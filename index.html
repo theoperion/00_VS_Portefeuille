@@ -1208,6 +1208,11 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
       <label class="coche-r"><input type="checkbox" id="moi-partage"> Partager mes lignes de bourse dans le récap du mois</label>
       <p class="info">En fin de mois, la liste de tes lignes de bourse (nom, montant, performance) est envoyée au Versus pour le récap que tout le monde voit dans l'onglet Mois. Jamais ton épargne, ton immobilier ni tes ordres.</p>
     </section>
+    <section class="regl" id="regl-or" hidden>
+      <h4>👑 Premier millionnaire</h4>
+      <p class="info">Ta récompense se voit dans toute l'appli, chez tout le monde. Tu peux la masquer pour tous, et la remettre quand tu veux.</p>
+      <div class="chips" id="choix-or"><button class="chip" type="button" data-or="">Visible par tous</button><button class="chip" type="button" data-or="off">Masquée</button></div>
+    </section>
     <section class="regl" id="regl-admin" hidden>
       <h4>👑 Mode admin</h4>
       <p class="info">Désactivé, l'appli se comporte comme pour un joueur : tu joues en ton nom, sans voir les cartes des autres avant la révélation ni les règles à venir. Activé : réglages communs, codes, aperçus et règles en réserve.</p>
@@ -1283,7 +1288,7 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 <script>
 "use strict";
 /* Version de l'appli : à changer à chaque livraison (affichée en bas des Réglages) */
-const APP_VERSION = "12.0", APP_DATE = "4 novembre 2026";
+const APP_VERSION = "12.1", APP_DATE = "4 novembre 2026";
 /* Admin : « voir l'appli à une autre date » (Réglages › Voir comme un joueur). L'horloge de l'appli est décalée ; rien n'est envoyé. */
 (function () {
   let s = null; try { s = localStorage.getItem("versus.dateSim"); } catch (e) { return; }
@@ -1297,7 +1302,7 @@ const APP_VERSION = "12.0", APP_DATE = "4 novembre 2026";
    CONFIGURATION : colle ici l'adresse de la web app (se termine par /exec),
    ou saisis-la dans Réglages. Vide = chiffres de démonstration.
    ============================================================ */
-const API_URL = "https://script.google.com/macros/s/AKfycbxz2UFvLYyt3kPWCzyRyN-JY-XOgspG2HmQ5Vmwe_rFBJGhLB0JaQH66Fm-Mqvc-bPo7Q/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxVNsHSYTTqolDYjZX18ECAFcNhSJH5Wv4pxZweTpTHbVsm538hE9UI5QSI8ZlofUTf/exec";
 
 const CLES = { api: "versus.api", cle: "versus.cle", theme: "versus.theme", cache: "versus.cache", vue: "versus.vue", etat: "versus.etat" };
 /* En simulation (date simulée ou vue joueur de l'admin), ce qui est « vu » (révélation, annonces, paliers, clôture…), l'état des onglets
@@ -1495,6 +1500,7 @@ function afficherTout() {
   $("#ligne-session").textContent = estAdmin() ? (SOURCE === "api" ? "Connecté avec la clé d'administration : tu vois et modifies tout, et tu gères les réglages communs." : "")
     : "Connecté en tant que " + SESSION.nom + " : tu vois tout le classement, et tu modifies ton relevé." + (SESSION.adminCoupe ? " Mode admin désactivé." : "");
   majModeAdmin();
+  ereDor();
 }
 
 /* ---------- Codes personnels (administrateur) ---------- */
@@ -2224,14 +2230,14 @@ const EXCLUSIFS = [
   { id: "cible", niv: 1, ico: "🎯", nom: "Dans le mille", def: "battre l'indice sur un mois (premier bonus 🎯)", gain: ["klaxon", "cibles"] },
   { id: "decollage", niv: 1, ico: "🚀", nom: "Décollage", def: "faire +5 % sur un seul mois", gain: ["klaxon", "fusees"] },
   { id: "fidele", niv: 1, ico: "🤝", nom: "Fidèle au poste", def: "verser 3 mois d'affilée", gain: ["plaque", "fidele"] },
-  { id: "vingt", niv: 1, ico: "🔢", nom: "Pointeur", def: "atteindre 20 points de championnat", gain: ["plaque", "vingt"] },
+  { id: "vingt", niv: 1, ico: "🔢", nom: "Pointeur", def: "atteindre 12 points de championnat", gain: ["plaque", "vingt"] },
   { id: "remontee", niv: 1, ico: "⏩", nom: "Coup de turbo", def: "gagner 2 places au championnat d'un mois à l'autre", gain: ["trainee", "turbo"] },
   // Intermédiaire
   { id: "hattrick", niv: 2, ico: "⚡", nom: "Hat-trick", def: "gagner 3 mois d'affilée", gain: ["casque", "foudre"] },
   { id: "massue", niv: 2, ico: "💥", nom: "Coup de massue", def: "battre l'indice de 5 points ou plus sur un seul mois", gain: ["trainee", "supernova"] },
   { id: "cinqetoiles", niv: 2, ico: "🌟", nom: "Cinq étoiles", def: "cumuler 5 bonus 🎯", gain: ["finition", "etoilee"] },
   { id: "mur10", niv: 2, ico: "💠", nom: "Le mur des 10 %", def: "atteindre +10 % cumulés depuis le départ de la saison 1", gain: ["livree", "platine"] },
-  { id: "cinquante", niv: 2, ico: "🏆", nom: "Demi-siècle", def: "atteindre 50 points de championnat, toutes saisons confondues", gain: ["klaxon", "trophees"] },
+  { id: "cinquante", niv: 2, ico: "🏆", nom: "Trentenaire", def: "atteindre 30 points de championnat, toutes saisons confondues", gain: ["klaxon", "trophees"] },
   { id: "inarretable", niv: 2, ico: "💎", nom: "Inarrêtable", def: "verser 12 mois d'affilée (relevés du Versus)", gain: ["finition", "diamant"] },
   // Difficile
   { id: "fusee", niv: 3, ico: "❤️‍🔥", nom: "Mois de feu", def: "faire +10 % sur un seul mois", gain: ["livree", "rubis"] },
@@ -2239,7 +2245,7 @@ const EXCLUSIFS = [
   { id: "phenix", niv: 3, ico: "🔥", nom: "Phénix", def: "battre son record de cumul après une chute de 10 %", gain: ["casque", "phenix"] },
   { id: "grandchelem", niv: 3, ico: "🌌", nom: "Grand chelem", def: "gagner 5 mois dans une même saison", gain: ["casque", "galaxie"] },
   { id: "maillot", niv: 3, ico: "☀️", nom: "Maillot jaune", def: "passer 6 mois en tête du championnat, au total", gain: ["finition", "soleil"] },
-  { id: "centurion", niv: 3, ico: "🎺", nom: "Centurion", def: "atteindre 100 points de championnat, toutes saisons confondues", gain: ["klaxon", "fanfare"] },
+  { id: "centurion", niv: 3, ico: "🎺", nom: "Soixante", def: "atteindre 60 points de championnat, toutes saisons confondues", gain: ["klaxon", "fanfare"] },
   // Légendaire
   { id: "champion", niv: 4, ico: "🌿", nom: "Premier champion", def: "remporter une saison complète", gain: ["finition", "lauriers"] },
   { id: "mur25", niv: 4, ico: "🪐", nom: "Le mur des 25 %", def: "atteindre +25 % cumulés depuis le départ de la saison 1", gain: ["livree", "galaxie"] },
@@ -2275,7 +2281,7 @@ function premiersExclusifs() {
           [["mur10", .10], ["mur25", .25], ["mur50", .50]].forEach(([id, seuil]) => { if (s.prod - 1 >= seuil) note(id, x.nom, m.k, s.prod); });
           if (m.iR !== null && x.r - m.iR >= 0.05) note("massue", x.nom, m.k, x.r - m.iR);
           s.pts += x.p;
-          [["vingt", 20], ["cinquante", 50], ["centurion", 100]].forEach(([id, seuil]) => { if (s.pts >= seuil) note(id, x.nom, m.k, s.pts); });
+          [["vingt", 12], ["cinquante", 30], ["centurion", 60]].forEach(([id, seuil]) => { if (s.pts >= seuil) note(id, x.nom, m.k, s.pts); });
           if (s.prod > s.pic + 1e-12) { if (s.creux) note("phenix", x.nom, m.k, s.prod); s.pic = s.prod; s.creux = false; } else if (s.prod <= s.pic * 0.9) s.creux = true;
           if (m.places[x.nom] === 1) { s.tete++; if (s.tete >= 6) note("maillot", x.nom, m.k, s.pts); }
           if (precPlaces && precPlaces[x.nom] && precPlaces[x.nom] - m.places[x.nom] >= 2) note("remontee", x.nom, m.k, precPlaces[x.nom] - m.places[x.nom]);
@@ -2363,7 +2369,7 @@ function htmlCourseExclusifs() {
   };
   const niveaux = [1, 2, 3, 4].map(n => {
     const l = EXCLUSIFS.filter(x => x.niv === n), pris = l.filter(x => detenteur(x.id)).length + (n === 4 && pm ? 1 : 0), tot = l.length + (n === 4 ? 1 : 0);
-    const mil = n === 4 ? '<div class="ex-l' + (pm ? " pris" : "") + '"><span class="ex-i">👑</span><div><b>Premier millionnaire</b><small>Le premier à 1 000 000 € · casque Couronne, livrée Or vivant, klaxon Pluie de billets</small></div>' +
+    const mil = n === 4 ? '<div class="ex-l' + (pm ? " pris" : "") + '"><span class="ex-i">👑</span><div><b>Premier millionnaire</b><small>Le premier à 1 000 000 € · récompense secrète, pour toute l\'appli</small></div>' +
       (pm ? '<span class="ex-q" style="--c:' + couleur(pm.nom) + '"><b>' + esc(pm.nom) + "</b><small>pour toujours</small></span>" : '<span class="ex-q libre"><b>Libre</b><small>à prendre</small></span>') + "</div>" : "";
     const icones = l.map(x => { const d = detenteur(x.id); return '<i' + (d ? ' style="--c:' + couleur(d.nom) + '" class="pris"' : "") + ">" + x.ico + "</i>"; }).join("") + (n === 4 ? "<i" + (pm ? ' style="--c:' + couleur(pm.nom) + '" class="pris"' : "") + ">👑</i>" : "");
     return '<details class="ex-bloc n' + n + '" data-exn="' + n + '"' + (EX_OUVERTS.has(n) ? " open" : "") + '><summary><span class="ex-niv"><span>' + MED_EX[n] + " " + NIV_EX[n] + "</span><small>" + pris + " / " + tot + "</small></span>" +
@@ -2488,7 +2494,7 @@ function finitionCasque(u, fin, c, lead) {
 function avatar(nom, e) {
   const eq = e || equipDe(nom), tete = (eq.pilote || "tete") === "tete";
   const lead = tete && !eq.vignette && saisonVisible() && leaderSaison() === nom;
-  return '<span class="av av-' + (eq.fond || "couleur") + (tete ? " av-tete" : "") + (lead ? " av-lead" : "") + '" style="--c:' + couleur(nom) + '">' + (tete ? svgTete(nom, eq, eq.vignette) : svgCasque(nom, eq)) + "</span>";
+  return '<span class="av av-' + (eq.fond || "couleur") + (tete ? " av-tete" : "") + (lead ? " av-lead" : "") + ((ereDorActive() || {}).nom === nom ? " av-or" : "") + '" style="--c:' + couleur(nom) + '">' + (tete ? svgTete(nom, eq, eq.vignette) : svgCasque(nom, eq)) + "</span>";
 }
 function svgCasque(nom, e) {
   const eq = e || equipDe(nom), u = "sv" + (++NSVG), c = couleur(nom), lead = !eq.vignette && saisonVisible() && leaderSaison() === nom;
@@ -2745,7 +2751,7 @@ function htmlEcurie() {
   if (slot === "pilote") corps = htmlPilote(qui, e);
   else if (slot === "numero") corps = '<div class="num-bloc"><input id="ecu-num" class="champ-num" inputmode="numeric" maxlength="2" value="' + e.numero + '" aria-label="Numéro de course (1 à 99)"><p class="info">Ton numéro de course, de 1 à 99 : sur le ponton de ta voiture et dans la grille.</p></div>';
   else corps = '<div class="items">' + Object.keys(ITEMS[slot]).map(id => {
-    const ouvert = ouverts.has(slot + "." + id), org = origineItem(slot, id), r = rareteItem(slot, id), cache = !ouvert && !!org.secret, porte = e[slot] === id;
+    const ouvert = ouverts.has(slot + "." + id), org = origineItem(slot, id), r = rareteItem(slot, id), cache = !ouvert && (!!org.secret || !!org.million), porte = e[slot] === id;
     const sous = ouvert ? r.lib : org.million ? "👑 Premier millionnaire" : org.secret ? "Défi secret" : org.defi ? MEDAILLES[org.defi.niv] + " " + org.defi.nom : "";
     const ex = org.exclusif ? detenteur(org.exclusif.id) : null;
     const sous2 = !ouvert && org.exclusif ? (ex ? "🔒 À " + ex.nom : "Exclusif · libre") : sous;
@@ -2789,7 +2795,7 @@ function htmlDefis() {
     return '<div class="ex-l' + (d ? " pris" : "") + '"><span class="ex-i">' + x.ico + "</span><div><b>" + esc(x.nom) + "</b><small>Le premier à " + esc(x.def.replace("l'indice", "le " + idx)) + " · " + esc(item) + " (" + slot + ")</small></div>" +
       (d ? '<span class="ex-q" style="--c:' + couleur(d.nom) + '"><b>' + esc(d.nom) + "</b><small>" + esc(moisCourt(d.k)) + "</small></span>" : '<span class="ex-q libre"><b>Libre</b><small>à prendre</small></span>') + "</div>";
   };
-  const ligneMillion = () => '<div class="ex-l' + (pm ? " pris" : "") + '"><span class="ex-i">👑</span><div><b>Premier millionnaire</b><small>Le premier à 1 000 000 € · casque Couronne, livrée Or vivant, klaxon Pluie de billets</small></div>' +
+  const ligneMillion = () => '<div class="ex-l' + (pm ? " pris" : "") + '"><span class="ex-i">👑</span><div><b>Premier millionnaire</b><small>Le premier à 1 000 000 € · récompense secrète, pour toute l\'appli</small></div>' +
     (pm ? '<span class="ex-q" style="--c:' + couleur(pm.nom) + '"><b>' + esc(pm.nom) + "</b><small>pour toujours</small></span>" : '<span class="ex-q libre"><b>Libre</b><small>à prendre</small></span>') + "</div>";
   // score de trophées par pilote
   const nbDe = n => DEFIS.filter(d => E[n][d.id].ok).length + SECRETS.filter(d => E[n][d.id].ok).length + EXCLUSIFS.filter(x => (detenteur(x.id) || {}).nom === n).length + (pm && pm.nom === n ? 1 : 0);
@@ -2831,6 +2837,7 @@ async function garderEcurie() {
   const qui = ECU.nom, equip = Object.assign({}, ECU.e), avant = D.ecurie, brut = ((avant || {})[qui] || {}).equip || {};
   delete equip.vignette;
   let envoi = Object.assign({}, equip);
+  if (brut.aura && envoi.aura === undefined) envoi.aura = brut.aura;
   // en aperçu admin, les améliorations restent sur l'appareil : on renvoie au serveur ses vraies valeurs, intactes
   if (apercuSaison()) { stock.set("versus.amelioApercu", equip.amelio || ""); envoi.amelio = Number(brut.amelioY) === anneeAmelio() ? brut.amelio || "" : ""; delete equip.amelio; }
   const local = Object.assign({}, brut, equip);
@@ -4966,6 +4973,139 @@ function majVersion() {
   const api = D && D.version ? "API V" + D.version : SOURCE === "demo" ? "API : démo" : "API : —";
   el.innerHTML = "<b>Versus " + APP_VERSION + "</b> · " + APP_DATE + "<br>" + esc(api) + " · module Moi " + esc((MOI_JS.match(/v=(\d+)/) || [])[1] ? "v" + MOI_JS.match(/v=(\d+)/)[1] : "") + (navigator.serviceWorker && navigator.serviceWorker.controller ? " · hors connexion prêt ✓" : "");
 }
+/* ============================================================
+   L'ÈRE D'OR · récompense du premier millionnaire (V12.1)
+   Volontairement non décrite ailleurs : à ne pas lire si tu veux garder la surprise.
+   ============================================================ */
+let ERE_RAF = null;
+function ereDorActive() {
+  const pm = typeof D !== "undefined" && D && D.premierMillion; if (!pm || !pm.nom) return null;
+  const eq = ((D.ecurie || {})[pm.nom] || {}).equip || {};
+  return eq.aura === "off" ? null : pm;
+}
+function ereStyle() {
+  if (document.getElementById("ere-style")) return;
+  const st = document.createElement("style"); st.id = "ere-style";
+  st.textContent = `
+@property --ere-a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@keyframes ereGlisse { to { background-position: -250% 0; } }
+@keyframes ereTour { to { --ere-a: 360deg; } }
+@keyframes erePouls { 0%,100% { box-shadow: 0 0 0 2px #E8B931, 0 0 10px 1px rgba(232,185,49,.45); } 50% { box-shadow: 0 0 0 2px #FFE58A, 0 0 18px 4px rgba(255,214,102,.7); } }
+@keyframes ereFil { from { background-position: 0 0; } to { background-position: 400px 0; } }
+@keyframes ereMonte { from { opacity: 0; transform: translateY(18px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes ereLueur { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+body.ere-or .logo b { color: transparent; background: linear-gradient(100deg, #F7E7B4 0%, #E8B931 22%, #FFF8DE 38%, #C98E1E 55%, #F7E7B4 72%, #E8B931 100%); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; animation: ereGlisse 8s linear infinite; filter: drop-shadow(0 0 6px rgba(232,185,49,.35)); }
+body.ere-or .logo i.ere-i { background: conic-gradient(from var(--ere-a), #FFF6D5, #E8B931, #9C6B12, #FFE9A0, #E8B931, #FFF6D5) !important; animation: ereTour 5s linear infinite; box-shadow: 0 0 8px rgba(232,185,49,.6); }
+body.ere-or .av.av-or { animation: erePouls 3.2s ease-in-out infinite; border-radius: 50%; }
+.ere-fil { position: fixed; left: 0; right: 0; top: 0; height: 2px; z-index: 9998; pointer-events: none; background: linear-gradient(90deg, transparent 0, #9C6B12 80px, #FFE58A 160px, #FFF8DE 200px, #E8B931 240px, transparent 400px); background-size: 400px 2px; animation: ereFil 3.5s linear infinite; opacity: .9; }
+.ere-poussiere { position: fixed; inset: 0; z-index: 9997; pointer-events: none; }
+.ere-voile { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: radial-gradient(120% 90% at 50% 40%, #2A1E06 0%, #0B0905 60%, #000 100%); color: #FFF4D2; text-align: center; padding: 24px; }
+.ere-voile canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ere-c { position: relative; max-width: 440px; }
+.ere-c > * { opacity: 0; animation: ereMonte .9s cubic-bezier(.2,.8,.2,1) forwards; }
+.ere-k { font: 700 12px/1 var(--f-text); letter-spacing: .35em; text-transform: uppercase; color: #E8B931; animation-delay: .3s !important; }
+.ere-n { margin: 18px 0 6px; font: italic 800 clamp(40px, 13vw, 64px)/1 var(--f-display); letter-spacing: .02em; color: transparent; background: linear-gradient(100deg, #F7E7B4, #E8B931 30%, #FFF8DE 45%, #C98E1E 62%, #F7E7B4); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; animation: ereMonte .9s cubic-bezier(.2,.8,.2,1) .9s forwards, ereGlisse 6s linear 1.8s infinite !important; }
+.ere-m { font: 800 clamp(30px, 10vw, 46px)/1.1 var(--f-num, var(--f-display)); color: #FFE58A; text-shadow: 0 0 24px rgba(255,214,102,.55); animation-delay: .5s !important; }
+.ere-p { margin: 18px auto 0; font: 400 15px/1.55 var(--f-text); color: #E9DDBA; max-width: 340px; animation-delay: 2.6s !important; }
+.ere-b { margin-top: 26px; padding: 13px 24px; border-radius: 999px; border: 1px solid #E8B931; background: linear-gradient(180deg, #F2CF63, #C58F1C); color: #1D1404; font: 800 14px/1 var(--f-text); letter-spacing: .06em; text-transform: uppercase; cursor: pointer; animation-delay: 3.2s !important; box-shadow: 0 0 24px rgba(232,185,49,.45); }
+.ere-cour { font-size: 58px; line-height: 1; filter: drop-shadow(0 0 18px rgba(255,214,102,.8)); animation-delay: 0s !important; }
+@media (prefers-reduced-motion: reduce) { body.ere-or .logo b, body.ere-or .logo i.ere-i, body.ere-or .av.av-or, .ere-fil { animation: none !important; } .ere-poussiere { display: none; } }`;
+  document.head.appendChild(st);
+}
+/** Poussière d'or : quelques paillettes qui dérivent lentement sur toute l'appli */
+function ereCanvasPoussiere() {
+  if (document.querySelector(".ere-poussiere") || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cv = document.createElement("canvas"); cv.className = "ere-poussiere"; document.body.appendChild(cv);
+  const cx = cv.getContext("2d"), dpr = Math.min(2, window.devicePixelRatio || 1);
+  const taille = () => { cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; };
+  taille(); addEventListener("resize", taille);
+  const P = Array.from({ length: 22 }, () => ({ x: Math.random(), y: Math.random(), v: .00004 + Math.random() * .00008, r: .6 + Math.random() * 1.6, p: Math.random() * 6.28, d: (Math.random() - .5) * .00003 }));
+  let t0 = 0;
+  const image = t => {
+    if (!document.body.classList.contains("ere-or")) { cv.remove(); ERE_RAF = null; return; }
+    const dt = t0 ? Math.min(64, t - t0) : 16; t0 = t;
+    cx.clearRect(0, 0, cv.width, cv.height);
+    P.forEach(q => {
+      q.y -= q.v * dt; q.x += q.d * dt; q.p += .002 * dt;
+      if (q.y < -.02) { q.y = 1.02; q.x = Math.random(); }
+      const a = .18 + .22 * (1 + Math.sin(q.p)) / 2, x = q.x * cv.width, y = q.y * cv.height, r = q.r * dpr;
+      const g = cx.createRadialGradient(x, y, 0, x, y, r * 4); g.addColorStop(0, "rgba(255,236,170," + a + ")"); g.addColorStop(1, "rgba(232,185,49,0)");
+      cx.fillStyle = g; cx.beginPath(); cx.arc(x, y, r * 4, 0, 6.283); cx.fill();
+    });
+    ERE_RAF = requestAnimationFrame(image);
+  };
+  if (!ERE_RAF) ERE_RAF = requestAnimationFrame(image);
+}
+/** Le grand moment : une seule fois par appareil, le jour où l'on découvre le premier millionnaire */
+function ereRevelation(pm) {
+  const cle = "versus.ereVue", deja = stock.get(cle);
+  if (deja === (pm.nom + "|" + pm.date) || document.querySelector(".ere-voile")) return;
+  const moi = SESSION && SESSION.nom === pm.nom;
+  const o = document.createElement("div"); o.className = "ere-voile"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Premier millionnaire");
+  o.innerHTML = '<canvas></canvas><div class="ere-c"><div class="ere-cour">👑</div><div class="ere-k">Premier millionnaire du Versus</div><div class="ere-m">0 €</div><div class="ere-n">' + esc(pm.nom) + '</div>' +
+    '<p class="ere-p">' + (moi ? "C'est toi. Le cap du million est franchi, le premier du groupe, et pour toujours." : esc(pm.nom) + " a franchi le million en premier. C'est gravé, pour toujours.") + " À partir d'aujourd'hui, l'appli vit à l'heure de l'ère d'or.</p>" +
+    '<button class="ere-b" type="button">Entrer dans l\'ère d\'or</button></div>';
+  document.body.appendChild(o);
+  const cv = o.querySelector("canvas"), cx = cv.getContext("2d"), dpr = Math.min(2, devicePixelRatio || 1);
+  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+  const W = cv.width, H = cv.height, P = [];
+  const salve = n => { for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, v = (2 + Math.random() * 7) * dpr; P.push({ x: W / 2, y: H * .42, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 3 * dpr, r: (2 + Math.random() * 4) * dpr, rot: Math.random() * 6, vr: (Math.random() - .5) * .3, vie: 1, piece: Math.random() < .35 }); } };
+  const pluie = () => { for (let i = 0; i < 3; i++) P.push({ x: Math.random() * W, y: -10, vx: (Math.random() - .5) * dpr, vy: (1 + Math.random() * 2) * dpr, r: (1.5 + Math.random() * 3) * dpr, rot: Math.random() * 6, vr: (Math.random() - .5) * .2, vie: 1, piece: Math.random() < .3 }); };
+  const calme = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let t0 = performance.now(), salves = [700, 1700, 2600], raf = null;
+  const m = o.querySelector(".ere-m"), cible = 1000000, debut = performance.now() + 500;
+  const image = t => {
+    const e = t - t0;
+    while (salves.length && e > salves[0]) { salves.shift(); salve(calme ? 0 : 140); }
+    if (!calme && e > 900) pluie();
+    const k = Math.min(1, Math.max(0, (t - debut) / 2200)), val = Math.round(cible * (1 - Math.pow(1 - k, 4)));
+    m.textContent = val.toLocaleString("fr-FR") + " €";
+    cx.clearRect(0, 0, W, H);
+    for (let i = P.length - 1; i >= 0; i--) {
+      const q = P[i]; q.x += q.vx; q.y += q.vy; q.vy += .12 * dpr; q.vx *= .99; q.rot += q.vr; q.vie -= q.y > H ? 1 : .004;
+      if (q.vie <= 0) { P.splice(i, 1); continue; }
+      cx.save(); cx.translate(q.x, q.y); cx.rotate(q.rot); cx.globalAlpha = Math.max(0, Math.min(1, q.vie));
+      if (q.piece) { const g = cx.createLinearGradient(-q.r * 2, 0, q.r * 2, 0); g.addColorStop(0, "#9C6B12"); g.addColorStop(.5, "#FFE58A"); g.addColorStop(1, "#C98E1E"); cx.fillStyle = g; cx.beginPath(); cx.ellipse(0, 0, q.r * 2, q.r * 2 * Math.abs(Math.cos(q.rot * 2)) + .5, 0, 0, 6.283); cx.fill(); }
+      else { cx.fillStyle = Math.random() < .5 ? "#FFE58A" : "#E8B931"; cx.fillRect(-q.r, -q.r / 3, q.r * 2, q.r * .7); }
+      cx.restore();
+    }
+    raf = requestAnimationFrame(image);
+  };
+  raf = requestAnimationFrame(image);
+  if (navigator.vibrate) try { navigator.vibrate([40, 60, 40, 60, 120]); } catch (er) { /* rien */ }
+  const fermer = () => { cancelAnimationFrame(raf); stock.set(cle, pm.nom + "|" + pm.date); o.style.transition = "opacity .6s"; o.style.opacity = "0"; setTimeout(() => o.remove(), 650); };
+  o.querySelector(".ere-b").addEventListener("click", fermer);
+}
+/** Applique (ou retire) l'ère d'or sur toute l'appli */
+function ereDor() {
+  const pm = ereDorActive(), on = !!pm;
+  document.body.classList.toggle("ere-or", on);
+  document.body.dataset.ereNom = on ? pm.nom : "";
+  document.querySelectorAll(".logo").forEach(l => { const i = l.querySelector("i.ere-i"); if (on && !i) { const n = document.createElement("i"); n.className = "ere-i"; l.insertBefore(n, l.querySelector("b")); } else if (!on && i) i.remove(); });
+  let fil = document.querySelector(".ere-fil");
+  if (on && !fil) { fil = document.createElement("div"); fil.className = "ere-fil"; document.body.appendChild(fil); } else if (!on && fil) fil.remove();
+  if (on) { ereStyle(); ereCanvasPoussiere(); if (!simulation()) ereRevelation(pm); }
+  majReglageOr();
+}
+/** Réglage réservé au premier millionnaire : afficher ou masquer l'ère d'or pour tout le monde */
+function majReglageOr() {
+  const sec = document.getElementById("regl-or"); if (!sec) return;
+  const pm = typeof D !== "undefined" && D && D.premierMillion, moi = moiPilote();
+  sec.hidden = !(pm && moi && pm.nom === moi); if (sec.hidden) return;
+  const brut = ((D.ecurie || {})[moi] || {}).equip || {}, etat = brut.aura === "off" ? "off" : "";
+  sec.querySelectorAll("[data-or]").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.or === etat)); b.onclick = async () => {
+    if (b.dataset.or === etat) return;
+    const avant = D.ecurie, equip = Object.assign({}, brut, { aura: b.dataset.or });
+    delete equip.amelios; delete equip.amelioY; delete equip.amelioT;
+    D.ecurie = Object.assign({}, avant, { [moi]: Object.assign({}, (avant || {})[moi], { equip: Object.assign({}, brut, { aura: b.dataset.or }) }) });
+    ereDor();
+    if (SOURCE !== "api" || simulation()) { toast("Aperçu seulement : rien n'est envoyé."); return; }
+    const rep = await posterAdmin({ action: "ecurie", personne: moi, equip: equip });
+    if (rep.ok) { if (rep.ecurie) D.ecurie = rep.ecurie; toast(b.dataset.or === "off" ? "Masquée pour tout le monde." : "Visible par tout le monde 👑"); }
+    else { D.ecurie = avant; ereDor(); toast(rep.message || "Impossible d'enregistrer."); }
+  }; });
+}
+
 /* ---------- Mode admin : désactivé par défaut, activable dans les Réglages ---------- */
 function majModeAdmin() {
   const sec = $("#regl-admin"); if (!sec) return;
