@@ -1154,7 +1154,6 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
   <div class="feuille" role="dialog" aria-modal="true" aria-labelledby="titre-reglages">
     <h3 id="titre-reglages">Réglages <button class="icon-btn" type="button" id="fermer-reglages" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3>
     <p class="info" id="ligne-session"></p>
-    <button class="btn ghost plein" type="button" id="regles-reglages">📖 Règles du championnat</button>
     <section class="regl">
       <h4>Affichage (cet appareil)</h4>
       <div class="champ" id="bloc-moi"><label>Je suis</label><div class="chips" id="choix-moi"></div></div>
@@ -4853,7 +4852,6 @@ $("#moi-oublier").addEventListener("click", () => {
   if (vueActive() === "moi") rendreMoi();
 });
 $("#fermer-reglages").addEventListener("click", () => { $("#reglages").hidden = true; });
-$("#regles-reglages").addEventListener("click", () => { $("#reglages").hidden = true; ouvrirRegles(); });
 $("#reglages").addEventListener("click", e => { if (e.target.id === "reglages") $("#reglages").hidden = true; });
 $("#saisie").addEventListener("click", e => { if (e.target.id === "saisie") $("#saisie").hidden = true; });
 $("#fermer-saisie").addEventListener("click", () => { $("#saisie").hidden = true; });
