@@ -3,9 +3,13 @@
 /* Version de l'appli : elle se change dans version.js, nulle part ailleurs */
 const APP_VERSION = (self.VERSUS_VERSION || {}).app || "?", APP_DATE = (self.VERSUS_VERSION || {}).date || "";
 /* Admin : « voir l'appli à une autre date » (Réglages › Voir comme un joueur). L'horloge de l'appli est décalée ; rien n'est envoyé. */
+/* 14.4 : à partir du 1er février 2027 (vraie date, jamais simulée), toutes les nouveautés sont sorties : plus d'aperçu, de vue joueur
+   ni de date simulée. L'admin garde les codes, la clé admin, les réglages communs et la saisie de secours. */
+window.APERCUS_FINIS = Date.now() >= new Date(2027, 1, 1).getTime();
 (function () {
   /* Le mode admin ne dure que jusqu'à la fermeture de l'appli (sessionStorage) : à l'ouverture suivante, plus d'admin ni de simulation */
   try { if (sessionStorage.getItem("versus.adminOn") !== "1") ["versus.adminOn", "versus.vueJoueur", "versus.dateSim", "versus.apercuSaison"].forEach(k => localStorage.removeItem(k)); } catch (e) { /* stockage indisponible */ }
+  if (window.APERCUS_FINIS) { try { ["versus.vueJoueur", "versus.dateSim", "versus.apercuSaison"].forEach(k => localStorage.removeItem(k)); } catch (e) { /* indisponible */ } return; }
   let s = null; try { s = localStorage.getItem("versus.dateSim"); } catch (e) { return; }
   const cible = s ? new Date(s + "T10:00:00").getTime() : NaN; if (!cible) return;
   const D0 = Date, decal = cible - D0.now();
@@ -198,7 +202,7 @@ function adminActif() { try { return vraiAdmin() && sessionStorage.getItem("vers
 function joueurAdmin() { const l = (typeof D !== "undefined" && D && D.personnes) || []; return (l.find(p => /^th[ée]o$/i.test(p.nom)) || l[0] || {}).nom; }   // la clé admin est Théo, point
 /** Qui je suis vraiment : mon joueur, jamais celui que je regarde (l'admin reste son propre joueur, Théo) */
 function moiVrai() { return estAdmin() ? (joueurAdmin() || "Théo") : SESSION && SESSION.nom; }
-function vueJoueur() { return adminActif() && !!stock.get("versus.vueJoueur"); }
+function vueJoueur() { return !window.APERCUS_FINIS && adminActif() && !!stock.get("versus.vueJoueur"); }
 /** Simulation : date simulée ou vue joueur. Rien ne part vers l'API, rien de « vu » n'est gardé. */
 function simulation() { return !!window.DATE_SIM || vueJoueur(); }
 const MSG_SIMULATION = "👁️ Simulation : rien n'est envoyé. Repasse en admin, aujourd'hui, pour agir pour de vrai.";

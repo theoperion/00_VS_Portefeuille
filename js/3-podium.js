@@ -14,7 +14,7 @@ const SAISON = { premiere: 2027, depart: new Date(2027, 0, 1), chauffe: new Date
 const CHAUFFE_K = 202612;
 function saisonOuverte() { return Date.now() >= SAISON.depart.getTime(); }
 function chauffeOuverte() { return Date.now() >= SAISON.chauffe.getTime(); }
-function apercuSaison() { return !saisonOuverte() && estAdmin() && stock.get("versus.apercuSaison") === "1"; }
+function apercuSaison() { return !window.APERCUS_FINIS && !saisonOuverte() && estAdmin() && stock.get("versus.apercuSaison") === "1"; }
 function saisonVisible() { return saisonOuverte() || apercuSaison() || chauffeOuverte(); }
 /** La « saison » 2026 hors aperçu admin, c'est le tour de chauffe : décembre seul, sans défis, badges ni exclusifs */
 function estChauffe(y) { return y === SAISON.premiere - 1 && !apercuSaison(); }
@@ -737,7 +737,7 @@ function blocSaison() {
     (ch ? '<div class="chauffe-b">🔥 <span><b>Tour de chauffe</b> : les règles de base, et rien ne compte. Le championnat démarre le 1<sup>er</sup> janvier. <a href="#" class="lien-regles" data-regles="speciaux">En savoir plus</a></span></div>' : "") +
     '<div class="pod-tabs" role="group" aria-label="Saison">' + b("gp", "<span>🏁</span>Course") + b("stand", "<span>🃏</span>Stand" + (rappelCartes() ? '<i class="pastille" aria-label="à faire"></i>' : "")) + b("ecurie", "<span>🏎️</span>Écurie") + b("defis", "<span>🏆</span>Trophées") + "</div>" +
     '<div class="s-corps">' + (o === "ecurie" ? htmlEcurie() : o === "defis" ? htmlDefis() : o === "stand" ? htmlStand(y) : htmlGrandPrix(y)) + "</div>" +
-    (adminActif() ? '<button class="reserve-b" type="button" id="reserve-ouvrir">🧪 <span><b>Règles et idées en réserve</b><small>admin · ce qui est en jeu, ce qui dort, les réglages</small></span> ›</button>' : "") + "</section>";
+    (adminActif() && !window.APERCUS_FINIS ? '<button class="reserve-b" type="button" id="reserve-ouvrir">🧪 <span><b>Règles et idées en réserve</b><small>admin · ce qui est en jeu, ce qui dort, les réglages</small></span> ›</button>' : "") + "</section>";
 }
 /** Onglet du Podium : l'ancien « Championnat » est maintenant dans le Grand Prix */
 function ongletPodium() { return ["gp", "stand", "ecurie", "defis"].includes(ETAT.podium) ? ETAT.podium : "gp";

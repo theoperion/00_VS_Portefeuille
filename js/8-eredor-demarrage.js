@@ -145,6 +145,7 @@ function majModeAdmin() {
     location.reload();
   }; });
   $("#bloc-admin-joueur").hidden = true;   // plus de « Je joue en tant que »
+  if (window.APERCUS_FINIS) { const i = sec.querySelector("p.info"); if (i) i.textContent = "Désactivé, tu es un joueur comme les autres. Activé (jusqu'à la fermeture de l'appli) : saisie de secours d'un relevé pour un autre joueur. Les codes, la clé admin et les réglages communs restent toujours accessibles plus bas."; }
 
 }
 /* ---------- Vue joueur et date simulée (admin) ---------- */
@@ -152,7 +153,7 @@ const DATES_SIM = [["", "Aujourd'hui"], ["2026-11-20", "20 nov. · teaser"], ["2
   ["2027-01-21", "21 janv. · nouvelles règles"], ["2027-02-21", "21 févr. · tout en jeu"], ["2027-11-21", "21 nov. 2027 · Finale"]];
 function majVueJoueur() {
   const sec = $("#regl-vue"); if (!sec) return;
-  sec.hidden = !adminActif() || !D || !D.personnes;
+  sec.hidden = window.APERCUS_FINIS || !adminActif() || !D || !D.personnes;
   if (sec.hidden) return;
   const vj = stock.get("versus.vueJoueur") || "", ds = stock.get("versus.dateSim") || "";
   $("#choix-vue").innerHTML = '<button class="chip" type="button" data-vuej="" aria-pressed="' + !vj + '">👑 Admin</button><button class="chip" type="button" data-vuej="' + esc(joueurAdmin()) + '" aria-pressed="' + !!vj + '">👁️ Joueur (toi, sans admin)</button>';

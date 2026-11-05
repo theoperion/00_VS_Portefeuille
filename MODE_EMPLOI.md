@@ -159,7 +159,7 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 - ✅ 3.7 **🗳️ Vote de fin de saison** (v13.9, Versus V23) : du 2 au 31 décembre dans le Stand, un vote pour un autre pilote ; résultat le 1er janvier ; le gagnant (égalité : chacun) débloque la plaque « Coup de la saison ».
 
 **Phase 3 terminée ✅** (05/11/2026).
-- ⬜ 3.3 Quand toutes les fonctionnalités sont sorties (vers février 2027) : supprimer l'aperçu des étapes à venir ; il ne reste en admin que les codes et la saisie de secours.
+- ✅ 3.3 bis **Fin des aperçus admin, automatique le 1er février 2027** (appli v14.4, programmé dès maintenant) : plus de barre admin du Podium, de vue joueur, de date simulée ni de panneau « réserve ». Restent : **codes des joueurs, clé admin, réglages communs** (toujours) et **saisie de secours** (mode admin activé). Rien à faire ce jour-là.
 
 ### Phase 4 · Transferts (Clément et Devlin ; Kévin reste chez Théo)
 
@@ -276,3 +276,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 5.1 | Correctif v14.3 : thème appliqué avant l'affichage (plus d'écran blanc à l'ouverture) ; au démarrage, un « hors ligne » passager de l'iPhone ne déclenche plus le bandeau « Hors connexion » (un nouvel essai d'abord) |
 | 05/11/2026 | 5.1 | v14.3.1 : le hors connexion ne nettoie plus que ses propres caches (il effaçait celui des carnets, même site) |
 | 05/11/2026 | E1 | v14.3.2 : chaque téléphone se range sur l'adresse officielle ; 25 anciennes adresses Versus et 7 du Carnet T3 supprimées (liste : app_scripts/audits/sauvegardes/2026-11-05-adresses-supprimees.json) |
+| 05/11/2026 | 3.3 bis | v14.4 : les aperçus admin s'arrêtent seuls le 01/02/2027 (codes et saisie de secours gardés). Testé avant/après la date ; calcul serveur inchangé |

@@ -169,7 +169,7 @@ function rendreTrophees() {
   // admin : la première fois, le Podium s'ouvre sur « tout afficher »
   // (l'ancienne ouverture automatique sur « tout afficher » est supprimée : l'admin choisit dans Réglages › Mode admin)
   const vis = saisonVisible();
-  v.innerHTML = (D && adminActif() ? barreAdmin() : "") + (vis ? blocSaison() : bandeauMillion() + teaser());
+  v.innerHTML = (D && adminActif() && !window.APERCUS_FINIS ? barreAdmin() : "") + (vis ? blocSaison() : bandeauMillion() + teaser());
   brancherBarreAdmin(v);
   const im = $("#info-million-t"); if (im) im.addEventListener("click", () => toast(texteMillion()));
   if (vis) brancherSaison(v);
