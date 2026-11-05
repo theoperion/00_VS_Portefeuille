@@ -3283,6 +3283,7 @@ window.Moi = {
   notifications: htmlNotifications,
   saisir(partiel, onglet) { lireCache(); if (M && M.simple) ouvrirSoldes(); else ouvrirSaisieM(partiel, onglet); },
   rafraichir(frais) { if (configure()) { rendre(); charger(!!frais); } },
+  testerVersus() { return configure() ? posterFichier({ action: "testerVersus" }) : Promise.resolve({ ok: false, message: "Aucun fichier relié à cet appareil." }); },
   connecter(url, k) {
     url = String(url || "").trim();
     if (url) stock.set(K.api, url);

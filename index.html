@@ -1205,6 +1205,8 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
         <button class="lien danger" type="button" id="moi-oublier">Déconnecter ce fichier</button>
       </div>
       <p class="info" id="moi-etat"></p>
+      <div class="btn-row"><button class="btn ghost" type="button" id="moi-tester-versus">🔗 Tester l'envoi du relevé au Versus</button></div>
+      <p class="info" id="moi-versus-etat">Vérifie, sans rien envoyer, que ton fichier pourra transmettre ton relevé de fin de mois.</p>
       <label class="coche-r"><input type="checkbox" id="moi-partage"> Partager mes lignes de bourse dans le récap du mois</label>
       <p class="info">En fin de mois, la liste de tes lignes de bourse (nom, montant, performance) est envoyée au Versus pour le récap que tout le monde voit dans l'onglet Mois. Jamais ton épargne, ton immobilier ni tes ordres.</p>
     </section>
@@ -5053,6 +5055,13 @@ $("#moi-enregistrer").addEventListener("click", () => {
   if (vueActive() === "moi") { $("#reglages").hidden = true; rendreMoi(); }
 });
 $("#moi-partage").addEventListener("change", e => { stock.set("versus.moi.partage", e.target.checked ? "oui" : "non"); });
+$("#moi-tester-versus").addEventListener("click", async () => {
+  const el = $("#moi-versus-etat");
+  if (!window.Moi || !window.Moi.testerVersus) { el.textContent = "Ouvre d'abord l'onglet Moi une fois, puis réessaie."; return; }
+  el.textContent = "Test en cours…";
+  const r = await window.Moi.testerVersus();
+  el.textContent = r && r.ok ? r.message : r && (r.erreur === "format" || /inconnu/i.test(r.message || "")) ? "Ton fichier n'a pas encore cette fonction : normal avant le transfert (elle arrive avec ta nouvelle adresse)." : (r && r.message) || "Test impossible.";
+});
 $("#moi-tester").addEventListener("click", async () => {
   const a = $("#moi-api").value.trim() || stock.get(MOI_CLES.api) || "", k = $("#moi-cle").value.trim() || stock.get(MOI_CLES.cle) || "";
   if (!adresseFichierValide(a) || !k) { $("#moi-etat").textContent = "Renseigne l'adresse (/exec) et la clé pour tester."; return; }

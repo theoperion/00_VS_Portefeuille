@@ -256,3 +256,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 4 | Mode d'emploi des transferts (fichier Google, dépôt GitHub, reconnexion) ; état des accès relevé (fichiers de Clément et Devlin à Théo ; Clément éditeur du sien, Devlin sans accès) |
 | 05/11/2026 | 4.0 | Scripts de Clément et Devlin récupérés et mis à jour (V12). Décision : transfert complet |
 | 05/11/2026 | 4.1 | Relevé envoyé par le fichier perso (V13), réception par le Versus (V24), liaison automatique (appli v14.0). Fiche de transfert autonome |
+| 05/11/2026 | 4.1 | Bouton « 🔗 Tester l'envoi du relevé au Versus » pour chaque joueur (Réglages → Moi), sans rien écrire. Appli v14.1. Fiche complétée |

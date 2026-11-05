@@ -8,7 +8,7 @@
 
 ## Avant le jour J · Théo (une seule fois, dès que possible)
 
-Le script de chaque fichier a reçu une nouveauté (l'envoi du relevé) qui demande une autorisation Google.
+Le script de chaque fichier a reçu une nouveauté (l'envoi du relevé) qui demande une autorisation Google. **À faire tout de suite, pas le jour J** : sans cette autorisation, la photo quotidienne de leur patrimoine (onglet *Historique* de leur fichier) peut s'arrêter.
 
 Pour **chacun** des deux fichiers (« Portefeuille & Épargne Clément », puis « … Devlin ») :
 1. Ouvre le fichier → menu **Extensions → Apps Script**.
@@ -41,9 +41,10 @@ Pour **chacun** des deux fichiers (« Portefeuille & Épargne Clément », puis 
 
 ---
 
-## Vérifier (Théo, dans l'appli)
+## Vérifier (sans attendre la fin du mois)
 
-- **Réglages → Relevés automatiques de fin de mois → Tester** : à côté de son nom, « **envoie lui-même son relevé (fichier transféré)** ».
+- **L'ami, dans son appli** : **Réglages → Moi → 🔗 Tester l'envoi du relevé au Versus**. Il doit lire « ✅ Tout est prêt : le Versus répond et te reconnaît… » avec ses enveloppes. **Rien n'est envoyé** : c'est un essai. Il peut le refaire quand il veut.
+- **Théo, dans l'appli** : **Réglages → Relevés automatiques de fin de mois → Tester** : à côté de son nom, « **envoie lui-même son relevé (fichier transféré)** ».
 - Le dernier jour ouvré du mois, vers 19 h, son relevé apparaît au classement, et « Import auto » dans l'onglet *Journal app* du Sheet Versus.
 
 ## Si quelque chose coince
@@ -51,7 +52,8 @@ Pour **chacun** des deux fichiers (« Portefeuille & Épargne Clément », puis 
 | Problème | Solution |
 |---|---|
 | « Tester » dit que le fichier ne répond pas | Vérifier l'étape 3 : **Qui a accès : Tout le monde**, et l'adresse finit bien par `/exec`. |
-| Pas de message 🔗 à l'ouverture de l'onglet Moi | Fermer et rouvrir l'appli (il réessaie à chaque ouverture). |
+| Pas de message 🔗 à l'ouverture de l'onglet Moi | Fermer et rouvrir l'appli (il réessaie à chaque ouverture), puis refaire le **Tester l'envoi**. |
+| « Tester l'envoi » dit « pas encore cette fonction » | Il utilise encore l'ancienne adresse : refaire l'étape 3 (nouveau déploiement) et 4 (coller la nouvelle adresse). |
 | Le relevé de fin de mois n'est pas arrivé | L'ami reçoit un e-mail « relevé non envoyé » : il fait son relevé à la main (bouton **+ › Relevé**). |
 | Il a perdu sa clé | Dans son fichier : Extensions → Apps Script → en haut du fichier `API`, remplacer `CHANGE-MOI` par une nouvelle clé → exécuter **`definirCle`** → remettre `CHANGE-MOI`. Puis la saisir dans l'appli. |
 | L'ancienne adresse marche encore | Normal tant que Théo n'a pas été retiré ; après, seule la nouvelle compte. |
