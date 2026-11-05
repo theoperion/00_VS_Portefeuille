@@ -65,11 +65,11 @@ Où est le code :
 
 | Script | Adresse officielle | État |
 |---|---|---|
-| Versus | `…xVNsHSYT…`, inscrit dans le code | ✅ Les 26 anciennes adresses donnent le même code (marquées « ancienne adresse » dans Apps Script) |
-| Moi · Théo | `…wUZGrzfS…` | ✅ Les 5 anciennes adresses donnent le même code |
+| Versus | `…xVNsHSYT…`, inscrit dans le code | ✅ **Seule adresse** : les 25 anciennes supprimées le 05/11/2026 (un téléphone qui en gardait une s'est rangé seul sur l'officielle, v14.3.2) |
+| Moi · Théo | `…wUZGrzfS…` | ✅ Le fichier donne son adresse officielle, le téléphone s'y range seul. ⬜ Supprimer les 4 anciennes **après** avoir ouvert une fois l'onglet Moi |
 | Moi · Clément | `…yue_yIcK…` | à rattacher (phase 4) |
 | Moi · Devlin | `…z2q12dXu…` | à rattacher (phase 4) |
-| Moi · Kévin (profil simple) | `…zucvUCgb…` | ✅ code récupéré (V4), les 2 anciennes adresses servent le même code |
+| Moi · Kévin (profil simple) | `…zucvUCgb…` | ✅ Même chose (V5). ⬜ Supprimer les 2 anciennes **après** que Kévin a ouvert une fois l'onglet Moi |
 
 ---
 
@@ -275,3 +275,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 5.1 | index.html découpé en css/versus.css + 8 fichiers js/ (v14.2) ; hors connexion et outil d'extraction du serveur adaptés |
 | 05/11/2026 | 5.1 | Correctif v14.3 : thème appliqué avant l'affichage (plus d'écran blanc à l'ouverture) ; au démarrage, un « hors ligne » passager de l'iPhone ne déclenche plus le bandeau « Hors connexion » (un nouvel essai d'abord) |
 | 05/11/2026 | 5.1 | v14.3.1 : le hors connexion ne nettoie plus que ses propres caches (il effaçait celui des carnets, même site) |
+| 05/11/2026 | E1 | v14.3.2 : chaque téléphone se range sur l'adresse officielle ; 25 anciennes adresses Versus et 7 du Carnet T3 supprimées (liste : app_scripts/audits/sauvegardes/2026-11-05-adresses-supprimees.json) |
