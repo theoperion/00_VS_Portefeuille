@@ -62,11 +62,15 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 - ✅ 0.1 Connexion Google ↔ Claude (clé Google Cloud `clasp-theo`, § 5)
 - ✅ 0.2 Code des scripts rangé dans le dépôt privé `app_scripts`
 - ✅ 0.3a Audit complet de Versus et de l'onglet Moi
-- 🔧 0.3b **Une seule adresse par script** : ✅ toutes les anciennes adresses servent le même code · ⬜ **toi** : Réglages → vider « Adresse de l'API » → Enregistrer · ⬜ plus tard : supprimer les anciennes adresses.
-- 🔧 0.4 **Un seul numéro de version** : fichier `version.js` (le seul endroit à changer), lu par l'appli et par le hors connexion. Version **12.2**. ✅ testé · ✅ mise en ligne · ⬜ **toi** : Réglages affiche « Versus 12.2 ».
+- ✅ 0.3b **Une seule adresse par script** : toutes les anciennes adresses servent le même code. À chaque mise à jour, Claude met à jour **toutes** les adresses d'un coup (donc plus jamais de téléphone en retard). Les supprimer : plus tard, optionnel.
+- ✅ 0.4 **Un seul numéro de version** : fichier `version.js` (le seul endroit à changer), lu par l'appli et le hors connexion. Version **12.2** en ligne, vérifiée par Théo le 05/11 (mise à jour arrivée toute seule).
 
 ### Phase 1 · Classement Versus
-- ⬜ 1.1 Données : corriger la confusion « joueur affiché = joueur connecté » (lignes de Théo enregistrées sous Kévin), bloquer les écritures en mode simulation, nettoyer la ligne fausse de Kévin.
+- 🟡 1.1 **Qui suis-je ?** (données mal enregistrées)
+  - Constat : en admin, toucher « Kévin » dans le classement faisait croire à l'appli que tu *étais* Kévin → tes lignes de bourse d'octobre enregistrées sous Kévin (ligne 3 de « Lignes app »), cartes cachées de Kévin visibles.
+  - Correction : pour tout ce qui est **à toi** (lignes, badge million, écurie, cartes, duels), l'appli utilise toujours **ton joueur** (Théo). Toucher un nom ne change plus que **l'affichage**. Pour voir l'appli comme un autre : Réglages → « Voir comme un joueur » (rien n'est envoyé).
+  - Et : le mode « Voir comme un joueur » / date simulée ne peut plus rien envoyer (relevé, clé, lignes, million, taux).
+  - Nettoyage : supprimer la ligne 3 de « Lignes app » (Kévin, 202610) ; Kévin re-partagera ses lignes.
 - ⬜ 1.2 Sécurité : clé jamais dans l'adresse, vrai anti-force brute, badges vérifiés par le serveur.
 - ⬜ 1.3 Fiabilité : délai max d'envoi, vrais messages d'erreur, double envoi, petits bugs de saisie, MWR.
 - ⬜ 1.4 Hors connexion : cache qui ne gonfle plus, mise à jour même sur réseau lent.
