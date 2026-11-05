@@ -669,8 +669,7 @@ async function charger(frais) {
   const minuteur = setTimeout(() => { if (ctrl) ctrl.abort(); }, 25000);
   try {
     const url = adresse();
-    const rep = await fetch(url + (url.includes("?") ? "&" : "?") + "action=data&cle=" + encodeURIComponent(cle()) + (frais ? "&frais=1" : ""), { cache: "no-store", signal: ctrl ? ctrl.signal : undefined });
-    const json = await rep.json();
+    const json = await lireApi(url, cle(), "data", { frais: !!frais }, ctrl ? ctrl.signal : undefined);   // clé hors de l'adresse (POST)
     if (!json.ok) {
       if (json.erreur === "cle") { stock.del(K.cle); erreur = json.message || "Clé refusée par ton fichier."; return; }
       throw new Error(json.message || "Réponse inattendue de ton fichier");
@@ -3253,7 +3252,7 @@ window.Moi = {
   oublier() { [K.api, K.cle, K.cache].forEach(k => stock.del(k)); M = null; SRC = ""; erreur = ""; signalerCloche(); },
   async tester(url, k) {
     try {
-      const j = await (await fetch(url + (url.includes("?") ? "&" : "?") + "action=ping&cle=" + encodeURIComponent(k), { cache: "no-store" })).json();
+      const j = await lireApi(url, k, "ping");
       return j.ok ? { ok: true, message: "Ton fichier répond (API version " + (j.version || "?") + ")." } : { ok: false, message: j.message || "Clé refusée." };
     } catch (e) { return { ok: false, message: "Impossible de joindre cette adresse : vérifie qu'elle finit par /exec et que le déploiement est en accès « Tout le monde »." }; }
   },

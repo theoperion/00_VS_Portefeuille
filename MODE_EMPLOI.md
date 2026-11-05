@@ -47,7 +47,7 @@ Où est le code :
 | Script | Adresse officielle | État |
 |---|---|---|
 | Versus | `…xVNsHSYT…`, inscrit dans le code | ✅ Les 26 anciennes adresses donnent le même code (marquées « ancienne adresse » dans Apps Script) |
-| Moi · Théo | déploiement n°13 (`…wUZGrzfS…`) | ✅ Les 5 anciennes adresses donnent le même code |
+| Moi · Théo | `…wUZGrzfS…` | ✅ Les 5 anciennes adresses donnent le même code |
 | Moi · Clément | `…yue_yIcK…` | à rattacher (phase 4) |
 | Moi · Devlin | `…z2q12dXu…` | à rattacher (phase 4) |
 | Moi · Kévin (profil simple) | `…zucvUCgb…` | à rattacher (phase 2) |
@@ -66,7 +66,7 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 - ✅ 0.4 **Un seul numéro de version** : fichier `version.js` (le seul endroit à changer), lu par l'appli et le hors connexion. Version **12.2** en ligne, vérifiée par Théo le 05/11 (mise à jour arrivée toute seule).
 
 ### Phase 1 · Classement Versus
-- 🔧 1.1 **Qui suis-je ?** (données mal enregistrées) · ✅ code en ligne (v12.3) · ✅ ligne fausse supprimée · ⬜ **toi** : vérifier
+- ✅ 1.1 **Qui suis-je ?** · validé par Théo le 05/11/2026
   - Constat : en admin, toucher « Kévin » dans le classement faisait croire à l'appli que tu *étais* Kévin → tes lignes de bourse d'octobre enregistrées sous Kévin (ligne 3 de « Lignes app »), cartes cachées de Kévin visibles.
   - Correction : pour tout ce qui est **à toi** (lignes, badge million, écurie, cartes, duels), l'appli utilise toujours **ton joueur** (Théo). Toucher un nom ne change plus que **l'affichage**. Pour voir l'appli comme un autre : Réglages → « Voir comme un joueur » (rien n'est envoyé).
   - Et : le mode « Voir comme un joueur » / date simulée ne peut plus rien envoyer (relevé, clé, lignes, million, taux).
@@ -74,7 +74,11 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
   - Et (serveur Versus V14) : avec la clé admin, **impossible** d'agir au nom d'un autre joueur (écurie, cartes, duels, lignes, badge million) ni de recevoir ses cartes cachées. Seule exception gardée : saisir un relevé en secours.
   - Et : le **mode admin s'éteint quand tu fermes l'appli** (et une date simulée oubliée est effacée à l'ouverture). Il ne sert plus qu'à : voir/régler les étapes à venir, gérer les codes, saisir un relevé en secours.
   - Nettoyage : supprimer la ligne 3 de « Lignes app » (Kévin, 202610) ; Kévin re-partagera ses lignes.
-- ⬜ 1.2 Sécurité : clé jamais dans l'adresse, vrai anti-force brute, badges vérifiés par le serveur.
+- 🔧 1.2 **Sécurité** · ✅ en ligne (appli v12.5, Versus V15, Moi Théo V11) · ⬜ **toi** : vérifier
+  - La clé n'est plus jamais écrite dans l'adresse des requêtes (lecture en POST). Les anciens fichiers Moi (Clément, Devlin, Kévin) continuent de marcher : l'appli repasse à l'ancienne méthode pour eux jusqu'à leur mise à jour (phase 2/4).
+  - Anti-force brute : la **bonne clé passe toujours**, même si quelqu'un a tapé 10 mauvaises clés (avant, ton fichier Moi te bloquait 15 min). Les codes des joueurs (8 caractères tirés au hasard) sont impossibles à deviner.
+  - Clé admin : **12 caractères minimum** pour toute nouvelle clé (avant 6).
+  - Reporté en phase 3 (règles du Podium) : vérification par le serveur du badge « Premier millionnaire » et des exclusifs (ce sont des règles de jeu, on les tranche avec le reste).
 - ⬜ 1.3 Fiabilité : délai max d'envoi, vrais messages d'erreur, double envoi, petits bugs de saisie, MWR, lien de l'appli dans les e-mails de rappel (pointe vers `VS_Portefeuille` au lieu de `00_VS_Portefeuille`).
 - ⬜ 1.4 Hors connexion : cache qui ne gonfle plus, mise à jour même sur réseau lent.
 - ⬜ 1.5 Ménage : script mort « Script par mois », code mort, stockage des cartes.
@@ -87,7 +91,7 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 
 ### Phase 3 · Podium (novembre)
 - ⬜ 3.1 Écrire les règles en clair ici, les valider ensemble **avant** de coder.
-- ⬜ 3.2 Coder, tester avec une date simulée, ouvrir.
+- ⬜ 3.2 Coder, tester avec une date simulée, ouvrir. Inclut : badge million et exclusifs vérifiés par le serveur (anti-triche).
 - ⬜ 3.3 Quand toutes les fonctionnalités sont sorties (vers février 2027) : supprimer l'aperçu des étapes à venir ; il ne reste en admin que les codes et la saisie de secours.
 
 ### Phase 4 · Transferts (quand tout est rodé)
@@ -128,3 +132,5 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 1.1 | Ligne 3 de « Lignes app » (Kévin, 202610, contenait le portefeuille de Théo) supprimée à la demande de Théo ; copie de sauvegarde dans `app_scripts/audits/sauvegardes/` |
 | 05/11/2026 | 1.1 | Serveur Versus V14 (version Google n°28, sur les 26 adresses) : l'admin reste Théo. Outil `app_scripts/outils/deployer.py` pour les mises en ligne. Note : une version n°29 vide a été créée par erreur (même code, inutilisée) |
 | 05/11/2026 | 1.1 | v12.4 : suppression de « Je suis », « Je joue en tant que » et du choix du joueur dans la vue joueur (testé par Théo : mode admin bien éteint à la réouverture) |
+| 05/11/2026 | 1.1 | ✅ Validé par Théo |
+| 05/11/2026 | 1.2 | Sécurité : lecture en POST, bonne clé jamais bloquée, clé admin ≥ 12. Appli v12.5 ; Versus V15 (version Google 30) ; Moi Théo V11 (version Google 14) |

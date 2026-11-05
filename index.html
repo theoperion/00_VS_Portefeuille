@@ -1383,6 +1383,18 @@ function appliquerAccent(a) {
 }
 
 /* ---------- Données ---------- */
+/** Lecture d'une API Apps Script sans mettre la clé dans l'adresse (POST).
+    Repli en GET pour un ancien script qui ne connaît pas encore la lecture en POST (fichiers Moi pas encore mis à jour). */
+async function lireApi(url, cle, action, extra, signal) {
+  const corps = Object.assign({ cle: cle, action: action }, extra || {});
+  const j = await (await fetch(url, { method: "POST", body: JSON.stringify(corps), signal: signal })).json();
+  if (j && !j.ok && (j.erreur === "format" || /inconnu/i.test(j.message || ""))) {
+    const q = Object.keys(corps).filter(k => corps[k] !== undefined && corps[k] !== null && corps[k] !== "" && corps[k] !== false)
+      .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(corps[k] === true ? "1" : corps[k])).join("&");
+    return (await fetch(url + (url.includes("?") ? "&" : "?") + q, { cache: "no-store", signal: signal })).json();
+  }
+  return j;
+}
 function apiUrl() { return (stock.get(CLES.api) || API_URL || "").trim(); }
 async function charger(frais) {
   const url = apiUrl();
@@ -1393,9 +1405,8 @@ async function charger(frais) {
   try {
     if (navigator.onLine === false) throw new Error("Hors connexion");
     const ab = window.AbortController ? new AbortController() : null, minu = ab ? setTimeout(() => ab.abort(), 20000) : null;
-    const rep = await fetch(url + (url.includes("?") ? "&" : "?") + "action=data&cle=" + encodeURIComponent(cle) + (frais ? "&frais=1" : "") + (moiVrai() ? "&moi=" + encodeURIComponent(moiVrai()) : ""), { cache: "no-store", signal: ab ? ab.signal : undefined });
+    const json = await lireApi(url, cle, "data", { frais: !!frais, moi: moiVrai() || undefined }, ab ? ab.signal : undefined);
     clearTimeout(minu);
-    const json = await rep.json();
     if (!json.ok) {
       if (json.erreur === "cle" || json.erreur === "bloque") { stock.del(CLES.cle); ouvrirCle(json.message); return; }
       if (json.erreur === "config") { stock.del(CLES.cle); ouvrirCle("", true); return; }
@@ -1435,7 +1446,7 @@ $("#form-cle").addEventListener("submit", async e => {
   const v = $("#champ-cle").value.trim();
   if (!v) { $("#err-cle").textContent = "Saisis la clé d'accès."; return; }
   if (CREATION) {
-    if (v.length < 6) { $("#err-cle").textContent = "La clé doit faire au moins 6 caractères."; return; }
+    if (v.length < 12) { $("#err-cle").textContent = "La clé doit faire au moins 12 caractères."; return; }
     if (v !== $("#champ-cle2").value.trim()) { $("#err-cle").textContent = "Les deux saisies ne correspondent pas."; return; }
     $("#valider-cle").disabled = true;
     let rep;
@@ -4852,7 +4863,7 @@ $("#moi-tester").addEventListener("click", async () => {
   if (!adresseFichierValide(a) || !k) { $("#moi-etat").textContent = "Renseigne l'adresse (/exec) et la clé pour tester."; return; }
   $("#moi-etat").textContent = "Test en cours…";
   let rep;
-  try { const j = await (await fetch(a + (a.includes("?") ? "&" : "?") + "action=ping&cle=" + encodeURIComponent(k), { cache: "no-store" })).json(); rep = j.ok ? "Ton fichier répond (API version " + (j.version || "?") + ")." : (j.message || "Clé refusée."); }
+  try { const j = await lireApi(a, k, "ping"); rep = j.ok ? "Ton fichier répond (API version " + (j.version || "?") + ")." : (j.message || "Clé refusée."); }
   catch (e) { rep = "Impossible de joindre cette adresse : vérifie qu'elle finit par /exec et que le déploiement est en accès « Tout le monde »."; }
   $("#moi-etat").textContent = rep;
 });
@@ -4880,7 +4891,7 @@ $("#changer-cle").addEventListener("click", async () => {
   const n = $("#champ-nouvelle-cle").value.trim();
   if (simulation()) { $("#etat-source").textContent = MSG_SIMULATION; return; }
   if (SOURCE !== "api") { $("#etat-source").textContent = "Configure d'abord l'adresse de l'API."; return; }
-  if (n.length < 6) { $("#etat-source").textContent = "La nouvelle clé doit faire au moins 6 caractères."; return; }
+  if (n.length < 12) { $("#etat-source").textContent = "La nouvelle clé doit faire au moins 12 caractères."; return; }
   let rep;
   try { rep = await (await fetch(apiUrl(), { method: "POST", body: JSON.stringify({ cle: stock.get(CLES.cle), action: "changerCle", nouvelleCle: n }) })).json(); }
   catch (e) { rep = { ok: false, message: "Impossible de joindre l'API." }; }
