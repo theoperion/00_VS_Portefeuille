@@ -4755,7 +4755,8 @@ async function envoyerReleve(forcer) {
   if (R.envoi) return;   // déjà en cours : pas de double envoi (ex. double appui sur « Enregistrer quand même »)
   const valeurs = R.v.map(t => { const n = lireNb(t); return ok(n) ? n : null; });
   if (simulation()) { toast(MSG_SIMULATION); return; }
-  if (SOURCE !== "api") { toast(SOURCE === "demo" ? "Aperçu : le relevé est contrôlé mais rien n'est écrit sans adresse d'API." : "Hors connexion : le relevé n'a pas été envoyé."); if (SOURCE === "demo") $("#saisie").hidden = true; return; }
+  if (SOURCE === "cache" && EN_CHARGEMENT) { toast("Mise à jour des chiffres en cours : réessaie dans quelques secondes."); return; }
+  if (SOURCE !== "api") { toast(SOURCE === "demo" ? "Aperçu : le relevé est contrôlé mais rien n'est écrit sans adresse d'API." : ERREUR_SERVEUR ? "Le fichier a répondu par une erreur : le relevé n'a pas été envoyé." : "Hors connexion : le relevé n'a pas été envoyé."); if (SOURCE === "demo") $("#saisie").hidden = true; return; }
   R.envoi = true; R.erreur = ""; majSaisie(null);
   let rep;
   try { rep = await envoyerApi(apiUrl(), { cle: stock.get(CLES.cle), action: "releve", personne: R.nom, mois: R.k, valeurs, forcer: !!forcer }); }

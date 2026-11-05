@@ -3238,11 +3238,7 @@ window.Moi = {
   prechauffer() { injecterStyle(); if (!configure()) { signalerCloche(); return; } lireCache(); signalerCloche(); if (Date.now() - dernierAppel > 5 * 60e3) charger(false); },
   notifications: htmlNotifications,
   saisir(partiel, onglet) { lireCache(); if (M && M.simple) ouvrirSoldes(); else ouvrirSaisieM(partiel, onglet); },
-  anneesPrivees() { lireCache(); return configure() ? anneesPrivees() : []; },
-  bilanPrive(an) { lireCache(); if (M) ouvrirDiapos("Mon patrimoine · " + an, diaposPrivees(an)); },
-  million(el) { afficherMillion(el); },
   rafraichir(frais) { if (configure()) { rendre(); charger(!!frais); } },
-  configure,
   connecter(url, k) {
     url = String(url || "").trim();
     if (url) stock.set(K.api, url);
@@ -3250,12 +3246,5 @@ window.Moi = {
     if (url || k) { M = null; SRC = ""; erreur = ""; dernierAppel = 0; stock.del(K.cache); }
   },
   oublier() { [K.api, K.cle, K.cache].forEach(k => stock.del(k)); M = null; SRC = ""; erreur = ""; signalerCloche(); },
-  async tester(url, k) {
-    try {
-      const j = await lireApi(url, k, "ping");
-      return j.ok ? { ok: true, message: "Ton fichier répond (API version " + (j.version || "?") + ")." } : { ok: false, message: j.message || "Clé refusée." };
-    } catch (e) { return { ok: false, message: "Impossible de joindre cette adresse : vérifie qu'elle finit par /exec et que le déploiement est en accès « Tout le monde »." }; }
-  },
-  etat() { return { configure: configure(), adresse: adresse(), aUneCle: !!cle(), maj: M ? M.majTexte : "" }; }
 };
 })();

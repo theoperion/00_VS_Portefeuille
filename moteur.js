@@ -13,7 +13,6 @@
 const ENVELOPPES = ["Portefeuille", "PEA", "Assurance vie", "CTO", "Crypto"];
 
 function cleMoins(k, n) { let y = Math.floor(k / 100), m = k % 100 - n; while (m <= 0) { m += 12; y--; } while (m > 12) { m -= 12; y++; } return y * 100 + m; }
-function cleVersDate(k) { const y = Math.floor(k / 100), m = k % 100; return new Date(y, m, 0); }
 function cleDeIso(iso) { return iso ? +iso.slice(0, 4) * 100 + +iso.slice(5, 7) : 0; }
 
 /** Série d'une personne pour une enveloppe : [{k, d, verse, val, gain, r, cum, brut}] */
@@ -190,18 +189,5 @@ function palmares(D, e, idx1, idx2) {
   });
 }
 
-/** Projection d'objectif : valeur actuelle capitalisée au taux mensuel, versement en fin de mois */
-function projection(valeur, versement, rendement, depuisK, jusquaIso) {
-  const fin = cleDeIso(jusquaIso);
-  const tm = Math.pow(1 + (rendement || 0), 1 / 12) - 1;
-  const pts = [{ k: depuisK, v: valeur }];
-  let v = valeur, k = depuisK, garde = 0;
-  while (k < fin && garde++ < 600) {
-    k = cleMoins(k, -1);
-    v = v * (1 + tm) + (versement || 0);
-    pts.push({ k: k, v: v });
-  }
-  return pts;
-}
 
-if (typeof module !== "undefined") module.exports = { ENVELOPPES, serie, finGlobale, debutPeriode, stats, statsIndice, palmares, projection, cleMoins, cleVersDate, xirr };
+if (typeof module !== "undefined") module.exports = { ENVELOPPES, serie, finGlobale, debutPeriode, stats, statsIndice, palmares, cleMoins, xirr };

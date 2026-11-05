@@ -12,13 +12,14 @@ self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(l => Promise.all(l.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 function delai(ms) { return new Promise((_, rej) => setTimeout(() => rej(new Error("lent")), ms)); }
-async function reseauDabord(req, ms) {
+async function reseauDabord(e, ms) {
+  const req = e.request;
+  const frais = (req.mode === "navigate" ? fetch(req.url, { cache: "no-cache", credentials: "same-origin" }) : fetch(req, { cache: "no-cache" }))   // revalide auprès de GitHub
+    .then(rep => { if (rep && rep.ok) { const copie = rep.clone(); return caches.open(VERSION).then(c => c.put(req, copie)).then(() => rep); } return rep; });
+  e.waitUntil(frais.catch(() => null));   // réseau lent : la nouvelle version est gardée même si elle arrive après le délai
   const cache = await caches.open(VERSION);
   try {
-    const frais = req.mode === "navigate" ? fetch(req.url, { cache: "no-cache", credentials: "same-origin" }) : fetch(req, { cache: "no-cache" });   // revalide auprès de GitHub
-    const rep = await Promise.race([frais, delai(ms)]);
-    if (rep && rep.ok) cache.put(req, rep.clone());
-    return rep;
+    return await Promise.race([frais, delai(ms)]);
   } catch (err) {
     const c = await cache.match(req, { ignoreSearch: req.mode === "navigate" }) || (req.mode === "navigate" ? await cache.match("index.html") : null);
     if (c) return c;
@@ -37,6 +38,6 @@ self.addEventListener("fetch", e => {
   if (u.hostname === "fonts.googleapis.com" || u.hostname === "fonts.gstatic.com") { e.respondWith(cacheDabord(req)); return; }
   if (u.origin !== self.location.origin) return;
   if (u.pathname.endsWith("version.js") && u.search) return;   // vérification de mise à jour : jamais gardée (sinon le cache gonfle)
-  if (req.mode === "navigate" || /\.(html|js)$/.test(u.pathname) || u.pathname.endsWith("/")) { e.respondWith(reseauDabord(req, 4000)); return; }
+  if (req.mode === "navigate" || /\.(html|js)$/.test(u.pathname) || u.pathname.endsWith("/")) { e.respondWith(reseauDabord(e, 4000)); return; }
   e.respondWith(cacheDabord(req));
 });

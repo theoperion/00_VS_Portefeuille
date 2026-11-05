@@ -79,7 +79,7 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
   - Anti-force brute : la **bonne clé passe toujours**, même si quelqu'un a tapé 10 mauvaises clés (avant, ton fichier Moi te bloquait 15 min). Les codes des joueurs (8 caractères tirés au hasard) sont impossibles à deviner.
   - Clé admin : **12 caractères minimum** pour toute nouvelle clé (avant 6).
   - Reporté en phase 3 (règles du Podium) : vérification par le serveur du badge « Premier millionnaire » et des exclusifs (ce sont des règles de jeu, on les tranche avec le reste).
-- 🔧 1.3 **Fiabilité** · ✅ en ligne (appli v12.6, Versus V16) · ⬜ **toi** : vérifier
+- ✅ 1.3 **Fiabilité** · validé par Théo le 05/11/2026
   - Délai maximal de 30 s sur tous les envois : plus d'« Enregistrement… » sans fin, un message clair à la place.
   - Si le fichier répond par une erreur, le bandeau affiche **cette erreur** (avant : « 📴 Hors connexion », trompeur).
   - Plus de double envoi avec « Enregistrer quand même ».
@@ -88,8 +88,16 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
   - Récap des lignes : un code bizarre ne peut plus le faire planter.
   - **MWR** : désormais **cumulé sur la période** (comparable au TWR juste à côté ; avant, annualisé au-delà d'un an), versements comptés en milieu de mois comme dans le Sheet, et calculé même sur un mois crypto à ±50 %.
   - E-mails de rappel : le lien ouvre bien l'appli (`00_VS_Portefeuille`).
-- ⬜ 1.4 Hors connexion : cache qui ne gonfle plus, mise à jour même sur réseau lent.
-- ⬜ 1.5 Ménage : script mort « Script par mois », code mort, stockage des cartes.
+- 🔧 1.4 **Hors connexion** · ✅ en ligne (v12.7) · ⬜ **toi** : vérifier
+  - Sur réseau lent, l'appli s'ouvre tout de suite avec la copie du téléphone **et** garde la nouvelle version pour la prochaine ouverture (avant : elle restait bloquée sur l'ancienne).
+  - Cache qui ne gonfle plus (fait en 0.4).
+  - Au démarrage, pendant la mise à jour des chiffres, un relevé n'est plus refusé « Hors connexion » : message « réessaie dans quelques secondes ».
+- 🔧 1.5 **Ménage** · ✅ en ligne (v12.7, Versus V17) · ⬜ **toi** : vérifier
+  - « Script par mois » supprimé (il écrivait dans un onglet qui n'existe plus). Si son déclencheur traînait encore, il se retire tout seul à sa prochaine exécution.
+  - Cartes et duels rangés **une case par saison** (avant : une seule case limitée à 9 Ko, pleine vers 2030). Les anciennes données sont reprises automatiquement.
+  - Code jamais utilisé retiré (moteur de calcul, onglet Moi).
+  - Laissé volontairement (sans risque, à revoir au découpage 5.1) : branches du mode « démo », restes de la carte « Huile », quelques styles inutilisés, doublons internes de l'onglet Moi.
+  - Les 25 anciennes adresses Versus et 4 adresses Moi : gardées (elles servent le même code). À supprimer seulement quand tout le monde sera sûr d'utiliser l'officielle.
 
 ### Phase 2 · Onglet Moi
 - ⬜ 2.1 Comprendre et documenter **le lien automatique de fin de mois** (Moi → Versus) : qui envoie quoi, quand ; pourquoi il n'a tourné que pour Théo en octobre.
@@ -144,3 +152,6 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 1.2 | Sécurité : lecture en POST, bonne clé jamais bloquée, clé admin ≥ 12. Appli v12.5 ; Versus V15 (version Google 30) ; Moi Théo V11 (version Google 14) |
 | 05/11/2026 | 1.2 | ✅ Validé par Théo |
 | 05/11/2026 | 1.3 | Fiabilité : délais d'envoi, vraie erreur affichée, double envoi, saisie des nombres, MWR cumulé (milieu de mois), lien des e-mails. Appli v12.6 ; Versus V16 (version Google 31) |
+| 05/11/2026 | 1.3 | ✅ Validé par Théo |
+| 05/11/2026 | 1.4 | Hors connexion : nouvelle version gardée même sur réseau lent. Appli v12.7 |
+| 05/11/2026 | 1.5 | Ménage : « Script par mois » supprimé, cartes/duels par saison, code mort retiré. Versus V17 (version Google 32) |
