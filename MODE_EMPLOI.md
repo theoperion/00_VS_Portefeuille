@@ -161,9 +161,34 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 **Phase 3 terminée ✅** (05/11/2026).
 - ⬜ 3.3 Quand toutes les fonctionnalités sont sorties (vers février 2027) : supprimer l'aperçu des étapes à venir ; il ne reste en admin que les codes et la saisie de secours.
 
-### Phase 4 · Transferts (quand tout est rodé)
-- ⬜ 4.1 Mode d'emploi « transférer » : Sheet + script + dépôt à Clément, puis Devlin (Kévin reste hébergé chez Théo).
-- ⬜ 4.2 Mode d'emploi « reconnecter » : nouvelle adresse dans Réglages → Moi, nouvelle clé.
+### Phase 4 · Transferts (Clément et Devlin ; Kévin reste chez Théo)
+
+- 🟡 4.0 **Mettre à jour leurs scripts avant le transfert** (mêmes corrections que celui de Théo : sécurité V11, bugs V12). Il faut l'**ID du script** de chacun (fichier → Extensions → Apps Script → ⚙️ Paramètres du projet).
+- 🟡 4.1 **Décisions** : Théo reste-t-il **éditeur** des fichiers transférés ? Les dépôts GitHub de leurs applis budget (`05_…Clement`, `06_…Devlin`) partent-ils maintenant ou après la phase 5 ?
+- ⬜ 4.2 Transfert de Clément · ⬜ 4.3 Transfert de Devlin
+
+#### 🔁 Transférer un fichier « Portefeuille & Épargne » à un ami (≈ 5 min)
+
+> Ce qui se passe : le fichier (et son script, qui le suit) devient **à lui**. Si tu restes **éditeur**, **rien d'autre ne change** : même adresse, même clé, relevé automatique de fin de mois toujours actif, et Claude peut toujours entretenir le script.
+
+1. **Claude** met à jour son script (étape 4.0).
+2. **Toi** : Google Drive → clic droit sur le fichier → **Partager** → ajoute son adresse en **Éditeur** (s'il n'y est pas) → **Envoyer**.
+3. **Toi** : dans la même fenêtre, menu à côté de son nom → **Transférer la propriété** → **Envoyer l'invitation**.
+4. **Lui** : il reçoit un e-mail « invitation à devenir propriétaire » → **Accepter**. Il ne doit **pas** te retirer l'accès.
+5. **Vérifier** : son onglet Moi s'ouvre normalement ; dans tes Réglages (admin) → « Relevés automatiques » → **Tester** : il apparaît « OK ».
+
+**S'il veut un jour te retirer complètement** (plus d'accès pour toi) :
+- dans son fichier : Extensions → Apps Script → **Déployer → Nouveau déploiement** (type « Application Web », exécuter en tant que **moi**, accès **Tout le monde**) → copier l'adresse `/exec` ;
+- dans **son** appli : Réglages → Moi → coller cette nouvelle adresse (même clé) → Tester ;
+- son relevé Versus de fin de mois redevient **manuel** (Claude le retire de la liste des fichiers reliés).
+
+#### 🔁 Transférer un dépôt GitHub (une appli) à un ami
+
+1. Il crée un compte GitHub (gratuit) et te donne son **nom d'utilisateur**.
+2. **Toi** : sur github.com, le dépôt → **Settings** → tout en bas **Transfer ownership** → tape son nom d'utilisateur → confirme.
+3. **Lui** : il accepte l'invitation reçue par e-mail, puis dans le dépôt → **Settings → Pages** : vérifier que la branche `main` est publiée.
+4. ⚠️ **L'adresse de l'appli change** : `https://SON-NOM.github.io/NOM-DU-DÉPÔT/`. Il ouvre la nouvelle adresse, l'**installe** sur son téléphone (Partager → Sur l'écran d'accueil) et **ressaisit** dans Réglages l'adresse de son API et sa clé (les réglages ne suivent pas : nouvelle adresse = nouvel espace sur le téléphone). Il peut supprimer l'ancienne icône.
+5. Pour que Claude continue à l'aider, il l'ajoute (ou t'ajoute) en **collaborateur** : Settings → Collaborators.
 
 ### Phase 5 · Plus tard
 - ⬜ 5.1 Découper `index.html` (5 000 lignes) en fichiers plus petits.
@@ -225,3 +250,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 3.3 | Anti-triche : exclusifs calculés et figés par le serveur (partagés si même mois), badge millionnaire vérifié. Appli v13.6 ; Versus V22 (version Google 37) |
 | 05/11/2026 | — | Correctif v13.7 : ta ligne du Podium (et ta voiture, ton étiquette « moi ») prenait les styles de l'onglet Moi après sa visite (score décalé, rond gris). Classe renommée. |
 | 05/11/2026 | 3.6, 3.7 | Carte postale du mois ; vote de fin de saison. Appli v13.9 ; Versus V23 (version Google 38). **Phase 3 terminée** |
+| 05/11/2026 | 4 | Mode d'emploi des transferts (fichier Google, dépôt GitHub, reconnexion) ; état des accès relevé (fichiers de Clément et Devlin à Théo ; Clément éditeur du sien, Devlin sans accès) |
