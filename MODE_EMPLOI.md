@@ -28,7 +28,7 @@ Téléphone (appli GitHub Pages : ce dépôt)
 - [x] On commence par **Versus**, puis les autres applis une par une, chacune avec son `MODE_EMPLOI.md`.
 - [x] Les dépôts restent **publics** (GitHub Pages gratuit), mais on **sort l'adresse et la clé de l'API du code**.
 - [x] Le code Apps Script sera **rangé dans GitHub** et envoyé chez Google automatiquement (outil `clasp`), fini les copier-coller.
-- [x] Connexion Google ↔ Claude faite avec **ta propre clé Google Cloud** (projet `clasp-theo`, compte theo.perion2@gmail.com, mode « Test »). Voir § 6.
+- [x] Connexion Google ↔ Claude faite avec **ta propre clé Google Cloud** (projet `clasp-theo`, ton compte Google principal, mode « Test »). Voir § 6.
 - [x] Transfert plus tard (quand les applis seront rodées) à Clément (frère), Devlin et Carla : Sheet + Apps Script + dépôt GitHub.
 
 ## 4. À faire ⏳
@@ -42,21 +42,21 @@ Téléphone (appli GitHub Pages : ce dépôt)
 - [ ] Sortir l'adresse API du code
 - [ ] Étape « transférer la propriété » et « reconnecter les applis »
 
-## 6. Connexion Google (clasp) : ce qui existe
-
-| Élément | Valeur |
-|---|---|
-| Projet Google Cloud | `clasp-theo` (console.cloud.google.com) |
-| Compte | theo.perion2@gmail.com (ajouté en « utilisateur test ») |
-| Script Versus | ID `1B_mjBofeUgigFcVvN5GpWVO-DU-fmVMZ_dIuDhBJCtwgkCZbkixEFlpE` · déploiement utilisé : version 27 |
-| Script Portefeuille & Épargne (Théo) | ID `1Cq2SGenlMeTyU5BtKR9i-GCaG8sPT6Co763rMu3S7NYmY4gZxpepOZOW` · dernière version : 13 |
-
-**Si Claude n'arrive plus à se connecter** (le mode « Test » fait expirer l'accès au bout de 7 jours) : demande-lui « refais la connexion clasp ». Il te donne un lien, tu cliques « Continuer », tu lui recolles l'adresse `localhost:8888/...`.
-**Retirer l'accès** : https://myaccount.google.com/permissions → « Mes applis Theo » → Supprimer l'accès.
-
-## 5. Journal des modifications
+## 6. Journal des modifications
 
 | Date | Quoi |
 |---|---|
 | 05/11/2026 | Création de ce mode d'emploi |
 | 05/11/2026 | Connexion Google (clasp) ; code et structure des Sheets récupérés ; audit lancé |
+
+## 5. Connexion Google (clasp) : ce qui existe
+
+| Élément | Valeur |
+|---|---|
+| Projet Google Cloud | `clasp-theo` (console.cloud.google.com) |
+| Compte | ton compte Google principal (ajouté en « utilisateur test ») |
+| Script Versus | ID `1B_mjBofeUgigFcVvN5GpWVO-DU-fmVMZ_dIuDhBJCtwgkCZbkixEFlpE` · déploiement utilisé : version 27 |
+| Script Portefeuille & Épargne (Théo) | ID `1Cq2SGenlMeTyU5BtKR9i-GCaG8sPT6Co763rMu3S7NYmY4gZxpepOZOW` · dernière version : 13 |
+
+**Si Claude n'arrive plus à se connecter** (le mode « Test » fait expirer l'accès au bout de 7 jours) : demande-lui « refais la connexion clasp ». Il te donne un lien, tu cliques « Continuer », tu lui recolles l'adresse `localhost:8888/...`.
+**Retirer l'accès** : https://myaccount.google.com/permissions → « Mes applis Theo » → Supprimer l'accès.
