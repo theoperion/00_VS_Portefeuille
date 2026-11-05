@@ -69,10 +69,10 @@ Dernier du mois → **1 carte bonus**, jouable dès le mois suivant, **une fois 
 - **👑 Premier millionnaire** : 1 000 000 € de **patrimoine financier** (pas l'immobilier ; le montant n'est jamais montré).
 - **Anti-triche** ✅ : le serveur refait le calcul et décide lui-même (exclusifs, badge millionnaire).
 
-## ⏳ À venir
+## 📸 Carte postale et 🗳️ vote
 
-- 📸 **Carte postale** : le 2 du mois, une image du mois prête à partager.
-- 🗳️ **Vote de fin de saison** : en décembre, « le coup de la saison » gagne un objet d'écurie unique.
+- **Carte postale** : sous la course du Podium, une image du mois prête à partager.
+- **Vote de fin de saison** (2 au 31 décembre, dans le Stand) : chacun vote pour « le coup de la saison » (pas pour soi). Résultat le 1er janvier ; le gagnant (égalité : chacun) reçoit la plaque **« Coup de la saison »**.
 
 ---
 

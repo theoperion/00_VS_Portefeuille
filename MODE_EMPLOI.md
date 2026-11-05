@@ -155,7 +155,10 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 - ✅ 3.3 **Anti-triche + exclusifs partagés** (appli v13.6, Versus V22) : le serveur refait **le même calcul** que l'appli (code extrait automatiquement à chaque mise en ligne : `app_scripts/versus/PodiumCommun.js`), attribue et fige lui-même les exclusifs (plusieurs le même mois → chacun) ; l'appli ne peut plus en revendiquer. Badge millionnaire vérifié dans le fichier perso (Théo, Clément, Devlin ; pour Kévin, seulement via son portefeuille du Versus). Testé sur une fausse saison.
   - **Mise en ligne du script Versus** : toujours `app_scripts/outils/mettre-en-ligne-versus.sh "V… : …"` (il régénère le calcul commun avant d'envoyer).
 - ✅ 3.8 **Règles réécrites, courtes et limpides** (v13.5) : bloc « L'essentiel » en haut des règles de l'appli, détail raccourci, tutoriel en un seul écran (plus de duels) ; `REGLES_PODIUM.md` au même format.
-- ⬜ 3.6 **Carte postale du mois** · ⬜ 3.7 **Vote de fin de saison**.
+- ✅ 3.6 **📸 Carte postale du mois** (v13.8) : bouton sous la course du Podium → image du mois (Grand Prix, météo, podium et bonus, classement) à partager (WhatsApp…) ou télécharger.
+- ✅ 3.7 **🗳️ Vote de fin de saison** (v13.9, Versus V23) : du 2 au 31 décembre dans le Stand, un vote pour un autre pilote ; résultat le 1er janvier ; le gagnant (égalité : chacun) débloque la plaque « Coup de la saison ».
+
+**Phase 3 terminée ✅** (05/11/2026).
 - ⬜ 3.3 Quand toutes les fonctionnalités sont sorties (vers février 2027) : supprimer l'aperçu des étapes à venir ; il ne reste en admin que les codes et la saisie de secours.
 
 ### Phase 4 · Transferts (quand tout est rodé)
@@ -221,3 +224,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 3.8 | Règles de l'appli et tutoriel réécrits (essentiel + détail court). Appli v13.5 |
 | 05/11/2026 | 3.3 | Anti-triche : exclusifs calculés et figés par le serveur (partagés si même mois), badge millionnaire vérifié. Appli v13.6 ; Versus V22 (version Google 37) |
 | 05/11/2026 | — | Correctif v13.7 : ta ligne du Podium (et ta voiture, ton étiquette « moi ») prenait les styles de l'onglet Moi après sa visite (score décalé, rond gris). Classe renommée. |
+| 05/11/2026 | 3.6, 3.7 | Carte postale du mois ; vote de fin de saison. Appli v13.9 ; Versus V23 (version Google 38). **Phase 3 terminée** |

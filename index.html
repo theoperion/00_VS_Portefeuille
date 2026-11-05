@@ -2214,7 +2214,7 @@ const ITEMS = {
   livree: { couleur: "Couleur", chrome: "Chrome", or: "Or", neon: "Néon", arcenciel: "Prisme", oranime: "Or vivant", platine: "Platine", rubis: "Rubis", galaxie: "Galaxie", orrose: "Or rose" },
   trainee: { simple: "Simple", halo: "Halo", flammes: "Flammes", etincelles: "Étincelles", comete: "Comète", supernova: "Supernova", turbo: "Turbo", arcenciel: "Arc-en-ciel" },
   klaxon: { confettis: "Confettis", damier: "Damier", feu: "Feu d'artifice", parade: "Parade", billets: "Pluie de billets", fanfare: "Fanfare royale", cibles: "Dans le mille", fusees: "Décollage", trophees: "Pluie de trophées" },
-  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur" }
+  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison" }
 };
 const BASE_ECURIE = { casque: "uni", circuit: "classique", fond: "couleur", finition: "aucune", livree: "couleur", trainee: "simple", klaxon: "confettis", plaque: "aucune" };
 const SLOTS = [["casque", "Casque"], ["finition", "Finition"], ["fond", "Avatar"], ["livree", "Livrée"], ["trainee", "Traînée"], ["klaxon", "Klaxon"], ["plaque", "Plaque"], ["circuit", "Ambiance"]];
@@ -2225,10 +2225,12 @@ function debloques(nom) {
   DEFIS.concat(SECRETS).forEach(d => { if (e[d.id].ok) d.gain.forEach(g => o.add(g.join("."))); });
   if (D.premierMillion && D.premierMillion.nom === nom) GAINS_MILLION.forEach(g => o.add(g.join(".")));
   exclusifsDe(nom).forEach(x => o.add(x.gain.join(".")));
+  if (Object.values(D.votes || {}).some(v => (v.gagnants || []).includes(nom))) o.add("plaque.coupsaison");   // V13.9 : gagnant d'un vote de fin de saison
   return o;
 }
 /** D'où vient un objet : { defi, secret, million } */
 function origineItem(slot, id) {
+  if (slot === "plaque" && id === "coupsaison") return { vote: true };
   const ex = EXCLUSIFS.find(x => x.gain[0] === slot && x.gain[1] === id); if (ex) return { exclusif: ex };
   const de = l => l.find(d => d.gain.some(g => g[0] === slot && g[1] === id));
   const d = de(DEFIS); if (d) return { defi: d };
@@ -2449,6 +2451,7 @@ function texteOrigineItem(qui, slot, id) {
     if (d) return { t: MED_EX[x.niv] + " Exclusif " + NIV_EX[x.niv].toLowerCase() + " · " + x.nom, p: d.nom + " l'" + (d.noms.length > 1 ? "ont" : "a") + " décroché en " + moisLong(d.k) + " : " + quoi + ". Plus personne ne pourra l'avoir." };
     return { t: MED_EX[x.niv] + " Exclusif " + NIV_EX[x.niv].toLowerCase() + " · " + x.nom, p: "Encore libre : sois " + quoi + ", et il sera à toi seul." };
   }
+  if (org.vote) return { t: "Unique · Coup de la saison", p: "Gagné au 🗳️ vote de fin de saison : les autres pilotes t'ont élu pour le coup de la saison." };
   if (org.million) return { t: "Unique · Premier millionnaire", p: D.premierMillion ? (D.premierMillion.nom === qui ? "À toi : premier millionnaire du groupe." : "Réservé à " + D.premierMillion.nom + ", premier millionnaire du groupe.") : "Réservé au premier du groupe qui atteindra 1 000 000 €." };
   if (org.secret) return ouvert ? { t: "Défi secret · " + org.secret.nom, p: "Gagné en réussissant : " + org.secret.def + "." } : { t: "Défi secret", p: "Un défi caché le débloque. Personne ne sait lequel… pour l'instant." };
   if (org.defi) {
@@ -3258,7 +3261,7 @@ function htmlCartes(y) {
   return '<div><h3 class="s-h3">Mes cartes <small>' + reste + " en main" + (regleVisible("pioche") ? " · " + aVenir + " dans la pioche" : "") + "</small></h3></div>" +
     '<p class="info">Touche une carte pour la poser. Une par mois ; une carte de base se rejoue, mais pas deux mois de suite. Une carte bonus ne sert qu\'une fois.' + (regleVisible("pioche") ? (regleVisible("niveaux") ? " Tu en pioches une nouvelle à chaque niveau gagné et quand tu finis dernier d\'un mois." : " Tu en pioches une nouvelle quand tu finis dernier d\'un mois.") : "") + (ap ? " Aperçu : choisis le mois avec les puces ci-dessous ; rien n'est envoyé." : "") + "</p>" +
     (ap ? '<div class="gp-mois">' + etapesGP(y).slice(1).map(x => '<button type="button" data-gpcible="' + x.k + '" aria-pressed="' + (x.k === kOuvert) + '">' + esc(moisCourt(x.k)) + "</button>").join("") + "</div>" : "") +
-    '<div class="main-cartes">' + main.map(tuile).join("") + "</div>" + action + htmlProno(y, kOuvert) + htmlRival(y, kOuvert);
+    '<div class="main-cartes">' + main.map(tuile).join("") + "</div>" + action + htmlProno(y, kOuvert) + htmlRival(y, kOuvert) + htmlVote(y);
 }
 /* ---------- Rappels : tant que ta carte du mois n'est pas posée, on te le dit partout ---------- */
 function aujNum() { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
@@ -3378,6 +3381,8 @@ function brancherStand(v, y) {
   v.querySelectorAll("[data-pi]").forEach(b => b.addEventListener("click", () => { PRONO_I = b.dataset.pi; rendreTrophees(); }));
   const pk = v.querySelector("#prono-ok"); if (pk) pk.addEventListener("click", () => { const p = pronoDe(y, moiPilote(), kOuvert()) || {}, vv = PRONO_V || p.v || null, ii = PRONO_I || p.i || null; PRONO_V = null; PRONO_I = null; envoyerProno(y, kOuvert(), vv, ii); });
   v.querySelectorAll("[data-rs]").forEach(b => b.addEventListener("click", () => { RIVAL_CHOIX = b.dataset.rs; rendreTrophees(); }));
+  v.querySelectorAll("[data-vote]").forEach(b => b.addEventListener("click", () => { VOTE_CHOIX = b.dataset.vote; rendreTrophees(); }));
+  const vk = v.querySelector("#vote-ok"); if (vk) vk.addEventListener("click", () => { const c = VOTE_CHOIX || ((D.monVote || {})[y] || {}).c; VOTE_CHOIX = null; if (c) envoyerVote(y, c); });
   const rk = v.querySelector("#rival-ok"); if (rk) rk.addEventListener("click", () => { const r = RIVAL_CHOIX; RIVAL_CHOIX = null; if (r) choisirRival(y, r); });
   const an = v.querySelector("#c-annuler"); if (an) an.addEventListener("click", () => { CARTE_CHOIX = null; GP_RIVAL = null; rendreTrophees(); });
   const re = v.querySelector("#c-reprendre"); if (re) re.addEventListener("click", () => poserCarte(y, kOuvert(), null, null));
@@ -3594,6 +3599,7 @@ const ETAPES = [
   { id: "gpspeciaux", ico: "🏁", nom: "Silverstone et Monza", ouvre: 202701, regle: "speciaux", resume: "Juillet à Silverstone : le vainqueur du mois marque +2 de plus. Septembre à Monza : le 🎯 vaut +2 au lieu de +1." },
   { id: "prono", ico: "🔮", nom: "Le pronostic du mois", ouvre: 202701, regle: "championnat", resume: "Dans la fenêtre de ta carte : qui gagne le mois (+1 si juste) et le S&P 500 en hausse ou en baisse (+1 si juste). Secret jusqu'au 2." },
   { id: "rival", ico: "😈", nom: "Le rival de la saison", ouvre: 202701, regle: "championnat", resume: "Entre le 20 décembre et le 1er janvier, choisis un rival secret. Fin décembre, si tu finis devant lui au championnat : +5. Révélé à la Finale." },
+  { id: "vote", ico: "🗳️", nom: "Le vote de fin de saison", ouvre: 202712, regle: "speciaux", resume: "Du 2 au 31 décembre, vote pour « le coup de la saison » (pas pour toi). Résultat le 1er janvier : le gagnant reçoit la plaque « Coup de la saison »." },
   { id: "equipe", ico: "🤝", nom: "Le bonus d'équipe", ouvre: 202701, regle: "championnat", resume: "Si tous les pilotes battent le S&P 500 le même mois : +1 pour chacun." },
   { id: "serie", ico: "🔥", nom: "La série", ouvre: 202701, regle: "championnat", resume: "+1 à chaque 3e mois d'affilée où tu bats le S&P 500 (3 mois, 6 mois…). La série repart de zéro dès que tu ne le bats pas." },
   { id: "finale", ico: "🏆", nom: "La Finale", ouvre: 202712, regle: "speciaux", resume: "Décembre, dernier mois de la saison : les points de place comptent double pour tout le monde." },
@@ -3776,7 +3782,30 @@ async function choisirRival(y, r) {
   else toast(rep.message || "Choix impossible.");
   rendreTrophees();
 }
-let PRONO_V = null, PRONO_I = null, RIVAL_CHOIX = null;
+let PRONO_V = null, PRONO_I = null, RIVAL_CHOIX = null, VOTE_CHOIX = null;
+/* ---------- 🗳️ Vote de fin de saison (V13.9) ---------- */
+function voteOuvert(y) { const a = aujNum(); return a >= y * 10000 + 1202 && a <= y * 10000 + 1231; }
+function htmlVote(y) {
+  const qui = moiPilote(); if (!qui || estChauffe(y) || !regleVisible("vote") || !regleActive("vote", y * 100 + 12)) return "";
+  const res = (D.votes || {})[y] || {}, mon = apercuSaison() ? (JSON.parse(stock.get("versus.voteApercu") || "{}"))[y] : ((D.monVote || {})[y]);
+  if (res.gagnants && res.gagnants.length) return '<p class="info">🗳️ <b>Coup de la saison ' + y + "</b> : " + res.gagnants.map(n => "<b>" + esc(n) + "</b> (" + res.voix[n] + " voix)").join(" et ") + ". Plaque « Coup de la saison » débloquée.</p>";
+  if (!voteOuvert(y)) return "";
+  const c = VOTE_CHOIX || (mon && mon.c) || null, autres = D.personnes.map(p => p.nom).filter(n => n !== qui);
+  return '<div><h3 class="s-h3">🗳️ Le coup de la saison <small>' + y + "</small></h3></div>" +
+    '<div class="c-action duel"><p>Qui a fait <b>le plus beau coup</b> de la saison (la plus belle remontée, le Pari le plus osé…) ? Vote pour un autre pilote, jusqu\'au 31 décembre. Secret jusqu\'au 1<sup>er</sup> janvier ; le gagnant reçoit la plaque <b>« Coup de la saison »</b>.' + (res.participants ? " " + res.participants + " vote" + (res.participants > 1 ? "s" : "") + " déjà." : "") + "</p>" +
+    '<div class="chips" role="group" aria-label="Coup de la saison">' + autres.map(n => '<button class="chip" type="button" data-vote="' + esc(n) + '" aria-pressed="' + (c === n) + '">' + esc(n) + "</button>").join("") + "</div>" +
+    (mon && mon.c && !VOTE_CHOIX ? "<p>✓ Tu as voté pour <b>" + esc(mon.c) + "</b>.</p>" : '<button class="btn acc" type="button" id="vote-ok"' + (c ? "" : " disabled") + ">Voter" + (c ? " pour " + esc(c) : "") + "</button>") + "</div>";
+}
+async function envoyerVote(y, c) {
+  const qui = moiPilote();
+  if (apercuSaison()) { const a = JSON.parse(stock.get("versus.voteApercu") || "{}"); a[y] = { c }; stock.set("versus.voteApercu", JSON.stringify(a)); toast("Aperçu : vote enregistré sur cet appareil."); rendreTrophees(); return; }
+  if (SOURCE !== "api") { toast("Vote indisponible hors connexion."); return; }
+  if (simulation()) { toast(MSG_SIMULATION); return; }
+  const rep = await posterAdmin({ action: "vote", personne: qui, saison: y, cible: c });
+  if (rep.ok) { D.monVote = D.monVote || {}; D.monVote[y] = rep.monVote; if (rep.votes) D.votes = rep.votes; toast(rep.message || "Vote enregistré."); }
+  else toast(rep.message || "Vote impossible.");
+  rendreTrophees();
+}
 function htmlProno(y, kOuvert) {
   const qui = moiPilote(); if (!qui || !kOuvert || estChauffe(y) || !regleVisible("prono") || !regleActive("prono", kOuvert)) return "";
   const p = pronoDe(y, qui, kOuvert), v = PRONO_V || (p && p.v) || null, i = PRONO_I || (p && p.i) || null, change = PRONO_V || PRONO_I;
@@ -4039,6 +4068,7 @@ function htmlRegles(tout, modeReserve) {
       "<ul>" + (vM ? "<li><b>🎰 Monaco</b> (un mois tiré entre avril et octobre" + (regleActive("monaco", mo) ? " : <b>" + esc(moisLong(mo)) + "</b>" : "") + ") : le dernier du championnat marque ses points de place ×2.</li>" : "") +
       (vS ? "<li><b>🇬🇧 Silverstone</b> (juillet) : le vainqueur du mois <b>+2</b>.</li><li><b>🇮🇹 Monza</b> (septembre) : le 🎯 vaut <b>+2</b>.</li>" : "") +
       (vF ? "<li><b>🏆 Finale</b> (décembre) : points de place ×2 pour tout le monde.</li>" : "") +
+      (vu("vote") ? "<li><b>🗳️ Vote</b> (2 au 31 décembre) : chacun vote pour « le coup de la saison » (pas pour soi). Le gagnant reçoit la plaque « Coup de la saison » (égalité : chacun).</li>" : "") +
       "<li>🔥 <b>Tour de chauffe</b> (décembre 2026) : rien ne compte ; cartes jusqu'au 5 décembre.</li></ul>") +
     s("gp", "🏎️", "La course",
       "<ul><li>Tes points te font avancer : <b>" + TOUR_GP + " points = un tour</b>. Une ville par mois (Bahreïn en janvier … Las Vegas en décembre).</li><li>La météo suit le " + idx + " du mois. En 3D ou en 2D, plein écran avec ⛶ ; touche une voiture pour la suivre.</li></ul>") +
