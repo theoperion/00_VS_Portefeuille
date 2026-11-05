@@ -1419,6 +1419,7 @@ async function charger(frais) {
       const er = new Error(json.message || "Réponse inattendue du fichier"); er.serveur = true; throw er;
     }
     ERREUR_SERVEUR = ""; D = json; SOURCE = "api"; EN_CHARGEMENT = false; stock.set(CLES.cache, JSON.stringify(json)); afficherTout();
+    setTimeout(() => { try { annoncerExclusifs(); } catch (e) { /* rien */ } }, 1200);
     setTimeout(() => revendiquerExclusifs().then(() => { if (vueActive() === "trophees" || vueActive() === "classement") rendreVue(vueActive()); }).catch(() => {}), 0);
   } catch (e) {
     EN_CHARGEMENT = false;
@@ -2349,22 +2350,37 @@ function premiersExclusifs() {
   EXCLUSIFS.forEach(x => {
     const val = (o, m) => { const v = (m[o.nom] || {})[o.k]; return v === undefined ? -Infinity : v; };
     const l = Object.values(cand[x.id]).sort((a, b) => a.k - b.k || b.score - a.score || val(b, rMois) - val(a, rMois) || val(b, cumMois) - val(a, cumMois) || a.nom.localeCompare(b.nom));
-    v[x.id] = l[0] || null;
+    // décision du 05/11/2026 : plusieurs le réussissent le même mois → chacun l'obtient
+    v[x.id] = l.length ? Object.assign({}, l[0], { noms: l.filter(o => o.k === l[0].k).map(o => o.nom) }) : null;
   });
   MEMO_EXCL = { d: D, cle, v };
   return v;
 }
 /** Détenteur d'un exclusif : figé dans le Versus s'il a été décroché, sinon le premier selon les relevés */
+/** Détenteur(s) d'un exclusif : { noms, nom (« A et B »), k, fige }. Figé = décidé par le serveur (V22) */
 function detenteur(id) {
   const fige = !apercuSaison() && D.exclusifs && D.exclusifs[id];
-  if (fige) return { nom: fige.nom, k: fige.mois, fige: true };
+  if (fige) { const noms = fige.noms || [fige.nom]; return { noms, nom: noms.join(" et "), k: fige.mois, fige: true }; }
   const p = premiersExclusifs()[id];
-  return p ? { nom: p.nom, k: p.k, fige: false } : null;
+  return p ? { noms: p.noms || [p.nom], nom: (p.noms || [p.nom]).join(" et "), k: p.k, fige: false } : null;
 }
-function exclusifsDe(nom) { return EXCLUSIFS.filter(x => { const d = detenteur(x.id); return d && d.nom === nom; }); }
+function possede(id, nom) { const d = detenteur(id); return !!(d && d.noms.includes(nom)); }
+function exclusifsDe(nom) { return EXCLUSIFS.filter(x => possede(x.id, nom)); }
 /* Figer un exclusif dans le Versus : la personne concernée (ou l'admin) le revendique ; le premier enregistré gagne. */
 let EXCL_ENVOI = false;
+/** V22 : annonce une fois les exclusifs que le serveur vient de t'attribuer */
+function annoncerExclusifs() {
+  if (!D || !D.exclusifs || simulation() || apercuSaison()) return;
+  const moi = moiVrai(); if (!moi) return;
+  let vus = []; try { vus = JSON.parse(stock.get("versus.exclVus") || "[]"); } catch (e) { vus = []; }
+  const nouveaux = EXCLUSIFS.filter(x => { const f = D.exclusifs[x.id]; return f && (f.noms || [f.nom]).includes(moi) && !vus.includes(x.id); });
+  if (!vus.length && !stock.get("versus.exclVus")) { stock.set("versus.exclVus", JSON.stringify(EXCLUSIFS.filter(x => possede(x.id, moi)).map(x => x.id))); return; }   // premier passage : rien à fêter
+  if (!nouveaux.length) return;
+  stock.set("versus.exclVus", JSON.stringify(vus.concat(nouveaux.map(x => x.id))));
+  const x = nouveaux[0]; toast(x.ico + " Exclusif décroché : " + ITEMS[x.gain[0]][x.gain[1]] + " (" + x.nom + ")" + (nouveaux.length > 1 ? " et " + (nouveaux.length - 1) + " autre(s)" : "")); confettis("damier");
+}
 async function revendiquerExclusifs() {
+  return;   // V22 : c'est le serveur qui calcule et fige les exclusifs (anti-triche) ; l'appli ne revendique plus rien
   if (EXCL_ENVOI || !saisonOuverte() || SOURCE !== "api" || !D) return;
   const moi = estAdmin() ? null : SESSION && SESSION.nom;
   const aFiger = EXCLUSIFS.filter(x => { const p = premiersExclusifs()[x.id]; return p && !(D.exclusifs && D.exclusifs[x.id]) && (estAdmin() || p.nom === moi); });
@@ -2406,17 +2422,17 @@ function htmlCourseExclusifs() {
   const ligne = x => {
     const d = detenteur(x.id), item = ITEMS[x.gain[0]][x.gain[1]], slot = SLOTS.find(z => z[0] === x.gain[0])[1].toLowerCase();
     return '<div class="ex-l' + (d ? " pris" : "") + '"><span class="ex-i">' + x.ico + "</span><div><b>" + esc(x.nom) + "</b><small>Le premier à " + esc(x.def.replace("l'indice", "le " + idx)) + " · " + esc(item) + " (" + slot + ")</small></div>" +
-      (d ? '<span class="ex-q" style="--c:' + couleur(d.nom) + '"><b>' + esc(d.nom) + "</b><small>" + esc(moisCourt(d.k)) + "</small></span>" : '<span class="ex-q libre"><b>Libre</b><small>à prendre</small></span>') + "</div>";
+      (d ? '<span class="ex-q" style="--c:' + couleur(d.noms[0]) + '"><b>' + esc(d.nom) + "</b><small>" + esc(moisCourt(d.k)) + "</small></span>" : '<span class="ex-q libre"><b>Libre</b><small>à prendre</small></span>') + "</div>";
   };
   const niveaux = [1, 2, 3, 4].map(n => {
     const l = EXCLUSIFS.filter(x => x.niv === n), pris = l.filter(x => detenteur(x.id)).length + (n === 4 && pm ? 1 : 0), tot = l.length + (n === 4 ? 1 : 0);
     const mil = n === 4 ? '<div class="ex-l' + (pm ? " pris" : "") + '"><span class="ex-i">👑</span><div><b>Premier millionnaire</b><small>Le premier à 1 000 000 € · récompense secrète, pour toute l\'appli</small></div>' +
       (pm ? '<span class="ex-q" style="--c:' + couleur(pm.nom) + '"><b>' + esc(pm.nom) + "</b><small>pour toujours</small></span>" : '<span class="ex-q libre"><b>Libre</b><small>à prendre</small></span>') + "</div>" : "";
-    const icones = l.map(x => { const d = detenteur(x.id); return '<i' + (d ? ' style="--c:' + couleur(d.nom) + '" class="pris"' : "") + ">" + x.ico + "</i>"; }).join("") + (n === 4 ? "<i" + (pm ? ' style="--c:' + couleur(pm.nom) + '" class="pris"' : "") + ">👑</i>" : "");
+    const icones = l.map(x => { const d = detenteur(x.id); return '<i' + (d ? ' style="--c:' + couleur(d.noms[0]) + '" class="pris"' : "") + ">" + x.ico + "</i>"; }).join("") + (n === 4 ? "<i" + (pm ? ' style="--c:' + couleur(pm.nom) + '" class="pris"' : "") + ">👑</i>" : "");
     return '<details class="ex-bloc n' + n + '" data-exn="' + n + '"' + (EX_OUVERTS.has(n) ? " open" : "") + '><summary><span class="ex-niv"><span>' + MED_EX[n] + " " + NIV_EX[n] + "</span><small>" + pris + " / " + tot + "</small></span>" +
       '<span class="ex-ics">' + icones + "</span></summary>" + l.map(ligne).join("") + mil + "</details>";
   }).join("");
-  const parNom = {}; EXCLUSIFS.forEach(x => { const d = detenteur(x.id); if (d) parNom[d.nom] = (parNom[d.nom] || 0) + 1; }); if (pm) parNom[pm.nom] = (parNom[pm.nom] || 0) + 1;
+  const parNom = {}; EXCLUSIFS.forEach(x => { const d = detenteur(x.id); if (d) d.noms.forEach(n => { parNom[n] = (parNom[n] || 0) + 1; }); }); if (pm) parNom[pm.nom] = (parNom[pm.nom] || 0) + 1;
   const tab = D.personnes.map(p => p.nom).sort((a, b) => (parNom[b] || 0) - (parNom[a] || 0)).map(n => '<span style="--c:' + couleur(n) + '"><b>' + (parNom[n] || 0) + "</b>" + esc(n) + "</span>").join("");
   return '<div><h3 class="s-h3">La course aux exclusifs <small>' + (EXCLUSIFS.length + 1) + " objets, un seul exemplaire chacun</small></h3></div>" +
     '<p class="info">Le premier qui y arrive décroche l\'objet et son badge, et personne d\'autre ne pourra jamais les avoir. Calculé sur les relevés publics, avec les mêmes règles pour tous. Si deux pilotes y arrivent le même mois : la meilleure valeur du critère l\'emporte, puis la meilleure performance du mois, puis le meilleur cumul de la saison.' + (apercuSaison() ? " En aperçu, rien n'est figé." : "") + "</p>" +
@@ -2428,8 +2444,8 @@ function texteOrigineItem(qui, slot, id) {
   if (BASE_ECURIE[slot] === id) return { t: "De série", p: "Fourni à tout le monde dès le départ." };
   if (org.exclusif) {
     const x = org.exclusif, d = detenteur(x.id), quoi = "le premier à " + x.def.replace("l'indice", "le " + D.marche.indices[iRef()]);
-    if (d && d.nom === qui) return { t: MED_EX[x.niv] + " Exclusif " + NIV_EX[x.niv].toLowerCase() + " · " + x.nom, p: "À toi seul : tu as été " + quoi + " (" + moisLong(d.k) + "). Personne d'autre ne pourra l'avoir." };
-    if (d) return { t: MED_EX[x.niv] + " Exclusif " + NIV_EX[x.niv].toLowerCase() + " · " + x.nom, p: d.nom + " l'a décroché en " + moisLong(d.k) + " : " + quoi + ". Il n'existe qu'en un exemplaire." };
+    if (d && d.noms.includes(qui)) return { t: MED_EX[x.niv] + " Exclusif " + NIV_EX[x.niv].toLowerCase() + " · " + x.nom, p: (d.noms.length > 1 ? "À toi, avec " + d.noms.filter(n => n !== qui).join(" et ") + " (le même mois)" : "À toi seul") + " : tu as été " + quoi + " (" + moisLong(d.k) + ")." };
+    if (d) return { t: MED_EX[x.niv] + " Exclusif " + NIV_EX[x.niv].toLowerCase() + " · " + x.nom, p: d.nom + " l'" + (d.noms.length > 1 ? "ont" : "a") + " décroché en " + moisLong(d.k) + " : " + quoi + ". Plus personne ne pourra l'avoir." };
     return { t: MED_EX[x.niv] + " Exclusif " + NIV_EX[x.niv].toLowerCase() + " · " + x.nom, p: "Encore libre : sois " + quoi + ", et il sera à toi seul." };
   }
   if (org.million) return { t: "Unique · Premier millionnaire", p: D.premierMillion ? (D.premierMillion.nom === qui ? "À toi : premier millionnaire du groupe." : "Réservé à " + D.premierMillion.nom + ", premier millionnaire du groupe.") : "Réservé au premier du groupe qui atteindra 1 000 000 €." };
@@ -2832,12 +2848,12 @@ function htmlDefis() {
   const ligneEx = x => {
     const d = detenteur(x.id), item = ITEMS[x.gain[0]][x.gain[1]], slot = SLOTS.find(z => z[0] === x.gain[0])[1].toLowerCase();
     return '<div class="ex-l' + (d ? " pris" : "") + '"><span class="ex-i">' + x.ico + "</span><div><b>" + esc(x.nom) + "</b><small>Le premier à " + esc(x.def.replace("l'indice", "le " + idx)) + " · " + esc(item) + " (" + slot + ")</small></div>" +
-      (d ? '<span class="ex-q" style="--c:' + couleur(d.nom) + '"><b>' + esc(d.nom) + "</b><small>" + esc(moisCourt(d.k)) + "</small></span>" : '<span class="ex-q libre"><b>Libre</b><small>à prendre</small></span>') + "</div>";
+      (d ? '<span class="ex-q" style="--c:' + couleur(d.noms[0]) + '"><b>' + esc(d.nom) + "</b><small>" + esc(moisCourt(d.k)) + "</small></span>" : '<span class="ex-q libre"><b>Libre</b><small>à prendre</small></span>') + "</div>";
   };
   const ligneMillion = () => '<div class="ex-l' + (pm ? " pris" : "") + '"><span class="ex-i">👑</span><div><b>Premier millionnaire</b><small>Le premier à 1 000 000 € · récompense secrète, pour toute l\'appli</small></div>' +
     (pm ? '<span class="ex-q" style="--c:' + couleur(pm.nom) + '"><b>' + esc(pm.nom) + "</b><small>pour toujours</small></span>" : '<span class="ex-q libre"><b>Libre</b><small>à prendre</small></span>') + "</div>";
   // score de trophées par pilote
-  const nbDe = n => DEFIS.filter(d => E[n][d.id].ok).length + SECRETS.filter(d => E[n][d.id].ok).length + EXCLUSIFS.filter(x => (detenteur(x.id) || {}).nom === n).length + (pm && pm.nom === n ? 1 : 0);
+  const nbDe = n => DEFIS.filter(d => E[n][d.id].ok).length + SECRETS.filter(d => E[n][d.id].ok).length + EXCLUSIFS.filter(x => possede(x.id, n)).length + (pm && pm.nom === n ? 1 : 0);
   const total = DEFIS.length + SECRETS.length + EXCLUSIFS.length + 1;
   const resume = '<div class="ex-tab">' + noms.slice().sort((a, b) => nbDe(b) - nbDe(a)).map(n => '<span style="--c:' + couleur(n) + '"><b>' + nbDe(n) + "</b>" + esc(n) + "</span>").join("") + "</div>";
   const raretes = [1, 2, 3, 4].map(n => {
@@ -3991,7 +4007,7 @@ function htmlRegles(tout, modeReserve) {
       "<ul><li>Casque, livrée, traînée, klaxon, avatar… : purement cosmétique, débloqué par les défis et les exclusifs. Onglet Écurie.</li><li>Le leader porte le liseré or 🟡.</li></ul>") +
     s("defis", "🏆", "Les trophées",
       "<ul><li><b>Défis</b> 🥉 🥈 🥇 💎 (performance, compétition, régularité, maîtrise) et <b>défis secrets</b> : une fois réussi, c'est acquis.</li>" +
-      "<li><b>Exclusifs</b> 💎 : un objet pour le premier qui réussit l'exploit, pour toujours.</li>" +
+      "<li><b>Exclusifs</b> 💎 : un objet pour le premier qui réussit l'exploit, pour toujours ; plusieurs le même mois → chacun l'obtient. C'est le serveur qui vérifie.</li>" +
       "<li><b>👑 Premier millionnaire</b> : le premier à 1 000 000 € de <b>patrimoine financier</b> (pas l'immobilier ; le montant n'est jamais montré).</li></ul>") +
     (bientot.length ? s("bientot", "🎁", "Prochainement", "<ul>" + bientot.map(e => "<li>" + (estAdmin() ? '<button type="button" class="lien" data-etape="' + e.id + '">🔒 ' + esc(e.nom) + "</button>" : e.ico + " <b>" + esc(e.nom) + "</b>") + " · " + esc(moisEtape(e)) + "</li>").join("") + "</ul>") : "");
 }

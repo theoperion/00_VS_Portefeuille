@@ -65,9 +65,9 @@ Dernier du mois → **1 carte bonus**, jouable dès le mois suivant, **une fois 
 
 - **Écurie** : purement cosmétique, débloquée par les défis et les exclusifs.
 - **Défis** et **défis secrets** : une fois réussi, c'est acquis.
-- **Exclusifs** 💎 : pour le premier qui réussit l'exploit ; **plusieurs le même mois → chacun l'obtient** ⏳.
+- **Exclusifs** 💎 : pour le premier qui réussit l'exploit ; **plusieurs le même mois → chacun l'obtient** ✅.
 - **👑 Premier millionnaire** : 1 000 000 € de **patrimoine financier** (pas l'immobilier ; le montant n'est jamais montré).
-- **Anti-triche** ⏳ : le serveur vérifie et décide lui-même.
+- **Anti-triche** ✅ : le serveur refait le calcul et décide lui-même (exclusifs, badge millionnaire).
 
 ## ⏳ À venir
 
