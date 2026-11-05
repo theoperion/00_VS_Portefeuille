@@ -524,7 +524,6 @@ button.bt-e { cursor: pointer; color: var(--ink); }
 .gp-l .nm { min-width: 0; overflow: hidden; }
 .gp-l .nm b { display: block; font: italic 700 16px/1.1 var(--f-display); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gp-l .nm small { display: block; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.gp-l .drs { color: #3DDC97; font-weight: 700; }
 .gp-l > .rk { grid-column: 1; } .gp-l > .av { grid-column: 2; } .gp-l > .nm { grid-column: 3; } .gp-l > .gp-c { grid-column: 4; justify-self: center; } .gp-l > .pt { grid-column: 5; }
 .ch-l > .rk { grid-column: 1; } .ch-l > .av { grid-column: 2; } .ch-l > .nm { grid-column: 3; } .ch-l > .pt { grid-column: 4; }
 .gp-l .pt, .ch-l .pt { font-variant-numeric: tabular-nums; }
@@ -2043,6 +2042,7 @@ function championnat(y) {
   const ch = estChauffe(y), deb = ch ? CHAUFFE_K - 1 : (y - 1) * 100 + 12, f = ch ? CHAUFFE_K : y * 100 + 12;
   const tot = {}; D.personnes.forEach(p => tot[p.nom] = { pts: 0, v: 0, pod: 0, bonus: 0, n: 0, cum: 1 });
   const J = {}; D.personnes.forEach(p => J[p.nom] = { xp: 0, niv: 1, pioche: [], deck: deckBonus(y, p.nom), i: 0 });
+  const SERIE = {};
   let prevL = null;
   const ordre = (a, b) => tot[b].pts - tot[a].pts || tot[b].v - tot[a].v || tot[b].cum - tot[a].cum;
   const mois = []; let attente = null;
@@ -2053,9 +2053,9 @@ function championnat(y) {
     const avant = mois.length ? mois[mois.length - 1].places : null, cumAvant = mois.length ? mois[mois.length - 1].cumul : null, spec = moisSpecial(y, k);
     const derniers = avant && Object.keys(avant).length >= 2 ? (mx => Object.keys(avant).filter(nm => avant[nm] === mx))(Math.max(...Object.values(avant))) : [];
     const l = du.map(x => {
-      const rg = du.findIndex(z => Math.abs(z.r - x.r) < 1e-9) + 1, bonus = iR !== null && x.r > iR ? 1 : 0;
-      const mult = spec && (spec.id === "finale" || spec.id === "monaco" && derniers.includes(x.nom)) ? 2 : 1, base = ptsRang(rg);
-      return { nom: x.nom, r: x.r, rg, base, mult, p: base * mult + bonus, bonus, dernier: n >= 3 && rg > 1 && Math.abs(x.r - du[n - 1].r) < 1e-9, ecart: rg === 1 && n > 1 ? x.r - du[1].r : null, niv: J[x.nom] ? J[x.nom].niv : 1 };
+      const rg = du.findIndex(z => Math.abs(z.r - x.r) < 1e-9) + 1, bonus = iR !== null && x.r > iR ? (spec && spec.id === "monza" ? 2 : 1) : 0;
+      const mult = spec && (spec.id === "finale" || spec.id === "monaco" && derniers.includes(x.nom)) ? 2 : 1, base = ptsRang(rg), vainq = spec && spec.id === "silverstone" && rg === 1 ? 2 : 0;
+      return { nom: x.nom, r: x.r, rg, base, mult, vainq, p: base * mult + bonus + vainq, bonus, dernier: n >= 3 && rg > 1 && Math.abs(x.r - du[n - 1].r) < 1e-9, ecart: rg === 1 && n > 1 ? x.r - du[1].r : null, niv: J[x.nom] ? J[x.nom].niv : 1 };
     });
     // cartes révélées (main de base et pioche bonus), plafonnées à +4
     const atM = ch ? null : atoutsDe(k);
@@ -2075,14 +2075,12 @@ function championnat(y) {
       if (c.c === "pari" && c.cible) { const xc = l.find(z => z.nom === c.cible); if (xc) (xc.vise = xc.vise || []).push({ par: x.nom, gain: g }); }
       delete x._c; delete x._g;
     });
-    // duels annoncés : le meilleur du mois prend 1 point à l'autre ; un seul duel par paire et par mois (même si les deux se défient)
-    const paires = new Set();
+    // bonus d'équipe : tous les pilotes du mois battent le S&P 500 → +1 chacun
+    if (!ch && regleActive("equipe", k) && iR !== null && l.length >= 2 && l.every(x => x.r > iR)) l.forEach(x => { x.equipe = 1; x.p += 1; });
+    // série : +1 à chaque 3e mois d'affilée au-dessus du S&P 500 (remise à zéro à chaque saison)
     l.forEach(x => {
-      if (!regleActive("duels", k)) return;
-      const d = duelDe(y, x.nom, k); if (!d || !d.cible || d.cache) return; const xc = l.find(z => z.nom === d.cible); if (!xc) return;
-      const cle = [x.nom, xc.nom].sort().join("|"); if (paires.has(cle)) return; paires.add(cle);
-      const s = x.r > xc.r + 1e-12 ? 1 : xc.r > x.r + 1e-12 ? -1 : 0;
-      (x.duels = x.duels || []).push({ contre: xc.nom, s, lance: true }); (xc.duels = xc.duels || []).push({ contre: x.nom, s: -s }); x.p += s; xc.p -= s;
+      const ok3 = iR !== null && x.r > iR; SERIE[x.nom] = ok3 ? (SERIE[x.nom] || 0) + 1 : 0;
+      if (!ch && ok3 && regleActive("serie", k) && SERIE[x.nom] % 3 === 0) { x.serie = SERIE[x.nom]; x.p += 1; }
     });
     l.forEach(x => { x.p = Math.max(0, x.p); });
     // XP, niveaux et pioche (dans l'ordre de la pioche de chacun)
@@ -3145,13 +3143,15 @@ function htmlGrandPrix(y) {
     const ca = et.k ? carteDe(y, n, et.k) : null, cdef = ca && ca.c ? carteDef(ca.c) : null;
     const res = x && x.carte ? (x.carte.invalide ? " Pas encore piochée à ce moment-là : sans effet." : " Résultat : " + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + " pt" + (Math.abs(x.carte.gain) > 1 ? "s" : "") + (x.carte.circ ? ", dont +1 d'atout du circuit" : "") + (x.carte.bouchon ? ", sans le +1 d'atout : bouchon, plusieurs pilotes l'ont jouée" : "") + (x.carte.sab ? " · " + x.carte.cible + " " + x.carte.sab : "") + ".") : "";
     const carte = ca ? (ca.cache && !cdef ? '<span class="gp-c cache" data-bdg="Carte posée face cachée : révélée le ' + jourLimite(et.k) + ' du mois.">🂠</span>' : cdef ? '<span class="gp-c" data-bdg="' + esc(cdef.ico + " " + cdef.nom + " : " + cdef.def + res) + '">' + cdef.ico + (x && x.carte ? "<small>" + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + "</small>" : "") + "</span>" : '<span class="gp-c vide"></span>') : '<span class="gp-c vide"></span>';
-    const extra = x ? (x.duels || []).map(d => '<span class="gp-x" data-bdg="⚔️ Duel ' + (d.lance ? "lancé contre " : "reçu de ") + esc(d.contre) + " : " + (d.s > 0 ? "gagné, +1" : d.s < 0 ? "perdu, −1" : "égalité, rien ne bouge") + '.">⚔️' + (d.s > 0 ? "+1" : d.s < 0 ? "−1" : "=") + "</span>").join("") +
-      (x.vise || []).map(z => '<span class="gp-x" data-bdg="🎲 Pari de ' + esc(z.par) + " contre " + esc(n) + " : " + (z.gain > 0 ? esc(z.par) + " a fini devant, +2 pour lui." : esc(n) + " a tenu bon, " + esc(z.par) + " perd 1 point.") + '">🎲' + (z.gain > 0 ? "" : "✓") + "</span>").join("") +
+    const extra = x ? (x.vainq ? '<span class="gp-x or" data-bdg="🇬🇧 Silverstone : vainqueur du mois, +2.">🏁+2</span>' : "") +
+      (x.equipe ? '<span class="gp-x" data-bdg="🤝 Bonus d\'équipe : tout le monde a battu le S&P 500 ce mois-ci, +1.">🤝+1</span>' : "") +
+      (x.serie ? '<span class="gp-x" data-bdg="🔥 Série : ' + x.serie + ' mois d\'affilée au-dessus du S&P 500, +1.">🔥+1</span>' : "") +
+      (x.vise || []).map(z => '<span class="gp-x" data-bdg="🎲 Pari de ' + esc(z.par) + " contre " + esc(n) + " : " + (z.gain > 0 ? esc(z.par) + " a fini devant, +2 pour lui." : z.gain < 0 ? esc(n) + " a tenu bon, " + esc(z.par) + " perd 1 point." : "égalité parfaite, 0.") + '">🎲' + (z.gain > 0 ? "" : "✓") + "</span>").join("") +
       (x.mult > 1 ? '<span class="gp-x or" data-bdg="' + esc(et.m.spec ? et.m.spec.ico + " " + et.m.spec.nom + " : points de place doublés." : "Points doublés.") + '">×2</span>' : "") +
       (x.pioche && x.pioche.length && regleVisible("pioche") ? '<span class="gp-x" data-bdg="🎴 Carte' + (x.pioche.length > 1 ? "s" : "") + " piochée" + (x.pioche.length > 1 ? "s" : "") + " ce mois-ci" + (n === qui ? " : " + esc(x.pioche.map(c => carteDef(c).nom).join(", ")) : "") + '.">🎴</span>' : "") : "";
     const jn = (c.jeu || {})[n], niv = x ? x.niv + (x.monte || 0) : jn && !et.m ? 1 : (jn ? jn.niv : 1);
     return '<div class="gp-l' + (n === qui ? " moi" : "") + '"><span class="rk">' + (r + 1) + "</span>" + avatar(n) + '<div class="nm"><b><span' + (attrLivree(n) ? attrLivree(n).replace(' class="', ' class="gp-nom ') : ' class="gp-nom"') + ">" + esc(n) + "</span>" + (regleVisible("niveaux") ? '<span class="gp-niv" data-bdg="Niveau d\'écurie ' + niv + ' : chaque niveau gagné donne une carte bonus.">N' + niv + "</span>" : "") + extra + "</b><small>" +
-      (r === 0 ? (et.k ? "en tête · tour " + (Math.floor(et.pts[n] / TOUR_GP) + 1) : "sur la grille") : "à " + ecart + " pt" + (ecart > 1 ? "s" : "") + " de " + esc(devant) + (ecart <= 3 && et.k ? ' · <span class="drs">💨 DRS</span>' : "")) +
+      (r === 0 ? (et.k ? "en tête · tour " + (Math.floor(et.pts[n] / TOUR_GP) + 1) : "sur la grille") : "à " + ecart + " pt" + (ecart > 1 ? "s" : "") + " de " + esc(devant)) +
       (x ? " · " + (x.p >= 0 ? "+" : "") + x.p + " ce mois" : "") + "</small></div>" + carte + '<span class="pt"><b>' + et.pts[n] + "</b><small>pts</small></span></div>";
   }).join("");
   const cal = htmlCalendrierGP(y, kGP);
@@ -3160,7 +3160,7 @@ function htmlGrandPrix(y) {
   const titreAt = at ? '<div class="gp-atouts"><span class="at" data-bdg="' + esc("Atout de " + G.ville + " : " + at.atout.ico + " " + at.atout.nom + " y gagne +1 quand elle marque (sauf bouchon).") + '">' + at.atout.ico + " " + esc(at.atout.nom) + " +1</span></div>" : (indiceCircuit(kGP) ? htmlIndice(indiceCircuit(kGP)) : "");
   return versStand + att + '<div class="gp-h"><div><span class="s-k">' + (c.chauffe ? "Tour de chauffe" : et.k ? "Manche " + i : "Départ") + " · " + esc(moisLong(kGP)) + '</span><h3 class="gp-titre">' + G.drap + " " + esc(G.gp) + '</h3><p class="gp-met">' + esc(G.ville) + " · " + met.ico + " " + esc(met.txt) + (spe ? " " + spe.ico + " <b>" + esc(spe.nom) + "</b> : " + esc(spe.txt) : "") + '</p></div><button class="btn ghost gp-rejouer" type="button" id="gp-rejouer">▶ Rejouer</button></div>' +
     titreAt + piste + chips + '<div class="gp-liste">' + lignes + "</div>" + cal +
-    '<p class="info">' + TOUR_GP + " points = un tour de circuit. 💨 DRS : à 3 points ou moins de celui de devant. Touche une icône pour le détail, une voiture pour la suivre." + (c.chauffe ? " 🔥 Rien ne compte pendant la chauffe." : "") + ' <a href="#" class="lien-regles" data-regles="gp">Règles</a></p>' +
+    '<p class="info">' + TOUR_GP + " points = un tour de circuit. Touche une icône pour le détail, une voiture pour la suivre." + (c.chauffe ? " 🔥 Rien ne compte pendant la chauffe." : "") + ' <a href="#" class="lien-regles" data-regles="gp">Règles</a></p>' +
     htmlDetailPoints(y);
 }
 /** Le calendrier des Grands Prix de la saison (atouts une fois révélés) */
@@ -3410,8 +3410,7 @@ function bullesGP(y, i) {
   et.m.l.forEach(x => {
     const extra = [];
     if (x.carte && !x.carte.invalide && x.carte.gain) { const cd = carteDef(x.carte.id); extra.push((cd ? cd.ico : "🃏") + (x.carte.gain > 0 ? "+" : "") + x.carte.gain); }
-    if (x.bonus) extra.push("🎯+1"); if (x.mult > 1) extra.push("×2");
-    (x.duels || []).forEach(d => { if (d.s) extra.push("⚔️" + (d.s > 0 ? "+1" : "−1")); });
+    if (x.bonus) extra.push("🎯+" + x.bonus); if (x.mult > 1) extra.push("×2"); if (x.vainq) extra.push("🏁+2"); if (x.equipe) extra.push("🤝+1"); if (x.serie) extra.push("🔥+1");
     box.insertAdjacentHTML("beforeend", '<span class="gp-pop" data-pop="' + esc(x.nom) + '" style="--c:' + couleur(x.nom) + '"><b>' + (x.p >= 0 ? "+" : "") + x.p + " pt" + (Math.abs(x.p) > 1 ? "s" : "") + "</b>" + (extra.length ? "<small>" + esc(extra.join(" ")) + "</small>" : "") + "</span>");
   });
   if (GP_ETQ) GP_ETQ.sale = true;
@@ -3517,9 +3516,12 @@ const CARTES_BONUS = [
 const ETAPES = [
   { id: "circuits", ico: "🗺️", nom: "L'atout des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque Grand Prix favorise une carte : +1 quand elle marque. Secret jusqu'au 2 (un indice avant), et bouchon si plusieurs la jouent." },
   { id: "pioche", ico: "🎴", nom: "Le rattrapage", ouvre: 202701, regle: "pioche", resume: "Tu finis dernier d'un mois ? Tu pioches une carte bonus (une fois par saison chacune), à jouer à partir du mois suivant. Tes cartes piochées t'attendent dans le Stand." },
-  { id: "monaco", ico: "🎰", nom: "Le Grand Prix de Monaco", reserve: true, regle: "speciaux", resume: "Un mois de la saison, le dernier du championnat marque ses points de place en double. La date est dans le calendrier du Grand Prix." },
+  { id: "monaco", ico: "🎰", nom: "Le Grand Prix de Monaco", ouvre: 202701, regle: "speciaux", resume: "Un mois de la saison, le dernier du championnat marque ses points de place en double. La date est dans le calendrier du Grand Prix." },
+  { id: "gpspeciaux", ico: "🏁", nom: "Silverstone et Monza", ouvre: 202701, regle: "speciaux", resume: "Juillet à Silverstone : le vainqueur du mois marque +2 de plus. Septembre à Monza : le 🎯 vaut +2 au lieu de +1." },
+  { id: "equipe", ico: "🤝", nom: "Le bonus d'équipe", ouvre: 202701, regle: "championnat", resume: "Si tous les pilotes battent le S&P 500 le même mois : +1 pour chacun." },
+  { id: "serie", ico: "🔥", nom: "La série", ouvre: 202701, regle: "championnat", resume: "+1 à chaque 3e mois d'affilée où tu bats le S&P 500 (3 mois, 6 mois…). La série repart de zéro dès que tu ne le bats pas." },
   { id: "finale", ico: "🏆", nom: "La Finale", ouvre: 202712, regle: "speciaux", resume: "Décembre, dernier mois de la saison : les points de place comptent double pour tout le monde." },
-  { id: "duels", ico: "⚔️", nom: "Les duels", ouvre: 202701, regle: "duels", resume: "Chaque mois, tu peux défier un rival, dans la même fenêtre que ta carte. Le meilleur du mois lui prend 1 point." },
+  { id: "duels", ico: "⚔️", nom: "Les duels", reserve: true, regle: "duels", resume: "Chaque mois, tu peux défier un rival, dans la même fenêtre que ta carte. Le meilleur du mois lui prend 1 point." },
   /* Réserve : des idées codées et prêtes, mais éteintes. Rien ne s'en voit, rien ne compte, tant que l'admin ne leur donne pas une date
      (Podium › tout en bas › « Règles et idées en réserve »). */
   { id: "niveaux", ico: "⭐", nom: "Les niveaux d'écurie", reserve: true, regle: "niveaux", resume: "Tes points de place et tes 🎯 donnent de l'XP. Chaque niveau gagné te fait piocher une carte bonus de plus." },
@@ -3643,6 +3645,8 @@ function moisSpecial(y, k) {
   if (!k) return null;
   if (k % 100 === 12 && regleActive("finale", k)) return { id: "finale", ico: "🏆", nom: "Finale", txt: "Points de place doublés pour tout le monde." };
   if (k === monacoMois(y) && regleActive("monaco", k)) return { id: "monaco", ico: "🎰", nom: "Grand Prix de Monaco", txt: "Le dernier du championnat avant ce mois marque ses points de place en double." };
+  if (k % 100 === 7 && regleActive("gpspeciaux", k)) return { id: "silverstone", ico: "🇬🇧", nom: "Silverstone", txt: "Le vainqueur du mois marque +2 de plus." };
+  if (k % 100 === 9 && regleActive("gpspeciaux", k)) return { id: "monza", ico: "🇮🇹", nom: "Monza", txt: "Le 🎯 vaut +2 au lieu de +1." };
   return null;
 }
 /* ---------- Améliorations : choix datés, valables pour les cartes posées après ---------- */
@@ -3881,7 +3885,7 @@ function htmlRegles(tout, modeReserve) {
     s("gp", "🏎️", "Le Grand Prix",
       "<ul><li>Tes points te font avancer sur le circuit : <b>" + TOUR_GP + " points = un tour</b>.</li><li>Chaque fin de mois, la course se rejoue en animation. Touche un mois pour revoir son étape.</li>" +
       "<li><b>Une ville par mois</b>, comme en Formule 1 : Bahreïn en janvier, Djeddah en février… jusqu'à Las Vegas en décembre. Le tour de chauffe se court à Abu Dhabi. Le calendrier est sous la course.</li>" +
-      "<li>La météo vient du " + idx + " du mois : ☀️ au-delà de +3 %, ⛅ entre 0 et +3 %, 🌧️ jusqu'à −3 %, ⛈️ en dessous. Il pleut aussi sur le circuit.</li><li>💨 DRS : tu es à 3 points ou moins du pilote devant toi.</li>" +
+      "<li>La météo vient du " + idx + " du mois : ☀️ au-delà de +3 %, ⛅ entre 0 et +3 %, 🌧️ jusqu'à −3 %, ⛈️ en dessous. Il pleut aussi sur le circuit.</li>" +
       "<li>La course se regarde en 3D (caméra TV, hélico ou embarquée) ou sur une carte 2D, et en plein écran avec ⛶. Touche une voiture pour la suivre.</li><li>Ton ambiance (jour, nocturne, golden hour, hiver, synthwave) se choisit dans l'écurie : elle ne change que ta vue.</li></ul>") +
     s("cartes", "🃏", "Les cartes de course",
       "<p><b>Ta main de base</b>, la même pour tout le monde chaque saison :</p><ul>" + CARTES.map(carte).join("") + "</ul>" +

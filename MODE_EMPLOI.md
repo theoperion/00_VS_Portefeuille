@@ -150,7 +150,10 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 ### Phase 3 · Podium (novembre)
 - ✅ 3.1 **Règles écrites en clair** et **validées** : [`REGLES_PODIUM.md`](REGLES_PODIUM.md) (décisions D1 à D9 du 05/11/2026).
 - 🔧 3.2 **Règles simples** · ✅ en ligne (appli v13.2, Versus V19) : tout en jeu dès janvier, égalité Pari = 0, un duel par paire, bouchon si les deux marquent, « inactive en janvier » sur les cartes, victoire partagée partout, page admin et code mort nettoyés. Testé sur une fausse saison.
-- ⬜ 3.3 **Anti-triche + exclusifs partagés** : le serveur recalcule lui-même qui a gagné chaque exclusif (à plusieurs si le même mois) et vérifie le badge millionnaire.
+- ✅ 3.4 **Nouvelles règles de points** (appli v13.3, Versus V20) : duels retirés ; 🎰 Monaco réactivé ; 🇬🇧 Silverstone (vainqueur +2) ; 🇮🇹 Monza (🎯 +2) ; 🤝 bonus d'équipe ; 🔥 série ; DRS supprimé. Testé sur une fausse saison.
+- ⬜ 3.5 **Pronostic du mois + rival de la saison** (saisie dans l'appli + serveur).
+- ⬜ 3.3 **Anti-triche + exclusifs partagés** : le serveur refait le même calcul (fichier de calcul commun) et décide lui-même.
+- ⬜ 3.6 **Carte postale du mois** · ⬜ 3.7 **Vote de fin de saison** · ⬜ 3.8 **Règles réécrites, courtes et limpides**.
 - ⬜ 3.3 Quand toutes les fonctionnalités sont sorties (vers février 2027) : supprimer l'aperçu des étapes à venir ; il ne reste en admin que les codes et la saisie de secours.
 
 ### Phase 4 · Transferts (quand tout est rodé)
@@ -211,3 +214,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 2.5 | ✅ Validé. **Phase 2 terminée** |
 | 05/11/2026 | 3.1 | Règles du Podium relevées dans le code et écrites en clair (`REGLES_PODIUM.md`) ; 9 décisions proposées |
 | 05/11/2026 | 3.1, 3.2 | Règles validées (D1–D9). Appli v13.2 ; Versus V19 (version Google 34) |
+| 05/11/2026 | 3.4 | Duels retirés, Monaco, Silverstone, Monza, équipe, série, DRS supprimé. Appli v13.3 ; Versus V20 (version Google 35) |
