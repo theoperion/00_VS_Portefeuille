@@ -1292,6 +1292,8 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 const APP_VERSION = (self.VERSUS_VERSION || {}).app || "?", APP_DATE = (self.VERSUS_VERSION || {}).date || "";
 /* Admin : « voir l'appli à une autre date » (Réglages › Voir comme un joueur). L'horloge de l'appli est décalée ; rien n'est envoyé. */
 (function () {
+  /* Le mode admin ne dure que jusqu'à la fermeture de l'appli (sessionStorage) : à l'ouverture suivante, plus d'admin ni de simulation */
+  try { if (sessionStorage.getItem("versus.adminOn") !== "1") ["versus.adminOn", "versus.vueJoueur", "versus.dateSim", "versus.apercuSaison"].forEach(k => localStorage.removeItem(k)); } catch (e) { /* stockage indisponible */ }
   let s = null; try { s = localStorage.getItem("versus.dateSim"); } catch (e) { return; }
   const cible = s ? new Date(s + "T10:00:00").getTime() : NaN; if (!cible) return;
   const D0 = Date, decal = cible - D0.now();
@@ -1391,7 +1393,7 @@ async function charger(frais) {
   try {
     if (navigator.onLine === false) throw new Error("Hors connexion");
     const ab = window.AbortController ? new AbortController() : null, minu = ab ? setTimeout(() => ab.abort(), 20000) : null;
-    const rep = await fetch(url + (url.includes("?") ? "&" : "?") + "action=data&cle=" + encodeURIComponent(cle) + (frais ? "&frais=1" : "") + (ETAT.moi ? "&moi=" + encodeURIComponent(ETAT.moi) : ""), { cache: "no-store", signal: ab ? ab.signal : undefined });
+    const rep = await fetch(url + (url.includes("?") ? "&" : "?") + "action=data&cle=" + encodeURIComponent(cle) + (frais ? "&frais=1" : "") + (moiVrai() ? "&moi=" + encodeURIComponent(moiVrai()) : ""), { cache: "no-store", signal: ab ? ab.signal : undefined });
     clearTimeout(minu);
     const json = await rep.json();
     if (!json.ok) {
@@ -1451,9 +1453,11 @@ function estAdmin() { return SESSION.role === "admin"; }
 /** Le vrai rôle (même quand l'admin regarde l'appli comme un joueur) */
 function vraiAdmin() { return typeof D === "undefined" || !D || !D.session || D.session.role === "admin"; }
 /** Mode admin : la clé d'administration reste, mais par défaut l'appli se comporte comme pour un joueur (réglage « Mode admin ») */
-function adminActif() { return vraiAdmin() && stock.get("versus.adminOn") === "1"; }
+function adminActif() { try { return vraiAdmin() && sessionStorage.getItem("versus.adminOn") === "1"; } catch (e) { return false; } }
 /** Le joueur que l'admin incarne quand le mode admin est coupé */
 function joueurAdmin() { const l = (typeof D !== "undefined" && D && D.personnes) || [], n = stock.get("versus.adminJoueur"); return l.some(p => p.nom === n) ? n : (l.find(p => /^th[ée]o$/i.test(p.nom)) || l[0] || {}).nom; }
+/** Qui je suis vraiment : mon joueur, jamais celui que je regarde (l'admin reste son propre joueur, Théo) */
+function moiVrai() { return estAdmin() ? (joueurAdmin() || stock.get("versus.adminJoueur") || "Théo") : SESSION && SESSION.nom; }
 function vueJoueur() { return adminActif() && !!stock.get("versus.vueJoueur"); }
 /** Simulation : date simulée ou vue joueur. Rien ne part vers l'API, rien de « vu » n'est gardé. */
 function simulation() { return !!window.DATE_SIM || vueJoueur(); }
@@ -2702,7 +2706,7 @@ function dessinerChampionnat(y) {
   tracer(box, { x: ks, series: c.classement.map(n => ({ nom: n, v: [0].concat(c.mois.map(m => m.cumul[n] !== undefined ? m.cumul[n] : null)), c: couleur(n), w: n === ETAT.moi ? 2.8 : 2, fx: equipDe(n).trainee })),
     finEtiq: true, h: 190, fmt: x => x + " pts", fmtAxe: t => Number.isInteger(t) ? String(t) : "", titreX: k => k === c.deb ? "Départ" : "Fin " + moisCourt(k) });
 }
-function quiEcurie() { return estAdmin() ? ETAT.moi : SESSION.nom; }
+function quiEcurie() { return moiVrai(); }
 let ECU_SLOT = "pilote";
 const ICONES_KLAXON = { confettis: "🎊", damier: "🏁", feu: "🎆", parade: "🎺", billets: "💸", fanfare: "👑", cibles: "🎯", fusees: "🚀", trophees: "🏆" };
 /** Rareté d'un objet : série (de base), bronze, argent, or, légendaire, secret, unique (premier millionnaire) */
@@ -2940,7 +2944,7 @@ function carteDe(y, nom, k) {
   if (m && m.c) return Object.assign({ cache: true }, m);
   return c && c.cache ? { cache: true } : null;
 }
-function moiPilote() { return estAdmin() ? ETAT.moi : SESSION && SESSION.nom; }
+function moiPilote() { return moiVrai(); }
 /** Effet d'une carte sur un mois : x = ligne du pilote, l = tout le mois, avant = places au championnat avant ce mois */
 function effetCarte(c, x, l, avant, iR, ctx) {
   if (!c || !c.c || c.cache && !c.revele) return 0;
@@ -4565,7 +4569,7 @@ function lireNb(t) { if (t === null || t === undefined) return null; const x = S
 function enSaisie(n) { return ok(n) ? String(n).replace(".", ",") : ""; }
 function ouvrirSaisie() {
   if (!D) return;
-  const p = D.personnes.find(x => x.nom === (estAdmin() ? ETAT.moi : SESSION.nom)) || D.personnes[0];
+  const p = D.personnes.find(x => x.nom === moiVrai()) || D.personnes[0];
   R = { nom: p.nom, k: null, forcer: null, erreur: "", envoi: false, tout: false };
   choisirMoisParDefaut();
   $("#saisie").hidden = false;
@@ -4724,6 +4728,7 @@ function majSaisie(prev) {
 }
 async function envoyerReleve(forcer) {
   const valeurs = R.v.map(t => { const n = lireNb(t); return ok(n) ? n : null; });
+  if (simulation()) { toast(MSG_SIMULATION); return; }
   if (SOURCE !== "api") { toast(SOURCE === "demo" ? "Aperçu : le relevé est contrôlé mais rien n'est écrit sans adresse d'API." : "Hors connexion : le relevé n'a pas été envoyé."); if (SOURCE === "demo") $("#saisie").hidden = true; return; }
   R.envoi = true; R.erreur = ""; majSaisie(null);
   let rep;
@@ -4875,6 +4880,7 @@ $("#enregistrer-api").addEventListener("click", () => {
 $("#oublier-cle").addEventListener("click", () => { stock.del(CLES.cle); $("#reglages").hidden = true; if (apiUrl()) ouvrirCle(""); });
 $("#changer-cle").addEventListener("click", async () => {
   const n = $("#champ-nouvelle-cle").value.trim();
+  if (simulation()) { $("#etat-source").textContent = MSG_SIMULATION; return; }
   if (SOURCE !== "api") { $("#etat-source").textContent = "Configure d'abord l'adresse de l'API."; return; }
   if (n.length < 6) { $("#etat-source").textContent = "La nouvelle clé doit faire au moins 6 caractères."; return; }
   let rep;
@@ -5114,7 +5120,7 @@ function majModeAdmin() {
   const on = adminActif();
   sec.querySelectorAll("[data-admin-on]").forEach(b => { b.setAttribute("aria-pressed", String((b.dataset.adminOn === "1") === on)); b.onclick = () => {
     if ((b.dataset.adminOn === "1") === on) return;
-    if (b.dataset.adminOn === "1") stock.set("versus.adminOn", "1"); else stock.del("versus.adminOn");
+    try { if (b.dataset.adminOn === "1") sessionStorage.setItem("versus.adminOn", "1"); else sessionStorage.removeItem("versus.adminOn"); } catch (e) { /* indisponible */ }
     ["versus.vueJoueur", "versus.dateSim", "versus.apercuSaison"].forEach(k => stock.del(k));
     location.reload();
   }; });

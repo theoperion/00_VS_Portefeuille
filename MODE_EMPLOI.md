@@ -66,10 +66,11 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 - ✅ 0.4 **Un seul numéro de version** : fichier `version.js` (le seul endroit à changer), lu par l'appli et le hors connexion. Version **12.2** en ligne, vérifiée par Théo le 05/11 (mise à jour arrivée toute seule).
 
 ### Phase 1 · Classement Versus
-- 🟡 1.1 **Qui suis-je ?** (données mal enregistrées)
+- 🔧 1.1 **Qui suis-je ?** (données mal enregistrées) · ✅ code en ligne (v12.3) · ⬜ ligne fausse à supprimer · ⬜ **toi** : vérifier
   - Constat : en admin, toucher « Kévin » dans le classement faisait croire à l'appli que tu *étais* Kévin → tes lignes de bourse d'octobre enregistrées sous Kévin (ligne 3 de « Lignes app »), cartes cachées de Kévin visibles.
   - Correction : pour tout ce qui est **à toi** (lignes, badge million, écurie, cartes, duels), l'appli utilise toujours **ton joueur** (Théo). Toucher un nom ne change plus que **l'affichage**. Pour voir l'appli comme un autre : Réglages → « Voir comme un joueur » (rien n'est envoyé).
   - Et : le mode « Voir comme un joueur » / date simulée ne peut plus rien envoyer (relevé, clé, lignes, million, taux).
+  - Et : le **mode admin s'éteint quand tu fermes l'appli** (et une date simulée oubliée est effacée à l'ouverture). Il ne sert plus qu'à : voir/régler les étapes à venir, gérer les codes, saisir un relevé en secours.
   - Nettoyage : supprimer la ligne 3 de « Lignes app » (Kévin, 202610) ; Kévin re-partagera ses lignes.
 - ⬜ 1.2 Sécurité : clé jamais dans l'adresse, vrai anti-force brute, badges vérifiés par le serveur.
 - ⬜ 1.3 Fiabilité : délai max d'envoi, vrais messages d'erreur, double envoi, petits bugs de saisie, MWR.
@@ -85,6 +86,7 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 ### Phase 3 · Podium (novembre)
 - ⬜ 3.1 Écrire les règles en clair ici, les valider ensemble **avant** de coder.
 - ⬜ 3.2 Coder, tester avec une date simulée, ouvrir.
+- ⬜ 3.3 Quand toutes les fonctionnalités sont sorties (vers février 2027) : supprimer l'aperçu des étapes à venir ; il ne reste en admin que les codes et la saisie de secours.
 
 ### Phase 4 · Transferts (quand tout est rodé)
 - ⬜ 4.1 Mode d'emploi « transférer » : Sheet + script + dépôt à Clément, puis Devlin (Kévin reste hébergé chez Théo).
@@ -120,3 +122,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | — | Mode d'emploi réorganisé en feuille de route |
 | 05/11/2026 | 0.3b | Toutes les anciennes adresses Versus (26) → code n°27 ; Moi Théo (5) → code n°13 |
 | 05/11/2026 | 0.4 | `version.js` : version unique 12.2 ; le cache hors connexion ne gonfle plus (vérif de mise à jour jamais gardée) |
+| 05/11/2026 | 1.1 | v12.3 : identité = toujours ton joueur ; mode admin limité à la session ; simulation n'envoie plus rien. Connexion Google refaite avec droit d'écriture sur les Sheets |

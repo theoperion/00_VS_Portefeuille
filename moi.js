@@ -1709,14 +1709,14 @@ function htmlMillion() {
 function badgeMillion() {
   const pm = typeof D !== "undefined" && D && D.premierMillion;
   if (!pm) return "👑 Le badge <b>Premier millionnaire</b> est encore à prendre : unique, gardé pour toujours, et seul le fait est partagé, jamais ton montant.";
-  return pm.nom === (estAdmin() ? ETAT.moi : SESSION.nom) ? "👑 Tu es le <b>premier millionnaire</b> du groupe. Personne d'autre ne l'aura." : "👑 <b>" + esc(pm.nom) + "</b> a pris le badge Premier millionnaire. Il reste le million pour toi.";
+  return pm.nom === moiVrai() ? "👑 Tu es le <b>premier millionnaire</b> du groupe. Personne d'autre ne l'aura." : "👑 <b>" + esc(pm.nom) + "</b> a pris le badge Premier millionnaire. Il reste le million pour toi.";
 }
 /* le premier à 1 000 000 € de patrimoine financier revendique le badge (le montant ne quitte pas l'appareil) */
 async function revendiquerMillion() {
   try {
     if (!M || SRC !== "api" || !((M.synthese || {}).financier >= 1e6) || typeof D === "undefined" || !D || D.premierMillion || SOURCE !== "api" || simulationM()) return;
     if (M.simple && (estAdmin() || !M.personne)) return;
-    const qui = M.simple ? M.personne : estAdmin() ? ETAT.moi : SESSION.nom;
+    const qui = M.simple ? M.personne : moiVrai();
     if (stock.get("versus.moi.million") === qui) return;
     const rep2 = await (await fetch(apiUrl(), { method: "POST", body: JSON.stringify({ cle: stock.get(CLES.cle), action: "million", personne: qui }) })).json();
     if (rep2.ok) { stock.set("versus.moi.million", qui); toast(rep2.message); if (typeof window.charger === "function") window.charger(true); }
@@ -2248,7 +2248,7 @@ function soumettreReglage(type, form) {
 /** Administrateur : les taux des livrets (les mêmes pour tous) sont recopiés par le Versus dans les fichiers des autres */
 async function propagerTaux(corps) {
   try {
-    if (!estAdmin() || typeof SOURCE === "undefined" || SOURCE !== "api") return;
+    if (!estAdmin() || typeof SOURCE === "undefined" || SOURCE !== "api" || simulationM()) return;
     const rep = await (await fetch(apiUrl(), { method: "POST", body: JSON.stringify(Object.assign({ cle: stock.get(CLES.cle) }, corps, { action: "tauxLivrets" })) })).json();
     toast(rep.message || (rep.ok ? "Taux recopiés chez les autres." : "Taux non recopiés chez les autres."));
   } catch (e) { toast("Taux enregistrés chez toi, mais pas recopiés chez les autres (Versus injoignable)."); }
@@ -2835,7 +2835,7 @@ async function partagerLignes() {
   try {
     if (!M || SRC !== "api" || !partageActif() || typeof D === "undefined" || !D || SOURCE !== "api" || simulationM()) return;
     const k = moisDeFenetre(new Date()); if (!k) return;
-    const qui = estAdmin() ? ETAT.moi : SESSION.nom;
+    const qui = moiVrai();
     if (!D.personnes.some(p => p.nom === qui)) return;
     const jour = String(M.genere || "").slice(0, 10) || isoJour(new Date()), marque = k + "|" + jour + "|" + qui;
     if (stock.get("versus.moi.lignesEnvoyees") === marque) return;
