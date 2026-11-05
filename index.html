@@ -1283,12 +1283,13 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 </div>
 <div class="toast" id="toast" role="status" hidden></div>
 
+<script src="version.js"></script>
 <script src="moteur.js"></script>
-<script src="piste.js?v=2"></script>
+<script src="piste.js"></script>
 <script>
 "use strict";
-/* Version de l'appli : à changer à chaque livraison (affichée en bas des Réglages) */
-const APP_VERSION = "12.1", APP_DATE = "4 novembre 2026";
+/* Version de l'appli : elle se change dans version.js, nulle part ailleurs */
+const APP_VERSION = (self.VERSUS_VERSION || {}).app || "?", APP_DATE = (self.VERSUS_VERSION || {}).date || "";
 /* Admin : « voir l'appli à une autre date » (Réglages › Voir comme un joueur). L'horloge de l'appli est décalée ; rien n'est envoyé. */
 (function () {
   let s = null; try { s = localStorage.getItem("versus.dateSim"); } catch (e) { return; }
@@ -4775,7 +4776,7 @@ function vueActive() {
 }
 function rendreVue(v) { ({ classement: rendreClassement, mois: rendreMois, fiche: rendreFiche, trophees: rendreTrophees, moi: rendreMoi })[v](); }
 /* Onglet Moi : module privé chargé à la demande (moi.js), qui lit le fichier personnel depuis l'appareil */
-const MOI_JS = "moi.js?v=26";
+const MOI_JS = "moi.js";
 function chargerModuleMoi(apres, echec) {
   if (window.Moi) { apres(); return; }
   let sc = document.getElementById("script-moi");
@@ -4959,8 +4960,8 @@ if (ETAT.ouverture === "fiche" || ETAT.ouverture === "moi") { ETAT.ouverture = "
 async function verifierMiseAJour() {
   if (location.protocol !== "https:") return;
   try {
-    const t = await (await fetch(location.pathname.replace(/[^/]*$/, "") + "index.html?v=" + Date.now(), { cache: "no-store" })).text();
-    const m = /const APP_VERSION = "([^"]+)"/.exec(t); if (!m || m[1] === APP_VERSION) return;
+    const t = await (await fetch(location.pathname.replace(/[^/]*$/, "") + "version.js?t=" + Date.now(), { cache: "no-store" })).text();   // jamais gardé par sw.js
+    const m = /app:\s*"([^"]+)"/.exec(t); if (!m || m[1] === APP_VERSION) return;
     const b = $("#maj-band"); if (!b) return;
     b.hidden = false;
     b.innerHTML = "<span>🆕 Version " + esc(m[1]) + " disponible (tu as la " + APP_VERSION + ").</span>" + '<button class="lien" type="button" id="maj-go">Mettre à jour</button>';
@@ -4971,7 +4972,7 @@ async function verifierMiseAJour() {
 function majVersion() {
   const el = $("#version-app"); if (!el) return;
   const api = D && D.version ? "API V" + D.version : SOURCE === "demo" ? "API : démo" : "API : —";
-  el.innerHTML = "<b>Versus " + APP_VERSION + "</b> · " + APP_DATE + "<br>" + esc(api) + " · module Moi " + esc((MOI_JS.match(/v=(\d+)/) || [])[1] ? "v" + MOI_JS.match(/v=(\d+)/)[1] : "") + (navigator.serviceWorker && navigator.serviceWorker.controller ? " · hors connexion prêt ✓" : "");
+  el.innerHTML = "<b>Versus " + esc(APP_VERSION) + "</b> · " + esc(APP_DATE) + "<br>" + esc(api) + (navigator.serviceWorker && navigator.serviceWorker.controller ? " · hors connexion prêt ✓" : "");
 }
 /* ============================================================
    L'ÈRE D'OR · récompense du premier millionnaire (V12.1)

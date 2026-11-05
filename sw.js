@@ -2,8 +2,9 @@
    La coquille de l'appli (page, scripts, icônes) est gardée sur le téléphone pour s'ouvrir sans réseau.
    Réseau d'abord : en ligne, on prend toujours la dernière version ; hors ligne (ou réseau trop lent), la copie gardée.
    Les appels à l'API (script.google.com) ne passent jamais par ici : l'appli garde elle-même ses dernières données. */
-const VERSION = "versus-v23";
-const COQUILLE = ["./", "index.html", "moteur.js", "moi.js?v=25", "piste.js?v=2", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "icon.svg"];
+importScripts("version.js");   // LE numéro de version (un seul endroit) : un changement là-bas met à jour le hors connexion
+const VERSION = "versus-" + ((self.VERSUS_VERSION || {}).app || "0");
+const COQUILLE = ["./", "index.html", "version.js", "moteur.js", "moi.js", "piste.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "icon.svg"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => Promise.all(COQUILLE.map(u => c.add(u).catch(() => null)))).then(() => self.skipWaiting()));
 });
@@ -35,6 +36,7 @@ self.addEventListener("fetch", e => {
   if (u.hostname.endsWith("google.com") || u.hostname.endsWith("googleusercontent.com")) return;   // API : jamais en cache ici
   if (u.hostname === "fonts.googleapis.com" || u.hostname === "fonts.gstatic.com") { e.respondWith(cacheDabord(req)); return; }
   if (u.origin !== self.location.origin) return;
+  if (u.pathname.endsWith("version.js") && u.search) return;   // vérification de mise à jour : jamais gardée (sinon le cache gonfle)
   if (req.mode === "navigate" || /\.(html|js)$/.test(u.pathname) || u.pathname.endsWith("/")) { e.respondWith(reseauDabord(req, 4000)); return; }
   e.respondWith(cacheDabord(req));
 });

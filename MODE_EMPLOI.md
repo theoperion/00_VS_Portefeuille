@@ -46,8 +46,8 @@ Où est le code :
 
 | Script | Adresse officielle | État |
 |---|---|---|
-| Versus | déploiement n°27 (`…xVNsHSYT…`) | ⚠️ ton téléphone utilise encore le n°26 → étape 0.3b |
-| Moi · Théo | déploiement n°13 (`…wUZGrzfS…`) | ✅ |
+| Versus | déploiement n°27 (`…xVNsHSYT…`), inscrit dans le code | ✅ Les 26 anciennes adresses donnent le même code (marquées « ancienne adresse » dans Apps Script) |
+| Moi · Théo | déploiement n°13 (`…wUZGrzfS…`) | ✅ Les 5 anciennes adresses donnent le même code |
 | Moi · Clément | `…yue_yIcK…` | à rattacher (phase 4) |
 | Moi · Devlin | `…z2q12dXu…` | à rattacher (phase 4) |
 | Moi · Kévin (profil simple) | `…zucvUCgb…` | à rattacher (phase 2) |
@@ -62,8 +62,8 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 - ✅ 0.1 Connexion Google ↔ Claude (clé Google Cloud `clasp-theo`, § 5)
 - ✅ 0.2 Code des scripts rangé dans le dépôt privé `app_scripts`
 - ✅ 0.3a Audit complet de Versus et de l'onglet Moi
-- 🟡 0.3b **Une seule adresse par script** : tout le monde sur Versus n°27 (tu vides l'adresse dans tes Réglages), puis suppression des 26 autres déploiements Versus et des 5 autres de ton script Moi.
-- 🟡 0.4 **Un seul numéro de version** pour toute l'appli (fini les `v=25` / `v=26`), affiché dans Réglages.
+- 🔧 0.3b **Une seule adresse par script** : ✅ toutes les anciennes adresses servent le même code · ⬜ **toi** : Réglages → vider « Adresse de l'API » → Enregistrer · ⬜ plus tard : supprimer les anciennes adresses.
+- 🔧 0.4 **Un seul numéro de version** : fichier `version.js` (le seul endroit à changer), lu par l'appli et par le hors connexion. Version **12.2**. ✅ testé · ⬜ mise en ligne · ⬜ **toi** : Réglages affiche « Versus 12.2 ».
 
 ### Phase 1 · Classement Versus
 - ⬜ 1.1 Données : corriger la confusion « joueur affiché = joueur connecté » (lignes de Théo enregistrées sous Kévin), bloquer les écritures en mode simulation, nettoyer la ligne fausse de Kévin.
@@ -114,3 +114,5 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 0.1, 0.2 | Connexion Google ; code des scripts dans `app_scripts` (privé) |
 | 05/11/2026 | 0.3a | Audit : 3 urgents, 11 bugs, 5 points sécurité, 3 hors connexion, 5 ménage |
 | 05/11/2026 | — | Mode d'emploi réorganisé en feuille de route |
+| 05/11/2026 | 0.3b | Toutes les anciennes adresses Versus (26) → code n°27 ; Moi Théo (5) → code n°13 |
+| 05/11/2026 | 0.4 | `version.js` : version unique 12.2 ; le cache hors connexion ne gonfle plus (vérif de mise à jour jamais gardée) |
