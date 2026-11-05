@@ -40,7 +40,15 @@ Téléphone (ce dépôt, GitHub Pages)
 2. Onglet **Marché** : pour chaque fin de mois (dates prises dans Data Théo, colonne A), une formule va chercher le dernier cours de ce mois dans Cours, puis calcule les performances.
 3. L'appli lit Marché.
 
-**D'où viennent les valeurs des portefeuilles** : le relevé de fin de mois de chaque joueur (saisi à la main, ou envoyé automatiquement par l'onglet Moi → étape 2.1).
+**D'où viennent les valeurs des portefeuilles : le relevé automatique de fin de mois**
+- **Qui le fait** : le **script Versus** (chez Google), pas le téléphone. Tous les jours vers 19 h, il regarde si on est le **dernier jour ouvré du mois** ; si oui, il agit.
+- **Pour qui** : les joueurs **reliés** (Théo, Devlin, Clément). Kévin n'est pas relié (son fichier est d'un autre type) : son relevé se fait à la main.
+- **Ce qu'il lit** dans chaque fichier « Portefeuille & Épargne » : les enveloppes du périmètre *Portefeuille* (onglet Paramètres), leur valeur (onglet Positions), les apports/retraits du mois (onglet Ordres).
+- **Ce qu'il écrit** : la ligne du mois dans « Data <prénom> » du Sheet Versus (+ les lignes de bourse dans « Lignes app »), et une trace « Import auto » dans « Journal app ».
+- **Sécurités** : il n'écrase jamais un relevé saisi à la main ; il s'arrête si une enveloppe qui avait de l'argent le mois d'avant a disparu, ou si aucune valeur n'est lue.
+- **L'onglet Moi du téléphone**, lui, sert à *voir* ton patrimoine et à saisir tes ordres ; il ne fait pas le relevé.
+- **Vérifier** : Réglages (mode admin) → « Relevés automatiques de fin de mois » : l'état doit être **activé** ; le bouton **Tester** montre ce qui serait importé, sans rien écrire.
+- **Octobre 2026** : seul Théo était relié le 30/10 à 19 h ; Devlin a été relié le 31/10 à 19 h 38, Clément à 19 h 54, donc trop tard pour octobre (ce n'est pas un bug). Relevés de Clément et Devlin saisis à la main le 31/10 : c'était la bonne chose à faire. **Novembre (lundi 30/11, 19 h)** : les trois seront importés.
 
 Où est le code :
 - **Appli téléphone** : ce dépôt (public).
@@ -111,7 +119,9 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 **Phase 1 terminée ✅** (05/11/2026). Reste volontairement pour plus tard : anti-triche du badge million et des exclusifs (phase 3), petits restes de code (5.1).
 
 ### Phase 2 · Onglet Moi
-- ⬜ 2.1 Comprendre et documenter **le lien automatique de fin de mois** (Moi → Versus) : qui envoie quoi, quand ; pourquoi il n'a tourné que pour Théo en octobre.
+- 🟡 2.1 **Relevé automatique de fin de mois** · ✅ expliqué (§ 2) · 🟡 améliorations proposées, attendent ton OK :
+  - a) Si l'import échoue pour quelqu'un, l'erreur est notée dans « Journal app » **et** tu reçois un e-mail (aujourd'hui elle reste cachée dans les journaux techniques de Google).
+  - b) Texte de l'onglet Data corrigé : la ligne du mois apparaît **le dernier jour ouvré** (pas « le lendemain »).
 - ⬜ 2.2 Choix : quelles lignes de bourse sont partagées avec les autres (réglage respecté partout).
 - ⬜ 2.3 Bugs : ordre à 0 € de frais non supprimable, cases vides comptées 0 (fausse perte −100 %), enveloppes clôturées, rechargement après un ordre.
 - ⬜ 2.4 Profil simple de Kévin : récupérer son script, même ménage.
@@ -169,3 +179,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 1.5 | Ménage : « Script par mois » supprimé, cartes/duels par saison, code mort retiré. Versus V17 (version Google 32) |
 | 05/11/2026 | 1.4, 1.5 | ✅ Validés par Théo |
 | 05/11/2026 | 1.6 | « Timing des versements » dans la fiche joueur. Appli v12.8. **Phase 1 terminée** |
+| 05/11/2026 | 2.1 | Explication du relevé automatique (§ 2) ; cause d'octobre trouvée (Devlin et Clément reliés le 31/10 au soir, après l'import) |
