@@ -220,3 +220,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 3.5 | Pronostic du mois (+1 vainqueur, +1 sens du S&P 500) et rival de la saison (+5). Appli v13.4 ; Versus V21 (version Google 36) |
 | 05/11/2026 | 3.8 | Règles de l'appli et tutoriel réécrits (essentiel + détail court). Appli v13.5 |
 | 05/11/2026 | 3.3 | Anti-triche : exclusifs calculés et figés par le serveur (partagés si même mois), badge millionnaire vérifié. Appli v13.6 ; Versus V22 (version Google 37) |
+| 05/11/2026 | — | Correctif v13.7 : ta ligne du Podium (et ta voiture, ton étiquette « moi ») prenait les styles de l'onglet Moi après sa visite (score décalé, rond gris). Classe renommée. |

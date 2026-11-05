@@ -176,7 +176,7 @@ h2.sec small { font: 400 12px/1.2 var(--f-text); letter-spacing: 0; text-transfo
 .pos.ghost .t { color: var(--ink-2); font-size: 15px; }
 .tag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; font: 700 10px/1.4 var(--f-display); letter-spacing: .08em; text-transform: uppercase; vertical-align: 2px; font-style: normal; }
 .tag.manque { background: var(--down-bg); color: var(--down); }
-.tag.moi { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent-ink); }
+.tag.ici { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent-ink); }
 .h-boutons { display: inline-flex; gap: 6px; align-items: center; }
 .million-b { width: 30px; height: 30px; border-radius: 50%; border: 1px dashed color-mix(in srgb, var(--gold) 70%, var(--rule)); background: var(--panel); cursor: pointer; font-size: 14px; line-height: 1; filter: grayscale(.6); padding: 0; }
 .million-b.pris { border-style: solid; filter: none; box-shadow: 0 0 10px color-mix(in srgb, var(--gold) 45%, transparent); }
@@ -419,7 +419,7 @@ button.bt-e { cursor: pointer; color: var(--ink); }
 .gp-rendu > canvas { cursor: grab; } .gp-rendu > canvas:active { cursor: grabbing; }
 .gp-piste.en2d { background: radial-gradient(120% 90% at 50% 0%, #171C28, #090B10); }
 .p2-svg text { font: 800 9px/1 var(--f-num); fill: #fff; paint-order: stroke; stroke: rgba(0,0,0,.5); stroke-width: 1.6px; }
-.p2-car { cursor: pointer; } .p2-car.moi circle:first-child { animation: gpMoi 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.p2-car { cursor: pointer; } .p2-car.ici circle:first-child { animation: gpMoi 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 @keyframes gpMoi { 50% { opacity: .35; transform: scale(1.25); } }
 .gp-nopiste { margin: 0; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: 13px; }
 .gp-rg { position: absolute; top: -5px; left: -5px; min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box; border-radius: 8px; background: #0B0D12; color: #fff; font: 800 9.5px/15px var(--f-num); text-align: center; box-shadow: 0 0 0 1.5px var(--c); font-style: normal; }
@@ -467,7 +467,7 @@ button.bt-e { cursor: pointer; color: var(--ink); }
 .gpp-x { pointer-events: auto; flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); background: rgba(8,10,14,.7); color: #fff; font-size: 16px; cursor: pointer; }
 .gpp-tour { position: absolute; z-index: 4; left: 10px; top: calc(env(safe-area-inset-top, 0px) + 66px); display: grid; gap: 4px; pointer-events: none; }
 .gpp-tour .r { display: grid; grid-template-columns: 18px 24px minmax(0, 1fr) auto; align-items: center; gap: 6px; padding: 3px 9px 3px 4px; border-radius: 10px; background: rgba(8,10,14,.74); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border-left: 3px solid var(--c); min-width: 150px; }
-.gpp-tour .r.moi { box-shadow: 0 0 0 1.5px var(--accent); }
+.gpp-tour .r.ici { box-shadow: 0 0 0 1.5px var(--accent); }
 .gpp-tour .rk { font: italic 800 14px/1 var(--f-display); text-align: center; }
 .gpp-tour .av { width: 24px; height: 24px; }
 .gpp-tour .n { font: italic 700 13px/1 var(--f-display); letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -488,7 +488,7 @@ button.bt-e { cursor: pointer; color: var(--ink); }
 .gp-t3 .av { width: 26px; height: 26px; box-shadow: inset 0 0 0 1.5px #fff; } .gp-t3 .av .casque { width: 20px !important; height: 20px !important; }
 .gp-hud, .gp-btns { z-index: 3; }
 .gp-t3 b { font: italic 800 10.5px/1 var(--f-display); letter-spacing: .05em; text-transform: uppercase; max-width: 56px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gp-t3.moi { box-shadow: 0 0 0 2px var(--accent), 0 2px 8px rgba(0,0,0,.45); z-index: 2; }
+.gp-t3.ici { box-shadow: 0 0 0 2px var(--accent), 0 2px 8px rgba(0,0,0,.45); z-index: 2; }
 .gp-btns { position: absolute; right: 8px; top: 8px; display: flex; gap: 6px; } .gp-btns .gp-vue { position: static; }
 .gp-t3::after { content: ""; position: absolute; left: 50%; bottom: -4px; margin-left: -4px; border: 4px solid transparent; border-top-color: var(--c); border-bottom: 0; }
 .gp-vue { position: absolute; right: 8px; top: 8px; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.25); background: rgba(8,10,14,.72); color: #fff; font: 600 11.5px/1.2 var(--f-text); cursor: pointer; }
@@ -520,7 +520,7 @@ button.bt-e { cursor: pointer; color: var(--ink); }
 .gp-l:first-child { border-top: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 14%, var(--panel)), var(--panel) 70%); }
 .gp-l .rk { font: italic 800 19px/1 var(--f-display); text-align: center; color: var(--ink-3); }
 .gp-l:first-child .rk { color: var(--gold); }
-.gp-l.moi .rk { color: var(--accent-ink); }
+.gp-l.ici .rk { color: var(--accent-ink); }
 .gp-l .nm { min-width: 0; overflow: hidden; }
 .gp-l .nm b { display: block; font: italic 700 16px/1.1 var(--f-display); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gp-l .nm small { display: block; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -742,7 +742,7 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .ch-l { display: grid; grid-template-columns: 22px 38px minmax(0, 1fr) 54px; gap: 8px; align-items: center; padding: 10px 12px; border-top: 1px solid var(--rule-2); }
 .ch-l:first-child { border-top: 0; }
 .ch-l.tete { background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 14%, var(--panel)), var(--panel) 70%); }
-.ch-l.moi .rk { color: var(--accent-ink); }
+.ch-l.ici .rk { color: var(--accent-ink); }
 .ch-l .rk { font: italic 800 20px/1 var(--f-display); text-align: center; color: var(--ink-3); }
 .ch-l.tete .rk { color: var(--gold); }
 .ch-l .casque { width: 30px; height: 30px; }
@@ -1787,7 +1787,7 @@ function rendreClassement() {
     rang++;
     const ecart = s.i1 ? s.twr - s.i1.twr : null;
     return '<div class="pos" tabindex="0" role="button" aria-expanded="false" data-key="' + esc(s.nom) + '" data-nom="' + esc(s.nom) + '"><span class="rk">' + rang + '</span><div class="who">' + (saisonVisible() ? avatar(s.nom) : '<i style="background:' + couleur(s.nom) + '"></i>') + '<div><b' + attrLivree(s.nom) + '>' + esc(s.nom) + couronne(s.nom) +
-      (s.nom === ETAT.moi ? '<span class="tag moi">moi</span>' : "") + badgesNom(s.nom) + (manque.has(s.nom) ? '<span class="tag manque">relevé à saisir</span>' : "") +
+      (s.nom === ETAT.moi ? '<span class="tag ici">moi</span>' : "") + badgesNom(s.nom) + (manque.has(s.nom) ? '<span class="tag manque">relevé à saisir</span>' : "") +
       "</b><small>" + plaqueDe(s.nom) + pts(ecart) + " vs " + esc(D.marche.indices[i1]) + (s.n < nMois ? " · " + s.n + " mois" : "") + '</small></div></div><span class="t ' + sens(s.twr) + '" data-cv="' + s.twr + '" data-cf="pct">' + pct(s.twr) + "</span>" +
       (s === leader ? '<span class="g lead">LEADER</span>' : '<span class="g">' + pts(s.twr - leader.twr) + "</span>") + "</div>";
   }).join("");
@@ -3159,7 +3159,7 @@ function htmlGrandPrix(y) {
   const deux = ETAT.gp2d === "1" || !piste3D(), cam = camGP();
   const piste = '<div class="gp-piste' + (deux ? " en2d" : "") + '" id="gp-piste" data-circuit="' + ci + '"><div class="gp-scene" id="gp-scene"></div>' +
     '<div class="gp-zones">' + (at ? '<span class="gp-zone at" data-zone="atout">' + at.atout.ico + ' <b>+1</b></span>' : "") + "</div>" +
-    '<div class="gp-tags3">' + ordre.map(n => '<span class="gp-t3' + (n === qui ? " moi" : "") + '" data-gpt3="' + esc(n) + '" style="--c:' + couleur(n) + '" title="' + esc(n) + '">' + avatar(n) + '<i class="gp-rg"></i></span>').join("") + "</div>" +
+    '<div class="gp-tags3">' + ordre.map(n => '<span class="gp-t3' + (n === qui ? " ici" : "") + '" data-gpt3="' + esc(n) + '" style="--c:' + couleur(n) + '" title="' + esc(n) + '">' + avatar(n) + '<i class="gp-rg"></i></span>').join("") + "</div>" +
     '<div class="gp-pops"></div>' +
     '<div class="gp-hud"><span class="gp-tour">Tour <b id="gp-tour">' + tourTete + "</b></span><span>" + met.ico + " " + esc(met.nom) + "</span></div>" +
     '<div class="gp-btns">' + (deux ? "" : '<button class="gp-vue" type="button" id="gp-cam-b" aria-label="Changer de caméra">' + CAMS[cam] + "</button>") +
@@ -3180,7 +3180,7 @@ function htmlGrandPrix(y) {
       (x.mult > 1 ? '<span class="gp-x or" data-bdg="' + esc(et.m.spec ? et.m.spec.ico + " " + et.m.spec.nom + " : points de place doublés." : "Points doublés.") + '">×2</span>' : "") +
       (x.pioche && x.pioche.length && regleVisible("pioche") ? '<span class="gp-x" data-bdg="🎴 Carte' + (x.pioche.length > 1 ? "s" : "") + " piochée" + (x.pioche.length > 1 ? "s" : "") + " ce mois-ci" + (n === qui ? " : " + esc(x.pioche.map(c => carteDef(c).nom).join(", ")) : "") + '.">🎴</span>' : "") : "";
     const jn = (c.jeu || {})[n], niv = x ? x.niv + (x.monte || 0) : jn && !et.m ? 1 : (jn ? jn.niv : 1);
-    return '<div class="gp-l' + (n === qui ? " moi" : "") + '"><span class="rk">' + (r + 1) + "</span>" + avatar(n) + '<div class="nm"><b><span' + (attrLivree(n) ? attrLivree(n).replace(' class="', ' class="gp-nom ') : ' class="gp-nom"') + ">" + esc(n) + "</span>" + (regleVisible("niveaux") ? '<span class="gp-niv" data-bdg="Niveau d\'écurie ' + niv + ' : chaque niveau gagné donne une carte bonus.">N' + niv + "</span>" : "") + extra + "</b><small>" +
+    return '<div class="gp-l' + (n === qui ? " ici" : "") + '"><span class="rk">' + (r + 1) + "</span>" + avatar(n) + '<div class="nm"><b><span' + (attrLivree(n) ? attrLivree(n).replace(' class="', ' class="gp-nom ') : ' class="gp-nom"') + ">" + esc(n) + "</span>" + (regleVisible("niveaux") ? '<span class="gp-niv" data-bdg="Niveau d\'écurie ' + niv + ' : chaque niveau gagné donne une carte bonus.">N' + niv + "</span>" : "") + extra + "</b><small>" +
       (r === 0 ? (et.k ? "en tête · tour " + (Math.floor(et.pts[n] / TOUR_GP) + 1) : "sur la grille") : "à " + ecart + " pt" + (ecart > 1 ? "s" : "") + " de " + esc(devant)) +
       (x ? " · " + (x.p >= 0 ? "+" : "") + x.p + " ce mois" : "") + "</small></div>" + carte + '<span class="pt"><b>' + et.pts[n] + "</b><small>pts</small></span></div>";
   }).join("");
@@ -3520,7 +3520,7 @@ function majTourPlein(cur, force) {
   const P = GP_PLEIN; if (!P) return; const now = performance.now(); if (!force && now - P.maj < 150) return; P.maj = now;
   const qui = quiEcurie(), ordre = Object.keys(cur).sort((a, b) => cur[b] - cur[a]), t = cur[ordre[0]] || 0, box = P.o.querySelector(".gpp-tour");
   if (force || !P.lignes || P.lignes.cle !== ordre.slice().sort().join("|")) {
-    box.innerHTML = Object.keys(cur).map(n => '<div class="r' + (n === qui ? " moi" : "") + '" data-tr="' + esc(n) + '" style="--c:' + couleur(n) + '"><span class="rk"></span>' + avatar(n) + '<span class="n">' + esc(n) + '</span><span class="p"><b></b><small></small></span></div>').join("");
+    box.innerHTML = Object.keys(cur).map(n => '<div class="r' + (n === qui ? " ici" : "") + '" data-tr="' + esc(n) + '" style="--c:' + couleur(n) + '"><span class="rk"></span>' + avatar(n) + '<span class="n">' + esc(n) + '</span><span class="p"><b></b><small></small></span></div>').join("");
     P.lignes = { cle: ordre.slice().sort().join("|"), m: {} }; box.querySelectorAll("[data-tr]").forEach(e => P.lignes.m[e.dataset.tr] = { e, rk: e.querySelector(".rk"), b: e.querySelector(".p b"), s: e.querySelector(".p small"), v: "" });
   }
   ordre.forEach((n, r) => { const l = P.lignes.m[n]; if (!l) return; const v = r + "|" + Math.round(cur[n]) + "|" + Math.round(t - cur[n]) + "|" + Math.floor(t / TOUR_GP); if (v === l.v) return; l.v = v;
