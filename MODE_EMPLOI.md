@@ -42,13 +42,6 @@ Téléphone (appli GitHub Pages : ce dépôt)
 - [ ] Sortir l'adresse API du code
 - [ ] Étape « transférer la propriété » et « reconnecter les applis »
 
-## 6. Journal des modifications
-
-| Date | Quoi |
-|---|---|
-| 05/11/2026 | Création de ce mode d'emploi |
-| 05/11/2026 | Connexion Google (clasp) ; code et structure des Sheets récupérés ; audit lancé |
-
 ## 5. Connexion Google (clasp) : ce qui existe
 
 | Élément | Valeur |
@@ -60,3 +53,10 @@ Téléphone (appli GitHub Pages : ce dépôt)
 
 **Si Claude n'arrive plus à se connecter** (le mode « Test » fait expirer l'accès au bout de 7 jours) : demande-lui « refais la connexion clasp ». Il te donne un lien, tu cliques « Continuer », tu lui recolles l'adresse `localhost:8888/...`.
 **Retirer l'accès** : https://myaccount.google.com/permissions → « Mes applis Theo » → Supprimer l'accès.
+
+## 6. Journal des modifications
+
+| Date | Quoi |
+|---|---|
+| 05/11/2026 | Création de ce mode d'emploi |
+| 05/11/2026 | Connexion Google (clasp) ; code et structure des Sheets récupérés ; audit lancé |
