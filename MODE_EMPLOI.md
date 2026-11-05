@@ -163,8 +163,9 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 
 ### Phase 4 · Transferts (Clément et Devlin ; Kévin reste chez Théo)
 
-- 🟡 4.0 **Mettre à jour leurs scripts avant le transfert** (mêmes corrections que celui de Théo : sécurité V11, bugs V12). Il faut l'**ID du script** de chacun (fichier → Extensions → Apps Script → ⚙️ Paramètres du projet).
-- 🟡 4.1 **Décisions** : Théo reste-t-il **éditeur** des fichiers transférés ? Les dépôts GitHub de leurs applis budget (`05_…Clement`, `06_…Devlin`) partent-ils maintenant ou après la phase 5 ?
+- ✅ 4.0 **Leurs scripts mis au niveau du tien** (V12 : sécurité + 3 bugs), rangés dans `app_scripts/portefeuille-epargne/clement|devlin`. Leurs adresses ne changent pas.
+- ✅ 4.1 **Décisions** (05/11/2026) : **transfert complet** (Théo n'a plus aucun accès à leurs fichiers). Les applis budget attendent la fin du travail en cours dans l'autre conversation.
+- 🟡 4.1b **Relevé de fin de mois après le transfert** : le script Versus (chez Théo) ne pourra plus lire leurs fichiers. Solution proposée : c'est **leur propre script** qui **envoie** leur relevé au Versus le dernier jour ouvré (avec leur code perso), configuré automatiquement par l'appli. Toujours automatique, sans que Théo voie leurs comptes.
 - ⬜ 4.2 Transfert de Clément · ⬜ 4.3 Transfert de Devlin
 
 #### 🔁 Transférer un fichier « Portefeuille & Épargne » à un ami (≈ 5 min)
@@ -251,3 +252,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | — | Correctif v13.7 : ta ligne du Podium (et ta voiture, ton étiquette « moi ») prenait les styles de l'onglet Moi après sa visite (score décalé, rond gris). Classe renommée. |
 | 05/11/2026 | 3.6, 3.7 | Carte postale du mois ; vote de fin de saison. Appli v13.9 ; Versus V23 (version Google 38). **Phase 3 terminée** |
 | 05/11/2026 | 4 | Mode d'emploi des transferts (fichier Google, dépôt GitHub, reconnexion) ; état des accès relevé (fichiers de Clément et Devlin à Théo ; Clément éditeur du sien, Devlin sans accès) |
+| 05/11/2026 | 4.0 | Scripts de Clément et Devlin récupérés et mis à jour (V12). Décision : transfert complet |
