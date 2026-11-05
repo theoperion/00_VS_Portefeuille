@@ -195,7 +195,21 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 5. Pour que Claude continue à l'aider, il l'ajoute (ou t'ajoute) en **collaborateur** : Settings → Collaborators.
 
 ### Phase 5 · Plus tard
-- ⬜ 5.1 Découper `index.html` (5 000 lignes) en fichiers plus petits.
+- ✅ 5.1 **Code découpé** (v14.2) : `index.html` passe de 5 377 à 227 lignes. Rien ne change à l'écran (code serveur extrait identique octet pour octet, tous les tests repassés, hors connexion vérifié).
+  | Fichier | Contenu |
+  |---|---|
+  | `index.html` | la page (structure) |
+  | `css/versus.css` | les styles (ceux de l'onglet Moi sont dans `moi.js`) |
+  | `js/1-base.js` | socle : configuration, stockage, chargement, classement, mois, fiches |
+  | `js/2-jeu.js` | verdict du mois, positions, confettis |
+  | `js/3-podium.js` | Podium : saison, cartes, écurie, défis, exclusifs |
+  | `js/4-grandprix.js` | Grand Prix : circuits, course, stand, pronostic, rival, vote, carte postale |
+  | `js/5-plateau.js` | pioche, étapes, règles, tutoriel |
+  | `js/6-voiture3d.js` | voiture 3D |
+  | `js/7-bilan.js` | bilan de l'année, réglages, onglet Moi, saisie du relevé |
+  | `js/8-eredor-demarrage.js` | Ère d'or et démarrage |
+  | `moteur.js` · `moi.js` · `piste.js` · `version.js` · `sw.js` | calculs · onglet Moi · circuit 3D/2D · numéro de version · hors connexion |
+  Les fichiers `js/` se chargent dans l'ordre de leur numéro ; un nouveau fichier doit aussi être ajouté à `sw.js`.
 - ⬜ 5.2 Les autres applis (budget, carnet d'entretien…) avec la même méthode.
 
 ---
@@ -258,3 +272,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 4.0 | Scripts de Clément et Devlin récupérés et mis à jour (V12). Décision : transfert complet |
 | 05/11/2026 | 4.1 | Relevé envoyé par le fichier perso (V13), réception par le Versus (V24), liaison automatique (appli v14.0). Fiche de transfert autonome |
 | 05/11/2026 | 4.1 | Bouton « 🔗 Tester l'envoi du relevé au Versus » pour chaque joueur (Réglages → Moi), sans rien écrire. Appli v14.1. Fiche complétée |
+| 05/11/2026 | 5.1 | index.html découpé en css/versus.css + 8 fichiers js/ (v14.2) ; hors connexion et outil d'extraction du serveur adaptés |
