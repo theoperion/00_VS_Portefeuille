@@ -123,7 +123,7 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 - ✅ 2.1 **Relevé automatique de fin de mois** · expliqué (§ 2) ; « Tester » OK chez Théo (Théo, Devlin, Clément) · validé le 05/11/2026
   - a) Si l'import échoue pour quelqu'un : une ligne est ajoutée dans l'onglet **« Bugs »** du Sheet Versus **et** Théo reçoit un **e-mail** (Versus V18).
   - b) Texte d'aide des 4 onglets Data corrigé : la ligne du mois apparaît **le dernier jour ouvré** (pas « le lendemain »).
-- ⬜ 2.2 Choix : quelles lignes de bourse sont partagées avec les autres (réglage respecté partout).
+- ✅ 2.2 **Partage des lignes de bourse** · décision de Théo (05/11/2026) : **on ne change rien** (partagé par défaut, comme avant).
 - ⬜ 2.3 Bugs : ordre à 0 € de frais non supprimable, cases vides comptées 0 (fausse perte −100 %), enveloppes clôturées, rechargement après un ordre.
 - ⬜ 2.4 Profil simple de Kévin : récupérer son script, même ménage.
 - ⬜ 2.5 **Saisir un ordre (achat / vente) facilement** : revoir le parcours de saisie dans l'onglet Moi et ajouter un mini-tutoriel clair, étape par étape.
@@ -183,3 +183,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 2.1 | Explication du relevé automatique (§ 2) ; cause d'octobre trouvée (Devlin et Clément reliés le 31/10 au soir, après l'import) |
 | 05/11/2026 | 1.1 | v12.9 : gestion (codes, relevés automatiques, réglages communs) visible avec la clé admin sans activer le mode admin (Théo ne la voyait plus) |
 | 05/11/2026 | 2.1 | ✅ Validé. Versus V18 (version Google 33) : import raté → onglet Bugs + e-mail. Textes d'aide des onglets Data corrigés |
+| 05/11/2026 | 2.2 | ✅ Décision : partage des lignes inchangé |
