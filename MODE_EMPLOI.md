@@ -151,7 +151,7 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 - ✅ 3.1 **Règles écrites en clair** et **validées** : [`REGLES_PODIUM.md`](REGLES_PODIUM.md) (décisions D1 à D9 du 05/11/2026).
 - 🔧 3.2 **Règles simples** · ✅ en ligne (appli v13.2, Versus V19) : tout en jeu dès janvier, égalité Pari = 0, un duel par paire, bouchon si les deux marquent, « inactive en janvier » sur les cartes, victoire partagée partout, page admin et code mort nettoyés. Testé sur une fausse saison.
 - ✅ 3.4 **Nouvelles règles de points** (appli v13.3, Versus V20) : duels retirés ; 🎰 Monaco réactivé ; 🇬🇧 Silverstone (vainqueur +2) ; 🇮🇹 Monza (🎯 +2) ; 🤝 bonus d'équipe ; 🔥 série ; DRS supprimé. Testé sur une fausse saison.
-- ⬜ 3.5 **Pronostic du mois + rival de la saison** (saisie dans l'appli + serveur).
+- ✅ 3.5 **Pronostic du mois + rival de la saison** (appli v13.4, Versus V21) : saisie dans le Stand (fenêtre du 20 au 1er ; rival pendant la fenêtre de janvier), secrets jusqu'au 2 (rival : jusqu'à la Finale), points comptés automatiquement. Testé sur une fausse saison.
 - ⬜ 3.3 **Anti-triche + exclusifs partagés** : le serveur refait le même calcul (fichier de calcul commun) et décide lui-même.
 - ⬜ 3.6 **Carte postale du mois** · ⬜ 3.7 **Vote de fin de saison** · ⬜ 3.8 **Règles réécrites, courtes et limpides**.
 - ⬜ 3.3 Quand toutes les fonctionnalités sont sorties (vers février 2027) : supprimer l'aperçu des étapes à venir ; il ne reste en admin que les codes et la saisie de secours.
@@ -215,3 +215,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 3.1 | Règles du Podium relevées dans le code et écrites en clair (`REGLES_PODIUM.md`) ; 9 décisions proposées |
 | 05/11/2026 | 3.1, 3.2 | Règles validées (D1–D9). Appli v13.2 ; Versus V19 (version Google 34) |
 | 05/11/2026 | 3.4 | Duels retirés, Monaco, Silverstone, Monza, équipe, série, DRS supprimé. Appli v13.3 ; Versus V20 (version Google 35) |
+| 05/11/2026 | 3.5 | Pronostic du mois (+1 vainqueur, +1 sens du S&P 500) et rival de la saison (+5). Appli v13.4 ; Versus V21 (version Google 36) |

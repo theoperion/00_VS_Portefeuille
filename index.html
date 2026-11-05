@@ -2082,6 +2082,12 @@ function championnat(y) {
       const ok3 = iR !== null && x.r > iR; SERIE[x.nom] = ok3 ? (SERIE[x.nom] || 0) + 1 : 0;
       if (!ch && ok3 && regleActive("serie", k) && SERIE[x.nom] % 3 === 0) { x.serie = SERIE[x.nom]; x.p += 1; }
     });
+    // pronostic du mois : +1 vainqueur juste (victoire partagée comprise), +1 sens du S&P 500 juste
+    if (!ch && regleActive("prono", k)) l.forEach(x => {
+      const pr = pronoDe(y, x.nom, k); if (!pr || pr.cache) return;
+      const okV = pr.v && l.some(z => z.nom === pr.v && z.rg === 1) ? 1 : 0, okI = pr.i && iR !== null && iR !== 0 && (pr.i === "h") === (iR > 0) ? 1 : 0;
+      x.prono = { v: pr.v || null, i: pr.i || null, pts: okV + okI }; x.p += okV + okI;
+    });
     l.forEach(x => { x.p = Math.max(0, x.p); });
     // XP, niveaux et pioche (dans l'ordre de la pioche de chacun)
     l.forEach(x => {
@@ -2096,6 +2102,12 @@ function championnat(y) {
     presents.forEach((nm, i) => { places[nm] = i + 1; cumul[nm] = tot[nm].pts; });
     mois.push({ k, iR, l, places, cumul, spec });
   });
+  // rival de la saison : +5 en fin de saison si tu finis devant ton rival (classement avant ce bonus)
+  if (!ch && mois.length && mois[mois.length - 1].k === f && regleActive("rival", f)) {
+    const avantR = Object.keys(tot).filter(nm => tot[nm].n).sort(ordre), der = mois[mois.length - 1];
+    avantR.forEach(nm => { const r = rivalDe(y, nm); if (!r || r.cache || !r.r) return; const ir = avantR.indexOf(r.r);
+      if (ir >= 0 && avantR.indexOf(nm) < ir) { tot[nm].pts += 5; const x = der.l.find(z => z.nom === nm); if (x) { x.rival = r.r; x.p += 5; } der.cumul[nm] = tot[nm].pts; } });
+  }
   const classement = Object.keys(tot).filter(nm => tot[nm].n).sort(ordre);
   const val = { y, deb, f, jeu: J, chauffe: ch, mois, attente: attente && (!mois.length || attente.k > mois[mois.length - 1].k) ? attente : null, tot, classement, complete: mois.length > 0 && mois[mois.length - 1].k === f };
   MEMO_SAISON.m[y] = val;
@@ -3146,6 +3158,8 @@ function htmlGrandPrix(y) {
     const extra = x ? (x.vainq ? '<span class="gp-x or" data-bdg="🇬🇧 Silverstone : vainqueur du mois, +2.">🏁+2</span>' : "") +
       (x.equipe ? '<span class="gp-x" data-bdg="🤝 Bonus d\'équipe : tout le monde a battu le S&P 500 ce mois-ci, +1.">🤝+1</span>' : "") +
       (x.serie ? '<span class="gp-x" data-bdg="🔥 Série : ' + x.serie + ' mois d\'affilée au-dessus du S&P 500, +1.">🔥+1</span>' : "") +
+      (x.prono ? '<span class="gp-x" data-bdg="🔮 Pronostic : ' + esc((x.prono.v || "—") + (x.prono.i ? ", indice " + (x.prono.i === "h" ? "en hausse" : "en baisse") : "")) + " → +" + x.prono.pts + '.">🔮+' + x.prono.pts + "</span>" : "") +
+      (x.rival ? '<span class="gp-x or" data-bdg="😈 Rival de la saison : devant ' + esc(x.rival) + ' au championnat, +5.">😈+5</span>' : "") +
       (x.vise || []).map(z => '<span class="gp-x" data-bdg="🎲 Pari de ' + esc(z.par) + " contre " + esc(n) + " : " + (z.gain > 0 ? esc(z.par) + " a fini devant, +2 pour lui." : z.gain < 0 ? esc(n) + " a tenu bon, " + esc(z.par) + " perd 1 point." : "égalité parfaite, 0.") + '">🎲' + (z.gain > 0 ? "" : "✓") + "</span>").join("") +
       (x.mult > 1 ? '<span class="gp-x or" data-bdg="' + esc(et.m.spec ? et.m.spec.ico + " " + et.m.spec.nom + " : points de place doublés." : "Points doublés.") + '">×2</span>' : "") +
       (x.pioche && x.pioche.length && regleVisible("pioche") ? '<span class="gp-x" data-bdg="🎴 Carte' + (x.pioche.length > 1 ? "s" : "") + " piochée" + (x.pioche.length > 1 ? "s" : "") + " ce mois-ci" + (n === qui ? " : " + esc(x.pioche.map(c => carteDef(c).nom).join(", ")) : "") + '.">🎴</span>' : "") : "";
@@ -3227,7 +3241,7 @@ function htmlCartes(y) {
   return '<div><h3 class="s-h3">Mes cartes <small>' + reste + " en main" + (regleVisible("pioche") ? " · " + aVenir + " dans la pioche" : "") + "</small></h3></div>" +
     '<p class="info">Touche une carte pour la poser. Une par mois ; une carte de base se rejoue, mais pas deux mois de suite. Une carte bonus ne sert qu\'une fois.' + (regleVisible("pioche") ? (regleVisible("niveaux") ? " Tu en pioches une nouvelle à chaque niveau gagné et quand tu finis dernier d\'un mois." : " Tu en pioches une nouvelle quand tu finis dernier d\'un mois.") : "") + (ap ? " Aperçu : choisis le mois avec les puces ci-dessous ; rien n'est envoyé." : "") + "</p>" +
     (ap ? '<div class="gp-mois">' + etapesGP(y).slice(1).map(x => '<button type="button" data-gpcible="' + x.k + '" aria-pressed="' + (x.k === kOuvert) + '">' + esc(moisCourt(x.k)) + "</button>").join("") + "</div>" : "") +
-    '<div class="main-cartes">' + main.map(tuile).join("") + "</div>" + action + htmlDuel(y, kOuvert);
+    '<div class="main-cartes">' + main.map(tuile).join("") + "</div>" + action + htmlProno(y, kOuvert) + htmlRival(y, kOuvert);
 }
 /* ---------- Rappels : tant que ta carte du mois n'est pas posée, on te le dit partout ---------- */
 function aujNum() { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
@@ -3343,6 +3357,11 @@ function brancherStand(v, y) {
   v.querySelectorAll("[data-duel]").forEach(b => b.addEventListener("click", () => { DUEL_RIVAL = DUEL_RIVAL === b.dataset.duel ? null : b.dataset.duel; rendreTrophees(); }));
   const dl = v.querySelector("#duel-lancer"); if (dl) dl.addEventListener("click", () => { const r = DUEL_RIVAL; DUEL_RIVAL = null; if (r) lancerDuel(y, kOuvert(), r); });
   const dr = v.querySelector("#duel-retirer"); if (dr) dr.addEventListener("click", () => lancerDuel(y, kOuvert(), null));
+  v.querySelectorAll("[data-pv]").forEach(b => b.addEventListener("click", () => { PRONO_V = b.dataset.pv; rendreTrophees(); }));
+  v.querySelectorAll("[data-pi]").forEach(b => b.addEventListener("click", () => { PRONO_I = b.dataset.pi; rendreTrophees(); }));
+  const pk = v.querySelector("#prono-ok"); if (pk) pk.addEventListener("click", () => { const p = pronoDe(y, moiPilote(), kOuvert()) || {}, vv = PRONO_V || p.v || null, ii = PRONO_I || p.i || null; PRONO_V = null; PRONO_I = null; envoyerProno(y, kOuvert(), vv, ii); });
+  v.querySelectorAll("[data-rs]").forEach(b => b.addEventListener("click", () => { RIVAL_CHOIX = b.dataset.rs; rendreTrophees(); }));
+  const rk = v.querySelector("#rival-ok"); if (rk) rk.addEventListener("click", () => { const r = RIVAL_CHOIX; RIVAL_CHOIX = null; if (r) choisirRival(y, r); });
   const an = v.querySelector("#c-annuler"); if (an) an.addEventListener("click", () => { CARTE_CHOIX = null; GP_RIVAL = null; rendreTrophees(); });
   const re = v.querySelector("#c-reprendre"); if (re) re.addEventListener("click", () => poserCarte(y, kOuvert(), null, null));
   v.querySelectorAll("[data-amelio]").forEach(b => b.addEventListener("click", () => {
@@ -3410,7 +3429,7 @@ function bullesGP(y, i) {
   et.m.l.forEach(x => {
     const extra = [];
     if (x.carte && !x.carte.invalide && x.carte.gain) { const cd = carteDef(x.carte.id); extra.push((cd ? cd.ico : "🃏") + (x.carte.gain > 0 ? "+" : "") + x.carte.gain); }
-    if (x.bonus) extra.push("🎯+" + x.bonus); if (x.mult > 1) extra.push("×2"); if (x.vainq) extra.push("🏁+2"); if (x.equipe) extra.push("🤝+1"); if (x.serie) extra.push("🔥+1");
+    if (x.bonus) extra.push("🎯+" + x.bonus); if (x.mult > 1) extra.push("×2"); if (x.vainq) extra.push("🏁+2"); if (x.equipe) extra.push("🤝+1"); if (x.serie) extra.push("🔥+1"); if (x.prono && x.prono.pts) extra.push("🔮+" + x.prono.pts); if (x.rival) extra.push("😈+5");
     box.insertAdjacentHTML("beforeend", '<span class="gp-pop" data-pop="' + esc(x.nom) + '" style="--c:' + couleur(x.nom) + '"><b>' + (x.p >= 0 ? "+" : "") + x.p + " pt" + (Math.abs(x.p) > 1 ? "s" : "") + "</b>" + (extra.length ? "<small>" + esc(extra.join(" ")) + "</small>" : "") + "</span>");
   });
   if (GP_ETQ) GP_ETQ.sale = true;
@@ -3518,6 +3537,8 @@ const ETAPES = [
   { id: "pioche", ico: "🎴", nom: "Le rattrapage", ouvre: 202701, regle: "pioche", resume: "Tu finis dernier d'un mois ? Tu pioches une carte bonus (une fois par saison chacune), à jouer à partir du mois suivant. Tes cartes piochées t'attendent dans le Stand." },
   { id: "monaco", ico: "🎰", nom: "Le Grand Prix de Monaco", ouvre: 202701, regle: "speciaux", resume: "Un mois de la saison, le dernier du championnat marque ses points de place en double. La date est dans le calendrier du Grand Prix." },
   { id: "gpspeciaux", ico: "🏁", nom: "Silverstone et Monza", ouvre: 202701, regle: "speciaux", resume: "Juillet à Silverstone : le vainqueur du mois marque +2 de plus. Septembre à Monza : le 🎯 vaut +2 au lieu de +1." },
+  { id: "prono", ico: "🔮", nom: "Le pronostic du mois", ouvre: 202701, regle: "championnat", resume: "Dans la fenêtre de ta carte : qui gagne le mois (+1 si juste) et le S&P 500 en hausse ou en baisse (+1 si juste). Secret jusqu'au 2." },
+  { id: "rival", ico: "😈", nom: "Le rival de la saison", ouvre: 202701, regle: "championnat", resume: "Entre le 20 décembre et le 1er janvier, choisis un rival secret. Fin décembre, si tu finis devant lui au championnat : +5. Révélé à la Finale." },
   { id: "equipe", ico: "🤝", nom: "Le bonus d'équipe", ouvre: 202701, regle: "championnat", resume: "Si tous les pilotes battent le S&P 500 le même mois : +1 pour chacun." },
   { id: "serie", ico: "🔥", nom: "La série", ouvre: 202701, regle: "championnat", resume: "+1 à chaque 3e mois d'affilée où tu bats le S&P 500 (3 mois, 6 mois…). La série repart de zéro dès que tu ne le bats pas." },
   { id: "finale", ico: "🏆", nom: "La Finale", ouvre: 202712, regle: "speciaux", resume: "Décembre, dernier mois de la saison : les points de place comptent double pour tout le monde." },
@@ -3668,6 +3689,58 @@ function amelioAu(y, nom, k, n) {
   return up;
 }
 /* ---------- Duels annoncés ---------- */
+/* ---------- Pronostic du mois et rival de la saison (V21) ---------- */
+function pronosApercu() { try { return JSON.parse(stock.get("versus.pronosApercu") || "{}"); } catch (e) { return {}; } }
+function pronoDe(y, nom, k) {
+  if (apercuSaison()) return ((pronosApercu()[y] || {})[nom] || {})[k] || null;
+  if (nom === moiPilote()) { const m = ((D.mesPronos || {})[y] || {})[k]; if (m) return m; }
+  return (((D.pronos || {})[y] || {})[nom] || {})[k] || null;
+}
+function rivalDe(y, nom) {
+  if (apercuSaison()) return (JSON.parse(stock.get("versus.rivalApercu") || "{}"))[y] || null;
+  if (nom === moiPilote()) { const m = (D.monRival || {})[y]; if (m) return m; }
+  return ((D.rivaux || {})[y] || {})[nom] || null;
+}
+async function envoyerProno(y, k, v, i) {
+  const qui = moiPilote();
+  if (apercuSaison()) { const a = pronosApercu(); a[y] = a[y] || {}; a[y][qui] = a[y][qui] || {}; if (v || i) a[y][qui][k] = { v, i }; else delete a[y][qui][k]; stock.set("versus.pronosApercu", JSON.stringify(a)); MEMO_SAISON = { d: null, m: {} }; toast("Aperçu : pronostic enregistré sur cet appareil."); rendreTrophees(); return; }
+  if (SOURCE !== "api") { toast("Pronostic indisponible hors connexion."); return; }
+  if (simulation()) { toast(MSG_SIMULATION); return; }
+  const rep = await posterAdmin({ action: "prono", personne: qui, mois: k, vainqueur: v || null, indice: i || null });
+  if (rep.ok) { D.mesPronos = D.mesPronos || {}; D.mesPronos[y] = rep.mesPronos || {}; if (rep.pronos) D.pronos = rep.pronos; MEMO_SAISON = { d: null, m: {} }; toast(rep.message || "Pronostic enregistré."); }
+  else toast(rep.message || "Pronostic impossible.");
+  rendreTrophees();
+}
+async function choisirRival(y, r) {
+  const qui = moiPilote();
+  if (apercuSaison()) { const a = JSON.parse(stock.get("versus.rivalApercu") || "{}"); if (r) a[y] = { r }; else delete a[y]; stock.set("versus.rivalApercu", JSON.stringify(a)); MEMO_SAISON = { d: null, m: {} }; toast("Aperçu : rival choisi sur cet appareil."); rendreTrophees(); return; }
+  if (SOURCE !== "api") { toast("Choix du rival indisponible hors connexion."); return; }
+  if (simulation()) { toast(MSG_SIMULATION); return; }
+  const rep = await posterAdmin({ action: "rival", personne: qui, saison: y, rival: r || null });
+  if (rep.ok) { D.monRival = D.monRival || {}; if (rep.monRival) D.monRival[y] = rep.monRival; else delete D.monRival[y]; if (rep.rivaux) D.rivaux = rep.rivaux; MEMO_SAISON = { d: null, m: {} }; toast(rep.message || "Rival enregistré."); }
+  else toast(rep.message || "Choix impossible.");
+  rendreTrophees();
+}
+let PRONO_V = null, PRONO_I = null, RIVAL_CHOIX = null;
+function htmlProno(y, kOuvert) {
+  const qui = moiPilote(); if (!qui || !kOuvert || estChauffe(y) || !regleVisible("prono") || !regleActive("prono", kOuvert)) return "";
+  const p = pronoDe(y, qui, kOuvert), v = PRONO_V || (p && p.v) || null, i = PRONO_I || (p && p.i) || null, change = PRONO_V || PRONO_I;
+  return '<div><h3 class="s-h3">🔮 Pronostic <small>' + esc(moisLong(kOuvert)) + "</small></h3></div>" +
+    '<div class="c-action duel"><p>Deux questions, secrètes jusqu\'au ' + jourLimite(kOuvert) + " : <b>+1</b> par bonne réponse.</p>" +
+    "<p><b>Qui gagne le mois ?</b></p>" + '<div class="chips" role="group" aria-label="Vainqueur du mois">' + D.personnes.map(x => '<button class="chip" type="button" data-pv="' + esc(x.nom) + '" aria-pressed="' + (v === x.nom) + '">' + esc(x.nom) + "</button>").join("") + "</div>" +
+    "<p><b>Le " + esc(D.marche.indices[iRef()]) + " finit le mois…</b></p>" + '<div class="chips" role="group" aria-label="Sens de l\'indice"><button class="chip" type="button" data-pi="h" aria-pressed="' + (i === "h") + '">📈 en hausse</button><button class="chip" type="button" data-pi="b" aria-pressed="' + (i === "b") + '">📉 en baisse</button></div>' +
+    (p && !change ? '<p>✓ Pronostic enregistré' + (p.v ? " : <b>" + esc(p.v) + "</b>" : "") + (p.i ? ", " + (p.i === "h" ? "📈 hausse" : "📉 baisse") : "") + '.</p>' : '<button class="btn acc" type="button" id="prono-ok"' + (v || i ? "" : " disabled") + ">Valider mon pronostic</button>") + "</div>";
+}
+function htmlRival(y, kOuvert) {
+  const qui = moiPilote(); if (!qui || estChauffe(y) || !regleVisible("rival") || !regleActive("rival", y * 100 + 1)) return "";
+  const r = rivalDe(y, qui), fenetre = kOuvert === y * 100 + 1, autres = D.personnes.map(p => p.nom).filter(n => n !== qui);
+  if (!fenetre) return r && r.r ? '<p class="info">😈 Ton rival secret de ' + y + " : <b>" + esc(r.r) + "</b>. +5 si tu finis devant lui au championnat.</p>" : "";
+  const c = RIVAL_CHOIX || (r && r.r) || null;
+  return '<div><h3 class="s-h3">😈 Rival de la saison <small>' + y + "</small></h3></div>" +
+    '<div class="c-action duel"><p>Choisis un rival <b>secret</b> pour toute la saison : si tu finis devant lui au championnat en décembre, <b>+5</b>. Modifiable jusqu\'au 1<sup>er</sup> janvier, révélé à la Finale.</p>' +
+    '<div class="chips" role="group" aria-label="Rival de la saison">' + autres.map(n => '<button class="chip" type="button" data-rs="' + esc(n) + '" aria-pressed="' + (c === n) + '">' + esc(n) + "</button>").join("") + "</div>" +
+    (r && r.r && !RIVAL_CHOIX ? "<p>✓ Rival choisi : <b>" + esc(r.r) + "</b>.</p>" : '<button class="btn acc" type="button" id="rival-ok"' + (c ? "" : " disabled") + ">Choisir " + (c ? esc(c) : "mon rival") + "</button>") + "</div>";
+}
 function duelsApercu() { try { return JSON.parse(stock.get("versus.duelsApercu") || "{}"); } catch (e) { return {}; } }
 function mesDuels() {
   let loc = {}; try { loc = JSON.parse(stock.get(cleMesDuels()) || "{}"); } catch (e) { loc = {}; }
