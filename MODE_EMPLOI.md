@@ -153,7 +153,8 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 - ✅ 3.4 **Nouvelles règles de points** (appli v13.3, Versus V20) : duels retirés ; 🎰 Monaco réactivé ; 🇬🇧 Silverstone (vainqueur +2) ; 🇮🇹 Monza (🎯 +2) ; 🤝 bonus d'équipe ; 🔥 série ; DRS supprimé. Testé sur une fausse saison.
 - ✅ 3.5 **Pronostic du mois + rival de la saison** (appli v13.4, Versus V21) : saisie dans le Stand (fenêtre du 20 au 1er ; rival pendant la fenêtre de janvier), secrets jusqu'au 2 (rival : jusqu'à la Finale), points comptés automatiquement. Testé sur une fausse saison.
 - ⬜ 3.3 **Anti-triche + exclusifs partagés** : le serveur refait le même calcul (fichier de calcul commun) et décide lui-même.
-- ⬜ 3.6 **Carte postale du mois** · ⬜ 3.7 **Vote de fin de saison** · ⬜ 3.8 **Règles réécrites, courtes et limpides**.
+- ✅ 3.8 **Règles réécrites, courtes et limpides** (v13.5) : bloc « L'essentiel » en haut des règles de l'appli, détail raccourci, tutoriel en un seul écran (plus de duels) ; `REGLES_PODIUM.md` au même format.
+- ⬜ 3.6 **Carte postale du mois** · ⬜ 3.7 **Vote de fin de saison**.
 - ⬜ 3.3 Quand toutes les fonctionnalités sont sorties (vers février 2027) : supprimer l'aperçu des étapes à venir ; il ne reste en admin que les codes et la saisie de secours.
 
 ### Phase 4 · Transferts (quand tout est rodé)
@@ -216,3 +217,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 3.1, 3.2 | Règles validées (D1–D9). Appli v13.2 ; Versus V19 (version Google 34) |
 | 05/11/2026 | 3.4 | Duels retirés, Monaco, Silverstone, Monza, équipe, série, DRS supprimé. Appli v13.3 ; Versus V20 (version Google 35) |
 | 05/11/2026 | 3.5 | Pronostic du mois (+1 vainqueur, +1 sens du S&P 500) et rival de la saison (+5). Appli v13.4 ; Versus V21 (version Google 36) |
+| 05/11/2026 | 3.8 | Règles de l'appli et tutoriel réécrits (essentiel + détail court). Appli v13.5 |
