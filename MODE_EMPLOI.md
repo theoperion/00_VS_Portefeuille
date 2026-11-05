@@ -74,7 +74,7 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
   - Et : le **mode admin s'éteint quand tu fermes l'appli** (et une date simulée oubliée est effacée à l'ouverture). Il ne sert plus qu'à : voir/régler les étapes à venir, gérer les codes, saisir un relevé en secours.
   - Nettoyage : supprimer la ligne 3 de « Lignes app » (Kévin, 202610) ; Kévin re-partagera ses lignes.
 - ⬜ 1.2 Sécurité : clé jamais dans l'adresse, vrai anti-force brute, badges vérifiés par le serveur.
-- ⬜ 1.3 Fiabilité : délai max d'envoi, vrais messages d'erreur, double envoi, petits bugs de saisie, MWR.
+- ⬜ 1.3 Fiabilité : délai max d'envoi, vrais messages d'erreur, double envoi, petits bugs de saisie, MWR, lien de l'appli dans les e-mails de rappel (pointe vers `VS_Portefeuille` au lieu de `00_VS_Portefeuille`).
 - ⬜ 1.4 Hors connexion : cache qui ne gonfle plus, mise à jour même sur réseau lent.
 - ⬜ 1.5 Ménage : script mort « Script par mois », code mort, stockage des cartes.
 
