@@ -35,6 +35,13 @@ Téléphone (ce dépôt, GitHub Pages)
                          └── fin de mois : envoie le relevé au Sheet Versus
 ```
 
+**D'où viennent les chiffres de bourse (indices)** : tout est en formules dans le Sheet Versus, aucun script.
+1. Onglet **Cours** : `GOOGLEFINANCE` télécharge, pour chaque indice, **tout l'historique des cours quotidiens** depuis le début du jeu jusqu'à aujourd'hui. Google le complète tout seul chaque jour.
+2. Onglet **Marché** : pour chaque fin de mois (dates prises dans Data Théo, colonne A), une formule va chercher le dernier cours de ce mois dans Cours, puis calcule les performances.
+3. L'appli lit Marché.
+
+**D'où viennent les valeurs des portefeuilles** : le relevé de fin de mois de chaque joueur (saisi à la main, ou envoyé automatiquement par l'onglet Moi → étape 2.1).
+
 Où est le code :
 - **Appli téléphone** : ce dépôt (public).
 - **Scripts Google** : dépôt **privé** `theoperion/app_scripts` (un dossier par script).
