@@ -74,12 +74,20 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
   - Et (serveur Versus V14) : avec la clé admin, **impossible** d'agir au nom d'un autre joueur (écurie, cartes, duels, lignes, badge million) ni de recevoir ses cartes cachées. Seule exception gardée : saisir un relevé en secours.
   - Et : le **mode admin s'éteint quand tu fermes l'appli** (et une date simulée oubliée est effacée à l'ouverture). Il ne sert plus qu'à : voir/régler les étapes à venir, gérer les codes, saisir un relevé en secours.
   - Nettoyage : supprimer la ligne 3 de « Lignes app » (Kévin, 202610) ; Kévin re-partagera ses lignes.
-- 🔧 1.2 **Sécurité** · ✅ en ligne (appli v12.5, Versus V15, Moi Théo V11) · ⬜ **toi** : vérifier
+- ✅ 1.2 **Sécurité** · validé par Théo le 05/11/2026
   - La clé n'est plus jamais écrite dans l'adresse des requêtes (lecture en POST). Les anciens fichiers Moi (Clément, Devlin, Kévin) continuent de marcher : l'appli repasse à l'ancienne méthode pour eux jusqu'à leur mise à jour (phase 2/4).
   - Anti-force brute : la **bonne clé passe toujours**, même si quelqu'un a tapé 10 mauvaises clés (avant, ton fichier Moi te bloquait 15 min). Les codes des joueurs (8 caractères tirés au hasard) sont impossibles à deviner.
   - Clé admin : **12 caractères minimum** pour toute nouvelle clé (avant 6).
   - Reporté en phase 3 (règles du Podium) : vérification par le serveur du badge « Premier millionnaire » et des exclusifs (ce sont des règles de jeu, on les tranche avec le reste).
-- ⬜ 1.3 Fiabilité : délai max d'envoi, vrais messages d'erreur, double envoi, petits bugs de saisie, MWR, lien de l'appli dans les e-mails de rappel (pointe vers `VS_Portefeuille` au lieu de `00_VS_Portefeuille`).
+- 🔧 1.3 **Fiabilité** · ✅ en ligne (appli v12.6, Versus V16) · ⬜ **toi** : vérifier
+  - Délai maximal de 30 s sur tous les envois : plus d'« Enregistrement… » sans fin, un message clair à la place.
+  - Si le fichier répond par une erreur, le bandeau affiche **cette erreur** (avant : « 📴 Hors connexion », trompeur).
+  - Plus de double envoi avec « Enregistrer quand même ».
+  - Saisie : « −500 » copié depuis l'appli et « 1.234,56 » sont acceptés.
+  - % de plus-value : plus de pourcentage inversé quand on a retiré plus que versé (affiché « — »).
+  - Récap des lignes : un code bizarre ne peut plus le faire planter.
+  - **MWR** : désormais **cumulé sur la période** (comparable au TWR juste à côté ; avant, annualisé au-delà d'un an), versements comptés en milieu de mois comme dans le Sheet, et calculé même sur un mois crypto à ±50 %.
+  - E-mails de rappel : le lien ouvre bien l'appli (`00_VS_Portefeuille`).
 - ⬜ 1.4 Hors connexion : cache qui ne gonfle plus, mise à jour même sur réseau lent.
 - ⬜ 1.5 Ménage : script mort « Script par mois », code mort, stockage des cartes.
 
@@ -134,3 +142,5 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 1.1 | v12.4 : suppression de « Je suis », « Je joue en tant que » et du choix du joueur dans la vue joueur (testé par Théo : mode admin bien éteint à la réouverture) |
 | 05/11/2026 | 1.1 | ✅ Validé par Théo |
 | 05/11/2026 | 1.2 | Sécurité : lecture en POST, bonne clé jamais bloquée, clé admin ≥ 12. Appli v12.5 ; Versus V15 (version Google 30) ; Moi Théo V11 (version Google 14) |
+| 05/11/2026 | 1.2 | ✅ Validé par Théo |
+| 05/11/2026 | 1.3 | Fiabilité : délais d'envoi, vraie erreur affichée, double envoi, saisie des nombres, MWR cumulé (milieu de mois), lien des e-mails. Appli v12.6 ; Versus V16 (version Google 31) |

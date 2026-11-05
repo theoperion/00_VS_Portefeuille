@@ -67,7 +67,7 @@ function xirr(flux) {
   if (flux.length < 2) return null;
   const t0 = flux[0].t.getTime();
   const f = r => flux.reduce((a, x) => a + x.v / Math.pow(1 + r, (x.t.getTime() - t0) / 864e5 / 365), 0);
-  let lo = -0.9999, hi = 10, flo = f(lo), fhi = f(hi);
+  let lo = -0.99999999, hi = 1e6, flo = f(lo), fhi = f(hi);   // large : un mois crypto à +30 % ou −60 % fait un taux annuel extrême
   if (!isFinite(flo) || !isFinite(fhi) || flo * fhi > 0) return null;
   for (let i = 0; i < 200; i++) {
     const mid = (lo + hi) / 2, fm = f(mid);
@@ -91,7 +91,7 @@ function stats(D, p, e, deb, fin, idx1, idx2) {
     dernierMois: derniere ? derniere.k : null
   };
   res.pvLatente = derniere ? derniere.val - derniere.cum : null;
-  res.pvLatentePct = derniere && derniere.cum ? res.pvLatente / derniere.cum : null;
+  res.pvLatentePct = derniere && derniere.cum > 0 ? res.pvLatente / derniere.cum : null;   // cumul versé nul ou négatif (plus retiré que versé) : pas de % (il serait de signe inversé)
   if (!mois.length) return res;
 
   const rs = mois.map(x => x.r);
@@ -132,11 +132,13 @@ function stats(D, p, e, deb, fin, idx1, idx2) {
   const base = i0 > 0 ? s[i0 - 1] : null;
   const dern = mois[mois.length - 1];
   const flux = [{ t: new Date((base ? base.d : mois[0].d) + "T12:00:00"), v: -(base && base.val ? base.val : 0) }];
-  mois.forEach(x => { if (x.verse) flux.push({ t: new Date(x.d + "T12:00:00"), v: -x.verse }); });
+  // versement compté en milieu de mois, comme le Sheet (Dietz modifié) : il a « travaillé » la moitié du mois
+  mois.forEach(x => { if (x.verse) { const t = new Date(x.d + "T12:00:00"); t.setDate(t.getDate() - 15); flux.push({ t: t < flux[0].t ? flux[0].t : t, v: -x.verse }); } });
+  flux.sort((a, b) => a.t - b.t);
   flux.push({ t: new Date(dern.d + "T12:00:00"), v: dern.val || 0 });
   const jours = (flux[flux.length - 1].t - flux[0].t) / 864e5;
   const tri = xirr(flux);
-  res.mwr = tri === null ? null : (jours < 365 ? Math.pow(1 + tri, jours / 365) - 1 : tri);
+  res.mwr = tri === null ? null : Math.pow(1 + tri, jours / 365) - 1;   // toujours cumulé sur la période, comme le TWR à côté
   return res;
 }
 

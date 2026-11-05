@@ -1383,6 +1383,13 @@ function appliquerAccent(a) {
 }
 
 /* ---------- Données ---------- */
+/** Envoi (POST) avec un délai maximal : plus jamais d'« Enregistrement… » sans fin */
+async function envoyerApi(url, corps, ms) {
+  const ab = window.AbortController ? new AbortController() : null, minu = ab ? setTimeout(() => ab.abort(), ms || 30000) : null;
+  try { return await (await fetch(url, { method: "POST", body: JSON.stringify(corps), signal: ab ? ab.signal : undefined })).json(); }
+  catch (e) { throw new Error(e && e.name === "AbortError" ? "Le fichier met trop de temps à répondre : réessaie dans un instant." : "Impossible de joindre le fichier : vérifie la connexion puis réessaie."); }
+  finally { clearTimeout(minu); }
+}
 /** Lecture d'une API Apps Script sans mettre la clé dans l'adresse (POST).
     Repli en GET pour un ancien script qui ne connaît pas encore la lecture en POST (fichiers Moi pas encore mis à jour). */
 async function lireApi(url, cle, action, extra, signal) {
@@ -1410,12 +1417,13 @@ async function charger(frais) {
     if (!json.ok) {
       if (json.erreur === "cle" || json.erreur === "bloque") { stock.del(CLES.cle); ouvrirCle(json.message); return; }
       if (json.erreur === "config") { stock.del(CLES.cle); ouvrirCle("", true); return; }
-      throw new Error(json.message || "Réponse inattendue");
+      const er = new Error(json.message || "Réponse inattendue du fichier"); er.serveur = true; throw er;
     }
-    D = json; SOURCE = "api"; EN_CHARGEMENT = false; stock.set(CLES.cache, JSON.stringify(json)); afficherTout();
+    ERREUR_SERVEUR = ""; D = json; SOURCE = "api"; EN_CHARGEMENT = false; stock.set(CLES.cache, JSON.stringify(json)); afficherTout();
     setTimeout(() => revendiquerExclusifs().then(() => { if (vueActive() === "trophees" || vueActive() === "classement") rendreVue(vueActive()); }).catch(() => {}), 0);
   } catch (e) {
     EN_CHARGEMENT = false;
+    ERREUR_SERVEUR = e && e.serveur ? String(e.message || e) : "";   // le fichier a répondu, mais avec une erreur : on la montre
     const c = stock.get(CLES.cache);
     if (c) { try { D = JSON.parse(c); SOURCE = "cache"; afficherTout(); return; } catch (er) { /* cache illisible */ } }
     $("#v-classement").innerHTML = '<div class="vide">Impossible de joindre le fichier.<br><small>' + esc(e.message || e) + '</small><br><br><button class="btn" type="button" id="reessayer">Réessayer</button></div>';
@@ -1423,6 +1431,7 @@ async function charger(frais) {
   } finally { btn.classList.remove("spin"); EN_CHARGEMENT = false; }
 }
 let EN_CHARGEMENT = false;
+let ERREUR_SERVEUR = "";
 let CREATION = false;
 async function verifierConfiguration(url) {
   try {
@@ -1450,7 +1459,7 @@ $("#form-cle").addEventListener("submit", async e => {
     if (v !== $("#champ-cle2").value.trim()) { $("#err-cle").textContent = "Les deux saisies ne correspondent pas."; return; }
     $("#valider-cle").disabled = true;
     let rep;
-    try { rep = await (await fetch(apiUrl(), { method: "POST", body: JSON.stringify({ action: "initialiser", nouvelleCle: v }) })).json(); }
+    try { rep = await envoyerApi(apiUrl(), { action: "initialiser", nouvelleCle: v }); }
     catch (er) { rep = { ok: false, message: "Impossible de joindre l'API : vérifie ta connexion." }; }
     $("#valider-cle").disabled = false;
     if (!rep.ok && rep.erreur === "deja") { ouvrirCle(rep.message, false); return; }
@@ -1490,7 +1499,8 @@ function afficherTout() {
   const b = $("#bandeau");
   b.hidden = SOURCE === "api" || (SOURCE === "cache" && EN_CHARGEMENT);   // copie affichée au démarrage pendant la mise à jour : pas d'alerte
   b.textContent = SOURCE === "demo" ? "Aperçu · chiffres du fichier au 29/10/2026. Ajoute l'adresse de l'API dans Réglages pour passer en direct."
-    : "📴 Hors connexion · " + (D.majTexte || "dernières données reçues") + ". Tout se consulte ; les saisies attendent le réseau.";
+    : ERREUR_SERVEUR ? "⚠️ Le fichier a répondu par une erreur : « " + ERREUR_SERVEUR + " ». Chiffres affichés : " + (D.majTexte || "dernière copie") + "."
+    : "📴 Hors connexion · " + (D.majTexte || "dernières données reçues") + ". Tout se consulte ; les saisies se font quand le réseau revient.";
   $("#sous-titre").textContent = D.majTexte || "";
   rendreTicker();
   rendreVue(vueActive());
@@ -1524,8 +1534,8 @@ let CODES = [], aRevoquer = null;
 async function posterAdmin(corps) {
   if (simulation()) return { ok: false, erreur: "simulation", message: MSG_SIMULATION };
   if (navigator.onLine === false) return { ok: false, erreur: "reseau", message: "📴 Hors connexion : réessaie quand le réseau revient." };
-  try { return await (await fetch(apiUrl(), { method: "POST", body: JSON.stringify(Object.assign({ cle: stock.get(CLES.cle) }, corps)) })).json(); }
-  catch (e) { return { ok: false, message: "Impossible de joindre l'API." }; }
+  try { return await envoyerApi(apiUrl(), Object.assign({ cle: stock.get(CLES.cle) }, corps)); }
+  catch (e) { return { ok: false, message: e.message }; }
 }
 async function chargerCodes() {
   if (!estAdmin() || SOURCE !== "api") return;
@@ -1795,7 +1805,7 @@ function rendreClassement() {
   if (idx2) series.push({ nom: idx2.nom, v: aligne(idx2.chemin), c: "var(--ink-2)", dash: "1.5 4", w: 1.8 });
 
   // Plus-value réelle depuis l'ouverture
-  const pv = D.personnes.map(p => stats(D, p, env, 0, fin, null, null)).filter(s => ok(s.valeur)).sort((a, b) => b.pvLatentePct - a.pvLatentePct);
+  const pv = D.personnes.map(p => stats(D, p, env, 0, fin, null, null)).filter(s => ok(s.valeur)).sort((a, b) => (b.pvLatentePct ?? -Infinity) - (a.pvLatentePct ?? -Infinity));
   const maxPv = Math.max(...pv.map(s => Math.abs(s.pvLatentePct || 0)), .01);
 
   v.innerHTML = banniereBilan() +
@@ -4309,7 +4319,7 @@ function ouvrirRecap(k) {
   const avecR = toutes.filter(l => ok(l.r));
   if (avecR.length >= 2) {
     const tri = avecR.slice().sort((a, b) => b.r - a.r), top = tri[0], flop = tri[tri.length - 1];
-    const parCode = {}; toutes.forEach(l => { (parCode[l.code] = parCode[l.code] || new Set()).add(l.qui); });
+    const parCode = Object.create(null); toutes.forEach(l => { (parCode[l.code] = parCode[l.code] || new Set()).add(l.qui); });   // sans prototype : un code « __proto__ » ne casse rien
     const commune = Object.entries(parCode).sort((a, b) => b[1].size - a[1].size)[0];
     L.push({ c: "#F5C542", h: '<div class="wr-k">Les lignes du mois</div><div class="wr-g">' +
       '<div class="wr-c"><span>⭐ Ligne star</span><b class="up">' + esc(top.code) + '</b><em>' + pct(top.r) + " · chez " + esc(top.qui) + "</em></div>" +
@@ -4574,7 +4584,13 @@ function rendreFiche() {
 /* ---------- Saisie du relevé ---------- */
 const NOMS_ENV = ["PEA", "Assurance vie", "CTO", "Crypto"];
 let R = null;
-function lireNb(t) { if (t === null || t === undefined) return null; const x = String(t).replace(/[\s  €]/g, "").replace(",", "."); if (x === "") return null; const n = Number(x); return isFinite(n) ? n : NaN; }
+function lireNb(t) {
+  if (t === null || t === undefined) return null;
+  let x = String(t).replace(/[\s\u00a0\u202f€]/g, "").replace(/[\u2212\u2013]/g, "-");   // « −500 » copié depuis l'appli
+  if (x.includes(",") && x.includes(".")) x = x.replace(/\./g, "");   // « 1.234,56 » : le point sépare les milliers
+  x = x.replace(",", ".");
+  if (x === "") return null; const n = Number(x); return isFinite(n) ? n : NaN;
+}
 function enSaisie(n) { return ok(n) ? String(n).replace(".", ",") : ""; }
 function ouvrirSaisie() {
   if (!D) return;
@@ -4736,13 +4752,14 @@ function majSaisie(prev) {
   const b = $("#r-envoyer"); if (b) { b.disabled = bloque || R.envoi; if (R.envoi) b.textContent = "Enregistrement…"; }
 }
 async function envoyerReleve(forcer) {
+  if (R.envoi) return;   // déjà en cours : pas de double envoi (ex. double appui sur « Enregistrer quand même »)
   const valeurs = R.v.map(t => { const n = lireNb(t); return ok(n) ? n : null; });
   if (simulation()) { toast(MSG_SIMULATION); return; }
   if (SOURCE !== "api") { toast(SOURCE === "demo" ? "Aperçu : le relevé est contrôlé mais rien n'est écrit sans adresse d'API." : "Hors connexion : le relevé n'a pas été envoyé."); if (SOURCE === "demo") $("#saisie").hidden = true; return; }
   R.envoi = true; R.erreur = ""; majSaisie(null);
   let rep;
-  try { rep = await (await fetch(apiUrl(), { method: "POST", body: JSON.stringify({ cle: stock.get(CLES.cle), action: "releve", personne: R.nom, mois: R.k, valeurs, forcer: !!forcer }) })).json(); }
-  catch (e) { rep = { ok: false, message: "Impossible de joindre le fichier : vérifie la connexion puis réessaie." }; }
+  try { rep = await envoyerApi(apiUrl(), { cle: stock.get(CLES.cle), action: "releve", personne: R.nom, mois: R.k, valeurs, forcer: !!forcer }); }
+  catch (e) { rep = { ok: false, message: e.message }; }
   R.envoi = false;
   if (rep.ok) { toast(rep.message || "Relevé enregistré."); await charger(true); JNOM = R.nom; ongletReleves("journal"); return; }
   if (rep.erreur === "cle" || rep.erreur === "bloque") { stock.del(CLES.cle); $("#saisie").hidden = true; ouvrirCle(rep.message); return; }
@@ -4893,8 +4910,8 @@ $("#changer-cle").addEventListener("click", async () => {
   if (SOURCE !== "api") { $("#etat-source").textContent = "Configure d'abord l'adresse de l'API."; return; }
   if (n.length < 12) { $("#etat-source").textContent = "La nouvelle clé doit faire au moins 12 caractères."; return; }
   let rep;
-  try { rep = await (await fetch(apiUrl(), { method: "POST", body: JSON.stringify({ cle: stock.get(CLES.cle), action: "changerCle", nouvelleCle: n }) })).json(); }
-  catch (e) { rep = { ok: false, message: "Impossible de joindre l'API." }; }
+  try { rep = await envoyerApi(apiUrl(), { cle: stock.get(CLES.cle), action: "changerCle", nouvelleCle: n }); }
+  catch (e) { rep = { ok: false, message: e.message }; }
   if (rep.ok) { stock.set(CLES.cle, n); $("#champ-nouvelle-cle").value = ""; }
   $("#etat-source").textContent = rep.message || (rep.ok ? "Clé changée." : "Changement impossible.");
 });

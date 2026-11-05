@@ -1717,7 +1717,7 @@ async function revendiquerMillion() {
     if (M.simple && (estAdmin() || !M.personne)) return;
     const qui = M.simple ? M.personne : moiVrai();
     if (stock.get("versus.moi.million") === qui) return;
-    const rep2 = await (await fetch(apiUrl(), { method: "POST", body: JSON.stringify({ cle: stock.get(CLES.cle), action: "million", personne: qui }) })).json();
+    const rep2 = await envoyerApi(apiUrl(), { cle: stock.get(CLES.cle), action: "million", personne: qui });
     if (rep2.ok) { stock.set("versus.moi.million", qui); toast(rep2.message); if (typeof window.charger === "function") window.charger(true); }
   } catch (e) { /* réessai à la prochaine ouverture */ }
 }
@@ -2248,7 +2248,7 @@ function soumettreReglage(type, form) {
 async function propagerTaux(corps) {
   try {
     if (!estAdmin() || typeof SOURCE === "undefined" || SOURCE !== "api" || simulationM()) return;
-    const rep = await (await fetch(apiUrl(), { method: "POST", body: JSON.stringify(Object.assign({ cle: stock.get(CLES.cle) }, corps, { action: "tauxLivrets" })) })).json();
+    const rep = await envoyerApi(apiUrl(), Object.assign({ cle: stock.get(CLES.cle) }, corps, { action: "tauxLivrets" }));
     toast(rep.message || (rep.ok ? "Taux recopiés chez les autres." : "Taux non recopiés chez les autres."));
   } catch (e) { toast("Taux enregistrés chez toi, mais pas recopiés chez les autres (Versus injoignable)."); }
 }
@@ -2842,7 +2842,7 @@ async function partagerLignes() {
     const lignes = [];
     (M.groupes || []).forEach(g => g.lignes.forEach(l => { if (!l.especes && l.valeur > 0) lignes.push({ env: g.env, code: l.code, nom: l.nom, cours: l.cours, qte: l.qte, valeur: l.valeur, pv: l.pv, pvPct: l.pvPct, m1: (perf[g.env + "|" + l.code] || {}).m1 }); }));
     if (!lignes.length) return;
-    const rep = await (await fetch(apiUrl(), { method: "POST", body: JSON.stringify({ cle: stock.get(CLES.cle), action: "lignes", personne: qui, mois: k, date: jour, lignes }) })).json();
+    const rep = await envoyerApi(apiUrl(), { cle: stock.get(CLES.cle), action: "lignes", personne: qui, mois: k, date: jour, lignes });
     if (rep.ok) { stock.set("versus.moi.lignesEnvoyees", marque); if (typeof window.charger === "function") window.charger(true); }
   } catch (e) { /* réessai à la prochaine ouverture */ }
 }
