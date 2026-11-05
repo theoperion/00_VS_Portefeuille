@@ -2933,6 +2933,8 @@ function htmlNotifications() {
    (appartement, prêt). Le reste est reconstruit ici, au format des autres fichiers, pour que
    les onglets Patrimoine, Stats et Missions marchent à l'identique. Pas de lignes de bourse. */
 function recevoir(json) {
+  // 14.3.2 : le fichier donne son adresse officielle ; le téléphone s'y range (les anciennes adresses sont supprimées)
+  if (json && /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(json.adresse || "") && stock.get(K.api) && stock.get(K.api) !== json.adresse) stock.set(K.api, json.adresse);
   if (json && json.profil === "simple") { RAW = json; M = adapterSimple(json); }
   else { RAW = null; M = json; }
 }

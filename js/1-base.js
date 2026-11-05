@@ -114,6 +114,8 @@ async function lireApi(url, cle, action, extra, signal) {
   }
   return j;
 }
+// 14.3.2 : une seule adresse Versus ; une ancienne adresse gardée par le téléphone est oubliée (les anciennes sont supprimées)
+try { const a = stock.get(CLES.api); if (a && a.trim() !== API_URL) stock.del(CLES.api); } catch (e) { /* stockage indisponible */ }
 function apiUrl() { return (stock.get(CLES.api) || API_URL || "").trim(); }
 async function charger(frais) {
   const url = apiUrl();
