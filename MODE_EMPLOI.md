@@ -124,7 +124,7 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
   - a) Si l'import échoue pour quelqu'un : une ligne est ajoutée dans l'onglet **« Bugs »** du Sheet Versus **et** Théo reçoit un **e-mail** (Versus V18).
   - b) Texte d'aide des 4 onglets Data corrigé : la ligne du mois apparaît **le dernier jour ouvré** (pas « le lendemain »).
 - ✅ 2.2 **Partage des lignes de bourse** · décision de Théo (05/11/2026) : **on ne change rien** (partagé par défaut, comme avant).
-- 🔧 2.3 **Bugs de l'onglet Moi** · ✅ en ligne (appli v13.0, fichier Moi de Théo V12) · ⬜ **toi** : vérifier
+- ✅ 2.3 **Bugs de l'onglet Moi** · validé par Théo le 05/11/2026
   - Un ordre saisi avec 0 € de frais peut de nouveau être supprimé.
   - Une case vide dans l'onglet Historique n'est plus comptée 0 € (plus de « pire baisse −100 % » ni de badge « Increvable » à tort).
   - Une enveloppe clôturée reste suivie par la photo quotidienne : son retrait final est compté (plus de fausse perte). Limite connue : une enveloppe clôturée **et** une nouvelle du même type (ex. deux PEA) partagent la même colonne de l'Historique.
@@ -190,3 +190,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 2.1 | ✅ Validé. Versus V18 (version Google 33) : import raté → onglet Bugs + e-mail. Textes d'aide des onglets Data corrigés |
 | 05/11/2026 | 2.2 | ✅ Décision : partage des lignes inchangé |
 | 05/11/2026 | 2.3 | 4 bugs de l'onglet Moi corrigés. Appli v13.0 ; Moi Théo V12 (version Google 15) |
+| 05/11/2026 | 2.3 | ✅ Validé par Théo |
