@@ -57,3 +57,42 @@ Pour **chacun** des deux fichiers (« Portefeuille & Épargne Clément », puis 
 | Le relevé de fin de mois n'est pas arrivé | L'ami reçoit un e-mail « relevé non envoyé » : il fait son relevé à la main (bouton **+ › Relevé**). |
 | Il a perdu sa clé | Dans son fichier : Extensions → Apps Script → en haut du fichier `API`, remplacer `CHANGE-MOI` par une nouvelle clé → exécuter **`definirCle`** → remettre `CHANGE-MOI`. Puis la saisir dans l'appli. |
 | L'ancienne adresse marche encore | Normal tant que Théo n'a pas été retiré ; après, seule la nouvelle compte. |
+
+<div style="page-break-before:always"></div>
+
+# Fiche · Transférer le « Carnet d'entretien T4 » à Carla
+
+> Durée : 3 min pour Théo, 10 min pour Carla. **Aucun besoin de Claude.**
+> Avant : il faut **l'adresse Gmail de Carla**. Après : le carnet est à elle seule, et ses **mails de rappel arrivent chez elle** (un seul par tâche, sans relance). Tant que le fichier est chez Théo, aucun mail ne part.
+
+## 1. Théo (≈ 3 min)
+
+1. Ouvre le Sheet « Carnet d'entretien - Appartement Carla » → **Extensions → Apps Script** → à gauche **⏰ Déclencheurs** → supprime **tes** déclencheurs (⋮ → Supprimer).
+2. Reviens au Sheet → **Partager** → ajoute l'adresse Gmail de Carla en **Éditeur** → **Envoyer**.
+3. Dans la même fenêtre, à droite de son nom → menu → **Transférer la propriété** → **Envoyer l'invitation**.
+4. Toujours dans **Partager**, « Accès général » → **Limité** → **OK** (le lien ouvert à tous n'est plus utile).
+
+## 2. Carla (≈ 10 min, sur ordinateur de préférence)
+
+1. **Accepter** : e-mail « Invitation à devenir propriétaire » → **Accepter**.
+2. **Autoriser son script** : ouvre le Sheet → **Extensions → Apps Script** → en haut, choisis **`installer`** → **Exécuter** → **Examiner les autorisations** → ton compte → **Paramètres avancés** → **Accéder à … (non sécurisé)** → **Autoriser**. Tu reçois un mail « ta clé d'accès » : garde-le.
+3. **Créer ton adresse** : en haut à droite **Déployer → Nouveau déploiement** → roue ⚙️ → **Application Web** →
+   - Exécuter en tant que : **Moi**
+   - Qui a accès : **Tout le monde**
+   → **Déployer** → **copie l'URL** (elle finit par `/exec`).
+4. **Dans l'appli** (téléphone) : ⚙️ **Réglages** → **Changer d'adresse ou de clé** → colle la nouvelle adresse et ta clé → **Ouvrir le carnet**.
+5. **Retirer Théo** : Sheet → **Partager** → à côté de Théo → **Supprimer l'accès** → **Enregistrer**.
+
+## Vérifier
+
+- Appli → ⚙️ Réglages → « Mail d'échéance : **✅ actif** » (et plus « en pause »).
+- Bouton **mail de test** : le mail arrive chez Carla.
+
+## Si quelque chose coince
+
+| Problème | Solution |
+|---|---|
+| « Connexion impossible » | Étape 3 : **Qui a accès : Tout le monde**, et l'adresse finit bien par `/exec`. |
+| « Clé incorrecte » | Reprendre la clé du mail reçu à l'étape 2. |
+| Mail d'échéance « inactif » | Refaire l'étape 2 (`installer`). |
+| Toujours « en pause » | L'appli parle encore à l'ancienne adresse : refaire l'étape 4. |
