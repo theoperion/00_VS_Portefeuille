@@ -515,6 +515,7 @@ button.bt-e { cursor: pointer; color: var(--ink); }
 .gp-mois::-webkit-scrollbar { display: none; }
 .gp-mois button { flex: none; border: 1px solid var(--rule); background: var(--panel); color: var(--ink-2); border-radius: 999px; padding: 6px 11px; font: 600 12px/1 var(--f-text); cursor: pointer; }
 .gp-mois button[aria-pressed="true"] { background: var(--accent); color: #0B0D12; border-color: var(--accent); }
+.gp-carte { width: 100%; margin-top: 10px; }
 .gp-liste { display: grid; border-radius: 14px; background: var(--panel); border: 1px solid var(--rule); overflow: hidden; }
 .gp-l { display: grid; grid-template-columns: 22px 38px minmax(0, 1fr) 30px 48px; gap: 8px; align-items: center; padding: 9px 12px; border-top: 1px solid var(--rule-2); }
 .gp-l:first-child { border-top: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 14%, var(--panel)), var(--panel) 70%); }
@@ -3189,7 +3190,7 @@ function htmlGrandPrix(y) {
   const att = c.attente ? '<div class="bref">⏳ ' + esc(moisLong(c.attente.k)) + " : la course avance dès que tout le monde a saisi son relevé (il manque " + c.attente.manquent.map(n => "<b>" + esc(n) + "</b>").join(" et ") + ").</div>" : "";
   const titreAt = at ? '<div class="gp-atouts"><span class="at" data-bdg="' + esc("Atout de " + G.ville + " : " + at.atout.ico + " " + at.atout.nom + " y gagne +1 quand elle marque (sauf bouchon).") + '">' + at.atout.ico + " " + esc(at.atout.nom) + " +1</span></div>" : (indiceCircuit(kGP) ? htmlIndice(indiceCircuit(kGP)) : "");
   return versStand + att + '<div class="gp-h"><div><span class="s-k">' + (c.chauffe ? "Tour de chauffe" : et.k ? "Manche " + i : "Départ") + " · " + esc(moisLong(kGP)) + '</span><h3 class="gp-titre">' + G.drap + " " + esc(G.gp) + '</h3><p class="gp-met">' + esc(G.ville) + " · " + met.ico + " " + esc(met.txt) + (spe ? " " + spe.ico + " <b>" + esc(spe.nom) + "</b> : " + esc(spe.txt) : "") + '</p></div><button class="btn ghost gp-rejouer" type="button" id="gp-rejouer">▶ Rejouer</button></div>' +
-    titreAt + piste + chips + '<div class="gp-liste">' + lignes + "</div>" + cal +
+    titreAt + piste + chips + '<div class="gp-liste">' + lignes + "</div>" + (et.m ? '<button class="btn ghost gp-carte" type="button" id="gp-carte">📸 Carte postale · ' + esc(moisLong(et.k)) + "</button>" : "") + cal +
     '<p class="info">' + TOUR_GP + " points = un tour de circuit. Touche une icône pour le détail, une voiture pour la suivre." + (c.chauffe ? " 🔥 Rien ne compte pendant la chauffe." : "") + ' <a href="#" class="lien-regles" data-regles="gp">Règles</a></p>' +
     htmlDetailPoints(y);
 }
@@ -3452,6 +3453,43 @@ function bullesGP(y, i) {
   if (GP_INST) { GP_INST.api.reveiller(); etiquettesGP(GP_INST.api); }
   setTimeout(() => { if (box.isConnected) { box.innerHTML = ""; if (GP_ETQ) GP_ETQ.sale = true; } }, 5200);
 }
+/* ---------- 📸 Carte postale du mois (V13.8) : une image prête à partager (WhatsApp…) ---------- */
+async function cartePostale(y, et) {
+  const m = et && et.m; if (!m) return;
+  const W = 1080, H = 1350, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const g = cv.getContext("2d"), css = getComputedStyle(document.documentElement), col = v => css.getPropertyValue(v).trim() || "#9B87FF";
+  const ci = circuitDe(m.k), G = GPS[ci], met = meteoMois(m.k), spe = m.spec, fond = g.createLinearGradient(0, 0, 0, H);
+  fond.addColorStop(0, "#151A2E"); fond.addColorStop(1, "#0B0E14"); g.fillStyle = fond; g.fillRect(0, 0, W, H);
+  const reel = c => { const t = document.createElement("i"); t.style.color = c; document.body.appendChild(t); const r = getComputedStyle(t).color; t.remove(); return r; };
+  g.fillStyle = reel(col("--accent")); g.fillRect(0, 0, W, 14);
+  const txt = (t, x, yy, taille, poids, coul, align, police) => { g.font = (poids || 700) + " " + taille + "px " + (police || "Saira, sans-serif"); g.fillStyle = coul || "#EDF0F4"; g.textAlign = align || "left"; g.fillText(t, x, yy); };
+  txt("VERSUS · PODIUM", 70, 110, 34, 800, "#A9B1BD", "left", "'Saira Condensed', sans-serif");
+  txt(G.drap + " " + G.gp, 70, 190, 64, 800, "#FFFFFF", "left", "'Saira Condensed', sans-serif");
+  txt(moisLong(m.k) + " · " + met.ico + " " + met.nom + (spe ? " · " + spe.ico + " " + spe.nom : ""), 70, 250, 34, 500, "#A9B1BD");
+  const l = m.l.slice().sort((a, b) => b.p - a.p || a.rg - b.rg), med = ["🥇", "🥈", "🥉", "4"];
+  l.forEach((x, i) => {
+    const y0 = 330 + i * 200;
+    g.fillStyle = "rgba(255,255,255,.06)"; g.beginPath(); g.roundRect ? g.roundRect(60, y0, W - 120, 170, 28) : g.rect(60, y0, W - 120, 170); g.fill();
+    g.fillStyle = reel(couleur(x.nom)); g.fillRect(60, y0, 14, 170);
+    txt(i < 3 ? med[i] : String(i + 1), 125, y0 + 105, 64, 800, "#FFFFFF", "center");
+    txt(x.nom.toUpperCase(), 190, y0 + 80, 58, 800, "#FFFFFF", "left", "'Saira Condensed', sans-serif");
+    const d = []; if (x.carte && !x.carte.invalide) { const cd = carteDef(x.carte.id); d.push((cd ? cd.ico : "🃏") + (x.carte.gain > 0 ? "+" : "") + x.carte.gain); }
+    if (x.bonus) d.push("🎯+" + x.bonus); if (x.prono && x.prono.pts) d.push("🔮+" + x.prono.pts); if (x.equipe) d.push("🤝+1"); if (x.serie) d.push("🔥+1"); if (x.vainq) d.push("🏁+2"); if (x.mult > 1) d.push("×2"); if (x.rival) d.push("😈+5");
+    txt((x.r >= 0 ? "+" : "") + (x.r * 100).toFixed(1).replace(".", ",") + " % ce mois" + (d.length ? "   " + d.join("  ") : ""), 190, y0 + 135, 32, 500, "#A9B1BD");
+    txt("+" + x.p, W - 110, y0 + 100, 76, 800, reel(col("--accent-ink")), "right", "'JetBrains Mono', monospace");
+    txt("pts", W - 110, y0 + 140, 26, 600, "#7A8391", "right", "'JetBrains Mono', monospace");
+  });
+  const cl = Object.keys(m.cumul).sort((a, b) => m.cumul[b] - m.cumul[a]);
+  txt("Championnat : " + cl.map((n, i) => (i + 1) + ". " + n + " " + m.cumul[n]).join("   "), W / 2, 1200, 32, 600, "#EDF0F4", "center");
+  txt("theoperion.github.io/00_VS_Portefeuille", W / 2, 1290, 26, 500, "#7A8391", "center");
+  const blob = await new Promise(res => cv.toBlob(res, "image/png")); if (!blob) { toast("Image impossible à créer."); return; }
+  const nomF = "versus-" + m.k + ".png", fichier = window.File ? new File([blob], nomF, { type: "image/png" }) : null;
+  try { if (fichier && navigator.canShare && navigator.canShare({ files: [fichier] })) { await navigator.share({ files: [fichier], title: "Versus · " + moisLong(m.k) }); return; } } catch (e) { if (e && e.name === "AbortError") return; }
+  const url = URL.createObjectURL(blob), o = document.createElement("div"); o.className = "regles"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
+  o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>📸 Carte postale</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div><div class="rg-corps"><img src="' + url + '" alt="Carte postale du mois" style="width:100%;border-radius:12px"><p class="info">Appui long sur l\'image pour l\'enregistrer ou la partager, ou :</p><a class="btn acc" download="' + nomF + '" href="' + url + '">Télécharger l\'image</a></div></div>';
+  document.body.appendChild(o); const fermer = () => { o.remove(); URL.revokeObjectURL(url); };
+  o.addEventListener("click", e => { if (e.target === o) fermer(); }); o.querySelector(".rg-x").addEventListener("click", fermer);
+}
 function brancherGP(v, y) {
   const etapes = etapesGP(y), i = GP_ETAPE !== null && GP_ETAPE < etapes.length ? GP_ETAPE : etapes.length - 1, et = etapes[i];
   const pi = v.querySelector("#gp-piste"), scene = v.querySelector("#gp-scene"); if (!pi || !scene) return;
@@ -3482,6 +3520,7 @@ function brancherGP(v, y) {
   const cb = v.querySelector("#gp-cam-b"); if (cb) cb.addEventListener("click", () => { const l = ["tv", "helico", "bord"], n = l[(l.indexOf(camGP()) + 1) % l.length]; ETAT.gpCam = n; garder(); if (GP_INST) GP_INST.api.camera(n); majBoutonsGP(); });
   const rj = v.querySelector("#gp-rejouer"); if (rj) rj.addEventListener("click", () => { if (i > 0) jouer(); else toast("Le départ n'a pas encore eu lieu : choisis un mois."); });
   const pl = v.querySelector("#gp-plein"); if (pl) pl.addEventListener("click", () => ouvrirPleinGP(y));
+  const cp = v.querySelector("#gp-carte"); if (cp) cp.addEventListener("click", () => cartePostale(y, et));
   v.querySelectorAll(".gp-mois [data-gpe]").forEach(b => b.addEventListener("click", () => { GP_ETAPE = +b.dataset.gpe; GP_REJOUER = true; rendreTrophees(); }));
   const cal = v.querySelector("#gp-calend"); if (cal) cal.addEventListener("toggle", () => { ETAT.calOuvert = cal.open ? "1" : "0"; garder(); });
   GP_ETQ = null;
