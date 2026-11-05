@@ -9,8 +9,9 @@ const COQUILLE = ["./", "index.html", "css/versus.css", "version.js", "moteur.js
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => Promise.all(COQUILLE.map(u => c.add(u).catch(() => null)))).then(() => self.skipWaiting()));
 });
+// 14.3.1 : ne nettoie que SES caches (versus-…) : les autres applis du même site (carnets) gardent leur hors connexion
 self.addEventListener("activate", e => {
-  e.waitUntil(caches.keys().then(l => Promise.all(l.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(l => Promise.all(l.filter(k => k.startsWith("versus-") && k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 function delai(ms) { return new Promise((_, rej) => setTimeout(() => rej(new Error("lent")), ms)); }
 async function reseauDabord(e, ms) {

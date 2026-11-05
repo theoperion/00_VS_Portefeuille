@@ -274,3 +274,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 4.1 | Bouton « 🔗 Tester l'envoi du relevé au Versus » pour chaque joueur (Réglages → Moi), sans rien écrire. Appli v14.1. Fiche complétée |
 | 05/11/2026 | 5.1 | index.html découpé en css/versus.css + 8 fichiers js/ (v14.2) ; hors connexion et outil d'extraction du serveur adaptés |
 | 05/11/2026 | 5.1 | Correctif v14.3 : thème appliqué avant l'affichage (plus d'écran blanc à l'ouverture) ; au démarrage, un « hors ligne » passager de l'iPhone ne déclenche plus le bandeau « Hors connexion » (un nouvel essai d'abord) |
+| 05/11/2026 | 5.1 | v14.3.1 : le hors connexion ne nettoie plus que ses propres caches (il effaçait celui des carnets, même site) |
