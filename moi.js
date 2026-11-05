@@ -679,7 +679,7 @@ async function charger(frais) {
     }
     recevoir(json); SRC = "api"; dernierAppel = Date.now();
     stock.set(K.cache, JSON.stringify(json));
-    setTimeout(() => { verifierPaliers(); partagerLignes(); revendiquerMillion(); revendiquerFichier(); }, 0);
+    setTimeout(() => { verifierPaliers(); partagerLignes(); revendiquerMillion(); revendiquerFichier(); lierVersus(); }, 0);
   } catch (e) {
     erreur = e && e.name === "AbortError" ? "Ton fichier met trop de temps à répondre." : (e && e.message) || String(e);
     if (M) SRC = "cache";
@@ -2862,6 +2862,18 @@ function moisDeFenetre(now) {
   return null;
 }
 function partageActif() { return stock.get("versus.moi.partage") !== "non"; }
+/** V13 : transmet à TON fichier l'adresse du Versus et ton code, pour qu'il envoie lui-même ton relevé de fin de mois.
+    Jamais avec la clé admin (Théo reste relevé par le Versus), jamais en simulation, une fois par ouverture. */
+let liaisonFaite = false;
+async function lierVersus() {
+  try {
+    if (liaisonFaite || !M || M.simple || M.versusLie !== false || SRC !== "api" || simulationM()) return;
+    if (typeof vraiAdmin !== "function" || vraiAdmin() || typeof SESSION === "undefined" || !SESSION || !SESSION.nom || typeof apiUrl !== "function" || !apiUrl() || !stock.get(CLES.cle)) return;
+    liaisonFaite = true;
+    const rep = await posterFichier({ action: "liaisonVersus", url: apiUrl(), code: stock.get(CLES.cle), nom: SESSION.nom });
+    if (rep && rep.ok) { M.versusLie = true; toast("🔗 Ton fichier enverra lui-même ton relevé de fin de mois au Versus."); }
+  } catch (e) { /* réessai à la prochaine ouverture */ }
+}
 async function partagerLignes() {
   try {
     if (!M || SRC !== "api" || !partageActif() || typeof D === "undefined" || !D || SOURCE !== "api" || simulationM()) return;
