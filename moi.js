@@ -498,6 +498,7 @@ function injecterStyle() {
 .moi .coche { display: flex; gap: 10px; align-items: center; font-size: 14px; cursor: pointer; }
 .moi .coche input { width: 20px; height: 20px; accent-color: var(--accent); }
 .moi .mini-btn { border: 1px solid var(--rule); background: var(--panel); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; cursor: pointer; color: var(--ink); }
+.moi .phrase-ordre { margin: 4px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--panel-2); border-left: 3px solid var(--accent); font-size: 14px; line-height: 1.45; }
 .moi .recap { display: grid; gap: 0; background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 4px 12px; }
 .moi .recap div { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--rule-2); font-size: 13px; color: var(--ink-2); align-items: center; }
 .moi .recap div:last-child { border-bottom: 0; }
@@ -1750,6 +1751,15 @@ const AVEC_ACTIF = ["Achat", "Vente", "Frais en parts", "Relevé"];
 const AVEC_QTE = ["Achat", "Vente", "Frais en parts"];
 const AVEC_FRAIS = ["Achat", "Vente"];
 const PRINCIPAUX = ["Achat", "Vente", "Apport", "Retrait"];
+/** « Autre type » : libellé affiché et explication en une phrase (le nom enregistré dans le fichier ne change pas) */
+const AUTRES_TYPES = {
+  "Intérêts": { lib: "Intérêts / dividendes", g: "Courant", d: "De l'argent versé sur l'enveloppe (dividende, coupon, intérêts du compte espèces)." },
+  "Frais": { lib: "Frais", g: "Courant", d: "Des frais débités en euros (droits de garde, frais de tenue de compte…)." },
+  "Relevé": { lib: "Relevé (assurance-vie)", g: "Rare", d: "La valeur d'une ligne lue sur ton relevé d'assurance-vie, pour recaler son cours." },
+  "Frais en parts": { lib: "Frais en parts (assurance-vie)", g: "Rare", d: "Les frais de gestion prélevés en parts sur une ligne d'assurance-vie." },
+  "Ajustement espèces": { lib: "Ajustement espèces", g: "Rare", d: "Corriger un écart entre les espèces de l'appli et celles de ta banque (négatif si sortie)." },
+  "Solde initial": { lib: "Solde initial", g: "Rare", d: "L'argent déjà présent sur l'enveloppe au moment où tu commences le suivi." }
+};
 const LIB_MONTANT = {
   "Achat": "Montant débité, frais compris", "Vente": "Montant crédité, net de frais", "Apport": "Montant viré sur l'enveloppe",
   "Retrait": "Montant retiré", "Relevé": "Valeur indiquée sur le relevé", "Intérêts": "Intérêts versés",
@@ -1781,6 +1791,7 @@ function envParDefaut() {
 function formulaire(partiel) {
   const f = Object.assign({ type: "Achat", date: aujourdhuiISO(), env: envParDefaut(), actif: "", qte: "", prix: "", pilote: "", montant: "", frais: "", apport: false, montantApport: "", forcer: null, erreur: "" }, partiel || {});
   if (!f.pilote) f.pilote = f.qte ? "qte" : "prix";
+  if (f.type === "Achat" && !(partiel && "apport" in partiel)) f.apport = true;   // cas le plus courant : on vire l'argent puis on achète
   if (AVEC_QTE.includes(f.type) && f.actif && !f.prix && !f.qte) { const c = refData().cours[f.actif]; if (c) f.prix = saisieNombre(c, c < 10 ? 4 : 2); }
   return f;
 }
@@ -1809,12 +1820,13 @@ function assurerFeuille() {
 }
 /* Guide de la saisie d'un ordre de bourse : s'ouvre tout seul la première fois, puis depuis « ❓ » */
 const TUTO_ORDRE = [
-  { ico: "🧾", t: "Un ordre, une ligne", html: true, p: "Chaque opération passée chez ton courtier se recopie ici, <b>à la date où elle est exécutée</b>. L'app recalcule tout à partir de ces ordres : tes lignes, tes gains, ta performance." },
-  { ico: "🔀", t: "Le bon type", html: true, p: "<b>Achat</b> / <b>Vente</b> pour des titres. <b>Apport</b> quand tu vires de l'argent sur l'enveloppe, <b>Retrait</b> quand tu en sors. « Autre type » pour les dividendes, intérêts et frais. Tu vires et tu achètes le même jour ? Coche « Enregistrer aussi l'apport »." },
-  { ico: "📂", t: "Enveloppe et actif", html: true, p: "Choisis l'enveloppe (PEA, CTO, assurance vie…), puis l'actif : ceux que tu détiens déjà sont en haut de la liste. Il n'y est pas ? « <b>Ajouter un nouvel actif</b> »." },
-  { ico: "💶", t: "Montant, quantité, frais", html: true, p: "Le montant est celui de ton <b>avis d'opéré</b> : débité frais compris pour un achat, crédité net de frais pour une vente. Ensuite la quantité <b>ou</b> le prix par part : l'autre se calcule. Puis les frais de courtage." },
-  { ico: "✅", t: "Vérifie, enregistre", html: true, p: "Le récapitulatif en bas t'alerte si quelque chose cloche (plus de parts vendues que détenues, prix bizarre…). Tu achètes la même chose chaque mois ? « <b>Enregistrer comme raccourci</b> » : un tap la prochaine fois." },
-  { ico: "↩️", t: "Une erreur ?", html: true, p: "Onglet <b>Journal</b> : un ordre saisi ici se supprime pendant <b>7 jours</b>, puis il est figé (corrige alors dans ton fichier). « Refaire » reprend un ordre à la date du jour." }
+  { ico: "🧾", t: "Saisir un ordre, en bref", html: true, p:
+    "<b>1 ordre = 1 ligne</b>, recopiée de ton courtier à la date d'exécution.<br>" +
+    "• <b>Achat</b> : choisis l'enveloppe, l'actif, le montant de l'avis d'opéré <b>frais compris</b>, la quantité (le prix se calcule) et les frais. L'<b>apport</b> est coché : décoche si l'argent était déjà sur le compte.<br>" +
+    "• <b>Vente</b> : pareil, montant <b>net de frais</b>.<br>" +
+    "• <b>Apport / Retrait</b> : argent que tu mets ou retires de l'enveloppe.<br>" +
+    "• <b>Autre type</b> : dividendes, frais, cas d'assurance-vie ; chaque type s'explique quand tu le choisis.<br>" +
+    "Relis la phrase « Tu enregistres… » avant de valider. Une erreur ? Onglet <b>Journal</b> : supprimable pendant 7 jours." }
 ];
 function guideOrdre() { if (typeof ouvrirGuide === "function") ouvrirGuide("Saisir un ordre", TUTO_ORDRE, "C'est compris"); }
 function ouvrirSaisieM(partiel, onglet) {
@@ -1874,22 +1886,26 @@ function rendreFormulaire() {
       '<div class="types" role="group" aria-label="Type d\'ordre">' + PRINCIPAUX.map(t => '<button type="button" class="type-btn" data-type="' + t + '" aria-pressed="' + (F.type === t) + '">' + t + "</button>").join("") + "</div>" +
       '<div class="rang">' +
         '<div class="champ"><label for="f-date">Date</label><input id="f-date" type="date" value="' + esc(F.date) + '"></div>' +
-        '<div class="champ"><label for="f-autre">Autre type</label><select id="f-autre"><option value="">Choisir…</option>' + autres.map(t => '<option value="' + esc(t) + '"' + (F.type === t ? " selected" : "") + ">" + esc(t) + "</option>").join("") + "</select></div>" +
+        '<div class="champ"><label for="f-autre">Autre type</label><select id="f-autre"><option value="">Choisir…</option>' +
+          ["Courant", "Rare"].map(g => { const l = autres.filter(t => (AUTRES_TYPES[t] || { g: "Rare" }).g === g); return l.length ? '<optgroup label="' + (g === "Courant" ? "Courant" : "Rare · assurance-vie et corrections") + '">' + l.map(t => '<option value="' + esc(t) + '"' + (F.type === t ? " selected" : "") + ">" + esc((AUTRES_TYPES[t] || {}).lib || t) + "</option>").join("") + "</optgroup>" : ""; }).join("") + "</select></div>" +
       "</div>" +
+      (AUTRES_TYPES[F.type] ? '<p class="info">ℹ️ <b>' + esc(AUTRES_TYPES[F.type].lib) + "</b> : " + esc(AUTRES_TYPES[F.type].d) + "</p>" : "") +
       '<div class="champ"><label for="fo-env">Enveloppe</label><select id="fo-env">' +
         groupeEnv(ouvertes.filter(e => e.perimetre === "Portefeuille"), "Bourse") + groupeEnv(ouvertes.filter(e => e.perimetre !== "Portefeuille"), "Épargne") + "</select></div>" +
       (avecActif ? '<div class="champ"><label for="f-actif">Actif</label><select id="f-actif"><option value="">Choisir l\'actif…</option>' +
         (tenus.length ? '<optgroup label="Détenus dans cette enveloppe">' + tenus.map(optA).join("") + "</optgroup>" : "") +
         '<optgroup label="Autres actifs">' + autresActifs.map(optA).join("") + "</optgroup></select>" +
         '<span class="aide">Actif absent de la liste ? <button class="lien" type="button" id="f-nouvel-actif">Ajouter un nouvel actif</button></span></div>' : "") +
-      '<div class="champ"><label for="f-montant">' + esc(LIB_MONTANT[F.type] || "Montant") + ' (€)</label><input id="f-montant" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montant) + '" placeholder="0,00"></div>' +
+      '<div class="champ"><label for="f-montant">' + esc(LIB_MONTANT[F.type] || "Montant") + ' (€)</label><input id="f-montant" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montant) + '" placeholder="0,00">' + (F.type === "Achat" || F.type === "Vente" ? '<span class="aide">Recopie-le depuis ton avis d\'opéré (le document de ton courtier).</span>' : "") + "</div>" +
       (avecQte ? '<div class="rang">' +
         '<div class="champ"><label for="f-qte">Quantité</label><input id="f-qte" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.qte) + '" placeholder="0"></div>' +
         '<div class="champ"><label for="f-prix">Prix par part (€)</label><input id="f-prix" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.prix) + '" placeholder="0,00"></div>' +
         '</div><span class="aide lie">Saisis la quantité ou le prix par part : l\'autre se calcule à partir du montant' + (avecFrais ? " hors frais" : "") + ".</span>" : "") +
-      (avecFrais ? '<div class="champ"><label for="f-frais">Dont frais (€)</label><input id="f-frais" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.frais) + '" placeholder="0,00"></div>' : "") +
+      (avecFrais ? '<div class="champ"><label for="f-frais">Dont frais (€)</label><input id="f-frais" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.frais) + '" placeholder="0,00"><span class="aide">Les frais de courtage (0 ou vide si tu n\'en as pas).</span></div>' : "") +
       (F.type === "Achat" ? '<label class="coche"><input type="checkbox" id="f-apport"' + (F.apport ? " checked" : "") + '> Enregistrer aussi l\'apport qui finance cet achat</label>' +
-        (F.apport ? '<div class="champ"><label for="f-mapport">Montant de l\'apport (€)</label><input id="f-mapport" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montantApport) + '" placeholder="Identique au montant de l\'achat"></div>' : "") : "") +
+        '<span class="aide lie">' + (F.apport ? "Tu vires l'argent puis tu achètes : l'apport est enregistré juste avant l'achat." : "Décoché : l'argent était déjà sur l'enveloppe (vente, dividende, apport précédent).") + "</span>" +
+        (F.apport ? '<div class="champ"><label for="f-mapport">Montant de l\'apport (€)</label><input id="f-mapport" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montantApport) + '" placeholder="Identique au montant de l\'achat"><span class="aide">Laisse vide : même montant que l\'achat.</span></div>' : "") : "") +
+      '<p class="phrase-ordre" id="m-phrase"></p>' +
       '<div class="recap" id="m-recap"></div>' +
       '<div class="alertes" id="m-alertes"></div>' +
       '<button class="btn plein acc" type="submit" id="f-envoyer">Enregistrer l\'ordre</button>' +
@@ -1998,8 +2014,21 @@ function analyser() {
   if (F.date && F.date > aujourdhuiISO()) msg.push(["warn", "Ordre programmé : il restera ignoré par les calculs jusqu'au " + frDate(F.date) + "."]);
   return { bloque, msg, lignes };
 }
+/** La phrase « Tu enregistres : … » : l'ordre relu en français, pour repérer une erreur d'un coup d'œil */
+function phraseOrdre() {
+  const m = lireNombre(F.montant), q = lireNombre(F.qte), fr = lireNombre(F.frais), ma = lireNombre(F.montantApport);
+  if (!(m > 0) && F.type !== "Ajustement espèces") return "";
+  const e = v => nf(2, 2).format(v) + NB + "€", lib = ((AUTRES_TYPES[F.type] || {}).lib || F.type).toLowerCase();
+  let t = "<b>" + esc(lib) + "</b>";
+  if (AVEC_ACTIF.includes(F.type) && F.actif) t += " de " + (AVEC_QTE.includes(F.type) && q > 0 ? "<b>" + qteBrute(q) + " " + esc(F.actif) + "</b>" : "<b>" + esc(F.actif) + "</b>");
+  t += " sur <b>" + esc(F.env || "?") + "</b>, le <b>" + frDate(F.date) + "</b>, pour <b>" + e(m) + "</b>";
+  if (AVEC_FRAIS.includes(F.type)) t += fr > 0 ? " dont <b>" + e(fr) + "</b> de frais" : " sans frais";
+  if (F.type === "Achat") t += F.apport ? ", financé par un <b>apport de " + e(ma > 0 ? ma : m) + "</b>" : ", payé avec l'argent déjà sur l'enveloppe";
+  return "📝 Tu enregistres : " + t + ".";
+}
 function majRecap() {
   const a = analyser();
+  if ($f("m-phrase")) { const ph = phraseOrdre(); $f("m-phrase").innerHTML = ph; $f("m-phrase").hidden = !ph; }
   $f("m-recap").innerHTML = a.lignes.map(l => "<div><span>" + l[0] + "</span><b>" + l[1] + "</b></div>").join("");
   $f("m-recap").hidden = !a.lignes.length;
   let al = a.msg.map(m => '<div class="alerte ' + m[0] + '">' + esc(m[1]) + "</div>").join("");

@@ -57,6 +57,10 @@ Où est le code :
 
 ---
 
+### Saisir un ordre (à montrer à Clément et Devlin)
+
+> **Onglet Moi → Saisir → Ordre.** Un ordre = une ligne recopiée de ton courtier, **à la date d'exécution**. **Achat** : enveloppe, actif, montant de l'avis d'opéré **frais compris**, quantité (le prix se calcule) et frais ; l'**apport** est coché d'office (décoche si l'argent était déjà sur le compte). **Vente** : pareil, montant **net de frais**. **Apport / Retrait** : argent mis ou retiré de l'enveloppe. **Autre type** : dividendes, frais, cas d'assurance-vie (chaque type s'explique quand on le choisit). **Relis la phrase « Tu enregistres… »** avant de valider. Erreur ? Onglet **Journal** : supprimable 7 jours.
+
 ## 3. Les adresses officielles (une par script)
 
 | Script | Adresse officielle | État |
@@ -134,7 +138,12 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
   - Ce que c'est : un fichier « Moi simple » pour l'**épargne** (livrets, assurances-vie, autre épargne), l'appartement et le prêt. Kévin y saisit ses mouvements depuis l'appli. **Il n'y a pas de bourse dedans** (c'est voulu).
   - Code rangé dans `app_scripts/portefeuille-epargne/kevin/` ; mêmes corrections de sécurité que le tien : lecture en POST, la bonne clé n'est jamais bloquée.
   - Relevé automatique : **pas possible** pour Kévin, puisque son fichier ne contient pas ses PEA / CTO / crypto. Son relevé Versus reste **saisi à la main** chaque fin de mois (par lui, ou par toi en secours).
-- ⬜ 2.5 **Saisir un ordre (achat / vente) facilement** : revoir le parcours de saisie dans l'onglet Moi et ajouter un mini-tutoriel clair, étape par étape.
+- 🔧 2.5 **Saisir un ordre facilement** · ✅ en ligne (v13.1) · ⬜ **toi** : vérifier
+  - Achat : l'**apport est coché d'office** (même montant que l'achat) ; un texte explique quand le décocher.
+  - « Autre type » rangé en *Courant* (Intérêts / dividendes, Frais) et *Rare* (assurance-vie, corrections), avec une phrase d'explication pour chacun.
+  - Une **phrase de vérification** avant d'enregistrer : « Tu enregistres : achat de 100 DCAM sur PEA Fortuneo, le 05/11/2026, pour 520 € dont 2 € de frais, financé par un apport de 520 €. »
+  - Une ligne d'aide sous le montant et les frais.
+  - Tutoriel de l'appli en **un seul écran**, et fiche « Saisir un ordre » ci-dessus (§ 2).
 
 ### Phase 3 · Podium (novembre)
 - ⬜ 3.1 Écrire les règles en clair ici, les valider ensemble **avant** de coder.
@@ -195,3 +204,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 2.3 | 4 bugs de l'onglet Moi corrigés. Appli v13.0 ; Moi Théo V12 (version Google 15) |
 | 05/11/2026 | 2.3 | ✅ Validé par Théo |
 | 05/11/2026 | 2.4 | Fichier de Kévin récupéré ; script Moi simple V4 (sécurité). Relevé auto impossible (pas de bourse dans son fichier) |
+| 05/11/2026 | 2.5 | Saisie d'un ordre simplifiée (apport coché, types expliqués, phrase de vérification, tutoriel en 1 écran). Appli v13.1 |
