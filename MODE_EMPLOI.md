@@ -86,6 +86,7 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
   - Correction : pour tout ce qui est **à toi** (lignes, badge million, écurie, cartes, duels), l'appli utilise toujours **ton joueur** (Théo). Toucher un nom ne change plus que **l'affichage**. Pour voir l'appli comme un autre : Réglages → « Voir comme un joueur » (rien n'est envoyé).
   - Et : le mode « Voir comme un joueur » / date simulée ne peut plus rien envoyer (relevé, clé, lignes, million, taux).
   - Et (v12.4) : **plus de « Je suis » ni de « Je joue en tant que »**, pour personne. Chacun ne joue qu'en son nom (celui de son code ; la clé admin = Théo). La « vue joueur » de l'admin montre l'appli **à toi, sans tes droits d'admin**, jamais comme un autre joueur.
+  - Correctif (v12.9) : la **gestion** (codes des joueurs, changer la clé admin, relevés automatiques, réglages communs) est de nouveau visible dans Réglages **dès que tu es connecté avec la clé admin**, même mode admin désactivé. Le mode admin ne sert qu'aux **aperçus des nouveautés** et à la saisie de secours.
   - Et (serveur Versus V14) : avec la clé admin, **impossible** d'agir au nom d'un autre joueur (écurie, cartes, duels, lignes, badge million) ni de recevoir ses cartes cachées. Seule exception gardée : saisir un relevé en secours.
   - Et : le **mode admin s'éteint quand tu fermes l'appli** (et une date simulée oubliée est effacée à l'ouverture). Il ne sert plus qu'à : voir/régler les étapes à venir, gérer les codes, saisir un relevé en secours.
   - Nettoyage : supprimer la ligne 3 de « Lignes app » (Kévin, 202610) ; Kévin re-partagera ses lignes.
@@ -180,3 +181,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 1.4, 1.5 | ✅ Validés par Théo |
 | 05/11/2026 | 1.6 | « Timing des versements » dans la fiche joueur. Appli v12.8. **Phase 1 terminée** |
 | 05/11/2026 | 2.1 | Explication du relevé automatique (§ 2) ; cause d'octobre trouvée (Devlin et Clément reliés le 31/10 au soir, après l'import) |
+| 05/11/2026 | 1.1 | v12.9 : gestion (codes, relevés automatiques, réglages communs) visible avec la clé admin sans activer le mode admin (Théo ne la voyait plus) |

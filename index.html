@@ -1470,6 +1470,9 @@ $("#form-cle").addEventListener("submit", async e => {
 
 let SESSION = { role: "admin" };
 function estAdmin() { return SESSION.role === "admin"; }
+/** Gestion (codes des joueurs, clé admin, relevés automatiques, réglages communs) : toujours accessible avec la clé admin,
+    même mode admin désactivé — le mode admin ne sert qu'aux aperçus des nouveautés (et à la saisie de secours) */
+function gestionAdmin() { return vraiAdmin() && !vueJoueur() && !window.DATE_SIM; }
 /** Le vrai rôle (même quand l'admin regarde l'appli comme un joueur) */
 function vraiAdmin() { return typeof D === "undefined" || !D || !D.session || D.session.role === "admin"; }
 /** Mode admin : la clé d'administration reste, mais par défaut l'appli se comporte comme pour un joueur (réglage « Mode admin ») */
@@ -1512,7 +1515,7 @@ function afficherTout() {
   $("#bloc-moi").hidden = true;   // plus de « Je suis » : chacun est lui-même
   majVueJoueur();
   majVersion();
-  const admin = estAdmin() && SOURCE === "api";
+  const admin = gestionAdmin() && SOURCE === "api";
   $("#regl-params").hidden = !admin;
   $("#regl-liaison").hidden = !admin;
   majChipsAffichage();
@@ -1521,10 +1524,10 @@ function afficherTout() {
     $("#p-comp").value = (D.marche.dateComparaison || "").slice(0, 7);
     majLiaison();
   }
-  $("#bloc-nouvelle-cle").hidden = !estAdmin();
-  $("#bloc-codes").hidden = !estAdmin() || SOURCE !== "api";
+  $("#bloc-nouvelle-cle").hidden = !gestionAdmin();
+  $("#bloc-codes").hidden = !gestionAdmin() || SOURCE !== "api";
   $("#ligne-session").textContent = estAdmin() ? (SOURCE === "api" ? "Connecté avec la clé d'administration : tu vois et modifies tout, et tu gères les réglages communs." : "")
-    : "Connecté en tant que " + SESSION.nom + " : tu vois tout le classement, et tu modifies ton relevé." + (SESSION.adminCoupe ? " Mode admin désactivé." : "");
+    : "Connecté en tant que " + SESSION.nom + " : tu vois tout le classement, et tu modifies ton relevé." + (SESSION.adminCoupe ? " Mode admin désactivé (aperçus des nouveautés masqués) ; la gestion (codes, relevés automatiques, réglages communs) reste plus bas." : "");
   majModeAdmin();
   ereDor();
 }
@@ -1538,7 +1541,7 @@ async function posterAdmin(corps) {
   catch (e) { return { ok: false, message: e.message }; }
 }
 async function chargerCodes() {
-  if (!estAdmin() || SOURCE !== "api") return;
+  if (!gestionAdmin() || SOURCE !== "api") return;
   $("#liste-codes").innerHTML = '<p class="info">Chargement des codes…</p>';
   const rep = await posterAdmin({ action: "codes" });
   if (!rep.ok) { $("#liste-codes").innerHTML = '<p class="info">' + esc(rep.message || "Lecture impossible.") + "</p>"; return; }
@@ -4942,7 +4945,7 @@ $("#p-enregistrer").addEventListener("click", async () => {
  *  caché si le relevé du mois est déjà rempli, grisé avant le jour du relevé à l'heure prévue */
 function etatImport() {
   const l = D && D.liaison;
-  if (!l || !estAdmin() || SOURCE !== "api") return { visible: false };
+  if (!l || !gestionAdmin() || SOURCE !== "api") return { visible: false };
   const now = new Date(), k = now.getFullYear() * 100 + now.getMonth() + 1, h = l.heure || 19;
   const p = D.personnes.find(x => x.nom === (l.personne || "Théo")); if (!p) return { visible: false };
   const r = p.rows.find(x => x[0] === k);

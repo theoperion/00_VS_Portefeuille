@@ -2247,7 +2247,7 @@ function soumettreReglage(type, form) {
 /** Administrateur : les taux des livrets (les mêmes pour tous) sont recopiés par le Versus dans les fichiers des autres */
 async function propagerTaux(corps) {
   try {
-    if (!estAdmin() || typeof SOURCE === "undefined" || SOURCE !== "api" || simulationM()) return;
+    if (!gestionAdmin() || typeof SOURCE === "undefined" || SOURCE !== "api" || simulationM()) return;
     const rep = await envoyerApi(apiUrl(), Object.assign({ cle: stock.get(CLES.cle) }, corps, { action: "tauxLivrets" }));
     toast(rep.message || (rep.ok ? "Taux recopiés chez les autres." : "Taux non recopiés chez les autres."));
   } catch (e) { toast("Taux enregistrés chez toi, mais pas recopiés chez les autres (Versus injoignable)."); }
