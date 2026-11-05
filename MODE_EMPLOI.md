@@ -148,7 +148,7 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 **Phase 2 terminée ✅** (05/11/2026).
 
 ### Phase 3 · Podium (novembre)
-- ⬜ 3.1 Écrire les règles en clair ici, les valider ensemble **avant** de coder.
+- 🟡 3.1 **Règles écrites en clair** : voir [`REGLES_PODIUM.md`](REGLES_PODIUM.md). 9 décisions à prendre (§ 9 de ce fichier). Inventaire technique dans `app_scripts/audits/podium-regles-inventaire-2026-11.md`.
 - ⬜ 3.2 Coder, tester avec une date simulée, ouvrir. Inclut : badge million et exclusifs vérifiés par le serveur (anti-triche).
 - ⬜ 3.3 Quand toutes les fonctionnalités sont sorties (vers février 2027) : supprimer l'aperçu des étapes à venir ; il ne reste en admin que les codes et la saisie de secours.
 
@@ -208,3 +208,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 2.4 | Fichier de Kévin récupéré ; script Moi simple V4 (sécurité). Relevé auto impossible (pas de bourse dans son fichier) |
 | 05/11/2026 | 2.5 | Saisie d'un ordre simplifiée (apport coché, types expliqués, phrase de vérification, tutoriel en 1 écran). Appli v13.1 |
 | 05/11/2026 | 2.5 | ✅ Validé. **Phase 2 terminée** |
+| 05/11/2026 | 3.1 | Règles du Podium relevées dans le code et écrites en clair (`REGLES_PODIUM.md`) ; 9 décisions proposées |
