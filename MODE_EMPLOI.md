@@ -66,7 +66,7 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 - ✅ 0.4 **Un seul numéro de version** : fichier `version.js` (le seul endroit à changer), lu par l'appli et le hors connexion. Version **12.2** en ligne, vérifiée par Théo le 05/11 (mise à jour arrivée toute seule).
 
 ### Phase 1 · Classement Versus
-- 🔧 1.1 **Qui suis-je ?** (données mal enregistrées) · ✅ code en ligne (v12.3) · ⬜ ligne fausse à supprimer · ⬜ **toi** : vérifier
+- 🔧 1.1 **Qui suis-je ?** (données mal enregistrées) · ✅ code en ligne (v12.3) · ✅ ligne fausse supprimée · ⬜ **toi** : vérifier
   - Constat : en admin, toucher « Kévin » dans le classement faisait croire à l'appli que tu *étais* Kévin → tes lignes de bourse d'octobre enregistrées sous Kévin (ligne 3 de « Lignes app »), cartes cachées de Kévin visibles.
   - Correction : pour tout ce qui est **à toi** (lignes, badge million, écurie, cartes, duels), l'appli utilise toujours **ton joueur** (Théo). Toucher un nom ne change plus que **l'affichage**. Pour voir l'appli comme un autre : Réglages → « Voir comme un joueur » (rien n'est envoyé).
   - Et : le mode « Voir comme un joueur » / date simulée ne peut plus rien envoyer (relevé, clé, lignes, million, taux).
@@ -123,3 +123,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 0.3b | Toutes les anciennes adresses Versus (26) → code n°27 ; Moi Théo (5) → code n°13 |
 | 05/11/2026 | 0.4 | `version.js` : version unique 12.2 ; le cache hors connexion ne gonfle plus (vérif de mise à jour jamais gardée) |
 | 05/11/2026 | 1.1 | v12.3 : identité = toujours ton joueur ; mode admin limité à la session ; simulation n'envoie plus rien. Connexion Google refaite avec droit d'écriture sur les Sheets |
+| 05/11/2026 | 1.1 | Ligne 3 de « Lignes app » (Kévin, 202610, contenait le portefeuille de Théo) supprimée à la demande de Théo ; copie de sauvegarde dans `app_scripts/audits/sauvegardes/` |
