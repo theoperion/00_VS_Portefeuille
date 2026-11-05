@@ -122,7 +122,7 @@ async function charger(frais) {
   if (!cle) { await verifierConfiguration(url); return; }
   const btn = $("#btn-maj"); btn.classList.add("spin"); EN_CHARGEMENT = true;
   try {
-    if (navigator.onLine === false) throw new Error("Hors connexion");
+    if (navigator.onLine === false && !DEMARRAGE) throw new Error("Hors connexion");   // au démarrage, l'iPhone dit parfois « hors ligne » une fraction de seconde : on essaie quand même
     const ab = window.AbortController ? new AbortController() : null, minu = ab ? setTimeout(() => ab.abort(), 20000) : null;
     const json = await lireApi(url, cle, "data", { frais: !!frais, moi: moiVrai() || undefined }, ab ? ab.signal : undefined);
     clearTimeout(minu);
@@ -131,10 +131,11 @@ async function charger(frais) {
       if (json.erreur === "config") { stock.del(CLES.cle); ouvrirCle("", true); return; }
       const er = new Error(json.message || "Réponse inattendue du fichier"); er.serveur = true; throw er;
     }
-    ERREUR_SERVEUR = ""; D = json; SOURCE = "api"; EN_CHARGEMENT = false; stock.set(CLES.cache, JSON.stringify(json)); afficherTout();
+    ERREUR_SERVEUR = ""; DEMARRAGE = false; D = json; SOURCE = "api"; EN_CHARGEMENT = false; stock.set(CLES.cache, JSON.stringify(json)); afficherTout();
     setTimeout(() => { try { annoncerExclusifs(); } catch (e) { /* rien */ } }, 1200);
     setTimeout(() => revendiquerExclusifs().then(() => { if (vueActive() === "trophees" || vueActive() === "classement") rendreVue(vueActive()); }).catch(() => {}), 0);
   } catch (e) {
+    if (DEMARRAGE && !(e && e.serveur)) { DEMARRAGE = false; setTimeout(() => charger(frais), 1500); return; }   // un seul nouvel essai avant d'afficher « Hors connexion »
     EN_CHARGEMENT = false;
     ERREUR_SERVEUR = e && e.serveur ? String(e.message || e) : "";   // le fichier a répondu, mais avec une erreur : on la montre
     const c = stock.get(CLES.cache);
@@ -145,6 +146,7 @@ async function charger(frais) {
 }
 let EN_CHARGEMENT = false;
 let ERREUR_SERVEUR = "";
+let DEMARRAGE = true;   // premier chargement de l'appli
 let CREATION = false;
 async function verifierConfiguration(url) {
   try {
