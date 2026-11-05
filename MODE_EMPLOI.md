@@ -148,8 +148,9 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 **Phase 2 terminée ✅** (05/11/2026).
 
 ### Phase 3 · Podium (novembre)
-- 🟡 3.1 **Règles écrites en clair** : voir [`REGLES_PODIUM.md`](REGLES_PODIUM.md). 9 décisions à prendre (§ 9 de ce fichier). Inventaire technique dans `app_scripts/audits/podium-regles-inventaire-2026-11.md`.
-- ⬜ 3.2 Coder, tester avec une date simulée, ouvrir. Inclut : badge million et exclusifs vérifiés par le serveur (anti-triche).
+- ✅ 3.1 **Règles écrites en clair** et **validées** : [`REGLES_PODIUM.md`](REGLES_PODIUM.md) (décisions D1 à D9 du 05/11/2026).
+- 🔧 3.2 **Règles simples** · ✅ en ligne (appli v13.2, Versus V19) : tout en jeu dès janvier, égalité Pari = 0, un duel par paire, bouchon si les deux marquent, « inactive en janvier » sur les cartes, victoire partagée partout, page admin et code mort nettoyés. Testé sur une fausse saison.
+- ⬜ 3.3 **Anti-triche + exclusifs partagés** : le serveur recalcule lui-même qui a gagné chaque exclusif (à plusieurs si le même mois) et vérifie le badge millionnaire.
 - ⬜ 3.3 Quand toutes les fonctionnalités sont sorties (vers février 2027) : supprimer l'aperçu des étapes à venir ; il ne reste en admin que les codes et la saisie de secours.
 
 ### Phase 4 · Transferts (quand tout est rodé)
@@ -209,3 +210,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 2.5 | Saisie d'un ordre simplifiée (apport coché, types expliqués, phrase de vérification, tutoriel en 1 écran). Appli v13.1 |
 | 05/11/2026 | 2.5 | ✅ Validé. **Phase 2 terminée** |
 | 05/11/2026 | 3.1 | Règles du Podium relevées dans le code et écrites en clair (`REGLES_PODIUM.md`) ; 9 décisions proposées |
+| 05/11/2026 | 3.1, 3.2 | Règles validées (D1–D9). Appli v13.2 ; Versus V19 (version Google 34) |

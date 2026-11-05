@@ -1,7 +1,7 @@
 # Podium · Les règles du jeu
 
-> Les règles **telles qu'elles sont programmées aujourd'hui** (relevé dans le code le 05/11/2026).
-> Les points marqués ❓ sont des décisions à prendre (§ 9). Rien ne sera codé avant ta validation.
+> Les règles du jeu, **validées par Théo le 05/11/2026** (décisions D1 à D9, § 9).
+> ✅ = en ligne · ⏳ = validé, en cours de codage.
 
 ---
 
@@ -13,7 +13,7 @@
 | 20 nov. 2026 | Le teaser dévoile les règles |
 | **Décembre 2026** | **Tour de chauffe** : on joue « pour de faux », rien ne compte. Cartes du 1er au 5 déc. |
 | **1er janv. 2027** | **Saison 1** : tout part de zéro |
-| Février 2027 | Arrivent : **duels**, **atout des circuits**, **rattrapage** (cartes bonus). Annoncés le 20 janvier |
+| **Janvier 2027** | **Tout est en jeu dès le début** : cartes, **duels**, **atout des circuits**, **rattrapage** (cartes bonus). Annoncés le 20 décembre ✅ |
 | **Décembre 2027** | **Finale** : points de place doublés |
 | En réserve (éteint) | Monaco, niveaux d'écurie, atelier |
 
@@ -35,29 +35,29 @@
 
 | Carte | Effet |
 |---|---|
-| 🌀 Aspiration | **+2** si tu fais mieux ce mois-ci que le pilote juste devant toi au championnat |
+| 🌀 Aspiration | **+2** si tu fais mieux ce mois-ci que le pilote juste devant toi au championnat. *Inactive en janvier* |
 | 🚀 Turbo | **+2** de plus si tu as le 🎯 |
 | 🌧️ Pneus pluie | **+2** si le S&P 500 du mois est négatif |
-| 🎲 Pari | Tu choisis un rival : **+2** si tu finis devant lui, **−1** sinon |
+| 🎲 Pari | Tu choisis un rival : **+2** si tu finis devant lui, **−1** si tu finis derrière, **0** en cas d'égalité ✅ |
 
-**Cartes bonus** (à partir de février 2027, **une fois par saison**) : tu en **pioches une** chaque mois où tu finis **dernier** ; jouable dès le mois suivant.
+**Cartes bonus** (dès janvier 2027, **une fois par saison**) : tu en **pioches une** chaque mois où tu finis **dernier** ; jouable dès le mois suivant.
 
 | Carte | Effet |
 |---|---|
 | ✂️ Undercut | +1 si ton mois est positif, +2 s'il dépasse +2 % |
 | 🟨 Drapeau jaune | +2 si tu finis dernier du mois |
-| 🚨 Safety car | +2 si tu as 6 points ou plus de retard sur le leader |
-| ⏱️ Arrêt éclair | +2 si ta place du mois est meilleure que celle du mois d'avant |
+| 🚨 Safety car | +2 si tu as 6 points ou plus de retard sur le leader. *Inactive en janvier* |
+| ⏱️ Arrêt éclair | +2 si ta place du mois est meilleure que celle du mois d'avant. *Inactive en janvier* |
 
 Une carte rapporte **au plus +4** (atout compris).
 
-## 4. Les duels (à partir de février 2027)
+## 4. Les duels (dès janvier 2027)
 
-Chaque mois, tu peux défier **un** rival. Le meilleur des deux **lui prend 1 point** (+1 / −1). Égalité : rien.
+Chaque mois, tu peux défier **un** rival. Le meilleur des deux **lui prend 1 point** (+1 / −1). Égalité : rien. **Un seul duel par paire et par mois**, même si les deux se défient ✅. Le total d'un mois ne descend pas sous 0.
 
 ## 5. Les circuits
 
-Une ville par mois (Bahreïn en janvier … Las Vegas en décembre) : c'est **du décor** (la météo suit le S&P 500). **Seul effet** (dès février 2027) : chaque ville favorise une carte de base (**l'atout**, secret jusqu'au 2, un indice avant) → **+1** si ta carte atout a marqué. Si **deux pilotes ou plus** posent l'atout le même mois : **bouchon**, personne n'a le +1.
+Une ville par mois (Bahreïn en janvier … Las Vegas en décembre) : c'est **du décor** (la météo suit le S&P 500). **Seul effet** (dès janvier 2027) : chaque ville favorise une carte de base (**l'atout**, secret jusqu'au 2, un indice avant) → **+1** si ta carte atout a marqué. **Bouchon** (personne n'a le +1) seulement si **au moins deux pilotes marquent** avec l'atout le même mois ✅.
 
 ## 6. L'écurie
 
@@ -65,8 +65,10 @@ Une ville par mois (Bahreïn en janvier … Las Vegas en décembre) : c'est **du
 
 ## 7. Exclusifs et Premier millionnaire
 
-- **23 exclusifs** : des objets en **un seul exemplaire**, pour le **premier** qui réussit un exploit (gagner un mois, +10 % en un mois, 30 points, 3 victoires d'affilée, premier champion…). Le premier enregistré le garde pour toujours.
-- **👑 Premier millionnaire** : le premier à 1 000 000 € de patrimoine financier → couronne, 3 objets, et l'« Ère d'or » (appli dorée pour tous).
+- **23 exclusifs** : des objets pour le **premier** qui réussit un exploit (gagner un mois, +10 % en un mois, 30 points, 3 victoires d'affilée, premier champion…). **Si plusieurs le réussissent le même mois, chacun l'obtient** ⏳. Une fois obtenu, c'est pour toujours.
+- **👑 Premier millionnaire** : le premier à 1 000 000 € de **patrimoine financier** (l'immobilier ne compte pas ; le montant n'est jamais montré aux autres) → couronne, 3 objets, et l'« Ère d'or » (appli dorée pour tous).
+- **Anti-triche** ⏳ : c'est le **serveur** qui vérifie et décide qui a gagné un exclusif ou le badge, pas le téléphone.
+- **Victoire partagée** = victoire pour chacun, partout (Podium, palmarès, trophées) ✅.
 
 ## 8. Défis et badges
 
@@ -74,16 +76,16 @@ Défis de saison (performance, compétition, régularité, maîtrise) et **défi
 
 ---
 
-## 9. ❓ Décisions à prendre
+## 9. Décisions prises (05/11/2026)
 
-| # | Question | Ma recommandation |
+| # | Décision | État |
 |---|---|---|
-| D1 | **Anti-triche** : aujourd'hui, le serveur croit le téléphone pour les exclusifs et le badge million (un joueur malin pourrait se les attribuer). | Le **serveur vérifie** : liste fixe des exclusifs, mois terminé et complet, et il **recalcule lui-même** qui est premier. Pour le million : relire le fichier perso (Théo, Clément, Devlin) ou se baser sur le relevé Versus. |
-| D2 | **Égalité** : un Pari à égalité donne **−1**, un duel à égalité donne **0**. | Les deux à **0** (plus juste et plus simple). |
-| D3 | **Duel croisé** : si A défie B **et** B défie A, l'écart compte **deux fois** (+2/−2). | Un seul duel par paire et par mois. |
-| D4 | **Bouchon** : un adversaire qui pose ta carte atout te prive du +1, même s'il ne marque pas. | Bouchon seulement si **les deux marquent**. |
-| D5 | **Janvier** : Aspiration, Safety car et Arrêt éclair ne peuvent rien rapporter (pas de mois d'avant). L'appli ne le dit pas. | L'écrire sur la carte (« inactive en janvier »). |
-| D6 | **Plancher à 0** : un duel perdu ne retire rien à quelqu'un déjà à 0, alors que le gagnant garde son +1. | Garder le plancher (rassurant), c'est un détail. |
-| D7 | **Victoire partagée** : elle compte au Podium mais pas dans le palmarès de l'écran principal. | Compter partout pareil (victoire partagée = victoire). |
-| D8 | **Page admin** « Règles en réserve » : textes périmés (Huile, pièges, « 6 cartes bonus »…). | Corriger + supprimer le code mort. |
-| D9 | **Texte « jamais ton patrimoine privé »** dans les règles, faux pour le badge millionnaire. | Corriger le texte. |
+| D1 | Anti-triche : le serveur vérifie et recalcule exclusifs et badge millionnaire | ⏳ étape 3.3 |
+| D2 | Égalité = 0 au Pari comme en duel | ✅ v13.2 |
+| D3 | Un seul duel par paire et par mois | ✅ v13.2 |
+| D4 | Bouchon seulement si au moins deux pilotes marquent avec l'atout | ✅ v13.2 |
+| D5 | « Inactive en janvier » écrit sur Aspiration, Safety car, Arrêt éclair ; **et tout est en jeu dès janvier 2027** | ✅ v13.2, serveur V19 |
+| D6 | Plancher à 0 gardé | ✅ (inchangé) |
+| D7 | Victoire partagée = victoire partout ; **exclusif réussi le même mois par plusieurs = pour chacun** | ✅ palmarès v13.2 · ⏳ exclusifs (3.3) |
+| D8 | Page admin corrigée, code mort retiré (Huile, Tir groupé) | ✅ v13.2 |
+| D9 | Badge millionnaire = patrimoine financier seulement, texte corrigé | ✅ v13.2 |
