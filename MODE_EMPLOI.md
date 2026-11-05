@@ -9,7 +9,7 @@
 
 1. **Claude propose** une étape (ce qu'il va faire, pourquoi, ce que ça change pour toi).
 2. **Tu valides** en écrivant « OK étape X » (ou tu dis non / plus tard).
-3. **Claude fait** : code dans GitHub, mise en ligne chez Google, test.
+3. **Claude fait** : code dans GitHub, test, puis **mise en ligne** (branche `main` = ce qui est sur ton téléphone ; scripts Google sur leur adresse officielle). Autorisé par Théo le 05/11/2026, à condition que Claude dise à chaque fois ce qu'il met en ligne.
 4. **Tu vérifies** sur ton téléphone ce que Claude te dit de regarder.
 5. **On coche** l'étape ici et on l'ajoute au journal (§ 6).
 
@@ -63,7 +63,7 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 - ✅ 0.2 Code des scripts rangé dans le dépôt privé `app_scripts`
 - ✅ 0.3a Audit complet de Versus et de l'onglet Moi
 - 🔧 0.3b **Une seule adresse par script** : ✅ toutes les anciennes adresses servent le même code · ⬜ **toi** : Réglages → vider « Adresse de l'API » → Enregistrer · ⬜ plus tard : supprimer les anciennes adresses.
-- 🔧 0.4 **Un seul numéro de version** : fichier `version.js` (le seul endroit à changer), lu par l'appli et par le hors connexion. Version **12.2**. ✅ testé · ⬜ mise en ligne · ⬜ **toi** : Réglages affiche « Versus 12.2 ».
+- 🔧 0.4 **Un seul numéro de version** : fichier `version.js` (le seul endroit à changer), lu par l'appli et par le hors connexion. Version **12.2**. ✅ testé · ✅ mise en ligne · ⬜ **toi** : Réglages affiche « Versus 12.2 ».
 
 ### Phase 1 · Classement Versus
 - ⬜ 1.1 Données : corriger la confusion « joueur affiché = joueur connecté » (lignes de Théo enregistrées sous Kévin), bloquer les écritures en mode simulation, nettoyer la ligne fausse de Kévin.
