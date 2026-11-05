@@ -95,22 +95,27 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
   - Récap des lignes : un code bizarre ne peut plus le faire planter.
   - **MWR** : désormais **cumulé sur la période** (comparable au TWR juste à côté ; avant, annualisé au-delà d'un an), versements comptés en milieu de mois comme dans le Sheet, et calculé même sur un mois crypto à ±50 %.
   - E-mails de rappel : le lien ouvre bien l'appli (`00_VS_Portefeuille`).
-- 🔧 1.4 **Hors connexion** · ✅ en ligne (v12.7) · ⬜ **toi** : vérifier
+- ✅ 1.4 **Hors connexion** · validé par Théo le 05/11/2026
   - Sur réseau lent, l'appli s'ouvre tout de suite avec la copie du téléphone **et** garde la nouvelle version pour la prochaine ouverture (avant : elle restait bloquée sur l'ancienne).
   - Cache qui ne gonfle plus (fait en 0.4).
   - Au démarrage, pendant la mise à jour des chiffres, un relevé n'est plus refusé « Hors connexion » : message « réessaie dans quelques secondes ».
-- 🔧 1.5 **Ménage** · ✅ en ligne (v12.7, Versus V17) · ⬜ **toi** : vérifier
+- ✅ 1.5 **Ménage** · validé par Théo le 05/11/2026
   - « Script par mois » supprimé (il écrivait dans un onglet qui n'existe plus). Si son déclencheur traînait encore, il se retire tout seul à sa prochaine exécution.
   - Cartes et duels rangés **une case par saison** (avant : une seule case limitée à 9 Ko, pleine vers 2030). Les anciennes données sont reprises automatiquement.
   - Code jamais utilisé retiré (moteur de calcul, onglet Moi).
   - Laissé volontairement (sans risque, à revoir au découpage 5.1) : branches du mode « démo », restes de la carte « Huile », quelques styles inutilisés, doublons internes de l'onglet Moi.
   - Les 25 anciennes adresses Versus et 4 adresses Moi : gardées (elles servent le même code). À supprimer seulement quand tout le monde sera sûr d'utiliser l'officielle.
 
+- ✅ 1.6 **Timing des versements** (v12.8) : dans la fiche d'un joueur, sous « MWR », une ligne « Timing des versements : favorable / défavorable (± x pts) » quand l'écart MWR − TWR dépasse 0,5 point. Un appui l'explique en une phrase.
+
+**Phase 1 terminée ✅** (05/11/2026). Reste volontairement pour plus tard : anti-triche du badge million et des exclusifs (phase 3), petits restes de code (5.1).
+
 ### Phase 2 · Onglet Moi
 - ⬜ 2.1 Comprendre et documenter **le lien automatique de fin de mois** (Moi → Versus) : qui envoie quoi, quand ; pourquoi il n'a tourné que pour Théo en octobre.
 - ⬜ 2.2 Choix : quelles lignes de bourse sont partagées avec les autres (réglage respecté partout).
 - ⬜ 2.3 Bugs : ordre à 0 € de frais non supprimable, cases vides comptées 0 (fausse perte −100 %), enveloppes clôturées, rechargement après un ordre.
 - ⬜ 2.4 Profil simple de Kévin : récupérer son script, même ménage.
+- ⬜ 2.5 **Saisir un ordre (achat / vente) facilement** : revoir le parcours de saisie dans l'onglet Moi et ajouter un mini-tutoriel clair, étape par étape.
 
 ### Phase 3 · Podium (novembre)
 - ⬜ 3.1 Écrire les règles en clair ici, les valider ensemble **avant** de coder.
@@ -162,3 +167,5 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 1.3 | ✅ Validé par Théo |
 | 05/11/2026 | 1.4 | Hors connexion : nouvelle version gardée même sur réseau lent. Appli v12.7 |
 | 05/11/2026 | 1.5 | Ménage : « Script par mois » supprimé, cartes/duels par saison, code mort retiré. Versus V17 (version Google 32) |
+| 05/11/2026 | 1.4, 1.5 | ✅ Validés par Théo |
+| 05/11/2026 | 1.6 | « Timing des versements » dans la fiche joueur. Appli v12.8. **Phase 1 terminée** |

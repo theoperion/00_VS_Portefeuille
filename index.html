@@ -4558,7 +4558,7 @@ function rendreFiche() {
       '<div class="periode">' + esc(textePeriode(deb, finP, s.n)) + (s.debutK && deb && s.debutK > cleMoins(deb, -1) ? " · l'enveloppe a démarré après le début demandé" : "") + "</div>" +
       '<div class="hero"><span class="eyebrow">' + esc(ENVELOPPES[env]) + " · " + esc(p.nom) + '</span><span class="big" data-cv="' + s.valeur + '" data-cf="eur">' + eur(s.valeur) + '</span><div class="sous"><span class="badge ' + sens(s.pvLatente) + '">' + eur(s.pvLatente, 0, true) + " · " + pct(s.pvLatentePct) + "</span><span>de plus-value pour " + eur(s.verse) + " versés</span></div></div>" +
       (s.n ? '<div class="tuiles">' +
-        tuile("Performance (TWR)", pct(s.twr), sens(s.twr), "MWR <b>" + pct(s.mwr) + "</b>") +
+        tuile("Performance (TWR)", pct(s.twr), sens(s.twr), "MWR <b>" + pct(s.mwr) + "</b>" + timingVersements(s)) +
         tuile(esc(D.marche.indices[i1]) + " même période", pct(s.i1 && s.i1.twr), "", s.i1 ? "Écart <b class=\"" + sens(s.twr - s.i1.twr) + "\">" + pts(s.twr - s.i1.twr) + "</b>" : "indice indisponible") +
         tuile("Pire baisse depuis un plus haut", pct(s.baisseMax), sens(s.baisseMax), "Actuelle <b>" + pct(s.baisseActuelle) + "</b>") +
         tuile("Volatilité annualisée", volTxt(s), "", s.n < RECUL ? "moins de " + RECUL + " mois de données" : "Sharpe <b>" + sharpeTxt(s) + "</b>") +
@@ -4590,6 +4590,12 @@ function lireNb(t) {
   if (x.includes(",") && x.includes(".")) x = x.replace(/\./g, "");   // « 1.234,56 » : le point sépare les milliers
   x = x.replace(",", ".");
   if (x === "") return null; const n = Number(x); return isFinite(n) ? n : NaN;
+}
+/** Fiche : « Timing des versements » = écart MWR − TWR, affiché seulement au-delà de 0,5 point */
+function timingVersements(s) {
+  if (!ok(s.mwr) || !ok(s.twr) || Math.abs(s.mwr - s.twr) < 0.005) return "";
+  const bon = s.mwr > s.twr;
+  return '<br><button class="lien" type="button" onclick="toast(\'Le TWR mesure tes placements, le MWR ton argent : l\\\'écart montre si tes versements sont arrivés au bon moment.\')">Timing des versements : <b class="' + (bon ? "up" : "down") + '">' + (bon ? "favorable" : "défavorable") + " (" + pts(s.mwr - s.twr) + ")</b></button>";
 }
 function enSaisie(n) { return ok(n) ? String(n).replace(".", ",") : ""; }
 function ouvrirSaisie() {
