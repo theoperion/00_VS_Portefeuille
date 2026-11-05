@@ -168,6 +168,7 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 - ✅ 4.1b **Relevé envoyé par leur propre fichier** (appli v14.0, Versus V24, fichiers perso V13) : `LiaisonVersus.js` dans leur script ; l'appli configure la liaison toute seule ; le Versus arrête de lire un fichier qui envoie lui-même. Testé sur les vraies données de Clément (lecture seule).
 - 🟡 4.1c **Toi, dès que possible** : autoriser la nouveauté dans les 2 fichiers (fiche, partie « Avant le jour J »).
 - 📄 **La fiche à suivre (et à leur envoyer)** : [`FICHE_TRANSFERT.md`](FICHE_TRANSFERT.md). Aucun besoin de Claude.
+- ✅ 4.1d **Fiche validée par Théo** (05/11/2026). **Phase 4 prête** : il ne reste que le transfert lui-même, prévu la 3e semaine de novembre, à faire avec la fiche, sans Claude.
 - ⬜ 4.2 Transfert de Clément · ⬜ 4.3 Transfert de Devlin
 
 #### 🔁 Transférer un fichier « Portefeuille & Épargne » à un ami (≈ 5 min)
