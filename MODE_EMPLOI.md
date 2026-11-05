@@ -65,7 +65,7 @@ Où est le code :
 | Moi · Théo | `…wUZGrzfS…` | ✅ Les 5 anciennes adresses donnent le même code |
 | Moi · Clément | `…yue_yIcK…` | à rattacher (phase 4) |
 | Moi · Devlin | `…z2q12dXu…` | à rattacher (phase 4) |
-| Moi · Kévin (profil simple) | `…zucvUCgb…` | à rattacher (phase 2) |
+| Moi · Kévin (profil simple) | `…zucvUCgb…` | ✅ code récupéré (V4), les 2 anciennes adresses servent le même code |
 
 ---
 
@@ -130,7 +130,10 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
   - Une enveloppe clôturée reste suivie par la photo quotidienne : son retrait final est compté (plus de fausse perte). Limite connue : une enveloppe clôturée **et** une nouvelle du même type (ex. deux PEA) partagent la même colonne de l'Historique.
   - Après un ordre, l'écran se met bien à jour (un rechargement demandé pendant un autre n'est plus perdu).
   - Fichiers de Clément et Devlin : mêmes corrections à faire au moment de récupérer leurs scripts (phase 4).
-- ⬜ 2.4 Profil simple de Kévin : récupérer son script, même ménage.
+- 🔧 2.4 **Fichier de Kévin** (« PF & Epargne Kévin », hébergé chez Théo) · ✅ en ligne (V4) · ⬜ **toi / Kévin** : vérifier
+  - Ce que c'est : un fichier « Moi simple » pour l'**épargne** (livrets, assurances-vie, autre épargne), l'appartement et le prêt. Kévin y saisit ses mouvements depuis l'appli. **Il n'y a pas de bourse dedans** (c'est voulu).
+  - Code rangé dans `app_scripts/portefeuille-epargne/kevin/` ; mêmes corrections de sécurité que le tien : lecture en POST, la bonne clé n'est jamais bloquée.
+  - Relevé automatique : **pas possible** pour Kévin, puisque son fichier ne contient pas ses PEA / CTO / crypto. Son relevé Versus reste **saisi à la main** chaque fin de mois (par lui, ou par toi en secours).
 - ⬜ 2.5 **Saisir un ordre (achat / vente) facilement** : revoir le parcours de saisie dans l'onglet Moi et ajouter un mini-tutoriel clair, étape par étape.
 
 ### Phase 3 · Podium (novembre)
@@ -191,3 +194,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 2.2 | ✅ Décision : partage des lignes inchangé |
 | 05/11/2026 | 2.3 | 4 bugs de l'onglet Moi corrigés. Appli v13.0 ; Moi Théo V12 (version Google 15) |
 | 05/11/2026 | 2.3 | ✅ Validé par Théo |
+| 05/11/2026 | 2.4 | Fichier de Kévin récupéré ; script Moi simple V4 (sécurité). Relevé auto impossible (pas de bourse dans son fichier) |
