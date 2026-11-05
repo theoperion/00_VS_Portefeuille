@@ -1215,13 +1215,13 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
     </section>
     <section class="regl" id="regl-admin" hidden>
       <h4>👑 Mode admin</h4>
-      <p class="info">Désactivé, l'appli se comporte comme pour un joueur : tu joues en ton nom, sans voir les cartes des autres avant la révélation ni les règles à venir. Activé : réglages communs, codes, aperçus et règles en réserve.</p>
+      <p class="info">Désactivé, tu es un joueur comme les autres. Activé (jusqu'à la fermeture de l'appli) : aperçu des nouveautés et des règles à venir, réglages communs, codes. Dans tous les cas, tu joues en ton nom uniquement.</p>
       <div class="chips" id="choix-admin"><button class="chip" type="button" data-admin-on="0">Désactivé</button><button class="chip" type="button" data-admin-on="1">Activé</button></div>
       <div class="champ" id="bloc-admin-joueur"><label>Je joue en tant que</label><div class="chips" id="choix-admin-joueur"></div></div>
     </section>
     <section class="regl" id="regl-vue" hidden>
-      <h4>Voir l'appli comme un joueur (admin)</h4>
-      <p class="info">Pour vérifier ce que voient les autres : sans tes droits d'admin, et à la date de ton choix. Avec une date simulée, rien n'est envoyé.</p>
+      <h4>Voir l'appli en simple joueur (admin)</h4>
+      <p class="info">Pour voir l'appli comme un simple joueur (toi, sans tes droits d'admin), à la date de ton choix. Rien n'est envoyé.</p>
       <div class="champ"><label>Voir comme</label><div class="chips" id="choix-vue"></div></div>
       <div class="champ"><label>Date</label><div class="chips" id="choix-date"></div></div>
     </section>
@@ -1455,9 +1455,9 @@ function vraiAdmin() { return typeof D === "undefined" || !D || !D.session || D.
 /** Mode admin : la clé d'administration reste, mais par défaut l'appli se comporte comme pour un joueur (réglage « Mode admin ») */
 function adminActif() { try { return vraiAdmin() && sessionStorage.getItem("versus.adminOn") === "1"; } catch (e) { return false; } }
 /** Le joueur que l'admin incarne quand le mode admin est coupé */
-function joueurAdmin() { const l = (typeof D !== "undefined" && D && D.personnes) || [], n = stock.get("versus.adminJoueur"); return l.some(p => p.nom === n) ? n : (l.find(p => /^th[ée]o$/i.test(p.nom)) || l[0] || {}).nom; }
+function joueurAdmin() { const l = (typeof D !== "undefined" && D && D.personnes) || []; return (l.find(p => /^th[ée]o$/i.test(p.nom)) || l[0] || {}).nom; }   // la clé admin est Théo, point
 /** Qui je suis vraiment : mon joueur, jamais celui que je regarde (l'admin reste son propre joueur, Théo) */
-function moiVrai() { return estAdmin() ? (joueurAdmin() || stock.get("versus.adminJoueur") || "Théo") : SESSION && SESSION.nom; }
+function moiVrai() { return estAdmin() ? (joueurAdmin() || "Théo") : SESSION && SESSION.nom; }
 function vueJoueur() { return adminActif() && !!stock.get("versus.vueJoueur"); }
 /** Simulation : date simulée ou vue joueur. Rien ne part vers l'API, rien de « vu » n'est gardé. */
 function simulation() { return !!window.DATE_SIM || vueJoueur(); }
@@ -1471,9 +1471,9 @@ function afficherTout() {
   if (ETAT.i2c === undefined || ETAT.i2c === null) ETAT.i2c = ok(ETAT.i2) ? ETAT.i2 : -1;
   if (ETAT.i2c >= nbIdx) ETAT.i2c = -1;
   SESSION = D.session || { role: "admin" };
-  if (vueJoueur()) { const n = stock.get("versus.vueJoueur"); SESSION = { role: "perso", nom: D.personnes.some(p => p.nom === n) ? n : D.personnes[0].nom, simule: true }; }
+  if (vueJoueur()) SESSION = { role: "perso", nom: joueurAdmin(), simule: true };   // vue joueur = toi, sans tes droits d'admin (jamais un autre joueur)
   else if (vraiAdmin() && !adminActif()) SESSION = { role: "perso", nom: joueurAdmin(), adminCoupe: true };
-  if (!estAdmin() && D.personnes.find(p => p.nom === SESSION.nom)) { if (ETAT.moi !== SESSION.nom) { ETAT.moi = SESSION.nom; ETAT.fiche = SESSION.nom; garder(); } }
+  if (D.personnes.find(p => p.nom === moiVrai())) { if (ETAT.moi !== moiVrai()) { ETAT.moi = moiVrai(); ETAT.fiche = moiVrai(); garder(); } } else if (!estAdmin() && D.personnes.find(p => p.nom === SESSION.nom)) { if (ETAT.moi !== SESSION.nom) { ETAT.moi = SESSION.nom; ETAT.fiche = SESSION.nom; garder(); } }
   if (!D.personnes.find(p => p.nom === ETAT.moi)) ETAT.moi = D.personnes[0].nom;
   if (!ETAT.fiche || !D.personnes.find(p => p.nom === ETAT.fiche)) ETAT.fiche = ETAT.moi;
   const b = $("#bandeau");
@@ -1488,7 +1488,7 @@ function afficherTout() {
   $("#etat-source").textContent = SOURCE === "demo" ? "Source : démonstration (aucune adresse d'API)." : SOURCE === "cache" ? "Source : copie locale, l'API n'a pas répondu." : "Source : le fichier « Versus Portefeuille ».";
   $("#choix-moi").innerHTML = D.personnes.map(p => '<button class="chip" type="button" data-moi="' + esc(p.nom) + '" aria-pressed="' + (p.nom === ETAT.moi) + '"><i style="background:' + couleur(p.nom) + '"></i>' + esc(p.nom) + "</button>").join("");
   document.querySelectorAll("[data-moi]").forEach(x => x.addEventListener("click", () => { ETAT.moi = x.dataset.moi; ETAT.fiche = x.dataset.moi; garder(); afficherTout(); }));
-  $("#bloc-moi").hidden = !estAdmin();
+  $("#bloc-moi").hidden = true;   // plus de « Je suis » : chacun est lui-même
   majVueJoueur();
   majVersion();
   const admin = estAdmin() && SOURCE === "api";
@@ -2650,13 +2650,12 @@ function modeAdmin() { return vueJoueur() ? "joueur" : apercuSaison() ? "tout" :
 function barreAdmin() {
   const m = modeAdmin(), b = (id, lib) => '<button type="button" data-madm="' + id + '" aria-pressed="' + (m === id) + '">' + lib + "</button>";
   const desc = m === "tout" ? "Toutes les fonctions et toutes les règles, sur la saison 2026 rejouée. Rien de ce que tu fais ici n'est vu par les autres."
-    : m === "joueur" ? "Exactement ce que voit " + esc(SESSION.nom || "") + (window.DATE_SIM ? ", au " + esc(new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })) : ", aujourd'hui") + ". Rien n'est envoyé."
+    : m === "joueur" ? "Ce que tu vois en simple joueur, sans tes droits d'admin" + (window.DATE_SIM ? ", au " + esc(new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })) : ", aujourd'hui") + ". Rien n'est envoyé."
     : "Ce que tout le monde voit aujourd'hui, pour de vrai. Ici, tes actions comptent.";
   let plus = "";
   if (m === "joueur") {
     const vj = stock.get("versus.vueJoueur") || "", ds = stock.get("versus.dateSim") || "";
-    plus = '<div class="ba-l"><span>Joueur</span><div class="ba-o">' + D.personnes.map(p => '<button type="button" data-bajoueur="' + esc(p.nom) + '" aria-pressed="' + (vj === p.nom) + '">' + esc(p.nom) + "</button>").join("") + "</div></div>" +
-      '<div class="ba-l"><span>Date</span><div class="ba-o">' + DATES_SIM.map(([d, l]) => '<button type="button" data-badate="' + d + '" aria-pressed="' + (ds === d) + '">' + esc(l) + "</button>").join("") + "</div></div>";
+    plus = '<div class="ba-l"><span>Date</span><div class="ba-o">' + DATES_SIM.map(([d, l]) => '<button type="button" data-badate="' + d + '" aria-pressed="' + (ds === d) + '">' + esc(l) + "</button>").join("") + "</div></div>";
   }
   return '<div class="barre-admin"><div class="ba-h"><b>👑 Admin</b><div class="ba-seg">' + b("tout", "Tout afficher") + b("joueur", "Vue joueur") + b("reel", "Le réel") + "</div></div>" + plus + "<small>" + desc + "</small></div>";
 }
@@ -2664,12 +2663,11 @@ function brancherBarreAdmin(v) {
   const reglerMode = m => {
     if (m === "tout") { stock.set("versus.apercuSaison", "1"); stock.del("versus.vueJoueur"); }
     else if (m === "reel") { stock.set("versus.apercuSaison", "0"); stock.del("versus.vueJoueur"); }
-    else { stock.set("versus.apercuSaison", "0"); stock.set("versus.vueJoueur", ETAT.moi || D.personnes[0].nom); if (!stock.get("versus.dateSim") && !chauffeOuverte()) stock.set("versus.dateSim", "2026-12-03"); }
+    else { stock.set("versus.apercuSaison", "0"); stock.set("versus.vueJoueur", joueurAdmin()); if (!stock.get("versus.dateSim") && !chauffeOuverte()) stock.set("versus.dateSim", "2026-12-03"); }
     if (m !== "joueur" && window.DATE_SIM) stock.del("versus.dateSim");
     location.reload();   // l'horloge simulée et la mémoire de session se règlent au chargement
   };
   v.querySelectorAll("[data-madm]").forEach(x => x.addEventListener("click", () => reglerMode(x.dataset.madm)));
-  v.querySelectorAll("[data-bajoueur]").forEach(x => x.addEventListener("click", () => { stock.set("versus.vueJoueur", x.dataset.bajoueur); location.reload(); }));
   v.querySelectorAll("[data-badate]").forEach(x => x.addEventListener("click", () => { if (x.dataset.badate) stock.set("versus.dateSim", x.dataset.badate); else stock.del("versus.dateSim"); location.reload(); }));
 }
 function blocSaison() {
@@ -5124,10 +5122,8 @@ function majModeAdmin() {
     ["versus.vueJoueur", "versus.dateSim", "versus.apercuSaison"].forEach(k => stock.del(k));
     location.reload();
   }; });
-  $("#bloc-admin-joueur").hidden = on;
-  const jn = joueurAdmin();
-  $("#choix-admin-joueur").innerHTML = D.personnes.map(p => '<button class="chip" type="button" data-admin-j="' + esc(p.nom) + '" aria-pressed="' + (p.nom === jn) + '"><i style="background:' + couleur(p.nom) + '"></i>' + esc(p.nom) + "</button>").join("");
-  sec.querySelectorAll("[data-admin-j]").forEach(b => b.addEventListener("click", () => { stock.set("versus.adminJoueur", b.dataset.adminJ); location.reload(); }));
+  $("#bloc-admin-joueur").hidden = true;   // plus de « Je joue en tant que »
+
 }
 /* ---------- Vue joueur et date simulée (admin) ---------- */
 const DATES_SIM = [["", "Aujourd'hui"], ["2026-11-20", "20 nov. · teaser"], ["2026-12-03", "3 déc. · chauffe"], ["2026-12-22", "22 déc. · cartes de janvier"],
@@ -5137,12 +5133,12 @@ function majVueJoueur() {
   sec.hidden = !adminActif() || !D || !D.personnes;
   if (sec.hidden) return;
   const vj = stock.get("versus.vueJoueur") || "", ds = stock.get("versus.dateSim") || "";
-  $("#choix-vue").innerHTML = '<button class="chip" type="button" data-vuej="" aria-pressed="' + !vj + '">👑 Admin</button>' + D.personnes.map(p => '<button class="chip" type="button" data-vuej="' + esc(p.nom) + '" aria-pressed="' + (vj === p.nom) + '">👁️ ' + esc(p.nom) + "</button>").join("");
+  $("#choix-vue").innerHTML = '<button class="chip" type="button" data-vuej="" aria-pressed="' + !vj + '">👑 Admin</button><button class="chip" type="button" data-vuej="' + esc(joueurAdmin()) + '" aria-pressed="' + !!vj + '">👁️ Joueur (toi, sans admin)</button>';
   $("#choix-date").innerHTML = DATES_SIM.map(([d, l]) => '<button class="chip" type="button" data-dsim="' + d + '" aria-pressed="' + (ds === d) + '">' + esc(l) + "</button>").join("");
   document.querySelectorAll("[data-vuej]").forEach(b => b.addEventListener("click", () => { if (b.dataset.vuej) { stock.set("versus.vueJoueur", b.dataset.vuej); stock.set("versus.apercuSaison", "0"); } else { stock.del("versus.vueJoueur"); stock.del("versus.dateSim"); } location.reload(); }));
   document.querySelectorAll("[data-dsim]").forEach(b => b.addEventListener("click", () => { if (b.dataset.dsim) stock.set("versus.dateSim", b.dataset.dsim); else stock.del("versus.dateSim"); location.reload(); }));
   const band = $("#simu-band"), parts = [];
-  if (vj) parts.push("👁️ Vue joueur : " + esc(SESSION.nom || vj));
+  if (vj) parts.push("👁️ Vue joueur (toi, sans admin)");
   if (window.DATE_SIM) parts.push("📅 Simulé au " + esc(new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })) + " · rien n'est envoyé");
   band.hidden = !parts.length;
   band.innerHTML = parts.length ? "<span>" + parts.join(" · ") + '</span><button class="lien" type="button" id="simu-quitter">Revenir à l\'admin, aujourd\'hui</button>' : "";
