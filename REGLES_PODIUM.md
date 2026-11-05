@@ -89,3 +89,30 @@ Défis de saison (performance, compétition, régularité, maîtrise) et **défi
 | D7 | Victoire partagée = victoire partout ; **exclusif réussi le même mois par plusieurs = pour chacun** | ✅ palmarès v13.2 · ⏳ exclusifs (3.3) |
 | D8 | Page admin corrigée, code mort retiré (Huile, Tir groupé) | ✅ v13.2 |
 | D9 | Badge millionnaire = patrimoine financier seulement, texte corrigé | ✅ v13.2 |
+
+---
+
+## 10. Nouveautés validées le 05/11/2026 (à coder ⏳)
+
+| # | Nouveauté | Règle précise proposée |
+|---|---|---|
+| N1 | **Duels retirés** | Le Pari suffit pour viser un rival. |
+| N2 | **🎰 Monaco réactivé** (saison 2027) | Un mois tiré entre avril et octobre (révélé avec le calendrier) : le **dernier du championnat** avant ce mois marque ses **points de place ×2**. |
+| N3 | **🔮 Pronostic du mois** (fusionné avec l'indice) | Dans la même fenêtre que la carte (du 20 au 1er), deux questions, secrètes jusqu'au 2 : **qui gagne le mois ?** (+1 si juste, toi compris ; victoire partagée = juste) et **le S&P 500 finit-il en hausse ou en baisse ?** (+1 si juste). Donc **jusqu'à +2**. Ne compte pas dans le plafond des cartes. |
+| N4 | **🤝 Bonus d'équipe** | Si **tous les joueurs du mois** battent le S&P 500 : **+1 pour chacun**. |
+| N5 | **🔥 Série** | **+1** à chaque **3e mois d'affilée** où tu bats le S&P 500 (3 mois = +1, 6 mois = +2 au total…). La série repart de zéro dès que tu ne bats pas l'indice, et à chaque nouvelle saison. |
+| N6 | **😈 Rival de la saison** | Entre le 20 décembre et le 1er janvier, chacun choisit **un rival secret** pour toute la saison (non modifiable ensuite). Révélé à la Finale. Fin décembre : si tu finis **devant lui au championnat**, **+5 points**. |
+| N7 | **📸 Carte postale du mois** | Le 2 du mois, une image prête à partager (podium du mois, cartes et pronostics révélés, ville du Grand Prix, météo) : un bouton « Partager » (WhatsApp…). Aucun effet sur les points. |
+| N8 | **🗳️ Vote de fin de saison** | Du 2 au 31 décembre, chacun vote (pas pour soi) pour **« le coup de la saison »**. Le plus de voix gagne un **objet d'écurie unique** (le trophée « Coup de la saison » de l'année). Égalité : chacun l'obtient. |
+
+### ❓ Ta question : des Grands Prix avec leur propre règle ?
+Oui, c'est une bonne idée pour casser la routine, **mais pas tous les mois** (trop dur à retenir). Proposition : **4 Grands Prix spéciaux** dans l'année, annoncés le 20 du mois d'avant comme le reste :
+
+| Mois | Grand Prix | Règle spéciale proposée |
+|---|---|---|
+| Entre avril et octobre (tiré) | 🎰 **Monaco** | Le dernier du championnat ×2 (N2) |
+| Juillet | 🇬🇧 **Silverstone** (« le GP à domicile ») | Le **vainqueur du mois prend +2** au lieu de 0 bonus : 1er = 8 pts |
+| Septembre | 🇮🇹 **Monza** (« temple de la vitesse ») | Le **🎯 vaut +2** au lieu de +1 (Turbo : +4) |
+| Décembre | 🇺🇸 **Las Vegas = Finale** | Points de place ×2 (déjà en place) |
+
+Si Monaco tombe en juillet ou en septembre, il passe avant (une seule règle spéciale par mois).
