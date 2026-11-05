@@ -662,8 +662,10 @@ function cle() { return stock.get(K.cle) || ""; }
 function configure() { return !!(adresse() && cle()); }
 function lireCache() { if (M) { assurerSimple(); return; } const c = stock.get(K.cache); if (c) { try { recevoir(JSON.parse(c)); SRC = "cache"; } catch (e) { stock.del(K.cache); } } }
 
+let rechargerApres = false;   // un rechargement demandé pendant une lecture en cours (ex. juste après un ordre) n'est plus perdu
 async function charger(frais) {
-  if (!configure() || enCours) return;
+  if (!configure()) return;
+  if (enCours) { if (frais) rechargerApres = true; return; }
   enCours = true; erreur = "";
   const ctrl = window.AbortController ? new AbortController() : null;
   const minuteur = setTimeout(() => { if (ctrl) ctrl.abort(); }, 25000);
@@ -684,6 +686,7 @@ async function charger(frais) {
     clearTimeout(minuteur); enCours = false;
     signalerCloche();
     if (vueMoi()) rendre();
+    if (rechargerApres) { rechargerApres = false; setTimeout(() => charger(true), 0); }
   }
 }
 function vueMoi() { const s = document.getElementById("v-moi"); return s && !s.hidden; }

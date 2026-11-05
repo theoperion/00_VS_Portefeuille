@@ -124,7 +124,12 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
   - a) Si l'import échoue pour quelqu'un : une ligne est ajoutée dans l'onglet **« Bugs »** du Sheet Versus **et** Théo reçoit un **e-mail** (Versus V18).
   - b) Texte d'aide des 4 onglets Data corrigé : la ligne du mois apparaît **le dernier jour ouvré** (pas « le lendemain »).
 - ✅ 2.2 **Partage des lignes de bourse** · décision de Théo (05/11/2026) : **on ne change rien** (partagé par défaut, comme avant).
-- ⬜ 2.3 Bugs : ordre à 0 € de frais non supprimable, cases vides comptées 0 (fausse perte −100 %), enveloppes clôturées, rechargement après un ordre.
+- 🔧 2.3 **Bugs de l'onglet Moi** · ✅ en ligne (appli v13.0, fichier Moi de Théo V12) · ⬜ **toi** : vérifier
+  - Un ordre saisi avec 0 € de frais peut de nouveau être supprimé.
+  - Une case vide dans l'onglet Historique n'est plus comptée 0 € (plus de « pire baisse −100 % » ni de badge « Increvable » à tort).
+  - Une enveloppe clôturée reste suivie par la photo quotidienne : son retrait final est compté (plus de fausse perte). Limite connue : une enveloppe clôturée **et** une nouvelle du même type (ex. deux PEA) partagent la même colonne de l'Historique.
+  - Après un ordre, l'écran se met bien à jour (un rechargement demandé pendant un autre n'est plus perdu).
+  - Fichiers de Clément et Devlin : mêmes corrections à faire au moment de récupérer leurs scripts (phase 4).
 - ⬜ 2.4 Profil simple de Kévin : récupérer son script, même ménage.
 - ⬜ 2.5 **Saisir un ordre (achat / vente) facilement** : revoir le parcours de saisie dans l'onglet Moi et ajouter un mini-tutoriel clair, étape par étape.
 
@@ -184,3 +189,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 1.1 | v12.9 : gestion (codes, relevés automatiques, réglages communs) visible avec la clé admin sans activer le mode admin (Théo ne la voyait plus) |
 | 05/11/2026 | 2.1 | ✅ Validé. Versus V18 (version Google 33) : import raté → onglet Bugs + e-mail. Textes d'aide des onglets Data corrigés |
 | 05/11/2026 | 2.2 | ✅ Décision : partage des lignes inchangé |
+| 05/11/2026 | 2.3 | 4 bugs de l'onglet Moi corrigés. Appli v13.0 ; Moi Théo V12 (version Google 15) |
