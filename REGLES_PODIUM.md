@@ -111,7 +111,7 @@ Oui, c'est une bonne idée pour casser la routine, **mais pas tous les mois** (t
 | Mois | Grand Prix | Règle spéciale proposée |
 |---|---|---|
 | Entre avril et octobre (tiré) | 🎰 **Monaco** | Le dernier du championnat ×2 (N2) |
-| Juillet | 🇬🇧 **Silverstone** (« le GP à domicile ») | Le **vainqueur du mois prend +2** au lieu de 0 bonus : 1er = 8 pts |
+| Juillet | 🇬🇧 **Silverstone** (« le GP à domicile ») | Le **vainqueur du mois gagne +2 de plus** : le 1er marque 8 pts au lieu de 6 |
 | Septembre | 🇮🇹 **Monza** (« temple de la vitesse ») | Le **🎯 vaut +2** au lieu de +1 (Turbo : +4) |
 | Décembre | 🇺🇸 **Las Vegas = Finale** | Points de place ×2 (déjà en place) |
 
