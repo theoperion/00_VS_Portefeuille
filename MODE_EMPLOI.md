@@ -279,3 +279,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 3.3 bis | v14.4 : les aperçus admin s'arrêtent seuls le 01/02/2027 (codes et saisie de secours gardés). Testé avant/après la date ; calcul serveur inchangé |
 | 06/11/2026 | 5.1 | v14.4.1 : onglet Moi, nouvel actif : clavier lettres pour le code et le nom (il n'affichait que des chiffres) |
 | 06/11/2026 | E1 | Fichier perso de Théo : 4 anciennes adresses supprimées ; actif PUST (Amundi PEA Nasdaq-100, EPA:PUST) ajouté dans Paramètres › Mes actifs |
+| 06/11/2026 | 2.x | Fichier de Théo (version Google 19) : une ligne entièrement vendue n'est plus envoyée à l'onglet Moi ; ligne PUST ajoutée dans Aujourd'hui › Mes lignes (un NOUVEL actif doit y avoir sa ligne pour apparaître dans Moi) |
