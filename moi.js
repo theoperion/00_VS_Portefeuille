@@ -1151,9 +1151,13 @@ function blocRisque() {
 function joursRecords() {
   const h = M.historique; if (!h || !h.rows || h.rows.length < 2) return [];
   const ki = h.cols.indexOf("ip"), kv = h.cols.indexOf("v"), ka = h.cols.indexOf("a"), out = [];
+  // 14.4.2 : seuls comptent les jours où le portefeuille valait au moins la moitié de sa valeur actuelle
+  // (les % des débuts, sur quelques centaines d'euros, ne sont pas comparables) ; se recale seul après un gros versement
+  const actuel = h.rows[h.rows.length - 1][kv], seuil = actuel > 0 ? actuel / 2 : 0;
   for (let i = 1; i < h.rows.length; i++) {
     const a = h.rows[i - 1], b = h.rows[i];
     if ((dateNum(b[0]) - dateNum(a[0])) / 864e5 > 4.5 || !(a[ki] > 0) || !(b[ki] > 0)) continue;
+    if (!(a[kv] >= seuil) || !(b[kv] >= seuil)) continue;
     out.push({ j: b[0], p: b[ki] / a[ki] - 1, e: (b[kv] - a[kv]) - (b[ka] - a[ka]) });
   }
   return out;
@@ -1188,7 +1192,7 @@ function blocJours() {
   const pastille = (lib, x, cls) => '<span class="m-jc-p ' + cls + '"><i>' + lib + '</i><b>' + pct(x.p, 2) + "</b><small>" + dateCourte(dateNum(x.j)) + "/" + String(x.j).slice(2, 4) + " · " + eur(x.e, 0, true) + "</small></span>";
   return '<details class="acc m-compact m-jc" data-acc="m-jours"' + (PREF.acc["m-jours"] ? " open" : "") + "><summary>" + pastille("▲ Meilleur jour", best[0], "up") + pastille("▼ Pire jour", pire[0], "down") + "</summary>" +
     '<div><div class="m-jr">' + liste("Top 5", best) + liste("Flop 5", pire) + "</div>" +
-    '<p class="info">Sur ' + l.length + " jours de bourse, classés en performance (sans l'effet de tes versements). Le montant en euros dépend de la taille du portefeuille ce jour-là.</p></div></details>";
+    '<p class="info">Sur ' + l.length + " jours de bourse depuis le " + dateLongue(dateNum(l[0].j)) + ", classés en performance (sans l'effet de tes versements). Seuls comptent les jours où ton portefeuille valait au moins la moitié de sa valeur actuelle : après un gros versement, la période se recale toute seule.</p></div></details>";
 }
 function moisParMois() {
   const h = M.historique; if (!h || !h.rows || h.rows.length < 2) return [];
