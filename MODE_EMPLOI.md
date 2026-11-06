@@ -277,3 +277,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | 5.1 | v14.3.1 : le hors connexion ne nettoie plus que ses propres caches (il effaçait celui des carnets, même site) |
 | 05/11/2026 | E1 | v14.3.2 : chaque téléphone se range sur l'adresse officielle ; 25 anciennes adresses Versus et 7 du Carnet T3 supprimées (liste : app_scripts/audits/sauvegardes/2026-11-05-adresses-supprimees.json) |
 | 05/11/2026 | 3.3 bis | v14.4 : les aperçus admin s'arrêtent seuls le 01/02/2027 (codes et saisie de secours gardés). Testé avant/après la date ; calcul serveur inchangé |
+| 06/11/2026 | 5.1 | v14.4.1 : onglet Moi, nouvel actif : clavier lettres pour le code et le nom (il n'affichait que des chiffres) |

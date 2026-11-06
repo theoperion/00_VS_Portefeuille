@@ -2118,7 +2118,7 @@ function cleRappel(n) {
 }
 function pourcent(v) { return v === null || v === undefined || v === "" ? "" : saisieNombre(v * 100, 3); }
 function champ(id, lab, val, attrs) {
-  return '<div class="champ"><label for="' + id + '">' + lab + '</label><input id="' + id + '" type="' + ((attrs && attrs.type) || "text") + '"' + (attrs && attrs.type === "date" ? "" : ' inputmode="decimal"') + ' autocomplete="off" value="' + esc(val === null || val === undefined ? "" : val) + '"' + (attrs && attrs.ph ? ' placeholder="' + esc(attrs.ph) + '"' : "") + "></div>";
+  return '<div class="champ"><label for="' + id + '">' + lab + '</label><input id="' + id + '" type="' + ((attrs && attrs.type) || "text") + '"' + (attrs && (attrs.type === "date" || attrs.texte) ? ' autocapitalize="' + (attrs && attrs.texte === "maj" ? "characters" : "sentences") + '"' : ' inputmode="decimal"') + ' autocomplete="off" value="' + esc(val === null || val === undefined ? "" : val) + '"' + (attrs && attrs.ph ? ' placeholder="' + esc(attrs.ph) + '"' : "") + "></div>";
 }
 function formReglage(k) {
   const p = (M && M.parametres) || {};
@@ -2181,7 +2181,7 @@ function rendreMaj() {
     '<h4 class="m-h4">Rappels de ton fichier <small>touche pour mettre à jour</small></h4><div class="raps">' + rappels + "</div>" +
     '<h4 class="m-h4" data-reg="actif">Nouvel actif <small>avant un premier achat</small></h4>' +
       '<form class="form reg-form" data-form="actif">' +
-        '<div class="rang">' + champ("a-code", "Code (court, unique)", "", { ph: "ex. CW8" }) + champ("a-nom", "Nom", "", { ph: "ex. Amundi MSCI World" }) + "</div>" +
+        '<div class="rang">' + champ("a-code", "Code (court, unique)", "", { ph: "ex. CW8", texte: "maj" }) + champ("a-nom", "Nom", "", { ph: "ex. Amundi MSCI World", texte: true }) + "</div>" +
         '<div class="champ"><label for="a-ticker">Ticker Google Finance</label><div class="ligne-champ"><input id="a-ticker" type="text" autocomplete="off" autocapitalize="characters" placeholder="ex. EPA:CW8"><button class="mini-btn" type="button" id="a-verif">Vérifier</button></div><span class="aide" id="a-verif-res">EPA: pour Paris, ETR: pour Xetra, CURRENCY:ETHEUR pour une crypto. Sans ticker, saisis un cours manuel.</span></div>' +
         '<div class="rang">' +
           '<div class="champ"><label for="a-classe">Classe</label><select id="a-classe">' + opt(classes, "Actions") + "</select></div>" +
