@@ -66,7 +66,7 @@ Où est le code :
 | Script | Adresse officielle | État |
 |---|---|---|
 | Versus | `…xVNsHSYT…`, inscrit dans le code | ✅ **Seule adresse** : les 25 anciennes supprimées le 05/11/2026 (un téléphone qui en gardait une s'est rangé seul sur l'officielle, v14.3.2) |
-| Moi · Théo | `…wUZGrzfS…` | ✅ Le fichier donne son adresse officielle, le téléphone s'y range seul. ⬜ Supprimer les 4 anciennes **après** avoir ouvert une fois l'onglet Moi |
+| Moi · Théo | `…wUZGrzfS…` | ✅ **Seule adresse** : les 4 anciennes supprimées le 06/11/2026 |
 | Moi · Clément | `…yue_yIcK…` | à rattacher (phase 4) |
 | Moi · Devlin | `…z2q12dXu…` | à rattacher (phase 4) |
 | Moi · Kévin (profil simple) | `…zucvUCgb…` | ✅ Même chose (V5). ⬜ Supprimer les 2 anciennes **après** que Kévin a ouvert une fois l'onglet Moi |
@@ -278,3 +278,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 05/11/2026 | E1 | v14.3.2 : chaque téléphone se range sur l'adresse officielle ; 25 anciennes adresses Versus et 7 du Carnet T3 supprimées (liste : app_scripts/audits/sauvegardes/2026-11-05-adresses-supprimees.json) |
 | 05/11/2026 | 3.3 bis | v14.4 : les aperçus admin s'arrêtent seuls le 01/02/2027 (codes et saisie de secours gardés). Testé avant/après la date ; calcul serveur inchangé |
 | 06/11/2026 | 5.1 | v14.4.1 : onglet Moi, nouvel actif : clavier lettres pour le code et le nom (il n'affichait que des chiffres) |
+| 06/11/2026 | E1 | Fichier perso de Théo : 4 anciennes adresses supprimées ; actif PUST (Amundi PEA Nasdaq-100, EPA:PUST) ajouté dans Paramètres › Mes actifs |
