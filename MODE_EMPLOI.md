@@ -280,3 +280,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 06/11/2026 | 5.1 | v14.4.1 : onglet Moi, nouvel actif : clavier lettres pour le code et le nom (il n'affichait que des chiffres) |
 | 06/11/2026 | E1 | Fichier perso de Théo : 4 anciennes adresses supprimées ; actif PUST (Amundi PEA Nasdaq-100, EPA:PUST) ajouté dans Paramètres › Mes actifs |
 | 06/11/2026 | 2.x | Fichier de Théo (version Google 19) : une ligne entièrement vendue n'est plus envoyée à l'onglet Moi ; ligne PUST ajoutée dans Aujourd'hui › Mes lignes (un NOUVEL actif doit y avoir sa ligne pour apparaître dans Moi) |
+| 06/11/2026 | 2.x | Lignes de l'onglet Moi automatiques (Théo version Google 20 ; Clément/Devlin : code prêt, actif à leur nouveau déploiement) : tout actif détenu apparaît même sans ligne dans Aujourd'hui › Mes lignes ; lignes ajoutées chez Théo pour ETDD, STOXX600, ANX, ESE, GOLD (CTO), ETH (détenus d'abord, puis les anciens) |
