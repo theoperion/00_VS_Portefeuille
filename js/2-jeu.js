@@ -54,24 +54,28 @@ function carteVerdict(v) {
   if (!v) return "";
   if (!v.complet) return '<div class="bref">⏳ Verdict de <b>' + esc(moisLong(v.k)) + "</b> dès que tout le monde a saisi son relevé : il manque " + v.manquent.map(n => "<b>" + esc(n) + "</b>").join(" et ") + "." +
     (moisVerdict(v.env).some(k => k < v.k) ? ' <button class="lien" type="button" data-vk="' + moisVerdict(v.env).filter(k => k < v.k).pop() + '">Voir le verdict précédent</button>' : "") + "</div>";
-  const c = (titre, nom, ligne) => '<div class="v-c"><span>' + titre + "</span><b" + (nom && D.personnes.some(p => p.nom === nom) ? ' style="color:' + couleur(nom) + '"' : "") + ">" + esc(nom || "—") + "</b><em>" + ligne + "</em></div>";
-  return '<div class="verdict"><div class="v-h"><span>' + navVerdict(v) + "Verdict · " + esc(moisLong(v.k)) + (v.env ? " · " + esc(ENVELOPPES[v.env]) : "") + '</span></div><div class="v-g">' +
-    (() => {
-      const n = v.du.length, idxOk = v.iR !== null, impair = (n + (idxOk ? 1 : 0)) % 2 === 1;
-      const rangDe = x => v.du.findIndex(y => Math.abs(y.r - x.r) < 1e-9) + 1;        // ex aequo : même place
-      const rangDernier = rangDe(v.du[n - 1]);
-      const tuiles = v.du.map(x => {
-        const rg = rangDe(x), ico = rg === 1 ? "🥇" : rg === 2 ? "🥈" : rg === 3 ? "🥉" : "";
-        const tortue = n >= 3 && rg === rangDernier && rg > 1, bat = idxOk && x.r > v.iR;
-        const cls = "v-c" + (rg === 1 ? " champ" : "") + (rg === 1 && impair && x === v.du[0] ? " large" : "");
-        return '<div class="' + cls + '"><span>' + (ico ? ico + " " : "") + rangTxt(rg) + (rg === 1 ? " · champion" : tortue ? " · lanterne rouge 🐢" : "") + "</span>" +
-          '<b style="color:' + couleur(x.nom) + '">' + esc(x.nom) + '</b><em class="' + sens(x.r) + '">' + pct(x.r) + (bat ? ' <i title="Bat ' + esc(D.marche.indices[ETAT.i1]) + '">🎯</i>' : "") + "</em></div>";
-      }).join("");
-      const tIdx = idxOk ? '<div class="v-c idx"><span>🎯 ' + esc(D.marche.indices[ETAT.i1]) + "</span><b>" + pct(v.iR) + "</b><em>" +
-        (v.battent.length ? v.battent.length + " sur " + n + " l'" + (v.battent.length > 1 ? "ont" : "a") + " battu" : "personne ne l'a battu") + "</em></div>" : "";
-      return tuiles + tIdx;
-    })() +
-    '</div><p class="v-n">Uniquement le mois de ' + esc(moisLong(v.k)) + ". Sur un seul mois, la chance pèse plus que le talent.</p></div>";
+  // V15.8 · le verdict en podium : marches 2-1-3, pilotes qui tombent sur leur marche, couronne pour le vainqueur ; puis les suivants et l'indice
+  const n = v.du.length, idxOk = v.iR !== null, nomI = esc(D.marche.indices[ETAT.i1]);
+  const rangDe = x => v.du.findIndex(y => Math.abs(y.r - x.r) < 1e-9) + 1, rangDernier = rangDe(v.du[n - 1]);
+  const tete = nom => (typeof avatar === "function" && saisonVisible() ? avatar(nom) : '<span class="vp-ini" style="--c:' + couleur(nom) + '">' + esc(nom.slice(0, 1)) + "</span>");
+  const marche = (x, place) => {
+    if (!x) return '<div class="vp-m vp-' + place + ' vide"></div>';
+    const rg = rangDe(x), bat = idxOk && x.r > v.iR;
+    return '<div class="vp-m vp-' + place + (rg === 1 ? " champ" : "") + '" style="--c:' + couleur(x.nom) + '">' +
+      '<div class="vp-p">' + (rg === 1 ? '<span class="vp-cour" aria-hidden="true">👑</span>' : "") + tete(x.nom) + '<b style="color:' + couleur(x.nom) + '">' + esc(x.nom) + "</b>" +
+      '<em class="' + sens(x.r) + '" data-cv="' + x.r + '" data-cf="pct">' + pct(x.r) + "</em>" + (bat ? '<i class="vp-bat" title="Bat ' + nomI + '">🎯</i>' : "") + "</div>" +
+      '<div class="vp-s"><span class="vp-rg">' + rg + "</span>" + (rg === 1 ? "<small>champion</small>" : "") + "</div></div>";
+  };
+  const top = v.du.slice(0, 3), suite = v.du.slice(3);
+  const autres = suite.map(x => { const rg = rangDe(x), tortue = n >= 3 && rg === rangDernier && rg > 1, bat = idxOk && x.r > v.iR;
+    return '<div class="vp-l' + (tortue ? " lanterne" : "") + '"><span class="vp-lrg">' + rangTxt(rg) + "</span>" + tete(x.nom) + '<b style="color:' + couleur(x.nom) + '">' + esc(x.nom) + "</b>" + (tortue ? '<span class="vp-tag">🐢 lanterne rouge</span>' : "") +
+      '<em class="' + sens(x.r) + '">' + pct(x.r) + (bat ? " 🎯" : "") + "</em></div>"; }).join("");
+  const barreIdx = idxOk ? '<div class="vp-idx"><span>🎯 ' + nomI + " <b>" + pct(v.iR) + "</b></span><span>" + (v.battent.length ? v.battent.length + " sur " + n + " l'" + (v.battent.length > 1 ? "ont" : "a") + " battu" : "personne ne l'a battu") +
+    '</span><span class="vp-jauge" aria-hidden="true">' + v.du.map(x => '<i style="background:' + (x.r > v.iR ? "var(--up)" : "var(--rule)") + '"></i>').join("") + "</span></div>" : "";
+  return '<div class="verdict vp"><div class="v-h"><span>' + navVerdict(v) + "Verdict · " + esc(moisLong(v.k)) + (v.env ? " · " + esc(ENVELOPPES[v.env]) : "") + "</span></div>" +
+    '<div class="vp-podium">' + marche(top[1], 2) + marche(top[0], 1) + marche(top[2], 3) + "</div>" +
+    (autres ? '<div class="vp-suite">' + autres + "</div>" : "") + barreIdx +
+    '<p class="v-n">Uniquement le mois de ' + esc(moisLong(v.k)) + ". Sur un seul mois, la chance pèse plus que le talent.</p></div>";
 }
 function brancherVerdict(v) {
   const boite = $("#boite-verdict"); if (!boite) return;
@@ -79,7 +83,7 @@ function brancherVerdict(v) {
     const k = +b.dataset.vk, l = moisVerdict(ETAT.env);
     VK = k === l[l.length - 1] ? null : k;
     const nv = verdictMois(ETAT.env, k);
-    boite.innerHTML = carteVerdict(nv); brancherVerdict(nv);
+    boite.innerHTML = carteVerdict(nv); brancherVerdict(nv); compterChiffres(boite);
   }));
 }
 

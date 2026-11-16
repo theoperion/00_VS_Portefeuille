@@ -552,7 +552,7 @@ function rendreClassement() {
     '<div><h2 class="sec">Classement <span class="h-boutons"><button class="million-b' + (D.premierMillion ? " pris" : "") + '" type="button" id="info-million" aria-label="Premier millionnaire">👑</button><button class="vers-fiches" type="button" id="vers-fiches" aria-label="Ouvrir les fiches de chacun"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.4c2.3.1 3.9 1.6 4.8 4.6"/></svg>Fiches</button></span></h2></div>' +
     filtres(true) +
     '<div class="periode">' + esc(textePeriode(deb, fin, nMois)) + (deb && st.some(s => s.n < nMois) ? " · chaque courbe démarre au premier relevé de la personne" : "") + " · performance (TWR), versements neutralisés</div>" +
-    '<div class="tour"><div class="tour-h"><span>Pos.</span><span>Portefeuille</span><span>TWR · écart</span></div>' + tour + "</div>" +
+    '<div class="tour' + (Object.keys(avantTour).length ? "" : " entree") + '"><div class="tour-h"><span>Pos.</span><span>Portefeuille</span><span>TWR · écart</span></div>' + tour + "</div>" +
     (saisonVisible() ? '<p class="leg-bdg"><b>Badges</b> 🟡 en tête du championnat · 🏆 champion de saison · ⚡💥… exclusifs gagnés (un seul exemplaire) · plaque gagnée en défi. <span>Touche un badge pour savoir ce qu\'il veut dire.</span></p>' : "") +
     "<div>" + '<h2 class="sec">La course <small>performance cumulée</small></h2></div>' +
     boiteGraphe("g-course", series.map(s => ({ nom: s.nom, c: s.c, dash: s.dash }))) +
@@ -572,6 +572,9 @@ function rendreClassement() {
       finEtiq: true, h: 170, fmt: x => rangTxt(-x), fmtAxe: t => Number.isInteger(t) && t < 0 ? rangTxt(-t) : "", titreX: k => "Fin " + moisCourt(k) });
   }
   brancherVerdict(verdict);
+  { const bv = $("#boite-verdict"); if (bv) { compterChiffres(bv);
+      // la première fois qu'on voit le verdict d'un nouveau mois : une petite fête
+      if (verdict && verdict.complet && !VK && +(stock.get("versus.verdictVu") || 0) < verdict.k) { const premier = !stock.get("versus.verdictVu"); stock.set("versus.verdictVu", String(verdict.k)); if (!premier && typeof confettis === "function") setTimeout(() => { if (vueActive() === "classement") confettis(); }, 1100); } } }
   v.querySelectorAll("[data-nv-manche]").forEach(b => b.addEventListener("click", () => { choisirSaison(+b.dataset.nvManche); ETAT.podium = "gp"; GP_ETAPE = null; garder(); allerA("trophees"); }));
   v.querySelectorAll(".regles-mois[data-aller-stand]").forEach(b => { const go = () => { ETAT.podium = "stand"; garder(); allerA("trophees"); }; b.addEventListener("click", go); b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }); });
   $("#info-million").addEventListener("click", () => toast(texteMillion()));

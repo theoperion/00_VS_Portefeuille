@@ -1162,3 +1162,62 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .nv-manche::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 10px, transparent 10px 20px) top / 100% 6px no-repeat, repeating-linear-gradient(90deg, transparent 0 10px, rgba(255,255,255,.07) 10px 20px) 0 6px / 100% 6px no-repeat; pointer-events: none; }
 @media (prefers-reduced-motion: no-preference) { .nv-manche { animation: rm-entre .5s cubic-bezier(.2,.9,.3,1.2) both; } .nv-manche .nm-go { animation: nmPouls 1.8s ease-in-out .6s infinite; } }
 @keyframes nmPouls { 50% { transform: scale(1.06); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 30%, transparent); } }
+
+/* V15.8 · Verdict en podium */
+.verdict.vp { gap: 12px; overflow: hidden; }
+.vp-podium { display: grid; grid-template-columns: 1fr 1.12fr 1fr; align-items: end; gap: 6px; padding-top: 6px; }
+.vp-m { display: grid; justify-items: center; min-width: 0; }
+.vp-p { position: relative; display: grid; justify-items: center; gap: 3px; padding-bottom: 8px; min-width: 0; max-width: 100%; }
+.vp-p .av, .vp-p svg { width: 46px; height: 46px; }
+.vp-1 .vp-p .av, .vp-1 .vp-p svg { width: 58px; height: 58px; }
+.vp-ini { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font: italic 800 20px/1 var(--f-display); color: #fff; background: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 30%, transparent); }
+.vp-1 .vp-ini { width: 58px; height: 58px; font-size: 24px; }
+.vp-p b { font: italic 800 14.5px/1.05 var(--f-display); letter-spacing: .04em; text-transform: uppercase; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vp-1 .vp-p b { font-size: 17px; }
+.vp-p em { font: 700 13px/1 var(--f-num); font-style: normal; font-variant-numeric: tabular-nums; }
+.vp-1 .vp-p em { font-size: 15px; }
+.vp-bat { position: absolute; top: -2px; right: -10px; font-style: normal; font-size: 14px; }
+.vp-cour { position: absolute; top: -20px; font-size: 22px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
+.vp-s { width: 100%; display: grid; justify-items: center; align-content: start; gap: 1px; padding-top: 8px; border-radius: 12px 12px 4px 4px; position: relative; overflow: hidden;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 55%, var(--panel-2)), color-mix(in srgb, var(--c) 18%, var(--panel-2))); }
+.vp-s .vp-rg { font: italic 900 26px/1 var(--f-display); color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.18); }
+.vp-s small { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.9); }
+.vp-1 .vp-s { height: 78px; } .vp-2 .vp-s { height: 56px; } .vp-3 .vp-s { height: 42px; }
+.vp-1 .vp-s::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.35) 50%, transparent 65%); background-size: 250% 100%; background-position: 160% 0; }
+.vp-m.vide .vp-s { visibility: hidden; }
+.vp-suite { display: grid; gap: 6px; }
+.vp-l { display: grid; grid-template-columns: 30px 30px minmax(0, 1fr) auto auto; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 10px; background: var(--panel-2); }
+.vp-l .av, .vp-l svg, .vp-l .vp-ini { width: 28px; height: 28px; font-size: 13px; box-shadow: none; }
+.vp-l .vp-lrg { font: italic 800 13px/1 var(--f-display); color: var(--ink-3); }
+.vp-l b { font: italic 700 14px/1.1 var(--f-display); letter-spacing: .04em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vp-l em { font: 600 12.5px/1 var(--f-num); font-style: normal; }
+.vp-l .vp-tag { font-size: 11px; color: var(--ink-3); white-space: nowrap; }
+.vp-l.lanterne { background: color-mix(in srgb, var(--down) 8%, var(--panel-2)); }
+.vp-idx { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 8px 10px; border-radius: 10px; border: 1px dashed var(--rule); font-size: 12.5px; color: var(--ink-2); }
+.vp-idx b { font-family: var(--f-num); color: var(--ink); }
+.vp-jauge { display: flex; gap: 3px; margin-left: auto; } .vp-jauge i { width: 14px; height: 6px; border-radius: 3px; }
+@media (prefers-reduced-motion: no-preference) {
+  .vp-s { animation: vpMonte .55s cubic-bezier(.2,.9,.25,1.15) both; transform-origin: bottom; }
+  .vp-3 .vp-s { animation-delay: .05s; } .vp-2 .vp-s { animation-delay: .2s; } .vp-1 .vp-s { animation-delay: .35s; }
+  .vp-p { animation: vpTombe .5s cubic-bezier(.3,1.4,.5,1) both; }
+  .vp-3 .vp-p { animation-delay: .35s; } .vp-2 .vp-p { animation-delay: .5s; } .vp-1 .vp-p { animation-delay: .7s; }
+  .vp-cour { animation: vpCour .6s cubic-bezier(.3,1.6,.5,1) 1.15s both; }
+  .vp-1 .vp-s::after { animation: rvEclat 1s ease-out 1.25s forwards; }
+  .vp-l { animation: rm-entre .4s ease-out both; } .vp-l:nth-child(1) { animation-delay: .9s; } .vp-l:nth-child(2) { animation-delay: 1s; } .vp-l:nth-child(3) { animation-delay: 1.1s; }
+  .vp-jauge i { animation: vpJauge .3s ease-out both; } .vp-jauge i:nth-child(2) { animation-delay: .08s; } .vp-jauge i:nth-child(3) { animation-delay: .16s; } .vp-jauge i:nth-child(4) { animation-delay: .24s; }
+}
+@keyframes vpMonte { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes vpTombe { from { transform: translateY(-26px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes vpCour { from { transform: translateY(-14px) rotate(-25deg) scale(.4); opacity: 0; } to { transform: rotate(-8deg); opacity: 1; } }
+@keyframes vpJauge { from { transform: scaleX(0); } to { transform: none; } }
+
+/* V15.8 · entrée du classement (première ouverture seulement) et reflet du leader */
+@media (prefers-reduced-motion: no-preference) {
+  .tour.entree .pos { animation: posIn .45s cubic-bezier(.2,.8,.2,1) both; }
+  .tour.entree .pos:nth-of-type(2) { animation-delay: .06s; } .tour.entree .pos:nth-of-type(3) { animation-delay: .12s; } .tour.entree .pos:nth-of-type(4) { animation-delay: .18s; }
+  .tour.entree .pos:nth-of-type(5) { animation-delay: .24s; } .tour.entree .pos:nth-of-type(6) { animation-delay: .3s; }
+  .pos .g.lead { position: relative; overflow: hidden; }
+  .pos .g.lead::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%); background-size: 250% 100%; animation: leadReflet 3.2s ease-in-out 1s infinite; }
+}
+@keyframes posIn { from { opacity: 0; translate: -14px 0; } to { opacity: 1; translate: 0 0; } }
+@keyframes leadReflet { 0%, 60% { background-position: 160% 0; } 100% { background-position: -60% 0; } }
