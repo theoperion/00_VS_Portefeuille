@@ -504,15 +504,27 @@ function rendreClassement() {
   if (enSerie) bref += "<b>" + esc(enSerie[0]) + "</b> enchaîne " + enSerie[1].serie + " victoires mensuelles d'affilée. ";
   if (leader) bref += "Sur la période, <b>" + esc(leader.nom) + "</b> mène avec " + pct(leader.twr) + (battent.length ? ", " + battent.map(esc).join(" et ") + (battent.length > 1 ? " battent " : " bat ") + esc(D.marche.indices[i1]) + " à mois égaux." : " ; personne ne bat " + esc(D.marche.indices[i1]) + " à mois égaux.");
 
+  // V15.4 · Classement plus punchy (visible à partir du 20/11/2026) : podium du mois, flèches de place, mini-courbes
+  const punchy = typeof podiumCache !== "function" || !podiumCache();
+  let rPrev = {}, rNow = {};
+  if (punchy) try { rNow = rangs(env, deb, fin); rPrev = deb && cleMoins(fin, 1) <= deb ? {} : rangs(env, deb, cleMoins(fin, 1)); } catch (e) { rNow = {}; rPrev = {}; }
+  const fleche = nom => { if (!punchy || !rPrev[nom] || !rNow[nom]) return ""; const d = rPrev[nom] - rNow[nom]; return d > 0 ? '<i class="fl up" title="+' + d + ' place(s) depuis le mois dernier">▲' + d + "</i>" : d < 0 ? '<i class="fl down" title="' + d + ' place(s) depuis le mois dernier">▼' + (-d) + "</i>" : '<i class="fl eq" title="même place que le mois dernier">=</i>'; };
+  const mini = s => {
+    if (!punchy || !s.chemin || s.chemin.length < 3) return "";
+    const v = s.chemin.slice(-7).map(c => c.v), lo = Math.min(...v), hi = Math.max(...v), H = 14, W = 44, X = i => (i * W / (v.length - 1)).toFixed(1), Y = x => (H - 1 - (hi > lo ? (x - lo) / (hi - lo) : .5) * (H - 2)).toFixed(1);
+    return '<svg class="mini-c" viewBox="0 0 ' + W + " " + H + '" aria-hidden="true"><polyline fill="none" stroke="' + couleur(s.nom) + '" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" points="' + v.map((x, i) => X(i) + "," + Y(x)).join(" ") + '"/></svg>';
+  };
+  const podiumMois = punchy && duMois.length >= 2 ? '<div class="podium-mois" aria-label="Podium de ' + esc(moisLong(der)) + '"><span class="pm-t">Podium de ' + esc(moisLong(der)) + "</span>" +
+    [1, 0, 2].filter(i => duMois[i]).map(i => '<div class="pm-m pm-' + (i + 1) + '"><span class="pm-n">' + (saisonVisible() && typeof avatar === "function" ? avatar(duMois[i].nom) : "") + "<b>" + esc(duMois[i].nom) + '</b><small class="' + sens(duMois[i].r) + '">' + pct(duMois[i].r) + '</small></span><span class="pm-s" style="--c:' + couleur(duMois[i].nom) + '">' + ["🥇", "🥈", "🥉"][i] + "</span></div>").join("") + "</div>" : "";
   const tour = lignes.map(s => {
     if (s.fantome) {
       return '<div class="pos ghost" data-key="idx"><span class="rk">IDX</span><div class="who"><i></i><div><b>' + esc(s.nom) + "</b><small>indice · " + s.n + ' mois</small></div></div><span class="t ' + sens(s.twr) + '" data-cv="' + s.twr + '" data-cf="pct">' + pct(s.twr) + '</span><span class="g">' + pts(s.twr - leader.twr) + "</span></div>";
     }
     rang++;
     const ecart = s.i1 ? s.twr - s.i1.twr : null;
-    return '<div class="pos" tabindex="0" role="button" aria-expanded="false" data-key="' + esc(s.nom) + '" data-nom="' + esc(s.nom) + '"><span class="rk">' + rang + '</span><div class="who">' + (saisonVisible() ? avatar(s.nom) : '<i style="background:' + couleur(s.nom) + '"></i>') + '<div><b' + attrLivree(s.nom) + '>' + esc(s.nom) + couronne(s.nom) +
+    return '<div class="pos" tabindex="0" role="button" aria-expanded="false" data-key="' + esc(s.nom) + '" data-nom="' + esc(s.nom) + '"><span class="rk">' + rang + fleche(s.nom) + '</span><div class="who">' + (saisonVisible() ? avatar(s.nom) : '<i style="background:' + couleur(s.nom) + '"></i>') + '<div><b' + attrLivree(s.nom) + '>' + esc(s.nom) + couronne(s.nom) +
       (s.nom === ETAT.moi ? '<span class="tag ici">moi</span>' : "") + badgesNom(s.nom) + (manque.has(s.nom) ? '<span class="tag manque">relevé à saisir</span>' : "") +
-      "</b><small>" + plaqueDe(s.nom) + pts(ecart) + " vs " + esc(D.marche.indices[i1]) + (s.n < nMois ? " · " + s.n + " mois" : "") + '</small></div></div><span class="t ' + sens(s.twr) + '" data-cv="' + s.twr + '" data-cf="pct">' + pct(s.twr) + "</span>" +
+      "</b><small>" + plaqueDe(s.nom) + pts(ecart) + " vs " + esc(D.marche.indices[i1]) + (s.n < nMois ? " · " + s.n + " mois" : "") + mini(s) + '</small></div></div><span class="t ' + sens(s.twr) + '" data-cv="' + s.twr + '" data-cf="pct">' + pct(s.twr) + "</span>" +
       (s === leader ? '<span class="g lead">LEADER</span>' : '<span class="g">' + pts(s.twr - leader.twr) + "</span>") + "</div>";
   }).join("");
 
@@ -537,7 +549,7 @@ function rendreClassement() {
 
   v.innerHTML = banniereBilan() +
     '<div id="boite-verdict">' + carteVerdict(verdict) + "</div>" +
-    (bref ? '<div class="bref">' + bref + "</div>" : "") +
+    (bref ? '<div class="bref">' + bref + "</div>" : "") + podiumMois +
     (anomalies.length ? '<div style="display:grid;gap:6px">' + anomalies.map(t => '<div class="alerte warn">' + t + "</div>").join("") + "</div>" : "") +
     '<div><h2 class="sec">Classement <span class="h-boutons"><button class="million-b' + (D.premierMillion ? " pris" : "") + '" type="button" id="info-million" aria-label="Premier millionnaire">👑</button><button class="vers-fiches" type="button" id="vers-fiches" aria-label="Ouvrir les fiches de chacun"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.4c2.3.1 3.9 1.6 4.8 4.6"/></svg>Fiches</button></span></h2></div>' +
     filtres(true) +

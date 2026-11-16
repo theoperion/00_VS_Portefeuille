@@ -139,6 +139,21 @@ h2.sec small { font: 400 12px/1.2 var(--f-text); letter-spacing: 0; text-transfo
 .pos { will-change: transform; background: var(--panel); display: grid; grid-template-columns: 34px minmax(0, 1fr) 92px; grid-template-rows: auto auto; column-gap: 10px; row-gap: 3px; align-items: center; padding: 11px 12px; border-top: 1px solid var(--rule-2); cursor: pointer; position: relative; }
 .pos:hover { background: var(--panel-2); }
 .pos .rk { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 7px; background: var(--ink); color: var(--bg); font: italic 800 17px/1 var(--f-display); }
+/* V15.4 · Classement punchy */
+.pos .rk { position: relative; }
+.pos .rk .fl { position: absolute; right: -9px; bottom: -7px; font: 700 9.5px/1 var(--f-text); font-style: normal; padding: 2px 3px; border-radius: 5px; background: var(--panel); border: 1px solid var(--rule); }
+.pos .rk .fl.up { color: var(--up); } .pos .rk .fl.down { color: var(--down); } .pos .rk .fl.eq { color: var(--ink-3); }
+.pos .who small .mini-c { width: 44px; height: 14px; vertical-align: -3px; margin-left: 6px; }
+.podium-mois { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 6px; padding: 12px 12px 0; border-radius: 14px; background: var(--panel); border: 1px solid var(--rule); overflow: hidden; }
+.podium-mois .pm-t { grid-column: 1 / -1; font: italic 800 13px/1 var(--f-display); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 4px; }
+.podium-mois .pm-m { display: grid; justify-items: center; gap: 6px; min-width: 0; }
+.podium-mois .pm-n { display: grid; justify-items: center; gap: 2px; min-width: 0; text-align: center; }
+.podium-mois .pm-n b { font: italic 800 15px/1.1 var(--f-display); text-transform: uppercase; letter-spacing: .04em; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.podium-mois .pm-n small { font: 600 12px/1 var(--f-num, inherit); }
+.podium-mois .pm-s { width: 100%; display: grid; place-items: start center; padding-top: 6px; font-size: 22px; border-radius: 10px 10px 0 0; background: linear-gradient(180deg, color-mix(in srgb, var(--c) 45%, transparent), color-mix(in srgb, var(--c) 12%, transparent)); }
+.podium-mois .pm-1 .pm-s { height: 64px; } .podium-mois .pm-2 .pm-s { height: 46px; } .podium-mois .pm-3 .pm-s { height: 32px; }
+@media (prefers-reduced-motion: no-preference) { .podium-mois .pm-s { animation: pm-monte .5s ease-out both; } .podium-mois .pm-1 .pm-s { animation-delay: .12s; } }
+@keyframes pm-monte { from { transform: scaleY(.2); transform-origin: bottom; opacity: 0; } to { transform: none; opacity: 1; } }
 .pos .who { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .pos .who i { width: 5px; align-self: stretch; min-height: 30px; border-radius: 2px; transform: skewX(-12deg); flex: none; }
 .pos .who div { min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }

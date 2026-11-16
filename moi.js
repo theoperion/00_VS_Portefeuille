@@ -373,6 +373,22 @@ function injecterStyle() {
 .moi .m-l .b i { font-style: normal; opacity: .75; }
 .moi .m-l.especes { cursor: default; color: var(--ink-3); } .moi .m-l.especes:hover { background: none; }
 .moi .m-l.especes .g b { font: 500 13px/1.1 var(--f-text); }
+.moi .m-mk-t { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.moi .m-idx-mk { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.moi .m-idx-mk button { all: unset; box-sizing: border-box; background: var(--panel); padding: 9px 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; cursor: pointer; }
+.moi .m-idx-mk button[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 14%, var(--panel)); box-shadow: inset 3px 0 0 var(--accent); }
+.moi .m-idx-mk button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.moi .m-mk-panneau:not(:empty) { margin-top: 10px; padding: 10px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); display: grid; gap: 8px; }
+.moi .m-mk-svg { width: 100%; height: auto; display: block; }
+.moi .m-mk-svg text { font: 10px var(--f-num, sans-serif); fill: var(--ink-2); }
+.moi .m-mk-svg .gr { stroke: var(--rule); stroke-width: 1; }
+.moi .m-mk-svg .b100 { stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 3 3; opacity: .6; }
+.moi .m-mk-res { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; font-size: 13px; color: var(--ink-2); }
+.moi .m-mk-res > b:first-child { color: var(--ink); font-size: 14px; margin-right: auto; }
+.moi .m-mk-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.moi .m-mk-chips .chip { font-size: 12px; padding: 5px 9px; display: inline-flex; align-items: center; gap: 5px; }
+.moi .m-mk-chips .chip i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+.moi .m-mk-chips .chip[aria-pressed="false"] { opacity: .45; }
 .moi .m-idx { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
 .moi .m-idx div { background: var(--panel); padding: 8px 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; }
 .moi .m-idx span { font-size: 12.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -901,7 +917,7 @@ function htmlJour() {
       liste +
       (detail ? '<p class="info" style="margin-top:6px">Touche une ligne pour ses performances et son prix de revient.</p>' : "") +
     "</div>" +
-    (indices.length ? '<div><h2 class="sec">Marchés <small>variation du jour</small></h2><div class="m-idx">' + indices.map(i => '<div><span>' + esc(nomIdx(i.nom)) + '</span><b class="' + sens(i.pct) + '">' + pct(i.pct, 2) + "</b></div>").join("") + "</div></div>" : "") +
+    (marchesMoi() ? htmlMarches() : indices.length ? '<div><h2 class="sec">Marchés <small>variation du jour</small></h2><div class="m-idx">' + indices.map(i => '<div><span>' + esc(nomIdx(i.nom)) + '</span><b class="' + sens(i.pct) + '">' + pct(i.pct, 2) + "</b></div>").join("") + "</div></div>" : "") +
     "";
 }
 function enteteEnv(nom, valeur, jour, jourPct, pv, pvPct) {
@@ -976,7 +992,7 @@ function alertesDeclenchees() {
   return out;
 }
 function brancherJour(v) {
-  brancherDefs(v); brancherSignal(v);
+  brancherDefs(v); brancherSignal(v); brancherMarches(v);
   v.querySelectorAll(".m-l[data-code]").forEach(el => {
     el.addEventListener("click", e => { if (!e.target.closest(".m-ligne-det")) basculerLigne(el); });
     el.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target === el) { e.preventDefault(); basculerLigne(el); } });
@@ -1038,11 +1054,70 @@ function pretHtml() {
   if (!p || (!p.prochaine && !p.actuel)) return "";
   const cell = (lab, val, sous) => "<div><span>" + lab + "</span><b>" + val + "</b>" + (sous ? "<small>" + sous + "</small>" : "") + "</div>";
   return '<div class="m-pret">' +
-    (p.prochaine ? cell("Prochaine échéance", eur(p.prochaine.echeance, 2), "le " + frDate(p.prochaine.date) + " · hors assurance") : "") +
+    (p.prochaine ? cell("Prochaine échéance", eur(p.prochaine.echeance + (p.prochaine.assurance || 0), 2), "le " + frDate(p.prochaine.date) + (p.prochaine.assurance ? " · assurance comprise (" + eur(p.prochaine.assurance, 2) + ")" : p.prochaine.assurance === 0 ? "" : " · hors assurance")) : "") +
     (p.actuel ? cell("Capital restant dû", eur(p.actuel.restant), "après l'échéance du " + frDate(p.actuel.date)) : "") +
     cell("Intérêts payés en " + new Date().getFullYear(), eur(p.interetsAnnee), "prêt classique") +
-    (p.fin ? cell("Fin des prêts", frDate(p.fin), p.interetsRestants ? "encore " + eur(p.interetsRestants) + " d'intérêts" : "") : (p.prochaine ? cell("Après la prochaine", eur(p.prochaine.restant), "restant dû") : "")) +
+    (p.fin ? cell("Fin des prêts", dansDuree(p.fin), "le " + frDate(p.fin) + (p.interetsRestants ? " · encore " + eur(p.interetsRestants) + " d'intérêts" : "")) : (p.prochaine ? cell("Après la prochaine", eur(p.prochaine.restant), "restant dû") : "")) +
     "</div>";
+}
+/* ---- V15.4 · Marchés : 8 cases (variation du jour, lue dans le Versus), courbe d'un an au toucher, « Comparer » en base 100 ---- */
+const COUL_MK = ["#5B8DEF", "#2BB673", "#9B6BFF", "#E5484D", "#F2A33A", "#18A9C7", "#D6619E", "#C9A227", "#8C7B5A"];
+let marcheOuvert = null, mkCaches = { "Or couvert €": true };
+function marchesMoi() { const Dv = dVersus(); const m = Dv && Dv.marchesMoi; return m && (m.jour || []).length ? m : null; }
+function htmlMarches() {
+  const m = marchesMoi(), h = (m.jour.find(x => x.heure) || {}).heure;
+  return '<div class="m-mk"><div class="m-mk-t"><h2 class="sec">Marchés <small>' + (h ? "cours du " + esc(h.replace(" ", " à ").replace(":", " h ")) + " · " : "") + "touche pour la courbe</small></h2>" +
+    '<button class="mini-btn" type="button" data-mk="cmp" aria-pressed="' + (marcheOuvert === "cmp") + '">Comparer</button></div>' +
+    '<div class="m-idx m-idx-mk">' + m.jour.map((x, i) => '<button type="button" data-mk="' + i + '" aria-pressed="' + (marcheOuvert === i) + '"><span>' + esc(x.nom) + '</span><b class="' + sens(x.pct) + '">' + (x.pct === null ? "—" : pct(x.pct, 2)) + "</b></button>").join("") + "</div>" +
+    '<div class="m-mk-panneau" id="m-mk-panneau">' + panneauMarche() + "</div></div>";
+}
+function serieMk(nom) { const m = marchesMoi(); return m && (m.series || []).find(x => x.nom === nom); }
+function varSur(v, n) { const f = v[v.length - 1], d = v[Math.max(0, v.length - 1 - n)]; return f && d ? f / d - 1 : null; }
+function courbesSVG(lignes, base100) {
+  const m = marchesMoi(), sem = m.semaines, W = 320, H = 150, g = 34, dr = 6, hb = 18;
+  const pts = lignes.map(l => { const i0 = l.v.findIndex(x => x); return l.v.map(x => x && base100 ? x / l.v[i0] * 100 : x); });
+  const tous = pts.flat().filter(x => x); if (!tous.length) return "";
+  let lo = Math.min(...tous), hi = Math.max(...tous); const mg = (hi - lo) * .08 || 1; lo -= mg; hi += mg;
+  const X = i => g + i * (W - g - dr) / Math.max(1, sem.length - 1), Y = v => 6 + (hi - v) / (hi - lo) * (H - 6 - hb);
+  const fmt = v => base100 ? Math.round(v) : v >= 100 ? Math.round(v) : v.toFixed(v >= 10 ? 1 : 2);
+  const mois = i => ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."][+sem[i].slice(5, 7) - 1] + " " + sem[i].slice(2, 4);
+  const grille = [lo + mg, (lo + hi) / 2, hi - mg].map(v => '<line x1="' + g + '" x2="' + (W - dr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" class="gr"/><text x="' + (g - 4) + '" y="' + (Y(v) + 3.5).toFixed(1) + '" text-anchor="end">' + fmt(v) + "</text>").join("");
+  const b100 = base100 && lo < 100 && hi > 100 ? '<line x1="' + g + '" x2="' + (W - dr) + '" y1="' + Y(100).toFixed(1) + '" y2="' + Y(100).toFixed(1) + '" class="b100"/>' : "";
+  const traits = pts.map((p, k) => '<polyline fill="none" stroke="' + lignes[k].c + '" stroke-width="' + (lignes.length > 1 ? 1.6 : 2.2) + '" stroke-linejoin="round" points="' + p.map((v, i) => v ? X(i).toFixed(1) + "," + Y(v).toFixed(1) : "").filter(Boolean).join(" ") + '"/>').join("");
+  return '<svg class="m-mk-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(lignes.map(l => l.nom).join(", ")) + ' sur un an">' + grille + b100 + traits +
+    '<text x="' + g + '" y="' + (H - 4) + '">' + mois(0) + '</text><text x="' + (W - dr) + '" y="' + (H - 4) + '" text-anchor="end">' + mois(sem.length - 1) + "</text></svg>";
+}
+function panneauMarche() {
+  const m = marchesMoi(); if (!m || marcheOuvert === null || !(m.semaines || []).length) return "";
+  if (marcheOuvert === "cmp") {
+    const lignes = m.series.map((x, i) => ({ nom: x.nom, v: x.v, c: COUL_MK[i % COUL_MK.length] }));
+    return '<div class="m-mk-chips">' + lignes.map(l => '<button type="button" class="chip" data-mk-cache="' + esc(l.nom) + '" aria-pressed="' + !mkCaches[l.nom] + '"><i style="background:' + l.c + '"></i>' + esc(l.nom) + " " + '<small class="' + sens(varSur(l.v, 52)) + '">' + pct(varSur(l.v, 52), 0) + "</small></button>").join("") + "</div>" +
+      courbesSVG(lignes.filter(l => !mkCaches[l.nom]), true) + '<p class="info">Base 100 il y a un an, une valeur par semaine (ETF en euros ; « Or couvert € » suivi par le GLD en dollars). Touche un nom pour l\'afficher ou le masquer.</p>';
+  }
+  const j = m.jour[marcheOuvert], se = j && serieMk(j.nom); if (!se) return '<p class="info">Pas d\'historique pour ce marché.</p>';
+  const c = COUL_MK[m.series.indexOf(se) % COUL_MK.length], t = (lab, n) => '<span>' + lab + ' <b class="' + sens(varSur(se.v, n)) + '">' + pct(varSur(se.v, n), 1) + "</b></span>";
+  return '<div class="m-mk-res"><b>' + esc(j.nom) + "</b>" + t("1 mois", 4) + t("3 mois", 13) + t("1 an", 52) + "</div>" + courbesSVG([{ nom: se.nom, v: se.v, c: c }], false) +
+    (/^Or/.test(j.nom) && serieMk("Or couvert €") ? '<p class="info">Couvert ou non ? <button class="lien" type="button" data-mk="cmp-or">Comparer l\'or couvert et non couvert</button></p>' : "");
+}
+function brancherMarches(v) {
+  const z = v.querySelector(".m-mk"); if (!z) return;
+  const maj = () => { const pn = z.querySelector("#m-mk-panneau"); pn.innerHTML = panneauMarche(); z.querySelectorAll("[data-mk]").forEach(b => b.setAttribute("aria-pressed", String(String(marcheOuvert) === b.dataset.mk))); };
+  z.addEventListener("click", e => {
+    const b = e.target.closest("[data-mk],[data-mk-cache]"); if (!b) return;
+    if (b.dataset.mkCache) { const n = b.dataset.mkCache; mkCaches[n] = !mkCaches[n]; maj(); return; }
+    const k = b.dataset.mk;
+    if (k === "cmp-or") { marcheOuvert = "cmp"; mkCaches = {}; marchesMoi().series.forEach(x => { if (!/^Or/.test(x.nom)) mkCaches[x.nom] = true; }); maj(); return; }
+    const val = k === "cmp" ? "cmp" : +k;
+    marcheOuvert = marcheOuvert === val ? null : val; maj();
+  });
+}
+/* « dans 14 ans 3 mois » jusqu'à une date (aaaa-mm-jj) */
+function dansDuree(iso) {
+  const f = new Date(String(iso).slice(0, 10) + "T12:00:00"), a = new Date();
+  let m = (f.getFullYear() - a.getFullYear()) * 12 + f.getMonth() - a.getMonth(); if (f.getDate() < a.getDate()) m--;
+  if (m <= 0) return f > a ? "dans moins d'un mois" : "terminé";
+  const ans = Math.floor(m / 12), mo = m % 12;
+  return "dans " + (ans ? ans + " an" + (ans > 1 ? "s" : "") : "") + (ans && mo ? " " : "") + (mo ? mo + " mois" : "");
 }
 function seriePatrimoine() {
   const mpm = M.moisParMois || [];
@@ -1630,8 +1705,8 @@ function blocPret() {
       t("Remboursé", pct(rembourse / emprunte, 1, false), "up", eur(rembourse) + " sur " + eur(emprunte)) +
       t("Restant dû", eur(restant), "", p.actuel ? "au " + frDate(p.actuel.date) : "") +
       t("Intérêts restants", eur(p.interetsRestants), "", "payés en " + new Date().getFullYear() + " : " + eur(p.interetsAnnee)) +
-      t("Fin des prêts", p.fin ? frDate(p.fin) : "—", "", p.fin ? "dans " + Math.max(0, Math.round((new Date(p.fin) - new Date()) / (365.25 * 864e5))) + " ans" : "") +
-      (p.banque && p.prochaine ? t("Prochaine échéance", eur(p.prochaine.echeance, 2), "", "le " + frDate(p.prochaine.date) + ", assurance comprise (ta part)") : "") +
+      t("Fin des prêts", p.fin ? dansDuree(p.fin) : "—", "", p.fin ? "le " + frDate(p.fin) : "") +
+      (p.prochaine && (p.banque || p.prochaine.assurance !== undefined && p.prochaine.assurance !== null) ? t("Prochaine échéance", eur(p.prochaine.echeance + (p.banque ? 0 : p.prochaine.assurance || 0), 2), "", "le " + frDate(p.prochaine.date) + ", assurance comprise" + (p.banque ? " (ta part)" : "")) : "") +
     "</div>";
 }
 function dessinerPret() {
@@ -2524,18 +2599,39 @@ const THEMES_M = [
   ["glacier", "Glacier", "#67E8F9", "linear-gradient(150deg, #071F29, #1A5B6E 60%, #0A2733)"],
   ["carbone", "Carbone", "#E5E7EB", "repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0 2px, transparent 2px 6px), linear-gradient(150deg, #141416, #2A2A2E 60%, #111113)"],
   ["or", "Or", "#F5C542", "radial-gradient(120% 90% at 85% 0%, rgba(245,197,66,.35), transparent 60%), linear-gradient(150deg, #171004, #3D2C0B 60%, #140E04)"],
-  ["aurore", "Aurore", "#FFB37A", "linear-gradient(150deg, #241036, #6E2550 55%, #A64E2A)"]
+  ["aurore", "Aurore", "#FFB37A", "linear-gradient(150deg, #241036, #6E2550 55%, #A64E2A)"],
+  // V15.4 · gagnés par la régularité
+  ["lagon", "Lagon", "#5EEAD4", "linear-gradient(150deg, #032A2E, #0E6B6B 60%, #04363A)"],
+  ["lavande", "Lavande", "#C4B5FD", "linear-gradient(150deg, #1B1433, #43307A 60%, #201843)"],
+  ["sahara", "Sahara", "#FBBF77", "linear-gradient(150deg, #2B1806, #7A4A17 60%, #3A220A)"],
+  ["foret", "Forêt", "#86EFAC", "linear-gradient(150deg, #071A0E, #1E4D2B 60%, #0A2413)"],
+  ["corail", "Corail", "#FF9B85", "linear-gradient(150deg, #2E0D0A, #7A2E24 60%, #3A120E)"],
+  ["acier", "Acier", "#A5B4C8", "linear-gradient(150deg, #10151C, #2F3B4C 60%, #141A22)"],
+  ["cerise", "Cerise", "#FF6FA8", "linear-gradient(150deg, #2A0618, #6E1A45 60%, #33081D)"],
+  ["ocean", "Océan", "#60A5FA", "linear-gradient(160deg, #031025, #0B3B78 55%, #0E5A8A)"],
+  ["volcan", "Volcan", "#FF6B3D", "radial-gradient(110% 80% at 50% 110%, rgba(255,107,61,.45), transparent 60%), linear-gradient(150deg, #120707, #2E0E0A 60%, #170807)"],
+  ["menthe", "Menthe", "#6EE7B7", "linear-gradient(150deg, #06201A, #145243 60%, #08281F)"],
+  ["nuit-etoilee", "Nuit étoilée", "#FDE68A", "radial-gradient(1px 1px at 20% 30%, #fff 50%, transparent), radial-gradient(1px 1px at 70% 20%, #fff 50%, transparent), radial-gradient(1px 1px at 45% 70%, #fff 50%, transparent), linear-gradient(160deg, #050816, #121A3A 60%, #070B1F)"],
+  ["platine", "Platine", "#F1F5F9", "radial-gradient(120% 90% at 85% 0%, rgba(241,245,249,.25), transparent 60%), linear-gradient(150deg, #15171B, #3A3F47 60%, #17191D)"]
 ];
 // [id, nom, couleur (null = celle du thème), effet de la courbe]
 const COURBES_M = [["classique", "Classique", null, null], ["etincelles", "Étincelles", null, "etincelles"], ["or", "Or", "#E8B931", "halo"],
-  ["neon", "Néon", "#FF4FD8", "halo"], ["comete", "Comète", "#2FD1C0", "comete"], ["flammes", "Flammes", "#FF7A1A", "flammes"]];
+  ["neon", "Néon", "#FF4FD8", "halo"], ["comete", "Comète", "#2FD1C0", "comete"], ["flammes", "Flammes", "#FF7A1A", "flammes"],
+  ["menthe", "Menthe", "#34D399", null], ["corail", "Corail", "#FF7F6B", null], ["lavande", "Lavande", "#A78BFA", "halo"], ["glace", "Glace", "#7DD3FC", "etincelles"],
+  ["rubis", "Rubis", "#F43F5E", "halo"], ["soleil", "Soleil", "#FACC15", "comete"], ["plasma", "Plasma", "#22D3EE", "halo"], ["braise", "Braise", "#F97316", "etincelles"], ["argent", "Argent", "#CBD5E1", "comete"]];
 // [id, nom, aperçu, style passé à confettis()]
 const FETES_M = [["confettis", "Confettis", "🎊", null], ["damier", "Damier", "🏁", "damier"], ["feu", "Feu d'artifice", "🎆", "feu"], ["billets", "Pluie de billets", "💸", "billets"],
-  ["lingots", "Lingots", "🪙", "lingots"], ["etoiles", "Étoiles", "✨", "etoiles"], ["fusees", "Fusées", "🚀", "fusees"]];
+  ["lingots", "Lingots", "🪙", "lingots"], ["etoiles", "Étoiles", "✨", "etoiles"], ["fusees", "Fusées", "🚀", "fusees"],
+  ["ballons", "Ballons", "🎈", ["🎈", "🎈", "🎉", "🎈"]], ["fleurs", "Pétales", "🌸", ["🌸", "🌼", "🌷", "🌸"]], ["coeurs", "Cœurs", "💚", ["💚", "💙", "💜", "💛"]], ["neige", "Flocons", "❄️", ["❄️", "❄️", "✨", "❄️"]],
+  ["trefles", "Trèfles", "🍀", ["🍀", "🍀", "✨", "🌿"]], ["diamants", "Diamants", "💎", ["💎", "💎", "✨", "💍"]], ["taureaux", "Taureaux", "🐂", ["🐂", "📈", "🐂", "💹"]], ["champagne", "Champagne", "🍾", ["🍾", "🥂", "✨", "🎉"]]];
 const EMBLEMES_M = [["pousse", "Pousse", "🌱"], ["abeille", "Abeille", "🐝"], ["hibou", "Hibou", "🦉"], ["tortue", "Tortue", "🐢"], ["renard", "Renard", "🦊"],
-  ["aigle", "Aigle", "🦅"], ["lion", "Lion", "🦁"], ["dragon", "Dragon", "🐉"], ["couronne", "Couronne", "👑"], ["taureau", "Taureau", "🐂"]];
+  ["aigle", "Aigle", "🦅"], ["lion", "Lion", "🦁"], ["dragon", "Dragon", "🐉"], ["couronne", "Couronne", "👑"], ["taureau", "Taureau", "🐂"],
+  ["fourmi", "Fourmi", "🐜"], ["ecureuil", "Écureuil", "🐿️"], ["castor", "Castor", "🦫"], ["dauphin", "Dauphin", "🐬"], ["loup", "Loup", "🐺"],
+  ["chene", "Chêne", "🌳"], ["boussole", "Boussole", "🧭"], ["ancre", "Ancre", "⚓"], ["phare", "Phare", "🗼"], ["comete-e", "Comète", "☄️"]];
 const TITRES_M = [["investisseur", "Investisseur"], ["metronome", "Le Métronome"], ["diamant", "Main de diamant"], ["batisseur", "Bâtisseur"], ["rentier", "Rentier"],
-  ["veteran", "Vétéran"], ["optimiseur", "Optimiseur fiscal"], ["legende", "Légende"], ["millionnaire", "Millionnaire"], ["increvable", "Increvable"]];
+  ["veteran", "Vétéran"], ["optimiseur", "Optimiseur fiscal"], ["legende", "Légende"], ["millionnaire", "Millionnaire"], ["increvable", "Increvable"],
+  ["fourmi", "La Fourmi"], ["regulier", "Régulier"], ["horloger", "L'Horloger"], ["patient", "Patient"], ["capitaine", "Capitaine"],
+  ["stratege", "Stratège"], ["marathonien", "Marathonien"], ["sage", "Le Sage"], ["roc", "Le Roc"], ["maitre", "Maître du temps"]];
 const SORTES = [["aff", "Afficheur", "🔢", "afficheur"], ["theme", "Thème", "🎨", "themeM"], ["courbe", "Courbe", "📈", "courbe"],
   ["fete", "Fête", "🎉", "fete"], ["emb", "Emblème", "🛡️", "emb"], ["titre", "Titre", "🏷️", "titre"]];
 const CATALOGUE = { aff: AFFICHEURS, theme: THEMES_M, courbe: COURBES_M, fete: FETES_M, emb: EMBLEMES_M, titre: TITRES_M };
@@ -2553,6 +2649,14 @@ const REC_FAM = {
   annee: [[["emb", "hibou"]], [["theme", "glacier"]], [["titre", "veteran"]]],
   fisc: [[["courbe", "neon"]], [["titre", "optimiseur"]]]
 };
+/* V15.4 · Régularité : chaque mois où tu verses débloque l'objet suivant de cette liste (les mois versés, pas forcément d'affilée) */
+const REGULARITE_M = [["emb", "fourmi"], ["courbe", "menthe"], ["theme", "lagon"], ["titre", "fourmi"], ["fete", "ballons"], ["emb", "ecureuil"], ["courbe", "corail"], ["theme", "lavande"],
+  ["titre", "regulier"], ["fete", "fleurs"], ["emb", "castor"], ["courbe", "lavande"], ["theme", "sahara"], ["titre", "horloger"], ["fete", "coeurs"], ["emb", "dauphin"], ["courbe", "glace"],
+  ["theme", "foret"], ["titre", "patient"], ["fete", "neige"], ["emb", "loup"], ["courbe", "rubis"], ["theme", "corail"], ["titre", "capitaine"], ["fete", "trefles"], ["emb", "chene"],
+  ["courbe", "soleil"], ["theme", "acier"], ["titre", "stratege"], ["fete", "diamants"], ["emb", "boussole"], ["courbe", "plasma"], ["theme", "cerise"], ["titre", "marathonien"],
+  ["fete", "taureaux"], ["emb", "ancre"], ["courbe", "braise"], ["theme", "ocean"], ["titre", "sage"], ["emb", "phare"], ["theme", "menthe"], ["courbe", "argent"], ["theme", "volcan"],
+  ["fete", "champagne"], ["titre", "roc"], ["emb", "comete-e"], ["theme", "nuit-etoilee"], ["theme", "platine"], ["titre", "maitre"]];
+function moisVerses() { try { return serieVersements().liste.filter(x => x.ok).length; } catch (e) { return 0; } }
 /* Récompenses cachées : calculées sur tes relevés (ou sur tes visites, pour deux d'entre elles) */
 const SECRETS_M = [
   { id: "sangfroid", nom: "Sang-froid", indice: "Garde la main quand tout baisse.", quoi: "Un versement un mois où ton portefeuille a perdu 5 % ou plus.", rec: [["courbe", "flammes"]] },
@@ -2620,6 +2724,7 @@ function etatObjets() {
   let pal = [], rec = new Map(), sec = new Set();
   if (M) {
     try { pal = paliers(); rec = recompensesPaliers(pal); pal.forEach(x => { if (x.atteint && rec.has(x.id)) rec.get(x.id).forEach(([t, id]) => ok.add(cleObj(t, id))); }); } catch (e) { /* données incomplètes */ }
+    try { REGULARITE_M.slice(0, moisVerses()).forEach(([t, id]) => ok.add(cleObj(t, id))); } catch (e) { /* pas de parcours */ }
     try { sec = secretsAtteints(); SECRETS_M.forEach(s => { if (sec.has(s.id)) s.rec.forEach(([t, id]) => ok.add(cleObj(t, id))); }); } catch (e) { /* idem */ }
     if (identiteSure()) stock.set(cleStock("objets"), JSON.stringify(Array.from(ok)));
   }
@@ -2638,6 +2743,7 @@ function origineObj(t, id) {
   const E = etatObjets();
   for (const s of SECRETS_M) if (s.rec.some(r => r[0] === t && r[1] === id)) return { secret: s, ok: E.sec.has(s.id) };
   for (const [pid, l] of E.rec) if (l.some(r => r[0] === t && r[1] === id)) return { palier: E.pal.find(x => x.id === pid) };
+  { const i = REGULARITE_M.findIndex(r => r[0] === t && r[1] === id); if (i >= 0) return { regul: i + 1, faits: moisVerses() }; }
   for (const [g, R] of Object.entries(REC_FAM)) if (R.some(c => c.some(r => r[0] === t && r[1] === id))) return { famille: (FAMILLES.find(f => f[0] === g) || [, g])[1] };
   return {};
 }
@@ -2686,6 +2792,8 @@ function htmlDetailObj() {
   else if (org.secret) quoi = o || org.ok ? "Récompense cachée « " + esc(org.secret.nom) + " » : " + esc(org.secret.quoi) : "Récompense cachée. Indice : <i>" + esc(org.secret.indice) + "</i>";
   else if (org.palier) { const p = org.palier; quoi = p.atteint ? "Gagné avec le palier « " + esc(p.titre) + " »" + (p.quand ? ", franchi en " + esc(libMois(p.quand)) : "") + "."
       : "À gagner : « " + esc(p.titre) + " » · " + pct(Math.max(0, Math.min(1, p.part)), 0, false) + (p.reste ? " · " + esc(p.reste) : "") + '<span class="jauge"><i style="width:' + Math.round(Math.max(0, Math.min(1, p.part)) * 100) + '%"></i></span>'; }
+  else if (org.regul) quoi = org.faits >= org.regul ? "Gagné par ta régularité : ton " + org.regul + (org.regul === 1 ? "er" : "e") + " mois avec un versement."
+      : "Régularité : se débloque à ton " + org.regul + (org.regul === 1 ? "er" : "e") + " mois avec un versement (tu en es à " + org.faits + ")." + '<span class="jauge"><i style="width:' + Math.round(Math.min(1, org.faits / org.regul) * 100) + '%"></i></span>';
   else if (org.famille) quoi = o ? "Gagné avec un palier « " + esc(org.famille) + " »." : "À gagner dans les paliers « " + esc(org.famille) + " ».";
   else quoi = o ? "Déjà à toi." : "Pas encore disponible pour ton profil.";
   const actif = actifM(t) === id;
@@ -3111,7 +3219,7 @@ function echeancier(pr, banque) {
   const a = passees[passees.length - 1], p = futures[0];
   return {
     actuel: a ? { date: a.date, restant: a.restant, echeance: a.echeance } : null,
-    prochaine: p ? { date: p.date, restant: p.restant, echeance: p.echeance } : null,
+    prochaine: p ? { date: p.date, restant: p.restant, echeance: p.echeance, assurance: pr.assurance > 0 ? pr.assurance : null } : null,
     interetsAnnee: passees.filter(x => x.date.slice(0, 4) === an).reduce((s, x) => s + x.interet, 0),
     interetsRestants: futures.reduce((s, x) => s + x.interet, 0),
     fin: L[L.length - 1].date, mensuel: [[isoJour(avant), C * part]].concat(L.map(x => [x.date, x.restant])),
