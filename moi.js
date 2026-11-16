@@ -1871,11 +1871,48 @@ function rendreRaccourcis() {
     (liste.length ? '<button class="lien" type="button" id="rac-gerer">' + (gererRaccourcis ? "Terminé" : "Gérer") + "</button>" : '<span class="info">aucun pour l\'instant : « Enregistrer comme raccourci » en bas</span>') +
     "</div>";
 }
+/* ---- 14.5 · Nouvel actif directement dans la saisie d'ordre ---- */
+function boiteNouvelActif() {
+  const na = F.na;
+  return '<div class="m-na" style="margin-top:8px;padding:10px;border:1px solid var(--rule-2);border-radius:10px">' +
+    '<b style="display:block;margin-bottom:6px">Nouvel actif</b>' +
+    '<div class="rang"><div class="champ"><label for="fn-code">Code (court)</label><input id="fn-code" type="text" autocomplete="off" autocapitalize="characters" placeholder="ex. CW8" value="' + esc(na.code) + '"></div>' +
+    '<div class="champ"><label for="fn-nom">Nom</label><input id="fn-nom" type="text" autocomplete="off" autocapitalize="sentences" placeholder="ex. Amundi MSCI World" value="' + esc(na.nom) + '"></div></div>' +
+    '<div class="champ"><label for="fn-ticker">Ticker Google Finance</label><div class="ligne-champ"><input id="fn-ticker" type="text" autocomplete="off" autocapitalize="characters" placeholder="ex. EPA:CW8" value="' + esc(na.ticker) + '"><button class="mini-btn" type="button" id="fn-verif">Vérifier</button></div>' +
+    '<span class="aide" id="fn-res">' + esc(na.msg || "EPA: pour Paris, ETR: pour Xetra, CURRENCY:ETHEUR pour une crypto.") + "</span></div>" +
+    '<button class="btn" type="button" id="fn-ok">Créer et choisir</button> <button class="lien" type="button" id="fn-ko" style="margin-left:10px">Annuler</button></div>';
+}
+function brancherNouvelActif() {
+  const lire = () => { F.na.code = ($f("fn-code").value || "").trim().toUpperCase(); F.na.nom = ($f("fn-nom").value || "").trim(); F.na.ticker = ($f("fn-ticker").value || "").trim().toUpperCase(); };
+  ["fn-code", "fn-nom", "fn-ticker"].forEach(id => $f(id).addEventListener("input", lire));
+  const msg = t => { F.na.msg = t; const el = $f("fn-res"); if (el) el.textContent = t; };
+  $f("fn-ko").addEventListener("click", () => { F.na = null; rendreFormulaire(); });
+  $f("fn-verif").addEventListener("click", async () => {
+    lire(); if (!F.na.ticker) { msg("Saisis d'abord un ticker."); return; }
+    msg("Vérification auprès de Google Finance…");
+    const rep = await posterFichier({ action: "verifierTicker", ticker: F.na.ticker });
+    if (rep.ok) { if (!F.na.nom && rep.nom) { F.na.nom = rep.nom; $f("fn-nom").value = rep.nom; } msg("✓ " + F.na.ticker + " reconnu : " + cours(rep.cours) + (rep.nom ? " · " + rep.nom : "")); }
+    else msg(rep.message || "Ticker introuvable.");
+  });
+  $f("fn-ok").addEventListener("click", async () => {
+    lire(); const na = F.na, r = refData();
+    if (!/^[A-Z0-9_]{2,12}$/.test(na.code) || !na.nom) { msg("Code (2 à 12 lettres ou chiffres) et nom obligatoires."); return; }
+    if (r.actifs.some(x => x.code === na.code)) { msg("Le code " + na.code + " existe déjà : choisis-le dans la liste."); return; }
+    if (!na.ticker) { msg("Indique le ticker Google Finance (le cours manuel se règle dans Réglages › Moi)."); return; }
+    const env = r.enveloppes.find(e => e.nom === F.env) || {};
+    const a = { code: na.code, nom: na.nom, ticker: na.ticker, classe: env.regime === "Crypto" ? "Crypto" : "Actions", zone: "Monde", levier: 1, coursManuel: null };
+    const b = $f("fn-ok"); b.disabled = true; b.textContent = "Création…";
+    const rep = await posterFichier({ action: "actif", actif: a });
+    if (!rep.ok) { b.disabled = false; b.textContent = "Créer et choisir"; msg(rep.message || "Erreur inattendue."); return; }
+    r.actifs.push({ code: a.code, nom: a.nom, classe: a.classe });
+    F.actif = a.code; F.na = null; toast("Actif " + a.code + " créé : tu peux saisir ton ordre."); rendreFormulaire();
+  });
+}
 function rendreFormulaire() {
   const r = refData();
-  const ouvertes = r.enveloppes.filter(e => !e.statut || e.statut === "Ouvert");
+  const ouvertes = r.enveloppes.filter(e => !e.statut || e.statut === "Ouvert" || e.statut === "À ouvrir");   // 14.5 : « À ouvrir » s'ouvre au 1er ordre
   if (!ouvertes.find(e => e.nom === F.env) && ouvertes.length) F.env = ouvertes[0].nom;
-  const groupeEnv = (liste, lab) => liste.length ? '<optgroup label="' + lab + '">' + liste.map(e => '<option value="' + esc(e.nom) + '"' + (e.nom === F.env ? " selected" : "") + ">" + esc(e.nom) + "</option>").join("") + "</optgroup>" : "";
+  const groupeEnv = (liste, lab) => liste.length ? '<optgroup label="' + lab + '">' + liste.map(e => '<option value="' + esc(e.nom) + '"' + (e.nom === F.env ? " selected" : "") + ">" + esc(e.nom) + (e.statut === "À ouvrir" ? " · à ouvrir" : "") + "</option>").join("") + "</optgroup>" : "";
   const autres = r.types.map(t => t.nom).filter(n => !PRINCIPAUX.includes(n));
   const tenus = r.detenu.filter(d => d.env === F.env && d.qte > 1e-9).map(d => d.code);
   const nomA = c => (r.actifs.find(a => a.code === c) || {}).nom || "";
@@ -1899,7 +1936,7 @@ function rendreFormulaire() {
       (avecActif ? '<div class="champ"><label for="f-actif">Actif</label><select id="f-actif"><option value="">Choisir l\'actif…</option>' +
         (tenus.length ? '<optgroup label="Détenus dans cette enveloppe">' + tenus.map(optA).join("") + "</optgroup>" : "") +
         '<optgroup label="Autres actifs">' + autresActifs.map(optA).join("") + "</optgroup></select>" +
-        '<span class="aide">Actif absent de la liste ? <button class="lien" type="button" id="f-nouvel-actif">Ajouter un nouvel actif</button></span></div>' : "") +
+        (F.na ? boiteNouvelActif() : '<span class="aide">Actif absent de la liste ? <button class="lien" type="button" id="f-nouvel-actif">Ajouter un nouvel actif</button></span>') + "</div>" : "") +
       '<div class="champ"><label for="f-montant">' + esc(LIB_MONTANT[F.type] || "Montant") + ' (€)</label><input id="f-montant" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montant) + '" placeholder="0,00">' + (F.type === "Achat" || F.type === "Vente" ? '<span class="aide">Recopie-le depuis ton avis d\'opéré (le document de ton courtier).</span>' : "") + "</div>" +
       (avecQte ? '<div class="rang">' +
         '<div class="champ"><label for="f-qte">Quantité</label><input id="f-qte" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.qte) + '" placeholder="0"></div>' +
@@ -1927,7 +1964,9 @@ function rendreFormulaire() {
   $f("fo-env").addEventListener("change", e => { F = formulaire({ type: F.type, date: F.date, env: e.target.value, montant: F.montant, frais: F.frais }); rendreFormulaire(); });
   if ($f("f-actif")) $f("f-actif").addEventListener("change", e => { F = formulaire({ type: F.type, date: F.date, env: F.env, actif: e.target.value, montant: F.montant, frais: F.frais, apport: F.apport, montantApport: F.montantApport }); synchroniser(); rendreFormulaire(); });
   if ($f("f-apport")) $f("f-apport").addEventListener("change", e => { F.apport = e.target.checked; rendreFormulaire(); });
-  if ($f("f-nouvel-actif")) $f("f-nouvel-actif").addEventListener("click", () => { reglageOuvert = null; paneSaisie("maj"); setTimeout(() => { const el = document.querySelector('#m-pane-maj [data-reg="actif"]'); if (el) el.scrollIntoView({ block: "start" }); }, 40); });
+  // 14.5 : le nouvel actif se crée ici même, sans quitter la saisie d'ordre
+  if ($f("f-nouvel-actif")) $f("f-nouvel-actif").addEventListener("click", () => { F.na = { code: "", nom: "", ticker: "", msg: "" }; rendreFormulaire(); setTimeout(() => { const el = $f("fn-code"); if (el) el.focus(); }, 30); });
+  if (F.na) brancherNouvelActif();
   [["f-date", "date"], ["f-montant", "montant"], ["f-frais", "frais"], ["f-mapport", "montantApport"], ["f-qte", "qte"], ["f-prix", "prix"]].forEach(([id, k]) => {
     const el = $f(id);
     if (!el) return;
