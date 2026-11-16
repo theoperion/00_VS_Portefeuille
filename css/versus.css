@@ -1123,3 +1123,42 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 
 /* V15.2 · en-tête : pastille du dernier relevé (sans emoji) */
 .brand small.pastille-releve { flex: none; padding: 3px 8px; border: 1px solid var(--rule); border-radius: 999px; font: 600 11px/1.2 var(--f-text); letter-spacing: .02em; color: var(--ink-2); background: var(--panel); }
+
+/* V15.5 · Règles du mois (circuit, piège, défi) */
+.regles-mois { border-radius: 16px; padding: 12px 14px; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, var(--panel)), var(--panel) 70%); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--rule)); display: grid; gap: 8px; }
+.regles-mois.compact { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.regles-mois .rm-h { display: flex; align-items: center; gap: 10px; }
+.regles-mois .rm-drap { font-size: 26px; line-height: 1; }
+.regles-mois .rm-h div { flex: 1; min-width: 0; display: grid; }
+.regles-mois .rm-h small { font-size: 11.5px; color: var(--ink-2); letter-spacing: .04em; text-transform: uppercase; }
+.regles-mois .rm-h b { font: italic 800 18px/1.15 var(--f-display); text-transform: uppercase; letter-spacing: .04em; }
+.regles-mois .rm-go { font-size: 22px; color: var(--ink-2); }
+.regles-mois ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.regles-mois li { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; line-height: 1.35; }
+.regles-mois li i { font-style: normal; font-size: 17px; line-height: 1.1; flex: none; }
+.regles-mois li b { margin-right: 4px; }
+.regles-mois li.rm-pg { padding: 6px 8px; border-radius: 10px; background: color-mix(in srgb, var(--down) 12%, transparent); }
+.regles-mois li.rm-spe { padding: 6px 8px; border-radius: 10px; background: color-mix(in srgb, var(--gold) 16%, transparent); }
+@media (prefers-reduced-motion: no-preference) { .regles-mois { animation: rm-entre .45s cubic-bezier(.2,.9,.3,1.2) both; } }
+@keyframes rm-entre { from { transform: translateY(8px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
+.gp-spe.piege { background: color-mix(in srgb, var(--down) 70%, #000); }
+
+/* V15.5 · révélation : texte lisible sur fond sombre, éclat des cartes une fois retournées */
+.rv-c .duel-recu { color: #F7CF55 !important; font-size: 13px; }
+.rv-face::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.45) 48%, transparent 66%); background-size: 250% 100%; background-position: 150% 0; pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .rv-face::after { animation: rvEclat .9s ease-out forwards; animation-delay: calc(var(--i) * .7s + 1.1s); }
+  .rv-carte { animation: rvPouls .5s ease-out both; animation-delay: calc(var(--i) * .7s + 1.05s); }
+}
+@keyframes rvEclat { to { background-position: -60% 0; } }
+@keyframes rvPouls { 0% { transform: none; } 40% { transform: scale(1.08); filter: drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 70%, transparent)); } 100% { transform: none; } }
+
+/* V15.5 · bandeau « Nouvelle manche » */
+.nv-manche { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; border-radius: 16px; color: #F4F5F8;
+  background: linear-gradient(120deg, #16181D 0%, #23283A 55%, color-mix(in srgb, var(--accent) 55%, #16181D) 100%); border: 1px solid color-mix(in srgb, var(--accent) 45%, #2A303C); position: relative; overflow: hidden; }
+.nv-manche .nm-drap { font-size: 28px; } .nv-manche .nm-t { flex: 1; min-width: 0; display: grid; } .nv-manche .nm-t b { font: italic 800 15.5px/1.15 var(--f-display); text-transform: uppercase; letter-spacing: .04em; }
+.nv-manche .nm-t small { font-size: 12px; color: rgba(244,245,248,.75); }
+.nv-manche .nm-go { flex: none; font: 700 12.5px/1 var(--f-text); padding: 9px 11px; border-radius: 10px; background: var(--accent); color: #fff; }
+.nv-manche::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 10px, transparent 10px 20px) top / 100% 6px no-repeat, repeating-linear-gradient(90deg, transparent 0 10px, rgba(255,255,255,.07) 10px 20px) 0 6px / 100% 6px no-repeat; pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) { .nv-manche { animation: rm-entre .5s cubic-bezier(.2,.9,.3,1.2) both; } .nv-manche .nm-go { animation: nmPouls 1.8s ease-in-out .6s infinite; } }
+@keyframes nmPouls { 50% { transform: scale(1.06); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 30%, transparent); } }

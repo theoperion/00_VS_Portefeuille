@@ -2835,17 +2835,21 @@ function verifierPaliers() {
   let sv = null; try { sv = JSON.parse(stock.get(cleStock("secrets")) || "null"); } catch (e) { sv = null; }
   const secrets = sv === null ? [] : SECRETS_M.filter(s => E.sec.has(s.id) && !sv.includes(s.id));
   stock.set(cleStock("secrets"), JSON.stringify(Array.from(new Set((sv || []).concat(Array.from(E.sec))))));
-  const file = nouveaux.concat(secrets.map(secret => ({ secret, titre: secret.nom, grand: "?!", quand: null, id: null })));
+  // V15.5 : objets gagnés par la régularité (un par mois versé) : fêtés eux aussi, regroupés
+  const rv = stock.get(cleStock("regul")), nbR = Math.min(REGULARITE_M.length, moisVerses()), avR = rv === null ? 0 : +rv || 0;
+  stock.set(cleStock("regul"), String(nbR));
+  const regul = nbR > avR ? [{ regul: true, titre: nbR - avR > 1 ? "Ta régularité paie : " + (nbR - avR) + " nouveaux objets" : "Un mois de plus avec un versement", grand: nbR + " MOIS", recs: REGULARITE_M.slice(avR, nbR), quand: null, id: null }] : [];
+  const file = nouveaux.concat(secrets.map(secret => ({ secret, titre: secret.nom, grand: "?!", quand: null, id: null })), regul);
   if (file.length) feter(file[0], file.slice(1));
 }
 function feter(x, suite) {
   injecterStyle();
   const o = document.createElement("div");
   o.className = "m-fete moi"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
-  const recs = x.secret ? x.secret.rec : (etatObjets().rec.get(x.id) || []);
+  const recs = x.recs || (x.secret ? x.secret.rec : (etatObjets().rec.get(x.id) || []));
   const aff = recs.find(r => r[0] === "aff");
-  o.innerHTML = '<div><span class="mf-k">' + (x.secret ? "Récompense cachée trouvée" : "Palier franchi") + '</span><div class="m-flaps">' + flaps(x.grand, !reduit, aff ? aff[1] : null) + "</div><h3>" + esc(x.titre) + "</h3>" +
-    (x.secret ? "<p>" + esc(x.secret.quoi) + "</p>" : x.quand ? "<p>Franchi en " + esc(libMois(x.quand, true)) + ".</p>" : "") +
+  o.innerHTML = '<div><span class="mf-k">' + (x.regul ? "🛡️ Régularité" : x.secret ? "Récompense cachée trouvée" : "Palier franchi") + '</span><div class="m-flaps">' + flaps(x.grand, !reduit, aff ? aff[1] : null) + "</div><h3>" + esc(x.titre) + "</h3>" +
+    (x.regul ? "<p>Chaque mois où tu verses débloque un objet. Le prochain : ton " + (moisVerses() + 1) + "<sup>e</sup> mois.</p>" : x.secret ? "<p>" + esc(x.secret.quoi) + "</p>" : x.quand ? "<p>Franchi en " + esc(libMois(x.quand, true)) + ".</p>" : "") +
     (recs.length ? '<p class="mf-af">Débloque :</p><div class="mf-recs">' + recs.map(([t, id]) => {
       const s = SORTES.find(y => y[0] === t);
       return '<button class="mf-rec" type="button" data-mf-eq="' + t + "." + id + '"><span>' + (t === "emb" || t === "fete" ? defObj(t, id)[2] : s[2]) + "</span><b>" + esc(nomObj(t, id)) + "</b><small>" + esc(s[1]) + " · équiper</small></button>";

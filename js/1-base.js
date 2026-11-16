@@ -547,7 +547,7 @@ function rendreClassement() {
   const pv = D.personnes.map(p => stats(D, p, env, 0, fin, null, null)).filter(s => ok(s.valeur)).sort((a, b) => (b.pvLatentePct ?? -Infinity) - (a.pvLatentePct ?? -Infinity));
   const maxPv = Math.max(...pv.map(s => Math.abs(s.pvLatentePct || 0)), .01);
 
-  v.innerHTML = banniereBilan() +
+ v.innerHTML = (punchy && typeof bandeauNouvelleManche === "function" ? bandeauNouvelleManche() : "") + (punchy && typeof htmlReglesMois === "function" && moisAMettreEnAvant() ? htmlReglesMois(Math.floor(moisAMettreEnAvant() / 100), moisAMettreEnAvant(), true) : "") + banniereBilan() +
     '<div id="boite-verdict">' + carteVerdict(verdict) + "</div>" +
     (bref ? '<div class="bref">' + bref + "</div>" : "") + podiumMois +
     (anomalies.length ? '<div style="display:grid;gap:6px">' + anomalies.map(t => '<div class="alerte warn">' + t + "</div>").join("") + "</div>" : "") +
@@ -574,6 +574,8 @@ function rendreClassement() {
       finEtiq: true, h: 170, fmt: x => rangTxt(-x), fmtAxe: t => Number.isInteger(t) && t < 0 ? rangTxt(-t) : "", titreX: k => "Fin " + moisCourt(k) });
   }
   brancherVerdict(verdict);
+  v.querySelectorAll("[data-nv-manche]").forEach(b => b.addEventListener("click", () => { choisirSaison(+b.dataset.nvManche); ETAT.podium = "gp"; GP_ETAPE = null; garder(); allerA("trophees"); }));
+  v.querySelectorAll(".regles-mois[data-aller-stand]").forEach(b => { const go = () => { ETAT.podium = "stand"; garder(); allerA("trophees"); }; b.addEventListener("click", go); b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }); });
   $("#info-million").addEventListener("click", () => toast(texteMillion()));
   $("#vers-fiches").addEventListener("click", () => { if (!ETAT.fiche) ETAT.fiche = ETAT.moi; garder(); allerA("fiche"); });
   v.querySelectorAll("[data-bilan]").forEach(b => b.addEventListener("click", () => ouvrirBilan(+b.dataset.bilan)));

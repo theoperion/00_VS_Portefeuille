@@ -41,8 +41,9 @@ function effetCarte(c, x, l, avant, iR, ctx) {
   const up = (ctx && ctx.up) || { m: 0, a: 0, p: 0 };
   if (c.c === "aspiration" && avant) { const pl = avant[x.nom], dev = pl > 1 ? Object.keys(avant).find(n => avant[n] === pl - 1) : null, xd = dev && l.find(z => z.nom === dev); return xd && x.r > xd.r + 1e-12 ? 2 + up.a : 0; }
   if (c.c === "turbo") return x.bonus ? 2 + up.m : 0;
-  if (c.c === "pluie") return iR !== null && iR < 0 && x.r > iR + 1e-12 ? 2 + up.p : 0;   // V15 : il faut aussi faire mieux que l'indice
-  if (c.c === "pari" && c.cible) { const xc = l.find(z => z.nom === c.cible); return xc ? (x.r > xc.r + 1e-12 ? 2 : xc.r > x.r + 1e-12 ? -1 : 0) : 0; }   // égalité parfaite : 0, comme un duel
+  const pg = (ctx && ctx.piege) || null;   // V15.5 : piège du circuit
+  if (c.c === "pluie") return iR !== null && iR < 0 && x.r > iR + 1e-12 ? 2 + up.p + (pg && pg.id === "ardennes" ? 1 : 0) : 0;   // V15 : il faut aussi faire mieux que l'indice
+  if (c.c === "pari" && c.cible) { const xc = l.find(z => z.nom === c.cible); const av = pg && pg.id === "averse"; return xc ? (x.r > xc.r + 1e-12 ? (av ? 3 : 2) : xc.r > x.r + 1e-12 ? (av ? -2 : -1) : 0) : 0; }   // égalité parfaite : 0, comme un duel
   if (c.c === "undercut") return x.r > 0.02 ? 2 : x.r > 0 ? 1 : 0;
   if (c.c === "jaune") return x.dernier ? 2 : 0;
   if (c.c === "safety") { const cu = ctx && ctx.cumAvant; if (!cu || cu[x.nom] === undefined) return 0; return Math.max(...Object.values(cu)) - cu[x.nom] >= 6 ? 2 : 0; }
@@ -193,7 +194,7 @@ function htmlGrandPrix(y) {
   const etapes = etapesGP(y), c = championnat(y);
   const i = GP_ETAPE !== null && GP_ETAPE < etapes.length ? GP_ETAPE : etapes.length - 1, et = etapes[i];
   const qui = quiEcurie(), kGP = et.k || (c.chauffe ? CHAUFFE_K : y * 100 + 1), ci = circuitDe(kGP), G = GPS[ci], at = atoutsVus(kGP);
-  const met = meteoMois(et.k), spe = et.k ? moisSpecial(y, et.k) : null;
+  const met = meteoMois(et.k), spe = et.k ? moisSpecial(y, et.k) : null, pgm = et.m && et.m.piege ? et.m.piege : null;
   const ordre = Object.keys(et.pts).sort((a, b) => et.pts[b] - et.pts[a] || (c.tot[b] ? c.tot[b].v : 0) - (c.tot[a] ? c.tot[a].v : 0));
   const tete = ordre[0], tourTete = Math.floor((et.pts[tete] || 0) / TOUR_GP) + 1;
   const deux = ETAT.gp2d === "1" || !piste3D(), cam = camGP();
@@ -204,14 +205,15 @@ function htmlGrandPrix(y) {
     '<div class="gp-hud"><span class="gp-tour">Tour <b id="gp-tour">' + tourTete + "</b></span><span>" + met.ico + " " + esc(met.nom) + "</span></div>" +
     '<div class="gp-btns">' + (deux ? "" : '<button class="gp-vue" type="button" id="gp-cam-b" aria-label="Changer de caméra">' + CAMS[cam] + "</button>") +
     '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en 3D" : "Passer en carte 2D") + '">' + (deux ? "🗺️ 2D" : "🧊 3D") + '</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">⛶</button></div>' +
-    (spe ? '<div class="gp-spe">' + spe.ico + " " + esc(spe.nom) + "</div>" : "") + "</div>";
+    (spe ? '<div class="gp-spe">' + spe.ico + " " + esc(spe.nom) + "</div>" : pgm ? '<div class="gp-spe piege" data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " " + esc(pgm.nom) + "</div>" : "") + "</div>";
   const chips = '<div class="gp-mois">' + etapes.map((x, j) => '<button type="button" data-gpe="' + j + '" aria-pressed="' + (j === i) + '">' + (x.k ? GPS[circuitDe(x.k)].drap + " " + esc(moisCourt(x.k)) : "Départ") + "</button>").join("") + "</div>";
   const lignes = ordre.map((n, r) => {
     const devant = r ? ordre[r - 1] : null, ecart = devant ? et.pts[devant] - et.pts[n] : 0, x = et.m ? et.m.l.find(z => z.nom === n) : null;
     const ca = et.k ? carteDe(y, n, et.k) : null, cdef = ca && ca.c ? carteDef(ca.c) : null;
-    const res = x && x.carte ? (x.carte.invalide ? " Pas encore piochée à ce moment-là : sans effet." : " Résultat : " + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + " pt" + (Math.abs(x.carte.gain) > 1 ? "s" : "") + (x.carte.circ ? ", dont +1 d'atout du circuit" : "") + (x.carte.bouchon ? ", sans le +1 d'atout : bouchon, plusieurs pilotes l'ont jouée" : "") + (x.carte.sab ? " · " + x.carte.cible + " " + x.carte.sab : "") + ".") : "";
+    const res = x && x.carte ? (x.carte.invalide ? (x.carte.piege ? " Interdite ce mois-ci (piège 🥵 Chaleur) : sans effet." : " Pas encore piochée à ce moment-là : sans effet.") : " Résultat : " + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + " pt" + (Math.abs(x.carte.gain) > 1 ? "s" : "") + (x.carte.circ ? ", dont +1 d'atout du circuit" : "") + (x.carte.bouchon ? ", sans le +1 d'atout : bouchon, plusieurs pilotes l'ont jouée" : "") + (x.carte.sab ? " · " + x.carte.cible + " " + x.carte.sab : "") + ".") : "";
     const carte = ca ? (ca.cache && !cdef ? '<span class="gp-c cache" data-bdg="Carte posée face cachée : révélée le ' + jourLimite(et.k) + ' du mois.">🂠</span>' : cdef ? '<span class="gp-c" data-bdg="' + esc(cdef.ico + " " + cdef.nom + " : " + cdef.def + res) + '">' + cdef.ico + (x && x.carte ? "<small>" + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + "</small>" : "") + "</span>" : '<span class="gp-c vide"></span>') : '<span class="gp-c vide"></span>';
     const extra = x ? (x.vainq ? '<span class="gp-x or" data-bdg="🇬🇧 Silverstone : vainqueur du mois, +2.">🇬🇧+2</span>' : "") +
+      (x.piege === "nuit" && x.dernier ? '<span class="gp-x" data-bdg="🌃 Safety car de nuit : le dernier du mois marque 2 points de place.">🌃+2</span>' : "") +
       (x.equipe ? '<span class="gp-x" data-bdg="🤝 Bonus d\'équipe : tout le monde a battu le S&P 500 ce mois-ci, +1.">🤝+1</span>' : "") +
       (x.serie ? '<span class="gp-x" data-bdg="🔥 Série : ' + x.serie + ' mois d\'affilée sans finir dernier, +1.">🔥+1</span>' : "") +
       (x.defi ? '<span class="gp-x" data-bdg="' + esc((defiDuMois(et.k) || {}).ico + " Défi du mois réussi : " + (defiDuMois(et.k) || {}).txt + ", +1.") + '">🏁+1</span>' : "") +
@@ -239,9 +241,9 @@ function htmlGrandPrix(y) {
 function htmlCalendrierGP(y, kIci) {
   const ch = estChauffe(y), ks = ch ? [CHAUFFE_K] : Array.from({ length: 12 }, (_, i) => y * 100 + i + 1), auj = new Date(), kAuj = auj.getFullYear() * 100 + auj.getMonth() + 1;
   const lignes = ks.map(k => {
-    const ci = circuitDe(k), g = GPS[ci], a = atoutsVus(k), ind = a ? null : indiceCircuit(k), spe = moisSpecial(y, k);
+    const ci = circuitDe(k), g = GPS[ci], a = atoutsVus(k), ind = a ? null : indiceCircuit(k), spe = moisSpecial(y, k), pg = regleVisible("pieges") ? piegeMois(y, k) : null;
     return '<div class="gp-cal-l' + (k === kIci ? " ici" : "") + (k < kAuj && !apercuSaison() ? " passe" : "") + '"><span class="mo">' + esc(moisCourt(k).replace(/\.$/, "")) + "</span>" + (window.Piste ? Piste.vignette(ci) : "") +
-      "<span><b>" + g.drap + " " + esc(g.ville) + (spe ? " " + spe.ico : "") + "</b><small>" + esc(g.gp) + "</small></span>" +
+      "<span><b>" + g.drap + " " + esc(g.ville) + (spe ? " " + spe.ico : "") + "</b><small>" + esc(g.gp) + (spe ? " · " + esc(spe.nom) : pg ? " · " + pg.ico + " " + esc(pg.nom) : "") + "</small></span>" +
       '<span class="ap">' + (a ? '<i class="p">' + a.atout.ico + "+1</i>" : ind ? '<i class="p" title="L\'atout est l\'une des deux">' + ind.duo[0].ico + "/" + ind.duo[1].ico + "?</i>" : "") + "</span></div>";
   }).join("");
   return '<details class="gp-calend" id="gp-calend"' + (ETAT.calOuvert === "1" ? " open" : "") + '><summary>📅 ' + (ch ? "Le circuit du tour de chauffe" : "Calendrier de la saison") + " <small>" + (ch ? "1 Grand Prix" : "12 Grands Prix, une ville par mois") + "</small></summary>" + lignes +
@@ -275,6 +277,8 @@ function htmlCartes(y) {
     const ks = joues[cd.id] || [], ici = !!kOuvert && ks.includes(kOuvert), kPrec = kOuvert ? cleMoins(kOuvert, 1) : null;
     const k = cd.bonus ? utilisees[cd.id] : (ici ? kOuvert : kPrec && ks.includes(kPrec) ? kPrec : undefined), jouee = k !== undefined, aug = Object.entries(AMELIOS).find(([, x]) => x.carte === cd.id), n = aug ? up[aug[0]] : 0;
     const gp = atk && !jouee ? (atk.atout.id === cd.id ? '<span class="c-gp at" title="Atout du circuit">+1</span>' : "") : indk && !jouee && indk.ids.includes(cd.id) ? '<span class="c-gp at" title="Atout possible du circuit (1 chance sur 2)">?</span>' : "";
+    const interdite = !!kOuvert && cd.id === "turbo" && (piegeMois(y, kOuvert) || {}).id === "chaleur" && regleVisible("pieges");
+    if (interdite) return '<button type="button" class="carte jouee" disabled data-carte="turbo"><span class="c-ico">' + cd.ico + "</span><b>" + esc(cd.nom) + "</b><small>" + esc(cd.court) + "</small><em>🥵 interdite à Miami</em></button>";
     return '<button type="button" class="carte' + (cd.bonus ? " bonus" : "") + (jouee && !ici ? " jouee" : "") + (ici ? " posee" : "") + (CARTE_CHOIX === cd.id ? " choix" : "") + '" data-carte="' + cd.id + '"' + (jouee && !ici || !kOuvert ? " disabled" : "") + ">" +
       '<span class="c-ico">' + cd.ico + "</span><b>" + esc(cd.nom) + "</b><small>" + esc(cd.court) + "</small>" + (n ? '<span class="c-up">+' + n + "</span>" : "") + gp +
       (jouee ? "<em>" + (ici ? "posée" : cd.bonus ? "jouée · " + esc(moisCourt(k)) : "repos · jouée en " + esc(moisCourt(k))) + "</em>" : cd.tire ? "<em>🎴 " + esc(moisCourt(cd.tire)) + "</em>" : "") + "</button>";
@@ -299,7 +303,7 @@ function htmlCartes(y) {
   return '<div><h3 class="s-h3">Mes cartes <small>' + reste + " en main" + (regleVisible("pioche") ? " · " + aVenir + " dans la pioche" : "") + "</small></h3></div>" +
     '<p class="info">Touche une carte pour la poser. Une par mois ; une carte de base se rejoue, mais pas deux mois de suite. Une carte bonus ne sert qu\'une fois.' + (regleVisible("pioche") ? (regleVisible("niveaux") ? " Tu en pioches une nouvelle à chaque niveau gagné et quand tu finis dernier d\'un mois." : " Tu en pioches une nouvelle quand tu finis dernier d\'un mois.") : "") + (ap ? " Aperçu : choisis le mois avec les puces ci-dessous ; rien n'est envoyé." : "") + "</p>" +
     (ap ? '<div class="gp-mois">' + etapesGP(y).slice(1).map(x => '<button type="button" data-gpcible="' + x.k + '" aria-pressed="' + (x.k === kOuvert) + '">' + esc(moisCourt(x.k)) + "</button>").join("") + "</div>" : "") +
-    '<div class="main-cartes">' + main.map(tuile).join("") + "</div>" + action + htmlDefi(y, kOuvert) + htmlProno(y, kOuvert) + htmlRival(y, kOuvert) + htmlVote(y);
+    '<div class="main-cartes">' + main.map(tuile).join("") + "</div>" + action + htmlProno(y, kOuvert) + htmlRival(y, kOuvert) + htmlVote(y);
 }
 /* ---------- Rappels : tant que ta carte du mois n'est pas posée, on te le dit partout ---------- */
 function aujNum() { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
@@ -366,7 +370,10 @@ function ouvrirRevelation(r) {
     "<p>Les effets se calculent à la fin du mois, quand tous les relevés sont saisis.</p>" +
     '<div class="btn-row"><button class="btn ghost" type="button" data-rv="fermer">Fermer</button><button class="btn acc" type="button" data-rv="course">Voir la course 🏁</button></div></div>';
   document.body.appendChild(o);
-  const fermer = () => o.remove();
+  // V15.5 : quand la dernière carte est retournée, une gerbe d'étoiles
+  const finFlip = (r.l.length - 1) * 700 + 450 + 700; let fini = false;
+  setTimeout(() => { if (!fini && o.isConnected && typeof confettis === "function") confettis("etoiles"); }, finFlip);
+  const fermer = () => { fini = true; o.remove(); };
   o.addEventListener("click", e => { if (e.target === o) fermer(); });
   o.querySelector('[data-rv="fermer"]').addEventListener("click", fermer);
   o.querySelector('[data-rv="course"]').addEventListener("click", () => { fermer(); choisirSaison(r.y); ETAT.podium = "gp"; garder(); if (vueActive() === "trophees") rendreTrophees(); else allerA("trophees"); });
@@ -409,7 +416,8 @@ function htmlStand(y) {
         : autre ? 'La fenêtre ouverte concerne une autre saison : <button class="lien" type="button" data-saison="' + (autre === CHAUFFE_K ? SAISON.premiere - 1 : Math.floor(autre / 100)) + '">y aller ›</button>'
         : "Prochaine ouverture le <b>" + esc(pf.du) + "</b>, pour " + esc(moisLong(pf.k)) + ". En attendant, prépare ta stratégie : ta main est ci-dessous.") + "</small></div>";
   }
-  return etat + htmlCartes(y) + (regleVisible("niveaux") ? '<div><h3 class="s-h3">' + (regleVisible("atelier") ? "Atelier <small>niveau d\'écurie et améliorations</small>" : "Niveau d\'écurie") + "</h3></div>" + htmlAtelier(qui) : "") + htmlProchainement() +
+  const kRm = k || (m => m && Math.floor(m / 100) === y ? m : null)(moisAMettreEnAvant());
+  return etat + htmlReglesMois(y, kRm) + htmlCartes(y) + (regleVisible("niveaux") ? '<div><h3 class="s-h3">' + (regleVisible("atelier") ? "Atelier <small>niveau d\'écurie et améliorations</small>" : "Niveau d\'écurie") + "</h3></div>" + htmlAtelier(qui) : "") + htmlProchainement() +
     '<p class="info">Le Stand regroupe tout ce qui se joue. La Course montre la course, l\'Écurie ton look. <a href="#" class="lien-regles" data-regles="cartes">Règles des cartes</a></p>';
 }
 function brancherStand(v, y) {
@@ -580,6 +588,14 @@ function brancherGP(v, y) {
   GP_ETQ = null;
   if (GP_PLEIN) placerPlein(y);
   etiquettesGP(api);
+}
+/** V15.5 · Nouvelle manche courue mais pas encore regardée : un bandeau dans le Classement */
+function bandeauNouvelleManche() {
+  if (typeof D === "undefined" || !D || !saisonVisible()) return "";
+  const y = saisonCourante(); if (!y) return "";
+  const c = championnat(y), m = c.mois[c.mois.length - 1]; if (!m || +(stock.get("versus.gpVu." + y) || 0) >= m.k) return "";
+  const g = GPS[circuitDe(m.k)], x = m.l.slice().sort((a, b) => a.rg - b.rg)[0], moi = m.l.find(z => z.nom === moiPilote());
+  return '<button class="nv-manche" type="button" data-nv-manche="' + y + '"><span class="nm-drap">' + g.drap + '</span><span class="nm-t"><b>Nouvelle manche : ' + esc(g.ville) + "</b><small>" + esc(moisLong(m.k)) + " · vainqueur " + esc(x ? x.nom : "—") + (moi ? " · toi : " + (moi.p >= 0 ? "+" : "") + moi.p + " pt" + (Math.abs(moi.p) > 1 ? "s" : "") : "") + '</small></span><span class="nm-go">🏁 Course</span></button>';
 }
 function majBoutonsGP() { document.querySelectorAll("#gp-cam-b").forEach(b => b.textContent = CAMS[camGP()]); }
 /* ---------- Plein écran : la même piste, déplacée dans une couche qui couvre tout l'écran ---------- */

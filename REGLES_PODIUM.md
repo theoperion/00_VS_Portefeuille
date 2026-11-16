@@ -57,6 +57,23 @@ Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Re
 | 🏆 Finale (décembre) | points de place ×2 pour tout le monde |
 | 🗳️ Vote (2 → 31 déc.) | « le coup de la saison » (pas pour soi) : plaque pour le gagnant |
 
+## 🪤 Les pièges des circuits (dès janvier 2027)
+
+Les mois sans règle spéciale, le circuit a son **piège**, une petite règle qui ne vaut que ce mois-là. Il s'affiche dès le 20 du mois d'avant, en haut du Classement et dans le Stand (« Ce mois-ci à … »), avec le défi du mois.
+
+| Mois | Circuit | Piège | Effet |
+|---|---|---|---|
+| Janv. | 🇧🇭 Bahreïn | 🏜️ Mirage | le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point |
+| Févr. | 🇸🇦 Djeddah | 🧱 Murs proches | à moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points) |
+| Mars | 🇦🇺 Melbourne | 💥 Départ chaotique | pronostic « qui gagne » : +2 si juste, −1 si faux |
+| Avr. | 🇯🇵 Suzuka | ➰ Le huit | les places se jouent sur deux mois cumulés (mars + avril) |
+| Mai | 🇺🇸 Miami | 🥵 Chaleur | 🚀 Turbo interdit |
+| Août | 🇧🇪 Spa | 🌦️ Météo des Ardennes | si le S&P 500 baisse, 🌧️ Pneus pluie vaut +3 au lieu de +2 |
+| Oct. | 🇸🇬 Singapour | 🌃 Safety car de nuit | le dernier du mois marque 2 points de place au lieu de 0 |
+| Nov. | 🇧🇷 Interlagos | ⛈️ Averse surprise | 🎲 Pari : +3 / −2 au lieu de +2 / −1 |
+
+Juin (Montréal), juillet (Silverstone), septembre (Monza) et décembre (Finale) ont déjà leur règle. Le mois de Monaco (tiré au sort) remplace le circuit prévu : pas de piège ce mois-là. La carte reste plafonnée à +4.
+
 ## 🎴 Le rattrapage
 
 Dernier d'un mois → **1 carte bonus**, jouable dès le mois suivant, une fois par saison : ✂️ Undercut (+1 si ton mois monte, +2 au-delà de +2 %) · 🟨 Drapeau jaune (+2 si tu finis dernier) · 🚨 Safety car (+2 si 6 pts ou plus de retard sur le leader) · ⏱️ Arrêt éclair (+2 si tu fais mieux que ta place du mois d'avant).
@@ -69,4 +86,4 @@ Dernier d'un mois → **1 carte bonus**, jouable dès le mois suivant, une fois 
 
 ---
 
-*V15 (16/11/2026) : dernier à 0 pt, Pneus pluie « résiste à la baisse », série = régularité, rival +3, pronostic « plus de +1 % », + défi du mois, pole position, trophée de la régularité. Retirés le 05/11/2026 : duels, DRS, carte Huile, Tir groupé, pièges des circuits.*
+*V15.5 (17/11/2026) : + pièges des circuits (8). V15 (16/11/2026) : dernier à 0 pt, Pneus pluie « résiste à la baisse », série = régularité, rival +3, pronostic « plus de +1 % », + défi du mois, pole position, trophée de la régularité. Retirés le 05/11/2026 : duels, DRS, carte Huile, Tir groupé, pièges des circuits.*

@@ -81,13 +81,21 @@ function championnat(y) {
   moisVerdict(0).filter(k => k > deb && k <= f).forEach(k => {
     const v = verdictMois(0, k);
     if (!v || !v.complet) { if (v) attente = v; return; }
-    const du = v.du.slice().sort((a, b) => b.r - a.r), n = du.length, iR = indiceMois(k);
+    const PG = ch ? null : piegeMois(y, k), iR = indiceMois(k);   // V15.5 : piège du circuit
+    // « Le huit » : les places se jouent sur ce mois et le précédent cumulés ; sinon sur le mois seul
+    const rc = x => { if (PG && PG.id === "huit" && prevL) { const p = prevL.find(z => z.nom === x.nom); if (p) return (1 + x.r) * (1 + p.r) - 1; } return x.r; };
+    const du = v.du.map(x => Object.assign({}, x, { rc: rc(x) })).sort((a, b) => b.rc - a.rc), n = du.length;
+    // places : ex æquo à 1e-9 près ; « Murs proches » : à moins de 0,2 point du pilote juste devant, on partage sa place
+    const RG = []; du.forEach((x, i) => { RG[i] = i && du[i - 1].rc - x.rc < (PG && PG.id === "murs" ? 0.002 : 0) + 1e-9 ? RG[i - 1] : i + 1; });
+    const rgMax = n ? Math.max(...RG) : 0;
     const avant = mois.length ? mois[mois.length - 1].places : null, cumAvant = mois.length ? mois[mois.length - 1].cumul : null, spec = moisSpecial(y, k);
     const derniers = avant && Object.keys(avant).length >= 2 ? (mx => Object.keys(avant).filter(nm => avant[nm] === mx))(Math.max(...Object.values(avant))) : [];
-    const l = du.map(x => {
-      const rg = du.findIndex(z => Math.abs(z.r - x.r) < 1e-9) + 1, bonus = iR !== null && x.r > iR ? (spec && spec.id === "monza" ? 2 : 1) : 0;
-      const mult = spec && (spec.id === "finale" || spec.id === "monaco" && derniers.includes(x.nom)) ? 2 : 1, base = ptsRang(rg), vainq = spec && spec.id === "silverstone" && rg === 1 ? 2 : 0;
-      return { nom: x.nom, r: x.r, rg, base, mult, vainq, p: base * mult + bonus + vainq, bonus, dernier: n >= 3 && rg > 1 && Math.abs(x.r - du[n - 1].r) < 1e-9, ecart: rg === 1 && n > 1 ? x.r - du[1].r : null, niv: J[x.nom] ? J[x.nom].niv : 1 };
+    const seuil = PG && PG.id === "mirage" ? 0.005 : 0;   // « Mirage » : le 🎯 demande 0,5 point d'avance sur l'indice
+    const l = du.map((x, i) => {
+      const rg = RG[i], bonus = iR !== null && x.r > iR + seuil + (seuil ? -1e-12 : 0) ? (spec && spec.id === "monza" ? 2 : 1) : 0;
+      const dernier = n >= 3 && rg > 1 && rg === rgMax;
+      const mult = spec && (spec.id === "finale" || spec.id === "monaco" && derniers.includes(x.nom)) ? 2 : 1, base = PG && PG.id === "nuit" && dernier ? 2 : ptsRang(rg), vainq = spec && spec.id === "silverstone" && rg === 1 ? 2 : 0;
+      return { nom: x.nom, r: x.r, rg, base, mult, vainq, p: base * mult + bonus + vainq, bonus, dernier, ecart: rg === 1 && n > 1 ? x.rc - du[1].rc : null, niv: J[x.nom] ? J[x.nom].niv : 1, piege: PG ? PG.id : undefined };
     });
     // cartes révélées (main de base et pioche bonus), plafonnées à +4
     const atM = ch ? null : atoutsDe(k);
@@ -95,7 +103,8 @@ function championnat(y) {
       const c = carteDe(y, x.nom, k); if (!c || !c.c) return;
       const def = carteDef(c.c), j = J[x.nom]; if (!def || !j) return;
       if (def.bonus && (!regleActive("pioche", k) || !j.pioche.some(z => z.c === c.c && z.k < k))) { x.carte = { id: c.c, gain: 0, cible: c.cible || null, invalide: true }; return; }
-      x._c = c; x._g = effetCarte(Object.assign({}, c, { revele: true }), x, l, avant, iR, { up: amelioAu(y, x.nom, k, j.niv), prev: prevL, cumAvant });
+      if (PG && PG.id === "chaleur" && c.c === "turbo") { x.carte = { id: c.c, gain: 0, cible: null, invalide: true, piege: true }; return; }   // « Chaleur » : Turbo interdit
+      x._c = c; x._g = effetCarte(Object.assign({}, c, { revele: true }), x, l, avant, iR, { up: amelioAu(y, x.nom, k, j.niv), prev: prevL, cumAvant, piege: PG });
     });
     // circuit du mois : +1 pour la carte atout qui a marqué ; bouchon (personne n'a le +1) seulement si au moins deux pilotes l'ont jouée ET ont marqué avec
     const nbAtout = atM ? l.filter(z => z._c && z._c.c === atM.atout.id && z._g > 0).length : 0;
@@ -122,7 +131,7 @@ function championnat(y) {
       const dMin = poles.length ? Math.min(...poles.map(nm => Math.abs(P[nm].p / 100 - iR))) : null;
       l.forEach(x => {
         const pr = P[x.nom]; if (!pr) return;
-        const okV = pr.v && l.some(z => z.nom === pr.v && z.rg === 1) ? 1 : 0, okI = pr.i && iR !== null && (pr.i === "h") === (iR > 0.01) ? 1 : 0;
+        const okV = pr.v ? (l.some(z => z.nom === pr.v && z.rg === 1) ? (PG && PG.id === "chaos" ? 2 : 1) : (PG && PG.id === "chaos" ? -1 : 0)) : 0, okI = pr.i && iR !== null && (pr.i === "h") === (iR > 0.01) ? 1 : 0;
         const okP = dMin !== null && poles.includes(x.nom) && Math.abs(Math.abs(pr.p / 100 - iR) - dMin) < 1e-9 ? 1 : 0;
         x.prono = { v: pr.v || null, i: pr.i || null, p: typeof pr.p === "number" ? pr.p : null, pole: okP, pts: okV + okI + okP }; x.p += okV + okI + okP;
       });
@@ -142,7 +151,7 @@ function championnat(y) {
     l.forEach(x => { const t = tot[x.nom]; t.pts += x.p; t.n++; t.cum *= 1 + x.r; t.bonus += x.bonus; if (x.rg === 1) t.v++; if (x.rg <= 3) t.pod++; });
     const presents = Object.keys(tot).filter(nm => tot[nm].n).sort(ordre), places = {}, cumul = {};
     presents.forEach((nm, i) => { places[nm] = i + 1; cumul[nm] = tot[nm].pts; });
-    mois.push({ k, iR, l, places, cumul, spec });
+    mois.push({ k, iR, l, places, cumul, spec, piege: PG });
   });
   // rival de la saison : +3 (V15, au lieu de +5) en fin de saison si tu finis devant ton rival (classement avant ce bonus)
   if (!ch && mois.length && mois[mois.length - 1].k === f && regleActive("rival", f)) {
