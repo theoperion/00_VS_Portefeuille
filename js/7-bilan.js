@@ -623,9 +623,39 @@ function montrerVue(v) {
   if (D || v === "moi") rendreVue(v);
   window.scrollTo(0, 0);
 }
-function allerA(v) { if (location.hash !== "#" + v) location.hash = v; else montrerVue(v); }
+/* Onglets : on remplace l'adresse au lieu d'empiler l'historique (V15.2) ; le bouton retour du téléphone est géré plus bas */
+function allerA(v) { if (location.hash !== "#" + v) { try { history.replaceState(history.state, "", "#" + v); } catch (e) { location.hash = v; return; } } montrerVue(v); }
 document.querySelectorAll(".onglet").forEach(t => t.addEventListener("click", () => allerA(t.dataset.vue)));
-window.addEventListener("hashchange", () => montrerVue(vueActive()));
+window.addEventListener("hashchange", () => { const v = vueActive(); if (v !== stock.get(CLES.vue) || !VUES.includes(location.hash.slice(1))) montrerVue(v); });
+/* V15.2 : la page ne « saute » plus quand un bouton redessine l'écran (elle garde sa hauteur le temps du nouveau rendu) */
+["click", "change"].forEach(t => document.addEventListener(t, e => {
+  if (!e.target.closest || !e.target.closest(".view")) return;
+  const c = document.body; c.style.minHeight = document.documentElement.scrollHeight + "px";
+  clearTimeout(c._garde); c._garde = setTimeout(() => { c.style.minHeight = ""; }, 600);
+}, true));
+/* Bouton retour (Android, appli installée) : ferme d'abord la fenêtre ouverte, puis revient à l'onglet d'accueil,
+   et seulement ensuite quitte l'appli (avant : écran noir). Une entrée « garde » reste toujours au-dessus de la page. */
+function vueAccueil() { const o = ETAT.ouverture || ""; return /^moi/.test(o) || o === "fiche" ? "moi" : ["classement", "mois", "trophees"].includes(o) ? o : "classement"; }
+function fermerFenetreOuverte() {
+  const ouverts = [...document.querySelectorAll(".voile")].filter(x => !x.hidden && getComputedStyle(x).display !== "none");
+  if (!ouverts.length) return false;
+  const v = ouverts[ouverts.length - 1], b = v.querySelector('[aria-label="Fermer"]');
+  if (b) b.click(); else if (v.id) v.hidden = true; else v.remove();
+  return true;
+}
+(() => {
+  try {
+    if (!history.state || history.state.vs !== "garde") { history.replaceState({ vs: "base" }, ""); history.pushState({ vs: "garde" }, ""); }
+    window.addEventListener("popstate", e => {
+      if (e.state && e.state.vs === "garde") return;
+      const cur = stock.get(CLES.vue) || vueActive(), acc = vueAccueil();
+      const rester = v => { history.replaceState({ vs: "base" }, "", "#" + v); history.pushState({ vs: "garde" }, ""); };
+      if (fermerFenetreOuverte()) { rester(cur); return; }
+      if (cur !== acc) { rester(acc); montrerVue(acc); return; }
+      history.back();   // déjà sur l'accueil : on quitte vraiment
+    });
+  } catch (e) {}
+})();
 
 /* ---------- Réglages ---------- */
 function ouvrirReglages(section) {

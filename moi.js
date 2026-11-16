@@ -281,6 +281,7 @@ function injecterStyle() {
 .moi .pl-bloc > .pl-liste { padding: 0 12px 6px; border-top: 1px solid var(--rule-2); }
 .moi .pl-bloc > .pl-liste .pl-r:last-child { border-bottom: 0; }
 .moi .pl-r .pl-rec { font-style: normal; font-size: 11.5px; font-weight: 600; color: var(--gold); }
+.moi .m-maj { display: block; margin-top: 4px; font-size: 11px; color: var(--ink-3, var(--ink-2)); opacity: .8; }
 .moi .m-jour { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; font-size: 13px; color: var(--ink-2); }
 .moi .m-status { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-3); }
 .moi .m-status i { font-style: normal; display: inline-flex; align-items: center; gap: 6px; }
@@ -695,6 +696,15 @@ function vueMoi() { const s = document.getElementById("v-moi"); return s && !s.h
 /* ---------- Rendu ---------- */
 const ONGLETS = [["jour", "Aujourd'hui"], ["patrimoine", "Patrimoine"], ["stats", "Stats"], ["missions", "Missions"]];
 
+/** V15.2 · Redessine sans faire sauter la page : le bouton touché reste au même endroit de l'écran */
+function garderPlace(b, fn) {
+  const attrs = b && b.attributes ? [...b.attributes].filter(x => x.name.startsWith("data-")) : [];
+  const sel = attrs.length ? attrs.map(x => "[" + x.name + '="' + CSS.escape(x.value) + '"]').join("") : null, y0 = b && b.getBoundingClientRect ? b.getBoundingClientRect().top : null;
+  const corps = document.body, h = corps.style.minHeight; corps.style.minHeight = document.documentElement.scrollHeight + "px";   // pas de remontée forcée pendant le redessin
+  fn();
+  const suite = () => { const nb = sel && document.querySelector("#v-moi " + sel); if (nb && y0 !== null) window.scrollBy(0, nb.getBoundingClientRect().top - y0); corps.style.minHeight = h; };
+  suite(); requestAnimationFrame(suite);
+}
 function rendre() {
   injecterStyle();
   const v = document.getElementById("v-moi"); if (!v) return;
@@ -865,10 +875,11 @@ function htmlJour() {
   const indices = (M.indices || []).filter(i => i.nom !== "1 USD en EUR");
   const nomIdx = n => n.replace(/\s*\((ETF\s)?([^)]*)\)/, "");
   return '<div class="m-hero">' +
-      '<span class="eyebrow">' + embHero() + 'Bourse aujourd\'hui' + (heureCours() ? " · " + esc(heureCours()) : "") + "</span>" +
+      '<span class="eyebrow">' + embHero() + 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "") + "</span>" +
       '<div class="m-flaps" role="img" aria-label="' + esc(texteFlap) + '">' + flaps(texteFlap, animer) + "</div>" +
       '<div class="m-jour"><span class="badge big-b ' + sens(s.jour) + '">' + fleche(s.jour) + " " + eur(s.jour, 0, true) + " · " + pct(s.jourPct, 2) + "</span>" +
         "<span>" + (suffixe ? esc(suffixe) : hausse + " en hausse · " + baisse + " en baisse") + "</span></div>" +
+      (majCourte() ? '<small class="m-maj">' + esc(majCourte()) + "</small>" : "") +
     "</div>" +
     bandeDebut(s) +
     '<div class="m-carte" role="group" aria-label="Carte du jour : une tuile par ligne">' + carte + "</div>" +
@@ -886,6 +897,12 @@ function htmlJour() {
 function enteteEnv(nom, valeur, jour, jourPct, pv, pvPct) {
   return '<div class="m-env-h"><b>' + esc(nom) + '</b><span class="v">' + eur(valeur) + "</span>" +
     '<span class="pv ' + sens(pv) + '">PV ' + eur(pv, 0, true) + " · " + pct(pvPct) + '</span><span class="j ' + sens(jour) + '">' + eur(jour, 0, true) + " · " + pct(jourPct, 2) + "</span></div>";
+}
+/* « cours du 16/11 à 17 h 35 » (point 10 : heure de mise à jour en petit) */
+function majCourte() {
+  const t = String(M.majTexte || ""), d = t.match(/(\d{1,2})\/(\d{1,2})/), h = t.match(/(\d{1,2})[:h]\s?(\d{2})/);
+  if (!h) return "";
+  return "cours " + (d ? "du " + d[1].padStart(2, "0") + "/" + d[2].padStart(2, "0") + " " : "") + "à " + h[1] + " h " + h[2];
 }
 function heureCours() { return String(M.majTexte || "").replace(/^Cours du /, "").replace(/\s*\(.*\)$/, "").replace(/^.* à /, ""); }
 /* « Depuis le début » : bande compacte sous le chiffre du jour, définition au toucher */
@@ -1252,20 +1269,20 @@ function blocFrais() {
 function brancherStats(v) {
   brancherDefs(v);
   v.querySelectorAll("[data-m-aller]").forEach(b => b.addEventListener("click", () => { PREF.onglet = b.dataset.mAller; garderPref(); rendre(); window.scrollTo(0, 0); }));
-  const re = () => { rendre(); };
-  v.querySelectorAll("[data-m-mode]").forEach(b => b.addEventListener("click", () => { PREF.mode = b.dataset.mMode; garderPref(); re(); }));
-  v.querySelectorAll("[data-m-per]").forEach(b => b.addEventListener("click", () => { PREF.per = b.dataset.mPer; garderPref(); re(); }));
-  v.querySelectorAll("[data-m-serie]").forEach(b => b.addEventListener("click", () => { PREF.serie = b.dataset.mSerie; garderPref(); re(); }));
-  v.querySelectorAll("[data-m-envv]").forEach(b => b.addEventListener("click", () => { PREF.envV = b.dataset.mEnvv; garderPref(); re(); }));
-  v.querySelectorAll("[data-m-mois]").forEach(b => b.addEventListener("click", () => { PREF.moisMode = b.dataset.mMois; garderPref(); re(); }));
-  v.querySelectorAll("[data-m-rep]").forEach(b => b.addEventListener("click", () => { PREF.rep = b.dataset.mRep; garderPref(); re(); }));
+  const re = b => garderPlace(b, rendre);
+  v.querySelectorAll("[data-m-mode]").forEach(b => b.addEventListener("click", () => { PREF.mode = b.dataset.mMode; garderPref(); re(b); }));
+  v.querySelectorAll("[data-m-per]").forEach(b => b.addEventListener("click", () => { PREF.per = b.dataset.mPer; garderPref(); re(b); }));
+  v.querySelectorAll("[data-m-serie]").forEach(b => b.addEventListener("click", () => { PREF.serie = b.dataset.mSerie; garderPref(); re(b); }));
+  v.querySelectorAll("[data-m-envv]").forEach(b => b.addEventListener("click", () => { PREF.envV = b.dataset.mEnvv; garderPref(); re(b); }));
+  v.querySelectorAll("[data-m-mois]").forEach(b => b.addEventListener("click", () => { PREF.moisMode = b.dataset.mMois; garderPref(); re(b); }));
+  v.querySelectorAll("[data-m-rep]").forEach(b => b.addEventListener("click", () => { PREF.rep = b.dataset.mRep; garderPref(); re(b); }));
   v.querySelectorAll("td[data-cel]").forEach(td => {
     const f = () => { v.querySelectorAll("td.m-c.sel").forEach(x => x.classList.remove("sel")); td.classList.add("sel"); v.querySelector("#m-mois-sel").innerHTML = td.dataset.cel; };
     td.addEventListener("click", f); td.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); f(); } });
   });
   const g = v.querySelector(".grille"); if (g) { const sx = g.closest(".scroll-x"); if (sx) sx.scrollLeft = sx.scrollWidth; }
-  v.querySelectorAll("[data-m-patri]").forEach(b => b.addEventListener("click", () => { PREF.patri = b.dataset.mPatri; garderPref(); re(); }));
-  v.querySelectorAll("[data-m-patridet]").forEach(b => b.addEventListener("click", () => { PREF.patriDet = b.dataset.mPatridet; garderPref(); re(); }));
+  v.querySelectorAll("[data-m-patri]").forEach(b => b.addEventListener("click", () => { PREF.patri = b.dataset.mPatri; garderPref(); re(b); }));
+  v.querySelectorAll("[data-m-patridet]").forEach(b => b.addEventListener("click", () => { PREF.patriDet = b.dataset.mPatridet; garderPref(); re(b); }));
   dessinerCourbe(); dessinerPatrimoine(); dessinerEpargne(); dessinerPret();
 }
 

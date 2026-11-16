@@ -225,7 +225,10 @@ function afficherTout() {
   b.textContent = SOURCE === "demo" ? "Aperçu · chiffres du fichier au 29/10/2026. Ajoute l'adresse de l'API dans Réglages pour passer en direct."
     : ERREUR_SERVEUR ? "⚠️ Le fichier a répondu par une erreur : « " + ERREUR_SERVEUR + " ». Chiffres affichés : " + (D.majTexte || "dernière copie") + "."
     : "📴 Hors connexion · " + (D.majTexte || "dernières données reçues") + ". Tout se consulte ; les saisies se font quand le réseau revient.";
-  $("#sous-titre").textContent = D.majTexte || "";
+  // V15.2 : pastille courte « Relevé oct. 26 » (le long texte était coupé) ; le détail reste dans l'info-bulle
+  { const st = $("#sous-titre"), k = typeof finGlobale === "function" ? finGlobale(D, 0) : null;
+    const court = k ? ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."][k % 100 - 1] + " " + String(Math.floor(k / 100)).slice(2) : "";
+    st.textContent = court ? "Relevé " + court : "Pas encore de relevé"; st.title = D.majTexte || ""; st.classList.add("pastille-releve"); }
   rendreTicker();
   rendreVue(vueActive());
   majRappels();
