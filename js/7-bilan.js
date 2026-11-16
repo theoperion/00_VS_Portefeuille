@@ -610,6 +610,13 @@ function majCloche(niveau) {
 }
 $("#btn-notif").addEventListener("click", () => { $("#corps-notifs").innerHTML = window.Moi ? window.Moi.notifications() : ""; $("#notifs").hidden = false; });
 $("#fermer-notifs").addEventListener("click", () => { $("#notifs").hidden = true; });
+/* V15.7 : actions directement depuis la cloche */
+$("#corps-notifs").addEventListener("click", e => {
+  const b = e.target.closest("[data-notif-faire],[data-notif-tard],[data-notif-maj]"); if (!b || !window.Moi) return;
+  if (b.dataset.notifTard !== undefined) { window.Moi.reporterRappel(b.dataset.notifTard); $("#corps-notifs").innerHTML = window.Moi.notifications(); toast("C'est noté : je te le rappelle dans 2 jours."); return; }
+  $("#notifs").hidden = true;
+  if (b.dataset.notifFaire !== undefined) window.Moi.faireRappel(b.dataset.notifFaire); else window.Moi.ouvrirMaj();
+});
 $("#notifs").addEventListener("click", e => { if (e.target.id === "notifs") $("#notifs").hidden = true; });
 /* au démarrage, si un fichier perso est connecté : on prépare Moi en arrière-plan pour la cloche */
 function moiConnecte() { return !!(stock.get("versus.moi.api") && stock.get("versus.moi.cle")); }

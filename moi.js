@@ -283,7 +283,22 @@ function injecterStyle() {
 .moi .pl-r .pl-rec { font-style: normal; font-size: 11.5px; font-weight: 600; color: var(--gold); }
 .moi .m-rappel { display: flex; align-items: center; gap: 10px; margin: 10px 0 4px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--gold) 14%, var(--card, transparent)); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); }
 .moi.sans-aide .aide, .moi.sans-aide .guide-l { display: none !important; }
+.nt-l { display: grid; gap: 8px; }
+.nt-l .m-h4 { margin: 6px 0 0; }
+.nt { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 14px; border: 1px solid var(--rule); background: var(--panel); }
+.nt .nt-ic { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 14px; }
+.nt.orange .nt-ic { background: color-mix(in srgb, var(--gold) 20%, transparent); color: var(--gold); } .nt.orange { border-color: color-mix(in srgb, var(--gold) 45%, var(--rule)); }
+.nt.rouge .nt-ic { background: color-mix(in srgb, var(--down) 18%, transparent); color: var(--down); } .nt.rouge { border-color: color-mix(in srgb, var(--down) 45%, var(--rule)); }
+.nt.vert .nt-ic { background: var(--up-bg, color-mix(in srgb, var(--up) 18%, transparent)); color: var(--up); }
+.nt .nt-t { flex: 1; min-width: 0; display: grid; gap: 2px; } .nt .nt-t b { font-size: 14.5px; } .nt .nt-t small { font-size: 12.5px; color: var(--ink-2); }
+.nt .nt-a { display: grid; gap: 4px; justify-items: end; flex: none; }
+.nt-rep { margin: 0; font-size: 12px; color: var(--ink-3); }
+.nt-tous { all: unset; box-sizing: border-box; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 12px; margin-top: 4px; border-radius: 12px; border: 1px dashed var(--rule); font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.nt-tous span { font-size: 18px; }
 .moi .rac-g { display: inline-flex; gap: 2px; } .moi .rac-g .chip.suppr { padding-inline: 10px; }
+.moi .maj-pli { margin-top: 10px; border: 1px solid var(--rule); border-radius: 12px; padding: 0 12px; }
+.moi .maj-pli > summary { cursor: pointer; padding: 12px 0; font-weight: 700; font-size: 14px; } .moi .maj-pli > summary small { font-weight: 400; color: var(--ink-3); margin-left: 6px; font-size: 12px; }
+.moi .maj-pli[open] { padding-bottom: 12px; }
 .moi .rap-autres { margin-top: 6px; } .moi .rap-autres > summary { cursor: pointer; font-size: 13px; color: var(--ink-2); padding: 6px 2px; }
 .moi .m-rappel .ic { color: var(--gold); font-weight: 700; }
 .moi .m-rappel .t { flex: 1; display: grid; font-size: 14px; line-height: 1.25; }
@@ -2327,13 +2342,13 @@ function rendreMaj() {
     const quand = x.prochaine && /^\d{4}-/.test(x.prochaine) ? "prochaine le " + frDate(x.prochaine) : (x.derniere && !/^\d{4}-/.test(String(x.derniere)) ? String(x.derniere) : (x.derniere ? "dernière le " + frDate(x.derniere) : ""));
     const ouvert = reglageOuvert === k;
     return '<div class="rap' + (ouvert ? " ouvert" : "") + '" data-reg="' + k + '">' +
-      (k ? '<button type="button" class="rap-h" data-rap="' + k + '" aria-expanded="' + ouvert + '">' : '<div class="rap-h fixe">') + '<span class="pt ' + etat + '"></span><span class="rap-n">' + esc(nomRappel(x.nom)) + "<small>" + esc(quand) + "</small></span>" +
+      (k ? '<button type="button" class="rap-h" data-rap="' + k + '" aria-expanded="' + ouvert + '">' : '<div class="rap-h fixe">') + '<span class="pt ' + etat + '"></span><span class="rap-n">' + esc(nomCourtRappel(x)) + "<small>" + esc(etat === "faire" ? "à faire " + quandRappel(x) : quandRappel(x) ? "prochaine " + quandRappel(x) : quand) + "</small></span>" +
       '<span class="st ' + etat + '">' + (etat === "faire" ? "À faire" : etat === "ok" ? "À jour" : "—") + "</span>" + (k ? "</button>" : "</div>") +
       (ouvert ? '<div class="rap-c">' + formReglage(k) + "</div>" : "") + "</div>";
   };
   const tous = rappelsFichier(), autres = tous.filter(x => !utile(x));
   const rappels = tous.filter(utile).sort((x, y) => (/À faire/i.test(y.statut || "") ? 1 : 0) - (/À faire/i.test(x.statut || "") ? 1 : 0) || String(x.prochaine).localeCompare(String(y.prochaine))).map(htmlRap).join("") +
-    (autres.length ? '<details class="rap-autres"><summary>Autres réglages du fichier (' + autres.length + ")</summary>" + autres.map(htmlRap).join("") + "</details>" : "");
+    (autres.length ? '<details class="rap-autres"><summary>Valeurs fixes du fichier (' + autres.length + ") · rarement à changer</summary>" + autres.map(htmlRap).join("") + "</details>" : "");
   const alertes = M.alertes || [];
   const codesAlerte = Array.from(new Set((r.detenu || []).map(d => d.code).concat(r.actifs.filter(a => r.cours[a.code]).map(a => a.code))));
   const classes = Array.from(new Set((p.classes || []).concat(["Actions", "Obligations", "Or", "Crypto", "Monétaire", "Immobilier"])));
@@ -2343,8 +2358,8 @@ function rendreMaj() {
   const mAl = reglageMsg.alertes ? '<div class="alerte ' + reglageMsg.alertes[0] + '">' + esc(reglageMsg.alertes[1]) + "</div>" : "";
   const pre = alertePre || {};
   z.innerHTML =
-    '<h4 class="m-h4">Rappels <small>le plus urgent en haut · touche pour mettre à jour</small></h4><div class="raps">' + rappels + "</div>" +
-    '<h4 class="m-h4" data-reg="actif">Nouvel actif <small>avant un premier achat</small></h4>' +
+    '<h4 class="m-h4">Rappels <small>touche une ligne pour la mettre à jour</small></h4><div class="raps">' + rappels + "</div>" +
+    '<details class="maj-pli" data-reg="actif"' + (reglageMsg.actif ? " open" : "") + '><summary>➕ Ajouter un actif <small>aussi possible pendant la saisie d\'un ordre</small></summary>' +
       '<form class="form reg-form" data-form="actif">' +
         '<div class="rang">' + champ("a-code", "Code (court, unique)", "", { ph: "ex. CW8", texte: "maj" }) + champ("a-nom", "Nom", "", { ph: "ex. Amundi MSCI World", texte: true }) + "</div>" +
         '<div class="champ"><label for="a-ticker">Ticker Google Finance</label><div class="ligne-champ"><input id="a-ticker" type="text" autocomplete="off" autocapitalize="characters" placeholder="ex. EPA:CW8"><button class="mini-btn" type="button" id="a-verif">Vérifier</button></div><span class="aide" id="a-verif-res">EPA: pour Paris, ETR: pour Xetra, CURRENCY:ETHEUR pour une crypto. Sans ticker, saisis un cours manuel.</span></div>' +
@@ -2357,8 +2372,8 @@ function rendreMaj() {
           champ("a-manuel", "Cours manuel (€)", "", { ph: "si pas de ticker" }) +
         "</div>" + mA +
         '<button class="btn" type="submit">Ajouter l\'actif</button>' +
-      "</form>" +
-    '<h4 class="m-h4" data-reg="alertes">Alertes de cours <small>la cloche passe au rouge si l\'une se déclenche</small></h4>' +
+      "</form></details>" +
+    '<details class="maj-pli" data-reg="alertes"' + (reglageMsg.alertes || alertePre || alertes.length ? " open" : "") + '><summary>🔔 Alertes de cours <small>' + (alertes.length ? alertes.length + " en veille" : "aucune") + "</small></summary>" +
       (alertes.length ? '<div class="m-liste">' + alertes.map((a, i) => {
         const c = coursConnu(a.code), declenchee = c && (a.sens === "sous" ? c < a.seuil : c > a.seuil);
         return '<div class="r"><span class="a">' + esc(a.code) + " " + (a.sens === "sous" ? "sous" : "au-dessus de") + " " + cours(a.seuil) + '</span><span class="b"><button class="lien danger" type="button" data-suppr-alerte="' + i + '">Retirer</button></span>' +
@@ -2371,7 +2386,7 @@ function rendreMaj() {
           champ("al-seuil", "Seuil (€)", pre.seuil || "") +
         "</div>" + mAl +
         '<button class="btn ghost" type="submit">Ajouter l\'alerte</button>' +
-      "</form>";
+      "</form></details>";
   alertePre = null;
   z.querySelectorAll("[data-rap]").forEach(b => b.addEventListener("click", () => {
     const k = b.dataset.rap;
@@ -3119,7 +3134,7 @@ function htmlBandeauRappel() {
   if (!M || M.simple) return "";
   const d = rappelsFichier().filter(rappelDu); if (!d.length) return "";
   const x = d[0], k = cleRappel(x.nom) || x.nom;
-  return '<div class="m-rappel" role="status"><span class="ic">◷</span><span class="t"><b>' + esc(nomRappel(x.nom)) + "</b><small>à faire" +
+  return '<div class="m-rappel" role="status"><span class="ic">◷</span><span class="t"><b>' + esc(nomCourtRappel(x)) + "</b><small>à faire" +
     (x.prochaine && /^\d{4}-/.test(x.prochaine) ? " depuis le " + frDate(x.prochaine) : "") + (d.length > 1 ? " · + " + (d.length - 1) + " autre" + (d.length > 2 ? "s" : "") : "") + "</small></span>" +
     '<button class="mini-btn" type="button" data-rap-faire="' + esc(k) + '">Faire</button><button class="lien" type="button" data-rap-tard="' + esc(k) + '">Plus tard</button></div>';
 }
@@ -3144,18 +3159,38 @@ function notifications() {
   return { niveau, items };
 }
 function signalerCloche() { if (typeof majCloche === "function") majCloche(configure() ? notifications().niveau : null); }
+/* V15.7 · noms courts et clairs des rappels (le Sheet garde ses intitulés longs) */
+const NOMS_RAPPEL = { releve: "Relevé du mois", taux: "Taux des livrets", fondsEuros: "Rendement du fonds euros", artemaInitial: "Artema : niveau de départ", artemaActuel: "Artema : niveau actuel",
+  interets: "Intérêts des livrets", appart: "Valeur de l'appartement", calendrier: "Jours fériés des bourses", versement: "Versement Quintessa" };
+function nomCourtRappel(x) { const k = cleRappel(x.nom); if (k === "releve" && /Linxea/i.test(x.nom)) return "Relevé du mois (Artema + Linxea)"; if (k === "releve") return "Relevé du mois (Artema)"; return NOMS_RAPPEL[k] || nomRappel(x.nom); }
+function quandRappel(x) {
+  if (!x.prochaine || !/^\d{4}-/.test(x.prochaine)) return "";
+  const j = Math.round((new Date(x.prochaine.slice(0, 10) + "T12:00:00") - new Date(isoJour(new Date()) + "T12:00:00")) / 864e5);
+  return j < 0 ? "depuis le " + frDate(x.prochaine) : j === 0 ? "aujourd'hui" : j === 1 ? "demain" : j <= 45 ? "dans " + j + " jours" : "le " + frDate(x.prochaine);
+}
+/* La cloche : seulement ce qui demande une action (sans doublon), avec « Faire » et « Plus tard » ; la liste complète vit dans Saisir › Mises à jour */
 function htmlNotifications() {
   if (!configure()) return '<p class="info">Connecte ton fichier dans Réglages › Mon fichier pour recevoir tes rappels et alertes ici.</p>';
   if (!M) return '<p class="info">Lecture de ton fichier en cours…</p>';
-  const n = notifications(), propre = t => esc(String(t || "").replace(/^[✓⚠🔔✏️\s]+/u, "").trim()).replace(/ +▸ /g, "<br>▸ ");
-  const ligne = (cls, ic, txt) => '<div class="m-note ' + cls + '"><span class="ic">' + ic + "</span><span>" + txt + "</span></div>";
-  const rap = rappelsFichier();
-  return '<div class="moi" style="display:grid;gap:10px"><div class="m-notes">' +
-    (n.items.length ? n.items.map(x => ligne(x.t === "rouge" ? "warn" : "rappel", x.t === "rouge" ? "!" : "◷", propre(x.txt))).join("") : ligne("ok", "✓", "Rien à signaler : aucune anomalie, aucun rappel à faire.")) +
-    (!n.items.some(x => x.txt === M.anomalies) && M.anomalies ? ligne("ok", "✓", propre(M.anomalies)) : "") +
-    (M.rappel && !n.items.some(x => x.txt === M.rappel) ? ligne("rappel", "◷", propre(M.rappel)) : "") + "</div>" +
+  injecterStyle();
+  const propre = t => esc(String(t || "").replace(/^[✓⚠🔔✏️\s]+/u, "").trim()).replace(/ +▸ /g, "<br>▸ ");
+  const anomalie = M.anomalies && !/^\s*✓/.test(M.anomalies), alertes = alertesDeclenchees(), dus = rappelsFichier().filter(rappelDu);
+  const reportes = rappelsFichier().filter(x => /À faire|mettre à jour|retard|⚠|✏/i.test(x.statut || "") && rappelReporte(x));
+  const sansListe = !rappelsFichier().length && /À mettre à jour/.test(M.rappel || "");   // profil simple : un seul texte de rappel
+  const carte = (cls, ic, titre, sous, actions) => '<div class="nt ' + cls + '"><span class="nt-ic">' + ic + '</span><div class="nt-t"><b>' + titre + "</b>" + (sous ? "<small>" + sous + "</small>" : "") + "</div>" + (actions || "") + "</div>";
+  const items = [];
+  if (anomalie) items.push(carte("rouge", "!", "Anomalie dans tes saisies", propre(M.anomalies)));
+  alertes.forEach(a => items.push(carte("rouge", "🔔", "Alerte de cours", esc(a))));
+  dus.forEach(x => { const k = cleRappel(x.nom) || x.nom;
+    items.push(carte("orange", "◷", esc(nomCourtRappel(x)), "à faire " + esc(quandRappel(x)), '<div class="nt-a"><button class="mini-btn" type="button" data-notif-faire="' + esc(k) + '">Faire</button><button class="lien" type="button" data-notif-tard="' + esc(k) + '">Plus tard</button></div>')); });
+  if (sansListe) items.push(carte("orange", "◷", "À mettre à jour", propre(M.rappel)));
+  const prochain = rappelsFichier().filter(x => !rappelDu(x) && x.prochaine && /^\d{4}-/.test(x.prochaine) && !/À faire/i.test(x.statut || "")).sort((a, b) => a.prochaine.localeCompare(b.prochaine))[0];
+  return '<div class="moi nt-l">' +
+    (items.length ? '<h4 class="m-h4">À faire</h4>' + items.join("") + (reportes.length ? '<p class="nt-rep">Reporté de 2 jours : ' + reportes.map(x => esc(nomCourtRappel(x))).join(", ") + ".</p>" : "")
+      : reportes.length ? carte("orange", "◷", "Rien d'urgent", "Reporté de 2 jours : " + reportes.map(x => esc(nomCourtRappel(x))).join(", ") + ".", '<div class="nt-a"><button class="mini-btn" type="button" data-notif-faire="' + esc(cleRappel(reportes[0].nom) || reportes[0].nom) + '">Faire</button></div>')
+      : carte("vert", "✓", "Tout est à jour", "Aucun rappel ni anomalie." + (prochain ? " Prochain : " + esc(nomCourtRappel(prochain)) + " " + esc(quandRappel(prochain)) + "." : ""))) +
     (M.marches ? '<h4 class="m-h4">Marchés</h4><div class="m-status">' + marches(M.marches) + "</div>" : "") +
-    (rap.length ? '<h4 class="m-h4">Rappels de ton fichier</h4><div class="m-liste">' + rap.map(r => '<div class="r"><span class="a">' + esc(r.nom) + '</span><span class="b">' + esc(String(r.statut || "").replace(/^[^\wÀ-ÿ]+/u, "")) + '</span><span class="c">dernière : ' + esc(/^\d{4}-/.test(r.derniere || "") ? frDate(r.derniere.slice(0, 10)) : r.derniere || "—") + '</span><span class="d">prochaine : ' + esc(/^\d{4}-/.test(r.prochaine || "") ? frDate(r.prochaine.slice(0, 10)) : r.prochaine || "—") + "</span></div>").join("") + "</div>" : "") + "</div>";
+    (rappelsFichier().length ? '<button class="nt-tous" type="button" data-notif-maj>Tous les rappels et réglages du fichier <span>›</span></button>' : "") + "</div>";
 }
 
 /* ================= Profil simple (Kévin) : épargne saisie à la main, bourse lue dans le Versus =================
@@ -3513,6 +3548,9 @@ window.Moi = {
   rendre,
   prechauffer() { injecterStyle(); if (!configure()) { signalerCloche(); return; } lireCache(); signalerCloche(); if (Date.now() - dernierAppel > 5 * 60e3) charger(false); },
   notifications: htmlNotifications,
+  faireRappel(k) { lireCache(); if (M) faireRappel(k); },
+  reporterRappel(k) { const pt = plusTard(); pt[k] = Date.now() + 2 * 864e5; stock.set(cleStock("plusTard"), JSON.stringify(pt)); signalerCloche(); if (vueMoi()) rendre(); },
+  ouvrirMaj() { lireCache(); if (M) { reglageOuvert = null; ouvrirSaisieM(null, "maj"); } },
   saisir(partiel, onglet) { lireCache(); if (M && M.simple) ouvrirSoldes(); else ouvrirSaisieM(partiel, onglet); },
   rafraichir(frais) { if (configure()) { rendre(); charger(!!frais); } },
   testerVersus() { return configure() ? posterFichier({ action: "testerVersus" }) : Promise.resolve({ ok: false, message: "Aucun fichier relié à cet appareil." }); },
