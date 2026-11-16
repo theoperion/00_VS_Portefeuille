@@ -1,79 +1,72 @@
-# Podium · Les règles
+# Podium · Les règles (V15)
 
-> Validées par Théo le 05/11/2026. Ce texte est le même que dans l'appli (📖 Règles).
-> ✅ en ligne · ⏳ validé, en cours de codage.
+> Validées par Théo le 16/11/2026. Même contenu que dans l'appli (📖 Règles), qui ajoute des schémas.
+> Décembre 2026 = **tour de chauffe** : tout marche, rien ne compte. Tout est en jeu à partir de janvier 2027.
 
 ## ⚡ L'essentiel
 
-- **Chaque mois**, la meilleure performance du portefeuille prend **6 · 4 · 2 · 1** points. **+1 🎯** si tu bats le S&P 500.
-- **Une carte par mois**, posée face cachée du 20 au 1er dans le Stand, révélée le 2 : jusqu'à **+4**.
-- **Bonus** : 🔮 pronostic (jusqu'à +2), 🤝 tout le monde bat l'indice (+1 chacun), 🔥 3 mois d'affilée devant l'indice (+1), 😈 devant ton rival secret en fin de saison (+5).
-- **Circuits** : chaque ville préfère une carte, **+1** si tu la joues et qu'elle marque.
-- **Dernier du mois ?** Tu pioches une carte bonus.
-- **Temps forts** : 🎰 Monaco (le dernier ×2) · 🇬🇧 Silverstone (vainqueur +2) · 🇮🇹 Monza (🎯 +2) · 🏆 Finale en décembre (×2).
-- **Saison** : janvier → décembre, tout repart de zéro. Décembre 2026 = tour de chauffe (rien ne compte). Tout est en jeu dès janvier 2027.
+Chaque mois, les pilotes sont classés sur la **performance de leur portefeuille** (versements neutralisés : seul le % compte). Saison : janvier → décembre ; le plus de points gagne.
+
+```
+ du 20 au 1er                 le 2                  fin du mois
+ 🃏 je pose ma carte    →     👀 tout est révélé  →  📊 relevé → points
+    + mon pronostic
+```
 
 ## 🏁 Les points du mois
 
-- Place : 1er **6** · 2e **4** · 3e **2** · 4e **1** (portefeuille total, versements neutralisés). Ex æquo : mêmes points.
-- **+1 🎯** si ton mois bat le S&P 500.
-- Puis ta carte, les bonus et les mois spéciaux. Un mois ne descend jamais sous 0.
-- Un mois compte quand tout le monde a saisi son relevé. Égalité au classement : le plus de victoires, puis la meilleure performance cumulée.
+| Place | 1er | 2e | 3e | 4e | 🎯 tu bats le S&P 500 |
+|---|---|---|---|---|---|
+| Points | **6** | **4** | **2** | **0** | **+1** |
 
-## 🃏 Les cartes
+**Points du mois = place + 🎯 + carte (≤ +4) + bonus.** Ex æquo : mêmes points. Un mois ne descend jamais sous 0. Égalité au championnat : le plus de victoires, puis la meilleure performance cumulée.
+
+## 🃏 Les cartes (une par mois, au plus +4)
 
 | Carte | Effet |
 |---|---|
-| 🌀 Aspiration | +2 si tu bats le pilote juste devant toi au championnat. *Inactive en janvier* |
-| 🚀 Turbo | +2 de plus si tu as le 🎯 |
-| 🌧️ Pneus pluie | +2 si le S&P 500 du mois baisse |
-| 🎲 Pari | Choisis un rival : +2 si tu finis devant lui, −1 derrière, 0 à égalité |
+| 🚀 Turbo | si tu bats le S&P 500, ton 🎯 vaut +3 |
+| 🌀 Aspiration | +2 si tu bats le pilote juste devant toi au championnat (pas en janvier) |
+| 🌧️ Pneus pluie | un mois où le S&P 500 baisse : +2 si tu fais mieux que lui |
+| 🎲 Pari | désigne un rival : +2 devant lui, −1 derrière, 0 à égalité |
 
-Une par mois (du 20 au 1er, modifiable jusque-là), révélée le 2. Rejouable, mais **pas deux mois de suite**. Au plus **+4**.
-
-## 🗺️ L'atout des circuits
-
-Chaque ville préfère une carte : si tu la joues **et qu'elle marque**, **+1**. Secret jusqu'au 2 (un indice avant). **Bouchon** : si deux pilotes ou plus marquent avec l'atout, personne n'a le +1.
-
-| Atout | Villes |
-|---|---|
-| 🚀 Turbo | Bahreïn, Miami, Las Vegas |
-| 🌀 Aspiration | Djeddah, Silverstone, Monza |
-| 🌧️ Pneus pluie | Melbourne, Spa, Interlagos |
-| 🎲 Pari | Suzuka, Montréal, Singapour |
+Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Rejouable, mais **pas deux mois de suite**.
+🗺️ **Atout du circuit** : chaque ville préfère une carte ; jouée **et** gagnante → **+1** (si 2 pilotes ou plus marquent avec : personne). Turbo : Bahreïn, Miami, Las Vegas · Aspiration : Djeddah, Silverstone, Monza · Pneus pluie : Melbourne, Spa, Interlagos · Pari : Suzuka, Montréal, Singapour.
 
 ## ✨ Les bonus
 
-- **🔮 Pronostic** (Stand, même fenêtre que la carte) : qui gagne le mois ? **+1**. Le S&P 500 en hausse ou en baisse ? **+1**.
-- **🤝 Équipe** : si tout le monde bat le S&P 500 le même mois, **+1** chacun.
-- **🔥 Série** : **+1** à chaque 3e mois d'affilée devant le S&P 500.
-- **😈 Rival de la saison** : choisi en secret du 20 décembre au 1er janvier. Fin décembre, devant lui au championnat : **+5**. Révélé à la Finale.
+| Bonus | Quand | Points |
+|---|---|---|
+| 🏁 Défi du mois | objectif du mois réussi (annoncé le 20, voir ci-dessous) | +1 |
+| 🔮 Pronostic | qui gagne le mois ? · le S&P 500 fera-t-il plus de +1 % ? | +1 / +1 |
+| 🅿️ Pole position | ton chiffre pour le S&P 500 du mois : le plus proche (partagé si égalité) | +1 |
+| 🤝 Équipe | tout le monde bat le S&P 500 le même mois | +1 chacun |
+| 🔥 Série | chaque 3e mois d'affilée sans finir dernier | +1 |
+| 😈 Rival | choisi en secret (20 déc. → 1er janv.) ; devant lui en fin de saison | +3 |
+| 🛡️ Régularité | fin de saison : le moins souvent dernier (puis le plus de mois positifs) | +3 |
 
-## 🎴 Le rattrapage
-
-Dernier du mois → **1 carte bonus**, jouable dès le mois suivant, **une fois par saison** :
-✂️ Undercut (+1 si ton mois monte, +2 au-delà de +2 %) · 🟨 Drapeau jaune (+2 si tu finis dernier) · 🚨 Safety car (+2 si 6 pts ou plus de retard sur le leader, *inactive en janvier*) · ⏱️ Arrêt éclair (+2 si tu fais mieux que ta place du mois d'avant, *inactive en janvier*).
+**Défis du mois** : janv. bats le Nasdaq-100 · févr. finis positif · mars fais mieux que l'or · avr. bats le MSCI Monde · mai bats le S&P 500 d'au moins 1 point · juin fais mieux que l'Euro Stoxx 50 · juil. fais mieux que ton mois de juin · août fais mieux que les marchés émergents · sept. ne perds pas plus de 1 % · oct. fais mieux que la moyenne des pilotes · nov. fais mieux que les semi-conducteurs · déc. monte sur le podium du mois.
 
 ## 📅 Les mois spéciaux
 
-- **🎰 Monaco** (un mois tiré entre avril et octobre ; juin en 2027) : le dernier du championnat marque ses points de place ×2.
-- **🇬🇧 Silverstone** (juillet) : vainqueur du mois **+2**.
-- **🇮🇹 Monza** (septembre) : le 🎯 vaut **+2**.
-- **🏆 Finale** (décembre) : points de place ×2 pour tout le monde.
+| Mois | Règle |
+|---|---|
+| 🎰 Monaco (juin 2027) | le dernier du championnat : points de place ×2 |
+| 🇬🇧 Silverstone (juillet) | le vainqueur du mois : +2 |
+| 🇮🇹 Monza (septembre) | le 🎯 vaut +2 |
+| 🏆 Finale (décembre) | points de place ×2 pour tout le monde |
+| 🗳️ Vote (2 → 31 déc.) | « le coup de la saison » (pas pour soi) : plaque pour le gagnant |
 
-## 🏆 Écurie et trophées
+## 🎴 Le rattrapage
 
+Dernier d'un mois → **1 carte bonus**, jouable dès le mois suivant, une fois par saison : ✂️ Undercut (+1 si ton mois monte, +2 au-delà de +2 %) · 🟨 Drapeau jaune (+2 si tu finis dernier) · 🚨 Safety car (+2 si 6 pts ou plus de retard sur le leader) · ⏱️ Arrêt éclair (+2 si tu fais mieux que ta place du mois d'avant).
+
+## 🏎️ Course, écurie et trophées
+
+- **Course** : 25 points = un tour ; une ville par mois ; la météo suit le S&P 500.
 - **Écurie** : purement cosmétique, débloquée par les défis et les exclusifs.
-- **Défis** et **défis secrets** : une fois réussi, c'est acquis.
-- **Exclusifs** 💎 : pour le premier qui réussit l'exploit ; **plusieurs le même mois → chacun l'obtient** ✅.
-- **👑 Premier millionnaire** : 1 000 000 € de **patrimoine financier** (pas l'immobilier ; le montant n'est jamais montré).
-- **Anti-triche** ✅ : le serveur refait le calcul et décide lui-même (exclusifs, badge millionnaire).
-
-## 📸 Carte postale et 🗳️ vote
-
-- **Carte postale** : sous la course du Podium, une image du mois prête à partager.
-- **Vote de fin de saison** (2 au 31 décembre, dans le Stand) : chacun vote pour « le coup de la saison » (pas pour soi). Résultat le 1er janvier ; le gagnant (égalité : chacun) reçoit la plaque **« Coup de la saison »**.
+- **Trophées** : défis 🥉🥈🥇💎 acquis pour toujours ; **exclusifs** 💎 pour le premier qui réussit (même mois : chacun) ; **👑 premier millionnaire** (patrimoine financier, montant jamais montré). Le serveur refait tous les calculs (anti-triche).
 
 ---
 
-*Retirés le 05/11/2026 : duels (doublon du Pari), DRS, carte Huile, Tir groupé, pièges des circuits. En réserve : niveaux d'écurie et atelier.*
+*V15 (16/11/2026) : dernier à 0 pt, Pneus pluie « résiste à la baisse », série = régularité, rival +3, pronostic « plus de +1 % », + défi du mois, pole position, trophée de la régularité. Retirés le 05/11/2026 : duels, DRS, carte Huile, Tir groupé, pièges des circuits.*

@@ -34,9 +34,38 @@ function anneesSaison() {
 }
 function numeroSaison(y) { return Math.max(1, y - SAISON.premiere + 1); }
 
-/* ---------- Championnat : 6 / 4 / 2 / 1 point, +1 si le mois bat le S&P 500 ---------- */
-const BAREME = [6, 4, 2, 1];
-function ptsRang(r) { return BAREME[r - 1] !== undefined ? BAREME[r - 1] : 1; }
+/* ---------- Championnat : 6 / 4 / 2 / 0 point (V15 : le dernier ne marque plus, prendre trop de risque se paie), +1 si le mois bat le S&P 500 ---------- */
+const BAREME = [6, 4, 2, 0];
+function ptsRang(r) { return BAREME[r - 1] !== undefined ? BAREME[r - 1] : 0; }
+/* ---------- V15 · Défi du mois : un par mois de l'année, annoncé le 20 du mois d'avant ; +1 à chaque pilote qui le réussit ---------- */
+const DEFIS_MOIS = {
+  1: { ico: "💻", txt: "Bats le Nasdaq-100", idx: "Nasdaq-100" },
+  2: { ico: "📈", txt: "Finis le mois en positif", test: "positif" },
+  3: { ico: "🥇", txt: "Fais mieux que l'or", idx: "Or (non couvert)" },
+  4: { ico: "🌍", txt: "Bats le MSCI Monde", idx: "MSCI Monde" },
+  5: { ico: "🎯", txt: "Bats le S&P 500 d'au moins 1 point", test: "sp1" },
+  6: { ico: "🇪🇺", txt: "Fais mieux que l'Euro Stoxx 50", idx: "Euro Stoxx 50" },
+  7: { ico: "⏫", txt: "Fais mieux que ton mois de juin", test: "progres" },
+  8: { ico: "🌏", txt: "Fais mieux que les marchés émergents", idx: "Marchés émergents" },
+  9: { ico: "🛡️", txt: "Ne perds pas plus de 1 %", test: "limite" },
+  10: { ico: "⚖️", txt: "Fais mieux que la moyenne des pilotes", test: "moyenne" },
+  11: { ico: "🔌", txt: "Fais mieux que les semi-conducteurs", idx: "Semi-conducteurs" },
+  12: { ico: "🏆", txt: "Monte sur le podium du mois (top 3)", test: "podium" }
+};
+function defiDuMois(k) { return k && k !== CHAUFFE_K ? DEFIS_MOIS[k % 100] || null : null; }
+function indiceNomMois(nom, k) { const i = D.marche.indices.indexOf(nom), l = i >= 0 ? D.marche.mois.find(x => x[0] === k) : null, v = l ? l[i + 1] : null; return ok(v) ? v : null; }
+/** Le pilote x réussit-il le défi du mois k ? (l = tout le mois, prev = mois d'avant, iR = S&P 500 du mois) */
+function defiReussi(d, k, x, l, prev, iR) {
+  if (!d) return false;
+  if (d.idx) { const v = indiceNomMois(d.idx, k); return v !== null && x.r > v + 1e-12; }
+  if (d.test === "positif") return x.r > 0;
+  if (d.test === "sp1") return iR !== null && x.r > iR + 0.01;
+  if (d.test === "progres") { const p = prev && prev.find(z => z.nom === x.nom); return !!p && x.r > p.r + 1e-12; }
+  if (d.test === "limite") return x.r >= -0.01;
+  if (d.test === "moyenne") return x.r > l.reduce((s, z) => s + z.r, 0) / l.length + 1e-12;
+  if (d.test === "podium") return x.rg <= 3;
+  return false;
+}
 function indiceMois(k) { const l = D.marche.mois.find(x => x[0] === k), v = l ? l[iRef() + 1] : null; return ok(v) ? v : null; }
 let MEMO_SAISON = { d: null, m: {} };
 function championnat(y) {
@@ -80,17 +109,27 @@ function championnat(y) {
     });
     // bonus d'équipe : tous les pilotes du mois battent le S&P 500 → +1 chacun
     if (!ch && regleActive("equipe", k) && iR !== null && l.length >= 2 && l.every(x => x.r > iR)) l.forEach(x => { x.equipe = 1; x.p += 1; });
-    // série : +1 à chaque 3e mois d'affilée au-dessus du S&P 500 (remise à zéro à chaque saison)
+    // série (V15) : +1 à chaque 3e mois d'affilée SANS FINIR DERNIER (remise à zéro à chaque saison)
     l.forEach(x => {
-      const ok3 = iR !== null && x.r > iR; SERIE[x.nom] = ok3 ? (SERIE[x.nom] || 0) + 1 : 0;
+      const ok3 = !x.dernier; SERIE[x.nom] = ok3 ? (SERIE[x.nom] || 0) + 1 : 0;
       if (!ch && ok3 && regleActive("serie", k) && SERIE[x.nom] % 3 === 0) { x.serie = SERIE[x.nom]; x.p += 1; }
     });
-    // pronostic du mois : +1 vainqueur juste (victoire partagée comprise), +1 sens du S&P 500 juste
-    if (!ch && regleActive("prono", k)) l.forEach(x => {
-      const pr = pronoDe(y, x.nom, k); if (!pr || pr.cache) return;
-      const okV = pr.v && l.some(z => z.nom === pr.v && z.rg === 1) ? 1 : 0, okI = pr.i && iR !== null && iR !== 0 && (pr.i === "h") === (iR > 0) ? 1 : 0;
-      x.prono = { v: pr.v || null, i: pr.i || null, pts: okV + okI }; x.p += okV + okI;
-    });
+    // pronostic du mois : +1 vainqueur juste (victoire partagée comprise), +1 si juste sur « le S&P 500 fait-il plus de +1 % ? » (V15)
+    // ⏱️ pole position (V15) : le chiffre le plus proche du S&P 500 du mois gagne +1 (partagé en cas d'égalité)
+    if (!ch && regleActive("prono", k)) {
+      const P = {}; l.forEach(x => { const pr = pronoDe(y, x.nom, k); if (pr && !pr.cache) P[x.nom] = pr; });
+      const poles = regleActive("pole", k) && iR !== null ? Object.keys(P).filter(nm => typeof P[nm].p === "number" && isFinite(P[nm].p)) : [];
+      const dMin = poles.length ? Math.min(...poles.map(nm => Math.abs(P[nm].p / 100 - iR))) : null;
+      l.forEach(x => {
+        const pr = P[x.nom]; if (!pr) return;
+        const okV = pr.v && l.some(z => z.nom === pr.v && z.rg === 1) ? 1 : 0, okI = pr.i && iR !== null && (pr.i === "h") === (iR > 0.01) ? 1 : 0;
+        const okP = dMin !== null && poles.includes(x.nom) && Math.abs(Math.abs(pr.p / 100 - iR) - dMin) < 1e-9 ? 1 : 0;
+        x.prono = { v: pr.v || null, i: pr.i || null, p: typeof pr.p === "number" ? pr.p : null, pole: okP, pts: okV + okI + okP }; x.p += okV + okI + okP;
+      });
+    }
+    // 🏁 défi du mois (V15) : +1 à chaque pilote qui le réussit
+    const dfM = !ch && regleActive("defi", k) ? defiDuMois(k) : null;
+    if (dfM) l.forEach(x => { if (defiReussi(dfM, k, x, l, prevL, iR)) { x.defi = 1; x.p += 1; } });
     l.forEach(x => { x.p = Math.max(0, x.p); });
     // XP, niveaux et pioche (dans l'ordre de la pioche de chacun)
     l.forEach(x => {
@@ -105,11 +144,18 @@ function championnat(y) {
     presents.forEach((nm, i) => { places[nm] = i + 1; cumul[nm] = tot[nm].pts; });
     mois.push({ k, iR, l, places, cumul, spec });
   });
-  // rival de la saison : +5 en fin de saison si tu finis devant ton rival (classement avant ce bonus)
+  // rival de la saison : +3 (V15, au lieu de +5) en fin de saison si tu finis devant ton rival (classement avant ce bonus)
   if (!ch && mois.length && mois[mois.length - 1].k === f && regleActive("rival", f)) {
     const avantR = Object.keys(tot).filter(nm => tot[nm].n).sort(ordre), der = mois[mois.length - 1];
     avantR.forEach(nm => { const r = rivalDe(y, nm); if (!r || r.cache || !r.r) return; const ir = avantR.indexOf(r.r);
-      if (ir >= 0 && avantR.indexOf(nm) < ir) { tot[nm].pts += 5; const x = der.l.find(z => z.nom === nm); if (x) { x.rival = r.r; x.p += 5; } der.cumul[nm] = tot[nm].pts; } });
+      if (ir >= 0 && avantR.indexOf(nm) < ir) { tot[nm].pts += 3; const x = der.l.find(z => z.nom === nm); if (x) { x.rival = r.r; x.p += 3; } der.cumul[nm] = tot[nm].pts; } });
+  }
+  // 🛡️ trophée de la régularité (V15) : +3 en fin de saison à qui a fini le moins souvent dernier (départage : le plus de mois positifs)
+  if (!ch && mois.length && mois[mois.length - 1].k === f && regleActive("regularite", f)) {
+    const der = mois[mois.length - 1], R = {};
+    Object.keys(tot).filter(nm => tot[nm].n).forEach(nm => { R[nm] = { d: mois.filter(m => m.l.some(z => z.nom === nm && z.dernier)).length, pos: mois.filter(m => m.l.some(z => z.nom === nm && z.r > 0)).length }; });
+    const noms = Object.keys(R), dMin = Math.min(...noms.map(nm => R[nm].d)), pMax = Math.max(...noms.filter(nm => R[nm].d === dMin).map(nm => R[nm].pos));
+    if (noms.length >= 2) noms.filter(nm => R[nm].d === dMin && R[nm].pos === pMax).forEach(nm => { tot[nm].pts += 3; const x = der.l.find(z => z.nom === nm); if (x) { x.regul = R[nm].d; x.p += 3; } der.cumul[nm] = tot[nm].pts; });
   }
   const classement = Object.keys(tot).filter(nm => tot[nm].n).sort(ordre);
   const val = { y, deb, f, jeu: J, chauffe: ch, mois, attente: attente && (!mois.length || attente.k > mois[mois.length - 1].k) ? attente : null, tot, classement, complete: mois.length > 0 && mois[mois.length - 1].k === f };

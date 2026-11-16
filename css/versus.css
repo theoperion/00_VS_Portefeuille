@@ -1071,3 +1071,32 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
   .ticker { overflow-x: auto; }
   .ticker-track, .icon-btn.spin svg { animation: none; }
 }
+/* V15 · Règles : schémas */
+.rg-sch { margin: 10px 0; padding: 10px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); }
+.rg-flux { display: flex; align-items: stretch; gap: 4px; }
+.rg-et { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; }
+.rg-et i { font-style: normal; font-size: 22px; }
+.rg-et b { font: 700 12.5px/1.2 var(--f-text); }
+.rg-et small { font-size: 11.5px; color: var(--ink-2); line-height: 1.25; }
+.rg-fl { align-self: center; color: var(--ink-3); font-weight: 700; }
+.rg-bar { display: flex; align-items: flex-end; justify-content: space-around; gap: 6px; }
+.rg-b { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+.rg-b span { display: block; width: 70%; max-width: 38px; border-radius: 6px 6px 2px 2px; background: var(--accent, #5b3fe0); }
+.rg-b.plus span { background: var(--ok, #2f9e5b); }
+.rg-b b { font: 800 15px/1 var(--f-num, inherit); }
+.rg-b small { font-size: 11px; color: var(--ink-2); text-align: center; }
+.rg-calc { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; font-weight: 700; color: var(--ink-3); }
+.rg-ch { padding: 5px 9px; border-radius: 999px; border: 1px solid var(--rule); color: var(--ink); font: 600 12.5px/1.1 var(--f-text); background: var(--bg); }
+.rg-ch.tot { background: var(--accent, #5b3fe0); border-color: transparent; color: #fff; }
+.rg-cartes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.rg-ca { display: flex; flex-direction: column; gap: 2px; padding: 8px; border-radius: 10px; border: 1px solid var(--rule-2); background: var(--bg); }
+.rg-ca i { font-style: normal; font-size: 20px; }
+.rg-ca b { font: 700 13px/1.2 var(--f-text); }
+.rg-ca small { font-size: 11.5px; color: var(--ink-2); line-height: 1.25; }
+.rg-tab { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.rg-tab > div { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 10px; align-items: baseline; padding: 7px 9px; border-radius: 10px; background: var(--panel); border: 1px solid var(--rule-2); }
+.rg-tab b { white-space: nowrap; font-size: 13px; }
+.rg-tab span { font-size: 12.5px; color: var(--ink-2); line-height: 1.3; }
+.rg-tab em { font-style: normal; font: 800 13px/1 var(--f-num, inherit); color: var(--accent-ink, var(--accent, #5b3fe0)); white-space: nowrap; }
+.rg-note { font-size: 12.5px; color: var(--ink-2); }
+@media (max-width: 380px) { .rg-tab > div { grid-template-columns: 1fr auto; } .rg-tab span { grid-column: 1 / -1; grid-row: 2; } }

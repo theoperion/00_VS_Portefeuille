@@ -11,7 +11,7 @@ const TOUR_GP = 25;
 const CARTES = [
   { id: "aspiration", ico: "🌀", nom: "Aspiration", def: "Si tu bats ce mois-ci le pilote juste devant toi au championnat : +2 pts. Inactive en janvier (pas encore de classement).", court: "+2 si tu bats celui de devant" },
   { id: "turbo", ico: "🚀", nom: "Turbo", def: "Si tu bats l'indice ce mois-ci, ton bonus 🎯 vaut +3 au lieu de +1.", court: "bonus 🎯 à +3" },
-  { id: "pluie", ico: "🌧️", nom: "Pneus pluie", def: "Si l'indice finit le mois en baisse : +2 pts, quoi qu'il arrive.", court: "+2 si l'indice baisse" },
+  { id: "pluie", ico: "🌧️", nom: "Pneus pluie", def: "Un mois où l'indice baisse, si tu fais mieux que lui : +2 pts. La carte du portefeuille bien protégé.", court: "+2 si tu résistes à la baisse" },
   { id: "pari", ico: "🎲", nom: "Pari", def: "Désigne un rival : si tu finis devant lui ce mois-ci, +2 pts ; derrière lui, −1 ; égalité parfaite, 0. Il découvre ton défi à la révélation.", court: "+2 / −1 contre un rival", cible: true }
 ];
 /* Cartes : celles du Versus (révélées après la date limite), les tiennes gardées sur l'appareil, ou celles de l'aperçu admin */
@@ -41,7 +41,7 @@ function effetCarte(c, x, l, avant, iR, ctx) {
   const up = (ctx && ctx.up) || { m: 0, a: 0, p: 0 };
   if (c.c === "aspiration" && avant) { const pl = avant[x.nom], dev = pl > 1 ? Object.keys(avant).find(n => avant[n] === pl - 1) : null, xd = dev && l.find(z => z.nom === dev); return xd && x.r > xd.r + 1e-12 ? 2 + up.a : 0; }
   if (c.c === "turbo") return x.bonus ? 2 + up.m : 0;
-  if (c.c === "pluie") return iR !== null && iR < 0 ? 2 + up.p : 0;
+  if (c.c === "pluie") return iR !== null && iR < 0 && x.r > iR + 1e-12 ? 2 + up.p : 0;   // V15 : il faut aussi faire mieux que l'indice
   if (c.c === "pari" && c.cible) { const xc = l.find(z => z.nom === c.cible); return xc ? (x.r > xc.r + 1e-12 ? 2 : xc.r > x.r + 1e-12 ? -1 : 0) : 0; }   // égalité parfaite : 0, comme un duel
   if (c.c === "undercut") return x.r > 0.02 ? 2 : x.r > 0 ? 1 : 0;
   if (c.c === "jaune") return x.dernier ? 2 : 0;
@@ -98,7 +98,7 @@ function meteoMois(k) {
   const idx = D.marche.indices[iRef()], t = idx + " " + pct(r);
   if (r >= 0.03) return { id: "soleil", ico: "☀️", nom: "Grand soleil", txt: t + " : piste sèche, ça roule fort." };
   if (r >= 0) return { id: "nuages", ico: "⛅", nom: "Nuageux", txt: t + " : temps couvert, course tactique." };
-  if (r > -0.03) return { id: "pluie", ico: "🌧️", nom: "Pluie", txt: t + " : piste glissante, les pneus pluie paient." };
+  if (r > -0.03) return { id: "pluie", ico: "🌧️", nom: "Pluie", txt: t + " : piste glissante, les pneus pluie paient pour qui résiste." };
   return { id: "orage", ico: "⛈️", nom: "Orage", txt: t + " : déluge sur le circuit, accrochez-vous." };
 }
 
@@ -211,11 +211,13 @@ function htmlGrandPrix(y) {
     const ca = et.k ? carteDe(y, n, et.k) : null, cdef = ca && ca.c ? carteDef(ca.c) : null;
     const res = x && x.carte ? (x.carte.invalide ? " Pas encore piochée à ce moment-là : sans effet." : " Résultat : " + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + " pt" + (Math.abs(x.carte.gain) > 1 ? "s" : "") + (x.carte.circ ? ", dont +1 d'atout du circuit" : "") + (x.carte.bouchon ? ", sans le +1 d'atout : bouchon, plusieurs pilotes l'ont jouée" : "") + (x.carte.sab ? " · " + x.carte.cible + " " + x.carte.sab : "") + ".") : "";
     const carte = ca ? (ca.cache && !cdef ? '<span class="gp-c cache" data-bdg="Carte posée face cachée : révélée le ' + jourLimite(et.k) + ' du mois.">🂠</span>' : cdef ? '<span class="gp-c" data-bdg="' + esc(cdef.ico + " " + cdef.nom + " : " + cdef.def + res) + '">' + cdef.ico + (x && x.carte ? "<small>" + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + "</small>" : "") + "</span>" : '<span class="gp-c vide"></span>') : '<span class="gp-c vide"></span>';
-    const extra = x ? (x.vainq ? '<span class="gp-x or" data-bdg="🇬🇧 Silverstone : vainqueur du mois, +2.">🏁+2</span>' : "") +
+    const extra = x ? (x.vainq ? '<span class="gp-x or" data-bdg="🇬🇧 Silverstone : vainqueur du mois, +2.">🇬🇧+2</span>' : "") +
       (x.equipe ? '<span class="gp-x" data-bdg="🤝 Bonus d\'équipe : tout le monde a battu le S&P 500 ce mois-ci, +1.">🤝+1</span>' : "") +
-      (x.serie ? '<span class="gp-x" data-bdg="🔥 Série : ' + x.serie + ' mois d\'affilée au-dessus du S&P 500, +1.">🔥+1</span>' : "") +
-      (x.prono ? '<span class="gp-x" data-bdg="🔮 Pronostic : ' + esc((x.prono.v || "—") + (x.prono.i ? ", indice " + (x.prono.i === "h" ? "en hausse" : "en baisse") : "")) + " → +" + x.prono.pts + '.">🔮+' + x.prono.pts + "</span>" : "") +
-      (x.rival ? '<span class="gp-x or" data-bdg="😈 Rival de la saison : devant ' + esc(x.rival) + ' au championnat, +5.">😈+5</span>' : "") +
+      (x.serie ? '<span class="gp-x" data-bdg="🔥 Série : ' + x.serie + ' mois d\'affilée sans finir dernier, +1.">🔥+1</span>' : "") +
+      (x.defi ? '<span class="gp-x" data-bdg="' + esc((defiDuMois(et.k) || {}).ico + " Défi du mois réussi : " + (defiDuMois(et.k) || {}).txt + ", +1.") + '">🏁+1</span>' : "") +
+      (x.prono ? '<span class="gp-x" data-bdg="🔮 Pronostic : ' + esc((x.prono.v || "—") + (x.prono.i ? ", S&P " + (x.prono.i === "h" ? "plus de +1 %" : "pas plus de +1 %") : "") + (x.prono.p !== null && x.prono.p !== undefined ? ", pole " + String(x.prono.p).replace(".", ",") + " %" + (x.prono.pole ? " (la plus proche)" : "") : "")) + " → +" + x.prono.pts + '.">🔮+' + x.prono.pts + "</span>" : "") +
+      (x.rival ? '<span class="gp-x or" data-bdg="😈 Rival de la saison : devant ' + esc(x.rival) + ' au championnat, +3.">😈+3</span>' : "") +
+      (x.regul !== undefined ? '<span class="gp-x or" data-bdg="🛡️ Trophée de la régularité : le moins souvent dernier de la saison, +3.">🛡️+3</span>' : "") +
       (x.vise || []).map(z => '<span class="gp-x" data-bdg="🎲 Pari de ' + esc(z.par) + " contre " + esc(n) + " : " + (z.gain > 0 ? esc(z.par) + " a fini devant, +2 pour lui." : z.gain < 0 ? esc(n) + " a tenu bon, " + esc(z.par) + " perd 1 point." : "égalité parfaite, 0.") + '">🎲' + (z.gain > 0 ? "" : "✓") + "</span>").join("") +
       (x.mult > 1 ? '<span class="gp-x or" data-bdg="' + esc(et.m.spec ? et.m.spec.ico + " " + et.m.spec.nom + " : points de place doublés." : "Points doublés.") + '">×2</span>' : "") +
       (x.pioche && x.pioche.length && regleVisible("pioche") ? '<span class="gp-x" data-bdg="🎴 Carte' + (x.pioche.length > 1 ? "s" : "") + " piochée" + (x.pioche.length > 1 ? "s" : "") + " ce mois-ci" + (n === qui ? " : " + esc(x.pioche.map(c => carteDef(c).nom).join(", ")) : "") + '.">🎴</span>' : "") : "";
@@ -297,7 +299,7 @@ function htmlCartes(y) {
   return '<div><h3 class="s-h3">Mes cartes <small>' + reste + " en main" + (regleVisible("pioche") ? " · " + aVenir + " dans la pioche" : "") + "</small></h3></div>" +
     '<p class="info">Touche une carte pour la poser. Une par mois ; une carte de base se rejoue, mais pas deux mois de suite. Une carte bonus ne sert qu\'une fois.' + (regleVisible("pioche") ? (regleVisible("niveaux") ? " Tu en pioches une nouvelle à chaque niveau gagné et quand tu finis dernier d\'un mois." : " Tu en pioches une nouvelle quand tu finis dernier d\'un mois.") : "") + (ap ? " Aperçu : choisis le mois avec les puces ci-dessous ; rien n'est envoyé." : "") + "</p>" +
     (ap ? '<div class="gp-mois">' + etapesGP(y).slice(1).map(x => '<button type="button" data-gpcible="' + x.k + '" aria-pressed="' + (x.k === kOuvert) + '">' + esc(moisCourt(x.k)) + "</button>").join("") + "</div>" : "") +
-    '<div class="main-cartes">' + main.map(tuile).join("") + "</div>" + action + htmlProno(y, kOuvert) + htmlRival(y, kOuvert) + htmlVote(y);
+    '<div class="main-cartes">' + main.map(tuile).join("") + "</div>" + action + htmlDefi(y, kOuvert) + htmlProno(y, kOuvert) + htmlRival(y, kOuvert) + htmlVote(y);
 }
 /* ---------- Rappels : tant que ta carte du mois n'est pas posée, on te le dit partout ---------- */
 function aujNum() { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
@@ -415,7 +417,12 @@ function brancherStand(v, y) {
   const dr = v.querySelector("#duel-retirer"); if (dr) dr.addEventListener("click", () => lancerDuel(y, kOuvert(), null));
   v.querySelectorAll("[data-pv]").forEach(b => b.addEventListener("click", () => { PRONO_V = b.dataset.pv; rendreTrophees(); }));
   v.querySelectorAll("[data-pi]").forEach(b => b.addEventListener("click", () => { PRONO_I = b.dataset.pi; rendreTrophees(); }));
-  const pk = v.querySelector("#prono-ok"); if (pk) pk.addEventListener("click", () => { const p = pronoDe(y, moiPilote(), kOuvert()) || {}, vv = PRONO_V || p.v || null, ii = PRONO_I || p.i || null; PRONO_V = null; PRONO_I = null; envoyerProno(y, kOuvert(), vv, ii); });
+  const pp = v.querySelector("#prono-pole"); if (pp) pp.addEventListener("change", () => { const t = pp.value.trim().replace(",", ".").replace("%", ""); PRONO_P = t === "" ? null : (isFinite(+t) ? +t : null); });
+  const pk = v.querySelector("#prono-ok"); if (pk) pk.addEventListener("click", () => {
+    const p = pronoDe(y, moiPilote(), kOuvert()) || {}, vv = PRONO_V || p.v || null, ii = PRONO_I || p.i || null;
+    const champ = v.querySelector("#prono-pole"), t = champ ? champ.value.trim().replace(",", ".").replace("%", "") : "", pole = t !== "" && isFinite(+t) && Math.abs(+t) <= 50 ? +t : (champ && t !== "" ? NaN : (typeof p.p === "number" ? p.p : null));
+    if (Number.isNaN(pole)) { toast("Pole position : saisis un nombre entre −50 et +50 (ex. 1,8)."); return; }
+    PRONO_V = null; PRONO_I = null; PRONO_P = null; envoyerProno(y, kOuvert(), vv, ii, pole); });
   v.querySelectorAll("[data-rs]").forEach(b => b.addEventListener("click", () => { RIVAL_CHOIX = b.dataset.rs; rendreTrophees(); }));
   v.querySelectorAll("[data-vote]").forEach(b => b.addEventListener("click", () => { VOTE_CHOIX = b.dataset.vote; rendreTrophees(); }));
   const vk = v.querySelector("#vote-ok"); if (vk) vk.addEventListener("click", () => { const c = VOTE_CHOIX || ((D.monVote || {})[y] || {}).c; VOTE_CHOIX = null; if (c) envoyerVote(y, c); });
@@ -487,7 +494,7 @@ function bullesGP(y, i) {
   et.m.l.forEach(x => {
     const extra = [];
     if (x.carte && !x.carte.invalide && x.carte.gain) { const cd = carteDef(x.carte.id); extra.push((cd ? cd.ico : "🃏") + (x.carte.gain > 0 ? "+" : "") + x.carte.gain); }
-    if (x.bonus) extra.push("🎯+" + x.bonus); if (x.mult > 1) extra.push("×2"); if (x.vainq) extra.push("🏁+2"); if (x.equipe) extra.push("🤝+1"); if (x.serie) extra.push("🔥+1"); if (x.prono && x.prono.pts) extra.push("🔮+" + x.prono.pts); if (x.rival) extra.push("😈+5");
+    if (x.bonus) extra.push("🎯+" + x.bonus); if (x.mult > 1) extra.push("×2"); if (x.vainq) extra.push("🇬🇧+2"); if (x.equipe) extra.push("🤝+1"); if (x.serie) extra.push("🔥+1"); if (x.defi) extra.push("🏁+1"); if (x.prono && x.prono.pts) extra.push("🔮+" + x.prono.pts); if (x.rival) extra.push("😈+3"); if (x.regul !== undefined) extra.push("🛡️+3");
     box.insertAdjacentHTML("beforeend", '<span class="gp-pop" data-pop="' + esc(x.nom) + '" style="--c:' + couleur(x.nom) + '"><b>' + (x.p >= 0 ? "+" : "") + x.p + " pt" + (Math.abs(x.p) > 1 ? "s" : "") + "</b>" + (extra.length ? "<small>" + esc(extra.join(" ")) + "</small>" : "") + "</span>");
   });
   if (GP_ETQ) GP_ETQ.sale = true;
@@ -515,7 +522,7 @@ async function cartePostale(y, et) {
     txt(i < 3 ? med[i] : String(i + 1), 125, y0 + 105, 64, 800, "#FFFFFF", "center");
     txt(x.nom.toUpperCase(), 190, y0 + 80, 58, 800, "#FFFFFF", "left", "'Saira Condensed', sans-serif");
     const d = []; if (x.carte && !x.carte.invalide) { const cd = carteDef(x.carte.id); d.push((cd ? cd.ico : "🃏") + (x.carte.gain > 0 ? "+" : "") + x.carte.gain); }
-    if (x.bonus) d.push("🎯+" + x.bonus); if (x.prono && x.prono.pts) d.push("🔮+" + x.prono.pts); if (x.equipe) d.push("🤝+1"); if (x.serie) d.push("🔥+1"); if (x.vainq) d.push("🏁+2"); if (x.mult > 1) d.push("×2"); if (x.rival) d.push("😈+5");
+    if (x.bonus) d.push("🎯+" + x.bonus); if (x.prono && x.prono.pts) d.push("🔮+" + x.prono.pts); if (x.equipe) d.push("🤝+1"); if (x.serie) d.push("🔥+1"); if (x.defi) d.push("🏁+1"); if (x.vainq) d.push("🇬🇧+2"); if (x.mult > 1) d.push("×2"); if (x.rival) d.push("😈+3"); if (x.regul !== undefined) d.push("🛡️+3");
     txt((x.r >= 0 ? "+" : "") + (x.r * 100).toFixed(1).replace(".", ",") + " % ce mois" + (d.length ? "   " + d.join("  ") : ""), 190, y0 + 135, 32, 500, "#A9B1BD");
     txt("+" + x.p, W - 110, y0 + 100, 76, 800, reel(col("--accent-ink")), "right", "'JetBrains Mono', monospace");
     txt("pts", W - 110, y0 + 140, 26, 600, "#7A8391", "right", "'JetBrains Mono', monospace");

@@ -19,11 +19,14 @@ const ETAPES = [
   { id: "pioche", ico: "🎴", nom: "Le rattrapage", ouvre: 202701, regle: "pioche", resume: "Tu finis dernier d'un mois ? Tu pioches une carte bonus (une fois par saison chacune), à jouer à partir du mois suivant. Tes cartes piochées t'attendent dans le Stand." },
   { id: "monaco", ico: "🎰", nom: "Le Grand Prix de Monaco", ouvre: 202701, regle: "speciaux", resume: "Un mois de la saison, le dernier du championnat marque ses points de place en double. La date est dans le calendrier du Grand Prix." },
   { id: "gpspeciaux", ico: "🏁", nom: "Silverstone et Monza", ouvre: 202701, regle: "speciaux", resume: "Juillet à Silverstone : le vainqueur du mois marque +2 de plus. Septembre à Monza : le 🎯 vaut +2 au lieu de +1." },
-  { id: "prono", ico: "🔮", nom: "Le pronostic du mois", ouvre: 202701, regle: "championnat", resume: "Dans la fenêtre de ta carte : qui gagne le mois (+1 si juste) et le S&P 500 en hausse ou en baisse (+1 si juste). Secret jusqu'au 2." },
-  { id: "rival", ico: "😈", nom: "Le rival de la saison", ouvre: 202701, regle: "championnat", resume: "Entre le 20 décembre et le 1er janvier, choisis un rival secret. Fin décembre, si tu finis devant lui au championnat : +5. Révélé à la Finale." },
+  { id: "prono", ico: "🔮", nom: "Le pronostic du mois", ouvre: 202701, regle: "championnat", resume: "Dans la fenêtre de ta carte : qui gagne le mois (+1 si juste) et le S&P 500 fera-t-il plus de +1 % (+1 si juste). Secret jusqu'au 2." },
+  { id: "pole", ico: "🅿️", nom: "La pole position", ouvre: 202701, regle: "championnat", resume: "Avec ton pronostic, donne ton chiffre pour le S&P 500 du mois (ex. +1,8 %). Le plus proche marque +1 (partagé en cas d'égalité)." },
+  { id: "defi", ico: "🏁", nom: "Le défi du mois", ouvre: 202701, regle: "championnat", resume: "Chaque mois a son défi (battre le Nasdaq, faire mieux que l'or, finir positif…), annoncé le 20 du mois d'avant : +1 à chaque pilote qui le réussit." },
+  { id: "rival", ico: "😈", nom: "Le rival de la saison", ouvre: 202701, regle: "championnat", resume: "Entre le 20 décembre et le 1er janvier, choisis un rival secret. Fin décembre, si tu finis devant lui au championnat : +3. Révélé à la Finale." },
+  { id: "regularite", ico: "🛡️", nom: "Le trophée de la régularité", ouvre: 202712, regle: "speciaux", resume: "Fin de saison : +3 au pilote qui a fini le moins souvent dernier (départage : le plus de mois positifs)." },
   { id: "vote", ico: "🗳️", nom: "Le vote de fin de saison", ouvre: 202712, regle: "speciaux", resume: "Du 2 au 31 décembre, vote pour « le coup de la saison » (pas pour toi). Résultat le 1er janvier : le gagnant reçoit la plaque « Coup de la saison »." },
   { id: "equipe", ico: "🤝", nom: "Le bonus d'équipe", ouvre: 202701, regle: "championnat", resume: "Si tous les pilotes battent le S&P 500 le même mois : +1 pour chacun." },
-  { id: "serie", ico: "🔥", nom: "La série", ouvre: 202701, regle: "championnat", resume: "+1 à chaque 3e mois d'affilée où tu bats le S&P 500 (3 mois, 6 mois…). La série repart de zéro dès que tu ne le bats pas." },
+  { id: "serie", ico: "🔥", nom: "La série", ouvre: 202701, regle: "championnat", resume: "+1 à chaque 3e mois d'affilée sans finir dernier (3 mois, 6 mois…). La série repart de zéro dès que tu finis dernier." },
   { id: "finale", ico: "🏆", nom: "La Finale", ouvre: 202712, regle: "speciaux", resume: "Décembre, dernier mois de la saison : les points de place comptent double pour tout le monde." },
   { id: "duels", ico: "⚔️", nom: "Les duels", reserve: true, regle: "duels", resume: "Chaque mois, tu peux défier un rival, dans la même fenêtre que ta carte. Le meilleur du mois lui prend 1 point." },
   /* Réserve : des idées codées et prêtes, mais éteintes. Rien ne s'en voit, rien ne compte, tant que l'admin ne leur donne pas une date
@@ -184,12 +187,13 @@ function rivalDe(y, nom) {
   if (nom === moiPilote()) { const m = (D.monRival || {})[y]; if (m) return m; }
   return ((D.rivaux || {})[y] || {})[nom] || null;
 }
-async function envoyerProno(y, k, v, i) {
+async function envoyerProno(y, k, v, i, p) {
+  p = typeof p === "number" && isFinite(p) ? Math.round(p * 10) / 10 : null;
   const qui = moiPilote();
-  if (apercuSaison()) { const a = pronosApercu(); a[y] = a[y] || {}; a[y][qui] = a[y][qui] || {}; if (v || i) a[y][qui][k] = { v, i }; else delete a[y][qui][k]; stock.set("versus.pronosApercu", JSON.stringify(a)); MEMO_SAISON = { d: null, m: {} }; toast("Aperçu : pronostic enregistré sur cet appareil."); rendreTrophees(); return; }
+  if (apercuSaison()) { const a = pronosApercu(); a[y] = a[y] || {}; a[y][qui] = a[y][qui] || {}; if (v || i || p !== null) a[y][qui][k] = { v, i, p }; else delete a[y][qui][k]; stock.set("versus.pronosApercu", JSON.stringify(a)); MEMO_SAISON = { d: null, m: {} }; toast("Aperçu : pronostic enregistré sur cet appareil."); rendreTrophees(); return; }
   if (SOURCE !== "api") { toast("Pronostic indisponible hors connexion."); return; }
   if (simulation()) { toast(MSG_SIMULATION); return; }
-  const rep = await posterAdmin({ action: "prono", personne: qui, mois: k, vainqueur: v || null, indice: i || null });
+  const rep = await posterAdmin({ action: "prono", personne: qui, mois: k, vainqueur: v || null, indice: i || null, pole: p });
   if (rep.ok) { D.mesPronos = D.mesPronos || {}; D.mesPronos[y] = rep.mesPronos || {}; if (rep.pronos) D.pronos = rep.pronos; MEMO_SAISON = { d: null, m: {} }; toast(rep.message || "Pronostic enregistré."); }
   else toast(rep.message || "Pronostic impossible.");
   rendreTrophees();
@@ -204,7 +208,7 @@ async function choisirRival(y, r) {
   else toast(rep.message || "Choix impossible.");
   rendreTrophees();
 }
-let PRONO_V = null, PRONO_I = null, RIVAL_CHOIX = null, VOTE_CHOIX = null;
+let PRONO_V = null, PRONO_I = null, PRONO_P = null, RIVAL_CHOIX = null, VOTE_CHOIX = null;
 /* ---------- 🗳️ Vote de fin de saison (V13.9) ---------- */
 function voteOuvert(y) { const a = aujNum(); return a >= y * 10000 + 1202 && a <= y * 10000 + 1231; }
 function htmlVote(y) {
@@ -228,22 +232,31 @@ async function envoyerVote(y, c) {
   else toast(rep.message || "Vote impossible.");
   rendreTrophees();
 }
+/** 🏁 Défi du mois (V15) : affiché dès l'ouverture de la fenêtre (le 20 du mois d'avant) */
+function htmlDefi(y, kOuvert) {
+  if (!kOuvert || estChauffe(y) || !regleVisible("defi") || !regleActive("defi", kOuvert)) return "";
+  const d = defiDuMois(kOuvert); if (!d) return "";
+  return '<div><h3 class="s-h3">🏁 Défi du mois <small>' + esc(moisLong(kOuvert)) + "</small></h3></div>" +
+    '<div class="c-action duel"><p style="font-size:1.05em">' + d.ico + " <b>" + esc(d.txt) + "</b></p><p class=\"info\">Rien à faire : à la fin du mois, chaque pilote qui l'a réussi marque <b>+1</b>.</p></div>";
+}
 function htmlProno(y, kOuvert) {
   const qui = moiPilote(); if (!qui || !kOuvert || estChauffe(y) || !regleVisible("prono") || !regleActive("prono", kOuvert)) return "";
-  const p = pronoDe(y, qui, kOuvert), v = PRONO_V || (p && p.v) || null, i = PRONO_I || (p && p.i) || null, change = PRONO_V || PRONO_I;
+  const p = pronoDe(y, qui, kOuvert), v = PRONO_V || (p && p.v) || null, i = PRONO_I || (p && p.i) || null, change = PRONO_V || PRONO_I || PRONO_P !== null;
+  const avecPole = regleActive("pole", kOuvert), pv = PRONO_P !== null ? PRONO_P : (p && typeof p.p === "number" ? p.p : null);
   return '<div><h3 class="s-h3">🔮 Pronostic <small>' + esc(moisLong(kOuvert)) + "</small></h3></div>" +
-    '<div class="c-action duel"><p>Deux questions, secrètes jusqu\'au ' + jourLimite(kOuvert) + " : <b>+1</b> par bonne réponse.</p>" +
+    '<div class="c-action duel"><p>' + (avecPole ? "Trois questions" : "Deux questions") + ', secrètes jusqu\'au ' + jourLimite(kOuvert) + " : <b>+1</b> par bonne réponse" + (avecPole ? " (la pole : au plus proche)" : "") + ".</p>" +
     "<p><b>Qui gagne le mois ?</b></p>" + '<div class="chips" role="group" aria-label="Vainqueur du mois">' + D.personnes.map(x => '<button class="chip" type="button" data-pv="' + esc(x.nom) + '" aria-pressed="' + (v === x.nom) + '">' + esc(x.nom) + "</button>").join("") + "</div>" +
-    "<p><b>Le " + esc(D.marche.indices[iRef()]) + " finit le mois…</b></p>" + '<div class="chips" role="group" aria-label="Sens de l\'indice"><button class="chip" type="button" data-pi="h" aria-pressed="' + (i === "h") + '">📈 en hausse</button><button class="chip" type="button" data-pi="b" aria-pressed="' + (i === "b") + '">📉 en baisse</button></div>' +
-    (p && !change ? '<p>✓ Pronostic enregistré' + (p.v ? " : <b>" + esc(p.v) + "</b>" : "") + (p.i ? ", " + (p.i === "h" ? "📈 hausse" : "📉 baisse") : "") + '.</p>' : '<button class="btn acc" type="button" id="prono-ok"' + (v || i ? "" : " disabled") + ">Valider mon pronostic</button>") + "</div>";
+    "<p><b>Le " + esc(D.marche.indices[iRef()]) + " fera-t-il plus de +1 % ce mois ?</b></p>" + '<div class="chips" role="group" aria-label="Sens de l\'indice"><button class="chip" type="button" data-pi="h" aria-pressed="' + (i === "h") + '">📈 oui, plus de +1 %</button><button class="chip" type="button" data-pi="b" aria-pressed="' + (i === "b") + '">📉 non</button></div>' +
+    (avecPole ? "<p><b>🅿️ Pole position : ton chiffre pour le " + esc(D.marche.indices[iRef()]) + " du mois</b></p>" + '<div class="ligne-champ"><input id="prono-pole" type="text" inputmode="decimal" autocomplete="off" placeholder="ex. +1,8" value="' + (pv !== null ? String(pv).replace(".", ",") : "") + '" style="max-width:120px"> <span>%</span></div>' : "") +
+    (p && !change ? '<p>✓ Pronostic enregistré' + (p.v ? " : <b>" + esc(p.v) + "</b>" : "") + (p.i ? ", " + (p.i === "h" ? "📈 plus de +1 %" : "📉 pas plus de +1 %") : "") + (typeof p.p === "number" ? ", pole " + (p.p > 0 ? "+" : "") + String(p.p).replace(".", ",") + " %" : "") + '.</p>' : '<button class="btn acc" type="button" id="prono-ok"' + (v || i || pv !== null || avecPole ? "" : " disabled") + ">Valider mon pronostic</button>") + "</div>";
 }
 function htmlRival(y, kOuvert) {
   const qui = moiPilote(); if (!qui || estChauffe(y) || !regleVisible("rival") || !regleActive("rival", y * 100 + 1)) return "";
   const r = rivalDe(y, qui), fenetre = kOuvert === y * 100 + 1, autres = D.personnes.map(p => p.nom).filter(n => n !== qui);
-  if (!fenetre) return r && r.r ? '<p class="info">😈 Ton rival secret de ' + y + " : <b>" + esc(r.r) + "</b>. +5 si tu finis devant lui au championnat.</p>" : "";
+  if (!fenetre) return r && r.r ? '<p class="info">😈 Ton rival secret de ' + y + " : <b>" + esc(r.r) + "</b>. +3 si tu finis devant lui au championnat.</p>" : "";
   const c = RIVAL_CHOIX || (r && r.r) || null;
   return '<div><h3 class="s-h3">😈 Rival de la saison <small>' + y + "</small></h3></div>" +
-    '<div class="c-action duel"><p>Choisis un rival <b>secret</b> pour toute la saison : si tu finis devant lui au championnat en décembre, <b>+5</b>. Modifiable jusqu\'au 1<sup>er</sup> janvier, révélé à la Finale.</p>' +
+    '<div class="c-action duel"><p>Choisis un rival <b>secret</b> pour toute la saison : si tu finis devant lui au championnat en décembre, <b>+3</b>. Modifiable jusqu\'au 1<sup>er</sup> janvier, révélé à la Finale.</p>' +
     '<div class="chips" role="group" aria-label="Rival de la saison">' + autres.map(n => '<button class="chip" type="button" data-rs="' + esc(n) + '" aria-pressed="' + (c === n) + '">' + esc(n) + "</button>").join("") + "</div>" +
     (r && r.r && !RIVAL_CHOIX ? "<p>✓ Rival choisi : <b>" + esc(r.r) + "</b>.</p>" : '<button class="btn acc" type="button" id="rival-ok"' + (c ? "" : " disabled") + ">Choisir " + (c ? esc(c) : "mon rival") + "</button>") + "</div>";
 }
@@ -447,60 +460,54 @@ function htmlPilote(qui, e) {
     '<button class="lien" type="button" id="tp-reset">↺ Revenir à mon portrait de départ</button></div>';
 }
 
-/* ---------- Règles : toujours accessibles (bouton 📖 du Podium et réglages) ---------- */
+/* ---------- Règles : toujours accessibles (bouton 📖 du Podium et réglages) · V15 : réécrites, courtes, avec schémas ---------- */
 function htmlRegles(tout, modeReserve) {
   const idx = esc(D.marche.indices[iRef()]), y = Math.max(saisonCourante() || 0, SAISON.premiere), mo = monacoMois(y);
-  const carte = c => "<li><b>" + c.ico + " " + esc(c.nom) + "</b> : " + esc(c.def.replace("l'indice", "le " + D.marche.indices[iRef()])) + "</li>";
   const s = (id, ico, t, corps) => '<section class="rg-s" id="rg-' + id + '"><h4>' + ico + " " + t + "</h4>" + corps + "</section>";
-  const vu = id => modeReserve || (tout && !enReserve(etape(id))) || regleVisible(id), vP = vu("pioche"), vN = vu("niveaux"), vA = vu("atelier"), vM = vu("monaco"), vF = vu("finale"), vC = vu("circuits"), vS = vu("gpspeciaux"), vB = vu("prono") || vu("rival") || vu("equipe") || vu("serie"), bientot = tout || modeReserve ? [] : etapesJeu().filter(e => !regleVisible(e.id));
-  const sommaire = [["essentiel", "L'essentiel"], ["champ", "Points"], ["cartes", "Cartes"]].concat(vC ? [["circuits", "Circuits"]] : [], vB ? [["bonus", "Bonus"]] : [], vP ? [["pioche", "Rattrapage"]] : [], vN ? [["niveaux", "Niveaux"]] : [], [["speciaux", "Mois spéciaux"], ["gp", "Course"], ["ecurie", "Écurie"], ["defis", "Trophées"]], bientot.length ? [["bientot", "🎁 Prochainement"]] : []);
+  const vu = id => modeReserve || (tout && !enReserve(etape(id))) || regleVisible(id);
+  const vP = vu("pioche"), vN = vu("niveaux"), vA = vu("atelier"), vM = vu("monaco"), vF = vu("finale"), vC = vu("circuits"), vS = vu("gpspeciaux");
+  const vB = ["prono", "pole", "defi", "rival", "equipe", "serie", "regularite"].some(vu), bientot = tout || modeReserve ? [] : etapesJeu().filter(e => !regleVisible(e.id));
+  const sommaire = [["essentiel", "L'essentiel"], ["champ", "Points"], ["cartes", "Cartes"]].concat(vB ? [["bonus", "Bonus"]] : [], [["speciaux", "Mois spéciaux"]], vP ? [["pioche", "Rattrapage"]] : [], vN ? [["niveaux", "Niveaux"]] : [], [["gp", "Course et trophées"]], bientot.length ? [["bientot", "🎁 Bientôt"]] : []);
+  // schémas (HTML/CSS, lisibles en clair comme en sombre)
+  const etapeSch = (ico, quand, quoi) => '<div class="rg-et"><i>' + ico + "</i><b>" + quand + "</b><small>" + quoi + "</small></div>";
+  const schemaMois = '<div class="rg-sch rg-flux" aria-label="Un mois en trois temps">' + etapeSch("🃏", "du 20 au 1<sup>er</sup>", "je pose ma carte" + (vu("prono") ? " et mon pronostic" : "")) + '<span class="rg-fl">→</span>' +
+    etapeSch("👀", "le 2", "tout est révélé") + '<span class="rg-fl">→</span>' + etapeSch("📊", "fin du mois", "relevé → points") + "</div>";
+  const schemaBareme = '<div class="rg-sch rg-bar" aria-label="Barème">' + BAREME.map((p, i) => '<div class="rg-b"><span style="height:' + (8 + p * 9) + 'px"></span><b>' + p + "</b><small>" + (i + 1) + (i ? "<sup>e</sup>" : "<sup>er</sup>") + "</small></div>").join("") +
+    '<div class="rg-b plus"><span style="height:17px"></span><b>+1</b><small>🎯 bats le ' + idx + "</small></div></div>";
+  const chip = (t, c) => '<span class="rg-ch' + (c ? " " + c : "") + '">' + t + "</span>";
+  const schemaCalcul = '<div class="rg-sch rg-calc" aria-label="Calcul d\'un mois">' + chip("Place") + "+" + chip("🎯") + "+" + chip("🃏 carte ≤ +" + PLAFOND_CARTE) + "+" + chip("✨ bonus") + "=" + chip("points du mois", "tot") + "</div>";
+  const schemaCartes = '<div class="rg-sch rg-cartes">' + CARTES.map(c => '<div class="rg-ca"><i>' + c.ico + "</i><b>" + esc(c.nom) + "</b><small>" + esc(c.court) + "</small></div>").join("") + "</div>";
   return (modeReserve ? "" : '<div class="rg-sommaire">' + sommaire.map(([id, l]) => '<button type="button" data-rg="' + id + '">' + l + "</button>").join("") + "</div>") +
     (modeReserve ? "" : s("essentiel", "⚡", "L'essentiel",
-      "<ul><li><b>Chaque mois</b>, la meilleure performance du portefeuille prend <b>" + BAREME.join(" · ") + "</b> points. <b>+1 🎯</b> si tu bats le " + idx + ".</li>" +
-      "<li><b>Une carte par mois</b>, posée face cachée du 20 au 1<sup>er</sup> dans le Stand, révélée le 2 : elle rapporte jusqu'à +4.</li>" +
-      (vB ? "<li><b>Bonus</b> : 🔮 pronostic (jusqu'à +2), 🤝 tout le monde bat l'indice (+1 chacun), 🔥 3 mois d'affilée devant l'indice (+1), 😈 devant ton rival secret en fin de saison (+5).</li>" : "") +
-      (vC ? "<li><b>Circuits</b> : chaque ville préfère une carte, <b>+1</b> si tu la joues et qu'elle marque.</li>" : "") +
-      (vP ? "<li><b>Dernier du mois ?</b> Tu pioches une carte bonus.</li>" : "") +
-      "<li><b>Temps forts</b> : " + [vM ? "🎰 Monaco (le dernier ×2)" : "", vS ? "🇬🇧 Silverstone (vainqueur +2)" : "", vS ? "🇮🇹 Monza (🎯 +2)" : "", vF ? "🏆 Finale en décembre (×2)" : ""].filter(Boolean).join(" · ") + ".</li>" +
-      "<li><b>Saison</b> : janvier → décembre, tout repart de zéro. Décembre 2026 = tour de chauffe (rien ne compte).</li></ul>")) +
-    s("champ", "🏁", "Les points du mois",
-      "<ul><li>Place : 1<sup>er</sup> <b>" + BAREME[0] + "</b> · 2<sup>e</sup> <b>" + BAREME[1] + "</b> · 3<sup>e</sup> <b>" + BAREME[2] + "</b> · 4<sup>e</sup> <b>" + BAREME[3] + "</b> (portefeuille total, versements neutralisés). Ex æquo : mêmes points.</li>" +
-      "<li><b>+1 🎯</b> si ton mois bat le " + idx + ".</li><li>Puis : ta carte, les bonus et les mois spéciaux. Un mois ne descend jamais sous 0.</li>" +
-      "<li>Un mois compte quand tout le monde a saisi son relevé. Égalité au classement : le plus de victoires, puis la meilleure performance cumulée.</li></ul>" +
-      "<p class=\"rg-ex\"><b>Exemple</b> : 2<sup>e</sup> du mois (" + BAREME[1] + ") + 🎯 (+1) + 🌀 Aspiration réussie (+2) = <b>" + (BAREME[1] + 3) + " points</b>.</p>") +
-    s("cartes", "🃏", "Les cartes",
-      "<ul>" + CARTES.map(carte).join("") + "</ul>" +
-      "<ul><li><b>Une par mois</b>, face cachée du 20 du mois d'avant au 1<sup>er</sup> inclus (Stand) ; modifiable jusque-là ; révélée le 2.</li><li>Rejouable, mais <b>pas deux mois de suite</b>. Une carte rapporte au plus <b>+" + PLAFOND_CARTE + "</b>.</li><li>Rappels : bandeau, pastille sur Podium et e-mail le 20, l'avant-veille et le dernier jour.</li></ul>") +
-    (vC ? s("circuits", "🗺️", "L'atout des circuits",
-      "<ul><li>Chaque ville préfère une de tes 4 cartes : si tu la joues <b>et qu'elle marque</b>, <b>+1</b>.</li>" +
-      "<li>🚀 Turbo : Bahreïn, Miami, Las Vegas · 🌀 Aspiration : Djeddah, Silverstone, Monza · 🌧️ Pneus pluie : Melbourne, Spa, Interlagos · 🎲 Pari : Suzuka, Montréal, Singapour.</li>" +
-      "<li>Secret jusqu'au 2 (un indice 🔍 avant). <b>Bouchon</b> : si deux pilotes ou plus marquent avec l'atout, personne n'a le +1.</li></ul>") : "") +
-    (vB ? s("bonus", "✨", "Les bonus",
-      "<ul>" + (vu("prono") ? "<li><b>🔮 Pronostic</b> (Stand, même fenêtre que la carte) : qui gagne le mois ? <b>+1</b> si juste. Le " + idx + " en hausse ou en baisse ? <b>+1</b> si juste.</li>" : "") +
-      (vu("equipe") ? "<li><b>🤝 Équipe</b> : si tout le monde bat le " + idx + " le même mois, <b>+1</b> chacun.</li>" : "") +
-      (vu("serie") ? "<li><b>🔥 Série</b> : <b>+1</b> à chaque 3<sup>e</sup> mois d'affilée devant le " + idx + " (repart de zéro sinon).</li>" : "") +
-      (vu("rival") ? "<li><b>😈 Rival de la saison</b> : choisi en secret entre le 20 décembre et le 1<sup>er</sup> janvier. Fin décembre, devant lui au championnat : <b>+5</b>. Révélé à la Finale.</li>" : "") + "</ul>") : "") +
+      "<p>Chaque mois, les pilotes sont classés sur la <b>performance de leur portefeuille</b> (versements neutralisés : seul le % compte). La saison va de janvier à décembre ; le plus de points gagne.</p>" + schemaMois +
+      '<p class="rg-note">🔥 Décembre 2026 = tour de chauffe : tout marche, rien ne compte (cartes jusqu\'au 5).</p>')) +
+    s("champ", "🏁", "Les points du mois", schemaBareme + schemaCalcul +
+      "<ul><li>Ex æquo : mêmes points. Un mois ne descend jamais sous 0.</li><li>Le mois compte quand tout le monde a saisi son relevé.</li><li>Égalité au championnat : le plus de victoires, puis la meilleure performance cumulée.</li></ul>") +
+    s("cartes", "🃏", "Les cartes", schemaCartes +
+      "<ul><li><b>Une par mois</b>, face cachée dans le Stand (modifiable jusqu'au 1<sup>er</sup>), révélée le 2.</li><li>Rejouable, mais <b>pas deux mois de suite</b>. Au plus <b>+" + PLAFOND_CARTE + "</b> par mois.</li>" +
+      (vC ? "<li>🗺️ <b>Atout du circuit</b> : chaque ville préfère une carte ; si tu la joues <b>et qu'elle marque</b> : <b>+1</b> (secret jusqu'au 2, un indice 🔍 avant ; si 2 pilotes ou plus marquent avec : personne n'a le +1).</li>" : "") + "</ul>") +
+    (vB ? s("bonus", "✨", "Les bonus", '<div class="rg-tab">' +
+      (vu("defi") ? "<div><b>🏁 Défi du mois</b><span>un objectif différent chaque mois (battre le Nasdaq, faire mieux que l'or, finir positif…), annoncé le 20</span><em>+1</em></div>" : "") +
+      (vu("prono") ? "<div><b>🔮 Pronostic</b><span>qui gagne le mois ? · le " + idx + " fera-t-il plus de +1 % ?</span><em>+1 / +1</em></div>" : "") +
+      (vu("pole") ? "<div><b>🅿️ Pole position</b><span>ton chiffre pour le " + idx + " du mois : le plus proche</span><em>+1</em></div>" : "") +
+      (vu("equipe") ? "<div><b>🤝 Équipe</b><span>tout le monde bat le " + idx + " le même mois</span><em>+1 chacun</em></div>" : "") +
+      (vu("serie") ? "<div><b>🔥 Série</b><span>chaque 3<sup>e</sup> mois d'affilée sans finir dernier</span><em>+1</em></div>" : "") +
+      (vu("rival") ? "<div><b>😈 Rival</b><span>choisi en secret (20 déc. → 1<sup>er</sup> janv.) ; devant lui en fin de saison</span><em>+3</em></div>" : "") +
+      (vu("regularite") ? "<div><b>🛡️ Régularité</b><span>fin de saison : le moins souvent dernier (puis le plus de mois positifs)</span><em>+3</em></div>" : "") + "</div>") : "") +
+    s("speciaux", "📅", "Les mois spéciaux", '<div class="rg-tab">' +
+      (vM ? "<div><b>🎰 Monaco</b><span>" + (regleActive("monaco", mo) ? esc(moisLong(mo)) : "un mois tiré") + " : le dernier du championnat</span><em>place ×2</em></div>" : "") +
+      (vS ? "<div><b>🇬🇧 Silverstone</b><span>juillet : le vainqueur du mois</span><em>+2</em></div><div><b>🇮🇹 Monza</b><span>septembre : le 🎯</span><em>vaut +2</em></div>" : "") +
+      (vF ? "<div><b>🏆 Finale</b><span>décembre : tout le monde</span><em>place ×2</em></div>" : "") +
+      (vu("vote") ? "<div><b>🗳️ Vote</b><span>2 → 31 décembre : « le coup de la saison » (pas pour soi)</span><em>plaque</em></div>" : "") + "</div>") +
     (vP ? s("pioche", "🎴", "Le rattrapage",
-      "<p>Tu finis <b>dernier d'un mois</b> ? Tu pioches <b>1 carte bonus</b> : jouable dès le mois suivant, <b>une fois par saison</b>.</p><ul>" + CARTES_BONUS.map(carte).join("") + "</ul>") : "") +
-    (vN ? s("niveaux", "🔧", vA ? "Niveaux d'écurie et améliorations" : "Niveaux d'écurie",
-      "<ul><li><b>XP</b> : chaque mois, tes points de place et ton 🎯, <b>+3</b> les mois où tu finis dernier. <b>Un niveau tous les " + XP_NIVEAU + " XP</b> (niveau " + NIV_MAX + " au plus), remis à 1 chaque saison.</li>" +
-      "<li>Chaque niveau gagné : <b>1 carte bonus</b>" + (vA ? " et <b>1 point d'amélioration</b> (atelier)" : "") + ".</li></ul>" +
-      (vA ? "<ul>" + Object.values(AMELIOS).map(a => "<li><b>" + a.ico + " " + a.nom + "</b> : " + a.txt + " (2 niveaux au plus).</li>").join("") + "</ul>" : "")) : "") +
-    s("speciaux", "📅", "Les mois spéciaux",
-      "<ul>" + (vM ? "<li><b>🎰 Monaco</b> (un mois tiré entre avril et octobre" + (regleActive("monaco", mo) ? " : <b>" + esc(moisLong(mo)) + "</b>" : "") + ") : le dernier du championnat marque ses points de place ×2.</li>" : "") +
-      (vS ? "<li><b>🇬🇧 Silverstone</b> (juillet) : le vainqueur du mois <b>+2</b>.</li><li><b>🇮🇹 Monza</b> (septembre) : le 🎯 vaut <b>+2</b>.</li>" : "") +
-      (vF ? "<li><b>🏆 Finale</b> (décembre) : points de place ×2 pour tout le monde.</li>" : "") +
-      (vu("vote") ? "<li><b>🗳️ Vote</b> (2 au 31 décembre) : chacun vote pour « le coup de la saison » (pas pour soi). Le gagnant reçoit la plaque « Coup de la saison » (égalité : chacun).</li>" : "") +
-      "<li>🔥 <b>Tour de chauffe</b> (décembre 2026) : rien ne compte ; cartes jusqu'au 5 décembre.</li></ul>") +
-    s("gp", "🏎️", "La course",
-      "<ul><li>Tes points te font avancer : <b>" + TOUR_GP + " points = un tour</b>. Une ville par mois (Bahreïn en janvier … Las Vegas en décembre).</li><li>La météo suit le " + idx + " du mois. En 3D ou en 2D, plein écran avec ⛶ ; touche une voiture pour la suivre.</li></ul>") +
-    s("ecurie", "🪖", "L'écurie",
-      "<ul><li>Casque, livrée, traînée, klaxon, avatar… : purement cosmétique, débloqué par les défis et les exclusifs. Onglet Écurie.</li><li>Le leader porte le liseré or 🟡.</li></ul>") +
-    s("defis", "🏆", "Les trophées",
-      "<ul><li><b>Défis</b> 🥉 🥈 🥇 💎 (performance, compétition, régularité, maîtrise) et <b>défis secrets</b> : une fois réussi, c'est acquis.</li>" +
-      "<li><b>Exclusifs</b> 💎 : un objet pour le premier qui réussit l'exploit, pour toujours ; plusieurs le même mois → chacun l'obtient. C'est le serveur qui vérifie.</li>" +
-      "<li><b>👑 Premier millionnaire</b> : le premier à 1 000 000 € de <b>patrimoine financier</b> (pas l'immobilier ; le montant n'est jamais montré).</li></ul>") +
-    (bientot.length ? s("bientot", "🎁", "Prochainement", "<ul>" + bientot.map(e => "<li>" + (estAdmin() ? '<button type="button" class="lien" data-etape="' + e.id + '">🔒 ' + esc(e.nom) + "</button>" : e.ico + " <b>" + esc(e.nom) + "</b>") + " · " + esc(moisEtape(e)) + "</li>").join("") + "</ul>") : "");
+      "<p>Dernier d'un mois ? Tu pioches <b>1 carte bonus</b>, jouable dès le mois suivant, une fois par saison :</p><ul>" + CARTES_BONUS.map(c => "<li>" + c.ico + " <b>" + esc(c.nom) + "</b> : " + esc(c.court || c.def) + "</li>").join("") + "</ul>") : "") +
+    (vN ? s("niveaux", "🔧", vA ? "Niveaux et atelier" : "Niveaux d'écurie",
+      "<ul><li>XP = tes points de place + ton 🎯 (+3 les mois où tu finis dernier). Un niveau tous les " + XP_NIVEAU + " XP (max " + NIV_MAX + "), remis à 1 chaque saison.</li><li>Chaque niveau : 1 carte bonus" + (vA ? " et 1 point d'amélioration" : "") + ".</li></ul>") : "") +
+    s("gp", "🏎️", "Course, écurie et trophées",
+      "<ul><li><b>Course</b> : " + TOUR_GP + " points = un tour ; une ville par mois ; la météo suit le " + idx + ".</li>" +
+      '<li id="rg-ecurie"><b>Écurie</b> : casque, livrée, klaxon… purement cosmétique, débloqué par les défis.</li>' +
+      '<li id="rg-defis"><b>Trophées</b> : défis 🥉🥈🥇💎 (acquis pour toujours), <b>exclusifs</b> 💎 pour le premier qui réussit (à égalité le même mois : chacun), <b>👑 premier millionnaire</b> (patrimoine financier, montant jamais montré). Le serveur vérifie tout.</li></ul>') +
+    (bientot.length ? s("bientot", "🎁", "Bientôt", "<ul>" + bientot.map(e => "<li>" + (estAdmin() ? '<button type="button" class="lien" data-etape="' + e.id + '">🔒 ' + esc(e.nom) + "</button>" : e.ico + " <b>" + esc(e.nom) + "</b>") + " · " + esc(moisEtape(e)) + "</li>").join("") + "</ul>") : "");
 }
 function ouvrirRegles(section, tout) {
   const o = document.createElement("div"); o.className = "regles"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Règles du Versus");
@@ -519,12 +526,11 @@ function ouvrirRegles(section, tout) {
 /* ---------- Tuto : à la première ouverture du championnat, et depuis les règles ---------- */
 const TUTO = [
   { ico: "🏁", t: "Le Podium en bref", html: true, p:
-    "• <b>Chaque mois</b> : 6 · 4 · 2 · 1 points selon ta place, <b>+1 🎯</b> si tu bats le S&P 500.<br>" +
-    "• <b>Ta carte</b> : une par mois, face cachée du 20 au 1er dans le <b>Stand</b>, révélée le 2.<br>" +
-    "• <b>Bonus</b> : 🔮 pronostic, 🤝 équipe, 🔥 série, 😈 rival de la saison ; chaque ville préfère une carte (+1).<br>" +
-    "• <b>Temps forts</b> : Monaco, Silverstone, Monza et la Finale en décembre.<br>" +
-    "• <b>Écurie et trophées</b> : du style à débloquer.<br>" +
-    "Décembre 2026 est un tour de chauffe : rien ne compte. Tout le détail : 📖 Règles." }
+    "• <b>Chaque mois</b> : 6 · 4 · 2 · 0 points selon ta performance, <b>+1 🎯</b> si tu bats le S&P 500.<br>" +
+    "• <b>Ta carte</b> : une par mois, posée du 20 au 1er dans le <b>Stand</b>, révélée le 2 (jusqu'à +4).<br>" +
+    "• <b>Chaque mois aussi</b> : 🏁 un défi, 🔮 un pronostic et 🅿️ la pole position (+1 chacun).<br>" +
+    "• <b>Sur la saison</b> : 🔥 série, 😈 rival, 🛡️ régularité ; Monaco, Silverstone, Monza et la Finale ×2.<br>" +
+    "Décembre 2026 = tour de chauffe : rien ne compte. Tout le détail, avec schémas : 📖 Règles." }
 ];
 function ouvrirTuto() { ouvrirGuide("Comment ça marche", TUTO, "C'est parti 🏁"); }
 /** Petit guide en diapos (tuto du jeu, saisie d'un ordre, relevé du Versus) ; les textes acceptent <b> */
