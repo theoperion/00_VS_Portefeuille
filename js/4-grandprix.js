@@ -342,7 +342,7 @@ function assurerRappel(vue) {
   const x = el.querySelector(".rp-x"); if (x) x.addEventListener("click", () => { stock.set("versus.rappelMasque", String(aujNum())); majRappels(); toast("D'accord, je te le rappelle demain."); });
 }
 /** V15.1 : avant l'annonce du 20 novembre 2026, rien du Podium dans les onglets Classement, Mois et Moi (pas de spoil) ; l'onglet Podium garde son teaser */
-function podiumCache() { return aujNum() < 20261120; }
+function podiumCache() { return aujNum() < 20261120 && !apercuSaison(); }   // l'admin en « Tout afficher » voit tout
 /** Bandeaux de toutes les vues + pastille sur l'onglet Podium */
 function majRappels() {
   VUES_RAPPEL.forEach(id => assurerRappel(document.getElementById(id)));
@@ -602,10 +602,12 @@ function majBoutonsGP() { document.querySelectorAll("#gp-cam-b").forEach(b => b.
 function ouvrirPleinGP(y) {
   if (GP_PLEIN) return;
   const o = document.createElement("div"); o.className = "gp-plein"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Circuit en plein écran");
-  o.innerHTML = '<div class="gpp-corps"></div><div class="gpp-h"><div class="gpp-t"></div><button class="gpp-x" type="button" aria-label="Fermer le plein écran">✕</button></div><div class="gpp-tour"></div><div class="gpp-mois"></div>';
+  o.innerHTML = '<div class="gpp-corps"></div><div class="gpp-h"><div class="gpp-t"></div><button class="gpp-x gpp-rj" type="button" aria-label="Rejouer la course">↻</button><button class="gpp-x" type="button" aria-label="Fermer le plein écran">✕</button></div><div class="gpp-tour"></div><div class="gpp-mois"></div>';
   document.body.appendChild(o); document.documentElement.classList.add("fige");
   GP_PLEIN = { o, y, ancre: null, maj: 0 };
-  o.querySelector(".gpp-x").addEventListener("click", fermerPleinGP);
+  o.querySelector('.gpp-x:not(.gpp-rj)').addEventListener("click", fermerPleinGP);
+  // V15.6 : rejouer la course sans quitter le plein écran (même action que « Rejouer » sous la piste)
+  o.querySelector(".gpp-rj").addEventListener("click", () => { const rj = document.getElementById("gp-rejouer"); if (rj) rj.click(); else toast("Choisis d'abord un mois couru."); });
   GP_PLEIN.esc = e => { if (e.key === "Escape") fermerPleinGP(); }; document.addEventListener("keydown", GP_PLEIN.esc);
   placerPlein(y);
 }
