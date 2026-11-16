@@ -138,6 +138,22 @@
       <label class="coche-r"><input type="checkbox" id="moi-partage"> Partager mes lignes de bourse dans le récap du mois</label>
       <p class="info">En fin de mois, la liste de tes lignes de bourse (nom, montant, performance) est envoyée au Versus pour le récap que tout le monde voit dans l'onglet Mois. Jamais ton épargne, ton immobilier ni tes ordres.</p>
     </section>
+    <section class="regl">
+      <h4>Accès au Versus</h4>
+      <div class="champ">
+        <label for="champ-api">Adresse de l'API (web app Apps Script)</label>
+        <input id="champ-api" type="url" inputmode="url" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec">
+      </div>
+      <div class="btn-row">
+        <button class="btn ghost" type="button" id="enregistrer-api">Enregistrer l'adresse</button>
+        <button class="btn ghost" type="button" id="oublier-cle">Saisir une autre clé</button>
+      </div>
+      <div class="champ" id="bloc-nouvelle-cle">
+        <label for="champ-nouvelle-cle">Changer ta clé d'administration (les codes personnels ne changent pas)</label>
+        <input id="champ-nouvelle-cle" type="password" autocomplete="new-password" placeholder="Nouvelle clé, 6 caractères minimum">
+        <button class="btn ghost" type="button" id="changer-cle">Changer la clé</button>
+      </div>
+    </section>
     <section class="regl" id="regl-or" hidden>
       <h4>👑 Premier millionnaire</h4>
       <p class="info">Ta récompense se voit dans toute l'appli, chez tout le monde. Tu peux la masquer pour tous, et la remettre quand tu veux.</p>
@@ -179,22 +195,6 @@
       <h4>Codes personnels</h4>
       <p class="info">Chaque code ouvre tout le classement, mais ne permet de modifier que le relevé de sa personne. « Nouveau code » remplace l'ancien, qui cesse aussitôt de fonctionner.</p>
       <div id="liste-codes" class="codes"></div>
-    </section>
-    <section class="regl">
-      <h4>Accès</h4>
-      <div class="champ">
-        <label for="champ-api">Adresse de l'API (web app Apps Script)</label>
-        <input id="champ-api" type="url" inputmode="url" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec">
-      </div>
-      <div class="btn-row">
-        <button class="btn ghost" type="button" id="enregistrer-api">Enregistrer l'adresse</button>
-        <button class="btn ghost" type="button" id="oublier-cle">Saisir une autre clé</button>
-      </div>
-      <div class="champ" id="bloc-nouvelle-cle">
-        <label for="champ-nouvelle-cle">Changer ta clé d'administration (les codes personnels ne changent pas)</label>
-        <input id="champ-nouvelle-cle" type="password" autocomplete="new-password" placeholder="Nouvelle clé, 6 caractères minimum">
-        <button class="btn ghost" type="button" id="changer-cle">Changer la clé</button>
-      </div>
     </section>
     <p class="info" id="etat-source"></p>
     <p class="version-app" id="version-app"></p>

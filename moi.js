@@ -281,6 +281,14 @@ function injecterStyle() {
 .moi .pl-bloc > .pl-liste { padding: 0 12px 6px; border-top: 1px solid var(--rule-2); }
 .moi .pl-bloc > .pl-liste .pl-r:last-child { border-bottom: 0; }
 .moi .pl-r .pl-rec { font-style: normal; font-size: 11.5px; font-weight: 600; color: var(--gold); }
+.moi .m-rappel { display: flex; align-items: center; gap: 10px; margin: 10px 0 4px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--gold) 14%, var(--card, transparent)); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); }
+.moi.sans-aide .aide, .moi.sans-aide .guide-l { display: none !important; }
+.moi .rac-g { display: inline-flex; gap: 2px; } .moi .rac-g .chip.suppr { padding-inline: 10px; }
+.moi .rap-autres { margin-top: 6px; } .moi .rap-autres > summary { cursor: pointer; font-size: 13px; color: var(--ink-2); padding: 6px 2px; }
+.moi .m-rappel .ic { color: var(--gold); font-weight: 700; }
+.moi .m-rappel .t { flex: 1; display: grid; font-size: 14px; line-height: 1.25; }
+.moi .m-rappel .t small { font-size: 12px; color: var(--ink-2); }
+.moi .m-rappel .lien { white-space: nowrap; }
 .moi .m-maj { display: block; margin-top: 4px; font-size: 11px; color: var(--ink-3, var(--ink-2)); opacity: .8; }
 .moi .m-jour { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; font-size: 13px; color: var(--ink-2); }
 .moi .m-status { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-3); }
@@ -490,7 +498,8 @@ function injecterStyle() {
 .moi .champ input[inputmode="decimal"] { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
 .moi .aide.lie, .moi .champ .aide { display: block; background: none; border: 0; padding: 0; margin: 0; font-size: 11.5px; color: var(--ink-3); }
 .moi .aide.lie { margin-top: -8px; }
-.moi .types { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.moi .types { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; gap: 6px; }
+.moi .types .plus-types { padding-inline: 10px; font-size: 13px; }
 .moi .type-btn { border: 1px solid var(--rule); background: var(--panel); border-radius: 10px; padding: 11px 4px; cursor: pointer; font: italic 800 14px/1 var(--f-display); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
 .moi .type-btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); box-shadow: inset 0 -3px 0 var(--accent); }
 .moi .raccourcis { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -725,9 +734,10 @@ function rendre() {
   const bandeau = SRC === "cache" ? '<div class="demo-band">' + (enCours ? "Mise à jour de ton fichier…" : erreur ? "Ton fichier n'a pas répondu (" + esc(erreur) + ") · chiffres de la dernière ouverture." : "Chiffres de la dernière ouverture · mise à jour…") + " <small>" + esc(M.majTexte || "") + "</small></div>" : "";
   v.innerHTML =
     '<div class="seg m-onglets" role="tablist" aria-label="Moi">' + ONGLETS.map(([k, l]) => '<button type="button" role="tab" data-m-ong="' + k + '" aria-pressed="' + (o === k) + '" aria-selected="' + (o === k) + '">' + l + "</button>").join("") + "</div>" +
-    bandeau +
+    bandeau + htmlBandeauRappel() +
     ({ jour: M.simple ? htmlJourSimple : htmlJour, patrimoine: htmlPatrimoine, stats: htmlStats, missions: htmlMissions })[o]();
   v.querySelectorAll("[data-m-ong]").forEach(b => b.addEventListener("click", () => { PREF.onglet = b.dataset.mOng; garderPref(); rendre(); window.scrollTo(0, 0); }));
+  brancherBandeauRappel(v);
   v.querySelectorAll("details.acc[data-acc]").forEach(d => d.addEventListener("toggle", () => { PREF.acc[d.dataset.acc] = d.open; garderPref(); if (d.open && d.dataset.acc === "m-courbe") dessinerCourbe(); }));
   ({ jour: M.simple ? brancherJourSimple : brancherJour, patrimoine: brancherPatrimoine, stats: brancherStats, missions: brancherMissions })[o](v);
   if (SRC === "api") verifierPaliers();
@@ -1883,7 +1893,9 @@ function rendreRaccourcis() {
   const liste = refData().raccourcis || [];
   const visibles = tousRaccourcis || gererRaccourcis ? liste : liste.slice(0, 3);
   return '<div class="raccourcis"><span>Raccourcis</span>' +
-    visibles.map((r, i) => '<button class="chip' + (gererRaccourcis ? " suppr" : "") + '" type="button" data-rac="' + i + '">' + (gererRaccourcis ? "✕ " : "") + esc(r.nom) + "</button>").join("") +
+    visibles.map((r, i) => gererRaccourcis
+      ? '<span class="rac-g"><button class="chip" type="button" data-rac-ren="' + i + '" aria-label="Renommer ' + esc(r.nom) + '">✎ ' + esc(r.nom) + '</button><button class="chip suppr" type="button" data-rac="' + i + '" aria-label="Supprimer ' + esc(r.nom) + '">✕</button></span>'
+      : '<button class="chip" type="button" data-rac="' + i + '">' + esc(r.nom) + "</button>").join("") +
     (liste.length > 3 && !gererRaccourcis ? '<button class="lien" type="button" id="rac-plus">' + (tousRaccourcis ? "Voir moins" : "Voir + (" + (liste.length - 3) + ")") + "</button>" : "") +
     (liste.length ? '<button class="lien" type="button" id="rac-gerer">' + (gererRaccourcis ? "Terminé" : "Gérer") + "</button>" : '<span class="info">aucun pour l\'instant : « Enregistrer comme raccourci » en bas</span>') +
     "</div>";
@@ -1925,7 +1937,11 @@ function brancherNouvelActif() {
     F.actif = a.code; F.na = null; toast("Actif " + a.code + " créé : tu peux saisir ton ordre."); rendreFormulaire();
   });
 }
+let plusTypes = false;
+/* V15.2 : aides masquables (« Masquer les aides » en bas de la saisie), retenu sur l'appareil */
+function majAides() { const f = document.querySelector("#m-saisie .m-feuille"); if (f) f.classList.toggle("sans-aide", PREF.aides === false); }
 function rendreFormulaire() {
+  majAides();
   const r = refData();
   const ouvertes = r.enveloppes.filter(e => !e.statut || e.statut === "Ouvert" || e.statut === "À ouvrir");   // 14.5 : « À ouvrir » s'ouvre au 1er ordre
   if (!ouvertes.find(e => e.nom === F.env) && ouvertes.length) F.env = ouvertes[0].nom;
@@ -1939,15 +1955,16 @@ function rendreFormulaire() {
   const avecActif = AVEC_ACTIF.includes(F.type), avecQte = AVEC_QTE.includes(F.type), avecFrais = AVEC_FRAIS.includes(F.type);
   $f("m-pane-ordre").innerHTML =
     '<form class="form" id="m-form-ordre" novalidate>' +
-      '<button class="lien guide-l" type="button" id="f-guide">❓ Comment saisir un ordre</button>' +
+      (PREF.aides === false ? "" : '<button class="lien guide-l" type="button" id="f-guide">❓ Comment saisir un ordre</button>') +
       rendreRaccourcis() +
-      '<div class="types" role="group" aria-label="Type d\'ordre">' + PRINCIPAUX.map(t => '<button type="button" class="type-btn" data-type="' + t + '" aria-pressed="' + (F.type === t) + '">' + t + "</button>").join("") + "</div>" +
+      '<div class="types" role="group" aria-label="Type d\'ordre">' + PRINCIPAUX.map(t => '<button type="button" class="type-btn" data-type="' + t + '" aria-pressed="' + (F.type === t) + '">' + t + "</button>").join("") +
+        '<button type="button" class="type-btn plus-types" id="f-plus-types" aria-pressed="' + (!PRINCIPAUX.includes(F.type)) + '" aria-expanded="' + !!(plusTypes || !PRINCIPAUX.includes(F.type)) + '">Plus…</button></div>' +
       '<div class="rang">' +
         '<div class="champ"><label for="f-date">Date</label><input id="f-date" type="date" value="' + esc(F.date) + '"></div>' +
-        '<div class="champ"><label for="f-autre">Autre type</label><select id="f-autre"><option value="">Choisir…</option>' +
-          ["Courant", "Rare"].map(g => { const l = autres.filter(t => (AUTRES_TYPES[t] || { g: "Rare" }).g === g); return l.length ? '<optgroup label="' + (g === "Courant" ? "Courant" : "Rare · assurance-vie et corrections") + '">' + l.map(t => '<option value="' + esc(t) + '"' + (F.type === t ? " selected" : "") + ">" + esc((AUTRES_TYPES[t] || {}).lib || t) + "</option>").join("") + "</optgroup>" : ""; }).join("") + "</select></div>" +
+        (!(plusTypes || !PRINCIPAUX.includes(F.type)) ? "" : '<div class="champ"><label for="f-autre">Plus de types</label><select id="f-autre"><option value="">Dividende, frais, assurance-vie…</option>' +
+          ["Courant", "Rare"].map(g => { const l = autres.filter(t => (AUTRES_TYPES[t] || { g: "Rare" }).g === g); return l.length ? '<optgroup label="' + (g === "Courant" ? "Courant" : "Rare · assurance-vie et corrections") + '">' + l.map(t => '<option value="' + esc(t) + '"' + (F.type === t ? " selected" : "") + ">" + esc((AUTRES_TYPES[t] || {}).lib || t) + "</option>").join("") + "</optgroup>" : ""; }).join("") + "</select></div>") +
       "</div>" +
-      (AUTRES_TYPES[F.type] ? '<p class="info">ℹ️ <b>' + esc(AUTRES_TYPES[F.type].lib) + "</b> : " + esc(AUTRES_TYPES[F.type].d) + "</p>" : "") +
+      (AUTRES_TYPES[F.type] && PREF.aides !== false ? '<p class="info">ℹ️ <b>' + esc(AUTRES_TYPES[F.type].lib) + "</b> : " + esc(AUTRES_TYPES[F.type].d) + "</p>" : "") +
       '<div class="champ"><label for="fo-env">Enveloppe</label><select id="fo-env">' +
         groupeEnv(ouvertes.filter(e => e.perimetre === "Portefeuille"), "Bourse") + groupeEnv(ouvertes.filter(e => e.perimetre !== "Portefeuille"), "Épargne") + "</select></div>" +
       (avecActif ? '<div class="champ"><label for="f-actif">Actif</label><select id="f-actif"><option value="">Choisir l\'actif…</option>' +
@@ -1972,12 +1989,15 @@ function rendreFormulaire() {
           ? '<div class="nommer"><input id="f-nom-rac" type="text" maxlength="40" aria-label="Nom du raccourci" value="' + esc(nomParDefaut()) + '"><button class="mini-btn" type="button" id="rac-ok">Créer</button><button class="lien" type="button" id="rac-annuler">Annuler</button></div>'
           : '<button class="lien" type="button" id="rac-creer">Enregistrer comme raccourci</button>') +
         '<button class="lien" type="button" id="f-vider">Vider le formulaire</button>' +
+        '<button class="lien" type="button" id="f-aides">' + (PREF.aides === false ? "Afficher les aides" : "Masquer les aides") + "</button>" +
       "</div>" +
     "</form>";
   const form = $f("m-form-ordre");
-  $f("f-guide").addEventListener("click", guideOrdre);
-  form.querySelectorAll("[data-type]").forEach(b => b.addEventListener("click", () => { F = formulaire({ type: b.dataset.type, date: F.date, env: F.env, actif: AVEC_ACTIF.includes(b.dataset.type) ? F.actif : "", montant: F.montant }); synchroniser(); rendreFormulaire(); }));
-  $f("f-autre").addEventListener("change", e => { if (e.target.value) { F = formulaire({ type: e.target.value, date: F.date, env: F.env, montant: F.montant }); rendreFormulaire(); } });
+  if ($f("f-guide")) $f("f-guide").addEventListener("click", guideOrdre);
+  form.querySelectorAll("[data-type]").forEach(b => b.addEventListener("click", () => { plusTypes = false; F = formulaire({ type: b.dataset.type, date: F.date, env: F.env, actif: AVEC_ACTIF.includes(b.dataset.type) ? F.actif : "", montant: F.montant }); synchroniser(); rendreFormulaire(); }));
+  $f("f-plus-types").addEventListener("click", () => { plusTypes = !plusTypes || !PRINCIPAUX.includes(F.type); if (!plusTypes && !PRINCIPAUX.includes(F.type)) F = formulaire({ type: "Achat", date: F.date, env: F.env }); rendreFormulaire(); if (plusTypes) setTimeout(() => { const x = $f("f-autre"); if (x) x.focus(); }, 30); });
+  $f("f-aides").addEventListener("click", () => { PREF.aides = PREF.aides === false; garderPref(); majAides(); rendreFormulaire(); });
+  if ($f("f-autre")) $f("f-autre").addEventListener("change", e => { if (e.target.value) { F = formulaire({ type: e.target.value, date: F.date, env: F.env, montant: F.montant }); rendreFormulaire(); } });
   $f("fo-env").addEventListener("change", e => { F = formulaire({ type: F.type, date: F.date, env: e.target.value, montant: F.montant, frais: F.frais }); rendreFormulaire(); });
   if ($f("f-actif")) $f("f-actif").addEventListener("change", e => { F = formulaire({ type: F.type, date: F.date, env: F.env, actif: e.target.value, montant: F.montant, frais: F.frais, apport: F.apport, montantApport: F.montantApport }); synchroniser(); rendreFormulaire(); });
   if ($f("f-apport")) $f("f-apport").addEventListener("change", e => { F.apport = e.target.checked; rendreFormulaire(); });
@@ -2000,6 +2020,12 @@ function rendreFormulaire() {
     const i = +b.dataset.rac, liste = (refData().raccourcis || []).slice();
     if (gererRaccourcis) { liste.splice(i, 1); sauverRaccourcis(liste); rendreFormulaire(); return; }
     F = formulaire(depuisRaccourci(liste[i])); synchroniser(); rendreFormulaire();
+  }));
+  form.querySelectorAll("[data-rac-ren]").forEach(b => b.addEventListener("click", () => {
+    const i = +b.dataset.racRen, liste = (refData().raccourcis || []).slice(), r = liste[i]; if (!r) return;
+    const nom = (window.prompt("Nouveau nom du raccourci", r.nom) || "").trim().slice(0, 40);
+    if (!nom || nom === r.nom) return;
+    liste[i] = Object.assign({}, r, { nom: nom }); sauverRaccourcis(liste); rendreFormulaire(); toast("Raccourci renommé : « " + nom + " ».");
   }));
   if ($f("rac-plus")) $f("rac-plus").addEventListener("click", () => { tousRaccourcis = !tousRaccourcis; rendreFormulaire(); });
   if ($f("rac-gerer")) $f("rac-gerer").addEventListener("click", () => { gererRaccourcis = !gererRaccourcis; rendreFormulaire(); });
@@ -2219,7 +2245,8 @@ function rendreMaj() {
   const z = $f("m-pane-maj"); const p = (M && M.parametres) || null;
   if (!p) { z.innerHTML = '<p class="info">Paramètres de ton fichier indisponibles.</p>'; return; }
   const r = refData();
-  const rappels = rappelsFichier().map(x => {
+  const utile = x => cleRappel(x.nom) && ((x.prochaine && /^\d{4}-/.test(x.prochaine)) || /À faire|mettre à jour/i.test(x.statut || ""));
+  const htmlRap = x => {
     const k = cleRappel(x.nom);
     const etat = /À faire|mettre à jour/i.test(x.statut) ? "faire" : /À jour|Fait/.test(x.statut) ? "ok" : "neutre";
     const quand = x.prochaine && /^\d{4}-/.test(x.prochaine) ? "prochaine le " + frDate(x.prochaine) : (x.derniere && !/^\d{4}-/.test(String(x.derniere)) ? String(x.derniere) : (x.derniere ? "dernière le " + frDate(x.derniere) : ""));
@@ -2228,7 +2255,10 @@ function rendreMaj() {
       (k ? '<button type="button" class="rap-h" data-rap="' + k + '" aria-expanded="' + ouvert + '">' : '<div class="rap-h fixe">') + '<span class="pt ' + etat + '"></span><span class="rap-n">' + esc(nomRappel(x.nom)) + "<small>" + esc(quand) + "</small></span>" +
       '<span class="st ' + etat + '">' + (etat === "faire" ? "À faire" : etat === "ok" ? "À jour" : "—") + "</span>" + (k ? "</button>" : "</div>") +
       (ouvert ? '<div class="rap-c">' + formReglage(k) + "</div>" : "") + "</div>";
-  }).join("");
+  };
+  const tous = rappelsFichier(), autres = tous.filter(x => !utile(x));
+  const rappels = tous.filter(utile).sort((x, y) => (/À faire/i.test(y.statut || "") ? 1 : 0) - (/À faire/i.test(x.statut || "") ? 1 : 0) || String(x.prochaine).localeCompare(String(y.prochaine))).map(htmlRap).join("") +
+    (autres.length ? '<details class="rap-autres"><summary>Autres réglages du fichier (' + autres.length + ")</summary>" + autres.map(htmlRap).join("") + "</details>" : "");
   const alertes = M.alertes || [];
   const codesAlerte = Array.from(new Set((r.detenu || []).map(d => d.code).concat(r.actifs.filter(a => r.cours[a.code]).map(a => a.code))));
   const classes = Array.from(new Set((p.classes || []).concat(["Actions", "Obligations", "Or", "Crypto", "Monétaire", "Immobilier"])));
@@ -2238,7 +2268,7 @@ function rendreMaj() {
   const mAl = reglageMsg.alertes ? '<div class="alerte ' + reglageMsg.alertes[0] + '">' + esc(reglageMsg.alertes[1]) + "</div>" : "";
   const pre = alertePre || {};
   z.innerHTML =
-    '<h4 class="m-h4">Rappels de ton fichier <small>touche pour mettre à jour</small></h4><div class="raps">' + rappels + "</div>" +
+    '<h4 class="m-h4">Rappels <small>le plus urgent en haut · touche pour mettre à jour</small></h4><div class="raps">' + rappels + "</div>" +
     '<h4 class="m-h4" data-reg="actif">Nouvel actif <small>avant un premier achat</small></h4>' +
       '<form class="form reg-form" data-form="actif">' +
         '<div class="rang">' + champ("a-code", "Code (court, unique)", "", { ph: "ex. CW8", texte: "maj" }) + champ("a-nom", "Nom", "", { ph: "ex. Amundi MSCI World", texte: true }) + "</div>" +
@@ -2270,10 +2300,7 @@ function rendreMaj() {
   alertePre = null;
   z.querySelectorAll("[data-rap]").forEach(b => b.addEventListener("click", () => {
     const k = b.dataset.rap;
-    const quint = (r.enveloppes.find(e => /Quintessa/.test(e.nom)) || {}).nom;
-    if (k === "releve") { F = formulaire({ type: "Relevé", env: quint, actif: "ARTEMA" }); paneSaisie("ordre"); return; }
-    if (k === "interets") { F = formulaire({ type: "Intérêts", env: (r.enveloppes.find(e => /Livret A/.test(e.nom)) || {}).nom, date: (new Date().getFullYear() - 1) + "-12-31" }); paneSaisie("ordre"); return; }
-    if (k === "versement") { const rc = (r.raccourcis || []).find(x => /Quintessa/.test(x.env)); F = formulaire(rc ? depuisRaccourci(rc) : { env: quint }); synchroniser(); paneSaisie("ordre"); return; }
+    const pr = partielRappel(k); if (pr) { F = formulaire(pr); synchroniser(); paneSaisie("ordre"); return; }
     reglageOuvert = reglageOuvert === k ? null : k;
     delete reglageMsg[k];
     rendreMaj();
@@ -2960,6 +2987,37 @@ function rappelsFichier() {
   for (const r of ((M.parametres || {}).rappels || [])) { if (/^Mes actifs/.test(r.nom || "")) break; if (r.nom) out.push(r); }
   return out;
 }
+/* V15.2 · rappels : un bandeau dans Moi quand c'est dû, « Faire » (ouvre la bonne saisie) ou « Plus tard » (2 jours) */
+function partielRappel(k) {
+  const r = refData(), quint = (r.enveloppes.find(e => /Quintessa/.test(e.nom)) || {}).nom;
+  if (k === "releve") return { type: "Relevé", env: quint, actif: "ARTEMA" };
+  if (k === "interets") return { type: "Intérêts", env: (r.enveloppes.find(e => /Livret A/.test(e.nom)) || {}).nom, date: (new Date().getFullYear() - 1) + "-12-31" };
+  if (k === "versement") { const rc = (r.raccourcis || []).find(x => /Quintessa/.test(x.env)); return rc ? depuisRaccourci(rc) : { env: quint }; }
+  return null;
+}
+function faireRappel(k) {
+  const pr = partielRappel(k);
+  if (pr) { ouvrirSaisieM(pr); return; }
+  reglageOuvert = k; delete reglageMsg[k]; ouvrirSaisieM(null, "maj");
+}
+function plusTard() { try { return JSON.parse(stock.get(cleStock("plusTard")) || "{}") || {}; } catch (e) { return {}; } }
+function rappelReporte(x) { const k = cleRappel(x.nom) || x.nom; return (plusTard()[k] || 0) > Date.now(); }
+function rappelDu(x) { return /À faire|mettre à jour|retard|⚠|✏/i.test(x.statut || "") && !rappelReporte(x); }
+function htmlBandeauRappel() {
+  if (!M || M.simple) return "";
+  const d = rappelsFichier().filter(rappelDu); if (!d.length) return "";
+  const x = d[0], k = cleRappel(x.nom) || x.nom;
+  return '<div class="m-rappel" role="status"><span class="ic">◷</span><span class="t"><b>' + esc(nomRappel(x.nom)) + "</b><small>à faire" +
+    (x.prochaine && /^\d{4}-/.test(x.prochaine) ? " depuis le " + frDate(x.prochaine) : "") + (d.length > 1 ? " · + " + (d.length - 1) + " autre" + (d.length > 2 ? "s" : "") : "") + "</small></span>" +
+    '<button class="mini-btn" type="button" data-rap-faire="' + esc(k) + '">Faire</button><button class="lien" type="button" data-rap-tard="' + esc(k) + '">Plus tard</button></div>';
+}
+function brancherBandeauRappel(v) {
+  v.querySelectorAll("[data-rap-faire]").forEach(b => b.addEventListener("click", () => faireRappel(b.dataset.rapFaire)));
+  v.querySelectorAll("[data-rap-tard]").forEach(b => b.addEventListener("click", () => {
+    const pt = plusTard(); pt[b.dataset.rapTard] = Date.now() + 2 * 864e5; stock.set(cleStock("plusTard"), JSON.stringify(pt));
+    toast("C'est noté : je te le rappelle dans 2 jours."); signalerCloche(); rendre();
+  }));
+}
 function notifications() {
   if (!M) return { niveau: "", items: [] };
   const items = [];
@@ -2968,8 +3026,8 @@ function notifications() {
   alertesDeclenchees().forEach(a => items.push({ t: "rouge", txt: "Alerte de cours : " + a }));
   const d = dateRappel(M.rappel);
   const aFaire = /À mettre à jour/.test(M.rappel || "") || (d && d - Date.now() < 2 * 864e5);
-  rappelsFichier().filter(r => /mettre à jour|à faire|retard|⚠|✏/i.test(r.statut || "")).forEach(r => items.push({ t: "orange", txt: r.nom + " : " + String(r.statut).replace(/^[^\wÀ-ÿ]+/u, "") + (r.prochaine ? " (prévu le " + frDate(String(r.prochaine).slice(0, 10)) + ")" : "") }));
-  if (aFaire && !items.some(x => x.t === "orange")) items.push({ t: "orange", txt: M.rappel });
+  rappelsFichier().filter(rappelDu).forEach(r => items.push({ t: "orange", txt: r.nom + " : " + String(r.statut).replace(/^[^\wÀ-ÿ]+/u, "") + (r.prochaine ? " (prévu le " + frDate(String(r.prochaine).slice(0, 10)) + ")" : "") }));
+  if (aFaire && !rappelsFichier().length && !items.some(x => x.t === "orange")) items.push({ t: "orange", txt: M.rappel });
   const niveau = items.some(x => x.t === "rouge") ? "rouge" : items.some(x => x.t === "orange") ? "orange" : "";
   return { niveau, items };
 }

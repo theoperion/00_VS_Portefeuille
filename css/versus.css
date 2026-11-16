@@ -1043,6 +1043,11 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
 .regl { display: grid; gap: 12px; padding-top: 14px; border-top: 1px solid var(--rule); }
 .regl h4 { margin: 0; font: italic 800 15px/1 var(--f-display); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.regl > h4[role="button"] { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; -webkit-tap-highlight-color: transparent; }
+.regl > h4[role="button"]::after { content: ""; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform .15s; margin-right: 4px; flex: none; }
+.regl.ferme > h4[role="button"]::after { transform: rotate(-45deg); }
+.regl.ferme > :not(h4) { display: none !important; }
+.regl.ferme { gap: 0; padding-bottom: 2px; }
 .liaison-res { display: grid; gap: 0; font-size: 13px; }
 .liaison-res div { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-top: 1px solid var(--rule-2); }
 .liaison-res b { font-family: var(--f-num); font-weight: 600; }

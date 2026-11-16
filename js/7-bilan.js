@@ -660,9 +660,25 @@ function fermerFenetreOuverte() {
 /* ---------- Réglages ---------- */
 function ouvrirReglages(section) {
   $("#champ-api").value = stock.get(CLES.api) || API_URL; aRevoquer = null; $("#reglages").hidden = false; chargerCodes(); majMoiReglages();
-  if (section) { const s = document.getElementById(section); if (s) setTimeout(() => { s.scrollIntoView({ block: "start" }); const i = s.querySelector("input"); if (i && !i.value) i.focus(); }, 30); }
+  if (section) { const s = document.getElementById(section); if (s) plierRegl(s, false); if (s) setTimeout(() => { s.scrollIntoView({ block: "start" }); const i = s.querySelector("input"); if (i && !i.value) i.focus(); }, 30); }
 }
 $("#btn-reglages").addEventListener("click", () => ouvrirReglages());
+/* V15.2 : Réglages rangés en rubriques repliables (touche le titre) ; seule « Affichage » est ouverte au départ, le choix reste sur l'appareil */
+function plierRegl(sec, ferme) {
+  sec.classList.toggle("ferme", ferme); const h = sec.querySelector(":scope > h4"); if (h) h.setAttribute("aria-expanded", String(!ferme));
+  const id = sec.id || "regl-affichage"; let o = {}; try { o = JSON.parse(stock.get("versus.reglOuverts") || "{}") || {}; } catch (e) { o = {}; }
+  o[id] = !ferme; stock.set("versus.reglOuverts", JSON.stringify(o));
+}
+(() => {
+  let o = {}; try { o = JSON.parse(stock.get("versus.reglOuverts") || "{}") || {}; } catch (e) { o = {}; }
+  document.querySelectorAll("#reglages section.regl").forEach((sec, i) => {
+    const h = sec.querySelector(":scope > h4"); if (!h) return;
+    const id = sec.id || "regl-affichage", ouvert = id in o ? o[id] : i === 0;
+    h.setAttribute("role", "button"); h.tabIndex = 0; sec.classList.toggle("ferme", !ouvert); h.setAttribute("aria-expanded", String(ouvert));
+    const bas = () => plierRegl(sec, !sec.classList.contains("ferme"));
+    h.addEventListener("click", bas); h.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); bas(); } });
+  });
+})();
 /* Mon fichier (privé) : adresse et clé du fichier personnel, gardées sur l'appareil */
 const MOI_CLES = { api: "versus.moi.api", cle: "versus.moi.cle" };
 function adresseFichierValide(a) { return /^https:\/\/script\.google(usercontent)?\.com\/.+\/exec$/.test(String(a || "").trim()); }
