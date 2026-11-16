@@ -310,8 +310,11 @@ function rappelCartes() {
   const k = moisCarteOuvert(); if (!k) return null;
   const y = k === CHAUFFE_K ? SAISON.premiere - 1 : Math.floor(k / 100);
   if (kOuvertPour(y) !== k) return null;
-  const c = carteDe(y, qui, k); if (c && c.c) return null;
-  return { k, y, j: joursRestants(k) };
+  const c = carteDe(y, qui, k), sansCarte = !(c && c.c);
+  // V15.1 : le rappel reste tant que la carte ET le pronostic (quand il compte) ne sont pas faits
+  const pr = k !== CHAUFFE_K && regleVisible("prono") && regleActive("prono", k) ? pronoDe(y, qui, k) : true, sansProno = !pr;
+  if (!sansCarte && !sansProno) return null;
+  return { k, y, j: joursRestants(k), carte: sansCarte, prono: sansProno };
 }
 const VUES_RAPPEL = ["v-classement", "v-mois", "v-moi"];
 function allerAuStand() {
@@ -321,18 +324,21 @@ function allerAuStand() {
 }
 function assurerRappel(vue) {
   if (!vue || !VUES_RAPPEL.includes(vue.id)) return;
-  const r = rappelCartes(), masque = r && r.j > 1 && stock.get("versus.rappelMasque") === String(aujNum());
+  if (podiumCache()) { const ici0 = vue.querySelector(":scope > .rappel"); if (ici0) ici0.remove(); return; }
+  const r = rappelCartes(), masque = false;   // V15.1 : plus de « rappelle-moi demain » : le rappel reste tant que ce n'est pas fait
   const ici = vue.querySelector(":scope > .rappel");
   if (!r || masque) { if (ici) ici.remove(); return; }
   const cle = r.k + "-" + r.j; if (ici && ici.dataset.cle === cle) return;
   if (ici) ici.remove();
-  vue.insertAdjacentHTML("afterbegin", '<div class="rappel' + (r.j <= 1 ? " urgent" : "") + '" data-cle="' + cle + '" role="status"><span class="rp-i">🃏</span><div class="rp-t"><b>Ta carte de ' + esc(moisLong(r.k).replace(/ \d{4}$/, "")) + "</b><small>" +
+  vue.insertAdjacentHTML("afterbegin", '<div class="rappel' + (r.j <= 1 ? " urgent" : "") + '" data-cle="' + cle + '" role="status"><span class="rp-i">🃏</span><div class="rp-t"><b>' + (r.carte && r.prono ? "Ta carte et ton pronostic" : r.carte ? "Ta carte" : "Ton pronostic") + " de " + esc(moisLong(r.k).replace(/ \d{4}$/, "")) + "</b><small>" +
     (r.j <= 1 ? "Dernier jour : la fenêtre se ferme ce soir." : "Fenêtre ouverte · il te reste " + r.j + " jours.") + (regleVisible("duels") && regleActive("duels", r.k) ? " Un duel aussi, si tu veux." : "") + '</small></div><button class="btn acc rp-go" type="button">Y aller</button>' +
-    (r.j > 1 ? '<button class="rp-x" type="button" aria-label="Me le rappeler demain">✕</button>' : "") + "</div>");
+    "</div>");
   const el = vue.querySelector(":scope > .rappel");
   el.querySelector(".rp-go").addEventListener("click", allerAuStand);
   const x = el.querySelector(".rp-x"); if (x) x.addEventListener("click", () => { stock.set("versus.rappelMasque", String(aujNum())); majRappels(); toast("D'accord, je te le rappelle demain."); });
 }
+/** V15.1 : avant l'annonce du 20 novembre 2026, rien du Podium dans les onglets Classement, Mois et Moi (pas de spoil) ; l'onglet Podium garde son teaser */
+function podiumCache() { return aujNum() < 20261120; }
 /** Bandeaux de toutes les vues + pastille sur l'onglet Podium */
 function majRappels() {
   VUES_RAPPEL.forEach(id => assurerRappel(document.getElementById(id)));
