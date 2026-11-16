@@ -374,7 +374,8 @@ function ouvrirRevelation(r) {
   const finFlip = (r.l.length - 1) * 700 + 450 + 700; let fini = false;
   setTimeout(() => { if (!fini && o.isConnected && typeof confettis === "function") confettis("etoiles"); }, finFlip);
   const fermer = () => { fini = true; o.remove(); };
-  o.addEventListener("click", e => { if (e.target === o) fermer(); });
+  // V15.9 : un tapotement à côté ne coupe plus la révélation ; il ne ferme qu'une fois toutes les cartes retournées (« Fermer » marche toujours)
+  const t0 = Date.now(); o.addEventListener("click", e => { if (e.target === o && Date.now() - t0 > finFlip + 600) fermer(); });
   o.querySelector('[data-rv="fermer"]').addEventListener("click", fermer);
   o.querySelector('[data-rv="course"]').addEventListener("click", () => { fermer(); choisirSaison(r.y); ETAT.podium = "gp"; garder(); if (vueActive() === "trophees") rendreTrophees(); else allerA("trophees"); });
 }

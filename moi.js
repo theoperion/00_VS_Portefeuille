@@ -2879,7 +2879,7 @@ function feter(x, suite) {
     if (t === "fete") lancerFete(id);
     if (vueMoi()) rendre();
   }));
-  o.addEventListener("click", e => { if (e.target === o) fermer(); });
+  const t0 = Date.now(); o.addEventListener("click", e => { if (e.target === o && Date.now() - t0 > 2200) fermer(); });   // V15.9 : laisse l'afficheur finir
   lancerFete();
 }
 const palOuverts = new Set();

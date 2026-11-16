@@ -436,7 +436,15 @@ function annoncerExclusifs() {
   if (!vus.length && !stock.get("versus.exclVus")) { stock.set("versus.exclVus", JSON.stringify(EXCLUSIFS.filter(x => possede(x.id, moi)).map(x => x.id))); return; }   // premier passage : rien à fêter
   if (!nouveaux.length) return;
   stock.set("versus.exclVus", JSON.stringify(vus.concat(nouveaux.map(x => x.id))));
-  const x = nouveaux[0]; toast(x.ico + " Exclusif décroché : " + ITEMS[x.gain[0]][x.gain[1]] + " (" + x.nom + ")" + (nouveaux.length > 1 ? " et " + (nouveaux.length - 1) + " autre(s)" : "")); confettis("damier");
+  // V15.9 : une vraie annonce (et plus un simple message de 4 s) : c'est un objet unique, gagné en premier
+  const o = document.createElement("div"); o.className = "revel excl-an"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
+  o.innerHTML = '<div class="rv-c"><span class="tuto-k">💎 Exclusif décroché</span>' + nouveaux.map((x, i) => '<div class="ea-l" style="--i:' + i + '"><span class="ea-ico">' + x.ico + "</span><b>" + esc(x.nom) + "</b><small>Tu es le premier : " + esc((SLOTS.find(z => z[0] === x.gain[0]) || [, "objet"])[1]) + " « " + esc(ITEMS[x.gain[0]][x.gain[1]]) + " », un objet d'écurie que personne d'autre n'aura.</small></div>").join("") +
+    '<div class="btn-row"><button class="btn acc" type="button" data-ea="ecurie">🏎️ Mon écurie</button><button class="btn ghost" type="button" data-ea="ok">Génial !</button></div></div>';
+  document.body.appendChild(o); confettis("damier");
+  const t0 = Date.now(), fermer = () => o.remove();
+  o.addEventListener("click", e => { if (e.target === o && Date.now() - t0 > 2000) fermer(); });
+  o.querySelector('[data-ea="ok"]').addEventListener("click", fermer);
+  o.querySelector('[data-ea="ecurie"]').addEventListener("click", () => { fermer(); ETAT.podium = "ecurie"; garder(); if (vueActive() === "trophees") rendreTrophees(); else allerA("trophees"); });
 }
 async function revendiquerExclusifs() {
   return;   // V22 : c'est le serveur qui calcule et fige les exclusifs (anti-triche) ; l'appli ne revendique plus rien

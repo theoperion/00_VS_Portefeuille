@@ -574,7 +574,7 @@ function rendreClassement() {
   brancherVerdict(verdict);
   { const bv = $("#boite-verdict"); if (bv) { compterChiffres(bv);
       // la première fois qu'on voit le verdict d'un nouveau mois : une petite fête
-      if (verdict && verdict.complet && !VK && +(stock.get("versus.verdictVu") || 0) < verdict.k) { const premier = !stock.get("versus.verdictVu"); stock.set("versus.verdictVu", String(verdict.k)); if (!premier && typeof confettis === "function") setTimeout(() => { if (vueActive() === "classement") confettis(); }, 1100); } } }
+      if (verdict && verdict.complet && !VK && +(stock.get("versus.verdictVu") || 0) < verdict.k) { const premier = !stock.get("versus.verdictVu"); stock.set("versus.verdictVu", String(verdict.k)); if (!premier && typeof confettis === "function" && !(verdict.champion && verdict.champion.seul && verdict.champion.nom === ETAT.moi)) setTimeout(() => { if (vueActive() === "classement") confettis(); }, 1100); } } }
   v.querySelectorAll("[data-nv-manche]").forEach(b => b.addEventListener("click", () => { choisirSaison(+b.dataset.nvManche); ETAT.podium = "gp"; GP_ETAPE = null; garder(); allerA("trophees"); }));
   v.querySelectorAll(".regles-mois[data-aller-stand]").forEach(b => { const go = () => { ETAT.podium = "stand"; garder(); allerA("trophees"); }; b.addEventListener("click", go); b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }); });
   $("#info-million").addEventListener("click", () => toast(texteMillion()));

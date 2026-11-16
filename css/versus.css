@@ -1221,3 +1221,11 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 }
 @keyframes posIn { from { opacity: 0; translate: -14px 0; } to { opacity: 1; translate: 0 0; } }
 @keyframes leadReflet { 0%, 60% { background-position: 160% 0; } 100% { background-position: -60% 0; } }
+
+/* V15.9 · annonce d'un exclusif */
+.excl-an .ea-l { display: grid; justify-items: center; gap: 4px; padding: 6px 0; }
+.excl-an .ea-ico { font-size: 54px; line-height: 1; filter: drop-shadow(0 6px 14px rgba(247,207,85,.45)); }
+.excl-an .ea-l b { font: italic 800 20px/1.1 var(--f-display); text-transform: uppercase; letter-spacing: .05em; color: #F7CF55; }
+.excl-an .ea-l small { font-size: 13px; color: rgba(244,245,248,.8); max-width: 30ch; }
+@media (prefers-reduced-motion: no-preference) { .excl-an .ea-ico { animation: eaPop .7s cubic-bezier(.3,1.6,.5,1) both; animation-delay: calc(var(--i) * .25s + .15s); } .excl-an .ea-l { animation: rvVient .4s ease-out both; animation-delay: calc(var(--i) * .25s); } }
+@keyframes eaPop { from { transform: scale(.2) rotate(-30deg); opacity: 0; } to { transform: none; opacity: 1; } }
