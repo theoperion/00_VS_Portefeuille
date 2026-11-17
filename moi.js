@@ -909,11 +909,17 @@ function lignesTenues() {
 /* V15.11 · « Dernière séance » : quand la bourse est fermée (nuit, week-end), on peut afficher les variations de la dernière séance,
    lues dans Perf lignes (Google Finance), puis revenir à « aujourd'hui ». Rien n'est écrit : c'est une vue. */
 function seanceDu() { const p = M && M.perfLignes; if (!p) return null; const ds = Object.values(p).map(x => x && x.seanceDu).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d || "")).sort(); return ds.length ? ds[ds.length - 1] : null; }
-function seanceProposee() { const d = seanceDu(); return !!d && d < isoJour(new Date()); }
-function modeSeance() { return PREF.seance === true && seanceProposee(); }
+/* proposée quand la dernière séance n'est pas aujourd'hui ET qu'aucune ligne cotée ne bouge aujourd'hui (une nouvelle séance a commencé → le bouton s'en va) */
+function seanceProposee() {
+  if (M && M.__seance) return true;   // pendant l'affichage de la séance (copie de M), elle reste proposée
+  const d = seanceDu(); if (!d || d >= isoJour(new Date())) return false;
+  const perf = M.perfLignes || {};
+  return !(M.groupes || []).some(g => g.lignes.some(l => { const p = perf[g.env + "|" + l.code]; return p && typeof p.seance === "number" && Math.abs(l.pct || 0) > 1e-9; }));
+}
+function modeSeance() { return PREF.seance === seanceDu() && seanceProposee(); }   // retenu pour CETTE séance seulement
 function libSeance() { const d = seanceDu(); if (!d) return ""; const x = new Date(d + "T12:00:00"); return ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."][x.getDay()] + " " + frDate(d).slice(0, 5); }
 function mSeance(m) {
-  const perf = m.perfLignes || {}, c = JSON.parse(JSON.stringify(m)); let tot = 0;
+  const perf = m.perfLignes || {}, c = JSON.parse(JSON.stringify(m)); c.__seance = true; let tot = 0;
   (c.groupes || []).forEach(g => {
     let j = 0;
     g.lignes.forEach(l => { if (l.especes) return; const p = perf[g.env + "|" + l.code];
@@ -1053,7 +1059,7 @@ function alertesDeclenchees() {
 }
 function brancherJour(v) {
   brancherDefs(v); brancherSignal(v); brancherMarches(v);
-  const bs = v.querySelector("#m-seance"); if (bs) bs.addEventListener("click", () => { PREF.seance = !modeSeance(); garderPref(); dernierFlap = ""; rendre(); });
+  const bs = v.querySelector("#m-seance"); if (bs) bs.addEventListener("click", () => { PREF.seance = modeSeance() ? null : seanceDu(); garderPref(); dernierFlap = ""; rendre(); });
   v.querySelectorAll(".m-l[data-code]").forEach(el => {
     el.addEventListener("click", e => { if (!e.target.closest(".m-ligne-det")) basculerLigne(el); });
     el.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target === el) { e.preventDefault(); basculerLigne(el); } });
@@ -1219,7 +1225,7 @@ function pretHtml() {
 }
 /* ---- V15.4 · Marchés : 8 cases (variation du jour, lue dans le Versus), courbe d'un an au toucher, « Comparer » en base 100 ---- */
 const COUL_MK = ["#5B8DEF", "#2BB673", "#9B6BFF", "#E5484D", "#F2A33A", "#18A9C7", "#D6619E", "#C9A227", "#8C7B5A"];
-let marcheOuvert = null, mkCaches = { "Or couvert €": true };
+let marcheOuvert = null, mkCaches = {};   // V15.19 : toutes les courbes affichées par défaut, or couvert compris
 function marchesMoi() { const Dv = dVersus(); const m = Dv && Dv.marchesMoi; return m && (m.jour || []).length ? m : null; }
 function htmlMarches() {
   const m = marchesMoi(), h = (m.jour.find(x => x.heure) || {}).heure;
