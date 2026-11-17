@@ -905,6 +905,122 @@ function htmlGarage(qui) {
 }
 /* Trophées : un seul écran, par rareté (🥉 → 💎). Dans chaque rareté, les défis (tout le monde peut les réussir)
    et les exclusifs (un seul exemplaire). Puis les secrets. Chaque trophée débloque un objet de l'écurie. */
+/* ================= V15.24 · Le plateau des trophées : le circuit des exclusifs + la piste façon « Mario Party » =================
+   Circuit : une case par exclusif (+ 👑), par secteur de difficulté ; case prise = couleur de son détenteur ; case libre = le pilote le plus proche.
+   Piste : chaque trophée fait avancer ton pion (défi ou secret : 1 case, exclusif : 3 cases), étoiles tous les 5. Tout se calcule sur les relevés. */
+const COUL_NIV = ["", "#2BB673", "#5B8DEF", "#E5484D", "#F2A33A"];
+let PLAT_SEL = null;
+/** Avancement de chaque pilote vers chaque exclusif : { id: { nom: { f: 0..1, t: "texte" } } } */
+function avancementExclusifs() {
+  const noms = D.personnes.map(p => p.nom), out = {}; EXCLUSIFS.forEach(x => { out[x.id] = {}; });
+  const ys = anneesSaison(), S = {}; noms.forEach(n => S[n] = { wins: 0, bestRg: 9, bonus: 0, bestR: -1, bestEcart: -1, winRun: 0, bestWinRun: 0, batRun: 0, bestBatRun: 0, prod: 1, pic: 1, creux: false, pts: 0, tete: 0, gain: 0, saisonWins: 0, titres: 0, place: null, n: 0 });
+  ys.forEach(y => {
+    const c = championnat(y), w = {}; let prec = null;
+    c.mois.forEach(m => {
+      m.l.forEach(x => {
+        const s = S[x.nom]; if (!s) return; s.n++;
+        if (x.rg === 1) { s.wins++; w[x.nom] = (w[x.nom] || 0) + 1; s.saisonWins = Math.max(s.saisonWins, w[x.nom]); }
+        s.bestRg = Math.min(s.bestRg, x.rg); if (x.bonus) s.bonus++;
+        s.bestR = Math.max(s.bestR, x.r); if (m.iR !== null) s.bestEcart = Math.max(s.bestEcart, x.r - m.iR);
+        s.winRun = x.rg === 1 ? s.winRun + 1 : 0; s.bestWinRun = Math.max(s.bestWinRun, s.winRun);
+        s.batRun = m.iR !== null && x.r > m.iR ? s.batRun + 1 : 0; s.bestBatRun = Math.max(s.bestBatRun, s.batRun);
+        s.prod *= 1 + x.r; if (s.prod > s.pic) { s.pic = s.prod; s.creux = false; } else if (s.prod <= s.pic * .9) s.creux = true;
+        s.pts += x.p; if (m.places[x.nom] === 1) s.tete++;
+        if (prec && prec[x.nom] && m.places[x.nom]) s.gain = Math.max(s.gain, prec[x.nom] - m.places[x.nom]);
+        s.place = m.places[x.nom] || s.place;
+      });
+      prec = m.places;
+    });
+    if (c.complete && c.classement[0] && S[c.classement[0]]) S[c.classement[0]].titres++;
+  });
+  // versements d'affilée (relevés du Versus)
+  const debut = ys.length ? (ys[0] - 1) * 100 + 12 : 999999, finPf = finGlobale(D, 0), run = {};
+  D.personnes.forEach(p => { let r = 0, best = 0, prec = null;
+    serie(p, 0).filter(z => z.k > debut && z.k <= finPf).forEach(z => { const v = z.val && (z.verse || 0) > 0; r = v ? (prec !== null && cleMoins(z.k, 1) === prec ? r + 1 : 1) : 0; prec = z.k; best = Math.max(best, r); });
+    run[p.nom] = { r, best }; });
+  const pc = v => (v >= 0 ? "+" : "") + (v * 100).toFixed(1).replace(".", ",") + " %", cl = v => Math.max(0, Math.min(1, v));
+  noms.forEach(n => {
+    const s = S[n], vr = run[n] || { r: 0, best: 0 }, mis = (id, f, t) => { out[id][n] = { f: cl(f), t }; };
+    mis("premiersang", s.wins ? 1 : s.bestRg < 9 ? (4 - s.bestRg) / 4 : 0, s.wins ? "fait" : s.bestRg < 9 ? "meilleure place : " + s.bestRg + "e" : "pas encore classé");
+    mis("cible", s.bonus ? 1 : s.bestEcart > -1 ? cl(1 + s.bestEcart / .03) : 0, s.bonus ? "fait" : s.bestEcart > -1 ? "meilleur écart : " + pc(s.bestEcart) : "—");
+    mis("decollage", s.bestR / .05, "meilleur mois : " + (s.bestR > -1 ? pc(s.bestR) : "—") + " / +5 %");
+    mis("fusee", s.bestR / .10, "meilleur mois : " + (s.bestR > -1 ? pc(s.bestR) : "—") + " / +10 %");
+    mis("massue", s.bestEcart / .05, "meilleur écart : " + (s.bestEcart > -1 ? pc(s.bestEcart) : "—") + " / +5 pts");
+    [["fidele", 3], ["inarretable", 12], ["marathon", 24]].forEach(([id, c]) => mis(id, vr.r / c, vr.r + " / " + c + " mois de versement d'affilée"));
+    [["vingt", 12], ["cinquante", 30], ["centurion", 60]].forEach(([id, c]) => mis(id, s.pts / c, Math.round(s.pts) + " / " + c + " points"));
+    mis("remontee", s.gain / 2, s.gain > 0 ? "meilleure remontée : " + s.gain + " place" : "pas encore de remontée");
+    mis("hattrick", s.winRun / 3, s.winRun + " / 3 victoires d'affilée");
+    mis("cinqetoiles", s.bonus / 5, s.bonus + " / 5 bonus 🎯");
+    [["mur10", .10], ["mur25", .25], ["mur50", .50]].forEach(([id, c]) => mis(id, (s.prod - 1) / c, "cumul " + pc(s.prod - 1) + " / " + pc(c)));
+    mis("semestre", s.batRun / 6, s.batRun + " / 6 mois d'affilée devant l'indice");
+    mis("phenix", s.creux ? .5 : 0, s.creux ? "dans le creux : il faut repasser son record" : "pas de chute de 10 % pour l'instant");
+    mis("grandchelem", s.saisonWins / 5, s.saisonWins + " / 5 victoires dans une saison");
+    mis("maillot", s.tete / 6, s.tete + " / 6 mois en tête");
+    mis("champion", s.titres ? 1 : s.place ? (D.personnes.length - s.place + 1) / (D.personnes.length + 1) : 0, s.titres ? "fait" : s.place ? s.place + "e du championnat" : "—");
+    mis("doublechampion", s.titres / 2, s.titres + " / 2 titres");
+  });
+  return out;
+}
+function scoreTrophees(n, E) {
+  const pm = D.premierMillion;
+  return DEFIS.filter(d => E[n][d.id].ok).length + SECRETS.filter(d => E[n][d.id].ok).length + 3 * EXCLUSIFS.filter(x => possede(x.id, n)).length + (pm && pm.nom === n ? 3 : 0);
+}
+function htmlPlateau() {
+  const noms = D.personnes.map(p => p.nom), A = avancementExclusifs(), pm = D.premierMillion, E = {}; noms.forEach(n => E[n] = etatDefis(n));
+  const cases = EXCLUSIFS.map(x => ({ x, d: detenteur(x.id) })).concat([{ x: { id: "million", niv: 4, ico: "👑", nom: "Premier millionnaire", def: "atteindre 1 000 000 €" }, d: pm ? { noms: [pm.nom], nom: pm.nom } : null }]);
+  // circuit en « stade » : deux lignes droites et deux virages
+  const W = 340, H = 236, R = 76, L = 148, x0 = (W - L) / 2, cy = H / 2, P = 2 * L + 2 * Math.PI * R, N = cases.length;
+  const pt = t => { t = ((t % P) + P) % P;
+    if (t < L) return [x0 + t, cy - R]; t -= L;
+    if (t < Math.PI * R) { const a = -Math.PI / 2 + t / R; return [x0 + L + R * Math.cos(a), cy + R * Math.sin(a)]; } t -= Math.PI * R;
+    if (t < L) return [x0 + L - t, cy + R]; t -= L; const a = Math.PI / 2 + t / R; return [x0 + R * Math.cos(a), cy + R * Math.sin(a)]; };
+  const piste = '<path d="M' + x0 + " " + (cy - R) + "h" + L + "a" + R + " " + R + " 0 0 1 0 " + 2 * R + "h" + -L + "a" + R + " " + R + ' 0 0 1 0 ' + -2 * R + 'z" class="pl-route"/>' +
+    '<path d="M' + x0 + " " + (cy - R) + "h" + L + "a" + R + " " + R + " 0 0 1 0 " + 2 * R + "h" + -L + "a" + R + " " + R + ' 0 0 1 0 ' + -2 * R + 'z" class="pl-ligne"/>' +
+    '<rect x="' + (x0 - 3) + '" y="' + (cy - R - 11) + '" width="6" height="22" class="pl-damier"/>';
+  const proche = id => { const l = noms.map(n => ({ n, f: (A[id] && A[id][n] || { f: 0 }).f })).sort((a, b) => b.f - a.f); return l[0] && l[0].f > 0 ? l[0] : null; };
+  const disques = cases.map((c, i) => {
+    const [cx, cyy] = pt((i + .5) * P / N), col = COUL_NIV[c.x.niv], pris = c.d, p = !pris && c.x.id !== "million" ? proche(c.x.id) : null;
+    const anneau = p ? '<circle cx="' + cx.toFixed(1) + '" cy="' + cyy.toFixed(1) + '" r="15.5" class="pl-prog" style="stroke:' + couleur(p.n) + ';stroke-dasharray:' + (p.f * 97.4).toFixed(1) + ' 200"/>' : "";
+    return '<g class="pl-case' + (pris ? " pris" : "") + (PLAT_SEL === c.x.id ? " sel" : "") + '" data-plc="' + c.x.id + '" style="--n:' + col + (pris ? ";--c:" + couleur(pris.noms[0]) : "") + '" tabindex="0" role="button" aria-label="' + esc(c.x.nom) + (pris ? " : à " + esc(pris.nom) : " : libre") + '">' + anneau +
+      '<circle cx="' + cx.toFixed(1) + '" cy="' + cyy.toFixed(1) + '" r="12.5"/><text x="' + cx.toFixed(1) + '" y="' + (cyy + 4.5).toFixed(1) + '" text-anchor="middle">' + c.x.ico + "</text>" +
+      (pris ? '<circle cx="' + (cx + 10).toFixed(1) + '" cy="' + (cyy - 10).toFixed(1) + '" r="6.5" class="pl-pion" style="fill:' + couleur(pris.noms[0]) + '"/><text class="pl-ini" x="' + (cx + 10).toFixed(1) + '" y="' + (cyy - 7.4).toFixed(1) + '" text-anchor="middle">' + esc(pris.noms[0].slice(0, 1)) + "</text>" : "") + "</g>";
+  }).join("");
+  const nbEx = n => cases.filter(c => c.d && c.d.noms.includes(n)).length;
+  const centre = '<foreignObject x="' + (x0 - 30) + '" y="' + (cy - R + 22) + '" width="' + (L + 60) + '" height="' + (2 * R - 44) + '"><div xmlns="http://www.w3.org/1999/xhtml" class="pl-centre">' +
+    '<b>Course aux exclusifs</b><small>' + cases.filter(c => c.d).length + " / " + N + " cases prises</small>" +
+    noms.slice().sort((a, b) => nbEx(b) - nbEx(a)).map(n => '<span style="--c:' + couleur(n) + '"><i></i>' + esc(n) + " <b>" + nbEx(n) + "</b></span>").join("") + "</div></foreignObject>";
+  const sel = cases.find(c => c.x.id === PLAT_SEL);
+  const detail = sel ? '<div class="pl-detail" style="--n:' + COUL_NIV[sel.x.niv] + '"><div class="pl-dh"><span>' + sel.x.ico + "</span><div><b>" + esc(sel.x.nom) + "</b><small>" + MED_EX[sel.x.niv] + " " + NIV_EX[sel.x.niv] + " · le premier à " + esc(String(sel.x.def).replace("l'indice", "le " + D.marche.indices[iRef()])) +
+      (sel.x.gain ? " → " + esc(ITEMS[sel.x.gain[0]][sel.x.gain[1]]) + " (" + SLOTS.find(z => z[0] === sel.x.gain[0])[1].toLowerCase() + ")" : "") + "</small></div></div>" +
+    (sel.d ? '<p class="pl-pris" style="--c:' + couleur(sel.d.noms[0]) + '">🏁 À <b>' + esc(sel.d.nom) + "</b>" + (sel.d.k ? ", décroché en " + esc(moisLong(sel.d.k)) : "") + ". Plus personne ne peut l'avoir.</p>"
+      : sel.x.id === "million" ? '<p class="info">Montant jamais montré : seul le premier à franchir le million le saura… et tout le monde verra sa couronne.</p>'
+      : noms.map(n => ({ n, a: A[sel.x.id][n] || { f: 0, t: "—" } })).sort((a, b) => b.a.f - a.a.f).map(o => '<div class="pl-bar"><span style="color:' + couleur(o.n) + '">' + esc(o.n) + '</span><span class="pl-j"><i style="width:' + Math.round(o.a.f * 100) + "%;background:" + couleur(o.n) + '"></i></span><small>' + esc(o.a.t) + "</small></div>").join("")) + "</div>"
+    : '<p class="pl-aide">Touche une case : qui l\'a, ou qui en est le plus proche. L\'anneau de couleur = le pilote le plus avancé.</p>';
+  // piste « Mario Party »
+  const sc = {}; noms.forEach(n => sc[n] = scoreTrophees(n, E));
+  const max = Math.max(30, ...Object.values(sc).map(v => Math.ceil((v + 6) / 5) * 5)), cols = 10, rows = Math.ceil((max + 1) / cols), cw = 32, ch = 34;
+  const posCase = i => { const r = Math.floor(i / cols), c = r % 2 ? cols - 1 - i % cols : i % cols; return [12 + c * cw + cw / 2, 10 + r * ch + ch / 2]; };
+  let chemin = ""; for (let i = 0; i <= max; i++) { const [a, b] = posCase(i); chemin += (i ? "L" : "M") + a + " " + b; }
+  const cs = Array.from({ length: max + 1 }, (_, i) => { const [a, b] = posCase(i), et = i && i % 5 === 0;
+    return '<g class="mp-case' + (et ? " et" : "") + (i === 0 ? " dep" : "") + '"><rect x="' + (a - 12) + '" y="' + (b - 12) + '" width="24" height="24" rx="7"/>' + (et ? '<text x="' + a + '" y="' + (b + 4.5) + '" text-anchor="middle">⭐</text>' : i === 0 ? '<text x="' + a + '" y="' + (b + 4.5) + '" text-anchor="middle">🏁</text>' : '<text class="mp-n" x="' + a + '" y="' + (b + 3.5) + '" text-anchor="middle">' + i + "</text>") + "</g>"; }).join("");
+  const parCase = {}; noms.forEach(n => (parCase[Math.min(max, sc[n])] = parCase[Math.min(max, sc[n])] || []).push(n));
+  const pions = Object.entries(parCase).map(([i, l]) => l.map((n, j) => { const [a, b] = posCase(+i), dx = (j - (l.length - 1) / 2) * 9;
+    return '<g class="mp-pion" style="--c:' + couleur(n) + '"><circle cx="' + (a + dx).toFixed(1) + '" cy="' + (b - 13) + '" r="7.5"/><text x="' + (a + dx).toFixed(1) + '" y="' + (b - 10.3) + '" text-anchor="middle">' + esc(n.slice(0, 1)) + "</text></g>"; }).join("")).join("");
+  const MW = 12 * 2 + cols * cw, MH = 10 + rows * ch + 6;
+  const classementMP = noms.slice().sort((a, b) => sc[b] - sc[a]).map((n, i) => '<span style="--c:' + couleur(n) + '"><i></i>' + (i + 1) + ". " + esc(n) + " <b>" + sc[n] + "</b></span>").join("");
+  return '<div><h3 class="s-h3">🏁 Le circuit des exclusifs <small>un seul exemplaire chacun</small></h3></div>' +
+    '<div class="plateau"><svg viewBox="0 0 ' + W + " " + H + '" class="pl-svg" role="img" aria-label="Circuit des exclusifs">' + piste +
+      [1, 2, 3, 4].map(n => { const i0 = cases.findIndex(c => c.x.niv === n), [a, b] = pt(i0 * P / N); return '<text class="pl-sect" x="' + a.toFixed(1) + '" y="' + (b < cy ? b - 20 : b + 28).toFixed(1) + '" style="fill:' + COUL_NIV[n] + '">' + NIV_EX[n] + "</text>"; }).join("") +
+      disques + centre + "</svg>" + detail + "</div>" +
+    '<div><h3 class="s-h3">🎲 La course aux trophées <small>défi ou secret : 1 case · exclusif : 3 cases</small></h3></div>' +
+    '<div class="mp"><svg viewBox="0 0 ' + MW + " " + MH + '" class="mp-svg" role="img" aria-label="Piste des trophées"><path d="' + chemin + '" class="mp-chemin"/>' + cs + pions + "</svg>" +
+      '<div class="mp-cl">' + classementMP + "</div></div>";
+}
+function brancherPlateau(v) {
+  v.querySelectorAll("[data-plc]").forEach(g => { const go = () => { PLAT_SEL = PLAT_SEL === g.dataset.plc ? null : g.dataset.plc; const y = window.scrollY; rendreTrophees(); window.scrollTo(0, y); };
+    g.addEventListener("click", go); g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }); });
+}
+
 function htmlDefis() {
   const noms = D.personnes.map(p => p.nom), E = {}; noms.forEach(n => E[n] = etatDefis(n));
   const pm = D.premierMillion, idx = D.marche.indices[iRef()];
@@ -938,7 +1054,7 @@ function htmlDefis() {
       : '<div class="sec-l"><b>??? </b><small>Trophée secret : personne ne l\'a encore trouvé.</small></div>';
   }).join("") + "</div>";
   return (estChauffe(saisonCourante()) ? '<div class="chauffe-b">🔥 <span>Tour de chauffe : les trophées démarrent le 1<sup>er</sup> janvier 2027. Voici ce qui t\'attend.</span></div>' : "") +
-    bandeauMillion() +
+    bandeauMillion() + htmlPlateau() +
     '<div><h3 class="s-h3">Les trophées <small>' + total + " au total</small></h3></div>" + resume +
     '<p class="info">Chaque trophée débloque un objet pour ton écurie, et reste acquis pour toujours. <b>Défis</b> : chacun peut les réussir. <b>Exclusifs</b> : un seul exemplaire, pour le premier qui y arrive (à égalité le même mois : la meilleure valeur du critère, puis la performance du mois, puis le cumul). Calculé sur les relevés publics du Versus, ' + esc(idx) + " comme référence.</p>" +
     '<div class="ex-liste">' + raretes + "</div>" + secrets;
@@ -983,6 +1099,7 @@ function brancherSaison(v) {
   v.querySelectorAll("[data-saison]").forEach(b => b.addEventListener("click", () => { choisirSaison(+b.dataset.saison); rendreTrophees(); }));
   const y = saisonCourante();
   const o = ongletPodium();
+  if (o === "defis") brancherPlateau(v);
   if (o === "gp") { brancherGP(v, y); const dp = v.querySelector("#pts-det"); if (dp) { if (dp.open) dessinerChampionnat(y); dp.addEventListener("toggle", () => { ETAT.ptsOuvert = dp.open ? "1" : "0"; garder(); if (dp.open) dessinerChampionnat(y); }); } }
   if (o === "stand") brancherStand(v, y);
   v.querySelectorAll("[data-aller-stand]").forEach(b => b.addEventListener("click", () => { const r = rappelCartes(); if (r) choisirSaison(r.y); ETAT.podium = "stand"; garder(); rendreTrophees(); const t = document.querySelector(".pod-tabs"); if (t) t.scrollIntoView({ block: "start", behavior: "smooth" }); }));
