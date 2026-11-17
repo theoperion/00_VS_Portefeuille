@@ -312,7 +312,7 @@ function rendreFiche() {
   const v = $("#v-fiche");
   const chips = '<div class="chips" role="group" aria-label="Personne">' + D.personnes.map(x => '<button class="chip" type="button" data-fiche="' + esc(x.nom) + '" aria-pressed="' + (x.nom === p.nom) + '"><i style="background:' + couleur(x.nom) + '"></i>' + esc(x.nom) + "</button>").join("") + "</div>";
   if (!finP) {
-    v.innerHTML = chips + filtres(true, true, false) + '<div class="vide">Pas encore de relevé pour ' + esc(p.nom) + " dans " + esc(ENVELOPPES[env]) + ".</div>";
+    v.innerHTML = chips + (typeof vitrineFiche === "function" ? vitrineFiche(p.nom) : "") + filtres(true, true, false) + '<div class="vide">Pas encore de relevé pour ' + esc(p.nom) + " dans " + esc(ENVELOPPES[env]) + ".</div>";
   } else {
     const deb = debutPeriode(D, ETAT.per, finP);
     const s = stats(D, p, env, deb, finP, i1, null);
@@ -327,7 +327,7 @@ function rendreFiche() {
     const annees = [...new Set(sAll.filter(x => typeof x.r === "number").map(x => Math.floor(x.k / 100)))].sort().reverse();
     const max = Math.max(.04, ...sAll.filter(x => typeof x.r === "number").map(x => Math.abs(x.r)));
 
-    v.innerHTML = chips + filtres(true) +
+    v.innerHTML = chips + (typeof vitrineFiche === "function" ? vitrineFiche(p.nom) : "") + filtres(true) +
       '<div class="periode">' + esc(textePeriode(deb, finP, s.n)) + (s.debutK && deb && s.debutK > cleMoins(deb, -1) ? " · l'enveloppe a démarré après le début demandé" : "") + "</div>" +
       '<div class="hero"><span class="eyebrow">' + esc(ENVELOPPES[env]) + " · " + esc(p.nom) + '</span><span class="big" data-cv="' + s.valeur + '" data-cf="eur">' + eur(s.valeur) + '</span><div class="sous"><span class="badge ' + sens(s.pvLatente) + '">' + eur(s.pvLatente, 0, true) + " · " + pct(s.pvLatentePct) + "</span><span>de plus-value pour " + eur(s.verse) + " versés</span></div></div>" +
       (s.n ? '<div class="tuiles">' +
@@ -352,6 +352,7 @@ function rendreFiche() {
   }
   brancherFiltres("fiche");
   v.querySelectorAll("[data-fiche]").forEach(b => b.addEventListener("click", () => { ETAT.fiche = b.dataset.fiche; garder(); rendreFiche(); }));
+  v.querySelectorAll(".vitrine [data-carte-coll]").forEach(b => b.addEventListener("click", () => ouvrirCarteColl(b.dataset.carteColl)));
 }
 
 /* ---------- Saisie du relevé ---------- */
