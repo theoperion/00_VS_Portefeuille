@@ -305,6 +305,9 @@ function injecterStyle() {
 .moi .m-rappel .t small { font-size: 12px; color: var(--ink-2); }
 .moi .m-rappel .lien { white-space: nowrap; }
 .moi .av-t > div:nth-child(2) .sub { font-size: 11px; }
+.moi .pret-an { padding: 10px; } .moi .pret-an .legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11.5px; color: var(--ink-2); margin-bottom: 6px; }
+.moi .pret-an .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; border: 5px solid; margin-right: 5px; vertical-align: -1px; box-sizing: border-box; }
+.moi .pret-an .legend .pa { color: var(--ink-3); } .moi .pret-an-t { margin: 6px 2px 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
 .moi .av-stack { margin: 10px 0 8px; }
 .moi .av-sups { display: grid; gap: 6px; }
 .moi .av-s { all: unset; box-sizing: border-box; cursor: pointer; display: flex; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--rule); background: var(--panel); }
@@ -316,7 +319,7 @@ function injecterStyle() {
 .moi .av-courbe { margin-top: 10px; padding: 10px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); }
 .moi .av-leg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11.5px; color: var(--ink-2); margin-top: 4px; }
 .moi .av-leg i { display: inline-block; width: 12px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; } .moi .av-leg i.pt { background: repeating-linear-gradient(90deg, var(--ink-3) 0 4px, transparent 4px 7px); } .moi .av-leg i.rd { width: 7px; height: 7px; border-radius: 50%; }
-.moi .av-rdv { display: grid; gap: 6px; } .moi .av-rdv > div { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; } .moi .av-rdv i { font-style: normal; } .moi .av-rdv small { display: block; color: var(--ink-3); font-size: 12px; }
+.moi .av-rdv { display: grid; gap: 6px; } .moi .av-rdv > div { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; } .moi .av-rdv > div > span { flex: 1; } .moi .av-rdv .mini-btn { flex: none; } .moi .av-rdv i { font-style: normal; } .moi .av-rdv small { display: block; color: var(--ink-3); font-size: 12px; }
 .moi .m-seance { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 2px; padding: 6px 11px; border-radius: 999px; font: 600 12.5px/1 var(--f-text); background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent-ink, var(--accent)); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
 .moi .m-seance[aria-pressed="true"] { background: var(--accent); color: #fff; }
 .moi .m-maj { display: block; margin-top: 4px; font-size: 11px; color: var(--ink-3, var(--ink-2)); opacity: .8; }
@@ -1179,7 +1182,7 @@ function htmlAV(sup) {
   const rdv = [];
   if (ar.initial === null || ar.initial === undefined || ar.initial === "") rdv.push(["📌", "Artema : niveau de départ de l'indice", rap("artemaInitial") ? "à saisir dès le " + frDate(rap("artemaInitial")) : "à saisir"]);
   if (rap("releve")) rdv.push(["◷", "Relevé du mois (Artema)", quandRappel({ prochaine: rap("releve") }) || frDate(rap("releve"))]);
-  if (fe.taux) rdv.push(["💶", "Fonds euros : " + pct(fe.taux, 2, false) + " net en " + (fe.annee || "—") + (fe.bonus ? " + bonus " + pct(fe.bonus, 2, false) + (fe.bonusFin ? " jusqu'au " + frDate(fe.bonusFin) : "") : ""), rap("fondsEuros") ? "prochain taux vers le " + frDate(rap("fondsEuros")) : ""]);
+  if (fe.taux) rdv.push(["💶", "Fonds euros : " + pct(fe.taux, 2, false) + " net (" + (fe.annee || "—") + ")" + (fe.bonus ? " + bonus " + pct(fe.bonus, 2, false) + (fe.bonusFin ? " jusqu'au " + frDate(fe.bonusFin) : "") : ""), (rap("fondsEuros") ? "vrai taux vers le " + frDate(rap("fondsEuros")) + " · " : "") + "estimation ajustable", "fondsEuros"]);
   const sel = S && S.s[avSel] ? avSel : "total";
   return '<div class="tuiles m-petit av-t">' +
       tuile("Valeur", eur(tot.valeur), "", "aujourd'hui") + tuile("Versé", eur(tot.investi), "", "à ce jour (pas les versements programmés)") +
@@ -1191,11 +1194,12 @@ function htmlAV(sup) {
         '<span class="av-v"><b>' + eur(r.valeur) + '</b><small>versé ' + eur(r.investi) + '</small><small class="' + sens(r.pv) + '">' + eur(r.pv, 2, true) + " · " + pct(r.pvPct, 2) + "</small></span></button>"; }).join("") +
       (S ? '<button type="button" class="av-s av-tout" data-av="total" aria-pressed="' + (sel === "total") + '">Toute l\'assurance-vie</button>' : "") + "</div>" +
     (S ? '<div class="av-courbe" id="av-courbe">' + courbeAV(S, sel) + "</div>" : '<p class="info">Les courbes arrivent dès que ton fichier envoie l\'historique (mise à jour du script).</p>') +
-    (rdv.length ? '<h3 class="m-sous">Rendez-vous</h3><div class="av-rdv">' + rdv.map(([i, t, q]) => '<div><i>' + i + "</i><span>" + esc(t) + (q ? "<small>" + esc(q) + "</small>" : "") + "</span></div>").join("") + "</div>" : "");
+    (rdv.length ? '<h3 class="m-sous">Rendez-vous</h3><div class="av-rdv">' + rdv.map(([i, t, q, k]) => '<div><i>' + i + "</i><span>" + esc(t) + (q ? "<small>" + esc(q) + "</small>" : "") + "</span>" + (k ? '<button class="mini-btn" type="button" data-av-reg="' + k + '">Ajuster</button>' : "") + "</div>").join("") + "</div>" : "");
 }
 function brancherAV(v) {
   const z = v.querySelector("#p-av"); if (!z) return;
   z.addEventListener("click", e => {
+    const rg = e.target.closest("[data-av-reg]"); if (rg) { faireRappel(rg.dataset.avReg); return; }
     const b = e.target.closest("[data-av]"); if (!b) return;
     avSel = b.dataset.av; const S = seriesAV(M.supports || []); if (!S) return;
     z.querySelectorAll("[data-av]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.av === avSel)));
@@ -1853,8 +1857,8 @@ function blocPret() {
   const mens = p.mensuel, emprunte = Math.max(...mens.map(r => r[1])), auj = isoJour(new Date());
   const restant = p.actuel ? p.actuel.restant : mens[0][1], rembourse = emprunte - restant;
   const t = (lab, val, cls, sub) => "<div><span class=\"lab\">" + lab + '</span><span class="val ' + (cls || "") + '">' + val + '</span><span class="sub">' + sub + "</span></div>";
-  return '<div><h2 class="sec">Ton prêt immobilier <small>capital restant dû</small></h2></div>' +
-    boiteGraphe("g-pret", [{ nom: "Déjà remboursé", c: "var(--accent)" }, { nom: "À venir", c: "var(--accent)", dash: true }]) +
+  return '<div><h2 class="sec">Ton prêt immobilier <small>année par année</small></h2></div>' +
+    '<div class="chart-box pret-an" id="g-pret"></div>' +
     '<div class="tuiles m-petit m-pret-t">' +
       t("Remboursé", pct(rembourse / emprunte, 1, false), "up", eur(rembourse) + " sur " + eur(emprunte)) +
       t("Restant dû", eur(restant), "", p.actuel ? "au " + frDate(p.actuel.date) : "") +
@@ -1870,15 +1874,31 @@ function tuileCapitalMois(p, t) {
   const capital = av.restant - pr.restant, ass = p.banque ? 0 : pr.assurance || 0, total = (pr.echeance || 0) + ass, interets = Math.max(0, total - capital - ass);
   return t("Dont capital", eur(capital, 0), "up", (total > 0 ? Math.round(capital / total * 100) + " % de l'échéance · " : "") + "intérêts " + eur(interets, 0) + (ass ? " · assurance " + eur(ass, 2) : ""));
 }
+/* V15.15 · le prêt année par année : barres « capital remboursé » + « intérêts payés » (passé plein, à venir pâle, année en cours entourée) */
 function dessinerPret() {
   const box = document.getElementById("g-pret"); if (!box) return;
-  const mens = M.prets.mensuel, auj = isoJour(new Date());
-  let iAuj = -1; mens.forEach((r, i) => { if (r[0] <= auj) iAuj = i; });
-  tracer(box, { x: mens.map(r => cleMoisIso(r[0])), zeroMin: true,
-    series: [{ nom: "Restant dû", v: mens.map((r, i) => i <= iAuj ? r[1] : null), c: "var(--accent)", aire: true, w: 2.4 },
-      { nom: "À venir", v: mens.map((r, i) => i >= Math.max(0, iAuj) ? r[1] : null), c: "var(--accent)", dash: true, w: 1.6 }],
-    fmt: x => eur(x), fmtAxe: axeEur, titreX: k => libMoisK(k),
-    etiqX: (k, kp) => kp === null ? "" : (Math.floor(k / 100) !== Math.floor(kp / 100) && Math.floor(k / 100) % 2 === 0 ? String(Math.floor(k / 100)) : "") });
+  const mens = M.prets.mensuel || []; if (mens.length < 2) { box.innerHTML = ""; return; }
+  const avecInt = mens.some(r => r[2] > 0), parAn = {};
+  for (let i = 1; i < mens.length; i++) { const y = +String(mens[i][0]).slice(0, 4), a = parAn[y] = parAn[y] || { cap: 0, int: 0 }; a.cap += Math.max(0, mens[i - 1][1] - mens[i][1]); a.int += mens[i][2] || 0; }
+  const ys = Object.keys(parAn).map(Number).sort((a, b) => a - b), an = new Date().getFullYear();
+  const W = 320, H = 170, g = 34, dr = 4, hb = 18, n = ys.length, max = Math.max(...ys.map(y => parAn[y].cap + parAn[y].int)) || 1;
+  const pas = (W - g - dr) / n, bw = Math.max(4, pas * .7), Y = v => 8 + (1 - v / max) * (H - 8 - hb);
+  const kE = v => v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1).replace(".", ",") + " k" : String(Math.round(v));
+  const grille = [max, max / 2].map(v => '<line x1="' + g + '" x2="' + (W - dr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" class="gr"/><text x="' + (g - 4) + '" y="' + (Y(v) + 3.5).toFixed(1) + '" text-anchor="end">' + kE(v) + "</text>").join("");
+  const barres = ys.map((y, i) => {
+    const a = parAn[y], x = g + i * pas + (pas - bw) / 2, op = y <= an ? 1 : .42, yc = Y(a.cap), yi = Y(a.cap + a.int);
+    return '<g opacity="' + op + '"><title>' + y + " : " + Math.round(a.cap).toLocaleString("fr-FR") + " € de capital" + (avecInt ? ", " + Math.round(a.int).toLocaleString("fr-FR") + " € d'intérêts" : "") + "</title>" +
+      '<rect x="' + x.toFixed(1) + '" y="' + yc.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(0, H - hb - yc).toFixed(1) + '" rx="2" fill="var(--accent)"/>' +
+      (avecInt && a.int > 0 ? '<rect x="' + x.toFixed(1) + '" y="' + yi.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(0, yc - yi).toFixed(1) + '" rx="2" fill="#F2A33A"/>' : "") +
+      (y === an ? '<rect x="' + (x - 2).toFixed(1) + '" y="' + (yi - 2).toFixed(1) + '" width="' + (bw + 4).toFixed(1) + '" height="' + (H - hb - yi + 2).toFixed(1) + '" rx="3" fill="none" stroke="var(--ink)" stroke-width="1.2"/>' : "") + "</g>";
+  }).join("");
+  const montrer = (y, i) => i === 0 || i === n - 1 || y === an || (y % 5 === 0 && Math.abs(y - an) > 1 && i > 1 && i < n - 2);
+  const lab = ys.map((y, i) => montrer(y, i) ? '<text x="' + (g + i * pas + pas / 2).toFixed(1) + '" y="' + (H - 4) + '" text-anchor="middle"' + (y === an ? ' font-weight="700"' : "") + ">" + y + "</text>" : "").join("");
+  const totInt = ys.reduce((t, y) => t + parAn[y].int, 0), resteInt = mens.filter(r => r[0] > isoJour(new Date())).reduce((t, r) => t + (r[2] || 0), 0);
+  box.innerHTML = '<div class="legend"><span><i style="border-color:var(--accent)"></i>capital remboursé</span>' + (avecInt ? '<span><i style="border-color:#F2A33A"></i>intérêts payés</span>' : "") + '<span class="pa">pâle = à venir</span></div>' +
+    '<svg class="m-mk-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Prêt année par année">' + grille + barres + lab + "</svg>" +
+    '<p class="pret-an-t">' + (parAn[an] ? "<b>En " + an + "</b> : " + eur(parAn[an].cap, 0) + " de capital" + (avecInt ? " · " + eur(parAn[an].int, 0) + " d'intérêts" : "") : "") +
+      (avecInt ? "<br>Intérêts sur toute la durée : <b>" + eur(totInt, 0) + "</b>, dont " + eur(resteInt, 0) + " encore à payer." : "") + "</p>";
 }
 
 /* ================= Jauge du millionnaire (privée : Moi › Missions, seulement sur ton appareil) ================= */
@@ -2455,8 +2475,10 @@ function formReglage(k) {
   }
   if (k === "fondsEuros") {
     const f = p.fondsEuros || {};
-    return '<form class="form reg-form" data-form="fondsEuros"><p class="info">Taux servi par Quintessa pour l\'année écoulée, net de frais, avant bonus et prélèvements sociaux. Dernier saisi : ' + pct(f.taux, 2, false) + " pour " + (f.annee || "—") + ".</p>" +
-      '<div class="rang">' + champ("r-an", "Année", f.annee ? f.annee + 1 : "") + champ("r-taux", "Taux net (%)", "") + "</div>" + msg + btn + "</form>";
+    // V15.15 : on peut aussi réajuster le taux simulé (et le bonus) quand on veut ; les champs partent des valeurs actuelles
+    return '<form class="form reg-form" data-form="fondsEuros"><p class="info">Taux servi par Quintessa (net de frais, avant bonus et prélèvements sociaux). Tant que le vrai taux n\'est pas connu, c\'est une <b>estimation</b> que tu peux réajuster ici quand tu veux. Actuel : ' + pct(f.taux, 2, false) + " (" + (f.annee || "—") + ")" + (f.bonus ? " + bonus " + pct(f.bonus, 2, false) + (f.bonusFin ? " jusqu'au " + frDate(f.bonusFin) : "") : "") + ".</p>" +
+      '<div class="rang">' + champ("r-an", "Année", f.annee || "") + champ("r-taux", "Taux net (%)", f.taux ? saisieNombre(f.taux * 100, 2) : "") + "</div>" +
+      '<div class="rang">' + champ("r-bonus", "Bonus (%)", f.bonus ? saisieNombre(f.bonus * 100, 2) : "") + champ("r-bfin", "Bonus jusqu'au", f.bonusFin || "", { type: "date" }) + "</div>" + msg + btn + "</form>";
   }
   if (k === "artemaInitial") {
     const a = p.artema || {};
@@ -2504,6 +2526,7 @@ function rendreMaj() {
   const mAl = reglageMsg.alertes ? '<div class="alerte ' + reglageMsg.alertes[0] + '">' + esc(reglageMsg.alertes[1]) + "</div>" : "";
   const pre = alertePre || {};
   z.innerHTML =
+    (reglageOuvert && !rappelsFichier().some(x => cleRappel(x.nom) === reglageOuvert) && formReglage(reglageOuvert) ? '<div class="rap ouvert seul" data-reg="' + reglageOuvert + '"><div class="rap-c">' + formReglage(reglageOuvert) + "</div></div>" : "") +
     '<h4 class="m-h4">Rappels <small>touche une ligne pour la mettre à jour</small></h4><div class="raps">' + rappels + "</div>" +
     '<details class="maj-pli" data-reg="actif"' + (reglageMsg.actif ? " open" : "") + '><summary>➕ Ajouter un actif <small>aussi possible pendant la saisie d\'un ordre</small></summary>' +
       '<form class="form reg-form" data-form="actif">' +
@@ -2571,9 +2594,11 @@ function soumettreReglage(type, form) {
     return envoyerReglage("taux", corps, form, () => { p.taux = Object.assign({}, p.taux, corps, { date: lireChamp("r-date") }); propagerTaux(corps); });
   }
   if (type === "fondsEuros") {
-    const an = n("r-an"), t = n("r-taux");
+    const an = n("r-an"), t = n("r-taux"), bo = lireChamp("r-bonus") ? n("r-bonus") : null, bf = lireChamp("r-bfin") || null;
     if (!(an >= 2020) || !(t >= 0 && t < 20)) { reglageMsg.fondsEuros = ["err", "Saisis l'année et le taux en % (ex. 3,1)."]; rendreMaj(); return; }
-    return envoyerReglage("fondsEuros", { action: "fondsEuros", annee: an, taux: t / 100 }, form, () => { p.fondsEuros = { annee: an, taux: t / 100 }; });
+    if (bo !== null && !(bo >= 0 && bo < 10)) { reglageMsg.fondsEuros = ["err", "Bonus en % entre 0 et 10 (ex. 1,3)."]; rendreMaj(); return; }
+    return envoyerReglage("fondsEuros", { action: "fondsEuros", annee: an, taux: t / 100, bonus: bo === null ? null : bo / 100, bonusFin: bf }, form, () => {
+      p.fondsEuros = Object.assign({}, p.fondsEuros, { annee: an, taux: t / 100 }, bo === null ? {} : { bonus: bo / 100 }, bf ? { bonusFin: bf } : {}); stock.set(cleStock("feVu"), String(Date.now())); });
   }
   if (type === "artemaInitial" || type === "artemaActuel") {
     const niv = n("r-niv");
@@ -3299,6 +3324,7 @@ function notifications() {
   alertesDeclenchees().forEach(a => items.push({ t: "rouge", txt: "Alerte de cours : " + a }));
   const d = dateRappel(M.rappel);
   const aFaire = /À mettre à jour/.test(M.rappel || "") || (d && d - Date.now() < 2 * 864e5);
+  if (feAVerifier()) items.push({ t: "orange", txt: "Fonds euros : taux estimé à vérifier" });
   rappelsFichier().filter(rappelDu).forEach(r => items.push({ t: "orange", txt: r.nom + " : " + String(r.statut).replace(/^[^\wÀ-ÿ]+/u, "") + (r.prochaine ? " (prévu le " + frDate(String(r.prochaine).slice(0, 10)) + ")" : "") }));
   if (aFaire && !rappelsFichier().length && !items.some(x => x.t === "orange")) items.push({ t: "orange", txt: M.rappel });
   const niveau = items.some(x => x.t === "rouge") ? "rouge" : items.some(x => x.t === "orange") ? "orange" : "";
@@ -3315,6 +3341,12 @@ function quandRappel(x) {
   return j < 0 ? "depuis le " + frDate(x.prochaine) : j === 0 ? "aujourd'hui" : j === 1 ? "demain" : j <= 45 ? "dans " + j + " jours" : "le " + frDate(x.prochaine);
 }
 /* La cloche : seulement ce qui demande une action (sans doublon), avec « Faire » et « Plus tard » ; la liste complète vit dans Saisir › Mises à jour */
+/* V15.15 · rappel discret, tous les 3 mois : réajuster (ou confirmer) le taux estimé du fonds euros */
+function feAVerifier() {
+  const fe = M && M.parametres && M.parametres.fondsEuros; if (!fe || !fe.taux) return false;
+  const t = +(stock.get(cleStock("feVu")) || 0); if (!t) { stock.set(cleStock("feVu"), String(Date.now())); return false; }
+  return Date.now() - t > 91 * 864e5;
+}
 function htmlNotifications() {
   if (!configure()) return '<p class="info">Connecte ton fichier dans Réglages › Mon fichier pour recevoir tes rappels et alertes ici.</p>';
   if (!M) return '<p class="info">Lecture de ton fichier en cours…</p>';
@@ -3330,6 +3362,7 @@ function htmlNotifications() {
   dus.forEach(x => { const k = cleRappel(x.nom) || x.nom;
     items.push(carte("orange", "◷", esc(nomCourtRappel(x)), "à faire " + esc(quandRappel(x)), '<div class="nt-a"><button class="mini-btn" type="button" data-notif-faire="' + esc(k) + '">Faire</button><button class="lien" type="button" data-notif-tard="' + esc(k) + '">Plus tard</button></div>')); });
   if (sansListe) items.push(carte("orange", "◷", "À mettre à jour", propre(M.rappel)));
+  if (feAVerifier()) items.push(carte("orange", "💶", "Fonds euros : ton taux estimé tient toujours ?", "tous les 3 mois · " + pct(M.parametres.fondsEuros.taux, 2, false) + (M.parametres.fondsEuros.bonus ? " + bonus " + pct(M.parametres.fondsEuros.bonus, 2, false) : ""), '<div class="nt-a"><button class="mini-btn" type="button" data-notif-faire="fondsEuros">Ajuster</button><button class="lien" type="button" data-notif-fe>C\'est bon</button></div>'));
   const prochain = rappelsFichier().filter(x => !rappelDu(x) && x.prochaine && /^\d{4}-/.test(x.prochaine) && !/À faire/i.test(x.statut || "")).sort((a, b) => a.prochaine.localeCompare(b.prochaine))[0];
   return '<div class="moi nt-l">' +
     (items.length ? '<h4 class="m-h4">À faire</h4>' + items.join("") + (reportes.length ? '<p class="nt-rep">Reporté de 2 jours : ' + reportes.map(x => esc(nomCourtRappel(x))).join(", ") + ".</p>" : "")
@@ -3382,7 +3415,7 @@ function echeancier(pr, banque) {
       banque: true, actuel: a ? { date: a.date, restant: a.restant, echeance: a.echeance } : null, prochaine: p ? { date: p.date, restant: p.restant, echeance: p.echeance } : null,
       interetsAnnee: passees.filter(x => x.date.slice(0, 4) === an).reduce((s, x) => s + x.interet, 0), interetsRestants: futures.reduce((s, x) => s + x.interet, 0),
       assuranceRestante: futures.reduce((s, x) => s + x.assurance, 0), nb: L.length, debut: banque[0][0],
-      fin: L[L.length - 1].date, mensuel: [[isoJour(avant), banque[0][1] * part]].concat(L.map(x => [x.date, x.restant])),
+      fin: L[L.length - 1].date, mensuel: [[isoJour(avant), banque[0][1] * part]].concat(L.map(x => [x.date, x.restant, x.interet])),
       restantAuj: a ? a.restant : banque[0][1] * part, part, mensualite: (p || a).echeance
     };
   }
@@ -3407,7 +3440,7 @@ function echeancier(pr, banque) {
     prochaine: p ? { date: p.date, restant: p.restant, echeance: p.echeance, assurance: pr.assurance > 0 ? pr.assurance : null } : null,
     interetsAnnee: passees.filter(x => x.date.slice(0, 4) === an).reduce((s, x) => s + x.interet, 0),
     interetsRestants: futures.reduce((s, x) => s + x.interet, 0),
-    fin: L[L.length - 1].date, mensuel: [[isoJour(avant), C * part]].concat(L.map(x => [x.date, x.restant])),
+    fin: L[L.length - 1].date, mensuel: [[isoJour(avant), C * part]].concat(L.map(x => [x.date, x.restant, x.interet])),
     restantAuj: a ? a.restant : C * part, part, mensualite: mens * part
   };
 }
@@ -3695,6 +3728,7 @@ window.Moi = {
   prechauffer() { injecterStyle(); if (!configure()) { signalerCloche(); return; } lireCache(); signalerCloche(); if (Date.now() - dernierAppel > 5 * 60e3) charger(false); },
   notifications: htmlNotifications,
   faireRappel(k) { lireCache(); if (M) faireRappel(k); },
+  feVerifie() { stock.set(cleStock("feVu"), String(Date.now())); signalerCloche(); },
   reporterRappel(k) { const pt = plusTard(); pt[k] = Date.now() + 2 * 864e5; stock.set(cleStock("plusTard"), JSON.stringify(pt)); signalerCloche(); if (vueMoi()) rendre(); },
   ouvrirMaj() { lireCache(); if (M) { reglageOuvert = null; ouvrirSaisieM(null, "maj"); } },
   saisir(partiel, onglet) { lireCache(); if (M && M.simple) ouvrirSoldes(); else ouvrirSaisieM(partiel, onglet); },
