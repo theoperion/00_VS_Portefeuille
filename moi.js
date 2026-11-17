@@ -917,18 +917,25 @@ function seanceProposee() {
   return !(M.groupes || []).some(g => g.lignes.some(l => { const p = perf[g.env + "|" + l.code]; return p && typeof p.seance === "number" && Math.abs(l.pct || 0) > 1e-9; }));
 }
 function modeSeance() { return PREF.seance === seanceDu() && seanceProposee(); }   // retenu pour CETTE séance seulement
-function libSeance() { const d = seanceDu(); if (!d) return ""; const x = new Date(d + "T12:00:00"); return ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."][x.getDay()] + " " + frDate(d).slice(0, 5); }
+/* V15.20 · le week-end : la semaine écoulée (lundi → vendredi) plutôt que la seule séance du vendredi */
+function vueSemaine() { const j = new Date().getDay(); return j === 0 || j === 6; }
+function libSeance() {
+  const d = seanceDu(); if (!d) return ""; const x = new Date(d + "T12:00:00");
+  if (vueSemaine()) { const l = new Date(x); l.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return frDate(isoJour(l)).slice(0, 5) + " → " + frDate(d).slice(0, 5); }
+  return ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."][x.getDay()] + " " + frDate(d).slice(0, 5);
+}
 function mSeance(m) {
-  const perf = m.perfLignes || {}, c = JSON.parse(JSON.stringify(m)); c.__seance = true; let tot = 0;
+  const perf = m.perfLignes || {}, c = JSON.parse(JSON.stringify(m)), sem = vueSemaine(); c.__seance = true; let tot = 0;
   (c.groupes || []).forEach(g => {
     let j = 0;
     g.lignes.forEach(l => { if (l.especes) return; const p = perf[g.env + "|" + l.code];
-      if (p && typeof p.seance === "number") { l.pct = p.seance; l.jour = (l.valeur || 0) * p.seance / (1 + p.seance); } j += l.jour || 0; });
+      const v = p ? (sem ? p.s1 : p.seance) : null;   // week-end : variation sur 1 semaine (crypto comprise)
+      if (typeof v === "number") { l.pct = v; l.jour = (l.valeur || 0) * v / (1 + v); } j += l.jour || 0; });
     if (g.total) { g.total.jour = j; const base = (g.total.valeur || 0) - j; g.total.pct = base ? j / base : 0; }
     tot += j;
   });
   const sy = c.synthese = Object.assign({}, c.synthese), base = (sy.valeur || 0) - tot;
-  sy.jour = tot; sy.jourPct = base ? tot / base : 0; sy.jourLibelle = "Dernière séance · " + libSeance();
+  sy.jour = tot; sy.jourPct = base ? tot / base : 0; sy.jourLibelle = (sem ? "Sur la semaine · " : "Dernière séance · ") + libSeance();
   return c;
 }
 function htmlJour() {
@@ -966,8 +973,8 @@ function htmlJourBase() {
   const indices = (M.indices || []).filter(i => i.nom !== "1 USD en EUR");
   const nomIdx = n => n.replace(/\s*\((ETF\s)?([^)]*)\)/, "");
   return '<div class="m-hero">' +
-      '<span class="eyebrow">' + embHero() + (modeSeance() ? "Dernière séance · " + esc(libSeance()) : 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "")) + "</span>" +
-      (seanceProposee() ? '<button class="m-seance" type="button" id="m-seance" aria-pressed="' + modeSeance() + '">' + (modeSeance() ? "↩ Revenir à aujourd'hui" : "🕘 Voir la dernière séance (" + esc(libSeance()) + ")") + "</button>" : "") +
+      '<span class="eyebrow">' + embHero() + (modeSeance() ? (vueSemaine() ? "La semaine · " : "Dernière séance · ") + esc(libSeance()) : 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "")) + "</span>" +
+      (seanceProposee() ? '<button class="m-seance" type="button" id="m-seance" aria-pressed="' + modeSeance() + '">' + (modeSeance() ? "↩ Revenir à aujourd'hui" : vueSemaine() ? "📅 Voir la semaine (" + esc(libSeance()) + ")" : "🕘 Voir la dernière séance (" + esc(libSeance()) + ")") + "</button>" : "") +
       '<div class="m-flaps" role="img" aria-label="' + esc(texteFlap) + '">' + flaps(texteFlap, animer) + "</div>" +
       '<div class="m-jour"><span class="badge big-b ' + sens(s.jour) + '">' + fleche(s.jour) + " " + eur(s.jour, 0, true) + " · " + pct(s.jourPct, 2) + "</span>" +
         "<span>" + (suffixe ? esc(suffixe) : hausse + " en hausse · " + baisse + " en baisse") + "</span></div>" +
