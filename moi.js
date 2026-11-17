@@ -304,6 +304,19 @@ function injecterStyle() {
 .moi .m-rappel .t { flex: 1; display: grid; font-size: 14px; line-height: 1.25; }
 .moi .m-rappel .t small { font-size: 12px; color: var(--ink-2); }
 .moi .m-rappel .lien { white-space: nowrap; }
+.moi .av-t > div:nth-child(2) .sub { font-size: 11px; }
+.moi .av-stack { margin: 10px 0 8px; }
+.moi .av-sups { display: grid; gap: 6px; }
+.moi .av-s { all: unset; box-sizing: border-box; cursor: pointer; display: flex; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--rule); background: var(--panel); }
+.moi .av-s[aria-pressed="true"] { border-color: var(--c, var(--accent)); box-shadow: inset 3px 0 0 var(--c, var(--accent)); }
+.moi .av-n { display: grid; gap: 2px; min-width: 0; } .moi .av-n b { font-size: 14px; display: flex; align-items: center; gap: 6px; } .moi .av-n small { font-size: 11.5px; color: var(--ink-3); }
+.moi .av-n i { width: 9px; height: 9px; border-radius: 3px; background: var(--c); display: inline-block; margin-right: 6px; }
+.moi .av-v { display: grid; justify-items: end; gap: 2px; flex: none; } .moi .av-v b { font: 600 14.5px/1 var(--f-num); } .moi .av-v small { font-size: 11.5px; color: var(--ink-2); }
+.moi .av-tout { justify-content: center; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.moi .av-courbe { margin-top: 10px; padding: 10px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); }
+.moi .av-leg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11.5px; color: var(--ink-2); margin-top: 4px; }
+.moi .av-leg i { display: inline-block; width: 12px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; } .moi .av-leg i.pt { background: repeating-linear-gradient(90deg, var(--ink-3) 0 4px, transparent 4px 7px); } .moi .av-leg i.rd { width: 7px; height: 7px; border-radius: 50%; }
+.moi .av-rdv { display: grid; gap: 6px; } .moi .av-rdv > div { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; } .moi .av-rdv i { font-style: normal; } .moi .av-rdv small { display: block; color: var(--ink-3); font-size: 12px; }
 .moi .m-seance { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 2px; padding: 6px 11px; border-radius: 999px; font: 600 12.5px/1 var(--f-text); background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent-ink, var(--accent)); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
 .moi .m-seance[aria-pressed="true"] { background: var(--accent); color: #fff; }
 .moi .m-maj { display: block; margin-top: 4px; font-size: 11px; color: var(--ink-3, var(--ink-2)); opacity: .8; }
@@ -1089,10 +1102,105 @@ function htmlPatrimoine() {
   return '<div class="hero"><span class="eyebrow">' + (net.avecImmo ? "Patrimoine net (avec immobilier)" : "Patrimoine financier") + '</span><span class="m-big">' + eur(net.montant) + '</span><div class="sous">' + esc(net.note || "") + "</div></div>" +
     '<div><div class="stack" role="img" aria-label="Répartition du patrimoine">' + parts.map(p => '<i style="flex:' + Math.max(p[1], 0) + ";background:var(" + p[2] + ')"></i>').join("") + "</div>" +
       '<div class="m-leg3">' + parts.map(p => '<button type="button" data-cible="' + p[3] + '"><i style="background:var(' + p[2] + ')"></i><span>' + p[0] + '</span><span class="num">' + eur(p[1]) + '</span><span class="pc">' + pct(p[1] / tot, 0, false) + "</span></button>").join("") + "</div></div>" +
-    bloc("p-epargne", "--s2", "Épargne", esc(s.epargneLibelle || ""), liste(ep, rEp) + (sup.length ? '<h3 class="m-sous">Assurance-vie · supports</h3>' + liste(sup, rSup) : "")) +
+    bloc("p-epargne", "--s2", "Épargne", esc(s.epargneLibelle || ""), liste(ep, rEp)) +
+    (sup.length ? bloc("p-av", "--s2", "Quintessa", "assurance-vie · par support", htmlAV(sup)) : "") +
     (net.avecImmo ? bloc("p-immo", "--s3", "Immobilier", "prix d'achat, prêts restants", pretHtml() + liste(imm, rImm)) : "") +
     bloc("p-bourse", "--s1", "Bourse", "portefeuille", liste(envs, rEnv)) +
     (fis.length ? acc("m-fis", "Si tout était retiré", "résultat net d'impôt estimé", liste(fis, rFis), false) : "");
+}
+/* ================= V15.14 · Assurance-vie Quintessa : versé, valeur et gain par support, courbes, rendez-vous ================= */
+const COUL_AV = { fe: "#2BB673", artema: "#9B6BFF", ostrum: "#18A9C7", total: "var(--accent)" };
+let avSel = "total";
+function cleSupport(nom) { return /fonds\s*euros/i.test(nom) ? "fe" : /artema/i.test(nom) ? "artema" : /ostrum/i.test(nom) ? "ostrum" : String(nom).toLowerCase().replace(/\W+/g, ""); }
+/* Valeur et versé de chaque support au fil du temps, à partir des ordres passés (Ordres) et de la valeur d'aujourd'hui (Patrimoine) */
+function seriesAV(sup) {
+  const h = M.histoAV, auj = isoJour(new Date()); if (!h || !(h.ordres || []).length) return null;
+  const O = h.ordres, debut = O[0][0], rows = sup.filter(r => !/^Total/.test(r.nom));
+  // grille de dates : chaque opération, le 1er de chaque mois, aujourd'hui
+  const dates = new Set(O.map(o => o[0])); let m = debut.slice(0, 7) + "-01";
+  while (m <= auj) { if (m >= debut) dates.add(m); const [y, mo] = m.split("-").map(Number); m = (mo === 12 ? y + 1 : y) + "-" + String(mo === 12 ? 1 : mo + 1).padStart(2, "0") + "-01"; }
+  dates.add(auj); const D_ = [...dates].sort();
+  const out = {};
+  rows.forEach(r => {
+    const k = cleSupport(r.nom), code = k === "fe" ? null : (k === "artema" ? "ARTEMA" : k === "ostrum" ? "OSTRUM" : null);
+    const verse = [], val = [];
+    if (k === "fe") {
+      // fonds euros = l'argent de l'enveloppe qui n'est pas investi en UC ; ses intérêts courent au prorata du temps (courbe estimée)
+      let v = 0, w = 0, prev = null; const W = [];
+      D_.forEach(d => {
+        if (prev) w += v * (new Date(d) - new Date(prev)) / 864e5;
+        O.filter(o => o[0] === d).forEach(o => { const t = o[1]; if (t === "Apport") v += o[3]; else if (t === "Retrait") v -= o[3]; else if (t === "Achat") v -= o[3]; else if (t === "Vente") v += o[3]; });
+        verse.push(v); W.push(w); prev = d;
+      });
+      const G = (r.valeur || 0) - (r.investi || verse[verse.length - 1] || 0), Wf = W[W.length - 1] || 1;
+      D_.forEach((d, i) => val.push(verse[i] + G * W[i] / Wf));
+    } else {
+      let v = 0, cur = null;
+      D_.forEach(d => {
+        O.filter(o => o[0] === d && o[2] === code).forEach(o => {
+          if (o[1] === "Achat") { v += o[3]; cur = (cur === null ? 0 : cur) + o[3]; }
+          else if (o[1] === "Vente") { v -= o[3]; cur = (cur === null ? 0 : cur) - o[3]; }
+          else if (o[1] === "Relevé") cur = o[3];
+        });
+        verse.push(v); val.push(cur === null ? null : cur);
+      });
+      if (val.length) val[val.length - 1] = r.valeur || val[val.length - 1];
+    }
+    out[k] = { nom: r.nom, verse, val, estime: k === "fe" };
+  });
+  const tv = D_.map((_, i) => Object.values(out).reduce((a, x) => a + (x.val[i] || 0), 0)), tvv = D_.map((_, i) => Object.values(out).reduce((a, x) => a + (x.verse[i] || 0), 0));
+  out.total = { nom: "Toute l'assurance-vie", verse: tvv, val: tv, estime: true };
+  return { dates: D_, s: out };
+}
+function courbeAV(S, k) {
+  const x = S.s[k]; if (!x) return "";
+  const W = 320, H = 150, g = 46, dr = 6, hb = 18, n = S.dates.length;
+  const vals = x.val.concat(x.verse).filter(v => v !== null && isFinite(v)); if (!vals.length) return "";
+  let lo = Math.min(...vals), hi = Math.max(...vals); const mg = (hi - lo) * .12 || Math.max(1, hi * .01); lo -= mg; hi += mg;
+  const X = i => g + i * (W - g - dr) / Math.max(1, n - 1), Y = v => 6 + (hi - v) / (hi - lo) * (H - 6 - hb);
+  const kEur = v => Math.abs(hi) >= 10000 && hi - lo > 3000 ? (v / 1000).toFixed(1).replace(".", ",") + " k" : Math.round(v).toLocaleString("fr-FR");
+  const pts = arr => arr.map((v, i) => v === null ? null : X(i).toFixed(1) + "," + Y(v).toFixed(1)).filter(Boolean).join(" ");
+  const c = COUL_AV[k] || "var(--accent)", i0 = x.val.findIndex(v => v !== null);
+  const aire = i0 >= 0 ? '<polygon fill="' + c + '" opacity=".12" points="' + X(i0).toFixed(1) + "," + Y(lo).toFixed(1) + " " + pts(x.val) + " " + X(n - 1).toFixed(1) + "," + Y(lo).toFixed(1) + '"/>' : "";
+  const mois = d => ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."][+d.slice(5, 7) - 1] + " " + d.slice(2, 4);
+  const grille = [lo + mg, (lo + hi) / 2, hi - mg].map(v => '<line x1="' + g + '" x2="' + (W - dr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" class="gr"/><text x="' + (g - 4) + '" y="' + (Y(v) + 3.5).toFixed(1) + '" text-anchor="end">' + kEur(v) + "</text>").join("");
+  const releves = k === "artema" || k === "ostrum" ? (M.histoAV.ordres || []).filter(o => o[1] === "Relevé" && o[2] === (k === "artema" ? "ARTEMA" : "OSTRUM")).map(o => { const i = S.dates.indexOf(o[0]); return i >= 0 ? '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(o[3]).toFixed(1) + '" r="3" fill="' + c + '"/>' : ""; }).join("") : "";
+  return '<svg class="m-mk-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Valeur et versements de ' + esc(x.nom) + '">' + grille + aire +
+    '<polyline fill="none" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="4 3" points="' + pts(x.verse) + '"/>' +
+    '<polyline fill="none" stroke="' + c + '" stroke-width="2.2" stroke-linejoin="round" points="' + pts(x.val) + '"/>' + releves +
+    '<text x="' + g + '" y="' + (H - 4) + '">' + mois(S.dates[0]) + '</text><text x="' + (W - dr) + '" y="' + (H - 4) + '" text-anchor="end">' + mois(S.dates[n - 1]) + "</text></svg>" +
+    '<div class="av-leg"><span><i style="background:' + c + '"></i>valeur' + (x.estime ? " (estimée entre les relevés)" : "") + '</span><span><i class="pt"></i>versé</span>' + (releves ? '<span><i class="rd" style="background:' + c + '"></i>tes relevés</span>' : "") + "</div>";
+}
+function htmlAV(sup) {
+  const tot = sup.find(r => /^Total/.test(r.nom)) || {}, rows = sup.filter(r => !/^Total/.test(r.nom)), p = (M.parametres || {});
+  const S = seriesAV(sup), fe = p.fondsEuros || {}, ar = p.artema || {};
+  const tuile = (lab, val, cls, sub) => '<div><span class="lab">' + lab + '</span><span class="val ' + (cls || "") + '">' + val + '</span><span class="sub">' + sub + "</span></div>";
+  const rap = k => (rappelsFichier().find(x => cleRappel(x.nom) === k) || {}).prochaine;
+  const rdv = [];
+  if (ar.initial === null || ar.initial === undefined || ar.initial === "") rdv.push(["📌", "Artema : niveau de départ de l'indice", rap("artemaInitial") ? "à saisir dès le " + frDate(rap("artemaInitial")) : "à saisir"]);
+  if (rap("releve")) rdv.push(["◷", "Relevé du mois (Artema)", quandRappel({ prochaine: rap("releve") }) || frDate(rap("releve"))]);
+  if (fe.taux) rdv.push(["💶", "Fonds euros : " + pct(fe.taux, 2, false) + " net en " + (fe.annee || "—") + (fe.bonus ? " + bonus " + pct(fe.bonus, 2, false) + (fe.bonusFin ? " jusqu'au " + frDate(fe.bonusFin) : "") : ""), rap("fondsEuros") ? "prochain taux vers le " + frDate(rap("fondsEuros")) : ""]);
+  const sel = S && S.s[avSel] ? avSel : "total";
+  return '<div class="tuiles m-petit av-t">' +
+      tuile("Valeur", eur(tot.valeur), "", "aujourd'hui") + tuile("Versé", eur(tot.investi), "", "à ce jour (pas les versements programmés)") +
+      tuile("Gain", eur(tot.pv, 0, true), sens(tot.pv), pct(tot.pvPct, 2) + " depuis l'ouverture") + tuile("Garanti", pct(rows.filter(r => cleSupport(r.nom) === "fe").reduce((a, r) => a + (r.poids || 0), 0), 0, false), "", "part en fonds euros") +
+    "</div>" +
+    '<div class="stack av-stack" role="img" aria-label="Répartition">' + rows.map(r => '<i style="flex:' + Math.max(0, r.valeur || 0) + ";background:" + (COUL_AV[cleSupport(r.nom)] || "var(--ink-3)") + '"></i>').join("") + "</div>" +
+    '<div class="av-sups">' + rows.map(r => { const k = cleSupport(r.nom);
+      return '<button type="button" class="av-s" data-av="' + k + '" aria-pressed="' + (sel === k) + '" style="--c:' + (COUL_AV[k] || "var(--ink-3)") + '"><span class="av-n"><b><i></i>' + esc(r.nom) + "</b><small>" + esc(r.note || "") + "</small></span>" +
+        '<span class="av-v"><b>' + eur(r.valeur) + '</b><small>versé ' + eur(r.investi) + '</small><small class="' + sens(r.pv) + '">' + eur(r.pv, 2, true) + " · " + pct(r.pvPct, 2) + "</small></span></button>"; }).join("") +
+      (S ? '<button type="button" class="av-s av-tout" data-av="total" aria-pressed="' + (sel === "total") + '">Toute l\'assurance-vie</button>' : "") + "</div>" +
+    (S ? '<div class="av-courbe" id="av-courbe">' + courbeAV(S, sel) + "</div>" : '<p class="info">Les courbes arrivent dès que ton fichier envoie l\'historique (mise à jour du script).</p>') +
+    (rdv.length ? '<h3 class="m-sous">Rendez-vous</h3><div class="av-rdv">' + rdv.map(([i, t, q]) => '<div><i>' + i + "</i><span>" + esc(t) + (q ? "<small>" + esc(q) + "</small>" : "") + "</span></div>").join("") + "</div>" : "");
+}
+function brancherAV(v) {
+  const z = v.querySelector("#p-av"); if (!z) return;
+  z.addEventListener("click", e => {
+    const b = e.target.closest("[data-av]"); if (!b) return;
+    avSel = b.dataset.av; const S = seriesAV(M.supports || []); if (!S) return;
+    z.querySelectorAll("[data-av]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.av === avSel)));
+    const c = z.querySelector("#av-courbe"); if (c) c.innerHTML = courbeAV(S, S.s[avSel] ? avSel : "total");
+  });
 }
 function pretHtml() {
   const p = M.prets;
@@ -1194,6 +1302,7 @@ function graduations(mn, mx, n) {
   return t;
 }
 function brancherPatrimoine(v) {
+  brancherAV(v);
   v.querySelectorAll("[data-cible]").forEach(b => b.addEventListener("click", () => { const c = document.getElementById(b.dataset.cible); if (c) c.scrollIntoView({ block: "start", behavior: reduit ? "auto" : "smooth" }); }));
 }
 
