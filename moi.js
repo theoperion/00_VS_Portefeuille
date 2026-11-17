@@ -411,6 +411,8 @@ function injecterStyle() {
 .moi .m-idx span { font-size: 12.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .moi .m-idx b { font: 600 12.5px/1 var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .moi .tuiles.m-petit .val { font-size: 15.5px; }
+.moi .tuiles.m-pret-t .val { font-size: 14.5px; white-space: nowrap; letter-spacing: -.01em; }   /* V15.12 : « dans 14 ans 7 mois » sur une ligne, les 4 tuiles à la même taille */
+.moi .m-pret b { white-space: nowrap; font-size: 14.5px; }
 .moi .tuiles.m-petit > div { padding: 9px 11px; }
 .moi .mini p { grid-column: 1 / -1; margin: 2px 0 0; font-size: 12px; color: var(--ink-2); }
 .moi .m-ligne-det { grid-column: 1 / -1; padding-top: 4px; cursor: default; }
@@ -1100,7 +1102,7 @@ function pretHtml() {
     (p.prochaine ? cell("Prochaine échéance", eur(p.prochaine.echeance + (p.prochaine.assurance || 0), 2), "le " + frDate(p.prochaine.date) + (p.prochaine.assurance ? " · assurance comprise (" + eur(p.prochaine.assurance, 2) + ")" : p.prochaine.assurance === 0 ? "" : " · hors assurance")) : "") +
     (p.actuel ? cell("Capital restant dû", eur(p.actuel.restant), "après l'échéance du " + frDate(p.actuel.date)) : "") +
     cell("Intérêts payés en " + new Date().getFullYear(), eur(p.interetsAnnee), "prêt classique") +
-    (p.fin ? cell("Fin des prêts", dansDuree(p.fin), "le " + frDate(p.fin) + (p.interetsRestants ? " · encore " + eur(p.interetsRestants) + " d'intérêts" : "")) : (p.prochaine ? cell("Après la prochaine", eur(p.prochaine.restant), "restant dû") : "")) +
+    (p.fin ? cell(/^dans /.test(dansDuree(p.fin)) ? "Fin des prêts dans" : "Fin des prêts", dansDuree(p.fin).replace(/^dans /, ""), "le " + frDate(p.fin) + (p.interetsRestants ? " · encore " + eur(p.interetsRestants) + " d'intérêts" : "")) : (p.prochaine ? cell("Après la prochaine", eur(p.prochaine.restant), "restant dû") : "")) +
     "</div>";
 }
 /* ---- V15.4 · Marchés : 8 cases (variation du jour, lue dans le Versus), courbe d'un an au toucher, « Comparer » en base 100 ---- */
@@ -1744,11 +1746,11 @@ function blocPret() {
   const t = (lab, val, cls, sub) => "<div><span class=\"lab\">" + lab + '</span><span class="val ' + (cls || "") + '">' + val + '</span><span class="sub">' + sub + "</span></div>";
   return '<div><h2 class="sec">Ton prêt immobilier <small>capital restant dû</small></h2></div>' +
     boiteGraphe("g-pret", [{ nom: "Déjà remboursé", c: "var(--accent)" }, { nom: "À venir", c: "var(--accent)", dash: true }]) +
-    '<div class="tuiles">' +
+    '<div class="tuiles m-petit m-pret-t">' +
       t("Remboursé", pct(rembourse / emprunte, 1, false), "up", eur(rembourse) + " sur " + eur(emprunte)) +
       t("Restant dû", eur(restant), "", p.actuel ? "au " + frDate(p.actuel.date) : "") +
       t("Intérêts restants", eur(p.interetsRestants), "", "payés en " + new Date().getFullYear() + " : " + eur(p.interetsAnnee)) +
-      t("Fin des prêts", p.fin ? dansDuree(p.fin) : "—", "", p.fin ? "le " + frDate(p.fin) : "") +
+      t(p.fin && /^dans /.test(dansDuree(p.fin)) ? "Fin des prêts dans" : "Fin des prêts", p.fin ? dansDuree(p.fin).replace(/^dans /, "") : "—", "", p.fin ? "le " + frDate(p.fin) : "") +
       (p.prochaine && (p.banque || p.prochaine.assurance !== undefined && p.prochaine.assurance !== null) ? t("Prochaine échéance", eur(p.prochaine.echeance + (p.banque ? 0 : p.prochaine.assurance || 0), 2), "", "le " + frDate(p.prochaine.date) + ", assurance comprise" + (p.banque ? " (ta part)" : "")) : "") +
     "</div>";
 }
