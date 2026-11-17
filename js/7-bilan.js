@@ -646,6 +646,14 @@ window.addEventListener("hashchange", () => { const v = vueActive(); if (v !== s
 }, true));
 /* Bouton retour (Android, appli installée) : ferme d'abord la fenêtre ouverte, puis revient à l'onglet d'accueil,
    et seulement ensuite quitte l'appli (avant : écran noir). Une entrée « garde » reste toujours au-dessus de la page. */
+/* V15.26 · journal de diagnostic du bouton retour (20 derniers évènements, sur l'appareil seulement ; aucune donnée financière) */
+function diag(t) { try { const l = JSON.parse(localStorage.getItem("versus.diag") || "[]"); const d = new Date();
+  l.push(String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0") + ":" + String(d.getSeconds()).padStart(2, "0") + " " + t + " · état=" + JSON.stringify(history.state) + " · lg=" + history.length + " · " + location.hash);
+  localStorage.setItem("versus.diag", JSON.stringify(l.slice(-20))); } catch (e) {} }
+diag("chargement · " + (navigator.userAgent.match(/(Firefox|Chrome|Safari)\/[\d.]+/) || [""])[0] + (matchMedia && matchMedia("(display-mode: standalone)").matches ? " · appli installée" : " · onglet"));
+addEventListener("pageshow", e => diag("pageshow persisted=" + e.persisted));
+addEventListener("pagehide", e => diag("pagehide persisted=" + e.persisted));
+addEventListener("error", e => diag("ERREUR " + (e.message || "") + " " + (e.filename || "").split("/").pop() + ":" + (e.lineno || "")));
 const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) || navigator.standalone === true;
 function vueAccueil() { const o = ETAT.ouverture || ""; return /^moi/.test(o) || o === "fiche" ? "moi" : ["classement", "mois", "trophees"].includes(o) ? o : "classement"; }
 function fermerFenetreOuverte() {
@@ -663,6 +671,7 @@ function fermerFenetreOuverte() {
     const armer = () => { const st = history.state; if (!st || st.vs !== "garde" || st.auto) { try { history.pushState({ vs: "garde" }, ""); } catch (e) {} } };
     ["pointerdown", "keydown"].forEach(t => document.addEventListener(t, armer, true));
     window.addEventListener("popstate", e => {
+      diag("retour (popstate) · arrivée=" + JSON.stringify(e.state));
       // V15.23 : chaque retour compte, même s'il tombe sur une étape « garde »
       const cur = stock.get(CLES.vue) || vueActive(), acc = vueAccueil();
       const rester = v => { history.replaceState({ vs: "base" }, "", "#" + v); history.pushState({ vs: "garde", auto: true }, ""); };   // « auto » : sans geste, Chrome peut la sauter → regarnie au prochain toucher
@@ -685,6 +694,8 @@ function ouvrirReglages(section) {
   if (section) { const s = document.getElementById(section); if (s) plierRegl(s, false); if (s) setTimeout(() => { s.scrollIntoView({ block: "start" }); const i = s.querySelector("input"); if (i && !i.value) i.focus(); }, 30); }
 }
 $("#btn-reglages").addEventListener("click", () => ouvrirReglages());
+document.querySelector(".diag").addEventListener("toggle", e => { if (e.target.open) { let l = []; try { l = JSON.parse(localStorage.getItem("versus.diag") || "[]"); } catch (x) {} $("#diag-txt").textContent = l.join("\n") || "(vide)"; } });
+$("#diag-vider").addEventListener("click", () => { try { localStorage.removeItem("versus.diag"); } catch (e) {} $("#diag-txt").textContent = "(vide)"; });
 /* V15.2 : Réglages rangés en rubriques repliables (touche le titre) ; seule « Affichage » est ouverte au départ, le choix reste sur l'appareil */
 function plierRegl(sec, ferme) {
   sec.classList.toggle("ferme", ferme); const h = sec.querySelector(":scope > h4"); if (h) h.setAttribute("aria-expanded", String(!ferme));
