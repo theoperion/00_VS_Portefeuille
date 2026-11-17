@@ -657,11 +657,15 @@ function fermerFenetreOuverte() {
 }
 (() => {
   try {
-    if (!history.state || history.state.vs !== "garde") { history.replaceState({ vs: "base" }, ""); history.pushState({ vs: "garde" }, ""); }
+    if (!history.state || history.state.vs !== "garde") { history.replaceState({ vs: "base" }, ""); history.pushState({ vs: "garde", auto: true }, ""); }
+    // V15.23 · Chrome Android saute, au retour, les étapes créées SANS geste de l'utilisateur (elles l'étaient au démarrage) :
+    // il reculait alors hors de l'appli → page blanche. On (re)crée donc l'étape « garde » pendant un vrai toucher.
+    const armer = () => { const st = history.state; if (!st || st.vs !== "garde" || st.auto) { try { history.pushState({ vs: "garde" }, ""); } catch (e) {} } };
+    ["pointerdown", "keydown"].forEach(t => document.addEventListener(t, armer, true));
     window.addEventListener("popstate", e => {
-      if (e.state && e.state.vs === "garde") return;
+      // V15.23 : chaque retour compte, même s'il tombe sur une étape « garde »
       const cur = stock.get(CLES.vue) || vueActive(), acc = vueAccueil();
-      const rester = v => { history.replaceState({ vs: "base" }, "", "#" + v); history.pushState({ vs: "garde" }, ""); };
+      const rester = v => { history.replaceState({ vs: "base" }, "", "#" + v); history.pushState({ vs: "garde", auto: true }, ""); };   // « auto » : sans geste, Chrome peut la sauter → regarnie au prochain toucher
       if (fermerFenetreOuverte()) { rester(cur); return; }
       // V15.21 : dans Moi, Patrimoine / Stats / Missions → d'abord « Aujourd'hui »
       if (cur === "moi" && window.Moi && window.Moi.retour && window.Moi.retour()) { rester(cur); return; }
