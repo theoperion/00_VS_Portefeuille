@@ -3758,6 +3758,7 @@ window.Moi = {
   rendre,
   prechauffer() { injecterStyle(); if (!configure()) { signalerCloche(); return; } lireCache(); signalerCloche(); if (Date.now() - dernierAppel > 5 * 60e3) charger(false); },
   notifications: htmlNotifications,
+  retour() { if (PREF.onglet && PREF.onglet !== "jour") { PREF.onglet = "jour"; garderPref(); rendre(); window.scrollTo(0, 0); return true; } return false; },
   faireRappel(k) { lireCache(); if (M) faireRappel(k); },
   feVerifie() { stock.set(cleStock("feVu"), String(Date.now())); signalerCloche(); },
   reporterRappel(k) { const pt = plusTard(); pt[k] = Date.now() + 2 * 864e5; stock.set(cleStock("plusTard"), JSON.stringify(pt)); signalerCloche(); if (vueMoi()) rendre(); },

@@ -646,6 +646,7 @@ window.addEventListener("hashchange", () => { const v = vueActive(); if (v !== s
 }, true));
 /* Bouton retour (Android, appli installée) : ferme d'abord la fenêtre ouverte, puis revient à l'onglet d'accueil,
    et seulement ensuite quitte l'appli (avant : écran noir). Une entrée « garde » reste toujours au-dessus de la page. */
+const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) || navigator.standalone === true;
 function vueAccueil() { const o = ETAT.ouverture || ""; return /^moi/.test(o) || o === "fiche" ? "moi" : ["classement", "mois", "trophees"].includes(o) ? o : "classement"; }
 function fermerFenetreOuverte() {
   const ouverts = [...document.querySelectorAll(".voile")].filter(x => !x.hidden && getComputedStyle(x).display !== "none");
@@ -662,8 +663,14 @@ function fermerFenetreOuverte() {
       const cur = stock.get(CLES.vue) || vueActive(), acc = vueAccueil();
       const rester = v => { history.replaceState({ vs: "base" }, "", "#" + v); history.pushState({ vs: "garde" }, ""); };
       if (fermerFenetreOuverte()) { rester(cur); return; }
+      // V15.21 : dans Moi, Patrimoine / Stats / Missions → d'abord « Aujourd'hui »
+      if (cur === "moi" && window.Moi && window.Moi.retour && window.Moi.retour()) { rester(cur); return; }
       if (cur !== acc) { rester(acc); montrerVue(acc); return; }
-      history.back();   // déjà sur l'accueil : on quitte vraiment
+      // déjà sur l'accueil : on ne recule JAMAIS au-delà de l'appli (c'était l'écran blanc, Android comme iPhone) ;
+      // un 2e retour dans les 2 s tente de fermer l'appli installée, sinon on reste simplement sur l'accueil
+      rester(cur);
+      if (Date.now() - (window.__retourT || 0) < 2000) { try { window.close(); } catch (e) {} return; }
+      window.__retourT = Date.now(); window.scrollTo({ top: 0, behavior: "smooth" }); toast("Retour encore une fois pour quitter");
     });
   } catch (e) {}
 })();
