@@ -621,8 +621,11 @@ $("#notifs").addEventListener("click", e => { if (e.target.id === "notifs") $("#
 /* au démarrage, si un fichier perso est connecté : on prépare Moi en arrière-plan pour la cloche */
 function moiConnecte() { return !!(stock.get("versus.moi.api") && stock.get("versus.moi.cle")); }
 function prechaufferMoi() { if (moiConnecte()) chargerModuleMoi(() => window.Moi.prechauffer()); }
+let VUE_AFFICHEE = null;
 function montrerVue(v) {
   if (!VUES.includes(v)) v = "classement";
+  if (v === "classement" && VUE_AFFICHEE !== null && VUE_AFFICHEE !== "classement") ANIM_CL = true;   // on (re)vient sur l'onglet : les animations se rejouent
+  VUE_AFFICHEE = v;
   document.querySelectorAll(".view").forEach(s => { s.hidden = s.dataset.vue !== v; });
   document.body.classList.toggle("vue-moi", v === "moi");
   document.querySelectorAll(".onglet").forEach(t => t.setAttribute("aria-current", t.dataset.vue === v || (v === "fiche" && t.dataset.vue === "classement") ? "page" : "false"));
@@ -755,7 +758,7 @@ $("#changer-cle").addEventListener("click", async () => {
   if (rep.ok) { stock.set(CLES.cle, n); $("#champ-nouvelle-cle").value = ""; }
   $("#etat-source").textContent = rep.message || (rep.ok ? "Clé changée." : "Changement impossible.");
 });
-$("#btn-maj").addEventListener("click", () => { charger(true); if (vueActive() === "moi" && window.Moi) window.Moi.rafraichir(true); });
+$("#btn-maj").addEventListener("click", () => { ANIM_CL = true; charger(true); if (vueActive() === "moi" && window.Moi) window.Moi.rafraichir(true); });
 function majChipsAffichage() {
   [["bandeau", "data-bandeau"], ["discret", "data-discret"], ["ouverture", "data-ouverture"]].forEach(([k, a]) =>
     document.querySelectorAll("[" + a + "]").forEach(b => b.setAttribute("aria-pressed", String(b.getAttribute(a) === ETAT[k]))));

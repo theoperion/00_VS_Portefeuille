@@ -470,7 +470,11 @@ function bandesDefilantes(root) {
 function expliquerBadges(root) {
   root.querySelectorAll("[data-bdg]").forEach(b => { b.style.cursor = "help"; b.addEventListener("click", ev => { ev.stopPropagation(); toast(b.dataset.bdg); }); });
 }
+/* V15.11 : les animations du Classement ne se jouent qu'une fois par ouverture (pas à chaque nouveau rendu : copie locale puis données fraîches) ;
+   elles se rejouent quand on revient sur l'onglet ou quand on touche « Actualiser » */
+let ANIM_CL = true;
 function rendreClassement() {
+  const animer = ANIM_CL; ANIM_CL = false;
   const { fin, deb } = cadre();
   const v = $("#v-classement");
   const avantTour = positionsTour(v);
@@ -546,13 +550,14 @@ function rendreClassement() {
   const maxPv = Math.max(...pv.map(s => Math.abs(s.pvLatentePct || 0)), .01);
 
  v.innerHTML = (punchy && typeof bandeauNouvelleManche === "function" ? bandeauNouvelleManche() : "") + (punchy && typeof htmlReglesMois === "function" && moisAMettreEnAvant() ? htmlReglesMois(Math.floor(moisAMettreEnAvant() / 100), moisAMettreEnAvant(), true) : "") + banniereBilan() +
-    '<div id="boite-verdict">' + carteVerdict(verdict) + "</div>" +
+    '<div id="boite-verdict"' + (animer ? "" : ' class="calme"') + ">" + carteVerdict(verdict) + "</div>" +
     (bref ? '<div class="bref">' + bref + "</div>" : "") +
     (anomalies.length ? '<div style="display:grid;gap:6px">' + anomalies.map(t => '<div class="alerte warn">' + t + "</div>").join("") + "</div>" : "") +
     '<div><h2 class="sec">Classement <span class="h-boutons"><button class="million-b' + (D.premierMillion ? " pris" : "") + '" type="button" id="info-million" aria-label="Premier millionnaire">👑</button><button class="vers-fiches" type="button" id="vers-fiches" aria-label="Ouvrir les fiches de chacun"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.4c2.3.1 3.9 1.6 4.8 4.6"/></svg>Fiches</button></span></h2></div>' +
     filtres(true) +
     '<div class="periode">' + esc(textePeriode(deb, fin, nMois)) + (deb && st.some(s => s.n < nMois) ? " · chaque courbe démarre au premier relevé de la personne" : "") + " · performance (TWR), versements neutralisés</div>" +
-    '<div class="tour' + (Object.keys(avantTour).length ? "" : " entree") + '"><div class="tour-h"><span>Pos.</span><span>Portefeuille</span><span>TWR · écart</span></div>' + tour + "</div>" +
+    '<div class="tour' + (animer ? " entree" : "") + '"><div class="tour-h"><span>Pos.</span><span>Portefeuille</span><span>TWR · écart</span></div>' + tour + "</div>" +
+    '<p class="tour-aide">👆 Touche un pilote pour ses stats et sa fiche (portefeuille, lignes, historique).</p>' +
     (saisonVisible() ? '<p class="leg-bdg"><b>Badges</b> 🟡 en tête du championnat · 🏆 champion de saison · ⚡💥… exclusifs gagnés (un seul exemplaire) · plaque gagnée en défi. <span>Touche un badge pour savoir ce qu\'il veut dire.</span></p>' : "") +
     "<div>" + '<h2 class="sec">La course <small>performance cumulée</small></h2></div>' +
     boiteGraphe("g-course", series.map(s => ({ nom: s.nom, c: s.c, dash: s.dash }))) +
@@ -572,7 +577,8 @@ function rendreClassement() {
       finEtiq: true, h: 170, fmt: x => rangTxt(-x), fmtAxe: t => Number.isInteger(t) && t < 0 ? rangTxt(-t) : "", titreX: k => "Fin " + moisCourt(k) });
   }
   brancherVerdict(verdict);
-  { const bv = $("#boite-verdict"); if (bv) { compterChiffres(bv);
+  if (!animer) v.querySelectorAll(".regles-mois, .nv-manche").forEach(e => e.classList.add("calme"));
+  { const bv = $("#boite-verdict"); if (bv) { if (animer) compterChiffres(bv);
       // la première fois qu'on voit le verdict d'un nouveau mois : une petite fête
       if (verdict && verdict.complet && !VK && +(stock.get("versus.verdictVu") || 0) < verdict.k) { const premier = !stock.get("versus.verdictVu"); stock.set("versus.verdictVu", String(verdict.k)); if (!premier && typeof confettis === "function" && !(verdict.champion && verdict.champion.seul && verdict.champion.nom === ETAT.moi)) setTimeout(() => { if (vueActive() === "classement") confettis(); }, 1100); } } }
   v.querySelectorAll("[data-nv-manche]").forEach(b => b.addEventListener("click", () => { choisirSaison(+b.dataset.nvManche); ETAT.podium = "gp"; GP_ETAPE = null; garder(); allerA("trophees"); }));
@@ -585,7 +591,7 @@ function rendreClassement() {
   glisserTour(v, avantTour);
   bandesDefilantes(v);
   expliquerBadges(v);
-  if (!Object.keys(avantTour).length) compterChiffres(v.querySelector(".tour"));
+  if (animer) compterChiffres(v.querySelector(".tour"));
   v.querySelectorAll(".pos[data-nom]").forEach(el => {
     const ouvrir = () => {
       const s = st.find(x => x.nom === el.dataset.nom);
@@ -593,11 +599,11 @@ function rendreClassement() {
       if (suiv && suiv.classList.contains("detail")) { suiv.remove(); el.setAttribute("aria-expanded", "false"); return; }
       const c = (l, val, cls) => "<div><span>" + l + '</span><b class="' + (cls || "") + '">' + val + "</b></div>";
       const d = document.createElement("div"); d.className = "detail";
-      d.innerHTML = '<div class="mini">' + c("Volatilité", volTxt(s)) + c("Sharpe", sharpeTxt(s)) + c("Pire baisse", pct(s.baisseMax), sens(s.baisseMax)) +
+      d.innerHTML = '<button class="btn acc fiche-go" type="button">📂 Fiche de ' + esc(s.nom) + ' <small>portefeuille, lignes, historique</small> ›</button><div class="mini">' + c("Volatilité", volTxt(s)) + c("Sharpe", sharpeTxt(s)) + c("Pire baisse", pct(s.baisseMax), sens(s.baisseMax)) +
         c("Meilleur (" + moisCourt(s.meilleur.k) + ")", pct(s.meilleur.r), sens(s.meilleur.r)) + c("Pire (" + moisCourt(s.pire.k) + ")", pct(s.pire.r), sens(s.pire.r)) + c("MWR", pct(s.mwr), sens(s.mwr)) +
         c(esc(D.marche.indices[i1]) + " même période", pct(s.i1 && s.i1.twr)) + c("Mois battant l'indice", pct(s.i1 && s.i1.battus, 0, false)) + c("Plus-value période", eur(s.pvPeriode, 0, true), sens(s.pvPeriode)) +
-        '</div><button class="lien" type="button" style="margin-top:8px">Ouvrir la fiche de ' + esc(s.nom) + " →</button>";
-      d.querySelector(".lien").addEventListener("click", () => { ETAT.fiche = s.nom; garder(); allerA("fiche"); });
+        "</div>";
+      d.querySelector(".fiche-go").addEventListener("click", () => { ETAT.fiche = s.nom; garder(); allerA("fiche"); });
       el.after(d); el.setAttribute("aria-expanded", "true");
     };
     el.addEventListener("click", ouvrir);

@@ -1216,11 +1216,10 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
   .tour.entree .pos { animation: posIn .45s cubic-bezier(.2,.8,.2,1) both; }
   .tour.entree .pos:nth-of-type(2) { animation-delay: .06s; } .tour.entree .pos:nth-of-type(3) { animation-delay: .12s; } .tour.entree .pos:nth-of-type(4) { animation-delay: .18s; }
   .tour.entree .pos:nth-of-type(5) { animation-delay: .24s; } .tour.entree .pos:nth-of-type(6) { animation-delay: .3s; }
-  .pos .g.lead { position: relative; overflow: hidden; }
-  .pos .g.lead::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%); background-size: 250% 100%; animation: leadReflet 3.2s ease-in-out 1s infinite; }
+  .tour.entree .pos .g.lead::after { animation: leadReflet 1.1s ease-out .9s 1 both; }
 }
 @keyframes posIn { from { opacity: 0; translate: -14px 0; } to { opacity: 1; translate: 0 0; } }
-@keyframes leadReflet { 0%, 60% { background-position: 160% 0; } 100% { background-position: -60% 0; } }
+@keyframes leadReflet { from { background-position: 160% 0; } to { background-position: -60% 0; } }
 
 /* V15.9 · annonce d'un exclusif */
 .excl-an .ea-l { display: grid; justify-items: center; gap: 4px; padding: 6px 0; }
@@ -1232,3 +1231,15 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 
 /* V15.10 · bouton « ↻ Rejouer » du plein écran, avec son texte */
 .gpp-x.gpp-rj { width: auto; padding: 0 14px; border-radius: 19px; font: 700 13.5px/1 var(--f-text); white-space: nowrap; background: var(--accent); border-color: transparent; }
+
+/* V15.11 · LEADER en pastille dorée (reflet une seule fois, à l'ouverture) ; « calme » = rendu sans animation */
+.pos .g.lead { position: relative; overflow: hidden; justify-self: end; padding: 4px 8px; border-radius: 6px; background: linear-gradient(135deg, #F7CF55, #E3A23B); color: #2A1B02; letter-spacing: .1em; box-shadow: 0 1px 0 rgba(0,0,0,.08); }
+.pos .g.lead::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.7) 50%, transparent 70%); background-size: 250% 100%; background-position: 160% 0; pointer-events: none; }
+.calme, .calme * { animation: none !important; }
+
+/* V15.11 · accès aux fiches */
+.vp-m[data-fiche], .vp-l[data-fiche] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.vp-m[data-fiche]:active .vp-p, .vp-l[data-fiche]:active { transform: scale(.96); }
+.detail .fiche-go { width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.detail .fiche-go small { font-weight: 400; opacity: .85; font-size: 12px; }
+.tour-aide { margin: 6px 2px 0; font-size: 12px; color: var(--ink-3); }

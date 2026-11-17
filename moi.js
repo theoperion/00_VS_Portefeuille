@@ -304,6 +304,8 @@ function injecterStyle() {
 .moi .m-rappel .t { flex: 1; display: grid; font-size: 14px; line-height: 1.25; }
 .moi .m-rappel .t small { font-size: 12px; color: var(--ink-2); }
 .moi .m-rappel .lien { white-space: nowrap; }
+.moi .m-seance { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 2px; padding: 6px 11px; border-radius: 999px; font: 600 12.5px/1 var(--f-text); background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent-ink, var(--accent)); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.moi .m-seance[aria-pressed="true"] { background: var(--accent); color: #fff; }
 .moi .m-maj { display: block; margin-top: 4px; font-size: 11px; color: var(--ink-3, var(--ink-2)); opacity: .8; }
 .moi .m-jour { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; font-size: 13px; color: var(--ink-2); }
 .moi .m-status { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-3); }
@@ -886,7 +888,31 @@ function lignesTenues() {
   (M.groupes || []).forEach(g => g.lignes.forEach(l => { if (!l.especes) out.push(Object.assign({ env: g.env }, l)); }));
   return out;
 }
+/* V15.11 · « Dernière séance » : quand la bourse est fermée (nuit, week-end), on peut afficher les variations de la dernière séance,
+   lues dans Perf lignes (Google Finance), puis revenir à « aujourd'hui ». Rien n'est écrit : c'est une vue. */
+function seanceDu() { const p = M && M.perfLignes; if (!p) return null; const ds = Object.values(p).map(x => x && x.seanceDu).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d || "")).sort(); return ds.length ? ds[ds.length - 1] : null; }
+function seanceProposee() { const d = seanceDu(); return !!d && d < isoJour(new Date()); }
+function modeSeance() { return PREF.seance === true && seanceProposee(); }
+function libSeance() { const d = seanceDu(); if (!d) return ""; const x = new Date(d + "T12:00:00"); return ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."][x.getDay()] + " " + frDate(d).slice(0, 5); }
+function mSeance(m) {
+  const perf = m.perfLignes || {}, c = JSON.parse(JSON.stringify(m)); let tot = 0;
+  (c.groupes || []).forEach(g => {
+    let j = 0;
+    g.lignes.forEach(l => { if (l.especes) return; const p = perf[g.env + "|" + l.code];
+      if (p && typeof p.seance === "number") { l.pct = p.seance; l.jour = (l.valeur || 0) * p.seance / (1 + p.seance); } j += l.jour || 0; });
+    if (g.total) { g.total.jour = j; const base = (g.total.valeur || 0) - j; g.total.pct = base ? j / base : 0; }
+    tot += j;
+  });
+  const sy = c.synthese = Object.assign({}, c.synthese), base = (sy.valeur || 0) - tot;
+  sy.jour = tot; sy.jourPct = base ? tot / base : 0; sy.jourLibelle = "Dernière séance · " + libSeance();
+  return c;
+}
 function htmlJour() {
+  if (!modeSeance()) return htmlJourBase();
+  const m0 = M; M = mSeance(m0);
+  try { return htmlJourBase(); } finally { M = m0; }
+}
+function htmlJourBase() {
   const s = M.synthese || {};
   const texteFlap = ETAT.discret === "oui" ? "•••" + NB + "€" : eur(s.valeur);
   const animer = !reduit && texteFlap !== dernierFlap; dernierFlap = texteFlap;
@@ -916,7 +942,8 @@ function htmlJour() {
   const indices = (M.indices || []).filter(i => i.nom !== "1 USD en EUR");
   const nomIdx = n => n.replace(/\s*\((ETF\s)?([^)]*)\)/, "");
   return '<div class="m-hero">' +
-      '<span class="eyebrow">' + embHero() + 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "") + "</span>" +
+      '<span class="eyebrow">' + embHero() + (modeSeance() ? "Dernière séance · " + esc(libSeance()) : 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "")) + "</span>" +
+      (seanceProposee() ? '<button class="m-seance" type="button" id="m-seance" aria-pressed="' + modeSeance() + '">' + (modeSeance() ? "↩ Revenir à aujourd'hui" : "🕘 Voir la dernière séance (" + esc(libSeance()) + ")") + "</button>" : "") +
       '<div class="m-flaps" role="img" aria-label="' + esc(texteFlap) + '">' + flaps(texteFlap, animer) + "</div>" +
       '<div class="m-jour"><span class="badge big-b ' + sens(s.jour) + '">' + fleche(s.jour) + " " + eur(s.jour, 0, true) + " · " + pct(s.jourPct, 2) + "</span>" +
         "<span>" + (suffixe ? esc(suffixe) : hausse + " en hausse · " + baisse + " en baisse") + "</span></div>" +
@@ -1008,6 +1035,7 @@ function alertesDeclenchees() {
 }
 function brancherJour(v) {
   brancherDefs(v); brancherSignal(v); brancherMarches(v);
+  const bs = v.querySelector("#m-seance"); if (bs) bs.addEventListener("click", () => { PREF.seance = !modeSeance(); garderPref(); dernierFlap = ""; rendre(); });
   v.querySelectorAll(".m-l[data-code]").forEach(el => {
     el.addEventListener("click", e => { if (!e.target.closest(".m-ligne-det")) basculerLigne(el); });
     el.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target === el) { e.preventDefault(); basculerLigne(el); } });
