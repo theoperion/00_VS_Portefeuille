@@ -1014,7 +1014,8 @@ function htmlPlateau() {
       disques + centre + "</svg>" + detail + "</div>" +
     '<div><h3 class="s-h3">🎲 La course aux trophées <small>défi ou secret : 1 case · exclusif : 3 cases</small></h3></div>' +
     '<div class="mp"><svg viewBox="0 0 ' + MW + " " + MH + '" class="mp-svg" role="img" aria-label="Piste des trophées"><path d="' + chemin + '" class="mp-chemin"/>' + cs + pions + "</svg>" +
-      '<div class="mp-cl">' + classementMP + "</div></div>";
+      '<div class="mp-cl">' + classementMP + "</div>" +
+      '<p class="mp-aide">Ton pion avance tout seul à chaque trophée gagné : <b>défi ou secret +1 case</b>, <b>exclusif ou 👑 +3 cases</b>. Les ⭐ marquent les paliers (5, 10, 15…) : pour l\'instant, de simples repères.</p></div>';
 }
 function brancherPlateau(v) {
   v.querySelectorAll("[data-plc]").forEach(g => { const go = () => { PLAT_SEL = PLAT_SEL === g.dataset.plc ? null : g.dataset.plc; const y = window.scrollY; rendreTrophees(); window.scrollTo(0, y); };

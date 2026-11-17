@@ -1290,3 +1290,4 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 }
 @keyframes plAnneau { from { stroke-dasharray: 0 200; } }
 @keyframes mpSaut { from { transform: translateY(-14px); opacity: 0; } to { transform: none; opacity: 1; } }
+.mp-aide { margin: 0 4px 2px; font-size: 12px; color: var(--ink-3); line-height: 1.4; } .mp-aide b { color: var(--ink-2); }
