@@ -1752,7 +1752,14 @@ function blocPret() {
       t("Intérêts restants", eur(p.interetsRestants), "", "payés en " + new Date().getFullYear() + " : " + eur(p.interetsAnnee)) +
       t(p.fin && /^dans /.test(dansDuree(p.fin)) ? "Fin des prêts dans" : "Fin des prêts", p.fin ? dansDuree(p.fin).replace(/^dans /, "") : "—", "", p.fin ? "le " + frDate(p.fin) : "") +
       (p.prochaine && (p.banque || p.prochaine.assurance !== undefined && p.prochaine.assurance !== null) ? t("Prochaine échéance", eur(p.prochaine.echeance + (p.banque ? 0 : p.prochaine.assurance || 0), 2), "", "le " + frDate(p.prochaine.date) + ", assurance comprise" + (p.banque ? " (ta part)" : "")) : "") +
+      tuileCapitalMois(p, t) +
     "</div>";
+}
+/* V15.13 · 6e tuile du prêt : dans la prochaine échéance, ce qui rembourse vraiment (capital) et ce qui part (intérêts, assurance) */
+function tuileCapitalMois(p, t) {
+  const pr = p.prochaine, av = p.actuel; if (!pr || !av || !(av.restant > pr.restant)) return "";
+  const capital = av.restant - pr.restant, ass = p.banque ? 0 : pr.assurance || 0, total = (pr.echeance || 0) + ass, interets = Math.max(0, total - capital - ass);
+  return t("Dont capital", eur(capital, 0), "up", (total > 0 ? Math.round(capital / total * 100) + " % de l'échéance · " : "") + "intérêts " + eur(interets, 0) + (ass ? " · assurance " + eur(ass, 2) : ""));
 }
 function dessinerPret() {
   const box = document.getElementById("g-pret"); if (!box) return;
