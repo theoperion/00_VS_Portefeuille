@@ -1703,7 +1703,7 @@ function empile(box, conf) {
   const X = i => m.l + i / (n - 1) * iw, Y = v => m.t + ih - (v - mn) / (mx - mn) * ih;
   let o = "";
   ticks.forEach(t => {
-    o += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + Y(t).toFixed(1) + '" y2="' + Y(t).toFixed(1) + '" style="stroke:var(' + (Math.abs(t) < 1e-9 ? "--ink-3" : "--rule") + ')"/>';
+    o += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + Y(t).toFixed(1) + '" y2="' + Y(t).toFixed(1) + '" style="stroke:var(' + (Math.abs(t) < 1e-9 ? "--ink-3" : "--rule") + ')"' + (Math.abs(t) < 1e-9 ? "" : ' stroke-dasharray="2 4"') + "/>";
     o += '<text x="' + (m.l - 6) + '" y="' + (Y(t) + 3.5).toFixed(1) + '" text-anchor="end">' + esc(axeEur(t)) + "</text>";
   });
   let dx = -99;
@@ -1712,20 +1712,36 @@ function empile(box, conf) {
     if (!lab) return; const x = X(i); if (x - dx < 40) return; dx = x;
     o += '<text x="' + x.toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">' + esc(lab) + "</text>";
   });
-  const aire = (bas0, haut1, c, op) => {
-    let d = "M" + X(0).toFixed(1) + " " + Y(haut1[0]).toFixed(1);
-    for (let i = 1; i < n; i++) d += "L" + X(i).toFixed(1) + " " + Y(haut1[i]).toFixed(1);
-    for (let i = n - 1; i >= 0; i--) d += "L" + X(i).toFixed(1) + " " + Y(bas0[i]).toFixed(1);
-    return '<path d="' + d + 'Z" style="fill:' + c + ';fill-opacity:' + (op || .78) + (conf.trait ? ';stroke:var(--panel);stroke-width:1;stroke-linejoin:round' : "") + '"/>';
+  // V15.17 : couches lissées (courbe monotone), dégradé vertical et liseré clair sur le dessus ; nom de la couche à droite si elle est assez épaisse
+  const uid = "e" + Math.random().toString(36).slice(2, 7); let defs = "";
+  const courbe = (pts, debut) => { // pts = [[x,y]…] ; tangentes monotones (Fritsch-Carlson)
+    const k = pts.length; if (k < 3) return pts.map((p, i) => (i || !debut ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join("");
+    const dx = [], dy = [], m2 = []; for (let i = 0; i < k - 1; i++) { dx.push(pts[i + 1][0] - pts[i][0]); dy.push(pts[i + 1][1] - pts[i][1]); m2.push(dy[i] / (dx[i] || 1)); }
+    const t = [m2[0]]; for (let i = 1; i < k - 1; i++) t.push(m2[i - 1] * m2[i] <= 0 ? 0 : (m2[i - 1] + m2[i]) / 2); t.push(m2[k - 2]);
+    for (let i = 0; i < k - 1; i++) { if (m2[i] === 0) { t[i] = 0; t[i + 1] = 0; continue; } const a = t[i] / m2[i], b = t[i + 1] / m2[i], h = a * a + b * b; if (h > 9) { const q = 3 / Math.sqrt(h); t[i] = q * a * m2[i]; t[i + 1] = q * b * m2[i]; } }
+    let d = (debut ? "M" : "L") + pts[0][0].toFixed(1) + " " + pts[0][1].toFixed(1);
+    for (let i = 0; i < k - 1; i++) d += "C" + (pts[i][0] + dx[i] / 3).toFixed(1) + " " + (pts[i][1] + t[i] * dx[i] / 3).toFixed(1) + " " + (pts[i + 1][0] - dx[i] / 3).toFixed(1) + " " + (pts[i + 1][1] - t[i + 1] * dx[i] / 3).toFixed(1) + " " + pts[i + 1][0].toFixed(1) + " " + pts[i + 1][1].toFixed(1);
+    return d;
   };
-  let base = xs.map(() => 0);
-  conf.couches.forEach(c => { const h = base.map((b, i) => b + Math.max(0, c.v[i] || 0)); o += aire(base, h, c.c, c.op); base = h; });
+  let nG = 0;
+  const aire = (bas0, haut1, c, op) => {
+    const id = uid + (nG++), hautP = haut1.map((v, i) => [X(i), Y(v)]), basP = bas0.map((v, i) => [X(i), Y(v)]).reverse();
+    defs += '<linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:' + c + ';stop-opacity:' + Math.min(1, (op || .85) + .08) + '"/><stop offset="1" style="stop-color:' + c + ';stop-opacity:' + ((op || .85) * .78).toFixed(2) + '"/></linearGradient>';
+    return '<path d="' + courbe(hautP, true) + courbe(basP, false) + 'Z" fill="url(#' + id + ')"/>' +
+      '<path d="' + courbe(hautP, true) + '" fill="none" style="stroke:' + c + '" stroke-width="1.6" stroke-linejoin="round"/>' +
+      '<path d="' + courbe(hautP, true) + '" fill="none" style="stroke:var(--panel)" stroke-width=".8" stroke-opacity=".7" transform="translate(0,1.2)"/>';
+  };
+  let base = xs.map(() => 0); const etiq = [];
+  conf.couches.forEach(c => { const h = base.map((b, i) => b + Math.max(0, c.v[i] || 0)); o += aire(base, h, c.c, c.op);
+    const ep = Y(base[n - 1]) - Y(h[n - 1]); if (ep >= 13) etiq.push([Y((base[n - 1] + h[n - 1]) / 2), c.nom]); base = h; });
   base = xs.map(() => 0);
   (conf.negs || []).forEach(c => { const h = base.map((b, i) => b - Math.max(0, c.v[i] || 0)); o += aire(base, h, c.c, c.op || .45); base = h; });
   if (conf.ligne) {
     let d = ""; conf.ligne.v.forEach((v, i) => { if (ok(v)) d += (d ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); });
     o += '<path d="' + d + '" fill="none" style="stroke:var(--ink)" stroke-width="2" stroke-dasharray="5 4" stroke-linejoin="round"/>';
   }
+  etiq.forEach(([y, nom]) => { o += '<text class="e-lab" x="' + (W - m.r - 6) + '" y="' + (y + 3.5).toFixed(1) + '" text-anchor="end">' + esc(String(nom).replace(/\s*\(.*\)$/, "").replace(/ et autres$/, "").replace(/ Fortuneo$/, "").slice(0, 16)) + "</text>"; });
+  o = "<defs>" + defs + "</defs>" + o;
   o += '<line class="cross" x1="0" x2="0" y1="' + m.t + '" y2="' + (m.t + ih) + '" style="stroke:var(--ink-3)" visibility="hidden"/>';
   o += '<rect class="hit" x="' + m.l + '" y="0" width="' + iw + '" height="' + H + '" fill="transparent"/>';
   svg.setAttribute("viewBox", "0 0 " + W + " " + H); svg.setAttribute("height", H); svg.innerHTML = o;
@@ -1736,7 +1752,8 @@ function empile(box, conf) {
     const x = X(i); cross.setAttribute("x1", x); cross.setAttribute("x2", x); cross.setAttribute("visibility", "visible");
     const rows = conf.couches.concat(conf.negs || []).filter(c => ok(c.v[i]) && c.v[i]).map(c => '<div class="row" style="--c:' + c.c + '"><span>' + esc(c.nom) + "</span><span>" + (conf.negs && conf.negs.includes(c) ? MOINS : "") + eur(c.v[i]) + "</span></div>").join("");
     tip.hidden = false;
-    tip.innerHTML = "<b>Fin " + esc(libMoisK(xs[i])) + "</b>" + rows + (conf.ligne && ok(conf.ligne.v[i]) ? '<div class="row" style="--c:var(--ink)"><span>' + esc(conf.ligne.nom) + "</span><span>" + eur(conf.ligne.v[i]) + "</span></div>" : "");
+    const totI = conf.couches.reduce((a, c) => a + Math.max(0, c.v[i] || 0), 0) - (conf.negs || []).reduce((a, c) => a + Math.max(0, c.v[i] || 0), 0);
+    tip.innerHTML = "<b>Fin " + esc(libMoisK(xs[i])) + " · " + eur(totI) + "</b>" + rows + (conf.ligne && ok(conf.ligne.v[i]) ? '<div class="row" style="--c:var(--ink)"><span>' + esc(conf.ligne.nom) + "</span><span>" + eur(conf.ligne.v[i]) + "</span></div>" : "");
     const bx = box.getBoundingClientRect(), px = x / W * r.width + (r.left - bx.left), tw = tip.offsetWidth;
     let left = px + 14; if (left + tw > bx.width - 6) left = px - tw - 14;
     tip.style.left = Math.max(6, left) + "px"; tip.style.top = "38px";
@@ -1797,8 +1814,9 @@ function detailPatrimoine(d) {
       if (nd.some(v => v > .5)) ep.push({ nom: "Épargne (pas de détail ce mois-là)", v: nd });
     }
   }
-  bourse.forEach((c, i) => { c.c = nuance("--s1", MIX_DET[i % MIX_DET.length]); c.op = .92; });
-  ep.forEach((c, i) => { c.c = nuance("--s2", MIX_DET[i % MIX_DET.length]); c.op = .92; });
+  const PAL_B = ["#5B8DEF", "#9B6BFF", "#18A9C7", "#E5484D", "#D6619E", "#3F5FBF"], PAL_E = ["#2BB673", "#C9A227", "#F2A33A", "#8C7B5A", "#6FCF97"];   // V15.17 : vraies couleurs
+  bourse.forEach((c, i) => { c.c = PAL_B[i % PAL_B.length]; c.op = .9; });
+  ep.forEach((c, i) => { c.c = PAL_E[i % PAL_E.length]; c.op = .9; });
   return { bourse, ep, utile: bourse.length > 1 || ep.length > 1 };
 }
 function couchesPatrimoine(d, brut, aImmo, det) {
