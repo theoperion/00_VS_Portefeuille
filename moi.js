@@ -1726,9 +1726,10 @@ function empile(box, conf) {
   let nG = 0;
   const aire = (bas0, haut1, c, op) => {
     const id = uid + (nG++), hautP = haut1.map((v, i) => [X(i), Y(v)]), basP = bas0.map((v, i) => [X(i), Y(v)]).reverse();
-    // V15.18 : à plat (sans dégradé ni relief), séparées par un fin trait de la couleur du fond
-    return '<path d="' + courbe(hautP, true) + courbe(basP, false) + 'Z" style="fill:' + c + ';fill-opacity:' + (op || .85) + '"/>' +
-      '<path d="' + courbe(hautP, true) + '" fill="none" style="stroke:var(--panel)" stroke-width="1.2" stroke-linejoin="round"/>';
+    defs += '<linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:' + c + ';stop-opacity:' + Math.min(1, (op || .85) + .08) + '"/><stop offset="1" style="stop-color:' + c + ';stop-opacity:' + ((op || .85) * .78).toFixed(2) + '"/></linearGradient>';
+    return '<path d="' + courbe(hautP, true) + courbe(basP, false) + 'Z" fill="url(#' + id + ')"/>' +
+      '<path d="' + courbe(hautP, true) + '" fill="none" style="stroke:' + c + '" stroke-width="1.6" stroke-linejoin="round"/>' +
+      '<path d="' + courbe(hautP, true) + '" fill="none" style="stroke:var(--panel)" stroke-width=".8" stroke-opacity=".7" transform="translate(0,1.2)"/>';
   };
   let base = xs.map(() => 0); const etiq = [];
   conf.couches.forEach(c => { const h = base.map((b, i) => b + Math.max(0, c.v[i] || 0)); o += aire(base, h, c.c, c.op);
