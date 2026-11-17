@@ -1198,7 +1198,7 @@ function htmlAV(sup) {
   if (fe.taux) rdv.push(["💶", "Fonds euros : " + pct(fe.taux, 2, false) + " net (" + (fe.annee || "—") + ")" + (fe.bonus ? " + bonus " + pct(fe.bonus, 2, false) + (fe.bonusFin ? " jusqu'au " + frDate(fe.bonusFin) : "") : ""), (rap("fondsEuros") ? "vrai taux vers le " + frDate(rap("fondsEuros")) + " · " : "") + "estimation ajustable", "fondsEuros"]);
   const sel = S && S.s[avSel] ? avSel : "total";
   return '<div class="tuiles m-petit av-t">' +
-      tuile("Valeur", eur(tot.valeur), "", "aujourd'hui") + tuile("Versé", eur(tot.investi), "", "à ce jour (pas les versements programmés)") +
+      tuile("Valeur", eur(tot.valeur), "", "aujourd'hui") + tuile("Versé", eur(tot.investi), "", "à ce jour") +
       tuile("Gain", eur(tot.pv, 0, true), sens(tot.pv), pct(tot.pvPct, 2) + " depuis l'ouverture") + tuile("Garanti", pct(rows.filter(r => cleSupport(r.nom) === "fe").reduce((a, r) => a + (r.poids || 0), 0), 0, false), "", "part en fonds euros") +
     "</div>" +
     '<div class="stack av-stack" role="img" aria-label="Répartition">' + rows.map(r => '<i style="flex:' + Math.max(0, r.valeur || 0) + ";background:" + (COUL_AV[cleSupport(r.nom)] || "var(--ink-3)") + '"></i>').join("") + "</div>" +
