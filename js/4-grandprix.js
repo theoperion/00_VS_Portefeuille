@@ -103,25 +103,25 @@ function meteoMois(k) {
   return { id: "orage", ico: "⛈️", nom: "Orage", txt: t + " : déluge sur le circuit, accrochez-vous." };
 }
 
-/* ---------- Grands Prix : une ville par mois (le dessin 3D / 2D est dans piste.js) ---------- */
+/* ---------- Grands Prix : un circuit à thème par mois (le dessin 3D / 2D est dans piste.js) ---------- */
 const GPS = {
-  abudhabi: { gp: "Essais d'Abu Dhabi", ville: "Yas Marina", drap: "🇦🇪", txt: "La marina au crépuscule, sous l'hôtel illuminé qui enjambe la piste." },
-  bahrein: { gp: "Grand Prix de Bahreïn", ville: "Sakhir", drap: "🇧🇭", atout: "turbo", piege: "pluie", txt: "De longues lignes droites dans le désert, sous les projecteurs." },
-  djeddah: { gp: "Grand Prix d'Arabie saoudite", ville: "Djeddah", drap: "🇸🇦", atout: "aspiration", piege: "pari", txt: "Le circuit urbain le plus rapide, au bord de la mer Rouge." },
-  melbourne: { gp: "Grand Prix d'Australie", ville: "Melbourne", drap: "🇦🇺", atout: "pluie", piege: "turbo", txt: "Autour du lac d'Albert Park, au cœur de l'automne australien." },
-  suzuka: { gp: "Grand Prix du Japon", ville: "Suzuka", drap: "🇯🇵", atout: "pari", piege: "aspiration", txt: "Le seul huit du calendrier, sous les cerisiers." },
-  miami: { gp: "Grand Prix de Miami", ville: "Miami", drap: "🇺🇸", atout: "turbo", piege: "pluie", txt: "Palmiers, marina et longue ligne droite sous le soleil de Floride." },
-  montreal: { gp: "Grand Prix du Canada", ville: "Montréal", drap: "🇨🇦", atout: "pari", piege: "turbo", txt: "Sur l'île, entre deux bras du fleuve, au pied du mur des champions." },
-  silverstone: { gp: "Grand Prix de Grande-Bretagne", ville: "Silverstone", drap: "🇬🇧", atout: "aspiration", piege: "pari", txt: "Un ancien aérodrome, des courbes rapides et des champs à perte de vue." },
-  spa: { gp: "Grand Prix de Belgique", ville: "Spa-Francorchamps", drap: "🇧🇪", atout: "pluie", piege: "turbo", txt: "La forêt des Ardennes et le raidillon de l'Eau Rouge." },
-  monza: { gp: "Grand Prix d'Italie", ville: "Monza", drap: "🇮🇹", atout: "aspiration", piege: "pluie", txt: "Le temple de la vitesse, dans le parc royal." },
-  singapour: { gp: "Grand Prix de Singapour", ville: "Marina Bay", drap: "🇸🇬", atout: "pari", piege: "aspiration", txt: "La nuit, entre les gratte-ciel de Marina Bay." },
-  interlagos: { gp: "Grand Prix de São Paulo", ville: "Interlagos", drap: "🇧🇷", atout: "pluie", piege: "aspiration", txt: "Les collines de São Paulo, dans un amphithéâtre de tribunes." },
-  lasvegas: { gp: "Grand Prix de Las Vegas", ville: "Las Vegas", drap: "🇺🇸", atout: "turbo", piege: "pari", txt: "Le Strip illuminé et sa ligne droite interminable." },
-  monaco: { gp: "Grand Prix de Monaco", ville: "Monte-Carlo", drap: "🇲🇨", atout: "pari", piege: "turbo", txt: "Le port, le tunnel, les rails : le plus mythique des circuits urbains." }
+  abudhabi: { gp: "Le Garage des rêves", ville: "Garage des rêves", drap: "🛠️", fx: "garage", txt: "Là où toutes les voitures naissent, entre établis, projecteurs et odeur d'essence : le tour de chauffe." },
+  bahrein: { gp: "Grand Prix des Lucioles", ville: "Forêt aux lucioles", drap: "🌲", fx: "lucioles", atout: "turbo", piege: "pluie", txt: "Des milliers de lucioles éclairent la piste au crépuscule, entre des arbres qui murmurent." },
+  djeddah: { gp: "Grand Prix du Château", ville: "Château aux sortilèges", drap: "🏰", fx: "sortileges", atout: "aspiration", piege: "pari", txt: "Les escaliers changent de place et les couloirs se referment derrière toi." },
+  melbourne: { gp: "Grand Prix de l'Hiver éternel", ville: "Pays derrière l'armoire", drap: "❄️", fx: "neige", atout: "pluie", piege: "turbo", txt: "On entre par une armoire, on ressort dans un hiver qui n'en finit pas, sous un lampadaire perdu." },
+  suzuka: { gp: "Grand Prix des Bas-fonds", ville: "Bas-fonds sous la pluie", drap: "🌧️", fx: "pluieneon", atout: "pari", piege: "aspiration", txt: "Pluie sans fin, ruelles qui se croisent en huit et enseignes qui grésillent." },
+  miami: { gp: "Grand Prix des Androïdes", ville: "Mégapole des androïdes", drap: "🤖", fx: "neon", atout: "turbo", piege: "pluie", txt: "Des tours à perte de vue, des voitures qui volent et des androïdes qui regardent passer la course." },
+  montreal: { gp: "Grand Prix de l'Arène virtuelle", ville: "Arène virtuelle", drap: "🕶️", fx: "pixels", atout: "pari", piege: "turbo", txt: "Un monde virtuel où le premier qui trouve la clé cachée gagne tout." },
+  silverstone: { gp: "Grand Prix du Solstice", ville: "Village du solstice", drap: "🌼", fx: "petales", atout: "aspiration", piege: "pari", txt: "Couronnes de fleurs et soleil qui ne se couche jamais : une fête trop belle pour être honnête." },
+  spa: { gp: "Grand Prix du Monde à l'envers", ville: "Monde à l'envers", drap: "🔦", fx: "brume", atout: "pluie", piege: "turbo", txt: "Les lumières clignotent, la forêt se retourne : quelque chose rôde de l'autre côté." },
+  monza: { gp: "Grand Prix des Survivants", ville: "Ville des survivants", drap: "🍄", fx: "spores", atout: "aspiration", piege: "pluie", txt: "Une ville reprise par la nature, où l'on roule en silence sans jamais s'arrêter." },
+  singapour: { gp: "Grand Prix de la Mer de dunes", ville: "Mer de dunes", drap: "🏜️", fx: "sable", atout: "pari", piege: "aspiration", txt: "Deux soleils, du sable à l'infini et, sous la piste, quelque chose d'immense qui bouge." },
+  interlagos: { gp: "Grand Prix du Mur des titans", ville: "Mur des titans", drap: "🧱", fx: "cendres", atout: "pluie", piege: "aspiration", txt: "Une piste au pied d'un mur de cinquante mètres. De l'autre côté, des géants." },
+  lasvegas: { gp: "Grand Prix du Sommet des dieux", ville: "Sommet des dieux", drap: "⚡", fx: "eclairs", atout: "turbo", piege: "pari", txt: "La dernière course, au-dessus des nuages, sous le regard des dieux qui parient sur vous." },
+  monaco: { gp: "Grand Prix du Plateau maudit", ville: "Plateau maudit", drap: "🎲", fx: "des", atout: "pari", piege: "turbo", txt: "Un jeu de société géant : chaque case peut te faire avancer… ou reculer. Les dés sont pipés." }
 };
 const CAL_GP = ["bahrein", "djeddah", "melbourne", "suzuka", "miami", "montreal", "silverstone", "spa", "monza", "singapour", "interlagos", "lasvegas"];
-/** Circuit d'un mois : Abu Dhabi pour la chauffe, Monaco au mois tiré (une fois la règle annoncée), sinon le calendrier */
+/** Circuit d'un mois : le Garage des rêves pour la chauffe, le Plateau maudit au mois tiré (une fois la règle annoncée), sinon le calendrier */
 function circuitDe(k) {
   if (!k || k === CHAUFFE_K) return "abudhabi";
   if (k === monacoMois(Math.floor(k / 100)) && regleVisible("monaco") && regleActive("monaco", k)) return "monaco";
@@ -201,7 +201,7 @@ function htmlGrandPrix(y) {
   const piste = '<div class="gp-piste' + (deux ? " en2d" : "") + '" id="gp-piste" data-circuit="' + ci + '"><div class="gp-scene" id="gp-scene"></div>' +
     '<div class="gp-zones">' + (at ? '<span class="gp-zone at" data-zone="atout">' + at.atout.ico + ' <b>+1</b></span>' : "") + "</div>" +
     '<div class="gp-tags3">' + ordre.map(n => '<span class="gp-t3' + (n === qui ? " ici" : "") + '" data-gpt3="' + esc(n) + '" style="--c:' + couleur(n) + '" title="' + esc(n) + '">' + avatar(n) + '<i class="gp-rg"></i></span>').join("") + "</div>" +
-    '<div class="gp-pops"></div>' +
+    '<div class="gp-pops"></div>' + fxCircuit(G.fx) +
     '<div class="gp-hud"><span class="gp-tour">Tour <b id="gp-tour">' + tourTete + "</b></span><span>" + met.ico + " " + esc(met.nom) + "</span></div>" +
     '<div class="gp-btns">' + (deux ? "" : '<button class="gp-vue" type="button" id="gp-cam-b" aria-label="Changer de caméra">' + CAMS[cam] + "</button>") +
     '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en 3D" : "Passer en carte 2D") + '">' + (deux ? "🗺️ 2D" : "🧊 3D") + '</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">⛶</button></div>' +
@@ -212,7 +212,7 @@ function htmlGrandPrix(y) {
     const ca = et.k ? carteDe(y, n, et.k) : null, cdef = ca && ca.c ? carteDef(ca.c) : null;
     const res = x && x.carte ? (x.carte.invalide ? (x.carte.piege ? " Interdite ce mois-ci (piège 🥵 Chaleur) : sans effet." : " Pas encore piochée à ce moment-là : sans effet.") : " Résultat : " + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + " pt" + (Math.abs(x.carte.gain) > 1 ? "s" : "") + (x.carte.circ ? ", dont +1 d'atout du circuit" : "") + (x.carte.bouchon ? ", sans le +1 d'atout : bouchon, plusieurs pilotes l'ont jouée" : "") + (x.carte.sab ? " · " + x.carte.cible + " " + x.carte.sab : "") + ".") : "";
     const carte = ca ? (ca.cache && !cdef ? '<span class="gp-c cache" data-bdg="Carte posée face cachée : révélée le ' + jourLimite(et.k) + ' du mois.">🂠</span>' : cdef ? '<span class="gp-c" data-bdg="' + esc(cdef.ico + " " + cdef.nom + " : " + cdef.def + res) + '">' + cdef.ico + (x && x.carte ? "<small>" + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + "</small>" : "") + "</span>" : '<span class="gp-c vide"></span>') : '<span class="gp-c vide"></span>';
-    const extra = x ? (x.vainq ? '<span class="gp-x or" data-bdg="🇬🇧 Silverstone : vainqueur du mois, +2.">🇬🇧+2</span>' : "") +
+    const extra = x ? (x.vainq ? '<span class="gp-x or" data-bdg="🌼 Le Sacre du solstice : vainqueur du mois, +2.">🌼+2</span>' : "") +
       (x.piege === "nuit" && x.dernier ? '<span class="gp-x" data-bdg="🌃 Safety car de nuit : le dernier du mois marque 2 points de place.">🌃+2</span>' : "") +
       (x.equipe ? '<span class="gp-x" data-bdg="🤝 Bonus d\'équipe : tout le monde a battu le S&P 500 ce mois-ci, +1.">🤝+1</span>' : "") +
       (x.serie ? '<span class="gp-x" data-bdg="🔥 Série : ' + x.serie + ' mois d\'affilée sans finir dernier, +1.">🔥+1</span>' : "") +
@@ -237,16 +237,23 @@ function htmlGrandPrix(y) {
     '<p class="info">' + TOUR_GP + " points = un tour de circuit. Touche une icône pour le détail, une voiture pour la suivre." + (c.chauffe ? " 🔥 Rien ne compte pendant la chauffe." : "") + ' <a href="#" class="lien-regles" data-regles="gp">Règles</a></p>' +
     htmlDetailPoints(y);
 }
+/** V16 · ambiance animée du circuit à thème : un calque de particules (lucioles, neige, pluie néon, pétales, brume…) */
+function fxCircuit(fx) {
+  if (!fx) return "";
+  const n = { lucioles: 18, neige: 26, pluieneon: 30, neon: 6, pixels: 16, petales: 16, brume: 5, spores: 18, sable: 14, cendres: 22, eclairs: 10, des: 7, sortileges: 16, garage: 8 }[fx] || 12;
+  let h = 0; const r = () => { h = (h * 9301 + 49297) % 233280; return h / 233280; };
+  return '<div class="gp-fx fx-' + fx + '" aria-hidden="true">' + Array.from({ length: n }, (_, i) => '<i style="--x:' + (r() * 100).toFixed(1) + ";--y:" + (r() * 100).toFixed(1) + ";--d:" + (r() * 6).toFixed(2) + "s;--t:" + (3 + r() * 5).toFixed(2) + "s;--s:" + (.6 + r() * .9).toFixed(2) + '"></i>').join("") + "</div>";
+}
 /** Le calendrier des Grands Prix de la saison (atouts une fois révélés) */
 function htmlCalendrierGP(y, kIci) {
   const ch = estChauffe(y), ks = ch ? [CHAUFFE_K] : Array.from({ length: 12 }, (_, i) => y * 100 + i + 1), auj = new Date(), kAuj = auj.getFullYear() * 100 + auj.getMonth() + 1;
   const lignes = ks.map(k => {
     const ci = circuitDe(k), g = GPS[ci], a = atoutsVus(k), ind = a ? null : indiceCircuit(k), spe = moisSpecial(y, k), pg = regleVisible("pieges") ? piegeMois(y, k) : null;
     return '<div class="gp-cal-l' + (k === kIci ? " ici" : "") + (k < kAuj && !apercuSaison() ? " passe" : "") + '"><span class="mo">' + esc(moisCourt(k).replace(/\.$/, "")) + "</span>" + (window.Piste ? Piste.vignette(ci) : "") +
-      "<span><b>" + g.drap + " " + esc(g.ville) + (spe ? " " + spe.ico : "") + "</b><small>" + esc(g.gp) + (spe ? " · " + esc(spe.nom) : pg ? " · " + pg.ico + " " + esc(pg.nom) : "") + "</small></span>" +
+      "<span><b>" + g.drap + " " + esc(g.ville) + (spe && spe.ico !== g.drap ? " " + spe.ico : "") + "</b><small>" + esc(g.gp) + (spe ? " · " + esc(spe.nom) : pg ? " · " + pg.ico + " " + esc(pg.nom) : "") + "</small></span>" +
       '<span class="ap">' + (a ? '<i class="p">' + a.atout.ico + "+1</i>" : ind ? '<i class="p" title="L\'atout est l\'une des deux">' + ind.duo[0].ico + "/" + ind.duo[1].ico + "?</i>" : "") + "</span></div>";
   }).join("");
-  return '<details class="gp-calend" id="gp-calend"' + (ETAT.calOuvert === "1" ? " open" : "") + '><summary>📅 ' + (ch ? "Le circuit du tour de chauffe" : "Calendrier de la saison") + " <small>" + (ch ? "1 Grand Prix" : "12 Grands Prix, une ville par mois") + "</small></summary>" + lignes +
+  return '<details class="gp-calend" id="gp-calend"' + (ETAT.calOuvert === "1" ? " open" : "") + '><summary>📅 ' + (ch ? "Le circuit du tour de chauffe" : "Calendrier de la saison") + " <small>" + (ch ? "1 Grand Prix" : "12 Grands Prix, un circuit à thème par mois") + "</small></summary>" + lignes +
     (regleVisible("circuits") || ch ? "" : '<p class="info" style="padding:8px 12px;margin:0">🎁 Bientôt : chaque circuit aura son atout.</p>') + "</details>";
 }
 /* ---------- Mes cartes ---------- */
@@ -278,7 +285,7 @@ function htmlCartes(y) {
     const k = cd.bonus ? utilisees[cd.id] : (ici ? kOuvert : kPrec && ks.includes(kPrec) ? kPrec : undefined), jouee = k !== undefined, aug = Object.entries(AMELIOS).find(([, x]) => x.carte === cd.id), n = aug ? up[aug[0]] : 0;
     const gp = atk && !jouee ? (atk.atout.id === cd.id ? '<span class="c-gp at" title="Atout du circuit">+1</span>' : "") : indk && !jouee && indk.ids.includes(cd.id) ? '<span class="c-gp at" title="Atout possible du circuit (1 chance sur 2)">?</span>' : "";
     const interdite = !!kOuvert && cd.id === "turbo" && (piegeMois(y, kOuvert) || {}).id === "chaleur" && regleVisible("pieges");
-    if (interdite) return '<button type="button" class="carte jouee" disabled data-carte="turbo"><span class="c-ico">' + cd.ico + "</span><b>" + esc(cd.nom) + "</b><small>" + esc(cd.court) + "</small><em>🥵 interdite à Miami</em></button>";
+    if (interdite) return '<button type="button" class="carte jouee" disabled data-carte="turbo"><span class="c-ico">' + cd.ico + "</span><b>" + esc(cd.nom) + "</b><small>" + esc(cd.court) + "</small><em>🌡️ interdite (Surchauffe)</em></button>";
     return '<button type="button" class="carte' + (cd.bonus ? " bonus" : "") + (jouee && !ici ? " jouee" : "") + (ici ? " posee" : "") + (CARTE_CHOIX === cd.id ? " choix" : "") + '" data-carte="' + cd.id + '"' + (jouee && !ici || !kOuvert ? " disabled" : "") + ">" +
       '<span class="c-ico">' + cd.ico + "</span><b>" + esc(cd.nom) + "</b><small>" + esc(cd.court) + "</small>" + (n ? '<span class="c-up">+' + n + "</span>" : "") + gp +
       (jouee ? "<em>" + (ici ? "posée" : cd.bonus ? "jouée · " + esc(moisCourt(k)) : "repos · jouée en " + esc(moisCourt(k))) + "</em>" : cd.tire ? "<em>🎴 " + esc(moisCourt(cd.tire)) + "</em>" : "") + "</button>";

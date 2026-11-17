@@ -17,9 +17,9 @@ const CARTES_BONUS = [
 const ETAPES = [
   { id: "circuits", ico: "🗺️", nom: "L'atout des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque Grand Prix favorise une carte : +1 quand elle marque. Secret jusqu'au 2 (un indice avant), et bouchon si plusieurs la jouent." },
   { id: "pioche", ico: "🎴", nom: "Le rattrapage", ouvre: 202701, regle: "pioche", resume: "Tu finis dernier d'un mois ? Tu pioches une carte bonus (une fois par saison chacune), à jouer à partir du mois suivant. Tes cartes piochées t'attendent dans le Stand." },
-  { id: "monaco", ico: "🎰", nom: "Le Grand Prix de Monaco", ouvre: 202701, regle: "speciaux", resume: "Un mois de la saison, le dernier du championnat marque ses points de place en double. La date est dans le calendrier du Grand Prix." },
-  { id: "pieges", ico: "🪤", nom: "Les pièges des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque circuit sans mois spécial a son piège, une petite règle qui ne vaut que ce mois-là (Mirage à Bahreïn, Murs proches à Djeddah, Chaleur à Miami…). Il s'affiche dès le 20 du mois d'avant, avec la carte." },
-  { id: "gpspeciaux", ico: "🏁", nom: "Silverstone et Monza", ouvre: 202701, regle: "speciaux", resume: "Juillet à Silverstone : le vainqueur du mois marque +2 de plus. Septembre à Monza : le 🎯 vaut +2 au lieu de +1." },
+  { id: "monaco", ico: "🎲", nom: "Le Plateau maudit", ouvre: 202701, regle: "speciaux", resume: "Un mois de la saison, le dernier du championnat marque ses points de place en double. La date est dans le calendrier du Grand Prix." },
+  { id: "pieges", ico: "🪤", nom: "Les pièges des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque circuit sans mois spécial a son piège, une petite règle qui ne vaut que ce mois-là (Feux follets dans la Forêt aux lucioles, Couloirs mouvants au Château, Surchauffe chez les Androïdes…). Il s\'affiche dès le 20 du mois d\'avant, avec la carte." },
+  { id: "gpspeciaux", ico: "🏁", nom: "Le Solstice et les Survivants", ouvre: 202701, regle: "speciaux", resume: "Juillet au Village du solstice : le vainqueur du mois marque +2 de plus (le Sacre). Septembre à la Ville des survivants : le 🎯 vaut +2 au lieu de +1 (Instinct de survie)." },
   { id: "prono", ico: "🔮", nom: "Le pronostic du mois", ouvre: 202701, regle: "championnat", resume: "Dans la fenêtre de ta carte : qui gagne le mois (+1 si juste) et le S&P 500 fera-t-il plus de +1 % (+1 si juste). Secret jusqu'au 2." },
   { id: "pole", ico: "🅿️", nom: "La pole position", ouvre: 202701, regle: "championnat", resume: "Avec ton pronostic, donne ton chiffre pour le S&P 500 du mois (ex. +1,8 %). Le plus proche marque +1 (partagé en cas d'égalité)." },
   { id: "defi", ico: "🏁", nom: "Le défi du mois", ouvre: 202701, regle: "championnat", resume: "Chaque mois a son défi (battre le Nasdaq, faire mieux que l'or, finir positif…), annoncé le 20 du mois d'avant : +1 à chaque pilote qui le réussit." },
@@ -104,11 +104,11 @@ function ouvrirReserve() {
   const reserve = ETAPES.filter(e => e.reserve);
   o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>🧪 Règles et idées en réserve</b><button class="icon-btn rg-x" type="button" id="rg-x" aria-label="Fermer">✕</button></div><div class="rg-corps">' +
     '<p class="rg-admin">👀 Admin seulement. On commence simple ; tout le reste est codé et attend ici. Touche une règle pour lui donner une date (elle sera annoncée le 20 du mois d\'avant) ou la remettre en réserve.</p>' +
-    '<section class="rg-s"><h4>✅ En jeu</h4><ul><li>🏁 Championnat : ' + BAREME.join(" · ") + ' points, +1 🎯 si tu bats l\'indice.</li><li>🏎️ Grand Prix : une ville par mois, ' + TOUR_GP + " points le tour.</li><li>🃏 Main de base : " + CARTES.map(c => c.ico + " " + esc(c.nom)).join(", ") + " (une par mois, rejouables mais pas deux mois de suite ; le Pari prévient sa cible).</li><li>⚔️ Duels, 🎴 rattrapage et 🗺️ atout des circuits : dès janvier 2027.</li><li>🏆 Trophées : défis, exclusifs, secrets, Premier millionnaire → objets d'écurie.</li><li>🏎️ Écurie : cosmétiques seulement.</li></ul>" +
+    '<section class="rg-s"><h4>✅ En jeu</h4><ul><li>🏁 Championnat : ' + BAREME.join(" · ") + ' points, +1 🎯 si tu bats l\'indice.</li><li>🏎️ Grand Prix : un circuit à thème par mois, ' + TOUR_GP + " points le tour.</li><li>🃏 Main de base : " + CARTES.map(c => c.ico + " " + esc(c.nom)).join(", ") + " (une par mois, rejouables mais pas deux mois de suite ; le Pari prévient sa cible).</li><li>⚔️ Duels, 🎴 rattrapage et 🗺️ atout des circuits : dès janvier 2027.</li><li>🏆 Trophées : défis, exclusifs, secrets, Premier millionnaire → objets d'écurie.</li><li>🏎️ Écurie : cosmétiques seulement.</li></ul>" +
       "<p><b>Calendrier des nouveautés</b></p><ul>" + etapesJeu().map(ligne).join("") + "</ul></section>" +
     '<section class="rg-s"><h4>🧪 En réserve <small>codé, éteint</small></h4><ul>' + reserve.map(ligne).join("") + "</ul>" +
       "<p><b>Ce qu'elles font, en détail</b> (le texte que les joueurs liront si tu les mets en jeu) :</p>" + sect("niveaux") + "</section>" +
-    '<section class="rg-s"><h4>⚙️ Réglages actuels</h4><ul><li>Points de place : ' + BAREME.join(" · ") + ' ; 🎯 : +1 (Turbo : +3).</li><li>Un tour de circuit : ' + TOUR_GP + " points.</li><li>Gain maximum d'une carte : +" + PLAFOND_CARTE + ".</li><li>Atout du circuit : +1 si la carte marque ; bouchon (pas de +1) si au moins deux pilotes marquent avec.</li><li>Duels : +1 / −1, un seul par paire et par mois ; égalité = 0 (Pari aussi).</li><li>Monaco : le dernier du championnat ×2 (mois tiré entre avril et octobre) ; Finale : tout le monde ×2 en décembre.</li><li>Rattrapage : 1 carte bonus quand tu finis dernier (4 cartes bonus, mélangées par pilote et par saison).</li><li>Niveaux (en réserve) : " + XP_NIVEAU + " XP par niveau, niveau " + NIV_MAX + " au plus ; atelier : +1 par niveau sur une carte, 2 au plus.</li></ul><p class=\"rg-admin\">Pour changer un chiffre : une session de modification (constantes en haut des règles dans le code).</p></section>" +
+    '<section class="rg-s"><h4>⚙️ Réglages actuels</h4><ul><li>Points de place : ' + BAREME.join(" · ") + ' ; 🎯 : +1 (Turbo : +3).</li><li>Un tour de circuit : ' + TOUR_GP + " points.</li><li>Gain maximum d'une carte : +" + PLAFOND_CARTE + ".</li><li>Atout du circuit : +1 si la carte marque ; bouchon (pas de +1) si au moins deux pilotes marquent avec.</li><li>Duels : +1 / −1, un seul par paire et par mois ; égalité = 0 (Pari aussi).</li><li>Plateau maudit : le dernier du championnat ×2 (mois tiré entre avril et octobre) ; Finale : tout le monde ×2 en décembre.</li><li>Rattrapage : 1 carte bonus quand tu finis dernier (4 cartes bonus, mélangées par pilote et par saison).</li><li>Niveaux (en réserve) : " + XP_NIVEAU + " XP par niveau, niveau " + NIV_MAX + " au plus ; atelier : +1 par niveau sur une carte, 2 au plus.</li></ul><p class=\"rg-admin\">Pour changer un chiffre : une session de modification (constantes en haut des règles dans le code).</p></section>" +
     '<section class="rg-s"><h4>💡 Idées à creuser <small>pas encore codées</small></h4><ul>' + IDEES_FUTURES.map(([i, t, d]) => "<li><b>" + i + " " + esc(t) + "</b> : " + esc(d) + "</li>").join("") + "</ul></section>" +
     "</div></div>";
   document.body.appendChild(o); document.documentElement.classList.add("fige");
@@ -152,23 +152,23 @@ function monacoMois(y) { return y * 100 + 4 + hashTxt("monaco" + y) % 7; }   // 
 function moisSpecial(y, k) {
   if (!k) return null;
   if (k % 100 === 12 && regleActive("finale", k)) return { id: "finale", ico: "🏆", nom: "Finale", txt: "Points de place doublés pour tout le monde." };
-  if (k === monacoMois(y) && regleActive("monaco", k)) return { id: "monaco", ico: "🎰", nom: "Grand Prix de Monaco", txt: "Le dernier du championnat avant ce mois marque ses points de place en double." };
-  if (k % 100 === 7 && regleActive("gpspeciaux", k)) return { id: "silverstone", ico: "🇬🇧", nom: "Silverstone", txt: "Le vainqueur du mois marque +2 de plus." };
-  if (k % 100 === 9 && regleActive("gpspeciaux", k)) return { id: "monza", ico: "🇮🇹", nom: "Monza", txt: "Le 🎯 vaut +2 au lieu de +1." };
+  if (k === monacoMois(y) && regleActive("monaco", k)) return { id: "monaco", ico: "🎲", nom: "Le Plateau maudit", txt: "Le dernier du championnat avant ce mois marque ses points de place en double." };
+  if (k % 100 === 7 && regleActive("gpspeciaux", k)) return { id: "silverstone", ico: "🌼", nom: "Le Sacre du solstice", txt: "Le vainqueur du mois marque +2 de plus." };
+  if (k % 100 === 9 && regleActive("gpspeciaux", k)) return { id: "monza", ico: "🍄", nom: "Instinct de survie", txt: "Le 🎯 vaut +2 au lieu de +1." };
   return null;
 }
 /* ---------- V15.5 · Pièges des circuits : une petite règle propre à chaque circuit qui n'a pas de mois spécial ---------- */
 const PIEGES = {
-  bahrein: { id: "mirage", ico: "🏜️", nom: "Mirage", txt: "Le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point." },
-  djeddah: { id: "murs", ico: "🧱", nom: "Murs proches", txt: "À moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points)." },
-  melbourne: { id: "chaos", ico: "💥", nom: "Départ chaotique", txt: "Pronostic « qui gagne le mois » : +2 si juste, mais −1 si faux." },
-  suzuka: { id: "huit", ico: "➰", nom: "Le huit", txt: "Les places du mois se jouent sur deux mois cumulés : ce mois-ci et le précédent." },
-  miami: { id: "chaleur", ico: "🥵", nom: "Chaleur", txt: "🚀 Turbo interdit ce mois-ci." },
-  spa: { id: "ardennes", ico: "🌦️", nom: "Météo des Ardennes", txt: "Si le S&P 500 baisse, 🌧️ Pneus pluie vaut +3 au lieu de +2." },
-  singapour: { id: "nuit", ico: "🌃", nom: "Safety car de nuit", txt: "Le dernier du mois marque 2 points de place au lieu de 0." },
-  interlagos: { id: "averse", ico: "⛈️", nom: "Averse surprise", txt: "🎲 Pari : +3 si tu finis devant ton rival, −2 derrière (au lieu de +2 / −1)." }
+  bahrein: { id: "mirage", ico: "✨", nom: "Feux follets", txt: "Le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point." },
+  djeddah: { id: "murs", ico: "🚪", nom: "Couloirs mouvants", txt: "À moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points)." },
+  melbourne: { id: "chaos", ico: "🌨️", nom: "Tempête de neige", txt: "Pronostic « qui gagne le mois » : +2 si juste, mais −1 si faux." },
+  suzuka: { id: "huit", ico: "🎭", nom: "Double vie", txt: "Les places du mois se jouent sur deux mois cumulés : ce mois-ci et le précédent." },
+  miami: { id: "chaleur", ico: "🌡️", nom: "Surchauffe", txt: "🚀 Turbo interdit ce mois-ci." },
+  spa: { id: "ardennes", ico: "🌫️", nom: "Brume", txt: "Si le S&P 500 baisse, 🌧️ Pneus pluie vaut +3 au lieu de +2." },
+  singapour: { id: "nuit", ico: "🌪️", nom: "Tempête de sable", txt: "Le dernier du mois marque 2 points de place au lieu de 0." },
+  interlagos: { id: "averse", ico: "💥", nom: "Assaut", txt: "🎲 Pari : +3 si tu finis devant ton rival, −2 derrière (au lieu de +2 / −1)." }
 };
-/** Piège du mois k (null : chauffe, mois spécial, Monaco, ou règle pas encore ouverte) */
+/** Piège du mois k (null : chauffe, mois spécial, Plateau maudit, ou règle pas encore ouverte) */
 function piegeMois(y, k) {
   if (!k || k === CHAUFFE_K || estChauffe(y) || !regleActive("pieges", k) || moisSpecial(y, k)) return null;
   return PIEGES[circuitDe(k)] || null;
@@ -519,7 +519,7 @@ function htmlRegles(tout, modeReserve) {
       "<ul><li>Ex æquo : mêmes points. Un mois ne descend jamais sous 0.</li><li>Le mois compte quand tout le monde a saisi son relevé.</li><li>Égalité au championnat : le plus de victoires, puis la meilleure performance cumulée.</li></ul>") +
     s("cartes", "🃏", "Les cartes", schemaCartes +
       "<ul><li><b>Une par mois</b>, face cachée dans le Stand (modifiable jusqu'au 1<sup>er</sup>), révélée le 2.</li><li>Rejouable, mais <b>pas deux mois de suite</b>. Au plus <b>+" + PLAFOND_CARTE + "</b> par mois.</li>" +
-      (vC ? "<li>🗺️ <b>Atout du circuit</b> : chaque ville préfère une carte ; si tu la joues <b>et qu'elle marque</b> : <b>+1</b> (secret jusqu'au 2, un indice 🔍 avant ; si 2 pilotes ou plus marquent avec : personne n'a le +1).</li>" : "") + "</ul>") +
+      (vC ? "<li>🗺️ <b>Atout du circuit</b> : chaque circuit préfère une carte ; si tu la joues <b>et qu'elle marque</b> : <b>+1</b> (secret jusqu'au 2, un indice 🔍 avant ; si 2 pilotes ou plus marquent avec : personne n'a le +1).</li>" : "") + "</ul>") +
     (vB ? s("bonus", "✨", "Les bonus", '<div class="rg-tab">' +
       (vu("defi") ? "<div><b>🏁 Défi du mois</b><span>un objectif différent chaque mois (battre le Nasdaq, faire mieux que l'or, finir positif…), annoncé le 20</span><em>+1</em></div>" : "") +
       (vu("prono") ? "<div><b>🔮 Pronostic</b><span>qui gagne le mois ? · le " + idx + " fera-t-il plus de +1 % ?</span><em>+1 / +1</em></div>" : "") +
@@ -529,19 +529,19 @@ function htmlRegles(tout, modeReserve) {
       (vu("rival") ? "<div><b>😈 Rival</b><span>choisi en secret (20 déc. → 1<sup>er</sup> janv.) ; devant lui en fin de saison</span><em>+3</em></div>" : "") +
       (vu("regularite") ? "<div><b>🛡️ Régularité</b><span>fin de saison : le moins souvent dernier (puis le plus de mois positifs)</span><em>+3</em></div>" : "") + "</div>") : "") +
     s("speciaux", "📅", "Les mois spéciaux", '<div class="rg-tab">' +
-      (vM ? "<div><b>🎰 Monaco</b><span>" + (regleActive("monaco", mo) ? esc(moisLong(mo)) : "un mois tiré") + " : le dernier du championnat</span><em>place ×2</em></div>" : "") +
-      (vS ? "<div><b>🇬🇧 Silverstone</b><span>juillet : le vainqueur du mois</span><em>+2</em></div><div><b>🇮🇹 Monza</b><span>septembre : le 🎯</span><em>vaut +2</em></div>" : "") +
+      (vM ? "<div><b>🎲 Le Plateau maudit</b><span>" + (regleActive("monaco", mo) ? esc(moisLong(mo)) : "un mois tiré") + " : le dernier du championnat</span><em>place ×2</em></div>" : "") +
+      (vS ? "<div><b>🌼 Le Sacre du solstice</b><span>juillet : le vainqueur du mois</span><em>+2</em></div><div><b>🍄 Instinct de survie</b><span>septembre : le 🎯</span><em>vaut +2</em></div>" : "") +
       (vF ? "<div><b>🏆 Finale</b><span>décembre : tout le monde</span><em>place ×2</em></div>" : "") +
       (vu("vote") ? "<div><b>🗳️ Vote</b><span>2 → 31 décembre : « le coup de la saison » (pas pour soi)</span><em>plaque</em></div>" : "") + "</div>") +
     (vu("pieges") ? s("pieges", "🪤", "Les pièges des circuits", "<p>Les autres mois, le circuit a son <b>piège</b> : une petite règle qui ne vaut que ce mois-là. Il s'affiche dès le 20 du mois d'avant (Stand et Classement).</p>" +
       '<div class="rg-tab">' + CAL_GP.filter(id => PIEGES[id]).map(id => "<div><b>" + GPS[id].drap + " " + esc(GPS[id].ville) + "</b><span>" + PIEGES[id].ico + " <b>" + esc(PIEGES[id].nom) + "</b> : " + esc(PIEGES[id].txt) + "</span><em>" + esc(moisCourt(y * 100 + CAL_GP.indexOf(id) + 1).replace(/ \d+$/, "")) + "</em></div>").join("") + "</div>" +
-      '<p class="rg-note">Le mois de Monaco (tiré au sort) remplace le circuit prévu : pas de piège ce mois-là.</p>') : "") +
+      '<p class="rg-note">Le mois du Plateau maudit (tiré au sort) remplace le circuit prévu : pas de piège ce mois-là.</p>') : "") +
     (vP ? s("pioche", "🎴", "Le rattrapage",
       "<p>Dernier d'un mois ? Tu pioches <b>1 carte bonus</b>, jouable dès le mois suivant, une fois par saison :</p><ul>" + CARTES_BONUS.map(c => "<li>" + c.ico + " <b>" + esc(c.nom) + "</b> : " + esc(c.court || c.def) + "</li>").join("") + "</ul>") : "") +
     (vN ? s("niveaux", "🔧", vA ? "Niveaux et atelier" : "Niveaux d'écurie",
       "<ul><li>XP = tes points de place + ton 🎯 (+3 les mois où tu finis dernier). Un niveau tous les " + XP_NIVEAU + " XP (max " + NIV_MAX + "), remis à 1 chaque saison.</li><li>Chaque niveau : 1 carte bonus" + (vA ? " et 1 point d'amélioration" : "") + ".</li></ul>") : "") +
     s("gp", "🏎️", "Course, écurie et trophées",
-      "<ul><li><b>Course</b> : " + TOUR_GP + " points = un tour ; une ville par mois ; la météo suit le " + idx + ".</li>" +
+      "<ul><li><b>Course</b> : " + TOUR_GP + " points = un tour ; un circuit à thème par mois ; la météo suit le " + idx + ".</li>" +
       '<li id="rg-ecurie"><b>Écurie</b> : casque, livrée, klaxon… purement cosmétique, débloqué par les défis.</li>' +
       '<li id="rg-defis"><b>Trophées</b> : défis 🥉🥈🥇💎 (acquis pour toujours), <b>exclusifs</b> 💎 pour le premier qui réussit (à égalité le même mois : chacun), <b>👑 premier millionnaire</b> (patrimoine financier, montant jamais montré). Le serveur vérifie tout.</li></ul>') +
     (bientot.length ? s("bientot", "🎁", "Bientôt", "<ul>" + bientot.map(e => "<li>" + (estAdmin() ? '<button type="button" class="lien" data-etape="' + e.id + '">🔒 ' + esc(e.nom) + "</button>" : e.ico + " <b>" + esc(e.nom) + "</b>") + " · " + esc(moisEtape(e)) + "</li>").join("") + "</ul>") : "");
@@ -566,7 +566,7 @@ const TUTO = [
     "• <b>Chaque mois</b> : 6 · 4 · 2 · 0 points selon ta performance, <b>+1 🎯</b> si tu bats le S&P 500.<br>" +
     "• <b>Ta carte</b> : une par mois, posée du 20 au 1er dans le <b>Stand</b>, révélée le 2 (jusqu'à +4).<br>" +
     "• <b>Chaque mois aussi</b> : 🏁 un défi, 🔮 un pronostic et 🅿️ la pole position (+1 chacun).<br>" +
-    "• <b>Sur la saison</b> : 🔥 série, 😈 rival, 🛡️ régularité ; Monaco, Silverstone, Monza et la Finale ×2.<br>" +
+    "• <b>Sur la saison</b> : 🔥 série, 😈 rival, 🛡️ régularité ; le Plateau maudit, le Sacre du solstice, l'Instinct de survie et la Finale ×2.<br>" +
     "Décembre 2026 = tour de chauffe : rien ne compte. Tout le détail, avec schémas : 📖 Règles." }
 ];
 function ouvrirTuto() { ouvrirGuide("Comment ça marche", TUTO, "C'est parti 🏁"); }

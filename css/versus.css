@@ -1298,3 +1298,40 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .cc-ov .pl-j { height: 8px; border-radius: 4px; background: rgba(255,255,255,.12); overflow: hidden; } .cc-ov .pl-j i { display: block; height: 100%; border-radius: 4px; } .cc-ov .pl-bar small { grid-column: 2; font-weight: 400; font-size: 11.5px; }
 .cc-ov .pl-pris { margin: 0; font-size: 13px; padding: 6px 8px; border-radius: 8px; background: color-mix(in srgb, var(--c) 22%, transparent); }
 .cc-c .btn-row { grid-template-columns: 1fr; }
+
+/* V16 · ambiances animées des circuits à thème */
+.gp-fx { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+.gp-fx i { position: absolute; left: calc(var(--x) * 1%); top: calc(var(--y) * 1%); display: block; }
+@media (prefers-reduced-motion: reduce) { .gp-fx i { animation: none !important; } }
+.fx-lucioles i { width: calc(var(--s) * 5px); height: calc(var(--s) * 5px); border-radius: 50%; background: #FFF6A8; box-shadow: 0 0 8px 3px #F7E25588; animation: fxFlotte var(--t) ease-in-out var(--d) infinite alternate, fxLueur 1.6s ease-in-out var(--d) infinite alternate; }
+.fx-sortileges i { width: calc(var(--s) * 6px); height: calc(var(--s) * 6px); background: #D9B8FF; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); filter: drop-shadow(0 0 4px #B47CFF); animation: fxLueur 1.4s ease-in-out var(--d) infinite alternate; }
+.fx-neige i, .fx-cendres i { top: -6%; width: calc(var(--s) * 5px); height: calc(var(--s) * 5px); border-radius: 50%; background: #fff; opacity: .9; animation: fxTombe calc(var(--t) + 2s) linear var(--d) infinite; }
+.fx-cendres i { background: #9A9AA2; opacity: .7; border-radius: 1px; }
+.fx-pluieneon i { top: -10%; width: 1.5px; height: calc(var(--s) * 22px); background: linear-gradient(transparent, #7FD8FF); opacity: .7; animation: fxPluie calc(var(--t) * .18) linear var(--d) infinite; }
+.fx-pluieneon::after, .fx-neon::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 20% 30%, #FF2E9722, transparent 45%), radial-gradient(circle at 80% 70%, #2ED3FF22, transparent 45%); animation: fxGresille 3.5s steps(2) infinite; }
+.fx-neon i { left: 0; right: 0; width: 100%; height: 1px; background: #FF2E9744; animation: fxBalaye var(--t) linear var(--d) infinite; }
+.fx-pixels i { width: calc(var(--s) * 6px); height: calc(var(--s) * 6px); background: #2ED3FF; opacity: .75; animation: fxMonte var(--t) linear var(--d) infinite; } .fx-pixels i:nth-child(2n) { background: #FF2E97; }
+.fx-petales i { top: -6%; width: calc(var(--s) * 8px); height: calc(var(--s) * 5px); border-radius: 60% 0 60% 0; background: #FFC2DA; animation: fxPetale calc(var(--t) + 3s) linear var(--d) infinite; } .fx-petales i:nth-child(3n) { background: #FFE38A; }
+.fx-brume i { left: -40%; width: 90%; height: 26%; border-radius: 50%; background: radial-gradient(ellipse, #C2183155, transparent 70%); filter: blur(6px); animation: fxDerive calc(var(--t) * 3) linear var(--d) infinite; }
+.fx-brume::after { content: ""; position: absolute; inset: 0; background: #40000a; mix-blend-mode: multiply; opacity: .25; animation: fxClignote 6s steps(1) infinite; }
+.fx-spores i { width: calc(var(--s) * 4px); height: calc(var(--s) * 4px); border-radius: 50%; background: #CDE68A; opacity: .7; box-shadow: 0 0 6px #B5D95A; animation: fxMonte calc(var(--t) * 1.6) ease-in-out var(--d) infinite; }
+.fx-sable i { left: -20%; width: calc(var(--s) * 60px); height: 2px; border-radius: 2px; background: #F3D9A0; opacity: .6; animation: fxVent calc(var(--t) * .6) linear var(--d) infinite; }
+.fx-sable::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 50%, #E8B66A33); }
+.fx-eclairs i { width: calc(var(--s) * 4px); height: calc(var(--s) * 4px); border-radius: 50%; background: #FFE07A; box-shadow: 0 0 8px #FFD24A; animation: fxLueur 1.2s ease-in-out var(--d) infinite alternate; }
+.fx-eclairs::after { content: ""; position: absolute; inset: 0; background: #fff; opacity: 0; animation: fxFlash 7s linear infinite; }
+.fx-des i { top: -10%; width: calc(var(--s) * 14px); height: calc(var(--s) * 14px); border-radius: 3px; background: #fff radial-gradient(circle at 30% 30%, #222 12%, transparent 13%) , #fff radial-gradient(circle at 70% 70%, #222 12%, transparent 13%); box-shadow: 0 2px 4px #0006; animation: fxDe calc(var(--t) + 2s) linear var(--d) infinite; }
+.fx-garage i { width: 3px; height: 3px; background: #FFB347; border-radius: 50%; box-shadow: 0 0 5px #FF8A00; animation: fxEtincelle 1.1s ease-out var(--d) infinite; }
+@keyframes fxFlotte { from { transform: translate(0, 0); } to { transform: translate(calc((var(--s) - 1) * 40px), -26px); } }
+@keyframes fxLueur { from { opacity: .15; } to { opacity: 1; } }
+@keyframes fxTombe { to { transform: translate(calc((var(--s) - 1) * 50px), 115vh); } }
+@keyframes fxPluie { to { transform: translate(-12px, 130vh); } }
+@keyframes fxGresille { 50% { opacity: .55; } }
+@keyframes fxBalaye { from { top: 0; } to { top: 100%; } }
+@keyframes fxMonte { from { transform: translateY(0); opacity: 0; } 20% { opacity: .8; } to { transform: translateY(-260px); opacity: 0; } }
+@keyframes fxPetale { 0% { transform: translate(0, 0) rotate(0); } 50% { transform: translate(30px, 55vh) rotate(180deg); } 100% { transform: translate(-10px, 110vh) rotate(360deg); } }
+@keyframes fxDerive { to { transform: translateX(180%); } }
+@keyframes fxClignote { 0%, 92%, 96% { opacity: .25; } 94%, 98% { opacity: .55; } }
+@keyframes fxVent { to { transform: translateX(160vw); } }
+@keyframes fxFlash { 0%, 95%, 97%, 100% { opacity: 0; } 96%, 98% { opacity: .55; } }
+@keyframes fxDe { 0% { transform: translateY(0) rotate(0); } 100% { transform: translateY(120vh) rotate(540deg); } }
+@keyframes fxEtincelle { 0% { transform: translate(0, 0); opacity: 1; } 100% { transform: translate(calc((var(--s) - 1) * 60px), 30px); opacity: 0; } }

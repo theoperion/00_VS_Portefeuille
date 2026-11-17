@@ -31,7 +31,7 @@ Chaque mois, les pilotes sont classés sur la **performance de leur portefeuille
 | 🎲 Pari | désigne un rival : +2 devant lui, −1 derrière, 0 à égalité |
 
 Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Rejouable, mais **pas deux mois de suite**.
-🗺️ **Atout du circuit** : chaque ville préfère une carte ; jouée **et** gagnante → **+1** (si 2 pilotes ou plus marquent avec : personne). Turbo : Bahreïn, Miami, Las Vegas · Aspiration : Djeddah, Silverstone, Monza · Pneus pluie : Melbourne, Spa, Interlagos · Pari : Suzuka, Montréal, Singapour.
+🗺️ **Atout du circuit** : chaque circuit préfère une carte ; jouée **et** gagnante → **+1** (si 2 pilotes ou plus marquent avec : personne). Turbo : Forêt aux lucioles, Mégapole des androïdes, Sommet des dieux · Aspiration : Château aux sortilèges, Village du solstice, Ville des survivants · Pneus pluie : Pays derrière l'armoire, Monde à l'envers, Mur des titans · Pari : Bas-fonds sous la pluie, Arène virtuelle, Mer de dunes.
 
 ## ✨ Les bonus
 
@@ -51,10 +51,10 @@ Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Re
 
 | Mois | Règle |
 |---|---|
-| 🎰 Monaco (juin 2027) | le dernier du championnat : points de place ×2 |
-| 🇬🇧 Silverstone (juillet) | le vainqueur du mois : +2 |
-| 🇮🇹 Monza (septembre) | le 🎯 vaut +2 |
-| 🏆 Finale (décembre) | points de place ×2 pour tout le monde |
+| 🎲 Le Plateau maudit (mois tiré : juin en 2027) | le dernier du championnat : points de place ×2 |
+| 🌼 Le Sacre du solstice (juillet, Village du solstice) | le vainqueur du mois : +2 |
+| 🍄 Instinct de survie (septembre, Ville des survivants) | le 🎯 vaut +2 |
+| 🏆 Finale (décembre, Sommet des dieux) | points de place ×2 pour tout le monde |
 | 🗳️ Vote (2 → 31 déc.) | « le coup de la saison » (pas pour soi) : plaque pour le gagnant |
 
 ## 🪤 Les pièges des circuits (dès janvier 2027)
@@ -63,16 +63,16 @@ Les mois sans règle spéciale, le circuit a son **piège**, une petite règle q
 
 | Mois | Circuit | Piège | Effet |
 |---|---|---|---|
-| Janv. | 🇧🇭 Bahreïn | 🏜️ Mirage | le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point |
-| Févr. | 🇸🇦 Djeddah | 🧱 Murs proches | à moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points) |
-| Mars | 🇦🇺 Melbourne | 💥 Départ chaotique | pronostic « qui gagne » : +2 si juste, −1 si faux |
-| Avr. | 🇯🇵 Suzuka | ➰ Le huit | les places se jouent sur deux mois cumulés (mars + avril) |
-| Mai | 🇺🇸 Miami | 🥵 Chaleur | 🚀 Turbo interdit |
-| Août | 🇧🇪 Spa | 🌦️ Météo des Ardennes | si le S&P 500 baisse, 🌧️ Pneus pluie vaut +3 au lieu de +2 |
-| Oct. | 🇸🇬 Singapour | 🌃 Safety car de nuit | le dernier du mois marque 2 points de place au lieu de 0 |
-| Nov. | 🇧🇷 Interlagos | ⛈️ Averse surprise | 🎲 Pari : +3 / −2 au lieu de +2 / −1 |
+| Janv. | 🌲 Forêt aux lucioles | ✨ Feux follets | le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point |
+| Févr. | 🏰 Château aux sortilèges | 🚪 Couloirs mouvants | à moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points) |
+| Mars | ❄️ Pays derrière l'armoire | 🌨️ Tempête de neige | pronostic « qui gagne » : +2 si juste, −1 si faux |
+| Avr. | 🌧️ Bas-fonds sous la pluie | 🎭 Double vie | les places se jouent sur deux mois cumulés (mars + avril) |
+| Mai | 🤖 Mégapole des androïdes | 🌡️ Surchauffe | 🚀 Turbo interdit |
+| Août | 🔦 Monde à l'envers | 🌫️ Brume | si le S&P 500 baisse, 🌧️ Pneus pluie vaut +3 au lieu de +2 |
+| Oct. | 🏜️ Mer de dunes | 🌪️ Tempête de sable | le dernier du mois marque 2 points de place au lieu de 0 |
+| Nov. | 🧱 Mur des titans | 💥 Assaut | 🎲 Pari : +3 / −2 au lieu de +2 / −1 |
 
-Juin (Montréal), juillet (Silverstone), septembre (Monza) et décembre (Finale) ont déjà leur règle. Le mois de Monaco (tiré au sort) remplace le circuit prévu : pas de piège ce mois-là. La carte reste plafonnée à +4.
+Juin (Arène virtuelle), juillet (Village du solstice), septembre (Ville des survivants) et décembre (Sommet des dieux, Finale) ont déjà leur règle. Le mois du Plateau maudit (tiré au sort) remplace le circuit prévu : pas de piège ce mois-là. La carte reste plafonnée à +4.
 
 ## 🎴 Le rattrapage
 
@@ -80,10 +80,11 @@ Dernier d'un mois → **1 carte bonus**, jouable dès le mois suivant, une fois 
 
 ## 🏎️ Course, écurie et trophées
 
-- **Course** : 25 points = un tour ; une ville par mois ; la météo suit le S&P 500.
+- **Course** : 25 points = un tour ; un circuit à thème par mois (4 mondes : Royaume enchanté, Ville néon, Terres sombres, Dieux et l'Épice), avec son décor animé ; la météo suit le S&P 500.
+- **La route des 4 mondes** : chaque exclusif est une **carte de collection** unique (texte d'ambiance, fragment d'histoire réservé à son détenteur) ; les défis et 12 trophées de monde sont des **badges** pour tous ; chacun a sa **vitrine** sur sa fiche.
 - **Écurie** : purement cosmétique, débloquée par les défis et les exclusifs.
 - **Trophées** : défis 🥉🥈🥇💎 acquis pour toujours ; **exclusifs** 💎 pour le premier qui réussit (même mois : chacun) ; **👑 premier millionnaire** (patrimoine financier, montant jamais montré). Le serveur refait tous les calculs (anti-triche).
 
 ---
 
-*V15.5 (17/11/2026) : + pièges des circuits (8). V15 (16/11/2026) : dernier à 0 pt, Pneus pluie « résiste à la baisse », série = régularité, rival +3, pronostic « plus de +1 % », + défi du mois, pole position, trophée de la régularité. Retirés le 05/11/2026 : duels, DRS, carte Huile, Tir groupé, pièges des circuits.*
+*V16 (17/11/2026) : circuits à thème et route des 4 mondes (noms et décors seulement, points inchangés). V15.5 (17/11/2026) : + pièges des circuits (8). V15 (16/11/2026) : dernier à 0 pt, Pneus pluie « résiste à la baisse », série = régularité, rival +3, pronostic « plus de +1 % », + défi du mois, pole position, trophée de la régularité. Retirés le 05/11/2026 : duels, DRS, carte Huile, Tir groupé, pièges des circuits.*
