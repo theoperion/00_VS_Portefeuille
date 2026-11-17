@@ -1229,3 +1229,6 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .excl-an .ea-l small { font-size: 13px; color: rgba(244,245,248,.8); max-width: 30ch; }
 @media (prefers-reduced-motion: no-preference) { .excl-an .ea-ico { animation: eaPop .7s cubic-bezier(.3,1.6,.5,1) both; animation-delay: calc(var(--i) * .25s + .15s); } .excl-an .ea-l { animation: rvVient .4s ease-out both; animation-delay: calc(var(--i) * .25s); } }
 @keyframes eaPop { from { transform: scale(.2) rotate(-30deg); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* V15.10 · bouton « ↻ Rejouer » du plein écran, avec son texte */
+.gpp-x.gpp-rj { width: auto; padding: 0 14px; border-radius: 19px; font: 700 13.5px/1 var(--f-text); white-space: nowrap; background: var(--accent); border-color: transparent; }

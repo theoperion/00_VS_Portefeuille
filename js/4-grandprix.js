@@ -603,7 +603,7 @@ function majBoutonsGP() { document.querySelectorAll("#gp-cam-b").forEach(b => b.
 function ouvrirPleinGP(y) {
   if (GP_PLEIN) return;
   const o = document.createElement("div"); o.className = "gp-plein"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Circuit en plein écran");
-  o.innerHTML = '<div class="gpp-corps"></div><div class="gpp-h"><div class="gpp-t"></div><button class="gpp-x gpp-rj" type="button" aria-label="Rejouer la course">↻</button><button class="gpp-x" type="button" aria-label="Fermer le plein écran">✕</button></div><div class="gpp-tour"></div><div class="gpp-mois"></div>';
+  o.innerHTML = '<div class="gpp-corps"></div><div class="gpp-h"><div class="gpp-t"></div><button class="gpp-x gpp-rj" type="button" aria-label="Rejouer la course">↻ Rejouer</button><button class="gpp-x" type="button" aria-label="Fermer le plein écran">✕</button></div><div class="gpp-tour"></div><div class="gpp-mois"></div>';
   document.body.appendChild(o); document.documentElement.classList.add("fige");
   GP_PLEIN = { o, y, ancre: null, maj: 0 };
   o.querySelector('.gpp-x:not(.gpp-rj)').addEventListener("click", fermerPleinGP);
