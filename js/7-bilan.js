@@ -637,7 +637,7 @@ function montrerVue(v) {
 /* Onglets : on remplace l'adresse au lieu d'empiler l'historique (V15.2) ; le bouton retour du téléphone est géré plus bas */
 function allerA(v) { if (location.hash !== "#" + v) { try { history.replaceState(history.state, "", "#" + v); } catch (e) { location.hash = v; return; } } montrerVue(v); }
 document.querySelectorAll(".onglet").forEach(t => t.addEventListener("click", () => allerA(t.dataset.vue)));
-window.addEventListener("hashchange", () => { const v = vueActive(); if (v !== stock.get(CLES.vue) || !VUES.includes(location.hash.slice(1))) montrerVue(v); });
+window.addEventListener("hashchange", () => { if (Date.now() - (window.__pop || 0) < 400) return; const v = vueActive(); if (v !== stock.get(CLES.vue) || !VUES.includes(location.hash.slice(1))) montrerVue(v); });
 /* V15.2 : la page ne « saute » plus quand un bouton redessine l'écran (elle garde sa hauteur le temps du nouveau rendu) */
 ["click", "change"].forEach(t => document.addEventListener(t, e => {
   if (!e.target.closest || !e.target.closest(".view")) return;
@@ -663,29 +663,34 @@ function fermerFenetreOuverte() {
   if (b) b.click(); else if (v.id) v.hidden = true; else v.remove();
   return true;
 }
+/* V15.27 · BOUTON RETOUR : même méthode que l'appli Budget (qui marche sur Firefox, Chrome et iPhone)
+   - une seule étape « garde » au-dessus de l'appli, posée seulement APRÈS un vrai geste (sinon le navigateur la saute) ;
+   - « retour » ferme d'abord la fenêtre ouverte, puis Moi › Aujourd'hui, puis l'onglet d'accueil ; sur l'accueil, un petit
+     message ; jamais de sortie de l'appli (c'était l'écran blanc), jamais de fermeture forcée ;
+   - au retour de veille (page ressortie du cache du navigateur), on redessine : une page restée vide = l'écran blanc. */
+const estGarde = () => { try { return !!(history.state && history.state.vs === "garde"); } catch (e) { return false; } };
+function armerRetour() {
+  if (estGarde()) return;
+  try { if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return; history.pushState({ vs: "garde" }, ""); } catch (e) {}
+}
 (() => {
-  try {
-    if (!history.state || history.state.vs !== "garde") { history.replaceState({ vs: "base" }, ""); history.pushState({ vs: "garde", auto: true }, ""); }
-    // V15.23 · Chrome Android saute, au retour, les étapes créées SANS geste de l'utilisateur (elles l'étaient au démarrage) :
-    // il reculait alors hors de l'appli → page blanche. On (re)crée donc l'étape « garde » pendant un vrai toucher.
-    const armer = () => { const st = history.state; if (!st || st.vs !== "garde" || st.auto) { try { history.pushState({ vs: "garde" }, ""); } catch (e) {} } };
-    ["pointerdown", "keydown"].forEach(t => document.addEventListener(t, armer, true));
-    window.addEventListener("popstate", e => {
-      diag("retour (popstate) · arrivée=" + JSON.stringify(e.state));
-      // V15.23 : chaque retour compte, même s'il tombe sur une étape « garde »
-      const cur = stock.get(CLES.vue) || vueActive(), acc = vueAccueil();
-      const rester = v => { history.replaceState({ vs: "base" }, "", "#" + v); history.pushState({ vs: "garde", auto: true }, ""); };   // « auto » : sans geste, Chrome peut la sauter → regarnie au prochain toucher
-      if (fermerFenetreOuverte()) { rester(cur); return; }
-      // V15.21 : dans Moi, Patrimoine / Stats / Missions → d'abord « Aujourd'hui »
-      if (cur === "moi" && window.Moi && window.Moi.retour && window.Moi.retour()) { rester(cur); return; }
-      if (cur !== acc) { rester(acc); montrerVue(acc); return; }
-      // déjà sur l'accueil : on ne recule JAMAIS au-delà de l'appli (c'était l'écran blanc, Android comme iPhone) ;
-      // un 2e retour dans les 2 s tente de fermer l'appli installée, sinon on reste simplement sur l'accueil
-      rester(cur);
-      if (Date.now() - (window.__retourT || 0) < 2000) { try { window.close(); } catch (e) {} return; }
-      window.__retourT = Date.now(); window.scrollTo({ top: 0, behavior: "smooth" }); toast("Retour encore une fois pour quitter");
-    });
-  } catch (e) {}
+  try { history.scrollRestoration = "manual"; } catch (e) {}
+  addEventListener("popstate", e => {
+    diag("retour (popstate) · arrivée=" + JSON.stringify(e.state));
+    if (estGarde()) return;   // on revient « en avant » sur la garde : rien à faire
+    window.__pop = Date.now();
+    const cur = stock.get(CLES.vue) || vueActive(), acc = vueAccueil();
+    if (fermerFenetreOuverte()) { /* fenêtre fermée */ }
+    else if (cur === "moi" && window.Moi && window.Moi.retour && window.Moi.retour()) { /* Moi › Aujourd'hui */ }
+    else if (cur !== acc) montrerVue(acc);
+    else toast("Tu es sur l'accueil. Pour quitter, utilise le bouton ou le geste « accueil » du téléphone");
+    try { const vv = stock.get(CLES.vue) || acc; if (location.hash !== "#" + vv) history.replaceState(history.state, "", "#" + vv); } catch (x) {}   // l'adresse suit l'onglet affiché
+    armerRetour();   // la garde est reposée tout de suite : le prochain « retour » reste aussi dans l'appli
+  });
+  ["click", "touchend", "keydown"].forEach(t => document.addEventListener(t, armerRetour, true));   // chaque geste repose la garde si besoin
+  const redessiner = pourquoi => { diag("redessin · " + pourquoi); try { if (D) { rendreTicker(); rendreVue(vueActive()); } else if (vueActive() === "moi") rendreVue("moi"); } catch (x) {} };
+  addEventListener("pageshow", e => { if (e.persisted) redessiner("pageshow (cache)"); });
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !document.querySelector(".view:not([hidden]) *")) redessiner("page vide au retour"); });
 })();
 
 /* ---------- Réglages ---------- */
