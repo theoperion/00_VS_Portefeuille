@@ -35,7 +35,7 @@
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **16.4**.
+  hors connexion `sw.js`). Version actuelle : **16.5**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
@@ -63,8 +63,8 @@ Commit (message en français, « vX.Y : … »), ligne dans le journal de `MODE_
 
 ## Points de vigilance connus
 - Bouton retour (v15.27, modèle de l'appli Budget) : validé par Théo, ne pas y toucher sans raison.
-- Le cosmétique « ambiance de circuit » (Nocturne, Hiver, Synthwave…) **remplace** le thème du circuit
-  (`ambiance()` dans `piste.js`) : à changer en simple touche par-dessus (voir chantiers).
+- Le cosmétique « Filtre de course » (ex-« Ambiance » : Nocturne, Golden hour, Hiver, Synthwave) n'est plus qu'une
+  touche par-dessus le thème du circuit (`ambiance()` dans `piste.js`, v16.5) : le thème (`def.amb`) s'applique toujours.
 
 ## Chantiers proposés, validés sur le principe par Théo (18/11), pas encore faits
 1. ✅ **Badges du Classement** (fait en v16.4 + serveur V31) : 3 max, épinglés dans Podium › Écurie › Badges
@@ -72,7 +72,7 @@ Commit (message en français, « vX.Y : … »), ligne dans le journal de `MODE_
 2. **F1 en 3D** (`voiture()` dans `piste.js`) jugée « ignoble » : option A recommandée = refaire la voiture
    dans le moteur actuel (carrosserie arrondie, vraies roues/jantes, ailerons avec dérives, numéro, ombre douce,
    reflets). Option B (three.js) seulement si A ne suffit pas. + l'ambiance cosmétique ne doit plus écraser le
-   thème ; le klaxon pourrait se jouer en 3D à l'arrivée.
+   thème (✅ fait en v16.5) ; le klaxon pourrait se jouer en 3D à l'arrivée.
 3. **Objets de collection** : remplacer les cartes (jugées sans effet « waouh ») par des **reliques 2D illustrées**
    originales, une par exclusif (24), effet holographique qui suit l'inclinaison/le doigt, relief en couches,
    ouverture mise en scène, raretés bronze/argent/holo, étagère-vitrine par monde avec bonus à la complétion.

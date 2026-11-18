@@ -163,7 +163,7 @@ const CAMS = { tv: "🎥 TV", helico: "🚁 Hélico", bord: "👁️ Embarquée"
 function camGP() { return ETAT.gpCam === "helico" || ETAT.gpCam === "bord" ? ETAT.gpCam : ETAT.gpCam === "0" ? "helico" : "tv"; }
 function piste3D() { return !!(window.Piste && Piste.supporte()); }
 function couleurAccent() { try { return getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#9B87FF"; } catch (e) { return "#9B87FF"; } }
-/** Vignette de l'ambiance (cosmétique « Ambiance » de l'écurie) */
+/** Vignette du filtre de course (cosmétique « Filtre de course » de l'écurie, ex-« Ambiance ») */
 const AMBIANCES = {
   classique: { h: "#3D86DD", o: "#BFE3F8", s: "#5E9E52", astre: "soleil" },
   monaco: { h: "#03060F", o: "#1C2850", s: "#1E2A22", astre: "lune" },
