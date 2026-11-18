@@ -57,7 +57,7 @@
     const P = H.concat([[336, 122, 2]], B, [[24, 122, 2]]); P.centre = [180, 122]; return depart(P); })();
   const F_CHAMPI = (() => { const P = [[150, 218], [210, 218], [206, 150], [292, 146], [326, 122]]; for (let a = 0.05; a < PI - .02; a += PI / 9) P.push([180 + 150 * Math.cos(a), 122 - 100 * Math.sin(a)]); P.push([34, 122], [68, 146], [154, 150]); return polyg(P, 12); })();
   const TRACES = {
-    abudhabi: { pts: polyg([[40, 204], [320, 204], [320, 40], [234, 40], [234, 126], [186, 126], [186, 40], [40, 40]], 16), decor: "garage", heure: "crepuscule", reperes: [{ t: "garage" }] },
+    abudhabi: { pts: polyg([[40, 204], [320, 204], [320, 40], [234, 40], [234, 126], [186, 126], [186, 40], [40, 40]], 16), decor: "garage", heure: "crepuscule", peint: "garage", reperes: [] },
     bahrein: { pts: etoile([[3, .14, .3], [5, .09, 1], [7, .05, 2.2]], 42), decor: "lucioles", heure: "crepuscule", amb: "lucioles", peint: "foret", reperes: [] },
     djeddah: { pts: polyg([[40, 210], [320, 210], [320, 70], [290, 70], [290, 32], [240, 32], [240, 70], [200, 70], [200, 32], [150, 32], [150, 70], [110, 70], [110, 32], [60, 32], [60, 70], [40, 70]], 12), decor: "chateau", heure: "nuit", reperes: [{ t: "chateau", y: 145 }] },
     melbourne: { pts: F_LAC, decor: "armoire", heure: "jour", amb: "neige", eau: [resserrer(F_LAC, .5)], reperes: [{ t: "armoire" }] },
@@ -241,7 +241,7 @@
     vegas: { sol: "#4A4036", bord: "#5C5045", piste: "#2C2E33", murs: ["#E9ECEF", "#B03AFF"], obj: [["neon", 46], ["lampadaire", 0]] },
     monaco: { sol: "#C4B395", bord: "#9FAE7A", piste: "#34373D", murs: ["#E9ECEF", "#D3302F"], eau: "#1C6E9E", obj: [["villa", 70], ["palmier", 30], ["yacht", 16, "eau"]] },
     // V16.2 : un décor par circuit à thème
-    garage: { sol: "#7E8288", bord: "#9AA0A8", piste: "#2F3238", murs: ["#F2F4F7", "#F28C28"], obj: [["conteneur", 44], ["pneus", 40, "pres"], ["projecteur", 12, "pres"]] },
+    garage: { sol: "#5B6068", bord: "#6A7078", piste: "#454A52", kerb: ["#F2C230", "#1A1B1F"], murs: ["#F2C230", "#1A1B1F"], obj: [["conteneur", 8], ["pneus", 10]] },
     lucioles: { sol: "#2A4A33", bord: "#3A5A3A", piste: "#7A5C3E", terre: true, murs: ["#5A4030", "#4A3426"], obj: [["pin", 200], ["arbre", 60], ["luciole", 70], ["champignon", 30]] },
     chateau: { sol: "#4F6B45", bord: "#62805A", piste: "#34373D", murs: ["#E9ECEF", "#7B4BD6"], obj: [["tour", 16], ["pin", 150], ["rocher", 20]] },
     armoire: { sol: "#4E7E44", bord: "#6C9A5C", piste: "#3A3E45", murs: ["#E9ECEF", "#2F6FD0"], eau: "#BFD9EC", obj: [["pin", 240], ["lanterne", 12, "pres"]] },
@@ -719,7 +719,164 @@
       sol.poser(objet("lanterne", r, A), x, 0, z, 0, 1); lum.push([x, 4.8, z, 1, .85, .55, 10]); }
     return occupe;
   }
-  const PEINTS = { foret: { peindre: peindreForet, deco: decorForet } };
+  function peindreGarage(T) {
+      const P = [], N = T.N, W = 1080, H = 720, anime = ANIM(), r = alea(11), a = [];
+      for (let i = 0; i < N; i++) P.push([T.X[i] * KU, T.Z[i] * KU]);
+  const f = v => (+v).toFixed(1), piste = "M" + P.map(p => f(p[0]) + " " + f(p[1])).join("L") + "Z";
+  const dT = (x, y) => { let m = 1e9; for (let i = 0; i < N; i += 2) m = Math.min(m, Math.hypot(P[i][0] - x, P[i][1] - y)); return m; };
+  const nrm = i => { const a = P[(i - 2 + N) % N], b = P[(i + 2) % N], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy); return [-dy / l, dx / l, dx / l, dy / l]; };
+  const s = [];
+  s.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><defs>
+  <pattern id="dalle" width="60" height="60" patternUnits="userSpaceOnUse"><rect width="60" height="60" fill="#5B6068"/><path d="M60 0H0V60" fill="none" stroke="#4A4E55" stroke-width="1.5"/><circle cx="18" cy="40" r="1" fill="#6A7078"/></pattern>
+  <pattern id="hach" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="14" height="14" fill="#F2C230"/><rect width="7" height="14" fill="#1A1B1F"/></pattern>
+  <pattern id="tole" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#8E969F"/><rect width="4" height="8" fill="#7D858E"/></pattern>
+  <radialGradient id="sodium" r="50%"><stop offset="0" stop-color="#FFD58A" stop-opacity=".55"/><stop offset="1" stop-color="#FFB347" stop-opacity="0"/></radialGradient>
+  <radialGradient id="neon" r="50%"><stop offset="0" stop-color="#9FE8FF" stop-opacity=".6"/><stop offset="1" stop-color="#4FC3F7" stop-opacity="0"/></radialGradient>
+  <radialGradient id="huile" r="50%"><stop offset="0" stop-color="#15171B" stop-opacity=".75"/><stop offset=".7" stop-color="#2A2D33" stop-opacity=".4"/><stop offset="1" stop-color="#2A2D33" stop-opacity="0"/></radialGradient>
+  <radialGradient id="etin" r="50%"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".3" stop-color="#FFE27A"/><stop offset="1" stop-color="#FF8A2B" stop-opacity="0"/></radialGradient>
+  <radialGradient id="vign" r="75%"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".6"/></radialGradient>
+  <linearGradient id="carro" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></linearGradient>
+  <filter id="flou" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter><filter id="flou8" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
+  <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="3"/><feColorMatrix values="0 0 0 0 .3  0 0 0 0 .3  0 0 0 0 .32  0 0 0 .35 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>
+  </defs><rect width="${W}" height="${H}" fill="url(#dalle)"/>`);
+  // taches d'huile et traces de pneus
+  for (let k = 0; k < 40; k++) { const x = r() * W, y = r() * H; if (dT(x, y) < 25) continue; s.push(`<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(8 + r() * 22)}" ry="${f(5 + r() * 14)}" fill="url(#huile)" transform="rotate(${f(r() * 180)} ${f(x)} ${f(y)})"/>`); }
+  for (let k = 0; k < 6; k++) { const x = 250 + r() * 500, y = 220 + r() * 300; if (x > 540 && x < 720 && y < 400) continue; s.push(`<path d="M${f(x)} ${f(y)}c40 -30 90 -10 120 30" fill="none" stroke="#2F3237" stroke-width="5" stroke-dasharray="2 3" opacity=".5"/><path d="M${f(x + 8)} ${f(y + 8)}c40 -30 90 -10 120 30" fill="none" stroke="#2F3237" stroke-width="5" stroke-dasharray="2 3" opacity=".5"/>`); }
+  // marquages au sol : grand cercle d'emblème au centre, places de parking
+  s.push(`<g opacity=".9"><circle cx="420" cy="380" r="95" fill="none" stroke="#F2C230" stroke-width="5" stroke-dasharray="18 10"/><circle cx="420" cy="380" r="70" fill="none" stroke="#F2C230" stroke-width="2"/>
+  <g transform="translate(420 380) rotate(-35)" fill="#F2C230" opacity=".85"><rect x="-55" y="-7" width="85" height="14" rx="4"/><path d="M30 -20a24 24 0 1 1 0 40l0 -12a12 12 0 1 0 0 -16z"/></g>
+  <text x="420" y="505" text-anchor="middle" font-family="Helvetica, Arial" font-weight="900" font-size="20" letter-spacing="6" fill="#F2C230" opacity=".8">GARAGE DES RÊVES</text></g>`);
+  for (let k = 0; k < 6; k++) { const x = 560 + k * 52; s.push(`<path d="M${x} 420v80" stroke="#E9ECEF" stroke-width="3" opacity=".6"/>`); }
+  // piste : béton lissé, bord hachuré jaune et noir aux virages
+  s.push(`<path d="${piste}" fill="none" stroke="#1A1C20" stroke-width="40" stroke-linejoin="round" opacity=".55" filter="url(#flou)"/>
+  <path d="${piste}" fill="none" stroke="url(#hach)" stroke-width="34" stroke-linejoin="round"/><path d="${piste}" fill="none" stroke="#3B3F46" stroke-width="27" stroke-linejoin="round"/>
+  <path d="${piste}" fill="none" stroke="#454A52" stroke-width="20" stroke-linejoin="round"/><path d="${piste}" fill="none" stroke="#E9ECEF" stroke-width="1.6" stroke-dasharray="14 12" stroke-linejoin="round" opacity=".7"/>`);
+  // ligne de départ
+  { const p = P[0], [nx, ny, tx, ty] = nrm(0); let d = ""; for (let a = -3; a < 3; a++) for (let b = 0; b < 2; b++) { const ox = nx * a * 4.5 + tx * b * 4.5, oy = ny * a * 4.5 + ty * b * 4.5; d += `<path d="M${f(p[0] + ox)} ${f(p[1] + oy)}l${f(nx * 4.5)} ${f(ny * 4.5)}l${f(tx * 4.5)} ${f(ty * 4.5)}l${f(-nx * 4.5)} ${f(-ny * 4.5)}z" fill="${(a + b) % 2 ? "#111" : "#EEE"}"/>`; } s.push(d); }
+  // murs de pneus aux virages
+  const pneus = (x, y, n, ang) => { let o = ""; for (let k = 0; k < n; k++) { const px = x + Math.cos(ang) * k * 11, py = y + Math.sin(ang) * k * 11; o += `<circle cx="${f(px + 2)}" cy="${f(py + 3)}" r="6" fill="#000" opacity=".4"/><circle cx="${f(px)}" cy="${f(py)}" r="5.5" fill="#1B1D21" stroke="${k % 3 === 0 ? "#E9ECEF" : k % 3 === 1 ? "#D62D2D" : "#2B2E33"}" stroke-width="2.2"/><circle cx="${f(px)}" cy="${f(py)}" r="2" fill="#2B2E33"/>`; } return o; };
+  s.push(pneus(990, 640, 6, -2.4) + pneus(995, 100, 6, 2.3) + pneus(88, 95, 6, .7) + pneus(85, 640, 6, -.7) + pneus(735, 400, 4, 2.4) + pneus(525, 400, 4, .7));
+  // conteneurs empilés (dans l'encoche et en haut)
+  const cont = (x, y, w, h, c, a) => `<g transform="rotate(${a || 0} ${x + w / 2} ${y + h / 2})"><rect x="${x + 4}" y="${y + 5}" width="${w}" height="${h}" fill="#000" opacity=".35"/><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>${Array.from({ length: Math.floor(w / 6) }, (_, k) => `<path d="M${x + 3 + k * 6} ${y + 2}v${h - 4}" stroke="#000" stroke-opacity=".18" stroke-width="2"/>`).join("")}<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#carro)" opacity=".5"/></g>`;
+  s.push(cont(590, 150, 90, 34, "#D9472B") + cont(588, 192, 90, 34, "#2F6FD0") + cont(594, 240, 86, 34, "#F2B33A", 3) + cont(592, 290, 88, 34, "#2BB673") + cont(300, 20, 110, 36, "#8C96A3") + cont(420, 18, 110, 36, "#D9472B", -2) + cont(760, 22, 100, 36, "#2F6FD0"));
+  // station-service rétro (en bas à droite)
+  s.push(`<g><rect x="790" y="655" width="150" height="48" rx="3" fill="#000" opacity=".35"/><rect x="784" y="648" width="150" height="48" rx="3" fill="#C8283A" stroke="#7A1420" stroke-width="2"/><rect x="784" y="648" width="150" height="10" fill="#F4F1EA"/>
+  <text x="859" y="682" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-weight="700" font-size="15" fill="#F4F1EA">Station du Rêve</text>
+  <circle cx="800" cy="668" r="5" fill="#F7CF55"/><circle cx="918" cy="668" r="5" fill="#F7CF55"/><circle cx="859" cy="672" r="60" fill="url(#sodium)"/></g>`);
+  // le pont roulant jaune au-dessus de la ligne droite du bas
+  s.push(`<g><rect x="372" y="566" width="10" height="100" fill="#000" opacity=".35"/><rect x="452" y="566" width="10" height="100" fill="#000" opacity=".35"/>
+  <rect x="366" y="560" width="12" height="104" fill="#F2C230" stroke="#9A6716" stroke-width="2"/><rect x="446" y="560" width="12" height="104" fill="#F2C230" stroke="#9A6716" stroke-width="2"/>
+  <rect x="366" y="596" width="92" height="16" fill="url(#hach)" stroke="#1A1B1F" stroke-width="2"/><rect x="398" y="590" width="26" height="28" rx="3" fill="#3A3E45" stroke="#F2C230" stroke-width="2"/></g>`); a.push(`<g><path d="M411 618v14" stroke="#9AA3AE" stroke-width="2"/><path d="M405 632h12l-6 8z" fill="#9AA3AE"/>${anime ? '<animateTransform attributeName="transform" type="rotate" values="-6 411 618;6 411 618;-6 411 618" dur="3s" repeatCount="indefinite"/>' : ""}</g>`);
+  // le hangar-atelier : la piste le traverse (côté gauche) ; toit découpé pour voir dedans
+  { const x0 = 40, y0 = 240, w = 250, h = 230; s.push(`<rect x="${x0 + 8}" y="${y0 + 10}" width="${w}" height="${h}" fill="#000" opacity=".45" filter="url(#flou8)"/>
+  <rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#2E3238" stroke="#1B1D21" stroke-width="4"/>`);
+    // sol intérieur, établis, voitures en construction, outils
+    s.push(`<rect x="${x0 + 6}" y="${y0 + 6}" width="${w - 12}" height="${h - 12}" fill="#3C4148"/>`);
+    for (let k = 0; k < 4; k++) s.push(`<rect x="${x0 + 8}" y="${y0 + 18 + k * 52}" width="26" height="40" fill="#C8283A" stroke="#7A1420"/><path d="M${x0 + 10} ${y0 + 28 + k * 52}h22M${x0 + 10} ${y0 + 38 + k * 52}h22M${x0 + 10} ${y0 + 48 + k * 52}h22" stroke="#5A0E16" stroke-width="1.5"/>`);
+    const auto = (x, y, c, a, ouverte) => `<g transform="translate(${x} ${y}) rotate(${a})"><rect x="-26" y="-11" width="52" height="22" rx="3" fill="#000" opacity=".35" transform="translate(3 4)"/>
+  <path d="M-25 -6h10l6 -4h18l6 4h10v12h-10l-6 4h-18l-6 -4h-10z" fill="${c}" stroke="#111" stroke-width="1"/><rect x="-30" y="-12" width="6" height="24" rx="1" fill="${c}"/><rect x="24" y="-10" width="5" height="20" rx="1" fill="${c}"/>
+  ${[[-16, -13], [-16, 9], [14, -13], [14, 9]].map(([u, v]) => `<rect x="${u}" y="${v}" width="9" height="5" rx="1.5" fill="#15171B"/>`).join("")}${ouverte ? `<rect x="-14" y="-5" width="16" height="10" fill="#7D858E"/><circle cx="-6" cy="0" r="3" fill="#C9D2DD"/>` : `<ellipse cx="2" cy="0" rx="5" ry="3.5" fill="#15171B"/>`}<rect x="-25" y="-6" width="50" height="12" fill="url(#carro)"/></g>`;
+    s.push(auto(205, y0 + 60, "#4C9AFF", 90, true) + auto(205, y0 + 165, "#FF6FA8", 90, false) + `<rect x="182" y="${y0 + 30}" width="46" height="62" fill="none" stroke="#F2C230" stroke-width="1.5" stroke-dasharray="4 3"/>`);
+    for (let k = 0; k < 4; k++) s.push(`<rect x="${194 + (k % 2) * 22}" y="${y0 + 32 + Math.floor(k / 2) * 55}" width="5" height="5" fill="#F2C230"/>`);
+    // étincelles de soudure
+    let et = ""; for (let k = 0; k < 14; k++) { const t = r() * 6.28, d = 6 + r() * 16; et += `<path d="M228 ${y0 + 118}l${f(Math.cos(t) * d)} ${f(Math.sin(t) * d)}" stroke="#FFD27A" stroke-width="1.2"/>`; }
+    a.push(`<g opacity=".9">${et}<circle cx="228" cy="${y0 + 118}" r="16" fill="url(#p2-etin)"/>${anime ? '<animate attributeName="opacity" values="1;.1;.9;.2;1;0;0;0" dur="1.6s" repeatCount="indefinite"/>' : ""}</g>`);
+    // piste à travers le hangar (repeinte par-dessus : dalle intérieure)
+    s.push(`<path d="${"M" + P.filter(p => p[1] > y0 - 5 && p[1] < y0 + h + 5 && p[0] < 200).map(p => f(p[0]) + " " + f(p[1])).join("L")}" fill="none" stroke="#4A4F57" stroke-width="27"/><path d="${"M" + P.filter(p => p[1] > y0 - 5 && p[1] < y0 + h + 5 && p[0] < 200).map(p => f(p[0]) + " " + f(p[1])).join("L")}" fill="none" stroke="#F2C230" stroke-width="1.6" stroke-dasharray="14 12"/>`);
+    // poutres de toit + verrière découpée
+    for (let k = 0; k <= 5; k++) s.push(`<path d="M${x0} ${y0 + k * h / 5}h${w}" stroke="#8E969F" stroke-width="3" opacity=".55"/>`);
+    for (let k = 0; k < 6; k++) { s.push(`<rect x="${x0 + 46 + k * 30}" y="${y0 + 8}" width="20" height="5" rx="2" fill="#E8F6FF"/>`); a.push(`<ellipse cx="${x0 + 56 + k * 30}" cy="${y0 + 40}" rx="24" ry="34" fill="url(#p2-neon)" opacity=".35">${anime && k === 3 ? '<animate attributeName="opacity" values=".35;.05;.35;.35;.1;.35" dur="3.2s" repeatCount="indefinite"/>' : ""}</ellipse>`); }
+    s.push(`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="none" stroke="#9AA3AE" stroke-width="5"/><rect x="${x0 + 70}" y="${y0 - 16}" width="110" height="16" fill="url(#tole)" stroke="#5A6068"/>
+  <text x="${x0 + 125}" y="${y0 - 4}" text-anchor="middle" font-family="Helvetica, Arial" font-weight="900" font-size="11" letter-spacing="2" fill="#1A1B1F">ATELIER 01</text>`);
+    [[118, y0], [118, y0 + h]].forEach(([x, y]) => s.push(`<rect x="${x - 18}" y="${y - 4}" width="36" height="8" fill="url(#hach)"/>`)); }
+  // le bureau du chef d'équipe (toit découpé) : clins d'œil
+  { const x0 = 760, y0 = 405, w = 150, h = 120; s.push(`<rect x="${x0 + 6}" y="${y0 + 8}" width="${w}" height="${h}" fill="#000" opacity=".4" filter="url(#flou)"/><rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#6B5A48" stroke="#2E2620" stroke-width="4"/><rect x="${x0 + 5}" y="${y0 + 5}" width="${w - 10}" height="${h - 10}" fill="#8A7458"/>`);
+    for (let k = 0; k < 8; k++) s.push(`<path d="M${x0 + 5} ${y0 + 5 + k * 14}h${w - 10}" stroke="#7A6450" stroke-width="1"/>`);
+    // tableau en liège : relevés boursiers + photo des 4
+    s.push(`<rect x="${x0 + 10}" y="${y0 + 10}" width="58" height="36" fill="#C49A63" stroke="#5A3A22" stroke-width="2"/><polyline points="${x0 + 14},${y0 + 38} ${x0 + 22},${y0 + 30} ${x0 + 30},${y0 + 33} ${x0 + 40},${y0 + 20} ${x0 + 48},${y0 + 24}" fill="none" stroke="#2BB673" stroke-width="1.6"/><rect x="${x0 + 13}" y="${y0 + 14}" width="16" height="11" fill="#F4F1EA" transform="rotate(-6 ${x0 + 21} ${y0 + 19})"/>
+  <rect x="${x0 + 50}" y="${y0 + 13}" width="15" height="12" fill="#F4F1EA"/>${["#4C9AFF", "#2BB6A3", "#FF6FA8", "#F2994A"].map((c, k) => `<circle cx="${x0 + 52.5 + k * 3.3}" cy="${y0 + 19}" r="1.4" fill="${c}"/>`).join("")}<circle cx="${x0 + 57}" cy="${y0 + 13}" r="1.5" fill="#D62D2D"/>`);
+    // tableau blanc : plan de stratégie
+    s.push(`<rect x="${x0 + 78}" y="${y0 + 10}" width="62" height="34" fill="#F4F6F8" stroke="#9AA3AE" stroke-width="2"/><path d="M${x0 + 84} ${y0 + 36}q12 -18 26 -6t24 -12" fill="none" stroke="#2F6FD0" stroke-width="1.4"/><path d="M${x0 + 128} ${y0 + 16}l6 2-4 4" fill="none" stroke="#D62D2D" stroke-width="1.4"/><circle cx="${x0 + 92}" cy="${y0 + 20}" r="3" fill="none" stroke="#D62D2D" stroke-width="1.2"/><path d="M${x0 + 102} ${y0 + 16}l4 4M${x0 + 106} ${y0 + 16}l-4 4" stroke="#111" stroke-width="1.2"/>`);
+    // table de cartes en pause
+    s.push(`<circle cx="${x0 + 45}" cy="${y0 + 82}" r="20" fill="#2E6B4A" stroke="#4A3626" stroke-width="3"/>${[[-8, -6, 20], [4, -9, -15], [10, 4, 40], [-6, 6, -30]].map(([u, v, a]) => `<rect x="${x0 + 45 + u - 3}" y="${y0 + 82 + v - 4.5}" width="6" height="9" rx="1" fill="#F4ECD8" transform="rotate(${a} ${x0 + 45 + u} ${y0 + 82 + v})"/>`).join("")}<rect x="${x0 + 40}" y="${y0 + 75}" width="8" height="12" rx="1" fill="#2F6FD0" stroke="#F4ECD8" stroke-width=".6"/><circle cx="${x0 + 52}" cy="${y0 + 90}" r="2" fill="#F7CF55"/><circle cx="${x0 + 55}" cy="${y0 + 88}" r="2" fill="#F7CF55"/>
+  ${[[-24, 0], [24, 0], [0, -24], [0, 24]].map(([u, v]) => `<circle cx="${x0 + 45 + u}" cy="${y0 + 82 + v}" r="5" fill="#3A2A1E"/>`).join("")}`);
+    // vitrine avec le trophée vide (socle sans coupe)
+    s.push(`<rect x="${x0 + 92}" y="${y0 + 60}" width="44" height="44" rx="3" fill="#BFE4F2" fill-opacity=".35" stroke="#E8F6FF" stroke-width="1.6"/><rect x="${x0 + 106}" y="${y0 + 82}" width="16" height="10" rx="1" fill="#1A1B1F"/><rect x="${x0 + 109}" y="${y0 + 84}" width="10" height="3" fill="#F7CF55"/><circle cx="${x0 + 114}" cy="${y0 + 74}" r="7" fill="none" stroke="#F7CF55" stroke-width="1" stroke-dasharray="2 2" opacity=".8"/><circle cx="${x0 + 114}" cy="${y0 + 80}" r="22" fill="url(#sodium)" opacity=".6"/>`);
+    s.push(`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="none" stroke="#2E2620" stroke-width="4"/><rect x="${x0 + 54}" y="${y0 + h - 3}" width="26" height="6" fill="#C9A35A"/>`); }
+  // caisses à outils roulantes, piles de roues, pièces au sol dans la cour
+  [[300, 260], [530, 520], [690, 530], [320, 520]].forEach(([x, y]) => s.push(`<rect x="${x + 3}" y="${y + 4}" width="22" height="14" fill="#000" opacity=".35"/><rect x="${x}" y="${y}" width="22" height="14" rx="2" fill="#C8283A" stroke="#5A0E16"/><path d="M${x + 2} ${y + 5}h18M${x + 2} ${y + 9}h18" stroke="#5A0E16"/>`));
+  [[270, 330], [640, 470], [520, 250], [250, 545]].forEach(([x, y]) => { for (let k = 0; k < 3; k++) s.push(`<circle cx="${x + k * 3}" cy="${y - k * 3}" r="8" fill="#1B1D21" stroke="#2B2E33" stroke-width="2"/><circle cx="${x + k * 3}" cy="${y - k * 3}" r="4" fill="#9AA3AE"/>`); });
+  // voitures en construction sur chandelles dans la cour
+  const auto2 = (x, y, c, a) => `<g transform="translate(${x} ${y}) rotate(${a})"><rect x="-27" y="-12" width="54" height="24" fill="#000" opacity=".35" transform="translate(3 4)"/><path d="M-25 -6h10l6 -4h18l6 4h10v12h-10l-6 4h-18l-6 -4h-10z" fill="${c}" stroke="#111"/><rect x="-14" y="-5" width="16" height="10" fill="#7D858E"/><circle cx="-6" cy="0" r="3" fill="#C9D2DD"/><rect x="-25" y="-6" width="50" height="12" fill="url(#carro)"/>${[[-18, -14], [-18, 10], [14, -14], [14, 10]].map(([u, v]) => `<rect x="${u}" y="${v}" width="4" height="4" fill="#F2C230"/>`).join("")}</g>`;
+  s.push(auto2(560, 470, "#2BB673", 0) + auto2(300, 420, "#F2994A", 20));
+  // projecteurs aux coins (pools de lumière sodium)
+  [[60, 60], [1020, 60], [1020, 690], [60, 690], [500, 140], [860, 330]].forEach(([x, y]) => s.push(`<circle cx="${x}" cy="${y}" r="150" fill="url(#sodium)" opacity=".55"/><circle cx="${x}" cy="${y}" r="5" fill="#2B2E33" stroke="#9AA3AE" stroke-width="2"/><rect x="${x - 6}" y="${y - 3}" width="12" height="6" fill="#FFF1C2"/>`));
+  s.push(`<rect width="${W}" height="${H}" filter="url(#grain)" opacity=".35"/><rect width="${W}" height="${H}" fill="#10183A" opacity=".18" style="mix-blend-mode:multiply"/><rect width="${W}" height="${H}" fill="url(#vign)"/>
+  </svg>`);
+      const defsAnim = '<defs><radialGradient id="p2-etin" r="50%"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".3" stop-color="#FFE27A"/><stop offset="1" stop-color="#FF8A2B" stop-opacity="0"/></radialGradient><radialGradient id="p2-neon" r="50%"><stop offset="0" stop-color="#9FE8FF" stop-opacity=".6"/><stop offset="1" stop-color="#4FC3F7" stop-opacity="0"/></radialGradient></defs>';
+      return { fond: s.join(""), anim: defsAnim + a.join(""), W, H, couleur: "#3A3E45" };
+    }
+  
+  /** le décor 3D du Garage des rêves, aux mêmes endroits que la carte (positions de la carte en u, divisées par KU) */
+  function decorGarage(ctx) {
+    const { T, A, sol, lum } = ctx, v = h => hex(h), m = x => x / KU, r = alea(77), occupe = [], jaune = v("#F2C230"), noir = v("#1A1B1F");
+    const boite = (g, x, y, z, w, h, d, c, em, cap) => g.boite(x, y, z, w, h, d, c, em, cap);
+    // l'atelier 01 : la piste le traverse (ouvertures nord et sud), établis, voitures sur pont, néons, étincelles
+    { const x0 = m(40), z0 = m(240), w = m(250), d = m(230), g = new Geo(), mur = v("#8E969F"), mur2 = v("#7D858E"), H = 14, px = m(118) - x0, ouv = 14;
+      // murs (ouest, est, nord et sud avec une ouverture pour la piste)
+      boite(g, .6, 0, d / 2, 1.2, H, d, mur); boite(g, w - .6, 0, d / 2, 1.2, H, d, mur);
+      [0, d].forEach(z => { boite(g, (px - ouv) / 2, 0, z, px - ouv, H, 1.2, mur2); boite(g, (px + ouv + w) / 2, 0, z, w - px - ouv, H, 1.2, mur2); boite(g, px, H - 4, z, ouv * 2, 4, 1.2, mur2);
+        [-1, 1].forEach(sd => boite(g, px + sd * (ouv - .6), 0, z, 1.2, H - 4, 1.4, jaune)); });
+      g.ov().boite(w / 2 + 10, H - 3, -.7, 40, 2.4, .2, jaune, .3);
+      // toit en poutres (on voit dedans) et rampes de néons
+      for (let k = 0; k <= 6; k++) boite(g, w / 2, H, k * d / 6, w, 1, 1, v("#5A6068"));
+      for (let k = 0; k < 5; k++) { boite(g, 40 + k * 30, H - 1.2, d / 2, 1, .4, d * .8, v("#E8F6FF"), 1); lum.push([x0 + 40 + k * 30, H - 2, z0 + d / 2, .7, .9, 1, 26]); }
+      // servantes rouges le long du mur ouest
+      for (let k = 0; k < 4; k++) { boite(g, 4, 0, 18 + k * 42, 5, 3.2, 12, v("#C8283A")); g.ov().boite(6.55, 1.6, 18 + k * 42, .1, .3, 11, v("#5A0E16")); }
+      // deux voitures en construction sur un pont élévateur (la bleue capot ouvert), soudure
+      const pont = new Geo(); boite(pont, 0, 0, 0, 12, .5, 4, v("#3A3E45")); [-1, 1].forEach(sd => boite(pont, 0, .5, sd * 1.6, 11, 1.4, .5, jaune)); 
+      [[m(205) - x0, m(300) - z0, "#4C9AFF"], [m(205) - x0, m(405) - z0, "#FF6FA8"]].forEach(([x, z, c]) => { g.poser(pont, x, 0, z, PI / 2, 1); g.poser(voiture({ couleur: c }), x, 1.9, z, PI / 2, 1); });
+      for (let k = 0; k < 14; k++) { const t = r() * TAU; branche(g, [m(228) - x0, 1.2, m(358) - z0], [m(228) - x0 + Math.cos(t) * 2.5, 1.2 + r() * 2.5, m(358) - z0 + Math.sin(t) * 2.5], .05, .02, v("#FFD27A"), 1); }
+      lum.push([m(228), 1.6, m(358), 1, .75, .3, 10]);
+      sol.poser(g, x0, 0, z0, 0, 1); occupe.push([x0 + w / 2, z0 + d / 2, Math.max(w, d) * .6]); }
+    // le pont roulant jaune qui enjambe la ligne droite du bas
+    { const g = new Geo(), x1 = m(372), x2 = m(452), z1 = m(566), z2 = m(660), hh = 12;
+      [x1, x2].forEach(x => { boite(g, x, 0, z1, 1.4, hh, 1.4, jaune); boite(g, x, 0, z2, 1.4, hh, 1.4, jaune); boite(g, x, hh, (z1 + z2) / 2, 1.6, 1.4, z2 - z1 + 2, jaune); });
+      for (let k = 0; k < 8; k++) boite(g, x1 + (x2 - x1) * (k + .5) / 8, hh + .2, m(604), (x2 - x1) / 8, 1.6, 2.2, k % 2 ? jaune : noir);
+      boite(g, m(411), hh - 2.4, m(604), 3, 2.4, 3, v("#3A3E45")); boite(g, m(411), 5.2, m(604), .15, hh - 7.6, .15, v("#9AA3AE")); g.cylindre(m(411), 4.4, m(604), .6, .8, 6, v("#9AA3AE"), 0, .1);
+      sol.poser(g, 0, 0, 0, 0, 1); }
+    // murs de pneus aux virages
+    const pneus = (x, y, n, ang) => { const g = new Geo(); for (let k = 0; k < n; k++) for (let e = 0; e < 3; e++) g.cylindre(m(x) + Math.cos(ang) * k * 1.8, e * .55, m(y) + Math.sin(ang) * k * 1.8, .85, .5, 8, e % 2 ? v(k % 3 === 0 ? "#E9ECEF" : k % 3 === 1 ? "#D62D2D" : "#2B2E33") : v("#1B1D21")); sol.poser(g, 0, 0, 0, 0, 1); };
+    pneus(990, 640, 6, -2.4); pneus(995, 100, 6, 2.3); pneus(88, 95, 6, .7); pneus(85, 640, 6, -.7); pneus(735, 400, 4, 2.4); pneus(525, 400, 4, .7);
+    // conteneurs empilés
+    [[590, 150, 90, 34, "#D9472B", 0], [588, 192, 90, 34, "#2F6FD0", 0], [594, 240, 86, 34, "#F2B33A", 1], [592, 290, 88, 34, "#2BB673", 0], [300, 20, 110, 36, "#8C96A3", 0], [420, 18, 110, 36, "#D9472B", 1], [760, 22, 100, 36, "#2F6FD0", 0]].forEach(([x, y, w, h, c, etage], k) => {
+      const g = new Geo(); for (let e = 0; e <= etage; e++) { boite(g, 0, e * 5.2, 0, m(w), 5.2, m(h) * .9, mel(v(c), [0, 0, 0], e * .15)); for (let q = 0; q < 8; q++) g.ov().boite(-m(w) / 2 + (q + .5) * m(w) / 8, e * 5.2 + .4, m(h) * .45 + .02, .25, 4.4, .1, mel(v(c), [0, 0, 0], .25)); }
+      sol.poser(g, m(x + w / 2), 0, m(y + h / 2), 0, 1); occupe.push([m(x + w / 2), m(y + h / 2), m(w) * .6]); });
+    // station-service rétro
+    { const g = new Geo(), cx = m(859), cz = m(672); [[-24, -6], [24, -6], [-24, 6], [24, 6]].forEach(([a, b]) => boite(g, a, 0, b, .8, 5, .8, v("#E9ECEF"))); boite(g, 0, 5, 0, 60, 1.4, 18, v("#C8283A")); g.ov().boite(0, 5.2, 9.02, 58, .6, .1, v("#F4F1EA"), .6);
+      [-10, 10].forEach(a => { boite(g, a, 0, 0, 2, 3, 1.4, v("#C8283A")); g.ov().boite(a, 2, .72, 1.2, .8, .1, v("#FFE6A8"), 1); });
+      g.ov().boite(0, 4.4, 0, 50, .1, 14, v("#FFE6A8"), .5); sol.poser(g, cx, 0, cz, 0, 1); lum.push([cx, 4, cz, 1, .85, .55, 30]); occupe.push([cx, cz, 34]); }
+    // le bureau du chef d'équipe : tableau en liège (photo des 4), tableau blanc, table de cartes, vitrine au trophée vide
+    { const x0 = m(760), z0 = m(405), w = m(150), d = m(120), g = new Geo(), bois = v("#6B5A48"), Hm = 4;
+      boite(g, .4, 0, d / 2, .8, Hm, d, bois); boite(g, w - .4, 0, d / 2, .8, Hm, d, bois); boite(g, w / 2, 0, .4, w, Hm, .8, bois); boite(g, (w - 26) / 4, 0, d - .4, (w - 26) / 2, Hm, .8, bois); boite(g, w - (w - 26) / 4, 0, d - .4, (w - 26) / 2, Hm, .8, bois);
+      boite(g, w / 2, .02, d / 2, w - 1.6, .05, d - 1.6, v("#8A7458"));
+      boite(g, 16, 1.2, 1.4, 22, 13, .3, v("#C49A63")); g.ov().boite(10, 9, 1.6, 6, 4, .1, v("#F4F1EA")); ["#4C9AFF", "#2BB6A3", "#FF6FA8", "#F2994A"].forEach((c, k) => g.ov().boite(18 + k * 1.3, 9, 1.62, .9, .9, .1, v(c), .3)); branche(g.ov(), [8, 3, 1.62], [24, 7, 1.62], .12, .12, v("#2BB673"), .4);
+      boite(g, 44, 1.2, 1.4, 24, 12, .3, v("#F4F6F8"), .15); branche(g.ov(), [36, 4, 1.62], [50, 9, 1.62], .1, .1, v("#2F6FD0")); branche(g.ov(), [50, 9, 1.62], [54, 6, 1.62], .1, .1, v("#D62D2D"));
+      g.cylindre(m(805) - x0, 0, m(487) - z0, 6, 2.6, 12, v("#2E6B4A")); for (let k = 0; k < 5; k++) boite(g, m(805) - x0 + (r() - .5) * 6, 2.62, m(487) - z0 + (r() - .5) * 6, 1, .04, 1.4, v("#F4ECD8"), 0, r() * PI);
+      [[-8, 0], [8, 0], [0, -8], [0, 8]].forEach(([a, b]) => g.cylindre(m(805) - x0 + a, 0, m(487) - z0 + b, 1.4, 1.6, 8, v("#3A2A1E")));
+      const vx = m(874) - x0, vz = m(487) - z0; boite(g, vx, 0, vz, 14, 1.2, 14, v("#1A1B1F")); boite(g, vx, 1.2, vz, 4, 2.4, 4, v("#F7CF55"), .5); boite(g, vx, 3.6, vz, 14, .3, 14, v("#BFE4F2"), .25); [[-7, -7], [7, -7], [-7, 7], [7, 7]].forEach(([a, b]) => boite(g, vx + a, 0, vz + b, .3, 9, .3, v("#E8F6FF"), .3)); boite(g, vx, 9, vz, 14.3, .3, 14.3, v("#E8F6FF"), .3);
+      sol.poser(g, x0, 0, z0, 0, 1); lum.push([x0 + vx, 6, z0 + vz, 1, .85, .5, 14]); lum.push([x0 + w / 2, 6, z0 + d / 2, 1, .85, .6, 30]); occupe.push([x0 + w / 2, z0 + d / 2, Math.max(w, d) * .62]); }
+    // la cour : emblème peint au sol, voitures en construction sur chandelles, caisses à outils, piles de roues
+    { const so = sol.ov(), cx = m(420), cz = m(380); for (let k = 0; k < 40; k++) { if (k % 3 === 2) continue; const a0 = k / 40 * TAU, a1 = (k + .8) / 40 * TAU; [[m(95), m(90)], [m(70), m(68)]].forEach(([R1, R2]) => so.quad([cx + Math.cos(a0) * R1, .05, cz + Math.sin(a0) * R1], [cx + Math.cos(a1) * R1, .05, cz + Math.sin(a1) * R1], [cx + Math.cos(a1) * R2, .05, cz + Math.sin(a1) * R2], [cx + Math.cos(a0) * R2, .05, cz + Math.sin(a0) * R2], jaune, .2, [0, 1, 0])); }
+      [[560, 470, "#2BB673", 0], [300, 420, "#F2994A", -.35]].forEach(([x, y, c, a]) => { const g = new Geo(); [[-3, -1.6], [-3, 1.6], [3, -1.6], [3, 1.6]].forEach(([p, q]) => boite(g, p, 0, q, .5, 1.6, .5, jaune)); g.poser(voiture({ couleur: c }), 0, 1.6, 0, 0, 1); sol.poser(g, m(x), 0, m(y), a, 1); occupe.push([m(x), m(y), 10]); });
+      [[300, 260], [530, 520], [690, 530], [320, 520]].forEach(([x, y]) => { const g = new Geo(); boite(g, 0, 0, 0, 3.5, 3, 2.2, v("#C8283A")); sol.poser(g, m(x), 0, m(y), r() * TAU, 1); });
+      [[270, 330], [640, 470], [520, 250], [250, 545]].forEach(([x, y]) => { const g = new Geo(); for (let k = 0; k < 4; k++) g.cylindre(0, k * .55, 0, .85, .5, 8, v(k % 2 ? "#1B1D21" : "#2B2E33")); sol.poser(g, m(x), 0, m(y), 0, 1); });
+      occupe.push([cx, cz, 70]); }
+    // projecteurs de la cour
+    [[60, 60], [1020, 60], [1020, 690], [60, 690], [500, 140], [860, 330]].forEach(([x, y]) => { sol.poser(objet("projecteur", r, A), m(x), 0, m(y), 0, 1); lum.push([m(x), 23, m(y), 1, .85, .55, 34]); });
+    return occupe;
+  }
+  const PEINTS = { foret: { peindre: peindreForet, deco: decorForet }, garage: { peindre: peindreGarage, deco: decorGarage } };
 
   /* ---------- Construction de la scène statique ---------- */
   function construire(def, T, A, Z) {
@@ -758,7 +915,7 @@
       // vibreurs dans les virages, sinon bas-côtés
       const kerb = vib(i) || vib((i + 2) % N) || vib((i - 2 + N) % N);
       [1, -1].forEach(sd => {
-        const c1 = D.terre ? (Math.floor(i / 2) % 2 ? hex("#6E675E") : hex("#57514A")) : kerb ? (Math.floor(i / 2) % 2 ? rouge : blanc) : A.bord;
+        const c1 = D.terre ? (Math.floor(i / 2) % 2 ? hex("#6E675E") : hex("#57514A")) : D.kerb && kerb ? hex(D.kerb[Math.floor(i / 2) % 2]) : kerb ? (Math.floor(i / 2) % 2 ? rouge : blanc) : A.bord;
         if (D.terre) { piste.quad(P(a, sd * DEMI), P(b, sd * DEMI), P(b, sd * (DEMI + 1.4), .25), P(a, sd * (DEMI + 1.4), .25), c1, 0, up); piste.quad(P(a, sd * (DEMI + 1.4), .25), P(b, sd * (DEMI + 1.4), .25), P(b, sd * (DEMI + 6)), P(a, sd * (DEMI + 6)), mel(A.bord, [0, 0, 0], .05 * (i % 3)), 0, up); }
         else piste.quad(P(a, sd * DEMI), P(b, sd * DEMI), P(b, sd * (DEMI + (kerb ? 2 : 0) + (rue ? 1.2 : 6))), P(a, sd * (DEMI + (kerb ? 2 : 0) + (rue ? 1.2 : 6))), kerb ? c1 : mel(A.bord, [0, 0, 0], .04 * (i % 3)), kerb ? nuitPiste : 0, up);
         // murs (rue) ou rails : un panneau sur deux de la couleur du circuit
@@ -831,7 +988,7 @@
     });
     // circuits urbains : des façades serrées derrière les murs ; ailleurs, des bosquets le long de la piste
     const typeRue = { monaco: "villa", nuitville: "gratteciel", vegas: "neon", corniche: "immeuble", basfonds: "usine", androides: "tourholo", plateau: "pion" }[def.decor], typeBord = { parc: "arbre", japon: "cerisier", ile: "arbre", foret: "pin", monza: "arbre", campagne: "arbre", collines: "maison", miami: "palmier", marina: "palmier", desert: "rocher",
-      garage: "conteneur", lucioles: "pin", chateau: "pin", armoire: "pin", arene: "cube", solstice: "arbre", envers: "arbremort", survivants: "champignon", dunes: "rocher", titans: "rocher", olympe: "colonne" }[def.decor];
+      lucioles: "pin", chateau: "pin", armoire: "pin", arene: "cube", solstice: "arbre", envers: "arbremort", survivants: "champignon", dunes: "rocher", titans: "rocher", olympe: "colonne" }[def.decor];
     for (let i = 0; i < N; i += Math.max(1, Math.round((typeRue ? 19 : 15) / T.ds))) [1, -1].forEach(sd => {
       if (r() < (typeRue ? .2 : .5)) return;
       const e = E[i], o = sd * (DEMI + (typeRue ? 15 + r() * 8 : 18 + r() * 30)), x = e.x + e.nx * o, z = e.z + e.nz * o;

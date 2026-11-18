@@ -35,7 +35,7 @@
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **16.8**.
+  hors connexion `sw.js`). Version actuelle : **16.9**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
@@ -83,7 +83,7 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
 - Moteur : `def.peint` (TRACES) → `PEINTS[...]` dans `piste.js` = { peindre(T, Z) → carte 2D illustrée (image fixe + couche
   animée SVG), deco(ctx) → décor 3D aux mêmes positions } ; un plan commun (`planForet`) sert aux deux ; `D.terre` = chemin
   de terre (pas de lignes blanches ni vibreurs) ; `rotors` = objets qui tournent (ailes du moulin).
-- ✅ Janvier · Forêt aux lucioles (v16.6). Suivant proposé : décembre · Garage des rêves (tour de chauffe), puis février…
+- ✅ Janvier · Forêt aux lucioles (v16.6). ✅ Décembre · Garage des rêves (v16.9 ; `peindreGarage`/`decorGarage`, positions fixes de la carte en u). Suivant : février · Château aux sortilèges…
 
 ## Chantiers proposés, validés sur le principe par Théo (18/11), pas encore faits
 1. ✅ **Badges du Classement** (fait en v16.4 + serveur V31) : 3 max, épinglés dans Podium › Écurie › Badges
