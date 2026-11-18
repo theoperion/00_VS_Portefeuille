@@ -781,16 +781,16 @@ function rendre() {
   }
   if (Date.now() - dernierAppel > 5 * 60e3 && !enCours && !erreur) setTimeout(() => charger(false), 0);
   noterVisite();
-  const o = ONGLETS.some(x => x[0] === PREF.onglet) ? PREF.onglet : "jour";
+  const o = ONGLETS.some(x => x[0] === PREF.onglet) || (PREF.onglet === "artema" && aArtema()) ? PREF.onglet : "jour";
   const bandeau = SRC === "cache" ? '<div class="demo-band">' + (enCours ? "Mise à jour de ton fichier…" : erreur ? "Ton fichier n'a pas répondu (" + esc(erreur) + ") · chiffres de la dernière ouverture." : "Chiffres de la dernière ouverture · mise à jour…") + " <small>" + esc(M.majTexte || "") + "</small></div>" : "";
   v.innerHTML =
     '<div class="seg m-onglets" role="tablist" aria-label="Moi">' + ONGLETS.map(([k, l]) => '<button type="button" role="tab" data-m-ong="' + k + '" aria-pressed="' + (o === k) + '" aria-selected="' + (o === k) + '">' + l + "</button>").join("") + "</div>" +
     bandeau + htmlBandeauRappel() +
-    ({ jour: M.simple ? htmlJourSimple : htmlJour, patrimoine: htmlPatrimoine, stats: htmlStats, missions: htmlMissions })[o]();
+    ({ jour: M.simple ? htmlJourSimple : htmlJour, patrimoine: htmlPatrimoine, stats: htmlStats, missions: htmlMissions, artema: htmlArtema })[o]();
   v.querySelectorAll("[data-m-ong]").forEach(b => b.addEventListener("click", () => { PREF.onglet = b.dataset.mOng; garderPref(); rendre(); window.scrollTo(0, 0); }));
   brancherBandeauRappel(v);
   v.querySelectorAll("details.acc[data-acc]").forEach(d => d.addEventListener("toggle", () => { PREF.acc[d.dataset.acc] = d.open; garderPref(); if (d.open && d.dataset.acc === "m-courbe") dessinerCourbe(); }));
-  ({ jour: M.simple ? brancherJourSimple : brancherJour, patrimoine: brancherPatrimoine, stats: brancherStats, missions: brancherMissions })[o](v);
+  ({ artema: brancherArtema, jour: M.simple ? brancherJourSimple : brancherJour, patrimoine: brancherPatrimoine, stats: brancherStats, missions: brancherMissions })[o](v);
   if (SRC === "api") verifierPaliers();
   verifierCloture();
 }
@@ -1205,13 +1205,109 @@ function htmlAV(sup) {
     '<div class="av-sups">' + rows.map(r => { const k = cleSupport(r.nom);
       return '<button type="button" class="av-s" data-av="' + k + '" aria-pressed="' + (sel === k) + '" style="--c:' + (COUL_AV[k] || "var(--ink-3)") + '"><span class="av-n"><b><i></i>' + esc(r.nom) + "</b><small>" + esc(r.note || "") + "</small></span>" +
         '<span class="av-v"><b>' + eur(r.valeur) + '</b><small>versé ' + eur(r.investi) + '</small><small class="' + sens(r.pv) + '">' + eur(r.pv, 2, true) + " · " + pct(r.pvPct, 2) + "</small></span></button>"; }).join("") +
-      (S ? '<button type="button" class="av-s av-tout" data-av="total" aria-pressed="' + (sel === "total") + '">Toute l\'assurance-vie</button>' : "") + "</div>" +
+      (S ? '<button type="button" class="av-s av-tout" data-av="total" aria-pressed="' + (sel === "total") + '">Toute l\'assurance-vie</button>' : "") + "</div>" + lienArtema() +
     (S ? '<div class="av-courbe" id="av-courbe">' + courbeAV(S, sel) + "</div>" : '<p class="info">Les courbes arrivent dès que ton fichier envoie l\'historique (mise à jour du script).</p>') +
     (rdv.length ? '<h3 class="m-sous">Rendez-vous</h3><div class="av-rdv">' + rdv.map(([i, t, q, k]) => '<div><i>' + i + "</i><span>" + esc(t) + (q ? "<small>" + esc(q) + "</small>" : "") + "</span>" + (k ? '<button class="mini-btn" type="button" data-av-reg="' + k + '">Ajuster</button>' : "") + "</div>").join("") + "</div>" : "");
+}
+/* ================= V16.7 · Artema Décembre 2026 : l'écran à part (produit structuré Natixis, ISIN FR0014017J36) =================
+   Source : DIC Natixis du 01/04/2026 + fiche BPCE Vie. Chacun ne voit que ses propres chiffres (calculés sur son fichier). */
+const ARTEMA = {
+  emission: "2026-12-04", photo: ["2026-12-02", "2026-12-04"], attente: .01, nominal: 100, barriere: .6, fgse: .008,
+  rdv: [["2029-12-07", "2029-12-24", .285], ["2030-12-09", "2030-12-23", .38], ["2031-12-08", "2031-12-22", .475], ["2032-12-07", "2032-12-20", .57], ["2033-12-07", "2033-12-19", .665], ["2034-12-01", "2034-12-18", .76, true]],
+  lien: "https://equityderivatives.natixis.com/fr/indice/rdigtdg/"
+};
+const JOUR_MS = 864e5, jours = (a, b) => (new Date(b) - new Date(a)) / JOUR_MS;
+function aArtema() { return !!(M && (M.supports || []).some(r => /artema/i.test(r.nom || "") && (r.valeur || r.investi))); }
+/** tout ce qu'il faut savoir sur ton Artema à une date */
+function etatArtema() {
+  const row = (M.supports || []).find(r => /artema/i.test(r.nom || "")) || {}, ar = (M.parametres || {}).artema || {}, auj = isoJour(new Date());
+  const ordres = ((M.histoAV || {}).ordres || []).filter(o => o[2] === "ARTEMA" && o[1] === "Achat");
+  // parts achetées pendant l'attente : prix = 100 € au 4 décembre, moins la rémunération de 1 %/an restant à courir
+  let parts = 0, debut = null; ordres.forEach(o => { const d = o[0] < ARTEMA.emission ? o[0] : ARTEMA.emission; parts += o[3] / (ARTEMA.nominal / (1 + ARTEMA.attente * Math.max(0, jours(d, ARTEMA.emission)) / 365)); if (!debut || o[0] < debut) debut = o[0]; });
+  const verse = row.investi || ordres.reduce((a, o) => a + o[3], 0);
+  if (!parts && verse) { parts = verse / 99.7; debut = debut || "2026-08-19"; }
+  const partsA = d => parts * Math.pow(1 - ARTEMA.fgse, Math.max(0, jours(debut || auj, d)) / 365.25);
+  const ech = ARTEMA.rdv.map(([ev, pay, c, fin]) => { const m = partsA(pay) * ARTEMA.nominal * (1 + c), a = Math.max(.1, jours(debut || auj, pay) / 365.25); return { ev, pay, c, fin: !!fin, montant: m, gain: m - verse, tra: Math.pow(m / verse, 1 / a) - 1 }; });
+  const finPlat = partsA(ARTEMA.rdv[5][1]) * ARTEMA.nominal;
+  const ini = +ar.initial || null, act = +ar.actuel || null, ratio = ini && act ? act / ini : null;
+  const phase = auj < ARTEMA.photo[0] ? "attente" : auj <= ARTEMA.photo[1] ? "photo" : !ini ? "depart" : "vie";
+  const prochain = ech.find(e => e.ev >= auj) || null, passe = ech.filter(e => e.ev < auj && e.pay >= isoJour(new Date(Date.now() - 40 * JOUR_MS))).pop() || null;
+  return { row, ar, auj, parts, verse, ech, finPlat, ini, act, ratio, phase, prochain, passe, valeur: row.valeur || null, pv: row.pv, pvPct: row.pvPct };
+}
+function rebours(de, a) {
+  const d0 = new Date(de), d1 = new Date(a); let y = d1.getFullYear() - d0.getFullYear(), m = d1.getMonth() - d0.getMonth(), j = d1.getDate() - d0.getDate();
+  if (j < 0) { m--; j += new Date(d1.getFullYear(), d1.getMonth(), 0).getDate(); } if (m < 0) { y--; m += 12; }
+  return { y, m, j, total: Math.round(jours(de, a)) };
+}
+const pc1 = c => String(Math.round(c * 1000) / 10).replace(".", ",");
+const moisAn = iso => ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."][+iso.slice(5, 7) - 1] + " " + iso.slice(0, 4);
+const jourMois = iso => +iso.slice(8, 10) + (iso.slice(8, 10) === "01" ? "er" : "") + " " + ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"][+iso.slice(5, 7) - 1] + " " + iso.slice(0, 4);
+/** la jauge : l'indice par rapport à son départ (40 % → 130 %) */
+function jaugeArtema(ratio, mini) {
+  const x = r => Math.max(0, Math.min(100, (r - .4) / .9 * 100));
+  return '<div class="art-jw' + (mini ? " mini" : "") + '">' + (ratio ? '<div class="art-jm" style="left:' + x(ratio).toFixed(1) + '%">' + Math.round(ratio * 100) + " %</div>" : "") +
+    '<div class="art-jauge"><span class="r" style="width:' + x(.6).toFixed(1) + '%"></span><span class="o" style="width:' + (x(1) - x(.6)).toFixed(1) + '%"></span><span class="v"></span></div>' +
+    (mini ? "" : '<div class="art-jl"><span>40 %</span><span>60 % · barrière</span><span>100 % · départ</span><span>130 %</span></div>') + "</div>";
+}
+function verdictArtema(E) {
+  if (E.phase === "attente") return ["", "⏳ <b>Pas encore exposé à l'indice.</b> Ton argent rapporte 1 %/an jusqu'au 3 décembre. La photo de départ de l'indice sera prise les 2, 3 et 4 décembre 2026."];
+  if (E.phase === "photo") return ["", "📸 <b>Photo de départ en cours</b> (2, 3 et 4 décembre) : la moyenne de l'indice sur ces 3 jours devient sa référence pour 8 ans."];
+  if (E.phase === "depart") return ["o", "📌 <b>Saisis le niveau de départ de l'indice</b> (publié par Natixis après le 4 décembre) pour que la jauge et les rendez-vous s'affichent."];
+  if (!E.ratio) return ["", "Saisis le niveau actuel de l'indice pour voir où il en est par rapport à son départ."];
+  if (E.ratio >= 1) return ["v", "🟢 <b>Au-dessus de son départ.</b> Si c'était le jour du rendez-vous, Artema s'arrêterait et te rendrait ton capital <b>+" + pc1((E.prochain || E.ech[5]).c) + " %</b>."];
+  if (E.ratio >= .6) return ["o", "🟠 <b>En dessous de son départ.</b> Si c'était le jour du rendez-vous, rien ne se passerait : on attendrait l'année suivante. Ton capital reste protégé à la fin, tant que l'indice ne finit pas sous 60 % en 2034."];
+  return ["r", "🔴 <b>Sous la barrière des 60 %.</b> Ça ne compte qu'à la toute fin (décembre 2034) : il reste " + Math.max(0, 2034 - +E.auj.slice(0, 4)) + " ans pour remonter. Si c'était la fin, tu perdrais autant que la baisse."];
+}
+/** la ligne compacte dans Moi › Patrimoine › Quintessa */
+function lienArtema() {
+  if (!aArtema()) return "";
+  const E = etatArtema(), p = E.prochain, txt = E.phase === "attente" || E.phase === "photo" ? "photo de départ les 2–4 déc." : E.phase === "depart" ? "niveau de départ à saisir" : p ? "prochain rendez-vous : " + moisAn(p.ev) : "terminé";
+  const X = r => (Math.max(0, Math.min(1, (r - .4) / .9)) * 96 + 2).toFixed(1);
+  const mini = E.ratio ? '<svg class="art-mini" viewBox="0 0 100 22" aria-label="Indice à ' + Math.round(E.ratio * 100) + ' % de son départ"><rect x="2" y="12" width="' + (X(.6) - 2) + '" height="6" rx="3" fill="#C8414E"/><rect x="' + X(.6) + '" y="12" width="' + (X(1) - X(.6)) + '" height="6" fill="#F2B33A"/><rect x="' + X(1) + '" y="12" width="' + (98 - X(1)) + '" height="6" rx="3" fill="#3DDC97"/><path d="M' + X(E.ratio) + ' 10l-3-5h6z" fill="currentColor"/><text x="' + X(E.ratio) + '" y="4.5" text-anchor="middle" font-size="7" font-weight="700" fill="currentColor">' + Math.round(E.ratio * 100) + ' %</text></svg>' : "";
+  return '<button type="button" class="art-lien" data-m-aller="artema" style="--c:' + COUL_AV.artema + '"><span><b>🎯 Suivi Artema</b><small>' + esc(txt) + "</small></span>" + mini + '<i aria-hidden="true">›</i></button>';
+}
+/** l'écran Artema */
+function htmlArtema() {
+  if (!aArtema()) return '<div class="m-vide"><p>Pas d\'Artema dans ton assurance-vie.</p></div>';
+  const E = etatArtema(), p = E.prochain, [vc, vt] = verdictArtema(E);
+  const cible = E.phase === "attente" || E.phase === "photo" ? ARTEMA.photo[1] : p ? p.ev : null, rb = cible ? rebours(E.auj, cible) : null;
+  const rbTxt = rb ? (rb.y ? rb.y + " an" + (rb.y > 1 ? "s" : "") : rb.m ? rb.m + " mois" : rb.total + " j") : "—", rbSous = rb ? (rb.y ? (rb.m ? rb.m + " mois · " : "") + rb.j + " j" : rb.m ? rb.j + " j" : "") : "";
+  const rdvTxt = E.phase === "attente" || E.phase === "photo" ? "<b>2, 3 et 4 décembre 2026</b> : photo de départ de l'indice. Ensuite, rien ne se passe jusqu'au premier rendez-vous de décembre 2029."
+    : p ? "<b>" + jourMois(p.ev) + "</b> : on compare l'indice à son niveau de départ. " + (p.fin ? "C'est la fin : au moins au même niveau → capital <b class=\"up\">+76 %</b> ; sinon, voir le cas de la fin ci-dessous." : "S'il est au moins au même niveau, Artema s'arrête et te rend ton capital <b class=\"up\">+" + pc1(p.c) + " %</b>.") : "Artema est terminé.";
+  const pos = iso => Math.max(0, Math.min(100, jours("2026-12-04", iso) / jours("2026-12-04", "2034-12-01") * 100));
+  const frise = '<div class="art-frise"><div class="l"></div><div class="f" style="width:' + pos(E.auj).toFixed(1) + '%"></div><div class="auj" style="left:' + pos(E.auj).toFixed(1) + '%">aujourd\'hui</div>' +
+    '<div class="p dep" style="left:0"><i></i>déc.<b>2026</b></div>' + E.ech.map(e => '<div class="p' + (p && e.ev === p.ev ? " next" : "") + (e.fin ? " fin" : "") + (e.ev < E.auj ? " passe" : "") + '" style="left:' + pos(e.ev).toFixed(1) + '%"><i></i>' + (e.fin ? "fin" : "déc.") + "<b>" + e.ev.slice(0, 4) + "</b></div>").join("") + "</div>";
+  const e1 = p || E.ech[0];
+  const tableau = '<table class="art-t"><tr><th>Si ça s\'arrête en</th><th>Gain</th><th>Tu récupères</th><th>Par an</th></tr>' +
+    E.ech.map(e => '<tr class="' + (p && e.ev === p.ev ? "on" : "") + (e.ev < E.auj ? " passe" : "") + '"><td>' + moisAn(e.ev) + (e.fin ? " · fin" : "") + '</td><td class="up">+' + pc1(e.c) + " %</td><td>" + eur(Math.round(e.montant / 100) * 100) + "</td><td>" + pct(e.tra, 1, false) + "</td></tr>").join("") +
+    '<tr class="note"><td colspan="4">À la fin seulement, si l\'indice n\'a jamais retrouvé son départ : entre 60 et 100 % → ≈ ' + eur(Math.round(E.finPlat / 100) * 100) + " (ton capital moins les frais) · sous 60 % → perte égale à la baisse.</td></tr></table>";
+  const sais = [];
+  sais.push(E.ini ? '<div><span class="up">✓</span> Niveau de départ : <b>' + String(E.ini).replace(".", ",") + " pts</b><small>saisi</small></div>"
+    : '<div>📌 Niveau de départ de l\'indice<small>' + (E.auj > ARTEMA.photo[1] ? "à saisir" : "à saisir dès le 5 déc.") + "</small></div>");
+  if (E.ini) sais.push("<div>📈 Niveau actuel : " + (E.act ? "<b>" + String(E.act).replace(".", ",") + " pts</b>" : "pas encore saisi") + "<small>" + (E.ar.date ? "au " + esc(/^\d{4}-\d\d-\d\d/.test(String(E.ar.date)) ? frDate(String(E.ar.date).slice(0, 10)) : String(E.ar.date)) : "avec le relevé du mois") + "</small></div>");
+  if (p) sais.push("<div>🔔 Rappel : rendez-vous dans une semaine<small>" + frDate(isoJour(new Date(new Date(p.ev) - 7 * JOUR_MS))) + "</small></div>");
+  const bientot = p && jours(E.auj, p.ev) <= 10 ? '<div class="art-alerte">🔔 <b>Rendez-vous Artema le ' + jourMois(p.ev) + "</b> : pense à saisir le niveau de l'indice ce jour-là pour savoir s'il s'arrête.</div>" : "";
+  const apres = E.passe ? '<div class="art-alerte">🎯 Le rendez-vous du ' + jourMois(E.passe.ev) + " est passé. Si l'indice était au moins à son départ, Artema a été remboursé le " + frDate(E.passe.pay) + " et l'assureur a placé l'argent sur un autre support : <b>choisis où le mettre</b> (Saisir › ordre).</div>" : "";
+  return '<div class="art"><button type="button" class="lien art-retour" data-m-aller="patrimoine">‹ Patrimoine</button>' +
+    '<div class="art-carte"><div class="art-h"><div><b><span class="art-pt"></span>Artema Décembre 2026</b><small>Produit structuré · Natixis · jusqu\'en 2034 au plus</small></div>' +
+    '<div class="art-val"><b>' + eur(E.valeur) + "</b><small>versé " + eur(E.verse) + '</small><small class="' + sens(E.pv) + '">' + eur(E.pv, 0, true) + " · " + pct(E.pvPct, 1) + "</small></div></div>" + bientot + apres +
+    '<h4>' + (E.phase === "attente" || E.phase === "photo" ? "Photo de départ" : "Prochain rendez-vous") + '</h4><div class="art-rdv"><div class="big">' + rbTxt + "<small>" + rbSous + "</small></div><p>" + rdvTxt + "</p></div>" + frise +
+    "<h4>L'indice par rapport à son départ</h4>" + (E.ratio ? jaugeArtema(E.ratio) : jaugeArtema(null)) + '<div class="art-verdict ' + vc + '">' + vt + "</div>" +
+    "<h4>Si ça s'arrêtait…</h4><div class=\"art-si\"><p>…" + (e1.fin ? "à la fin" : "au prochain rendez-vous") + "<small>(si l'indice est ≥ 100 % le " + frDate(e1.ev) + ")</small></p><div><b>≈ " + eur(Math.round(e1.montant / 100) * 100) + "</b><small>" + eur(Math.round(e1.gain / 10) * 10, 0, true) + " · ≈ " + pct(e1.tra, 1, false) + "/an</small></div></div>" +
+    '<details class="art-d" open><summary>Tous les rendez-vous</summary>' + tableau + "</details>" +
+    '<details class="art-d"><summary>Comment marche Artema ?</summary><div class="art-cas"><div><i>📸</i>Déc. 2026 : photo de départ de l\'indice (moyenne du 2 au 4 décembre).</div><div><i>⏳</i>Jusqu\'en 2029 : rien ne se passe, la valeur bouge avec les marchés.</div><div><i>🎯</i>Chaque début décembre de 2029 à 2033 : si l\'indice est au moins à son départ → Artema s\'arrête, capital + gain (+9,5 points par année d\'attente).</div><div><i>🏁</i>Décembre 2034 : au moins au départ → +76 % · entre −40 % et 0 → capital · pire que −40 % → perte égale à la baisse.</div><div><i>🙅</i>Rien à décider : sortir avant se fait au prix du marché (protection perdue).</div><div><i>ℹ️</i>Montants estimés avec tes parts et 0,80 %/an de frais du contrat, avant impôts. L\'indice retire 50 points par an à la performance des entreprises ; ton capital dépend aussi de la solidité de Natixis.</div></div></details>' +
+    "<h4>Rendez-vous et saisies</h4><div class=\"art-rap\">" + sais.join("") + "</div>" +
+    '<div class="art-btns">' + (E.phase === "attente" || E.phase === "photo" ? "" : '<button type="button" class="btn acc" data-art-reg="' + (E.ini ? "artemaActuel" : "artemaInitial") + '">Saisir le niveau de l\'indice</button>') + '<a class="lien" href="' + ARTEMA.lien + '" target="_blank" rel="noopener">↗ Voir l\'indice</a></div>' +
+    "</div></div>";
+}
+function brancherArtema(v) {
+  v.querySelectorAll("[data-m-aller]").forEach(b => b.addEventListener("click", () => { PREF.onglet = b.dataset.mAller; garderPref(); rendre(); window.scrollTo(0, 0); }));
+  v.querySelectorAll("[data-art-reg]").forEach(b => b.addEventListener("click", () => faireRappel(b.dataset.artReg)));
 }
 function brancherAV(v) {
   const z = v.querySelector("#p-av"); if (!z) return;
   z.addEventListener("click", e => {
+    const al = e.target.closest("[data-m-aller]"); if (al) { PREF.onglet = al.dataset.mAller; garderPref(); rendre(); window.scrollTo(0, 0); return; }
     const rg = e.target.closest("[data-av-reg]"); if (rg) { faireRappel(rg.dataset.avReg); return; }
     const b = e.target.closest("[data-av]"); if (!b) return;
     avSel = b.dataset.av; const S = seriesAV(M.supports || []); if (!S) return;
@@ -3758,7 +3854,7 @@ window.Moi = {
   rendre,
   prechauffer() { injecterStyle(); if (!configure()) { signalerCloche(); return; } lireCache(); signalerCloche(); if (Date.now() - dernierAppel > 5 * 60e3) charger(false); },
   notifications: htmlNotifications,
-  retour() { if (PREF.onglet && PREF.onglet !== "jour") { PREF.onglet = "jour"; garderPref(); rendre(); window.scrollTo(0, 0); return true; } return false; },
+  retour() { if (PREF.onglet === "artema") { PREF.onglet = "patrimoine"; garderPref(); rendre(); window.scrollTo(0, 0); return true; } if (PREF.onglet && PREF.onglet !== "jour") { PREF.onglet = "jour"; garderPref(); rendre(); window.scrollTo(0, 0); return true; } return false; },
   faireRappel(k) { lireCache(); if (M) faireRappel(k); },
   feVerifie() { stock.set(cleStock("feVu"), String(Date.now())); signalerCloche(); },
   reporterRappel(k) { const pt = plusTard(); pt[k] = Date.now() + 2 * 864e5; stock.set(cleStock("plusTard"), JSON.stringify(pt)); signalerCloche(); if (vueMoi()) rendre(); },

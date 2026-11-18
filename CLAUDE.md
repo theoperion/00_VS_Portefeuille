@@ -35,7 +35,7 @@
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **16.6**.
+  hors connexion `sw.js`). Version actuelle : **16.7**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
@@ -60,6 +60,14 @@
 
 ## Publier
 Commit (message en français, « vX.Y : … »), ligne dans le journal de `MODE_EMPLOI.md`, push sur `main`.
+
+## Artema (produit structuré Natixis, Théo et Clément)
+- Écran à part dans Moi (`PREF.onglet = "artema"`, `htmlArtema`/`etatArtema` dans `moi.js`, constantes `ARTEMA`), ouvert par
+  « 🎯 Suivi Artema » dans Moi › Patrimoine › Quintessa ; visible seulement si le support Artema existe ; chacun ses chiffres.
+- Règles (DIC Natixis + fiche BPCE Vie, Drive de Théo) : photo de départ = moyenne 2-3-4 déc. 2026 ; rendez-vous ~7 déc. 2029→2033
+  (si indice ≥ départ : arrêt, capital + 28,5 % +9,5 pts/an) ; fin 1er déc. 2034 : ≥ départ +76 %, entre −40 % et 0 capital,
+  sous 60 % perte = baisse ; frais contrat 0,80 %/an ; parts = achats ÷ (100 € moins 1 %/an jusqu'au 4/12/2026).
+- Niveau de l'indice saisi à la main (pas sur Google Finance) : rappels « artemaInitial » / « artemaActuel » du fichier.
 
 ## Points de vigilance connus
 - Bouton retour (v15.27, modèle de l'appli Budget) : validé par Théo, ne pas y toucher sans raison.
