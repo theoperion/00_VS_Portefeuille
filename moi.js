@@ -1281,10 +1281,10 @@ function htmlArtema() {
   const tableau = '<table class="art-t"><tr><th>Si ça s\'arrête en</th><th>Gain</th><th>Tu récupères</th><th>Par an</th></tr>' +
     E.ech.map(e => '<tr class="' + (p && e.ev === p.ev ? "on" : "") + (e.ev < E.auj ? " passe" : "") + '"><td>' + moisAn(e.ev) + (e.fin ? " · fin" : "") + '</td><td class="up">+' + pc1(e.c) + " %</td><td>" + eur(Math.round(e.montant / 100) * 100) + "</td><td>" + pct(e.tra, 1, false) + "</td></tr>").join("") +
     '<tr class="note"><td colspan="4">À la fin seulement, si l\'indice n\'a jamais retrouvé son départ : entre 60 et 100 % → ≈ ' + eur(Math.round(E.finPlat / 100) * 100) + " (ton capital moins les frais) · sous 60 % → perte égale à la baisse.</td></tr></table>";
-  const sais = [];
+  const rapA = (rappelsFichier().find(x => cleRappel(x.nom) === "artemaActuel") || {}).prochaine, sais = [];
   sais.push(E.ini ? '<div><span class="up">✓</span> Niveau de départ : <b>' + String(E.ini).replace(".", ",") + " pts</b><small>saisi</small></div>"
     : '<div>📌 Niveau de départ de l\'indice<small>' + (E.auj > ARTEMA.photo[1] ? "à saisir" : "à saisir dès le 5 déc.") + "</small></div>");
-  if (E.ini) sais.push("<div>📈 Niveau actuel : " + (E.act ? "<b>" + String(E.act).replace(".", ",") + " pts</b>" : "pas encore saisi") + "<small>" + (E.ar.date ? "au " + esc(/^\d{4}-\d\d-\d\d/.test(String(E.ar.date)) ? frDate(String(E.ar.date).slice(0, 10)) : String(E.ar.date)) : "avec le relevé du mois") + "</small></div>");
+  if (E.ini) sais.push("<div>📈 Niveau actuel : " + (E.act ? "<b>" + String(E.act).replace(".", ",") + " pts</b>" : "pas encore saisi") + "<small>" + (rapA ? "rappel le " + frDate(rapA) + " · " : "") + (E.ar.date ? "au " + esc(/^\d{4}-\d\d-\d\d/.test(String(E.ar.date)) ? frDate(String(E.ar.date).slice(0, 10)) : String(E.ar.date)) : "avec le relevé du mois") + "</small></div>");
   if (p) sais.push("<div>🔔 Rappel : rendez-vous dans une semaine<small>" + frDate(isoJour(new Date(new Date(p.ev) - 7 * JOUR_MS))) + "</small></div>");
   const bientot = p && jours(E.auj, p.ev) <= 10 ? '<div class="art-alerte">🔔 <b>Rendez-vous Artema le ' + jourMois(p.ev) + "</b> : pense à saisir le niveau de l'indice ce jour-là pour savoir s'il s'arrête.</div>" : "";
   const apres = E.passe ? '<div class="art-alerte">🎯 Le rendez-vous du ' + jourMois(E.passe.ev) + " est passé. Si l'indice était au moins à son départ, Artema a été remboursé le " + frDate(E.passe.pay) + " et l'assureur a placé l'argent sur un autre support : <b>choisis où le mettre</b> (Saisir › ordre).</div>" : "";
@@ -2614,7 +2614,7 @@ function formReglage(k) {
   }
   if (k === "artemaActuel") {
     const a = p.artema || {};
-    return '<form class="form reg-form" data-form="artemaActuel"><p class="info">Niveau actuel de l\'indice, une fois par an avant chaque date de constatation.</p>' +
+    return '<form class="form reg-form" data-form="artemaActuel"><p class="info">Niveau actuel de l\'indice Artema (page de l\'indice sur le site Natixis), à saisir au rythme de ton rappel. Il fait bouger la jauge de l\'écran Artema.</p>' +
       '<div class="rang">' + champ("r-niv", "Niveau actuel", a.actuel === null || a.actuel === undefined ? "" : saisieNombre(a.actuel, 4)) + champ("r-date", "Relevé le", a.date || aujourdhuiISO(), { type: "date" }) + "</div>" + msg + btn + "</form>";
   }
   if (k === "appart") {
