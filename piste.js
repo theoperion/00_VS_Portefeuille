@@ -1105,11 +1105,11 @@
   /** V16.3 · position de chaque voiture : la distance suit les points sans jamais sauter ;
       chacun a son couloir (ordre de départ) : seul, il se rapproche de la trajectoire idéale, près d'un rival il s'écarte en douceur.
       Plus de téléportation de 11 m ni de changement de voie brutal quand quelqu'un double. */
-  function cibles(pts, tour, L, ordreDepart) {
+  function cibles(pts, tour, L, ordreDepart, grille) {
     const noms = Object.keys(pts).sort((a, b) => pts[b] - pts[a] || (ordreDepart ? ordreDepart.indexOf(a) - ordreDepart.indexOf(b) : 0));
     const ordre = ordreDepart && ordreDepart.length ? ordreDepart : noms, nb = Math.max(ordre.length, noms.length), pas = Math.min(3.6, 13 / Math.max(1, nb - 1));
     const out = {};
-    noms.forEach((n, j) => { const k = Math.max(0, ordre.indexOf(n)); out[n] = { s: (pts[n] / tour) * L - 4, base: (k - (nb - 1) / 2) * pas, rang: j + 1 }; });
+    noms.forEach((n, j) => { const k = Math.max(0, ordre.indexOf(n)); out[n] = { s: (pts[n] / tour) * L - 4 - (grille && grille.indexOf(n) >= 0 ? grille.indexOf(n) * 9 : 0), base: (k - (nb - 1) / 2) * pas, rang: j + 1 }; });
     noms.forEach(n => { const a = out[n]; let p = 0;
       noms.forEach(m => { if (m === n) return; let d = Math.abs(out[m].s - a.s) % L; d = Math.min(d, L - d); p = Math.max(p, clamp(1 - (d - 6) / 22, 0, 1)); });
       a.voie = a.base * (.3 + .7 * p * p * (3 - 2 * p)); });
@@ -1140,7 +1140,7 @@
     const I = { q: DPR, ft: 16, lents: 0, cssW: 1, cssH: 1, tConstr: Math.round(performance.now() - t0c), cv, gl, T, A, Z, V, mode: o.camera || "tv", focus: o.focus || (V[0] && V[0].v.nom), pts: Object.assign({}, o.pts || {}), anim: null, t0: performance.now(), cam: null, cible: null,
       orbite: 0, zoom: 1, tir: null, actif: true, dernier: 0, inactif: 0, feux: 0, flash: 0, prochainEclair: 3, artifice: [], ordreDepart: (o.voitures || []).map(v => v.nom), feuxDepart: -1 };
     const placer = (instant) => {
-      const c = cibles(I.pts, o.tour || 25, T.L, I.ordreDepart);
+      const c = cibles(I.pts, o.tour || 25, T.L, I.ordreDepart, o.grille);
       V.forEach(x => { const t = c[x.v.nom]; if (!t) return; x.rang = t.rang; if (instant) { x.s = t.s; x.voie = t.voie; } else { x.s = t.s; x.voie = lisse(x.voie, t.voie, .06); } });
     };
     placer(true);
@@ -1323,6 +1323,7 @@
     const api = {
       type: "3d", T, zones: Z, stats: () => ({ sol: B.sol.n, piste: B.piste.n, ov: B.solOv.n + B.pisteOv.n, eau: B.eau ? B.eau.n : 0, lum: LUM.length, tConstr: I.tConstr }),
       placer(pts) { I.anim = null; I.pts = Object.assign({}, pts); placer(true); I.feuxDepart = -1; reveiller(); },
+      regler(x) { Object.assign(o, x); },
       jouer(de, a, duree, fin, depart) {
         I.pts = Object.assign({}, de); placer(true); V.forEach(x => x.hist = []);
         const now = performance.now(), dl = depart ? 3200 : 0;
@@ -1403,7 +1404,7 @@
     const I = { pts: Object.assign({}, o.pts || {}), anim: null, ordre: (o.voitures || []).map(v => v.nom) };
     let raf = 0;
     function poser() {
-      const c = cibles(I.pts, o.tour || 25, T.L, I.ordre);
+      const c = cibles(I.pts, o.tour || 25, T.L, I.ordre, o.grille);
       Object.entries(c).forEach(([n, t]) => { const v = V[n]; if (!v) return; const p = T.a(t.s, t.voie * .8); v.x = p.x; v.y = p.z; v.g.setAttribute("transform", "translate(" + p.x.toFixed(1) + " " + p.z.toFixed(1) + ")"); v.t.textContent = t.rang; });
       // l'ordre d'affichage : le premier dessus
       Object.entries(c).sort((a, b) => b[1].rang - a[1].rang).forEach(([n]) => V[n] && gV.appendChild(V[n].g));
@@ -1423,6 +1424,7 @@
     const api = {
       type: "2d", T, zones: Z,
       placer(pts) { I.anim = null; I.pts = Object.assign({}, pts); poser(); },
+      regler(x) { Object.assign(o, x); },
       jouer(de, a, duree, fin) { if (!ANIM()) { api.placer(a); if (fin) fin(); return; } I.pts = Object.assign({}, de); poser(); I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: performance.now(), duree: Math.min(duree || 2600, 3200), fin }; if (!raf) raf = requestAnimationFrame(boucle); },
       camera() { }, focus() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (o.image) o.image(api); }, reveiller() { },
       detruire() { if (raf) cancelAnimationFrame(raf); if (ro) ro.disconnect(); svg.remove(); }

@@ -80,7 +80,7 @@ Dernier d'un mois → **1 carte bonus**, jouable dès le mois suivant, une fois 
 
 ## 🏎️ Course, écurie et trophées
 
-- **Course** : 25 points = un tour ; un circuit à thème par mois (4 mondes : Royaume enchanté, Ville néon, Terres sombres, Dieux et l'Épice), avec son décor animé ; la météo suit le S&P 500.
+- **Course** : une manche par mois sur un circuit à thème, départ dans l'ordre du championnat, le meilleur du mois boucle le tour (dès le 1er du mois, les voitures attendent sur la grille du nouveau circuit) (4 mondes : Royaume enchanté, Ville néon, Terres sombres, Dieux et l'Épice), avec son décor animé ; la météo suit le S&P 500.
 - **La route des 4 mondes** : chaque exclusif est une **carte de collection** unique (texte d'ambiance, fragment d'histoire réservé à son détenteur) ; les défis et 12 trophées de monde sont des **badges** pour tous ; chacun a sa **vitrine** sur sa fiche.
 - **Écurie** : purement cosmétique, débloquée par les défis et les exclusifs.
 - **Trophées** : défis 🥉🥈🥇💎 acquis pour toujours ; **exclusifs** 💎 pour le premier qui réussit (même mois : chacun) ; **👑 premier millionnaire** (patrimoine financier, montant jamais montré). Le serveur refait tous les calculs (anti-triche).
