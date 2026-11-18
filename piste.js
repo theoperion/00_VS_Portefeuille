@@ -59,18 +59,18 @@
   const TRACES = {
     abudhabi: { pts: polyg([[40, 204], [320, 204], [320, 40], [234, 40], [234, 126], [186, 126], [186, 40], [40, 40]], 16), decor: "garage", heure: "crepuscule", peint: "garage", reperes: [] },
     bahrein: { pts: etoile([[3, .14, .3], [5, .09, 1], [7, .05, 2.2]], 42), decor: "lucioles", heure: "crepuscule", amb: "lucioles", peint: "foret", reperes: [] },
-    djeddah: { pts: polyg([[40, 210], [320, 210], [320, 70], [290, 70], [290, 32], [240, 32], [240, 70], [200, 70], [200, 32], [150, 32], [150, 70], [110, 70], [110, 32], [60, 32], [60, 70], [40, 70]], 12), decor: "chateau", heure: "nuit", reperes: [{ t: "chateau", y: 145 }] },
-    melbourne: { pts: F_LAC, decor: "armoire", heure: "jour", amb: "neige", eau: [resserrer(F_LAC, .5)], reperes: [{ t: "armoire" }] },
-    suzuka: { pts: huit(), decor: "basfonds", heure: "nuit", amb: "pluie", reperes: [{ t: "cheminees" }] },
-    miami: { pts: polyg([[40, 210], [320, 210], [320, 60], [270, 60], [270, 104], [220, 104], [220, 30], [160, 30], [160, 92], [110, 92], [110, 50], [40, 50]], 12), decor: "androides", heure: "nuit", amb: "neon", reperes: [{ t: "tourcentrale", y: 160 }] },
+    djeddah: { pts: polyg([[40, 210], [320, 210], [320, 70], [290, 70], [290, 32], [240, 32], [240, 70], [200, 70], [200, 32], [150, 32], [150, 70], [110, 70], [110, 32], [60, 32], [60, 70], [40, 70]], 12), decor: "chateau", heure: "nuit", peint: "chateau", reperes: [{ t: "chateau", y: 145 }] },
+    melbourne: { pts: F_LAC, decor: "armoire", heure: "jour", amb: "neige", eau: [resserrer(F_LAC, .5)], peint: "armoire", reperes: [{ t: "armoire" }] },
+    suzuka: { pts: huit(), decor: "basfonds", heure: "nuit", amb: "pluie", peint: "basfonds", reperes: [{ t: "cheminees" }] },
+    miami: { pts: polyg([[40, 210], [320, 210], [320, 60], [270, 60], [270, 104], [220, 104], [220, 30], [160, 30], [160, 92], [110, 92], [110, 50], [40, 50]], 12), decor: "androides", heure: "nuit", amb: "neon", peint: "megapole", reperes: [{ t: "tourcentrale", y: 160 }] },
     montreal: { pts: polyg([[110, 30], [250, 30], [324, 120], [250, 210], [110, 210], [156, 120]], 18), decor: "arene", heure: "nuit", amb: "neon", reperes: [{ t: "holodome" }] },
-    silverstone: { pts: etoile([[5, .17, .6]], 45), decor: "solstice", heure: "jour", reperes: [{ t: "mai" }] },
-    spa: { pts: etoile([[1, .16, .5], [2, .17, 2.2], [4, .06, .8]], 36, t => 5 + 5 * Math.sin(2 * t + 1)), decor: "envers", heure: "nuit", amb: "envers", reperes: [{ t: "faille" }] },
-    monza: { pts: F_CHAMPI, decor: "survivants", heure: "crepuscule", amb: "spores", reperes: [{ t: "champignons", y: 95 }] },
-    singapour: { pts: F_DUNES, decor: "dunes", heure: "crepuscule", amb: "desert", reperes: [{ t: "ver", y: 122 }] },
-    interlagos: { pts: polyg([[40, 40], [320, 40], [334, 96], [292, 132], [304, 184], [250, 212], [200, 170], [150, 206], [90, 202], [56, 156], [30, 100]], 22, (x, y) => Math.max(0, 9 - (y - 40) / 18)), decor: "titans", heure: "crepuscule", amb: "cendres", reperes: [{ t: "mur" }] },
-    lasvegas: { pts: etoile([[3, .2, .5], [6, .03]], 39, t => 9 + 7 * Math.sin(t + .4)), decor: "olympe", heure: "jour", amb: "olympe", reperes: [{ t: "temple" }] },
-    monaco: { pts: polyg([[60, 30], [300, 30], [300, 210], [212, 210], [212, 120], [148, 120], [148, 210], [60, 210]], 18), decor: "plateau", heure: "nuit", rue: true, damier: true, reperes: [{ t: "plateau" }] }
+    silverstone: { pts: etoile([[5, .17, .6]], 45), decor: "solstice", heure: "jour", peint: "solstice", reperes: [{ t: "mai" }] },
+    spa: { pts: etoile([[1, .16, .5], [2, .17, 2.2], [4, .06, .8]], 36, t => 5 + 5 * Math.sin(2 * t + 1)), decor: "envers", heure: "nuit", amb: "envers", peint: "envers", reperes: [{ t: "faille" }] },
+    monza: { pts: F_CHAMPI, decor: "survivants", heure: "crepuscule", amb: "spores", peint: "survivants", reperes: [{ t: "champignons", y: 95 }] },
+    singapour: { pts: F_DUNES, decor: "dunes", heure: "crepuscule", amb: "desert", peint: "dunes", reperes: [{ t: "ver", y: 122 }] },
+    interlagos: { pts: polyg([[40, 40], [320, 40], [334, 96], [292, 132], [304, 184], [250, 212], [200, 170], [150, 206], [90, 202], [56, 156], [30, 100]], 22, (x, y) => Math.max(0, 9 - (y - 40) / 18)), decor: "titans", heure: "crepuscule", amb: "cendres", peint: "titans", reperes: [{ t: "mur" }] },
+    lasvegas: { pts: etoile([[3, .2, .5], [6, .03]], 39, t => 9 + 7 * Math.sin(t + .4)), decor: "olympe", heure: "jour", amb: "olympe", peint: "olympe", reperes: [{ t: "temple" }] },
+    monaco: { pts: polyg([[60, 30], [300, 30], [300, 210], [212, 210], [212, 120], [148, 120], [148, 210], [60, 210]], 18), decor: "plateau", heure: "nuit", rue: true, damier: true, peint: "plateau", reperes: [{ t: "plateau" }] }
   };
 
   /* ---------- Couleurs et petits outils ---------- */
@@ -243,18 +243,18 @@
     // V16.2 : un décor par circuit à thème
     garage: { sol: "#5B6068", bord: "#6A7078", piste: "#454A52", kerb: ["#F2C230", "#1A1B1F"], murs: ["#F2C230", "#1A1B1F"], obj: [["conteneur", 8], ["pneus", 10]] },
     lucioles: { sol: "#2A4A33", bord: "#3A5A3A", piste: "#7A5C3E", terre: true, murs: ["#5A4030", "#4A3426"], obj: [["pin", 200], ["arbre", 60], ["luciole", 70], ["champignon", 30]] },
-    chateau: { sol: "#4F6B45", bord: "#62805A", piste: "#34373D", murs: ["#E9ECEF", "#7B4BD6"], obj: [["tour", 16], ["pin", 150], ["rocher", 20]] },
-    armoire: { sol: "#4E7E44", bord: "#6C9A5C", piste: "#3A3E45", murs: ["#E9ECEF", "#2F6FD0"], eau: "#BFD9EC", obj: [["pin", 240], ["lanterne", 12, "pres"]] },
-    basfonds: { sol: "#2B2A2C", bord: "#3A3634", piste: "#2A2C30", murs: ["#E9ECEF", "#B33A2E"], obj: [["usine", 46], ["lampadaire", 0]] },
-    androides: { sol: "#14121F", bord: "#1E1A2E", piste: "#24262E", murs: ["#E9ECEF", "#22D3EE"], obj: [["tourholo", 44], ["gratteciel", 30], ["lampadaire", 0]] },
+    chateau: { sol: "#4F6B45", bord: "#62805A", piste: "#6A6F77", kerb: ["#8A8F97", "#4A4F57"], murs: ["#E9ECEF", "#7B4BD6"], obj: [["tour", 16], ["pin", 150], ["rocher", 20]] },
+    armoire: { sol: "#4E7E44", bord: "#6C9A5C", piste: "#C9D6E2", kerb: ["#2F6FD0", "#FFFFFF"], murs: ["#E9ECEF", "#2F6FD0"], eau: "#BFD9EC", obj: [["pin", 240], ["lanterne", 12, "pres"]] },
+    basfonds: { sol: "#2B2A2C", bord: "#3A3634", piste: "#1E2126", kerb: ["#7A3B2E", "#9A4E3A"], murs: ["#E9ECEF", "#B33A2E"], obj: [["usine", 46], ["lampadaire", 0]] },
+    androides: { sol: "#14121F", bord: "#1E1A2E", piste: "#151925", kerb: ["#22D3EE", "#FF4FD8"], murs: ["#E9ECEF", "#22D3EE"], obj: [["tourholo", 44], ["gratteciel", 30], ["lampadaire", 0]] },
     arene: { sol: "#0D0820", bord: "#1C0B3A", piste: "#1A1C24", murs: ["#22D3EE", "#FF4FD8"], obj: [["cube", 110]] },
-    solstice: { sol: "#79A858", bord: "#93C070", piste: "#3B3F47", murs: ["#FFFFFF", "#F2B33A"], obj: [["fleurs", 70], ["maison", 50], ["arbre", 60], ["foin", 20]] },
-    envers: { sol: "#2B2A2E", bord: "#3B3438", piste: "#2C2E33", murs: ["#E9ECEF", "#C8102E"], obj: [["arbremort", 170], ["pin", 50]] },
-    survivants: { sol: "#5D6B44", bord: "#6E7A52", piste: "#36383D", murs: ["#E9ECEF", "#9BC53D"], obj: [["ruine", 40], ["champignon", 90], ["arbre", 40]] },
-    dunes: { sol: "#D3A867", bord: "#C08F50", piste: "#3B3B40", murs: ["#E9ECEF", "#D9822B"], obj: [["dune", 90], ["rocher", 30], ["projecteur", 10, "pres"]] },
-    titans: { sol: "#6E7458", bord: "#82886A", piste: "#3A3C40", murs: ["#E9ECEF", "#8C2F2F"], obj: [["maison", 50], ["rocher", 50], ["arbre", 40]] },
-    olympe: { sol: "#B8B19E", bord: "#A49D8A", piste: "#3A3C42", murs: ["#FFFFFF", "#F2B33A"], obj: [["colonne", 50], ["montagne", 9], ["nuage", 26], ["rocher", 30], ["pin", 30]] },
-    plateau: { sol: "#E9DFC8", bord: "#C9B98F", piste: "#2E3038", murs: ["#F2F4F7", "#E5484D"], obj: [["de", 22], ["pion", 40], ["lampadaire", 0]] }
+    solstice: { sol: "#79A858", bord: "#93C070", piste: "#C9B48A", terre: true, murs: ["#FFFFFF", "#F2B33A"], obj: [["fleurs", 70], ["maison", 50], ["arbre", 60], ["foin", 20]] },
+    envers: { sol: "#2B2A2E", bord: "#3B3438", piste: "#2C2E33", kerb: ["#C8102E", "#2C2E33"], murs: ["#E9ECEF", "#C8102E"], obj: [["arbremort", 170], ["pin", 50]] },
+    survivants: { sol: "#5D6B44", bord: "#6E7A52", piste: "#45473F", kerb: ["#6B8A42", "#45473F"], murs: ["#E9ECEF", "#9BC53D"], obj: [["ruine", 40], ["champignon", 90], ["arbre", 40]] },
+    dunes: { sol: "#D3A867", bord: "#C08F50", piste: "#C9A06A", terre: true, murs: ["#E9ECEF", "#D9822B"], obj: [["dune", 90], ["rocher", 30], ["projecteur", 10, "pres"]] },
+    titans: { sol: "#6E7458", bord: "#82886A", piste: "#8A7050", terre: true, murs: ["#E9ECEF", "#8C2F2F"], obj: [["maison", 50], ["rocher", 50], ["arbre", 40]] },
+    olympe: { sol: "#B8B19E", bord: "#A49D8A", piste: "#E6DFCF", kerb: ["#F2B33A", "#FFFFFF"], murs: ["#FFFFFF", "#F2B33A"], obj: [["colonne", 50], ["montagne", 9], ["nuage", 26], ["rocher", 30], ["pin", 30]] },
+    plateau: { sol: "#E9DFC8", bord: "#C9B98F", piste: "#2E2420", kerb: ["#E5484D", "#4C8DFF"], murs: ["#F2F4F7", "#E5484D"], obj: [["de", 22], ["pion", 40], ["lampadaire", 0]] }
   };
   /** objets qui gardent leurs couleurs propres (lumineux ou peints), même sous la neige ou le néon */
   const SANS_TEINTE = new Set(["yacht", "neon", "luciole", "cube", "tourholo", "lanterne", "fleurs", "de", "pion", "nuage"]);
@@ -876,7 +876,346 @@
     [[60, 60], [1020, 60], [1020, 690], [60, 690], [500, 140], [860, 330]].forEach(([x, y]) => { sol.poser(objet("projecteur", r, A), m(x), 0, m(y), 0, 1); lum.push([m(x), 23, m(y), 1, .85, .55, 34]); });
     return occupe;
   }
+  /* ============================================================
+     V16.10 · Boîte à outils des cartes peintes (unité u = 1,25 m ; carte 1080 × 720 u)
+     ============================================================ */
+  function posRepere(def, T, R) {   // même place que le monument 3D (voir repere / libre)
+    const rue = !!def.rue, ps = T.a(-30, -(DEMI + (rue ? 12 : 22))), pt2 = T.a(-20, DEMI + (rue ? 8 : 18));
+    const M = { chateau: 92, ver: 70, temple: 60, armoire: 66, cheminees: 60, tourcentrale: 40, holodome: 60, mai: 56, faille: 90, champignons: 56, plateau: 50 }[R.t] || 50;
+    const p = libre(T, M, R.x !== undefined ? R.x * ECH : T.cx, R.y !== undefined ? R.y * ECH : T.cz, [[ps.x, ps.z, 70], [pt2.x, pt2.z, 75]]);
+    return [p[0] * KU, p[1] * KU];
+  }
+  function kit(T, def, graine, pre) {
+    const P = [], N = T.N, W = 1080, H = 720, r = alea(graine), s = [], a = [], defs = [], occ = [], anime = ANIM(), f = v => (+v).toFixed(1);
+    for (let i = 0; i < N; i++) P.push([T.X[i] * KU, T.Z[i] * KU]);
+    const K = {
+      P, N, W, H, r, s, a, f, occ, anime, pre,
+      dT(x, y) { let m = 1e9; for (let i = 0; i < N; i += 2) { const d = Math.hypot(P[i][0] - x, P[i][1] - y); if (d < m) m = d; } return m; },
+      nrm(i) { i = ((i % N) + N) % N; const p = P[(i - 2 + N) % N], q = P[(i + 2) % N], dx = q[0] - p[0], dy = q[1] - p[1], l = Math.hypot(dx, dy) || 1; return [-dy / l, dx / l, dx / l, dy / l]; },
+      inside(x, y) { let o = false; for (let i = 0, j = N - 1; i < N; j = i++) { const p = P[i], q = P[j]; if ((p[1] > y) !== (q[1] > y) && x < (q[0] - p[0]) * (y - p[1]) / (q[1] - p[1]) + p[0]) o = !o; } return o; },
+      libre(x, y, R, marge) { return K.dT(x, y) > R + (marge === undefined ? 20 : marge) && !occ.some(o => Math.hypot(o[0] - x, o[1] - y) < o[2] + R) && !(def.eau || []).some(poly => dansPoly(x / KU / ECH, y / KU / ECH, poly)); },
+      prendre(x, y, R) { occ.push([x, y, R]); },
+      piste: "M" + P.map(p => f(p[0]) + " " + f(p[1])).join("L") + "Z",
+      cx: P.reduce((t, p) => t + p[0], 0) / N, cy: P.reduce((t, p) => t + p[1], 0) / N,
+      rep(R) { return posRepere(def, T, R); },
+      /** semis d'objets au hasard, loin de la piste et de ce qui est déjà posé */
+      semis(n, R, essais, test, dessin) { let k = 0; for (let e = 0; e < essais && k < n; e++) { const x = r() * (W + 40) - 20, y = r() * (H + 40) - 20, rr = typeof R === "function" ? R() : R; if (!K.libre(x, y, rr) || (test && !test(x, y))) continue; K.prendre(x, y, rr * .7); dessin(x, y, rr, k++); } return k; },
+      /** halo lumineux (dégradé radial mis en cache par couleur) */
+      halo(x, y, R, c, op, dest) { const id = pre + "h" + c.replace("#", ""); if (!defs.includes(id)) { defs.push(id); s.unshift(`<radialGradient id="${id}" r="50%"><stop offset="0" stop-color="${c}" stop-opacity=".9"/><stop offset=".35" stop-color="${c}" stop-opacity=".4"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`); } (dest || s).push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(R)}" fill="url(#${id})" opacity="${op === undefined ? 1 : op}"/>`); },
+      ombre(x, y, rx, ry, op) { s.push(`<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(rx)}" ry="${f(ry || rx)}" fill="#000" opacity="${op || .45}" filter="url(#${pre}flou)"/>`); },
+      /** cime d'arbre vue de dessus */
+      arbre(x, y, R, c1, c2, c3) { K.ombre(x + R * .35, y + R * .4, R, R * .9, .5); const n = 4 + Math.floor(r() * 3), id = pre + "c" + (c1 + c2).replace(/#/g, ""); if (!defs.includes(id)) { defs.push(id); s.unshift(`<radialGradient id="${id}" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="${c1}"/><stop offset=".55" stop-color="${c2}"/><stop offset="1" stop-color="${c3}"/></radialGradient>`); }
+        for (let k = 0; k < n; k++) { const t = k / n * TAU + r(); s.push(`<circle cx="${f(x + Math.cos(t) * R * .38)}" cy="${f(y + Math.sin(t) * R * .38)}" r="${f(R * (.55 + r() * .2))}" fill="url(#${id})"/>`); } s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(R * .6)}" fill="url(#${id})"/>`); },
+      /** sapin vu de dessus (étoile) */
+      sapin(x, y, R, c, neige) { K.ombre(x + R * .3, y + R * .35, R, R, .45); for (let e = 0; e < 3; e++) { const rr = R * (1 - e * .28), pts = []; for (let k = 0; k < 16; k++) { const t = k / 16 * TAU + e * .2, q = k % 2 ? rr * .55 : rr; pts.push(f(x + Math.cos(t) * q) + "," + f(y + Math.sin(t) * q)); } s.push(`<polygon points="${pts.join(" ")}" fill="${e === 2 && neige ? "#F4F8FC" : mixHex(c, neige ? "#FFFFFF" : "#000000", e * (neige ? .3 : .12))}"/>`); } },
+      /** toit vu de dessus (bâtiment), tourné de ang degrés */
+      toit(x, y, w, h, c, ang, faitage, chem) { s.push(`<g transform="rotate(${f(ang || 0)} ${f(x)} ${f(y)})"><rect x="${f(x - w / 2 + 4)}" y="${f(y - h / 2 + 6)}" width="${f(w)}" height="${f(h)}" fill="#000" opacity=".45"/><rect x="${f(x - w / 2)}" y="${f(y - h / 2)}" width="${f(w)}" height="${f(h)}" fill="${c}"/>` +
+        (faitage !== false ? `<rect x="${f(x - w / 2)}" y="${f(y - h / 2)}" width="${f(w)}" height="${f(h / 2)}" fill="#fff" opacity=".12"/><path d="M${f(x - w / 2)} ${f(y)}h${f(w)}" stroke="#000" stroke-opacity=".35" stroke-width="1.5"/>` : `<rect x="${f(x - w / 2 + 3)}" y="${f(y - h / 2 + 3)}" width="${f(w - 6)}" height="${f(h - 6)}" fill="none" stroke="#000" stroke-opacity=".25" stroke-width="2"/>`) +
+        (chem ? `<rect x="${f(x + w * .25)}" y="${f(y - h * .35)}" width="${f(Math.max(4, w * .1))}" height="${f(Math.max(4, w * .1))}" fill="#5A3A2E"/>` : "") + "</g>"); },
+      /** la piste : liste de couches [couleur, largeur, extra] puis ligne centrale */
+      route(couches) { couches.forEach(([c, l, x]) => s.push(`<path d="${K.piste}" fill="none" stroke="${c}" stroke-width="${l}" stroke-linejoin="round"${x || ""}/>`)); },
+      depart() { const p = P[0], [nx, ny, tx, ty] = K.nrm(0); let d = ""; for (let i = -3; i < 3; i++) for (let j = 0; j < 2; j++) { const ox = nx * i * 4.5 + tx * j * 4.5, oy = ny * i * 4.5 + ty * j * 4.5; d += `<path d="M${f(p[0] + ox)} ${f(p[1] + oy)}l${f(nx * 4.5)} ${f(ny * 4.5)}l${f(tx * 4.5)} ${f(ty * 4.5)}l${f(-nx * 4.5)} ${f(-ny * 4.5)}z" fill="${(i + j) % 2 ? "#111" : "#EEE"}"/>`; } s.push(d); },
+      /** eau (polygones du tracé, en unités du plan) */
+      eaux(c1, c2) { (def.eau || []).forEach(poly => { const d = "M" + poly.map(q => f(q[0] * ECH * KU) + " " + f(q[1] * ECH * KU)).join("L") + "Z"; s.push(`<path d="${d}" fill="${c1}"/><path d="${d}" fill="none" stroke="${c2}" stroke-width="4" opacity=".6"/>`); }); },
+      /** particules animées : 'scintille', 'monte', 'tombe', 'derive' */
+      particules(n, c, taille, mode) { const id = pre + "p" + c.replace("#", ""); a.unshift(`<radialGradient id="${id}" r="50%"><stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="${c}" stop-opacity=".8"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`);
+        for (let k = 0; k < n; k++) { const x = r() * W, y = r() * H, t = taille * (.6 + r() * .8), d = (2 + r() * 4).toFixed(2), b = (r() * 4).toFixed(2), o = (.4 + r() * .6).toFixed(2);
+          const an = !anime ? "" : mode === "scintille" ? `<animate attributeName="opacity" values="${o};.05;${o}" dur="${d}s" begin="${b}s" repeatCount="indefinite"/>` : mode === "monte" ? `<animateTransform attributeName="transform" type="translate" values="0 0;${f((r() - .5) * 30)} -60" dur="${(+d * 2).toFixed(2)}s" begin="${b}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;${o};0" dur="${(+d * 2).toFixed(2)}s" begin="${b}s" repeatCount="indefinite"/>`
+            : mode === "tombe" ? `<animateTransform attributeName="transform" type="translate" values="0 -40;${f((r() - .5) * 20)} 60" dur="${(+d * 1.5).toFixed(2)}s" begin="${b}s" repeatCount="indefinite"/>` : `<animateTransform attributeName="transform" type="translate" values="0 0;${f(20 + r() * 40)} ${f((r() - .5) * 16)};0 0" dur="${(+d * 3).toFixed(2)}s" begin="${b}s" repeatCount="indefinite"/>`;
+          a.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(t)}" fill="url(#${id})" opacity="${o}">${an}</circle>`); } },
+      /** fin : textures, teinte, vignette */
+      fin(fond, teinte, opTeinte) {
+        const tete = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><defs><filter id="${pre}flou" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter><filter id="${pre}flou8" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter><radialGradient id="${pre}vign" r="75%"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".6"/></radialGradient>`;
+        const grads = s.filter(x => x.startsWith("<radialGradient") || x.startsWith("<linearGradient") || x.startsWith("<pattern")), corps = s.filter(x => !(x.startsWith("<radialGradient") || x.startsWith("<linearGradient") || x.startsWith("<pattern")));
+        const svg = tete + grads.join("") + "</defs>" + fond + corps.join("") + (teinte ? `<rect width="${W}" height="${H}" fill="${teinte}" opacity="${opTeinte || .2}" style="mix-blend-mode:multiply"/>` : "") + `<rect width="${W}" height="${H}" fill="url(#${pre}vign)"/></svg>`;
+        const ag = a.filter(x => x.startsWith("<radialGradient")), ac = a.filter(x => !x.startsWith("<radialGradient"));
+        return { fond: svg, anim: (ag.length ? "<defs>" + ag.join("") + "</defs>" : "") + ac.join(""), W, H, couleur: "#000" };
+      }
+    };
+    return K;
+  }
+  function mixHex(c1, c2, t) { const a = hex(c1), b = hex(c2), m = [0, 1, 2].map(i => Math.round((a[i] + (b[i] - a[i]) * t) * 255)); return "#" + m.map(v => v.toString(16).padStart(2, "0")).join(""); }
+  const COULEURS_J = ["#4C9AFF", "#2BB6A3", "#FF6FA8", "#F2994A"];   // les 4 pilotes, pour les clins d'œil
+  /* ---------- Février · Château aux sortilèges (école de magie) ---------- */
+  function peindreChateau(T, Z, def) {
+    const K = kit(T, def, 21, "ch-"), { s, r, f, W, H } = K, [X, Y] = K.rep({ t: "chateau", y: 145 }), c = 74, i0 = s.length;
+    // douves, remparts, tours, donjon, cour
+    s.push(`<rect x="${f(X - c - 26)}" y="${f(Y - c - 26)}" width="${f(2 * c + 52)}" height="${f(2 * c + 52)}" rx="30" fill="none" stroke="#14324A" stroke-width="22"/><rect x="${f(X - c - 26)}" y="${f(Y - c - 26)}" width="${f(2 * c + 52)}" height="${f(2 * c + 52)}" rx="30" fill="none" stroke="#2B6A8C" stroke-width="14" opacity=".8"/>`);
+    K.ombre(X + 10, Y + 14, c + 10, c + 10, .55);
+    s.push(`<rect x="${f(X - c)}" y="${f(Y - c)}" width="${f(2 * c)}" height="${f(2 * c)}" fill="#4A4F57"/><rect x="${f(X - c + 9)}" y="${f(Y - c + 9)}" width="${f(2 * c - 18)}" height="${f(2 * c - 18)}" fill="#3A4A3A"/>`);
+    for (let k = 0; k < 24; k++) { const t = k / 24; [[X - c + t * 2 * c, Y - c], [X - c + t * 2 * c, Y + c - 6], [X - c, Y - c + t * 2 * c], [X + c - 6, Y - c + t * 2 * c]].forEach(([x, y]) => s.push(`<rect x="${f(x)}" y="${f(y)}" width="5" height="6" fill="#6E747D"/>`)); }
+    s.push(`<rect x="${f(X - 9)}" y="${f(Y + c - 4)}" width="18" height="40" fill="#5A4030"/>`);   // pont-levis vers le sud
+    [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([a, b], k) => { const x = X + a * c, y = Y + b * c; K.ombre(x + 6, y + 8, 20, 20, .5);
+      s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="17" fill="#5A5F68" stroke="#2E3138" stroke-width="2"/><circle cx="${f(x)}" cy="${f(y)}" r="13" fill="url(#ch-toit)"/><circle cx="${f(x - 3)}" cy="${f(y - 3)}" r="3" fill="#C9D2FF" opacity=".6"/>`);
+      s.push(`<path d="M${f(x + 10)} ${f(y - 10)}l16 -6l-3 6l3 6z" fill="${COULEURS_J[k]}" stroke="#111" stroke-width=".6"/>`); });   // bannières aux couleurs des 4 pilotes
+    s.unshift(`<radialGradient id="ch-toit" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#7C8CFF"/><stop offset=".6" stop-color="#3D4E9C"/><stop offset="1" stop-color="#1E2558"/></radialGradient>`);
+    // grande salle et donjon avec l'orbe
+    K.toit(X - 22, Y - 30, 70, 34, "#5B4A6B", 0, true); for (let k = 0; k < 6; k++) s.push(`<rect x="${f(X - 52 + k * 11)}" y="${f(Y - 49)}" width="5" height="3" fill="#FFC86B"/>`);
+    K.ombre(X + 34, Y - 22, 24, 24, .5); s.push(`<circle cx="${f(X + 30)}" cy="${f(Y - 28)}" r="20" fill="#5A5F68" stroke="#2E3138" stroke-width="2"/><circle cx="${f(X + 30)}" cy="${f(Y - 28)}" r="15" fill="url(#ch-toit)"/>`);
+    K.halo(X + 30, Y - 28, 70, "#B57BFF", .55, K.a); K.a.push(`<circle cx="${f(X + 30)}" cy="${f(Y - 28)}" r="6" fill="#E9D5FF">${K.anime ? '<animate attributeName="r" values="5;8;5" dur="2.6s" repeatCount="indefinite"/>' : ""}</circle>`);
+    // cour : échiquier géant en pleine partie (clin d'œil), torches
+    const ex = X - 30, ey = Y + 18; for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) s.push(`<rect x="${f(ex + i * 6)}" y="${f(ey + j * 6)}" width="6" height="6" fill="${(i + j) % 2 ? "#2B2B30" : "#D9D2C2"}"/>`);
+    [[1, 2, "#F4F1EA"], [3, 4, "#F4F1EA"], [5, 1, "#1A1A22"], [6, 6, "#1A1A22"], [2, 5, "#1A1A22"], [4, 3, "#F4F1EA"]].forEach(([i, j, c2]) => s.push(`<circle cx="${f(ex + i * 6 + 3)}" cy="${f(ey + j * 6 + 3)}" r="2.3" fill="${c2}" stroke="#777" stroke-width=".4"/>`));
+    [[X - 55, Y + 55], [X + 55, Y + 55], [X - 55, Y - 5], [X + 55, Y + 20]].forEach(([x, y]) => { K.halo(x, y, 20, "#FFB347", .8); s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="2" fill="#FFF0BC"/>`); });
+    // serre aux plantes (et une partie de cartes posée sur l'établi) + volière
+    const sx = X + 115, sy = Y + 40; if (K.libre(sx, sy, 30, 0)) { s.push(`<rect x="${f(sx - 26)}" y="${f(sy - 16)}" width="52" height="32" rx="4" fill="#9FD8C8" fill-opacity=".35" stroke="#CFF3E8" stroke-width="1.5"/>`); for (let k = 0; k < 8; k++) s.push(`<circle cx="${f(sx - 20 + (k % 4) * 13)}" cy="${f(sy - 8 + Math.floor(k / 4) * 15)}" r="5" fill="${["#3E8E5A", "#6FB98A", "#9D6AD8"][k % 3]}"/>`); s.push(`<rect x="${f(sx + 6)}" y="${f(sy + 4)}" width="5" height="7" fill="#F4ECD8" transform="rotate(20 ${f(sx + 8)} ${f(sy + 7)})"/><rect x="${f(sx + 12)}" y="${f(sy + 3)}" width="5" height="7" fill="#F4ECD8"/>`); K.prendre(sx, sy, 32); }
+    const grp = s.splice(i0).filter(x => !x.startsWith("<radialGradient")); s.push(`<g transform="translate(${f(X)} ${f(Y)}) scale(1.45) translate(${f(-X)} ${f(-Y)})">` + grp.join("") + "</g>");
+    s.push(`<path d="M${f(X)} ${f(Y + c * 1.45 + 30)}L${f(X)} ${f(Y + c * 1.45 + 120)}" stroke="#6E6A62" stroke-width="10" stroke-dasharray="6 3" opacity=".8"/>`);
+    K.prendre(X, Y, c * 1.45 + 50);
+    K.semis(1, 60, 1500, (x, y) => !K.inside(x, y), (x, y) => { s.push(`<ellipse cx="${f(x)}" cy="${f(y)}" rx="70" ry="44" fill="#0F2A3A"/><ellipse cx="${f(x)}" cy="${f(y)}" rx="62" ry="38" fill="#1E4A63"/>`); for (let k = 0; k < 6; k++) { const t = r() * TAU; s.push(`<path d="M${f(x + Math.cos(t) * 30 - 6)} ${f(y + Math.sin(t) * 20)}q6 4 12 0" stroke="#5A4030" stroke-width="3" fill="none"/>`); K.halo(x + Math.cos(t) * 30, y + Math.sin(t) * 20 - 3, 8, "#FFD58A", .8); } });
+    // lac sombre, forêt de sapins, saules
+    K.semis(220, () => 10 + r() * 12, 4000, null, (x, y, R) => K.sapin(x, y, R, "#173A2C"));
+    K.route([["#0B0E10", 40, ` opacity=".5" filter="url(#ch-flou)"`], ["#5B5F66", 30], ["#7B8088", 30, ` stroke-dasharray="4 4" opacity=".7"`], ["#6A6F77", 22], ["#80858D", 16, ` stroke-dasharray="6 3" opacity=".5"`]]);
+    K.depart(); for (let i = 0; i < K.N; i += 22) { const [nx, ny] = K.nrm(i), sd = (i / 22) % 2 ? 1 : -1; K.halo(K.P[i][0] + nx * sd * 22, K.P[i][1] + ny * sd * 22, 14, "#FFB347", .75); }
+    K.particules(40, "#FFE6A8", 3, "monte"); K.particules(30, "#C9B8FF", 2.5, "scintille");
+    return K.fin(`<rect width="${W}" height="${H}" fill="#1A2B22"/>`, "#14183A", .28);
+  }
+  /* ---------- Mars · Pays derrière l'armoire (royaume d'hiver) ---------- */
+  function peindreArmoire(T, Z, def) {
+    const K = kit(T, def, 31, "ar-"), { s, r, f, W, H } = K, [X, Y] = K.rep({ t: "armoire" });
+    for (let k = 0; k < 60; k++) { const x = r() * W, y = r() * H; s.push(`<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(30 + r() * 60)}" ry="${f(14 + r() * 26)}" fill="${r() < .5 ? "#FFFFFF" : "#D5E2EF"}" opacity=".35"/>`); }
+    K.eaux("#BFE1F2", "#FFFFFF");
+    (def.eau || []).forEach(poly => { const P0 = poly.map(q => [q[0] * ECH * KU, q[1] * ECH * KU]), cx = P0.reduce((t, p) => t + p[0], 0) / P0.length, cy = P0.reduce((t, p) => t + p[1], 0) / P0.length;
+      for (let k = 0; k < 7; k++) { const t = r() * TAU, L = 30 + r() * 60; s.push(`<path d="M${f(cx + Math.cos(t) * 10)} ${f(cy + Math.sin(t) * 10)}l${f(Math.cos(t) * L)} ${f(Math.sin(t) * L)}l${f(Math.cos(t + .5) * 12)} ${f(Math.sin(t + .5) * 12)}" stroke="#FFFFFF" stroke-width="1.2" fill="none" opacity=".8"/>`); }
+      s.push(`<path d="M${f(cx - 70)} ${f(cy + 10)}c30 -40 70 40 110 0s60 -30 30 20" stroke="#9FC6DC" stroke-width="1.5" fill="none" opacity=".9"/><path d="M${f(cx - 60)} ${f(cy + 18)}c30 -40 70 40 110 0" stroke="#9FC6DC" stroke-width="1.5" fill="none" opacity=".7"/>`);
+      // clin d'œil : une partie de jeu prise dans la glace
+      s.push(`<rect x="${f(cx + 20)}" y="${f(cy - 30)}" width="22" height="16" fill="#2E5E8C" opacity=".55" transform="rotate(12 ${f(cx + 31)} ${f(cy - 22)})"/>`); COULEURS_J.forEach((c2, k) => s.push(`<circle cx="${f(cx + 25 + k * 4)}" cy="${f(cy - 23 + (k % 2) * 3)}" r="1.6" fill="${c2}" opacity=".8"/>`));
+      K.prendre(cx, cy, 120); });
+    // l'armoire ouverte, lumière chaude, réverbère et traces de pas
+    K.ombre(X + 6, Y + 8, 28, 14, .5); s.push(`<rect x="${f(X - 22)}" y="${f(Y - 9)}" width="44" height="18" rx="2" fill="#6B4226" stroke="#3A2414" stroke-width="2"/><rect x="${f(X - 19)}" y="${f(Y - 6)}" width="38" height="12" fill="#FFE9B0"/>`);
+    s.push(`<rect x="${f(X - 40)}" y="${f(Y + 6)}" width="20" height="4" fill="#7E5232" transform="rotate(35 ${f(X - 22)} ${f(Y + 8)})"/><rect x="${f(X + 20)}" y="${f(Y + 6)}" width="20" height="4" fill="#7E5232" transform="rotate(-35 ${f(X + 22)} ${f(Y + 8)})"/>`);
+    K.halo(X, Y + 18, 70, "#FFD58A", .7); for (let k = 0; k < 9; k++) s.push(`<ellipse cx="${f(X + 6 + (k % 2) * 7)}" cy="${f(Y + 22 + k * 11)}" rx="2.2" ry="3.4" fill="#B9CCDD"/>`);
+    const lx = X + 48, ly = Y - 18; K.halo(lx, ly, 45, "#FFE6A8", .8); s.push(`<circle cx="${f(lx)}" cy="${f(ly)}" r="4" fill="#20242B"/><circle cx="${f(lx)}" cy="${f(ly)}" r="2.2" fill="#FFF3C8"/>`); K.prendre(X, Y, 70);
+    // bonhomme de neige à 4 écharpes (clin d'œil), traîneau
+    K.semis(1, 12, 500, (x, y) => K.dT(x, y) > 60, (x, y) => { s.push(`<circle cx="${f(x + 3)}" cy="${f(y + 4)}" r="12" fill="#9FB2C6" opacity=".5"/><circle cx="${f(x)}" cy="${f(y)}" r="11" fill="#FFFFFF" stroke="#C9D8E6"/><circle cx="${f(x)}" cy="${f(y)}" r="6.5" fill="#F4F8FC" stroke="#C9D8E6"/>`); COULEURS_J.forEach((c2, k) => s.push(`<path d="M${f(x)} ${f(y)}l${f(Math.cos(k * 1.57 + .4) * 12)} ${f(Math.sin(k * 1.57 + .4) * 12)}" stroke="${c2}" stroke-width="2.4"/>`)); s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="2" fill="#F2994A"/>`); });
+    K.semis(1, 16, 500, (x, y) => K.dT(x, y) > 50, (x, y) => { s.push(`<g transform="rotate(${f(r() * 360)} ${f(x)} ${f(y)})"><rect x="${f(x - 14)}" y="${f(y - 6)}" width="28" height="12" rx="4" fill="#B03A2E"/><path d="M${f(x - 16)} ${f(y - 8)}h34M${f(x - 16)} ${f(y + 8)}h34" stroke="#C9A35A" stroke-width="2"/></g><path d="M${f(x + 16)} ${f(y)}c40 10 80 -10 120 4" stroke="#C9D8E6" stroke-width="5" stroke-dasharray="2 4" fill="none" opacity=".7"/>`); });
+    // palais de glace au loin (cristaux)
+    K.semis(1, 40, 800, (x, y) => !K.inside(x, y), (x, y) => { for (let k = 0; k < 7; k++) { const t = k / 7 * TAU, d = k ? 22 : 0; s.push(`<polygon points="${f(x + Math.cos(t) * d)},${f(y + Math.sin(t) * d - 14)} ${f(x + Math.cos(t) * d + 8)},${f(y + Math.sin(t) * d)} ${f(x + Math.cos(t) * d)},${f(y + Math.sin(t) * d + 14)} ${f(x + Math.cos(t) * d - 8)},${f(y + Math.sin(t) * d)}" fill="#CFEFFF" stroke="#FFFFFF" opacity=".9"/>`); } K.halo(x, y, 60, "#9FE8FF", .45); });
+    K.semis(260, () => 9 + r() * 11, 5000, null, (x, y, R) => K.sapin(x, y, R, "#2F5A4A", true));
+    K.route([["#7E92A6", 38, ` opacity=".4" filter="url(#ar-flou)"`], ["#E6EEF5", 30], ["#C7D4E0", 22], ["#AFC0D0", 3, ` transform="translate(3 3)" opacity=".7"`]]);
+    s.push(`<path d="${K.piste}" fill="none" stroke="#9DB1C4" stroke-width="2" stroke-dasharray="1 0" transform="translate(-4 0)" opacity=".6"/><path d="${K.piste}" fill="none" stroke="#9DB1C4" stroke-width="2" transform="translate(4 0)" opacity=".6"/>`);
+    K.depart(); for (let i = 0; i < K.N; i += 18) { const [nx, ny] = K.nrm(i), sd = (i / 18) % 2 ? 1 : -1; s.push(`<circle cx="${f(K.P[i][0] + nx * sd * 18)}" cy="${f(K.P[i][1] + ny * sd * 18)}" r="2.6" fill="${sd > 0 ? "#2F6FD0" : "#FFFFFF"}" stroke="#2F6FD0" stroke-width=".8"/>`); }
+    K.particules(90, "#FFFFFF", 2.6, "tombe");
+    return K.fin(`<rect width="${W}" height="${H}" fill="#EAF1F7"/>`, "#AFC6E0", .18);
+  }
+  /* ---------- Avril · Bas-fonds sous la pluie (gangs des années 1920) ---------- */
+  function peindreBasfonds(T, Z, def) {
+    const K = kit(T, def, 41, "bf-"), { s, r, f, W, H } = K, [X, Y] = K.rep({ t: "cheminees" });
+    s.push(`<pattern id="bf-pave" width="12" height="8" patternUnits="userSpaceOnUse"><rect width="12" height="8" fill="#2E2C2B"/><rect x=".6" y=".6" width="10.8" height="6.8" rx="1.5" fill="#3A3735"/></pattern>`);
+    // canal avec péniches
+    const cy0 = H * .5 + (r() - .5) * 60; s.push(`<path d="M-20 ${f(cy0)}C${f(W * .3)} ${f(cy0 - 60)} ${f(W * .6)} ${f(cy0 + 70)} ${W + 20} ${f(cy0 - 20)}" fill="none" stroke="#1B2A33" stroke-width="44"/><path d="M-20 ${f(cy0)}C${f(W * .3)} ${f(cy0 - 60)} ${f(W * .6)} ${f(cy0 + 70)} ${W + 20} ${f(cy0 - 20)}" fill="none" stroke="#2F4A58" stroke-width="34"/>`);
+    // usine aux cheminées (monument 3D), fumée
+    K.toit(X, Y, 130, 64, "#7A3B2E", 0, false); for (let k = 0; k < 5; k++) { const x = X - 48 + k * 24, y = Y - 50; s.push(`<circle cx="${f(x + 3)}" cy="${f(y + 4)}" r="8" fill="#000" opacity=".4"/><circle cx="${f(x)}" cy="${f(y)}" r="7" fill="#6A3328" stroke="#3A1A14" stroke-width="2"/><circle cx="${f(x)}" cy="${f(y)}" r="3.5" fill="#111"/>`); K.halo(x + 10, y - 18, 26, "#6E7178", .6); }
+    for (let k = 0; k < 8; k++) s.push(`<rect x="${f(X - 58 + k * 15)}" y="${f(Y + 20)}" width="9" height="5" fill="#FFC86B" opacity=".9"/>`); K.prendre(X, Y, 90);
+    // rangées de maisons de briques (toits d'ardoise et de tuiles), cheminées qui fument
+    K.semis(140, () => 14 + r() * 10, 6000, null, (x, y, R) => { const ang = Math.round(r() * 3) * 90 + (r() - .5) * 8; K.toit(x, y, R * 2.2, R * 1.3, r() < .5 ? "#5A3A32" : r() < .5 ? "#3E434C" : "#6E3B2C", ang, true, true); if (r() < .35) { const id = "bf-f" + Math.floor(r() * 3); K.a.push(`<circle cx="${f(x + R * .5)}" cy="${f(y - R * .5)}" r="5" fill="#8A8D93" opacity=".35">${K.anime ? `<animateTransform attributeName="transform" type="translate" values="0 0;14 -22" dur="${(3 + r() * 3).toFixed(1)}s" repeatCount="indefinite"/><animate attributeName="opacity" values=".4;0" dur="${(3 + r() * 3).toFixed(1)}s" repeatCount="indefinite"/>` : ""}</circle>`); } if (r() < .5) s.push(`<rect x="${f(x - 3)}" y="${f(y + R * .65)}" width="6" height="3" fill="#FFC86B"/>`); });
+    // clins d'œil : ardoise des paris (4 pilotes, leurs cotes), table de cartes et 4 casquettes, voiture d'époque
+    K.semis(1, 22, 800, null, (x, y) => { s.push(`<rect x="${f(x - 20)}" y="${f(y - 13)}" width="40" height="26" fill="#1E2420" stroke="#5A4030" stroke-width="3"/>`); ["T 2/1", "K 3/1", "C 5/1", "D 4/1"].forEach((t, k) => s.push(`<text x="${f(x - 16)}" y="${f(y - 4 + k * 5.5)}" font-family="Georgia, serif" font-size="5" fill="${COULEURS_J[k]}">${t}</text>`)); });
+    K.semis(1, 18, 800, null, (x, y) => { s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="11" fill="#2E5A3A" stroke="#4A3626" stroke-width="2"/>`); for (let k = 0; k < 4; k++) { const t = k * 1.57; s.push(`<ellipse cx="${f(x + Math.cos(t) * 15)}" cy="${f(y + Math.sin(t) * 15)}" rx="5" ry="4" fill="${COULEURS_J[k]}" stroke="#222"/><rect x="${f(x + Math.cos(t) * 5 - 2)}" y="${f(y + Math.sin(t) * 5 - 3)}" width="4" height="6" fill="#F4ECD8"/>`); } });
+    K.semis(1, 18, 800, null, (x, y) => s.push(`<g transform="rotate(${f(r() * 360)} ${f(x)} ${f(y)})"><rect x="${f(x - 16)}" y="${f(y - 7)}" width="32" height="14" rx="5" fill="#1A1A1E"/><rect x="${f(x - 6)}" y="${f(y - 6)}" width="12" height="12" rx="2" fill="#2C2C33"/><circle cx="${f(x + 14)}" cy="${f(y - 4)}" r="2" fill="#FFE6A8"/><circle cx="${f(x + 14)}" cy="${f(y + 4)}" r="2" fill="#FFE6A8"/></g>`));
+    // pavés mouillés, piste en asphalte luisant, bordures de briques, becs de gaz, pont au croisement
+    K.route([["#08090B", 40, ` opacity=".6" filter="url(#bf-flou)"`], ["#7A3B2E", 30], ["#9A4E3A", 30, ` stroke-dasharray="5 5"`], ["#1E2126", 23], ["#3A4250", 2, ` stroke-dasharray="20 30" opacity=".8"`]]);
+    const haut = []; for (let i = 0; i < K.N; i++) if (T.Y[i] > 4) haut.push(K.P[i]); if (haut.length > 4) { const d = "M" + haut.map(p => f(p[0]) + " " + f(p[1])).join("L"); s.push(`<path d="${d}" fill="none" stroke="#000" stroke-width="40" opacity=".35" filter="url(#bf-flou)"/><path d="${d}" fill="none" stroke="#5A5F68" stroke-width="32"/><path d="${d}" fill="none" stroke="#1E2126" stroke-width="24"/><path d="${d}" fill="none" stroke="#8E969F" stroke-width="27" stroke-dasharray="2 6" opacity=".7"/>`); }
+    K.depart(); for (let i = 0; i < K.N; i += 20) { const [nx, ny] = K.nrm(i), sd = (i / 20) % 2 ? 1 : -1; K.halo(K.P[i][0] + nx * sd * 20, K.P[i][1] + ny * sd * 20, 22, "#FFB347", .7); }
+    for (let k = 0; k < 30; k++) { const x = r() * W, y = r() * H; s.push(`<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(6 + r() * 14)}" ry="${f(3 + r() * 5)}" fill="#6E7F8F" opacity=".25"/>`); }
+    for (let k = 0; k < 70; k++) { const x = r() * W, y = r() * H, d = (.5 + r() * .6).toFixed(2); K.a.push(`<path d="M${f(x)} ${f(y)}l-3 12" stroke="#AFC6DA" stroke-width="1" opacity=".5">${K.anime ? `<animateTransform attributeName="transform" type="translate" values="0 -30;-6 40" dur="${d}s" begin="${(r()).toFixed(2)}s" repeatCount="indefinite"/>` : ""}</path>`); }
+    return K.fin(`<rect width="${W}" height="${H}" fill="url(#bf-pave)"/>`, "#1C2433", .3);
+  }
+  /* ---------- Mai · Mégapole des androïdes (ville néon) ---------- */
+  function peindreMegapole(T, Z, def) {
+    const K = kit(T, def, 51, "mg-"), { s, r, f, W, H } = K, [X, Y] = K.rep({ t: "tourcentrale", y: 160 }), neons = ["#22D3EE", "#FF4FD8", "#9B87FF", "#3DDC97", "#F7CF55"];
+    for (let x = 0; x < W; x += 40) s.push(`<path d="M${x} 0V${H}" stroke="#1B1F33" stroke-width="10"/>`); for (let y = 0; y < H; y += 40) s.push(`<path d="M0 ${y}H${W}" stroke="#1B1F33" stroke-width="10"/>`);
+    // la tour centrale : anneaux holographiques
+    K.ombre(X + 14, Y + 18, 46, 46, .6); [44, 34, 24, 14].forEach((R, k) => s.push(`<rect x="${f(X - R)}" y="${f(Y - R)}" width="${f(2 * R)}" height="${f(2 * R)}" fill="${["#1A1D2B", "#22263A", "#2A2F48", "#33395A"][k]}" stroke="${neons[k]}" stroke-width="1.5" transform="rotate(${k * 12} ${f(X)} ${f(Y)})"/>`));
+    K.halo(X, Y, 120, "#22D3EE", .35); K.a.push(`<circle cx="${f(X)}" cy="${f(Y)}" r="70" fill="none" stroke="#FF4FD8" stroke-width="2.5" stroke-dasharray="14 10" opacity=".8">${K.anime ? `<animateTransform attributeName="transform" type="rotate" from="0 ${f(X)} ${f(Y)}" to="360 ${f(X)} ${f(Y)}" dur="18s" repeatCount="indefinite"/>` : ""}</circle>`); K.prendre(X, Y, 80);
+    // immeubles : toits sombres aux arêtes néon, climatiseurs, héliports, panneaux holographiques
+    K.semis(150, () => 13 + r() * 16, 7000, null, (x, y, R) => { const c = neons[Math.floor(r() * neons.length)], w = R * 2, h = R * (1.2 + r() * .8);
+      s.push(`<rect x="${f(x - w / 2 + 6)}" y="${f(y - h / 2 + 8)}" width="${f(w)}" height="${f(h)}" fill="#000" opacity=".55"/><rect x="${f(x - w / 2)}" y="${f(y - h / 2)}" width="${f(w)}" height="${f(h)}" fill="#1E2233" stroke="${c}" stroke-width="1.4" stroke-opacity=".8"/>`);
+      if (r() < .2) s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(Math.min(w, h) * .3)}" fill="none" stroke="#F7CF55" stroke-width="1.5"/><text x="${f(x)}" y="${f(y + 3)}" text-anchor="middle" font-size="8" font-weight="700" fill="#F7CF55" font-family="Helvetica">H</text>`);
+      else for (let k = 0; k < 3; k++) s.push(`<rect x="${f(x - w / 2 + 3 + r() * (w - 10))}" y="${f(y - h / 2 + 3 + r() * (h - 10))}" width="5" height="4" fill="#3A3F55"/>`);
+      if (r() < .25) { K.a.push(`<rect x="${f(x - w / 2 + 2)}" y="${f(y - 3)}" width="${f(w - 4)}" height="6" fill="${c}" opacity=".7">${K.anime ? `<animate attributeName="opacity" values=".8;.2;.8" dur="${(1.5 + r() * 2).toFixed(1)}s" repeatCount="indefinite"/>` : ""}</rect>`); K.halo(x, y, R * 1.6, c, .25); } });
+    // clins d'œil : panneau géant « VERSUS » avec la courbe des 4, 4 drones aux couleurs des pilotes, jardin sur un toit avec un jeu
+    K.semis(1, 30, 1500, null, (x, y) => { s.push(`<rect x="${f(x - 30)}" y="${f(y - 14)}" width="60" height="28" fill="#0A0C16" stroke="#22D3EE" stroke-width="1.5"/><text x="${f(x - 26)}" y="${f(y - 4)}" font-family="Helvetica" font-weight="900" font-size="7" fill="#22D3EE">VERSUS</text>`); COULEURS_J.forEach((c2, k) => s.push(`<polyline points="${[0, 1, 2, 3, 4].map(i => f(x - 26 + i * 12) + "," + f(y + 10 - i * (1 + k * .6) - r() * 3)).join(" ")}" fill="none" stroke="${c2}" stroke-width="1.2"/>`)); K.halo(x, y, 50, "#22D3EE", .3); });
+    COULEURS_J.forEach((c2, k) => { const x = 120 + r() * (W - 240), y = 80 + r() * (H - 160); K.a.push(`<g><circle cx="${f(x)}" cy="${f(y)}" r="4" fill="${c2}"/><circle cx="${f(x)}" cy="${f(y)}" r="9" fill="none" stroke="${c2}" stroke-opacity=".5"/>${K.anime ? `<animateTransform attributeName="transform" type="translate" values="0 0;${f((r() - .5) * 80)} ${f((r() - .5) * 60)};0 0" dur="${(8 + r() * 6).toFixed(1)}s" repeatCount="indefinite"/>` : ""}</g>`); });
+    K.semis(1, 22, 1500, null, (x, y) => { s.push(`<rect x="${f(x - 20)}" y="${f(y - 16)}" width="40" height="32" fill="#2B4A35" stroke="#3DDC97"/>`); for (let k = 0; k < 6; k++) s.push(`<circle cx="${f(x - 14 + (k % 3) * 14)}" cy="${f(y - 8 + Math.floor(k / 3) * 16)}" r="4" fill="#3E8E5A"/>`); s.push(`<rect x="${f(x - 5)}" y="${f(y - 4)}" width="10" height="8" fill="#2E5E8C"/>`); });
+    // voies des voitures volantes
+    for (let k = 0; k < 4; k++) { const y0 = 60 + r() * (H - 120); K.a.push(`<path d="M-20 ${f(y0)}C${f(W * .3)} ${f(y0 + (r() - .5) * 200)} ${f(W * .7)} ${f(y0 + (r() - .5) * 200)} ${W + 20} ${f(y0)}" fill="none" stroke="${neons[k]}" stroke-width="2" stroke-dasharray="8 30" opacity=".6">${K.anime ? '<animate attributeName="stroke-dashoffset" from="0" to="-76" dur="2s" repeatCount="indefinite"/>' : ""}</path>`); }
+    K.route([["#000", 40, ` opacity=".6" filter="url(#mg-flou)"`], ["#22D3EE", 30, ` opacity=".25"`], ["#0E1018", 26], ["#151925", 20], ["#FF4FD8", 1.4, ` transform="translate(0 0)" opacity=".0"`]]);
+    s.push(`<path d="${K.piste}" fill="none" stroke="#22D3EE" stroke-width="27" stroke-opacity=".9" stroke-dasharray="1 0" fill-opacity="0" style="stroke-width:1.4" transform="translate(0 0)"/>`);
+    for (const sd of [1, -1]) { const d = "M" + K.P.map((p, i) => { const [nx, ny] = K.nrm(i); return f(p[0] + nx * sd * 12) + " " + f(p[1] + ny * sd * 12); }).join("L") + "Z"; s.push(`<path d="${d}" fill="none" stroke="${sd > 0 ? "#22D3EE" : "#FF4FD8"}" stroke-width="2"/>`); K.a.push(`<path d="${d}" fill="none" stroke="${sd > 0 ? "#22D3EE" : "#FF4FD8"}" stroke-width="5" opacity=".25"/>`); }
+    K.depart(); K.particules(40, "#22D3EE", 2, "scintille");
+    return K.fin(`<rect width="${W}" height="${H}" fill="#0C0E18"/>`, "#2A0B5A", .18);
+  }
+  /* ---------- Juin · Plateau maudit (jeu de plateau géant dans la jungle) ---------- */
+  function peindrePlateau(T, Z, def) {
+    const K = kit(T, def, 61, "pl-"), { s, r, f, W, H } = K, [X, Y] = K.rep({ t: "plateau" });
+    // le plateau de bois au centre, cases à damier rouges et prune, cadre doré
+    s.push(`<rect x="40" y="30" width="${W - 80}" height="${H - 60}" rx="18" fill="#6B3E1F" stroke="#C9A24A" stroke-width="8"/><rect x="56" y="46" width="${W - 112}" height="${H - 92}" rx="10" fill="#E9DFC8"/>`);
+    for (let i = 0; i < 26; i++) for (let j = 0; j < 17; j++) if ((i + j) % 2 === 0) s.push(`<rect x="${56 + i * 38}" y="${46 + j * 38}" width="38" height="38" fill="${(i * 7 + j * 3) % 5 === 0 ? "#C8283A" : "#3A2F4A"}" opacity=".85"/>`);
+    s.push(`<rect x="56" y="46" width="${W - 112}" height="${H - 92}" rx="10" fill="none" stroke="#5A3A22" stroke-width="3"/>`);
+    // la jungle déborde du bord du plateau
+    for (let k = 0; k < 90; k++) { const t = r(), side = Math.floor(r() * 4), x = side === 0 ? t * W : side === 1 ? W - r() * 34 : side === 2 ? t * W : r() * 34, y = side === 0 ? r() * 34 : side === 1 ? t * H : side === 2 ? H - r() * 34 : t * H; K.arbre(x, y, 14 + r() * 16, "#5BA35A", "#2C6B3A", "#123A20"); }
+    for (let k = 0; k < 14; k++) { const x = 60 + r() * (W - 120), y = 50 + r() * (H - 100); if (K.dT(x, y) < 20) continue; s.push(`<path d="M${f(x)} ${f(y)}q${f(20 + r() * 30)} ${f(10 + r() * 20)} ${f(40 + r() * 40)} ${f(-5 + r() * 30)}" stroke="#2E6B2A" stroke-width="3" fill="none" opacity=".8"/>`); }
+    // pions, dés, cartes, sablier géants (le monument 3D)
+    K.ombre(X + 8, Y + 10, 40, 30, .5); [[-22, -6, "#F4F1EA", 4], [10, 6, "#C8283A", 6]].forEach(([dx, dy, c2, n]) => { const x = X + dx, y = Y + dy; s.push(`<rect x="${f(x - 14)}" y="${f(y - 14)}" width="28" height="28" rx="5" fill="${c2}" stroke="#111" stroke-width="1.5" transform="rotate(${f(r() * 40)} ${f(x)} ${f(y)})"/>`); const pts = n === 4 ? [[-1, -1], [1, 1], [-1, 1], [1, -1]] : [[-1, -1], [1, 1], [-1, 1], [1, -1], [-1, 0], [1, 0]]; pts.forEach(([u, v]) => s.push(`<circle cx="${f(x + u * 7)}" cy="${f(y + v * 7)}" r="2.4" fill="${c2 === "#F4F1EA" ? "#1A1A22" : "#FFFFFF"}"/>`)); });
+    [[-50, 30], [44, -36], [0, 50]].forEach(([dx, dy], k) => { const x = X + dx, y = Y + dy; K.ombre(x + 5, y + 6, 13, 13, .5); s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="13" fill="${["#E5484D", "#4C8DFF", "#F2B33A"][k]}"/><circle cx="${f(x)}" cy="${f(y)}" r="7" fill="${["#FF7A7E", "#8AB4FF", "#FFD27A"][k]}"/>`); });
+    s.push(`<g transform="translate(${f(X + 60)} ${f(Y + 30)})"><circle r="12" fill="#C9A24A"/><path d="M-7 -7L7 7M7 -7L-7 7" stroke="#F2E6CC" stroke-width="4"/><circle r="4" fill="#E9D3A0"/></g>`); K.prendre(X, Y, 85);
+    // clins d'œil : 4 pions aux couleurs des pilotes sur la case départ, pioche « Pioche 2 », coffre
+    const p0 = K.P[0], [nx, ny] = K.nrm(0); COULEURS_J.forEach((c2, k) => s.push(`<circle cx="${f(p0[0] + nx * 26 + k * 7)}" cy="${f(p0[1] + ny * 26)}" r="4" fill="${c2}" stroke="#111"/>`)); s.push(`<text x="${f(p0[0] + nx * 26 - 6)}" y="${f(p0[1] + ny * 26 + 14)}" font-family="Georgia" font-weight="700" font-size="8" fill="#5A3A22">DÉPART</text>`);
+    K.semis(1, 16, 800, null, (x, y) => { for (let k = 0; k < 4; k++) s.push(`<rect x="${f(x - 9 + k * 2)}" y="${f(y - 12 - k * 2)}" width="18" height="26" rx="2" fill="#2E5E8C" stroke="#F4ECD8" stroke-width="1"/>`); s.push(`<text x="${f(x - 1)}" y="${f(y - 2)}" text-anchor="middle" font-family="Georgia" font-size="5.5" fill="#F4ECD8">Pioche 2</text>`); });
+    K.semis(1, 14, 800, null, (x, y) => { s.push(`<rect x="${f(x - 12)}" y="${f(y - 8)}" width="24" height="16" rx="2" fill="#7A4A26" stroke="#3A2414"/><path d="M${f(x - 12)} ${f(y - 2)}h24" stroke="#E2B93B" stroke-width="2"/>`); K.halo(x, y, 24, "#F7CF55", .6); });
+    // la piste : chemin de cases colorées
+    K.route([["#000", 38, ` opacity=".4" filter="url(#pl-flou)"`], ["#2E2420", 30], ["#F2E6CC", 26]]);
+    s.push(`<path d="${K.piste}" fill="none" stroke="#E5484D" stroke-width="22" stroke-dasharray="14 42"/><path d="${K.piste}" fill="none" stroke="#4C8DFF" stroke-width="22" stroke-dasharray="14 42" stroke-dashoffset="14"/><path d="${K.piste}" fill="none" stroke="#F2B33A" stroke-width="22" stroke-dasharray="14 42" stroke-dashoffset="28"/><path d="${K.piste}" fill="none" stroke="#2BB673" stroke-width="22" stroke-dasharray="14 42" stroke-dashoffset="42"/><path d="${K.piste}" fill="none" stroke="#2E2420" stroke-width="22" stroke-dasharray="1.5 12.5" opacity=".7"/>`);
+    K.depart(); K.particules(30, "#B8F25A", 2.5, "derive");
+    return K.fin(`<rect width="${W}" height="${H}" fill="#1E3A20"/>`, "#2A1A3A", .22);
+  }
+  /* ---------- Juillet · Village du solstice (fête nordique de l'été) ---------- */
+  function peindreSolstice(T, Z, def) {
+    const K = kit(T, def, 71, "so-"), { s, r, f, W, H } = K, [X, Y] = K.rep({ t: "mai" });
+    for (let k = 0; k < 9; k++) { const x = r() * W, y = r() * H, a2 = r() * 180, c2 = ["#F7D84A", "#B57BFF", "#FF8FB8", "#FFFFFF", "#6EC6FF"][k % 5]; s.push(`<g transform="rotate(${f(a2)} ${f(x)} ${f(y)})">${Array.from({ length: 7 }, (_, j) => `<rect x="${f(x - 90)}" y="${f(y - 40 + j * 12)}" width="180" height="7" rx="3" fill="${c2}" opacity=".55"/>`).join("")}</g>`); }
+    // le mât fleuri (couronne et rubans qui tournent), table de banquet, feu de joie
+    K.ombre(X + 6, Y + 8, 18, 18, .4); K.a.push(`<g>${["#E5484D", "#F2B33A", "#4C8DFF", "#2BB673", "#FF6FA8", "#B57BFF"].map((c2, k) => `<path d="M${f(X)} ${f(Y)}L${f(X + Math.cos(k * 1.047) * 42)} ${f(Y + Math.sin(k * 1.047) * 42)}" stroke="${c2}" stroke-width="3"/>`).join("")}${K.anime ? `<animateTransform attributeName="transform" type="rotate" from="0 ${f(X)} ${f(Y)}" to="360 ${f(X)} ${f(Y)}" dur="20s" repeatCount="indefinite"/>` : ""}</g>`);
+    s.push(`<circle cx="${f(X)}" cy="${f(Y)}" r="12" fill="#3F9A45" stroke="#F2E6CC" stroke-width="3"/>`); for (let k = 0; k < 10; k++) s.push(`<circle cx="${f(X + Math.cos(k * .63) * 12)}" cy="${f(Y + Math.sin(k * .63) * 12)}" r="2.5" fill="${["#FFFFFF", "#F7D84A", "#FF8FB8"][k % 3]}"/>`);
+    const tx = X + 80, ty = Y - 10; s.push(`<rect x="${f(tx - 50)}" y="${f(ty - 7)}" width="100" height="14" fill="#FFFFFF" stroke="#C9B8A0"/>`); for (let k = 0; k < 10; k++) s.push(`<circle cx="${f(tx - 45 + k * 10)}" cy="${f(ty)}" r="2.6" fill="${["#E5484D", "#F2B33A", "#2BB673", "#FF8FB8"][k % 4]}"/><circle cx="${f(tx - 45 + k * 10)}" cy="${f(ty + (k % 2 ? 12 : -12))}" r="4" fill="#C9A35A"/>`);
+    K.halo(X - 70, Y + 30, 40, "#FF8A2B", .8); s.push(`<circle cx="${f(X - 70)}" cy="${f(Y + 30)}" r="8" fill="#5A3F2A"/>`); K.a.push(`<circle cx="${f(X - 70)}" cy="${f(Y + 30)}" r="6" fill="#FFD27A">${K.anime ? '<animate attributeName="r" values="5;8;5" dur=".8s" repeatCount="indefinite"/>' : ""}</circle>`); K.prendre(X + 20, Y, 110);
+    // maisons de bois rouges aux toits verts, granges, moutons
+    K.semis(40, () => 12 + r() * 8, 3000, null, (x, y, R) => { K.toit(x, y, R * 2, R * 1.4, r() < .7 ? "#B5372A" : "#E8C24A", Math.round(r() * 2) * 90, true, r() < .5); s.push(`<rect x="${f(x - R * .9)}" y="${f(y - R * .7)}" width="${f(R * 1.8)}" height="${f(R * .5)}" fill="#3F6B3A" opacity=".55"/>`); });
+    K.semis(18, 4, 1500, null, (x, y) => s.push(`<ellipse cx="${f(x)}" cy="${f(y)}" rx="4" ry="3" fill="#F4F1EA"/><circle cx="${f(x + 3.5)}" cy="${f(y)}" r="1.5" fill="#333"/>`));
+    // clins d'œil : pique-nique avec un jeu de plateau et 4 tasses, partie de quilles en bois sur l'herbe, 4 couronnes de fleurs
+    K.semis(1, 22, 800, null, (x, y) => { s.push(`<rect x="${f(x - 18)}" y="${f(y - 13)}" width="36" height="26" fill="#E5484D" opacity=".85"/>`); for (let i = 0; i < 6; i++) s.push(`<path d="M${f(x - 18 + i * 6)} ${f(y - 13)}v26M${f(x - 18)} ${f(y - 13 + i * 5)}h36" stroke="#FFFFFF" stroke-width="1" opacity=".6"/>`); s.push(`<rect x="${f(x - 8)}" y="${f(y - 6)}" width="16" height="12" fill="#2E5E8C"/>`); COULEURS_J.forEach((c2, k) => s.push(`<circle cx="${f(x + (k % 2 ? 14 : -14))}" cy="${f(y + (k < 2 ? -9 : 9))}" r="2.6" fill="${c2}"/>`)); });
+    K.semis(1, 24, 800, null, (x, y) => { for (let k = 0; k < 5; k++) s.push(`<rect x="${f(x - 20 + k * 10)}" y="${f(y - 3)}" width="4" height="6" fill="#C9A35A"/>`); s.push(`<rect x="${f(x - 2)}" y="${f(y - 14)}" width="5" height="6" fill="#B5372A"/><rect x="${f(x - 2)}" y="${f(y + 10)}" width="4" height="6" fill="#C9A35A"/>`); });
+    K.semis(4, 6, 800, null, (x, y, R, k) => { s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="5" fill="none" stroke="${COULEURS_J[k]}" stroke-width="2"/>`); for (let j = 0; j < 5; j++) s.push(`<circle cx="${f(x + Math.cos(j * 1.26) * 5)}" cy="${f(y + Math.sin(j * 1.26) * 5)}" r="1.4" fill="#FFFFFF"/>`); });
+    K.semis(70, () => 11 + r() * 10, 3000, null, (x, y, R) => K.arbre(x, y, R, "#9ED36A", "#4F9A45", "#2A5A2A"));
+    K.route([["#3C6A2A", 36, ` opacity=".4" filter="url(#so-flou)"`], ["#C9B48A", 28], ["#E2D2A8", 20], ["#D4C29A", 12, ` stroke-dasharray="3 6" opacity=".7"`]]);
+    for (let i = 0; i < K.N; i += 6) { const [nx, ny] = K.nrm(i); [1, -1].forEach(sd => s.push(`<circle cx="${f(K.P[i][0] + nx * sd * 17)}" cy="${f(K.P[i][1] + ny * sd * 17)}" r="2.4" fill="${["#FF6FA8", "#F7D84A", "#FFFFFF", "#B57BFF"][i % 4]}"/>`)); }
+    K.depart(); K.particules(50, "#FFC6E0", 2.8, "derive");
+    return K.fin(`<rect width="${W}" height="${H}" fill="#7FB55E"/>`, "#FFE9B0", .12);
+  }
+  /* ---------- Août · Monde à l'envers (petite ville des années 80 et sa faille) ---------- */
+  function peindreEnvers(T, Z, def) {
+    const K = kit(T, def, 81, "en-"), { s, r, f, W, H } = K, [X, Y] = K.rep({ t: "faille" });
+    // veines rouges qui courent au sol
+    for (let k = 0; k < 26; k++) { let x = X + (r() - .5) * 60, y = Y + (r() - .5) * 60, d = "M" + f(x) + " " + f(y); const t0 = r() * TAU; for (let j = 0; j < 8; j++) { x += Math.cos(t0 + (r() - .5)) * 40; y += Math.sin(t0 + (r() - .5)) * 40; d += "L" + f(x) + " " + f(y); } s.push(`<path d="${d}" fill="none" stroke="#7A1424" stroke-width="${f(1 + r() * 3)}" opacity=".7"/>`); }
+    // la faille : déchirure rouge qui palpite, débris qui flottent
+    K.halo(X, Y, 130, "#FF2B3D", .45); s.push(`<path d="M${f(X - 8)} ${f(Y - 60)}l12 18l-10 14l14 16l-8 12l10 18l-12 14l-4 -26l-8 -14l8 -18l-10 -16z" fill="#1A0306" stroke="#FF4B5C" stroke-width="2"/>`);
+    K.a.push(`<path d="M${f(X - 2)} ${f(Y - 50)}l8 16l-7 12l9 14l-6 12l7 16" fill="none" stroke="#FFB3BC" stroke-width="2.5">${K.anime ? '<animate attributeName="opacity" values="1;.3;1;.6;1" dur="2.2s" repeatCount="indefinite"/>' : ""}</path>`);
+    for (let k = 0; k < 14; k++) { const t = r() * TAU, d = 50 + r() * 60; s.push(`<path d="M${f(X + Math.cos(t) * d)} ${f(Y + Math.sin(t) * d)}l${f(4 + r() * 6)} ${f(-3 - r() * 4)}l${f(3 + r() * 4)} ${f(5 + r() * 5)}z" fill="#3A3438" stroke="#5A5056"/>`); } K.prendre(X, Y, 100);
+    // petite ville : maisons, voitures des années 80, laboratoire clôturé avec son projecteur
+    K.semis(55, () => 11 + r() * 6, 4000, (x, y) => Math.hypot(x - X, y - Y) > 170, (x, y, R) => { K.toit(x, y, R * 2, R * 1.5, ["#5A6B7A", "#7A5A4A", "#4A5A4A"][Math.floor(r() * 3)], Math.round(r()) * 90, true, true); if (r() < .5) K.halo(x, y + R, 12, "#FFD58A", .6); });
+    K.semis(1, 50, 1500, (x, y) => Math.hypot(x - X, y - Y) > 150, (x, y) => { s.push(`<rect x="${f(x - 46)}" y="${f(y - 34)}" width="92" height="68" fill="none" stroke="#9AA3AE" stroke-width="1.5" stroke-dasharray="3 3"/>`); K.toit(x, y, 60, 40, "#6E747D", 0, false); s.push(`<text x="${f(x)}" y="${f(y + 4)}" text-anchor="middle" font-family="Helvetica" font-size="8" font-weight="700" fill="#2B2E33">LABO 4</text>`); K.a.push(`<path d="M${f(x + 30)} ${f(y - 20)}l120 -40l10 30z" fill="#FFF6D0" opacity=".12">${K.anime ? `<animateTransform attributeName="transform" type="rotate" values="-20 ${f(x + 30)} ${f(y - 20)};25 ${f(x + 30)} ${f(y - 20)};-20 ${f(x + 30)} ${f(y - 20)}" dur="7s" repeatCount="indefinite"/>` : ""}</path>`); });
+    // clins d'œil : 4 vélos aux couleurs des pilotes couchés au bord de la route, borne d'arcade dans un garage, talkie-walkie
+    K.semis(1, 24, 1500, (x, y) => K.dT(x, y) < 60, (x, y) => COULEURS_J.forEach((c2, k) => { const a2 = r() * 180, bx = x + (k % 2) * 16 - 8, by = y + Math.floor(k / 2) * 12 - 6; s.push(`<g transform="rotate(${f(a2)} ${f(bx)} ${f(by)})"><circle cx="${f(bx - 6)}" cy="${f(by)}" r="4" fill="none" stroke="#222" stroke-width="1.6"/><circle cx="${f(bx + 6)}" cy="${f(by)}" r="4" fill="none" stroke="#222" stroke-width="1.6"/><path d="M${f(bx - 6)} ${f(by)}l6 -4l6 4M${f(bx)} ${f(by - 4)}l0 -3" stroke="${c2}" stroke-width="2"/></g>`); }));
+    K.semis(1, 14, 1500, null, (x, y) => { K.toit(x, y, 30, 24, "#4A4A55", 0, false); s.push(`<rect x="${f(x - 5)}" y="${f(y - 6)}" width="10" height="12" fill="#1A1A2E" stroke="#22D3EE"/>`); K.halo(x, y, 18, "#22D3EE", .6); });
+    K.semis(1, 6, 800, (x, y) => K.dT(x, y) < 40, (x, y) => s.push(`<rect x="${f(x - 2)}" y="${f(y - 5)}" width="4" height="9" rx="1" fill="#2B2E33"/><path d="M${f(x + 1)} ${f(y - 5)}v-5" stroke="#2B2E33"/><circle cx="${f(x)}" cy="${f(y - 1)}" r="1" fill="#E5484D"/>`));
+    K.semis(260, () => 8 + r() * 9, 6000, null, (x, y, R) => { K.ombre(x + 3, y + 3, R, R * .8, .5); s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(R * .35)}" fill="#3A2E30"/>`); for (let k = 0; k < 7; k++) { const t = k / 7 * TAU + r(), L = R * (.7 + r() * .5); s.push(`<path d="M${f(x)} ${f(y)}q${f(Math.cos(t + .4) * L * .6)} ${f(Math.sin(t + .4) * L * .6)} ${f(Math.cos(t) * L)} ${f(Math.sin(t) * L)}" stroke="#4A3A3C" stroke-width="2.2" fill="none"/>`); } });
+    for (let k = 0; k < 10; k++) K.halo(r() * W, r() * H, 120 + r() * 80, "#7A1424", .25);
+    K.route([["#000", 38, ` opacity=".6" filter="url(#en-flou)"`], ["#3A3438", 28], ["#2C2E33", 22]]);
+    for (let k = 0; k < 40; k++) { const i = Math.floor(r() * K.N), [nx, ny] = K.nrm(i), o = (r() - .5) * 18; s.push(`<path d="M${f(K.P[i][0] + nx * o)} ${f(K.P[i][1] + ny * o)}l${f((r() - .5) * 10)} ${f((r() - .5) * 10)}l${f((r() - .5) * 8)} ${f((r() - .5) * 8)}" stroke="#C8102E" stroke-width="1" opacity=".8"/>`); }
+    s.push(`<path d="${K.piste}" fill="none" stroke="#C8102E" stroke-width="1.5" stroke-dasharray="10 14" opacity=".6"/>`);
+    K.depart(); K.particules(70, "#C9B8BC", 2, "monte");
+    return K.fin(`<rect width="${W}" height="${H}" fill="#1E1A1E"/>`, "#3A0410", .3);
+  }
+  /* ---------- Septembre · Ville des survivants (monde post-apocalyptique) ---------- */
+  function peindreSurvivants(T, Z, def) {
+    const K = kit(T, def, 91, "sv-"), { s, r, f, W, H } = K, [X, Y] = K.rep({ t: "champignons", y: 95 });
+    for (let x = 30; x < W; x += 120) s.push(`<path d="M${x} 0V${H}" stroke="#4A4A45" stroke-width="16" opacity=".5"/>`); for (let y = 40; y < H; y += 120) s.push(`<path d="M0 ${y}H${W}" stroke="#4A4A45" stroke-width="16" opacity=".5"/>`);
+    for (let k = 0; k < 120; k++) { const x = r() * W, y = r() * H; s.push(`<path d="M${f(x)} ${f(y)}l${f((r() - .5) * 18)} ${f((r() - .5) * 18)}l${f((r() - .5) * 14)} ${f((r() - .5) * 14)}" stroke="#2A2C28" stroke-width="1.2" opacity=".6"/>`); }
+    // champignons géants qui luisent (monument 3D) sur des ruines
+    [[0, 0, 30], [-36, 22, 20], [34, 18, 24], [10, -34, 16], [-28, -24, 13]].forEach(([dx, dy, R], k) => { const x = X + dx, y = Y + dy, c2 = ["#C2412D", "#5FB3A1", "#D9822B", "#9D6AD8", "#5FB3A1"][k]; K.ombre(x + R * .3, y + R * .4, R, R, .5); s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${R}" fill="${c2}" stroke="#1A1A1A" stroke-opacity=".4" stroke-width="2"/>`); for (let j = 0; j < 5; j++) s.push(`<circle cx="${f(x + Math.cos(j * 1.3 + k) * R * .55)}" cy="${f(y + Math.sin(j * 1.3 + k) * R * .55)}" r="${f(R * .13)}" fill="#FFF6E0"/>`); K.halo(x, y, R * 2.2, c2, .35, K.a); }); K.prendre(X, Y, 80);
+    // immeubles en ruine (toits percés, mousse), voitures rouillées couvertes de lierre, cerf
+    K.semis(55, () => 14 + r() * 14, 4000, null, (x, y, R) => { const w = R * 2, h = R * 1.6; K.toit(x, y, w, h, "#6E6A62", Math.round(r()) * 90, false); s.push(`<polygon points="${f(x - w * .2)},${f(y - h * .1)} ${f(x + w * .15)},${f(y - h * .3)} ${f(x + w * .2)},${f(y + h * .2)} ${f(x - w * .1)},${f(y + h * .25)}" fill="#1E1E1C"/><circle cx="${f(x + w * .3)}" cy="${f(y - h * .3)}" r="${f(R * .4)}" fill="#4F7A3A" opacity=".8"/><circle cx="${f(x - w * .35)}" cy="${f(y + h * .3)}" r="${f(R * .3)}" fill="#5F8A42" opacity=".8"/>`); });
+    K.semis(16, 10, 2000, null, (x, y) => s.push(`<g transform="rotate(${f(r() * 360)} ${f(x)} ${f(y)})"><rect x="${f(x - 12)}" y="${f(y - 6)}" width="24" height="12" rx="3" fill="#7A4A2E"/><rect x="${f(x - 6)}" y="${f(y - 5)}" width="10" height="10" fill="#3A2A20"/><circle cx="${f(x + 6)}" cy="${f(y + 2)}" r="4" fill="#4F7A3A" opacity=".85"/></g>`));
+    K.semis(3, 5, 1000, null, (x, y) => s.push(`<ellipse cx="${f(x)}" cy="${f(y)}" rx="6" ry="3" fill="#8A6A48"/><circle cx="${f(x + 6)}" cy="${f(y - 2)}" r="2" fill="#8A6A48"/><path d="M${f(x + 7)} ${f(y - 4)}l2 -4M${f(x + 6)} ${f(y - 4)}l-2 -4" stroke="#5A4030"/>`));
+    // le camp des survivants : tentes, feu, tour de guet, palissade ; clins d'œil : jeu sur une caisse (4 pions), guitare, tag T·K·C·D
+    K.semis(1, 55, 2000, null, (x, y) => { s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="52" fill="none" stroke="#6B4A30" stroke-width="5" stroke-dasharray="4 2"/>`); [[-24, -18], [22, -20], [-22, 20]].forEach(([a2, b]) => s.push(`<polygon points="${f(x + a2 - 12)},${f(y + b + 8)} ${f(x + a2)},${f(y + b - 10)} ${f(x + a2 + 12)},${f(y + b + 8)}" fill="#6E7A52" stroke="#3A4230"/>`));
+      K.halo(x, y, 36, "#FF8A2B", .8); s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="5" fill="#4A3626"/>`); K.a.push(`<circle cx="${f(x)}" cy="${f(y)}" r="4" fill="#FFD27A">${K.anime ? '<animate attributeName="r" values="3;6;3" dur=".7s" repeatCount="indefinite"/>' : ""}</circle>`);
+      s.push(`<rect x="${f(x + 18)}" y="${f(y + 10)}" width="14" height="10" fill="#8A6A48" stroke="#4A3626"/>`); COULEURS_J.forEach((c2, k) => s.push(`<circle cx="${f(x + 21 + k * 2.7)}" cy="${f(y + 15)}" r="1.4" fill="${c2}"/>`));
+      s.push(`<path d="M${f(x - 10)} ${f(y + 22)}l14 6" stroke="#8A5A2E" stroke-width="3"/><ellipse cx="${f(x - 12)}" cy="${f(y + 21)}" rx="4" ry="3" fill="#8A5A2E"/>`); s.push(`<rect x="${f(x + 34)}" y="${f(y - 38)}" width="12" height="12" fill="#5A4030" stroke="#2E2014"/>`); K.prendre(x, y, 60); });
+    K.semis(1, 20, 1500, (x, y) => K.dT(x, y) < 70, (x, y) => s.push(`<text x="${f(x)}" y="${f(y)}" font-family="Impact, Helvetica" font-size="13" fill="#E5484D" opacity=".75" transform="rotate(-8 ${f(x)} ${f(y)})">T·K·C·D</text>`));
+    K.semis(140, () => 8 + r() * 10, 4000, null, (x, y, R) => K.arbre(x, y, R, "#7FA85A", "#3F6B32", "#1F3A1A"));
+    K.route([["#000", 36, ` opacity=".5" filter="url(#sv-flou)"`], ["#55574F", 28], ["#45473F", 22]]);
+    for (let k = 0; k < 60; k++) { const i = Math.floor(r() * K.N), [nx, ny] = K.nrm(i), o = (r() - .5) * 18; s.push(`<path d="M${f(K.P[i][0] + nx * o)} ${f(K.P[i][1] + ny * o)}l${f((r() - .5) * 12)} ${f((r() - .5) * 12)}" stroke="${r() < .5 ? "#6B8A42" : "#25261F"}" stroke-width="${r() < .5 ? 2.5 : 1}"/>`); }
+    K.depart(); K.particules(60, "#D9E8A0", 2.4, "derive");
+    return K.fin(`<rect width="${W}" height="${H}" fill="#3A4232"/>`, "#3A3A1A", .2);
+  }
+  /* ---------- Octobre · Mer de dunes (désert, ver géant, épice) ---------- */
+  function peindreDunes(T, Z, def) {
+    const K = kit(T, def, 101, "du-"), { s, r, f, W, H } = K, [X, Y] = K.rep({ t: "ver", y: 122 });
+    for (let k = 0; k < 70; k++) { const x = r() * W, y = r() * H, L = 80 + r() * 160, c2 = r() < .5 ? "#E8C48A" : "#B98A50"; s.push(`<path d="M${f(x)} ${f(y)}q${f(L / 2)} ${f(-14 - r() * 18)} ${f(L)} 0" fill="none" stroke="${c2}" stroke-width="${f(3 + r() * 5)}" opacity=".55"/><path d="M${f(x)} ${f(y + 4)}q${f(L / 2)} ${f(-10 - r() * 14)} ${f(L)} 0" fill="none" stroke="#9A6A38" stroke-width="2" opacity=".35"/>`); }
+    // le ver qui sort du sable : gueule ronde, dents, gerbe de sable
+    for (let k = 0; k < 18; k++) { const t = k / 18 * TAU; s.push(`<ellipse cx="${f(X + Math.cos(t) * 52)}" cy="${f(Y + Math.sin(t) * 46)}" rx="10" ry="6" fill="#D9AE70" transform="rotate(${f(t * 57.3)} ${f(X + Math.cos(t) * 52)} ${f(Y + Math.sin(t) * 46)})"/>`); }
+    s.push(`<circle cx="${f(X)}" cy="${f(Y)}" r="36" fill="#8A6A4A"/><circle cx="${f(X)}" cy="${f(Y)}" r="30" fill="#6E5238"/><circle cx="${f(X)}" cy="${f(Y)}" r="22" fill="#3A1414"/>`);
+    for (let k = 0; k < 16; k++) { const t = k / 16 * TAU; s.push(`<path d="M${f(X + Math.cos(t) * 22)} ${f(Y + Math.sin(t) * 22)}L${f(X + Math.cos(t + .1) * 13)} ${f(Y + Math.sin(t + .1) * 13)}L${f(X + Math.cos(t + .2) * 22)} ${f(Y + Math.sin(t + .2) * 22)}z" fill="#F2E8D2"/>`); }
+    K.a.push(`<circle cx="${f(X)}" cy="${f(Y)}" r="40" fill="none" stroke="#E8C48A" stroke-width="3" opacity=".6">${K.anime ? '<animate attributeName="r" values="40;70" dur="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".7;0" dur="2.4s" repeatCount="indefinite"/>' : ""}</circle>`); K.prendre(X, Y, 80);
+    // la moissonneuse d'épice, l'avant-poste aux dômes, les rochers, l'oasis
+    K.semis(1, 30, 1500, null, (x, y) => { K.ombre(x + 8, y + 10, 30, 18, .5); s.push(`<rect x="${f(x - 28)}" y="${f(y - 14)}" width="56" height="28" rx="4" fill="#8E7E62" stroke="#3A3226" stroke-width="2"/><rect x="${f(x - 28)}" y="${f(y + 10)}" width="56" height="6" fill="#3A3226"/><rect x="${f(x - 28)}" y="${f(y - 16)}" width="56" height="6" fill="#3A3226"/>`); K.halo(x + 34, y, 30, "#E8A050", .6); });
+    K.semis(1, 50, 1500, null, (x, y) => { [[0, 0, 18], [-26, 10, 11], [24, 12, 12], [6, -24, 9]].forEach(([a2, b, R]) => { K.ombre(x + a2 + 4, y + b + 5, R, R, .45); s.push(`<circle cx="${f(x + a2)}" cy="${f(y + b)}" r="${R}" fill="#E9DCC4" stroke="#B99E78" stroke-width="1.5"/><circle cx="${f(x + a2 - R * .3)}" cy="${f(y + b - R * .3)}" r="${f(R * .4)}" fill="#FFFFFF" opacity=".35"/>`); }); s.push(`<path d="M${f(x + 38)} ${f(y - 20)}v-16M${f(x + 46)} ${f(y - 18)}v-14" stroke="#7A6450" stroke-width="2.5"/>`); });
+    K.semis(1, 34, 1500, null, (x, y) => { s.push(`<ellipse cx="${f(x)}" cy="${f(y)}" rx="30" ry="20" fill="#2F8FA8"/>`); for (let k = 0; k < 7; k++) { const t = k / 7 * TAU; K.arbre(x + Math.cos(t) * 34, y + Math.sin(t) * 26, 8, "#7FB55E", "#3F7A3A", "#1F4A2A"); } });
+    K.semis(25, () => 8 + r() * 16, 2000, null, (x, y, R) => { K.ombre(x + R * .3, y + R * .3, R, R * .8, .4); s.push(`<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(R)}" ry="${f(R * .75)}" fill="#8A6A48" transform="rotate(${f(r() * 180)} ${f(x)} ${f(y)})"/>`); });
+    // clins d'œil : table de stratégie (plateau, cartes, 4 agents aux couleurs des pilotes), 4 traces de pas, tambour planté dans le sable
+    K.semis(1, 22, 1500, null, (x, y) => { s.push(`<rect x="${f(x - 20)}" y="${f(y - 14)}" width="40" height="28" fill="#5A3A22" stroke="#2E1E12" stroke-width="2"/><rect x="${f(x - 16)}" y="${f(y - 10)}" width="32" height="20" fill="#C9A35A"/>`); COULEURS_J.forEach((c2, k) => s.push(`<rect x="${f(x - 12 + k * 7)}" y="${f(y - 3 + (k % 2) * 4)}" width="3" height="5" fill="${c2}"/>`)); [[-26, -6], [-25, 4]].forEach(([a2, b]) => s.push(`<rect x="${f(x + a2)}" y="${f(y + b)}" width="5" height="7" fill="#F4ECD8"/>`)); });
+    COULEURS_J.forEach((c2, k) => { let x = 80 + r() * (W - 160), y = 80 + r() * (H - 160); const t = r() * TAU; for (let j = 0; j < 7; j++) { x += Math.cos(t) * 10; y += Math.sin(t) * 10; s.push(`<ellipse cx="${f(x + (j % 2) * 3)}" cy="${f(y)}" rx="1.6" ry="2.6" fill="${c2}" opacity=".55"/>`); } });
+    K.semis(1, 8, 800, null, (x, y) => { s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="4" fill="#5A4A3A" stroke="#2E2014"/>`); K.a.push(`<circle cx="${f(x)}" cy="${f(y)}" r="6" fill="none" stroke="#7A5A3A" stroke-width="1.5">${K.anime ? '<animate attributeName="r" values="6;26" dur="1.2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="1.2s" repeatCount="indefinite"/>' : ""}</circle>`); });
+    K.route([["#7A5530", 34, ` opacity=".45" filter="url(#du-flou)"`], ["#C9A06A", 26], ["#D9B47E", 20]]);
+    for (let i = 0; i < K.N; i += 24) { const [nx, ny] = K.nrm(i), sd = (i / 24) % 2 ? 1 : -1; s.push(`<path d="M${f(K.P[i][0] + nx * sd * 17)} ${f(K.P[i][1] + ny * sd * 17)}l0 -9l7 3l-7 3" fill="#D9472B" stroke="#5A3A22" stroke-width="1"/>`); }
+    K.depart(); K.particules(80, "#E8A050", 2.2, "derive");
+    return K.fin(`<rect width="${W}" height="${H}" fill="#D7AD72"/>`, "#C86A28", .15);
+  }
+  /* ---------- Novembre · Mur des titans (cité fortifiée) ---------- */
+  function peindreTitans(T, Z, def) {
+    const K = kit(T, def, 111, "ti-"), { s, r, f, W, H } = K, zm = (T.cz - T.rz - 62) * KU, ep = 26;
+    // au-delà du mur : terres sauvages et empreintes de géants
+    s.push(`<rect x="0" y="0" width="${W}" height="${f(zm - ep / 2)}" fill="#5A5A42"/>`); for (let k = 0; k < 8; k++) { const x = r() * W, y = r() * (zm - 40); s.push(`<ellipse cx="${f(x)}" cy="${f(y)}" rx="14" ry="26" fill="#3E3E2C" transform="rotate(${f((r() - .5) * 40)} ${f(x)} ${f(y)})"/>`); for (let j = 0; j < 4; j++) s.push(`<circle cx="${f(x - 9 + j * 6)}" cy="${f(y - 28)}" r="4" fill="#3E3E2C"/>`); }
+    // le mur : pierre massive, créneaux, contreforts, portail, canons et torches
+    K.ombre(W / 2, zm + 18, W, 14, .6); s.push(`<rect x="-10" y="${f(zm - ep / 2)}" width="${W + 20}" height="${ep}" fill="#8F8676" stroke="#5A5246" stroke-width="3"/>`);
+    for (let x = 0; x < W; x += 14) s.push(`<rect x="${x}" y="${f(zm - ep / 2 - 2)}" width="8" height="6" fill="#776F61"/>`);
+    for (let x = 40; x < W; x += 90) { s.push(`<rect x="${x - 10}" y="${f(zm + ep / 2)}" width="20" height="12" fill="#776F61"/><rect x="${x - 3}" y="${f(zm - 4)}" width="14" height="5" rx="2" fill="#2B2E33"/>`); K.halo(x, zm + ep / 2 + 10, 18, "#FF9A3D", .8); }
+    const gx = W / 2; s.push(`<rect x="${f(gx - 22)}" y="${f(zm - ep / 2)}" width="44" height="${ep}" fill="#3B3128"/><path d="M${f(gx - 22)} ${f(zm)}h44" stroke="#5A4A3A" stroke-width="2"/>`); K.prendre(gx, zm, 30);
+    // la ville : toits serrés, clocher, champs, terrain d'entraînement aux poteaux
+    K.semis(130, () => 10 + r() * 8, 6000, (x, y) => y > zm + 40, (x, y, R) => K.toit(x, y, R * 2, R * 1.4, ["#8C3B2E", "#7A4A3A", "#A0563E", "#5A4A42"][Math.floor(r() * 4)], Math.round(r()) * 90 + (r() - .5) * 20, true, r() < .4));
+    K.semis(1, 14, 1000, (x, y) => y > zm + 40, (x, y) => { s.push(`<rect x="${f(x - 10)}" y="${f(y - 10)}" width="20" height="20" fill="#6E6A62"/><polygon points="${f(x - 10)},${f(y - 10)} ${f(x + 10)},${f(y - 10)} ${f(x)},${f(y)}" fill="#4A4F57"/><polygon points="${f(x + 10)},${f(y + 10)} ${f(x - 10)},${f(y + 10)} ${f(x)},${f(y)}" fill="#3A3F47"/>`); });
+    K.semis(8, 26, 2000, (x, y) => y > zm + 40, (x, y) => s.push(`<g transform="rotate(${f(r() * 40 - 20)} ${f(x)} ${f(y)})">${Array.from({ length: 6 }, (_, j) => `<rect x="${f(x - 26)}" y="${f(y - 18 + j * 6)}" width="52" height="4" fill="${j % 2 ? "#B9A04E" : "#8DB255"}"/>`).join("")}</g>`));
+    K.semis(1, 30, 1500, (x, y) => y > zm + 40, (x, y) => { s.push(`<rect x="${f(x - 28)}" y="${f(y - 20)}" width="56" height="40" fill="#A08A62" opacity=".6"/>`); for (let k = 0; k < 8; k++) s.push(`<rect x="${f(x - 22 + (k % 4) * 14)}" y="${f(y - 12 + Math.floor(k / 4) * 20)}" width="4" height="4" fill="#5A4030"/>`); });
+    // clins d'œil : 4 capes aux couleurs des pilotes qui sèchent sur un fil, table de guerre avec la carte et ses figurines, échiquier
+    K.semis(1, 20, 1500, (x, y) => y > zm + 40, (x, y) => { s.push(`<path d="M${f(x - 22)} ${f(y)}h44" stroke="#5A4030" stroke-width="1.2"/>`); COULEURS_J.forEach((c2, k) => s.push(`<path d="M${f(x - 18 + k * 11)} ${f(y)}l-3 12h9z" fill="${c2}"/>`)); });
+    K.semis(1, 18, 1500, (x, y) => y > zm + 40, (x, y) => { s.push(`<rect x="${f(x - 18)}" y="${f(y - 12)}" width="36" height="24" fill="#6B4A30"/><rect x="${f(x - 15)}" y="${f(y - 9)}" width="30" height="18" fill="#D9C79A"/><path d="M${f(x - 12)} ${f(y - 4)}q8 -4 14 2t12 0" stroke="#8A6A48" fill="none"/>`); COULEURS_J.forEach((c2, k) => s.push(`<circle cx="${f(x - 9 + k * 6)}" cy="${f(y + 3)}" r="1.8" fill="${c2}"/>`)); });
+    K.semis(1, 10, 1500, (x, y) => y > zm + 40, (x, y) => { for (let i = 0; i < 6; i++) for (let j = 0; j < 6; j++) s.push(`<rect x="${f(x - 9 + i * 3)}" y="${f(y - 9 + j * 3)}" width="3" height="3" fill="${(i + j) % 2 ? "#2B2B30" : "#D9D2C2"}"/>`); });
+    K.semis(70, () => 8 + r() * 8, 3000, (x, y) => y > zm + 30, (x, y, R) => K.arbre(x, y, R, "#8DB25A", "#4F7A3A", "#2A4A22"));
+    K.route([["#000", 36, ` opacity=".4" filter="url(#ti-flou)"`], ["#7A6448", 28], ["#9A8058", 20], ["#7A6448", 6, ` stroke-dasharray="2 8" opacity=".6"`]]);
+    for (const sd of [1, -1]) { const d = "M" + K.P.map((p, i) => { const [nx, ny] = K.nrm(i); return f(p[0] + nx * sd * 17) + " " + f(p[1] + ny * sd * 17); }).join("L") + "Z"; s.push(`<path d="${d}" fill="none" stroke="#5A4030" stroke-width="2" stroke-dasharray="10 4"/>`); }
+    K.depart(); K.particules(60, "#FFB070", 2.2, "monte");
+    return K.fin(`<rect width="${W}" height="${H}" fill="#7A8058"/>`, "#3A2A20", .22);
+  }
+  /* ---------- Décembre · Sommet des dieux (mythologie, finale) ---------- */
+  function peindreOlympe(T, Z, def) {
+    const K = kit(T, def, 121, "ol-"), { s, r, f, W, H } = K, [X, Y] = K.rep({ t: "temple" }); let i1 = 0;
+    // la montagne : courbes de niveau autour du sommet
+    for (let k = 9; k >= 0; k--) { const R = 40 + k * 46, c2 = mixHex("#8A8070", "#E9E2D2", 1 - k / 9); s.push(`<ellipse cx="${f(X)}" cy="${f(Y)}" rx="${f(R * 1.25)}" ry="${f(R)}" fill="${c2}" stroke="#7A7062" stroke-opacity=".35"/>`); }
+    // le temple de marbre : colonnes, fronton doré, escalier, braseros
+    i1 = s.length; K.ombre(X + 8, Y + 10, 48, 30, .5); s.push(`<rect x="${f(X - 46)}" y="${f(Y - 28)}" width="92" height="56" fill="#F1EBDD" stroke="#C9BFA8" stroke-width="2"/><rect x="${f(X - 38)}" y="${f(Y - 20)}" width="76" height="40" fill="#E2D8C2"/>`);
+    for (let k = 0; k < 8; k++) [Y - 24, Y + 24].forEach(y => s.push(`<circle cx="${f(X - 38 + k * 10.8)}" cy="${f(y)}" r="3.4" fill="#FFFFFF" stroke="#B9AE96"/>`));
+    s.push(`<path d="M${f(X - 40)} ${f(Y)}h80" stroke="#F2B33A" stroke-width="3"/><rect x="${f(X - 12)}" y="${f(Y + 28)}" width="24" height="30" fill="#F7CF55" opacity=".85"/>`); for (let k = 0; k < 6; k++) s.push(`<path d="M${f(X - 12)} ${f(Y + 32 + k * 5)}h24" stroke="#C9A24A"/>`);
+    [[-54, -30], [54, -30]].forEach(([a2, b]) => { K.halo(X + a2, Y + b, 26, "#FF9A3D", .9, K.a); s.push(`<circle cx="${f(X + a2)}" cy="${f(Y + b)}" r="4" fill="#5A4A3A"/>`); });
+    // clin d'œil : 4 trônes aux couleurs des pilotes autour d'un plateau de jeu sur l'autel
+    s.push(`<rect x="${f(X - 9)}" y="${f(Y - 7)}" width="18" height="14" fill="#2E5E8C" stroke="#F2B33A"/>`); COULEURS_J.forEach((c2, k) => { const t = k * 1.57 + .78; s.push(`<rect x="${f(X + Math.cos(t) * 20 - 4)}" y="${f(Y + Math.sin(t) * 14 - 4)}" width="8" height="8" rx="1.5" fill="${c2}" stroke="#F2B33A" stroke-width="1"/>`); });
+    const gt = s.splice(i1).filter(x => !x.startsWith("<radialGradient")); s.push(`<g transform="translate(${f(X)} ${f(Y)}) scale(1.5) translate(${f(-X)} ${f(-Y)})">` + gt.join("") + "</g>");
+    K.halo(X, Y, 120, "#FFE6A0", .35); K.prendre(X, Y, 120);
+    // statues, oliviers, couronnes de laurier, nuages qui passent, éclairs
+    K.semis(10, 6, 2000, null, (x, y) => { K.ombre(x + 3, y + 3, 6, 6, .4); s.push(`<rect x="${f(x - 5)}" y="${f(y - 5)}" width="10" height="10" fill="#D9D0BC"/><circle cx="${f(x)}" cy="${f(y)}" r="3.4" fill="#F4F0E6"/>`); });
+    K.semis(90, () => 7 + r() * 7, 3000, null, (x, y, R) => K.arbre(x, y, R, "#A7B27A", "#6E7A4A", "#3E4A2A"));
+    K.semis(3, 8, 1000, null, (x, y, R, k) => { s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="6" fill="none" stroke="#6E8A3A" stroke-width="2.5" stroke-dasharray="2 1.5"/>`); });
+    for (let k = 0; k < 7; k++) { const x = r() * W, y = r() * H, d = (25 + r() * 25).toFixed(0); K.a.push(`<g opacity=".75">${[0, 1, 2, 3].map(j => `<circle cx="${f(x + (j - 1.5) * 18)}" cy="${f(y + (j % 2) * 6)}" r="${f(16 + r() * 8)}" fill="#FFFFFF"/>`).join("")}${K.anime ? `<animateTransform attributeName="transform" type="translate" values="-60 0;${W + 60 - x} 0" dur="${d}s" begin="-${(r() * +d).toFixed(0)}s" repeatCount="indefinite"/>` : ""}</g>`); }
+    K.a.push(`<path d="M${f(X + 120)} ${f(Y - 140)}l-16 40l14 0l-20 50" fill="none" stroke="#FFF6B0" stroke-width="3" opacity="0">${K.anime ? '<animate attributeName="opacity" values="0;0;0;1;0;1;0" dur="6s" repeatCount="indefinite"/>' : ""}</path>`);
+    // la route de marbre à bordures dorées (en relief : ombre portée plus marquée)
+    K.route([["#000", 44, ` opacity=".45" filter="url(#ol-flou)"`], ["#C9A24A", 30], ["#F4F0E6", 24], ["#E6DFCF", 14]]);
+    s.push(`<path d="${K.piste}" fill="none" stroke="#F2B33A" stroke-width="27" stroke-dasharray="3 9" opacity=".8"/>`);
+    K.depart(); K.particules(40, "#FFE6A0", 2.5, "scintille");
+    return K.fin(`<rect width="${W}" height="${H}" fill="#8A8070"/>`, "#FFE9B0", .1);
+  }
+  const PEINTS_NUIT = { chateau: peindreChateau, armoire: peindreArmoire, basfonds: peindreBasfonds, megapole: peindreMegapole, plateau: peindrePlateau, solstice: peindreSolstice, envers: peindreEnvers, survivants: peindreSurvivants, dunes: peindreDunes, titans: peindreTitans, olympe: peindreOlympe };
   const PEINTS = { foret: { peindre: peindreForet, deco: decorForet }, garage: { peindre: peindreGarage, deco: decorGarage } };
+  Object.keys(PEINTS_NUIT).forEach(k => { PEINTS[k] = { peindre: PEINTS_NUIT[k] }; });
 
   /* ---------- Construction de la scène statique ---------- */
   function construire(def, T, A, Z) {
@@ -966,7 +1305,7 @@
     // les monuments d'abord : les autres décors s'écartent de la place qu'ils occupent
     const occupe = []; (def.reperes || []).forEach(R => { const o = repere(sol, R, T, A, teinte, [[ps.x, ps.z, 70], [pt2.x, pt2.z, 75]], lum); if (o) occupe.push(...o); });
     const rotors = [];
-    if (def.peint && PEINTS[def.peint]) occupe.push(...PEINTS[def.peint].deco({ T, A, sol, eau, lum, rotors, pistePose: (g, x, z, cap) => sol.poser(g, x, 0, z, cap, 1) }));
+    if (def.peint && PEINTS[def.peint] && PEINTS[def.peint].deco) occupe.push(...PEINTS[def.peint].deco({ T, A, sol, eau, lum, rotors, pistePose: (g, x, z, cap) => sol.poser(g, x, 0, z, cap, 1) }));
     const pris = (x, z) => occupe.some(o => Math.hypot(x - o[0], z - o[1]) < o[2]);
     // plateau de jeu : de grandes cases sur tout le sol
     if (def.damier) for (let a = -40; a <= 40; a++) for (let b = -40; b <= 40; b++) { if ((a + b) % 2) continue; const x = cx + a * 26, z = cz + b * 26; if (Math.abs(x - cx) > ext * .7 || Math.abs(z - cz) > ext * .7 || T.dist(x + 13, z + 13) < DEMI + 26) continue;
@@ -998,7 +1337,7 @@
       const g = objet(ty, r, A); sol.poser(g, x, typeRue ? 0 : 0, z, Math.atan2(-e.nz, e.nx) * 0 + (typeRue ? Math.atan2(-T.TZ[i], T.TX[i]) : r() * TAU), typeRue === "gratteciel" ? .8 : 1, SANS_TEINTE.has(ty) ? null : teinte);
     });
     // lampadaires le long des circuits de nuit (et de ville)
-    if (!def.peint && (A.nuit || (D.obj || []).some(o => o[0] === "lampadaire"))) for (let i = 0; i < N; i += Math.round(64 / T.ds)) {
+    if (!(def.peint && PEINTS[def.peint] && PEINTS[def.peint].deco) && (A.nuit || (D.obj || []).some(o => o[0] === "lampadaire"))) for (let i = 0; i < N; i += Math.round(64 / T.ds)) {
       const sd = Math.floor(i / Math.round(64 / T.ds)) % 2 ? 1 : -1, e = E[i], o = sd * (DEMI + (rue ? 5 : 13));
       const pp = P(e, o), g = objet("lampadaire", r, A); sol.poser(g, pp[0], pp[1] - .1, pp[2], Math.atan2(e.nz * -sd, e.nx * -sd) * -1 + 0, 1);
       if (A.nuit) lum.push([pp[0] - e.nx * sd * 1.2, pp[1] + 8.8, pp[2] - e.nz * sd * 1.2, 1, .9, .7, 13]);
@@ -1381,7 +1720,7 @@
     const kf = (T.rx * 2 + 68) / 340, fleches = [.2, .45, .7].map(f => { const p = T.a(f * T.L, 0); return '<path d="M-3 -2.6L2.4 0-3 2.6" transform="translate(' + p.x.toFixed(1) + " " + p.z.toFixed(1) + ") rotate(" + (Math.atan2(p.tz, p.tx) * 180 / PI).toFixed(1) + ") scale(" + kf.toFixed(2) + ')" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>'; }).join("");
     const zoneTrait = (z, col) => z && col ? '<path d="' + seg(z.s0, z.s1) + '" fill="none" stroke="' + col + '" stroke-width="' + (3.4 * kf).toFixed(1) + '" stroke-linecap="round" opacity=".95"/>' : "";
     const acc = o.accent || "#9B87FF", k = w / 340, K = v => (v * k).toFixed(1);
-    const PE = def.peint && PEINTS[def.peint] ? PEINTS[def.peint] : null, CP = PE ? (CARTES_P[def.peint] || (CARTES_P[def.peint] = PE.peindre(T, Z))) : null;
+    const PE = def.peint && PEINTS[def.peint] ? PEINTS[def.peint] : null, CP = PE ? (CARTES_P[def.peint] || (CARTES_P[def.peint] = PE.peindre(T, Z, def))) : null;
     const svg = document.createElementNS(NS, "svg"); svg.setAttribute("class", "p2-svg"); svg.setAttribute("viewBox", minx.toFixed(1) + " " + minz.toFixed(1) + " " + w.toFixed(1) + " " + h.toFixed(1)); svg.setAttribute("preserveAspectRatio", "xMidYMid meet"); svg.setAttribute("role", "img"); svg.setAttribute("aria-label", o.titre || "Circuit");
     if (CP) svg.innerHTML = '<rect x="' + (minx - 400) + '" y="' + (minz - 400) + '" width="' + (w + 800) + '" height="' + (h + 800) + '" fill="' + CP.couleur + '"/>' +
       '<g transform="scale(' + (1 / KU) + ')"><image href="' + (CP.url || (CP.url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(CP.fond))) + '" x="0" y="0" width="' + CP.W + '" height="' + CP.H + '"/>' + CP.anim + "</g>" +

@@ -35,7 +35,7 @@
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **16.9**.
+  hors connexion `sw.js`). Version actuelle : **16.11**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
@@ -83,7 +83,20 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
 - Moteur : `def.peint` (TRACES) → `PEINTS[...]` dans `piste.js` = { peindre(T, Z) → carte 2D illustrée (image fixe + couche
   animée SVG), deco(ctx) → décor 3D aux mêmes positions } ; un plan commun (`planForet`) sert aux deux ; `D.terre` = chemin
   de terre (pas de lignes blanches ni vibreurs) ; `rotors` = objets qui tournent (ailes du moulin).
-- ✅ Janvier · Forêt aux lucioles (v16.6). ✅ Décembre · Garage des rêves (v16.9 ; `peindreGarage`/`decorGarage`, positions fixes de la carte en u). Suivant : février · Château aux sortilèges…
+- ✅ Janvier · Forêt aux lucioles (v16.6). ✅ Décembre · Garage des rêves (v16.9 ; `peindreGarage`/`decorGarage`, positions fixes de la carte en u). 
+- ✅ Nuit du 18→19/11 (autorisé par Théo sans validation, à revoir avec lui) : cartes 2D peintes pour les 11 autres circuits
+  (`kit()` + `peindreChateau`, `peindreArmoire`, `peindreBasfonds`, `peindreMegapole`, `peindrePlateau`, `peindreSolstice`,
+  `peindreEnvers`, `peindreSurvivants`, `peindreDunes`, `peindreTitans`, `peindreOlympe` ; monuments placés par `posRepere`
+  comme en 3D) + style de piste 3D par thème (`D.kerb`, `D.terre`). Leur 3D garde les décors v16.2 : à enrichir circuit par
+  circuit comme janvier/décembre si Théo le demande. Théo trouve certaines références obscures : à revoir avec lui.
+- Course (v16.10) : une manche par mois, grille = classement d'avant le mois, le meilleur du mois boucle un tour (`mancheGP`),
+  mois en cours visible dès le 1er sur la grille (`etapesGP` ajoute une étape `avenir`).
+
+## À venir
+- 5ᵉ joueur : **Nicolas**, au plus tard le 1er janvier 2027 (PEA, peut-être une assurance-vie) ; à voir la semaine du 23/11.
+  À prévoir : son fichier + script, l'ajouter au Versus, barème à 5 (proposé 6·4·2·1·0, à valider), vérifs d'affichage.
+- Objets à collectionner : Théo veut une **montée en puissance par paliers** (premiers paliers = beaux objets ; paliers
+  hauts = effets dans l'appli, comme le badge millionnaire) à la place des cartes actuelles (« ignobles ») : proposer, ne pas coder.
 
 ## Chantiers proposés, validés sur le principe par Théo (18/11), pas encore faits
 1. ✅ **Badges du Classement** (fait en v16.4 + serveur V31) : 3 max, épinglés dans Podium › Écurie › Badges
