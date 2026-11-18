@@ -736,11 +736,17 @@
   function supporte() { try { const c = document.createElement("canvas"); return !!(window.WebGLRenderingContext && (c.getContext("webgl") || c.getContext("experimental-webgl"))); } catch (e) { return false; } }
 
   /* ---------- Placement des voitures sur la piste, à partir des points ---------- */
+  /** V16.3 · position de chaque voiture : la distance suit les points sans jamais sauter ;
+      chacun a son couloir (ordre de départ) : seul, il se rapproche de la trajectoire idéale, près d'un rival il s'écarte en douceur.
+      Plus de téléportation de 11 m ni de changement de voie brutal quand quelqu'un double. */
   function cibles(pts, tour, L, ordreDepart) {
     const noms = Object.keys(pts).sort((a, b) => pts[b] - pts[a] || (ordreDepart ? ordreDepart.indexOf(a) - ordreDepart.indexOf(b) : 0));
-    const out = {}; let prev = null, recul = 0;
-    noms.forEach((n, j) => { recul = prev !== null && Math.abs(pts[prev] - pts[n]) < .35 ? recul + 1 : 0; prev = n;
-      out[n] = { s: (pts[n] / tour) * L - recul * 11 - 4, voie: recul ? (recul % 2 ? -3.2 : 3.2) : (j % 2 ? -2.6 : 2.6), rang: j + 1 }; });
+    const ordre = ordreDepart && ordreDepart.length ? ordreDepart : noms, nb = Math.max(ordre.length, noms.length), pas = Math.min(3.6, 13 / Math.max(1, nb - 1));
+    const out = {};
+    noms.forEach((n, j) => { const k = Math.max(0, ordre.indexOf(n)); out[n] = { s: (pts[n] / tour) * L - 4, base: (k - (nb - 1) / 2) * pas, rang: j + 1 }; });
+    noms.forEach(n => { const a = out[n]; let p = 0;
+      noms.forEach(m => { if (m === n) return; let d = Math.abs(out[m].s - a.s) % L; d = Math.min(d, L - d); p = Math.max(p, clamp(1 - (d - 6) / 22, 0, 1)); });
+      a.voie = a.base * (.3 + .7 * p * p * (3 - 2 * p)); });
     return out;
   }
 

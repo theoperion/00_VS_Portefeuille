@@ -648,7 +648,8 @@ window.addEventListener("hashchange", () => { if (Date.now() - (window.__pop || 
 /* Bouton retour (Android, appli installée) : ferme d'abord la fenêtre ouverte, puis revient à l'onglet d'accueil,
    et seulement ensuite quitte l'appli (avant : écran noir). Une entrée « garde » reste toujours au-dessus de la page. */
 /* V15.26 · journal de diagnostic du bouton retour (20 derniers évènements, sur l'appareil seulement ; aucune donnée financière) */
-function diag(t) { try { const l = JSON.parse(localStorage.getItem("versus.diag") || "[]"); const d = new Date();
+try { localStorage.removeItem("versus.diag"); } catch (e) {}
+function diag(t) { return; /* V16.3 : bouton retour validé, journal coupé */ try { const l = JSON.parse(localStorage.getItem("versus.diag") || "[]"); const d = new Date();
   l.push(String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0") + ":" + String(d.getSeconds()).padStart(2, "0") + " " + t + " · état=" + JSON.stringify(history.state) + " · lg=" + history.length + " · " + location.hash);
   localStorage.setItem("versus.diag", JSON.stringify(l.slice(-20))); } catch (e) {} }
 diag("chargement · " + (navigator.userAgent.match(/(Firefox|Chrome|Safari)\/[\d.]+/) || [""])[0] + (matchMedia && matchMedia("(display-mode: standalone)").matches ? " · appli installée" : " · onglet"));
@@ -700,8 +701,8 @@ function ouvrirReglages(section) {
   if (section) { const s = document.getElementById(section); if (s) plierRegl(s, false); if (s) setTimeout(() => { s.scrollIntoView({ block: "start" }); const i = s.querySelector("input"); if (i && !i.value) i.focus(); }, 30); }
 }
 $("#btn-reglages").addEventListener("click", () => ouvrirReglages());
-document.querySelector(".diag").addEventListener("toggle", e => { if (e.target.open) { let l = []; try { l = JSON.parse(localStorage.getItem("versus.diag") || "[]"); } catch (x) {} $("#diag-txt").textContent = l.join("\n") || "(vide)"; } });
-$("#diag-vider").addEventListener("click", () => { try { localStorage.removeItem("versus.diag"); } catch (e) {} $("#diag-txt").textContent = "(vide)"; });
+if (document.querySelector(".diag")) document.querySelector(".diag").addEventListener("toggle", e => { if (e.target.open) { let l = []; try { l = JSON.parse(localStorage.getItem("versus.diag") || "[]"); } catch (x) {} $("#diag-txt").textContent = l.join("\n") || "(vide)"; } });
+if ($("#diag-vider")) $("#diag-vider").addEventListener("click", () => { try { localStorage.removeItem("versus.diag"); } catch (e) {} $("#diag-txt").textContent = "(vide)"; });
 /* V15.2 : Réglages rangés en rubriques repliables (touche le titre) ; seule « Affichage » est ouverte au départ, le choix reste sur l'appareil */
 function plierRegl(sec, ferme) {
   sec.classList.toggle("ferme", ferme); const h = sec.querySelector(":scope > h4"); if (h) h.setAttribute("aria-expanded", String(!ferme));

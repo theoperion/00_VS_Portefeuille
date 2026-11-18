@@ -1167,7 +1167,7 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .verdict.vp { gap: 12px; overflow: hidden; }
 .vp-podium { display: grid; grid-template-columns: 1fr 1.12fr 1fr; align-items: end; gap: 6px; padding-top: 6px; }
 .vp-m { display: grid; justify-items: center; min-width: 0; }
-.vp-p { position: relative; display: grid; justify-items: center; gap: 3px; padding-bottom: 8px; min-width: 0; max-width: 100%; }
+.vp-p { position: relative; z-index: 1; display: grid; justify-items: center; gap: 3px; padding-bottom: 8px; min-width: 0; max-width: 100%; }
 .vp-p .av, .vp-p svg { width: 46px; height: 46px; }
 .vp-1 .vp-p .av, .vp-1 .vp-p svg { width: 58px; height: 58px; }
 .vp-ini { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font: italic 800 20px/1 var(--f-display); color: #fff; background: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 30%, transparent); }
@@ -1197,7 +1197,7 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .vp-idx b { font-family: var(--f-num); color: var(--ink); }
 .vp-jauge { display: flex; gap: 3px; margin-left: auto; } .vp-jauge i { width: 14px; height: 6px; border-radius: 3px; }
 @media (prefers-reduced-motion: no-preference) {
-  .vp-s { animation: vpMonte .55s cubic-bezier(.2,.9,.25,1.15) both; transform-origin: bottom; }
+  .vp-s { animation: vpMonte .55s cubic-bezier(.2,.9,.25,1) both; }
   .vp-3 .vp-s { animation-delay: .05s; } .vp-2 .vp-s { animation-delay: .2s; } .vp-1 .vp-s { animation-delay: .35s; }
   .vp-p { animation: vpTombe .5s cubic-bezier(.3,1.4,.5,1) both; }
   .vp-3 .vp-p { animation-delay: .35s; } .vp-2 .vp-p { animation-delay: .5s; } .vp-1 .vp-p { animation-delay: .7s; }
@@ -1206,7 +1206,7 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
   .vp-l { animation: rm-entre .4s ease-out both; } .vp-l:nth-child(1) { animation-delay: .9s; } .vp-l:nth-child(2) { animation-delay: 1s; } .vp-l:nth-child(3) { animation-delay: 1.1s; }
   .vp-jauge i { animation: vpJauge .3s ease-out both; } .vp-jauge i:nth-child(2) { animation-delay: .08s; } .vp-jauge i:nth-child(3) { animation-delay: .16s; } .vp-jauge i:nth-child(4) { animation-delay: .24s; }
 }
-@keyframes vpMonte { from { transform: scaleY(0); } to { transform: none; } }
+@keyframes vpMonte { from { clip-path: inset(100% 0 0 0 round 12px 12px 4px 4px); } to { clip-path: inset(0 0 0 0 round 12px 12px 4px 4px); } }   /* V16.3 : découpe plutôt qu'étirement (Firefox laissait des traces) */
 @keyframes vpTombe { from { transform: translateY(-26px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes vpCour { from { transform: translateY(-14px) rotate(-25deg) scale(.4); opacity: 0; } to { transform: rotate(-8deg); opacity: 1; } }
 @keyframes vpJauge { from { transform: scaleX(0); } to { transform: none; } }
