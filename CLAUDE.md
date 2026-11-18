@@ -35,7 +35,7 @@
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **16.5**.
+  hors connexion `sw.js`). Version actuelle : **16.6**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
@@ -65,6 +65,15 @@ Commit (message en français, « vX.Y : … »), ligne dans le journal de `MODE_
 - Bouton retour (v15.27, modèle de l'appli Budget) : validé par Théo, ne pas y toucher sans raison.
 - Le cosmétique « Filtre de course » (ex-« Ambiance » : Nocturne, Golden hour, Hiver, Synthwave) n'est plus qu'une
   touche par-dessus le thème du circuit (`ambiance()` dans `piste.js`, v16.5) : le thème (`def.amb`) s'applique toujours.
+
+## Refonte des circuits, un par un (demandée par Théo le 18/11 : « visuellement une horreur », 2D vide)
+Méthode imposée : pour chaque circuit, fiche (inspiration + éléments) → maquette image → validation de Théo →
+construction 2D + 3D → captures → publication. 2 à 4 clins d'œil discrets par circuit (jeux de société / deck-building,
+films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identique » d'une œuvre (droits d'auteur).
+- Moteur : `def.peint` (TRACES) → `PEINTS[...]` dans `piste.js` = { peindre(T, Z) → carte 2D illustrée (image fixe + couche
+  animée SVG), deco(ctx) → décor 3D aux mêmes positions } ; un plan commun (`planForet`) sert aux deux ; `D.terre` = chemin
+  de terre (pas de lignes blanches ni vibreurs) ; `rotors` = objets qui tournent (ailes du moulin).
+- ✅ Janvier · Forêt aux lucioles (v16.6). Suivant proposé : décembre · Garage des rêves (tour de chauffe), puis février…
 
 ## Chantiers proposés, validés sur le principe par Théo (18/11), pas encore faits
 1. ✅ **Badges du Classement** (fait en v16.4 + serveur V31) : 3 max, épinglés dans Podium › Écurie › Badges

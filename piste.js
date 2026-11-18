@@ -58,7 +58,7 @@
   const F_CHAMPI = (() => { const P = [[150, 218], [210, 218], [206, 150], [292, 146], [326, 122]]; for (let a = 0.05; a < PI - .02; a += PI / 9) P.push([180 + 150 * Math.cos(a), 122 - 100 * Math.sin(a)]); P.push([34, 122], [68, 146], [154, 150]); return polyg(P, 12); })();
   const TRACES = {
     abudhabi: { pts: polyg([[40, 204], [320, 204], [320, 40], [234, 40], [234, 126], [186, 126], [186, 40], [40, 40]], 16), decor: "garage", heure: "crepuscule", reperes: [{ t: "garage" }] },
-    bahrein: { pts: etoile([[3, .14, .3], [5, .09, 1], [7, .05, 2.2]], 42), decor: "lucioles", heure: "crepuscule", amb: "lucioles", reperes: [{ t: "feu" }] },
+    bahrein: { pts: etoile([[3, .14, .3], [5, .09, 1], [7, .05, 2.2]], 42), decor: "lucioles", heure: "crepuscule", amb: "lucioles", peint: "foret", reperes: [] },
     djeddah: { pts: polyg([[40, 210], [320, 210], [320, 70], [290, 70], [290, 32], [240, 32], [240, 70], [200, 70], [200, 32], [150, 32], [150, 70], [110, 70], [110, 32], [60, 32], [60, 70], [40, 70]], 12), decor: "chateau", heure: "nuit", reperes: [{ t: "chateau", y: 145 }] },
     melbourne: { pts: F_LAC, decor: "armoire", heure: "jour", amb: "neige", eau: [resserrer(F_LAC, .5)], reperes: [{ t: "armoire" }] },
     suzuka: { pts: huit(), decor: "basfonds", heure: "nuit", amb: "pluie", reperes: [{ t: "cheminees" }] },
@@ -242,7 +242,7 @@
     monaco: { sol: "#C4B395", bord: "#9FAE7A", piste: "#34373D", murs: ["#E9ECEF", "#D3302F"], eau: "#1C6E9E", obj: [["villa", 70], ["palmier", 30], ["yacht", 16, "eau"]] },
     // V16.2 : un décor par circuit à thème
     garage: { sol: "#7E8288", bord: "#9AA0A8", piste: "#2F3238", murs: ["#F2F4F7", "#F28C28"], obj: [["conteneur", 44], ["pneus", 40, "pres"], ["projecteur", 12, "pres"]] },
-    lucioles: { sol: "#2F5236", bord: "#3F6A48", piste: "#33373D", murs: ["#E9ECEF", "#B8E04A"], obj: [["pin", 200], ["arbre", 60], ["luciole", 70], ["champignon", 30]] },
+    lucioles: { sol: "#2A4A33", bord: "#3A5A3A", piste: "#7A5C3E", terre: true, murs: ["#5A4030", "#4A3426"], obj: [["pin", 200], ["arbre", 60], ["luciole", 70], ["champignon", 30]] },
     chateau: { sol: "#4F6B45", bord: "#62805A", piste: "#34373D", murs: ["#E9ECEF", "#7B4BD6"], obj: [["tour", 16], ["pin", 150], ["rocher", 20]] },
     armoire: { sol: "#4E7E44", bord: "#6C9A5C", piste: "#3A3E45", murs: ["#E9ECEF", "#2F6FD0"], eau: "#BFD9EC", obj: [["pin", 240], ["lanterne", 12, "pres"]] },
     basfonds: { sol: "#2B2A2C", bord: "#3A3634", piste: "#2A2C30", murs: ["#E9ECEF", "#B33A2E"], obj: [["usine", 46], ["lampadaire", 0]] },
@@ -275,7 +275,7 @@
     }
     // le thème du circuit (V16.2) : il ne disparaît jamais
     if (th === "neige") { A.hiver = 1; A.sol = hex("#E8EEF4"); A.bord = hex("#D5DFEA"); A.neige = A.pluie ? 0 : 1; A.horizon = mel(A.horizon, hex("#E6EDF5"), .5); A.haut = mel(A.haut, hex("#9FB5CC"), .4); }
-    if (th === "lucioles") { A.haut = hex("#0E1A3A"); A.horizon = hex("#3E6B6A"); A.nuit = .8; A.amb = .48; A.sCol = fois(A.sCol, .6); if (!A.pluie) { A.neige = 1; A.floc = [.85, 1, .35, .9]; A.flocV = 1.5; } }
+    if (th === "lucioles") { A.haut = hex("#13244A"); A.horizon = hex("#4A7E7A"); A.nuit = .8; A.amb = .6; A.sCol = fois(A.sCol, .6); if (!A.pluie) { A.neige = 1; A.floc = [.85, 1, .35, .9]; A.flocV = 1.5; } }
     if (th === "envers") { A.haut = hex("#0B0610"); A.horizon = hex("#5A1424"); A.nuit = 1; A.eclairs = 1; A.sCol = hex("#9AA6C8"); A.sol = hex("#2A2730"); A.bord = hex("#35303A"); A.envers = 1; if (!A.pluie) { A.neige = 1; A.floc = [.75, .68, .7, .6]; A.flocV = 2.5; } }
     if (th === "spores") { A.horizon = mel(A.horizon, hex("#B7C27A"), .6); A.haut = mel(A.haut, hex("#33402C"), .4); if (!A.pluie) { A.neige = 1; A.floc = [.85, .92, .6, .6]; A.flocV = 2; } }
     if (th === "cendres") { A.horizon = mel(A.horizon, hex("#C98A5A"), .5); A.haut = mel(A.haut, hex("#4A4250"), .5); A.brume *= 1.4; if (!A.pluie) { A.neige = 1; A.floc = [.62, .6, .58, .7]; A.flocV = 3; } }
@@ -521,6 +521,206 @@
     }
   }
 
+  /* ============================================================
+     V16.6 · Circuits peints : un plan commun à la carte 2D illustrée et au décor 3D
+     Janvier · Forêt aux lucioles : arbre géant creux (tunnel), rivière et pont, bassin et cascade,
+     vieux moulin, maisons-champignons, lanternes, lucioles, feux follets ; 4 clins d'œil cachés.
+     Unité du plan : u = 1,25 × mètre (la carte fait 1080 × 720 u = 864 × 576 m).
+     ============================================================ */
+  const KU = 1.25;
+  function planForet(T) {
+    const P = []; for (let i = 0; i < T.N; i++) P.push([T.X[i] * KU, T.Z[i] * KU]);
+    const N = P.length, W = 1080, H = 720;
+    const dTrack = (x, y) => { let m = 1e9; for (let i = 0; i < N; i += 2) { const d = Math.hypot(P[i][0] - x, P[i][1] - y); if (d < m) m = d; } return m; };
+    const nrm = i => { const a = P[(i - 2 + N) % N], b = P[(i + 2) % N], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1; return [-dy / l, dx / l, dx / l, dy / l]; };
+    let cx = 0, cy = 0; P.forEach(p => { cx += p[0] / N; cy += p[1] / N; });
+    const inside = (x, y) => { let o = false; for (let i = 0, j = N - 1; i < N; j = i++) { const a = P[i], b = P[j]; if ((a[1] > y) !== (b[1] > y) && x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0]) o = !o; } return o; };
+    let iB = 0, iT = 0, bx = -1, ty = 1e9; P.forEach((p, i) => { if (Math.abs(p[1] - cy) < 60 && p[0] > bx) { bx = p[0]; iB = i; } if (Math.abs(p[0] - cx - 40) < 40 && p[1] < ty) { ty = p[1]; iT = i; } });
+    const B = P[iB], TT = P[iT], nb = nrm(iB), bassin = [cx + 150, cy + 10];
+    const riv = [[bassin[0] - 10, bassin[1]], [bassin[0] + 40, bassin[1] - 20], [(bassin[0] + B[0]) / 2 + 10, (bassin[1] + B[1]) / 2 + 25], [B[0] - nb[0] * 6, B[1] - nb[1] * 6], [B[0] + 40, B[1] + 10], [B[0] + 70, B[1] - 20], [W + 30, B[1] - 30]];
+    const dRiv = (x, y) => { let m = 1e9; for (let k = 0; k < riv.length - 1; k++) for (let t = 0; t <= 1; t += .05) { const a = riv[k], b = riv[k + 1]; m = Math.min(m, Math.hypot(a[0] + (b[0] - a[0]) * t - x, a[1] + (b[1] - a[1]) * t - y)); } return m; };
+    const MX = cx - 40, MY = cy + 10, r = alea(101), maisons = [];
+    for (let k = 0; k < 400 && maisons.length < 7; k++) { const x = cx + (r() - .5) * 520, y = cy + (r() - .5) * 300; if (!inside(x, y) || dTrack(x, y) < 40 || dRiv(x, y) < 30 || Math.hypot(x - bassin[0], y - bassin[1]) < 90 || Math.hypot(x - MX, y - MY) < 85 || maisons.some(m => Math.hypot(m[0] - x, m[1] - y) < 70)) continue; maisons.push([x, y, 14 + r() * 8]); }
+    let porte = [W * .8, H * .85]; for (let k = 0; k < 300; k++) { const x = W * (.6 + r() * .3), y = H * (.7 + r() * .22); if (!inside(x, y) && dTrack(x, y) > 50 && dRiv(x, y) > 40) { porte = [x, y]; break; } }
+    return { P, N, W, H, cx, cy, iB, iT, B, TT, nb, nrm, bassin, riv, dTrack, dRiv, inside, MX, MY, maisons, souche: [MX - 110, MY + 70], coffre: [MX + 52, MY - 40], porte };
+  }
+  /** la carte 2D peinte : { fond (image fixe, dessinée une fois), anim (lucioles, feux follets, eau, ailes du moulin) } */
+  function peindreForet(T, Z) {
+    const L = planForet(T), { P, N, W, H, cx, cy, B, TT, bassin, riv, inside, dTrack, dRiv, nrm, MX, MY } = L, iT = L.iT;
+    const r = alea(7), f = v => v.toFixed(1), anime = ANIM();
+    const chemin = l => "M" + l.map(p => f(p[0]) + " " + f(p[1])).join("L");
+    const lisseD = l => { let d = "M" + f(l[0][0]) + " " + f(l[0][1]); for (let i = 1; i < l.length - 1; i++) { const m = [(l[i][0] + l[i + 1][0]) / 2, (l[i][1] + l[i + 1][1]) / 2]; d += "Q" + f(l[i][0]) + " " + f(l[i][1]) + " " + f(m[0]) + " " + f(m[1]); } const z = l[l.length - 1]; return d + "L" + f(z[0]) + " " + f(z[1]); };
+    const piste = "M" + P.map(p => f(p[0]) + " " + f(p[1])).join("L") + "Z", rivD = lisseD(riv), [nbx, nby, tbx, tby] = L.nb;
+    const i0 = Math.floor(Z.piege.s0 / T.ds), i1 = Math.floor(Z.piege.s1 / T.ds), piege = []; for (let i = i0; i <= i1; i++) piege.push((i + N) % N);
+    const s = [], a = [];
+    s.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><defs>
+ <radialGradient id="sol" cx="62%" cy="38%" r="80%"><stop offset="0" stop-color="#1F4A43"/><stop offset=".55" stop-color="#123430"/><stop offset="1" stop-color="#071613"/></radialGradient>
+ <radialGradient id="clair" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#3E7A55"/><stop offset="1" stop-color="#25503D" stop-opacity="0"/></radialGradient>
+ <radialGradient id="cime" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#2F7A6E"/><stop offset=".55" stop-color="#174A48"/><stop offset="1" stop-color="#08201F"/></radialGradient>
+ <radialGradient id="cime2" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#3F8C78"/><stop offset=".6" stop-color="#1E5650"/><stop offset="1" stop-color="#0B2A28"/></radialGradient>
+ <radialGradient id="geant" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#6FB98A"/><stop offset=".5" stop-color="#2E7A5C"/><stop offset="1" stop-color="#0F3A30"/></radialGradient>
+ <radialGradient id="halo" r="50%"><stop offset="0" stop-color="#FFE9A3" stop-opacity=".95"/><stop offset=".35" stop-color="#FFC45C" stop-opacity=".45"/><stop offset="1" stop-color="#FF9E3D" stop-opacity="0"/></radialGradient>
+ <radialGradient id="luc" r="50%"><stop offset="0" stop-color="#F4FFB0"/><stop offset=".3" stop-color="#C8F25A" stop-opacity=".7"/><stop offset="1" stop-color="#9BE03A" stop-opacity="0"/></radialGradient>
+ <radialGradient id="lune" cx="85%" cy="8%" r="60%"><stop offset="0" stop-color="#BFD9FF" stop-opacity=".28"/><stop offset="1" stop-color="#BFD9FF" stop-opacity="0"/></radialGradient>
+ <radialGradient id="vign" r="75%"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".65"/></radialGradient>
+ <linearGradient id="eau" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5CC8E8"/><stop offset="1" stop-color="#1F6C9A"/></linearGradient>
+ <filter id="flou" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
+ <filter id="flou8" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>
+ <filter id="mousse"><feTurbulence type="fractalNoise" baseFrequency=".018" numOctaves="3" seed="9"/><feColorMatrix values="0 0 0 0 .18  0 0 0 0 .42  0 0 0 0 .3  0 0 0 .5 0"/></filter>
+</defs><rect width="${W}" height="${H}" fill="url(#sol)"/><rect width="${W}" height="${H}" filter="url(#mousse)" opacity=".7"/>
+<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="330" ry="210" fill="url(#clair)" opacity=".8"/>`);
+    // prairie de la clairière
+    for (let k = 0; k < 900; k++) { const x = cx + (r() - .5) * 620, y = cy + (r() - .5) * 380; if (!inside(x, y) || dTrack(x, y) < 22) continue; s.push(`<path d="M${f(x)} ${f(y)}l-2 -5M${f(x)} ${f(y)}l0 -6M${f(x)} ${f(y)}l2 -5" stroke="${r() < .5 ? "#4F8F5C" : "#3C7A50"}" stroke-width="1.3" opacity=".8"/>`); }
+    for (let k = 0; k < 120; k++) { const x = cx + (r() - .5) * 600, y = cy + (r() - .5) * 360; if (!inside(x, y) || dTrack(x, y) < 22) continue; const c = ["#B8F0FF", "#F7C6FF", "#FFF1A8"][k % 3]; s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="5" fill="${c}" opacity=".18"/><circle cx="${f(x)}" cy="${f(y)}" r="1.6" fill="${c}"/>`); }
+    for (let k = 0; k < 14; k++) { const x = cx + (r() - .5) * 560, y = cy + (r() - .5) * 320; if (!inside(x, y) || dTrack(x, y) < 30) continue; s.push(`<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(5 + r() * 6)}" ry="${f(4 + r() * 4)}" fill="#5A6669" stroke="#2C3436" stroke-width="1.5"/>`); }
+    // sentiers, rivière, bassin, cascade, nénuphars
+    s.push(`<path d="${lisseD([[cx - 230, cy + 60], [cx - 100, cy + 20], [cx, cy + 40], [bassin[0] - 30, bassin[1] + 10]])}" fill="none" stroke="#6E5A3C" stroke-width="5" stroke-linecap="round" opacity=".55" stroke-dasharray="2 7"/>
+<path d="${rivD}" fill="none" stroke="#0B2A33" stroke-width="30" stroke-linecap="round" opacity=".8"/><path d="${rivD}" fill="none" stroke="url(#eau)" stroke-width="20" stroke-linecap="round"/>
+<ellipse cx="${f(bassin[0])}" cy="${f(bassin[1])}" rx="62" ry="44" fill="#0B2A33"/><ellipse cx="${f(bassin[0])}" cy="${f(bassin[1])}" rx="55" ry="38" fill="url(#eau)"/>
+<ellipse cx="${f(bassin[0] - 12)}" cy="${f(bassin[1] - 8)}" rx="30" ry="16" fill="#E8FBFF" opacity=".25" filter="url(#flou)"/>`);
+    a.push(`<path d="${rivD}" fill="none" stroke="#C9F1FF" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 18" opacity=".7">${anime ? '<animate attributeName="stroke-dashoffset" from="0" to="-48" dur="2.4s" repeatCount="indefinite"/>' : ""}</path>`);
+    for (let k = 0; k < 9; k++) { const t = Math.PI * (1.05 + k * .1), x = bassin[0] + Math.cos(t) * 66, y = bassin[1] + Math.sin(t) * 48; s.push(`<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(9 + r() * 7)}" ry="${f(7 + r() * 5)}" fill="#4B5658" stroke="#2C3436" stroke-width="2"/><ellipse cx="${f(x - 2)}" cy="${f(y - 3)}" rx="4" ry="2.5" fill="#8E9BA0" opacity=".6"/>`); }
+    s.push(`<path d="M${f(bassin[0] - 14)} ${f(bassin[1] - 50)} q14 -6 28 0 l-4 30 q-10 4 -20 0 z" fill="#BDEBFF" opacity=".85"/><ellipse cx="${f(bassin[0])}" cy="${f(bassin[1] - 18)}" rx="22" ry="8" fill="#fff" opacity=".55" filter="url(#flou)"/>`);
+    a.push(`<path d="M${f(bassin[0] - 10)} ${f(bassin[1] - 46)} l2 26 M${f(bassin[0])} ${f(bassin[1] - 48)} l0 28 M${f(bassin[0] + 9)} ${f(bassin[1] - 46)} l-2 26" stroke="#fff" stroke-width="1.6" stroke-dasharray="5 4" opacity=".85">${anime ? '<animate attributeName="stroke-dashoffset" from="0" to="-18" dur=".7s" repeatCount="indefinite"/>' : ""}</path>`);
+    for (let k = 0; k < 6; k++) { const x = bassin[0] + (r() - .5) * 70, y = bassin[1] + (r() - .2) * 40; s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="4.5" fill="#3E8E5A"/><circle cx="${f(x)}" cy="${f(y)}" r="9" fill="url(#halo)" opacity=".6"/><circle cx="${f(x)}" cy="${f(y)}" r="1.8" fill="#FFE7F1"/>`); }
+    // arbres
+    const arbres = [];
+    for (let k = 0; k < 4000 && arbres.length < 330; k++) {
+      const x = r() * (W + 40) - 20, y = r() * (H + 40) - 20, R = 12 + r() * 20;
+      if (dTrack(x, y) < R + 16 || dRiv(x, y) < R + 12 || Math.hypot(x - bassin[0], y - bassin[1]) < 80 + R) continue;
+      if (inside(x, y) && Math.hypot((x - cx) / 300, (y - cy) / 190) < 1 && r() < .97) continue;
+      if (Math.hypot(x - TT[0], y - TT[1]) < 95) continue;
+      if (arbres.some(t => Math.hypot(t[0] - x, t[1] - y) < (t[2] + R) * .62)) continue;
+      arbres.push([x, y, R]);
+    }
+    arbres.sort((p, q) => p[1] - q[1]);
+    const ombres = [], cimes = [];
+    arbres.forEach(([x, y, R]) => {
+      ombres.push(`<ellipse cx="${f(x + R * .35)}" cy="${f(y + R * .4)}" rx="${f(R * 1.05)}" ry="${f(R * .9)}" fill="#020806" opacity=".55"/>`);
+      const g = r() < .3 ? "cime2" : "cime", n = 4 + Math.floor(r() * 3); let c = "";
+      for (let k = 0; k < n; k++) { const t = k / n * TAU + r(), d = R * .38; c += `<circle cx="${f(x + Math.cos(t) * d)}" cy="${f(y + Math.sin(t) * d)}" r="${f(R * (.55 + r() * .2))}" fill="url(#${g})"/>`; }
+      c += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(R * .6)}" fill="url(#${g})"/><path d="M${f(x - R * .7)} ${f(y - R * .25)} A${f(R * .8)} ${f(R * .8)} 0 0 1 ${f(x + R * .15)} ${f(y - R * .78)}" fill="none" stroke="#A8E6C2" stroke-width="1.6" opacity=".35"/>`;
+      cimes.push(c);
+    });
+    // la piste : chemin de terre bordé de pierres
+    s.push(ombres.join("") + `<path d="${piste}" fill="none" stroke="#050B09" stroke-width="40" stroke-linejoin="round" opacity=".5" filter="url(#flou)"/>
+<path d="${piste}" fill="none" stroke="#3A3530" stroke-width="31" stroke-linejoin="round"/><path d="${piste}" fill="none" stroke="#6F6559" stroke-width="31" stroke-linejoin="round" stroke-dasharray="3 5" opacity=".9"/>
+<path d="${piste}" fill="none" stroke="#7A5C3E" stroke-width="24" stroke-linejoin="round"/><path d="${piste}" fill="none" stroke="#8E6E4C" stroke-width="16" stroke-linejoin="round"/>
+<path d="${piste}" fill="none" stroke="#5E4730" stroke-width="12" stroke-linejoin="round" opacity=".5"/><path d="${piste}" fill="none" stroke="#9C7C58" stroke-width="7" stroke-linejoin="round" opacity=".8"/>`);
+    // pont de bois éclairé
+    { const Lp = 46, w = 34; let pl = ""; for (let k = -5; k <= 5; k++) { const o = k * 4; pl += `<path d="M${f(B[0] + tbx * o - nbx * w / 2)} ${f(B[1] + tby * o - nby * w / 2)}L${f(B[0] + tbx * o + nbx * w / 2)} ${f(B[1] + tby * o + nby * w / 2)}" stroke="${k % 2 ? "#9A6B42" : "#86593A"}" stroke-width="3.6"/>`; }
+      s.push(pl); [-1, 1].forEach(sd => { s.push(`<path d="M${f(B[0] - tbx * Lp / 2 + nbx * sd * 17)} ${f(B[1] - tby * Lp / 2 + nby * sd * 17)}L${f(B[0] + tbx * Lp / 2 + nbx * sd * 17)} ${f(B[1] + tby * Lp / 2 + nby * sd * 17)}" stroke="#4A3020" stroke-width="3.5" stroke-linecap="round"/>`);
+        [-1, 1].forEach(e => s.push(`<circle cx="${f(B[0] + tbx * e * Lp / 2 + nbx * sd * 17)}" cy="${f(B[1] + tby * e * Lp / 2 + nby * sd * 17)}" r="12" fill="url(#halo)"/><circle cx="${f(B[0] + tbx * e * Lp / 2 + nbx * sd * 17)}" cy="${f(B[1] + tby * e * Lp / 2 + nby * sd * 17)}" r="2.6" fill="#FFF3C8"/>`)); }); }
+    // lanternes le long de la piste
+    for (let i = 0; i < N; i += 16) { const [nx, ny] = nrm(i), sd = (i / 16) % 2 ? 1 : -1, x = P[i][0] + nx * sd * 21, y = P[i][1] + ny * sd * 21; if (Math.hypot(x - TT[0], y - TT[1]) < 70 || Math.hypot(x - B[0], y - B[1]) < 30) continue;
+      s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="16" fill="url(#halo)" opacity=".85"/><circle cx="${f(x)}" cy="${f(y)}" r="2.8" fill="#2B1E14"/><circle cx="${f(x)}" cy="${f(y)}" r="1.7" fill="#FFF0BC"/>`); }
+    // le piège « Feux follets » : flammes bleues qui dansent (animées)
+    for (let k = 0; k < 16; k++) { const i = piege[Math.floor(r() * piege.length)], [nx, ny] = nrm(i), o = (r() - .5) * 30, x = P[i][0] + nx * o, y = P[i][1] + ny * o, d = (1 + r() * 1.6).toFixed(2);
+      a.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(7 + r() * 6)}" fill="url(#p2-follet)">${anime ? `<animate attributeName="opacity" values="1;.25;1" dur="${d}s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 0;${f((r() - .5) * 8)} ${f(-3 - r() * 5)};0 0" dur="${(+d * 1.7).toFixed(2)}s" repeatCount="indefinite"/>` : ""}</circle>`); }
+    s.push(cimes.join(""));
+    // l'arbre géant creux : la piste passe dans son tronc
+    { const [nx, ny, tx, ty2] = nrm(iT), R = 74; let rac = "";
+      for (let k = 0; k < 14; k++) { const t = k / 14 * TAU + .2, x1 = TT[0] + Math.cos(t) * 40, y1 = TT[1] + Math.sin(t) * 40, x2 = TT[0] + Math.cos(t + .25) * (R + 24 + r() * 20), y2 = TT[1] + Math.sin(t + .25) * (R + 24 + r() * 20);
+        rac += `<path d="M${f(x1)} ${f(y1)}Q${f((x1 + x2) / 2 + (r() - .5) * 20)} ${f((y1 + y2) / 2 + (r() - .5) * 20)} ${f(x2)} ${f(y2)}" stroke="#4E3A2A" stroke-width="${f(6 + r() * 4)}" fill="none" stroke-linecap="round"/><path d="M${f(x1)} ${f(y1)}Q${f((x1 + x2) / 2)} ${f((y1 + y2) / 2)} ${f(x2)} ${f(y2)}" stroke="#9BF5D0" stroke-width="1.4" fill="none" opacity=".55" filter="url(#flou)"/>`; }
+      s.push(rac + `<circle cx="${f(TT[0] + 18)}" cy="${f(TT[1] + 22)}" r="${R + 6}" fill="#020806" opacity=".6" filter="url(#flou8)"/>`);
+      let c = ""; for (let k = 0; k < 9; k++) { const t = k / 9 * TAU, d = R * .45; c += `<circle cx="${f(TT[0] + Math.cos(t) * d)}" cy="${f(TT[1] + Math.sin(t) * d)}" r="${f(R * .6)}" fill="url(#geant)"/>`; }
+      s.push(c + `<circle cx="${f(TT[0])}" cy="${f(TT[1])}" r="${f(R * .62)}" fill="url(#geant)"/>`);
+      [-1, 1].forEach(sd => { const x = TT[0] + tx * sd * (R - 6), y = TT[1] + ty2 * sd * (R - 6), rot = f(Math.atan2(ny, nx) * 57.3); s.push(`<ellipse cx="${f(x)}" cy="${f(y)}" rx="18" ry="11" transform="rotate(${rot} ${f(x)} ${f(y)})" fill="#1A120C" stroke="#6B4E36" stroke-width="3"/><ellipse cx="${f(x)}" cy="${f(y)}" rx="12" ry="6" transform="rotate(${rot} ${f(x)} ${f(y)})" fill="url(#halo)"/>`); });
+      for (let k = 0; k < 26; k++) { const t = r() * TAU, d = r() * R; s.push(`<circle cx="${f(TT[0] + Math.cos(t) * d)}" cy="${f(TT[1] + Math.sin(t) * d)}" r="${f(3 + r() * 3)}" fill="url(#luc)"/>`); }
+      const ox = TT[0] + R * .55, oy = TT[1] + R * .35;
+      s.push(`<path d="M${f(ox - 26)} ${f(oy + 8)}Q${f(ox)} ${f(oy + 2)} ${f(ox + 26)} ${f(oy + 10)}" stroke="#4E3A2A" stroke-width="4" fill="none"/><ellipse cx="${f(ox)}" cy="${f(oy - 2)}" rx="9" ry="11" fill="#7A6450"/><ellipse cx="${f(ox)}" cy="${f(oy + 1)}" rx="6" ry="7" fill="#C9B396"/>
+<path d="M${f(ox - 8)} ${f(oy - 11)}l3 5l3 -3z M${f(ox + 8)} ${f(oy - 11)}l-3 5l-3 -3z" fill="#7A6450"/><circle cx="${f(ox - 3.6)}" cy="${f(oy - 4)}" r="3.2" fill="#FFD84A"/><circle cx="${f(ox + 3.6)}" cy="${f(oy - 4)}" r="3.2" fill="#FFD84A"/><circle cx="${f(ox - 3.6)}" cy="${f(oy - 4)}" r="1.3" fill="#111"/><circle cx="${f(ox + 3.6)}" cy="${f(oy - 4)}" r="1.3" fill="#111"/><path d="M${f(ox - 1.5)} ${f(oy - 1)}l1.5 2.5l1.5 -2.5z" fill="#E09A3A"/>
+<g transform="translate(${f(TT[0] - 30)} ${f(TT[1] + 40)})"><path d="M0 4c-6-8-16-2-8 6l8 7 8-7c8-8-2-14-8-6z" fill="none" stroke="#E9D9B8" stroke-width="1.2" opacity=".75"/><text x="0" y="8" text-anchor="middle" font-family="Georgia, serif" font-size="5.5" fill="#E9D9B8" opacity=".9">T·K·C·D</text></g>`); }
+    // le vieux moulin (corps ici ; ailes animées dans la couche du dessus)
+    s.push(`<circle cx="${f(MX + 8)}" cy="${f(MY + 10)}" r="36" fill="#020806" opacity=".55" filter="url(#flou)"/><circle cx="${f(MX)}" cy="${f(MY)}" r="70" fill="url(#halo)" opacity=".25"/><circle cx="${f(MX)}" cy="${f(MY)}" r="27" fill="#7E7466" stroke="#3E372F" stroke-width="3"/>`);
+    for (let k = 0; k < 16; k++) { const t = k / 16 * TAU; s.push(`<path d="M${f(MX + Math.cos(t) * 18)} ${f(MY + Math.sin(t) * 18)}L${f(MX + Math.cos(t) * 27)} ${f(MY + Math.sin(t) * 27)}" stroke="#5E564B" stroke-width="1.2"/>`); }
+    s.push(`<circle cx="${f(MX)}" cy="${f(MY)}" r="20" fill="#C9A35A"/><circle cx="${f(MX - 5)}" cy="${f(MY - 6)}" r="10" fill="#E2C27A" opacity=".6"/><circle cx="${f(MX + 26)}" cy="${f(MY + 14)}" r="14" fill="url(#halo)"/><circle cx="${f(MX + 26)}" cy="${f(MY + 14)}" r="2.4" fill="#FFF0BC"/>`);
+    let ailes = ""; for (let k = 0; k < 4; k++) { const t = k * PI / 2 + .5, ca = Math.cos(t), sa = Math.sin(t), px = -sa, py = ca, Lw = 64;
+      ailes += `<path d="M${f(MX)} ${f(MY)}L${f(MX + ca * Lw)} ${f(MY + sa * Lw)}" stroke="#4A3020" stroke-width="3.5" stroke-linecap="round"/><path d="M${f(MX + ca * 16)} ${f(MY + sa * 16)}L${f(MX + ca * Lw)} ${f(MY + sa * Lw)}L${f(MX + ca * Lw + px * 13)} ${f(MY + sa * Lw + py * 13)}L${f(MX + ca * 16 + px * 13)} ${f(MY + sa * 16 + py * 13)}Z" fill="#E9DFC6" fill-opacity=".88" stroke="#6B4E36" stroke-width="1.5"/>`;
+      for (let q = 1; q < 5; q++) { const d = 16 + q * 9.6; ailes += `<path d="M${f(MX + ca * d)} ${f(MY + sa * d)}l${f(px * 13)} ${f(py * 13)}" stroke="#8E7556" stroke-width="1"/>`; } }
+    a.push(`<g>${ailes}<circle cx="${f(MX)}" cy="${f(MY)}" r="5" fill="#3A2A1E"/>${anime ? `<animateTransform attributeName="transform" type="rotate" from="0 ${f(MX)} ${f(MY)}" to="360 ${f(MX)} ${f(MY)}" dur="24s" repeatCount="indefinite"/>` : ""}</g>`);
+    // maisons-champignons
+    L.maisons.forEach(([x, y, R], j) => { s.push(`<circle cx="${f(x + 4)}" cy="${f(y + 6)}" r="${f(R + 4)}" fill="#020806" opacity=".5" filter="url(#flou)"/><circle cx="${f(x)}" cy="${f(y)}" r="${f(R * 1.9)}" fill="url(#halo)" opacity=".7"/><circle cx="${f(x)}" cy="${f(y)}" r="${f(R)}" fill="${["#C2412D", "#D9632B", "#B03A5B", "#C2412D"][j % 4]}" stroke="#5A1B12" stroke-width="2"/><circle cx="${f(x - R * .3)}" cy="${f(y - R * .35)}" r="${f(R * .45)}" fill="#fff" opacity=".12"/>`);
+      for (let k = 0; k < 6; k++) { const t = k / 6 * TAU + j, d = R * (.35 + (k % 2) * .3); s.push(`<circle cx="${f(x + Math.cos(t) * d)}" cy="${f(y + Math.sin(t) * d)}" r="${f(R * .13)}" fill="#FFF4E0"/>`); }
+      s.push(`<rect x="${f(x + R * .55)}" y="${f(y - 3)}" width="7" height="6" rx="1" fill="#FFD27A"/><circle cx="${f(x + R * .55 + 3.5)}" cy="${f(y)}" r="9" fill="url(#halo)"/><path d="M${f(x + R)} ${f(y + 2)}Q${f(x + R + 14)} ${f(y + 10)} ${f(x + R + 30)} ${f(y + 6)}" stroke="#8E7556" stroke-width="2.4" fill="none" stroke-dasharray="1 4" stroke-linecap="round"/>`); });
+    // clins d'œil : partie de jeu sur une souche (4 pions aux couleurs des joueurs, cartes, dé), coffre du Versus, petite porte lumineuse
+    { const [x, y] = L.souche; s.push(`<circle cx="${x + 3}" cy="${y + 4}" r="20" fill="#020806" opacity=".5" filter="url(#flou)"/><circle cx="${x}" cy="${y}" r="19" fill="#8A6A48" stroke="#4E3A2A" stroke-width="2"/><circle cx="${x}" cy="${y}" r="13" fill="none" stroke="#6E5236" stroke-width="1"/><rect x="${x - 10}" y="${y - 9}" width="20" height="14" rx="1.5" fill="#2E5E8C" stroke="#E9DFC6" stroke-width=".8"/><path d="M${x - 10} ${y - 2}h20M${x} ${y - 9}v14" stroke="#E9DFC6" stroke-width=".5"/>`);
+      ["#4C9AFF", "#2BB6A3", "#FF6FA8", "#F2994A"].forEach((c, k) => s.push(`<circle cx="${x - 6 + k * 4}" cy="${y - 4 + (k % 2) * 5}" r="1.9" fill="${c}" stroke="#111" stroke-width=".4"/>`));
+      [[-26, 6, 20], [-24, 12, -10], [-29, 15, 35]].forEach(([dx, dy, t]) => s.push(`<rect x="${x + dx}" y="${y + dy}" width="7" height="10" rx="1" fill="#F4ECD8" stroke="#7A5C3E" stroke-width=".6" transform="rotate(${t} ${x + dx + 3.5} ${y + dy + 5})"/>`));
+      s.push(`<rect x="${x + 14}" y="${y + 10}" width="6" height="6" rx="1.2" fill="#fff" stroke="#333" stroke-width=".5" transform="rotate(15 ${x + 17} ${y + 13})"/>`); }
+    { const [x, y] = L.coffre; s.push(`<circle cx="${x}" cy="${y}" r="16" fill="url(#halo)" opacity=".8"/><rect x="${x - 8}" y="${y - 5}" width="16" height="10" rx="1.5" fill="#7A4A26" stroke="#3A2414" stroke-width="1"/><rect x="${x - 8}" y="${y - 8}" width="16" height="4" rx="1.5" fill="#94602F" stroke="#3A2414" stroke-width="1"/><path d="M${x - 8} ${y - 2}h16" stroke="#E2B93B" stroke-width="1.4"/>`);
+      for (let k = 0; k < 7; k++) s.push(`<circle cx="${f(x - 6 + r() * 12)}" cy="${f(y - 9 + r() * 4)}" r="1.6" fill="#F7CF55" stroke="#9A6716" stroke-width=".4"/>`); }
+    { const [x, y] = L.porte; s.push(`<rect x="${f(x - 3)}" y="${f(y - 5)}" width="6" height="8" rx="3" fill="#FFE27A"/><circle cx="${f(x)}" cy="${f(y - 1)}" r="10" fill="url(#halo)"/>`); }
+    // lanternes envolées, lucioles (fixes + une partie qui clignote)
+    for (let k = 0; k < 9; k++) { const x = cx + (r() - .5) * 420, y = cy + (r() - .5) * 240; s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="20" fill="url(#halo)" opacity=".7"/><rect x="${f(x - 3.5)}" y="${f(y - 4.5)}" width="7" height="9" rx="2" fill="#FFB347" stroke="#FFE6A8" stroke-width=".8"/>`); }
+    for (let k = 0; k < 260; k++) { const x = r() * W, y = r() * H, t = 2 + r() * 5, o = (.4 + r() * .6).toFixed(2);
+      if (k % 4 === 0) a.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(t)}" fill="url(#p2-luc)" opacity="${o}">${anime ? `<animate attributeName="opacity" values="${o};.05;${o}" dur="${(1.5 + r() * 3).toFixed(2)}s" begin="${(r() * 3).toFixed(2)}s" repeatCount="indefinite"/>` : ""}</circle>`);
+      else s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(t)}" fill="url(#luc)" opacity="${o}"/>`); }
+    for (let k = 0; k < 40; k++) { const t = r() * TAU, d = 20 + r() * 40; s.push(`<circle cx="${f(P[0][0] + Math.cos(t) * d)}" cy="${f(P[0][1] + Math.sin(t) * d)}" r="${f(2 + r() * 3)}" fill="url(#luc)"/>`); }
+    s.push(`<rect width="${W}" height="${H}" fill="#0A1E4A" opacity=".22" style="mix-blend-mode:multiply"/><rect width="${W}" height="${H}" fill="url(#lune)"/><rect width="${W}" height="${H}" fill="url(#vign)"/></svg>`);
+    const defsAnim = `<defs><radialGradient id="p2-luc" r="50%"><stop offset="0" stop-color="#F4FFB0"/><stop offset=".3" stop-color="#C8F25A" stop-opacity=".7"/><stop offset="1" stop-color="#9BE03A" stop-opacity="0"/></radialGradient><radialGradient id="p2-follet" r="50%"><stop offset="0" stop-color="#E8FBFF"/><stop offset=".35" stop-color="#5FD4FF" stop-opacity=".75"/><stop offset="1" stop-color="#2A7BFF" stop-opacity="0"/></radialGradient></defs>`;
+    return { fond: s.join(""), anim: defsAnim + a.join(""), W, H, couleur: "#071613" };
+  }
+  /** le décor 3D de janvier, aux mêmes endroits que la carte */
+  function decorForet(ctx) {
+    const { T, A, sol, eau, lum } = ctx, L = planForet(T), m = p => [p[0] / KU, p[1] / KU], v = h => hex(h), occupe = [];
+    const r = alea(55);
+    // bassin + cascade
+    const [bx, bz] = m(L.bassin); { const n = 20; for (let k = 0; k < n; k++) { const a0 = k / n * TAU, a1 = (k + 1) / n * TAU; eau.tri([bx, .3, bz], [bx + Math.cos(a1) * 44, .3, bz + Math.sin(a1) * 31], [bx + Math.cos(a0) * 44, .3, bz + Math.sin(a0) * 31], A.eau || v("#2F7FA8"), A.nuit ? .15 : .05, [0, 1, 0]); } }
+    for (let k = 0; k < 11; k++) { const a = PI * (1.02 + k * .1), x = bx + Math.cos(a) * 50, z = bz + Math.sin(a) * 36; const g = new Geo(); g.boule(0, 2, 0, 5 + r() * 4, mel(v("#55605F"), v("#6E7A78"), r()), 0, .8); sol.poser(g, x, 0, z, r() * TAU, 1); }
+    { const g = new Geo(); g.boite(0, 0, 0, 22, 12, 8, v("#4E5856")); g.ov().boite(0, 1, 4.05, 9, 11, .2, v("#CFF3FF"), .7); for (let k = 0; k < 5; k++) g.boule((r() - .5) * 8, .8, 6 + r() * 3, 1.6 + r() * 1.4, v("#F2FBFF"), .5, .6); sol.poser(g, bx, 0, bz - 40, 0, 1); lum.push([bx, 8, bz - 34, .7, .9, 1, 18]); }
+    occupe.push([bx, bz, 60]);
+    // rivière (ruban d'eau) + pont sur la piste
+    const R = L.riv.map(m), pts = [];
+    for (let k = 0; k < R.length - 1; k++) for (let t = 0; t < 1; t += .1) pts.push([R[k][0] + (R[k + 1][0] - R[k][0]) * t, R[k][1] + (R[k + 1][1] - R[k][1]) * t]);
+    for (let k = 0; k < pts.length - 1; k++) { const p = pts[k], q = pts[k + 1]; if (T.dist(p[0], p[1]) < DEMI + 10 || T.dist(q[0], q[1]) < DEMI + 10) continue;
+      const dx = q[0] - p[0], dz = q[1] - p[1], l = Math.hypot(dx, dz) || 1, nx = -dz / l * 8, nz = dx / l * 8;
+      eau.quad([p[0] + nx, .3, p[1] + nz], [q[0] + nx, .3, q[1] + nz], [q[0] - nx, .3, q[1] - nz], [p[0] - nx, .3, p[1] - nz], A.eau || v("#2F7FA8"), A.nuit ? .15 : .05, [0, 1, 0]); if (k % 3 === 0) occupe.push([p[0], p[1], 20]); }
+    { const [x, z] = m(L.B), [nx, nz, tx, tz] = L.nb, g = new Geo(), cap = Math.atan2(-tz, tx);
+      for (let k = -9; k <= 9; k++) g.boite(k * 2, .12, 0, 1.8, .12, DEMI * 2 + 6, k % 2 ? v("#9A6B42") : v("#86593A"));
+      [-1, 1].forEach(sd => { g.boite(0, .6, sd * (DEMI + 3), 38, .5, .5, v("#4A3020")); for (let k = -2; k <= 2; k++) g.boite(k * 9, .6, sd * (DEMI + 3), .5, 2.4, .5, v("#4A3020")); [-1, 1].forEach(e => { g.boite(e * 19, 0, sd * (DEMI + 3), .6, 4, .6, v("#3A2414")); g.boite(e * 19, 4, sd * (DEMI + 3), 1, 1.2, 1, v("#FFD58A"), 1); }); });
+      ctx.pistePose(g, x, z, cap); [-1, 1].forEach(sd => [-1, 1].forEach(e => lum.push([x + tx * e * 19 + nx * sd * (DEMI + 3), 4.6, z + tz * e * 19 + nz * sd * (DEMI + 3), 1, .85, .55, 12]))); }
+    // l'arbre géant creux : deux murs de tronc de part et d'autre de la piste, une voûte, une immense cime, des racines lumineuses
+    { const [x, z] = m(L.TT), [nx, nz, tx, tz] = L.nrm(L.iT), g = new Geo(), cap = Math.atan2(-tz, tx), ecorce = v("#5A4230"), ecorce2 = v("#4A3626");
+      [-1, 1].forEach(sd => { for (let k = -5; k <= 5; k++) g.boite(k * 3.6, 0, sd * (DEMI + 3.5), 3.8, 16 - Math.abs(k) * .6, 4 + Math.abs(k) * .4, k % 2 ? ecorce : ecorce2); });
+      for (let k = -5; k <= 5; k++) { const P0 = [k * 3.6, 15, -(DEMI + 3.5)], P1 = [k * 3.6, 21, 0], P2 = [k * 3.6, 15, DEMI + 3.5]; branche(g, P0, P1, 2.2, 2.2, ecorce); branche(g, P1, P2, 2.2, 2.2, ecorce); }
+      for (let k = 0; k < 5; k++) { const a = k / 5 * TAU; branche(g, [Math.cos(a) * 8, 18, Math.sin(a) * 8], [Math.cos(a) * 26, 34 + r() * 8, Math.sin(a) * 26], 3, 1.2, ecorce2); }
+      [[0, 44, 0, 26], [-16, 40, 10, 18], [16, 41, -8, 19], [6, 50, 14, 16], [-8, 48, -14, 17]].forEach(([a, b, c, rr]) => g.boule(a, b, c, rr, mel(v("#2E7A5C"), v("#4FA07A"), r()), A.nuit ? .12 : 0, .75));
+      for (let k = 0; k < 12; k++) { const a = k / 12 * TAU + .2, a1 = [Math.cos(a) * 12, .2, Math.sin(a) * 12], a2 = [Math.cos(a + .25) * (34 + r() * 14), .2, Math.sin(a + .25) * (34 + r() * 14)];
+        if (Math.abs(Math.sin(a)) < .35) continue; branche(g, a1, a2, 1.6, .5, ecorce2); branche(g, [a1[0], .9, a1[2]], [a2[0], .7, a2[2]], .25, .1, v("#9BF5D0"), 1); }
+      for (let k = 0; k < 30; k++) { const a = r() * TAU, d = r() * 28; g.boite(Math.cos(a) * d, 30 + r() * 26, Math.sin(a) * d, .5, .5, .5, v("#D8FF5A"), 1); }
+      g.boule(11, 23, DEMI + 5, 1.6, v("#7A6450"), 0, 1.2); g.boule(10.4, 23.8, DEMI + 6.3, .35, v("#FFD84A"), 1); g.boule(11.6, 23.8, DEMI + 6.3, .35, v("#FFD84A"), 1);
+      ctx.pistePose(g, x, z, cap); for (let k = -1; k <= 1; k++) lum.push([x + tx * k * 14, 12, z + tz * k * 14, .6, 1, .7, 16]); occupe.push([x, z, 70]); }
+    // le vieux moulin, avec ses ailes qui tournent
+    { const x = L.MX / KU, z = L.MY / KU, g = new Geo(); g.cylindre(0, 0, 0, 8, 12, 10, v("#7E7466")); g.cylindre(0, 12, 0, 7, 8, 10, v("#8A6A48"), 0, 6); g.cylindre(0, 20, 0, 7.6, 7, 10, v("#C9A35A"), 0, 0);
+      g.ov().boite(0, 0, 8.02, 3, 5, .2, v("#3A2A1E")); g.ov().boite(0, 8, 8.02, 1.6, 1.6, .2, v("#FFD27A"), 1); g.ov().boite(5.6, 13, 5.6, 1.4, 1.4, .2, v("#FFD27A"), 1, PI / 4); g.boite(0, 17.5, 7.4, 1.4, 1.4, 2, v("#4A3020"));
+      sol.poser(g, x, 0, z, 0, 1); lum.push([x, 6, z + 10, 1, .85, .55, 14]);
+      const ailes = new Geo(); for (let k = 0; k < 4; k++) { const a = k * PI / 2, c = Math.cos(a), s2 = Math.sin(a); branche(ailes, [0, 0, 0], [c * 16, s2 * 16, 0], .3, .25, v("#4A3020"));
+        const q = (d, o) => [c * d - s2 * o, s2 * d + c * o, .2]; ailes.quad(q(4, 0), q(16, 0), q(16, 3.4), q(4, 3.4), v("#E9DFC6"), 0, [0, 0, 1]); ailes.quad(q(4, 0), q(4, 3.4), q(16, 3.4), q(16, 0), v("#D8CCB0"), 0, [0, 0, -1]); }
+      ctx.rotors.push({ g: ailes, x, y: 17.5, z: z + 8.4, cap: 0, v: .5 }); occupe.push([x, z, 30]);
+      // clins d'œil : souche avec une partie en cours (4 pions aux couleurs des joueurs), coffre du Versus
+      const [sx, sz] = m(L.souche), st = new Geo(); st.cylindre(0, 0, 0, 2.2, 1, 9, v("#8A6A48")); st.boite(0, 1, 0, 2.4, .08, 1.7, v("#2E5E8C")); ["#4C9AFF", "#2BB6A3", "#FF6FA8", "#F2994A"].forEach((c, k) => { st.cylindre(-.8 + k * .5, 1.08, (k % 2) * .5 - .25, .16, .45, 6, v(c), .2, .06); st.boule(-.8 + k * .5, 1.6, (k % 2) * .5 - .25, .14, v(c), .2); });
+      st.boite(1.7, 1, .9, .7, .04, .5, v("#F4ECD8"), 0, .4); st.boite(2.1, 1, 1.3, .7, .04, .5, v("#F4ECD8"), 0, -.3); st.boite(-1.6, 1, -1, .45, .45, .45, v("#FFFFFF"), 0, .3); sol.poser(st, sx, 0, sz, 0, 1.6); occupe.push([sx, sz, 8]);
+      const [kx, kz] = m(L.coffre), ch = new Geo(); ch.boite(0, 0, 0, 2.4, 1.4, 1.5, v("#7A4A26")); ch.boite(0, 1.4, -.5, 2.4, 1.3, .3, v("#94602F"), 0, 0); for (let k = 0; k < 9; k++) ch.boule((r() - .5) * 1.8, 1.4 + r() * .3, (r() - .5) * 1, .22, v("#F7CF55"), .6);
+      sol.poser(ch, kx, 0, kz, .5, 1.5); lum.push([kx, 2.5, kz, 1, .85, .4, 6]); occupe.push([kx, kz, 6]); }
+    // maisons-champignons aux fenêtres allumées
+    L.maisons.forEach(([px, pz, Rr], j) => { const x = px / KU, z = pz / KU, k = Rr / 14, g = new Geo(), cap = v(["#C2412D", "#D9632B", "#B03A5B", "#C2412D"][j % 4]);
+      g.cylindre(0, 0, 0, 4 * k, 6 * k, 9, v("#EFE4CC"), 0, 3.4 * k); g.boule(0, 6 * k, 0, 8.5 * k, cap, A.nuit ? .12 : 0, .55);
+      for (let q = 0; q < 6; q++) { const a = q / 6 * TAU + j; g.ov().boule(Math.cos(a) * 5 * k, 6 * k + 3.2 * k, Math.sin(a) * 5 * k, .9 * k, v("#FFF4E0"), .3, .5); }
+      g.ov().boite(0, 0, 3.9 * k, 1.6 * k, 2.6 * k, .2, v("#5A3A22")); g.ov().boite(2.4 * k, 2.6 * k, 3.4 * k, 1.1 * k, 1.1 * k, .2, v("#FFD27A"), 1, .5); g.ov().boite(-2.4 * k, 2.6 * k, 3.4 * k, 1.1 * k, 1.1 * k, .2, v("#FFD27A"), 1, -.5);
+      sol.poser(g, x, 0, z, r() * TAU, 1); lum.push([x, 4, z, 1, .8, .5, 10]); occupe.push([x, z, 14]); });
+    // la clairière reste dégagée : herbes fleuries et lanternes qui flottent
+    { const cx = L.cx / KU, cz = L.cy / KU; for (let k = 0; k < 60; k++) { const x = cx + (r() - .5) * 460, z = cz + (r() - .5) * 280; if (!L.inside(x * KU, z * KU) || T.dist(x, z) < 18 || occupe.some(o => Math.hypot(x - o[0], z - o[1]) < o[2])) continue; sol.poser(objet("fleurs", r, A), x, 0, z, r() * TAU, 1); }
+      for (let k = 0; k < 10; k++) { const x = cx + (r() - .5) * 320, z = cz + (r() - .5) * 180, g = new Geo(); g.boite(0, 10 + r() * 16, 0, 1, 1.3, 1, v("#FFB347"), 1); sol.poser(g, x, 0, z, 0, 1); }
+      for (let a = 0; a < TAU; a += .5) for (const kk of [.25, .5, .75]) occupe.push([cx + Math.cos(a) * 230 * kk, cz + Math.sin(a) * 140 * kk, 70 * kk + 20]); }
+    // lanternes au bord du chemin, en alternance
+    for (let i = 0; i < T.N; i += Math.round(26 / T.ds)) { const sd = Math.floor(i / Math.round(26 / T.ds)) % 2 ? 1 : -1, nx = -T.TZ[i], nz = T.TX[i], x = T.X[i] + nx * sd * (DEMI + 5), z = T.Z[i] + nz * sd * (DEMI + 5);
+      if (Math.hypot(x - L.TT[0] / KU, z - L.TT[1] / KU) < 40 || Math.hypot(x - L.B[0] / KU, z - L.B[1] / KU) < 25) continue;
+      sol.poser(objet("lanterne", r, A), x, 0, z, 0, 1); lum.push([x, 4.8, z, 1, .85, .55, 10]); }
+    return occupe;
+  }
+  const PEINTS = { foret: { peindre: peindreForet, deco: decorForet } };
+
   /* ---------- Construction de la scène statique ---------- */
   function construire(def, T, A, Z) {
     const sol = new Geo(), piste = new Geo(), eau = new Geo(), lum = [];
@@ -551,15 +751,18 @@
       const a = E[i], b = E[(i + 1) % N], up = [0, 1, 0];
       piste.quad(P(a, DEMI), P(b, DEMI), P(b, -DEMI), P(a, -DEMI), Math.floor(i / 6) % 2 ? asph : asph2, nuitPiste, up);
       // lignes blanches de bord
+      if (D.terre) { const orn = mel(asph, [0, 0, 0], .28); [-2.6, 2.6].forEach(o => mk.quad(P(a, o - .45, .02), P(b, o - .45, .02), P(b, o + .45, .02), P(a, o + .45, .02), orn, 0, up)); }
+      else {
       mk.quad(P(a, DEMI - .35, .02), P(b, DEMI - .35, .02), P(b, DEMI - .9, .02), P(a, DEMI - .9, .02), A.synth ? hex("#22D3EE") : blanc, A.synth ? 1 : nuitPiste, up);
-      mk.quad(P(a, -DEMI + .35, .02), P(b, -DEMI + .35, .02), P(b, -DEMI + .9, .02), P(a, -DEMI + .9, .02), A.synth ? hex("#FF4FD8") : blanc, A.synth ? 1 : nuitPiste, up);
+      mk.quad(P(a, -DEMI + .35, .02), P(b, -DEMI + .35, .02), P(b, -DEMI + .9, .02), P(a, -DEMI + .9, .02), A.synth ? hex("#FF4FD8") : blanc, A.synth ? 1 : nuitPiste, up); }
       // vibreurs dans les virages, sinon bas-côtés
       const kerb = vib(i) || vib((i + 2) % N) || vib((i - 2 + N) % N);
       [1, -1].forEach(sd => {
-        const c1 = kerb ? (Math.floor(i / 2) % 2 ? rouge : blanc) : A.bord;
-        piste.quad(P(a, sd * DEMI), P(b, sd * DEMI), P(b, sd * (DEMI + (kerb ? 2 : 0) + (rue ? 1.2 : 6))), P(a, sd * (DEMI + (kerb ? 2 : 0) + (rue ? 1.2 : 6))), kerb ? c1 : mel(A.bord, [0, 0, 0], .04 * (i % 3)), kerb ? nuitPiste : 0, up);
+        const c1 = D.terre ? (Math.floor(i / 2) % 2 ? hex("#6E675E") : hex("#57514A")) : kerb ? (Math.floor(i / 2) % 2 ? rouge : blanc) : A.bord;
+        if (D.terre) { piste.quad(P(a, sd * DEMI), P(b, sd * DEMI), P(b, sd * (DEMI + 1.4), .25), P(a, sd * (DEMI + 1.4), .25), c1, 0, up); piste.quad(P(a, sd * (DEMI + 1.4), .25), P(b, sd * (DEMI + 1.4), .25), P(b, sd * (DEMI + 6)), P(a, sd * (DEMI + 6)), mel(A.bord, [0, 0, 0], .05 * (i % 3)), 0, up); }
+        else piste.quad(P(a, sd * DEMI), P(b, sd * DEMI), P(b, sd * (DEMI + (kerb ? 2 : 0) + (rue ? 1.2 : 6))), P(a, sd * (DEMI + (kerb ? 2 : 0) + (rue ? 1.2 : 6))), kerb ? c1 : mel(A.bord, [0, 0, 0], .04 * (i % 3)), kerb ? nuitPiste : 0, up);
         // murs (rue) ou rails : un panneau sur deux de la couleur du circuit
-        const ow = sd * (DEMI + (rue ? 3.4 : 11)), hw = rue ? 1.3 : .9, cw = Math.floor(i / 4) % 2 ? A.murs[0] : A.murs[1], emw = A.synth ? .9 : A.nuit ? .3 : 0;
+        const ow = sd * (DEMI + (rue ? 3.4 : D.terre ? 9 : 11)), hw = rue ? 1.3 : D.terre ? .6 : .9, cw = Math.floor(i / 4) % 2 ? A.murs[0] : A.murs[1], emw = A.synth ? .9 : A.nuit ? .3 : 0;
         if (!(def.pitlane && sd < 0 && i < 12)) {
           const a1 = P(a, ow), b1 = P(b, ow), a2 = P(a, ow, hw), b2 = P(b, ow, hw);
           piste.quad(a1, b1, b2, a2, cw, emw, [-a.nx * sd, 0, -a.nz * sd]);
@@ -605,6 +808,8 @@
     const loin = (x, z, m) => T.dist(x, z) > m;
     // les monuments d'abord : les autres décors s'écartent de la place qu'ils occupent
     const occupe = []; (def.reperes || []).forEach(R => { const o = repere(sol, R, T, A, teinte, [[ps.x, ps.z, 70], [pt2.x, pt2.z, 75]], lum); if (o) occupe.push(...o); });
+    const rotors = [];
+    if (def.peint && PEINTS[def.peint]) occupe.push(...PEINTS[def.peint].deco({ T, A, sol, eau, lum, rotors, pistePose: (g, x, z, cap) => sol.poser(g, x, 0, z, cap, 1) }));
     const pris = (x, z) => occupe.some(o => Math.hypot(x - o[0], z - o[1]) < o[2]);
     // plateau de jeu : de grandes cases sur tout le sol
     if (def.damier) for (let a = -40; a <= 40; a++) for (let b = -40; b <= 40; b++) { if ((a + b) % 2) continue; const x = cx + a * 26, z = cz + b * 26; if (Math.abs(x - cx) > ext * .7 || Math.abs(z - cz) > ext * .7 || T.dist(x + 13, z + 13) < DEMI + 26) continue;
@@ -636,12 +841,12 @@
       const g = objet(ty, r, A); sol.poser(g, x, typeRue ? 0 : 0, z, Math.atan2(-e.nz, e.nx) * 0 + (typeRue ? Math.atan2(-T.TZ[i], T.TX[i]) : r() * TAU), typeRue === "gratteciel" ? .8 : 1, SANS_TEINTE.has(ty) ? null : teinte);
     });
     // lampadaires le long des circuits de nuit (et de ville)
-    if (A.nuit || (D.obj || []).some(o => o[0] === "lampadaire")) for (let i = 0; i < N; i += Math.round(64 / T.ds)) {
+    if (!def.peint && (A.nuit || (D.obj || []).some(o => o[0] === "lampadaire"))) for (let i = 0; i < N; i += Math.round(64 / T.ds)) {
       const sd = Math.floor(i / Math.round(64 / T.ds)) % 2 ? 1 : -1, e = E[i], o = sd * (DEMI + (rue ? 5 : 13));
       const pp = P(e, o), g = objet("lampadaire", r, A); sol.poser(g, pp[0], pp[1] - .1, pp[2], Math.atan2(e.nz * -sd, e.nx * -sd) * -1 + 0, 1);
       if (A.nuit) lum.push([pp[0] - e.nx * sd * 1.2, pp[1] + 8.8, pp[2] - e.nz * sd * 1.2, 1, .9, .7, 13]);
     }
-    return { sol, piste, eau, lum, stands: ps, portique: p0 };
+    return { sol, piste, eau, lum, stands: ps, portique: p0, rotors };
   }
 
   /* ---------- Voiture : une F1 low-poly aux couleurs du pilote ---------- */
@@ -731,7 +936,7 @@
   function sceneDe(cle, fab) {
     if (SCENES.has(cle)) { const v = SCENES.get(cle); SCENES.delete(cle); SCENES.set(cle, v); return v; }
     const S = fab(), fige = g => ({ f: new Float32Array(g.d) });
-    const v = { sol: fige(S.sol), solOv: fige(S.sol.ov()), piste: fige(S.piste), pisteOv: fige(S.piste.ov()), eau: S.eau.n ? fige(S.eau) : null, lum: S.lum, portique: S.portique };
+    const v = { sol: fige(S.sol), solOv: fige(S.sol.ov()), piste: fige(S.piste), pisteOv: fige(S.piste.ov()), eau: S.eau.n ? fige(S.eau) : null, lum: S.lum, portique: S.portique, rotors: (S.rotors || []).map(o => ({ f: new Float32Array(o.g.d), x: o.x, y: o.y, z: o.z, cap: o.cap, v: o.v })) };
     SCENES.set(cle, v); while (SCENES.size > 4) SCENES.delete(SCENES.keys().next().value);
     return v;
   }
@@ -766,6 +971,7 @@
     const t0c = performance.now();
     const S = sceneDe([o.circuit, o.ambiance || "", A.nuit, Z.atoutCol, Z.piegeCol].join("|"), () => construire(def, T, A, Z));
     const B = { sol: tampon(gl, S.sol), solOv: tampon(gl, S.solOv), piste: tampon(gl, S.piste), pisteOv: tampon(gl, S.pisteOv), eau: S.eau ? tampon(gl, S.eau) : null };
+    const RO = (S.rotors || []).map(x => Object.assign({ b: tampon(gl, x) }, x));
     const V = (o.voitures || []).map(v => ({ v, b: tampon(gl, voiture(v)), s: 0, voie: 0, rang: 0, rot: 0, hist: [], x: 0, y: 0, z: 0, cap: 0, vit: 0 }));
     // lumières (lampadaires, projecteurs) en sprites additifs
     const LUM = S.lum, bL = gl.createBuffer(); { const d = []; LUM.forEach(l => d.push(l[0], l[1], l[2], l[3], l[4], l[5], A.nuit ? .55 : 0, l[6] * 1.6)); gl.bindBuffer(gl.ARRAY_BUFFER, bL); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(d), gl.STATIC_DRAW); }
@@ -858,6 +1064,8 @@
           const Mw = mul(M, mul(modele(wx, rr, sd * wz, 0, 0, 1), rotZ(-x.rot)));
           gl.uniformMatrix4fv(U.uM, false, Mw); lier(gl, PL, rb); gl.drawArrays(gl.TRIANGLES, 0, rb.n); }));
       });
+      // décors qui tournent (ailes du moulin…)
+      RO.forEach(x => { gl.uniform4f(U.uTint, 1, 1, 1, 0); gl.uniformMatrix4fv(U.uM, false, mul(modele(x.x, x.y, x.z, x.cap, 0, 1), rotZ(t * x.v))); lier(gl, PL, x.b); gl.drawArrays(gl.TRIANGLES, 0, x.b.n); });
       gl.uniform1f(U.uSpec, 0);
       [PL.A.aN].forEach(a => gl.disableVertexAttribArray(a));
       // effets transparents : ombres, traînées
@@ -1001,6 +1209,7 @@
   /* ============================================================
      Instance 2D : la carte du circuit, sobre et lisible
      ============================================================ */
+  const CARTES_P = {};   // cartes peintes, calculées une fois par circuit
   function monter2D(boite, o) {
     const def = TRACES[o.circuit] || TRACES.melbourne, T = echantillonner(def), Z = zones(T), NS = "http://www.w3.org/2000/svg";
     const m = 34, minx = T.cx - T.rx - m, minz = T.cz - T.rz - m, w = T.rx * 2 + 2 * m, h = T.rz * 2 + 2 * m;
@@ -1014,8 +1223,14 @@
     const kf = (T.rx * 2 + 68) / 340, fleches = [.2, .45, .7].map(f => { const p = T.a(f * T.L, 0); return '<path d="M-3 -2.6L2.4 0-3 2.6" transform="translate(' + p.x.toFixed(1) + " " + p.z.toFixed(1) + ") rotate(" + (Math.atan2(p.tz, p.tx) * 180 / PI).toFixed(1) + ") scale(" + kf.toFixed(2) + ')" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>'; }).join("");
     const zoneTrait = (z, col) => z && col ? '<path d="' + seg(z.s0, z.s1) + '" fill="none" stroke="' + col + '" stroke-width="' + (3.4 * kf).toFixed(1) + '" stroke-linecap="round" opacity=".95"/>' : "";
     const acc = o.accent || "#9B87FF", k = w / 340, K = v => (v * k).toFixed(1);
+    const PE = def.peint && PEINTS[def.peint] ? PEINTS[def.peint] : null, CP = PE ? (CARTES_P[def.peint] || (CARTES_P[def.peint] = PE.peindre(T, Z))) : null;
     const svg = document.createElementNS(NS, "svg"); svg.setAttribute("class", "p2-svg"); svg.setAttribute("viewBox", minx.toFixed(1) + " " + minz.toFixed(1) + " " + w.toFixed(1) + " " + h.toFixed(1)); svg.setAttribute("preserveAspectRatio", "xMidYMid meet"); svg.setAttribute("role", "img"); svg.setAttribute("aria-label", o.titre || "Circuit");
-    svg.innerHTML = '<defs><pattern id="p2g" width="' + K(24) + '" height="' + K(24) + '" patternUnits="userSpaceOnUse"><path d="M' + K(24) + ' 0H0V' + K(24) + '" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="' + K(1) + '"/></pattern></defs>' +
+    if (CP) svg.innerHTML = '<rect x="' + (minx - 400) + '" y="' + (minz - 400) + '" width="' + (w + 800) + '" height="' + (h + 800) + '" fill="' + CP.couleur + '"/>' +
+      '<g transform="scale(' + (1 / KU) + ')"><image href="' + (CP.url || (CP.url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(CP.fond))) + '" x="0" y="0" width="' + CP.W + '" height="' + CP.H + '"/>' + CP.anim + "</g>" +
+      zoneTrait(Z.atout, o.atoutCol) + zoneTrait(Z.piege, o.piegeCol) + fleches +
+      '<g transform="translate(' + p0.x.toFixed(1) + " " + p0.z.toFixed(1) + ") rotate(" + ang.toFixed(1) + ") scale(" + (k * .9).toFixed(2) + ')"><rect x="-1.6" y="-6" width="3.2" height="12" fill="#fff"/><rect x="-1.6" y="-6" width="1.6" height="2" fill="#111"/><rect x="0" y="-4" width="1.6" height="2" fill="#111"/><rect x="-1.6" y="-2" width="1.6" height="2" fill="#111"/><rect x="0" y="0" width="1.6" height="2" fill="#111"/><rect x="-1.6" y="2" width="1.6" height="2" fill="#111"/><rect x="0" y="4" width="1.6" height="2" fill="#111"/></g>' +
+      '<g class="p2-v"></g>';
+    else svg.innerHTML = '<defs><pattern id="p2g" width="' + K(24) + '" height="' + K(24) + '" patternUnits="userSpaceOnUse"><path d="M' + K(24) + ' 0H0V' + K(24) + '" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="' + K(1) + '"/></pattern></defs>' +
       '<rect x="' + (minx - 400) + '" y="' + (minz - 400) + '" width="' + (w + 800) + '" height="' + (h + 800) + '" fill="url(#p2g)"/>' + eau +
       '<path d="' + d + '" fill="none" stroke="' + acc + '" stroke-width="' + K(17) + '" stroke-linejoin="round" opacity=".16"/>' +
       '<path d="' + d + '" fill="none" stroke="#07090D" stroke-width="' + K(11) + '" stroke-linejoin="round"/>' +
