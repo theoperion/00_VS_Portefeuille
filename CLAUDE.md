@@ -35,14 +35,14 @@
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **16.3**.
+  hors connexion `sw.js`). Version actuelle : **16.4**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
 ## Serveur Apps Script (dépôt app_scripts)
 - Prérequis une fois par machine : `npx -y @google/clasp@3.4.1 login` (compte Google de Théo) → crée `~/.clasprc.json`.
 - Versus : `sh outils/mettre-en-ligne-versus.sh "V31 : ce qui change"` (APPLI=chemin de ce dépôt si besoin).
-  Versions actuelles : VS_VERSION 30, version Google 45.
+  Versions actuelles : VS_VERSION 31, version Google 46.
 - Scripts perso : dans `portefeuille-epargne/<nom>` : `clasp push --force` puis `python3 ../../outils/deployer.py "desc"`
   (garde les mêmes adresses). Versions actuelles : Théo 30, Clément 9, Devlin 9.
 - Sheets en direct : `outils/gs.py` (`SS(id).get/put/batch`). Classeurs : Théo `1pbpJRMwZR64LqP_wwlhiw-6m7-lUg-Q3pVAF4Dv9j8U`,
@@ -67,8 +67,8 @@ Commit (message en français, « vX.Y : … »), ligne dans le journal de `MODE_
   (`ambiance()` dans `piste.js`) : à changer en simple touche par-dessus (voir chantiers).
 
 ## Chantiers proposés, validés sur le principe par Théo (18/11), pas encore faits
-1. **Badges du Classement** : 3 max sur la ligne, épinglés par le joueur dans l'Écurie, le reste en « +N » ;
-   la plaque (ex. « CONTRE-ATTAQUE ») quitte la ligne (elle coupe le texte) → sous-titre dans la fiche et au podium.
+1. ✅ **Badges du Classement** (fait en v16.4 + serveur V31) : 3 max, épinglés dans Podium › Écurie › Badges
+   (`equip.badges`, absent = l'appli choisit les 3 plus prestigieux), le reste en « +N » ; plaque dans la fiche et au podium.
 2. **F1 en 3D** (`voiture()` dans `piste.js`) jugée « ignoble » : option A recommandée = refaire la voiture
    dans le moteur actuel (carrosserie arrondie, vraies roues/jantes, ailerons avec dérives, numéro, ombre douce,
    reflets). Option B (three.js) seulement si A ne suffit pas. + l'ambiance cosmétique ne doit plus écraser le

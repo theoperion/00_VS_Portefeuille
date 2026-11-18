@@ -303,6 +303,7 @@ function equipDe(nom) {
   e.pilote = brut.pilote === "casque" ? "casque" : "tete";
   e.tete = teteValide(brut.tete) ? brut.tete : presetTete(nom);
   e.amelio = amelioDe(nom, anneeAmelioPour()).s;
+  e.badges = Array.isArray(brut.badges) ? brut.badges.filter(x => typeof x === "string").slice(0, 3) : null;   // null = l'appli choisit
   return e;
 }
 /** Saison des améliorations : celle de l'aperçu, sinon celle qui se joue (décembre prépare la suivante) */
@@ -474,13 +475,28 @@ function leaderSaison() {
 }
 function moisEnTete(nom, y) { return championnat(y).mois.filter(m => m.places[nom] === 1).length; }
 /** Petits badges à côté du nom (classement) : leader, titres de champion, exclusifs */
-function badgesNom(nom) {
+/** V16.3 · badges possédés (titres de saison puis exclusifs, du plus prestigieux au moins) : [{ id, ico, nom, html }] */
+function badgesPossedes(nom) {
+  if (!saisonVisible()) return [];
+  const l = [], titres = anneesSaison().filter(y => { const c = championnat(y); return c.complete && c.classement[0] === nom; }).length;
+  if (titres) l.push({ id: "titre", ico: "🏆", nom: titres > 1 ? titres + " titres de champion" : "Champion de saison", html: '<span class="bdg" data-bdg="🏆 ' + esc(nom) + " a remporté " + titres + (titres > 1 ? " saisons" : " saison") + ' du championnat.">🏆' + (titres > 1 ? "×" + titres : "") + "</span>" });
+  exclusifsDe(nom).sort((a, b) => b.niv - a.niv).forEach(x => l.push({ id: x.id, ico: x.ico, nom: x.nom, niv: x.niv, html: '<span class="bdg ex n' + x.niv + '" data-bdg="' + esc(x.ico + " " + x.nom + " · exclusif " + NIV_EX[x.niv].toLowerCase() + " : " + nom + " a été le premier à " + x.def.replace("l'indice", "le " + D.marche.indices[iRef()]) + ". Il garde " + ITEMS[x.gain[0]][x.gain[1]] + " (" + SLOTS.find(z => z[0] === x.gain[0])[1].toLowerCase() + "), en un seul exemplaire.") + '">' + x.ico + "</span>" }));
+  return l;
+}
+/** Les badges affichés : ceux épinglés dans l'Écurie (3 au plus), sinon les 3 plus prestigieux */
+function badgesAffiches(nom, e) {
+  const tous = badgesPossedes(nom), choix = (e || equipDe(nom)).badges;
+  if (!Array.isArray(choix)) return tous.slice(0, 3);
+  return choix.map(id => tous.find(b => b.id === id)).filter(Boolean).slice(0, 3);
+}
+/** Sur la ligne du Classement : 🟡 en tête (automatique, hors quota), puis 3 badges au plus, puis « +N » */
+function badgesNom(nom, e) {
   if (!saisonVisible()) return "";
   let h = "";
-  if (leaderSaison() === nom) h += '<span class="bdg jaune" data-bdg="🟡 ' + esc(nom) + ' est en tête du championnat de la saison : il porte le liseré or sur son casque, jusqu\'à ce qu\'un autre le dépasse.">🟡 Championnat</span>';
-  const titres = anneesSaison().filter(y => { const c = championnat(y); return c.complete && c.classement[0] === nom; }).length;
-  if (titres) h += '<span class="bdg" data-bdg="🏆 ' + esc(nom) + " a remporté " + titres + (titres > 1 ? " saisons" : " saison") + ' du championnat.">🏆' + (titres > 1 ? "×" + titres : "") + "</span>";
-  exclusifsDe(nom).sort((a, b) => b.niv - a.niv).forEach(x => { h += '<span class="bdg ex n' + x.niv + '" data-bdg="' + esc(x.ico + " " + x.nom + " · exclusif " + NIV_EX[x.niv].toLowerCase() + " : " + nom + " a été le premier à " + x.def.replace("l'indice", "le " + D.marche.indices[iRef()]) + ". Il garde " + ITEMS[x.gain[0]][x.gain[1]] + " (" + SLOTS.find(z => z[0] === x.gain[0])[1].toLowerCase() + "), en un seul exemplaire.") + '">' + x.ico + "</span>"; });
+  if (leaderSaison() === nom) h += '<span class="bdg jaune" data-bdg="🟡 ' + esc(nom) + ' est en tête du championnat de la saison : il porte le liseré or sur son casque, jusqu\'à ce qu\'un autre le dépasse.">🟡</span>';
+  const tous = badgesPossedes(nom), vus = badgesAffiches(nom, e), autres = tous.filter(b => !vus.some(x => x.id === b.id));
+  h += vus.map(b => b.html).join("");
+  if (autres.length) h += '<span class="bdg bdg-plus" data-bdg="' + esc(nom + " a aussi : " + autres.map(b => b.ico + " " + b.nom).join(", ") + ". Chacun choisit les 3 badges affichés sur sa ligne dans Podium › Écurie › Badges.") + '">+' + autres.length + "</span>";
   return h;
 }
 const EX_OUVERTS = new Set();
@@ -861,17 +877,18 @@ function htmlEcurie() {
   if (!D.personnes.some(p => p.nom === qui)) return '<div class="vide">Choisis ton nom dans les réglages pour monter ton écurie.</div>';
   if (!ECU || ECU.nom !== qui) ECU = { nom: qui, e: equipDe(qui) };
   const ouverts = debloques(qui), e = ECU.e;
-  const slot = ECU_SLOT === "numero" || ECU_SLOT === "pilote" || SLOTS.some(s => s[0] === ECU_SLOT) ? ECU_SLOT : "pilote";
+  const slot = ECU_SLOT === "numero" || ECU_SLOT === "pilote" || ECU_SLOT === "badges" || SLOTS.some(s => s[0] === ECU_SLOT) ? ECU_SLOT : "pilote";
   const total = SLOTS.reduce((a, [s]) => a + Object.keys(ITEMS[s]).length, 0) - Object.keys(BASE_ECURIE).length, nb = ouverts.size - Object.keys(BASE_ECURIE).length;
   const showroom = '<div class="showroom"><div class="sr-num" aria-hidden="true">' + e.numero + '</div>' +
     '<div class="sr-h"><span class="sr-k">Mon écurie · ' + (estChauffe(saisonCourante()) ? "Tour de chauffe" : "Saison " + numeroSaison(saisonCourante())) + '</span><span class="sr-id">' + avatar(qui, Object.assign({}, e, { vignette: true })) + "<b" + attrLivree(qui, e) + ">" + esc(qui) + "</b></span>" +
     '<span class="sr-p"><span class="sr-barre"><i style="width:' + (total ? nb / total * 100 : 0).toFixed(0) + '%"></i></span>' + nb + " / " + total + " objets</span></div>" +
     '<div class="sr-3d" id="sr-3d">' + svgVoiture({ nom: qui, e, reflet: true, idle: true }) + "</div>" +
     '<span class="sr-aide"></span><button class="sr-vue" type="button" id="sr-vue">' + (ETAT.sr3d === "1" ? "↔ 360° · Vue détaillée" : "🔄 Vue 360°") + '</button><button class="sr-klaxon" type="button" id="ecu-klaxon">📯 Klaxonner</button></div>';
-  const onglets = '<div class="slot-tabs">' + [["pilote", "Pilote"]].concat(SLOTS, [["numero", "Numéro"]]).map(([s, lib]) => '<button type="button" data-ecu-slot="' + s + '" aria-pressed="' + (s === slot) + '">' + lib +
-    "<small>" + (s === "numero" ? "#" + e.numero : s === "pilote" ? (e.pilote === "casque" ? "Casque" : "Tête") : esc(ITEMS[s][e[s]])) + "</small></button>").join("") + "</div>";
+  const onglets = '<div class="slot-tabs">' + [["pilote", "Pilote"]].concat(SLOTS, [["numero", "Numéro"], ["badges", "Badges"]]).map(([s, lib]) => '<button type="button" data-ecu-slot="' + s + '" aria-pressed="' + (s === slot) + '">' + lib +
+    "<small>" + (s === "badges" ? (Array.isArray(e.badges) ? e.badges.length + " / 3" : "auto") : s === "numero" ? "#" + e.numero : s === "pilote" ? (e.pilote === "casque" ? "Casque" : "Tête") : esc(ITEMS[s][e[s]])) + "</small></button>").join("") + "</div>";
   let corps;
   if (slot === "pilote") corps = htmlPilote(qui, e);
+  else if (slot === "badges") corps = htmlChoixBadges(qui, e);
   else if (slot === "numero") corps = '<div class="num-bloc"><input id="ecu-num" class="champ-num" inputmode="numeric" maxlength="2" value="' + e.numero + '" aria-label="Numéro de course (1 à 99)"><p class="info">Ton numéro de course, de 1 à 99 : sur le ponton de ta voiture et dans la grille.</p></div>';
   else corps = '<div class="items">' + Object.keys(ITEMS[slot]).map(id => {
     const ouvert = ouverts.has(slot + "." + id), org = origineItem(slot, id), r = rareteItem(slot, id), cache = !ouvert && (!!org.secret || !!org.million), porte = e[slot] === id;
@@ -888,6 +905,17 @@ function htmlEcurie() {
     '<button class="btn acc plein" type="button" id="ecu-garder">Enregistrer mon écurie</button>' +
     '<p class="info">Touche un objet pour l\'essayer, « ? » pour savoir d\'où il vient. Ta voiture roule dans la Course avec ta livrée et ta traînée ; ta tête ou ton casque s\'affichent partout à côté de ton nom.</p>' +
     '<div><h3 class="s-h3">La grille <small>touche une écurie pour la voir</small></h3></div><div class="grille-dep">' + grille + "</div>" + htmlGarage(qui);
+}
+/** V16.3 · Écurie › Badges : jusqu'à 3 badges épinglés sur la ligne du Classement (ou choix automatique) */
+function htmlChoixBadges(qui, e) {
+  const tous = badgesPossedes(qui), auto = !Array.isArray(e.badges), vus = badgesAffiches(qui, e).map(b => b.id);
+  if (!tous.length) return '<div class="bdg-choix"><p class="info">Pas encore de badge : gagne un exclusif (le premier à réussir un exploit) ou un titre de champion, puis choisis ici les 3 qui s\'affichent à côté de ton nom.</p></div>';
+  return '<div class="bdg-choix"><p class="info">Touche un badge pour l\'épingler ou le retirer : <b>3 au plus</b> s\'affichent à côté de ton nom dans le Classement, les autres se résument en « +N ». ' +
+    (auto ? "Pour l'instant, l'appli choisit tes 3 plus prestigieux." : "") + "</p>" +
+    '<div class="bdg-grille">' + tous.map(b => { const on = vus.includes(b.id), rang = on ? vus.indexOf(b.id) + 1 : 0;
+      return '<button type="button" class="bdg-c' + (on ? " on" : "") + (b.niv ? " n" + b.niv : "") + '" data-ecu-bdg="' + b.id + '" aria-pressed="' + on + '"><span class="ico">' + b.ico + "</span><span>" + esc(b.nom) + "</span>" + (on ? '<i class="rg">' + (auto ? "auto" : rang) + "</i>" : "") + "</button>"; }).join("") + "</div>" +
+    '<div class="bdg-apercu"><small>Aperçu de ta ligne</small><b>' + esc(qui) + "</b>" + badgesNom(qui, e) + "</div>" +
+    (auto ? "" : '<button class="lien" type="button" id="ecu-bdg-auto">Laisser l\'appli choisir</button>') + "</div>";
 }
 let ECU_VOIR = null;
 /** Garage d'un autre pilote : sa voiture et tout son équipement, en lecture seule */
@@ -1173,7 +1201,7 @@ function vitrineFiche(nom) {
   const parMonde = MONDES.map(mo => { const tot = DEFIS.filter(d => d.niv === mo.niv).length + TROPHEES_MONDES.filter(t => t.monde === mo.id).length;
     const ok = DEFIS.filter(d => d.niv === mo.niv && E[d.id].ok).length + TROPHEES_MONDES.filter(t => t.monde === mo.id && TM[t.id][nom] && TM[t.id][nom].ok).length;
     return '<span style="--mc:' + mo.c + '">' + mo.ico + " " + ok + "/" + tot + "</span>"; }).join("");
-  return '<div class="vitrine"><div class="vt-h"><b>🗄️ La vitrine de ' + esc(nom) + "</b><small>" + cartes.length + " carte" + (cartes.length > 1 ? "s" : "") + " · badges par monde</small></div>" +
+  return '<div class="vitrine">' + (plaqueDe(nom) ? '<div class="vt-plaque">' + plaqueDe(nom).replace('class="plaque"', 'class="plaque grande"') + "</div>" : "") + '<div class="vt-h"><b>🗄️ La vitrine de ' + esc(nom) + "</b><small>" + cartes.length + " carte" + (cartes.length > 1 ? "s" : "") + " · badges par monde</small></div>" +
     (cartes.length ? '<div class="vt-cartes">' + cartes.map(id => '<button type="button" data-carte-coll="' + id + '">' + htmlCarteColl(id, "m", [nom]) + "</button>").join("") + "</div>" : '<p class="info">Pas encore de carte : la course aux exclusifs ne fait que commencer.</p>') +
     '<div class="vt-badges">' + parMonde + "</div></div>";
 }
@@ -1265,6 +1293,11 @@ function brancherSaison(v) {
   bandesDefilantes(v); expliquerBadges(v);
   v.querySelectorAll("details.ex-bloc").forEach(d => d.addEventListener("toggle", () => { const n = +d.dataset.exn; if (d.open) EX_OUVERTS.add(n); else EX_OUVERTS.delete(n); }));
   v.querySelectorAll("[data-ecu-slot]").forEach(b => b.addEventListener("click", () => { ECU_SLOT = b.dataset.ecuSlot; ECU_Q = null; rendreTrophees(); }));
+  v.querySelectorAll("[data-ecu-bdg]").forEach(b => b.addEventListener("click", () => {
+    if (!ECU) return; const id = b.dataset.ecuBdg, l = Array.isArray(ECU.e.badges) ? ECU.e.badges.slice() : badgesAffiches(ECU.nom, ECU.e).map(x => x.id), i = l.indexOf(id);
+    if (i >= 0) l.splice(i, 1); else { if (l.length >= 3) { toast("3 badges au plus : retires-en un d'abord."); return; } l.push(id); }
+    ECU.e.badges = l; rendreTrophees(); }));
+  const bAuto = v.querySelector("#ecu-bdg-auto"); if (bAuto) bAuto.addEventListener("click", () => { if (ECU) { ECU.e.badges = null; rendreTrophees(); } });
   const majQ = () => { const z = v.querySelector("#it-d"); if (z) z.innerHTML = htmlDetailItem(ECU.nom); v.querySelectorAll(".it-w").forEach(w => w.classList.toggle("q-on", w.querySelector("[data-itq]").dataset.itq === ECU_Q)); };
   v.querySelectorAll("[data-itq]").forEach(b => b.addEventListener("click", () => { ECU_Q = ECU_Q === b.dataset.itq ? null : b.dataset.itq; majQ(); }));
   v.querySelectorAll(".it").forEach(b => b.addEventListener("click", () => {

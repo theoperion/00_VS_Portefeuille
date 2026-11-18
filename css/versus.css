@@ -1335,3 +1335,29 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 @keyframes fxFlash { 0%, 95%, 97%, 100% { opacity: 0; } 96%, 98% { opacity: .55; } }
 @keyframes fxDe { 0% { transform: translateY(0) rotate(0); } 100% { transform: translateY(120vh) rotate(540deg); } }
 @keyframes fxEtincelle { 0% { transform: translate(0, 0); opacity: 1; } 100% { transform: translate(calc((var(--s) - 1) * 60px), 30px); opacity: 0; } }
+
+/* V16.3 · badges épinglés (Écurie › Badges), pastille « +N », plaque dans la fiche et au podium */
+.bdg.bdg-plus { color: var(--ink-2); background: var(--panel-2); border-color: var(--rule); font-weight: 800; }
+.bdg-choix { display: grid; gap: 10px; }
+.bdg-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.bdg-c { position: relative; display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 12px; border: 1px solid var(--rule); background: var(--panel-2); color: var(--ink); font: 600 12.5px/1.2 var(--f-text); text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.bdg-c .ico { font-size: 20px; line-height: 1; flex: none; }
+.bdg-c.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--panel-2)); box-shadow: 0 0 0 1px var(--accent) inset; }
+.bdg-c.n4.on { border-color: #B98CFF; } .bdg-c.n3.on { border-color: #E2A92A; }
+.bdg-c .rg { position: absolute; top: -7px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; display: grid; place-items: center; background: var(--accent); color: #fff; font: 800 10.5px/1 var(--f-num); font-style: normal; }
+.bdg-c:active { transform: scale(.97); }
+.bdg-apercu { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--rule); }
+.bdg-apercu small { width: 100%; font-size: 11px; color: var(--ink-3); margin-bottom: 4px; }
+.bdg-apercu b { font: italic 700 17px/1.1 var(--f-display); letter-spacing: .05em; text-transform: uppercase; }
+.vt-plaque { margin-bottom: 8px; }
+.vp-plq { display: block; max-width: 100%; overflow: hidden; line-height: 1; }
+.vp-plq .plaque { font-size: 8px; padding: 1px 5px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: 0; }
+.pos .who b .bdg { margin-left: 0; padding: 0 1px; border: 0; background: none; font-size: 13px; letter-spacing: -.02em; }
+.pos .who b .bdg.jaune { margin-left: 3px; }
+.pos .who b .bdg.bdg-plus { margin-left: 2px; padding: 1px 4px; font-size: 9.5px; border: 1px solid var(--rule); background: var(--panel-2); }
+.pos .who b .tag.ici + .bdg { margin-left: 2px; }
+.pos .who b .bdg.ex, .pos .who b .bdg.jaune { font-size: 12px; }
+.pos .who b .tag.ici { padding-left: 4px; padding-right: 4px; margin-left: 4px; }
+.pos .who b:has(.bdg) { padding-right: 4px; }
+.pos .who b .bdg.bdg-plus { margin-left: 1px; padding: 1px 3px; }
+.pos .who b .bdg.jaune { margin-left: 2px; }
