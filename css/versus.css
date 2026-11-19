@@ -1439,3 +1439,4 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 @keyframes ba-feu { 0% { background: #2A0A0A; } 1% { background: #FF2A2A; box-shadow: 0 0 18px #FF2A2A; } 100% { background: #FF2A2A; box-shadow: 0 0 18px #FF2A2A; } }
 @media (prefers-reduced-motion: reduce) { .ba *, .ba { animation-duration: .01s !important; animation-delay: 0s !important; } .ba-sc { opacity: 0 !important; } .ba-s3 { opacity: 1 !important; } }
 .ba-regle { display: grid; gap: 3px; margin-top: 6px; padding: 8px 14px; border: 1px solid var(--b1); border-radius: 12px; background: rgba(0,0,0,.55); opacity: 0; animation: ba-coupe .6s ease 6.4s both; max-width: 34ch; } .ba-regle b { font-size: 18px; color: var(--b1); } .ba-regle small { font: 400 14px/1.3 "Saira", sans-serif; color: #fff; }
+.ba.pause, .ba.pause * { animation-play-state: paused !important; }

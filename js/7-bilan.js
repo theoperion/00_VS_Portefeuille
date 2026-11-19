@@ -659,6 +659,10 @@ addEventListener("error", e => diag("ERREUR " + (e.message || "") + " " + (e.fil
 const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) || navigator.standalone === true;
 function vueAccueil() { const o = ETAT.ouverture || ""; return /^moi/.test(o) || o === "fiche" ? "moi" : ["classement", "mois", "trophees"].includes(o) ? o : "classement"; }
 function fermerFenetreOuverte() {
+  // V16.16 : les fenêtres plein écran de la Course (bande-annonce, carte postale / règles, plein écran) passent avant le reste
+  if (typeof BA_OUVERTE !== "undefined" && BA_OUVERTE) { BA_OUVERTE.fermer(false); return true; }
+  const dialogues = [...document.querySelectorAll(".regles")]; if (dialogues.length) { const d = dialogues[dialogues.length - 1], x = d.querySelector(".rg-x"); if (x) x.click(); else d.remove(); return true; }
+  if (typeof GP_PLEIN !== "undefined" && GP_PLEIN) { fermerPleinGP(); return true; }
   const ouverts = [...document.querySelectorAll(".voile")].filter(x => !x.hidden && getComputedStyle(x).display !== "none");
   if (!ouverts.length) return false;
   const v = ouverts[ouverts.length - 1], b = v.querySelector('[aria-label="Fermer"]');

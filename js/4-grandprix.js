@@ -602,13 +602,16 @@ function bandeAnnonce(y, i, ensuite) {
     '<div class="ba-sc ba-s2"><em>Précédemment…</em>' + resume + "</div>" +
     '<div class="ba-sc ba-s3"><span class="ba-k">' + esc(et.avenir ? "Ce mois-ci" : moisLong(kGP)) + '</span><h2><span class="ba-drap">' + G.drap + "</span>" + esc(G.gp) + "</h2><p>" + esc(G.ville) + '</p><q>' + esc(G.txt) + "</q>" + ligneRegle + "</div>" +
     '<div class="ba-sc ba-s4"><em>Sur la grille</em><div class="ba-gr">' + grille + '</div><p>En pole : <b style="color:' + couleur(mc.grille[0]) + '">' + esc(mc.grille[0]) + "</b></p></div>" +
-    '<div class="ba-sc ba-s5"><div class="ba-feux">' + [0, 1, 2, 3, 4].map(q => '<i style="--d:' + (10.4 + q * .32).toFixed(2) + 's"></i>').join("") + "</div><b>" + (et.avenir ? "Rendez-vous à la fin du mois" : "C'est parti !") + "</b></div>" +
+    '<div class="ba-sc ba-s5"><div class="ba-feux">' + [0, 1, 2, 3, 4].map(q => '<i style="--d:' + (10.4 + q * .32).toFixed(2) + 's"></i>').join("") + "</div><b>" + (ensuite ? "C'est parti !" : et.avenir ? "Rendez-vous à la fin du mois" : "Rendez-vous au premier départ") + "</b></div>" +
     '<div class="ba-bande h"></div><div class="ba-bande b"></div><button class="ba-passer" type="button">Passer ›</button>';
   document.body.appendChild(o);
-  let fini = false; const t = setTimeout(() => fermer(true), reduit ? 2500 : 12800);
-  function fermer(lancer) { if (fini) return; fini = true; clearTimeout(t); BA_OUVERTE = null; o.classList.add("fin"); setTimeout(() => o.remove(), 450); if (lancer && ensuite) setTimeout(ensuite, 250); }
+  // V16.16 : seul « Passer » (ou Échap / retour) ferme ; si l'appli passe en arrière-plan, la bande-annonce se met en pause
+  let fini = false, restant = reduit ? 2500 : 12800, debut = performance.now(), t = setTimeout(() => fermer(true), restant);
+  const visib = () => { if (fini) return; if (document.visibilityState === "hidden") { clearTimeout(t); restant -= performance.now() - debut; o.classList.add("pause"); } else if (o.classList.contains("pause")) { debut = performance.now(); o.classList.remove("pause"); t = setTimeout(() => fermer(true), Math.max(300, restant)); } };
+  const clavier = e => { if (e.key === "Escape") fermer(true); };
+  document.addEventListener("visibilitychange", visib); document.addEventListener("keydown", clavier);
+  function fermer(lancer) { if (fini) return; fini = true; clearTimeout(t); document.removeEventListener("visibilitychange", visib); document.removeEventListener("keydown", clavier); BA_OUVERTE = null; o.classList.add("fin"); setTimeout(() => o.remove(), 450); if (lancer && ensuite) setTimeout(ensuite, 250); }
   o.querySelector(".ba-passer").addEventListener("click", e => { e.stopPropagation(); fermer(true); });
-  o.addEventListener("click", () => fermer(true));
   BA_OUVERTE = { fermer };
 }
 function brancherGP(v, y) {
@@ -632,10 +635,11 @@ function brancherGP(v, y) {
   }
   // V16.10 · une manche par mois : grille de départ dans l'ordre du classement d'avant le mois ; le meilleur du mois boucle exactement un tour
   const api = GP_INST.api, mc = mancheGP(etapes, i); if (api.regler) api.regler({ tour: mc.tour, grille: mc.grille });
-  const jouer = () => api.jouer(mc.depart, mc.arrivee, api.type === "3d" ? 6400 : 3000, () => bullesGP(y, i), i >= 1 && api.type === "3d");
   const cleVu = "versus.gpVu." + y, vu = +(stock.get(cleVu) || 0);
+  // V16.16 : la manche n'est marquée « vue » qu'à l'arrivée (quitter pendant la bande-annonce ou la course ne la fait plus perdre)
+  const jouer = () => api.jouer(mc.depart, mc.arrivee, api.type === "3d" ? 6400 : 3000, () => { if (et.k && !et.avenir && et.k > +(stock.get(cleVu) || 0)) stock.set(cleVu, String(et.k)); bullesGP(y, i); }, i >= 1 && api.type === "3d");
   if (GP_REJOUER && i > 0 && !et.avenir) { GP_REJOUER = false; setTimeout(jouer, 150); }
-  else if (!et.avenir && et.k && et.k > vu && i > 0) { stock.set(cleVu, String(et.k)); api.placer(mc.depart); setTimeout(() => bandeAnnonce(y, i, jouer), 300); }
+  else if (!et.avenir && et.k && et.k > vu && i > 0) { api.placer(mc.depart); if (!BA_OUVERTE) setTimeout(() => { if (!BA_OUVERTE) bandeAnnonce(y, i, jouer); }, 300); }
   else { if (!api.enCours()) api.placer(mc.arrivee); const kBA = et.k || 0, cleBA = "versus.baVu." + y; if (et.avenir && kBA && kBA > +(stock.get(cleBA) || 0)) { stock.set(cleBA, String(kBA)); setTimeout(() => bandeAnnonce(y, i, null), 400); } }
   GP_REJOUER = false;
   const vu3 = v.querySelector("#gp-vue"); if (vu3) vu3.addEventListener("click", () => { ETAT.gp2d = pi.classList.contains("en2d") ? "0" : "1"; garder(); rendreTrophees(); });
