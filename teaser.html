@@ -31,43 +31,80 @@
 <script>
 const COUL = ["#4C9AFF", "#2BB6A3", "#FF6FA8", "#F2994A"], NOMS = ["Théo", "Kévin", "Clément", "Devlin"];
 const carte = id => { try { return window.Piste && Piste.carte(id); } catch (e) { return null; } };
-const PLANS = [   // [durée ms, carte, mois, texte, style]
-  [3000, null, "", "Ils pensaient juste épargner.", "s"],
-  [2600, null, "", "Ils se sont trompés.", "s"],
-  [3000, "pilotes", "", "4 pilotes.", ""],
-  [1300, "bahrein", "JANVIER", "12 univers.", ""],
-  [1500, "djeddah", "FÉVRIER", "Un dragon sous la banque.", "s"],
-  [1500, "melbourne", "MARS", "Le Chapelier sert le thé.", "s"],
-  [1500, "montreal", "JUIN", "Le côté obscur vous attend.", "s"],
-  [1500, "silverstone", "JUILLET", "Quelque chose bouge sous le sable.", "s"],
-  [1500, "singapour", "OCTOBRE", "Cinq tickets d'or. Pas un de plus.", "s"],
-  [1500, "interlagos", "NOVEMBRE", "Ils sont derrière le mur.", "s"],
-  [2200, "lasvegas", "DÉCEMBRE", "Une seule finale.", ""],
-  [2400, null, "", "Six pierres. Un seul claquement de doigts.", "s"],
-  [2400, null, "", "Une seule couronne. « Qu'on lui coupe la tête ! »", "s"],
-  [6000, "fin", "", "", ""]];
-let audio = null;
-function boum(f, d, v) { if (!audio) return; const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime; o.type = "sine"; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(30, t + d); g.gain.setValueAtTime(v || .7, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g).connect(audio.destination); o.start(t); o.stop(t + d); }
-function souffle(d) { if (!audio) return; const n = audio.createBufferSource(), b = audio.createBuffer(1, audio.sampleRate * d, audio.sampleRate), c = b.getChannelData(0); for (let i = 0; i < c.length; i++) c[i] = (Math.random() * 2 - 1) * (i / c.length); n.buffer = b; const fi = audio.createBiquadFilter(), t = audio.currentTime; fi.type = "lowpass"; fi.frequency.setValueAtTime(200, t); fi.frequency.exponentialRampToValueAtTime(6000, t + d); const g = audio.createGain(); g.gain.value = .35; n.connect(fi).connect(g).connect(audio.destination); n.start(); }
-let nappe = null, coeur = null;
-function demarrerNappe() { if (!audio) return; const g = audio.createGain(), t = audio.currentTime; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.12, t + 6); g.gain.linearRampToValueAtTime(.2, t + 22); g.connect(audio.destination);
-  nappe = { g, o: [55, 82.4, 110].map((f, k) => { const o = audio.createOscillator(); o.type = k === 2 ? "triangle" : "sine"; o.frequency.value = f; const gg = audio.createGain(); gg.gain.value = [1, .6, .25][k]; o.connect(gg).connect(g); o.start(); return o; }) };
-  let n = 0; coeur = setInterval(() => { boum(70, .35, .45); setTimeout(() => boum(70, .3, .3), 220); if (++n > 5) clearInterval(coeur); }, 850); }
-function silence(d) { if (nappe) { const t = audio.currentTime; nappe.g.gain.cancelScheduledValues(t); nappe.g.gain.setValueAtTime(nappe.g.gain.value, t); nappe.g.gain.linearRampToValueAtTime(0, t + d); } }
-function accord() { if (!audio) return; const t = audio.currentTime; [110, 164.8, 220, 261.6].forEach(f => { const o = audio.createOscillator(), g = audio.createGain(); o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.08, t + .05); g.gain.exponentialRampToValueAtTime(.001, t + 4.5); o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 4.6); }); }
-let alt = 0;
+// [durée ms, carte, mois, texte, style, son]  — sons : h battements de cœur · b « braam » de cuivres · t tambour · o ostinato (jusqu'au prochain b) · r montée · B final (braam + cymbale)
+const LONG = [
+  [3000, null, "", "Ils pensaient juste épargner.", "s", "h"],
+  [2600, null, "", "Ils se sont trompés.", "s", "t"],
+  [3000, "pilotes", "", "4 pilotes.", "", "b"],
+  [1300, "bahrein", "JANVIER", "12 univers.", "", "to"],
+  [1500, "djeddah", "FÉVRIER", "Un dragon sous la banque.", "s", "t"],
+  [1500, "melbourne", "MARS", "Le Chapelier sert le thé.", "s", "t"],
+  [1500, "montreal", "JUIN", "Le côté obscur vous attend.", "s", "t"],
+  [1500, "silverstone", "JUILLET", "Quelque chose bouge sous le sable.", "s", "t"],
+  [1500, "singapour", "OCTOBRE", "Cinq tickets d'or. Pas un de plus.", "s", "t"],
+  [1500, "interlagos", "NOVEMBRE", "Ils sont derrière le mur.", "s", "t"],
+  [2200, "lasvegas", "DÉCEMBRE", "Une seule finale.", "", "b"],
+  [2400, null, "", "Six pierres. Un seul claquement de doigts.", "s", "t"],
+  [2400, null, "", "Une seule couronne. « Qu'on lui coupe la tête ! »", "s", "tr"],
+  [6000, "fin", "", "", "", "B"]];
+const COURT = [
+  [2200, null, "", "Ils pensaient juste épargner.", "s", "h"],
+  [2000, "pilotes", "", "4 pilotes.", "", "b"],
+  [700, "bahrein", "", "", "", "to"], [700, "djeddah", "", "", "", "t"], [700, "melbourne", "", "", "", "t"],
+  [700, "montreal", "", "", "", "t"], [700, "silverstone", "", "", "", "t"], [700, "interlagos", "", "", "", "t"],
+  [1700, "lasvegas", "", "12 univers. Un seul champion.", "", "b"],
+  [1300, null, "", "", "", "r"],
+  [4200, "demain", "", "", "", "B"]];
+const COURTE = location.hash.indexOf("court") >= 0, PLANS = COURTE ? COURT : LONG;
+/* ---------- la partition : un seul code pour la page (son en direct) et pour la vidéo (rendu hors ligne, identique) ---------- */
+function bruit(ac, d) { const b = ac.createBuffer(1, Math.max(1, Math.floor(ac.sampleRate * d)), ac.sampleRate), c = b.getChannelData(0); for (let i = 0; i < c.length; i++) c[i] = Math.random() * 2 - 1; const n = ac.createBufferSource(); n.buffer = b; return n; }
+function sortie(ac) { if (!ac._bus) { const comp = ac.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4; const g = ac.createGain(); g.gain.value = .9; comp.connect(g).connect(ac.destination); ac._bus = comp; } return ac._bus; }
+function tambour(ac, t, v) { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(42, t + .5); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .006); g.gain.exponentialRampToValueAtTime(.001, t + .9); o.connect(g).connect(sortie(ac)); o.start(t); o.stop(t + 1);
+  const n = bruit(ac, .15), f = ac.createBiquadFilter(), gn = ac.createGain(); f.type = "lowpass"; f.frequency.value = 900; gn.gain.setValueAtTime(v * .7, t); gn.gain.exponentialRampToValueAtTime(.001, t + .12); n.connect(f).connect(gn).connect(sortie(ac)); n.start(t); }
+function braam(ac, t, d, v) { const f = ac.createBiquadFilter(), sh = ac.createWaveShaper(), g = ac.createGain(), cv = new Float32Array(256); for (let i = 0; i < 256; i++) { const x = i / 128 - 1; cv[i] = Math.tanh(2.5 * x); } sh.curve = cv;
+  f.type = "lowpass"; f.Q.value = 2; f.frequency.setValueAtTime(90, t); f.frequency.exponentialRampToValueAtTime(1500, t + .22); f.frequency.exponentialRampToValueAtTime(260, t + d);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .05); g.gain.setValueAtTime(v, t + d * .5); g.gain.exponentialRampToValueAtTime(.001, t + d); sh.connect(f).connect(g).connect(sortie(ac));
+  [36.7, 36.85, 73.4, 73.7, 110, 146.8].forEach(fr => { const o = ac.createOscillator(), gg = ac.createGain(); o.type = "sawtooth"; o.frequency.value = fr; gg.gain.value = .22; o.connect(gg).connect(sh); o.start(t); o.stop(t + d + .1); });
+  const s = ac.createOscillator(), gs = ac.createGain(); s.frequency.setValueAtTime(55, t); s.frequency.exponentialRampToValueAtTime(30, t + d); gs.gain.setValueAtTime(v * .9, t); gs.gain.exponentialRampToValueAtTime(.001, t + d); s.connect(gs).connect(sortie(ac)); s.start(t); s.stop(t + d + .1); }
+function cymbale(ac, t, v) { const n = bruit(ac, 3.5), f = ac.createBiquadFilter(), g = ac.createGain(); f.type = "highpass"; f.frequency.value = 3500; g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + 3.4); n.connect(f).connect(g).connect(sortie(ac)); n.start(t); }
+function montee(ac, t, d, v) { const n = bruit(ac, d), f = ac.createBiquadFilter(), g = ac.createGain(); f.type = "bandpass"; f.Q.value = 1.2; f.frequency.setValueAtTime(250, t); f.frequency.exponentialRampToValueAtTime(5000, t + d); g.gain.setValueAtTime(.001, t); g.gain.exponentialRampToValueAtTime(v, t + d); n.connect(f).connect(g).connect(sortie(ac)); n.start(t);
+  const o = ac.createOscillator(), go = ac.createGain(); o.type = "triangle"; o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(880, t + d); go.gain.setValueAtTime(.001, t); go.gain.exponentialRampToValueAtTime(v * .5, t + d); o.connect(go).connect(sortie(ac)); o.start(t); o.stop(t + d); }
+function ostinato(ac, t, d) { const notes = [73.4, 73.4, 87.3, 73.4, 65.4, 73.4, 98, 87.3], pas = .1875; for (let k = 0; k * pas < d; k++) { const tt = t + k * pas, o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain(), v = .05 + .12 * (k * pas / d);
+  o.type = "sawtooth"; o.frequency.value = notes[k % 8] * (k % 16 >= 8 ? 1 : 2); f.type = "lowpass"; f.frequency.value = 700 + 1200 * (k * pas / d); g.gain.setValueAtTime(v, tt); g.gain.exponentialRampToValueAtTime(.001, tt + .16); o.connect(f).connect(g).connect(sortie(ac)); o.start(tt); o.stop(tt + .18); } }
+function nappe(ac, t, d) { const g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.1, t + 4); g.gain.setValueAtTime(.1, t + d - 1); g.gain.linearRampToValueAtTime(0, t + d); g.connect(sortie(ac));
+  [55, 82.4].forEach(f => { const o = ac.createOscillator(); o.frequency.value = f; o.connect(g); o.start(t); o.stop(t + d); }); }
+function partition(ac, t0, P) {
+  let t = t0; const fin = P.findIndex(p => p[5].indexOf("B") >= 0), tFin = t0 + P.slice(0, fin).reduce((s, p) => s + p[0], 0) / 1000;
+  nappe(ac, t0, tFin - t0 - .35);
+  P.forEach((p, i) => { const s = p[5], d = p[0] / 1000;
+    if (s.indexOf("h") >= 0) for (let k = 0; k * .8 < d; k++) { tambour(ac, t + k * .8, .35); tambour(ac, t + k * .8 + .2, .22); }
+    if (s.indexOf("t") >= 0) tambour(ac, t, .9);
+    if (s.indexOf("b") >= 0) { braam(ac, t, Math.min(3.2, d + .8), .55); tambour(ac, t, 1); }
+    if (s.indexOf("o") >= 0) { let d2 = 0; for (let j = i; j < P.length && (j === i || P[j][5].indexOf("b") < 0); j++) d2 += P[j][0] / 1000; ostinato(ac, t, d2); }
+    if (s.indexOf("r") >= 0) montee(ac, t + .1, d - .45, .5);
+    if (s.indexOf("B") >= 0) { braam(ac, t, 4.5, .75); tambour(ac, t, 1.2); cymbale(ac, t, .35); }
+    t += d; });
+  return t - t0;
+}
+let audio = null, alt = 0;
 function plan(i) {
   if (i >= PLANS.length) return; const [d, id, mois, t, st] = PLANS[i], txt = document.getElementById("txt");
   const f = document.getElementById(alt ? "f1" : "f2"), autre = document.getElementById(alt ? "f2" : "f1"); alt = 1 - alt;
-  const img = id && id !== "pilotes" && id !== "fin" ? carte(id) : null;
+  const img = id && id !== "pilotes" && id !== "fin" && id !== "demain" ? carte(id) : null;
   if (img) { f.style.backgroundImage = 'url("' + img + '")'; f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); autre.classList.remove("on"); } else { f.classList.remove("on"); autre.classList.remove("on"); }
   if (id === "pilotes") txt.innerHTML = '<div class="l on">' + t + '</div><div class="pilotes">' + NOMS.map((n, k) => '<i style="color:' + COUL[k] + ';background:' + COUL[k] + '22;animation-delay:' + (.3 + k * .35) + 's" class="on">' + n + "</i>").join("") + "</div>";
-  else if (id === "fin") { accord(); txt.innerHTML = '<div class="l on titre">VERSUS</div><div class="l on date" style="animation-delay:.6s">Saison 1 · 2027</div><div class="l on s" style="animation-delay:1.2s">Les moteurs chauffent le 1<sup>er</sup> décembre.</div><a class="go on" style="animation-delay:2s" href="./">Entrer dans la course 🏁</a>'; boum(70, 2.2, .9); }
-  else txt.innerHTML = (mois ? '<span class="mois">' + mois + "</span>" : "") + '<div class="l on ' + st + '">' + t + "</div>";
-  if (img || id === "pilotes") { const fl = document.getElementById("flash"); fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on"); boum(i < 4 ? 90 : 140, .6, .6); }
-  if (i === 10) souffle(2.2); if (i === 12) { souffle(2.3); silence(.4); }
+  else if (id === "fin") txt.innerHTML = '<div class="l on titre">VERSUS</div><div class="l on date" style="animation-delay:.6s">Saison 1 · 2027</div><div class="l on s" style="animation-delay:1.2s">Les moteurs chauffent le 1<sup>er</sup> décembre.</div><a class="go on" style="animation-delay:2s" href="./">Entrer dans la course 🏁</a>';
+  else if (id === "demain") txt.innerHTML = '<div class="l on titre" style="font-size:clamp(56px,19vw,120px)">Demain.</div><div class="l on date" style="animation-delay:1.4s">VERSUS · samedi 9 h 🏁</div>';
+  else txt.innerHTML = (mois ? '<span class="mois">' + mois + "</span>" : "") + (t ? '<div class="l on ' + st + '">' + t + "</div>" : "");
+  if (img || id === "pilotes" || id === "fin" || id === "demain") { const fl = document.getElementById("flash"); fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on"); }
   setTimeout(() => plan(i + 1), d);
 }
-document.getElementById("lancer").addEventListener("click", e => { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) { } e.currentTarget.remove(); demarrerNappe(); setTimeout(() => plan(0), 300); });
-if (location.hash === "#auto") { document.getElementById("lancer").remove(); setTimeout(() => plan(0), 300); }
+/** pour la vidéo : la même partition rendue hors ligne, renvoyée en WAV (base64) */
+async function rendreSon() { const total = PLANS.reduce((s, p) => s + p[0], 0) / 1000 + 4, oac = new OfflineAudioContext(2, Math.ceil(44100 * total), 44100); partition(oac, 0, PLANS); const b = await oac.startRendering();
+  const n = b.length, buf = new DataView(new ArrayBuffer(44 + n * 4)), w = (o, s) => { for (let i = 0; i < s.length; i++) buf.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, "RIFF"); buf.setUint32(4, 36 + n * 4, true); w(8, "WAVEfmt "); buf.setUint32(16, 16, true); buf.setUint16(20, 1, true); buf.setUint16(22, 2, true); buf.setUint32(24, 44100, true); buf.setUint32(28, 176400, true); buf.setUint16(32, 4, true); buf.setUint16(34, 16, true); w(36, "data"); buf.setUint32(40, n * 4, true);
+  const L = b.getChannelData(0), R = b.getChannelData(1); for (let i = 0; i < n; i++) { buf.setInt16(44 + i * 4, Math.max(-1, Math.min(1, L[i])) * 32767, true); buf.setInt16(46 + i * 4, Math.max(-1, Math.min(1, R[i])) * 32767, true); }
+  let s = ""; const u = new Uint8Array(buf.buffer); for (let i = 0; i < u.length; i += 32768) s += String.fromCharCode.apply(null, u.subarray(i, i + 32768)); return btoa(s); }
+document.getElementById("lancer").addEventListener("click", e => { try { audio = new (window.AudioContext || window.webkitAudioContext)(); partition(audio, audio.currentTime + .3, PLANS); } catch (_) { } e.currentTarget.remove(); setTimeout(() => plan(0), 300); });
+if (location.hash.indexOf("auto") >= 0) { document.getElementById("lancer").remove(); setTimeout(() => plan(0), 300); }
 </script></body></html>
