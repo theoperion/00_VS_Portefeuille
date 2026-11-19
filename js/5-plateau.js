@@ -17,9 +17,9 @@ const CARTES_BONUS = [
 const ETAPES = [
   { id: "circuits", ico: "🗺️", nom: "L'atout des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque Grand Prix favorise une carte : +1 quand elle marque. Secret jusqu'au 2 (un indice avant), et bouchon si plusieurs la jouent." },
   { id: "pioche", ico: "🎴", nom: "Le rattrapage", ouvre: 202701, regle: "pioche", resume: "Tu finis dernier d'un mois ? Tu pioches une carte bonus (une fois par saison chacune), à jouer à partir du mois suivant. Tes cartes piochées t'attendent dans le Stand." },
-  { id: "monaco", ico: "🌑", nom: "Le Côté obscur", ouvre: 202701, regle: "speciaux", resume: "Un mois de la saison, une éclipse tombe sur le circuit : le dernier du championnat marque ses points de place en double. La date est dans le calendrier du Grand Prix." },
-  { id: "pieges", ico: "🪤", nom: "Les pièges des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque circuit sans mois spécial a son piège, une petite règle qui ne vaut que ce mois-là (Feux follets dans la Forêt aux lucioles, Couloirs mouvants au Château, Surchauffe chez les Androïdes…). Il s\'affiche dès le 20 du mois d\'avant, avec la carte." },
-  { id: "gpspeciaux", ico: "🏁", nom: "Les Dunes et le Multivers", ouvre: 202701, regle: "speciaux", resume: "Janvier sur la Mer de dunes : le vainqueur du mois marque +2 de plus (le Chevaucheur des sables). Décembre, la Finale dans le Multivers : en plus des places doublées, le 🎯 vaut +2 au lieu de +1 (le Rassemblement des héros)." },
+  { id: "monaco", ico: "🌑", nom: "L'éclipse", ouvre: 202701, quand: "juin 2027", regle: "speciaux", resume: "Un mois de la saison, une éclipse tombe sur le circuit : le dernier du championnat marque ses points de place en double. La date est dans le calendrier du Grand Prix." },   // v17.5 : nom sans univers, mois corrigé (juin)
+  { id: "pieges", ico: "🪤", nom: "Les pièges des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque circuit sans mois spécial a son piège, une petite règle qui ne vaut que ce mois-là. Il s\'affiche dès le 20 du mois d\'avant, avec la carte." },
+  { id: "gpspeciaux", ico: "🏁", nom: "Les mois spéciaux", ouvre: 202701, regle: "speciaux", resume: "Janvier : le vainqueur du mois marque +2 de plus. Décembre, la Finale : en plus des places doublées, le 🎯 vaut +2 au lieu de +1." },   // v17.5 : sans nom d'univers (révélation fin décembre)
   { id: "prono", ico: "🔮", nom: "Le pronostic du mois", ouvre: 202701, regle: "championnat", resume: "Dans la fenêtre de ta carte : qui gagne le mois (+1 si juste) et le S&P 500 fera-t-il plus de +1 % (+1 si juste). Secret jusqu'au 2." },
   { id: "pole", ico: "🅿️", nom: "La pole position", ouvre: 202701, regle: "championnat", resume: "Avec ton pronostic, donne ton chiffre pour le S&P 500 du mois (ex. +1,8 %). Le plus proche marque +1 (partagé en cas d'égalité)." },
   { id: "defi", ico: "🏁", nom: "Le défi du mois", ouvre: 202701, regle: "championnat", resume: "Chaque mois a son défi (battre le Nasdaq, faire mieux que l'or, finir positif…), annoncé le 20 du mois d'avant : +1 à chaque pilote qui le réussit." },
@@ -47,7 +47,7 @@ function annonceEtape(e) { return cleMoins(ouvreEtape(e), 1) * 100 + 20; }
 function regleActive(id, k) { const e = etape(id); if (enReserve(e)) return false; if (apercuSaison()) return true; return !e || (!!k && k >= ouvreEtape(e)); }
 /** La règle est-elle déjà annoncée (expliquée) ? */
 function regleVisible(id) { const e = etape(id); if (enReserve(e)) return false; if (apercuSaison()) return true; return !e || aujNum() >= annonceEtape(e); }
-function moisEtape(e) { return moisLong(ouvreEtape(e)); }
+function moisEtape(e) { return e.quand || moisLong(ouvreEtape(e)); }   // v17.5 : « quand » = le mois où la règle joue vraiment (l'éclipse : juin)
 /** Les nouveautés pas encore annoncées : leur nom et leur mois, rien de plus */
 function htmlProchainement(compact) {
   const l = etapesJeu().filter(e => !regleVisible(e.id)); if (!l.length) return "";
@@ -548,6 +548,8 @@ function htmlRegles(tout, modeReserve) {
   const vP = vu("pioche"), vN = vu("niveaux"), vA = vu("atelier"), vM = vu("monaco"), vF = vu("finale"), vC = vu("circuits"), vS = vu("gpspeciaux");
   const vB = ["prono", "pole", "defi", "rival", "equipe", "serie", "regularite"].some(vu), bientot = tout || modeReserve ? [] : etapesJeu().filter(e => !regleVisible(e.id));
   const base = !tout && !modeReserve && basesSeules(), vSp = vM || vS || vF || vu("vote");   // V16.23 : pendant la chauffe, les règles ne montrent que les bases
+  // v17.5 · univers 2027 gardés secrets jusqu'au 31/12 23:59 : seulement janvier (à partir du 20/12) ; l'admin (« tout », réserve, aperçu) voit tout
+  const univ = tout || modeReserve || saisonJouee(), univJanv = univ || janvierAnnonce();
   const sommaire = [["essentiel", "L'essentiel"], ["champ", "Points"], ["cartes", "Cartes"]].concat(vB ? [["bonus", "Bonus"]] : [], vSp ? [["speciaux", "Mois spéciaux"]] : [], vu("pieges") ? [["pieges", "Pièges"]] : [], vP ? [["pioche", "Rattrapage"]] : [], vN ? [["niveaux", "Niveaux"]] : [], [["gp", base ? "La course" : "Course et trophées"]], bientot.length ? [["bientot", "🎁 Bientôt"]] : []);
   // schémas (HTML/CSS, lisibles en clair comme en sombre)
   const etapeSch = (ico, quand, quoi) => '<div class="rg-et"><i>' + ico + "</i><b>" + quand + "</b><small>" + quoi + "</small></div>";
@@ -576,13 +578,14 @@ function htmlRegles(tout, modeReserve) {
       (vu("rival") ? "<div><b>😈 Rival</b><span>choisi en secret (20 déc. → 1<sup>er</sup> janv.) ; devant lui en fin de saison</span><em>+3</em></div>" : "") +
       (vu("regularite") ? "<div><b>🛡️ Régularité</b><span>fin de saison : le moins souvent dernier (puis le plus de mois positifs)</span><em>+3</em></div>" : "") + "</div>") : "") +
     (!vSp ? "" : s("speciaux", "📅", "Les mois spéciaux", '<div class="rg-tab">' +
-      (vM ? "<div><b>🌑 Le Côté obscur</b><span>" + (regleActive("monaco", mo) ? esc(moisLong(mo)) : "juin") + " : le dernier du championnat</span><em>place ×2</em></div>" : "") +
-      (vS ? "<div><b>🪱 Le Chevaucheur des sables</b><span>janvier : le vainqueur du mois</span><em>+2</em></div><div><b>🦸 Le Rassemblement des héros</b><span>décembre (avec la Finale) : le 🎯</span><em>vaut +2</em></div>" : "") +
+      (vM && univ ? "<div><b>🌑 Le Côté obscur</b><span>" + (regleActive("monaco", mo) ? esc(moisLong(mo)) : "juin") + " : le dernier du championnat</span><em>place ×2</em></div>" : "") +
+      (vS && univJanv ? "<div><b>🪱 Le Chevaucheur des sables</b><span>janvier : le vainqueur du mois</span><em>+2</em></div>" : "") + (vS && univ ? "<div><b>🦸 Le Rassemblement des héros</b><span>décembre (avec la Finale) : le 🎯</span><em>vaut +2</em></div>" : vS ? "<div><b>🎯 Bonus de la Finale</b><span>décembre : le 🎯</span><em>vaut +2</em></div>" : "") +
+      (vM && !univ ? "<div><b>🌑 L'éclipse</b><span>un mois de la saison : le dernier du championnat</span><em>place ×2</em></div>" : "") +
       (vF ? "<div><b>🏆 Finale</b><span>décembre : tout le monde</span><em>place ×2</em></div>" : "") +
       (vu("vote") ? "<div><b>🗳️ Vote</b><span>2 → 31 décembre : « le coup de la saison » (pas pour soi)</span><em>plaque</em></div>" : "") + "</div>")) +
     (vu("pieges") ? s("pieges", "🪤", "Les pièges des circuits", "<p>Les autres mois, le circuit a son <b>piège</b> : une petite règle qui ne vaut que ce mois-là. Il s'affiche dès le 20 du mois d'avant (Stand et Classement).</p>" +
-      '<div class="rg-tab">' + CAL_GP.filter(id => PIEGES[id]).map(id => "<div><b>" + GPS[id].drap + " " + esc(GPS[id].ville) + "</b><span>" + PIEGES[id].ico + " <b>" + esc(PIEGES[id].nom) + "</b> : " + esc(PIEGES[id].txt) + "</span><em>" + esc(moisCourt(y * 100 + CAL_GP.indexOf(id) + 1).replace(/ \d+$/, "")) + "</em></div>").join("") + "</div>" +
-      '<p class="rg-note">Le Côté obscur tombe en juin, sur la Bataille spatiale.</p>') : "") +
+      '<div class="rg-tab">' + CAL_GP.filter((id, i) => PIEGES[id] && (univ || (univJanv && i === 0))).map(id => "<div><b>" + GPS[id].drap + " " + esc(GPS[id].ville) + "</b><span>" + PIEGES[id].ico + " <b>" + esc(PIEGES[id].nom) + "</b> : " + esc(PIEGES[id].txt) + "</span><em>" + esc(moisCourt(y * 100 + CAL_GP.indexOf(id) + 1).replace(/ \d+$/, "")) + "</em></div>").join("") + "</div>" +
+      (univ ? '<p class="rg-note">Le Côté obscur tombe en juin, sur la Bataille spatiale.</p>' : '<p class="rg-note">Les circuits et leurs pièges se dévoilent fin décembre.</p>')) : "") +
     (vP ? s("pioche", "🎴", "Le rattrapage",
       "<p>Dernier d'un mois ? Tu pioches <b>1 carte bonus</b>, jouable dès le mois suivant, une fois par saison :</p><ul>" + CARTES_BONUS.map(c => "<li>" + c.ico + " <b>" + esc(c.nom) + "</b> : " + esc(c.court || c.def) + "</li>").join("") + "</ul>") : "") +
     (vN ? s("niveaux", "🔧", vA ? "Niveaux et atelier" : "Niveaux d'écurie",

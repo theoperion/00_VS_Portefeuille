@@ -708,6 +708,7 @@ function armerRetour() {
 function ouvrirReglages(section) {
   $("#champ-api").value = stock.get(CLES.api) || API_URL; aRevoquer = null; $("#reglages").hidden = false; chargerCodes(); majMoiReglages();
   { const pb = document.getElementById("ouvrir-portrait"); if (pb) pb.hidden = !portraitDispo(); }   // V16.56 : Mon portrait à partir du samedi 21/11, 11 h
+  { const ce = document.querySelector('[data-accent-choix="ecurie"]'); if (ce) ce.style.display = saisonJouee() ? "" : "none"; }   // v17.5 : pas de couleur « Mon écurie » avant la Saison 1 (tour de chauffe = bases seulement)
   if (section) { const s = document.getElementById(section); if (s) plierRegl(s, false); if (s) setTimeout(() => { s.scrollIntoView({ block: "start" }); const i = s.querySelector("input"); if (i && !i.value) i.focus(); }, 30); }
 }
 $("#btn-reglages").addEventListener("click", () => ouvrirReglages());

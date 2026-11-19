@@ -18,13 +18,20 @@ function apercuSaison() { return !window.APERCUS_FINIS && !saisonOuverte() && es
 function saisonVisible() { return saisonOuverte() || apercuSaison() || chauffeOuverte(); }
 /** La « saison » 2026 hors aperçu admin, c'est le tour de chauffe : décembre seul, sans défis, badges ni exclusifs */
 function estChauffe(y) { return y === SAISON.premiere - 1 && !apercuSaison(); }
+/** v17.5 · la saison 2027 est-elle jouée pour de vrai (ou en aperçu admin) ? Fondé sur la DATE, pas sur l'onglet choisi : avant le 1/1/2027, ni écurie, ni badges, ni trophées, ni univers 2027 */
+function saisonJouee() { return saisonOuverte() || apercuSaison(); }
+/** v17.5 · à partir du 20 décembre 2026 : l'onglet « Saison 1 » s'ouvre, mais seulement le Stand (carte de janvier, pronostic, rival) ; seul l'univers de janvier est dévoilé */
+function janvierAnnonce() { return Date.now() >= new Date(SAISON.premiere - 1, 11, 20).getTime(); }
 /** V16.22 · pendant le tour de chauffe : seulement les bases (course + cartes) ; écurie, badges, trophées et objets attendent janvier (demande de Théo) */
-function basesSeules() { try { return !apercuSaison() && estChauffe(saisonCourante()); } catch (e) { return false; } }
-/** Saisons qu'on peut ouvrir dans le Podium : le tour de chauffe (dès le 1er décembre), puis les vraies */
+function basesSeules() { try { return !apercuSaison() && (!saisonOuverte() || estChauffe(saisonCourante())); } catch (e) { return false; } }
+/** v17.5 · onglet « Saison 1 » ouvert avant le 1er janvier (du 20 au 31 décembre) : seulement le Stand */
+function standSeul(y) { return !saisonJouee() && y >= SAISON.premiere; }
+/** Saisons qu'on peut ouvrir dans le Podium : le tour de chauffe (dès le 21 novembre), puis la Saison 1 (à partir du 20 décembre, Stand seul jusqu'au 1er janvier) */
 function anneesPodium() {
   if (apercuSaison()) return anneesSaison();
   if (!chauffeOuverte()) return [];
   const l = Date.now() < new Date(SAISON.premiere, 1, 1).getTime() ? [SAISON.premiere - 1] : [];   // la chauffe reste consultable jusqu'à fin janvier
+  if (!saisonOuverte() && !janvierAnnonce()) return l;   // v17.5 : pas de Saison 1 avant le 20 décembre
   for (let y = SAISON.premiere; y <= Math.max(SAISON.premiere, new Date(Date.now()).getFullYear()); y++) l.push(y); return l;
 }
 /** Jour limite (exclu) pour poser une carte ou lancer un duel : le 2, ou le 6 pour le tour de chauffe */
@@ -783,8 +790,8 @@ function teaser() {
   const now = new Date(), noel = now >= SAISON.noel;
   const qui = D.personnes.some(p => p.nom === ETAT.moi) ? ETAT.moi : (D.personnes[0] || {}).nom;
   const e = Object.assign({}, BASE_ECURIE, { numero: numeroParDefaut(qui) });
-  return '<section class="teaser">' + svgVoiture({ nom: qui, e, drapeau: compteRebours(now), roule: true, reflet: true, label: "Tour de chauffe le 1er décembre, saison 1 le 1er janvier 2027" }) +
-    '<div class="t-txt"><div class="t-saison">Saison 1</div><div class="t-date">🔥 Tour de chauffe le 1<sup>er</sup> décembre · 🏁 départ le 1<sup>er</sup> janvier 2027</div>' +
+  return '<section class="teaser">' + svgVoiture({ nom: qui, e, drapeau: compteRebours(now), roule: true, reflet: true, label: "Tour de chauffe le samedi 21 novembre à 9 h, saison 1 le 1er janvier 2027" }) +
+    '<div class="t-txt"><div class="t-saison">Saison 1</div><div class="t-date">🔥 Tour de chauffe le samedi 21 novembre à 9 h · 🏁 départ le 1<sup>er</sup> janvier 2027</div>' +
     '<p class="t-phrase">Tout le monde sur la ligne de départ.<br>Même point de départ, mêmes chances.</p>' +
     (noel ? '<div class="t-concept">' +
       '<div><b>🔥 Tour de chauffe</b><span>Décembre pour découvrir les règles, sans que rien ne compte. Vos cartes de janvier se posent pendant les fêtes.</span></div>' +
@@ -792,7 +799,7 @@ function teaser() {
       '<div><b>🏎️ Grand Prix</b><span>Un circuit à thème par mois : 12 univers gardés secrets jusqu\'à fin décembre. Vos voitures en 3D, 25 points le tour, la météo du marché.</span></div>' +
       '<div><b>🃏 Cartes de course</b><span>4 cartes de stratégie, les mêmes pour tous. Une par mois, face cachée.</span></div>' +
       '<div><b>🎁 Nouveautés en cours de saison</b><span>' + etapesJeu().map(e => e.ico + " " + esc(e.nom) + " (" + esc(moisEtape(e).replace(/ \d{4}$/, "")) + ")").join(" · ") + ". Chaque règle est expliquée le 20 du mois d'avant, quand sa fenêtre s'ouvre.</span></div>" +
-      '<div><b>🙂 Ta tête au volant</b><span>Ton portrait animé, ou ton casque, à côté de ton nom. Et 24 objets uniques à rafler les premiers.</span></div></div>' +
+      '<div><b>🙂 Ta tête au volant</b><span>Ton portrait animé, à côté de ton nom.</span></div></div>' +
       '<button class="btn acc" type="button" id="teaser-regles">📖 Lire toutes les règles</button>' +
       '<p class="t-note">Tout repart de zéro le 1<sup>er</sup> janvier : ce qui s\'est passé avant ne compte pas.</p>'
       : '<p class="t-note">On en dit plus le samedi 21 novembre.</p>') + "</div>" +
@@ -850,13 +857,14 @@ function blocSaison() {
   return '<section class="saison"><div class="saison-h"><div><span class="s-k">' + (ch ? "Tour de chauffe · décembre 2026" : "Saison " + numeroSaison(y) + " · " + y + (apercuSaison() ? " (répétition)" : "")) + "</span><h2>" + (ch ? "La chauffe" : "Le championnat") + '</h2></div><div class="s-droite">' +
     '<button class="regles-b" type="button" id="regles-ouvrir" aria-label="Règles du jeu">' + icoOu("regles", "📖") + ' Règles</button></div></div>' +
     (ys.length > 1 ? '<div class="s-ys">' + ys.map(a => '<button type="button" class="chip-s' + (a === y ? " on" : "") + '" data-saison="' + a + '">' + (estChauffe(a) ? "🔥 Chauffe" : "Saison " + numeroSaison(a)) + "</button>").join("") + "</div>" : "") +
-    (ch ? '<div class="chauffe-b">🔥 <span><b>Tour de chauffe</b> : les règles de base, et rien ne compte. Le championnat démarre le 1<sup>er</sup> janvier. <a href="#" class="lien-regles" data-regles="speciaux">En savoir plus</a></span></div>' : "") +
-    '<div class="pod-tabs" role="group" aria-label="Saison">' + b("gp", "<span>" + icoOu("course", "🏁") + "</span>Course") + b("stand", "<span>" + icoOu("stand", "🃏") + "</span>Stand" + (rappelCartes() ? '<i class="pastille" aria-label="à faire"></i>' : "")) + (basesSeules() ? "" : b("ecurie", "<span>" + icoOu("ecurie", "🏎️") + "</span>Écurie") + b("defis", "<span>" + icoOu("trophees", "🏆") + "</span>Trophées")) + "</div>" +
+    (ch ? '<div class="chauffe-b">🔥 <span><b>Tour de chauffe</b> : les règles de base, et rien ne compte. Le championnat démarre le 1<sup>er</sup> janvier. <a href="#" class="lien-regles" data-regles="essentiel">En savoir plus</a></span></div>' : "") +
+    (standSeul(y) ? '<div class="chauffe-b">🏁 <span><b>Saison 1</b> : le championnat démarre le 1<sup>er</sup> janvier. D\'ici là, pose ta carte de janvier dans le Stand.</span></div>' : "") +
+    '<div class="pod-tabs" role="group" aria-label="Saison">' + (standSeul(y) ? "" : b("gp", "<span>" + icoOu("course", "🏁") + "</span>Course")) + b("stand", "<span>" + icoOu("stand", "🃏") + "</span>Stand" + (rappelCartes() ? '<i class="pastille" aria-label="à faire"></i>' : "")) + (basesSeules() ? "" : b("ecurie", "<span>" + icoOu("ecurie", "🏎️") + "</span>Écurie") + b("defis", "<span>" + icoOu("trophees", "🏆") + "</span>Trophées")) + "</div>" +
     '<div class="s-corps">' + (o === "ecurie" ? htmlEcurie() : o === "defis" ? htmlDefis() : o === "stand" ? htmlStand(y) : htmlGrandPrix(y)) + "</div>" +
     (adminActif() && !window.APERCUS_FINIS ? '<button class="reserve-b" type="button" id="reserve-ouvrir">🧪 <span><b>Règles et idées en réserve</b><small>admin · ce qui est en jeu, ce qui dort, les réglages</small></span> ›</button>' : "") + "</section>";
 }
 /** Onglet du Podium : l'ancien « Championnat » est maintenant dans le Grand Prix */
-function ongletPodium() { return (basesSeules() ? ["gp", "stand"] : ["gp", "stand", "ecurie", "defis"]).includes(ETAT.podium) ? ETAT.podium : "gp";
+function ongletPodium() { if (standSeul(saisonCourante())) return "stand"; return (basesSeules() ? ["gp", "stand"] : ["gp", "stand", "ecurie", "defis"]).includes(ETAT.podium) ? ETAT.podium : "gp";
 }
 /** Détail des points (l'ancien onglet Championnat), replié sous la course */
 function htmlDetailPoints(y) {
@@ -1266,7 +1274,7 @@ function brancherPlateau(v) {
 }
 /* La vitrine d'un pilote (fiche du Classement) : ses cartes, et ses badges par monde */
 function vitrineFiche(nom) {
-  if (typeof saisonVisible !== "function" || !saisonVisible()) return "";
+  if (typeof saisonJouee !== "function" || !saisonJouee()) return "";   // v17.5 : pas de vitrine pendant le tour de chauffe (date, pas onglet)
   const pm = D.premierMillion, cartes = EXCLUSIFS.filter(x => possede(x.id, nom)).map(x => x.id).concat(pm && pm.nom === nom ? ["million"] : []);
   const E = etatDefis(nom), TM = etatTropheesMondes();
   const parMonde = MONDES.map(mo => { const tot = DEFIS.filter(d => d.niv === mo.niv).length + TROPHEES_MONDES.filter(t => t.monde === mo.id).length;
