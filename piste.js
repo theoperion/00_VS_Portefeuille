@@ -2341,7 +2341,9 @@
     const noms = Object.keys(pts).sort((a, b) => pts[b] - pts[a] || (ordreDepart ? ordreDepart.indexOf(a) - ordreDepart.indexOf(b) : 0));
     const ordre = ordreDepart && ordreDepart.length ? ordreDepart : noms, nb = Math.max(ordre.length, noms.length), pas = Math.min(3.6, 13 / Math.max(1, nb - 1));
     const out = {};
-    noms.forEach((n, j) => { const k = Math.max(0, ordre.indexOf(n)); out[n] = { s: (pts[n] / tour) * L - 4 - (grille && grille.indexOf(n) >= 0 ? grille.indexOf(n) * 9 : 0), base: (k - (nb - 1) / 2) * pas, rang: j + 1 }; });
+    // V16.18 : le décalage de la grille s'efface en course (le vainqueur franchit vraiment la ligne) ; ex æquo = même rang
+    noms.forEach(n => { const k = Math.max(0, ordre.indexOf(n)), f = clamp(pts[n] / tour, 0, 1), dec = 4 + (grille && grille.indexOf(n) >= 0 ? grille.indexOf(n) * 9 : 0);
+      out[n] = { s: (pts[n] / tour) * L - dec * (1 - f), base: (k - (nb - 1) / 2) * pas, rang: 1 + noms.filter(m => pts[m] > pts[n] + 1e-9).length }; });
     noms.forEach(n => { const a = out[n]; let p = 0;
       noms.forEach(m => { if (m === n) return; let d = Math.abs(out[m].s - a.s) % L; d = Math.min(d, L - d); p = Math.max(p, clamp(1 - (d - 6) / 22, 0, 1)); });
       a.voie = a.base * (.3 + .7 * p * p * (3 - 2 * p)); });

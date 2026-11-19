@@ -218,10 +218,10 @@ function htmlGrandPrix(y) {
   const piste = '<div class="gp-piste' + (deux ? " en2d" : "") + '" id="gp-piste" data-circuit="' + ci + '"><div class="gp-scene" id="gp-scene"></div>' +
     '<div class="gp-zones">' + (at ? '<span class="gp-zone at" data-zone="atout">' + at.atout.ico + ' <b>+1</b></span>' : "") + "</div>" +
     '<div class="gp-tags3">' + ordre.map(n => '<span class="gp-t3' + (n === qui ? " ici" : "") + '" data-gpt3="' + esc(n) + '" style="--c:' + couleur(n) + '" title="' + esc(n) + '">' + avatar(n) + '<i class="gp-rg"></i></span>').join("") + "</div>" +
-    '<div class="gp-pops"></div>' + fxCircuit(G.fx) +
+    '<div class="gp-pops"></div><div class="gp-com" aria-live="polite"></div>' + fxCircuit(G.fx) +
     '<div class="gp-hud"><span class="gp-tour">' + (et.k && !et.avenir ? "Manche <b>" + i + "</b>" : "Sur la grille") + "</span><span>" + met.ico + " " + esc(met.nom) + "</span></div>" +
     '<div class="gp-btns">' + (deux ? "" : '<button class="gp-vue" type="button" id="gp-cam-b" aria-label="Changer de caméra">' + CAMS[cam] + "</button>") +
-    '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en 3D" : "Passer en carte 2D") + '">' + (deux ? "🗺️ 2D" : "🧊 3D") + '</button><button class="gp-vue" type="button" id="gp-ba" aria-label="Bande-annonce">🎬</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">⛶</button></div>' +
+    '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en 3D" : "Passer en carte 2D") + '">' + (deux ? "🗺️ 2D" : "🧊 3D") + '</button><button class="gp-vue" type="button" id="gp-ba" aria-label="Bande-annonce">🎬</button><button class="gp-vue" type="button" id="gp-fin" aria-label="Aller directement à la fin de la course">⏭</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">⛶</button></div>' +
     (spe ? '<div class="gp-spe">' + spe.ico + " " + esc(spe.nom) + "</div>" : pgm ? '<div class="gp-spe piege" data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " " + esc(pgm.nom) + "</div>" : "") + "</div>";
   const chips = '<div class="gp-mois">' + etapes.map((x, j) => '<button type="button" data-gpe="' + j + '" aria-pressed="' + (j === i) + '">' + (x.k ? GPS[circuitDe(x.k)].drap + " " + esc(moisCourt(x.k)) + (x.avenir ? " ⏳" : "") : "Départ") + "</button>").join("") + "</div>";
   const lignes = ordre.map((n, r) => {
@@ -243,7 +243,7 @@ function htmlGrandPrix(y) {
     const jn = (c.jeu || {})[n], niv = x ? x.niv + (x.monte || 0) : jn && !et.m ? 1 : (jn ? jn.niv : 1);
     return '<div class="gp-l' + (n === qui ? " ici" : "") + '"><span class="rk">' + (r + 1) + "</span>" + avatar(n) + '<div class="nm"><b><span' + (attrLivree(n) ? attrLivree(n).replace(' class="', ' class="gp-nom ') : ' class="gp-nom"') + ">" + esc(n) + "</span>" + (regleVisible("niveaux") ? '<span class="gp-niv" data-bdg="Niveau d\'écurie ' + niv + ' : chaque niveau gagné donne une carte bonus.">N' + niv + "</span>" : "") + extra + "</b><small>" +
       (r === 0 ? (et.avenir ? "en pole position" : et.k ? "en tête du championnat" : "sur la grille") : "à " + ecart + " pt" + (ecart > 1 ? "s" : "") + " de " + esc(devant)) +
-      (x ? " · " + (x.p >= 0 ? "+" : "") + x.p + " ce mois" : "") + "</small></div>" + carte + '<span class="pt"><b>' + et.pts[n] + "</b><small>pts</small></span></div>";
+      "</small>" + (x ? '<small class="gp-dec">' + esc(decompte(x, et.m.spec)) + "</small>" : "") + "</div>" + carte + '<span class="pt"><b>' + et.pts[n] + "</b><small>pts</small></span></div>";
   }).join("");
   const cal = htmlCalendrierGP(y, kGP);
   const rap = rappelCartes(), versStand = rap ? '<button class="gp-stand" type="button" data-aller-stand>🃏 <span><b>Fenêtre ouverte</b> : pose ta carte de ' + esc(moisLong(rap.k)) + "</span> ›</button>" : "";
@@ -513,7 +513,7 @@ function etiquettesGP(api) {
   const C = cacheEtq(pi), cur = api.courant(), ordre = Object.keys(cur).sort((a, b) => cur[b] - cur[a]), pos = [];
   const H = api.taille ? api.taille().h : 400;
   C.tags.forEach(o => {
-    const r = ordre.indexOf(o.n) + 1; if (o.rg && o.rgv !== r) { o.rg.textContent = r; o.rgv = r; }
+    const r = 1 + ordre.filter(m => cur[m] > (cur[o.n] || 0) + 1e-9).length; if (o.rg && o.rgv !== r) { o.rg.textContent = r; o.rgv = r; }   // V16.18 : ex æquo = même rang
     const e = api.ecran(o.n); if (!e || e.vis === false) { poser1(o, "0", null); return; }
     pos.push({ o, n: o.n, x: e.x, y: e.y });
   });
@@ -577,6 +577,39 @@ async function cartePostale(y, et) {
   document.body.appendChild(o); const fermer = () => { o.remove(); URL.revokeObjectURL(url); };
   o.addEventListener("click", e => { if (e.target === o) fermer(); }); o.querySelector(".rg-x").addEventListener("click", fermer);
 }
+/* ---------- V16.18 · Le décompte des points d'un pilote : « 4 place + 1 🎯 + 2 🎲 = 7 » ---------- */
+function decompte(x, spec) {
+  const l = [(x.mult > 1 ? x.base + "×2" : String(x.base)) + " de place"], add = (v, t) => { if (v) l.push((v > 0 ? "+ " : "− ") + Math.abs(v) + " " + t); };
+  add(x.bonus, "🎯"); add(x.vainq, spec ? spec.ico : "★");
+  if (x.carte && !x.carte.invalide && x.carte.gain) { const cd = carteDef(x.carte.id); add(x.carte.gain, cd ? cd.ico : "🃏"); }
+  add(x.equipe, "🤝"); add(x.serie ? 1 : 0, "🔥"); add(x.prono && x.prono.pts, "🔮"); add(x.defi, "🏁"); add(x.rival ? 3 : 0, "😈"); add(x.regul !== undefined ? 3 : 0, "🛡️");
+  return l.join(" ") + " = " + x.p + " pt" + (Math.abs(x.p) > 1 ? "s" : "");
+}
+/* ---------- V16.18 · Le commentateur : 3 à 4 phrases vraies pendant la course, la dernière à l'arrivée ---------- */
+let GP_COM = [];
+function phrasesCourse(y, i) {
+  const etapes = etapesGP(y), et = etapes[i], m = et && et.m; if (!m) return null;
+  const mc = mancheGP(etapes, i), av = mc.grille, ap = Object.keys(et.pts).sort((a, b) => et.pts[b] - et.pts[a] || av.indexOf(a) - av.indexOf(b));
+  const l = m.l.slice().sort((a, b) => a.rg - b.rg), v = l[0], dern = av[av.length - 1], debut = [], milieu = [];
+  debut.push(av.length > 1 ? "🚦 " + av[0] + " part en pole, " + dern + " ferme la marche." : "🚦 Départ !");
+  l.forEach(x => { if (x.carte && !x.carte.invalide && x.carte.gain) { const cd = carteDef(x.carte.id); if (cd) milieu.push({ p: Math.abs(x.carte.gain) + 1, t: x.carte.gain > 0 ? cd.ico + " " + x.nom + " sort son " + cd.nom + " : +" + x.carte.gain + " !" : cd.ico + " Raté pour " + x.nom + " : son " + cd.nom + " coûte " + Math.abs(x.carte.gain) + " point" + (Math.abs(x.carte.gain) > 1 ? "s" : "") + "." }); } });
+  l.forEach(x => { const g = av.indexOf(x.nom) - ap.indexOf(x.nom); if (g >= 2) milieu.push({ p: g + 1, t: "🚀 " + x.nom + " gagne " + g + " places au championnat !" }); });
+  l.forEach(x => { if (x.serie) milieu.push({ p: 2, t: "🔥 " + x.nom + " enchaîne " + x.serie + " mois sans finir dernier." }); });
+  if (m.piege) milieu.push({ p: 1.5, t: m.piege.ico + " Piège du circuit : " + m.piege.nom + "." });
+  if (m.spec) milieu.push({ p: 1.5, t: m.spec.ico + " " + m.spec.nom + " : " + m.spec.txt.replace(/\.$/, "") + "." });
+  milieu.sort((a, b) => b.p - a.p);
+  const chg = av[0] !== ap[0] ? "👑 " + ap[0] + " prend la tête du championnat !" : null;
+  const fin = (v ? "🏁 " + v.nom + " remporte la manche (+" + v.p + " pts)" + (v.bonus ? ", et bat l'indice 🎯" : "") + "." : "🏁 Arrivée !") + (chg ? " " + chg : "");
+  return { debut, milieu: milieu.slice(0, 2).map(z => z.t), fin };
+}
+function commenter(y, i, duree, delai) {
+  GP_COM.forEach(clearTimeout); GP_COM = [];
+  const box = document.querySelector("#gp-piste .gp-com"); if (!box) return; const P = phrasesCourse(y, i); if (!P) { box.innerHTML = ""; return; }
+  const dire = (t, dur) => { const b = document.querySelector("#gp-piste .gp-com"); if (!b) return; b.innerHTML = '<span class="gp-com-t">' + esc(t) + "</span>"; if (dur) GP_COM.push(setTimeout(() => { const bb = document.querySelector("#gp-piste .gp-com"); if (bb) bb.innerHTML = ""; }, dur)); };
+  if (duree < 0) { dire(P.fin, 7000); return; }
+  const d0 = delai || 0, n = duree - d0, l = P.debut.concat(P.milieu);
+  l.forEach((t, k) => GP_COM.push(setTimeout(() => dire(t, 0), d0 + k * n / Math.max(1, l.length) + 150)));
+}
 /* ---------- 🎬 V16.12 · Bande-annonce avant la course : « Précédemment… », le circuit en grand, la grille, les feux ---------- */
 const BA_STYLE = {   // couleurs et police de chaque circuit (la bande-annonce prend le ton de l'univers)
   abudhabi: ["#FF9A3D", "#FFE2B0", "sans"], bahrein: ["#B8FF8A", "#FFF2B0", "serif"], djeddah: ["#E2B93B", "#F3E6C4", "serif"], melbourne: ["#FF6FA8", "#FFFFFF", "serif"],
@@ -639,7 +672,8 @@ function brancherGP(v, y) {
   const cleVu = "versus.gpVu." + y, vu = +(stock.get(cleVu) || 0);
   // V16.16 : la manche n'est marquée « vue » qu'à l'arrivée (quitter pendant la bande-annonce ou la course ne la fait plus perdre)
   // V16.17 : un seul départ — après la bande-annonce (qui finit sur les 5 feux), la course part sans refaire les feux
-  const jouer = feux => api.jouer(mc.depart, mc.arrivee, api.type === "3d" ? 6400 : 3000, () => { if (et.k && !et.avenir && et.k > +(stock.get(cleVu) || 0)) stock.set(cleVu, String(et.k)); bullesGP(y, i); }, feux !== false && i >= 1 && api.type === "3d");
+  const finCourse = () => { if (et.k && !et.avenir && et.k > +(stock.get(cleVu) || 0)) stock.set(cleVu, String(et.k)); bullesGP(y, i); commenter(y, i, -1); };
+  const jouer = feux => { const f = feux !== false && i >= 1 && api.type === "3d", d = api.type === "3d" ? 6400 : 3000; commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0); api.jouer(mc.depart, mc.arrivee, d, finCourse, f); };
   const apresBA = () => jouer(false);
   if (GP_REJOUER && i > 0 && !et.avenir) { GP_REJOUER = false; setTimeout(jouer, 150); }
   else if (!et.avenir && et.k && et.k > vu && i > 0) { api.placer(mc.depart); if (!BA_OUVERTE) setTimeout(() => { if (!BA_OUVERTE) bandeAnnonce(y, i, apresBA); }, 300); }
@@ -648,6 +682,7 @@ function brancherGP(v, y) {
   const vu3 = v.querySelector("#gp-vue"); if (vu3) vu3.addEventListener("click", () => { ETAT.gp2d = pi.classList.contains("en2d") ? "0" : "1"; garder(); rendreTrophees(); });
   const cb = v.querySelector("#gp-cam-b"); if (cb) cb.addEventListener("click", () => { const l = ["tv", "helico", "bord"], n = l[(l.indexOf(camGP()) + 1) % l.length]; ETAT.gpCam = n; garder(); if (GP_INST) GP_INST.api.camera(n); majBoutonsGP(); });
   const rj = v.querySelector("#gp-rejouer"); if (rj) rj.addEventListener("click", () => { if (i > 0 && !et.avenir) jouer(); else toast(et.avenir ? "Cette manche se court ce mois-ci : la course se joue dès que tout le monde a saisi son relevé." : "Le départ n'a pas encore eu lieu : choisis un mois."); });
+  const fb = v.querySelector("#gp-fin"); if (fb) fb.addEventListener("click", () => { if (api.enCours()) { api.placer(mc.arrivee); finCourse(); } else toast(i > 0 && !et.avenir ? "La course est déjà arrivée : ↻ Rejouer pour la revoir." : "Pas encore de course pour ce mois-ci."); });
   const pl = v.querySelector("#gp-plein"); if (pl) pl.addEventListener("click", () => ouvrirPleinGP(y));
   const bb = v.querySelector("#gp-ba"); if (bb) bb.addEventListener("click", () => { const j = i > 0 && !et.avenir; if (j) api.placer(mc.depart); bandeAnnonce(y, i, j ? apresBA : null); });
   const cp = v.querySelector("#gp-carte"); if (cp) cp.addEventListener("click", () => cartePostale(y, et));
