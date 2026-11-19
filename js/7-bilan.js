@@ -663,6 +663,7 @@ addEventListener("error", e => diag("ERREUR " + (e.message || "") + " " + (e.fil
 const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) || navigator.standalone === true;
 function vueAccueil() { const o = ETAT.ouverture || ""; return /^moi/.test(o) || o === "fiche" ? "moi" : ["classement", "mois", "trophees"].includes(o) ? o : "classement"; }
 function fermerFenetreOuverte() {
+  { const f = document.querySelectorAll(".m-fete"), d = f[f.length - 1]; if (d) { const c = d.querySelector("[data-continuer]"); if (c) c.click(); else d.remove(); return true; } }   // v16.83 : la fête de palier de Moi
   // V16.16 : les fenêtres plein écran de la Course (bande-annonce, carte postale / règles, plein écran) passent avant le reste
   if (typeof BA_OUVERTE !== "undefined" && BA_OUVERTE) { BA_OUVERTE.fermer(false); return true; }
   const dialogues = [...document.querySelectorAll(".regles")]; if (dialogues.length) { const d = dialogues[dialogues.length - 1], x = d.querySelector(".rg-x"); if (x) x.click(); else d.remove(); return true; }

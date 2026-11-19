@@ -9,7 +9,10 @@
    ============================================================ */
 (function () {
 "use strict";
-const K = { api: "versus.moi.api", cle: "versus.moi.cle", cache: "versus.moi.cache", pref: "versus.moi.pref", refus: "versus.moi.refus" };
+const K = { api: "versus.moi.api", cle: "versus.moi.cle", cache: "versus.moi.cache", cacheLe: "versus.moi.cacheLe", pref: "versus.moi.pref", refus: "versus.moi.refus" };
+/* v16.83 · âge de la copie affichée quand le fichier ne répond pas */
+function ageCopie() { const t = +stock.get(K.cacheLe) || 0; if (!t) return ""; const mn = Math.max(0, Math.round((Date.now() - t) / 60e3)); return mn < 1 ? "à l'instant" : mn < 60 ? "il y a " + mn + " min" : mn < 48 * 60 ? "il y a " + Math.round(mn / 60) + " h" : "il y a " + Math.round(mn / 1440) + " j"; }
+function majuscule(t) { t = String(t || ""); return t.charAt(0).toUpperCase() + t.slice(1); }
 const PREF = Object.assign({ onglet: "jour", patri: "net", million: "financier", tri: "env", mode: "valeur", per: "6m", serie: "ip", moisMode: "pct", rep: "classe", acc: {} },
   (() => { try { return JSON.parse(stock.get(K.pref) || "{}"); } catch (e) { return {}; } })());
 function garderPref() { stock.set(K.pref, JSON.stringify(PREF)); }
@@ -464,7 +467,7 @@ function injecterStyle() {
 .moi .m-rep .n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
 .moi .m-rep .b { height: 8px; background: var(--rule-2); border-radius: 4px; overflow: hidden; }
 .moi .m-rep .b i { display: block; height: 100%; background: var(--s1); border-radius: 4px; }
-.moi .m-rep .p, .moi .m-rep .e { text-align: right; font: 500 12px/1 var(--f-num); font-variant-numeric: tabular-nums; } .moi .m-rep .e { color: var(--ink-3); }
+.moi .m-rep .p, .moi .m-rep .e { text-align: right; font: 500 12px/1 var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; } .moi .m-rep .e { color: var(--ink-3); }
 .moi .grille td.m-c { cursor: pointer; min-width: 46px; height: 34px; font-size: 11px; }
 .moi .grille td.m-c.sel { box-shadow: inset 0 0 0 2px var(--ink); }
 .moi .m-jr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -728,30 +731,41 @@ let rechargerApres = false;   // un rechargement demandé pendant une lecture en
 /* v16.65 · une clé refusée n'est plus effacée en silence (avant : l'appli retombait sur « Connecter mon fichier » sans dire pourquoi) ;
    on la garde, on le dit, et on ne réessaie plus tout seul (pour ne pas faire bloquer le fichier) tant qu'on n'a pas touché « Réessayer » */
 function cleRefusee(msg) { stock.set(K.refus, "1"); erreur = "Ton fichier a refusé la clé enregistrée sur ce téléphone" + (msg && !/^Clé incorrecte\.?$/.test(msg) ? " (" + msg + ")" : "") + "."; }
+/* v16.83 · changement d'adresse ou de clé pendant une lecture : connecter() augmente la génération et coupe la lecture en cours ;
+   une réponse d'une génération (ou d'une adresse) périmée est jetée, puis on relit le bon fichier */
+let generation = 0, ctrlLecture = null;
 async function charger(frais) {
   if (!configure() || (stock.get(K.refus) && !frais)) return;
   if (enCours) { if (frais) rechargerApres = true; return; }
   enCours = true; erreur = "";
-  const ctrl = window.AbortController ? new AbortController() : null;
+  const gen = generation, url = adresse(), k = cle();
+  const ctrl = window.AbortController ? new AbortController() : null; ctrlLecture = ctrl;
   const minuteur = setTimeout(() => { if (ctrl) ctrl.abort(); }, 25000);
+  const perime = () => gen !== generation || url !== adresse() || k !== cle();
   try {
-    const url = adresse();
-    const json = await lireApi(url, cle(), "data", { frais: !!frais }, ctrl ? ctrl.signal : undefined);   // clé hors de l'adresse (POST)
+    const json = await lireApi(url, k, "data", { frais: !!frais }, ctrl ? ctrl.signal : undefined);   // clé hors de l'adresse (POST)
+    if (perime()) return;
     if (!json.ok) {
       if (json.erreur === "cle") { cleRefusee(json.message); return; }
       throw new Error(json.message || "Réponse inattendue de ton fichier");
     }
     recevoir(json); SRC = "api"; dernierAppel = Date.now();
-    stock.set(K.cache, JSON.stringify(json));
-    setTimeout(() => { verifierPaliers(); partagerLignes(); revendiquerMillion(); revendiquerFichier(); lierVersus(); }, 0);
+    stock.set(K.cache, JSON.stringify(json)); stock.set(K.cacheLe, String(Date.now()));
+    setTimeout(() => { verifierPaliers(); revendiquerMillion(); revendiquerFichier(); lierVersus(); }, 0);
   } catch (e) {
-    erreur = e && e.name === "AbortError" ? "Ton fichier met trop de temps à répondre." : (e && e.message) || String(e);
+    if (perime()) return;
+    erreur = (e && e.message) || String(e);
     if (M) SRC = "cache";
   } finally {
-    clearTimeout(minuteur); enCours = false;
-    signalerCloche();
-    if (vueMoi()) rendre();
-    if (rechargerApres) { rechargerApres = false; setTimeout(() => charger(true), 0); }
+    clearTimeout(minuteur);
+    if (gen !== generation) { /* connecter() a déjà libéré la place : ne rien toucher à la nouvelle lecture */ }
+    else if (url !== adresse() || k !== cle()) { enCours = false; if (ctrlLecture === ctrl) ctrlLecture = null; setTimeout(() => charger(true), 0); }
+    else {
+      enCours = false; if (ctrlLecture === ctrl) ctrlLecture = null;
+      signalerCloche();
+      if (vueMoi()) rendre();
+      if (rechargerApres) { rechargerApres = false; setTimeout(() => charger(true), 0); }
+    }
   }
 }
 function vueMoi() { const s = document.getElementById("v-moi"); return s && !s.hidden; }
@@ -783,7 +797,7 @@ function rendre() {
   }
   lireCache(); signalerCloche();
   if (!M) {
-    v.innerHTML = erreur ? '<div class="m-vide"><p>Impossible de lire ton fichier.</p><p class="info">' + esc(erreur) + '</p><button class="btn" type="button" id="m-reessayer">Réessayer</button></div>'
+    v.innerHTML = erreur ? '<div class="m-vide"><p>Impossible de lire ton fichier.</p><p class="info">' + esc(majuscule(erreur).replace(/\.?$/, ".")) + '</p><button class="btn" type="button" id="m-reessayer">Réessayer</button></div>'
       : '<div class="m-vide"><div class="m-flaps" aria-hidden="true">' + flaps("MOI", !reduit) + "</div><p>Ouverture de ton fichier…</p><p class=\"info\">La première lecture prend quelques secondes. Ensuite, les derniers chiffres s'affichent tout de suite pendant la mise à jour.</p></div>";
     const r = v.querySelector("#m-reessayer"); if (r) r.addEventListener("click", () => { erreur = ""; rendre(); charger(true); });
     if (!erreur) charger(false);
@@ -792,10 +806,10 @@ function rendre() {
   if (Date.now() - dernierAppel > 5 * 60e3 && !enCours && !erreur) setTimeout(() => charger(false), 0);
   noterVisite();
   const o = ONGLETS.some(x => x[0] === PREF.onglet) || (PREF.onglet === "artema" && aArtema()) ? PREF.onglet : "jour";
-  const bandeau = SRC === "cache" ? '<div class="demo-band">' + (enCours ? "Mise à jour de ton fichier…" : erreur ? "Ton fichier n'a pas répondu (" + esc(erreur) + ") · chiffres de la dernière ouverture." : "Chiffres de la dernière ouverture · mise à jour…") + " <small>" + esc(M.majTexte || "") + "</small></div>" : "";
+  const bandeau = SRC === "cache" ? '<div class="demo-band">' + (enCours ? "Mise à jour de ton fichier…" : erreur ? "Ton fichier n'a pas répondu (" + esc(String(erreur).replace(/\.$/, "")) + ") · chiffres de la dernière ouverture" + (ageCopie() ? " (" + ageCopie() + ")" : "") + "." : "Chiffres de la dernière ouverture · mise à jour…") + " <small>" + esc(M.majTexte || "") + "</small></div>" : "";
   v.innerHTML =
     '<div class="seg m-onglets" role="tablist" aria-label="Moi">' + ONGLETS.map(([k, l]) => '<button type="button" role="tab" data-m-ong="' + k + '" aria-pressed="' + (o === k) + '" aria-selected="' + (o === k) + '">' + l + "</button>").join("") + "</div>" +
-    bandeau + htmlBandeauRappel() +
+    bandeau + (o === "jour" || o === "artema" ? htmlBandeauRappel(o) : "") +   // v16.83 : ailleurs, la cloche suffit
     ({ jour: M.simple ? htmlJourSimple : htmlJour, patrimoine: htmlPatrimoine, stats: htmlStats, missions: htmlMissions, artema: htmlArtema })[o]();
   v.querySelectorAll("[data-m-ong]").forEach(b => b.addEventListener("click", () => { PREF.onglet = b.dataset.mOng; garderPref(); rendre(); window.scrollTo(0, 0); }));
   brancherBandeauRappel(v);
@@ -1146,31 +1160,52 @@ function seriesAV(sup) {
   const dates = new Set(O.map(o => o[0])); let m = debut.slice(0, 7) + "-01";
   while (m <= auj) { if (m >= debut) dates.add(m); const [y, mo] = m.split("-").map(Number); m = (mo === 12 ? y + 1 : y) + "-" + String(mo === 12 ? 1 : mo + 1).padStart(2, "0") + "-01"; }
   dates.add(auj); const D_ = [...dates].sort();
+  /* v16.83 · une vente d'UC retire de son versé la part au prix d'achat (au prorata de la valeur vendue, faute de quantités ici) ;
+     ce même coût repasse au versé du fonds euros, la plus-value réalisée s'ajoute à sa valeur. Ainsi, versé total = apports − retraits. */
+  const coutVente = new Map(), suivi = {};
+  O.forEach((o, i) => {
+    if (!o[2] || !(o[1] === "Achat" || o[1] === "Vente" || o[1] === "Relevé")) return;
+    const x = suivi[o[2]] || (suivi[o[2]] = { v: 0, cur: 0 });
+    if (o[1] === "Achat") { x.v += o[3]; x.cur += o[3]; }
+    else if (o[1] === "Relevé") x.cur = o[3];
+    else { const frac = x.cur > 0 ? Math.min(1, o[3] / x.cur) : x.v > 0 ? Math.min(1, o[3] / x.v) : 1, cout = x.v * frac; coutVente.set(i, cout); x.v -= cout; x.cur = Math.max(0, x.cur - o[3]); }
+  });
+  const typesRef = (M.ref && M.ref.types) || [];
+  const sensType = t => { const x = typesRef.find(y => y.nom === t); if (x) return { s: Math.sign(x.tresorerie || 0), flux: !!x.flux };
+    return { s: t === "Apport" || t === "Solde initial" || t === "Intérêts" || t === "Dividende" ? 1 : t === "Retrait" || t === "Frais" ? -1 : 0, flux: t === "Apport" || t === "Retrait" || t === "Solde initial" }; };
   const out = {};
   rows.forEach(r => {
     const k = cleSupport(r.nom), code = k === "fe" ? null : (k === "artema" ? "ARTEMA" : k === "ostrum" ? "OSTRUM" : null);
     const verse = [], val = [];
     if (k === "fe") {
-      // fonds euros = l'argent de l'enveloppe qui n'est pas investi en UC ; ses intérêts courent au prorata du temps (courbe estimée)
-      let v = 0, w = 0, prev = null; const W = [];
+      /* fonds euros = l'argent de l'enveloppe qui n'est pas investi en UC. v16.83 : tous les types comptent, d'après leur signe (M.ref.types) :
+         Solde initial, Apport et Retrait au versé ; Intérêts, Frais (et plus-values réalisées) à la valeur ; le reste de l'écart avec la valeur
+         du fichier court au prorata du temps (courbe estimée, ancrée sur r.valeur) */
+      let v = 0, vx = 0, w = 0, prev = null; const W = [], X = [];
       D_.forEach(d => {
-        if (prev) w += v * (new Date(d) - new Date(prev)) / 864e5;
-        O.filter(o => o[0] === d).forEach(o => { const t = o[1]; if (t === "Apport") v += o[3]; else if (t === "Retrait") v -= o[3]; else if (t === "Achat") v -= o[3]; else if (t === "Vente") v += o[3]; });
-        verse.push(v); W.push(w); prev = d;
+        if (prev) w += (v + vx) * (new Date(d) - new Date(prev)) / 864e5;
+        O.forEach((o, i) => {
+          if (o[0] !== d) return; const t = o[1];
+          if (t === "Achat") v -= o[3];
+          else if (t === "Vente") { const c = coutVente.has(i) ? coutVente.get(i) : o[3]; v += c; vx += o[3] - c; }
+          else { const st = sensType(t); if (st.flux) v += st.s * o[3]; else if (st.s) vx += st.s * o[3]; }
+        });
+        verse.push(v); X.push(vx); W.push(w); prev = d;
       });
-      const G = (r.valeur || 0) - (r.investi || verse[verse.length - 1] || 0), Wf = W[W.length - 1] || 1;
-      D_.forEach((d, i) => val.push(verse[i] + G * W[i] / Wf));
+      const n = D_.length - 1, G = ok(r.valeur) ? r.valeur - (verse[n] + X[n]) : 0, Wf = W[n] || 1;
+      D_.forEach((d, i) => val.push(verse[i] + X[i] + G * W[i] / Wf));
     } else {
       let v = 0, cur = null;
       D_.forEach(d => {
-        O.filter(o => o[0] === d && o[2] === code).forEach(o => {
+        O.forEach((o, i) => {
+          if (o[0] !== d || o[2] !== code) return;
           if (o[1] === "Achat") { v += o[3]; cur = (cur === null ? 0 : cur) + o[3]; }
-          else if (o[1] === "Vente") { v -= o[3]; cur = (cur === null ? 0 : cur) - o[3]; }
+          else if (o[1] === "Vente") { v -= coutVente.has(i) ? coutVente.get(i) : o[3]; cur = Math.max(0, (cur === null ? 0 : cur) - o[3]); }
           else if (o[1] === "Relevé") cur = o[3];
         });
-        verse.push(v); val.push(cur === null ? null : cur);
+        verse.push(Math.max(0, v)); val.push(cur === null ? null : cur);
       });
-      if (val.length) val[val.length - 1] = r.valeur || val[val.length - 1];
+      if (val.length) val[val.length - 1] = ok(r.valeur) ? r.valeur : val[val.length - 1];
     }
     out[k] = { nom: r.nom, verse, val, estime: k === "fe" };
   });
@@ -1182,14 +1217,17 @@ function courbeAV(S, k) {
   const x = S.s[k]; if (!x) return "";
   const W = 320, H = 150, g = 46, dr = 6, hb = 18, n = S.dates.length;
   const vals = x.val.concat(x.verse).filter(v => v !== null && isFinite(v)); if (!vals.length) return "";
-  let lo = Math.min(...vals), hi = Math.max(...vals); const mg = (hi - lo) * .12 || Math.max(1, hi * .01); lo -= mg; hi += mg;
+  let lo = Math.min(...vals), hi = Math.max(...vals); const mg = (hi - lo) * .12 || Math.max(1, hi * .01);
+  /* v16.83 · graduations rondes (graduations + axeEur, comme les autres courbes) : plus de « 23k » pour 22 500 */
+  const ticks = graduations(lo, hi, 3), pasT = ticks.length > 1 ? ticks[1] - ticks[0] : 1;
+  lo = Math.min(lo - mg, ticks[0]); hi = Math.max(hi + mg, ticks[ticks.length - 1]);
   const X = i => g + i * (W - g - dr) / Math.max(1, n - 1), Y = v => 6 + (hi - v) / (hi - lo) * (H - 6 - hb);
-  const kEur = v => Math.abs(hi) >= 10000 && hi - lo > 3000 ? (v / 1000).toFixed(1).replace(".", ",") + " k" : Math.round(v).toLocaleString("fr-FR");
+  const kEur = v => Math.abs(v) >= 1000 ? axeEur(v) : ETAT.discret === "oui" ? "" : nf(0, pasT < 1 ? 2 : 0).format(v);
   const pts = arr => arr.map((v, i) => v === null ? null : X(i).toFixed(1) + "," + Y(v).toFixed(1)).filter(Boolean).join(" ");
   const c = COUL_AV[k] || "var(--accent)", i0 = x.val.findIndex(v => v !== null);
   const aire = i0 >= 0 ? '<polygon fill="' + c + '" opacity=".12" points="' + X(i0).toFixed(1) + "," + Y(lo).toFixed(1) + " " + pts(x.val) + " " + X(n - 1).toFixed(1) + "," + Y(lo).toFixed(1) + '"/>' : "";
   const mois = d => ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."][+d.slice(5, 7) - 1] + " " + d.slice(2, 4);
-  const grille = [lo + mg, (lo + hi) / 2, hi - mg].map(v => '<line x1="' + g + '" x2="' + (W - dr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" class="gr"/><text x="' + (g - 4) + '" y="' + (Y(v) + 3.5).toFixed(1) + '" text-anchor="end">' + kEur(v) + "</text>").join("");
+  const grille = ticks.map(v => '<line x1="' + g + '" x2="' + (W - dr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" class="gr"/><text x="' + (g - 4) + '" y="' + (Y(v) + 3.5).toFixed(1) + '" text-anchor="end">' + kEur(v) + "</text>").join("");
   const releves = k === "artema" || k === "ostrum" ? (M.histoAV.ordres || []).filter(o => o[1] === "Relevé" && o[2] === (k === "artema" ? "ARTEMA" : "OSTRUM")).map(o => { const i = S.dates.indexOf(o[0]); return i >= 0 ? '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(o[3]).toFixed(1) + '" r="3" fill="' + c + '"/>' : ""; }).join("") : "";
   return '<svg class="m-mk-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Valeur et versements de ' + esc(x.nom) + '">' + grille + aire +
     '<polyline fill="none" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="4 3" points="' + pts(x.verse) + '"/>' +
@@ -1202,9 +1240,10 @@ function htmlAV(sup) {
   const S = seriesAV(sup), fe = p.fondsEuros || {}, ar = p.artema || {};
   const tuile = (lab, val, cls, sub) => '<div><span class="lab">' + lab + '</span><span class="val ' + (cls || "") + '">' + val + '</span><span class="sub">' + sub + "</span></div>";
   const rap = k => (rappelsFichier().find(x => cleRappel(x.nom) === k) || {}).prochaine;
+  const du = k => rappelsFichier().some(x => cleRappel(x.nom) === k && rappelDu(x));   // v16.83 : un rappel déjà dû est dans la cloche, pas répété ici
   const rdv = [];
-  if (ar.initial === null || ar.initial === undefined || ar.initial === "") rdv.push(["📌", "Artema : niveau de départ de l'indice", rap("artemaInitial") ? "à saisir dès le " + frDate(rap("artemaInitial")) : "à saisir"]);
-  if (rap("releve")) rdv.push(["◷", "Relevé du mois (Artema)", quandRappel({ prochaine: rap("releve") }) || frDate(rap("releve"))]);
+  if ((ar.initial === null || ar.initial === undefined || ar.initial === "") && !du("artemaInitial")) rdv.push(["📌", "Artema : niveau de départ de l'indice", rap("artemaInitial") ? "à saisir dès le " + frDate(rap("artemaInitial")) : "à saisir"]);
+  if (rap("releve") && !du("releve")) rdv.push(["◷", "Relevé du mois (Artema)", quandRappel({ prochaine: rap("releve") }) || frDate(rap("releve"))]);
   if (fe.taux) rdv.push(["💶", "Fonds euros : " + pct(fe.taux, 2, false) + " net (" + (fe.annee || "—") + ")" + (fe.bonus ? " + bonus " + pct(fe.bonus, 2, false) + (fe.bonusFin ? " jusqu'au " + frDate(fe.bonusFin) : "") : ""), (rap("fondsEuros") ? "vrai taux vers le " + frDate(rap("fondsEuros")) + " · " : "") + "estimation ajustable", "fondsEuros"]);
   const sel = S && S.s[avSel] ? avSel : "total";
   return '<div class="tuiles m-petit av-t">' +
@@ -1548,7 +1587,9 @@ function pretHtml() {
   if (!p || (!p.prochaine && !p.actuel)) return "";
   const cell = (lab, val, sous) => "<div><span>" + lab + "</span><b>" + val + "</b>" + (sous ? "<small>" + sous + "</small>" : "") + "</div>";
   return '<div class="m-pret">' +
-    (p.prochaine ? cell("Prochaine échéance", eur(p.prochaine.echeance + (p.prochaine.assurance || 0), 2), "le " + frDate(p.prochaine.date) + (p.prochaine.assurance ? " · assurance comprise (" + eur(p.prochaine.assurance, 2) + ")" : p.prochaine.assurance === 0 ? "" : " · hors assurance")) : "") +
+    (p.prochaine ? (p.banque   // v16.83 : tableau de la banque (profil simple) : l'échéance contient déjà l'assurance, et c'est ta part
+      ? cell("Prochaine échéance", eur(p.prochaine.echeance, 2), "le " + frDate(p.prochaine.date) + " · assurance comprise (ta part)")
+      : cell("Prochaine échéance", eur(p.prochaine.echeance + (p.prochaine.assurance || 0), 2), "le " + frDate(p.prochaine.date) + (p.prochaine.assurance ? " · assurance comprise (" + eur(p.prochaine.assurance, 2) + ")" : p.prochaine.assurance === 0 ? "" : " · hors assurance"))) : "") +
     (p.actuel ? cell("Capital restant dû", eur(p.actuel.restant), "après l'échéance du " + frDate(p.actuel.date)) : "") +
     cell("Intérêts payés en " + new Date().getFullYear(), eur(p.interetsAnnee), "prêt classique") +
     (p.fin ? cell(/^dans /.test(dansDuree(p.fin)) ? "Fin des prêts dans" : "Fin des prêts", dansDuree(p.fin).replace(/^dans /, ""), "le " + frDate(p.fin) + (p.interetsRestants ? " · encore " + eur(p.interetsRestants) + " d'intérêts" : "")) : (p.prochaine ? cell("Après la prochaine", eur(p.prochaine.restant), "restant dû") : "")) +
@@ -1661,7 +1702,9 @@ function seriesValeur() { const cols = (M.historique || {}).cols || []; return s
 function fenetre(rows, per) {
   if (!rows.length || per === "tout") return rows;
   const fin = dateNum(rows[rows.length - 1][0]);
-  const debut = per === "ytd" ? new Date(fin.getFullYear() - 1, 11, 31) : new Date(fin.getFullYear(), fin.getMonth() - ({ "1m": 1, "3m": 3, "6m": 6, "1a": 12 }[per] || 6), fin.getDate());
+  const nm = ({ "1m": 1, "3m": 3, "6m": 6, "1a": 12 }[per] || 6), mDeb = new Date(fin.getFullYear(), fin.getMonth() - nm, 1);
+  /* v16.83 : le 31 mai − 3 mois = le 28/29 février (et non le 3 mars) : jour borné au dernier jour du mois visé */
+  const debut = per === "ytd" ? new Date(fin.getFullYear() - 1, 11, 31) : new Date(mDeb.getFullYear(), mDeb.getMonth(), Math.min(fin.getDate(), new Date(mDeb.getFullYear(), mDeb.getMonth() + 1, 0).getDate()));
   const cle = debut.getFullYear() * 10000 + (debut.getMonth() + 1) * 100 + debut.getDate();
   let i0 = 0; rows.forEach((r, i) => { if (r[0] <= cle) i0 = i; });
   return rows.slice(i0);
@@ -2419,6 +2462,11 @@ function lireNombre(v) {
   const n = Number(t);
   return isFinite(n) ? n : NaN;
 }
+/* v16.83 · « 1.500 » : point des milliers (1 500 €) ou virgule (1,5 €) ? Pour les montants en € seulement, on demande toujours
+   (jamais de conversion en silence) ; ni les quantités, ni les cours, ni le niveau d'indice ne sont concernés */
+function millierDouteux(v) { return /^\d{1,3}(\.\d{3})+$/.test(String(v === null || v === undefined ? "" : v).replace(/[\s  €]/g, "")); }
+function lectureMilliers(v) { const t = String(v).replace(/[\s  €]/g, ""); return { milliers: t.replace(/\./g, ""), virgule: (t.match(/\./g) || []).length === 1 ? saisieNombre(+t, 6) : null }; }
+function mediane(l) { const x = l.filter(v => v > 0).sort((a, b) => a - b); return x.length ? x[Math.floor(x.length / 2)] : 0; }
 function saisieNombre(n, dec) { return n === null || n === undefined || !isFinite(n) ? "" : String(+n.toFixed(dec)).replace(".", ","); }
 function refData() { return (M && M.ref) || { enveloppes: [], types: [], actifs: [], cours: {}, detenu: [], journal: [], raccourcis: [] }; }
 function quantiteTenue(env, code) { const x = refData().detenu.find(d => d.env === env && d.code === code); return x ? x.qte : 0; }
@@ -2594,7 +2642,7 @@ function rendreFormulaire() {
       '<p class="phrase-ordre" id="m-phrase"></p>' +
       '<div class="recap" id="m-recap"></div>' +
       '<div class="alertes" id="m-alertes"></div>' +
-      '<button class="btn plein acc" type="submit" id="f-envoyer">Enregistrer l\'ordre</button>' +
+      '<button class="btn plein acc" type="submit" id="f-envoyer">' + esc(libBoutonOrdre()) + '</button>' +
       '<div class="pied-form">' +
         (nommerRaccourci
           ? '<div class="nommer"><input id="f-nom-rac" type="text" maxlength="40" aria-label="Nom du raccourci" value="' + esc(nomParDefaut()) + '"><button class="mini-btn" type="button" id="rac-ok">Créer</button><button class="lien" type="button" id="rac-annuler">Annuler</button></div>'
@@ -2667,6 +2715,8 @@ async function posterFichier(corps) {
     const rep = await fetch(adresse(), { method: "POST", body: JSON.stringify(Object.assign({ cle: cle() }, corps)), signal: ctrl ? ctrl.signal : undefined });
     return await rep.json();
   } catch (e) {
+    /* v16.83 · sans réseau (TypeError), rien n'est parti : on peut renvoyer. Délai dépassé ou réponse illisible : le fichier a PEUT-ÊTRE écrit */
+    if (e && (e.name === "AbortError" || e.name === "SyntaxError")) return { ok: false, erreur: "incertain", message: (e.name === "AbortError" ? "Ton fichier a mis trop de temps à répondre" : "Réponse illisible de ton fichier") + (corps && corps.action === "ordre" ? " : l'ordre a peut-être été enregistré. Vérifie le Journal avant de renvoyer." : " : c'est peut-être enregistré quand même. Vérifie avant de renvoyer.") };
     return { ok: false, erreur: "reseau", message: "Impossible de joindre ton fichier : vérifie ta connexion puis réessaie." };
   } finally { clearTimeout(minuteur); }
 }
@@ -2691,6 +2741,13 @@ function analyser() {
     let ref = 0; (M.histoAV.ordres || []).forEach(o => { if (o[2] !== F.actif) return; if (o[1] === "Relevé" && o[3] > ref * .2) ref = o[3]; else if (o[1] === "Achat") ref += o[3]; else if (o[1] === "Vente") ref -= o[3]; });
     if (ref > 0 && m < ref * .2) msg.push(["warn", "Ce montant ressemble au prix d'une seule part. Sur ton relevé, prends la VALEUR TOTALE de la ligne (environ " + Math.round(ref).toLocaleString("fr-FR") + " €)."]);
   }
+  /* v16.83 · un apport bien plus petit que d'habitude (comme le garde-fou du relevé) */
+  if (F.type === "Apport" && m > 0) {
+    const hab = mediane((r.journal || []).filter(o => o.type === "Apport" && o.enveloppe === F.env && !o.envoi).map(o => o.montant));
+    if (hab > 0 && m < hab * .2) msg.push(["warn", "Ce montant est bien plus petit que tes apports habituels sur " + F.env + " (environ " + Math.round(hab).toLocaleString("fr-FR") + " €) : vérifie la virgule."]);
+  }
+  const doutes = [["montant", "f-montant"]].concat(AVEC_FRAIS.includes(F.type) ? [["frais", "f-frais"]] : [], F.type === "Achat" && F.apport ? [["montantApport", "f-mapport"]] : []).filter(([k]) => millierDouteux(F[k]));
+  if (doutes.length) bloque = true;
   if (AVEC_QTE.includes(F.type)) {
     if (q === null) bloque = true;
     else if (isNaN(q) || q <= 0) { bloque = true; msg.push(["err", "La quantité doit être supérieure à 0."]); }
@@ -2714,12 +2771,12 @@ function analyser() {
     lignes.push(["Apport enregistré avant l'achat", nf(2, 2).format(ma === null ? m : ma) + NB + "€"]);
   }
   if (F.date && F.date > aujourdhuiISO()) msg.push(["warn", "Ordre programmé : il restera ignoré par les calculs jusqu'au " + frDate(F.date) + "."]);
-  return { bloque, msg, lignes };
+  return { bloque, msg, lignes, doutes };
 }
 /** La phrase « Tu enregistres : … » : l'ordre relu en français, pour repérer une erreur d'un coup d'œil */
 function phraseOrdre() {
   const m = lireNombre(F.montant), q = lireNombre(F.qte), fr = lireNombre(F.frais), ma = lireNombre(F.montantApport);
-  if (!(m > 0) && F.type !== "Ajustement espèces") return "";
+  if ((!(m > 0) && F.type !== "Ajustement espèces") || millierDouteux(F.montant)) return "";   // v16.83 : pas de « 1,50 € » relu tant que « 1.500 » est en doute
   const e = v => nf(2, 2).format(v) + NB + "€", lib = ((AUTRES_TYPES[F.type] || {}).lib || F.type).toLowerCase();
   let t = "<b>" + esc(lib) + "</b>";
   if (AVEC_ACTIF.includes(F.type) && F.actif) t += " de " + (AVEC_QTE.includes(F.type) && q > 0 ? "<b>" + qteBrute(q) + " " + esc(F.actif) + "</b>" : "<b>" + esc(F.actif) + "</b>");
@@ -2734,14 +2791,27 @@ function majRecap() {
   $f("m-recap").innerHTML = a.lignes.map(l => "<div><span>" + l[0] + "</span><b>" + l[1] + "</b></div>").join("");
   $f("m-recap").hidden = !a.lignes.length;
   let al = a.msg.map(m => '<div class="alerte ' + m[0] + '">' + esc(m[1]) + "</div>").join("");
+  (a.doutes || []).forEach(([k]) => { const t = String(F[k]).trim(), l = lectureMilliers(t);
+    al += '<div class="alerte warn">« ' + esc(t) + ' » veut dire ' + esc((+l.milliers).toLocaleString("fr-FR")) + NB + '€ ?<br><button class="btn" type="button" data-millier="' + k + '" data-mv="' + esc(l.milliers) + '">Oui, ' + esc((+l.milliers).toLocaleString("fr-FR")) + NB + "€</button>" +
+      (l.virgule ? ' <button class="btn ghost" type="button" data-millier="' + k + '" data-mv="' + esc(l.virgule) + '">Non, ' + esc(l.virgule) + NB + "€</button>" : "") + "</div>"; });
   if (F.erreur) al += '<div class="alerte err">' + esc(F.erreur) + "</div>";
   if (F.forcer) al += '<div class="alerte warn">' + esc(F.forcer) + '<br><button class="btn" type="button" id="forcer">Enregistrer quand même</button></div>';
   $f("m-alertes").innerHTML = al;
   const btn = $f("f-envoyer");
   btn.disabled = a.bloque;
-  btn.textContent = F.type === "Achat" && F.apport ? "Enregistrer l'apport et l'achat" : "Enregistrer l'ordre";
+  btn.textContent = libBoutonOrdre();
   if ($f("tout-vendre")) $f("tout-vendre").addEventListener("click", () => { F.qte = saisieNombre(quantiteTenue(F.env, F.actif), 8); F.pilote = "qte"; synchroniser(); $f("f-qte").value = F.qte; if ($f("f-prix")) $f("f-prix").value = F.prix; majRecap(); });
   if ($f("forcer")) $f("forcer").addEventListener("click", () => envoyerOrdre(true));
+  $f("m-alertes").querySelectorAll("[data-millier]").forEach(b => b.addEventListener("click", () => {
+    const k = b.dataset.millier, id = { montant: "f-montant", frais: "f-frais", montantApport: "f-mapport" }[k];
+    F[k] = b.dataset.mv; if ($f(id)) $f(id).value = F[k];
+    synchroniser(); if ($f("f-qte")) $f("f-qte").value = F.qte; if ($f("f-prix")) $f("f-prix").value = F.prix;
+    majRecap();
+  }));
+}
+/* v16.83 · le bouton dit ce qu'on enregistre (un Relevé n'est pas un « ordre ») */
+function libBoutonOrdre() {
+  return F.type === "Achat" && F.apport ? "Enregistrer l'apport et l'achat" : ({ "Relevé": "Enregistrer la valeur", "Apport": "Enregistrer l'apport", "Retrait": "Enregistrer le retrait", "Intérêts": "Enregistrer les intérêts", "Frais": "Enregistrer les frais", "Solde initial": "Enregistrer le solde" })[F.type] || "Enregistrer l'ordre";
 }
 /* Envoi optimiste : la feuille se ferme tout de suite, l'enregistrement continue en arrière-plan */
 async function envoyerOrdre(forcer) {
@@ -2768,6 +2838,7 @@ async function envoyerOrdre(forcer) {
   if (M && M.ref) M.ref.journal = (M.ref.journal || []).filter(o => !o.envoi);
   if (rep.ok) { if (window.SONS) SONS.succes(); toast(rep.message || "Ordre enregistré."); charger(true); return; }
   if (rep.erreur === "cle") { cleRefusee(rep.message); toast("Clé refusée par ton fichier."); if (vueMoi()) rendre(); return; }
+  if (rep.erreur === "incertain") { toast("L'ordre a peut-être été enregistré : vérifie le Journal avant de renvoyer."); charger(true); return; }   // v16.83 : jamais rouvert rempli (doublon)
   toast(rep.erreur === "avertissement" ? "Ordre à confirmer." : "Ordre non enregistré.");
   F = sauvegarde;
   if (rep.erreur === "avertissement") F.forcer = rep.message; else F.erreur = rep.message || "Erreur inattendue.";
@@ -3009,6 +3080,7 @@ async function envoyerReglage(k, corps, form, local) {
     if (rep.erreur === "cle") { cleRefusee(rep.message); fermerSaisieM(); toast("Clé refusée par ton fichier."); if (vueMoi()) rendre(); return; }
     reglageMsg[k] = ["err", rep.message || "Erreur inattendue."];
     rendreMaj();
+    if (rep.erreur === "incertain") charger(true);   // v16.83 : on relit le fichier pour voir si c'est passé
   }
 }
 
@@ -3597,18 +3669,7 @@ function apresLesFetes(fn, abandon) {
   setTimeout(attendre, 600);
 }
 
-/* ================= Lignes partagées pour le récap mensuel (lignes de bourse seulement) ================= */
-/* Fenêtre de fin de mois : du dernier jour ouvré à 18 h jusqu'à l'ouverture du premier jour ouvré du mois suivant (9 h) */
-function moisDeFenetre(now) {
-  for (const dec of [0, -1]) {
-    const d = new Date(now.getFullYear(), now.getMonth() + dec, 1), y = d.getFullYear(), m = d.getMonth() + 1;
-    const debut = jourReleve(y, m); debut.setHours(18, 0, 0, 0);
-    const fin = new Date(y, m, 1, 9); while (fin.getDay() === 0 || fin.getDay() === 6) fin.setDate(fin.getDate() + 1);
-    if (now >= debut && now < fin) return y * 100 + m;
-  }
-  return null;
-}
-function partageActif() { return false; }   // v16.77 : plus aucun partage des lignes de bourse (décision de Théo : privé pour tous)
+/* v16.83 : plus aucun envoi des lignes de bourse au Versus (privées pour tous, décision de Théo) : le code mort de partage est retiré */
 /** V13 : transmet à TON fichier l'adresse du Versus et ton code, pour qu'il envoie lui-même ton relevé de fin de mois.
     Jamais avec la clé admin (Théo reste relevé par le Versus), jamais en simulation, une fois par ouverture. */
 let liaisonFaite = false;
@@ -3619,22 +3680,6 @@ async function lierVersus() {
     liaisonFaite = true;
     const rep = await posterFichier({ action: "liaisonVersus", url: apiUrl(), code: stock.get(CLES.cle), nom: SESSION.nom });
     if (rep && rep.ok) { M.versusLie = true; toast("🔗 Ton fichier enverra lui-même ton relevé de fin de mois au Versus."); }
-  } catch (e) { /* réessai à la prochaine ouverture */ }
-}
-async function partagerLignes() {
-  try {
-    if (!M || SRC !== "api" || !partageActif() || typeof D === "undefined" || !D || SOURCE !== "api" || simulationM()) return;
-    const k = moisDeFenetre(new Date()); if (!k) return;
-    const qui = moiVrai();
-    if (!D.personnes.some(p => p.nom === qui)) return;
-    const jour = String(M.genere || "").slice(0, 10) || isoJour(new Date()), marque = k + "|" + jour + "|" + qui;
-    if (stock.get("versus.moi.lignesEnvoyees") === marque) return;
-    const perf = M.perfLignes || {};
-    const lignes = [];
-    (M.groupes || []).forEach(g => g.lignes.forEach(l => { if (!l.especes && l.valeur > 0) lignes.push({ env: g.env, code: l.code, nom: l.nom, cours: l.cours, qte: l.qte, valeur: l.valeur, pv: l.pv, pvPct: l.pvPct, m1: (perf[g.env + "|" + l.code] || {}).m1 }); }));
-    if (!lignes.length) return;
-    const rep = await envoyerApi(apiUrl(), { cle: stock.get(CLES.cle), action: "lignes", personne: qui, mois: k, date: jour, lignes });
-    if (rep.ok) { stock.set("versus.moi.lignesEnvoyees", marque); if (typeof window.charger === "function") window.charger(true); }
   } catch (e) { /* réessai à la prochaine ouverture */ }
 }
 
@@ -3663,9 +3708,9 @@ function faireRappel(k) {
 function plusTard() { try { return JSON.parse(stock.get(cleStock("plusTard")) || "{}") || {}; } catch (e) { return {}; } }
 function rappelReporte(x) { const k = cleRappel(x.nom) || x.nom; return (plusTard()[k] || 0) > Date.now(); }
 function rappelDu(x) { return /À faire|mettre à jour|retard|⚠|✏/i.test(x.statut || "") && !rappelReporte(x); }
-function htmlBandeauRappel() {
+function htmlBandeauRappel(o) {
   if (!M || M.simple) return "";
-  const d = rappelsFichier().filter(rappelDu); if (!d.length) return "";
+  const d = rappelsFichier().filter(rappelDu).filter(x => o !== "artema" || /^(artema|releve)/.test(cleRappel(x.nom) || "")); if (!d.length) return "";
   const x = d[0], k = cleRappel(x.nom) || x.nom;
   return '<div class="m-rappel" role="status"><span class="ic">◷</span><span class="t"><b>' + esc(nomCourtRappel(x)) + "</b><small>à faire" +
     (x.prochaine && /^\d{4}-/.test(x.prochaine) ? " depuis le " + frDate(x.prochaine) : "") + (d.length > 1 ? " · + " + (d.length - 1) + " autre" + (d.length > 2 ? "s" : "") : "") + "</small></span>" +
@@ -3738,9 +3783,9 @@ function htmlNotifications() {
    Son fichier (API « Moi simple ») ne donne que ses comptes, ses soldes datés et ses réglages
    (appartement, prêt). Le reste est reconstruit ici, au format des autres fichiers, pour que
    les onglets Patrimoine, Stats et Missions marchent à l'identique. Pas de lignes de bourse. */
+/* v16.83 : plus d'adoption automatique de l'« adresse officielle » donnée par le fichier (migration du 05/11 terminée) */
+function couperLecture() { generation++; if (ctrlLecture) { try { ctrlLecture.abort(); } catch (e) { /* déjà coupée */ } } ctrlLecture = null; enCours = false; rechargerApres = false; }
 function recevoir(json) {
-  // 14.3.2 : le fichier donne son adresse officielle ; le téléphone s'y range (les anciennes adresses sont supprimées)
-  if (json && /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(json.adresse || "") && stock.get(K.api) && stock.get(K.api) !== json.adresse) stock.set(K.api, json.adresse);
   if (json && json.profil === "simple") { RAW = json; M = adapterSimple(json); }
   else { RAW = null; M = json; }
 }
@@ -4021,10 +4066,20 @@ function rendreSimple() {
     z.querySelectorAll("[data-ms-t]").forEach(b => b.addEventListener("click", () => { ETAT_S.type = b.dataset.msT; rendreSimple(); }));
     z.querySelector("#ms-form").addEventListener("submit", async e => {
       e.preventDefault();
-      const v = lireNombre(z.querySelector("#ms-montant").value), date = z.querySelector("#ms-date").value;
+      const brut = z.querySelector("#ms-montant").value, date = z.querySelector("#ms-date").value;
+      let v = lireNombre(brut);
+      if (millierDouteux(brut)) {   // v16.83 : « 1.500 » = 1 500 € ? on demande
+        const l = lectureMilliers(brut);
+        if (!confirm("« " + brut.trim() + " » = " + (+l.milliers).toLocaleString("fr-FR") + " € ?\n\nOK : " + (+l.milliers).toLocaleString("fr-FR") + " €" + (l.virgule ? "\nAnnuler : corriger (pour " + l.virgule + " €, écris-le avec une virgule)" : "\nAnnuler : corriger"))) { toast("Corrige le montant : 1500 ou 1,5 (avec une virgule)."); return; }
+        v = +l.milliers; z.querySelector("#ms-montant").value = saisieNombre(v, 2);
+      }
       if (!(v >= 0) || (!depart && !(v > 0))) { toast("Montant illisible."); return; }
       if (!date) { toast("Choisis une date."); return; }
       if (!depart && ETAT_S.type === "Retrait") { const dispo = soldes.filter(x => x[1] === sel.nom && x[0] <= date).map(x => x[2]).pop(); if (v > (dispo || 0) + .005) { toast("Retrait trop élevé : " + sel.nom + " n'a que " + eur(dispo || 0, 2) + " à cette date."); return; } }
+      if (!depart && ETAT_S.type !== "Intérêts") {   // v16.83 : un versement ou un retrait bien plus petit que d'habitude sur ce compte
+        const hab = mediane(mouv.filter(x => x[1] === sel.nom && x[3] === ETAT_S.type).map(x => x[2]));
+        if (hab > 0 && v < hab * .2 && !confirm("Ce montant (" + eur(v, 2) + ") est bien plus petit que d'habitude sur " + sel.nom + " (environ " + eur(hab) + "). L'enregistrer quand même ?")) return;
+      }
       const nature = depart ? "Départ" : ETAT_S.type;
       if (await envoyerSimple({ action: "soldes", entrees: [{ date, compte: sel.nom, montant: v, nature }] }, z.querySelector("#ms-envoyer"))) rendreSimple();
     });
@@ -4101,8 +4156,8 @@ window.Moi = {
     url = String(url || "").trim();
     if (url) stock.set(K.api, url);
     if (k) stock.set(K.cle, k);
-    if (url || k) { M = null; SRC = ""; erreur = ""; dernierAppel = 0; stock.del(K.cache); stock.del(K.refus); }
+    if (url || k) { couperLecture(); M = null; SRC = ""; erreur = ""; dernierAppel = 0; stock.del(K.cache); stock.del(K.cacheLe); stock.del(K.refus); }
   },
-  oublier() { [K.api, K.cle, K.cache, K.refus].forEach(k => stock.del(k)); M = null; SRC = ""; erreur = ""; signalerCloche(); },
+  oublier() { couperLecture(); [K.api, K.cle, K.cache, K.cacheLe, K.refus].forEach(k => stock.del(k)); M = null; SRC = ""; erreur = ""; signalerCloche(); },
 };
 })();

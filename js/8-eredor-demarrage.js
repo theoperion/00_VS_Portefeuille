@@ -175,7 +175,7 @@ montrerVue(vueActive());
   try { D = JSON.parse(c); SOURCE = "cache"; EN_CHARGEMENT = true; afficherTout(); } catch (e) { D = null; }
 })();
 charger(false);
-window.addEventListener("online", () => { if (SOURCE === "cache") charger(false); });
+window.addEventListener("online", () => { if (SOURCE === "cache") charger(false); if (window.Moi && moiConnecte()) window.Moi.rafraichir(false); });   // v16.83 : Moi se relit aussi au retour du réseau
 setTimeout(verifierMiseAJour, 3000);
 window.addEventListener("offline", () => { if (D && SOURCE === "api") { SOURCE = "cache"; afficherTout(); } });
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));

@@ -27,7 +27,7 @@ const CLES = { api: "versus.api", cle: "versus.cle", theme: "versus.theme", cach
 /* En simulation (date simulée ou vue joueur de l'admin), ce qui est « vu » (révélation, annonces, paliers, clôture…), l'état des onglets
    et les choix privés de Moi vivent dans une mémoire de session : le vrai stockage reste intact, et on retrouve tout en revenant à l'admin. */
 const SIMULATION = (() => { try { return !!window.DATE_SIM || !!localStorage.getItem("versus.vueJoueur"); } catch (e) { return !!window.DATE_SIM; } })();
-const CLES_SIM = /^versus\.(etat|tuto1|revele|nouveaute\.|gpVu\.|chauffe1|saison1|recapVu|rappelMasque|mesCartes|mesDuels|moi\.(paliers|secrets|objets|jours|nuit|cloture|pref|afficheurs|lignesEnvoyees|million|partage))/;
+const CLES_SIM = /^versus\.(etat|tuto1|revele|nouveaute\.|gpVu\.|chauffe1|saison1|recapVu|rappelMasque|mesCartes|mesDuels|moi\.(?!api$|cle$))/;   // v16.83 : tous les choix privés de Moi, sauf l'adresse et la clé du fichier
 const MEM_SIM = {};
 const stock = {
   get(k) { if (SIMULATION && k in MEM_SIM) return MEM_SIM[k]; try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -83,7 +83,8 @@ function couleurReelle(c) { const m = /var\((--[\w-]+)\)/.exec(c); return m ? cs
 
 const PERIODES = [["mois", "Mois en cours (dernier relevé)"], ["3m", "3 derniers mois"], ["6m", "6 derniers mois"], ["ytd", "Année en cours"], ["12m", "12 derniers mois"], ["comp", "Depuis la date de comparaison"], ["tout", "Depuis le début"]];
 
-function axeEur(t) { return ETAT.discret === "oui" ? "" : Math.abs(t) >= 1000 ? (t < 0 ? "−" : "") + F0.format(Math.abs(t) / 1000) + "k" : F0.format(t); }
+const F0_2 = nf(0, 2);
+function axeEur(t) { return ETAT.discret === "oui" ? "" : Math.abs(t) >= 1000 ? (t < 0 ? "−" : "") + F0_2.format(Math.abs(t) / 1000) + "k" : F0.format(t); }   // v16.83 : « 22,5k », plus « 23k »
 
 /* ---------- Thème ---------- */
 function appliquerTheme(c) {
@@ -108,17 +109,15 @@ async function envoyerApi(url, corps, ms) {
   catch (e) { throw new Error(e && e.name === "AbortError" ? "Le fichier met trop de temps à répondre : réessaie dans un instant." : "Impossible de joindre le fichier : vérifie la connexion puis réessaie."); }
   finally { clearTimeout(minu); }
 }
-/** Lecture d'une API Apps Script sans mettre la clé dans l'adresse (POST).
-    Repli en GET pour un ancien script qui ne connaît pas encore la lecture en POST (fichiers Moi pas encore mis à jour). */
+/** Lecture d'une API Apps Script sans mettre la clé dans l'adresse (POST). v16.83 : plus de repli en GET (la clé n'est jamais dans l'URL,
+    tous les fichiers lisent en POST) et des erreurs en français, comme envoyerApi. */
 async function lireApi(url, cle, action, extra, signal) {
   const corps = Object.assign({ cle: cle, action: action }, extra || {});
-  const j = await (await fetch(url, { method: "POST", body: JSON.stringify(corps), signal: signal })).json();
-  if (j && !j.ok && (j.erreur === "format" || /inconnu/i.test(j.message || ""))) {
-    const q = Object.keys(corps).filter(k => corps[k] !== undefined && corps[k] !== null && corps[k] !== "" && corps[k] !== false)
-      .map(k => encodeURIComponent(k) + "=" + encodeURIComponent(corps[k] === true ? "1" : corps[k])).join("&");
-    return (await fetch(url + (url.includes("?") ? "&" : "?") + q, { cache: "no-store", signal: signal })).json();
+  try { return await (await fetch(url, { method: "POST", body: JSON.stringify(corps), signal: signal })).json(); }
+  catch (e) {
+    const n = e && e.name, er = new Error(n === "AbortError" ? "le fichier met trop de temps à répondre" : n === "SyntaxError" ? "réponse illisible du fichier, peut-être en cours de mise à jour" : "impossible de joindre le fichier : vérifie la connexion");
+    er.name = n === "AbortError" || n === "SyntaxError" ? n : "Reseau"; throw er;
   }
-  return j;
 }
 // 14.3.2 : une seule adresse Versus ; une ancienne adresse gardée par le téléphone est oubliée (les anciennes sont supprimées)
 try { const a = stock.get(CLES.api); if (a && a.trim() !== API_URL) stock.del(CLES.api); } catch (e) { /* stockage indisponible */ }
