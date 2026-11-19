@@ -24,6 +24,7 @@
 .l.gp{font-size:clamp(24px,7.4vw,40px)}.l.gp.sous{font:700 clamp(15px,4.4vw,20px)/1.3 "Saira",sans-serif;letter-spacing:.06em;color:#F7CF55;margin-top:10px;text-transform:none}
 .moisXL{font:800 clamp(56px,17vw,100px)/.95 "Saira Condensed",sans-serif;letter-spacing:.03em}
 .mois{display:block;font:600 13px/1 "Saira",sans-serif;letter-spacing:.4em;color:#F7CF55;margin-bottom:8px}
+.petit.cle{font-size:clamp(22px,6.4vw,27px);color:#FFE7A0;letter-spacing:.12em;margin-top:16px;padding:6px 16px;border-radius:999px;background:rgba(0,0,0,.55);box-shadow:0 0 0 1.5px #F7CF55aa,0 0 22px rgba(247,207,85,.35);text-shadow:0 0 12px rgba(247,207,85,.55),0 0 3px #000}
 .petit{font:600 clamp(14px,4vw,17px)/1.4 "Saira",sans-serif;letter-spacing:.18em;color:#F7CF55;text-transform:uppercase;margin-top:12px}
 @keyframes inl{from{opacity:0;transform:scale(1.25);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
 .pilotes{display:flex;gap:12px;justify-content:center;margin-top:14px}.pilotes i{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font:800 15px/1 "Saira",sans-serif;font-style:normal;box-shadow:0 0 0 3px #000,0 0 18px currentColor;opacity:0}
@@ -45,7 +46,7 @@
 /* la Coupe en éclats */
 .coupe{width:min(56vw,300px);overflow:visible}.coupe .entier{transform-box:fill-box;transform-origin:center;animation:tremble .5s linear .05s both}
 @keyframes tremble{0%,100%{transform:none}20%{transform:translate(-1.5px,1px) rotate(-.6deg)}40%{transform:translate(2px,-1px) rotate(.8deg)}60%{transform:translate(-2px,0) rotate(-1deg)}80%{transform:translate(2.5px,1px) rotate(1.2deg)}}
-.coupe .ec{transform-box:fill-box;transform-origin:center;animation:eclat 1.25s cubic-bezier(.12,.75,.3,1) .55s both}
+.coupe .ec{transform-box:fill-box;transform-origin:center;animation:eclat 1.05s cubic-bezier(.12,.75,.3,1) .55s both}
 @keyframes eclat{from{transform:none;opacity:1}70%{opacity:1}to{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
 .eclair{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,#fff,rgba(255,236,170,.6) 30%,transparent 65%);opacity:0;animation:fl .4s ease-out .55s}
 /* l'objet caché : lampe torche */
@@ -97,12 +98,12 @@ const LONG = [
   [2000, "silverstone", "JANVIER", "", "", "t o", { cpt: "01 / 12" }],
   ...flashes(["djeddah", "melbourne", "suzuka", "miami", "montreal", "bahrein", "spa", "lasvegas", "singapour", "interlagos"], true),
   [2400, "monza", "", "12 univers.<br><span class=\"or\">Le reste" + NB + "? Patience.</span>", "flou", "b", { cpt: "12 / 12", sous: "Révélé fin décembre" }],
-  [2000, "coupe", "", "🏆 La Coupe a volé en éclats.", "s", "t:.5 b@.55"],
+  [2700, "coupe", "", "🏆 La Coupe a volé en éclats.", "s", "t:.5 b@.55"],
   [2000, "cache", "", "🗝️ Un objet est caché sur chaque circuit…", "s", "t t@1.5:.7"],
   [2400, "abudhabi", "DÉCEMBRE 2026", "🔥 1ᵉʳ" + NB + "décembre" + NB + ": le tour de" + NB + "chauffe", "s", "t"],
-  [2000, null, "", "Le 1ᵉʳ janvier, tout compte.", "", "t r"],
+  [2000, null, "", "Le 1ᵉʳ" + NB + "janvier,<br>tout compte.", "", "t r"],
   [550, "noir", "", "", "", "S"],
-  [7000, "fin", "", "", "", "B t@1.4:.7 t@2.2:.75 t@3:.8 t@4:.9"]];
+  [7000, "fin", "", "", "", VIDEO ? "B t@1.4:.7 t@2.2:.75 t@3:.85 g@2.4" : "B t@1.4:.7 t@2.2:.75 t@3:.8 t@4:.9"]];
 const COURT = [
   [500, "affiche-noel", "", "", "", "t:.8"],
   [2200, null, "", "Ils pensaient juste épargner.", "s", "h"],
@@ -112,9 +113,9 @@ const COURT = [
   ...flashes(["djeddah", "melbourne", "suzuka", "miami", "montreal", "bahrein", "spa", "lasvegas", "singapour", "interlagos"], false),
   [1900, "monza", "", "12 univers.<br><span class=\"or\">Le reste" + NB + "? Patience.</span>", "flou", "b"],
   [1800, "abudhabi", "DÉCEMBRE 2026", "🔥 1ᵉʳ" + NB + "décembre" + NB + ": le tour de" + NB + "chauffe", "s", "t"],
-  [1600, null, "", "Le 1ᵉʳ janvier, tout compte.", "", "t r"],
+  [1600, null, "", "Le 1ᵉʳ" + NB + "janvier,<br>tout compte.", "", "t r"],
   [550, "noir", "", "", "", "S"],
-  [4300, "demain", "", "", "", "B t@1.4:.75 t@2.2:.85"]];
+  [4300, "demain", "", "", "", "B t@1.4:.8 g@1.6"]];
 const PLANS = H.indexOf("court") >= 0 ? COURT : LONG;
 /*FIN PLANS*/
 /* ---------- la partition : un seul code pour la page (son en direct) et pour la vidéo (rendu hors ligne, identique) ---------- */
@@ -150,6 +151,11 @@ function ostinato(ac, tps) { const notes = [73.4, 73.4, 87.3, 73.4, 65.4, 73.4, 
     const b = ac.createOscillator(), gb = ac.createGain(); b.type = "triangle"; b.frequency.value = notes[k % 8]; gb.gain.setValueAtTime(v * .5, tt); gb.gain.exponentialRampToValueAtTime(.001, tt + dur); b.connect(gb).connect(sortie(ac)); b.start(tt); b.stop(tt + dur + .02); }); }
 function nappe(ac, t, d, mont) { const g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.1, t + mont); g.gain.setValueAtTime(.1, t + Math.max(mont, d - .2)); g.gain.linearRampToValueAtTime(0, t + d); g.connect(sortie(ac));
   [55, 82.4, 110, 164.8, 220].forEach((f, k) => { const o = ac.createOscillator(); o.type = k > 2 ? "triangle" : "sine"; o.frequency.value = f; if (k > 2) o.detune.value = 5; const gg = ac.createGain(); gg.gain.value = [.6, .7, .6, .45, .35][k]; o.connect(gg).connect(g); o.start(t); o.stop(t + d); }); }
+/* grondement : queue sombre (ré grave saturé + souffle filtré) tenue jusqu'à la dernière image, pas de silence final */
+function grondement(ac, t, d, v) { const sh = ac.createWaveShaper(), f = ac.createBiquadFilter(), g = ac.createGain(); sh.curve = courbe(2); f.type = "lowpass"; f.Q.value = .7; f.frequency.setValueAtTime(900, t); f.frequency.linearRampToValueAtTime(420, t + d);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + 1.2); g.gain.setValueAtTime(v, t + d * .6); g.gain.linearRampToValueAtTime(v * .45, t + d); sh.connect(f).connect(g).connect(sortie(ac));
+  [73.4, 73.6, 110, 146.8].forEach((fr, k) => { const o = ac.createOscillator(), gg = ac.createGain(), l = ac.createOscillator(), lg = ac.createGain(); o.type = "sawtooth"; o.frequency.value = fr; gg.gain.value = [.3, .3, .18, .12][k]; l.frequency.value = .35 + k * .21; lg.gain.value = gg.gain.value * .35; l.connect(lg).connect(gg.gain); o.connect(gg).connect(sh); o.start(t); o.stop(t + d + .05); l.start(t); l.stop(t + d + .05); });
+  const n = bruit(ac, d), fb = ac.createBiquadFilter(), gb = ac.createGain(); fb.type = "bandpass"; fb.Q.value = .9; fb.frequency.value = 520; gb.gain.setValueAtTime(0, t); gb.gain.linearRampToValueAtTime(v * .9, t + 1.5); gb.gain.linearRampToValueAtTime(v * .5, t + d); n.connect(fb).connect(gb).connect(sortie(ac)); n.start(t); }
 function bip(ac, t, v) { const o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain(); o.type = "square"; o.frequency.value = 880; f.type = "lowpass"; f.frequency.value = 3500; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .004); g.gain.setValueAtTime(v, t + .15); g.gain.linearRampToValueAtTime(0, t + .17); o.connect(f).connect(g).connect(sortie(ac)); o.start(t); o.stop(t + .2); }
 function moteur(ac, t, d, v) { const o = ac.createOscillator(), o2 = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain(), lfo = ac.createOscillator(), lg = ac.createGain(); o.type = o2.type = "sawtooth";
   o.frequency.setValueAtTime(48, t); o.frequency.exponentialRampToValueAtTime(96, t + d); o2.frequency.setValueAtTime(72, t); o2.frequency.exponentialRampToValueAtTime(144, t + d); lfo.frequency.value = 9; lg.gain.value = 4; lfo.connect(lg); lg.connect(o.frequency); lg.connect(o2.frequency);
@@ -173,6 +179,7 @@ function partition(ac, t0, P) {
       if (c === "r") montee(ac, tt + .1, d - at - .1, .5);
       if (c === "p") bip(ac, tt, v === null ? .32 : v);
       if (c === "m") moteur(ac, tt, d - at, v === null ? .22 : v);
+      if (c === "g") grondement(ac, tt, d - at + .5, v === null ? .16 : v);
       if (c === "B") { braam(ac, tt, 4.5, .75); tambour(ac, tt, 1.2); boum(ac, tt, .6); cymbale(ac, tt, .4); accord(ac, tt + .02, 4.8, .75); } }); });
   ac._bus = null; return tot; }
 /* ---------- l'image ---------- */
@@ -186,7 +193,7 @@ function svgCoupe() { // un trophée dessiné, découpé en 7 éclats qui parten
     '<g id="cup"><path d="M52 28h96v30c0 46-22 74-48 80-26-6-48-34-48-80z" fill="url(#or)"/><path d="M52 40c-30 0-34 40 4 52M148 40c30 0 34 40-4 52" fill="none" stroke="url(#or)" stroke-width="9"/><rect x="91" y="136" width="18" height="34" fill="url(#or)"/><rect x="66" y="168" width="68" height="14" rx="3" fill="url(#or)"/><rect x="54" y="182" width="92" height="20" rx="4" fill="url(#or)"/><path d="M70 40c4 30 14 52 26 62" stroke="#fff8" stroke-width="6" fill="none" stroke-linecap="round"/></g>', g = "";
   P.forEach((p, k) => { const q = P[(k + 1) % P.length], mx = (p[0] + q[0]) / 2 - c[0], my = (p[1] + q[1]) / 2 - c[1], L = Math.hypot(mx, my) || 1;
     defs += '<clipPath id="e' + k + '"><polygon points="' + c + " " + p + " " + q + '"/></clipPath>';
-    g += '<g class="ec" style="--dx:' + (mx / L * 190).toFixed(0) + 'px;--dy:' + (my / L * 190 + 40).toFixed(0) + 'px;--r:' + ((k % 2 ? 1 : -1) * (40 + k * 17)) + 'deg"><use href="#cup" clip-path="url(#e' + k + ')"/></g>'; });
+    g += '<g class="ec" style="--dx:' + (mx / L * 190).toFixed(0) + 'px;--dy:' + (my / L * 190 - 30).toFixed(0) + 'px;--r:' + ((k % 2 ? 1 : -1) * (40 + k * 17)) + 'deg"><use href="#cup" clip-path="url(#e' + k + ')"/></g>'; });
   return '<div class="eclair"></div><svg class="coupe" viewBox="0 0 200 210"><defs>' + defs + '</defs><g class="entier">' + g + "</g></svg>"; }
 function portraitTexte() { if (VIDEO) return "Aujourd'hui 11" + NB + "h" + NB + ": fais ton portrait"; const n = new Date(); if (n < new Date(2026, 10, 21)) return "Samedi 11" + NB + "h" + NB + ": fais ton portrait"; if (n < new Date(2026, 10, 22)) return "Aujourd'hui 11" + NB + "h" + NB + ": fais ton portrait"; return "Mon portrait" + NB + ": à toi de jouer"; }
 const ligne = (dl, html, cls) => '<div class="ligne on ' + (cls || "") + '" style="animation-delay:' + dl + 's">' + html + "</div>";
@@ -206,18 +213,19 @@ function plan(i) {
   else if (id === "noir") { txt.innerHTML = ""; fl = ""; }
   else if (id === "pilotes") { txt.innerHTML = '<div class="l on">' + t + "</div>" + pastilles(true); fl = "fort"; }
   else if (id === "cinq") { txt.innerHTML = '<div class="l on ' + st + '">' + t + "</div>" + pastilles(false, .5); fl = "fort"; }
-  else if (id === "coupe") { sc.className = "sansvoile"; obj.innerHTML = svgCoupe(); txt.innerHTML = '<div class="l on s" style="animation-delay:.6s;margin-top:62vh">' + t + "</div>"; }
+  else if (id === "coupe") { sc.className = "sansvoile"; obj.innerHTML = svgCoupe(); txt.innerHTML = '<div class="l on s" style="animation-delay:1.55s;margin-top:62vh">' + t + "</div>"; }
   else if (id === "cache") { sc.className = "carte sansvoile"; obj.innerHTML = '<div class="torche"></div><div class="qm">?</div>'; txt.innerHTML = '<div class="l on s">' + t + "</div>"; fl = ""; }
   else if (id === "feux") { sc.className = "sansvoile"; obj.innerHTML = '<div class="feux">' + opt.feux.map(a => '<b>' + ('<u class="rouge" style="--a:' + a + "s;--e:" + opt.ext + 's"></u>').repeat(2) + '</b>').join("") + "</div>"; txt.innerHTML = '<div class="l on s" style="margin-top:34vh">' + t + "</div>"; }
   else if (id === "fin") { fl = "fort"; txt.innerHTML = '<div class="l on titre" style="animation-duration:.3s">VERSUS</div><div class="l on date" style="animation-delay:.5s">🏆 Le Podium · Saison 1 · 2027</div>' +
-      ligne(1.4, svgTete(1.45) + "<span>" + portraitTexte() + "</span>") + ligne(2.2, "1ᵉʳ" + NB + "décembre" + NB + ": la chauffe") + ligne(3, "1ᵉʳ" + NB + "janvier" + NB + ": tout compte") + ligne(4, "Onglet 🏆 Podium", "dore") +
+      (VIDEO ? ligne(1.4, "1ᵉʳ" + NB + "décembre" + NB + ": la chauffe") + ligne(2.2, "1ᵉʳ" + NB + "janvier" + NB + ": tout compte") + ligne(3, "Onglet 🏆 Podium", "dore")
+        : ligne(1.4, svgTete(1.45) + "<span>" + portraitTexte() + "</span>") + ligne(2.2, "1ᵉʳ" + NB + "décembre" + NB + ": la chauffe") + ligne(3, "1ᵉʳ" + NB + "janvier" + NB + ": tout compte") + ligne(4, "Onglet 🏆 Podium", "dore")) +
       (VIDEO ? "" : '<a class="go on" style="animation-delay:4.6s" href="./#trophees">Ouvrir l’onglet Podium 🏁</a>'); }
-  else if (id === "demain") { fl = "fort"; txt.innerHTML = '<div class="l on titre" style="font-size:clamp(56px,19vw,120px);animation-duration:.3s">Demain.</div>' + ligne(1.4, "Samedi 9" + NB + "h" + NB + ": la bande-annonce") + ligne(2.2, svgTete(2.25) + "<span>11" + NB + "h" + NB + ": ton portrait</span>"); }
+  else if (id === "demain") { fl = "fort"; txt.innerHTML = '<div class="l on titre" style="font-size:clamp(56px,19vw,120px);animation-duration:.3s">Demain.</div>' + ligne(1.4, "Samedi" + NB + ": la bande-annonce"); }
   else if (id === "depart") { fl = "fort"; txt.innerHTML = '<div class="l on titre" style="animation-duration:.25s;font-size:clamp(50px,15.5vw,100px)">1ᵉʳ janvier</div><div class="l on" style="animation-duration:.25s;animation-delay:.12s;font-size:clamp(34px,10.5vw,58px)">Le départ.</div>' + pastilles(true, 1.9) + '<div class="l on date" style="animation-delay:2.6s;margin-top:22px">VERSUS · Saison 1 · 2027</div>'; }
   else if (st.indexOf("rev") >= 0) { // révélation : le mois en GROS, lisible dès la 1re image
     txt.innerHTML = (opt.haut ? '<span class="mois">' + opt.haut + "</span>" : "") + '<div class="l on net moisXL">' + mois + '</div><div class="l on net gp sous">' + GP[id] + "</div>" + (t ? '<div class="l on s" style="animation-delay:.15s;margin-top:8px">' + t + "</div>" : "");
     if (st.indexOf("fort") >= 0) fl = "fort"; }
-  else txt.innerHTML = (mois ? '<span class="mois">' + mois + "</span>" : "") + (t ? '<div class="l on ' + st.replace(/\b(flou|net)\b/g, "") + '">' + t + "</div>" : img && mois ? '<div class="l on gp">' + GP[id] + "</div>" : "") + (img && t && mois ? '<div class="l on gp sous" style="animation-delay:.25s">' + GP[id] + "</div>" : "") + (opt.sous ? '<div class="petit l on" style="animation-delay:.7s">' + opt.sous + "</div>" : "");
+  else txt.innerHTML = (mois ? '<span class="mois">' + mois + "</span>" : "") + (t ? '<div class="l on ' + st.replace(/\b(flou|net)\b/g, "") + '">' + t + "</div>" : img && mois ? '<div class="l on gp">' + GP[id] + "</div>" : "") + (img && t && mois ? '<div class="l on gp sous" style="animation-delay:.25s">' + GP[id] + "</div>" : "") + (opt.sous ? '<div class="petit cle l on" style="animation-delay:.7s">' + opt.sous + "</div>" : "");
   if (img && !flou && !aff && id !== "cache") sc.classList.add("carte");
   if (fl) { const x = $("flash"); x.classList.remove("on"); x.classList.toggle("doux", fl === "doux"); void x.offsetWidth; x.classList.add("on"); }
 }
