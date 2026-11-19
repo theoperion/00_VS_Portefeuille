@@ -67,6 +67,18 @@ const MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août"
 const MOIS_L = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 /* v16.83 · en « Tout afficher » (admin), le Podium présente la saison simulée comme 2027 (circuits 2027, chiffres réels de 2026) : on affiche l'année + 1 */
 function anAff(k) { const y = Math.floor(k / 100); try { return y === 2026 && typeof apercuSaison === "function" && apercuSaison() && typeof vueActive === "function" && vueActive() === "trophees" ? 2027 : y; } catch (e) { return y; } }
+/** v16.87 · courbe lissée (cubique monotone : jamais de bosse au-delà des points) ; P = [[x, y], …] avec x croissants */
+function lisse(P) {
+  const n = P.length; if (!n) return ""; const f = v => (+v).toFixed(1);
+  if (n < 3) return "M" + P.map(p => f(p[0]) + " " + f(p[1])).join("L");
+  const dx = [], m = [], t = [];
+  for (let i = 0; i < n - 1; i++) { dx[i] = P[i + 1][0] - P[i][0] || 1e-6; m[i] = (P[i + 1][1] - P[i][1]) / dx[i]; }
+  t[0] = m[0]; t[n - 1] = m[n - 2];
+  for (let i = 1; i < n - 1; i++) t[i] = m[i - 1] * m[i] <= 0 ? 0 : 3 * (dx[i - 1] + dx[i]) / ((2 * dx[i] + dx[i - 1]) / m[i - 1] + (dx[i] + 2 * dx[i - 1]) / m[i]);
+  let d = "M" + f(P[0][0]) + " " + f(P[0][1]);
+  for (let i = 0; i < n - 1; i++) { const h = dx[i] / 3; d += "C" + f(P[i][0] + h) + " " + f(P[i][1] + t[i] * h) + " " + f(P[i + 1][0] - h) + " " + f(P[i + 1][1] - t[i + 1] * h) + " " + f(P[i + 1][0]) + " " + f(P[i + 1][1]); }
+  return d;
+}
 function moisCourt(k) { return MOIS[k % 100 - 1] + " " + String(anAff(k)).slice(2); }
 function moisLong(k) { return MOIS_L[k % 100 - 1] + " " + anAff(k); }
 function jourReleve(y, m) { const d = new Date(y, m, 0, 12); while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1); return d; }
@@ -413,13 +425,15 @@ function tracer(box, conf) {
   o += '<defs><clipPath id="' + cid + '"><rect class="revele" x="0" y="0" width="' + (ANIM ? m.l : W) + '" height="' + H + '"/></clipPath></defs><g clip-path="url(#' + cid + ')">';
   const fins = [];
   conf.series.forEach(s => {
-    let d = "", ouvert = false, dernier = null;
+    let d = "", ouvert = false, dernier = null; const segs = [];
     s.v.forEach((v, i) => {
       if (!ok(v)) { ouvert = false; return; }
       const x = X(i).toFixed(1), y = Y(v).toFixed(1);
       d += (ouvert ? (s.marche ? "H" + x + "V" + y : "L" + x + " " + y) : "M" + x + " " + y);
+      if (!ouvert) segs.push([]); segs[segs.length - 1].push([X(i), Y(v)]);
       ouvert = true; dernier = i;
     });
+    if (!s.marche && segs.length) d = segs.map(lisse).join("");   // v16.87 : courbes lissées
     if (s.aire && d) {
       const premier = s.v.findIndex(ok);
       o += '<path d="' + d + "L" + X(dernier).toFixed(1) + " " + (m.t + ih) + "L" + X(premier).toFixed(1) + " " + (m.t + ih) + 'Z" fill="' + C(s.c) + '" fill-opacity=".14" stroke="none"/>';
@@ -519,7 +533,7 @@ function rendreClassement() {
   const mini = s => {
     if (!punchy || !s.chemin || s.chemin.length < 3) return "";
     const v = s.chemin.slice(-7).map(c => c.v), lo = Math.min(...v), hi = Math.max(...v), H = 14, W = 44, X = i => (i * W / (v.length - 1)).toFixed(1), Y = x => (H - 1 - (hi > lo ? (x - lo) / (hi - lo) : .5) * (H - 2)).toFixed(1);
-    return '<svg class="mini-c" viewBox="0 0 ' + W + " " + H + '" aria-hidden="true"><polyline fill="none" stroke="' + couleur(s.nom) + '" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" points="' + v.map((x, i) => X(i) + "," + Y(x)).join(" ") + '"/></svg>';
+    return '<svg class="mini-c" viewBox="0 0 ' + W + " " + H + '" aria-hidden="true"><path fill="none" stroke="' + couleur(s.nom) + '" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" d="' + lisse(v.map((x, i) => [+X(i), +Y(x)])) + '"/></svg>';
   };
   const tour = lignes.map(s => {
     if (s.fantome) {

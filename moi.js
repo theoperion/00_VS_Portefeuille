@@ -1142,10 +1142,11 @@ function htmlPatrimoine() {
   return '<div class="hero"><span class="eyebrow">' + (net.avecImmo ? "Patrimoine net (avec immobilier)" : "Patrimoine financier") + '</span><span class="m-big">' + eur(net.montant) + '</span><div class="sous">' + esc(net.note || "") + "</div></div>" +
     '<div><div class="stack" role="img" aria-label="Répartition du patrimoine">' + parts.map(p => '<i style="flex:' + Math.max(p[1], 0) + ";background:var(" + p[2] + ')"></i>').join("") + "</div>" +
       '<div class="m-leg3">' + parts.map(p => '<button type="button" data-cible="' + p[3] + '"><i style="background:var(' + p[2] + ')"></i><span>' + p[0] + '</span><span class="num">' + eur(p[1]) + '</span><span class="pc">' + pct(p[1] / tot, 0, false) + "</span></button>").join("") + "</div></div>" +
-    bloc("p-epargne", "--s2", "Épargne", esc(s.epargneLibelle || ""), liste(ep, rEp)) +
-    (sup.length ? bloc("p-av", "--s2", "Quintessa", "assurance-vie · par support", htmlAV(sup)) : "") +
-    (net.avecImmo ? bloc("p-immo", "--s3", "Immobilier", "prix d'achat, prêts restants", pretHtml() + liste(imm, rImm)) : "") +
+    /* v16.87 (Théo) : l'assurance-vie Banque Populaire en premier, la bourse en second (elle est déjà sur Aujourd'hui), puis l'épargne et l'immobilier */
+    (sup.length ? bloc("p-av", "--s2", "Quintessa", "assurance-vie Banque Populaire · par support", htmlAV(sup)) : "") +
     bloc("p-bourse", "--s1", "Bourse", "portefeuille", liste(envs, rEnv)) +
+    bloc("p-epargne", "--s2", "Épargne", esc(s.epargneLibelle || ""), liste(ep, rEp)) +
+    (net.avecImmo ? bloc("p-immo", "--s3", "Immobilier", "prix d'achat, prêts restants", pretHtml() + liste(imm, rImm)) : "") +
     (fis.length ? acc("m-fis", "Si tout était retiré", "résultat net d'impôt estimé", liste(fis, rFis), false) : "");
 }
 /* ================= V15.14 · Assurance-vie Quintessa : versé, valeur et gain par support, courbes, rendez-vous ================= */
@@ -1217,21 +1218,24 @@ function courbeAV(S, k) {
   const x = S.s[k]; if (!x) return "";
   const W = 320, H = 150, g = 46, dr = 6, hb = 18, n = S.dates.length;
   const vals = x.val.concat(x.verse).filter(v => v !== null && isFinite(v)); if (!vals.length) return "";
-  let lo = Math.min(...vals), hi = Math.max(...vals); const mg = (hi - lo) * .12 || Math.max(1, hi * .01);
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  { const mini = Math.abs(hi) * .08; if (hi - lo < mini) { const mil = (hi + lo) / 2; lo = mil - mini / 2; hi = mil + mini / 2; } }   // v16.87 : échelle honnête (20 € sur 15 850 € ne doit pas ressembler à une envolée)
+  const mg = (hi - lo) * .12 || Math.max(1, hi * .01);
   /* v16.83 · graduations rondes (graduations + axeEur, comme les autres courbes) : plus de « 23k » pour 22 500 */
   const ticks = graduations(lo, hi, 3), pasT = ticks.length > 1 ? ticks[1] - ticks[0] : 1;
   lo = Math.min(lo - mg, ticks[0]); hi = Math.max(hi + mg, ticks[ticks.length - 1]);
   const X = i => g + i * (W - g - dr) / Math.max(1, n - 1), Y = v => 6 + (hi - v) / (hi - lo) * (H - 6 - hb);
   const kEur = v => Math.abs(v) >= 1000 ? axeEur(v) : ETAT.discret === "oui" ? "" : nf(0, pasT < 1 ? 2 : 0).format(v);
   const pts = arr => arr.map((v, i) => v === null ? null : X(i).toFixed(1) + "," + Y(v).toFixed(1)).filter(Boolean).join(" ");
+  const ptsA = arr => arr.map((v, i) => v === null ? null : [X(i), Y(v)]).filter(Boolean);   // v16.87 : pour les courbes lissées
   const c = COUL_AV[k] || "var(--accent)", i0 = x.val.findIndex(v => v !== null);
-  const aire = i0 >= 0 ? '<polygon fill="' + c + '" opacity=".12" points="' + X(i0).toFixed(1) + "," + Y(lo).toFixed(1) + " " + pts(x.val) + " " + X(n - 1).toFixed(1) + "," + Y(lo).toFixed(1) + '"/>' : "";
+  const aire = i0 >= 0 ? '<path fill="' + c + '" opacity=".12" d="' + lisse(ptsA(x.val)) + "L" + X(n - 1).toFixed(1) + " " + Y(lo).toFixed(1) + "L" + X(i0).toFixed(1) + " " + Y(lo).toFixed(1) + 'Z"/>' : "";
   const mois = d => ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."][+d.slice(5, 7) - 1] + " " + d.slice(2, 4);
   const grille = ticks.map(v => '<line x1="' + g + '" x2="' + (W - dr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" class="gr"/><text x="' + (g - 4) + '" y="' + (Y(v) + 3.5).toFixed(1) + '" text-anchor="end">' + kEur(v) + "</text>").join("");
   const releves = k === "artema" || k === "ostrum" ? (M.histoAV.ordres || []).filter(o => o[1] === "Relevé" && o[2] === (k === "artema" ? "ARTEMA" : "OSTRUM")).map(o => { const i = S.dates.indexOf(o[0]); return i >= 0 ? '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(o[3]).toFixed(1) + '" r="3" fill="' + c + '"/>' : ""; }).join("") : "";
   return '<svg class="m-mk-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Valeur et versements de ' + esc(x.nom) + '">' + grille + aire +
     '<polyline fill="none" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="4 3" points="' + pts(x.verse) + '"/>' +
-    '<polyline fill="none" stroke="' + c + '" stroke-width="2.2" stroke-linejoin="round" points="' + pts(x.val) + '"/>' + releves +
+    '<path fill="none" stroke="' + c + '" stroke-width="2.2" stroke-linejoin="round" d="' + lisse(ptsA(x.val)) + '"/>' + releves +
     '<text x="' + g + '" y="' + (H - 4) + '">' + mois(S.dates[0]) + '</text><text x="' + (W - dr) + '" y="' + (H - 4) + '" text-anchor="end">' + mois(S.dates[n - 1]) + "</text></svg>" +
     '<div class="av-leg"><span><i style="background:' + c + '"></i>valeur' + (x.estime ? " (estimée entre les relevés)" : "") + '</span><span><i class="pt"></i>versé</span>' + (releves ? '<span><i class="rd" style="background:' + c + '"></i>tes relevés</span>' : "") + "</div>";
 }
@@ -1438,7 +1442,7 @@ function svgCourbeArtema(E, tout) {
   }
   s += '<line x1="' + gl + '" x2="' + gr + '" y1="' + Y(1).toFixed(1) + '" y2="' + Y(1).toFixed(1) + '" class="dep"/><text x="' + gr + '" y="' + (Y(1) + 4).toFixed(1) + '" text-anchor="start" class="lv" dx="6">départ</text>';
   s += '<line x1="' + gl + '" x2="' + gr + '" y1="' + Y(.6).toFixed(1) + '" y2="' + Y(.6).toFixed(1) + '" class="bar"/><text x="' + gr + '" y="' + (Y(.6) + 4).toFixed(1) + '" text-anchor="start" class="lr" dx="6">barrière</text>';
-  if (pts.length > 1) s += '<polyline class="pl" points="' + pts.map(p => X(p[0]).toFixed(1) + "," + Y(p[1]).toFixed(1)).join(" ") + '"/>';
+  if (pts.length > 1) s += '<path class="pl" d="' + lisse(pts.map(p => [X(p[0]), Y(p[1])])) + '"/>';
   pts.forEach((p, k) => { s += '<circle class="pt ' + coulArt(p[1]) + '" cx="' + X(p[0]).toFixed(1) + '" cy="' + Y(p[1]).toFixed(1) + '" r="' + (k === pts.length - 1 ? 4.5 : 3.5) + '" data-k="' + k + '"/>'; });
   return s + "</svg>";
 }
@@ -1618,7 +1622,7 @@ function courbesSVG(lignes, base100) {
   const mois = i => ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."][+sem[i].slice(5, 7) - 1] + " " + sem[i].slice(2, 4);
   const grille = [lo + mg, (lo + hi) / 2, hi - mg].map(v => '<line x1="' + g + '" x2="' + (W - dr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" class="gr"/><text x="' + (g - 4) + '" y="' + (Y(v) + 3.5).toFixed(1) + '" text-anchor="end">' + fmt(v) + "</text>").join("");
   const b100 = base100 && lo < 100 && hi > 100 ? '<line x1="' + g + '" x2="' + (W - dr) + '" y1="' + Y(100).toFixed(1) + '" y2="' + Y(100).toFixed(1) + '" class="b100"/>' : "";
-  const traits = pts.map((p, k) => '<polyline fill="none" stroke="' + lignes[k].c + '" stroke-width="' + (lignes.length > 1 ? 1.6 : 2.2) + '" stroke-linejoin="round" points="' + p.map((v, i) => v ? X(i).toFixed(1) + "," + Y(v).toFixed(1) : "").filter(Boolean).join(" ") + '"/>').join("");
+  const traits = pts.map((p, k) => '<path fill="none" stroke="' + lignes[k].c + '" stroke-width="' + (lignes.length > 1 ? 1.6 : 2.2) + '" stroke-linejoin="round" d="' + lisse(p.map((v, i) => v ? [X(i), Y(v)] : null).filter(Boolean)) + '"/>').join("");
   return '<svg class="m-mk-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(lignes.map(l => l.nom).join(", ")) + ' sur un an">' + grille + b100 + traits +
     '<text x="' + g + '" y="' + (H - 4) + '">' + mois(0) + '</text><text x="' + (W - dr) + '" y="' + (H - 4) + '" text-anchor="end">' + mois(sem.length - 1) + "</text></svg>";
 }
