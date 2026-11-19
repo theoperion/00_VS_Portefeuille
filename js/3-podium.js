@@ -787,7 +787,7 @@ function compteRebours(maintenant) {
   return "J-" + Math.round((SAISON.chauffe - new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate())) / 864e5);
 }
 function teaser() {
-  const now = new Date(), noel = now >= SAISON.noel;
+  const now = new Date(), noel = false;   // v17.14 (Théo) : la page d'attente reste comme avant le 20/11 (rien sur ce qui arrive)
   const qui = D.personnes.some(p => p.nom === ETAT.moi) ? ETAT.moi : (D.personnes[0] || {}).nom;
   const e = Object.assign({}, BASE_ECURIE, { numero: numeroParDefaut(qui) });
   return '<section class="teaser">' + svgVoiture({ nom: qui, e, drapeau: compteRebours(now), roule: true, reflet: true, label: "Tour de chauffe le samedi 21 novembre à 9 h, saison 1 le 1er janvier 2027" }) +

@@ -433,3 +433,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 20/11/2026 | ven | **v17.11 · Plus de bandeau « Hors connexion »** (Théo) : la pastille du haut devient « 📴 Hors ligne » quand l'appli n'a pas pu joindre le serveur ; le bandeau ne reste que pour une vraie erreur du fichier. |
 | 20/11/2026 | ven | **v17.12 · Plein écran complet + en-tête épuré** (Théo) : en plein écran, ▶ rejouer, ⏭ arrivée et 🛸 survol guidé à côté du choix de vue ; la pastille « Relevé Versus · mois » disparaît (seulement « 📴 Hors ligne » en cas de souci). |
 | 20/11/2026 | ven | **v17.13 · Plein écran : « ⏭ Arrivée » et « 🛸 Survol » en toutes lettres** (Théo) ; barre sur deux lignes en portrait. |
+| 20/11/2026 | ven | **v17.14 · Page d'attente comme avant** (Théo) : voiture, compte à rebours, « Saison 1 », date d'ouverture et « On en dit plus le samedi 21 novembre » ; plus aucun bloc sur ce qui arrive (chauffe, championnat, Grand Prix, cartes, portrait). |
