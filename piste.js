@@ -4099,11 +4099,11 @@
     const f = v => (+v).toFixed(1), NS = "http://www.w3.org/2000/svg";
     const el = (html, parent) => { const g = document.createElementNS(NS, "g"); g.innerHTML = html; (parent || x.g).appendChild(g); return g; };
     const anim = (dur, fn, fin) => { const t0 = performance.now(); const pas = now => { if (!x.svg.isConnected) return; const p = Math.min(1, (now - t0) / dur); fn(p); if (p < 1) requestAnimationFrame(pas); else if (fin) fin(); }; requestAnimationFrame(pas); };
-    const voiture = n => { const v = x.V[n]; return v ? [v.x * x.KU, v.y * x.KU] : null; };
+    const voiture = n => { const v = x.V[n]; return v ? [v.x * x.KU, v.y * x.KU] : null; }, dedans = p => p && [Math.max(160, Math.min(920, p[0])), Math.max(260, Math.min(640, p[1]))];
     const bulle = (u, v, txt, t) => { t = t || 26; const w = txt.length * t * .54 + t * 1.4, h = t * 1.7; u = Math.max(w / 2 + 8, Math.min(1072 - w / 2, u)); v = Math.max(h / 2 + 8, Math.min(712 - h / 2, v));
       return el('<g transform="translate(' + f(u) + " " + f(v) + ')"><rect x="' + f(-w / 2) + '" y="' + f(-h / 2) + '" width="' + f(w) + '" height="' + f(h) + '" rx="' + f(h / 2) + '" fill="#14161C" fill-opacity=".86" stroke="#FFD86B" stroke-width="2.5"/><text y="' + f(t * .36) + '" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="' + t + '" fill="#FFF3C8">' + txt + "</text></g>"); };
     const premier = c => Object.keys(c).sort((a, b) => c[a].rang - c[b].rang)[0], dernier = c => Object.keys(c).sort((a, b) => c[b].rang - c[a].rang || c[a].s - c[b].s)[0];
-    return { f, el, anim, voiture, bulle, premier, dernier };
+    return { f, el, anim, voiture, dedans, bulle, premier, dernier };
   }
   const EVENEMENTS = {
     /* avril · l'Œil suit la voiture du DERNIER ; quand le vainqueur passe la ligne, l'anneau s'envole et tombe dans la lave */
@@ -4169,7 +4169,63 @@
           if (b && e > .45) { b.remove(); b = null; } },
         maj() { }
       };
-    }
+    },
+    /* ---------- V16.38 · un événement pour chaque mois (attachés aux voitures : ils survivent aux nouvelles cartes) ---------- */
+    /* janvier · des ballons s'envolent de la voiture du vainqueur à l'arrivée */
+    foret(x) { const O = outilsEv(x); let fait = false;
+      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; const p = O.dedans(O.voiture(O.premier(c))); if (!p) return;
+        const g = O.el([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(i => { const a = (i / 14 - .5) * 1.6, col = ["#FF6FA8", "#4C9AFF", "#F2C230", "#2BB6A3", "#F2994A", "#B57BFF", "#FF5A5F"][i % 7];
+          return '<g transform="translate(' + O.f(Math.sin(a) * 60) + " " + O.f(-90 - Math.cos(a) * 50 - (i % 3) * 14) + ')"><path d="M0 14Q' + O.f(-Math.sin(a) * 30) + ' 50 ' + O.f(-Math.sin(a) * 60) + ' 90" stroke="#fff" stroke-width="1.2" fill="none" opacity=".7"/><ellipse rx="13" ry="16" fill="' + col + '"/><ellipse cx="-4" cy="-6" rx="3.5" ry="5" fill="#fff" opacity=".45"/></g>'; }).join(""));
+        const b = O.bulle(p[0], p[1] - 210, "Et c’est parti pour l’aventure !", 22);
+        O.anim(3200, q => { g.setAttribute("transform", "translate(" + O.f(p[0] + Math.sin(q * 6) * 8) + " " + O.f(p[1] - q * 300) + ") scale(" + O.f(.4 + Math.min(1, q * 3) * .6) + ")"); g.setAttribute("opacity", O.f(q < .75 ? 1 : (1 - q) * 4)); b.setAttribute("opacity", O.f(q < .6 ? 1 : Math.max(0, 1 - (q - .6) * 3))); }, () => { g.remove(); b.remove(); }); } }; },
+    /* mai · un parachute argenté (cadeau des sponsors) descend sur la voiture du dernier */
+    arene(x) { const O = outilsEv(x); let fait = false;
+      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .45 || !x.anime) return; fait = true; const n = O.dernier(c);
+        const g = O.el('<g><path d="M-34 0Q0 -40 34 0Q24 -6 17 0Q8 -8 0 0Q-8 -8 -17 0Q-24 -6 -34 0Z" fill="#E8ECF2" stroke="#9AA3B0" stroke-width="1.5"/><path d="M-34 0L-6 42M34 0L6 42M0 0V42" stroke="#C9CFD8" stroke-width="1"/><rect x="-9" y="40" width="18" height="15" rx="2" fill="#C0C6CF" stroke="#7D8590" stroke-width="1.5"/><circle cx="0" cy="47.5" r="3" fill="#E2B23C"/></g>');
+        const b = O.bulle(540, 60, "🪂 Un cadeau des sponsors pour " + n + " !", 24);
+        O.anim(2600, q => { const p = O.voiture(n) || [0, 0]; g.setAttribute("transform", "translate(" + O.f(p[0] + Math.sin(q * 9) * 12 * (1 - q)) + " " + O.f(p[1] - 60 - (1 - q) * 360) + ")"); if (q > .8) g.setAttribute("opacity", O.f((1 - q) * 5)); }, () => { g.remove(); setTimeout(() => b.remove(), 600); }); } }; },
+    /* juin · le chasseur du vainqueur fait un looping au-dessus de la ligne */
+    etoiles(x) { const O = outilsEv(x); let fait = false;
+      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; const n = O.premier(c), p = O.dedans(O.voiture(n)); if (!p) return; const col = (x.V[n] && x.V[n].couleur) || "#4C9AFF";
+        const g = O.el('<g><path d="M-22 0L-4 -4 18 0-4 4Z" fill="#E8ECF2" stroke="#3B4048" stroke-width="1.2"/><path d="M-14 -4L-20 -16M-14 4L-20 16M-2 -4L-8 -16M-2 4L-8 16" stroke="' + col + '" stroke-width="3" stroke-linecap="round"/><circle cx="6" cy="0" r="3" fill="#1B1D22"/><path d="M-22 0H-46" stroke="' + col + '" stroke-width="5" opacity=".6" stroke-linecap="round"/></g>');
+        const b = O.bulle(p[0], p[1] - 150, "Bien joué, petit ! Ne te laisse pas griser.", 20);
+        O.anim(2400, q => { const a = q * Math.PI * 2 - Math.PI / 2, r = 90, u = p[0] - 200 + q * 400 + Math.cos(a) * r * Math.sin(q * Math.PI), v = p[1] - 90 + Math.sin(a) * r * Math.sin(q * Math.PI);
+          const d = q * 360 + Math.cos(q * Math.PI) * 0; g.setAttribute("transform", "translate(" + O.f(u) + " " + O.f(v) + ") rotate(" + O.f(d) + ")"); g.setAttribute("opacity", O.f(q > .85 ? (1 - q) * 6.6 : 1)); }, () => { g.remove(); b.remove(); }); } }; },
+    /* juillet · le ver surgit juste derrière la voiture du dernier */
+    dunes(x) { const O = outilsEv(x); let fait = false;
+      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .4 || !x.anime) return; fait = true; const n = O.dernier(c), p0 = O.voiture(n); if (!p0) return; const p = [p0[0], p0[1]];
+        const g = O.el('<g><ellipse rx="70" ry="22" fill="#C9874A" opacity=".55"/><g class="ver"><path d="M-40 0C-40 -90 40 -90 40 0" stroke="#8C6A4E" stroke-width="34" fill="none"/><path d="M-40 0C-40 -90 40 -90 40 0" stroke="#6E5440" stroke-width="34" fill="none" stroke-dasharray="3 9"/><circle cx="40" cy="-4" r="22" fill="#3A2418"/><circle cx="40" cy="-4" r="15" fill="none" stroke="#F4E3C1" stroke-width="4" stroke-dasharray="2 3"/></g>' + [0, 1, 2, 3, 4, 5, 6].map(i => '<circle cx="' + (-60 + i * 20) + '" cy="' + (-4 - (i % 2) * 10) + '" r="' + (6 + i % 3 * 3) + '" fill="#E3B57A" opacity=".8"/>').join("") + "</g>");
+        const b = O.bulle(p[0], p[1] - 130, "Le ver ! Derrière " + n + " !", 24);
+        O.anim(2200, q => { const k = Math.sin(q * Math.PI); g.setAttribute("transform", "translate(" + O.f(p[0] - 90) + " " + O.f(p[1] + 14) + ")"); g.querySelector(".ver").setAttribute("transform", "translate(0 " + O.f((1 - k) * 60) + ") scale(1.9 " + O.f(Math.max(.05, k) * 1.9) + ")"); g.setAttribute("opacity", O.f(Math.min(1, k * 3))); }, () => { g.remove(); b.remove(); }); } }; },
+    /* août · le monde bascule à l'envers un instant */
+    envers(x) { const O = outilsEv(x); let fait = false;
+      return { raz() { fait = false; x.svg.style.transform = ""; x.svg.style.filter = ""; }, maj(e, c, en) { if (!en || fait || e < .5 || !x.anime) return; fait = true; const sv = x.svg;
+        sv.style.transition = "transform .5s ease-in-out, filter .5s"; sv.style.transform = "scaleY(-1)"; sv.style.filter = "hue-rotate(160deg) saturate(1.6) brightness(.8)";
+        setTimeout(() => { sv.style.transform = ""; sv.style.filter = ""; setTimeout(() => { sv.style.transition = ""; const b = O.bulle(540, 360, "On revient de loin…", 26); setTimeout(() => b.remove(), 1600); }, 550); }, 1700); } }; },
+    /* septembre · un portail orange s'ouvre devant le leader */
+    multivers(x) { const O = outilsEv(x); let fait = false;
+      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .55 || !x.anime) return; fait = true; const n = O.premier(c);
+        const g = O.el('<g>' + Array.from({ length: 24 }, (_, i) => { const a = i / 24 * Math.PI * 2; return '<path d="M' + O.f(Math.cos(a) * 34) + " " + O.f(Math.sin(a) * 34) + "l" + O.f(Math.cos(a + 1.4) * 10) + " " + O.f(Math.sin(a + 1.4) * 10) + '" stroke="' + (i % 3 ? "#FF9A2A" : "#FFE07A") + '" stroke-width="3" stroke-linecap="round"/>'; }).join("") + '<circle r="32" fill="none" stroke="#FFB02A" stroke-width="4"/><circle r="30" fill="#2A1450" opacity=".35"/></g>');
+        const b = O.bulle(540, 60, "Un portail s’ouvre devant " + n + " !", 24);
+        O.anim(2000, q => { const p = O.voiture(n) || [0, 0]; g.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1]) + ") rotate(" + O.f(q * 540) + ") scale(" + O.f(Math.sin(q * Math.PI) * 1.4) + ")"); }, () => { g.remove(); b.remove(); }); } }; },
+    /* octobre · pluie de tickets d'or sur le vainqueur */
+    chocolat(x) { const O = outilsEv(x); let fait = false;
+      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; const n = O.premier(c), p = O.dedans(O.voiture(n)); if (!p) return;
+        const T = Array.from({ length: 16 }, (_, i) => ({ dx: (Math.random() - .5) * 220, d: Math.random() * .35, r: Math.random() * 360, el: O.el('<g><rect x="-16" y="-9" width="32" height="18" rx="2" fill="#F2C230" stroke="#A8761A" stroke-width="1.5"/><rect x="-12" y="-5" width="24" height="10" fill="none" stroke="#A8761A" stroke-width=".8"/></g>') }));
+        const b = O.bulle(p[0], p[1] - 160, "Un ticket d’or pour " + n + " !", 24);
+        O.anim(2600, q => T.forEach(t => { const k = Math.max(0, Math.min(1, (q - t.d) / .6)); t.el.setAttribute("transform", "translate(" + O.f(p[0] + t.dx * (1 - k * .7)) + " " + O.f(p[1] - 230 + k * 220) + ") rotate(" + O.f(t.r + k * 400) + ") scale(" + O.f(.6 + Math.sin(k * 6) * .15) + ")"); t.el.setAttribute("opacity", O.f(q > .85 ? (1 - q) * 6.6 : k > 0 ? 1 : 0)); }), () => { T.forEach(t => t.el.remove()); b.remove(); }); } }; },
+    /* novembre · la main d'un titan balaie la piste juste derrière le dernier */
+    titans(x) { const O = outilsEv(x); let fait = false;
+      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .48 || !x.anime) return; fait = true; const n = O.dernier(c), p0 = O.voiture(n); if (!p0) return;
+        const g = O.el('<g><ellipse cx="6" cy="10" rx="40" ry="34" fill="#000" opacity=".25"/>' + [[-24, -12, -28], [-9, -22, -8], [7, -24, 6], [22, -18, 22]].map(([u, v, a]) => '<rect x="-7" y="-40" width="14" height="44" rx="7" fill="#E0A27A" stroke="#4A2414" stroke-width="3" transform="translate(' + u + " " + v + ") rotate(" + a + ')"/>').join("") + '<rect x="-7" y="-30" width="14" height="36" rx="7" fill="#E0A27A" stroke="#4A2414" stroke-width="3" transform="translate(-30 14) rotate(-75)"/><ellipse cx="0" cy="4" rx="30" ry="26" fill="#E0A27A" stroke="#4A2414" stroke-width="3"/><path d="M-14 0C-6 6 6 6 14 0M-10 12C-2 16 8 16 14 10" stroke="#B5704A" stroke-width="2" fill="none"/></g>');
+        const b = O.bulle(540, 60, "Un titan ! " + n + " l’a échappé belle !", 24);
+        O.anim(1800, q => { const k = Math.sin(q * Math.PI), p = O.voiture(n) || p0; g.setAttribute("transform", "translate(" + O.f(p[0] - 150 + q * 120) + " " + O.f(p[1] + 50 - k * 50) + ") rotate(" + O.f(-30 + q * 60) + ") scale(2.6)"); g.setAttribute("opacity", O.f(Math.min(1, k * 2.5))); }, () => { g.remove(); setTimeout(() => b.remove(), 500); }); } }; },
+    /* décembre 2027 · Poséidon foudroie la mer juste devant le leader */
+    odyssee(x) { const O = outilsEv(x); let fait = false;
+      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .6 || !x.anime) return; fait = true; const n = O.premier(c), p = O.voiture(n); if (!p) return;
+        const g = O.el('<g><rect x="-2000" y="-2000" width="4000" height="4000" fill="#fff" class="fl"/><path d="M' + O.f(p[0] + 30) + ' -20L' + O.f(p[0] + 4) + " " + O.f(p[1] * .4) + "L" + O.f(p[0] + 34) + " " + O.f(p[1] * .45) + "L" + O.f(p[0] + 12) + " " + O.f(p[1] - 8) + '" stroke="#FFF7C0" stroke-width="7" fill="none" stroke-linejoin="bevel"/><circle cx="' + O.f(p[0] + 12) + '" cy="' + O.f(p[1] - 8) + '" r="30" fill="none" stroke="#9BE8FF" stroke-width="5" class="on"/></g>');
+        const b = O.bulle(540, 60, "Poséidon gronde sur " + n + " !", 24);
+        O.anim(1400, q => { g.querySelector(".fl").setAttribute("opacity", O.f(q < .15 ? q * 4 : Math.max(0, .6 - q))); g.querySelector(".on").setAttribute("r", O.f(30 + q * 90)); g.setAttribute("opacity", O.f(1 - q * q)); }, () => { g.remove(); setTimeout(() => b.remove(), 700); }); } }; }
   };
 
   function monter2D(boite, o) {
@@ -4205,7 +4261,7 @@
       '<g class="p2-v"></g>';
     boite.appendChild(svg);
     const gV = svg.querySelector(".p2-v"), V = {};
-    (o.voitures || []).forEach(v => { const g = document.createElementNS(NS, "g"); g.setAttribute("class", "p2-car" + (v.moi ? " ici" : "")); g.innerHTML = '<g transform="scale(' + k.toFixed(2) + ')">' + (v.moi ? '<circle r="10.5" fill="none" stroke="' + v.couleur + '" stroke-width="1.6" opacity=".55"/>' : "") + '<circle r="7" fill="' + v.couleur + '" stroke="#fff" stroke-width="1.8"/><text y="3" text-anchor="middle"></text></g>'; gV.appendChild(g); V[v.nom] = { g, t: g.querySelector("text"), x: 0, y: 0 }; });
+    (o.voitures || []).forEach(v => { const g = document.createElementNS(NS, "g"); g.setAttribute("class", "p2-car" + (v.moi ? " ici" : "")); g.innerHTML = '<g transform="scale(' + k.toFixed(2) + ')">' + (v.moi ? '<circle r="10.5" fill="none" stroke="' + v.couleur + '" stroke-width="1.6" opacity=".55"/>' : "") + '<circle r="7" fill="' + v.couleur + '" stroke="#fff" stroke-width="1.8"/><text y="3" text-anchor="middle"></text></g>'; gV.appendChild(g); V[v.nom] = { g, t: g.querySelector("text"), x: 0, y: 0, couleur: v.couleur }; });
     const I = { pts: Object.assign({}, o.pts || {}), anim: null, ordre: (o.voitures || []).map(v => v.nom), e: 1 };
     const gEv = svg.querySelector(".p2-ev"), EVf = gEv && EVENEMENTS[def.peint];   // V16.35 : événements en course
     let EV = null; try { EV = EVf ? EVf({ svg, g: gEv, T, KU, V, lieux: (CP && CP.lieux) || {}, anime: ANIM() }) : null; } catch (e) { EV = null; }
