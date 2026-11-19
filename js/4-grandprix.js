@@ -770,8 +770,37 @@ function bandeAnnonce(y, i, ensuite) {
   const pause3d = b => { try { if (GP_INST && GP_INST.api.pause) GP_INST.api.pause(b); } catch (e) { } }; pause3d(true);   // V16.17 : la 3D ne tourne pas sous la bande-annonce
   let fini = false, joue = 0, t0 = performance.now(), t = setTimeout(() => fermer(true), total), raf = 0, feu = 0, appui = 0;
   const raisons = new Set(), ecoule = () => joue + (raisons.size ? 0 : performance.now() - t0);
-  const pauser = r => { if (fini) return; if (!raisons.size) { joue += performance.now() - t0; clearTimeout(t); o.classList.add("pause"); } raisons.add(r); };
-  const reprendre = r => { if (fini || !raisons.delete(r) || raisons.size) return; t0 = performance.now(); o.classList.remove("pause"); t = setTimeout(() => fermer(true), Math.max(300, total - joue)); };
+  // V16.75 · la musique de l'univers (sons.js), posée sur les vrais temps des plans ; figée avec l'image, coupée en fondu à la fermeture
+  const S = typeof SONS !== "undefined" ? SONS : null, cleU = (window.Piste && Piste.TRACES && Piste.TRACES[ci] || {}).peint || "";
+  const optM = { plans: [0].concat(regle ? [t2 * 1000] : [], tr ? [t3 * 1000] : []), tFeux: tFeux * 1000, tOut: tOut * 1000, reduit };
+  let mus = S && S.musiqueBA ? S.musiqueBA(cleU, optM) : null;
+  const pauser = r => { if (fini) return; if (!raisons.size) { joue += performance.now() - t0; clearTimeout(t); o.classList.add("pause"); if (mus) mus.pause(); } raisons.add(r); };
+  const reprendre = r => { if (fini || !raisons.delete(r) || raisons.size) return; t0 = performance.now(); o.classList.remove("pause"); if (mus) mus.reprendre(); t = setTimeout(() => fermer(true), Math.max(300, total - joue)); };
+  /* V16.75 · une petite astuce en haut (jamais sur le titre), qui part seule après 3 s, d'un toucher ailleurs, ou pour de bon avec ✕ :
+     son coupé dans l'appli → bouton pour l'activer ; son bloqué par le navigateur → un toucher le réveille ; sinon, une seule fois : monter le volume */
+  const memo = k => { try { return localStorage.getItem(k) === "1"; } catch (e) { return false; } }, retenir = k => { try { localStorage.setItem(k, "1"); } catch (e) { /* rien */ } };
+  let astuce = null, tAst = 0;
+  const oterAstuce = () => { clearTimeout(tAst); if (!astuce) return; const a = astuce; astuce = null; a.style.opacity = "0"; setTimeout(() => a.remove(), 260); };
+  const reveiller = () => { if (S && S.bloque && S.bloque()) S.debloquer(ecoule()); };
+  function montrerAstuce() {
+    if (fini || !S) return;
+    const cas = !S.actif() ? ["versus.astuceSon.coupe", "🔇 Son coupé", "Activer pour la musique"] : S.bloque && S.bloque() ? ["versus.astuceSon.bloque", "🔊 Touche pour la musique", ""] : ["versus.astuceVolume", "🎵 Monte le volume pour la musique", ""];
+    if (memo(cas[0])) return; if (cas[0] === "versus.astuceVolume") retenir(cas[0]);   // celle-ci : une seule fois par appareil (le mode silencieux du téléphone ne se voit pas depuis le web)
+    const a = astuce = document.createElement("div"); a.className = "ba-astuce"; a.setAttribute("role", "status");
+    a.style.cssText = "position:absolute;z-index:9;top:max(6px,calc(3.5vh - 15px));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;max-width:calc(100% - 32px);padding:4px 4px 4px 12px;border-radius:999px;background:rgba(0,0,0,.78);border:1px solid rgba(255,255,255,.28);font:600 12px/1.2 Saira,sans-serif;color:#fff;white-space:nowrap;transition:opacity .25s;cursor:pointer";
+    const bt = "border:0;border-radius:999px;font:700 12px/1 Saira,sans-serif;cursor:pointer;padding:6px 9px;";
+    a.innerHTML = "<span>" + cas[1] + "</span>" + (cas[2] ? '<button type="button" class="ba-astuce-ok" style="' + bt + 'background:' + st[0] + ';color:#000">' + cas[2] + "</button>" : "") +
+      '<button type="button" class="ba-astuce-x" aria-label="Ne plus afficher" style="' + bt + 'background:transparent;color:rgba(255,255,255,.75)">✕</button>';
+    ["pointerdown", "pointerup"].forEach(ev => a.addEventListener(ev, e => e.stopPropagation()));   // ni pause (appui long) ni fermeture (mode réduit)
+    a.addEventListener("click", e => { e.stopPropagation();
+      if (e.target.closest(".ba-astuce-x")) retenir(cas[0]);
+      else if (e.target.closest(".ba-astuce-ok")) { S.basculer(true); if (!fini) mus = S.musiqueBA(cleU, Object.assign({}, optM, { depuis: ecoule() })); }
+      else reveiller();
+      oterAstuce(); });
+    o.appendChild(a); tAst = setTimeout(oterAstuce, 3000);
+  }
+  setTimeout(montrerAstuce, 300);   // le temps que le navigateur dise si le son est bloqué
+  o.addEventListener("pointerup", () => { reveiller(); oterAstuce(); });   // toucher ailleurs : l'astuce part, et le son se réveille s'il était bloqué
   // CHAQUE bip des feux suit l'horloge de l'image : figé avec elle (appui long, arrière-plan)
   const tic = () => { if (fini) return; const e = ecoule() / 1000;
     if (!reduit && feu < 6 && e >= (feu < 5 ? tFeux + feu * .25 : tOut)) { if (typeof SONS !== "undefined" && SONS.feuBA) SONS.feuBA(feu); feu++; }   // un bip par feu, puis le départ
@@ -784,6 +813,7 @@ function bandeAnnonce(y, i, ensuite) {
   o.addEventListener("pointerdown", bas); ["pointerup", "pointercancel", "pointerleave"].forEach(ev => o.addEventListener(ev, haut)); o.addEventListener("contextmenu", e => e.preventDefault());
   document.addEventListener("visibilitychange", visib); document.addEventListener("keydown", clavier);
   function fermer(lancer) { if (fini) return; fini = true; clearTimeout(t); clearTimeout(appui); cancelAnimationFrame(raf); document.removeEventListener("visibilitychange", visib); document.removeEventListener("keydown", clavier);
+    clearTimeout(tAst); if (mus) mus.arreter(.3);   // V16.75 : fondu de 0,3 s sur la musique
     if (feu > 0 && feu < 6 && typeof SONS !== "undefined" && SONS.arreter) SONS.arreter();   // « Passer » en plein milieu des feux : on coupe le son
     BA_OUVERTE = null; pause3d(false); o.classList.add("fin"); setTimeout(() => o.remove(), 450); if (lancer && ensuite) setTimeout(ensuite, 250); }
   o.querySelector(".ba-passer").addEventListener("click", e => { e.stopPropagation(); fermer(true); });
@@ -815,7 +845,7 @@ function brancherGP(v, y) {
   const cleVu = "versus.gpVu." + y, vu = +(stock.get(cleVu) || 0);
   // V16.16 : la manche n'est marquée « vue » qu'à l'arrivée (quitter pendant la bande-annonce ou la course ne la fait plus perdre)
   // V16.17 : un seul départ — après la bande-annonce (qui finit sur les 5 feux), la course part sans refaire les feux
-  const finCourse = () => { if (window.SONS && et.m) { const v1 = et.m.l.slice().sort((a, b) => a.rg - b.rg)[0]; if (v1) SONS.arrivee(saisonVisible() && !estChauffe(y) ? equipDe(v1.nom).klaxon : "fanfare", v1.nom === ETAT.moi); }   // V16.43 : la foule et le klaxon du vainqueur
+  const finCourse = () => { if (window.SONS && et.m) { const v1 = et.m.l.slice().sort((a, b) => a.rg - b.rg)[0]; if (v1) SONS.arrivee(saisonVisible() && !estChauffe(y) ? equipDe(v1.nom).klaxon : "fanfare", v1.nom === ETAT.moi, (Piste.TRACES[ci] || {}).peint); }   // V16.43 : la foule et le klaxon du vainqueur
     if (et.k && !et.avenir && et.k > +(stock.get(cleVu) || 0)) stock.set(cleVu, String(et.k)); bullesGP(y, i); commenter(y, i, -1); };
   const jouer = feux => { const f = feux !== false && i >= 1 && api.type === "3d", d = SC ? (api.type === "3d" ? 16000 : 11000) : api.type === "3d" ? 6400 : 3000; commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0); if (window.SONS) SONS.course(d, f ? 3200 : 0);   // V16.43 : feux, moteurs
     if (SC) api.jouerScenario(SC.scen, d, finCourse, f); else api.jouer(mc.depart, mc.arrivee, d, finCourse, f); };
