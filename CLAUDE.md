@@ -75,7 +75,7 @@ Commit (message en français, « vX.Y : … »), ligne dans le journal de `MODE_
 - Règles (DIC Natixis + fiche BPCE Vie, Drive de Théo) : photo de départ = moyenne 2-3-4 déc. 2026 ; rendez-vous ~7 déc. 2029→2033
   (si indice ≥ départ : arrêt, capital + 28,5 % +9,5 pts/an) ; fin 1er déc. 2034 : ≥ départ +76 %, entre −40 % et 0 capital,
   sous 60 % perte = baisse ; frais contrat 0,80 %/an ; parts = achats ÷ (100 € moins 1 %/an jusqu'au 4/12/2026).
-- v16.85 : écran refait (`issueArtema` = fonction unique des issues, verdict, jauge, frise des rendez-vous, simulateur, courbe `parametres.artema.histo` = onglet « Artema histo » des fichiers Théo/Clément). À faire : formulaire unique valeur (€) + niveau (demande de Théo, action serveur `artemaReleve`).
+- v16.85 : écran refait (`issueArtema` = fonction unique des issues, verdict, jauge, frise des rendez-vous, simulateur, courbe `parametres.artema.histo` = onglet « Artema histo » des fichiers Théo/Clément). À faire (validé par Théo, après les corrections de Moi en cours) : formulaire unique valeur (€) + niveau (action serveur `artemaReleve`) ; phrase-bilan en tête de Moi (patrimoine, variation, priorité) ; boîte unique « À faire (N) » qui regroupe rappels et saisies en retard.
 - Niveau de l'indice saisi à la main (pas sur Google Finance) : rappels « artemaInitial » / « artemaActuel » du fichier.
   Rythme du rappel « niveau actuel » (Paramètres!V8 de chaque fichier, 18/11) : Théo chaque lundi (1er : 07/12/2026),
   Clément chaque 20 du mois avec son relevé (1er : 20/12/2026). Les deux démarrent une fois le niveau initial saisi.
