@@ -926,3 +926,33 @@ function fermerPleinGP() {
   if (GP_INST) GP_INST.api.redim();
 }
 
+/* ---------- v16.81 · ADMIN : visite des circuits 2027 (2D, hélico 3D, Visite rapprochée), sans attendre le mois ni la saison ---------- */
+function ouvrirCircuits2027(ci0) {
+  const MOIS_C = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+  const liste = [["abudhabi", "Chauffe · déc. 26"]].concat(CAL_GP.map((c, i) => [c, MOIS_C[i] + " 27"]));
+  let ci = ci0 || liste[0][0], vue = "2d", api = null;
+  const o = document.createElement("div"); o.className = "regles circ-gal"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Circuits 2027");
+  o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>🗺️ Circuits 2027 · aperçu admin</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div>' +
+    '<div class="cg-chips">' + liste.map(([c, m]) => '<button type="button" class="chip" data-cg="' + c + '">' + (GPS[c] ? GPS[c].drap + " " : "") + esc(m) + "</button>").join("") + "</div>" +
+    '<div class="cg-t"></div><div class="cg-vues"><button type="button" class="chip" data-cgv="2d">🗺️ Carte 2D</button><button type="button" class="chip" data-cgv="3d">🚁 Hélico 3D</button><button type="button" class="chip" data-cgv="visite">🔎 Visite rapprochée</button></div>' +
+    '<div class="cg-scene"></div><p class="info">Aperçu seulement : rien n\'est enregistré. En 3D, fais glisser pour tourner, pince pour zoomer.</p></div>';
+  document.body.appendChild(o);
+  const scene = o.querySelector(".cg-scene");
+  const monter = () => {
+    if (api) { try { api.detruire(); } catch (e) { } api = null; } scene.innerHTML = "";
+    o.querySelectorAll("[data-cg]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.cg === ci)));
+    o.querySelectorAll("[data-cgv]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.cgv === vue)));
+    const G = GPS[ci] || {}; o.querySelector(".cg-t").innerHTML = "<b>" + esc(G.gp || ci) + "</b> · " + esc(G.ville || "");
+    if (!window.Piste) return;
+    const boite = document.createElement("div"); boite.className = "cg-rendu"; scene.appendChild(boite);
+    const vs = voituresGP(), pts = Object.fromEntries(D.personnes.map(p => [p.nom, 0]));
+    api = Piste.monter(boite, { circuit: ci, meteo: "soleil", mode: vue === "2d" ? "2d" : "3d", camera: "helico", tour: 0, voitures: vs, pts, focus: vs[0] && vs[0].nom, accent: couleurAccent(),
+      titre: (G.gp || ci), portrait: n => avatar(n, Object.assign({}, equipDe(n), { skin: (Piste.TRACES[ci] || {}).peint })) });
+    if (vue === "visite" && api && api.viser) setTimeout(() => { try { api.viser(null, .3, .38); } catch (e) { } }, 300);
+  };
+  o.querySelectorAll("[data-cg]").forEach(b => b.addEventListener("click", () => { ci = b.dataset.cg; monter(); }));
+  o.querySelectorAll("[data-cgv]").forEach(b => b.addEventListener("click", () => { vue = b.dataset.cgv; monter(); }));
+  const fermer = () => { if (api) { try { api.detruire(); } catch (e) { } } o.remove(); };
+  o.querySelector(".rg-x").addEventListener("click", fermer); o.addEventListener("click", ev => { if (ev.target === o) fermer(); });
+  monter();
+}

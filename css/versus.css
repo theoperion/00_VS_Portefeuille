@@ -1563,3 +1563,11 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .gp-piste.en2d .gp-tresor-appel { display: block; }
 .gp-tresors { white-space: nowrap; opacity: .8; font-size: .92em; }
 @media (prefers-reduced-motion: reduce) { .gp-tresor svg, .gp-tresor.pris svg { animation: none; } .gp-tresor.pris { opacity: 0 !important; } }
+
+/* v16.81 · aperçu admin des circuits 2027 */
+.circ-gal .rg-c { width: min(100%, 760px); }
+.cg-chips, .cg-vues { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 4px 0; } .cg-chips::-webkit-scrollbar { display: none; }
+.cg-chips .chip, .cg-vues .chip { flex: none; }
+.cg-t { margin: 6px 0 2px; font-size: 14px; }
+.cg-scene { position: relative; width: 100%; aspect-ratio: 3 / 2; border-radius: 12px; overflow: hidden; background: #0B0E14; }
+.cg-rendu { position: absolute; inset: 0; }
