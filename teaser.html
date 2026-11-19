@@ -46,7 +46,9 @@ const LONG = [
   [1500, "interlagos", "NOVEMBRE", "Ils sont derrière le mur.", "s", "t"],
   [2200, "lasvegas", "DÉCEMBRE", "Une seule finale.", "", "b"],
   [2400, null, "", "Six pierres. Un seul claquement de doigts.", "s", "t"],
-  [2400, null, "", "Une seule couronne. « Qu'on lui coupe la tête ! »", "s", "tr"],
+  [2400, null, "", "Une seule couronne. « Qu'on lui coupe la tête ! »", "s", "t"],
+  [2200, null, "", "En décembre, rien ne compte.", "s", "t"],
+  [2400, null, "", "Le 1ᵉʳ janvier, tout compte.", "", "tr"],
   [6000, "fin", "", "", "", "B"]];
 const COURT = [
   [2200, null, "", "Ils pensaient juste épargner.", "s", "h"],
@@ -55,7 +57,8 @@ const COURT = [
   [700, "bahrein", "", "", "", "to"], [700, "djeddah", "", "", "", "t"], [700, "melbourne", "", "", "", "t"],
   [700, "montreal", "", "", "", "t"], [700, "silverstone", "", "", "", "t"], [700, "interlagos", "", "", "", "t"],
   [1700, "lasvegas", "", "12 univers. Un seul champion.", "", "b"],
-  [1300, null, "", "", "", "r"],
+  [1800, null, "", "En décembre, rien ne compte.", "s", "t"],
+  [1800, null, "", "Le 1ᵉʳ janvier, tout compte.", "", "r"],
   [4200, "demain", "", "", "", "B"]];
 const COURTE = location.hash.indexOf("court") >= 0, PLANS = COURTE ? COURT : LONG;
 /* ---------- la partition : un seul code pour la page (son en direct) et pour la vidéo (rendu hors ligne, identique) ---------- */
@@ -96,7 +99,7 @@ function plan(i) {
   if (img) { f.style.backgroundImage = 'url("' + img + '")'; f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); autre.classList.remove("on"); } else { f.classList.remove("on"); autre.classList.remove("on"); }
   if (id === "pilotes") txt.innerHTML = '<div class="l on">' + t + '</div><div class="pilotes">' + NOMS.map((n, k) => '<i style="color:' + COUL[k] + ';background:' + COUL[k] + '22;animation-delay:' + (.3 + k * .35) + 's" class="on">' + n + "</i>").join("") + "</div>";
   else if (id === "cinq") txt.innerHTML = '<div class="l on ' + st + '">' + t + '</div><div class="pilotes">' + NOMS.map((n, k) => '<i style="color:' + COUL[k] + ';background:' + COUL[k] + '22;opacity:.35">' + n + "</i>").join("") + '<i class="on cinq" style="color:#B4E33D;background:#B4E33D22;animation-delay:.5s">?</i></div>';
-  else if (id === "fin") txt.innerHTML = '<div class="l on titre">VERSUS</div><div class="l on date" style="animation-delay:.6s">🏆 Le Podium · Saison 1 · 2027</div><div class="l on s" style="animation-delay:1.2s">Les moteurs chauffent le 1<sup>er</sup> décembre.</div><a class="go on" style="animation-delay:2s" href="./#trophees">Ouvrir l’onglet Podium 🏁</a>';
+  else if (id === "fin") txt.innerHTML = '<div class="l on titre">VERSUS</div><div class="l on date" style="animation-delay:.6s">🏆 Le Podium · Saison 1 · 2027</div><div class="l on s" style="animation-delay:1.2s">Décembre : le tour de chauffe.<br>1<sup>er</sup> janvier : le départ.</div><a class="go on" style="animation-delay:2s" href="./#trophees">Ouvrir l’onglet Podium 🏁</a>';
   else if (id === "demain") txt.innerHTML = '<div class="l on titre" style="font-size:clamp(56px,19vw,120px)">Demain.</div><div class="l on date" style="animation-delay:1.4s">Onglet 🏆 Podium<br>samedi 9 h</div>';
   else txt.innerHTML = (mois ? '<span class="mois">' + mois + "</span>" : "") + (t ? '<div class="l on ' + st + '">' + t + "</div>" : "");
   if (img || id === "pilotes" || id === "cinq" || id === "fin" || id === "demain") { const fl = document.getElementById("flash"); fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on"); }

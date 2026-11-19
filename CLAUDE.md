@@ -42,14 +42,14 @@
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **16.23**.
+  hors connexion `sw.js`). Version actuelle : **16.24**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
 ## Serveur Apps Script (dépôt app_scripts)
 - Prérequis une fois par machine : `npx -y @google/clasp@3.4.1 login` (compte Google de Théo) → crée `~/.clasprc.json`.
 - Versus : `sh outils/mettre-en-ligne-versus.sh "V31 : ce qui change"` (APPLI=chemin de ce dépôt si besoin).
-  Versions actuelles : VS_VERSION 39, version Google 54.
+  Versions actuelles : VS_VERSION 40, version Google 55.
 - Scripts perso : dans `portefeuille-epargne/<nom>` : `clasp push --force` puis `python3 ../../outils/deployer.py "desc"`
   (garde les mêmes adresses). Versions actuelles : Théo 30, Clément 9, Devlin 9.
 - Sheets en direct : `outils/gs.py` (`SS(id).get/put/batch`). Classeurs : Théo `1pbpJRMwZR64LqP_wwlhiw-6m7-lUg-Q3pVAF4Dv9j8U`,
@@ -134,8 +134,8 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
   v16.22 (pas d'écurie/trophées/badges avant janvier, pour recueillir l'avis des joueurs) ; **refonte des récompenses en ~20 familles AVANT janvier** ;
   tirages des billets par graine fixée au 1er janvier (empreinte affichée, révélée le 31/12 ; la Réserve admin ne montre pas les tirages) ; vibration à
   tester sur l'appli installée (Firefox Android) ; une cérémonie par ouverture (file : course, vol, pierre, billet) ; **icônes maison** à la place des
-  émojis (≈30) ; repeindre les cartes petit à petit ; storyboard à réajuster ; corriger tous les bugs du rapport. Gant : question en cours (gant de
-  l'infini gardé ou objet maison ?).
+  émojis (≈30) ; repeindre les cartes petit à petit ; storyboard à réajuster ; corriger tous les bugs du rapport. Gant : **gant de l'infini GARDÉ** (Théo, 19/11).
+- **Mon portrait (v16.24)** : `ouvrirPortrait()` (3-podium.js), ouvert par Réglages › « 👤 Mon portrait » ou en touchant sa propre tête ; disponible dès la chauffe (hors Écurie).
 - Bande-annonce de lancement : `teaser.html` (bouton dans le mail du 20/11, serveur V35) ; vidéo MP4 faite avec Playwright + bande-son synthétisée (numpy + ffmpeg).
 - Maquettes de travail : scratchpad `galerie/` (perdu avec la session ; les peintres sont dans `piste.js`, rendu via `tpeints.js`, `PEINT=clé`, `ANIM=1 ATT=2600`).
 

@@ -845,6 +845,21 @@ function dessinerChampionnat(y) {
     finEtiq: true, h: 190, fmt: x => x + " pts", fmtAxe: t => Number.isInteger(t) ? String(t) : "", titreX: k => k === c.deb ? "Départ" : "Fin " + moisCourt(k) });
 }
 function quiEcurie() { return moiVrai(); }
+/* V16.24 · « Mon portrait » : la tête de chacun se règle hors de l'Écurie (Réglages, ou toucher sa tête dans le Classement), dès le tour de chauffe */
+function ouvrirPortrait() {
+  const qui = quiEcurie(); if (!qui || !D) { toast("Choisis d'abord qui tu es dans les Réglages."); return; }
+  const rg = document.getElementById("reglages"); if (rg && !rg.hidden) rg.hidden = true;
+  ECU = { nom: qui, e: equipDe(qui) };
+  const o = document.createElement("div"); o.className = "regles portrait"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Mon portrait");
+  o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>👤 Mon portrait</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div><div class="rg-corps">' +
+    '<div class="showroom pt-apercu"><div class="sr-id">' + avatar(qui, Object.assign({}, ECU.e, { vignette: true })) + "<b>" + esc(qui) + '</b></div></div>' + htmlPilote(qui, ECU.e) +
+    '<div class="btn-row"><button class="btn acc" type="button" id="pt-garder">Enregistrer</button></div><p class="info">Ton portrait s\'affiche dans le Classement, la Course et partout ailleurs. Tout le monde le voit.</p></div></div>';
+  document.body.appendChild(o);
+  const fermer = () => { o.remove(); ECU = null; };
+  o.addEventListener("click", ev => { if (ev.target === o) fermer(); }); o.querySelector(".rg-x").addEventListener("click", fermer);
+  o.querySelector("#pt-garder").addEventListener("click", () => { o.remove(); garderEcurie(); try { rendreVue(vueActive()); } catch (e) { } });
+  brancherPilote(o);
+}
 let ECU_SLOT = "pilote";
 const ICONES_KLAXON = { confettis: "🎊", damier: "🏁", feu: "🎆", parade: "🎺", billets: "💸", fanfare: "👑", cibles: "🎯", fusees: "🚀", trophees: "🏆" };
 /** Rareté d'un objet : série (de base), bronze, argent, or, légendaire, secret, unique (premier millionnaire) */

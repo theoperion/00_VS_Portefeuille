@@ -1451,3 +1451,5 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 /* V16.20 · 5e bande du logo : cachée tant qu'il n'y a que 4 pilotes */
 .logo .l5 { display: none; } .j5 .logo .l5 { display: inline-block; }
 .bientot.teaser p { margin: 6px 0 0; font-size: 14px; line-height: 1.45; } .bientot.teaser i { color: var(--ink-2); }
+.portrait-b { width: 100%; display: grid; text-align: left; gap: 2px; margin: 4px 0 10px; } .portrait-b small { font-weight: 400; color: var(--ink-3); }
+.regles.portrait .pt-apercu { display: flex; justify-content: center; padding: 8px 0; } .regles.portrait .sr-id { display: grid; justify-items: center; gap: 4px; } .regles.portrait .sr-id .av { width: 76px; height: 76px; }

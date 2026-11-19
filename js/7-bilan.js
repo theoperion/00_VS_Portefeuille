@@ -768,6 +768,9 @@ $("#moi-oublier").addEventListener("click", () => {
   if (vueActive() === "moi") rendreMoi();
 });
 $("#fermer-reglages").addEventListener("click", () => { $("#reglages").hidden = true; });
+{ const pb = document.getElementById("ouvrir-portrait"); if (pb) pb.addEventListener("click", () => ouvrirPortrait()); }   // V16.24
+// V16.24 : toucher SA propre tête (Classement, Course…) ouvre « Mon portrait »
+document.addEventListener("click", ev => { const a = ev.target.closest && ev.target.closest(".av"); if (!a || ev.target.closest(".regles, .feuille, .ecurie, .showroom, .pt-apercu")) return; try { const qui = quiEcurie(); if (!qui || !D) return; const l = a.closest("[data-nom], [data-gpt3], .lb-row, .gp-l"); const n = l && (l.dataset.nom || l.dataset.gpt3 || (l.querySelector(".gp-nom, .nm b") || {}).textContent); if (n && n.trim() === qui) { ev.preventDefault(); ev.stopPropagation(); ouvrirPortrait(); } } catch (e) { } }, true);
 $("#reglages").addEventListener("click", e => { if (e.target.id === "reglages") $("#reglages").hidden = true; });
 $("#saisie").addEventListener("click", e => { if (e.target.id === "saisie") $("#saisie").hidden = true; });
 $("#fermer-saisie").addEventListener("click", () => { $("#saisie").hidden = true; });
