@@ -105,7 +105,7 @@ function meteoMois(k) {
 
 /* ---------- Grands Prix : un circuit à thème par mois (le dessin 3D / 2D est dans piste.js) ---------- */
 const GPS = {
-  abudhabi: { gp: "Le Garage des rêves", ville: "Garage des rêves", drap: "🛠️", fx: "garage", txt: "Là où toutes les voitures naissent, entre établis, projecteurs et odeur d'essence : le tour de chauffe." },
+  abudhabi: { gp: "L'Atelier du Père Noël", ville: "Atelier du Père Noël", drap: "🎅", fx: "garage", txt: "Là où les lutins montent les voitures de 2027, sous la neige et les guirlandes : le tour de chauffe." },
   bahrein: { gp: "Grand Prix du Petit Chef", ville: "Paris, la nuit", drap: "🐀", fx: "lucioles", atout: "turbo", piege: "pluie", txt: "Des toits de Paris aux fourneaux du grand restaurant : tout le monde peut cuisiner, mais un seul gagne." },
   djeddah: { gp: "Grand Prix du Château", ville: "Château aux sortilèges", drap: "🏰", fx: "sortileges", atout: "aspiration", piege: "pari", txt: "Les escaliers changent de place et les couloirs se referment derrière toi." },
   melbourne: { gp: "Grand Prix des Merveilles", ville: "Pays des merveilles", drap: "🎩", fx: "petales", atout: "pluie", piege: "turbo", txt: "On tombe dans un terrier, on boit une fiole, on rétrécit… et le Chapelier sert le thé à toute heure." },
