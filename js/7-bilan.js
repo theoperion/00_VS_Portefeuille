@@ -705,6 +705,7 @@ function armerRetour() {
 /* ---------- Réglages ---------- */
 function ouvrirReglages(section) {
   $("#champ-api").value = stock.get(CLES.api) || API_URL; aRevoquer = null; $("#reglages").hidden = false; chargerCodes(); majMoiReglages();
+  { const pb = document.getElementById("ouvrir-portrait"); if (pb) pb.hidden = !portraitDispo(); }   // V16.56 : Mon portrait à partir du samedi 21/11, 11 h
   if (section) { const s = document.getElementById(section); if (s) plierRegl(s, false); if (s) setTimeout(() => { s.scrollIntoView({ block: "start" }); const i = s.querySelector("input"); if (i && !i.value) i.focus(); }, 30); }
 }
 $("#btn-reglages").addEventListener("click", () => ouvrirReglages());
@@ -773,7 +774,7 @@ $("#moi-oublier").addEventListener("click", () => {
 $("#fermer-reglages").addEventListener("click", () => { $("#reglages").hidden = true; });
 { const pb = document.getElementById("ouvrir-portrait"); if (pb) pb.addEventListener("click", () => ouvrirPortrait()); }   // V16.24
 // V16.24 : toucher SA propre tête (Classement, Course…) ouvre « Mon portrait »
-document.addEventListener("click", ev => { const a = ev.target.closest && ev.target.closest(".av"); if (!a || ev.target.closest(".regles, .feuille, .ecurie, .showroom, .pt-apercu")) return; try { const qui = quiEcurie(); if (!qui || !D) return; const l = a.closest("[data-nom], [data-gpt3], .lb-row, .gp-l"); const n = l && (l.dataset.nom || l.dataset.gpt3 || (l.querySelector(".gp-nom, .nm b") || {}).textContent); if (n && n.trim() === qui) { ev.preventDefault(); ev.stopPropagation(); ouvrirPortrait(); } } catch (e) { } }, true);
+document.addEventListener("click", ev => { const a = ev.target.closest && ev.target.closest(".av"); if (!a || !portraitDispo() || ev.target.closest(".regles, .feuille, .ecurie, .showroom, .pt-apercu")) return; try { const qui = quiEcurie(); if (!qui || !D) return; const l = a.closest("[data-nom], [data-gpt3], .lb-row, .gp-l"); const n = l && (l.dataset.nom || l.dataset.gpt3 || (l.querySelector(".gp-nom, .nm b") || {}).textContent); if (n && n.trim() === qui) { ev.preventDefault(); ev.stopPropagation(); ouvrirPortrait(); } } catch (e) { } }, true);
 $("#reglages").addEventListener("click", e => { if (e.target.id === "reglages") $("#reglages").hidden = true; });
 $("#saisie").addEventListener("click", e => { if (e.target.id === "saisie") $("#saisie").hidden = true; });
 $("#fermer-saisie").addEventListener("click", () => { $("#saisie").hidden = true; });

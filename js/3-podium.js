@@ -864,7 +864,11 @@ function dessinerChampionnat(y) {
 }
 function quiEcurie() { return moiVrai(); }
 /* V16.24 · « Mon portrait » : la tête de chacun se règle hors de l'Écurie (Réglages, ou toucher sa tête dans le Classement), dès le tour de chauffe */
+/** V16.56 · « Mon portrait » s'ouvre à tous le samedi 21 novembre 2026 à 11 h (heure de Paris) ; l'admin le voit avant */
+const PORTRAIT_OUVRE = Date.UTC(2026, 10, 21, 10, 0);
+function portraitDispo() { return vraiAdmin() || Date.now() >= PORTRAIT_OUVRE; }
 function ouvrirPortrait() {
+  if (!portraitDispo()) { toast("👤 Mon portrait arrive samedi 21 novembre à 11 h."); return; }
   const qui = quiEcurie(); if (!qui || !D) { toast("Choisis d'abord qui tu es dans les Réglages."); return; }
   const rg = document.getElementById("reglages"); if (rg && !rg.hidden) rg.hidden = true;
   ECU = { nom: qui, e: equipDe(qui) };
@@ -881,7 +885,7 @@ function ouvrirPortrait() {
 /* V16.26 · la bulle « Fais ton portrait ! » : une seule fois, pour qui n'a jamais réglé sa tête, à partir du lancement */
 function bullePortrait(essai) {
   try {
-    if (SOURCE !== "api" || podiumCache() || stock.get("versus.bullePortrait") || document.querySelector(".bulle-portrait")) return;
+    if (SOURCE !== "api" || !portraitDispo() || podiumCache() || stock.get("versus.bullePortrait") || document.querySelector(".bulle-portrait")) return;
     const qui = quiEcurie(); if (!qui || !D) return;
     const brut = ((D.ecurie || {})[qui] || {}).equip || {}; if (brut.tete) { stock.set("versus.bullePortrait", "1"); return; }
     if (document.querySelector(".tuto, .regles, .ba, .revel, .voile:not([hidden])")) { if ((essai || 0) < 8) setTimeout(() => bullePortrait((essai || 0) + 1), 4000); return; }

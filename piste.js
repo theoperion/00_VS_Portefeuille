@@ -5462,12 +5462,31 @@
     const f = v => (+v).toFixed(1), NS = "http://www.w3.org/2000/svg";
     const el = (html, parent) => { const g = document.createElementNS(NS, "g"); g.innerHTML = html; (parent || x.g).appendChild(g); return g; };
     const anim = (dur, fn, fin) => { const t0 = performance.now(); const pas = now => { if (!x.svg.isConnected) return; const p = Math.min(1, (now - t0) / dur); fn(p); if (p < 1) requestAnimationFrame(pas); else if (fin) fin(); }; requestAnimationFrame(pas); };
-    const voiture = n => { const v = x.V[n]; return v ? [v.x * x.KU, v.y * x.KU] : null; }, dedans = p => p && [Math.max(160, Math.min(920, p[0])), Math.max(260, Math.min(640, p[1]))];
-    const bulle = (u, v, txt, t) => { t = t || 26; const w = txt.length * t * .54 + t * 1.4, h = t * 1.7; u = Math.max(w / 2 + 8, Math.min(1072 - w / 2, u)); v = Math.max(h / 2 + 8, Math.min(712 - h / 2, v));
-      return el('<g transform="translate(' + f(u) + " " + f(v) + ')"><rect x="' + f(-w / 2) + '" y="' + f(-h / 2) + '" width="' + f(w) + '" height="' + f(h) + '" rx="' + f(h / 2) + '" fill="#14161C" fill-opacity=".86" stroke="#FFD86B" stroke-width="2.5"/><text y="' + f(t * .36) + '" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="' + t + '" fill="#FFF3C8">' + txt + "</text></g>"); };
+    const voiture = n => { const v = x.V[n]; return v ? [v.x * x.KU, v.y * x.KU] : null; };
+    // V16.44 · la partie de la carte vraiment visible à l'écran (la carte peut être rognée en haut ou sur les côtés), en unités de la carte
+    const vue = () => { const vb = x.svg.viewBox.baseVal; let r = [vb.x * x.KU, vb.y * x.KU, (vb.x + vb.width) * x.KU, (vb.y + vb.height) * x.KU];
+      try { const ctm = x.svg.getScreenCTM(), b = x.svg.getBoundingClientRect(), par = x.svg.parentNode && x.svg.parentNode.getBoundingClientRect ? x.svg.parentNode.getBoundingClientRect() : b;
+        if (ctm && b.width > 2) { const l = Math.max(b.left, par.left), t = Math.max(b.top, par.top), rr = Math.min(b.right, par.right), bo = Math.min(b.bottom, par.bottom), inv = ctm.inverse();
+          const P = (u, v) => { const p = x.svg.createSVGPoint(); p.x = u; p.y = v; const q = p.matrixTransform(inv); return [q.x * x.KU, q.y * x.KU]; }, a = P(l, t), c = P(rr, bo); if (c[0] > a[0] + 50 && c[1] > a[1] + 50) r = [a[0], a[1], c[0], c[1]]; } } catch (e) { }
+      return [Math.max(0, r[0]), Math.max(0, r[1]), Math.min(1080, r[2]), Math.min(720, r[3])]; };
+    const dedans = (p, m) => { if (!p) return p; const V = vue(); m = m == null ? 40 : m; return [Math.max(V[0] + m, Math.min(V[2] - m, p[0])), Math.max(V[1] + m, Math.min(V[3] - m, p[1]))]; };
+    const rp = () => 7 * x.svg.viewBox.baseVal.width / 340 * x.KU;   // le rayon d'une pastille de voiture, en unités de la carte
+    // la bulle : largeur mesurée (getBBox), toujours entière à l'écran ; g.placer(u, v) la déplace (pour suivre une voiture)
+    const bulle = (u, v, txt, t) => { t = Math.max(24, t || 24); const h = t * 1.7;
+      const g = el('<rect rx="' + f(h / 2) + '" height="' + f(h) + '" y="' + f(-h / 2) + '" fill="#14161C" fill-opacity=".86" stroke="#FFD86B" stroke-width="2.5"/><text y="' + f(t * .36) + '" text-anchor="middle" style="font: bold ' + t + 'px Georgia, serif; stroke: none; paint-order: normal" fill="#FFF3C8">' + txt + "</text>");
+      let w = txt.length * t * .62; try { const bb = g.lastChild.getBBox(); if (bb && bb.width > 10) w = bb.width; } catch (e) { } w += t * 1.3;
+      g.firstChild.setAttribute("x", f(-w / 2)); g.firstChild.setAttribute("width", f(w));
+      g.placer = (a, b) => { const V = vue(); a = Math.max(V[0] + w / 2 + 6, Math.min(V[2] - w / 2 - 6, a)); b = Math.max(V[1] + h / 2 + 6, Math.min(V[3] - h / 2 - 6, b)); g.setAttribute("transform", "translate(" + f(a) + " " + f(b) + ")"); };
+      g.l = w; g.placer(u, v); return g; };
+    const cache = html => { const g = el(html); g.setAttribute("opacity", "0"); return g; };   // un élément qui apparaîtra plus tard
+    const fondu = (g, d) => anim(d || 400, q => g.setAttribute("opacity", f(1 - q)), () => g.remove());
     const premier = c => Object.keys(c).sort((a, b) => c[a].rang - c[b].rang)[0], dernier = c => Object.keys(c).sort((a, b) => c[b].rang - c[a].rang || c[a].s - c[b].s)[0];
     const son = k => { try { if (window.SONS) SONS.ev(k); } catch (e) { } };   // V16.43 : chaque événement a son son
-    return { f, el, anim, voiture, dedans, bulle, premier, dernier, son };
+    // V16.45 · un point de la piste (abscisse s, en tours × L, même négative) en unités de la carte ; le centre de la piste ; un flash coloré très bref sur toute la carte
+    const pt = (s, lat) => { const L = x.T.L, P = x.T.a(((s % L) + L) % L, lat || 0); return [P.x * x.KU, P.z * x.KU]; };
+    const centre = () => [x.T.cx * x.KU, x.T.cz * x.KU];
+    const flash = (col, op, dur) => { const g = el('<rect x="-600" y="-600" width="2400" height="2000" fill="' + col + '" opacity="0" style="pointer-events: none"/>'); anim(dur || 300, q => g.firstChild.setAttribute("opacity", (op * Math.sin(q * Math.PI)).toFixed(3)), () => g.remove()); };
+    return { f, el, cache, anim, voiture, vue, dedans, rp, bulle, fondu, premier, dernier, son, pt, centre, flash };
   }
   const EVENEMENTS = {
     /* avril · l'Œil suit la voiture du DERNIER ; quand le vainqueur passe la ligne, l'anneau s'envole et tombe dans la lave */
@@ -5481,13 +5500,22 @@
         pu.setAttribute("transform", "translate(" + O.f(oe[0] + (p[0] - oe[0]) / d * 9) + " " + O.f(oe[1] + (p[1] - oe[1]) / d * 3) + ")"); };
       const anneau = vainq => { const p = O.voiture(vainq); if (!p || !de) return; fait = true; O.son("anneau");
         const g = O.el('<g><circle r="30" fill="#FFD86B" opacity=".35"/><circle r="15" fill="none" stroke="#F7C948" stroke-width="6"/><circle r="15" fill="none" stroke="#FFF6C8" stroke-width="1.6" stroke-dasharray="5 7"/></g>');
-        const b = O.bulle(p[0], p[1] - 70, "Le Précieux…", 24);
+        // V16.45 : « Le Précieux… » toujours au-dessus de la colline (dans la plaine, sous les montagnes), jamais sur les portraits de la Comté
+        const b = O.bulle(Math.max(300, Math.min(780, (p[0] + de[0]) / 2)), 315, "Le Précieux…", 24);
         O.anim(2200, q => { const k = q < .5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2, u = p[0] + (de[0] - p[0]) * k, v = p[1] + (de[1] - p[1]) * k - Math.sin(q * Math.PI) * 180;
           g.setAttribute("transform", "translate(" + O.f(u) + " " + O.f(v) + ") rotate(" + O.f(q * 720) + ") scale(" + O.f(1 - q * .55) + ")"); if (q > .3) b.setAttribute("opacity", O.f(Math.max(0, 1 - (q - .3) * 3))); },
-        () => { g.remove(); b.remove(); O.son("lave"); const sp = O.el('<g transform="translate(' + O.f(de[0]) + " " + O.f(de[1]) + ')"><circle r="10" fill="url(#an-lave)"/><circle r="10" fill="none" stroke="#FFB02A" stroke-width="5"/></g>'), c = sp.firstChild.children;
-          const t = O.bulle(de[0], de[1] - 90, "L’anneau est détruit !", 26);
-          O.anim(1600, q => { c[0].setAttribute("r", O.f(10 + q * 150)); c[0].setAttribute("opacity", O.f(1 - q)); c[1].setAttribute("r", O.f(10 + q * 110)); c[1].setAttribute("opacity", O.f(1 - q)); if (q > .2) { fx.setAttribute("opacity", O.f(Math.max(0, 1 - (q - .2) * 2))); pu.setAttribute("opacity", O.f(Math.max(0, 1 - (q - .2) * 2))); } },
-            () => { sp.remove(); eteint = true; setTimeout(() => t.remove(), 1800); }); }); };
+        () => { g.remove(); b.remove(); O.son("lave");
+          // V16.45 : la Montagne est au bord haut de la carte : la gerbe jaillit vers le BAS et sur les côtés, plus grosse, avec un léger flash orange
+          O.flash("#FF8A1A", .15, 300);
+          const V = O.vue(), D = [de[0], Math.max(de[1], V[1] + 12)];
+          const gouttes = [8, 28, 48, 66, 82, 98, 114, 132, 152, 172, -8, 188].map((a, i) => ({ a: a * Math.PI / 180, v: 130 + (i % 4) * 26 }));
+          const sp = O.el('<g transform="translate(' + O.f(D[0]) + " " + O.f(D[1]) + ')"><circle r="10" fill="url(#an-lave)"/><circle r="10" fill="none" stroke="#FF7A1A" stroke-width="18"/><circle r="10" fill="none" stroke="#FFD24A" stroke-width="6"/>' + gouttes.map((d, i) => '<circle r="' + (i % 3 ? 10 : 14) + '" fill="#FF8A1A" stroke="#FFE07A" stroke-width="3"/>').join("") + "</g>"), c = sp.firstChild.children;
+          const t = O.bulle(D[0], D[1] + 150, "L’anneau est détruit !", 26);
+          setTimeout(() => O.fondu(t, 300), 1200);   // 1,2 s, pas plus
+          O.anim(1500, q => { const z = 1 - Math.pow(1 - q, 2); c[0].setAttribute("r", O.f(10 + z * 200)); c[0].setAttribute("opacity", O.f(1 - q)); [1, 2].forEach(i => { c[i].setAttribute("r", O.f(10 + z * (i === 1 ? 170 : 140))); c[i].setAttribute("opacity", O.f(1 - q)); });
+            gouttes.forEach((d, i) => { const k = Math.min(1, q * 1.3), el = c[3 + i]; el.setAttribute("cx", O.f(Math.cos(d.a) * d.v * k)); el.setAttribute("cy", O.f(Math.sin(d.a) * d.v * k + 90 * k * k)); el.setAttribute("opacity", O.f(Math.max(0, 1 - q * 1.1))); });
+            if (q > .2) { fx.setAttribute("opacity", O.f(Math.max(0, 1 - (q - .2) * 2))); pu.setAttribute("opacity", O.f(Math.max(0, 1 - (q - .2) * 2))); } },
+            () => { sp.remove(); eteint = true; }); }); };
       return {
         raz() { fait = false; eteint = false; fx.removeAttribute("opacity"); pu.removeAttribute("opacity"); },
         maj(e, c, enCourse) { if (!eteint) viser(O.dernier(c)); if (enCourse && !fait && e >= .985 && x.anime) anneau(O.premier(c)); }
@@ -5496,42 +5524,93 @@
     /* décembre · la bâche « 2027 ? » s'envole et retombe sur la voiture du vainqueur, puis se lève : révélation */
     garage(x) {
       const O = outilsEv(x); let fait = false;
-      const bache = n => { const p = O.voiture(n); if (!p) return; fait = true; O.son("bache");
-        const g = O.el('<g><path d="M-46 -30C-30 -44 30 -44 46 -30L52 26C20 34 -20 34 -52 26Z" fill="#8E96A3" stroke="#3B4048" stroke-width="2.5"/><path d="M-30 -32C-20 0 -24 20 -30 30M0 -38V32M30 -32C20 0 24 20 30 30" stroke="#6C737E" stroke-width="2" fill="none"/><text y="8" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="22" fill="#F4F6F8">2027 ?</text></g>');
-        O.anim(900, q => { const k = 1 - Math.pow(1 - q, 3); g.setAttribute("transform", "translate(" + O.f(p[0] + (1 - k) * 140) + " " + O.f(p[1] - (1 - k) * 260) + ") rotate(" + O.f((1 - k) * -40) + ")"); }, () => {
-          const t = O.bulle(p[0], p[1] - 70, "Et la voiture de l’année est…", 22);
-          setTimeout(() => { const eclat = O.el('<g transform="translate(' + O.f(p[0]) + " " + O.f(p[1]) + ')">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(i => '<path d="M0 0L' + O.f(Math.cos(i * Math.PI / 6) * 90) + " " + O.f(Math.sin(i * Math.PI / 6) * 90) + '" stroke="' + ["#FFD86B", "#4C9AFF", "#FF6FA8", "#2BB6A3"][i % 4] + '" stroke-width="5" stroke-linecap="round"/>').join("") + "</g>");
-            O.anim(1100, q => { g.setAttribute("transform", "translate(" + O.f(p[0] - q * 60) + " " + O.f(p[1] - q * 320) + ") rotate(" + O.f(q * -70) + ") scale(" + O.f(1 + q * .4) + ")"); g.setAttribute("opacity", O.f(1 - q)); eclat.setAttribute("opacity", O.f(1 - q)); eclat.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1]) + ") scale(" + O.f(.3 + q) + ")"); },
-              () => { g.remove(); eclat.remove(); t.remove(); }); }, 900); }); };
-      return { raz() { fait = false; }, maj(e, c, enCourse) { if (enCourse && !fait && e >= .985 && x.anime) bache(O.premier(c)); } };
+      // V16.45 : la vraie bâche peinte (peindreGarage5) : une monoplace bâchée, avant vers la droite, sol à y = 0, centre (466, 552), échelle .95
+      const MX = 466, MY = 552, S = .95, INK = 'stroke="#14121A" stroke-width="3" stroke-linejoin="round"';
+      const BA = "M-262 -10L-266 -42Q-210 -50 -160 -62Q-100 -80 -62 -108L-48 -130L-34 -106Q-26 -92 -6 -88Q24 -100 54 -92Q84 -82 112 -72L160 -62Q150 -38 164 -12Q120 -6 80 -12Q20 -8 -40 -12Q-140 -6 -262 -10Z";
+      const AIL = "M-306 -142Q-244 -150 -172 -138L-170 -120Q-240 -128 -304 -122Z", DER = "M-314 -152Q-306 -156 -300 -150L-298 -98Q-306 -94 -314 -98Z";
+      const CAP = "M-238 -36Q-242 -76 -212 -90Q-190 -97 -168 -90Q-138 -76 -142 -36Q-160 -28 -176 -34Q-190 -26 -206 -33Q-222 -27 -238 -36Z";
+      const roue = (x0, y0, R, col) => '<circle cx="' + x0 + '" cy="' + y0 + '" r="' + R + '" fill="#0B0C10" ' + INK + '/><circle cx="' + x0 + '" cy="' + y0 + '" r="' + O.f(R * .86) + '" fill="none" stroke="#2A2C34" stroke-width="2"/><circle cx="' + x0 + '" cy="' + y0 + '" r="' + O.f(R * .56) + '" fill="' + col + '" stroke="#FFFFFF" stroke-width="2.4"/><circle cx="' + x0 + '" cy="' + y0 + '" r="' + O.f(R * .15) + '" fill="#141215"/>';
+      const reveler = n => { fait = true; O.son("bache"); const col = (x.V[n] && x.V[n].couleur) || "#4C9AFF";
+        // la monoplace révélée : même place et même échelle que la bâche peinte (elle la recouvre entièrement, museau compris)
+        const auto = O.cache('<g transform="translate(' + MX + " " + MY + ") scale(" + S + ')"><ellipse cx="40" cy="-60" rx="380" ry="96" fill="' + col + '" opacity=".28"/>' +
+          '<path d="M-262 -124V-46M-212 -128V-56" stroke="#1A1B22" stroke-width="6.5" stroke-linecap="round"/><path d="' + AIL + '" fill="' + col + '" ' + INK + '/><path d="' + DER + '" fill="#14121A"/>' +
+          '<path d="M-262 -10L-266 -42Q-210 -50 -160 -62Q-100 -80 -62 -108L-48 -130L-34 -106Q-26 -92 -6 -88Q24 -100 54 -92Q84 -82 112 -72L160 -62Q250 -50 356 -28L358 -16Q250 -14 160 -12Q80 -6 -40 -12Q-140 -6 -262 -10Z" fill="' + col + '" ' + INK + '/>' +
+          '<path d="M-262 -16Q-40 -20 160 -18L330 -20" stroke="#14121A" stroke-width="9" fill="none"/><path d="M-200 -46Q-60 -60 110 -54L300 -36" stroke="#FFFFFF" stroke-width="5" fill="none" stroke-linecap="round" opacity=".75"/>' +
+          '<ellipse cx="-50" cy="-118" rx="7" ry="9" fill="#14121A"/><circle cx="16" cy="-98" r="15" fill="#F4F4F4" ' + INK + '/><path d="M6 -102H30V-94H8Z" fill="#14121A"/><path d="M-22 -100Q18 -124 62 -96" stroke="#1A1B22" stroke-width="6" fill="none" stroke-linecap="round"/>' +
+          '<circle cx="-110" cy="-58" r="17" fill="#FFFFFF" ' + INK + '/><text x="-110" y="-50" text-anchor="middle" style="font: 900 24px sans-serif; stroke: none" fill="#14121A">1</text>' +
+          roue(-190, -44, 44, col) + roue(214, -40, 40, col) +
+          '<path d="M244 -12Q300 -14 364 -8L364 -1Q300 -4 244 -3Z" fill="' + col + '" ' + INK + '/><path d="M262 -24Q306 -27 354 -20L354 -13Q306 -18 262 -16Z" fill="#14121A"/><path d="M346 -32Q364 -34 368 -26L370 0L344 0Z" fill="' + col + '" ' + INK + '/></g>');
+        // une copie de la bâche peinte, posée exactement dessus : c'est elle qui frémit puis s'envole
+        const bache = O.el('<g><path d="' + BA + '" fill="#E9EDF4" ' + INK + '/><path d="' + AIL + '" fill="#E9EDF4" ' + INK + '/><path d="' + DER + '" fill="#E9EDF4" ' + INK + '/><path d="' + CAP + '" fill="#E9EDF4" ' + INK + '/><path d="M-48 -126Q-80 -70 -118 -12M-46 -124Q-52 -60 -66 -12M-42 -120Q-10 -64 4 -10M54 -90Q90 -50 112 -10" stroke="#2A2C3C" stroke-opacity=".3" stroke-width="5" fill="none" stroke-linecap="round"/></g>');
+        const place = (dx, dy, rot, s) => "translate(" + O.f(MX + dx) + " " + O.f(MY + dy) + ") rotate(" + O.f(rot) + ") scale(" + O.f(S * s) + ")";
+        bache.setAttribute("transform", place(0, 0, 0, 1));
+        // 1. la bâche frémit (900 ms), 2. elle s'envole et la monoplace apparaît ; une seule bulle, à la révélation
+        O.anim(900, q => bache.setAttribute("transform", place(Math.sin(q * 40) * 3 * q, -q * 6, 0, 1)), () => {
+          const eclat = O.el('<g>' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(i => '<path d="M' + O.f(Math.cos(i * Math.PI / 6) * 90) + " " + O.f(Math.sin(i * Math.PI / 6) * 50) + "L" + O.f(Math.cos(i * Math.PI / 6) * 220) + " " + O.f(Math.sin(i * Math.PI / 6) * 120) + '" stroke="' + (i % 2 ? "#FFD86B" : col) + '" stroke-width="6" stroke-linecap="round"/>').join("") + "</g>");
+          const b2 = O.bulle(MX + 40, MY - 200, "…la tienne, " + n + " !", 24);
+          const anneau = O.el('<circle r="10" fill="none" stroke="#FFD86B" stroke-width="4"/>');
+          O.anim(1100, q => { bache.setAttribute("transform", place(-q * 90, -q * 280, -q * 30, 1 + q * .2)); bache.setAttribute("opacity", O.f(1 - q));
+            auto.setAttribute("opacity", O.f(Math.min(1, q * 3))); eclat.setAttribute("opacity", O.f(1 - q)); eclat.setAttribute("transform", "translate(" + O.f(MX + 40) + " " + O.f(MY - 60) + ") scale(" + O.f(.6 + q * .6) + ")");
+            const p = O.voiture(n); if (p) { anneau.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1]) + ")"); anneau.firstChild.setAttribute("r", O.f(O.rp() * (1.2 + (q * 3 % 1) * 1.2))); anneau.firstChild.setAttribute("opacity", O.f(1 - (q * 3 % 1))); } },
+            () => { bache.remove(); eclat.remove(); anneau.remove(); setTimeout(() => { O.fondu(b2, 300); O.fondu(auto, 700); }, 1500); }); }); };
+      return { raz() { fait = false; }, maj(e, c, enCourse) { if (enCourse && !fait && e >= .985 && x.anime) reveler(O.premier(c)); } };
     },
     /* février · au 2e tour, un escalier pivote en travers de la piste… et s'écarte de justesse devant le leader */
     chateau(x) {
-      const O = outilsEv(x), T = x.T, L = T.L; let s0 = null, g = null, passe = 0, b = null;
-      const raz = () => { s0 = null; passe = 0; if (g) g.remove(); g = null; if (b) b.remove(); b = null; };
+      const O = outilsEv(x), T = x.T, L = T.L; let s0 = null, g = null, passe = 0, b = null, ouf = null, tb = 0;
+      const raz = () => { s0 = null; passe = 0; if (g) g.remove(); g = null; if (b) b.remove(); b = null; if (ouf) ouf.remove(); ouf = null; };
       return { raz,
         maj(e, c, enCourse) {
-          if (!enCourse || !x.anime) return; const lead = O.premier(c);
-          if (s0 === null && e >= .5) { s0 = ((c[lead].s + .3 * L) % L + L) % L; const p = T.a(s0, 0), a = Math.atan2(p.tz, p.tx) * 180 / Math.PI;
-            g = O.el('<g transform="translate(' + O.f(p.x * x.KU) + " " + O.f(p.z * x.KU) + ") rotate(" + O.f(a) + ')"><g class="esc">' + '<rect x="-66" y="-30" width="132" height="60" rx="4" fill="#000" opacity=".35" transform="translate(5 6)"/>' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => '<rect x="' + (-66 + i * 12) + '" y="-26" width="12" height="52" fill="' + (i % 2 ? "#8C7A5C" : "#B49E74") + '" stroke="#3A2E1E" stroke-width="1.5"/>').join("") + '<path d="M-68 -28H68M-68 28H68" stroke="#4A3A24" stroke-width="5" stroke-linecap="round"/><circle cx="-68" cy="-28" r="5" fill="#C9A23A"/><circle cx="68" cy="-28" r="5" fill="#C9A23A"/><circle cx="-68" cy="28" r="5" fill="#C9A23A"/><circle cx="68" cy="28" r="5" fill="#C9A23A"/></g></g>');
-            b = O.bulle(p.x * x.KU, p.z * x.KU - 80, "Les escaliers changent de place !", 22); O.son("escalier"); }
-          if (!g) return; const ds = ((s0 - (c[lead].s % L) + L) % L), esc = g.firstChild.firstChild;
+          if (!enCourse || !x.anime) return; const lead = O.premier(c), sl = Math.max.apply(null, Object.keys(c).map(k => c[k].s));
+          if (s0 === null && e >= .5) {
+            // V16.45 : un point de la piste devant le leader, à au moins 15 % du bord de la partie visible (plus d'escalier coupé par le bord)
+            const V = O.vue(), mx = (V[2] - V[0]) * .15, my = (V[3] - V[1]) * .15; let d0 = null;
+            for (let d = .2; d <= .45 && d0 === null; d += .01) { const P = O.pt(sl + d * L); if (P[0] > V[0] + mx && P[0] < V[2] - mx && P[1] > V[1] + my && P[1] < V[3] - my) d0 = d; }
+            s0 = sl + (d0 === null ? .2 : d0) * L; const P = T.a(((s0 % L) + L) % L, 0), a = Math.atan2(P.tz, P.tx) * 180 / Math.PI;
+            g = O.el('<g transform="translate(' + O.f(P.x * x.KU) + " " + O.f(P.z * x.KU) + ") rotate(" + O.f(a) + ') scale(1.25)"><g class="esc">' +
+              '<ellipse rx="96" ry="58" fill="#8EC8FF" opacity=".45" style="filter: blur(9px)"/>' +   // la lueur magique
+              '<rect x="-66" y="-30" width="132" height="60" rx="4" fill="#000" opacity=".35" transform="translate(5 6)"/>' +
+              '<rect x="-71" y="-31" width="142" height="62" rx="6" fill="none" stroke="#F4ECFF" stroke-width="4"/>' +   // le contour clair
+              [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => '<rect x="' + (-66 + i * 12) + '" y="-26" width="12" height="52" fill="' + (i % 2 ? "#B49A6C" : "#DCC796") + '" stroke="#3A2E1E" stroke-width="1.5"/>').join("") +
+              '<path d="M-68 -28H68M-68 28H68" stroke="#4A3A24" stroke-width="5" stroke-linecap="round"/><circle cx="-68" cy="-28" r="5" fill="#F2C94C"/><circle cx="68" cy="-28" r="5" fill="#F2C94C"/><circle cx="-68" cy="28" r="5" fill="#F2C94C"/><circle cx="68" cy="28" r="5" fill="#F2C94C"/>' +
+              [[-80, -40], [84, -36], [-60, 44], [76, 40]].map(([u, v]) => '<path d="M' + u + " " + (v - 8) + "L" + (u + 2) + " " + (v - 2) + "L" + (u + 8) + " " + v + "L" + (u + 2) + " " + (v + 2) + "L" + u + " " + (v + 8) + "L" + (u - 2) + " " + (v + 2) + "L" + (u - 8) + " " + v + "L" + (u - 2) + " " + (v - 2) + 'Z" fill="#FFF7D0"/>').join("") + "</g></g>");
+            b = O.bulle(P.x * x.KU, P.z * x.KU - 110, "Les escaliers bougent !", 24); tb = performance.now(); O.son("escalier"); }
+          if (!g) return; const ds = s0 - sl, esc = g.firstChild.firstChild;
           let ang = 90; if (e < .54) ang = 90 * Math.min(1, (e - .5) / .04);
-          if (ds < .07 * L || passe) { ang = Math.min(ang, 90 * Math.max(0, (ds - .02 * L) / (.05 * L))); if (ds > .5 * L || ds < .02 * L) passe = Math.max(passe, 1); }
-          if (passe) { ang = 0; passe++; g.setAttribute("opacity", O.f(Math.max(0, 1 - passe / 40))); if (b) b.setAttribute("opacity", O.f(Math.max(0, 1 - passe / 25))); }
-          esc.setAttribute("transform", "rotate(" + O.f(ang) + ")");
+          if (!passe && ds < .07 * L) ang = Math.min(ang, 90 * Math.max(0, (ds - .01 * L) / (.05 * L)));
+          // V16.45 : le passage se détecte au franchissement (le leader était avant l'escalier, il est maintenant après), même s'il va vite
+          if (!passe && ds <= 0) { passe = 1; const p = O.voiture(lead); if (p) { ouf = O.bulle(p[0], p[1] - 70, "Ouf !", 26); setTimeout(() => { if (ouf) { O.fondu(ouf, 300); ouf = null; } }, 800); } if (b) { O.fondu(b, 250); b = null; } }
+          if (b && performance.now() - tb > 1200) { O.fondu(b, 250); b = null; }   // au plus tard 1,2 s après son apparition
+          if (ouf) { const p = O.voiture(lead); if (p) ouf.placer(p[0], p[1] - 70); }   // le « Ouf ! » suit le leader
+          if (passe) { ang = 0; passe++; g.setAttribute("opacity", O.f(Math.max(0, 1 - passe / 30))); }
+          // l'escalier s'écarte en glissant un peu (le « dérapage »)
+          esc.setAttribute("transform", (passe ? "translate(0 " + O.f(Math.min(40, passe * 2)) + ") " : "") + "rotate(" + O.f(ang) + ")");
         } };
     },
     /* mars · « Changement de place ! » : le premier et le dernier échangent leurs places un instant (pour rire, rien ne change à l'arrivée) */
     terrier(x) {
-      const O = outilsEv(x); let duo = null, b = null;
-      const m = e => e < .3 || e > .44 ? 0 : e < .33 ? (e - .3) / .03 : e > .41 ? (.44 - e) / .03 : 1;
+      const O = outilsEv(x); let duo = null, b = null, lien = null;
+      // V16.45 : échange plus long (entrée et sortie en 0,05 au lieu de 0,03) pour être lisible sur téléphone
+      const m = e => e < .3 || e > .5 ? 0 : e < .35 ? (e - .3) / .05 : e > .45 ? (.5 - e) / .05 : 1;
+      const fin = () => { if (b) b.remove(); b = null; if (lien) lien.remove(); lien = null; };
       return {
-        raz() { duo = null; if (b) b.remove(); b = null; },
-        permuter(e, pts) { if (!x.anime) return; if (!duo && e >= .3 && e < .44) { const n = Object.keys(pts).sort((a, c) => pts[c] - pts[a]); if (n.length > 1) { duo = [n[0], n[n.length - 1]]; b = O.bulle(540, 70, "Changement de place ! ☕", 28); O.son("changement"); } }
+        raz() { duo = null; fin(); },
+        permuter(e, pts) { if (!x.anime) return; if (!duo && e >= .3 && e < .5) { const n = Object.keys(pts).sort((a, c) => pts[c] - pts[a]); if (n.length > 1) { duo = [n[0], n[n.length - 1]];
+            // un trait pointillé relie les deux pastilles, avec la montre du Lapin blanc écartée du trait
+            lien = O.el('<path d="M0 0" fill="none" stroke="#FFF3C8" stroke-width="5" stroke-dasharray="4 10" stroke-linecap="round"/><g><circle r="17" fill="#F2C94C" stroke="#5A3A10" stroke-width="3"/><circle r="12" fill="#FFF8E6"/><path d="M0 0V-9M0 0L6 3" stroke="#3A2A10" stroke-width="2.4" stroke-linecap="round"/><path d="M0 -17V-24" stroke="#5A3A10" stroke-width="4"/></g><circle class="a1" r="10" fill="none" stroke="#FFD86B" stroke-width="4"/><circle class="a2" r="10" fill="none" stroke="#FFD86B" stroke-width="4"/>');
+            b = O.bulle(540, 360, "Changement de place !", 22); O.son("changement"); } }
           if (!duo) return; const k = m(e), a = pts[duo[0]], c = pts[duo[1]]; if (k > 0) { pts[duo[0]] = a + (c - a) * k; pts[duo[1]] = c + (a - c) * k; }
-          if (b && e > .45) { b.remove(); b = null; } },
-        maj() { }
+          if (e > .51) fin(); },
+        maj(e) { if (!lien || !duo) return; const a = O.voiture(duo[0]), c = O.voiture(duo[1]); if (!a || !c) return;
+          const mx = (a[0] + c[0]) / 2, my = (a[1] + c[1]) / 2, d = Math.hypot(c[0] - a[0], c[1] - a[1]) || 1, rr = O.rp() * 1.6, C = O.centre();
+          // la courbe se bombe vers l'intérieur de la piste ; la montre est au-delà du sommet de la courbe (elle ne cache plus de pastille)
+          let nx = (c[1] - a[1]) / d, ny = -(c[0] - a[0]) / d; if (nx * (C[0] - mx) + ny * (C[1] - my) < 0) { nx = -nx; ny = -ny; }
+          const cb = Math.max(110, d * .45);
+          [[".a1", a], [".a2", c]].forEach(([k, p]) => { const o = lien.querySelector(k); o.setAttribute("cx", O.f(p[0])); o.setAttribute("cy", O.f(p[1])); o.setAttribute("r", O.f(rr)); });
+          lien.firstChild.setAttribute("d", "M" + O.f(a[0]) + " " + O.f(a[1]) + "Q" + O.f(mx + nx * cb) + " " + O.f(my + ny * cb) + " " + O.f(c[0]) + " " + O.f(c[1]));
+          const wx = mx + nx * (cb / 2 + 34), wy = my + ny * (cb / 2 + 34);
+          lien.childNodes[1].setAttribute("transform", "translate(" + O.f(wx) + " " + O.f(wy) + ") rotate(" + O.f(Math.sin(e * 60) * 12) + ")");
+          if (b) b.placer(mx + (C[0] - mx) * .55, my + (C[1] - my) * .55 - 20); }   // vers le centre de la piste, au-dessus du duo
       };
     },
     /* ---------- V16.38 · un événement pour chaque mois (attachés aux voitures : ils survivent aux nouvelles cartes) ---------- */
@@ -5543,13 +5622,30 @@
         O.anim(1800, q => { const u = p[0] - 320 + q * 640, v = p[1] - 40 - Math.sin(q * Math.PI) * -120 - 150 + q * 0; g.setAttribute("transform", "translate(" + O.f(u) + " " + O.f(p[1] - 170 + Math.sin(q * Math.PI) * 120) + ") rotate(" + O.f(-8 + q * 16) + ") scale(" + O.f(1.2 + Math.sin(q * Math.PI) * .5) + ")"); g.setAttribute("opacity", O.f(q < .1 ? q * 10 : q > .85 ? (1 - q) * 6.6 : 1)); }, () => { g.remove(); setTimeout(() => b.remove(), 700); }); } }; },
     /* janvier 2027 · Ratatouille : à l'arrivée, le petit chef rat court jusqu'au vainqueur et lui pose sa toque */
     ratatouille(x) { const O = outilsEv(x); let fait = false;
-      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("ratatouille"); const n = O.premier(c), p = O.dedans(O.voiture(n)); if (!p) return;
-        const rat = O.el('<g><ellipse cx="0" cy="22" rx="20" ry="5" fill="#000" opacity=".25"/><path d="M18 10C34 8 40 -2 34 -10" stroke="#8E7E86" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="0" cy="8" rx="20" ry="13" fill="#8C7F8A" stroke="#3A3036" stroke-width="2"/><circle cx="-16" cy="-2" r="10" fill="#8C7F8A" stroke="#3A3036" stroke-width="2"/><circle cx="-10" cy="-12" r="6" fill="#C9A3B3" stroke="#3A3036" stroke-width="1.6"/><circle cx="-22" cy="-4" r="2" fill="#1A1416"/><circle cx="-26" cy="0" r="2.6" fill="#E88AA6"/><path d="M-26 -1L-36 -4M-26 1L-36 2" stroke="#3A3036" stroke-width="1"/>' +
-          '<g class="toque" transform="translate(-14 -14)"><path d="M-9 0V-8C-14 -9 -14 -16 -9 -16C-8 -21 -2 -22 0 -19C2 -22 8 -21 9 -16C14 -16 14 -9 9 -8V0Z" fill="#FAFAF6" stroke="#9A9A92" stroke-width="1.4"/></g></g>');
-        const b = O.bulle(p[0], p[1] - 90, "Tout le monde peut cuisiner !", 17);
-        O.anim(1300, q => { const k = 1 - Math.pow(1 - q, 2); rat.setAttribute("transform", "translate(" + O.f(p[0] - 260 + k * 220) + " " + O.f(p[1] + 20 - Math.abs(Math.sin(q * 18)) * 14) + ") scale(1.7)"); }, () => {
-          O.anim(900, q => { const tq = rat.querySelector(".toque"); tq.setAttribute("transform", "translate(" + O.f(-14 + q * 38) + " " + O.f(-14 - Math.sin(q * Math.PI) * 50 - q * 6) + ") rotate(" + O.f(q * 360) + ")"); }, () => {
-            setTimeout(() => { O.anim(600, q => { rat.setAttribute("opacity", O.f(1 - q)); b.setAttribute("opacity", O.f(1 - q)); }, () => { rat.remove(); b.remove(); }); }, 1400); }); }); } }; },
+      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("ratatouille"); const n = O.premier(c), p = O.voiture(n); if (!p) return;
+        // il arrive en courant par le côté d'où viennent les voitures (la piste déjà parcourue) et s'arrête juste à côté de la pastille
+        const r = O.rp(), L = x.T.L, A = O.pt(c[n].s - .04 * L), V = O.vue(), sc = 1.8; let sd = A[0] >= p[0] ? 1 : -1;
+        if (p[0] + sd * (r + 340) > V[2] || p[0] + sd * (r + 340) < V[0]) sd = -sd;
+        const ar = [p[0] + sd * (r + 46), p[1] + 2], dep = [ar[0] + sd * 280, ar[1]];
+        // V16.45 : le rat est plus gros (×1,8), plus clair, avec un liseré crème qui le détache du fond brun ; sa toque est sur sa tête pendant qu'il court
+        const rat = O.el('<g style="filter: drop-shadow(0 0 1.6px #FFF4DC) drop-shadow(0 0 1.6px #FFF4DC)"><ellipse cx="0" cy="22" rx="20" ry="5" fill="#000" opacity=".25"/><path d="M18 10C34 8 40 -2 34 -10" stroke="#A8979F" stroke-width="3.4" fill="none" stroke-linecap="round"/><ellipse cx="0" cy="8" rx="20" ry="13" fill="#A99CA6" stroke="#2E2428" stroke-width="2"/><ellipse cx="2" cy="12" rx="12" ry="6" fill="#CFC5CC"/><circle cx="-16" cy="-2" r="10" fill="#A99CA6" stroke="#2E2428" stroke-width="2"/><circle cx="-8" cy="-11" r="6" fill="#E3B9C9" stroke="#2E2428" stroke-width="1.6"/><circle cx="-21" cy="-4" r="2.2" fill="#1A1416"/><circle cx="-26" cy="0" r="2.8" fill="#E88AA6"/><path d="M-26 -1L-36 -4M-26 1L-36 2" stroke="#2E2428" stroke-width="1"/></g>');
+        const toque = O.el('<g style="filter: drop-shadow(0 0 1.2px #3A2A10)"><path d="M-9 0V-8C-14 -9 -14 -16 -9 -16C-8 -21 -2 -22 0 -19C2 -22 8 -21 9 -16C14 -16 14 -9 9 -8V0Z" fill="#FFFFFF" stroke="#4A4A42" stroke-width="1.6"/><path d="M-9 -3H9" stroke="#C9C9C0" stroke-width="1.2"/></g>');
+        const tete = (u, v) => [u - sd * 15 * sc, v - 10 * sc], gros = r / 6, petit = r / 11;   // gros : la toque fait 1,5 fois la pastille
+        let b = null;
+        O.anim(1100, q => { const k = 1 - Math.pow(1 - q, 2), u = ar[0] + (dep[0] - ar[0]) * (1 - k), v = ar[1] + (dep[1] - ar[1]) * (1 - k) - Math.abs(Math.sin(q * 16)) * 8 * (1 - q), h = tete(u, v);
+          rat.setAttribute("transform", "translate(" + O.f(u) + " " + O.f(v) + ") scale(" + O.f(sd * sc) + " " + sc + ")"); toque.setAttribute("transform", "translate(" + O.f(h[0]) + " " + O.f(h[1]) + ") rotate(" + (sd * -10) + ") scale(1.5)");
+          // la bulle, courte et plus haut (au-dessus de la cuisine, loin de la foule de rats peinte en bas)
+          if (q > .35 && !b) b = O.bulle(p[0], p[1] - 150, "Tout le monde peut cuisiner !", 22); }, () => {
+          const d0 = tete(ar[0], ar[1]);
+          O.anim(800, q => { const pp = O.voiture(n) || p, k = q * q * (3 - 2 * q), u = d0[0] + (pp[0] - d0[0]) * k, v = d0[1] + (pp[1] - r * .7 - d0[1]) * k - Math.sin(q * Math.PI) * 80;
+            toque.setAttribute("transform", "translate(" + O.f(u) + " " + O.f(v) + ") rotate(" + O.f(sd * -360 * k) + ") scale(" + (1.5 + (gros - 1.5) * k).toFixed(2) + ")"); }, () => {
+            // posée : 1,5 fois la pastille pendant 1 s, avec un éclat doré, puis elle se réduit
+            const eclat = O.el('<circle r="' + O.f(r * 2.4) + '" fill="#FFD86B" opacity=".35"/>' + [0, 1, 2, 3, 4, 5, 6, 7].map(i => '<path d="M' + O.f(Math.cos(i * .785) * r * 1.7) + " " + O.f(Math.sin(i * .785) * r * 1.7) + "L" + O.f(Math.cos(i * .785) * r * 2.8) + " " + O.f(Math.sin(i * .785) * r * 2.8) + '" stroke="' + (i % 2 ? "#FFF3C8" : "#F2C230") + '" stroke-width="4" stroke-linecap="round"/>').join(""));
+            toque.parentNode.appendChild(toque);
+            O.anim(1300, q => { const pp = O.voiture(n) || p, s = q < .77 ? gros * (1 + Math.sin(Math.min(1, q / .2) * Math.PI) * .15) : gros + (petit - gros) * Math.min(1, (q - .77) / .23);
+              toque.setAttribute("transform", "translate(" + O.f(pp[0]) + " " + O.f(pp[1] - r * (q < .77 ? 1 : .7)) + ") scale(" + s.toFixed(3) + ")");
+              eclat.setAttribute("transform", "translate(" + O.f(pp[0]) + " " + O.f(pp[1] - r * .9) + ") rotate(" + O.f(q * 60) + ") scale(" + O.f(.6 + Math.min(1, q * 4) * .5) + ")"); eclat.setAttribute("opacity", O.f(q < .6 ? 1 : Math.max(0, 1 - (q - .6) / .2))); }, () => eclat.remove());
+            setTimeout(() => { O.fondu(rat, 500); O.fondu(toque, 500); if (b) O.fondu(b, 300); }, 1600); }); }); } }; },
     /* janvier · des ballons s'envolent de la voiture du vainqueur à l'arrivée */
     foret(x) { const O = outilsEv(x); let fait = false;
       return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("foret"); const p = O.dedans(O.voiture(O.premier(c))); if (!p) return;
@@ -5559,52 +5655,115 @@
         O.anim(3200, q => { g.setAttribute("transform", "translate(" + O.f(p[0] + Math.sin(q * 6) * 8) + " " + O.f(p[1] - q * 300) + ") scale(" + O.f(.4 + Math.min(1, q * 3) * .6) + ")"); g.setAttribute("opacity", O.f(q < .75 ? 1 : (1 - q) * 4)); b.setAttribute("opacity", O.f(q < .6 ? 1 : Math.max(0, 1 - (q - .6) * 3))); }, () => { g.remove(); b.remove(); }); } }; },
     /* mai · un parachute argenté (cadeau des sponsors) descend sur la voiture du dernier */
     arene(x) { const O = outilsEv(x); let fait = false;
-      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .45 || !x.anime) return; fait = true; O.son("arene"); const n = O.dernier(c);
-        const g = O.el('<g><path d="M-34 0Q0 -40 34 0Q24 -6 17 0Q8 -8 0 0Q-8 -8 -17 0Q-24 -6 -34 0Z" fill="#E8ECF2" stroke="#9AA3B0" stroke-width="1.5"/><path d="M-34 0L-6 42M34 0L6 42M0 0V42" stroke="#C9CFD8" stroke-width="1"/><rect x="-9" y="40" width="18" height="15" rx="2" fill="#C0C6CF" stroke="#7D8590" stroke-width="1.5"/><circle cx="0" cy="47.5" r="3" fill="#E2B23C"/></g>');
-        const b = O.bulle(540, 60, "🪂 Un cadeau des sponsors pour " + n + " !", 24);
-        O.anim(2600, q => { const p = O.voiture(n) || [0, 0]; g.setAttribute("transform", "translate(" + O.f(p[0] + Math.sin(q * 9) * 12 * (1 - q)) + " " + O.f(p[1] - 60 - (1 - q) * 360) + ")"); if (q > .8) g.setAttribute("opacity", O.f((1 - q) * 5)); }, () => { g.remove(); setTimeout(() => b.remove(), 600); }); } }; },
+      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .45 || !x.anime) return; fait = true; O.son("arene"); const n = O.dernier(c), r = O.rp();
+        const g = O.el('<g><g class="voile"><path d="M-34 0Q0 -40 34 0Q24 -6 17 0Q8 -8 0 0Q-8 -8 -17 0Q-24 -6 -34 0Z" fill="#E8ECF2" stroke="#5A6370" stroke-width="2"/><path d="M-17 0Q-10 -26 0 -28M17 0Q10 -26 0 -28" stroke="#9AA3B0" stroke-width="1.5" fill="none"/></g><path d="M-34 0L-6 42M34 0L6 42M0 0V42" stroke="#C9CFD8" stroke-width="1.2"/><g class="caisse"><rect x="-10" y="40" width="20" height="16" rx="2" fill="#C0C6CF" stroke="#4D5560" stroke-width="2"/><circle cx="0" cy="48" r="3.4" fill="#E2B23C"/></g><g class="eclat" opacity="0">' + [0, 1, 2, 3].map(i => '<path d="M0 48L' + O.f(Math.cos(i * 1.57 + .78) * 24) + " " + O.f(48 + Math.sin(i * 1.57 + .78) * 24) + '" stroke="#FFE07A" stroke-width="3" stroke-linecap="round"/>').join("") + "</g></g>");
+        const b = O.bulle(0, 0, "Cadeau des sponsors pour " + n + " !", 24), sc = 1.6;
+        O.anim(2600, q => { const p = O.voiture(n) || [0, 0], desc = Math.min(1, q / .7), bond = q > .7 ? Math.sin((q - .7) / .3 * Math.PI * 2) * 6 * (1 - q) / .3 : 0;
+          // la caisse vient se poser sur la pastille (48·sc sous le haut de la voile)
+          g.setAttribute("transform", "translate(" + O.f(p[0] + Math.sin(q * 9) * 14 * (1 - desc)) + " " + O.f(p[1] - 48 * sc - (1 - desc) * 320 - bond) + ") scale(" + sc + ")");
+          g.querySelector(".voile").setAttribute("transform", "translate(0 " + O.f(6 * (1 - Math.min(1, q * 4))) + ") scale(" + O.f(.4 + .6 * Math.min(1, q * 4)) + " 1)");
+          if (q > .7) { const z = (q - .7) / .3; g.querySelector(".eclat").setAttribute("opacity", O.f(Math.sin(z * Math.PI))); g.querySelector(".eclat").setAttribute("transform", "rotate(" + O.f(z * 90) + " 0 48)"); }
+          if (q > .85) g.setAttribute("opacity", O.f((1 - q) / .15));
+          b.placer(p[0], p[1] + r + 50); if (q > .62) b.setAttribute("opacity", O.f(Math.max(0, 1 - (q - .62) / .15))); }, () => { g.remove(); b.remove(); }); } }; },
     /* juin · le chasseur du vainqueur fait un looping au-dessus de la ligne */
     etoiles(x) { const O = outilsEv(x); let fait = false;
-      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("etoiles"); const n = O.premier(c), p = O.dedans(O.voiture(n)); if (!p) return; const col = (x.V[n] && x.V[n].couleur) || "#4C9AFF";
-        const g = O.el('<g><path d="M-22 0L-4 -4 18 0-4 4Z" fill="#E8ECF2" stroke="#3B4048" stroke-width="1.2"/><path d="M-14 -4L-20 -16M-14 4L-20 16M-2 -4L-8 -16M-2 4L-8 16" stroke="' + col + '" stroke-width="3" stroke-linecap="round"/><circle cx="6" cy="0" r="3" fill="#1B1D22"/><path d="M-22 0H-46" stroke="' + col + '" stroke-width="5" opacity=".6" stroke-linecap="round"/></g>');
-        const b = O.bulle(p[0], p[1] - 150, "Bien joué, petit ! Ne te laisse pas griser.", 20);
-        O.anim(2400, q => { const a = q * Math.PI * 2 - Math.PI / 2, r = 90, u = p[0] - 200 + q * 400 + Math.cos(a) * r * Math.sin(q * Math.PI), v = p[1] - 90 + Math.sin(a) * r * Math.sin(q * Math.PI);
-          const d = q * 360 + Math.cos(q * Math.PI) * 0; g.setAttribute("transform", "translate(" + O.f(u) + " " + O.f(v) + ") rotate(" + O.f(d) + ")"); g.setAttribute("opacity", O.f(q > .85 ? (1 - q) * 6.6 : 1)); }, () => { g.remove(); b.remove(); }); } }; },
+      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("etoiles"); const n = O.premier(c), p = O.voiture(n); if (!p) return; const col = (x.V[n] && x.V[n].couleur) || "#4C9AFF", r = O.rp();
+        const V = O.vue(), dir = p[0] > (V[0] + V[2]) / 2 ? -1 : 1, R = 70;
+        const pos = q => { const a = q * Math.PI * 2, s = Math.sin(q * Math.PI); return [p[0] + dir * (-170 + q * 340) + dir * Math.sin(a) * R * s, p[1] - 10 + (1 - Math.cos(a)) * R * s * (p[1] - V[1] < 2 * R + 30 ? 1 : -1)]; };
+        const trace = O.el('<path fill="none" stroke="' + col + '" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><path fill="none" stroke="' + col + '" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>');
+        const g = O.el('<g><path d="M-22 0L-4 -4 18 0-4 4Z" fill="#E8ECF2" stroke="#1B1D22" stroke-width="1.6"/><path d="M-14 -4L-20 -16M-14 4L-20 16M-2 -4L-8 -16M-2 4L-8 16" stroke="' + col + '" stroke-width="3.4" stroke-linecap="round"/><circle cx="6" cy="0" r="3" fill="#1B1D22"/><circle cx="-24" cy="0" r="4" fill="#FFF3C8"/></g>');
+        const b = O.bulle(p[0], p[1] + r + 60, "Bien joué, petit !", 24), hist = [];
+        O.anim(2200, q => { const a = pos(q), a2 = pos(Math.min(1, q + .01)), d = Math.atan2(a2[1] - a[1], a2[0] - a[0]) * 180 / Math.PI, ton = q > .42 && q < .62 ? Math.cos((q - .42) / .2 * Math.PI * 2) : 1;
+          hist.push(O.f(a[0]) + " " + O.f(a[1])); const dd = "M" + hist.slice(-60).join("L"); trace.childNodes.forEach(t => t.setAttribute("d", dd));
+          g.setAttribute("transform", "translate(" + O.f(a[0]) + " " + O.f(a[1]) + ") rotate(" + O.f(d) + ") scale(1.8 " + O.f(1.8 * ton) + ")");
+          const fo = q > .85 ? (1 - q) / .15 : 1; g.setAttribute("opacity", O.f(fo)); trace.setAttribute("opacity", O.f(fo)); if (q > .7) b.setAttribute("opacity", O.f(Math.max(0, (1 - q) / .3))); }, () => { g.remove(); trace.remove(); b.remove(); }); } }; },
     /* juillet · le ver surgit juste derrière la voiture du dernier */
-    dunes(x) { const O = outilsEv(x); let fait = false;
-      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .4 || !x.anime) return; fait = true; O.son("dunes"); const n = O.dernier(c), p0 = O.voiture(n); if (!p0) return; const p = [p0[0], p0[1]];
-        const g = O.el('<g><ellipse rx="70" ry="22" fill="#C9874A" opacity=".55"/><g class="ver"><path d="M-40 0C-40 -90 40 -90 40 0" stroke="#8C6A4E" stroke-width="34" fill="none"/><path d="M-40 0C-40 -90 40 -90 40 0" stroke="#6E5440" stroke-width="34" fill="none" stroke-dasharray="3 9"/><circle cx="40" cy="-4" r="22" fill="#3A2418"/><circle cx="40" cy="-4" r="15" fill="none" stroke="#F4E3C1" stroke-width="4" stroke-dasharray="2 3"/></g>' + [0, 1, 2, 3, 4, 5, 6].map(i => '<circle cx="' + (-60 + i * 20) + '" cy="' + (-4 - (i % 2) * 10) + '" r="' + (6 + i % 3 * 3) + '" fill="#E3B57A" opacity=".8"/>').join("") + "</g>");
-        const b = O.bulle(p[0], p[1] - 130, "Le ver ! Derrière " + n + " !", 24);
-        O.anim(2200, q => { const k = Math.sin(q * Math.PI); g.setAttribute("transform", "translate(" + O.f(p[0] - 90) + " " + O.f(p[1] + 14) + ")"); g.querySelector(".ver").setAttribute("transform", "translate(0 " + O.f((1 - k) * 60) + ") scale(1.9 " + O.f(Math.max(.05, k) * 1.9) + ")"); g.setAttribute("opacity", O.f(Math.min(1, k * 3))); }, () => { g.remove(); b.remove(); }); } }; },
+    dunes(x) { const O = outilsEv(x), L = x.T.L; let fait = false, dern = null;
+      return { raz() { fait = false; }, maj(e, c, en) { dern = c; if (!en || fait || e < .4 || !x.anime) return; fait = true; O.son("dunes"); const n = O.dernier(c); if (!O.voiture(n)) return;
+        const der = d => O.pt(dern[n].s - d * L);   // un point de la piste, à la distance d derrière le dernier
+        // V16.45 : la bosse est sombre et crache de petits jets de sable : on la voit courir derrière Devlin
+        const bosses = O.el([0, 1, 2, 3, 4, 5, 6].map(i => '<g><ellipse rx="' + (30 - i * 3) + '" ry="' + (13 - i) + '" fill="#6E3E1A" opacity=".8"/><path d="M' + (-26 + i * 3) + ' -2Q0 ' + (-14 + i) + " " + (26 - i * 3) + ' -2" stroke="#FFE6B8" stroke-width="3.4" fill="none" opacity=".9"/></g>').join(""));
+        const jets = O.el([0, 1, 2, 3, 4, 5, 6, 7].map(i => '<circle r="' + (3 + i % 3) + '" fill="' + (i % 2 ? "#F4D49A" : "#E0A868") + '" stroke="#6E3E1A" stroke-width="1"/>').join(""));
+        const gueule = O.cache('<g transform="scale(1.5)"><ellipse rx="64" ry="20" fill="#6E3E1A" opacity=".55"/>' + [0, 1, 2, 3, 4, 5, 6, 7].map(i => '<circle cx="' + O.f(Math.cos(i * .785) * 52) + '" cy="' + O.f(Math.sin(i * .785) * 18 - 6) + '" r="' + (7 + i % 3 * 3) + '" fill="#E3B57A" stroke="#6E3E1A" stroke-width="1.4"/>').join("") +
+          '<g class="ver"><path d="M-30 0C-30 -60 30 -60 30 0Z" fill="#7A5A40" stroke="#FFE9C0" stroke-width="4"/><ellipse cy="-46" rx="30" ry="14" fill="#2A140C" stroke="#FFE9C0" stroke-width="4"/><ellipse cy="-46" rx="22" ry="9" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-dasharray="2 3.5"/></g></g>');
+        // la bulle dans le désert vide (dans la boucle de gauche), loin du drapeau et du leader
+        const b = O.bulle(250, 420, "Le ver ! Derrière " + n + " !", 22); let ou = null;
+        O.anim(2400, q => {
+          bosses.childNodes.forEach((bo, i) => { const h = der(.012 + i * .007); bo.setAttribute("transform", "translate(" + O.f(h[0]) + " " + O.f(h[1] + 6) + ") scale(" + O.f(1 + Math.sin(q * 30 + i) * .1) + ")"); });
+          const tete = der(.012); jets.childNodes.forEach((j, i) => { const ph = (q * 6 + i / 8) % 1, a = (i / 8 - .5) * 2.4; j.setAttribute("cx", O.f(tete[0] + Math.sin(a) * 26 * ph)); j.setAttribute("cy", O.f(tete[1] - Math.sin(ph * Math.PI) * 26)); j.setAttribute("opacity", O.f(1 - ph)); });
+          const ob = q < .1 ? q * 10 : q < .55 ? 1 : Math.max(0, 1 - (q - .55) * 6); bosses.setAttribute("opacity", O.f(ob)); jets.setAttribute("opacity", O.f(ob));
+          // le ver surgit 0,03 tour derrière le dernier et le talonne
+          if (q > .52) { ou = O.dedans(der(.03), 60); const z = Math.min(1, (q - .52) / .44), k = Math.sin(z * Math.PI); gueule.setAttribute("opacity", O.f(Math.min(1, k * 3))); gueule.setAttribute("transform", "translate(" + O.f(ou[0]) + " " + O.f(ou[1] + 10) + ")"); gueule.firstChild.querySelector(".ver").setAttribute("transform", "scale(" + O.f(.9 + k * .6) + " " + O.f(Math.max(.05, k) * 1.5) + ")"); }
+          b.setAttribute("opacity", O.f(q < .7 ? 1 : Math.max(0, 1 - (q - .7) * 6))); }, () => { bosses.remove(); jets.remove(); gueule.remove(); b.remove(); }); } }; },
     /* août · le monde bascule à l'envers un instant */
     envers(x) { const O = outilsEv(x); let fait = false;
       return { raz() { fait = false; x.svg.style.transform = ""; x.svg.style.filter = ""; }, maj(e, c, en) { if (!en || fait || e < .5 || !x.anime) return; fait = true; O.son("envers"); const sv = x.svg;
         sv.style.transition = "transform .5s ease-in-out, filter .5s"; sv.style.transform = "scaleY(-1)"; sv.style.filter = "hue-rotate(160deg) saturate(1.6) brightness(.8)";
         setTimeout(() => { sv.style.transform = ""; sv.style.filter = ""; setTimeout(() => { sv.style.transition = ""; const b = O.bulle(540, 360, "On revient de loin…", 26); setTimeout(() => b.remove(), 1600); }, 550); }, 1700); } }; },
     /* septembre · un portail orange s'ouvre devant le leader */
-    multivers(x) { const O = outilsEv(x); let fait = false;
-      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .55 || !x.anime) return; fait = true; O.son("multivers"); const n = O.premier(c);
-        const g = O.el('<g>' + Array.from({ length: 24 }, (_, i) => { const a = i / 24 * Math.PI * 2; return '<path d="M' + O.f(Math.cos(a) * 34) + " " + O.f(Math.sin(a) * 34) + "l" + O.f(Math.cos(a + 1.4) * 10) + " " + O.f(Math.sin(a + 1.4) * 10) + '" stroke="' + (i % 3 ? "#FF9A2A" : "#FFE07A") + '" stroke-width="3" stroke-linecap="round"/>'; }).join("") + '<circle r="32" fill="none" stroke="#FFB02A" stroke-width="4"/><circle r="30" fill="#2A1450" opacity=".35"/></g>');
-        const b = O.bulle(540, 60, "Un portail s’ouvre devant " + n + " !", 24);
-        O.anim(2000, q => { const p = O.voiture(n) || [0, 0]; g.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1]) + ") rotate(" + O.f(q * 540) + ") scale(" + O.f(Math.sin(q * Math.PI) * 1.4) + ")"); }, () => { g.remove(); b.remove(); }); } }; },
+    multivers(x) { const O = outilsEv(x), T = x.T, L = T.L; let fait = false, dern = null;
+      return { raz() { fait = false; }, maj(e, c, en) { dern = c; if (!en || fait || e < .55 || !x.anime) return; fait = true; O.son("multivers"); const n = O.premier(c), r = O.rp(), s0 = ((c[n].s + .05 * L) % L + L) % L, P = T.a(s0, 0), pu = [P.x * x.KU, P.z * x.KU];
+        const ang = Math.atan2(P.tz, P.tx) * 180 / Math.PI, rang = c[n].rang;
+        const portail = O.el('<g class="pt"><ellipse rx="' + O.f(r * 3.2) + '" ry="' + O.f(r * 1.3) + '" fill="#1A0838" opacity=".7"/>' + Array.from({ length: 18 }, (_, i) => { const a = i / 18 * Math.PI * 2; return '<circle cx="' + O.f(Math.cos(a) * r * 3.2) + '" cy="' + O.f(Math.sin(a) * r * 1.3) + '" r="3" fill="' + (i % 2 ? "#7CF2E8" : "#C89BFF") + '"/>'; }).join("") + '<ellipse rx="' + O.f(r * 3.2) + '" ry="' + O.f(r * 1.3) + '" fill="none" stroke="#9B7BFF" stroke-width="4"/></g>'); portail.setAttribute("transform", "translate(" + O.f(pu[0]) + " " + O.f(pu[1]) + ") rotate(" + O.f(ang + 90) + ")");
+        const fant = ["#B57BFF", "#7CF2C8"].map(col => O.cache('<g><circle r="' + O.f(r) + '" fill="' + col + '" fill-opacity=".55" stroke="#fff" stroke-width="2" stroke-dasharray="4 3"/><text y="' + O.f(r * .38) + '" text-anchor="middle" style="font: 800 ' + O.f(r * 1.1) + 'px sans-serif; stroke: none" fill="#fff" fill-opacity=".85">' + rang + "</text></g>"));
+        const b = O.bulle(pu[0], pu[1] + r * 2 + 50, "Un portail !", 24);
+        let entre = -1;
+        O.anim(2600, q => { const ouv = Math.min(1, q * 4);
+          const pv = O.voiture(n), sv = dern && dern[n] ? dern[n].s : 0;
+          if (entre < 0 && q > .05 && ((sv - s0) % L + L) % L < .3 * L) entre = q;   // le leader a franchi le portail
+          const ferme = entre < 0 ? 1 : Math.max(0, 1 - (q - entre) / .25);
+          portail.firstChild.setAttribute("transform", "rotate(" + O.f(q * 200) + ") scale(" + O.f(ouv * ferme) + ")");
+          if (entre >= 0 && pv) { const z = (q - entre) / .45, op = z < .15 ? z / .15 : z < .75 ? 1 : Math.max(0, (1 - z) / .25);
+            // les deux variantes, de chaque côté de la pastille (perpendiculaires à la piste), qui s'écartent puis s'effacent
+            const a = (ang + 90) * Math.PI / 180, ec = r * (1.2 + Math.min(1, z * 3) * 1.4);
+            fant.forEach((g, i) => { const sg = i ? 1 : -1; g.setAttribute("transform", "translate(" + O.f(pv[0] + Math.cos(a) * ec * sg) + " " + O.f(pv[1] + Math.sin(a) * ec * sg) + ")"); g.setAttribute("opacity", O.f(Math.max(0, op) * .9)); }); }
+          if (q > .6) b.setAttribute("opacity", O.f(Math.max(0, 1 - (q - .6) * 4))); }, () => { portail.remove(); fant.forEach(g => g.remove()); b.remove(); }); } }; },
     /* octobre · pluie de tickets d'or sur le vainqueur */
     chocolat(x) { const O = outilsEv(x); let fait = false;
-      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("chocolat"); const n = O.premier(c), p = O.dedans(O.voiture(n)); if (!p) return;
-        const T = Array.from({ length: 16 }, (_, i) => ({ dx: (Math.random() - .5) * 220, d: Math.random() * .35, r: Math.random() * 360, el: O.el('<g><rect x="-16" y="-9" width="32" height="18" rx="2" fill="#F2C230" stroke="#A8761A" stroke-width="1.5"/><rect x="-12" y="-5" width="24" height="10" fill="none" stroke="#A8761A" stroke-width=".8"/></g>') }));
-        const b = O.bulle(p[0], p[1] - 160, "Un ticket d’or pour " + n + " !", 24);
-        O.anim(2600, q => T.forEach(t => { const k = Math.max(0, Math.min(1, (q - t.d) / .6)); t.el.setAttribute("transform", "translate(" + O.f(p[0] + t.dx * (1 - k * .7)) + " " + O.f(p[1] - 230 + k * 220) + ") rotate(" + O.f(t.r + k * 400) + ") scale(" + O.f(.6 + Math.sin(k * 6) * .15) + ")"); t.el.setAttribute("opacity", O.f(q > .85 ? (1 - q) * 6.6 : k > 0 ? 1 : 0)); }), () => { T.forEach(t => t.el.remove()); b.remove(); }); } }; },
+      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("chocolat"); const n = O.premier(c), p = O.voiture(n); if (!p) return; const r = O.rp();
+        const tk = '<rect x="-16" y="-9" width="32" height="18" rx="2" fill="#F2C230" stroke="#7A5210" stroke-width="2"/><rect x="-12" y="-5" width="24" height="10" fill="none" stroke="#A8761A" stroke-width="1"/>';
+        const T = Array.from({ length: 8 }, (_, i) => ({ dx: (i / 7 - .5) * 260 + (Math.random() - .5) * 30, d: i % 4 * .08 + Math.random() * .08, r: Math.random() * 360, el: O.el("<g>" + tk + "</g>") }));
+        const der = O.cache('<g><circle r="34" fill="#FFE07A" opacity=".35"/>' + tk + '<g class="bri">' + [0, 1, 2, 3, 4, 5, 6, 7].map(i => '<path d="M' + O.f(Math.cos(i * .785) * 26) + " " + O.f(Math.sin(i * .785) * 20) + "L" + O.f(Math.cos(i * .785) * 40) + " " + O.f(Math.sin(i * .785) * 32) + '" stroke="#FFF3C8" stroke-width="3" stroke-linecap="round"/>').join("") + "</g></g>");
+        const b = O.bulle(p[0], p[1] + r + 60, "Un ticket d’or pour " + n + " !", 24);
+        const haut = Math.max(O.vue()[1] + 10, p[1] - 240), chute = Math.max(160, p[1] + 20 - haut);   // la pluie part du haut de l'écran visible
+        O.anim(3000, q => { const pp = O.voiture(n) || p;
+          T.forEach(t => { const k = Math.max(0, Math.min(1, (q / .6 - t.d) / .7)); t.el.setAttribute("transform", "translate(" + O.f(pp[0] + t.dx * (1 - k * .5)) + " " + O.f(haut + k * chute) + ") rotate(" + O.f(t.r + k * 300) + ") scale(1.25)"); t.el.setAttribute("opacity", O.f(k <= 0 ? 0 : q < .55 ? 1 : Math.max(0, 1 - (q - .55) * 8))); });
+          if (q > .4) { const z = Math.min(1, (q - .4) / .25), k = 1 - Math.pow(1 - z, 3); der.setAttribute("transform", "translate(" + O.f(pp[0]) + " " + O.f(pp[1] - r * .4 - (1 - k) * Math.max(80, pp[1] - haut)) + ") rotate(" + O.f((1 - k) * 200 - 8) + ") scale(" + O.f(.9 + Math.sin(Math.max(0, q - .65) * 30) * .05) + ")"); der.setAttribute("opacity", O.f(q < .9 ? 1 : (1 - q) * 10));
+            der.querySelector(".bri").setAttribute("opacity", O.f(q > .65 ? .5 + .5 * Math.sin(q * 40) : 0)); }
+          if (q > .75) b.setAttribute("opacity", O.f(Math.max(0, (1 - q) / .25))); }, () => { T.forEach(t => t.el.remove()); der.remove(); b.remove(); }); } }; },
     /* novembre · la main d'un titan balaie la piste juste derrière le dernier */
-    titans(x) { const O = outilsEv(x); let fait = false;
-      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .48 || !x.anime) return; fait = true; O.son("titans"); const n = O.dernier(c), p0 = O.voiture(n); if (!p0) return;
-        const g = O.el('<g><ellipse cx="6" cy="10" rx="40" ry="34" fill="#000" opacity=".25"/>' + [[-24, -12, -28], [-9, -22, -8], [7, -24, 6], [22, -18, 22]].map(([u, v, a]) => '<rect x="-7" y="-40" width="14" height="44" rx="7" fill="#E0A27A" stroke="#4A2414" stroke-width="3" transform="translate(' + u + " " + v + ") rotate(" + a + ')"/>').join("") + '<rect x="-7" y="-30" width="14" height="36" rx="7" fill="#E0A27A" stroke="#4A2414" stroke-width="3" transform="translate(-30 14) rotate(-75)"/><ellipse cx="0" cy="4" rx="30" ry="26" fill="#E0A27A" stroke="#4A2414" stroke-width="3"/><path d="M-14 0C-6 6 6 6 14 0M-10 12C-2 16 8 16 14 10" stroke="#B5704A" stroke-width="2" fill="none"/></g>');
-        const b = O.bulle(540, 60, "Un titan ! " + n + " l’a échappé belle !", 24);
-        O.anim(1800, q => { const k = Math.sin(q * Math.PI), p = O.voiture(n) || p0; g.setAttribute("transform", "translate(" + O.f(p[0] - 150 + q * 120) + " " + O.f(p[1] + 50 - k * 50) + ") rotate(" + O.f(-30 + q * 60) + ") scale(2.6)"); g.setAttribute("opacity", O.f(Math.min(1, k * 2.5))); }, () => { g.remove(); setTimeout(() => b.remove(), 500); }); } }; },
+    titans(x) { const O = outilsEv(x), L = x.T.L; let fait = false, dern = null;
+      return { raz() { fait = false; }, maj(e, c, en) { dern = c; if (!en || fait || e < .48 || !x.anime) return; fait = true; O.son("titans"); const n = O.dernier(c); if (!O.voiture(n)) return; const r = O.rp();
+        // V16.45 : une vraie silhouette de main (paume + 5 doigts), bien sombre (0,55), qui suit la voiture, descend, se referme derrière elle, puis remonte
+        const doigt = (a, l, w) => '<g transform="rotate(' + a + ')"><rect class="dg" x="' + O.f(-w / 2) + '" y="' + O.f(-l) + '" width="' + w + '" height="' + l + '" rx="' + O.f(w / 2) + '"/></g>';
+        const main = '<ellipse cx="0" cy="8" rx="40" ry="34"/>' + doigt(-28, 70, 17) + doigt(-10, 84, 18) + doigt(6, 86, 18) + doigt(22, 74, 17) + '<g transform="translate(-34 22) rotate(-82)"><rect class="dg" x="-9" y="-56" width="19" height="56" rx="9.5"/></g>';
+        const g = O.cache('<g fill="#140A10"><g transform="translate(12 16)" fill-opacity=".25" style="filter: blur(6px)">' + main + '</g><g class="m" fill-opacity=".55">' + main + "</g></g>");
+        let b = null, cible = null;
+        O.anim(1700, q => { const pv = O.voiture(n);
+          if (q < .62 || !cible) cible = O.pt(dern[n].s - .04 * L);   // jusqu'à ce qu'elle se referme, la main vise la piste juste derrière la voiture
+          const desc = Math.min(1, q / .5), ferme = q < .5 ? 0 : Math.min(1, (q - .5) / .14), monte = q > .7 ? (q - .7) / .3 : 0;
+          const s = 2.2 - desc * 1.1 + monte * .9, dy = 0,   // une ombre : elle « descend » en rétrécissant et en devenant nette (elle reste sur la piste, jamais hors de l'écran)
+            ang = Math.atan2(pv ? pv[1] - cible[1] : 0, pv ? pv[0] - cible[0] : 1) * 180 / Math.PI + 90;
+          g.setAttribute("transform", "translate(" + O.f(cible[0]) + " " + O.f(cible[1] + dy) + ") rotate(" + O.f(ang) + ") scale(" + O.f(s) + ")");
+          g.querySelectorAll(".dg").forEach(d => d.setAttribute("transform", "scale(1 " + O.f(1 - ferme * .62) + ")"));
+          g.setAttribute("opacity", O.f(q < .5 ? .2 + desc * .8 : 1 - monte));
+          if (!b && ferme >= 1 && pv) b = O.bulle(pv[0], pv[1] - r - 46, "Ouf !", 26);
+          if (b && pv) b.placer(pv[0], pv[1] - r - 46); }, () => { g.remove(); if (b) O.fondu(b, 300); }); } }; },
     /* décembre 2027 · Poséidon foudroie la mer juste devant le leader */
     odyssee(x) { const O = outilsEv(x); let fait = false;
-      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .6 || !x.anime) return; fait = true; O.son("odyssee"); const n = O.premier(c), p = O.voiture(n); if (!p) return;
-        const g = O.el('<g><rect x="-2000" y="-2000" width="4000" height="4000" fill="#fff" class="fl"/><path d="M' + O.f(p[0] + 30) + ' -20L' + O.f(p[0] + 4) + " " + O.f(p[1] * .4) + "L" + O.f(p[0] + 34) + " " + O.f(p[1] * .45) + "L" + O.f(p[0] + 12) + " " + O.f(p[1] - 8) + '" stroke="#FFF7C0" stroke-width="7" fill="none" stroke-linejoin="bevel"/><circle cx="' + O.f(p[0] + 12) + '" cy="' + O.f(p[1] - 8) + '" r="30" fill="none" stroke="#9BE8FF" stroke-width="5" class="on"/></g>');
-        const b = O.bulle(540, 60, "Poséidon gronde sur " + n + " !", 24);
-        O.anim(1400, q => { g.querySelector(".fl").setAttribute("opacity", O.f(q < .15 ? q * 4 : Math.max(0, .6 - q))); g.querySelector(".on").setAttribute("r", O.f(30 + q * 90)); g.setAttribute("opacity", O.f(1 - q * q)); }, () => { g.remove(); setTimeout(() => b.remove(), 700); }); } }; }
+      const POSE = [612, 432], S = .95, TR = [POSE[0] - 322 * S, POSE[1] - 268 * S];   // la pointe du trident peint (peindreOdyssee2)
+      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .6 || !x.anime) return; fait = true; O.son("odyssee"); const n = O.premier(c); if (!O.voiture(n)) return; const r = O.rp();
+        const lueurT = O.el('<circle r="40" fill="#E8FFFA" opacity=".0"/><circle r="16" fill="#FFFFFF" opacity="0"/>'); lueurT.setAttribute("transform", "translate(" + O.f(TR[0]) + " " + O.f(TR[1]) + ")");
+        const g = O.el('<defs><radialGradient id="ev-ody"><stop offset="0" stop-color="#E8FFFA" stop-opacity=".8"/><stop offset="1" stop-color="#9BE8FF" stop-opacity="0"/></radialGradient></defs><circle class="lu" r="1" fill="url(#ev-ody)"/><path class="ec" fill="none" stroke="#9BE8FF" stroke-width="16" stroke-linejoin="round" stroke-linecap="round" opacity=".45"/><path class="ec" fill="none" stroke="#FFF7C0" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><g class="on"><ellipse rx="10" ry="5" fill="none" stroke="#E8FFFA" stroke-width="6"/><ellipse rx="10" ry="5" fill="none" stroke="#3AB8D8" stroke-width="3"/></g>');
+        const b = O.bulle(POSE[0], POSE[1] + 95, "Poséidon gronde !", 24);
+        const zig = (a, z, k) => { const pts = [a]; for (let i = 1; i < 7; i++) { const t = i / 7, nx = -(z[1] - a[1]), ny = z[0] - a[0], l = Math.hypot(nx, ny) || 1, o = (i % 2 ? 1 : -1) * (20 + (i * 37 % 17)) * (1 - t * .5); pts.push([a[0] + (z[0] - a[0]) * t + nx / l * o, a[1] + (z[1] - a[1]) * t + ny / l * o]); } pts.push(z); return "M" + pts.map(p => O.f(p[0]) + " " + O.f(p[1])).join("L"); };
+        O.anim(1800, q => { const p = O.voiture(n);
+          lueurT.firstChild.setAttribute("opacity", O.f(q < .2 ? q * 4 : Math.max(0, .8 - (q - .2) * 1.5))); lueurT.lastChild.setAttribute("opacity", O.f(q < .2 ? q * 5 : Math.max(0, 1 - (q - .2) * 3)));
+          const ecl = q > .18 && q < .42 ? (Math.floor(q * 40) % 3 ? 1 : .35) : 0;   // l'éclair suit la voiture et crépite (sans flash plein écran)
+          g.querySelectorAll(".ec").forEach(t => { if (ecl && p) t.setAttribute("d", zig(TR, p)); t.style.opacity = ecl ? (t.getAttribute("stroke-width") === "16" ? .45 * ecl : ecl) : 0; });
+          if (p) { const z = Math.max(0, (q - .2) / .8); const lu = g.querySelector(".lu"); lu.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1]) + ")"); lu.setAttribute("r", O.f(r * 4)); lu.setAttribute("opacity", O.f(q < .2 ? 0 : Math.max(0, 1 - z * 1.3)));
+            const on = g.querySelector(".on"); on.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1] + r * .6) + ") scale(" + O.f(1 + z * 7) + ")"); on.setAttribute("opacity", O.f(q < .2 ? 0 : Math.max(0, 1 - z))); }
+          if (q > .7) b.setAttribute("opacity", O.f(Math.max(0, (1 - q) / .3))); }, () => { g.remove(); lueurT.remove(); b.remove(); }); } }; }
   };
 
   function monter2D(boite, o) {
