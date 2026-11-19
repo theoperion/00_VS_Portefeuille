@@ -552,21 +552,23 @@ async function cartePostale(y, et) {
   txt("VERSUS · PODIUM", 70, 110, 34, 800, "#A9B1BD", "left", "'Saira Condensed', sans-serif");
   txt(G.drap + " " + G.gp, 70, 190, 64, 800, "#FFFFFF", "left", "'Saira Condensed', sans-serif");
   txt(moisLong(m.k) + " · " + met.ico + " " + met.nom + (spe ? " · " + spe.ico + " " + spe.nom : ""), 70, 250, 34, 500, "#A9B1BD");
-  const l = m.l.slice().sort((a, b) => b.p - a.p || a.rg - b.rg), med = ["🥇", "🥈", "🥉", "4"];
+  const l = m.l.slice().sort((a, b) => b.p - a.p || a.rg - b.rg), med = ["🥇", "🥈", "🥉", "4", "5"];
+  const hL = l.length >= 5 ? 142 : 170, pas = hL + (l.length >= 5 ? 22 : 30), q = v => Math.round(v * hL / 170);   // v16.27 : à 5 pilotes, les lignes se resserrent
   l.forEach((x, i) => {
-    const y0 = 330 + i * 200;
-    g.fillStyle = "rgba(255,255,255,.06)"; g.beginPath(); g.roundRect ? g.roundRect(60, y0, W - 120, 170, 28) : g.rect(60, y0, W - 120, 170); g.fill();
-    g.fillStyle = reel(couleur(x.nom)); g.fillRect(60, y0, 14, 170);
-    txt(i < 3 ? med[i] : String(i + 1), 125, y0 + 105, 64, 800, "#FFFFFF", "center");
-    txt(x.nom.toUpperCase(), 190, y0 + 80, 58, 800, "#FFFFFF", "left", "'Saira Condensed', sans-serif");
+    const y0 = 330 + i * pas;
+    g.fillStyle = "rgba(255,255,255,.06)"; g.beginPath(); g.roundRect ? g.roundRect(60, y0, W - 120, hL, 28) : g.rect(60, y0, W - 120, hL); g.fill();
+    g.fillStyle = reel(couleur(x.nom)); g.fillRect(60, y0, 14, hL);
+    txt(i < 3 ? med[i] : String(i + 1), 125, y0 + q(105), 64, 800, "#FFFFFF", "center");
+    txt(x.nom.toUpperCase(), 190, y0 + q(80), 58, 800, "#FFFFFF", "left", "'Saira Condensed', sans-serif");
     const d = []; if (x.carte && !x.carte.invalide) { const cd = carteDef(x.carte.id); d.push((cd ? cd.ico : "🃏") + (x.carte.gain > 0 ? "+" : "") + x.carte.gain); }
     if (x.bonus) d.push("🎯+" + x.bonus); if (x.prono && x.prono.pts) d.push("🔮+" + x.prono.pts); if (x.equipe) d.push("🤝+1"); if (x.serie) d.push("🔥+1"); if (x.defi) d.push("🏁+1"); if (x.vainq) d.push("🇬🇧+2"); if (x.mult > 1) d.push("×2"); if (x.rival) d.push("😈+3"); if (x.regul !== undefined) d.push("🛡️+3");
-    txt((x.r >= 0 ? "+" : "") + (x.r * 100).toFixed(1).replace(".", ",") + " % ce mois" + (d.length ? "   " + d.join("  ") : ""), 190, y0 + 135, 32, 500, "#A9B1BD");
-    txt("+" + x.p, W - 110, y0 + 100, 76, 800, reel(col("--accent-ink")), "right", "'JetBrains Mono', monospace");
-    txt("pts", W - 110, y0 + 140, 26, 600, "#7A8391", "right", "'JetBrains Mono', monospace");
+    txt((x.r >= 0 ? "+" : "") + (x.r * 100).toFixed(1).replace(".", ",") + " % ce mois" + (d.length ? "   " + d.join("  ") : ""), 190, y0 + q(135), 32, 500, "#A9B1BD");
+    txt("+" + x.p, W - 110, y0 + q(100), 76, 800, reel(col("--accent-ink")), "right", "'JetBrains Mono', monospace");
+    txt("pts", W - 110, y0 + q(140), 26, 600, "#7A8391", "right", "'JetBrains Mono', monospace");
   });
   const cl = Object.keys(m.cumul).sort((a, b) => m.cumul[b] - m.cumul[a]);
-  txt("Championnat : " + cl.map((n, i) => (i + 1) + ". " + n + " " + m.cumul[n]).join("   "), W / 2, 1200, 32, 600, "#EDF0F4", "center");
+  { const t = "Championnat : " + cl.map((n, i) => (i + 1) + ". " + n + " " + m.cumul[n]).join("   "); g.font = "600 32px Saira, sans-serif"; const lw = g.measureText(t).width, tz = lw > W - 90 ? Math.floor(32 * (W - 90) / lw) : 32;   // v16.27 : rétrécit si trop long (5 pilotes)
+    txt(t, W / 2, 1200, tz, 600, "#EDF0F4", "center"); }
   txt("theoperion.github.io/00_VS_Portefeuille", W / 2, 1290, 26, 500, "#7A8391", "center");
   const blob = await new Promise(res => cv.toBlob(res, "image/png")); if (!blob) { toast("Image impossible à créer."); return; }
   const nomF = "versus-" + m.k + ".png", fichier = window.File ? new File([blob], nomF, { type: "image/png" }) : null;
@@ -673,7 +675,7 @@ function brancherGP(v, y) {
   // V16.17 : un seul départ — après la bande-annonce (qui finit sur les 5 feux), la course part sans refaire les feux
   const finCourse = () => { if (et.k && !et.avenir && et.k > +(stock.get(cleVu) || 0)) stock.set(cleVu, String(et.k)); bullesGP(y, i); commenter(y, i, -1); };
   const jouer = feux => { const f = feux !== false && i >= 1 && api.type === "3d", d = api.type === "3d" ? 6400 : 3000; commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0); api.jouer(mc.depart, mc.arrivee, d, finCourse, f); };
-  const apresBA = () => jouer(false);
+  const apresBA = () => { if (GP_INST && GP_INST.api === api && document.body.contains(GP_INST.boite)) jouer(false); };   // v16.27 : piste reconstruite entre-temps : on ne lance rien
   if (GP_REJOUER && i > 0 && !et.avenir) { GP_REJOUER = false; setTimeout(jouer, 150); }
   else if (!et.avenir && et.k && et.k > vu && i > 0) { api.placer(mc.depart); if (!BA_OUVERTE) setTimeout(() => { if (!BA_OUVERTE) bandeAnnonce(y, i, apresBA); }, 300); }
   else { if (!api.enCours()) api.placer(mc.arrivee); const kBA = et.k || 0, cleBA = "versus.baVu." + y; if (et.avenir && kBA && kBA > +(stock.get(cleBA) || 0)) { stock.set(cleBA, String(kBA)); setTimeout(() => bandeAnnonce(y, i, null), 400); } }
