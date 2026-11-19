@@ -24,7 +24,7 @@
 #lancer{position:fixed;inset:0;z-index:9;display:grid;place-items:center;background:#000;border:0;color:#fff;font:800 22px/1.3 "Saira",sans-serif;letter-spacing:.2em}
 #lancer small{display:block;font:400 13px/1.4 "Saira",sans-serif;letter-spacing:.1em;color:#A9B1BD;margin-top:8px}
 .flash{position:fixed;inset:0;background:#fff;opacity:0;z-index:4;pointer-events:none}.flash.on{animation:fl .35s ease-out}
-@keyframes fl{from{opacity:.85}to{opacity:0}}.flash.doux.on{animation:fld .18s ease-out}@keyframes fld{from{opacity:.3}to{opacity:0}}
+@keyframes fl{from{opacity:.85}to{opacity:0}}.fond.flou{filter:blur(14px) brightness(.38) saturate(.6);transition:none}.flash.doux.on{animation:fld .18s ease-out}@keyframes fld{from{opacity:.3}to{opacity:0}}
 </style></head><body>
 <div id="scene"><div class="fond" id="f1"></div><div class="fond" id="f2"></div><div class="voile"></div><div class="txt" id="txt"></div></div>
 <div class="flash" id="flash"></div><div class="bande h"></div><div class="bande b"></div>
@@ -45,18 +45,10 @@ const LONG = [
   [2400, null, "", "Ils se sont trompés.", "s", "t"],
   [2800, "pilotes", "", "4 pilotes.", "", "b"],
   [3200, "cinq", "", "Et bientôt… un 5ᵉ sur la piste.", "s", "t"],
-  [1200, "silverstone", "JANVIER", "12 univers.", "", "to"],
-  [900, "djeddah", "FÉVRIER", "", "", "t"],
-  [900, "melbourne", "MARS", "", "", "t"],
-  [900, "suzuka", "AVRIL", "", "", "t"],
-  [900, "miami", "MAI", "", "", "t"],
-  [900, "montreal", "JUIN", "", "", "t"],
-  [1100, "bahrein", "JUILLET", "", "", "t"],
-  [1100, "spa", "AOÛT", "", "", "t"],
-  [1100, "lasvegas", "SEPTEMBRE", "", "", "t"],
-  [900, "singapour", "OCTOBRE", "", "", "t"],
-  [900, "interlagos", "NOVEMBRE", "", "", "t"],
-  [2000, "monza", "DÉCEMBRE", "Une seule finale.", "", "b"],
+  [1800, "silverstone", "JANVIER", "12 univers.", "", "to"],
+  [300, "djeddah", "", "", "flou", "t"], [300, "melbourne", "", "", "flou", "t"], [300, "suzuka", "", "", "flou", "t"], [300, "miami", "", "", "flou", "t"], [300, "montreal", "", "", "flou", "t"],
+  [300, "bahrein", "", "", "flou", "t"], [300, "spa", "", "", "flou", "t"], [300, "lasvegas", "", "", "flou", "t"], [300, "singapour", "", "", "flou", "t"], [300, "interlagos", "", "", "flou", "t"],
+  [2600, "monza", "", "Le reste ? Patience.<br>Révélé fin décembre.", "s flou", "b"],
   [2200, null, "", "🏆 La Coupe a volé en éclats.", "s", "t"],
   [2400, null, "", "🗝️ Un objet est caché sur chaque circuit…", "s", "t"],
   [2200, null, "", "👤 Mon portrait : dès samedi\u00a011\u00a0h", "s", "t"],
@@ -67,10 +59,9 @@ const COURT = [
   [2200, null, "", "Ils pensaient juste épargner.", "s", "h"],
   [2000, "pilotes", "", "4 pilotes.", "", "b"],
   [2400, "cinq", "", "Et bientôt… un 5ᵉ.", "s", "t"],
-  [500, "silverstone", "", "", "", "to"], [450, "djeddah", "", "", "", "t"], [450, "melbourne", "", "", "", "t"], [450, "suzuka", "", "", "", "t"],
-  [450, "miami", "", "", "", "t"], [450, "montreal", "", "", "", "t"], [450, "bahrein", "", "", "", "t"], [450, "spa", "", "", "", "t"],
-  [450, "lasvegas", "", "", "", "t"], [450, "singapour", "", "", "", "t"], [450, "interlagos", "", "", "", "t"],
-  [1700, "monza", "", "12 univers. Un seul champion.", "", "b"],
+  [1400, "silverstone", "JANVIER", "", "", "to"],
+  [300, "djeddah", "", "", "flou", "t"], [300, "melbourne", "", "", "flou", "t"], [300, "suzuka", "", "", "flou", "t"], [300, "miami", "", "", "flou", "t"], [300, "montreal", "", "", "flou", "t"], [300, "bahrein", "", "", "flou", "t"], [300, "spa", "", "", "flou", "t"], [300, "lasvegas", "", "", "flou", "t"], [300, "singapour", "", "", "flou", "t"], [300, "interlagos", "", "", "flou", "t"],
+  [1700, "monza", "", "12 univers. Le reste ? Patience.", "flou", "b"],
   [1800, "abudhabi", "", "🔥 1ᵉʳ\u00a0décembre : le tour de\u00a0chauffe", "s", "t"],
   [1800, null, "", "Le 1ᵉʳ janvier, tout compte.", "", "r"],
   [4200, "demain", "", "", "", "B"]];
@@ -110,14 +101,15 @@ function plan(i) {
   if (i >= PLANS.length) return; const [d, id, mois, t, st] = PLANS[i], txt = document.getElementById("txt");
   const f = document.getElementById(alt ? "f1" : "f2"), autre = document.getElementById(alt ? "f2" : "f1"); alt = 1 - alt;
   const img = id && id !== "pilotes" && id !== "fin" && id !== "demain" ? carte(id) : null;
+  const flou = (st || "").indexOf("flou") >= 0; f.classList.toggle("flou", flou);
   if (img) { f.style.backgroundImage = 'url("' + img + '")'; f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); autre.classList.remove("on"); } else { f.classList.remove("on"); autre.classList.remove("on"); }
   if (id === "pilotes") txt.innerHTML = '<div class="l on">' + t + '</div><div class="pilotes">' + NOMS.map((n, k) => '<i style="color:' + COUL[k] + ';background:' + COUL[k] + '22;animation-delay:' + (.3 + k * .35) + 's" class="on">' + n + "</i>").join("") + "</div>";
   else if (id === "cinq") txt.innerHTML = '<div class="l on ' + st + '">' + t + '</div><div class="pilotes">' + NOMS.map((n, k) => '<i style="color:' + COUL[k] + ';background:' + COUL[k] + '22;opacity:.35">' + n + "</i>").join("") + '<i class="on cinq" style="color:#B4E33D;background:#B4E33D22;animation-delay:.5s">?</i></div>';
   else if (id === "fin") txt.innerHTML = '<div class="l on titre">VERSUS</div><div class="l on date" style="animation-delay:.6s">🏆 Le Podium · Saison 1 · 2027</div><div class="l on s" style="animation-delay:1.2s">1<sup>er</sup> décembre : le tour de chauffe.<br>1<sup>er</sup> janvier : le départ.</div><a class="go on" style="animation-delay:2s" href="./#trophees">Ouvrir l’onglet Podium 🏁</a>';
   else if (id === "demain") txt.innerHTML = '<div class="l on titre" style="font-size:clamp(56px,19vw,120px)">Demain.</div><div class="l on date" style="animation-delay:1.4s">Onglet 🏆 Podium<br>samedi 9 h</div>';
   else txt.innerHTML = (mois ? '<span class="mois">' + mois + "</span>" : "") + (t ? '<div class="l on ' + st + '">' + t + "</div>" : img && mois ? '<div class="l on gp">' + GP[id] + "</div>" : "") + (img && t && mois ? '<div class="l on gp sous" style="animation-delay:.25s">' + GP[id] + "</div>" : "");
-  document.getElementById("scene").classList.toggle("carte", !!img);
-  if (img || id === "pilotes" || id === "cinq" || id === "fin" || id === "demain") { const fl = document.getElementById("flash"); fl.classList.remove("on"); fl.classList.toggle("doux", !!img && d < 1500); void fl.offsetWidth; fl.classList.add("on"); }
+  document.getElementById("scene").classList.toggle("carte", !!img && !flou);
+  if ((img && !flou) || id === "pilotes" || id === "cinq" || id === "fin" || id === "demain") { const fl = document.getElementById("flash"); fl.classList.remove("on"); fl.classList.toggle("doux", !!img && d < 1500); void fl.offsetWidth; fl.classList.add("on"); }
   setTimeout(() => plan(i + 1), d);
 }
 /** pour la vidéo : la même partition rendue hors ligne, renvoyée en WAV (base64) */
