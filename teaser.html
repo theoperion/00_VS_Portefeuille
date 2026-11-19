@@ -9,7 +9,7 @@
 #scene.carte .voile{background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.05) 35%,rgba(0,0,0,.25) 55%,rgba(0,0,0,.88) 80%)}
 #scene.carte{place-items:end center}#scene.carte .txt{padding-bottom:calc(11vh + 26px)}
 @media (orientation:portrait){.fond.on{animation-name:pan}}@keyframes pan{from{transform:scale(1.04);background-position:38% 50%}to{transform:scale(1.14);background-position:62% 50%}}
-.l.gp{font-size:clamp(24px,7.4vw,40px)}.l.gp.sous{font:700 clamp(15px,4.4vw,20px)/1.3 "Saira",sans-serif;letter-spacing:.06em;color:#F7CF55;margin-top:10px;text-transform:none}
+.l.gp.on{animation-duration:.25s}.l.gp{font-size:clamp(24px,7.4vw,40px)}.l.gp.sous{font:700 clamp(15px,4.4vw,20px)/1.3 "Saira",sans-serif;letter-spacing:.06em;color:#F7CF55;margin-top:10px;text-transform:none}
 .txt{position:relative;z-index:3;text-align:center;padding:0 22px;width:100%;max-width:560px;display:grid;justify-items:center}
 .l{opacity:0;font-size:clamp(26px,8vw,44px);line-height:1.05;font-weight:800;text-transform:uppercase;letter-spacing:.02em;text-shadow:0 0 18px rgba(0,0,0,.9)}
 .l.on{animation:inl .5s cubic-bezier(.2,.8,.2,1) both}.l.s{font:italic 400 clamp(22px,6.4vw,32px)/1.25 Georgia,serif;text-transform:none}
@@ -24,7 +24,7 @@
 #lancer{position:fixed;inset:0;z-index:9;display:grid;place-items:center;background:#000;border:0;color:#fff;font:800 22px/1.3 "Saira",sans-serif;letter-spacing:.2em}
 #lancer small{display:block;font:400 13px/1.4 "Saira",sans-serif;letter-spacing:.1em;color:#A9B1BD;margin-top:8px}
 .flash{position:fixed;inset:0;background:#fff;opacity:0;z-index:4;pointer-events:none}.flash.on{animation:fl .35s ease-out}
-@keyframes fl{from{opacity:.85}to{opacity:0}}
+@keyframes fl{from{opacity:.85}to{opacity:0}}.flash.doux.on{animation:fld .18s ease-out}@keyframes fld{from{opacity:.3}to{opacity:0}}
 </style></head><body>
 <div id="scene"><div class="fond" id="f1"></div><div class="fond" id="f2"></div><div class="voile"></div><div class="txt" id="txt"></div></div>
 <div class="flash" id="flash"></div><div class="bande h"></div><div class="bande b"></div>
@@ -51,9 +51,9 @@ const LONG = [
   [900, "suzuka", "AVRIL", "", "", "t"],
   [900, "miami", "MAI", "", "", "t"],
   [900, "montreal", "JUIN", "", "", "t"],
-  [900, "bahrein", "JUILLET", "", "", "t"],
-  [900, "spa", "AOÛT", "", "", "t"],
-  [900, "lasvegas", "SEPTEMBRE", "", "", "t"],
+  [1100, "bahrein", "JUILLET", "", "", "t"],
+  [1100, "spa", "AOÛT", "", "", "t"],
+  [1100, "lasvegas", "SEPTEMBRE", "", "", "t"],
   [900, "singapour", "OCTOBRE", "", "", "t"],
   [900, "interlagos", "NOVEMBRE", "", "", "t"],
   [2000, "monza", "DÉCEMBRE", "Une seule finale.", "", "b"],
@@ -117,7 +117,7 @@ function plan(i) {
   else if (id === "demain") txt.innerHTML = '<div class="l on titre" style="font-size:clamp(56px,19vw,120px)">Demain.</div><div class="l on date" style="animation-delay:1.4s">Onglet 🏆 Podium<br>samedi 9 h</div>';
   else txt.innerHTML = (mois ? '<span class="mois">' + mois + "</span>" : "") + (t ? '<div class="l on ' + st + '">' + t + "</div>" : img && mois ? '<div class="l on gp">' + GP[id] + "</div>" : "") + (img && t && mois ? '<div class="l on gp sous" style="animation-delay:.25s">' + GP[id] + "</div>" : "");
   document.getElementById("scene").classList.toggle("carte", !!img);
-  if (img || id === "pilotes" || id === "cinq" || id === "fin" || id === "demain") { const fl = document.getElementById("flash"); fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on"); }
+  if (img || id === "pilotes" || id === "cinq" || id === "fin" || id === "demain") { const fl = document.getElementById("flash"); fl.classList.remove("on"); fl.classList.toggle("doux", !!img && d < 1500); void fl.offsetWidth; fl.classList.add("on"); }
   setTimeout(() => plan(i + 1), d);
 }
 /** pour la vidéo : la même partition rendue hors ligne, renvoyée en WAV (base64) */
