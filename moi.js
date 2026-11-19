@@ -2468,6 +2468,11 @@ function analyser() {
   if (m === null) bloque = true;
   else if (isNaN(m)) { bloque = true; msg.push(["err", "Montant illisible."]); }
   else if (F.type !== "Ajustement espèces" && m <= 0) { bloque = true; msg.push(["err", "Le montant doit être positif : c'est le type qui donne le sens."]); }
+  /* v16.78 · relevé d'assurance-vie : un montant bien plus petit que la ligne ressemble au prix d'UNE part (ex. 99,96 € au lieu de ~15 850 €) */
+  if (F.type === "Relevé" && F.actif && m > 0 && M && M.histoAV) {
+    let ref = 0; (M.histoAV.ordres || []).forEach(o => { if (o[2] !== F.actif) return; if (o[1] === "Relevé" && o[3] > ref * .2) ref = o[3]; else if (o[1] === "Achat") ref += o[3]; else if (o[1] === "Vente") ref -= o[3]; });
+    if (ref > 0 && m < ref * .2) msg.push(["warn", "Ce montant ressemble au prix d'une seule part. Sur ton relevé, prends la VALEUR TOTALE de la ligne (environ " + Math.round(ref).toLocaleString("fr-FR") + " €)."]);
+  }
   if (AVEC_QTE.includes(F.type)) {
     if (q === null) bloque = true;
     else if (isNaN(q) || q <= 0) { bloque = true; msg.push(["err", "La quantité doit être supérieure à 0."]); }
