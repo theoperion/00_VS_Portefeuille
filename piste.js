@@ -58,7 +58,7 @@
   const F_CHAMPI = (() => { const P = [[150, 218], [210, 218], [206, 150], [292, 146], [326, 122]]; for (let a = 0.05; a < PI - .02; a += PI / 9) P.push([180 + 150 * Math.cos(a), 122 - 100 * Math.sin(a)]); P.push([34, 122], [68, 146], [154, 150]); return polyg(P, 12); })();
   const TRACES = {
     abudhabi: { pts: polyg([[40, 204], [320, 204], [320, 40], [234, 40], [234, 126], [186, 126], [186, 40], [40, 40]], 16), decor: "garage", heure: "crepuscule", peint: "garage", reperes: [] },
-    bahrein: { pts: etoile([[3, .14, .3], [5, .09, 1], [7, .05, 2.2]], 42), decor: "lucioles", heure: "crepuscule", amb: "lucioles", peint: "foret", reperes: [] },
+    bahrein: { pts: etoile([[3, .14, .3], [5, .09, 1], [7, .05, 2.2]], 42), decor: "lucioles", heure: "crepuscule", amb: "lucioles", peint: "ratatouille", reperes: [] },   // V16.47 : janvier = Ratatouille (la Forêt garde son peintre pour plus tard)
     djeddah: { pts: polyg([[40, 210], [320, 210], [320, 70], [290, 70], [290, 32], [240, 32], [240, 70], [200, 70], [200, 32], [150, 32], [150, 70], [110, 70], [110, 32], [60, 32], [60, 70], [40, 70]], 12), decor: "chateau", heure: "nuit", peint: "chateau", reperes: [{ t: "chateau", y: 145 }] },
     melbourne: { pts: F_LAC, decor: "solstice", heure: "jour", eau: [resserrer(F_LAC, .3)], peint: "terrier", reperes: [] },
     suzuka: { pts: etoile([[5, .17, .6]], 45), decor: "solstice", heure: "jour", peint: "anneau", reperes: [{ t: "mai" }] },   // avril · Seigneur des Anneaux
@@ -3622,7 +3622,224 @@
     const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#o2-mer)"/>`, "#3A1A5A", .1); RES.portraits = PORTR; return RES;
   }
 
-  const PEINTS_NUIT = { arene: peindreArene2, etoiles: peindreEtoiles4, anneau: peindreAnneau4, chocolat: peindreChocolat3, terrier: peindreTerrier3, chateau: peindreChateau5, plateau: peindrePlateau, envers: peindreEnvers3, multivers: peindreMultivers, dunes: peindreDunes4, titans: peindreTitans4, odyssee: peindreOdyssee2 };   // v16.34 : 10 cartes refaites au niveau de l'Arène
+  function peindreRatatouille(T, Z, def) {
+    // UNE scène, vue en coupe : sous les toits de zinc de Paris, la grande cuisine d'un restaurant, la nuit.
+    // Une seule lumière (le fourneau, la cocotte, le petit chef rat) ; tout autour, la nuit bleue.
+    // La course part du passe, longe la salle du critique, roule SUR les toits, puis plonge vers la voûte des égouts.
+    const K = kit(T, def, 1911, "rt-"), { s, a, r, f, W, H } = K, an = x => K.anime ? x : "", INK = `stroke="#1A1220" stroke-width="2"`, INK1 = `stroke="#1A1220" stroke-width="1.4"`;
+    const G = (x, y, sc, rot) => `<g transform="translate(${f(x)} ${f(y)})${sc && sc !== 1 ? ` scale(${sc})` : ""}${rot ? ` rotate(${f(rot)})` : ""}">`;
+    const trait = (d, c, l) => `<path d="${d}" fill="none" stroke="#1A1220" stroke-width="${l + 3.4}" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${c}" stroke-width="${l}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const LX = 600, LY = 410, SILL = 250, SOL = 462;   // la source de lumière ; le plafond de la cuisine ; la ligne du sol
+    // ---- 0. dégradés
+    s.push(`<linearGradient id="rt-ciel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060A22"/><stop offset=".55" stop-color="#121B46"/><stop offset="1" stop-color="#25336A"/></linearGradient>`);
+    s.push(`<radialGradient id="rt-mur" gradientUnits="userSpaceOnUse" cx="${LX}" cy="370" r="560"><stop offset="0" stop-color="#FFE7B0"/><stop offset=".22" stop-color="#F2C27A"/><stop offset=".48" stop-color="#A86A48"/><stop offset=".75" stop-color="#3E2E4A"/><stop offset="1" stop-color="#161830"/></radialGradient>`);
+    s.push(`<radialGradient id="rt-sol" gradientUnits="userSpaceOnUse" cx="${LX}" cy="${SOL}" r="560"><stop offset="0" stop-color="#C08A50"/><stop offset=".35" stop-color="#6A4434"/><stop offset=".7" stop-color="#2A1E2C"/><stop offset="1" stop-color="#10101E"/></radialGradient>`);
+    s.push(`<linearGradient id="rt-zinc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A8AB8"/><stop offset=".25" stop-color="#4A5888"/><stop offset="1" stop-color="#262E58"/></linearGradient>`);
+    s.push(`<radialGradient id="rt-cave" gradientUnits="userSpaceOnUse" cx="905" cy="640" r="260"><stop offset="0" stop-color="#8A5434"/><stop offset=".5" stop-color="#4A2E2A"/><stop offset="1" stop-color="#160F1C"/></radialGradient>`);
+    s.push(`<linearGradient id="rt-cuivre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7A3A1A"/><stop offset=".35" stop-color="#E8955A"/><stop offset=".5" stop-color="#FFE0B0"/><stop offset=".7" stop-color="#C46A32"/><stop offset="1" stop-color="#5A2A14"/></linearGradient>`);
+    s.push(`<radialGradient id="rt-poele" cx="38%" cy="34%" r="70%"><stop offset="0" stop-color="#FFE6B8"/><stop offset=".3" stop-color="#F0A060"/><stop offset=".7" stop-color="#B05A28"/><stop offset="1" stop-color="#5A2812"/></radialGradient>`);
+    s.push(`<linearGradient id="rt-cone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE6A8" stop-opacity=".6"/><stop offset="1" stop-color="#FFE6A8" stop-opacity="0"/></linearGradient>`);
+    s.push(`<radialGradient id="rt-lune" r="50%"><stop offset="0" stop-color="#FFF8E0"/><stop offset=".6" stop-color="#F4E6B8"/><stop offset="1" stop-color="#D8C890"/></radialGradient>`);
+    s.push(`<radialGradient id="rt-route" gradientUnits="userSpaceOnUse" cx="${LX}" cy="${LY + 60}" r="640"><stop offset="0" stop-color="#8A6248"/><stop offset=".38" stop-color="#6A5058"/><stop offset=".62" stop-color="#465478"/><stop offset="1" stop-color="#36426E"/></radialGradient>`);
+    s.push(`<radialGradient id="rt-flaque" gradientUnits="userSpaceOnUse" cx="${LX}" cy="${LY}" r="430"><stop offset="0" stop-color="#FFD27A" stop-opacity=".75"/><stop offset=".35" stop-color="#FFAA4A" stop-opacity=".32"/><stop offset=".7" stop-color="#FF8A3A" stop-opacity=".08"/><stop offset="1" stop-color="#FF8A3A" stop-opacity="0"/></radialGradient>`);
+    s.push(`<radialGradient id="rt-nuit" gradientUnits="userSpaceOnUse" cx="${LX}" cy="${LY}" r="760"><stop offset=".4" stop-color="#0A1238" stop-opacity="0"/><stop offset=".8" stop-color="#0A1238" stop-opacity=".35"/><stop offset="1" stop-color="#050A24" stop-opacity=".6"/></radialGradient>`);
+    s.push(`<pattern id="rt-carreau" width="32" height="16" patternUnits="userSpaceOnUse"><path d="M0 .5H32M.5 0V16" stroke="#5A3A24" stroke-width="1.1" opacity=".22"/></pattern>`);
+    s.push(`<pattern id="rt-brique" width="30" height="15" patternUnits="userSpaceOnUse"><path d="M0 .5H30M0 7.5H30M7 .5V7.5M22 7.5V15" stroke="#1A0E10" stroke-width="1.3" opacity=".45"/></pattern>`);
+
+    // ---- 1. la nuit : lune, étoiles, et au loin (à droite) la Seine, ses ponts et la tour de fer
+    for (let k = 0; k < 40; k++) { const x = r() * W, y = r() * 120; s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(.6 + r() * 1.1)}" fill="#FFF6DA" opacity="${(.3 + r() * .6).toFixed(2)}"/>`); }
+    K.halo(56, 44, 90, "#BFD0FF", .3); s.push(`<circle cx="56" cy="44" r="26" fill="url(#rt-lune)"/><circle cx="48" cy="38" r="4.5" fill="#D8C890" opacity=".6"/><circle cx="64" cy="52" r="3" fill="#D8C890" opacity=".5"/>`);
+    { // la tour de fer, lointaine et discrète (la lumière principale reste la cuisine)
+      const TX = 846, TB = 178, TH = 122;
+      s.push(`<path d="M${TX - 34} ${TB}Q${TX - 22} ${TB - 30} ${TX - 12} ${TB - 50}L${TX - 6} ${TB - 88}L${TX - 1.5} ${TB - TH}H${TX + 1.5}L${TX + 6} ${TB - 88}L${TX + 12} ${TB - 50}Q${TX + 22} ${TB - 30} ${TX + 34} ${TB}H${TX + 22}Q${TX + 10} ${TB - 22} ${TX} ${TB - 22}Q${TX - 10} ${TB - 22} ${TX - 22} ${TB}Z" fill="#9A6A48" stroke="#2A1A2A" stroke-width="1"/>`);
+      s.push(`<rect x="${TX - 16}" y="${TB - 52}" width="32" height="4" fill="#E8B060" opacity=".8"/><rect x="${TX - 8}" y="${TB - 90}" width="16" height="3" fill="#E8B060" opacity=".8"/><circle cx="${TX}" cy="${TB - TH - 1}" r="2.4" fill="#FFF0C0"/>`);
+      K.halo(TX, TB - 60, 70, "#FFB04A", .14);
+      for (let k = 0; k < 6; k++) { const t = r(), y = TB - 4 - t * (TH - 8), w = 30 * (1 - t) ** 1.6 + 1.5, x = TX + (r() - .5) * 2 * w; a.push(`<circle cx="${f(x)}" cy="${f(y)}" r="1.4" fill="#FFFFFF" opacity="${K.anime ? 0 : .7}">${an(`<animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.1;.2;1" dur="${(1.2 + r() * 1.4).toFixed(2)}s" begin="${(r() * 2).toFixed(2)}s" repeatCount="indefinite"/>`)}</circle>`); }
+      // l'autre rive
+      let d = "M620 182"; for (let x = 620; x <= W + 20; x += 16 + r() * 20) { const h = 8 + r() * 20; d += `V${f(180 - h)}H${f(x + 14)}`; } d += `V200H620Z`; s.push(`<path d="${d}" fill="#1A2458"/>`);
+      for (let k = 0; k < 12; k++) { const x = 630 + r() * (W - 630), y = 164 + r() * 12; s.push(`<rect x="${f(x)}" y="${f(y)}" width="2.4" height="3" fill="#FFD27A" opacity="${(.35 + r() * .5).toFixed(2)}"/>`); }
+      // la Seine, qui reflète la lumière
+      s.push(`<rect x="620" y="182" width="${W - 620}" height="40" fill="#13204E"/><path d="M620 183H${W}" stroke="#4A60A0" stroke-width="1.5"/>`);
+      // un pont à arches franches
+      { const x = 960, w = 120, n = 4; let d2 = `M${x - w} 182H${x + w}V196`; const p = 2 * w / n; for (let k = n - 1; k >= 0; k--) d2 += `L${f(x - w + (k + 1) * p - 4)} 196A${f(p / 2 - 4)} 12 0 0 0 ${f(x - w + k * p + 4)} 196`; d2 += `L${x - w} 196Z`;
+        s.push(`<path d="${d2}" fill="#3A4478" stroke="#141A3A" stroke-width="1.5"/><path d="M${x - w} 182H${x + w}" stroke="#8A96C8" stroke-width="2"/>`); for (let k = 0; k <= n; k++) s.push(`<circle cx="${f(x - w + k * p)}" cy="179" r="2.2" fill="#FFE2A0"/>`); }
+      a.push(`<path d="M${TX - 22} 192h44M${TX - 14} 198h28M720 204h50M680 210h30" stroke="#FFC060" stroke-width="2.2" opacity=".6">${an(`<animate attributeName="opacity" values=".6;.2;.6" dur="2.6s" repeatCount="indefinite"/>`)}</path>`);
+    }
+
+    // ---- 2. les toits de zinc : la piste roule sur leur faîtage (on suit le tracé, 16 px plus bas)
+    { const pts = []; for (let i = 214; i <= 476; i += 3) { const [x, y] = K.P[i]; pts.push([x, Math.min(SILL - 8, y + 15)]); }
+      const ridge = "M" + pts.map(p => f(p[0]) + " " + f(p[1])).join("L");
+      s.push(`<path d="${ridge}L${f(pts[pts.length - 1][0] + 60)} ${f(pts[pts.length - 1][1] + 10)}L${W} ${SILL - 4}V${SILL + 6}H0V${SILL - 4}L${f(pts[0][0] - 40)} ${SILL - 4}Z" fill="url(#rt-zinc)" stroke="#121838" stroke-width="2"/>`);
+      // les bandes de zinc (joints debout) qui accrochent la lune
+      let d = ""; for (let x = 80; x < W; x += 22) { const i = pts.reduce((b, p, k) => Math.abs(p[0] - x) < Math.abs(pts[b][0] - x) ? k : b, 0), y0 = pts[i][1] + 6; if (y0 > SILL - 16 || Math.abs(pts[i][0] - x) > 20) continue; d += `M${x} ${f(y0)}V${SILL - 6}`; }
+      s.push(`<path d="${d}" stroke="#9AAAD8" stroke-width="1.4" opacity=".35"/>`);
+      // la lumière de la cuisine remonte et dore le zinc au-dessus du fourneau
+      s.push(`<path d="${ridge}L${f(pts[pts.length - 1][0] + 60)} ${f(pts[pts.length - 1][1] + 10)}L${W} ${SILL - 4}V${SILL + 6}H0V${SILL - 4}L${f(pts[0][0] - 40)} ${SILL - 4}Z" fill="url(#rt-flaque)" opacity=".7"/>`);
+      // lucarnes éclairées
+      [[430, 160], [590, 150], [760, 228], [900, 240]].forEach(([x, y]) => { if (y > SILL - 14) return; const lit = Math.abs(x - LX) < 260;
+        s.push(`<path d="M${x - 14} ${y + 26}V${y + 6}L${x} ${y - 8}L${x + 14} ${y + 6}V${y + 26}Z" fill="#3A4678" stroke="#121838" stroke-width="1.8"/><rect x="${x - 8}" y="${y + 8}" width="16" height="18" fill="${lit ? "#FFC860" : "#5A6A9A"}" stroke="#121838" stroke-width="1"/><path d="M${x} ${y + 8}V${y + 26}" stroke="#121838" stroke-width="1"/>`); if (lit) K.halo(x, y + 16, 34, "#FFC860", .5); });
+      // grandes cheminées en silhouette, plantées le long du faîtage (la piste passe entre leurs pots)
+      [[244, 1], [352, 1.15], [676, .95], [800, 1.1], [930, 1]].forEach(([x, sc]) => { const i = pts.reduce((b, p, k) => Math.abs(p[0] - x) < Math.abs(pts[b][0] - x) ? k : b, 0), y = pts[i][1] + 4, w = 34 * sc, h = 58 * sc;
+        s.push(`<rect x="${f(x - w / 2)}" y="${f(y - h)}" width="${f(w)}" height="${f(h)}" fill="#3A2232" stroke="#120C18" stroke-width="2"/><rect x="${f(x - w / 2 - 4)}" y="${f(y - h - 6)}" width="${f(w + 8)}" height="8" fill="#2A1A26" stroke="#120C18" stroke-width="1.6"/>`
+          + [-.28, .02, .3].map(u => `<rect x="${f(x + u * w - 4)}" y="${f(y - h - 18)}" width="8" height="13" rx="1.5" fill="#B8603A" stroke="#120C18" stroke-width="1.4"/>`).join("") + `<path d="M${f(x - w / 2 + 3)} ${f(y - h + 3)}V${f(y - 2)}" stroke="#7A8AC0" stroke-width="2" opacity=".5"/>`); });
+      // la poutre coupée : on voit la cuisine en dessous
+      s.push(`<rect x="0" y="${SILL - 4}" width="${W}" height="12" fill="#2A1A20" stroke="#120C18" stroke-width="1.5"/><path d="M0 ${SILL + 8}H${W}" stroke="#FFC870" stroke-width="2" opacity=".55"/>`);
+    }
+
+    // ---- 3. la cuisine : mur carrelé, soubassement de bois, sol en damier, tous éclairés par le fourneau
+    s.push(`<rect x="0" y="${SILL + 8}" width="${W}" height="${SOL - SILL - 8}" fill="url(#rt-mur)"/><rect x="0" y="${SILL + 8}" width="${W}" height="${SOL - SILL - 8}" fill="url(#rt-carreau)"/>`);
+    s.push(`<rect x="0" y="392" width="${W}" height="${SOL - 392}" fill="#3A1E18" opacity=".55"/><path d="M0 392H${W}" stroke="#C88A50" stroke-width="3" opacity=".7"/>`);
+    { let d = ""; for (let x = 20; x < W; x += 64) d += `M${x} 400h50v54h-50z`; s.push(`<path d="${d}" fill="none" stroke="#1A0E10" stroke-width="1.6" opacity=".35"/>`); }
+    s.push(`<rect x="0" y="${SOL}" width="${W}" height="${H - SOL}" fill="url(#rt-sol)"/>`);
+    { const VX = LX, VY = 300, rows = [SOL, 500, 556, 640, 760], col = 66; let d = "";
+      for (let j = 0; j < rows.length - 1; j++) for (let k = -14; k < 14; k++) { if ((j + k) % 2) continue; const y0 = rows[j], y1 = rows[j + 1], X = (kk, y) => VX + kk * col * (y - VY) / (SOL - VY);
+        d += `M${f(X(k, y0))} ${y0}L${f(X(k + 1, y0))} ${y0}L${f(X(k + 1, y1))} ${y1}L${f(X(k, y1))} ${y1}Z`; }
+      s.push(`<path d="${d}" fill="#0E0A14" opacity=".42"/><rect x="0" y="${SOL - 3}" width="${W}" height="7" fill="#2A1A20"/>`);
+    }
+
+    // ---- 4. sous le plancher, en coupe : la grande bouche d'égout où la colonie fait la fête
+    const VC = { x: 905, y: 770, rx: 205, ry: 268 };
+    { const { x: cx, y: cy, rx, ry } = VC;
+      s.push(`<ellipse cx="${cx}" cy="${cy}" rx="${rx + 32}" ry="${ry + 32}" fill="#7A4A3A"/><ellipse cx="${cx}" cy="${cy}" rx="${rx + 32}" ry="${ry + 32}" fill="url(#rt-brique)"/>`);
+      let d = ""; for (let k = 0; k <= 16; k++) { const t = PI + k / 16 * PI; d += `M${f(cx + Math.cos(t) * rx)} ${f(cy + Math.sin(t) * ry)}L${f(cx + Math.cos(t) * (rx + 32))} ${f(cy + Math.sin(t) * (ry + 32))}`; }
+      s.push(`<path d="${d}" stroke="#2A1A1E" stroke-width="2.4"/><ellipse cx="${cx}" cy="${cy}" rx="${rx + 32}" ry="${ry + 32}" fill="none" stroke="#1A1220" stroke-width="3"/>`);
+      s.push(`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#rt-cave)" stroke="#1A1220" stroke-width="3"/>`);
+      K.halo(cx + 10, 640, 220, "#FFB060", .5);
+      // l'eau qui coule au fond, et le quai où l'on danse
+      s.push(`<path d="M${cx - rx} 700H${W}V${H}H${cx - rx}Z" fill="#0E1A30"/><path d="M${cx - rx + 20} 708H${W}" stroke="#FFC070" stroke-width="2" opacity=".45"/><path d="M${cx - rx + 4} 696H${W}" stroke="#4A2A24" stroke-width="7"/>`);
+      // deux lanternes suspendues
+      [[1004, 530], [878, 556]].forEach(([x, y], k) => { s.push(`<path d="M${x} ${y - 40}V${y - 14}" stroke="#1A1220" stroke-width="2"/><path d="M${x - 10} ${y - 14}H${x + 10}L${x + 7} ${y + 12}H${x - 7}Z" fill="#FFD27A" ${INK1}/><path d="M${x - 12} ${y - 16}H${x + 12}M${x - 9} ${y + 13}H${x + 9}" stroke="#1A1220" stroke-width="3"/>`);
+        K.halo(x, y, 70, "#FFC060", .7); a.push(`<circle cx="${x}" cy="${y - 1}" r="6" fill="#FFF6D0" opacity=".9">${an(`<animate attributeName="opacity" values=".8;.5;.9;.8" keyTimes="0;.3;.6;1" dur="${(2.2 + k * .7).toFixed(1)}s" repeatCount="indefinite"/>`)}</circle>`); });
+      // la guirlande d'ampoules, plus vive
+      const g0 = [742, 600], g1 = [1076, 548], gc = [920, 668]; s.push(`<path d="M${g0[0]} ${g0[1]}Q${gc[0]} ${gc[1]} ${g1[0]} ${g1[1]}" fill="none" stroke="#1A1220" stroke-width="2"/>`);
+      for (let k = 1; k <= 9; k++) { const t = k / 10, x = (1 - t) ** 2 * g0[0] + 2 * t * (1 - t) * gc[0] + t * t * g1[0], y = (1 - t) ** 2 * g0[1] + 2 * t * (1 - t) * gc[1] + t * t * g1[1]; if (K.dT(x, y) < 18) continue;
+        K.halo(x, y + 5, 26, "#FFC060", .65); a.push(`<circle cx="${f(x)}" cy="${f(y + 5)}" r="5" fill="${["#FFE08A", "#FF8A5A", "#9AE0A0"][k % 3]}" stroke="#1A1220">${an(`<animate attributeName="opacity" values="1;.45;1" dur="${(1 + (k % 3) * .4).toFixed(1)}s" begin="${(k * .2).toFixed(1)}s" repeatCount="indefinite"/>`)}</circle>`); }
+      // le festin chapardé : une caisse renversée, la baguette, le raisin, des bouchons, des miettes
+      { let g = G(918, 694); g += `<ellipse cx="0" cy="2" rx="70" ry="8" fill="#000" opacity=".4"/><path d="M-50 0V-30H50V0Z" fill="#A8743A" ${INK}/><path d="M-50 -30H50" stroke="#1A1220" stroke-width="2"/><path d="M-50 -16H50M-24 -30V0M24 -30V0" stroke="#6A4420" stroke-width="2"/><path d="M-56 -32H56L50 -38H-50Z" fill="#E8E0D0" ${INK1}/><path d="M-56 -32L-60 -18L-48 -30M56 -32L62 -16L48 -30" fill="#E8E0D0" stroke="#1A1220" stroke-width="1"/>`;
+        g += `${G(-14, -46, 1, -12)}<path d="M-40 0Q-40 -10 -28 -10H30Q42 -10 42 0Q42 8 30 8H-28Q-40 8 -40 0Z" fill="#E0A050" ${INK1}/><path d="M-26 -6l8 8M-10 -7l8 8M6 -7l8 8M20 -6l8 8" stroke="#A86A28" stroke-width="2"/></g>`;
+        g += [[26, -48], [34, -46], [30, -40], [38, -40], [22, -40], [34, -34], [26, -33], [30, -27]].map(([x, y]) => `<circle cx="${x + 6}" cy="${y + 4}" r="4.6" fill="#8A3A8A" stroke="#1A1220" stroke-width="1"/>`).join("") + `<path d="M36 -48l4 -8" stroke="#3A6A2A" stroke-width="2"/>`;
+        g += `<rect x="-46" y="-46" width="8" height="12" rx="2" fill="#D8A868" ${INK1}/><rect x="-36" y="-44" width="8" height="10" rx="2" fill="#C89858" ${INK1}/><circle cx="-60" cy="-2" r="2" fill="#E0A050"/><circle cx="62" cy="-3" r="2.2" fill="#E0A050"/><circle cx="-70" cy="0" r="1.6" fill="#E8B060"/></g>`; s.push(g); }
+      // la colonie : 6 rats entiers, plus grands, qui dansent
+      const rat = (c, sc, pose, dir) => { const v = dir || 1, bras = pose === "haut" ? "M-8 -26L-18 -46M8 -26L18 -46" : pose === "verre" ? "M-8 -24L-16 -12M8 -26L16 -44" : "M-8 -24L-18 -34M8 -24L18 -14";
+        return `<g transform="scale(${v * sc} ${sc})"><path d="M8 -4Q30 0 28 -22" fill="none" stroke="#E8A0A8" stroke-width="2.4" stroke-linecap="round"/><path d="M-6 -2l-3 4h6M6 -2l3 4h-6" stroke="#E8A0A8" stroke-width="2" fill="none"/><path d="M-11 0Q-15 -26 -6 -36Q0 -40 6 -36Q15 -26 11 0Z" fill="${c}" ${INK1}/><ellipse cx="0" cy="-16" rx="6" ry="10" fill="#E8DCD8" opacity=".55"/>`
+          + `<circle cx="-9" cy="-50" r="6" fill="${c}" ${INK1}/><circle cx="-9" cy="-50" r="3.4" fill="#F0A8B4"/><circle cx="9" cy="-52" r="6.5" fill="${c}" ${INK1}/><circle cx="9" cy="-52" r="3.8" fill="#F0A8B4"/><path d="M-12 -42Q-12 -54 0 -54Q12 -54 12 -42Q8 -36 0 -34Q-8 -36 -12 -42Z" fill="${c}" ${INK1}/><path d="M-4 -38L-16 -36L-8 -32Z" fill="${c}" ${INK1}/><circle cx="-16" cy="-36" r="2.2" fill="#E87A8A"/><circle cx="-4" cy="-45" r="1.8" fill="#1A1220"/><circle cx="4" cy="-46" r="1.8" fill="#1A1220"/><path d="M-5 -40q3 2 6 0" stroke="#1A1220" stroke-width="1" fill="none"/>`
+          + `<path d="${bras}" stroke="#1A1220" stroke-width="5.4" stroke-linecap="round"/><path d="${bras}" stroke="${c}" stroke-width="3.4" stroke-linecap="round"/>${pose === "verre" ? `<path d="M13 -54h8l-2 9h-4z" fill="#FFF0C0" opacity=".9" stroke="#1A1220" stroke-width=".8"/>` : ""}</g>`; };
+      [[770, 692, 1.55, "haut", 1, "#8A8098"], [836, 694, 1.8, "verre", -1, "#9A8A7A"], [988, 692, 1.85, "haut", -1, "#7A809A"], [1032, 694, 1.22, "danse", 1, "#8A7A8A"], [918, 646, 1.2, "haut", 1, "#A09AAA"], [726, 696, 1.05, "danse", -1, "#A89A90"]].forEach(([x, y, sc, pose, dir, c], k) => {
+        a.push(`${G(x, y)}<g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;0 -8;0 0" dur="${(.5 + (k % 3) * .12).toFixed(2)}s" begin="${(k * .13).toFixed(2)}s" repeatCount="indefinite"/>`)}${rat(c, sc, pose, dir)}</g></g>`); });
+    }
+
+    // ---- 5. les casseroles de cuivre suspendues : elles renvoient la lueur dorée
+    { const y0 = 268; s.push(`<path d="M592 ${y0}H884" stroke="#1A1220" stroke-width="7" stroke-linecap="round"/><path d="M592 ${y0}H884" stroke="#C88A50" stroke-width="3.4" stroke-linecap="round"/>`);
+      [[618, 22, "p"], [672, 30, "c"], [736, 26, "p"], [800, 33, "c"], [858, 21, "p"]].forEach(([x, R, t]) => { const yc = y0 + 22 + R + (t === "c" ? 18 : 0);
+        s.push(`<path d="M${x} ${y0}l-4 8h8z" fill="#1A1220"/>`);
+        if (t === "p") s.push(trait(`M${x} ${y0 + 8}V${yc - R}`, "#8A4A22", 5) + `<circle cx="${x}" cy="${yc}" r="${R}" fill="url(#rt-poele)" ${INK}/><circle cx="${x}" cy="${yc}" r="${R * .7}" fill="none" stroke="#5A2812" stroke-width="1.4" opacity=".6"/>`);
+        else s.push(trait(`M${x - R * .5} ${y0 + 8}L${x} ${yc - R + 4}L${x + R * .5} ${y0 + 8}`, "#5A2812", 2.4) + `<path d="M${x - R} ${yc - R + 6}H${x + R}V${yc + R * .5}Q${x + R} ${yc + R} ${x} ${yc + R}Q${x - R} ${yc + R} ${x - R} ${yc + R * .5}Z" fill="url(#rt-cuivre)" ${INK}/><path d="M${x - R - 3} ${yc - R + 6}H${x + R + 3}" stroke="#1A1220" stroke-width="5" stroke-linecap="round"/><path d="M${x - R - 3} ${yc - R + 6}H${x + R + 3}" stroke="#F0B070" stroke-width="2.4" stroke-linecap="round"/>`);
+        s.push(`<path d="M${f(x - R * .5)} ${f(yc - R * .2)}q${f(R * .2)} ${f(-R * .4)} ${f(R * .6)} ${f(-R * .5)}" stroke="#FFF4D8" stroke-width="3" fill="none" stroke-linecap="round" opacity=".85"/>`); });
+      a.push(`<path d="M664 330l6 -6M796 342l6 -6M612 306l5 -5" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" opacity="${K.anime ? 0 : .8}">${an(`<animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.08;.2;1" dur="3.4s" repeatCount="indefinite"/>`)}</path>`);
+    }
+
+    // ---- 6. le fourneau, ses flammes bleues, la grande cocotte de ratatouille
+    const CX = 668, CY = 404;
+    { s.push(`<path d="M582 ${SOL - 14}H754L760 ${SOL - 2}H576Z" fill="#4A4048" ${INK}/><rect x="578" y="${SOL - 2}" width="180" height="${532 - SOL + 2}" rx="4" fill="#24202A" ${INK}/><path d="M582 ${SOL + 8}H754" stroke="#E8B060" stroke-width="3"/>`);
+      [[594, 652], [676, 742]].forEach(([x0, x1]) => s.push(`<rect x="${x0}" y="${SOL + 18}" width="${x1 - x0}" height="44" rx="5" fill="#16121A" stroke="#7A6A60" stroke-width="1.5"/><rect x="${x0 + 8}" y="${SOL + 24}" width="${x1 - x0 - 16}" height="6" rx="3" fill="#E8B060"/>`));
+      K.halo(CX, SOL - 16, 120, "#4AA8FF", .5);
+      a.push(`<g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;0 -3;0 0" dur=".35s" repeatCount="indefinite"/>`)}${[-100, -90, -80, 80, 90, 100].map(u => `<path d="M${CX + u - 6} ${SOL - 14}Q${CX + u} ${SOL - 50} ${CX + u + 6} ${SOL - 14}Z" fill="#4AB0FF" stroke="#1A3A8A" stroke-width="1"/><path d="M${CX + u - 2.5} ${SOL - 14}Q${CX + u} ${SOL - 32} ${CX + u + 2.5} ${SOL - 14}Z" fill="#E8F6FF"/>`).join("")}</g>`);
+      s.push(`<ellipse cx="${CX}" cy="${CY + 46}" rx="84" ry="8" fill="#000" opacity=".35"/><path d="M${CX - 74} ${CY}V${CY + 26}Q${CX} ${CY + 52} ${CX + 74} ${CY + 26}V${CY}Z" fill="url(#rt-cuivre)" ${INK}/><path d="M${CX - 74} ${CY + 6}h-16M${CX + 74} ${CY + 6}h16" stroke="#3A2214" stroke-width="7" stroke-linecap="round"/>`);
+      s.push(`<ellipse cx="${CX}" cy="${CY}" rx="74" ry="15" fill="#C8582A" ${INK}/><ellipse cx="${CX}" cy="${CY + 2}" rx="64" ry="10" fill="#D8442A"/>`);
+      [[-44, "#F2C030"], [-22, "#3A8A3A"], [2, "#8A2A6A"], [26, "#F2C030"], [48, "#3A8A3A"]].forEach(([u, c]) => s.push(`<ellipse cx="${CX + u}" cy="${CY + 2}" rx="8" ry="3.6" fill="${c}"/>`));
+      for (let q = 0; q < 3; q++) a.push(`<path d="M${CX + [-44, 8, 50][q]} ${CY - 8}q-10 -20 0 -38q10 -18 0 -36" fill="none" stroke="#FFF6DA" stroke-width="6" stroke-linecap="round" opacity="${K.anime ? 0 : .4}">${an(`<animate attributeName="opacity" values="0;.55;0" dur="3s" begin="${q}s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 6;0 -14" dur="3s" begin="${q}s" repeatCount="indefinite"/>`)}</path>`);
+    }
+
+    // ---- 7. le critique austère, à sa table, devant LA ratatouille en éventail ; sa bulle-souvenir reste visible
+    { const TX = 360, TY = 480;
+      s.push(`<ellipse cx="${TX}" cy="540" rx="96" ry="10" fill="#000" opacity=".35"/><path d="M${TX - 90} ${TY}L${TX - 98} 532Q${TX - 74} 540 ${TX - 49} 532Q${TX - 24} 540 ${TX} 532Q${TX + 24} 540 ${TX + 49} 532Q${TX + 74} 540 ${TX + 98} 532L${TX + 90} ${TY}Z" fill="#F4EEE2" ${INK}/><path d="M${TX + 30} ${TY + 8}L${TX + 42} 530M${TX + 62} ${TY + 6}L${TX + 76} 528M${TX - 60} ${TY + 8}L${TX - 70} 530" stroke="#D8CDB8" stroke-width="3"/><ellipse cx="${TX}" cy="${TY}" rx="90" ry="24" fill="#FFFBF2" ${INK}/>`);
+      // l'assiette : rondelles rouges, jaunes, vertes et violettes en spirale (vue presque d'en haut)
+      { let p = G(TX - 4, TY - 8) + `<ellipse rx="62" ry="30" fill="#FFFFFF" ${INK}/><ellipse rx="48" ry="23" fill="#F2EAD8" stroke="#D8CDB8" stroke-width="1.4"/><ellipse rx="46" ry="21" fill="#B8341E" opacity=".7"/>`;
+        const cols = ["#D8341E", "#F2C030", "#3A8A3A", "#7A2A6A"]; let k = 0;
+        [[38, 15, 20], [26, 10, 14], [13, 5, 8]].forEach(([rx, ry, n]) => { for (let j = 0; j < n; j++) { const t = j / n * TAU; p += `<ellipse cx="${f(Math.cos(t) * rx)}" cy="${f(Math.sin(t) * ry)}" rx="7.4" ry="5" transform="rotate(${f(t * 57.3 + 90)} ${f(Math.cos(t) * rx)} ${f(Math.sin(t) * ry)})" fill="${cols[k++ % 4]}" stroke="#1A1220" stroke-width=".7"/>`; } });
+        p += `<path d="M-6 -2q4 -6 10 -2" stroke="#3A8A3A" stroke-width="2.4" fill="none"/><ellipse cx="-18" cy="-8" rx="10" ry="3" fill="#FFF" opacity=".35"/></g>`; s.push(p); }
+      s.push(`<rect x="${TX + 62}" y="${TY - 38}" width="7" height="30" fill="#F8F0D8" ${INK1}/><path d="M${TX + 57} ${TY - 8}h17" stroke="#C8A050" stroke-width="3"/>`); K.halo(TX + 65, TY - 44, 46, "#FFD27A", .8); K.halo(TX - 20, TY - 70, 150, "#FFC870", .35);
+      a.push(`<path d="M${TX + 65} ${TY - 39}q-5 -8 0 -16q5 8 0 16Z" fill="#FFC040" stroke="#C86020" stroke-width=".8">${an(`<animateTransform attributeName="transform" type="scale" values="1 1;1 1.12;1 1" dur=".7s" repeatCount="indefinite" additive="sum"/>`)}</path>`);
+      // le critique : grand, sec, anguleux, dans une chaise haute à dossier ; la fourchette levée, figé de surprise
+      let c = G(250, 536, .95);
+      c += `<path d="M-52 0V-214Q-52 -236 -36 -238Q-20 -236 -20 -214V-96H34V-84H-20V0" fill="none" stroke="#1A1220" stroke-width="12" stroke-linejoin="round"/><path d="M-52 0V-214Q-52 -236 -36 -238Q-20 -236 -20 -214V-96H34V-84H-20V0" fill="none" stroke="#5A2E22" stroke-width="8" stroke-linejoin="round"/><path d="M30 -90V0" stroke="#1A1220" stroke-width="9"/><path d="M30 -90V0" stroke="#5A2E22" stroke-width="5"/>`;
+      c += `<path d="M-30 -98L-24 -204Q-18 -222 0 -222Q16 -220 18 -204L22 -98Z" fill="#2A2238" ${INK}/><path d="M14 -204Q20 -150 20 -100" stroke="#C88A60" stroke-width="3" opacity=".55" fill="none"/><path d="M-30 -100H52V-84H-30Z" fill="#2A2238" ${INK}/><path d="M42 -86L48 -6H62" fill="none" stroke="#1A1220" stroke-width="14" stroke-linejoin="round"/><path d="M42 -86L48 -6H62" fill="none" stroke="#2A2238" stroke-width="10" stroke-linejoin="round"/>`;
+      c += `<path d="M-6 -222L4 -200L12 -222Z" fill="#F4F0E8" ${INK1}/><rect x="-4" y="-236" width="12" height="16" fill="#E0CCB8" ${INK1}/>`;
+      c += `<path d="M-16 -232Q-22 -270 0 -282Q20 -284 22 -262L34 -252L22 -246Q22 -232 8 -228Q-6 -226 -16 -232Z" fill="#E6D3C0" ${INK}/><path d="M18 -262Q24 -250 20 -238" stroke="#FFC880" stroke-width="2.4" fill="none" opacity=".8"/>`;
+      c += `<path d="M-18 -250Q-24 -286 2 -288Q20 -288 22 -270Q8 -276 -6 -270Q-14 -264 -14 -244Z" fill="#1A1420"/><circle cx="12" cy="-263" r="3.4" fill="#FFF" stroke="#1A1220" stroke-width="1.2"/><circle cx="13" cy="-263" r="1.6" fill="#1A1220"/><path d="M6 -271l12 -3" stroke="#1A1220" stroke-width="1.6"/><ellipse cx="17" cy="-240" rx="3" ry="2.4" fill="#5A2A2A"/>`;
+      c += trait("M2 -200L46 -176L40 -226", "#2A2238", 9) + `<circle cx="40" cy="-228" r="5.5" fill="#E6D3C0" ${INK1}/><path d="M42 -232L48 -254M46 -254l-2 -8M48 -254l1 -8M50 -254l3 -7" stroke="#C8C8D0" stroke-width="2.2" stroke-linecap="round"/>`;
+      c += `</g>`; s.push(c);
+      // la bulle-souvenir (sépia, toujours visible) : la petite cuisine de campagne, la maman, le garçonnet et son bol
+      const BX = 336, BY = 180, BR = 62;
+      let b = `<circle cx="272" cy="248" r="6" fill="#F4E0B8" stroke="#6A4A2A" stroke-width="2"/><circle cx="286" cy="232" r="9" fill="#F4E0B8" stroke="#6A4A2A" stroke-width="2"/>`;
+      b += `<circle cx="${BX}" cy="${BY}" r="${BR + 4}" fill="#FFE6B0" opacity=".35"/><circle cx="${BX}" cy="${BY}" r="${BR}" fill="#F2DDB0" stroke="#6A4A2A" stroke-width="4"/><circle cx="${BX}" cy="${BY}" r="${BR - 7}" fill="none" stroke="#C8A070" stroke-width="1.5"/>`;
+      b += `${G(BX, BY, .9)}<rect x="-46" y="-44" width="30" height="28" fill="#CFE0EC" stroke="#6A4A2A" stroke-width="2"/><path d="M-46 -30h30M-31 -44v28" stroke="#6A4A2A" stroke-width="2"/><path d="M-62 30H62V40H-62Z" fill="#9A6A3A"/>`
+        + `<path d="M18 30V-4Q18 -18 30 -18Q42 -18 42 -4V30Z" fill="#B86A40" stroke="#4A2A14" stroke-width="2"/><circle cx="30" cy="-26" r="9" fill="#EAC8A2" stroke="#4A2A14" stroke-width="2"/><path d="M22 -32Q30 -42 38 -32" fill="#6A3A1A"/>`
+        + `<path d="M-10 30H16V14H-10Z" fill="#7A4A24" stroke="#4A2A14" stroke-width="1.5"/><ellipse cx="2" cy="12" rx="12" ry="3.4" fill="#FFF" stroke="#4A2A14" stroke-width="1.5"/><path d="M-4 8q-3 -8 0 -14M6 8q3 -8 0 -14" stroke="#A88060" stroke-width="2" fill="none"/>`
+        + `<path d="M-36 30V8Q-36 0 -28 0Q-20 0 -20 8V30Z" fill="#6A8AB0" stroke="#4A2A14" stroke-width="2"/><circle cx="-28" cy="-8" r="8" fill="#EAC8A2" stroke="#4A2A14" stroke-width="2"/><path d="M-20 8L-10 6" stroke="#4A2A14" stroke-width="3" stroke-linecap="round"/></g>`;
+      s.push(b);
+      a.push(`<circle cx="${BX}" cy="${BY}" r="${BR + 3}" fill="none" stroke="#FFE6B0" stroke-width="3" opacity="${K.anime ? 0 : .5}">${an(`<animate attributeName="opacity" values="0;.7;0" dur="3.2s" repeatCount="indefinite"/>`)}</circle>`);
+    }
+
+    // ---- 8. LE HÉROS : l'apprenti (de dos) mené comme une marionnette par le petit chef rat agrippé à ses cheveux
+    { const AX = 512, AY = 620, SC = .88;
+      K.halo(AX + 30, 300, 300, "#FFE8B0", .55);
+      let h = G(AX, AY, SC);
+      // bras droit tendu vers la cocotte, la louche qui remue
+      h += `<g>${an(`<animateTransform attributeName="transform" type="rotate" values="0 46 -212;-4 46 -212;0 46 -212" dur="1.6s" repeatCount="indefinite"/>`)}` + trait("M42 -212L100 -196L146 -236", "#F4F1EA", 24) + `<path d="M98 -200L132 -226" stroke="#FFD890" stroke-width="5" opacity=".8" stroke-linecap="round"/><path d="M146 -236L194 -230" stroke="#1A1220" stroke-width="8" stroke-linecap="round"/><path d="M146 -236L194 -230" stroke="#C8904A" stroke-width="4.6" stroke-linecap="round"/><circle cx="148" cy="-238" r="11" fill="#EBC2A0" ${INK}/></g>`;
+      // le corps (veste blanche, de dos) : côté fourneau doré, côté nuit bleuté
+      h += `<path d="M-46 0L-56 -196Q-54 -228 -18 -234L26 -234Q52 -228 54 -196L46 0Z" fill="#F4F1EA" ${INK}/><path d="M-46 0L-56 -196Q-54 -228 -18 -234L-6 -234Q-20 -200 -14 -120L-12 0Z" fill="#7A80A8" opacity=".55"/><path d="M48 -6L54 -196Q52 -224 30 -232" fill="none" stroke="#FFD27A" stroke-width="7" opacity=".9"/><path d="M20 -226Q36 -160 34 -20" fill="none" stroke="#FFE8B8" stroke-width="10" opacity=".35"/>`;
+      // plis de la veste, cordon du tablier, torchon à la ceinture
+      h += `<path d="M-30 -200Q-24 -160 -32 -128M28 -200Q22 -168 30 -132M2 -190Q6 -160 0 -130" fill="none" stroke="#C0B8C8" stroke-width="2.4"/><path d="M-52 -122Q0 -112 52 -122" stroke="#D8D2C8" stroke-width="7" fill="none"/><path d="M0 -118Q-22 -136 -24 -114Q-20 -102 0 -118Q22 -136 24 -114Q20 -102 0 -118Z" fill="#ECE6DA" ${INK1}/><path d="M-2 -116L-10 -90M2 -116L12 -92" stroke="#ECE6DA" stroke-width="5"/>`;
+      h += `${G(-44, -120, 1, 8)}<path d="M-8 0H12L14 44H-10Z" fill="#DCE8F4" ${INK1}/><path d="M-9 12H13M-9.5 22H13.5M-10 32H14" stroke="#4C7ACC" stroke-width="3"/></g>`;
+      h += `<path d="M-22 -234Q2 -224 28 -234L26 -244Q2 -236 -20 -244Z" fill="#FFFFFF" ${INK1}/><rect x="-10" y="-258" width="24" height="18" fill="#E2B896" ${INK1}/>`;
+      // la tête (de dos, cheveux roux en bataille)
+      h += `<ellipse cx="4" cy="-284" rx="32" ry="36" fill="#8E3A1C" ${INK}/><path d="M22 -306Q36 -290 30 -262" stroke="#E0783A" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M26 -262Q38 -270 36 -294L30 -296Q32 -272 20 -262Z" fill="#EBC2A0" ${INK1}/><ellipse cx="33" cy="-282" rx="6" ry="10" fill="#EBC2A0" ${INK1}/>`;
+      h += `<path d="M-26 -300L-36 -296L-28 -310L-34 -318L-20 -316M-10 -262L-14 -248L-4 -256L0 -246L8 -258" fill="#8E3A1C" stroke="#1A1220" stroke-width="1.6" stroke-linejoin="round"/>`;
+      // bras gauche levé, tiré par la mèche (marionnette) : il suit le geste du rat
+      h += `<g>${an(`<animateTransform attributeName="transform" type="rotate" values="0 -46 -212;-16 -46 -212;0 -46 -212" dur="1.6s" repeatCount="indefinite"/>`)}` + trait("M-46 -212L-100 -250L-96 -320", "#F4F1EA", 24) + `<path d="M-50 -222L-96 -254" stroke="#7A80A8" stroke-width="8" opacity=".5"/><circle cx="-96" cy="-326" r="12" fill="#EBC2A0" ${INK}/><path d="M-104 -334l-6 -10M-98 -338l-2 -12M-90 -338l3 -11M-85 -330l9 -6" stroke="#1A1220" stroke-width="7" stroke-linecap="round"/><path d="M-104 -334l-6 -10M-98 -338l-2 -12M-90 -338l3 -11M-85 -330l9 -6" stroke="#EBC2A0" stroke-width="4" stroke-linecap="round"/></g>`;
+      // le petit chef rat, de 3/4, agrippé aux cheveux : la patte gauche tire une mèche (=> le bras se lève)
+      h += `${G(4, -328, 1.38)}`;
+      h += `<path d="M14 -4C46 6 56 40 40 76" fill="none" stroke="#1A1220" stroke-width="8.4" stroke-linecap="round"/><path d="M14 -4C46 6 56 40 40 76" fill="none" stroke="#F0A8B4" stroke-width="5.4" stroke-linecap="round"/>`;
+      h += `<ellipse cx="-16" cy="2" rx="12" ry="5" fill="#F0A8B4" ${INK1}/><ellipse cx="16" cy="3" rx="12" ry="5" fill="#F0A8B4" ${INK1}/>`;
+      h += `<path d="M-28 -2C-36 -44 -18 -74 2 -76C24 -74 36 -44 28 -2C18 6 -18 6 -28 -2Z" fill="#8592A8" ${INK}/><ellipse cx="-4" cy="-30" rx="15" ry="22" fill="#D3D8E2"/><path d="M24 -60Q34 -36 28 -8" fill="none" stroke="#FFD890" stroke-width="4" opacity=".9" stroke-linecap="round"/><path d="M-26 -50Q-32 -30 -26 -6" fill="none" stroke="#4A5070" stroke-width="4" opacity=".5"/>`;
+      h += `<g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;-2 -9;0 0" dur="1.6s" repeatCount="indefinite"/>`)}` + trait("M-6 14Q-30 0 -38 -26", "#B0502A", 6) + trait("M-14 -54L-36 -30", "#8592A8", 8) + `<circle cx="-38" cy="-28" r="7.5" fill="#F0A8B4" ${INK1}/></g>`;
+      h += trait("M10 14Q26 4 28 -18", "#B0502A", 6) + trait("M14 -56L28 -22", "#8592A8", 8) + `<circle cx="28" cy="-20" r="7" fill="#F0A8B4" ${INK1}/>`;
+      h += `<circle cx="-26" cy="-112" r="15" fill="#8592A8" ${INK}/><circle cx="-26" cy="-112" r="9" fill="#F0A8B4"/><circle cx="20" cy="-116" r="17" fill="#8592A8" ${INK}/><circle cx="20" cy="-116" r="10.5" fill="#F0A8B4"/>`;
+      h += `<path d="M-26 -84C-30 -104 -14 -118 2 -116C22 -114 30 -98 24 -82C18 -70 -4 -68 -14 -72Z" fill="#8592A8" ${INK}/>`;
+      h += `<path d="M-14 -72Q-38 -74 -46 -86Q-40 -98 -24 -98Q-10 -96 -6 -84Z" fill="#AAB4C6" ${INK}/><ellipse cx="-44" cy="-89" rx="6.4" ry="5" fill="#F07A92" ${INK1}/><circle cx="-46" cy="-91" r="1.6" fill="#FFF" opacity=".8"/>`;
+      h += `<ellipse cx="-4" cy="-82" rx="6" ry="3.6" fill="#F08A9A" opacity=".55"/><path d="M-32 -79Q-24 -70 -16 -77Q-22 -75 -32 -79Z" fill="#7A2A3A" stroke="#1A1220" stroke-width="1.4"/>`;
+      h += `<path d="M-30 -78Q-24 -73 -18 -76" fill="none" stroke="#1A1220" stroke-width="1.8" stroke-linecap="round"/><path d="M-36 -84L-58 -90M-36 -82L-58 -80M-30 -84L-50 -96" stroke="#1A1220" stroke-width="1" opacity=".8"/>`;
+      h += `<ellipse cx="-14" cy="-98" rx="7.4" ry="9" fill="#FFFFFF" ${INK1}/><ellipse cx="6" cy="-100" rx="8" ry="9.6" fill="#FFFFFF" ${INK1}/><circle cx="-16" cy="-97" r="4.4" fill="#2A1A20"/><circle cx="3" cy="-99" r="4.8" fill="#2A1A20"/><circle cx="-14.5" cy="-99" r="1.7" fill="#FFF"/><circle cx="4.8" cy="-101.5" r="1.9" fill="#FFF"/>`;
+      h += `<path d="M-22 -110Q-14 -108 -8 -105M0 -108Q8 -112 14 -110" fill="none" stroke="#1A1220" stroke-width="2" stroke-linecap="round"/>`;
+      h += `${G(-2, -122, 1, 14)}<rect x="-20" y="-12" width="40" height="13" rx="3" fill="#FFFFFF" ${INK}/><path d="M-20 -10C-38 -16 -38 -44 -20 -44C-22 -64 6 -70 10 -52C22 -68 46 -52 30 -36C42 -30 36 -12 20 -10Z" fill="#FFFFFF" ${INK}/><path d="M-8 -12Q-10 -30 -4 -44M8 -12Q10 -30 14 -46" fill="none" stroke="#C8C8D8" stroke-width="1.6"/><path d="M22 -14Q36 -24 30 -40" stroke="#FFD890" stroke-width="3" fill="none"/></g>`;
+      h += `</g></g>`;
+      s.push(h); K.prendre(AX, AY - 220, 160);
+    }
+
+    // ---- 9. le passe arrondi (premier plan) : 4 assiettes sous 4 lampes chauffantes = les portraits des 4 pilotes
+    const PORTR = [];
+    { const xs = [240, 336, 432, 528], yA = x => 598 - Math.sin((x - 170) / 420 * PI) * 10, R = 35;
+      s.push(`<path d="M170 560Q380 524 590 560L584 644H176Z" fill="#4A2A1A" ${INK}/><path d="M164 556Q380 516 596 556L596 566Q380 528 164 566Z" fill="#C8C0B8" ${INK}/><path d="M176 572Q380 540 584 572" stroke="#FFC870" stroke-width="2" opacity=".6" fill="none"/>`);
+      xs.forEach((x, k) => { const c = COULEURS_J[k], y = yA(x); PORTR.push({ k, x, y: Math.round(y), r: R });
+        s.push(`<path d="M${x - 18} 520L${x - 48} ${f(y + 20)}H${x + 48}L${x + 18} 520Z" fill="url(#rt-cone)"/>`);
+        K.halo(x, 526, 48, "#FFE6A8", .75); s.push(`<path d="M${x} 500V508" stroke="#2A1A14" stroke-width="3"/><path d="M${x - 20} 522Q${x} 500 ${x + 20} 522Z" fill="#B86A32" ${INK1}/><ellipse cx="${x}" cy="522" rx="14" ry="3.4" fill="#FFF0B8"/>`);
+        s.push(`${G(x, y)}<ellipse cx="3" cy="${R + 6}" rx="${R + 6}" ry="6" fill="#000" opacity=".35"/><circle r="${R + 9}" fill="#FFFFFF" ${INK}/><circle r="${R + 9}" fill="none" stroke="#E8DCC8" stroke-width="3" stroke-dasharray="2 5"/><circle r="${R + 2.5}" fill="none" stroke="${c}" stroke-width="6"/><circle r="${R}" fill="#1A1420"/></g>`); });
+      s.push(`<path d="M200 500H560" stroke="#2A1A14" stroke-width="4"/>`);
+    }
+
+    // ---- 10. la piste : bitume chaud près de la cuisine, pavés bleus de nuit sur les toits
+    K.route([["#000", 40, ` opacity=".45" filter="url(#rt-flou)"`], ["#140E1C", 35], ["url(#rt-route)", 30], ["#000", 24, ` opacity=".16" stroke-dasharray="1.6 6"`]]);
+    s.push(`<path d="${K.piste}" fill="none" stroke="#FFD27A" stroke-width="1.8" stroke-dasharray="10 12" opacity=".8"/>`);
+    K.depart();
+    // UNE lumière par-dessus tout : la flaque d'or du fourneau, puis la nuit bleue sur les bords
+    s.push(`<rect width="${W}" height="${H}" fill="url(#rt-flaque)" style="mix-blend-mode:screen" opacity=".85"/>`);
+    s.push(`<rect width="${W}" height="${H}" fill="url(#rt-nuit)"/>`);
+    K.particules(8, "#FFE2A0", 1.6, "scintille");
+    const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#rt-ciel)"/>`, "#1A1440", .05); RES.portraits = PORTR; return RES;
+  }
+
+  const PEINTS_NUIT = { ratatouille: peindreRatatouille, arene: peindreArene2, etoiles: peindreEtoiles4, anneau: peindreAnneau4, chocolat: peindreChocolat3, terrier: peindreTerrier3, chateau: peindreChateau5, plateau: peindrePlateau, envers: peindreEnvers3, multivers: peindreMultivers, dunes: peindreDunes4, titans: peindreTitans4, odyssee: peindreOdyssee2 };   // v16.34 : 10 cartes refaites au niveau de l'Arène
   const PEINTS = { foret: { peindre: peindreForet3, deco: decorForet }, garage: { peindre: peindreGarage4, deco: decorGarage } };
   Object.keys(PEINTS_NUIT).forEach(k => { PEINTS[k] = { peindre: PEINTS_NUIT[k] }; });
 
@@ -4211,6 +4428,15 @@
       };
     },
     /* ---------- V16.38 · un événement pour chaque mois (attachés aux voitures : ils survivent aux nouvelles cartes) ---------- */
+    /* janvier 2027 · Ratatouille : à l'arrivée, le petit chef rat court jusqu'au vainqueur et lui pose sa toque */
+    ratatouille(x) { const O = outilsEv(x); let fait = false;
+      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("ratatouille"); const n = O.premier(c), p = O.dedans(O.voiture(n)); if (!p) return;
+        const rat = O.el('<g><ellipse cx="0" cy="22" rx="20" ry="5" fill="#000" opacity=".25"/><path d="M18 10C34 8 40 -2 34 -10" stroke="#8E7E86" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="0" cy="8" rx="20" ry="13" fill="#8C7F8A" stroke="#3A3036" stroke-width="2"/><circle cx="-16" cy="-2" r="10" fill="#8C7F8A" stroke="#3A3036" stroke-width="2"/><circle cx="-10" cy="-12" r="6" fill="#C9A3B3" stroke="#3A3036" stroke-width="1.6"/><circle cx="-22" cy="-4" r="2" fill="#1A1416"/><circle cx="-26" cy="0" r="2.6" fill="#E88AA6"/><path d="M-26 -1L-36 -4M-26 1L-36 2" stroke="#3A3036" stroke-width="1"/>' +
+          '<g class="toque" transform="translate(-14 -14)"><path d="M-9 0V-8C-14 -9 -14 -16 -9 -16C-8 -21 -2 -22 0 -19C2 -22 8 -21 9 -16C14 -16 14 -9 9 -8V0Z" fill="#FAFAF6" stroke="#9A9A92" stroke-width="1.4"/></g></g>');
+        const b = O.bulle(p[0], p[1] - 90, "Tout le monde peut cuisiner !", 17);
+        O.anim(1300, q => { const k = 1 - Math.pow(1 - q, 2); rat.setAttribute("transform", "translate(" + O.f(p[0] - 260 + k * 220) + " " + O.f(p[1] + 20 - Math.abs(Math.sin(q * 18)) * 14) + ") scale(1.7)"); }, () => {
+          O.anim(900, q => { const tq = rat.querySelector(".toque"); tq.setAttribute("transform", "translate(" + O.f(-14 + q * 38) + " " + O.f(-14 - Math.sin(q * Math.PI) * 50 - q * 6) + ") rotate(" + O.f(q * 360) + ")"); }, () => {
+            setTimeout(() => { O.anim(600, q => { rat.setAttribute("opacity", O.f(1 - q)); b.setAttribute("opacity", O.f(1 - q)); }, () => { rat.remove(); b.remove(); }); }, 1400); }); }); } }; },
     /* janvier · des ballons s'envolent de la voiture du vainqueur à l'arrivée */
     foret(x) { const O = outilsEv(x); let fait = false;
       return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("foret"); const p = O.dedans(O.voiture(O.premier(c))); if (!p) return;

@@ -161,7 +161,7 @@ function moisSpecial(y, k) {
 }
 /* ---------- V15.5 · Pièges des circuits : une petite règle propre à chaque circuit qui n'a pas de mois spécial ---------- */
 const PIEGES = {
-  bahrein: { id: "mirage", ico: "✨", nom: "Feux follets", txt: "Le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point." },
+  bahrein: { id: "mirage", ico: "🧐", nom: "Le critique gastronomique", txt: "Le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point." },
   djeddah: { id: "murs", ico: "🚪", nom: "Couloirs mouvants", txt: "À moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points)." },
   melbourne: { id: "chaos", ico: "🫖", nom: "Le thé du Chapelier", txt: "Pronostic « qui gagne le mois » : +2 si juste, mais −1 si faux." },
   suzuka: { id: "huit", ico: "🔁", nom: "Un aller et retour", txt: "Les places du mois se jouent sur deux mois cumulés : ce mois-ci et le précédent." },
@@ -374,6 +374,8 @@ const SKINS_TETE = {
   garage: c => ({ dessus: '<path d="M11.2 11.8C11 6.4 14.8 3.6 20 3.6S29 6.4 28.8 11.8Z" fill="' + c + '"/><path d="M11.2 11.8C11 6.4 14.8 3.6 20 3.6" fill="none" stroke="#fff" stroke-width=".5" opacity=".35"/><path d="M20 3.6V11.8" stroke="rgba(0,0,0,.2)" stroke-width=".5"/><path d="M9.6 11.4C13 13.6 27 13.6 30.4 11.4C30 13.8 27.6 14.6 20 14.6S10 13.8 9.6 11.4Z" fill="#1B1D22"/><circle cx="20" cy="8" r="2.1" fill="#fff"/><path d="M18.9 7.2L20 9.2 21.1 7.2" stroke="' + c + '" stroke-width=".7" fill="none"/>' }),
   // janvier · Forêt : couronne de feuilles et une luciole
   foret: () => ({ dessus: [[11.4, 10.6, -50], [13.6, 7.6, -30], [16.6, 5.8, -12], [20, 5.2, 0], [23.4, 5.8, 12], [26.4, 7.6, 30], [28.6, 10.6, 50]].map(([x, y, a], i) => '<ellipse cx="' + x + '" cy="' + y + '" rx="1.6" ry="3" fill="' + (i % 2 ? "#5FA83F" : "#7BC24E") + '" transform="rotate(' + a + " " + x + " " + y + ')"/>').join("") + '<path d="M11 11.6C14 6.6 26 6.6 29 11.6" stroke="#3E7A2A" stroke-width=".7" fill="none"/><circle cx="31" cy="5.4" r="2.6" fill="#FFE77A" opacity=".35"/><circle cx="31" cy="5.4" r="1.1" fill="#FFF6B0"/>' }),
+  // janvier 2027 · Ratatouille : la toque du petit chef
+  ratatouille: () => ({ dessus: '<path d="M12.6 11.6V7.4C9.6 6.8 9.4 2.6 12.6 2.2C13.4 -.6 17 -1 18.6 .8C20 -1.2 24 -1 25 1.2C28.6 .6 30.6 5 27.4 7.4V11.6Z" fill="#FAFAF6" stroke="#C9C9C2" stroke-width=".7"/><path d="M12.6 9.2H27.4V11.8H12.6Z" fill="#ECECE6"/><path d="M16 3.4C16.4 5.4 16.6 7 16.4 9M20 2.6C20.2 5 20.2 7 20 9M24 3.4C23.6 5.4 23.4 7 23.6 9" stroke="#D8D8D0" stroke-width=".6" fill="none"/>' }),
   // février · Château : chapeau de sorcier pointu étoilé
   chateau: () => ({ dessus: '<path d="M12.6 10.4C15 7 17.6 1.6 22.4 -1.4C24.6 -2.6 26.6 -1.4 25 .4C24.2 1.6 25.4 6 27.6 10.4Z" fill="#3B2F63"/><path d="M14 9.2C17 8.6 23 8.6 26.6 9.2L26.9 10.4C23 9.9 17 9.9 13.4 10.4Z" fill="#C9A23A"/><ellipse cx="20" cy="10.8" rx="11.2" ry="2" fill="#2C2350"/><path d="M19.6 4.6L20.1 5.8 21.4 5.9 20.4 6.7 20.7 8 19.6 7.3 18.5 8 18.8 6.7 17.8 5.9 19.1 5.8Z" fill="#F5D76E"/><circle cx="23.4" cy="2.6" r=".5" fill="#F5D76E"/>' }),
   // mars · Pays des merveilles : haut-de-forme du Chapelier (et sa carte 10/6)

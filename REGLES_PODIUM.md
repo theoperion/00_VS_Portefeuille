@@ -31,7 +31,7 @@ Chaque mois, les pilotes sont classés sur la **performance de leur portefeuille
 | 🎲 Pari | désigne un rival : +2 devant lui, −1 derrière, 0 à égalité |
 
 Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Rejouable, mais **pas deux mois de suite**.
-🗺️ **Atout du circuit** : chaque circuit préfère une carte ; jouée **et** gagnante → **+1** (si 2 pilotes ou plus marquent avec : personne). Turbo : Forêt aux lucioles, l'Arène, l'Odyssée · Aspiration : Château aux sortilèges, Mer de dunes, le Multivers · Pneus pluie : Pays des merveilles, Monde à l'envers, Mur des titans · Pari : la Chocolaterie, Bataille spatiale, Terre de l'Anneau.
+🗺️ **Atout du circuit** : chaque circuit préfère une carte ; jouée **et** gagnante → **+1** (si 2 pilotes ou plus marquent avec : personne). Turbo : Paris la nuit, l'Arène, l'Odyssée · Aspiration : Château aux sortilèges, Mer de dunes, le Multivers · Pneus pluie : Pays des merveilles, Monde à l'envers, Mur des titans · Pari : la Chocolaterie, Bataille spatiale, Terre de l'Anneau.
 
 ## ✨ Les bonus
 
@@ -63,7 +63,7 @@ Les mois sans règle spéciale, le circuit a son **piège**, une petite règle q
 
 | Mois | Circuit | Piège | Effet |
 |---|---|---|---|
-| Janv. | 🌲 Forêt aux lucioles | ✨ Feux follets | le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point |
+| Janv. | 🐀 Paris, la nuit (le petit chef) | 🧐 Le critique gastronomique | le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point |
 | Févr. | 🏰 Château aux sortilèges | 🚪 Couloirs mouvants | à moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points) |
 | Mars | 🎩 Pays des merveilles | 🫖 Le thé du Chapelier | pronostic « qui gagne » : +2 si juste, −1 si faux |
 | Avr. | 💍 Terre de l'Anneau | 🔁 Un aller et retour | les places se jouent sur deux mois cumulés (mars + avril) |

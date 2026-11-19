@@ -80,6 +80,7 @@ const SONS = (() => {
 
   /* ---------- les événements de course (un par carte) ---------- */
   const EV = {
+    ratatouille: () => { note([1800, 2600], .12, "sine", .12); note([2000, 3000], .1, "sine", .1, .16); souffle(1.2, 5000, .08, .2, .3, "highpass"); },
     anneau: () => { note([1568, 2093], .5, "sine", .2); note(2637, 1.2, "sine", .08, .1); },
     lave: () => { souffle(1.6, [300, 80], .5, 0, .05, "lowpass"); note([90, 40], 1.4, "sawtooth", .2); vibrer([80, 40, 160]); },
     bache: () => { souffle(.9, [400, 2400], .25, 0, .3); plus_tard(1800, () => { souffle(.6, [2400, 600], .3, 0, .02); klaxon("fanfare"); }); },

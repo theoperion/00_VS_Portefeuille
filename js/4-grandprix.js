@@ -106,7 +106,7 @@ function meteoMois(k) {
 /* ---------- Grands Prix : un circuit à thème par mois (le dessin 3D / 2D est dans piste.js) ---------- */
 const GPS = {
   abudhabi: { gp: "Le Garage des rêves", ville: "Garage des rêves", drap: "🛠️", fx: "garage", txt: "Là où toutes les voitures naissent, entre établis, projecteurs et odeur d'essence : le tour de chauffe." },
-  bahrein: { gp: "Grand Prix des Lucioles", ville: "Forêt aux lucioles", drap: "🌲", fx: "lucioles", atout: "turbo", piege: "pluie", txt: "Des milliers de lucioles éclairent la piste au crépuscule, entre des arbres qui murmurent." },
+  bahrein: { gp: "Grand Prix du Petit Chef", ville: "Paris, la nuit", drap: "🐀", fx: "lucioles", atout: "turbo", piege: "pluie", txt: "Des toits de Paris aux fourneaux du grand restaurant : tout le monde peut cuisiner, mais un seul gagne." },
   djeddah: { gp: "Grand Prix du Château", ville: "Château aux sortilèges", drap: "🏰", fx: "sortileges", atout: "aspiration", piege: "pari", txt: "Les escaliers changent de place et les couloirs se referment derrière toi." },
   melbourne: { gp: "Grand Prix des Merveilles", ville: "Pays des merveilles", drap: "🎩", fx: "petales", atout: "pluie", piege: "turbo", txt: "On tombe dans un terrier, on boit une fiole, on rétrécit… et le Chapelier sert le thé à toute heure." },
   suzuka: { gp: "Grand Prix de l'Anneau", ville: "Terre de l'Anneau", drap: "💍", fx: "lucioles", atout: "pari", piege: "aspiration", txt: "De la Comté à la montagne de feu : un seul anneau, une seule ligne d'arrivée." },
@@ -633,7 +633,7 @@ function commenter(y, i, duree, delai) {
 }
 /* ---------- 🎬 V16.12 · Bande-annonce avant la course : « Précédemment… », le circuit en grand, la grille, les feux ---------- */
 const BA_STYLE = {   // couleurs et police de chaque circuit (la bande-annonce prend le ton de l'univers)
-  abudhabi: ["#FF9A3D", "#FFE2B0", "sans"], bahrein: ["#B8FF8A", "#FFF2B0", "serif"], djeddah: ["#E2B93B", "#F3E6C4", "serif"], melbourne: ["#FF6FA8", "#FFFFFF", "serif"],
+  abudhabi: ["#FF9A3D", "#FFE2B0", "sans"], bahrein: ["#FFB547", "#FFE9C2", "serif"], djeddah: ["#E2B93B", "#F3E6C4", "serif"], melbourne: ["#FF6FA8", "#FFFFFF", "serif"],
   suzuka: ["#E2B93B", "#F4EAD2", "serif"], miami: ["#FF8A2A", "#F7CF55", "sans"], montreal: ["#FFE81F", "#FFFFFF", "sans"], silverstone: ["#FF8A3D", "#F6D29A", "large"],
   spa: ["#FF2A2A", "#FFFFFF", "serif"], monza: ["#E5484D", "#F7CF55", "sans"], singapour: ["#FF8FB8", "#F7CF55", "serif"], interlagos: ["#C8102E", "#F4F1EA", "sans"], lasvegas: ["#3ED6E0", "#FFFFFF", "serif"] };
 let BA_OUVERTE = null;
