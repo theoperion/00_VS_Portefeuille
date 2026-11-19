@@ -127,6 +127,15 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
   « Increvable » ; Némésis partagée ; records qu'on se vole fondés sur places/points (jamais %). Plan : v16.16 réparations (retour, course 2D figée, « vu »
   trop tôt, Passer), v16.17 fluidité (fonds peints en images WebP), v16.18 nettoyage licences, v16.19 Garage amélioré, puis 5 joueurs, banc de tests sur
   FAUSSES données (l'ancien repet.js utilisait une copie du vrai Sheet : supprimée), course en 3 tours, badges vague 1.
+- **Décisions de Théo du 19/11 (soir) sur le rapport du Conseil** : ticket d'or / Chocolaterie gardés tels quels ; Anneau sans pâleur (objet qui brille à partir
+  du 3e mois en tête, cible sur la voiture, badge pour qui fait tomber le leader) ; pierre « pronostic » remplacée par « gagner un Pari contre celui qui a le
+  plus de pierres », pierre manquante affichée ; manche close = tous les relevés + 48 h (avant : « provisoire », pas de cérémonie ni de vol) ; la course en
+  3 tours doit être prête pour la course du Garage (vue début janvier) ; Côté obscur fixé en juin ✅ v16.22 ; barème 5 ✅ ; **chauffe = bases seulement** ✅
+  v16.22 (pas d'écurie/trophées/badges avant janvier, pour recueillir l'avis des joueurs) ; **refonte des récompenses en ~20 familles AVANT janvier** ;
+  tirages des billets par graine fixée au 1er janvier (empreinte affichée, révélée le 31/12 ; la Réserve admin ne montre pas les tirages) ; vibration à
+  tester sur l'appli installée (Firefox Android) ; une cérémonie par ouverture (file : course, vol, pierre, billet) ; **icônes maison** à la place des
+  émojis (≈30) ; repeindre les cartes petit à petit ; storyboard à réajuster ; corriger tous les bugs du rapport. Gant : question en cours (gant de
+  l'infini gardé ou objet maison ?).
 - Bande-annonce de lancement : `teaser.html` (bouton dans le mail du 20/11, serveur V35) ; vidéo MP4 faite avec Playwright + bande-son synthétisée (numpy + ffmpeg).
 - Maquettes de travail : scratchpad `galerie/` (perdu avec la session ; les peintres sont dans `piste.js`, rendu via `tpeints.js`, `PEINT=clé`, `ANIM=1 ATT=2600`).
 
