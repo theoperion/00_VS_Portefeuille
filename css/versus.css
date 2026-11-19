@@ -1403,3 +1403,38 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .art-btns { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; } .art-btns .lien { font-size: 12.5px; }
 .art-alerte { margin-top: 10px; padding: 9px 11px; border-radius: 10px; background: rgba(155,107,255,.12); border: 1px solid rgba(155,107,255,.4); font-size: 12.5px; }
 .art-lien .art-mini { flex: 1; min-width: 70px; max-width: 150px; height: 26px; margin: 0 4px; color: var(--ink); overflow: visible; }
+
+/* ---------- 🎬 V16.12 · Bande-annonce ---------- */
+.ba { position: fixed; inset: 0; z-index: 2000; background: #000; color: #fff; overflow: hidden; display: grid; place-items: center; font-family: "Saira Condensed", "Saira", sans-serif; cursor: pointer; animation: ba-in .5s ease-out both; }
+.ba.fin { animation: ba-out .45s ease-in both; }
+.ba-fond { position: absolute; inset: 0; background: #111 0% 50%/cover no-repeat; animation: ba-zoom 13s linear both; filter: saturate(1.15); }
+.ba-voile { position: absolute; inset: 0; background: radial-gradient(130% 70% at 50% 50%, rgba(0,0,0,.55), rgba(0,0,0,.9)); animation: ba-voile 13s linear both; }
+.ba-bande { position: absolute; left: 0; right: 0; height: 13vh; background: #000; z-index: 3; animation: ba-bande .8s cubic-bezier(.2,.8,.2,1) both; }
+.ba-bande.h { top: 0; } .ba-bande.b { bottom: 0; --s: 1; }
+.ba-passer { position: absolute; right: 14px; bottom: calc(13vh + 12px); z-index: 4; background: rgba(0,0,0,.55); color: #fff; border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 7px 14px; font: 600 14px/1 "Saira", sans-serif; }
+.ba-sc { position: absolute; inset: 13vh 18px; display: grid; place-content: center; justify-items: center; text-align: center; gap: 10px; z-index: 2; opacity: 0; }
+.ba-s1 { animation: ba-sc 1.7s ease both; } .ba-s1 small { letter-spacing: .6em; font-size: 15px; color: var(--b2); } .ba-s1 b { font: italic 300 34px/1 Georgia, serif; }
+.ba-s2 { animation: ba-sc 2.9s ease 1.5s both; } .ba-s2 em, .ba-s4 em { font: italic 400 22px/1.2 Georgia, serif; color: var(--b2); opacity: .9; }
+.ba-r { opacity: 0; animation: ba-coupe .5s ease var(--d) both; font-size: 22px; } .ba-r span { display: block; font-size: 13px; letter-spacing: .25em; text-transform: uppercase; color: rgba(255,255,255,.7); } .ba-r b { font-size: 30px; text-transform: uppercase; } .ba-r i { font-style: normal; color: var(--b1); }
+.ba-s3 { animation: ba-sc 3.7s ease 4.3s both; } .ba-k { letter-spacing: .4em; text-transform: uppercase; font-size: 13px; color: var(--b2); }
+.ba-s3 h2 { margin: 0; font-size: clamp(36px, 11vw, 78px); line-height: .95; font-weight: 800; text-transform: uppercase; color: #fff; text-shadow: 0 0 24px var(--b1), 0 0 2px #000; animation: ba-titre 3.7s cubic-bezier(.15,.8,.2,1) 4.3s both; }
+.ba-drap { display: block; font-size: .6em; margin-bottom: 6px; }
+.ba-s3 p { margin: 0; font-size: 20px; letter-spacing: .18em; text-transform: uppercase; color: var(--b1); }
+.ba-s3 q { max-width: 30ch; text-wrap: balance; font: italic 400 17px/1.35 Georgia, serif; color: rgba(255,255,255,.88); quotes: "« " " »"; opacity: 0; animation: ba-coupe .8s ease 5.6s both; }
+.ba-serif .ba-s3 h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 700; text-transform: none; letter-spacing: .02em; }
+.ba-large .ba-s3 h2 { letter-spacing: .3em; font-weight: 300; }
+.ba-s4 { animation: ba-sc 2.5s ease 7.9s both; } .ba-gr { display: flex; gap: 12px; justify-content: center; }
+.ba-g { display: grid; justify-items: center; gap: 4px; opacity: 0; animation: ba-coupe .4s ease var(--d) both; } .ba-g .av { width: 54px; height: 54px; box-shadow: 0 0 0 3px var(--c); border-radius: 50%; } .ba-g small { font: 700 14px/1 "JetBrains Mono", monospace; }
+.ba-s4 p { margin: 4px 0 0; font-size: 20px; }
+.ba-s5 { animation: ba-sc 2.6s ease 10.2s both; } .ba-s5 b { font-size: 34px; text-transform: uppercase; opacity: 0; animation: ba-coupe .3s ease 12.1s both; color: var(--b1); }
+.ba-feux { display: flex; gap: 10px; padding: 10px 14px; background: #111; border-radius: 12px; box-shadow: 0 0 0 2px #333; }
+.ba-feux i { width: 26px; height: 26px; border-radius: 50%; background: #2A0A0A; animation: ba-feu 2.1s steps(1) var(--d) both; }
+@keyframes ba-in { from { opacity: 0; } } @keyframes ba-out { to { opacity: 0; } }
+@keyframes ba-zoom { from { background-position: 0% 50%; transform: scale(1.08); } to { background-position: 100% 50%; transform: scale(1.18); } }
+@keyframes ba-voile { 0%, 30% { opacity: 1; } 45% { opacity: .8; } 100% { opacity: .9; } }
+@keyframes ba-bande { from { transform: translateY(calc(-100% + var(--s, 0) * 200%)); } }
+@keyframes ba-sc { 0% { opacity: 0; } 12%, 85% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes ba-coupe { from { opacity: 0; transform: scale(1.12); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes ba-titre { from { transform: scale(1.6); letter-spacing: .3em; filter: blur(8px); } 30% { filter: none; } to { transform: scale(1); } }
+@keyframes ba-feu { 0% { background: #2A0A0A; } 1% { background: #FF2A2A; box-shadow: 0 0 18px #FF2A2A; } 100% { background: #FF2A2A; box-shadow: 0 0 18px #FF2A2A; } }
+@media (prefers-reduced-motion: reduce) { .ba *, .ba { animation-duration: .01s !important; animation-delay: 0s !important; } .ba-sc { opacity: 0 !important; } .ba-s3 { opacity: 1 !important; } }

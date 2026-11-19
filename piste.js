@@ -2642,6 +2642,11 @@
       if (o.mode !== "2d" && supporte()) { try { return monter3D(boite, o); } catch (e) { if (window.console) console.warn("Piste 3D indisponible :", e && e.message); } }
       return monter2D(boite, Object.assign({}, o, { mode: "2d" }));
     },
+    /** V16.12 · la carte peinte du circuit en image (fond de la bande-annonce), ou null */
+    carte(id) {
+      const def = TRACES[id], PE = def && def.peint ? PEINTS[def.peint] : null; if (!PE) return null;
+      try { const T = echantillonner(def), CP = CARTES_P[def.peint] || (CARTES_P[def.peint] = PE.peindre(T, zones(T), def)); return CP.url || (CP.url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(CP.fond)); } catch (e) { return null; }
+    },
     /** vignette SVG du tracé (calendrier, Stand) */
     vignette(id, coul) {
       const def = TRACES[id]; if (!def) return "";

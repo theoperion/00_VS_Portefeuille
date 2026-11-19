@@ -221,7 +221,7 @@ function htmlGrandPrix(y) {
     '<div class="gp-pops"></div>' + fxCircuit(G.fx) +
     '<div class="gp-hud"><span class="gp-tour">' + (et.k && !et.avenir ? "Manche <b>" + i + "</b>" : "Sur la grille") + "</span><span>" + met.ico + " " + esc(met.nom) + "</span></div>" +
     '<div class="gp-btns">' + (deux ? "" : '<button class="gp-vue" type="button" id="gp-cam-b" aria-label="Changer de caméra">' + CAMS[cam] + "</button>") +
-    '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en 3D" : "Passer en carte 2D") + '">' + (deux ? "🗺️ 2D" : "🧊 3D") + '</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">⛶</button></div>' +
+    '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en 3D" : "Passer en carte 2D") + '">' + (deux ? "🗺️ 2D" : "🧊 3D") + '</button><button class="gp-vue" type="button" id="gp-ba" aria-label="Bande-annonce">🎬</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">⛶</button></div>' +
     (spe ? '<div class="gp-spe">' + spe.ico + " " + esc(spe.nom) + "</div>" : pgm ? '<div class="gp-spe piege" data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " " + esc(pgm.nom) + "</div>" : "") + "</div>";
   const chips = '<div class="gp-mois">' + etapes.map((x, j) => '<button type="button" data-gpe="' + j + '" aria-pressed="' + (j === i) + '">' + (x.k ? GPS[circuitDe(x.k)].drap + " " + esc(moisCourt(x.k)) + (x.avenir ? " ⏳" : "") : "Départ") + "</button>").join("") + "</div>";
   const lignes = ordre.map((n, r) => {
@@ -577,6 +577,37 @@ async function cartePostale(y, et) {
   document.body.appendChild(o); const fermer = () => { o.remove(); URL.revokeObjectURL(url); };
   o.addEventListener("click", e => { if (e.target === o) fermer(); }); o.querySelector(".rg-x").addEventListener("click", fermer);
 }
+/* ---------- 🎬 V16.12 · Bande-annonce avant la course : « Précédemment… », le circuit en grand, la grille, les feux ---------- */
+const BA_STYLE = {   // couleurs et police de chaque circuit (la bande-annonce prend le ton de l'univers)
+  abudhabi: ["#FF9A3D", "#FFE2B0", "sans"], bahrein: ["#B8FF8A", "#FFF2B0", "serif"], djeddah: ["#E2B93B", "#F3E6C4", "serif"], melbourne: ["#FF6FA8", "#FFFFFF", "serif"],
+  suzuka: ["#FF8FB8", "#F7CF55", "serif"], miami: ["#22D3EE", "#FF4FD8", "sans"], montreal: ["#FFE81F", "#FFFFFF", "sans"], silverstone: ["#F7CF55", "#FFFFFF", "sans"],
+  spa: ["#FF2A2A", "#FFFFFF", "serif"], monza: ["#C9A35A", "#FFFFFF", "serif"], singapour: ["#FF8A3D", "#F6D29A", "large"], interlagos: ["#C8102E", "#F4F1EA", "sans"], lasvegas: ["#E2B93B", "#FFFFFF", "serif"] };
+let BA_OUVERTE = null;
+function bandeAnnonce(y, i, ensuite) {
+  if (BA_OUVERTE) BA_OUVERTE.fermer(false);
+  const etapes = etapesGP(y), et = etapes[i], c = championnat(y), kGP = et.k || (c.chauffe ? CHAUFFE_K : y * 100 + 1), ci = circuitDe(kGP), G = GPS[ci];
+  const st = BA_STYLE[ci] || ["#9B87FF", "#FFFFFF", "sans"], img = window.Piste && Piste.carte ? Piste.carte(ci) : null, mc = mancheGP(etapes, i);
+  // « Précédemment… » : les vainqueurs des 3 derniers mois (jamais le résultat du mois qu'on va voir)
+  const prec = []; for (let j = i - 1; j >= 1 && prec.length < 3; j--) { const m = etapes[j].m; if (!m) continue; const x = m.l.slice().sort((a, b) => a.rg - b.rg)[0]; if (x) prec.unshift({ k: m.k, g: GPS[circuitDe(m.k)], n: x.nom, p: x.p }); }
+  const resume = prec.length ? prec.map((r, q) => '<div class="ba-r" style="--d:' + (1.7 + q * .7).toFixed(1) + 's"><span>' + r.g.drap + " " + esc(moisLong(r.k).replace(/ \d{4}$/, "")) + "</span><b style=\"color:" + couleur(r.n) + '">' + esc(r.n) + "</b> s'impose <i>+" + r.p + " pts</i></div>").join("")
+    : '<div class="ba-r" style="--d:1.7s"><span>' + (c.chauffe ? "Tour de chauffe" : "Manche 1") + "</span><b>Une nouvelle saison commence.</b></div>";
+  const grille = mc.grille.map((n, q) => '<span class="ba-g" style="--d:' + (8.1 + q * .18).toFixed(2) + 's;--c:' + couleur(n) + '">' + avatar(n) + "<small>" + (q + 1) + "</small></span>").join("");
+  const o = document.createElement("div"); o.className = "ba ba-" + st[2]; o.setAttribute("role", "dialog"); o.setAttribute("aria-label", "Bande-annonce : " + G.gp);
+  o.style.setProperty("--b1", st[0]); o.style.setProperty("--b2", st[1]);
+  o.innerHTML = '<div class="ba-fond"' + (img ? ' style="background-image:url(&quot;' + img.replace(/"/g, "%22") + '&quot;)"' : "") + '></div><div class="ba-voile"></div>' +
+    '<div class="ba-sc ba-s1"><small>VERSUS</small><b>présente</b></div>' +
+    '<div class="ba-sc ba-s2"><em>Précédemment…</em>' + resume + "</div>" +
+    '<div class="ba-sc ba-s3"><span class="ba-k">' + esc(et.avenir ? "Ce mois-ci" : moisLong(kGP)) + '</span><h2><span class="ba-drap">' + G.drap + "</span>" + esc(G.gp) + "</h2><p>" + esc(G.ville) + '</p><q>' + esc(G.txt) + "</q></div>" +
+    '<div class="ba-sc ba-s4"><em>Sur la grille</em><div class="ba-gr">' + grille + '</div><p>En pole : <b style="color:' + couleur(mc.grille[0]) + '">' + esc(mc.grille[0]) + "</b></p></div>" +
+    '<div class="ba-sc ba-s5"><div class="ba-feux">' + [0, 1, 2, 3, 4].map(q => '<i style="--d:' + (10.4 + q * .32).toFixed(2) + 's"></i>').join("") + "</div><b>" + (et.avenir ? "Rendez-vous à la fin du mois" : "C'est parti !") + "</b></div>" +
+    '<div class="ba-bande h"></div><div class="ba-bande b"></div><button class="ba-passer" type="button">Passer ›</button>';
+  document.body.appendChild(o);
+  let fini = false; const t = setTimeout(() => fermer(true), reduit ? 2500 : 12800);
+  function fermer(lancer) { if (fini) return; fini = true; clearTimeout(t); BA_OUVERTE = null; o.classList.add("fin"); setTimeout(() => o.remove(), 450); if (lancer && ensuite) setTimeout(ensuite, 250); }
+  o.querySelector(".ba-passer").addEventListener("click", e => { e.stopPropagation(); fermer(true); });
+  o.addEventListener("click", () => fermer(true));
+  BA_OUVERTE = { fermer };
+}
 function brancherGP(v, y) {
   const etapes = etapesGP(y), i = GP_ETAPE !== null && GP_ETAPE < etapes.length ? GP_ETAPE : etapeParDefaut(etapes, y), et = etapes[i];
   const pi = v.querySelector("#gp-piste"), scene = v.querySelector("#gp-scene"); if (!pi || !scene) return;
@@ -601,13 +632,14 @@ function brancherGP(v, y) {
   const jouer = () => api.jouer(mc.depart, mc.arrivee, api.type === "3d" ? 6400 : 3000, () => bullesGP(y, i), i >= 1 && api.type === "3d");
   const cleVu = "versus.gpVu." + y, vu = +(stock.get(cleVu) || 0);
   if (GP_REJOUER && i > 0 && !et.avenir) { GP_REJOUER = false; setTimeout(jouer, 150); }
-  else if (!et.avenir && et.k && et.k > vu && i > 0) { stock.set(cleVu, String(et.k)); setTimeout(jouer, 450); }
-  else if (!api.enCours()) api.placer(mc.arrivee);
+  else if (!et.avenir && et.k && et.k > vu && i > 0) { stock.set(cleVu, String(et.k)); api.placer(mc.depart); setTimeout(() => bandeAnnonce(y, i, jouer), 300); }
+  else { if (!api.enCours()) api.placer(mc.arrivee); const kBA = et.k || 0, cleBA = "versus.baVu." + y; if (et.avenir && kBA && kBA > +(stock.get(cleBA) || 0)) { stock.set(cleBA, String(kBA)); setTimeout(() => bandeAnnonce(y, i, null), 400); } }
   GP_REJOUER = false;
   const vu3 = v.querySelector("#gp-vue"); if (vu3) vu3.addEventListener("click", () => { ETAT.gp2d = pi.classList.contains("en2d") ? "0" : "1"; garder(); rendreTrophees(); });
   const cb = v.querySelector("#gp-cam-b"); if (cb) cb.addEventListener("click", () => { const l = ["tv", "helico", "bord"], n = l[(l.indexOf(camGP()) + 1) % l.length]; ETAT.gpCam = n; garder(); if (GP_INST) GP_INST.api.camera(n); majBoutonsGP(); });
   const rj = v.querySelector("#gp-rejouer"); if (rj) rj.addEventListener("click", () => { if (i > 0 && !et.avenir) jouer(); else toast(et.avenir ? "Cette manche se court ce mois-ci : la course se joue dès que tout le monde a saisi son relevé." : "Le départ n'a pas encore eu lieu : choisis un mois."); });
   const pl = v.querySelector("#gp-plein"); if (pl) pl.addEventListener("click", () => ouvrirPleinGP(y));
+  const bb = v.querySelector("#gp-ba"); if (bb) bb.addEventListener("click", () => { const j = i > 0 && !et.avenir; if (j) api.placer(mc.depart); bandeAnnonce(y, i, j ? jouer : null); });
   const cp = v.querySelector("#gp-carte"); if (cp) cp.addEventListener("click", () => cartePostale(y, et));
   v.querySelectorAll(".gp-mois [data-gpe]").forEach(b => b.addEventListener("click", () => { GP_ETAPE = +b.dataset.gpe; GP_REJOUER = true; rendreTrophees(); }));
   const cal = v.querySelector("#gp-calend"); if (cal) cal.addEventListener("toggle", () => { ETAT.calOuvert = cal.open ? "1" : "0"; garder(); });
