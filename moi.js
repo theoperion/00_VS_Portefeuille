@@ -556,8 +556,23 @@ function injecterStyle() {
 .moi .champ input[inputmode="decimal"] { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
 .moi .aide.lie, .moi .champ .aide { display: block; background: none; border: 0; padding: 0; margin: 0; font-size: 11.5px; color: var(--ink-3); }
 .moi .aide.lie { margin-top: -8px; }
-.moi .types { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; gap: 6px; }
-.moi .types .plus-types { padding-inline: 10px; font-size: 13px; }
+.moi .types { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 6px; }
+.moi .types .type-btn { font-size: 13px; letter-spacing: .03em; }
+.moi .types .plus-types { padding-inline: 10px; font-size: 12.5px; }
+.moi .m-autres { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: -6px; }
+.moi .m-autres .chip { padding: 8px 12px; }
+.moi .m-autres-t { flex-basis: 100%; font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+.moi .champ .calc { display: block; font-size: 12px; line-height: 1.4; color: var(--accent-ink, var(--accent)); margin-top: 4px; }
+.moi .champ .calc[hidden] { display: none; }
+.moi .champ input.auto { border-style: dashed; }
+.moi .champ > .lien { justify-self: start; margin-top: 4px; font-size: 13px; }
+.moi .m-plus { border: 1px solid var(--rule); border-radius: 10px; background: var(--panel); }
+.moi .m-plus > summary { cursor: pointer; list-style: none; padding: 11px 12px; font-weight: 600; font-size: 14px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.moi .m-plus > summary::-webkit-details-marker { display: none; }
+.moi .m-plus > summary::before { content: "▸"; color: var(--ink-3); }
+.moi .m-plus[open] > summary::before { content: "▾"; }
+.moi .m-plus > summary small { font-weight: 400; font-size: 12.5px; color: var(--ink-3); }
+.moi .m-plus-c { display: grid; gap: 12px; padding: 0 12px 12px; }
 .moi .type-btn { border: 1px solid var(--rule); background: var(--panel); border-radius: 10px; padding: 11px 4px; cursor: pointer; font: italic 800 14px/1 var(--f-display); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
 .moi .type-btn[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); box-shadow: inset 0 -3px 0 var(--accent); }
 .moi .raccourcis { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -604,7 +619,7 @@ function injecterStyle() {
 .moi .ligne-champ input { flex: 1; min-width: 0; font: 500 15px/1.2 var(--f-num); padding: 11px 12px; border-radius: 10px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); }
 .moi .m-h4 small { font: 400 12px/1.2 var(--f-text); letter-spacing: 0; text-transform: none; color: var(--ink-3); margin-left: 6px; }
 .moi .m-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; }
-@media (max-width: 380px) { .moi .rang.trois { grid-template-columns: 1fr 1fr; } .moi .types .type-btn { font-size: 12.5px; } }
+@media (max-width: 380px) { .moi .rang.trois { grid-template-columns: 1fr 1fr; } .moi .types .type-btn { font-size: 12px; letter-spacing: .01em; } }
 /* jauge du millionnaire */
 .m-million { --gold: #F5C542; position: relative; overflow: hidden; border-radius: 18px; padding: 18px 16px 16px; display: grid; gap: 12px; color: #F4F5F8;
   background: radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--gold) 34%, transparent), transparent 55%), radial-gradient(90% 80% at 0% 100%, color-mix(in srgb, var(--mc) 40%, transparent), transparent 60%), #0B0D12;
@@ -2758,6 +2773,13 @@ const AVEC_ACTIF = ["Achat", "Vente", "Frais en parts", "Relevé"];
 const AVEC_QTE = ["Achat", "Vente", "Frais en parts"];
 const AVEC_FRAIS = ["Achat", "Vente"];
 const PRINCIPAUX = ["Achat", "Vente", "Apport", "Retrait"];
+/* v16.97 · types rangés par fréquence : 3 boutons (Achat, Versement, Relevé si assurance-vie, sinon Vente), le reste sous « Autres ».
+   Seuls les libellés changent : le nom enregistré dans le fichier reste celui du type (« Apport », « Intérêts »…) */
+const LIB_TYPE = { "Apport": "Versement", "Intérêts": "Dividende / intérêts", "Relevé": "Relevé", "Ajustement espèces": "Correction d'espèces", "Solde initial": "Solde de départ", "Frais en parts": "Frais en parts" };
+const ORDRE_AUTRES = ["Vente", "Retrait", "Intérêts", "Frais", "Relevé", "Frais en parts", "Ajustement espèces", "Solde initial"];
+function libType(t) { return LIB_TYPE[t] || t; }
+function aAV() { return (refData().enveloppes || []).some(e => e.regime === "AV" && (!e.statut || e.statut === "Ouvert")); }
+function typesCourants() { return ["Achat", "Apport", aAV() ? "Relevé" : "Vente"]; }
 /** « Autre type » : libellé affiché et explication en une phrase (le nom enregistré dans le fichier ne change pas) */
 const AUTRES_TYPES = {
   "Intérêts": { lib: "Intérêts / dividendes", g: "Courant", d: "De l'argent versé sur l'enveloppe (dividende, coupon, intérêts du compte espèces)." },
@@ -2768,7 +2790,7 @@ const AUTRES_TYPES = {
   "Solde initial": { lib: "Solde initial", g: "Rare", d: "L'argent déjà présent sur l'enveloppe au moment où tu commences le suivi." }
 };
 const LIB_MONTANT = {
-  "Achat": "Montant débité, frais compris", "Vente": "Montant crédité, net de frais", "Apport": "Montant viré sur l'enveloppe",
+  "Achat": "Montant débité, frais compris", "Vente": "Montant crédité, net de frais", "Apport": "Montant viré sur le compte",
   "Retrait": "Montant retiré", "Relevé": "Valeur indiquée sur le relevé", "Intérêts": "Intérêts versés",
   "Frais en parts": "Valeur des parts prélevées", "Frais": "Frais débités", "Ajustement espèces": "Écart d'espèces (négatif si sortie)",
   "Solde initial": "Solde à la date choisie"
@@ -2800,11 +2822,45 @@ function envParDefaut() {
   const l = (refData().enveloppes || []).map(e => typeof e === "string" ? e : e.nom), der = stock.get("versus.moi.derniereEnv");
   return der && (!l.length || l.includes(der)) ? der : (l[0] || der || "");
 }
+/* v16.97 · pré-remplissage : le dernier compte utilisé POUR CE TYPE (sinon le dernier tout court), le dernier actif acheté sur ce compte,
+   le cours connu, le montant habituel d'un versement, les frais de la dernière fois. Jamais pour « Refaire » ni « Vider » (auto: false) */
+function envsParType() { try { return JSON.parse(stock.get("versus.moi.envType") || "{}") || {}; } catch (e) { return {}; } }
+function envPourType(type) {
+  const ouv = (refData().enveloppes || []).filter(e => typeof e !== "string" && (!e.statut || e.statut === "Ouvert" || e.statut === "À ouvrir"));
+  const m = envsParType()[type];
+  if (m && ouv.some(e => e.nom === m)) return m;
+  if (type === "Relevé" || type === "Frais en parts") { const av = ouv.find(e => e.regime === "AV"); if (av) return av.nom; }
+  return "";
+}
+/** le journal du plus récent au plus ancien, sans les ordres en cours d'envoi */
+function journalRecent() { return (refData().journal || []).filter(o => !o.envoi).slice().sort((a, b) => String(b.date).localeCompare(String(a.date))); }
+function montantHabituel(env) { return mediane(journalRecent().filter(o => o.type === "Apport" && o.enveloppe === env).slice(0, 6).map(o => o.montant)); }
+function preRemplir(f) {
+  const r = refData(), j = journalRecent();
+  if (AVEC_ACTIF.includes(f.type) && !f.actif) {
+    const tenus = r.detenu.filter(d => d.env === f.env && d.qte > 1e-9).map(d => d.code);
+    const der = j.find(o => o.type === f.type && o.enveloppe === f.env && o.actif && (f.type === "Achat" || tenus.includes(o.actif)) && r.actifs.some(a => a.code === o.actif));
+    f.actif = der ? der.actif : tenus.length === 1 || (tenus.length && f.type !== "Achat") ? tenus[0] : "";
+    f.actifAuto = !!f.actif;
+  }
+  if (f.type === "Apport" && !String(f.montant || "").trim() && ETAT.discret !== "oui") {   // en mode discret, rien ne s'affiche tout seul (bouton « montant habituel »)
+    const hab = montantHabituel(f.env); if (hab > 0) { f.montant = saisieNombre(hab, 2); f.montantHab = true; }
+  }
+  if (AVEC_FRAIS.includes(f.type) && !String(f.frais || "").trim()) {
+    const der = j.find(o => o.type === f.type && o.enveloppe === f.env);
+    if (der && der.frais > 0) { f.frais = saisieNombre(der.frais, 2); f.fraisAuto = true; }
+  }
+}
 function formulaire(partiel) {
-  const f = Object.assign({ type: "Achat", date: aujourdhuiISO(), env: envParDefaut(), actif: "", qte: "", prix: "", pilote: "", montant: "", frais: "", apport: false, montantApport: "", forcer: null, erreur: "" }, partiel || {});
+  const p = partiel || {}, auto = p.auto !== false;
+  const f = Object.assign({ type: "Achat", date: aujourdhuiISO(), env: "", actif: "", qte: "", prix: "", pilote: "", montant: "", frais: "", apport: false, montantApport: "", forcer: null, erreur: "",
+    prixAuto: false, montantAuto: false, montantHab: false, fraisAuto: false, actifAuto: false, envChoisi: false }, p);
+  delete f.auto;
+  if (!f.env) f.env = (auto && envPourType(f.type)) || envParDefaut();
   if (!f.pilote) f.pilote = f.qte ? "qte" : "prix";
-  if (f.type === "Achat" && !(partiel && "apport" in partiel)) f.apport = true;   // cas le plus courant : on vire l'argent puis on achète
-  if (AVEC_QTE.includes(f.type) && f.actif && !f.prix && !f.qte) { const c = refData().cours[f.actif]; if (c) f.prix = saisieNombre(c, c < 10 ? 4 : 2); }
+  if (f.type === "Achat" && !("apport" in p)) f.apport = true;   // cas le plus courant : on vire l'argent puis on achète
+  if (auto) preRemplir(f);
+  if (AVEC_QTE.includes(f.type) && f.actif && !f.prix && !f.qte) { const c = refData().cours[f.actif]; if (c) { f.prix = saisieNombre(c, c < 10 ? 4 : 2); f.prixAuto = true; } }
   return f;
 }
 function depuisRaccourci(rc) {
@@ -2834,10 +2890,11 @@ function assurerFeuille() {
 const TUTO_ORDRE = [
   { ico: "🧾", t: "Saisir un ordre, en bref", html: true, p:
     "<b>1 ordre = 1 ligne</b>, recopiée de ton courtier à la date d'exécution.<br>" +
-    "• <b>Achat</b> : choisis l'enveloppe, l'actif, le montant de l'avis d'opéré <b>frais compris</b>, la quantité (le prix se calcule) et les frais. L'<b>apport</b> est coché : décoche si l'argent était déjà sur le compte.<br>" +
-    "• <b>Vente</b> : pareil, montant <b>net de frais</b>.<br>" +
-    "• <b>Apport / Retrait</b> : argent que tu mets ou retires de l'enveloppe.<br>" +
-    "• <b>Autre type</b> : dividendes, frais, cas d'assurance-vie ; chaque type s'explique quand tu le choisis.<br>" +
+    "• <b>Achat</b> : le compte, l'actif et le montant de l'avis d'opéré <b>frais compris</b> sont proposés ; le nombre de parts se calcule avec le cours (corrige-le si besoin). Le <b>versement</b> qui paie l'achat est coché : décoche si l'argent était déjà sur le compte.<br>" +
+    "• <b>Versement</b> : l'argent que tu mets sur un compte (ton montant habituel est proposé).<br>" +
+    "• <b>Relevé</b> : la valeur d'une ligne d'assurance-vie, recopiée de ton relevé.<br>" +
+    "• <b>Autres</b> : vente, retrait, dividende, frais… ; chaque type s'explique quand tu le choisis.<br>" +
+    "La date (aujourd'hui), les frais et le prix par part sont sous <b>Plus de détails</b>.<br>" +
     "Relis la phrase 📝 avant de valider. Une erreur ? Onglet <b>Historique</b> : supprimable pendant 7 jours." }
 ];
 function guideOrdre() { if (typeof ouvrirGuide === "function") ouvrirGuide("Saisir un ordre", TUTO_ORDRE, "C'est compris"); }
@@ -2846,7 +2903,7 @@ function ouvrirSaisieM(partiel, onglet) {
   if (!M) { toast("Lecture de ton fichier en cours, réessaie dans un instant."); charger(false); return; }
   F = formulaire(partiel);
   synchroniser();
-  nommerRaccourci = false;
+  nommerRaccourci = false; detailsOuverts = false; plusTypes = false;
   $f("m-saisie").hidden = false;
   paneSaisie(onglet || "ordre");
   if ((onglet || "ordre") === "ordre" && identiteSure() && !stock.get(cleStock("guideOrdre")) && !simulationM()) { stock.set(cleStock("guideOrdre"), "1"); setTimeout(guideOrdre, 250); }
@@ -2863,15 +2920,39 @@ function netOrdre() {
   if (!(m > 0)) return null;
   return m + (isNaN(fr) ? 0 : fr) * typeInfo(F.type).tresorerie;
 }
+/* v16.97 · calculs automatiques, à partir du cours connu :
+   - quantité tapée, montant vide (ou déjà estimé) : montant ≈ quantité × cours (+ frais à l'achat, − frais à la vente) ;
+   - montant tapé, quantité vide : quantité = montant hors frais ÷ cours, en parts entières sur un PEA (ou une ligne déjà en parts entières)
+     quand le calcul tombe à moins de 2 % d'un nombre entier (3,04 → 3) : le prix par part est alors recalculé */
+function coursActif() { const c = F && F.actif ? refData().cours[F.actif] : null; return c > 0 ? c : null; }
+function partsEntieres() {
+  const e = (refData().enveloppes || []).find(x => x.nom === F.env) || {}, tenu = quantiteTenue(F.env, F.actif);
+  return e.regime !== "AV" && e.regime !== "Crypto" && (/^PEA/.test(e.regime || "") || (tenu > 0 && Math.abs(tenu - Math.round(tenu)) < 1e-9));
+}
 function synchroniser() {
   if (!AVEC_QTE.includes(F.type)) return;
+  F.arrondi = false;
+  if (F.pilote === "qte" && (F.montantAuto || !String(F.montant || "").trim())) {
+    const q = lireNombre(F.qte), p = lireNombre(F.prix) || coursActif(), fr = lireNombre(F.frais) || 0;
+    if (q > 0 && p > 0) { F.montant = saisieNombre(q * p - (isNaN(fr) ? 0 : fr) * typeInfo(F.type).tresorerie, 2); F.montantAuto = true; }
+    else if (F.montantAuto) { F.montant = ""; F.montantAuto = false; }
+  }
   const net = netOrdre();
   if (!(net > 0)) return;
-  if (F.pilote === "prix") { const p = lireNombre(F.prix); if (p > 0) F.qte = saisieNombre(net / p, 6); }
+  if (F.pilote === "prix") {
+    const p = F.prixAuto && coursActif() ? coursActif() : lireNombre(F.prix);
+    if (p > 0) {
+      let q = net / p; const e = Math.round(q);
+      if (F.prixAuto && e >= 1 && Math.abs(q - e) <= .02 * q && Math.abs(q - e) > 1e-9 && partsEntieres()) { q = e; F.arrondi = true; F.prix = saisieNombre(net / q, 4); }
+      else if (F.prixAuto) F.prix = saisieNombre(p, p < 10 ? 4 : 2);
+      F.qte = saisieNombre(q, 6);
+    }
+  }
   else { const q = lireNombre(F.qte); if (q > 0) F.prix = saisieNombre(net / q, 4); }
 }
 function rendreRaccourcis() {
   const liste = refData().raccourcis || [];
+  if (!liste.length && !gererRaccourcis) return "";   // v16.97 : rien à afficher tant qu'il n'y a aucun raccourci (« Enregistrer comme raccourci » reste en bas)
   const visibles = tousRaccourcis || gererRaccourcis ? liste : liste.slice(0, 3);
   return '<div class="raccourcis"><span>Raccourcis</span>' +
     visibles.map((r, i) => gererRaccourcis
@@ -2921,46 +3002,72 @@ function brancherNouvelActif() {
 let plusTypes = false;
 /* V15.2 : aides masquables (« Masquer les aides » en bas de la saisie), retenu sur l'appareil */
 function majAides() { const f = document.querySelector("#m-saisie .m-feuille"); if (f) f.classList.toggle("sans-aide", PREF.aides === false); }
+let detailsOuverts = false;
+/* v16.97 · ce qui est replié sous « Plus de détails », résumé en une ligne (rien n'est caché sans qu'on le voie) */
+function resumeDetails() {
+  const an = String(new Date().getFullYear()), d = F.date || "";
+  const parts = [d === aujourdhuiISO() ? "aujourd'hui" : d ? "le " + (d.slice(0, 4) === an ? d.slice(8, 10) + "/" + d.slice(5, 7) : frDate(d)) : "date à choisir"];
+  if (AVEC_FRAIS.includes(F.type)) { const fr = lireNombre(F.frais); parts.push(fr > 0 ? "frais " + nf(2, 2).format(fr) + NB + "€" : "sans frais"); }
+  if (F.type === "Achat" && F.apport) { const ma = lireNombre(F.montantApport); if (ma > 0) parts.push("versement " + nf(0, 2).format(ma) + NB + "€"); }
+  return parts.join(" · ");
+}
+/* v16.97 · les petites phrases sous les champs calculés ou pré-remplis (toujours visibles, même « aides masquées ») */
+function aidesCalcul() {
+  const c = coursActif(), out = { montant: "", qte: "", frais: "" };
+  if (F.montantAuto && AVEC_QTE.includes(F.type)) out.montant = "Estimé : nombre de parts × cours (" + cours(lireNombre(F.prix) || c) + ")" + (lireNombre(F.frais) > 0 ? (F.type === "Vente" ? " − frais" : " + frais") : "") + ". Remplace-le par le montant exact de ton avis d'opéré.";
+  else if (F.montantHab && F.type === "Apport") out.montant = "Ton versement habituel sur ce compte : change-le si besoin.";
+  if (AVEC_QTE.includes(F.type) && F.pilote === "prix" && lireNombre(F.qte) > 0) out.qte = F.prixAuto && c ? "Calculé avec le cours connu (" + cours(c) + ")" + (F.arrondi ? ", arrondi à des parts entières" : "") + ". Corrige-le si ton avis d'opéré dit autre chose." : "Calculé avec ton prix par part.";
+  if (F.fraisAuto && AVEC_FRAIS.includes(F.type)) out.frais = "Comme ta dernière opération de ce type sur ce compte.";
+  return out;
+}
 function rendreFormulaire() {
   majAides();
   const r = refData();
   const ouvertes = r.enveloppes.filter(e => !e.statut || e.statut === "Ouvert" || e.statut === "À ouvrir");   // 14.5 : « À ouvrir » s'ouvre au 1er ordre
   if (!ouvertes.find(e => e.nom === F.env) && ouvertes.length) F.env = ouvertes[0].nom;
   const groupeEnv = (liste, lab) => liste.length ? '<optgroup label="' + lab + '">' + liste.map(e => '<option value="' + esc(e.nom) + '"' + (e.nom === F.env ? " selected" : "") + ">" + esc(e.nom) + (e.statut === "À ouvrir" ? " · à ouvrir" : "") + "</option>").join("") + "</optgroup>" : "";
-  const autres = r.types.map(t => t.nom).filter(n => !PRINCIPAUX.includes(n));
+  const courants = typesCourants(), autreType = !courants.includes(F.type), panneau = plusTypes || autreType;
+  const autres = r.types.map(t => t.nom).filter(n => !courants.includes(n)).sort((a, b) => (ORDRE_AUTRES.indexOf(a) + 1 || 99) - (ORDRE_AUTRES.indexOf(b) + 1 || 99));
   const tenus = r.detenu.filter(d => d.env === F.env && d.qte > 1e-9).map(d => d.code);
   const nomA = c => (r.actifs.find(a => a.code === c) || {}).nom || "";
   const optA = c => '<option value="' + esc(c) + '"' + (c === F.actif ? " selected" : "") + ">" + esc(c) + (nomA(c) ? " · " + esc(nomA(c)) : "") + "</option>";
   const autresActifs = r.actifs.map(a => a.code).filter(c => !tenus.includes(c));
-  if (AVEC_ACTIF.includes(F.type) && !F.actif && F.type !== "Achat" && tenus.length) { F.actif = tenus[0]; F = formulaire(F); }
+  if (AVEC_ACTIF.includes(F.type) && !F.actif && F.type !== "Achat" && tenus.length) { F.actif = tenus[0]; F = formulaire(Object.assign({}, F, { auto: false })); synchroniser(); }
   const avecActif = AVEC_ACTIF.includes(F.type), avecQte = AVEC_QTE.includes(F.type), avecFrais = AVEC_FRAIS.includes(F.type);
+  const chipT = t => '<button type="button" class="chip" data-type="' + esc(t) + '" aria-pressed="' + (F.type === t) + '">' + esc(libType(t)) + "</button>";
+  const courantsAutres = autres.filter(t => (AUTRES_TYPES[t] || { g: "Courant" }).g === "Courant"), raresAutres = autres.filter(t => !courantsAutres.includes(t));
+  const hab = F.type === "Apport" && ETAT.discret === "oui" && !String(F.montant || "").trim() ? montantHabituel(F.env) : 0;
+  const A = aidesCalcul();
   $f("m-pane-ordre").innerHTML =
     '<form class="form" id="m-form-ordre" novalidate>' +
       (PREF.aides === false ? "" : '<button class="lien guide-l" type="button" id="f-guide">❓ Comment saisir un ordre</button>') +
       rendreRaccourcis() +
-      '<div class="types" role="group" aria-label="Type d\'ordre">' + PRINCIPAUX.map(t => '<button type="button" class="type-btn" data-type="' + t + '" aria-pressed="' + (F.type === t) + '">' + t + "</button>").join("") +
-        '<button type="button" class="type-btn plus-types" id="f-plus-types" aria-pressed="' + (!PRINCIPAUX.includes(F.type)) + '" aria-expanded="' + !!(plusTypes || !PRINCIPAUX.includes(F.type)) + '">Plus…</button></div>' +
-      '<div class="rang">' +
-        '<div class="champ"><label for="f-date">Date</label><input id="f-date" type="date" value="' + esc(F.date) + '"></div>' +
-        (!(plusTypes || !PRINCIPAUX.includes(F.type)) ? "" : '<div class="champ"><label for="f-autre">Plus de types</label><select id="f-autre"><option value="">Dividende, frais, assurance-vie…</option>' +
-          ["Courant", "Rare"].map(g => { const l = autres.filter(t => (AUTRES_TYPES[t] || { g: "Rare" }).g === g); return l.length ? '<optgroup label="' + (g === "Courant" ? "Courant" : "Rare · assurance-vie et corrections") + '">' + l.map(t => '<option value="' + esc(t) + '"' + (F.type === t ? " selected" : "") + ">" + esc((AUTRES_TYPES[t] || {}).lib || t) + "</option>").join("") + "</optgroup>" : ""; }).join("") + "</select></div>") +
-      "</div>" +
+      '<div class="types" role="group" aria-label="Type d\'opération">' + courants.map(t => '<button type="button" class="type-btn" data-type="' + t + '" aria-pressed="' + (F.type === t) + '">' + esc(libType(t)) + "</button>").join("") +
+        '<button type="button" class="type-btn plus-types" id="f-plus-types" aria-pressed="' + autreType + '" aria-expanded="' + panneau + '">Autres' + (panneau ? " ▴" : " ▾") + "</button></div>" +
+      (!panneau ? "" : '<div class="m-autres" role="group" aria-label="Autres types">' + courantsAutres.map(chipT).join("") +
+        (raresAutres.length ? '<span class="m-autres-t">Plus rares</span>' + raresAutres.map(chipT).join("") : "") + "</div>") +
       (AUTRES_TYPES[F.type] && PREF.aides !== false ? '<p class="info">ℹ️ <b>' + esc(AUTRES_TYPES[F.type].lib) + "</b> : " + esc(AUTRES_TYPES[F.type].d) + "</p>" : "") +
-      '<div class="champ"><label for="fo-env">Enveloppe</label><select id="fo-env">' +
+      '<div class="champ"><label for="fo-env">Compte</label><select id="fo-env">' +
         groupeEnv(ouvertes.filter(e => e.perimetre === "Portefeuille"), "Bourse") + groupeEnv(ouvertes.filter(e => e.perimetre !== "Portefeuille"), "Épargne") + "</select></div>" +
       (avecActif ? '<div class="champ"><label for="f-actif">Actif</label><select id="f-actif"><option value="">Choisir l\'actif…</option>' +
-        (tenus.length ? '<optgroup label="Détenus dans cette enveloppe">' + tenus.map(optA).join("") + "</optgroup>" : "") +
+        (tenus.length ? '<optgroup label="Détenus sur ce compte">' + tenus.map(optA).join("") + "</optgroup>" : "") +
         '<optgroup label="Autres actifs">' + autresActifs.map(optA).join("") + "</optgroup></select>" +
         (F.na ? boiteNouvelActif() : '<span class="aide">Actif absent de la liste ? <button class="lien" type="button" id="f-nouvel-actif">Ajouter un nouvel actif</button></span>') + "</div>" : "") +
-      '<div class="champ"><label for="f-montant">' + esc(LIB_MONTANT[F.type] || "Montant") + ' (€)</label><input id="f-montant" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montant) + '" placeholder="0,00">' + (F.type === "Achat" || F.type === "Vente" ? '<span class="aide">Recopie-le depuis ton avis d\'opéré (le document de ton courtier).</span>' : "") + "</div>" +
-      (avecQte ? '<div class="rang">' +
-        '<div class="champ"><label for="f-qte">Quantité</label><input id="f-qte" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.qte) + '" placeholder="0"></div>' +
-        '<div class="champ"><label for="f-prix">Prix par part (€)</label><input id="f-prix" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.prix) + '" placeholder="0,00"></div>' +
-        '</div><span class="aide lie">Saisis la quantité ou le prix par part : l\'autre se calcule à partir du montant' + (avecFrais ? " hors frais" : "") + ".</span>" : "") +
-      (avecFrais ? '<div class="champ"><label for="f-frais">Dont frais (€)</label><input id="f-frais" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.frais) + '" placeholder="0,00"><span class="aide">Les frais de courtage (0 ou vide si tu n\'en as pas).</span></div>' : "") +
-      (F.type === "Achat" ? '<label class="coche"><input type="checkbox" id="f-apport"' + (F.apport ? " checked" : "") + '> Enregistrer aussi l\'apport qui finance cet achat</label>' +
-        '<span class="aide lie">' + (F.apport ? "Tu vires l'argent puis tu achètes : l'apport est enregistré juste avant l'achat." : "Décoché : l'argent était déjà sur l'enveloppe (vente, dividende, apport précédent).") + "</span>" +
-        (F.apport ? '<div class="champ"><label for="f-mapport">Montant de l\'apport (€)</label><input id="f-mapport" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montantApport) + '" placeholder="Identique au montant de l\'achat"><span class="aide">Laisse vide : même montant que l\'achat.</span></div>' : "") : "") +
+      '<div class="champ"><label for="f-montant">' + esc(LIB_MONTANT[F.type] || "Montant") + ' (€)</label><input id="f-montant" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montant) + '" placeholder="0,00"' + (F.montantAuto || F.montantHab ? ' class="auto"' : "") + ">" +
+        '<span class="calc" id="f-montant-calc"' + (A.montant ? "" : " hidden") + ">" + esc(A.montant) + "</span>" +
+        (hab > 0 ? '<button class="lien" type="button" id="f-hab">Reprendre ton versement habituel</button>' : "") +
+        (F.type === "Achat" || F.type === "Vente" ? '<span class="aide">Recopie-le depuis ton avis d\'opéré (le document de ton courtier).</span>' : "") + "</div>" +
+      (avecQte ? '<div class="champ"><label for="f-qte">Nombre de parts</label><input id="f-qte" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.qte) + '" placeholder="0">' +
+        '<span class="calc" id="f-qte-calc"' + (A.qte ? "" : " hidden") + ">" + esc(A.qte) + "</span></div>" : "") +
+      (F.type === "Achat" ? '<label class="coche"><input type="checkbox" id="f-apport"' + (F.apport ? " checked" : "") + '> Avec le versement qui paie cet achat</label>' +
+        '<span class="aide lie">' + (F.apport ? "L'argent viré est enregistré juste avant l'achat." : "Décoché : l'argent était déjà sur le compte (vente, dividende, versement précédent).") + "</span>" : "") +
+      '<details class="m-plus" id="f-details"' + (detailsOuverts ? " open" : "") + '><summary>Plus de détails <small id="f-details-res">' + esc(resumeDetails()) + "</small></summary><div class=\"m-plus-c\">" +
+        '<div class="champ"><label for="f-date">Date</label><input id="f-date" type="date" value="' + esc(F.date) + '"></div>' +
+        (avecQte ? '<div class="champ"><label for="f-prix">Prix par part (€)</label><input id="f-prix" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.prix) + '" placeholder="0,00"><span class="aide">Se calcule tout seul ; tape-le si tu connais le prix mais pas le nombre de parts.</span></div>' : "") +
+        (avecFrais ? '<div class="champ"><label for="f-frais">Dont frais (€)</label><input id="f-frais" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.frais) + '" placeholder="0,00">' +
+          '<span class="calc" id="f-frais-calc"' + (A.frais ? "" : " hidden") + ">" + esc(A.frais) + '</span><span class="aide">Les frais de courtage (0 ou vide si tu n\'en as pas).</span></div>' : "") +
+        (F.type === "Achat" && F.apport ? '<div class="champ"><label for="f-mapport">Montant du versement (€)</label><input id="f-mapport" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montantApport) + '" placeholder="Comme l\'achat"><span class="aide">Laisse vide : même montant que l\'achat.</span></div>' : "") +
+      "</div></details>" +
       '<p class="phrase-ordre" id="m-phrase"></p>' +
       '<div class="recap" id="m-recap"></div>' +
       '<div class="alertes" id="m-alertes"></div>' +
@@ -2975,13 +3082,20 @@ function rendreFormulaire() {
     "</form>";
   const form = $f("m-form-ordre");
   if ($f("f-guide")) $f("f-guide").addEventListener("click", guideOrdre);
-  form.querySelectorAll("[data-type]").forEach(b => b.addEventListener("click", () => { plusTypes = false; F = formulaire({ type: b.dataset.type, date: F.date, env: F.env, actif: AVEC_ACTIF.includes(b.dataset.type) ? F.actif : "", montant: F.montant }); synchroniser(); rendreFormulaire(); }));
-  $f("f-plus-types").addEventListener("click", () => { plusTypes = !plusTypes || !PRINCIPAUX.includes(F.type); if (!plusTypes && !PRINCIPAUX.includes(F.type)) F = formulaire({ type: "Achat", date: F.date, env: F.env }); rendreFormulaire(); if (plusTypes) setTimeout(() => { const x = $f("f-autre"); if (x) x.focus(); }, 30); });
+  $f("f-details").addEventListener("toggle", () => { detailsOuverts = $f("f-details").open; });
+  form.querySelectorAll("[data-type]").forEach(b => b.addEventListener("click", () => {
+    const t = b.dataset.type; if (t === F.type) return;
+    plusTypes = !courants.includes(t);
+    const env = F.envChoisi ? F.env : envPourType(t) || envParDefaut() || F.env;
+    F = formulaire({ type: t, date: F.date, env: env, envChoisi: F.envChoisi, actif: AVEC_ACTIF.includes(t) && env === F.env ? F.actif : "", montant: F.montantAuto || F.montantHab ? "" : F.montant });
+    synchroniser(); rendreFormulaire();
+  }));
+  $f("f-plus-types").addEventListener("click", () => { plusTypes = !panneau; if (!plusTypes && autreType) F = formulaire({ type: "Achat", date: F.date, env: F.env, envChoisi: F.envChoisi }); rendreFormulaire(); });
   $f("f-aides").addEventListener("click", () => { PREF.aides = PREF.aides === false; garderPref(); majAides(); rendreFormulaire(); });
-  if ($f("f-autre")) $f("f-autre").addEventListener("change", e => { if (e.target.value) { F = formulaire({ type: e.target.value, date: F.date, env: F.env, montant: F.montant }); rendreFormulaire(); } });
-  $f("fo-env").addEventListener("change", e => { F = formulaire({ type: F.type, date: F.date, env: e.target.value, montant: F.montant, frais: F.frais }); rendreFormulaire(); });
-  if ($f("f-actif")) $f("f-actif").addEventListener("change", e => { F = formulaire({ type: F.type, date: F.date, env: F.env, actif: e.target.value, montant: F.montant, frais: F.frais, apport: F.apport, montantApport: F.montantApport }); synchroniser(); rendreFormulaire(); });
+  $f("fo-env").addEventListener("change", e => { F = formulaire({ type: F.type, date: F.date, env: e.target.value, envChoisi: true, montant: F.montantAuto || F.montantHab ? "" : F.montant, frais: F.fraisAuto ? "" : F.frais }); synchroniser(); rendreFormulaire(); });
+  if ($f("f-actif")) $f("f-actif").addEventListener("change", e => { F = formulaire({ type: F.type, date: F.date, env: F.env, envChoisi: F.envChoisi, actif: e.target.value, montant: F.montantAuto ? "" : F.montant, frais: F.frais, fraisAuto: F.fraisAuto, apport: F.apport, montantApport: F.montantApport, auto: false }); synchroniser(); rendreFormulaire(); });
   if ($f("f-apport")) $f("f-apport").addEventListener("change", e => { F.apport = e.target.checked; rendreFormulaire(); });
+  if ($f("f-hab")) $f("f-hab").addEventListener("click", () => { F.montant = saisieNombre(hab, 2); F.montantHab = true; rendreFormulaire(); });
   // 14.5 : le nouvel actif se crée ici même, sans quitter la saisie d'ordre
   if ($f("f-nouvel-actif")) $f("f-nouvel-actif").addEventListener("click", () => { F.na = { code: "", nom: "", ticker: "", msg: "" }; rendreFormulaire(); setTimeout(() => { const el = $f("fn-code"); if (el) el.focus(); }, 30); });
   if (F.na) brancherNouvelActif();
@@ -2991,9 +3105,13 @@ function rendreFormulaire() {
     el.addEventListener("input", () => {
       F[k] = el.value; F.forcer = null; F.erreur = "";
       if (k === "qte" || k === "prix") F.pilote = k;
+      if (k === "prix") F.prixAuto = false;
+      if (k === "montant") { F.montantAuto = false; F.montantHab = false; el.classList.remove("auto"); }
+      if (k === "frais") F.fraisAuto = false;
       synchroniser();
       if (k !== "qte" && $f("f-qte")) $f("f-qte").value = F.qte;
       if (k !== "prix" && $f("f-prix")) $f("f-prix").value = F.prix;
+      if (k !== "montant" && $f("f-montant")) { $f("f-montant").value = F.montant; $f("f-montant").classList.toggle("auto", !!F.montantAuto); }
       majRecap();
     });
   });
@@ -3021,7 +3139,7 @@ function rendreFormulaire() {
     rendreFormulaire();
     toast("Raccourci « " + nom + " » créé.");
   });
-  $f("f-vider").addEventListener("click", () => { F = formulaire({ type: F.type, env: F.env }); nommerRaccourci = false; rendreFormulaire(); });
+  $f("f-vider").addEventListener("click", () => { F = formulaire({ type: F.type, env: F.env, envChoisi: F.envChoisi, auto: false }); nommerRaccourci = false; rendreFormulaire(); });
   form.addEventListener("submit", e => { e.preventDefault(); envoyerOrdre(false); });
   majRecap();
 }
@@ -3090,7 +3208,7 @@ function analyser() {
   if (F.type === "Achat" && F.apport) {
     const ma = lireNombre(F.montantApport);
     if (ma !== null && (isNaN(ma) || ma <= 0)) { bloque = true; msg.push(["err", "Montant de l'apport illisible."]); }
-    lignes.push(["Apport enregistré avant l'achat", nf(2, 2).format(ma === null ? m : ma) + NB + "€"]);
+    lignes.push(["Versement enregistré avant l'achat", nf(2, 2).format(ma === null ? m : ma) + NB + "€"]);
   }
   if (F.date && F.date > aujourdhuiISO()) msg.push(["warn", "Ordre programmé : il restera ignoré par les calculs jusqu'au " + frDate(F.date) + "."]);
   return { bloque, msg, lignes, doutes };
@@ -3107,12 +3225,11 @@ function phraseOrdre() {
   const de = n => (/^[aeiouyhàâéèêîôû]/i.test(n) ? "d'" : "de ") + B(n);
   const titres = AVEC_QTE.includes(F.type) && q > 0 ? de(qteBrute(q) + " " + esc(F.actif)).replace(/^d'/, "de ") : F.actif ? de(nomA) : "";
   const frais = !AVEC_FRAIS.includes(F.type) ? "" : fr > 0 ? " (dont " + e(fr) + " de frais)" : " (sans frais)";
-  const regime = ((refData().enveloppes || []).find(x => (x.nom || x) === F.env) || {}).regime;
   let t;
   switch (F.type) {
-    case "Achat": t = "Achat " + titres + " pour " + e(m) + frais + " sur " + env + le + ". " + (F.apport ? "Avec un apport de " + e(ma > 0 ? ma : m) + "." : "Sans apport (argent déjà sur l'enveloppe)."); break;
+    case "Achat": t = "Achat " + titres + " pour " + e(m) + frais + " sur " + env + le + ". " + (F.apport ? "Avec un versement de " + e(ma > 0 ? ma : m) + "." : "Sans versement (argent déjà sur le compte)."); break;
     case "Vente": t = "Vente " + titres + " pour " + e(m) + frais + " sur " + env + le + "."; break;
-    case "Apport": t = (regime === "AV" ? "Versement" : "Apport") + " de " + e(m) + " sur " + env + le + "."; break;
+    case "Apport": t = "Versement de " + e(m) + " sur " + env + le + "."; break;
     case "Retrait": t = "Retrait de " + e(m) + " sur " + env + le + "."; break;
     case "Intérêts": t = "Dividende ou intérêts de " + e(m) + " reçus sur " + env + le + "."; break;
     case "Frais": t = "Frais de " + e(m) + " débités sur " + env + le + "."; break;
@@ -3131,6 +3248,12 @@ function majRecap() {
   if ($f("m-phrase")) { const ph = phraseOrdre(); $f("m-phrase").innerHTML = ph; $f("m-phrase").hidden = !ph; }
   $f("m-recap").innerHTML = a.lignes.map(l => "<div><span>" + l[0] + "</span><b>" + l[1] + "</b></div>").join("");
   $f("m-recap").hidden = !a.lignes.length;
+  /* v16.97 · phrases des champs calculés, résumé de « Plus de détails », qu'on ouvre tout seul si un champ replié pose problème */
+  const A = aidesCalcul();
+  [["f-montant-calc", "montant"], ["f-qte-calc", "qte"], ["f-frais-calc", "frais"]].forEach(([id, k]) => { const el = $f(id); if (el) { el.textContent = A[k]; el.hidden = !A[k]; } });
+  if ($f("f-details-res")) $f("f-details-res").textContent = resumeDetails();
+  const replie = !F.date || (a.doutes || []).some(([k]) => k !== "montant") || a.msg.some(m => m[0] === "err" && /frais|apport/i.test(m[1]));
+  if (replie && $f("f-details") && !$f("f-details").open) { $f("f-details").open = true; detailsOuverts = true; }
   let al = a.msg.map(m => '<div class="alerte ' + m[0] + '">' + esc(m[1]) + "</div>").join("");
   (a.doutes || []).forEach(([k]) => { const t = String(F[k]).trim(), l = lectureMilliers(t);
     al += '<div class="alerte warn">« ' + esc(t) + ' » veut dire ' + esc((+l.milliers).toLocaleString("fr-FR")) + NB + '€ ?<br><button class="btn" type="button" data-millier="' + k + '" data-mv="' + esc(l.milliers) + '">Oui, ' + esc((+l.milliers).toLocaleString("fr-FR")) + NB + "€</button>" +
@@ -3170,6 +3293,7 @@ async function envoyerOrdre(forcer) {
     montant: lireNombre(F.montant), frais: AVEC_FRAIS.includes(F.type) ? lireNombre(F.frais) : null
   }));
   stock.set("versus.moi.derniereEnv", F.env);
+  { const m = envsParType(); m[F.type] = F.env; stock.set("versus.moi.envType", JSON.stringify(m)); }   // v16.97 : le compte de ce type, proposé la prochaine fois
   const sauvegarde = Object.assign({}, F);
   fermerSaisieM();
   toast("Enregistrement de l'ordre…");
@@ -3200,7 +3324,7 @@ function rendreJournal() {
       (o.app ? '<button class="lien danger" type="button" data-suppr="' + i + '">' + (confirmeSuppr === i ? "Confirmer la suppression" : "Supprimer") + "</button>" : "") + "</div>") + "</div>").join("") + "</div>";
   z.querySelectorAll("[data-refaire]").forEach(b => b.addEventListener("click", () => {
     const o = j[+b.dataset.refaire];
-    ouvrirSaisieM({ type: o.type, env: o.enveloppe, actif: o.actif || "", qte: o.quantite !== null && o.quantite !== undefined ? saisieNombre(o.quantite, 8) : "", montant: saisieNombre(o.montant, 2), frais: o.frais ? saisieNombre(o.frais, 2) : "" }, "ordre");
+    ouvrirSaisieM({ type: o.type, env: o.enveloppe, actif: o.actif || "", qte: o.quantite !== null && o.quantite !== undefined ? saisieNombre(o.quantite, 8) : "", montant: saisieNombre(o.montant, 2), frais: o.frais ? saisieNombre(o.frais, 2) : "", auto: false }, "ordre");
   }));
   z.querySelectorAll("[data-suppr]").forEach(b => b.addEventListener("click", async () => {
     const i = +b.dataset.suppr;
