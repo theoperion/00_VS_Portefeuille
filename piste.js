@@ -62,7 +62,8 @@
     djeddah: { pts: polyg([[40, 210], [320, 210], [320, 70], [290, 70], [290, 32], [240, 32], [240, 70], [200, 70], [200, 32], [150, 32], [150, 70], [110, 70], [110, 32], [60, 32], [60, 70], [40, 70]], 12), decor: "chateau", heure: "nuitclaire", peint: "chateau", reperes: [{ t: "chateau", y: 145 }] },
     melbourne: { pts: F_LAC, decor: "olympe", heure: "jour", amb: "gouter", eau: [resserrer(F_LAC, .3)], peint: "terrier", reperes: [] },
     suzuka: { pts: etoile([[5, .17, .6]], 45), decor: "solstice", heure: "jour", peint: "anneau", reperes: [{ t: "mai" }] },   // avril · Seigneur des Anneaux
-    miami: { pts: polyg([[40, 210], [320, 210], [320, 60], [270, 60], [270, 104], [220, 104], [220, 30], [160, 30], [160, 92], [110, 92], [110, 50], [40, 50]], 12), decor: "solstice", heure: "crepuscule", peint: "arene", reperes: [{ t: "tourcentrale", y: 160 }] },
+    miami: { pts: polyg([[60, 30], [300, 30], [300, 210], [212, 210], [212, 120], [148, 120], [148, 210], [60, 210]], 18), decor: "lucioles", heure: "nuit", peint: "pandora", reperes: [] },   // V16.54 : mai 2027 = Pandora (carte peinte sur ce tracé)
+    arene2028: { pts: polyg([[40, 210], [320, 210], [320, 60], [270, 60], [270, 104], [220, 104], [220, 30], [160, 30], [160, 92], [110, 92], [110, 50], [40, 50]], 12), decor: "solstice", heure: "crepuscule", peint: "arene", reperes: [{ t: "tourcentrale", y: 160 }] },   // l'Arène et son tracé, gardés pour 2028
     montreal: { pts: polyg([[60, 30], [300, 30], [300, 210], [212, 210], [212, 120], [148, 120], [148, 210], [60, 210]], 18),   // juin · Star Wars (tracé de la maquette validée)
        decor: "station", heure: "nuit", peint: "etoiles", reperes: [] },
     silverstone: { pts: F_DUNES, decor: "dunes", heure: "crepuscule", amb: "desert", peint: "dunes", reperes: [{ t: "ver", y: 122 }] },   // juillet · Dune (tracé échangé avec singapour le 19/11, atouts et pièges inchangés)
@@ -632,7 +633,7 @@
       for (let k = 0; k < 4; k++) { boite(g, 4, 0, 18 + k * 42, 5, 3.2, 12, v("#C8283A")); g.ov().boite(6.55, 1.6, 18 + k * 42, .1, .3, 11, v("#5A0E16")); }
       // deux voitures en construction sur un pont élévateur (la bleue capot ouvert), soudure
       const pont = new Geo(); boite(pont, 0, 0, 0, 12, .5, 4, v("#3A3E45")); [-1, 1].forEach(sd => boite(pont, 0, .5, sd * 1.6, 11, 1.4, .5, jaune)); 
-      [[m(205) - x0, m(300) - z0, "#4C9AFF"], [m(205) - x0, m(405) - z0, "#FF6FA8"]].forEach(([x, z, c]) => { g.poser(pont, x, 0, z, PI / 2, 1); g.poser(voiture({ couleur: c }), x, 1.9, z, PI / 2, 1); });
+      [[m(205) - x0, m(300) - z0, "#4C9AFF"], [m(205) - x0, m(405) - z0, "#FF6FA8"]].forEach(([x, z, c]) => { g.poser(pont, x, 0, z, PI / 2, 1); g.poser(voiture({ couleur: c, roues: true }), x, 1.9, z, PI / 2, 1); });
       for (let k = 0; k < 14; k++) { const t = r() * TAU; branche(g, [m(228) - x0, 1.2, m(358) - z0], [m(228) - x0 + Math.cos(t) * 2.5, 1.2 + r() * 2.5, m(358) - z0 + Math.sin(t) * 2.5], .05, .02, v("#FFD27A"), 1); }
       lum.push([m(228), 1.6, m(358), 1, .75, .3, 10]);
       sol.poser(g, x0, 0, z0, 0, 1); occupe.push([x0 + w / 2, z0 + d / 2, Math.max(w, d) * .6]); }
@@ -665,7 +666,7 @@
       sol.poser(g, x0, 0, z0, 0, 1); lum.push([x0 + vx, 6, z0 + vz, 1, .85, .5, 14]); lum.push([x0 + w / 2, 6, z0 + d / 2, 1, .85, .6, 30]); occupe.push([x0 + w / 2, z0 + d / 2, Math.max(w, d) * .62]); }
     // la cour : emblème peint au sol, voitures en construction sur chandelles, caisses à outils, piles de roues
     { const so = sol.ov(), cx = m(420), cz = m(380); for (let k = 0; k < 40; k++) { if (k % 3 === 2) continue; const a0 = k / 40 * TAU, a1 = (k + .8) / 40 * TAU; [[m(95), m(90)], [m(70), m(68)]].forEach(([R1, R2]) => so.quad([cx + Math.cos(a0) * R1, .05, cz + Math.sin(a0) * R1], [cx + Math.cos(a1) * R1, .05, cz + Math.sin(a1) * R1], [cx + Math.cos(a1) * R2, .05, cz + Math.sin(a1) * R2], [cx + Math.cos(a0) * R2, .05, cz + Math.sin(a0) * R2], jaune, .2, [0, 1, 0])); }
-      [[560, 470, "#2BB673", 0], [300, 420, "#F2994A", -.35]].forEach(([x, y, c, a]) => { const g = new Geo(); [[-3, -1.6], [-3, 1.6], [3, -1.6], [3, 1.6]].forEach(([p, q]) => boite(g, p, 0, q, .5, 1.6, .5, jaune)); g.poser(voiture({ couleur: c }), 0, 1.6, 0, 0, 1); sol.poser(g, m(x), 0, m(y), a, 1); occupe.push([m(x), m(y), 10]); });
+      [[560, 470, "#2BB673", 0], [300, 420, "#F2994A", -.35]].forEach(([x, y, c, a]) => { const g = new Geo(); [[-3, -1.6], [-3, 1.6], [3, -1.6], [3, 1.6]].forEach(([p, q]) => boite(g, p, 0, q, .5, 1.6, .5, jaune)); g.poser(voiture({ couleur: c, roues: true }), 0, 1.6, 0, 0, 1); sol.poser(g, m(x), 0, m(y), a, 1); occupe.push([m(x), m(y), 10]); });
       [[300, 260], [530, 520], [690, 530], [320, 520]].forEach(([x, y]) => { const g = new Geo(); boite(g, 0, 0, 0, 3.5, 3, 2.2, v("#C8283A")); sol.poser(g, m(x), 0, m(y), r() * TAU, 1); });
       [[270, 330], [640, 470], [520, 250], [250, 545]].forEach(([x, y]) => { const g = new Geo(); for (let k = 0; k < 4; k++) g.cylindre(0, k * .55, 0, .85, .5, 8, v(k % 2 ? "#1B1D21" : "#2B2E33")); sol.poser(g, m(x), 0, m(y), 0, 1); });
       occupe.push([cx, cz, 70]); }
@@ -3285,82 +3286,96 @@
      en bas à droite, Ithaque baignée d'or (le palais aux 4 boucliers-portraits, l'arc et les 12 haches).
      Polyphème guette depuis le coin bas gauche. Une seule lumière : le soleil couchant derrière Ithaque. */
   function peindreOdyssee2(T, Z, def) {
+    /* v3 (retouche) : UNE seule mer et UNE seule lumière. L'aube se lève derrière Ithaque (bas droite) et éclaire toute la carte en
+       diagonale ; la nuit recule vers Troie (bas gauche) qui brûle et rougit l'eau. Une grande houle part de Troie, porte la galère
+       d'Ulysse, enfle en une vague géante derrière Poséidon et vient mourir dorée sur Ithaque. Le duel : le trident plonge sur la galère. */
     const K = kit(T, def, 27, "o2-"), { s, a, r, f, W, H } = K, an = x => K.anime ? x : "", INK = `stroke="#1A1020" stroke-width="1.3"`, PEAU = "#E8B48A";
     const G = (x, y, sc, rot) => `<g transform="translate(${f(x)} ${f(y)})${sc && sc !== 1 ? ` scale(${sc})` : ""}${rot ? ` rotate(${f(rot)})` : ""}">`;
-    const nom = (x, y, txt, t) => s.push(`<text x="${f(x)}" y="${f(y)}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-weight="bold" font-size="${t || 15}" fill="#FFF3D0" stroke="#1A1238" stroke-width="3.4" paint-order="stroke" letter-spacing=".6">${txt}</text>`);
-    const bulle = (x, y, txt, du, deb) => a.push(`<g opacity="${K.anime ? 0 : 1}">${an(`<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.12;.18;.8;.88;1" dur="${du}s" begin="${deb || 0}s" repeatCount="indefinite"/>`)}<rect x="${f(x - txt.length * 3.2 - 7)}" y="${f(y - 12)}" width="${f(txt.length * 6.4 + 14)}" height="19" rx="9" fill="#FFFDF6" stroke="#1A1020" stroke-width="1.1"/><path d="M${f(x - 4)} ${f(y + 7)}l2 7l6 -7" fill="#FFFDF6" stroke="#1A1020" stroke-width="1.1"/><text x="${f(x)}" y="${f(y + 2)}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#1A1020">${txt}</text></g>`);
+    const nom = (x, y, txt, t) => s.push(`<text x="${f(x)}" y="${f(y)}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-weight="bold" font-size="${t || 28}" fill="#FFF3D0" stroke="#1A1238" stroke-width="6" paint-order="stroke" letter-spacing="1">${txt}</text>`);
     // la galère vue de côté (coque, œil peint, rames, voile carrée) ; mat = ce qu'on attache au mât
-    const galere = (x, y, sc, voile, fl, mat, rot) => `${G(x, y, sc, rot)}<g transform="scale(${fl ? -1 : 1} 1)">${[-22, -14, -6, 2, 10, 18].map(u => `<path d="M${u} 0l-6 9" stroke="#4A2E16" stroke-width="1.3"/>`).join("")}<path d="M-36 -10Q-30 4 0 4Q26 4 34 -8L40 -16Q36 -8 30 -9Z" fill="#6A3E1E" ${INK}/><path d="M-36 -10Q-40 -16 -44 -14Q-40 -10 -34 -8" fill="#6A3E1E" ${INK}/><path d="M-32 -6H30" stroke="#E2B93B" stroke-width="1.6"/><circle cx="26" cy="-6" r="2" fill="#F4F1EA" stroke="#1A1020" stroke-width=".6"/><circle cx="26.6" cy="-6" r=".9" fill="#1A1020"/>
-      <path d="M-2 -8V-46" stroke="#4A2E16" stroke-width="2.2"/><path d="M-18 -42H14" stroke="#4A2E16" stroke-width="1.6"/><path d="M-17 -42Q-20 -26 -16 -14H12Q16 -26 13 -42Z" fill="${voile}" ${INK}/><path d="M-17 -34Q-2 -30 13 -34M-18 -24Q-2 -20 14 -24" stroke="#000" stroke-opacity=".2" stroke-width="2" fill="none"/>${mat || ""}</g></g>`;
+    const galere = (x, y, sc, voile, fl, mat, rot) => `${G(x, y, sc, rot)}<g transform="scale(${fl ? -1 : 1} 1)">${[-22, -14, -6, 2, 10, 18].map(u => `<path d="M${u} 0l-6 9" stroke="#4A2E16" stroke-width="1.3"/>`).join("")}<path d="M-36 -10Q-30 4 0 4Q26 4 34 -8L40 -16Q36 -8 30 -9Z" fill="#6A3E1E" ${INK}/><path d="M-36 -10Q-40 -16 -44 -14Q-40 -10 -34 -8" fill="#6A3E1E" ${INK}/><path d="M-32 -6H30" stroke="#E2B93B" stroke-width="1.6"/><path d="M-30 -2Q0 2 28 -4" stroke="#FFC870" stroke-width="1.4" fill="none" opacity=".7"/><circle cx="26" cy="-6" r="2" fill="#F4F1EA" stroke="#1A1020" stroke-width=".6"/><circle cx="26.6" cy="-6" r=".9" fill="#1A1020"/>
+      <path d="M-2 -8V-46" stroke="#4A2E16" stroke-width="2.2"/><path d="M-18 -42H14" stroke="#4A2E16" stroke-width="1.6"/><path d="M-17 -42Q-20 -26 -16 -14H12Q16 -26 13 -42Z" fill="${voile}" ${INK}/><path d="M-17 -34Q-2 -30 13 -34M-18 -24Q-2 -20 14 -24" stroke="#000" stroke-opacity=".2" stroke-width="2" fill="none"/><path d="M12 -40Q15 -26 12 -15" stroke="#FFC870" stroke-width="1.6" fill="none" opacity=".8"/>${mat || ""}</g></g>`;
     // une crête de vague « à la japonaise » (rouleau d'écume griffu), dessinée vers la droite
     const crete = (x, y, sc, fl, c1, c2) => `${G(x, y, sc)}<g transform="scale(${fl ? -1 : 1} 1)"><path d="M-40 10Q-30 -20 0 -30Q26 -36 34 -16Q36 -4 26 -2Q30 -14 18 -18Q4 -20 0 -6Q-4 6 -14 10Z" fill="${c1 || "#1E6A8E"}" ${INK}/><path d="M-30 4Q-20 -18 2 -24Q22 -28 28 -16" stroke="#BFF4EE" stroke-width="2.4" fill="none" opacity=".8"/><path d="M34 -16Q38 -24 32 -30M28 -26q6 -8 2 -14M20 -30q4 -8 -2 -12" stroke="${c2 || "#F4FFFC"}" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M26 -2Q30 -14 18 -18Q8 -18 6 -10Q14 -12 18 -6Z" fill="${c2 || "#F4FFFC"}"/></g></g>`;
-    // ---- 0. dégradés : la mer éclairée par le soleil couchant (en bas à droite), assombrie par la tempête (au centre gauche)
-    s.push(`<radialGradient id="o2-mer" cx="96%" cy="92%" r="118%" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#FFE6A8"/><stop offset=".1" stop-color="#F7B866"/><stop offset=".22" stop-color="#5FCFC0"/><stop offset=".42" stop-color="#2394A8"/><stop offset=".64" stop-color="#1D5C8C"/><stop offset=".84" stop-color="#34357A"/><stop offset="1" stop-color="#2C2260"/></radialGradient>`);
-    s.push(`<radialGradient id="o2-orage" r="50%"><stop offset="0" stop-color="#0E0A2A" stop-opacity=".75"/><stop offset=".55" stop-color="#1C1446" stop-opacity=".5"/><stop offset="1" stop-color="#2A1E5A" stop-opacity="0"/></radialGradient>`);
-    s.push(`<radialGradient id="o2-soleil" r="50%"><stop offset="0" stop-color="#FFF4C8" stop-opacity=".95"/><stop offset=".25" stop-color="#FFC870" stop-opacity=".6"/><stop offset=".6" stop-color="#FF8A5A" stop-opacity=".18"/><stop offset="1" stop-color="#FF7A5A" stop-opacity="0"/></radialGradient>`);
-    s.push(`<radialGradient id="o2-feu" r="50%"><stop offset="0" stop-color="#FFD27A" stop-opacity=".9"/><stop offset=".35" stop-color="#FF7A1E" stop-opacity=".5"/><stop offset="1" stop-color="#C8281E" stop-opacity="0"/></radialGradient>`);
-    s.push(`<linearGradient id="o2-dieu" x1="0" y1="0" x2="1" y2=".4"><stop offset="0" stop-color="#1E5E66"/><stop offset=".45" stop-color="#3E9A94"/><stop offset=".8" stop-color="#8ADCC6"/><stop offset="1" stop-color="#E8D4A0"/></linearGradient>`);
+    // ---- 0. dégradés : une seule lumière, l'aube derrière Ithaque (bas droite) ; la nuit recule vers Troie (bas gauche)
+    s.push(`<radialGradient id="o2-mer" cx="100%" cy="100%" r="125%" gradientUnits="objectBoundingBox"><stop offset="0" stop-color="#FFEBB0"/><stop offset=".1" stop-color="#F8BE6C"/><stop offset=".22" stop-color="#6ED0BE"/><stop offset=".4" stop-color="#2A93A6"/><stop offset=".6" stop-color="#1D5D88"/><stop offset=".8" stop-color="#1A3866"/><stop offset="1" stop-color="#141E46"/></radialGradient>`);
+    s.push(`<radialGradient id="o2-nuit" r="50%"><stop offset="0" stop-color="#0A0C26" stop-opacity=".6"/><stop offset=".6" stop-color="#101436" stop-opacity=".3"/><stop offset="1" stop-color="#101436" stop-opacity="0"/></radialGradient>`);
+    s.push(`<radialGradient id="o2-feu" r="50%"><stop offset="0" stop-color="#FFB050" stop-opacity=".85"/><stop offset=".4" stop-color="#FF6A1E" stop-opacity=".4"/><stop offset="1" stop-color="#C8281E" stop-opacity="0"/></radialGradient>`);
+    s.push(`<linearGradient id="o2-dieu" x1="0" y1="0" x2="1" y2=".4"><stop offset="0" stop-color="#1E5E66"/><stop offset=".45" stop-color="#3E9A94"/><stop offset=".8" stop-color="#8ADCC6"/><stop offset="1" stop-color="#F0D8A0"/></linearGradient>`);
     s.push(`<linearGradient id="o2-or" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF2B8"/><stop offset=".35" stop-color="#F2C64A"/><stop offset=".75" stop-color="#B07A1E"/><stop offset="1" stop-color="#6A440E"/></linearGradient>`);
+    s.push(`<radialGradient id="o2-bronze" cx="62%" cy="66%" r="70%"><stop offset="0" stop-color="#F2C27A"/><stop offset=".5" stop-color="#B0702E"/><stop offset="1" stop-color="#5A3410"/></radialGradient>`);
     s.push(`<linearGradient id="o2-marbre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF6E4"/><stop offset="1" stop-color="#E8C8A0"/></linearGradient>`);
-    s.push(`<radialGradient id="o2-tourb" r="50%"><stop offset="0" stop-color="#02060E"/><stop offset=".3" stop-color="#0B2A4A"/><stop offset=".7" stop-color="#1A5A8A"/><stop offset="1" stop-color="#2A6A9A" stop-opacity="0"/></radialGradient>`);
-    s.push(`<linearGradient id="o2-terre" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#E8C878"/><stop offset=".5" stop-color="#9AAA5A"/><stop offset="1" stop-color="#5A7A4A"/></linearGradient>`);
-    s.push(`<linearGradient id="o2-roc" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#9A8A9A"/><stop offset=".5" stop-color="#5A4E6A"/><stop offset="1" stop-color="#2E2844"/></linearGradient>`);
-    // ---- 1. la mer : grandes nappes de lumière, vaguelettes, reflets dorés du soleil
-    const POSE = [612, 432], ITH = [930, 610], TRO = [330, 522];
-    s.push(`<ellipse cx="${POSE[0] - 40}" cy="${POSE[1] - 120}" rx="420" ry="280" fill="url(#o2-orage)"/>`);
-    K.halo(1050, 690, 470, "#FFC870", .45);
-    for (let k = 0; k < 220; k++) { const x = r() * W, y = r() * H; if (K.dT(x, y) < 24) continue; const l = 5 + r() * 8, chaud = Math.hypot(x - 1060, y - 700) < 420;
-      s.push(`<path d="M${f(x)} ${f(y)}q${f(l / 2)} ${f(-l / 2)} ${f(l)} 0q${f(l / 2)} ${f(-l / 2)} ${f(l)} 0" stroke="${chaud ? "#FFF0C0" : "#D8F4FF"}" stroke-width="1.2" fill="none" opacity="${(.15 + r() * .3).toFixed(2)}"/>`); }
-    for (let k = 0; k < 160; k++) { const d = 60 + r() * 520, t = PI + .25 + r() * 1.1, x = 1060 + Math.cos(t) * d, y = 700 + Math.sin(t) * d * .8; if (K.dT(x, y) < 22 || x > 1080 || y > 720) continue; const l = 4 + r() * 10 * (1 - d / 700); s.push(`<path d="M${f(x)} ${f(y)}h${f(l)}" stroke="#FFE7A0" stroke-width="2" stroke-linecap="round" opacity="${Math.max(.3, .45 + (1 - d / 580) * .5).toFixed(2)}"/>`); }
-    // ---- 2. le ciel d'orage autour de Poséidon : nuages en spirale, pluie, éclairs
-    { const ox = POSE[0] - 60, oy = POSE[1] - 170;
-      [[250, 150, 200, 330, 46, .3], [210, 125, 170, 300, 36, .35], [300, 190, 215, 300, 40, .25], [165, 100, 160, 260, 26, .4], [330, 215, 250, 320, 30, .22]].forEach(([rx, ry, a0, a1, w, op], q) => {
-        const P = []; for (let k = 0; k <= 24; k++) { const t = (a0 + (a1 - a0) * k / 24) * PI / 180, sp = 1 + k / 24 * .12; P.push([ox + Math.cos(t) * rx * sp, oy + Math.sin(t) * ry * sp]); }
-        const d = "M" + P.map(p => f(p[0]) + " " + f(p[1])).join("L");
-        s.push(`<path d="${d}" fill="none" stroke="#120E30" stroke-width="${w + 10}" stroke-linecap="round" opacity="${op * .8}" transform="translate(-5 -6)"/><path d="${d}" fill="none" stroke="#4A4486" stroke-width="${w}" stroke-linecap="round" opacity="${op + .2}"/><path d="${d}" fill="none" stroke="#B8B0E8" stroke-width="2" stroke-linecap="round" opacity="${op}" transform="translate(${w * .3} ${w * .3})"/>`); }); }
-    for (let k = 0; k < 70; k++) { const x = 200 + r() * 600, y = 150 + r() * 330; if (K.dT(x, y) < 20) continue; s.push(`<path d="M${f(x)} ${f(y)}l-6 14" stroke="#C8D4FF" stroke-width="1" opacity=".3"/>`); }
-    // ---- 3. TROIE EN FLAMMES (le départ) : la ville sur sa colline, les remparts, le cheval de bois sur la plage
-    { const [x, y] = TRO; K.prendre(x, y, 120); K.prendre(x + 120, y + 30, 70);
+    s.push(`<linearGradient id="o2-terre" x1="1" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#F4D488"/><stop offset=".55" stop-color="#C8B46A"/><stop offset="1" stop-color="#7A8A52"/></linearGradient>`);
+    s.push(`<linearGradient id="o2-vague" x1="0" y1="1" x2=".2" y2="0"><stop offset="0" stop-color="#0C2C58"/><stop offset=".55" stop-color="#17538A"/><stop offset="1" stop-color="#2A86AE"/></linearGradient>`);
+    s.push(`<linearGradient id="o2-houle" gradientUnits="userSpaceOnUse" x1="300" y1="420" x2="1000" y2="640"><stop offset="0" stop-color="#3A6A9A"/><stop offset=".5" stop-color="#5FC4C0"/><stop offset="1" stop-color="#FFE29A"/></linearGradient>`);
+    const POSE = [612, 432], ITH = [930, 610], TRO = [330, 522], GAL = [250, 350];
+    // ---- 1. la mer : la nuit qui recule (haut gauche), les rayons de l'aube, vaguelettes et reflets dorés
+    s.push(`<ellipse cx="230" cy="250" rx="380" ry="300" fill="url(#o2-nuit)"/>`);
+    K.halo(1080, 720, 560, "#FFC870", .5);
+    [[200, 3.2], [212, 2.2], [224, 3.6], [238, 2.4], [252, 3]].forEach(([ang, w]) => { const t1 = (ang - w) * PI / 180, t2 = (ang + w) * PI / 180, L = 1500;
+      s.push(`<path d="M1090 730L${f(1090 + Math.cos(t1) * L)} ${f(730 + Math.sin(t1) * L)}L${f(1090 + Math.cos(t2) * L)} ${f(730 + Math.sin(t2) * L)}Z" fill="#FFE6A8" opacity=".07"/>`); });
+    for (let k = 0; k < 200; k++) { const x = r() * W, y = r() * H; if (K.dT(x, y) < 24) continue; const l = 5 + r() * 8, chaud = Math.hypot(x - 1080, y - 720) < 460;
+      s.push(`<path d="M${f(x)} ${f(y)}q${f(l / 2)} ${f(-l / 2)} ${f(l)} 0q${f(l / 2)} ${f(-l / 2)} ${f(l)} 0" stroke="${chaud ? "#FFF0C0" : "#CFEFFF"}" stroke-width="1.2" fill="none" opacity="${(.12 + r() * .26).toFixed(2)}"/>`); }
+    for (let k = 0; k < 170; k++) { const d = 60 + r() * 600, t = PI + .2 + r() * 1.2, x = 1080 + Math.cos(t) * d, y = 720 + Math.sin(t) * d * .8; if (K.dT(x, y) < 22 || x > 1080 || y > 720) continue; const l = 4 + r() * 11 * (1 - d / 760); s.push(`<path d="M${f(x)} ${f(y)}h${f(l)}" stroke="#FFE7A0" stroke-width="2" stroke-linecap="round" opacity="${Math.max(.22, .4 + (1 - d / 600) * .5).toFixed(2)}"/>`); }
+    // ---- 2. LA HOULE : un seul courant qui part de Troie, porte la galère, passe sous Poséidon et vient mourir doré sur Ithaque
+    const HOULE = `M300 452C214 420 176 360 220 318C270 270 380 300 470 380C540 444 600 480 700 504C800 528 880 568 960 620`;
+    s.push(`<path d="${HOULE}" fill="none" stroke="url(#o2-houle)" stroke-width="96" stroke-linecap="round" opacity=".38" filter="url(#o2-flou8)"/>`);
+    [[-22, .5], [0, .75], [22, .5]].forEach(([o, op]) => s.push(`<path d="${HOULE}" fill="none" stroke="#F4FFFC" stroke-width="2.4" stroke-dasharray="${18 + (o > 0 ? 6 : 0)} 16" stroke-linecap="round" opacity="${op}" transform="translate(${o * .4} ${o})"/>`));
+    a.push(`<path d="${HOULE}" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="3 30" stroke-linecap="round" opacity=".85">${an(`<animate attributeName="stroke-dashoffset" values="66;0" dur="2s" repeatCount="indefinite"/>`)}</path>`);
+    // ---- 3. LA VAGUE GÉANTE qui se soulève avec le dieu et roule vers la droite (le sens de la course)
+    { const V = `M330 476C370 330 450 130 570 70C650 30 760 36 806 96C830 130 816 176 782 178C800 154 792 126 764 124C786 240 816 370 846 474Z`;
+      s.push(`<path d="${V}" fill="#08142A" opacity=".45" transform="translate(-12 10)" filter="url(#o2-flou)"/><path d="${V}" fill="url(#o2-vague)" ${INK}/>`);
+      // le creux sombre sous la lèvre, les couches d'eau, l'écume griffue de la crête (dorée par l'aube côté droit)
+      s.push(`<path d="M764 124C780 170 792 210 798 250C780 220 762 180 742 138C750 128 756 124 764 124Z" fill="#071830" opacity=".6"/>`);
+      [1, 2, 3, 4, 5].forEach(k => { const d = k * 52; s.push(`<path d="M${352 + k * 22} 476C${392 + k * 20} ${f(330 + d * .3)} ${460 + k * 14} ${f(130 + d * .9)} ${570 + k * 6} ${70 + d}C650 ${34 + d} ${750 - k * 6} ${40 + d} ${790 - k * 4} ${96 + d}" stroke="#4AA6C4" stroke-width="${f(5 - k * .6)}" fill="none" opacity="${(.6 - k * .08).toFixed(2)}"/>`); });
+      s.push(`<path d="M330 476C370 330 450 130 570 70" stroke="#F4FFFC" stroke-width="4" fill="none" stroke-dasharray="26 10" stroke-linecap="round" opacity=".7"/>`);
+      s.push(`<path d="M520 110C600 50 730 30 796 90C824 120 818 168 782 178" stroke="#F4FFFC" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M620 52C700 30 770 44 806 90" stroke="#FFE6A8" stroke-width="3" fill="none" opacity=".9"/>`);
+      [[782, 180, 150], [808, 168, 110], [822, 140, 70], [812, 108, 40]].forEach(([u, v, ang]) => s.push(`${G(u, v, 1.9, ang)}<path d="M-6 2Q-4 -10 4 -12Q10 -12 8 -6Q4 -8 2 -4" stroke="#F4FFFC" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="9" cy="-14" r="2.2" fill="#F4FFFC"/></g>`));
+      [[548, 94, -40], [600, 62, -26], [660, 44, -10], [716, 40, 6]].forEach(([u, v, ang]) => s.push(`${G(u, v, 1.3, ang)}<path d="M-6 2Q-4 -10 4 -12Q10 -12 8 -6Q4 -8 2 -4" stroke="#F4FFFC" stroke-width="3" fill="none" stroke-linecap="round"/></g>`));
+      [[360, 400, -68], [390, 320, -64], [428, 238, -58], [474, 162, -50]].forEach(([u, v, ang]) => s.push(`${G(u, v, 1.5, ang)}<path d="M-10 4Q-6 -8 4 -10Q12 -10 10 -2" stroke="#F4FFFC" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".75"/></g>`));
+      a.push(`<g opacity="${K.anime ? 0 : .8}">${an(`<animate attributeName="opacity" values="0;.9;0" dur="3.4s" repeatCount="indefinite"/>`)}${[[640, 38], [750, 30], [836, 132]].map(([u, v]) => `<circle cx="${u}" cy="${v}" r="3.4" fill="#FFFFFF"/><circle cx="${u + 10}" cy="${v - 8}" r="2.2" fill="#FFFFFF"/>`).join("")}</g>`); }
+    // ---- 4. TROIE EN FLAMMES (le départ) : la ville sur sa colline, fondue dans la mer, le feu qui rougit l'eau
+    { const [x, y] = TRO; K.prendre(x, y, 120);
       const cote = `M${x - 130} ${y + 40}Q${x - 150} ${y - 10} ${x - 110} ${y - 50}Q${x - 60} ${y - 90} ${x + 10} ${y - 80}Q${x + 90} ${y - 74} ${x + 150} ${y - 20}Q${x + 190} ${y + 20} ${x + 170} ${y + 70}Q${x + 100} ${y + 96} ${x} ${y + 88}Q${x - 100} ${y + 84} ${x - 130} ${y + 40}Z`;
-      s.push(`<path d="${cote}" fill="#7FE0D4" opacity=".4" transform="translate(${x} ${y}) scale(1.12) translate(${-x} ${-y})"/><path d="${cote}" fill="none" stroke="#F4FFFC" stroke-width="2.6" stroke-dasharray="12 6" opacity=".75" transform="translate(${x} ${y}) scale(1.06) translate(${-x} ${-y})"/><path d="${cote}" fill="#E6CF94"/><path d="${cote}" fill="#B89A62" transform="translate(${x} ${y - 6}) scale(.9) translate(${-x} ${-y})"/>`);
-      K.halo(x - 20, y - 50, 170, "#FF7A1E", .6);
+      // reflet du feu sur l'eau tout autour, hauts-fonds flous (pas de contour découpé)
+      s.push(`<ellipse cx="${x + 20}" cy="${y - 10}" rx="290" ry="170" fill="url(#o2-feu)" opacity=".75"/>`);
+      for (let k = 0; k < 40; k++) { const t = r() * TAU, d = 150 + r() * 120, u = x + 20 + Math.cos(t) * d, v = y - 10 + Math.sin(t) * d * .6; if (K.dT(u, v) < 22 || u < 0) continue; s.push(`<path d="M${f(u)} ${f(v)}h${f(6 + r() * 10)}" stroke="#FFB050" stroke-width="2" stroke-linecap="round" opacity="${(.35 + r() * .4).toFixed(2)}"/>`); }
+      s.push(`<path d="${cote}" fill="#8ADCC6" opacity=".45" transform="translate(${x} ${y}) scale(1.16) translate(${-x} ${-y})" filter="url(#o2-flou8)"/><path d="${cote}" fill="#D8B878"/><path d="${cote}" fill="#A8844E" transform="translate(${x} ${y - 6}) scale(.9) translate(${-x} ${-y})"/>`);
+      // un seul panache de fumée, net, qui part vers le coin sombre (bas gauche), éclairé par-dessous par le feu
+      { const PL = [[240, 408, 15], [226, 390, 19], [204, 376, 23], [176, 368, 27], [144, 362, 30], [108, 352, 34], [70, 338, 38], [28, 322, 44], [-10, 306, 48], [196, 356, 14], [150, 344, 18], [104, 330, 22], [56, 312, 26]];
+        a.push(`<g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;-8 -4;0 0" dur="6s" repeatCount="indefinite"/>`)}<g opacity=".85">${PL.map(([u, v, R]) => `<circle cx="${u + 3}" cy="${v + 5}" r="${R}" fill="#C8642A"/>`).join("")}${PL.map(([u, v, R]) => `<circle cx="${u}" cy="${v}" r="${R}" fill="#3A2C44"/>`).join("")}${PL.map(([u, v, R]) => `<circle cx="${u - R * .25}" cy="${v - R * .3}" r="${R * .45}" fill="#4E405A"/>`).join("")}</g></g>`); }
+      K.halo(x - 20, y - 50, 180, "#FF7A1E", .65);
       s.push(`${G(x - 14, y - 2, 1.12)}
         ${[[-70, -58, 18], [-46, -66, 22], [-20, -60, 16], [22, -62, 20], [44, -54, 16]].map(([u, v, w]) => `<rect x="${u - w / 2}" y="${v}" width="${w}" height="${-v - 40}" fill="#C9A47A" ${INK}/><path d="M${u - w / 2 - 3} ${v}l${w / 2 + 3} -10l${w / 2 + 3} 10z" fill="#7A2A1A" ${INK}/><rect x="${u - 3}" y="${v + 6}" width="6" height="7" fill="#FFB347"/>`).join("")}
         <path d="M-14 -78h28l-14 -10z" fill="url(#o2-marbre)" ${INK}/>${[-12, -6, 0, 6, 12].map(u => `<rect x="${u - 1.4}" y="-78" width="2.8" height="16" fill="#F4F1EA" stroke="#8A8270" stroke-width=".5"/>`).join("")}<rect x="-15" y="-63" width="30" height="3" fill="#D8D0BC" ${INK}/>
         <rect x="-92" y="-44" width="146" height="44" fill="#D9BE8E" ${INK}/>${[-36, -26, -16, -8].map(v => `<path d="M-92 ${v}H54" stroke="#A88A5A" stroke-width=".8"/>`).join("")}${Array.from({ length: 18 }, (_, q) => `<rect x="${-92 + q * 8.2}" y="-49" width="5" height="5" fill="#D9BE8E" ${INK}/>`).join("")}
-        ${[-92, -30, 42].map(u => `<rect x="${u - 4}" y="-68" width="26" height="68" fill="#E2C898" ${INK}/>${[0, 1, 2].map(q => `<rect x="${u - 4 + q * 9.5}" y="-74" width="6" height="6" fill="#E2C898" ${INK}/>`).join("")}<path d="M${u + 6} -52v-6a3 3 0 0 1 6 0v6z" fill="#FFB347" ${INK}/><path d="M${u + 3} -62q6 -10 12 0" stroke="#2A1A10" stroke-width="3" opacity=".5" fill="none"/>`).join("")}
-        <path d="M-2 0v-24a10 10 0 0 1 20 0v24z" fill="#2A1A10" ${INK}/><path d="M-2 0l-8 4v-26l8 -2zM18 0l8 4v-26l-8 -2z" fill="#7A4A26" ${INK}/></g>`);
-      // le cheval de bois sur la plage (trappe ouverte, un Grec descend à l'échelle de corde)
-      s.push(`${G(x + 136, y + 48, 1.3)}<ellipse cx="-6" cy="2" rx="40" ry="6" fill="#000" opacity=".3"/><rect x="-30" y="-8" width="60" height="7" rx="2" fill="#6A4422" ${INK}/>${[-22, -4, 14].map(u => `<circle cx="${u}" cy="0" r="5" fill="#8A5A2E" ${INK}/><circle cx="${u}" cy="0" r="1.6" fill="#3A2414"/>`).join("")}
-        ${[-20, -10, 10, 20].map(u => `<rect x="${u - 3}" y="-30" width="6" height="23" fill="#A8703A" ${INK}/>`).join("")}<path d="M-30 -44Q-32 -28 -18 -26H22Q34 -28 30 -44Q26 -54 0 -54Q-26 -54 -30 -44Z" fill="#B97E44" ${INK}/>${[-18, -8, 2, 12, 22].map(u => `<path d="M${u} -53V-27" stroke="#7A4A26" stroke-width=".9"/>`).join("")}<path d="M-30 -44Q-26 -50 0 -52Q24 -52 30 -44" stroke="#F2C27A" stroke-width="2" fill="none" opacity=".6"/>
-        <path d="M-24 -46L-36 -78L-24 -82L-12 -50Z" fill="#B97E44" ${INK}/><path d="M-38 -76Q-52 -78 -54 -68L-50 -64Q-42 -66 -34 -66Z" fill="#B97E44" ${INK}/><path d="M-36 -82l-2 -8l5 6zM-30 -84l1 -8l3 7z" fill="#B97E44" ${INK}/><circle cx="-40" cy="-74" r="1.6" fill="#1A1020"/>
-        <path d="M-24 -84l6 4l-4 2l7 4l-4 2l7 5l-4 3l6 4" stroke="#5A3418" stroke-width="2" fill="none"/><path d="M30 -46Q42 -42 40 -26" stroke="#5A3418" stroke-width="3" fill="none"/>
-        <rect x="-6" y="-27" width="12" height="6" fill="#2A1A0E" ${INK}/><path d="M-4 -21V-6M3 -21V-6M-4 -17h7M-4 -13h7M-4 -9h7" stroke="#C9A06A" stroke-width=".9"/>
-        <g transform="translate(-1 -8)"><circle cx="0" cy="-4" r="2.6" fill="${PEAU}" ${INK}/><path d="M-3 -5q3 -6 6 0" fill="#C9962A" ${INK}/><path d="M-3 -8q3 -4 7 -2" stroke="#C8283A" stroke-width="1.6" fill="none"/><rect x="-2.2" y="-1.6" width="4.4" height="6" fill="#8A2A1E" ${INK}/></g></g>`);
-      // flammes (animées) et grande fumée qui file vers la tempête
+        ${[-92, -30, 42].map(u => `<rect x="${u - 4}" y="-68" width="26" height="68" fill="#E2C898" ${INK}/>${[0, 1, 2].map(q => `<rect x="${u - 4 + q * 9.5}" y="-74" width="6" height="6" fill="#E2C898" ${INK}/>`).join("")}<path d="M${u + 6} -52v-6a3 3 0 0 1 6 0v6z" fill="#FFB347" ${INK}/>`).join("")}
+        <path d="M-92 -44h146" stroke="#FF9A4A" stroke-width="2" opacity=".7"/>
+        <path d="M-2 0v-24a10 10 0 0 1 20 0v24z" fill="#FFB347" ${INK}/><path d="M-2 0v-24a10 10 0 0 1 20 0v24z" fill="#FF6A1E" opacity=".5"/><path d="M-2 0l-14 6v-28l14 -2zM18 0l14 6v-28l-14 -2z" fill="#7A4A26" ${INK}/></g>`);
       const flamme = (u, v, h, q) => `<g transform="translate(${f(u)} ${f(v)})"><g>${an(`<animateTransform attributeName="transform" type="scale" values="1 1;.85 1.25;1.1 .9;1 1" dur="${(.7 + q * .13).toFixed(2)}s" repeatCount="indefinite"/>`)}<path d="M-9 0Q-11 ${f(-h * .5)} 0 ${f(-h)}Q11 ${f(-h * .5)} 9 0Z" fill="#E8471E"/><path d="M-5 0Q-6 ${f(-h * .4)} 0 ${f(-h * .7)}Q6 ${f(-h * .4)} 5 0Z" fill="#FFB12A"/><path d="M-2 0Q-2 ${f(-h * .2)} 0 ${f(-h * .4)}Q2 ${f(-h * .2)} 2 0Z" fill="#FFF2B0"/></g></g>`;
       const B = (u, v) => [x - 14 + u * 1.12, y - 2 + v * 1.12];
-      a.push([[-79, -74, 30], [-46, -66, 38], [-17, -76, 26], [22, -62, 34], [55, -74, 26], [-60, -40, 22]].map(([u, v, h], q) => { const [px, py] = B(u, v); return flamme(px, py, h, q); }).join(""));
-      for (let q = 0; q < 6; q++) s.push(`<circle cx="${f(x - 40 - q * 26)}" cy="${f(y - 120 - q * 22)}" r="${f(18 + q * 5)}" fill="#3A2E3E" opacity="${(.5 - q * .06).toFixed(2)}"/>`);
-      [0, 1, 2].forEach(q => a.push(`<g opacity="${K.anime ? 0 : .45}">${an(`<animateTransform attributeName="transform" type="translate" values="0 0;${-40 - q * 10} -60" dur="${6 + q}s" begin="-${q * 2}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.55;0" dur="${6 + q}s" begin="-${q * 2}s" repeatCount="indefinite"/>`)}<circle cx="${f(x - 60 + q * 40)}" cy="${f(y - 110)}" r="${16 + q * 3}" fill="#5A4A52"/><circle cx="${f(x - 52 + q * 40)}" cy="${f(y - 118)}" r="10" fill="#7A6A72"/></g>`));
-      nom(x - 30, y + 60, "Troie", 17); bulle(x - 40, y - 124, "Un cadeau des Grecs ?", 10, 0); }
-    // ---- 4. la galère d'Ulysse, voile rouge, dans la tempête ; son long sillage depuis la plage de Troie
-    const GAL = [282, 262];
-    { const [x, y] = GAL; K.prendre(x, y - 10, 60);
-      const sill = `M${TRO[0] + 70} ${TRO[1] - 70}Q${TRO[0] + 40} ${TRO[1] - 140} ${x - 30} ${y + 30}`;
-      s.push(`<path d="${sill}" fill="none" stroke="#F4FFFC" stroke-width="16" stroke-linecap="round" opacity=".18"/><path d="${sill}" fill="none" stroke="#F4FFFC" stroke-width="3" stroke-dasharray="10 9" stroke-linecap="round" opacity=".7"/>`);
-      a.push(`<path d="${sill}" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="2 18" stroke-linecap="round" opacity=".9">${an(`<animate attributeName="stroke-dashoffset" values="40;0" dur="1.6s" repeatCount="indefinite"/>`)}</path>`);
+      a.push([[-79, -74, 34], [-46, -66, 42], [-17, -76, 28], [22, -62, 36], [-60, -40, 24]].map(([u, v, h], q) => { const [px, py] = B(u, v); return flamme(px, py, h, q); }).join(""));
+      // LE CHEVAL DE BOIS, grand, devant la porte ouverte de la ville (on le reconnaît d'un coup d'œil)
+      s.push(`${G(x + 124, y + 52, 2.05)}<ellipse cx="-6" cy="3" rx="44" ry="6" fill="#000" opacity=".35"/><rect x="-30" y="-8" width="60" height="7" rx="2" fill="#6A4422" ${INK}/>${[-22, -4, 14].map(u => `<circle cx="${u}" cy="0" r="5" fill="#8A5A2E" ${INK}/><circle cx="${u}" cy="0" r="1.6" fill="#3A2414"/>`).join("")}
+        ${[-20, -10, 10, 20].map(u => `<rect x="${u - 3}" y="-30" width="6" height="23" fill="#A8703A" ${INK}/>`).join("")}<path d="M-30 -44Q-32 -28 -18 -26H22Q34 -28 30 -44Q26 -54 0 -54Q-26 -54 -30 -44Z" fill="#B97E44" ${INK}/>${[-18, -8, 2, 12, 22].map(u => `<path d="M${u} -53V-27" stroke="#7A4A26" stroke-width=".9"/>`).join("")}<path d="M-30 -44Q-26 -50 0 -52Q24 -52 30 -44" stroke="#FFB050" stroke-width="2" fill="none" opacity=".7"/>
+        <path d="M-24 -46L-36 -78L-24 -82L-12 -50Z" fill="#B97E44" ${INK}/><path d="M-38 -76Q-52 -78 -54 -68L-50 -64Q-42 -66 -34 -66Z" fill="#B97E44" ${INK}/><path d="M-36 -82l-2 -8l5 6zM-30 -84l1 -8l3 7z" fill="#B97E44" ${INK}/><circle cx="-40" cy="-74" r="1.6" fill="#1A1020"/>
+        <path d="M-24 -84l6 4l-4 2l7 4l-4 2l7 5l-4 3l6 4" stroke="#5A3418" stroke-width="2" fill="none"/><path d="M30 -46Q42 -42 40 -26" stroke="#5A3418" stroke-width="3" fill="none"/>
+        <path d="M-36 -78L-24 -82L-12 -50M-30 -44Q-32 -28 -18 -26" stroke="#FFB050" stroke-width="1.2" fill="none" opacity=".6"/>
+        <rect x="-6" y="-27" width="12" height="6" fill="#2A1A0E" ${INK}/><path d="M-4 -21V-6M3 -21V-6M-4 -17h7M-4 -13h7M-4 -9h7" stroke="#C9A06A" stroke-width=".9"/></g>`);
+      }
+    // ---- 5. LA GALÈRE D'ULYSSE, voile rouge, grande, portée par la houle face à la vague et au dieu
+    { const [x, y] = GAL; K.prendre(x, y - 20, 90);
       const ulysse = `<g transform="translate(-2 -30)"><circle cx="0" cy="-12" r="3.4" fill="${PEAU}" ${INK}/><path d="M-3.4 -13q3 -6 7 0" fill="#5A3A1E"/><rect x="-3" y="-9" width="6" height="12" fill="#C8283A" ${INK}/><path d="M-5 -5h10M-5 -1h10M-5 3h10" stroke="#C9A06A" stroke-width="1.2"/></g>`;
-      a.push(`<g>${an(`<animateTransform attributeName="transform" type="rotate" values="-6 ${x} ${y};5 ${x} ${y};-6 ${x} ${y}" dur="3s" repeatCount="indefinite"/>`)}${galere(x, y, 1.35, "#C8283A", 0, ulysse)}${crete(x - 34, y + 14, .7, 1)}</g>`);
-      bulle(x - 66, y + 74, "Ramez, compagnons !", 9, 3); }
-    // ---- 5. POSÉIDON, géant, surgit des vagues au cœur de la carte (trident levé, barbe d'écume, couronne d'or)
-    { const [x, y] = POSE, S = .95; K.prendre(x, y - 130, 150); K.halo(x, y - 170, 190, "#9FF4E8", .35);
+      s.push(`<ellipse cx="${x}" cy="${y + 16}" rx="104" ry="14" fill="#F4FFFC" opacity=".22"/>`);
+      a.push(`<g>${an(`<animateTransform attributeName="transform" type="rotate" values="-5 ${x} ${y};4 ${x} ${y};-5 ${x} ${y}" dur="3s" repeatCount="indefinite"/>`)}${galere(x, y, 2.3, "#C8283A", 0, ulysse, -6)}${crete(x - 66, y + 22, 1.1, 1)}${crete(x + 92, y + 6, .9, 0)}</g>`); }
+    // ---- 6. POSÉIDON, géant, surgit au cœur de la carte, le trident plongé sur la galère
+    { const [x, y] = POSE, S = .95; K.prendre(x, y - 130, 150); 
       const bras = (d, w) => `<path d="${d}" stroke="#12303A" stroke-width="${w + 3}" stroke-linecap="round" fill="none"/><path d="${d}" stroke="url(#o2-dieu)" stroke-width="${w}" stroke-linecap="round" fill="none"/>`;
       s.push(`${G(x, y, S)}
-        <g transform="translate(-122 -214) rotate(-74)"><path d="M0 36V-170" stroke="#1A1020" stroke-width="7"/><path d="M0 36V-170" stroke="url(#o2-or)" stroke-width="5"/><path d="M-24 -158Q-24 -176 -26 -196M0 -170V-208M24 -158Q24 -176 26 -196" stroke="#1A1020" stroke-width="6.4" fill="none" stroke-linecap="round"/><path d="M-24 -158Q-24 -176 -26 -196M0 -170V-208M24 -158Q24 -176 26 -196" stroke="#F2C64A" stroke-width="4.2" fill="none" stroke-linecap="round"/><path d="M-26 -160Q0 -148 26 -160" stroke="#1A1020" stroke-width="7" fill="none"/><path d="M-26 -160Q0 -148 26 -160" stroke="#F2C64A" stroke-width="4.6" fill="none"/>${[[-26, -196], [0, -208], [26, -196]].map(([u, v]) => `<path d="M${u - 5} ${v + 5}L${u} ${v - 10}L${u + 5} ${v + 5}Z" fill="#FFF2B8" ${INK}/>`).join("")}</g>
+        <g transform="translate(-130 -252) rotate(-114)"><path d="M0 36V-170" stroke="#1A1020" stroke-width="7"/><path d="M0 36V-170" stroke="url(#o2-or)" stroke-width="5"/><path d="M-24 -158Q-24 -176 -26 -196M0 -170V-208M24 -158Q24 -176 26 -196" stroke="#1A1020" stroke-width="6.4" fill="none" stroke-linecap="round"/><path d="M-24 -158Q-24 -176 -26 -196M0 -170V-208M24 -158Q24 -176 26 -196" stroke="#F2C64A" stroke-width="4.2" fill="none" stroke-linecap="round"/><path d="M-26 -160Q0 -148 26 -160" stroke="#1A1020" stroke-width="7" fill="none"/><path d="M-26 -160Q0 -148 26 -160" stroke="#F2C64A" stroke-width="4.6" fill="none"/>${[[-26, -196], [0, -208], [26, -196]].map(([u, v]) => `<path d="M${u - 5} ${v + 5}L${u} ${v - 10}L${u + 5} ${v + 5}Z" fill="#FFF2B8" ${INK}/>`).join("")}</g>
         <path d="M-58 0C-64 -50 -78 -100 -72 -140Q-50 -158 -18 -160H18Q50 -158 72 -140C78 -100 64 -50 58 0Z" fill="url(#o2-dieu)" ${INK}/>
-        <path d="M-44 -118Q-22 -100 0 -112Q22 -100 44 -118M0 -108V-30M-20 -82h40M-17 -58h34M-38 -138Q-50 -100 -44 -70M38 -138Q50 -100 44 -70" stroke="#14404A" stroke-width="1.8" fill="none"/><path d="M30 -150Q56 -148 64 -130" stroke="#C8FFF0" stroke-width="3" fill="none" opacity=".6"/>
-        ${bras("M-62 -140Q-100 -150 -112 -180Q-118 -196 -122 -212", 26)}<circle cx="-122" cy="-214" r="15" fill="url(#o2-dieu)" ${INK}/><path d="M-130 -224v22M-122 -226v24M-114 -224v22" stroke="#14404A" stroke-width="1.4"/>
+        <path d="M-44 -118Q-22 -100 0 -112Q22 -100 44 -118M0 -108V-30M-20 -82h40M-17 -58h34M-38 -138Q-50 -100 -44 -70M38 -138Q50 -100 44 -70" stroke="#14404A" stroke-width="1.8" fill="none"/><path d="M30 -150Q56 -148 64 -130M66 -110Q70 -60 58 -10" stroke="#FFE6A8" stroke-width="3" fill="none" opacity=".6"/>
+        ${bras("M-62 -140Q-104 -160 -118 -200Q-126 -226 -130 -250", 26)}<circle cx="-130" cy="-252" r="15" fill="url(#o2-dieu)" ${INK}/><path d="M-138 -262v22M-130 -264v24M-122 -262v22" stroke="#14404A" stroke-width="1.4"/>
         ${bras("M62 -140Q110 -128 134 -150Q150 -164 164 -168", 24)}<path d="M156 -176q8 -14 16 -6q6 -10 12 -2q6 -6 8 4l-8 12q-16 6 -26 0z" fill="url(#o2-dieu)" ${INK}/></g>${crete(x + 168 * S, y - 196 * S, .95, 0, "#2A8AA8")}${G(x, y, S)}
         <rect x="-13" y="-176" width="26" height="18" fill="#2E7A70" ${INK}/>
         <path d="M-30 -200Q-50 -180 -44 -150Q-52 -138 -40 -130M30 -200Q50 -180 44 -150Q52 -138 40 -130" stroke="#DCF4F0" stroke-width="7" fill="none" stroke-linecap="round"/>
@@ -3368,82 +3383,55 @@
         <path d="M-27 -194Q-34 -160 -18 -138Q-8 -120 0 -106Q8 -120 18 -138Q34 -160 27 -194Q14 -176 0 -178Q-14 -176 -27 -194Z" fill="#F0FAF8" ${INK}/>${[-16, -8, 0, 8, 16].map(u => `<path d="M${u} -172Q${u * 1.3} -148 ${u * .5} -126" stroke="#9ACAC8" stroke-width="1.3" fill="none"/>`).join("")}<path d="M-6 -112q6 8 12 0q-2 10 -6 14q-4 -4 -6 -14z" fill="#F0FAF8" ${INK}/>
         <path d="M-15 -180Q-8 -188 0 -183Q8 -188 15 -180Q8 -175 0 -177Q-8 -175 -15 -180Z" fill="#DCF4F0" ${INK}/><path d="M-9 -170Q0 -162 9 -170Q4 -165 0 -165Q-4 -165 -9 -170Z" fill="#1A1020"/>
         <path d="M-3 -200L-5 -186H4Z" fill="#2E7A70" stroke="#14404A" stroke-width=".9"/>
-        <path d="M-19 -210l11 4M19 -210l-11 4" stroke="#0E2A30" stroke-width="3.4" stroke-linecap="round"/><ellipse cx="-11" cy="-201" rx="4.4" ry="2.4" fill="#0E2A26"/><ellipse cx="11" cy="-201" rx="4.4" ry="2.4" fill="#0E2A26"/>
+        <path d="M-19 -212l11 6M19 -210l-11 4" stroke="#0E2A30" stroke-width="3.4" stroke-linecap="round"/><ellipse cx="-11" cy="-201" rx="4.4" ry="2.4" fill="#0E2A26"/><ellipse cx="11" cy="-201" rx="4.4" ry="2.4" fill="#0E2A26"/><circle cx="-12.4" cy="-201" r="1.4" fill="#E8FFFA"/><circle cx="9.6" cy="-201" r="1.4" fill="#E8FFFA"/>
         <path d="M-27 -218Q-34 -240 -40 -250M27 -218Q34 -240 42 -248M-20 -228Q-28 -250 -22 -262M20 -228Q28 -250 24 -262" stroke="#DCF4F0" stroke-width="6" fill="none" stroke-linecap="round"/>
         <path d="M-27 -222L-30 -250L-17 -232L-10 -260L0 -236L10 -260L17 -232L30 -250L27 -222Q0 -232 -27 -222Z" fill="url(#o2-or)" ${INK}/><path d="M-27 -222Q0 -232 27 -222" stroke="#6A440E" stroke-width="2.2" fill="none"/><circle cx="0" cy="-230" r="3.4" fill="#2BB6A3" ${INK}/>
-        <path d="M-160 4Q-140 -26 -110 -8Q-90 -34 -60 -10Q-36 -36 0 -12Q36 -36 60 -10Q90 -34 110 -8Q140 -26 160 4Q80 30 0 26Q-80 30 -160 4Z" fill="#1E7A92" ${INK}/><path d="M-160 4Q-140 -26 -110 -8Q-90 -34 -60 -10Q-36 -36 0 -12Q36 -36 60 -10Q90 -34 110 -8Q140 -26 160 4" stroke="#F4FFFC" stroke-width="4" fill="none" stroke-linecap="round"/>${[-130, -84, -36, 12, 58, 104, 140].map(u => `<path d="M${u - 7} 4q7 -7 14 0" stroke="#F4FFFC" stroke-width="2.2" fill="none"/><circle cx="${u + 9}" cy="-6" r="2.4" fill="#F4FFFC"/>`).join("")}</g>`);
-            // les yeux et le trident qui s'allument, l'éclair qui part du trident, les ondes autour du dieu
-      a.push(`<g opacity="${K.anime ? .15 : 1}">${an(`<animate attributeName="opacity" values=".1;.1;1;1;.1" keyTimes="0;.55;.6;.85;1" dur="7s" repeatCount="indefinite"/>`)}${G(x, y, S)}<ellipse cx="-11" cy="-201" rx="4" ry="2" fill="#E8FFFA"/><ellipse cx="11" cy="-201" rx="4" ry="2" fill="#E8FFFA"/><circle cx="-322" cy="-268" r="30" fill="#E8FFFA" opacity=".35"/></g></g>`);
-      { const [tx, ty] = [x - 322 * S, y - 268 * S], [gx, gy] = [GAL[0] + 30, GAL[1] - 30]; a.push(`<path d="M${f(tx)} ${f(ty)}L${f(tx - 14)} ${f(ty - 22)}L${f(tx - 26)} ${f(ty - 10)}L${f(gx + 22)} ${f(gy - 30)}L${f(gx + 8)} ${f(gy - 18)}L${f(gx)} ${f(gy - 34)}" stroke="#FFF6C8" stroke-width="3" fill="none" stroke-linejoin="round" opacity="${K.anime ? 0 : .9}">${an(`<animate attributeName="opacity" values="0;0;1;.2;1;0;0" keyTimes="0;.58;.6;.63;.66;.72;1" dur="7s" repeatCount="indefinite"/>`)}</path>`); }
-      [[425, 330, 0], [805, 292, 2.3]].forEach(([u, v, b]) => { if (K.dT(u, v) < 30) return; a.push(`<path d="M${u} ${v - 40}l-12 26l10 -2l-14 30l26 -36l-10 2l12 -20z" fill="#FFF6C8" stroke="#FFFFFF" stroke-width="1" opacity="${K.anime ? 0 : .9}">${an(`<animate attributeName="opacity" values="0;0;1;0;1;0;0" keyTimes="0;.7;.72;.75;.77;.8;1" dur="5s" begin="${b}s" repeatCount="indefinite"/>`)}</path>`); });
+        <path d="M-160 4Q-140 -26 -110 -8Q-90 -34 -60 -10Q-36 -36 0 -12Q36 -36 60 -10Q90 -34 110 -8Q140 -26 160 4Q80 30 0 26Q-80 30 -160 4Z" fill="#1E7A92" ${INK}/><path d="M-160 4Q-140 -26 -110 -8Q-90 -34 -60 -10Q-36 -36 0 -12Q36 -36 60 -10Q90 -34 110 -8Q140 -26 160 4" stroke="#F4FFFC" stroke-width="4" fill="none" stroke-linecap="round"/>${[-130, -84, -36, 12, 58, 104, 140].map(u => `<path d="M${u - 7} 4q7 -7 14 0" stroke="#F4FFFC" stroke-width="2.2" fill="none"/><circle cx="${u + 9}" cy="-6" r="2.4" fill="#F4FFFC"/>`).join("")}<path d="M60 -10Q90 -34 110 -8Q140 -26 160 4" stroke="#FFD98A" stroke-width="2.4" fill="none" opacity=".8"/></g>`);
+      // le duel : les yeux s'allument, les pointes du trident flamboient et la foudre frappe l'eau devant la proue
+      const [tx, ty] = [x - 320 * S, y - 167.4 * S];
+      a.push(`<g opacity="${K.anime ? .15 : 1}">${an(`<animate attributeName="opacity" values=".1;.1;1;1;.1" keyTimes="0;.55;.6;.85;1" dur="7s" repeatCount="indefinite"/>`)}${G(x, y, S)}<ellipse cx="-11" cy="-201" rx="4" ry="2" fill="#E8FFFA"/><ellipse cx="11" cy="-201" rx="4" ry="2" fill="#E8FFFA"/></g><circle cx="${f(tx)}" cy="${f(ty)}" r="20" fill="#FFF6C8" opacity=".4"/><circle cx="${f(tx)}" cy="${f(ty)}" r="9" fill="#FFFFFF" opacity=".7"/></g>`);
+      a.push(`<path d="M${f(tx)} ${f(ty)}L${f(tx + 14)} ${f(ty + 22)}L${f(tx + 2)} ${f(ty + 26)}L${f(tx + 18)} ${f(ty + 52)}" stroke="#FFF6C8" stroke-width="4" fill="none" stroke-linejoin="round" opacity="${K.anime ? 0 : .9}">${an(`<animate attributeName="opacity" values="0;0;1;.2;1;0;0" keyTimes="0;.58;.6;.63;.66;.72;1" dur="7s" repeatCount="indefinite"/>`)}</path>`);
       [0, 1].forEach(q => a.push(`<ellipse cx="${x}" cy="${y + 14}" rx="170" ry="36" fill="none" stroke="#E8FFFA" stroke-width="2" opacity="${K.anime ? 0 : .4}">${an(`<animate attributeName="rx" values="170;250" dur="5s" begin="${q * 2.5}s" repeatCount="indefinite"/><animate attributeName="ry" values="36;60" dur="5s" begin="${q * 2.5}s" repeatCount="indefinite"/><animate attributeName="opacity" values=".7;0" dur="5s" begin="${q * 2.5}s" repeatCount="indefinite"/>`)}</ellipse>`));
-      nom(x, y + 58, "Poséidon", 19); bulle(x - 150, y - 278, "Tu ne rentreras pas, Ulysse !", 12, 6); }
-    // ---- 6. LE DÉTROIT : Charybde (le tourbillon) et Scylla aux six têtes dans sa falaise (en haut à droite)
-    { const cx = 790, cy = 72; K.prendre(cx, cy, 70); s.push(`<circle cx="${cx}" cy="${cy}" r="86" fill="url(#o2-tourb)"/>`);
-      const spir = (R0, dt, c, w) => { let d = ""; for (let q = 0; q < 56; q++) { const t = q / 56 * TAU * 2.4 + dt, R = R0 * (1 - q / 62); d += (q ? "L" : "M") + f(cx + Math.cos(t) * R) + " " + f(cy + Math.sin(t) * R * .78); } return `<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" opacity=".85"/>`; };
-      a.push(`<g>${an(`<animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="7s" repeatCount="indefinite"/>`)}${spir(80, 0, "#E8FFFA", 2.8)}${spir(72, 2.1, "#8EEBDD", 2.2)}${spir(76, 4.2, "#E8FFFA", 1.6)}<path d="M${cx + 46} ${cy - 10}l12 5" stroke="#7A4A26" stroke-width="3.4"/><rect x="${cx - 40}" y="${cy + 18}" width="14" height="3.4" fill="#7A4A26"/></g>`);
-      s.push(`<ellipse cx="${cx}" cy="${cy}" rx="14" ry="10" fill="#010408"/>`); nom(cx - 128, cy - 34, "Charybde", 14);
-      const sx = 1010, sy = 110; K.prendre(sx, sy, 80);
-      s.push(`<path d="M940 0Q930 40 950 80Q940 130 980 170Q1010 210 1050 200Q1080 190 1080 160V0Z" fill="#7FE0D4" opacity=".35"/><path d="M952 0Q944 40 962 78Q954 124 990 160Q1016 192 1050 186Q1080 178 1080 150V0Z" fill="url(#o2-roc)" ${INK}/><path d="M968 30Q980 60 972 90M990 120Q1010 150 1040 160" stroke="#8A7EA0" stroke-width="3" fill="none"/><path d="M984 64Q990 100 1010 112Q1030 104 1028 72Q1014 56 984 64Z" fill="#0A0614"/>`);
-      const tete = (u, v, ang) => `<path d="M1006 88Q${f((1006 + u) / 2)} ${f(v - 30)} ${f(u)} ${f(v)}" stroke="#1A1020" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M1006 88Q${f((1006 + u) / 2)} ${f(v - 30)} ${f(u)} ${f(v)}" stroke="#4A8A6A" stroke-width="6" fill="none" stroke-linecap="round"/>${G(u, v, 1.4, ang)}<path d="M0 -5Q10 -6 14 -2L8 0L14 2Q10 6 0 5Q-4 0 0 -5Z" fill="#5AA07A" ${INK}/><path d="M9 -1.4l1.4 1.4l1 -1.4" stroke="#FFF" stroke-width=".8" fill="none"/><circle cx="4" cy="-2.2" r="1.5" fill="#FFE04A"/><path d="M-1 -5l-3 -4M1 -5l1 -5" stroke="#2A5A3A" stroke-width="1.6"/></g>`;
-      [[0, [[920, 40, 170], [905, 92, 160], [940, 150, 140]]], [1, [[955, 196, 110], [890, 128, 190], [930, 10, -170]]]].forEach(([q, L]) => a.push(`<g>${an(`<animateTransform attributeName="transform" type="rotate" values="${q ? 5 : -5} 1006 88;${q ? -6 : 6} 1006 88;${q ? 5 : -5} 1006 88" dur="${3 + q}s" repeatCount="indefinite"/>`)}${L.map(([u, v, an2]) => tete(u, v, an2)).join("")}</g>`));
-      nom(1018, 228, "Scylla", 14); }
-    // ---- 7. ITHAQUE baignée d'or (l'arrivée) : le palais aux 4 boucliers-portraits, l'arc et les 12 haches, l'olivier, Argos
+      // un seul dauphin, qui saute de la vague du dieu dans la lumière de l'aube
+      { const [u, v] = [736, 404]; a.push(`<g${K.anime ? "" : ` transform="translate(${u} ${v - 14})"`}>${an(`<animateMotion dur="3.2s" repeatCount="indefinite" rotate="auto" path="M${u - 34} ${v + 6}Q${u} ${v - 40} ${u + 34} ${v + 6}"/>`)}<g transform="scale(2)"><path d="M-10 0Q-2 -6 8 -2L12 0L8 2Q-2 4 -10 0Z" fill="#4A7A9A" ${INK}/><path d="M-6 -1Q0 -4 8 -1" stroke="#FFE6A8" stroke-width=".9" fill="none"/><path d="M0 -4l-3 -4l5 3z" fill="#4A7A9A"/><path d="M-10 0l-4 -3v6z" fill="#4A7A9A" ${INK}/></g></g>`); } }
+    // ---- 7. SCYLLA : six grands cous qui jaillissent de sa falaise (haut droite) et plongent vers la piste
+    { K.prendre(1010, 110, 80);
+      s.push(`<path d="M940 0Q930 40 950 80Q940 130 980 170Q1010 210 1050 200Q1080 190 1080 160V0Z" fill="#8ADCC6" opacity=".35" filter="url(#o2-flou8)"/><path d="M952 0Q944 40 962 78Q954 124 990 160Q1016 192 1050 186Q1080 178 1080 150V0Z" fill="#3A3452" ${INK}/><path d="M962 78Q954 124 990 160Q1016 192 1050 186" stroke="#E8B878" stroke-width="3" fill="none" opacity=".7"/><path d="M968 30Q980 60 972 90" stroke="#6A5E82" stroke-width="3" fill="none"/><path d="M984 64Q990 100 1010 112Q1030 104 1028 72Q1014 56 984 64Z" fill="#0A0614"/>`);
+      const tete = (u, v, ang) => `<path d="M1006 92Q${f((1006 + u) / 2 + 20)} ${f((92 + v) / 2 - 40)} ${f(u)} ${f(v)}" stroke="#1A1020" stroke-width="15" fill="none" stroke-linecap="round"/><path d="M1006 92Q${f((1006 + u) / 2 + 20)} ${f((92 + v) / 2 - 40)} ${f(u)} ${f(v)}" stroke="#4A8A6A" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M1006 92Q${f((1006 + u) / 2 + 20)} ${f((92 + v) / 2 - 40)} ${f(u)} ${f(v)}" stroke="#C8E89A" stroke-width="2" fill="none" opacity=".5" transform="translate(2 3)"/>${G(u, v, 2.6, ang)}<path d="M0 -5Q10 -6 14 -2L8 0L14 2Q10 6 0 5Q-4 0 0 -5Z" fill="#5AA07A" ${INK}/><path d="M9 -1.4l1.4 1.4l1 -1.4" stroke="#FFF" stroke-width=".8" fill="none"/><circle cx="4" cy="-2.2" r="1.6" fill="#FFE04A"/><circle cx="4.3" cy="-2.2" r=".6" fill="#1A1020"/><path d="M-1 -5l-3 -4M1 -5l1 -5" stroke="#2A5A3A" stroke-width="1.6"/></g>`;
+      [[0, [[868, 112, 165], [884, 176, 145], [932, 222, 120]]], [1, [[1000, 252, 95], [892, 52, -165], [1052, 246, 80]]]].forEach(([q, L]) => a.push(`<g>${an(`<animateTransform attributeName="transform" type="rotate" values="${q ? 4 : -4} 1006 92;${q ? -5 : 5} 1006 92;${q ? 4 : -4} 1006 92" dur="${3 + q}s" repeatCount="indefinite"/>`)}${L.map(([u, v, an2]) => tete(u, v, an2)).join("")}</g>`)); }
+    // ---- 8. ITHAQUE dorée (l'arrivée) : la côte fondue dans la mer, le palais en trois-quarts, les 4 boucliers-portraits, le grand arc
     const PORTR = [];
     { const [x, y] = ITH; K.prendre(x, y, 150);
       const cote = `M690 720Q700 660 750 612Q810 560 880 532Q950 500 1010 470Q1050 452 1080 446V720Z`;
-      s.push(`<path d="${cote}" fill="#BFF4E0" opacity=".45" transform="translate(-14 -14)"/><path d="${cote}" fill="none" stroke="#FFF8E0" stroke-width="3" stroke-dasharray="12 6" opacity=".8" transform="translate(-7 -7)"/><path d="${cote}" fill="#F4DCA0"/><path d="${cote}" fill="url(#o2-terre)" transform="translate(10 14)"/>`);
-      K.halo(1040, 660, 300, "#FFE08A", .7);
-      // l'olivier (le lit d'Ulysse y est taillé)
-      s.push(`${G(1032, 530, 1.4)}<ellipse cx="-10" cy="20" rx="30" ry="6" fill="#000" opacity=".25"/><path d="M-2 22Q-6 4 2 -6Q-6 -14 -2 -20M2 -6Q10 -12 14 -20" stroke="#6A5034" stroke-width="5" fill="none" stroke-linecap="round"/>${[[-16, -22, 13], [2, -32, 15], [18, -22, 12], [-4, -16, 11], [12, -10, 10]].map(([u, v, R]) => `<circle cx="${u}" cy="${v}" r="${R}" fill="#7A9A6A" ${INK}/><circle cx="${u + 3}" cy="${v + 3}" r="${R * .5}" fill="#C8D896"/>`).join("")}${[[-10, -26], [8, -36], [16, -18], [-2, -12]].map(([u, v]) => `<ellipse cx="${u}" cy="${v}" rx="1.6" ry="2.2" fill="#3A2A4A"/>`).join("")}</g>`);
-      // le palais : colonnade, fronton, et les 4 grands boucliers ronds (portraits des pilotes)
-      const PX = 905, PY = 612, L = 112;
-      s.push(`<ellipse cx="${PX - 10}" cy="${PY + 26}" rx="${L + 16}" ry="14" fill="#000" opacity=".25"/><rect x="${PX - L}" y="${PY + 10}" width="${L * 2}" height="16" fill="url(#o2-marbre)" ${INK}/><rect x="${PX - L + 6}" y="${PY + 1}" width="${L * 2 - 12}" height="10" fill="url(#o2-marbre)" ${INK}/>
-        ${Array.from({ length: 11 }, (_, q) => `<rect x="${PX - L + 14 + q * ((L * 2 - 28) / 10) - 3.5}" y="${PY - 62}" width="7" height="64" fill="#FFF8EC" stroke="#B89A7A" stroke-width=".7"/>`).join("")}<rect x="${PX - L - 2}" y="${PY - 70}" width="${L * 2 + 4}" height="9" fill="url(#o2-marbre)" ${INK}/><rect x="${PX - L - 2}" y="${PY - 65}" width="${L * 2 + 4}" height="4" fill="url(#o2-grecque)"/>
-        <path d="M${PX - L - 10} ${PY - 70}L${PX} ${PY - 124}L${PX + L + 10} ${PY - 70}Z" fill="#B5482E" ${INK}/><path d="M${PX - L + 6} ${PY - 74}L${PX} ${PY - 114}L${PX + L - 6} ${PY - 74}Z" fill="url(#o2-marbre)" ${INK}/>`);
+      s.push(`<path d="${cote}" fill="#FFF0C0" opacity=".55" transform="translate(-18 -18)" filter="url(#o2-flou8)"/><path d="${cote}" fill="#F4DCA0"/><path d="${cote}" fill="url(#o2-terre)" transform="translate(10 14)"/>`);
+      K.halo(1060, 690, 320, "#FFE08A", .75);
+      // le palais en trois-quarts : façade, flanc droit éclairé par l'aube, toit vu d'en haut
+      const PX = 896, PY = 616, L = 124, dx = 34, dy = -40;
+      s.push(`<ellipse cx="${PX - 20}" cy="${PY + 30}" rx="${L + 30}" ry="16" fill="#3A2A10" opacity=".3"/>
+        <path d="M${PX + L + 2} ${PY + 26}L${PX + L + 2 + dx} ${PY + 26 + dy}V${PY - 70 + dy}L${PX + L + 2} ${PY - 70}Z" fill="#FFE8B8" ${INK}/>${[0, 1, 2].map(q => `<path d="M${f(PX + L + 10 + q * 9)} ${f(PY + 18 - q * 10.6)}V${f(PY - 60 - q * 10.6)}" stroke="#E0B880" stroke-width="5"/>`).join("")}
+        <rect x="${PX - L}" y="${PY + 10}" width="${L * 2}" height="16" fill="url(#o2-marbre)" ${INK}/><rect x="${PX - L + 6}" y="${PY + 1}" width="${L * 2 - 12}" height="10" fill="url(#o2-marbre)" ${INK}/>
+        ${Array.from({ length: 9 }, (_, q) => `<rect x="${f(PX - L + 12 + q * ((L * 2 - 24) / 8) - 4)}" y="${PY - 62}" width="8" height="64" fill="#FFF8EC" stroke="#B89A7A" stroke-width=".7"/>`).join("")}<rect x="${PX - L - 2}" y="${PY - 70}" width="${L * 2 + 4}" height="9" fill="url(#o2-marbre)" ${INK}/><rect x="${PX - L - 2}" y="${PY - 65}" width="${L * 2 + 4}" height="4" fill="url(#o2-grecque)"/>
+        <path d="M${PX} ${PY - 126}L${PX + dx} ${PY - 126 + dy}L${PX + L + 12 + dx} ${PY - 70 + dy}L${PX + L + 12} ${PY - 70}Z" fill="#C8603A" ${INK}/>${[1, 2, 3, 4].map(q => `<path d="M${f(PX + (L + 12) * q / 5)} ${f(PY - 126 + 56 * q / 5)}l${dx} ${dy}" stroke="#8A3A22" stroke-width="1.2"/>`).join("")}<path d="M${PX} ${PY - 126}L${PX + dx} ${PY - 126 + dy}" stroke="#FFD98A" stroke-width="2"/>
+        <path d="M${PX - L - 12} ${PY - 70}L${PX} ${PY - 126}L${PX + L + 12} ${PY - 70}Z" fill="#B5482E" ${INK}/><path d="M${PX - L + 6} ${PY - 74}L${PX} ${PY - 116}L${PX + L - 6} ${PY - 74}Z" fill="url(#o2-marbre)" ${INK}/><circle cx="${PX}" cy="${PY - 90}" r="8" fill="url(#o2-or)" ${INK}/>`);
       s.push(`<pattern id="o2-grecque" width="12" height="6" patternUnits="userSpaceOnUse"><rect width="12" height="6" fill="#F2E6C8"/><path d="M1 5V1h4v3H3V3M7 5V1h4v3H9V3" stroke="#B5482E" stroke-width=".9" fill="none"/></pattern>`);
-      COULEURS_J.forEach((c, k) => { const u = PX - 75 + k * 50, v = PY - 30; PORTR.push({ k, x: u, y: v, r: 18 }); s.push(`<circle cx="${u - 2}" cy="${v - 2}" r="24" fill="#000" opacity=".25"/><circle cx="${u}" cy="${v}" r="23" fill="url(#o2-or)" ${INK}/><circle cx="${u}" cy="${v}" r="20.5" fill="${c}"/><circle cx="${u}" cy="${v}" r="18" fill="#1A2238" stroke="#FFF2B8" stroke-width="1"/>`); });
-      s.push(`<text x="${PX}" y="${PY - 82}" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="12" letter-spacing="2" fill="#6A2A1A">ITHAQUE</text>`);
-      a.push(`<g>${COULEURS_J.map((c, k) => `<circle cx="${PX - 75 + k * 50}" cy="${PY - 30}" r="24" fill="none" stroke="#FFF6C8" stroke-width="2.4" opacity="0">${an(`<animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.08;.2;1" dur="8s" begin="${k * 2}s" repeatCount="indefinite"/>`)}</circle>`).join("")}</g>`);
-      // l'arc et les 12 haches alignées, la flèche passe dans les 12 anneaux
-      { const g = `<g transform="translate(818 682) scale(1.7)">`;
-        s.push(`${g}${Array.from({ length: 12 }, (_, q) => `<path d="M${q * 9} 7V-7" stroke="#6A4422" stroke-width="1.5"/><path d="M${q * 9} -7q5 -2 5 4q-5 2 -5 -1z" fill="#DCE2EA" stroke="#1A1020" stroke-width=".6"/><circle cx="${q * 9 + 2.6}" cy="-5" r="1.3" fill="#2A3A3A"/>`).join("")}<path d="M-22 -19Q-8 -5 -22 9" stroke="#7A4A1E" stroke-width="2.6" fill="none"/><path d="M-22 -19V9" stroke="#F4F1EA" stroke-width=".7"/></g>`);
-        a.push(`${g}<g${K.anime ? "" : ` transform="translate(52 0)"`}>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;0 0;118 0;118 0" keyTimes="0;.45;.75;1" dur="5s" repeatCount="indefinite"/>`)}<path d="M-20 -5h18" stroke="#5A3A1E" stroke-width="1.3"/><path d="M-2 -5l-4 -2v4z" fill="#DCE2EA"/><path d="M-20 -5l-3 -2.4M-20 -5l-3 2.4" stroke="${COULEURS_J[0]}" stroke-width="1.4"/></g></g>`); }
-      // le chien Argos qui reconnaît son maître, et le métier à tisser de Pénélope
-      s.push(`${G(1040, 690, 1.3)}<ellipse cx="0" cy="4" rx="14" ry="3" fill="#000" opacity=".25"/><path d="M-12 2Q-12 -6 0 -6Q10 -6 10 2Z" fill="#9A6A3A" ${INK}/><circle cx="12" cy="-3" r="4.4" fill="#9A6A3A" ${INK}/><path d="M10 -6l-2 -4l4 2z" fill="#6A4422"/><ellipse cx="16" cy="-2" rx="2.4" ry="1.8" fill="#9A6A3A" ${INK}/><circle cx="18" cy="-2.6" r=".8" fill="#1A1020"/></g>`);
-      a.push(`${G(1040 - 12 * 1.3, 690, 1.3)}<path d="M0 0q-4 -4 -2 -8" stroke="#9A6A3A" stroke-width="2" fill="none" stroke-linecap="round">${an(`<animateTransform attributeName="transform" type="rotate" values="-25;25;-25" dur=".5s" repeatCount="indefinite"/>`)}</path></g>`);
-      s.push(`${G(1052, 600, 1.2)}<path d="M-12 14V-18M12 14V-18M-14 -18H14" stroke="#7A4A26" stroke-width="2.4"/><rect x="-10" y="-14" width="20" height="18" fill="#E8D8B0" stroke="#7A4A26" stroke-width=".8"/>${COULEURS_J.map((c, k) => `<path d="M-10 ${-10 + k * 4}h20" stroke="${c}" stroke-width="2"/>`).join("")}</g>`);
-      // le feu de bienvenue au port
-      s.push(`${G(762, 640, 1.3)}<path d="M-4 16L-3 -10H3L4 16Z" fill="#E8DCC0" ${INK}/><rect x="-5" y="-14" width="10" height="5" fill="#8A6A48" ${INK}/></g>`); K.halo(762, 616, 34, "#FFB347", .9);
-      a.push(`${G(762, 620, 1.3)}<g>${an(`<animateTransform attributeName="transform" type="scale" values="1 1;.8 1.3;1.1 .9;1 1" dur=".9s" repeatCount="indefinite"/>`)}<path d="M-5 0Q-6 -8 0 -14Q6 -8 5 0Z" fill="#E8471E"/><path d="M-3 0Q-3 -5 0 -9Q3 -5 3 0Z" fill="#FFE08A"/></g></g>`);
-      nom(PX - 10, 712, "Ithaque", 17); bulle(PX - 30, PY - 140, "Enfin… à la maison !", 9, 4); }
-    // ---- 8. POLYPHÈME, le Cyclope, surgit derrière sa falaise (coin bas gauche) et lance un rocher
-    { K.prendre(60, 640, 80);
-      s.push(`<path d="M0 520Q40 540 80 568Q120 600 140 650Q156 690 170 720H0Z" fill="#7FE0D4" opacity=".35" transform="translate(8 -8)"/>`);
-      s.push(`${G(64, 616, 1.5)}<path d="M-26 0Q-30 -36 -10 -50H16Q34 -40 32 0Z" fill="#D9C79A" ${INK}/>${[-20, -11, -2, 7, 16, 24].map((u, q) => `<circle cx="${u}" cy="${-46 + (q % 2) * 3}" r="5" fill="#EFE2C0" ${INK}/>`).join("")}<path d="M18 -40Q34 -32 34 -14" stroke="#1A1020" stroke-width="12" stroke-linecap="round" fill="none"/><path d="M18 -40Q34 -32 34 -14" stroke="#C88A5E" stroke-width="9" stroke-linecap="round" fill="none"/><path d="M26 -14q2 6 6 4q2 6 6 2q4 4 6 -2l-4 -8z" fill="#C88A5E" ${INK}/>
-        <path d="M-16 -40Q-34 -62 -24 -94" stroke="#1A1020" stroke-width="13" stroke-linecap="round" fill="none"/><path d="M-16 -40Q-34 -62 -24 -94" stroke="#C88A5E" stroke-width="10" stroke-linecap="round" fill="none"/><circle cx="-24" cy="-104" r="15" fill="#7A7266" ${INK}/><circle cx="-28" cy="-108" r="4" fill="#9A9284"/>
-        <circle cx="3" cy="-66" r="21" fill="#D89A6A" ${INK}/><path d="M-16 -76Q-8 -94 4 -92Q18 -94 22 -76Q12 -86 4 -84Q-6 -86 -16 -76Z" fill="#3A2414"/>
-        <path d="M-10 -76Q3 -82 16 -76" stroke="#2A1A10" stroke-width="3.4" fill="none" stroke-linecap="round"/><ellipse cx="3" cy="-67" rx="10" ry="8" fill="#FFFDF6" ${INK}/><path d="M-8 -52Q3 -46 14 -52" stroke="#1A1020" stroke-width="1.6" fill="none"/><path d="M-12 -54Q3 -38 18 -54Q16 -44 3 -42Q-10 -44 -12 -54Z" fill="#5A3A22" opacity=".7"/></g>`);
-      s.push(`<path d="M0 548Q34 560 66 586Q104 610 122 650Q138 690 150 720H0Z" fill="url(#o2-roc)" ${INK}/><path d="M10 600Q50 610 80 650M20 660Q60 670 90 710" stroke="#8A7EA0" stroke-width="3" fill="none"/>`);
-      a.push(`${G(64 + 3 * 1.5, 616 - 67 * 1.5, 1.5)}<g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;0 0;4 -1;4 -1;-3 0;-3 0;0 0" keyTimes="0;.3;.38;.55;.62;.85;1" dur="6s" repeatCount="indefinite"/>`)}<circle r="4.4" fill="#5A8A3A" ${INK}/><circle r="2.2" fill="#0A0A0A"/><circle cx="-1.2" cy="-1.2" r=".8" fill="#FFF"/></g></g>`);
-      if (K.anime) a.push(`<g opacity="0"><animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.5;.52;.78;.8;1" dur="7s" repeatCount="indefinite"/><animateMotion dur="7s" repeatCount="indefinite" keyPoints="0;0;0;1;1" keyTimes="0;.5;.52;.8;1" calcMode="linear" path="M${f(64 - 24 * 1.5)} ${f(616 - 104 * 1.5)}Q140 300 238 392"/><circle r="12" fill="#7A7266" ${INK}/><circle cx="-3" cy="-3" r="3.4" fill="#9A9284"/></g>`);
-      // la gerbe d'écume où tombe le rocher
-      a.push(`<g opacity="0">${an(`<animate attributeName="opacity" values="0;0;1;0;0" keyTimes="0;.8;.82;.95;1" dur="7s" repeatCount="indefinite"/>`)}<path d="M226 396q-6 -16 2 -26M238 392q0 -20 6 -30M250 396q8 -14 4 -26" stroke="#F4FFFC" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="238" cy="398" rx="20" ry="5" fill="none" stroke="#F4FFFC" stroke-width="2"/></g>`);
-      nom(70, 708, "Polyphème", 13); bulle(96, 448, "Personne ? Où ça ?!", 9, 7); }
-    s.push(crete(860, 372, .9, 0, "#2A8AA8"));
-    // ---- 9. la vie de la mer (peu) : dauphins qui sautent dans la lumière dorée, mouettes, amphores
-    [[880, 300, 0], [700, 600, 1.6]].forEach(([u, v, b]) => { if (K.dT(u, v) < 26) return; a.push(`<g${K.anime ? "" : ` transform="translate(${u} ${v - 12})"`}>${an(`<animateMotion dur="3.2s" begin="${b}s" repeatCount="indefinite" rotate="auto" path="M${u - 30} ${v}Q${u} ${v - 34} ${u + 30} ${v}"/>`)}<g transform="scale(1.4)"><path d="M-10 0Q-2 -6 8 -2L12 0L8 2Q-2 4 -10 0Z" fill="#5A7A9A" ${INK}/><path d="M0 -4l-3 -4l5 3z" fill="#5A7A9A"/><path d="M-10 0l-4 -3v6z" fill="#5A7A9A" ${INK}/></g></g>`); });
-    [[0, 560, 11], [1, 470, 14]].forEach(([q, v, du]) => a.push(`<g${K.anime ? "" : ` transform="translate(${760 + q * 140} 0)"`}>${an(`<animateTransform attributeName="transform" type="translate" values="${W + 40} 0;600 ${q ? -60 : -30}" dur="${du}s" begin="-${q * 5}s" repeatCount="indefinite"/>`)}<path d="M-9 ${v}q4.5 -5 9 0q4.5 -5 9 0" stroke="#FFFFFF" stroke-width="2" fill="none"/></g>`));
-    // ---- 10. le cartouche du titre (coin haut gauche)
-    s.push(`<g transform="translate(10 10)"><path d="M6 0H140Q148 0 148 8V34Q148 42 140 42H6Q-2 42 -2 34V8Q-2 0 6 0Z" fill="#F4E6C0" stroke="#8A6A3A" stroke-width="1.6"/><rect x="3" y="4" width="140" height="34" rx="5" fill="none" stroke="#B5482E" stroke-width=".8" stroke-dasharray="3 2"/><text x="73" y="21" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="14.5" letter-spacing="1.5" fill="#6A2A1A">L'ODYSSÉE</text><text x="73" y="33" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="9" fill="#6A4A2A">dix ans pour rentrer</text></g>`);
-    // ---- 11. la piste : le sillage d'Ulysse, voie d'écume claire sur la mer, pointillés rouges du voyage
+      // 4 grands boucliers de bronze peints (l'appli pose les vrais portraits au centre ; sans portrait, le bouclier reste beau)
+      COULEURS_J.forEach((c, k) => { const u = PX - 90 + k * 60, v = PY - 30; PORTR.push({ k, x: u, y: v, r: 21 });
+        s.push(`<circle cx="${u - 3}" cy="${v + 3}" r="29" fill="#000" opacity=".3"/><circle cx="${u}" cy="${v}" r="28" fill="url(#o2-or)" ${INK}/><circle cx="${u}" cy="${v}" r="25" fill="${c}"/><circle cx="${u}" cy="${v}" r="22" fill="url(#o2-bronze)" stroke="#5A3410" stroke-width="1"/><circle cx="${u}" cy="${v}" r="15" fill="none" stroke="#6A440E" stroke-width="1.4"/>${Array.from({ length: 8 }, (_, q) => { const t = q / 8 * TAU; return `<path d="M${f(u + Math.cos(t) * 7)} ${f(v + Math.sin(t) * 7)}L${f(u + Math.cos(t) * 13)} ${f(v + Math.sin(t) * 13)}" stroke="#6A440E" stroke-width="1.6"/>`; }).join("")}<circle cx="${u}" cy="${v}" r="5" fill="url(#o2-or)" stroke="#6A440E" stroke-width="1"/><path d="M${u - 18} ${v - 8}A20 20 0 0 1 ${u - 4} ${v - 20}" stroke="#FFF2C8" stroke-width="2.4" fill="none" opacity=".7"/>`); });
+      a.push(`<g>${COULEURS_J.map((c, k) => `<circle cx="${PX - 90 + k * 60}" cy="${PY - 30}" r="29" fill="none" stroke="#FFF6C8" stroke-width="3" opacity="0">${an(`<animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.08;.2;1" dur="8s" begin="${k * 2}s" repeatCount="indefinite"/>`)}</circle>`).join("")}</g>`);
+      // le grand arc d'Ulysse, tendu sur la plage : sa flèche file vers la ligne d'arrivée
+      { const [bx, by] = [742, 652], p0 = K.P[0], ang = Math.atan2(p0[1] - by, p0[0] - bx) * 180 / PI;
+        s.push(`${G(bx, by, 1, ang)}<path d="M8 -46Q-22 0 8 46" stroke="#1A1020" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M8 -46Q-22 0 8 46" stroke="#8A5226" stroke-width="5.4" fill="none" stroke-linecap="round"/><path d="M5 -40Q-14 0 5 40" stroke="#E2B26A" stroke-width="1.6" fill="none"/><path d="M8 -46L-26 0L8 46" stroke="#FFF6E0" stroke-width="1.4" fill="none"/></g>`);
+        const L2 = Math.hypot(p0[0] - bx, p0[1] - by) - 30;
+        a.push(`${G(bx, by, 1, ang)}<g${K.anime ? "" : ` transform="translate(0 0)"`}>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;0 0;${f(L2)} 0;${f(L2)} 0" keyTimes="0;.5;.7;1" dur="5s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;1;0;0" keyTimes="0;.5;.7;.75;1" dur="5s" repeatCount="indefinite"/>`)}<path d="M-26 0H22" stroke="#5A3A1E" stroke-width="2.6"/><path d="M22 0l-8 -5v10z" fill="#DCE2EA" ${INK}/><path d="M-26 0l-7 -5M-26 0l-7 5M-20 0l-7 -5M-20 0l-7 5" stroke="${COULEURS_J[3]}" stroke-width="2.2"/></g></g>`); }
+      }
+    // ---- 9. la piste : le sillage d'Ulysse, voie d'écume claire sur la mer, pointillés rouges du voyage
     K.route([["#0A1030", 46, ` opacity=".45" filter="url(#o2-flou)"`], ["#F4FFFC", 36], ["#9AE8DC", 32], ["#F6E8C4", 26]]);
     s.push(`<path d="${K.piste}" fill="none" stroke="#B5482E" stroke-width="1.8" stroke-dasharray="7 8" opacity=".55"/>`);
     a.push(`<path d="${K.piste}" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-dasharray="3 26" opacity=".75">${an(`<animate attributeName="stroke-dashoffset" values="0;-58" dur="2.4s" repeatCount="indefinite"/>`)}</path>`);
     K.depart();
-    // ---- 12. les 4 pilotes : 4 petites galères vues du dessus, voiles à leurs couleurs
+    // ---- 10. les 4 pilotes : 4 petites galères vues du dessus, voiles à leurs couleurs
     COULEURS_J.forEach((c, k) => a.push(K.surPiste(.04 + k * .03, `<g transform="scale(1.2)"><path d="M-9 0Q-6 -4 6 -3L11 0L6 3Q-6 4 -9 0Z" fill="#6A3E1E" ${INK}/><path d="M-5 -3l-3 -4M-1 -3l-3 -4M3 -3l-3 -4M-5 3l-3 4M-1 3l-3 4M3 3l-3 4" stroke="#4A2E16" stroke-width=".9"/><rect x="-2" y="-5.5" width="4" height="11" rx="1" fill="${c}" ${INK}/></g>`, 44, k * 1.3)));
-    const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#o2-mer)"/>`, "#3A1A5A", .1); RES.portraits = PORTR; return RES;
+    const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#o2-mer)"/>`, "#2A2040", .08); RES.portraits = PORTR; return RES;
   }
 
   function peindreRatatouille(T, Z, def) {
@@ -4658,7 +4646,180 @@
       return g; }
   }
 
-  const PEINTS_NUIT = { ratatouille: peindreRatatouille, arene: peindreArene2, etoiles: peindreEtoiles4, anneau: peindreAnneau4, chocolat: peindreChocolat3, terrier: peindreGouter, chateau: peindreChateau5, plateau: peindrePlateau, envers: peindreEnvers3, multivers: peindreMultivers, dunes: peindreDunes4, titans: peindreTitans4, odyssee: peindreOdyssee2 };   // v16.34 : 10 cartes refaites au niveau de l'Arène
+  function peindrePandora(T, Z, def) {
+    /* ---------- Saison 2028 · Pandora la nuit (tracé monaco) — v2 : UNE forêt nocturne éclairée par un seul Arbre des Âmes géant.
+       Lecture dans le sens de la course : le grand chasseur rouge ouvre le ciel (haut gauche), les 4 ikrans des pilotes plongent vers la droite
+       (cavaliers dont la tête = cadre-portrait, RES.portraits), l'archère tend son arc vers le ciel (« Je te vois. »), le cavalier galope vers l'Arbre,
+       le grand cétacé jaillit de la lagune. Tout est éclairé par en dessous par l'Arbre (liserés côté Arbre, ombres de l'autre). */
+    const K = kit(T, def, 2028, "pa-"), { s, a, r, f, W, H } = K, an = x => K.anime ? x : "", INK = `stroke="#030512" stroke-width="1.4" stroke-linejoin="round"`;
+    const G = (x, y, sc, rot) => `<g transform="translate(${f(x)} ${f(y)})${sc && sc !== 1 ? ` scale(${sc})` : ""}${rot ? ` rotate(${f(rot)})` : ""}">`;
+    const PEAU = "#3A7AD8", RAYE = "#A8F0FF", CY = "#5FF2FF", VI = "#C08BFF", ROSE = "#F2C8FF", NUIT = "#070B22";
+    const LX = 545, LY = 430;   // le cœur lumineux de l'Arbre : la seule lumière de la carte
+    let nc = 0;
+    /** formes éclairées par l'Arbre : liseré clair du côté de l'Arbre, corps sombre décalé à l'opposé (repère local du groupe G(x,y,sc,rot)) */
+    const lit = (x, y, sc, rot, parts, ep) => { const ux = LX - x, uy = LY - y, l = Math.hypot(ux, uy) || 1, d = (ep || 3.2) / (sc || 1), t = -(rot || 0) * PI / 180;
+      const gx = -ux / l * d, gy = -uy / l * d, dx = gx * Math.cos(t) - gy * Math.sin(t), dy = gx * Math.sin(t) + gy * Math.cos(t), id = "pa-l" + (nc++);
+      return parts.map((p, q) => `<clipPath id="${id}-${q}"><path d="${p[0]}"/></clipPath><path d="${p[0]}" fill="${p[2]}"/><g clip-path="url(#${id}-${q})"><path d="${p[0]}" fill="${p[1]}" transform="translate(${f(dx)} ${f(dy)})"/></g><path d="${p[0]}" fill="none" ${INK}/>`).join(""); };
+    const bulle = (x, y, txt, du, deb) => a.push(`<g opacity="${K.anime ? 0 : 1}">${an(`<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.1;.16;.8;.88;1" dur="${du}s" begin="${-(deb || 0)}s" repeatCount="indefinite"/>`)}<rect x="${f(x - txt.length * 4 - 10)}" y="${f(y - 15)}" width="${f(txt.length * 8 + 20)}" height="24" rx="12" fill="#F6FEFF" stroke="#050A22" stroke-width="1.4"/><path d="M${f(x - 30)} ${f(y + 8)}l-12 10l20 -10" fill="#F6FEFF" stroke="#050A22" stroke-width="1.4"/><path d="M${f(x - 31)} ${f(y + 7.5)}h12" stroke="#F6FEFF" stroke-width="2.4"/><text x="${f(x)}" y="${f(y + 2.5)}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-weight="bold" font-size="14" fill="#050A22">${txt}</text></g>`);
+    const PORTR = [];
+
+    // ---- 0. dégradés (couche fixe) ; la couche animée a les siens
+    s.push(`<linearGradient id="pa-ciel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#02040F"/><stop offset=".3" stop-color="#060A26"/><stop offset=".65" stop-color="#081436"/><stop offset="1" stop-color="#040A1A"/></linearGradient>`);
+    s.push(`<radialGradient id="pa-arbre" gradientUnits="userSpaceOnUse" cx="${LX}" cy="${LY}" r="620"><stop offset="0" stop-color="#F4D2FF" stop-opacity=".95"/><stop offset=".1" stop-color="#C88BFF" stop-opacity=".72"/><stop offset=".28" stop-color="#7A5ADF" stop-opacity=".42"/><stop offset=".55" stop-color="#2E3AA8" stop-opacity=".18"/><stop offset=".85" stop-color="#121A60" stop-opacity=".05"/><stop offset="1" stop-color="#0A1040" stop-opacity="0"/></radialGradient>`);
+    s.push(`<linearGradient id="pa-roc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0E1230"/><stop offset=".55" stop-color="#2A2466"/><stop offset="1" stop-color="#8A64D8"/></linearGradient>`);
+    s.push(`<linearGradient id="pa-herbe" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0E3A44"/><stop offset="1" stop-color="#1E7A78"/></linearGradient>`);
+    s.push(`<linearGradient id="pa-chute" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D8F4FF" stop-opacity=".8"/><stop offset=".7" stop-color="#B89CFF" stop-opacity=".45"/><stop offset="1" stop-color="#B89CFF" stop-opacity="0"/></linearGradient>`);
+    s.push(`<linearGradient id="pa-mer" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#041428"/><stop offset=".6" stop-color="#0C2C5A"/><stop offset="1" stop-color="#2A2A7A"/></linearGradient>`);
+    s.push(`<linearGradient id="pa-sol" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0A1238" stop-opacity="0"/><stop offset=".4" stop-color="#0A1434" stop-opacity=".75"/><stop offset="1" stop-color="#040818"/></linearGradient>`);
+    s.push(`<linearGradient id="pa-tronc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A0E44"/><stop offset=".4" stop-color="#6A4AC0"/><stop offset=".55" stop-color="#B08AF0"/><stop offset=".7" stop-color="#5A3AA8"/><stop offset="1" stop-color="#120A34"/></linearGradient>`);
+    s.push(`<radialGradient id="pa-dome" gradientUnits="userSpaceOnUse" cx="${LX}" cy="330" r="300"><stop offset="0" stop-color="#F8E0FF" stop-opacity=".7"/><stop offset=".4" stop-color="#B07BFF" stop-opacity=".38"/><stop offset="1" stop-color="#5A3AB8" stop-opacity=".08"/></radialGradient>`);
+    a.unshift(`<radialGradient id="pa-ag" r="50%"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".3" stop-color="#E8D8FF" stop-opacity=".8"/><stop offset="1" stop-color="#B08BFF" stop-opacity="0"/></radialGradient>`);
+    a.unshift(`<radialGradient id="pa-ar" r="50%"><stop offset="0" stop-color="#FFF0FF" stop-opacity=".9"/><stop offset=".4" stop-color="#D88BFF" stop-opacity=".4"/><stop offset="1" stop-color="#9A5AFF" stop-opacity="0"/></radialGradient>`);
+
+    // ---- 1. la nuit : quelques étoiles, la géante gazeuse noyée dans la brume (simple fond), la lumière de l'Arbre
+    for (let k = 0; k < 70; k++) { const x = r() * W, y = r() * 200 * r(); s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(.4 + r() * .9)}" fill="#DDE6FF" opacity="${(.2 + r() * .45).toFixed(2)}"/>`); }
+    s.push(`<clipPath id="pa-kg"><circle cx="1004" cy="40" r="58"/></clipPath><circle cx="1004" cy="40" r="58" fill="#1C2E5E" opacity=".75"/>${[[-26, 8, "#3A5A92"], [-4, 6, "#14264E"], [16, 9, "#30508A"], [36, 5, "#14264E"]].map(([dy, h, c]) => `<path d="M940 ${40 + dy}Q1004 ${48 + dy} 1066 ${36 + dy}" stroke="${c}" stroke-width="${h}" fill="none" opacity=".7" clip-path="url(#pa-kg)"/>`).join("")}<path d="M954 82A58 58 0 0 1 1056 14" stroke="#7FA8E0" stroke-width="2" fill="none" opacity=".5"/><ellipse cx="1004" cy="70" rx="110" ry="34" fill="#060A26" opacity=".7" filter="url(#pa-flou8)"/>`);
+    s.push(`<rect width="${W}" height="${H}" fill="url(#pa-arbre)"/>`);
+
+    // ---- 2. LA FORÊT CONTINUE : deux rideaux de cimes et de grands troncs, de plus en plus clairs près de l'Arbre
+    const rideau = (y0, amp, c, op) => { let d = `M-10 ${H}V${y0}`; for (let x = -10; x <= W + 30; x += 34 + r() * 24) d += `Q${f(x + 18)} ${f(y0 - amp * (.6 + r() * .8))} ${f(x + 40)} ${f(y0 + (r() - .5) * amp * .6)}`; return `<path d="${d}V${H}Z" fill="${c}" opacity="${op}"/>`; };
+    s.push(rideau(270, 46, "#0C1240", .85), rideau(350, 40, "#0A0F34", .8));
+    // grands troncs du sous-bois (liseré côté Arbre)
+    [[60, 22, 250], [232, 26, 300], [338, 18, 330], [752, 18, 330], [870, 26, 300], [1018, 28, 230]].forEach(([x, w, y0]) => { const cote = x < LX ? 1 : -1;
+      s.push(`<path d="M${x - w / 2} ${H}Q${x - w * .3} ${f((H + y0) / 2)} ${f(x - w * .25)} ${y0}H${f(x + w * .25)}Q${x + w * .3} ${f((H + y0) / 2)} ${x + w / 2} ${H}Z" fill="#090D2C" opacity=".92"/><path d="M${f(x + cote * w * .42)} ${H}Q${f(x + cote * w * .28)} ${f((H + y0) / 2)} ${f(x + cote * w * .22)} ${y0}" stroke="#9A7AF0" stroke-width="1.6" fill="none" opacity="${(.75 - Math.abs(x - LX) / 1100).toFixed(2)}"/>`); });
+    s.push(`<rect y="380" width="${W}" height="${H - 380}" fill="url(#pa-sol)"/>`);
+
+    // ---- 3. LES MONTAGNES FLOTTANTES (bords gauche et droit), éclairées par en dessous, cascades dans le vide
+    const mont = (x, y, w, fl) => { const h = w * .95;
+      let g = `${G(x, y, 1)}<g transform="scale(${fl ? -1 : 1} 1)">`;
+      g += `<path d="M${f(-w * .5)} 0Q${f(-w * .46)} ${f(-w * .16)} ${f(-w * .2)} ${f(-w * .2)}Q0 ${f(-w * .3)} ${f(w * .26)} ${f(-w * .18)}Q${f(w * .5)} ${f(-w * .12)} ${f(w * .5)} 0Q${f(w * .42)} ${f(h * .3)} ${f(w * .16)} ${f(h * .52)}Q${f(w * .02)} ${f(h * .7)} ${f(-w * .08)} ${f(h * .9)}Q${f(-w * .12)} ${f(h * .5)} ${f(-w * .3)} ${f(h * .34)}Q${f(-w * .48)} ${f(h * .2)} ${f(-w * .5)} 0Z" fill="url(#pa-roc)" ${INK}/>`;
+      g += `<path d="M${f(-w * .3)} ${f(h * .34)}Q${f(-w * .12)} ${f(h * .5)} ${f(-w * .08)} ${f(h * .88)}M${f(w * .16)} ${f(h * .5)}Q${f(w * .36)} ${f(h * .28)} ${f(w * .48)} ${f(h * .02)}" stroke="#E0C8FF" stroke-width="2" fill="none" opacity=".75"/>`;
+      g += `<path d="M${f(-w * .54)} 2Q${f(-w * .5)} ${f(-w * .24)} ${f(-w * .2)} ${f(-w * .28)}Q0 ${f(-w * .4)} ${f(w * .28)} ${f(-w * .26)}Q${f(w * .56)} ${f(-w * .18)} ${f(w * .54)} 2Q0 ${f(w * .12)} ${f(-w * .54)} 2Z" fill="url(#pa-herbe)" ${INK}/>`;
+      for (let k = 0; k < 5; k++) { const u = (r() - .5) * w * .7, l = 20 + r() * h * .45; g += `<path d="M${f(u)} ${f(h * .12)}q${f((r() - .5) * 10)} ${f(l / 2)} ${f((r() - .5) * 6)} ${f(l)}" stroke="#2A6A7A" stroke-width="1.8" fill="none"/>`; }
+      return g + "</g></g>"; };
+    s.push(mont(92, 214, 150, 0), mont(990, 196, 156, 1));
+    const CHUTES = [[66, 236, 230, 11], [1012, 220, 170, 10]];
+    CHUTES.forEach(([x, y, l, w]) => { s.push(`<path d="M${x} ${y}Q${x + 3} ${y + l * .5} ${x - 2} ${y + l}" stroke="url(#pa-chute)" stroke-width="${w}" fill="none" stroke-linecap="round"/><ellipse cx="${x - 2}" cy="${y + l}" rx="${w * 3.4}" ry="${w * 1.3}" fill="#C8B8FF" opacity=".28" filter="url(#pa-flou8)"/>`);
+      a.push(`<path d="M${x} ${y}Q${x + 3} ${y + l * .5} ${x - 2} ${y + l * .85}" stroke="#FFFFFF" stroke-width="${f(w * .4)}" fill="none" stroke-dasharray="7 16" opacity=".7">${an(`<animate attributeName="stroke-dashoffset" values="0;-46" dur="1.3s" repeatCount="indefinite"/>`)}</path>`); });
+
+    // ---- 4. LA LAGUNE (bas gauche) qui entre dans la forêt, et LE GRAND CÉTACÉ qui jaillit, entier, vers la piste
+    { const mer = `M0 450Q60 430 120 452Q158 470 158 540Q156 610 210 660Q300 676 420 668Q470 690 486 720H0Z`;
+      s.push(`<path d="${mer}" fill="url(#pa-mer)"/><path d="M0 450Q60 430 120 452Q158 470 158 540Q156 610 210 660Q300 676 420 668" fill="none" stroke="#B8A8FF" stroke-width="2" opacity=".55"/>`);
+      [[40, 500, 30], [110, 610, 40], [300, 700, 60], [60, 700, 34]].forEach(([x, y, l]) => s.push(`<path d="M${x} ${y}h${l}" stroke="#C8B8FF" stroke-width="1.6" opacity=".35" stroke-linecap="round"/>`));
+      const x = 74, y = 548, sc = 1.08, rot = -60; K.prendre(x, y, 80);
+      s.push(`<ellipse cx="44" cy="662" rx="54" ry="10" fill="#D8C8FF" opacity=".3"/><ellipse cx="44" cy="662" rx="36" ry="6" fill="none" stroke="#F0E8FF" stroke-width="2" opacity=".75"/>`);
+      s.push(`${G(x, y, sc, rot)}${lit(x, y, sc, rot, [
+        [`M-70 10Q-90 -6 -106 -4Q-96 6 -94 12Q-96 20 -106 30Q-88 30 -70 14Z`, "#1A2C5A", "#C8B8FF"],
+        [`M-72 10Q-40 -30 30 -26Q72 -22 88 2Q72 24 30 26Q-30 32 -72 10Z`, "#22406E", "#D8C8FF"],
+        [`M40 -24Q58 -20 70 -8L60 -2Q50 -14 36 -16Z`, "#162A52", "#B8A8F0"], [`M2 18Q12 36 -4 46Q-10 30 -12 20Z`, "#162A52", "#B8A8F0"]], 3.4)}
+        <path d="M-62 8Q-30 18 30 18Q66 16 82 4" stroke="#BCD8F0" stroke-width="9" fill="none" opacity=".4"/>${[-44, -26, -8, 10, 28, 46].map((u, q) => `<circle cx="${u}" cy="${-10 + Math.abs(q - 3)}" r="2.4" fill="${CY}"/>`).join("")}<circle cx="66" cy="-2" r="3.2" fill="#F0FCFF" stroke="#040616" stroke-width="1"/><circle cx="66.6" cy="-2" r="1.3" fill="#040616"/><path d="M68 10Q78 12 84 6" stroke="#040616" stroke-width="1.3" fill="none"/></g>`);
+      a.push(`<g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;0 -5;0 0" dur="3s" repeatCount="indefinite"/>`)}<path d="M30 660q-14 -22 -6 -42M50 660q4 -26 22 -38M66 662q16 -14 26 -26" stroke="#F0E8FF" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".7"/></g>`); }
+
+    // ---- 5. LA BASE HUMAINE, au loin : une silhouette sombre au bord droit, dans l'ombre (un seul feu rouge)
+    s.push(`<g fill="#05071A" opacity=".95"><path d="M936 470V432H990V420H1030V444H1050V470Z"/><path d="M958 470V360H966V470Z"/><path d="M950 366H974V374H950Z"/><path d="M1046 470V448L1066 438L1080 444V470Z"/></g><path d="M940 470H1080" stroke="#3A3A7A" stroke-width="1.2" opacity=".6"/>`);
+    a.push(`<circle cx="962" cy="356" r="2.4" fill="#FF4A3A">${an(`<animate attributeName="opacity" values="1;.1;1" dur="2.4s" repeatCount="indefinite"/>`)}</circle>`);
+
+    // ---- 6. L'ARBRE DES ÂMES, géant : racines lumineuses dans toute la moitié basse, tronc, dôme qui monte vers les montagnes, rideau de filaments
+    const AX = LX, AY = 704, DT = 168;   // pied du tronc ; sommet du dôme
+    K.prendre(AX, 480, 150);
+    { // racines qui courent sous la piste
+      const RAC = [[-500, 6, 140], [-380, -60, 90], [-260, -150, 60], [-150, -40, 40], [150, -40, 40], [250, -150, 60], [380, -70, 90], [520, -10, 140], [-90, 10, 20], [90, 12, 20]];
+      let d = ""; RAC.forEach(([dx, dy, c]) => { d += `M${AX + Math.sign(dx) * 16} ${AY - 14}C${f(AX + dx * .22)} ${f(AY + 14)} ${f(AX + dx * .55)} ${f(AY + dy * .2 - c * .4)} ${f(AX + dx)} ${f(AY + dy)}`; });
+      s.push(`<path d="${d}" stroke="#14093A" stroke-width="9" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#D8A8FF" stroke-width="5" fill="none" opacity=".35" filter="url(#pa-flou)"/><path d="${d}" stroke="#F4D8FF" stroke-width="1.6" fill="none" opacity=".9"/>`);
+      a.push(`<path d="${d}" stroke="#FFFFFF" stroke-width="2.6" fill="none" stroke-dasharray="6 60" opacity=".85">${an(`<animate attributeName="stroke-dashoffset" values="0;-132" dur="3.2s" repeatCount="indefinite"/>`)}</path>`);
+      s.push(`<ellipse cx="${AX}" cy="${AY}" rx="170" ry="30" fill="#F0C8FF" opacity=".4" filter="url(#pa-flou8)"/>`);
+      // le dôme (grande cloche) et ses branches
+      const RX = 262, BAS = 446, DOM = `M${AX - RX} ${BAS}Q${AX - RX - 10} ${DT + 20} ${AX} ${DT}Q${AX + RX + 10} ${DT + 20} ${AX + RX} ${BAS}`;
+      const yDome = u => { const t = .5 + u / (2 * RX), mx = (1 - t) * (1 - t) * (AX - RX) + 2 * t * (1 - t) * AX + t * t * (AX + RX); return { x: mx, y: (1 - t) * (1 - t) * BAS + 2 * t * (1 - t) * (DT - 120) + t * t * BAS }; };
+      s.push(`<path d="${DOM}Q${AX} ${BAS - 150} ${AX - RX} ${BAS}Z" fill="url(#pa-dome)"/>`);
+      // le tronc noueux, éclairé de l'intérieur
+      s.push(`<path d="M${AX - 46} ${AY + 4}Q${AX - 20} ${AY - 60} ${AX - 22} ${AY - 160}Q${AX - 26} ${AY - 280} ${AX - 8} ${DT + 140}H${AX + 8}Q${AX + 26} ${AY - 280} ${AX + 22} ${AY - 160}Q${AX + 20} ${AY - 60} ${AX + 46} ${AY + 4}Z" fill="url(#pa-tronc)" ${INK}/><path d="M${AX - 6} ${AY - 10}Q${AX - 12} ${AY - 140} ${AX - 3} ${DT + 150}M${AX + 9} ${AY - 26}Q${AX + 6} ${AY - 180} ${AX + 5} ${DT + 160}" stroke="#FFE8FF" stroke-width="1.6" fill="none" opacity=".7"/>`);
+      { let d2 = ""; for (let k = 0; k < 11; k++) { const u = -RX * .92 + k * RX * 1.84 / 10, p = yDome(u); d2 += `M${AX} ${DT + 150}Q${f(AX + u * .35)} ${f(DT + 40)} ${f(p.x)} ${f(p.y + 6)}`; }
+        s.push(`<path d="${d2}" stroke="#1E1050" stroke-width="5" fill="none" stroke-linecap="round"/><path d="${d2}" stroke="#E0B8FF" stroke-width="1.4" fill="none" opacity=".8"/>`); }
+      s.push(`<path d="${DOM}" stroke="#1E1050" stroke-width="6" fill="none"/><path d="${DOM}" stroke="#F4D8FF" stroke-width="2" fill="none"/>`);
+      // le rideau de filaments : long au centre, plus court sur les côtés
+      let d1 = "", d2 = ""; for (let k = 0; k < 84; k++) { const u = -RX * .97 + k * RX * 1.94 / 83, p = yDome(u), e = Math.abs(u) / RX, top = p.y + 4, bas = AY - 30 - e ** 1.4 * 250 - r() * 26, x = p.x, sw = (r() - .5) * 10;
+        const q = `M${f(x)} ${f(top)}Q${f(x + sw)} ${f((top + bas) / 2)} ${f(x + sw * .4 + u * .06)} ${f(bas)}`; if (k % 2) d1 += q; else d2 += q; }
+      s.push(`<path d="${d1 + d2}" stroke="#E0A8FF" stroke-width="5" fill="none" opacity=".2" filter="url(#pa-flou)"/><path d="${d1}" stroke="#F8DCFF" stroke-width="1.2" fill="none" opacity=".9"/><path d="${d2}" stroke="#C890FF" stroke-width="1.1" fill="none" opacity=".85"/>`);
+      for (let k = 0; k < 60; k++) { const u = (r() - .5) * RX * 1.9, p = yDome(u), y = p.y + r() * (AY - 40 - p.y - Math.abs(u) * .9); s.push(`<circle cx="${f(p.x + (r() - .5) * 6)}" cy="${f(y)}" r="${f(.8 + r() * 1.5)}" fill="#FFFFFF" opacity="${(.45 + r() * .5).toFixed(2)}"/>`); }
+      a.push(`<path d="${d1}" stroke="#FFFFFF" stroke-width="1.8" fill="none" stroke-dasharray="3 26" opacity=".9">${an(`<animate attributeName="stroke-dashoffset" values="0;-58" dur="2.8s" repeatCount="indefinite"/>`)}</path><path d="${d2}" stroke="#FFF0FF" stroke-width="1.5" fill="none" stroke-dasharray="2 34" opacity=".8">${an(`<animate attributeName="stroke-dashoffset" values="0;-72" dur="3.6s" repeatCount="indefinite"/>`)}</path>`);
+      a.push(`<circle cx="${AX}" cy="${LY - 40}" r="200" fill="url(#pa-ar)" opacity="${K.anime ? .45 : .55}">${an(`<animate attributeName="opacity" values=".3;.65;.3" dur="5s" repeatCount="indefinite"/>`)}</circle>`); }
+
+    // ---- 7. LE CAVALIER sur son cheval à six pattes (boucle bas gauche), au galop vers l'Arbre
+    { const x = 302, y = 560, sc = 1.0; K.prendre(x, y - 40, 110);
+      s.push(`<ellipse cx="${x + 10}" cy="${y + 50}" rx="100" ry="10" fill="#000" opacity=".5" filter="url(#pa-flou)"/>`);
+      const jamb = (d, c, w) => `<path d="${d}" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+      s.push(`${G(x, y, sc)}${jamb("M30 2L48 22L62 30M-6 6L-14 26L-4 38M-48 2L-66 18L-80 16", "#0A1236", 6.5)}
+        ${lit(x, y, sc, 0, [[`M-62 -6Q-58 -26 -24 -28Q16 -30 40 -26Q52 -24 56 -40Q60 -64 74 -80Q86 -90 100 -86Q112 -80 124 -64L134 -52Q120 -48 108 -54Q98 -56 92 -46Q82 -20 68 -2Q50 12 4 12Q-44 12 -62 -6Z`, "#1E2C62", "#D0DCFF"],
+          [`M-60 -10Q-78 -16 -94 -6Q-80 -6 -74 4Q-68 2 -60 0Z`, "#101A40", "#B8C8F0"]], 3)}
+        ${jamb("M44 -2L64 20L84 24M4 8L6 32L20 40M-40 2L-52 26L-70 34", "#22336A", 7)}${jamb("M64 20L84 24M6 32L20 40M-52 26L-70 34", CY, 1.6)}
+        <path d="M-50 -16Q0 -28 50 -26M-46 -4Q0 -14 40 -12" stroke="${CY}" stroke-width="2.2" fill="none" stroke-dasharray="7 6" opacity=".95"/><path d="M80 -78Q96 -84 118 -66" stroke="${CY}" stroke-width="1.8" fill="none"/><circle cx="106" cy="-74" r="2.6" fill="#E8FCFF"/>
+        <path d="M94 -86Q80 -118 46 -118M100 -86Q98 -128 66 -138" stroke="${CY}" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="46" cy="-118" r="2.6" fill="${CY}"/><circle cx="66" cy="-138" r="2.6" fill="${CY}"/>
+        ${lit(x, y, sc, 0, [[`M-8 -26Q-12 -52 0 -68Q12 -72 16 -62Q14 -44 12 -26Z`, PEAU, "#D8E8FF"], [`M-2 -28Q12 -14 24 -10L28 -4Q8 -6 -10 -20Z`, "#2A5AB0", "#C8E0FF"]], 2.6)}
+        <path d="M12 -60Q34 -64 56 -86" stroke="${PEAU}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M12 -60Q34 -64 56 -86" stroke="#D8E8FF" stroke-width="1.2" fill="none" opacity=".7"/>
+        <path d="M6 -84Q-14 -92 -30 -80Q-42 -70 -58 -72" stroke="#0A0E26" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+        ${lit(x, y, sc, 0, [[`M4 -86Q4 -100 16 -100Q28 -98 26 -84Q24 -74 14 -72Q6 -74 4 -86Z`, PEAU, "#E0ECFF"], [`M20 -96L30 -108L26 -92Z`, PEAU, "#E0ECFF"]], 2.4)}<circle cx="22" cy="-87" r="1.8" fill="#FFE070"/><path d="M0 -40Q-2 -54 4 -64" stroke="${RAYE}" stroke-width="1.2" fill="none" stroke-dasharray="1.5 2.5"/></g>`); }
+
+    // ---- 8. L'ARCHÈRE sur la grande racine (boucle bas droite) : arc tendu vers le ciel, visage éclairé par l'Arbre
+    { const x = 792, y = 612, sc = 1.42; K.prendre(x, y - 90, 90);
+      s.push(`<path d="M${x - 110} ${y + 26}Q${x - 50} ${y - 16} ${x + 6} ${y - 4}Q${x + 60} ${y + 4} ${x + 110} ${y + 36}" stroke="#14093A" stroke-width="20" fill="none" stroke-linecap="round"/><path d="M${x - 104} ${y + 18}Q${x - 50} ${y - 22} ${x + 6} ${y - 11}" stroke="#E8C8FF" stroke-width="2.4" fill="none" opacity=".85"/>`);
+      s.push(`${G(x, y - 8, sc)}${lit(x, y - 60, sc, 0, [
+        [`M-9 -58Q-16 -36 -28 -2L-19 0Q-8 -28 0 -42Q6 -28 16 0L25 -2Q16 -36 10 -58Z`, "#1E4AA0", "#D8E4FF"],
+        [`M-9 -56Q-12 -80 -4 -96Q4 -100 10 -96Q15 -80 10 -56Z`, PEAU, "#E4EEFF"],
+        [`M-9 -60Q0 -64 10 -60L12 -50Q0 -54 -11 -50Z`, "#6A3A2A", "#E8B890"]], 2.4)}
+        <path d="M2 -110Q24 -108 22 -90Q20 -72 28 -58" stroke="#0A0E26" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+        <path d="M-2 -92L-50 -138" stroke="${PEAU}" stroke-width="5.4" stroke-linecap="round"/><path d="M-2 -92L-50 -138" stroke="#E4EEFF" stroke-width="1.4" stroke-linecap="round" opacity=".7" transform="translate(-1 1.4)"/>
+        <path d="M7 -92Q18 -102 4 -110" stroke="${PEAU}" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M-14 -162Q-66 -156 -70 -100" stroke="#3A2414" stroke-width="3.6" fill="none" stroke-linecap="round"/><path d="M-14 -162Q-66 -156 -70 -100" stroke="#E8B890" stroke-width="1" fill="none" transform="translate(1.2 1.2)"/>
+        <path d="M-14 -162L4 -110L-70 -100" stroke="#F4F4FF" stroke-width=".9" fill="none"/><path d="M4 -110L-66 -176" stroke="#E8D8B8" stroke-width="1.6"/><path d="M-66 -176l2 9l-9 -3z" fill="#F4F4FF" stroke="#040616" stroke-width=".6"/><path d="M8 -106l-4 -8M6 -104l-6 -6" stroke="${CY}" stroke-width="1.4"/>
+        ${lit(x, y - 160, sc, 0, [[`M-8 -110Q-10 -124 0 -128Q12 -130 14 -118Q15 -106 8 -100Q0 -98 -3 -103L-10 -106Z`, PEAU, "#EEF4FF"], [`M9 -120L22 -132L13 -112Z`, PEAU, "#EEF4FF"]], 2)}
+        <circle cx="-2" cy="-115" r="1.8" fill="#FFE070"/><path d="M-4 -80Q-6 -68 -4 -58M4 -84Q6 -72 4 -62" stroke="${RAYE}" stroke-width="1.1" fill="none" stroke-dasharray="1.5 2.5"/><path d="M-10 -100l-4 0" stroke="#040616" stroke-width="1"/></g>`); }
+    bulle(866, 412, "Je te vois.", 9, 1);
+
+    // ---- 9. LA PISTE : sentier de mousse sombre aux bords cyan (gardée)
+    K.route([["#000", 44, ` opacity=".55" filter="url(#pa-flou)"`], ["#5FF2FF", 36, ` opacity=".35" filter="url(#pa-flou)"`], ["#9FF6FF", 30], ["#14204A", 27], ["#1E2E5E", 22]]);
+    s.push(`<path d="${K.piste}" fill="none" stroke="#7FE8FF" stroke-width="1.4" stroke-dasharray="2 9" opacity=".6"/>`);
+    a.push(`<path d="${K.piste}" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-dasharray="4 40" opacity=".8">${an(`<animate attributeName="stroke-dashoffset" values="0;-88" dur="2.2s" repeatCount="indefinite"/>`)}</path>`);
+    K.depart();
+    // fougères du premier plan (bas droit), en silhouette liserée
+    [[700, 726, 1], [1000, 728, -1.2], [1070, 640, -1]].forEach(([x, y, sc]) => s.push(`${G(x, y, 1)}<g transform="scale(${sc} ${Math.abs(sc)})">${[-50, -25, 0, 22].map((ang, q) => `<path d="M0 0Q${f(-10 + q * 6)} -40 ${f(Math.sin(ang * PI / 180) * 80)} ${f(-Math.cos(ang * PI / 180) * 80)}" stroke="#05081C" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M0 0Q${f(-10 + q * 6)} -40 ${f(Math.sin(ang * PI / 180) * 80)} ${f(-Math.cos(ang * PI / 180) * 80)}" stroke="#9A7AF0" stroke-width="1.2" fill="none" opacity=".6" transform="translate(-2 -1)"/>`).join("")}</g></g>`));
+
+    // ---- 10. LE GRAND CHASSEUR ROUGE (haut gauche), entier, ailes déployées, qui ouvre le ciel vers la droite
+    { const x = 206, y = 96, sc = 1, rot = 4;
+      const ombre = mixHex("#7A1810", NUIT, .25);
+      a.push(`${G(x, y, sc, rot)}<g>${an(`<animateTransform attributeName="transform" type="rotate" values="0 10 -6;7 10 -6;0 10 -6" dur="2.4s" repeatCount="indefinite"/>`)}${lit(x, y - 60, sc, rot, [[`M40 -10Q18 -58 -52 -88Q-60 -68 -82 -64Q-80 -46 -104 -40Q-96 -24 -118 -16Q-40 -2 40 -10Z`, mixHex("#B83018", NUIT, .3), "#F8A8C8"]], 3)}<path d="M34 -12Q10 -56 -50 -84M30 -12Q-20 -46 -80 -62M24 -10Q-30 -26 -102 -38" stroke="#FFB43A" stroke-width="2.6" fill="none" opacity=".85"/></g>
+        ${lit(x, y, sc, rot, [[`M-150 4Q-120 -8 -90 -4Q-70 -2 -56 -6L-54 8Q-70 12 -96 14Q-124 18 -150 4Z`, ombre, "#F0A0B8"], [`M-150 4Q-168 -10 -176 -2Q-166 4 -170 14Q-160 8 -150 10Z`, ombre, "#F0A0B8"],
+          [`M-60 -6Q-20 -22 34 -14Q60 -10 78 -2Q62 12 34 14Q-20 18 -60 8Z`, mixHex("#9A2414", NUIT, .25), "#FFB0C8"],
+          [`M70 -10Q96 -20 116 -10L156 -2Q136 8 116 10Q98 14 74 8Z`, mixHex("#A82A16", NUIT, .2), "#FFB8C8"], [`M100 -12Q110 -48 146 -58Q132 -30 128 -6Z`, "#E89A2A", "#FFE0A0"]], 3.2)}
+        <path d="M-52 2Q0 -8 60 0" stroke="#FFC24A" stroke-width="3" fill="none" opacity=".8"/><circle cx="128" cy="-5" r="3" fill="#FFF0A0" stroke="#040616" stroke-width="1"/><path d="M118 4L152 0" stroke="#040616" stroke-width="1.3"/>
+        <g>${an(`<animateTransform attributeName="transform" type="rotate" values="0 6 6;-8 6 6;0 6 6" dur="2.4s" repeatCount="indefinite"/>`)}${lit(x, y + 60, sc, rot, [[`M30 4Q-6 36 -104 62Q-78 68 -66 86Q-48 70 -28 82Q-22 62 -2 62Q8 40 42 12Z`, mixHex("#D0401E", NUIT, .15), "#FFC0D0"]], 3.4)}<path d="M28 8Q-10 38 -98 62M30 10Q-12 48 -58 78M34 12Q8 44 -18 74" stroke="#FFC24A" stroke-width="3" fill="none" opacity=".9"/><path d="M-30 30Q-50 46 -70 52" stroke="#2A0808" stroke-width="2.4" fill="none" opacity=".6"/></g>
+        <path d="M-8 -12Q0 -24 10 -14" fill="${PEAU}" ${INK}/><circle cx="2" cy="-22" r="4.4" fill="${PEAU}" ${INK}/></g>`); }
+
+    // ---- 11. LES 4 IKRANS des pilotes, de trois-quarts, qui plongent vers la droite ; la tête du cavalier = le cadre-portrait (RES.portraits)
+    const IKR = [[332, 214, 16], [512, 262, 22], [668, 214, 14], [830, 310, 22]], SCI = .9, RP = 23;
+    COULEURS_J.forEach((c, k) => { const [x, y, rot] = IKR[k], cor = mixHex(c, NUIT, .55), bord = mixHex(c, "#F4E0FF", .55), memb = mixHex(c, NUIT, .15), c2 = mixHex(c, "#FFFFFF", .5), du = (1.3 + k * .17).toFixed(2); K.prendre(x, y, 70);
+      const R = RP / SCI, hx = 2, hy = -34 - R * .85;
+      a.push(`${G(x, y, SCI, rot)}<g>${an(`<animateTransform attributeName="transform" type="rotate" values="0 10 6;-9 10 6;0 10 6" dur="${du}s" repeatCount="indefinite"/>`)}${lit(x, y + 30, SCI, rot, [[`M10 6Q-20 34 -70 48Q-54 52 -48 62Q-34 50 -20 58Q-14 42 4 38Q14 24 26 8Z`, mixHex(c, NUIT, .65), mixHex(c, "#F4E0FF", .3)]], 2)}</g>
+        ${lit(x, y, SCI, rot, [[`M-34 0Q-64 6 -86 22Q-80 10 -78 4Q-96 6 -104 -2Q-82 -8 -64 -8Q-48 -9 -34 -6Z`, cor, bord], [`M36 -12Q54 -18 64 -6Q70 2 82 4L102 12Q88 17 76 16Q68 21 60 19Q48 14 42 8Q36 6 32 5Z`, cor, bord], [`M-38 -8Q-6 -22 26 -14Q40 -10 46 0Q34 12 14 13Q-12 15 -38 6Z`, cor, bord],
+          [`M62 -6Q70 -26 90 -28Q80 -14 78 2Z`, c, c2]], 2.6)}
+        <path d="M-32 -4Q0 -14 40 -4M-80 0L-56 -2" stroke="${c2}" stroke-width="2" fill="none" stroke-dasharray="5 4" opacity=".9"/><circle cx="72" cy="6" r="2.4" fill="#FFF4B0" stroke="#040616" stroke-width=".8"/>
+        <g>${an(`<animateTransform attributeName="transform" type="rotate" values="0 16 -8;12 16 -8;0 16 -8" dur="${du}s" repeatCount="indefinite"/>`)}${lit(x, y - 40, SCI, rot, [[`M16 -8Q2 -50 -62 -84Q-58 -64 -82 -58Q-70 -42 -94 -32Q-66 -16 -40 -6Z`, memb, bord]], 2.6)}<path d="M14 -10Q-4 -50 -60 -80M12 -9Q-30 -40 -80 -56M10 -8Q-40 -24 -92 -32" stroke="${c2}" stroke-width="2.2" fill="none" opacity=".9"/></g>
+        ${lit(x, y, SCI, rot, [[`M-6 -36Q-10 -22 -8 -8H12Q14 -22 10 -36Z`, PEAU, "#E0ECFF"]], 2)}<path d="M8 -26Q28 -20 42 -10" stroke="${PEAU}" stroke-width="4.4" fill="none" stroke-linecap="round"/><path d="M0 -8Q8 2 18 4" stroke="#1E4AA0" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M${f(hx - R * .9)} ${f(hy - R * .2)}L${f(hx - R * 1.35)} ${f(hy - R * .75)}L${f(hx - R * .7)} ${f(hy - R * .55)}ZM${f(hx + R * .9)} ${f(hy - R * .2)}L${f(hx + R * 1.35)} ${f(hy - R * .75)}L${f(hx + R * .7)} ${f(hy - R * .55)}Z" fill="${PEAU}" ${INK}/><path d="M${f(hx - R * .6)} ${f(hy + R * .5)}Q${f(hx - R * 1.6)} ${f(hy + R * 1.1)} ${f(hx - R * 2.2)} ${f(hy + R * .6)}" stroke="#0A0E26" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <circle cx="${f(hx)}" cy="${f(hy)}" r="${f(R + 4)}" fill="${c}" opacity=".35"/><circle cx="${f(hx)}" cy="${f(hy)}" r="${f(R)}" fill="#06103A" stroke="${c}" stroke-width="3"/></g>`);
+      const t = rot * PI / 180; PORTR.push({ k, x: +f(x + (hx * Math.cos(t) - hy * Math.sin(t)) * SCI), y: +f(y + (hx * Math.sin(t) + hy * Math.cos(t)) * SCI), r: RP }); });
+
+    // ---- 12. 6 graines sacrées, en grappe, qui montent de l'Arbre vers le ciel (couche animée)
+    [[574, 178], [590, 146], [562, 128], [582, 102], [598, 172], [556, 160]].forEach(([x, y], k) => { const sc = .8 + (k % 3) * .2;
+      a.push(`${G(x, y, sc)}<g>${an(`<animateTransform attributeName="transform" type="translate" values="0 30;${k % 2 ? 6 : -6} 0;0 -30" dur="${(7 + k).toFixed(1)}s" begin="-${(k * 1.3).toFixed(1)}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.2;.8;1" dur="${(7 + k).toFixed(1)}s" begin="-${(k * 1.3).toFixed(1)}s" repeatCount="indefinite"/>`)}<circle r="10" fill="url(#pa-ag)"/><path d="M-5 0Q-5 -6 0 -6Q5 -6 5 0Z" fill="#FFFFFF"/>${[-3.5, -1.2, 1.2, 3.5].map(u => `<path d="M${u} 0q${f(u * 1.4)} 6 ${f(u * 2.2)} 13" stroke="#F4ECFF" stroke-width=".8" fill="none"/>`).join("")}</g></g>`); });
+
+    // ---- 13. les 4 pilotes sur la piste : petites montures-éclairs à leurs couleurs
+    COULEURS_J.forEach((c, k) => a.push(K.surPiste(.02 + k * .035, `<g transform="scale(1.15)"><circle r="9" fill="${c}" opacity=".25"/><path d="M-8 -3Q0 -6 9 0Q0 6 -8 3Z" fill="${c}" ${INK}/><path d="M-4 -3l-4 -6M-4 3l-4 6" stroke="${c}" stroke-width="2"/><circle cx="2" cy="0" r="2" fill="${PEAU}"/></g>`, 46, k * 1.4)));
+    K.particules(8, "#E8C8FF", 2, "scintille");
+    const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#pa-ciel)"/>`, "#1A0A4A", .08); RES.portraits = PORTR; RES.lieux = { arbre: [AX, LY] }; return RES;
+  }
+
+  const PEINTS_NUIT = { pandora: peindrePandora, ratatouille: peindreRatatouille, arene: peindreArene2, etoiles: peindreEtoiles4, anneau: peindreAnneau4, chocolat: peindreChocolat3, terrier: peindreGouter, chateau: peindreChateau5, plateau: peindrePlateau, envers: peindreEnvers3, multivers: peindreMultivers, dunes: peindreDunes4, titans: peindreTitans4, odyssee: peindreOdyssee2 };   // v16.34 : 10 cartes refaites au niveau de l'Arène
   const PEINTS = { foret: { peindre: peindreForet3, deco: decorForet }, garage: { peindre: peindreGarage5, deco: decorGarage } };
   Object.keys(PEINTS_NUIT).forEach(k => { PEINTS[k] = { peindre: PEINTS_NUIT[k] }; });
   PEINTS.chateau.deco = decorChateau;
@@ -4794,41 +4955,160 @@
     return { sol, piste, eau, lum, stands: ps, portique: p0, rotors };
   }
 
-  /* ---------- Voiture : une F1 low-poly aux couleurs du pilote ---------- */
+  /* ---------- Voiture (v16.35) : une vraie petite monoplace aux couleurs du pilote ----------
+     Repère : x vers l'avant (museau en +x), y vers le haut, z sur le côté. Carrosserie en surfaces LISSES (normales par sommet :
+     le reflet glisse sur la coque au lieu de dessiner des facettes), ailerons et pièces plates en faces planes.
+     ≈ 900 triangles de carrosserie + 4 roues de ≈ 150 : ≈ 1 500 par voiture. */
+  const ROUES = [[3.2, 1.52, .58, .52], [-2.92, 1.46, .64, .74]];   // [x, demi-voie, rayon, largeur] : avant, arrière
+  function triL(g, a, b, c, na, nb, nc, col, em) {
+    const e = em || 0, cb = col.b || col, cc = col.c || col;
+    g.d.push(a[0], a[1], a[2], na[0], na[1], na[2], col[0], col[1], col[2], e, b[0], b[1], b[2], nb[0], nb[1], nb[2], cb[0], cb[1], cb[2], e, c[0], c[1], c[2], nc[0], nc[1], nc[2], cc[0], cc[1], cc[2], e);
+  }
+  /** surface lisse tendue sur des sections (rangées de points qui bouclent) ; col(i, j) → couleur de la face, em(i, j) → lumineux */
+  function nappe(g, R, col, em) {
+    const ni = R.length, nj = R[0].length, N = R.map(r => r.map(() => [0, 0, 0])), ctr = R.map(r => r.reduce((s, p) => [s[0] + p[0] / nj, s[1] + p[1] / nj, s[2] + p[2] / nj], [0, 0, 0])), F = [];
+    for (let i = 0; i < ni - 1; i++) for (let j = 0; j < nj; j++) {
+      const k = (j + 1) % nj, a = R[i][j], b = R[i + 1][j], c = R[i + 1][k], d = R[i][k];
+      let n = croix(sous(c, a), sous(d, b)); const m = [(a[0] + c[0]) / 2, (a[1] + c[1]) / 2, (a[2] + c[2]) / 2], ref = sous(m, mel(ctr[i], ctr[i + 1], .5));
+      if (point(n, ref) < 0) n = [-n[0], -n[1], -n[2]];
+      [[i, j], [i + 1, j], [i + 1, k], [i, k]].forEach(([u, w]) => { const q = N[u][w]; q[0] += n[0]; q[1] += n[1]; q[2] += n[2]; });
+      F.push([i, j, k]);
+    }
+    const Nn = N.map(r => r.map(norme));
+    F.forEach(([i, j, k]) => { const co = typeof col === "function" ? col(i, j) : col, e = typeof em === "function" ? em(i, j) : em || 0;
+      const a = R[i][j], b = R[i + 1][j], c = R[i + 1][k], d = R[i][k], na = Nn[i][j], nb = Nn[i + 1][j], nc = Nn[i + 1][k], nd = Nn[i][k];
+      triL(g, a, b, c, na, nb, nc, co, e); triL(g, a, c, d, na, nc, nd, co, e); });
+    return Nn;
+  }
+  /** bouchon plat (éventail) au bout d'une nappe */
+  function bouchon(g, P, col, em, dir) { const c = P.reduce((s, p) => [s[0] + p[0] / P.length, s[1] + p[1] / P.length, s[2] + p[2] / P.length], [0, 0, 0]); for (let j = 0; j < P.length; j++) g.tri(c, P[j], P[(j + 1) % P.length], col, em, dir); }
+  /** section arrondie (super-ellipse) : centre zc, demi-largeur hw, du bas yb au haut yt ; tp resserre le haut (flancs inclinés) */
+  function section(x, zc, hw, yb, yt, tp, n) {
+    const P = [], ym = (yb + yt) / 2, hh = (yt - yb) / 2, pw = v => Math.sign(v) * Math.pow(Math.abs(v), .62);
+    for (let j = 0; j < n; j++) { const t = j / n * TAU, c = pw(Math.cos(t)), s = pw(Math.sin(t)); P.push([x, ym + hh * s, zc + hw * c * (1 - (tp || 0) * Math.max(0, s))]); }
+    return P;
+  }
+  /** tube lisse le long d'un chemin (halo, bras) */
+  function tube(g, chemin, r, col, em, m) {
+    const R = chemin.map((p, i) => { const a = chemin[Math.max(0, i - 1)], b = chemin[Math.min(chemin.length - 1, i + 1)], t = norme(sous(b, a));
+      let u = norme(croix(t, [0, 1, 0])); if (!isFinite(u[0]) || Math.hypot(u[0], u[1], u[2]) < .5) u = [1, 0, 0]; const w = croix(u, t), out = [];
+      for (let j = 0; j < (m || 6); j++) { const q = j / (m || 6) * TAU; out.push([p[0] + (u[0] * Math.cos(q) + w[0] * Math.sin(q)) * r, p[1] + (u[1] * Math.cos(q) + w[1] * Math.sin(q)) * r, p[2] + (u[2] * Math.cos(q) + w[2] * Math.sin(q)) * r]); }
+      return out; });
+    nappe(g, R, col, em);
+  }
+  /** bras de suspension : ruban fin d'un point à un autre (visible des deux côtés) */
+  function bras(g, a, b, l, col) { const d = norme(sous(b, a)), u = norme(croix(d, [0, 1, 0])), h = [u[0] * l, u[1] * l, u[2] * l]; g.quad(sous(a, h), sous(b, h), [b[0] + h[0], b[1] + h[1], b[2] + h[2]], [a[0] + h[0], a[1] + h[1], a[2] + h[2]], col, 0, [0, 1, 0]); }
+  /** lame d'aileron : profil incliné (bord d'attaque bas, bord de fuite haut), du côté z0 au côté z1 */
+  function lame(g, xa, ya, xf, yf, ep, z0, z1, col, dessous) {
+    const P = (x, y, z) => [x, y, z];
+    g.bloc([P(xf, yf, z0), P(xa, ya, z0), P(xa, ya, z1), P(xf, yf, z1), P(xf, yf + ep, z0), P(xa, ya + ep * 1.6, z0), P(xa, ya + ep * 1.6, z1), P(xf, yf + ep, z1)], col, 0, { dessous: true, 0: dessous || col });
+  }
   function voiture(v) {
     const g = new Geo(), c = hex(v.couleur || "#4C9AFF"), lv = v.livree || "couleur";
     const metal = { chrome: "#C9D2DC", or: "#E8C15A", oranime: "#F2C94C", platine: "#E5E8EC", orrose: "#F2B8A6", rubis: "#B0122E", galaxie: "#2B1B5A" }[lv];
-    const neon = lv === "neon", corps = neon ? hex("#0B0D12") : metal ? hex(metal) : c, deux = neon ? c : metal ? c : mel(c, [1, 1, 1], .75), em = neon ? 1 : 0;
-    const carbone = hex("#15181E"), sombre = hex("#22262E");
-    // fond plat
-    g.boite(-.2, .18, 0, 7.4, .16, 3.0, carbone);
-    // coque : de l'arrière au museau, en tronçons qui s'affinent
-    const tr = [[-3.5, .5, 1.05, .55], [-2.4, .45, 1.15, .62], [-1.0, .4, 1.25, .72], [.6, .4, 1.0, .68], [2.0, .42, .7, .5], [3.4, .38, .42, .38], [4.3, .33, .22, .26]];
-    for (let i = 0; i < tr.length - 1; i++) {
-      const a = tr[i], b = tr[i + 1], A1 = (s, h) => [a[0], a[1] + h * a[3] * 2, s * a[2] / 2], B1 = (s, h) => [b[0], b[1] + h * b[3] * 2, s * b[2] / 2];
-      g.bloc([A1(-1, 0), B1(-1, 0), B1(1, 0), A1(1, 0), A1(-1, 1), B1(-1, 1), B1(1, 1), A1(1, 1)], corps, 0, { 1: i >= 3 && !neon && !metal ? deux : corps, em: neon ? [0, .0, 1, 0, 1, 0] : null });
-    }
-    // pontons
-    [1, -1].forEach(s => { g.boite(-.6, .3, s * 1.05, 3.2, .62, .95, corps); g.boite(.95, .3, s * 1.05, .2, .55, .9, carbone); if (neon) g.boite(-.6, .93, s * 1.05, 3.2, .06, .1, c, 1); });
-    // capot moteur avec aileron de requin, prise d'air
-    g.boite(-1.8, .95, 0, 2.8, .45, .7, corps); g.boite(-2.2, 1.35, 0, 2.0, .5, .08, neon ? c : deux, em); g.boite(-.55, 1.15, 0, .5, .4, .45, carbone);
-    // cockpit, casque, halo
-    g.boite(.1, .95, 0, 1.3, .18, .8, carbone);
-    g.boule(-.05, 1.25, 0, .3, hex(v.casque || v.couleur || "#ffffff"), v.casqueEm ? 1 : 0, 1, true);
-    g.boite(.65, 1.0, 0, .12, .5, .12, hex("#30353D")); [1, -1].forEach(s => g.bloc([[-.35, 1.45, s * .38], [.65, 1.45, s * .14], [.65, 1.52, s * .14], [-.35, 1.52, s * .38], [-.35, 1.5, s * .44], [.65, 1.5, s * .2], [.65, 1.57, s * .2], [-.35, 1.57, s * .44]], hex("#30353D")));
-    // aileron avant
-    g.boite(4.0, .14, 0, .75, .1, 3.6, neon ? c : deux, em); g.boite(3.85, .24, 0, .45, .08, 3.4, corps); [1, -1].forEach(s => g.boite(4.0, .14, s * 1.78, .9, .45, .08, sombre));
-    // aileron arrière
-    g.boite(-3.75, 1.3, 0, .6, .12, 2.5, corps); g.boite(-3.65, 1.48, 0, .4, .08, 2.5, neon ? c : deux, em); [1, -1].forEach(s => g.boite(-3.7, .35, s * 1.25, .9, 1.25, .08, corps)); g.boite(-3.5, .4, 0, .3, .9, .25, carbone);
-    // feu arrière
-    g.boite(-3.95, .55, 0, .1, .22, .3, hex("#FF2A2A"), 1);
+    const neon = lv === "neon", corps = neon ? hex("#0B0D12") : metal ? hex(metal) : c, em = neon ? 1 : 0;
+    // accent : la couleur du pilote sur les livrées métal / néon, sinon un blanc cassé teinté
+    const accent = neon || metal ? c : mel(c, [1, 1, 1], .82), emA = neon ? 1 : 0;
+    const carbone = hex("#16191F"), carbone2 = hex("#23272F"), cockpit = hex("#0C0E12"), titane = hex("#2C3038");
+    const fonce = mel(corps, [0, 0, 0], .35);
+    // ---- monocoque, du diffuseur au museau : [x, demi-largeur, bas, haut, resserrement du haut]
+    const M = [[-3.62, .26, .34, .74, .2], [-3.1, .36, .3, .92, .3], [-2.3, .48, .27, 1.1, .42], [-1.35, .58, .25, 1.16, .42], [-.62, .62, .25, 1.06, .3], [.3, .58, .25, .98, .25],
+      [1.25, .45, .27, .9, .2], [2.25, .32, .28, .79, .15], [3.2, .22, .28, .66, .1], [4.05, .13, .27, .53, .08], [4.62, .05, .29, .41, 0]];
+    const nM = 10, RM = M.map(s => section(s[0], 0, s[1], s[2], s[3], s[4], nM));
+    // faces du haut (j = 2 et 3 autour du sommet) entre le cockpit : creux sombre
+    nappe(g, RM, (i, j) => (i === 4 && j === 2) ? cockpit : (j >= 6 && j <= 8) ? fonce : corps, 0);
+    bouchon(g, RM[0], carbone, 0, [-1, 0, 0]); bouchon(g, RM[RM.length - 1], corps, 0, [1, 0, 0]);
+    // ---- bande centrale à la couleur d'accent, du museau jusqu'au cockpit et sur le capot moteur
+    const bande = (pts, l) => { for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1]; g.quad([a[0], a[1], -l * a[2]], [b[0], b[1], -l * b[2]], [b[0], b[1], l * b[2]], [a[0], a[1], l * a[2]], accent, emA, [0, 1, 0]); } };
+    bande([[.62, .995, .9], [1.25, .915, .8], [2.25, .805, .6], [3.2, .675, .45], [4.05, .545, .3], [4.5, .455, .12]], .16);
+    // ---- pontons (entrée d'air sombre devant, taille de guêpe vers l'arrière)
+    [1, -1].forEach(s => {
+      const P = [[1.08, .95, .36, .3, .82, .3], [.62, .98, .42, .27, .86, .35], [-.4, .95, .42, .25, .8, .45], [-1.4, .84, .33, .25, .64, .5], [-2.3, .68, .18, .25, .46, .4], [-2.88, .56, .06, .27, .34, .2]];
+      const R = P.map(q => section(q[0], s * q[1], q[2], q[3], q[4], q[5], 8));
+      nappe(g, R, (i, j) => j >= 5 && j <= 6 ? fonce : corps, 0);
+      // bouche d'entrée d'air : bord à la couleur, fond noir
+      bouchon(g, R[0], cockpit, 0, [1, 0, 0]);
+      // liseré néon / accent sur le flanc du ponton
+      if (neon) g.quad([.7, .62, s * 1.455], [-1.5, .55, s * 1.25], [-1.5, .62, s * 1.25], [.7, .7, s * 1.455], c, 1, [0, 0, s]);
+    });
+    // ---- fond plat et plancher (bords sombres qui posent la voiture)
+    g.bloc([[-3.0, .15, -.95], [1.3, .15, -1.12], [1.3, .15, 1.12], [-3.0, .15, .95], [-3.0, .22, -.95], [1.3, .22, -1.12], [1.3, .22, 1.12], [-3.0, .22, .95]], carbone, 0, { dessous: true });
+    // ---- prise d'air au-dessus du pilote et capot moteur
+    const AB = [[-.42, .15, 1.0, 1.38], [-.8, .2, 1.02, 1.5], [-1.5, .18, 1.02, 1.42], [-2.4, .1, .98, 1.2], [-3.2, .04, .86, .94]].map(q => section(q[0], 0, q[1], q[2], q[3], .1, 6));
+    nappe(g, AB, (i, j) => (j === 1 || j === 2) && i < 3 ? accent : corps, (i, j) => (j === 1 || j === 2) && i < 3 ? emA : 0);
+    bouchon(g, AB[0].map(p => [p[0] + .01, (p[1] - 1.19) * .7 + 1.19, p[2] * .7]), cockpit, 0, [1, 0, 0]);
+    for (let j = 0; j < 6; j++) { const k = (j + 1) % 6, a = AB[0][j], b = AB[0][k]; g.quad(a, b, [b[0] + .01, (b[1] - 1.19) * .7 + 1.19, b[2] * .7], [a[0] + .01, (a[1] - 1.19) * .7 + 1.19, a[2] * .7], corps, 0, [1, 0, 0]); }
+    // aileron de requin (le long du capot jusqu'à l'aileron arrière)
+    g.quad([-1.6, 1.38, 0], [-3.7, 1.0, 0], [-3.7, 1.42, 0], [-2.2, 1.42, 0], neon ? c : accent, emA, [0, 0, 1]);
+    // ---- cockpit : rebord, casque, halo, rétroviseurs
+    const CQ = []; for (let j = 0; j < 5; j++) { const la = j / 4 * PI * .5, R = []; for (let k = 0; k < 9; k++) { const lo = k / 9 * TAU; R.push([-.08 + Math.sin(la) * Math.cos(lo) * .31, 1.12 + Math.cos(la) * .3, Math.sin(la) * Math.sin(lo) * .27]); } CQ.push(R); }
+    for (let j = 0; j < 1; j++) { const R = []; for (let k = 0; k < 9; k++) { const lo = k / 9 * TAU; R.push([-.08 + Math.cos(lo) * .31 * (1 - j * .15), 1.12 - .14 * (j + 1), Math.sin(lo) * .27 * (1 - j * .15)]); } CQ.push(R); }
+    CQ[0] = CQ[0].map(() => [-.08, 1.42, 0]);
+    const casque = hex(v.casque || v.couleur || "#ffffff"), visiere = hex("#14171D");
+    nappe(g, CQ, (i, j) => { const lo = (j + .5) / 9 * TAU; return (i === 2 || i === 3) && Math.cos(lo) > .3 ? visiere : casque; }, v.casqueEm ? 1 : 0);
+    // halo : arceau de titane au-dessus du casque, pilier central jusqu'au museau
+    const H = [[-.5, 1.04, .5], [-.42, 1.3, .48], [-.18, 1.47, .44], [.18, 1.53, .34], [.5, 1.5, .17], [.66, 1.47, 0]];
+    tube(g, H.concat(H.slice(0, -1).reverse().map(p => [p[0], p[1], -p[2]])), .06, titane, 0, 4);
+    tube(g, [[.66, 1.47, 0], [.82, 1.3, 0], [.95, 1.0, 0]], .065, titane, 0, 4);
+    [1, -1].forEach(s => { bras(g, [.3, 1.02, s * .5], [.42, 1.12, s * .78], .03, carbone); g.boite(.42, 1.06, s * .84, .1, .13, .26, corps); });
+    // ---- suspensions : bras en V de la coque vers chaque roue
+    ROUES.forEach(([wx, wz, r]) => [1, -1].forEach(s => {
+      const moy = [wx, r, s * (wz - .3)];
+      [[r - .2, .08], [r + .14, -.02]].forEach(([h, d]) => { const m2 = [wx, h, s * (wz - .3)]; bras(g, [wx - .45, h - d, s * .3], m2, .03, carbone); bras(g, [wx + .4, h - d, s * .3], m2, .03, carbone); });
+      bras(g, [wx + .05, .5, s * .3], moy, .04, carbone);
+    }));
+    // ---- aileron avant : deux lames larges qui remontent, dérives aux bouts, piliers sous le museau
+    const AVc = neon ? carbone : corps;
+    [1, -1].forEach(s => {
+      lame(g, 4.92, .14, 4.32, .2, .05, s * .18, s * 1.86, AVc, carbone);
+      lame(g, 4.34, .24, 3.95, .42, .045, s * .32, s * 1.86, accent, carbone);
+      if (neon) g.quad([4.92, .2, s * .18], [4.92, .2, s * 1.86], [4.92, .23, s * 1.86], [4.92, .23, s * .18], c, 1, [1, 0, 0]);
+      g.bloc([[3.9, .1, s * 1.86], [4.98, .1, s * 1.86], [4.98, .1, s * 1.91], [3.9, .1, s * 1.91], [3.9, .44, s * 1.86], [4.98, .3, s * 1.86], [4.98, .3, s * 1.91], [3.9, .44, s * 1.91]], fonce, 0);
+      g.boite(4.35, .2, s * .16, .5, .12, .04, carbone);
+    });
+    // ---- aileron arrière : lame principale + volet, grandes dérives (accent), pilier col de cygne, aileron de poutre
+    const AR = -3.88;
+    lame(g, AR + .38, 1.44, AR - .28, 1.56, .07, -1.06, 1.06, corps, carbone);
+    lame(g, AR - .1, 1.66, AR - .42, 1.86, .05, -1.06, 1.06, neon ? c : accent, carbone);
+    if (neon) g.quad([AR + .38, 1.55, -1.06], [AR + .38, 1.55, 1.06], [AR + .38, 1.58, 1.06], [AR + .38, 1.58, -1.06], c, 1, [1, 0, 0]);
+    [1, -1].forEach(s => {
+      const z0 = s * 1.06, z1 = s * 1.12, P = [[AR + .5, .62], [AR - .55, .62], [AR - .55, 1.98], [AR + .25, 1.98], [AR + .5, 1.62]];
+      // dérive : plaque épaisse (2 faces + tranche)
+      for (let k = 1; k < P.length - 1; k++) [z0, z1].forEach(z => g.tri([P[0][0], P[0][1], z], [P[k][0], P[k][1], z], [P[k + 1][0], P[k + 1][1], z], corps, 0, [0, 0, z === z0 ? -s : s]));
+      for (let k = 0; k < P.length; k++) { const a = P[k], b = P[(k + 1) % P.length]; g.quad([a[0], a[1], z0], [b[0], b[1], z0], [b[0], b[1], z1], [a[0], a[1], z1], fonce, 0, [a[1] + b[1] > 3.6 ? 0 : 0, 1, 0]); }
+      // bande d'accent sur la face extérieure de la dérive
+      g.quad([AR + .42, 1.25, z1 + s * .01], [AR - .5, 1.25, z1 + s * .01], [AR - .5, 1.52, z1 + s * .01], [AR + .42, 1.52, z1 + s * .01], accent, emA, [0, 0, s]);
+    });
+    g.boite(AR + .15, 1.0, 0, .16, .52, .06, carbone);                      // col de cygne
+    lame(g, AR + .3, .74, AR - .15, .8, .05, -.7, .7, carbone);            // aileron de poutre
+    // diffuseur et feu arrière
+    g.bloc([[-3.0, .15, -.9], [-3.9, .24, -.86], [-3.9, .24, .86], [-3.0, .15, .9], [-3.0, .2, -.9], [-3.9, .4, -.86], [-3.9, .4, .86], [-3.0, .2, .9]], carbone2, 0);
+    g.boite(-3.66, .5, 0, .08, .2, .26, hex("#FF2A2A"), 1);
+    if (v.roues) ROUES.forEach(([wx, wz, r, l], i) => [1, -1].forEach(s => g.poser(roue(r, l, s), wx, r, s * wz, 0, 1)));
     return g;
   }
-  function roue(r, l) { const g = new Geo(), n = 12, noir = hex("#101216"), jante = hex("#C9CED6");
-    for (let i = 0; i < n; i++) { const a = i / n * TAU, b = (i + 1) / n * TAU, P = (t, z, rr) => [Math.cos(t) * rr, Math.sin(t) * rr, z];
-      g.quad(P(a, -l / 2, r), P(b, -l / 2, r), P(b, l / 2, r), P(a, l / 2, r), i % 2 ? noir : hex("#191C21"), 0, [Math.cos((a + b) / 2), Math.sin((a + b) / 2), 0]);
-      [1, -1].forEach(s => { g.tri([0, 0, s * l / 2], P(a, s * l / 2, r), P(b, s * l / 2, r), noir, 0, [0, 0, s]); g.tri([0, 0, s * (l / 2 + .01)], P(a, s * (l / 2 + .01), r * .55), P(b, s * (l / 2 + .01), r * .55), i % 3 ? jante : hex("#F7CF55"), 0, [0, 0, s]); }); }
-    return g; }
+  /** roue : pneu épais arrondi (normales lisses), liseré de couleur sur le flanc et jante creuse à rayons, côté extérieur s (+1 : +z) */
+  function roue(r, l, s) {
+    const g = new Geo(), n = 11, noir = hex("#131519"), noir2 = hex("#1C1F25"), lis = hex("#F2C230"), jante = hex("#B9C1CB"), jante2 = hex("#3A4049"), sd = s || 1, h = l / 2, rb = .1;
+    // profil (rayon, z, normale radiale, normale z) de l'intérieur vers l'extérieur
+    const Pf = [[r * .62, -h, .3, -1], [r, -h + rb, 1, -.05], [r, h - rb, 1, .05], [r - rb * .25, h - rb * .3, .8, .6], [r * .86, h, .15, 1], [r * .74, h, 0, 1]];
+    const col = k => k === 4 ? lis : k < 1 ? noir2 : noir;
+    for (let i = 0; i < n; i++) {
+      const a = i / n * TAU, b = (i + 1) / n * TAU, ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
+      for (let k = 0; k < Pf.length - 1; k++) {
+        const p = Pf[k], q = Pf[k + 1], z1 = p[1] * sd, z2 = q[1] * sd;
+        const A = [ca * p[0], sa * p[0], z1], B = [cb * p[0], sb * p[0], z1], C = [cb * q[0], sb * q[0], z2], Dd = [ca * q[0], sa * q[0], z2];
+        const nA = norme([ca * p[2], sa * p[2], p[3] * sd]), nB = norme([cb * p[2], sb * p[2], p[3] * sd]), nC = norme([cb * q[2], sb * q[2], q[3] * sd]), nD = norme([ca * q[2], sa * q[2], q[3] * sd]);
+        const co = k === 4 && i % 2 ? noir2 : col(k);
+        triL(g, A, B, C, nA, nB, nC, co, 0); triL(g, A, C, Dd, nA, nC, nD, co, 0);
+      }
+      // jante creuse : rebord argent qui rentre, puis voile à rayons (un sur deux clair)
+      const r1 = r * .74, r2 = r * .64, zi = (h - .1) * sd, A = [ca * r1, sa * r1, h * sd], B = [cb * r1, sb * r1, h * sd], C = [cb * r2, sb * r2, zi], Dd = [ca * r2, sa * r2, zi];
+      g.quad(A, B, C, Dd, jante, 0, [0, 0, sd]);
+      g.tri([0, 0, zi + .03 * sd], Dd, C, i % 2 ? jante : jante2, 0, [0, 0, sd]);
+    }
+    return g;
+  }
 
   /* ---------- WebGL ---------- */
   const VS = "attribute vec3 aP;attribute vec3 aN;attribute vec4 aC;uniform mat4 uPV;uniform mat4 uM;varying vec3 vN;varying vec4 vC;varying vec3 vW;void main(){vec4 w=uM*vec4(aP,1.);vW=w.xyz;vN=(uM*vec4(aN,0.)).xyz;vC=aC;gl_Position=uPV*w;}";
@@ -4874,7 +5154,7 @@
     const ciel = new Geo(); ciel.boule(0, 0, 0, 1, [1, 1, 1], 0, 1, true);
     const feu = new Geo(); feu.boule(0, 0, 0, .7, [1, 1, 1]);
     return { cv, gl, PL: programme(gl, VS, FS), PC: programme(gl, VS_CIEL, FS_CIEL), PF: programme(gl, VS_FX, FS_FX), PP: programme(gl, VS_PT, FS_PT), PR: programme(gl, VS_PLUIE, FS_PLUIE),
-      BC: tampon(gl, ciel), FEU: tampon(gl, feu), roueAv: tampon(gl, roue(.55, .5)), roueAr: tampon(gl, roue(.62, .7)) };
+      BC: tampon(gl, ciel), FEU: tampon(gl, feu), roues: ROUES.map(([x, z, r, l]) => [tampon(gl, roue(r, l, 1)), tampon(gl, roue(r, l, -1))]) };
   }
   /* Scènes déjà construites, gardées en mémoire : revenir sur un mois ne recalcule rien */
   const SCENES = new Map();
@@ -4910,7 +5190,7 @@
      Instance 3D
      ============================================================ */
   function monter3D(boite, o) {
-    const C = contexte(), cv = C.cv, gl = C.gl, PL = C.PL, PC = C.PC, PF = C.PF, PP = C.PP, PR = C.PR, BC = C.BC, roueAv = C.roueAv, roueAr = C.roueAr;
+    const C = contexte(), cv = C.cv, gl = C.gl, PL = C.PL, PC = C.PC, PF = C.PF, PP = C.PP, PR = C.PR, BC = C.BC, roues = C.roues;
     cv.setAttribute("role", "img"); cv.setAttribute("aria-label", o.titre || "Circuit"); cv.width = 2; cv.height = 2;
     boite.appendChild(cv);
     const def = TRACES[o.circuit] || TRACES.melbourne, T = echantillonner(def), A = ambiance(def, o.meteo, o.ambiance), Z = zones(T);
@@ -5003,12 +5283,13 @@
         gl.uniform4f(U.uTint, 1, 1, 1, 0); }
       // voitures
       gl.uniform1f(U.uSpec, .55);
+      const KV = I.mode === "helico" ? 1.8 : 1;   // v16.35 · vue d'hélico : voitures grossies pour rester lisibles
       V.forEach(x => {
-        gl.uniform4f(U.uTint, 1, 1, 1, A.nuit ? .32 : 0);
-        const M = modele(x.x, x.y + .05, x.z, x.cap, x.tang, 1); gl.uniformMatrix4fv(U.uM, false, M); lier(gl, PL, x.b); gl.drawArrays(gl.TRIANGLES, 0, x.b.n);
+        gl.uniform4f(U.uTint, 1, 1, 1, A.nuit ? .2 : 0);
+        const M = modele(x.x, x.y + .05, x.z, x.cap, x.tang, KV); gl.uniformMatrix4fv(U.uM, false, M); lier(gl, PL, x.b); gl.drawArrays(gl.TRIANGLES, 0, x.b.n);
         gl.uniform4f(U.uTint, 1, 1, 1, 0);
-        [[3.25, 1.5, roueAv, .55], [-2.95, 1.45, roueAr, .62]].forEach(([wx, wz, rb, rr]) => [1, -1].forEach(sd => {
-          const Mw = mul(M, mul(modele(wx, rr, sd * wz, 0, 0, 1), rotZ(-x.rot)));
+        ROUES.forEach(([wx, wz, rr], i) => [1, -1].forEach(sd => {
+          const rb = roues[i][sd > 0 ? 0 : 1], Mw = mul(M, mul(modele(wx, rr, sd * wz, 0, 0, 1), rotZ(-x.rot * .6 / rr)));
           gl.uniformMatrix4fv(U.uM, false, Mw); lier(gl, PL, rb); gl.drawArrays(gl.TRIANGLES, 0, rb.n); }));
       });
       // décors qui tournent (ailes du moulin…)
@@ -5019,8 +5300,11 @@
       gl.enable(gl.BLEND); gl.depthMask(false); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-3, -6);
       const fx = [], add = [];
       V.forEach(x => {   // ombre douce sous la voiture
-        const c = Math.cos(x.cap), s = Math.sin(x.cap), q = (a, b) => [x.x + a * c + b * s, x.y + .16, x.z - a * s + b * c];
-        const A1 = q(-4.6, -2.1), B1 = q(4.8, -2.1), C1 = q(4.8, 2.1), D1 = q(-4.6, 2.1); [A1, B1, C1, A1, C1, D1].forEach(p => fx.push(p[0], p[1], p[2], 0, 0, 0, .32));
+        const c = Math.cos(x.cap) * KV, s = Math.sin(x.cap) * KV, q = (a, b) => [x.x + a * c + b * s, x.y + .16, x.z - a * s + b * c];
+        // v16.35 · ombre douce : cœur sombre sous la coque, bord qui s'efface (super-ellipse en éventail)
+        const cO = q(-.2, 0), bord = (t, k) => { const ct = Math.cos(t), st = Math.sin(t); return q(-.2 + Math.sign(ct) * Math.pow(Math.abs(ct), .55) * 4.6 * k, Math.sign(st) * Math.pow(Math.abs(st), .55) * 1.95 * k); };
+        for (let j = 0; j < 14; j++) { const t0 = j / 14 * TAU, t1 = (j + 1) / 14 * TAU, a = bord(t0, .62), b = bord(t1, .62), a2 = bord(t0, 1.08), b2 = bord(t1, 1.08);
+          [[cO, .46], [a, .4], [b, .4], [a, .4], [b, .4], [b2, 0], [a, .4], [b2, 0], [a2, 0]].forEach(([p, al]) => fx.push(p[0], p[1], p[2], 0, 0, 0, al)); }
         rubanTrainee(x, add);
       });
       gl.useProgram(PF.p); gl.uniformMatrix4fv(PF.U.uPV, false, PV); gl.enableVertexAttribArray(PF.A.aP); gl.enableVertexAttribArray(PF.A.aC);
@@ -5251,6 +5535,12 @@
       };
     },
     /* ---------- V16.38 · un événement pour chaque mois (attachés aux voitures : ils survivent aux nouvelles cartes) ---------- */
+    /* mai 2027 · Pandora : à l'arrivée, un grand oiseau-dragon plonge en piqué au-dessus du vainqueur */
+    pandora(x) { const O = outilsEv(x); let fait = false;
+      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("pandora"); const n = O.premier(c), p = O.dedans(O.voiture(n)); if (!p) return;
+        const g = O.el('<g><path d="M0 0L-70 -26L-40 -4L-90 10L-36 8L0 16L36 8L90 10L40 -4L70 -26Z" fill="#E8542A" stroke="#5A1A0A" stroke-width="2.5"/><path d="M-40 -4L-70 -26M40 -4L70 -26M-36 8L-90 10M36 8L90 10" stroke="#F2B33A" stroke-width="2"/><path d="M0 16L-8 40L0 34L8 40Z" fill="#C2401E"/><path d="M0 -6L-6 -22L0 -16L6 -22Z" fill="#F2B33A"/><circle cx="0" cy="2" r="3.5" fill="#3AE0FF"/></g>');
+        const b = O.bulle(p[0], p[1] - 130, "Le grand oiseau t’a choisi, " + n + " !", 20);
+        O.anim(1800, q => { const u = p[0] - 320 + q * 640, v = p[1] - 40 - Math.sin(q * Math.PI) * -120 - 150 + q * 0; g.setAttribute("transform", "translate(" + O.f(u) + " " + O.f(p[1] - 170 + Math.sin(q * Math.PI) * 120) + ") rotate(" + O.f(-8 + q * 16) + ") scale(" + O.f(1.2 + Math.sin(q * Math.PI) * .5) + ")"); g.setAttribute("opacity", O.f(q < .1 ? q * 10 : q > .85 ? (1 - q) * 6.6 : 1)); }, () => { g.remove(); setTimeout(() => b.remove(), 700); }); } }; },
     /* janvier 2027 · Ratatouille : à l'arrivée, le petit chef rat court jusqu'au vainqueur et lui pose sa toque */
     ratatouille(x) { const O = outilsEv(x); let fait = false;
       return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("ratatouille"); const n = O.premier(c), p = O.dedans(O.voiture(n)); if (!p) return;

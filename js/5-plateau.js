@@ -165,7 +165,7 @@ const PIEGES = {
   djeddah: { id: "murs", ico: "🚪", nom: "Couloirs mouvants", txt: "À moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points)." },
   melbourne: { id: "chaos", ico: "🫖", nom: "Le thé du Chapelier", txt: "Pronostic « qui gagne le mois » : +2 si juste, mais −1 si faux." },
   suzuka: { id: "huit", ico: "🔁", nom: "Un aller et retour", txt: "Les places du mois se jouent sur deux mois cumulés : ce mois-ci et le précédent." },
-  miami: { id: "chaleur", ico: "🔥", nom: "Champ de force", txt: "🚀 Turbo interdit ce mois-ci." },
+  miami: { id: "chaleur", ico: "🌿", nom: "Les graines sacrées", txt: "🚀 Turbo interdit ce mois-ci." },
   spa: { id: "ardennes", ico: "🌫️", nom: "Brume", txt: "Si le S&P 500 baisse, 🌧️ Pneus pluie vaut +3 au lieu de +2." },
   singapour: { id: "nuit", ico: "🍬", nom: "Bonbon de consolation", txt: "Le dernier du mois marque 2 points de place au lieu de 0." },
   interlagos: { id: "averse", ico: "💥", nom: "Assaut", txt: "🎲 Pari : +3 si tu finis devant ton rival, −2 derrière (au lieu de +2 / −1)." }
@@ -383,7 +383,9 @@ const SKINS_TETE = {
   // avril · Terre de l'Anneau : cape et capuche elfique, broche feuille
   anneau: () => ({ derriere: '<path d="M7.6 41C6.6 26 9 8.6 20 3.4C31 8.6 33.4 26 32.4 41Z" fill="#344F31"/>', corps: '<path d="M3 41C4 31 11 28.4 20 28.4S36 31 37 41Z" fill="#3F5B3A"/><path d="M20 28.6V41" stroke="rgba(0,0,0,.2)" stroke-width=".8"/><path d="M18.4 31.4C19.6 29.6 21.6 29.8 22 31.2 21.4 33.2 19.6 33.6 18.4 31.4Z" fill="#9BD07A" stroke="#E6E9EA" stroke-width=".45"/>',
     cache: true, dessus: '<path d="M10.4 19C9.8 9.4 14.2 4.8 20 4.8S30.2 9.4 29.6 19C28.6 12 25.4 8.8 20 8.8S11.4 12 10.4 19Z" fill="#4A6B43"/><path d="M12.4 13C14.4 9.6 25.6 9.6 27.6 13" stroke="#2C4229" stroke-width=".6" fill="none"/>' }),
-  // mai · L'Arène : tenue noire et broche dorée à l'oiseau
+  // mai 2027 · Pandora : marques bleues lumineuses sur le visage et natte
+  pandora: () => ({ dessus: '<path d="M14 13.2C15.4 12.6 16.8 12.8 17.8 13.6M22.2 13.6C23.2 12.8 24.6 12.6 26 13.2" stroke="#7FE9FF" stroke-width=".8" fill="none"/><circle cx="13.4" cy="19.6" r=".7" fill="#7FE9FF"/><circle cx="14.8" cy="21.2" r=".6" fill="#7FE9FF"/><circle cx="26.6" cy="19.6" r=".7" fill="#7FE9FF"/><circle cx="25.2" cy="21.2" r=".6" fill="#7FE9FF"/><path d="M20 8.6V11.6M18.6 9.2L20 10.2 21.4 9.2" stroke="#7FE9FF" stroke-width=".6" fill="none"/><path d="M29.6 12C33 15 32 22 34 27C34.6 29 33.4 31.4 31.6 31.6C32.4 28.6 30.4 24 30.6 19.6C30.8 16.6 30 14.2 29.6 12Z" fill="#2A1C14" stroke="#120A06" stroke-width=".5"/><path d="M31 18.4L32.4 19.2M31.2 22.4L32.8 23.2M31.6 26.4L33.2 27.2" stroke="#7FE9FF" stroke-width=".5"/>' }),
+  // mai 2028 · L'Arène : tenue noire et broche dorée à l'oiseau
   arene: () => ({ corps: '<path d="M3 41C4 32 11 28.5 20 28.5S36 32 37 41Z" fill="#23252B"/><path d="M15 28.6C16.4 31 23.6 31 25 28.6L25.4 30.4C23.6 32.6 16.4 32.6 14.6 30.4Z" fill="#14161A"/><circle cx="26.2" cy="34.2" r="2.5" fill="none" stroke="#E2B23C" stroke-width=".8"/><path d="M24.4 34.6C25.4 33.4 26.4 33.6 27.6 33C27 34.4 26 35.4 24.4 34.6Z" fill="#E2B23C"/>' }),
   // juin · Bataille spatiale : casque et combinaison orange de pilote de chasseur
   etoiles: c => ({ corps: '<path d="M3 41C4 32 11 28.5 20 28.5S36 32 37 41Z" fill="#E2762E"/><path d="M12 30.4L20 36.4 28 30.4M20 36.4V41" stroke="#F1F1EE" stroke-width="2" fill="none"/><rect x="17.2" y="35" width="5.6" height="3.2" rx=".6" fill="#8E9499"/>',
