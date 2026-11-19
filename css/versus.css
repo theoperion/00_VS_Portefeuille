@@ -1450,3 +1450,4 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .gp-btns { flex-wrap: wrap; justify-content: flex-end; max-width: 64%; } .gp-hud { max-width: 36%; flex-wrap: wrap; }
 /* V16.20 · 5e bande du logo : cachée tant qu'il n'y a que 4 pilotes */
 .logo .l5 { display: none; } .j5 .logo .l5 { display: inline-block; }
+.bientot.teaser p { margin: 6px 0 0; font-size: 14px; line-height: 1.45; } .bientot.teaser i { color: var(--ink-2); }

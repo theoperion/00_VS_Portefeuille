@@ -52,6 +52,8 @@ function moisEtape(e) { return moisLong(ouvreEtape(e)); }
 function htmlProchainement(compact) {
   const l = etapesJeu().filter(e => !regleVisible(e.id)); if (!l.length) return "";
   const adm = estAdmin(), tag = adm ? "button" : "span";
+  // V16.23 : pendant la chauffe, pas de longue liste (les joueurs découvrent les bases) : quelques phrases d'accroche, la liste reste pour l'admin
+  if (!adm && basesSeules()) return '<div class="bientot teaser"><span class="bt-k">🎁 Le 1<sup>er</sup> janvier</span><p>Le championnat démarre, avec ' + l.length + ' nouveautés.</p><p><i>« Douze univers. Un seul champion. »</i><br><i>« Cinq tickets d\'or sont cachés quelque part. »</i><br><i>« Une couronne changera de tête. »</i></p></div>';
   return '<div class="bientot' + (compact ? " compact" : "") + '"><span class="bt-k">🎁 Prochainement' + (adm ? " · admin : touche une règle pour la voir et régler sa date" : "") + "</span>" +
     l.map(e => "<" + tag + ' class="bt-e"' + (adm ? ' type="button" data-etape="' + e.id + '"' : "") + "><i>" + (adm ? "🔒" : e.ico) + "</i><b>" + esc(e.nom) + "</b><em>" + esc(moisEtape(e).replace(/ \d{4}$/, "")) + "</em></" + tag + ">").join("") + "</div>";
 }
@@ -501,7 +503,8 @@ function htmlRegles(tout, modeReserve) {
   const vu = id => modeReserve || (tout && !enReserve(etape(id))) || regleVisible(id);
   const vP = vu("pioche"), vN = vu("niveaux"), vA = vu("atelier"), vM = vu("monaco"), vF = vu("finale"), vC = vu("circuits"), vS = vu("gpspeciaux");
   const vB = ["prono", "pole", "defi", "rival", "equipe", "serie", "regularite"].some(vu), bientot = tout || modeReserve ? [] : etapesJeu().filter(e => !regleVisible(e.id));
-  const sommaire = [["essentiel", "L'essentiel"], ["champ", "Points"], ["cartes", "Cartes"]].concat(vB ? [["bonus", "Bonus"]] : [], [["speciaux", "Mois spéciaux"]], vu("pieges") ? [["pieges", "Pièges"]] : [], vP ? [["pioche", "Rattrapage"]] : [], vN ? [["niveaux", "Niveaux"]] : [], [["gp", "Course et trophées"]], bientot.length ? [["bientot", "🎁 Bientôt"]] : []);
+  const base = !tout && !modeReserve && basesSeules(), vSp = vM || vS || vF || vu("vote");   // V16.23 : pendant la chauffe, les règles ne montrent que les bases
+  const sommaire = [["essentiel", "L'essentiel"], ["champ", "Points"], ["cartes", "Cartes"]].concat(vB ? [["bonus", "Bonus"]] : [], vSp ? [["speciaux", "Mois spéciaux"]] : [], vu("pieges") ? [["pieges", "Pièges"]] : [], vP ? [["pioche", "Rattrapage"]] : [], vN ? [["niveaux", "Niveaux"]] : [], [["gp", base ? "La course" : "Course et trophées"]], bientot.length ? [["bientot", "🎁 Bientôt"]] : []);
   // schémas (HTML/CSS, lisibles en clair comme en sombre)
   const etapeSch = (ico, quand, quoi) => '<div class="rg-et"><i>' + ico + "</i><b>" + quand + "</b><small>" + quoi + "</small></div>";
   const schemaMois = '<div class="rg-sch rg-flux" aria-label="Un mois en trois temps">' + etapeSch("🃏", "du 20 au 1<sup>er</sup>", "je pose ma carte" + (vu("prono") ? " et mon pronostic" : "")) + '<span class="rg-fl">→</span>' +
@@ -528,11 +531,11 @@ function htmlRegles(tout, modeReserve) {
       (vu("serie") ? "<div><b>🔥 Série</b><span>chaque 3<sup>e</sup> mois d'affilée sans finir dernier</span><em>+1</em></div>" : "") +
       (vu("rival") ? "<div><b>😈 Rival</b><span>choisi en secret (20 déc. → 1<sup>er</sup> janv.) ; devant lui en fin de saison</span><em>+3</em></div>" : "") +
       (vu("regularite") ? "<div><b>🛡️ Régularité</b><span>fin de saison : le moins souvent dernier (puis le plus de mois positifs)</span><em>+3</em></div>" : "") + "</div>") : "") +
-    s("speciaux", "📅", "Les mois spéciaux", '<div class="rg-tab">' +
+    (!vSp ? "" : s("speciaux", "📅", "Les mois spéciaux", '<div class="rg-tab">' +
       (vM ? "<div><b>🌑 Le Côté obscur</b><span>" + (regleActive("monaco", mo) ? esc(moisLong(mo)) : "juin") + " : le dernier du championnat</span><em>place ×2</em></div>" : "") +
       (vS ? "<div><b>🪱 Le Chevaucheur des sables</b><span>juillet : le vainqueur du mois</span><em>+2</em></div><div><b>🦸 Le Rassemblement des héros</b><span>septembre : le 🎯</span><em>vaut +2</em></div>" : "") +
       (vF ? "<div><b>🏆 Finale</b><span>décembre : tout le monde</span><em>place ×2</em></div>" : "") +
-      (vu("vote") ? "<div><b>🗳️ Vote</b><span>2 → 31 décembre : « le coup de la saison » (pas pour soi)</span><em>plaque</em></div>" : "") + "</div>") +
+      (vu("vote") ? "<div><b>🗳️ Vote</b><span>2 → 31 décembre : « le coup de la saison » (pas pour soi)</span><em>plaque</em></div>" : "") + "</div>")) +
     (vu("pieges") ? s("pieges", "🪤", "Les pièges des circuits", "<p>Les autres mois, le circuit a son <b>piège</b> : une petite règle qui ne vaut que ce mois-là. Il s'affiche dès le 20 du mois d'avant (Stand et Classement).</p>" +
       '<div class="rg-tab">' + CAL_GP.filter(id => PIEGES[id]).map(id => "<div><b>" + GPS[id].drap + " " + esc(GPS[id].ville) + "</b><span>" + PIEGES[id].ico + " <b>" + esc(PIEGES[id].nom) + "</b> : " + esc(PIEGES[id].txt) + "</span><em>" + esc(moisCourt(y * 100 + CAL_GP.indexOf(id) + 1).replace(/ \d+$/, "")) + "</em></div>").join("") + "</div>" +
       '<p class="rg-note">Le Côté obscur tombe en juin, sur la Bataille spatiale.</p>') : "") +
@@ -540,10 +543,10 @@ function htmlRegles(tout, modeReserve) {
       "<p>Dernier d'un mois ? Tu pioches <b>1 carte bonus</b>, jouable dès le mois suivant, une fois par saison :</p><ul>" + CARTES_BONUS.map(c => "<li>" + c.ico + " <b>" + esc(c.nom) + "</b> : " + esc(c.court || c.def) + "</li>").join("") + "</ul>") : "") +
     (vN ? s("niveaux", "🔧", vA ? "Niveaux et atelier" : "Niveaux d'écurie",
       "<ul><li>XP = tes points de place + ton 🎯 (+3 les mois où tu finis dernier). Un niveau tous les " + XP_NIVEAU + " XP (max " + NIV_MAX + "), remis à 1 chaque saison.</li><li>Chaque niveau : 1 carte bonus" + (vA ? " et 1 point d'amélioration" : "") + ".</li></ul>") : "") +
-    s("gp", "🏎️", "Course, écurie et trophées",
+    s("gp", "🏎️", base ? "La course du mois" : "Course, écurie et trophées",
       "<ul><li><b>Course</b> : une manche par mois sur un circuit à thème, départ dans l'ordre du championnat, le meilleur du mois boucle le tour ; la météo suit le " + idx + ".</li>" +
-      '<li id="rg-ecurie"><b>Écurie</b> : casque, livrée, klaxon… purement cosmétique, débloqué par les défis.</li>' +
-      '<li id="rg-defis"><b>Trophées</b> : défis 🥉🥈🥇💎 (acquis pour toujours), <b>exclusifs</b> 💎 pour le premier qui réussit (à égalité le même mois : chacun), <b>👑 premier millionnaire</b> (patrimoine financier, montant jamais montré). Le serveur vérifie tout.</li></ul>') +
+      (base ? "</ul>" : '<li id="rg-ecurie"><b>Écurie</b> : casque, livrée, klaxon… purement cosmétique, débloqué par les défis.</li>' +
+      '<li id="rg-defis"><b>Trophées</b> : défis 🥉🥈🥇💎 (acquis pour toujours), <b>exclusifs</b> 💎 pour le premier qui réussit (à égalité le même mois : chacun), <b>👑 premier millionnaire</b> (patrimoine financier, montant jamais montré). Le serveur vérifie tout.</li></ul>')) +
     (bientot.length ? s("bientot", "🎁", "Bientôt", "<ul>" + bientot.map(e => "<li>" + (estAdmin() ? '<button type="button" class="lien" data-etape="' + e.id + '">🔒 ' + esc(e.nom) + "</button>" : e.ico + " <b>" + esc(e.nom) + "</b>") + " · " + esc(moisEtape(e)) + "</li>").join("") + "</ul>") : "");
 }
 function ouvrirRegles(section, tout) {
