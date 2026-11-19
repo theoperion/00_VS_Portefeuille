@@ -312,7 +312,7 @@ function htmlCalendrierGP(y, kIci) {
       '<span class="ap">' + (a ? '<i class="p">' + a.atout.ico + "+1</i>" : ind ? '<i class="p" title="L\'atout est l\'une des deux">' + ind.duo[0].ico + "/" + ind.duo[1].ico + "?</i>" : "") + "</span></div>";
   }).join("");
   return '<details class="gp-calend" id="gp-calend"' + (ETAT.calOuvert === "1" ? " open" : "") + '><summary>📅 ' + (ch ? "Le circuit du tour de chauffe" : "Calendrier de la saison") + " <small>" + (ch ? "1 Grand Prix" : "12 Grands Prix, un circuit à thème par mois") + "</small></summary>" + lignes +
-    (regleVisible("circuits") || ch ? "" : '<p class="info" style="padding:8px 12px;margin:0">🎁 Bientôt : chaque circuit aura son atout.</p>') + "</details>";
+    (regleVisible("circuits") || ch || !saisonJouee() ? "" : '<p class="info" style="padding:8px 12px;margin:0">🎁 Bientôt : chaque circuit aura son atout.</p>') + "</details>";
 }
 /* ---------- Mes cartes ---------- */
 let CARTE_CHOIX = null;

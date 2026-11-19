@@ -546,7 +546,7 @@ function htmlRegles(tout, modeReserve) {
   const s = (id, ico, t, corps) => '<section class="rg-s" id="rg-' + id + '"><h4>' + ico + " " + t + "</h4>" + corps + "</section>";
   const vu = id => modeReserve || (tout && !enReserve(etape(id))) || regleVisible(id);
   const vP = vu("pioche"), vN = vu("niveaux"), vA = vu("atelier"), vM = vu("monaco"), vF = vu("finale"), vC = vu("circuits"), vS = vu("gpspeciaux");
-  const vB = ["prono", "pole", "defi", "rival", "equipe", "serie", "regularite"].some(vu), bientot = tout || modeReserve ? [] : etapesJeu().filter(e => !regleVisible(e.id));
+  const vB = ["prono", "pole", "defi", "rival", "equipe", "serie", "regularite"].some(vu), bientot = tout || modeReserve || (!saisonJouee() && !estAdmin()) ? [] : etapesJeu().filter(e => !regleVisible(e.id));   // v17.8 (Théo) : rien de « Bientôt » pour les joueurs avant la saison
   const base = !tout && !modeReserve && basesSeules(), vSp = vM || vS || vF || vu("vote");   // V16.23 : pendant la chauffe, les règles ne montrent que les bases
   // v17.5 · univers 2027 gardés secrets jusqu'au 31/12 23:59 : seulement janvier (à partir du 20/12) ; l'admin (« tout », réserve, aperçu) voit tout
   const univ = tout || modeReserve || saisonJouee(), univJanv = univ || janvierAnnonce();
