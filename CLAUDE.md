@@ -43,7 +43,7 @@
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **16.84**.
+  hors connexion `sw.js`). Version actuelle : **16.85**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
@@ -52,7 +52,7 @@
 - Versus : `sh outils/mettre-en-ligne-versus.sh "V31 : ce qui change"` (APPLI=chemin de ce dépôt si besoin).
   Versions actuelles : VS_VERSION 51, version Google 66.
 - Scripts perso : dans `portefeuille-epargne/<nom>` : `clasp push --force` puis `python3 ../../outils/deployer.py "desc"`
-  (garde les mêmes adresses). Versions actuelles : Théo 31, Clément 10, Devlin 10.
+  (garde les mêmes adresses). Versions actuelles : Théo 32, Clément 11, Devlin 10.
 - Sheets en direct : `outils/gs.py` (`SS(id).get/put/batch`). Classeurs : Théo `1pbpJRMwZR64LqP_wwlhiw-6m7-lUg-Q3pVAF4Dv9j8U`,
   Clément `1srJuvBQ7Pksf0gpO1v3XLC8E7FVSBihKdEnFmGXD6LU`, Devlin `1xilETvIo9uR7RhHJHNbP1x1FPK0knWCtNh2IB6mJxGY`,
   Versus `1p9bZv5jP-BAnlAUVhsPKd2TeEyZDk8RG2vzia9p0kUk` (ne lire ceux de Clément/Devlin que pour une
@@ -75,6 +75,7 @@ Commit (message en français, « vX.Y : … »), ligne dans le journal de `MODE_
 - Règles (DIC Natixis + fiche BPCE Vie, Drive de Théo) : photo de départ = moyenne 2-3-4 déc. 2026 ; rendez-vous ~7 déc. 2029→2033
   (si indice ≥ départ : arrêt, capital + 28,5 % +9,5 pts/an) ; fin 1er déc. 2034 : ≥ départ +76 %, entre −40 % et 0 capital,
   sous 60 % perte = baisse ; frais contrat 0,80 %/an ; parts = achats ÷ (100 € moins 1 %/an jusqu'au 4/12/2026).
+- v16.85 : écran refait (`issueArtema` = fonction unique des issues, verdict, jauge, frise des rendez-vous, simulateur, courbe `parametres.artema.histo` = onglet « Artema histo » des fichiers Théo/Clément). À faire : formulaire unique valeur (€) + niveau (demande de Théo, action serveur `artemaReleve`).
 - Niveau de l'indice saisi à la main (pas sur Google Finance) : rappels « artemaInitial » / « artemaActuel » du fichier.
   Rythme du rappel « niveau actuel » (Paramètres!V8 de chaque fichier, 18/11) : Théo chaque lundi (1er : 07/12/2026),
   Clément chaque 20 du mois avec son relevé (1er : 20/12/2026). Les deux démarrent une fois le niveau initial saisi.
