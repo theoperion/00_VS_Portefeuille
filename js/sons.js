@@ -134,6 +134,21 @@ const SONS = (() => {
     else if (b.hasAttribute("data-son-choix")) API.basculer(b.dataset.sonChoix === "1");
     else API.vibrations(b.dataset.vibreChoix === "1");
   });
+  /* v16.70 · « Tester » dans Réglages : joue un bip, vibre, et dit ce que le navigateur permet (pour comprendre un téléphone muet) */
+  document.addEventListener("click", e => {
+    if (!(e.target.closest && e.target.closest("#son-test"))) return;
+    const etaitCoupe = !actif(); if (etaitCoupe) ecrire("versus.son", "1");
+    const c = audio(); note(880, .15, "sine", .3); note(1320, .25, "sine", .25, .15);
+    const vib = !!navigator.vibrate; let vibOk = false; try { vibOk = vib && navigator.vibrate([60, 60, 120]); } catch (er) { vibOk = false; }
+    if (etaitCoupe) ecrire("versus.son", "0");
+    const d = document.getElementById("son-diag"); if (!d) return;
+    setTimeout(() => {
+      const etat = !c ? "impossible (ce navigateur ne gère pas le son web)" : c.state === "running" ? "OK, un bip vient de partir" : "bloqué par le navigateur (" + c.state + ")";
+      d.hidden = false;
+      d.textContent = "Son : " + etat + ". Si tu n'entends rien : volume « multimédia » du téléphone, Bluetooth connecté ailleurs ? Vibration : " +
+        (!vib ? "pas gérée par ce navigateur (c’est le cas sur iPhone et sur certaines versions de Firefox)." : vibOk ? "demandée au téléphone." : "refusée par le navigateur.") + (etaitCoupe ? " (Le son reste coupé dans l'appli : active-le au-dessus.)" : "");
+    }, 400);
+  });
   // un bouton 🔊 qui apparaît dans la page se met tout seul à jour
   new MutationObserver(() => { document.querySelectorAll("[data-son]:not([data-son-ok])").forEach(b => { b.setAttribute("data-son-ok", ""); majBouton(b); }); majReglages(); }).observe(document.documentElement, { childList: true, subtree: true });
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") arreter(); });
