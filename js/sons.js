@@ -116,6 +116,8 @@ const SONS = (() => {
     },
     /** les 5 feux de la bande-annonce (aux mêmes moments que l'image) */
     feuxBA(departMs, pasMs) { for (let q = 0; q < 5; q++) plus_tard(departMs + q * pasMs, () => { note(440, .16, "square", .12); vibrer(25); }); },
+    /** un seul feu de la bande-annonce, déclenché par son horloge (suit la pause) : q = 0..4 feux rouges, 5 = extinction (bip grave et long) */
+    feuBA(q) { if (q < 5) { note(440, .16, "square", .12); vibrer(25); } else { note(660, .55, "square", .15); vibrer(110); } },
     ev(k) { try { if (EV[k]) EV[k](); } catch (e) { /* rien */ } },
     succes() { note(1046, .12, "sine", .12); note(1568, .25, "sine", .12, .1); vibrer(30); }
   };
@@ -137,3 +139,4 @@ const SONS = (() => {
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") arreter(); });
   return API;
 })();
+window.SONS = SONS;   // v16.69 : « const » ne crée pas window.SONS, et tous les « if (window.SONS) » de l'appli restaient faux (sons et vibrations muets depuis la v16.43)
