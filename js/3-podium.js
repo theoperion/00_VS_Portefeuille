@@ -869,7 +869,7 @@ function quiEcurie() { return moiVrai(); }
 /* V16.24 · « Mon portrait » : la tête de chacun se règle hors de l'Écurie (Réglages, ou toucher sa tête dans le Classement), dès le tour de chauffe */
 /** V16.56 · « Mon portrait » s'ouvre à tous le samedi 21 novembre 2026 à 11 h (heure de Paris) ; l'admin le voit avant */
 const PORTRAIT_OUVRE = Date.UTC(2026, 10, 21, 10, 0);
-function portraitDispo() { return vraiAdmin() || Date.now() >= PORTRAIT_OUVRE; }
+function portraitDispo() { return (adminActif() && !vueJoueur()) || Date.now() >= PORTRAIT_OUVRE; }   // v16.71 : avant le 21/11, seulement en mode admin actif (avant : visible avec la clé admin même en mode non admin)
 function ouvrirPortrait() {
   if (!portraitDispo()) { toast("👤 Mon portrait arrive samedi 21 novembre à 11 h."); return; }
   const qui = quiEcurie(); if (!qui || !D) { toast("Choisis d'abord qui tu es dans les Réglages."); return; }
