@@ -173,9 +173,10 @@ function vuesV2(ci) { return VUES_V2.includes(ci); }
 function vueGP(ci) { if (!vuesV2(ci)) return null; return ETAT.gp2d !== "0" || !piste3D() ? "2d" : ETAT.gpVue3 === "poursuite" ? "poursuite" : "visite"; }
 /** la voiture suivie en 🚁 Hélico : la sienne par défaut, sinon la 1re */
 function suiviGP() { const ok = n => n && D.personnes.some(p => p.nom === n); return ok(ETAT.gpSuivi) ? ETAT.gpSuivi : ok(moiPilote()) ? moiPilote() : D.personnes[0].nom; }
-function selVuesGP(vue, cls) {
+function selVuesGP(vue, cls, survol) {
   return '<div class="gp-sel ' + cls + '" role="group" aria-label="Choisir la vue">' + Object.entries(VUES_TXT).filter(([k]) => k === "2d" || piste3D()).map(([k, [ico, t]]) =>
-    '<button type="button" data-gpv="' + k + '" aria-pressed="' + (k === vue) + '"><span aria-hidden="true">' + ico + "</span> " + t + "</button>").join("") + "</div>";
+    '<button type="button" data-gpv="' + k + '" aria-pressed="' + (k === vue) + '"><span aria-hidden="true">' + ico + "</span> " + t + "</button>").join("") +
+    (survol && piste3D() ? '<button type="button" data-gpv-survol aria-pressed="false" title="Survol guidé"><span aria-hidden="true">🛸</span> Survol</button>' : "") + "</div>";   // Théo, 19/11 : le survol est un segment du sélecteur en plein écran
 }
 /** applique la vue 3D à la piste déjà montée (sans la reconstruire ni couper la course) */
 function appliquerVue3(api, vue) {
@@ -999,12 +1000,17 @@ function ouvrirPleinGP(y) {
 /* v17.6 · plein écran « V2 » : rien que la piste, un petit sélecteur de vue, ▶ et ✕ ; vrai plein écran + paysage quand le téléphone le permet */
 function pleinV2(o, y) {
   const P = GP_PLEIN; P.v2 = true; o.classList.add("v2");
-  o.insertAdjacentHTML("beforeend", '<div class="gpp-bar">' + selVuesGP(vueGP(document.getElementById("gp-piste").dataset.circuit), "mini") +
-    '<button class="gpp-b gpp-play" type="button" aria-label="Rejouer la course" title="Rejouer">▶</button><button class="gpp-b gpp-txt gpp-fin" type="button" title="Aller à l\'arrivée">⏭ Arrivée</button>' + (piste3D() ? '<button class="gpp-b gpp-txt gpp-survol" type="button" title="Survol guidé">🛸 Survol</button>' : "") + '<button class="gpp-b gpp-fermer" type="button" aria-label="Fermer le plein écran">✕</button></div>' +
+  /* Théo, 19/11 : [Carte | Visite | Hélico | Survol] puis ▶ ⏭ ✕, ronds et en icônes seules */
+  o.insertAdjacentHTML("beforeend", '<div class="gpp-bar">' + selVuesGP(vueGP(document.getElementById("gp-piste").dataset.circuit), "mini", true) +
+    '<button class="gpp-b gpp-play" type="button" aria-label="Rejouer la course" title="Rejouer">▶</button><button class="gpp-b gpp-fin" type="button" aria-label="Aller à l\'arrivée" title="Aller à l\'arrivée">⏭</button><button class="gpp-b gpp-fermer" type="button" aria-label="Fermer le plein écran">✕</button></div>' +
     '<div class="gpp-tourne" hidden><b>📱↻</b> Tourne ton téléphone<br><small>pour voir le circuit en grand</small></div>');
-  o.querySelectorAll(".gpp-bar [data-gpv]").forEach(b => b.addEventListener("click", () => choisirVueGP(b.dataset.gpv, y)));
+  const stopSv = () => { try { if (GP_INST && GP_INST.api.arreterSurvol) GP_INST.api.arreterSurvol(); } catch (e) { } };
+  o.querySelectorAll(".gpp-bar [data-gpv]").forEach(b => b.addEventListener("click", () => { stopSv(); choisirVueGP(b.dataset.gpv, y); majSurvolPlein(true); }));
+  const sv = o.querySelector(".gpp-bar [data-gpv-survol]");   // même action que « 🛸 Survol guidé » sous la piste (passe en 📺 Visite puis survole) ; re-toucher l'arrête
+  if (sv) sv.addEventListener("click", () => { if (P.survol) { stopSv(); majSurvolPlein(true); return; } const x = document.getElementById("gp-survol"); if (x) x.click(); sv.setAttribute("aria-pressed", "true"); P.svDemande = performance.now(); });
+  P.svTimer = setInterval(() => majSurvolPlein(), 250);   // le segment reste allumé pendant le survol
   o.querySelector(".gpp-play").addEventListener("click", () => { const rj = document.getElementById("gp-rejouer"); if (rj) rj.click(); });
-  [["gpp-fin", "gp-fin"], ["gpp-survol", "gp-survol"]].forEach(([c, id]) => { const b = o.querySelector("." + c); if (b) b.addEventListener("click", () => { const x = document.getElementById(id); if (x) x.click(); }); });   // v17.12 (Théo) : arrivée et survol aussi en plein écran
+  [["gpp-fin", "gp-fin"]].forEach(([c, id]) => { const b = o.querySelector("." + c); if (b) b.addEventListener("click", () => { const x = document.getElementById(id); if (x) x.click(); }); });   // v17.12 (Théo) : arrivée et survol aussi en plein écran
   o.querySelector(".gpp-fermer").addEventListener("click", fermerPleinGP);
   const rq = o.requestFullscreen || o.webkitRequestFullscreen;
   const paysage = () => { try { if (screen.orientation && screen.orientation.lock) return screen.orientation.lock("landscape").then(() => true, () => false); } catch (e) { } return Promise.resolve(false); };
@@ -1015,6 +1021,15 @@ function pleinV2(o, y) {
   if (rq) { try { const r = rq.call(o, { navigationUI: "hide" }); P.natif = true; document.addEventListener("fullscreenchange", P.fsc); document.addEventListener("webkitfullscreenchange", P.fsc);
     Promise.resolve(r).then(() => paysage(), () => { P.natif = false; return false; }).then(conseil); } catch (e) { P.natif = false; conseil(false); } }
   else conseil(false);   // iPhone : pas de plein écran natif → la couche fixe couvre l'écran, et on propose de tourner le téléphone
+}
+/** 19/11 · plein écran : le segment 🛸 Survol est allumé pendant le survol, la vue choisie sinon */
+function majSurvolPlein(force) {
+  const P = GP_PLEIN; if (!P || !P.v2) return; const sv = P.o.querySelector(".gpp-bar [data-gpv-survol]"); if (!sv) return;
+  const api = GP_INST && GP_INST.api, en = !!(api && api.survolEnCours && api.survolEnCours()), attente = P.svDemande && performance.now() - P.svDemande < 1500;
+  if (en) P.svDemande = 0;
+  const allume = en || !!attente; if (!force && allume === P.survol) return; P.survol = allume;
+  if (allume) { P.o.querySelectorAll(".gpp-bar [data-gpv]").forEach(b => b.setAttribute("aria-pressed", "false")); sv.setAttribute("aria-pressed", "true"); }
+  else { sv.setAttribute("aria-pressed", "false"); const pi = document.getElementById("gp-piste"); if (pi) majVueDOM(vueGP(pi.dataset.circuit)); }
 }
 function placerPlein(y) {
   const P = GP_PLEIN; if (!P) return;
@@ -1030,7 +1045,7 @@ function placerPlein(y) {
   const ch = document.querySelector(".saison .gp-mois"); P.o.querySelector(".gpp-mois").innerHTML = ch ? ch.outerHTML : "";
   P.o.querySelectorAll(".gpp-mois [data-gpe]").forEach(b => b.addEventListener("click", () => { GP_ETAPE = +b.dataset.gpe; GP_REJOUER = true; rendreTrophees(); }));
   const sel = P.o.querySelector('.gpp-mois [aria-pressed="true"]'); if (sel && !P.v2) sel.scrollIntoView({ inline: "center", block: "nearest" });
-  if (P.v2) majVueDOM(vueGP(pi.dataset.circuit));
+  if (P.v2) { majVueDOM(vueGP(pi.dataset.circuit)); P.survol = null; majSurvolPlein(true); }
   GP_ETQ = null;
   if (GP_INST) { GP_INST.api.redim(); majTourPlein(GP_INST.api.courant(), true); }
 }
@@ -1049,7 +1064,7 @@ function fermerPleinGP() {
   const P = GP_PLEIN; if (!P) return; GP_PLEIN = null;
   const pi = P.o.querySelector(".gp-piste");
   if (pi && P.ancre && P.ancre.isConnected) P.ancre.replaceWith(pi); else if (P.ancre) P.ancre.remove();
-  document.removeEventListener("keydown", P.esc);
+  document.removeEventListener("keydown", P.esc); if (P.svTimer) clearInterval(P.svTimer);
   if (P.v2) { document.removeEventListener("fullscreenchange", P.fsc); document.removeEventListener("webkitfullscreenchange", P.fsc); if (P.mq && P.mqf) try { P.mq.removeEventListener("change", P.mqf); } catch (e) { }
     try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) { }
     try { const fe = document.fullscreenElement || document.webkitFullscreenElement; if (fe) (document.exitFullscreen || document.webkitExitFullscreen).call(document).catch(() => { }); } catch (e) { } }

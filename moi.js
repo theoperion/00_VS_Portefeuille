@@ -325,8 +325,23 @@ function injecterStyle() {
 .moi .av-leg { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11.5px; color: var(--ink-2); margin-top: 4px; }
 .moi .av-leg i { display: inline-block; width: 12px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; } .moi .av-leg i.pt { background: repeating-linear-gradient(90deg, var(--ink-3) 0 4px, transparent 4px 7px); } .moi .av-leg i.rd { width: 7px; height: 7px; border-radius: 50%; }
 .moi .av-rdv { display: grid; gap: 6px; } .moi .av-rdv > div { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; } .moi .av-rdv > div > span { flex: 1; } .moi .av-rdv .mini-btn { flex: none; } .moi .av-rdv i { font-style: normal; } .moi .av-rdv small { display: block; color: var(--ink-3); font-size: 12px; }
-.moi .m-seance { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 2px; padding: 6px 11px; border-radius: 999px; font: 600 12.5px/1 var(--f-text); background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent-ink, var(--accent)); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
-.moi .m-seance[aria-pressed="true"] { background: var(--accent); color: #fff; }
+/* 19/11 · pastille Jour | 5 j en haut à droite de la carte (remplace le bandeau « Voir la semaine ») */
+.moi .m-hero.a-per > .eyebrow { padding-right: 92px; }
+.moi .m-per { all: unset; box-sizing: border-box; cursor: pointer; position: absolute; top: -4px; right: 0; display: inline-flex; padding: 2px; border-radius: 999px; border: 1px solid var(--rule); background: var(--panel); font: 600 11.5px/1 var(--f-text); color: var(--ink-3); -webkit-tap-highlight-color: transparent; }
+#v-moi.th .m-per { top: 10px; right: 10px; --bg: #0B0D12; }
+.moi .m-per span { padding: 5px 9px; border-radius: 999px; }
+.moi .m-per[aria-pressed="false"] span:first-child, .moi .m-per[aria-pressed="true"] span:last-child { background: var(--ink); color: var(--bg, #0B0D12); }
+.moi .m-per:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.moi .m-jour[role="button"] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.moi .m-5j-v { font-style: normal; opacity: .7; margin-left: 2px; }
+.moi .m-5j { display: grid; gap: 5px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--rule); background: var(--panel); }
+.moi .m-5j .l { display: grid; grid-template-columns: 70px minmax(0, 1fr) 62px 62px; align-items: center; gap: 8px; font-size: 12.5px; }
+.moi .m-5j .j { color: var(--ink-2); }
+.moi .m-5j .bar { height: 6px; border-radius: 3px; background: var(--rule-2); overflow: hidden; }
+.moi .m-5j .bar i { display: block; height: 100%; border-radius: 3px; background: var(--ink-3); } .moi .m-5j .bar i.up { background: var(--up); } .moi .m-5j .bar i.down { background: var(--down); }
+.moi .m-5j b { font: 600 12.5px/1 var(--f-num); text-align: right; } .moi .m-5j small { font: 500 11.5px/1 var(--f-num); text-align: right; color: var(--ink-2); }
+.moi .m-5j b.up, .moi .m-5j small.up { color: var(--up); } .moi .m-5j b.down, .moi .m-5j small.down { color: var(--down); }
+.moi .m-5j p { margin: 2px 0 0; font-size: 11px; line-height: 1.35; color: var(--ink-3); }
 .moi .m-maj { display: block; margin-top: 4px; font-size: 11px; color: var(--ink-3, var(--ink-2)); opacity: .8; }
 .moi .m-jour { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; font-size: 13px; color: var(--ink-2); }
 .moi .m-status { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-3); }
@@ -982,31 +997,63 @@ function seanceProposee() {
   const perf = M.perfLignes || {};
   return !(M.groupes || []).some(g => g.lignes.some(l => { const p = perf[g.env + "|" + l.code]; return p && typeof p.seance === "number" && Math.abs(l.pct || 0) > 1e-9; }));
 }
-function modeSeance() { return PREF.seance === seanceDu() && seanceProposee(); }   // retenu pour CETTE séance seulement
-/* V15.20 · le week-end : la semaine écoulée (lundi → vendredi) plutôt que la seule séance du vendredi */
-function vueSemaine() { const j = new Date().getDay(); return j === 0 || j === 6; }
-function libSeance() {
-  const d = seanceDu(); if (!d) return ""; const x = new Date(d + "T12:00:00");
-  if (vueSemaine()) { const l = new Date(x); l.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return frDate(isoJour(l)).slice(0, 5) + " → " + frDate(d).slice(0, 5); }
-  return ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."][x.getDay()] + " " + frDate(d).slice(0, 5);
+/* Théo, 19/11 : plus de bandeau « Voir la semaine ». « Jour » montre tout seul la dernière séance quand la bourse n'a pas encore bougé
+   aujourd'hui (nuit, week-end : fini le « ■ 0 € · 0,00 % »), et la pastille « Jour | 5 j » de la carte passe aux 5 dernières séances
+   (semaine glissante : « 1 semaine » de Perf lignes). Le choix est gardé sur l'appareil (PREF.var5). Rien n'est écrit : c'est une vue. */
+function modeSeance() { return seanceProposee(); }
+function mode5j() { return PREF.var5 === true && !!seanceDu(); }
+const JOURS_C = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+function libSeance() { const d = seanceDu(); if (!d) return ""; const x = new Date(d + "T12:00:00"); return JOURS_C[x.getDay()] + " " + frDate(d).slice(0, 5); }
+/** les 5 dernières séances (jours ouvrés, fériés non retirés) : la dernière = aujourd'hui si la bourse bouge, sinon la dernière séance connue */
+function seances5() {
+  const fin = new Date((seanceProposee() ? seanceDu() : isoJour(new Date())) + "T12:00:00"), out = [];
+  for (const d = new Date(fin); out.length < 5; d.setDate(d.getDate() - 1)) if (d.getDay() % 6) out.unshift(isoJour(d));
+  return out;
 }
-function mSeance(m) {
-  const perf = m.perfLignes || {}, c = JSON.parse(JSON.stringify(m)), sem = vueSemaine(); c.__seance = true; let tot = 0;
+function lib5j() { const s = seances5(); return "sur 5 séances · du " + frDate(s[0]).slice(0, 5) + " au " + frDate(s[4]).slice(0, 5); }
+function mSeance(m, cinq) {
+  const perf = m.perfLignes || {}, c = JSON.parse(JSON.stringify(m)); c.__seance = true; let tot = 0;
   (c.groupes || []).forEach(g => {
     let j = 0;
     g.lignes.forEach(l => { if (l.especes) return; const p = perf[g.env + "|" + l.code];
-      const v = p ? (sem ? p.s1 : p.seance) : null;   // week-end : variation sur 1 semaine (crypto comprise)
-      if (typeof v === "number") { l.pct = v; l.jour = (l.valeur || 0) * v / (1 + v); } j += l.jour || 0; });
+      const v = p ? (cinq ? p.s1 : p.seance) : null;   // 5 j : « 1 semaine » de Perf lignes (cours d'il y a 5 séances)
+      if (typeof v === "number") { l.pct = v; l.jour = (l.valeur || 0) * v / (1 + v); } else if (cinq) { l.pct = null; l.jour = 0; }
+      j += l.jour || 0; });
     if (g.total) { g.total.jour = j; const base = (g.total.valeur || 0) - j; g.total.pct = base ? j / base : 0; }
     tot += j;
   });
   const sy = c.synthese = Object.assign({}, c.synthese), base = (sy.valeur || 0) - tot;
-  sy.jour = tot; sy.jourPct = base ? tot / base : 0; sy.jourLibelle = (sem ? "Sur la semaine · " : "Dernière séance · ") + libSeance();
+  sy.jour = tot; sy.jourPct = base ? tot / base : 0; sy.jourLibelle = cinq ? lib5j() : "";   // séance : la date est déjà dans le titre de la carte
   return c;
 }
+/** 5 j : le détail jour par jour, lu dans ton historique (sans l'effet des versements) ; aujourd'hui en séance = la variation en direct */
+let CINQ = null, cinqOuvert = false, VUEJ = "jour";   // VUEJ : "jour" | "seance" | "5j", fixé par htmlJour avant de prendre la copie
+function joursCinq() {
+  const h = M.historique, cols = h && h.cols || [], rows = h && h.rows || [], ki = cols.indexOf("ip"), kv = cols.indexOf("v"), ka = cols.indexOf("a"), s = M.synthese || {};
+  const auj = isoJour(new Date()), live = !seanceProposee();
+  const out = seances5().map(iso => {
+    const x = { iso }, n = +iso.replace(/-/g, "");
+    if (iso === auj && live && ok(s.jour)) { x.p = s.jourPct; x.e = s.jour; return x; }
+    const i = rows.findIndex(r => r[0] === n), a = rows[i - 1], b = rows[i];
+    if (i > 0 && ki >= 0 && a[ki] > 0 && b[ki] > 0 && (dateNum(b[0]) - dateNum(a[0])) / 864e5 < 4.5) { x.p = b[ki] / a[ki] - 1; x.e = kv >= 0 ? (b[kv] - a[kv]) - (ka >= 0 ? b[ka] - a[ka] : 0) : null; }
+    return x;
+  });
+  return out.some(x => ok(x.p)) ? out : null;
+}
+function htmlCinq() {
+  if (!CINQ || !cinqOuvert) return "";
+  const maxP = Math.max(.002, ...CINQ.filter(x => ok(x.p)).map(x => Math.abs(x.p)));
+  return '<div class="m-5j">' + CINQ.map(x => { const d = new Date(x.iso + "T12:00:00");
+    return '<div class="l"><span class="j">' + JOURS_C[d.getDay()] + " " + frDate(x.iso).slice(0, 5) + "</span>" +
+      (ok(x.p) ? '<span class="bar"><i class="' + sens(x.p) + '" style="width:' + Math.max(3, Math.round(Math.abs(x.p) / maxP * 100)) + '%"></i></span><b class="' + sens(x.p) + '">' + pct(x.p, 2) + '</b><small class="' + sens(x.e) + '">' + (ok(x.e) ? eur(x.e, 0, true) : "") + "</small>"
+        : '<span class="bar"></span><b class="flat">—</b><small></small>') + "</div>"; }).join("") +
+    '<p>Jour par jour d\'après ton historique, sans l\'effet de tes versements. Le total au-dessus suit le cours de chaque ligne.</p></div>';
+}
 function htmlJour() {
-  if (!modeSeance()) return htmlJourBase();
-  const m0 = M; M = mSeance(m0);
+  const cinq = mode5j();
+  CINQ = cinq ? joursCinq() : null; VUEJ = cinq ? "5j" : modeSeance() ? "seance" : "jour";
+  if (VUEJ === "jour") return htmlJourBase();
+  const m0 = M; M = mSeance(m0, cinq);
   try { return htmlJourBase(); } finally { M = m0; }
 }
 function htmlJourBase() {
@@ -1038,12 +1085,15 @@ function htmlJourBase() {
   }
   const indices = (M.indices || []).filter(i => i.nom !== "1 USD en EUR");
   const nomIdx = n => n.replace(/\s*\((ETF\s)?([^)]*)\)/, "");
-  return '<div class="m-hero">' +
-      '<span class="eyebrow">' + embHero() + (modeSeance() ? (vueSemaine() ? "La semaine · " : "Dernière séance · ") + esc(libSeance()) : 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "")) + "</span>" +
-      (seanceProposee() ? '<button class="m-seance" type="button" id="m-seance" aria-pressed="' + modeSeance() + '">' + (modeSeance() ? "↩ Revenir à aujourd'hui" : vueSemaine() ? "📅 Voir la semaine (" + esc(libSeance()) + ")" : "🕘 Voir la dernière séance (" + esc(libSeance()) + ")") + "</button>" : "") +
+  const v5 = VUEJ === "5j", per = !!seanceDu(), det5 = v5 && !!CINQ;
+  return '<div class="m-hero' + (per ? " a-per" : "") + '">' +
+      '<span class="eyebrow">' + embHero() + (v5 ? "Bourse · semaine glissante" : VUEJ === "seance" ? "Dernière séance · " + esc(libSeance()) : 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "")) + "</span>" +
+      /* Théo, 19/11 : pastille discrète Jour | 5 j (un toucher bascule, le choix reste sur l'appareil) */
+      (per ? '<button class="m-per" type="button" id="m-per" aria-pressed="' + v5 + '" aria-label="' + (v5 ? "Variation sur 5 séances : toucher pour revenir au jour" : "Variation du jour : toucher pour voir les 5 dernières séances") + '"><span>Jour</span><span>5 j</span></button>' : "") +
       '<div class="m-flaps" role="img" aria-label="' + esc(texteFlap) + '">' + flaps(texteFlap, animer) + "</div>" +
-      '<div class="m-jour"><span class="badge big-b ' + sens(s.jour) + '">' + fleche(s.jour) + " " + eur(s.jour, 0, true) + " · " + pct(s.jourPct, 2) + "</span>" +
-        "<span>" + (suffixe ? esc(suffixe) : hausse + " en hausse · " + baisse + " en baisse") + "</span></div>" +
+      '<div class="m-jour"' + (det5 ? ' role="button" tabindex="0" aria-expanded="' + cinqOuvert + '" title="Jour par jour"' : "") + '><span class="badge big-b ' + sens(s.jour) + '">' + fleche(s.jour) + " " + eur(s.jour, 0, true) + " · " + pct(s.jourPct, 2) + "</span>" +
+        "<span>" + (suffixe ? esc(suffixe) : hausse + " en hausse · " + baisse + " en baisse") + (det5 ? ' <i class="m-5j-v" aria-hidden="true">' + (cinqOuvert ? "▴" : "▾") + "</i>" : "") + "</span></div>" +
+      (det5 ? htmlCinq() : "") +
       (majCourte() ? '<small class="m-maj">' + esc(majCourte()) + "</small>" : "") +
     "</div>" +
     bandeDebut(s) +
@@ -1054,7 +1104,7 @@ function htmlJourBase() {
         '<label class="m-coche"><input type="checkbox" id="m-detail"' + (detail ? " checked" : "") + "> Lignes</label>" +
         "</div>" +
       /* F (v16.93) : le tri se choisit par puces (un toucher au lieu d'une liste déroulante) */
-      (detail ? '<div class="chips m-tri-p" role="group" aria-label="Classer les lignes">' + [["env", "Enveloppe"], ["jour", "Jour"], ["poids", "Montant"], ["pv", "Plus-value"]].map(([k, l]) => '<button class="chip" type="button" data-m-tri="' + k + '" aria-pressed="' + (tri === k) + '">' + l + "</button>").join("") + "</div>" : "") +
+      (detail ? '<div class="chips m-tri-p" role="group" aria-label="Classer les lignes">' + [["env", "Enveloppe"], ["jour", v5 ? "5 j" : "Jour"], ["poids", "Montant"], ["pv", "Plus-value"]].map(([k, l]) => '<button class="chip" type="button" data-m-tri="' + k + '" aria-pressed="' + (tri === k) + '">' + l + "</button>").join("") + "</div>" : "") +
       liste +
       (detail ? '<p class="info" style="margin-top:6px">Touche une ligne pour ses performances et son prix de revient.</p>' : "") +
     "</div>" +
@@ -1136,7 +1186,9 @@ function alertesDeclenchees() {
 }
 function brancherJour(v) {
   brancherDefs(v); brancherSignal(v); brancherMarches(v);
-  const bs = v.querySelector("#m-seance"); if (bs) bs.addEventListener("click", () => { PREF.seance = modeSeance() ? null : seanceDu(); garderPref(); dernierFlap = ""; rendre(); });
+  const bp = v.querySelector("#m-per"); if (bp) bp.addEventListener("click", () => { PREF.var5 = !mode5j(); delete PREF.seance; garderPref(); rendre(); });   // 19/11 : Jour ⇄ 5 séances
+  const b5 = v.querySelector('.m-jour[role="button"]'); if (b5) { const bascule = () => { cinqOuvert = !cinqOuvert; rendre(); };
+    b5.addEventListener("click", bascule); b5.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); bascule(); } }); }
   v.querySelectorAll(".m-l[data-code]").forEach(el => {
     el.addEventListener("click", e => { if (!e.target.closest(".m-ligne-det")) basculerLigne(el); });
     el.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target === el) { e.preventDefault(); basculerLigne(el); } });
