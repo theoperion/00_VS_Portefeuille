@@ -4,7 +4,7 @@
 (menées jusqu'au 18/11/2026). L'historique détaillé de chaque version est dans `MODE_EMPLOI.md` (journal en bas).
 
 ## 🎬 Teasers (Théo, 19/11)
-Samedi 21/11 : bande-annonce + MP4 (WhatsApp) qui NE dévoilent PAS les 12 cartes (seulement l'Atelier du Père Noël + au plus janvier ; les autres en flashes floutés) ; vendredi 20/11 : MP4 court « demain, tout commence ». La révélation complète des 12 univers est gardée pour un AUTRE teaser fin décembre (à faire). Scripts MP4 : scratchpad teaser/rec2.js + son.py (perdus avec la session : recréer au besoin).
+Samedi 21/11 : bande-annonce + MP4 (WhatsApp) qui NE dévoilent PAS les 12 cartes (seulement l'Atelier du Père Noël + au plus janvier ; les autres en flashes floutés) ; vendredi 20/11 : MP4 court « demain, tout commence ». Théo : PAS de « Mon portrait 11 h » dans les vidéos ni le mail (ça s'affiche dans l'appli). La révélation complète des 12 univers est gardée pour un AUTRE teaser fin décembre (à faire). Scripts MP4 : scratchpad teaser/rec2.js + son.py (perdus avec la session : recréer au besoin).
 
 ## ⏸️ PAUSE (Théo, 19/11 soir, crédits limités)
 Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles cartes, vidéo + mail du samedi 21/11, corrections bloquantes. EN PAUSE (à reprendre « la semaine prochaine ») : 3D des circuits 2027 (lot 1 : Dune publiée v16.89 ; Château r3d-chateau-1 et goûter r3d-terrier inachevés, scratchpad wf-3d-lot.js), retouche 3D de Noël si non finie, (Ordre validé par Théo : 1) bilan/À faire/Point Artema en cours, 2) puis petit lot saisie : phrase de relecture raccourcie + titre « Saisir » et mêmes onglets pour tous les profils, 3) Coupe, 4) badges. REPRIS à la demande de Théo : phrase-bilan + boîte « À faire » + Point Artema, écran « La Coupe », refonte des badges en ~20 familles après la Coupe.) Travailler étape par étape, une chose à la fois.
@@ -56,7 +56,7 @@ Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles 
 ## Serveur Apps Script (dépôt app_scripts)
 - Prérequis une fois par machine : `npx -y @google/clasp@3.4.1 login` (compte Google de Théo) → crée `~/.clasprc.json`.
 - Versus : `sh outils/mettre-en-ligne-versus.sh "V31 : ce qui change"` (APPLI=chemin de ce dépôt si besoin).
-  Versions actuelles : VS_VERSION 54, version Google 69.
+  Versions actuelles : VS_VERSION 55, version Google 70.
 - Scripts perso : dans `portefeuille-epargne/<nom>` : `clasp push --force` puis `python3 ../../outils/deployer.py "desc"`
   (garde les mêmes adresses). Versions actuelles : Théo 34, Clément 13, Devlin 12 (v34 : cache pré-calculé toutes les 10 min, `prechaufferDonnees`, installé au 1er appel).
 - Sheets en direct : `outils/gs.py` (`SS(id).get/put/batch`). Classeurs : Théo `1pbpJRMwZR64LqP_wwlhiw-6m7-lUg-Q3pVAF4Dv9j8U`,
