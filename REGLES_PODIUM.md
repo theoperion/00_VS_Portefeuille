@@ -52,9 +52,8 @@ Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Re
 | Mois | Règle |
 |---|---|
 | 🌑 Le Côté obscur (juin, Bataille spatiale) | le dernier du championnat : points de place ×2 |
-| 🪱 Le Chevaucheur des sables (juillet, Mer de dunes) | le vainqueur du mois : +2 |
-| 🦸 Le Rassemblement des héros (septembre, le Multivers) | le 🎯 vaut +2 |
-| 🏆 Finale (décembre, l'Odyssée) | points de place ×2 pour tout le monde |
+| 🪱 Le Chevaucheur des sables (janvier, Mer de dunes) | le vainqueur du mois : +2 |
+| 🏆🦸 Finale et Rassemblement des héros (décembre, le Multivers) | points de place ×2 pour tout le monde, et le 🎯 vaut +2 |
 | 🗳️ Vote (2 → 31 déc.) | « le coup de la saison » (pas pour soi) : plaque pour le gagnant |
 
 ## 🪤 Les pièges des circuits (dès janvier 2027)
@@ -63,16 +62,17 @@ Les mois sans règle spéciale, le circuit a son **piège**, une petite règle q
 
 | Mois | Circuit | Piège | Effet |
 |---|---|---|---|
-| Janv. | 🐀 Paris, la nuit (le petit chef) | 🧐 Le critique gastronomique | le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point |
 | Févr. | 🏰 Château aux sortilèges | 🚪 Couloirs mouvants | à moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points) |
 | Mars | 🎩 Pays des merveilles | 🫖 Le thé du Chapelier | pronostic « qui gagne » : +2 si juste, −1 si faux |
 | Avr. | 💍 Terre de l'Anneau | 🔁 Un aller et retour | les places se jouent sur deux mois cumulés (mars + avril) |
 | Mai | 🌿 Pandora | 🌿 Les graines sacrées | 🚀 Turbo interdit |
+| Juil. | 🐀 Paris, la nuit (le petit chef) | 🧐 Le critique gastronomique | le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point |
 | Août | 🔦 Monde à l'envers | 🌫️ Brume | si le S&P 500 baisse, 🌧️ Pneus pluie vaut +3 au lieu de +2 |
+| Sept. | 🌊 L'Odyssée | 🧜 Le chant des Sirènes | 🎲 Pari interdit |
 | Oct. | 🍫 La Chocolaterie | 🍬 Bonbon de consolation | le dernier du mois marque 2 points de place au lieu de 0 |
 | Nov. | 🧱 Mur des titans | 💥 Assaut | 🎲 Pari : +3 / −2 au lieu de +2 / −1 |
 
-Juin (Bataille spatiale), juillet (Mer de dunes), septembre (le Multivers) et décembre (l'Odyssée, Finale) ont déjà leur règle. Le Côté obscur tombe toujours en juin. La carte reste plafonnée à +4.
+Janvier (Mer de dunes), juin (Bataille spatiale) et décembre (le Multivers, Finale) ont déjà leur règle. Le Côté obscur tombe toujours en juin. La carte reste plafonnée à +4.
 
 ## 🎴 Le rattrapage
 

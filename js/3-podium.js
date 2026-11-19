@@ -95,7 +95,7 @@ function championnat(y) {
     const derniers = avant && Object.keys(avant).length >= 2 ? (mx => Object.keys(avant).filter(nm => avant[nm] === mx))(Math.max(...Object.values(avant))) : [];
     const seuil = PG && PG.id === "mirage" ? 0.005 : 0;   // « Mirage » : le 🎯 demande 0,5 point d'avance sur l'indice
     const l = du.map((x, i) => {
-      const rg = RG[i], bonus = iR !== null && x.r > iR + seuil + (seuil ? -1e-12 : 0) ? (spec && spec.id === "monza" ? 2 : 1) : 0;
+      const rg = RG[i], bonus = iR !== null && x.r > iR + seuil + (seuil ? -1e-12 : 0) ? (spec && (spec.id === "monza" || spec.heros) ? 2 : 1) : 0;
       const dernier = n >= 3 && rg > 1 && rg === rgMax;
       const mult = spec && (spec.id === "finale" || spec.id === "monaco" && derniers.includes(x.nom)) ? 2 : 1, base = PG && PG.id === "nuit" && dernier ? 2 : ptsRang(rg, n), vainq = spec && spec.id === "silverstone" && rg === 1 ? 2 : 0;
       return { nom: x.nom, r: x.r, rg, base, mult, vainq, p: base * mult + bonus + vainq, bonus, dernier, ecart: rg === 1 && n > 1 ? x.rc - du[1].rc : null, niv: J[x.nom] ? J[x.nom].niv : 1, piege: PG ? PG.id : undefined };
@@ -107,6 +107,7 @@ function championnat(y) {
       const def = carteDef(c.c), j = J[x.nom]; if (!def || !j) return;
       if (def.bonus && (!regleActive("pioche", k) || !j.pioche.some(z => z.c === c.c && z.k < k))) { x.carte = { id: c.c, gain: 0, cible: c.cible || null, invalide: true }; return; }
       if (PG && PG.id === "chaleur" && c.c === "turbo") { x.carte = { id: c.c, gain: 0, cible: null, invalide: true, piege: true }; return; }   // « Chaleur » : Turbo interdit
+      if (PG && PG.id === "sirenes" && c.c === "pari") { x.carte = { id: c.c, gain: 0, cible: null, invalide: true, piege: true }; return; }   // V16.55 « Chant des Sirènes » : Pari interdit   // « Chaleur » : Turbo interdit
       x._c = c; x._g = effetCarte(Object.assign({}, c, { revele: true }), x, l, avant, iR, { up: amelioAu(y, x.nom, k, j.niv), prev: prevL, cumAvant, piege: PG });
     });
     // circuit du mois : +1 pour la carte atout qui a marqué ; bouchon (personne n'a le +1) seulement si au moins deux pilotes l'ont jouée ET ont marqué avec
@@ -778,7 +779,7 @@ function teaser() {
     (noel ? '<div class="t-concept">' +
       '<div><b>🔥 Tour de chauffe</b><span>Décembre pour découvrir les règles, sans que rien ne compte. Vos cartes de janvier se posent pendant les fêtes.</span></div>' +
       '<div><b>🏁 Championnat</b><span>Chaque mois : ' + baremeJ().join(", ") + ' points, et +1 🎯 si tu bats le ' + esc(D.marche.indices[iRef()]) + '.</span></div>' +
-      '<div><b>🏎️ Grand Prix</b><span>Un circuit à thème par mois, de Paris et son petit chef à l\'Odyssée. Vos voitures en 3D, 25 points le tour, la météo du marché.</span></div>' +
+      '<div><b>🏎️ Grand Prix</b><span>Un circuit à thème par mois, de la Mer de dunes au Multivers. Vos voitures en 3D, 25 points le tour, la météo du marché.</span></div>' +
       '<div><b>🃏 Cartes de course</b><span>4 cartes de stratégie, les mêmes pour tous. Une par mois, face cachée.</span></div>' +
       '<div><b>🎁 Nouveautés en cours de saison</b><span>' + etapesJeu().map(e => e.ico + " " + esc(e.nom) + " (" + esc(moisEtape(e).replace(/ \d{4}$/, "")) + ")").join(" · ") + ". Chaque règle est expliquée le 20 du mois d'avant, quand sa fenêtre s'ouvre.</span></div>" +
       '<div><b>🙂 Ta tête au volant</b><span>Ton portrait animé, ou ton casque, à côté de ton nom. Et 24 objets uniques à rafler les premiers.</span></div></div>' +

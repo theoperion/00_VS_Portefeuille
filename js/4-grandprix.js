@@ -120,7 +120,7 @@ const GPS = {
   lasvegas: { gp: "Grand Prix de l'Odyssée", ville: "L'Odyssée", drap: "🌊", fx: "eclairs", atout: "turbo", piege: "pari", txt: "Dix ans pour rentrer chez soi : Cyclope, Sirènes et tempêtes entre Troie et Ithaque. La dernière course de l'année." },
   monaco: { gp: "Grand Prix du Plateau maudit", ville: "Plateau maudit", drap: "🎲", fx: "des", atout: "pari", piege: "turbo", txt: "Un jeu de société géant : chaque case peut te faire avancer… ou reculer. Les dés sont pipés." }
 };
-const CAL_GP = ["bahrein", "djeddah", "melbourne", "suzuka", "miami", "montreal", "silverstone", "spa", "monza", "singapour", "interlagos", "lasvegas"];
+const CAL_GP = ["silverstone", "djeddah", "melbourne", "suzuka", "miami", "montreal", "bahrein", "spa", "lasvegas", "singapour", "interlagos", "monza"];   // V16.55 (Théo) : Dune en janvier (sortie du film), Ratatouille en juillet, l'Odyssée en septembre, Secret Wars en finale (décembre, sortie du film)
 /** Circuit d'un mois : le Garage des rêves pour la chauffe, sinon le calendrier (V16.14 : le mois du Côté obscur garde son circuit, la règle s'y ajoute) */
 function circuitDe(k) {
   if (!k || k === CHAUFFE_K) return "abudhabi";
@@ -300,7 +300,7 @@ function htmlCartes(y) {
     const ks = joues[cd.id] || [], ici = !!kOuvert && ks.includes(kOuvert), kPrec = kOuvert ? cleMoins(kOuvert, 1) : null;
     const k = cd.bonus ? utilisees[cd.id] : (ici ? kOuvert : kPrec && ks.includes(kPrec) ? kPrec : undefined), jouee = k !== undefined, aug = Object.entries(AMELIOS).find(([, x]) => x.carte === cd.id), n = aug ? up[aug[0]] : 0;
     const gp = atk && !jouee ? (atk.atout.id === cd.id ? '<span class="c-gp at" title="Atout du circuit">+1</span>' : "") : indk && !jouee && indk.ids.includes(cd.id) ? '<span class="c-gp at" title="Atout possible du circuit (1 chance sur 2)">?</span>' : "";
-    const interdite = !!kOuvert && cd.id === "turbo" && (piegeMois(y, kOuvert) || {}).id === "chaleur" && regleVisible("pieges");
+    const pgO = kOuvert ? piegeMois(y, kOuvert) || {} : {}, interdite = !!kOuvert && regleVisible("pieges") && (cd.id === "turbo" && pgO.id === "chaleur" || cd.id === "pari" && pgO.id === "sirenes");   // V16.55 : Pari interdit sous le chant des Sirènes
     if (interdite) return '<button type="button" class="carte jouee" disabled data-carte="turbo"><span class="c-ico">' + icoOu(cd.id, cd.ico) + "</span><b>" + esc(cd.nom) + "</b><small>" + esc(cd.court) + "</small><em>🌡️ interdite (Surchauffe)</em></button>";
     return '<button type="button" class="carte' + (cd.bonus ? " bonus" : "") + (jouee && !ici ? " jouee" : "") + (ici ? " posee" : "") + (CARTE_CHOIX === cd.id ? " choix" : "") + '" data-carte="' + cd.id + '"' + (jouee && !ici || !kOuvert ? " disabled" : "") + ">" +
       '<span class="c-ico">' + icoOu(cd.id, cd.ico) + "</span><b>" + esc(cd.nom) + "</b><small>" + esc(cd.court) + "</small>" + (n ? '<span class="c-up">+' + n + "</span>" : "") + gp +

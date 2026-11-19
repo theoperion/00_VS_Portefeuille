@@ -19,7 +19,7 @@ const ETAPES = [
   { id: "pioche", ico: "🎴", nom: "Le rattrapage", ouvre: 202701, regle: "pioche", resume: "Tu finis dernier d'un mois ? Tu pioches une carte bonus (une fois par saison chacune), à jouer à partir du mois suivant. Tes cartes piochées t'attendent dans le Stand." },
   { id: "monaco", ico: "🌑", nom: "Le Côté obscur", ouvre: 202701, regle: "speciaux", resume: "Un mois de la saison, une éclipse tombe sur le circuit : le dernier du championnat marque ses points de place en double. La date est dans le calendrier du Grand Prix." },
   { id: "pieges", ico: "🪤", nom: "Les pièges des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque circuit sans mois spécial a son piège, une petite règle qui ne vaut que ce mois-là (Feux follets dans la Forêt aux lucioles, Couloirs mouvants au Château, Surchauffe chez les Androïdes…). Il s\'affiche dès le 20 du mois d\'avant, avec la carte." },
-  { id: "gpspeciaux", ico: "🏁", nom: "Les Dunes et le Multivers", ouvre: 202701, regle: "speciaux", resume: "Juillet sur la Mer de dunes : le vainqueur du mois marque +2 de plus (le Chevaucheur des sables). Septembre dans le Multivers : le 🎯 vaut +2 au lieu de +1 (le Rassemblement des héros)." },
+  { id: "gpspeciaux", ico: "🏁", nom: "Les Dunes et le Multivers", ouvre: 202701, regle: "speciaux", resume: "Janvier sur la Mer de dunes : le vainqueur du mois marque +2 de plus (le Chevaucheur des sables). Décembre, la Finale dans le Multivers : en plus des places doublées, le 🎯 vaut +2 au lieu de +1 (le Rassemblement des héros)." },
   { id: "prono", ico: "🔮", nom: "Le pronostic du mois", ouvre: 202701, regle: "championnat", resume: "Dans la fenêtre de ta carte : qui gagne le mois (+1 si juste) et le S&P 500 fera-t-il plus de +1 % (+1 si juste). Secret jusqu'au 2." },
   { id: "pole", ico: "🅿️", nom: "La pole position", ouvre: 202701, regle: "championnat", resume: "Avec ton pronostic, donne ton chiffre pour le S&P 500 du mois (ex. +1,8 %). Le plus proche marque +1 (partagé en cas d'égalité)." },
   { id: "defi", ico: "🏁", nom: "Le défi du mois", ouvre: 202701, regle: "championnat", resume: "Chaque mois a son défi (battre le Nasdaq, faire mieux que l'or, finir positif…), annoncé le 20 du mois d'avant : +1 à chaque pilote qui le réussit." },
@@ -153,10 +153,12 @@ function deckBonus(y, nom) {
 function monacoMois(y) { return y * 100 + 6; }   // V16.22 : le Côté obscur est toujours en juin (avant : tiré d'avril à octobre, ce qui faisait perdre son piège à un autre circuit certaines années)
 function moisSpecial(y, k) {
   if (!k) return null;
-  if (k % 100 === 12 && regleActive("finale", k)) return { id: "finale", ico: "🏆", nom: "Finale", txt: "Points de place doublés pour tout le monde." };
+  if (k % 100 === 12 && regleActive("finale", k)) return circuitDe(k) === "monza" && regleActive("gpspeciaux", k)
+    ? { id: "finale", heros: true, ico: "🦸", nom: "Finale · le Rassemblement des héros", txt: "Points de place doublés pour tout le monde, et le 🎯 vaut +2 au lieu de +1." }   // V16.55 : Secret Wars en finale
+    : { id: "finale", ico: "🏆", nom: "Finale", txt: "Points de place doublés pour tout le monde." };
   if (k === monacoMois(y) && regleActive("monaco", k)) return { id: "monaco", ico: "🌑", nom: "Le Côté obscur", txt: "Le dernier du championnat avant ce mois marque ses points de place en double." };
-  if (k % 100 === 7 && regleActive("gpspeciaux", k)) return { id: "silverstone", ico: "🪱", nom: "Le Chevaucheur des sables", txt: "Le vainqueur du mois marque +2 de plus." };
-  if (k % 100 === 9 && regleActive("gpspeciaux", k)) return { id: "monza", ico: "🦸", nom: "Le Rassemblement des héros", txt: "Le 🎯 vaut +2 au lieu de +1." };
+  if (circuitDe(k) === "silverstone" && regleActive("gpspeciaux", k)) return { id: "silverstone", ico: "🪱", nom: "Le Chevaucheur des sables", txt: "Le vainqueur du mois marque +2 de plus." };
+  if (circuitDe(k) === "monza" && regleActive("gpspeciaux", k)) return { id: "monza", ico: "🦸", nom: "Le Rassemblement des héros", txt: "Le 🎯 vaut +2 au lieu de +1." };
   return null;
 }
 /* ---------- V15.5 · Pièges des circuits : une petite règle propre à chaque circuit qui n'a pas de mois spécial ---------- */
@@ -168,6 +170,7 @@ const PIEGES = {
   miami: { id: "chaleur", ico: "🌿", nom: "Les graines sacrées", txt: "🚀 Turbo interdit ce mois-ci." },
   spa: { id: "ardennes", ico: "🌫️", nom: "Brume", txt: "Si le S&P 500 baisse, 🌧️ Pneus pluie vaut +3 au lieu de +2." },
   singapour: { id: "nuit", ico: "🍬", nom: "Bonbon de consolation", txt: "Le dernier du mois marque 2 points de place au lieu de 0." },
+  lasvegas: { id: "sirenes", ico: "🧜", nom: "Le chant des Sirènes", txt: "🎲 Pari interdit ce mois-ci." },   // V16.55 : l'Odyssée en septembre
   interlagos: { id: "averse", ico: "💥", nom: "Assaut", txt: "🎲 Pari : +3 si tu finis devant ton rival, −2 derrière (au lieu de +2 / −1)." }
 };
 /** Piège du mois k (null : chauffe, mois spécial, Côté obscur, ou règle pas encore ouverte) */
@@ -392,9 +395,9 @@ const SKINS_TETE = {
     cache: true, dessus: '<path d="M10.2 20C9.4 9.6 13.8 4 20 4S30.6 9.6 29.8 20L27.6 20C27.8 13.6 25 10.6 20 10.6S12.2 13.6 12.4 20Z" fill="#EEF0F2"/><path d="M12.2 9.6C14.6 6.4 25.4 6.4 27.8 9.6L27.4 11C25 8.6 15 8.6 12.6 11Z" fill="' + c + '"/><path d="M19 4.2H21V10.4H19Z" fill="' + c + '" opacity=".85"/><circle cx="11.4" cy="17.6" r="1.6" fill="#B7BCC2"/><circle cx="28.6" cy="17.6" r="1.6" fill="#B7BCC2"/>' }),
   // août · Monde à l'envers : casque audio orange des années 80
   envers: () => ({ dessus: '<path d="M10.8 17C10.4 7.8 14.6 4.4 20 4.4S29.6 7.8 29.2 17" fill="none" stroke="#2A2C31" stroke-width="1.5"/><rect x="8.9" y="14.4" width="4.4" height="6.6" rx="2" fill="#E8762C"/><rect x="26.7" y="14.4" width="4.4" height="6.6" rx="2" fill="#E8762C"/><rect x="8.4" y="15.4" width="2" height="4.6" rx=".8" fill="#2A2C31"/><rect x="29.6" y="15.4" width="2" height="4.6" rx=".8" fill="#2A2C31"/>' }),
-  // septembre · Multivers : masque de héros à la couleur du pilote
+  // décembre 2027 · Multivers (finale) : masque de héros à la couleur du pilote
   multivers: c => ({ dessus: '<path d="M11.6 15.2C14 13.2 18 13.8 20 15 22 13.8 26 13.2 28.4 15.2L27.8 18.8C25 19.6 22 18.6 20 17.6 18 18.6 15 19.6 12.2 18.8Z" fill="' + c + '"/><path d="M11.6 15.2C14 13.2 18 13.8 20 15 22 13.8 26 13.2 28.4 15.2" fill="none" stroke="#fff" stroke-width=".4" opacity=".4"/><path d="M14.8 16.8C15.8 15.9 17.6 15.9 18.4 16.9 17.4 17.6 15.8 17.6 14.8 16.8ZM25.2 16.8C24.2 15.9 22.4 15.9 21.6 16.9 22.6 17.6 24.2 17.6 25.2 16.8Z" fill="#fff"/>' }),
-  // juillet · Dune : capuche de distille, masque et yeux bleus de l'épice
+  // janvier 2027 · Dune : capuche de distille, masque et yeux bleus de l'épice
   dunes: () => ({ derriere: '<path d="M7.6 41C6.8 26 9.2 8.4 20 3.4C30.8 8.4 33.2 26 32.4 41Z" fill="#A9784A"/>', corps: '<path d="M3 41C4 31 11 28.4 20 28.4S36 31 37 41Z" fill="#5A4A3C"/><path d="M8 34H32M6.4 37.6H33.6M14 29.6V41M26 29.6V41" stroke="#3E3229" stroke-width=".8"/>',
     cache: true, dessus: '<path d="M10.4 19C9.8 9.4 14.2 4.8 20 4.8S30.2 9.4 29.6 19C28.6 12 25.4 8.8 20 8.8S11.4 12 10.4 19Z" fill="#B98A57"/><path d="M12.6 20.6C15 22.4 25 22.4 27.4 20.6L27 25.4C24.4 27.6 15.6 27.6 13 25.4Z" fill="#4A3D33"/><path d="M27 23C29.4 23.4 30.4 25.6 29.6 28.4" stroke="#4A3D33" stroke-width="1.1" fill="none"/><circle cx="16.6" cy="16.9" r="1.15" fill="#2F9BFF"/><circle cx="23.4" cy="16.9" r="1.15" fill="#2F9BFF"/><circle cx="16.6" cy="16.9" r="2.2" fill="#6CC4FF" opacity=".25"/><circle cx="23.4" cy="16.9" r="2.2" fill="#6CC4FF" opacity=".25"/>' }),
   // octobre · Chocolaterie : haut-de-forme prune à ruban doré
@@ -574,7 +577,7 @@ function htmlRegles(tout, modeReserve) {
       (vu("regularite") ? "<div><b>🛡️ Régularité</b><span>fin de saison : le moins souvent dernier (puis le plus de mois positifs)</span><em>+3</em></div>" : "") + "</div>") : "") +
     (!vSp ? "" : s("speciaux", "📅", "Les mois spéciaux", '<div class="rg-tab">' +
       (vM ? "<div><b>🌑 Le Côté obscur</b><span>" + (regleActive("monaco", mo) ? esc(moisLong(mo)) : "juin") + " : le dernier du championnat</span><em>place ×2</em></div>" : "") +
-      (vS ? "<div><b>🪱 Le Chevaucheur des sables</b><span>juillet : le vainqueur du mois</span><em>+2</em></div><div><b>🦸 Le Rassemblement des héros</b><span>septembre : le 🎯</span><em>vaut +2</em></div>" : "") +
+      (vS ? "<div><b>🪱 Le Chevaucheur des sables</b><span>janvier : le vainqueur du mois</span><em>+2</em></div><div><b>🦸 Le Rassemblement des héros</b><span>décembre (avec la Finale) : le 🎯</span><em>vaut +2</em></div>" : "") +
       (vF ? "<div><b>🏆 Finale</b><span>décembre : tout le monde</span><em>place ×2</em></div>" : "") +
       (vu("vote") ? "<div><b>🗳️ Vote</b><span>2 → 31 décembre : « le coup de la saison » (pas pour soi)</span><em>plaque</em></div>" : "") + "</div>")) +
     (vu("pieges") ? s("pieges", "🪤", "Les pièges des circuits", "<p>Les autres mois, le circuit a son <b>piège</b> : une petite règle qui ne vaut que ce mois-là. Il s'affiche dès le 20 du mois d'avant (Stand et Classement).</p>" +
