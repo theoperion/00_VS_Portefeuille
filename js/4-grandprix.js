@@ -219,12 +219,34 @@ function vignetteAmbiance(id) {
 }
 /** Position au championnat : cumul de points de chacun, mois par mois (avec le départ) */
 /** V16.10 · la manche du mois i : grille (classement avant le mois), points gagnés dans le mois, longueur du tour = meilleur score du mois */
-function mancheGP(etapes, i) {
+/** v17.10 (Théo) · grille d'une manche SANS classement d'avant :
+    tour de chauffe (décembre 2026) = la performance de NOVEMBRE (% du mois, places au barème d'un mois normal ; sans relevé de novembre : derrière) ;
+    janvier de la saison 1 = grille TIRÉE AU SORT, la même pour tous et à chaque ouverture (graine = clé du mois + noms triés), écart fixe.
+    Renvoie { avant: valeurs (plus grand = devant), ordre?: tirage, de: "novembre" | "tirage" } ou null. Aucun point n'en dépend. */
+function grilleSansClassement(k, noms) {
+  if (k === CHAUFFE_K) {
+    const du = rendementsDuMois(0, CHAUFFE_K - 1).filter(x => noms.includes(x.nom)).sort((a, b) => b.r - a.r), n = du.length, avant = {};
+    if (!n) return null;
+    const RG = []; du.forEach((x, j) => { RG[j] = j && du[j - 1].r - x.r < 1e-9 ? RG[j - 1] : j + 1; });
+    noms.forEach(nm => avant[nm] = -1); du.forEach((x, j) => avant[x.nom] = ptsRang(RG[j], n));
+    return { avant, de: "novembre" };
+  }
+  if (k === SAISON.premiere * 100 + 1) {
+    const l = noms.slice().sort(); let h = 2166136261; for (const ch of k + "|" + l.join("|")) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
+    const alea = () => { h = h + 0x6D2B79F5 >>> 0; let t = h; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };   // mulberry32
+    for (let j = l.length - 1; j > 0; j--) { const r = Math.floor(alea() * (j + 1)); [l[j], l[r]] = [l[r], l[j]]; }
+    return { avant: Object.fromEntries(noms.map(n => [n, 0])), ordre: l, de: "tirage" };
+  }
+  return null;
+}
+function mancheGP(etapes, i, kDef) {
   const noms = D.personnes.map(p => p.nom), et = etapes[i], prec = et.avenir ? et.pts : i > 0 ? etapes[i - 1].pts : Object.fromEntries(noms.map(n => [n, 0]));
-  const grille = noms.slice().sort((a, b) => (prec[b] || 0) - (prec[a] || 0) || noms.indexOf(a) - noms.indexOf(b));
+  const k = et.k || kDef, sans = (i <= 1 && noms.every(n => !(prec[n] || 0))) ? grilleSansClassement(k, noms) : null, ref = sans ? sans.avant : prec;
+  const rang0 = sans && sans.ordre ? sans.ordre : noms;
+  const grille = noms.slice().sort((a, b) => (ref[b] || 0) - (ref[a] || 0) || rang0.indexOf(a) - rang0.indexOf(b));
   const gains = {}; noms.forEach(n => gains[n] = i > 0 && !et.avenir ? Math.max(0, (et.pts[n] || 0) - (prec[n] || 0)) : 0);
   const max = Math.max(0, ...Object.values(gains));
-  return { grille, depart: Object.fromEntries(noms.map(n => [n, 0])), arrivee: gains, tour: max > 0 ? max : TOUR_GP };
+  return { grille, avant: ref, grilleDe: sans ? sans.de : null, depart: Object.fromEntries(noms.map(n => [n, 0])), arrivee: gains, tour: max > 0 ? max : TOUR_GP };
 }
 function etapesGP(y) {
   const c = championnat(y), noms = D.personnes.map(p => p.nom);
@@ -247,12 +269,12 @@ function htmlGrandPrix(y) {
   const i = GP_ETAPE !== null && GP_ETAPE < etapes.length ? GP_ETAPE : etapeParDefaut(etapes, y), et = etapes[i];
   const qui = quiEcurie(), kGP = et.k || (c.chauffe ? CHAUFFE_K : y * 100 + 1), ci = circuitDe(kGP), G = GPS[ci], at = atoutsVus(kGP);
   const met = meteoMois(et.k), spe = et.k ? moisSpecial(y, et.k) : null, pgm = et.m && et.m.piege ? et.m.piege : null;
-  const ordre = Object.keys(et.pts).sort((a, b) => et.pts[b] - et.pts[a] || (c.tot[b] ? c.tot[b].v : 0) - (c.tot[a] ? c.tot[a].v : 0));
+  const mc0 = !et.m ? mancheGP(etapes, i, kGP) : null, ordre = mc0 && mc0.grilleDe ? mc0.grille : Object.keys(et.pts).sort((a, b) => et.pts[b] - et.pts[a] || (c.tot[b] ? c.tot[b].v : 0) - (c.tot[a] ? c.tot[a].v : 0));   // v17.10 : sur la grille, l'ordre de départ (novembre pour la chauffe, tirage en janvier)
   const tete = ordre[0], tourTete = Math.floor((et.pts[tete] || 0) / TOUR_GP) + 1;
   const deux = ETAT.gp2d !== "0" || !piste3D(), cam = camGP();   // V16.58 : la 2D par défaut
   const v2 = vuesV2(ci), vue = vueGP(ci), suivi = v2 ? suiviGP() : null;   // v17.6
   // v17.6 · la piste « V2 » ne garde AUCUN bouton sur l'image : vue, plein écran et « ⋯ » (bande-annonce, arrivée, survol) passent juste en dessous
-  const menuV2 = '<details class="gp-plus"><summary aria-label="Plus d\'options">⋯</summary><div class="gp-plus-m">' + (deux ? "" : '<button type="button" class="gp-survol-b" id="gp-survol">🛸 Survol guidé</button>') +
+  const menuV2 = '<details class="gp-plus"><summary aria-label="Plus d\'options">⋯</summary><div class="gp-plus-m">' + (piste3D() ? '<button type="button" class="gp-survol-b" id="gp-survol">🛸 Survol guidé</button>' : "") +   // v17.10 : toujours utilisable (passe tout seul en 📺 Visite)
     '<button type="button" id="gp-ba">🎬 Bande-annonce</button><button type="button" id="gp-fin">⏭ Aller à l\'arrivée</button></div></details>';
   const suiviH = v2 && !deux ? '<div class="gp-suivi" role="group" aria-label="Voiture suivie">' + ordre.map(n => '<button type="button" data-suivre="' + esc(n) + '" style="--c:' + couleur(n) + '" aria-pressed="' + (n === suivi) + '" aria-label="Suivre ' + esc(n) + '">' + avatar(n) + "</button>").join("") + "</div>" : "";
   const piste = '<div class="gp-piste' + (deux ? " en2d" : "") + (v2 ? " v2 vue-" + vue : "") + '" id="gp-piste" data-circuit="' + ci + '"><div class="gp-scene" id="gp-scene"></div>' +
@@ -288,7 +310,8 @@ function htmlGrandPrix(y) {
   const cal = htmlCalendrierGP(y, kGP);
   const rap = rappelCartes(), versStand = rap ? '<button class="gp-stand" type="button" data-aller-stand>🃏 <span><b>Fenêtre ouverte</b> : pose ta carte de ' + esc(moisLong(rap.k)) + "</span> ›</button>" : "";
   const att = (c.attente ? '<div class="bref">⏳ ' + esc(moisLong(c.attente.k)) + " : la course avance dès que tout le monde a saisi son relevé (il manque " + c.attente.manquent.map(n => "<b>" + esc(n) + "</b>").join(" et ") + ").</div>" : "") +
-    (c.chauffe && !et.m && Date.now() < SAISON.depart.getTime() ? '<p class="info gp-depart">🏁 Départ le 1<sup>er</sup> décembre : la course se joue avec le relevé de fin décembre.</p>' : "");   // v17.5 (Théo) : sur la grille de la chauffe, du 21/11 au 31/12
+    (c.chauffe && !et.m && Date.now() < SAISON.depart.getTime() ? '<p class="info gp-depart">🏁 Grille de départ : la performance de novembre. La course se joue avec le relevé de fin décembre.</p>' :
+      !et.m && kGP === SAISON.premiere * 100 + 1 ? '<p class="info gp-depart"><span class="gp-de' + (stock.get("versus.deJanvier") ? "" : (stock.set("versus.deJanvier", "1"), " roule")) + '" aria-hidden="true">🎲</span> Grille tirée au sort : tout le monde part à 0 point.</p>' : "");   // v17.5 (Théo) : sur la grille de la chauffe, du 21/11 au 31/12
   const titreAt = at ? '<div class="gp-atouts"><span class="at" data-bdg="' + esc("Atout de " + G.ville + " : " + at.atout.ico + " " + at.atout.nom + " y gagne +1 quand elle marque (sauf bouchon).") + '">' + at.atout.ico + " " + esc(at.atout.nom) + " +1</span></div>" : (indiceCircuit(kGP) ? htmlIndice(indiceCircuit(kGP)) : "");
   return versStand + att + '<div class="gp-h"><div><span class="s-k">' + (c.chauffe ? "Tour de chauffe" : et.avenir ? "Manche " + i + " · sur la grille" : et.k ? "Manche " + i : "Départ") + " · " + esc(moisLong(kGP)) + '</span><h3 class="gp-titre">' + G.drap + " " + esc(G.gp) + '</h3><p class="gp-met">' + esc(G.ville) + " · " + met.ico + " " + esc(met.txt) + (spe ? " " + spe.ico + " <b>" + esc(spe.nom) + "</b> : " + esc(spe.txt) : vuesV2(ci) && pgm ? ' <span data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " <b>" + esc(pgm.nom) + "</b></span>" : "") + '</p></div><button class="btn ghost gp-rejouer" type="button" id="gp-rejouer">▶ Rejouer</button></div>' +
     titreAt + piste + (v2 ? '<div class="gp-vues2">' + selVuesGP(vue, "") + menuV2 + '<button class="gp-plein-gros" type="button" id="gp-plein-gros"><span aria-hidden="true">⛶</span> Plein écran</button></div>' : "") + chips + '<div class="gp-liste">' + lignes + "</div>" + (et.m ? '<button class="btn ghost gp-carte" type="button" id="gp-carte">📸 Carte postale · ' + esc(moisLong(et.k)) + "</button>" : "") + cal +
@@ -558,10 +581,16 @@ function etiquettesGP(api) {
   C.tags.forEach(o => {
     const r = 1 + ordre.filter(m => cur[m] > (cur[o.n] || 0) + 1e-9).length; if (o.rg && o.rgv !== r) { o.rg.textContent = r; o.rgv = r; }   // V16.18 : ex æquo = même rang
     const e = api.ecran(o.n); if (!e || e.vis === false) { poser1(o, "0", null); return; }
-    pos.push({ o, n: o.n, x: e.x, y: e.y });
+    pos.push({ o, n: o.n, x: e.x, y: e.y, x0: e.x, y0: e.y });
   });
-  // deux étiquettes qui se chevauchent : la seconde monte d'un cran
-  pos.sort((a, b) => b.y - a.y).forEach((p, i) => { for (let j = 0; j < i; j++) { const q = pos[j]; if (Math.abs(q.x - p.x) < 30 && Math.abs(q.y - p.y) < 32) p.y = Math.min(p.y, q.y - 32); } });
+  // v17.8 · deux étiquettes qui se chevauchent : la seconde s'écarte sur le côté (au plus 30 px), puis monte d'un seul cran au plus.
+  // Avant : chacune montait au-dessus de la précédente sans limite → une colonne de têtes qui ne suivait plus les voitures.
+  const D0 = 30, recouvre = (p, l) => l.find(q => Math.abs(q.x - p.x) < D0 && Math.abs(q.y - p.y) < D0);
+  pos.sort((a, b) => b.y - a.y).forEach((p, i) => { const l = pos.slice(0, i), x0 = p.x, y0 = p.y, q = recouvre(p, l); if (!q) return;
+    const c = (p.x >= q.x ? [1, -1] : [-1, 1]).flatMap(sx => [[sx, 0]]).concat([[p.x >= q.x ? 1 : -1, -1], [p.x >= q.x ? -1 : 1, -1], [0, -1]]).map(([dx, dy]) => ({ x: x0 + dx * D0, y: y0 + dy * D0 }));
+    const ok = c.find(z => !recouvre(z, l)) || c[2]; p.x = ok.x; p.y = ok.y; });
+  // le décalage glisse en douceur (pas de saut de 30 px d'une image à l'autre) et reste borné : la tête ne quitte jamais sa voiture
+  pos.forEach(p => { const o = p.o, ex = p.x - p.x0, ey = p.y - p.y0, k = api.enCours() ? .22 : 1; o.dx = (o.dx || 0) + (ex - (o.dx || 0)) * k; o.dy = (o.dy || 0) + (ey - (o.dy || 0)) * k; p.x = p.x0 + o.dx; p.y = p.y0 + o.dy; });
   pos.forEach(p => { if (p.y < 44 && !C.plein) { poser1(p.o, "0", null); p.y = -99; return; } poser1(p.o, "", "translate3d(" + p.x.toFixed(0) + "px," + Math.min(p.y, H - 4).toFixed(0) + "px,0) translate(-50%,-100%)"); });
   C.pops.forEach(o => { const p = pos.find(q => q.n === o.n); if (!p || p.y < 0) { poser1(o, "0", null); return; } poser1(o, "", "translate3d(" + p.x.toFixed(0) + "px," + (p.y - 36).toFixed(0) + "px,0) translate(-50%,-100%)"); });
   C.zones.forEach(o => { const zz = api.zones && api.zones[o.z], e = zz && api.ecranMonde((zz.s0 + zz.s1) / 2, 0, 5);
@@ -569,6 +598,9 @@ function etiquettesGP(api) {
   { const h = pi.querySelector(".gp-tour"); if (h) { if (GP_SCEN && api.enCours()) { const tr = Math.min(TOURS_GP, Math.floor(Math.max(0, ...Object.values(cur))) + 1); if (h.dataset.tr !== String(tr)) { if (!h.dataset.tr) h.dataset.orig = h.innerHTML; h.innerHTML = "Tour <b>" + tr + "</b>/" + TOURS_GP; h.dataset.tr = tr; } } else if (h.dataset.tr) { h.innerHTML = h.dataset.orig || ""; delete h.dataset.orig; delete h.dataset.tr; } } }   // v16.28
   if (api.enCours() && C.tour) { const v = Math.floor(Math.max(0, ...Object.values(cur)) / TOUR_GP) + 1; if (v !== C.tourv) { C.tour.textContent = v; C.tourv = v; } }
   if (GP_PLEIN) majTourPlein(cur);
+  // v17.8 · 🚁 Hélico : la rangée de têtes « voiture suivie » se range dans l'ordre de la course, avec la place de chacun
+  if (C.suivi === undefined) C.suivi = [...document.querySelectorAll("[data-suivre]")].map(e => ({ e, n: e.dataset.suivre, v: "" }));
+  C.suivi.forEach(o => { const r = 1 + ordre.filter(m => cur[m] > (cur[o.n] || 0) + 1e-9).length, v = String(r); if (o.v !== v) { o.v = v; o.e.style.order = r; o.e.dataset.rg = v; } });
   majTresor(api, pi);
 }
 /* ---------- 🗝️ V16.61 · Chasse au trésor : un objet caché par circuit dans la Visite 3D (vue hélico).
@@ -708,15 +740,34 @@ async function cartePostale(y, et) {
    le vainqueur franchit la ligne. Distances en tours (0 → 3). ---------- */
 const TOURS_GP = 2, E_TOUR = [0, .525], W_TOUR = E_TOUR.map(e => e / .8 * .74);   // v16.29 : 2 tours (Théo : le 1er de 3 faisait doublon) — tour 1 le départ et le spectacle, tour 2 le sprint   // W_TOUR : début de chaque tour en temps réel (avant le ralenti)
 let GP_SCEN = null;
+/* v17.8 (Théo) · le déroulé en 2 tours, distances en tours (la base B avance pour tout le monde, chacun a un retard « off » sur B) :
+   Tour 1 : départ lancé, voitures ÉCARTÉES selon le classement d'avant le mois (écart ∝ écart de points, au moins ECART_MIN pour que
+   les têtes ne se chevauchent pas, au plus ETAL_1 en tout) ; personne ne double. Sans mois d'avant : file à écart fixe.
+   Tour 2 : chacun glisse de son écart du tour 1 à son écart d'arrivée (∝ points du mois, au moins ECART_ARR) ; une seule interpolation
+   commune ⇒ chaque paire se double au plus une fois (aucun faux dépassement). Le vainqueur passe la ligne en premier, les autres un par
+   un (ex æquo côte à côte = même rang), puis tout le monde freine ensemble, la ligne franchie. */
+const ECART_MIN = .045, ECART_ARR = .06, ETAL_1 = .32, ETAL_2 = .3;
+function ecartsGP(noms, v, pas, mini, etal, egauxColles) {   // noms dans l'ordre (premier d'abord), v = valeurs (plus grand = devant)
+  const g = noms.map((n, k) => k ? (egauxColles && v[noms[k - 1]] === v[n] ? 0 : Math.max(mini, (v[noms[k - 1]] - v[n]) * pas)) : 0);
+  const base = g.reduce((s, x) => s + (x ? mini : 0), 0), plus = g.reduce((s, x) => s + (x ? x - mini : 0), 0);
+  const f = plus > 0 && base + plus > etal ? Math.max(0, etal - base) / plus : 1, out = {}; let o = 0;
+  noms.forEach((n, k) => { if (k && g[k]) o += mini + (g[k] - mini) * f; out[n] = o; }); return out;
+}
 function scenarioCourse(mc) {
-  const noms = mc.grille.slice(), G = mc.arrivee, maxG = Math.max(0, ...noms.map(n => G[n] || 0)), gap = .006;
-  const fin = {}; noms.forEach((n, g) => fin[n] = maxG > 0 ? (maxG - (G[n] || 0)) / maxG * .3 : g * gap);
+  const noms = mc.grille.slice(), G = mc.arrivee, P = mc.avant || {};
+  const o1 = ecartsGP(noms, Object.fromEntries(noms.map(n => [n, P[n] || 0])), .012, ECART_MIN, ETAL_1, false);
+  const arr = noms.slice().sort((a, b) => (G[b] || 0) - (G[a] || 0) || noms.indexOf(a) - noms.indexOf(b));
+  const o2 = ecartsGP(arr, G, .03, ECART_ARR, ETAL_2, true);
   const lisse = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
-  const course = e => (e < .1 ? e * e / .2 : e - .05) / .95 * TOURS_GP;   // départ qui accélère, puis pleine vitesse
-  const temps = w => w < .74 ? w / .74 * .8 : w < .88 ? .8 + (w - .74) / .14 * .08 : .88 + (w - .88) / .12 * .12;   // ralenti au cœur du dernier tour
-  const scen = w => { const e = temps(clampN(w, 0, 1)), D = course(e), m = lisse((e - E_TOUR[TOURS_GP - 1]) / (.92 - E_TOUR[TOURS_GP - 1])), out = {};
-    noms.forEach((n, g) => { out[n] = D - (g * gap * (1 - m) + fin[n] * m) + Math.sin(e * 22 + g * 1.7) * .0016 * (1 - m); }); return out; };
-  return { scen, gains: G, noms };
+  const o2max = Math.max(0, ...noms.map(n => o2[n])), BF = TOURS_GP + o2max + .03, BL = TOURS_GP - .1;
+  // vitesse de la base : élan au départ, tour 2 un peu plus posé (les dépassements), arrivées au ralenti, puis on freine jusqu'à l'arrêt
+  const vit = B => (B < .1 ? .45 + .55 * lisse(B / .1) : 1) * (B > 1 ? .9 : 1) * (B > BL ? .6 : 1) * (B > BF - .06 ? .3 + .7 * (BF - B) / .06 : 1), N = 800, tab = [0];
+  for (let k = 1; k <= N; k++) { const B = BF * (k - .5) / N; tab.push(tab[k - 1] + BF / N / vit(B)); }
+  const tot = tab[N], Bde = w => { const t = clampN(w, 0, 1) * tot; let a = 0, b = N; while (b - a > 1) { const m = (a + b) >> 1; if (tab[m] <= t) a = m; else b = m; } return BF * (a + (t - tab[a]) / Math.max(1e-9, tab[b] - tab[a])) / N; };
+  const wDe = B => { const k = clampN(B / BF * N, 0, N), a = Math.floor(k), b = Math.min(N, a + 1); return (tab[a] + (tab[b] - tab[a]) * (k - a)) / tot; };
+  const scen = w => { const B = w >= 1 ? BF : Bde(w), m = lisse((B - 1.03) / .77), out = {};
+    noms.forEach(n => { out[n] = B - (o1[n] + (o2[n] - o1[n]) * m); }); return out; };
+  return { scen, gains: G, noms, wTour2: wDe(1), wLigne: wDe(TOURS_GP) };
 }
 function clampN(v, a, b) { return v < a ? a : v > b ? b : v; }
 /* ---------- V16.18 · Le décompte des points d'un pilote : « 4 place + 1 🎯 + 2 🎲 = 7 » ---------- */
@@ -750,7 +801,7 @@ function commenter(y, i, duree, delai) {
   const dire = (t, dur) => { const b = document.querySelector("#gp-piste .gp-com"); if (!b) return; b.innerHTML = '<span class="gp-com-t">' + esc(t) + "</span>"; if (dur) GP_COM.push(setTimeout(() => { const bb = document.querySelector("#gp-piste .gp-com"); if (bb) bb.innerHTML = ""; }, dur)); };
   if (duree < 0) { dire(P.fin, 7000); return; }
   const d0 = delai || 0, n = duree - d0;
-  if (GP_SCEN) { const l = [[0, P.debut[0]], [.24, P.milieu[0]], [W_TOUR[1], "🏁 Dernier tour !" + (P.milieu[1] ? " · " + P.milieu[1] : "")]].filter(x => x[1]);
+  if (GP_SCEN) { const l = [[0, P.debut[0]], [.24, P.milieu[0]], [GP_SCEN.wTour2 || W_TOUR[1], "🏁 Dernier tour !" + (P.milieu[1] ? " · " + P.milieu[1] : "")]].filter(x => x[1]);
     l.forEach(([w, t]) => GP_COM.push(setTimeout(() => dire(t, 0), d0 + w * n + 150))); return; }
   const l = P.debut.concat(P.milieu);
   l.forEach((t, k) => GP_COM.push(setTimeout(() => dire(t, 0), d0 + k * n / Math.max(1, l.length) + 150)));
@@ -884,8 +935,8 @@ function brancherGP(v, y) {
   }
   // V16.10 · une manche par mois : grille de départ dans l'ordre du classement d'avant le mois ; le meilleur du mois boucle exactement un tour
   if (vue && vue !== "2d") appliquerVue3(GP_INST.api, vue);
-  const api = GP_INST.api, mc = mancheGP(etapes, i), SC = i > 0 && !et.avenir && et.m && api.jouerScenario ? scenarioCourse(mc) : null; GP_SCEN = SC;
-  if (api.regler) api.regler({ tour: SC ? 1 : mc.tour, grille: mc.grille });   // v16.28 : en course scénarisée, les distances sont en tours
+  const api = GP_INST.api, mc = mancheGP(etapes, i, kGP), SC = i > 0 && !et.avenir && et.m && api.jouerScenario ? scenarioCourse(mc) : null; GP_SCEN = SC;
+  if (api.regler) api.regler({ tour: SC ? 1 : mc.tour, grille: SC ? null : mc.grille });   // v17.8 : en course scénarisée, les écarts viennent tous du scénario   // v16.28 : en course scénarisée, les distances sont en tours
   const pDep = SC ? SC.scen(0) : mc.depart, pArr = SC ? SC.scen(1) : mc.arrivee;
   const cleVu = "versus.gpVu." + y, vu = +(stock.get(cleVu) || 0);
   // V16.16 : la manche n'est marquée « vue » qu'à l'arrivée (quitter pendant la bande-annonce ou la course ne la fait plus perdre)
@@ -893,7 +944,7 @@ function brancherGP(v, y) {
   const finCourse = () => { if (window.SONS && et.m) { const v1 = et.m.l.slice().sort((a, b) => a.rg - b.rg)[0]; if (v1) SONS.arrivee(saisonVisible() && !estChauffe(y) ? equipDe(v1.nom).klaxon : "fanfare", v1.nom === ETAT.moi, (Piste.TRACES[ci] || {}).peint); }   // V16.43 : la foule et le klaxon du vainqueur
     if (et.k && !et.avenir && et.k > +(stock.get(cleVu) || 0)) stock.set(cleVu, String(et.k)); bullesGP(y, i); commenter(y, i, -1); };
   const jouer = feux => { if (vueGP(ci) === "visite" && api.type === "3d") choisirVueGP("poursuite", y);   // v17.6 : la Visite n'a pas de voitures : la course se regarde en 🚁 Hélico
-    const f = feux !== false && i >= 1 && api.type === "3d", d = SC ? (api.type === "3d" ? 16000 : 11000) : api.type === "3d" ? 6400 : 3000; commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0); if (window.SONS) SONS.course(d, f ? 3200 : 0);   // V16.43 : feux, moteurs
+    const f = feux !== false && i >= 1 && api.type === "3d", d = SC ? (api.type === "3d" ? 17000 : 12000) : api.type === "3d" ? 6400 : 3000; commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0); if (window.SONS) SONS.course(d, f ? 3200 : 0);   // V16.43 : feux, moteurs
     if (SC) api.jouerScenario(SC.scen, d, finCourse, f); else api.jouer(mc.depart, mc.arrivee, d, finCourse, f); };
   const apresBA = () => { if (GP_INST && GP_INST.api === api && document.body.contains(GP_INST.boite)) jouer(false); };   // v16.27 : piste reconstruite entre-temps : on ne lance rien
   if (GP_REJOUER && i > 0 && !et.avenir) { GP_REJOUER = false; setTimeout(jouer, 150); }
@@ -901,7 +952,11 @@ function brancherGP(v, y) {
   else { if (!api.enCours()) api.placer(pArr); const kBA = et.k || 0, cleBA = "versus.baVu." + y; if (et.avenir && kBA && kBA > +(stock.get(cleBA) || 0)) { stock.set(cleBA, String(kBA)); setTimeout(() => ereApres(() => bandeAnnonce(y, i, null), "ba"), 400); } }
   GP_REJOUER = false;
   const vu3 = v.querySelector("#gp-vue"); if (vu3) vu3.addEventListener("click", () => { const vers3d = pi.classList.contains("en2d"); ETAT.gp2d = vers3d ? "0" : "1"; garder(); rendreTrophees(); if (vers3d && !stock.get("versus.aideVisite")) { stock.set("versus.aideVisite", "1"); setTimeout(() => { toast("🧭 Visite 3D : glisse pour tourner, vers le haut ou le bas pour incliner, pince pour zoomer, deux doigts pour te déplacer. 🎬 Survol : la visite guidée."); try { if (GP_INST && GP_INST.api.type === "3d" && !GP_INST.api.enCours()) GP_INST.api.survol(12000); } catch (e) { } }, 900); } });
-  const sv = v.querySelector("#gp-survol"); if (sv) sv.addEventListener("click", () => { if (!GP_INST || GP_INST.api.type !== "3d") return; if (GP_INST.api.enCours()) { toast("Attends la fin de la course pour le survol."); return; } GP_INST.api.survol(12000); });   // V16.59 : visite guidée
+  const sv = v.querySelector("#gp-survol"); if (sv) sv.addEventListener("click", () => { if (GP_INST && GP_INST.api.enCours()) { toast("Attends la fin de la course pour le survol."); return; }
+    const pl = sv.closest("details"); if (pl) pl.open = false;
+    // v17.10 : depuis la Carte 2D ou l'Hélico, on passe d'abord en 📺 Visite (la carte 3D seule), puis le survol part
+    if (vue && vue !== "visite") { choisirVueGP("visite", y); setTimeout(() => { if (GP_INST && GP_INST.api.type === "3d" && !GP_INST.api.enCours()) GP_INST.api.survol(12000); }, 700); return; }
+    if (!GP_INST || GP_INST.api.type !== "3d") return; GP_INST.api.survol(12000); });   // V16.59 : visite guidée
   const cb = v.querySelector("#gp-cam-b"); if (cb) cb.addEventListener("click", () => { const l = ["tv", "helico", "bord"], n = l[(l.indexOf(camGP()) + 1) % l.length]; ETAT.gpCam = n; garder(); if (GP_INST) GP_INST.api.camera(n); majBoutonsGP(); });
   const rj = v.querySelector("#gp-rejouer"); if (rj) rj.addEventListener("click", () => { if (i > 0 && !et.avenir) jouer(); else toast(et.avenir ? "Cette manche se court ce mois-ci : la course se joue dès que tout le monde a saisi son relevé." : "Le départ n'a pas encore eu lieu : choisis un mois."); });
   const fb = v.querySelector("#gp-fin"); if (fb) fb.addEventListener("click", () => { if (api.enCours()) { api.placer(pArr); finCourse(); } else toast(i > 0 && !et.avenir ? "La course est déjà arrivée : ↻ Rejouer pour la revoir." : "Pas encore de course pour ce mois-ci."); });
@@ -964,6 +1019,7 @@ function placerPlein(y) {
   const P = GP_PLEIN; if (!P) return;
   const pi = document.querySelector(".saison #gp-piste") || document.getElementById("gp-piste"); if (!pi) { fermerPleinGP(); return; }
   const corps = P.o.querySelector(".gpp-corps");
+  if (GP_INST && GP_INST.api.zoom2D) GP_INST.api.zoom2D(true);   // v17.10 : la carte 2D se zoome et se déplace en plein écran
   if (pi.parentNode !== corps) {
     corps.querySelectorAll(".gp-piste").forEach(x => x.remove());
     P.ancre = document.createElement("div"); P.ancre.className = "gp-ancre"; pi.parentNode.insertBefore(P.ancre, pi); corps.appendChild(pi);
@@ -997,6 +1053,7 @@ function fermerPleinGP() {
     try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) { }
     try { const fe = document.fullscreenElement || document.webkitFullscreenElement; if (fe) (document.exitFullscreen || document.webkitExitFullscreen).call(document).catch(() => { }); } catch (e) { } }
   P.o.remove(); document.documentElement.classList.remove("fige"); GP_ETQ = null;
+  if (GP_INST && GP_INST.api.zoom2D) GP_INST.api.zoom2D(false);
   if (GP_INST) GP_INST.api.redim();
 }
 

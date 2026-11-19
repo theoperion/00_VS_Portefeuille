@@ -5109,16 +5109,7 @@
       // il tire d'un coup sec : tout le corps bascule un peu en arrière, au rythme du rabat
       a.push(`${G(MECX, MY, 1)}<g>${an(`<animateTransform attributeName="transform" type="rotate" values="0;2.5;0" dur="3s" repeatCount="indefinite"/>`)}<g transform="translate(-4 -2)">${corps(1)}</g>${corps(0)}</g></g>`); }
 
-    // =============== 7. l'étiquette « Noël » (v17.4 : plus de « 2027 ? », Théo) pend de la poutre, un lutin assis dessus balance les jambes, la chaussette citron de Nicolas se balance
-    { const ex = 852, ey = 158, LU = ["#2E8A4A", "#F4BE96", "#B8262E"];
-      const lutS = (rim) => { const c = k => rim ? "#FFC46A" : LU[k], o = rim ? "" : ` stroke="#2A0A0C" stroke-width=".7"`;
-        return { haut: `<path d="M-8 0Q-10 -16 -4 -22Q4 -26 9 -20Q12 -10 10 0Z" fill="${c(0)}"${o}/><circle cx="1" cy="-29" r="7.5" fill="${c(1)}"${o}/><path d="M-6 -16L-18 -10L-24 -16" stroke="${c(0)}" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
-          jambes: `<path d="M-6 0L-10 12L-14 16M6 0L10 12L6 17" stroke="${c(2)}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>` }; };
-      const L0 = lutS(1), L1 = lutS(0);
-      a.push(`<g transform="translate(${ex} ${ey})"><g>${an(`<animateTransform attributeName="transform" type="rotate" values="-3;3;-3" dur="3.6s" repeatCount="indefinite"/>`)}<path d="M-46 0L-42 82M46 0L42 82" stroke="#C9A24A" stroke-width="2.2"/><circle cx="-46" cy="2" r="3.5" fill="#C9A24A"/><circle cx="46" cy="2" r="3.5" fill="#C9A24A"/><g transform="translate(0 112)"><rect x="-76" y="-32" width="152" height="66" rx="8" fill="#FFF4D6" ${INK}/><rect x="-70" y="-26" width="140" height="54" rx="5" fill="none" stroke="#D8262E" stroke-width="2" stroke-dasharray="7 5"/><circle cx="-42" cy="-28" r="3" fill="#07080B"/><circle cx="42" cy="-28" r="3" fill="#07080B"/>${txt(0, 17, "Noël", 50, "#C8141C", { police: "Georgia, serif", gras: 700 })}
-        <g transform="translate(-52 34)"><g>${an(`<animateTransform attributeName="transform" type="rotate" values="-12;12;-12" dur="2.6s" repeatCount="indefinite"/>`)}<path d="M0 0V8" stroke="#C9A24A" stroke-width="2"/><path d="M-8 14V34Q-8 46 4 46H14Q20 46 20 40Q20 34 10 33H6V14Z" fill="${BANDE[4]}" ${IN1}/><rect x="-10" y="6" width="18" height="10" rx="3" fill="#FFF6E4" ${IN1}/><path d="M-6 24H4M-6 30H4" stroke="#FFFFFF" stroke-opacity=".6" stroke-width="2"/></g></g>
-        <g transform="translate(26 -47) scale(1.45)"><g transform="translate(-2 0)">${L0.haut}</g>${L1.haut}<g>${an(`<animateTransform attributeName="transform" type="rotate" values="-16;14;-16" dur="1.3s" repeatCount="indefinite"/>`)}<g transform="translate(-2 0)">${L0.jambes}</g>${L1.jambes}</g><circle cx="3" cy="-30" r="1.1" fill="#2A0A0C"/><circle cx="6" cy="-27" r="1.6" fill="#FF7A7A" opacity=".6"/><path d="M-26 -14L-30 -22M-26 -14L-22 -21" stroke="#C9A24A" stroke-width="3" stroke-linecap="round"/><path d="M-7 -33Q-4 -52 16 -54Q10 -44 8 -32Z" fill="#D8262E" ${IN1}/><circle cx="17" cy="-54" r="3.6" fill="#FFF6E4" ${IN1}/><rect x="-8" y="-35" width="17" height="5" rx="2.5" fill="#FFF6E4" ${IN1}/></g>
-        <g transform="translate(-70 -30)"><path d="M0 0Q-6 -14 -20 -12Q-14 -8 -16 -2Q-8 -4 0 0Z" fill="#2E7A44" ${IN1}/><path d="M0 0Q14 -10 24 -2Q18 0 18 6Q8 2 0 0Z" fill="#1E5A30" ${IN1}/><circle cx="-2" cy="-4" r="4" fill="#E0242C" ${IN1}/><circle cx="5" cy="-6" r="4" fill="#E0242C" ${IN1}/><circle cx="2" cy="1" r="4" fill="#E0242C" ${IN1}/></g></g></g></g>`); }
+    // =============== 7. (v17.10, Théo) l'étiquette « Noël » qui pendait de la poutre est retirée, avec son lutin et la chaussette qui y tenaient : un texte petit qui gâchait tout
     // le reflet doré qui glisse sur la bâche
     a.push(`<clipPath id="g6-cb"><path d="${BA}" transform="translate(${MX} ${MY}) scale(${S})"/></clipPath><g clip-path="url(#g6-cb)"><rect x="${MX - 420}" y="${MY - 190}" width="50" height="200" fill="#FFF4D0" opacity="${K.anime ? .28 : 0}" transform="skewX(-25)">${an(`<animate attributeName="x" values="${MX - 420};${MX - 420};${MX + 300}" keyTimes="0;.55;1" dur="6s" repeatCount="indefinite"/>`)}</rect></g>`);
     // l'éclat doré sur la roue avant
@@ -5167,8 +5158,8 @@
 
   /* ============================================================
      Décembre 2026 · Tour de chauffe : « L'Atelier du Père Noël » (mélange choisi par Théo : base B + voiture de A)
-     Boule à neige géante « VERSUS 2027 » avec son village qui tourne (boîte à musique), la monoplace mystère de 2027 sous sa bâche
-     dorée sur un plateau tournant devant le panneau lumineux « 2027 ? », chemins arc-en-ciel aux couleurs des pilotes, grand sapin,
+     Boule à neige géante « VERSUS » avec son village qui tourne (boîte à musique), la monoplace mystère de 2027 sous sa bâche
+     dorée sur un plateau tournant devant le panneau lumineux (étoile et flocons, v17.10), chemins arc-en-ciel aux couleurs des pilotes, grand sapin,
      marché de Noël, grande roue, patinoire, carrousel, train électrique, traîneau dans le ciel, bonhomme de neige.
      ============================================================ */
   function decorNoel(ctx) {
@@ -5263,7 +5254,7 @@
     { const pA = arche(16, "JOYEUX NOEL !"); lum.push([pA.x, 14, pA.z, 1, .8, .5, 30]);
       [.24, .5, .74].forEach(f => { let best = f * T.L, bk = 1e9; for (let s = f * T.L - 70; s < f * T.L + 70; s += 4) { const i = ((Math.round(s / T.ds) % T.N) + T.N) % T.N, k = Math.abs(T.K[i]); if (k < bk) { bk = k; best = s; } } arche(best); }); }
 
-    // ================= 1. LA BOULE À NEIGE GÉANTE, au cœur du circuit : socle doré « VERSUS 2027 », 12 hublots de 2027, voiture mystère sous sa bâche, sapin à l'étoile des 5 =================
+    // ================= 1. LA BOULE À NEIGE GÉANTE, au cœur du circuit : socle doré « VERSUS », 12 hublots de 2027, voiture mystère sous sa bâche, sapin à l'étoile des 5 =================
     const GX = 520, GZ = 392, SR = 42, SH = 13, GR = 60, GY = SH + 50, FACE = .3, CHAUD = v("#FFB33A");
     // une sphère lisse (normales douces) : neige, bonhomme, boules
     const lisse = (g, x, y, z, R, col, em, la, lo, k) => { const kk = k || 1, P = (t, p) => [Math.sin(t) * Math.cos(p), Math.cos(t), Math.sin(t) * Math.sin(p)];
@@ -5310,8 +5301,8 @@
       for (let k = 0; k < 7; k++) { const a = k / 7 * TAU + .2, e = k % 2 ? .25 : -.05; halo(GX + Math.cos(e) * Math.cos(a) * GR, GY + Math.sin(e) * GR, GZ + Math.cos(e) * Math.sin(a) * GR, [.8, .92, 1], 16); }
       halo(GX, SH + 14, GZ, [1, .85, .5], 48);   // le village illumine la boule de l'intérieur
       halo(GX, GY + GR + 1, GZ, [1, .85, .4], 8);
-      // « VERSUS 2027 » gravé tout autour, trois fois
-      [face, face + TAU / 3, face - TAU / 3].forEach(a0 => { const txt = "VERSUS 2027", px = .82, da = 4 * px / (SR + .1); [...txt].forEach((ch, i) => { const a = a0 + ((txt.length - 1) / 2 - i) * da; ecrire(g, ch, GX + Math.cos(a) * (SR + .14), SH - 5.6, GZ + Math.sin(a) * (SR + .14), PI / 2 - a, px, v("#7A1E10"), .1); }); });
+      // « VERSUS » gravé tout autour, trois fois (v17.10, Théo : plus de « 2027 »)
+      [face, face + TAU / 3, face - TAU / 3].forEach(a0 => { const txt = "VERSUS", px = .82, da = 4 * px / (SR + .1); [...txt].forEach((ch, i) => { const a = a0 + ((txt.length - 1) / 2 - i) * da; ecrire(g, ch, GX + Math.cos(a) * (SR + .14), SH - 5.6, GZ + Math.sin(a) * (SR + .14), PI / 2 - a, px, v("#7A1E10"), .1); }); });
       // les 12 hublots : un diorama par univers de 2027 (la saison est « sous globe » jusqu'au 1er janvier)
       const ICONES = [["#E8B060", "#5A3010", ["01110", "10001", "10101", "10001", "01110"]], ["#5A48B0", "#FFE7A0", ["10101", "11111", "11011", "11011", "11111"]], ["#FF9EC4", "#FFFFFF", ["00100", "01110", "11111", "01110", "00000"]],
         ["#5A1A10", "#F2C230", ["01110", "10001", "10001", "10001", "01110"]], ["#1C3A8A", "#7CF2FF", ["01110", "11111", "01110", "00100", "00100"]], ["#10141C", "#FF3A3A", ["00001", "00010", "00100", "01000", "10000"]],
@@ -5329,7 +5320,7 @@
         if (k % 2) sapin(vg, Math.cos(a + .26) * Rr, 0, Math.sin(a + .26) * Rr, .72, 3, true, 5, true); }
       rotors.push({ g: vg, x: GX, y: tertre(Rr) - .4, z: GZ, cap: 0, v: .12, a: { ax: "y" } }); }
 
-    // ================= 1 ter. LA MONOPLACE MYSTÈRE (la voiture de 2027) : sous sa bâche dorée, sur un plateau tournant, devant le panneau lumineux « 2027 ? » =================
+    // ================= 1 ter. LA MONOPLACE MYSTÈRE (la voiture de 2027) : sous sa bâche dorée, sur un plateau tournant, devant le panneau lumineux =================
     const PX = 405, PZ = 338, PCAP = .35, KV = 1.25;   // KV : toute la scène de la voiture agrandie d'un quart (lisible d'hélico)
     { const CREME = v("#FFF1D6"), ORA = v("#FFD34D"), ORA2 = v("#E8B83A"), RG2 = v("#E5484D"), W2 = (lx, lz) => monde(PX, PZ, PCAP, lx * KV, lz * KV);
       const perle = (g, x, y, z, rr, col, em) => { const P = [[x + rr, y, z], [x, y, z + rr], [x - rr, y, z], [x, y, z - rr]], H = [x, y + rr, z], Bs = [x, y - rr, z];
@@ -5344,16 +5335,16 @@
       [-1, 1].forEach(s => { const x = s * 28, z = -6, hx = x - s * 1.6; branche(g, [x, 0, z], [x, 7.5, z], .32, .24, ORA2, .45); g.boule(x, 7.8, z, .6, ORA, .7, 1);
         branche(g, [x + s * .6, 8, z], [hx, 7.6, z + .4], 1, 1.25, CREME, .5); g.boule(hx, 7.6, z + .4, 1.05, v("#FFF4C8"), 1, 1); const m = W2(hx, z); lum.push([m[0], 7.6 * KV, m[1], 1, .95, .7, 11]); });
       lum.push([PX, 6, PZ, 1, .82, .38, 56]); flaque(PX, PZ, 25 * KV, CHAUD);
-      // le panneau « 2027 ? » en grosses ampoules, derrière la voiture
+      // le panneau lumineux en grosses ampoules, derrière la voiture
       const P = new Geo(), F7 = { "2": "01110100010000100110010001000011111", "0": "01110100011001110101110011000101110", "7": "11111000010001000100010000100001000" };
       P.boite(-22.5, 0, 0, .9, 16, .9, ORA2); P.boite(22.5, 0, 0, .9, 16, .9, ORA2); P.boite(0, 5, -.3, 45, 10.6, .5, v("#B8222C"), .2); P.boite(0, 15.6, -.3, 46, .7, 1.1, ORA, .55); P.boite(0, 4.4, -.3, 46, .5, 1.1, ORA, .55);
-      { const mot = ["2", "0", "2", "7", " ", "?"], px = 1.32, larg = mot.reduce((s, c) => s + (c === " " ? 2 : 6), 0) - 1; let cx = -larg / 2 * px;
-        mot.forEach(c => { if (c === " ") { cx += 2 * px; return; } const m = F7[c];
-          if (c === "?") { const qx = cx + 2.5 * px, P2 = [], RO = v("#FF4FA0"); for (let q = 0; q <= 10; q++) { const a = PI * 1.05 - q / 10 * PI * 1.45; P2.push([qx + Math.cos(a) * 2.4, 12.4 + Math.sin(a) * 2.4, .7]); } P2.push([qx + .2, 9.2, .7]); P2.push([qx, 8.5, .7]);
-            tube(P, P2, .85, RO, 1); P.boule(qx, 6.5, .7, 1.25, RO, 1, 1, true); cx += 6 * px; return; }
-          // v16.89 · chiffres PLEINS lumineux (pavés jointifs, liseré doré) : lisibles de loin, plus de nuage de perles
-          for (let q = 0; q < 35; q++) if (m[q] === "1") { const x = cx + (q % 5 + .5) * px, y = 5.6 + (6 - Math.floor(q / 5)) * px, h = px * .5, e = px * .62;
-            P.quad([x - e, y - e, .02], [x + e, y - e, .02], [x + e, y + e, .02], [x - e, y + e, .02], ORA2, .55, [0, 0, 1]); P.quad([x - h, y - h, .09], [x + h, y - h, .09], [x + h, y + h, .09], [x - h, y + h, .09], v("#FFF6CC"), 1, [0, 0, 1]); } cx += 6 * px; }); }
+      // v17.10 (Théo) · plus de « 2027 ? » : une grande étoile d'ampoules entre deux flocons (motif sans texte, lisible de loin)
+      { const pav = (x, y, px) => { const h = px * .5, e = px * .62; P.quad([x - e, y - e, .02], [x + e, y - e, .02], [x + e, y + e, .02], [x - e, y + e, .02], ORA2, .55, [0, 0, 1]); P.quad([x - h, y - h, .09], [x + h, y - h, .09], [x + h, y + h, .09], [x - h, y + h, .09], v("#FFF6CC"), 1, [0, 0, 1]); };
+        const ligne = (x0, y0, x1, y1, px) => { const n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0) / (px * 1.25))); for (let q = 0; q < n; q++) pav(x0 + (x1 - x0) * q / n, y0 + (y1 - y0) * q / n, px); };
+        const st = []; for (let k = 0; k < 10; k++) { const a = PI / 2 + k * PI / 5, r = k % 2 ? 2.3 : 5.2; st.push([Math.cos(a) * r, 10.2 + Math.sin(a) * r]); }
+        st.forEach((p, k) => { const q = st[(k + 1) % 10]; ligne(p[0], p[1], q[0], q[1], .95); }); pav(0, 10.2, 1.3);
+        [-1, 1].forEach(sd => { const fx = sd * 14, fy = 10.2; for (let k = 0; k < 6; k++) { const a = k * PI / 3, c = Math.cos(a), sn = Math.sin(a); ligne(fx, fy, fx + c * 3.6, fy + sn * 3.6, .8);
+          pav(fx + c * 2.4 - sn * .9, fy + sn * 2.4 + c * .9, .6); pav(fx + c * 2.4 + sn * .9, fy + sn * 2.4 - c * .9, .6); } pav(fx, fy, 1); }); }
       g.poser(P, 0, 0, -23, 0, 1); [-1, 1].forEach(sd => { const m = W2(sd * 23, -24); lum.push([m[0], 16.5 * KV, m[1], 1, .9, .55, 9]); });   // deux petits halos aux coins hauts du panneau (pas devant les chiffres)
       // deux sapins-sentinelles derrière le panneau
       sapin(g, -27.5, 0, -27, 1.25, 10, true); sapin(g, 27.5, 0, -27, 1.25, 10, true);
@@ -5491,12 +5482,12 @@
     [C[0], C[3], C[6]].forEach(c => lum.push([c.avant[0], 3, c.avant[1], 1, .82, .45, 22])); C.forEach(c => flaque(c.avant[0], c.avant[1], 9, CHAUD, .045));
     fumee(C[3].avant[0], 2.6, C[3].avant[1] + .5, .45, 3.5, 2, 3);
 
-    // ================= 3. LA GRANDE ROUE blanche et rouge (au fond du marché) : une jante épaisse, 8 rayons, nacelles-bulles aux 5 couleurs, moyeu « 2027 » fixe et lisible =================
+    // ================= 3. LA GRANDE ROUE blanche et rouge (au fond du marché) : une jante épaisse, 8 rayons, nacelles-bulles aux 5 couleurs, moyeu en flocon (v17.10) =================
     { const WX = 152, WZ = 170, RW = 30, HY = 41, cap = PI / 2 - .3, per = 50, n = 8, g = new Geo();
       g.boite(0, 0, 0, 36, 1.2, 15, ROUGE2, .1); g.boite(0, 1.2, 0, 34, .4, 13, OR, .3);
       [-1, 1].forEach(sd => { [-1, 1].forEach(e => branche(g, [e * 13, 1.6, sd * 5.4], [0, HY, sd * 2.6], 1.1, .75, BLANC, .15)); branche(g, [-8.6, 14, sd * 4.65], [8.6, 14, sd * 4.65], .55, .55, ROUGE, .2); });
       branche(g, [0, HY, -3.6], [0, HY, 3.6], 1.3, 1.3, OR2, .3);
-      [1, -1].forEach(sd => { disque(g, 0, HY, sd * 3.7, 6.2, 20, OR, .45, sd > 0 ? 0 : PI); disque(g, 0, HY, sd * 3.8, 5.2, 20, BLANC, .45, sd > 0 ? 0 : PI); ecrire(g, "2027", 0, HY - 1.4, sd * 3.9, sd > 0 ? 0 : PI, .62, ROUGE, .7); });
+      [1, -1].forEach(sd => { disque(g, 0, HY, sd * 3.7, 6.2, 20, OR, .45, sd > 0 ? 0 : PI); disque(g, 0, HY, sd * 3.8, 5.2, 20, BLANC, .45, sd > 0 ? 0 : PI); for (let k = 0; k < 6; k++) { const a = k * PI / 3; branche(g, [0, HY, sd * 3.95], [Math.cos(a) * 3.6, HY + Math.sin(a) * 3.6, sd * 3.95], .32, .2, ROUGE, .7); } g.boule(0, HY, sd * 3.95, .9, ROUGE, .7, 1); });   // v17.10 : plus de « 2027 » au moyeu
       sol.poser(g, WX, 0, WZ, cap, 1); prendre(WX, WZ, 22);
       const w = new Geo(); [-2, 2].forEach(z => tube(w, cercle(RW, 32, 0, 0).map(p => [p[0], p[1], z]), 1.05, ROUGE, .2));
       for (let k = 0; k < 8; k++) { const t = k / 8 * TAU; [-2, 2].forEach(z => branche(w, [Math.cos(t) * 6.4, Math.sin(t) * 6.4, z], [Math.cos(t) * RW, Math.sin(t) * RW, z], .6, .42, BLANC, .2)); }
@@ -6346,7 +6337,8 @@
     const out = {};
     // V16.18 : le décalage de la grille s'efface en course (le vainqueur franchit vraiment la ligne) ; ex æquo = même rang
     noms.forEach(n => { const k = Math.max(0, ordre.indexOf(n)), f = clamp(pts[n] / tour, 0, 1), dec = 4 + (grille && grille.indexOf(n) >= 0 ? grille.indexOf(n) * 9 : 0);
-      out[n] = { s: (pts[n] / tour) * L - dec * (1 - f), base: (k - (nb - 1) / 2) * pas, rang: 1 + noms.filter(m => pts[m] > pts[n] + 1e-9).length }; });
+      const gi = grille ? grille.indexOf(n) : -1;   // v17.10 : sur la grille, en quinconce comme en F1 (une voiture à gauche, la suivante à droite)
+      out[n] = { s: (pts[n] / tour) * L - dec * (1 - f), base: gi >= 0 ? (gi % 2 ? 1 : -1) * Math.min(2.6, pas * .75) : (k - (nb - 1) / 2) * pas, rang: 1 + noms.filter(m => pts[m] > pts[n] + 1e-9).length }; });
     noms.forEach(n => { const a = out[n]; let p = 0;
       noms.forEach(m => { if (m === n) return; let d = Math.abs(out[m].s - a.s) % L; d = Math.min(d, L - d); p = Math.max(p, clamp(1 - (d - 6) / 22, 0, 1)); });
       a.voie = a.base * (.3 + .7 * p * p * (3 - 2 * p)); });
@@ -6761,7 +6753,7 @@
         maj(e, c, enCourse) { if (!eteint) viser(O.dernier(c)); if (enCourse && !fait && e >= .985 && x.anime) anneau(O.premier(c)); }
       };
     },
-    /* décembre · la bâche « 2027 ? » s'envole et retombe sur la voiture du vainqueur, puis se lève : révélation */
+    /* décembre · la bâche dorée s'envole et retombe sur la voiture du vainqueur, puis se lève : révélation */
     garage(x) {
       const O = outilsEv(x); let fait = false;
       // V16.45 : la vraie bâche peinte (peindreGarage5) : une monoplace bâchée, avant vers la droite, sol à y = 0, centre (466, 552), échelle .95
@@ -7060,7 +7052,35 @@
     }
     function ecran(n) { const v = V[n]; if (!v) return null; const ctm = svg.getScreenCTM(), r = boite.getBoundingClientRect(); if (!ctm) return null; const p = svg.createSVGPoint(); p.x = v.x; p.y = v.y - 9 * k; const q = p.matrixTransform(ctm); return { x: q.x - r.left, y: q.y - r.top, vis: true }; }
     function ecranMonde(s, lat) { const ctm = svg.getScreenCTM(), r = boite.getBoundingClientRect(); if (!ctm) return null; const t = T.a(s, lat || 0), p = svg.createSVGPoint(); p.x = t.x; p.y = t.z; const q = p.matrixTransform(ctm); return { x: q.x - r.left, y: q.y - r.top, vis: true }; }
-    svg.addEventListener("click", ev => { const r = boite.getBoundingClientRect(); let best = null, bd = 30; Object.keys(V).forEach(n => { const e = ecran(n); if (!e) return; const dd = Math.hypot(e.x + r.left - ev.clientX, e.y + 10 + r.top - ev.clientY); if (dd < bd) { bd = dd; best = n; } }); if (best && o.toucher) o.toucher(best); });
+    /* v17.10 (Théo) · en plein écran, la carte 2D se zoome (pincer, molette, double-toucher) et se déplace (glisser), avec un bouton « Recentrer ».
+       On change le viewBox du SVG : les voitures, les têtes et les bulles (placées par getScreenCTM) suivent sans rien recalculer d'autre. */
+    const ZM = { on: false, z: 1, c: [minx + w / 2, minz + h / 2], pts: new Map(), pinch: null, glisse: false, tap: 0, tapX: 0, tapY: 0, raf: 0 };
+    const rec = document.createElement("button"); rec.type = "button"; rec.className = "p2-recentre"; rec.hidden = true; rec.innerHTML = "⌖ Recentrer"; boite.appendChild(rec);
+    const echelle = () => { const r = boite.getBoundingClientRect(); return { r, s: Math.min(r.width / w, r.height / h) * ZM.z }; };
+    const versMonde = (px, py) => { const { r, s } = echelle(); return [ZM.c[0] + (px - r.left - r.width / 2) / s, ZM.c[1] + (py - r.top - r.height / 2) / s]; };
+    function appliquerVB() { ZM.raf = 0; const z = ZM.z = clamp(ZM.z, 1, 5), vw = w / z, vh = h / z;
+      ZM.c = [clamp(ZM.c[0], minx + vw / 2, minx + w - vw / 2), clamp(ZM.c[1], minz + vh / 2, minz + h - vh / 2)];
+      svg.setAttribute("viewBox", (ZM.c[0] - vw / 2).toFixed(1) + " " + (ZM.c[1] - vh / 2).toFixed(1) + " " + vw.toFixed(1) + " " + vh.toFixed(1)); rec.hidden = z < 1.02; if (o.image) o.image(api); }
+    const majVB = () => { if (!ZM.raf) ZM.raf = requestAnimationFrame(appliquerVB); };
+    /** zoome d'un facteur f en gardant le point (px, py) de l'écran sous le doigt */
+    const zoomer = (f, px, py) => { const W0 = versMonde(px, py), { r } = echelle(), z = clamp(ZM.z * f, 1, 5), s = Math.min(r.width / w, r.height / h) * z;
+      ZM.z = z; ZM.c = [W0[0] - (px - r.left - r.width / 2) / s, W0[1] - (py - r.top - r.height / 2) / s]; majVB(); };
+    const recentrer = () => { ZM.z = 1; ZM.c = [minx + w / 2, minz + h / 2]; majVB(); };
+    rec.addEventListener("click", ev => { ev.stopPropagation(); recentrer(); });
+    svg.addEventListener("pointerdown", ev => { if (!ZM.on) return; ZM.pts.set(ev.pointerId, { x: ev.clientX, y: ev.clientY, x0: ev.clientX, y0: ev.clientY }); try { svg.setPointerCapture(ev.pointerId); } catch (e) { }
+      if (ZM.pts.size === 1) ZM.glisse = false;
+      if (ZM.pts.size === 2) { const [a, b] = [...ZM.pts.values()]; ZM.pinch = { d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: ZM.z, m: versMonde((a.x + b.x) / 2, (a.y + b.y) / 2) }; ZM.glisse = true; } });
+    svg.addEventListener("pointermove", ev => { if (!ZM.on || !ZM.pts.has(ev.pointerId)) return; const p = ZM.pts.get(ev.pointerId), dx = ev.clientX - p.x, dy = ev.clientY - p.y; p.x = ev.clientX; p.y = ev.clientY;
+      if (Math.hypot(p.x - p.x0, p.y - p.y0) > 6) ZM.glisse = true;
+      if (ZM.pts.size >= 2 && ZM.pinch) { const [a, b] = [...ZM.pts.values()], { r } = echelle(), z = clamp(ZM.pinch.z0 * Math.hypot(a.x - b.x, a.y - b.y) / ZM.pinch.d0, 1, 5), s = Math.min(r.width / w, r.height / h) * z, mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        ZM.z = z; ZM.c = [ZM.pinch.m[0] - (mx - r.left - r.width / 2) / s, ZM.pinch.m[1] - (my - r.top - r.height / 2) / s]; majVB(); }
+      else if (ZM.z > 1.02) { const { s } = echelle(); ZM.c = [ZM.c[0] - dx / s, ZM.c[1] - dy / s]; majVB(); } });
+    const lacher = ev => { if (!ZM.pts.has(ev.pointerId)) return; const p = ZM.pts.get(ev.pointerId); ZM.pts.delete(ev.pointerId); if (ZM.pts.size < 2) ZM.pinch = null;
+      if (ev.type !== "pointerup" || ZM.glisse || ZM.pts.size) return;
+      const t = performance.now(); if (t - ZM.tap < 320 && Math.hypot(p.x - ZM.tapX, p.y - ZM.tapY) < 30) { ZM.tap = 0; ZM.glisse = true; if (ZM.z > 1.05) recentrer(); else zoomer(2.5, p.x, p.y); } else { ZM.tap = t; ZM.tapX = p.x; ZM.tapY = p.y; } };
+    ["pointerup", "pointercancel"].forEach(t => svg.addEventListener(t, lacher));
+    svg.addEventListener("wheel", ev => { if (!ZM.on) return; ev.preventDefault(); zoomer(Math.exp(-ev.deltaY * .0015), ev.clientX, ev.clientY); }, { passive: false });
+    svg.addEventListener("click", ev => { if (ZM.on && ZM.glisse) return; const r = boite.getBoundingClientRect(); let best = null, bd = 30; Object.keys(V).forEach(n => { const e = ecran(n); if (!e) return; const dd = Math.hypot(e.x + r.left - ev.clientX, e.y + 10 + r.top - ev.clientY); if (dd < bd) { bd = dd; best = n; } }); if (best && o.toucher) o.toucher(best); });
     let taille = { w: 1, h: 1 };
     const ro = window.ResizeObserver ? new ResizeObserver(() => { const r = boite.getBoundingClientRect(); taille = { w: r.width, h: r.height }; if (o.image) o.image(api); }) : null; if (ro) ro.observe(boite);
     const api = {
@@ -7070,7 +7090,9 @@
       jouer(de, a, duree, fin) { if (!ANIM()) { api.placer(a); if (fin) fin(); return; } I.pts = Object.assign({}, de); poser(); I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: performance.now(), duree: Math.min(duree || 2600, 3200), fin }; if (!raf) raf = requestAnimationFrame(boucle); },
       jouerScenario(scen, duree, fin) { if (EV && EV.raz) EV.raz(); if (!ANIM()) { api.placer(scen(1)); if (fin) fin(); return; } I.e = 0; I.pts = scen(0); poser(); I.anim = { scen, de: scen(0), a: scen(1), t0: performance.now(), duree, fin }; if (!raf) raf = requestAnimationFrame(boucle); },
       camera() { }, focus() { }, voitures() { }, survol(d, fin) { if (fin) fin(); }, arreterSurvol() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); if (o.image) o.image(api); }, reveiller() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); },   // V16.16 : la course reprend si la piste a été détachée
-      detruire() { if (raf) cancelAnimationFrame(raf); if (ro) ro.disconnect(); svg.remove(); }
+      /** v17.10 · zoom et déplacement de la carte (plein écran) : true pour l'activer, false pour l'arrêter et recentrer */
+      zoom2D(b) { ZM.on = !!b; svg.style.touchAction = b ? "none" : ""; svg.classList.toggle("zoomable", ZM.on); if (!b) recentrer(); },
+      detruire() { if (raf) cancelAnimationFrame(raf); if (ZM.raf) cancelAnimationFrame(ZM.raf); if (ro) ro.disconnect(); svg.remove(); rec.remove(); }
     };
     poser();
     return api;

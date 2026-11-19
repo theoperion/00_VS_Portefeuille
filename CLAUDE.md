@@ -10,7 +10,7 @@ Samedi 21/11 : bande-annonce + MP4 (WhatsApp) qui NE dévoilent PAS les 12 carte
 
 ## Course 2D/3D
 ✅ v17.6 (Théo a validé) : 3 vues Carte/Visite (sans voitures)/Hélico (poursuite `poursuite` dans piste.js) + plein écran paysage, activées par `VUES_V2 = ["abudhabi"]` (js/4-grandprix.js) ; ajouter les autres circuits quand leur 3D sera refaite. À tester par Théo sur Firefox Android (rotation, fluidité, retour).
-À FAIRE ENSUITE :
+✅ v17.10 FAIT (course écartée, grille chauffe = novembre, janvier = dé, zoom 2D plein écran, plus de « 2027 »/« Noël »). Ancienne note :
 Théo (19/11) : au 1er tour les voitures se suivent en file et les têtes des pilotes ne suivent plus leur voiture (alignées). Proposition à construire :
 tour 1 = voitures ÉCARTÉES selon le classement du mois d'avant (écarts réels, pas de file), têtes collées à leur voiture ; tour 2 = dépassements jusqu'au résultat du mois clos. Faire valider par le Conseil (simple, lisible) avant de publier.
 
@@ -61,7 +61,7 @@ Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles 
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **17.9**.
+  hors connexion `sw.js`). Version actuelle : **17.10**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
