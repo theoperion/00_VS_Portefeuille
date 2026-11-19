@@ -682,7 +682,7 @@ function brancherGP(v, y) {
     const boite = document.createElement("div"); boite.className = "gp-rendu"; scene.appendChild(boite);
     const focus = ETAT.gpFocus && D.personnes.some(p => p.nom === ETAT.gpFocus) ? ETAT.gpFocus : (qui && D.personnes.some(p => p.nom === qui) ? qui : D.personnes[0].nom);
     const api = Piste.monter(boite, { circuit: ci, meteo: met, ambiance: amb, mode: deux ? "2d" : "3d", camera: camGP(), tour: TOUR_GP, voitures: vs, pts: et.pts, focus,
-      atoutCol: at ? "#3DDC97" : null, piegeCol: null, accent: couleurAccent(), titre: GPS[ci].gp + ", " + GPS[ci].ville, portrait: n => avatar(n),
+      atoutCol: at ? "#3DDC97" : null, piegeCol: null, accent: couleurAccent(), titre: GPS[ci].gp + ", " + GPS[ci].ville, portrait: n => avatar(n, Object.assign({}, equipDe(n), { skin: (Piste.TRACES[ci] || {}).peint })),   // V16.35 : sa tête + l'accessoire du thème
       image: etiquettesGP, toucher: n => { ETAT.gpFocus = n; garder(); if (GP_INST) GP_INST.api.focus(n); if (camGP() === "helico" && GP_INST && GP_INST.api.type === "3d") { ETAT.gpCam = "tv"; garder(); GP_INST.api.camera("tv"); majBoutonsGP(); } toast("🎥 La caméra suit " + n + "."); },
       perdu: () => { if (GP_INST && GP_INST.boite === boite) GP_INST = null; } });
     GP_INST = { cle, api, boite };

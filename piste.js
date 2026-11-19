@@ -1338,8 +1338,8 @@
       const angs = []; pts.forEach(p => { let t = Math.atan2(p[1] - oeilY, p[0] - oeilX) * 180 / PI; if (angs.length) { const pr = angs[angs.length - 1]; while (t - pr > 180) t -= 360; while (t - pr < -180) t += 360; } angs.push(t); });
       const kt = pts.map((_, q) => q === n ? "1" : q === 0 ? "0" : (q / n).toFixed(4)).join(";"), pupille = pts.map(p => { const d = Math.hypot(p[0] - oeilX, p[1] - oeilY) || 1; return f((p[0] - oeilX) / d * 9) + " " + f((p[1] - oeilY) / d * 3); }).join(";");
       a.unshift(`<radialGradient id="an-faisceau" gradientUnits="userSpaceOnUse" cx="${f(oeilX)}" cy="${f(oeilY)}" r="700"><stop offset="0" stop-color="#FFD890" stop-opacity=".8"/><stop offset=".55" stop-color="#FF9A3A" stop-opacity=".28"/><stop offset="1" stop-color="#FF7A2A" stop-opacity="0"/></radialGradient>`);
-      a.push(`<path d="M${f(oeilX)} ${f(oeilY - 3)}L${f(oeilX + 900)} ${f(oeilY - 46)}L${f(oeilX + 900)} ${f(oeilY + 46)}L${f(oeilX)} ${f(oeilY + 3)}Z" fill="url(#an-faisceau)"${K.anime ? "" : ` transform="rotate(${f(angs[0])} ${f(oeilX)} ${f(oeilY)})"`}>${an(`<animateTransform attributeName="transform" type="rotate" values="${angs.map(t => f(t) + " " + f(oeilX) + " " + f(oeilY)).join(";")}" keyTimes="${kt}" dur="${DUR}s" begin="0s" repeatCount="indefinite"/>`)}</path>`);
-      a.push(`<g${K.anime ? "" : ` transform="translate(${pupille.split(";")[0]})"`}>${an(`<animateTransform attributeName="transform" type="translate" values="${pupille}" keyTimes="${kt}" dur="${DUR}s" repeatCount="indefinite"/>`)}<ellipse cx="${f(oeilX)}" cy="${f(oeilY)}" rx="2.6" ry="9" fill="#120404"/></g>`);
+      a.push(`<path class="an-suit" d="M${f(oeilX)} ${f(oeilY - 3)}L${f(oeilX + 900)} ${f(oeilY - 46)}L${f(oeilX + 900)} ${f(oeilY + 46)}L${f(oeilX)} ${f(oeilY + 3)}Z" fill="url(#an-faisceau)"${K.anime ? "" : ` transform="rotate(${f(angs[0])} ${f(oeilX)} ${f(oeilY)})"`}>${an(`<animateTransform attributeName="transform" type="rotate" values="${angs.map(t => f(t) + " " + f(oeilX) + " " + f(oeilY)).join(";")}" keyTimes="${kt}" dur="${DUR}s" begin="0s" repeatCount="indefinite"/>`)}</path>`);
+      a.push(`<g class="an-suit"${K.anime ? "" : ` transform="translate(${pupille.split(";")[0]})"`}>${an(`<animateTransform attributeName="transform" type="translate" values="${pupille}" keyTimes="${kt}" dur="${DUR}s" repeatCount="indefinite"/>`)}<ellipse cx="${f(oeilX)}" cy="${f(oeilY)}" rx="2.6" ry="9" fill="#120404"/></g>`);
       bulle(oeilX - 70, oeilY - 30, "Un anneau pour les gouverner…", 13, 7); }
     // les marais des Morts : flaques et feux follets entre la route et le bord de la carte
     { const [x, y] = pres(600, 690, 30, 40, .3); for (let k = 0; k < 9; k++) s.push(`<ellipse cx="${f(x - 60 + r() * 120)}" cy="${f(y - 14 + r() * 26)}" rx="${f(8 + r() * 12)}" ry="${f(3 + r() * 3)}" fill="#2A3A34" stroke="#5A7A6A" stroke-width=".6"/>`); for (let k = 0; k < 12; k++) { const u = x - 64 + r() * 128, v = y - 16 + r() * 30; s.push(`<path d="M${f(u)} ${f(v)}l-2 -6M${f(u)} ${f(v)}l1 -7M${f(u)} ${f(v)}l3 -5" stroke="#6A7A5A" stroke-width=".8"/>`); }
@@ -1368,7 +1368,7 @@
     K.depart();
     // les 4 pilotes : 4 voyageurs encapuchonnés aux couleurs des 4 (la communauté sur la route)
     COULEURS_J.forEach((c, k) => a.push(K.surPiste(.05 + DEB[k] / DUR, `<g transform="scale(1.15)"><ellipse cx="-1" cy="1" rx="7" ry="5" fill="#000" opacity=".3"/><path d="M-7 -5Q-9 0 -7 5L4 3Q6 0 4 -3Z" fill="${c}" stroke="#1A1410" stroke-width=".9"/><circle cx="3" cy="0" r="3.4" fill="${mixHex(c, "#000000", .35)}" stroke="#1A1410" stroke-width=".7"/><circle cx="4.6" cy="0" r="1.5" fill="${PEAU}"/><path d="M-1 -4l-3 -3M-1 4l-3 3" stroke="#1A1410" stroke-width="1"/></g>`, DUR, DEB[k])));
-        const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#an-par)"/>`, "#5A3A1A", .1); RES.portraits = PORTR; return RES;
+        const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#an-par)"/>`, "#5A3A1A", .1); RES.portraits = PORTR; RES.lieux = { destin: [dX, dY - 44], oeil: [oeilX, oeilY] }; return RES;
   }
   /* ---------- Décembre · Le Garage des rêves (tour de chauffe) : l'immense atelier vu du dessus — v3 ---------- */
   function peindreGarage3(T, Z, def) {
@@ -4099,6 +4099,87 @@
   const CARTES_P = {};   // cartes peintes, calculées une fois par circuit
   /** V16.17 · fond peint « cuit » en WebP (outils-tests/cuire-cartes.js) : image fixe, bien plus légère à afficher que le SVG */
   const carteCuite = k => { const c = self.CARTES_CUITES; return c && c[k] ? "img/cartes/" + k + ".webp?v=" + c[k] : null; };
+  /* ---------- V16.35 · Événements en pleine course (carte 2D) ----------
+     Chaque thème peut faire vivre la carte pendant la course, sans jamais toucher au résultat :
+     maj(e, c, enCourse) est appelé à chaque image (e = avancement 0→1, c = { nom: { s, rang } }) ;
+     permuter(e, pts) peut échanger un instant deux voitures (retour à la normale bien avant l'arrivée). Repère : coordonnées de la carte peinte (u). */
+  function outilsEv(x) {
+    const f = v => (+v).toFixed(1), NS = "http://www.w3.org/2000/svg";
+    const el = (html, parent) => { const g = document.createElementNS(NS, "g"); g.innerHTML = html; (parent || x.g).appendChild(g); return g; };
+    const anim = (dur, fn, fin) => { const t0 = performance.now(); const pas = now => { if (!x.svg.isConnected) return; const p = Math.min(1, (now - t0) / dur); fn(p); if (p < 1) requestAnimationFrame(pas); else if (fin) fin(); }; requestAnimationFrame(pas); };
+    const voiture = n => { const v = x.V[n]; return v ? [v.x * x.KU, v.y * x.KU] : null; };
+    const bulle = (u, v, txt, t) => { t = t || 26; const w = txt.length * t * .54 + t * 1.4, h = t * 1.7; u = Math.max(w / 2 + 8, Math.min(1072 - w / 2, u)); v = Math.max(h / 2 + 8, Math.min(712 - h / 2, v));
+      return el('<g transform="translate(' + f(u) + " " + f(v) + ')"><rect x="' + f(-w / 2) + '" y="' + f(-h / 2) + '" width="' + f(w) + '" height="' + f(h) + '" rx="' + f(h / 2) + '" fill="#14161C" fill-opacity=".86" stroke="#FFD86B" stroke-width="2.5"/><text y="' + f(t * .36) + '" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="' + t + '" fill="#FFF3C8">' + txt + "</text></g>"); };
+    const premier = c => Object.keys(c).sort((a, b) => c[a].rang - c[b].rang)[0], dernier = c => Object.keys(c).sort((a, b) => c[b].rang - c[a].rang || c[a].s - c[b].s)[0];
+    return { f, el, anim, voiture, bulle, premier, dernier };
+  }
+  const EVENEMENTS = {
+    /* avril · l'Œil suit la voiture du DERNIER ; quand le vainqueur passe la ligne, l'anneau s'envole et tombe dans la lave */
+    anneau(x) {
+      const O = outilsEv(x), L = x.lieux, oe = L.oeil, de = L.destin; if (!oe) return null;
+      x.svg.querySelectorAll(".an-suit").forEach(n => n.style.display = "none");
+      const fx = O.el('<defs><linearGradient id="ev-fx"><stop offset="0" stop-color="#FFE7A0" stop-opacity=".95"/><stop offset=".6" stop-color="#FF9A3A" stop-opacity=".5"/><stop offset="1" stop-color="#FF7A2A" stop-opacity=".08"/></linearGradient></defs><path d="M0 -4L900 -70L900 70L0 4Z" fill="url(#ev-fx)" style="mix-blend-mode:screen"/>'), pu = O.el('<ellipse rx="2.6" ry="9" fill="#120302"/>');
+      let fait = false, eteint = false;
+      const viser = n => { const p = O.voiture(n); if (!p) return; const a = Math.atan2(p[1] - oe[1], p[0] - oe[0]), d = Math.hypot(p[0] - oe[0], p[1] - oe[1]) || 1;
+        fx.setAttribute("transform", "translate(" + O.f(oe[0]) + " " + O.f(oe[1]) + ") rotate(" + O.f(a * 180 / Math.PI) + ") scale(" + O.f(Math.max(.2, d / 900 * 1.15)) + " 1)");
+        pu.setAttribute("transform", "translate(" + O.f(oe[0] + (p[0] - oe[0]) / d * 9) + " " + O.f(oe[1] + (p[1] - oe[1]) / d * 3) + ")"); };
+      const anneau = vainq => { const p = O.voiture(vainq); if (!p || !de) return; fait = true;
+        const g = O.el('<g><circle r="30" fill="#FFD86B" opacity=".35"/><circle r="15" fill="none" stroke="#F7C948" stroke-width="6"/><circle r="15" fill="none" stroke="#FFF6C8" stroke-width="1.6" stroke-dasharray="5 7"/></g>');
+        const b = O.bulle(p[0], p[1] - 70, "Le Précieux…", 24);
+        O.anim(2200, q => { const k = q < .5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2, u = p[0] + (de[0] - p[0]) * k, v = p[1] + (de[1] - p[1]) * k - Math.sin(q * Math.PI) * 180;
+          g.setAttribute("transform", "translate(" + O.f(u) + " " + O.f(v) + ") rotate(" + O.f(q * 720) + ") scale(" + O.f(1 - q * .55) + ")"); if (q > .3) b.setAttribute("opacity", O.f(Math.max(0, 1 - (q - .3) * 3))); },
+        () => { g.remove(); b.remove(); const sp = O.el('<g transform="translate(' + O.f(de[0]) + " " + O.f(de[1]) + ')"><circle r="10" fill="url(#an-lave)"/><circle r="10" fill="none" stroke="#FFB02A" stroke-width="5"/></g>'), c = sp.firstChild.children;
+          const t = O.bulle(de[0], de[1] - 90, "L’anneau est détruit !", 26);
+          O.anim(1600, q => { c[0].setAttribute("r", O.f(10 + q * 150)); c[0].setAttribute("opacity", O.f(1 - q)); c[1].setAttribute("r", O.f(10 + q * 110)); c[1].setAttribute("opacity", O.f(1 - q)); if (q > .2) { fx.setAttribute("opacity", O.f(Math.max(0, 1 - (q - .2) * 2))); pu.setAttribute("opacity", O.f(Math.max(0, 1 - (q - .2) * 2))); } },
+            () => { sp.remove(); eteint = true; setTimeout(() => t.remove(), 1800); }); }); };
+      return {
+        raz() { fait = false; eteint = false; fx.removeAttribute("opacity"); pu.removeAttribute("opacity"); },
+        maj(e, c, enCourse) { if (!eteint) viser(O.dernier(c)); if (enCourse && !fait && e >= .985 && x.anime) anneau(O.premier(c)); }
+      };
+    },
+    /* décembre · la bâche « 2027 ? » s'envole et retombe sur la voiture du vainqueur, puis se lève : révélation */
+    garage(x) {
+      const O = outilsEv(x); let fait = false;
+      const bache = n => { const p = O.voiture(n); if (!p) return; fait = true;
+        const g = O.el('<g><path d="M-46 -30C-30 -44 30 -44 46 -30L52 26C20 34 -20 34 -52 26Z" fill="#8E96A3" stroke="#3B4048" stroke-width="2.5"/><path d="M-30 -32C-20 0 -24 20 -30 30M0 -38V32M30 -32C20 0 24 20 30 30" stroke="#6C737E" stroke-width="2" fill="none"/><text y="8" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="22" fill="#F4F6F8">2027 ?</text></g>');
+        O.anim(900, q => { const k = 1 - Math.pow(1 - q, 3); g.setAttribute("transform", "translate(" + O.f(p[0] + (1 - k) * 140) + " " + O.f(p[1] - (1 - k) * 260) + ") rotate(" + O.f((1 - k) * -40) + ")"); }, () => {
+          const t = O.bulle(p[0], p[1] - 70, "Et la voiture de l’année est…", 22);
+          setTimeout(() => { const eclat = O.el('<g transform="translate(' + O.f(p[0]) + " " + O.f(p[1]) + ')">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(i => '<path d="M0 0L' + O.f(Math.cos(i * Math.PI / 6) * 90) + " " + O.f(Math.sin(i * Math.PI / 6) * 90) + '" stroke="' + ["#FFD86B", "#4C9AFF", "#FF6FA8", "#2BB6A3"][i % 4] + '" stroke-width="5" stroke-linecap="round"/>').join("") + "</g>");
+            O.anim(1100, q => { g.setAttribute("transform", "translate(" + O.f(p[0] - q * 60) + " " + O.f(p[1] - q * 320) + ") rotate(" + O.f(q * -70) + ") scale(" + O.f(1 + q * .4) + ")"); g.setAttribute("opacity", O.f(1 - q)); eclat.setAttribute("opacity", O.f(1 - q)); eclat.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1]) + ") scale(" + O.f(.3 + q) + ")"); },
+              () => { g.remove(); eclat.remove(); t.remove(); }); }, 900); }); };
+      return { raz() { fait = false; }, maj(e, c, enCourse) { if (enCourse && !fait && e >= .985 && x.anime) bache(O.premier(c)); } };
+    },
+    /* février · au 2e tour, un escalier pivote en travers de la piste… et s'écarte de justesse devant le leader */
+    chateau(x) {
+      const O = outilsEv(x), T = x.T, L = T.L; let s0 = null, g = null, passe = 0, b = null;
+      const raz = () => { s0 = null; passe = 0; if (g) g.remove(); g = null; if (b) b.remove(); b = null; };
+      return { raz,
+        maj(e, c, enCourse) {
+          if (!enCourse || !x.anime) return; const lead = O.premier(c);
+          if (s0 === null && e >= .5) { s0 = ((c[lead].s + .3 * L) % L + L) % L; const p = T.a(s0, 0), a = Math.atan2(p.tz, p.tx) * 180 / Math.PI;
+            g = O.el('<g transform="translate(' + O.f(p.x * x.KU) + " " + O.f(p.z * x.KU) + ") rotate(" + O.f(a) + ')"><g class="esc">' + '<rect x="-66" y="-30" width="132" height="60" rx="4" fill="#000" opacity=".35" transform="translate(5 6)"/>' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => '<rect x="' + (-66 + i * 12) + '" y="-26" width="12" height="52" fill="' + (i % 2 ? "#8C7A5C" : "#B49E74") + '" stroke="#3A2E1E" stroke-width="1.5"/>').join("") + '<path d="M-68 -28H68M-68 28H68" stroke="#4A3A24" stroke-width="5" stroke-linecap="round"/><circle cx="-68" cy="-28" r="5" fill="#C9A23A"/><circle cx="68" cy="-28" r="5" fill="#C9A23A"/><circle cx="-68" cy="28" r="5" fill="#C9A23A"/><circle cx="68" cy="28" r="5" fill="#C9A23A"/></g></g>');
+            b = O.bulle(p.x * x.KU, p.z * x.KU - 80, "Les escaliers changent de place !", 22); }
+          if (!g) return; const ds = ((s0 - (c[lead].s % L) + L) % L), esc = g.firstChild.firstChild;
+          let ang = 90; if (e < .54) ang = 90 * Math.min(1, (e - .5) / .04);
+          if (ds < .07 * L || passe) { ang = Math.min(ang, 90 * Math.max(0, (ds - .02 * L) / (.05 * L))); if (ds > .5 * L || ds < .02 * L) passe = Math.max(passe, 1); }
+          if (passe) { ang = 0; passe++; g.setAttribute("opacity", O.f(Math.max(0, 1 - passe / 40))); if (b) b.setAttribute("opacity", O.f(Math.max(0, 1 - passe / 25))); }
+          esc.setAttribute("transform", "rotate(" + O.f(ang) + ")");
+        } };
+    },
+    /* mars · « Changement de place ! » : le premier et le dernier échangent leurs places un instant (pour rire, rien ne change à l'arrivée) */
+    terrier(x) {
+      const O = outilsEv(x); let duo = null, b = null;
+      const m = e => e < .3 || e > .44 ? 0 : e < .33 ? (e - .3) / .03 : e > .41 ? (.44 - e) / .03 : 1;
+      return {
+        raz() { duo = null; if (b) b.remove(); b = null; },
+        permuter(e, pts) { if (!x.anime) return; if (!duo && e >= .3 && e < .44) { const n = Object.keys(pts).sort((a, c) => pts[c] - pts[a]); if (n.length > 1) { duo = [n[0], n[n.length - 1]]; b = O.bulle(540, 70, "Changement de place ! ☕", 28); } }
+          if (!duo) return; const k = m(e), a = pts[duo[0]], c = pts[duo[1]]; if (k > 0) { pts[duo[0]] = a + (c - a) * k; pts[duo[1]] = c + (a - c) * k; }
+          if (b && e > .45) { b.remove(); b = null; } },
+        maj() { }
+      };
+    }
+  };
+
   function monter2D(boite, o) {
     const def = TRACES[o.circuit] || TRACES.melbourne, T = echantillonner(def), Z = zones(T), NS = "http://www.w3.org/2000/svg";
     const m = 34, minx = T.cx - T.rx - m, minz = T.cz - T.rz - m, w = T.rx * 2 + 2 * m, h = T.rz * 2 + 2 * m;
@@ -4119,7 +4200,7 @@
       (CP.portraits && o.portrait ? CP.portraits.map(p => { const v = (o.voitures || [])[p.k]; const h = v ? o.portrait(v.nom) : ""; return h ? '<foreignObject x="' + (p.x - p.r) + '" y="' + (p.y - p.r) + '" width="' + 2 * p.r + '" height="' + 2 * p.r + '"><div xmlns="http://www.w3.org/1999/xhtml" class="p2-portrait">' + h + "</div></foreignObject>" : ""; }).join("") : "") + "</g>" +   // v16.31 : les vrais portraits (Mon portrait) dans les cartes qui en prévoient
       zoneTrait(Z.atout, o.atoutCol) + zoneTrait(Z.piege, o.piegeCol) + fleches +
       '<g transform="translate(' + p0.x.toFixed(1) + " " + p0.z.toFixed(1) + ") rotate(" + ang.toFixed(1) + ") scale(" + (k * .9).toFixed(2) + ')"><rect x="-1.6" y="-6" width="3.2" height="12" fill="#fff"/><rect x="-1.6" y="-6" width="1.6" height="2" fill="#111"/><rect x="0" y="-4" width="1.6" height="2" fill="#111"/><rect x="-1.6" y="-2" width="1.6" height="2" fill="#111"/><rect x="0" y="0" width="1.6" height="2" fill="#111"/><rect x="-1.6" y="2" width="1.6" height="2" fill="#111"/><rect x="0" y="4" width="1.6" height="2" fill="#111"/></g>' +
-      '<g class="p2-v"></g>';
+      '<g class="p2-v"></g><g class="p2-ev" transform="scale(' + (1 / KU) + ')"></g>';
     else svg.innerHTML = '<defs><pattern id="p2g" width="' + K(24) + '" height="' + K(24) + '" patternUnits="userSpaceOnUse"><path d="M' + K(24) + ' 0H0V' + K(24) + '" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="' + K(1) + '"/></pattern></defs>' +
       '<rect x="' + (minx - 400) + '" y="' + (minz - 400) + '" width="' + (w + 800) + '" height="' + (h + 800) + '" fill="url(#p2g)"/>' + eau +
       '<path d="' + d + '" fill="none" stroke="' + acc + '" stroke-width="' + K(17) + '" stroke-linejoin="round" opacity=".16"/>' +
@@ -4133,19 +4214,22 @@
     boite.appendChild(svg);
     const gV = svg.querySelector(".p2-v"), V = {};
     (o.voitures || []).forEach(v => { const g = document.createElementNS(NS, "g"); g.setAttribute("class", "p2-car" + (v.moi ? " ici" : "")); g.innerHTML = '<g transform="scale(' + k.toFixed(2) + ')">' + (v.moi ? '<circle r="10.5" fill="none" stroke="' + v.couleur + '" stroke-width="1.6" opacity=".55"/>' : "") + '<circle r="7" fill="' + v.couleur + '" stroke="#fff" stroke-width="1.8"/><text y="3" text-anchor="middle"></text></g>'; gV.appendChild(g); V[v.nom] = { g, t: g.querySelector("text"), x: 0, y: 0 }; });
-    const I = { pts: Object.assign({}, o.pts || {}), anim: null, ordre: (o.voitures || []).map(v => v.nom) };
+    const I = { pts: Object.assign({}, o.pts || {}), anim: null, ordre: (o.voitures || []).map(v => v.nom), e: 1 };
+    const gEv = svg.querySelector(".p2-ev"), EVf = gEv && EVENEMENTS[def.peint];   // V16.35 : événements en course
+    let EV = null; try { EV = EVf ? EVf({ svg, g: gEv, T, KU, V, lieux: (CP && CP.lieux) || {}, anime: ANIM() }) : null; } catch (e) { EV = null; }
     let raf = 0;
     function poser() {
       const c = cibles(I.pts, o.tour || 25, T.L, I.ordre, o.grille);
       Object.entries(c).forEach(([n, t]) => { const v = V[n]; if (!v) return; const p = T.a(t.s, t.voie * .8); v.x = p.x; v.y = p.z; v.g.setAttribute("transform", "translate(" + p.x.toFixed(1) + " " + p.z.toFixed(1) + ")"); v.t.textContent = t.rang; });
       // l'ordre d'affichage : le premier dessus
       Object.entries(c).sort((a, b) => b[1].rang - a[1].rang).forEach(([n]) => V[n] && gV.appendChild(V[n].g));
+      if (EV) try { EV.maj(I.anim ? I.e : 1, c, !!(I.anim && I.anim.scen)); } catch (e) { }
       if (o.image) o.image(api);
     }
     function boucle(now) {
       raf = 0; if (!svg.isConnected) return; const a = I.anim; if (!a) return;
       const e = clamp((now - a.t0) / a.duree, 0, 1), k = e < .5 ? 2 * e * e : 1 - Math.pow(-2 * e + 2, 2) / 2;
-      if (a.scen) I.pts = a.scen(e); else Object.keys(a.a).forEach(n => I.pts[n] = (a.de[n] || 0) + ((a.a[n] || 0) - (a.de[n] || 0)) * k); poser();
+      I.e = e; if (a.scen) { I.pts = a.scen(e); if (EV && EV.permuter) try { EV.permuter(e, I.pts); } catch (er) { } } else Object.keys(a.a).forEach(n => I.pts[n] = (a.de[n] || 0) + ((a.a[n] || 0) - (a.de[n] || 0)) * k); poser();
       if (e < 1) raf = requestAnimationFrame(boucle); else { I.anim = null; if (a.fin) a.fin(); }
     }
     function ecran(n) { const v = V[n]; if (!v) return null; const ctm = svg.getScreenCTM(), r = boite.getBoundingClientRect(); if (!ctm) return null; const p = svg.createSVGPoint(); p.x = v.x; p.y = v.y - 9 * k; const q = p.matrixTransform(ctm); return { x: q.x - r.left, y: q.y - r.top, vis: true }; }
@@ -4158,7 +4242,7 @@
       placer(pts) { I.anim = null; I.pts = Object.assign({}, pts); poser(); },
       regler(x) { Object.assign(o, x); },
       jouer(de, a, duree, fin) { if (!ANIM()) { api.placer(a); if (fin) fin(); return; } I.pts = Object.assign({}, de); poser(); I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: performance.now(), duree: Math.min(duree || 2600, 3200), fin }; if (!raf) raf = requestAnimationFrame(boucle); },
-      jouerScenario(scen, duree, fin) { if (!ANIM()) { api.placer(scen(1)); if (fin) fin(); return; } I.pts = scen(0); poser(); I.anim = { scen, de: scen(0), a: scen(1), t0: performance.now(), duree, fin }; if (!raf) raf = requestAnimationFrame(boucle); },
+      jouerScenario(scen, duree, fin) { if (EV && EV.raz) EV.raz(); if (!ANIM()) { api.placer(scen(1)); if (fin) fin(); return; } I.e = 0; I.pts = scen(0); poser(); I.anim = { scen, de: scen(0), a: scen(1), t0: performance.now(), duree, fin }; if (!raf) raf = requestAnimationFrame(boucle); },
       camera() { }, focus() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); if (o.image) o.image(api); }, reveiller() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); },   // V16.16 : la course reprend si la piste a été détachée
       detruire() { if (raf) cancelAnimationFrame(raf); if (ro) ro.disconnect(); svg.remove(); }
     };

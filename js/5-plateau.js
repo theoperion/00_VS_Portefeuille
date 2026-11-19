@@ -367,8 +367,42 @@ function decodeTete(s) {
   if (v.length === 9) { o.barbeC = o.cheveux; o.forme = 0; } return o;
 }
 function encodeTete(o) { return CHAMPS_TETE.map((c, i) => String(Math.max(0, Math.min(BORNES_TETE[i] - 1, o[c] | 0)))).join(""); }
+/** V16.35 · accessoire du thème, posé sur la tête de chacun UNIQUEMENT dans les cartes 2D des circuits (clé = TRACES[id].peint).
+ *  Chaque entrée renvoie { derriere?, corps?, cache? (masque la frange), dessus } dans le repère 40×40 de svgTete. */
+const SKINS_TETE = {
+  // décembre · Garage : casquette de mécano à la couleur du pilote
+  garage: c => ({ dessus: '<path d="M11.2 11.8C11 6.4 14.8 3.6 20 3.6S29 6.4 28.8 11.8Z" fill="' + c + '"/><path d="M11.2 11.8C11 6.4 14.8 3.6 20 3.6" fill="none" stroke="#fff" stroke-width=".5" opacity=".35"/><path d="M20 3.6V11.8" stroke="rgba(0,0,0,.2)" stroke-width=".5"/><path d="M9.6 11.4C13 13.6 27 13.6 30.4 11.4C30 13.8 27.6 14.6 20 14.6S10 13.8 9.6 11.4Z" fill="#1B1D22"/><circle cx="20" cy="8" r="2.1" fill="#fff"/><path d="M18.9 7.2L20 9.2 21.1 7.2" stroke="' + c + '" stroke-width=".7" fill="none"/>' }),
+  // janvier · Forêt : couronne de feuilles et une luciole
+  foret: () => ({ dessus: [[11.4, 10.6, -50], [13.6, 7.6, -30], [16.6, 5.8, -12], [20, 5.2, 0], [23.4, 5.8, 12], [26.4, 7.6, 30], [28.6, 10.6, 50]].map(([x, y, a], i) => '<ellipse cx="' + x + '" cy="' + y + '" rx="1.6" ry="3" fill="' + (i % 2 ? "#5FA83F" : "#7BC24E") + '" transform="rotate(' + a + " " + x + " " + y + ')"/>').join("") + '<path d="M11 11.6C14 6.6 26 6.6 29 11.6" stroke="#3E7A2A" stroke-width=".7" fill="none"/><circle cx="31" cy="5.4" r="2.6" fill="#FFE77A" opacity=".35"/><circle cx="31" cy="5.4" r="1.1" fill="#FFF6B0"/>' }),
+  // février · Château : chapeau de sorcier pointu étoilé
+  chateau: () => ({ dessus: '<path d="M12.6 10.4C15 7 17.6 1.6 22.4 -1.4C24.6 -2.6 26.6 -1.4 25 .4C24.2 1.6 25.4 6 27.6 10.4Z" fill="#3B2F63"/><path d="M14 9.2C17 8.6 23 8.6 26.6 9.2L26.9 10.4C23 9.9 17 9.9 13.4 10.4Z" fill="#C9A23A"/><ellipse cx="20" cy="10.8" rx="11.2" ry="2" fill="#2C2350"/><path d="M19.6 4.6L20.1 5.8 21.4 5.9 20.4 6.7 20.7 8 19.6 7.3 18.5 8 18.8 6.7 17.8 5.9 19.1 5.8Z" fill="#F5D76E"/><circle cx="23.4" cy="2.6" r=".5" fill="#F5D76E"/>' }),
+  // mars · Pays des merveilles : haut-de-forme du Chapelier (et sa carte 10/6)
+  terrier: () => ({ dessus: '<path d="M13.2 10.4L12.2 .6C16 -.6 24 -.6 27.8 .6L26.8 10.4Z" fill="#4A6B47"/><path d="M12.9 7.4C17 6.6 23 6.6 27.1 7.4L26.9 9.6C23 8.9 17 8.9 13.1 9.6Z" fill="#C8455C"/><ellipse cx="20" cy="10.8" rx="11.4" ry="2.1" fill="#3B5639"/><rect x="22.4" y="3.8" width="3.6" height="4.4" rx=".4" fill="#F7F1E0" transform="rotate(10 24 6)"/><text x="24.2" y="6.9" font-size="1.9" font-family="Georgia,serif" text-anchor="middle" fill="#7A2E2E" transform="rotate(10 24 6)">10/6</text>' }),
+  // avril · Terre de l'Anneau : cape et capuche elfique, broche feuille
+  anneau: () => ({ derriere: '<path d="M7.6 41C6.6 26 9 8.6 20 3.4C31 8.6 33.4 26 32.4 41Z" fill="#344F31"/>', corps: '<path d="M3 41C4 31 11 28.4 20 28.4S36 31 37 41Z" fill="#3F5B3A"/><path d="M20 28.6V41" stroke="rgba(0,0,0,.2)" stroke-width=".8"/><path d="M18.4 31.4C19.6 29.6 21.6 29.8 22 31.2 21.4 33.2 19.6 33.6 18.4 31.4Z" fill="#9BD07A" stroke="#E6E9EA" stroke-width=".45"/>',
+    cache: true, dessus: '<path d="M10.4 19C9.8 9.4 14.2 4.8 20 4.8S30.2 9.4 29.6 19C28.6 12 25.4 8.8 20 8.8S11.4 12 10.4 19Z" fill="#4A6B43"/><path d="M12.4 13C14.4 9.6 25.6 9.6 27.6 13" stroke="#2C4229" stroke-width=".6" fill="none"/>' }),
+  // mai · L'Arène : tenue noire et broche dorée à l'oiseau
+  arene: () => ({ corps: '<path d="M3 41C4 32 11 28.5 20 28.5S36 32 37 41Z" fill="#23252B"/><path d="M15 28.6C16.4 31 23.6 31 25 28.6L25.4 30.4C23.6 32.6 16.4 32.6 14.6 30.4Z" fill="#14161A"/><circle cx="26.2" cy="34.2" r="2.5" fill="none" stroke="#E2B23C" stroke-width=".8"/><path d="M24.4 34.6C25.4 33.4 26.4 33.6 27.6 33C27 34.4 26 35.4 24.4 34.6Z" fill="#E2B23C"/>' }),
+  // juin · Bataille spatiale : casque et combinaison orange de pilote de chasseur
+  etoiles: c => ({ corps: '<path d="M3 41C4 32 11 28.5 20 28.5S36 32 37 41Z" fill="#E2762E"/><path d="M12 30.4L20 36.4 28 30.4M20 36.4V41" stroke="#F1F1EE" stroke-width="2" fill="none"/><rect x="17.2" y="35" width="5.6" height="3.2" rx=".6" fill="#8E9499"/>',
+    cache: true, dessus: '<path d="M10.2 20C9.4 9.6 13.8 4 20 4S30.6 9.6 29.8 20L27.6 20C27.8 13.6 25 10.6 20 10.6S12.2 13.6 12.4 20Z" fill="#EEF0F2"/><path d="M12.2 9.6C14.6 6.4 25.4 6.4 27.8 9.6L27.4 11C25 8.6 15 8.6 12.6 11Z" fill="' + c + '"/><path d="M19 4.2H21V10.4H19Z" fill="' + c + '" opacity=".85"/><circle cx="11.4" cy="17.6" r="1.6" fill="#B7BCC2"/><circle cx="28.6" cy="17.6" r="1.6" fill="#B7BCC2"/>' }),
+  // août · Monde à l'envers : casque audio orange des années 80
+  envers: () => ({ dessus: '<path d="M10.8 17C10.4 7.8 14.6 4.4 20 4.4S29.6 7.8 29.2 17" fill="none" stroke="#2A2C31" stroke-width="1.5"/><rect x="8.9" y="14.4" width="4.4" height="6.6" rx="2" fill="#E8762C"/><rect x="26.7" y="14.4" width="4.4" height="6.6" rx="2" fill="#E8762C"/><rect x="8.4" y="15.4" width="2" height="4.6" rx=".8" fill="#2A2C31"/><rect x="29.6" y="15.4" width="2" height="4.6" rx=".8" fill="#2A2C31"/>' }),
+  // septembre · Multivers : masque de héros à la couleur du pilote
+  multivers: c => ({ dessus: '<path d="M11.6 15.2C14 13.2 18 13.8 20 15 22 13.8 26 13.2 28.4 15.2L27.8 18.8C25 19.6 22 18.6 20 17.6 18 18.6 15 19.6 12.2 18.8Z" fill="' + c + '"/><path d="M11.6 15.2C14 13.2 18 13.8 20 15 22 13.8 26 13.2 28.4 15.2" fill="none" stroke="#fff" stroke-width=".4" opacity=".4"/><path d="M14.8 16.8C15.8 15.9 17.6 15.9 18.4 16.9 17.4 17.6 15.8 17.6 14.8 16.8ZM25.2 16.8C24.2 15.9 22.4 15.9 21.6 16.9 22.6 17.6 24.2 17.6 25.2 16.8Z" fill="#fff"/>' }),
+  // juillet · Dune : capuche de distille, masque et yeux bleus de l'épice
+  dunes: () => ({ derriere: '<path d="M7.6 41C6.8 26 9.2 8.4 20 3.4C30.8 8.4 33.2 26 32.4 41Z" fill="#A9784A"/>', corps: '<path d="M3 41C4 31 11 28.4 20 28.4S36 31 37 41Z" fill="#5A4A3C"/><path d="M8 34H32M6.4 37.6H33.6M14 29.6V41M26 29.6V41" stroke="#3E3229" stroke-width=".8"/>',
+    cache: true, dessus: '<path d="M10.4 19C9.8 9.4 14.2 4.8 20 4.8S30.2 9.4 29.6 19C28.6 12 25.4 8.8 20 8.8S11.4 12 10.4 19Z" fill="#B98A57"/><path d="M12.6 20.6C15 22.4 25 22.4 27.4 20.6L27 25.4C24.4 27.6 15.6 27.6 13 25.4Z" fill="#4A3D33"/><path d="M27 23C29.4 23.4 30.4 25.6 29.6 28.4" stroke="#4A3D33" stroke-width="1.1" fill="none"/><circle cx="16.6" cy="16.9" r="1.15" fill="#2F9BFF"/><circle cx="23.4" cy="16.9" r="1.15" fill="#2F9BFF"/><circle cx="16.6" cy="16.9" r="2.2" fill="#6CC4FF" opacity=".25"/><circle cx="23.4" cy="16.9" r="2.2" fill="#6CC4FF" opacity=".25"/>' }),
+  // octobre · Chocolaterie : haut-de-forme prune à ruban doré
+  chocolat: () => ({ dessus: '<path d="M13.4 10.4V2.2C16.4 1 23.6 1 26.6 2.2V10.4Z" fill="#5B2A4E"/><rect x="13.4" y="6.8" width="13.2" height="2.2" fill="#E3A83A"/><ellipse cx="20" cy="10.8" rx="11.2" ry="2" fill="#4A2140"/><path d="M14.4 2.6V9.8" stroke="#fff" stroke-width=".5" opacity=".2"/>' }),
+  // novembre · Titans : veste du bataillon, sangles et cape verte
+  titans: () => ({ derriere: '<path d="M4 41C4.6 33 7 29.6 11 28.6L29 28.6C33 29.6 35.4 33 36 41Z" fill="#2F5D3A"/>', corps: '<path d="M6 41C7 32 12 28.5 20 28.5S33 32 34 41Z" fill="#8A6A45"/><path d="M20 30V41" stroke="#F1EEE6" stroke-width="2.6"/><path d="M10 33L30 39M30 33L10 39" stroke="#3A2A1C" stroke-width=".9"/><path d="M11.4 33.4C12.4 32 14 32 14.4 33.6 13.4 34.6 12.2 34.6 11.4 33.4Z" fill="#fff"/><path d="M14.6 33.6C15.2 32 16.8 32 17.6 33.4 16.8 34.6 15.4 34.6 14.6 33.6Z" fill="#3C6DD8"/>' }),
+  // décembre 2027 · L'Odyssée : casque grec de bronze à crête rouge
+  odyssee: () => ({ cache: true, dessus: '<path d="M10.8 18C10.4 9.2 14.6 5 20 5S29.6 9.2 29.2 18L27.4 23.4C26.8 19 26.6 15.6 25.6 13.6C23.6 12.6 16.4 12.6 14.4 13.6C13.4 15.6 13.2 19 12.6 23.4Z" fill="#B98A3E"/><path d="M14.4 13.6C16.4 12.6 23.6 12.6 25.6 13.6" stroke="#7A5A22" stroke-width=".7" fill="none"/><path d="M19.2 13.2H20.8V19.6H19.2Z" fill="#B98A3E"/><path d="M10.6 9.4C11.6 1.6 28.4 1.6 29.4 9.4 27 5.8 13 5.8 10.6 9.4Z" fill="#D2402F"/><path d="M12.6 6.2C15.6 3.6 24.4 3.6 27.4 6.2M14.6 4.6V7M17.4 3.8V6.2M20 3.6V6M22.6 3.8V6.2M25.4 4.6V7" stroke="#8E2A20" stroke-width=".45" fill="none"/><path d="M13 9.6C16 8.4 24 8.4 27 9.6" stroke="#E4C06A" stroke-width=".8" fill="none"/>' })
+};
 function svgTete(nom, eq, statique) {
   const t = decodeTete(eq.tete || presetTete(nom)), u = "tt" + (++NSVG);
+  const SK = eq.skin && SKINS_TETE[eq.skin] ? SKINS_TETE[eq.skin](couleur(nom)) : null;   // V16.35 : accessoire du thème (cartes 2D)
   const peau = TETE.peau[t.peau], ch = TETE.cheveux[t.cheveux], bc = TETE.cheveux[t.barbeC], ten = t.style === 5 ? couleur(nom) : TETE.tenues[t.couleur], des = TETE.tenues[t.dessous];
   const lead = !statique && saisonVisible() && leaderSaison() === nom, expr = lead ? 1 : t.expr, retard = -((hashTxt(nom) % 37) / 10).toFixed(1);
   const sombre = "rgba(0,0,0,.22)", T = "M3 41C4 32 11 28.5 20 28.5S36 32 37 41Z";
@@ -443,7 +477,7 @@ function svgTete(nom, eq, statique) {
       '<circle cx="' + (oreX + .1) + '" cy="19.2" r=".45" fill="#E8EBEF"/>'
   ][t.coupe] || "";
   return '<svg class="tete' + (statique ? " fixe" : "") + (lead ? " lead" : "") + '" viewBox="0 0 40 40" style="--d:' + retard + 's" aria-hidden="true"><defs><clipPath id="' + u + 'c"><circle cx="20" cy="20" r="20"/></clipPath></defs><g clip-path="url(#' + u + 'c)">' +
-    '<g class="t-tete">' + derriere + corps +
+    '<g class="t-tete">' + (SK && SK.derriere != null ? SK.derriere : derriere) + (SK && SK.corps || corps) +
     '<path d="M16.6 22.5H23.4V29C22 30.6 18 30.6 16.6 29Z" fill="' + peau + '"/><path d="M16.6 24.6C18.6 26 21.4 26 23.4 24.6V26.4C21.4 27.6 18.6 27.6 16.6 26.4Z" fill="rgba(0,0,0,.12)"/>' +
     '<ellipse cx="' + oreX + '" cy="17.6" rx="1.6" ry="2.3" fill="' + peau + '"/><ellipse cx="' + (40 - oreX) + '" cy="17.6" rx="1.6" ry="2.3" fill="' + peau + '"/>' +
     '<path d="' + VIS + '" fill="' + peau + '"/>' +
@@ -452,7 +486,7 @@ function svgTete(nom, eq, statique) {
     '<path d="M20 17.6C19.4 19.4 19.2 20 20.4 20.2" stroke="rgba(0,0,0,.28)" stroke-width=".7" fill="none" stroke-linecap="round"/>' +
     '<g class="t-yeux"><circle cx="16.6" cy="16.9" r="1" fill="#1d1d1f"/><circle cx="23.4" cy="16.9" r="1" fill="#1d1d1f"/><circle cx="16.9" cy="16.6" r=".32" fill="#fff"/><circle cx="23.7" cy="16.6" r=".32" fill="#fff"/></g>' +
     '<path d="M14.9 14.5C15.9 13.8 17.4 13.8 18.3 14.3M21.7 14.3C22.6 13.8 24.1 13.8 25.1 14.5" stroke="' + ch + '" stroke-width=".95" fill="none" stroke-linecap="round"/>' +
-    lun + devant + "</g></g></svg>";
+    lun + (SK && SK.cache ? "" : devant) + (SK ? SK.dessus || "" : "") + "</g></g></svg>";
 }
 
 /* ---------- Atelier : niveau d'écurie et améliorations ---------- */
