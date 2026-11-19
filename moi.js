@@ -2528,8 +2528,8 @@ function assurerFeuille() {
   d.innerHTML = '<div class="feuille moi m-feuille" role="dialog" aria-modal="true" aria-labelledby="m-titre-saisie">' +
     '<h3 id="m-titre-saisie">Saisir <button class="icon-btn" type="button" id="m-fermer-saisie" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3>' +
     '<div class="seg m-seg4" role="group" aria-label="Saisie">' +
-      '<button type="button" data-m-pane="ordre">Ordre</button><button type="button" data-m-pane="journal">Journal</button>' +
-      '<button type="button" data-m-pane="maj">Mises à jour</button><button type="button" data-m-pane="versus">Relevé Versus</button></div>' +
+      '<button type="button" data-m-pane="ordre">Mouvement</button><button type="button" data-m-pane="journal">Historique</button>' +
+      '<button type="button" data-m-pane="maj">Mes comptes</button><button type="button" data-m-pane="versus">Relevé Versus</button></div>' +
     '<div id="m-pane-ordre"></div><div id="m-pane-journal" hidden></div><div id="m-pane-maj" hidden></div></div>';
   document.body.appendChild(d);
   d.addEventListener("click", e => { if (e.target === d) fermerSaisieM(); });
@@ -2549,7 +2549,7 @@ const TUTO_ORDRE = [
     "• <b>Vente</b> : pareil, montant <b>net de frais</b>.<br>" +
     "• <b>Apport / Retrait</b> : argent que tu mets ou retires de l'enveloppe.<br>" +
     "• <b>Autre type</b> : dividendes, frais, cas d'assurance-vie ; chaque type s'explique quand tu le choisis.<br>" +
-    "Relis la phrase « Tu enregistres… » avant de valider. Une erreur ? Onglet <b>Journal</b> : supprimable pendant 7 jours." }
+    "Relis la phrase 📝 avant de valider. Une erreur ? Onglet <b>Historique</b> : supprimable pendant 7 jours." }
 ];
 function guideOrdre() { if (typeof ouvrirGuide === "function") ouvrirGuide("Saisir un ordre", TUTO_ORDRE, "C'est compris"); }
 function ouvrirSaisieM(partiel, onglet) {
@@ -2749,7 +2749,7 @@ async function posterFichier(corps) {
     return await rep.json();
   } catch (e) {
     /* v16.83 · sans réseau (TypeError), rien n'est parti : on peut renvoyer. Délai dépassé ou réponse illisible : le fichier a PEUT-ÊTRE écrit */
-    if (e && (e.name === "AbortError" || e.name === "SyntaxError")) return { ok: false, erreur: "incertain", message: (e.name === "AbortError" ? "Ton fichier a mis trop de temps à répondre" : "Réponse illisible de ton fichier") + (corps && corps.action === "ordre" ? " : l'ordre a peut-être été enregistré. Vérifie le Journal avant de renvoyer." : " : c'est peut-être enregistré quand même. Vérifie avant de renvoyer.") };
+    if (e && (e.name === "AbortError" || e.name === "SyntaxError")) return { ok: false, erreur: "incertain", message: (e.name === "AbortError" ? "Ton fichier a mis trop de temps à répondre" : "Réponse illisible de ton fichier") + (corps && corps.action === "ordre" ? " : l'ordre a peut-être été enregistré. Vérifie l'Historique avant de renvoyer." : " : c'est peut-être enregistré quand même. Vérifie avant de renvoyer.") };
     return { ok: false, erreur: "reseau", message: "Impossible de joindre ton fichier : vérifie ta connexion puis réessaie." };
   } finally { clearTimeout(minuteur); }
 }
@@ -2806,17 +2806,36 @@ function analyser() {
   if (F.date && F.date > aujourdhuiISO()) msg.push(["warn", "Ordre programmé : il restera ignoré par les calculs jusqu'au " + frDate(F.date) + "."]);
   return { bloque, msg, lignes, doutes };
 }
-/** La phrase « Tu enregistres : … » : l'ordre relu en français, pour repérer une erreur d'un coup d'œil */
+/** La phrase de relecture : l'ordre dit en une phrase courte et naturelle, pour repérer une erreur d'un coup d'œil (v16.92) */
 function phraseOrdre() {
   const m = lireNombre(F.montant), q = lireNombre(F.qte), fr = lireNombre(F.frais), ma = lireNombre(F.montantApport);
   if ((!(m > 0) && F.type !== "Ajustement espèces") || millierDouteux(F.montant)) return "";   // v16.83 : pas de « 1,50 € » relu tant que « 1.500 » est en doute
-  const e = v => nf(2, 2).format(v) + NB + "€", lib = ((AUTRES_TYPES[F.type] || {}).lib || F.type).toLowerCase();
-  let t = "<b>" + esc(lib) + "</b>";
-  if (AVEC_ACTIF.includes(F.type) && F.actif) t += " de " + (AVEC_QTE.includes(F.type) && q > 0 ? "<b>" + qteBrute(q) + " " + esc(F.actif) + "</b>" : "<b>" + esc(F.actif) + "</b>");
-  t += " sur <b>" + esc(F.env || "?") + "</b>, le <b>" + frDate(F.date) + "</b>, pour <b>" + e(m) + "</b>";
-  if (AVEC_FRAIS.includes(F.type)) t += fr > 0 ? " dont <b>" + e(fr) + "</b> de frais" : " sans frais";
-  if (F.type === "Achat") t += F.apport ? ", financé par un <b>apport de " + e(ma > 0 ? ma : m) + "</b>" : ", payé avec l'argent déjà sur l'enveloppe";
-  return "📝 Tu enregistres : " + t + ".";
+  if (m === null || !isFinite(m) || m === 0) return "";
+  const B = x => "<b>" + x + "</b>", e = v => { const d = Number.isInteger(+v.toFixed(2)) ? 0 : 2; return B(nf(d, d).format(v) + NB + "€"); };
+  const env = B(esc(F.env || "?")), an = String(new Date().getFullYear());
+  const quand = (F.date || "").slice(0, 4) === an ? (F.date || "").slice(8, 10) + "/" + (F.date || "").slice(5, 7) : frDate(F.date), le = ", le " + B(quand);
+  const actifs = refData().actifs || [], a = actifs.find(x => x.code === F.actif), nomA = esc(a && a.nom && a.nom.length <= 22 ? a.nom : F.actif || "");
+  const de = n => (/^[aeiouyhàâéèêîôû]/i.test(n) ? "d'" : "de ") + B(n);
+  const titres = AVEC_QTE.includes(F.type) && q > 0 ? de(qteBrute(q) + " " + esc(F.actif)).replace(/^d'/, "de ") : F.actif ? de(nomA) : "";
+  const frais = !AVEC_FRAIS.includes(F.type) ? "" : fr > 0 ? " (dont " + e(fr) + " de frais)" : " (sans frais)";
+  const regime = ((refData().enveloppes || []).find(x => (x.nom || x) === F.env) || {}).regime;
+  let t;
+  switch (F.type) {
+    case "Achat": t = "Achat " + titres + " pour " + e(m) + frais + " sur " + env + le + ". " + (F.apport ? "Avec un apport de " + e(ma > 0 ? ma : m) + "." : "Sans apport (argent déjà sur l'enveloppe)."); break;
+    case "Vente": t = "Vente " + titres + " pour " + e(m) + frais + " sur " + env + le + "."; break;
+    case "Apport": t = (regime === "AV" ? "Versement" : "Apport") + " de " + e(m) + " sur " + env + le + "."; break;
+    case "Retrait": t = "Retrait de " + e(m) + " sur " + env + le + "."; break;
+    case "Intérêts": t = "Dividende ou intérêts de " + e(m) + " reçus sur " + env + le + "."; break;
+    case "Frais": t = "Frais de " + e(m) + " débités sur " + env + le + "."; break;
+    case "Relevé": {
+      const plusieursAV = (refData().enveloppes || []).filter(x => x.regime === "AV").length > 1;
+      t = "Valeur " + (F.actif ? de(nomA) + " " : "") + "sur ton relevé" + (plusieursAV ? " (" + env + ")" : "") + " : " + e(m) + " au " + B(quand) + "."; break; }
+    case "Frais en parts": t = "Frais prélevés en parts : " + (q > 0 ? B(qteBrute(q) + " " + esc(F.actif)) + " pour " : "") + e(m) + " sur " + env + le + "."; break;
+    case "Ajustement espèces": t = "Ajustement des espèces de " + e(m) + " sur " + env + le + "."; break;
+    case "Solde initial": t = "Solde de départ de " + e(m) + " sur " + env + ", au " + B(quand) + "."; break;
+    default: t = esc((AUTRES_TYPES[F.type] || {}).lib || F.type) + " de " + e(m) + " sur " + env + le + ".";
+  }
+  return "📝 " + t;
 }
 function majRecap() {
   const a = analyser();
@@ -2871,7 +2890,7 @@ async function envoyerOrdre(forcer) {
   if (M && M.ref) M.ref.journal = (M.ref.journal || []).filter(o => !o.envoi);
   if (rep.ok) { if (window.SONS) SONS.succes(); toast(rep.message || "Ordre enregistré."); charger(true); return; }
   if (rep.erreur === "cle") { cleRefusee(rep.message); toast("Clé refusée par ton fichier."); if (vueMoi()) rendre(); return; }
-  if (rep.erreur === "incertain") { toast("L'ordre a peut-être été enregistré : vérifie le Journal avant de renvoyer."); charger(true); return; }   // v16.83 : jamais rouvert rempli (doublon)
+  if (rep.erreur === "incertain") { toast("L'ordre a peut-être été enregistré : vérifie l'Historique avant de renvoyer."); charger(true); return; }   // v16.83 : jamais rouvert rempli (doublon)
   toast(rep.erreur === "avertissement" ? "Ordre à confirmer." : "Ordre non enregistré.");
   F = sauvegarde;
   if (rep.erreur === "avertissement") F.forcer = rep.message; else F.erreur = rep.message || "Erreur inattendue.";
@@ -3934,7 +3953,7 @@ async function envoyerPA() {
     if (rep.ok || rep.erreur === "incertain") {
       faits.push("releve"); if (PA) { PA.valeur = ""; PA.forcer = false; }
       if (rep.ok) { const h = (M.histoAV = M.histoAV || {}); h.ordres = (h.ordres || []).concat([[date, "Relevé", "ARTEMA", a.v]]); const r = (M.supports || []).find(x => /artema/i.test(x.nom || "")); if (r && date >= (etatArtema().releve || "")) r.valeur = a.v; }
-      else probleme = "La valeur a peut-être été enregistrée : vérifie le Journal avant de la renvoyer.";
+      else probleme = "La valeur a peut-être été enregistrée : vérifie l'Historique (➕) avant de la renvoyer.";
     } else if (rep.erreur === "avertissement") { PA.forcer = rep.message || "Ton fichier demande une confirmation."; PA.arme = false; majPA(); return; }
     else { PA.erreur = "Valeur non enregistrée : " + (rep.message || "erreur inattendue."); PA.arme = false; majPA(); return; }
   }
@@ -3987,7 +4006,7 @@ function quandRappel(x) {
   const j = Math.round((new Date(x.prochaine.slice(0, 10) + "T12:00:00") - new Date(isoJour(new Date()) + "T12:00:00")) / 864e5);
   return j < 0 ? "depuis le " + frDate(x.prochaine) : j === 0 ? "aujourd'hui" : j === 1 ? "demain" : j <= 45 ? "dans " + j + " jours" : "le " + frDate(x.prochaine);
 }
-/* La cloche : seulement ce qui demande une action (sans doublon), avec « Faire » et « Plus tard » ; la liste complète vit dans Saisir › Mises à jour */
+/* La cloche : seulement ce qui demande une action (sans doublon), avec « Faire » et « Plus tard » ; la liste complète vit dans Saisir › Mes comptes */
 /* V15.15 · rappel discret, tous les 3 mois : réajuster (ou confirmer) le taux estimé du fonds euros */
 function feAVerifier() {
   const fe = M && M.parametres && M.parametres.fondsEuros; if (!fe || !fe.taux) return false;
@@ -4163,7 +4182,7 @@ function adapterSimple(raw) {
     const prix = ap.prix * partA, dette = prets ? prets.restantAuj : 0;
     appart = { prix, date: ap.date || (prets ? prets.mensuel[0][0] : null) };
     immo = [{ nom: (ap.nom || "Appartement") + " (ma part)", montant: prix, note: partA < 1 ? F0.format(partA * 100) + " % de " + eur(ap.prix) : null },
-      { nom: "Crédit immobilier : restant dû (ma part)", montant: dette, note: prets ? "fin du crédit : " + frDate(prets.fin) + " · mensualité (ma part) " + eur(prets.mensualite, 2) : "prêt pas encore saisi (➕ › Comptes et prêt)" },
+      { nom: "Crédit immobilier : restant dû (ma part)", montant: dette, note: prets ? "fin du crédit : " + frDate(prets.fin) + " · mensualité (ma part) " + eur(prets.mensualite, 2) : "prêt pas encore saisi (➕ › Mes comptes)" },
       { nom: "Valeur nette immobilière", montant: prix - dette, note: null },
       { nom: "Patrimoine net (avec immobilier)", montant: financier + prix - dette, note: "L'immobilier pèse " + pct((prix - dette) / Math.max(1, financier + prix - dette), 0, false) + " du total" }];
   }
@@ -4182,7 +4201,7 @@ function adapterSimple(raw) {
     simple: true, profil: "simple", _d: Dv, ok: true, genere: raw.genere, personne: qui,
     majTexte: (fin ? "Bourse : relevé de " + MOIS_L[fin % 100 - 1] + " " + Math.floor(fin / 100) : "Bourse : pas encore de relevé") + (derSaisie ? " · épargne saisie le " + frDate(derSaisie) : ""),
     anomalies: "", marches: "",
-    rappel: !comptes.length ? "🔔 À mettre à jour : ajoute tes comptes d'épargne et leur valeur de départ (➕ › Comptes et prêt)" : vieux ? "🔔 À mettre à jour : tes soldes d'épargne (dernière saisie il y a plus d'un mois)" : derSaisie ? "✓ Soldes à jour (saisis le " + frDate(derSaisie) + ")." : "🔔 À mettre à jour : saisis le solde de tes comptes (➕ › Mes soldes)",
+    rappel: !comptes.length ? "🔔 À mettre à jour : ajoute tes comptes d'épargne et leur valeur de départ (➕ › Mes comptes)" : vieux ? "🔔 À mettre à jour : tes soldes d'épargne (dernière saisie il y a plus d'un mois)" : derSaisie ? "✓ Soldes à jour (saisis le " + frDate(derSaisie) + ")." : "🔔 À mettre à jour : saisis le solde de tes comptes (➕ › Mouvement)",
     synthese: { valeur: tot.valeur || 0, apports: tot.verse || 0, gain: tot.pvLatente, gainPct: tot.pvLatentePct, latente: tot.pvLatente, latentePct: tot.pvLatentePct, mwr: tot.mwr, twr: tot.twr,
       sp500: tot.i1 ? tot.i1.twr : null, epargne: totalEp, financier, jour: null, jourPct: null, timing: "—", releve: fin },
     indices: [], enveloppes: envs.concat([total]), groupes: [], fiscalite: [], supports: [], frais: [], cibles: [], alertes: [], perfLignes: {}, signal: null,
@@ -4238,7 +4257,7 @@ function brancherJourSimple(v) {
   v.querySelectorAll("[data-ms-proprio]").forEach(x => x.addEventListener("click", () => envoyerSimple({ action: "reglages", reglages: { "versus.nom": x.dataset.msProprio } }, x)));
 }
 
-/* ---- Saisie (profil simple) : soldes, historique, comptes et prêt ---- */
+/* ---- Saisie (profil simple) : mêmes titre et onglets que le profil complet (v16.92) : Mouvement, Historique, Mes comptes ---- */
 let paneS = "soldes", confirmeS = null;
 const ETAT_S = { compte: null, type: "Versement" };
 function assurerFeuilleSimple() {
@@ -4246,9 +4265,9 @@ function assurerFeuilleSimple() {
   const d = document.createElement("div");
   d.className = "voile"; d.id = "ms-saisie"; d.hidden = true;
   d.innerHTML = '<div class="feuille moi m-feuille" role="dialog" aria-modal="true" aria-labelledby="ms-titre">' +
-    '<h3 id="ms-titre">Mes chiffres <button class="icon-btn" type="button" id="ms-fermer" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3>' +
+    '<h3 id="ms-titre">Saisir <button class="icon-btn" type="button" id="ms-fermer" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3>' +
     '<div class="seg m-seg4" role="group" aria-label="Saisie"><button type="button" data-ms-pane="soldes">Mouvement</button><button type="button" data-ms-pane="historique">Historique</button>' +
-      '<button type="button" data-ms-pane="comptes">Comptes et prêt</button><button type="button" data-ms-pane="versus">Relevé Versus</button></div>' +
+      '<button type="button" data-ms-pane="comptes">Mes comptes</button><button type="button" data-ms-pane="versus">Relevé Versus</button></div>' +
     '<div id="ms-corps"></div></div>';
   document.body.appendChild(d);
   const fermer = () => { d.hidden = true; confirmeS = null; };
@@ -4286,7 +4305,7 @@ function rendreSimple() {
   const aDepart = nom => mouv.some(s => s[1] === nom && (s[3] === "Départ" || s[3] === "Mise à jour"));
   if (paneS === "soldes") {
     if (!ouverts.length) {
-      z.innerHTML = '<p class="info">Aucun compte pour l\'instant. Ajoute d\'abord tes livrets et assurances-vie dans « Comptes et prêt ».</p><button class="btn acc" type="button" id="ms-aller-comptes">Ajouter un compte</button>';
+      z.innerHTML = '<p class="info">Aucun compte pour l\'instant. Ajoute d\'abord tes livrets et assurances-vie dans « Mes comptes ».</p><button class="btn acc" type="button" id="ms-aller-comptes">Ajouter un compte</button>';
       z.querySelector("#ms-aller-comptes").addEventListener("click", () => { paneS = "comptes"; rendreSimple(); });
       return;
     }
