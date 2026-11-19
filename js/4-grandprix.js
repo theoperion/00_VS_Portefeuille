@@ -1000,10 +1000,11 @@ function ouvrirPleinGP(y) {
 function pleinV2(o, y) {
   const P = GP_PLEIN; P.v2 = true; o.classList.add("v2");
   o.insertAdjacentHTML("beforeend", '<div class="gpp-bar">' + selVuesGP(vueGP(document.getElementById("gp-piste").dataset.circuit), "mini") +
-    '<button class="gpp-b gpp-play" type="button" aria-label="Rejouer la course">▶</button><button class="gpp-b gpp-fermer" type="button" aria-label="Fermer le plein écran">✕</button></div>' +
+    '<button class="gpp-b gpp-play" type="button" aria-label="Rejouer la course" title="Rejouer">▶</button><button class="gpp-b gpp-fin" type="button" aria-label="Aller à l\'arrivée" title="Aller à l\'arrivée">⏭</button>' + (piste3D() ? '<button class="gpp-b gpp-survol" type="button" aria-label="Survol guidé" title="Survol guidé">🛸</button>' : "") + '<button class="gpp-b gpp-fermer" type="button" aria-label="Fermer le plein écran">✕</button></div>' +
     '<div class="gpp-tourne" hidden><b>📱↻</b> Tourne ton téléphone<br><small>pour voir le circuit en grand</small></div>');
   o.querySelectorAll(".gpp-bar [data-gpv]").forEach(b => b.addEventListener("click", () => choisirVueGP(b.dataset.gpv, y)));
   o.querySelector(".gpp-play").addEventListener("click", () => { const rj = document.getElementById("gp-rejouer"); if (rj) rj.click(); });
+  [["gpp-fin", "gp-fin"], ["gpp-survol", "gp-survol"]].forEach(([c, id]) => { const b = o.querySelector("." + c); if (b) b.addEventListener("click", () => { const x = document.getElementById(id); if (x) x.click(); }); });   // v17.12 (Théo) : arrivée et survol aussi en plein écran
   o.querySelector(".gpp-fermer").addEventListener("click", fermerPleinGP);
   const rq = o.requestFullscreen || o.webkitRequestFullscreen;
   const paysage = () => { try { if (screen.orientation && screen.orientation.lock) return screen.orientation.lock("landscape").then(() => true, () => false); } catch (e) { } return Promise.resolve(false); };

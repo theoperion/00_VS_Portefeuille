@@ -243,7 +243,7 @@ function afficherTout() {
   // V15.2 : pastille courte (le long texte était coupé) ; le détail reste dans l'info-bulle. « Relevé Versus · nov. 2026 » : un seul sens pour « relevé »
   { const st = $("#sous-titre"), k = typeof finGlobale === "function" ? finGlobale(D, 0) : null;
     const court = k ? ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."][k % 100 - 1] + " " + Math.floor(k / 100) : "";
-    st.textContent = (SOURCE === "cache" && !EN_CHARGEMENT ? "📴 Hors ligne\n" : court ? "Relevé Versus\n" : "") + (court || (SOURCE === "cache" && !EN_CHARGEMENT ? "" : "Pas encore de\nrelevé Versus")); st.classList.toggle("hors", SOURCE === "cache" && !EN_CHARGEMENT); st.setAttribute("aria-label", court ? "Relevé Versus · " + court : "Pas encore de relevé Versus"); st.title = D.majTexte || ""; st.classList.add("pastille-releve"); }
+    st.textContent = (SOURCE === "cache" && !EN_CHARGEMENT ? "📴 Hors ligne\n" : court ? "Relevé Versus\n" : "") + (court || (SOURCE === "cache" && !EN_CHARGEMENT ? "" : "Pas encore de\nrelevé Versus")); st.classList.toggle("hors", SOURCE === "cache" && !EN_CHARGEMENT); st.hidden = !(SOURCE === "cache" && !EN_CHARGEMENT); /* v17.12 (Théo) : plus de pastille « Relevé Versus · mois » ; seulement « 📴 Hors ligne » en cas de souci */ st.setAttribute("aria-label", court ? "Relevé Versus · " + court : "Pas encore de relevé Versus"); st.title = D.majTexte || ""; st.classList.add("pastille-releve"); }
   rendreTicker();
   rendreVue(vueActive());
   majRappels();
