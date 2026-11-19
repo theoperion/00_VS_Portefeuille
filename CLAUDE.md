@@ -55,7 +55,7 @@ Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles 
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **17.1**.
+  hors connexion `sw.js`). Version actuelle : **17.2**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
@@ -87,7 +87,7 @@ Commit (message en français, « vX.Y : … »), ligne dans le journal de `MODE_
 - Règles (DIC Natixis + fiche BPCE Vie, Drive de Théo) : photo de départ = moyenne 2-3-4 déc. 2026 ; rendez-vous ~7 déc. 2029→2033
   (si indice ≥ départ : arrêt, capital + 28,5 % +9,5 pts/an) ; fin 1er déc. 2034 : ≥ départ +76 %, entre −40 % et 0 capital,
   sous 60 % perte = baisse ; frais contrat 0,80 %/an ; parts = achats ÷ (100 € moins 1 %/an jusqu'au 4/12/2026).
-- v16.85 : écran refait (`issueArtema` = fonction unique des issues, verdict, jauge, frise des rendez-vous, simulateur, courbe `parametres.artema.histo` = onglet « Artema histo » des fichiers Théo/Clément). v16.91 : formulaire « 🎯 Point Artema » (valeur € + niveau en une fois, via les actions existantes ordre Relevé ARTEMA + artema actuel), phrase-bilan en tête de Moi, boîte unique « À faire (N) » ; les rappels artemaActuel/releve ouvrent le Point Artema.
+- v16.85 : écran refait (`issueArtema` = fonction unique des issues, verdict, jauge, frise des rendez-vous, simulateur, courbe `parametres.artema.histo` = onglet « Artema histo » des fichiers Théo/Clément). v16.91 : formulaire « 🎯 Point Artema » (valeur € + niveau en une fois, via les actions existantes ordre Relevé ARTEMA + artema actuel), boîte unique « À faire (N) » (v17.2, Théo : phrase-bilan SUPPRIMÉE, « Mes échéances » dans la cloche, pas d'export agenda : « pollution visuelle ») ; les rappels artemaActuel/releve ouvrent le Point Artema.
 - Niveau de l'indice saisi à la main (pas sur Google Finance) : rappels « artemaInitial » / « artemaActuel » du fichier.
   Rythme du rappel « niveau actuel » (Paramètres!V8 de chaque fichier, 18/11) : Théo chaque lundi (1er : 07/12/2026),
   Clément chaque 20 du mois avec son relevé (1er : 20/12/2026). Les deux démarrent une fois le niveau initial saisi.

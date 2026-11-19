@@ -850,7 +850,7 @@ function rendre() {
   const bandeau = SRC === "cache" ? '<div class="demo-band">' + (enCours ? "Mise à jour de ton fichier…" : erreur ? "Ton fichier n'a pas répondu (" + esc(String(erreur).replace(/\.$/, "")) + ") · chiffres de la dernière ouverture" + (ageCopie() ? " (" + ageCopie() + ")" : "") + "." : "Chiffres de la dernière ouverture · mise à jour…") + " <small>" + esc(M.majTexte || "") + "</small></div>" : "";
   v.innerHTML =
     '<div class="seg m-onglets" role="tablist" aria-label="Moi">' + ONGLETS.map(([k, l]) => '<button type="button" role="tab" data-m-ong="' + k + '" aria-pressed="' + (o === k) + '" aria-selected="' + (o === k) + '">' + l + "</button>").join("") + "</div>" +
-    bandeau + (o === "jour" ? phraseBilan() + htmlAFaire() + htmlEcheances() : "") +   /* v16.95 : calendrier unique des échéances */   // v16.87 : phrase-bilan + boîte unique « À faire » (ailleurs, la cloche suffit)
+    bandeau + (o === "jour" ? htmlAFaire() : "")   /* v17.2 (Théo) : plus de phrase-bilan ; les échéances passent dans la cloche */ +   /* v16.95 : calendrier unique des échéances */   // v16.87 : phrase-bilan + boîte unique « À faire » (ailleurs, la cloche suffit)
     ({ jour: M.simple ? htmlJourSimple : htmlJour, patrimoine: htmlPatrimoine, stats: htmlStats, missions: htmlMissions, artema: htmlArtema })[o]();
   v.querySelectorAll("[data-m-ong]").forEach(b => b.addEventListener("click", () => { PREF.onglet = b.dataset.mOng; garderPref(); rendre(); window.scrollTo(0, 0); }));
   brancherAFaire(v); brancherEcheances(v);
@@ -2652,6 +2652,15 @@ function echeancesMoi() {
   return l.filter(x => { const c = x.k + x.d; if (vus.has(c)) return false; vus.add(c); return true; })
     .sort((a, b) => (b.du ? 1 : 0) - (a.du ? 1 : 0) || (a.d < b.d ? -1 : a.d > b.d ? 1 : 0));
 }
+/** v17.2 : les échéances dans le panneau de la cloche (en haut), sans bouton d'agenda */
+function htmlEcheancesNotif() {
+  let l = []; try { l = echeancesMoi().filter(x => !x.du); } catch (e) { l = []; } if (!l.length) return "";
+  const auj = isoJour(new Date());
+  const ligne = x => '<div class="ec-r"><span class="ec-d">' + jourCourt(x.d, x.d.slice(0, 4) === auj.slice(0, 4)) + '</span><span class="ec-i" aria-hidden="true">' + x.ico + '</span><span class="ec-t"><b>' + esc(x.t) + "</b><small>" + esc(x.s) + "</small></span></div>";
+  const vis = l.slice(0, 4), reste = l.slice(4);
+  return '<h4 class="m-h4">Mes échéances</h4><div class="m-ech">' + vis.map(ligne).join("") +
+    (reste.length ? '<details class="ec-plus"><summary>Voir les ' + reste.length + " suivantes</summary>" + reste.map(ligne).join("") + "</details>" : "") + "</div>";
+}
 function htmlEcheances() {
   const l = echeancesMoi(); if (!l.length) return "";
   const auj = isoJour(new Date());
@@ -2660,8 +2669,7 @@ function htmlEcheances() {
   return acc("m-echeances", "Mes échéances", (l.some(x => x.du) ? l.filter(x => x.du).length + " à faire · " : "") + "prochaine : " + esc(pro.t) + (pro.du ? "" : " · " + jourCourt(pro.d, pro.d.slice(0, 4) === auj.slice(0, 4))),
     '<div class="m-ech">' + vis.map(ligne).join("") +
     (reste.length ? '<details class="ec-plus"><summary>Voir les ' + reste.length + " suivantes</summary>" + reste.map(ligne).join("") + "</details>" : "") +
-    '<button class="btn" type="button" id="ec-ics">📅 Ajouter à mon agenda</button>' +
-    '<p class="info">Le fichier est fabriqué sur ton téléphone (rien n\'est envoyé) et ne contient aucun montant. Ouvre-le : ton agenda propose d\'ajouter les échéances. Le refaire plus tard met à jour les mêmes rendez-vous.</p></div>', false);
+    "</div>", false);
 }
 /** le texte du fichier .ics (iCalendar) : journées entières, sans montant, identifiants stables pour ne pas créer de doublons */
 function icsEcheances(l) {
@@ -4472,6 +4480,7 @@ function htmlNotifications() {
     (items.length ? '<h4 class="m-h4">À faire</h4>' + items.join("") + (reportes.length ? '<p class="nt-rep">Reporté de 2 jours : ' + reportes.map(x => esc(nomCourtRappel(x))).join(", ") + ".</p>" : "")
       : reportes.length ? carte("orange", "◷", "Rien d'urgent", "Reporté de 2 jours : " + reportes.map(x => esc(nomCourtRappel(x))).join(", ") + ".", '<div class="nt-a"><button class="mini-btn" type="button" data-notif-faire="' + esc(cleRappel(reportes[0].nom) || reportes[0].nom) + '">Faire</button></div>')
       : carte("vert", "✓", "Tout est à jour", "Aucun rappel ni anomalie." + (prochain ? " Prochain : " + esc(nomCourtRappel(prochain)) + " " + esc(quandRappel(prochain)) + "." : ""))) +
+    htmlEcheancesNotif() +
     (M.marches ? '<h4 class="m-h4">Marchés</h4><div class="m-status">' + marches(M.marches) + "</div>" : "") +
     (rappelsFichier().length ? '<button class="nt-tous" type="button" data-notif-maj>Tous les rappels et réglages du fichier <span>›</span></button>' : "") + "</div>";
 }
