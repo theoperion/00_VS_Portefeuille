@@ -121,16 +121,16 @@ const GPS = {
   monaco: { gp: "Grand Prix du Plateau maudit", ville: "Plateau maudit", drap: "🎲", fx: "des", atout: "pari", piege: "turbo", txt: "Un jeu de société géant : chaque case peut te faire avancer… ou reculer. Les dés sont pipés." }
 };
 const CAL_GP = ["bahrein", "djeddah", "melbourne", "suzuka", "miami", "montreal", "silverstone", "spa", "monza", "singapour", "interlagos", "lasvegas"];
-/** Circuit d'un mois : le Garage des rêves pour la chauffe, le Plateau maudit au mois tiré (une fois la règle annoncée), sinon le calendrier */
+/** Circuit d'un mois : le Garage des rêves pour la chauffe, sinon le calendrier (V16.14 : le mois du Côté obscur garde son circuit, la règle s'y ajoute) */
 function circuitDe(k) {
   if (!k || k === CHAUFFE_K) return "abudhabi";
-  if (k === monacoMois(Math.floor(k / 100)) && regleVisible("monaco") && regleActive("monaco", k)) return "monaco";
   return CAL_GP[((k % 100) - 1 + 12) % 12];
 }
 /** Atout du circuit d'un mois, quand la règle compte pour ce mois (sinon null) ; plus de piège depuis la V12 */
 function atoutsDe(k) {
   if (!k || k === CHAUFFE_K || !regleActive("circuits", k)) return null;
-  const g = GPS[circuitDe(k)]; if (!g || !g.atout) return null;
+  const cote = k === monacoMois(Math.floor(k / 100)) && regleVisible("monaco") && regleActive("monaco", k);   // le Côté obscur garde l'atout de l'ancien Plateau maudit (calcul inchangé)
+  const g = GPS[cote ? "monaco" : circuitDe(k)]; if (!g || !g.atout) return null;
   return { atout: carteDef(g.atout), piege: null, g };
 }
 /** Atout d'un circuit : secret jusqu'à la révélation des cartes (le 2 du mois, le 6 pour la chauffe) */
@@ -592,12 +592,15 @@ function bandeAnnonce(y, i, ensuite) {
   const resume = prec.length ? prec.map((r, q) => '<div class="ba-r" style="--d:' + (1.7 + q * .7).toFixed(1) + 's"><span>' + r.g.drap + " " + esc(moisLong(r.k).replace(/ \d{4}$/, "")) + "</span><b style=\"color:" + couleur(r.n) + '">' + esc(r.n) + "</b> s'impose <i>+" + r.p + " pts</i></div>").join("")
     : '<div class="ba-r" style="--d:1.7s"><span>' + (c.chauffe ? "Tour de chauffe" : "Manche 1") + "</span><b>Une nouvelle saison commence.</b></div>";
   const grille = mc.grille.map((n, q) => '<span class="ba-g" style="--d:' + (8.1 + q * .18).toFixed(2) + 's;--c:' + couleur(n) + '">' + avatar(n) + "<small>" + (q + 1) + "</small></span>").join("");
+  // le mois spécial ou le piège du circuit, annoncé sous le titre (ex. 🌑 Le Côté obscur, 🍫 Double tablette)
+  const spe = et.k ? moisSpecial(y, et.k) : null, pg = !spe && et.k && typeof piegeMois === "function" ? piegeMois(y, et.k) : null, regle = spe || pg;
+  const ligneRegle = regle ? '<div class="ba-regle"><b>' + regle.ico + " " + esc(regle.nom) + "</b><small>" + esc(regle.txt) + "</small></div>" : "";
   const o = document.createElement("div"); o.className = "ba ba-" + st[2]; o.setAttribute("role", "dialog"); o.setAttribute("aria-label", "Bande-annonce : " + G.gp);
   o.style.setProperty("--b1", st[0]); o.style.setProperty("--b2", st[1]);
   o.innerHTML = '<div class="ba-fond"' + (img ? ' style="background-image:url(&quot;' + img.replace(/"/g, "%22") + '&quot;)"' : "") + '></div><div class="ba-voile"></div>' +
     '<div class="ba-sc ba-s1"><small>VERSUS</small><b>présente</b></div>' +
     '<div class="ba-sc ba-s2"><em>Précédemment…</em>' + resume + "</div>" +
-    '<div class="ba-sc ba-s3"><span class="ba-k">' + esc(et.avenir ? "Ce mois-ci" : moisLong(kGP)) + '</span><h2><span class="ba-drap">' + G.drap + "</span>" + esc(G.gp) + "</h2><p>" + esc(G.ville) + '</p><q>' + esc(G.txt) + "</q></div>" +
+    '<div class="ba-sc ba-s3"><span class="ba-k">' + esc(et.avenir ? "Ce mois-ci" : moisLong(kGP)) + '</span><h2><span class="ba-drap">' + G.drap + "</span>" + esc(G.gp) + "</h2><p>" + esc(G.ville) + '</p><q>' + esc(G.txt) + "</q>" + ligneRegle + "</div>" +
     '<div class="ba-sc ba-s4"><em>Sur la grille</em><div class="ba-gr">' + grille + '</div><p>En pole : <b style="color:' + couleur(mc.grille[0]) + '">' + esc(mc.grille[0]) + "</b></p></div>" +
     '<div class="ba-sc ba-s5"><div class="ba-feux">' + [0, 1, 2, 3, 4].map(q => '<i style="--d:' + (10.4 + q * .32).toFixed(2) + 's"></i>').join("") + "</div><b>" + (et.avenir ? "Rendez-vous à la fin du mois" : "C'est parti !") + "</b></div>" +
     '<div class="ba-bande h"></div><div class="ba-bande b"></div><button class="ba-passer" type="button">Passer ›</button>';

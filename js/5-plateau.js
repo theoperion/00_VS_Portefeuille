@@ -17,7 +17,7 @@ const CARTES_BONUS = [
 const ETAPES = [
   { id: "circuits", ico: "🗺️", nom: "L'atout des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque Grand Prix favorise une carte : +1 quand elle marque. Secret jusqu'au 2 (un indice avant), et bouchon si plusieurs la jouent." },
   { id: "pioche", ico: "🎴", nom: "Le rattrapage", ouvre: 202701, regle: "pioche", resume: "Tu finis dernier d'un mois ? Tu pioches une carte bonus (une fois par saison chacune), à jouer à partir du mois suivant. Tes cartes piochées t'attendent dans le Stand." },
-  { id: "monaco", ico: "🎲", nom: "Le Plateau maudit", ouvre: 202701, regle: "speciaux", resume: "Un mois de la saison, le dernier du championnat marque ses points de place en double. La date est dans le calendrier du Grand Prix." },
+  { id: "monaco", ico: "🌑", nom: "Le Côté obscur", ouvre: 202701, regle: "speciaux", resume: "Un mois de la saison, une éclipse tombe sur le circuit : le dernier du championnat marque ses points de place en double. La date est dans le calendrier du Grand Prix." },
   { id: "pieges", ico: "🪤", nom: "Les pièges des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque circuit sans mois spécial a son piège, une petite règle qui ne vaut que ce mois-là (Feux follets dans la Forêt aux lucioles, Couloirs mouvants au Château, Surchauffe chez les Androïdes…). Il s\'affiche dès le 20 du mois d\'avant, avec la carte." },
   { id: "gpspeciaux", ico: "🏁", nom: "Les Dunes et le Multivers", ouvre: 202701, regle: "speciaux", resume: "Juillet sur la Mer de dunes : le vainqueur du mois marque +2 de plus (le Chevaucheur des sables). Septembre dans le Multivers : le 🎯 vaut +2 au lieu de +1 (le Rassemblement des héros)." },
   { id: "prono", ico: "🔮", nom: "Le pronostic du mois", ouvre: 202701, regle: "championnat", resume: "Dans la fenêtre de ta carte : qui gagne le mois (+1 si juste) et le S&P 500 fera-t-il plus de +1 % (+1 si juste). Secret jusqu'au 2." },
@@ -108,7 +108,7 @@ function ouvrirReserve() {
       "<p><b>Calendrier des nouveautés</b></p><ul>" + etapesJeu().map(ligne).join("") + "</ul></section>" +
     '<section class="rg-s"><h4>🧪 En réserve <small>codé, éteint</small></h4><ul>' + reserve.map(ligne).join("") + "</ul>" +
       "<p><b>Ce qu'elles font, en détail</b> (le texte que les joueurs liront si tu les mets en jeu) :</p>" + sect("niveaux") + "</section>" +
-    '<section class="rg-s"><h4>⚙️ Réglages actuels</h4><ul><li>Points de place : ' + BAREME.join(" · ") + ' ; 🎯 : +1 (Turbo : +3).</li><li>Course : une manche par mois, départ dans l\'ordre du championnat ; le meilleur du mois boucle un tour.' + "</li><li>Gain maximum d'une carte : +" + PLAFOND_CARTE + ".</li><li>Atout du circuit : +1 si la carte marque ; bouchon (pas de +1) si au moins deux pilotes marquent avec.</li><li>Duels : +1 / −1, un seul par paire et par mois ; égalité = 0 (Pari aussi).</li><li>Plateau maudit : le dernier du championnat ×2 (mois tiré entre avril et octobre) ; Finale : tout le monde ×2 en décembre.</li><li>Rattrapage : 1 carte bonus quand tu finis dernier (4 cartes bonus, mélangées par pilote et par saison).</li><li>Niveaux (en réserve) : " + XP_NIVEAU + " XP par niveau, niveau " + NIV_MAX + " au plus ; atelier : +1 par niveau sur une carte, 2 au plus.</li></ul><p class=\"rg-admin\">Pour changer un chiffre : une session de modification (constantes en haut des règles dans le code).</p></section>" +
+    '<section class="rg-s"><h4>⚙️ Réglages actuels</h4><ul><li>Points de place : ' + BAREME.join(" · ") + ' ; 🎯 : +1 (Turbo : +3).</li><li>Course : une manche par mois, départ dans l\'ordre du championnat ; le meilleur du mois boucle un tour.' + "</li><li>Gain maximum d'une carte : +" + PLAFOND_CARTE + ".</li><li>Atout du circuit : +1 si la carte marque ; bouchon (pas de +1) si au moins deux pilotes marquent avec.</li><li>Duels : +1 / −1, un seul par paire et par mois ; égalité = 0 (Pari aussi).</li><li>Côté obscur : le dernier du championnat ×2 (mois tiré entre avril et octobre) ; Finale : tout le monde ×2 en décembre.</li><li>Rattrapage : 1 carte bonus quand tu finis dernier (4 cartes bonus, mélangées par pilote et par saison).</li><li>Niveaux (en réserve) : " + XP_NIVEAU + " XP par niveau, niveau " + NIV_MAX + " au plus ; atelier : +1 par niveau sur une carte, 2 au plus.</li></ul><p class=\"rg-admin\">Pour changer un chiffre : une session de modification (constantes en haut des règles dans le code).</p></section>" +
     '<section class="rg-s"><h4>💡 Idées à creuser <small>pas encore codées</small></h4><ul>' + IDEES_FUTURES.map(([i, t, d]) => "<li><b>" + i + " " + esc(t) + "</b> : " + esc(d) + "</li>").join("") + "</ul></section>" +
     "</div></div>";
   document.body.appendChild(o); document.documentElement.classList.add("fige");
@@ -152,7 +152,7 @@ function monacoMois(y) { return y * 100 + 4 + hashTxt("monaco" + y) % 7; }   // 
 function moisSpecial(y, k) {
   if (!k) return null;
   if (k % 100 === 12 && regleActive("finale", k)) return { id: "finale", ico: "🏆", nom: "Finale", txt: "Points de place doublés pour tout le monde." };
-  if (k === monacoMois(y) && regleActive("monaco", k)) return { id: "monaco", ico: "🎲", nom: "Le Plateau maudit", txt: "Le dernier du championnat avant ce mois marque ses points de place en double." };
+  if (k === monacoMois(y) && regleActive("monaco", k)) return { id: "monaco", ico: "🌑", nom: "Le Côté obscur", txt: "Le dernier du championnat avant ce mois marque ses points de place en double." };
   if (k % 100 === 7 && regleActive("gpspeciaux", k)) return { id: "silverstone", ico: "🪱", nom: "Le Chevaucheur des sables", txt: "Le vainqueur du mois marque +2 de plus." };
   if (k % 100 === 9 && regleActive("gpspeciaux", k)) return { id: "monza", ico: "🦸", nom: "Le Rassemblement des héros", txt: "Le 🎯 vaut +2 au lieu de +1." };
   return null;
@@ -168,7 +168,7 @@ const PIEGES = {
   singapour: { id: "nuit", ico: "🍃", nom: "Même le plus petit", txt: "Le dernier du mois marque 2 points de place au lieu de 0." },
   interlagos: { id: "averse", ico: "💥", nom: "Assaut", txt: "🎲 Pari : +3 si tu finis devant ton rival, −2 derrière (au lieu de +2 / −1)." }
 };
-/** Piège du mois k (null : chauffe, mois spécial, Plateau maudit, ou règle pas encore ouverte) */
+/** Piège du mois k (null : chauffe, mois spécial, Côté obscur, ou règle pas encore ouverte) */
 function piegeMois(y, k) {
   if (!k || k === CHAUFFE_K || estChauffe(y) || !regleActive("pieges", k) || moisSpecial(y, k)) return null;
   return PIEGES[circuitDe(k)] || null;
@@ -529,13 +529,13 @@ function htmlRegles(tout, modeReserve) {
       (vu("rival") ? "<div><b>😈 Rival</b><span>choisi en secret (20 déc. → 1<sup>er</sup> janv.) ; devant lui en fin de saison</span><em>+3</em></div>" : "") +
       (vu("regularite") ? "<div><b>🛡️ Régularité</b><span>fin de saison : le moins souvent dernier (puis le plus de mois positifs)</span><em>+3</em></div>" : "") + "</div>") : "") +
     s("speciaux", "📅", "Les mois spéciaux", '<div class="rg-tab">' +
-      (vM ? "<div><b>🎲 Le Plateau maudit</b><span>" + (regleActive("monaco", mo) ? esc(moisLong(mo)) : "un mois tiré") + " : le dernier du championnat</span><em>place ×2</em></div>" : "") +
+      (vM ? "<div><b>🌑 Le Côté obscur</b><span>" + (regleActive("monaco", mo) ? esc(moisLong(mo)) : "un mois tiré") + " : le dernier du championnat</span><em>place ×2</em></div>" : "") +
       (vS ? "<div><b>🪱 Le Chevaucheur des sables</b><span>juillet : le vainqueur du mois</span><em>+2</em></div><div><b>🦸 Le Rassemblement des héros</b><span>septembre : le 🎯</span><em>vaut +2</em></div>" : "") +
       (vF ? "<div><b>🏆 Finale</b><span>décembre : tout le monde</span><em>place ×2</em></div>" : "") +
       (vu("vote") ? "<div><b>🗳️ Vote</b><span>2 → 31 décembre : « le coup de la saison » (pas pour soi)</span><em>plaque</em></div>" : "") + "</div>") +
     (vu("pieges") ? s("pieges", "🪤", "Les pièges des circuits", "<p>Les autres mois, le circuit a son <b>piège</b> : une petite règle qui ne vaut que ce mois-là. Il s'affiche dès le 20 du mois d'avant (Stand et Classement).</p>" +
       '<div class="rg-tab">' + CAL_GP.filter(id => PIEGES[id]).map(id => "<div><b>" + GPS[id].drap + " " + esc(GPS[id].ville) + "</b><span>" + PIEGES[id].ico + " <b>" + esc(PIEGES[id].nom) + "</b> : " + esc(PIEGES[id].txt) + "</span><em>" + esc(moisCourt(y * 100 + CAL_GP.indexOf(id) + 1).replace(/ \d+$/, "")) + "</em></div>").join("") + "</div>" +
-      '<p class="rg-note">Le mois du Plateau maudit (tiré au sort) remplace le circuit prévu : pas de piège ce mois-là.</p>') : "") +
+      '<p class="rg-note">Le mois du Côté obscur (tiré au sort) garde son circuit, mais pas de piège ce mois-là.</p>') : "") +
     (vP ? s("pioche", "🎴", "Le rattrapage",
       "<p>Dernier d'un mois ? Tu pioches <b>1 carte bonus</b>, jouable dès le mois suivant, une fois par saison :</p><ul>" + CARTES_BONUS.map(c => "<li>" + c.ico + " <b>" + esc(c.nom) + "</b> : " + esc(c.court || c.def) + "</li>").join("") + "</ul>") : "") +
     (vN ? s("niveaux", "🔧", vA ? "Niveaux et atelier" : "Niveaux d'écurie",
@@ -566,7 +566,7 @@ const TUTO = [
     "• <b>Chaque mois</b> : 6 · 4 · 2 · 0 points selon ta performance, <b>+1 🎯</b> si tu bats le S&P 500.<br>" +
     "• <b>Ta carte</b> : une par mois, posée du 20 au 1er dans le <b>Stand</b>, révélée le 2 (jusqu'à +4).<br>" +
     "• <b>Chaque mois aussi</b> : 🏁 un défi, 🔮 un pronostic et 🅿️ la pole position (+1 chacun).<br>" +
-    "• <b>Sur la saison</b> : 🔥 série, 😈 rival, 🛡️ régularité ; le Plateau maudit, le Chevaucheur des sables, le Rassemblement des héros et la Finale ×2.<br>" +
+    "• <b>Sur la saison</b> : 🔥 série, 😈 rival, 🛡️ régularité ; le Côté obscur, le Chevaucheur des sables, le Rassemblement des héros et la Finale ×2.<br>" +
     "Décembre 2026 = tour de chauffe : rien ne compte. Tout le détail, avec schémas : 📖 Règles." }
 ];
 function ouvrirTuto() { ouvrirGuide("Comment ça marche", TUTO, "C'est parti 🏁"); }

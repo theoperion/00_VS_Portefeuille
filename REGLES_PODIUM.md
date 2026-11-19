@@ -51,7 +51,7 @@ Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Re
 
 | Mois | Règle |
 |---|---|
-| 🎲 Le Plateau maudit (mois tiré : juin en 2027) | le dernier du championnat : points de place ×2 |
+| 🌑 Le Côté obscur (mois tiré : juin en 2027) | le dernier du championnat : points de place ×2 |
 | 🪱 Le Chevaucheur des sables (juillet, Mer de dunes) | le vainqueur du mois : +2 |
 | 🦸 Le Rassemblement des héros (septembre, le Multivers) | le 🎯 vaut +2 |
 | 🏆 Finale (décembre, l'Odyssée) | points de place ×2 pour tout le monde |
@@ -72,7 +72,7 @@ Les mois sans règle spéciale, le circuit a son **piège**, une petite règle q
 | Oct. | 💍 Terre de l'Anneau | 🍃 Même le plus petit | le dernier du mois marque 2 points de place au lieu de 0 |
 | Nov. | 🧱 Mur des titans | 💥 Assaut | 🎲 Pari : +3 / −2 au lieu de +2 / −1 |
 
-Juin (Bataille spatiale), juillet (Mer de dunes), septembre (le Multivers) et décembre (l'Odyssée, Finale) ont déjà leur règle. Le mois du Plateau maudit (tiré au sort) remplace le circuit prévu : pas de piège ce mois-là. La carte reste plafonnée à +4.
+Juin (Bataille spatiale), juillet (Mer de dunes), septembre (le Multivers) et décembre (l'Odyssée, Finale) ont déjà leur règle. Le mois du Côté obscur (tiré au sort) garde son circuit, mais pas de piège ce mois-là. La carte reste plafonnée à +4.
 
 ## 🎴 Le rattrapage
 
