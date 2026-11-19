@@ -6,8 +6,9 @@
 ## Qui, quoi
 - **Théo** (GitHub `theoperion`), francophone : toujours répondre **en français**, simplement, sans jargon.
 - Apps : Google Sheets + Apps Script + pages GitHub Pages. Joueurs du Versus : Théo, Kévin, Clément, Devlin.
-- **Méthode convenue** : Claude propose → Théo valide → Claude construit, teste, publie (une ligne de journal
-  dans `MODE_EMPLOI.md` par version) → Théo vérifie. Claude peut publier directement sur `main` de
+- **Méthode convenue (mise à jour le 19/11)** : Théo ne valide plus chaque étape ; il fait confiance au plan du Conseil (rapport du 19/11).
+  Claude construit, teste, publie (une ligne de journal dans `MODE_EMPLOI.md` par version) et ne demande l'avis de Théo que pour les vraies
+  questions (choix de règles, changements visibles importants, désaccords). Objectif : simple à comprendre au début, nouveautés petit à petit. Claude peut publier directement sur `main` de
   `00_VS_Portefeuille` et des carnets T3/T4.
 
 ## Façon de travailler avec Théo (demandée par Théo le 19/11/2026, valable pour TOUTES les conversations)
@@ -22,8 +23,9 @@
 3. Opération destructive sur des données (Sheets) : seulement sur instruction explicite.
 4. Ne pas toucher aux applis gérées ailleurs : budgets 02/05/06, Compagnie de l'Aube, W4M (lecture seule).
 5. `app_scripts` est partagé avec une autre conversation : toujours `git pull --rebase` avant de pousser.
-6. Uniquement des créations originales : aucun nom, personnage, logo ou visuel d'œuvre existante
-   (les thèmes « s'inspirent » des goûts de Théo : cinéma, séries, jeux, sans rien reprendre).
+6. **Références assumées (décision de Théo du 19/11, qui remplace l'ancienne règle « créations originales »)** : on GARDE les références aux
+   films, séries et livres qu'ils adorent (gant de l'infini, ticket d'or, anneau, seigneur noir, chapelier…), sinon « ça n'a pas de sens ». Limites
+   maintenues : tout est **dessiné par nous** (aucune image, logo ou photo officielle, pas de visage d'acteur), répliques courtes seulement.
 
 ## Dépôts
 | Dépôt | Contenu |
@@ -118,9 +120,8 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
   Badges qu'on se vole validés : Couronne de cœur, Casque noir, Anneau (leader, l'avatar pâlit), Corne d'abondance (attention : écarts de points faibles).
   Réserve validée (à coder mais cachée, visible et réglable par l'admin, lancement progressif) : Œuf de dragon, Némésis, Communauté, Lanterne rouge, rareté affichée. Badges secrets : carte blanche (garder la surprise).
   Théo trouve la course trop courte : la vouloir grandiose (plus longue, plus de tours) sans réforme des points si possible.
-- **Conseil du Versus (19/11, 9 agents, rapport : synthèse dans la conversation)** — décisions validées par Théo : compromis licences = évoquer sans copier
-  (pas de personnage reconnaissable trait pour trait ni de réplique exacte ; gant → « volant à 6 voyants », ticket d'or → « billet doré », anneau sans pâleur,
-  juin en flotte originale, titans en colosses de pierre, Alice d'après les gravures de 1865) ; résultat du mois caché jusqu'à la course ; Lanterne rouge →
+- **Conseil du Versus (19/11, 9 agents, rapport : synthèse dans la conversation)** — décisions validées par Théo : ~~compromis licences~~ ANNULÉ par Théo le 19/11 : on garde
+  gant de l'infini, ticket d'or, anneau, personnages (voir règle 6) ; résultat du mois caché jusqu'à la course ; Lanterne rouge →
   « Increvable » ; Némésis partagée ; records qu'on se vole fondés sur places/points (jamais %). Plan : v16.16 réparations (retour, course 2D figée, « vu »
   trop tôt, Passer), v16.17 fluidité (fonds peints en images WebP), v16.18 nettoyage licences, v16.19 Garage amélioré, puis 5 joueurs, banc de tests sur
   FAUSSES données (l'ancien repet.js utilisait une copie du vrai Sheet : supprimée), course en 3 tours, badges vague 1.
