@@ -544,12 +544,13 @@ function htmlPilote(qui, e) {
 function htmlRegles(tout, modeReserve) {
   const idx = esc(D.marche.indices[iRef()]), y = Math.max(saisonCourante() || 0, SAISON.premiere), mo = monacoMois(y);
   const s = (id, ico, t, corps) => '<section class="rg-s" id="rg-' + id + '"><h4>' + ico + " " + t + "</h4>" + corps + "</section>";
-  const vu = id => modeReserve || (tout && !enReserve(etape(id))) || regleVisible(id);
+  const secret = !tout && !modeReserve && !estAdmin() && !saisonJouee();   // v17.9 (Théo) : jusqu'au 1er janvier, les joueurs ne lisent que les règles de décembre (rien d'autre, même après le 20/12)
+  const vu = id => !secret && (modeReserve || (tout && !enReserve(etape(id))) || regleVisible(id));
   const vP = vu("pioche"), vN = vu("niveaux"), vA = vu("atelier"), vM = vu("monaco"), vF = vu("finale"), vC = vu("circuits"), vS = vu("gpspeciaux");
   const vB = ["prono", "pole", "defi", "rival", "equipe", "serie", "regularite"].some(vu), bientot = tout || modeReserve || (!saisonJouee() && !estAdmin()) ? [] : etapesJeu().filter(e => !regleVisible(e.id));   // v17.8 (Théo) : rien de « Bientôt » pour les joueurs avant la saison
   const base = !tout && !modeReserve && basesSeules(), vSp = vM || vS || vF || vu("vote");   // V16.23 : pendant la chauffe, les règles ne montrent que les bases
   // v17.5 · univers 2027 gardés secrets jusqu'au 31/12 23:59 : seulement janvier (à partir du 20/12) ; l'admin (« tout », réserve, aperçu) voit tout
-  const univ = tout || modeReserve || saisonJouee(), univJanv = univ || janvierAnnonce();
+  const univ = tout || modeReserve || saisonJouee(), univJanv = univ || (janvierAnnonce() && !secret);
   const sommaire = [["essentiel", "L'essentiel"], ["champ", "Points"], ["cartes", "Cartes"]].concat(vB ? [["bonus", "Bonus"]] : [], vSp ? [["speciaux", "Mois spéciaux"]] : [], vu("pieges") ? [["pieges", "Pièges"]] : [], vP ? [["pioche", "Rattrapage"]] : [], vN ? [["niveaux", "Niveaux"]] : [], [["gp", base ? "La course" : "Course et trophées"]], bientot.length ? [["bientot", "🎁 Bientôt"]] : []);
   // schémas (HTML/CSS, lisibles en clair comme en sombre)
   const etapeSch = (ico, quand, quoi) => '<div class="rg-et"><i>' + ico + "</i><b>" + quand + "</b><small>" + quoi + "</small></div>";
