@@ -807,7 +807,7 @@ let ECU = null;   // brouillon de l'écurie en cours de réglage
 function modeAdmin() { return vueJoueur() ? "joueur" : apercuSaison() ? "tout" : "reel"; }
 function barreAdmin() {
   const m = modeAdmin(), b = (id, lib) => '<button type="button" data-madm="' + id + '" aria-pressed="' + (m === id) + '">' + lib + "</button>";
-  const desc = m === "tout" ? "Toutes les fonctions et toutes les règles, sur la saison 2026 rejouée. Rien de ce que tu fais ici n'est vu par les autres."
+  const desc = m === "tout" ? "La saison 2027 simulée : les circuits et les règles de 2027, joués avec nos vrais résultats de 2026. Rien de ce que tu fais ici n'est vu par les autres."
     : m === "joueur" ? "Ce que tu vois en simple joueur, sans tes droits d'admin" + (window.DATE_SIM ? ", au " + esc(new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })) : ", aujourd'hui") + ". Rien n'est envoyé."
     : "Ce que tout le monde voit aujourd'hui, pour de vrai. Ici, tes actions comptent.";
   let plus = "";

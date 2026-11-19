@@ -65,8 +65,10 @@ function sens(v) { return !ok(v) || Math.abs(v) < 1e-9 ? "flat" : v > 0 ? "up" :
 function esc(t) { return String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 const MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
 const MOIS_L = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
-function moisCourt(k) { return MOIS[k % 100 - 1] + " " + String(Math.floor(k / 100)).slice(2); }
-function moisLong(k) { return MOIS_L[k % 100 - 1] + " " + Math.floor(k / 100); }
+/* v16.83 · en « Tout afficher » (admin), le Podium présente la saison simulée comme 2027 (circuits 2027, chiffres réels de 2026) : on affiche l'année + 1 */
+function anAff(k) { const y = Math.floor(k / 100); try { return y === 2026 && typeof apercuSaison === "function" && apercuSaison() && typeof vueActive === "function" && vueActive() === "trophees" ? 2027 : y; } catch (e) { return y; } }
+function moisCourt(k) { return MOIS[k % 100 - 1] + " " + String(anAff(k)).slice(2); }
+function moisLong(k) { return MOIS_L[k % 100 - 1] + " " + anAff(k); }
 function jourReleve(y, m) { const d = new Date(y, m, 0, 12); while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1); return d; }
 function finMois(k) {
   const r = D && D.personnes && D.personnes[0] && D.personnes[0].rows.find(x => x[0] === k);
