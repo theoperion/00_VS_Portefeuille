@@ -556,7 +556,7 @@ const TRESOR_SVG = {
 /** pose (ou retire) le compteur, l'énigme du mois et l'objet dans la page Course ; sans rien recalculer d'autre */
 function poserTresorDOM(v) {
   const pi = (v || document).querySelector ? (v || document).querySelector("#gp-piste") : null; if (!pi) return;
-  pi.querySelectorAll(".gp-tresor, .gp-enigme").forEach(e => e.remove()); TRESOR_EL = null;
+  pi.querySelectorAll(".gp-tresor, .gp-enigme, .gp-tresor-appel").forEach(e => e.remove()); TRESOR_EL = null;
   const met = document.querySelector(".gp-h .gp-met"), cpt = met && met.querySelector(".gp-tresors");
   if (!TRESORS || !tresorsOuverts()) { if (cpt) cpt.remove(); return; }
   const n = TRESORS.total || 0, txt = "🗝️ " + n + " trésor" + (n > 1 ? "s" : "") + " trouvé" + (n > 1 ? "s" : "");
@@ -568,6 +568,10 @@ function poserTresorDOM(v) {
     const en0 = pi.querySelector(".gp-enigme"); TRESOR_EL = { pi, b: null, en: en0, t: tc, vu: false, pris: true };
     en0.addEventListener("click", () => en0.classList.toggle("ouverte")); if (GP_INST) majTresor(GP_INST.api, pi); return;
   }
+  /* v16.67 · rappel en carte 2D (vue par défaut) : un trésor attend sur ce circuit → un toucher ouvre la Visite 3D (validé par le Conseil) */
+  const premiere = !stock.get("versus.tresorAide");
+  pi.insertAdjacentHTML("beforeend", '<button class="gp-tresor-appel" type="button">' + (ind ? "💡 2e indice tombé · " : "🗝️ Un trésor se cache ici · ") + "<b>Chercher en 3D</b>" + (premiere ? "<small>Zoome au maximum, au ras du sol.</small>" : "") + "</button>");
+  pi.querySelector(".gp-tresor-appel").addEventListener("click", ev => { ev.stopPropagation(); stock.set("versus.tresorAide", "1"); const bv = document.getElementById("gp-vue"); if (bv && pi.classList.contains("en2d")) bv.click(); });
   pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme" title="Énigme du mois : un objet est caché dans le décor de ce circuit. Approche-toi en Visite 3D. Touche pour lire la suite.">' + (ind ? "💡" : "🗝️") + ' <i>' + esc(t.enigme) + "</i>" + ind + '<span class="gp-chercheurs">' + chercheursTxt(t) + "</span></div>" +
     '<button class="gp-tresor t-' + esc(t.type) + '" type="button" aria-label="Un objet du film : touche-le !" tabindex="-1">' + (TRESOR_SVG[t.type] || TRESOR_SVG.gemme) + "</button>");
   const b = pi.querySelector(".gp-tresor"), en = pi.querySelector(".gp-enigme");

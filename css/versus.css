@@ -1489,5 +1489,8 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .gp-indice { display: none; margin-top: 3px; font-weight: 700; color: #FFE08A; } .gp-chercheurs { display: none; margin-top: 3px; opacity: .85; font-size: 11px; }
 .gp-enigme.ouverte .gp-indice, .gp-enigme.ouverte .gp-chercheurs { display: block; }
 .gp-enigme.cache, .gp-piste.en2d .gp-enigme, .gp-piste.en2d .gp-tresor { display: none; }
+.gp-tresor-appel { display: none; position: absolute; left: 8px; bottom: 8px; z-index: 3; max-width: calc(100% - 16px); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(255,224,138,.45); background: rgba(8,10,14,.74); color: #F3E6C4; font: 500 12px/1.3 var(--f-text); text-align: left; cursor: pointer; }
+.gp-tresor-appel b { color: #FFE08A; } .gp-tresor-appel small { display: block; opacity: .8; font-size: 10.5px; }
+.gp-piste.en2d .gp-tresor-appel { display: block; }
 .gp-tresors { white-space: nowrap; opacity: .8; font-size: .92em; }
 @media (prefers-reduced-motion: reduce) { .gp-tresor svg, .gp-tresor.pris svg { animation: none; } .gp-tresor.pris { opacity: 0 !important; } }
