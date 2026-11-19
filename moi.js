@@ -835,10 +835,10 @@ function rendre() {
   const bandeau = SRC === "cache" ? '<div class="demo-band">' + (enCours ? "Mise à jour de ton fichier…" : erreur ? "Ton fichier n'a pas répondu (" + esc(String(erreur).replace(/\.$/, "")) + ") · chiffres de la dernière ouverture" + (ageCopie() ? " (" + ageCopie() + ")" : "") + "." : "Chiffres de la dernière ouverture · mise à jour…") + " <small>" + esc(M.majTexte || "") + "</small></div>" : "";
   v.innerHTML =
     '<div class="seg m-onglets" role="tablist" aria-label="Moi">' + ONGLETS.map(([k, l]) => '<button type="button" role="tab" data-m-ong="' + k + '" aria-pressed="' + (o === k) + '" aria-selected="' + (o === k) + '">' + l + "</button>").join("") + "</div>" +
-    bandeau + (o === "jour" ? phraseBilan() + htmlAFaire() : "") +   // v16.87 : phrase-bilan + boîte unique « À faire » (ailleurs, la cloche suffit)
+    bandeau + (o === "jour" ? phraseBilan() + htmlAFaire() + htmlEcheances() : "") +   /* v16.95 : calendrier unique des échéances */   // v16.87 : phrase-bilan + boîte unique « À faire » (ailleurs, la cloche suffit)
     ({ jour: M.simple ? htmlJourSimple : htmlJour, patrimoine: htmlPatrimoine, stats: htmlStats, missions: htmlMissions, artema: htmlArtema })[o]();
   v.querySelectorAll("[data-m-ong]").forEach(b => b.addEventListener("click", () => { PREF.onglet = b.dataset.mOng; garderPref(); rendre(); window.scrollTo(0, 0); }));
-  brancherAFaire(v);
+  brancherAFaire(v); brancherEcheances(v);
   v.querySelectorAll("details.acc[data-acc]").forEach(d => d.addEventListener("toggle", () => { PREF.acc[d.dataset.acc] = d.open; garderPref(); if (d.open && d.dataset.acc === "m-courbe") dessinerCourbe(); }));
   ({ artema: brancherArtema, jour: M.simple ? brancherJourSimple : brancherJour, patrimoine: brancherPatrimoine, stats: brancherStats, missions: brancherMissions })[o](v);
   if (SRC === "api") verifierPaliers();
@@ -1180,7 +1180,8 @@ function htmlPatrimoine() {
     bloc("p-bourse", "--s1", "Bourse", "portefeuille", liste(envs, rEnv)) +
     bloc("p-epargne", "--s2", "Épargne", esc(s.epargneLibelle || ""), liste(ep, rEp)) +
     (net.avecImmo ? bloc("p-immo", "--s3", "Immobilier", "prix d'achat, prêts restants", pretHtml() + liste(imm, rImm)) : "") +
-    (fis.length ? acc("m-fis", "Si tout était retiré", "résultat net d'impôt estimé", liste(fis, rFis), false) : "");
+    (fis.length ? acc("m-fis", "Si tout était retiré", "résultat net d'impôt estimé", liste(fis, rFis), false) : "") +
+    htmlComparateur();   // v16.95 : où mettre le prochain euro
 }
 /* ================= V15.14 · Assurance-vie Quintessa : versé, valeur et gain par support, courbes, rendez-vous ================= */
 const COUL_AV = { fe: "#2BB673", artema: "#9B6BFF", ostrum: "#18A9C7", total: "var(--accent)" };
@@ -1725,7 +1726,7 @@ function graduations(mn, mx, n) {
   return t;
 }
 function brancherPatrimoine(v) {
-  brancherAV(v);
+  brancherAV(v); brancherComparateur(v);
   v.querySelectorAll("[data-cible]").forEach(b => b.addEventListener("click", () => { const c = document.getElementById(b.dataset.cible); if (c) c.scrollIntoView({ block: "start", behavior: reduit ? "auto" : "smooth" }); }));
 }
 
@@ -1766,6 +1767,7 @@ function htmlStats() {
   const resume = ["m1", "ytd", "twr"].map((k, i) => '<span>' + ["1 mois", "janv.", "début"][i] + ' <b class="' + sens(pf[k]) + '">' + pct(pf[k]) + "</b></span>").join("");
   /* C (v16.93) : Stats s'ouvre sur la courbe ; « En ce moment » ne garde que ce qui n'est pas ailleurs */
   return '<div><h2 class="sec">Courbe <small>' + (derniere ? "relevé du " + dateLongue(derniere) : "") + "</small></h2></div>" + courbe +
+    htmlProjection() +   /* v16.95 : projection 2034, sous la courbe */
     blocEnCours() + blocJours() +
     '<details class="acc m-compact" data-acc="m-perf"' + (PREF.acc["m-perf"] ? " open" : "") + '><summary><span class="t">Performances</span><span class="m-cp-r">' + resume + "</span></summary>" +
       '<div><div class="scroll-x"><table class="tab m-perf-t"><thead><tr><th>Enveloppe</th><th>1 sem.</th><th>1 mois</th><th>6 mois</th><th>Janv.</th><th>1 an</th><th>Début</th><th>MWR</th><th>Vol.</th></tr></thead><tbody>' + envs.map(perfLigne).join("") + "</tbody></table></div></div></details>" +
@@ -1941,6 +1943,7 @@ function brancherStats(v) {
   v.querySelectorAll("[data-m-patri]").forEach(b => b.addEventListener("click", () => { PREF.patri = b.dataset.mPatri; garderPref(); re(b); }));
   v.querySelectorAll("[data-m-patridet]").forEach(b => b.addEventListener("click", () => { PREF.patriDet = b.dataset.mPatridet; garderPref(); re(b); }));
   dessinerCourbe(); dessinerPatrimoine(); dessinerEpargne(); dessinerPret();
+  brancherProjection(v);
 }
 
 /* ================= Signal levier Nasdaq (repris tel quel de Cote V5.6 : mêmes données, mêmes règles, mêmes textes) ================= */
@@ -2473,6 +2476,281 @@ function afficherMillion(el) {
   if (!M) { el.innerHTML = ""; return; }
   el.classList.add("moi");
   el.innerHTML = htmlMillion(); brancherMillion(el);
+}
+
+/* ================= v16.95 · Projection 2034, calendrier des échéances, « où mettre le prochain euro » (privé, rien n'est envoyé) =================
+   Règle fixe : la projection part du patrimoine FINANCIER seulement (valeurMillion), jamais de l'immobilier.
+   Taux de repli : utilisés seulement quand ton fichier ne donne pas le sien (indicatifs, à revoir de temps en temps). */
+const TAUX_REPLI = { livretA: .017, ldds: .017, lep: .027, livretJeune: .02, pel: .0175, cel: .01, autreLivret: .01, fondsEuros: .025, uc: .04, bourse: .06 };
+const PLAFONDS_LIVRETS = [[/livret\s*a\b/i, 22950, "livretA", "Livret A"], [/ldds|d[ée]veloppement durable/i, 12000, "ldds", "LDDS"], [/\blep\b|populaire/i, 10000, "lep", "LEP"],
+  [/livret\s*jeune/i, 1600, "livretJeune", "Livret jeune"], [/\bpel\b|plan d'[ée]pargne logement/i, 61200, "pel", "PEL"], [/\bcel\b|compte d'[ée]pargne logement/i, 15300, "cel", "CEL"]];
+const PLAFOND_PEA = 150000, ECART_SCENARIO = .02, FIN_PROJ = "2034-12-31";
+const PLUS_MAX = 500, PLUS_PAS = 50, PLUS_PROPOSE = 100;
+let projPlus = 0;   // curseur « Et si je versais plus ? » : toujours à 0 à l'ouverture
+function genreLivret(r) { const t = (r.nom || "") + " " + (r.type || ""); return PLAFONDS_LIVRETS.find(p => p[0].test(t)) || null; }
+function tauxLivret(r) { if (ok(r.taux) && r.taux > 0) return { r: r.taux, repli: false }; const g = genreLivret(r); return { r: TAUX_REPLI[g ? g[2] : "autreLivret"], repli: true }; }
+function tauxFondsEuros() { const fe = (M.parametres || {}).fondsEuros || {}; return ok(fe.taux) && fe.taux > 0 ? { r: fe.taux, repli: false, fe } : { r: TAUX_REPLI.fondsEuros, repli: true, fe }; }
+/** le patrimoine financier découpé par famille, chacune avec son rendement habituel → rendement moyen « central » */
+function mixFinancier() {
+  const s = M.synthese || {}, total = valeurMillion();
+  if (!ok(total) || total <= 0) return null;
+  const parts = [];
+  (M.epargne || []).filter(r => !/^Total/.test(r.nom || "") && r.solde > 0).forEach(r => parts.push({ fam: "livrets", v: r.solde, r: tauxLivret(r).r }));
+  (M.supports || []).filter(r => !/^Total/.test(r.nom || "") && r.valeur > 0).forEach(r => parts.push({ fam: cleSupport(r.nom) === "fe" ? "fe" : "uc", v: r.valeur, r: cleSupport(r.nom) === "fe" ? tauxFondsEuros().r : TAUX_REPLI.uc }));
+  if (s.valeur > 0) parts.push({ fam: "bourse", v: s.valeur, r: TAUX_REPLI.bourse });
+  let somme = parts.reduce((a, p) => a + p.v, 0);
+  if (total > somme + 1) { parts.push({ fam: "autres", v: total - somme, r: TAUX_REPLI.autreLivret }); somme = total; }
+  const r = somme > 0 ? parts.reduce((a, p) => a + p.v * p.r, 0) / somme : TAUX_REPLI.autreLivret;
+  const fam = {}; parts.forEach(p => { const f = fam[p.fam] = fam[p.fam] || { v: 0, rv: 0 }; f.v += p.v; f.rv += p.v * p.r; });
+  return { total, r, fam: Object.keys(fam).map(k => ({ k, part: fam[k].v / somme, r: fam[k].rv / fam[k].v })).sort((a, b) => b.part - a.part) };
+}
+function moisJusquA(iso) { const a = new Date(), f = new Date(iso + "T12:00:00"); return Math.max(1, (f.getFullYear() - a.getFullYear()) * 12 + f.getMonth() - a.getMonth()); }
+function serieProj(v, c, rAn, n) { const i = Math.pow(1 + Math.max(-.5, rAn), 1 / 12) - 1, out = [v]; let x = v; for (let k = 1; k <= n; k++) { x = x * (1 + i) + c; out.push(x); } return out; }
+/** tout le calcul de la projection (sans effet de bord) ; plus = euros ajoutés chaque mois par le curseur */
+function calculProjection(plus) {
+  if (!M) return null;
+  const mix = mixFinancier(); if (!mix) return null;
+  const ry = rythmeMillion(), c = ry ? ry.c : 0, n = moisJusquA(FIN_PROJ), cp = c + (plus || 0);
+  const sc = [["prudent", Math.max(0, mix.r - ECART_SCENARIO)], ["central", mix.r], ["optimiste", mix.r + ECART_SCENARIO]].map(([k, r]) => ({ k, r, s: serieProj(mix.total, cp, r, n) }));
+  sc.forEach(x => { x.fin = x.s[n]; });
+  const nM = moisPourMillion(mix.total, c, mix.r), nMp = moisPourMillion(mix.total, cp, mix.r);
+  return { v: mix.total, mix, c, plus: plus || 0, cp, n, sc, verse: mix.total + cp * n, source: ry ? ry.source : "", nM, nMp };
+}
+function dateDansMois(n) { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + n, 1); }
+function jalonsProjection() {
+  const l = [], fin = FIN_PROJ, auj = isoJour(new Date());
+  if (aArtema()) ARTEMA.rdv.forEach((x, i) => { if (x[0] >= auj && x[0] <= fin) l.push({ d: x[0], k: "artema", t: x[3] ? "Artema : fin" : "Artema : rendez-vous " + (i + 1) }); });
+  const p = M.prets; if (p && p.fin && p.fin >= auj && p.fin <= fin) l.push({ d: p.fin, k: "pret", t: "Fin du prêt" });
+  return l;
+}
+function svgProjection2034(P) {
+  const W = 320, H = 176, m = { l: 38, r: 8, t: 10, b: 30 }, iw = W - m.l - m.r, ih = H - m.t - m.b, n = P.n;
+  const mx = Math.max(...P.sc[2].s) * 1.06 || 1, X = k => m.l + k / n * iw, Y = v => m.t + ih - Math.max(0, Math.min(v, mx)) / mx * ih;
+  const d = arr => arr.map((v, k) => (k ? "L" : "M") + X(k).toFixed(1) + " " + Y(v).toFixed(1)).join("");
+  const pas = mx > 2e6 ? 5e5 : mx > 8e5 ? 2.5e5 : mx > 3e5 ? 1e5 : mx > 1.2e5 ? 5e4 : mx > 4e4 ? 1e4 : 5e3;
+  let o = "";
+  for (let t = 0; t <= mx; t += pas) o += '<line class="gr" x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + Y(t).toFixed(1) + '" y2="' + Y(t).toFixed(1) + '"/><text x="' + (m.l - 4) + '" y="' + (Y(t) + 3.5).toFixed(1) + '" text-anchor="end">' + (t ? kEurP(t).replace(" ", "") : "0") + "</text>";
+  if (mx > CIBLE * .7) o += '<line class="mil" x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + Y(CIBLE).toFixed(1) + '" y2="' + Y(CIBLE).toFixed(1) + '"/><text class="mil-t" x="' + (W - m.r) + '" y="' + (Y(CIBLE) - 3).toFixed(1) + '" text-anchor="end">1 million</text>';
+  const a0 = new Date(), kDe = iso => Math.max(0, Math.min(n, (+iso.slice(0, 4) - a0.getFullYear()) * 12 + (+iso.slice(5, 7) - 1 - a0.getMonth()) + (+iso.slice(8, 10) - 1) / 30));
+  for (let y = a0.getFullYear() + 1; y <= 2034; y++) { if ((y - a0.getFullYear()) % 2) continue; const x = X(kDe(y + "-01-01")); o += '<text x="' + x.toFixed(1) + '" y="' + (H - m.b + 13) + '" text-anchor="middle">' + y + "</text>"; }
+  const [pr, ce, op] = P.sc;
+  o += '<path class="bande" d="' + d(op.s) + pr.s.map((v, k) => "L" + X(n - k).toFixed(1) + " " + Y(pr.s[n - k]).toFixed(1)).join("") + 'Z"/>';
+  o += '<path class="l-pr" d="' + d(pr.s) + '"/><path class="l-op" d="' + d(op.s) + '"/><path class="l-ce" d="' + d(ce.s) + '"/>';
+  if (P.plus) { const base = serieProj(P.v, P.c, ce.r, n); o += '<path class="l-base" d="' + d(base) + '"/>'; }
+  o += '<circle class="pt" cx="' + X(0).toFixed(1) + '" cy="' + Y(P.v).toFixed(1) + '" r="3"/><circle class="pt" cx="' + X(n).toFixed(1) + '" cy="' + Y(ce.fin).toFixed(1) + '" r="3.5"/>';
+  jalonsProjection().forEach(j => { const x = X(kDe(j.d)), yb = H - m.b; o += '<g class="j-' + j.k + '"><title>' + esc(j.t) + " · " + frDate(j.d) + '</title><line x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + m.t + '" y2="' + yb + '"/>' +
+    (j.k === "artema" ? '<path d="M' + x.toFixed(1) + " " + (yb - 5) + "l4 4l-4 4l-4 -4z" + '"/>' : '<circle cx="' + x.toFixed(1) + '" cy="' + (yb - 1) + '" r="4"/>') + "</g>"; });
+  return '<svg class="pj-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Projection du patrimoine financier jusqu\'en 2034">' + o + "</svg>";
+}
+const pctR = r => String(Math.round(r * 1000) / 10).replace(".", ",") + NB + "%";
+const NOMS_FAM = { livrets: "livrets", fe: "fonds euros", uc: "Artema et autres supports", bourse: "bourse", autres: "le reste" };
+function phrasePlus(P) {
+  if (!P.plus) return 'Fais glisser pour voir l\'effet d\'un petit effort en plus (essaie +' + PLUS_PROPOSE + " €).";
+  const q = P.nMp === null ? null : dateDansMois(P.nMp), gain = P.nM !== null && P.nMp !== null ? P.nM - P.nMp : null;
+  const fin = P.sc[1].fin - serieProj(P.v, P.c, P.sc[1].r, P.n)[P.n];
+  const dur = g => g >= 24 ? Math.floor(g / 12) + " ans" + (g % 12 ? " et " + (g % 12) + " mois" : "") : g + " mois";
+  return "<b>+" + F0.format(P.plus) + " €/mois</b> → " + (q ? (gain > 0 ? "million <b>" + dur(gain) + " plus tôt</b>, en " + MOIS_L[q.getMonth()] + " " + q.getFullYear() : "million en " + MOIS_L[q.getMonth()] + " " + q.getFullYear()) : "million encore hors de portée en 80 ans") +
+    " · fin 2034 : <b>+" + kEurP(Math.max(0, fin)) + "</b> (central).";
+}
+function htmlProjection() {
+  if (!M) return "";
+  const P = calculProjection(projPlus); if (!P) return "";
+  if (ETAT.discret === "oui") return acc("m-proj", "Projection 2034", "patrimoine financier", '<p class="info">Masquée en mode discret (la courbe laisse deviner le montant). Désactive-le dans Réglages pour la voir.</p>', false);
+  const [pr, ce, op] = P.sc, art = aArtema(), pret = M.prets && M.prets.fin;
+  const tuile = (x, lab) => '<div class="pj-t pj-' + x.k + '"><span>' + lab + '</span><b>' + kEurP(Math.round(x.fin / 1000) * 1000) + "</b><small>" + pctR(x.r) + " par an</small></div>";
+  const familles = P.mix.fam.filter(f => f.part >= .02).map(f => NOMS_FAM[f.k] + " " + pctR(f.r)).join(", ");
+  const jal = jalonsProjection();
+  const leg = '<div class="pj-leg"><span><i class="ce"></i>central</span><span><i class="bd"></i>de prudent à optimiste</span>' + (P.plus ? '<span><i class="bs"></i>sans le curseur</span>' : "") +
+    (jal.some(j => j.k === "artema") ? '<span><i class="ar"></i>Artema</span>' : "") + (jal.some(j => j.k === "pret") ? '<span><i class="pt"></i>fin du prêt</span>' : "") + "</div>";
+  const apresPret = pret && pret > isoJour(new Date()) && pret <= FIN_PROJ && M.prets.mensualite > 0
+    ? (() => { const k = moisJusquA(pret), i = Math.pow(1 + ce.r, 1 / 12) - 1, mens = M.prets.mensualite; let x = 0; for (let j = k; j < P.n; j++) x = x * (1 + i) + mens; return "<li>Ton prêt se termine le " + frDate(pret) + " : si tu épargnes ensuite ta mensualité (" + eur(mens) + "), cela ferait ≈ +" + kEurP(Math.round(x / 1000) * 1000) + " de plus fin 2034 (pas compté dans la courbe).</li>"; })()
+    : pret && pret > FIN_PROJ ? "<li>Ton prêt se termine le " + frDate(pret) + ", après la frise.</li>" : "";
+  const corps = '<div class="m-proj">' +
+    '<div class="pj-tuiles">' + tuile(pr, "Prudent") + tuile(ce, "Central") + tuile(op, "Optimiste") + "</div>" +
+    '<div class="pj-graph" id="pj-graph">' + svgProjection2034(P) + "</div>" + leg +
+    '<div class="pj-plus"><label for="pj-plus"><span>Et si je versais plus chaque mois ?</span><b id="pj-plus-v">+' + F0.format(P.plus) + " €</b></label>" +
+      '<input type="range" id="pj-plus" min="0" max="' + PLUS_MAX + '" step="' + PLUS_PAS + '" value="' + P.plus + '" aria-describedby="pj-plus-t">' +
+      '<p class="pj-plus-t" id="pj-plus-t">' + phrasePlus(P) + "</p></div>" +
+    '<div data-aide><h4 class="pj-h">Les hypothèses <button type="button" class="qm-b" aria-label="Pourquoi ces chiffres ?">?</button></h4>' +
+    '<span class="aide">Chaque famille garde son rendement habituel : les livrets et le fonds euros à leur taux (celui de ton fichier quand il est saisi), la bourse à ' + pctR(TAUX_REPLI.bourse) + ' par an en moyenne sur longue période. Le scénario prudent retire ' + F0.format(ECART_SCENARIO * 100) + ' points par an à tout, l\'optimiste en ajoute ' + F0.format(ECART_SCENARIO * 100) + '. La bourse peut perdre 20 % ou plus certaines années : la vraie courbe ne sera jamais aussi lisse.</span>' +
+    '<ul class="pj-hyp"><li>Départ : ton patrimoine financier d\'aujourd\'hui, ' + kEurP(Math.round(P.v / 1000) * 1000) + " (épargne, bourse, assurance-vie). L'immobilier ne compte pas.</li>" +
+      "<li>Chaque mois : " + eur(P.c) + (P.plus ? " + " + eur(P.plus) + " (curseur)" : "") + " versés" + (P.source ? " (ton rythme : " + esc(P.source) + ")" : "") + ". Fin 2034, tu auras versé en tout ≈ " + kEurP(Math.round(P.verse / 1000) * 1000) + ", le reste vient des intérêts.</li>" +
+      "<li>Rendement central : " + pctR(ce.r) + " par an (" + esc(familles) + ").</li>" +
+      (art ? "<li>Artema : rendez-vous chaque début décembre de 2029 à 2033, fin le 1er décembre 2034 (◆ sur la frise). La courbe ne suppose aucun remboursement anticipé.</li>" : "") + apresPret +
+      "<li>Ni impôts, ni inflation, ni retraits. Un repère pour se projeter, pas une prévision.</li></ul></div></div>";
+  return acc("m-proj", "Projection 2034", "fin 2034 ≈ " + kEurP(Math.round(ce.fin / 1000) * 1000) + " (central)", corps, true);
+}
+function brancherProjection(v) {
+  const z = v.querySelector(".m-proj"); if (!z) return;
+  z.querySelectorAll(".qm-b").forEach(q => q.addEventListener("click", e => { e.preventDefault(); const a = q.closest("[data-aide]"); if (a) a.classList.toggle("aide-on"); }));
+  const r = z.querySelector("#pj-plus"); if (!r) return;
+  r.addEventListener("input", () => {
+    projPlus = Math.max(0, Math.min(PLUS_MAX, Math.round(+r.value / PLUS_PAS) * PLUS_PAS));
+    const P = calculProjection(projPlus); if (!P) return;
+    z.querySelector("#pj-graph").innerHTML = svgProjection2034(P);
+    z.querySelector("#pj-plus-v").textContent = "+" + F0.format(projPlus) + " €";
+    z.querySelector("#pj-plus-t").innerHTML = phrasePlus(P);
+    const tu = z.querySelectorAll(".pj-t b"); P.sc.forEach((x, i) => { if (tu[i]) tu[i].textContent = kEurP(Math.round(x.fin / 1000) * 1000); });
+    const leg = z.querySelector(".pj-leg"), bs = leg && leg.querySelector(".bs");
+    if (leg && projPlus && !bs) leg.insertAdjacentHTML("beforeend", '<span class="pj-bs"><i class="bs"></i>sans le curseur</span>'); else if (leg && !projPlus && bs) bs.parentNode.remove();
+  });
+}
+
+/* ---- Calendrier unique des échéances (+ fichier .ics pour l'agenda, fabriqué dans le téléphone) ---- */
+function finDuMois(d) { return isoJour(new Date(d.getFullYear(), d.getMonth() + 1, 0)); }
+function echeancesMoi() {
+  if (!M) return [];
+  const l = [], auj = isoJour(new Date()), dans = isoJour(new Date(Date.now() + 2 * 365.25 * 864e5));
+  const add = (o) => { if (o.d && (o.du || (o.d >= auj && (o.d <= dans || o.loin)))) l.push(o); };
+  // rappels du fichier (le Point Artema compris)
+  if (M.simple) {
+    if (/À mettre à jour/.test(M.rappel || "")) add({ d: auj, ico: ICO_RAPPEL.soldes, t: "Mettre à jour tes soldes", s: "tes soldes d'épargne ont plus d'un mois", du: true, k: "soldes" });
+  } else rappelsFichier().forEach(x => {
+    const k = cleRappel(x.nom) || x.nom, d = x.prochaine && /^\d{4}-\d\d-\d\d/.test(x.prochaine) ? String(x.prochaine).slice(0, 10) : null, du = rappelDu(x);
+    const point = aArtema() && POINT_ART.includes(k);
+    if (!d && !du) return;
+    add({ d: d || auj, ico: point ? "🎯" : ICO_RAPPEL[k] || "◷", t: point ? "Point Artema" : nomCourtRappel(x), s: du ? (d && d < auj ? "en retard, prévu le " + frDate(d) : "à faire maintenant") : point ? nomCourtRappel(x) + " et niveau de l'indice" : "rappel de ton fichier", du, k: "r-" + k });
+  });
+  // relevé du Versus : chaque fin de mois
+  add({ d: finDuMois(new Date()), ico: "🏁", t: "Relevé du mois pour le Versus", s: M.versusLie === true ? "ton fichier l'envoie tout seul" : "à saisir dans le Versus en fin de mois", k: "versus", rrule: "FREQ=MONTHLY;BYMONTHDAY=-1" });
+  // Artema : photo de départ, rendez-vous, fin
+  if (aArtema()) {
+    if (auj <= ARTEMA.photo[1]) add({ d: ARTEMA.photo[0], ico: "📸", t: "Artema : photo de départ", s: "moyenne des 2, 3 et 4 décembre 2026", k: "art-photo" });
+    ARTEMA.rdv.forEach((x, i) => add({ d: x[0], ico: "🎯", t: x[3] ? "Artema : fin du produit" : "Artema : rendez-vous " + (i + 1) + " sur 5", s: x[3] ? "dernière constatation de l'indice" : "si l'indice est au moins à son départ : arrêt, capital + " + pc1(x[2]) + " %", k: "art-" + i, loin: true }));
+  }
+  // prêt : prochaine échéance (tous les mois) et fin
+  const p = M.prets;
+  if (p && p.prochaine && p.prochaine.date >= auj) add({ d: p.prochaine.date, ico: "🏠", t: "Échéance du prêt", s: eur((p.prochaine.echeance || 0) + (p.banque ? 0 : p.prochaine.assurance || 0), 2) + " · tous les mois", k: "pret-m", rrule: "FREQ=MONTHLY" + (p.fin ? ";UNTIL=" + p.fin.replace(/-/g, "") : "") });
+  if (p && p.fin) add({ d: p.fin, ico: "🎉", t: "Fin du prêt immobilier", s: "dernière échéance", k: "pret-fin", loin: true });
+  // échéances connues : anniversaires fiscaux, intérêts et taux des livrets, fin du bonus du fonds euros
+  ((M.ref || {}).enveloppes || []).filter(e => e.ouverture && e.statut !== "Fermé" && (e.regime === "PEA" || e.regime === "AV")).forEach(e => {
+    const n = e.regime === "PEA" ? 5 : 8; add({ d: isoPlus(String(e.ouverture).slice(0, 10), n, 0), ico: "🎂", t: e.nom + " a " + n + " ans", s: e.regime === "PEA" ? "gains sans impôt (prélèvements sociaux seulement)" : "abattement sur les gains retirés chaque année", k: "fisc-" + e.nom, loin: true });
+  });
+  const an = new Date().getFullYear();
+  if ((M.epargne || []).some(r => !/^Total/.test(r.nom || "") && genreLivret(r))) {
+    add({ d: an + "-12-31", ico: "🏦", t: "Intérêts des livrets", s: "versés sur tes livrets le 31 décembre", k: "liv-int", rrule: "FREQ=YEARLY" });
+    [an + "-02-01", an + "-08-01", (an + 1) + "-02-01"].filter(d => d >= auj).slice(0, 1).forEach(d => add({ d, ico: "📣", t: "Nouveau taux possible du Livret A", s: "révisé en principe le 1er février et le 1er août", k: "liv-taux" }));
+  }
+  const fe = ((M.parametres || {}).fondsEuros) || {};
+  if (fe.bonus && fe.bonusFin) add({ d: String(fe.bonusFin).slice(0, 10), ico: "💶", t: "Fin du bonus du fonds euros", s: "bonus de " + pct(fe.bonus, 2, false), k: "fe-bonus" });
+  const vus = new Set();
+  return l.filter(x => { const c = x.k + x.d; if (vus.has(c)) return false; vus.add(c); return true; })
+    .sort((a, b) => (b.du ? 1 : 0) - (a.du ? 1 : 0) || (a.d < b.d ? -1 : a.d > b.d ? 1 : 0));
+}
+function htmlEcheances() {
+  const l = echeancesMoi(); if (!l.length) return "";
+  const auj = isoJour(new Date());
+  const ligne = x => '<div class="ec-r' + (x.du ? " du" : "") + '"><span class="ec-d">' + (x.du && x.d <= auj ? "à faire" : jourCourt(x.d, x.d.slice(0, 4) === auj.slice(0, 4))) + '</span><span class="ec-i" aria-hidden="true">' + x.ico + '</span><span class="ec-t"><b>' + esc(x.t) + "</b><small>" + esc(x.s) + "</small></span></div>";
+  const vis = l.slice(0, 5), reste = l.slice(5), pro = l.find(x => !x.du) || l[0];
+  return acc("m-echeances", "Mes échéances", (l.some(x => x.du) ? l.filter(x => x.du).length + " à faire · " : "") + "prochaine : " + esc(pro.t) + (pro.du ? "" : " · " + jourCourt(pro.d, pro.d.slice(0, 4) === auj.slice(0, 4))),
+    '<div class="m-ech">' + vis.map(ligne).join("") +
+    (reste.length ? '<details class="ec-plus"><summary>Voir les ' + reste.length + " suivantes</summary>" + reste.map(ligne).join("") + "</details>" : "") +
+    '<button class="btn" type="button" id="ec-ics">📅 Ajouter à mon agenda</button>' +
+    '<p class="info">Le fichier est fabriqué sur ton téléphone (rien n\'est envoyé) et ne contient aucun montant. Ouvre-le : ton agenda propose d\'ajouter les échéances. Le refaire plus tard met à jour les mêmes rendez-vous.</p></div>', false);
+}
+/** le texte du fichier .ics (iCalendar) : journées entières, sans montant, identifiants stables pour ne pas créer de doublons */
+function icsEcheances(l) {
+  const esc2 = t => String(t).replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  const plie = s => { const out = []; let cur = "", n = 0; for (const ch of s) { const b = new TextEncoder().encode(ch).length; if (n + b > 74) { out.push(cur); cur = " "; n = 1; } cur += ch; n += b; } out.push(cur); return out.join("\r\n"); };
+  const jd = iso => iso.replace(/-/g, ""), lend = iso => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + 1); return jd(isoJour(d)); };
+  const st = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z"), qui = String((M && M.personne) || ETAT.moi || "moi").normalize("NFD").replace(/[^\w]/g, "").toLowerCase() || "moi";
+  const sansMontant = t => String(t).replace(/(?:[−-]?[\d\s\u202F\u00A0.,]+|•••)\s?€[^·]*·?\s*/g, "").trim();
+  const ev = l.map(x => {
+    const lignes = ["BEGIN:VEVENT", "UID:versus-" + qui + "-" + String(x.k).normalize("NFD").replace(/[^\w-]/g, "").toLowerCase() + (x.rrule ? "" : "-" + jd(x.d)) + "@versus-moi", "DTSTAMP:" + st,
+      "DTSTART;VALUE=DATE:" + jd(x.d), "DTEND;VALUE=DATE:" + lend(x.d), "SUMMARY:" + esc2(x.t), "DESCRIPTION:" + esc2((sansMontant(x.s) || x.s.replace(/€/g, "")) + " · Versus › Moi"), "TRANSP:TRANSPARENT"];
+    if (x.rrule) lignes.push("RRULE:" + x.rrule);
+    lignes.push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + esc2(x.t), "TRIGGER:PT9H", "END:VALARM", "END:VEVENT");
+    return lignes.map(plie).join("\r\n");
+  });
+  return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Versus//Moi echeances//FR", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:Mes échéances (Versus)"].map(plie).join("\r\n") + "\r\n" + ev.join("\r\n") + "\r\nEND:VCALENDAR\r\n";
+}
+function telechargerIcs() {
+  const l = echeancesMoi().map(x => x.du && x.d < isoJour(new Date()) ? Object.assign({}, x, { d: isoJour(new Date()) }) : x);
+  if (!l.length) return;
+  const blob = new Blob([icsEcheances(l)], { type: "text/calendar;charset=utf-8" }), url = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = url; a.download = "mes-echeances-versus.ics"; a.rel = "noopener"; a.style.display = "none";
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 4000);   // pas trop tôt : Firefox Android et iPhone lisent le fichier après le clic
+  if (typeof toast === "function") toast("📅 " + l.length + " échéances prêtes : ouvre le fichier téléchargé pour les ajouter à ton agenda.");
+}
+function brancherEcheances(v) { const b = v.querySelector("#ec-ics"); if (b) b.addEventListener("click", telechargerIcs); }
+
+/* ---- « Où mettre le prochain euro ? » : comparateur indicatif de TES enveloppes ---- */
+const HORIZONS = [["court", "moins de 2 ans", 1], ["moyen", "2 à 5 ans", 3], ["long", "5 ans et plus", 8]];
+function optionsEuro() {
+  const o = [], r = (M.ref || {}), envs = (r.enveloppes || []).filter(e => e.statut !== "Fermé"), ficPEA = (M.fiscalite || []).find(x => /PEA/i.test(x.nom || ""));
+  (M.epargne || []).filter(x => !/^Total/.test(x.nom || "")).forEach(x => {
+    const g = genreLivret(x), t = tauxLivret(x); if (!g && !(ok(x.taux) && x.taux > 0)) return;
+    const reste = g ? Math.max(0, g[1] - (x.solde || 0)) : null, regle = g && /pel|cel/.test(g[2]);
+    o.push({ nom: x.nom, fam: "livret", r: t.r, repli: t.repli, reste, plafond: g ? g[1] : null, risque: 0,
+      dispo: g && g[2] === "pel" ? "bloqué jusqu'à la fin du plan (le retrait le ferme)" : "à tout moment, en un jour", fisc: regle ? "Intérêts imposés (environ 30 %)." : g ? "Intérêts sans impôt ni prélèvements sociaux." : "Fiscalité selon le compte." });
+  });
+  const tFE = tauxFondsEuros(), aFE = (M.supports || []).some(x => cleSupport(x.nom || "") === "fe") || envs.some(e => e.regime === "AV" && /épargne/i.test(e.perimetre || ""));
+  const av = envs.find(e => e.regime === "AV" && /Quintessa/i.test(e.nom)) || envs.find(e => e.regime === "AV");
+  if (aFE) { const bon = tFE.fe && tFE.fe.bonus && (!tFE.fe.bonusFin || tFE.fe.bonusFin >= isoJour(new Date())) ? tFE.fe.bonus : 0;
+    const age = av && av.ouverture ? (Date.now() - new Date(String(av.ouverture).slice(0, 10) + "T12:00:00")) / (365.25 * 864e5) : null;
+    o.push({ nom: (av ? av.nom + " · " : "Assurance-vie · ") + "fonds euros", fam: "fe", r: tFE.r + bon, repli: tFE.repli, bonus: bon, reste: null, risque: 0,
+      dispo: "en quelques jours (rachat), capital garanti", fisc: "Gains taxés seulement quand tu retires" + (age !== null && age >= 8 ? " ; après 8 ans (c'est ton cas), une part des gains chaque année sans impôt." : " ; après 8 ans" + (age !== null ? " (dans " + Math.ceil(8 - age) + " an" + (8 - age > 1 ? "s" : "") + ")" : "") + ", une part des gains chaque année sans impôt.") }); }
+  const pea = envs.find(e => e.regime === "PEA") || (M.enveloppes || []).find(e => e.type === "env" && /PEA/.test(e.nom || ""));
+  if (pea) {
+    const apports = ficPEA && ok(ficPEA.apports) ? ficPEA.apports : null, age = pea.ouverture ? (Date.now() - new Date(String(pea.ouverture).slice(0, 10) + "T12:00:00")) / (365.25 * 864e5) : null;
+    o.push({ nom: pea.nom, fam: "bourse", r: TAUX_REPLI.bourse, repli: true, reste: apports !== null ? Math.max(0, PLAFOND_PEA - apports) : null, plafond: PLAFOND_PEA, plafondVerse: true, risque: 2,
+      dispo: "à tout moment, mais un retrait avant 5 ans ferme le PEA" + (age !== null && age >= 5 ? " (le tien a plus de 5 ans : retrait possible sans le fermer)" : ""),
+      fisc: "Après 5 ans, gains sans impôt (prélèvements sociaux seulement)." });
+  }
+  const cto = envs.find(e => e.regime === "CTO") || (M.enveloppes || []).find(e => e.type === "env" && /CTO/.test(e.nom || ""));
+  if (cto) o.push({ nom: cto.nom, fam: "bourse", r: TAUX_REPLI.bourse, repli: true, reste: null, risque: 2, dispo: "à tout moment (vente en bourse)", fisc: "Gains taxés à chaque vente (environ 30 %)." });
+  return o;
+}
+/** classement + répartition du montant (les plafonds sont respectés), sans effet de bord */
+function comparerEuro(montant, h) {
+  const H = HORIZONS.find(x => x[0] === h) || HORIZONS[1], ans = H[2];
+  const opts = optionsEuro().map(x => {
+    let note = x.r, exclu = null;
+    if (x.risque && h === "court") exclu = "trop court pour la bourse : elle peut baisser de 20 % ou plus en un an";
+    else if (x.risque && h === "moyen") note = x.r - .035;   // prudence : une baisse peut ne pas avoir le temps de se refaire
+    if (x.reste === 0) exclu = x.plafondVerse ? "plafond des versements atteint" : "plein (plafond atteint)";
+    if (x.fam === "livret" && /bloqué/.test(x.dispo) && h === "court") note -= .02;
+    return Object.assign({}, x, { note, exclu, gain: montant > 0 ? montant * (Math.pow(1 + x.r, ans) - 1) : 0 });
+  });
+  const rang = opts.filter(x => !x.exclu).sort((a, b) => b.note - a.note || (a.risque - b.risque)).concat(opts.filter(x => x.exclu));
+  const rep = []; let reste = montant > 0 ? montant : 0;
+  rang.filter(x => !x.exclu).forEach(x => { if (reste <= 0) return; const m = x.reste === null ? reste : Math.min(reste, x.reste); if (m > 0) { rep.push({ nom: x.nom, m }); reste -= m; } });
+  return { H, ans, rang, rep, reste };
+}
+function phraseEuro(C, montant) {
+  const p = C.rang.find(x => !x.exclu);
+  if (!p) return "Toutes tes enveloppes connues sont pleines ou trop risquées pour cette durée : un livret ou l'assurance-vie fonds euros restent les choix sûrs.";
+  let t = C.H[0] === "court" ? "Pour un argent dont tu auras besoin bientôt, la sécurité passe avant le rendement : " : C.H[0] === "moyen" ? "Sur 2 à 5 ans, mieux vaut un placement qui ne baisse pas : " : "Sur 5 ans et plus, la bourse a le plus de chances de rapporter, avec des années en baisse : ";
+  t += "<b>" + esc(p.nom) + "</b> arrive en tête";
+  if (C.rep.length > 1 && montant > 0) t += " ; comme il ne reste que " + eur(C.rep[0].m) + " de place, la suite irait sur " + C.rep.slice(1).map(x => "<b>" + esc(x.nom) + "</b>").join(" puis ") + "";
+  return t + ". Garde toujours de quoi faire face à un imprévu (environ 3 mois de dépenses) sur un livret disponible.";
+}
+function htmlComparateur() {
+  if (!M) return "";
+  const opts = optionsEuro(); if (!opts.length) return "";
+  const discret = ETAT.discret === "oui", h = HORIZONS.some(x => x[0] === PREF.euroH) ? PREF.euroH : "moyen";
+  const m0 = ok(PREF.euroM) ? PREF.euroM : null;
+  const corps = '<div class="m-euro">' +
+    '<div class="eu-saisie"><label for="eu-m"><span>Montant à placer (€)</span><input id="eu-m" type="text" inputmode="decimal" autocomplete="off" placeholder="1 000" value="' + (m0 !== null && !discret ? saisieNombre(m0, 2) : "") + '"></label></div>' +
+    '<div class="chips" role="group" aria-label="J\'en aurai besoin dans">' + HORIZONS.map(([k, l]) => '<button class="chip" type="button" data-eu-h="' + k + '" aria-pressed="' + (h === k) + '">' + l + "</button>").join("") + "</div>" +
+    '<div id="eu-res">' + resComparateur(m0 !== null && !discret ? m0 : 1000, h, discret) + "</div>" +
+    '<p class="info">Indicatif, pas un conseil financier. Rendements attendus : les taux de ton fichier quand ils sont saisis, sinon des repères moyens (bourse ' + pctR(TAUX_REPLI.bourse) + " par an sur longue période, jamais garanti). Les règles fiscales peuvent changer.</p></div>";
+  return acc("m-euro", "Où mettre le prochain euro ?", "tes enveloppes comparées", corps, false);
+}
+function resComparateur(montant, h, discret) {
+  const C = comparerEuro(montant, h);
+  const ligne = (x, i) => '<div class="eu-r' + (x.exclu ? " exclu" : i === 0 ? " tete" : "") + '"><span class="eu-n">' + (x.exclu ? "—" : i + 1) + '</span><span class="eu-t"><b>' + esc(x.nom) + "</b>" +
+    "<small>" + (x.exclu ? esc(x.exclu) : (x.risque ? "≈ " : "") + pctR(x.r) + " par an" + (x.repli ? (x.risque ? " en moyenne, sans garantie" : " (taux de repli)") : x.bonus ? " bonus compris" : "") + " · ≈ " + eur(x.gain, 0, true) + " en " + C.ans + " an" + (C.ans > 1 ? "s" : "")) + "</small>" +
+    "<small>Disponible : " + esc(x.dispo) + (x.plafond ? " · place restante : " + (x.reste === null ? "plafond de " + kEurP(x.plafond) + (x.plafondVerse ? " versés" : "") : discret ? "•••" : eur(x.reste)) : "") + "</small>" +
+    "<small>" + esc(x.fisc) + "</small></span></div>";
+  return '<p class="eu-conseil">' + phraseEuro(C, montant) + "</p>" + '<div class="eu-liste">' + C.rang.map(ligne).join("") + "</div>";
+}
+function brancherComparateur(v) {
+  const z = v.querySelector(".m-euro"); if (!z) return;
+  const maj = () => { const m = lireNombre(z.querySelector("#eu-m").value); z.querySelector("#eu-res").innerHTML = resComparateur(m > 0 ? m : 1000, PREF.euroH || "moyen", ETAT.discret === "oui"); };
+  z.querySelector("#eu-m").addEventListener("input", e => { const m = lireNombre(e.target.value); if (m > 0 && m < 1e8) PREF.euroM = m; else delete PREF.euroM; garderPref(); maj(); });
+  z.querySelectorAll("[data-eu-h]").forEach(b => b.addEventListener("click", () => { PREF.euroH = b.dataset.euH; garderPref(); z.querySelectorAll("[data-eu-h]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); maj(); }));
 }
 
 /* ================= Saisie : ordres, journal, mises à jour du fichier (repris de Cote) ================= */
