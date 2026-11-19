@@ -350,7 +350,53 @@ const SONS = (() => {
     odyssee: () => { souffle(.35, 4000, .6, 0, .005, "highpass"); souffle(2.2, [400, 60], .6, .05, .02, "lowpass"); note([110, 40], 2, "sawtooth", .15, .05); vibrer([60, 30, 220]); }
   };
 
+  /* v16.93 · la bande-son d'un moment rare (8-eredor-demarrage.js) : un roulement qui monte, un tic à chaque palette du compteur,
+     un silence, puis l'accord majeur, la cymbale, les pièces qui tintent et « VER-SUS ! » en majeur. Lancée par un toucher (le son se débloque) ;
+     o = { ticks: [ms…], impact: ms, forcer } ; forcer = la personne a choisi d'activer le son pour CE moment alors qu'il est coupé dans les Réglages. */
+  function sacre(o) {
+    let c = null;
+    try {
+      if (!actif() && !o.forcer) return null;
+      if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; ctx = new AC(); maitre = sortie(ctx); }
+      if (ctx.state === "suspended") ctx.resume();
+      c = ctx;
+    } catch (e) { return null; }
+    let N = [], bus = null;
+    const nouveauBus = () => { bus = c.createGain(); bus.gain.value = 1; bus.connect(maitre); };
+    const tout = () => { N.forEach(x => { try { x.stop(); } catch (e) { /* déjà fini */ } }); N = []; try { bus.disconnect(); } catch (e) { } };
+    const t0 = c.currentTime + .04, tI = t0 + o.impact / 1000;
+    const leMillion = T => {   // l'impact, puis la fanfare
+      INSTR.timbale(c, bus, T, 65.4, 0, .55, N); INSTR.choc(c, bus, T, 0, 0, .45, N);
+      bruitF(c, env(c, bus, T, .002, 3.4, .32), T, 3.4, 6500, .7, "highpass", N);   // la cymbale
+      bruitF(c, env(c, bus, T, .004, 1.6, .12), T, 1.6, 9500, 1.2, "bandpass", N);
+      [261.63, 329.63, 392, 523.25].forEach((f, i) => { INSTR.cuivre(c, bus, T + i * .012, f, 2.6, .11, N); INSTR.cor(c, bus, T + .02, f / 2, 2.4, .05, N); });
+      for (let k = 0; k < 18; k++) INSTR.clochette(c, bus, T + .55 + k * .09 + Math.random() * .05, 1900 + Math.random() * 1700, 0, .035 + Math.random() * .03, N);   // les pièces
+      jingleSur(c, bus, T + 2.3, "multivers", "motif", N); jingleSur(c, bus, T + 3.15, "multivers", "accord", N);
+      INSTR.timbale(c, bus, T + 3.15, 65.4, 0, .45, N); bruitF(c, env(c, bus, T + 3.15, .002, 2.6, .2), T + 3.15, 2.6, 7000, .7, "highpass", N);
+      INSTR.cloche(c, bus, T + 3.2, 523.25, 0, .1, N); INSTR.glock(c, bus, T + 3.3, 2093, 0, .08, N); INSTR.glock(c, bus, T + 3.42, 2637, 0, .07, N);
+    };
+    try {
+      nouveauBus();
+      // le roulement : un seul bruit, haché par un oscillateur carré qui accélère, qui enfle puis se coupe net sur 999 999
+      const fin = tI - 1.15, s = c.createBufferSource(), fl = c.createBiquadFilter(), hache = c.createGain(), lfo = c.createOscillator(), lg = c.createGain(), g = c.createGain();
+      s.buffer = bruitDe(c); s.loop = true; fl.type = "bandpass"; fl.frequency.setValueAtTime(1600, t0); fl.frequency.linearRampToValueAtTime(2600, fin); fl.Q.value = .9;
+      lfo.type = "square"; lfo.frequency.setValueAtTime(15, t0); lfo.frequency.linearRampToValueAtTime(27, fin); lg.gain.value = .5; hache.gain.value = .5;
+      lfo.connect(lg); lg.connect(hache.gain); s.connect(fl); fl.connect(hache); hache.connect(g); g.connect(bus);
+      g.gain.setValueAtTime(.0001, t0 + .15); g.gain.exponentialRampToValueAtTime(.34, fin - .05); g.gain.linearRampToValueAtTime(0, fin + .02);
+      s.start(t0); lfo.start(t0); s.stop(fin + .1); lfo.stop(fin + .1); N.push(s, lfo);
+      for (let t = .2; t < fin - t0 - .1; t += .5) INSTR.timbale(c, bus, t0 + t, 98, 0, .05 + .22 * t / (fin - t0), N);   // le grave qui pousse
+      o.ticks.forEach((ms, i) => INSTR.tictac(c, bus, t0 + ms / 1000, 1900, 0, .08 + .06 * i / o.ticks.length, N));   // une palette = un tic
+      leMillion(tI);
+    } catch (e) { /* rien */ }
+    return {
+      /** « Passer » : on coupe tout et l'impact part maintenant */
+      sauter() { try { tout(); nouveauBus(); leMillion(c.currentTime + .03); } catch (e) { /* rien */ } },
+      arreter(f) { try { const t = c.currentTime, b = bus, M = N; b.gain.cancelScheduledValues(t); b.gain.setValueAtTime(b.gain.value, t); b.gain.linearRampToValueAtTime(0, t + (f || .3)); N = []; setTimeout(() => { M.forEach(x => { try { x.stop(); } catch (e) { } }); try { b.disconnect(); } catch (e) { } }, (f || .3) * 1000 + 100); } catch (e) { /* rien */ } }
+    };
+  }
+
   const API = {
+    sacre,
     actif, vibreOK, arreter, vibrer, klaxon, musiqueBA, bloque, debloquer, MUSIQUES, JINGLE_TIMBRE, _ecoute: ecoute, _ecouteJingles: ecouteJingles, _partition: composer,
     /** V16.75 · le jingle « VER-SUS ! » dans le timbre d'un univers : mode « motif » (3 notes enchaînées) ou « accord » (tenu ~1 s) */
     jingle(cle, mode) { const c = audio(); if (!c) return; try { jingleSur(c, maitre, c.currentTime + .02, cle, mode || "motif", []); } catch (e) { /* rien */ } },

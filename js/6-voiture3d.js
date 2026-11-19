@@ -228,6 +228,7 @@ function blocDuel(env, deb, fin) {
 
 /* ---------- Confettis : une seule fois quand tu es champion du mois ---------- */
 function feterChampion(v) {
+  if (typeof ereEnCours === "function" && ereEnCours()) { ereApres(() => feterChampion(v), "champion"); return; }   // v16.93 : après la scène du premier million
   if (!v || !v.complet || v.env !== 0 || !v.champion.seul || v.champion.nom !== ETAT.moi) return;
   const cle = "versus.confettis", deja = stock.get(cle);
   if (deja === String(v.k)) return;

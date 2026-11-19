@@ -2455,7 +2455,7 @@ async function revendiquerMillion() {
     const qui = M.simple ? M.personne : moiVrai();
     if (stock.get("versus.moi.million") === qui) return;
     const rep2 = await envoyerApi(apiUrl(), { cle: stock.get(CLES.cle), action: "million", personne: qui });
-    if (rep2.ok) { stock.set("versus.moi.million", qui); toast(rep2.message); if (typeof window.charger === "function") window.charger(true); }
+    if (rep2.ok) { stock.set("versus.moi.million", qui); if (typeof window.charger === "function") window.charger(true); }   // v16.93 : plus de message, la cérémonie EST l'annonce (rechargement direct vers la scène)
   } catch (e) { /* réessai à la prochaine ouverture */ }
 }
 function majSimulation(el) {
@@ -3801,7 +3801,7 @@ function verifierPaliers() {
   stock.set(cleStock("regul"), String(nbR));
   const regul = nbR > avR ? [{ regul: true, titre: nbR - avR > 1 ? "Ta régularité paie : " + (nbR - avR) + " nouveaux objets" : "Un mois de plus avec un versement", grand: nbR + " MOIS", recs: REGULARITE_M.slice(avR, nbR), quand: null, id: null }] : [];
   const file = nouveaux.concat(secrets.map(secret => ({ secret, titre: secret.nom, grand: "?!", quand: null, id: null })), regul);
-  if (file.length) feter(file[0], file.slice(1));
+  if (file.length) { const go = () => feter(file[0], file.slice(1)); if (typeof window.ereApres === "function") window.ereApres(go, "feteMoi"); else go(); }   // v16.93 : attend la scène du premier million
 }
 function feter(x, suite) {
   injecterStyle();

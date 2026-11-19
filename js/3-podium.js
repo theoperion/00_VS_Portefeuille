@@ -525,7 +525,7 @@ function htmlCourseExclusifs() {
   };
   const niveaux = [1, 2, 3, 4].map(n => {
     const l = EXCLUSIFS.filter(x => x.niv === n), pris = l.filter(x => detenteur(x.id)).length + (n === 4 && pm ? 1 : 0), tot = l.length + (n === 4 ? 1 : 0);
-    const mil = n === 4 ? '<div class="ex-l' + (pm ? " pris" : "") + '"><span class="ex-i">👑</span><div><b>Premier millionnaire</b><small>Le premier à 1 000 000 € · récompense secrète, pour toute l\'appli</small></div>' +
+    const mil = n === 4 ? '<div class="ex-l' + (pm ? " pris" : "") + '"><span class="ex-i">👑</span><div><b>Premier millionnaire</b><small>Le premier à 1 000 000 € · récompense secrète</small></div>' +
       (pm ? '<span class="ex-q" style="--c:' + couleur(pm.nom) + '"><b>' + esc(pm.nom) + "</b><small>pour toujours</small></span>" : '<span class="ex-q libre"><b>Libre</b><small>à prendre</small></span>') + "</div>" : "";
     const icones = l.map(x => { const d = detenteur(x.id); return '<i' + (d ? ' style="--c:' + couleur(d.noms[0]) + '" class="pris"' : "") + ">" + x.ico + "</i>"; }).join("") + (n === 4 ? "<i" + (pm ? ' style="--c:' + couleur(pm.nom) + '" class="pris"' : "") + ">👑</i>" : "");
     return '<details class="ex-bloc n' + n + '" data-exn="' + n + '"' + (EX_OUVERTS.has(n) ? " open" : "") + '><summary><span class="ex-niv"><span>' + MED_EX[n] + " " + NIV_EX[n] + "</span><small>" + pris + " / " + tot + "</small></span>" +
@@ -1290,7 +1290,7 @@ function htmlDefis() {
     return '<div class="ex-l' + (d ? " pris" : "") + '"><span class="ex-i">' + x.ico + "</span><div><b>" + esc(x.nom) + "</b><small>Le premier à " + esc(x.def.replace("l'indice", "le " + idx)) + " · " + esc(item) + " (" + slot + ")</small></div>" +
       (d ? '<span class="ex-q" style="--c:' + couleur(d.noms[0]) + '"><b>' + esc(d.nom) + "</b><small>" + esc(moisCourt(d.k)) + "</small></span>" : '<span class="ex-q libre"><b>Libre</b><small>à prendre</small></span>') + "</div>";
   };
-  const ligneMillion = () => '<div class="ex-l' + (pm ? " pris" : "") + '"><span class="ex-i">👑</span><div><b>Premier millionnaire</b><small>Le premier à 1 000 000 € · récompense secrète, pour toute l\'appli</small></div>' +
+  const ligneMillion = () => '<div class="ex-l' + (pm ? " pris" : "") + '"><span class="ex-i">👑</span><div><b>Premier millionnaire</b><small>Le premier à 1 000 000 € · récompense secrète</small></div>' +
     (pm ? '<span class="ex-q" style="--c:' + couleur(pm.nom) + '"><b>' + esc(pm.nom) + "</b><small>pour toujours</small></span>" : '<span class="ex-q libre"><b>Libre</b><small>à prendre</small></span>') + "</div>";
   // score de trophées par pilote
   const nbDe = n => DEFIS.filter(d => E[n][d.id].ok).length + SECRETS.filter(d => E[n][d.id].ok).length + EXCLUSIFS.filter(x => possede(x.id, n)).length + (pm && pm.nom === n ? 1 : 0);

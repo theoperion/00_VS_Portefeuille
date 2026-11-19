@@ -247,7 +247,7 @@ function afficherTout() {
   rendreTicker();
   rendreVue(vueActive());
   majRappels();
-  if (SOURCE === "api") setTimeout(verifierRevelation, 900);
+  if (SOURCE === "api") setTimeout(() => { if (typeof ereApres === "function") ereApres(verifierRevelation, "revel"); else verifierRevelation(); }, 900);   // v16.93 : la scène du premier million passe avant
   $("#etat-source").textContent = SOURCE === "demo" ? "Source : démonstration (aucune adresse d'API)." : SOURCE === "cache" ? "Source : copie locale, l'API n'a pas répondu." : "Source : le fichier « Versus Portefeuille ».";
   $("#choix-moi").innerHTML = D.personnes.map(p => '<button class="chip" type="button" data-moi="' + esc(p.nom) + '" aria-pressed="' + (p.nom === ETAT.moi) + '"><i style="background:' + couleur(p.nom) + '"></i>' + esc(p.nom) + "</button>").join("");
   document.querySelectorAll("[data-moi]").forEach(x => x.addEventListener("click", () => { ETAT.moi = x.dataset.moi; ETAT.fiche = x.dataset.moi; garder(); afficherTout(); }));
@@ -571,7 +571,7 @@ function rendreClassement() {
     (bref ? '<div class="bref">' + bref + "</div>" : "") +
     (anomalies.length ? '<div style="display:grid;gap:6px">' + anomalies.map(t => '<div class="alerte warn">' + t + "</div>").join("") + "</div>" : "") +
     '<div><h2 class="sec">Classement <span class="h-boutons"><button class="million-b' + (D.premierMillion ? " pris" : "") + '" type="button" id="info-million" aria-label="Premier millionnaire">👑</button><button class="vers-fiches" type="button" id="vers-fiches" aria-label="Ouvrir les fiches de chacun"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.4c2.3.1 3.9 1.6 4.8 4.6"/></svg>Fiches</button></span></h2></div>' +
-    filtres(true) +
+    (typeof plaqueMillion === "function" ? plaqueMillion() : "") + filtres(true) +
     '<div class="periode">' + esc(textePeriode(deb, fin, nMois)) + (deb && st.some(s => s.n < nMois) ? " · chaque courbe démarre au premier relevé de la personne" : "") + " · performance (TWR), versements neutralisés</div>" +
     '<div class="tour' + (animer ? " entree" : "") + '"><div class="tour-h"><span>Pos.</span><span>Portefeuille</span><span>TWR · écart</span></div>' + tour + "</div>" +
     '<p class="tour-aide">👆 Touche un pilote pour ses stats et sa fiche (portefeuille, lignes, historique).</p>' +
@@ -597,7 +597,7 @@ function rendreClassement() {
   if (!animer) v.querySelectorAll(".regles-mois, .nv-manche").forEach(e => e.classList.add("calme"));
   { const bv = $("#boite-verdict"); if (bv) { if (animer) compterChiffres(bv);
       // la première fois qu'on voit le verdict d'un nouveau mois : une petite fête
-      if (verdict && verdict.complet && !VK && +(stock.get("versus.verdictVu") || 0) < verdict.k) { const premier = !stock.get("versus.verdictVu"); stock.set("versus.verdictVu", String(verdict.k)); if (!premier && typeof confettis === "function" && !(verdict.champion && verdict.champion.seul && verdict.champion.nom === ETAT.moi)) setTimeout(() => { if (vueActive() === "classement") confettis(); }, 1100); } } }
+      if (verdict && verdict.complet && !VK && +(stock.get("versus.verdictVu") || 0) < verdict.k) { const premier = !stock.get("versus.verdictVu"); stock.set("versus.verdictVu", String(verdict.k)); if (!premier && typeof confettis === "function" && !(verdict.champion && verdict.champion.seul && verdict.champion.nom === ETAT.moi)) setTimeout(() => ereApres(() => { if (vueActive() === "classement") confettis(); }, "verdict"), 1100); } } }
   v.querySelectorAll("[data-nv-manche]").forEach(b => b.addEventListener("click", () => { choisirSaison(+b.dataset.nvManche); ETAT.podium = "gp"; GP_ETAPE = null; garder(); allerA("trophees"); }));
   v.querySelectorAll(".regles-mois[data-aller-stand]").forEach(b => { const go = () => { ETAT.podium = "stand"; garder(); allerA("trophees"); }; b.addEventListener("click", go); b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }); });
   $("#info-million").addEventListener("click", () => toast(texteMillion()));
