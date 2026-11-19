@@ -7,6 +7,7 @@
 Samedi 21/11 : bande-annonce + MP4 (WhatsApp) qui NE dévoilent PAS les 12 cartes (seulement l'Atelier du Père Noël + au plus janvier ; les autres en flashes floutés) ; vendredi 20/11 : MP4 court « demain, tout commence ». Théo : PAS de « Mon portrait 11 h » dans les vidéos ni le mail (ça s'affiche dans l'appli). La révélation complète des 12 univers est gardée pour un AUTRE teaser fin décembre (à faire). Scripts MP4 : scratchpad teaser/rec2.js + son.py (perdus avec la session : recréer au besoin).
 
 ## ⏸️ PAUSE (Théo, 19/11 soir, crédits limités)
+Aussi en pause (Théo, 19/11 nuit) : écran « La Coupe brisée » (reprendre le workflow ecran-la-coupe, resumeFromRunId wf_e6d7fbf7-b36 ; serveur V49 déjà prêt) et la vidéo de fin décembre (teaser-revelation.html, scratchpad videos/).
 Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles cartes, vidéo + mail du samedi 21/11, corrections bloquantes. EN PAUSE (à reprendre « la semaine prochaine ») : 3D des circuits 2027 (lot 1 : Dune publiée v16.89 ; Château r3d-chateau-1 et goûter r3d-terrier inachevés, scratchpad wf-3d-lot.js), retouche 3D de Noël si non finie, (Ordre validé par Théo : 1) bilan/À faire/Point Artema en cours, 2) puis petit lot saisie : phrase de relecture raccourcie + titre « Saisir » et mêmes onglets pour tous les profils, 3) Coupe, 4) badges. REPRIS à la demande de Théo : phrase-bilan + boîte « À faire » + Point Artema, écran « La Coupe », refonte des badges en ~20 familles après la Coupe.) Travailler étape par étape, une chose à la fois.
 
 ## Qui, quoi
