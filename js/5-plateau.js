@@ -600,12 +600,12 @@ function htmlRegles(tout, modeReserve) {
 }
 function ouvrirRegles(section, tout) {
   const o = document.createElement("div"); o.className = "regles"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Règles du Versus");
-  o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>📖 Les règles</b><button class="btn ghost rg-tuto" type="button" id="rg-tuto">▶ Tuto</button><button class="icon-btn rg-x" type="button" id="rg-x" aria-label="Fermer">✕</button></div><div class="rg-corps">' + (tout ? '<p class="rg-admin">👀 Vue admin : toutes les règles, y compris celles que les autres ne voient pas encore.</p>' : "") + htmlRegles(tout) + "</div></div>";
+  o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>📖 Les règles</b><button class="icon-btn rg-x" type="button" id="rg-x" aria-label="Fermer">✕</button></div><div class="rg-corps">' + (tout ? '<p class="rg-admin">👀 Vue admin : toutes les règles, y compris celles que les autres ne voient pas encore.</p>' : "") + htmlRegles(tout) + "</div></div>";
   document.body.appendChild(o); document.documentElement.classList.add("fige");
   const fermer = () => { o.remove(); document.documentElement.classList.remove("fige"); };
   o.addEventListener("click", e => { if (e.target === o) fermer(); });
   o.querySelector("#rg-x").addEventListener("click", fermer);
-  o.querySelector("#rg-tuto").addEventListener("click", () => { fermer(); ouvrirTuto(); });
+  // v17.17 : plus de bouton « ▶ Tuto » (Théo : les règles suffisent)
   const corps = o.querySelector(".rg-corps");
   const aller = id => { const el = o.querySelector("#rg-" + id); if (el) corps.scrollTop += el.getBoundingClientRect().top - corps.getBoundingClientRect().top - corps.querySelector(".rg-sommaire").offsetHeight - 4; };
   o.querySelectorAll("[data-rg]").forEach(b => b.addEventListener("click", () => aller(b.dataset.rg)));
