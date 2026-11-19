@@ -64,7 +64,7 @@
 /* feux de départ */
 .feux{display:flex;gap:10px;padding:12px 14px;background:#111;border-radius:12px;box-shadow:0 0 0 2px #262626,0 10px 30px #000}
 .feux b{width:44px;display:grid;gap:8px}.feux b u{display:block;width:44px;height:44px;border-radius:50%;background:#2a0505;box-shadow:inset 0 0 8px #000}
-.feux b u.rouge{animation:allume .05s linear var(--a) both,eteint .04s linear var(--e) both}
+.feux b u.rouge{animation:allume .05s linear var(--a) forwards,eteint .04s linear var(--e) forwards}
 @keyframes allume{from,to{background:#ff2b22;box-shadow:0 0 26px #ff2b22,0 0 8px #fff inset}}
 @keyframes eteint{from,to{background:#2a0505;box-shadow:inset 0 0 8px #000}}
 </style></head><body>
@@ -208,7 +208,7 @@ function plan(i) {
   else if (id === "cinq") { txt.innerHTML = '<div class="l on ' + st + '">' + t + "</div>" + pastilles(false, .5); fl = "fort"; }
   else if (id === "coupe") { sc.className = "sansvoile"; obj.innerHTML = svgCoupe(); txt.innerHTML = '<div class="l on s" style="animation-delay:.6s;margin-top:62vh">' + t + "</div>"; }
   else if (id === "cache") { sc.className = "carte sansvoile"; obj.innerHTML = '<div class="torche"></div><div class="qm">?</div>'; txt.innerHTML = '<div class="l on s">' + t + "</div>"; fl = ""; }
-  else if (id === "feux") { sc.className = "sansvoile"; obj.innerHTML = '<div class="feux">' + opt.feux.map(a => '<b><u></u><u class="rouge" style="--a:' + a + "s;--e:" + opt.ext + 's"></u></b>').join("") + "</div>"; txt.innerHTML = '<div class="l on s" style="margin-top:34vh">' + t + "</div>"; }
+  else if (id === "feux") { sc.className = "sansvoile"; obj.innerHTML = '<div class="feux">' + opt.feux.map(a => '<b>' + ('<u class="rouge" style="--a:' + a + "s;--e:" + opt.ext + 's"></u>').repeat(2) + '</b>').join("") + "</div>"; txt.innerHTML = '<div class="l on s" style="margin-top:34vh">' + t + "</div>"; }
   else if (id === "fin") { fl = "fort"; txt.innerHTML = '<div class="l on titre" style="animation-duration:.3s">VERSUS</div><div class="l on date" style="animation-delay:.5s">🏆 Le Podium · Saison 1 · 2027</div>' +
       ligne(1.4, svgTete(1.45) + "<span>" + portraitTexte() + "</span>") + ligne(2.2, "1ᵉʳ" + NB + "décembre" + NB + ": la chauffe") + ligne(3, "1ᵉʳ" + NB + "janvier" + NB + ": tout compte") + ligne(4, "Onglet 🏆 Podium", "dore") +
       (VIDEO ? "" : '<a class="go on" style="animation-delay:4.6s" href="./#trophees">Ouvrir l’onglet Podium 🏁</a>'); }
