@@ -4232,9 +4232,7 @@ function htmlAFaire(o) {
   if (!M) return "";
   const l = tachesAFaire(o), rep = o === "artema" ? [] : reportesAFaire();
   if (!l.length) {
-    if (o === "artema") return "";
-    const p = prochainRappel();
-    return '<div class="m-afaire vide" role="status"><span class="af-ok">✓</span><span><b>Rien à faire</b>' + (p ? " · prochain : " + esc(nomCourtRappel(p)) + " " + esc(quandRappel(p)) : "") + (rep.length ? " · " + rep.length + " reporté" + (rep.length > 1 ? "s" : "") : "") + "</span></div>";
+    return "";   // v17.3 (Théo) : rien à faire = rien d'affiché (ni « Rien à faire », ni prochain rappel, ni reportés)
   }
   const ligne = t => '<div class="af-r"><span class="af-i" aria-hidden="true">' + t.ico + '</span><span class="af-t"><b>' + esc(t.titre) + "</b><small>" + esc(t.quand) + "</small></span>" +
     '<span class="af-a"><button class="mini-btn" type="button" data-af-faire="' + esc(t.k) + '">Faire</button><button class="lien" type="button" data-af-tard="' + esc(t.cles.join(",")) + '">Plus tard</button></span></div>';
@@ -4242,7 +4240,7 @@ function htmlAFaire(o) {
   return '<section class="m-afaire m-rappel" aria-label="À faire"><div class="af-h"><b>À faire</b><span class="af-n">' + l.length + "</span>" + (o === "artema" ? "" : "<small>le plus ancien d'abord</small>") + "</div>" +
     vis.map(ligne).join("") +
     (reste.length ? '<details class="af-plus"><summary>Voir ' + (reste.length > 1 ? "les " + reste.length + " autres" : "l'autre") + "</summary>" + reste.map(ligne).join("") + "</details>" : "") +
-    (rep.length ? '<p class="af-rep">Reporté de 2 jours : ' + rep.map(x => esc(nomCourtRappel(x))).join(", ") + ".</p>" : "") + "</section>";
+    (rep.length ? '<p class="af-rep">Reporté à demain : ' + rep.map(x => esc(nomCourtRappel(x))).join(", ") + ".</p>" : "") + "</section>";
 }
 function annivVus() { try { return JSON.parse(stock.get(cleStock("annivVus")) || "{}"); } catch (e) { return {}; } }
 function annivsFiscaux() {
@@ -4268,8 +4266,8 @@ function faireTache(k) {
 function brancherAFaire(v) {
   v.querySelectorAll("[data-af-faire]").forEach(b => b.addEventListener("click", () => faireTache(b.dataset.afFaire)));
   v.querySelectorAll("[data-af-tard]").forEach(b => b.addEventListener("click", () => {
-    const pt = plusTard(); b.dataset.afTard.split(",").forEach(k => { pt[k] = Date.now() + 2 * 864e5; }); stock.set(cleStock("plusTard"), JSON.stringify(pt));
-    toast("C'est noté : je te le rappelle dans 2 jours."); signalerCloche(); rendre();
+    const pt = plusTard(); b.dataset.afTard.split(",").forEach(k => { pt[k] = Date.now() + 864e5; }); stock.set(cleStock("plusTard"), JSON.stringify(pt));
+    toast("C'est noté : je te le rappelle demain."); signalerCloche(); rendre();
   }));
   v.querySelectorAll("[data-bilan-faire]").forEach(b => b.addEventListener("click", () => faireTache(b.dataset.bilanFaire)));
 }
@@ -4477,8 +4475,8 @@ function htmlNotifications() {
   if (feAVerifier()) items.push(carte("orange", "💶", "Fonds euros : ton taux estimé tient toujours ?", "tous les 3 mois · " + pct(M.parametres.fondsEuros.taux, 2, false) + (M.parametres.fondsEuros.bonus ? " + bonus " + pct(M.parametres.fondsEuros.bonus, 2, false) : ""), '<div class="nt-a"><button class="mini-btn" type="button" data-notif-faire="fondsEuros">Ajuster</button><button class="lien" type="button" data-notif-fe>C\'est bon</button></div>'));
   const prochain = rappelsFichier().filter(x => !rappelDu(x) && x.prochaine && /^\d{4}-/.test(x.prochaine) && !/À faire/i.test(x.statut || "")).sort((a, b) => a.prochaine.localeCompare(b.prochaine))[0];
   return '<div class="moi nt-l">' +
-    (items.length ? '<h4 class="m-h4">À faire</h4>' + items.join("") + (reportes.length ? '<p class="nt-rep">Reporté de 2 jours : ' + reportes.map(x => esc(nomCourtRappel(x))).join(", ") + ".</p>" : "")
-      : reportes.length ? carte("orange", "◷", "Rien d'urgent", "Reporté de 2 jours : " + reportes.map(x => esc(nomCourtRappel(x))).join(", ") + ".", '<div class="nt-a"><button class="mini-btn" type="button" data-notif-faire="' + esc(cleRappel(reportes[0].nom) || reportes[0].nom) + '">Faire</button></div>')
+    (items.length ? '<h4 class="m-h4">À faire</h4>' + items.join("") + (reportes.length ? '<p class="nt-rep">Reporté à demain : ' + reportes.map(x => esc(nomCourtRappel(x))).join(", ") + ".</p>" : "")
+      : reportes.length ? carte("orange", "◷", "Rien d'urgent", "Reporté à demain : " + reportes.map(x => esc(nomCourtRappel(x))).join(", ") + ".", '<div class="nt-a"><button class="mini-btn" type="button" data-notif-faire="' + esc(cleRappel(reportes[0].nom) || reportes[0].nom) + '">Faire</button></div>')
       : carte("vert", "✓", "Tout est à jour", "Aucun rappel ni anomalie." + (prochain ? " Prochain : " + esc(nomCourtRappel(prochain)) + " " + esc(quandRappel(prochain)) + "." : ""))) +
     htmlEcheancesNotif() +
     (M.marches ? '<h4 class="m-h4">Marchés</h4><div class="m-status">' + marches(M.marches) + "</div>" : "") +
@@ -4854,7 +4852,7 @@ window.Moi = {
   faireRappel(k) { lireCache(); if (M) faireRappel(k); },
   pointArtema() { lireCache(); if (M) ouvrirPointArtema("point"); },
   feVerifie() { stock.set(cleStock("feVu"), String(Date.now())); signalerCloche(); },
-  reporterRappel(k) { const pt = plusTard(); pt[k] = Date.now() + 2 * 864e5; stock.set(cleStock("plusTard"), JSON.stringify(pt)); signalerCloche(); if (vueMoi()) rendre(); },
+  reporterRappel(k) { const pt = plusTard(); pt[k] = Date.now() + 864e5; stock.set(cleStock("plusTard"), JSON.stringify(pt)); signalerCloche(); if (vueMoi()) rendre(); },
   ouvrirMaj() { lireCache(); if (M) { reglageOuvert = null; ouvrirSaisieM(null, "maj"); } },
   saisir(partiel, onglet) { lireCache(); if (M && M.simple) ouvrirSoldes(); else ouvrirSaisieM(partiel, onglet); },
   rafraichir(frais) { if (configure()) { rendre(); charger(!!frais); } },

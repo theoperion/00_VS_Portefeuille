@@ -619,7 +619,7 @@ $("#fermer-notifs").addEventListener("click", () => { $("#notifs").hidden = true
 $("#corps-notifs").addEventListener("click", e => {
   const fe = e.target.closest("[data-notif-fe]"); if (fe && window.Moi) { window.Moi.feVerifie(); $("#corps-notifs").innerHTML = window.Moi.notifications(); toast("Noté : je te le redemande dans 3 mois."); return; }
   const b = e.target.closest("[data-notif-faire],[data-notif-tard],[data-notif-maj]"); if (!b || !window.Moi) return;
-  if (b.dataset.notifTard !== undefined) { window.Moi.reporterRappel(b.dataset.notifTard); $("#corps-notifs").innerHTML = window.Moi.notifications(); toast("C'est noté : je te le rappelle dans 2 jours."); return; }
+  if (b.dataset.notifTard !== undefined) { window.Moi.reporterRappel(b.dataset.notifTard); $("#corps-notifs").innerHTML = window.Moi.notifications(); toast("C'est noté : je te le rappelle demain."); return; }
   $("#notifs").hidden = true;
   if (b.dataset.notifFaire !== undefined) window.Moi.faireRappel(b.dataset.notifFaire); else window.Moi.ouvrirMaj();
 });
