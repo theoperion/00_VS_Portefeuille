@@ -522,6 +522,7 @@ function etiquettesGP(api) {
   C.pops.forEach(o => { const p = pos.find(q => q.n === o.n); if (!p || p.y < 0) { poser1(o, "0", null); return; } poser1(o, "", "translate3d(" + p.x.toFixed(0) + "px," + (p.y - 36).toFixed(0) + "px,0) translate(-50%,-100%)"); });
   C.zones.forEach(o => { const zz = api.zones && api.zones[o.z], e = zz && api.ecranMonde((zz.s0 + zz.s1) / 2, 0, 5);
     if (!e || e.vis === false) { poser1(o, "0", null); return; } poser1(o, "", "translate3d(" + e.x.toFixed(0) + "px," + e.y.toFixed(0) + "px,0) translate(-50%,-50%)"); });
+  { const h = pi.querySelector(".gp-tour"); if (h) { if (GP_SCEN && api.enCours()) { const tr = Math.min(TOURS_GP, Math.floor(Math.max(0, ...Object.values(cur))) + 1); if (h.dataset.tr !== String(tr)) { if (!h.dataset.orig) h.dataset.orig = h.innerHTML; h.innerHTML = "Tour <b>" + tr + "</b>/" + TOURS_GP; h.dataset.tr = tr; } } else if (h.dataset.orig) { h.innerHTML = h.dataset.orig; delete h.dataset.orig; delete h.dataset.tr; } } }   // v16.28
   if (api.enCours() && C.tour) { const v = Math.floor(Math.max(0, ...Object.values(cur)) / TOUR_GP) + 1; if (v !== C.tourv) { C.tour.textContent = v; C.tourv = v; } }
   if (GP_PLEIN) majTourPlein(cur);
 }
@@ -578,6 +579,22 @@ async function cartePostale(y, et) {
   document.body.appendChild(o); const fermer = () => { o.remove(); URL.revokeObjectURL(url); };
   o.addEventListener("click", e => { if (e.target === o) fermer(); }); o.querySelector(".rg-x").addEventListener("click", fermer);
 }
+/* ---------- V16.28 · La course en 3 tours : un scénario calculé d'avance (même résultat que les points)
+   Tours 1 et 2 : la meute dans l'ordre de la grille (aucun faux dépassement). Tour 3 : les vrais changements du mois, ralenti au moment clé,
+   le vainqueur franchit la ligne. Distances en tours (0 → 3). ---------- */
+const TOURS_GP = 3, E_TOUR = [0, .3667, .6833], W_TOUR = E_TOUR.map(e => e / .8 * .74);   // W_TOUR : début de chaque tour en temps réel (avant le ralenti)
+let GP_SCEN = null;
+function scenarioCourse(mc) {
+  const noms = mc.grille.slice(), G = mc.arrivee, maxG = Math.max(0, ...noms.map(n => G[n] || 0)), gap = .006;
+  const fin = {}; noms.forEach((n, g) => fin[n] = maxG > 0 ? (maxG - (G[n] || 0)) / maxG * .3 : g * gap);
+  const lisse = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+  const course = e => (e < .1 ? e * e / .2 : e - .05) / .95 * TOURS_GP;   // départ qui accélère, puis pleine vitesse
+  const temps = w => w < .74 ? w / .74 * .8 : w < .88 ? .8 + (w - .74) / .14 * .08 : .88 + (w - .88) / .12 * .12;   // ralenti au cœur du dernier tour
+  const scen = w => { const e = temps(clampN(w, 0, 1)), D = course(e), m = lisse((e - E_TOUR[2]) / (.92 - E_TOUR[2])), out = {};
+    noms.forEach((n, g) => { out[n] = D - (g * gap * (1 - m) + fin[n] * m) + Math.sin(e * 22 + g * 1.7) * .0016 * (1 - m); }); return out; };
+  return { scen, gains: G, noms };
+}
+function clampN(v, a, b) { return v < a ? a : v > b ? b : v; }
 /* ---------- V16.18 · Le décompte des points d'un pilote : « 4 place + 1 🎯 + 2 🎲 = 7 » ---------- */
 function decompte(x, spec) {
   const l = [(x.mult > 1 ? x.base + "×2" : String(x.base)) + " de place"], add = (v, t) => { if (v) l.push((v > 0 ? "+ " : "− ") + Math.abs(v) + " " + t); };
@@ -608,7 +625,10 @@ function commenter(y, i, duree, delai) {
   const box = document.querySelector("#gp-piste .gp-com"); if (!box) return; const P = phrasesCourse(y, i); if (!P) { box.innerHTML = ""; return; }
   const dire = (t, dur) => { const b = document.querySelector("#gp-piste .gp-com"); if (!b) return; b.innerHTML = '<span class="gp-com-t">' + esc(t) + "</span>"; if (dur) GP_COM.push(setTimeout(() => { const bb = document.querySelector("#gp-piste .gp-com"); if (bb) bb.innerHTML = ""; }, dur)); };
   if (duree < 0) { dire(P.fin, 7000); return; }
-  const d0 = delai || 0, n = duree - d0, l = P.debut.concat(P.milieu);
+  const d0 = delai || 0, n = duree - d0;
+  if (GP_SCEN) { const l = [P.debut[0], "🔁 Tour 2 sur 3" + (P.milieu[0] ? " · " + P.milieu[0] : ""), "🏁 Dernier tour !" + (P.milieu[1] ? " · " + P.milieu[1] : "")];
+    l.forEach((t, k) => GP_COM.push(setTimeout(() => dire(t, 0), d0 + W_TOUR[k] * n + 150))); return; }
+  const l = P.debut.concat(P.milieu);
   l.forEach((t, k) => GP_COM.push(setTimeout(() => dire(t, 0), d0 + k * n / Math.max(1, l.length) + 150)));
 }
 /* ---------- 🎬 V16.12 · Bande-annonce avant la course : « Précédemment… », le circuit en grand, la grille, les feux ---------- */
@@ -669,23 +689,26 @@ function brancherGP(v, y) {
     if (api.type === "2d" && !deux) { pi.classList.add("en2d"); const cb = pi.querySelector("#gp-cam-b"); if (cb) cb.remove(); }
   }
   // V16.10 · une manche par mois : grille de départ dans l'ordre du classement d'avant le mois ; le meilleur du mois boucle exactement un tour
-  const api = GP_INST.api, mc = mancheGP(etapes, i); if (api.regler) api.regler({ tour: mc.tour, grille: mc.grille });
+  const api = GP_INST.api, mc = mancheGP(etapes, i), SC = i > 0 && !et.avenir && et.m && api.jouerScenario ? scenarioCourse(mc) : null; GP_SCEN = SC;
+  if (api.regler) api.regler({ tour: SC ? 1 : mc.tour, grille: mc.grille });   // v16.28 : en course scénarisée, les distances sont en tours
+  const pDep = SC ? SC.scen(0) : mc.depart, pArr = SC ? SC.scen(1) : mc.arrivee;
   const cleVu = "versus.gpVu." + y, vu = +(stock.get(cleVu) || 0);
   // V16.16 : la manche n'est marquée « vue » qu'à l'arrivée (quitter pendant la bande-annonce ou la course ne la fait plus perdre)
   // V16.17 : un seul départ — après la bande-annonce (qui finit sur les 5 feux), la course part sans refaire les feux
   const finCourse = () => { if (et.k && !et.avenir && et.k > +(stock.get(cleVu) || 0)) stock.set(cleVu, String(et.k)); bullesGP(y, i); commenter(y, i, -1); };
-  const jouer = feux => { const f = feux !== false && i >= 1 && api.type === "3d", d = api.type === "3d" ? 6400 : 3000; commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0); api.jouer(mc.depart, mc.arrivee, d, finCourse, f); };
+  const jouer = feux => { const f = feux !== false && i >= 1 && api.type === "3d", d = SC ? (api.type === "3d" ? 22000 : 15000) : api.type === "3d" ? 6400 : 3000; commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0);
+    if (SC) api.jouerScenario(SC.scen, d, finCourse, f); else api.jouer(mc.depart, mc.arrivee, d, finCourse, f); };
   const apresBA = () => { if (GP_INST && GP_INST.api === api && document.body.contains(GP_INST.boite)) jouer(false); };   // v16.27 : piste reconstruite entre-temps : on ne lance rien
   if (GP_REJOUER && i > 0 && !et.avenir) { GP_REJOUER = false; setTimeout(jouer, 150); }
-  else if (!et.avenir && et.k && et.k > vu && i > 0) { api.placer(mc.depart); if (!BA_OUVERTE) setTimeout(() => { if (!BA_OUVERTE) bandeAnnonce(y, i, apresBA); }, 300); }
-  else { if (!api.enCours()) api.placer(mc.arrivee); const kBA = et.k || 0, cleBA = "versus.baVu." + y; if (et.avenir && kBA && kBA > +(stock.get(cleBA) || 0)) { stock.set(cleBA, String(kBA)); setTimeout(() => bandeAnnonce(y, i, null), 400); } }
+  else if (!et.avenir && et.k && et.k > vu && i > 0) { api.placer(pDep); if (!BA_OUVERTE) setTimeout(() => { if (!BA_OUVERTE) bandeAnnonce(y, i, apresBA); }, 300); }
+  else { if (!api.enCours()) api.placer(pArr); const kBA = et.k || 0, cleBA = "versus.baVu." + y; if (et.avenir && kBA && kBA > +(stock.get(cleBA) || 0)) { stock.set(cleBA, String(kBA)); setTimeout(() => bandeAnnonce(y, i, null), 400); } }
   GP_REJOUER = false;
   const vu3 = v.querySelector("#gp-vue"); if (vu3) vu3.addEventListener("click", () => { ETAT.gp2d = pi.classList.contains("en2d") ? "0" : "1"; garder(); rendreTrophees(); });
   const cb = v.querySelector("#gp-cam-b"); if (cb) cb.addEventListener("click", () => { const l = ["tv", "helico", "bord"], n = l[(l.indexOf(camGP()) + 1) % l.length]; ETAT.gpCam = n; garder(); if (GP_INST) GP_INST.api.camera(n); majBoutonsGP(); });
   const rj = v.querySelector("#gp-rejouer"); if (rj) rj.addEventListener("click", () => { if (i > 0 && !et.avenir) jouer(); else toast(et.avenir ? "Cette manche se court ce mois-ci : la course se joue dès que tout le monde a saisi son relevé." : "Le départ n'a pas encore eu lieu : choisis un mois."); });
-  const fb = v.querySelector("#gp-fin"); if (fb) fb.addEventListener("click", () => { if (api.enCours()) { api.placer(mc.arrivee); finCourse(); } else toast(i > 0 && !et.avenir ? "La course est déjà arrivée : ↻ Rejouer pour la revoir." : "Pas encore de course pour ce mois-ci."); });
+  const fb = v.querySelector("#gp-fin"); if (fb) fb.addEventListener("click", () => { if (api.enCours()) { api.placer(pArr); finCourse(); } else toast(i > 0 && !et.avenir ? "La course est déjà arrivée : ↻ Rejouer pour la revoir." : "Pas encore de course pour ce mois-ci."); });
   const pl = v.querySelector("#gp-plein"); if (pl) pl.addEventListener("click", () => ouvrirPleinGP(y));
-  const bb = v.querySelector("#gp-ba"); if (bb) bb.addEventListener("click", () => { const j = i > 0 && !et.avenir; if (j) api.placer(mc.depart); bandeAnnonce(y, i, j ? apresBA : null); });
+  const bb = v.querySelector("#gp-ba"); if (bb) bb.addEventListener("click", () => { const j = i > 0 && !et.avenir; if (j) api.placer(pDep); bandeAnnonce(y, i, j ? apresBA : null); });
   const cp = v.querySelector("#gp-carte"); if (cp) cp.addEventListener("click", () => cartePostale(y, et));
   v.querySelectorAll(".gp-mois [data-gpe]").forEach(b => b.addEventListener("click", () => { GP_ETAPE = +b.dataset.gpe; GP_REJOUER = true; rendreTrophees(); }));
   const cal = v.querySelector("#gp-calend"); if (cal) cal.addEventListener("toggle", () => { ETAT.calOuvert = cal.open ? "1" : "0"; garder(); });
@@ -738,8 +761,9 @@ function majTourPlein(cur, force) {
     box.innerHTML = Object.keys(cur).map(n => '<div class="r' + (n === qui ? " ici" : "") + '" data-tr="' + esc(n) + '" style="--c:' + couleur(n) + '"><span class="rk"></span>' + avatar(n) + '<span class="n">' + esc(n) + '</span><span class="p"><b></b><small></small></span></div>').join("");
     P.lignes = { cle: ordre.slice().sort().join("|"), m: {} }; box.querySelectorAll("[data-tr]").forEach(e => P.lignes.m[e.dataset.tr] = { e, rk: e.querySelector(".rk"), b: e.querySelector(".p b"), s: e.querySelector(".p small"), v: "" });
   }
-  ordre.forEach((n, r) => { const l = P.lignes.m[n]; if (!l) return; const v = r + "|" + Math.round(cur[n]) + "|" + Math.round(t - cur[n]) + "|" + Math.floor(t / TOUR_GP); if (v === l.v) return; l.v = v;
-    l.e.style.order = r; l.rk.textContent = r + 1; l.b.textContent = Math.round(cur[n]); l.s.textContent = r ? "−" + Math.round(t - cur[n]) : "en tête du mois"; });
+  const pt = n => GP_SCEN ? Math.round((GP_SCEN.gains[n] || 0) * clampN(cur[n] / TOURS_GP, 0, 1)) : Math.round(cur[n]), pT = GP_SCEN ? Math.max(...ordre.map(pt)) : Math.round(t);   // v16.28
+  ordre.forEach((n, r) => { const l = P.lignes.m[n]; if (!l) return; const v = r + "|" + pt(n) + "|" + (pT - pt(n)); if (v === l.v) return; l.v = v;
+    l.e.style.order = r; l.rk.textContent = r + 1; l.b.textContent = pt(n); l.s.textContent = r ? "−" + (pT - pt(n)) : "en tête du mois"; });
 }
 function fermerPleinGP() {
   const P = GP_PLEIN; if (!P) return; GP_PLEIN = null;

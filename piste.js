@@ -1961,7 +1961,7 @@
       if (I.anim) {
         const a = I.anim, e = clamp((now - a.t0) / a.duree, 0, 1), k = e < .5 ? 2 * e * e : 1 - Math.pow(-2 * e + 2, 2) / 2;
         if (a.feux) { const f = (now - a.t00) / 1000; I.feuxDepart = f < 3.2 ? Math.floor(f / .6) + 1 : f < 4 ? 6 : -1; }
-        Object.keys(a.a).forEach(n => { I.pts[n] = (a.de[n] || 0) + ((a.a[n] || 0) - (a.de[n] || 0)) * k; });
+        if (a.scen) I.pts = a.scen(e); else Object.keys(a.a).forEach(n => { I.pts[n] = (a.de[n] || 0) + ((a.a[n] || 0) - (a.de[n] || 0)) * k; });   // v16.28 : scénario de course (3 tours)
         const avant = V.map(x => x.s); placer(false);
         V.forEach((x, i) => { const d = x.s - avant[i]; x.vit = lisse(x.vit, Math.abs(d) / Math.max(dt, .001), .2); x.rot += d / .6; });
         if (e >= 1 && (!a.feux || I.feuxDepart < 0)) { I.anim = null; I.vitFin = performance.now(); V.forEach(x => x.vit = 0); placer(true); if (a.fin) a.fin(); if (o.artifice !== false && ANIM()) feuArtifice(); }
@@ -2018,7 +2018,15 @@
       type: "3d", T, zones: Z, stats: () => ({ sol: B.sol.n, piste: B.piste.n, ov: B.solOv.n + B.pisteOv.n, eau: B.eau ? B.eau.n : 0, lum: LUM.length, tConstr: I.tConstr }),
       placer(pts) { I.anim = null; I.pts = Object.assign({}, pts); placer(true); I.feuxDepart = -1; reveiller(); },
       regler(x) { Object.assign(o, x); },
-      pause(b) { I.pause = !!b; if (!b) reveiller(); },   // V16.17 : la 3D se met en pause sous la bande-annonce
+      pause(b) { I.pause = !!b; if (!b) reveiller(); },
+      /** v16.28 · course scénarisée : scen(e) → distances (en tours) de chaque voiture, e de 0 à 1 */
+      jouerScenario(scen, duree, fin, depart) {
+        if (!ANIM()) { api.placer(scen(1)); if (fin) fin(); return; }
+        I.pts = scen(0); placer(true); V.forEach(x => x.hist = []);
+        const now = performance.now(), dl = depart ? 3200 : 0;
+        I.anim = { scen, de: scen(0), a: scen(1), t0: now + dl, t00: now, duree, fin, feux: !!depart };
+        if (depart) I.feuxDepart = 0; I.saut = I.mode !== "helico"; reveiller();
+      },   // V16.17 : la 3D se met en pause sous la bande-annonce
       jouer(de, a, duree, fin, depart) {
         if (!ANIM()) { api.placer(a); if (fin) fin(); return; }   // V16.17 : « animations réduites » respecté en 3D comme en 2D
         I.pts = Object.assign({}, de); placer(true); V.forEach(x => x.hist = []);
@@ -2111,7 +2119,7 @@
     function boucle(now) {
       raf = 0; if (!svg.isConnected) return; const a = I.anim; if (!a) return;
       const e = clamp((now - a.t0) / a.duree, 0, 1), k = e < .5 ? 2 * e * e : 1 - Math.pow(-2 * e + 2, 2) / 2;
-      Object.keys(a.a).forEach(n => I.pts[n] = (a.de[n] || 0) + ((a.a[n] || 0) - (a.de[n] || 0)) * k); poser();
+      if (a.scen) I.pts = a.scen(e); else Object.keys(a.a).forEach(n => I.pts[n] = (a.de[n] || 0) + ((a.a[n] || 0) - (a.de[n] || 0)) * k); poser();
       if (e < 1) raf = requestAnimationFrame(boucle); else { I.anim = null; if (a.fin) a.fin(); }
     }
     function ecran(n) { const v = V[n]; if (!v) return null; const ctm = svg.getScreenCTM(), r = boite.getBoundingClientRect(); if (!ctm) return null; const p = svg.createSVGPoint(); p.x = v.x; p.y = v.y - 9 * k; const q = p.matrixTransform(ctm); return { x: q.x - r.left, y: q.y - r.top, vis: true }; }
@@ -2124,6 +2132,7 @@
       placer(pts) { I.anim = null; I.pts = Object.assign({}, pts); poser(); },
       regler(x) { Object.assign(o, x); },
       jouer(de, a, duree, fin) { if (!ANIM()) { api.placer(a); if (fin) fin(); return; } I.pts = Object.assign({}, de); poser(); I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: performance.now(), duree: Math.min(duree || 2600, 3200), fin }; if (!raf) raf = requestAnimationFrame(boucle); },
+      jouerScenario(scen, duree, fin) { if (!ANIM()) { api.placer(scen(1)); if (fin) fin(); return; } I.pts = scen(0); poser(); I.anim = { scen, de: scen(0), a: scen(1), t0: performance.now(), duree, fin }; if (!raf) raf = requestAnimationFrame(boucle); },
       camera() { }, focus() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); if (o.image) o.image(api); }, reveiller() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); },   // V16.16 : la course reprend si la piste a été détachée
       detruire() { if (raf) cancelAnimationFrame(raf); if (ro) ro.disconnect(); svg.remove(); }
     };
