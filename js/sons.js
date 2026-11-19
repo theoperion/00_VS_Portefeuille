@@ -7,7 +7,7 @@
 const SONS = (() => {
   const lire = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } };
   const ecrire = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* rien */ } };
-  const actif = () => lire("versus.son", "0") === "1";
+  const actif = () => lire("versus.son", "1") === "1";   // v16.74 : son ACTIVÉ par défaut (Théo), coupable dans Réglages ou 🔊
   const vibreOK = () => lire("versus.vibre", "1") !== "0";
   let ctx = null, maitre = null, bruitBuf = null, moteur = null;
   const timers = new Set();
