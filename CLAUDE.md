@@ -40,14 +40,14 @@
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **16.14**.
+  hors connexion `sw.js`). Version actuelle : **16.15**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
 ## Serveur Apps Script (dépôt app_scripts)
 - Prérequis une fois par machine : `npx -y @google/clasp@3.4.1 login` (compte Google de Théo) → crée `~/.clasprc.json`.
 - Versus : `sh outils/mettre-en-ligne-versus.sh "V31 : ce qui change"` (APPLI=chemin de ce dépôt si besoin).
-  Versions actuelles : VS_VERSION 33, version Google 48.
+  Versions actuelles : VS_VERSION 34, version Google 49.
 - Scripts perso : dans `portefeuille-epargne/<nom>` : `clasp push --force` puis `python3 ../../outils/deployer.py "desc"`
   (garde les mêmes adresses). Versions actuelles : Théo 30, Clément 9, Devlin 9.
 - Sheets en direct : `outils/gs.py` (`SS(id).get/put/batch`). Classeurs : Théo `1pbpJRMwZR64LqP_wwlhiw-6m7-lUg-Q3pVAF4Dv9j8U`,
@@ -99,7 +99,7 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
 
 ## Feuille de route validée par Théo le 19/11 (à suivre dans l'ordre, une version publiée par étape)
 - Univers finaux : jan Forêt ✅ · fév **Château pièce par pièce** (carte-parchemin `peindreChateau3` ✅ en ligne, 3D intérieure + **balais** à faire) ·
-  mars **Alice** (`peindreTerrier2`, livre de 1865 libre de droits, personnages autorisés) · avr **Chocolaterie** (`peindreChocolat2`, piste en chocolat) ·
+  mars **Alice** (`peindreTerrier2`, livre de 1865 libre de droits, personnages autorisés) · avr **Seigneur des Anneaux** (tracé suzuka) · oct **Chocolaterie** (`peindreChocolat2`, tracé singapour, Halloween, ticket d’or) ·
   mai **Hunger Games** (arène-horloge, à dessiner) · juin **Star Wars** (`peindreEtoiles` + personnages à ajouter ; **petits chasseurs** comme véhicules) ·
   juil **Dune** (`peindreDunes2` ✅) · août **Stranger Things** (à refaire : deux mondes, failles qui font basculer la course, tête en bas) ·
   sept **Marvel multivers** (à dessiner) · oct **Seigneur des Anneaux** (à refaire : voyage Comté → Montagne du Destin sur la grande carte) ·

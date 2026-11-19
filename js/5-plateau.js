@@ -162,10 +162,10 @@ const PIEGES = {
   bahrein: { id: "mirage", ico: "✨", nom: "Feux follets", txt: "Le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point." },
   djeddah: { id: "murs", ico: "🚪", nom: "Couloirs mouvants", txt: "À moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points)." },
   melbourne: { id: "chaos", ico: "🫖", nom: "Le thé du Chapelier", txt: "Pronostic « qui gagne le mois » : +2 si juste, mais −1 si faux." },
-  suzuka: { id: "huit", ico: "🍫", nom: "Double tablette", txt: "Les places du mois se jouent sur deux mois cumulés : ce mois-ci et le précédent." },
+  suzuka: { id: "huit", ico: "🔁", nom: "Un aller et retour", txt: "Les places du mois se jouent sur deux mois cumulés : ce mois-ci et le précédent." },
   miami: { id: "chaleur", ico: "🔥", nom: "Champ de force", txt: "🚀 Turbo interdit ce mois-ci." },
   spa: { id: "ardennes", ico: "🌫️", nom: "Brume", txt: "Si le S&P 500 baisse, 🌧️ Pneus pluie vaut +3 au lieu de +2." },
-  singapour: { id: "nuit", ico: "🍃", nom: "Même le plus petit", txt: "Le dernier du mois marque 2 points de place au lieu de 0." },
+  singapour: { id: "nuit", ico: "🍬", nom: "Bonbon de consolation", txt: "Le dernier du mois marque 2 points de place au lieu de 0." },
   interlagos: { id: "averse", ico: "💥", nom: "Assaut", txt: "🎲 Pari : +3 si tu finis devant ton rival, −2 derrière (au lieu de +2 / −1)." }
 };
 /** Piège du mois k (null : chauffe, mois spécial, Côté obscur, ou règle pas encore ouverte) */

@@ -66,10 +66,10 @@ Les mois sans règle spéciale, le circuit a son **piège**, une petite règle q
 | Janv. | 🌲 Forêt aux lucioles | ✨ Feux follets | le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point |
 | Févr. | 🏰 Château aux sortilèges | 🚪 Couloirs mouvants | à moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points) |
 | Mars | 🎩 Pays des merveilles | 🫖 Le thé du Chapelier | pronostic « qui gagne » : +2 si juste, −1 si faux |
-| Avr. | 🍫 La Chocolaterie | 🍫 Double tablette | les places se jouent sur deux mois cumulés (mars + avril) |
+| Avr. | 💍 Terre de l'Anneau | 🔁 Un aller et retour | les places se jouent sur deux mois cumulés (mars + avril) |
 | Mai | 🏹 L'Arène | 🔥 Champ de force | 🚀 Turbo interdit |
 | Août | 🔦 Monde à l'envers | 🌫️ Brume | si le S&P 500 baisse, 🌧️ Pneus pluie vaut +3 au lieu de +2 |
-| Oct. | 💍 Terre de l'Anneau | 🍃 Même le plus petit | le dernier du mois marque 2 points de place au lieu de 0 |
+| Oct. | 🍫 La Chocolaterie | 🍬 Bonbon de consolation | le dernier du mois marque 2 points de place au lieu de 0 |
 | Nov. | 🧱 Mur des titans | 💥 Assaut | 🎲 Pari : +3 / −2 au lieu de +2 / −1 |
 
 Juin (Bataille spatiale), juillet (Mer de dunes), septembre (le Multivers) et décembre (l'Odyssée, Finale) ont déjà leur règle. Le mois du Côté obscur (tiré au sort) garde son circuit, mais pas de piège ce mois-là. La carte reste plafonnée à +4.
