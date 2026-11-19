@@ -638,8 +638,23 @@ function finitionCasque(u, fin, c, lead) {
 }
 /** Avatar public : le casque (avec sa finition) dans une pastille dont le fond se débloque en course */
 const CASQUE_CACHE = true;   // V16.26 : « Mon casque » masqué en attendant d'être redessiné (demande de Théo) : tout le monde affiche sa tête
+/** V16.37 · l'accessoire mérité : le vainqueur de la dernière manche garde l'accessoire du circuit sur sa tête jusqu'à la manche suivante.
+ *  Dès janvier (pas pendant la chauffe), et seulement quand on a déjà regardé la course (le résultat reste caché jusque-là). */
+let MERITE = null;
+function accessoireMerite(nom) {
+  try {
+    const y = saisonCourante(), vu = +(stock.get("versus.gpVu." + y) || 0);
+    if (!MERITE || MERITE.d !== D || MERITE.vu !== vu || MERITE.y !== y) {
+      MERITE = { d: D, vu, y, n: {} };
+      if (!estChauffe(y) && window.Piste) { const et = etapesGP(y).filter(x => x.m && !x.avenir), der = et[et.length - 1];
+        if (der && der.k && vu >= der.k) { const cle = (Piste.TRACES[circuitDe(der.k)] || {}).peint; if (cle) (der.m.l || []).filter(x => x.rg === 1).forEach(x => MERITE.n[x.nom] = cle); } }
+    }
+    return MERITE.n[nom] || null;
+  } catch (er) { return null; }
+}
 function avatar(nom, e) {
-  const eq = e || equipDe(nom), tete = CASQUE_CACHE || (eq.pilote || "tete") === "tete";
+  let eq = e || equipDe(nom); if (!e) { const sk = accessoireMerite(nom); if (sk) eq = Object.assign({}, eq, { skin: sk }); }
+  const tete = CASQUE_CACHE || (eq.pilote || "tete") === "tete";
   const lead = tete && !eq.vignette && saisonVisible() && leaderSaison() === nom;
   return '<span class="av av-' + (eq.fond || "couleur") + (tete ? " av-tete" : "") + (lead ? " av-lead" : "") + ((ereDorActive() || {}).nom === nom ? " av-or" : "") + '" style="--c:' + couleur(nom) + '">' + (tete ? svgTete(nom, eq, eq.vignette) : svgCasque(nom, eq)) + "</span>";
 }
