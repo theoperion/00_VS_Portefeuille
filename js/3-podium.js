@@ -10,7 +10,7 @@
    Référence fixe : portefeuille total contre le S&P 500, quels que soient les filtres.
    ============================================================ */
 // noel : dévoilement détaillé dans le teaser ; chauffe : tour de chauffe de décembre 2026 (tout marche, rien ne compte)
-const SAISON = { premiere: 2027, depart: new Date(2027, 0, 1), chauffe: new Date(2026, 11, 1), noel: new Date(2026, 10, 20) };
+const SAISON = { premiere: 2027, depart: new Date(2027, 0, 1), chauffe: new Date(Date.UTC(2026, 10, 21, 8, 0)), noel: new Date(2026, 10, 20) };
 const CHAUFFE_K = 202612;
 function saisonOuverte() { return Date.now() >= SAISON.depart.getTime(); }
 function chauffeOuverte() { return Date.now() >= SAISON.chauffe.getTime(); }
@@ -789,7 +789,7 @@ function teaser() {
     (noel ? '<div class="t-concept">' +
       '<div><b>🔥 Tour de chauffe</b><span>Décembre pour découvrir les règles, sans que rien ne compte. Vos cartes de janvier se posent pendant les fêtes.</span></div>' +
       '<div><b>🏁 Championnat</b><span>Chaque mois : ' + baremeJ().join(", ") + ' points, et +1 🎯 si tu bats le ' + esc(D.marche.indices[iRef()]) + '.</span></div>' +
-      '<div><b>🏎️ Grand Prix</b><span>Un circuit à thème par mois, de la Mer de dunes au Multivers. Vos voitures en 3D, 25 points le tour, la météo du marché.</span></div>' +
+      '<div><b>🏎️ Grand Prix</b><span>Un circuit à thème par mois : 12 univers gardés secrets jusqu\'à fin décembre. Vos voitures en 3D, 25 points le tour, la météo du marché.</span></div>' +
       '<div><b>🃏 Cartes de course</b><span>4 cartes de stratégie, les mêmes pour tous. Une par mois, face cachée.</span></div>' +
       '<div><b>🎁 Nouveautés en cours de saison</b><span>' + etapesJeu().map(e => e.ico + " " + esc(e.nom) + " (" + esc(moisEtape(e).replace(/ \d{4}$/, "")) + ")").join(" · ") + ". Chaque règle est expliquée le 20 du mois d'avant, quand sa fenêtre s'ouvre.</span></div>" +
       '<div><b>🙂 Ta tête au volant</b><span>Ton portrait animé, ou ton casque, à côté de ton nom. Et 24 objets uniques à rafler les premiers.</span></div></div>' +
@@ -880,10 +880,10 @@ function dessinerChampionnat(y) {
 function quiEcurie() { return moiVrai(); }
 /* V16.24 · « Mon portrait » : la tête de chacun se règle hors de l'Écurie (Réglages, ou toucher sa tête dans le Classement), dès le tour de chauffe */
 /** V16.56 · « Mon portrait » s'ouvre à tous le samedi 21 novembre 2026 à 11 h (heure de Paris) ; l'admin le voit avant */
-const PORTRAIT_OUVRE = Date.UTC(2026, 10, 21, 10, 0);
+const PORTRAIT_OUVRE = Date.UTC(2026, 10, 21, 8, 0);   // samedi 21/11 9 h (Paris), comme le tour de chauffe
 function portraitDispo() { return (adminActif() && !vueJoueur()) || Date.now() >= PORTRAIT_OUVRE; }   // v16.71 : avant le 21/11, seulement en mode admin actif (avant : visible avec la clé admin même en mode non admin)
 function ouvrirPortrait() {
-  if (!portraitDispo()) { toast("👤 Mon portrait arrive samedi 21 novembre à 11 h."); return; }
+  if (!portraitDispo()) { toast("👤 Mon portrait arrive samedi 21 novembre à 9 h."); return; }
   const qui = quiEcurie(); if (!qui || !D) { toast("Choisis d'abord qui tu es dans les Réglages."); return; }
   const rg = document.getElementById("reglages"); if (rg && !rg.hidden) rg.hidden = true;
   ECU = { nom: qui, e: equipDe(qui) };
