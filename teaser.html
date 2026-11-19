@@ -105,18 +105,20 @@ const LONG = [
   [550, "noir", "", "", "", "S"],
   [7000, "fin", "", "", "", VIDEO ? "B t@1.4:.7 t@2.2:.75 t@3:.85 g@2.4" : "B t@1.4:.7 t@2.2:.75 t@3:.8 t@4:.9"]];
 const COURT = [
-  [500, "affiche-noel", "", "", "", "t:.8"],
+  [500, "affiche-noel", "", "", "flou", "t:.8"],
   [2200, null, "", "Ils pensaient juste épargner.", "s", "h"],
   [1900, "pilotes", "", "4 pilotes.", "", "b t@.3:.45 t@.65:.5 t@1:.55 t@1.35:.6"],
   [2200, "cinq", "", "Et bientôt… un 5ᵉ.", "s", "t t@.5:.6"],
-  [2000, "silverstone", "JANVIER", "", "", "t o"],
+  [2000, "silverstone", "", "", "flou", "t o"],
   ...flashes(["djeddah", "melbourne", "suzuka", "miami", "montreal", "bahrein", "spa", "lasvegas", "singapour", "interlagos"], false),
   [1900, "monza", "", "12 univers.<br><span class=\"or\">Le reste" + NB + "? Patience.</span>", "flou", "b"],
-  [1800, "abudhabi", "DÉCEMBRE 2026", "🔥 1ᵉʳ" + NB + "décembre" + NB + ": le tour de" + NB + "chauffe", "s", "t"],
+  [1800, "abudhabi", "DÉCEMBRE 2026", "🔥 1ᵉʳ" + NB + "décembre" + NB + ": le tour de" + NB + "chauffe", "flou", "t"],
   [1600, null, "", "Le 1ᵉʳ" + NB + "janvier,<br>tout compte.", "", "t r"],
   [550, "noir", "", "", "", "S"],
   [4300, "demain", "", "", "", "B t@1.4:.8 g@1.6"]];
 const PLANS = H.indexOf("court") >= 0 ? COURT : LONG;
+/* v16.94 (Théo) : vendredi, on ne doit rien deviner des circuits : flou très fort partout */
+if (PLANS === COURT) { const st = document.createElement("style"); st.textContent = ".fond.flou{filter:blur(26px) brightness(.45) saturate(.7) !important}"; document.head.appendChild(st); }
 /*FIN PLANS*/
 /* ---------- la partition : un seul code pour la page (son en direct) et pour la vidéo (rendu hors ligne, identique) ---------- */
 function bruit(ac, d) { const b = ac.createBuffer(1, Math.max(1, Math.floor(ac.sampleRate * d)), ac.sampleRate), c = b.getChannelData(0); for (let i = 0; i < c.length; i++) c[i] = Math.random() * 2 - 1; const n = ac.createBufferSource(); n.buffer = b; return n; }
