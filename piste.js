@@ -64,7 +64,7 @@
     suzuka: { pts: etoile([[5, .17, .6]], 45), decor: "solstice", heure: "jour", peint: "anneau", reperes: [{ t: "mai" }] },   // avril · Seigneur des Anneaux
     miami: { pts: polyg([[40, 210], [320, 210], [320, 60], [270, 60], [270, 104], [220, 104], [220, 30], [160, 30], [160, 92], [110, 92], [110, 50], [40, 50]], 12), decor: "solstice", heure: "crepuscule", peint: "arene", reperes: [{ t: "tourcentrale", y: 160 }] },
     montreal: { pts: polyg([[60, 30], [300, 30], [300, 210], [212, 210], [212, 120], [148, 120], [148, 210], [60, 210]], 18),   // juin · Star Wars (tracé de la maquette validée)
-       decor: "arene", heure: "nuit", amb: "neon", peint: "etoiles", reperes: [{ t: "holodome" }] },
+       decor: "station", heure: "nuit", peint: "etoiles", reperes: [] },
     silverstone: { pts: F_DUNES, decor: "dunes", heure: "crepuscule", amb: "desert", peint: "dunes", reperes: [{ t: "ver", y: 122 }] },   // juillet · Dune (tracé échangé avec singapour le 19/11, atouts et pièges inchangés)
     spa: { pts: etoile([[1, .16, .5], [2, .17, 2.2], [4, .06, .8]], 36, t => 5 + 5 * Math.sin(2 * t + 1)), decor: "envers", heure: "nuit", amb: "envers", peint: "envers", reperes: [{ t: "faille" }] },
     monza: { pts: F_CHAMPI, decor: "multivers", heure: "nuit", amb: "multivers", peint: "multivers", reperes: [{ t: "champignons", y: 95 }] },
@@ -253,6 +253,7 @@
     arene: { sol: "#0D0820", bord: "#1C0B3A", piste: "#1A1C24", murs: ["#22D3EE", "#FF4FD8"], obj: [["cube", 110]] },
     solstice: { sol: "#79A858", bord: "#93C070", piste: "#C9B48A", terre: true, murs: ["#FFFFFF", "#F2B33A"], obj: [["fleurs", 70], ["maison", 50], ["arbre", 60], ["foin", 20]] },
     envers: { sol: "#2B2A2E", bord: "#3B3438", piste: "#2C2E33", kerb: ["#C8102E", "#2C2E33"], murs: ["#E9ECEF", "#C8102E"], obj: [["arbremort", 170], ["pin", 50]] },
+    station: { sol: "#14171D", bord: "#2E333C", piste: "#1C1F26", kerb: ["#A8B0BA", "#E9ECEF"], murs: ["#C8D0D8", "#5A626C"], obj: [] },   // juin : la station de combat (vibreurs acier et blanc)
     multivers: { sol: "#2A2050", bord: "#4A4562", piste: "#363A46", kerb: ["#FF7A1E", "#D2C8DE"], murs: ["#FF8A1E", "#2A2438"], obj: [] },   // septembre · Secret Wars (le décor vient de decorMultivers)
     survivants: { sol: "#5D6B44", bord: "#6E7A52", piste: "#45473F", kerb: ["#6B8A42", "#45473F"], murs: ["#E9ECEF", "#9BC53D"], obj: [["ruine", 40], ["champignon", 90], ["arbre", 40]] },
     dunes: { sol: "#D3A867", bord: "#C08F50", piste: "#C9A06A", terre: true, murs: ["#E9ECEF", "#D9822B"], obj: [["dune", 90], ["rocher", 30], ["projecteur", 10, "pres"]] },
@@ -4370,12 +4371,300 @@
     return occupe;
   }
 
+  function decorEtoiles(ctx) {
+    const { T, sol, lum, rotors } = ctx, v = h => hex(h), r = alea(1977), so = sol.ov(), occupe = [];
+    const HD = 15, MARCHES = [[14, 5], [20, 10], [26, HD]];   // gradins de la tranchée : [décalage depuis l'axe, hauteur]
+    const pont = v("#A3ABB5"), EMP = .42;   // l'acier clair du sol de la station (assez émissif : lumière froide de la planète)
+    const gris = [v("#626A75"), v("#6C747F"), v("#5C646E"), v("#757D88")], clair = [v("#8C949E"), v("#9AA2AC"), v("#7E8690")], sombre = v("#22262E");
+    const marche = v("#7E8690"), jaune = v("#FFE6A8"), rougeL = v("#FF4B4B"), bleuL = v("#7CD8FF"), vertL = v("#7CFF8A"), froid = v("#D8F2FF"), joint = v("#6E7680");
+    const h3 = (a, b, c) => { const x = Math.sin(a * 127.1 + b * 311.7 + c * 74.7) * 43758.5453; return x - Math.floor(x); };
+    // ---- repère local quelconque (pour les objets penchés ou volants)
+    const X = (o, ex, ey, ez) => (a, b, c) => [o[0] + ex[0] * a + ey[0] * b + ez[0] * c, o[1] + ex[1] * a + ey[1] * b + ez[1] * c, o[2] + ex[2] * a + ey[2] * b + ez[2] * c];
+    const blocX = (g, M, cx, cy, cz, sx, sy, sz, col, em) => { const hx = sx / 2, hy = sy / 2, hz = sz / 2, p = (a, b, c) => M(cx + a, cy + b, cz + c);
+      g.bloc([p(-hx, -hy, -hz), p(hx, -hy, -hz), p(hx, -hy, hz), p(-hx, -hy, hz), p(-hx, hy, -hz), p(hx, hy, -hz), p(hx, hy, hz), p(-hx, hy, hz)], col, em, { dessous: 1 }); };
+    // ---- l'échantillon de piste le plus proche (pour savoir quel profil de mur s'applique ici)
+    const GR = new Map(), CL = 24, cle = (a, b) => a * 10007 + b;
+    for (let i = 0; i < T.N; i++) { const k = cle(Math.floor(T.X[i] / CL), Math.floor(T.Z[i] / CL)); if (!GR.has(k)) GR.set(k, []); GR.get(k).push(i); }
+    const proche = (x, z) => { let m = 1e9, im = -1; const gx = Math.floor(x / CL), gz = Math.floor(z / CL);
+      for (let a = -3; a <= 3; a++) for (let b = -3; b <= 3; b++) { const l = GR.get(cle(gx + a, gz + b)); if (l) for (const i of l) { const d = Math.hypot(T.X[i] - x, T.Z[i] - z); if (d < m) { m = d; im = i; } } }
+      return [m, im]; };
+    // ---- la baie de départ : autour des stands et de la tribune, la tranchée s'élargit (sol au niveau de la piste, mur du fond à 56 m)
+    const iDe = s => ((Math.round(s / T.ds) % T.N) + T.N) % T.N, B0 = iDe(-108), B1 = iDe(58), BAIE = 56;
+    const enBaie = i => i >= 0 && (B0 > B1 ? (i >= B0 || i <= B1) : (i >= B0 && i <= B1));
+    const besoin = i => enBaie(i) ? BAIE : MARCHES[2][0];
+    // ---- les creux du sol de la station : hangar (encoche), puits du réacteur (ellipse étirée sur la jambe gauche), au-delà du bord de la coque (le vide)
+    const HG = { x0: 390, x1: 472.5, z0: 330, z1: 562.5 }, PU = [250, 378, 58, 86], COQ = [608, 1184, 1262];
+    const dansHG = (x, z) => x > HG.x0 && x < HG.x1 && z > HG.z0 && z < HG.z1;
+    const dansPU = (x, z, m) => ((x - PU[0]) / (PU[2] + m)) ** 2 + ((z - PU[1]) / (PU[3] + m)) ** 2 < 1;
+    const trou = (x, z, col) => dansHG(x, z) || dansPU(x, z, col ? 8 : 0) || Math.hypot(x - COQ[0], z - COQ[1]) > COQ[2] - (col ? 8 : 0);
+    const nrm = i => [-T.TZ[i], T.TX[i]];
+    // décalage d'un point de bord : raboté à l'intérieur des virages serrés, et arrêté avant un creux ou une autre portion de piste
+    const bord = (i, sd, o, mini) => { const k = T.K[i], R = Math.abs(k) > 1e-5 ? 1 / Math.abs(k) : 1e9; let oo = (Math.sign(k) === sd) ? Math.min(o, R * .85) : o; const [nx, nz] = nrm(i);
+      while (oo > mini) { const x = T.X[i] + nx * sd * oo, z = T.Z[i] + nz * sd * oo; if (!trou(x, z) && T.dist(x, z) > Math.min(oo, mini) - 1.5) break; oo -= 2.5; }
+      return Math.max(oo, mini); };
+    const P = (i, sd, o, y) => { const [nx, nz] = nrm(i); return [T.X[i] + nx * sd * o, y, T.Z[i] + nz * sd * o]; };
+
+    // ================= 1. LA TRANCHÉE : trois gradins sombres, bandes lumineuses blanc-bleu, caissons clairs, tourelles =================
+    const PAS = 2;
+    for (let i = 0; i < T.N; i += PAS) { const j = (i + PAS) % T.N, baie = enBaie(i) && enBaie(j);
+      [1, -1].forEach(sd => {
+        const [nx, nz] = nrm(i), dedans = [-nx * sd, 0, -nz * sd];
+        const face = (o, y0, y1, col, em) => { sol.quad(P(i, sd, o, y0), P(j, sd, o, y0), P(j, sd, o, y1), P(i, sd, o, y1), col, em, dedans); };
+        const dalle = (oa, ob, y, col, em, oa2, ob2) => sol.quad(P(i, sd, oa, y), P(j, sd, oa2 === undefined ? oa : oa2, y), P(j, sd, ob2 === undefined ? ob : ob2, y), P(i, sd, ob, y), col, em, [0, 1, 0]);
+        const bande = (o, y0, y1, col, em) => so.quad(P(i, sd, o - .06, y0), P(j, sd, o - .06, y0), P(j, sd, o - .06, y1), P(i, sd, o - .06, y1), col, em, dedans);
+        const c = () => gris[Math.floor(r() * 4)];
+        // 1er gradin (partout)
+        face(MARCHES[0][0], 0, MARCHES[0][1], c(), .3); dalle(MARCHES[0][0], MARCHES[1][0], MARCHES[0][1], marche, .32);
+        if (baie) {
+          // la baie : sol de la station au niveau de la piste, mur du fond lumineux, puis le pont au-dessus
+          so.quad(P(i, sd, MARCHES[1][0], .05), P(j, sd, MARCHES[1][0], .05), P(j, sd, BAIE, .05), P(i, sd, BAIE, .05), v("#4A505A"), .2, [0, 1, 0]); face(BAIE, 0, HD, c(), .2);
+          const oB = bord(i, sd, BAIE + 14, BAIE), oBj = bord(j, sd, BAIE + 14, BAIE); dalle(BAIE, oB, HD, pont, EMP, BAIE, oBj);
+          if ((i / PAS) % 3 === 0) { const p = P(i, sd, BAIE - .1, 0); so.quad([p[0] - T.TX[i] * 2, 3, p[2] - T.TZ[i] * 2], [p[0] + T.TX[i] * 2, 3, p[2] + T.TZ[i] * 2], [p[0] + T.TX[i] * 2, 11, p[2] + T.TZ[i] * 2], [p[0] - T.TX[i] * 2, 11, p[2] - T.TZ[i] * 2], v("#BFE8FF"), .85, dedans); }
+        } else {
+          face(MARCHES[1][0], MARCHES[0][1], MARCHES[1][1], c(), .3); dalle(MARCHES[1][0], MARCHES[2][0], MARCHES[1][1], marche, .32);
+          face(MARCHES[2][0], MARCHES[1][1], MARCHES[2][1], c(), .3);
+          const oC = bord(i, sd, MARCHES[2][0] + 14, MARCHES[2][0]), oCj = bord(j, sd, MARCHES[2][0] + 14, MARCHES[2][0]); dalle(MARCHES[2][0], oC, HD, pont, EMP, MARCHES[2][0], oCj);
+        }
+        // la ligne lumineuse CONTINUE au bord supérieur (on lit la tranchée de haut) ; filets plus fins au bord des gradins du bas
+        (baie ? [[BAIE, HD]] : [MARCHES[2]]).forEach(([o, y]) => bande(o, y - .9, y - .1, froid, 1));
+        if ((i / PAS) % 2 === 0) (baie ? [MARCHES[0]] : [MARCHES[0], MARCHES[1]]).forEach(([o, y]) => bande(o, y - .45, y - .1, v("#9FD8FF"), .9));
+        // bandes lumineuses horizontales blanc-bleu, par tronçons (quelques rares hublots jaunes ou rouges)
+        const etages = baie ? [[MARCHES[0][0], 0, MARCHES[0][1]]] : [[MARCHES[0][0], 0, MARCHES[0][1]], [MARCHES[1][0], MARCHES[0][1], MARCHES[1][1]], [MARCHES[2][0], MARCHES[1][1], MARCHES[2][1]]];
+        etages.forEach(([o, y0, y1], e) => { const tr = Math.floor(i / (PAS * 7)), q = h3(tr, sd, e);
+          if (q < .5) { const hb = y0 + 1.2 + h3(tr, sd, e + 7) * (y1 - y0 - 2.6); bande(o, hb, hb + .28, h3(tr, e, 3) < .8 ? v("#CFEFFF") : bleuL, .95); }
+          if (r() < .07) { const t = [T.TX[i], T.TZ[i]], pa = P(i, sd, o - .07, 0), u0 = .6 + r() * 3, h0 = y0 + 1 + r() * (y1 - y0 - 2.4), cc = r() < .4 ? rougeL : jaune;
+            so.quad([pa[0] + t[0] * u0, h0, pa[2] + t[1] * u0], [pa[0] + t[0] * (u0 + 1.2), h0, pa[2] + t[1] * (u0 + 1.2)], [pa[0] + t[0] * (u0 + 1.2), h0 + .7, pa[2] + t[1] * (u0 + 1.2)], [pa[0] + t[0] * u0, h0 + .7, pa[2] + t[1] * u0], cc, .95, dedans); } });
+        // caissons et tuyaux en relief, gris clair, sur les faces ; petits blocs sur les gradins
+        if (r() < .4) { const k = baie ? 0 : Math.floor(r() * 3), [o, y1] = MARCHES[k], y0 = k ? MARCHES[k - 1][1] : 0, hh = 1 + r() * (y1 - y0 - 1.6), p = P(i, sd, o - .45, y0 + r() * (y1 - y0 - hh));
+          sol.boite(p[0], p[1], p[2], 1 + r() * 3.4, hh, .9, clair[Math.floor(r() * 3)], .26, Math.atan2(-T.TZ[i], T.TX[i])); }
+        if (!baie && r() < .22) { const k = Math.floor(r() * 2), o = MARCHES[k][0] + 1.5 + r() * 3, p = P(i, sd, o, MARCHES[k][1]); sol.boite(p[0], p[1], p[2], 1.5 + r() * 2.5, .6 + r() * 1.4, 1.5 + r() * 2, clair[Math.floor(r() * 3)], .24, Math.atan2(-T.TZ[i], T.TX[i])); }
+      });
+    }
+    // fermetures de la baie (à ses deux bouts, de chaque côté)
+    [B0, B1].forEach(i => [1, -1].forEach(sd => { const a = P(i, sd, MARCHES[1][0], 0), b = P(i, sd, BAIE, 0); sol.quad(a, b, [b[0], HD, b[2]], [a[0], HD, a[2]], gris[1], .2, [T.TX[i], 0, T.TZ[i]]); }));
+    // lumières froides le long de la tranchée (halos) et tourelles sur le bord, en quinconce
+    for (let i = 0, n = 0; i < T.N; i += Math.round(46 / T.ds), n++) { const sd = n % 2 ? 1 : -1; if (enBaie(i)) { const p = P(i, sd, BAIE - 2, 7); lum.push([p[0], 7, p[2], .7, .88, 1, 14]); continue; }
+      const p = P(i, sd, MARCHES[0][0] + .6, MARCHES[0][1] + .4); lum.push([p[0], p[1], p[2], .65, .85, 1, 9]); }
+    for (let i = Math.round(30 / T.ds), n = 0; i < T.N; i += Math.round(132 / T.ds), n++) { const sd = n % 2 ? 1 : -1; if (enBaie(i)) continue;
+      const o = bord(i, sd, MARCHES[2][0] + 8, MARCHES[2][0]); if (o < MARCHES[2][0] + 6) continue; const p = P(i, sd, o, HD), [nx, nz] = nrm(i), g = new Geo();
+      g.cylindre(0, 0, 0, 3.2, 2.6, 8, clair[2], .2); g.boite(0, 2.6, 0, 5, 3.2, 4.4, clair[0], .22); g.ov().boite(0, 3.6, 2.22, 2.6, 1, .1, v("#FF6A3A"), 1);
+      branche(g, [-1.1, 4.2, 1.6], [-1.1, 7.6, 7.2], .32, .22, sombre); branche(g, [1.1, 4.2, 1.6], [1.1, 7.6, 7.2], .32, .22, sombre);
+      sol.poser(g, p[0], HD, p[2], Math.atan2(-sd * nx, -sd * nz), 1); lum.push([p[0] - nx * sd * 5, HD + 8, p[2] - nz * sd * 5, 1, .35, .25, 7]); }
+    // blocs techniques au bord de la tranchée (ils découpent l'horizon vu du fond), avec bandes lumineuses
+    for (let i = Math.round(12 / T.ds), n = 0; i < T.N; i += Math.round((50 + r() * 60) / T.ds), n++) { const sd = r() < .5 ? 1 : -1; if (enBaie(i)) continue;
+      const o = bord(i, sd, MARCHES[2][0] + 8 + r() * 8, MARCHES[2][0]); if (o < MARCHES[2][0] + 6) continue; const p = P(i, sd, o, HD), w = 5 + r() * 9, l = 5 + r() * 7, h = 2.5 + r() * 4, cap = Math.atan2(-T.TZ[i], T.TX[i]), g = new Geo();
+      g.boite(0, 0, 0, w, h, l, clair[Math.floor(r() * 3)], .26); if (r() < .5) g.boite(0, h, 0, w * .5, 1.2 + r() * 1.5, l * .5, clair[Math.floor(r() * 3)], .26);
+      g.ov().boite(0, h * .55, -sd * (l / 2 + .03), w - 1.2, .25, .1, v("#CFEFFF"), 1);
+      sol.poser(g, p[0], HD, p[2], cap, 1); }
+
+    // ================= 2. LE SOL DE LA STATION : plaques d'acier clair (quadtree qui épouse la tranchée), joints du quadrillage, voyants =================
+    const X0 = -210, Z0 = -270, S0 = 60, NX = 21, NZ = 19;
+    const joints = (x, z, s) => { const pas = s >= 30 ? s / (s >= 60 ? 3 : 2) : s, e = .35;
+      for (let u = 0; u < s - .1; u += pas) { so.quad([x + u - e, HD + .03, z], [x + u + e, HD + .03, z], [x + u + e, HD + .03, z + s], [x + u - e, HD + .03, z + s], joint, .3, [0, 1, 0]);
+        so.quad([x, HD + .03, z + u - e], [x + s, HD + .03, z + u - e], [x + s, HD + .03, z + u + e], [x, HD + .03, z + u + e], joint, .3, [0, 1, 0]); } };
+    const dalleSol = (x, z, s) => { sol.quad([x, HD, z], [x + s, HD, z], [x + s, HD, z + s], [x, HD, z + s], pont, EMP, [0, 1, 0]); if (s >= 30) joints(x, z, s); };
+    const libreSol = [];
+    const cel = (x, z, s) => { const cx = x + s / 2, cz = z + s / 2, hd = s * .7072, [d, i] = proche(cx, cz), need = i < 0 ? 0 : besoin(i);
+      const coins = [[x, z], [x + s, z], [x, z + s], [x + s, z + s], [cx, cz]], tr = coins.map(([a, b]) => trou(a, b)), creux = tr.some(Boolean); if (tr.every(Boolean)) return;
+      if (!creux && d - hd >= need - 1) { dalleSol(x, z, s); if (s >= 30) libreSol.push([x, z, d, s]); return; }
+      if (s > 7.6) { const h = s / 2; cel(x, z, h); cel(x + h, z, h); cel(x, z + h, h); cel(x + h, z + h, h); return; }
+      if (!trou(cx, cz, true) && d >= need + 2) dalleSol(x, z, s); };
+    for (let a = 0; a < NX; a++) for (let b = 0; b < NZ; b++) cel(X0 + a * S0, Z0 + b * S0, S0);
+    // quelques plaques de teinte différente et de rares voyants (plus de cubes éparpillés : le sol reste net, comme la carte)
+    libreSol.forEach(([x, z, d, s]) => { const m = s / 30;
+      for (let a = 0; a < m; a++) for (let b = 0; b < m; b++) { const u0 = x + a * 30, w0 = z + b * 30;
+        if (r() < .3) { const c = mel(pont, r() < .5 ? [1, 1, 1] : [.25, .3, .38], .1 + r() * .12); so.quad([u0 + .5, HD + .02, w0 + .5], [u0 + 14.5, HD + .02, w0 + .5], [u0 + 14.5, HD + .02, w0 + 14.5], [u0 + .5, HD + .02, w0 + 14.5], c, EMP, [0, 1, 0]); }
+        if (r() < .18) { const u = u0 + 2 + r() * 26, w = w0 + 2 + r() * 26; so.quad([u, HD + .04, w], [u + 1.2, HD + .04, w], [u + 1.2, HD + .04, w + 1.2], [u, HD + .04, w + 1.2], r() < .3 ? rougeL : froid, 1, [0, 1, 0]); } } });
+    // le col du puits (ellipse) et le bord de la coque (anneaux de la même couleur que le sol, qui couvrent les marches du quadtree)
+    { const n = 48; for (let k = 0; k < n; k++) { const a0 = k / n * TAU, a1 = (k + 1) / n * TAU, p = (a, m) => [PU[0] + Math.cos(a) * (PU[2] + m), HD, PU[1] + Math.sin(a) * (PU[3] + m)];
+        sol.quad(p(a0, 0), p(a1, 0), p(a1, 16), p(a0, 16), pont, EMP, [0, 1, 0]); so.quad(p(a0, .2), p(a1, .2), p(a1, 1.2), p(a0, 1.2), bleuL, 1, [0, 1, 0]); } }
+    { const R = COQ[2], a0 = -2.32, a1 = -1.02, n = 70;
+      for (let k = 0; k < n; k++) { const t0 = a0 + (a1 - a0) * k / n, t1 = a0 + (a1 - a0) * (k + 1) / n, p = (t, RR, y) => [COQ[0] + Math.cos(t) * RR, y, COQ[1] + Math.sin(t) * RR];
+        const m = p((t0 + t1) / 2, R - 8, 0); if (T.dist(m[0], m[2]) < 34) continue;
+        sol.quad(p(t0, R - 18, HD), p(t1, R - 18, HD), p(t1, R, HD), p(t0, R, HD), pont, EMP, [0, 1, 0]);
+        sol.quad(p(t0, R, 0), p(t1, R, 0), p(t1, R, HD), p(t0, R, HD), gris[k % 4], .2, [Math.cos(t0), 0, Math.sin(t0)]);
+        so.quad(p(t0, R + .05, HD - .9), p(t1, R + .05, HD - .9), p(t1, R + .05, HD - .1), p(t0, R + .05, HD - .1), froid, 1, [Math.cos(t0), 0, Math.sin(t0)]);
+        if (k % 3 === 0) so.quad(p(t0, R + .06, 6), p(t1, R + .06, 6), p(t1, R + .06, 6.3), p(t0, R + .06, 6.3), v("#9FD8FF"), .9, [Math.cos(t0), 0, Math.sin(t0)]); } }
+    // le vide au-delà de la coque : beaucoup d'étoiles
+    for (let k = 0; k < 480; k++) { const x = X0 - 400 + r() * 2000, z = Z0 - 500 + r() * 900; if (Math.hypot(x - COQ[0], z - COQ[1]) < COQ[2] + 6) continue; const s = .6 + r() * 1.8;
+      so.quad([x, .05, z], [x + s, .05, z], [x + s, .05, z + s], [x, .05, z + s], r() < .15 ? v("#FFE8C8") : v("#FFFFFF"), 1, [0, 1, 0]); }
+
+    // ================= 3. LE PUITS DU RÉACTEUR (étiré sur la jambe gauche), la passerelle et le duel en ombres chinoises devant le rideau rouge =================
+    { const [px, pz, ax, az] = PU, n = 40;
+      for (let k = 0; k < 6; k++) { const y0 = HD - k * 2.5, y1 = y0 - 2.5, m0 = -k * 5, m1 = -(k + 1) * 5, p = (a, m, y) => [px + Math.cos(a) * (ax + m), y, pz + Math.sin(a) * (az + m * 1.45)];
+        for (let s = 0; s < n; s++) { const a0 = s / n * TAU, a1 = (s + 1) / n * TAU;
+          sol.quad(p(a0, m0, y0), p(a1, m0, y0), p(a1, m1, y1), p(a0, m1, y1), k % 2 ? v("#26324A") : v("#1A2236"), .16 + k * .06, [-Math.cos(a0), .3, -Math.sin(a0)]);
+          so.quad(p(a0, m1 + .05, y1 + .15), p(a1, m1 + .05, y1 + .15), p(a1, m1 + .05, y1 + .9), p(a0, m1 + .05, y1 + .9), k % 2 ? v("#4AB8FF") : bleuL, 1, [-Math.cos(a0), 0, -Math.sin(a0)]); } }
+      const mf = -6 * 5; for (let s = 0; s < n; s++) { const a0 = s / n * TAU, a1 = (s + 1) / n * TAU; sol.tri([px, .4, pz], [px + Math.cos(a0) * (ax + mf), .4, pz + Math.sin(a0) * (az + mf * 1.45)], [px + Math.cos(a1) * (ax + mf), .4, pz + Math.sin(a1) * (az + mf * 1.45)], v("#BFF2FF"), 1, [0, 1, 0]); }
+      [-40, 0, 40].forEach(dz => lum.push([px, 4, pz + dz, .45, .8, 1, 50])); lum.push([px, 12, pz, .5, .85, 1, 40]);
+      // la passerelle (est-ouest, en haut du puits) et ses feux rouges
+      const zw = pz + 6, x0 = 172, x1 = 328;
+      sol.boite((x0 + x1) / 2, HD - 1.4, zw, x1 - x0, 1.4, 6, v("#3A4250"), .15); [-2.8, 2.8].forEach(e => sol.boite((x0 + x1) / 2, HD, zw + e, x1 - x0, 1.1, .35, clair[0], .25));
+      for (let x = x0 + 8; x < x1; x += 12) so.quad([x - .8, HD + .02, zw - 2], [x + .8, HD + .02, zw - 2], [x + .8, HD + .02, zw + 2], [x - .8, HD + .02, zw + 2], rougeL, 1, [0, 1, 0]);
+      // le rideau rouge au fond (comme la salle de la carte) : il éclaire les silhouettes par derrière
+      { const zr = pz - az - 4, xa = 180, xb = 320, H = 26;
+        sol.quad([xa, HD, zr], [xb, HD, zr], [xb, HD + H, zr], [xa, HD + H, zr], v("#7A1420"), .7, [0, 0, 1]);
+        for (let x = xa + 5; x < xb; x += 10) so.quad([x, HD, zr + .08], [x + 3, HD, zr + .08], [x + 3, HD + H, zr + .08], [x, HD + H, zr + .08], v("#B82434"), .75, [0, 0, 1]);
+        so.quad([xa, HD + H - 1.2, zr + .1], [xb, HD + H - 1.2, zr + .1], [xb, HD + H, zr + .1], [xa, HD + H, zr + .1], v("#FF5A5A"), 1, [0, 0, 1]);
+        sol.boite((xa + xb) / 2, HD, zr - 1.5, xb - xa + 4, H + 1, 2.4, sombre, .1);
+        lum.push([px - 30, HD + 14, zr + 6, 1, .25, .25, 34]); lum.push([px + 30, HD + 14, zr + 6, 1, .25, .25, 34]); }
+      // le seigneur noir (silhouette à grande cape, casque évasé, sabre rouge) face au jeune chevalier (silhouette fine, sabre bleu) : sans visage
+      const noir = v("#07070C"), E = 8;
+      const sn = new Geo(); sn.cylindre(0, 0, 0, 1.25, 2.3, 9, noir, 0, .5); sn.boite(0, 1.9, 0, .7, .6, 1.5, noir); sn.cylindre(0, 2.35, 0, .52, .32, 8, noir, 0, .4); sn.boule(0, 2.75, 0, .4, noir, 0, 1.05);
+      branche(sn, [.45, 1.65, .25], [1.0, 1.95, .3], .12, .1, noir); branche(sn, [1.0, 1.95, .3], [2.4, 3.4, .3], .11, .09, v("#FF2A2A"), 1);
+      sol.poser(sn, 226, HD, zw, 0, E);
+      const ch = new Geo(); ch.boite(-.17, 0, 0, .26, 1.2, .3, noir); ch.boite(.17, 0, 0, .26, 1.2, .3, noir); ch.cylindre(0, 1.2, 0, .38, 1.0, 7, noir, 0, .45); ch.boule(0, 2.48, 0, .3, noir, 0, 1.1);
+      branche(ch, [-.35, 1.9, .2], [-.9, 2.05, .25], .09, .08, noir); branche(ch, [-.9, 2.05, .25], [-2.1, 3.25, .25], .11, .09, v("#3AA0FF"), 1);
+      sol.poser(ch, 276, HD, zw, 0, E);
+      lum.push([240, HD + 18, zw, 1, .3, .3, 22]); lum.push([262, HD + 18, zw, .35, .65, 1, 22]);
+      occupe.push([px, pz, az + 20]); }
+
+    // ================= 4. LA SALLE DU TRÔNE (à droite dans la boucle) : grande verrière, trône en gradins, deux gardes rouges =================
+    { const vx = 614, vz = 184, vr = 70, n = 40;
+      for (let k = 0; k < n; k++) { const a0 = k / n * TAU, a1 = (k + 1) / n * TAU, p = (a, R, y) => [vx + Math.cos(a) * R, y, vz + Math.sin(a) * R];
+        so.tri([vx, HD + .05, vz], p(a0, vr, HD + .05), p(a1, vr, HD + .05), mel(v("#24103A"), v("#5A2A86"), (Math.cos(a0 - 2.2) + 1) / 2), .6, [0, 1, 0]);
+        sol.quad(p(a0, vr, HD), p(a1, vr, HD), p(a1, vr + 5, HD + 1.6), p(a0, vr + 5, HD + 1.6), clair[1], .3, [Math.cos(a0), 1, Math.sin(a0)]);
+        so.quad(p(a0, vr + .3, HD + .1), p(a1, vr + .3, HD + .1), p(a1, vr + 1.4, HD + .45), p(a0, vr + 1.4, HD + .45), v("#C8A0FF"), 1, [0, 1, 0]); }
+      for (let k = 0; k < 10; k++) { const a = k / 10 * TAU + PI / 10; branche(sol, [vx + Math.cos(a) * 12, HD + .3, vz + Math.sin(a) * 12], [vx + Math.cos(a) * vr, HD + .3, vz + Math.sin(a) * vr], .8, .8, sombre); }
+      [vr * .5].forEach(rr => { for (let k = 0; k < 24; k++) { const a0 = k / 24 * TAU, a1 = (k + 1) / 24 * TAU; branche(sol.ov(), [vx + Math.cos(a0) * rr, HD + .3, vz + Math.sin(a0) * rr], [vx + Math.cos(a1) * rr, HD + .3, vz + Math.sin(a1) * rr], .5, .5, sombre); } });
+      sol.cylindre(vx, HD, vz, 12, .5, 12, sombre, .05);
+      for (let k = 0; k < 70; k++) { const t = r() * TAU, d2 = 13 + Math.sqrt(r()) * (vr - 15), x = vx + Math.cos(t) * d2, z = vz + Math.sin(t) * d2, s = .5 + r() * .5; so.quad([x, HD + .08, z], [x + s, HD + .08, z], [x + s, HD + .08, z + s], [x, HD + .08, z + s], v("#FFFFFF"), 1, [0, 1, 0]); }
+      [[-34, -12, .5, 1.6], [24, -34, 2.6, 1], [30, 28, 3.4, 1.2]].forEach(([u, w, a, e]) => { const c = Math.cos(a), s = Math.sin(a), p = (q, f) => [vx + u + (c * q - s * f) * e, HD + .1, vz + w + (s * q + c * f) * e]; so.tri(p(9, 0), p(-6, -4.5), p(-6, 4.5), v("#C8D0DA"), .6, [0, 1, 0]); });
+      lum.push([vx, HD + 6, vz, .65, .35, 1, 60]); occupe.push([vx, vz, vr + 10]);
+      // le sol sombre de la salle, le trône en gradins (il monte vers la verrière), l'empereur encapuchonné et ses éclairs, les deux gardes rouges
+      const tx = 614, zN = 300;       for (let k = 0; k < 4; k++) { const zk = 446 - k * 32; sol.boite(tx, HD + k * 1.8, (zk + zN) / 2, 84 - k * 12, 1.8, zk - zN, k % 2 ? v("#6A5C84") : v("#7A6C94"), .32);
+        so.quad([tx - 42 + k * 6, HD + k * 1.8 + .9, zk + .06], [tx + 42 - k * 6, HD + k * 1.8 + .9, zk + .06], [tx + 42 - k * 6, HD + k * 1.8 + 1.2, zk + .06], [tx - 42 + k * 6, HD + k * 1.8 + 1.2, zk + .06], v("#B890FF"), 1, [0, 0, 1]); }
+      const yT = HD + 7.2, tr = new Geo(), nt = v("#14101C");
+      tr.boite(0, 0, 0, 4.4, 1.6, 3.6, nt, .1); tr.boite(0, 0, -1.6, 4.4, 5.6, .7, nt, .1); tr.boite(-2.1, 0, 0, .5, 2.6, 3.2, nt, .1); tr.boite(2.1, 0, 0, .5, 2.6, 3.2, nt, .1);
+      tr.cylindre(0, 1.6, -.2, 1.15, 2.2, 8, v("#0C0A12"), 0, .55); tr.boule(0, 4.05, -.1, .62, v("#0C0A12"), 0, 1.15); tr.cylindre(0, .1, .9, 1.1, 1.5, 8, v("#0C0A12"), 0, .9);
+      branche(tr, [-.9, 3.0, .3], [-1.6, 2.6, 1.6], .14, .12, v("#0C0A12")); branche(tr, [.9, 3.0, .3], [1.6, 2.6, 1.6], .14, .12, v("#0C0A12"));
+      [-1, 1].forEach(sd => { let a = [sd * 1.6, 2.6, 1.6]; for (let k = 0; k < 4; k++) { const b = [a[0] + sd * (.7 + r() * .6), 2.6 - k * .45 + (r() - .5) * .8, a[2] + 1.3]; branche(tr, a, b, .1, .06, v("#B8DCFF"), 1); a = b; } });
+      sol.poser(tr, tx, yT, zN + 22, 0, 5.5); lum.push([tx, yT + 14, zN + 34, .55, .7, 1, 30]);
+      [-1, 1].forEach(sd => { const gx = tx + sd * 30, gz = 436, gg = new Geo(), rg = v("#D0202E");
+        gg.cylindre(0, 0, 0, 1.0, 2.6, 9, rg, .7, .62); gg.cylindre(0, 2.6, 0, .62, .35, 9, rg, .7, .5); gg.boule(0, 3.05, 0, .5, rg, .7, 1.2);
+        branche(gg, [.75, 0, .3], [.75, 4.2, .3], .06, .06, v("#3A3A44")); sol.poser(gg, gx, HD + 1.8, gz, 0, 4.6); lum.push([gx, HD + 12, gz + 6, 1, .25, .25, 22]); });
+      occupe.push([tx, 380, 80]); }
+
+    // ================= 5. LE HANGAR dans l'encoche : fosse éclairée, cargo rond, deux droïdes, un chasseur au repos =================
+    { const { x0, x1, z0, z1 } = HG, mur = v("#5A5246"), murs = [[[x0, z0], [x1, z0], [0, 0, 1]], [[x1, z0], [x1, z1], [-1, 0, 0]], [[x1, z1], [x0, z1], [0, 0, -1]], [[x0, z1], [x0, z0], [1, 0, 0]]];
+      murs.forEach(([a, b, n]) => { sol.quad([a[0], 0, a[1]], [b[0], 0, b[1]], [b[0], HD, b[1]], [a[0], HD, a[1]], mur, .2, n);
+        const L = Math.hypot(b[0] - a[0], b[1] - a[1]), tx = (b[0] - a[0]) / L, tz = (b[1] - a[1]) / L;
+        for (let u = 6; u < L - 6; u += 12) { const x = a[0] + tx * u + n[0] * .06, z = a[1] + tz * u + n[2] * .06; so.quad([x, 11, z], [x + tx * 6, 11, z + tz * 6], [x + tx * 6, 12.2, z + tz * 6], [x, 12.2, z], v("#FFD9A0"), 1, n); }
+        sol.quad([a[0], HD, a[1]], [b[0], HD, b[1]], [b[0] + n[0] * -3, HD, b[1] + n[2] * -3], [a[0] + n[0] * -3, HD, a[1] + n[2] * -3], pont, EMP, [0, 1, 0]); });
+      // le grand portail sud : un cadre lumineux bleu (le champ de force)
+      so.quad([x0 + 6, 1, z1 - .07], [x1 - 6, 1, z1 - .07], [x1 - 6, 1.6, z1 - .07], [x0 + 6, 1.6, z1 - .07], bleuL, 1, [0, 0, -1]); so.quad([x0 + 6, HD - 2, z1 - .07], [x1 - 6, HD - 2, z1 - .07], [x1 - 6, HD - 1.4, z1 - .07], [x0 + 6, HD - 1.4, z1 - .07], bleuL, 1, [0, 0, -1]);
+      so.quad([x0, .04, z0], [x1, .04, z0], [x1, .04, z1], [x0, .04, z1], v("#4A3E2C"), .2, [0, 1, 0]);
+      for (let u = x0 + 10; u < x1; u += 10) so.quad([u - .2, .06, z0], [u + .2, .06, z0], [u + .2, .06, z1], [u - .2, .06, z1], v("#FFC86A"), .6, [0, 1, 0]);
+      for (let w = z0 + 14; w < z1; w += 14) so.quad([x0, .06, w - .2], [x1, .06, w - .2], [x1, .06, w + .2], [x0, .06, w + .2], v("#FFC86A"), .6, [0, 1, 0]);
+      // le cargo rond (stylisé), pinces vers le nord comme sur la carte : disque clair, deux pinces bien séparées, cockpit à droite, parabole, anneau bleu des réacteurs à l'arrière
+      const g = new Geo(), coque = v("#E2E5E9"), coque2 = v("#C4C9D0"), hx = (x0 + x1) / 2, hz = 420;
+      g.cylindre(0, 1.4, 0, 15, 1.8, 20, coque2, .35); g.cylindre(0, 3.2, 0, 15, 1.6, 20, coque, .38, 9); g.cylindre(0, 4.8, 0, 9, .5, 16, coque2, .35, 6);
+      g.cylindre(0, 5.3, 0, 3.4, .5, 10, v("#5A606A"), .2, 3.2);
+      [-1, 1].forEach(e => { g.boite(e * 5.2, 1.6, 17, 3.6, 2.4, 14, coque, .38); g.ov().boite(e * 5.2, 4.02, 17, 1.4, .06, 10, v("#9AA2AC"), .3); }); g.ov().boite(0, 2.2, 10.2, 5.2, 2, .2, sombre, 0);
+      g.boite(-14.6, 2, 9, 3.2, 2.6, 7, coque, .38); g.boite(-14.6, 2.2, 12.6, 2.4, 2, 1.6, coque, .38); g.ov().boite(-14.6, 2.7, 13.45, 2, 1.2, .1, v("#9FE0FF"), .9);
+      g.cylindre(6, 5.2, -3, 2.6, .6, 8, coque2, .35, .4); g.ov().boite(-2, 4.95, -6, 7, .06, 1.2, v("#8A6A48"), .2); g.ov().boite(4, 4.95, 4, 1.4, .06, 4, v("#B04A3A"), .2);
+      { const R = 15.06, NA = 12; for (let k = 0; k < NA; k++) { const a0 = -PI / 2 - 1.05 + k / NA * 2.1, a1 = a0 + 2.1 / NA; g.ov().quad([Math.cos(a0) * R, 1.9, Math.sin(a0) * R], [Math.cos(a1) * R, 1.9, Math.sin(a1) * R], [Math.cos(a1) * R, 4.4, Math.sin(a1) * R], [Math.cos(a0) * R, 4.4, Math.sin(a0) * R], v("#8FE4FF"), 1, [Math.cos(a0), 0, Math.sin(a0)]); } }
+      [[-8, -8], [8, -8], [0, 9]].forEach(([a, b]) => g.boite(a, 0, b, 1, 1.4, 1, sombre));
+      sol.poser(g, hx + 4, 0, hz, PI, 1.5); lum.push([hx + 4, 4, hz + 24, .5, .85, 1, 24]); lum.push([hx + 4, 10, hz, .85, .9, 1, 30]);
+      // les deux droïdes, au sud du cargo, bien plus grands qu'avant
+      const d1 = new Geo(); d1.cylindre(0, .25, 0, .55, 1, 8, v("#F4F6F8"), .3); d1.boule(0, 1.25, 0, .55, v("#D4DAE2"), .3, .7); d1.ov().boite(0, .75, .56, .42, .5, .05, v("#2A5AD8"), .4); d1.ov().boite(0, 1.45, .5, .16, .16, .1, v("#FF4A4A"), 1);
+      d1.boite(-.7, 0, 0, .22, 1.3, .32, v("#E8ECEF"), .3); d1.boite(.7, 0, 0, .22, 1.3, .32, v("#E8ECEF"), .3);
+      sol.poser(d1, hx - 10, 0, hz + 50, PI, 3.6); lum.push([hx - 10, 5, hz + 52, .5, .7, 1, 8]);
+      const d2 = new Geo(), or = v("#F0C040"); d2.boite(0, .9, 0, .9, 1.1, .5, or, .4); d2.boite(-.25, 0, 0, .25, .9, .3, or, .4); d2.boite(.25, 0, 0, .25, .9, .3, or, .4); d2.boule(0, 2.3, 0, .36, or, .4); d2.boite(-.6, 1, 0, .2, .9, .2, or, .4); d2.boite(.6, 1, 0, .2, .9, .2, or, .4);
+      sol.poser(d2, hx + 2, 0, hz + 52, PI, 3.6);
+      // un chasseur aux ailes hexagonales au repos, près du mur nord
+      sol.poser(chasseurTIE(), hx - 24, 6, z0 + 16, PI / 2, 1.3);
+      for (let k = 0; k < 3; k++) lum.push([hx, 10, z0 + 30 + k * 70, 1, .85, .6, 30]);
+      occupe.push([hx, (z0 + z1) / 2, 70]); }
+
+    // ================= 6. LA PARABOLE DU SUPER-LASER (en bas à droite) : bol d'acier clair à anneaux en relief, émetteurs verts, point vert central =================
+    { const C0 = [575, -22], Rd = 64, tilt = .62, vers = norme([T.cx - C0[0], 0, T.cz - C0[1]]), n = norme([vers[0] * Math.sin(tilt), Math.cos(tilt), vers[2] * Math.sin(tilt)]);
+      const e1 = norme(croix(n, [0, 1, 0])), e2 = croix(e1, n), Ctr = [C0[0], HD + 10 + Rd * Math.sin(tilt), C0[1]], prof = Rd * .2;
+      const M = X(Ctr, e1, n, e2), Q = (rho, phi, dy) => M(Math.cos(phi) * rho, -prof * (1 - (rho / Rd) * (rho / Rd)) + (dy || 0), Math.sin(phi) * rho), NR = 8, NS = 32;
+      for (let a = 0; a < NR; a++) for (let b = 0; b < NS; b++) { const r0 = Rd * a / NR, r1 = Rd * (a + 1) / NR, p0 = b / NS * TAU, p1 = (b + 1) / NS * TAU, c = mel(v("#8A929C"), v("#C4CBD3"), ((a + b) % 3) / 3 * .5 + a / NR * .4);
+        sol.quad(Q(r0, p0), Q(r0, p1), Q(r1, p1), Q(r1, p0), c, .32, n); }
+      for (let b = 0; b < NS; b++) { const p0 = b / NS * TAU, p1 = (b + 1) / NS * TAU, a0 = Q(Rd, p0), a1 = Q(Rd, p1), o0 = sous(a0, fois(n, 5)), o1 = sous(a1, fois(n, 5)); sol.quad(a0, a1, o1, o0, v("#5A626C"), .2, sous(a0, Ctr)); }
+      // anneaux concentriques en relief (et un filet vert sur deux)
+      for (let a = 1; a < NR; a++) for (let b = 0; b < NS; b++) { const rr = Rd * a / NR, p0 = b / NS * TAU, p1 = (b + 1) / NS * TAU;
+        if (a % 2) so.quad(Q(rr - .5, p0, .35), Q(rr - .5, p1, .35), Q(rr + .5, p1, .35), Q(rr + .5, p0, .35), v("#4AE070"), .85, n);
+        else branche(sol, Q(rr, p0, .6), Q(rr, p1, .6), .9, .9, v("#6A727C"), .2); }
+      // le socle
+      const bas = Q(0, 0); sol.cylindre(bas[0], HD, bas[2], 14, bas[1] - HD, 10, gris[2], .2, 10); sol.cylindre(bas[0], HD, bas[2], 22, 5, 14, clair[2], .26, 17);
+      // les 8 émetteurs verts, les rayons qui convergent, le point vert central et le rayon
+      const F = M(0, Rd * .5, 0); for (let k = 0; k < 8; k++) { const ph = k / 8 * TAU, E = Q(Rd * .78, ph); sol.boule(E[0], E[1], E[2], 5.5, v("#3A424C"), .2); sol.boule(E[0] + n[0] * 3, E[1] + n[1] * 3, E[2] + n[2] * 3, 4, vertL, 1); branche(sol, E, F, .7, .5, v("#B8FFB0"), 1); lum.push([E[0] + n[0] * 3, E[1] + n[1] * 3 + 2, E[2] + n[2] * 3, .5, 1, .55, 22]); }
+      const C = Q(0, 0, .4); sol.cylindre(C[0], C[1] - 1, C[2], 9, 2.4, 14, v("#9CFFA8"), 1, 7); lum.push([C[0], C[1] + 3, C[2], .5, 1, .55, 50]);
+      const F2 = M(0, Rd * .95, 0); branche(sol, F, F2, 3.2, 2.4, vertL, 1); branche(sol, F, F2, 1.4, 1.2, v("#E8FFE0"), 1); sol.boule(F[0], F[1], F[2], 6, v("#E8FFE0"), 1);
+      lum.push([F[0], F[1], F[2], .5, 1, .55, 70]); lum.push([F2[0], F2[1], F2[2], .5, 1, .55, 36]); lum.push([Ctr[0], Ctr[1], Ctr[2], .5, 1, .55, 90]);
+      occupe.push([C0[0], C0[1], Rd + 30]); }
+
+    // ================= 7. LE CIEL : destroyer géant dans l'axe de la ligne droite du haut, planète dans l'axe de la jambe gauche, étoiles, chasseurs =================
+    { const L = 470, w = 125, h = 34, hb = 20, g = new Geo(), coque = v("#AEB6C0"), coque2 = v("#C8CFD7"), coque3 = v("#8E97A2"), EM = .34;
+      const N0 = [L * .55, 0, 0], BA = [-L * .45, 0, -w], BB = [-L * .45, 0, w], S = [-L * .45, h, 0], D = [-L * .45, -hb, 0];
+      g.tri(N0, BA, S, coque2, EM, [0, 1, -.3]); g.tri(N0, S, BB, coque, EM, [0, 1, .3]); g.tri(N0, BA, D, coque3, EM * .8, [0, -1, -.3]); g.tri(N0, D, BB, coque3, EM * .8, [0, -1, .3]);
+      g.tri(BA, S, D, v("#6A727C"), EM, [-1, 0, 0]); g.tri(S, BB, D, v("#6A727C"), EM, [-1, 0, 0]);
+      const haut = (u, z) => h * ((L * .55 - u) / L - Math.abs(z) / w);
+      for (let k = 0; k < 60; k++) { const u = -L * .43 + r() * L * .8, t = (L * .55 - u) / L, z = (r() * 2 - 1) * w * t * .85, y = haut(u, z); if (y < 1) continue; g.boite(u, y - 1, z, 3 + r() * 14, 2 + r() * 3, 2 + r() * 8, r() < .5 ? coque3 : coque2, EM); }
+      for (let k = 0; k < 120; k++) { const u = -L * .43 + r() * L * .9, t = (L * .55 - u) / L, z = (r() * 2 - 1) * w * t * .9; g.ov().boite(u, -hb * (t - Math.abs(z) / w) - .15, z, 2, .1, 1, jaune, 1); }
+      // l'arête lumineuse de la coque (on lit la silhouette triangulaire de loin)
+      [[N0, BA], [N0, BB]].forEach(([a, b]) => branche(g.ov(), a, b, .9, .9, v("#DDEBFF"), .9));
+      [[-L * .3, h * .55, 90, 6, 120], [-L * .34, h * .55 + 6, 60, 6, 80], [-L * .37, h * .55 + 12, 34, 8, 44]].forEach(([u, y, lx, ly, lz]) => g.boite(u, y, 0, lx, ly, lz, coque2, EM));
+      g.boite(-L * .38, h * .55 + 20, 0, 12, 10, 10, coque2, EM); g.boite(-L * .38, h * .55 + 30, 0, 8, 3, 46, coque2, EM); g.ov().boite(-L * .38 + 4.05, h * .55 + 31, 0, .1, .8, 40, jaune, 1);
+      [-16, 16].forEach(z => g.boule(-L * .38, h * .55 + 35, z, 3.4, coque2, EM, 1, 1));
+      [-.5, 0, .5].forEach(z => { for (let s = 0; s < 10; s++) { const a0 = s / 10 * TAU, a1 = (s + 1) / 10 * TAU, R = z ? 6 : 9;
+        g.tri([-L * .45 - .4, -2, z * w * .5], [-L * .45 - .4, -2 + Math.cos(a0) * R, z * w * .5 + Math.sin(a0) * R], [-L * .45 - .4, -2 + Math.cos(a1) * R, z * w * .5 + Math.sin(a1) * R], v("#9FE0FF"), 1, [-1, 0, 0]); } });
+      // au bout de la ligne droite du haut (les voitures y foncent vers l'est), haut dans le ciel, vu de trois quarts, ×1,7
+      const dx = 1240, dz = -60, dy = 105, cap = 2.2, ech = 1.7; sol.poser(g, dx, dy, dz, cap, ech);
+      // un second destroyer au sud, dans l'axe de la jambe droite (la vue TV la plus fréquente)
+      sol.poser(g, 690, 92, 1120, 2.75, 1.35);
+      occupe.push([dx, dz, 120]); }
+    // la planète : grosse, dans l'axe de la jambe gauche (les voitures y remontent vers le nord)
+    { const px = 150, py = 60, pz = -560, R = 230, nla = 16, nlo = 28, sun = norme([1, .35, .9]), g = sol;
+      for (let i = 0; i < nla; i++) for (let j = 0; j < nlo; j++) { const t0 = i / nla * PI, t1 = (i + 1) / nla * PI, p0 = j / nlo * TAU, p1 = (j + 1) / nlo * TAU;
+        const Pp = (t, p) => [px + Math.sin(t) * Math.cos(p) * R, py + Math.cos(t) * R, pz + Math.sin(t) * Math.sin(p) * R], m = Pp((t0 + t1) / 2, (p0 + p1) / 2), nn = norme(sous(m, [px, py, pz]));
+        const jour = Math.max(0, point(nn, sun)), bande = Math.sin(((t0 + t1) / 2) * 7) * .5 + .5, c = mel(mel(v("#1E3C9A"), v("#3A9AE0"), bande), v("#E8F8FF"), jour * .45);
+        const a = Pp(t0, p0), b = Pp(t0, p1), cc = Pp(t1, p1), d = Pp(t1, p0); if (i === 0) g.tri(a, cc, d, c, .7 + jour * .3, nn); else if (i === nla - 1) g.tri(a, b, cc, c, .7 + jour * .3, nn); else g.quad(a, b, cc, d, c, .7 + jour * .3, nn); }
+      occupe.push([px, pz, R]); }
+    // un ciel plus étoilé : des étoiles posées sur une grande voûte, au ras de l'horizon (là où la caméra les voit, au-dessus des murs)
+    for (let k = 0; k < 380; k++) { const a = r() * TAU, el = Math.pow(r(), 1.6) * .5, D = 1150, x = T.cx + Math.cos(a) * Math.cos(el) * D, z = T.cz + Math.sin(a) * Math.cos(el) * D, y = 20 + Math.sin(el) * D, s = 2.4 + r() * 3.2;
+      const ux = -Math.sin(a), uz = Math.cos(a); so.quad([x - ux * s / 2, y, z - uz * s / 2], [x + ux * s / 2, y, z + uz * s / 2], [x + ux * s / 2, y + s, z + uz * s / 2], [x - ux * s / 2, y + s, z - uz * s / 2], r() < .15 ? v("#FFE8C8") : v("#FFFFFF"), 1, [-Math.cos(a), 0, -Math.sin(a)]); }
+    // les chasseurs qui bouclent AU-DESSUS de la tranchée, dans l'axe de la caméra : un chasseur en croix poursuivi par deux chasseurs hexagonaux (×2)
+    [[610, 40, 72, 26, 0, .42], [720, 40, 430, 26, -PI / 2, .4], [144, 40, 200, 26, PI / 2, .38]].forEach(([x, y, z, R, cap, vit]) => { const g = new Geo(), K = 2;
+      [[0, chasseurX()], [-.5, chasseurTIE()], [-.85, chasseurTIE()]].forEach(([th, f]) => { const t = [-Math.sin(th), Math.cos(th), 0], up = [-Math.cos(th), -Math.sin(th), 0], ez = croix(t, up);
+        const M = X([Math.cos(th) * R, Math.sin(th) * R, 0], t, up, ez); for (let k = 0; k < f.d.length; k += 10) { const p = M(f.d[k] * K, f.d[k + 1] * K, f.d[k + 2] * K), nn = [t[0] * f.d[k + 3] + up[0] * f.d[k + 4] + ez[0] * f.d[k + 5], t[1] * f.d[k + 3] + up[1] * f.d[k + 4] + ez[1] * f.d[k + 5], t[2] * f.d[k + 3] + up[2] * f.d[k + 4] + ez[2] * f.d[k + 5]];
+          g.d.push(p[0], p[1], p[2], nn[0], nn[1], nn[2], f.d[k + 6], f.d[k + 7], f.d[k + 8], Math.max(f.d[k + 9], .35)); } });
+      rotors.push({ g, x, y, z, cap, v: Math.abs(vit) }); });
+
+    // ================= 8. L'ESPRIT DU PETIT MAÎTRE (marge gauche, comme sur la carte) : grand, translucide, il luit =================
+    { const x = 78, z = 330, g = new Geo(), c = v("#BFEFFF");
+      g.cylindre(0, 0, 0, 2.6, 4.6, 8, c, .8, 1.3); g.boule(0, 5.4, 0, 1.4, c, .85, .9); [-1, 1].forEach(e => g.tri([e * 1.1, 5.7, 0], [e * 4.4, 6.5, -.3], [e * 1.2, 5.0, .2], c, .85, [0, 0, 1]));
+      branche(g, [1.8, .1, .6], [2.2, 5.4, .8], .12, .1, c, .8);
+      sol.poser(g, x, HD, z, PI / 2 + .6, 3.2); lum.push([x, HD + 14, z, .7, .95, 1, 40]); occupe.push([x, z, 24]); }
+
+    // les cubes génériques du décor n'ont rien à faire ici : toute la zone est déclarée occupée
+    for (let a = -700; a <= 1500; a += 150) for (let b = -700; b <= 1300; b += 150) occupe.push([a, b, 115]);
+    return occupe;
+
+    // ---- les deux chasseurs (repère local : nez vers +x, haut vers +y)
+    function chasseurTIE() { const g = new Geo(), aile = v("#2E333C"), cadre = v("#8A929C");
+      g.boule(0, 0, 0, 1.7, v("#8A929C"), .1, 1, 1); g.boule(1.25, .15, 0, .8, v("#1A1E26"), 0, 1); [-1, 1].forEach(sd => { g.boite(0, -.3, sd * 1.9, .9, .6, 1.8, cadre, .1);
+        for (let q = 0; q < 6; q++) { const a0 = q / 6 * TAU, a1 = (q + 1) / 6 * TAU; g.tri([0, 0, sd * 3.1], [Math.cos(a0) * 2.6, Math.sin(a0) * 4.2, sd * 3.1], [Math.cos(a1) * 2.6, Math.sin(a1) * 4.2, sd * 3.1], aile, .08, [0, 0, sd]); }
+        g.boite(0, -4.3, sd * 3.1, .4, 8.6, .35, cadre, .1); });
+      return g; }
+    function chasseurX() { const g = new Geo(), blanc = v("#D8DCE0"), rouge = v("#C8283A");
+      g.boite(-.5, -.5, 0, 7, 1, 1.3, blanc, .12); g.boite(3.6, -.35, 0, 2.6, .7, .8, blanc, .12); g.boite(.8, .5, 0, 1.6, .1, .7, v("#1A2A40"), .2);
+      [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([a, b]) => { const M = X([-1.6, 0, 0], [1, 0, 0], [0, Math.cos(.26 * a), Math.sin(.26 * a)], [0, -Math.sin(.26 * a), Math.cos(.26 * a)]);
+        blocX(g, M, 0, 0, b * 2.8, 2.4, .18, 4.6, blanc, .12); blocX(g, M, .3, .12, b * 2.2, 1.4, .05, .9, rouge, .4); blocX(g, M, -.6, 0, b * 1.4, 2.4, .7, .7, blanc, .12);
+        blocX(g, M, -2, 0, b * 1.4, .3, .5, .5, v("#FF7A9A"), 1); blocX(g, M, 2.4, 0, b * 5, 3, .12, .12, v("#9AA3AE"), .12); });
+      return g; }
+  }
+
   const PEINTS_NUIT = { ratatouille: peindreRatatouille, arene: peindreArene2, etoiles: peindreEtoiles4, anneau: peindreAnneau4, chocolat: peindreChocolat3, terrier: peindreGouter, chateau: peindreChateau5, plateau: peindrePlateau, envers: peindreEnvers3, multivers: peindreMultivers, dunes: peindreDunes4, titans: peindreTitans4, odyssee: peindreOdyssee2 };   // v16.34 : 10 cartes refaites au niveau de l'Arène
   const PEINTS = { foret: { peindre: peindreForet3, deco: decorForet }, garage: { peindre: peindreGarage5, deco: decorGarage } };
   Object.keys(PEINTS_NUIT).forEach(k => { PEINTS[k] = { peindre: PEINTS_NUIT[k] }; });
   PEINTS.chateau.deco = decorChateau;
   PEINTS.multivers.deco = decorMultivers;   // V16.52 : décor 3D (7/10)
-  PEINTS.terrier.deco = decorGouter;   // V16.52 : décor 3D (7/10)   // V16.51 : décor 3D sur mesure (boucle du critique, 7/10)
+  PEINTS.terrier.deco = decorGouter;
+  PEINTS.etoiles.deco = decorEtoiles;   // V16.53 : décor 3D (7/10)   // V16.52 : décor 3D (7/10)   // V16.51 : décor 3D sur mesure (boucle du critique, 7/10)
 
   /* ---------- Construction de la scène statique ---------- */
   function construire(def, T, A, Z) {
