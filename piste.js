@@ -6375,7 +6375,7 @@
     const bFX = gl.createBuffer(), bPT = gl.createBuffer();
     const DPR = Math.min(1.5, window.devicePixelRatio || 1);
     const I = { q: DPR, ft: 16, lents: 0, cssW: 1, cssH: 1, tConstr: Math.round(performance.now() - t0c), cv, gl, T, A, Z, V, mode: o.camera || "tv", focus: o.focus || (V[0] && V[0].v.nom), pts: Object.assign({}, o.pts || {}), anim: null, t0: performance.now(), cam: null, cible: null,
-      orbite: 0, zoom: 1, incl: .72, pan: [0, 0], tir: null, actif: true, dernier: 0, inactif: 0, feux: 0, flash: 0, prochainEclair: 3, artifice: [], ordreDepart: (o.voitures || []).map(v => v.nom), feuxDepart: -1 };
+      orbite: 0, zoom: 1, incl: .72, pan: [0, 0], tir: null, sansVoit: !!o.sansVoitures, rel: null, fondu: null, actif: true, dernier: 0, inactif: 0, feux: 0, flash: 0, prochainEclair: 3, artifice: [], ordreDepart: (o.voitures || []).map(v => v.nom), feuxDepart: -1 };
     const placer = (instant) => {
       const c = cibles(I.pts, o.tour || 25, T.L, I.ordreDepart, o.grille);
       V.forEach(x => { const t = c[x.v.nom]; if (!t) return; x.rang = t.rang; if (instant) { x.s = t.s; x.voie = t.voie; } else { x.s = t.s; x.voie = lisse(x.voie, t.voie, .06); } });
@@ -6400,6 +6400,16 @@
         return { e: [cx + Math.cos(a) * dist * .62, h, cz + Math.sin(a) * dist * .62], c: [cx, 0, cz], fov };
       }
       const x = voitureDe(I.focus); if (!x) return null;
+      /* v17.6 · 🚁 Hélico (poursuite) : un peu au-dessus et derrière UNE voiture, le long de la piste (pas en ligne droite : la caméra ne coupe pas les virages).
+         Glisser fait tourner autour de la voiture, puis la caméra revient doucement derrière ; pincer rapproche / éloigne. */
+      if (I.mode === "poursuite") {
+        if (!I.tir) I.orbite = lisse(I.orbite, 0, 1 - Math.exp(-dt * 1.6));
+        const z = clamp(I.zoom, .45, 2.4) * Math.max(1, .8 / asp), d = 15 * z, h = 5.2 * z + 2.4, arr = T.a(x.s - d, x.voie * .5);
+        // direction : moitié « le long de la piste », moitié « droit derrière », remise à la bonne distance (dans une épingle, la caméra ne colle plus à la voiture)
+        let ox = (arr.x - x.x) - x.tx * d, oz = (arr.z - x.z) - x.tz * d; const lo = Math.hypot(ox, oz) || 1; ox *= d / lo; oz *= d / lo;
+        const c = Math.cos(I.orbite), sn = Math.sin(I.orbite), dev = T.a(x.s + 10, x.voie * .7);
+        return { e: [x.x + ox * c - oz * sn, Math.max(arr.y, x.y) + h, x.z + ox * sn + oz * c], c: [dev.x, (dev.y + x.y) / 2 + 1.3, dev.z], fov: 1.0, base: [x.x, x.y, x.z] };
+      }
       if (I.mode === "bord") {
         return { e: [x.x - x.tx * 1.6, x.y + 3.1, x.z - x.tz * 1.6], c: [x.x + x.tx * 40, x.y + .6, x.z + x.tz * 40], fov: 1.05 };
       }
@@ -6417,9 +6427,23 @@
       const W = cv.width, Hh = cv.height; H = Hh; gl.viewport(0, 0, W, Hh);
       V.forEach(poseVoiture);
       const cible = camVoulue(dt); if (!cible) return;
+      if (cible.base) {   // v17.6 · poursuite : on lisse la position de la caméra PAR RAPPORT à la voiture (aucun retard en ligne droite, virages adoucis)
+        const b = cible.base, re = cible.e.map((v, i) => v - b[i]), rc = cible.c.map((v, i) => v - b[i]);
+        if (!I.rel || I.saut) { I.rel = { e: re, c: rc }; if (I.cam && I.saut) I.fondu = { e: I.cam.e.slice(), c: I.cam.c.slice(), t0: performance.now() }; I.saut = false; }
+        const k = 1 - Math.exp(-dt * 3.6); let ecart = 0;
+        // lissage « polaire » (angle autour de la voiture, distance, hauteur) : dans une épingle, la caméra tourne autour de la voiture au lieu de lui rentrer dedans
+        const polaire = (v, w) => { let da = Math.atan2(w[2], w[0]) - Math.atan2(v[2], v[0]); da -= Math.round(da / TAU) * TAU; const a = Math.atan2(v[2], v[0]) + da * k, r = lisse(Math.hypot(v[0], v[2]), Math.hypot(w[0], w[2]), k);
+          ecart += Math.abs(da) * 10 + Math.abs(r - Math.hypot(w[0], w[2])) + Math.abs(v[1] - w[1]); return [Math.cos(a) * r, lisse(v[1], w[1], k), Math.sin(a) * r]; };
+        I.rel.e = polaire(I.rel.e, re); I.rel.c = polaire(I.rel.c, rc);
+        const e = I.rel.e.map((v, i) => v + b[i]), c = I.rel.c.map((v, i) => v + b[i]);
+        if (I.fondu) { const q = Math.min(1, (performance.now() - I.fondu.t0) / 750), w = q * q * (3 - 2 * q); for (let i = 0; i < 3; i++) { e[i] = I.fondu.e[i] + (e[i] - I.fondu.e[i]) * w; c[i] = I.fondu.c[i] + (c[i] - I.fondu.c[i]) * w; } if (q >= 1) I.fondu = null; else ecart += 1; }
+        I.cam = { e, c, fov: I.cam ? lisse(I.cam.fov, cible.fov, k) : cible.fov }; I.enRoute = ecart > .3;
+      } else {
+      I.rel = null; I.fondu = null;
       if (!I.cam || I.saut) { I.cam = { e: cible.e.slice(), c: cible.c.slice(), fov: cible.fov }; I.saut = false; }
       const k = 1 - Math.exp(-dt * (I.mode === "bord" ? 12 : I.anim && I.mode === "tv" ? 8 : 3.2));
       let ecart = 0; for (let i = 0; i < 3; i++) { I.cam.e[i] = lisse(I.cam.e[i], cible.e[i], k); I.cam.c[i] = lisse(I.cam.c[i], cible.c[i], k); ecart += Math.abs(I.cam.e[i] - cible.e[i]) + Math.abs(I.cam.c[i] - cible.c[i]); } I.cam.fov = lisse(I.cam.fov, cible.fov, k); I.enRoute = ecart > .3;
+      }
       // la caméra ne passe jamais sous le sol
       I.cam.e[1] = Math.max(I.cam.e[1], 1.5);
       const dc = Math.hypot(I.cam.e[0] - I.cam.c[0], I.cam.e[1] - I.cam.c[1], I.cam.e[2] - I.cam.c[2]), pres = clamp(dc * .035, .5, 14);
@@ -6456,7 +6480,8 @@
       // voitures
       gl.uniform1f(U.uSpec, .55);
       const KV = I.mode === "helico" ? 1.8 : 1;   // v16.35 · vue d'hélico : voitures grossies pour rester lisibles
-      V.forEach(x => {
+      const VV = I.sansVoit ? [] : V;   // v17.6 · 📺 Visite : la carte seule, sans aucune voiture
+      VV.forEach(x => {
         gl.uniform4f(U.uTint, 1, 1, 1, A.nuit ? .2 : 0);
         const M = modele(x.x, x.y + .05, x.z, x.cap, x.tang, KV); gl.uniformMatrix4fv(U.uM, false, M); lier(gl, PL, x.b); gl.drawArrays(gl.TRIANGLES, 0, x.b.n);
         gl.uniform4f(U.uTint, 1, 1, 1, 0);
@@ -6471,7 +6496,7 @@
       // effets transparents : ombres, traînées
       gl.enable(gl.BLEND); gl.depthMask(false); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-3, -6);
       const fx = [], add = [];
-      V.forEach(x => {   // ombre douce sous la voiture
+      VV.forEach(x => {   // ombre douce sous la voiture
         const c = Math.cos(x.cap) * KV, s = Math.sin(x.cap) * KV, q = (a, b) => [x.x + a * c + b * s, x.y + .16, x.z - a * s + b * c];
         // v16.35 · ombre douce : cœur sombre sous la coque, bord qui s'efface (super-ellipse en éventail)
         const cO = q(-.2, 0), bord = (t, k) => { const ct = Math.cos(t), st = Math.sin(t); return q(-.2 + Math.sign(ct) * Math.pow(Math.abs(ct), .55) * 4.6 * k, Math.sign(st) * Math.pow(Math.abs(st), .55) * 1.95 * k); };
@@ -6486,7 +6511,7 @@
       gl.disable(gl.POLYGON_OFFSET_FILL);
       // halos de lumière, feux arrière sous la pluie, feu d'artifice
       const pts = [];
-      if (A.nuit || A.pluie) V.forEach(x => pts.push(x.x - x.tx * 4.1, x.y + .7, x.z - x.tz * 4.1, 1, .15, .1, A.pluie ? .9 : .5, 7));
+      if (A.nuit || A.pluie) VV.forEach(x => pts.push(x.x - x.tx * 4.1, x.y + .7, x.z - x.tz * 4.1, 1, .15, .1, A.pluie ? .9 : .5, 7));
       I.artifice.forEach(p => pts.push(p.x, p.y, p.z, p.c[0], p.c[1], p.c[2], Math.max(0, p.v), 9));
       gl.useProgram(PP.p); gl.uniformMatrix4fv(PP.U.uPV, false, PV); gl.uniform1f(PP.U.uH, Hh * .9); gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
       [PP.A.aP, PP.A.aC, PP.A.aS].forEach(a => gl.enableVertexAttribArray(a));
@@ -6555,7 +6580,7 @@
     ecoute("wheel", ev => { ev.preventDefault(); I.zoom = clamp(I.zoom * (ev.deltaY > 0 ? 1.1 : .9), .12, 2.4); reveiller(); }, { passive: false });
     cv.style.touchAction = "pan-y";
     function ecran(n) {
-      const x = voitureDe(n); if (!x || !PV) return null; if (I.mode === "bord" && n === I.focus) return { vis: false }; const p = appliquer(PV, [x.x, x.y + 3.2, x.z, 1]); if (p[3] <= .5) return { vis: false };
+      const x = voitureDe(n); if (!x || !PV) return null; if (I.sansVoit || I.mode === "bord" && n === I.focus) return { vis: false }; const p = appliquer(PV, [x.x, x.y + 3.2, x.z, 1]); if (p[3] <= .5) return { vis: false };
       return { x: (p[0] / p[3] * .5 + .5) * I.cssW, y: (1 - (p[1] / p[3] * .5 + .5)) * I.cssH, vis: Math.abs(p[0] / p[3]) < 1.15 && Math.abs(p[1] / p[3]) < 1.2, d: p[3] };
     }
     function ecranMonde(s, lat, h) { if (!PV) return null; const q = T.a(s, lat || 0), p = appliquer(PV, [q.x, q.y + (h || 0), q.z, 1]); if (p[3] <= .5) return { vis: false }; return { x: (p[0] / p[3] * .5 + .5) * I.cssW, y: (1 - (p[1] / p[3] * .5 + .5)) * I.cssH, vis: Math.abs(p[0] / p[3]) < 1.1 && Math.abs(p[1] / p[3]) < 1.1 }; }
@@ -6594,11 +6619,15 @@
         I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: now + dl, t00: now, duree: duree || 5200, fin, feux: !!depart };
         if (depart) I.feuxDepart = 0; I.saut = I.mode !== "helico"; reveiller();
       },
-      camera(m) { I.mode = m; I.saut = false; I.zoom = 1; I.incl = .72; I.pan = [0, 0]; reveiller(); },
+      camera(m) { I.saut = m === "poursuite" && I.mode !== m; if (I.saut) I.orbite = 0; I.mode = m; I.zoom = 1; I.incl = .72; I.pan = [0, 0]; reveiller(); },
+      /** v17.6 · montrer ou cacher les voitures (📺 Visite = la carte seule) */
+      voitures(b) { I.sansVoit = !b; reveiller(); },
+      /** v17.6 · la voiture suivie en poursuite : on change de voiture en glissant (fondu de 0,75 s), pas en sautant */
+      focus(n) { if (I.focus !== n && I.mode === "poursuite") I.saut = true; I.focus = n; reveiller(); },
+      suivie: () => I.focus, ips: () => Math.round(1000 / Math.max(1, I.ft)),
       /** V16.59 · visite guidée (hélico) : un survol de la piste en ~12 s ; un toucher l'arrête */
       survol(dur, fin) { if (I.mode !== "helico" || !ANIM()) { if (fin) fin(); return; } I.survol = { t0: performance.now(), dur: dur || 12000, s0: 0, o0: I.orbite, fin }; reveiller(); },
       arreterSurvol() { if (I.survol) { I.survol = null; I.pan = [0, 0]; I.zoom = 1; I.incl = .72; reveiller(); } },
-      focus(n) { I.focus = n; reveiller(); },
       ecran, ecranMonde, projeter, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim, reveiller, taille: () => ({ w: I.cssW, h: I.cssH }),
       /** zoom de la Visite 3D (1 = vue d'ensemble, 0,12 = au plus près) et mode de caméra */
       zoom: () => I.zoom, mode: () => I.mode, survolEnCours: () => !!I.survol,
@@ -7040,7 +7069,7 @@
       regler(x) { Object.assign(o, x); },
       jouer(de, a, duree, fin) { if (!ANIM()) { api.placer(a); if (fin) fin(); return; } I.pts = Object.assign({}, de); poser(); I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: performance.now(), duree: Math.min(duree || 2600, 3200), fin }; if (!raf) raf = requestAnimationFrame(boucle); },
       jouerScenario(scen, duree, fin) { if (EV && EV.raz) EV.raz(); if (!ANIM()) { api.placer(scen(1)); if (fin) fin(); return; } I.e = 0; I.pts = scen(0); poser(); I.anim = { scen, de: scen(0), a: scen(1), t0: performance.now(), duree, fin }; if (!raf) raf = requestAnimationFrame(boucle); },
-      camera() { }, focus() { }, survol(d, fin) { if (fin) fin(); }, arreterSurvol() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); if (o.image) o.image(api); }, reveiller() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); },   // V16.16 : la course reprend si la piste a été détachée
+      camera() { }, focus() { }, voitures() { }, survol(d, fin) { if (fin) fin(); }, arreterSurvol() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); if (o.image) o.image(api); }, reveiller() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); },   // V16.16 : la course reprend si la piste a été détachée
       detruire() { if (raf) cancelAnimationFrame(raf); if (ro) ro.disconnect(); svg.remove(); }
     };
     poser();

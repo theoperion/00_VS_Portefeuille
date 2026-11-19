@@ -8,7 +8,9 @@
 MAIL D'ANNONCE DU 21/11 ANNULÉ (V56, `VS_ANNONCE_ACTIVE = false`) : Théo envoie les vidéos MP4 lui-même sur WhatsApp (meilleurs retours). Vendredi = texte seul, aucun visuel ni circuit, 4 pilotes ; samedi = fonctionnement du championnat sans dévoiler les univers, 5ᵉ pilote ; toutes commencent par « Ils pensaient juste épargner ».
 Samedi 21/11 : bande-annonce + MP4 (WhatsApp) qui NE dévoilent PAS les 12 cartes (seulement l'Atelier du Père Noël + au plus janvier ; les autres en flashes floutés) ; vendredi 20/11 : MP4 court « demain, tout commence ». Théo : PAS de « Mon portrait 11 h » dans les vidéos ni le mail (ça s'affiche dans l'appli). La révélation complète des 12 univers est gardée pour un AUTRE teaser fin décembre (à faire). Théo (19/11) : en décembre, PLUSIEURS petits teasers vidéo (WhatsApp), un par pan de règles (dont La Coupe brisée, juste évoquée), plus de détails plus tard. Calendrier VALIDÉ, à faire la SEMAINE PROCHAINE (pas avant) : ~6/12 les cartes, ~13/12 trésors + Coupe brisée (évoquée), ~20/12 badges/écurie (si refonte prête), ~28/12 révélation des 12 univers ; chacune commence par « Ils pensaient juste épargner. ». SÉRIE EN ÉPISODES (Théo, 19/11) : couverture d'1 s en 1re image (= vignette WhatsApp) « VERSUS · ÉPISODE N » + titre, une couleur par épisode : Ép.1 Demain (ven.), Ép.2 La bande-annonce (sam.), Ép.3 Les cartes, Ép.4 La Coupe brisée, Ép.5 L'écurie, Ép.6 Les 12 univers. Les bandes-annonces ne sont PAS dans l'appli (teaser*.html retirés du site, gardés en local, exclus de git). Le tour de chauffe n'a pas de classement : c'est un test + retours de bugs. Scripts MP4 : scratchpad teaser/rec2.js + son.py (perdus avec la session : recréer au besoin).
 
-## Course 2D/3D : à faire APRÈS le lot « vues » (plein écran paysage, Visite sans voitures, Hélico poursuite, piste allégée ; Noël d'abord)
+## Course 2D/3D
+✅ v17.6 (Théo a validé) : 3 vues Carte/Visite (sans voitures)/Hélico (poursuite `poursuite` dans piste.js) + plein écran paysage, activées par `VUES_V2 = ["abudhabi"]` (js/4-grandprix.js) ; ajouter les autres circuits quand leur 3D sera refaite. À tester par Théo sur Firefox Android (rotation, fluidité, retour).
+À FAIRE ENSUITE :
 Théo (19/11) : au 1er tour les voitures se suivent en file et les têtes des pilotes ne suivent plus leur voiture (alignées). Proposition à construire :
 tour 1 = voitures ÉCARTÉES selon le classement du mois d'avant (écarts réels, pas de file), têtes collées à leur voiture ; tour 2 = dépassements jusqu'au résultat du mois clos. Faire valider par le Conseil (simple, lisible) avant de publier.
 
@@ -59,7 +61,7 @@ Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles 
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **17.5**.
+  hors connexion `sw.js`). Version actuelle : **17.6**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 

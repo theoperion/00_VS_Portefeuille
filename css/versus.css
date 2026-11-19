@@ -1681,3 +1681,49 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 
 /* v17.4 : plus de bouton pour couper le son (Théo) */
 [data-son] { display: none !important; }
+
+/* ---------- v17.6 · Course, vues « V2 » (circuit de Noël d'abord) : piste épurée, sélecteur 🗺️ / 📺 / 🚁 et gros bouton ⛶ sous l'image ---------- */
+.gp-piste.v2 .gp-tour:empty { display: none; }
+.gp-piste.v2:not(.vue-poursuite) .gp-tags3 { display: none; }   /* plus de colonne de têtes sur la carte : le classement est juste en dessous */
+.gp-piste.v2.vue-visite :is(.gp-zones, .gp-pops, .gp-com) { display: none; }   /* Visite : la carte seule, aucune étiquette */
+.gp-vues2 { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin: 10px 0 4px; }
+.gp-sel { display: flex; padding: 3px; gap: 3px; border-radius: 14px; background: var(--panel-2); border: 1px solid var(--rule); min-width: 0; }
+.gp-sel button { flex: 1 1 0; min-width: 0; min-height: 40px; padding: 0 6px; border: 0; border-radius: 11px; background: transparent; color: inherit; font: 700 13.5px/1 var(--f-text); white-space: nowrap; cursor: pointer; }
+.gp-sel button[aria-pressed="true"] { background: var(--accent); color: var(--bg); box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+.gp-plein-gros { grid-column: 1 / -1; min-height: 48px; border: 0; border-radius: 14px; background: var(--accent); color: var(--bg); font: italic 800 16px/1 var(--f-display); letter-spacing: .05em; text-transform: uppercase; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.28); }
+.gp-plein-gros span { font-style: normal; font-size: 19px; margin-right: 4px; }
+.gp-plus { position: relative; }
+.gp-plus > summary { list-style: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; border: 1px solid var(--rule); background: var(--panel-2); font: 800 20px/1 var(--f-text); cursor: pointer; }
+.gp-plus > summary::-webkit-details-marker { display: none; }
+.gp-plus[open] > summary { background: var(--accent); color: var(--bg); }
+.gp-plus-m { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; display: grid; min-width: 210px; padding: 6px; border-radius: 14px; background: #10131A; color: #fff; border: 1px solid rgba(255,255,255,.14); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+.gp-plus-m button { text-align: left; padding: 11px 12px; border: 0; border-radius: 10px; background: transparent; color: inherit; font: 600 14px/1.2 var(--f-text); cursor: pointer; }
+.gp-plus-m button:hover, .gp-plus-m button:focus-visible { background: rgba(255,255,255,.08); }
+.gp-piste:not(.vue-visite) .gp-survol-b { display: none; }
+/* 🚁 Hélico : les pastilles des pilotes pour choisir la voiture suivie */
+.gp-suivi { display: none; position: absolute; left: 8px; bottom: 8px; z-index: 3; gap: 6px; padding: 4px; border-radius: 999px; background: rgba(8,10,14,.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.gp-piste.vue-poursuite .gp-suivi { display: flex; }
+.gp-suivi button { width: 34px; height: 34px; padding: 2px; border-radius: 50%; border: 2px solid transparent; background: var(--c); cursor: pointer; opacity: .62; transition: opacity .2s, transform .2s; }
+.gp-suivi button .av { width: 100%; height: 100%; }
+.gp-suivi button[aria-pressed="true"] { opacity: 1; border-color: #fff; transform: scale(1.12); }
+/* plein écran V2 : rien que la piste, un petit sélecteur, ▶ et ✕ */
+.gp-plein.v2 :is(.gpp-h, .gpp-tour, .gpp-mois) { display: none; }
+.gp-plein.v2 .gp-piste > :is(.gp-btns, .gp-spe, .gp-tresor-appel) { display: none !important; }
+.gp-plein.v2 .gp-hud { top: calc(env(safe-area-inset-top, 0px) + 10px); left: 10px; right: auto; }
+.gp-plein.v2 .gp-suivi { left: calc(env(safe-area-inset-left, 0px) + 10px); bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); }
+.gp-plein.v2 .gp-enigme { left: auto; right: calc(env(safe-area-inset-right, 0px) + 10px); bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); max-width: min(60%, 420px); }
+.gpp-bar { position: absolute; z-index: 5; top: calc(env(safe-area-inset-top, 0px) + 8px); right: calc(env(safe-area-inset-right, 0px) + 8px); display: flex; align-items: center; gap: 6px; }
+.gpp-bar .gp-sel.mini { background: rgba(8,10,14,.62); border-color: rgba(255,255,255,.16); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: #fff; }
+.gpp-bar .gp-sel.mini button[aria-pressed="true"] { color: #0B0D12; background: #fff; }
+.gpp-bar .gp-sel.mini button { min-height: 34px; padding: 0 9px; font-size: 12.5px; flex: none; }
+.gpp-b { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,.22); background: rgba(8,10,14,.62); color: #fff; font: 700 15px/1 var(--f-text); cursor: pointer; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.gpp-tourne { position: absolute; z-index: 6; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 16px 22px; border-radius: 18px; background: rgba(8,10,14,.82); color: #fff; text-align: center; font: 700 16px/1.35 var(--f-text); pointer-events: none; transition: opacity .4s; }
+.gpp-tourne b { display: block; font-size: 34px; margin-bottom: 4px; animation: gpp-tourne 1.6s ease-in-out infinite; }
+.gpp-tourne small { font-weight: 500; opacity: .8; }
+.gpp-tourne.fin { opacity: 0; }
+@keyframes gpp-tourne { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+@media (prefers-reduced-motion: reduce) { .gpp-tourne b { animation: none; } }
+@media (max-width: 380px) { .gp-sel button { font-size: 12.5px; } }
+/* Conseil v17.6 : en 🚁 Hélico, le commentaire de course monte en haut (il cachait les pastilles des pilotes) */
+.gp-piste.v2.vue-poursuite .gp-com { bottom: auto; top: 44px; }
+.gp-plein.v2 .gp-piste.vue-poursuite .gp-com { top: calc(env(safe-area-inset-top, 0px) + 58px); }
