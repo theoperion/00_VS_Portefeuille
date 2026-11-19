@@ -3,6 +3,9 @@
 À lire en entier avant toute action. Ce fichier remplace la mémoire des conversations précédentes
 (menées jusqu'au 18/11/2026). L'historique détaillé de chaque version est dans `MODE_EMPLOI.md` (journal en bas).
 
+## ⏸️ PAUSE (Théo, 19/11 soir, crédits limités)
+Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles cartes, vidéo + mail du samedi 21/11, corrections bloquantes. EN PAUSE (à reprendre « la semaine prochaine ») : 3D des circuits 2027 (lot 1 : Dune publiée v16.89 ; Château r3d-chateau-1 et goûter r3d-terrier inachevés, scratchpad wf-3d-lot.js), retouche 3D de Noël si non finie, phrase-bilan + boîte « À faire » + Point Artema (workflow moi-bilan-afaire-artema, copie moi2-0), écran « La Coupe », badges/refonte. Travailler étape par étape, une chose à la fois.
+
 ## Qui, quoi
 - **Théo** (GitHub `theoperion`), francophone : toujours répondre **en français**, simplement, sans jargon.
 - Apps : Google Sheets + Apps Script + pages GitHub Pages. Joueurs du Versus : Théo, Kévin, Clément, Devlin.
@@ -43,7 +46,7 @@
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **16.88**.
+  hors connexion `sw.js`). Version actuelle : **16.89**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
