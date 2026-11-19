@@ -49,7 +49,7 @@
 ## Serveur Apps Script (dépôt app_scripts)
 - Prérequis une fois par machine : `npx -y @google/clasp@3.4.1 login` (compte Google de Théo) → crée `~/.clasprc.json`.
 - Versus : `sh outils/mettre-en-ligne-versus.sh "V31 : ce qui change"` (APPLI=chemin de ce dépôt si besoin).
-  Versions actuelles : VS_VERSION 41, version Google 56.
+  Versions actuelles : VS_VERSION 42, version Google 57.
 - Scripts perso : dans `portefeuille-epargne/<nom>` : `clasp push --force` puis `python3 ../../outils/deployer.py "desc"`
   (garde les mêmes adresses). Versions actuelles : Théo 30, Clément 9, Devlin 9.
 - Sheets en direct : `outils/gs.py` (`SS(id).get/put/batch`). Classeurs : Théo `1pbpJRMwZR64LqP_wwlhiw-6m7-lUg-Q3pVAF4Dv9j8U`,
