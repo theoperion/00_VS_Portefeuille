@@ -116,15 +116,15 @@ function couche(ac, t, d, v, f0, f1) { const sh = ac.createWaveShaper(), f = ac.
   g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .008); g.gain.exponentialRampToValueAtTime(.001, t + d); sh.connect(f).connect(g).connect(sortie(ac));
   [110, 146.8, 220].forEach(fr => { const o = ac.createOscillator(), gg = ac.createGain(); o.type = "sawtooth"; o.frequency.value = fr; gg.gain.value = .3; o.connect(gg).connect(sh); o.start(t); o.stop(t + d + .05); }); }
 function clic(ac, t, v) { const n = bruit(ac, .03), f = ac.createBiquadFilter(), f2 = ac.createBiquadFilter(), g = ac.createGain(); f.type = "highpass"; f.frequency.value = 2000; f2.type = "lowpass"; f2.frequency.value = 4500; g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + .012); n.connect(f).connect(f2).connect(g).connect(sortie(ac)); n.start(t); n.stop(t + .03); }
-function tambour(ac, t, v) { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(42, t + .5); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .006); g.gain.exponentialRampToValueAtTime(.001, t + .9); o.connect(g).connect(sortie(ac)); o.start(t); o.stop(t + 1);
-  const n = bruit(ac, .15), f = ac.createBiquadFilter(), gn = ac.createGain(); f.type = "lowpass"; f.frequency.value = 900; gn.gain.setValueAtTime(v * .7, t); gn.gain.exponentialRampToValueAtTime(.001, t + .12); n.connect(f).connect(gn).connect(sortie(ac)); n.start(t);
-  couche(ac, t, .16, v * .32, 500, 2400); clic(ac, t, v * .5); }
+function tambour(ac, t, v) { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(42, t + .5); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .006); g.gain.exponentialRampToValueAtTime(.001, t + .9); const gc = ac.createGain(); gc.gain.value = .7; o.connect(g).connect(gc).connect(sortie(ac)); o.start(t); o.stop(t + 1);
+  const n = bruit(ac, .15), f = ac.createBiquadFilter(), gn = ac.createGain(); f.type = "bandpass"; f.Q.value = .8; f.frequency.value = 1300; gn.gain.setValueAtTime(v * .9, t); gn.gain.exponentialRampToValueAtTime(.001, t + .12); n.connect(f).connect(gn).connect(sortie(ac)); n.start(t);
+  couche(ac, t, .18, v * .6, 600, 3000); clic(ac, t, v * .8); }
 function braam(ac, t, d, v) { const f = ac.createBiquadFilter(), sh = ac.createWaveShaper(), g = ac.createGain(); sh.curve = courbe(2.5);
   f.type = "lowpass"; f.Q.value = 2; f.frequency.setValueAtTime(90, t); f.frequency.exponentialRampToValueAtTime(1500, t + .22); f.frequency.exponentialRampToValueAtTime(260, t + d);
   g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .05); g.gain.setValueAtTime(v, t + d * .5); g.gain.exponentialRampToValueAtTime(.001, t + d); sh.connect(f).connect(g).connect(sortie(ac));
   [36.7, 36.85, 73.4, 73.7, 110, 146.8].forEach(fr => { const o = ac.createOscillator(), gg = ac.createGain(); o.type = "sawtooth"; o.frequency.value = fr; gg.gain.value = .22; o.connect(gg).connect(sh); o.start(t); o.stop(t + d + .1); });
-  couche(ac, t, d * .8, v * .42, 300, 2600);
-  const s = ac.createOscillator(), gs = ac.createGain(); s.frequency.setValueAtTime(55, t); s.frequency.exponentialRampToValueAtTime(30, t + d); gs.gain.setValueAtTime(v * .9, t); gs.gain.exponentialRampToValueAtTime(.001, t + d); s.connect(gs).connect(sortie(ac)); s.start(t); s.stop(t + d + .1); }
+  couche(ac, t, d * .8, v * .75, 400, 3200);
+  const s = ac.createOscillator(), gs = ac.createGain(); s.frequency.setValueAtTime(55, t); s.frequency.exponentialRampToValueAtTime(30, t + d); gs.gain.setValueAtTime(v * .5, t); gs.gain.exponentialRampToValueAtTime(.001, t + d); s.connect(gs).connect(sortie(ac)); s.start(t); s.stop(t + d + .1); }
 function cymbale(ac, t, v) { const n = bruit(ac, 3.5), f = ac.createBiquadFilter(), g = ac.createGain(); f.type = "highpass"; f.frequency.value = 3500; g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + 3.4); n.connect(f).connect(g).connect(sortie(ac)); n.start(t); }
 function boum(ac, t, v) { const o = ac.createOscillator(), g = ac.createGain(); o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(28, t + 1.6); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.001, t + 2.4); o.connect(g).connect(sortie(ac)); o.start(t); o.stop(t + 2.5); }
 /* accord final (ré mineur ouvert) : cuivres tenus qui s'éteignent */
@@ -136,9 +136,9 @@ function montee(ac, t, d, v) { const n = bruit(ac, d), f = ac.createBiquadFilter
 function ostinato(ac, tps) { const notes = [73.4, 73.4, 87.3, 73.4, 65.4, 73.4, 98, 87.3], n = tps.length;
   tps.forEach((tt, k) => { const p = n > 1 ? k / (n - 1) : 1, o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain(), v = .07 + .13 * p, dur = Math.min(.16, (tps[k + 1] || tt + .2) - tt);
     o.type = "sawtooth"; o.frequency.value = notes[k % 8] * (k % 16 >= 8 ? 2 : 4); f.type = "lowpass"; f.frequency.value = 900 + 1600 * p; g.gain.setValueAtTime(v, tt); g.gain.exponentialRampToValueAtTime(.001, tt + dur); o.connect(f).connect(g).connect(sortie(ac)); o.start(tt); o.stop(tt + dur + .02);
-    const b = ac.createOscillator(), gb = ac.createGain(); b.type = "triangle"; b.frequency.value = notes[k % 8]; gb.gain.setValueAtTime(v * .9, tt); gb.gain.exponentialRampToValueAtTime(.001, tt + dur); b.connect(gb).connect(sortie(ac)); b.start(tt); b.stop(tt + dur + .02); }); }
+    const b = ac.createOscillator(), gb = ac.createGain(); b.type = "triangle"; b.frequency.value = notes[k % 8]; gb.gain.setValueAtTime(v * .5, tt); gb.gain.exponentialRampToValueAtTime(.001, tt + dur); b.connect(gb).connect(sortie(ac)); b.start(tt); b.stop(tt + dur + .02); }); }
 function nappe(ac, t, d, mont) { const g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.1, t + mont); g.gain.setValueAtTime(.1, t + Math.max(mont, d - .2)); g.gain.linearRampToValueAtTime(0, t + d); g.connect(sortie(ac));
-  [55, 82.4, 110].forEach((f, k) => { const o = ac.createOscillator(); o.frequency.value = f; const gg = ac.createGain(); gg.gain.value = k === 2 ? .5 : 1; o.connect(gg).connect(g); o.start(t); o.stop(t + d); }); }
+  [55, 82.4, 110, 164.8, 220].forEach((f, k) => { const o = ac.createOscillator(); o.type = k > 2 ? "triangle" : "sine"; o.frequency.value = f; if (k > 2) o.detune.value = 5; const gg = ac.createGain(); gg.gain.value = [.6, .7, .6, .45, .35][k]; o.connect(gg).connect(g); o.start(t); o.stop(t + d); }); }
 function bip(ac, t, v) { const o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain(); o.type = "square"; o.frequency.value = 880; f.type = "lowpass"; f.frequency.value = 3500; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .004); g.gain.setValueAtTime(v, t + .15); g.gain.linearRampToValueAtTime(0, t + .17); o.connect(f).connect(g).connect(sortie(ac)); o.start(t); o.stop(t + .2); }
 function moteur(ac, t, d, v) { const o = ac.createOscillator(), o2 = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain(), lfo = ac.createOscillator(), lg = ac.createGain(); o.type = o2.type = "sawtooth";
   o.frequency.setValueAtTime(48, t); o.frequency.exponentialRampToValueAtTime(96, t + d); o2.frequency.setValueAtTime(72, t); o2.frequency.exponentialRampToValueAtTime(144, t + d); lfo.frequency.value = 9; lg.gain.value = 4; lfo.connect(lg); lg.connect(o.frequency); lg.connect(o2.frequency);
@@ -162,7 +162,7 @@ function partition(ac, t0, P) {
       if (c === "r") montee(ac, tt + .1, d - at - .1, .5);
       if (c === "p") bip(ac, tt, v === null ? .32 : v);
       if (c === "m") moteur(ac, tt, d - at, v === null ? .22 : v);
-      if (c === "B") { braam(ac, tt, 4.5, .75); tambour(ac, tt, 1.2); boum(ac, tt, .9); cymbale(ac, tt, .35); accord(ac, tt + .02, 4.8, .5); } }); });
+      if (c === "B") { braam(ac, tt, 4.5, .75); tambour(ac, tt, 1.2); boum(ac, tt, .6); cymbale(ac, tt, .4); accord(ac, tt + .02, 4.8, .75); } }); });
   ac._bus = null; return tot; }
 /* ---------- l'image ---------- */
 let alt = 0;
