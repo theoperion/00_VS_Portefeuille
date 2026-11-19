@@ -53,7 +53,8 @@ function htmlProchainement(compact) {
   const l = etapesJeu().filter(e => !regleVisible(e.id)); if (!l.length) return "";
   const adm = estAdmin(), tag = adm ? "button" : "span";
   // V16.23 : pendant la chauffe, pas de longue liste (les joueurs découvrent les bases) : quelques phrases d'accroche, la liste reste pour l'admin
-  if (!adm && basesSeules()) return '<div class="bientot teaser"><span class="bt-k">🎁 Le 1<sup>er</sup> janvier</span><p>Le championnat démarre, avec ' + l.length + ' nouveautés.</p><p><i>« Douze univers. Un seul champion. »</i><br><i>« Cinq tickets d\'or sont cachés quelque part. »</i><br><i>« Une couronne changera de tête. »</i></p></div>';
+  if (!adm && (basesSeules() || !saisonJouee())) return "";   // v17.15 (Théo) : rien sur ce qui arrive, on révélera au bon moment
+  if (false) return '<div class="bientot teaser"><span class="bt-k">🎁 Le 1<sup>er</sup> janvier</span><p>Le championnat démarre, avec ' + l.length + ' nouveautés.</p><p><i>« Douze univers. Un seul champion. »</i><br><i>« Cinq tickets d\'or sont cachés quelque part. »</i><br><i>« Une couronne changera de tête. »</i></p></div>';
   return '<div class="bientot' + (compact ? " compact" : "") + '"><span class="bt-k">🎁 Prochainement' + (adm ? " · admin : touche une règle pour la voir et régler sa date" : "") + "</span>" +
     l.map(e => "<" + tag + ' class="bt-e"' + (adm ? ' type="button" data-etape="' + e.id + '"' : "") + "><i>" + (adm ? "🔒" : e.ico) + "</i><b>" + esc(e.nom) + "</b><em>" + esc(moisEtape(e).replace(/ \d{4}$/, "")) + "</em></" + tag + ">").join("") + "</div>";
 }
