@@ -13,8 +13,9 @@ const K = { api: "versus.moi.api", cle: "versus.moi.cle", cache: "versus.moi.cac
 /* v16.83 · âge de la copie affichée quand le fichier ne répond pas */
 function ageCopie() { const t = +stock.get(K.cacheLe) || 0; if (!t) return ""; const mn = Math.max(0, Math.round((Date.now() - t) / 60e3)); return mn < 1 ? "à l'instant" : mn < 60 ? "il y a " + mn + " min" : mn < 48 * 60 ? "il y a " + Math.round(mn / 60) + " h" : "il y a " + Math.round(mn / 1440) + " j"; }
 function majuscule(t) { t = String(t || ""); return t.charAt(0).toUpperCase() + t.slice(1); }
-const PREF = Object.assign({ onglet: "jour", patri: "net", million: "financier", tri: "env", mode: "valeur", per: "6m", serie: "ip", moisMode: "pct", rep: "classe", acc: {} },
+const PREF = Object.assign({ onglet: "jour", patri: "net", tri: "env", mode: "valeur", per: "6m", serie: "ip", moisMode: "pct", rep: "classe", acc: {} },
   (() => { try { return JSON.parse(stock.get(K.pref) || "{}"); } catch (e) { return {}; } })());
+delete PREF.million;   // E (v16.93) : plus de mode « net » pour le million (ancienne préférence oubliée)
 function garderPref() { stock.set(K.pref, JSON.stringify(PREF)); }
 
 let M = null;            // dernières données reçues de ton fichier
@@ -41,7 +42,8 @@ function injecterStyle() {
   if (document.getElementById("style-moi")) return;
   const st = document.createElement("style"); st.id = "style-moi";
   st.textContent = `
-.moi { --s1: var(--mc, var(--p0)); --s2: var(--gold); --s3: var(--accent);
+.moi { --c-bourse: #5B8DEF; --c-epargne: #E8B341; --c-av: #2EC4A0; --c-immo: #E07A52;   /* A (v16.93) : une couleur fixe par famille, distincte du violet de l'appli */
+  --s1: var(--c-bourse); --s2: var(--c-epargne); --s3: var(--c-immo);
   --e1: #E8B341; --e2: #34C3AE; --e3: #C084FC; --e4: #FF8A5B; --e5: #7DD3FC;
   --flap: #1C222B; --flap-2: #262E39; --flap-ink: #F2F4F7; --flap-line: #0B0E12; --flap-acc: #B8A9FF; }
 .moi .m-onglets { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 62px); z-index: 15; box-shadow: 0 6px 10px -6px var(--shade); }
@@ -371,6 +373,7 @@ function injecterStyle() {
 .moi .m-tuile span { font: 600 12px/1.1 var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .moi .m-tri { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 10px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
 .moi .m-tri .m-coche { padding-bottom: 0; }
+.moi .m-tri-p { margin: 8px 0 2px; } .moi .m-tri-p .chip { padding: 6px 11px; font-size: 12.5px; }
 @media (max-width: 400px) { .moi .m-tri .sel { width: 100% !important; order: 3; } }
 .moi .m-tri h2.sec { border: 0; padding: 0; white-space: nowrap; }
 .moi .m-tri .sel { min-width: 0; width: min(190px, 44%); }
@@ -441,6 +444,7 @@ function injecterStyle() {
 .moi .m-leg3 { display: grid; }
 .moi .m-leg3 button { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 12px minmax(0, 1fr) auto 46px; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--rule); font-size: 13.5px; }
 .moi .m-leg3 button i { width: 12px; height: 12px; border-radius: 3px; transform: skewX(-12deg); }
+.moi .m-leg3 .m-dette i { background: none; box-shadow: inset 0 0 0 1.5px var(--c-immo); } .moi .m-leg3 .m-dette .num { color: var(--down); }
 .moi .m-leg3 .num { text-align: right; font-family: var(--f-num); font-variant-numeric: tabular-nums; } .moi .m-leg3 .pc { text-align: right; color: var(--ink-3); font-size: 12.5px; font-family: var(--f-num); }
 .moi .m-bloc { position: relative; padding-left: 12px; display: grid; gap: 10px; scroll-margin-top: 130px; }
 .moi .m-bloc::before { content: ""; position: absolute; left: 0; top: 2px; bottom: 2px; width: 4px; border-radius: 2px; background: var(--c, var(--rule)); }
@@ -495,8 +499,8 @@ function injecterStyle() {
 .moi .m-vide { display: grid; gap: 14px; justify-items: start; padding: 26px 0 10px; }
 .moi .m-vide p { margin: 0; font-size: 14px; color: var(--ink-2); }
 .moi .tab td small { color: var(--ink-3); }
-@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .moi { --e1: #B7791F; --e2: #0F8F7E; --e3: #8B3FD9; --e4: #D35A1F; --e5: #1E88B8; } }
-:root[data-theme="light"] .moi { --e1: #B7791F; --e2: #0F8F7E; --e3: #8B3FD9; --e4: #D35A1F; --e5: #1E88B8; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .moi { --e1: #B7791F; --e2: #0F8F7E; --e3: #8B3FD9; --e4: #D35A1F; --e5: #1E88B8; --c-bourse: #2F62C8; --c-epargne: #9A7400; --c-av: #12866B; --c-immo: #C24E2A; } }
+:root[data-theme="light"] .moi { --e1: #B7791F; --e2: #0F8F7E; --e3: #8B3FD9; --e4: #D35A1F; --e5: #1E88B8; --c-bourse: #2F62C8; --c-epargne: #9A7400; --c-av: #12866B; --c-immo: #C24E2A; }
 @media (max-width: 430px) {
   .moi .m-rep > div { grid-template-columns: minmax(60px, 26%) minmax(0, 1fr) 44px 66px; }
 }
@@ -623,9 +627,6 @@ function injecterStyle() {
 .m-million .mj.fin { transform: translateX(-100%); }
 .m-million .mj.fin i { width: 14px; height: 34px; background: repeating-conic-gradient(#fff 0 25%, #0B0D12 0 50%) 0 0 / 7px 7px; border-radius: 2px; }
 .m-million .mj.fin b { color: var(--gold); font-weight: 800; }
-.m-million .mm-seg { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
-.m-million .mm-seg button { color: rgba(255,255,255,.75); }
-.m-million .mm-seg button[aria-pressed="true"] { background: var(--gold); color: #17110A; }
 .m-million .mm-eta { margin: 0; font-size: 16px; line-height: 1.4; }
 .m-million .mm-eta b { color: var(--gold); font-weight: 700; }
 .m-million .mm-sub { margin: 0; font-size: 13px; color: rgba(255,255,255,.75); }
@@ -1035,7 +1036,9 @@ function htmlJourBase() {
     "<div>" +
       '<div class="m-tri"><h2 class="sec">' + (detail ? "Mes lignes" : "Mes enveloppes") + "</h2>" +
         '<label class="m-coche"><input type="checkbox" id="m-detail"' + (detail ? " checked" : "") + "> Lignes</label>" +
-        (detail ? '<label class="sel"><span>Classer</span><select id="m-tri">' + [["env", "Par enveloppe"], ["jour", "Par variation du jour"], ["poids", "Par montant"], ["pv", "Par plus-value"]].map(([k, l]) => '<option value="' + k + '"' + (tri === k ? " selected" : "") + ">" + l + "</option>").join("") + "</select></label>" : "") + "</div>" +
+        "</div>" +
+      /* F (v16.93) : le tri se choisit par puces (un toucher au lieu d'une liste déroulante) */
+      (detail ? '<div class="chips m-tri-p" role="group" aria-label="Classer les lignes">' + [["env", "Enveloppe"], ["jour", "Jour"], ["poids", "Montant"], ["pv", "Plus-value"]].map(([k, l]) => '<button class="chip" type="button" data-m-tri="' + k + '" aria-pressed="' + (tri === k) + '">' + l + "</button>").join("") + "</div>" : "") +
       liste +
       (detail ? '<p class="info" style="margin-top:6px">Touche une ligne pour ses performances et son prix de revient.</p>' : "") +
     "</div>" +
@@ -1074,7 +1077,8 @@ function ligneJour(l, avecEnv) {
   return '<div class="m-l" role="button" tabindex="0" aria-expanded="false" data-code="' + esc(l.code) + '" data-env="' + esc(l.env) + '">' +
     '<div class="g"><b>' + esc(l.code) + (avecEnv ? '<span class="tag">' + esc(String(l.env).split(" ")[0]) + "</span>" : "") + "</b><small>" + esc(l.nom || "") + "</small></div>" +
     '<div class="d"><span class="badge ' + sens(l.pct) + '">' + pct(l.pct, 2) + '</span><small class="' + sens(l.jour) + '">' + eur(l.jour, 0, true) + "</small></div>" +
-    '<div class="b"><span>' + cours(l.cours) + "</span><span>" + eur(l.valeur) + ' <i>' + pct(l.poids, 0, false) + '</i></span><span class="' + sens(l.pv) + '">PV ' + eur(l.pv, 0, true) + " · " + pct(l.pvPct) + "</span></div>" +
+    /* F (v16.93) : rangée du bas allégée (valeur · plus-value en %), le cours et le poids sont dans le détail */
+    '<div class="b"><span>' + eur(l.valeur) + '</span><span class="' + sens(l.pv) + '">PV ' + pct(l.pvPct) + "</span></div>" +
     "</div>";
 }
 function basculerLigne(el) {
@@ -1089,7 +1093,8 @@ function basculerLigne(el) {
   const d = document.createElement("div");
   d.className = "m-ligne-det";
   d.innerHTML = '<div class="mini">' + m("1 semaine", p.s1) + m("1 mois", p.m1) + m("6 mois", p.m6) + m("Depuis janv.", p.ytd) + m("1 an", p.a1) +
-    "<div><span>Quantité × PRU</span><b>" + qte(l.qte) + " × " + cours(l.pru) + "</b></div>" +
+    "<div><span>Cours</span><b>" + cours(l.cours) + "</b></div><div><span>Poids</span><b>" + pct(l.poids, 1, false) + "</b></div>" +
+    "<div><span>Quantité × PRU</span><b>" + qte(l.qte) + " × " + cours(l.pru) + "</b></div>" + e("Plus-value", l.pv, true) +
     e("Coût de revient", pos.cout) + e("Plus-value réalisée", pos.pvr, true) + e("Frais payés", pos.frais) +
     '<p style="grid-column:1/-1;margin:0;font-size:12px;color:var(--ink-2)">' + (p.ticker ? "Performance du cours (" + esc(p.ticker) + "), indépendante de tes dates d'achat." : "Pas de cotation Google Finance pour cette ligne : performances du cours indisponibles.") + "</p>" +
     '<p class="m-actions"><button class="mini-btn" type="button" data-ordre="Achat">Acheter</button><button class="mini-btn" type="button" data-ordre="Vente">Vendre</button><button class="mini-btn" type="button" data-alerte="1">Alerte de cours</button></p></div>';
@@ -1128,7 +1133,7 @@ function brancherJour(v) {
     el.scrollIntoView({ block: "center", behavior: reduit ? "auto" : "smooth" });
     el.classList.add("eclair"); setTimeout(() => el.classList.remove("eclair"), 1200);
   }));
-  const t = v.querySelector("#m-tri"); if (t) t.addEventListener("change", () => { PREF.tri = t.value; garderPref(); rendre(); });
+  v.querySelectorAll("[data-m-tri]").forEach(b => b.addEventListener("click", () => { PREF.tri = b.dataset.mTri; garderPref(); garderPlace(b, rendre); }));
   const dt = v.querySelector("#m-detail"); if (dt) dt.addEventListener("change", () => { PREF.lignes = dt.checked; garderPref(); rendre(); });
   const def = v.querySelector(".m-def-l");
   v.querySelectorAll("[data-def]").forEach(b => b.addEventListener("click", () => {
@@ -1144,7 +1149,9 @@ function htmlPatrimoine() {
   const net = patrimoineNet();
   const immoNet = (imm.find(x => /^Valeur nette/.test(x.nom)) || {}).montant || 0;
   const parts = [["Épargne", s.epargne || 0, "--s2", "p-epargne"]].concat(net.avecImmo ? [["Immobilier net", immoNet, "--s3", "p-immo"]] : []).concat([["Bourse", s.valeur || 0, "--s1", "p-bourse"]]);
-  const tot = parts.reduce((a, p) => a + Math.max(0, p[1]), 0) || 1;
+  /* I (v16.93) : seules les parts positives vont dans la barre et les % ; un immobilier net négatif s'affiche à part (« dette nette ») */
+  const posit = parts.filter(p => p[1] > 0), dette = net.avecImmo && immoNet < 0;
+  const tot = posit.reduce((a, p) => a + p[1], 0) || 1;
   const envs = (M.enveloppes || []).filter(e => e.type === "env");
   const liste = (rows, f) => '<div class="m-liste">' + rows.map(f).join("") + "</div>";
   const rEnv = e => '<div class="r"><span class="a">' + esc(e.nom) + '</span><span class="b">' + eur(e.valeur) + "</span>" +
@@ -1165,10 +1172,11 @@ function htmlPatrimoine() {
       '<span class="c">' + (r.fiscal && r.fiscal !== "—" ? "Fiscalité allégée le " + esc(r.fiscal) : t ? "Après impôt estimé" : "Pas d'avantage fiscal de durée") + '</span><span class="d">impôt ≈ ' + eur(r.impot) + "</span></div>"; };
   const bloc = (id, c, titre, sous, contenu) => '<section class="m-bloc" id="' + id + '" style="--c:var(' + c + ')"><h2 class="sec">' + titre + " <small>" + sous + "</small></h2>" + contenu + "</section>";
   return '<div class="hero"><span class="eyebrow">' + (net.avecImmo ? "Patrimoine net (avec immobilier)" : "Patrimoine financier") + '</span><span class="m-big">' + eur(net.montant) + '</span><div class="sous">' + esc(net.note || "") + "</div></div>" +
-    '<div><div class="stack" role="img" aria-label="Répartition du patrimoine">' + parts.map(p => '<i style="flex:' + Math.max(p[1], 0) + ";background:var(" + p[2] + ')"></i>').join("") + "</div>" +
-      '<div class="m-leg3">' + parts.map(p => '<button type="button" data-cible="' + p[3] + '"><i style="background:var(' + p[2] + ')"></i><span>' + p[0] + '</span><span class="num">' + eur(p[1]) + '</span><span class="pc">' + pct(p[1] / tot, 0, false) + "</span></button>").join("") + "</div></div>" +
+    '<div><div class="stack" role="img" aria-label="Répartition du patrimoine">' + posit.map(p => '<i style="flex:' + p[1] + ";background:var(" + p[2] + ')"></i>').join("") + "</div>" +
+      '<div class="m-leg3">' + parts.filter(p => p[1] > 0 || !(dette && p[3] === "p-immo")).map(p => '<button type="button" data-cible="' + p[3] + '"><i style="background:var(' + p[2] + ')"></i><span>' + p[0] + '</span><span class="num">' + eur(p[1]) + '</span><span class="pc">' + (p[1] >= 0 ? pct(p[1] / tot, 0, false) : "") + "</span></button>").join("") +
+        (dette ? '<button type="button" class="m-dette" data-cible="p-immo"><i></i><span>Immobilier : dette nette</span><span class="num down">' + eur(immoNet) + '</span><span class="pc"></span></button>' : "") + "</div></div>" +
     /* v16.87 (Théo) : l'assurance-vie Banque Populaire en premier, la bourse en second (elle est déjà sur Aujourd'hui), puis l'épargne et l'immobilier */
-    (sup.length ? bloc("p-av", "--s2", "Quintessa", "assurance-vie Banque Populaire · par support", htmlAV(sup)) : "") +
+    (sup.length ? bloc("p-av", "--c-av", "Quintessa", "par support", htmlAV(sup)) : "") +
     bloc("p-bourse", "--s1", "Bourse", "portefeuille", liste(envs, rEnv)) +
     bloc("p-epargne", "--s2", "Épargne", esc(s.epargneLibelle || ""), liste(ep, rEp)) +
     (net.avecImmo ? bloc("p-immo", "--s3", "Immobilier", "prix d'achat, prêts restants", pretHtml() + liste(imm, rImm)) : "") +
@@ -1285,7 +1293,7 @@ function htmlAV(sup) {
     '<div class="av-sups">' + rows.map(r => { const k = cleSupport(r.nom);
       return '<button type="button" class="av-s" data-av="' + k + '" aria-pressed="' + (sel === k) + '" style="--c:' + (COUL_AV[k] || "var(--ink-3)") + '"><span class="av-n"><b><i></i>' + esc(r.nom) + "</b><small>" + esc(r.note || "") + "</small></span>" +
         '<span class="av-v"><b>' + eur(r.valeur) + '</b><small>versé ' + eur(r.investi) + '</small><small class="' + sens(r.pv) + '">' + eur(r.pv, 2, true) + " · " + pct(r.pvPct, 2) + "</small></span></button>"; }).join("") +
-      (S ? '<button type="button" class="av-s av-tout" data-av="total" aria-pressed="' + (sel === "total") + '">Toute l\'assurance-vie</button>' : "") + "</div>" + lienArtema() +
+      (S ? '<button type="button" class="av-s av-tout" data-av="total" aria-pressed="' + (sel === "total") + '">Toute l\'AV</button>' : "") + "</div>" + lienArtema() +
     (S ? '<div class="av-courbe" id="av-courbe">' + courbeAV(S, sel) + "</div>" : '<p class="info">Les courbes arrivent dès que ton fichier envoie l\'historique (mise à jour du script).</p>') +
     (rdv.length ? '<h3 class="m-sous">Rendez-vous</h3><div class="av-rdv">' + rdv.map(([i, t, q, k, al]) => '<div' + (al ? ' class="av-du"' : "") + '><i>' + i + "</i><span>" + esc(t) + (q ? "<small>" + esc(q) + "</small>" : "") + "</span>" + (k ? '<button class="mini-btn" type="button" data-av-reg="' + k + '">Ajuster</button>' : al ? '<button class="mini-btn" type="button" data-m-aller="' + al + '">Voir</button>' : "") + "</div>").join("") + "</div>" : "");
 }
@@ -1756,8 +1764,9 @@ function htmlStats() {
     '<div id="m-courbe-box"></div><p class="resume" id="m-resume"></p>' : '<div class="vide">Pas encore assez de relevés pour tracer une courbe.</div>';
   const pf = envs.find(e => e.type === "total") || envs[0] || {};
   const resume = ["m1", "ytd", "twr"].map((k, i) => '<span>' + ["1 mois", "janv.", "début"][i] + ' <b class="' + sens(pf[k]) + '">' + pct(pf[k]) + "</b></span>").join("");
-  return blocEnCours() + blocJours() +
-    '<div><h2 class="sec">Courbe <small>' + (derniere ? "relevé du " + dateLongue(derniere) : "") + "</small></h2></div>" + courbe +
+  /* C (v16.93) : Stats s'ouvre sur la courbe ; « En ce moment » ne garde que ce qui n'est pas ailleurs */
+  return '<div><h2 class="sec">Courbe <small>' + (derniere ? "relevé du " + dateLongue(derniere) : "") + "</small></h2></div>" + courbe +
+    blocEnCours() + blocJours() +
     '<details class="acc m-compact" data-acc="m-perf"' + (PREF.acc["m-perf"] ? " open" : "") + '><summary><span class="t">Performances</span><span class="m-cp-r">' + resume + "</span></summary>" +
       '<div><div class="scroll-x"><table class="tab m-perf-t"><thead><tr><th>Enveloppe</th><th>1 sem.</th><th>1 mois</th><th>6 mois</th><th>Janv.</th><th>1 an</th><th>Début</th><th>MWR</th><th>Vol.</th></tr></thead><tbody>' + envs.map(perfLigne).join("") + "</tbody></table></div></div></details>" +
     blocPatrimoineTemps() + blocEpargneTemps() + blocPret() +
@@ -1812,14 +1821,14 @@ function blocRisque() {
   const actuel = h.rows[h.rows.length - 1][k] / max - 1;
   const pf = (M.enveloppes || []).find(e => e.type === "total") || {}, sp = (M.synthese || {}).sp500;
   const dc = n => dateCourte(dateNum(n)) + "/" + String(n).slice(2, 4);
-  return '<div><h2 class="sec">Risque <small>portefeuille, relevés du soir</small></h2></div><div class="tuiles">' +
+  return acc("m-risque", "Risque", "portefeuille, relevés du soir", '<div class="tuiles">' +
     tuile("Baisse actuelle", pct(actuel), sens(actuel), actuel > -0.0005 ? "au plus haut" : "depuis le plus haut du " + dc(dateMax)) +
     tuile("Pire baisse", pct(pire), "down", datePire ? "du " + dc(dateHaut) + " au " + dc(datePire) : "—") +
     tuile("Volatilité 1 an", pct(pf.vol, 1, false), "", "écart type annualisé") +
     tuile("Sharpe 1 an", ok(pf.sharpe) ? F2.format(pf.sharpe) : "—", sens(pf.sharpe), "rendement / risque, &gt; 1 = bon", "Sharpe : le rendement obtenu pour le risque pris. Plus c'est haut, mieux c'est.") +
     tuile("Jours en hausse", pct(pf.hausse, 0, false), "", "sur les 12 derniers mois") +
     tuile("Écart avec le S&amp;P 500", ok(pf.twr) && ok(sp) ? pts(pf.twr - sp) : "—", sens(pf.twr - sp), "depuis le début (TWR)") +
-    "</div>";
+    "</div>", false);
 }
 function joursRecords() {
   const h = M.historique; if (!h || !h.rows || h.rows.length < 2) return [];
@@ -1835,25 +1844,17 @@ function joursRecords() {
   }
   return out;
 }
-/* « En ce moment » : ce qui avance ce mois-ci (série de versements, palier le plus proche, objets, prochain jalon) */
+/* « En ce moment » : ce qui avance ce mois-ci (série de versements, prochain jalon). C (v16.93) : palier et vestiaire sont dans Missions */
 function blocEnCours() {
   const t = [], now = new Date(), mo = MOIS_L[now.getMonth()], finM = new Date(now.getFullYear(), now.getMonth() + 1, 0), discret = ETAT.discret === "oui";
   const tuile = (k, big, small, cls, aller) => t.push('<' + (aller ? 'button type="button" data-m-aller="' + aller + '"' : "div") + ' class="m-ec-t' + (cls ? " " + cls : "") + '"><span class="k">' + k + "</span><b>" + big + "</b><small>" + small + "</small></" + (aller ? "button" : "div") + ">");
   try {
     const sv = serieVersements();
-    if (sv.liste.length) tuile("Versements", sv.actuelle + " mois", "d'affilée · record " + sv.record + "<br>" + (sv.moisEnCours ? '<span class="up">' + esc(mo) + " fait ✓</span>" : '<span class="warn">' + esc(mo) + " : pas encore (jusqu'au " + dateCourte(finM) + ")</span>"), sv.moisEnCours ? "ok" : "attente");
+    if (sv.liste.length) tuile("Versements d'affilée", sv.actuelle + " mois", "record " + sv.record + "<br>" + (sv.moisEnCours ? '<span class="up">' + esc(mo) + " fait ✓</span>" : '<span class="warn">' + esc(mo) + " : pas encore (jusqu'au " + dateCourte(finM) + ")</span>"), sv.moisEnCours ? "ok" : "attente");
   } catch (e) { /* pas de parcours : tuile absente */ }
   try {
-    const pal = paliers(), suiv = pal.filter(x => !x.atteint).sort((a, b) => b.part - a.part)[0];
-    if (suiv) tuile("Palier le plus proche", pct(Math.max(0, Math.min(1, suiv.part)), 0, false), esc(suiv.titre), "", "missions");
-  } catch (e) { /* idem */ }
-  try {
-    const E = etatObjets(), tot = Object.values(CATALOGUE).reduce((n, l) => n + l.length, 0), nb = Object.entries(CATALOGUE).reduce((n, [s, l]) => n + l.filter(d => E.ok.has(cleObj(s, d[0]))).length, 0);
-    tuile("Vestiaire", nb + " / " + tot, "objets débloqués", "", "missions");
-  } catch (e) { /* idem */ }
-  try {
     const P = paramsMillion(), j = JALONS.concat([CIBLE]).find(x => x > P.v);
-    if (j) tuile("Prochain jalon", F0.format(j / 1000) + " 000 €", discret ? "cap sur le million" : "encore " + eur(j - P.v), "", "missions");
+    if (j) tuile("Prochain jalon", discret ? "•••" : F0.format(j / 1000) + NB + "000 €", discret ? "cap sur le million · privé" : "encore " + eur(j - P.v), "", "missions");
   } catch (e) { /* idem */ }
   return t.length ? '<div><h2 class="sec">En ce moment <small>' + esc(mo) + " " + now.getFullYear() + '</small></h2></div><div class="m-ec">' + t.join("") + "</div>" : "";
 }
@@ -2271,7 +2272,7 @@ function donneesEpargne() {
   if (rows.length < 2) return null;
   const av = rows.map(r => { const t = mpm[String(r[0]).slice(0, 7)]; return Math.max(0, (t.epargne || 0) + (t.uc || 0) - r.slice(1).reduce((a, b) => a + b, 0)); });
   const couches = em.comptes.map((nom, j) => ({ nom: nom.replace(/\s+Banque Pop\.?$/, ""), v: rows.map(r => r[j + 1]), c: COUL_EP[j % COUL_EP.length] })).filter(c => c.v.some(x => x > 0.5));
-  if (av.some(x => x > 0.5)) couches.push({ nom: "Assurance-vie et autres", v: av, c: "var(--s3)" });
+  if (av.some(x => x > 0.5)) couches.push({ nom: "Assurance-vie et autres", v: av, c: "var(--c-av)" });
   return { x: rows.map(r => cleMoisIso(r[0])), couches };
 }
 function blocEpargneTemps() {
@@ -2288,8 +2289,7 @@ function blocPret() {
   const mens = p.mensuel, emprunte = Math.max(...mens.map(r => r[1])), auj = isoJour(new Date());
   const restant = p.actuel ? p.actuel.restant : mens[0][1], rembourse = emprunte - restant;
   const t = (lab, val, cls, sub) => "<div><span class=\"lab\">" + lab + '</span><span class="val ' + (cls || "") + '">' + val + '</span><span class="sub">' + sub + "</span></div>";
-  return '<div><h2 class="sec">Ton prêt immobilier <small>année par année</small></h2></div>' +
-    '<div class="chart-box pret-an" id="g-pret"></div>' +
+  return acc("m-pret", "Ton prêt immobilier", "année par année", '<div class="chart-box pret-an" id="g-pret"></div>' +
     '<div class="tuiles m-petit m-pret-t">' +
       t("Remboursé", pct(rembourse / emprunte, 1, false), "up", eur(rembourse) + " sur " + eur(emprunte)) +
       t("Restant dû", eur(restant), "", p.actuel ? "au " + frDate(p.actuel.date) : "") +
@@ -2297,7 +2297,7 @@ function blocPret() {
       t(p.fin && /^dans /.test(dansDuree(p.fin)) ? "Fin des prêts dans" : "Fin des prêts", p.fin ? dansDuree(p.fin).replace(/^dans /, "") : "—", "", p.fin ? "le " + frDate(p.fin) : "") +
       (p.prochaine && (p.banque || p.prochaine.assurance !== undefined && p.prochaine.assurance !== null) ? t("Prochaine échéance", eur(p.prochaine.echeance + (p.banque ? 0 : p.prochaine.assurance || 0), 2), "", "le " + frDate(p.prochaine.date) + ", assurance comprise" + (p.banque ? " (ta part)" : "")) : "") +
       tuileCapitalMois(p, t) +
-    "</div>";
+    "</div>", false);
 }
 /* V15.13 · 6e tuile du prêt : dans la prochaine échéance, ce qui rembourse vraiment (capital) et ce qui part (intérêts, assurance) */
 function tuileCapitalMois(p, t) {
@@ -2334,20 +2334,30 @@ function dessinerPret() {
 
 /* ================= Jauge du millionnaire (privée : Moi › Missions, seulement sur ton appareil) ================= */
 const CIBLE = 1e6, JALONS = [100000, 250000, 500000, 750000];
-function valeurMillion(mode) {
-  const s = M.synthese || {};
-  return mode === "net" ? patrimoineNet().montant : s.financier;
-}
-/* rythme d'épargne estimé : médiane des apports mensuels en bourse sur 12 mois (la médiane ignore les gros transferts ponctuels) */
-function effortMensuel() {
+/* E (v16.93, règle de Théo) : le million se compte UNIQUEMENT sur le patrimoine financier (épargne + bourse + assurance-vie), jamais avec l'immobilier */
+function valeurMillion() { return (M.synthese || {}).financier; }
+/* rythme d'épargne vers le million : médiane des versements nets (versements − retraits) de TOUTES les enveloppes financières
+   sur les 12 derniers mois terminés (un mois sans versement compte pour 0 ; la médiane ignore les gros transferts ponctuels).
+   Profil simple : pas de « net » dans le fichier, on prend les versements. Sans parcours : repli sur les apports en bourse (relevés du Versus). */
+function medianeMois(vals) { const v = vals.slice().sort((x, y) => x - y); return v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2; }
+function effortMensuel() { const r = rythmeMillion(); return r ? r.c : null; }
+function rythmeMillion() {
+  const p = ((M && M.ref) || {}).parcours || {}, liste = p.mois || [];
+  if (liste.length || p.premier) {
+    const par = {}, aNet = liste.some(x => ok(x.net));
+    liste.forEach(x => { par[x.m] = ok(x.net) ? x.net : (x.apports || 0); });
+    const auj = new Date(), debut = p.premier ? p.premier.slice(0, 7) : liste.map(x => x.m).sort()[0], vals = [];
+    for (let k = 12; k >= 1; k--) { const d = new Date(auj.getFullYear(), auj.getMonth() - k, 1), m = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); if (!debut || m >= debut) vals.push(par[m] || 0); }
+    if (vals.length) return { c: Math.max(0, Math.round(medianeMois(vals) / 10) * 10), n: vals.length,
+      source: (aNet ? "versements nets médians, toutes enveloppes" : "versements médians, tous comptes") + ", sur " + (vals.length > 1 ? "les " + vals.length + " derniers mois terminés" : "le dernier mois terminé") };
+  }
   const h = M.historique; if (!h || !h.rows || h.rows.length < 2) return null;
   const ka = h.cols.indexOf("a"); if (ka < 0) return null;
   const fins = {}; h.rows.forEach(r => { fins[Math.floor(r[0] / 100)] = r[ka]; });
   const ks = Object.keys(fins).map(Number).sort((x, y) => x - y), d = [];
   for (let i = 1; i < ks.length; i++) d.push(fins[ks[i]] - fins[ks[i - 1]]);
-  const der = d.slice(-12).sort((x, y) => x - y); if (!der.length) return null;
-  const med = der.length % 2 ? der[(der.length - 1) / 2] : (der[der.length / 2 - 1] + der[der.length / 2]) / 2;
-  return Math.max(0, Math.round(med / 10) * 10);
+  const der = d.slice(-12); if (!der.length) return null;
+  return { c: Math.max(0, Math.round(medianeMois(der) / 10) * 10), n: der.length, source: "apports médians en bourse sur 12 mois (pas encore de parcours dans ton fichier)" };
 }
 function moisPourMillion(v0, c, rAn) {
   if (v0 >= CIBLE) return 0;
@@ -2357,10 +2367,9 @@ function moisPourMillion(v0, c, rAn) {
   return null;
 }
 function paramsMillion() {
-  const mode = PREF.million === "net" ? "net" : "financier";
-  const v = valeurMillion(mode) || 0, c0 = effortMensuel();
+  const v = valeurMillion() || 0, ry = rythmeMillion(), c0 = ry ? ry.c : null;
   const c = ok(PREF.effort) ? PREF.effort : (c0 || 0), R = ok(PREF.rendement) ? PREF.rendement : 0.05;
-  return { mode, v, c0, c, R };
+  return { v, c0, c, R, source: ry ? ry.source : "" };
 }
 /* projection mois par mois jusqu'au million (40 ans au plus), avec et sans épargne nouvelle */
 function projection(v, c, R) {
@@ -2409,6 +2418,9 @@ function htmlMillion() {
   const piste = JALONS.map(j => '<span class="mj' + (P.v >= j ? " passe" : "") + '" style="left:' + (j / CIBLE * 100) + '%"><i></i><b>' + (j / 1000) + "k</b></span>").join("");
   const tete = '<div class="mm-h"><span class="mm-k">Cap sur le million</span><span class="mm-d"><span class="mm-prive">privé</span>' +
     '<button type="button" class="mm-plus" id="mm-reduire" aria-expanded="' + !reduitM + '">' + (reduitM ? "Voir plus ▾" : "Réduire ▴") + "</button></span></div>";
+  /* D (v16.93) : en mode discret, ni %, ni jauge, ni date, ni jalon (tout cela laisse deviner le montant) */
+  if (discret) return '<section class="m-million reduit discret" style="--mc:' + couleurMoi() + '"><div class="mm-h"><span class="mm-k">Cap sur le million</span><span class="mm-d"><span class="mm-prive">privé</span></span></div>' +
+    '<p class="mm-mini">Masqué en mode discret. Désactive-le dans Réglages pour voir ta progression.</p></section>';
   if (reduitM) return '<section class="m-million reduit" style="--mc:' + couleurMoi() + '">' + tete +
     '<p class="mm-ligne"><b>' + F1.format(part * 100) + ' %</b><span>' + (T.quand ? "millionnaire en " + MOIS_L[T.quand.getMonth()] + " " + T.quand.getFullYear() : "hors de portée à ce rythme") + "</span></p>" +
     '<div class="mm-rail mini"><i style="width:' + (part * 100).toFixed(2) + '%"></i></div>' + (T.sub ? '<p class="mm-mini">' + T.sub + "</p>" : "") + "</section>";
@@ -2416,12 +2428,12 @@ function htmlMillion() {
     '<div class="mm-pct"><b>' + F1.format(part * 100) + '</b><span>%</span></div>' +
     '<div class="m-flaps mm-flaps" aria-label="' + esc(texteFlap) + ' euros">' + flaps(texteFlap + NB + "€", false) + "</div>" +
     '<div class="mm-piste" role="img" aria-label="' + F1.format(part * 100) + ' % du million"><div class="mm-rail"><i style="width:' + (part * 100).toFixed(2) + '%"></i><em style="left:' + (part * 100).toFixed(2) + '%"></em></div>' + piste + '<span class="mj fin" style="left:100%"><i></i><b>1M</b></span></div>' +
-    '<div class="seg mm-seg" role="group" aria-label="Ce qui compte"><button type="button" data-m-million="financier" aria-pressed="' + (P.mode === "financier") + '">Financier</button><button type="button" data-m-million="net" aria-pressed="' + (P.mode === "net") + '">Net, avec l\'appartement</button></div>' +
+    '<p class="mm-note">Patrimoine financier : épargne, bourse et assurance-vie. L\'immobilier ne compte pas.</p>' +
     '<p class="mm-eta" id="mm-eta">' + T.eta + "</p>" +
     '<p class="mm-sub" id="mm-sub">' + T.sub + "</p>" +
     '<div class="mm-sim"><label><span>Épargne par mois (€)</span><input id="mm-effort" type="text" inputmode="numeric" autocomplete="off" value="' + Math.round(P.c) + '"></label>' +
       '<label><span>Rendement par an (%)</span><input id="mm-rend" type="text" inputmode="decimal" autocomplete="off" value="' + String(+(P.R * 100).toFixed(1)).replace(".", ",") + '"></label></div>' +
-    '<p class="mm-note" id="mm-rythme">' + (P.c0 !== null ? "Ton rythme estimé : ≈ " + (discret ? "•••" : F0.format(P.c0)) + " €/mois (apports médians en bourse sur 12 mois)" + (ok(PREF.effort) || ok(PREF.rendement) ? ' · <button type="button" class="mm-raz" id="mm-raz">revenir à ton rythme et 5 %</button>' : "") : "") + "</p>" +
+    '<p class="mm-note" id="mm-rythme">' + (P.c0 !== null ? "Ton rythme estimé : ≈ " + (discret ? "•••" : F0.format(P.c0)) + " €/mois (" + esc(P.source) + ")" + (ok(PREF.effort) || ok(PREF.rendement) ? ' · <button type="button" class="mm-raz" id="mm-raz">revenir à ton rythme et 5 %</button>' : "") : "") + "</p>" +
     '<div class="mm-graph" id="mm-graph">' + svgProjection(P.v, P.c, P.R) + "</div>" +
     '<p class="mm-badge">' + badgeMillion() + "</p>" +
     '<p class="mm-note">Simulation : épargne et rendement constants, intérêts composés chaque mois. Un repère pour se motiver, pas une prévision.</p>' +
@@ -2450,7 +2462,6 @@ function majSimulation(el) {
   el.querySelector("#mm-graph").innerHTML = svgProjection(P.v, P.c, P.R);
 }
 function brancherMillion(el) {
-  el.querySelectorAll("[data-m-million]").forEach(b => b.addEventListener("click", () => { PREF.million = b.dataset.mMillion; garderPref(); afficherMillion(el); }));
   const r = el.querySelector("#mm-reduire"); if (r) r.addEventListener("click", () => { PREF.millionReduit = PREF.millionReduit === false; garderPref(); afficherMillion(el); });
   const e = el.querySelector("#mm-effort"), t = el.querySelector("#mm-rend");
   if (e) e.addEventListener("input", () => { const x = lireNombre(e.value); if (x >= 0 && x <= 100000) { PREF.effort = x; garderPref(); majSimulation(el); } });
@@ -3451,8 +3462,8 @@ function htmlVestiaire() {
         '<span class="vs-nm">' + esc(lab) + "</span>") + (id === actif ? '<span class="vs-ok" aria-hidden="true">✓</span>' : "") + "</button>" +
       '<button type="button" class="vs-q" data-vsq="' + t + "." + id + '" aria-label="D\'où vient ' + esc(lab) + ' ?">?</button></div>';
   }).join("");
-  return prof + '<div><h2 class="sec">Vestiaire <small>privé · rien ne sort de ton appareil</small></h2></div>' + onglets +
-    '<div class="vs-g' + (t === "titre" ? " vs-g2" : "") + '">' + tuiles + '</div><div class="vs-d" id="vs-d" aria-live="polite">' + htmlDetailObj() + "</div>";
+  return acc("m-vest", "Vestiaire", nb + " / " + tot + " objets · privé", prof + onglets +
+    '<div class="vs-g' + (t === "titre" ? " vs-g2" : "") + '">' + tuiles + '</div><div class="vs-d" id="vs-d" aria-live="polite">' + htmlDetailObj() + "</div>", false);
 }
 function htmlDetailObj() {
   if (!vsSel) return '<p class="vs-aide">Touche un objet pour l\'équiper, ou « ? » pour savoir d\'où il vient.</p>';
@@ -3546,8 +3557,14 @@ function htmlBilansMoi() {
     (diaposCloture(k).length > 1 ? '<button class="bilan-b prive" type="button" data-m-cloture="' + k + '">🔒 Revoir la clôture ' + deMois(i) + esc(MOIS_L[i]) + " " + Math.floor(k / 100) + "</button>" : "") +
     ans.map(an => '<button class="bilan-b prive" type="button" data-m-bilan="' + an + '">🔒 Mon patrimoine ' + an + "</button>").join("") + "</div>";
 }
+/* D (v16.93) : en mode discret, les paliers en euros ne montrent ni le seuil, ni la jauge, ni le % (ils laisseraient deviner le montant) */
+const FAM_EUR = ["pat", "bourse", "verse", "gains", "gainsAn"];
+function masquerPalier(x) {
+  if (ETAT.discret !== "oui" || !FAM_EUR.includes(x.groupe)) return x;
+  return Object.assign({}, x, { court: "•••", titre: x.titre.replace(/\d[\d\s\u202F\u00A0.,]*\s?€/g, "•••" + NB + "€"), reste: "", cache: true });
+}
 function htmlMissions() {
-  const pal = paliers(), nbFaits = pal.filter(x => x.atteint).length;
+  const pal = paliers().map(masquerPalier), nbFaits = pal.filter(x => x.atteint).length;
   const carte = x => '<button type="button" class="palier' + (x.atteint ? " fait" : "") + '" data-palier="' + esc(x.id) + '"' + (x.atteint ? "" : " disabled") + '>' +
     '<span class="pastille">' + esc(x.court) + '</span><span class="pl-t">' + esc(x.titre) + "</span>" +
     (x.atteint ? '<span class="pl-s">✓ franchi en ' + esc(libMois(x.quand)) + "</span>"
@@ -3556,25 +3573,25 @@ function htmlMissions() {
   const icone = (t, id) => t === "emb" || t === "fete" ? defObj(t, id)[2] : SORTES.find(x => x[0] === t)[2];
   const htmlRecs = x => { const l = recDe(x.id); return l.length ? '<em class="pl-rec">' + l.map(([t, id]) => "<span>" + icone(t, id) + " " + esc(nomObj(t, id)) + "</span>").join("") + "</em>" : ""; };
   const ligneP = x => '<button type="button" class="pl-r' + (x.atteint ? " fait" : "") + '" data-palier="' + esc(x.id) + '"' + (x.atteint ? "" : " disabled") + '>' +
-    '<span class="pastille">' + esc(x.court) + '</span><span class="pl-t">' + esc(x.titre) + htmlRecs(x) + (x.atteint ? "" : '<span class="jauge"><i style="width:' + Math.round(Math.max(0, Math.min(1, x.part)) * 100) + '%"></i></span><small>' + esc(x.reste) + "</small>") + "</span>" +
-    (x.atteint ? '<span class="pl-s">✓ ' + esc(libMois(x.quand)) + "</span>" : '<span class="pl-s">' + pct(Math.max(0, Math.min(1, x.part)), 0, false) + "</span>") + "</button>";
+    '<span class="pastille">' + esc(x.court) + '</span><span class="pl-t">' + esc(x.titre) + htmlRecs(x) + (x.atteint || x.cache ? "" : '<span class="jauge"><i style="width:' + Math.round(Math.max(0, Math.min(1, x.part)) * 100) + '%"></i></span><small>' + esc(x.reste) + "</small>") + "</span>" +
+    (x.atteint ? '<span class="pl-s">✓ ' + esc(libMois(x.quand)) + "</span>" : '<span class="pl-s">' + (x.cache ? "•••" : pct(Math.max(0, Math.min(1, x.part)), 0, false)) + "</span>") + "</button>";
   const blocs = FAMILLES.map(([g, nom]) => {
     const l = pal.filter(x => x.groupe === g); if (!l.length) return "";
-    const faits = l.filter(x => x.atteint).length, suiv = l.find(x => !x.atteint);
+    const faits = l.filter(x => x.atteint).length, suiv = l.find(x => !x.atteint), cache = l.some(x => x.cache);
     const recs = l.filter(x => !x.atteint).reduce((n, x) => n + recDe(x.id).length, 0);
     return '<details class="pl-bloc' + (suiv ? "" : " complet") + '" data-fam="' + g + '"' + (palOuverts.has(g) ? " open" : "") + "><summary>" +
-      '<span class="pb-t">' + esc(nom) + '</span><span class="pb-n">' + faits + " / " + l.length + "</span>" +
-      '<span class="jauge"><i style="width:' + Math.round(faits / l.length * 100) + '%"></i></span>' +
-      '<span class="pb-s">' + (suiv ? "Prochain : <b>" + esc(suiv.titre) + "</b> · " + pct(Math.max(0, Math.min(1, suiv.part)), 0, false) : "Tout est franchi ✓") +
+      '<span class="pb-t">' + esc(nom) + '</span><span class="pb-n">' + (cache ? "•••" : faits + " / " + l.length) + "</span>" +
+      '<span class="jauge"><i style="width:' + (cache ? 0 : Math.round(faits / l.length * 100)) + '%"></i></span>' +
+      '<span class="pb-s">' + (cache ? "Masqué en mode discret" : suiv ? "Prochain : <b>" + esc(suiv.titre) + "</b> · " + pct(Math.max(0, Math.min(1, suiv.part)), 0, false) : "Tout est franchi ✓") +
         (recs ? ' · <span class="pb-r">🎁 ' + recs + (recs > 1 ? " récompenses" : " récompense") + " à gagner</span>" : "") + "</span>" +
       '</summary><div class="pl-liste">' + l.map(ligneP).join("") + "</div></details>";
   }).join("");
+  /* C (v16.93) : million, paliers, bilans, puis le Vestiaire replié */
   return '<div id="m-million-z"></div>' +
-    htmlVestiaire() +
-    '<div><h2 class="sec">Paliers <small>' + nbFaits + " franchis sur " + pal.length + "</small></h2></div>" +
+    '<div><h2 class="sec">Paliers <small>' + (pal.some(x => x.cache) ? "privé en mode discret" : nbFaits + " franchis sur " + pal.length) + "</small></h2></div>" +
     '<div class="pl-blocs">' + blocs + "</div>" +
     '<p class="info">Un palier sur deux, et toujours le dernier de chaque famille, débloque une récompense pour ton onglet Moi : afficheur, thème, courbe, fête, emblème ou titre. D\'autres sont cachées. Tout reste privé et à toi, même si tu repasses sous le palier. Touche un palier franchi pour revoir sa fête.</p>' +
-    htmlBilansMoi();
+    htmlBilansMoi() + htmlVestiaire();
 }
 function brancherMissions(v) {
   const z = v.querySelector("#m-million-z"); if (z) afficherMillion(z);
