@@ -25,6 +25,8 @@
 .moisXL{font:800 clamp(56px,17vw,100px)/.95 "Saira Condensed",sans-serif;letter-spacing:.03em}
 .mois{display:block;font:600 13px/1 "Saira",sans-serif;letter-spacing:.4em;color:#F7CF55;margin-bottom:8px}
 .petit.cle{font-size:clamp(22px,6.4vw,27px);color:#FFE7A0;letter-spacing:.12em;margin-top:16px;padding:6px 16px;border-radius:999px;background:rgba(0,0,0,.55);box-shadow:0 0 0 1.5px #F7CF55aa,0 0 22px rgba(247,207,85,.35);text-shadow:0 0 12px rgba(247,207,85,.55),0 0 3px #000}
+.petit.detail{font-size:clamp(17px,5vw,22px);letter-spacing:.06em;text-transform:none;color:#E9E3FF;margin-top:16px}
+.lueur{position:absolute;inset:0;background:radial-gradient(70% 34% at 50% 50%,var(--c),transparent 72%);opacity:0;animation:lueur 2.2s ease-out both}@keyframes lueur{from{opacity:0;transform:scale(.7)}35%{opacity:.42}to{opacity:.3;transform:scale(1.15)}}
 .petit{font:600 clamp(14px,4vw,17px)/1.4 "Saira",sans-serif;letter-spacing:.18em;color:#F7CF55;text-transform:uppercase;margin-top:12px}
 @keyframes inl{from{opacity:0;transform:scale(1.25);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
 .pilotes{display:flex;gap:12px;justify-content:center;margin-top:14px}.pilotes i{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font:800 15px/1 "Saira",sans-serif;font-style:normal;box-shadow:0 0 0 3px #000,0 0 18px currentColor;opacity:0}
@@ -90,35 +92,33 @@ function flashes(ids, cpt) { const d = [375, 375, 375, 300, 250, 225, 200, 175, 
 // texte vide sur un circuit = le nom du Grand Prix
 /*PLANS*/
 const LONG = [
-  [550, "affiche-dunes", "", "", "", "t:.8"],
-  [2600, null, "", "Ils pensaient juste épargner.", "s", "h"],
+  [2400, null, "", "Ils pensaient juste épargner.", "s", "h"],
   [2200, null, "", "Ils se sont trompés.", "s", "t"],
   [2600, "pilotes", "", "4 pilotes.", "", "b t@.3:.45 t@.65:.5 t@1:.55 t@1.35:.6"],
-  [2800, "cinq", "", "Et bientôt… un 5ᵉ sur la piste.", "s", "t t@.5:.6"],
+  [2600, "cinq", "", "Et bientôt… un 5ᵉ sur la piste.", "s", "t t@.5:.6"],
   [2000, "silverstone", "JANVIER", "", "", "t o", { cpt: "01 / 12" }],
   ...flashes(["djeddah", "melbourne", "suzuka", "miami", "montreal", "bahrein", "spa", "lasvegas", "singapour", "interlagos"], true),
   [2400, "monza", "", "12 univers.<br><span class=\"or\">Le reste" + NB + "? Patience.</span>", "flou", "b", { cpt: "12 / 12", sous: "Révélé fin décembre" }],
   [2700, "coupe", "", "🏆 La Coupe a volé en éclats.", "s", "t:.5 b@.55"],
   [2000, "cache", "", "🗝️ Un objet est caché sur chaque circuit…", "s", "t t@1.5:.7"],
+  [2100, null, "", "Chaque mois<br><span class=\"or\">6 · 4 · 2 · 0" + NB + "points</span>", "", "t t@.9:.55", { lueur: "#F7CF55", detail: "selon ta place · +1" + NB + "🎯 si tu bats le S&amp;P" + NB + "500" }],
+  [2000, null, "", "Une carte secrète<br>par mois", "", "t t@.9:.55", { lueur: "#9B87FF", detail: "Turbo · Aspiration · Pneus pluie · Pari" }],
+  [1900, null, "", "La course du mois<br><span class=\"or\">en 3D</span>", "", "t t@.9:.6", { lueur: "#4C9AFF", detail: "dans l’onglet 🏆" + NB + "Podium" }],
   [2400, "abudhabi", "DÉCEMBRE 2026", "🔥 1ᵉʳ" + NB + "décembre" + NB + ": le tour de" + NB + "chauffe", "s", "t"],
   [2000, null, "", "Le 1ᵉʳ" + NB + "janvier,<br>tout compte.", "", "t r"],
   [550, "noir", "", "", "", "S"],
-  [7000, "fin", "", "", "", VIDEO ? "B t@1.4:.7 t@2.2:.75 t@3:.85 g@2.4" : "B t@1.4:.7 t@2.2:.75 t@3:.8 t@4:.9"]];
+  [6500, "fin", "", "", "", VIDEO ? "B t@1.4:.7 t@2.2:.75 t@3:.85 g@2.4" : "B t@1.4:.7 t@2.2:.75 t@3:.8 t@4:.9"]];
+/* vendredi : aucun circuit, que des phrases (Théo, 19/11) */
 const COURT = [
-  [500, "affiche-noel", "", "", "flou", "t:.8"],
-  [2200, null, "", "Ils pensaient juste épargner.", "s", "h"],
-  [1900, "pilotes", "", "4 pilotes.", "", "b t@.3:.45 t@.65:.5 t@1:.55 t@1.35:.6"],
-  [2200, "cinq", "", "Et bientôt… un 5ᵉ.", "s", "t t@.5:.6"],
-  [2000, "silverstone", "", "", "flou", "t o"],
-  ...flashes(["djeddah", "melbourne", "suzuka", "miami", "montreal", "bahrein", "spa", "lasvegas", "singapour", "interlagos"], false),
-  [1900, "monza", "", "12 univers.<br><span class=\"or\">Le reste" + NB + "? Patience.</span>", "flou", "b"],
-  [1800, "abudhabi", "DÉCEMBRE 2026", "🔥 1ᵉʳ" + NB + "décembre" + NB + ": le tour de" + NB + "chauffe", "flou", "t"],
-  [1600, null, "", "Le 1ᵉʳ" + NB + "janvier,<br>tout compte.", "", "t r"],
+  [2600, null, "", "Ils pensaient juste épargner.", "s", "h"],
+  [1900, null, "", "Ils se sont trompés.", "s", "t"],
+  [2300, "pilotes", "", "4 pilotes.", "", "b t@.3:.45 t@.65:.5 t@1:.55 t@1.35:.6"],
+  [2000, null, "", "Chaque mois,<br>une course.", "", "t o", { lueur: "#9B87FF" }],
+  [2400, null, "", "Seul le %" + NB + "compte.<br><span class=\"or\">Jamais le montant.</span>", "", "t t@1.1:.75", { lueur: "#2BB6A3" }],
+  [2300, null, "", "Un seul<br>champion.", "", "t r", { lueur: "#F7CF55" }],
   [550, "noir", "", "", "", "S"],
   [4300, "demain", "", "", "", "B t@1.4:.8 g@1.6"]];
 const PLANS = H.indexOf("court") >= 0 ? COURT : LONG;
-/* v16.94 (Théo) : vendredi, on ne doit rien deviner des circuits : flou très fort partout */
-if (PLANS === COURT) { const st = document.createElement("style"); st.textContent = ".fond.flou{filter:blur(26px) brightness(.45) saturate(.7) !important}"; document.head.appendChild(st); }
 /*FIN PLANS*/
 /* ---------- la partition : un seul code pour la page (son en direct) et pour la vidéo (rendu hors ligne, identique) ---------- */
 function bruit(ac, d) { const b = ac.createBuffer(1, Math.max(1, Math.floor(ac.sampleRate * d)), ac.sampleRate), c = b.getChannelData(0); for (let i = 0; i < c.length; i++) c[i] = Math.random() * 2 - 1; const n = ac.createBufferSource(); n.buffer = b; return n; }
@@ -213,7 +213,7 @@ function plan(i) {
       : '<div class="plaque"><div class="l net titre">VERSUS</div><div class="l net ' + (aff[1] === "noel" ? 's" style="font-size:clamp(34px,10vw,52px)">Demain.' : 'date" style="font-size:clamp(18px,5.4vw,26px)">Saison 1') + "</div></div>";
     if (aff[1] === "mosaique") obj.innerHTML = '<div class="mosa">' + SAISON.map(k => '<i style="background-image:url(\'' + carte(k) + '\')"></i>').join("") + "</div>"; }
   else if (id === "noir") { txt.innerHTML = ""; fl = ""; }
-  else if (id === "pilotes") { txt.innerHTML = '<div class="l on">' + t + "</div>" + pastilles(true); fl = "fort"; }
+  else if (id === "pilotes") { txt.innerHTML = '<div class="l on">' + t + "</div>" + pastilles(true, opt.cinq); fl = "fort"; }
   else if (id === "cinq") { txt.innerHTML = '<div class="l on ' + st + '">' + t + "</div>" + pastilles(false, .5); fl = "fort"; }
   else if (id === "coupe") { sc.className = "sansvoile"; obj.innerHTML = svgCoupe(); txt.innerHTML = '<div class="l on s" style="animation-delay:1.55s;margin-top:62vh">' + t + "</div>"; }
   else if (id === "cache") { sc.className = "carte sansvoile"; obj.innerHTML = '<div class="torche"></div><div class="qm">?</div>'; txt.innerHTML = '<div class="l on s">' + t + "</div>"; fl = ""; }
@@ -227,7 +227,8 @@ function plan(i) {
   else if (st.indexOf("rev") >= 0) { // révélation : le mois en GROS, lisible dès la 1re image
     txt.innerHTML = (opt.haut ? '<span class="mois">' + opt.haut + "</span>" : "") + '<div class="l on net moisXL">' + mois + '</div><div class="l on net gp sous">' + GP[id] + "</div>" + (t ? '<div class="l on s" style="animation-delay:.15s;margin-top:8px">' + t + "</div>" : "");
     if (st.indexOf("fort") >= 0) fl = "fort"; }
-  else txt.innerHTML = (mois ? '<span class="mois">' + mois + "</span>" : "") + (t ? '<div class="l on ' + st.replace(/\b(flou|net)\b/g, "") + '">' + t + "</div>" : img && mois ? '<div class="l on gp">' + GP[id] + "</div>" : "") + (img && t && mois ? '<div class="l on gp sous" style="animation-delay:.25s">' + GP[id] + "</div>" : "") + (opt.sous ? '<div class="petit cle l on" style="animation-delay:.7s">' + opt.sous + "</div>" : "");
+  else txt.innerHTML = (mois ? '<span class="mois">' + mois + "</span>" : "") + (t ? '<div class="l on ' + st.replace(/\b(flou|net)\b/g, "") + '">' + t + "</div>" : img && mois ? '<div class="l on gp">' + GP[id] + "</div>" : "") + (img && t && mois ? '<div class="l on gp sous" style="animation-delay:.25s">' + GP[id] + "</div>" : "") + (opt.sous ? '<div class="petit cle l on" style="animation-delay:.7s">' + opt.sous + "</div>" : "") + (opt.detail ? '<div class="petit detail l on" style="animation-delay:.9s">' + opt.detail + "</div>" : "");
+  if (opt.lueur) obj.innerHTML = '<div class="lueur" style="--c:' + opt.lueur + '"></div>';
   if (img && !flou && !aff && id !== "cache") sc.classList.add("carte");
   if (fl) { const x = $("flash"); x.classList.remove("on"); x.classList.toggle("doux", fl === "doux"); void x.offsetWidth; x.classList.add("on"); }
 }
