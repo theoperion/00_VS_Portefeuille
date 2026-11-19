@@ -1833,7 +1833,7 @@
     const OR = "#F2C64A";
     const G = (x, y, sc, rot) => `<g transform="translate(${f(x)} ${f(y)})${sc && sc !== 1 ? ` scale(${sc})` : ""}${rot ? ` rotate(${f(rot)})` : ""}">`;
     const LUM = [], SOMB = [];   // fenêtres allumées (halo posé après coup) / éteintes (certaines s'allument dans la couche animée)
-    const fen = (x, y, w, h, lit) => { if (lit) LUM.push([x, y + h / 2, w * 2.2]); else if (r() < .3) SOMB.push([x, y]); return `<path d="M${f(x - w / 2)} ${f(y + h)}V${f(y + w / 2)}a${f(w / 2)} ${f(w / 2)} 0 0 1 ${f(w)} 0V${f(y + h)}Z" fill="${lit ? "#D9A050" : "#0C1024"}"/>`; };
+    const fen = (x, y, w, h, lit) => { if (lit) LUM.push([x, y + h / 2, w * 2.2]); else if (r() < .3) SOMB.push([x, y]); const d = `M${f(x - w / 2)} ${f(y + h)}V${f(y + w / 2)}a${f(w / 2)} ${f(w / 2)} 0 0 1 ${f(w)} 0V${f(y + h)}Z`; return `<path d="${d}" fill="${lit ? "#FFC86A" : "#0C1024"}"/>` + (lit ? `<rect x="${f(x - w * .22)}" y="${f(y + h * .35)}" width="${f(w * .44)}" height="${f(h * .45)}" fill="#FFE6A0"/>` : ""); };
     // ---- 0. dégradés (pierre du château volontairement sourde et froide : la Grande Salle est le seul point chaud)
     s.push(`<linearGradient id="c5-ciel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050818"/><stop offset=".25" stop-color="#0C1434"/><stop offset=".48" stop-color="#1B2A5E"/><stop offset=".56" stop-color="#2A3F78"/><stop offset=".6" stop-color="#16213F"/><stop offset="1" stop-color="#0B1222"/></linearGradient>`);
     s.push(`<linearGradient id="c5-pi" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5A688E"/><stop offset=".3" stop-color="#3A4566"/><stop offset=".7" stop-color="#232B48"/><stop offset="1" stop-color="#12172C"/></linearGradient>`);
@@ -1841,7 +1841,7 @@
     s.push(`<linearGradient id="c5-to" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3A4672"/><stop offset=".45" stop-color="#20284C"/><stop offset="1" stop-color="#0C1026"/></linearGradient>`);
     s.push(`<linearGradient id="c5-ro" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3E4868"/><stop offset=".4" stop-color="#1E2540"/><stop offset="1" stop-color="#090C18"/></linearGradient>`);
     s.push(`<linearGradient id="c5-lac" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1C2C58"/><stop offset=".35" stop-color="#0D1836"/><stop offset="1" stop-color="#050A18"/></linearGradient>`);
-    s.push(`<linearGradient id="c5-sol" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E3238"/><stop offset="1" stop-color="#0C171C"/></linearGradient>`);
+    s.push(`<linearGradient id="c5-sol" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#142038"/><stop offset="1" stop-color="#0F1A30"/></linearGradient>`);
     s.push(`<linearGradient id="c5-or" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF2B8"/><stop offset=".4" stop-color="#E8B83A"/><stop offset=".8" stop-color="#A8741E"/><stop offset="1" stop-color="#6A440E"/></linearGradient>`);
     s.push(`<radialGradient id="c5-vitre" cx="50%" cy="62%" r="60%"><stop offset="0" stop-color="#FFF4C8"/><stop offset=".45" stop-color="#FFC45A"/><stop offset=".85" stop-color="#D9782E"/><stop offset="1" stop-color="#8A3A1E"/></radialGradient>`);
     s.push(`<radialGradient id="c5-lune" r="50%"><stop offset="0" stop-color="#FFFBEA"/><stop offset=".7" stop-color="#F2EBCB"/><stop offset="1" stop-color="#D8CFAA"/></radialGradient>`);
@@ -1850,15 +1850,15 @@
     // ---- 1. le ciel : étoiles, voie lactée, lune (cadrée par la boucle haut-gauche du tracé)
     s.push(`<path d="M0 30Q300 140 560 60T1080 120" stroke="#9FB4FF" stroke-width="70" opacity=".05" fill="none" filter="url(#c5-flou8)"/>`);
     for (let k = 0; k < 240; k++) { const x = r() * W, y = r() * 380, t = r(); s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(t < .9 ? .5 + r() * .7 : 1.3 + r())}" fill="${t < .8 ? "#E8EEFF" : "#FFF2C8"}" opacity="${f(.3 + r() * .6)}"/>`); }
-    const LX = 255, LY = 160;
-    K.halo(LX, LY, 220, "#9FB8F0", .38); K.halo(LX, LY, 84, "#FFF6D8", .55);
-    s.push(`<circle cx="${LX}" cy="${LY}" r="34" fill="url(#c5-lune)"/><circle cx="${LX - 9}" cy="${LY - 6}" r="6.5" fill="#D8CFAA" opacity=".5"/><circle cx="${LX + 11}" cy="${LY + 9}" r="8.5" fill="#D8CFAA" opacity=".4"/><circle cx="${LX + 4}" cy="${LY - 15}" r="3.8" fill="#D8CFAA" opacity=".45"/>`);
-    s.push(`<path d="M186 186q30 -10 60 -2q30 -10 70 2q-40 8 -130 0z" fill="#3A4C80" opacity=".55"/>`);
+    const LX = 527, LY = 262, LR = 86;   // la lune géante, derrière le donjon (la boucle du milieu la cadre : jamais sous la route)
+    K.halo(LX, LY, LR * 3.4, "#9FB8F0", .38); K.halo(LX, LY, LR * 1.75, "#FFF6D8", .6);
+    s.push(`<circle cx="${LX}" cy="${LY}" r="${LR}" fill="url(#c5-lune)"/>` + [[-30, -34, 13, .45], [26, -40, 9, .4], [-44, 8, 8, .35], [34, 4, 15, .3], [-8, -58, 6, .4], [52, -22, 6, .35], [-18, -12, 5, .3]].map(([dx, dy, rr, o]) => `<circle cx="${LX + dx}" cy="${LY + dy}" r="${rr}" fill="#D8CFAA" opacity="${o}"/>`).join(""));
+    s.push(`<circle cx="${LX}" cy="${LY}" r="${LR}" fill="none" stroke="#FFFDF2" stroke-width="2" opacity=".6"/>`);
 
     // ---- 2. les montagnes au loin et la brume de l'horizon
     s.push(`<path d="M0 330L60 296L120 318L190 270L250 300L300 286L360 318L420 300L470 330L560 310L640 322L720 288L790 300L850 262L920 296L990 274L1080 300V420H0Z" fill="#1A2652"/><path d="M0 330L60 296L120 318L190 270L250 300L300 286L360 318M720 288L790 300L850 262L920 296L990 274L1080 300" fill="none" stroke="#5A72B4" stroke-width="1.4" opacity=".5"/>`);
     s.push(`<path d="M0 360L80 336L150 352L230 330L330 356L460 344L600 352L760 330L880 344L1000 326L1080 340V430H0Z" fill="#14203F"/>`);
-    s.push(`<ellipse cx="540" cy="360" rx="620" ry="34" fill="url(#c5-brume)"/>`);
+    s.push(`<ellipse cx="540" cy="360" rx="620" ry="34" fill="url(#c5-brume)"/><ellipse cx="527" cy="420" rx="320" ry="120" fill="#3A4C80" opacity=".18" filter="url(#c5-flou8)"/>`);
 
     // ---- 3. le sol : plateau à gauche, colline de la forêt à droite
     s.push(`<path d="M0 410C90 392 260 386 360 420L372 552H0Z" fill="url(#c5-sol)"/><path d="M0 410C90 392 260 386 360 420" stroke="#4E6A88" stroke-width="1.5" opacity=".5" fill="none"/>`);
@@ -1881,15 +1881,15 @@
       return g + `<path d="M${f(x0 + .8)} ${f(yt)}V${f(yb)}" stroke="#A8BCE8" stroke-width="1.2" opacity=".28"/>`; };
     const CX = 527;   // axe du château = axe de la boucle du milieu
     s.push("<!--C0-->");
-    { const n0 = LUM.length, n1 = SOMB.length; s.push(`<g opacity=".55">` + bloc(420, 720, 505, 310, 18, { lum: .1, pas: 28, ec: 18 }) + tour(470, 505, 22, 250, 46, { lum: .1 }) + tour(590, 505, 22, 246, 48, { lum: .1 }) + tour(735, 505, 26, 268, 44, { lum: .1 }) + `</g>`); LUM.splice(n0); SOMB.splice(n1); }
-    s.push(tour(CX, 505, 58, 232, 96, { lum: .18 }));                 // le donjon, pointe dans la boucle du milieu
-    s.push(tour(796, 505, 30, 196, 80, { lum: .18 }));                // la tour d'astronomie, dans la boucle de droite
-    s.push(tour(392, 505, 30, 250, 60, { lum: .18 }) + tour(664, 505, 32, 250, 62, { lum: .18 }));   // tours sous les creux du tracé (abaissées)
+    { const n0 = LUM.length, n1 = SOMB.length; s.push(`<g opacity=".55">` + bloc(420, 720, 505, 310, 18, { lum: .1, pas: 28, ec: 18 }) + tour(462, 505, 22, 300, 40, { lum: .1 }) + tour(598, 505, 22, 296, 42, { lum: .1 }) + tour(735, 505, 26, 268, 44, { lum: .1 }) + `</g>`); LUM.splice(n0); SOMB.splice(n1); }
+    s.push(tour(CX, 505, 40, 300, 66, { lum: .38 }));                 // le donjon, pointe dans la boucle du milieu
+    s.push(tour(796, 505, 30, 196, 80, { lum: .38 }));                // la tour d'astronomie, dans la boucle de droite
+    s.push(tour(392, 505, 30, 250, 60, { lum: .38 }) + tour(664, 505, 32, 250, 62, { lum: .38 }));   // tours sous les creux du tracé (abaissées)
     s.push(tour(470, 505, 14, 300, 54, { pas: 30 }) + tour(586, 505, 14, 296, 56, { pas: 30 }) + tour(712, 505, 13, 290, 54, { pas: 30 }));
     s.push(bloc(360, 452, 505, 396, 22) + bloc(602, 770, 505, 382, 24));
     s.push(tour(440, 505, 24, 330, 46) + tour(740, 505, 28, 316, 52));
     // la Grande Salle : façade à pignon et UNE grande verrière gothique allumée de l'intérieur (à l'échelle de la façade)
-    { const x0 = CX - 86, x1 = CX + 86, yt = 344, vw = 33, vb = 486, vt = 350;
+    { const x0 = CX - 96, x1 = CX + 96, yt = 336, vw = 38, vb = 488, vt = 336;
       s.push(`<path d="M${x0} 505V${yt}L${CX} ${yt - 50}L${x1} ${yt}V505Z" fill="url(#c5-pi2)"/><path d="M${x0 - 6} ${yt + 2}L${CX} ${yt - 54}L${x1 + 6} ${yt + 2}" stroke="url(#c5-to)" stroke-width="9" fill="none" stroke-linejoin="round"/><path d="M${x0 - 6} ${yt + 2}L${CX} ${yt - 54}" stroke="#8EA2D4" stroke-width="1.2" opacity=".5" fill="none"/>`);
       [x0 + 4, x1 - 4].forEach(x => s.push(`<path d="M${x - 6} 505V${yt - 4}l6 -14l6 14V505Z" fill="#323C60"/>`));
       [x0 + 26, x1 - 26].forEach(x => s.push(`<path d="M${x - 7} 470V420a7 7 0 0 1 14 0V470Z" fill="#B87A3A"/><path d="M${x - 7} 470V420a7 7 0 0 1 14 0V470Z" fill="none" stroke="#1A2040" stroke-width="2"/>`));
@@ -1908,33 +1908,33 @@
     s.push(`<path d="M340 520H820V530H340Z" fill="#232C4C"/>${Array.from({ length: 52 }, (_, q) => `<rect x="${340 + q * 9.2}" y="514" width="5" height="6" fill="#323C60"/>`).join("")}`);
     s.push("<!--C1-->");
     { const i0 = s.indexOf("<!--C0-->"), i1 = s.indexOf("<!--C1-->"); s.splice(i0, i1 - i0 + 1, `<g id="c5-chat">${s.slice(i0 + 1, i1).join("")}</g>`); }
+    s.push(`<filter id="c5-sil" x="-5%" y="-5%" width="110%" height="110%"><feFlood flood-color="#0A0E24"/><feComposite in2="SourceAlpha" operator="in"/></filter><clipPath id="c5-dl"><circle cx="${LX}" cy="${LY}" r="${LR - 1}"/></clipPath><g clip-path="url(#c5-dl)"><use href="#c5-chat" filter="url(#c5-sil)" opacity=".82"/></g>`);
     s.push(`<path d="M314 556L334 536L360 528H812L838 534L862 556Z" fill="url(#c5-ro)"/><path d="M334 536L360 528H812L838 534" stroke="#7A8CB8" stroke-width="1.2" opacity=".4" fill="none"/>`);
-    LUM.forEach(([x, y, R]) => K.halo(x, y, R * .7, "#FFB347", .16));
+    LUM.forEach(([x, y, R]) => K.halo(x, y, R * .8, "#FFB347", .22));
     s.push(`<path d="M${CX - 40} 530L${CX + 40} 530L${CX + 110} 556H${CX - 110}Z" fill="#FFC85A" opacity=".14"/>`);
 
-    // ---- 6. le lac noir, miroir calme : château, lune, Grande Salle (et plus bas, le peloton)
-    const WL = 550, MIR = 612;
+    // ---- 6. le lac noir, miroir calme : château, lune, Grande Salle
+    const WL = 550;
     s.push(`<linearGradient id="c5-lac2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050A18" stop-opacity=".1"/><stop offset="1" stop-color="#03060F" stop-opacity=".7"/></linearGradient>`);
-    s.push(`<rect x="0" y="${WL}" width="${W}" height="${H - WL}" fill="url(#c5-lac)"/><clipPath id="c5-eau"><rect x="0" y="${WL}" width="${W}" height="${H - WL}"/></clipPath><clipPath id="c5-eau2"><rect x="0" y="${MIR + 14}" width="${W}" height="${H - MIR}"/></clipPath>`);
+    s.push(`<rect x="0" y="${WL}" width="${W}" height="${H - WL}" fill="url(#c5-lac)"/><clipPath id="c5-eau"><rect x="0" y="${WL}" width="${W}" height="${H - WL}"/></clipPath>`);
     s.push(`<g clip-path="url(#c5-eau)" opacity=".5" filter="url(#c5-flou)"><use href="#c5-chat" transform="translate(0 ${2 * WL}) scale(1 -1)"/></g>`);
     for (let k = 0; k < 46; k++) { const y = WL + 6 + k * 3.7, x = r() * W; s.push(`<path d="M${f(x)} ${f(y)}h${f(40 + r() * 160)}" stroke="#08102A" stroke-width="${f(1 + k * .03)}" opacity=".5"/>`); }
     s.push(`<rect x="0" y="${WL}" width="${W}" height="${H - WL}" fill="url(#c5-lac2)"/><path d="M0 ${WL}H${W}" stroke="#7A90C8" stroke-width="1.2" opacity=".4"/>`);
-    for (let k = 0, y = WL + 6; y < H - 6; k++) { const w = 14 + r() * (34 - k * .8); s.push(`<path d="M${f(LX - w / 2 + (r() - .5) * 18)} ${f(y)}h${f(w)}" stroke="#F6EED2" stroke-width="${f(1 + r() * 1.4)}" opacity="${f(Math.max(.08, .45 - k * .02) * (.5 + r() * .5))}" stroke-linecap="round"/>`); y += 4 + r() * 9; }
-    for (let k = 0; k < 26; k++) { const x = CX - 50 + r() * 100, y = WL + 12 + r() * 150; s.push(`<path d="M${f(x)} ${f(y)}h${f(5 + r() * 14)}" stroke="#FFC85A" stroke-width="1.6" opacity="${f(.2 + r() * .3)}" stroke-linecap="round"/>`); }
-    // le reflet du peloton (copie retournée, floue, 30 %) : la bande du bas fait partie de la scène
-    s.push(`<g clip-path="url(#c5-eau2)" opacity=".3" filter="url(#c5-flou)"><use href="#c5-her" transform="translate(0 ${2 * MIR}) scale(1 -1)"/></g>`);
+    for (let k = 0, y = WL + 6; y < H - 6; k++) { const w = 20 + r() * (60 - k * 1.4); s.push(`<path d="M${f(LX - w / 2 + (r() - .5) * 26)} ${f(y)}h${f(w)}" stroke="#F6EED2" stroke-width="${f(1 + r() * 1.4)}" opacity="${f(Math.max(.08, .45 - k * .018) * (.5 + r() * .5))}" stroke-linecap="round"/>`); y += 4 + r() * 9; }
+    for (let k = 0; k < 30; k++) { const x = CX - 56 + r() * 112, y = WL + 12 + r() * 150; s.push(`<path d="M${f(x)} ${f(y)}h${f(5 + r() * 14)}" stroke="#FFC85A" stroke-width="1.6" opacity="${f(.2 + r() * .3)}" stroke-linecap="round"/>`); }
 
-    // ---- 7. les traînées de lumière du peloton (sous la route : la piste reste continue)
-    // pilotes [x, y, échelle, joueur, inclinaison] du plus loin au plus près ; Théo en tête cabre vers le vif d'or
-    const HER = [[262, 318, 2.1, 3, 17], [352, 420, 2.75, 2, 12], [396, 540, 3.45, 1, 6], [778, 472, 5.2, 0, -9]];
-    const loc = (x, y, S, ro, u, v) => { const c = Math.cos(ro * PI / 180), si = Math.sin(ro * PI / 180); return [x + S * (u * c - v * si), y + S * (u * si + v * c)]; };
-    const TR = [], HERS = [];
-    HER.forEach(([x, y, S, k, ro]) => { const c = CJ[k], co = Math.cos(ro * PI / 180), si = Math.sin(ro * PI / 180), [tx, ty] = loc(x, y, S, ro, -50, 3), Lg = 120 + 70 * S, ex = tx - co * Lg, ey = ty - si * Lg, w = 5 * S, nx = -si * w, ny = co * w;
-      TR.push(`<linearGradient id="c5-tr${k}" gradientUnits="userSpaceOnUse" x1="${f(tx)}" y1="${f(ty)}" x2="${f(ex)}" y2="${f(ey)}"><stop offset="0" stop-color="${c}" stop-opacity=".95"/><stop offset=".45" stop-color="${c}" stop-opacity=".35"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient><linearGradient id="c5-tw${k}" gradientUnits="userSpaceOnUse" x1="${f(tx)}" y1="${f(ty)}" x2="${f(ex)}" y2="${f(ey)}"><stop offset="0" stop-color="#FFFBEA" stop-opacity=".95"/><stop offset=".6" stop-color="#FFFBEA" stop-opacity="0"/></linearGradient>`);
-      let g = `<path d="M${f(tx + nx * 1.6)} ${f(ty + ny * 1.6)}L${f(ex)} ${f(ey)}L${f(tx - nx * 1.6)} ${f(ty - ny * 1.6)}Z" fill="url(#c5-tr${k})" opacity=".5" filter="url(#c5-flou8)"/><path d="M${f(tx + nx)} ${f(ty + ny)}L${f(ex)} ${f(ey)}L${f(tx - nx)} ${f(ty - ny)}Z" fill="url(#c5-tr${k})"/><path d="M${f(tx)} ${f(ty)}L${f(ex)} ${f(ey)}" stroke="url(#c5-tw${k})" stroke-width="${f(S * 1.1)}" stroke-linecap="round"/>`;
-      for (let q = 0; q < 7; q++) { const t = .12 + r() * .7, j = (r() - .5) * w * 2.4; g += `<circle cx="${f(tx - co * Lg * t - si * j)}" cy="${f(ty - si * Lg * t + co * j)}" r="${f(.6 + r() * S * .3)}" fill="#FFF6D8" opacity="${f(.35 + r() * .5)}"/>`; }
-      HERS.push(g); });
-    TR.forEach(t => s.push(t));
+    // ---- 7. clins d'œil : le train rouge sur son viaduc (montagne de gauche), les barques des premières années, les 3 buts
+    { const y0 = 344; let g = `<path d="M146 ${y0}H346" stroke="#1A2246" stroke-width="7"/><path d="M146 ${y0 - 3.5}H346" stroke="#5A6A9C" stroke-width="1" opacity=".6"/>`;
+      for (let k = 0; k < 6; k++) { const x = 150 + k * 32; g += `<path d="M${x} ${y0 + 3}h32v62h-6v-24a10 12 0 0 0 -20 0v24h-6z" fill="#1A2246"/><path d="M${x + 6} ${y0 + 65}v-24a10 12 0 0 1 20 0" stroke="#4A5A8C" stroke-width="1" fill="none" opacity=".5"/>`; }
+      s.push(`<g opacity=".95">${g}</g>`);
+      // la locomotive rouge et 3 voitures aux fenêtres chaudes (tournée vers le château)
+      const wag = x => `<rect x="${x}" y="${y0 - 17}" width="28" height="13" rx="2" fill="#8A1E22"/><rect x="${x}" y="${y0 - 19}" width="28" height="3" rx="1.5" fill="#3A1418"/>` + [4, 11, 18].map(d => `<rect x="${x + d}" y="${y0 - 14}" width="5" height="5" fill="#FFC86A"/>`).join("") + `<circle cx="${x + 6}" cy="${y0 - 3}" r="2.6" fill="#120E1A"/><circle cx="${x + 22}" cy="${y0 - 3}" r="2.6" fill="#120E1A"/>`;
+      const lx = 286; s.push(`<g>${[176, 212, 248].map(wag).join("")}<rect x="${lx}" y="${y0 - 15}" width="30" height="11" rx="5" fill="#B82A2A"/><rect x="${lx - 2}" y="${y0 - 24}" width="13" height="20" rx="1.5" fill="#9A2226"/><rect x="${lx + 1}" y="${y0 - 21}" width="6" height="6" fill="#FFC86A"/><rect x="${lx + 20}" y="${y0 - 24}" width="5" height="10" fill="#2A1418"/><path d="M${lx + 30} ${y0 - 6}l6 6h-6z" fill="#2A1418"/><circle cx="${lx + 31}" cy="${y0 - 10}" r="2" fill="#FFE6A0"/><path d="M${lx - 2} ${y0 - 24}h13" stroke="#C8D8FF" stroke-width="1" opacity=".6"/>${[lx + 4, lx + 15, lx + 25].map(x => `<circle cx="${x}" cy="${y0 - 3}" r="3.2" fill="#120E1A"/>`).join("")}</g>`);
+      K.halo(lx + 40, y0 - 10, 30, "#FFE6A0", .35); K.halo(230, y0 - 10, 70, "#FFB347", .12); }
+    const BAR = [[196, 602, .9], [262, 590, 1], [336, 598, 1.05], [408, 584, .9]];
+    BAR.forEach(([x, y, sc]) => s.push(`${G(x, y, sc * 1.35)}<path d="M-16 0H16L11 6H-12Z" fill="#05070F"/><path d="M-16 0H16" stroke="#3A4C80" stroke-width="1"/><path d="M-6 0v-7a2.5 2.5 0 0 1 5 0v7" fill="#0A0E24"/><path d="M5 0v-6a2.2 2.2 0 0 1 4.4 0v6" fill="#0A0E24"/><path d="M14 0V-12" stroke="#3A2A1A" stroke-width="1.2"/><rect x="12.6" y="-15" width="3" height="4" fill="#FFC86A"/><path d="M-26 4H-16M-30 7H-14" stroke="#7A90C8" stroke-width=".8" opacity=".5"/></g>`));
+    const BUTS = [[556, 560], [584, 578], [724, 570]];
+    BUTS.forEach(([x, yt]) => s.push(`<path d="M${x} ${yt + 18}V640" stroke="#5A3A1A" stroke-width="2.4"/><path d="M${x - .8} ${yt + 18}V640" stroke="#C8D8FF" stroke-width=".6" opacity=".5"/><circle cx="${x}" cy="${yt + 9}" r="9" fill="none" stroke="#000" stroke-width="4" opacity=".4"/><circle cx="${x}" cy="${yt + 9}" r="9" fill="none" stroke="url(#c5-or)" stroke-width="2.6"/>`));
 
     // ---- 8. la piste : une voie aérienne d'or, balisée d'anneaux, avec l'arche de départ
     K.route([["#000", 44, ` opacity=".45" filter="url(#c5-flou8)"`], ["#FFD27A", 34, ` opacity=".12"`], ["url(#c5-or)", 27, ` opacity=".95"`], ["#121A3C", 22, ` opacity=".92"`], ["#2A3A78", 10, ` opacity=".35"`]]);
@@ -1943,64 +1943,60 @@
     const idx = fr => ((Math.floor(fr * N) % N) + N) % N;
     [.2, .32, .405, .5, .59, .7, .78].forEach(fr => { const i = idx(fr), [, , tx, ty] = K.nrm(i), an2 = Math.atan2(ty, tx) * 57.3, [x, y] = P[i];
       s.push(`${G(x, y, 1, an2)}<ellipse rx="5" ry="20" fill="none" stroke="#000" stroke-width="4.5" opacity=".4"/><ellipse rx="5" ry="20" fill="none" stroke="url(#c5-or)" stroke-width="3"/><ellipse rx="5" ry="20" fill="none" stroke="#FFF6D8" stroke-width=".8" opacity=".7"/></g>`); K.halo(x, y, 26, "#FFD27A", .28); });
-    // arche de départ : grand anneau d'or, deux torches, bannière aux 4 couleurs (sans texte)
+    // arche de départ : grand anneau d'or, deux torches, bannière de parchemin « Méfait accompli »
     const [DX, DY] = P[0];
     s.push(`<ellipse cx="${f(DX)}" cy="${f(DY)}" rx="10" ry="34" fill="none" stroke="#000" stroke-width="7" opacity=".45"/><ellipse cx="${f(DX)}" cy="${f(DY)}" rx="10" ry="34" fill="none" stroke="url(#c5-or)" stroke-width="5"/><ellipse cx="${f(DX)}" cy="${f(DY)}" rx="10" ry="34" fill="none" stroke="#FFF6D8" stroke-width="1" opacity=".7"/>`);
     [-1, 1].forEach(sg => s.push(`<path d="M${f(DX)} ${f(DY + sg * 34)}v${sg * 12}" stroke="#5A3A1A" stroke-width="4" stroke-linecap="round"/><path d="M${f(DX - 5)} ${f(DY + sg * 34 + (sg < 0 ? -2 : 12))}h10l-2 ${sg < 0 ? -4 : 4}h-6z" fill="#8A6A2A"/>`));
-    s.push(`<path d="M${f(DX + 2)} ${f(DY - 44)}l44 3l-7 8l7 8l-44 -3z" fill="#1A1630"/>${[0, 1, 2, 3].map(q => `<path d="M${f(DX + 4 + q * 9)} ${f(DY - 43.6 + q * .6)}l8 .6v15l-8 -.6z" fill="${CJ[q]}" opacity=".95"/>`).join("")}<path d="M${f(DX + 2)} ${f(DY - 44)}l44 3" stroke="#FFE6A8" stroke-width=".8" opacity=".7"/>`);
+    s.push(`<path d="M${f(DX + 4)} ${f(DY - 46)}h86l-7 9l7 9h-86z" fill="#000" opacity=".35" transform="translate(2 2)"/><path d="M${f(DX + 4)} ${f(DY - 46)}h86l-7 9l7 9h-86z" fill="#E8D9A8" stroke="#8A6A2A" stroke-width="1"/><text x="${f(DX + 44)}" y="${f(DY - 34.5)}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-weight="700" font-size="10" fill="#1A1630">Méfait accompli</text>`);
     K.halo(DX, DY - 52, 34, "#FFB347", .6); K.halo(DX, DY + 52, 34, "#FFB347", .5);
 
-    // ---- 9. LES HÉROS : 4 pilotes en grand, en position de jockey, liserés de lune (l'appli pose leurs portraits sur les têtes)
-    const PEAU = ["#F2CDB0", "#D9A27A", "#F5D4BC", "#C98E66"], CHEV = ["#5A3A1E", "#1A1410", "#C88A3A", "#8A3A1A"], LU = "#C8D8FF", ROBE = "#3A3264", ROBE2 = "#16122A";
-    const HX = 14, HY = -17.5, HR = 5.6, PORTR = [], PIL = [];
-    const pilote = (k, c) => {
-      const jambe = (h, kn, an, col) => `<path d="M${h}L${kn}L${an}" stroke="${col}" stroke-width="4.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-      return `<path d="M-27 3.2L29 -1" stroke="#7A4E22" stroke-width="3" stroke-linecap="round"/><path d="M-27 2.3L29 -1.9" stroke="#D8B070" stroke-width=".8" stroke-linecap="round" opacity=".8"/><circle cx="29" cy="-1" r="1.8" fill="#5A3A1A"/>` +
-        `<path d="M-25 3L-50 -8Q-57 3 -50 15Z" fill="#A8823E" stroke="#3A2414" stroke-width="1"/><path d="M-30 2L-50 -4M-30 4L-50 10M-28 3H-53" stroke="#6A4A1A" stroke-width=".9"/><path d="M-26 -1V7" stroke="#C9A24A" stroke-width="2.4"/><path d="M-25 3L-50 -8" stroke="${LU}" stroke-width=".8" opacity=".6"/>` +
-        // jambe lointaine, repliée en arrière
-        jambe("-8 -1", "-1 6.5", "-16 9", ROBE2) + `<path d="M-16 9l-5 .6" stroke="#3A2010" stroke-width="3.6" stroke-linecap="round"/>` +
-        // la cape qui claque au vent : doublure à la couleur du pilote, liseré de lune sur le dessus
-        `<path d="M9 -14C0 -21 -16 -22 -30 -18L-38 -19L-31 -14L-40 -12L-29 -9C-20 -6 -14 -4 -8 -3Z" fill="${ROBE2}"/><path d="M-40 -12L-29 -9C-20 -6 -14 -4 -8 -3L-9 -6C-16 -7 -22 -9 -30 -12Z" fill="${c}" opacity=".95"/><path d="M9 -14C0 -21 -16 -22 -30 -18L-38 -19" stroke="${LU}" stroke-width="1.2" fill="none" opacity=".95"/><path d="M-4 -16C-14 -18 -22 -17 -28 -15" stroke="#3E3866" stroke-width="1" fill="none"/>` +
-        // le buste couché sur le manche
-        `<path d="M-13 1C-13 -8 -2 -15 9 -14.5L12 -9C5 -7 -1 -3 -3 2Z" fill="${ROBE}"/><path d="M-13 0C-12 -8 -2 -14.6 9 -14.5" stroke="${LU}" stroke-width="1.1" fill="none" opacity=".9"/>` +
-        // jambe proche, repliée, botte en arrière
-        jambe("-8 0.5", "0 8", "-14 10.5", "#2E2850") + `<path d="M-14 10.5l-6 .8" stroke="#6A3A1A" stroke-width="4" stroke-linecap="round"/><path d="M-8 -1.5L0 6" stroke="${LU}" stroke-width=".8" opacity=".55"/>` +
-        // bras : les deux mains sur le manche
-        `<path d="M8 -12L14 -6L20 -1.5" stroke="#1E1A32" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 -11L12 -5L18 -1" stroke="${ROBE}" stroke-width="3.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18.6" cy="-1" r="1.9" fill="${PEAU[k]}"/><circle cx="21" cy="-1.4" r="1.7" fill="${mixHex(PEAU[k], "#000000", .2)}"/>` +
-        // écharpe nouée au cou
-        `<path d="M8.5 -14.5l5 -1.2l1 2.6l-5 1.4z" fill="${c}"/>` +
-        // la tête de profil (nez, menton, oreille, cheveux), cerclée de la couleur du pilote
-        `<circle cx="${HX}" cy="${HY}" r="${HR + .9}" fill="${c}"/><path d="M${HX - HR} ${HY}A${HR} ${HR} 0 1 1 ${HX + HR - .2} ${HY + 1.4}L${HX + HR + 1.9} ${HY + .6}L${HX + HR - .3} ${HY + 2.6}Q${HX + HR - 1} ${HY + 4.6} ${HX + 1.5} ${HY + HR - .2}A${HR} ${HR} 0 0 1 ${HX - HR} ${HY}Z" fill="${PEAU[k]}" stroke="#0A0814" stroke-width=".5"/>` +
-        `<path d="M${HX + 4} ${HY - 4}C${HX + 1} ${HY - 7.6} ${HX - 6} ${HY - 6.4} ${HX - 5.9} ${HY + .5}C${HX - 5} ${HY + 3} ${HX - 3.4} ${HY + 4} ${HX - 2.6} ${HY + 4.4}C${HX - 2.6} ${HY + 1} ${HX - .8} ${HY - 1.6} ${HX + .6} ${HY - 2.2}C${HX + 2} ${HY - 3} ${HX + 3.6} ${HY - 2.4} ${HX + 5} ${HY - 2}Z" fill="${CHEV[k]}"/><circle cx="${HX - .8}" cy="${HY + .8}" r="1.1" fill="${mixHex(PEAU[k], "#000000", .25)}"/><circle cx="${HX + 3.4}" cy="${HY - .6}" r=".7" fill="#0A0814"/>` +
-        `<path d="M${HX - 5.9} ${HY + .5}C${HX - 5.6} ${HY - 5.4} ${HX - 1} ${HY - 7.4} ${HX + 3} ${HY - 5.6}" stroke="${LU}" stroke-width=".9" fill="none" opacity=".85"/>`;
-    };
-    HER.forEach(([x, y, S, k, ro], q) => {
-      const tmp = []; K.halo(x - 6 * S, y - 8 * S, 18 * S, CJ[k], .22, tmp);
-      PIL.push(tmp.join("") + `${G(x, y, S, ro)}${pilote(k, CJ[k])}</g>`);
-      const [px, py] = loc(x, y, S, ro, HX, HY); PORTR.push({ k, x: +px.toFixed(1), y: +py.toFixed(1), r: +(HR * S).toFixed(1) }); });
-    s.push(`<g id="c5-her">${HERS.join("")}${PIL.join("")}</g>`);
+    // ---- 9. les 4 attrapeurs en silhouettes, en V devant la lune (seules les écharpes sont en couleur)
+    const LU = "#C8D8FF";
+    s.push(`<filter id="c5-sil2" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="1.6" result="d"/><feFlood flood-color="#A8BCE8" flood-opacity=".75"/><feComposite in2="d" operator="in" result="rim"/><feFlood flood-color="#0A0E24"/><feComposite in2="SourceAlpha" operator="in" result="sil"/><feMerge><feMergeNode in="rim"/><feMergeNode in="sil"/></feMerge></filter>`);
+    const pilote = () => `<path d="M-27 3.2L29 -1" stroke="#000" stroke-width="3" stroke-linecap="round"/><path d="M-25 3L-50 -8Q-57 3 -50 15Z"/><path d="M-8 -1L-1 6.5L-16 9M-8 .5L0 8L-14 10.5" stroke="#000" stroke-width="4.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` +
+      `<path d="M9 -14C0 -21 -16 -22 -30 -18L-38 -19L-31 -14L-40 -12L-29 -9C-20 -6 -14 -4 -8 -3Z"/><path d="M-13 1C-13 -8 -2 -15 9 -14.5L12 -9C5 -7 -1 -3 -3 2Z"/><path d="M6 -11L12 -5L19 -1" stroke="#000" stroke-width="3.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="14" cy="-17.5" r="6.2"/>`;
+    // [x, y, échelle, joueur, inclinaison] : le meneur en tête, à droite, vers le vif d'or
+    const HER = [[572, 224, .64, 0, -8], [532, 206, .56, 1, -8], [566, 256, .56, 2, -8], [492, 192, .5, 3, -8]];
+    HER.forEach(([x, y, S, k, ro]) => s.push(`${G(x, y, S, ro)}<g filter="url(#c5-sil2)">${pilote()}</g><path d="M-30 -14L-40 -12L-29 -9C-20 -6 -14 -4 -8 -3L-9 -6C-16 -7 -22 -9 -30 -12Z" fill="${CJ[k]}" opacity=".8"/></g>`));
+
+    // ---- 10. le cartouche « Les 4 attrapeurs » (portraits posés par l'appli)
+    const NOMS = ["Théo", "Kévin", "Clément", "Devlin"], PORTR = [];
+    s.push(`<rect x="690" y="652" width="378" height="64" rx="10" fill="#0E1230" opacity=".88"/><rect x="692" y="654" width="374" height="14" rx="8" fill="#FFD27A" opacity=".15"/><rect x="690" y="652" width="378" height="64" rx="10" fill="none" stroke="${OR}" stroke-width="2"/><rect x="693" y="655" width="372" height="58" rx="7.5" fill="none" stroke="#8A6A2A" stroke-width="1"/>`);
+    [0, 1, 2, 3].forEach(k => { const x = 734 + k * 66, y = 676, R = 18; PORTR.push({ k, x, y, r: R });
+      [-1, 1].forEach(sg => s.push(`<g transform="translate(${x} ${y}) rotate(${sg * 32})"><path d="M-28 0H22" stroke="#3A2414" stroke-width="3.6" stroke-linecap="round"/><path d="M-28 0H22" stroke="#7A4E22" stroke-width="2" stroke-linecap="round"/><path d="M22 -1L34 -5Q37 0 34 5L22 1Z" fill="#A8823E" stroke="#3A2414" stroke-width="1"/></g>`));
+      s.push(`<circle cx="${x}" cy="${y}" r="${R + 2}" fill="#1A1440" stroke="${CJ[k]}" stroke-width="3"/><circle cx="${x}" cy="${y}" r="${R}" fill="#1A1440"/><text x="${x}" y="709" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="700" font-size="9" fill="#E8EEFF">${NOMS[k]}</text>`); });
+    s.push(`<text x="1017" y="679" text-anchor="middle" font-family="Georgia, serif" font-weight="700" font-size="12" letter-spacing="1" fill="${OR}">LES 4</text><text x="1017" y="695" text-anchor="middle" font-family="Georgia, serif" font-weight="700" font-size="10.5" letter-spacing="1" fill="${OR}">ATTRAPEURS</text>`);
 
     // ================= COUCHE ANIMÉE =================
     a.push(`<radialGradient id="c5-flamme" r="50%"><stop offset="0" stop-color="#FFF6D0"/><stop offset=".35" stop-color="#FFC85A" stop-opacity=".8"/><stop offset="1" stop-color="#FFB347" stop-opacity="0"/></radialGradient>`);
     // les bougies flottantes, vues à travers la verrière (deux groupes qui ondulent)
-    [0, 1].forEach(g => { let c = ""; for (let k = 0; k < 6; k++) { const x = CX - 24 + r() * 48, y = 372 + r() * 64; c += `<circle cx="${f(x)}" cy="${f(y - 3)}" r="4.4" fill="url(#c5-flamme)"/><ellipse cx="${f(x)}" cy="${f(y - 2.6)}" rx="1.1" ry="2" fill="#FFF8DC"/>`; }
+    [0, 1].forEach(g => { let c = ""; for (let k = 0; k < 6; k++) { const x = CX - 27 + r() * 54, y = 362 + r() * 70; c += `<circle cx="${f(x)}" cy="${f(y - 3)}" r="4.4" fill="url(#c5-flamme)"/><ellipse cx="${f(x)}" cy="${f(y - 2.6)}" rx="1.1" ry="2" fill="#FFF8DC"/>`; }
       a.push(`<g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;0 -3;0 0" dur="${3 + g * 1.3}s" repeatCount="indefinite"/>`)}${c}</g>`); });
     // quelques fenêtres qui s'allument doucement
-    SOMB.filter((_, i) => i % 3 === 0).slice(0, 4).forEach(([x, y], k) => a.push(`<rect x="${f(x - 2.2)}" y="${f(y)}" width="4.4" height="8.6" fill="#E0A85A" opacity="${K.anime ? 0 : .7}">${an(`<animate attributeName="opacity" values="0;.8;.8;0;0" keyTimes="0;.1;.5;.6;1" dur="${5 + k * 1.7}s" begin="${k * 1.3}s" repeatCount="indefinite"/>`)}</rect>`));
+    SOMB.filter((_, i) => i % 3 === 0).slice(0, 6).forEach(([x, y], k) => a.push(`<rect x="${f(x - 2.2)}" y="${f(y)}" width="4.4" height="8.6" fill="#FFC86A" opacity="${K.anime ? 0 : .8}">${an(`<animate attributeName="opacity" values="0;.85;.85;0;0" keyTimes="0;.1;.5;.6;1" dur="${5 + k * 1.7}s" begin="${k * 1.3}s" repeatCount="indefinite"/>`)}</rect>`));
     // les torches de l'arche de départ
-    [-1, 1].forEach((sg, q) => { const y = DY + sg * (sg < 0 ? 52 : 52); a.push(`<g transform="translate(${f(DX)} ${f(y)})"><g>${an(`<animateTransform attributeName="transform" type="scale" values="1 1;.85 1.18;1.1 .9;1 1" dur="${.7 + q * .2}s" repeatCount="indefinite"/>`)}<circle r="11" fill="url(#c5-flamme)"/><path d="M0 -10C4 -4 5 0 0 4C-5 0 -4 -4 0 -10Z" fill="#FFB347"/><path d="M0 -5C2 -2 2 1 0 3C-2 1 -2 -2 0 -5Z" fill="#FFF6D0"/></g></g>`); });
-    // les écharpes qui claquent au vent, et la lumière qui file le long des traînées
-    HER.forEach(([x, y, S, k, ro], q) => { const c = CJ[k], c2 = mixHex(c, "#101020", .55), v1 = "M11 -14Q0 -20 -12 -16T-32 -19", v2 = "M11 -14Q0 -11 -12 -17T-32 -13", d = (.6 + q * .05).toFixed(2);
-      a.push(`<g transform="translate(${f(x)} ${f(y)}) scale(${S}) rotate(${ro})"><path d="${v1}" stroke="${c}" stroke-width="3.6" fill="none" stroke-linecap="round">${an(`<animate attributeName="d" values="${v1};${v2};${v1}" dur="${d}s" repeatCount="indefinite"/>`)}</path><path d="${v1}" stroke="${c2}" stroke-width="3.6" fill="none" stroke-dasharray="2.5 4">${an(`<animate attributeName="d" values="${v1};${v2};${v1}" dur="${d}s" repeatCount="indefinite"/>`)}</path></g>`);
-      const co = Math.cos(ro * PI / 180), si = Math.sin(ro * PI / 180), [tx, ty] = loc(x, y, S, ro, -50, 3), Lg = (120 + 70 * S) * .75; a.push(`<path d="M${f(tx)} ${f(ty)}l${f(-co * Lg)} ${f(-si * Lg)}" stroke="#FFF6D8" stroke-width="${f(S * .7)}" stroke-linecap="round" stroke-dasharray="${f(S * 4)} ${f(S * 16)}" opacity=".7">${an(`<animate attributeName="stroke-dashoffset" values="0;${f(-S * 20)}" dur=".5s" repeatCount="indefinite"/>`)}</path>`); });
-    // le vif d'or, devant Théo, dans l'axe de son regard : il tire le peloton
-    { const [vx, vy] = loc(HER[3][0], HER[3][1], HER[3][2], HER[3][4], 36, -24);
-      a.push(`<g transform="translate(${f(vx)} ${f(vy)})"><g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;6 -5;-3 4;0 0" dur="1.6s" repeatCount="indefinite"/>`)}<circle r="34" fill="url(#c5-flamme)"/><circle r="10" fill="${OR}" stroke="#8A5A14" stroke-width="1.2"/><path d="M-7 -3Q0 -6 7 -3M-7 3Q0 6 7 3" stroke="#B88A2A" stroke-width="1" fill="none"/><circle cx="-3.2" cy="-3.2" r="3" fill="#FFF6D0"/>` +
-        `<g>${an(`<animateTransform attributeName="transform" type="scale" values="1 1;1 .15;1 1" dur=".22s" repeatCount="indefinite"/>`)}<path d="M-4 -4C-20 -30 -42 -26 -50 -18C-34 -17 -20 -12 -4 -4ZM4 -4C-2 -30 12 -38 24 -34C16 -24 12 -14 4 -4Z" fill="#F4F0E2" opacity=".92"/></g></g></g>`); }
+    [-1, 1].forEach((sg, q) => { const y = DY + sg * 52; a.push(`<g transform="translate(${f(DX)} ${f(y)})"><g>${an(`<animateTransform attributeName="transform" type="scale" values="1 1;.85 1.18;1.1 .9;1 1" dur="${.7 + q * .2}s" repeatCount="indefinite"/>`)}<circle r="11" fill="url(#c5-flamme)"/><path d="M0 -10C4 -4 5 0 0 4C-5 0 -4 -4 0 -10Z" fill="#FFB347"/><path d="M0 -5C2 -2 2 1 0 3C-2 1 -2 -2 0 -5Z" fill="#FFF6D0"/></g></g>`); });
+    // les lanternes des barques
+    BAR.forEach(([x, y, sc], k) => { const lx = x + 14 * sc * 1.35, ly = y - 13 * sc * 1.35; a.push(`<circle cx="${f(lx)}" cy="${f(ly)}" r="9" fill="url(#c5-flamme)" opacity="${K.anime ? .6 : .8}">${an(`<animate attributeName="opacity" values=".45;.95;.6;.85;.45" keyTimes="0;.25;.5;.75;1" dur="${1.8 + k * .4}s" repeatCount="indefinite"/>`)}</circle>`); });
+    // la fumée du train
+    a.push(`<g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;-26 -8" dur="2.6s" repeatCount="indefinite"/>`)}${[0, 1, 2, 3].map(q => `<circle cx="${290 - q * 14}" cy="${328 - q * 4}" r="${4 + q * 2}" fill="#8A96B8" opacity="${(.55 - q * .12).toFixed(2)}"/>`).join("")}</g>`);
+    // les écharpes des 4 attrapeurs qui claquent au vent (seule couleur vive des silhouettes)
+    HER.forEach(([x, y, S, k, ro], q) => { const v1 = "M11 -14Q0 -20 -12 -16T-34 -19", v2 = "M11 -14Q0 -11 -12 -17T-34 -13";
+      a.push(`<g transform="translate(${f(x)} ${f(y)}) scale(${S}) rotate(${ro})"><path d="${v1}" stroke="${CJ[k]}" stroke-width="4.2" fill="none" stroke-linecap="round">${an(`<animate attributeName="d" values="${v1};${v2};${v1}" dur="${(.6 + q * .05).toFixed(2)}s" repeatCount="indefinite"/>`)}</path></g>`); });
+    // le vif d'or, juste devant le meneur
+    const vx = 598, vy = 216;
+    a.push(`<g transform="translate(${vx} ${vy})"><g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;4 -3;-2 3;0 0" dur="1.6s" repeatCount="indefinite"/>`)}<circle r="16" fill="url(#c5-flamme)"/><circle r="5" fill="${OR}" stroke="#8A5A14" stroke-width=".8"/><circle cx="-1.6" cy="-1.6" r="1.6" fill="#FFF6D0"/>` +
+      `<g>${an(`<animateTransform attributeName="transform" type="scale" values="1 1;1 .15;1 1" dur=".22s" repeatCount="indefinite"/>`)}<path d="M-2 -2C-10 -15 -21 -13 -25 -9C-17 -8 -10 -6 -2 -2ZM2 -2C-1 -15 6 -19 12 -17C8 -12 6 -7 2 -2Z" fill="#F4F0E2" opacity=".95"/></g></g></g>`);
+    // la chouette blanche et sa lettre, dans la boucle haut-gauche
+    { const ox = 248, oy = 168; a.push(`<g transform="translate(${ox} ${oy})"><g>${an(`<animateTransform attributeName="transform" type="translate" values="-14 4;14 -4;-14 4" dur="7s" repeatCount="indefinite"/>`)}<circle r="30" fill="#C8D8FF" opacity=".08"/>` +
+      `<g>${an(`<animateTransform attributeName="transform" type="scale" values="1 1;1 -.6;1 1" dur=".9s" repeatCount="indefinite"/>`)}<path d="M-3 -2C-10 -16 -24 -18 -30 -12C-22 -10 -14 -6 -6 2ZM3 -2C8 -16 22 -19 29 -13C21 -10 13 -5 6 2Z" fill="#F4F0E2"/><path d="M-30 -12l4 2l-3 1l4 2M29 -13l-4 2l3 1l-4 2" stroke="#B8B0A0" stroke-width=".8" fill="none"/></g>` +
+      `<ellipse cx="0" cy="2" rx="6.5" ry="8" fill="#F4F0E2"/><circle cx="0" cy="-6" r="5.4" fill="#F4F0E2"/><circle cx="-2" cy="-6.6" r="1.2" fill="#1A1630"/><circle cx="2" cy="-6.6" r="1.2" fill="#1A1630"/><path d="M-.8 -4.6l.8 1.6l.8 -1.6z" fill="#8A6A2A"/><path d="M-2 4l2 1l2 -1M-3 7l3 1l3 -1" stroke="#B8B0A0" stroke-width=".7" fill="none"/>` +
+      `<g transform="translate(5 -1) rotate(-12)"><rect x="0" y="-3.4" width="12" height="7.6" fill="#F2E8C8" stroke="#8A7A5A" stroke-width=".5"/><path d="M0 -3.4l6 4l6 -4" stroke="#8A7A5A" stroke-width=".5" fill="none"/><circle cx="6" cy=".8" r="1.6" fill="#A82020"/></g></g></g>`); }
     // des chevrons d'or qui filent sur la voie, dans le sens de la course
     [[.1, 0], [.35, 6], [.6, 12], [.85, 18]].forEach(([fr, deb]) => a.push(K.surPiste(fr, `<path d="M-14 -7L-6 0L-14 7M-4 -7L4 0L-4 7" stroke="#FFD27A" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><path d="M-14 -7L-6 0L-14 7M-4 -7L4 0L-4 7" stroke="#FFF2B8" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`, 24, deb)));
     K.particules(10, "#FFF2C8", 1.6, "scintille");
-    const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#c5-ciel)"/>`, "#1A1440", .1); RES.portraits = PORTR; return RES;
+    const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#c5-ciel)"/>`, "#1A1440", .1); RES.portraits = PORTR; RES.lieux = { chateau: [CX, 300], lune: [LX, LY], vif: [vx, vy] }; return RES;
+
   }
 
   /* ---------- Mars · Le pays des merveilles (v3 : grandes scènes en gravures colorées, d'après le livre de 1865) ----------
@@ -2184,7 +2180,8 @@
         <g transform="translate(-6 -46)"><path d="M-34 6Q-38 -2 -30 -4H-8Q0 -6 2 -16" fill="none" stroke="#3E6AB8" stroke-width="14" stroke-linecap="round"/>${[[-32, 2, 7.4], [-21, 0, 7.8], [-10, -2, 8], [0, -11, 7.6], [4, -24, 7.4]].map(([u, v, R]) => `<circle cx="${u}" cy="${v}" r="${R}" fill="#4A8AE0" ${INK}/>`).join("")}
           <circle cx="6" cy="-39" r="10.4" fill="#5A9AF0" ${INK}/><path d="M0 -47q-4 -8 -8 -8M12 -47q4 -8 8 -8" stroke="${ENC}" stroke-width="1.4" fill="none"/><path d="M1 -41q2 -1.6 4 0M7 -41q2 -1.6 4 0" stroke="${ENC}" stroke-width="1.2" fill="none"/><path d="M3 -34q3 2 6 0" stroke="${ENC}" stroke-width="1" fill="none"/>
           <path d="M14 -34Q28 -30 30 -18" stroke="#B88A3A" stroke-width="2" fill="none"/><path d="M24 -18h12l-2 -14h-8z" fill="#7AD0C0" ${INK}/></g></g>`);
-      [["", -4, 0, 9], ["Qui", -30, -50, 22], ["es-tu ?", -38, -108, 34]].forEach(([w, u, v, R], k) => { const cx = x + 8 + u, cy = y - 128 + v;
+      [["", -4, 0, 9], ["", -12, -40, 15], ["Qui es-tu ?", -2, -98, 52]].forEach(([w, u, v, R], k) => {   // v16.68 : une seule bulle lisible, dans le cadre (avant : « es-tu ? » au-dessus de « Qui », coupée au bord)
+        const cx = x + 8 + u, cy = y - 128 + v;
         a.push(`<g opacity="${vu(0)}">${an(`<animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;${(.06 + k * .14).toFixed(2)};${(.14 + k * .14).toFixed(2)};.84;1" dur="8s" repeatCount="indefinite"/>`)}<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${R}" ry="${f(R * .62)}" fill="#EEF4FF" fill-opacity=".85" stroke="#9AB0D0" stroke-width="2"/>${w ? `<text x="${f(cx)}" y="${f(cy + 6)}" text-anchor="middle" ${TXT} font-size="17" fill="#3E5A8A">${w}</text>` : ""}</g>`); }); }
     // ================= 12. la grande tasse fumante, coupée par le cadre en bas à droite (la seule vaisselle géante)
     s.push(`${G(1050, 706, 1)}<ellipse cx="34" cy="20" rx="150" ry="120" fill="#4A1424" opacity=".3" filter="url(#gt-flou8)"/><circle r="140" fill="url(#gt-porc)" ${INK}/><circle r="130" fill="none" stroke="${ROUGE}" stroke-width="4"/><circle cx="-6" cy="-6" r="90" fill="url(#gt-porc)" ${INK}/><circle cx="-6" cy="-6" r="78" fill="url(#gt-the)" ${INK}/><path d="M-62 -36q30 -24 70 -20" stroke="#FFF2D0" stroke-width="6" fill="none" opacity=".5" stroke-linecap="round"/><path d="M-84 -40Q-124 -60 -128 -20" stroke="#F4EEF2" stroke-width="16" fill="none"/></g>`);
