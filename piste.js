@@ -3357,242 +3357,224 @@
      une brèche crache ses gravats, des titans de trois tailles marchent vers les murs, et quatre soldats minuscules
      (capes aux couleurs des pilotes) volent au bout de leurs câbles pour donner l'échelle. */
   function peindreTitans4(T, Z, def) {
-    const K = kit(T, def, 87, "t4-"), { s, a, r, f, W, H } = K, an = x => K.anime ? x : "", NOMS = ["Théo", "Kévin", "Clément", "Devlin"];
-    const INK = `stroke="#2A1810" stroke-width="1.3" stroke-linejoin="round"`;
+    const K = kit(T, def, 87, "t4-"), { s, a, r, f, W, H } = K, an = x => K.anime ? x : "";
     const G = (x, y, sc, rot) => `<g transform="translate(${f(x)} ${f(y)})${sc && sc !== 1 ? ` scale(${f(sc)})` : ""}${rot ? ` rotate(${f(rot)})` : ""}">`;
-    // ---- géométrie : trois remparts = arcs d'un même cercle dont le centre est loin sous la carte
+    // ---- géométrie : trois remparts = arcs d'un même cercle dont le centre est loin sous la carte (Maria épais et proche, Sina mince et lointain)
     const CX = 540, CY = 1150, dC = (x, y) => Math.hypot(x - CX, y - CY);
-    const MUR = [{ n: "MARIA", R: 790, h: 32, e: 11 }, { n: "ROSE", R: 680, h: 24, e: 9 }, { n: "SINA", R: 500, h: 18, e: 7 }];
+    const MUR = [{ n: "MARIA", R: 790, h: 40, e: 14 }, { n: "ROSE", R: 680, h: 22, e: 8 }, { n: "SINA", R: 500, h: 11, e: 5 }];
     const yA = (R, x) => CY - Math.sqrt(Math.max(0, R * R - (x - CX) * (x - CX)));
     MUR.forEach(m => { m.portes = []; for (let i = 0; i < K.N; i++) { const p = K.P[i], q = K.P[(i + 1) % K.N], u = dC(p[0], p[1]) - m.R, v = dC(q[0], q[1]) - m.R; if (u * v > 0 || u === v) continue;
       const t = u / (u - v), x = p[0] + (q[0] - p[0]) * t, y = p[1] + (q[1] - p[1]) * t, tx = q[0] - p[0], ty = q[1] - p[1], l = Math.hypot(tx, ty) || 1, sn = Math.abs((tx * (x - CX) + ty * (y - CY)) / l / m.R);
       if (!m.portes.some(g => Math.abs(g.x - x) < 40)) m.portes.push({ x, y, d: 19 / Math.max(.45, sn) }); } });
     const MA = MUR[0], RO = MUR[1], SI = MUR[2];
-    const BRE = [446, 494];   // la brèche dans Maria
+    // la brèche = là où la piste traverse Maria à droite : la course entre par le trou du Colosse
+    const pD = MA.portes.reduce((m, g) => g.x > m.x ? g : m, MA.portes[0]), BRE = [pD.x - 58, pD.x + 44], xG = pD.x - 6;
     const dHaut = m => { const q = []; for (let x = -12; x <= W + 12; x += 8) q.push(f(x) + " " + f(yA(m.R, x) + 1)); return `M-12 -12L${q.join("L")}L${W + 12} -12Z`; };
-    // ---- dégradés et motifs
-    s.push(`<linearGradient id="t4-ciel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9A5A62"/><stop offset=".6" stop-color="#E0905A"/><stop offset="1" stop-color="#F8CC80"/></linearGradient>`);
-    s.push(`<linearGradient id="t4-mer" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E7A867"/><stop offset=".25" stop-color="#5E8EA0"/><stop offset="1" stop-color="#2E5E76"/></linearGradient>`);
-    s.push(`<linearGradient id="t4-terre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A88A5A"/><stop offset=".5" stop-color="#8E7C50"/><stop offset="1" stop-color="#6E6A44"/></linearGradient>`);
-    s.push(`<radialGradient id="t4-pre" cx="50%" cy="100%" r="100%"><stop offset=".55" stop-color="#7C9A4C"/><stop offset="1" stop-color="#5E7E3A"/></radialGradient>`);
-    s.push(`<radialGradient id="t4-champ" cx="50%" cy="100%" r="100%"><stop offset=".6" stop-color="#A9A659"/><stop offset="1" stop-color="#8E9446"/></radialGradient>`);
-    s.push(`<pattern id="t4-face" width="16" height="9" patternUnits="userSpaceOnUse"><rect width="16" height="9" fill="#A69C88"/><rect x=".7" y=".7" width="14.6" height="7.6" fill="#BDB39E"/><rect x=".7" y=".7" width="14.6" height="2" fill="#CFC6B2"/><path d="M8 0v4.5" stroke="#8C8270" stroke-width=".9"/></pattern>`);
-    s.push(`<radialGradient id="t4-muscle" cx="42%" cy="34%" r="70%"><stop offset="0" stop-color="#F06A56"/><stop offset=".45" stop-color="#C23A2C"/><stop offset=".8" stop-color="#7E1C16"/><stop offset="1" stop-color="#4A0E0A"/></radialGradient>`);
-    s.push(`<linearGradient id="t4-bras" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7E1C16"/><stop offset=".4" stop-color="#D2483A"/><stop offset="1" stop-color="#6A1612"/></linearGradient>`);
-    s.push(`<radialGradient id="t4-vap" r="50%"><stop offset="0" stop-color="#FFF8EE" stop-opacity=".95"/><stop offset=".55" stop-color="#F4EADC" stop-opacity=".55"/><stop offset="1" stop-color="#F4EADC" stop-opacity="0"/></radialGradient>`);
-    s.push(`<linearGradient id="t4-parch" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2E6C8"/><stop offset="1" stop-color="#D9C79C"/></linearGradient>`);
-    const PEAUX = ["#E8B898", "#D9A07E", "#F0C8A8", "#C98E6E", "#E2AE8C"];
-    // ---- un titan debout, vu de face (pieds en x,y ; hauteur 100 * sc) ; types : 0 maigre, 1 gros, 2 barbu, 3 souriant, 4 long
-    const titan = (x, y, sc, o) => {
-      o = o || {}; const p = o.peau || PEAUX[Math.floor(r() * PEAUX.length)], ty = o.type === undefined ? Math.floor(r() * 5) : o.type, ombreP = mixHex(p, "#5A2A1A", .35), L = `stroke="#3A2016" stroke-width="${f(1.6 / Math.max(.4, sc))}" stroke-linejoin="round"`;
-      const lg = ty === 4 ? 1.25 : 1, bw = ty === 1 ? 1.45 : ty === 0 ? .85 : 1;
-      let g = `<g transform="translate(${f(x)} ${f(y)}) scale(${f(o.flip ? -sc : sc)} ${f(sc)})"><ellipse cx="4" cy="1" rx="${f(24 * bw)}" ry="6" fill="#1A1008" opacity=".35"/>`;
-      const hy = -44 * lg;   // hanches
-      g += `<path d="M-6 ${f(hy)}L-10 -3M6 ${f(hy)}L10 -3" stroke="#3A2016" stroke-width="11.5" stroke-linecap="round"/><path d="M-6 ${f(hy)}L-10 -3M6 ${f(hy)}L10 -3" stroke="${p}" stroke-width="9" stroke-linecap="round"/><path d="M8 ${f(hy)}L11 -3" stroke="${ombreP}" stroke-width="3.5" stroke-linecap="round" opacity=".6"/>`;
-      const sh = hy - 32 * (ty === 4 ? 1.15 : 1), tw = 15 * bw;   // épaules
-      const brasL = o.leve ? `M${f(-tw + 1)} ${f(sh + 3)}Q${f(-tw - 14)} ${f(sh - 12)} ${f(-tw - 10)} ${f(sh - 30)}` : `M${f(-tw + 1)} ${f(sh + 3)}Q${f(-tw - 9)} ${f(sh + 18)} ${f(-tw - 8)} ${f(sh + 34 * lg)}`;
-      const brasR = `M${f(tw - 1)} ${f(sh + 3)}Q${f(tw + 9)} ${f(sh + 18)} ${f(tw + 8)} ${f(sh + 34 * lg)}`;
-      g += `<path d="${brasL}${brasR}" stroke="#3A2016" stroke-width="9" stroke-linecap="round" fill="none"/><path d="${brasL}${brasR}" stroke="${p}" stroke-width="6.6" stroke-linecap="round" fill="none"/>`;
-      g += `<path d="M${f(-tw)} ${f(sh)}Q${f(-tw - 3)} ${f((sh + hy) / 2)} ${f(-tw * .8)} ${f(hy + 2)}Q0 ${f(hy + 6)} ${f(tw * .8)} ${f(hy + 2)}Q${f(tw + 3)} ${f((sh + hy) / 2)} ${f(tw)} ${f(sh)}Q0 ${f(sh - 4)} ${f(-tw)} ${f(sh)}Z" fill="${p}" ${L}/>`;
-      g += `<path d="M${f(tw * .25)} ${f(sh + 2)}Q${f(tw + 2)} ${f((sh + hy) / 2)} ${f(tw * .7)} ${f(hy + 3)}Q${f(tw * .9)} ${f((sh + hy) / 2)} ${f(tw * .25)} ${f(sh + 2)}Z" fill="${ombreP}" opacity=".45"/>`;
-      if (ty === 1) g += `<ellipse cx="0" cy="${f(hy - 8)}" rx="${f(tw * .85)}" ry="12" fill="${p}" ${L}/><path d="M-3 ${f(hy - 7)}q3 2 6 0" stroke="#7A4A36" fill="none"/>`;
-      else g += `<path d="M-6 ${f(sh + 9)}q6 3 12 0M-6 ${f(sh + 15)}q6 3 12 0" stroke="${ombreP}" stroke-width="1.2" fill="none"/><circle cx="0" cy="${f(hy - 6)}" r="1.2" fill="${ombreP}"/>`;
-      const hc = sh - 12 - (ty === 1 ? 0 : 1), hr = ty === 1 ? 13 : ty === 4 ? 9.5 : 11;
-      g += `<path d="M-5 ${f(sh + 1)}V${f(hc + 6)}H5V${f(sh + 1)}Z" fill="${p}"/>`;
-      if (ty === 2) g += `<path d="M${f(-hr - 2)} ${f(hc - 4)}Q${f(-hr - 6)} ${f(hc + 14)} 0 ${f(hc + 22)}Q${f(hr + 6)} ${f(hc + 14)} ${f(hr + 2)} ${f(hc - 4)}Z" fill="#5A3A22" ${L}/>`;
-      g += `<ellipse cx="0" cy="${f(hc)}" rx="${f(hr)}" ry="${f(hr * 1.1)}" fill="${p}" ${L}/>`;
-      if (ty === 0 || ty === 4) g += `<path d="M${f(-hr - 1)} ${f(hc)}Q${f(-hr)} ${f(hc - hr * 1.3)} 0 ${f(hc - hr * 1.15)}Q${f(hr)} ${f(hc - hr * 1.3)} ${f(hr + 1)} ${f(hc)}Q${f(hr * .4)} ${f(hc - hr * .6)} ${f(-hr * .2)} ${f(hc - hr * .5)}Q${f(-hr * .7)} ${f(hc - hr * .4)} ${f(-hr - 1)} ${f(hc)}Z" fill="${["#3A2A1A", "#8A6A3A", "#2A1A12"][Math.floor(r() * 3)]}"/>`;
-      if (ty === 3) g += `<path d="M${f(-hr)} ${f(hc - 3)}Q0 ${f(hc - hr * 1.6)} ${f(hr)} ${f(hc - 3)}Q0 ${f(hc - hr * .8)} ${f(-hr)} ${f(hc - 3)}Z" fill="#C8A060"/>`;
-      g += `<circle cx="${f(-hr * .38)}" cy="${f(hc - 1)}" r="${f(hr * .26)}" fill="#FFF" stroke="#3A2016" stroke-width=".8"/><circle cx="${f(hr * .38)}" cy="${f(hc - 1)}" r="${f(hr * .26)}" fill="#FFF" stroke="#3A2016" stroke-width=".8"/><circle cx="${f(-hr * .38)}" cy="${f(hc - .5)}" r="${f(hr * .11)}" fill="#111"/><circle cx="${f(hr * .38)}" cy="${f(hc - .5)}" r="${f(hr * .11)}" fill="#111"/>`;
-      g += ty === 3 || ty === 1 ? `<path d="M${f(-hr * .7)} ${f(hc + hr * .4)}Q0 ${f(hc + hr * .95)} ${f(hr * .7)} ${f(hc + hr * .4)}Z" fill="#5A1A14" stroke="#3A2016" stroke-width=".8"/><path d="M${f(-hr * .6)} ${f(hc + hr * .45)}H${f(hr * .6)}" stroke="#F4F1EA" stroke-width="${f(hr * .16)}" stroke-dasharray="${f(hr * .14)} ${f(hr * .06)}"/>` : `<path d="M${f(-hr * .45)} ${f(hc + hr * .5)}q${f(hr * .45)} ${f(hr * .25)} ${f(hr * .9)} 0" stroke="#5A1A14" stroke-width="1.6" fill="none"/>`;
-      return g + (o.extra || "") + "</g>";
-    };
-    // ---- 1. le ciel du soir et la mer à l'horizon (en haut), puis les terres des titans
-    s.push(`<rect width="${W}" height="${H}" fill="url(#t4-terre)"/>`);
-    const rive = []; for (let x = -10; x <= W + 10; x += 20) rive.push([x, 44 + 7 * Math.sin(x / 61) + 5 * Math.sin(x / 23 + 1) + (x < 140 ? (140 - x) * .18 : 0) + (x > 960 ? (x - 960) * .1 : 0)]);
-    const dRive = "M-10 -10L" + rive.map(p => f(p[0]) + " " + f(p[1])).join("L") + `L${W + 10} -10Z`;
-    s.push(`<path d="${dRive}" fill="url(#t4-mer)"/><rect width="${W}" height="16" fill="url(#t4-ciel)"/><path d="M0 16C80 10 140 12 200 8C260 4 330 12 400 16Z" fill="#7A6A7A" opacity=".55"/><path d="M880 16C930 6 990 4 1080 10V16Z" fill="#7A6A7A" opacity=".5"/>`);
-    s.push(`<path d="M0 16.5H${W}" stroke="#FFE6B0" stroke-width="1.5" opacity=".8"/><ellipse cx="760" cy="17" rx="160" ry="9" fill="#FFE2A0" opacity=".6" filter="url(#t4-flou8)"/><circle cx="760" cy="16" r="9" fill="#FFF0C0" opacity=".9"/>`);
-    for (let k = 0; k < 40; k++) { const x = r() * W, y = 14 + r() * 26; s.push(`<path d="M${f(x)} ${f(y)}h${f(6 + r() * 14)}" stroke="${y < 22 ? "#FFE0A8" : "#A8D0DE"}" stroke-width="1" opacity=".55"/>`); }
-    s.push(`<path d="M${rive.map(p => f(p[0]) + " " + f(p[1])).join("L")}" fill="none" stroke="#F4ECD0" stroke-width="5" opacity=".85"/><path d="M${rive.map(p => f(p[0]) + " " + f(p[1] + 5)).join("L")}" fill="none" stroke="#D8C48E" stroke-width="7"/>`);
-    s.push(`<text x="700" y="30" font-family="Georgia, serif" font-style="italic" font-size="13" fill="#F4ECD8" opacity=".9" letter-spacing="2">la mer, enfin…</text>`);
-    // terres sauvages : taches, collines, arbres morts, et des empreintes géantes qui mènent aux murs
-    for (let k = 0; k < 70; k++) { const x = r() * W, y = 40 + r() * 540; if (dC(x, y) < MA.R + 10) continue; s.push(`<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(16 + r() * 36)}" ry="${f(6 + r() * 12)}" fill="${r() < .5 ? "#5E5A3C" : "#C4A878"}" opacity=".22"/>`); }
-    // ---- 2. dans les murs : prairie (Maria→Rose), champs (Rose→Sina), ville (Sina)
-    s.push(`<circle cx="${CX}" cy="${CY}" r="${MA.R}" fill="url(#t4-pre)"/>`);
-    for (let k = 0; k < 50; k++) { const x = r() * W, y = 360 + r() * 360; if (dC(x, y) > MA.R - 30 || dC(x, y) < RO.R + 10) continue; s.push(`<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(16 + r() * 30)}" ry="${f(5 + r() * 9)}" fill="${r() < .5 ? "#3E6A2E" : "#B4C878"}" opacity=".22"/>`); }
-    s.push(`<circle cx="${CX}" cy="${CY}" r="${RO.R}" fill="url(#t4-champ)"/>`);
-    { let o = ""; for (let k = 0; k < 90; k++) { const x = r() * W, y = 470 + r() * 250, d = dC(x, y); if (d > RO.R - 30 || d < SI.R + 8 || K.dT(x, y) < 26) continue; const w = 26 + r() * 40, hh = 8 + r() * 10, ang = Math.atan2(y - CY, x - CX) * 57.3 + 90;
-      o += `<rect x="${f(x - w / 2)}" y="${f(y - hh / 2)}" width="${f(w)}" height="${f(hh)}" fill="${["#B8A24A", "#7E9A44", "#9AA85A", "#C9B46A", "#8C9A3E"][Math.floor(r() * 5)]}" stroke="#6E7A3A" stroke-width=".7" transform="rotate(${f(ang)} ${f(x)} ${f(y)})"/>`; } s.push(o); }
-    s.push(`<circle cx="${CX}" cy="${CY}" r="${SI.R}" fill="#C9BEA4"/>`);
-    // ---- 3. la piste : route de terre battue (sort par une porte de Maria, rentre par l'autre)
-    K.route([["#1E1408", 40, ` opacity=".35" filter="url(#t4-flou)"`], ["#4E3A24", 31], ["#9A7A52", 26], ["#B8966A", 18, ` opacity=".5"`], ["#6E5236", 1.6, ` stroke-dasharray="7 9" transform="translate(-4 -1)"`], ["#6E5236", 1.6, ` stroke-dasharray="7 9" transform="translate(4 1)"`]]);
+    const HZ = 80;   // l'horizon
+    const GX = 640, HY = 232, HK = 1.02;   // le Colosse : axe, centre de la tête, échelle de la tête
+    // ---- dégradés
+    s.push(`<linearGradient id="t4-ciel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A1A3A"/><stop offset=".45" stop-color="#8A3E50"/><stop offset=".8" stop-color="#E8843E"/><stop offset="1" stop-color="#FFC66A"/></linearGradient>`);
+    s.push(`<linearGradient id="t4-plaine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A4A52"/><stop offset=".1" stop-color="#4E3446"/><stop offset=".45" stop-color="#33243A"/><stop offset="1" stop-color="#22182A"/></linearGradient>`);
+    s.push(`<radialGradient id="t4-ble" cx="${f((GX - CX) / (2 * MA.R) * 100 + 50)}%" cy="0%" r="32%"><stop offset="0" stop-color="#F4C860"/><stop offset=".35" stop-color="#D09838"/><stop offset=".7" stop-color="#9A6426"/><stop offset="1" stop-color="#5E3A18"/></radialGradient>`);
+    s.push(`<radialGradient id="t4-ville" cx="50%" cy="0%" r="90%"><stop offset="0" stop-color="#B07A50"/><stop offset="1" stop-color="#5A3A2A"/></radialGradient>`);
+    s.push(`<pattern id="t4-face" width="16" height="9" patternUnits="userSpaceOnUse"><rect width="16" height="9" fill="#6A5A50"/><rect x=".7" y=".7" width="14.6" height="7.6" fill="#7E6E60"/><rect x=".7" y=".7" width="14.6" height="2" fill="#90806C"/><path d="M8 0v4.5" stroke="#4E4238" stroke-width=".9"/></pattern>`);
+    s.push(`<radialGradient id="t4-muscle" cx="50%" cy="4%" r="85%"><stop offset="0" stop-color="#FF9A60"/><stop offset=".2" stop-color="#C8402C"/><stop offset=".55" stop-color="#7A1A14"/><stop offset="1" stop-color="#3A0806"/></radialGradient>`);
+    s.push(`<linearGradient id="t4-torse" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9A3424"/><stop offset=".3" stop-color="#6A1610"/><stop offset=".75" stop-color="#3E0A08"/><stop offset="1" stop-color="#2A0604"/></linearGradient>`);
+    s.push(`<linearGradient id="t4-bras" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D8583A"/><stop offset=".5" stop-color="#8A2418"/><stop offset="1" stop-color="#4A0E0A"/></linearGradient>`);
+    s.push(`<radialGradient id="t4-vap" r="50%"><stop offset="0" stop-color="#FFF2D6" stop-opacity=".95"/><stop offset=".55" stop-color="#FFD9A0" stop-opacity=".5"/><stop offset="1" stop-color="#FFC890" stop-opacity="0"/></radialGradient>`);
+    s.push(`<radialGradient id="t4-brume" r="50%"><stop offset="0" stop-color="#C8A0A0" stop-opacity=".4"/><stop offset="1" stop-color="#C8A0A0" stop-opacity="0"/></radialGradient>`);
+    s.push(`<radialGradient id="t4-ray" gradientUnits="userSpaceOnUse" cx="${GX}" cy="${HZ}" r="760"><stop offset="0" stop-color="#FFE6A8" stop-opacity=".55"/><stop offset=".45" stop-color="#FFD088" stop-opacity=".22"/><stop offset="1" stop-color="#FFC070" stop-opacity="0"/></radialGradient>`);
+    // ---- un titan lointain en silhouette (pieds en x,y ; hauteur ~100*sc) : poses variées, il se fond dans la brume
+    const titanLoin = (x, y, sc, o) => { const c = "#3A2434", lu = "#C8784A", p = o.pose;
+      const jambes = p === "court" ? "M-5 -44L-16 -14L-22 -2M6 -44L12 -20L22 -10" : p === "penche" ? "M-6 -44L-9 -2M6 -44L9 -2" : "M-6 -44L-8 -2M6 -44L8 -2";
+      const bras = p === "court" ? "M-13 -72Q-24 -60 -30 -70M13 -72Q22 -56 16 -40" : p === "penche" ? "M-12 -72Q-18 -52 -10 -30M12 -72Q20 -50 16 -28" : "M-13 -73Q-19 -54 -17 -30M13 -73Q19 -54 17 -30";
+      const tete = p === "penche" ? `<ellipse cx="6" cy="-84" rx="9" ry="10.5" fill="${c}"/>` : `<ellipse cx="0" cy="-88" rx="9.5" ry="11" fill="${c}"/>`;
+      return `<g transform="translate(${f(x)} ${f(y)}) scale(${f(o.flip ? -sc : sc)} ${f(sc)})${p === "penche" ? " skewX(-10)" : p === "court" ? " skewX(-6)" : ""}" opacity="${o.op}"><path d="${jambes}" stroke="${c}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M-14 -76Q-17 -58 -11 -42Q0 -38 11 -42Q17 -58 14 -76Q0 -80 -14 -76Z" fill="${c}"/><path d="${bras}" stroke="${c}" stroke-width="7" stroke-linecap="round" fill="none"/>${tete}<path d="M-8 -96Q0 -101 8 -96" stroke="${lu}" stroke-width="2" fill="none" opacity=".7"/></g>`; };
+    // ================= 1. LE CIEL ET LA MER AU COUCHANT =================
+    s.push(`<rect width="${W}" height="${H}" fill="url(#t4-plaine)"/>`);
+    s.push(`<rect width="${W}" height="${HZ + 2}" fill="url(#t4-ciel)"/>`);
+    K.halo(GX, HZ + 20, 620, "#FF9A48", .55); K.halo(GX, HZ + 10, 240, "#FFE6A0", .85);
+    // le soleil, énorme, à moitié dans la mer, pile derrière le crâne du Colosse
+    s.push(`<circle cx="${GX}" cy="${HZ + 8}" r="84" fill="#FFE4A0" opacity=".9"/><circle cx="${GX}" cy="${HZ + 8}" r="70" fill="#FFF4D0"/>`);
+    // nuages étirés, éclairés par en dessous
+    [[150, 26, 220], [420, 14, 160], [930, 22, 240]].forEach(([x, y, w]) => s.push(`<path d="M${x - w / 2} ${y}Q${x} ${y - 9} ${x + w / 2} ${y}Q${x} ${y + 4} ${x - w / 2} ${y}Z" fill="#5A2A44" opacity=".65"/><path d="M${x - w * .4} ${y + 2}Q${x} ${y + 5} ${x + w * .4} ${y + 2}" stroke="#FFB070" stroke-width="1.6" fill="none" opacity=".7"/>`));
+    // la mer, une bande dorée ; collines en silhouette ouvertes sur le soleil
+    s.push(`<rect x="0" y="${HZ - 1}" width="${W}" height="10" fill="#C8784A"/><path d="M${GX - 150} ${HZ + 2}H${GX + 150}M${GX - 90} ${HZ + 5}H${GX + 100}" stroke="#FFF4C8" stroke-width="2" opacity=".9"/>`);
+    s.push(`<path d="M-10 ${HZ + 14}L-10 ${HZ - 14}Q60 ${HZ - 30} 150 ${HZ - 14}Q230 ${HZ - 2} 300 ${HZ - 16}Q380 ${HZ - 26} 470 ${HZ - 4}Q520 ${HZ + 6} 550 ${HZ + 10}L550 ${HZ + 14}Z" fill="#4A2A3E"/><path d="M800 ${HZ + 14}Q880 ${HZ - 6} 950 ${HZ - 18}Q1020 ${HZ - 30} 1090 ${HZ - 16}L1090 ${HZ + 14}Z" fill="#4A2A3E"/>`);
+    // ================= 2. LA PLAINE DES TITANS : violet-brun, brumeuse, fendue par les rayons du couchant =================
+    { let o = ""; [[-86, 7], [-70, 9], [-52, 7], [-36, 10], [-18, 6], [14, 6], [30, 10], [48, 7], [64, 9], [80, 7]].forEach(([ang, l]) => { const t = (90 + ang) / 57.3, n = l / 57.3, R = 1000;
+        o += `<path d="M${GX} ${HZ + 8}L${f(GX + Math.cos(t) * R)} ${f(HZ + Math.sin(t) * R)}L${f(GX + Math.cos(t + n) * R)} ${f(HZ + Math.sin(t + n) * R)}Z"/>`; });
+      s.push(`<g fill="url(#t4-ray)">${o}</g>`); }
+    [[250, 170, 280, 26], [860, 190, 200, 22], [330, 300, 300, 30], [150, 360, 200, 28]].forEach(([x, y, rx, ry]) => s.push(`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#t4-brume)"/>`));
+    // ================= 3. DANS LES MURS : une seule nappe de blés dorés =================
+    s.push(`<circle cx="${CX}" cy="${CY}" r="${MA.R}" fill="url(#t4-ble)"/>`);
+    { let o = ""; for (let k = 0; k < 10; k++) { const R = MA.R - 60 - k * 26 - r() * 8, a0 = -2.25 + r() * .5, a1 = -.9 - r() * .5, pts = []; for (let t = a0; t <= a1; t += .03) pts.push(f(CX + Math.cos(t) * R) + " " + f(CY + Math.sin(t) * R + Math.sin(t * 40) * 3)); o += `<path d="M${pts.join("L")}" stroke="${k % 2 ? "#FFE08A" : "#8A5A1E"}" stroke-width="2.5" fill="none" opacity="${k % 2 ? .25 : .15}"/>`; } s.push(o); }
+    s.push(`<circle cx="${CX}" cy="${CY}" r="${SI.R}" fill="url(#t4-ville)"/>`);
+    // l'ombre immense du Colosse, couchée vers nous sur les blés (le soleil est derrière lui)
+    s.push(`<path d="M${GX - 240} ${f(yA(MA.R, GX - 240) + MA.h)}Q${GX - 230} 470 ${GX - 120} 520Q${GX - 70} 600 ${GX} 610Q${GX + 70} 600 ${GX + 120} 520Q${GX + 230} 470 ${GX + 240} ${f(yA(MA.R, GX + 240) + MA.h)}Z" fill="#2A0C06" opacity=".5" filter="url(#t4-flou8)"/>`);
+    // ================= 4. LA PISTE : route de terre claire (elle se détache sur la plaine sombre) =================
+    K.route([["#140A10", 40, ` opacity=".45" filter="url(#t4-flou)"`], ["#2E1E16", 31], ["#C8A070", 26], ["#F0D8A8", 16, ` opacity=".55"`], ["#8A6A46", 1.6, ` stroke-dasharray="7 9" transform="translate(-4 -1)"`], ["#8A6A46", 1.6, ` stroke-dasharray="7 9" transform="translate(4 1)"`]]);
     K.depart();
-    // ---- 4. les titans au loin (bande du haut, entre la mer et la piste) : plus loin = plus petits
-    const loin = [[60, 66, .42, 2], [205, 90, .62, 1], [300, 70, .44, 0], [380, 92, .7, 3], [520, 74, .5, 4], [600, 92, .66, 2], [760, 72, .46, 1], [845, 91, .74, 0], [935, 84, .58, 3], [1030, 62, .4, 4], [140, 60, .36, 3]];
-    loin.forEach(([x, y, sc, ty], k) => { if (K.dT(x, y) < 18) return; s.push(titan(x, y, sc, { type: ty, flip: k % 2 })); });
-    // empreintes géantes dans la poussière
-    const pas = (x, y, ang, sc) => `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(ang)}) scale(${f(sc)})" opacity=".35"><ellipse rx="5" ry="9" fill="#4A3A22"/>${[-4, -1.5, 1, 3.5].map(u => `<circle cx="${f(u)}" cy="-11" r="1.6" fill="#4A3A22"/>`).join("")}</g>`;
-    [[290, 160], [312, 186], [296, 214], [330, 196]].forEach(([x, y], k) => s.push(pas(x, y, 160 + k * 4, 1.3)));
-    // ---- 5. coin haut-gauche : le titan aux longs bras qui rampe vers la piste ; à gauche : deux titans moyens
-    s.push(titan(44, 300, .95, { type: 4, peau: "#D9A07E" }));
-    s.push(titan(52, 470, 1.05, { type: 1, peau: "#E8B898", flip: true }));
-    { const x = 62, y = 150; s.push(`${G(x, y, 1)}<ellipse cx="0" cy="6" rx="42" ry="9" fill="#1A1008" opacity=".35"/><path d="M-30 4Q-36 -16 -20 -26Q0 -34 22 -24Q36 -14 32 4Z" fill="#C98E6E" stroke="#3A2016" stroke-width="1.6"/><path d="M-28 0Q-44 -6 -50 -18M28 0Q44 -4 54 -16" stroke="#3A2016" stroke-width="8" stroke-linecap="round"/><path d="M-28 0Q-44 -6 -50 -18M28 0Q44 -4 54 -16" stroke="#C98E6E" stroke-width="5.6" stroke-linecap="round"/><ellipse cx="0" cy="-30" rx="13" ry="12" fill="#C98E6E" stroke="#3A2016" stroke-width="1.6"/><path d="M-13 -34Q0 -48 13 -34Q4 -40 -13 -34Z" fill="#2A1A12"/><circle cx="-5" cy="-30" r="3.4" fill="#FFF" stroke="#3A2016" stroke-width=".8"/><circle cx="5" cy="-30" r="3.4" fill="#FFF" stroke="#3A2016" stroke-width=".8"/><circle cx="-4.4" cy="-29.4" r="1.5" fill="#111"/><circle cx="5.6" cy="-29.4" r="1.5" fill="#111"/><path d="M-7 -23Q0 -18 7 -23Z" fill="#5A1A14"/></g>`); }
-    s.push(titan(186, 262, .6, { type: 3, peau: "#F0C8A8" }));
-    [[160, 300], [176, 330], [150, 350]].forEach(([x, y], k) => s.push(pas(x, y, 170 + k * 6, 1.1)));
-    // ---- 6. coin haut-droit : le titan bestial, couvert de poils, qui lance des rochers sur les murs
-    const BX = 1036, BY = 196;
-    s.push(`${G(BX, BY, 1)}<ellipse cx="0" cy="2" rx="40" ry="8" fill="#1A1008" opacity=".4"/><path d="M-12 -70L-15 -4M12 -70L14 -4" stroke="#2A1A10" stroke-width="15" stroke-linecap="round"/><path d="M-12 -70L-15 -4M12 -70L14 -4" stroke="#7A5A3A" stroke-width="12" stroke-linecap="round"/>
-      <path d="M-24 -126Q-30 -96 -18 -66Q0 -60 18 -66Q30 -96 24 -126Q0 -136 -24 -126Z" fill="#7A5A3A" stroke="#2A1A10" stroke-width="1.6"/>${Array.from({ length: 18 }, (_, k) => `<path d="M${f(-20 + (k % 6) * 8)} ${f(-124 + Math.floor(k / 6) * 18)}l-3 8l5 -2" stroke="#4A3220" stroke-width="1.4" fill="none"/>`).join("")}
-      <path d="M-22 -122Q-40 -100 -44 -60" stroke="#2A1A10" stroke-width="11" stroke-linecap="round" fill="none"/><path d="M-22 -122Q-40 -100 -44 -60" stroke="#7A5A3A" stroke-width="8.4" stroke-linecap="round" fill="none"/>
-      <path d="M22 -122Q40 -140 30 -166" stroke="#2A1A10" stroke-width="11" stroke-linecap="round" fill="none"/><path d="M22 -122Q40 -140 30 -166" stroke="#7A5A3A" stroke-width="8.4" stroke-linecap="round" fill="none"/>
-      <ellipse cx="0" cy="-142" rx="15" ry="16" fill="#8A6A48" stroke="#2A1A10" stroke-width="1.6"/><path d="M-17 -146Q-20 -166 0 -164Q20 -166 17 -146Q14 -156 0 -156Q-14 -156 -17 -146Z" fill="#4A3220"/><path d="M-15 -138Q-18 -120 0 -118Q18 -120 15 -138Q8 -128 0 -128Q-8 -128 -15 -138Z" fill="#5A3E26"/><circle cx="-5.5" cy="-144" r="2.4" fill="#F4E8C0"/><circle cx="5.5" cy="-144" r="2.4" fill="#F4E8C0"/><circle cx="-5.5" cy="-144" r="1" fill="#111"/><circle cx="5.5" cy="-144" r="1" fill="#111"/></g>`);
-    s.push(`<text x="${BX}" y="${BY + 16}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="10" fill="#F4ECD8" stroke="#3A2414" stroke-width="2.4" paint-order="stroke">le lanceur</text>`);
-    // ---- 7. le titan cuirassé (à droite) qui charge la porte de Maria
-    const CRX = 1012, CRY = 492;
-    s.push(`${G(CRX, CRY, 1.08)}<ellipse cx="2" cy="2" rx="34" ry="8" fill="#1A1008" opacity=".4"/><path d="M-9 -50L-12 -4M9 -50L12 -4" stroke="#2A1810" stroke-width="15" stroke-linecap="round"/><path d="M-9 -50L-12 -4M9 -50L12 -4" stroke="#D8C8A8" stroke-width="12" stroke-linecap="round"/><path d="M-9 -40l-2 10M9 -40l2 10M-11 -24l-1 9M11 -24l1 9" stroke="#8A7A5A" stroke-width="1.6"/>
-      <path d="M-20 -92Q-24 -70 -16 -48H16Q24 -70 20 -92Q0 -98 -20 -92Z" fill="#E4D6B8" stroke="#2A1810" stroke-width="1.6"/><path d="M-18 -88H18M-17 -78H17M-16 -68H16M-15 -58H15M0 -94V-48" stroke="#9A8A6A" stroke-width="1.4"/>
-      <path d="M-19 -88Q-36 -74 -36 -52M19 -88Q36 -74 36 -52" stroke="#2A1810" stroke-width="12" stroke-linecap="round" fill="none"/><path d="M-19 -88Q-36 -74 -36 -52M19 -88Q36 -74 36 -52" stroke="#D8C8A8" stroke-width="9.4" stroke-linecap="round" fill="none"/>
-      <path d="M-12 -96Q-14 -118 0 -120Q14 -118 12 -96Q0 -92 -12 -96Z" fill="#E4D6B8" stroke="#2A1810" stroke-width="1.6"/><path d="M-10 -108H10M0 -120V-96" stroke="#9A8A6A" stroke-width="1.3"/><path d="M-8 -110l4 2M8 -110l-4 2" stroke="#2A1810" stroke-width="2.2"/><circle cx="-4.5" cy="-106" r="1.5" fill="#FFE070"/><circle cx="4.5" cy="-106" r="1.5" fill="#FFE070"/><path d="M-6 -100h12" stroke="#2A1810" stroke-width="1.4"/></g>`);
-    // ---- 8. derrière Maria : la file de titans vers la brèche (perspective : plus loin = plus petits)
-    [[520, 300, .46, 1], [430, 252, .38, 3], [560, 220, .3, 0], [398, 196, .3, 2], [610, 168, .24, 4]].forEach(([x, y, sc, ty], k) => s.push(titan(x, y, sc, { type: ty, flip: k % 2 })));
-    // ---- 9. LE TITAN COLOSSAL : tête et épaules derrière Maria (la vapeur derrière lui)
-    const CO = { x: 712, y: 248, k: 1.14 };
-    K.halo(CO.x, CO.y + 20, 300, "#FFB070", .45);
-    [[-120, 40, 70], [118, 30, 66], [-60, -70, 60], [70, -86, 58], [0, -120, 56], [-150, 90, 60], [150, 96, 56], [-108, -20, 48], [112, -40, 46]].forEach(([u, v, R]) => s.push(`<circle cx="${f(CO.x + u * CO.k)}" cy="${f(CO.y + v * CO.k)}" r="${f(R * CO.k)}" fill="url(#t4-vap)"/>`));
+    // ================= 5. TITANS EN MARCHE DANS LA BRUME (une seule échelle géante : le Colosse) =================
+    [[196, 392, .62, "court", 0, .78], [300, 350, .5, "penche", 1, .6], [228, 300, .4, "ballant", 0, .42], [140, 268, .34, "penche", 0, .3]].forEach(([x, y, sc, pose, fl, op]) => s.push(titanLoin(x, y, sc, { pose, flip: fl, op })));
+    [[240, 330, 190, 20], [190, 280, 140, 16]].forEach(([x, y, rx, ry]) => s.push(`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#t4-brume)"/>`));
+    // ================= 6. LE COLOSSE (derrière Maria, penché au-dessus du mur, à contre-jour) =================
+    // la vapeur, un grand panache doré couché par le vent vers la gauche
+    [[GX + 20, 300, 120], [GX - 40, 220, 110], [GX - 100, 160, 96], [GX - 170, 112, 86], [GX - 250, 76, 76], [GX - 340, 52, 66], [GX + 120, 250, 86], [GX - 140, 260, 84]].forEach(([x, y, R], k) =>
+      s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(R)}" fill="url(#t4-vap)" opacity="${k < 2 || k > 5 ? .85 : .65}"/>`));
     s.push(`<clipPath id="t4-hautM"><path d="${dHaut(MA)}"/></clipPath>`);
-    { let o = `<g clip-path="url(#t4-hautM)">` + G(CO.x, CO.y, CO.k);
-      // trapèzes et cou (le bas est caché par Maria)
-      o += `<path d="M-60 52Q-74 104 -170 128L-176 190H176L170 128Q74 104 60 52Z" fill="url(#t4-muscle)" stroke="#3A0C08" stroke-width="2.2"/>`;
-      for (let k = -4; k <= 4; k++) o += `<path d="M${k * 13} 60Q${k * 16} 100 ${k * 30} 150" stroke="${k % 2 ? "#5A1210" : "#F08A72"}" stroke-width="${k % 2 ? 2 : 1.4}" fill="none" opacity=".6"/>`;
-      o += `<path d="M-160 132Q-100 112 -62 120M160 132Q100 112 62 120" stroke="#F4DCCB" stroke-width="5" fill="none" opacity=".75"/><path d="M-44 60Q-36 100 -14 126M44 60Q36 100 14 126" stroke="#4A0E0A" stroke-width="5" fill="none" opacity=".7"/>`;
-      // crâne écorché
-      o += `<path d="M0 -98C58 -98 86 -62 84 -12C82 30 70 62 50 80C32 94 -32 94 -50 80C-70 62 -82 30 -84 -12C-86 -62 -58 -98 0 -98Z" fill="url(#t4-muscle)" stroke="#3A0C08" stroke-width="2.6"/>`;
-      for (let k = -6; k <= 6; k++) o += `<path d="M${f(k * 9)} -94Q${f(k * 11.5)} -66 ${f(k * 8)} -40" stroke="${k % 2 ? "#6A1410" : "#F28C74"}" stroke-width="${k % 2 ? 2.2 : 1.6}" fill="none" opacity=".7"/>`;
-      [-1, 1].forEach(sg => { for (let k = 0; k < 6; k++) o += `<path d="M${f(sg * (80 - k * 3))} ${f(-30 + k * 9)}Q${f(sg * (64 - k * 2))} ${f(10 + k * 9)} ${f(sg * (50 - k * 2))} ${f(40 + k * 7)}" stroke="${k % 2 ? "#5A1210" : "#F08A72"}" stroke-width="1.8" fill="none" opacity=".65"/>`; });
-      // pommettes (os), arcade, orbites
-      o += `<path d="M-74 0Q-56 -12 -30 4Q-48 2 -72 12ZM74 0Q56 -12 30 4Q48 2 72 12Z" fill="#F4DCCB" opacity=".85"/>`;
-      o += `<path d="M-70 -40Q-36 -58 -6 -36Q0 -32 6 -36Q36 -58 70 -40L68 -26Q36 -42 6 -22H-6Q-36 -42 -68 -26Z" fill="#6A1410" stroke="#3A0C08" stroke-width="1.6"/>`;
-      o += `<ellipse cx="-33" cy="-16" rx="22" ry="13" fill="#1A0402"/><ellipse cx="33" cy="-16" rx="22" ry="13" fill="#1A0402"/>`;
-      // nez : deux fentes ; bouche sans lèvres : deux rangées de dents
-      o += `<path d="M-9 4Q-12 16 -5 20Q-4 12 -9 4ZM9 4Q12 16 5 20Q4 12 9 4Z" fill="#1A0402"/>`;
-      o += `<path d="M-60 26Q0 18 60 26L58 70Q0 80 -58 70Z" fill="#5A0E0A" stroke="#3A0C08" stroke-width="1.6"/>`;
-      for (let k = -6; k <= 5; k++) o += `<rect x="${f(k * 9.4 + .4)}" y="28" width="8.8" height="19" rx="2.2" fill="#F2E8D4" stroke="#4A2A1A" stroke-width=".9"/><rect x="${f(k * 9.4 + .4)}" y="49" width="8.8" height="18" rx="2.2" fill="#E8DCC4" stroke="#4A2A1A" stroke-width=".9"/>`;
-      o += `<path d="M-74 22Q-64 58 -52 78L-56 30ZM74 22Q64 58 52 78L56 30Z" fill="#8A1E18" opacity=".9"/>`;
+    const X = (sg, v) => f(GX + sg * v);
+    // silhouette du buste : trapèzes énormes qui partent derrière les oreilles, épaules rondes, coudes écartés posés sur le mur
+    const buste = sg => `M${X(sg, 40)} ${HY + 10}Q${X(sg, 96)} ${HY + 46} ${X(sg, 160)} ${HY + 84}Q${X(sg, 222)} ${HY + 90} ${X(sg, 238)} ${HY + 140}L${X(sg, 206)} ${HY + 260}H${X(sg, 0)}V${HY + 10}Z`;
+    const crane = "M0 -98C58 -98 86 -62 84 -12C82 30 70 62 50 80C32 94 -32 94 -50 80C-70 62 -82 30 -84 -12C-86 -62 -58 -98 0 -98Z";
+    { let o = `<g clip-path="url(#t4-hautM)">`;
+      // contour embrasé (contre-jour)
+      o += `<g filter="url(#t4-flou8)" opacity=".95">${[-1, 1].map(sg => `<path d="${buste(sg)}" fill="none" stroke="#FFB050" stroke-width="20"/>`).join("")}${G(GX, HY, HK)}<path d="${crane}" fill="none" stroke="#FFC060" stroke-width="26"/></g></g>`;
+      [-1, 1].forEach(sg => {
+        o += `<path d="${buste(sg)}" fill="url(#t4-torse)" stroke="#1E0402" stroke-width="2.4"/>`;
+        // trapèze : fibres en éventail du cou vers l'épaule
+        for (let k = 0; k < 9; k++) { const t = k / 8; o += `<path d="M${X(sg, 44 + t * 6)} ${f(HY + 14 + t * 30)}Q${X(sg, 110 + t * 10)} ${f(HY + 52 + t * 22)} ${X(sg, 170 + t * 20)} ${f(HY + 86 + t * 16)}" stroke="${k % 2 ? "#3A0806" : "#E8704E"}" stroke-width="${k % 2 ? 2 : 1.5}" fill="none" opacity=".6"/>`; }
+        // pectoral sous la clavicule (fibres)
+        o += `<path d="M${X(sg, 10)} ${HY + 128}Q${X(sg, 90)} ${HY + 112} ${X(sg, 180)} ${HY + 124}Q${X(sg, 176)} ${HY + 200} ${X(sg, 90)} ${HY + 214}Q${X(sg, 20)} ${HY + 210} ${X(sg, 10)} ${HY + 180}Z" fill="#6A1410" stroke="#1E0402" stroke-width="1.6"/>`;
+        for (let k = 0; k < 6; k++) o += `<path d="M${X(sg, 16)} ${HY + 134 + k * 12}Q${X(sg, 90)} ${HY + 122 + k * 12} ${X(sg, 172 - k * 6)} ${HY + 132 + k * 9}" stroke="${k % 2 ? "#3A0806" : "#C8503A"}" stroke-width="1.6" fill="none" opacity=".55"/>`;
+        // le bras : de l'épaule, il plonge vers la main crispée sur le parapet (le coude est caché derrière le mur)
+        const ep = [GX + sg * 196, HY + 116], ma = [GX + sg * 150, yA(MA.R, GX + sg * 150) - MA.e - 16], cc = [GX + sg * 222, HY + 180], A = `M${f(ep[0])} ${f(ep[1])}Q${f(cc[0])} ${f(cc[1])} ${f(ma[0])} ${f(ma[1])}`;
+        o += `<path d="${A}" stroke="#1E0402" stroke-width="44" stroke-linecap="round" fill="none"/><path d="${A}" stroke="url(#t4-bras)" stroke-width="39" stroke-linecap="round" fill="none"/>`;
+        o += `<path d="M${f(ep[0] + sg * 18)} ${f(ep[1] - 2)}Q${f(cc[0] + sg * 18)} ${f(cc[1])} ${f(ma[0] + sg * 18)} ${f(ma[1] - 4)}" stroke="#FFB070" stroke-width="3" fill="none" opacity=".75"/>`;
+        for (let k = 0; k < 4; k++) o += `<path d="M${f(ep[0] + sg * (-12 + k * 8))} ${f(ep[1] + 6)}Q${f(cc[0] + sg * (-14 + k * 7))} ${f(cc[1])} ${f(ma[0] + sg * (-12 + k * 7))} ${f(ma[1])}" stroke="${k % 2 ? "#3E0A08" : "#E06A4A"}" stroke-width="1.4" fill="none" opacity=".5"/>`;
+        // deltoïde rond
+        o += `<path d="M${X(sg, 158)} ${HY + 84}Q${X(sg, 226)} ${HY + 82} ${X(sg, 244)} ${HY + 146}Q${X(sg, 230)} ${HY + 172} ${X(sg, 200)} ${HY + 164}Q${X(sg, 168)} ${HY + 128} ${X(sg, 158)} ${HY + 84}Z" fill="url(#t4-muscle)" stroke="#1E0402" stroke-width="2"/>`;
+        for (let k = 0; k < 6; k++) o += `<path d="M${X(sg, 168 + k * 11)} ${HY + 90 + k * 2}Q${X(sg, 204 + k * 6)} ${HY + 120} ${X(sg, 208 + k * 5)} ${HY + 164}" stroke="${k % 2 ? "#3E0A08" : "#F08058"}" stroke-width="1.5" fill="none" opacity=".55"/>`;
+        // clavicule : une arête d'os pâle
+        o += `<path d="M${X(sg, 14)} ${HY + 120}Q${X(sg, 80)} ${HY + 104} ${X(sg, 166)} ${HY + 100}" stroke="#1E0402" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M${X(sg, 14)} ${HY + 118}Q${X(sg, 80)} ${HY + 102} ${X(sg, 166)} ${HY + 98}" stroke="#E8C8AC" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+        // liseré de lumière sur le haut du trapèze et de l'épaule
+        o += `<path d="M${X(sg, 42)} ${HY + 12}Q${X(sg, 96)} ${HY + 48} ${X(sg, 160)} ${HY + 86}Q${X(sg, 222)} ${HY + 92} ${X(sg, 238)} ${HY + 138}" stroke="#FFC078" stroke-width="4" fill="none" opacity=".9" stroke-linecap="round"/>`;
+      });
+      o += `<path d="M${GX} ${HY + 124}V${HY + 240}" stroke="#1E0402" stroke-width="3" opacity=".8"/>`;
+      // le cou, épais, en cordes de muscle
+      o += `<path d="M${GX - 52} ${HY + 30}L${GX - 58} ${HY + 116}Q${GX} ${HY + 128} ${GX + 58} ${HY + 116}L${GX + 52} ${HY + 30}Z" fill="#5A100C" stroke="#1E0402" stroke-width="2"/>`;
+      for (let k = -4; k <= 4; k++) o += `<path d="M${GX + k * 11} ${HY + 50}Q${GX + k * 13} ${HY + 84} ${GX + k * 14} ${HY + 120}" stroke="${k % 2 ? "#3A0806" : "#D8603E"}" stroke-width="1.8" fill="none" opacity=".6"/>`;
+      o += `<path d="M${GX - 46} ${HY + 60}L${GX - 8} ${HY + 122}M${GX + 46} ${HY + 60}L${GX + 8} ${HY + 122}" stroke="#A8301F" stroke-width="7" stroke-linecap="round" opacity=".7"/>`;   // sterno-cléido
+      // la tête écorchée
+      o += G(GX, HY, HK) + `<path d="${crane}" fill="url(#t4-muscle)" stroke="#1E0402" stroke-width="2.8"/>`;
+      for (let k = -6; k <= 6; k++) o += `<path d="M${f(k * 9)} -94Q${f(k * 11.5)} -70 ${f(k * 8.5)} -48" stroke="${k % 2 ? "#4A0E0A" : "#FF9A74"}" stroke-width="${k % 2 ? 2.2 : 1.8}" fill="none" opacity=".7"/>`;
+      // joues creusées : muscles des mâchoires à nu, en cordes verticales, pommettes d'os pâle
+      [-1, 1].forEach(sg => { o += `<path d="M${sg * 82} -10Q${sg * 80} 40 ${sg * 52} 82L${sg * 40} 30Q${sg * 50} 0 ${sg * 82} -10Z" fill="#4A0C08"/>`;
+        for (let k = 0; k < 6; k++) o += `<path d="M${f(sg * (78 - k * 5))} ${f(-6 + k * 2)}Q${f(sg * (70 - k * 4))} ${f(34 + k * 3)} ${f(sg * (56 - k * 3))} ${f(74 + k)}" stroke="${k % 2 ? "#2A0604" : "#D85A40"}" stroke-width="2" fill="none" opacity=".75"/>`;
+        o += `<path d="M${sg * 80} -6Q${sg * 58} -10 ${sg * 30} 6Q${sg * 50} 8 ${sg * 76} 4Z" fill="#E8C8AC"/><path d="M${sg * 78} -2Q${sg * 58} -4 ${sg * 34} 6" stroke="#FFF0DC" stroke-width="1.4" fill="none"/>`; });
+      // arcade sourcilière lourde, orbites enfoncées dans l'ombre
+      o += `<path d="M-74 -46Q-38 -64 -6 -40Q0 -36 6 -40Q38 -64 74 -46L74 -28Q38 -46 6 -26H-6Q-38 -46 -74 -28Z" fill="#3A0806" stroke="#1E0402" stroke-width="1.6"/><path d="M-72 -46Q-38 -64 -6 -40M72 -46Q38 -64 6 -40" stroke="#FFA070" stroke-width="2" fill="none" opacity=".75"/>`;
+      o += `<path d="M-58 -30Q-34 -40 -12 -28Q-14 -6 -34 -2Q-54 -6 -58 -30ZM58 -30Q34 -40 12 -28Q14 -6 34 -2Q54 -6 58 -30Z" fill="#0E0200"/>`;
+      o += `<circle cx="-34" cy="-18" r="5" fill="#FFB040"/><circle cx="34" cy="-18" r="5" fill="#FFB040"/><circle cx="-34" cy="-18" r="2" fill="#FFF4C0"/><circle cx="34" cy="-18" r="2" fill="#FFF4C0"/>`;
+      // le nez : deux fentes
+      o += `<path d="M-8 2Q-12 16 -4 20Q-3 10 -8 2ZM8 2Q12 16 4 20Q3 10 8 2Z" fill="#0E0200"/>`;
+      // la denture : deux rangées de longues dents serrées, d'une joue à l'autre, sans lèvres
+      o += `<path d="M-50 26Q0 18 50 26L48 78Q0 88 -48 78Z" fill="#1A0200"/>`;
+      o += `<path d="M-48 28Q0 20 48 28L47 51Q0 47 -47 51Z" fill="#E8D8C0"/><path d="M-47 54Q0 50 47 54L46 76Q0 84 -46 76Z" fill="#D2BEA0"/>`;
+      { let d = ""; for (let k = -11; k <= 11; k++) { const x = k * 4.1; d += `M${f(x)} ${f(24 + Math.abs(k) * .3)}V${f(51 - Math.abs(k) * .1)}M${f(x + 2)} ${f(54)}V${f(80 - Math.abs(k) * .35)}`; } o += `<path d="${d}" stroke="#4A2A1A" stroke-width="1.1"/>`; }
+      o += `<path d="M-48 52Q0 47 48 52" stroke="#1A0200" stroke-width="2.4" fill="none"/>`;
+      o += `<path d="M-78 -40C-70 -84 -40 -98 0 -98C40 -98 70 -84 78 -40" stroke="#FFD080" stroke-width="5" fill="none" opacity=".95"/>`;   // le crâne embrasé par le soleil
       s.push(o + "</g></g>"); }
-    // un peu de vapeur devant les épaules (elle passe devant le rempart)
-    // ---- 10. l'enjambeur : jambe arrière (derrière Maria)
-    const EJ = { x: 318, k: 1 }, yEJ = yA(MA.R, EJ.x);
-    s.push(`<path d="M${f(EJ.x - 8)} ${f(yEJ - 78)}Q${f(EJ.x - 28)} ${f(yEJ - 46)} ${f(EJ.x - 22)} ${f(yEJ - 6)}" stroke="#3A2016" stroke-width="22" stroke-linecap="round" fill="none"/><path d="M${f(EJ.x - 8)} ${f(yEJ - 78)}Q${f(EJ.x - 28)} ${f(yEJ - 46)} ${f(EJ.x - 22)} ${f(yEJ - 6)}" stroke="#D49C7C" stroke-width="18" stroke-linecap="round" fill="none"/>`);
-    // ---- 11. les remparts : chemin de ronde, créneaux, face en pierre, tours ; trous pour les portes et la brèche
-    const mur = (m, trous) => {
+    // ================= 7. LES REMPARTS (ombres portées vers nous) =================
+    const mur = (m, trous, ombre, opO) => {
       const seg = []; let cur = []; for (let x = -12; x <= W + 12; x += 4) { const dans = trous.some(([a0, a1]) => x > a0 && x < a1); if (dans) { if (cur.length > 1) seg.push(cur); cur = []; } else cur.push(x); } if (cur.length > 1) seg.push(cur);
       let o = "", cren = "";
       seg.forEach(xs => { const top = xs.map(x => [x, yA(m.R, x) - m.e]), mid = xs.map(x => [x, yA(m.R, x)]), bot = xs.map(x => [x, yA(m.R, x) + m.h]), L = q => q.map(p => f(p[0]) + " " + f(p[1])).join("L");
-        o += `<path d="M${L(bot.map(p => [p[0], p[1] + 5]))}" stroke="#1A1008" stroke-width="12" fill="none" opacity=".35" filter="url(#t4-flou)"/>`;
-        o += `<path d="M${L(mid)}L${L(bot.slice().reverse())}Z" fill="url(#t4-face)"/><path d="M${L(bot)}" stroke="#4A3E30" stroke-width="2.2" fill="none"/><path d="M${L(mid.map(p => [p[0], p[1] + m.h * .55]))}" stroke="#1A1008" stroke-width="${f(m.h * .9)}" fill="none" opacity=".12"/>`;
-        for (let i = 0; i < xs.length; i += 9) { const x = xs[i]; if (i === 0) continue; o += `<path d="M${f(x)} ${f(yA(m.R, x) + 1)}v${f(m.h - 2)}" stroke="#7A705E" stroke-width="3.5"/><path d="M${f(x - 1.5)} ${f(yA(m.R, x) + 1)}v${f(m.h - 2)}" stroke="#D8D0BC" stroke-width="1"/>`; }
-        o += `<path d="M${L(top)}L${L(mid.slice().reverse())}Z" fill="#DAD0BA" stroke="#5A4E3E" stroke-width="1.2"/>`;
-        for (let i = 1; i < xs.length - 1; i += 3) { const x = xs[i], y = yA(m.R, x) - m.e; cren += `M${f(x - 2.4)} ${f(y + .5)}v${f(-m.e * .55)}h4.8v${f(m.e * .55)}Z`; } });
-      return o + `<path d="${cren}" fill="#CEC4AE" stroke="#5A4E3E" stroke-width=".8"/>`;
+        o += `<path d="M${L(bot)}L${L(bot.slice().reverse().map(p => [p[0], p[1] + ombre]))}Z" fill="#2A0C06" opacity="${opO}" filter="url(#t4-flou)"/>`;
+        o += `<path d="M${L(mid)}L${L(bot.slice().reverse())}Z" fill="url(#t4-face)"/><path d="M${L(bot)}" stroke="#1E1610" stroke-width="2.2" fill="none"/><path d="M${L(mid.map(p => [p[0], p[1] + m.h * .55]))}" stroke="#1A0C06" stroke-width="${f(m.h * .9)}" fill="none" opacity=".3"/>`;
+        for (let i = 0; i < xs.length; i += 9) { const x = xs[i]; if (i === 0) continue; o += `<path d="M${f(x)} ${f(yA(m.R, x) + 1)}v${f(m.h - 2)}" stroke="#4A3E34" stroke-width="${f(m.h / 10)}"/>`; }
+        o += `<path d="M${L(top)}L${L(mid.slice().reverse())}Z" fill="#B89676" stroke="#2E241C" stroke-width="1.2"/><path d="M${L(top)}" stroke="#FFC888" stroke-width="1.8" fill="none" opacity=".85"/>`;
+        for (let i = 1; i < xs.length - 1; i += 3) { const x = xs[i], y = yA(m.R, x) - m.e; cren += `M${f(x - m.e * .17)} ${f(y + .5)}v${f(-m.e * .5)}h${f(m.e * .34)}v${f(m.e * .5)}Z`; } });
+      return o + `<path d="${cren}" fill="#A88A6E" stroke="#2E241C" stroke-width=".8"/>`;
     };
-    const tour = (m, x, carre) => { const y = yA(m.R, x), w = m.h * (carre ? 1.1 : .95), hh = m.h + m.e + 10, c = "#C4BAA4";
-      return `<rect x="${f(x - w / 2)}" y="${f(y - m.e - 10)}" width="${f(w)}" height="${f(hh + 4)}" fill="${c}" stroke="#4A3E30" stroke-width="1.3"/><rect x="${f(x + w * .1)}" y="${f(y - m.e - 10)}" width="${f(w * .4)}" height="${f(hh + 4)}" fill="#000" opacity=".14"/>` + (carre ? `<path d="M${f(x - w / 2 - 2)} ${f(y - m.e - 10)}h${f(w + 4)}v-5h-5v3h-4v-3h-5v3h-4v-3h-5v3h-4v-3h-${f(Math.max(0, w + 4 - 31))}Z" fill="${c}" stroke="#4A3E30" stroke-width="1"/>` : `<ellipse cx="${f(x)}" cy="${f(y - m.e - 10)}" rx="${f(w / 2 + 2)}" ry="${f(w * .22)}" fill="#D8CEB8" stroke="#4A3E30" stroke-width="1.2"/>`) + `<rect x="${f(x - 2)}" y="${f(y - 2)}" width="4" height="7" rx="2" fill="#2A2018"/>`; };
-    const trousMA = MA.portes.map(g => [g.x - g.d, g.x + g.d]).concat([BRE]);
-    s.push(mur(MA, trousMA));
-    MA.portes.forEach(g => { s.push(tour(MA, g.x - g.d - 7, true) + tour(MA, g.x + g.d + 7, true)); });
-    [70, 250, 650, 960].forEach(x => { if (!trousMA.some(([a0, a1]) => x > a0 - 20 && x < a1 + 20)) s.push(tour(MA, x)); });
-    // la brèche : bords cassés, gravats qui se déversent dans la prairie
-    { const yb = yA(MA.R, (BRE[0] + BRE[1]) / 2); let o = "";
-      [[BRE[0], -1], [BRE[1], 1]].forEach(([x, sg]) => { const y = yA(MA.R, x); o += `<path d="M${f(x)} ${f(y - MA.e)}l${f(-sg * 5)} 8l${f(sg * 7)} 6l${f(-sg * 4)} 9l${f(sg * 5)} 10l${f(-sg * 3)} ${f(MA.h + MA.e - 33)}h${f(-sg * 2)}V${f(y - MA.e)}Z" fill="#9A907C" stroke="#4A3E30" stroke-width="1.2"/>`; });
-      for (let k = 0; k < 70; k++) { const t = r(), sp = 14 + t * 70, x = (BRE[0] + BRE[1]) / 2 + (r() - .5) * 2 * sp, y = yb + 4 + t * 78 + r() * 8, R = 2.5 + r() * 6 * (1 - t * .5);
-        o += `<path d="M${f(x - R)} ${f(y)}l${f(R * .6)} ${f(-R * .8)}l${f(R * .9)} ${f(-R * .1)}l${f(R * .5)} ${f(R * .7)}l${f(-R * .4)} ${f(R * .5)}Z" fill="${["#B8AE98", "#9A907C", "#CFC6B2", "#857B68"][Math.floor(r() * 4)]}" stroke="#4A3E30" stroke-width=".6"/>`; }
-      s.push(o); K.halo((BRE[0] + BRE[1]) / 2, yb + 30, 70, "#E8DCC4", .5);
-      s.push(titan((BRE[0] + BRE[1]) / 2 + 4, yb + 34, .62, { type: 3, peau: "#F0C8A8", leve: true }));
-      }
-    // ---- 12. LES MAINS DU COLOSSE agrippées à Maria (la droite juste au-dessus de la porte)
-    const main = (x, sg) => { const y = yA(MA.R, x) - MA.e + 2, k = .98; let o = `<g transform="translate(${f(x)} ${f(y)}) skewY(${f(Math.asin((x - CX) / MA.R) * 57.3)}) scale(${f(sg * k)} ${f(k)})">`;
-      // avant-bras qui remonte vers le coude (vers l'extérieur), ombré d'un côté
-      o += `<path d="M-30 -10Q-12 -50 18 -78Q44 -92 70 -74Q56 -40 40 -10Z" fill="url(#t4-bras)" stroke="#3A0C08" stroke-width="2"/><path d="M-12 -16Q4 -48 30 -76M10 -14Q24 -46 50 -80M28 -12Q40 -40 60 -72" stroke="#F4DCCB" stroke-width="1.8" fill="none" opacity=".5"/><path d="M40 -10Q56 -40 70 -74Q60 -40 48 -10Z" fill="#3A0C08" opacity=".35"/>`;
-      // dos de la main, jointures
-      o += `<path d="M-46 6Q-50 -22 -26 -30Q8 -36 42 -26Q54 -10 50 6Z" fill="url(#t4-muscle)" stroke="#3A0C08" stroke-width="2"/>`;
-      // 4 doigts écartés qui s'enfoncent dans la pierre (deux phalanges, griffe pâle), fissures autour
-      [[-36, 34, -5], [-14, 42, -2], [9, 44, 2], [32, 36, 6]].forEach(([u, l, sk]) => { const ux = u + sk; o += `<path d="M${u - 8} 0Q${u - 9} ${f(l * .5)} ${ux - 7} ${l - 6}Q${ux} ${l + 4} ${ux + 7} ${l - 6}Q${u + 9} ${f(l * .5)} ${u + 8} 0Z" fill="url(#t4-bras)" stroke="#3A0C08" stroke-width="1.8"/><path d="M${ux - 4.5} ${l - 6}Q${ux} ${l + 1} ${ux + 4.5} ${l - 6}L${ux} ${l - 10}Z" fill="#F4E4D4" stroke="#3A0C08" stroke-width=".8"/><path d="M${u - 7} ${f(l * .3)}q7 3 14 0M${u - 7} ${f(l * .62)}q7 3 14 0" stroke="#4A0E0A" stroke-width="1.5" fill="none"/><path d="M${u - 6} -6Q${u - 2} -16 ${u + 2} -26" stroke="#F4DCCB" stroke-width="1.6" fill="none" opacity=".6"/><path d="M${ux - 9} ${l - 2}l-6 7M${ux + 9} ${l - 2}l5 8l4 -2" stroke="#3A3024" stroke-width="1" fill="none"/>`; });
-      // pouce qui passe derrière, sur le chemin de ronde
-      o += `<path d="M-44 -6Q-62 -14 -66 -2Q-64 8 -50 6Z" fill="url(#t4-bras)" stroke="#3A0C08" stroke-width="1.8"/>`;
-      return o + "</g>"; };
-    const MD = 830, MG = 566;
-    s.push(main(MG, -1), main(MD, 1));
-    // vapeur devant (là où le corps touche le mur)
-    [[600, 350, 26], [790, 372, 30], [700, 368, 34]].forEach(([x, y, R]) => s.push(`<circle cx="${x}" cy="${y}" r="${R}" fill="url(#t4-vap)" opacity=".8"/>`));
-    // ---- 13. l'enjambeur : le corps au-dessus du mur, la jambe avant posée dans la prairie
-    { const x = EJ.x, y0 = yEJ, p = "#D49C7C", L = `stroke="#3A2016" stroke-width="2"`;
-      let o = `<path d="M${f(x + 8)} ${f(y0 - 78)}Q${f(x + 30)} ${f(y0 - 10)} ${f(x + 40)} ${f(y0 + 52)}" stroke="#3A2016" stroke-width="23" stroke-linecap="round" fill="none"/><path d="M${f(x + 8)} ${f(y0 - 78)}Q${f(x + 30)} ${f(y0 - 10)} ${f(x + 40)} ${f(y0 + 52)}" stroke="${p}" stroke-width="19" stroke-linecap="round" fill="none"/><path d="M${f(x + 14)} ${f(y0 - 64)}Q${f(x + 34)} ${f(y0 - 10)} ${f(x + 44)} ${f(y0 + 46)}" stroke="#9A5E44" stroke-width="5" stroke-linecap="round" fill="none" opacity=".45"/><ellipse cx="${f(x + 44)}" cy="${f(y0 + 60)}" rx="16" ry="6" fill="#1A1008" opacity=".4"/><ellipse cx="${f(x + 44)}" cy="${f(y0 + 56)}" rx="13" ry="6" fill="${p}" ${L}/>`;
-      o += `<path d="M${f(x - 26)} ${f(y0 - 160)}Q${f(x - 30)} ${f(y0 - 110)} ${f(x - 18)} ${f(y0 - 76)}Q${f(x)} ${f(y0 - 66)} ${f(x + 18)} ${f(y0 - 76)}Q${f(x + 30)} ${f(y0 - 110)} ${f(x + 26)} ${f(y0 - 160)}Q${f(x)} ${f(y0 - 166)} ${f(x - 26)} ${f(y0 - 160)}Z" fill="${p}" ${L}/><path d="M${f(x + 6)} ${f(y0 - 158)}Q${f(x + 30)} ${f(y0 - 112)} ${f(x + 16)} ${f(y0 - 78)}Q${f(x + 22)} ${f(y0 - 120)} ${f(x + 6)} ${f(y0 - 158)}Z" fill="#9A5E44" opacity=".4"/><path d="M${f(x - 10)} ${f(y0 - 140)}q10 4 20 0M${f(x - 10)} ${f(y0 - 128)}q10 4 20 0M${f(x - 9)} ${f(y0 - 116)}q9 4 18 0" stroke="#9A5E44" stroke-width="1.6" fill="none"/><circle cx="${f(x)}" cy="${f(y0 - 96)}" r="1.8" fill="#9A5E44"/>`;
-      o += `<path d="M${f(x - 24)} ${f(y0 - 156)}Q${f(x - 52)} ${f(y0 - 130)} ${f(x - 60)} ${f(y0 - 92)}M${f(x + 24)} ${f(y0 - 156)}Q${f(x + 60)} ${f(y0 - 168)} ${f(x + 82)} ${f(y0 - 196)}" stroke="#3A2016" stroke-width="16" stroke-linecap="round" fill="none"/><path d="M${f(x - 24)} ${f(y0 - 156)}Q${f(x - 52)} ${f(y0 - 130)} ${f(x - 60)} ${f(y0 - 92)}M${f(x + 24)} ${f(y0 - 156)}Q${f(x + 60)} ${f(y0 - 168)} ${f(x + 82)} ${f(y0 - 196)}" stroke="${p}" stroke-width="12.5" stroke-linecap="round" fill="none"/>`;
-      o += `<path d="M${f(x - 8)} ${f(y0 - 162)}V${f(y0 - 178)}H${f(x + 8)}V${f(y0 - 162)}Z" fill="${p}"/><ellipse cx="${f(x)}" cy="${f(y0 - 194)}" rx="19" ry="21" fill="${p}" ${L}/><path d="M${f(x - 21)} ${f(y0 - 192)}Q${f(x - 24)} ${f(y0 - 222)} ${f(x)} ${f(y0 - 220)}Q${f(x + 26)} ${f(y0 - 222)} ${f(x + 22)} ${f(y0 - 186)}Q${f(x + 30)} ${f(y0 - 160)} ${f(x + 18)} ${f(y0 - 150)}Q${f(x + 16)} ${f(y0 - 190)} ${f(x)} ${f(y0 - 204)}Q${f(x - 12)} ${f(y0 - 200)} ${f(x - 21)} ${f(y0 - 192)}Z" fill="#E8D49A" stroke="#3A2016" stroke-width="1.4"/>`;
-      o += `<circle cx="${f(x - 7)}" cy="${f(y0 - 194)}" r="4.6" fill="#FFF" stroke="#3A2016"/><circle cx="${f(x + 7)}" cy="${f(y0 - 194)}" r="4.6" fill="#FFF" stroke="#3A2016"/><circle cx="${f(x - 6)}" cy="${f(y0 - 193)}" r="2" fill="#111"/><circle cx="${f(x + 8)}" cy="${f(y0 - 193)}" r="2" fill="#111"/><path d="M${f(x - 12)} ${f(y0 - 182)}Q${f(x)} ${f(y0 - 172)} ${f(x + 12)} ${f(y0 - 182)}Z" fill="#5A1A14" stroke="#3A2016"/><path d="M${f(x - 10)} ${f(y0 - 181)}H${f(x + 10)}" stroke="#F4F1EA" stroke-width="2.4" stroke-dasharray="2 .8"/>`;
+    // tour de rempart : fût ombré côté opposé au soleil, liseré doré côté soleil, toit conique d'ardoise
+    const tour = (m, x) => { const y = yA(m.R, x), w = m.h * 1.05, top = y - m.e - m.h * .4, bas = y + m.h + 2, sg = x < GX ? 1 : -1, L = x - w / 2, Rr = x + w / 2;
+      return `<path d="M${f(L)} ${f(bas)}h${f(w)}l${f(-sg * w * .5 + w * .1)} ${f(m.h * 1.6)}h${f(-w * 1.1)}Z" fill="#2A1008" opacity=".35" filter="url(#t4-flou)"/>` +
+        `<rect x="${f(L)}" y="${f(top)}" width="${f(w)}" height="${f(bas - top)}" fill="#8A6E58" stroke="#1E1610" stroke-width="1.3"/>` +
+        `<rect x="${f(sg > 0 ? x : L)}" y="${f(top)}" width="${f(w / 2)}" height="${f(bas - top)}" fill="#1A0C06" opacity=".35"/><path d="M${f(sg > 0 ? L + 1.5 : Rr - 1.5)} ${f(top)}V${f(bas)}" stroke="#FFC078" stroke-width="2" opacity=".85"/>` +
+        `<path d="M${f(L - 3)} ${f(top + 1)}L${f(x)} ${f(top - w * 1.2)}L${f(Rr + 3)} ${f(top + 1)}Z" fill="#4A3A44" stroke="#1E1610" stroke-width="1.2"/><path d="M${f(x)} ${f(top - w * 1.2)}L${f(sg > 0 ? L - 3 : Rr + 3)} ${f(top + 1)}L${f(x - sg * w * .2)} ${f(top + 1)}Z" fill="#FFB070" opacity=".55"/>`; };
+    const pG = MA.portes.reduce((m, g) => g.x < m.x ? g : m, MA.portes[0]);
+    s.push(mur(MA, [[pG.x - pG.d, pG.x + pG.d], BRE], 70, .5));
+    // ---- la brèche : un trou net, blocs en éventail vers l'intérieur, nuage de poussière dorée
+    { const yb = yA(MA.R, xG); let o = "";
+      o += `<ellipse cx="${f(xG)}" cy="${f(yb + 46)}" rx="120" ry="54" fill="url(#t4-vap)" opacity=".85"/><ellipse cx="${f(xG - 10)}" cy="${f(yb + 10)}" rx="54" ry="34" fill="url(#t4-vap)" opacity=".9"/>`;
+      [[BRE[0], -1], [BRE[1], 1]].forEach(([x, sg]) => { const y = yA(MA.R, x); o += `<path d="M${f(x)} ${f(y - MA.e)}l${f(-sg * 7)} 9l${f(sg * 9)} 7l${f(-sg * 6)} 10l${f(sg * 7)} 11l${f(-sg * 4)} ${f(MA.h + MA.e - 37)}l${f(-sg * 4)} 0V${f(y - MA.e)}Z" fill="#7E6A58" stroke="#1E1610" stroke-width="1.4"/><path d="M${f(x - sg * 1)} ${f(y - MA.e + 2)}l${f(-sg * 5)} 8" stroke="#FFC888" stroke-width="1.4"/>`; });
+      // grands blocs projetés vers l'intérieur (vers nous), en éventail, jamais sur la piste
+      for (let k = 0; k < 40; k++) { const t = r(), ang = (r() - .5) * 2.4, sp = 26 + t * 120, x = xG + Math.sin(ang) * sp * 1.2, y = yb + MA.h * .6 + Math.cos(ang) * sp * .7, R = (6 + r() * 10) * (1 - t * .5); if (K.dT(x, y) < 18 + R || y < yb + 4) continue;
+        o += `<g transform="rotate(${f(r() * 360)} ${f(x)} ${f(y)})"><path d="M${f(x - R)} ${f(y)}l${f(R * .6)} ${f(-R * .8)}l${f(R * 1.1)} ${f(-R * .1)}l${f(R * .4)} ${f(R * .8)}l${f(-R * .5)} ${f(R * .5)}Z" fill="${["#9A8670", "#7E6A58", "#B09478", "#5E4E42"][Math.floor(r() * 4)]}" stroke="#1E1610" stroke-width=".7"/></g>`; }
       s.push(o); }
-    // ---- 14. Rose et Sina
-    s.push(mur(RO, RO.portes.map(g => [g.x - g.d, g.x + g.d])));
-    RO.portes.forEach(g => s.push(tour(RO, g.x - g.d - 6, true) + tour(RO, g.x + g.d + 6, true)));
-    [400, 690].forEach(x => s.push(tour(RO, x)));
-    s.push(mur(SI, []));
-    [330, 760].forEach(x => s.push(tour(SI, x))); s.push(tour(SI, 528, true) + tour(SI, 552, true));
-    // noms gravés sur la face des remparts
-    const grav = (m, x0, x1, dy, fs) => { const id = "t4-l" + m.n, d = []; for (let x = x0; x <= x1; x += 10) d.push(f(x) + " " + f(yA(m.R, x) + m.h * dy)); s.push(`<path id="${id}" d="M${d.join("L")}" fill="none"/><text font-family="Georgia, serif" font-weight="bold" font-size="${fs}" letter-spacing="5" fill="#3E3428" opacity=".85"><textPath href="#${id}" startOffset="50%" text-anchor="middle">MUR ${m.n}</textPath></text>`); };
-    grav(MA, 170, 300, .72, 15); grav(RO, 440, 660, .78, 13); grav(SI, 350, 470, .86, 11);
-    { const xb = (BRE[0] + BRE[1]) / 2, yb = yA(MA.R, xb); s.push(`<text x="${f(xb - 4)}" y="${f(yb + 92)}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-weight="bold" font-size="13" fill="#3A2414" stroke="#F4ECD8" stroke-width="3.2" paint-order="stroke">« Le mur est percé ! »</text>`); }
-    // ---- 15. entre Maria et Rose : soldats en rang, canons sur le chemin de ronde, arbres ; la ville derrière Sina
-    for (let k = 0; k < 16; k++) { const x = 600 + k * 9, y = yA(MA.R, x) + MA.h + 16 + (k % 2) * 4; if (x > MD - 50) break; s.push(`<path d="M${f(x)} ${f(y)}l-2 -6h4z" fill="#3A6A3A"/><circle cx="${f(x)}" cy="${f(y - 7)}" r="1.4" fill="#E8C4A0"/>`); }
-    const canons = [380, 540, 760, 930].filter(x => !trousMA.some(([a0, a1]) => x > a0 - 10 && x < a1 + 10));
-    canons.forEach(x => { const y = yA(MA.R, x) - MA.e / 2; s.push(`<rect x="${f(x - 6)}" y="${f(y - 3)}" width="12" height="5" rx="2" fill="#2A2A2E"/><circle cx="${f(x - 3)}" cy="${f(y + 2)}" r="2" fill="#5A3A22"/><circle cx="${f(x + 3)}" cy="${f(y + 2)}" r="2" fill="#5A3A22"/>`); });
-    K.semis(16, 9, 2500, (x, y) => dC(x, y) < MA.R - 46 && dC(x, y) > RO.R + 14 && !(x > 280 && x < 520 && y < 480), (x, y, R) => K.arbre(x, y, R, "#8EBA6A", "#4E7E3A", "#2A4A22"));
-    K.semis(18, 7, 2500, (x, y) => dC(x, y) < RO.R - 34 && dC(x, y) > SI.R + 14, (x, y, R) => K.arbre(x, y, R, "#9EC27A", "#5A8A44", "#2E5A2A"));
-    // soldats minuscules sur le chemin de ronde, face au colosse (pour l'échelle)
-    for (let k = 0; k < 9; k++) { const x = 662 + k * 12, y = yA(MA.R, x) - MA.e * .45; s.push(`<path d="M${f(x)} ${f(y + 1)}l-2.2 -6h4.4z" fill="#3A6A3A"/><circle cx="${f(x)}" cy="${f(y - 6)}" r="1.5" fill="#E8C4A0"/>`); }
-    // l'enclos des chevaux (selles aux couleurs des 4)
-    { const x = 1000, y = 662; let o = `<ellipse cx="${x}" cy="${y}" rx="62" ry="30" fill="#B4C878" opacity=".5" stroke="#6A4A2A" stroke-width="2.2" stroke-dasharray="6 3"/>`;
-      COULEURS_J.forEach((c, k) => { const hx = x - 36 + k * 24, hy = y - 8 + (k % 2) * 14; o += `${G(hx, hy, 1.2, k % 2 ? 0 : 0)}<ellipse cx="1" cy="5" rx="9" ry="2.4" fill="#000" opacity=".3"/><path d="M-7 4v-4M6 4v-4" stroke="#3A2414" stroke-width="2"/><ellipse cx="0" cy="-2" rx="8.5" ry="4" fill="${["#6A4A2A", "#3A2A1E", "#8A6A48", "#4A3424"][k]}" stroke="#1E1610" stroke-width=".7"/><path d="M6 -4l5 -6l3 1l-3 6z" fill="${["#6A4A2A", "#3A2A1E", "#8A6A48", "#4A3424"][k]}" stroke="#1E1610" stroke-width=".7"/><rect x="-3" y="-6" width="6" height="4" rx="1" fill="${c}"/></g>`; });
-      s.push(o + `<text x="${x}" y="${y + 42}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="10" fill="#F4ECD8" stroke="#3A2414" stroke-width="2.4" paint-order="stroke">les écuries</text>`); }
-    // la capitale au-delà de Sina (en bas, coupée par le bord) : le palais aux 4 fanions
-    { const x = 540, y = yA(SI.R, 540) + SI.h + 2; let o = "";
-      [[-60, 30, 40], [-22, 22, 58], [22, 22, 58], [60, 30, 40]].forEach(([u, w, hh], k) => { o += `<rect x="${f(x + u - w / 2)}" y="${f(y + 70 - hh)}" width="${w}" height="${hh + 10}" fill="#D8CCB0" stroke="#4A3E30" stroke-width="1.3"/><path d="M${f(x + u - w / 2 - 3)} ${f(y + 70 - hh)}L${f(x + u)} ${f(y + 70 - hh - w * .9)}L${f(x + u + w / 2 + 3)} ${f(y + 70 - hh)}Z" fill="#3E5A7A" stroke="#22324A" stroke-width="1.2"/><path d="M${f(x + u)} ${f(y + 70 - hh - w * .9)}v-12" stroke="#3A2414" stroke-width="1.2"/><path d="M${f(x + u)} ${f(y + 58 - hh - w * .9)}l11 3l-11 3z" fill="${COULEURS_J[k]}"/><rect x="${f(x + u - 3)}" y="${f(y + 80 - hh)}" width="6" height="9" rx="3" fill="#3A3024"/>`; });
+    s.push(tour(MA, pG.x + pG.d + 9) + tour(MA, 1030));
+    // ---- les deux mains crispées sur le parapet : doigts longs et osseux, phalanges marquées, le bout des doigts passe devant les créneaux
+    const main = (x, sg) => { const y = yA(MA.R, x) - MA.e; let o = `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(Math.asin((x - CX) / MA.R) * 57.3)}) scale(${f(sg * .82)} .82)">`;
+      o += `<ellipse cx="4" cy="${MA.e + MA.h + 14}" rx="60" ry="12" fill="#1A0804" opacity=".4" filter="url(#t4-flou)"/>`;
+      // le dos de la main, posé sur le chemin de ronde
+      o += `<path d="M-52 -2Q-60 -30 -36 -44Q-4 -54 30 -46Q54 -38 56 -12L50 4Z" fill="url(#t4-bras)" stroke="#1E0402" stroke-width="2.4"/>`;
+      for (let k = 0; k < 5; k++) o += `<path d="M${-30 + k * 14} -46Q${-30 + k * 15} -24 ${-36 + k * 18} -4" stroke="${k % 2 ? "#3A0806" : "#E87050"}" stroke-width="2.2" fill="none" opacity=".65"/>`;
+      o += `<path d="M-46 -30Q-10 -52 38 -40" stroke="#FFC078" stroke-width="3.2" fill="none" opacity=".85"/>`;
+      // 4 doigts longs et osseux, de longueurs différentes, effilés, plis des phalanges, ongles sombres : ils passent par-dessus le parapet
+      [[-36, 34, -5, 15], [-12, 42, -2, 16], [12, 39, 2, 15], [34, 28, 5, 13]].forEach(([u, l, dv, w]) => { const t = (v, k) => f(u + dv * k + v), w1 = w * .5;
+        o += `<path d="M${t(-w / 2, 0)} -6Q${t(-w / 2 - 1.5, .5)} ${f(l * .5)} ${t(-w1 / 2, 1)} ${f(l - 3)}Q${t(0, 1)} ${f(l + 5)} ${t(w1 / 2, 1)} ${f(l - 3)}Q${t(w / 2 + 1.5, .5)} ${f(l * .5)} ${t(w / 2, 0)} -6Z" fill="url(#t4-bras)" stroke="#1E0402" stroke-width="2.2"/>`;
+        o += `<path d="M${t(-w / 2 + 2.5, 0)} -2Q${t(-w / 2 + 1.5, .5)} ${f(l * .5)} ${t(-w1 / 2 + 1.5, 1)} ${f(l - 5)}" stroke="#FF9A70" stroke-width="1.6" fill="none" opacity=".8"/>`;
+        [.36, .7].forEach(k => o += `<path d="M${t(-w * .42, k)} ${f(l * k - 1)}Q${t(0, k)} ${f(l * k + 3)} ${t(w * .42, k)} ${f(l * k - 1)}" stroke="#2A0604" stroke-width="1.5" fill="none"/><path d="M${t(-w * .3, k)} ${f(l * k - 4)}Q${t(0, k)} ${f(l * k - 7)} ${t(w * .3, k)} ${f(l * k - 4)}" stroke="#F08060" stroke-width="1.3" fill="none" opacity=".7"/>`);
+        o += `<path d="M${t(-w1 / 2 + 1, 1)} ${f(l - 6)}Q${t(0, 1)} ${f(l + 3)} ${t(w1 / 2 - 1, 1)} ${f(l - 6)}Q${t(0, 1)} ${f(l - 9)} ${t(-w1 / 2 + 1, 1)} ${f(l - 6)}Z" fill="#2A120A"/>`; });
+      // les jointures saillantes
+      [-36, -12, 12, 34].forEach(u => o += `<ellipse cx="${u}" cy="-5" rx="8.5" ry="6" fill="#A8301F" stroke="#1E0402" stroke-width="1.6"/><path d="M${u - 6} -8q6 -3 12 0" stroke="#FFB080" stroke-width="1.6" fill="none"/>`);   // les jointures
+      // la pierre qui éclate sous les doigts
+      o += `<path d="M-24 ${MA.e + 2}l-5 9M-2 ${MA.e + 4}l2 10M18 ${MA.e + 2}l6 8" stroke="#1E1610" stroke-width="1.6"/>`;
+      return o + `</g>`; };
+    s.push(main(GX - 150, 1), main(GX + 150, -1));
+    // vapeur là où le corps touche le mur
+    [[GX - 70, yA(MA.R, GX - 70) - 20, 40], [GX + 70, yA(MA.R, GX + 70) - 20, 40]].forEach(([x, y, R]) => s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${R}" fill="url(#t4-vap)" opacity=".45"/>`));
+    // ---- Rose (plus fin) et Sina (mince et lointain), avec leurs ombres
+    s.push(mur(RO, RO.portes.map(g => [g.x - g.d, g.x + g.d]), 46, .45));
+    { const gR = RO.portes.slice().sort((p, q) => p.x - q.x); if (gR[0]) s.push(tour(RO, gR[0].x + gR[0].d + 8)); if (gR[1]) s.push(tour(RO, gR[1].x - gR[1].d - 8)); }
+    s.push(mur(SI, [], 26, .4));
+    // ---- le Bataillon lancé au galop vers la brèche (dans le sens de la course), avec sa poussière
+    const cheval = (vert) => `<g><ellipse cx="0" cy="6" rx="10" ry="3" fill="#000" opacity=".35"/><path d="M-9 0Q-8 -6 0 -6Q8 -6 10 -2L15 -9L18 -7L14 2Q10 4 6 3L8 9M-6 3L-11 9M-4 3L-1 9M4 3L9 8" stroke="#1E120A" stroke-width="2.4" fill="#2E1E12" stroke-linecap="round"/><path d="M-12 -3L-17 1" stroke="#1E120A" stroke-width="2.4"/><path d="M-4 -6L-2 -15L4 -14L3 -6Z" fill="#3A2A1E"/><path d="M-3 -14Q-12 -12 -16 -6Q-8 -8 -2 -8Z" fill="${vert}"/><circle cx="1" cy="-17" r="2.6" fill="#E8C4A0"/></g>`;
+    { const at = i => { i = ((i % K.N) + K.N) % K.N; const p = K.P[i], [, , tx, ty] = K.nrm(i); return [p[0], p[1], Math.atan2(ty, tx) * 57.3]; };
+      let o = "";
+      for (let j = 0; j < 6; j++) { const [x, y] = at(126 + j * 4); o += `<circle cx="${f(x + (r() - .5) * 10)}" cy="${f(y + (r() - .5) * 10)}" r="${f(12 + j * 3)}" fill="url(#t4-vap)" opacity="${f(.25 + j * .05)}"/>`; }
+      [150, 158, 166, 174].forEach((i, k) => { const [x, y, ang] = at(i), droite = Math.cos(ang / 57.3) >= 0; o += `<g transform="translate(${f(x + (k % 2 ? 5 : -5))} ${f(y)}) scale(${droite ? 1.2 : -1.2} 1.2)">${cheval("#3E6A3A")}</g>`; });
       s.push(o); }
-    // ---- 16. l'affiche du Bataillon d'exploration (4 cadres portraits)
+    // ---- les 4 soldats (= les 4 pilotes) qui volent vers le Colosse : un câble droit et tendu chacun, planté dans la nuque ou l'épaule
+    const SOL = [[462, 178], [826, 172], [392, 266], [884, 256]], ANC = [[GX - 60, HY + 40], [GX + 62, HY + 42], [GX - 188, HY + 96], [GX + 190, HY + 98]];
     const PORTR = [];
-    { const px = 14, py = 624, pw = 246, ph = 88; let o = `<g><rect x="${px + 4}" y="${py + 5}" width="${pw}" height="${ph}" rx="4" fill="#000" opacity=".4"/><rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="4" fill="url(#t4-parch)" stroke="#6A4A2A" stroke-width="2"/>`;
-      o += `<text x="${px + pw / 2}" y="${py + 16}" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="10.5" letter-spacing="1.5" fill="#3A2414">BATAILLON D'EXPLORATION</text>`;
-      COULEURS_J.forEach((c, k) => { const x = px + 34 + k * 59, y = py + 46; PORTR.push({ k, x, y, r: 18 }); o += `${G(x, y, 1)}<path d="M-24 -10Q-30 -24 -14 -22L0 -16L14 -22Q30 -24 24 -10L18 8L0 0L-18 8Z" fill="${c}" opacity=".4"/><circle r="20" fill="#2A2018" stroke="${c}" stroke-width="2.4"/></g><text x="${f(x)}" y="${f(y + 31)}" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="8.5" fill="${mixHex(c, "#000000", .3)}">${NOMS[k]}</text>`; });
-      o += `<text x="${px + pw / 2}" y="${py + ph - 3}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="8.5" fill="#6A2414">« Offrez vos cœurs ! »</text></g>`;
-      s.push(o); for (let q = 0; q < 5; q++) K.prendre(px + 26 + q * 50, py + ph / 2, 50); }
-    // ================= COUCHE ANIMÉE =================
-    // vapeur qui monte du colosse
-    for (let k = 0; k < 7; k++) { const x = CO.x + (k - 3) * 44 + (r() - .5) * 20, y = CO.y + 40 - (k % 3) * 30, R = 22 + r() * 14, d = (5 + r() * 3).toFixed(1), b = (-r() * 6).toFixed(1);
-      a.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(R)}" fill="url(#t4-vap)" opacity="${K.anime ? 0 : .55}">${an(`<animateTransform attributeName="transform" type="translate" values="0 0;${f((r() - .5) * 40)} -90" dur="${d}s" begin="${b}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.8;0" keyTimes="0;.3;1" dur="${d}s" begin="${b}s" repeatCount="indefinite"/>`)}</circle>`); }
-    // ses yeux qui s'allument
-    { const ex = (u) => [CO.x + u * CO.k, CO.y - 16 * CO.k]; a.push(`<g opacity="${K.anime ? .3 : 1}">${an(`<animate attributeName="opacity" values=".3;.3;1;1;.3" keyTimes="0;.55;.62;.9;1" dur="7s" repeatCount="indefinite"/>`)}${[-33, 33].map(u => { const [x, y] = ex(u); return `<circle cx="${f(x)}" cy="${f(y)}" r="16" fill="#FFB060" opacity=".35"/><circle cx="${f(x)}" cy="${f(y)}" r="6" fill="#FFF2C0"/><circle cx="${f(x)}" cy="${f(y)}" r="2.6" fill="#2A0A04"/>`; }).join("")}</g>`); }
-    // 4 soldats minuscules au bout de leurs câbles (capes aux couleurs des pilotes) : ils se balancent autour des géants
-    const soldat = c => `<g><path d="M-1 -2L-9 6L-3 5L-6 12L1 4Z" fill="${c}" stroke="#1A1008" stroke-width=".6"/><rect x="-2" y="-5" width="4" height="7" rx="1.5" fill="#4A3A2A"/><circle cx="0" cy="-6.5" r="2" fill="#E8C4A0"/><path d="M-4 1l-4 3M4 1l4 3" stroke="#BFC6CC" stroke-width="1.2"/><path d="M5 -3l7 -6" stroke="#E8F0F4" stroke-width="1.2"/></g>`;
-    [[CO.x - 70, CO.y - 60, 92, -40, 30, 0], [CO.x + 92, CO.y - 40, 80, -30, 40, 1], [EJ.x + 20, yEJ - 196, 70, -20, 50, 2], [MD + 40, yA(MA.R, MD + 40) - MA.e - 20, 60, -50, 10, 3]].forEach(([x, y, l, a0, a1, k]) => {
-      const d = (3.2 + k * .5).toFixed(1); a.push(`<g transform="translate(${f(x)} ${f(y)}) rotate(${(a0 + a1) / 2})">${an(`<animateTransform attributeName="transform" type="rotate" values="${a0};${a1};${a0}" dur="${d}s" additive="sum" repeatCount="indefinite"/>`)}<path d="M0 0L${f(-3)} ${f(l)}M0 0L3 ${f(l)}" stroke="#E8F0F4" stroke-width="1" opacity=".9"/><g transform="translate(0 ${f(l)}) scale(1.25)">${soldat(COULEURS_J[k])}</g></g>`); });
-    // titans qui marchent vers la brèche ; gravats qui tombent ; poussière
-    for (let k = 0; k < 4; k++) { const x = BRE[0] + 6 + r() * (BRE[1] - BRE[0] - 12), y = yA(MA.R, x) - MA.e, d = (1.4 + r()).toFixed(1), b = (-r() * 2).toFixed(1);
-      a.push(`<path d="M${f(x - 3)} ${f(y)}l3 -4l4 1l1 4l-3 3z" fill="#9A907C" stroke="#4A3E30" stroke-width=".6">${an(`<animateTransform attributeName="transform" type="translate" values="0 0;${f((r() - .5) * 30)} ${f(40 + r() * 30)}" dur="${d}s" begin="${b}s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0" keyTimes="0;.8;1" dur="${d}s" begin="${b}s" repeatCount="indefinite"/>`)}</path>`); }
-    { const x = (BRE[0] + BRE[1]) / 2, y = yA(MA.R, x) + 10; a.push(`<circle cx="${f(x)}" cy="${f(y)}" r="40" fill="url(#t4-vap)" opacity=".45">${an(`<animate attributeName="r" values="30;56;30" dur="4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".55;.2;.55" dur="4s" repeatCount="indefinite"/>`)}</circle>`); }
-    // canons qui tirent sur les géants (flash + fumée)
-    canons.forEach((x, k) => { const y = yA(MA.R, x) - MA.e / 2 - 4, d = (3 + k * .7).toFixed(1); a.push(`<g opacity="${K.anime ? 0 : .8}">${an(`<animate attributeName="opacity" values="0;1;.6;0;0" keyTimes="0;.04;.2;.45;1" dur="${d}s" begin="${k * .9}s" repeatCount="indefinite"/>`)}<circle cx="${f(x)}" cy="${f(y)}" r="5" fill="#FFE080"/><circle cx="${f(x + 2)}" cy="${f(y - 8)}" r="9" fill="#F4F1EA" opacity=".8"/><circle cx="${f(x - 5)}" cy="${f(y - 14)}" r="7" fill="#F4F1EA" opacity=".6"/></g>`); });
-    // fusées éclairantes vertes au-dessus des portes
-    MA.portes.forEach((g, k) => { const x = g.x + (k ? 26 : -26), y = yA(MA.R, g.x) - 30, d = (4 + k).toFixed(1); a.push(`<g>${an(`<animateTransform attributeName="transform" type="translate" values="0 30;0 -60" dur="${d}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.1;.7;1" dur="${d}s" repeatCount="indefinite"/>`)}<path d="M${f(x)} ${f(y)}v40" stroke="#7CE08A" stroke-width="5" opacity=".35" stroke-linecap="round"/><circle cx="${f(x)}" cy="${f(y)}" r="4" fill="#C8FFB0"/></g>`); });
-    // le lanceur : le rocher qui vole vers Maria
-    { const x0 = BX + 30, y0 = BY - 166, x1 = 930, y1 = yA(MA.R, 930) - 10; a.push(`<g>${an(`<animateMotion dur="3.6s" repeatCount="indefinite" path="M0,0 Q${f((x1 - x0) / 2)},-60 ${f(x1 - x0)},${f(y1 - y0)}"/>`)}<circle cx="${f(x0)}" cy="${f(y0)}" r="9" fill="#7A7060" stroke="#2A2018" stroke-width="1.2"/><circle cx="${f(x0 - 3)}" cy="${f(y0 - 3)}" r="3" fill="#A49A88"/></g>`); }
-    // vagues, mouettes
-    a.push(`<g opacity=".7">${an(`<animateTransform attributeName="transform" type="translate" values="0 0;-18 1;0 0" dur="6s" repeatCount="indefinite"/>`)}${rive.filter((_, i) => i % 3 === 0).map(p => `<path d="M${f(p[0])} ${f(p[1] - 6)}q6 -3 12 0t12 0" stroke="#F4ECD8" stroke-width="1.4" fill="none"/>`).join("")}</g>`);
-    [[180, 26], [620, 18]].forEach(([x, y], k) => a.push(`<path d="M${x} ${y}q4 -4 8 0q4 -4 8 0" stroke="#3A2A1A" stroke-width="1.3" fill="none">${an(`<animateTransform attributeName="transform" type="translate" values="0 0;${k ? -80 : 90} 6;0 0" dur="${14 + k * 4}s" repeatCount="indefinite"/>`)}</path>`));
+    { let o = "";
+      SOL.forEach(([x, y], k) => { const c = COULEURS_J[k], [hx, hy] = ANC[k], ang = Math.atan2(hy - y, hx - x) * 57.3, sg = hx > x ? 1 : -1;
+        o += `<path d="M${f(x + sg * 4)} ${f(y + 22)}L${hx} ${hy}" stroke="#1A0C08" stroke-width="3.2" opacity=".55"/><path d="M${f(x + sg * 4)} ${f(y + 22)}L${hx} ${hy}" stroke="#F8F0E0" stroke-width="1.6"/><circle cx="${hx}" cy="${hy}" r="3" fill="#E8E8E8" stroke="#1A0C08" stroke-width="1"/>`;
+        // le soldat, de profil vers son câble : cape verte qui claque derrière, deux lames qui brillent, tête claire (l'appli y pose le portrait)
+        o += `${G(x, y, 1)}<g transform="scale(${-sg} 1)"><path d="M2 12Q22 18 36 40L22 38L28 52Q8 40 -2 24Z" fill="#3E6A3A" stroke="#1A2A14" stroke-width="1.6" stroke-linejoin="round"/><path d="M4 14Q22 22 32 38" stroke="#7AA86A" stroke-width="1.4" fill="none"/>` +
+          `<path d="M-6 12Q-8 26 -4 34L6 34Q8 22 6 12Z" fill="#2E2218" stroke="#120A06" stroke-width="1.2"/><path d="M-4 34L-10 48M4 34L8 48" stroke="#2E2218" stroke-width="4.5" stroke-linecap="round"/><rect x="-8" y="24" width="16" height="6" rx="2" fill="#8A8E94" stroke="#120A06" stroke-width=".8"/>` +
+          `<path d="M-6 18L-30 8M-6 22L-30 22" stroke="#120A06" stroke-width="4.4" stroke-linecap="round"/><path d="M-6 18L-30 8M-6 22L-30 22" stroke="#F4FAFF" stroke-width="2.4" stroke-linecap="round"/></g>` +
+          `<circle r="21" fill="#FFE8B0" opacity=".45"/><circle r="17.5" fill="#F0D4B0" stroke="${c}" stroke-width="3.2"/><path d="M-15 -6Q-12 -18 0 -18Q12 -18 15 -6Q8 -12 0 -11Q-8 -12 -15 -6Z" fill="#4A2E1A"/><circle cx="-5" cy="1" r="1.6" fill="#2A1A10"/><circle cx="5" cy="1" r="1.6" fill="#2A1A10"/></g>`;
+        PORTR.push({ k, x, y, r: 16 }); });
+      s.push(o); }
+    // ================= COUCHE ANIMÉE (tout le mouvement est sur le Colosse) =================
+    // la vapeur qui monte de ses épaules et se couche avec le vent
+    for (let k = 0; k < 12; k++) { const x = GX + (k % 4 - 1.5) * 100 + (r() - .5) * 30, y = HY + 90 + (r() - .5) * 40, R = 26 + r() * 22, d = (6 + r() * 4).toFixed(1), b = (-r() * 10).toFixed(1);
+      a.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(R)}" fill="url(#t4-vap)" opacity="${K.anime ? 0 : .5}">${an(`<animateTransform attributeName="transform" type="translate" values="0 0;${f(-160 - r() * 120)} ${f(-170 - r() * 60)}" dur="${d}s" begin="${b}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.85;0" keyTimes="0;.25;1" dur="${d}s" begin="${b}s" repeatCount="indefinite"/>`)}</circle>`); }
+    // la vapeur qui fuit des fibres de la mâchoire
+    [-1, 1].forEach(sg => { const x = GX + sg * 62 * HK, y = HY + 40 * HK;
+      a.push(`<circle cx="${f(x)}" cy="${f(y)}" r="16" fill="url(#t4-vap)" opacity="${K.anime ? 0 : .55}">${an(`<animateTransform attributeName="transform" type="translate" values="0 0;${f(sg * 30 - 30)} -60" dur="3.4s" begin="${sg > 0 ? -1.7 : 0}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.8;0" keyTimes="0;.3;1" dur="3.4s" begin="${sg > 0 ? -1.7 : 0}s" repeatCount="indefinite"/>`)}</circle>`); });
+    // ses yeux qui luisent au fond des orbites
+    a.push(`<g opacity="${K.anime ? .4 : 1}">${an(`<animate attributeName="opacity" values=".4;.4;1;1;.4" keyTimes="0;.5;.6;.9;1" dur="6s" repeatCount="indefinite"/>`)}${[-34, 34].map(u => { const x = GX + u * HK, y = HY - 18 * HK; return `<circle cx="${f(x)}" cy="${f(y)}" r="14" fill="#FF6A2A" opacity=".4"/><circle cx="${f(x)}" cy="${f(y)}" r="4.6" fill="#FFE2A0"/>`; }).join("")}</g>`);
+    // jets de gaz derrière les soldats et éclat des lames
+    SOL.forEach(([x, y], k) => { const sg = ANC[k][0] > x ? 1 : -1, d = (1.6 + k * .3).toFixed(1);
+      a.push(`<circle cx="${f(x - sg * 16)}" cy="${f(y + 30)}" r="10" fill="url(#t4-vap)" opacity="${K.anime ? 0 : .6}">${an(`<animateTransform attributeName="transform" type="translate" values="0 0;${f(-sg * 30)} 10" dur="${d}s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="${d}s" repeatCount="indefinite"/>`)}</circle>`);
+      a.push(`<circle cx="${f(x + sg * 28)}" cy="${f(y + 12)}" r="3" fill="#FFFFFF" opacity="${K.anime ? 0 : .8}">${an(`<animate attributeName="opacity" values="0;0;1;0" keyTimes="0;.6;.75;1" dur="${(2.4 + k * .5).toFixed(1)}s" repeatCount="indefinite"/>`)}</circle>`); });
+    // gravats qui tombent de la brèche, poussière dorée qui roule
+    for (let k = 0; k < 4; k++) { const x = BRE[0] - 2 + (k % 2 ? BRE[1] - BRE[0] + 4 : 0) + (r() - .5) * 8, y = yA(MA.R, x) - MA.e, d = (1.4 + r()).toFixed(1), b = (-r() * 2).toFixed(1);
+      a.push(`<path d="M${f(x - 3)} ${f(y)}l3 -4l4 1l1 4l-3 3z" fill="#7E6A58" stroke="#1E1610" stroke-width=".6">${an(`<animateTransform attributeName="transform" type="translate" values="0 0;${f((r() - .5) * 30)} ${f(40 + r() * 30)}" dur="${d}s" begin="${b}s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;1;0" keyTimes="0;.8;1" dur="${d}s" begin="${b}s" repeatCount="indefinite"/>`)}</path>`); }
+    { const x = xG, y = yA(MA.R, x) + 40; a.push(`<circle cx="${f(x)}" cy="${f(y)}" r="44" fill="url(#t4-vap)" opacity=".45">${an(`<animate attributeName="r" values="34;62;34" dur="4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".5;.2;.5" dur="4s" repeatCount="indefinite"/>`)}</circle>`); }
+    // la brume qui dérive sur la plaine
+    [[300, 220, 200, 24], [820, 230, 160, 20]].forEach(([x, y, rx, ry], k) => a.push(`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#t4-brume)">${an(`<animateTransform attributeName="transform" type="translate" values="0 0;${k ? -40 : 40} 0;0 0" dur="${18 + k * 5}s" repeatCount="indefinite"/>`)}</ellipse>`));
+    // le scintillement du soleil sur la mer
+    a.push(`<path d="M${GX - 110} ${HZ + 3}H${GX + 110}" stroke="#FFFFFF" stroke-width="1.5" opacity=".6">${an(`<animate attributeName="opacity" values=".2;.8;.2" dur="3s" repeatCount="indefinite"/>`)}</path>`);
     // les 4 pilotes à cheval sur la piste, capes aux couleurs des 4
-    COULEURS_J.forEach((c, k) => a.push(K.surPiste(.04 + k * .03, `<g transform="scale(1.5)"><ellipse rx="8" ry="3.4" fill="#6A4A2A" stroke="#1E1610" stroke-width=".7"/><ellipse cx="8" cy="0" rx="3.4" ry="2" fill="#5A3E22" stroke="#1E1610" stroke-width=".6"/><path d="M-8 0l-4 -1.5l1 1.5l-1 1.5z" fill="#2A1A0A"/><path d="M-5 -4.2L2 -2.8L2 2.8L-5 4.2Z" fill="${c}" stroke="#1E1610" stroke-width=".6"/><circle cx="1.5" cy="0" r="2.2" fill="#E8C4A0" stroke="#1E1610" stroke-width=".5"/></g>`, 44, k * 1.1)));
-    K.particules(8, "#F4E8D8", 2.4, "monte");
-    const RES = K.fin(`<rect width="${W}" height="${H}" fill="#6E6A44"/>`, "#C87A4A", .1); RES.portraits = PORTR; return RES;
+    COULEURS_J.forEach((c, k) => a.push(K.surPiste(.04 + k * .03, `<g transform="scale(1.5)"><ellipse rx="8" ry="3.4" fill="#4A3220" stroke="#1E1610" stroke-width=".7"/><ellipse cx="8" cy="0" rx="3.4" ry="2" fill="#3E2A18" stroke="#1E1610" stroke-width=".6"/><path d="M-8 0l-4 -1.5l1 1.5l-1 1.5z" fill="#1A1008"/><path d="M-5 -4.2L2 -2.8L2 2.8L-5 4.2Z" fill="${c}" stroke="#1E1610" stroke-width=".6"/><circle cx="1.5" cy="0" r="2.2" fill="#E8C4A0" stroke="#1E1610" stroke-width=".5"/></g>`, 44, k * 1.1)));
+    K.particules(8, "#FFD8A0", 2.4, "monte");
+    const RES = K.fin(`<rect width="${W}" height="${H}" fill="#22182A"/>`, "#C8642A", .1); RES.portraits = PORTR; return RES;
   }
 
   /* ---------- Décembre · L'Odyssée (finale) : de Troie en flammes à Ithaque, sur une mer turquoise ----------
