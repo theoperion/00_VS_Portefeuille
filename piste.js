@@ -2488,7 +2488,7 @@
     // ----- boucle -----
     let raf = 0;
     function image(now) {
-      raf = 0; if (!cv.isConnected) { I.endormi = true; return; }   // détachée : on attend d'être rattachée (redim / reveiller)
+      raf = 0; if (!cv.isConnected || I.pause) { I.endormi = true; return; }   // détachée ou en pause (bande-annonce) : on attend redim / reveiller
       // au repos (rien ne bouge vraiment), 30 images par seconde suffisent : la batterie dit merci
       const calme = !I.anim && !I.tir && !I.enRoute && !I.artifice.length;
       if (calme && I.dernier && now - I.dernier < 31) { if (I.actif) raf = requestAnimationFrame(image); return; }
@@ -2556,7 +2556,9 @@
       type: "3d", T, zones: Z, stats: () => ({ sol: B.sol.n, piste: B.piste.n, ov: B.solOv.n + B.pisteOv.n, eau: B.eau ? B.eau.n : 0, lum: LUM.length, tConstr: I.tConstr }),
       placer(pts) { I.anim = null; I.pts = Object.assign({}, pts); placer(true); I.feuxDepart = -1; reveiller(); },
       regler(x) { Object.assign(o, x); },
+      pause(b) { I.pause = !!b; if (!b) reveiller(); },   // V16.17 : la 3D se met en pause sous la bande-annonce
       jouer(de, a, duree, fin, depart) {
+        if (!ANIM()) { api.placer(a); if (fin) fin(); return; }   // V16.17 : « animations réduites » respecté en 3D comme en 2D
         I.pts = Object.assign({}, de); placer(true); V.forEach(x => x.hist = []);
         const now = performance.now(), dl = depart ? 3200 : 0;
         I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: now + dl, t00: now, duree: duree || 5200, fin, feux: !!depart };
@@ -2600,6 +2602,8 @@
      Instance 2D : la carte du circuit, sobre et lisible
      ============================================================ */
   const CARTES_P = {};   // cartes peintes, calculées une fois par circuit
+  /** V16.17 · fond peint « cuit » en WebP (outils-tests/cuire-cartes.js) : image fixe, bien plus légère à afficher que le SVG */
+  const carteCuite = k => { const c = self.CARTES_CUITES; return c && c[k] ? "img/cartes/" + k + ".webp?v=" + c[k] : null; };
   function monter2D(boite, o) {
     const def = TRACES[o.circuit] || TRACES.melbourne, T = echantillonner(def), Z = zones(T), NS = "http://www.w3.org/2000/svg";
     const m = 34, minx = T.cx - T.rx - m, minz = T.cz - T.rz - m, w = T.rx * 2 + 2 * m, h = T.rz * 2 + 2 * m;
@@ -2616,7 +2620,7 @@
     const PE = def.peint && PEINTS[def.peint] ? PEINTS[def.peint] : null, CP = PE ? (CARTES_P[def.peint] || (CARTES_P[def.peint] = PE.peindre(T, Z, def))) : null;
     const svg = document.createElementNS(NS, "svg"); svg.setAttribute("class", "p2-svg"); svg.setAttribute("viewBox", minx.toFixed(1) + " " + minz.toFixed(1) + " " + w.toFixed(1) + " " + h.toFixed(1)); svg.setAttribute("preserveAspectRatio", "xMidYMid meet"); svg.setAttribute("role", "img"); svg.setAttribute("aria-label", o.titre || "Circuit");
     if (CP) svg.innerHTML = '<rect x="' + (minx - 400) + '" y="' + (minz - 400) + '" width="' + (w + 800) + '" height="' + (h + 800) + '" fill="' + CP.couleur + '"/>' +
-      '<g transform="scale(' + (1 / KU) + ')"><image href="' + (CP.url || (CP.url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(CP.fond))) + '" x="0" y="0" width="' + CP.W + '" height="' + CP.H + '"/>' + CP.anim + "</g>" +
+      '<g transform="scale(' + (1 / KU) + ')"><image href="' + (carteCuite(def.peint) || CP.url || (CP.url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(CP.fond))) + '" x="0" y="0" width="' + CP.W + '" height="' + CP.H + '"/>' + CP.anim + "</g>" +
       zoneTrait(Z.atout, o.atoutCol) + zoneTrait(Z.piege, o.piegeCol) + fleches +
       '<g transform="translate(' + p0.x.toFixed(1) + " " + p0.z.toFixed(1) + ") rotate(" + ang.toFixed(1) + ") scale(" + (k * .9).toFixed(2) + ')"><rect x="-1.6" y="-6" width="3.2" height="12" fill="#fff"/><rect x="-1.6" y="-6" width="1.6" height="2" fill="#111"/><rect x="0" y="-4" width="1.6" height="2" fill="#111"/><rect x="-1.6" y="-2" width="1.6" height="2" fill="#111"/><rect x="0" y="0" width="1.6" height="2" fill="#111"/><rect x="-1.6" y="2" width="1.6" height="2" fill="#111"/><rect x="0" y="4" width="1.6" height="2" fill="#111"/></g>' +
       '<g class="p2-v"></g>';
@@ -2674,6 +2678,7 @@
     /** V16.12 · la carte peinte du circuit en image (fond de la bande-annonce), ou null */
     carte(id) {
       const def = TRACES[id], PE = def && def.peint ? PEINTS[def.peint] : null; if (!PE) return null;
+      const cu = carteCuite(def.peint); if (cu) return cu;   // V16.17 : l'image cuite, sans recalculer le dessin (plus de blocage d'une seconde)
       try { const T = echantillonner(def), CP = CARTES_P[def.peint] || (CARTES_P[def.peint] = PE.peindre(T, zones(T), def)); return CP.url || (CP.url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(CP.fond)); } catch (e) { return null; }
     },
     /** vignette SVG du tracé (calendrier, Stand) */

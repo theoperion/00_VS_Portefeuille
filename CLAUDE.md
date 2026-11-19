@@ -42,7 +42,7 @@
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **16.16**.
+  hors connexion `sw.js`). Version actuelle : **16.17**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
@@ -96,6 +96,8 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
   `peindreEnvers`, `peindreSurvivants`, `peindreDunes`, `peindreTitans`, `peindreOlympe` ; monuments placés par `posRepere`
   comme en 3D) + style de piste 3D par thème (`D.kerb`, `D.terre`). Leur 3D garde les décors v16.2 : à enrichir circuit par
   circuit comme janvier/décembre si Théo le demande. Théo trouve certaines références obscures : à revoir avec lui.
+- **Fonds peints cuits (v16.17)** : `img/cartes/<clé>.webp` + `img/cartes/cartes.js` (empreintes). Après TOUTE retouche d'un peintre de piste.js :
+  `node outils-tests/cuire-cartes.js` puis publier (sinon l'appli affiche l'ancienne image). La couche animée reste en SVG.
 - Course (v16.10) : une manche par mois, grille = classement d'avant le mois, le meilleur du mois boucle un tour (`mancheGP`),
   mois en cours visible dès le 1er sur la grille (`etapesGP` ajoute une étape `avenir`).
 
