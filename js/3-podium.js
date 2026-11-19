@@ -71,6 +71,12 @@ function defiReussi(d, k, x, l, prev, iR) {
 }
 function indiceMois(k) { const l = D.marche.mois.find(x => x[0] === k), v = l ? l[iRef() + 1] : null; return ok(v) ? v : null; }
 let MEMO_SAISON = { d: null, m: {} };
+/** v16.84 · résultats inventés (admin, saison simulée) : rendements fixes entre −4 % et +5 % selon le nom et le mois */
+function fauxVerdict(k) {
+  const h = t => { let x = 2166136261; for (const c of t) { x ^= c.charCodeAt(0); x = Math.imul(x, 16777619); } return ((x >>> 0) % 10000) / 10000; };
+  const du = D.personnes.map(p => ({ nom: p.nom, r: -0.04 + 0.09 * h(p.nom + ":" + k) })).sort((a, b) => b.r - a.r);
+  return { k, env: 0, du, manquent: [], complet: true, simule: true };
+}
 function championnat(y) {
   if (MEMO_SAISON.d !== D) MEMO_SAISON = { d: D, m: {} };
   if (MEMO_SAISON.m[y]) return MEMO_SAISON.m[y];
@@ -81,8 +87,12 @@ function championnat(y) {
   let prevL = null;
   const ordre = (a, b) => tot[b].pts - tot[a].pts || tot[b].v - tot[a].v || tot[b].cum - tot[a].cum;
   const mois = []; let attente = null;
-  moisVerdict(0).filter(k => k > deb && k <= f).forEach(k => {
-    const v = verdictMois(0, k);
+  /* v16.84 · « Tout afficher » (admin) : la saison simulée va jusqu'à décembre ; les mois sans vrais résultats reçoivent des résultats INVENTÉS (fixes, marqués simule) */
+  const simu = !ch && y === SAISON.premiere - 1 && apercuSaison(), listeK = moisVerdict(0).filter(k => k > deb && k <= f);
+  if (simu) for (let k = y * 100 + 1; k <= f; k++) if (!listeK.includes(k) && k > Math.min(...listeK.concat([f]))) listeK.push(k);
+  listeK.sort((a, b) => a - b).forEach(k => {
+    let v = verdictMois(0, k);
+    if (simu && (!v || !v.complet)) v = fauxVerdict(k);
     if (!v || !v.complet) { if (v) attente = v; return; }
     const PG = ch ? null : piegeMois(y, k), iR = indiceMois(k);   // V15.5 : piège du circuit
     // « Le huit » : les places se jouent sur ce mois et le précédent cumulés ; sinon sur le mois seul

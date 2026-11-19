@@ -123,7 +123,7 @@ const GPS = {
 const CAL_GP = ["silverstone", "djeddah", "melbourne", "suzuka", "miami", "montreal", "bahrein", "spa", "lasvegas", "singapour", "interlagos", "monza"];   // V16.55 (Théo) : Dune en janvier (sortie du film), Ratatouille en juillet, l'Odyssée en septembre, Secret Wars en finale (décembre, sortie du film)
 /** Circuit d'un mois : le Garage des rêves pour la chauffe, sinon le calendrier (V16.14 : le mois du Côté obscur garde son circuit, la règle s'y ajoute) */
 function circuitDe(k) {
-  if (!k || k === CHAUFFE_K) return "abudhabi";
+  if (!k || (k === CHAUFFE_K && !apercuSaison())) return "abudhabi";   // v16.84 : en saison simulée (admin), décembre = la Finale du Multivers
   return CAL_GP[((k % 100) - 1 + 12) % 12];
 }
 /** Atout du circuit d'un mois, quand la règle compte pour ce mois (sinon null) ; plus de piège depuis la V12 */
