@@ -236,14 +236,14 @@ function afficherTout() {
   if (!D.personnes.find(p => p.nom === ETAT.moi)) ETAT.moi = D.personnes[0].nom;
   if (!ETAT.fiche || !D.personnes.find(p => p.nom === ETAT.fiche)) ETAT.fiche = ETAT.moi;
   const b = $("#bandeau");
-  b.hidden = SOURCE === "api" || (SOURCE === "cache" && EN_CHARGEMENT);   // copie affichée au démarrage pendant la mise à jour : pas d'alerte
+  b.hidden = SOURCE === "api" || (SOURCE === "cache" && !ERREUR_SERVEUR);   // v17.11 (Théo) : plus de grand bandeau « hors connexion » : une pastille 📴 discrète sur « Relevé Versus »   // copie affichée au démarrage pendant la mise à jour : pas d'alerte
   b.textContent = SOURCE === "demo" ? "Aperçu · chiffres du fichier au 29/10/2026. Ajoute l'adresse de l'API dans Réglages pour passer en direct."
     : ERREUR_SERVEUR ? "⚠️ Le fichier a répondu par une erreur : « " + ERREUR_SERVEUR + " ». Chiffres affichés : " + (D.majTexte || "dernière copie") + "."
     : "📴 Hors connexion · " + (D.majTexte || "dernières données reçues") + ". Tout se consulte ; les saisies se font quand le réseau revient.";
   // V15.2 : pastille courte (le long texte était coupé) ; le détail reste dans l'info-bulle. « Relevé Versus · nov. 2026 » : un seul sens pour « relevé »
   { const st = $("#sous-titre"), k = typeof finGlobale === "function" ? finGlobale(D, 0) : null;
     const court = k ? ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."][k % 100 - 1] + " " + Math.floor(k / 100) : "";
-    st.textContent = court ? "Relevé Versus\n" + court : "Pas encore de\nrelevé Versus"; st.setAttribute("aria-label", court ? "Relevé Versus · " + court : "Pas encore de relevé Versus"); st.title = D.majTexte || ""; st.classList.add("pastille-releve"); }
+    st.textContent = (SOURCE === "cache" && !EN_CHARGEMENT ? "📴 Hors ligne\n" : court ? "Relevé Versus\n" : "") + (court || (SOURCE === "cache" && !EN_CHARGEMENT ? "" : "Pas encore de\nrelevé Versus")); st.classList.toggle("hors", SOURCE === "cache" && !EN_CHARGEMENT); st.setAttribute("aria-label", court ? "Relevé Versus · " + court : "Pas encore de relevé Versus"); st.title = D.majTexte || ""; st.classList.add("pastille-releve"); }
   rendreTicker();
   rendreVue(vueActive());
   majRappels();
