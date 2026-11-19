@@ -1465,3 +1465,10 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .tp .tp-mode, .tp .tp-apercu .tp-grand:nth-child(2) { display: none; }
 .tp-slot.vide { flex: 0 0 44px; height: 44px; padding: 0; align-self: center; } .tp-slots { align-items: center; flex-wrap: wrap; gap: 8px; }
 .regles.portrait .tp-apercu { display: none; }
+/* v16.29 · icônes maison (js/icones.js) */
+.ic { width: 1.15em; height: 1.15em; vertical-align: -.2em; flex: none; --ic-acc: var(--accent); }
+.ic.or { --ic-acc: var(--gold); } .ic.argent { --ic-acc: #B8C0CC; } .ic.bronze { --ic-acc: #C98A4B; }
+.pod-tabs .ic { width: 22px; height: 22px; } .carte .c-ico .ic { width: 28px; height: 28px; }
+/* v16.29 · croix des bulles de détail */
+.toast { display: flex; align-items: flex-start; gap: 10px; pointer-events: auto; } .toast .tst-t { flex: 1; }
+.toast .tst-x { flex: none; border: 0; background: rgba(127,127,127,.18); color: inherit; width: 26px; height: 26px; border-radius: 50%; font-size: 13px; line-height: 26px; padding: 0; cursor: pointer; margin: -2px -4px -2px 0; }

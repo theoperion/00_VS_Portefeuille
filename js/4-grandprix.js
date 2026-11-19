@@ -221,7 +221,7 @@ function htmlGrandPrix(y) {
     '<div class="gp-pops"></div><div class="gp-com" aria-live="polite"></div>' + fxCircuit(G.fx) +
     '<div class="gp-hud"><span class="gp-tour">' + (et.k && !et.avenir ? "Manche <b>" + i + "</b>" : "Sur la grille") + "</span><span>" + met.ico + " " + esc(met.nom) + "</span></div>" +
     '<div class="gp-btns">' + (deux ? "" : '<button class="gp-vue" type="button" id="gp-cam-b" aria-label="Changer de caméra">' + CAMS[cam] + "</button>") +
-    '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en 3D" : "Passer en carte 2D") + '">' + (deux ? "🗺️ 2D" : "🧊 3D") + '</button><button class="gp-vue" type="button" id="gp-ba" aria-label="Bande-annonce">🎬</button><button class="gp-vue" type="button" id="gp-fin" aria-label="Aller directement à la fin de la course">⏭</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">⛶</button></div>' +
+    '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en 3D" : "Passer en carte 2D") + '">' + (deux ? icoOu("vue2d", "🗺️") + " 2D" : icoOu("vue3d", "🧊") + " 3D") + '</button><button class="gp-vue" type="button" id="gp-ba" aria-label="Bande-annonce">' + icoOu("bandeannonce", "🎬") + '</button><button class="gp-vue" type="button" id="gp-fin" aria-label="Aller directement à la fin de la course">' + icoOu("arrivee", "⏭") + '</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">' + icoOu("pleinecran", "⛶") + '</button></div>' +
     (spe ? '<div class="gp-spe">' + spe.ico + " " + esc(spe.nom) + "</div>" : pgm ? '<div class="gp-spe piege" data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " " + esc(pgm.nom) + "</div>" : "") + "</div>";
   const chips = '<div class="gp-mois">' + etapes.map((x, j) => '<button type="button" data-gpe="' + j + '" aria-pressed="' + (j === i) + '">' + (x.k ? GPS[circuitDe(x.k)].drap + " " + esc(moisCourt(x.k)) + (x.avenir ? " ⏳" : "") : "Départ") + "</button>").join("") + "</div>";
   const lignes = ordre.map((n, r) => {
@@ -301,9 +301,9 @@ function htmlCartes(y) {
     const k = cd.bonus ? utilisees[cd.id] : (ici ? kOuvert : kPrec && ks.includes(kPrec) ? kPrec : undefined), jouee = k !== undefined, aug = Object.entries(AMELIOS).find(([, x]) => x.carte === cd.id), n = aug ? up[aug[0]] : 0;
     const gp = atk && !jouee ? (atk.atout.id === cd.id ? '<span class="c-gp at" title="Atout du circuit">+1</span>' : "") : indk && !jouee && indk.ids.includes(cd.id) ? '<span class="c-gp at" title="Atout possible du circuit (1 chance sur 2)">?</span>' : "";
     const interdite = !!kOuvert && cd.id === "turbo" && (piegeMois(y, kOuvert) || {}).id === "chaleur" && regleVisible("pieges");
-    if (interdite) return '<button type="button" class="carte jouee" disabled data-carte="turbo"><span class="c-ico">' + cd.ico + "</span><b>" + esc(cd.nom) + "</b><small>" + esc(cd.court) + "</small><em>🌡️ interdite (Surchauffe)</em></button>";
+    if (interdite) return '<button type="button" class="carte jouee" disabled data-carte="turbo"><span class="c-ico">' + icoOu(cd.id, cd.ico) + "</span><b>" + esc(cd.nom) + "</b><small>" + esc(cd.court) + "</small><em>🌡️ interdite (Surchauffe)</em></button>";
     return '<button type="button" class="carte' + (cd.bonus ? " bonus" : "") + (jouee && !ici ? " jouee" : "") + (ici ? " posee" : "") + (CARTE_CHOIX === cd.id ? " choix" : "") + '" data-carte="' + cd.id + '"' + (jouee && !ici || !kOuvert ? " disabled" : "") + ">" +
-      '<span class="c-ico">' + cd.ico + "</span><b>" + esc(cd.nom) + "</b><small>" + esc(cd.court) + "</small>" + (n ? '<span class="c-up">+' + n + "</span>" : "") + gp +
+      '<span class="c-ico">' + icoOu(cd.id, cd.ico) + "</span><b>" + esc(cd.nom) + "</b><small>" + esc(cd.court) + "</small>" + (n ? '<span class="c-up">+' + n + "</span>" : "") + gp +
       (jouee ? "<em>" + (ici ? "posée" : cd.bonus ? "jouée · " + esc(moisCourt(k)) : "repos · jouée en " + esc(moisCourt(k))) + "</em>" : cd.tire ? "<em>🎴 " + esc(moisCourt(cd.tire)) + "</em>" : "") + "</button>";
   };
   let action = "";
@@ -582,7 +582,7 @@ async function cartePostale(y, et) {
 /* ---------- V16.28 · La course en 3 tours : un scénario calculé d'avance (même résultat que les points)
    Tours 1 et 2 : la meute dans l'ordre de la grille (aucun faux dépassement). Tour 3 : les vrais changements du mois, ralenti au moment clé,
    le vainqueur franchit la ligne. Distances en tours (0 → 3). ---------- */
-const TOURS_GP = 3, E_TOUR = [0, .3667, .6833], W_TOUR = E_TOUR.map(e => e / .8 * .74);   // W_TOUR : début de chaque tour en temps réel (avant le ralenti)
+const TOURS_GP = 2, E_TOUR = [0, .525], W_TOUR = E_TOUR.map(e => e / .8 * .74);   // v16.29 : 2 tours (Théo : le 1er de 3 faisait doublon) — tour 1 le départ et le spectacle, tour 2 le sprint   // W_TOUR : début de chaque tour en temps réel (avant le ralenti)
 let GP_SCEN = null;
 function scenarioCourse(mc) {
   const noms = mc.grille.slice(), G = mc.arrivee, maxG = Math.max(0, ...noms.map(n => G[n] || 0)), gap = .006;
@@ -590,7 +590,7 @@ function scenarioCourse(mc) {
   const lisse = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
   const course = e => (e < .1 ? e * e / .2 : e - .05) / .95 * TOURS_GP;   // départ qui accélère, puis pleine vitesse
   const temps = w => w < .74 ? w / .74 * .8 : w < .88 ? .8 + (w - .74) / .14 * .08 : .88 + (w - .88) / .12 * .12;   // ralenti au cœur du dernier tour
-  const scen = w => { const e = temps(clampN(w, 0, 1)), D = course(e), m = lisse((e - E_TOUR[2]) / (.92 - E_TOUR[2])), out = {};
+  const scen = w => { const e = temps(clampN(w, 0, 1)), D = course(e), m = lisse((e - E_TOUR[TOURS_GP - 1]) / (.92 - E_TOUR[TOURS_GP - 1])), out = {};
     noms.forEach((n, g) => { out[n] = D - (g * gap * (1 - m) + fin[n] * m) + Math.sin(e * 22 + g * 1.7) * .0016 * (1 - m); }); return out; };
   return { scen, gains: G, noms };
 }
@@ -626,8 +626,8 @@ function commenter(y, i, duree, delai) {
   const dire = (t, dur) => { const b = document.querySelector("#gp-piste .gp-com"); if (!b) return; b.innerHTML = '<span class="gp-com-t">' + esc(t) + "</span>"; if (dur) GP_COM.push(setTimeout(() => { const bb = document.querySelector("#gp-piste .gp-com"); if (bb) bb.innerHTML = ""; }, dur)); };
   if (duree < 0) { dire(P.fin, 7000); return; }
   const d0 = delai || 0, n = duree - d0;
-  if (GP_SCEN) { const l = [P.debut[0], "🔁 Tour 2 sur 3" + (P.milieu[0] ? " · " + P.milieu[0] : ""), "🏁 Dernier tour !" + (P.milieu[1] ? " · " + P.milieu[1] : "")];
-    l.forEach((t, k) => GP_COM.push(setTimeout(() => dire(t, 0), d0 + W_TOUR[k] * n + 150))); return; }
+  if (GP_SCEN) { const l = [[0, P.debut[0]], [.24, P.milieu[0]], [W_TOUR[1], "🏁 Dernier tour !" + (P.milieu[1] ? " · " + P.milieu[1] : "")]].filter(x => x[1]);
+    l.forEach(([w, t]) => GP_COM.push(setTimeout(() => dire(t, 0), d0 + w * n + 150))); return; }
   const l = P.debut.concat(P.milieu);
   l.forEach((t, k) => GP_COM.push(setTimeout(() => dire(t, 0), d0 + k * n / Math.max(1, l.length) + 150)));
 }
@@ -696,7 +696,7 @@ function brancherGP(v, y) {
   // V16.16 : la manche n'est marquée « vue » qu'à l'arrivée (quitter pendant la bande-annonce ou la course ne la fait plus perdre)
   // V16.17 : un seul départ — après la bande-annonce (qui finit sur les 5 feux), la course part sans refaire les feux
   const finCourse = () => { if (et.k && !et.avenir && et.k > +(stock.get(cleVu) || 0)) stock.set(cleVu, String(et.k)); bullesGP(y, i); commenter(y, i, -1); };
-  const jouer = feux => { const f = feux !== false && i >= 1 && api.type === "3d", d = SC ? (api.type === "3d" ? 22000 : 15000) : api.type === "3d" ? 6400 : 3000; commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0);
+  const jouer = feux => { const f = feux !== false && i >= 1 && api.type === "3d", d = SC ? (api.type === "3d" ? 16000 : 11000) : api.type === "3d" ? 6400 : 3000; commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0);
     if (SC) api.jouerScenario(SC.scen, d, finCourse, f); else api.jouer(mc.depart, mc.arrivee, d, finCourse, f); };
   const apresBA = () => { if (GP_INST && GP_INST.api === api && document.body.contains(GP_INST.boite)) jouer(false); };   // v16.27 : piste reconstruite entre-temps : on ne lance rien
   if (GP_REJOUER && i > 0 && !et.avenir) { GP_REJOUER = false; setTimeout(jouer, 150); }

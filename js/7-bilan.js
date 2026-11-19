@@ -575,7 +575,10 @@ function restaurerDefil(vue) {
   new MutationObserver(l => { const vues = new Set(); l.forEach(x => { const v = x.target.closest && x.target.closest("[data-vue]"); if (v) vues.add(v); }); vues.forEach(v => { restaurerDefil(v); if (typeof assurerRappel === "function") assurerRappel(v); }); })
     .observe(m, { childList: true, subtree: true });
 })();
-function toast(t) { const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(minuteur); minuteur = setTimeout(() => { el.hidden = true; }, Math.max(4200, String(t).length * 50)); }
+function toast(t) {   // v16.29 : une croix pour fermer tout de suite (il se ferme toujours tout seul après quelques secondes)
+  const el = $("#toast"); el.innerHTML = '<span class="tst-t"></span><button class="tst-x" type="button" aria-label="Fermer">✕</button>'; el.querySelector(".tst-t").textContent = t;
+  el.querySelector(".tst-x").addEventListener("click", ev => { ev.stopPropagation(); clearTimeout(minuteur); el.hidden = true; });
+  el.hidden = false; clearTimeout(minuteur); minuteur = setTimeout(() => { el.hidden = true; }, Math.max(4200, String(t).length * 50)); }
 
 /* ---------- Navigation ---------- */
 const VUES = ["classement", "mois", "fiche", "trophees", "moi"];

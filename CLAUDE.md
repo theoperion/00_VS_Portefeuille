@@ -42,7 +42,7 @@
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **16.28**.
+  hors connexion `sw.js`). Version actuelle : **16.29**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
@@ -136,6 +136,7 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
   tester sur l'appli installée (Firefox Android) ; une cérémonie par ouverture (file : course, vol, pierre, billet) ; **icônes maison** à la place des
   émojis (≈30) ; repeindre les cartes petit à petit ; storyboard à réajuster ; corriger tous les bugs du rapport. Gant : **gant de l'infini GARDÉ** (Théo, 19/11).
 - **Mon portrait (v16.24)** : `ouvrirPortrait()` (3-podium.js), ouvert par Réglages › « 👤 Mon portrait » ou en touchant sa propre tête ; disponible dès la chauffe (hors Écurie). v16.26 : « ↺ Par défaut » + 4 têtes enregistrées (`equip.tetes`, serveur V41), bulle « Fais ton portrait ! » une fois (`bullePortrait`) ; « Mon casque » MASQUÉ (`CASQUE_CACHE`) en attendant d'être redessiné. Badges secrets : conditions à mettre côté serveur (dépôt privé), validé par Théo.
+- **Icônes maison (v16.29)** : 39 icônes dans `js/icones.js` (`ico`, `icoOu(cle, emoji)`), branchées sur les onglets du Podium, Règles, boutons de la Course et cartes, mais **coupées** (`ICONES_ACTIVES = false`) : Théo préfère garder les émojis pour l'instant. Course : **2 tours** (Théo : le 1er de 3 faisait doublon).
 - Bande-annonce de lancement : `teaser.html` (bouton dans le mail du 20/11, serveur V35) ; vidéo MP4 faite avec Playwright + bande-son synthétisée (numpy + ffmpeg).
 - Maquettes de travail : scratchpad `galerie/` (perdu avec la session ; les peintres sont dans `piste.js`, rendu via `tpeints.js`, `PEINT=clé`, `ANIM=1 ATT=2600`).
 

@@ -817,10 +817,10 @@ function blocSaison() {
   const o = ongletPodium();
   const b = (id, lib) => '<button type="button" data-pod="' + id + '" aria-pressed="' + (o === id) + '">' + lib + "</button>";
   return '<section class="saison"><div class="saison-h"><div><span class="s-k">' + (ch ? "Tour de chauffe · décembre 2026" : "Saison " + numeroSaison(y) + " · " + y + (apercuSaison() ? " (répétition)" : "")) + "</span><h2>" + (ch ? "La chauffe" : "Le championnat") + '</h2></div><div class="s-droite">' +
-    '<button class="regles-b" type="button" id="regles-ouvrir" aria-label="Règles du jeu">📖 Règles</button></div></div>' +
+    '<button class="regles-b" type="button" id="regles-ouvrir" aria-label="Règles du jeu">' + icoOu("regles", "📖") + ' Règles</button></div></div>' +
     (ys.length > 1 ? '<div class="s-ys">' + ys.map(a => '<button type="button" class="chip-s' + (a === y ? " on" : "") + '" data-saison="' + a + '">' + (estChauffe(a) ? "🔥 Chauffe" : "Saison " + numeroSaison(a)) + "</button>").join("") + "</div>" : "") +
     (ch ? '<div class="chauffe-b">🔥 <span><b>Tour de chauffe</b> : les règles de base, et rien ne compte. Le championnat démarre le 1<sup>er</sup> janvier. <a href="#" class="lien-regles" data-regles="speciaux">En savoir plus</a></span></div>' : "") +
-    '<div class="pod-tabs" role="group" aria-label="Saison">' + b("gp", "<span>🏁</span>Course") + b("stand", "<span>🃏</span>Stand" + (rappelCartes() ? '<i class="pastille" aria-label="à faire"></i>' : "")) + (basesSeules() ? "" : b("ecurie", "<span>🏎️</span>Écurie") + b("defis", "<span>🏆</span>Trophées")) + "</div>" +
+    '<div class="pod-tabs" role="group" aria-label="Saison">' + b("gp", "<span>" + icoOu("course", "🏁") + "</span>Course") + b("stand", "<span>" + icoOu("stand", "🃏") + "</span>Stand" + (rappelCartes() ? '<i class="pastille" aria-label="à faire"></i>' : "")) + (basesSeules() ? "" : b("ecurie", "<span>" + icoOu("ecurie", "🏎️") + "</span>Écurie") + b("defis", "<span>" + icoOu("trophees", "🏆") + "</span>Trophées")) + "</div>" +
     '<div class="s-corps">' + (o === "ecurie" ? htmlEcurie() : o === "defis" ? htmlDefis() : o === "stand" ? htmlStand(y) : htmlGrandPrix(y)) + "</div>" +
     (adminActif() && !window.APERCUS_FINIS ? '<button class="reserve-b" type="button" id="reserve-ouvrir">🧪 <span><b>Règles et idées en réserve</b><small>admin · ce qui est en jeu, ce qui dort, les réglages</small></span> ›</button>' : "") + "</section>";
 }
