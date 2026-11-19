@@ -9,7 +9,7 @@
    ============================================================ */
 (function () {
 "use strict";
-const K = { api: "versus.moi.api", cle: "versus.moi.cle", cache: "versus.moi.cache", pref: "versus.moi.pref" };
+const K = { api: "versus.moi.api", cle: "versus.moi.cle", cache: "versus.moi.cache", pref: "versus.moi.pref", refus: "versus.moi.refus" };
 const PREF = Object.assign({ onglet: "jour", patri: "net", million: "financier", tri: "env", mode: "valeur", per: "6m", serie: "ip", moisMode: "pct", rep: "classe", acc: {} },
   (() => { try { return JSON.parse(stock.get(K.pref) || "{}"); } catch (e) { return {}; } })());
 function garderPref() { stock.set(K.pref, JSON.stringify(PREF)); }
@@ -725,8 +725,11 @@ function configure() { return !!(adresse() && cle()); }
 function lireCache() { if (M) { assurerSimple(); return; } const c = stock.get(K.cache); if (c) { try { recevoir(JSON.parse(c)); SRC = "cache"; } catch (e) { stock.del(K.cache); } } }
 
 let rechargerApres = false;   // un rechargement demandé pendant une lecture en cours (ex. juste après un ordre) n'est plus perdu
+/* v16.65 · une clé refusée n'est plus effacée en silence (avant : l'appli retombait sur « Connecter mon fichier » sans dire pourquoi) ;
+   on la garde, on le dit, et on ne réessaie plus tout seul (pour ne pas faire bloquer le fichier) tant qu'on n'a pas touché « Réessayer » */
+function cleRefusee(msg) { stock.set(K.refus, "1"); erreur = "Ton fichier a refusé la clé enregistrée sur ce téléphone" + (msg && !/^Clé incorrecte\.?$/.test(msg) ? " (" + msg + ")" : "") + "."; }
 async function charger(frais) {
-  if (!configure()) return;
+  if (!configure() || (stock.get(K.refus) && !frais)) return;
   if (enCours) { if (frais) rechargerApres = true; return; }
   enCours = true; erreur = "";
   const ctrl = window.AbortController ? new AbortController() : null;
@@ -735,7 +738,7 @@ async function charger(frais) {
     const url = adresse();
     const json = await lireApi(url, cle(), "data", { frais: !!frais }, ctrl ? ctrl.signal : undefined);   // clé hors de l'adresse (POST)
     if (!json.ok) {
-      if (json.erreur === "cle") { stock.del(K.cle); erreur = json.message || "Clé refusée par ton fichier."; return; }
+      if (json.erreur === "cle") { cleRefusee(json.message); return; }
       throw new Error(json.message || "Réponse inattendue de ton fichier");
     }
     recevoir(json); SRC = "api"; dernierAppel = Date.now();
@@ -771,6 +774,13 @@ function rendre() {
   v.style.setProperty("--mc", couleurMoi());
   { const th = M ? themeActif() : null; v.classList.toggle("th", !!(th && th[3])); if (th && th[3]) v.style.setProperty("--th-fond", th[3]); else v.style.removeProperty("--th-fond"); }
   if (!configure()) { v.innerHTML = ecranConnexion(); brancherConnexion(v); return; }
+  if (stock.get(K.refus)) {
+    v.innerHTML = '<div class="m-vide"><div class="m-flaps" aria-hidden="true">' + flaps("MOI", false) + '</div><p>🔑 Ton fichier a refusé la clé de ce téléphone.</p><p class="info">' + "La clé enregistrée ici ne correspond plus à celle de ton fichier." + ' Elle est gardée : si c\'était un raté passager, « Réessayer » suffit ; sinon, remets ta clé dans Réglages › Mon fichier.</p>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn acc" type="button" id="m-reessayer">Réessayer</button><button class="btn" type="button" id="m-connecter">Changer la clé</button></div></div>';
+    brancherConnexion(v);
+    v.querySelector("#m-reessayer").addEventListener("click", () => { stock.del(K.refus); erreur = ""; rendre(); charger(true); });
+    return;
+  }
   lireCache(); signalerCloche();
   if (!M) {
     v.innerHTML = erreur ? '<div class="m-vide"><p>Impossible de lire ton fichier.</p><p class="info">' + esc(erreur) + '</p><button class="btn" type="button" id="m-reessayer">Réessayer</button></div>'
@@ -2534,7 +2544,7 @@ async function envoyerOrdre(forcer) {
   const rep = await posterFichier({ action: "ordre", ordres: ordres, forcer: !!forcer });
   if (M && M.ref) M.ref.journal = (M.ref.journal || []).filter(o => !o.envoi);
   if (rep.ok) { if (window.SONS) SONS.succes(); toast(rep.message || "Ordre enregistré."); charger(true); return; }
-  if (rep.erreur === "cle") { stock.del(K.cle); toast(rep.message || "Clé refusée par ton fichier."); return; }
+  if (rep.erreur === "cle") { cleRefusee(rep.message); toast("Clé refusée par ton fichier."); if (vueMoi()) rendre(); return; }
   toast(rep.erreur === "avertissement" ? "Ordre à confirmer." : "Ordre non enregistré.");
   F = sauvegarde;
   if (rep.erreur === "avertissement") F.forcer = rep.message; else F.erreur = rep.message || "Erreur inattendue.";
@@ -2771,7 +2781,7 @@ async function envoyerReglage(k, corps, form, local) {
     rendreMaj(); signalerCloche();
     charger(true);
   } else {
-    if (rep.erreur === "cle") { stock.del(K.cle); fermerSaisieM(); toast(rep.message || "Clé refusée."); return; }
+    if (rep.erreur === "cle") { cleRefusee(rep.message); fermerSaisieM(); toast("Clé refusée par ton fichier."); if (vueMoi()) rendre(); return; }
     reglageMsg[k] = ["err", rep.message || "Erreur inattendue."];
     rendreMaj();
   }
@@ -3866,8 +3876,8 @@ window.Moi = {
     url = String(url || "").trim();
     if (url) stock.set(K.api, url);
     if (k) stock.set(K.cle, k);
-    if (url || k) { M = null; SRC = ""; erreur = ""; dernierAppel = 0; stock.del(K.cache); }
+    if (url || k) { M = null; SRC = ""; erreur = ""; dernierAppel = 0; stock.del(K.cache); stock.del(K.refus); }
   },
-  oublier() { [K.api, K.cle, K.cache].forEach(k => stock.del(k)); M = null; SRC = ""; erreur = ""; signalerCloche(); },
+  oublier() { [K.api, K.cle, K.cache, K.refus].forEach(k => stock.del(k)); M = null; SRC = ""; erreur = ""; signalerCloche(); },
 };
 })();

@@ -180,3 +180,5 @@ setTimeout(verifierMiseAJour, 3000);
 window.addEventListener("offline", () => { if (D && SOURCE === "api") { SOURCE = "cache"; afficherTout(); } });
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 setTimeout(prechaufferMoi, 600);
+/* v16.65 · demande au navigateur de ne pas effacer les données de l'appli quand le téléphone manque de place (adresse et clé de ton fichier, réglages) */
+window.addEventListener("load", () => { try { if (navigator.storage && navigator.storage.persist && stock.get("versus.moi.api")) navigator.storage.persisted().then(p => { if (!p) navigator.storage.persist(); }).catch(() => {}); } catch (e) { /* indisponible */ } });

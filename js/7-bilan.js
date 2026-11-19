@@ -766,7 +766,7 @@ $("#moi-tester").addEventListener("click", async () => {
   $("#moi-etat").textContent = rep;
 });
 $("#moi-oublier").addEventListener("click", () => {
-  if (window.Moi) window.Moi.oublier(); else ["versus.moi.api", "versus.moi.cle", "versus.moi.cache"].forEach(k => stock.del(k));
+  if (window.Moi) window.Moi.oublier(); else ["versus.moi.api", "versus.moi.cle", "versus.moi.cache", "versus.moi.refus"].forEach(k => stock.del(k));
   majMoiReglages("Fichier déconnecté de cet appareil (adresse, clé et copie locale effacées).");
   majCloche(null);
   if (vueActive() === "moi") rendreMoi();
