@@ -4,6 +4,7 @@
 (menées jusqu'au 18/11/2026). L'historique détaillé de chaque version est dans `MODE_EMPLOI.md` (journal en bas).
 
 ## 🎬 Teasers (Théo, 19/11)
+MAIL D'ANNONCE DU 21/11 ANNULÉ (V56, `VS_ANNONCE_ACTIVE = false`) : Théo envoie les vidéos MP4 lui-même sur WhatsApp (meilleurs retours). Vendredi = texte seul, aucun visuel ni circuit, 4 pilotes ; samedi = fonctionnement du championnat sans dévoiler les univers, 5ᵉ pilote ; toutes commencent par « Ils pensaient juste épargner ».
 Samedi 21/11 : bande-annonce + MP4 (WhatsApp) qui NE dévoilent PAS les 12 cartes (seulement l'Atelier du Père Noël + au plus janvier ; les autres en flashes floutés) ; vendredi 20/11 : MP4 court « demain, tout commence ». Théo : PAS de « Mon portrait 11 h » dans les vidéos ni le mail (ça s'affiche dans l'appli). La révélation complète des 12 univers est gardée pour un AUTRE teaser fin décembre (à faire). Scripts MP4 : scratchpad teaser/rec2.js + son.py (perdus avec la session : recréer au besoin).
 
 ## Moi : file d'attente (Théo, 19/11 nuit)
@@ -60,7 +61,7 @@ Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles 
 ## Serveur Apps Script (dépôt app_scripts)
 - Prérequis une fois par machine : `npx -y @google/clasp@3.4.1 login` (compte Google de Théo) → crée `~/.clasprc.json`.
 - Versus : `sh outils/mettre-en-ligne-versus.sh "V31 : ce qui change"` (APPLI=chemin de ce dépôt si besoin).
-  Versions actuelles : VS_VERSION 55, version Google 70.
+  Versions actuelles : VS_VERSION 56, version Google 71.
 - Scripts perso : dans `portefeuille-epargne/<nom>` : `clasp push --force` puis `python3 ../../outils/deployer.py "desc"`
   (garde les mêmes adresses). Versions actuelles : Théo 34, Clément 13, Devlin 12 (v34 : cache pré-calculé toutes les 10 min, `prechaufferDonnees`, installé au 1er appel).
 - Sheets en direct : `outils/gs.py` (`SS(id).get/put/batch`). Classeurs : Théo `1pbpJRMwZR64LqP_wwlhiw-6m7-lUg-Q3pVAF4Dv9j8U`,
