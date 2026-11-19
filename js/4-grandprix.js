@@ -365,8 +365,8 @@ function assurerRappel(vue) {
   el.querySelector(".rp-go").addEventListener("click", allerAuStand);
   const x = el.querySelector(".rp-x"); if (x) x.addEventListener("click", () => { stock.set("versus.rappelMasque", String(aujNum())); majRappels(); toast("D'accord, je te le rappelle demain."); });
 }
-/** V15.1 : avant l'annonce du 20 novembre 2026, rien du Podium dans les onglets Classement, Mois et Moi (pas de spoil) ; l'onglet Podium garde son teaser */
-function podiumCache() { return aujNum() < 20261120 && !apercuSaison(); }   // l'admin en « Tout afficher » voit tout
+/** V15.1 : avant l'annonce du 21 novembre 2026, rien du Podium dans les onglets Classement, Mois et Moi (pas de spoil) ; l'onglet Podium garde son teaser */
+function podiumCache() { return aujNum() < 20261121 && !apercuSaison(); }   // l'admin en « Tout afficher » voit tout
 /** Bandeaux de toutes les vues + pastille sur l'onglet Podium */
 function majRappels() {
   VUES_RAPPEL.forEach(id => assurerRappel(document.getElementById(id)));

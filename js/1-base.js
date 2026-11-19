@@ -508,7 +508,7 @@ function rendreClassement() {
   if (enSerie) bref += "<b>" + esc(enSerie[0]) + "</b> enchaîne " + enSerie[1].serie + " victoires mensuelles d'affilée. ";
   if (leader) bref += "Sur la période, <b>" + esc(leader.nom) + "</b> mène avec " + pct(leader.twr) + (battent.length ? ", " + battent.map(esc).join(" et ") + (battent.length > 1 ? " battent " : " bat ") + esc(D.marche.indices[i1]) + " à mois égaux." : " ; personne ne bat " + esc(D.marche.indices[i1]) + " à mois égaux.");
 
-  // V15.4 · Classement plus punchy (visible à partir du 20/11/2026) : podium du mois, flèches de place, mini-courbes
+  // V15.4 · Classement plus punchy (visible à partir du 21/11/2026) : podium du mois, flèches de place, mini-courbes
   const punchy = typeof podiumCache !== "function" || !podiumCache();
   let rPrev = {}, rNow = {};
   if (punchy) try { rNow = rangs(env, deb, fin); rPrev = deb && cleMoins(fin, 1) <= deb ? {} : rangs(env, deb, cleMoins(fin, 1)); } catch (e) { rNow = {}; rPrev = {}; }

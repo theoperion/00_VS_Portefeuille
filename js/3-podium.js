@@ -763,7 +763,7 @@ function teaser() {
       '<div><b>🙂 Ta tête au volant</b><span>Ton portrait animé, ou ton casque, à côté de ton nom. Et 24 objets uniques à rafler les premiers.</span></div></div>' +
       '<button class="btn acc" type="button" id="teaser-regles">📖 Lire toutes les règles</button>' +
       '<p class="t-note">Tout repart de zéro le 1<sup>er</sup> janvier : ce qui s\'est passé avant ne compte pas.</p>'
-      : '<p class="t-note">On en dit plus le 20 novembre.</p>') + "</div>" +
+      : '<p class="t-note">On en dit plus le samedi 21 novembre.</p>') + "</div>" +
 
     "</section>";
 }
