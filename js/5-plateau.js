@@ -154,24 +154,24 @@ function monacoMois(y) { return y * 100 + 6; }   // V16.22 : le Côté obscur es
 function moisSpecial(y, k) {
   if (!k) return null;
   if (k % 100 === 12 && regleActive("finale", k)) return circuitDe(k) === "monza" && regleActive("gpspeciaux", k)
-    ? { id: "finale", heros: true, ico: "🦸", nom: "Finale · le Rassemblement des héros", txt: "Points de place doublés pour tout le monde, et le 🎯 vaut +2 au lieu de +1.", bref: "Points de place doublés, et le 🎯 vaut +2" }   // V16.55 : Secret Wars en finale
-    : { id: "finale", ico: "🏆", nom: "Finale", txt: "Points de place doublés pour tout le monde.", bref: "Points de place doublés pour tous" };
-  if (k === monacoMois(y) && regleActive("monaco", k)) return { id: "monaco", ico: "🌑", nom: "Le Côté obscur", txt: "Le dernier du championnat avant ce mois marque ses points de place en double.", bref: "Le dernier au classement marque double" };
-  if (circuitDe(k) === "silverstone" && regleActive("gpspeciaux", k)) return { id: "silverstone", ico: "🪱", nom: "Le Chevaucheur des sables", txt: "Le vainqueur du mois marque +2 de plus.", bref: "Le 1er du mois gagne 2 pts de plus" };
-  if (circuitDe(k) === "monza" && regleActive("gpspeciaux", k)) return { id: "monza", ico: "🦸", nom: "Le Rassemblement des héros", txt: "Le 🎯 vaut +2 au lieu de +1.", bref: "Battre l'indice 🎯 rapporte +2 au lieu de +1" };
+    ? { id: "finale", heros: true, ico: "🦸", nom: "Finale · le Rassemblement des héros", txt: "Points de place doublés pour tout le monde, et le 🎯 vaut +2 au lieu de +1.", bref: "Points de place doublés, et le 🎯 vaut 2 points" }   // V16.55 : Secret Wars en finale
+    : { id: "finale", ico: "🏆", nom: "Finale", txt: "Points de place doublés pour tout le monde.", bref: "Tous les points de place sont doublés" };
+  if (k === monacoMois(y) && regleActive("monaco", k)) return { id: "monaco", ico: "🌑", nom: "Le Côté obscur", txt: "Le dernier du championnat avant ce mois marque ses points de place en double.", bref: "Le dernier du classement marque double" };
+  if (circuitDe(k) === "silverstone" && regleActive("gpspeciaux", k)) return { id: "silverstone", ico: "🪱", nom: "Le Chevaucheur des sables", txt: "Le vainqueur du mois marque +2 de plus.", bref: "Le vainqueur du mois gagne 2 points de plus" };
+  if (circuitDe(k) === "monza" && regleActive("gpspeciaux", k)) return { id: "monza", ico: "🦸", nom: "Le Rassemblement des héros", txt: "Le 🎯 vaut +2 au lieu de +1.", bref: "Battre l'indice 🎯 rapporte 2 points au lieu d'un" };
   return null;
 }
 /* ---------- V15.5 · Pièges des circuits : une petite règle propre à chaque circuit qui n'a pas de mois spécial ---------- */
 const PIEGES = {
-  bahrein: { id: "mirage", ico: "🧐", nom: "Le critique gastronomique", txt: "Le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point.", bref: "Le 🎯 compte si tu bats le S&P de 0,5 pt" },
-  djeddah: { id: "murs", ico: "🚪", nom: "Couloirs mouvants", txt: "À moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points).", bref: "Moins de 0,2 pt d'écart = même place" },
-  melbourne: { id: "chaos", ico: "🫖", nom: "Le thé du Chapelier", txt: "Pronostic « qui gagne le mois » : +2 si juste, mais −1 si faux.", bref: "Pronostic du vainqueur : +2 si juste, −1 si faux" },
-  suzuka: { id: "huit", ico: "🔁", nom: "Un aller et retour", txt: "Les places du mois se jouent sur deux mois cumulés : ce mois-ci et le précédent.", bref: "Le classement du mois compte 2 mois" },
-  miami: { id: "chaleur", ico: "🌿", nom: "Les graines sacrées", txt: "🚀 Turbo interdit ce mois-ci.", bref: "Carte 🚀 Turbo interdite" },
-  spa: { id: "ardennes", ico: "🌫️", nom: "Brume", txt: "Si le S&P 500 baisse, 🌧️ Pneus pluie vaut +3 au lieu de +2.", bref: "Si le S&P baisse : 🌧️ Pneus pluie à +3" },
-  singapour: { id: "nuit", ico: "🍬", nom: "Bonbon de consolation", txt: "Le dernier du mois marque 2 points de place au lieu de 0.", bref: "Le dernier du mois gagne quand même 2 pts" },
-  lasvegas: { id: "sirenes", ico: "🧜", nom: "Le chant des Sirènes", txt: "🎲 Pari interdit ce mois-ci.", bref: "Carte 🎲 Pari interdite" },   // V16.55 : l'Odyssée en septembre
-  interlagos: { id: "averse", ico: "💥", nom: "Assaut", txt: "🎲 Pari : +3 si tu finis devant ton rival, −2 derrière (au lieu de +2 / −1).", bref: "🎲 Pari : +3 si tu bats ton rival, −2 sinon" }
+  bahrein: { id: "mirage", ico: "🧐", nom: "Le critique gastronomique", txt: "Le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point.", bref: "Pour le 🎯, bats le S&P d'au moins 0,5 point" },
+  djeddah: { id: "murs", ico: "🚪", nom: "Couloirs mouvants", txt: "À moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points).", bref: "À moins de 0,2 point d'écart, vous partagez la place" },
+  melbourne: { id: "chaos", ico: "🫖", nom: "Le thé du Chapelier", txt: "Pronostic « qui gagne le mois » : +2 si juste, mais −1 si faux.", bref: "Pronostic juste : 2 points. Faux : 1 point en moins" },
+  suzuka: { id: "huit", ico: "🔁", nom: "Un aller et retour", txt: "Les places du mois se jouent sur deux mois cumulés : ce mois-ci et le précédent.", bref: "Ce mois-ci et le précédent comptent ensemble" },
+  miami: { id: "chaleur", ico: "🌿", nom: "Les graines sacrées", txt: "🚀 Turbo interdit ce mois-ci.", bref: "Carte 🚀 Turbo interdite ce mois-ci" },
+  spa: { id: "ardennes", ico: "🌫️", nom: "Brume", txt: "Si le S&P 500 baisse, 🌧️ Pneus pluie vaut +3 au lieu de +2.", bref: "Si le S&P baisse, 🌧️ Pneus pluie rapporte 3 points" },
+  singapour: { id: "nuit", ico: "🍬", nom: "Bonbon de consolation", txt: "Le dernier du mois marque 2 points de place au lieu de 0.", bref: "Le dernier du mois gagne quand même 2 points" },
+  lasvegas: { id: "sirenes", ico: "🧜", nom: "Le chant des Sirènes", txt: "🎲 Pari interdit ce mois-ci.", bref: "Carte 🎲 Pari interdite ce mois-ci" },   // V16.55 : l'Odyssée en septembre
+  interlagos: { id: "averse", ico: "💥", nom: "Assaut", txt: "🎲 Pari : +3 si tu finis devant ton rival, −2 derrière (au lieu de +2 / −1).", bref: "🎲 Pari gagné : 3 points. Perdu : 2 points en moins" }
 };
 /** Piège du mois k (null : chauffe, mois spécial, Côté obscur, ou règle pas encore ouverte) */
 function piegeMois(y, k) {

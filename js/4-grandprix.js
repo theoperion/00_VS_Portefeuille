@@ -711,112 +711,69 @@ function commenter(y, i, duree, delai) {
   const l = P.debut.concat(P.milieu);
   l.forEach((t, k) => GP_COM.push(setTimeout(() => dire(t, 0), d0 + k * n / Math.max(1, l.length) + 150)));
 }
-/* ---------- 🎬 V16.12 · Bande-annonce avant la course : la fiche de match (en-tête, enjeu, règle, grille, feux) ---------- */
+/* ---------- 🎬 V16.12 · Bande-annonce avant la course · V16.70 : « le circuit, la règle, le trésor » (affiche de cinéma) ---------- */
 const BA_STYLE = {   // couleurs et police de chaque circuit (la bande-annonce prend le ton de l'univers)
   abudhabi: ["#FF9A3D", "#FFE2B0", "sans"], bahrein: ["#FFB547", "#FFE9C2", "serif"], djeddah: ["#E2B93B", "#F3E6C4", "serif"], melbourne: ["#FF6FA8", "#FFFFFF", "serif"],
   suzuka: ["#E2B93B", "#F4EAD2", "serif"], miami: ["#5CF2FF", "#E6D2FF", "sans"], montreal: ["#FFE81F", "#FFFFFF", "sans"], silverstone: ["#FF8A3D", "#F6D29A", "large"],
   spa: ["#FF2A2A", "#FFFFFF", "serif"], monza: ["#E5484D", "#F7CF55", "sans"], singapour: ["#FF8FB8", "#F7CF55", "serif"], interlagos: ["#C8102E", "#F4F1EA", "sans"], lasvegas: ["#3ED6E0", "#FFFFFF", "serif"] };
 let BA_OUVERTE = null;
-/* V16.65 · « La fiche de match » : tout se lit de haut en bas, chaque bloc se cale sous le précédent et reste à l'écran.
-   0 s en-tête · 0,25 l'enjeu (seul chiffre géant) · 0,7 « TOI » en bandeau · 1,1 la règle du mois (+ défi) · 1,7 la grille ·
-   2,9 le face-à-face (moi contre mon rival ou mon voisin) et ce qui peut basculer · 5,6 les feux · 6,85 « C'est parti ! » tenu 1,75 s.
-   Sans règle du mois, tout ce qui suit avance de 0,5 s (8,6 s → 8,1 s). Animations réduites : la fiche d'un coup, 7 s, un toucher ferme.
-   Jamais affiché : le résultat du mois couru (points, rang, vainqueur), les cartes (nom, gain), les Paris, les pronostics.
-   « Ce qui peut basculer » ne dit que des possibles (« peut »), calculés sur les points d'avant et le barème : jamais une certitude. */
-function brefRegle(r) { return r.bref || String(r.txt || "").split(/(?<=[.!?])\s/)[0].replace(/\.$/, ""); }
+/* V16.70 · Trois plans, un seul message par plan (avis de Théo : « mettre en avant le nouveau circuit, la règle du mois, l'objet à trouver »).
+   0-1,8 s LE CIRCUIT (la carte peinte en plein cadre, travelling + lueur qui balaie, le nom de l'univers en titre d'affiche) · 1,8-3,7 LA RÈGLE DU MOIS (carton de film muet)
+   · 3,7-6,95 LE TRÉSOR (silhouette noire bordée de lumière, l'énigme ; l'objet ne s'éclaire qu'à moitié en fin de plan) · 6,95 les 5 feux · 8,2 « C'est parti ! » jusqu'à 9,0.
+   Un seul des deux (règle ou trésor) : le plan 1 dure 2,2 s. Sans les deux (chauffe sans trésor) : 3,95 s avec deux balayages de lumière (6 s en tout).
+   Le trésor n'apparaît que pour la manche du mois (ou la dernière course) : jamais sur la rediffusion d'une vieille manche.
+   Jamais affiché : points, classement, pilotes, résultat du mois, emplacement du trésor, chercheurs. Animations réduites : une affiche fixe, 7 s, un toucher ferme. */
+function brefRegle(r) { return (r.bref || String(r.txt || "").split(/(?<=[.!?])\s/)[0].replace(/\.$/, "")).replace(/ ([:;!?])/g, "\u00a0$1"); }   // espace insécable : jamais « : » seul en début de ligne
+const sansArticle = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/^(le |la |les |l')/, "").replace(/[^a-z0-9]/g, "");
 function bandeAnnonce(y, i, ensuite) {
   if (BA_OUVERTE) BA_OUVERTE.fermer(false);
   const etapes = etapesGP(y), et = etapes[i], c = championnat(y), kGP = et.k || (c.chauffe ? CHAUFFE_K : y * 100 + 1), ci = circuitDe(kGP), G = GPS[ci];
-  const st = BA_STYLE[ci] || ["#9B87FF", "#FFFFFF", "sans"], img = window.Piste && Piste.carte ? Piste.carte(ci) : null, mc = mancheGP(etapes, i), gr = mc.grille;
-  const avant = et.avenir ? et.pts : i > 0 ? etapes[i - 1].pts : {}, pts = n => avant[n] || 0;   // points d'AVANT le mois (comme la grille)
-  const mPrec = i > 0 && etapes[i - 1].m ? etapes[i - 1].m : null, xPrec = n => mPrec ? mPrec.l.find(z => z.nom === n) : null;
-  const tenant = mPrec ? (mPrec.l.slice().sort((a, b) => a.rg - b.rg)[0] || {}).nom : null, moisPrec = mPrec ? MOIS_L[mPrec.k % 100 - 1].toLowerCase() : "";
+  const st = BA_STYLE[ci] || ["#9B87FF", "#FFFFFF", "sans"], img = window.Piste && Piste.carte ? Piste.carte(ci) : null;
   const spe = et.k ? moisSpecial(y, et.k) : null, pg = !spe && et.k && typeof piegeMois === "function" ? piegeMois(y, et.k) : null, regle = spe || pg;
-  const dec = regle ? 0 : -.5, total = reduit ? 7000 : Math.round((8.6 + dec) * 1000);
-  const T = v => v + (v >= 1.1 ? dec : 0), s = v => T(v).toFixed(2) + "s";   // instant d'une image, décalé si pas de règle
-  const tFeux = T(5.6), tOut = tFeux + 1.25;
-  const moi = moiPilote(), rgMoi = gr.indexOf(moi), tousZero = gr.every(n => !pts(n)), pl = v => Math.abs(v) > 1 ? "s" : "";
-  const nomC = n => '<b class="ba-n" style="color:' + couleur(n) + '">' + esc(n) + "</b>";
-  // ce que vaut le mois : écart maximal de points de place entre deux pilotes (doublé en finale)
-  const bar = baremeJ(gr.length), mult = spe && spe.id === "finale" ? 2 : 1, swing = (bar[0] - bar[Math.min(gr.length, bar.length) - 1]) * mult, vMax = bar[0] * mult;
-  // S1 · l'en-tête (le lieu est déjà dans le titre)
-  const sous = c.chauffe ? "Tour de chauffe · " + MOIS_L[kGP % 100 - 1] : "Manche " + (et.k ? et.k % 100 : 1) + "/12 · " + (et.avenir ? "ce mois-ci" : MOIS_L[kGP % 100 - 1]);
-  const s1 = '<header class="ba-s1"><i class="ba-barre"></i><h2><span class="ba-drap">' + G.drap + "</span>" + esc(G.gp) + '</h2><p class="ba-det">' + esc(sous) + "</p></header>";
-  // S2 · l'enjeu : le seul chiffre géant du film
-  const N = gr.length > 1 ? pts(gr[0]) - pts(gr[1]) : 0;
-  const s2 = tousZero || gr.length < 2 ? '<section class="ba-s2 zero"><p class="ba-ouv">' + (c.chauffe ? "Tour de chauffe" : "Première course") + " :<br><b>tout le monde part ensemble</b></p>" +
-      '<p class="ba-det">' + vMax + " pts pour le 1er du mois</p></section>"
-    : '<section class="ba-s2' + (N ? "" : " egal") + '"><p class="ba-info">👑 ' + nomC(gr[0]) + (N ? " mène" : " et " + nomC(gr[1]) + " à égalité") + "</p>" +
-      '<div class="ba-geant"><b class="ba-cpt" data-n="' + N + '">' + (reduit || !N ? (N ? "+" + N : "0") : "") + '</b><span><em class="ba-sur">' + (N ? "pt" + pl(N) + " sur " + nomC(gr[1]) : "pt d'écart") + "</em><small>" + vMax + " pts pour le 1er du mois</small></span></div>" +
-      (N <= 2 ? '<em class="ba-tampon">Ça se joue à rien</em>' : "") + "</section>";
-  // le bandeau « TOI » : l'info la plus importante pour celui qui regarde
-  const devant = rgMoi > 0 ? gr[rgMoi - 1] : null, derriere = rgMoi >= 0 && rgMoi < gr.length - 1 ? gr[rgMoi + 1] : null;
-  const toiTxt = rgMoi < 0 ? "" : tousZero ? "Tu pars avec tout le monde · 0 pt"
-    : rgMoi === 0 ? (N ? "Tu pars en pole · +" + N + " sur " + esc(gr[1]) : "Tu pars en pole · à égalité")
-    : "Tu pars P" + (rgMoi + 1) + " · " + (pts(devant) - pts(moi) ? "−" + (pts(devant) - pts(moi)) + " de " + esc(devant) : "à égalité avec " + esc(devant));
-  const sToi = toiTxt ? '<p class="ba-toib" style="--d:' + s(.7) + '"><b>TOI</b>' + toiTxt + "</p>" : "";
-  // S3 · la règle du mois (en mots simples), avec le défi du mois dedans ; pas de météo (indice du mois)
-  const df = et.k && regleVisible("defi") && regleActive("defi", et.k) ? defiDuMois(et.k) : null;
-  const dfL = df ? '<span class="ba-defi">' + df.ico + " Défi du mois : " + esc(df.txt) + "</span>" : "";
-  const s3 = regle ? '<section class="ba-s3" style="--d:' + s(1.1) + '"><i class="ba-alerte-i">' + regle.ico + '</i><div><small class="ba-det">' + (spe ? "Mois spécial" : "Piège du circuit") + " · " + esc(regle.nom) + "</small><b>" + esc(brefRegle(regle)) + "</b>" + dfL + "</div></section>"
-    : df ? '<section class="ba-s3 seul" style="--d:' + s(1.1) + '"><div>' + dfL + "</div></section>" : "";
-  // S4 · la grille, façon tableau de chronométrage (points d'avant, une seule étiquette par pilote)
-  const rival = moi && rgMoi >= 0 ? rivalDe(y, moi) : null;
-  const lignes = gr.map((n, q) => {
-    const x = xPrec(n), ca = et.k ? carteDe(y, n, et.k) : null;
-    const etq = n === tenant ? "🏆 vainqueur de " + moisPrec : x && x.serie ? "🔥 série de " + x.serie : ca ? "🂠 carte posée" : "";
-    const ec = q ? pts(gr[q - 1]) - pts(n) : 0, toi = n === moi;
-    return '<div class="ba-ligne' + (q || tousZero ? "" : " pole") + (toi ? " moi" : "") + '" style="--d:' + s(1.7 + q * .12) + ";--c:" + couleur(n) + '"><b class="ba-rg">' + (q + 1) + "</b>" + avatar(n) +
-      '<span class="ba-nom">' + nomC(n) + (toi ? '<em class="ba-toi">TOI</em>' : "") + (etq ? '<small><i class="ba-etq">' + etq + "</i></small>" : "") + "</span>" +
-      '<span class="ba-pts"><b>' + pts(n) + "</b>" + (tousZero ? "" : "<small>" + (q ? (ec ? "−" + ec : "=") : "pole") + "</small>") + "</span></div>";
-  }).join("");
-  // S4 bis · le face-à-face : moi contre mon rival (sinon mon voisin de grille) ; sans moi, le duel pour la tête
-  let duel = "";
-  if (gr.length > 1 && !tousZero) {
-    const a = rgMoi >= 0 ? moi : gr[0], b = rgMoi >= 0 ? (rival && rival !== moi && gr.includes(rival) ? rival : devant || derriere) : gr[1];
-    const titre = rgMoi < 0 ? "Le duel pour la tête" : b === rival ? "😈 Ton rival" : b === devant ? "Juste devant toi" : "Juste derrière toi", e = pts(a) - pts(b);
-    const phr = [];   // ce qui PEUT arriver ce mois-ci (jamais une certitude)
-    if (rgMoi >= 0) {
-      if (devant && pts(devant) - pts(moi) < swing) phr.push(pts(devant) === pts(moi) ? "Finis devant " + nomC(devant) + " et tu le passes" : "Tu peux passer " + nomC(devant) + " ce mois-ci");
-      if (rgMoi > 1 && pts(gr[0]) - pts(moi) < swing) phr.push("La tête est à ta portée : −" + (pts(gr[0]) - pts(moi)));
-      if (derriere && pts(moi) - pts(derriere) < swing) phr.push(nomC(derriere) + (rgMoi === 0 ? " peut te prendre la tête" : " peut te passer") + " ce mois-ci");
-      if (!phr.length) phr.push(rgMoi === 0 ? "Un bon mois et tu creuses l'écart" : "Un gros mois pour recoller au peloton");
-    } else {
-      if (N < swing) phr.push(nomC(gr[1]) + " peut prendre la tête ce mois-ci");
-      const d = gr[gr.length - 1]; if (gr.length > 2 && pts(gr[gr.length - 2]) - pts(d) < swing) phr.push(nomC(d) + " peut quitter la dernière place");
-      if (!phr.length) phr.push("Un mois pour tout changer");
-    }
-    duel = '<section class="ba-duel" style="--d:' + s(2.9) + '"><small class="ba-det">' + titre + '</small><div class="ba-vs">' +
-      '<span class="ba-cote" style="--c:' + couleur(a) + '">' + avatar(a) + nomC(a) + "<i>" + pts(a) + " pts</i></span>" +
-      '<b class="ba-ecart">' + (e ? (e > 0 ? "+" : "−") + Math.abs(e) : "=") + "<small>" + (e ? "pt" + pl(e) : "égalité") + "</small></b>" +
-      '<span class="ba-cote" style="--c:' + couleur(b) + '">' + avatar(b) + nomC(b) + "<i>" + pts(b) + " pts</i></span></div>" +
-      phr.slice(0, 2).map((t, q) => '<p class="ba-enjeu" style="--d:' + s(3.3 + q * .3) + '">⚡ ' + t + "</p>").join("") + "</section>";
-  } else duel = '<p class="ba-enjeu seul" style="--d:' + s(2.5) + '">⚡ ' + vMax + " pts pour le 1er · tout est à faire</p>";
-  const s4 = '<section class="ba-s4">' + lignes + "</section>";
-  // S5 · les feux, le flash, le départ (tenu 1,75 s, net)
+  // le trésor : seulement pour la manche du mois, ou la dernière course jouée (pas sur la rediffusion d'une vieille manche) ; pas chargé, absent ou déjà trouvé : plan sauté
+  const iDer = etapes.reduce((a, e, q) => e.avenir ? a : q, -1), duMois = !!et.avenir || i === iDer;
+  const tr = duMois && typeof tresorsOuverts === "function" && tresorsOuverts() ? tresorDuCircuit(ci) : null;
+  // l'horloge du film : chaque plan commence où le précédent s'arrête
+  const d1 = regle && tr ? 1.8 : regle || tr ? 2.2 : 3.95, t2 = d1, t3 = t2 + (regle ? 1.9 : 0), dT = 3.25, tFeux = t3 + (tr ? dT : 0), tOut = tFeux + 1.25, total = reduit ? 7000 : Math.round((tOut + .8) * 1000);
+  const zFin = tFeux - .22;   // le dernier plan s'efface juste avant que les feux descendent (pas de chevauchement)
+  const T = v => v.toFixed(2) + "s", plan = (cl, a, z, h) => '<section class="ba-plan ' + cl + '" style="--a:' + T(a) + ";--z:" + T(z) + '">' + h + "</section>";
+  // PLAN 1 · le circuit
+  const sous = c.chauffe ? "Tour de chauffe · " + MOIS_L[kGP % 100 - 1] : "Manche " + (et.k ? et.k % 100 : 1) + "/12 · " + MOIS_L[kGP % 100 - 1];
+  const p1 = plan("ba-p1", 0, regle || tr ? t2 : zFin, '<h2 class="ba-titre">' + esc(G.ville) + '</h2><i class="ba-barre"></i>' +
+    (sansArticle(G.gp) === sansArticle(G.ville) ? "" : '<p class="ba-gp"><span>' + G.drap + "</span> " + esc(G.gp) + "</p>") + '<p class="ba-leg">' + esc(sous) + "</p>");   // chauffe : « Le Garage des rêves » ne répète pas le titre
+  // PLAN 2 · la règle du mois, en mots simples
+  const p2 = regle ? plan("ba-p2", t2, tr ? t3 : zFin, '<i class="ba-ico">' + regle.ico + '</i><p class="ba-etiq">' + (spe ? "Mois spécial" : "Piège du circuit") + "</p>" +
+    '<h3 class="ba-regle">' + esc(regle.nom) + '</h3><p class="ba-bref">' + esc(brefRegle(regle)) + "</p>") : "";
+  // PLAN 3 · le trésor du mois : l'objet en silhouette qui s'allume, l'énigme mot à mot (jamais l'emplacement)
+  let p3 = "";
+  if (tr) {
+    // l'énigme arrive vite (0,6 s) puis reste ~2,3 s à lire ; jamais coupée : la police rétrécit avec la longueur
+    const brut = String(tr.enigme || ""), mots = brut.split(/\s+/).filter(Boolean), pas = Math.min(.05, .6 / Math.max(1, mots.length)), lg = brut.length > 130 ? " l3" : brut.length > 90 ? " l2" : "";
+    const enig = mots.map((m, q) => '<span style="--m:' + T(t3 + .35 + q * pas) + '">' + esc(m) + "</span>").join(" ");
+    const parts = [0, 1, 2, 3, 4, 5, 6].map(q => '<b style="--k:' + (q * 51 + 12) + "deg;--q:" + (q % 3) + '"></b>').join("");
+    p3 = plan("ba-p3", t3, zFin, '<div class="ba-relique" style="--r:' + T(t3 + .45) + ";--rd:" + T(dT - .45) + '"><i class="ba-rai"></i><i class="ba-rayons"></i><span class="ba-objet">' + (TRESOR_SVG[tr.type] || TRESOR_SVG.gemme) + '</span><span class="ba-parts">' + parts + "</span></div>" +
+      '<div class="ba-cart"><p class="ba-etiq">🗝️ ' + (et.avenir || !et.k || c.chauffe ? "Le trésor du mois" : "Le trésor du circuit") + '</p><p class="ba-enig' + lg + '">' + enig + '</p><p class="ba-ou" style="--m:' + T(t3 + 1) + '">À chercher dans la Visite 3D</p>' +
+      (tr.indice2 ? '<p class="ba-ind" style="--m:' + T(t3 + 1.15) + '">💡 ' + esc(tr.indice2) + "</p>" : "") + "</div>");   // indice 2 : le serveur ne l'envoie qu'une fois tombé (le 11, si personne n'a trouvé)
+  }
+  // les feux sous le rappel du circuit, puis le départ (plus de têtes de pilotes : avis des critiques, elles servaient peu)
   const feux = [0, 1, 2, 3, 4].map(q => { const t = tFeux + q * .25; return '<i style="--d:' + t.toFixed(2) + "s;--l:" + (tOut - t).toFixed(2) + 's"></i>'; }).join("");
+  const rappel = '<p class="ba-rappel"><span>' + G.drap + "</span> " + esc(G.ville) + "</p>";
   const go = ensuite ? "C'est parti !" : et.avenir ? "Verdict à la fin du mois" : "Rendez-vous au premier départ";
-  const o = document.createElement("div"); o.className = "ba ba-" + st[2] + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-label", "Bande-annonce : " + G.gp);
-  o.style.setProperty("--b1", st[0]); o.style.setProperty("--b2", st[1]); o.style.setProperty("--t", (total / 1000) + "s"); o.style.setProperty("--tf", tFeux.toFixed(2) + "s"); o.style.setProperty("--tx", tOut.toFixed(2) + "s");
-  o.innerHTML = '<div class="ba-fond"' + (img ? ' style="background-image:url(&quot;' + img.replace(/"/g, "%22") + '&quot;)"' : "") + '></div><div class="ba-voile"></div>' +
-    '<div class="ba-fiche">' + s1 + s2 + sToi + s3 + s4 + duel + "</div>" +
-    '<div class="ba-s5"><div class="ba-feux">' + feux + '</div></div><div class="ba-flash"></div><b class="ba-go' + (go.length > 14 ? " long" : "") + '">' + esc(go) + "</b>" +
+  const o = document.createElement("div"); o.className = "ba ba-" + st[2] + (reduit ? " reduit" : "") + (tr ? " a-tresor" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-label", "Bande-annonce : " + G.gp);
+  [["--b1", st[0]], ["--b2", st[1]], ["--t", (total / 1000) + "s"], ["--t2", T(t2)], ["--t3", T(t3)], ["--tf", T(tFeux)], ["--tx", T(tOut)], ["--fz", T(regle || tr ? t2 : tFeux)]].forEach(([k, v]) => o.style.setProperty(k, v));
+  o.innerHTML = '<div class="ba-fond' + (regle ? " f2" : "") + (tr ? " f3" : "") + '"' + (img ? ' style="background-image:url(&quot;' + img.replace(/"/g, "%22") + '&quot;)"' : "") + '></div><i class="ba-lueur' + (!regle && !tr ? " x2" : "") + '"></i><div class="ba-voile"></div>' +
+    '<div class="ba-plans">' + p1 + p2 + p3 + "</div>" +
+    '<div class="ba-s5">' + rappel + '<div class="ba-feux">' + feux + '</div></div><div class="ba-flash"></div><b class="ba-go' + (go.length > 14 ? " long" : "") + '">' + esc(go) + "</b>" +
     '<div class="ba-bande h"></div><div class="ba-bande b"></div><span class="ba-pause-i" aria-hidden="true">❚❚</span>' + (reduit ? '<span class="ba-aide">Touche l\'écran pour fermer</span>' : "") + '<button class="ba-passer" type="button">Passer ›</button>';
   document.body.appendChild(o);
-  // petit écran : on resserre (mesuré sans animation), trois crans (le dernier garde du face-à-face la seule phrase d'enjeu)
-  const fi = o.querySelector(".ba-fiche"); if (!reduit) o.classList.add("reduit");
-  for (const cran of ["serre", "serre2", "serre3"]) if (fi.scrollHeight > fi.clientHeight + 2) fi.classList.add(cran);
-  if (!reduit) o.classList.remove("reduit");
   // V16.16 : seul « Passer » (ou Échap / retour) ferme ; en arrière-plan ou sur appui long (> 350 ms), arrêt sur image
   const pause3d = b => { try { if (GP_INST && GP_INST.api.pause) GP_INST.api.pause(b); } catch (e) { } }; pause3d(true);   // V16.17 : la 3D ne tourne pas sous la bande-annonce
   let fini = false, joue = 0, t0 = performance.now(), t = setTimeout(() => fermer(true), total), raf = 0, feu = 0, appui = 0;
   const raisons = new Set(), ecoule = () => joue + (raisons.size ? 0 : performance.now() - t0);
   const pauser = r => { if (fini) return; if (!raisons.size) { joue += performance.now() - t0; clearTimeout(t); o.classList.add("pause"); } raisons.add(r); };
   const reprendre = r => { if (fini || !raisons.delete(r) || raisons.size) return; t0 = performance.now(); o.classList.remove("pause"); t = setTimeout(() => fermer(true), Math.max(300, total - joue)); };
-  // le compteur de l'écart et CHAQUE bip des feux suivent l'horloge de l'image : figés avec elle (appui long, arrière-plan)
-  const cpt = o.querySelector(".ba-cpt"), nCpt = cpt ? +cpt.dataset.n : 0;
+  // CHAQUE bip des feux suit l'horloge de l'image : figé avec elle (appui long, arrière-plan)
   const tic = () => { if (fini) return; const e = ecoule() / 1000;
-    if (cpt && nCpt && !reduit && e >= .45) cpt.textContent = "+" + Math.round(nCpt * Math.min(1, (e - .45) / .55));
     if (!reduit && feu < 6 && e >= (feu < 5 ? tFeux + feu * .25 : tOut)) { if (typeof SONS !== "undefined" && SONS.feuBA) SONS.feuBA(feu); feu++; }   // un bip par feu, puis le départ
     raf = requestAnimationFrame(tic); };
   raf = requestAnimationFrame(tic);
