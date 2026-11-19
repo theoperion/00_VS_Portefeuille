@@ -530,7 +530,7 @@ function etiquettesGP(api) {
 /* ---------- 🗝️ V16.61 · Chasse au trésor : un objet caché par circuit dans la Visite 3D (vue hélico).
    Les emplacements ne sont pas dans l'appli : le serveur ne les donne qu'à partir du 1er du mois du circuit (saison 2027),
    à tout le monde, admin compris. L'objet n'apparaît que de très près (zoom faible), superposé au décor ; un toucher le ramasse. ---------- */
-const TRESOR_DEBUT = 20270101, TRESOR_D = 125;   // distance (mètres du décor) en dessous de laquelle l'objet se montre
+const TRESOR_DEBUT = 20270101, TRESOR_D = 92;   // distance (mètres du décor) en dessous de laquelle l'objet se montre (v16.64 : plus difficile, il faut zoomer au maximum et regarder au ras du sol)
 let TRESORS = null, TRESORS_T = 0, TRESOR_EL = null;
 function tresorsOuverts() { return aujNum() >= TRESOR_DEBUT && SOURCE === "api" && !simulation(); }
 async function chargerTresors() {
@@ -556,7 +556,7 @@ function poserTresorDOM(v) {
   if (met) { if (cpt) cpt.textContent = txt; else met.insertAdjacentHTML("beforeend", ' <span class="gp-tresors">' + txt + "</span>"); }
   const t = tresorDuCircuit(pi.dataset.circuit); if (!t) return;
   pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme" title="Énigme du mois : un objet est caché dans le décor de ce circuit. Approche-toi en Visite 3D.">🗝️ <i>' + esc(t.enigme) + "</i></div>" +
-    '<button class="gp-tresor t-' + esc(t.type) + '" type="button" aria-label="Un objet brille ici : touche-le !" tabindex="-1">' + (TRESOR_SVG[t.type] || TRESOR_SVG.gemme) + "</button>");
+    '<button class="gp-tresor t-' + esc(t.type) + '" type="button" aria-label="Un objet du film : touche-le !" tabindex="-1">' + (TRESOR_SVG[t.type] || TRESOR_SVG.gemme) + "</button>");
   const b = pi.querySelector(".gp-tresor"), en = pi.querySelector(".gp-enigme");
   TRESOR_EL = { pi, b, en, t, vu: false };
   en.addEventListener("click", () => en.classList.toggle("ouverte"));
@@ -568,9 +568,9 @@ function majTresor(api, pi) {
   const T = TRESOR_EL; if (!T || T.pi !== pi) return;
   const libre = api.type === "3d" && api.projeter && api.mode() === "helico" && !api.enCours() && !(api.survolEnCours && api.survolEnCours()) && !pi.classList.contains("en2d");
   T.en.classList.toggle("cache", !libre || !!T.pris);
-  const e = libre && !T.pris && api.zoom() <= .32 ? api.projeter(T.t.p) : null, d = e && e.vis ? e.d : 1e9, al = d < TRESOR_D ? Math.min(1, (TRESOR_D - d) / 20) : 0;
+  const e = libre && !T.pris && api.zoom() <= .2 ? api.projeter(T.t.p) : null, d = e && e.vis ? e.d : 1e9, al = d < TRESOR_D ? Math.min(.92, (TRESOR_D - d) / 16) : 0;
   if (!al) { if (T.vu) { T.b.style.opacity = "0"; T.b.style.pointerEvents = "none"; T.vu = false; } return; }
-  const s = Math.max(18, Math.min(36, 2600 / d));
+  const s = Math.max(15, Math.min(26, 1500 / d));
   T.b.style.transform = "translate3d(" + e.x.toFixed(1) + "px," + e.y.toFixed(1) + "px,0) translate(-50%,-50%)";
   T.b.style.width = T.b.style.height = s.toFixed(0) + "px"; T.b.style.opacity = al.toFixed(2); T.b.style.pointerEvents = al > .5 ? "auto" : "none"; T.vu = true;
 }
