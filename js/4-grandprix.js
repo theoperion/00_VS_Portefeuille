@@ -530,7 +530,7 @@ function etiquettesGP(api) {
 /* ---------- 🗝️ V16.61 · Chasse au trésor : un objet caché par circuit dans la Visite 3D (vue hélico).
    Les emplacements ne sont pas dans l'appli : le serveur ne les donne qu'à partir du 1er du mois du circuit (saison 2027),
    à tout le monde, admin compris. L'objet n'apparaît que de très près (zoom faible), superposé au décor ; un toucher le ramasse. ---------- */
-const TRESOR_DEBUT = 20270101, TRESOR_D = 92;   // distance (mètres du décor) en dessous de laquelle l'objet se montre (v16.64 : plus difficile, il faut zoomer au maximum et regarder au ras du sol)
+const TRESOR_DEBUT = 20261201, TRESOR_D = 92;   // distance (mètres du décor) en dessous de laquelle l'objet se montre (v16.64 : plus difficile, il faut zoomer au maximum et regarder au ras du sol)
 let TRESORS = null, TRESORS_T = 0, TRESOR_EL = null;
 function tresorsOuverts() { return aujNum() >= TRESOR_DEBUT && SOURCE === "api" && !simulation(); }
 async function chargerTresors() {
@@ -540,10 +540,17 @@ async function chargerTresors() {
   TRESORS = { l: rep.tresors || [], trouves: rep.trouves || [], total: rep.total || 0 }; poserTresorDOM(document);
 }
 function tresorDuCircuit(ci) { if (!TRESORS) return null; const t = TRESORS.l.find(x => x.circuit === ci); return t && TRESORS.trouves.indexOf(ci) < 0 ? t : null; }
+/** v16.66 · classement des chercheurs du circuit (qui et quel jour, jamais où) */
+function chercheursTxt(t) {
+  const l = (t && t.chercheurs) || []; if (!l.length) return "Personne ne l'a encore trouvé.";
+  const j = x => x.j ? " (" + (x.j % 100) + " " + MOIS[Math.floor(x.j / 100) % 100 - 1] + ")" : "";
+  return "Trouvé par : " + l.map((x, k) => (k ? "" : "🥇 ") + (k ? (k + 1) + ". " : "") + esc(x.nom) + j(x)).join(" · ");
+}
 const TRESOR_SVG = {
   vif: '<svg viewBox="-20 -12 40 24"><path d="M-4 -1C-10 -9 -18 -9 -19 -6C-15 -5 -12 -2 -5 2Z" fill="#FFFDF2" stroke="#C9B98A" stroke-width=".8"/><path d="M4 -1C10 -9 18 -9 19 -6C15 -5 12 -2 5 2Z" fill="#FFFDF2" stroke="#C9B98A" stroke-width=".8"/><circle r="6" fill="#F2C230" stroke="#9A6A10" stroke-width="1"/><path d="M-4 -2Q0 1 4 -2" stroke="#9A6A10" fill="none" stroke-width=".8"/><circle cx="-2" cy="-2.5" r="1.6" fill="#FFF3B8"/></svg>',
   gemme: '<svg viewBox="-12 -12 24 24"><path d="M-7 -4L-3 -9H3L7 -4L0 10Z" fill="#FF8A1F" stroke="#8A3A05" stroke-width="1"/><path d="M-7 -4H7M-3 -9L-2 -4L0 10M3 -9L2 -4L0 10" stroke="#FFD08A" stroke-width=".7" fill="none"/><path d="M-3 -8L-5 -4.5" stroke="#FFF2D6" stroke-width="1.2"/></svg>',
   fiole: '<svg viewBox="-12 -14 24 28"><rect x="-2.4" y="-13" width="4.8" height="3.4" rx="1" fill="#C8A070"/><path d="M-2 -10V-5C-6 -3 -7 1 -7 5C-7 10 -4 12 0 12C4 12 7 10 7 5C7 1 6 -3 2 -5V-10Z" fill="#7FC6FF" stroke="#1F4E86" stroke-width="1"/><path d="M-6.4 4C-4 6 4 6 6.4 4C6.4 9 4 11 0 11C-4 11 -6.4 9 -6.4 4Z" fill="#3A8AE0"/><rect x="-4.6" y="-1.6" width="9.2" height="4.4" rx=".6" fill="#FFFDF2" stroke="#B8203A" stroke-width=".6"/><path d="M-3 .6H3" stroke="#B8203A" stroke-width=".9"/></svg>',
+  molette: '<svg viewBox="-14 -14 28 28"><g transform="rotate(-35)"><path d="M-2 -6H2V9A2 2 0 0 1 -2 9Z" fill="#E9B53A" stroke="#7A5410" stroke-width="1"/><path d="M-6 -12A6.5 6.5 0 0 0 6 -12L3.4 -12V-8.6H-3.4V-12Z" transform="translate(0 4)" fill="#F2C94C" stroke="#7A5410" stroke-width="1"/><path d="M-1 -4V8" stroke="#FFF1B8" stroke-width=".9"/></g></svg>',
   droide: '<svg viewBox="-12 -14 24 28"><path d="M-6 -2A6 6 0 0 1 6 -2Z" fill="#D4DAE2" stroke="#3A4250" stroke-width=".9"/><rect x="-6" y="-2" width="12" height="11" rx="1.4" fill="#F4F6F8" stroke="#3A4250" stroke-width=".9"/><rect x="-3.6" y="1" width="7.2" height="2.4" fill="#2A5AD8"/><rect x="-3.6" y="5" width="3" height="2" fill="#2A5AD8"/><circle cx="1.4" cy="-4.4" r="1.2" fill="#1A1E28"/><circle cx="1.4" cy="-4.4" r=".5" fill="#FF4A4A"/><rect x="-9" y="0" width="2.6" height="11" rx=".8" fill="#E8ECEF" stroke="#3A4250" stroke-width=".8"/><rect x="6.4" y="0" width="2.6" height="11" rx=".8" fill="#E8ECEF" stroke="#3A4250" stroke-width=".8"/></svg>'
 };
 /** pose (ou retire) le compteur, l'énigme du mois et l'objet dans la page Course ; sans rien recalculer d'autre */
@@ -554,8 +561,14 @@ function poserTresorDOM(v) {
   if (!TRESORS || !tresorsOuverts()) { if (cpt) cpt.remove(); return; }
   const n = TRESORS.total || 0, txt = "🗝️ " + n + " trésor" + (n > 1 ? "s" : "") + " trouvé" + (n > 1 ? "s" : "");
   if (met) { if (cpt) cpt.textContent = txt; else met.insertAdjacentHTML("beforeend", ' <span class="gp-tresors">' + txt + "</span>"); }
-  const t = tresorDuCircuit(pi.dataset.circuit); if (!t) return;
-  pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme" title="Énigme du mois : un objet est caché dans le décor de ce circuit. Approche-toi en Visite 3D.">🗝️ <i>' + esc(t.enigme) + "</i></div>" +
+  const tc = TRESORS.l.find(x => x.circuit === pi.dataset.circuit); if (!tc) return;
+  const t = tresorDuCircuit(pi.dataset.circuit), ind = tc.indice2 ? '<b class="gp-indice">💡 ' + esc(tc.indice2) + "</b>" : "";
+  if (!t) {   // déjà trouvé : plus d'objet, mais l'énigme résolue et le classement des chercheurs restent consultables
+    pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme trouvee">✅ <i>Trésor trouvé !</i><span class="gp-chercheurs">' + chercheursTxt(tc) + "</span></div>");
+    const en0 = pi.querySelector(".gp-enigme"); TRESOR_EL = { pi, b: null, en: en0, t: tc, vu: false, pris: true };
+    en0.addEventListener("click", () => en0.classList.toggle("ouverte")); if (GP_INST) majTresor(GP_INST.api, pi); return;
+  }
+  pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme" title="Énigme du mois : un objet est caché dans le décor de ce circuit. Approche-toi en Visite 3D. Touche pour lire la suite.">' + (ind ? "💡" : "🗝️") + ' <i>' + esc(t.enigme) + "</i>" + ind + '<span class="gp-chercheurs">' + chercheursTxt(t) + "</span></div>" +
     '<button class="gp-tresor t-' + esc(t.type) + '" type="button" aria-label="Un objet du film : touche-le !" tabindex="-1">' + (TRESOR_SVG[t.type] || TRESOR_SVG.gemme) + "</button>");
   const b = pi.querySelector(".gp-tresor"), en = pi.querySelector(".gp-enigme");
   TRESOR_EL = { pi, b, en, t, vu: false };
@@ -567,8 +580,9 @@ function poserTresorDOM(v) {
 function majTresor(api, pi) {
   const T = TRESOR_EL; if (!T || T.pi !== pi) return;
   const libre = api.type === "3d" && api.projeter && api.mode() === "helico" && !api.enCours() && !(api.survolEnCours && api.survolEnCours()) && !pi.classList.contains("en2d");
-  T.en.classList.toggle("cache", !libre || !!T.pris);
+  T.en.classList.toggle("cache", !libre || (!!T.pris && !!T.b));
   const e = libre && !T.pris && api.zoom() <= .2 ? api.projeter(T.t.p) : null, d = e && e.vis ? e.d : 1e9, al = d < TRESOR_D ? Math.min(.92, (TRESOR_D - d) / 16) : 0;
+  if (!T.b) return;
   if (!al) { if (T.vu) { T.b.style.opacity = "0"; T.b.style.pointerEvents = "none"; T.vu = false; } return; }
   const s = Math.max(15, Math.min(26, 1500 / d));
   T.b.style.transform = "translate3d(" + e.x.toFixed(1) + "px," + e.y.toFixed(1) + "px,0) translate(-50%,-50%)";
@@ -583,7 +597,8 @@ async function trouverTresor(t, b) {
   if (window.SONS) { SONS.succes(); setTimeout(() => SONS.klaxon("billets"), 250); SONS.vibrer([40, 50, 120]); }
   const rep = await posterAdmin({ action: "tresorTrouve", circuit: t.circuit });
   if (rep && rep.ok) { TRESORS.trouves = rep.trouves || TRESORS.trouves.concat([t.circuit]); TRESORS.total = rep.total || TRESORS.trouves.length;
-    toast(rep.deja ? "🗝️ Déjà trouvé !" : "🗝️ Trouvé ! " + TRESORS.total + " trésor" + (TRESORS.total > 1 ? "s" : "") + " dans ta besace.");
+    if (!rep.deja) { const l = TRESORS.l.find(x => x.circuit === t.circuit), n = moiVrai(); if (l && !(l.chercheurs || []).some(x => x.nom === n)) { const d = new Date(); (l.chercheurs = l.chercheurs || []).push({ nom: n, j: d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate() }); } }
+    toast(rep.deja ? "🗝️ Déjà trouvé !" : "🗝️ Trouvé" + (rep.rang === 1 ? " en premier ! 🥇" : rep.rang ? " (" + rep.rang + "e)" : " !") + " " + TRESORS.total + " trésor" + (TRESORS.total > 1 ? "s" : "") + " dans ta besace.");
     setTimeout(() => poserTresorDOM(document), reduit ? 0 : 900); }
   else { T.pris = false; b.classList.remove("pris"); toast((rep && rep.message) || "Trouvaille non enregistrée : réessaie."); }
 }

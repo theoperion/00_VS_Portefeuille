@@ -1486,6 +1486,8 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 @keyframes gp-tresor-etinc { 0% { transform: rotate(var(--a)) translateX(0) scale(1.2); opacity: 1; } 100% { transform: rotate(var(--a)) translateX(var(--d)) scale(.2); opacity: 0; } }
 .gp-enigme { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 3; padding: 5px 10px; border-radius: 12px; background: rgba(8,10,14,.66); color: #F3E6C4; font: 500 11.5px/1.35 var(--f-text); backdrop-filter: blur(4px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
 .gp-enigme.ouverte { white-space: normal; }
+.gp-indice { display: none; margin-top: 3px; font-weight: 700; color: #FFE08A; } .gp-chercheurs { display: none; margin-top: 3px; opacity: .85; font-size: 11px; }
+.gp-enigme.ouverte .gp-indice, .gp-enigme.ouverte .gp-chercheurs { display: block; }
 .gp-enigme.cache, .gp-piste.en2d .gp-enigme, .gp-piste.en2d .gp-tresor { display: none; }
 .gp-tresors { white-space: nowrap; opacity: .8; font-size: .92em; }
 @media (prefers-reduced-motion: reduce) { .gp-tresor svg, .gp-tresor.pris svg { animation: none; } .gp-tresor.pris { opacity: 0 !important; } }
