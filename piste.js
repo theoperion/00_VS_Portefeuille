@@ -5276,7 +5276,11 @@
     function camVoulue(dt) {
       const asp = cv.width / Math.max(1, cv.height);
       if (I.mode === "helico") {
-        if (!I.tir && ANIM()) I.orbite += dt * .05;
+        // V16.59 · visite guidée : la caméra descend, suit la piste au ras des décors en tournant doucement, puis remonte
+        if (I.survol) { const S = I.survol, q = Math.min(1, (performance.now() - S.t0) / S.dur), w = Math.sin(Math.PI * q), e = q * q * (3 - 2 * q), p = T.a(S.s0 + e * T.L * .92, 0);
+          I.pan = [(p.x - T.cx) * Math.min(1, w * 1.6), (p.z - T.cz) * Math.min(1, w * 1.6)]; I.zoom = 1 - .72 * w; I.incl = .72 - .42 * w; I.orbite = S.o0 + e * 2.4;
+          if (q >= 1) { const fin = S.fin; I.survol = null; I.pan = [0, 0]; I.zoom = 1; I.incl = .72; if (fin) setTimeout(fin, 0); } }
+        else if (!I.tir && ANIM()) I.orbite += dt * .05;
         const fov = .9, rv = Math.max(T.rx, T.rz / Math.min(1, asp * .9) * (asp < 1 ? 1.25 : 1)), dist = rv / Math.tan(fov / 2) * .92 * I.zoom;
         // V16.58 · Visite : inclinaison (glisser haut/bas) et déplacement (deux doigts) ; zoom jusqu'à 0,12
         const a = I.orbite + .6, h = dist * (I.incl || .72), cx = T.cx + I.pan[0], cz = T.cz + I.pan[1];
@@ -5406,7 +5410,7 @@
       dessiner(t, dt);
       if (o.image) o.image(api);
       // cadence : 60 i/s en mouvement, 30 au repos, rien quand tout est calme
-      const bouge = I.anim || I.tir || I.enRoute || I.artifice.length || (I.inactif < 40 && (nbP || A.eclairs || (ANIM() && I.mode !== "bord")));
+      const bouge = I.anim || I.survol || I.tir || I.enRoute || I.artifice.length || (I.inactif < 40 && (nbP || A.eclairs || (ANIM() && I.mode !== "bord")));
       I.inactif += dt; if (I.anim || I.tir) I.inactif = 0;
       if (I.actif && bouge && document.visibilityState !== "hidden") raf = requestAnimationFrame(image); else I.endormi = true;
     }
@@ -5420,7 +5424,8 @@
     }
     // ----- interactions : glisser pour tourner, pincer / molette pour zoomer, toucher une voiture pour la suivre -----
     const pointeurs = new Map(), ecoutes = [], ecoute = (type, f, opt) => { cv.addEventListener(type, f, opt); ecoutes.push([type, f, opt]); };
-    ecoute("pointerdown", ev => { pointeurs.set(ev.pointerId, { x: ev.clientX, y: ev.clientY }); I.tir = { x: ev.clientX, o: I.orbite, z: I.zoom, i: I.incl, d0: null, m0: null, p0: I.pan.slice(), t: performance.now(), x0: ev.clientX, y0: ev.clientY }; try { cv.setPointerCapture(ev.pointerId); } catch (e) { } reveiller(); });
+    ecoute("pointerdown", ev => { if (I.survol) { I.survol = null; }   // V16.59 : toucher reprend la main
+      pointeurs.set(ev.pointerId, { x: ev.clientX, y: ev.clientY }); I.tir = { x: ev.clientX, o: I.orbite, z: I.zoom, i: I.incl, d0: null, m0: null, p0: I.pan.slice(), t: performance.now(), x0: ev.clientX, y0: ev.clientY }; try { cv.setPointerCapture(ev.pointerId); } catch (e) { } reveiller(); });
     ecoute("pointermove", ev => {
       if (!I.tir || !pointeurs.has(ev.pointerId)) return; pointeurs.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
       if (pointeurs.size >= 2) { const [a, b] = [...pointeurs.values()], d = Math.hypot(a.x - b.x, a.y - b.y), m = [(a.x + b.x) / 2, (a.y + b.y) / 2];
@@ -5473,6 +5478,9 @@
         if (depart) I.feuxDepart = 0; I.saut = I.mode !== "helico"; reveiller();
       },
       camera(m) { I.mode = m; I.saut = false; I.zoom = 1; I.incl = .72; I.pan = [0, 0]; reveiller(); },
+      /** V16.59 · visite guidée (hélico) : un survol de la piste en ~12 s ; un toucher l'arrête */
+      survol(dur, fin) { if (I.mode !== "helico" || !ANIM()) { if (fin) fin(); return; } I.survol = { t0: performance.now(), dur: dur || 12000, s0: 0, o0: I.orbite, fin }; reveiller(); },
+      arreterSurvol() { if (I.survol) { I.survol = null; I.pan = [0, 0]; I.zoom = 1; I.incl = .72; reveiller(); } },
       focus(n) { I.focus = n; reveiller(); },
       ecran, ecranMonde, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim, reveiller, taille: () => ({ w: I.cssW, h: I.cssH }),
       detruire() {
@@ -5908,7 +5916,7 @@
       regler(x) { Object.assign(o, x); },
       jouer(de, a, duree, fin) { if (!ANIM()) { api.placer(a); if (fin) fin(); return; } I.pts = Object.assign({}, de); poser(); I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: performance.now(), duree: Math.min(duree || 2600, 3200), fin }; if (!raf) raf = requestAnimationFrame(boucle); },
       jouerScenario(scen, duree, fin) { if (EV && EV.raz) EV.raz(); if (!ANIM()) { api.placer(scen(1)); if (fin) fin(); return; } I.e = 0; I.pts = scen(0); poser(); I.anim = { scen, de: scen(0), a: scen(1), t0: performance.now(), duree, fin }; if (!raf) raf = requestAnimationFrame(boucle); },
-      camera() { }, focus() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); if (o.image) o.image(api); }, reveiller() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); },   // V16.16 : la course reprend si la piste a été détachée
+      camera() { }, focus() { }, survol(d, fin) { if (fin) fin(); }, arreterSurvol() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); if (o.image) o.image(api); }, reveiller() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); },   // V16.16 : la course reprend si la piste a été détachée
       detruire() { if (raf) cancelAnimationFrame(raf); if (ro) ro.disconnect(); svg.remove(); }
     };
     poser();
