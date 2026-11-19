@@ -6,6 +6,9 @@
 .fond{position:absolute;inset:0;background:#000 center/cover no-repeat;opacity:0;transition:opacity .25s}.fond.on{opacity:1;animation:kb 3s linear both}
 @keyframes kb{from{transform:scale(1.05)}to{transform:scale(1.22) translate(-3%,-2%)}}
 .voile{position:absolute;inset:0;background:radial-gradient(110% 60% at 50% 50%,rgba(0,0,0,.55),rgba(0,0,0,.92))}
+#scene.carte .voile{background:radial-gradient(120% 55% at 50% 50%,rgba(0,0,0,.18),rgba(0,0,0,.7))}
+@media (orientation:portrait){.fond.on{animation-name:pan}}@keyframes pan{from{transform:scale(1.04);background-position:38% 50%}to{transform:scale(1.14);background-position:62% 50%}}
+.l.gp{font-size:clamp(24px,7.4vw,40px)}.l.gp.sous{font:700 clamp(15px,4.4vw,20px)/1.3 "Saira",sans-serif;letter-spacing:.06em;color:#F7CF55;margin-top:10px;text-transform:none}
 .txt{position:relative;z-index:3;text-align:center;padding:0 22px;width:100%;max-width:560px;display:grid;justify-items:center}
 .l{opacity:0;font-size:clamp(26px,8vw,44px);line-height:1.05;font-weight:800;text-transform:uppercase;letter-spacing:.02em;text-shadow:0 0 18px rgba(0,0,0,.9)}
 .l.on{animation:inl .5s cubic-bezier(.2,.8,.2,1) both}.l.s{font:italic 400 clamp(22px,6.4vw,32px)/1.25 Georgia,serif;text-transform:none}
@@ -25,39 +28,49 @@
 <div id="scene"><div class="fond" id="f1"></div><div class="fond" id="f2"></div><div class="voile"></div><div class="txt" id="txt"></div></div>
 <div class="flash" id="flash"></div><div class="bande h"></div><div class="bande b"></div>
 <button id="lancer" type="button">▶ BANDE-ANNONCE<small>Saison 1 · monte le son</small></button>
-<script>window.matchMedia = window.matchMedia || (() => ({ matches: false }));</script>
 <script src="img/cartes/cartes.js"></script>
-<script src="piste.js"></script>
 <script>
 const COUL = ["#4C9AFF", "#2BB6A3", "#FF6FA8", "#F2994A"], NOMS = ["Théo", "Kévin", "Clément", "Devlin"];
-const carte = id => { try { return window.Piste && Piste.carte(id); } catch (e) { return null; } };
+/* les fonds peints cuits (img/cartes/<clé>.webp, empreinte dans cartes.js) : clé du peintre de chaque circuit */
+const PEINT = { abudhabi: "garage", silverstone: "dunes", djeddah: "chateau", melbourne: "terrier", suzuka: "anneau", miami: "pandora", montreal: "etoiles", bahrein: "ratatouille", spa: "envers", lasvegas: "odyssee", singapour: "chocolat", interlagos: "titans", monza: "multivers" };
+/* noms des Grands Prix (GPS dans js/4-grandprix.js) */
+const GP = { abudhabi: "🎅 L'Atelier du Père Noël", silverstone: "🏜️ GP de la Mer de dunes", djeddah: "🏰 GP du Château", melbourne: "🎩 GP des Merveilles", suzuka: "💍 GP de l'Anneau", miami: "🌿 GP de Pandora", montreal: "🌌 GP des Étoiles", bahrein: "🐀 GP du Petit Chef", spa: "🔦 GP du Monde à l'envers", lasvegas: "🌊 GP de l'Odyssée", singapour: "🍫 GP de la Chocolaterie", interlagos: "🧱 GP du Mur des titans", monza: "🌀 GP du Multivers" };
+const carte = id => { const k = PEINT[id], c = self.CARTES_CUITES || {}; return k ? "img/cartes/" + k + ".webp" + (c[k] ? "?v=" + c[k] : "") : null; };
+Object.keys(PEINT).forEach(id => { const i = new Image(); i.decoding = "async"; i.src = carte(id); });   // préchargées : pas de plan noir
 // [durée ms, carte, mois, texte, style, son]  — sons : h battements de cœur · b « braam » de cuivres · t tambour · o ostinato (jusqu'au prochain b) · r montée · B final (braam + cymbale)
+// texte vide sur un circuit = le nom du Grand Prix
 const LONG = [
   [3000, null, "", "Ils pensaient juste épargner.", "s", "h"],
-  [2600, null, "", "Ils se sont trompés.", "s", "t"],
-  [3000, "pilotes", "", "4 pilotes.", "", "b"],
-  [3400, "cinq", "", "Et bientôt… un 5ᵉ sur la piste.", "s", "t"],
-  [1300, "bahrein", "JANVIER", "12 univers.", "", "to"],
-  [1500, "djeddah", "FÉVRIER", "Un dragon sous la banque.", "s", "t"],
-  [1500, "melbourne", "MARS", "Le Chapelier sert le thé.", "s", "t"],
-  [1500, "montreal", "JUIN", "Le côté obscur vous attend.", "s", "t"],
-  [1500, "silverstone", "JUILLET", "Quelque chose bouge sous le sable.", "s", "t"],
-  [1500, "singapour", "OCTOBRE", "Cinq tickets d'or. Pas un de plus.", "s", "t"],
-  [1500, "interlagos", "NOVEMBRE", "Ils sont derrière le mur.", "s", "t"],
-  [2200, "lasvegas", "DÉCEMBRE", "Une seule finale.", "", "b"],
-  [2400, null, "", "Six pierres. Un seul claquement de doigts.", "s", "t"],
-  [2400, null, "", "Une seule couronne. « Qu'on lui coupe la tête ! »", "s", "t"],
-  [2200, null, "", "En décembre, rien ne compte.", "s", "t"],
+  [2400, null, "", "Ils se sont trompés.", "s", "t"],
+  [2800, "pilotes", "", "4 pilotes.", "", "b"],
+  [3200, "cinq", "", "Et bientôt… un 5ᵉ sur la piste.", "s", "t"],
+  [1200, "silverstone", "JANVIER", "12 univers.", "", "to"],
+  [900, "djeddah", "FÉVRIER", "", "", "t"],
+  [900, "melbourne", "MARS", "", "", "t"],
+  [900, "suzuka", "AVRIL", "", "", "t"],
+  [900, "miami", "MAI", "", "", "t"],
+  [900, "montreal", "JUIN", "", "", "t"],
+  [900, "bahrein", "JUILLET", "", "", "t"],
+  [900, "spa", "AOÛT", "", "", "t"],
+  [900, "lasvegas", "SEPTEMBRE", "", "", "t"],
+  [900, "singapour", "OCTOBRE", "", "", "t"],
+  [900, "interlagos", "NOVEMBRE", "", "", "t"],
+  [2000, "monza", "DÉCEMBRE", "Une seule finale.", "", "b"],
+  [2200, null, "", "🏆 La Coupe a volé en éclats.", "s", "t"],
+  [2400, null, "", "🗝️ Un objet est caché sur chaque circuit…", "s", "t"],
+  [2200, null, "", "👤 Mon portrait : dès samedi 11 h", "s", "t"],
+  [2400, "abudhabi", "DÉCEMBRE 2026", "🔥 1ᵉʳ décembre : le tour de chauffe", "s", "t"],
   [2400, null, "", "Le 1ᵉʳ janvier, tout compte.", "", "tr"],
   [6000, "fin", "", "", "", "B"]];
 const COURT = [
   [2200, null, "", "Ils pensaient juste épargner.", "s", "h"],
   [2000, "pilotes", "", "4 pilotes.", "", "b"],
-  [2600, "cinq", "", "Et bientôt… un 5ᵉ.", "s", "t"],
-  [700, "bahrein", "", "", "", "to"], [700, "djeddah", "", "", "", "t"], [700, "melbourne", "", "", "", "t"],
-  [700, "montreal", "", "", "", "t"], [700, "silverstone", "", "", "", "t"], [700, "interlagos", "", "", "", "t"],
-  [1700, "lasvegas", "", "12 univers. Un seul champion.", "", "b"],
-  [1800, null, "", "En décembre, rien ne compte.", "s", "t"],
+  [2400, "cinq", "", "Et bientôt… un 5ᵉ.", "s", "t"],
+  [500, "silverstone", "", "", "", "to"], [450, "djeddah", "", "", "", "t"], [450, "melbourne", "", "", "", "t"], [450, "suzuka", "", "", "", "t"],
+  [450, "miami", "", "", "", "t"], [450, "montreal", "", "", "", "t"], [450, "bahrein", "", "", "", "t"], [450, "spa", "", "", "", "t"],
+  [450, "lasvegas", "", "", "", "t"], [450, "singapour", "", "", "", "t"], [450, "interlagos", "", "", "", "t"],
+  [1700, "monza", "", "12 univers. Un seul champion.", "", "b"],
+  [1800, "abudhabi", "", "🔥 1ᵉʳ décembre : le tour de chauffe", "s", "t"],
   [1800, null, "", "Le 1ᵉʳ janvier, tout compte.", "", "r"],
   [4200, "demain", "", "", "", "B"]];
 const COURTE = location.hash.indexOf("court") >= 0, PLANS = COURTE ? COURT : LONG;
@@ -99,9 +112,10 @@ function plan(i) {
   if (img) { f.style.backgroundImage = 'url("' + img + '")'; f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); autre.classList.remove("on"); } else { f.classList.remove("on"); autre.classList.remove("on"); }
   if (id === "pilotes") txt.innerHTML = '<div class="l on">' + t + '</div><div class="pilotes">' + NOMS.map((n, k) => '<i style="color:' + COUL[k] + ';background:' + COUL[k] + '22;animation-delay:' + (.3 + k * .35) + 's" class="on">' + n + "</i>").join("") + "</div>";
   else if (id === "cinq") txt.innerHTML = '<div class="l on ' + st + '">' + t + '</div><div class="pilotes">' + NOMS.map((n, k) => '<i style="color:' + COUL[k] + ';background:' + COUL[k] + '22;opacity:.35">' + n + "</i>").join("") + '<i class="on cinq" style="color:#B4E33D;background:#B4E33D22;animation-delay:.5s">?</i></div>';
-  else if (id === "fin") txt.innerHTML = '<div class="l on titre">VERSUS</div><div class="l on date" style="animation-delay:.6s">🏆 Le Podium · Saison 1 · 2027</div><div class="l on s" style="animation-delay:1.2s">Décembre : le tour de chauffe.<br>1<sup>er</sup> janvier : le départ.</div><a class="go on" style="animation-delay:2s" href="./#trophees">Ouvrir l’onglet Podium 🏁</a>';
+  else if (id === "fin") txt.innerHTML = '<div class="l on titre">VERSUS</div><div class="l on date" style="animation-delay:.6s">🏆 Le Podium · Saison 1 · 2027</div><div class="l on s" style="animation-delay:1.2s">1<sup>er</sup> décembre : le tour de chauffe.<br>1<sup>er</sup> janvier : le départ.</div><a class="go on" style="animation-delay:2s" href="./#trophees">Ouvrir l’onglet Podium 🏁</a>';
   else if (id === "demain") txt.innerHTML = '<div class="l on titre" style="font-size:clamp(56px,19vw,120px)">Demain.</div><div class="l on date" style="animation-delay:1.4s">Onglet 🏆 Podium<br>samedi 9 h</div>';
-  else txt.innerHTML = (mois ? '<span class="mois">' + mois + "</span>" : "") + (t ? '<div class="l on ' + st + '">' + t + "</div>" : "");
+  else txt.innerHTML = (mois ? '<span class="mois">' + mois + "</span>" : "") + (t ? '<div class="l on ' + st + '">' + t + "</div>" : img && mois ? '<div class="l on gp">' + GP[id] + "</div>" : "") + (img && t && mois ? '<div class="l on gp sous" style="animation-delay:.25s">' + GP[id] + "</div>" : "");
+  document.getElementById("scene").classList.toggle("carte", !!img);
   if (img || id === "pilotes" || id === "cinq" || id === "fin" || id === "demain") { const fl = document.getElementById("flash"); fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on"); }
   setTimeout(() => plan(i + 1), d);
 }
