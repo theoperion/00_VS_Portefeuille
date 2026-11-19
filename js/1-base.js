@@ -215,7 +215,7 @@ function afficherTout() {
   if (!(ETAT.i2 >= 0 && ETAT.i2 < nbIdx)) ETAT.i2 = Math.min(1, nbIdx - 1);
   if (ETAT.i2c === undefined || ETAT.i2c === null) ETAT.i2c = ok(ETAT.i2) ? ETAT.i2 : -1;
   if (ETAT.i2c >= nbIdx) ETAT.i2c = -1;
-  SESSION = D.session || { role: "admin" };
+  SESSION = D.session || (SOURCE === "demo" ? { role: "admin" } : { role: "perso" });   // V16.25 : sans session renvoyée par le serveur, jamais de droits admin par défaut
   if (vueJoueur()) SESSION = { role: "perso", nom: joueurAdmin(), simule: true };   // vue joueur = toi, sans tes droits d'admin (jamais un autre joueur)
   else if (vraiAdmin() && !adminActif()) SESSION = { role: "perso", nom: joueurAdmin(), adminCoupe: true };
   if (D.personnes.find(p => p.nom === moiVrai())) { if (ETAT.moi !== moiVrai()) { ETAT.moi = moiVrai(); ETAT.fiche = moiVrai(); garder(); } } else if (!estAdmin() && D.personnes.find(p => p.nom === SESSION.nom)) { if (ETAT.moi !== SESSION.nom) { ETAT.moi = SESSION.nom; ETAT.fiche = SESSION.nom; garder(); } }
