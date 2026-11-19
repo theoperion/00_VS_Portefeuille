@@ -2032,37 +2032,17 @@
     s.push(`<path d="M0 360L80 336L150 352L230 330L330 356L460 344L600 352L760 330L880 344L1000 326L1080 340V430H0Z" fill="#14203F"/>`);
     s.push(`<ellipse cx="540" cy="360" rx="620" ry="34" fill="url(#c5-brume)"/>`);
 
-    // ---- 3. le sol : plateau du Quidditch à gauche, colline de la forêt à droite
-    s.push(`<path d="M0 410C90 392 260 386 360 420L380 520L340 610L0 615Z" fill="url(#c5-sol)"/><path d="M0 410C90 392 260 386 360 420" stroke="#4E6A88" stroke-width="1.5" opacity=".6" fill="none"/>`);
-    s.push(`<path d="M760 330C820 300 930 286 1080 296V620L780 610Z" fill="url(#c5-sol)"/>`);
+    // ---- 3. le sol : plateau à gauche, colline de la forêt à droite (ils descendent jusqu'à l'eau)
+    s.push(`<path d="M0 410C90 392 260 386 360 420L372 552H0Z" fill="url(#c5-sol)"/><path d="M0 410C90 392 260 386 360 420" stroke="#4E6A88" stroke-width="1.5" opacity=".5" fill="none"/>`);
+    s.push(`<path d="M760 330C820 300 930 286 1080 296V552H790Z" fill="url(#c5-sol)"/>`);
 
     // ---- 4. la forêt interdite (colline de droite), sombre, quelques cimes touchées par la lune
     const sapin = (x, y, h, c, lu) => { const w = h * .42; let d = `M${f(x)} ${f(y - h)}`; for (let e = 0; e < 4; e++) { const yy = y - h + (e + 1) * h / 4, ww = w * (e + 1) / 4; d += `L${f(x + ww)} ${f(yy)}L${f(x + ww * .45)} ${f(yy - 2)}`; } for (let e = 3; e >= 0; e--) { const yy = y - h + (e + 1) * h / 4, ww = w * (e + 1) / 4; d += `L${f(x - ww * .45)} ${f(yy - 2)}L${f(x - ww)} ${f(yy)}`; } return `<path d="${d}Z" fill="${c}"/>` + (lu ? `<path d="M${f(x)} ${f(y - h)}L${f(x - w * .25)} ${f(y - h * .75)}" stroke="#6A86C0" stroke-width="1.2" opacity=".6"/>` : ""); };
     for (let rang = 0; rang < 4; rang++) for (let k = 0; k < 16; k++) { const x = 778 + k * 11.5 + r() * 8 + rang * 4, y = 330 + rang * 34 + r() * 14 - (x - 780) * .08 + (k % 2) * 6; if (x > 948) continue; s.push(sapin(x, y, 46 + r() * 30 - rang * 2, ["#0F2230", "#0C1C28", "#0A1822", "#08131C"][rang], rang === 0 && r() < .5)); }
-    nom(868, 296, "La forêt interdite", 11.5);
 
-    // ---- 5. le terrain de Quidditch (plateau de gauche) : pelouse, tours de gradins aux couleurs des pilotes, 2 × 3 anneaux
-    { const cx = 232, cy = 462;
-      s.push(`<ellipse cx="${cx}" cy="${cy + 4}" rx="104" ry="32" fill="#000" opacity=".35" filter="url(#c5-flou)"/><ellipse cx="${cx}" cy="${cy}" rx="98" ry="28" fill="#1F4A3A"/><ellipse cx="${cx}" cy="${cy}" rx="98" ry="28" fill="none" stroke="#9FD0B0" stroke-width="1.2" opacity=".5"/><ellipse cx="${cx}" cy="${cy}" rx="14" ry="5" fill="none" stroke="#CFEAD8" stroke-width="1" opacity=".6"/><path d="M${cx} ${cy - 28}V${cy + 28}" stroke="#CFEAD8" stroke-width="1" opacity=".4"/>`);
-      const gradin = (x, yb, h, w, c) => { const yt = yb - h; return `<path d="M${f(x - w / 2)} ${f(yb)}V${f(yt + 10)}L${f(x)} ${f(yt)}L${f(x + w / 2)} ${f(yt + 10)}V${f(yb)}Z" fill="#2A2238"/>` +
-        `<path d="M${f(x - w / 2)} ${f(yt + 10)}L${f(x)} ${f(yt)}L${f(x + w / 2)} ${f(yt + 10)}L${f(x + w / 2)} ${f(yt + 4)}L${f(x)} ${f(yt - 8)}L${f(x - w / 2)} ${f(yt + 4)}Z" fill="${mixHex(c, "#000000", .35)}"/>` +
-        `<rect x="${f(x - w / 2 + 2)}" y="${f(yt + 12)}" width="${f(w - 4)}" height="${f(h * .5)}" fill="${c}"/>` + [0, 1, 2].map(q => `<rect x="${f(x - w / 2 + 2 + q * (w - 4) / 3)}" y="${f(yt + 12)}" width="${f((w - 4) / 6)}" height="${f(h * .5)}" fill="#000" opacity=".22"/>`).join("") +
-        `<path d="M${f(x - w / 2 + 2)} ${f(yt + 12 + h * .5)}l${f((w - 4) / 4)} 6l${f((w - 4) / 4)} -6l${f((w - 4) / 4)} 6l${f((w - 4) / 4)} -6" fill="${c}"/><path d="M${f(x - w / 2)} ${f(yt + 12)}V${f(yb)}" stroke="#7A8CB8" opacity=".5"/>` +
-        `<path d="M${f(x - w / 2 - 2)} ${f(yt + 10)}h${f(w + 4)}" stroke="#E8C25A" stroke-width="1.2"/>`; };
-      // tours du fond (petites), puis anneaux, puis tours de devant (grandes)
-      [[150, 446, 70, 18, 0], [186, 438, 84, 19, 1], [232, 436, 92, 20, 2], [278, 438, 84, 19, 3], [314, 446, 70, 18, 0]].forEach(([x, yb, h, w, k]) => s.push(gradin(x, yb, h, w, CJ[k])));
-      const anneaux = (x, sens) => [[-10, 70, 8], [0, 92, 10], [10, 62, 7]].map(([dx, h, R]) => { const xx = x + dx * sens; return `<path d="M${f(xx)} ${f(cy)}V${f(cy - h + R)}" stroke="#C9A24A" stroke-width="1.6"/><ellipse cx="${f(xx)}" cy="${f(cy - h)}" rx="${f(R * .6)}" ry="${f(R)}" fill="none" stroke="url(#c5-or)" stroke-width="2.4"/>`; }).join("");
-      s.push(anneaux(146, 1) + anneaux(318, -1));
-      [[132, 492, 64, 22, 1], [198, 500, 56, 22, 3], [266, 500, 56, 22, 2], [332, 492, 64, 22, 0]].forEach(([x, yb, h, w, k]) => s.push(gradin(x, yb, h, w, CJ[k])));
-      [[132, 432], [332, 432], [232, 348]].forEach(([x, y]) => K.halo(x, y, 30, "#FFB347", .5));
-      nom(cx, 524, "Le terrain de Quidditch", 12); }
+    // ---- 5. trois grands anneaux en silhouette, dans l'ombre : les pilotes viennent d'y passer
+    [[258, 548, 226, 22], [298, 548, 262, 27], [334, 548, 206, 19]].forEach(([x, yb, h, R]) => s.push(`<path d="M${x} ${yb}V${yb - h + R}" stroke="#0A1024" stroke-width="3.4"/><ellipse cx="${x}" cy="${yb - h}" rx="${f(R * .62)}" ry="${R}" fill="none" stroke="#0A1024" stroke-width="5.5"/><path d="M${f(x - R * .62)} ${yb - h}A${f(R * .62)} ${R} 0 0 1 ${x} ${yb - h - R}" fill="none" stroke="#9FB4E8" stroke-width="1.3" opacity=".6"/><path d="M${f(x - 1.6)} ${yb - h + R + 4}V${yb - 10}" stroke="#7A8CC0" stroke-width=".9" opacity=".4"/>`));
 
-    // ---- 6. le saule cogneur (devant le terrain, au-dessus de la ligne droite du bas)
-    const SX = 236, SY = 606;
-    s.push(`<ellipse cx="${SX}" cy="${SY + 2}" rx="46" ry="7" fill="#000" opacity=".4"/><path d="M${SX - 14} ${SY}C${SX - 8} ${SY - 20} ${SX - 18} ${SY - 34} ${SX - 6} ${SY - 50}C${SX + 2} ${SY - 40} ${SX + 4} ${SY - 46} ${SX + 10} ${SY - 52}C${SX + 8} ${SY - 30} ${SX + 4} ${SY - 18} ${SX + 16} ${SY}Z" fill="#3A2A22" stroke="#120C0A" stroke-width="1.2"/><path d="M${SX - 8} ${SY - 8}c4 -10 0 -20 4 -30" stroke="#6A5440" stroke-width="1.6" fill="none"/><path d="M${SX - 24} ${SY}q10 -6 14 -2M${SX + 14} ${SY}q12 -4 22 2" stroke="#3A2A22" stroke-width="4" fill="none" stroke-linecap="round"/>`);
-    // petite voiture turquoise coincée dans les branches (clin d'œil)
-    s.push(`${G(SX + 34, SY - 66, 1, -18)}<path d="M-12 2h24l-2 -6h-4l-3 -5h-7l-4 5h-4z" fill="#2BB6A3" stroke="#0A1A20" stroke-width="1"/><rect x="-5" y="-8" width="4" height="4" fill="#BFE4F2"/><rect x="1" y="-8" width="4" height="4" fill="#FFE6A0"/><circle cx="-7" cy="3" r="2.4" fill="#111"/><circle cx="7" cy="3" r="2.4" fill="#111"/></g>`);
-    nom(SX - 2, SY + 16, "le saule cogneur", 10.5);
 
     // ---- 7. le château : couches du fond (plus bleues, plus petites), puis le corps, puis les tours avant
     const tour = (x, yb, w, yt, rh, o) => { o = o || {}; let g = `<rect x="${f(x - w / 2)}" y="${f(yt)}" width="${f(w)}" height="${f(yb - yt)}" fill="url(#c5-pi)"/>`;
@@ -2076,10 +2056,9 @@
       g += rh > 0 ? `<path d="M${f(x0 - 3)} ${f(yt)}L${f(x0 + w * .06)} ${f(yt - rh)}L${f(x1 - w * .06)} ${f(yt - rh)}L${f(x1 + 3)} ${f(yt)}Z" fill="url(#c5-to)"/><path d="M${f(x0 + w * .06)} ${f(yt - rh)}H${f(x1 - w * .06)}" stroke="#9FB6E8" stroke-width="1" opacity=".45"/>` : Array.from({ length: Math.floor(w / 9) }, (_, q) => `<rect x="${f(x0 + q * 9 + 1)}" y="${f(yt - 5)}" width="5" height="5" fill="#4E5D88"/>`).join("");
       for (let y = yt + 12; y < yb - 14; y += o.pas || 26) for (let x = x0 + 9; x < x1 - 5; x += o.ec || 15) g += fen(x, y, 4.6, 9, r() < (o.lum === undefined ? .55 : o.lum));
       return g + `<path d="M${f(x0 + .8)} ${f(yt)}V${f(yb)}" stroke="#B8CCF2" stroke-width="1.2" opacity=".3"/>`; };
+    s.push("<!--C0-->");
     // fond (brumeux)
     { const n0 = LUM.length; s.push(`<g opacity=".6">` + bloc(430, 720, 505, 300, 18, { lum: .35, pas: 28, ec: 18 }) + tour(425, 505, 24, 262, 44, { lum: .4 }) + tour(512, 505, 26, 236, 50, { lum: .4 }) + tour(612, 505, 22, 254, 46, { lum: .4 }) + tour(735, 505, 26, 268, 44, { lum: .4 }) + `</g>`); LUM.splice(n0); }
-    // la falaise
-    s.push(`<path d="M320 612L338 560L352 520L372 498L800 498L822 524L842 570L858 612Q590 640 320 612Z" fill="url(#c5-ro)"/><path d="M338 560L352 520L372 498M360 600L368 556L380 528M420 606l6 -40l14 -30M470 612l4 -50l10 -40" stroke="#7A8CB8" stroke-width="1.3" opacity=".45" fill="none"/>${[[540, 604, 520, 560], [600, 610, 614, 548], [690, 608, 700, 556], [760, 604, 776, 540], [810, 596, 820, 548]].map(([x1, y1, x2, y2]) => `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="#05070F" stroke-width="2" opacity=".55"/>`).join("")}`);
     // le corps du château
     s.push(tour(392, 505, 30, 176, 74, { dr: CJ[0], lum: .6 }));                   // tour ouest (dans le créneau gauche du tracé)
     s.push(tour(545, 505, 62, 240, 86, { dr: CJ[2], lum: .5, pas: 26 }));          // donjon (dans la boucle du milieu)
@@ -2099,8 +2078,6 @@
       for (let k = 0; k < 40; k++) s.push(`<circle cx="${f(gx0 + r() * (gx1 - gx0))}" cy="${f(yt + r() * 70)}" r="${f(.5 + r() * .8)}" fill="#F4F0FF" opacity="${f(.4 + r() * .6)}"/>`);
       // fond de salle : la table des professeurs et le grand vitrail
       s.push(`<rect x="${gx0}" y="${gy - 44}" width="${gx1 - gx0}" height="44" fill="#4A3020"/><path d="M${gx0} ${gy - 44}H${gx1}" stroke="#E8C25A" stroke-width="1"/><rect x="${gx0 + 22}" y="${gy - 50}" width="${gx1 - gx0 - 44}" height="7" fill="#7A4A26"/><path d="M${(gx0 + gx1) / 2 - 8} ${gy - 50}v-14h16v14" fill="#E2B93B" opacity=".9"/>`);
-      // 4 bannières de maisons (couleurs des pilotes, initiales, pas de blason)
-      ["T", "K", "C", "D"].forEach((l, k) => { const bx = gx0 + 16 + k * 30; s.push(`<path d="M${bx - 8} ${yt + 70}h16v24l-8 -5l-8 5z" fill="${CJ[k]}"/><text x="${bx}" y="${yt + 85}" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="9" fill="#FFF6D8">${l}</text>`); });
       // 4 longues tables en perspective, avec leurs couverts d'or
       [0, 1, 2, 3].forEach(k => { const xa = gx0 + 22 + k * 26, xb = gx0 + 6 + k * 37; s.push(`<path d="M${xa} ${gy - 40}L${xa + 6} ${gy - 40}L${xb + 12} ${gy}L${xb} ${gy}Z" fill="#6A4022"/><path d="M${xa + 3} ${gy - 40}L${xb + 6} ${gy}" stroke="#F7CF55" stroke-width="1.6" stroke-dasharray="1.5 4"/><path d="M${xa - 1} ${gy - 40}L${xb - 5} ${gy}" stroke="${CJ[k]}" stroke-width="1.6" opacity=".9"/>`); });
       s.push(`</g>`);
@@ -2112,47 +2089,25 @@
     s.push(tour(366, 520, 28, 372, 50, { lum: .6 }) + tour(784, 518, 32, 352, 58, { lum: .6 }));
     // pied du château : rempart et escalier vers le lac
     s.push(`<path d="M352 520H800V530H352Z" fill="#2A3458"/>${Array.from({ length: 49 }, (_, q) => `<rect x="${352 + q * 9.2}" y="514" width="5" height="6" fill="#3E4A74"/>`).join("")}<path d="M590 530l-6 20l-10 16l-12 14l-10 14" stroke="#5A6A92" stroke-width="3" stroke-dasharray="3 2" fill="none"/>`);
+    s.push("<!--C1-->");
+    { const i0 = s.indexOf("<!--C0-->"), i1 = s.indexOf("<!--C1-->"); s.splice(i0, i1 - i0 + 1, `<g id="c5-chat">${s.slice(i0 + 1, i1).join("")}</g>`); }
+    // l'avancée de roche au bord de l'eau
+    s.push(`<path d="M326 556L344 536L370 528H802L828 534L850 556Z" fill="url(#c5-ro)"/><path d="M344 536L370 528H802L828 534" stroke="#7A8CB8" stroke-width="1.2" opacity=".45" fill="none"/>`);
 
-    // la falaise habitée : rochers éclairés par la lune, lanternes le long de l'escalier, le hangar à bateaux au bord de l'eau
-    for (let k = 0; k < 9; k++) { const y = 544 + k * 8 + r() * 4, x0 = 350 + k * 3 + r() * 20, x1 = 830 - k * 2 - r() * 20; let d = `M${f(x0)} ${f(y)}`; for (let x = x0 + 30; x < x1; x += 30) d += `l30 ${f((r() - .5) * 6)}`; s.push(`<path d="${d}" stroke="${k % 2 ? "#05070F" : "#5A6A92"}" stroke-width="${k % 2 ? 2 : 1}" opacity="${k % 2 ? .45 : .3}" fill="none"/>`); }
-    for (let k = 0; k < 18; k++) { const x = 330 + k * 30 + r() * 14; if (Math.abs(x - 520) < 34) continue; s.push(sapin(x, 612 + r() * 4, 16 + r() * 16, "#0A161E", r() < .3)); }
-    [[586, 548], [576, 566], [564, 580], [552, 594]].forEach(([x, y]) => { s.push(`<path d="M${x} ${y}v-8" stroke="#2A2014" stroke-width="1.2"/><circle cx="${x}" cy="${y - 9}" r="2" fill="#FFD27A"/>`); K.halo(x, y - 9, 14, "#FFB347", .6); });
-    { const x = 520, y = 612; s.push(`<path d="M${x - 26} ${y}V${y - 14}L${x} ${y - 30}L${x + 26} ${y - 14}V${y}Z" fill="#4A3424"/><path d="M${x - 30} ${y - 12}L${x} ${y - 32}L${x + 30} ${y - 12}" stroke="url(#c5-to)" stroke-width="5" fill="none"/><path d="M${x - 10} ${y}v-12a10 10 0 0 1 20 0v12z" fill="#FFC85A" opacity=".85"/>`); K.halo(x, y - 6, 34, "#FFB347", .5); }
-    // ---- 8. le pont couvert (du château vers la colline de la forêt)
-    { const x0 = 798, y0 = 470, x1 = 936, y1 = 446;
-      [826, 862, 898].forEach(x => { const y = y0 + (y1 - y0) * (x - x0) / (x1 - x0); s.push(`<path d="M${x - 7} ${f(y + 14)}L${x - 9} 600H${x + 9}L${x + 7} ${f(y + 14)}Z" fill="url(#c5-ro)"/>`); });
-      s.push(`<path d="M${x0} ${y0 + 16}Q${(x0 + x1) / 2} ${(y0 + y1) / 2 + 34} ${x1} ${y1 + 16}" stroke="#3E4A74" stroke-width="4" fill="none"/>`);
-      s.push(`<path d="M${x0} ${y0 - 12}L${x1} ${y1 - 12}L${x1} ${y1 + 14}L${x0} ${y0 + 14}Z" fill="#4A3424"/><path d="M${x0 - 4} ${y0 - 10}L${x0 + 6} ${y0 - 22}L${x1 + 6} ${y1 - 22}L${x1 + 4} ${y1 - 10}Z" fill="url(#c5-to)"/>`);
-      for (let k = 0; k < 7; k++) { const x = x0 + 12 + k * 18, y = y0 + (y1 - y0) * (x - x0) / (x1 - x0); s.push(fen(x, y - 6, 7, 11, r() < .7, "#FFC85A")); }
-      s.push(`<path d="M${x1} ${y1 + 14}l14 4l2 20h-20z" fill="url(#c5-ro)"/>`);
-      nom(868, 500, "le pont couvert", 10.5); }
 
-    // ---- 9. la cabane du garde-chasse (pierre, toit de chaume, fenêtre chaude, citrouilles géantes)
-    { const x = 880, y = 566;
-      s.push(`<ellipse cx="${x + 4}" cy="${y + 3}" rx="40" ry="7" fill="#000" opacity=".4"/><path d="M${x - 24} ${y}V${y - 26}H${x + 24}V${y}Z" fill="#5A5E70"/>${[0, 1, 2].map(q => `<path d="M${x - 24} ${y - 7 - q * 8}H${x + 24}" stroke="#2E3242" stroke-width="1"/>`).join("")}<path d="M${x - 32} ${y - 24}L${x} ${y - 58}L${x + 32} ${y - 24}Z" fill="#6A5430"/><path d="M${x - 32} ${y - 24}L${x} ${y - 58}" stroke="#A88A54" stroke-width="1.3"/><rect x="${x + 10}" y="${y - 66}" width="7" height="16" fill="#4A3A2E"/>`);
-      s.push(`<rect x="${x - 6}" y="${y - 18}" width="12" height="18" fill="#3A2414"/>` + fen(x - 15, y - 20, 7, 9, true, "#FFB347") + fen(x + 15, y - 20, 7, 9, true, "#FFB347"));
-      [[x - 42, y - 2, 9], [x - 30, y + 4, 6], [x + 36, y + 2, 8]].forEach(([u, v, R]) => s.push(`<ellipse cx="${u}" cy="${v}" rx="${R}" ry="${R * .78}" fill="#E07A1E"/><path d="M${u - R * .4} ${v - R * .7}q${R * .1} ${R * .7} 0 ${R * 1.4}M${u + R * .4} ${v - R * .7}q${-R * .1} ${R * .7} 0 ${R * 1.4}" stroke="#A8500E" stroke-width="1" fill="none"/><path d="M${u} ${v - R * .78}v-3" stroke="#3A6A2A" stroke-width="2"/>`));
-      LUM.push([x, y - 16, 40]); nom(x - 14, y + 22, "la cabane du garde-chasse", 10); }
-
-    // ---- 10. la volière (premier plan à gauche) d'où partent les hiboux
-    { const x = 52, yb = 640, yt = 300;
-      s.push(`<path d="M${x - 30} ${yb}L${x - 22} ${yt}H${x + 22}L${x + 30} ${yb}Z" fill="url(#c5-pi)"/><path d="M${x - 30} ${yt + 4}L${x} ${yt - 64}L${x + 30} ${yt + 4}Z" fill="url(#c5-to)"/><path d="M${x - 30} ${yt + 4}L${x} ${yt - 64}" stroke="#9FB6E8" stroke-width="1.2" opacity=".55"/>`);
-      for (let q = 0; q < 14; q++) { const u = x - 14 + (q % 3) * 14 + (Math.floor(q / 3) % 2) * 6, v = yt + 26 + Math.floor(q / 3) * 52; if (v > yb - 30) continue; s.push(`<path d="M${u - 4} ${v + 8}V${v + 2}a4 4 0 0 1 8 0V${v + 8}Z" fill="#0A0D1C"/><circle cx="${u - 1.4}" cy="${v + 3.5}" r=".9" fill="#FFD27A"/><circle cx="${u + 1.4}" cy="${v + 3.5}" r=".9" fill="#FFD27A"/>`); }
-      s.push(`<path d="M${x - 34} ${yt + 6}h68" stroke="#3E4A74" stroke-width="4"/>`);
-      nom(x, yt - 72, "la volière", 10.5); }
-
-    // ---- 11. le lac noir : reflets de la lune et des fenêtres
-    s.push(`<path d="M0 612Q160 600 320 612Q590 640 858 612Q960 602 1080 610V720H0Z" fill="url(#c5-lac)"/><path d="M0 612Q160 600 320 612Q590 640 858 612Q960 602 1080 610" stroke="#5A72B4" stroke-width="1.2" opacity=".5" fill="none"/>`);
-    for (let k = 0; k < 16; k++) { const y = 622 + k * 6.2, w = 26 - k * .8 + r() * 10; s.push(`<path d="M${f(LX - w / 2 + (r() - .5) * 10)} ${f(y)}h${f(w)}" stroke="#F6EED2" stroke-width="2" opacity="${f(.5 - k * .025)}" stroke-linecap="round"/>`); }
-    for (let k = 0; k < 34; k++) { const x = 380 + r() * 420, y = 628 + r() * 80; s.push(`<path d="M${f(x)} ${f(y)}h${f(4 + r() * 10)}" stroke="#FFC85A" stroke-width="1.6" opacity="${f(.15 + r() * .35)}" stroke-linecap="round"/>`); }
+    // ---- 11. le lac noir, miroir calme : il reflète le château, la lune et la Grande Salle
+    const WL = 550;
+    s.push(`<linearGradient id="c5-lac2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050A18" stop-opacity=".1"/><stop offset="1" stop-color="#03060F" stop-opacity=".75"/></linearGradient>`);
+    s.push(`<rect x="0" y="${WL}" width="${W}" height="${H - WL}" fill="url(#c5-lac)"/><clipPath id="c5-eau"><rect x="0" y="${WL}" width="${W}" height="${H - WL}"/></clipPath>`);
+    s.push(`<g clip-path="url(#c5-eau)" opacity=".55" filter="url(#c5-flou)"><use href="#c5-chat" transform="translate(0 ${2 * WL}) scale(1 -1)"/></g>`);
+    for (let k = 0; k < 46; k++) { const y = WL + 6 + k * 3.7, x = r() * W; s.push(`<path d="M${f(x)} ${f(y)}h${f(40 + r() * 160)}" stroke="#08102A" stroke-width="${f(1 + k * .03)}" opacity=".55"/>`); }
+    s.push(`<rect x="0" y="${WL}" width="${W}" height="${H - WL}" fill="url(#c5-lac2)"/><path d="M0 ${WL}H${W}" stroke="#7A90C8" stroke-width="1.2" opacity=".45"/>`);
+    K.halo(LX, WL + 40, 90, "#9FB8F0", .18); for (let k = 0, y = WL + 6; y < H - 6; k++) { const w = 14 + r() * (34 - k * .8); s.push(`<path d="M${f(LX - w / 2 + (r() - .5) * 18)} ${f(y)}h${f(w)}" stroke="#F6EED2" stroke-width="${f(1 + r() * 1.4)}" opacity="${f(Math.max(.08, .5 - k * .02) * (.5 + r() * .5))}" stroke-linecap="round"/>`); y += 4 + r() * 9; }
+    for (let k = 0; k < 30; k++) { const x = 480 + r() * 150, y = WL + 12 + r() * 150; s.push(`<path d="M${f(x)} ${f(y)}h${f(5 + r() * 14)}" stroke="#FFC85A" stroke-width="1.6" opacity="${f(.2 + r() * .35)}" stroke-linecap="round"/>`); }
 
     // halos des fenêtres (après le château)
     LUM.forEach(([x, y, R]) => K.halo(x, y, R * .8, "#FFB347", .26));
 
-    // le froid des détraqueurs sur le lac (bas gauche) et trois détraqueurs au loin dans le ciel
-    s.push(`<ellipse cx="160" cy="692" rx="130" ry="22" fill="#9FB4E0" opacity=".12" filter="url(#c5-flou8)"/>`);
-    for (let k = 0; k < 20; k++) { const x = 70 + r() * 190, y = 676 + r() * 36; s.push(`<path d="M${f(x)} ${f(y)}l3 -3l3 3l-3 3z" fill="#DDE8FF" opacity="${f(.2 + r() * .4)}"/>`); }
-    [[118, 72, .45], [150, 96, .35], [86, 110, .3]].forEach(([x, y, sc]) => s.push(`${G(x, y, sc)}<path d="M-8 -22C-14 -22 -16 -12 -14 -2C-16 8 -20 16 -24 22L-18 18L-16 26L-10 18L-6 26L-2 18L2 26L4 16C8 6 6 -6 4 -12C2 -20 -2 -22 -8 -22Z" fill="#05060C" stroke="#4A5A88" stroke-width="1.4"/></g>`));
     // ---- 12. la piste : une voie aérienne d'or, balisée d'anneaux
     K.route([["#000", 44, ` opacity=".45" filter="url(#c5-flou8)"`], ["#FFD27A", 34, ` opacity=".12"`], ["url(#c5-or)", 27, ` opacity=".95"`], ["#121A3C", 22, ` opacity=".9"`], ["#2A3A78", 10, ` opacity=".35"`]]);
     s.push(`<path d="${K.piste}" fill="none" stroke="#FFE6A8" stroke-width="2.2" stroke-dasharray="2 13" stroke-linecap="round" opacity=".85"/>`);
@@ -2161,79 +2116,55 @@
     [.075, .2, .32, .405, .5, .59, .7, .78, .885].forEach(fr => { const i = idx(fr), [, , tx, ty] = K.nrm(i), an2 = Math.atan2(ty, tx) * 57.3, [x, y] = P[i];
       s.push(`${G(x, y, 1, an2)}<path d="M0 -20V-30" stroke="#C9A24A" stroke-width="1.6"/><ellipse rx="5" ry="20" fill="none" stroke="#000" stroke-width="4.5" opacity=".4"/><ellipse rx="5" ry="20" fill="none" stroke="url(#c5-or)" stroke-width="3"/><ellipse rx="5" ry="20" fill="none" stroke="#FFF6D8" stroke-width=".8" opacity=".7"/></g>`); K.halo(x, y, 26, "#FFD27A", .3); });
 
-    // ---- 13. le titre (petit) : « Je jure solennellement… »
-    s.push(`<path d="M352 16H728L716 34L728 52H352L364 34Z" fill="#E9D8A8" stroke="#6A4A1E" stroke-width="1.4" opacity=".95"/><text x="540" y="31" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-weight="bold" font-size="13" fill="#3A2614">Je jure solennellement que mes intentions sont mauvaises</text><text x="540" y="45" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="9" fill="#5A3A1E">Février · la grande course de balais</text>`);
 
-    // ---- 14. les tableaux des 4 pilotes (bord droit) : cadres d'or, les vrais portraits sont posés par l'appli
-    const PORTR = [];
-    { const px = 990, pw = 84, py = 236, ph = 412;
-      s.push(`<rect x="${px + 4}" y="${py + 5}" width="${pw}" height="${ph}" rx="6" fill="#000" opacity=".4" filter="url(#c5-flou)"/><rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="6" fill="#4A1E2A" stroke="#1A0A10" stroke-width="2"/>${Array.from({ length: 6 }, (_, q) => `<path d="M${px + 8 + q * 14} ${py + 4}v${ph - 8}" stroke="#6A2A3A" stroke-width="5" opacity=".6"/>`).join("")}<path d="M${px} ${py + 2}h${pw}" stroke="url(#c5-or)" stroke-width="4"/>`);
-      s.push(`<text x="${px + pw / 2}" y="${py + 18}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="10.5" fill="#F7E3A0">Les tableaux</text>`);
-      CJ.forEach((c, k) => { const x = px + pw / 2, y = py + 66 + k * 96; PORTR.push({ k, x, y, r: 20 });
-        s.push(`<ellipse cx="${x + 2}" cy="${y + 3}" rx="29" ry="34" fill="#000" opacity=".4"/><ellipse cx="${x}" cy="${y}" rx="28" ry="33" fill="url(#c5-or)" stroke="#3A2614" stroke-width="1.2"/><ellipse cx="${x}" cy="${y}" rx="23.5" ry="28.5" fill="none" stroke="#8A5A14" stroke-width="1.2" stroke-dasharray="2 2"/><ellipse cx="${x}" cy="${y}" rx="21.5" ry="26.5" fill="${mixHex(c, "#1A1020", .5)}"/>${[[0, -34], [0, 34], [-29, 0], [29, 0]].map(([u, v]) => `<circle cx="${x + u}" cy="${y + v}" r="3" fill="url(#c5-or)" stroke="#3A2614" stroke-width=".8"/>`).join("")}<rect x="${x - 24}" y="${y + 37}" width="48" height="12" rx="2" fill="url(#c5-or)" stroke="#3A2614" stroke-width=".8"/><text x="${x}" y="${y + 46}" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="9" fill="#3A2614">${NOMS[k]}</text>`); }); }
-
-    // ---- 15. étiquettes
-    nom(690, 706, "Le lac noir", 13);
+    // ---- 14. les héros : les 4 pilotes en grand, en piqué vers le lac dans le sens de la course (du plus loin au plus près ;
+    //      l'appli pose leurs vrais portraits sur les têtes)
+    const PORTR = [], ROT = 9, CO = Math.cos(ROT * PI / 180), SI = Math.sin(ROT * PI / 180), HX = 7, HY = -23, HR = 5.4;
+    const PEAU = ["#F2CDB0", "#D9A27A", "#F5D4BC", "#C98E66"], CHEV = ["#5A3A1E", "#1A1410", "#C88A3A", "#8A3A1A"];
+    const loc = (x, y, S, u, v) => [x + S * (u * CO - v * SI), y + S * (u * SI + v * CO)];
+    const HER = [[208, 438, 2.0, 3], [362, 502, 2.6, 2], [518, 572, 3.2, 1], [792, 636, 3.9, 0]];
+    HER.forEach(([x, y, S, k]) => { const c = CJ[k], [tx, ty] = loc(x, y, S, -44, 2), Lg = 80 + 62 * S, ex = tx - CO * Lg, ey = ty - SI * Lg, w = 4.2 * S, nx = -SI * w, ny = CO * w;
+      s.push(`<linearGradient id="c5-tr${k}" gradientUnits="userSpaceOnUse" x1="${f(tx)}" y1="${f(ty)}" x2="${f(ex)}" y2="${f(ey)}"><stop offset="0" stop-color="${c}" stop-opacity=".95"/><stop offset=".45" stop-color="${c}" stop-opacity=".35"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient>`);
+      s.push(`<linearGradient id="c5-tw${k}" gradientUnits="userSpaceOnUse" x1="${f(tx)}" y1="${f(ty)}" x2="${f(ex)}" y2="${f(ey)}"><stop offset="0" stop-color="#FFFBEA" stop-opacity=".95"/><stop offset=".6" stop-color="#FFFBEA" stop-opacity="0"/></linearGradient>`);
+      s.push(`<path d="M${f(tx + nx * 1.6)} ${f(ty + ny * 1.6)}L${f(ex)} ${f(ey)}L${f(tx - nx * 1.6)} ${f(ty - ny * 1.6)}Z" fill="url(#c5-tr${k})" opacity=".55" filter="url(#c5-flou8)"/>`);
+      s.push(`<path d="M${f(tx + nx)} ${f(ty + ny)}L${f(ex)} ${f(ey)}L${f(tx - nx)} ${f(ty - ny)}Z" fill="url(#c5-tr${k})"/><path d="M${f(tx)} ${f(ty)}L${f(ex)} ${f(ey)}" stroke="url(#c5-tw${k})" stroke-width="${f(S * 1.1)}" stroke-linecap="round"/>`);
+      for (let q = 0; q < 7; q++) { const t = .12 + r() * .7, j = (r() - .5) * w * 2.4; s.push(`<circle cx="${f(tx - CO * Lg * t - SI * j)}" cy="${f(ty - SI * Lg * t + CO * j)}" r="${f(.6 + r() * S * .35)}" fill="#FFF6D8" opacity="${f(.35 + r() * .5)}"/>`); }
+      if (y > WL - 20) K.halo(x, Math.min(H - 10, y + 50 + S * 6), 26 * S, c, .28);   // reflet coloré sur l'eau
+      K.halo(x - 4 * S, y - 8 * S, 16 * S, c, .3);
+      s.push(`${G(x, y, S, ROT)}` +
+        `<path d="M-26 2L23 -1" stroke="#8A5A2A" stroke-width="2.8" stroke-linecap="round"/><path d="M-26 2L23 -1" stroke="#D8B070" stroke-width=".7" stroke-linecap="round" opacity=".7" transform="translate(0 -.9)"/><path d="M-24 2L-46 -8Q-52 2 -46 12Z" fill="#A8823E" stroke="#3A2414" stroke-width="1"/><path d="M-30 1L-46 -4M-30 3L-46 8M-28 2H-48" stroke="#6A4A1A" stroke-width=".8"/>` +
+        `<path d="M-5 -2L3 6L-1 11" stroke="#14121E" stroke-width="3.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M-1 11h4.5" stroke="#3A2414" stroke-width="2.8" stroke-linecap="round"/>` +
+        `<path d="M3 -18Q-14 -17 -30 -5Q-16 -7 -8 -1Z" fill="#1A1630"/><path d="M3 -18Q-14 -17 -30 -5" stroke="#9FB6E8" stroke-width=".8" fill="none" opacity=".75"/>` +
+        `<path d="M-9 -1Q-7 -15 3 -19L9 -15Q2 -9 2 -1Z" fill="#26203A" stroke="#0A0814" stroke-width=".8"/><path d="M-8 -3Q-6 -14 3 -18" stroke="#9FB6E8" stroke-width=".7" fill="none" opacity=".6"/>` +
+        `<path d="M5 -15L14 -3" stroke="#26203A" stroke-width="3.6" stroke-linecap="round"/><circle cx="15" cy="-2" r="1.9" fill="${PEAU[k]}"/>` +
+        `<path d="M1 -17.5h7" stroke="${c}" stroke-width="3.2" stroke-linecap="round"/>` +
+        `<circle cx="${HX}" cy="${HY}" r="${HR + .9}" fill="${c}" opacity=".9"/><circle cx="${HX}" cy="${HY}" r="${HR}" fill="${PEAU[k]}" stroke="#0A0814" stroke-width=".6"/><path d="M${HX - 5} ${HY - .4}C${HX - 5.4} ${HY - 7} ${HX + 3} ${HY - 8} ${HX + 5.4} ${HY - 3}C${HX + 2} ${HY - 5} ${HX - 2} ${HY - 4.4} ${HX - 3} ${HY - .4}Z" fill="${CHEV[k]}"/></g>`);
+      const [px, py] = loc(x, y, S, HX, HY); PORTR.push({ k, x: +px.toFixed(1), y: +py.toFixed(1), r: +(HR * S).toFixed(1) }); });
 
     // ================= COUCHE ANIMÉE =================
-    // reflet qui passe sur les tableaux
-    a.push(`<rect x="996" y="250" width="16" height="390" fill="#FFF6D0" opacity="${K.anime ? 0 : 0}" transform="skewX(-12)">${an(`<animate attributeName="opacity" values="0;.25;0;0" keyTimes="0;.1;.2;1" dur="9s" repeatCount="indefinite"/><animate attributeName="x" values="1040;1140;1140;1140" keyTimes="0;.2;.21;1" dur="9s" repeatCount="indefinite"/>`)}</rect>`);
     // les bougies flottantes de la Grande Salle (deux groupes qui ondulent)
     a.push(`<radialGradient id="c5-flamme" r="50%"><stop offset="0" stop-color="#FFF6D0"/><stop offset=".35" stop-color="#FFC85A" stop-opacity=".8"/><stop offset="1" stop-color="#FFB347" stop-opacity="0"/></radialGradient>`);
     [0, 1].forEach(g => { let c = ""; for (let k = 0; k < 9; k++) { const x = 500 + r() * 110, y = 360 + r() * 56; c += `<circle cx="${f(x)}" cy="${f(y - 4)}" r="5" fill="url(#c5-flamme)"/><rect x="${f(x - 1.2)}" y="${f(y - 1)}" width="2.4" height="7" fill="#F4F0E2"/><ellipse cx="${f(x)}" cy="${f(y - 3)}" rx="1.2" ry="2.2" fill="#FFE6A0"/>`; }
       a.push(`<g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;0 -3;0 0" dur="${3 + g * 1.3}s" repeatCount="indefinite"/>`)}${c}</g>`); });
     // fenêtres qui s'allument et s'éteignent
     [[664, 196], [545, 290], [392, 220], [724, 330]].forEach(([x, y], k) => a.push(`<rect x="${x - 2.5}" y="${y}" width="5" height="9" fill="#FFF0B8" opacity="${K.anime ? 0 : .8}">${an(`<animate attributeName="opacity" values="0;.9;.9;0;0" keyTimes="0;.1;.5;.6;1" dur="${5 + k * 1.7}s" begin="${k * 1.3}s" repeatCount="indefinite"/>`)}</rect>`));
-    // fumée de la cabane
-    a.push(`<g opacity=".5">${[0, 1, 2].map(q => `<circle cx="${893 + q * 4}" cy="${494 - q * 12}" r="${4 + q * 2}" fill="#8A96B8" opacity="${.5 - q * .12}"/>`).join("")}${an(`<animateTransform attributeName="transform" type="translate" values="0 0;4 -8;0 0" dur="5s" repeatCount="indefinite"/>`)}</g>`);
-    // yeux dans la forêt interdite
-    [[820, 400], [905, 372], [860, 430]].forEach(([x, y], k) => a.push(`<g opacity="${K.anime ? 0 : 1}">${an(`<animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.05;.3;.35;1" dur="${6 + k * 2.3}s" begin="${k * 1.7}s" repeatCount="indefinite"/>`)}${[[-3, 0], [3, 0], [-2, -4], [2, -4]].map(([u, v]) => `<circle cx="${x + u}" cy="${y + v}" r="1.2" fill="#E8FF6A"/>`).join("")}</g>`));
-    // le saule cogneur : trois branches qui fouettent
-    [[-6, -48, -40, -72, -70, -54, "-18;14;-8;-18", 2.2], [4, -50, 26, -86, 64, -78, "16;-10;20;16", 1.8], [0, -44, 40, -50, 58, -24, "-10;22;-4;-10", 2.6]].forEach(([x0, y0, cx1, cy1, x1, y1, vals, du]) => {
-      const fixe = vals.split(";")[0]; a.push(`<g transform="translate(${SX + x0} ${SY + y0})"><g${K.anime ? "" : ` transform="rotate(${fixe})"`}>${an(`<animateTransform attributeName="transform" type="rotate" values="${vals}" dur="${du}s" repeatCount="indefinite"/>`)}<path d="M0 0Q${cx1 - x0} ${cy1 - y0} ${x1 - x0} ${y1 - y0}" stroke="#3A2A22" stroke-width="4.5" fill="none" stroke-linecap="round"/><path d="M${(x1 - x0) * .6} ${(y1 - y0) * .7}q6 -8 14 -6M${(x1 - x0) * .85} ${(y1 - y0) * .95}q-8 -6 -6 -14" stroke="#3A2A22" stroke-width="2" fill="none"/>${[.4, .7, 1].map(t => `<circle cx="${f((x1 - x0) * t)}" cy="${f((y1 - y0) * t)}" r="${4 - t * 1.6}" fill="#2A4A3A" opacity=".85"/>`).join("")}</g></g>`); });
-    // le vif d'or autour du terrain
-    { const ch = "M232 400C300 380 320 430 250 420S160 380 200 410S280 440 232 400"; a.push(`<g${K.anime ? "" : ` transform="translate(262 404)"`}>${an(`<animateMotion dur="7s" repeatCount="indefinite" path="${ch}"/>`)}<circle r="6" fill="url(#c5-flamme)"/><circle r="2.4" fill="${OR}"/><g>${an(`<animateTransform attributeName="transform" type="scale" values="1 1;1 .2;1 1" dur=".25s" repeatCount="indefinite"/>`)}<path d="M-2 -1q-6 -6 -9 -2q4 1 9 3M2 -1q6 -6 9 -2q-4 1 -9 3" fill="#F4F0FF" opacity=".9"/></g></g>`); }
-    // les hiboux du courrier (enveloppe au bec)
-    const hibou = c => `<g><path d="M-6 -2l-8 -6l3 7z" fill="${c}"/><ellipse rx="6" ry="4.5" fill="${c}"/><circle cx="5" cy="-3" r="3.4" fill="${c}"/><circle cx="6" cy="-3.6" r=".9" fill="#FFD27A"/><rect x="7" y="-1.5" width="7" height="5" fill="#F4ECD8" stroke="#6A4A1E" stroke-width=".5"/><circle cx="10.5" cy="1" r="1" fill="#C8302A"/>` +
-      `<g>${an(`<animateTransform attributeName="transform" type="scale" values="1 1;1 -.7;1 1" dur=".5s" repeatCount="indefinite"/>`)}<path d="M-3 -2q2 -12 10 -10q-4 4 -6 10z" fill="${mixHex(c, "#FFFFFF", .25)}"/></g></g>`;
-    [["M60 250C160 200 300 230 420 200S560 270 545 290", 12, 0, "#C8B8A0", [300, 226]], ["M70 260C200 120 520 140 760 140S950 220 905 300", 16, 5, "#E8E4DA", [560, 145]], ["M40 270C150 300 320 280 520 330S760 440 885 510", 14, 9, "#8A6A4A", [720, 420]]].forEach(([ch, du, deb, c, fx]) =>
-      a.push(`<g${K.anime ? "" : ` transform="translate(${fx[0]} ${fx[1]})"`}>${an(`<animateMotion dur="${du}s" begin="-${deb}s" repeatCount="indefinite" path="${ch}"/>`)}<g transform="scale(1.3)">${hibou(c)}</g></g>`));
     // le dragon qui survole (en haut à droite)
-    { const dx = 978, dy = 104, aile = (sx) => `<path d="M0 0C${-10 * sx} -30 ${-34 * sx} -54 ${-70 * sx} -58C${-60 * sx} -44 ${-62 * sx} -36 ${-56 * sx} -26C${-48 * sx} -34 ${-44 * sx} -30 ${-40 * sx} -18C${-32 * sx} -26 ${-26 * sx} -20 ${-22 * sx} -8Z" fill="#3A1E2A" stroke="#120A10" stroke-width="1"/><path d="M0 0L${-70 * sx} -58M0 0L${-56 * sx} -26M0 0L${-40 * sx} -18" stroke="#6A3A4A" stroke-width="1" opacity=".7"/>`;
+    { const dx = 978, dy = 104, aile = (sx) => `<path d="M0 0C${-10 * sx} -30 ${-34 * sx} -54 ${-70 * sx} -58C${-60 * sx} -44 ${-62 * sx} -36 ${-56 * sx} -26C${-48 * sx} -34 ${-44 * sx} -30 ${-40 * sx} -18C${-32 * sx} -26 ${-26 * sx} -20 ${-22 * sx} -8Z" fill="#10142A" stroke="#06080F" stroke-width="1"/><path d="M0 0L${-70 * sx} -58M0 0L${-56 * sx} -26M0 0L${-40 * sx} -18" stroke="#34406A" stroke-width="1" opacity=".7"/>`;
       a.push(`<g transform="translate(${dx} ${dy})"><g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;-6 6;0 0" dur="4s" repeatCount="indefinite"/>`)}`);
       a.push(`<g transform="translate(10 -6) scale(-1 1)"><g>${an(`<animateTransform attributeName="transform" type="scale" values="1 1;1 .35;1 1" dur="1.6s" repeatCount="indefinite"/>`)}${aile(1.1)}</g></g>`);
-      a.push(`<path d="M-62 30C-90 34 -96 14 -84 6C-92 18 -78 24 -60 18Z" fill="#4A2432"/><path d="M-58 22C-30 26 -4 14 20 -2C30 -8 40 -10 48 -6L54 -12L52 -2C46 2 40 4 30 4C14 22 -20 34 -58 30Z" fill="#5A2A38" stroke="#120A10" stroke-width="1"/><path d="M-50 26C-24 26 0 16 20 4" stroke="#C8784A" stroke-width="2.4" stroke-dasharray="2 3" fill="none"/><path d="M44 -10l4 -10l2 9M38 -8l0 -10l4 8" fill="#C8B89A"/><circle cx="46" cy="-6" r="1.4" fill="#FFD27A"/>`);
-      a.push(`<g opacity="${K.anime ? 0 : .9}">${an(`<animate attributeName="opacity" values="0;0;.95;.95;0" keyTimes="0;.55;.62;.85;1" dur="5s" repeatCount="indefinite"/>`)}<path d="M54 -4C70 0 80 10 96 6C84 16 70 14 58 4Z" fill="#FFB347"/><path d="M54 -4C66 0 74 6 86 5C76 10 66 8 58 1Z" fill="#FFF0A0"/><circle cx="84" cy="6" r="16" fill="url(#c5-flamme)"/></g>`);
+      a.push(`<path d="M-62 30C-90 34 -96 14 -84 6C-92 18 -78 24 -60 18Z" fill="#0E1228"/><path d="M-58 22C-30 26 -4 14 20 -2C30 -8 40 -10 48 -6L54 -12L52 -2C46 2 40 4 30 4C14 22 -20 34 -58 30Z" fill="#12172E" stroke="#06080F" stroke-width="1"/><path d="M-58 22C-30 26 -4 14 20 -2C30 -8 40 -10 48 -6" stroke="#5A6EA8" stroke-width="1" fill="none" opacity=".6"/><path d="M44 -10l4 -10l2 9M38 -8l0 -10l4 8" fill="#2A3458"/>`);
       a.push(`<g transform="translate(0 2)"><g>${an(`<animateTransform attributeName="transform" type="scale" values="1 1;1 .3;1 1" dur="1.6s" begin=".1s" repeatCount="indefinite"/>`)}${aile(1)}</g></g></g></g>`); }
-    // le calmar géant : une grande tentacule qui sort du lac (et une petite), ronds dans l'eau
-    { const tx = 812, ty = 712;
-      a.push(`<g transform="translate(${tx} ${ty}) scale(.82)"><g${K.anime ? "" : ` transform="rotate(-6)"`}>${an(`<animateTransform attributeName="transform" type="rotate" values="-8;6;-8" dur="6s" repeatCount="indefinite"/>`)}<path d="M-10 0C-14 -30 4 -50 -8 -66C-16 -78 -2 -86 6 -78C0 -76 -4 -70 2 -64C14 -48 6 -24 10 0Z" fill="#5A3A6A" stroke="#1A0A20" stroke-width="1.2"/>${[0, 1, 2, 3, 4].map(q => `<circle cx="${f(3 - q * .4)}" cy="${f(-12 - q * 12)}" r="${f(2.6 - q * .3)}" fill="#C8A0D8" opacity=".8"/>`).join("")}</g></g>`);
-      a.push(`<g transform="translate(${tx + 60} ${ty})"><g${K.anime ? "" : ` transform="rotate(10)"`}>${an(`<animateTransform attributeName="transform" type="rotate" values="12;-6;12" dur="4.5s" repeatCount="indefinite"/>`)}<path d="M-5 0C-6 -14 6 -22 0 -32C8 -26 8 -12 5 0Z" fill="#5A3A6A" stroke="#1A0A20" stroke-width="1"/></g></g>`);
-      a.push(`<ellipse cx="${tx}" cy="${ty - 2}" rx="18" ry="3.4" fill="none" stroke="#9FB4E8" stroke-width="1.2" opacity=".6">${an(`<animate attributeName="rx" values="12;30;12" dur="3s" repeatCount="indefinite"/>`)}</ellipse>`); }
-    // les barques des premières années, lanternes allumées
-    [[470, 690, 0], [522, 702, 1], [578, 688, 2]].forEach(([x, y, k]) => a.push(`<g transform="translate(${x} ${y})"><g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;0 -1.5;0 0" dur="${2.6 + k * .5}s" repeatCount="indefinite"/>`)}<path d="M-14 0Q0 8 14 0L12 -3H-12Z" fill="#5A3A22" stroke="#120A08" stroke-width=".8"/><circle cx="-4" cy="-6" r="2.6" fill="#2A2238"/><circle cx="4" cy="-6" r="2.6" fill="#2A2238"/><path d="M10 -3v-10" stroke="#3A2414" stroke-width="1"/><circle cx="10" cy="-13" r="5" fill="url(#c5-flamme)"/><circle cx="10" cy="-13" r="1.6" fill="#FFE6A0"/></g></g>`));
-    // le cerf argenté qui charge, les détraqueurs qui reculent (bas gauche, au-dessus du lac)
-    a.push(`<radialGradient id="c5-patro" r="50%"><stop offset="0" stop-color="#F4FAFF" stop-opacity=".9"/><stop offset=".4" stop-color="#BFD8FF" stop-opacity=".45"/><stop offset="1" stop-color="#BFD8FF" stop-opacity="0"/></radialGradient>`);
-    { const x = 356, y = 684, cerf = `<path d="M-22 4C-20 -6 -8 -10 8 -8L16 -16L22 -14L18 -6C20 0 18 6 14 8L18 22L14 22L10 10L-10 10L-14 22L-18 22L-16 8C-20 8 -24 6 -22 4Z" fill="#E8F2FF" opacity=".92"/><path d="M17 -15C14 -24 8 -28 4 -34M15 -20L8 -22M12 -26L6 -32M20 -15C22 -26 28 -30 32 -36M22 -22L28 -22M26 -28L30 -34" stroke="#E8F2FF" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="19" cy="-11" r=".9" fill="#5A7AB4"/>`;
-      a.push(`<circle cx="${x}" cy="${y - 4}" r="48" fill="url(#c5-patro)" opacity=".85">${an(`<animate attributeName="r" values="44;54;44" dur="2.4s" repeatCount="indefinite"/>`)}</circle>`);
-      a.push(`<g transform="translate(${x} ${y}) scale(-1.15 1.15)"><g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;3 -3;0 0" dur=".9s" repeatCount="indefinite"/>`)}${cerf}</g></g>`);
-      [[150, 668, 1], [208, 690, .85], [96, 692, .75]].forEach(([u, v, sc], k) => a.push(`<g transform="translate(${u} ${v}) scale(${sc})"><g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;-6 -5;0 0" dur="${3.2 + k * .7}s" repeatCount="indefinite"/>`)}<path d="M-8 -22C-14 -22 -16 -12 -14 -2C-16 8 -20 16 -24 22L-18 18L-16 26L-10 18L-6 26L-2 18L2 26L4 16C8 6 6 -6 4 -12C2 -20 -2 -22 -8 -22Z" fill="#0A0C14" stroke="#6E80B0" stroke-width="1" opacity=".95"/><ellipse cx="-6" cy="-14" rx="3" ry="4" fill="#000"/><path d="M-12 0q-10 4 -16 -2" stroke="#0A0C14" stroke-width="2.4" fill="none"/><path d="M-14 -2q-10 4 -16 -2" stroke="#9AAAD0" stroke-width=".8" fill="none" opacity=".6"/></g></g>`)); }
-    // ---- les 4 pilotes sur leurs balais, écharpes à leurs couleurs (ils restent toujours la tête en haut)
-    const PEAU = ["#F2CDB0", "#D9A27A", "#F5D4BC", "#C98E66"], CHEV = ["#5A3A1E", "#1A1410", "#C88A3A", "#8A3A1A"];
-    const pilote = (k) => { const c = CJ[k], c2 = mixHex(c, "#101020", .55), v1 = "M3 -16Q-8 -21 -18 -16T-34 -18", v2 = "M3 -16Q-8 -12 -18 -17T-34 -13";
-      return `<ellipse cx="-4" cy="-8" rx="30" ry="22" fill="url(#c5-pj${k})"/><path d="M-46 1H-120" stroke="${c}" stroke-width="7" stroke-linecap="round" opacity=".18"/><path d="M-46 1H-86" stroke="${c}" stroke-width="3" stroke-linecap="round" opacity=".5"/>` +
-        `<path d="M-26 2L22 -1" stroke="#8A5A2A" stroke-width="2.8" stroke-linecap="round"/><path d="M-24 2L-46 -7Q-51 2 -46 11Z" fill="#A8823E" stroke="#3A2414" stroke-width="1"/><path d="M-30 1L-46 -3M-30 3L-46 7" stroke="#8A6A2A" stroke-width=".8"/>` +
-        `<path d="M-5 -2L3 6L-1 11" stroke="#14121E" stroke-width="3.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M-1 11h4" stroke="#3A2414" stroke-width="2.6" stroke-linecap="round"/>` +
-        `<path d="M2 -17Q-14 -16 -26 -6Q-14 -8 -8 -1Z" fill="#1E1A30"/><path d="M-9 -1Q-7 -15 3 -19L8 -15Q2 -9 2 -1Z" fill="#26203A" stroke="#0A0814" stroke-width=".8"/><path d="M4 -15L13 -3" stroke="#26203A" stroke-width="3.4" stroke-linecap="round"/><circle cx="14" cy="-2" r="1.8" fill="${PEAU[k]}"/>` +
-        `<circle cx="6" cy="-22" r="4.8" fill="${PEAU[k]}" stroke="#0A0814" stroke-width=".7"/><path d="M1.6 -22.5C1 -28 8 -30 10.6 -25C8 -26.5 5 -26 3.6 -23.5Z" fill="${CHEV[k]}"/>` +
-        `<path d="${v1}" stroke="${c}" stroke-width="4" fill="none" stroke-linecap="round">${an(`<animate attributeName="d" values="${v1};${v2};${v1}" dur=".7s" repeatCount="indefinite"/>`)}</path><path d="${v1}" stroke="${c2}" stroke-width="4" fill="none" stroke-dasharray="2.5 4">${an(`<animate attributeName="d" values="${v1};${v2};${v1}" dur=".7s" repeatCount="indefinite"/>`)}</path><path d="M0 -17.5h6" stroke="${c}" stroke-width="3.4" stroke-linecap="round"/>`; };
-    CJ.forEach((c, k) => a.unshift(`<radialGradient id="c5-pj${k}" r="50%"><stop offset="0" stop-color="${c}" stop-opacity=".45"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`));
-    // quand la piste va vers la gauche, le pilote est retourné (scale 1,-1 dans le repère de la piste) : il reste la tête en haut
-    const gauche = []; { let g = false; for (let i = 0; i < N; i++) { const tx = K.nrm(i)[2]; if (tx < -.25) g = true; else if (tx > .25) g = false; gauche.push(g); } }
-    const flip = (() => { const kt = [0], vals = [gauche[0] ? "1 -1" : "1 1"]; for (let i = 1; i < N; i++) if (gauche[i] !== gauche[i - 1]) { kt.push((i / N).toFixed(4)); vals.push(gauche[i] ? "1 -1" : "1 1"); } kt.push(1); vals.push(vals[vals.length - 1]); return { kt: kt.join(";"), vals: vals.join(";") }; })();
-    CJ.forEach((c, k) => { const fr = [.035, .005, .972, .94][k], du = 34 + k * 1.6, deb = (fr * du).toFixed(2);
-      if (K.anime) a.push(`<g><animateMotion dur="${du}s" begin="-${deb}s" repeatCount="indefinite" rotate="auto" path="${K.piste.replace(/(-?\d+\.\d) (-?\d+\.\d)/g, "$1,$2")}"/><g><animateTransform attributeName="transform" type="scale" calcMode="discrete" values="${flip.vals}" keyTimes="${flip.kt}" dur="${du}s" begin="-${deb}s" repeatCount="indefinite"/><g transform="scale(1.3)">${pilote(k)}</g></g></g>`);
-      else { const i = idx(fr), [, , tx, ty] = K.nrm(i); a.push(`<g transform="translate(${f(P[i][0])} ${f(P[i][1])}) rotate(${f(Math.atan2(ty, tx) * 57.3)})${gauche[i] ? " scale(1 -1)" : ""}"><g transform="scale(1.3)">${pilote(k)}</g></g>`); } });
+    // les écharpes des héros qui claquent au vent, et la lumière qui file le long de leurs traînées
+    HER.forEach(([x, y, S, k], q) => { const c = CJ[k], c2 = mixHex(c, "#101020", .55), v1 = "M3 -17Q-8 -22 -19 -17T-36 -19", v2 = "M3 -17Q-8 -13 -19 -18T-36 -14", d = (.6 + q * .05).toFixed(2);
+      a.push(`<g transform="translate(${f(x)} ${f(y)}) scale(${S}) rotate(${ROT})"><path d="${v1}" stroke="${c}" stroke-width="4" fill="none" stroke-linecap="round">${an(`<animate attributeName="d" values="${v1};${v2};${v1}" dur="${d}s" repeatCount="indefinite"/>`)}</path><path d="${v1}" stroke="${c2}" stroke-width="4" fill="none" stroke-dasharray="2.5 4">${an(`<animate attributeName="d" values="${v1};${v2};${v1}" dur="${d}s" repeatCount="indefinite"/>`)}</path></g>`);
+      const [tx, ty] = loc(x, y, S, -44, 2), Lg = (80 + 62 * S) * .8; a.push(`<path d="M${f(tx)} ${f(ty)}l${f(-CO * Lg)} ${f(-SI * Lg)}" stroke="#FFF6D8" stroke-width="${f(S * .7)}" stroke-linecap="round" stroke-dasharray="${f(S * 4)} ${f(S * 16)}" opacity=".7">${an(`<animate attributeName="stroke-dashoffset" values="0;${f(-S * 20)}" dur=".5s" repeatCount="indefinite"/>`)}</path>`); });
+    // le vif d'or, en tête, dans le sens de la course
+    { const [vx, vy] = loc(792, 636, 3.9, 40, -12);
+      a.push(`<g transform="translate(${f(vx)} ${f(vy)})"><g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;5 -4;-2 3;0 0" dur="1.6s" repeatCount="indefinite"/>`)}<circle r="22" fill="url(#c5-flamme)"/><circle r="5.2" fill="${OR}" stroke="#8A5A14" stroke-width=".8"/><circle cx="-1.6" cy="-1.6" r="1.6" fill="#FFF6D0"/>` +
+        `<g>${an(`<animateTransform attributeName="transform" type="scale" values="1 1;1 .15;1 1" dur=".22s" repeatCount="indefinite"/>`)}<path d="M-2 -2C-10 -16 -22 -14 -26 -10C-18 -9 -10 -6 -2 -2ZM2 -2C-2 -16 6 -20 12 -18C8 -12 6 -7 2 -2Z" fill="#F4F0E2" opacity=".9"/></g></g></g>`);
+      a.push(`<path d="M${f(vx - 8)} ${f(vy + 1)}l-46 -7" stroke="#FFE6A0" stroke-width="2" stroke-linecap="round" opacity=".6"/>`); }
+    // des éclats de lumière qui filent sur la voie aérienne, dans le sens de la course
+    [[.14, 0], [.4, 9], [.68, 18]].forEach(([fr, deb]) => a.push(K.surPiste(fr, `<path d="M-52 0H-30" stroke="#FFF6D8" stroke-width="2" stroke-linecap="round" opacity=".25"/><path d="M-30 0H-12" stroke="#FFF6D8" stroke-width="2.6" stroke-linecap="round" opacity=".5"/><path d="M-12 0H0" stroke="#FFFBEA" stroke-width="3.2" stroke-linecap="round" opacity=".9"/><circle r="3" fill="#FFFBEA"/>`, 26, deb)));
     a.push(`<g opacity="${K.anime ? 0 : 0}">${an(`<animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.03;.08;1" dur="11s" begin="3s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 0;-160 60;-160 60" keyTimes="0;.08;1" dur="11s" begin="3s" repeatCount="indefinite"/>`)}<path d="M860 30l60 -22" stroke="#FFF6D8" stroke-width="1.6" stroke-linecap="round" opacity=".8"/><circle cx="860" cy="30" r="2" fill="#FFF"/></g>`);
     K.particules(12, "#FFF2C8", 1.6, "scintille");
     const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#c5-ciel)"/>`, "#1A1440", .1); RES.portraits = PORTR; return RES;
