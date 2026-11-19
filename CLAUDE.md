@@ -4,7 +4,7 @@
 (menées jusqu'au 18/11/2026). L'historique détaillé de chaque version est dans `MODE_EMPLOI.md` (journal en bas).
 
 ## ⏸️ PAUSE (Théo, 19/11 soir, crédits limités)
-Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles cartes, vidéo + mail du samedi 21/11, corrections bloquantes. EN PAUSE (à reprendre « la semaine prochaine ») : 3D des circuits 2027 (lot 1 : Dune publiée v16.89 ; Château r3d-chateau-1 et goûter r3d-terrier inachevés, scratchpad wf-3d-lot.js), retouche 3D de Noël si non finie, (REPRIS à la demande de Théo : phrase-bilan + boîte « À faire » + Point Artema, écran « La Coupe », refonte des badges en ~20 familles après la Coupe.) Travailler étape par étape, une chose à la fois.
+Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles cartes, vidéo + mail du samedi 21/11, corrections bloquantes. EN PAUSE (à reprendre « la semaine prochaine ») : 3D des circuits 2027 (lot 1 : Dune publiée v16.89 ; Château r3d-chateau-1 et goûter r3d-terrier inachevés, scratchpad wf-3d-lot.js), retouche 3D de Noël si non finie, (Ordre validé par Théo : 1) bilan/À faire/Point Artema en cours, 2) puis petit lot saisie : phrase de relecture raccourcie + titre « Saisir » et mêmes onglets pour tous les profils, 3) Coupe, 4) badges. REPRIS à la demande de Théo : phrase-bilan + boîte « À faire » + Point Artema, écran « La Coupe », refonte des badges en ~20 familles après la Coupe.) Travailler étape par étape, une chose à la fois.
 
 ## Qui, quoi
 - **Théo** (GitHub `theoperion`), francophone : toujours répondre **en français**, simplement, sans jargon.
