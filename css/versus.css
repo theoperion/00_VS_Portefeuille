@@ -361,6 +361,7 @@ button.bt-e { cursor: pointer; color: var(--ink); }
 .ba-seg { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; background: var(--panel); }
 .ba-seg button { border: 0; background: none; padding: 8px 4px; font: 700 12px/1.1 var(--f-text); color: var(--ink-2); cursor: pointer; }
 .ba-seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.ba-dec { display: block; width: 100%; margin-top: 8px; border: 1px solid var(--rule); border-radius: 10px; background: var(--panel); padding: 9px 10px; font: 700 12.5px/1.2 var(--f-text); color: var(--ink); text-align: left; cursor: pointer; }
 .ba-l { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 8px; align-items: center; } .ba-l > span { font: 700 10.5px/1 var(--f-num); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
 .ba-o { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; } .ba-o::-webkit-scrollbar { display: none; }
 .ba-o button { flex: none; border: 1px solid var(--rule); background: var(--panel); color: var(--ink-2); border-radius: 999px; padding: 6px 10px; font: 600 12px/1 var(--f-text); cursor: pointer; white-space: nowrap; }
