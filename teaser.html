@@ -39,15 +39,21 @@ const PLANS = [   // [durée ms, carte, mois, texte, style]
   [1500, "melbourne", "MARS", "Le Chapelier sert le thé.", "s"],
   [1500, "montreal", "JUIN", "Le côté obscur vous attend.", "s"],
   [1500, "silverstone", "JUILLET", "Quelque chose bouge sous le sable.", "s"],
-  [1500, "singapour", "OCTOBRE", "Cinq tickets d'or. Pas un de plus.", "s"],
+  [1500, "singapour", "OCTOBRE", "Cinq billets dorés. Pas un de plus.", "s"],
   [1500, "interlagos", "NOVEMBRE", "Ils sont derrière le mur.", "s"],
   [2200, "lasvegas", "DÉCEMBRE", "Une seule finale.", ""],
-  [2400, null, "", "Quelqu'un finira par claquer des doigts.", "s"],
+  [2400, null, "", "Six voyants à allumer. Un seul y arrivera le premier.", "s"],
   [2400, null, "", "Une seule couronne. « Qu'on lui coupe la tête ! »", "s"],
   [6000, "fin", "", "", ""]];
 let audio = null;
 function boum(f, d, v) { if (!audio) return; const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime; o.type = "sine"; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(30, t + d); g.gain.setValueAtTime(v || .7, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g).connect(audio.destination); o.start(t); o.stop(t + d); }
-function souffle(d) { if (!audio) return; const n = audio.createBufferSource(), b = audio.createBuffer(1, audio.sampleRate * d, audio.sampleRate), c = b.getChannelData(0); for (let i = 0; i < c.length; i++) c[i] = (Math.random() * 2 - 1) * (i / c.length); n.buffer = b; const g = audio.createGain(); g.gain.value = .12; n.connect(g).connect(audio.destination); n.start(); }
+function souffle(d) { if (!audio) return; const n = audio.createBufferSource(), b = audio.createBuffer(1, audio.sampleRate * d, audio.sampleRate), c = b.getChannelData(0); for (let i = 0; i < c.length; i++) c[i] = (Math.random() * 2 - 1) * (i / c.length); n.buffer = b; const fi = audio.createBiquadFilter(), t = audio.currentTime; fi.type = "lowpass"; fi.frequency.setValueAtTime(200, t); fi.frequency.exponentialRampToValueAtTime(6000, t + d); const g = audio.createGain(); g.gain.value = .35; n.connect(fi).connect(g).connect(audio.destination); n.start(); }
+let nappe = null, coeur = null;
+function demarrerNappe() { if (!audio) return; const g = audio.createGain(), t = audio.currentTime; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.12, t + 6); g.gain.linearRampToValueAtTime(.2, t + 22); g.connect(audio.destination);
+  nappe = { g, o: [55, 82.4, 110].map((f, k) => { const o = audio.createOscillator(); o.type = k === 2 ? "triangle" : "sine"; o.frequency.value = f; const gg = audio.createGain(); gg.gain.value = [1, .6, .25][k]; o.connect(gg).connect(g); o.start(); return o; }) };
+  let n = 0; coeur = setInterval(() => { boum(70, .35, .45); setTimeout(() => boum(70, .3, .3), 220); if (++n > 5) clearInterval(coeur); }, 850); }
+function silence(d) { if (nappe) { const t = audio.currentTime; nappe.g.gain.cancelScheduledValues(t); nappe.g.gain.setValueAtTime(nappe.g.gain.value, t); nappe.g.gain.linearRampToValueAtTime(0, t + d); } }
+function accord() { if (!audio) return; const t = audio.currentTime; [110, 164.8, 220, 261.6].forEach(f => { const o = audio.createOscillator(), g = audio.createGain(); o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.08, t + .05); g.gain.exponentialRampToValueAtTime(.001, t + 4.5); o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 4.6); }); }
 let alt = 0;
 function plan(i) {
   if (i >= PLANS.length) return; const [d, id, mois, t, st] = PLANS[i], txt = document.getElementById("txt");
@@ -55,12 +61,12 @@ function plan(i) {
   const img = id && id !== "pilotes" && id !== "fin" ? carte(id) : null;
   if (img) { f.style.backgroundImage = 'url("' + img + '")'; f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); autre.classList.remove("on"); } else { f.classList.remove("on"); autre.classList.remove("on"); }
   if (id === "pilotes") txt.innerHTML = '<div class="l on">' + t + '</div><div class="pilotes">' + NOMS.map((n, k) => '<i style="color:' + COUL[k] + ';background:' + COUL[k] + '22;animation-delay:' + (.3 + k * .35) + 's" class="on">' + n + "</i>").join("") + "</div>";
-  else if (id === "fin") { txt.innerHTML = '<div class="l on titre">VERSUS</div><div class="l on date" style="animation-delay:.6s">Saison 1 · 2027</div><div class="l on s" style="animation-delay:1.2s">Les moteurs chauffent le 1<sup>er</sup> décembre.</div><a class="go on" style="animation-delay:2s" href="./">Entrer dans la course 🏁</a>'; boum(70, 2.2, .9); }
+  else if (id === "fin") { accord(); txt.innerHTML = '<div class="l on titre">VERSUS</div><div class="l on date" style="animation-delay:.6s">Saison 1 · 2027</div><div class="l on s" style="animation-delay:1.2s">Les moteurs chauffent le 1<sup>er</sup> décembre.</div><a class="go on" style="animation-delay:2s" href="./">Entrer dans la course 🏁</a>'; boum(70, 2.2, .9); }
   else txt.innerHTML = (mois ? '<span class="mois">' + mois + "</span>" : "") + '<div class="l on ' + st + '">' + t + "</div>";
   if (img || id === "pilotes") { const fl = document.getElementById("flash"); fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on"); boum(i < 4 ? 90 : 140, .6, .6); }
-  if (i === 10) souffle(2.2);
+  if (i === 10) souffle(2.2); if (i === 12) { souffle(2.3); silence(.4); }
   setTimeout(() => plan(i + 1), d);
 }
-document.getElementById("lancer").addEventListener("click", e => { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) { } e.currentTarget.remove(); setTimeout(() => plan(0), 300); });
+document.getElementById("lancer").addEventListener("click", e => { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) { } e.currentTarget.remove(); demarrerNappe(); setTimeout(() => plan(0), 300); });
 if (location.hash === "#auto") { document.getElementById("lancer").remove(); setTimeout(() => plan(0), 300); }
 </script></body></html>

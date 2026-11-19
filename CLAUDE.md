@@ -118,6 +118,13 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
   Badges qu'on se vole validés : Couronne de cœur, Casque noir, Anneau (leader, l'avatar pâlit), Corne d'abondance (attention : écarts de points faibles).
   Réserve validée (à coder mais cachée, visible et réglable par l'admin, lancement progressif) : Œuf de dragon, Némésis, Communauté, Lanterne rouge, rareté affichée. Badges secrets : carte blanche (garder la surprise).
   Théo trouve la course trop courte : la vouloir grandiose (plus longue, plus de tours) sans réforme des points si possible.
+- **Conseil du Versus (19/11, 9 agents, rapport : synthèse dans la conversation)** — décisions validées par Théo : compromis licences = évoquer sans copier
+  (pas de personnage reconnaissable trait pour trait ni de réplique exacte ; gant → « volant à 6 voyants », ticket d'or → « billet doré », anneau sans pâleur,
+  juin en flotte originale, titans en colosses de pierre, Alice d'après les gravures de 1865) ; résultat du mois caché jusqu'à la course ; Lanterne rouge →
+  « Increvable » ; Némésis partagée ; records qu'on se vole fondés sur places/points (jamais %). Plan : v16.16 réparations (retour, course 2D figée, « vu »
+  trop tôt, Passer), v16.17 fluidité (fonds peints en images WebP), v16.18 nettoyage licences, v16.19 Garage amélioré, puis 5 joueurs, banc de tests sur
+  FAUSSES données (l'ancien repet.js utilisait une copie du vrai Sheet : supprimée), course en 3 tours, badges vague 1.
+- Bande-annonce de lancement : `teaser.html` (bouton dans le mail du 20/11, serveur V35) ; vidéo MP4 faite avec Playwright + bande-son synthétisée (numpy + ffmpeg).
 - Maquettes de travail : scratchpad `galerie/` (perdu avec la session ; les peintres sont dans `piste.js`, rendu via `tpeints.js`, `PEINT=clé`, `ANIM=1 ATT=2600`).
 
 ## À venir
