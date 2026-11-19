@@ -42,7 +42,7 @@
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **16.29**.
+  hors connexion `sw.js`). Version actuelle : **16.30**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
@@ -104,7 +104,7 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
 ## Feuille de route validée par Théo le 19/11 (à suivre dans l'ordre, une version publiée par étape)
 - Univers finaux : jan Forêt ✅ · fév **Château pièce par pièce** (carte-parchemin `peindreChateau3` ✅ en ligne, 3D intérieure + **balais** à faire) ·
   mars **Alice** (`peindreTerrier2`, livre de 1865 libre de droits, personnages autorisés) · avr **Seigneur des Anneaux** (tracé suzuka) · oct **Chocolaterie** (`peindreChocolat2`, tracé singapour, Halloween, ticket d’or) ·
-  mai **Hunger Games** (arène-horloge, à dessiner) · juin **Star Wars** (`peindreEtoiles` + personnages à ajouter ; **petits chasseurs** comme véhicules) ·
+  mai **Hunger Games** (`peindreArene2` ✅ v16.30, dessinée par un agent : arène-horloge 12 pièges) · juin **Star Wars** (`peindreEtoiles` + personnages à ajouter ; **petits chasseurs** comme véhicules) ·
   juil **Dune** (`peindreDunes2` ✅) · août **Stranger Things** (à refaire : deux mondes, failles qui font basculer la course, tête en bas) ·
   sept **Marvel multivers** (à dessiner) · oct **Seigneur des Anneaux** (à refaire : voyage Comté → Montagne du Destin sur la grande carte) ·
   nov **Titans** (`peindreTitans2`, à agrandir : toute l'île, 3 murs, mer, moins de maisons) · déc **Odyssée d'Homère** (libre de droits, à dessiner).
