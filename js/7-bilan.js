@@ -890,3 +890,16 @@ function majVersion() {
   const api = D && D.version ? "API V" + D.version : SOURCE === "demo" ? "API : démo" : "API : —";
   el.innerHTML = "<b>Versus " + esc(APP_VERSION) + "</b> · " + esc(APP_DATE) + "<br>" + esc(api) + (navigator.serviceWorker && navigator.serviceWorker.controller ? " · hors connexion prêt ✓" : "");
 }
+
+/* Réglages › Aides « ? » sur les termes (MWR, TWR…) : Oui par défaut, mémorisé sur l'appareil ; Non = classe « sans-qm » sur <html>, les « ? » sont masqués par le CSS */
+(function () {
+  const lire = () => { try { return localStorage.getItem("versus.aides") !== "0"; } catch (e) { return true; } };
+  const maj = () => { const on = lire(); document.documentElement.classList.toggle("sans-qm", !on);
+    document.querySelectorAll("[data-aides-choix]").forEach(b => b.setAttribute("aria-pressed", String((b.dataset.aidesChoix === "1") === on))); };
+  document.addEventListener("click", e => {
+    const b = e.target.closest && e.target.closest("[data-aides-choix]"); if (!b) return;
+    try { localStorage.setItem("versus.aides", b.dataset.aidesChoix === "1" ? "1" : "0"); } catch (er) { /* rien */ }
+    maj();
+  });
+  maj();
+})();

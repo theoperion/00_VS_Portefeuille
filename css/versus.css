@@ -1622,3 +1622,7 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .cg-t { margin: 6px 0 2px; font-size: 14px; }
 .cg-scene { position: relative; width: 100%; aspect-ratio: 3 / 2; border-radius: 12px; overflow: hidden; background: #0B0E14; }
 .cg-rendu { position: absolute; inset: 0; }
+/* « Relevé Versus · nov. 2026 » sur deux lignes : tient à côté des boutons de l'en-tête à 390 px */
+.brand small.pastille-releve { white-space: pre-line; text-align: center; font-size: 10px; line-height: 1.15; padding: 2px 8px; border-radius: 10px; }
+/* Réglages › Aides « ? » = Non : les petits « ? » des termes disparaissent (la définition reste au toucher de la tuile) */
+html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }

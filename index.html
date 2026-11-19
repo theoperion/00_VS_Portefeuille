@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Saira+Condensed:wght@600;700;800&family=Saira:wght@400;500;600&display=swap">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <link rel="stylesheet" href="css/versus.css">
-<script>/* thème et couleur choisis, appliqués AVANT l'affichage (sinon un flash clair au démarrage) */(function(){try{var r=document.documentElement,t=localStorage.getItem("versus.theme"),a=localStorage.getItem("versus.accent");if(t==="light"||t==="dark")r.setAttribute("data-theme",t);if(a&&a!=="violet")r.setAttribute("data-accent",a);}catch(e){}})();</script>
+<script>/* thème et couleur choisis, appliqués AVANT l'affichage (sinon un flash clair au démarrage) */(function(){try{var r=document.documentElement,t=localStorage.getItem("versus.theme"),a=localStorage.getItem("versus.accent");if(t==="light"||t==="dark")r.setAttribute("data-theme",t);if(a&&a!=="violet")r.setAttribute("data-accent",a);if(localStorage.getItem("versus.aides")==="0")r.classList.add("sans-qm");}catch(e){}})();</script>
 </head>
 <body>
 <div class="app">
@@ -98,6 +98,9 @@
       </div>
       <div class="champ"><label>Vibrations <small>(Android ; pas sur iPhone)</small></label>
         <div class="chips"><button class="chip" type="button" data-vibre-choix="1">Oui</button><button class="chip" type="button" data-vibre-choix="0">Non</button></div>
+      </div>
+      <div class="champ"><label>Aides « ? » sur les termes <small>(MWR, TWR…)</small></label>
+        <div class="chips"><button class="chip" type="button" data-aides-choix="1">Oui</button><button class="chip" type="button" data-aides-choix="0">Non</button></div>
       </div>
       <div class="champ"><button class="btn ghost" type="button" id="son-test">🔔 Tester le son et la vibration</button><p class="info" id="son-diag" hidden></p></div>
       <div class="champ"><label>Couleur de l'appli</label>

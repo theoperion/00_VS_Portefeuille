@@ -332,7 +332,7 @@ function injecterStyle() {
 .moi .m-status i::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); }
 .moi .m-status i.on::before { background: var(--up); box-shadow: 0 0 0 3px var(--up-bg); }
 .moi .tuiles > .m-def-t { cursor: pointer; }
-.moi .tuiles .lab .qm { display: inline-grid; place-items: center; width: 14px; height: 14px; margin-left: 4px; border-radius: 50%; border: 1px solid var(--rule); font: 700 9px/1 var(--f-num); font-style: normal; color: var(--ink-3); vertical-align: 1px; }
+.moi .tuiles .lab .qm, .moi .m-debut .lab .qm { display: inline-grid; place-items: center; width: 14px; height: 14px; margin-left: 4px; border-radius: 50%; border: 1px solid var(--rule); font: 700 9px/1 var(--f-num); font-style: normal; color: var(--ink-3); vertical-align: 1px; }
 .moi .tuiles .m-def { display: none; font-size: 12px; line-height: 1.4; color: var(--ink-2); padding-top: 4px; }
 .moi .tuiles .ouvert .m-def { display: block; }
 .moi .m-notes { display: grid; gap: 6px; }
@@ -1031,17 +1031,17 @@ function heureCours() { return String(M.majTexte || "").replace(/^Cours du /, ""
 /* « Depuis le début » : bande compacte sous le chiffre du jour, définition au toucher */
 const DEFS = {
   gain: "Résultat total : valeur actuelle moins apports nets, ce que tes placements t'ont rapporté ou coûté, frais et ventes compris.",
-  latente: "Plus-value latente : écart entre la valeur des lignes encore détenues et leur prix de revient. Elle devient « réalisée » quand tu vends.",
-  mwr: "MWR : rendement de ton argent en tenant compte des dates et montants de tes versements. Non annualisé avant un an de recul.",
-  twr: "TWR : performance des placements eux-mêmes, sans l'effet de tes versements. C'est elle qu'on compare au S&P 500."
+  latente: "Latente : gain ou perte sur ce que tu n'as pas encore vendu.",
+  mwr: "MWR : ton rendement réel, en tenant compte du moment où tu as versé ton argent.",
+  twr: "TWR : la performance de tes placements, sans l'effet de tes versements : c'est elle qu'on compare au S&P 500."
 };
 function bandeDebut(s) {
   const c = (k, lab, val, cls, sub) => '<button type="button" data-def="' + k + '"><span class="lab">' + lab + '</span><b class="' + cls + '">' + val + "</b><small>" + sub + "</small></button>";
   return '<div class="m-debut-w"><span class="eyebrow">Depuis le début</span><div class="m-debut">' +
     c("gain", "Résultat", eur(s.gain, 0, true), sens(s.gain), pct(s.gainPct)) +
-    c("latente", "Latente", eur(s.latente, 0, true), sens(s.latente), pct(s.latentePct)) +
-    c("mwr", "MWR", pct(s.mwr), sens(s.mwr), "timing " + esc(s.timing || "—")) +
-    c("twr", "TWR", pct(s.twr), sens(s.twr), "S&amp;P " + pct(s.sp500)) +
+    c("latente", 'Latente<i class="qm" aria-hidden="true">?</i>', eur(s.latente, 0, true), sens(s.latente), pct(s.latentePct)) +
+    c("mwr", 'MWR<i class="qm" aria-hidden="true">?</i>', pct(s.mwr), sens(s.mwr), "timing " + esc(s.timing || "—")) +
+    c("twr", 'TWR<i class="qm" aria-hidden="true">?</i>', pct(s.twr), sens(s.twr), "S&amp;P " + pct(s.sp500)) +
     '</div><p class="m-def-l" hidden></p></div>';
 }
 function ligneJour(l, avecEnv) {
@@ -1787,7 +1787,7 @@ function blocRisque() {
     tuile("Baisse actuelle", pct(actuel), sens(actuel), actuel > -0.0005 ? "au plus haut" : "depuis le plus haut du " + dc(dateMax)) +
     tuile("Pire baisse", pct(pire), "down", datePire ? "du " + dc(dateHaut) + " au " + dc(datePire) : "—") +
     tuile("Volatilité 1 an", pct(pf.vol, 1, false), "", "écart type annualisé") +
-    tuile("Sharpe 1 an", ok(pf.sharpe) ? F2.format(pf.sharpe) : "—", sens(pf.sharpe), "rendement / risque, &gt; 1 = bon") +
+    tuile("Sharpe 1 an", ok(pf.sharpe) ? F2.format(pf.sharpe) : "—", sens(pf.sharpe), "rendement / risque, &gt; 1 = bon", "Sharpe : le rendement obtenu pour le risque pris. Plus c'est haut, mieux c'est.") +
     tuile("Jours en hausse", pct(pf.hausse, 0, false), "", "sur les 12 derniers mois") +
     tuile("Écart avec le S&amp;P 500", ok(pf.twr) && ok(sp) ? pts(pf.twr - sp) : "—", sens(pf.twr - sp), "depuis le début (TWR)") +
     "</div>";
@@ -2444,7 +2444,7 @@ const PRINCIPAUX = ["Achat", "Vente", "Apport", "Retrait"];
 const AUTRES_TYPES = {
   "Intérêts": { lib: "Intérêts / dividendes", g: "Courant", d: "De l'argent versé sur l'enveloppe (dividende, coupon, intérêts du compte espèces)." },
   "Frais": { lib: "Frais", g: "Courant", d: "Des frais débités en euros (droits de garde, frais de tenue de compte…)." },
-  "Relevé": { lib: "Relevé (assurance-vie)", g: "Rare", d: "La valeur d'une ligne lue sur ton relevé d'assurance-vie, pour recaler son cours." },
+  "Relevé": { lib: "Valeur sur ton relevé d'assurance-vie", g: "Rare", d: "Recopie la valeur d'une ligne telle qu'elle figure sur ton relevé d'assurance-vie : l'appli recale son cours, sans achat ni vente." },
   "Frais en parts": { lib: "Frais en parts (assurance-vie)", g: "Rare", d: "Les frais de gestion prélevés en parts sur une ligne d'assurance-vie." },
   "Ajustement espèces": { lib: "Ajustement espèces", g: "Rare", d: "Corriger un écart entre les espèces de l'appli et celles de ta banque (négatif si sortie)." },
   "Solde initial": { lib: "Solde initial", g: "Rare", d: "L'argent déjà présent sur l'enveloppe au moment où tu commences le suivi." }
@@ -2815,7 +2815,7 @@ function majRecap() {
 }
 /* v16.83 · le bouton dit ce qu'on enregistre (un Relevé n'est pas un « ordre ») */
 function libBoutonOrdre() {
-  return F.type === "Achat" && F.apport ? "Enregistrer l'apport et l'achat" : ({ "Relevé": "Enregistrer la valeur", "Apport": "Enregistrer l'apport", "Retrait": "Enregistrer le retrait", "Intérêts": "Enregistrer les intérêts", "Frais": "Enregistrer les frais", "Solde initial": "Enregistrer le solde" })[F.type] || "Enregistrer l'ordre";
+  return F.type === "Achat" && F.apport ? "Enregistrer le versement et l'achat" : ({ "Relevé": "Enregistrer la valeur", "Apport": "Enregistrer le versement", "Retrait": "Enregistrer le retrait", "Intérêts": "Enregistrer les intérêts", "Frais": "Enregistrer les frais", "Solde initial": "Enregistrer le solde", "Achat": "Enregistrer l'achat", "Vente": "Enregistrer la vente", "Frais en parts": "Enregistrer les frais", "Ajustement espèces": "Enregistrer l'ajustement" })[F.type] || "Enregistrer l'ordre";
 }
 /* Envoi optimiste : la feuille se ferme tout de suite, l'enregistrement continue en arrière-plan */
 async function envoyerOrdre(forcer) {
@@ -3977,7 +3977,7 @@ function htmlJourSimple() {
       '<div class="m-jour"><span class="badge big-b flat">' + (M.personne ? esc(M.personne) + " · " : "") + 'Bourse ' + eur(s.valeur) + " · épargne " + eur(s.epargne) + "</span><span>" + (rel ? "relevé de " + esc(rel) : "pas encore de relevé") + "</span></div></div>" +
     (envs.length ? '<div class="m-debut-w"><span class="eyebrow">Bourse depuis le début</span><div class="m-debut">' +
       c("gain", "Résultat", eur(s.gain, 0, true), sens(s.gain), pct(s.gainPct)) + c("verse", "Versé", eur(s.apports), "", "au total") +
-      c("twr", "TWR", pct(s.twr), sens(s.twr), "S&amp;P " + pct(s.sp500)) + c("mwr", "MWR", pct(s.mwr), sens(s.mwr), "ton argent") +
+      c("twr", 'TWR<i class="qm" aria-hidden="true">?</i>', pct(s.twr), sens(s.twr), "S&amp;P " + pct(s.sp500)) + c("mwr", 'MWR<i class="qm" aria-hidden="true">?</i>', pct(s.mwr), sens(s.mwr), "ton argent") +
       '</div><p class="m-def-l" hidden></p></div>' : "") +
     "<div>" + '<div class="m-tri"><h2 class="sec">Mes comptes</h2></div>' +
       (envs.length ? '<div class="m-env" style="--ce:var(--e1)"><div class="m-env-h"><b>Bourse</b><span class="v">' + eur(s.valeur) + '</span><span class="pv">relevé Versus de ' + esc(rel || "—") + '</span><span class="j"></span></div>' +
