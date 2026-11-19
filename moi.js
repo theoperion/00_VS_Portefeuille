@@ -674,6 +674,7 @@ function injecterStyle() {
 .moi .m-bilans { display: flex; flex-wrap: wrap; gap: 8px; }
 .wr .cl-flaps { display: flex; flex-wrap: wrap; justify-content: center; align-self: stretch; width: 100%; margin: 14px 0 6px; gap: 3px; }
 .wr .cl-flaps .m-flap { width: clamp(22px, 7vw, 40px); height: clamp(34px, 10.6vw, 60px); font-size: clamp(22px, 7vw, 40px); }
+.wr .cl-flaps { --fh: clamp(34px, 10.6vw, 56px); } .wr .cl-serie .t-billet::after, .wr .cl-serie .t-ticket .tk-h { display: none; } .wr .cl-serie .t-billet { padding-right: calc(var(--fh) * .3); }   /* v17.4 : styles de compteur (billet…) dans la clôture : --fh manquait (iPhone) */
 .wr .cl-serie { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0; } .wr .cl-serie .cl-flaps { margin: 0; width: auto; align-self: auto; }
 .wr .cl-fl { font: 800 28px/1 var(--f-display); opacity: .7; }
 .wr .cl-jauge { height: 8px; border-radius: 4px; background: rgba(255,255,255,.18); overflow: hidden; margin: 6px 0 2px; } .wr .cl-jauge i { display: block; height: 100%; background: var(--c, #9B87FF); border-radius: 4px; }

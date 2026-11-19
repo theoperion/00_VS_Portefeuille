@@ -1678,3 +1678,6 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .moi .eu-r.exclu { opacity: .62; }
 .moi .eu-n { font: 800 15px/1.2 var(--f-num); color: var(--accent-ink); }
 .moi .eu-t { display: grid; gap: 2px; min-width: 0; } .moi .eu-t b { font-size: 13.5px; } .moi .eu-t small { font-size: 12px; color: var(--ink-3); line-height: 1.35; }
+
+/* v17.4 : plus de bouton pour couper le son (Théo) */
+[data-son] { display: none !important; }
