@@ -113,7 +113,30 @@ const SONS = (() => {
     tasse: (c, o, t, f, d, v, N) => { osc(c, env(c, o, t, .001, .3, v), t, 3150, "sine", .3, N); osc(c, env(c, o, t, .001, .2, v * .6), t, 4420, "sine", .2, N); },
     choc: (c, o, t, f, d, v, N) => { bruitF(c, env(c, o, t, .003, .3, v), t, .3, 260, 1, "lowpass", N); const x = osc(c, env(c, o, t, .003, .3, v * .7), t, 150, "sine", .3, N); x.frequency.exponentialRampToValueAtTime(60, t + .3); },
     sable: (c, o, t, f, d, v, N) => bruitF(c, env(c, o, t, .15, d, v), t, d, [3200, 1200], 1.5, "bandpass", N),
-    souffle: (c, o, t, f, d, v, N) => bruitF(c, env(c, o, t, d * .3, d, v), t, d, 1200, 1.5, "bandpass", N)
+    souffle: (c, o, t, f, d, v, N) => bruitF(c, env(c, o, t, d * .3, d, v), t, d, 1200, 1.5, "bandpass", N),
+    /* V16.81 · les instruments des 10 autres univers (x = avancée dans la tension, 0 → 1) */
+    glock: (c, o, t, f, d, v, N) => { osc(c, env(c, o, t, .001, 1, v), t, f, "sine", 1, N); osc(c, env(c, o, t, .001, .25, v * .25), t, f * 5.4, "sine", .25, N); },
+    tictac: (c, o, t, f, d, v, N) => { osc(c, env(c, o, t, .001, .035, v), t, f, "square", .035, N); bruitF(c, env(c, o, t, .001, .03, v * .6), t, .03, 5000, 1, "highpass", N); },
+    chute: (c, o, t, f, d, v, N) => { const x = osc(c, env(c, o, t, .005, d, v, d * .3), t, f, "sine", d, N); x.frequency.exponentialRampToValueAtTime(f / 4, t + d); },   // la note qui tombe
+    cor: (c, o, t, f, d, v, N) => { const g = env(c, o, t, .14, d + .25, v, d * .6), fl = passeBas(c, g, 700); fl.frequency.setValueAtTime(500, t); fl.frequency.linearRampToValueAtTime(1100, t + .2); osc(c, fl, t, f, "sawtooth", d + .25, N); osc(c, fl, t, f * 1.003, "triangle", d + .25, N); },
+    harpe: (c, o, t, f, d, v, N) => { osc(c, env(c, o, t, .002, 1.3, v), t, f, "triangle", 1.3, N); osc(c, env(c, o, t, .002, .4, v * .3), t, f * 2, "sine", .4, N); },
+    tambour: (c, o, t, f, d, v, N) => { bruitF(c, env(c, o, t, .003, .45, v), t, .45, 320, 1, "lowpass", N); bruitF(c, env(c, o, t, .001, .05, v * .5), t, .05, 1100, 1.5, "bandpass", N); const x = osc(c, env(c, o, t, .003, .35, v * .6), t, 230, "sine", .35, N); x.frequency.exponentialRampToValueAtTime(120, t + .35); },
+    mailloche: (c, o, t, f, d, v, N) => { osc(c, env(c, o, t, .003, .55, v), t, f, "sine", .55, N); osc(c, env(c, o, t, .002, .09, v * .35), t, f * 4, "sine", .09, N); },   // marimba boisé
+    ping: (c, o, t, f, d, v, N) => { const x = osc(c, env(c, o, t, .01, 1.2, v), t, f * .97, "sine", 1.2, N); x.frequency.exponentialRampToValueAtTime(f, t + .15); },   // ping bioluminescent
+    cuivre: (c, o, t, f, d, v, N) => { const g = env(c, o, t, .05, d + .2, v, d * .6), fl = passeBas(c, g, 1200); fl.frequency.setValueAtTime(500, t); fl.frequency.linearRampToValueAtTime(2200, t + .08); fl.frequency.linearRampToValueAtTime(1200, t + .4); osc(c, fl, t, f, "sawtooth", d + .2, N); osc(c, fl, t, f * 1.004, "sawtooth", d + .2, N); },
+    timbale: (c, o, t, f, d, v, N) => { [[1, 1, .9], [1.5, .5, .6], [2, .3, .4]].forEach(([m, k, D]) => { const x = osc(c, env(c, o, t, .003, D, v * k), t, f * m * 1.03, "sine", D, N); x.frequency.exponentialRampToValueAtTime(f * m, t + .1); }); bruitF(c, env(c, o, t, .001, .08, v * .5), t, .08, 500, 1, "bandpass", N); },
+    mecanique: (c, o, t, f, d, v, N) => { bruitF(c, env(c, o, t, d * .45, d * .5, v), t, d * .5, [500, 1300], 2, "bandpass", N); bruitF(c, env(c, o, t + d * .5, d * .1, d * .5, v * .8), t + d * .5, d * .5, [1100, 400], 2, "bandpass", N); },   // un souffle de machine, aller-retour
+    accordeon: (c, o, t, f, d, v, N) => { const fl = passeBas(c, env(c, o, t, .03, d + .08, v, d * .7), 2500); osc(c, fl, t, f, "square", d + .08, N); osc(c, fl, t, f * 1.006, "square", d + .08, N); },   // 2 carrés désaccordés
+    pizz: (c, o, t, f, d, v, N) => osc(c, passeBas(c, env(c, o, t, .002, .28, v), 2200), t, f, "triangle", .28, N),
+    casserole: (c, o, t, f, d, v, N) => [[1840, 1, .9], [2530, .6, .7], [3910, .35, .5]].forEach(([fq, k, D]) => osc(c, env(c, o, t, .001, D, v * k), t, fq, "sine", D, N)),
+    arp: (c, o, t, f, d, v, N, x) => { const fl = passeBas(c, env(c, o, t, .004, .3, v), 2800 - 2300 * (x || 0)); fl.Q.value = 4; osc(c, fl, t, f, "sawtooth", .3, N); osc(c, fl, t, f * 1.005, "square", .3, N); },   // synthé années 80 ; le filtre se ferme à la faille
+    aspire: (c, o, t, f, d, v, N) => { const g = c.createGain(); g.gain.setValueAtTime(.0005, t); g.gain.exponentialRampToValueAtTime(v, t + d); g.gain.linearRampToValueAtTime(0, t + d + .02); g.connect(o); bruitF(c, g, t, d + .02, [800, 4000], 1, "bandpass", N); },   // un son à l'envers
+    vague: (c, o, t, f, d, v, N) => bruitF(c, env(c, o, t, d * .5, d, v), t, d, [300, 1400], 1, "lowpass", N),
+    sirene: (c, o, t, f, d, v, N) => { const x = osc(c, env(c, o, t, d * .3, d, v, d * .4), t, f, "sine", d, N); x.frequency.linearRampToValueAtTime(f * 1.5, t + d * .45); x.frequency.linearRampToValueAtTime(f * 1.33, t + d); },
+    foudre: (c, o, t, f, d, v, N) => { bruitF(c, env(c, o, t, .002, .25, v), t, .25, 3500, .7, "highpass", N); bruitF(c, env(c, o, t + .05, .03, d, v * .9), t + .05, d, [900, 150], .8, "lowpass", N); },
+    orgue: (c, o, t, f, d, v, N) => { const g = env(c, o, t, .01, Math.max(d, .15) * .9, v, .06); osc(c, g, t, f, "triangle", d, N); const h = c.createGain(); h.gain.value = .35; h.connect(g); osc(c, h, t, f * 2, "sine", d, N); },   // orgue de foire
+    petille: (c, o, t, f, d, v, N) => { for (let k = 0, n = Math.round(d * 14); k < n; k++) { const tk = t + Math.random() * d; bruitF(c, env(c, o, tk, .001, .02, v * (.4 + Math.random() * .6)), tk, .025, 6000 + Math.random() * 3000, 3, "bandpass", N); } },
+    montee: (c, o, t, f, d, v, N) => bruitF(c, env(c, o, t, d * .9, d, v, d * .1), t, d, [300, 3500], 2, "bandpass", N)
   };
   /* le jingle « VER-SUS ! » : sol-do-mi, court-court-long. Seuls l'onde, l'octave, l'enveloppe et une couche de bruit changent selon l'univers */
   const JINGLE_NOTES = [392, 523.25, 659.25], JINGLE_RYTHME = [[0, .12], [.12, .12], [.24, .5]];
@@ -161,27 +184,86 @@ const SONS = (() => {
       pas: [[["dum", 0, .35]]], fond: [["bourdon", -12, .1]],
       bruit: [["vent", 0, 3, .12]],
       tension: { sous: 2, puls: [["dum", 0, .5, 2], ["tek", 0, .28, 1]], inst: "flute", decal: [-5, -3], v: .34, retard: 1, accent: [["vent", 0, 1.5, .1]], monte: [["ver", 1.8, .3]] },
-      fin: [["bourdon", 0, 1.4, .1, -12], ["dum", 0, .2, .6], ["ver", 0, 1.2, .22]] }
+      fin: [["bourdon", 0, 1.4, .1, -12], ["dum", 0, .2, .6], ["ver", 0, 1.2, .22]] },
+    /* V16.81 · les 10 autres univers. Tout est en do, pour finir sur l'accord du jingle (do majeur) ; motifs composés ici. pas : [instrument, demi-tons, volume, durée, décalage en temps] */
+    terrier: {   // le goûter : valse bancale (le 3e temps boite) qui accélère, glockenspiel, tic-tac, une note qui tombe
+      tempo: 168, tonique: 523.25, mel: "glock", vMel: .38, motif: [[12, 1], [11, .5], [12, .5], [7, 1], [4, 1.5], [5, .5]],
+      pas: [[["pizz", -12, .26]], [["tictac", 24, .1]], [["tictac", 19, .1, 0, .18]]],
+      bruit: [["chute", 4.5, .6, .14, 24]],
+      tension: { sous: 1, accel: .45, puls: [["tictac", 24, .14, 1], ["pizz", -12, .26, 3]], inst: "glock", decal: [-12, -7], v: .32, retard: 1, accent: [["chute", 0, .6, .14, 24]] },
+      fin: [["glock", 0, 1, .16, 24], ["tasse", .12, .3, .14]] },
+    anneau: {   // dorien sur do : cor lointain, harpe, tambour au loin, montée pesante
+      tempo: 84, tonique: 523.25, mel: "cor", vMel: .32, motif: [[-12, .5], [-10, .5], [-9, .5], [-2, .5], [-3, 1.5]],
+      pas: [[["harpe", 0, .16], ["tambour", 0, .2]], [["harpe", 7, .12]], [["harpe", 3, .12], ["tambour", 0, .12]], [["harpe", 9, .12]]],
+      tension: { sous: 1, puls: [["tambour", 0, .45, 1], ["harpe", -12, .14, 2]], inst: "cor", decal: [0, 3], v: .3, retard: 1, accent: [["tambour", 0, .3, .4]] },
+      fin: [["tambour", 0, .5, .5], ["harpe", 0, 1.2, .15, 12], ["cor", 0, 1.2, .18, -12]] },
+    pandora: {   // pentatonique majeure : mailloches boisées, flûte aérienne, pings qui s'allument ; accord final suspendu (ré ajouté)
+      tempo: 96, tonique: 523.25, mel: "flute", vMel: .34, motif: [[9, .5], [7, .5], [12, .5], [14, .5], [16, 1]],
+      pas: [[["mailloche", -12, .26]], [["mailloche", -5, .2]], [["mailloche", -3, .2]], [["mailloche", -8, .2]]],
+      bruit: [["ping", .5, 1, .08, 24], ["ping", 2.5, 1, .07, 28], ["souffle", 0, 2.5, .05]],
+      tension: { sous: 2, puls: [["mailloche", -12, .28, 2], ["mailloche", -3, .16, 4], ["ping", 26, .06, 3]], inst: "flute", decal: [-12, -10], v: .3, retard: 1, accent: [["souffle", 0, 1.2, .07], ["ping", 0, 1, .1, 26]] },
+      fin: [["mailloche", 0, .6, .26, -12], ["ping", 0, 1.2, .1, 26], ["flute", 0, 1.1, .2, 2]] },
+    etoiles: {   // le Côté obscur : do mineur, cuivres synthétiques graves en quintes, timbale, souffle de machine ; pulsation 3-3-2
+      tempo: 100, tonique: 523.25, mel: "cuivre", vMel: .2, dbl: 7, motif: [[-12, 1], [-12, .5], [-9, .5], [-5, 1], [-4, 1]],
+      pas: [[["timbale", -12, .3]], [["tek", 0, .14]], [["tek", 0, .12], ["timbale", -12, .18, 0, .5]], [["tek", 0, .14]]],
+      bruit: [["mecanique", 0, 1.3, .1], ["mecanique", 2.5, 1.3, .08]],
+      tension: { sous: 2, puls: [["timbale", -12, .36, 3], ["tek", 0, .2, 1]], inst: "cuivre", decal: [0, 1], v: .18, retard: 1, accent: [["mecanique", 0, 1.3, .1]] },
+      fin: [["timbale", 0, 1, .45, -12], ["cuivre", 0, 1.2, .16, -12], ["cuivre", 0, 1.2, .13, -5]] },
+    ratatouille: {   // musette à trois temps : accordéon (2 carrés désaccordés), pizzicati, casserole qui tinte
+      tempo: 168, tonique: 523.25, mel: "accordeon", vMel: .2, motif: [[4, 1], [3, .5], [4, .5], [9, 1], [7, 1.5], [4, .5]],
+      pas: [[["pizz", -12, .28]], [["accordeon", -5, .08, .25], ["accordeon", -8, .08, .25]], [["accordeon", -5, .08, .25], ["accordeon", -8, .08, .25]]],
+      bruit: [["casserole", 0, .8, .1]],
+      tension: { sous: 1, puls: [["pizz", -12, .26, 1], ["casserole", 0, .06, 3]], inst: "accordeon", decal: [-12, -10], v: .18, retard: 0, accent: [["casserole", 0, .8, .12]] },
+      fin: [["casserole", 0, .9, .13], ["accordeon", 0, 1.1, .12, -12]] },
+    envers: {   // arpège de synthé années 80 ; à la faille tout s'inverse : le motif descend, le filtre se ferme
+      tempo: 112, tonique: 523.25, mel: "arp", vMel: .3, motif: [[0, .5], [7, .5], [12, .5], [15, .5], [14, 1]],
+      pas: [[["arp", -12, .16, 0, 0], ["arp", -5, .12, 0, .5]], [["arp", -9, .16, 0, 0], ["arp", -5, .12, 0, .5]]],
+      tension: { sous: 2, inverse: true, puls: [["arp", -12, .2, 1], ["arp", 3, .1, 2]], inst: "arp", decal: [2, 0], v: .28, retard: 1, accent: [["aspire", -.9, .9, .2]] },
+      fin: [["arp", 0, .8, .18, -12], ["arp", .1, .8, .15, -5], ["arp", .2, .8, .13, 12]] },
+    odyssee: {   // mixolydien sur do : lyre pincée, tambour et vagues, une sirène qui glisse, la foudre
+      tempo: 92, tonique: 523.25, mel: "harpe", vMel: .34, motif: [[0, .5], [4, .5], [7, .5], [10, 1], [9, .5], [7, 1]],
+      pas: [[["tambour", 0, .22]], [["harpe", -12, .1]], [["tambour", 0, .12]], [["harpe", -5, .1]]],
+      bruit: [["vague", 0, 2.6, .14]],
+      tension: { sous: 2, puls: [["tambour", 0, .36, 2], ["harpe", -12, .12, 1]], inst: "harpe", decal: [-12, -10], v: .3, retard: 1, accent: [["sirene", 0, 1.6, .1, 7], ["vague", 0, 2, .1]] },
+      fin: [["foudre", 0, 1.2, .3], ["harpe", 0, 1.2, .15, 12]] },
+    chocolat: {   // orgue de foire sautillant, boîte à musique, pétillement
+      tempo: 132, tonique: 523.25, mel: "orgue", vMel: .26, motif: [[7, .5], [12, .25], [11, .25], [12, .5], [16, .5], [14, 1]],
+      pas: [[["orgue", -12, .2, .2]], [["orgue", -5, .12, .2], ["orgue", -8, .12, .2]]],
+      bruit: [["petille", 0, 2, .08], ["boite", 2, .9, .16, 24]],
+      tension: { sous: 2, puls: [["orgue", -12, .2, 2, .2], ["bloc", 0, .16, 1]], inst: "boite", decal: [-5, -3], v: .34, retard: 1, accent: [["petille", 0, 1.2, .08]] },
+      fin: [["petille", 0, 1.2, .1], ["boite", 0, 1, .2, 24]] },
+    titans: {   // tambours de guerre, cuivres graves, choc sourd, montée
+      tempo: 100, tonique: 523.25, mel: "cuivre", vMel: .22, motif: [[-12, 1], [-9, .5], [-7, .5], [-5, 1.5], [-4, .5]],
+      pas: [[["tambour", 0, .5]], [["tambour", 0, .26]], [["tambour", 0, .44], ["tambour", 0, .26, 0, .5]], []],
+      bruit: [["choc", 0, .3, .32]],
+      tension: { sous: 2, puls: [["tambour", 0, .5, 1]], inst: "cuivre", decal: [0, 2], v: .2, retard: 1, accent: [["choc", 0, .3, .3]], monte: [["montee", 2, .14]] },
+      fin: [["choc", 0, .3, .4], ["tambour", 0, .4, .55], ["cuivre", 0, 1.3, .17, -12], ["cuivre", 0, 1.3, .13, -5]] },
+    multivers: {   // la Finale : épique ; dans la tension, le motif passe d'un univers à l'autre (cascade de timbres) ; l'accord final le plus large
+      tempo: 120, tonique: 523.25, mel: "cuivre", vMel: .2, motif: [[0, .5], [7, .5], [12, .5], [11, .25], [12, .25], [16, 1.5]],
+      pas: [[["timbale", -12, .3]], [["harpe", 7, .12]], [["timbale", -12, .18]], [["harpe", 12, .12]]],
+      tension: { sous: 2, puls: [["timbale", -12, .38, 2], ["tek", 0, .18, 1]], inst: ["celesta", "clavecin", "flute", "harpe", "mailloche", "accordeon", "glock", "orgue", "boite", "cuivre"], decal: [-12, -7, -5], v: .26, retard: 1, monte: [["montee", 2, .14]] },
+      fin: [["timbale", 0, 1, .45, -12], ["cuivre", 0, 1.4, .15, -12], ["cuivre", 0, 1.4, .12, -5], ["glock", 0, 1.2, .13, 24], ["celesta", .08, 1.2, .12, 28]] }
   };
   /* la partition : la liste des notes, en secondes depuis le début de la bande-annonce */
   function composer(R, o) {
     const b = 60 / R.tempo, E = [], P = o.plans.map(x => x / 1000), tF = o.tFeux / 1000, tO = o.tOut / 1000;
-    const add = (t, i, st, d, v, fin) => E.push({ t: Math.round(t * 1000) / 1000, i, f: R.tonique * Math.pow(2, (st || 0) / 12), d, v, fin: !!fin });
+    const add = (t, i, st, d, v, fin, x) => { E.push({ t: Math.round(t * 1000) / 1000, i, f: R.tonique * Math.pow(2, (st || 0) / 12), d, v, fin: !!fin, x }); if (R.dbl && (i === R.mel || i === (R.tension || {}).inst) && v === (i === R.mel ? R.vMel : R.tension.v) && !fin) E.push(Object.assign({}, E[E.length - 1], { f: R.tonique * Math.pow(2, ((st || 0) + R.dbl) / 12), v: v * .7 })); };   // dbl : la mélodie doublée (quintes)
     const finale = (tf, enDirect) => { add(tf, "jingle", 0, 1.3, 1, enDirect); (R.fin || []).forEach(([i, dt, d, v, st]) => add(tf + dt, i, st, d, v, enDirect)); };
     // 1 · la signature, sur le plan du circuit
     const s0 = .15, bord = Math.min(P[1] != null ? P[1] : tF - b, s0 + 3);
     let t = s0; R.motif.forEach(([st, d]) => { if (t < bord - .1) add(t, R.mel, st, Math.min(d * b, bord - t + .3), R.vMel); t += d * b; });
     const finSig = Math.min(t, bord);
-    for (let k = 0; s0 + k * b < finSig - .05; k++) R.pas[k % R.pas.length].forEach(([i, st, v, d]) => add(s0 + k * b, i, st, d || b, v));
+    for (let k = 0; s0 + k * b < finSig - .05; k++) R.pas[k % R.pas.length].forEach(([i, st, v, d, dt]) => add(s0 + (k + (dt || 0)) * b, i, st, d || b, v));
     (R.bruit || []).forEach(([i, dt, d, v, st]) => add(s0 + dt * b, i, st, d, v));
     if (o.reduit) { (R.fond || []).forEach(([i, st, v]) => add(s0, i, st, finSig + .2 - s0, v)); finale(finSig + .45, false); return E; }
     // 2 · la tension, sur la règle et le trésor ; un temps de silence avant les feux
     const T = R.tension, a = Math.max(finSig, P[1] != null ? P[1] : finSig), z = tF - b;
     (R.fond || []).forEach(([i, st, v]) => add(s0, i, st, Math.max(a, z) - s0, v));
     if (z - a > .3) {
-      const sub = b / (T.sous || 1);
-      for (let k = 0; a + k * sub < z - .02; k++) { const x = k * sub / (z - a); T.puls.forEach(([i, st, v, tous, d]) => { if (k % (tous || 1) === 0) add(a + k * sub, i, st, d || sub, v * (.45 + .55 * x)); }); }
-      let tt = a + (T.retard || 0) * b; [].concat(T.decal).forEach(dc => R.motif.forEach(([st, d]) => { if (tt < z - .15) add(tt, T.inst, st + dc, Math.min(d * b, z - tt), T.v); tt += d * b; }));   // le motif plus bas, puis un cran plus haut : ça monte
+      const sub = b / (T.sous || 1), av = tt => Math.max(0, Math.min(1, (tt - a) / (z - a))), pasDe = tt => T.accel ? 1 - T.accel * av(tt) : 1;   // accel : le tempo s'emballe
+      for (let k = 0, tk = a; tk < z - .02; k++, tk += sub * pasDe(tk)) { const x = av(tk); T.puls.forEach(([i, st, v, tous, d]) => { if (k % (tous || 1) === 0) add(tk, i, st, d || sub, v * (.45 + .55 * x), false, x); }); }
+      let tt = a + (T.retard || 0) * b, n = 0; [].concat(T.decal).forEach(dc => R.motif.forEach(([st, d]) => { const ins = [].concat(T.inst), i = ins[n++ % ins.length];   // une liste d'instruments = la cascade (Multivers)
+        if (tt < z - .15) add(tt, i, (T.inverse ? -st : st) + dc, Math.min(d * b, z - tt), T.v, false, av(tt)); tt += d * b * pasDe(tt); }));   // le motif plus bas, puis un cran plus haut : ça monte ; inverse : il descend (Envers)
       P.slice(1).forEach(p => (T.accent || []).forEach(([i, dt, d, v, st]) => add(p + dt, i, st, d, v)));
       (T.monte || []).forEach(([i, d, v]) => add(Math.max(a, z - d), i, 0, Math.min(d, z - a), v));
     }
@@ -190,7 +272,7 @@ const SONS = (() => {
     return E;
   }
   function poser(M, evs, t0) {
-    evs.forEach(e => { if (e.i === "jingle") jingleSur(M.c, M.busJ, t0 + e.t, M.cle, "accord", M.N); else INSTR[e.i](M.c, M.bus, t0 + e.t, e.f, e.d, e.v, M.N); });
+    evs.forEach(e => { if (e.i === "jingle") jingleSur(M.c, M.busJ, t0 + e.t, M.cle, "accord", M.N); else INSTR[e.i](M.c, M.bus, Math.max(0, t0 + e.t), e.f, e.d, e.v, M.N, e.x); });
   }
   function buses(M, sortieM) { M.bus = M.c.createGain(); M.bus.gain.value = M.R.gain || .4; M.bus.connect(sortieM); M.busJ = M.c.createGain(); M.busJ.gain.value = 1; M.busJ.connect(sortieM); }
   function couper(M) { M.N.forEach(s => { try { s.stop(); } catch (e) { /* déjà fini */ } }); M.N = []; [M.bus, M.busJ].forEach(b => { try { b && b.disconnect(); } catch (e) { } }); }
