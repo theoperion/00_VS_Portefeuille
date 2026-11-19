@@ -108,7 +108,7 @@ function ouvrirReserve() {
       "<p><b>Calendrier des nouveautés</b></p><ul>" + etapesJeu().map(ligne).join("") + "</ul></section>" +
     '<section class="rg-s"><h4>🧪 En réserve <small>codé, éteint</small></h4><ul>' + reserve.map(ligne).join("") + "</ul>" +
       "<p><b>Ce qu'elles font, en détail</b> (le texte que les joueurs liront si tu les mets en jeu) :</p>" + sect("niveaux") + "</section>" +
-    '<section class="rg-s"><h4>⚙️ Réglages actuels</h4><ul><li>Points de place : ' + baremeJ().join(" · ") + ' ; 🎯 : +1 (Turbo : +3).</li><li>Course : une manche par mois, départ dans l\'ordre du championnat ; le meilleur du mois boucle un tour.' + "</li><li>Gain maximum d'une carte : +" + PLAFOND_CARTE + ".</li><li>Atout du circuit : +1 si la carte marque ; bouchon (pas de +1) si au moins deux pilotes marquent avec.</li><li>Duels : +1 / −1, un seul par paire et par mois ; égalité = 0 (Pari aussi).</li><li>Côté obscur : le dernier du championnat ×2 (mois tiré entre avril et octobre) ; Finale : tout le monde ×2 en décembre.</li><li>Rattrapage : 1 carte bonus quand tu finis dernier (4 cartes bonus, mélangées par pilote et par saison).</li><li>Niveaux (en réserve) : " + XP_NIVEAU + " XP par niveau, niveau " + NIV_MAX + " au plus ; atelier : +1 par niveau sur une carte, 2 au plus.</li></ul><p class=\"rg-admin\">Pour changer un chiffre : une session de modification (constantes en haut des règles dans le code).</p></section>" +
+    '<section class="rg-s"><h4>⚙️ Réglages actuels</h4><ul><li>Points de place : ' + baremeJ().join(" · ") + ' ; 🎯 : +1 (Turbo : +3).</li><li>Course : une manche par mois, départ dans l\'ordre du championnat ; le meilleur du mois boucle un tour.' + "</li><li>Gain maximum d'une carte : +" + PLAFOND_CARTE + ".</li><li>Atout du circuit : +1 si la carte marque ; bouchon (pas de +1) si au moins deux pilotes marquent avec.</li><li>Duels : +1 / −1, un seul par paire et par mois ; égalité = 0 (Pari aussi).</li><li>Côté obscur : le dernier du championnat ×2 (en juin) ; Finale : tout le monde ×2 en décembre.</li><li>Rattrapage : 1 carte bonus quand tu finis dernier (4 cartes bonus, mélangées par pilote et par saison).</li><li>Niveaux (en réserve) : " + XP_NIVEAU + " XP par niveau, niveau " + NIV_MAX + " au plus ; atelier : +1 par niveau sur une carte, 2 au plus.</li></ul><p class=\"rg-admin\">Pour changer un chiffre : une session de modification (constantes en haut des règles dans le code).</p></section>" +
     '<section class="rg-s"><h4>💡 Idées à creuser <small>pas encore codées</small></h4><ul>' + IDEES_FUTURES.map(([i, t, d]) => "<li><b>" + i + " " + esc(t) + "</b> : " + esc(d) + "</li>").join("") + "</ul></section>" +
     "</div></div>";
   document.body.appendChild(o); document.documentElement.classList.add("fige");
@@ -148,7 +148,7 @@ function deckBonus(y, nom) {
   return l;
 }
 /* ---------- Mois spéciaux ---------- */
-function monacoMois(y) { return y * 100 + 4 + hashTxt("monaco" + y) % 7; }   // d'avril à octobre, tiré une fois par saison
+function monacoMois(y) { return y * 100 + 6; }   // V16.22 : le Côté obscur est toujours en juin (avant : tiré d'avril à octobre, ce qui faisait perdre son piège à un autre circuit certaines années)
 function moisSpecial(y, k) {
   if (!k) return null;
   if (k % 100 === 12 && regleActive("finale", k)) return { id: "finale", ico: "🏆", nom: "Finale", txt: "Points de place doublés pour tout le monde." };
@@ -529,13 +529,13 @@ function htmlRegles(tout, modeReserve) {
       (vu("rival") ? "<div><b>😈 Rival</b><span>choisi en secret (20 déc. → 1<sup>er</sup> janv.) ; devant lui en fin de saison</span><em>+3</em></div>" : "") +
       (vu("regularite") ? "<div><b>🛡️ Régularité</b><span>fin de saison : le moins souvent dernier (puis le plus de mois positifs)</span><em>+3</em></div>" : "") + "</div>") : "") +
     s("speciaux", "📅", "Les mois spéciaux", '<div class="rg-tab">' +
-      (vM ? "<div><b>🌑 Le Côté obscur</b><span>" + (regleActive("monaco", mo) ? esc(moisLong(mo)) : "un mois tiré") + " : le dernier du championnat</span><em>place ×2</em></div>" : "") +
+      (vM ? "<div><b>🌑 Le Côté obscur</b><span>" + (regleActive("monaco", mo) ? esc(moisLong(mo)) : "juin") + " : le dernier du championnat</span><em>place ×2</em></div>" : "") +
       (vS ? "<div><b>🪱 Le Chevaucheur des sables</b><span>juillet : le vainqueur du mois</span><em>+2</em></div><div><b>🦸 Le Rassemblement des héros</b><span>septembre : le 🎯</span><em>vaut +2</em></div>" : "") +
       (vF ? "<div><b>🏆 Finale</b><span>décembre : tout le monde</span><em>place ×2</em></div>" : "") +
       (vu("vote") ? "<div><b>🗳️ Vote</b><span>2 → 31 décembre : « le coup de la saison » (pas pour soi)</span><em>plaque</em></div>" : "") + "</div>") +
     (vu("pieges") ? s("pieges", "🪤", "Les pièges des circuits", "<p>Les autres mois, le circuit a son <b>piège</b> : une petite règle qui ne vaut que ce mois-là. Il s'affiche dès le 20 du mois d'avant (Stand et Classement).</p>" +
       '<div class="rg-tab">' + CAL_GP.filter(id => PIEGES[id]).map(id => "<div><b>" + GPS[id].drap + " " + esc(GPS[id].ville) + "</b><span>" + PIEGES[id].ico + " <b>" + esc(PIEGES[id].nom) + "</b> : " + esc(PIEGES[id].txt) + "</span><em>" + esc(moisCourt(y * 100 + CAL_GP.indexOf(id) + 1).replace(/ \d+$/, "")) + "</em></div>").join("") + "</div>" +
-      '<p class="rg-note">Le mois du Côté obscur (tiré au sort) garde son circuit, mais pas de piège ce mois-là.</p>') : "") +
+      '<p class="rg-note">Le Côté obscur tombe en juin, sur la Bataille spatiale.</p>') : "") +
     (vP ? s("pioche", "🎴", "Le rattrapage",
       "<p>Dernier d'un mois ? Tu pioches <b>1 carte bonus</b>, jouable dès le mois suivant, une fois par saison :</p><ul>" + CARTES_BONUS.map(c => "<li>" + c.ico + " <b>" + esc(c.nom) + "</b> : " + esc(c.court || c.def) + "</li>").join("") + "</ul>") : "") +
     (vN ? s("niveaux", "🔧", vA ? "Niveaux et atelier" : "Niveaux d'écurie",

@@ -18,6 +18,8 @@ function apercuSaison() { return !window.APERCUS_FINIS && !saisonOuverte() && es
 function saisonVisible() { return saisonOuverte() || apercuSaison() || chauffeOuverte(); }
 /** La « saison » 2026 hors aperçu admin, c'est le tour de chauffe : décembre seul, sans défis, badges ni exclusifs */
 function estChauffe(y) { return y === SAISON.premiere - 1 && !apercuSaison(); }
+/** V16.22 · pendant le tour de chauffe : seulement les bases (course + cartes) ; écurie, badges, trophées et objets attendent janvier (demande de Théo) */
+function basesSeules() { try { return !apercuSaison() && estChauffe(saisonCourante()); } catch (e) { return false; } }
 /** Saisons qu'on peut ouvrir dans le Podium : le tour de chauffe (dès le 1er décembre), puis les vraies */
 function anneesPodium() {
   if (apercuSaison()) return anneesSaison();
@@ -431,7 +433,7 @@ function exclusifsDe(nom) { return EXCLUSIFS.filter(x => possede(x.id, nom)); }
 let EXCL_ENVOI = false;
 /** V22 : annonce une fois les exclusifs que le serveur vient de t'attribuer */
 function annoncerExclusifs() {
-  if (!D || !D.exclusifs || simulation() || apercuSaison()) return;
+  if (!D || !D.exclusifs || simulation() || apercuSaison() || basesSeules()) return;
   const moi = moiVrai(); if (!moi) return;
   let vus = []; try { vus = JSON.parse(stock.get("versus.exclVus") || "[]"); } catch (e) { vus = []; }
   const nouveaux = EXCLUSIFS.filter(x => { const f = D.exclusifs[x.id]; return f && (f.noms || [f.nom]).includes(moi) && !vus.includes(x.id); });
@@ -486,6 +488,7 @@ function badgesPossedes(nom) {
 }
 /** Les badges affichés : ceux épinglés dans l'Écurie (3 au plus), sinon les 3 plus prestigieux */
 function badgesAffiches(nom, e) {
+  if (basesSeules()) return [];
   const tous = badgesPossedes(nom), choix = (e || equipDe(nom)).badges;
   if (!Array.isArray(choix)) return tous.slice(0, 3);
   return choix.map(id => tous.find(b => b.id === id)).filter(Boolean).slice(0, 3);
@@ -815,12 +818,12 @@ function blocSaison() {
     '<button class="regles-b" type="button" id="regles-ouvrir" aria-label="Règles du jeu">📖 Règles</button></div></div>' +
     (ys.length > 1 ? '<div class="s-ys">' + ys.map(a => '<button type="button" class="chip-s' + (a === y ? " on" : "") + '" data-saison="' + a + '">' + (estChauffe(a) ? "🔥 Chauffe" : "Saison " + numeroSaison(a)) + "</button>").join("") + "</div>" : "") +
     (ch ? '<div class="chauffe-b">🔥 <span><b>Tour de chauffe</b> : les règles de base, et rien ne compte. Le championnat démarre le 1<sup>er</sup> janvier. <a href="#" class="lien-regles" data-regles="speciaux">En savoir plus</a></span></div>' : "") +
-    '<div class="pod-tabs" role="group" aria-label="Saison">' + b("gp", "<span>🏁</span>Course") + b("stand", "<span>🃏</span>Stand" + (rappelCartes() ? '<i class="pastille" aria-label="à faire"></i>' : "")) + b("ecurie", "<span>🏎️</span>Écurie") + b("defis", "<span>🏆</span>Trophées") + "</div>" +
+    '<div class="pod-tabs" role="group" aria-label="Saison">' + b("gp", "<span>🏁</span>Course") + b("stand", "<span>🃏</span>Stand" + (rappelCartes() ? '<i class="pastille" aria-label="à faire"></i>' : "")) + (basesSeules() ? "" : b("ecurie", "<span>🏎️</span>Écurie") + b("defis", "<span>🏆</span>Trophées")) + "</div>" +
     '<div class="s-corps">' + (o === "ecurie" ? htmlEcurie() : o === "defis" ? htmlDefis() : o === "stand" ? htmlStand(y) : htmlGrandPrix(y)) + "</div>" +
     (adminActif() && !window.APERCUS_FINIS ? '<button class="reserve-b" type="button" id="reserve-ouvrir">🧪 <span><b>Règles et idées en réserve</b><small>admin · ce qui est en jeu, ce qui dort, les réglages</small></span> ›</button>' : "") + "</section>";
 }
 /** Onglet du Podium : l'ancien « Championnat » est maintenant dans le Grand Prix */
-function ongletPodium() { return ["gp", "stand", "ecurie", "defis"].includes(ETAT.podium) ? ETAT.podium : "gp";
+function ongletPodium() { return (basesSeules() ? ["gp", "stand"] : ["gp", "stand", "ecurie", "defis"]).includes(ETAT.podium) ? ETAT.podium : "gp";
 }
 /** Détail des points (l'ancien onglet Championnat), replié sous la course */
 function htmlDetailPoints(y) {
