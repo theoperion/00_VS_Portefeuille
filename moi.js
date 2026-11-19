@@ -712,6 +712,31 @@ function injecterStyle() {
 .m-fete .m-flaps { justify-content: center; }
 .m-fete h3 { margin: 0; font: italic 800 24px/1.15 var(--f-display); letter-spacing: .05em; text-transform: uppercase; }
 .m-fete p { margin: 0; opacity: .75; font-size: 14px; }
+.moi .m-bilan { margin: 10px 0 2px; font-size: 15px; line-height: 1.4; color: var(--ink); }
+.moi .m-bilan b { font-weight: 800; white-space: nowrap; }
+.moi .m-bilan .up { color: var(--up); font-weight: 600; white-space: nowrap; } .moi .m-bilan .neutre { color: var(--ink-2); font-weight: 600; white-space: nowrap; }
+.moi .m-bilan .bl-faire { all: unset; cursor: pointer; font-weight: 700; color: var(--gold); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.moi .m-bilan .bl-ok { color: var(--ink-2); }
+.moi .m-afaire.m-rappel { display: grid; gap: 0; padding: 4px 12px 6px; align-items: stretch; }
+.moi .m-afaire .af-h { display: flex; align-items: center; gap: 8px; padding: 6px 0 4px; }
+.moi .m-afaire .af-h b { font-size: 15px; } .moi .m-afaire .af-h small { margin-left: auto; font-size: 11.5px; color: var(--ink-3); }
+.moi .m-afaire .af-n { min-width: 22px; height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 11px; display: inline-grid; place-items: center; font: 700 12.5px/1 var(--f-num); background: var(--gold); color: #1A1406; }
+.moi .m-afaire .af-r { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid color-mix(in srgb, var(--gold) 25%, transparent); }
+.moi .m-afaire .af-i { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; background: color-mix(in srgb, var(--gold) 18%, transparent); }
+.moi .m-afaire .af-t { flex: 1; min-width: 0; display: grid; gap: 1px; } .moi .m-afaire .af-t b { font-size: 14px; line-height: 1.25; } .moi .m-afaire .af-t small { font-size: 12px; color: var(--ink-2); }
+.moi .m-afaire .af-a { flex: none; display: grid; gap: 2px; justify-items: center; } .moi .m-afaire .af-a .lien { font-size: 12px; white-space: nowrap; }
+.moi .m-afaire .af-plus > summary { cursor: pointer; padding: 8px 0 4px; font-size: 13px; font-weight: 600; color: var(--ink-2); border-top: 1px solid color-mix(in srgb, var(--gold) 25%, transparent); }
+.moi .m-afaire .af-rep { margin: 4px 0 2px; font-size: 12px; color: var(--ink-3); }
+.moi .m-afaire.vide { display: flex; align-items: center; gap: 10px; margin: 10px 0 4px; padding: 9px 12px; border-radius: 14px; border: 1px solid var(--rule); background: var(--panel); font-size: 13.5px; color: var(--ink-2); }
+.moi .m-afaire.vide b { color: var(--ink); } .moi .m-afaire .af-ok { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: var(--up); background: var(--up-bg, color-mix(in srgb, var(--up) 18%, transparent)); }
+.moi .av-rdv .av-du i { color: var(--gold); }
+.moi .art-point { display: flex; align-items: center; gap: 10px; margin: 14px 0 4px; padding: 10px 12px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--rule)); background: color-mix(in srgb, var(--gold) 10%, transparent); }
+.moi .art-point span { flex: 1; display: grid; gap: 2px; font-size: 14px; } .moi .art-point small { font-size: 12px; color: var(--ink-2); }
+.moi.pa .pa-expl { margin: -6px 0 0; font-size: 13.5px; line-height: 1.4; color: var(--ink-2); padding: 10px 12px; border-radius: 12px; background: var(--panel); }
+.moi.pa .pa-expl b { color: var(--ink); }
+.moi.pa .pa-vide { margin: 0; font-size: 12.5px; color: var(--ink-3); text-align: center; }
+.moi.pa .pa-pied { margin: 0; font-size: 13px; color: var(--ink-2); text-align: center; }
+.moi.pa #pa-envoyer.arme { background: var(--gold); color: #1A1406; }
 @media (max-width: 380px) { .moi .paliers { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { .moi .m-flap.go, .moi .m-flap.af-prisme, .moi .m-flap.af-lingot::after { animation: none; } }
 `;
@@ -809,10 +834,10 @@ function rendre() {
   const bandeau = SRC === "cache" ? '<div class="demo-band">' + (enCours ? "Mise à jour de ton fichier…" : erreur ? "Ton fichier n'a pas répondu (" + esc(String(erreur).replace(/\.$/, "")) + ") · chiffres de la dernière ouverture" + (ageCopie() ? " (" + ageCopie() + ")" : "") + "." : "Chiffres de la dernière ouverture · mise à jour…") + " <small>" + esc(M.majTexte || "") + "</small></div>" : "";
   v.innerHTML =
     '<div class="seg m-onglets" role="tablist" aria-label="Moi">' + ONGLETS.map(([k, l]) => '<button type="button" role="tab" data-m-ong="' + k + '" aria-pressed="' + (o === k) + '" aria-selected="' + (o === k) + '">' + l + "</button>").join("") + "</div>" +
-    bandeau + (o === "jour" || o === "artema" ? htmlBandeauRappel(o) : "") +   // v16.83 : ailleurs, la cloche suffit
+    bandeau + (o === "jour" ? phraseBilan() + htmlAFaire() : "") +   // v16.87 : phrase-bilan + boîte unique « À faire » (ailleurs, la cloche suffit)
     ({ jour: M.simple ? htmlJourSimple : htmlJour, patrimoine: htmlPatrimoine, stats: htmlStats, missions: htmlMissions, artema: htmlArtema })[o]();
   v.querySelectorAll("[data-m-ong]").forEach(b => b.addEventListener("click", () => { PREF.onglet = b.dataset.mOng; garderPref(); rendre(); window.scrollTo(0, 0); }));
-  brancherBandeauRappel(v);
+  brancherAFaire(v);
   v.querySelectorAll("details.acc[data-acc]").forEach(d => d.addEventListener("toggle", () => { PREF.acc[d.dataset.acc] = d.open; garderPref(); if (d.open && d.dataset.acc === "m-courbe") dessinerCourbe(); }));
   ({ artema: brancherArtema, jour: M.simple ? brancherJourSimple : brancherJour, patrimoine: brancherPatrimoine, stats: brancherStats, missions: brancherMissions })[o](v);
   if (SRC === "api") verifierPaliers();
@@ -1250,6 +1275,8 @@ function htmlAV(sup) {
   if (rap("releve") && !du("releve")) rdv.push(["◷", "Relevé du mois (Artema)", quandRappel({ prochaine: rap("releve") }) || frDate(rap("releve"))]);
   if (fe.taux) rdv.push(["💶", "Fonds euros : " + pct(fe.taux, 2, false) + " net (" + (fe.annee || "—") + ")" + (fe.bonus ? " + bonus " + pct(fe.bonus, 2, false) + (fe.bonusFin ? " jusqu'au " + frDate(fe.bonusFin) : "") : ""), (rap("fondsEuros") ? "vrai taux vers le " + frDate(rap("fondsEuros")) + " · " : "") + "estimation ajustable", "fondsEuros"]);
   const sel = S && S.s[avSel] ? avSel : "total";
+  const nDus = tachesAFaire().filter(t => t.cles.some(k => /^(artema|releve|fondsEuros|versement)/.test(k))).length;   // v16.87 : ce qui est dû vit dans « À faire »
+  if (nDus) rdv.unshift(["◷", nDus + " chose" + (nDus > 1 ? "s" : "") + " à faire sur l'assurance-vie", "dans « À faire » (onglet Aujourd'hui)", null, "jour"]);
   return '<div class="tuiles m-petit av-t">' +
       tuile("Valeur", eur(tot.valeur), "", "aujourd'hui") + tuile("Versé", eur(tot.investi), "", "à ce jour") +
       tuile("Gain", eur(tot.pv, 0, true), sens(tot.pv), pct(tot.pvPct, 2) + " depuis l'ouverture") + tuile("Garanti", pct(rows.filter(r => cleSupport(r.nom) === "fe").reduce((a, r) => a + (r.poids || 0), 0), 0, false), "", "part en fonds euros") +
@@ -1260,7 +1287,7 @@ function htmlAV(sup) {
         '<span class="av-v"><b>' + eur(r.valeur) + '</b><small>versé ' + eur(r.investi) + '</small><small class="' + sens(r.pv) + '">' + eur(r.pv, 2, true) + " · " + pct(r.pvPct, 2) + "</small></span></button>"; }).join("") +
       (S ? '<button type="button" class="av-s av-tout" data-av="total" aria-pressed="' + (sel === "total") + '">Toute l\'assurance-vie</button>' : "") + "</div>" + lienArtema() +
     (S ? '<div class="av-courbe" id="av-courbe">' + courbeAV(S, sel) + "</div>" : '<p class="info">Les courbes arrivent dès que ton fichier envoie l\'historique (mise à jour du script).</p>') +
-    (rdv.length ? '<h3 class="m-sous">Rendez-vous</h3><div class="av-rdv">' + rdv.map(([i, t, q, k]) => '<div><i>' + i + "</i><span>" + esc(t) + (q ? "<small>" + esc(q) + "</small>" : "") + "</span>" + (k ? '<button class="mini-btn" type="button" data-av-reg="' + k + '">Ajuster</button>' : "") + "</div>").join("") + "</div>" : "");
+    (rdv.length ? '<h3 class="m-sous">Rendez-vous</h3><div class="av-rdv">' + rdv.map(([i, t, q, k, al]) => '<div' + (al ? ' class="av-du"' : "") + '><i>' + i + "</i><span>" + esc(t) + (q ? "<small>" + esc(q) + "</small>" : "") + "</span>" + (k ? '<button class="mini-btn" type="button" data-av-reg="' + k + '">Ajuster</button>' : al ? '<button class="mini-btn" type="button" data-m-aller="' + al + '">Voir</button>' : "") + "</div>").join("") + "</div>" : "");
 }
 /* ================= V16.7 · Artema Décembre 2026 : l'écran à part (produit structuré Natixis, ISIN FR0014017J36) =================
    Source : DIC Natixis du 01/04/2026 + fiche BPCE Vie. Chacun ne voit que ses propres chiffres (calculés sur son fichier). */
@@ -1498,13 +1525,14 @@ function htmlArtema() {
     '<tr class="note"><td colspan="4">Une ligne = le cas où l\'indice est au moins à son départ ce jour-là (et ne l\'était pas avant). À la fin seulement, s\'il ne l\'a jamais retrouvé : entre 60 et 100 % → ≈ ' + e10(E.finPlat) + " (ton capital moins les frais) · sous 60 % → perte égale à la baisse.</td></tr></table>";
   const bientot = p && jours(E.auj, p.ev) <= 10 && jours(E.auj, p.ev) > 0 ? '<div class="art-alerte">🔔 <b>Rendez-vous Artema le ' + jourMois(p.ev) + "</b> : pense à saisir le niveau de clôture de l'indice ce jour-là pour savoir s'il s'arrête.</div>" : "";
   const apres = !E.passe ? "" : '<div class="art-alerte">🎯 Le rendez-vous du ' + jourMois(E.passe.ev) + " est passé. " + (E.arrete ? "L'assureur placera l'argent sur un autre support vers le " + frDate(E.passe.pay) : "Si l'indice était au moins à son départ ce jour-là, Artema a été remboursé le " + frDate(E.passe.pay) + (E.ratio && E.dateAct && E.dateAct >= E.passe.ev ? "" : " (saisis le niveau de clôture du " + frDate(E.passe.ev).slice(0, 5) + " pour en avoir le cœur net)") + " et l'assureur a placé l'argent sur un autre support") + " : <b>choisis où le mettre</b> (Saisir › ordre).</div>";
-  return '<div class="art"><button type="button" class="lien art-retour" data-m-aller="patrimoine">‹ Patrimoine</button>' +
+  return '<div class="art"><button type="button" class="lien art-retour" data-m-aller="patrimoine">‹ Patrimoine</button>' + htmlAFaire("artema") +   // v16.87 : ce qui est dû sur Artema
     '<div class="art-carte"><div class="art-h"><div><b><span class="art-pt"></span>Artema Décembre 2026</b><small>Produit structuré · Natixis · jusqu\'en 2034 au plus</small></div>' +
     '<div class="art-val"><small>versé</small><b>' + eur(E.verse) + "</b>" + (E.estime ? pastilleEstime(E) : "") + "</div></div>" +
     apres + '<div class="art-verdict ' + vc + vieux + '">' + vt + fraicheurArtema(E) + (E.estime ? '<small class="art-gris">' + pastilleEstime(E) + " ajoute ton ordre d'achat pour un calcul exact.</small>" : "") + "</div>" + bientot +
     (avantPhoto || !E.ini ? "" : "<h4>L'indice par rapport à son départ</h4><div class=\"art-jz" + vieux + "\">" + jaugeArtema(E.ratio, false, E) + "</div>") +
     '<h4>' + (avantPhoto ? "Photo de départ" : E.arrete ? "Versement" : "Prochain rendez-vous") + '</h4><div class="art-rdv"><div class="big">' + rbTxt + "<small>" + rbSous + "</small></div><p>" + rdvTxt + "</p></div>" + frise +
     vente +
+    '<div class="art-point"><span><b>Nouveau relevé ?</b><small>Valeur de ta ligne (€) et niveau de l\'indice en une fois.</small></span><button class="mini-btn" type="button" data-art-point>🎯 Point Artema</button></div>' +
     "<h4>" + (E.ini ? "Niveau de l'indice" : "Niveau de départ") + "</h4>" + htmlSaisieArtema(E) +
     htmlSim(E) +
     "<h4>L'indice, saisie après saisie</h4>" + htmlCourbeArtema(E) +
@@ -1516,6 +1544,7 @@ function htmlArtema() {
 function brancherArtema(v) {
   v.querySelectorAll("[data-m-aller]").forEach(b => b.addEventListener("click", () => { PREF.onglet = b.dataset.mAller; garderPref(); rendre(); window.scrollTo(0, 0); }));
   v.querySelectorAll("[data-art-reg]").forEach(b => b.addEventListener("click", () => faireRappel(b.dataset.artReg)));
+  v.querySelectorAll("[data-art-point]").forEach(b => b.addEventListener("click", () => ouvrirPointArtema("point")));
   if (!aArtema()) return;
   let E = null; const etat = () => E || (E = etatArtema());
   // simulateur : l'input ne touche QUE son bloc
@@ -3705,6 +3734,7 @@ function partielRappel(k) {
   return null;
 }
 function faireRappel(k) {
+  if ((k === "artemaActuel" || k === "releve" || k === "point") && aArtema()) { ouvrirPointArtema(k); return; }   // v16.87 : le Point Artema (valeur + niveau)
   const pr = partielRappel(k);
   if (pr) { ouvrirSaisieM(pr); return; }
   reglageOuvert = k; delete reglageMsg[k]; ouvrirSaisieM(null, "maj");
@@ -3712,20 +3742,226 @@ function faireRappel(k) {
 function plusTard() { try { return JSON.parse(stock.get(cleStock("plusTard")) || "{}") || {}; } catch (e) { return {}; } }
 function rappelReporte(x) { const k = cleRappel(x.nom) || x.nom; return (plusTard()[k] || 0) > Date.now(); }
 function rappelDu(x) { return /À faire|mettre à jour|retard|⚠|✏/i.test(x.statut || "") && !rappelReporte(x); }
-function htmlBandeauRappel(o) {
-  if (!M || M.simple) return "";
-  const d = rappelsFichier().filter(rappelDu).filter(x => o !== "artema" || /^(artema|releve)/.test(cleRappel(x.nom) || "")); if (!d.length) return "";
-  const x = d[0], k = cleRappel(x.nom) || x.nom;
-  return '<div class="m-rappel" role="status"><span class="ic">◷</span><span class="t"><b>' + esc(nomCourtRappel(x)) + "</b><small>à faire" +
-    (x.prochaine && /^\d{4}-/.test(x.prochaine) ? " depuis le " + frDate(x.prochaine) : "") + (d.length > 1 ? " · + " + (d.length - 1) + " autre" + (d.length > 2 ? "s" : "") : "") + "</small></span>" +
-    '<button class="mini-btn" type="button" data-rap-faire="' + esc(k) + '">Faire</button><button class="lien" type="button" data-rap-tard="' + esc(k) + '">Plus tard</button></div>';
+/* v16.87 : l'ancien bandeau est remplacé par la boîte unique « À faire » (gardé pour compatibilité) */
+function htmlBandeauRappel(o) { return htmlAFaire(o === "artema" ? "artema" : undefined); }
+function brancherBandeauRappel(v) { brancherAFaire(v); }
+/* ================= v16.87 · Phrase-bilan, boîte unique « À faire », Point Artema =================
+   - phraseBilan : UNE ligne en tête d'Aujourd'hui (total, variation depuis la fin du mois dernier, LA chose à faire) ;
+   - tachesAFaire / htmlAFaire : tous les rappels dus du fichier au même endroit (remplace le bandeau), « Faire » et « Plus tard » (2 jours) ;
+   - ouvrirPointArtema : valeur de la ligne (€, relevé) ET niveau de l'indice (pts) en une fois, par les actions existantes « ordre » et « artema ». */
+const VERBES_RAPPEL = { point: "faire le point Artema", releve: "saisir ton relevé Artema", artemaActuel: "saisir l'indice Artema", artemaInitial: "saisir le niveau de départ d'Artema",
+  taux: "mettre à jour les taux des livrets", fondsEuros: "vérifier le taux du fonds euros", interets: "saisir les intérêts des livrets", appart: "revoir la valeur de l'appartement",
+  calendrier: "compléter les jours fériés des bourses", versement: "saisir ton versement Quintessa", soldes: "mettre à jour tes soldes" };
+const ICO_RAPPEL = { point: "🎯", releve: "🧾", artemaActuel: "🎯", artemaInitial: "📌", taux: "🏦", fondsEuros: "💶", interets: "🏦", appart: "🏠", calendrier: "📅", versement: "💸", soldes: "🏦" };
+const POINT_ART = ["releve", "artemaActuel"];
+function reporte(k) { return (plusTard()[k] || 0) > Date.now(); }
+/** les tâches dues, la plus ancienne d'abord ; o = "artema" : seulement celles d'Artema */
+function tachesAFaire(o) {
+  const l = []; if (!M) return l;
+  const quand = iso => { if (!iso || !/^\d{4}-\d\d-\d\d/.test(iso)) return "à faire"; const j = Math.round((new Date(isoJour(new Date()) + "T12:00:00") - new Date(iso.slice(0, 10) + "T12:00:00")) / 864e5);
+    return j > 0 ? "en retard depuis le " + iso.slice(8, 10) + "/" + iso.slice(5, 7) + (j >= 2 ? " (" + j + NB + "j)" : "") : j === 0 ? "prévu aujourd'hui" : "prévu le " + iso.slice(8, 10) + "/" + iso.slice(5, 7); };
+  if (M.simple) {
+    if (/À mettre à jour/.test(M.rappel || "") && !reporte("soldes")) { const q = /\(([^)]+)\)/.exec(M.rappel); l.push({ k: "soldes", cles: ["soldes"], titre: "Mettre à jour tes soldes", quand: q ? q[1] : "à faire", date: "", ico: ICO_RAPPEL.soldes, verbe: VERBES_RAPPEL.soldes }); }
+    return l;
+  }
+  const dus = rappelsFichier().filter(rappelDu), kk = x => cleRappel(x.nom) || x.nom, dIso = x => x.prochaine && /^\d{4}-/.test(x.prochaine) ? String(x.prochaine).slice(0, 10) : "";
+  const pts = aArtema() ? dus.filter(x => POINT_ART.includes(cleRappel(x.nom))) : [];
+  if (pts.length) { const d = pts.map(dIso).filter(Boolean).sort()[0] || "";
+    l.push({ k: pts.length > 1 ? "point" : kk(pts[0]), cles: pts.map(kk), titre: pts.length > 1 ? "Point Artema : valeur et indice" : nomCourtRappel(pts[0]), date: d, quand: quand(d), ico: "🎯" }); }
+  dus.filter(x => !pts.includes(x)).forEach(x => { const k = kk(x), d = dIso(x); l.push({ k, cles: [k], titre: nomCourtRappel(x), date: d, quand: quand(d) }); });
+  if (feAVerifier()) l.push({ k: "fondsEuros", cles: ["fondsEuros"], titre: "Fonds euros : ton taux estimé tient toujours ?", date: "", quand: "tous les 3 mois", fe: true });
+  l.forEach((t, i) => { t.i = i; t.ico = t.ico || ICO_RAPPEL[t.k] || "◷"; t.verbe = VERBES_RAPPEL[t.k] || "faire : " + t.titre.toLowerCase(); });
+  l.sort((a, b) => (a.date || "9") < (b.date || "9") ? -1 : (a.date || "9") > (b.date || "9") ? 1 : a.i - b.i);
+  return o === "artema" ? l.filter(t => t.cles.every(k => /^(artema|releve)/.test(k))) : l;
 }
-function brancherBandeauRappel(v) {
-  v.querySelectorAll("[data-rap-faire]").forEach(b => b.addEventListener("click", () => faireRappel(b.dataset.rapFaire)));
-  v.querySelectorAll("[data-rap-tard]").forEach(b => b.addEventListener("click", () => {
-    const pt = plusTard(); pt[b.dataset.rapTard] = Date.now() + 2 * 864e5; stock.set(cleStock("plusTard"), JSON.stringify(pt));
+function reportesAFaire() {
+  if (!M || M.simple) return [];
+  return rappelsFichier().filter(x => /À faire|mettre à jour|retard|⚠|✏/i.test(x.statut || "") && rappelReporte(x));
+}
+function prochainRappel() { return M && !M.simple ? rappelsFichier().filter(x => !rappelDu(x) && x.prochaine && /^\d{4}-/.test(x.prochaine) && !/À faire/i.test(x.statut || "")).sort((a, b) => a.prochaine.localeCompare(b.prochaine))[0] : null; }
+/** la boîte unique « À faire (N) » (Aujourd'hui ; filtrée sur l'écran Artema) */
+function htmlAFaire(o) {
+  if (!M) return "";
+  const l = tachesAFaire(o), rep = o === "artema" ? [] : reportesAFaire();
+  if (!l.length) {
+    if (o === "artema") return "";
+    const p = prochainRappel();
+    return '<div class="m-afaire vide" role="status"><span class="af-ok">✓</span><span><b>Rien à faire</b>' + (p ? " · prochain : " + esc(nomCourtRappel(p)) + " " + esc(quandRappel(p)) : "") + (rep.length ? " · " + rep.length + " reporté" + (rep.length > 1 ? "s" : "") : "") + "</span></div>";
+  }
+  const ligne = t => '<div class="af-r"><span class="af-i" aria-hidden="true">' + t.ico + '</span><span class="af-t"><b>' + esc(t.titre) + "</b><small>" + esc(t.quand) + "</small></span>" +
+    '<span class="af-a"><button class="mini-btn" type="button" data-af-faire="' + esc(t.k) + '">Faire</button><button class="lien" type="button" data-af-tard="' + esc(t.cles.join(",")) + '">Plus tard</button></span></div>';
+  const vis = l.slice(0, 3), reste = l.slice(3);
+  return '<section class="m-afaire m-rappel" aria-label="À faire"><div class="af-h"><b>À faire</b><span class="af-n">' + l.length + "</span>" + (o === "artema" ? "" : "<small>le plus ancien d'abord</small>") + "</div>" +
+    vis.map(ligne).join("") +
+    (reste.length ? '<details class="af-plus"><summary>Voir ' + (reste.length > 1 ? "les " + reste.length + " autres" : "l'autre") + "</summary>" + reste.map(ligne).join("") + "</details>" : "") +
+    (rep.length ? '<p class="af-rep">Reporté de 2 jours : ' + rep.map(x => esc(nomCourtRappel(x))).join(", ") + ".</p>" : "") + "</section>";
+}
+function faireTache(k) {
+  if (k === "soldes") { if (window.Moi) window.Moi.saisir(); return; }
+  if (k === "point") { ouvrirPointArtema("point"); return; }
+  faireRappel(k);
+}
+function brancherAFaire(v) {
+  v.querySelectorAll("[data-af-faire]").forEach(b => b.addEventListener("click", () => faireTache(b.dataset.afFaire)));
+  v.querySelectorAll("[data-af-tard]").forEach(b => b.addEventListener("click", () => {
+    const pt = plusTard(); b.dataset.afTard.split(",").forEach(k => { pt[k] = Date.now() + 2 * 864e5; }); stock.set(cleStock("plusTard"), JSON.stringify(pt));
     toast("C'est noté : je te le rappelle dans 2 jours."); signalerCloche(); rendre();
   }));
+  v.querySelectorAll("[data-bilan-faire]").forEach(b => b.addEventListener("click", () => faireTache(b.dataset.bilanFaire)));
+}
+/** la phrase-bilan : total · variation depuis la fin du mois dernier (sinon le jour) · LA chose à faire. Rien en € en mode discret, jamais de rouge */
+function phraseBilan() {
+  if (!M) return "";
+  const s = M.synthese || {}, discret = ETAT.discret === "oui", net = M.simple ? { montant: s.financier } : patrimoineNet(), total = net.montant;
+  if (!ok(total)) return "";
+  let d = null, depuis = "";
+  try {
+    const now = new Date(), avant = new Date(now.getFullYear(), now.getMonth() - 1, 1), cle = avant.getFullYear() * 100 + avant.getMonth() + 1;
+    const prev = seriePatrimoine().filter(x => x.an * 100 + x.mo === cle && x.complet).pop();   // la fin du mois dernier, sinon rien (pas de « depuis fin nov. » en mars)
+    if (prev && ok(s.financier) && (prev.bourse + prev.epargne) > 0) { d = s.financier - (prev.bourse + prev.epargne); depuis = "depuis fin " + MOIS_C[prev.mo - 1]; }
+  } catch (e) { d = null; }
+  if (d === null && ok(s.jour) && !M.simple) { d = s.jour; depuis = /semaine/i.test(s.jourLibelle || "") ? "cette semaine" : "aujourd'hui"; }
+  const cls = d === null ? "" : d >= 1 ? "up" : "neutre";
+  const varTxt = d === null ? "" : Math.abs(d) < 1 ? '<span class="neutre">stable</span> ' + esc(depuis) : discret ? '<span class="' + cls + '">' + (d >= 0 ? "▲ en hausse" : "▼ en baisse") + "</span> " + esc(depuis)
+    : '<span class="' + cls + '">' + (d >= 0 ? "▲ " : "▼ ") + eur(d, 0, true) + "</span> " + esc(depuis);
+  const t = tachesAFaire()[0];
+  const faire = t ? '<button type="button" class="bl-faire" data-bilan-faire="' + esc(t.k) + '">👉 ' + esc(t.verbe) + "</button>" : '<span class="bl-ok">rien à faire ✓</span>';
+  return ('<p class="m-bilan">' + (discret ? "<b>Ton patrimoine</b>" : "<b>" + eur(total) + "</b> au total") + (varTxt ? " · " + varTxt : "") + " · " + faire + "</p>").replace(/\u202F/g, "\u00A0");   // espace des milliers bien visible
+}
+
+/* ---- 🎯 Point Artema : la valeur de la ligne (€) et le niveau de l'indice (pts), en une fois ---- */
+let PA = null;
+function envQuintessa() { return (refData().enveloppes.map(e => typeof e === "string" ? { nom: e } : e).find(e => /Quintessa/.test(e.nom)) || {}).nom || ""; }
+/** valeur de référence d'une ligne d'assurance-vie (dernier relevé, achats − ventes ensuite) : sert au garde-fou « prix d'une part ? » (v16.78) */
+function refLigneAV(code) {
+  let ref = 0; ((M && M.histoAV && M.histoAV.ordres) || []).forEach(o => { if (o[2] !== code) return; if (o[1] === "Relevé" && o[3] > ref * .2) ref = o[3]; else if (o[1] === "Achat") ref += o[3]; else if (o[1] === "Vente") ref -= o[3]; });
+  if (!(ref > 0)) { const r = (M && M.supports || []).find(x => /artema/i.test(x.nom || "")); if (code === "ARTEMA" && r) ref = r.valeur || r.investi || 0; }
+  return ref;
+}
+function ouvrirPointArtema(k) {
+  injecterStyle(); lireCache();
+  if (!M) { toast("Lecture de ton fichier en cours, réessaie dans un instant."); charger(false); return; }
+  if (!aArtema()) { if (k === "releve") ouvrirSaisieM(partielRappel("releve")); else { reglageOuvert = "artemaActuel"; ouvrirSaisieM(null, "maj"); } return; }
+  PA = { valeur: "", niveau: "", date: aujourdhuiISO(), arme: false, forcer: false, erreur: "", cle: k || "" };
+  let d = $f("m-pa");
+  if (!d) {
+    d = document.createElement("div"); d.className = "voile"; d.id = "m-pa"; d.hidden = true; document.body.appendChild(d);
+    d.addEventListener("click", e => { if (e.target === d) fermerPointArtema(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && PA) fermerPointArtema(); });
+  }
+  rendrePA(); d.hidden = false;
+}
+function fermerPointArtema() { const d = $f("m-pa"); if (d) d.hidden = true; PA = null; }
+function rendrePA() {
+  const d = $f("m-pa"); if (!d || !PA) return;
+  const E = etatArtema(), env = envQuintessa(), linxea = rappelsFichier().some(x => cleRappel(x.nom) === "releve" && /Linxea/i.test(x.nom));
+  const derV = E.releve && E.valeur ? "Dernier relevé : " + eur(E.valeur) + " le " + frDate(E.releve) : E.valeur ? "Valeur actuelle : " + eur(E.valeur) : "Aucun relevé saisi pour l'instant";
+  const derN = E.act ? "Dernière saisie : " + ptsIdx(E.act) + (E.dateAct ? " le " + frDate(E.dateAct) : "") : E.phase === "attente" || E.phase === "photo" ? "Le niveau de départ sera connu le 5 décembre" : "Aucun niveau saisi pour l'instant";
+  const inp = (id, lab, val, ph, aide) => '<div class="champ"><label for="' + id + '">' + lab + '</label><input id="' + id + '" type="text" inputmode="decimal" autocomplete="off" value="' + esc(val) + '" placeholder="' + esc(ph) + '"><span class="aide">' + aide + "</span></div>";
+  d.innerHTML = '<div class="feuille moi m-feuille pa" role="dialog" aria-modal="true" aria-labelledby="pa-titre">' +
+    '<h3 id="pa-titre">🎯 Point Artema <button class="icon-btn" type="button" id="pa-fermer" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3>' +
+    '<p class="pa-expl"><b>La valeur</b> = ce que vaut ta ligne en € (sur ton relevé). <b>Le niveau</b> = le cours de l\'indice. Remplis l\'un, l\'autre ou les deux.</p>' +
+    '<form id="pa-form" class="form" novalidate>' +
+      (env ? inp("pa-valeur", "💶 Valeur de ta ligne Artema (€)", PA.valeur, E.valeur ? saisieNombre(Math.round(E.valeur), 0) : "ex. 15 850", esc(derV) + ". Prends le <b>total de la ligne</b>, pas le prix d'une part.") : "") +
+      inp("pa-niveau", "📈 Niveau de l'indice (pts)", PA.niveau, E.act ? saisieNombre(E.act, 2) : "ex. 1 234,56", esc(derN) + ' · <a class="lien" href="' + ARTEMA.lien + '" target="_blank" rel="noopener">↗ voir l\'indice</a>') +
+      '<div class="champ"><label for="pa-date">Date (du relevé ou de la clôture)</label><input id="pa-date" type="date" value="' + esc(PA.date) + '" max="' + aujourdhuiISO() + '"></div>' +
+      '<div class="alertes" id="pa-alertes"></div><p class="phrase-ordre" id="pa-phrase" hidden></p>' +
+      '<button class="btn plein acc" type="submit" id="pa-envoyer">Enregistrer</button>' +
+      (linxea ? '<p class="pa-pied">Relevé Linxea aussi ? <button class="lien" type="button" id="pa-autre">Saisie classique ›</button></p>' : "") +
+    "</form></div>";
+  $f("pa-fermer").addEventListener("click", fermerPointArtema);
+  const lie = (id, k) => { const el = $f(id); if (el) el.addEventListener("input", () => { PA[k] = el.value; PA.arme = false; PA.forcer = false; PA.erreur = ""; majPA(); }); };
+  lie("pa-valeur", "valeur"); lie("pa-niveau", "niveau"); lie("pa-date", "date");
+  if ($f("pa-autre")) $f("pa-autre").addEventListener("click", () => { fermerPointArtema(); ouvrirSaisieM({ type: "Relevé", env: envQuintessa() }); });
+  $f("pa-form").addEventListener("submit", e => { e.preventDefault(); envoyerPA(); });
+  majPA();
+}
+function analysePA() {
+  const E = etatArtema(), out = { msg: [], bloque: false, doute: null };
+  const v = $f("pa-valeur") ? lireNombre(PA.valeur) : null, n = lireNombre(PA.niveau);
+  out.v = v; out.n = n;
+  if (v === null && n === null) { out.bloque = true; out.vide = true; }
+  if (v !== null) {
+    if (millierDouteux(PA.valeur)) { out.doute = lectureMilliers(PA.valeur); out.bloque = true; }
+    else if (isNaN(v) || v <= 0) { out.bloque = true; out.msg.push(["err", "Valeur illisible : écris un montant en euros (ex. 15 850)."]); }
+    else { const ref = refLigneAV("ARTEMA"); if (ref > 0 && v < ref * .2) out.msg.push(["warn", "Prix d'une part ? Sur ton relevé, prends la VALEUR TOTALE de la ligne (environ " + Math.round(ref).toLocaleString("fr-FR") + " €)."]); }
+  }
+  if (n !== null) {
+    if (isNaN(n) || n <= 0) { out.bloque = true; out.msg.push(["err", "Niveau illisible : écris le cours de l'indice (ex. 1 234,56)."]); }
+    else if (E.act && Math.abs(n - E.act) < 1e-9) out.msg.push(["warn", "Niveau identique à ta dernière saisie (" + ptsIdx(E.act) + ") : c'est bien le cours du jour ?"]);
+    else if (E.act && Math.abs(n / E.act - 1) > .3) out.msg.push(["warn", "Plus de 30 % d'écart avec ta dernière saisie (" + ptsIdx(E.act) + ") : faute de frappe ?"]);
+    else if (!E.act && E.ini && (n < E.ini / 3 || n > E.ini * 3)) out.msg.push(["warn", "Niveau très loin du départ (" + ptsIdx(E.ini) + ") : faute de frappe ?"]);
+  }
+  if (!/^\d{4}-\d\d-\d\d$/.test(PA.date || "")) { out.bloque = true; if (!out.vide) out.msg.push(["err", "Choisis la date."]); }
+  else if (PA.date > aujourdhuiISO()) { out.bloque = true; out.msg.push(["err", "La date ne peut pas être dans le futur."]); }
+  out.avert = out.msg.some(m => m[0] === "warn");
+  return out;
+}
+function majPA() {
+  if (!PA || !$f("pa-envoyer")) return;
+  const a = analysePA(), btn = $f("pa-envoyer");
+  let al = a.msg.map(m => '<div class="alerte ' + m[0] + '">' + esc(m[1]) + "</div>").join("");
+  if (a.doute) al += '<div class="alerte warn">« ' + esc(String(PA.valeur).trim()) + " » veut dire " + esc((+a.doute.milliers).toLocaleString("fr-FR")) + NB + '€ ?<br><button class="btn" type="button" data-pa-mv="' + esc(a.doute.milliers) + '">Oui, ' + esc((+a.doute.milliers).toLocaleString("fr-FR")) + NB + "€</button>" +
+    (a.doute.virgule ? ' <button class="btn ghost" type="button" data-pa-mv="' + esc(a.doute.virgule) + '">Non, ' + esc(a.doute.virgule) + NB + "€</button>" : "") + "</div>";
+  if (PA.forcer) al += '<div class="alerte warn">' + esc(PA.forcer) + "</div>";
+  if (PA.erreur) al += '<div class="alerte err">' + esc(PA.erreur) + "</div>";
+  if (a.vide) al += '<p class="pa-vide">Saisis au moins la valeur ou le niveau.</p>';
+  $f("pa-alertes").innerHTML = al;
+  $f("pa-alertes").querySelectorAll("[data-pa-mv]").forEach(b => b.addEventListener("click", () => { PA.valeur = b.dataset.paMv; $f("pa-valeur").value = PA.valeur; PA.arme = false; majPA(); }));
+  const ph = $f("pa-phrase"), quoi = [];
+  if (!a.bloque) {
+    if (a.v !== null) quoi.push("la valeur <b>" + nf(0, 2).format(a.v) + NB + "€</b>");
+    if (a.n !== null) quoi.push("le niveau <b>" + ptsIdx(a.n) + "</b>");
+  }
+  ph.innerHTML = quoi.length ? "📝 Tu enregistres " + quoi.join(" et ") + ", au <b>" + frDate(PA.date) + "</b>." : ""; ph.hidden = !quoi.length;
+  btn.disabled = a.bloque;
+  const lib = a.v !== null && a.n !== null ? "Enregistrer la valeur et le niveau" : a.v !== null ? "Enregistrer la valeur" : a.n !== null ? "Enregistrer le niveau" : "Enregistrer";
+  btn.textContent = (a.avert || PA.forcer) && PA.arme ? "Oui, enregistrer quand même" : lib;
+  btn.classList.toggle("arme", !!((a.avert || PA.forcer) && PA.arme));
+}
+/** envoi : l'ordre « Relevé » ARTEMA (action « ordre ») puis le niveau (action « artema », quoi « actuel ») ; une alerte demande un 2e appui */
+async function envoyerPA() {
+  if (!PA) return;
+  const a = analysePA(); if (a.bloque) return;
+  if ((a.avert || PA.forcer) && !PA.arme) { PA.arme = true; majPA(); $f("pa-envoyer").focus(); return; }
+  const btn = $f("pa-envoyer"); btn.disabled = true; btn.textContent = "Enregistrement…";
+  const date = PA.date, env = envQuintessa(), faits = [];
+  let probleme = "";
+  if (a.v !== null) {
+    const rep = await posterFichier({ action: "ordre", ordres: [{ date, enveloppe: env, type: "Relevé", actif: "ARTEMA", quantite: null, montant: a.v, frais: null }], forcer: !!PA.forcer });
+    if (rep.erreur === "simulation") { PA.erreur = rep.message; PA.arme = false; majPA(); return; }
+    if (rep.erreur === "cle") { cleRefusee(rep.message); fermerPointArtema(); toast("Clé refusée par ton fichier."); if (vueMoi()) rendre(); return; }
+    if (rep.ok || rep.erreur === "incertain") {
+      faits.push("releve"); if (PA) { PA.valeur = ""; PA.forcer = false; }
+      if (rep.ok) { const h = (M.histoAV = M.histoAV || {}); h.ordres = (h.ordres || []).concat([[date, "Relevé", "ARTEMA", a.v]]); const r = (M.supports || []).find(x => /artema/i.test(x.nom || "")); if (r && date >= (etatArtema().releve || "")) r.valeur = a.v; }
+      else probleme = "La valeur a peut-être été enregistrée : vérifie le Journal avant de la renvoyer.";
+    } else if (rep.erreur === "avertissement") { PA.forcer = rep.message || "Ton fichier demande une confirmation."; PA.arme = false; majPA(); return; }
+    else { PA.erreur = "Valeur non enregistrée : " + (rep.message || "erreur inattendue."); PA.arme = false; majPA(); return; }
+  }
+  if (a.n !== null) {
+    const rep = await posterFichier({ action: "artema", quoi: "actuel", niveau: a.n, date });
+    if (rep.erreur === "simulation") { if (PA) { PA.erreur = rep.message; PA.arme = false; majPA(); } return; }
+    if (rep.erreur === "cle") { cleRefusee(rep.message); fermerPointArtema(); toast("Clé refusée par ton fichier."); if (vueMoi()) rendre(); return; }
+    if (rep.ok) {
+      faits.push("artemaActuel");
+      const ar = (M.parametres = M.parametres || {}).artema = Object.assign({}, (M.parametres || {}).artema);
+      ar.actuel = a.n; ar.date = date; if (Array.isArray(ar.histo)) ar.histo = ar.histo.filter(x => String(x[0]).slice(0, 10) !== date).concat([[date, a.n]]);
+    } else {
+      if (PA) { PA.erreur = (faits.length ? "Valeur enregistrée. " : "") + "Niveau non enregistré : " + (rep.message || "erreur inattendue."); PA.arme = false; PA.niveau = String(PA.niveau); rendrePA(); }
+      marquerFaits(faits); signalerCloche(); if (faits.length) charger(true);
+      return;
+    }
+  }
+  marquerFaits(faits);
+  fermerPointArtema();
+  if (window.SONS && SONS.succes && !probleme) SONS.succes();
+  toast(probleme || (faits.length > 1 ? "Point Artema enregistré : valeur et niveau." : faits[0] === "releve" ? "Valeur d'Artema enregistrée." : "Niveau de l'indice enregistré."));
+  artSim.v = null; signalerCloche(); if (vueMoi()) rendre(); charger(true);
+}
+/** en attendant la relecture du fichier : les rappels faits ne sont plus « à faire » */
+function marquerFaits(cles) {
+  if (!cles.length) return;
+  rappelsFichier().forEach(x => { if (cles.includes(cleRappel(x.nom))) { x.statut = "✓ Fait"; } });
 }
 function notifications() {
   if (!M) return { niveau: "", items: [] };
@@ -3756,6 +3992,7 @@ function quandRappel(x) {
 function feAVerifier() {
   const fe = M && M.parametres && M.parametres.fondsEuros; if (!fe || !fe.taux) return false;
   const t = +(stock.get(cleStock("feVu")) || 0); if (!t) { stock.set(cleStock("feVu"), String(Date.now())); return false; }
+  if ((plusTard().fondsEuros || 0) > Date.now()) return false;   // v16.87 : « Plus tard » de la boîte À faire
   return Date.now() - t > 91 * 864e5;
 }
 function htmlNotifications() {
@@ -4150,6 +4387,7 @@ window.Moi = {
   notifications: htmlNotifications,
   retour() { if (PREF.onglet === "artema") { PREF.onglet = "patrimoine"; garderPref(); rendre(); window.scrollTo(0, 0); return true; } if (PREF.onglet && PREF.onglet !== "jour") { PREF.onglet = "jour"; garderPref(); rendre(); window.scrollTo(0, 0); return true; } return false; },
   faireRappel(k) { lireCache(); if (M) faireRappel(k); },
+  pointArtema() { lireCache(); if (M) ouvrirPointArtema("point"); },
   feVerifie() { stock.set(cleStock("feVu"), String(Date.now())); signalerCloche(); },
   reporterRappel(k) { const pt = plusTard(); pt[k] = Date.now() + 2 * 864e5; stock.set(cleStock("plusTard"), JSON.stringify(pt)); signalerCloche(); if (vueMoi()) rendre(); },
   ouvrirMaj() { lireCache(); if (M) { reglageOuvert = null; ouvrirSaisieM(null, "maj"); } },
