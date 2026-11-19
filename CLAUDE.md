@@ -42,14 +42,14 @@
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **16.19**.
+  hors connexion `sw.js`). Version actuelle : **16.20**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
 ## Serveur Apps Script (dépôt app_scripts)
 - Prérequis une fois par machine : `npx -y @google/clasp@3.4.1 login` (compte Google de Théo) → crée `~/.clasprc.json`.
 - Versus : `sh outils/mettre-en-ligne-versus.sh "V31 : ce qui change"` (APPLI=chemin de ce dépôt si besoin).
-  Versions actuelles : VS_VERSION 36, version Google 51.
+  Versions actuelles : VS_VERSION 37, version Google 52.
 - Scripts perso : dans `portefeuille-epargne/<nom>` : `clasp push --force` puis `python3 ../../outils/deployer.py "desc"`
   (garde les mêmes adresses). Versions actuelles : Théo 30, Clément 9, Devlin 9.
 - Sheets en direct : `outils/gs.py` (`SS(id).get/put/batch`). Classeurs : Théo `1pbpJRMwZR64LqP_wwlhiw-6m7-lUg-Q3pVAF4Dv9j8U`,
@@ -132,7 +132,7 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
 
 ## À venir
 - 5ᵉ joueur : **Nicolas**, au plus tard le 1er janvier 2027 (PEA, peut-être une assurance-vie) ; à voir la semaine du 23/11.
-  À prévoir : son fichier + script, l'ajouter au Versus, barème à 5 (proposé 6·4·2·1·0, à valider), vérifs d'affichage.
+  À prévoir : son fichier + script, l'ajouter au Versus, barème à 5 = 6·4·2·1·0 (validé, codé v16.20 : `baremeJ`), couleur `--p4` vert citron, 5e bande du logo `.l5` visible dès 5 pilotes, vérifs d'affichage.
 - Objets à collectionner : Théo veut une **montée en puissance par paliers** (premiers paliers = beaux objets ; paliers
   hauts = effets dans l'appli, comme le badge millionnaire) à la place des cartes actuelles (« ignobles ») : proposer, ne pas coder.
 

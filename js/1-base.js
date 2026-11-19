@@ -75,7 +75,7 @@ function isoFr(iso) { return iso ? iso.slice(8, 10) + "/" + iso.slice(5, 7) + "/
 function isoMois(iso) { return iso ? MOIS[+iso.slice(5, 7) - 1] + " " + iso.slice(0, 4) : "—"; }
 
 /* ---------- Couleurs des personnes ---------- */
-function couleur(nom) { const i = D.personnes.findIndex(p => p.nom === nom); return "var(--p" + (i < 0 ? 0 : i % 4) + ")"; }
+function couleur(nom) { const i = D.personnes.findIndex(p => p.nom === nom); return "var(--p" + (i < 0 ? 0 : i % 5) + ")"; }   // V16.20 : 5 couleurs (5e pilote)
 function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 function couleurReelle(c) { const m = /var\((--[\w-]+)\)/.exec(c); return m ? css(m[1]) : c; }
 
@@ -207,6 +207,7 @@ function vueJoueur() { return !window.APERCUS_FINIS && adminActif() && !!stock.g
 function simulation() { return !!window.DATE_SIM || vueJoueur(); }
 const MSG_SIMULATION = "👁️ Simulation : rien n'est envoyé. Repasse en admin, aujourd'hui, pour agir pour de vrai.";
 function afficherTout() {
+  try { document.documentElement.classList.toggle("j5", !!(D && D.personnes && D.personnes.length >= 5)); } catch (e) { }   // V16.20 : 5e bande du logo
   if (stock.get("versus.accent") === "ecurie") appliquerAccent("ecurie");
   // indice mémorisé hors liste (changement du nombre d'indices) : retour au S&P 500
   const nbIdx = (D.marche.indices || []).length;
