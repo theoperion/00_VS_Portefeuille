@@ -62,7 +62,7 @@ Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles 
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **17.15**.
+  hors connexion `sw.js`). Version actuelle : **17.16**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
@@ -141,7 +141,7 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
 - Badges, décisions du 19/11 : **Gant aux 6 pierres** validé (pierres : victoire, 3 mois devant le S&P, carte gagnante, pronostic juste, 3 mois sans être dernier, dernier puis vainqueur ; le 1er à 6 pierres = claquement ~10 s chez tout le monde, gant légendaire unique ; les suivants = gant simple, sans animation).
   **Ticket d'or** validé (5 par saison, tirés par le serveur) MAIS le relevé est automatique : proposer une « tablette du mois » à déballer dans l'appli. Théo voudrait la Chocolaterie plus tard dans l'année.
   Badges qu'on se vole validés : Couronne de cœur, Casque noir, Anneau (leader, l'avatar pâlit), Corne d'abondance (attention : écarts de points faibles).
-  Réserve validée (à coder mais cachée, visible et réglable par l'admin, lancement progressif) : Œuf de dragon, Némésis, Communauté, Lanterne rouge, rareté affichée. Badges secrets : carte blanche (garder la surprise).
+  Réserve validée (à coder mais cachée ; v17.16 : l'écran « Règles et idées en réserve » est masqué même pour l'admin, Théo en parle avec Claude ; réactiver en retirant `false &&` dans js/3-podium.js) : Œuf de dragon, Némésis, Communauté, Lanterne rouge, rareté affichée. Badges secrets : carte blanche (garder la surprise).
   Théo trouve la course trop courte : la vouloir grandiose (plus longue, plus de tours) sans réforme des points si possible.
 - **Conseil du Versus (19/11, 9 agents, rapport : synthèse dans la conversation)** — décisions validées par Théo : ~~compromis licences~~ ANNULÉ par Théo le 19/11 : on garde
   gant de l'infini, ticket d'or, anneau, personnages (voir règle 6) ; résultat du mois caché jusqu'à la course ; Lanterne rouge →

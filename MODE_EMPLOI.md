@@ -435,3 +435,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 20/11/2026 | ven | **v17.13 · Plein écran : « ⏭ Arrivée » et « 🛸 Survol » en toutes lettres** (Théo) ; barre sur deux lignes en portrait. |
 | 20/11/2026 | ven | **v17.14 · Page d'attente comme avant** (Théo) : voiture, compte à rebours, « Saison 1 », date d'ouverture et « On en dit plus le samedi 21 novembre » ; plus aucun bloc sur ce qui arrive (chauffe, championnat, Grand Prix, cartes, portrait). |
 | 20/11/2026 | ven | **v17.15 · Stand sans annonce** (Théo) : le bloc « 🎁 Le 1er janvier : le championnat démarre avec 14 nouveautés… Douze univers… tickets d'or… couronne » et « Prochainement » disparaissent pour les joueurs avant la saison ; on révélera au bon moment. |
+| 20/11/2026 | ven | **v17.16 · « Règles et idées en réserve » masqué**, même pour l'admin (Théo : on en parle dans la conversation). Code gardé (`ouvrirReserve`, bouton derrière `false &&` dans js/3-podium.js). |
