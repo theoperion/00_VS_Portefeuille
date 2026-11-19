@@ -4228,11 +4228,22 @@
     const tasse = (g, x, y, z, rr, c, l, plein) => { g.cylindre(x, y, z, rr * 1.5, rr * .1, 16, PORC, 0, rr * 1.42); g.cylindre(x, y + rr * .1, z, rr * 1.42, rr * .06, 16, l || PORC2, 0, rr * 1.2);
       g.cylindre(x, y + rr * .12, z, rr * .62, rr * .9, 14, c, 0, rr); g.cylindre(x, y + rr * .92, z, rr * 1.01, rr * .1, 14, l || PORC, 0, rr * 1.04);
       if (plein !== false) g.cylindre(x, y + rr * 1.02, z, rr * .93, .05, 14, THE, .05);
-      tube(g, [0, 1, 2, 3, 4, 5, 6].map(k => { const a = -PI / 2 + k / 6 * PI; return [x + rr * .86 + Math.cos(a) * rr * .42, y + rr * .58 + Math.sin(a) * rr * .3, z]; }), rr * .08, c); };
+      tube(g, [0, 1, 2, 3, 4, 5, 6].map(k => { const a = -PI / 2 + k / 6 * PI; return [x + rr * .86 + Math.cos(a) * rr * .42, y + rr * .58 + Math.sin(a) * rr * .3, z]; }), rr * .08, c);
+      // v16.35 · reflet de la porcelaine (deux traits de lumière sur le flanc) et, sur les grandes tasses, une frise de losanges dorés
+      const rb = h => (.62 + (h - .12) / .9 * .38) * rr * 1.015, flanc = (a0, a1, h0, h1, col, em) => { const P = (a, h) => [x + Math.cos(a) * rb(h), y + h * rr, z + Math.sin(a) * rb(h)];
+        g.ov().quad(P(a0, h0), P(a1, h0), P(a1, h1), P(a0, h1), col, em, [Math.cos(a0), 0, Math.sin(a0)]); };
+      flanc(-2.3, -2.16, .3, .84, PORC, .9); flanc(-2.02, -1.97, .42, .8, PORC, .9);
+      if (rr >= 8) for (let k = 0; k < 12; k++) { const a = k / 12 * TAU + .26, h = .56, ca = Math.cos(a), sa = Math.sin(a), R = rb(h) + .02, d = rr * .07;
+        g.ov().quad([x + ca * R, y + (h - .07) * rr, z + sa * R], [x + ca * R - sa * d, y + h * rr, z + sa * R + ca * d], [x + ca * R, y + (h + .07) * rr, z + sa * R], [x + ca * R + sa * d, y + h * rr, z + sa * R - ca * d], OR, .25, [ca, 0, sa]); } };
+    // v16.35 · petits effets animés (voir matRotor) : vapeur qui monte, en 3 bouffées décalées
+    const bouffee = s => { const g = new Geo(), bl = v("#FFFFFF"); g.boule(0, 0, 0, s * 1.3, bl, .45, .85); g.boule(s * .9, s * .5, s * .3, s, bl, .45, .85); g.boule(-s * .7, s * .7, -s * .4, s * .85, bl, .45, .85); return g; };
+    const vapeur = (x, y, z, s, h, n) => { for (let q = 0; q < (n || 3); q++) rotors.push({ g: bouffee(s), x, y, z, cap: q * 2.1, v: .35, a: { ax: "y", p: 3.6, ph: q / (n || 3), h, dx: s * .8, dz: s * .5, souffle: true, k0: .55, k1: 1.5 } }); };
     // ---- 3. la théière du Chapelier, qui flotte au-dessus de la flaque et y verse le thé (le Loir dort dedans)
     { const [tx, tz] = [m(454), m(258)], H = 60, cap = vers(tx, tz, lx, lz) - PI / 2, pen = -.42, g = new Geo(), R = 21;
       g.boule(0, 0, 0, R, PORC, 0, .82, true); g.cylindre(0, -R * .5, 0, R * .9, R * .2, 14, BLEU, 0, R * .98); g.cylindre(0, R * .3, 0, R * .9, R * .14, 14, BLEU, 0, R * .78);
       for (let k = 0; k < 6; k++) { const a = k / 6 * TAU; g.ov().boule(Math.cos(a) * R * .97, 0, Math.sin(a) * R * .97, R * .17, v("#7AA6E8"), 0, 1); g.ov().boule(Math.cos(a) * R * 1.0, 0, Math.sin(a) * R * 1.0, R * .07, v("#F2CF6A"), 0, 1); }
+      for (let k = 0; k < 18; k++) { const a = (k + .5) / 18 * TAU; [-.5, .3].forEach((h, j) => { const rr2 = R * (j ? .93 : .88) + .4; g.ov().boule(Math.cos(a) * rr2, R * (h + (j ? .07 : .1)), Math.sin(a) * rr2, R * .045, OR, .3, 1); }); }   // v16.35 · perles d'or sur les frises
+      [[-.5, .5, .1], [-.35, .62, .16]].forEach(([u, w, e]) => g.ov().boule(Math.cos(u) * R * .74, R * w, Math.sin(u) * R * .74, R * e * .7, v("#FFFFFF"), 1, .5));   // reflets
       g.cylindre(0, R * .72, 0, R * .5, R * .16, 12, PORC2, 0, R * .4); g.boule(0, R * .98, 0, R * .14, OR, .1);
       g.cylindre(0, -R * .82, 0, R * .55, R * .1, 12, PORC2, 0, R * .6);
       const bec = [[R * .8, -R * .2, 0], [R * 1.25, R * .05, 0], [R * 1.55, R * .45, 0], [R * 1.72, R * .62, 0]]; tube(g, bec, k => R * (.22 - k * .12), PORC);
@@ -4245,7 +4256,12 @@
       for (let k = 0; k <= 10; k++) { const t = k / 10; jet.push([b[0] + (ix - b[0]) * t, b[1] + (0 - b[1]) * t * t + 4 * t * (1 - t), b[2] + (iz - b[2]) * t]); }
       tube(gj, jet, k => 1.6 + k * .5, v("#B8661E"), .08); for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; gj.boule(ix + Math.cos(a) * 6, 1.5 + r() * 2.5, iz + Math.sin(a) * 6, 1 + r() * .8, v("#C8762A"), .05); }
       for (let k = 0; k < 2; k++) { const R1 = 9 + k * 9; for (let q = 0; q < 24; q++) { const a0 = q / 24 * TAU, a1 = (q + 1) / 24 * TAU; gj.quad([ix + Math.cos(a0) * R1, .33, iz + Math.sin(a0) * R1], [ix + Math.cos(a1) * R1, .33, iz + Math.sin(a1) * R1], [ix + Math.cos(a1) * (R1 + 1.2), .33, iz + Math.sin(a1) * (R1 + 1.2)], [ix + Math.cos(a0) * (R1 + 1.2), .33, iz + Math.sin(a0) * (R1 + 1.2)], v("#F2C98A"), .05, [0, 1, 0]); } }
-      sol.poser(gj, 0, 0, 0, 0, 1); lum.push([ix, 3, iz, 1, .8, .5, 14]); }
+      sol.poser(gj, 0, 0, 0, 0, 1); lum.push([ix, 3, iz, 1, .8, .5, 14]);
+      for (let q = 0; q < 5; q++) { const d = new Geo(); d.boule(0, 0, 0, 2, v("#D88A3A"), .35, 1.1); rotors.push({ g: d, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { p: 1.2, ph: q / 5, chemin: jet, k0: .95, k1: 3.35 } }); }
+      for (let q = 0; q < 3; q++) { const o = new Geo(); for (let w = 0; w < 18; w++) { const a0 = w / 18 * TAU, a1 = (w + 1) / 18 * TAU; o.quad([Math.cos(a0) * 5, 0, Math.sin(a0) * 5], [Math.cos(a1) * 5, 0, Math.sin(a1) * 5], [Math.cos(a1) * 5.9, 0, Math.sin(a1) * 5.9], [Math.cos(a0) * 5.9, 0, Math.sin(a0) * 5.9], v("#E8A860"), .3, [0, 1, 0]); }
+        rotors.push({ g: o, x: ix, y: .4, z: iz, cap: 0, v: 0, a: { p: 2.7, ph: q / 3, k0: .7, k1: 4.2, coule: 1.4 } }); }
+      for (let q = 0; q < 4; q++) { const d = new Geo(), an = q / 4 * TAU + .4, L = 9 + q * 2; d.boule(0, 0, 0, 1.1, v("#C8762A"), .2, 1.2);
+        rotors.push({ g: d, x: ix, y: .3, z: iz, cap: 0, v: 0, a: { p: .9 + q * .13, ph: q * .27, chemin: [0, .2, .4, .6, .8, 1].map(t => [Math.cos(an) * L * t, 9 * 4 * t * (1 - t), Math.sin(an) * L * t]), souffle: true } }); } }
     // sur la flaque : deux sucres-icebergs, une rondelle de citron, une cuillère qui dépasse
     [[.42, .28, 9, .5], [.6, -.08, 7, 1.2]].forEach(([u, w, s, a]) => { const g = new Geo(); g.boite(0, -s * .3, 0, s, s, s, v("#FFFFFF"), 0, a); sol.poser(g, lx + u * lrx, 0, lz + w * lrz, 0, 1); });
     { const g = new Geo(); g.cylindre(0, .26, 0, 9, .5, 16, v("#F7E04A")); g.ov().cylindre(0, .3, 0, 7.6, .5, 16, v("#FFF6B0")); for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; branche(g.ov(), [0, .82, 0], [Math.cos(a) * 7, .82, Math.sin(a) * 7], .25, .2, v("#F2D040")); } sol.poser(g, lx - .36 * lrx, 0, lz + .42 * lrz, 0, 1); }
@@ -4263,9 +4279,15 @@
       for (let k = 0; k < 14; k++) g.quad(haut[k], haut[k + 1], bas[k + 1], bas[k], PORC, .25, [0, 0, 1]);
       for (let k = 1; k < 14; k++) branche(g, [haut[k][0], haut[k][1], .2], [bas[k][0], bas[k][1], .2], .25, .25, v("#7A6A8A"));
       tube(g, bas, 1.6, lev, .1); tube(g, haut, 1.2, lev, .1); [-1, 1].forEach(sd => { branche(g, [sd * W, 1.2, 0], [sd * (W + 5), 5, 0], 1.2, .4, lev, .1); });
-      [-1, 1].forEach(sd => { g.boule(sd * 16, 17, 0, 7.4, v("#F2E25A"), .35, .62, true); g.boite(sd * 16, 13.8, 0, 1.3, 6.4, 15.2, NOIR); });
-      for (let k = 0; k < 7; k++) { const a = PI * (.1 + k * .13); g.boule(Math.cos(a) * 44, 8 + Math.sin(a) * 26 - 14, -4, 3.2 - Math.abs(k - 3) * .4, k % 2 ? v("#C890E8") : v("#9A5AC8"), .2, .6); }
-      sol.poser(g, x, y, z, vers(x, z, T.cx, T.cz + 300), 1); lum.push([x, y, z, .8, .5, 1, 30]); }
+      const ye = new Geo(); [-1, 1].forEach(sd => { ye.boule(sd * 16, 17, 0, 7.4, v("#F2E25A"), .35, .62, true); ye.boite(sd * 16, 13.8, 0, 1.3, 6.4, 15.2, NOIR); ye.boule(sd * 16 - 2.4, 19.6, 3.4, 1.3, v("#FFFFFF"), 1); });
+      for (let k = 0; k < 7; k++) { const a = PI * (.1 + k * .13); ye.boule(Math.cos(a) * 44, 8 + Math.sin(a) * 26 - 14, -4, 3.2 - Math.abs(k - 3) * .4, k % 2 ? v("#C890E8") : v("#9A5AC8"), .2, .6); }
+      const cs = vers(x, z, T.cx, T.cz + 300);
+      rotors.push({ g, x, y, z, cap: cs, v: 0, a: { p: 18, vis: [.02, .5], visX: true, bob: [2.4, .6] } }); rotors.push({ g: ye, x, y, z, cap: cs, v: 0, a: { p: 18, vis: [.08, .38], bob: [2.4, .6] } });
+      // … puis il réapparaît ailleurs, plus petit, au bord de la piste (et ainsi de suite)
+      [[.3, 34], [.74, 36]].forEach(([fr, o], q) => { const i = Math.floor(fr * T.N), n = [-T.TZ[i], T.TX[i]], sd = Math.hypot(T.X[i] + n[0] - T.cx, T.Z[i] + n[1] - T.cz) > Math.hypot(T.X[i] - T.cx, T.Z[i] - T.cz) ? 1 : -1;
+        const x2 = T.X[i] + n[0] * sd * o, z2 = T.Z[i] + n[1] * sd * o, c2 = vers(x2, z2, T.X[i], T.Z[i]), w = q ? [.76, .99] : [.52, .74];
+        rotors.push({ g, x: x2, y: 20, z: z2, cap: c2, v: 0, a: { p: 18, vis: w, visX: true, bob: [1.6, .8], k0: .55, k1: .55 } }); rotors.push({ g: ye, x: x2, y: 20, z: z2, cap: c2, v: 0, a: { p: 18, vis: [w[0] + .04, w[1] - .07], bob: [1.6, .8], k0: .55, k1: .55 } }); });
+      lum.push([x, y, z, .8, .5, 1, 30]); }
     // ---- 6. la montre du Lapin blanc, debout sur la tranche, aiguilles qui tournent (« En retard ! »)
     { const p = place(m(716), m(198), 24); if (p) { const [x, z] = p, R = 21, cap = vers(x, z, T.cx, T.cz), g = new Geo(), c = new Geo();
       c.cylindre(0, -2.4, 0, R, 4.8, 22, OR, .05); c.cylindre(0, -2.6, 0, R * .9, 5.2, 22, v("#FFF8E6")); tourne(c, "x", PI / 2); g.poser(c, 0, R + 2, 0, 0, 1);
@@ -4276,6 +4298,8 @@
       const ai = (L, l, col) => { const h = new Geo(); h.quad([-l, -2, 0], [l, -2, 0], [l * .6, L, 0], [-l * .6, L, 0], col, 0, [0, 0, 1]); h.tri([-l * .6, L, 0], [l * .6, L, 0], [0, L + 2.4, 0], col, 0, [0, 0, 1]); return h; };
       const h1 = ai(R * .78, .7, NOIR), h2 = ai(R * .5, 1.1, NOIR); h2.boule(0, 0, 0, 1.1, OR, .1);
       rotors.push({ g: h1, x: wx, y: R + 2, z: wz, cap, v: -2.4 }); rotors.push({ g: h2, x: wx + .05 * Math.sin(cap), y: R + 2, z: wz + .05 * Math.cos(cap), cap, v: -.4 });
+      { const h3 = new Geo(); h3.quad([-.25, -4, 0], [.25, -4, 0], [.2, R * .84, 0], [-.2, R * .84, 0], ROUGE, .2, [0, 0, 1]); h3.boule(0, 0, 0, .7, ROUGE, .2); rotors.push({ g: h3, x: wx + .1 * Math.sin(cap), y: R + 2, z: wz + .1 * Math.cos(cap), cap, v: -6.28 / 4 }); }
+      { const ch = new Geo(); for (let k = 0; k <= 14; k++) { const t = k / 14, px = 3 + t * 30, py = R * 2 + 9 - Math.sin(t * PI) * 8 - t * (R * 2 + 8); ch.boule(px, Math.max(.6, py), 0, .75, OR, .15); } sol.poser(ch, x, 0, z, cap, 1); }
       lum.push([wx, R + 2, wz, 1, .9, .6, 12]); } }
     // ---- 7. le Lièvre de mars → le grand sucrier, couvercle de travers, sucres renversés
     { const p = place(m(618), m(266), 24); if (p) { const g = new Geo(); g.cylindre(0, 0, 0, 9, 3, 14, PORC2, 0, 12); g.boule(0, 12, 0, 15, PORC, 0, .72, true); g.cylindre(0, 12, 0, 15.2, 2.4, 16, ROSE, 0, 15.2);
@@ -4317,7 +4341,7 @@
     [[388, 556], [478, 572], [568, 570], [656, 540]].forEach(([u, w], k) => { const p = place(m(u), m(w), 26); if (!p) return; const g = new Geo(), c = v(COULEURS_J[k]);
       tasse(g, 0, 0, 0, 14, c, mel(c, [1, 1, 1], .55)); g.ov().boite(0, 8, 14, 9, 3.4, .1, PORC, .1, 0);
       const os = new Geo(); os.cylindre(0, 0, 0, 7, 2, 10, OR, .05); os.boule(0, 2, 0, 1.6, ROUGE, .1); g.poser(os, -16, 0, -14, 0, 1);
-      poser(g, p[0], p[1], 28, vers(p[0], p[1], T.cx, T.cz) + PI / 2, 0, 1.2); });
+      poser(g, p[0], p[1], 28, vers(p[0], p[1], T.cx, T.cz) + PI / 2, 0, 1.2); vapeur(p[0], 19, p[1], 2.6, 18); });
     // ---- 11. la Chenille sur son champignon, avec ses ronds de fumée (« Qui es-tu ? »)
     { const p = place(m(74), m(668), 30); if (p) { const g = new Geo(), bl = v("#4A8AE0");
       g.cylindre(0, 0, 0, 6, 14, 10, v("#F7E6C8"), 0, 4.6); g.boule(0, 14, 0, 22, v("#C81A34"), 0, .42, true);
@@ -4330,8 +4354,9 @@
       poser(g, p[0], p[1], 34, vers(p[0], p[1], T.cx, T.cz) - PI / 2, 0, 1.3); } }
     // ---- 12. la grande tasse fumante, dans le coin en bas à droite (comme sur la carte)
     { const p = place(m(1050), m(706), 46); if (p) { const g = new Geo(); tasse(g, 0, 0, 0, 34, PORC, ROUGE); g.ov().cylindre(0, 14, 0, 30.6, 3, 16, ROUGE, 0, 32);
-      for (let k = 0; k < 7; k++) g.boule(Math.sin(k * 1.3) * 6, 42 + k * 9, Math.cos(k * 1.1) * 6, 5 + k * 1.1, v("#FFFFFF"), .3, .8);
-      poser(g, p[0], p[1], 52, r() * TAU); } }
+      poser(g, p[0], p[1], 52, r() * TAU); vapeur(p[0], 38, p[1], 6, 46, 4);
+      { const c = new Geo(), arg = v("#D4D9E0"); branche(c, [17, 34, 0], [26, 56, 0], 1.3, 1, arg, .15); c.boule(26.6, 57.5, 0, 2.6, arg, .2, .5); c.boule(17, 34.4, 0, 4.4, arg, .2, .35);   // la cuillère tourne toute seule
+        rotors.push({ g: c, x: p[0], y: 0, z: p[1], cap: 0, v: .9, a: { ax: "y", bob: [.6, 2] } }); } } }
     // ---- 13. une autre théière (la vraie, posée), une pile de tasses du Chapelier, une grande cuillère : les masses du bas à gauche
     { const p = place(m(280), m(470), 16); if (p) { const g = new Geo(), pal = ["#4C9AFF", "#F4A6B8", "#F7E08A", "#A6DCC8", "#C8B0F0"]; let y = 0;
       for (let k = 0; k < 5; k++) { const s = 9 - k * .4, gg = new Geo(); tasse(gg, 0, 0, 0, s, v(pal[k]), PORC, false); g.poser(gg, (k % 2 ? 1.6 : -1.2), y, 0, k * .9, 1); y += s * 1.04; }
@@ -4354,6 +4379,35 @@
         else if (ty === "biscuit") { g.cylindre(0, 0, 0, 4.6, 1.2, 12, v("#D8A060")); for (let k = 0; k < 5; k++) g.ov().boule((r() - .5) * 5, 1.2, (r() - .5) * 5, .5, v("#5A3020"), 0, .5); }
         else { branche(g, [0, .5, -8], [0, .5, 4], .6, .9, v("#C9CED6"), .05); g.boule(0, .8, 7, 3, v("#C9CED6"), .05, .35); }
         poser(g, x, z, R, r() * TAU); n++; } }
+    // ---- 15. v16.35 · les détails du bord de piste (vus de la caméra TV) : miettes, sucres, vermicelles, pétales et gouttes de thé sur la nappe
+    { const so2 = sol.ov(), mie = ["#D8A060", "#C8884A", "#E8C090"], verm = ["#F4A6B8", "#A6DCC8", "#F7E08A", "#C8B0F0", "#4C9AFF", "#FFFFFF"], rouges = [ROUGE, v("#F04A6A"), v("#FFFFFF")];
+      const pos = (i, o) => { let nx = -T.TZ[i], nz = T.TX[i]; return [T.X[i] + nx * o, T.Z[i] + nz * o]; };
+      const libre = (x, z) => !stands.some(o => Math.hypot(x - o[0], z - o[1]) < o[2]) && !dansLac(x, z, 6) && T.dist(x, z) > DEMI + 6.4;
+      const plat = (x, z, R, n, col, an, ky) => { for (let k = 0; k < n; k++) { const a0 = k / n * TAU, a1 = (k + 1) / n * TAU; so2.tri([x, .09, z], [x + Math.cos(a0 + an) * R, .09, z + Math.sin(a0 + an) * R * (ky || 1)], [x + Math.cos(a1 + an) * R, .09, z + Math.sin(a1 + an) * R * (ky || 1)], col, 0, [0, 1, 0]); } };
+      const pas = Math.max(1, Math.round(5 / T.ds));
+      for (let i = 0; i < T.N; i += pas) [1, -1].forEach(sd => { if (r() < .5) return;
+        const o = sd * (DEMI + 7 + r() * 3.4 + (r() < .45 ? 6 + r() * 8 : 0)), [x, z] = pos(i, o); if (!libre(x, z)) return; const ty = r(), g = new Geo(), an = r() * TAU;
+        if (ty < .2) { g.boite(0, 0, 0, 1.8, 1.8, 1.8, v("#FFFFFF"), .35, an); if (r() < .5) g.boite(2, 0, .6, 1.5, 1.5, 1.5, v("#FFFDF8"), .35, an + .5); }
+        else if (ty < .45) { for (let k = 0; k < 3; k++) g.boite((r() - .5) * 2.4, 0, (r() - .5) * 2.4, .6 + r() * .7, .35 + r() * .4, .5 + r() * .7, v(mie[k % 3]), 0, r() * 3); }
+        else if (ty < .62) { for (let k = 0; k < 3; k++) g.boite((r() - .5) * 2.6, 0, (r() - .5) * 2.6, .26, .22, 1.1, v(verm[Math.floor(r() * verm.length)]), .15, r() * 3); }
+        else if (ty < .82) { for (let k = 0; k < 3; k++) { const px = x + (r() - .5) * 3, pz = z + (r() - .5) * 3, c = rouges[Math.floor(r() * 3)], a = r() * TAU, L = .9 + r() * .4;
+            so2.quad([px + Math.cos(a) * L, .1, pz + Math.sin(a) * L], [px - Math.sin(a) * .5, .1, pz + Math.cos(a) * .5], [px - Math.cos(a) * L, .1, pz - Math.sin(a) * L], [px + Math.sin(a) * .5, .1, pz - Math.cos(a) * .5], c, .05, [0, 1, 0]); } return; }
+        else { plat(x, z, .9 + r() * 1.1, 7, mel(CREME, THE, .55), an, .7 + r() * .3); if (r() < .6) plat(x + 1.8, z + .8, .45, 5, mel(CREME, THE, .5), an); return; }
+        sol.poser(g, x, 0, z, 0, 1); }); }
+    // ---- 16. v16.35 · animés : les cartes qui virevoltent en tourbillon au-dessus des bas-côtés, et les pétales des rosiers que le vent emporte
+    { const carte = (k, ech) => { const g = new Geo(), sy = ["c", "p", "k", "t"][k % 4], W = 3.5 * ech, H = 5 * ech;
+        g.quad([-W, -H, .02], [W, -H, .02], [W, H, .02], [-W, H, .02], v("#FFFDF6"), .12, [0, 0, 1]); g.quad([-W, -H, -.02], [W, -H, -.02], [W, H, -.02], [-W, H, -.02], v("#B8203A"), .05, [0, 0, -1]);
+        symbole(g, sy, 0, 0, .12, 2 * ech, 1);
+        g.quad([-W * .5, -W * .5, -.12], [W * .5, -W * .5, -.12], [W * .5, W * .5, -.12], [-W * .5, W * .5, -.12], v("#F2C0C8"), 0, [0, 0, -1]); return g; };
+      const bord = (fr, o) => { const i = Math.floor(fr * T.N) % T.N; let nx = -T.TZ[i], nz = T.TX[i]; if (Math.hypot(T.X[i] + nx - T.cx, T.Z[i] + nz - T.cz) < Math.hypot(T.X[i] - T.cx, T.Z[i] - T.cz)) { nx = -nx; nz = -nz; } return [T.X[i] + nx * o, T.Z[i] + nz * o, nx, nz]; };
+      [.05, .2, .36, .52, .68, .86].forEach((fr, q) => { const R = 8, [x, z] = bord(fr, DEMI + 14 + R + 5); if (dansLac(x, z, 10) || stands.some(o => Math.hypot(x - o[0], z - o[1]) < o[2])) return;
+        const g = new Geo(); for (let k = 0; k < 4; k++) { const c = carte(k + q, 1.6), a = k / 4 * TAU; tourne(c, "z", .35 * (k % 2 ? 1 : -1)); tourne(c, "x", .25 + k * .1); g.poser(c, Math.cos(a) * R, k * 3.4, Math.sin(a) * R, -a + .6, 1); }
+        rotors.push({ g, x, y: 11 + q % 3 * 2, z, cap: 0, v: q % 2 ? .7 : -.6, a: { ax: "y", ph: q * .17, bob: [2.2, .9] } }); });
+      const petales = (n, R) => { const g = new Geo(); for (let k = 0; k < n; k++) { const a = r() * TAU, d = r() * R, px = Math.cos(a) * d, pz = Math.sin(a) * d, py = r() * 7, b = r() * TAU, L = 1.1 + r() * .5, c = [ROUGE, v("#F04A6A"), v("#FFFFFF"), ROUGE][k % 4];
+        const e = [Math.cos(b) * L, .5, Math.sin(b) * L], f = [-Math.sin(b) * .45, -.2, Math.cos(b) * .45];
+        g.quad([px + e[0], py + e[1], pz + e[2]], [px + f[0], py + f[1], pz + f[2]], [px - e[0], py - e[1], pz - e[2]], [px - f[0], py - f[1], pz - f[2]], c, .1, [0, 1, 0]); } return g; };
+      [.12, .28, .44, .6, .76, .93].forEach((fr, q) => { const [x, z, nx, nz] = bord(fr, DEMI + 16 + r() * 6); if (dansLac(x, z, 6)) return;   // le vent les pousse vers l'extérieur : jamais au-dessus de la piste
+        rotors.push({ g: petales(18, 7), x, y: 15, z, cap: 0, v: 1.1, a: { ax: "y", p: 7 + q % 3, ph: q * .29, h: -15, dx: nx * 9, dz: nz * 9, souffle: true } }); }); }
     // tout le reste du sol est la nappe : aucun décor générique ne s'y pose
     occupe.push([T.cx, T.cz, 6000]);
     return occupe;
@@ -5161,7 +5215,7 @@
   function sceneDe(cle, fab) {
     if (SCENES.has(cle)) { const v = SCENES.get(cle); SCENES.delete(cle); SCENES.set(cle, v); return v; }
     const S = fab(), fige = g => ({ f: new Float32Array(g.d) });
-    const v = { sol: fige(S.sol), solOv: fige(S.sol.ov()), piste: fige(S.piste), pisteOv: fige(S.piste.ov()), eau: S.eau.n ? fige(S.eau) : null, lum: S.lum, portique: S.portique, rotors: (S.rotors || []).map(o => ({ f: new Float32Array(o.g.d), x: o.x, y: o.y, z: o.z, cap: o.cap, v: o.v })) };
+    const v = { sol: fige(S.sol), solOv: fige(S.sol.ov()), piste: fige(S.piste), pisteOv: fige(S.piste.ov()), eau: S.eau.n ? fige(S.eau) : null, lum: S.lum, portique: S.portique, rotors: (S.rotors || []).map(o => ({ f: new Float32Array(o.g.d), x: o.x, y: o.y, z: o.z, cap: o.cap, v: o.v, a: o.a })) };
     SCENES.set(cle, v); while (SCENES.size > 4) SCENES.delete(SCENES.keys().next().value);
     return v;
   }
@@ -5293,7 +5347,7 @@
           gl.uniformMatrix4fv(U.uM, false, Mw); lier(gl, PL, rb); gl.drawArrays(gl.TRIANGLES, 0, rb.n); }));
       });
       // décors qui tournent (ailes du moulin…)
-      RO.forEach(x => { gl.uniform4f(U.uTint, 1, 1, 1, 0); gl.uniformMatrix4fv(U.uM, false, mul(modele(x.x, x.y, x.z, x.cap, 0, 1), rotZ(t * x.v))); lier(gl, PL, x.b); gl.drawArrays(gl.TRIANGLES, 0, x.b.n); });
+      gl.uniform4f(U.uTint, 1, 1, 1, 0); RO.forEach(x => { const M = matRotor(x, t); if (!M) return; gl.uniformMatrix4fv(U.uM, false, M); lier(gl, PL, x.b); gl.drawArrays(gl.TRIANGLES, 0, x.b.n); });
       gl.uniform1f(U.uSpec, 0);
       [PL.A.aN].forEach(a => gl.disableVertexAttribArray(a));
       // effets transparents : ombres, traînées
@@ -5427,6 +5481,27 @@
     reveiller();
     return api;
   }
+  /** v16.35 · décors animés : sans « a », l'objet tourne autour de son axe z (ailes du moulin, aiguilles) ; avec « a » (facultatif, tout se cumule) :
+      p (période, s) et ph (décalage 0-1) donnent un cycle f de 0 à 1 ; h, dx, dz = déplacement sur le cycle (vapeur qui monte, pétales qui tombent) ;
+      chemin = liste de points parcourue sur le cycle (gouttes de thé) ; k0 → k1 = taille sur le cycle ; souffle = apparaît puis s'efface (taille) ;
+      vis = [début, fin] du cycle où l'objet est visible (sourire du Chat) ; visX = il s'efface en largeur seulement ; coule = s'enfonce en fin de cycle ;
+      bob = [amplitude, vitesse] (flotte) ; ax "y" = tourne autour de la verticale (cartes qui virevoltent). Rien de plus qu'une matrice par objet et par image. */
+  function matRotor(x, t) {
+    const a = x.a; if (!a) return mul(modele(x.x, x.y, x.z, x.cap, 0, 1), rotZ(t * x.v));
+    const u = t / (a.p || 1) + (a.ph || 0), f = u - Math.floor(u); let px = x.x, py = x.y, pz = x.z, k = 1, kx = 1;
+    if (a.chemin) { const C = a.chemin, q = f * (C.length - 1), i = Math.min(C.length - 2, Math.floor(q)), w = q - i; px += C[i][0] + (C[i + 1][0] - C[i][0]) * w; py += C[i][1] + (C[i + 1][1] - C[i][1]) * w; pz += C[i][2] + (C[i + 1][2] - C[i][2]) * w; }
+    if (a.h) py += a.h * f; if (a.dx) px += a.dx * f; if (a.dz) pz += a.dz * f;
+    if (a.bob) py += a.bob[0] * Math.sin(t * a.bob[1] + (a.ph || 0) * TAU);
+    if (a.coule) py -= a.coule * clamp((f - .7) / .3, 0, 1);
+    if (a.k0 !== undefined) k = a.k0 + (a.k1 - a.k0) * f;
+    if (a.souffle) k *= Math.sin(PI * f);
+    if (a.vis) { const e = .07, w = clamp(Math.min((f - a.vis[0]) / e, (a.vis[1] - f) / e), 0, 1), s = w * w * (3 - 2 * w); if (s <= 0) return null; if (a.visX) kx = s; else k *= s; }
+    if (k <= .002) return null;
+    const M = mul(modele(px, py, pz, x.cap, 0, k), a.ax === "y" ? rotY(t * x.v + (a.ph || 0) * TAU) : rotZ(t * x.v));
+    if (kx !== 1) { M[0] *= kx; M[1] *= kx; M[2] *= kx; }
+    return M;
+  }
+  function rotY(a) { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, 0, 0, 0, 1]); }
   function rotZ(a) { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]); }
   const ANIM = () => !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   /** traînée : un ruban derrière la voiture, à la couleur de la cosmétique */
