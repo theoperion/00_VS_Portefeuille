@@ -109,6 +109,8 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
 - Idées « hors limites » validées : ✅ bande-annonce (v16.12, `bandeAnnonce` dans 4-grandprix.js, `Piste.carte`) ; à faire : événements en pleine course
   (ver qui surgit, titan qui enjambe…), chasse au trésor (objet caché par carte → badge secret), décor qui réagit au classement, mode photo,
   autres circuits pièce par pièce. Reste aussi : brancher noms/pièges/serveur/mail des nouveaux univers (calendrier : juil=singapour, oct=silverstone).
+- Validé aussi le 19/11 : les 3 changements d'univers (mai Hunger Games, sept Marvel, déc Odyssée), les principes Stranger Things / Seigneur des Anneaux / Titans,
+  et l'ordre des étapes 1 (brancher les univers) → 2 (événements en course) → 3 (décor qui réagit + chasse au trésor) → 4 (mode photo) → 5 (château 3D) → 6 (maquettes).
 - Badges à refaire « waouh » : paliers facile → légendaire (un seul détenteur, cérémonie plein écran, inclinaison), badges qu'on se **vole** (record),
   badges qui **se remplissent** (gant aux 6 pierres) : maquette de 4 badges soignés à faire avant de coder.
 - Maquettes de travail : scratchpad `galerie/` (perdu avec la session ; les peintres sont dans `piste.js`, rendu via `tpeints.js`, `PEINT=clé`, `ANIM=1 ATT=2600`).
