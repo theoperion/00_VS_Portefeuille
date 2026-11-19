@@ -6,7 +6,8 @@
 .fond{position:absolute;inset:0;background:#000 center/cover no-repeat;opacity:0;transition:opacity .25s}.fond.on{opacity:1;animation:kb 3s linear both}
 @keyframes kb{from{transform:scale(1.05)}to{transform:scale(1.22) translate(-3%,-2%)}}
 .voile{position:absolute;inset:0;background:radial-gradient(110% 60% at 50% 50%,rgba(0,0,0,.55),rgba(0,0,0,.92))}
-#scene.carte .voile{background:radial-gradient(120% 55% at 50% 50%,rgba(0,0,0,.18),rgba(0,0,0,.7))}
+#scene.carte .voile{background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.05) 35%,rgba(0,0,0,.25) 55%,rgba(0,0,0,.88) 80%)}
+#scene.carte{place-items:end center}#scene.carte .txt{padding-bottom:calc(11vh + 26px)}
 @media (orientation:portrait){.fond.on{animation-name:pan}}@keyframes pan{from{transform:scale(1.04);background-position:38% 50%}to{transform:scale(1.14);background-position:62% 50%}}
 .l.gp{font-size:clamp(24px,7.4vw,40px)}.l.gp.sous{font:700 clamp(15px,4.4vw,20px)/1.3 "Saira",sans-serif;letter-spacing:.06em;color:#F7CF55;margin-top:10px;text-transform:none}
 .txt{position:relative;z-index:3;text-align:center;padding:0 22px;width:100%;max-width:560px;display:grid;justify-items:center}
@@ -58,8 +59,8 @@ const LONG = [
   [2000, "monza", "DÉCEMBRE", "Une seule finale.", "", "b"],
   [2200, null, "", "🏆 La Coupe a volé en éclats.", "s", "t"],
   [2400, null, "", "🗝️ Un objet est caché sur chaque circuit…", "s", "t"],
-  [2200, null, "", "👤 Mon portrait : dès samedi 11 h", "s", "t"],
-  [2400, "abudhabi", "DÉCEMBRE 2026", "🔥 1ᵉʳ décembre : le tour de chauffe", "s", "t"],
+  [2200, null, "", "👤 Mon portrait : dès samedi\u00a011\u00a0h", "s", "t"],
+  [2400, "abudhabi", "DÉCEMBRE 2026", "🔥 1ᵉʳ\u00a0décembre : le tour de\u00a0chauffe", "s", "t"],
   [2400, null, "", "Le 1ᵉʳ janvier, tout compte.", "", "tr"],
   [6000, "fin", "", "", "", "B"]];
 const COURT = [
@@ -70,7 +71,7 @@ const COURT = [
   [450, "miami", "", "", "", "t"], [450, "montreal", "", "", "", "t"], [450, "bahrein", "", "", "", "t"], [450, "spa", "", "", "", "t"],
   [450, "lasvegas", "", "", "", "t"], [450, "singapour", "", "", "", "t"], [450, "interlagos", "", "", "", "t"],
   [1700, "monza", "", "12 univers. Un seul champion.", "", "b"],
-  [1800, "abudhabi", "", "🔥 1ᵉʳ décembre : le tour de chauffe", "s", "t"],
+  [1800, "abudhabi", "", "🔥 1ᵉʳ\u00a0décembre : le tour de\u00a0chauffe", "s", "t"],
   [1800, null, "", "Le 1ᵉʳ janvier, tout compte.", "", "r"],
   [4200, "demain", "", "", "", "B"]];
 const COURTE = location.hash.indexOf("court") >= 0, PLANS = COURTE ? COURT : LONG;
