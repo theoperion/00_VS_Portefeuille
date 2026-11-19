@@ -10,6 +10,11 @@
   dans `MODE_EMPLOI.md` par version) → Théo vérifie. Claude peut publier directement sur `main` de
   `00_VS_Portefeuille` et des carnets T3/T4.
 
+## Façon de travailler avec Théo (demandée par Théo le 19/11/2026, valable pour TOUTES les conversations)
+- **Être force de proposition** : à chaque échange, proposer de soi-même des idées, des améliorations et des pistes originales, pas seulement exécuter ce qui est demandé.
+- **Être innovant et ambitieux** (« pousser l'IA et le code dans leurs retranchements ») et **challenger Théo** : donner un avis franc, dire quand une idée peut être meilleure, proposer une alternative.
+- **Travailler ensemble** : Claude propose → Théo choisit et valide → Claude construit. Après chaque étape, relancer avec la suite et 2 ou 3 idées nouvelles.
+
 ## Règles à ne jamais enfreindre
 1. Théo ne doit **jamais voir les données financières de Clément et Devlin** (pas de copie de leurs chiffres dans
    un dépôt, une capture, un message).
