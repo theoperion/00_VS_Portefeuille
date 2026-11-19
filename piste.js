@@ -4918,7 +4918,9 @@
     // guirlande : les ampoules en 3 groupes de couleurs qui clignotent à tour de rôle (les ampoules éteintes restent colorées dans le fond)
     const GUIR = [[], [], []], AMP = ["#FF3B3B", "#F2C64A", "#4C9AFF", "#2BB6A3", "#FF6FA8", "#F2994A", "#C6E03A"];
     let nAmp = 0;
-    const ampoule = (x, y, R) => { if (Math.abs(y - 166) < 22 && (Math.abs(x - 408) < 28 || Math.abs(x - 772) < 28)) return; const c = AMP[nAmp % AMP.length], g = nAmp % 3; nAmp++;
+    const SPX = [512, 760], SX = 630, SY0 = 118, SB = 322;
+    let surSapin = false;
+    const ampoule = (x, y, R) => { if (Math.abs(y - 166) < 22 && SPX.some(v => Math.abs(x - v) < 28)) return; if (!surSapin && y > SY0 - 20 && y < SB + 24 && Math.abs(x - SX) < 52) return; const c = AMP[nAmp % AMP.length], g = nAmp % 3; nAmp++;
       s.push(`<path d="M${f(x)} ${f(y - R - 1.5)}v2" stroke="#1A1012" stroke-width="2.4"/><ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(R * .8)}" ry="${f(R)}" fill="${mixHex(c, "#000000", .08)}" stroke="#1A1012" stroke-width=".8"/>`);
       if (K.dT(x, y) > 31) GUIR[g].push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(R * 1.55)}" fill="${c}" opacity=".3"/><ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(R * .8)}" ry="${f(R)}" fill="${mixHex(c, "#FFFFFF", .3)}"/><circle cx="${f(x - R * .25)}" cy="${f(y - R * .35)}" r="${f(R * .3)}" fill="#FFFFFF"/>`); };
     const feston = (x0, y0, x1, y1, creux, pas, R) => { const mx = (x0 + x1) / 2, my = (y0 + y1) / 2 + creux;
@@ -4939,36 +4941,29 @@
 
     // =============== 2. les hautes fenêtres sur le soir de neige (bleu soir, seule touche froide), avec congères et guirlande
     //  (remontées au-dessus de la ligne droite du haut pour que la piste ne mange plus les appuis ni les ampoules)
-    const VX0 = 476, VX1 = 784, VY1 = 340, SX = (VX0 + VX1) / 2, FEN = [], FY = 10, FH = 54;
+    const VX0 = 476, VX1 = 784, VY1 = 340, FEN = [], FY = 10, FH = 54;
     for (let x = 18; x < W - 40; x += 88) { if (x + 80 > VX0 - 10 && x < VX1 + 10) continue; FEN.push(x);
       s.push(`<rect x="${x}" y="${FY}" width="80" height="${FH}" fill="url(#g6-ciel)" stroke="#5A3420" stroke-width="5"/><path d="M${x + 2} ${FY + FH - 10}Q${x + 22} ${FY + FH - 18} ${x + 44} ${FY + FH - 12}Q${x + 64} ${FY + FH - 16} ${x + 78} ${FY + FH - 12}V${FY + FH - 2}H${x + 2}Z" fill="url(#g6-neige)"/>`); }
     s.push(`<rect x="${VX0}" y="0" width="${VX1 - VX0}" height="${VY1}" fill="url(#g6-ciel)"/>`);
-    // DEHORS, derrière la grande verrière : le grand sapin du village, tout illuminé ; il est plus large que l'épingle, ses branches débordent des deux côtés
+    // DEHORS, derrière la grande verrière : la nuit de neige, les collines et quelques sapins du village au loin (le grand sapin est DEDANS, dans l'alcôve de l'épingle)
     s.push(`<clipPath id="g6-cver"><rect x="${VX0}" y="0" width="${VX1 - VX0}" height="${VY1}"/></clipPath><g clip-path="url(#g6-cver)">`);
     s.push(`<path d="M${VX0} 250Q${VX0 + 60} 226 ${VX0 + 120} 244Q${SX} 230 ${VX1 - 110} 246Q${VX1 - 50} 228 ${VX1} 248V${VY1}H${VX0}Z" fill="#B8C6E4" opacity=".7"/>`);
-    s.push(`<ellipse cx="${SX}" cy="190" rx="200" ry="230" fill="url(#g6-chaud)" opacity=".75" style="mix-blend-mode:screen"/>`);
-    const SY0 = 30, SB = 322, ET = 5, etages = [];
-    for (let e = 0; e < ET; e++) { const t0 = e / ET, t1 = (e + 1) / ET; etages.push([SY0 + 8 + (SB - SY0 - 8) * t0 - (e ? 22 : 0), 34 + 124 * t1, SY0 + 8 + (SB - SY0 - 8) * t1]); }
-    s.push(`<rect x="${SX - 12}" y="${SB - 14}" width="24" height="20" fill="#5A3420" ${IN1}/>`);
-    etages.forEach(([y0, demi, y1]) => { const pts = []; for (let q = 0; q <= 12; q++) { const u = -demi + q * demi / 6; pts.push(`${f(SX + u)} ${f(y1 + (q % 2 ? -8 : 3))}`); }
-      s.push(`<path d="M${SX} ${f(y0 - 8)}L${f(SX + demi)} ${f(y1)}L${pts.reverse().join("L")}Z" fill="url(#g6-sapin)" ${INK}/><path d="M${f(SX - demi * .2)} ${f(y0 + 6)}L${f(SX - demi * .78)} ${f(y1 - 6)}" stroke="#FFFFFF" stroke-opacity=".8" stroke-width="3.4" stroke-linecap="round"/><path d="M${f(SX - demi * .95)} ${f(y1 - 1)}Q${SX} ${f(y1 - 9)} ${f(SX + demi * .95)} ${f(y1 - 1)}" stroke="#FFFFFF" stroke-opacity=".7" stroke-width="2.4" fill="none"/>`); });
-    etages.forEach(([y0, demi, y1], e) => { const ya = y0 + (y1 - y0) * .6, w = demi * .78; feston(SX - w, ya - 10, SX + w, ya + 6, 6, 15, 3.6); });
-    // les boules nettes, rouges et dorées, plus grosses sur les branches qui débordent de l'épingle
-    etages.forEach(([y0, demi, y1], e) => { const ya = y0 + (y1 - y0) * .9, w = demi * .74, n = e < 2 ? 2 : 3; for (let q = 0; q < n; q++) { const t = n === 2 ? (q ? .85 : .15) : [.06, .5, .94][q], x = SX - w + 2 * w * t, c = (q + e) % 2 ? "#F2C64A" : "#E0242C", R = 6 + e * 1.1, y = ya - 6 + Math.sin(t * PI) * 4;
-      s.push(`<path d="M${f(x)} ${f(y - R - 3)}v3" stroke="#C9A24A" stroke-width="2.4"/><circle cx="${f(x)}" cy="${f(y)}" r="${f(R)}" fill="${c}" ${IN1}/><circle cx="${f(x - R * .35)}" cy="${f(y - R * .35)}" r="${f(R * .32)}" fill="#FFFFFF" opacity=".9"/>`); } });
+    [[598, 250, 13], [664, 246, 11], [612, 262, 9]].forEach(([x, y, h]) => s.push(`<path d="M${x} ${y - h * 2.2}L${x + h * .8} ${y}H${x - h * .8}Z" fill="#2A3E6A" opacity=".8"/><path d="M${x} ${y - h * 2.2}L${x + h * .35} ${y - h * 1.3}H${x - h * .35}Z" fill="#E8EEF8" opacity=".8"/>`));
+    s.push(`<ellipse cx="${SX}" cy="230" rx="120" ry="170" fill="url(#g6-chaud)" opacity=".55" style="mix-blend-mode:screen"/>`);
     s.push(`<path d="M${VX0} 322Q${SX - 60} 310 ${SX} 316Q${SX + 70} 308 ${VX1} 320V${VY1}H${VX0}Z" fill="#EEF3FB"/><path d="M${VX0} 322Q${SX - 60} 310 ${SX} 316Q${SX + 70} 308 ${VX1} 320" stroke="#FFFFFF" stroke-width="3" fill="none"/></g>`);
     // la verrière : cadre de bois chaud et deux traverses fines (on voit le sapin à travers la vitre)
-    const CADRES = `M${VX0} 0V${VY1}H${VX1}V0M${VX0} 112H${VX1}M${VX0} 226H${VX1}`;
+    const CADRES = `M${VX0} 0V${VY1}H${VX1}V0M${VX0} 72H${VX1}M${VX0} 226H${VX1}`;
     s.push(`<path d="${CADRES}" fill="none" stroke="#5A3420" stroke-width="6"/>`);
     // la neige tombe derrière toutes les vitres (deux couches, la plus proche en gros flocons), les montants repassent devant
-    { a.push(`<clipPath id="g6-cv"><rect x="${VX0}" y="0" width="${VX1 - VX0}" height="${VY1}"/>${FEN.map(x => `<rect x="${x}" y="${FY}" width="80" height="${FH}"/>`).join("")}</clipPath>`);
+    { const TROU = `M${SX} ${SY0 - 26}L${SX + 26} ${SY0 + 6}L${SX + 50} ${SB + 2}L${SX + 18} ${SB + 24}H${SX - 18}L${SX - 50} ${SB + 2}L${SX - 26} ${SY0 + 6}Z`;
+      a.push(`<clipPath id="g6-cv"><path clip-rule="evenodd" d="M${VX0} 0H${VX1}V${VY1}H${VX0}Z${FEN.map(x => `M${x} ${FY}h80v${FH}h-80Z`).join("")}${TROU}"/></clipPath><clipPath id="g6-hors"><path clip-rule="evenodd" d="M0 0H${W}V${H}H0Z${TROU}"/></clipPath>`);
       [[13, 0], [8, 1]].forEach(([du, q]) => { let fl = "";
         const nV = q ? 40 : 64, nF = q ? 50 : 90, rb = q ? 2.4 : 1.2, rv = q ? 1.8 : 1.4;
         for (let k = 0; k < nV; k++) fl += `<circle cx="${f(VX0 + r() * (VX1 - VX0))}" cy="${f(r() * VY1)}" r="${f(rb + r() * rv)}" fill="#F4F8FF" opacity="${(.6 + r() * .4).toFixed(2)}"/>`;
         for (let k = 0; k < nF; k++) fl += `<circle cx="${f(FEN[k % FEN.length] + r() * 80)}" cy="${f(r() * VY1)}" r="${f(rb * .85 + r() * rv)}" fill="#F4F8FF" opacity="${(.6 + r() * .4).toFixed(2)}"/>`;
         if (q) for (let k = 0; k < 8; k++) { const x = r() < .5 ? VX0 + 8 + r() * 46 : VX1 - 54 + r() * 46, y = r() * VY1; fl += `<circle cx="${f(x)}" cy="${f(y)}" r="8" fill="#FFFFFF" opacity=".22"/><circle cx="${f(x)}" cy="${f(y)}" r="${f(3.5 + r() * 1.5)}" fill="#FFFFFF"/>`; }
         a.push(`<g clip-path="url(#g6-cv)"><g>${an(`<animateTransform attributeName="transform" type="translate" values="0 -${VY1};${q ? -10 : 8} 0" dur="${du}s" repeatCount="indefinite"/>`)}<g id="g6-fl${q}">${fl}</g>${K.anime ? `<use href="#g6-fl${q}" y="${VY1}"/>` : ""}</g></g>`); });
-      a.push(`<path d="${CADRES}${FEN.map(x => `M${x} ${FY}h80v${FH}h-80zM${x + 40} ${FY}V${FY + FH}M${x} ${FY + FH / 2}H${x + 80}`).join("")}" fill="none" stroke="#5A3420" stroke-width="3.6"/><path d="M${VX0 + 3} 0V${VY1}M${VX1 - 3} 0V${VY1}" stroke="#F2C64A" stroke-opacity=".45" stroke-width="1.4"/>`);
+      a.push(`<g clip-path="url(#g6-hors)"><path d="${CADRES}${FEN.map(x => `M${x} ${FY}h80v${FH}h-80zM${x + 40} ${FY}V${FY + FH}M${x} ${FY + FH / 2}H${x + 80}`).join("")}" fill="none" stroke="#5A3420" stroke-width="3.6"/><path d="M${VX0 + 3} 0V${VY1}M${VX1 - 3} 0V${VY1}" stroke="#F2C64A" stroke-opacity=".45" stroke-width="1.4"/></g>`);
       FEN.forEach(x => a.push(`<path d="M${x - 3} ${FY + FH + 2}Q${x + 40} ${FY + FH - 4} ${x + 83} ${FY + FH + 2}" stroke="#F4F8FC" stroke-width="5" stroke-linecap="round" fill="none"/>`)); }
     // guirlande en festons sous les fenêtres (au-dessus de la piste du haut)
     for (let k = 0; k < FEN.length; k++) { const x = FEN[k]; feston(x - 4, FY + FH + 6, x + 84, FY + FH + 6, 4, 14, 3); }
@@ -4981,44 +4976,58 @@
     CJ.forEach((c, k) => { const x0 = BX0 + k * BW, xm = x0 + BW / 2;
       s.push(`<rect x="${x0 + 4}" y="${PY0}" width="${BW - 8}" height="${HZ - PY0 - 8}" fill="url(#g6-porte)"/>`);
       for (let y = PY0 + 8; y < HZ - 10; y += 9) s.push(`<path d="M${x0 + 5} ${y}H${x0 + BW - 5}" stroke="#000" stroke-opacity=".28" stroke-width="1.6"/><path d="M${x0 + 5} ${y + 1.6}H${x0 + BW - 5}" stroke="#FFD8A0" stroke-opacity=".08" stroke-width="1"/>`);
-      s.push(houx(xm, PY0 + 46, 15));
+      s.push(houx(xm, PY0 + 46, 22));
       // la chaussette pend à la poignée, à la couleur du pilote, revers crème
       const hx = xm + 10, hy = HZ - 74;
       s.push(`<g transform="translate(${hx} ${hy}) scale(1.12) translate(${-hx} ${-hy})"><rect x="${hx - 9}" y="${hy - 3}" width="18" height="5" rx="2" fill="#C9A24A" ${IN1}/><path d="M${hx} ${hy + 2}V${hy + 8}" stroke="#E8D8B0" stroke-width="1.5"/>
         <path d="M${hx - 8} ${hy + 14}V${hy + 34}Q${hx - 8} ${hy + 46} ${hx + 4} ${hy + 46}H${hx + 14}Q${hx + 20} ${hy + 46} ${hx + 20} ${hy + 40}Q${hx + 20} ${hy + 34} ${hx + 10} ${hy + 33}H${hx + 6}V${hy + 14}Z" fill="${c}" ${IN1}/>
         <rect x="${hx - 10}" y="${hy + 6}" width="18" height="10" rx="3" fill="#FFF6E4" ${IN1}/><path d="M${hx - 6} ${hy + 24}H${hx + 4}M${hx - 6} ${hy + 30}H${hx + 4}" stroke="#FFFFFF" stroke-opacity=".55" stroke-width="2"/></g>`);
-      PORTR.push({ k, x: +xm.toFixed(1), y: +(PY0 - 34).toFixed(1), r: 18 });
+      PORTR.push({ k, x: +xm.toFixed(1), y: +(PY0 + 46).toFixed(1), r: 18 });
     });
     for (let k = 0; k <= 4; k++) s.push(`<rect x="${BX0 + k * BW - 4}" y="${PY0 - 6}" width="8" height="${HZ - PY0}" fill="#2A1614" ${IN1}/>`);
     s.push(`<rect x="${BX0 - 6}" y="${PY0 - 10}" width="${4 * BW + 12}" height="8" fill="#3A201C" ${IN1}/>`);
 
-    s.push(`<ellipse cx="300" cy="200" rx="300" ry="150" fill="url(#g6-chaud)" opacity=".32" style="mix-blend-mode:screen"/>`);
+    s.push(`<ellipse cx="300" cy="200" rx="300" ry="150" fill="url(#g6-chaud)" opacity=".1" style="mix-blend-mode:screen"/>`);
     // =============== 4. la poutre de bois chaud (reflets dorés des guirlandes), ses festons, l'étoile du sapin et les suspensions de papier
     const MX = 466, MY = 552, S = .95;
     s.push(`<ellipse cx="600" cy="176" rx="360" ry="46" fill="url(#g6-chaud)" opacity=".55" style="mix-blend-mode:screen"/>`);
-    s.push(`<rect x="300" y="144" width="600" height="14" fill="url(#g6-poutre)" ${IN1}/><path d="M302 146.5H898" stroke="#FFE2A0" stroke-opacity=".8" stroke-width="1.6"/>`);
-    for (let x = 312; x < 900; x += 26) s.push(`<path d="M${x} 150l13 6l13 -6" stroke="#4A2614" stroke-opacity=".7" stroke-width="1.2" fill="none"/>`);
+    [[300, 584], [676, 900]].forEach(([x0, x1]) => s.push(`<rect x="${x0}" y="144" width="${x1 - x0}" height="14" fill="url(#g6-poutre)" ${IN1}/><path d="M${x0 + 2} 146.5H${x1 - 2}" stroke="#FFE2A0" stroke-opacity=".8" stroke-width="1.6"/>`));
+    for (let x = 312; x < 900; x += 26) if (x + 26 < 584 || x > 676) s.push(`<path d="M${x} 150l13 6l13 -6" stroke="#4A2614" stroke-opacity=".7" stroke-width="1.2" fill="none"/>`);
     // l'étoile au sommet : grand halo, rayons qui scintillent, étoile qui pulse (couche animée)
-    a.push(`<circle cx="${SX}" cy="${SY0 - 4}" r="54" fill="url(#g6-etoile)" opacity="${K.anime ? .6 : .9}">${an(`<animate attributeName="opacity" values=".5;1;.5" dur="2.4s" repeatCount="indefinite"/>`)}</circle>`);
-    a.push(`<g transform="translate(${SX} ${SY0 - 4})"><g opacity="${O0(.85)}">${an(`<animate attributeName="opacity" values=".2;.95;.2" dur="1.6s" repeatCount="indefinite"/>`)}${Array.from({ length: 8 }, (_, q) => { const t = q / 8 * TAU, l = q % 2 ? 26 : 40; return `<path d="M${f(Math.cos(t) * 14)} ${f(Math.sin(t) * 14)}L${f(Math.cos(t) * l)} ${f(Math.sin(t) * l)}" stroke="#FFF6C8" stroke-width="${q % 2 ? 2 : 3}" stroke-linecap="round"/>`; }).join("")}</g><g>${an(`<animateTransform attributeName="transform" type="scale" values="1;1.14;1" dur="2.4s" repeatCount="indefinite"/>`)}<path d="M0 -19L5.6 -5.8L20 -5.8L8.3 3.3L12.8 18.2L0 9.3L-12.8 18.2L-8.3 3.3L-20 -5.8L-5.6 -5.8Z" fill="#FFD84A" ${INK}/><path d="M0 -11L3 -3.2L-3 -3.2Z" fill="#FFF8D8"/></g></g>`);
+    a.push(`<circle cx="${SX}" cy="${SY0 - 4}" r="40" fill="url(#g6-etoile)" opacity="${K.anime ? .6 : .9}">${an(`<animate attributeName="opacity" values=".5;1;.5" dur="2.4s" repeatCount="indefinite"/>`)}</circle>`);
+    a.push(`<g transform="translate(${SX} ${SY0 - 4})"><g opacity="${O0(.85)}">${an(`<animate attributeName="opacity" values=".2;.95;.2" dur="1.6s" repeatCount="indefinite"/>`)}${Array.from({ length: 8 }, (_, q) => { const t = q / 8 * TAU, l = q % 2 ? 22 : 32; return `<path d="M${f(Math.cos(t) * 14)} ${f(Math.sin(t) * 14)}L${f(Math.cos(t) * l)} ${f(Math.sin(t) * l)}" stroke="#FFF6C8" stroke-width="${q % 2 ? 2 : 3}" stroke-linecap="round"/>`; }).join("")}</g><g transform="scale(.8)"><g>${an(`<animateTransform attributeName="transform" type="scale" values="1;1.14;1" dur="2.4s" repeatCount="indefinite"/>`)}<path d="M0 -19L5.6 -5.8L20 -5.8L8.3 3.3L12.8 18.2L0 9.3L-12.8 18.2L-8.3 3.3L-20 -5.8L-5.6 -5.8Z" fill="#FFD84A" ${INK}/><path d="M0 -11L3 -3.2L-3 -3.2Z" fill="#FFF8D8"/></g></g></g>`);
     // festons sous la poutre (de part et d'autre du sapin)
-    [304, 454, 604, 754].forEach(x => feston(x, 158, x + 150, 158, 14, 16, 4.2));
+    [[304, 454], [454, 578], [682, 800], [800, 900]].forEach(([x0, x1]) => feston(x0, 158, x1, 158, 12, 16, 4.2));
     // une grande étoile de papier rouge et or qui tourne doucement, et un brin de gui au bout de la poutre
     { const ex = 346, ey = 210, pts = Array.from({ length: 16 }, (_, q) => { const t = q / 16 * TAU - PI / 2, l = q % 2 ? 9 : 22; return `${f(Math.cos(t) * l)} ${f(Math.sin(t) * l)}`; }).join("L");
       s.push(`<path d="M${ex} 158V${ey - 22}" stroke="#C9A24A" stroke-width="1.6"/><circle cx="${ex}" cy="${ey}" r="40" fill="url(#g6-chaud)" opacity=".6" style="mix-blend-mode:screen"/>`);
       a.push(`<g transform="translate(${ex} ${ey})"><g>${an(`<animateTransform attributeName="transform" type="rotate" values="-12;12;-12" dur="5s" repeatCount="indefinite"/>`)}<path d="M${pts}Z" fill="#D8262E" ${INK}/><path d="M${pts}Z" fill="none" stroke="#F2C64A" stroke-width="2" transform="scale(.66)"/><circle r="5" fill="#F2C64A" ${IN1}/></g></g>`); }
     { const gx = 310, gy = 158; s.push(`<path d="M${gx} ${gy}V${gy + 16}" stroke="#D8262E" stroke-width="2.4"/><path d="M${gx - 6} ${gy + 10}h12" stroke="#D8262E" stroke-width="4" stroke-linecap="round"/>${[[-14, 22, -40], [0, 30, 0], [14, 22, 40], [-8, 32, -20], [8, 32, 20]].map(([dx, dy, rt]) => `<ellipse cx="${gx + dx}" cy="${gy + dy}" rx="5" ry="11" fill="#6A9A3A" stroke="#1E3A12" stroke-width=".8" transform="rotate(${rt} ${gx + dx} ${gy + dy})"/>`).join("")}${[[-3, 24], [3, 26], [0, 20]].map(([dx, dy]) => `<circle cx="${gx + dx}" cy="${gy + dy}" r="3.4" fill="#FFFDF0" stroke="#7A7A6A" stroke-width=".6"/>`).join("")}`); }
+    // =============== 4 bis. le grand sapin, dans l'alcôve que dessine l'épingle (entier : ni la piste ni les montants ne le coupent)
+    { const ET = 5, etages = [];
+      for (let e = 0; e < ET; e++) { const t0 = e / ET, t1 = (e + 1) / ET; etages.push([SY0 + 6 + (SB - SY0 - 6) * t0 - (e ? 14 : 0), 9 + 34 * t1, SY0 + 6 + (SB - SY0 - 6) * t1]); }
+      s.push(`<ellipse cx="${SX}" cy="${SB + 14}" rx="40" ry="6" fill="#000" opacity=".5" filter="url(#g6-flou)"/><rect x="${SX - 6}" y="${SB - 6}" width="12" height="12" fill="#5A3420" ${IN1}/>`);
+      s.push(`<path d="M${SX - 15} ${SB + 4}H${SX + 15}L${SX + 11} ${SB + 20}H${SX - 11}Z" fill="#D8262E" ${IN1}/><path d="M${SX - 15} ${SB + 4}H${SX + 15}" stroke="#F2C64A" stroke-width="3"/><path d="M${SX - 13} ${SB + 11}H${SX + 13}" stroke="#F2C64A" stroke-width="1.6"/>`);
+      etages.forEach(([y0, demi, y1]) => { const pts = []; for (let q = 0; q <= 10; q++) { const u = -demi + q * demi / 5; pts.push(`${f(SX + u)} ${f(y1 + (q % 2 ? -5 : 2))}`); }
+        s.push(`<path d="M${SX} ${f(y0 - 6)}L${f(SX + demi)} ${f(y1)}L${pts.reverse().join("L")}Z" fill="url(#g6-sapin)" ${INK}/><path d="M${f(SX - demi * .2)} ${f(y0 + 4)}L${f(SX - demi * .74)} ${f(y1 - 5)}" stroke="#FFFFFF" stroke-opacity=".75" stroke-width="2.4" stroke-linecap="round"/><path d="M${f(SX - demi * .92)} ${f(y1 - 1)}Q${SX} ${f(y1 - 6)} ${f(SX + demi * .92)} ${f(y1 - 1)}" stroke="#FFFFFF" stroke-opacity=".65" stroke-width="1.8" fill="none"/>`); });
+      surSapin = true;
+      etages.forEach(([y0, demi, y1], e) => { if (!e) return; const ya = y0 + (y1 - y0) * .55, w = demi * .7; feston(SX - w, ya - 6, SX + w, ya + 4, 4, 10, 2.5); });
+      surSapin = false;
+      etages.forEach(([y0, demi, y1], e) => { const ya = y0 + (y1 - y0) * .88, w = demi * .7, n = e < 2 ? 2 : 3; for (let q = 0; q < n; q++) { const t = n === 2 ? (q ? .85 : .15) : [.08, .5, .92][q], x = SX - w + 2 * w * t, c = (q + e) % 2 ? "#F2C64A" : "#E0242C", R = 3.4 + e * .55, y = ya - 4 + Math.sin(t * PI) * 3;
+        s.push(`<path d="M${f(x)} ${f(y - R - 2)}v2" stroke="#C9A24A" stroke-width="1.6"/><circle cx="${f(x)}" cy="${f(y)}" r="${f(R)}" fill="${c}" ${IN1}/><circle cx="${f(x - R * .35)}" cy="${f(y - R * .35)}" r="${f(R * .32)}" fill="#FFFFFF" opacity=".9"/>`); } }); }
     // les guirlandes clignotent par groupes de couleurs, décalés (petits points nets ; dessinées AVANT les personnages pour ne jamais leur tomber dessus)
     GUIR.forEach((g, q) => a.push(`<g opacity="${O0(q === 1 ? .4 : 1)}">${an(`<animate attributeName="opacity" values="1;.2;1" dur="2.1s" begin="${(q * .7).toFixed(1)}s" repeatCount="indefinite"/>`)}${g.join("")}</g>`));
 
     // =============== 5. LE héros : la monoplace sous sa bâche-cadeau, sous deux projecteurs ambrés
-    const SPOTS = [[408, 1, MX - 120, MY - 70, 330], [772, -1, MX + 270, MY - 40, 240]];
+    const SPOTS = [[SPX[0], 1, MX + 14, MY - 50, 230], [SPX[1], -1, MX + 104, MY - 58, 250]].map(([x, sd, x1, y1, w]) => [x, sd, x1, y1, w, -Math.atan2(x1 - x, y1 - 184) * 57.3]);
     SPOTS.forEach(([x, sd, x1, y1, w]) => cone(x, 184, x1, y1, w, "#FFC870", .85));
+    // là où les deux faisceaux se croisent : le sol s'allume d'or sous la voiture
+    flaque(MX + 60, MY - 4, 300, 46, 1, "lueurOr");
     s.push(`<ellipse cx="${MX + 30}" cy="${MY - 110}" rx="470" ry="250" fill="url(#g6-chaud)" opacity=".6" style="mix-blend-mode:screen"/><ellipse cx="${MX - 50}" cy="${MY - 130}" rx="230" ry="150" fill="url(#g6-rougeM)" style="mix-blend-mode:screen"/>`);
     flaque(MX - 10, MY - 50, 410, 155, 1);
     flaque(MX + 20, MY + 4, 450, 52, 1);
-    SPOTS.forEach(([x, sd]) => s.push(`<path d="M${x} 158V166" stroke="#16141A" stroke-width="4"/><g transform="translate(${x} 174) rotate(${sd * -18})"><rect x="-17" y="-12" width="34" height="26" rx="5" fill="#3A2420" ${INK}/><ellipse cx="0" cy="14" rx="13" ry="4.5" fill="#FFF0C8" ${IN1}/></g><circle cx="${x + sd * 4}" cy="188" r="22" fill="#FFE2A8" opacity=".7" filter="url(#g6-flou)"/>`));
-    CJ.forEach((c, k) => s.push(houx(BX0 + k * BW + BW / 2, PY0 + 46, 15)));
+    SPOTS.forEach(([x, sd, x1, y1, w, ang]) => s.push(`<path d="M${x} 158V166" stroke="#16141A" stroke-width="4"/><g transform="translate(${x} 174) rotate(${f(ang)})"><rect x="-17" y="-12" width="34" height="26" rx="5" fill="#3A2420" ${INK}/><ellipse cx="0" cy="14" rx="13" ry="4.5" fill="#FFF0C8" ${IN1}/></g><circle cx="${f(x - Math.sin(ang / 57.3) * 14)}" cy="${f(174 + Math.cos(ang / 57.3) * 14)}" r="16" fill="#FFE2A8" opacity=".7" filter="url(#g6-flou)"/>`));
+    CJ.forEach((c, k) => s.push(houx(BX0 + k * BW + BW / 2, PY0 + 46, 22)));
     const RR = [-190, -44, 44], RV = [214, -40, 40];
     const BA = "M-262 -10L-266 -42Q-210 -50 -160 -62Q-100 -80 -62 -108L-48 -130L-34 -106Q-26 -92 -6 -88Q24 -100 54 -92Q84 -82 112 -72L160 -62Q150 -38 164 -12Q120 -6 80 -12Q20 -8 -40 -12Q-140 -6 -262 -10Z";
     const AIL = "M-306 -142Q-244 -150 -172 -138L-170 -120Q-240 -128 -304 -122Z";
@@ -5053,6 +5062,8 @@
       ${pneu(RV, "url(#g6-or)", "#8A5A12")}${AV}</g>`);
     s.push(`${G(MX, MY, S)}<path d="${BA}" fill="url(#g6-lumB)" style="mix-blend-mode:screen"/>
       <path d="M58 -90Q120 -116 196 -106Q256 -96 290 -70Q240 -56 160 -60Q110 -68 58 -90Z" fill="url(#g6-or)" ${INK}/><path d="M80 -96Q140 -112 200 -102Q246 -94 272 -76" stroke="#FFF8D8" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M150 -98Q170 -80 168 -62" stroke="#7A4E12" stroke-width="2" fill="none"/><ellipse cx="190" cy="-90" rx="60" ry="22" fill="url(#g6-lueurOr)" style="mix-blend-mode:screen"/></g>`);
+    s.push(`<ellipse cx="${MX - 50}" cy="${MY - 6}" rx="250" ry="16" fill="url(#g6-lueurOr)" opacity=".9" style="mix-blend-mode:screen"/><ellipse cx="${MX - 40}" cy="${MY - 70}" rx="300" ry="95" fill="url(#g6-lueurOr)" opacity=".35" style="mix-blend-mode:screen"/>`);
+    a.push(`<ellipse cx="${MX - 40}" cy="${MY - 2}" rx="230" ry="12" fill="url(#g6-lueurOr)" opacity="${O0(.7)}" style="mix-blend-mode:screen">${an(`<animate attributeName="opacity" values=".35;.9;.35" dur="2.8s" repeatCount="indefinite"/>`)}</ellipse>`);
     rad("lumB", [[0, "#FFF0D0", .7], [.5, "#FFD090", .2], [1, "#FFD090", 0]], 'cx="45%" cy="0%" r="75%"');
     // LE grand nœud rouge bordé d'or, posé sur l'arceau ; ses deux pans flottent
     const NX = MX - 49 * S, NY = MY - 134 * S;
@@ -5147,7 +5158,7 @@
     s.push(`<rect width="${W}" height="${H}" fill="url(#g6-nuit)"/>`);
     // la poussière dorée qui danse dans les deux faisceaux
     for (let q = 0; q < 8; q++) { const x = MX - 200 + r() * 400, y = 200 + r() * 260, d = (3 + r() * 3).toFixed(1); a.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(1 + r() * 1)}" fill="#FFF3C8" opacity="${O0(.6)}">${an(`<animate attributeName="opacity" values="0;.8;0" dur="${d}s" begin="${(r() * 3).toFixed(1)}s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 0;${f((r() - .5) * 16)} -14" dur="${d}s" repeatCount="indefinite"/>`)}</circle>`); }
-    const RES = K.fin(`<rect width="${W}" height="${H}" fill="#3A1C1A"/>`, "#2A0A10", .03); RES.portraits = PORTR; RES.lieux = { bache: [MX, MY - 80], sapin: [SX, 200] }; return RES;
+    const RES = K.fin(`<rect width="${W}" height="${H}" fill="#3A1C1A"/>`, "#2A0A10", .03); RES.portraits = PORTR; RES.lieux = { bache: [MX, MY - 80], sapin: [SX, 230] }; return RES;
   }
 
   const PEINTS_NUIT = { pandora: peindrePandora, ratatouille: peindreRatatouille, arene: peindreArene2, etoiles: peindreEtoiles4, anneau: peindreAnneau4, chocolat: peindreChocolat4, terrier: peindreGouter, chateau: peindreChateau5, plateau: peindrePlateau, envers: peindreEnvers3, multivers: peindreMultivers, dunes: peindreDunes4, titans: peindreTitans4, odyssee: peindreOdyssee2 };   // v16.34 : 10 cartes refaites au niveau de l'Arène
