@@ -1,0 +1,66 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Versus · Saison 1</title>
+<meta name="theme-color" content="#000"><style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#000;color:#fff;overflow:hidden;font-family:"Saira Condensed","Arial Narrow",system-ui,sans-serif}
+#scene{position:fixed;inset:0;display:grid;place-items:center}
+.bande{position:fixed;left:0;right:0;height:11vh;background:#000;z-index:5}.bande.h{top:0}.bande.b{bottom:0}
+.fond{position:absolute;inset:0;background:#000 center/cover no-repeat;opacity:0;transition:opacity .25s}.fond.on{opacity:1;animation:kb 3s linear both}
+@keyframes kb{from{transform:scale(1.05)}to{transform:scale(1.22) translate(-3%,-2%)}}
+.voile{position:absolute;inset:0;background:radial-gradient(110% 60% at 50% 50%,rgba(0,0,0,.55),rgba(0,0,0,.92))}
+.txt{position:relative;z-index:3;text-align:center;padding:0 22px;width:100%;max-width:560px;display:grid;justify-items:center}
+.l{opacity:0;font-size:clamp(26px,8vw,44px);line-height:1.05;font-weight:800;text-transform:uppercase;letter-spacing:.02em;text-shadow:0 0 18px rgba(0,0,0,.9)}
+.l.on{animation:inl .5s cubic-bezier(.2,.8,.2,1) both}.l.s{font:italic 400 clamp(22px,6.4vw,32px)/1.25 Georgia,serif;text-transform:none}
+.mois{display:block;font:600 13px/1 "Saira",sans-serif;letter-spacing:.4em;color:#F7CF55;margin-bottom:8px}
+@keyframes inl{from{opacity:0;transform:scale(1.25);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+.pilotes{display:flex;gap:12px;justify-content:center;margin-top:14px}.pilotes i{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font:800 15px/1 "Saira",sans-serif;font-style:normal;box-shadow:0 0 0 3px #000,0 0 18px currentColor;opacity:0}
+.pilotes i.on{animation:inl .4s both}
+.titre{font-size:clamp(48px,15vw,104px);letter-spacing:.02em;background:linear-gradient(180deg,#fff,#B8A9FF);-webkit-background-clip:text;background-clip:text;color:transparent}
+.date{font:600 16px/1.4 "Saira",sans-serif;letter-spacing:.2em;color:#F7CF55;text-transform:uppercase}
+.go{margin-top:18px;display:inline-block;padding:12px 22px;border-radius:999px;background:#9B87FF;color:#0B0B12;font:800 18px/1 "Saira",sans-serif;text-decoration:none;opacity:0}
+.go.on{animation:inl .5s both}
+#lancer{position:fixed;inset:0;z-index:9;display:grid;place-items:center;background:#000;border:0;color:#fff;font:800 22px/1.3 "Saira",sans-serif;letter-spacing:.2em}
+#lancer small{display:block;font:400 13px/1.4 "Saira",sans-serif;letter-spacing:.1em;color:#A9B1BD;margin-top:8px}
+.flash{position:fixed;inset:0;background:#fff;opacity:0;z-index:4;pointer-events:none}.flash.on{animation:fl .35s ease-out}
+@keyframes fl{from{opacity:.85}to{opacity:0}}
+</style></head><body>
+<div id="scene"><div class="fond" id="f1"></div><div class="fond" id="f2"></div><div class="voile"></div><div class="txt" id="txt"></div></div>
+<div class="flash" id="flash"></div><div class="bande h"></div><div class="bande b"></div>
+<button id="lancer" type="button">▶ BANDE-ANNONCE<small>Saison 1 · monte le son</small></button>
+<script>window.matchMedia = window.matchMedia || (() => ({ matches: false }));</script>
+<script src="piste.js"></script>
+<script>
+const COUL = ["#4C9AFF", "#2BB6A3", "#FF6FA8", "#F2994A"], NOMS = ["Théo", "Kévin", "Clément", "Devlin"];
+const carte = id => { try { return window.Piste && Piste.carte(id); } catch (e) { return null; } };
+const PLANS = [   // [durée ms, carte, mois, texte, style]
+  [3000, null, "", "Ils pensaient juste épargner.", "s"],
+  [2600, null, "", "Ils se sont trompés.", "s"],
+  [3000, "pilotes", "", "4 pilotes.", ""],
+  [1300, "bahrein", "JANVIER", "12 univers.", ""],
+  [1500, "djeddah", "FÉVRIER", "Un dragon sous la banque.", "s"],
+  [1500, "melbourne", "MARS", "Le Chapelier sert le thé.", "s"],
+  [1500, "montreal", "JUIN", "Le côté obscur vous attend.", "s"],
+  [1500, "silverstone", "JUILLET", "Quelque chose bouge sous le sable.", "s"],
+  [1500, "singapour", "OCTOBRE", "Cinq tickets d'or. Pas un de plus.", "s"],
+  [1500, "interlagos", "NOVEMBRE", "Ils sont derrière le mur.", "s"],
+  [2200, "lasvegas", "DÉCEMBRE", "Une seule finale.", ""],
+  [2400, null, "", "Quelqu'un finira par claquer des doigts.", "s"],
+  [2400, null, "", "Une seule couronne. « Qu'on lui coupe la tête ! »", "s"],
+  [6000, "fin", "", "", ""]];
+let audio = null;
+function boum(f, d, v) { if (!audio) return; const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime; o.type = "sine"; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(30, t + d); g.gain.setValueAtTime(v || .7, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g).connect(audio.destination); o.start(t); o.stop(t + d); }
+function souffle(d) { if (!audio) return; const n = audio.createBufferSource(), b = audio.createBuffer(1, audio.sampleRate * d, audio.sampleRate), c = b.getChannelData(0); for (let i = 0; i < c.length; i++) c[i] = (Math.random() * 2 - 1) * (i / c.length); n.buffer = b; const g = audio.createGain(); g.gain.value = .12; n.connect(g).connect(audio.destination); n.start(); }
+let alt = 0;
+function plan(i) {
+  if (i >= PLANS.length) return; const [d, id, mois, t, st] = PLANS[i], txt = document.getElementById("txt");
+  const f = document.getElementById(alt ? "f1" : "f2"), autre = document.getElementById(alt ? "f2" : "f1"); alt = 1 - alt;
+  const img = id && id !== "pilotes" && id !== "fin" ? carte(id) : null;
+  if (img) { f.style.backgroundImage = 'url("' + img + '")'; f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); autre.classList.remove("on"); } else { f.classList.remove("on"); autre.classList.remove("on"); }
+  if (id === "pilotes") txt.innerHTML = '<div class="l on">' + t + '</div><div class="pilotes">' + NOMS.map((n, k) => '<i style="color:' + COUL[k] + ';background:' + COUL[k] + '22;animation-delay:' + (.3 + k * .35) + 's" class="on">' + n + "</i>").join("") + "</div>";
+  else if (id === "fin") { txt.innerHTML = '<div class="l on titre">VERSUS</div><div class="l on date" style="animation-delay:.6s">Saison 1 · 2027</div><div class="l on s" style="animation-delay:1.2s">Les moteurs chauffent le 1<sup>er</sup> décembre.</div><a class="go on" style="animation-delay:2s" href="./">Entrer dans la course 🏁</a>'; boum(70, 2.2, .9); }
+  else txt.innerHTML = (mois ? '<span class="mois">' + mois + "</span>" : "") + '<div class="l on ' + st + '">' + t + "</div>";
+  if (img || id === "pilotes") { const fl = document.getElementById("flash"); fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on"); boum(i < 4 ? 90 : 140, .6, .6); }
+  if (i === 10) souffle(2.2);
+  setTimeout(() => plan(i + 1), d);
+}
+document.getElementById("lancer").addEventListener("click", e => { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) { } e.currentTarget.remove(); setTimeout(() => plan(0), 300); });
+if (location.hash === "#auto") { document.getElementById("lancer").remove(); setTimeout(() => plan(0), 300); }
+</script></body></html>
