@@ -36,7 +36,7 @@ const LONG = [
   [3000, null, "", "Ils pensaient juste épargner.", "s", "h"],
   [2600, null, "", "Ils se sont trompés.", "s", "t"],
   [3000, "pilotes", "", "4 pilotes.", "", "b"],
-  [2400, "cinq", "", "Et bientôt… un 5ᵉ sur la piste.", "s", "t"],
+  [3400, "cinq", "", "Et bientôt… un 5ᵉ sur la piste.", "s", "t"],
   [1300, "bahrein", "JANVIER", "12 univers.", "", "to"],
   [1500, "djeddah", "FÉVRIER", "Un dragon sous la banque.", "s", "t"],
   [1500, "melbourne", "MARS", "Le Chapelier sert le thé.", "s", "t"],
@@ -51,7 +51,7 @@ const LONG = [
 const COURT = [
   [2200, null, "", "Ils pensaient juste épargner.", "s", "h"],
   [2000, "pilotes", "", "4 pilotes.", "", "b"],
-  [1600, "cinq", "", "Et bientôt… un 5ᵉ.", "s", "t"],
+  [2600, "cinq", "", "Et bientôt… un 5ᵉ.", "s", "t"],
   [700, "bahrein", "", "", "", "to"], [700, "djeddah", "", "", "", "t"], [700, "melbourne", "", "", "", "t"],
   [700, "montreal", "", "", "", "t"], [700, "silverstone", "", "", "", "t"], [700, "interlagos", "", "", "", "t"],
   [1700, "lasvegas", "", "12 univers. Un seul champion.", "", "b"],
@@ -96,8 +96,8 @@ function plan(i) {
   if (img) { f.style.backgroundImage = 'url("' + img + '")'; f.classList.remove("on"); void f.offsetWidth; f.classList.add("on"); autre.classList.remove("on"); } else { f.classList.remove("on"); autre.classList.remove("on"); }
   if (id === "pilotes") txt.innerHTML = '<div class="l on">' + t + '</div><div class="pilotes">' + NOMS.map((n, k) => '<i style="color:' + COUL[k] + ';background:' + COUL[k] + '22;animation-delay:' + (.3 + k * .35) + 's" class="on">' + n + "</i>").join("") + "</div>";
   else if (id === "cinq") txt.innerHTML = '<div class="l on ' + st + '">' + t + '</div><div class="pilotes">' + NOMS.map((n, k) => '<i style="color:' + COUL[k] + ';background:' + COUL[k] + '22;opacity:.35">' + n + "</i>").join("") + '<i class="on cinq" style="color:#B4E33D;background:#B4E33D22;animation-delay:.5s">?</i></div>';
-  else if (id === "fin") txt.innerHTML = '<div class="l on titre">VERSUS</div><div class="l on date" style="animation-delay:.6s">Saison 1 · 2027</div><div class="l on s" style="animation-delay:1.2s">Les moteurs chauffent le 1<sup>er</sup> décembre.</div><a class="go on" style="animation-delay:2s" href="./">Entrer dans la course 🏁</a>';
-  else if (id === "demain") txt.innerHTML = '<div class="l on titre" style="font-size:clamp(56px,19vw,120px)">Demain.</div><div class="l on date" style="animation-delay:1.4s">VERSUS · samedi 9 h 🏁</div>';
+  else if (id === "fin") txt.innerHTML = '<div class="l on titre">VERSUS</div><div class="l on date" style="animation-delay:.6s">🏆 Le Podium · Saison 1 · 2027</div><div class="l on s" style="animation-delay:1.2s">Les moteurs chauffent le 1<sup>er</sup> décembre.</div><a class="go on" style="animation-delay:2s" href="./#trophees">Ouvrir l’onglet Podium 🏁</a>';
+  else if (id === "demain") txt.innerHTML = '<div class="l on titre" style="font-size:clamp(56px,19vw,120px)">Demain.</div><div class="l on date" style="animation-delay:1.4s">Onglet 🏆 Podium<br>samedi 9 h</div>';
   else txt.innerHTML = (mois ? '<span class="mois">' + mois + "</span>" : "") + (t ? '<div class="l on ' + st + '">' + t + "</div>" : "");
   if (img || id === "pilotes" || id === "cinq" || id === "fin" || id === "demain") { const fl = document.getElementById("flash"); fl.classList.remove("on"); void fl.offsetWidth; fl.classList.add("on"); }
   setTimeout(() => plan(i + 1), d);
