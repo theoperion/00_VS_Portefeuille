@@ -542,7 +542,7 @@ async function envoyerReleve(forcer) {
   try { rep = await envoyerApi(apiUrl(), { cle: stock.get(CLES.cle), action: "releve", personne: R.nom, mois: R.k, valeurs, forcer: !!forcer }); }
   catch (e) { rep = { ok: false, message: e.message }; }
   R.envoi = false;
-  if (rep.ok) { toast(rep.message || "Relevé enregistré."); await charger(true); JNOM = R.nom; ongletReleves("journal"); return; }
+  if (rep.ok) { if (window.SONS) SONS.succes(); toast(rep.message || "Relevé enregistré."); await charger(true); JNOM = R.nom; ongletReleves("journal"); return; }
   if (rep.erreur === "cle" || rep.erreur === "bloque") { stock.del(CLES.cle); $("#saisie").hidden = true; ouvrirCle(rep.message); return; }
   if (rep.erreur === "avertissement") R.forcer = rep.message; else R.erreur = rep.message || "Erreur inattendue.";
   if (rep.erreur === "fige") { charger(true); }

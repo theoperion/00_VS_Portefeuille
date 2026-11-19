@@ -2533,7 +2533,7 @@ async function envoyerOrdre(forcer) {
   if (M && M.ref) M.ref.journal = enAttente.reverse().concat(M.ref.journal || []);
   const rep = await posterFichier({ action: "ordre", ordres: ordres, forcer: !!forcer });
   if (M && M.ref) M.ref.journal = (M.ref.journal || []).filter(o => !o.envoi);
-  if (rep.ok) { toast(rep.message || "Ordre enregistré."); charger(true); return; }
+  if (rep.ok) { if (window.SONS) SONS.succes(); toast(rep.message || "Ordre enregistré."); charger(true); return; }
   if (rep.erreur === "cle") { stock.del(K.cle); toast(rep.message || "Clé refusée par ton fichier."); return; }
   toast(rep.erreur === "avertissement" ? "Ordre à confirmer." : "Ordre non enregistré.");
   F = sauvegarde;

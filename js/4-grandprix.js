@@ -221,7 +221,7 @@ function htmlGrandPrix(y) {
     '<div class="gp-pops"></div><div class="gp-com" aria-live="polite"></div>' + fxCircuit(G.fx) +
     '<div class="gp-hud"><span class="gp-tour">' + (et.k && !et.avenir ? "Manche <b>" + i + "</b>" : "Sur la grille") + "</span><span>" + met.ico + " " + esc(met.nom) + "</span></div>" +
     '<div class="gp-btns">' + (deux ? "" : '<button class="gp-vue" type="button" id="gp-cam-b" aria-label="Changer de caméra">' + CAMS[cam] + "</button>") +
-    '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en 3D" : "Passer en carte 2D") + '">' + (deux ? icoOu("vue2d", "🗺️") + " 2D" : icoOu("vue3d", "🧊") + " 3D") + '</button><button class="gp-vue" type="button" id="gp-ba" aria-label="Bande-annonce">' + icoOu("bandeannonce", "🎬") + '</button><button class="gp-vue" type="button" id="gp-fin" aria-label="Aller directement à la fin de la course">' + icoOu("arrivee", "⏭") + '</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">' + icoOu("pleinecran", "⛶") + '</button></div>' +
+    '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en 3D" : "Passer en carte 2D") + '">' + (deux ? icoOu("vue2d", "🗺️") + " 2D" : icoOu("vue3d", "🧊") + " 3D") + '</button><button class="gp-vue gp-son" type="button" data-son aria-label="Son">🔇</button><button class="gp-vue" type="button" id="gp-ba" aria-label="Bande-annonce">' + icoOu("bandeannonce", "🎬") + '</button><button class="gp-vue" type="button" id="gp-fin" aria-label="Aller directement à la fin de la course">' + icoOu("arrivee", "⏭") + '</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">' + icoOu("pleinecran", "⛶") + '</button></div>' +
     (spe ? '<div class="gp-spe">' + spe.ico + " " + esc(spe.nom) + "</div>" : pgm ? '<div class="gp-spe piege" data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " " + esc(pgm.nom) + "</div>" : "") + "</div>";
   const chips = '<div class="gp-mois">' + etapes.map((x, j) => '<button type="button" data-gpe="' + j + '" aria-pressed="' + (j === i) + '">' + (x.k ? GPS[circuitDe(x.k)].drap + " " + esc(moisCourt(x.k)) + (x.avenir ? " ⏳" : "") : "Départ") + "</button>").join("") + "</div>";
   const lignes = ordre.map((n, r) => {
@@ -661,6 +661,7 @@ function bandeAnnonce(y, i, ensuite) {
   document.body.appendChild(o);
   // V16.16 : seul « Passer » (ou Échap / retour) ferme ; si l'appli passe en arrière-plan, la bande-annonce se met en pause
   const pause3d = b => { try { if (GP_INST && GP_INST.api.pause) GP_INST.api.pause(b); } catch (e) { } }; pause3d(true);   // V16.17 : la 3D ne tourne pas sous la bande-annonce
+  if (window.SONS && !reduit) SONS.feuxBA(10400, 320);   // V16.43 : les 5 feux sonnent avec l'image
   let fini = false, restant = reduit ? 2500 : 12800, debut = performance.now(), t = setTimeout(() => fermer(true), restant);
   const visib = () => { if (fini) return; if (document.visibilityState === "hidden") { clearTimeout(t); restant -= performance.now() - debut; o.classList.add("pause"); } else if (o.classList.contains("pause")) { debut = performance.now(); o.classList.remove("pause"); t = setTimeout(() => fermer(true), Math.max(300, restant)); } };
   const clavier = e => { if (e.key === "Escape") fermer(true); };
@@ -695,8 +696,9 @@ function brancherGP(v, y) {
   const cleVu = "versus.gpVu." + y, vu = +(stock.get(cleVu) || 0);
   // V16.16 : la manche n'est marquée « vue » qu'à l'arrivée (quitter pendant la bande-annonce ou la course ne la fait plus perdre)
   // V16.17 : un seul départ — après la bande-annonce (qui finit sur les 5 feux), la course part sans refaire les feux
-  const finCourse = () => { if (et.k && !et.avenir && et.k > +(stock.get(cleVu) || 0)) stock.set(cleVu, String(et.k)); bullesGP(y, i); commenter(y, i, -1); };
-  const jouer = feux => { const f = feux !== false && i >= 1 && api.type === "3d", d = SC ? (api.type === "3d" ? 16000 : 11000) : api.type === "3d" ? 6400 : 3000; commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0);
+  const finCourse = () => { if (window.SONS && et.m) { const v1 = et.m.l.slice().sort((a, b) => a.rg - b.rg)[0]; if (v1) SONS.arrivee(saisonVisible() && !estChauffe(y) ? equipDe(v1.nom).klaxon : "fanfare", v1.nom === ETAT.moi); }   // V16.43 : la foule et le klaxon du vainqueur
+    if (et.k && !et.avenir && et.k > +(stock.get(cleVu) || 0)) stock.set(cleVu, String(et.k)); bullesGP(y, i); commenter(y, i, -1); };
+  const jouer = feux => { const f = feux !== false && i >= 1 && api.type === "3d", d = SC ? (api.type === "3d" ? 16000 : 11000) : api.type === "3d" ? 6400 : 3000; commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0); if (window.SONS) SONS.course(d, f ? 3200 : 0);   // V16.43 : feux, moteurs
     if (SC) api.jouerScenario(SC.scen, d, finCourse, f); else api.jouer(mc.depart, mc.arrivee, d, finCourse, f); };
   const apresBA = () => { if (GP_INST && GP_INST.api === api && document.body.contains(GP_INST.boite)) jouer(false); };   // v16.27 : piste reconstruite entre-temps : on ne lance rien
   if (GP_REJOUER && i > 0 && !et.avenir) { GP_REJOUER = false; setTimeout(jouer, 150); }

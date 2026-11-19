@@ -4,7 +4,7 @@
    Les appels à l'API (script.google.com) ne passent jamais par ici : l'appli garde elle-même ses dernières données. */
 importScripts("version.js");   // LE numéro de version (un seul endroit) : un changement là-bas met à jour le hors connexion
 const VERSION = "versus-" + ((self.VERSUS_VERSION || {}).app || "0");
-const JS = ["icones", "1-base", "2-jeu", "3-podium", "4-grandprix", "5-plateau", "6-voiture3d", "7-bilan", "8-eredor-demarrage"].map(n => "js/" + n + ".js");   // V14.2 : index.html découpé
+const JS = ["sons", "icones", "1-base", "2-jeu", "3-podium", "4-grandprix", "5-plateau", "6-voiture3d", "7-bilan", "8-eredor-demarrage"].map(n => "js/" + n + ".js");   // V14.2 : index.html découpé
 const COQUILLE = ["./", "index.html", "css/versus.css", "version.js", "moteur.js", "moi.js", "piste.js", ...JS, "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "icon.svg"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSION).then(c => Promise.all(COQUILLE.map(u => c.add(u).catch(() => null)))).then(() => self.skipWaiting()));

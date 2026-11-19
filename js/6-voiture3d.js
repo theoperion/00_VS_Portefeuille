@@ -238,6 +238,7 @@ function feterChampion(v) {
 }
 /** Confettis et klaxons de l'écurie : confettis, damier, feu (d'artifice), parade, billets */
 function confettis(style) {
+  if (window.SONS) { SONS.klaxon(style); SONS.vibrer([40, 50, 90]); }   // V16.43 : le klaxon sonne pour de vrai
   if (!ANIM) return;
   const c = document.createElement("canvas"), x = c.getContext("2d"), dpr = window.devicePixelRatio || 1, W = innerWidth, H = innerHeight;
   c.width = W * dpr; c.height = H * dpr; c.setAttribute("aria-hidden", "true");

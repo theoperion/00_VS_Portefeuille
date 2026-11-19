@@ -99,7 +99,7 @@ function ereRevelation(pm) {
     raf = requestAnimationFrame(image);
   };
   raf = requestAnimationFrame(image);
-  if (navigator.vibrate) try { navigator.vibrate([40, 60, 40, 60, 120]); } catch (er) { /* rien */ }
+  if (window.SONS) { SONS.vibrer([40, 60, 40, 60, 120]); SONS.klaxon("lingots"); }   // V16.43 : réglage Vibrations respecté
   const fermer = () => { cancelAnimationFrame(raf); stock.set(cle, pm.nom + "|" + pm.date); o.style.transition = "opacity .6s"; o.style.opacity = "0"; setTimeout(() => o.remove(), 650); };
   o.querySelector(".ere-b").addEventListener("click", fermer);
 }
