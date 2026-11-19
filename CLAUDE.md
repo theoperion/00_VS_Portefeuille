@@ -49,7 +49,7 @@
 ## Serveur Apps Script (dépôt app_scripts)
 - Prérequis une fois par machine : `npx -y @google/clasp@3.4.1 login` (compte Google de Théo) → crée `~/.clasprc.json`.
 - Versus : `sh outils/mettre-en-ligne-versus.sh "V31 : ce qui change"` (APPLI=chemin de ce dépôt si besoin).
-  Versions actuelles : VS_VERSION 44, version Google 59.
+  Versions actuelles : VS_VERSION 45, version Google 60.
 - Scripts perso : dans `portefeuille-epargne/<nom>` : `clasp push --force` puis `python3 ../../outils/deployer.py "desc"`
   (garde les mêmes adresses). Versions actuelles : Théo 30, Clément 9, Devlin 9.
 - Sheets en direct : `outils/gs.py` (`SS(id).get/put/batch`). Classeurs : Théo `1pbpJRMwZR64LqP_wwlhiw-6m7-lUg-Q3pVAF4Dv9j8U`,
@@ -139,6 +139,7 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
 - **Mon portrait ouvert aux joueurs le samedi 21/11 à 11 h** (`PORTRAIT_OUVRE`, `portraitDispo()` dans 3-podium.js ; l'admin le voit avant).
 - **Icônes maison (v16.29)** : 39 icônes dans `js/icones.js` (`ico`, `icoOu(cle, emoji)`), branchées sur les onglets du Podium, Règles, boutons de la Course et cartes, mais **coupées** (`ICONES_ACTIVES = false`) : Théo préfère garder les émojis pour l'instant. Course : **2 tours** (Théo : le 1er de 3 faisait doublon).
 - **Sons et vibrations (v16.43)** : `js/sons.js` (`SONS` : `course`, `arrivee`, `feuxBA`, `ev(clé)`, `klaxon`, `succes`, `vibrer`), Web Audio synthétisé, son coupé par défaut (`versus.son`), vibrations oui par défaut (`versus.vibre`) ; boutons `[data-son]`, `[data-son-choix]`, `[data-vibre-choix]`.
+- **Chasse au trésor (serveur V45, appli « v16.61 » sur la branche)** : un objet caché par circuit dans la Visite 3D (hélico), visible seulement de très près ; emplacements, types et énigmes UNIQUEMENT dans `app_scripts/versus/Tresors.js` (privé : ne jamais les recopier ici ni les dire à Théo, qui joue). Le serveur ne les donne qu'à partir du 1er du mois du circuit (saison 2027, admin compris) ; actions `tresors` / `tresorTrouve`, onglet masqué « Trésors » (Nom, Circuit, Date). Appli : `chargerTresors`/`poserTresorDOM`/`majTresor` (4-grandprix.js), `api.projeter/zoom/viser` (piste.js). 4 circuits pour l'instant (Château, goûter, tranchée, Multivers) : ajouter une ligne à `VS_TRESORS` quand un nouveau décor 3D sur mesure est prêt (cachette vérifiée par captures).
 - Bande-annonce de lancement : `teaser.html` (bouton dans le mail du 20/11, serveur V35) ; vidéo MP4 faite avec Playwright + bande-son synthétisée (numpy + ffmpeg).
 - Maquettes de travail : scratchpad `galerie/` (perdu avec la session ; les peintres sont dans `piste.js`, rendu via `tpeints.js`, `PEINT=clé`, `ANIM=1 ATT=2600`).
 

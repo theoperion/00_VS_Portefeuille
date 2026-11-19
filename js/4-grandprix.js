@@ -525,6 +525,67 @@ function etiquettesGP(api) {
   { const h = pi.querySelector(".gp-tour"); if (h) { if (GP_SCEN && api.enCours()) { const tr = Math.min(TOURS_GP, Math.floor(Math.max(0, ...Object.values(cur))) + 1); if (h.dataset.tr !== String(tr)) { if (!h.dataset.orig) h.dataset.orig = h.innerHTML; h.innerHTML = "Tour <b>" + tr + "</b>/" + TOURS_GP; h.dataset.tr = tr; } } else if (h.dataset.orig) { h.innerHTML = h.dataset.orig; delete h.dataset.orig; delete h.dataset.tr; } } }   // v16.28
   if (api.enCours() && C.tour) { const v = Math.floor(Math.max(0, ...Object.values(cur)) / TOUR_GP) + 1; if (v !== C.tourv) { C.tour.textContent = v; C.tourv = v; } }
   if (GP_PLEIN) majTourPlein(cur);
+  majTresor(api, pi);
+}
+/* ---------- 🗝️ V16.61 · Chasse au trésor : un objet caché par circuit dans la Visite 3D (vue hélico).
+   Les emplacements ne sont pas dans l'appli : le serveur ne les donne qu'à partir du 1er du mois du circuit (saison 2027),
+   à tout le monde, admin compris. L'objet n'apparaît que de très près (zoom faible), superposé au décor ; un toucher le ramasse. ---------- */
+const TRESOR_DEBUT = 20270101, TRESOR_D = 125;   // distance (mètres du décor) en dessous de laquelle l'objet se montre
+let TRESORS = null, TRESORS_T = 0, TRESOR_EL = null;
+function tresorsOuverts() { return aujNum() >= TRESOR_DEBUT && SOURCE === "api" && !simulation(); }
+async function chargerTresors() {
+  if (TRESORS || !tresorsOuverts() || Date.now() - TRESORS_T < 60000) return; TRESORS_T = Date.now();
+  const rep = await posterAdmin({ action: "tresors" });
+  if (!rep || !rep.ok) return;
+  TRESORS = { l: rep.tresors || [], trouves: rep.trouves || [], total: rep.total || 0 }; poserTresorDOM(document);
+}
+function tresorDuCircuit(ci) { if (!TRESORS) return null; const t = TRESORS.l.find(x => x.circuit === ci); return t && TRESORS.trouves.indexOf(ci) < 0 ? t : null; }
+const TRESOR_SVG = {
+  vif: '<svg viewBox="-20 -12 40 24"><path d="M-4 -1C-10 -9 -18 -9 -19 -6C-15 -5 -12 -2 -5 2Z" fill="#FFFDF2" stroke="#C9B98A" stroke-width=".8"/><path d="M4 -1C10 -9 18 -9 19 -6C15 -5 12 -2 5 2Z" fill="#FFFDF2" stroke="#C9B98A" stroke-width=".8"/><circle r="6" fill="#F2C230" stroke="#9A6A10" stroke-width="1"/><path d="M-4 -2Q0 1 4 -2" stroke="#9A6A10" fill="none" stroke-width=".8"/><circle cx="-2" cy="-2.5" r="1.6" fill="#FFF3B8"/></svg>',
+  gemme: '<svg viewBox="-12 -12 24 24"><path d="M-7 -4L-3 -9H3L7 -4L0 10Z" fill="#FF8A1F" stroke="#8A3A05" stroke-width="1"/><path d="M-7 -4H7M-3 -9L-2 -4L0 10M3 -9L2 -4L0 10" stroke="#FFD08A" stroke-width=".7" fill="none"/><path d="M-3 -8L-5 -4.5" stroke="#FFF2D6" stroke-width="1.2"/></svg>',
+  fiole: '<svg viewBox="-12 -14 24 28"><rect x="-2.4" y="-13" width="4.8" height="3.4" rx="1" fill="#C8A070"/><path d="M-2 -10V-5C-6 -3 -7 1 -7 5C-7 10 -4 12 0 12C4 12 7 10 7 5C7 1 6 -3 2 -5V-10Z" fill="#7FC6FF" stroke="#1F4E86" stroke-width="1"/><path d="M-6.4 4C-4 6 4 6 6.4 4C6.4 9 4 11 0 11C-4 11 -6.4 9 -6.4 4Z" fill="#3A8AE0"/><rect x="-4.6" y="-1.6" width="9.2" height="4.4" rx=".6" fill="#FFFDF2" stroke="#B8203A" stroke-width=".6"/><path d="M-3 .6H3" stroke="#B8203A" stroke-width=".9"/></svg>',
+  droide: '<svg viewBox="-12 -14 24 28"><path d="M-6 -2A6 6 0 0 1 6 -2Z" fill="#D4DAE2" stroke="#3A4250" stroke-width=".9"/><rect x="-6" y="-2" width="12" height="11" rx="1.4" fill="#F4F6F8" stroke="#3A4250" stroke-width=".9"/><rect x="-3.6" y="1" width="7.2" height="2.4" fill="#2A5AD8"/><rect x="-3.6" y="5" width="3" height="2" fill="#2A5AD8"/><circle cx="1.4" cy="-4.4" r="1.2" fill="#1A1E28"/><circle cx="1.4" cy="-4.4" r=".5" fill="#FF4A4A"/><rect x="-9" y="0" width="2.6" height="11" rx=".8" fill="#E8ECEF" stroke="#3A4250" stroke-width=".8"/><rect x="6.4" y="0" width="2.6" height="11" rx=".8" fill="#E8ECEF" stroke="#3A4250" stroke-width=".8"/></svg>'
+};
+/** pose (ou retire) le compteur, l'énigme du mois et l'objet dans la page Course ; sans rien recalculer d'autre */
+function poserTresorDOM(v) {
+  const pi = (v || document).querySelector ? (v || document).querySelector("#gp-piste") : null; if (!pi) return;
+  pi.querySelectorAll(".gp-tresor, .gp-enigme").forEach(e => e.remove()); TRESOR_EL = null;
+  const met = document.querySelector(".gp-h .gp-met"), cpt = met && met.querySelector(".gp-tresors");
+  if (!TRESORS || !tresorsOuverts()) { if (cpt) cpt.remove(); return; }
+  const n = TRESORS.total || 0, txt = "🗝️ " + n + " trésor" + (n > 1 ? "s" : "") + " trouvé" + (n > 1 ? "s" : "");
+  if (met) { if (cpt) cpt.textContent = txt; else met.insertAdjacentHTML("beforeend", ' <span class="gp-tresors">' + txt + "</span>"); }
+  const t = tresorDuCircuit(pi.dataset.circuit); if (!t) return;
+  pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme" title="Énigme du mois : un objet est caché dans le décor de ce circuit. Approche-toi en Visite 3D.">🗝️ <i>' + esc(t.enigme) + "</i></div>" +
+    '<button class="gp-tresor t-' + esc(t.type) + '" type="button" aria-label="Un objet brille ici : touche-le !" tabindex="-1">' + (TRESOR_SVG[t.type] || TRESOR_SVG.gemme) + "</button>");
+  const b = pi.querySelector(".gp-tresor"), en = pi.querySelector(".gp-enigme");
+  TRESOR_EL = { pi, b, en, t, vu: false };
+  en.addEventListener("click", () => en.classList.toggle("ouverte"));
+  b.addEventListener("click", ev => { ev.stopPropagation(); trouverTresor(t, b); });
+  if (GP_INST) majTresor(GP_INST.api, pi);
+}
+/** à chaque image : l'objet suit le décor, seulement en Visite 3D (hélico, hors course et survol), de très près et à l'écran */
+function majTresor(api, pi) {
+  const T = TRESOR_EL; if (!T || T.pi !== pi) return;
+  const libre = api.type === "3d" && api.projeter && api.mode() === "helico" && !api.enCours() && !(api.survolEnCours && api.survolEnCours()) && !pi.classList.contains("en2d");
+  T.en.classList.toggle("cache", !libre || !!T.pris);
+  const e = libre && !T.pris && api.zoom() <= .32 ? api.projeter(T.t.p) : null, d = e && e.vis ? e.d : 1e9, al = d < TRESOR_D ? Math.min(1, (TRESOR_D - d) / 20) : 0;
+  if (!al) { if (T.vu) { T.b.style.opacity = "0"; T.b.style.pointerEvents = "none"; T.vu = false; } return; }
+  const s = Math.max(18, Math.min(36, 2600 / d));
+  T.b.style.transform = "translate3d(" + e.x.toFixed(1) + "px," + e.y.toFixed(1) + "px,0) translate(-50%,-50%)";
+  T.b.style.width = T.b.style.height = s.toFixed(0) + "px"; T.b.style.opacity = al.toFixed(2); T.b.style.pointerEvents = al > .5 ? "auto" : "none"; T.vu = true;
+}
+async function trouverTresor(t, b) {
+  const T = TRESOR_EL; if (!T || T.pris) return; T.pris = true;
+  const r = b.getBoundingClientRect(), pr = T.pi.getBoundingClientRect(), x = r.left - pr.left + r.width / 2, y = r.top - pr.top + r.height / 2;
+  b.style.pointerEvents = "none"; b.classList.add("pris");
+  if (!reduit) { const fx = document.createElement("div"); fx.className = "gp-tresor-fx"; fx.style.left = x + "px"; fx.style.top = y + "px";
+    fx.innerHTML = Array.from({ length: 14 }, (_, k) => '<i style="--a:' + (k / 14 * 360).toFixed(0) + "deg;--d:" + (26 + (k % 3) * 12) + 'px"></i>').join(""); T.pi.appendChild(fx); setTimeout(() => fx.remove(), 1300); }
+  if (window.SONS) { SONS.succes(); setTimeout(() => SONS.klaxon("billets"), 250); SONS.vibrer([40, 50, 120]); }
+  const rep = await posterAdmin({ action: "tresorTrouve", circuit: t.circuit });
+  if (rep && rep.ok) { TRESORS.trouves = rep.trouves || TRESORS.trouves.concat([t.circuit]); TRESORS.total = rep.total || TRESORS.trouves.length;
+    toast(rep.deja ? "🗝️ Déjà trouvé !" : "🗝️ Trouvé ! " + TRESORS.total + " trésor" + (TRESORS.total > 1 ? "s" : "") + " dans ta besace.");
+    setTimeout(() => poserTresorDOM(document), reduit ? 0 : 900); }
+  else { T.pris = false; b.classList.remove("pris"); toast((rep && rep.message) || "Trouvaille non enregistrée : réessaie."); }
 }
 /** Ce que chacun a marqué ce mois-ci, en bulles au-dessus des voitures, à l'arrivée */
 function bullesGP(y, i) {
@@ -717,6 +778,7 @@ function brancherGP(v, y) {
   const cal = v.querySelector("#gp-calend"); if (cal) cal.addEventListener("toggle", () => { ETAT.calOuvert = cal.open ? "1" : "0"; garder(); });
   GP_ETQ = null;
   if (GP_PLEIN) placerPlein(y);
+  chargerTresors(); poserTresorDOM(v);
   etiquettesGP(api);
 }
 /** V15.5 · Nouvelle manche courue mais pas encore regardée : un bandeau dans le Classement */
