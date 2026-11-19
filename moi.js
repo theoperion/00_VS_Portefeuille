@@ -3383,7 +3383,7 @@ function moisDeFenetre(now) {
   }
   return null;
 }
-function partageActif() { return stock.get("versus.moi.partage") !== "non"; }
+function partageActif() { return false; }   // v16.77 : plus aucun partage des lignes de bourse (décision de Théo : privé pour tous)
 /** V13 : transmet à TON fichier l'adresse du Versus et ton code, pour qu'il envoie lui-même ton relevé de fin de mois.
     Jamais avec la clé admin (Théo reste relevé par le Versus), jamais en simulation, une fois par ouverture. */
 let liaisonFaite = false;

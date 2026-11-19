@@ -56,6 +56,7 @@ function brancherBilans(v0) {
 }
 /* Performance du mois d'une ligne partagée : cours de fin de mois contre celui du mois précédent, sinon la variation sur 1 mois envoyée avec */
 function lignesDe(nom, k) {
+  return null;   // v16.77 : le détail des lignes de bourse reste privé (Théo) : plus jamais affiché dans le Versus
   const L = (D.lignes || {})[nom] || {}, cur = L[k], prev = L[cleMoins(k, 1)];
   if (!cur) return null;
   const tot = cur.lignes.reduce((a, l) => a + (l.valeur || 0), 0) || 1;
@@ -736,7 +737,6 @@ function majMoiReglages(msg) {
   $("#moi-cle").placeholder = k ? "Clé enregistrée (laisse vide pour la garder)" : "Clé d'accès";
   $("#moi-oublier").hidden = !a && !k;
   $("#moi-etat").textContent = msg || (a && k ? "Connecté sur cet appareil." : "Aucun fichier connecté sur cet appareil.");
-  $("#moi-partage").checked = stock.get("versus.moi.partage") !== "non";
 }
 $("#moi-enregistrer").addEventListener("click", () => {
   const a = $("#moi-api").value.trim(), k = $("#moi-cle").value.trim();
@@ -748,7 +748,6 @@ $("#moi-enregistrer").addEventListener("click", () => {
   prechaufferMoi();
   if (vueActive() === "moi") { $("#reglages").hidden = true; rendreMoi(); }
 });
-$("#moi-partage").addEventListener("change", e => { stock.set("versus.moi.partage", e.target.checked ? "oui" : "non"); });
 $("#moi-tester-versus").addEventListener("click", async () => {
   const el = $("#moi-versus-etat");
   if (!window.Moi || !window.Moi.testerVersus) { el.textContent = "Ouvre d'abord l'onglet Moi une fois, puis réessaie."; return; }

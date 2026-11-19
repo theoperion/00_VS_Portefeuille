@@ -17,6 +17,7 @@
 - **Travailler ensemble** : Claude propose → Théo choisit et valide → Claude construit. Après chaque étape, relancer avec la suite et 2 ou 3 idées nouvelles.
 
 ## Règles à ne jamais enfreindre
+0. (v16.77, Théo) Le détail des lignes de bourse de Moi reste PRIVÉ pour tous : plus de partage dans le Versus (ne pas le remettre).
 1. Théo ne doit **jamais voir les données financières de Clément et Devlin** (pas de copie de leurs chiffres dans
    un dépôt, une capture, un message).
 2. **Aucun identifiant / jeton / secret dans GitHub** (`~/.clasprc.json` reste sur la machine).
@@ -42,14 +43,14 @@
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **16.76**.
+  hors connexion `sw.js`). Version actuelle : **16.77**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
 ## Serveur Apps Script (dépôt app_scripts)
 - Prérequis une fois par machine : `npx -y @google/clasp@3.4.1 login` (compte Google de Théo) → crée `~/.clasprc.json`.
 - Versus : `sh outils/mettre-en-ligne-versus.sh "V31 : ce qui change"` (APPLI=chemin de ce dépôt si besoin).
-  Versions actuelles : VS_VERSION 49, version Google 64.
+  Versions actuelles : VS_VERSION 50, version Google 65.
 - Scripts perso : dans `portefeuille-epargne/<nom>` : `clasp push --force` puis `python3 ../../outils/deployer.py "desc"`
   (garde les mêmes adresses). Versions actuelles : Théo 30, Clément 9, Devlin 9.
 - Sheets en direct : `outils/gs.py` (`SS(id).get/put/batch`). Classeurs : Théo `1pbpJRMwZR64LqP_wwlhiw-6m7-lUg-Q3pVAF4Dv9j8U`,
