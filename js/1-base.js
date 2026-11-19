@@ -139,6 +139,7 @@ async function charger(frais) {
     }
     ERREUR_SERVEUR = ""; DEMARRAGE = false; D = json; SOURCE = "api"; EN_CHARGEMENT = false; stock.set(CLES.cache, JSON.stringify(json)); afficherTout();
     setTimeout(() => { try { annoncerExclusifs(); } catch (e) { /* rien */ } }, 1200);
+    setTimeout(() => { try { bullePortrait(); } catch (e) { /* rien */ } }, 2500);   // V16.26
     setTimeout(() => revendiquerExclusifs().then(() => { if (vueActive() === "trophees" || vueActive() === "classement") rendreVue(vueActive()); }).catch(() => {}), 0);
   } catch (e) {
     if (DEMARRAGE && !(e && e.serveur)) { DEMARRAGE = false; setTimeout(() => charger(frais), 1500); return; }   // un seul nouvel essai avant d'afficher « Hors connexion »

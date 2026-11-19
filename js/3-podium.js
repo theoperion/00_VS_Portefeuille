@@ -305,6 +305,7 @@ function equipDe(nom) {
   const n = parseInt(brut.numero, 10); e.numero = n >= 1 && n <= 99 ? n : numeroParDefaut(nom);
   e.pilote = brut.pilote === "casque" ? "casque" : "tete";
   e.tete = teteValide(brut.tete) ? brut.tete : presetTete(nom);
+  e.tetes = Array.isArray(brut.tetes) ? brut.tetes.slice(0, 4).map(x => teteValide(x) ? x : "") : [];   // V16.26 : jusqu'à 4 têtes enregistrées
   e.amelio = amelioDe(nom, anneeAmelioPour()).s;
   e.badges = Array.isArray(brut.badges) ? brut.badges.filter(x => typeof x === "string").slice(0, 3) : null;   // null = l'appli choisit
   return e;
@@ -636,8 +637,9 @@ function finitionCasque(u, fin, c, lead) {
   return h;
 }
 /** Avatar public : le casque (avec sa finition) dans une pastille dont le fond se débloque en course */
+const CASQUE_CACHE = true;   // V16.26 : « Mon casque » masqué en attendant d'être redessiné (demande de Théo) : tout le monde affiche sa tête
 function avatar(nom, e) {
-  const eq = e || equipDe(nom), tete = (eq.pilote || "tete") === "tete";
+  const eq = e || equipDe(nom), tete = CASQUE_CACHE || (eq.pilote || "tete") === "tete";
   const lead = tete && !eq.vignette && saisonVisible() && leaderSaison() === nom;
   return '<span class="av av-' + (eq.fond || "couleur") + (tete ? " av-tete" : "") + (lead ? " av-lead" : "") + ((ereDorActive() || {}).nom === nom ? " av-or" : "") + '" style="--c:' + couleur(nom) + '">' + (tete ? svgTete(nom, eq, eq.vignette) : svgCasque(nom, eq)) + "</span>";
 }
@@ -859,6 +861,21 @@ function ouvrirPortrait() {
   o.addEventListener("click", ev => { if (ev.target === o) fermer(); }); o.querySelector(".rg-x").addEventListener("click", fermer);
   o.querySelector("#pt-garder").addEventListener("click", () => { o.remove(); garderEcurie(); try { rendreVue(vueActive()); } catch (e) { } });
   brancherPilote(o);
+}
+/* V16.26 · la bulle « Fais ton portrait ! » : une seule fois, pour qui n'a jamais réglé sa tête, à partir du lancement */
+function bullePortrait(essai) {
+  try {
+    if (SOURCE !== "api" || podiumCache() || stock.get("versus.bullePortrait") || document.querySelector(".bulle-portrait")) return;
+    const qui = quiEcurie(); if (!qui || !D) return;
+    const brut = ((D.ecurie || {})[qui] || {}).equip || {}; if (brut.tete) { stock.set("versus.bullePortrait", "1"); return; }
+    if (document.querySelector(".tuto, .regles, .ba, .revel, .voile:not([hidden])")) { if ((essai || 0) < 8) setTimeout(() => bullePortrait((essai || 0) + 1), 4000); return; }
+    stock.set("versus.bullePortrait", "1");
+    const b = document.createElement("div"); b.className = "bulle-portrait"; b.setAttribute("role", "dialog"); b.setAttribute("aria-label", "Fais ton portrait");
+    b.innerHTML = '<div class="bp-av">' + avatar(qui) + '</div><div class="bp-t"><b>👤 Fais ton portrait !</b><small>Choisis ta tête : elle s\'affichera partout à côté de ton nom.</small></div><div class="bp-b"><button class="btn acc" type="button" data-bp="go">C\'est parti</button><button class="btn ghost" type="button" data-bp="non">Plus tard</button></div>';
+    document.body.appendChild(b);
+    b.querySelector('[data-bp="go"]').addEventListener("click", () => { b.remove(); ouvrirPortrait(); });
+    b.querySelector('[data-bp="non"]').addEventListener("click", () => { b.remove(); toast("Ton portrait t'attend dans Réglages, ou touche ta tête dans le Classement."); });
+  } catch (e) { }
 }
 let ECU_SLOT = "pilote";
 const ICONES_KLAXON = { confettis: "🎊", damier: "🏁", feu: "🎆", parade: "🎺", billets: "💸", fanfare: "👑", cibles: "🎯", fusees: "🚀", trophees: "🏆" };
@@ -1352,5 +1369,7 @@ function brancherPilote(v) {
   tp.querySelectorAll("[data-portrait]").forEach(b => b.addEventListener("click", () => { ECU.e.tete = b.dataset.portrait; ECU.e.pilote = "tete"; maj(); }));
   tp.querySelectorAll("[data-tp]").forEach(b => b.addEventListener("click", () => { const t = decodeTete(ECU.e.tete); if (b.dataset.tp === "cheveux" && t.barbeC === t.cheveux) t.barbeC = +b.dataset.v; t[b.dataset.tp] = +b.dataset.v; ECU.e.tete = encodeTete(t); if (ECU.e.pilote !== "tete") ECU.e.pilote = "tete"; maj(); }));
   const r = tp.querySelector("#tp-reset"); if (r) r.addEventListener("click", () => { ECU.e.tete = presetTete(ECU.nom); ECU.e.pilote = "tete"; maj(); });
+  tp.querySelectorAll("[data-slot-mettre]").forEach(b => b.addEventListener("click", () => { const t = (ECU.e.tetes || [])[+b.dataset.slotMettre]; if (t) { ECU.e.tete = t; ECU.e.pilote = "tete"; maj(); } }));
+  tp.querySelectorAll("[data-slot-garder]").forEach(b => b.addEventListener("click", () => { const l = (ECU.e.tetes || []).slice(); while (l.length < 4) l.push(""); l[+b.dataset.slotGarder] = ECU.e.tete; ECU.e.tetes = l; maj(); toast("Tête gardée dans l'emplacement " + (+b.dataset.slotGarder + 1) + " (pense à Enregistrer)."); }));
 }
 

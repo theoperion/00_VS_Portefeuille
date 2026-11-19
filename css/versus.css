@@ -1453,3 +1453,15 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .bientot.teaser p { margin: 6px 0 0; font-size: 14px; line-height: 1.45; } .bientot.teaser i { color: var(--ink-2); }
 .portrait-b { width: 100%; display: grid; text-align: left; gap: 2px; margin: 4px 0 10px; } .portrait-b small { font-weight: 400; color: var(--ink-3); }
 .regles.portrait .pt-apercu { display: flex; justify-content: center; padding: 8px 0; } .regles.portrait .sr-id { display: grid; justify-items: center; gap: 4px; } .regles.portrait .sr-id .av { width: 76px; height: 76px; }
+/* V16.26 · têtes enregistrées et bulle « Fais ton portrait » */
+.tp-slots { align-items: center; } .tp-slot { position: relative; display: inline-flex; }
+.tp-mini { border: 0; background: none; padding: 0; } .tp-mini .av { width: 44px; height: 44px; }
+.tp-sv { position: absolute; right: -6px; bottom: -6px; border: 0; border-radius: 50%; width: 22px; height: 22px; font-size: 11px; background: var(--card-2, #222); box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+.tp-slot.vide { width: 44px; height: 44px; border-radius: 50%; border: 1.5px dashed var(--line-2, #555); background: none; color: var(--ink-3); display: grid; place-items: center; line-height: 1; font-size: 16px; } .tp-slot.vide small { font-size: 8px; }
+.bulle-portrait { position: fixed; left: 12px; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); z-index: 90; display: grid; grid-template-columns: auto 1fr; gap: 10px 12px; align-items: center; padding: 14px; border-radius: 16px; background: var(--card, #151A2E); color: var(--ink, #fff); box-shadow: 0 10px 30px rgba(0,0,0,.45); border: 1px solid var(--accent, #9B87FF); animation: gp-com .4s cubic-bezier(.2,.8,.2,1) both; max-width: 520px; margin: 0 auto; }
+.bulle-portrait .bp-av .av { width: 52px; height: 52px; } .bulle-portrait .bp-t { display: grid; gap: 2px; } .bulle-portrait .bp-t small { color: var(--ink-3); }
+.bulle-portrait .bp-b { grid-column: 1 / -1; display: flex; gap: 8px; } .bulle-portrait .bp-b .btn { flex: 1; }
+/* V16.26 : « Mon casque » masqué en attendant d'être redessiné */
+.tp .tp-mode, .tp .tp-apercu .tp-grand:nth-child(2) { display: none; }
+.tp-slot.vide { flex: 0 0 44px; height: 44px; padding: 0; align-self: center; } .tp-slots { align-items: center; flex-wrap: wrap; gap: 8px; }
+.regles.portrait .tp-apercu { display: none; }

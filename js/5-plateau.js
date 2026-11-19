@@ -487,13 +487,16 @@ function htmlPilote(qui, e) {
   return '<div class="tp" id="tp"><div class="seg tp-mode" role="group" aria-label="Pilote"><button type="button" data-pmode="tete" aria-pressed="' + (mode === "tete") + '">🙂 Ma tête</button><button type="button" data-pmode="casque" aria-pressed="' + (mode === "casque") + '">🪖 Mon casque</button></div>' +
     '<div class="tp-apercu"><span class="tp-grand">' + avatar(qui, Object.assign({}, e, { pilote: "tete" })) + '<em>Tête</em></span><span class="tp-grand">' + avatar(qui, Object.assign({}, e, { pilote: "casque" })) + "<em>Casque</em></span></div>" +
     '<p class="info" style="margin:0">' + (mode === "tete" ? "Ta tête s'affiche partout à côté de ton nom. Au volant, tu gardes ton casque." : "Ton casque s'affiche partout à côté de ton nom. Tu peux repasser à ta tête quand tu veux.") + "</p>" +
+    '<div class="tp-l"><span class="tp-k">Mes têtes</span><div class="tp-o tp-slots"><button type="button" class="tp-b tp-def" id="tp-reset">↺ Par défaut</button>' +
+      [0, 1, 2, 3].map(i => { const tt = (e.tetes || [])[i]; return tt ? '<span class="tp-slot"><button type="button" class="tp-mini" data-slot-mettre="' + i + '" aria-label="Mettre la tête ' + (i + 1) + '">' + avatar(qui, Object.assign({}, e, { tete: tt, pilote: "tete", vignette: true })) + '</button><button type="button" class="tp-sv" data-slot-garder="' + i + '" aria-label="Remplacer par la tête actuelle">💾</button></span>'
+        : '<button type="button" class="tp-slot vide" data-slot-garder="' + i + '" aria-label="Enregistrer la tête actuelle">＋<small>garder</small></button>'; }).join("") + "</div></div>" +
     (portraitsDe(qui) && portraitsDe(qui).length > 1 ? '<div class="tp-l"><span class="tp-k">Mes portraits</span><div class="tp-o">' + portraitsDe(qui).map(([lib, v]) => '<button type="button" class="tp-b tp-por" data-portrait="' + v + '" aria-pressed="' + (e.tete === v) + '">' + avatar(qui, Object.assign({}, e, { pilote: "tete", tete: v, vignette: true })) + esc(lib) + "</button>").join("") + "</div></div>" : "") +
     ligne("peau", "Peau", TETE.peau, true) + ligne("forme", "Visage", TETE.formes) + ligne("coupe", "Coupe", TETE.coupes) + ligne("cheveux", "Cheveux", TETE.cheveux, true) + ligne("barbe", "Barbe", TETE.barbes) +
     (t.barbe ? ligne("barbeC", "Couleur de barbe", TETE.cheveux, true) : "") +
     ligne("lunettes", "Lunettes", TETE.lunettes) + ligne("style", "Tenue", TETE.styles) +
     ligne("couleur", "Couleur", TETE.tenues, true, t.style === 5 ? "La combi prend la couleur de ton écurie." : "") +
     (t.style === 2 || t.style === 6 ? ligne("dessous", t.style === 6 ? "Dessous (col zippé)" : "T-shirt", TETE.tenues, true) : "") + ligne("expr", "Expression", TETE.expr) +
-    '<button class="lien" type="button" id="tp-reset">↺ Revenir à mon portrait de départ</button></div>';
+    "</div>";
 }
 
 /* ---------- Règles : toujours accessibles (bouton 📖 du Podium et réglages) · V15 : réécrites, courtes, avec schémas ---------- */
