@@ -3184,7 +3184,7 @@ function analyser() {
   /* v16.83 · un apport bien plus petit que d'habitude (comme le garde-fou du relevé) */
   if (F.type === "Apport" && m > 0) {
     const hab = mediane((r.journal || []).filter(o => o.type === "Apport" && o.enveloppe === F.env && !o.envoi).map(o => o.montant));
-    if (hab > 0 && m < hab * .2) msg.push(["warn", "Ce montant est bien plus petit que tes apports habituels sur " + F.env + " (environ " + Math.round(hab).toLocaleString("fr-FR") + " €) : vérifie la virgule."]);
+    if (hab > 0 && m < hab * .2) msg.push(["warn", "Ce montant est bien plus petit que tes versements habituels sur " + F.env + " (environ " + Math.round(hab).toLocaleString("fr-FR") + " €) : vérifie la virgule."]);
   }
   const doutes = [["montant", "f-montant"]].concat(AVEC_FRAIS.includes(F.type) ? [["frais", "f-frais"]] : [], F.type === "Achat" && F.apport ? [["montantApport", "f-mapport"]] : []).filter(([k]) => millierDouteux(F[k]));
   if (doutes.length) bloque = true;
@@ -4207,8 +4207,10 @@ function tachesAFaire(o) {
   if (pts.length) { const d = pts.map(dIso).filter(Boolean).sort()[0] || "";
     l.push({ k: pts.length > 1 ? "point" : kk(pts[0]), cles: pts.map(kk), titre: pts.length > 1 ? "Point Artema : valeur et indice" : nomCourtRappel(pts[0]), date: d, quand: quand(d), ico: "🎯" }); }
   dus.filter(x => !pts.includes(x)).forEach(x => { const k = kk(x), d = dIso(x); l.push({ k, cles: [k], titre: nomCourtRappel(x), date: d, quand: quand(d) }); });
+  // v16.99 (Théo) : les 5 ans du PEA / les 8 ans d'une assurance-vie, annoncés 3 mois avant (jusqu'à 30 j après), « Compris » les range
+  annivsFiscaux().filter(a => !annivVus()[a.k] && !reporte(a.k)).forEach(a => l.push({ k: a.k, cles: [a.k], titre: a.titre, date: "", quand: a.quand, ico: "🎂", anniv: a }));
   if (feAVerifier()) l.push({ k: "fondsEuros", cles: ["fondsEuros"], titre: "Fonds euros : ton taux estimé tient toujours ?", date: "", quand: "tous les 3 mois", fe: true });
-  l.forEach((t, i) => { t.i = i; t.ico = t.ico || ICO_RAPPEL[t.k] || "◷"; t.verbe = VERBES_RAPPEL[t.k] || "faire : " + t.titre.toLowerCase(); });
+  l.forEach((t, i) => { t.i = i; t.ico = t.ico || ICO_RAPPEL[t.k] || "◷"; t.verbe = t.anniv ? "noter : " + t.titre.toLowerCase() : VERBES_RAPPEL[t.k] || "faire : " + t.titre.toLowerCase(); });
   l.sort((a, b) => (a.date || "9") < (b.date || "9") ? -1 : (a.date || "9") > (b.date || "9") ? 1 : a.i - b.i);
   return o === "artema" ? l.filter(t => t.cles.every(k => /^(artema|releve)/.test(k))) : l;
 }
@@ -4234,7 +4236,23 @@ function htmlAFaire(o) {
     (reste.length ? '<details class="af-plus"><summary>Voir ' + (reste.length > 1 ? "les " + reste.length + " autres" : "l'autre") + "</summary>" + reste.map(ligne).join("") + "</details>" : "") +
     (rep.length ? '<p class="af-rep">Reporté de 2 jours : ' + rep.map(x => esc(nomCourtRappel(x))).join(", ") + ".</p>" : "") + "</section>";
 }
+function annivVus() { try { return JSON.parse(stock.get(cleStock("annivVus")) || "{}"); } catch (e) { return {}; } }
+function annivsFiscaux() {
+  if (!M || M.simple) return [];
+  const auj = isoJour(new Date()), t0 = new Date(auj + "T12:00:00");
+  return ((M.ref || {}).enveloppes || []).filter(e => e.ouverture && e.statut !== "Fermé" && (e.regime === "PEA" || e.regime === "AV")).map(e => {
+    const n = e.regime === "PEA" ? 5 : 8, d = isoPlus(String(e.ouverture).slice(0, 10), n, 0), j = Math.round((new Date(d + "T12:00:00") - t0) / 864e5);
+    if (j > 92 || j < -30) return null;
+    const date = d.slice(8, 10) + "/" + d.slice(5, 7) + "/" + d.slice(0, 4);
+    return { k: "anniv-" + e.nom + "-" + d.slice(0, 4), titre: (j > 0 ? "Les " + n + " ans de ton " : "Ton ") + e.nom + (j > 0 ? " arrivent" : " a " + n + " ans"),
+      quand: (j > 0 ? "le " + date + " (dans " + j + NB + "j)" : "depuis le " + date) + " · " + (e.regime === "PEA" ? "gains sans impôt sur le revenu" : "une part des gains sans impôt chaque année"),
+      info: e.regime === "PEA" ? "À partir de 5 ans, tu peux retirer de ton PEA sans le fermer, et les gains ne paient plus d'impôt sur le revenu (seulement les prélèvements sociaux). Rien à faire : c'est automatique."
+        : "À partir de 8 ans, chaque année, une part des gains que tu retires échappe à l'impôt (4 600 € de gains pour une personne seule). Rien à faire : c'est automatique, à garder en tête avant un retrait." };
+  }).filter(Boolean);
+}
 function faireTache(k) {
+  if (/^anniv-/.test(k)) { const a = annivsFiscaux().find(x => x.k === k), v = annivVus(); v[k] = 1; try { stock.set(cleStock("annivVus"), JSON.stringify(v)); } catch (e) {}
+    if (a) toast("🎂 " + a.info); signalerCloche(); rendre(); return; }
   if (k === "soldes") { if (window.Moi) window.Moi.saisir(); return; }
   if (k === "point") { ouvrirPointArtema("point"); return; }
   faireRappel(k);
