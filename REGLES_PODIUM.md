@@ -31,7 +31,7 @@ Chaque mois, les pilotes sont classés sur la **performance de leur portefeuille
 | 🎲 Pari | désigne un rival : +2 devant lui, −1 derrière, 0 à égalité |
 
 Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Rejouable, mais **pas deux mois de suite**.
-🗺️ **Atout du circuit** : chaque circuit préfère une carte ; jouée **et** gagnante → **+1** (si 2 pilotes ou plus marquent avec : personne). Turbo : Forêt aux lucioles, Mégapole des androïdes, Sommet des dieux · Aspiration : Château aux sortilèges, Village du solstice, Ville des survivants · Pneus pluie : Pays derrière l'armoire, Monde à l'envers, Mur des titans · Pari : Bas-fonds sous la pluie, Arène virtuelle, Mer de dunes.
+🗺️ **Atout du circuit** : chaque circuit préfère une carte ; jouée **et** gagnante → **+1** (si 2 pilotes ou plus marquent avec : personne). Turbo : Forêt aux lucioles, l'Arène, l'Odyssée · Aspiration : Château aux sortilèges, Mer de dunes, le Multivers · Pneus pluie : Pays des merveilles, Monde à l'envers, Mur des titans · Pari : la Chocolaterie, Bataille spatiale, Terre de l'Anneau.
 
 ## ✨ Les bonus
 
@@ -52,9 +52,9 @@ Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Re
 | Mois | Règle |
 |---|---|
 | 🎲 Le Plateau maudit (mois tiré : juin en 2027) | le dernier du championnat : points de place ×2 |
-| 🌼 Le Sacre du solstice (juillet, Village du solstice) | le vainqueur du mois : +2 |
-| 🍄 Instinct de survie (septembre, Ville des survivants) | le 🎯 vaut +2 |
-| 🏆 Finale (décembre, Sommet des dieux) | points de place ×2 pour tout le monde |
+| 🪱 Le Chevaucheur des sables (juillet, Mer de dunes) | le vainqueur du mois : +2 |
+| 🦸 Le Rassemblement des héros (septembre, le Multivers) | le 🎯 vaut +2 |
+| 🏆 Finale (décembre, l'Odyssée) | points de place ×2 pour tout le monde |
 | 🗳️ Vote (2 → 31 déc.) | « le coup de la saison » (pas pour soi) : plaque pour le gagnant |
 
 ## 🪤 Les pièges des circuits (dès janvier 2027)
@@ -65,14 +65,14 @@ Les mois sans règle spéciale, le circuit a son **piège**, une petite règle q
 |---|---|---|---|
 | Janv. | 🌲 Forêt aux lucioles | ✨ Feux follets | le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point |
 | Févr. | 🏰 Château aux sortilèges | 🚪 Couloirs mouvants | à moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points) |
-| Mars | ❄️ Pays derrière l'armoire | 🌨️ Tempête de neige | pronostic « qui gagne » : +2 si juste, −1 si faux |
-| Avr. | 🌧️ Bas-fonds sous la pluie | 🎭 Double vie | les places se jouent sur deux mois cumulés (mars + avril) |
-| Mai | 🤖 Mégapole des androïdes | 🌡️ Surchauffe | 🚀 Turbo interdit |
+| Mars | 🎩 Pays des merveilles | 🫖 Le thé du Chapelier | pronostic « qui gagne » : +2 si juste, −1 si faux |
+| Avr. | 🍫 La Chocolaterie | 🍫 Double tablette | les places se jouent sur deux mois cumulés (mars + avril) |
+| Mai | 🏹 L'Arène | 🔥 Champ de force | 🚀 Turbo interdit |
 | Août | 🔦 Monde à l'envers | 🌫️ Brume | si le S&P 500 baisse, 🌧️ Pneus pluie vaut +3 au lieu de +2 |
-| Oct. | 🏜️ Mer de dunes | 🌪️ Tempête de sable | le dernier du mois marque 2 points de place au lieu de 0 |
+| Oct. | 💍 Terre de l'Anneau | 🍃 Même le plus petit | le dernier du mois marque 2 points de place au lieu de 0 |
 | Nov. | 🧱 Mur des titans | 💥 Assaut | 🎲 Pari : +3 / −2 au lieu de +2 / −1 |
 
-Juin (Arène virtuelle), juillet (Village du solstice), septembre (Ville des survivants) et décembre (Sommet des dieux, Finale) ont déjà leur règle. Le mois du Plateau maudit (tiré au sort) remplace le circuit prévu : pas de piège ce mois-là. La carte reste plafonnée à +4.
+Juin (Bataille spatiale), juillet (Mer de dunes), septembre (le Multivers) et décembre (l'Odyssée, Finale) ont déjà leur règle. Le mois du Plateau maudit (tiré au sort) remplace le circuit prévu : pas de piège ce mois-là. La carte reste plafonnée à +4.
 
 ## 🎴 Le rattrapage
 

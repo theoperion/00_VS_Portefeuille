@@ -108,16 +108,16 @@ const GPS = {
   abudhabi: { gp: "Le Garage des rêves", ville: "Garage des rêves", drap: "🛠️", fx: "garage", txt: "Là où toutes les voitures naissent, entre établis, projecteurs et odeur d'essence : le tour de chauffe." },
   bahrein: { gp: "Grand Prix des Lucioles", ville: "Forêt aux lucioles", drap: "🌲", fx: "lucioles", atout: "turbo", piege: "pluie", txt: "Des milliers de lucioles éclairent la piste au crépuscule, entre des arbres qui murmurent." },
   djeddah: { gp: "Grand Prix du Château", ville: "Château aux sortilèges", drap: "🏰", fx: "sortileges", atout: "aspiration", piege: "pari", txt: "Les escaliers changent de place et les couloirs se referment derrière toi." },
-  melbourne: { gp: "Grand Prix de l'Hiver éternel", ville: "Pays derrière l'armoire", drap: "❄️", fx: "neige", atout: "pluie", piege: "turbo", txt: "On entre par une armoire, on ressort dans un hiver qui n'en finit pas, sous un lampadaire perdu." },
-  suzuka: { gp: "Grand Prix des Bas-fonds", ville: "Bas-fonds sous la pluie", drap: "🌧️", fx: "pluieneon", atout: "pari", piege: "aspiration", txt: "Pluie sans fin, ruelles qui se croisent en huit et enseignes qui grésillent." },
-  miami: { gp: "Grand Prix des Androïdes", ville: "Mégapole des androïdes", drap: "🤖", fx: "neon", atout: "turbo", piege: "pluie", txt: "Des tours à perte de vue, des voitures qui volent et des androïdes qui regardent passer la course." },
-  montreal: { gp: "Grand Prix de l'Arène virtuelle", ville: "Arène virtuelle", drap: "🕶️", fx: "pixels", atout: "pari", piege: "turbo", txt: "Un monde virtuel où le premier qui trouve la clé cachée gagne tout." },
-  silverstone: { gp: "Grand Prix du Solstice", ville: "Village du solstice", drap: "🌼", fx: "petales", atout: "aspiration", piege: "pari", txt: "Couronnes de fleurs et soleil qui ne se couche jamais : une fête trop belle pour être honnête." },
+  melbourne: { gp: "Grand Prix des Merveilles", ville: "Pays des merveilles", drap: "🎩", fx: "petales", atout: "pluie", piege: "turbo", txt: "On tombe dans un terrier, on boit une fiole, on rétrécit… et le Chapelier sert le thé à toute heure." },
+  suzuka: { gp: "Grand Prix de la Chocolaterie", ville: "La Chocolaterie", drap: "🍫", fx: "sortileges", atout: "pari", piege: "aspiration", txt: "Une rivière de chocolat, des sucettes géantes, un ascenseur de verre… et des tickets d'or cachés quelque part." },
+  miami: { gp: "Grand Prix des Tributs", ville: "L'Arène", drap: "🏹", fx: "cendres", atout: "turbo", piege: "pluie", txt: "Une arène en pleine forêt, découpée comme une horloge : chaque heure, un nouveau piège. Puisse le sort vous être favorable." },
+  montreal: { gp: "Grand Prix des Étoiles", ville: "Bataille spatiale", drap: "🌌", fx: "neige", atout: "pari", piege: "turbo", txt: "Il y a bien longtemps, dans une galaxie lointaine… quatre pilotes ont rejoint l'escadrille." },
+  silverstone: { gp: "Grand Prix de la Mer de dunes", ville: "Mer de dunes", drap: "🏜️", fx: "sable", atout: "aspiration", piege: "pari", txt: "Deux soleils, du sable à l'infini et, sous la piste, quelque chose d'immense qui bouge." },
   spa: { gp: "Grand Prix du Monde à l'envers", ville: "Monde à l'envers", drap: "🔦", fx: "brume", atout: "pluie", piege: "turbo", txt: "Les lumières clignotent, la forêt se retourne : quelque chose rôde de l'autre côté." },
-  monza: { gp: "Grand Prix des Survivants", ville: "Ville des survivants", drap: "🍄", fx: "spores", atout: "aspiration", piege: "pluie", txt: "Une ville reprise par la nature, où l'on roule en silence sans jamais s'arrêter." },
-  singapour: { gp: "Grand Prix de la Mer de dunes", ville: "Mer de dunes", drap: "🏜️", fx: "sable", atout: "pari", piege: "aspiration", txt: "Deux soleils, du sable à l'infini et, sous la piste, quelque chose d'immense qui bouge." },
+  monza: { gp: "Grand Prix du Multivers", ville: "Le Multivers", drap: "🌀", fx: "eclairs", atout: "aspiration", piege: "pluie", txt: "Des mondes cousus entre eux, des portails qui s'ouvrent, des héros… et un gant qui n'attend que six pierres." },
+  singapour: { gp: "Grand Prix de l'Anneau", ville: "Terre de l'Anneau", drap: "💍", fx: "lucioles", atout: "pari", piege: "aspiration", txt: "De la Comté à la montagne de feu : un seul anneau, une seule ligne d'arrivée." },
   interlagos: { gp: "Grand Prix du Mur des titans", ville: "Mur des titans", drap: "🧱", fx: "cendres", atout: "pluie", piege: "aspiration", txt: "Une piste au pied d'un mur de cinquante mètres. De l'autre côté, des géants." },
-  lasvegas: { gp: "Grand Prix du Sommet des dieux", ville: "Sommet des dieux", drap: "⚡", fx: "eclairs", atout: "turbo", piege: "pari", txt: "La dernière course, au-dessus des nuages, sous le regard des dieux qui parient sur vous." },
+  lasvegas: { gp: "Grand Prix de l'Odyssée", ville: "L'Odyssée", drap: "🌊", fx: "eclairs", atout: "turbo", piege: "pari", txt: "Dix ans pour rentrer chez soi : Cyclope, Sirènes et tempêtes entre Troie et Ithaque. La dernière course de l'année." },
   monaco: { gp: "Grand Prix du Plateau maudit", ville: "Plateau maudit", drap: "🎲", fx: "des", atout: "pari", piege: "turbo", txt: "Un jeu de société géant : chaque case peut te faire avancer… ou reculer. Les dés sont pipés." }
 };
 const CAL_GP = ["bahrein", "djeddah", "melbourne", "suzuka", "miami", "montreal", "silverstone", "spa", "monza", "singapour", "interlagos", "lasvegas"];
@@ -229,7 +229,7 @@ function htmlGrandPrix(y) {
     const ca = et.k ? carteDe(y, n, et.k) : null, cdef = ca && ca.c ? carteDef(ca.c) : null;
     const res = x && x.carte ? (x.carte.invalide ? (x.carte.piege ? " Interdite ce mois-ci (piège 🥵 Chaleur) : sans effet." : " Pas encore piochée à ce moment-là : sans effet.") : " Résultat : " + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + " pt" + (Math.abs(x.carte.gain) > 1 ? "s" : "") + (x.carte.circ ? ", dont +1 d'atout du circuit" : "") + (x.carte.bouchon ? ", sans le +1 d'atout : bouchon, plusieurs pilotes l'ont jouée" : "") + (x.carte.sab ? " · " + x.carte.cible + " " + x.carte.sab : "") + ".") : "";
     const carte = ca ? (ca.cache && !cdef ? '<span class="gp-c cache" data-bdg="Carte posée face cachée : révélée le ' + jourLimite(et.k) + ' du mois.">🂠</span>' : cdef ? '<span class="gp-c" data-bdg="' + esc(cdef.ico + " " + cdef.nom + " : " + cdef.def + res) + '">' + cdef.ico + (x && x.carte ? "<small>" + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + "</small>" : "") + "</span>" : '<span class="gp-c vide"></span>') : '<span class="gp-c vide"></span>';
-    const extra = x ? (x.vainq ? '<span class="gp-x or" data-bdg="🌼 Le Sacre du solstice : vainqueur du mois, +2.">🌼+2</span>' : "") +
+    const extra = x ? (x.vainq ? '<span class="gp-x or" data-bdg="🪱 Le Chevaucheur des sables : vainqueur du mois, +2.">🪱+2</span>' : "") +
       (x.piege === "nuit" && x.dernier ? '<span class="gp-x" data-bdg="🌃 Safety car de nuit : le dernier du mois marque 2 points de place.">🌃+2</span>' : "") +
       (x.equipe ? '<span class="gp-x" data-bdg="🤝 Bonus d\'équipe : tout le monde a battu le S&P 500 ce mois-ci, +1.">🤝+1</span>' : "") +
       (x.serie ? '<span class="gp-x" data-bdg="🔥 Série : ' + x.serie + ' mois d\'affilée sans finir dernier, +1.">🔥+1</span>' : "") +
@@ -580,8 +580,8 @@ async function cartePostale(y, et) {
 /* ---------- 🎬 V16.12 · Bande-annonce avant la course : « Précédemment… », le circuit en grand, la grille, les feux ---------- */
 const BA_STYLE = {   // couleurs et police de chaque circuit (la bande-annonce prend le ton de l'univers)
   abudhabi: ["#FF9A3D", "#FFE2B0", "sans"], bahrein: ["#B8FF8A", "#FFF2B0", "serif"], djeddah: ["#E2B93B", "#F3E6C4", "serif"], melbourne: ["#FF6FA8", "#FFFFFF", "serif"],
-  suzuka: ["#FF8FB8", "#F7CF55", "serif"], miami: ["#22D3EE", "#FF4FD8", "sans"], montreal: ["#FFE81F", "#FFFFFF", "sans"], silverstone: ["#F7CF55", "#FFFFFF", "sans"],
-  spa: ["#FF2A2A", "#FFFFFF", "serif"], monza: ["#C9A35A", "#FFFFFF", "serif"], singapour: ["#FF8A3D", "#F6D29A", "large"], interlagos: ["#C8102E", "#F4F1EA", "sans"], lasvegas: ["#E2B93B", "#FFFFFF", "serif"] };
+  suzuka: ["#FF8FB8", "#F7CF55", "serif"], miami: ["#FF8A2A", "#F7CF55", "sans"], montreal: ["#FFE81F", "#FFFFFF", "sans"], silverstone: ["#FF8A3D", "#F6D29A", "large"],
+  spa: ["#FF2A2A", "#FFFFFF", "serif"], monza: ["#E5484D", "#F7CF55", "sans"], singapour: ["#E2B93B", "#F4EAD2", "serif"], interlagos: ["#C8102E", "#F4F1EA", "sans"], lasvegas: ["#3ED6E0", "#FFFFFF", "serif"] };
 let BA_OUVERTE = null;
 function bandeAnnonce(y, i, ensuite) {
   if (BA_OUVERTE) BA_OUVERTE.fermer(false);

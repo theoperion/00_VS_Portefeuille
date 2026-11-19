@@ -60,14 +60,14 @@
     abudhabi: { pts: polyg([[40, 204], [320, 204], [320, 40], [234, 40], [234, 126], [186, 126], [186, 40], [40, 40]], 16), decor: "garage", heure: "crepuscule", peint: "garage", reperes: [] },
     bahrein: { pts: etoile([[3, .14, .3], [5, .09, 1], [7, .05, 2.2]], 42), decor: "lucioles", heure: "crepuscule", amb: "lucioles", peint: "foret", reperes: [] },
     djeddah: { pts: polyg([[40, 210], [320, 210], [320, 70], [290, 70], [290, 32], [240, 32], [240, 70], [200, 70], [200, 32], [150, 32], [150, 70], [110, 70], [110, 32], [60, 32], [60, 70], [40, 70]], 12), decor: "chateau", heure: "nuit", peint: "chateau", reperes: [{ t: "chateau", y: 145 }] },
-    melbourne: { pts: F_LAC, decor: "armoire", heure: "jour", amb: "neige", eau: [resserrer(F_LAC, .3)], peint: "armoire", reperes: [{ t: "armoire" }] },
-    suzuka: { pts: huit(), decor: "basfonds", heure: "nuit", amb: "pluie", peint: "basfonds", reperes: [{ t: "cheminees" }] },
+    melbourne: { pts: F_LAC, decor: "solstice", heure: "jour", eau: [resserrer(F_LAC, .3)], peint: "terrier", reperes: [] },
+    suzuka: { pts: huit(), decor: "solstice", heure: "jour", peint: "chocolat", reperes: [] },
     miami: { pts: polyg([[40, 210], [320, 210], [320, 60], [270, 60], [270, 104], [220, 104], [220, 30], [160, 30], [160, 92], [110, 92], [110, 50], [40, 50]], 12), decor: "androides", heure: "nuit", amb: "neon", peint: "megapole", reperes: [{ t: "tourcentrale", y: 160 }] },
-    montreal: { pts: polyg([[110, 30], [250, 30], [324, 120], [250, 210], [110, 210], [156, 120]], 18), decor: "arene", heure: "nuit", amb: "neon", reperes: [{ t: "holodome" }] },
-    silverstone: { pts: etoile([[5, .17, .6]], 45), decor: "solstice", heure: "jour", peint: "solstice", reperes: [{ t: "mai" }] },
+    montreal: { pts: polyg([[110, 30], [250, 30], [324, 120], [250, 210], [110, 210], [156, 120]], 18), decor: "arene", heure: "nuit", amb: "neon", peint: "etoiles", reperes: [{ t: "holodome" }] },
+    silverstone: { pts: F_DUNES, decor: "dunes", heure: "crepuscule", amb: "desert", peint: "dunes", reperes: [{ t: "ver", y: 122 }] },   // juillet · Dune (tracé échangé avec singapour le 19/11, atouts et pièges inchangés)
     spa: { pts: etoile([[1, .16, .5], [2, .17, 2.2], [4, .06, .8]], 36, t => 5 + 5 * Math.sin(2 * t + 1)), decor: "envers", heure: "nuit", amb: "envers", peint: "envers", reperes: [{ t: "faille" }] },
     monza: { pts: F_CHAMPI, decor: "survivants", heure: "crepuscule", amb: "spores", peint: "survivants", reperes: [{ t: "champignons", y: 95 }] },
-    singapour: { pts: F_DUNES, decor: "dunes", heure: "crepuscule", amb: "desert", peint: "dunes", reperes: [{ t: "ver", y: 122 }] },
+    singapour: { pts: etoile([[5, .17, .6]], 45), decor: "solstice", heure: "jour", peint: "anneau", reperes: [{ t: "mai" }] },   // octobre · Seigneur des Anneaux
     interlagos: { pts: polyg([[40, 40], [320, 40], [334, 96], [292, 132], [304, 184], [250, 212], [200, 170], [150, 206], [90, 202], [56, 156], [30, 100]], 22, (x, y) => Math.max(0, 9 - (y - 40) / 18)), decor: "titans", heure: "crepuscule", amb: "cendres", peint: "titans", reperes: [{ t: "mur" }] },
     lasvegas: { pts: etoile([[3, .2, .5], [6, .03]], 39, t => 9 + 7 * Math.sin(t + .4)), decor: "olympe", heure: "jour", amb: "olympe", peint: "olympe", reperes: [{ t: "temple" }] },
     monaco: { pts: polyg([[60, 30], [300, 30], [300, 210], [212, 210], [212, 120], [148, 120], [148, 210], [60, 210]], 18), decor: "plateau", heure: "nuit", rue: true, damier: true, peint: "plateau", reperes: [{ t: "plateau" }] }

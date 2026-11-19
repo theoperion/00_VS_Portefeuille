@@ -19,7 +19,7 @@ const ETAPES = [
   { id: "pioche", ico: "🎴", nom: "Le rattrapage", ouvre: 202701, regle: "pioche", resume: "Tu finis dernier d'un mois ? Tu pioches une carte bonus (une fois par saison chacune), à jouer à partir du mois suivant. Tes cartes piochées t'attendent dans le Stand." },
   { id: "monaco", ico: "🎲", nom: "Le Plateau maudit", ouvre: 202701, regle: "speciaux", resume: "Un mois de la saison, le dernier du championnat marque ses points de place en double. La date est dans le calendrier du Grand Prix." },
   { id: "pieges", ico: "🪤", nom: "Les pièges des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque circuit sans mois spécial a son piège, une petite règle qui ne vaut que ce mois-là (Feux follets dans la Forêt aux lucioles, Couloirs mouvants au Château, Surchauffe chez les Androïdes…). Il s\'affiche dès le 20 du mois d\'avant, avec la carte." },
-  { id: "gpspeciaux", ico: "🏁", nom: "Le Solstice et les Survivants", ouvre: 202701, regle: "speciaux", resume: "Juillet au Village du solstice : le vainqueur du mois marque +2 de plus (le Sacre). Septembre à la Ville des survivants : le 🎯 vaut +2 au lieu de +1 (Instinct de survie)." },
+  { id: "gpspeciaux", ico: "🏁", nom: "Les Dunes et le Multivers", ouvre: 202701, regle: "speciaux", resume: "Juillet sur la Mer de dunes : le vainqueur du mois marque +2 de plus (le Chevaucheur des sables). Septembre dans le Multivers : le 🎯 vaut +2 au lieu de +1 (le Rassemblement des héros)." },
   { id: "prono", ico: "🔮", nom: "Le pronostic du mois", ouvre: 202701, regle: "championnat", resume: "Dans la fenêtre de ta carte : qui gagne le mois (+1 si juste) et le S&P 500 fera-t-il plus de +1 % (+1 si juste). Secret jusqu'au 2." },
   { id: "pole", ico: "🅿️", nom: "La pole position", ouvre: 202701, regle: "championnat", resume: "Avec ton pronostic, donne ton chiffre pour le S&P 500 du mois (ex. +1,8 %). Le plus proche marque +1 (partagé en cas d'égalité)." },
   { id: "defi", ico: "🏁", nom: "Le défi du mois", ouvre: 202701, regle: "championnat", resume: "Chaque mois a son défi (battre le Nasdaq, faire mieux que l'or, finir positif…), annoncé le 20 du mois d'avant : +1 à chaque pilote qui le réussit." },
@@ -153,19 +153,19 @@ function moisSpecial(y, k) {
   if (!k) return null;
   if (k % 100 === 12 && regleActive("finale", k)) return { id: "finale", ico: "🏆", nom: "Finale", txt: "Points de place doublés pour tout le monde." };
   if (k === monacoMois(y) && regleActive("monaco", k)) return { id: "monaco", ico: "🎲", nom: "Le Plateau maudit", txt: "Le dernier du championnat avant ce mois marque ses points de place en double." };
-  if (k % 100 === 7 && regleActive("gpspeciaux", k)) return { id: "silverstone", ico: "🌼", nom: "Le Sacre du solstice", txt: "Le vainqueur du mois marque +2 de plus." };
-  if (k % 100 === 9 && regleActive("gpspeciaux", k)) return { id: "monza", ico: "🍄", nom: "Instinct de survie", txt: "Le 🎯 vaut +2 au lieu de +1." };
+  if (k % 100 === 7 && regleActive("gpspeciaux", k)) return { id: "silverstone", ico: "🪱", nom: "Le Chevaucheur des sables", txt: "Le vainqueur du mois marque +2 de plus." };
+  if (k % 100 === 9 && regleActive("gpspeciaux", k)) return { id: "monza", ico: "🦸", nom: "Le Rassemblement des héros", txt: "Le 🎯 vaut +2 au lieu de +1." };
   return null;
 }
 /* ---------- V15.5 · Pièges des circuits : une petite règle propre à chaque circuit qui n'a pas de mois spécial ---------- */
 const PIEGES = {
   bahrein: { id: "mirage", ico: "✨", nom: "Feux follets", txt: "Le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point." },
   djeddah: { id: "murs", ico: "🚪", nom: "Couloirs mouvants", txt: "À moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points)." },
-  melbourne: { id: "chaos", ico: "🌨️", nom: "Tempête de neige", txt: "Pronostic « qui gagne le mois » : +2 si juste, mais −1 si faux." },
-  suzuka: { id: "huit", ico: "🎭", nom: "Double vie", txt: "Les places du mois se jouent sur deux mois cumulés : ce mois-ci et le précédent." },
-  miami: { id: "chaleur", ico: "🌡️", nom: "Surchauffe", txt: "🚀 Turbo interdit ce mois-ci." },
+  melbourne: { id: "chaos", ico: "🫖", nom: "Le thé du Chapelier", txt: "Pronostic « qui gagne le mois » : +2 si juste, mais −1 si faux." },
+  suzuka: { id: "huit", ico: "🍫", nom: "Double tablette", txt: "Les places du mois se jouent sur deux mois cumulés : ce mois-ci et le précédent." },
+  miami: { id: "chaleur", ico: "🔥", nom: "Champ de force", txt: "🚀 Turbo interdit ce mois-ci." },
   spa: { id: "ardennes", ico: "🌫️", nom: "Brume", txt: "Si le S&P 500 baisse, 🌧️ Pneus pluie vaut +3 au lieu de +2." },
-  singapour: { id: "nuit", ico: "🌪️", nom: "Tempête de sable", txt: "Le dernier du mois marque 2 points de place au lieu de 0." },
+  singapour: { id: "nuit", ico: "🍃", nom: "Même le plus petit", txt: "Le dernier du mois marque 2 points de place au lieu de 0." },
   interlagos: { id: "averse", ico: "💥", nom: "Assaut", txt: "🎲 Pari : +3 si tu finis devant ton rival, −2 derrière (au lieu de +2 / −1)." }
 };
 /** Piège du mois k (null : chauffe, mois spécial, Plateau maudit, ou règle pas encore ouverte) */
@@ -530,7 +530,7 @@ function htmlRegles(tout, modeReserve) {
       (vu("regularite") ? "<div><b>🛡️ Régularité</b><span>fin de saison : le moins souvent dernier (puis le plus de mois positifs)</span><em>+3</em></div>" : "") + "</div>") : "") +
     s("speciaux", "📅", "Les mois spéciaux", '<div class="rg-tab">' +
       (vM ? "<div><b>🎲 Le Plateau maudit</b><span>" + (regleActive("monaco", mo) ? esc(moisLong(mo)) : "un mois tiré") + " : le dernier du championnat</span><em>place ×2</em></div>" : "") +
-      (vS ? "<div><b>🌼 Le Sacre du solstice</b><span>juillet : le vainqueur du mois</span><em>+2</em></div><div><b>🍄 Instinct de survie</b><span>septembre : le 🎯</span><em>vaut +2</em></div>" : "") +
+      (vS ? "<div><b>🪱 Le Chevaucheur des sables</b><span>juillet : le vainqueur du mois</span><em>+2</em></div><div><b>🦸 Le Rassemblement des héros</b><span>septembre : le 🎯</span><em>vaut +2</em></div>" : "") +
       (vF ? "<div><b>🏆 Finale</b><span>décembre : tout le monde</span><em>place ×2</em></div>" : "") +
       (vu("vote") ? "<div><b>🗳️ Vote</b><span>2 → 31 décembre : « le coup de la saison » (pas pour soi)</span><em>plaque</em></div>" : "") + "</div>") +
     (vu("pieges") ? s("pieges", "🪤", "Les pièges des circuits", "<p>Les autres mois, le circuit a son <b>piège</b> : une petite règle qui ne vaut que ce mois-là. Il s'affiche dès le 20 du mois d'avant (Stand et Classement).</p>" +
@@ -566,7 +566,7 @@ const TUTO = [
     "• <b>Chaque mois</b> : 6 · 4 · 2 · 0 points selon ta performance, <b>+1 🎯</b> si tu bats le S&P 500.<br>" +
     "• <b>Ta carte</b> : une par mois, posée du 20 au 1er dans le <b>Stand</b>, révélée le 2 (jusqu'à +4).<br>" +
     "• <b>Chaque mois aussi</b> : 🏁 un défi, 🔮 un pronostic et 🅿️ la pole position (+1 chacun).<br>" +
-    "• <b>Sur la saison</b> : 🔥 série, 😈 rival, 🛡️ régularité ; le Plateau maudit, le Sacre du solstice, l'Instinct de survie et la Finale ×2.<br>" +
+    "• <b>Sur la saison</b> : 🔥 série, 😈 rival, 🛡️ régularité ; le Plateau maudit, le Chevaucheur des sables, le Rassemblement des héros et la Finale ×2.<br>" +
     "Décembre 2026 = tour de chauffe : rien ne compte. Tout le détail, avec schémas : 📖 Règles." }
 ];
 function ouvrirTuto() { ouvrirGuide("Comment ça marche", TUTO, "C'est parti 🏁"); }

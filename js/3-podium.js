@@ -757,7 +757,7 @@ function teaser() {
     (noel ? '<div class="t-concept">' +
       '<div><b>🔥 Tour de chauffe</b><span>Décembre pour découvrir les règles, sans que rien ne compte. Vos cartes de janvier se posent pendant les fêtes.</span></div>' +
       '<div><b>🏁 Championnat</b><span>Chaque mois : ' + BAREME.join(", ") + ' points, et +1 🎯 si tu bats le ' + esc(D.marche.indices[iRef()]) + '.</span></div>' +
-      '<div><b>🏎️ Grand Prix</b><span>Un circuit à thème par mois, de la Forêt aux lucioles au Sommet des dieux. Vos voitures en 3D, 25 points le tour, la météo du marché.</span></div>' +
+      '<div><b>🏎️ Grand Prix</b><span>Un circuit à thème par mois, de la Forêt aux lucioles à l\'Odyssée. Vos voitures en 3D, 25 points le tour, la météo du marché.</span></div>' +
       '<div><b>🃏 Cartes de course</b><span>4 cartes de stratégie, les mêmes pour tous. Une par mois, face cachée.</span></div>' +
       '<div><b>🎁 Nouveautés en cours de saison</b><span>' + etapesJeu().map(e => e.ico + " " + esc(e.nom) + " (" + esc(moisEtape(e).replace(/ \d{4}$/, "")) + ")").join(" · ") + ". Chaque règle est expliquée le 20 du mois d'avant, quand sa fenêtre s'ouvre.</span></div>" +
       '<div><b>🙂 Ta tête au volant</b><span>Ton portrait animé, ou ton casque, à côté de ton nom. Et 24 objets uniques à rafler les premiers.</span></div></div>' +
