@@ -1472,3 +1472,4 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 /* v16.29 · croix des bulles de détail */
 .toast { display: flex; align-items: flex-start; gap: 10px; pointer-events: auto; } .toast .tst-t { flex: 1; }
 .toast .tst-x { flex: none; border: 0; background: rgba(127,127,127,.18); color: inherit; width: 26px; height: 26px; border-radius: 50%; font-size: 13px; line-height: 26px; padding: 0; cursor: pointer; margin: -2px -4px -2px 0; }
+.p2-portrait, .p2-portrait .av { width: 100%; height: 100%; display: block; } .p2-portrait .av { border-radius: 50%; }

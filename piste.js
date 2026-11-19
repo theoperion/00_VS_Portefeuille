@@ -1574,7 +1574,7 @@
   function peindreArene2(T, Z, def) {
     const K = kit(T, def, 74, "hg-"), { s, a, r, f, W, H } = K, an = x => K.anime ? x : "", INK = `stroke="#1A1410" stroke-width="1.2"`, PEAU = "#F2CDB0", OR = "#E2B93B";
     const G = (x, y, sc, rot) => `<g transform="translate(${f(x)} ${f(y)})${sc && sc !== 1 ? ` scale(${sc})` : ""}${rot ? ` rotate(${f(rot)})` : ""}">`;
-    const DUR = 36, PAS = DUR / 12, RO = ["XII", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI"], NOM = ["la foudre", "baies mortelles", "guêpes tueuses", "singes", "geais bavards", "raz-de-marée", "brouillard", "pluie de sang", "mur de feu", "loups", "tornade", "blizzard"];
+    const DUR = 36, PAS = DUR / 12, RO = ["XII", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI"], NOM = ["la foudre", "baies mortelles", "guêpes tueuses", "singes", "oiseaux imitateurs", "raz-de-marée", "brouillard", "pluie de sang", "mur de feu", "loups", "tornade", "blizzard"];
     // ---- géométrie : l'horloge (centre = la Corne), le dôme (ellipse du champ de force)
     const cx = 540, cy = 455, RL = Math.max(62, Math.min(96, K.dT(cx, cy) - 36));
     const EX = 540, EY = 360, ERX = 600, ERY = 420, dome = (x, y) => Math.sqrt(((x - EX) / ERX) ** 2 + ((y - EY) / ERY) ** 2);
@@ -1632,7 +1632,7 @@
     a.push(`<circle cx="${cx + 24}" cy="${cy - 2}" r="10" fill="#FFF2B8" opacity=".0">${an(`<animate attributeName="opacity" values="0;.5;0" dur="3s" repeatCount="indefinite"/>`)}</circle>`);
     // ---- 3. les scènes de pièges (une par heure)
     const scenes = {};
-    // XII · l'arbre frappé par la foudre (le fil de cuivre enroulé autour du tronc)
+    // XII · l'arbre frappé par la foudre
     scenes[0] = place(0, 46 * SC, 150, 330);
     if (scenes[0]) { const [x, y] = scenes[0]; ouvre(x, y); s.push(`${G(x, y, 1)}<ellipse cx="6" cy="36" rx="40" ry="8" fill="#000" opacity=".3"/><path d="M-8 36Q-6 4 -4 -14L-12 -40M-4 -14L8 -44M-2 4Q10 -6 22 -18M-6 -2Q-16 -10 -26 -22" stroke="#3A2414" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M-6 36Q-3 6 -2 -14L6 -40" stroke="#1A0E06" stroke-width="2.5" fill="none"/>
       ${[[-24, -34, 15], [6, -48, 17], [22, -26, 14], [-10, -54, 12], [-30, -14, 11]].map(([u, v, R]) => `<circle cx="${u}" cy="${v}" r="${R}" fill="#2E4A24" ${INK}/><circle cx="${u - 3}" cy="${v - 4}" r="${R * .55}" fill="#4E7A3A"/>`).join("")}
@@ -1659,7 +1659,7 @@
       [[-30, -16, 1, 0], [-14, -14, .9, 1], [14, -18, 1, 0], [30, -20, .9, 1]].forEach(([u, v, sc, fl]) => s.push(geai(x + u, y + v, sc, fl)));
       a.push(`<g>${an(`<animateMotion dur="7s" repeatCount="indefinite" rotate="auto" path="M${f(x + 46)} ${f(y - 30)}a46 22 0 1 1 -92 0a46 22 0 1 1 92 0"/>`)}${K.anime ? "" : `<g transform="translate(${f(x + 44)} ${f(y - 50)})">`}<g>${an(`<animateTransform attributeName="transform" type="scale" values="1 1;1 .4;1 1" dur=".35s" repeatCount="indefinite"/>`)}<path d="M-8 0q8 -10 16 0q-8 4 -16 0z" fill="#2A3A5A" ${INK}/></g>${K.anime ? "" : "</g>"}</g>`);
       a.push(`<g opacity="${K.anime ? ".0" : "1"}">${act(4, 0, 1)}${[0, 1, 2].map(q => `<path d="M${f(x + 34 + q * 8)} ${f(y - 34 - q * 4)}q6 -2 6 -8" stroke="#FFF" stroke-width="1.4" fill="none"/>`).join("")}</g>`);
-      ferme(); bulle(x, y - 56 * SC, "« Au secours ! »… c'était un geai.", 8, 4); }
+      ferme(); bulle(x, y - 56 * SC, "« Au secours ! »… ce n'était qu'un oiseau.", 8, 4); }
     // I · les baies mortelles
     scenes[1] = place(1, 36 * SC, 120, 420);
     if (scenes[1]) { const [x, y] = scenes[1]; ouvre(x, y); s.push(`${G(x, y, 1)}<ellipse cx="2" cy="22" rx="38" ry="8" fill="#000" opacity=".3"/>${[[-20, 4, 16], [0, -6, 20], [20, 6, 15], [-6, 12, 14], [12, 14, 13]].map(([u, v, R]) => `<circle cx="${u}" cy="${v}" r="${R}" fill="#1E3A26" ${INK}/><circle cx="${u - 3}" cy="${v - 4}" r="${R * .5}" fill="#2E5A36"/>`).join("")}
@@ -1741,12 +1741,13 @@
     // l'aiguille : un faisceau doré qui fait le tour du cadran
     a.push(`<clipPath id="hg-domeA">${ell}</clipPath><g clip-path="url(#hg-domeA)"><g>${an(`<animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="${DUR}s" repeatCount="indefinite"/>`)}<path d="${coin(0, 1300)}" fill="#FFF2B8" opacity=".09"/><path d="M${f(cx + Math.cos(ang(0) + PI / 12) * 30)} ${f(cy + Math.sin(ang(0) + PI / 12) * 30)}L${f(cx + Math.cos(ang(0) + PI / 12) * 1300)} ${f(cy + Math.sin(ang(0) + PI / 12) * 1300)}" stroke="#FFE08A" stroke-width="2" opacity=".5"/></g></g>`);
     // ---- 10. le ciel de l'arène (coin haut gauche) : les visages des 4 pilotes projetés, la devise
+    const PORTR = [];
     { const px = 10, py = 8, pw = 252, ph = 112; s.push(`<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="12" fill="url(#hg-ciel)" stroke="#9AF4FF" stroke-width="1.5" opacity=".95"/>`);
       for (let k = 0; k < 24; k++) s.push(`<circle cx="${f(px + 6 + r() * (pw - 12))}" cy="${f(py + 6 + r() * (ph - 12))}" r="${f(.4 + r() * .8)}" fill="#FFF" opacity="${(.3 + r() * .6).toFixed(2)}"/>`);
       s.push(`<text x="${px + pw / 2}" y="${py + 16}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="10.5" fill="#F7E3A0">Puisse le sort vous être favorable</text>`);
       const NOMS = ["Théo", "Kévin", "Clément", "Devlin"], CHEV = [`<path d="M-11 -8Q-10 -20 0 -20Q10 -20 11 -8Q6 -14 0 -13Q-6 -14 -11 -8Z" fill="#4A2E1A"/>`, `<path d="M-12 -7Q-12 -21 0 -21Q12 -21 12 -7L15 -6L12 -10Q2 -16 -12 -7Z" fill="#2A2A34"/><path d="M-12 -8h27" stroke="#1A1A22" stroke-width="2"/>`,
         `${[-9, -4, 1, 6, 10].map((u, q) => `<circle cx="${u}" cy="${-14 - (q % 2) * 3}" r="4.6" fill="#6A4022"/>`).join("")}`, `<path d="M-11 -6Q-12 -20 0 -20Q12 -20 11 -6Q8 -12 0 -12Q-8 -12 -11 -6Z" fill="#8A5A2A"/><path d="M-9 4Q0 14 9 4Q6 10 0 11Q-6 10 -9 4Z" fill="#8A5A2A"/>`];
-      COULEURS_J.forEach((c, k) => { const x = px + 34 + k * 61, y = py + 58; s.push(`${G(x, y, 1)}<circle r="24" fill="${c}" opacity=".25"/><circle r="21" fill="#0A1430" stroke="${c}" stroke-width="2"/><path d="M-17 16Q-16 4 0 4Q16 4 17 16Q8 21 0 21Q-8 21 -17 16Z" fill="${c}"/><ellipse cx="0" cy="-6" rx="10" ry="12" fill="${PEAU}" stroke="#3A2A1A" stroke-width=".8"/>${CHEV[k]}<circle cx="-3.6" cy="-6" r="1.3" fill="#1A1410"/><circle cx="3.6" cy="-6" r="1.3" fill="#1A1410"/><path d="M-3.5 0q3.5 3 7 0" stroke="#7A3A2A" stroke-width="1" fill="none"/></g>`);
+      COULEURS_J.forEach((c, k) => { const x = px + 34 + k * 61, y = py + 58; PORTR.push({ k, x, y, r: 20 }); s.push(`${G(x, y, 1)}<circle r="24" fill="${c}" opacity=".25"/><circle r="21" fill="#0A1430" stroke="${c}" stroke-width="2"/></g>`);   // v16.31 : les vrais portraits sont posés par l'appli
         s.push(`<text x="${x}" y="${py + 98}" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="10" fill="${c}">${NOMS[k]}</text>`);
         a.push(`<circle cx="${x}" cy="${y}" r="23" fill="none" stroke="${c}" stroke-width="2" opacity="0">${an(`<animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.1;.25;1" dur="8s" begin="${k * 2}s" repeatCount="indefinite"/><animate attributeName="r" values="21;27;27;21" keyTimes="0;.25;.26;1" dur="8s" begin="${k * 2}s" repeatCount="indefinite"/>`)}</circle>`); });
       a.push(`<rect x="${px + 2}" y="${py}" width="${pw - 4}" height="3" fill="#BFF8FF" opacity=".25">${an(`<animate attributeName="y" values="${py};${py + ph - 3}" dur="3.5s" repeatCount="indefinite"/>`)}</rect>`); }
@@ -1763,7 +1764,7 @@
     // les 4 pilotes sur la piste (petits chars de parade aux couleurs des 4)
     COULEURS_J.forEach((c, k) => a.push(K.surPiste(.05 + k * .03, `<g><rect x="-6" y="-4" width="12" height="8" rx="3" fill="${c}" ${INK}/><path d="M-6 -4l-4 -2M-6 4l-4 2" stroke="#FFB12A" stroke-width="1.6"/><circle cx="2" cy="0" r="2.2" fill="#F4F1EA"/></g>`, 40, k * 1.2)));
     K.particules(26, "#FFE08A", 1.8, "scintille"); K.particules(20, "#BFF8FF", 1.6, "derive");
-    return K.fin(`<rect width="${W}" height="${H}" fill="url(#hg-sol)"/>`, "#2A1A3A", .12);
+    const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#hg-sol)"/>`, "#2A1A3A", .12); RES.portraits = PORTR; return RES;
   }
   const PEINTS_NUIT = { arene: peindreArene2, etoiles: peindreEtoiles, anneau: peindreAnneau, chocolat: peindreChocolat2, terrier: peindreTerrier2, chateau: peindreChateau3, megapole: peindreMegapole2, plateau: peindrePlateau, envers: peindreEnvers, survivants: peindreSurvivants, dunes: peindreDunes2, titans: peindreTitans2, olympe: peindreOlympe2 };   // v16.27 : peintres abandonnés retirés
   const PEINTS = { foret: { peindre: peindreForet, deco: decorForet }, garage: { peindre: peindreGarage, deco: decorGarage } };
@@ -2289,7 +2290,8 @@
     const PE = def.peint && PEINTS[def.peint] ? PEINTS[def.peint] : null, CP = PE ? (CARTES_P[def.peint] || (CARTES_P[def.peint] = PE.peindre(T, Z, def))) : null;
     const svg = document.createElementNS(NS, "svg"); svg.setAttribute("class", "p2-svg"); svg.setAttribute("viewBox", minx.toFixed(1) + " " + minz.toFixed(1) + " " + w.toFixed(1) + " " + h.toFixed(1)); svg.setAttribute("preserveAspectRatio", "xMidYMid meet"); svg.setAttribute("role", "img"); svg.setAttribute("aria-label", o.titre || "Circuit");
     if (CP) svg.innerHTML = '<rect x="' + (minx - 400) + '" y="' + (minz - 400) + '" width="' + (w + 800) + '" height="' + (h + 800) + '" fill="' + CP.couleur + '"/>' +
-      '<g transform="scale(' + (1 / KU) + ')"><image href="' + (carteCuite(def.peint) || CP.url || (CP.url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(CP.fond))) + '" x="0" y="0" width="' + CP.W + '" height="' + CP.H + '"/>' + CP.anim + "</g>" +
+      '<g transform="scale(' + (1 / KU) + ')"><image href="' + (carteCuite(def.peint) || CP.url || (CP.url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(CP.fond))) + '" x="0" y="0" width="' + CP.W + '" height="' + CP.H + '"/>' + CP.anim +
+      (CP.portraits && o.portrait ? CP.portraits.map(p => { const v = (o.voitures || [])[p.k]; const h = v ? o.portrait(v.nom) : ""; return h ? '<foreignObject x="' + (p.x - p.r) + '" y="' + (p.y - p.r) + '" width="' + 2 * p.r + '" height="' + 2 * p.r + '"><div xmlns="http://www.w3.org/1999/xhtml" class="p2-portrait">' + h + "</div></foreignObject>" : ""; }).join("") : "") + "</g>" +   // v16.31 : les vrais portraits (Mon portrait) dans les cartes qui en prévoient
       zoneTrait(Z.atout, o.atoutCol) + zoneTrait(Z.piege, o.piegeCol) + fleches +
       '<g transform="translate(' + p0.x.toFixed(1) + " " + p0.z.toFixed(1) + ") rotate(" + ang.toFixed(1) + ") scale(" + (k * .9).toFixed(2) + ')"><rect x="-1.6" y="-6" width="3.2" height="12" fill="#fff"/><rect x="-1.6" y="-6" width="1.6" height="2" fill="#111"/><rect x="0" y="-4" width="1.6" height="2" fill="#111"/><rect x="-1.6" y="-2" width="1.6" height="2" fill="#111"/><rect x="0" y="0" width="1.6" height="2" fill="#111"/><rect x="-1.6" y="2" width="1.6" height="2" fill="#111"/><rect x="0" y="4" width="1.6" height="2" fill="#111"/></g>' +
       '<g class="p2-v"></g>';
