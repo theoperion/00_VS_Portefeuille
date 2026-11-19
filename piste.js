@@ -5262,7 +5262,7 @@
     const bFX = gl.createBuffer(), bPT = gl.createBuffer();
     const DPR = Math.min(1.5, window.devicePixelRatio || 1);
     const I = { q: DPR, ft: 16, lents: 0, cssW: 1, cssH: 1, tConstr: Math.round(performance.now() - t0c), cv, gl, T, A, Z, V, mode: o.camera || "tv", focus: o.focus || (V[0] && V[0].v.nom), pts: Object.assign({}, o.pts || {}), anim: null, t0: performance.now(), cam: null, cible: null,
-      orbite: 0, zoom: 1, tir: null, actif: true, dernier: 0, inactif: 0, feux: 0, flash: 0, prochainEclair: 3, artifice: [], ordreDepart: (o.voitures || []).map(v => v.nom), feuxDepart: -1 };
+      orbite: 0, zoom: 1, incl: .72, pan: [0, 0], tir: null, actif: true, dernier: 0, inactif: 0, feux: 0, flash: 0, prochainEclair: 3, artifice: [], ordreDepart: (o.voitures || []).map(v => v.nom), feuxDepart: -1 };
     const placer = (instant) => {
       const c = cibles(I.pts, o.tour || 25, T.L, I.ordreDepart, o.grille);
       V.forEach(x => { const t = c[x.v.nom]; if (!t) return; x.rang = t.rang; if (instant) { x.s = t.s; x.voie = t.voie; } else { x.s = t.s; x.voie = lisse(x.voie, t.voie, .06); } });
@@ -5278,8 +5278,9 @@
       if (I.mode === "helico") {
         if (!I.tir && ANIM()) I.orbite += dt * .05;
         const fov = .9, rv = Math.max(T.rx, T.rz / Math.min(1, asp * .9) * (asp < 1 ? 1.25 : 1)), dist = rv / Math.tan(fov / 2) * .92 * I.zoom;
-        const a = I.orbite + .6, h = dist * .72;
-        return { e: [T.cx + Math.cos(a) * dist * .62, h, T.cz + Math.sin(a) * dist * .62], c: [T.cx, 0, T.cz], fov };
+        // V16.58 · Visite : inclinaison (glisser haut/bas) et déplacement (deux doigts) ; zoom jusqu'à 0,12
+        const a = I.orbite + .6, h = dist * (I.incl || .72), cx = T.cx + I.pan[0], cz = T.cz + I.pan[1];
+        return { e: [cx + Math.cos(a) * dist * .62, h, cz + Math.sin(a) * dist * .62], c: [cx, 0, cz], fov };
       }
       const x = voitureDe(I.focus); if (!x) return null;
       if (I.mode === "bord") {
@@ -5419,18 +5420,21 @@
     }
     // ----- interactions : glisser pour tourner, pincer / molette pour zoomer, toucher une voiture pour la suivre -----
     const pointeurs = new Map(), ecoutes = [], ecoute = (type, f, opt) => { cv.addEventListener(type, f, opt); ecoutes.push([type, f, opt]); };
-    ecoute("pointerdown", ev => { pointeurs.set(ev.pointerId, { x: ev.clientX, y: ev.clientY }); I.tir = { x: ev.clientX, o: I.orbite, z: I.zoom, d0: null, t: performance.now(), x0: ev.clientX, y0: ev.clientY }; try { cv.setPointerCapture(ev.pointerId); } catch (e) { } reveiller(); });
+    ecoute("pointerdown", ev => { pointeurs.set(ev.pointerId, { x: ev.clientX, y: ev.clientY }); I.tir = { x: ev.clientX, o: I.orbite, z: I.zoom, i: I.incl, d0: null, m0: null, p0: I.pan.slice(), t: performance.now(), x0: ev.clientX, y0: ev.clientY }; try { cv.setPointerCapture(ev.pointerId); } catch (e) { } reveiller(); });
     ecoute("pointermove", ev => {
       if (!I.tir || !pointeurs.has(ev.pointerId)) return; pointeurs.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
-      if (pointeurs.size >= 2) { const [a, b] = [...pointeurs.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if (!I.tir.d0) { I.tir.d0 = d; I.tir.z = I.zoom; } I.zoom = clamp(I.tir.z * I.tir.d0 / d, .45, 2.4); }
-      else if (I.mode !== "bord") I.orbite = I.tir.o - (ev.clientX - I.tir.x) * .008;
+      if (pointeurs.size >= 2) { const [a, b] = [...pointeurs.values()], d = Math.hypot(a.x - b.x, a.y - b.y), m = [(a.x + b.x) / 2, (a.y + b.y) / 2];
+        if (!I.tir.d0) { I.tir.d0 = d; I.tir.z = I.zoom; I.tir.m0 = m; I.tir.p0 = I.pan.slice(); } I.zoom = clamp(I.tir.z * I.tir.d0 / d, .12, 2.4);
+        if (I.mode === "helico") { const k = Math.max(T.rx, T.rz) * I.zoom * .004, dx = (m[0] - I.tir.m0[0]) * k, dy = (m[1] - I.tir.m0[1]) * k, an = I.orbite + .6, s = Math.sin(an), c = Math.cos(an);
+          I.pan = [clamp(I.tir.p0[0] + dx * s + dy * c, -T.rx, T.rx), clamp(I.tir.p0[1] - dx * c + dy * s, -T.rz, T.rz)]; } }
+      else if (I.mode !== "bord") { I.orbite = I.tir.o - (ev.clientX - I.tir.x) * .008; if (I.mode === "helico") I.incl = clamp(I.tir.i + (ev.clientY - I.tir.y0) * .004, .18, 1.4); }
     });
     const fin = ev => {
       const t = I.tir; pointeurs.delete(ev.pointerId); if (pointeurs.size) return; I.tir = null;
       if (t && performance.now() - t.t < 300 && Math.hypot(ev.clientX - t.x0, ev.clientY - t.y0) < 8) { const n = toucher(ev.clientX, ev.clientY); if (n && o.toucher) o.toucher(n); }
     };
     ecoute("pointerup", fin); ecoute("pointercancel", fin);
-    ecoute("wheel", ev => { ev.preventDefault(); I.zoom = clamp(I.zoom * (ev.deltaY > 0 ? 1.1 : .9), .45, 2.4); reveiller(); }, { passive: false });
+    ecoute("wheel", ev => { ev.preventDefault(); I.zoom = clamp(I.zoom * (ev.deltaY > 0 ? 1.1 : .9), .12, 2.4); reveiller(); }, { passive: false });
     cv.style.touchAction = "pan-y";
     function ecran(n) {
       const x = voitureDe(n); if (!x || !PV) return null; if (I.mode === "bord" && n === I.focus) return { vis: false }; const p = appliquer(PV, [x.x, x.y + 3.2, x.z, 1]); if (p[3] <= .5) return { vis: false };
@@ -5468,7 +5472,7 @@
         I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: now + dl, t00: now, duree: duree || 5200, fin, feux: !!depart };
         if (depart) I.feuxDepart = 0; I.saut = I.mode !== "helico"; reveiller();
       },
-      camera(m) { I.mode = m; I.saut = false; I.zoom = 1; reveiller(); },
+      camera(m) { I.mode = m; I.saut = false; I.zoom = 1; I.incl = .72; I.pan = [0, 0]; reveiller(); },
       focus(n) { I.focus = n; reveiller(); },
       ecran, ecranMonde, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim, reveiller, taille: () => ({ w: I.cssW, h: I.cssH }),
       detruire() {
