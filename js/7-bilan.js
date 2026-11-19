@@ -903,3 +903,30 @@ function majVersion() {
   });
   maj();
 })();
+
+/* v17.0 · 🐞 Signaler un bug (Réglages) : texte libre + écran, version et appareil ajoutés tout seuls → onglet « Bugs » du Versus + mail à Théo (serveur V58). Rien de financier. */
+function ecranCourant() {
+  try { const v = vueActive(), m = v === "moi" ? " › " + ((JSON.parse(stock.get("versus.moi.pref") || "{}").onglet) || "") : v === "trophees" ? " › " + (ETAT.podium || "") : ""; return v + m; } catch (e) { return "?"; }
+}
+function ouvrirSignalerBug() {
+  const rg = document.getElementById("reglages"), ecran = ecranCourant(); if (rg && !rg.hidden) rg.hidden = true;
+  const o = document.createElement("div"); o.className = "regles bug-f"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Signaler un bug");
+  o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>🐞 Signaler un bug</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div><div class="rg-corps">' +
+    '<p class="info">Qu\'est-ce qui cloche ? Où étais-tu, qu\'as-tu touché, qu\'attendais-tu ? Une idée d\'amélioration marche aussi.</p>' +
+    '<textarea id="bug-t" rows="5" maxlength="1500" style="width:100%;box-sizing:border-box;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--line,#444);background:var(--panel,transparent);color:inherit" placeholder="Ex. : sur la course, la voiture de Kévin reste bloquée au départ."></textarea>' +
+    '<p class="info" style="opacity:.75">Ajouté tout seul : l\'écran (' + esc(ecran) + '), la version ' + esc((self.VERSUS_VERSION || {}).app || "") + " et ton téléphone. Rien de tes chiffres.</p>" +
+    '<div class="btn-row"><button class="btn acc" type="button" id="bug-env">Envoyer à Théo</button></div></div></div>';
+  document.body.appendChild(o);
+  const fermer = () => o.remove();
+  o.addEventListener("click", ev => { if (ev.target === o) fermer(); }); o.querySelector(".rg-x").addEventListener("click", fermer);
+  const t = o.querySelector("#bug-t"), b = o.querySelector("#bug-env"); setTimeout(() => { try { t.focus(); } catch (e) { } }, 50);
+  b.addEventListener("click", async () => {
+    const txt = t.value.trim(); if (txt.length < 3) { toast("Décris le souci en quelques mots."); t.focus(); return; }
+    b.disabled = true; b.textContent = "Envoi…";
+    const app = navigator.userAgent.replace(/\s+/g, " ") + " · écran " + screen.width + "×" + screen.height + " · " + (matchMedia("(display-mode: standalone)").matches ? "appli installée" : "navigateur");
+    const rep = await posterAdmin({ action: "bug", texte: txt, ecran: ecran, version: (self.VERSUS_VERSION || {}).app || "", appareil: app });
+    if (rep && rep.ok) { fermer(); toast("🐞 " + (rep.message || "Merci ! C'est envoyé.")); }
+    else { b.disabled = false; b.textContent = "Envoyer à Théo"; toast((rep && rep.message) || "Envoi impossible : réessaie."); }
+  });
+}
+{ const bb = document.getElementById("signaler-bug"); if (bb) bb.addEventListener("click", ouvrirSignalerBug); }
