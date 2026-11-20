@@ -251,6 +251,7 @@ function confettis(style) {
   const hasard = l => l[Math.floor(Math.random() * l.length)];
   let ps;
   if (emo) ps = Array.from({ length: 46 }, () => ({ x: Math.random() * W, y: -20 - Math.random() * H * .6, vx: (Math.random() - .5) * 1.5, vy: 2 + Math.random() * 3, r: (Math.random() - .5) * .8, vr: (Math.random() - .5) * .06, e: hasard(emo), g: .04 }));
+  else if (style === "meteores") ps = Array.from({ length: 26 }, (_, i) => { const v = 7 + Math.random() * 5; return { x: Math.random() * W * 1.2, y: -40 - Math.random() * H * .5, vx: -v * .55, vy: v, meteore: true, w: 2 + Math.random() * 1.8, c: Math.random() < .35 ? css("--gold") : "#FFFFFF", g: 0, retard: Math.floor(i * 3.2) }; });   // lot 55 : traînées lumineuses (fête « Météores » de Moi)
   else if (style === "feu") ps = [[.25, .32], [.5, .2], [.75, .3], [.4, .45], [.62, .42]].flatMap(([fx, fy], j) => { const col = hasard(pal); return Array.from({ length: 34 }, (_, i) => { const a = i / 34 * 6.283, v = 3 + Math.random() * 2.5; return { x: W * fx, y: H * fy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rond: true, w: 3.2, c: Math.random() < .3 ? css("--gold") : col, g: .06, retard: j * 9 }; }); });
   else ps = Array.from({ length: 110 }, () => ({ x: W / 2 + (Math.random() - .5) * W * .3, y: H * .3, vx: (Math.random() - .5) * 10, vy: -Math.random() * 10 - 4,
     r: Math.random() * 6.28, vr: (Math.random() - .5) * .3, w: style === "damier" ? 8 : 6 + Math.random() * 5, h: style === "damier" ? 8 : 3 + Math.random() * 4, c: style === "damier" ? (Math.random() < .5 ? "#111" : "#f4f4f4") : hasard(pal), g: .3 }));
@@ -262,7 +263,8 @@ function confettis(style) {
       if (p.retard && f < p.retard) return;
       p.vy += p.g; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r = (p.r || 0) + (p.vr || 0);
       x.save(); x.translate(p.x, p.y); x.rotate(p.r || 0); x.globalAlpha = Math.max(0, 1 - e / duree);
-      if (p.e) { x.font = "24px serif"; x.textAlign = "center"; x.fillText(p.e, 0, 0); }
+      if (p.meteore) { x.rotate(Math.atan2(p.vy, p.vx)); const q = x.createLinearGradient(-90, 0, 0, 0); q.addColorStop(0, "rgba(255,255,255,0)"); q.addColorStop(1, p.c); x.strokeStyle = q; x.lineWidth = p.w; x.lineCap = "round"; x.beginPath(); x.moveTo(-90, 0); x.lineTo(0, 0); x.stroke(); x.fillStyle = "#fff"; x.beginPath(); x.arc(0, 0, p.w * 1.3, 0, 6.283); x.fill(); }
+      else if (p.e) { x.font = "24px serif"; x.textAlign = "center"; x.fillText(p.e, 0, 0); }
       else if (p.rond) { x.fillStyle = p.c; x.beginPath(); x.arc(0, 0, p.w, 0, 6.283); x.fill(); }
       else { x.fillStyle = p.c; if (style === "damier") { x.strokeStyle = "rgba(0,0,0,.25)"; x.strokeRect(-p.w / 2, -p.h / 2, p.w, p.h); } x.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); }
       x.restore();

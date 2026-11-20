@@ -969,7 +969,22 @@ function injecterStyle() {
 .moi.pa .pa-vide { margin: 0; font-size: 12.5px; color: var(--ink-3); text-align: center; }
 .moi.pa .pa-pied { margin: 0; font-size: 13px; color: var(--ink-2); text-align: center; }
 .moi.pa #pa-envoyer.arme { background: var(--gold); color: #1A1406; }
-@media (prefers-reduced-motion: reduce) { .moi .m-flap.go, .moi .m-flap.af-prisme, .moi .m-flap.af-lingot::after { animation: none; } }
+/* lot 55 · objets « vivants » des paliers hauts */
+.moi .m-flap.af-paillettes { overflow: hidden; border-radius: 8px; color: #FFF8E1; font-weight: 600; text-shadow: 0 0 6px rgba(255,236,170,.75);
+  background: radial-gradient(1.5px 1.5px at 22% 30%, #fff 60%, transparent), radial-gradient(1px 1px at 70% 22%, #FFE9A8 60%, transparent), radial-gradient(1.5px 1.5px at 40% 78%, #fff 60%, transparent), radial-gradient(1px 1px at 80% 64%, #FFE9A8 60%, transparent), linear-gradient(160deg, #1F1640, #3A2470 55%, #1A1236);
+  box-shadow: inset 0 0 0 1px rgba(255,233,168,.25), 0 4px 12px rgba(122,84,255,.3); }
+.moi .m-flap.af-paillettes::after { top: 0; bottom: 0; height: auto; margin: 0; background: radial-gradient(2px 2px at 30% 40%, #fff 50%, transparent), radial-gradient(2px 2px at 68% 70%, #fff 50%, transparent), radial-gradient(1.5px 1.5px at 55% 18%, #fff 50%, transparent); animation: mPaillettes 2.4s ease-in-out infinite; }
+.moi .m-flap.af-paillettes:nth-child(2n)::after { animation-delay: -.8s; } .moi .m-flap.af-paillettes:nth-child(3n)::after { animation-delay: -1.6s; }
+@keyframes mPaillettes { 0%, 100% { opacity: 0; transform: scale(.6); } 45% { opacity: 1; transform: scale(1); } 70% { opacity: .2; } }
+.moi .m-flap.af-paillettes.u, .moi .m-flap.af-paillettes.s { color: #FFE9A8; }
+.fx-pulsar { stroke-width: 6; stroke-dasharray: 26 640; opacity: .95; filter: drop-shadow(0 0 4px #fff); animation: fxPulsar 3.2s linear infinite; }
+@keyframes fxPulsar { from { stroke-dashoffset: 666; } to { stroke-dashoffset: 0; } }
+.moi svg.vs-cb[class*="fx-"] { stroke-dasharray: none; stroke-width: 0; opacity: 1; filter: none; animation: none; }   /* lot 55 : les règles .fx-* du graphe ne doivent pas s'appliquer à l'aperçu entier (il était pâle et flou) */
+.moi .vs-cb.fx-pulsar path.x { display: block; stroke-width: 5; stroke-dasharray: 10 70; filter: drop-shadow(0 0 2px #fff); animation: fxPulsarP 1.6s linear infinite; }
+@keyframes fxPulsarP { from { stroke-dashoffset: 80; } to { stroke-dashoffset: 0; } }
+#v-moi.th.th-vivant .m-hero { background-size: 300% 300%; animation: mOpale 14s ease-in-out infinite alternate; }
+@keyframes mOpale { from { background-position: 0% 40%; } to { background-position: 100% 60%; } }
+@media (prefers-reduced-motion: reduce) { .moi .m-flap.go, .moi .m-flap.af-prisme, .moi .m-flap.af-lingot::after, .moi .m-flap.af-paillettes::after, .fx-pulsar, .moi .vs-cb.fx-pulsar path.x, #v-moi.th.th-vivant .m-hero { animation: none; } }
 `;
   document.head.appendChild(st);
 }
@@ -1042,7 +1057,7 @@ function rendre() {
   injecterStyle();
   const v = document.getElementById("v-moi"); if (!v) return;
   v.style.setProperty("--mc", couleurMoi());
-  { const th = M ? themeActif() : null; v.classList.toggle("th", !!(th && th[3])); if (th && th[3]) v.style.setProperty("--th-fond", th[3]); else v.style.removeProperty("--th-fond"); }
+  { const th = M ? themeActif() : null; v.classList.toggle("th", !!(th && th[3])); v.classList.toggle("th-vivant", !!(th && th[4] === "vivant")); if (th && th[3]) v.style.setProperty("--th-fond", th[3]); else v.style.removeProperty("--th-fond"); }
   if (!configure()) { v.innerHTML = ecranConnexion(); brancherConnexion(v); return; }
   if (stock.get(K.refus)) {
     v.innerHTML = '<div class="m-vide"><div class="m-flaps" aria-hidden="true">' + flaps("MOI", false) + '</div><p>🔑 Ton fichier a refusé la clé de ce téléphone.</p><p class="info">' + "La clé enregistrée ici ne correspond plus à celle de ton fichier." + ' Elle est gardée : si c\'était un raté passager, « Réessayer » suffit ; sinon, remets ta clé dans Réglages › Mon fichier.</p>' +
@@ -4360,7 +4375,13 @@ async function envoyerReglage(k, corps, form, local) {
 }
 
 /* ================= Missions (privé) : le million, la série de versements, les paliers (repris de Cote) ================= */
-const SERIES = [3, 6, 12, 18, 24, 36, 48, 60];
+/* lot 54 (Théo : « les prochains paliers sont trop loin ; plus de récompenses liées à ce qu'on fait, sans en faire trop »)
+   Paliers intermédiaires sur les familles longues, une table palier → objet (fini le « un palier sur deux »),
+   régularité étalée (un objet à chacun des 3 premiers mois versés, puis tous les 2 mois versés), joker de série 1 fois par an.
+   Rien de ce qui a été gagné ne se perd : les objets de la régularité gagnés jusqu'à REGLES_V1_JUSQUA (anciennes règles) restent acquis,
+   et chaque objet déjà placé sur un palier reste sur ce palier ou arrive plus tôt. */
+const SERIES = [3, 6, 9, 12, 18, 24, 30, 36, 48, 60, 72, 84, 96, 108, 120];   // lot 55 : + 84 et 108 (un palier chaque décembre des années 7 à 10)
+const REGLES_V1_JUSQUA = "2026-11";   // dernier mois des anciennes règles : à caler sur le mois de mise en ligne
 function cleMoisD(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); }
 function moisSuivant(m, n) { return cleMoisD(new Date(+m.slice(0, 4), +m.slice(5, 7) - 1 + n, 1)); }
 function libMois(m, long) { const i = +m.slice(5, 7) - 1; return (long ? MOIS_L[i] : MOIS[i]) + " " + m.slice(0, 4); }
@@ -4379,12 +4400,16 @@ function serieVersements() {
   if (!debut) return { actuelle: 0, record: 0, moisEnCours: false, liste: [], atteintes: {} };
   const liste = [];
   for (let m = debut; m <= auj; m = moisSuivant(m, 1)) liste.push({ m: m, ok: !!vers[m] });
-  let run = 0, record = 0; const atteintes = {};
-  liste.forEach(x => { run = x.ok ? run + 1 : 0; if (run > record) record = run; SERIES.forEach(n => { if (run >= n && !atteintes[n]) atteintes[n] = x.m; }); });
+  let run = 0, record = 0; const atteintes = {}, jokers = {};
+  liste.forEach(x => {
+    if (x.ok) run++;
+    else if (x.m === auj) { /* le mois en cours n'est pas fini : il ne casse rien */ }
+    else if (run > 0 && !jokers[x.m.slice(0, 4)]) { jokers[x.m.slice(0, 4)] = x.m; x.joker = true; }   // lot 54 : un mois sauté par an ne casse pas la série
+    else run = 0;
+    if (run > record) record = run; SERIES.forEach(n => { if (run >= n && !atteintes[n]) atteintes[n] = x.m; });
+  });
   const moisEnCours = !!vers[auj];
-  let actuelle = 0;
-  for (let i = liste.length - 1 - (moisEnCours ? 0 : 1); i >= 0 && liste[i].ok; i--) actuelle++;
-  return { actuelle, record, moisEnCours, liste, atteintes };
+  return { actuelle: run, record, moisEnCours, liste, atteintes, jokers };
 }
 /* Gain de marché (bourse) et versements d'une année, à partir des relevés du soir */
 function bilanAnneeM(an) {
@@ -4404,10 +4429,12 @@ function bilanAnneeM(an) {
 }
 /* Paliers : chaque famille est une suite de seuils */
 /* lot 44 : le 3e champ sert enfin : true = en vitrine (le comportement d'abord), false = « Autres paliers » (replié) */
+/* lot 54 : « Année en cours » (gains > versements) récompensait le fait de verser MOINS → remplacée par « Année de versements » ;
+   « Argent versé » passe en vitrine (ce qu'on fait), les familles du marché restent dans « Autres paliers » */
 const FAMILLES = [
-  ["serie", "Séries de versements", true], ["vente", "Sans vendre", true], ["pat", "Patrimoine financier", true], ["gainsAn", "Année en cours", false],
-  ["bourse", "Portefeuille bourse", false], ["verse", "Argent versé en bourse", false], ["gains", "Gains cumulés", false],
-  ["mois", "Mois avec un versement (au total)", false], ["annee", "Ancienneté", false], ["fisc", "Fiscalité allégée", false]
+  ["serie", "Séries de versements", true], ["vente", "Sans vendre", true], ["verse", "Argent versé en bourse", true], ["pat", "Patrimoine financier", true],
+  ["anv", "Année de versements", false], ["mois", "Mois avec un versement (au total)", false], ["annee", "Ancienneté", false],
+  ["bourse", "Portefeuille bourse", false], ["gains", "Gains cumulés", false], ["fisc", "Fiscalité allégée", false]
 ];
 function paliers() {
   const s = M.synthese || {}, p = (M.ref || {}).parcours || {}, out = [];
@@ -4421,36 +4448,35 @@ function paliers() {
       actuel / seuil, "encore " + eur(Math.max(0, seuil - actuel)) + (unite ? " " + unite : ""), kEurP(seuil));
   });
   const pat = seriePatrimoine().map(x => ({ m: x.an + "-" + String(x.mo).padStart(2, "0"), v: x.bourse + x.epargne }));
-  parSeuil("pat", [5000, 10000, 25000, 50000, 75000, 100000, 150000, 200000, 250000, 300000, 500000, 750000, 1000000], pat, s.financier || 0, x => F0.format(x) + " € de patrimoine financier", "(bourse + épargne)");
+  parSeuil("pat", [1000, 2500, 5000, 10000, 25000, 50000, 75000, 100000, 150000, 200000, 250000, 300000, 500000, 750000, 1000000], pat, s.financier || 0, x => F0.format(x) + " € de patrimoine financier", "(bourse + épargne)");
   const h = M.historique, rows = h && h.rows ? h.rows : [];
   const kv = h ? h.cols.indexOf("v") : -1, ka = h ? h.cols.indexOf("a") : -1;
   const sh = k => rows.map(r => ({ m: String(r[0]).slice(0, 4) + "-" + String(r[0]).slice(4, 6), v: k(r) }));
   if (rows.length && kv >= 0 && ka >= 0) {
     parSeuil("bourse", [1000, 5000, 10000, 25000, 50000, 100000, 250000, 500000], sh(r => r[kv]), s.valeur || 0, x => F0.format(x) + " € en bourse");
-    parSeuil("verse", [5000, 10000, 25000, 50000, 100000, 200000], sh(r => r[ka]), s.apports || 0, x => F0.format(x) + " € versés en bourse au total");
+    parSeuil("verse", [1000, 2500, 5000, 10000, 25000, 50000, 100000, 200000], sh(r => r[ka]), s.apports || 0, x => F0.format(x) + " € versés en bourse au total");
     parSeuil("gains", [500, 1000, 5000, 10000, 25000, 50000, 100000], sh(r => r[kv] - r[ka]), s.gain || 0, x => F0.format(x) + " € de gains cumulés", "de gains");
   }
   const sv = serieVersements();
   SERIES.forEach(n => {
-    const atteint = sv.record >= n;
-    let quand = null, run = 0;
-    if (atteint) for (const x of sv.liste) { run = x.ok ? run + 1 : 0; if (run >= n) { quand = x.m; break; } }
+    const atteint = sv.record >= n, quand = atteint ? sv.atteintes[n] || null : null;   // lot 54 : même calcul que la série (joker compris)
     ajoute("serie", "serie" + n, n + "M", n + " mois d'affilée avec un versement", atteint, quand, sv.actuelle / n, "série actuelle : " + sv.actuelle + " / " + n + " mois", n + " MOIS");
   });
   let total = 0; const cumul = {};
   sv.liste.forEach(x => { if (x.ok) { total++; if (!cumul[total]) cumul[total] = x.m; } });
-  [12, 24, 36, 50, 100].forEach(n => ajoute("mois", "mois" + n, n + "×", n + " mois avec un versement depuis le début", total >= n, cumul[n] || null, total / n, total + " / " + n + " mois", n + " MOIS"));
+  [12, 24, 36, 50, 75, 100, 125, 150].forEach(n => ajoute("mois", "mois" + n, n + "×", n + " mois avec un versement depuis le début", total >= n, cumul[n] || null, total / n, total + " / " + n + " mois", n + " MOIS"));
   if (p.premier) {
-    const depuis = p.derniereVente || p.premier;
+    const dv = derniereVenteSV(p), depuis = dv.date || p.premier;
     const jours = Math.floor((Date.now() - new Date(depuis + "T00:00:00")) / 864e5);
-    (M.simple ? [] : [[6, "6M", "6 mois sans vendre"], [12, "1AN", "1 an sans vendre"], [24, "2ANS", "2 ans sans vendre"], [36, "3ANS", "3 ans sans vendre"]]).forEach(([mo, court, titre]) => {
+    (M.simple ? [] : [[3, "3M", "3 mois sans vendre"], [6, "6M", "6 mois sans vendre"], [12, "1AN", "1 an sans vendre"], [18, "18M", "18 mois sans vendre"], [24, "2ANS", "2 ans sans vendre"],
+      [36, "3ANS", "3 ans sans vendre"], [48, "4ANS", "4 ans sans vendre"], [60, "5ANS", "5 ans sans vendre"]]).forEach(([mo, court, titre]) => {
       const d0 = new Date(depuis + "T00:00:00"), d = new Date(d0.getFullYear(), d0.getMonth() + mo, 1);
       d.setDate(Math.min(d0.getDate(), new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));   // 31/08 + 6 mois = 28/02
       const date = isoJour(d), tot = Math.round((d - new Date(depuis + "T00:00:00")) / 864e5), atteint = date <= auj;
       ajoute("vente", "vente" + mo + "-" + depuis, court, titre, atteint, atteint ? date.slice(0, 7) : null, jours / tot,
-        (p.derniereVente ? "dernière vente le " + frDate(p.derniereVente) + " · " : "") + jours + " j / " + tot + " · le " + frDate(date) + " sans vente", court.replace(/(\d)([A-Z])/, "$1 $2"));
+        (dv.date ? "dernière vente" + (dv.horsLevier ? " (hors levier)" : "") + " le " + frDate(dv.date) + " · " : "") + jours + " j / " + tot + " · le " + frDate(date) + " sans vente", court.replace(/(\d)([A-Z])/, "$1 $2"));
     });
-    [1, 2, 3, 5, 10].forEach(n => {
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20].forEach(n => {   // lot 55 : chaque anniversaire jusqu'à 10 ans
       const date = isoPlus(p.premier, n, 0), atteint = date <= auj;
       const part = (Date.now() - new Date(p.premier + "T00:00:00")) / (new Date(date + "T00:00:00") - new Date(p.premier + "T00:00:00"));
       ajoute("annee", "annee" + n, n + "A", n + (n > 1 ? " ans" : " an") + " d'investissement", atteint, atteint ? date.slice(0, 7) : null, part, "le " + frDate(date), n + (n > 1 ? " ANS" : " AN"));
@@ -4461,21 +4487,16 @@ function paliers() {
     const part = (Date.now() - new Date(e.ouverture + "T00:00:00")) / (new Date(date + "T00:00:00") - new Date(e.ouverture + "T00:00:00"));
     ajoute("fisc", "fisc-" + e.nom, e.regime + n, e.nom + " a " + n + " ans : fiscalité allégée", atteint, atteint ? date.slice(0, 7) : null, part, "le " + frDate(date), e.regime + " " + n + " ANS");
   });
-  const an = new Date().getFullYear(), b = bilanAnneeM(an);
-  if (b && b.verse > 0) {
-    const atteint = b.gain > b.verse;
-    /* lot 44 : date figée au premier mois où la condition est vraie (même calcul que bilanAnneeM, arrêté à chaque relevé), pour la clôture du mois */
-    let quandG = null;
-    if (atteint && rows.length && kv >= 0 && ka >= 0) {
-      const r0 = rows.filter(r => Math.floor(r[0] / 10000) < an).pop();
-      for (const r of rows) {
-        if (Math.floor(r[0] / 10000) !== an) continue;
-        const ve = r[ka] - (r0 ? r0[ka] : 0), ga = (r[kv] - (r0 ? r0[kv] : 0)) - ve;
-        if (ve > 0 && ga > ve) { quandG = String(r[0]).slice(0, 4) + "-" + String(r[0]).slice(4, 6); break; }
-      }
-    }
-    ajoute("gainsAn", "gains" + an, "G>V", "Les gains " + an + " dépassent tes versements de l'année", atteint, atteint ? quandG || moisAuj : null,
-      Math.max(0, b.gain) / b.verse, "gains " + eur(b.gain, 0, true) + " · versements " + eur(b.verse), "GAINS > VERSÉ");
+  /* lot 54 : « Année de versements » (remplace « Année en cours ») : 6 puis 9 mois versés dans l'année civile ; 12 sur 12 reste la récompense cachée « Année parfaite » */
+  { const an = moisAuj.slice(0, 4), dans = sv.liste.filter(x => x.m.slice(0, 4) === an), nb = dans.filter(x => x.ok).length;
+    const jouables = 12 - +moisAuj.slice(5, 7) + (sv.moisEnCours ? 0 : 1);   // mois encore possibles cette année (le mois en cours s'il n'est pas fait)
+    if (dans.length) [6, 9].forEach(n => {
+      let c = 0, quand = null; dans.forEach(x => { if (x.ok && ++c === n && !quand) quand = x.m; });
+      const atteint = nb >= n, manque = n - nb;
+      ajoute("anv", "anv" + an + "-" + n, n + "/12", n + " mois versés en " + an, atteint, quand, nb / n,
+        manque > jouables ? "hors de portée cette année · on recommence en janvier" : "encore " + manque + " mois versé" + (manque > 1 ? "s" : "") + " d'ici décembre", n + " SUR 12");
+      out[out.length - 1].manque = manque > jouables ? null : manque;
+    });
   }
   return out;
 }
@@ -4494,7 +4515,8 @@ const AFFICHEURS = [
   ["ticket", "Ticket de caisse", "ticket", "Papier"], ["compteur", "Compteur", "tambour", "Rouleaux"], ["led", "LED de gare", "matrice", "Matrice"],
   ["billet", "Billet", "billet", "Papier"], ["neon", "Néon", "palette", "Lumière"], ["nixie", "Nixie", "palette", "Lumière"],
   ["carte", "Carte black", "carte", "Métal"], ["lingot", "Lingot", "palette", "Métal"], ["prisme", "Prisme", "palette", "Lumière"],
-  ["terminal", "Terminal", "palette", "Écran"], ["reveil", "Réveil", "seg", "Segments"]
+  ["terminal", "Terminal", "palette", "Écran"], ["reveil", "Réveil", "seg", "Segments"],
+  ["paillettes", "Paillettes", "palette", "Lumière"]   // lot 55 · vivant : des éclats passent sur les chiffres (9 ans d'investissement)
 ];
 // [id, nom, couleur d'accent, fond de la carte du haut]
 const THEMES_M = [
@@ -4518,33 +4540,48 @@ const THEMES_M = [
   ["volcan", "Volcan", "#FF6B3D", "radial-gradient(110% 80% at 50% 110%, rgba(255,107,61,.45), transparent 60%), linear-gradient(150deg, #120707, #2E0E0A 60%, #170807)"],
   ["menthe", "Menthe", "#6EE7B7", "linear-gradient(150deg, #06201A, #145243 60%, #08281F)"],
   ["nuit-etoilee", "Nuit étoilée", "#FDE68A", "radial-gradient(1px 1px at 20% 30%, #fff 50%, transparent), radial-gradient(1px 1px at 70% 20%, #fff 50%, transparent), radial-gradient(1px 1px at 45% 70%, #fff 50%, transparent), linear-gradient(160deg, #050816, #121A3A 60%, #070B1F)"],
-  ["platine", "Platine", "#F1F5F9", "radial-gradient(120% 90% at 85% 0%, rgba(241,245,249,.25), transparent 60%), linear-gradient(150deg, #15171B, #3A3F47 60%, #17191D)"]
+  ["platine", "Platine", "#F1F5F9", "radial-gradient(120% 90% at 85% 0%, rgba(241,245,249,.25), transparent 60%), linear-gradient(150deg, #15171B, #3A3F47 60%, #17191D)"],
+  // lot 54 · prestige (750 k€ de patrimoine)
+  ["diamant-noir", "Diamant noir", "#E0E7FF", "radial-gradient(120% 90% at 85% 0%, rgba(224,231,255,.28), transparent 60%), repeating-linear-gradient(120deg, rgba(255,255,255,.03) 0 1px, transparent 1px 9px), linear-gradient(150deg, #050507, #1C1C26 60%, #08080B)"],
+  // lot 55 · pour boucher les longs trous après 5 ans (5e champ « vivant » = le fond bouge doucement)
+  ["crepuscule", "Crépuscule", "#FDA4AF", "radial-gradient(130% 80% at 50% 115%, rgba(251,146,60,.45), transparent 60%), linear-gradient(170deg, #120A2A, #3B1D5C 55%, #7A2E4F)"],
+  ["ambre", "Ambre", "#FBBF24", "radial-gradient(110% 90% at 15% 0%, rgba(251,191,36,.30), transparent 60%), linear-gradient(150deg, #1E1003, #5C3507 60%, #2A1704)"],
+  ["opale", "Opale", "#E9D5FF", "linear-gradient(120deg, #1B2A4A, #3E2C63, #1E4B5A, #4A2A4F, #1B2A4A)", "vivant"]
 ];
 // [id, nom, couleur (null = celle du thème), effet de la courbe]
 // lot 44 : noms affichés dédoublonnés (les identifiants stockés ne changent pas)
 const COURBES_M = [["classique", "Classique", null, null], ["etincelles", "Étincelles", null, "etincelles"], ["or", "Fil d'or", "#E8B931", "halo"],
   ["neon", "Néon rose", "#FF4FD8", "halo"], ["comete", "Queue de comète", "#2FD1C0", "comete"], ["flammes", "Flammes", "#FF7A1A", "flammes"],
   ["menthe", "Trait menthe", "#34D399", null], ["corail", "Trait corail", "#FF7F6B", null], ["lavande", "Halo lavande", "#A78BFA", "halo"], ["glace", "Glace", "#7DD3FC", "etincelles"],
-  ["rubis", "Rubis", "#F43F5E", "halo"], ["soleil", "Soleil", "#FACC15", "comete"], ["plasma", "Plasma", "#22D3EE", "halo"], ["braise", "Braise", "#F97316", "etincelles"], ["argent", "Argent", "#CBD5E1", "comete"]];
+  ["rubis", "Rubis", "#F43F5E", "halo"], ["soleil", "Soleil", "#FACC15", "comete"], ["plasma", "Plasma", "#22D3EE", "halo"], ["braise", "Braise", "#F97316", "etincelles"], ["argent", "Argent", "#CBD5E1", "comete"],
+  ["aurore", "Aurore boréale", "#7CF5C4", "comete"],   // lot 54 · prestige (15 ans)
+  ["pulsar", "Pulsar", "#F0ABFC", "pulsar"], ["cuivre", "Cuivre", "#D97706", "comete"]];   // lot 55 · Pulsar vivant : une lueur court le long de la courbe
 // [id, nom, aperçu, style passé à confettis()]
 const FETES_M = [["confettis", "Confettis", "🎊", null], ["damier", "Damier", "🏁", "damier"], ["feu", "Feu d'artifice", "🎆", "feu"], ["billets", "Pluie de billets", "💸", "billets"],
   ["lingots", "Lingots", "🪙", "lingots"], ["etoiles", "Étoiles", "✨", "etoiles"], ["fusees", "Fusées", "🚀", "fusees"],
   ["ballons", "Ballons", "🎈", ["🎈", "🎈", "🎉", "🎈"]], ["fleurs", "Pétales", "🌸", ["🌸", "🌼", "🌷", "🌸"]], ["coeurs", "Cœurs", "💚", ["💚", "💙", "💜", "💛"]], ["neige", "Flocons", "❄️", ["❄️", "❄️", "✨", "❄️"]],
-  ["trefles", "Trèfles", "🍀", ["🍀", "🍀", "✨", "🌿"]], ["diamants", "Diamants", "💎", ["💎", "💎", "✨", "💍"]], ["taureaux", "Taureaux", "🐂", ["🐂", "📈", "🐂", "💹"]], ["champagne", "Champagne", "🍾", ["🍾", "🥂", "✨", "🎉"]]];
+  ["trefles", "Trèfles", "🍀", ["🍀", "🍀", "✨", "🌿"]], ["diamants", "Diamants", "💎", ["💎", "💎", "✨", "💍"]], ["taureaux", "Taureaux", "🐂", ["🐂", "📈", "🐂", "💹"]], ["champagne", "Champagne", "🍾", ["🍾", "🥂", "✨", "🎉"]],
+  ["feudor", "Gerbes d'or", "🎇", ["🎇", "✨", "🌟", "🎇"]],   // lot 54 · prestige (150 mois versés)
+  ["meteores", "Météores", "☄️", "meteores"]];   // lot 55 · fête spéciale : des traînées lumineuses traversent l'écran
 const EMBLEMES_M = [["pousse", "Pousse", "🌱"], ["abeille", "Abeille", "🐝"], ["hibou", "Hibou", "🦉"], ["tortue", "Tortue", "🐢"], ["renard", "Renard", "🦊"],
   ["aigle", "Aigle", "🦅"], ["lion", "Lion", "🦁"], ["dragon", "Dragon", "🐉"], ["couronne", "Couronne", "👑"], ["taureau", "Taureau", "🐂"],
   ["fourmi", "Petite fourmi", "🐜"], ["ecureuil", "Écureuil", "🐿️"], ["castor", "Castor", "🦫"], ["dauphin", "Dauphin", "🐬"], ["loup", "Loup", "🐺"],
-  ["chene", "Chêne", "🌳"], ["boussole", "Boussole", "🧭"], ["ancre", "Ancre", "⚓"], ["phare", "Phare", "🗼"], ["comete-e", "Comète", "☄️"]];
+  ["chene", "Chêne", "🌳"], ["boussole", "Boussole", "🧭"], ["ancre", "Ancre", "⚓"], ["phare", "Phare", "🗼"], ["comete-e", "Comète", "☄️"],
+  ["montagne", "Montagne", "⛰️"],   // lot 54 · prestige (5 ans sans vendre)
+  ["sablier", "Sablier", "⏳"], ["sequoia", "Séquoia", "🌲"], ["baleine", "Baleine", "🐋"]];   // lot 55
 const TITRES_M = [["investisseur", "Investisseur"], ["metronome", "Le Métronome"], ["diamant", "Main de diamant"], ["batisseur", "Bâtisseur"], ["rentier", "Rentier"],
   ["veteran", "Vétéran"], ["optimiseur", "Optimiseur fiscal"], ["legende", "Légende"], ["millionnaire", "Millionnaire"], ["increvable", "Increvable"],
   ["fourmi", "La Fourmi"], ["regulier", "Régulier"], ["horloger", "L'Horloger"], ["patient", "Patient"], ["capitaine", "Capitaine"],
-  ["stratege", "Stratège"], ["marathonien", "Marathonien"], ["sage", "Le Sage"], ["roc", "Le Roc"], ["maitre", "Maître du temps"]];
+  ["stratege", "Stratège"], ["marathonien", "Marathonien"], ["sage", "Le Sage"], ["roc", "Le Roc"], ["maitre", "Maître du temps"],
+  ["inebranlable", "L'Inébranlable"],   // lot 54 · prestige (120 mois d'affilée)
+  ["pilier", "Le Pilier"], ["infatigable", "L'Infatigable"]];   // lot 55
 const SORTES = [["aff", "Afficheur", "🔢", "afficheur"], ["theme", "Thème", "🎨", "themeM"], ["courbe", "Courbe", "📈", "courbe"],
   ["fete", "Fête", "🎉", "fete"], ["emb", "Emblème", "🛡️", "emb"], ["titre", "Titre", "🏷️", "titre"]];
 const CATALOGUE = { aff: AFFICHEURS, theme: THEMES_M, courbe: COURBES_M, fete: FETES_M, emb: EMBLEMES_M, titre: TITRES_M };
 const BASE_M = { aff: "classique", theme: "classique", courbe: "classique", fete: "confettis", emb: "pousse", titre: "investisseur" };
-/* Récompenses par famille de paliers : la k-ième case va au k-ième palier pair (2e, 4e…), la dernière au dernier palier. */
-const REC_FAM = {
+/* Anciennes règles (jusqu'au lot 53) : la k-ième case va au k-ième palier pair (2e, 4e…), la dernière au dernier palier.
+   lot 54 : ne sert plus que pour la Fiscalité (le nombre de paliers dépend du nombre d'enveloppes) ; les autres familles passent par REC_PAL. */
+const REC_FAM_V1 = {
   pat: [[["aff", "led"]], [["aff", "neon"]], [["aff", "nixie"]], [["theme", "or"], ["courbe", "or"]], [["aff", "lingot"]], [["aff", "prisme"]], [["emb", "couronne"], ["titre", "millionnaire"]]],
   serie: [[["aff", "laiton"]], [["emb", "abeille"], ["fete", "damier"]], [["theme", "bordeaux"]], [["titre", "metronome"]]],
   vente: [[["theme", "minuit"]], [["emb", "tortue"], ["titre", "diamant"]]],
@@ -4556,7 +4593,33 @@ const REC_FAM = {
   annee: [[["emb", "hibou"]], [["theme", "glacier"]], [["titre", "veteran"]]],
   fisc: [[["courbe", "neon"]], [["titre", "optimiseur"]]]
 };
-/* V15.4 · Régularité : chaque mois où tu verses débloque l'objet suivant de cette liste (les mois versés, pas forcément d'affilée) */
+/* lot 54 · une table palier → objets (la clé = famille + seuil). Chaque objet déjà placé reste sur son palier ou arrive plus tôt
+   (Damier : 18 → 12 mois d'affilée ; Prisme : 750 k€ → 500 k€) ; les nouveaux paliers prennent les 16 derniers objets de la régularité
+   et 5 objets de prestige pour les paliers lointains. Comportement d'abord : séries, sans vendre, argent versé, mois versés. */
+const REC_PAL = {
+  serie3: [["courbe", "braise"]], serie6: [["aff", "laiton"]], serie9: [["emb", "phare"]], serie12: [["fete", "damier"]], serie18: [["emb", "abeille"]], serie24: [["titre", "marathonien"]],
+  serie36: [["theme", "bordeaux"]], serie48: [["theme", "ocean"]], serie60: [["titre", "metronome"]], serie72: [["titre", "maitre"]], serie120: [["titre", "inebranlable"]],
+  vente6: [["emb", "ancre"]], vente12: [["theme", "minuit"]], vente18: [["courbe", "argent"]], vente24: [["titre", "roc"]], vente36: [["emb", "tortue"], ["titre", "diamant"]], vente60: [["emb", "montagne"]],
+  verse2500: [["theme", "menthe"]], verse5000: [["fete", "champagne"]], verse10000: [["aff", "calc"]], verse25000: [["theme", "volcan"]], verse50000: [["aff", "billet"], ["fete", "billets"]],
+  verse100000: [["theme", "platine"]], verse200000: [["titre", "batisseur"]],
+  anv9: [["fete", "feu"]],
+  mois24: [["aff", "compteur"]], mois50: [["emb", "renard"], ["courbe", "comete"]], mois75: [["theme", "nuit-etoilee"]], mois100: [["emb", "aigle"]], mois150: [["fete", "feudor"]],
+  annee1: [["emb", "comete-e"]], annee2: [["emb", "hibou"]], annee3: [["titre", "sage"]], annee5: [["theme", "glacier"]], annee10: [["titre", "veteran"]], annee15: [["courbe", "aurore"]],
+  pat2500: [["fete", "taureaux"]], pat10000: [["aff", "led"]], pat50000: [["aff", "neon"]], pat100000: [["aff", "nixie"]], pat200000: [["theme", "or"], ["courbe", "or"]],
+  pat300000: [["aff", "lingot"]], pat500000: [["aff", "prisme"]], pat750000: [["theme", "diamant-noir"]], pat1000000: [["emb", "couronne"], ["titre", "millionnaire"]],
+  bourse5000: [["aff", "ticket"]], bourse25000: [["theme", "emeraude"]], bourse100000: [["theme", "carbone"], ["emb", "lion"]], bourse500000: [["emb", "dragon"], ["titre", "legende"]],
+  gains1000: [["courbe", "etincelles"]], gains10000: [["aff", "carte"]], gains50000: [["fete", "lingots"]], gains100000: [["titre", "rentier"]],
+  // lot 55 · après 5 ans il restait des trous jusqu'à 22 mois : un anniversaire chaque janvier, une série chaque décembre (années 6 à 9)
+  annee6: [["emb", "sablier"]], annee7: [["theme", "crepuscule"]], annee8: [["courbe", "pulsar"]], annee9: [["aff", "paillettes"]],
+  serie84: [["titre", "pilier"]], serie96: [["emb", "sequoia"]], serie108: [["fete", "meteores"]]
+};
+/* lot 55 · « Année de versements » : à partir de la 6e année civile où tu verses au moins 6 mois, un objet à ce palier 6/12 (vers juin) */
+const ANV6_RANG = { 6: [["theme", "ambre"]], 7: [["titre", "infatigable"]], 8: [["emb", "baleine"]], 9: [["courbe", "cuivre"]], 10: [["theme", "opale"]] };
+/** lot 55 · années civiles (avant l'an donné) avec au moins 6 mois versés */
+function anneesA6(avant) { return Object.entries(versesParAn()).filter(([a, n]) => (!avant || a < avant) && n >= 6).map(([a]) => a).sort(); }
+/* V15.4 · Régularité : chaque mois où tu verses débloque l'objet suivant de cette liste (les mois versés, pas forcément d'affilée)
+   lot 54 : les 33 premiers objets seulement (RG), un à chacun des 3 premiers mois versés puis un tous les 2 mois versés ; les 16 derniers vont aux paliers.
+   Ce qui a été gagné avec l'ancienne règle (un par mois, jusqu'à REGLES_V1_JUSQUA) reste acquis et la suite repart de là. */
 const REGULARITE_M = [["emb", "fourmi"], ["courbe", "menthe"], ["theme", "lagon"], ["titre", "fourmi"], ["fete", "ballons"], ["emb", "ecureuil"], ["courbe", "corail"], ["theme", "lavande"],
   ["titre", "regulier"], ["fete", "fleurs"], ["emb", "castor"], ["courbe", "lavande"], ["theme", "sahara"], ["titre", "horloger"], ["fete", "coeurs"], ["emb", "dauphin"], ["courbe", "glace"],
   ["theme", "foret"], ["titre", "patient"], ["fete", "neige"], ["emb", "loup"], ["courbe", "rubis"], ["theme", "corail"], ["titre", "capitaine"], ["fete", "trefles"], ["emb", "chene"],
@@ -4564,6 +4627,33 @@ const REGULARITE_M = [["emb", "fourmi"], ["courbe", "menthe"], ["theme", "lagon"
   ["fete", "taureaux"], ["emb", "ancre"], ["courbe", "braise"], ["theme", "ocean"], ["titre", "sage"], ["emb", "phare"], ["theme", "menthe"], ["courbe", "argent"], ["theme", "volcan"],
   ["fete", "champagne"], ["titre", "roc"], ["emb", "comete-e"], ["theme", "nuit-etoilee"], ["theme", "platine"], ["titre", "maitre"]];
 function moisVerses() { try { return serieVersements().liste.filter(x => x.ok).length; } catch (e) { return 0; } }
+const REGUL_M0 = 3, RG = REGULARITE_M.slice(0, 33);
+function regulPas(n) { return n <= REGUL_M0 ? n : REGUL_M0 + Math.floor((n - REGUL_M0) / 2); }
+/** lot 54 · la régularité : objets gagnés (avec le mois), le prochain et à quel mois versé il tombe */
+function regulInfo() {
+  let ok = []; try { ok = serieVersements().liste.filter(x => x.ok); } catch (e) { ok = []; }
+  const n = ok.length, nc = Math.min(REGULARITE_M.length, ok.filter(x => x.m <= REGLES_V1_JUSQUA).length), a = Math.min(nc, RG.length);
+  const gagnes = k => Math.min(RG.length, a + regulPas(Math.max(k, nc)) - regulPas(nc));
+  const gains = REGULARITE_M.slice(0, nc).map((r, i) => ({ r, m: ok[i].m, mois: i + 1 }));
+  for (let k = nc + 1, c = a; k <= n; k++) for (const g = gagnes(k); c < g; c++) gains.push({ r: RG[c], m: ok[k - 1].m, mois: k });
+  const own = gagnes(n), fini = own >= RG.length;
+  const auMoisDe = j => { if (j < own) { const g = gains.find(x => x.r === RG[j]); return g ? g.mois : j + 1; } let k = n + 1; while (gagnes(k) <= j && k < n + 400) k++; return k; };
+  const au = fini ? null : auMoisDe(own);
+  return { n, gains, prochain: fini ? null : RG[own], auMois: au, reste: au ? au - n : 0, fini, auMoisDe, legacy: new Set(REGULARITE_M.slice(RG.length, nc).map(r => cleObj(r[0], r[1]))) };
+}
+/** lot 54 · mois versés par année civile */
+function versesParAn() { const o = {}; try { serieVersements().liste.forEach(x => { const a = x.m.slice(0, 4); o[a] = (o[a] || 0) + (x.ok ? 1 : 0); }); } catch (e) { /* pas de parcours */ } return o; }
+/** lot 54 · ancienne famille « Année en cours » (gains > versements) : son objet (Feu d'artifice) reste acquis s'il avait été gagné avant REGLES_V1_JUSQUA */
+function feuV1() {
+  const h = M && M.historique, rows = h && h.rows ? h.rows : []; if (!rows.length) return false;
+  const kv = h.cols.indexOf("v"), ka = h.cols.indexOf("a"); if (kv < 0 || ka < 0) return false;
+  const lim = +REGLES_V1_JUSQUA.replace("-", "") * 100 + 31;
+  for (const an of new Set(rows.filter(r => r[0] <= lim).map(r => Math.floor(r[0] / 10000)))) {
+    const r0 = rows.filter(r => Math.floor(r[0] / 10000) < an).pop();
+    for (const r of rows) { if (Math.floor(r[0] / 10000) !== an || r[0] > lim) continue; const ve = r[ka] - (r0 ? r0[ka] : 0), ga = (r[kv] - (r0 ? r0[kv] : 0)) - ve; if (ve > 0 && ga > ve) return true; }
+  }
+  return false;
+}
 /* Récompenses cachées : calculées sur tes relevés (ou sur tes visites, pour deux d'entre elles) */
 const SECRETS_M = [
   { id: "sangfroid", nom: "Sang-froid", indice: "Garde la main quand tout baisse.", quoi: "Un versement un mois où ton portefeuille a perdu 5 % ou plus.", rec: [["courbe", "flammes"]] },
@@ -4611,16 +4701,38 @@ function secretsAtteints() {
   let suite = 1; for (let i = 1; i < l.length; i++) { suite = (new Date(l[i] + "T12:00:00") - new Date(l[i - 1] + "T12:00:00")) / 864e5 === 1 ? suite + 1 : 1; if (suite >= 7) { ok.add("fidele"); break; } }
   return ok;
 }
-/* Palier → récompenses (selon la règle « un palier sur deux + le dernier ») */
+/* Palier → récompenses. lot 54 : la table REC_PAL (famille + seuil) ; la Fiscalité garde l'ancienne règle (selon le nombre d'enveloppes).
+   Un objet déjà gagné par l'ancienne régularité n'est pas redonné (ni refêté) par un palier. */
 function recompensesPaliers(pal) {
-  const map = new Map();
-  FAMILLES.forEach(([g]) => {
-    const l = pal.filter(x => x.groupe === g), R = REC_FAM[g]; if (!R || !l.length) return;
+  const map = new Map(), an = cleMoisD(new Date()).slice(0, 4);
+  const anvAvant = Object.entries(versesParAn()).some(([a, n]) => a < an && n >= 9);   // Feu d'artifice : la première année à 9 mois versés seulement
+  pal.forEach(x => {
+    if (x.groupe === "fisc") return;
+    if (x.groupe === "anv" && String(x.id).split("-")[1] === "6") { const rg = anneesA6(an).length + 1; if (ANV6_RANG[rg]) map.set(x.id, ANV6_RANG[rg]); return; }   // lot 55
+    const k = x.groupe === "anv" ? (anvAvant ? null : "anv" + String(x.id).split("-")[1]) : cleFete(x.id);
+    if (k && REC_PAL[k]) map.set(x.id, REC_PAL[k]);
+  });
+  const l = pal.filter(x => x.groupe === "fisc"), R = REC_FAM_V1.fisc;
+  if (l.length) {
     const cases = l.map((x, i) => i).filter(i => i % 2 === 1 || i === l.length - 1);
     // lot 44 : moins de paliers récompensés que de récompenses prévues (Fiscalité avec 1 ou 2 enveloppes) → le dernier palier prend tout ce qui reste
     cases.forEach((i, j) => { const r = j === cases.length - 1 ? [].concat(...R.slice(Math.min(j, R.length - 1))) : j < R.length - 1 ? R[j] : null; if (r) map.set(l[i].id, r); });
-  });
+  }
+  let leg = new Set(); try { leg = regulInfo().legacy; } catch (e) { leg = new Set(); }
+  if (leg.size) map.forEach((r, id) => { const f = r.filter(o => !leg.has(cleObj(o[0], o[1]))); if (f.length) map.set(id, f); else map.delete(id); });
   return map;
+}
+/** lot 54 · tous les objets gagnés selon les règles (sans le stockage de l'appareil) : clé → d'où il vient */
+function objetsParRegle(pal, rec, sec) {
+  if (!pal) { pal = paliers(); rec = recompensesPaliers(pal); sec = secretsAtteints(); }
+  const ok = new Map(), met = (r, src) => { const k = cleObj(r[0], r[1]); if (!ok.has(k)) ok.set(k, src); };
+  pal.forEach(x => { if (x.atteint && rec.has(x.id)) rec.get(x.id).forEach(r => met(r, "fam:" + x.groupe)); });
+  try { regulInfo().gains.forEach(g => met(g.r, "regul")); } catch (e) { /* pas de parcours */ }
+  try { const an = cleMoisD(new Date()).slice(0, 4); if (Object.entries(versesParAn()).some(([a, n]) => a < an && n >= 9)) met(["fete", "feu"], "fam:anv"); } catch (e) { /* idem */ }
+  try { if (feuV1()) met(["fete", "feu"], "v1"); } catch (e) { /* idem */ }
+  try { const an = cleMoisD(new Date()).slice(0, 4); anneesA6(an).forEach((a, i) => (ANV6_RANG[i + 1] || []).forEach(r => met(r, "fam:anv"))); } catch (e) { /* lot 55 : les années passées gardent leur objet */ }
+  SECRETS_M.forEach(s => { if (sec && sec.has(s.id)) s.rec.forEach(r => met(r, "secret")); });
+  return ok;
 }
 let MEMO_OBJ = { m: null, ok: null, pal: null, rec: null, sec: null };
 function etatObjets() {
@@ -4631,10 +4743,14 @@ function etatObjets() {
   vus.forEach(k => ok.add(k));
   let pal = [], rec = new Map(), sec = new Set();
   if (M) {
-    try { pal = paliers(); rec = recompensesPaliers(pal); pal.forEach(x => { if (x.atteint && rec.has(x.id)) rec.get(x.id).forEach(([t, id]) => ok.add(cleObj(t, id))); }); } catch (e) { /* données incomplètes */ }
-    try { REGULARITE_M.slice(0, moisVerses()).forEach(([t, id]) => ok.add(cleObj(t, id))); } catch (e) { /* pas de parcours */ }
-    try { sec = secretsAtteints(); SECRETS_M.forEach(s => { if (sec.has(s.id)) s.rec.forEach(([t, id]) => ok.add(cleObj(t, id))); }); } catch (e) { /* idem */ }
-    if (identiteSure()) stock.set(cleStock("objets"), JSON.stringify(Array.from(ok)));
+    try { pal = paliers(); rec = recompensesPaliers(pal); } catch (e) { /* données incomplètes */ }
+    try { sec = secretsAtteints(); } catch (e) { /* idem */ }
+    try { objetsParRegle(pal, rec, sec).forEach((src, k) => ok.add(k)); } catch (e) { /* idem */ }
+    if (identiteSure()) {
+      // lot 54 : avant la première écriture avec les nouvelles règles, on garde la liste d'avant (pour l'écran unique « Les paliers se rapprochent »)
+      if (stock.get(cleStock("regles")) !== "2" && stock.get(cleStock("objetsV1")) === null && stock.get(cleStock("objets")) !== null) stock.set(cleStock("objetsV1"), stock.get(cleStock("objets")));
+      stock.set(cleStock("objets"), JSON.stringify(Array.from(ok)));
+    }
   }
   MEMO_OBJ = { m: M, ok, pal, rec, sec, d: ETAT.discret };
   return MEMO_OBJ;
@@ -4651,8 +4767,11 @@ function origineObj(t, id) {
   const E = etatObjets();
   for (const s of SECRETS_M) if (s.rec.some(r => r[0] === t && r[1] === id)) return { secret: s, ok: E.sec.has(s.id) };
   for (const [pid, l] of E.rec) if (l.some(r => r[0] === t && r[1] === id)) return { palier: masquerPalier(E.pal.find(x => x.id === pid)) };
-  { const i = REGULARITE_M.findIndex(r => r[0] === t && r[1] === id); if (i >= 0) return { regul: i + 1, faits: moisVerses() }; }
-  for (const [g, R] of Object.entries(REC_FAM)) if (R.some(c => c.some(r => r[0] === t && r[1] === id))) return { famille: (FAMILLES.find(f => f[0] === g) || [, g])[1], absente: !E.pal.some(x => x.groupe === g) };   // lot 44 : famille absente du profil
+  { const RI = regulInfo(), g = RI.gains.find(x => x.r[0] === t && x.r[1] === id); if (g) return { regul: g.mois, faits: RI.n };
+    const i = RG.findIndex(r => r[0] === t && r[1] === id); if (i >= 0) return { regul: RI.auMoisDe(i), faits: RI.n }; }   // lot 54 : au rythme de la nouvelle régularité
+  { const rg = Object.keys(ANV6_RANG).find(k => ANV6_RANG[k].some(r => r[0] === t && r[1] === id)); if (rg) return { anvRang: +rg, faits: anneesA6().length }; }   // lot 55
+  const cle = Object.keys(REC_PAL).find(k => REC_PAL[k].some(r => r[0] === t && r[1] === id)), g = cle ? cle.replace(/\d.*$/, "") : REC_FAM_V1.fisc.some(c => c.some(r => r[0] === t && r[1] === id)) ? "fisc" : null;
+  if (g) return { famille: (FAMILLES.find(f => f[0] === g) || [, g])[1], absente: !E.pal.some(x => x.groupe === g) };   // lot 44 : famille absente du profil
   return {};
 }
 function apercuObj(t, id) {
@@ -4743,6 +4862,8 @@ function htmlDetailObj() {
       : "À gagner : « " + esc(p.titre) + " » · " + pct(Math.max(0, Math.min(1, p.part)), 0, false) + (p.reste ? " · " + esc(p.reste) : "") + '<span class="jauge"><i style="width:' + Math.round(Math.max(0, Math.min(1, p.part)) * 100) + '%"></i></span>'; }
   else if (org.regul) quoi = org.faits >= org.regul ? "Gagné par ta régularité : ton " + org.regul + (org.regul === 1 ? "er" : "e") + " mois avec un versement."
       : "Régularité : se débloque à ton " + org.regul + (org.regul === 1 ? "er" : "e") + " mois avec un versement (tu en es à " + org.faits + ")." + '<span class="jauge"><i style="width:' + Math.round(Math.min(1, org.faits / org.regul) * 100) + '%"></i></span>';
+  else if (org.anvRang) quoi = o ? "Gagné avec un palier « Année de versements » : ta " + org.anvRang + "e année civile avec au moins 6 mois versés."
+      : "Année de versements : se débloque ta " + org.anvRang + "e année civile avec au moins 6 mois versés (tu en as " + org.faits + ")." + '<span class="jauge"><i style="width:' + Math.round(Math.min(1, org.faits / org.anvRang) * 100) + '%"></i></span>';
   else if (org.famille) quoi = o ? "Gagné avec un palier « " + esc(org.famille) + " »." : org.absente ? "Pas disponible pour ton profil (pas de paliers « " + esc(org.famille) + " »)." : "À gagner dans les paliers « " + esc(org.famille) + " ».";
   else quoi = o ? "Déjà à toi." : "Pas encore disponible pour ton profil.";
   const actif = actifM(t) === id;
@@ -4782,25 +4903,62 @@ function verifierPaliers() {
   const faits = E.pal.filter(x => x.atteint), ids = faits.map(x => x.id);
   let vus = null; try { vus = JSON.parse(stock.get(cleStock("paliers")) || stock.get("versus.moi.paliers") || "null"); } catch (e) { vus = null; }
   const vusF = new Set((vus || []).map(cleFete));   // lot 44 : « Sans vendre » déjà fêté = même seuil, quelle que soit la date de la dernière vente
-  const nouveaux = vus === null ? [] : faits.filter(x => !vus.includes(x.id) && !vusF.has(cleFete(x.id)));
+  // lot 54 : premier passage avec les nouvelles règles → les paliers déjà franchis (anciens comme nouveaux) sont notés sans fête
+  const migre = stock.get(cleStock("regles")) !== "2";
+  const nouveaux = vus === null || migre ? [] : faits.filter(x => !vus.includes(x.id) && !vusF.has(cleFete(x.id)));
   stock.set(cleStock("paliers"), JSON.stringify(Array.from(new Set((vus || []).concat(ids, ids.map(cleFete))))));
   let sv = null; try { sv = JSON.parse(stock.get(cleStock("secrets")) || "null"); } catch (e) { sv = null; }
-  const secrets = sv === null ? [] : SECRETS_M.filter(s => E.sec.has(s.id) && !sv.includes(s.id));
+  const secrets = sv === null || migre ? [] : SECRETS_M.filter(s => E.sec.has(s.id) && !sv.includes(s.id));
   stock.set(cleStock("secrets"), JSON.stringify(Array.from(new Set((sv || []).concat(Array.from(E.sec))))));
   // V15.5 : objets gagnés par la régularité (un par mois versé) : fêtés eux aussi, regroupés
   // lot 44 : clé absente (premier lancement, nouveau téléphone, nouveau joueur) → on note sans fêter, comme les paliers et les objets cachés
-  const rv = stock.get(cleStock("regul")), nV = moisVerses(), nbR = Math.min(REGULARITE_M.length, nV), avR = rv === null ? nbR : +rv || 0;
+  // lot 54 : « regul » = nombre d'objets de la régularité déjà fêtés (même valeur qu'avant pour tout ce qui a été gagné avec l'ancienne règle)
+  const RI = regulInfo(), nV = RI.n, nbR = RI.gains.length, rv = stock.get(cleStock("regul")), avR = rv === null || migre ? nbR : Math.min(nbR, +rv || 0);
   stock.set(cleStock("regul"), String(nbR));
-  const regul = nbR > avR ? [{ regul: true, titre: nbR - avR > 1 ? "Ta régularité paie : " + (nbR - avR) + " nouveaux objets" : "Un mois de plus avec un versement", grand: nV + " MOIS", recs: REGULARITE_M.slice(avR, nbR), quand: null, id: null }] : [];
+  const regul = nbR > avR ? [{ regul: true, titre: nbR - avR > 1 ? "Ta régularité paie : " + (nbR - avR) + " nouveaux objets" : "Ta régularité paie", grand: nV + " MOIS", recs: RI.gains.slice(avR, nbR).map(g => g.r), quand: null, id: null }] : [];
   const file = nouveaux.concat(secrets.map(secret => ({ secret, titre: secret.nom, grand: "?!", quand: null, id: null })), regul);
-  if (file.length) { const go = () => lancerFetes(file); if (typeof window.ereApres === "function") window.ereApres(go, "feteMoi"); else go(); }   // v16.93 : attend la scène du premier million
+  // lot 54 : ce que les nouveaux paliers donnent pour ce qui était déjà fait = UN seul écran (jamais de pluie de fêtes)
+  let maj = [];
+  if (migre) {
+    let v1 = null; try { v1 = JSON.parse(stock.get(cleStock("objetsV1")) || "null"); } catch (e) { v1 = null; }
+    if (Array.isArray(v1) && vus !== null) { const avant = new Set(v1); maj = Array.from(E.ok).filter(k => !avant.has(k) && BASE_M[k.split(".")[0]] !== k.split(".")[1]).map(k => k.split(".")); }
+    stock.set(cleStock("regles"), "2"); stock.del(cleStock("objetsV1"));
+  }
+  const go = maj.length ? () => feterMaj(maj) : file.length ? () => lancerFetes(file) : null;
+  if (go) { if (typeof window.ereApres === "function") window.ereApres(go, "feteMoi"); else go(); }   // v16.93 : attend la scène du premier million
+}
+/** lot 55 : la vente qui compte pour « Sans vendre ». Un script récent envoie derniereVenteHorsLevier (les ventes de la stratégie levier,
+ *  LQQ ×2, QQQ3 ×3 et bascules ×1 → ×2, ne cassent pas la série) ; un ancien script n'envoie que derniereVente (toute vente casse la série). */
+function derniereVenteSV(p) {
+  p = p || {};
+  if (Object.prototype.hasOwnProperty.call(p, "derniereVenteHorsLevier")) return { date: p.derniereVenteHorsLevier || null, horsLevier: true, levier: p.derniereVenteLevier || null };
+  return { date: p.derniereVente || null, horsLevier: false, levier: null };
 }
 /* lot 44 : clé de fête d'un palier = famille + seuil (sans la date de la dernière vente pour « Sans vendre ») */
 function cleFete(id) { return String(id).replace(/^(vente\d+)-.*$/, "$1"); }
 function recsDe(x) { return x.recs || (x.secret ? x.secret.rec : (etatObjets().rec.get(x.id) || [])); }
 /** le prochain palier non franchi d'une famille qui donne un objet */
 function prochaineRec(groupe) { const E = etatObjets(), x = E.pal.find(p => p.groupe === groupe && !p.atteint && E.rec.has(p.id)); return x ? { x, r: E.rec.get(x.id) } : null; }
-function regulEpuisee() { return moisVerses() >= REGULARITE_M.length; }
+function regulEpuisee() { return regulInfo().fini; }
+/** lot 54 : la phrase de la régularité dans les fêtes */
+function phraseRegul() {
+  const RI = regulInfo();
+  return RI.fini ? "Tu as gagné les " + RG.length + " objets de la régularité. Tes séries et tes mois versés continuent de compter dans les paliers."
+    : "Régularité : " + RI.n + " mois versés · prochain objet à ton " + RI.auMois + "<sup>e</sup> mois versé.";
+}
+/** lot 54 : premier passage avec les nouveaux paliers : un seul écran pour tout ce qu'ils donnent en plus (rien n'est retiré) */
+function feterMaj(recs) {
+  injecterStyle();
+  const aff = recs.find(r => r[0] === "aff"), o = document.createElement("div");
+  o.className = "m-fete moi"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
+  o.innerHTML = '<div><span class="mf-k">Nouveaux paliers</span><div class="m-flaps">' + flaps("+" + recs.length, !reduit, aff ? aff[1] : null) + "</div><h3>Les paliers se rapprochent</h3>" +
+    "<p>Des paliers intermédiaires arrivent dans tes Missions. Ce que tu avais déjà fait te rapporte " + (recs.length > 1 ? recs.length + " objets" : "un objet") + " de plus. Tout ce que tu avais est gardé.</p>" +
+    '<p class="mf-af">Touche un objet pour l\'équiper</p>' + htmlRecsFete(recs.slice(0, 12)) + (recs.length > 12 ? "<p>… et " + (recs.length - 12) + " autres dans ton vestiaire.</p>" : "") +
+    '<button class="wr-btn" type="button" data-continuer>Continuer</button></div>';
+  document.body.appendChild(o);
+  brancherFete(o, () => o.remove());
+  lancerFete();
+}
 /** lot 44 : un seul écran pour un rattrapage ; un simple toast pour un palier sans objet ; la pleine fête pour un objet ou la régularité */
 function lancerFetes(file) {
   if (file.length > 1) return feterRecap(file);
@@ -4838,7 +4996,7 @@ function feter(x, suite) {
   const recs = recsDe(x);
   const aff = recs.find(r => r[0] === "aff"), fini = x.regul && regulEpuisee();
   o.innerHTML = '<div><span class="mf-k">' + (x.regul ? "🛡️ Régularité" : x.secret ? "Récompense cachée trouvée" : "Palier franchi") + '</span><div class="m-flaps">' + flaps(x.grand, !reduit, aff ? aff[1] : null) + "</div><h3>" + esc(x.titre) + "</h3>" +
-    (x.regul ? "<p>" + (fini ? "Tu as gagné les " + REGULARITE_M.length + " objets de la régularité. Ta série continue de compter dans les paliers." : "Chaque mois où tu verses débloque un objet. Le prochain : ton " + (moisVerses() + 1) + "<sup>e</sup> mois.") + "</p>" : x.secret ? "<p>" + esc(x.secret.quoi) + "</p>" : x.quand ? "<p>Franchi en " + esc(libMois(x.quand, true)) + ".</p>" : "") +
+    (x.regul ? "<p>" + phraseRegul() + "</p>" : x.secret ? "<p>" + esc(x.secret.quoi) + "</p>" : x.quand ? "<p>Franchi en " + esc(libMois(x.quand, true)) + ".</p>" : "") +
     (recs.length ? '<p class="mf-af">' + (recs.length > 1 ? "Tes " + recs.length + " objets" : "Ton objet") + " · touche pour l'équiper</p>" + htmlRecsFete(recs) : "") +
     '<button class="wr-btn" type="button" data-continuer>Continuer</button></div>';
   document.body.appendChild(o);
@@ -4864,7 +5022,7 @@ function feterRecap(file) {
   o.className = "m-fete moi"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
   o.innerHTML = '<div><span class="mf-k">Du nouveau</span><div class="m-flaps">' + flaps(recs.length ? "+" + recs.length : String(pals.length || 1), !reduit, aff ? aff[1] : null) + "</div><h3>" + esc(titre) + "</h3>" +
     (lignes.length ? '<ul class="mf-l">' + lignes.slice(0, 8).map(l => "<li>✓ " + esc(l) + "</li>").join("") + (lignes.length > 8 ? "<li>… et " + (lignes.length - 8) + " de plus</li>" : "") + "</ul>" : "") +
-    (reg ? "<p>" + (regulEpuisee() ? "Tu as gagné les " + REGULARITE_M.length + " objets de la régularité." : "Régularité : " + moisVerses() + " mois versés · prochain objet au " + (moisVerses() + 1) + "<sup>e</sup>.") + "</p>" : "") +
+    (reg ? "<p>" + phraseRegul() + "</p>" : "") +
     (recs.length ? '<p class="mf-af">Touche un objet pour l\'équiper</p>' + htmlRecsFete(recs) : "") +
     '<button class="wr-btn" type="button" data-continuer>Continuer</button></div>';
   document.body.appendChild(o);
@@ -4891,14 +5049,18 @@ function htmlCeMois(cour) {
   if (!sv || !sv.liste.length) return "";
   const now = new Date(), mo = MOIS_L[now.getMonth()], Mo = mo.charAt(0).toUpperCase() + mo.slice(1);
   const finM = new Date(now.getFullYear(), now.getMonth() + 1, 0), fin = String(finM.getDate()).padStart(2, "0") + "/" + String(finM.getMonth() + 1).padStart(2, "0");
-  const n = moisVerses(), L = REGULARITE_M.length, fini = n >= L, e = k => k + (k === 1 ? "<sup>er</sup>" : "<sup>e</sup>");
+  const RI = regulInfo(), n = RI.n, L = RG.length, fini = RI.fini, e = k => k + (k === 1 ? "<sup>er</sup>" : "<sup>e</sup>");
+  const an = cleMoisD(now).slice(0, 4), jk = (sv.jokers || {})[an], libJ = jk ? MOIS_L[+jk.slice(5, 7) - 1] : "";
   let tete, sous = "";
   if (sv.moisEnCours) tete = "<b>" + esc(Mo) + " fait ✓</b> · série de " + sv.actuelle + " mois";
   else {
     tete = "<b>" + esc(Mo) + " : pas encore versé</b>";
-    sous = sv.actuelle ? "Ta série de <b>" + sv.actuelle + " mois</b> est en jeu jusqu'au " + fin + "." : "Un versement d'ici le " + fin + ", même petit, lance ta série.";
+    sous = sv.actuelle ? "Ta série de <b>" + sv.actuelle + " mois</b> est en jeu jusqu'au " + fin + (jk ? " (joker de " + an + " déjà utilisé)." : " (joker de l'année encore dispo).")
+      : "Un versement d'ici le " + fin + ", même petit, lance ta série.";
   }
-  const piste = '<p class="cm-pt">Régularité : <b>' + n + " mois versés</b>" + (fini ? " · les " + L + " objets gagnés" : " · prochain objet au " + e(n + 1)) + "</p>";
+  // lot 54 : le joker vient d'être utilisé (mois précédent) → on le dit
+  if (jk && jk === moisSuivant(cleMoisD(now), -1) && sv.actuelle) sous = (sous ? sous + " " : "") + "🛟 Joker utilisé en " + esc(libJ) + " : ta série a tenu.";
+  const piste = '<p class="cm-pt">Régularité : <b>' + n + " mois versés</b>" + (fini ? " · les " + L + " objets gagnés" : " · prochain objet au " + e(RI.auMois)) + "</p>";
   return '<section class="m-cemois' + (sv.moisEnCours ? " fait" : "") + '" aria-label="Ce mois-ci"><div class="cm-h"><span class="cm-k">Ce mois-ci</span>' + (cour || "") + '</div><p class="cm-t">' + tete + "</p>" + (sous ? '<p class="cm-s">' + sous + "</p>" : "") + piste + "</section>";
 }
 /* lot 51 (Théo) : le million n'est plus un gros bloc ; une couronne discrète (« 👑 4,2 % ») en haut de Missions, un toucher déplie le détail.
@@ -4930,21 +5092,23 @@ function afficherMillionM(v) {
    Mini-Conseil : « À venir » d'abord (la suite directe de Ce mois-ci), puis « Récemment gagnées ». */
 function recompensesRecentes(n) {
   const E = etatObjets(), discret = ETAT.discret === "oui", l = [], vu = new Set();
-  try { const ok = serieVersements().liste.filter(x => x.ok); REGULARITE_M.slice(0, Math.min(REGULARITE_M.length, ok.length)).forEach((r, i) => l.push({ r, m: ok[i].m, o: i })); } catch (e) { /* pas de parcours */ }
+  try { regulInfo().gains.forEach((g, i) => l.push({ r: g.r, m: g.m, o: i })); } catch (e) { /* pas de parcours */ }
   (E.pal || []).forEach((x, i) => { if (!x.atteint || !x.quand || !E.rec.has(x.id) || (discret && FAM_EUR.includes(x.groupe))) return; E.rec.get(x.id).forEach(r => l.push({ r, m: x.quand, o: 1000 + i })); });
   return l.filter(x => E.ok.has(cleObj(x.r[0], x.r[1]))).sort((a, b) => a.m < b.m ? 1 : a.m > b.m ? -1 : b.o - a.o)
     .filter(x => { const k = cleObj(x.r[0], x.r[1]); if (vu.has(k)) return false; vu.add(k); return true; }).slice(0, n);
 }
 function recompensesAVenir(n) {
-  const E = etatObjets(), discret = ETAT.discret === "oui", l = [], nv = moisVerses();
-  if (nv < REGULARITE_M.length) {
+  const E = etatObjets(), discret = ETAT.discret === "oui", l = [], RI = regulInfo(), nv = RI.n;
+  if (RI.prochain) {   // lot 54 : au rythme de la régularité (parfois dans 2 mois versés)
     let sv = null; try { sv = serieVersements(); } catch (e) { sv = null; }
     const pro = MOIS_L[(new Date().getMonth() + 1) % 12];
-    l.push({ r: REGULARITE_M[nv], quoi: sv && sv.moisEnCours ? "verse en " + pro : nv ? "verse ce mois-ci" : "ton 1<sup>er</sup> versement", part: 2 });
+    l.push({ r: RI.prochain, quoi: RI.reste > 1 ? "encore " + RI.reste + " mois versés" : sv && sv.moisEnCours ? "verse en " + pro : nv ? "verse ce mois-ci" : "ton 1<sup>er</sup> versement", part: 2 });
   }
   const pal = [];
-  FAMILLES.forEach(([g]) => { if (discret && FAM_EUR.includes(g)) return; const pr = prochaineRec(g); if (pr) pal.push({ r: pr.r[0], plus: pr.r.length - 1, quoi: cheminP(masquerPalier(pr.x)), g, part: pr.x.part || 0 }); });
-  return l.concat(pal.sort((a, b) => b.part - a.part)).slice(0, n);
+  FAMILLES.forEach(([g]) => { if (discret && FAM_EUR.includes(g)) return; const pr = prochaineRec(g); if (pr) pal.push({ r: pr.r[0], plus: pr.r.length - 1, quoi: cheminP(masquerPalier(pr.x)), g, part: pr.x.part || 0, mois: moisRestants(pr.x) }); });
+  // lot 54 : ce qu'on fait d'abord : les paliers « en mois » à 3 mois ou moins, puis les paliers en euros (par %), puis le reste
+  const proches = pal.filter(x => x.mois !== null && x.mois <= 3).sort((a, b) => a.mois - b.mois), eu = pal.filter(x => x.mois === null).sort((a, b) => b.part - a.part);
+  return l.concat(proches, eu, pal.filter(x => x.mois !== null && x.mois > 3).sort((a, b) => a.mois - b.mois)).slice(0, n);
 }
 function htmlRecompensesM() {
   const s = new Date(), auj = s.getFullYear() + "-" + String(s.getMonth() + 1).padStart(2, "0");
@@ -4956,6 +5120,16 @@ function htmlRecompensesM() {
     (av.length ? ligne("À venir", av.map(x => carte(x, x.quoi, x.g ? 'data-rc-fam="' + x.g + '"' : "")).join("")) : "") +
     (rec.length ? ligne("Récemment gagnées", rec.map(x => carte(x, x.m === auj ? "ce mois-ci" : esc(libMois(x.m)), 'data-vt-ouv="' + x.r[0] + '" aria-label="' + esc(nomObj(x.r[0], x.r[1]) + ", gagné " + (x.m === auj ? "ce mois-ci" : libMois(x.m, true)) + ", ouvrir le vestiaire") + '"')).join("")) : "") + "</section>";
 }
+/** lot 54 · combien de mois avant un palier « en temps » (séries, mois versés, sans vendre, ancienneté…) ; null pour les paliers en euros */
+function moisRestants(x) {
+  if (FAM_EUR.includes(x.groupe)) return null;
+  const n = +String(x.id).replace(/^\D+/, "").replace(/\D.*$/, "") || 0;
+  if (x.groupe === "serie") return Math.max(1, n - serieVersements().actuelle);
+  if (x.groupe === "mois") return Math.max(1, n - moisVerses());
+  if (x.groupe === "anv") return x.manque || 99;
+  const duree = x.groupe === "vente" ? n : x.groupe === "annee" ? n * 12 : x.groupe === "fisc" ? (/^PEA/.test(x.court) ? 60 : 96) : 12;
+  return Math.max(0, (1 - Math.max(0, Math.min(1, x.part))) * duree);
+}
 const pctNw = v => '<span class="nw">' + pct(Math.max(0, Math.min(1, v)), 0, false) + "</span>";
 /** le chemin qui reste jusqu'à un palier (« encore 2 mois », « 70 % ») ; masqué en mode discret pour les familles en euros */
 function cheminP(x) {
@@ -4964,6 +5138,7 @@ function cheminP(x) {
     const n = +String(x.id).replace(/\D/g, ""), sv = serieVersements(), fait = x.groupe === "serie" ? sv.actuelle : sv.liste.filter(z => z.ok).length, r = Math.max(1, n - fait);
     return "encore " + r + " mois" + (x.groupe === "serie" ? " d'affilée" : "");
   }
+  if (x.groupe === "anv") return x.manque ? "encore " + x.manque + " mois versé" + (x.manque > 1 ? "s" : "") : "l'an prochain";   // lot 54
   return pctNw(x.part);
 }
 function htmlMissions() {
@@ -4974,7 +5149,7 @@ function htmlMissions() {
   const ligneP = x => '<button type="button" class="pl-r' + (x.atteint ? " fait" : "") + '" data-palier="' + esc(x.id) + '"' + (x.atteint ? "" : " disabled") + '>' +
     '<span class="pastille">' + esc(x.court) + '</span><span class="pl-t">' + esc(x.titre) + htmlRecs(x) + (x.atteint || x.cache ? "" : '<span class="jauge"><i style="width:' + Math.round(Math.max(0, Math.min(1, x.part)) * 100) + '%"></i></span><small>' + esc(x.reste) + "</small>") + "</span>" +
     (x.atteint ? '<span class="pl-s">✓' + (x.cache ? "" : " " + esc(libMois(x.quand))) + "</span>" : '<span class="pl-s">' + (x.cache ? "•••" : pctNw(x.part)) + "</span>") + "</button>";
-  const derVente = ((M.ref || {}).parcours || {}).derniereVente;
+  const dvSV = derniereVenteSV((M.ref || {}).parcours), derVente = dvSV.date;
   const bloc = (g, nom) => {
     const l = pal.filter(x => x.groupe === g); if (!l.length) return null;
     const faits = l.filter(x => x.atteint).length, suiv = l.find(x => !x.atteint), cache = l.some(x => x.cache);
@@ -4983,7 +5158,7 @@ function htmlMissions() {
       '<span class="pb-t">' + esc(nom) + '</span><span class="pb-n">' + (cache ? "•••" : faits + " / " + l.length) + "</span>" +
       (cache ? "" : '<span class="jauge" title="vers le prochain palier"><i style="width:' + (suiv ? Math.round(Math.max(0, Math.min(1, suiv.part)) * 100) : 100) + '%"></i></span>') +
       '<span class="pb-s">' + (cache ? "Masqué en mode discret" : suiv ? "Prochain : <b>" + esc(suiv.titre) + "</b> · " + cheminP(suiv) : "Tout est franchi ✓") +
-        (g === "vente" && derVente ? " · depuis ta dernière vente le " + esc(frDate(derVente)) : "") + "</span>" +
+        (g === "vente" && derVente ? " · depuis ta dernière vente" + (dvSV.horsLevier ? " (hors levier)" : "") + " le " + esc(frDate(derVente)) : g === "vente" && dvSV.levier ? " · aucune vente hors levier (les ventes de la règle du levier ne comptent pas)" : "") + "</span>" +
       (r && !cache ? '<span class="pb-r"><span class="pb-ap">' + apercuFete(r[0], r[1]) + "</span><span>🎁 <b>" + esc(nomObj(r[0], r[1])) + "</b>" + (recDe(pr.id).length > 1 ? " +" + (recDe(pr.id).length - 1) : "") + " · " + cheminP(pr) + "</span></span>" : "") +
       '</summary><div class="pl-liste">' + l.map(ligneP).join("") + "</div></details>";
     return { g, html, complet: !suiv };
@@ -4997,7 +5172,7 @@ function htmlMissions() {
   const ce = htmlCeMois(puceMillion());
   return (ce || '<div class="mi-haut">' + puceMillion() + "</div>") + '<div id="m-million-z" class="mi-det" hidden></div>' + htmlRecompensesM() + htmlTenue() +
     '<div><h2 class="sec">Paliers <small>' + (pal.some(x => x.cache) ? "privé en mode discret" : nbFaits + " franchis sur " + pal.length) + "</small></h2></div>" +
-    '<details class="pl-aide"' + (palOuverts.has("_aide") ? " open" : "") + ' data-grp="_aide"><summary>Comment ça marche ?</summary><p>🎁 = récompense · touche un palier franchi pour revoir sa fête</p></details>' +
+    '<details class="pl-aide"' + (palOuverts.has("_aide") ? " open" : "") + ' data-grp="_aide"><summary>Comment ça marche ?</summary><p>🎁 = récompense · touche un palier franchi pour revoir sa fête</p><p>Régularité : un objet à chacun de tes 3 premiers mois versés, puis un tous les 2 mois versés. 🛟 Un mois sauté par an ne casse pas ta série.</p></details>' +
     '<div class="pl-blocs">' + blocs + "</div>" +
     htmlVestiaire() + htmlBilansMoi();
 }
@@ -5112,11 +5287,11 @@ function diaposCloture(k) {
   const idx = sv ? sv.liste.findIndex(z => z.m === mm) : -1;
   if (idx >= 0) {
     let run = 0, avant = 0, rec = 0;
-    for (let j = 0; j <= idx; j++) { avant = run; run = sv.liste[j].ok ? run + 1 : 0; rec = Math.max(rec, run); }
+    for (let j = 0; j <= idx; j++) { avant = run; run = sv.liste[j].ok ? run + 1 : sv.liste[j].joker ? run : 0; rec = Math.max(rec, run); }   // lot 54 : joker
     L.push({ c: "#FF8A3D", h: '<div class="wr-k">Ton versement</div>' + (sv.liste[idx].ok
       ? '<div class="wr-mid">Fait ✓</div><div class="cl-serie">' + palette(p2(avant), false) + '<span class="cl-fl" aria-hidden="true">→</span>' + palette(p2(run), !reduit) + "</div>" +
         '<p class="wr-p"><b>' + run + " mois</b> d'affilée avec un versement" + (run > 1 && run >= rec ? " : c'est ton record !" : (rec > run ? " · record " + rec + " mois" : "") + ".") + "</p>"
-      : '<div class="wr-mid">Pas ce mois-là</div><p class="wr-p">' + (avant ? "Ta série de <b>" + avant + " mois</b> repart de zéro." : "La série repart de zéro.") + " Un versement ce mois-ci, même 10 €, la relance.</p>") });
+      : '<div class="wr-mid">Pas ce mois-là</div><p class="wr-p">' + (sv.liste[idx].joker ? "🛟 Ton joker de l'année a joué : ta série de <b>" + avant + " mois</b> tient." : avant ? "Ta série de <b>" + avant + " mois</b> repart de zéro." : "La série repart de zéro.") + " Un versement ce mois-ci, même 10 €, la relance.</p>") });
   }
   // 4. paliers franchis pendant le mois, 5. le plus proche, 6. récompenses débloquées
   let E = null; try { E = etatObjets(); } catch (e) { E = null; }
