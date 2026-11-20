@@ -1246,9 +1246,9 @@ function htmlPatrimoine() {
         (dette ? '<button type="button" class="m-dette" data-cible="p-immo"><i></i><span>Immobilier : dette nette</span><span class="num down">' + eur(immoNet) + '</span><span class="pc"></span></button>' : "") + "</div></div>" +
     /* v16.87 (Théo) : l'assurance-vie Banque Populaire en premier, la bourse en second (elle est déjà sur Aujourd'hui), puis l'épargne et l'immobilier */
     (sup.length ? bloc("p-av", "--c-av", "Quintessa", "par support", htmlAV(sup)) : "") +
-    bloc("p-bourse", "--s1", "Bourse", "portefeuille", liste(envs, rEnv)) +
     bloc("p-epargne", "--s2", "Épargne", esc(s.epargneLibelle || ""), liste(ep, rEp)) +
     (net.avecImmo ? bloc("p-immo", "--s3", "Immobilier", "prix d'achat, prêts restants", pretHtml() + liste(imm, rImm)) : "") +
+    bloc("p-bourse", "--s1", "Bourse", "portefeuille", liste(envs, rEnv)) +   // v17.21 (Théo) : la bourse en dernier (elle a déjà sa place dans Aujourd'hui)
     (fis.length ? acc("m-fis", "Si tout était retiré", "résultat net d'impôt estimé", liste(fis, rFis), false) : "") +
     htmlComparateur();   // v16.95 : où mettre le prochain euro
 }

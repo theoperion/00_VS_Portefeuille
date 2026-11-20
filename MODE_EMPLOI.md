@@ -440,3 +440,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 20/11/2026 | ven | **v17.18 · Bourse « Jour | 5 j » + barre du plein écran** (Théo, Conseil) : pastille sur la carte verte (5 séances glissantes, détail jour par jour en touchant la variation ; la nuit/le week-end « Jour » montre la dernière séance), bandeau « Voir la semaine » supprimé ; plein écran : [Carte | Visite | Hélico | Survol] puis ▶ ⏭ ✕ en icônes. |
 | 20/11/2026 | ven | **v17.19 · Tuiles de la carte du jour** : largeur minimale 80 px et texte qui ne déborde plus (« BTC -15,28 % » sortait de sa tuile sur iPhone). |
 | 20/11/2026 | ven | **v17.20 · Moi se met à jour en silence** (Théo) : plus de bandeau bleu « Chiffres de la dernière ouverture · mise à jour… » ; seulement une petite ligne si le fichier ne répond vraiment pas. |
+| 20/11/2026 | ven | **v17.21 · Patrimoine : la bourse en dernier** (Théo) : Quintessa, Épargne, Immobilier, puis Bourse (déjà détaillée dans Aujourd'hui). |
