@@ -1768,3 +1768,8 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
   .gp-plein.v2 .tap-band { top: calc(env(safe-area-inset-top, 0px) + 106px); }
   .gp-plein.v2 .gp-jauge { bottom: calc(env(safe-area-inset-bottom, 0px) + 48px); }
 }
+/* v17.39 (Théo) : en plein écran, l'énigme, le 2e indice et les chercheurs sont affichés en entier (en Visite comme sur la carte 2D) */
+.gp-plein .gp-enigme { white-space: normal; font-size: 13px; line-height: 1.4; padding: 8px 12px; }
+.gp-plein .gp-enigme .gp-indice, .gp-plein .gp-enigme .gp-chercheurs { display: block; }
+.gp-plein .gp-piste.en2d .gp-enigme:not(.cache) { display: block; }
+.gp-plein .gp-piste.en2d .gp-tresor-appel { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 56px); }
