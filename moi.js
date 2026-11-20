@@ -3056,9 +3056,8 @@ function synchroniser() {
   if (F.pilote === "prix") {
     const p = F.prixAuto && coursActif() ? coursActif() : lireNombre(F.prix);
     if (p > 0) {
-      let q = net / p; const e = Math.round(q);
-      if (F.prixAuto && e >= 1 && Math.abs(q - e) <= .02 * q && Math.abs(q - e) > 1e-9 && partsEntieres()) { q = e; F.arrondi = true; F.prix = saisieNombre(net / q, 4); }
-      else if (F.prixAuto) F.prix = saisieNombre(p, p < 10 ? 4 : 2);
+      const q = net / p;   // v17.26 (Théo) : jamais d'arrondi automatique des parts ; c'est une estimation à remplacer par le chiffre exact de l'avis d'opéré
+      if (F.prixAuto) F.prix = saisieNombre(p, p < 10 ? 4 : 2);
       F.qte = saisieNombre(q, 6);
     }
   }
