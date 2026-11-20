@@ -670,7 +670,7 @@ function poserTresorDOM(v) {
 function majTresor(api, pi) {
   const T = TRESOR_EL; if (!T || T.pi !== pi) return;
   const libre = api.type === "3d" && api.projeter && api.mode() === "helico" && !api.enCours() && !(api.survolEnCours && api.survolEnCours()) && !pi.classList.contains("en2d");
-  T.en.classList.toggle("cache", !libre || (!!T.pris && !!T.b));
+  T.en.classList.toggle("cache", (!libre && !(GP_PLEIN && pi.closest(".gp-plein"))) || (!!T.pris && !!T.b));   // v17.55 (Théo) : en plein écran, l'énigme et les indices restent affichés dans toutes les vues
   /* v17.35 : en hauteur (portrait), la caméra recule toute seule pour montrer le circuit ; on ramène la distance à celle d'un écran en largeur → même difficulté dans toutes les orientations */
   const e = libre && !T.pris && T.t.p && api.zoom() <= .2 ? api.projeter(T.t.p) : null, d = e && e.vis ? e.d / (api.recul ? api.recul() : 1) : 1e9, al = d < TRESOR_D ? Math.min(.92, (TRESOR_D - d) / 16) : 0;
   if (T.j) { const c = libre && !T.pris && T.t.p && api.cible ? api.cible() : null; T.j.classList.toggle("cache", !c);
@@ -1065,7 +1065,7 @@ function brancherGP(v, y) {
   const cal = v.querySelector("#gp-calend"); if (cal) cal.addEventListener("toggle", () => { ETAT.calOuvert = cal.open ? "1" : "0"; garder(); });
   GP_ETQ = null;
   if (GP_PLEIN) placerPlein(y);
-  chargerTresors(); poserTresorDOM(v);
+  chargerTresors(); poserTresorDOM(GP_PLEIN ? document : v);   // v17.55 : en plein écran la piste a été déplacée dans la fenêtre (énigme absente en Carte plein écran)
   etiquettesGP(api);
 }
 /** V15.5 · Nouvelle manche courue mais pas encore regardée : un bandeau dans le Classement */
