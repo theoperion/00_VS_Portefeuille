@@ -469,7 +469,7 @@ function rendreSaisie() {
   const idx = p.rows.findIndex(x => x[0] === R.k);
   const prev = idx > 0 ? p.rows[idx - 1] : null;
   const util = utilisees(p);
-  const montrer = NOMS_ENV.map((_, e) => R.tout || util[e] || !util.some(Boolean));
+  const montrer = NOMS_ENV.map((_, e) => e < 2 && (R.tout || util[e] || !util.slice(0, 2).some(Boolean)));   // v17.29 : PEA + assurance-vie seulement (CTO et crypto hors du Versus)
   const opts = p.rows.slice().reverse().map(r => { const e = etatReleve(p.nom, r[0]).etat; return '<option value="' + r[0] + '"' + (r[0] === R.k ? " selected" : "") + ">" + esc(moisLong(r[0])) + (e === "vide" ? " · à saisir" : e === "modif" ? " · modifiable" : " · figé") + "</option>"; }).join("");
   const st = etatReleve(p.nom, R.k);
   const fige = st.etat === "fige";
@@ -489,7 +489,7 @@ function rendreSaisie() {
       '<div class="env-saisie"><div class="h"><b>' + nom + '</b><span id="r-info-' + e + '"></span></div><div class="rang">' +
       '<div class="champ"><label for="r-v' + e + '">Versé ce mois (€)</label><input id="r-v' + e + '" type="text" inputmode="decimal" autocomplete="off" placeholder="0" value="' + esc(R.v[2 * e]) + '"' + (fige ? " disabled" : "") + "></div>" +
       '<div class="champ"><label for="r-c' + e + '">Valeur fin de mois (€)</label><input id="r-c' + e + '" type="text" inputmode="decimal" autocomplete="off" placeholder="—" value="' + esc(R.v[2 * e + 1]) + '"' + (fige ? " disabled" : "") + "></div></div></div>").join("") +
-    (montrer.every(Boolean) ? "" : '<button class="lien" type="button" id="r-tout">Afficher les autres enveloppes</button>') +
+    (montrer[0] && montrer[1] ? "" : '<button class="lien" type="button" id="r-tout">Afficher les autres enveloppes</button>') +
     '<p class="info">Versé : 0 si rien, négatif si retrait. Valeur : le total affiché par la banque en fin de mois, 0 si l\'enveloppe est vidée. Le rendement affiché compte le versement à moitié (arrivé en moyenne en milieu de mois).</p>' +
     '<div class="recap" id="r-recap"></div><div id="r-alertes" style="display:grid;gap:6px"></div>' +
     (fige ? "" : '<button class="btn acc plein" type="submit" id="r-envoyer">' + (st.etat === "modif" ? "Enregistrer la modification" : "Enregistrer le relevé") + "</button>") + "</form>";

@@ -564,7 +564,7 @@ function htmlRegles(tout, modeReserve) {
   const schemaCartes = '<div class="rg-sch rg-cartes">' + CARTES.map(c => '<div class="rg-ca"><i>' + c.ico + "</i><b>" + esc(c.nom) + "</b><small>" + esc(c.court) + "</small></div>").join("") + "</div>";
   return (modeReserve ? "" : '<div class="rg-sommaire">' + sommaire.map(([id, l]) => '<button type="button" data-rg="' + id + '">' + l + "</button>").join("") + "</div>") +
     (modeReserve ? "" : s("essentiel", "⚡", "L'essentiel",
-      "<p>Chaque mois, les pilotes sont classés sur la <b>performance de leur portefeuille</b> (versements neutralisés : seul le % compte). La saison va de janvier à décembre ; le plus de points gagne.</p>" + schemaMois +
+      "<p>Chaque mois, les pilotes sont classés sur la <b>performance de leur PEA et de leur assurance-vie</b> (versements neutralisés : seul le % compte ; les autres comptes restent privés). La saison va de janvier à décembre ; le plus de points gagne.</p>" + schemaMois +
       '<p class="rg-note">🔥 Décembre 2026 = tour de chauffe : tout marche, rien ne compte (cartes jusqu\'au 5).</p>')) +
     s("champ", "🏁", "Les points du mois", schemaBareme + schemaCalcul +
       "<ul><li>Ex æquo : mêmes points. Un mois ne descend jamais sous 0.</li><li>Le mois compte quand tout le monde a saisi son relevé.</li><li>Égalité au championnat : le plus de victoires, puis la meilleure performance cumulée.</li></ul>") +

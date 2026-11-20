@@ -38,6 +38,7 @@ const $ = s => document.querySelector(s);
 const reduit = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 let D = null, SOURCE = "demo";
 const ETAT = Object.assign({ env: 0, per: "ytd", i1: 0, i2: 1, moi: "Théo", fiche: null, bandeau: "fige", discret: "non", ouverture: "dernier" }, (() => { try { return JSON.parse(stock.get(CLES.etat) || "{}"); } catch (e) { return {}; } })());
+if (!(ETAT.env >= 0 && ETAT.env <= 2)) ETAT.env = 0;   // v17.29 : CTO et crypto ne sont plus dans le Versus
 function garder() { stock.set(CLES.etat, JSON.stringify(ETAT)); }
 
 /* ---------- Format ---------- */
@@ -330,7 +331,7 @@ function rendreTicker() {
 function i2Actif() { return ok(ETAT.i2c) && ETAT.i2c >= 0 && ETAT.i2c !== ETAT.i1 && ETAT.i2c < D.marche.indices.length ? ETAT.i2c : -1; }
 function filtres(avecIndices, avecPeriode = true, avecSecond = true) {
   const opt = (v, l, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? " selected" : "") + ">" + esc(l) + "</option>";
-  const env = '<label class="sel"><span>Enveloppe</span><select id="f-env">' + ENVELOPPES.map((e, i) => opt(i, e, ETAT.env)).join("") + "</select></label>";
+  const env = '<label class="sel"><span>Enveloppe</span><select id="f-env">' + ENVELOPPES.slice(0, 3).map((e, i) => opt(i, e, ETAT.env)).join("")   /* v17.29 : le Versus ne compte que PEA + assurance-vie */ + "</select></label>";
   const per = avecPeriode ? '<label class="sel"><span>Période</span><select id="f-per">' + PERIODES.map(([k, l]) => opt(k, l, ETAT.per)).join("") + "</select></label>" : "";
   const idx = avecIndices ? '<label class="sel"><span>Indice</span><select id="f-i1">' + D.marche.indices.map((n, i) => opt(i, n, ETAT.i1)).join("") + "</select></label>" : "";
   const idx2 = avecIndices && avecSecond ? '<label class="sel"><span>2e indice</span><select id="f-i2c">' + opt(-1, "Aucun", i2Actif()) + D.marche.indices.map((n, i) => i === ETAT.i1 ? "" : opt(i, n, i2Actif())).join("") + "</select></label>" : "";
@@ -635,7 +636,7 @@ function anomaliesDonnees(env) {
     const rows = p.rows.filter(r => aUnReleveBrut(r[2]));
     if (rows.length < 2) return;
     const r = rows[rows.length - 1], pr = rows[rows.length - 2];
-    ["PEA", "Assurance vie", "CTO", "Crypto"].forEach((nom, e) => {
+    ["PEA", "Assurance vie"].forEach((nom, e) => {
       const v = r[2][2 * e + 1], pv = pr[2][2 * e + 1], ve = r[2][2 * e] || 0;
       if (!ok(v) && ok(pv) && pv > 0) out.push("<b>" + esc(p.nom) + "</b>, " + esc(moisLong(r[0])) + " : valeur " + nom + " manquante (" + eur(pv) + " le mois d'avant). Le total du portefeuille est faussé.");
       else if (ok(v) && ok(pv) && pv > 0 && pv + ve / 2 > 0) {

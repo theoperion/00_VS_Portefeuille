@@ -36,6 +36,7 @@ Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles 
 - **Travailler ensemble** : Claude propose → Théo choisit et valide → Claude construit. Après chaque étape, relancer avec la suite et 2 ou 3 idées nouvelles.
 
 ## Règles à ne jamais enfreindre
+0 bis. (v17.29/V61, Théo, 20/11) Le Versus ne compte et ne montre QUE le PEA et l'assurance-vie, pour TOUS les joueurs : CTO et crypto ne sont jamais enregistrés dans le Sheet du Versus ni affichés (rétroactif fait pour 2026). Ils restent suivis dans Moi (privé).
 0. (v16.77/V51, Théo) Le détail des lignes de bourse de Moi reste PRIVÉ pour tous : plus de partage dans le Versus, ni par l'appli ni par le relevé automatique (LiaisonVersus.js), onglet « Lignes app » supprimé ; ne pas le remettre.
 1. Théo ne doit **jamais voir les données financières de Clément et Devlin** (pas de copie de leurs chiffres dans
    un dépôt, une capture, un message).
@@ -62,14 +63,14 @@ Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles 
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **17.28**.
+  hors connexion `sw.js`). Version actuelle : **17.29**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
 ## Serveur Apps Script (dépôt app_scripts)
 - Prérequis une fois par machine : `npx -y @google/clasp@3.4.1 login` (compte Google de Théo) → crée `~/.clasprc.json`.
 - Versus : `sh outils/mettre-en-ligne-versus.sh "V31 : ce qui change"` (APPLI=chemin de ce dépôt si besoin).
-  Versions actuelles : VS_VERSION 60, version Google 75.
+  Versions actuelles : VS_VERSION 61, version Google 76.
 - Scripts perso : dans `portefeuille-epargne/<nom>` : `clasp push --force` puis `python3 ../../outils/deployer.py "desc"`
   (garde les mêmes adresses). Versions actuelles : Théo 34, Clément 13, Devlin 12 (v34 : cache pré-calculé toutes les 10 min, `prechaufferDonnees`, installé au 1er appel).
 - Sheets en direct : `outils/gs.py` (`SS(id).get/put/batch`). Classeurs : Théo `1pbpJRMwZR64LqP_wwlhiw-6m7-lUg-Q3pVAF4Dv9j8U`,
