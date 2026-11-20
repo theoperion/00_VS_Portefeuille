@@ -131,22 +131,23 @@ function injecterStyle() {
 .moi .vs-prof.th .vs-n, .moi .vs-prof.th .vs-n b { color: #F4F5F8; }
 .moi .vs-n small { display: block; font: 500 11px/1.2 var(--f-text); margin: 2px 0 0; }
 /* v17.19 · Ma tenue (haut de Missions) + encart « Nouveau » */
-.moi .vs-tenue { display: grid; gap: 8px; padding: 10px 12px 12px; border-radius: 16px; border: 1px solid var(--rule); background: var(--panel); }
-.moi .vs-tenue .vt-h { all: unset; box-sizing: border-box; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; cursor: pointer; }
-.moi .vs-tenue .vt-h b { font: italic 800 14px/1 var(--f-display); letter-spacing: .06em; text-transform: uppercase; }
-.moi .vs-tenue .vt-h small { font: 500 12px/1 var(--f-text); color: var(--ink-3); white-space: nowrap; }
+.moi .vs-tenue { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 6px 8px; padding: 7px 8px 7px 12px; border-radius: 16px; border: 1px solid var(--rule); background: var(--panel); }   /* lot 51 : une seule rangée */
+.moi .vs-tenue .vt-h { all: unset; box-sizing: border-box; display: grid; gap: 4px; cursor: pointer; }
+.moi .vs-tenue .vt-h b { font: italic 800 12.5px/1 var(--f-display); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
+.moi .vs-tenue .vt-h small { font: 500 11.5px/1 var(--f-num, var(--f-text)); color: var(--ink-3); white-space: nowrap; }
 .moi .vs-tenue .vt-r { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
-.moi .vs-tenue .vt-o { all: unset; box-sizing: border-box; min-width: 0; display: grid; justify-items: center; gap: 4px; padding: 7px 2px 6px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--rule-2, var(--rule)); cursor: pointer; text-align: center; }
+.moi .vs-tenue .vt-o { all: unset; box-sizing: border-box; position: relative; min-width: 0; height: 38px; display: grid; place-items: center; padding: 0 1px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--rule-2, var(--rule)); cursor: pointer; }
 .moi .vs-tenue .vt-o:focus-visible, .moi .vs-tenue .vt-h:focus-visible { outline: 2px solid var(--accent); }
 .moi .vs-tenue .vt-p { height: 26px; width: 100%; display: grid; place-items: center; overflow: hidden; }
 .moi .vs-tenue .vt-p .m-flaps { --fh: 17px; gap: 1px; flex-wrap: nowrap; }
 .moi .vs-tenue .vt-p .m-flap { width: 13px; height: 19px; font-size: 12px; border-radius: 2px; box-shadow: none; }
 .moi .vs-tenue .vt-p .m-flap::after { height: 1px; }
 .moi .vs-tenue .vt-p .m-af { max-width: none; } .moi .vs-tenue .vt-p .t-ticket .tk-h, .moi .vs-tenue .vt-p .t-billet .bl-c, .moi .vs-tenue .vt-p .t-billet::after { display: none; }
-.moi .vs-tenue .vt-p .vs-sw { width: 34px; height: 22px; } .moi .vs-tenue .vt-p .vs-cb { width: 40px; height: 20px; }
-.moi .vs-tenue .vt-p .vs-em { font-size: 20px; }
-.moi .vs-tenue .vt-n .vt-c { display: none; } @media (max-width: 370px) { .moi .vs-tenue .vt-n .vt-l { display: none; } .moi .vs-tenue .vt-n .vt-c { display: inline; } }
-.moi .vs-tenue .vt-n { max-width: 100%; padding: 0; font-size: 10px; letter-spacing: -.02em; font-weight: 600; line-height: 1.15; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.moi .vs-tenue .vt-p .vs-sw { width: 30px; height: 20px; } .moi .vs-tenue .vt-p .vs-cb { width: 34px; height: 18px; }
+.moi .vs-tenue .vt-p .vs-em { font-size: 19px; }
+.moi .vs-tenue .vt-n { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }   /* lot 51 : nom lu par le lecteur d'écran, pas affiché */
+.moi .vs-tenue .vt-n .vt-c { display: none; }
+.moi .vs-tenue > .vs-nv { grid-column: 1 / -1; }
 .moi .vs-nv { display: flex; align-items: center; gap: 8px; padding: 7px 6px 7px 10px; border-radius: 12px; background: color-mix(in srgb, var(--gold) 14%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); font-size: 12.5px; line-height: 1.3; }
 .moi .vs-nv > span { flex: 1; min-width: 0; }
 .moi .vs-nv .btn { padding: 6px 12px; font-size: 12.5px; }
@@ -235,22 +236,41 @@ function injecterStyle() {
 .moi :is(.cm-ap, .pb-ap, .mf-ap) .vs-em { font-size: 20px; }
 .moi .nw { white-space: nowrap; }
 /* lot 44 · carte « Ce mois-ci » */
-.moi .m-cemois { display: grid; gap: 8px; padding: 11px 12px 12px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--gold) 50%, var(--rule)); background: color-mix(in srgb, var(--gold) 9%, var(--panel)); }
+.moi .m-cemois { display: grid; gap: 4px; padding: 9px 12px 10px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--gold) 50%, var(--rule)); background: color-mix(in srgb, var(--gold) 9%, var(--panel)); }
 .moi .m-cemois.fait { border-color: color-mix(in srgb, var(--up) 55%, var(--rule)); background: color-mix(in srgb, var(--up) 10%, var(--panel)); }
+.moi .m-cemois .cm-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 26px; margin: -2px -4px 0 0; }
 .moi .m-cemois .cm-k { font: 700 11px/1 var(--f-display); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
 .moi .m-cemois.fait .cm-k, .moi .m-cemois.fait .cm-t b { color: var(--up); }
 .moi .m-cemois .cm-t { margin: 0; font-size: 15px; line-height: 1.3; color: var(--ink); }
-.moi .m-cemois .cm-s { margin: -4px 0 0; font-size: 13px; line-height: 1.35; color: var(--ink-2); }
-.moi .m-cemois .cm-o { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 12px; background: var(--panel-2); }
-.moi .m-cemois .cm-o .cm-ap { width: 44px; height: 28px; }
-.moi .m-cemois .cm-o > span:last-child { display: grid; gap: 1px; min-width: 0; } .moi .m-cemois .cm-o small { font-size: 11.5px; color: var(--ink-3); }
-.moi .m-cemois .cm-o b { font: italic 800 14px/1.15 var(--f-display); letter-spacing: .05em; text-transform: uppercase; }
-.moi .m-cemois .cm-p { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--rule-2, var(--rule)); }
-.moi .m-cemois .cm-pt { font-size: 12.5px; color: var(--ink-2); } .moi .m-cemois .cm-pt b { color: var(--ink); white-space: nowrap; }
-.moi .m-cemois .cm-f { display: flex; gap: 5px; }
-.moi .m-cemois .cm-fi { display: grid; justify-items: center; gap: 2px; width: 46px; padding: 4px 0 3px; border-radius: 9px; border: 1px dashed var(--rule); opacity: .75; }
-.moi .m-cemois .cm-fi.pro { border: 1px solid var(--gold); opacity: 1; }
-.moi .m-cemois .cm-fi .cm-ap { width: 42px; height: 24px; } .moi .m-cemois .cm-fi small { font: 600 10px/1 var(--f-num); color: var(--ink-3); }
+.moi .m-cemois .cm-s { margin: 0; font-size: 13px; line-height: 1.35; color: var(--ink-2); }
+.moi .m-cemois .cm-pt { margin: 0; font-size: 12.5px; line-height: 1.35; color: var(--ink-2); } .moi .m-cemois .cm-pt b { color: var(--ink); white-space: nowrap; }
+/* lot 51 · couronne du million (détail replié) */
+.moi .mi-haut { display: flex; justify-content: flex-end; }
+.moi .mi-cour { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 3px 10px 3px 8px; border-radius: 999px; cursor: pointer; white-space: nowrap;
+  border: 1px solid color-mix(in srgb, #F5C542 55%, transparent); background: color-mix(in srgb, #F5C542 12%, var(--panel)); color: var(--ink); }
+.moi .mi-cour .mi-c { font-size: 15px; line-height: 1; }
+.moi .mi-cour b { font: italic 800 14px/1 var(--f-display); letter-spacing: .02em; color: color-mix(in srgb, #F5C542 70%, var(--ink)); }
+.moi .mi-cour i { font-style: normal; font-size: 10px; color: var(--ink-3); }
+.moi .mi-cour[aria-expanded="true"] { background: color-mix(in srgb, #F5C542 24%, var(--panel)); }
+.moi .mi-cour:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.moi .mi-det[hidden] { display: none; }
+/* lot 51 · Récompenses : récemment gagnées / à venir */
+.moi .m-recs { display: grid; gap: 8px; padding: 9px 10px 10px; border-radius: 16px; border: 1px solid var(--rule); background: var(--panel); }
+.moi .m-recs .rc-l { display: grid; gap: 5px; }
+.moi .m-recs .rc-k { font: 700 10.5px/1 var(--f-display); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); padding-left: 2px; }
+.moi .m-recs .rc-g { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.moi .m-recs .rc-c { all: unset; box-sizing: border-box; position: relative; overflow: hidden; min-width: 0; display: grid; justify-items: center; align-content: start; gap: 2px; padding: 5px 4px 6px; border-radius: 11px; background: var(--panel-2); border: 1px solid var(--rule-2, var(--rule)); text-align: center; }
+.moi .m-recs button.rc-c { cursor: pointer; } .moi .m-recs button.rc-c:focus-visible { outline: 2px solid var(--accent); }
+.moi .m-recs .rc-c.av { border-style: dashed; }
+.moi .m-recs .rc-ap { position: relative; height: 22px; width: 100%; display: grid; place-items: center; overflow: hidden; }
+.moi .m-recs .rc-c b { max-width: 100%; font: 700 11.5px/1.2 var(--f-text); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.moi .m-recs .rc-c b em { font-style: normal; color: var(--ink-3); font-weight: 600; }
+.moi .m-recs .rc-c small { font-size: 10.5px; line-height: 1.2; color: var(--ink-3); }
+.moi .m-recs .rc-c.av small { color: var(--ink-2); }
+.moi .rc-ap .m-flaps { --fh: 15px; gap: 1px; flex-wrap: nowrap; }
+.moi .rc-ap .m-flap { width: 11px; height: 16px; font-size: 10.5px; border-radius: 2px; box-shadow: none; } .moi .rc-ap .m-flap::after { height: 1px; }
+.moi .rc-ap .m-af { max-width: none; } .moi .rc-ap :is(.t-ticket .tk-h, .t-billet .bl-c, .t-billet::after) { display: none; }
+.moi .rc-ap .vs-sw { width: 30px; height: 18px; } .moi .rc-ap .vs-cb { width: 34px; height: 17px; } .moi .rc-ap .vs-em { font-size: 17px; }
 /* lot 44 · groupes de familles, aide repliée, récompense suivante */
 .moi details.pl-grp { border-radius: 12px; }
 .moi details.pl-grp > summary { list-style: none; cursor: pointer; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--rule); font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
@@ -4589,7 +4609,7 @@ function htmlTenue() {
     encart = '<div class="vs-nv" role="status"><span>🎁 <b>Nouveau :</b> ' + esc(s[1].toLowerCase()) + " « " + esc(nomObj(t, id)) + " »" + (nv.length > 1 ? " <small>(+" + (nv.length - 1) + ")</small>" : "") + "</span>" +
       '<button class="btn acc" type="button" data-vt-eq="' + k + '">Équiper</button><button class="vt-x" type="button" data-vt-vu="' + k + '" aria-label="Plus tard">✕</button></div>';
   }
-  return '<section class="vs-tenue" aria-label="Ma tenue"><button type="button" class="vt-h" data-vt-ouv="' + (SORTES.some(x => x[0] === PREF.vest) ? PREF.vest : "aff") + '"><b>Ma tenue</b><small>' + nb + " / " + tot + " objets · privé ›</small></button>" +
+  return '<section class="vs-tenue" aria-label="Ma tenue"><button type="button" class="vt-h" data-vt-ouv="' + (SORTES.some(x => x[0] === PREF.vest) ? PREF.vest : "aff") + '" aria-label="' + esc("Ma tenue : " + nb + " objets sur " + tot + ", ouvrir le vestiaire") + '"><b>Ma tenue</b><small>' + nb + " / " + tot + " ›</small></button>" +
     '<div class="vt-r">' + SORTES.map(([t, l]) => { const id = actifM(t), n = nomObj(t, id);
       return '<button type="button" class="vt-o" data-vt-ouv="' + t + '" aria-label="' + esc(l + " : " + n + ", changer") + '" title="' + esc(l + " : " + n) + '"><span class="vt-p">' + apercuTenue(t, id) + '</span><span class="vt-n"><span class="vt-l">' + esc(l) + '</span><span class="vt-c">' + esc(COURT_SORTE[t] || l) + "</span></span></button>"; }).join("") +
     "</div>" + encart + "</section>";
@@ -4782,27 +4802,77 @@ function masquerPalier(x) {
   if (!x || ETAT.discret !== "oui" || !FAM_EUR.includes(x.groupe)) return x;
   return Object.assign({}, x, { court: "•••", titre: x.titre.replace(/\d[\d\s\u202F\u00A0.,]*\s?€/g, "•••" + NB + "€"), reste: "", cache: true });
 }
-/* lot 44 · carte « Ce mois-ci » : le versement du mois d'abord (aucun euro : compatible mode discret ; aucune règle changée) */
-function htmlCeMois() {
-  let sv; try { sv = serieVersements(); } catch (e) { return ""; }
+/* lot 44 · carte « Ce mois-ci » : le versement du mois d'abord (aucun euro : compatible mode discret ; aucune règle changée)
+   lot 51 (Théo : « tuiles trop grosses ») : compacte, sans aperçus ; les objets sont dans « Récompenses » juste en dessous ; la couronne du million dans l'en-tête */
+function htmlCeMois(cour) {
+  let sv; try { sv = serieVersements(); } catch (e) { sv = null; }
   if (!sv || !sv.liste.length) return "";
   const now = new Date(), mo = MOIS_L[now.getMonth()], Mo = mo.charAt(0).toUpperCase() + mo.slice(1);
   const finM = new Date(now.getFullYear(), now.getMonth() + 1, 0), fin = String(finM.getDate()).padStart(2, "0") + "/" + String(finM.getMonth() + 1).padStart(2, "0");
   const n = moisVerses(), L = REGULARITE_M.length, fini = n >= L, e = k => k + (k === 1 ? "<sup>er</sup>" : "<sup>e</sup>");
-  const obj = (r, lab) => '<span class="cm-o"><span class="cm-ap">' + apercuFete(r[0], r[1]) + "</span><span><small>" + lab + "</small><b>" + esc(nomObj(r[0], r[1])) + "</b></span></span>";
-  let tete, sous = "", o = "";
-  if (sv.moisEnCours) {
-    tete = "<b>" + esc(Mo) + " fait ✓</b> · série de " + sv.actuelle + " mois";
-    if (n <= L) o = obj(REGULARITE_M[n - 1], "objet gagné ce mois-ci");
-  } else {
+  let tete, sous = "";
+  if (sv.moisEnCours) tete = "<b>" + esc(Mo) + " fait ✓</b> · série de " + sv.actuelle + " mois";
+  else {
     tete = "<b>" + esc(Mo) + " : pas encore versé</b>";
     sous = sv.actuelle ? "Ta série de <b>" + sv.actuelle + " mois</b> est en jeu jusqu'au " + fin + "." : "Un versement d'ici le " + fin + ", même petit, lance ta série.";
-    if (!fini) o = obj(REGULARITE_M[n], "ton prochain objet");
   }
-  const suite = fini ? [] : REGULARITE_M.slice(n, n + 3);
-  const piste = '<div class="cm-p"><span class="cm-pt">Régularité : <b>' + n + " mois versés</b>" + (fini ? " · les " + L + " objets gagnés" : " · prochain objet au " + e(n + 1)) + "</span>" +
-    (suite.length ? '<span class="cm-f" aria-label="Les prochains objets de la régularité">' + suite.map((r, i) => '<span class="cm-fi' + (i === 0 ? " pro" : "") + '" title="' + esc(nomObj(r[0], r[1])) + '"><span class="cm-ap">' + apercuFete(r[0], r[1]) + "</span><small>" + e(n + 1 + i) + "</small></span>").join("") + "</span>" : "") + "</div>";
-  return '<section class="m-cemois' + (sv.moisEnCours ? " fait" : "") + '" aria-label="Ce mois-ci"><span class="cm-k">Ce mois-ci</span><p class="cm-t">' + tete + "</p>" + (sous ? '<p class="cm-s">' + sous + "</p>" : "") + o + piste + "</section>";
+  const piste = '<p class="cm-pt">Régularité : <b>' + n + " mois versés</b>" + (fini ? " · les " + L + " objets gagnés" : " · prochain objet au " + e(n + 1)) + "</p>";
+  return '<section class="m-cemois' + (sv.moisEnCours ? " fait" : "") + '" aria-label="Ce mois-ci"><div class="cm-h"><span class="cm-k">Ce mois-ci</span>' + (cour || "") + '</div><p class="cm-t">' + tete + "</p>" + (sous ? '<p class="cm-s">' + sous + "</p>" : "") + piste + "</section>";
+}
+/* lot 51 (Théo) : le million n'est plus un gros bloc ; une couronne discrète (« 👑 4,2 % ») en haut de Missions, un toucher déplie le détail.
+   Replié à chaque ouverture de l'appli : l'ouverture n'est pas mémorisée (règle de Théo). Même calcul qu'avant (patrimoine financier seulement). */
+let milOuvertM = false;
+function puceMillion() {
+  let t = "•••";
+  if (ETAT.discret !== "oui") { const E = millionEstime(), v = E ? E.v : (valeurMillion() || 0); t = F1.format(Math.max(0, Math.min(1, v / CIBLE)) * 100) + NB + "%"; }
+  return '<button type="button" class="mi-cour" data-mi-cour aria-expanded="' + milOuvertM + '" aria-controls="m-million-z" aria-label="' + esc("Cap sur le million : " + (t === "•••" ? "masqué" : t) + (milOuvertM ? ", replier" : ", voir le détail")) + '">' +
+    '<span class="mi-c" aria-hidden="true">👑</span><b>' + t + '</b><i aria-hidden="true">' + (milOuvertM ? "▴" : "▾") + "</i></button>";
+}
+function afficherMillionM(v) {
+  const z = v.querySelector("#m-million-z"); if (!z) return;
+  v.querySelectorAll("[data-mi-cour]").forEach(b => { b.outerHTML = puceMillion(); });
+  v.querySelectorAll("[data-mi-cour]").forEach(b => b.addEventListener("click", () => { milOuvertM = !milOuvertM; afficherMillionM(v); }));
+  if (!milOuvertM || !M) { z.innerHTML = ""; z.hidden = true; return; }
+  const av = PREF.millionReduit; PREF.millionReduit = false;   // le détail complet, sans toucher au réglage gardé
+  let h = ""; try { h = htmlMillion(); } finally { if (av === undefined) delete PREF.millionReduit; else PREF.millionReduit = av; }
+  z.hidden = false; z.innerHTML = h;
+  const r = z.querySelector("#mm-reduire"); if (r) { r.textContent = "Fermer ▴"; r.setAttribute("aria-expanded", "true"); r.addEventListener("click", () => { milOuvertM = false; afficherMillionM(v); const c = v.querySelector("[data-mi-cour]"); if (c) c.focus(); }); }
+  z.querySelectorAll("[data-m-razproj]").forEach(b => b.addEventListener("click", () => { razReglagesProj(); afficherMillionM(v); }));
+  z.querySelectorAll("[data-m-voirproj]").forEach(b => b.addEventListener("click", () => {   // comme avant : la projection unique est dans Patrimoine
+    PREF.onglet = "patrimoine"; PREF.acc["m-proj"] = true; garderPref(); rendre();
+    const d = document.querySelector('#v-moi details[data-acc="m-proj"]'); if (d) d.scrollIntoView({ block: "start", behavior: reduit ? "auto" : "smooth" }); else window.scrollTo(0, 0);
+  }));
+}
+/* lot 51 (Théo) : « Récompenses » = les derniers objets gagnés (avec le mois) et les prochains (avec ce qu'il reste à faire).
+   Lu sur les données existantes (régularité, paliers) : aucune règle ni aucun stockage ne change. En mode discret, rien des familles en euros.
+   Mini-Conseil : « À venir » d'abord (la suite directe de Ce mois-ci), puis « Récemment gagnées ». */
+function recompensesRecentes(n) {
+  const E = etatObjets(), discret = ETAT.discret === "oui", l = [], vu = new Set();
+  try { const ok = serieVersements().liste.filter(x => x.ok); REGULARITE_M.slice(0, Math.min(REGULARITE_M.length, ok.length)).forEach((r, i) => l.push({ r, m: ok[i].m, o: i })); } catch (e) { /* pas de parcours */ }
+  (E.pal || []).forEach((x, i) => { if (!x.atteint || !x.quand || !E.rec.has(x.id) || (discret && FAM_EUR.includes(x.groupe))) return; E.rec.get(x.id).forEach(r => l.push({ r, m: x.quand, o: 1000 + i })); });
+  return l.filter(x => E.ok.has(cleObj(x.r[0], x.r[1]))).sort((a, b) => a.m < b.m ? 1 : a.m > b.m ? -1 : b.o - a.o)
+    .filter(x => { const k = cleObj(x.r[0], x.r[1]); if (vu.has(k)) return false; vu.add(k); return true; }).slice(0, n);
+}
+function recompensesAVenir(n) {
+  const E = etatObjets(), discret = ETAT.discret === "oui", l = [], nv = moisVerses();
+  if (nv < REGULARITE_M.length) {
+    let sv = null; try { sv = serieVersements(); } catch (e) { sv = null; }
+    const pro = MOIS_L[(new Date().getMonth() + 1) % 12];
+    l.push({ r: REGULARITE_M[nv], quoi: sv && sv.moisEnCours ? "verse en " + pro : nv ? "verse ce mois-ci" : "ton 1<sup>er</sup> versement", part: 2 });
+  }
+  const pal = [];
+  FAMILLES.forEach(([g]) => { if (discret && FAM_EUR.includes(g)) return; const pr = prochaineRec(g); if (pr) pal.push({ r: pr.r[0], plus: pr.r.length - 1, quoi: cheminP(masquerPalier(pr.x)), g, part: pr.x.part || 0 }); });
+  return l.concat(pal.sort((a, b) => b.part - a.part)).slice(0, n);
+}
+function htmlRecompensesM() {
+  const s = new Date(), auj = s.getFullYear() + "-" + String(s.getMonth() + 1).padStart(2, "0");
+  const carte = (x, sous, attr) => '<' + (attr ? 'button type="button" ' + attr : "span") + ' class="rc-c' + (x.quoi ? " av" : "") + '" title="' + esc(nomObj(x.r[0], x.r[1])) + '"><span class="rc-ap">' + apercuFete(x.r[0], x.r[1]) + '</span><b>' + esc(nomObj(x.r[0], x.r[1])) + (x.plus ? " <em>+" + x.plus + "</em>" : "") + "</b><small>" + sous + "</small></" + (attr ? "button" : "span") + ">";
+  const rec = recompensesRecentes(3), av = recompensesAVenir(3);
+  if (!rec.length && !av.length) return "";
+  const ligne = (k, l) => '<div class="rc-l"><span class="rc-k">' + k + '</span><div class="rc-g">' + l + "</div></div>";
+  return '<section class="m-recs" aria-label="Récompenses">' +
+    (av.length ? ligne("À venir", av.map(x => carte(x, x.quoi, x.g ? 'data-rc-fam="' + x.g + '"' : "")).join("")) : "") +
+    (rec.length ? ligne("Récemment gagnées", rec.map(x => carte(x, x.m === auj ? "ce mois-ci" : esc(libMois(x.m)), 'data-vt-ouv="' + x.r[0] + '" aria-label="' + esc(nomObj(x.r[0], x.r[1]) + ", gagné " + (x.m === auj ? "ce mois-ci" : libMois(x.m, true)) + ", ouvrir le vestiaire") + '"')).join("")) : "") + "</section>";
 }
 const pctNw = v => '<span class="nw">' + pct(Math.max(0, Math.min(1, v)), 0, false) + "</span>";
 /** le chemin qui reste jusqu'à un palier (« encore 2 mois », « 70 % ») ; masqué en mode discret pour les familles en euros */
@@ -4841,14 +4911,21 @@ function htmlMissions() {
   const groupe = (cle, titre, l) => l.length ? '<details class="pl-grp" data-grp="' + cle + '"' + (palOuverts.has(cle) ? " open" : "") + "><summary>" + titre + '</summary><div class="pl-blocs">' + l.map(x => x.html).join("") + "</div></details>" : "";
   const blocs = vit.map(x => x.html).join("") + groupe("_autres", "Autres paliers <small>(" + aut.length + ")</small>", aut) + groupe("_finies", "✓ " + fin.length + (fin.length > 1 ? " familles terminées" : " famille terminée"), fin);
   /* lot 44 : Ce mois-ci, million, tenue, paliers, Vestiaire, puis les bilans */
-  return htmlCeMois() + '<div id="m-million-z"></div>' + htmlTenue() +
+  /* lot 51 (Théo) : couronne du million dans l'en-tête de Ce mois-ci (détail replié), Récompenses (récentes / à venir), tenue compacte */
+  const ce = htmlCeMois(puceMillion());
+  return (ce || '<div class="mi-haut">' + puceMillion() + "</div>") + '<div id="m-million-z" class="mi-det" hidden></div>' + htmlRecompensesM() + htmlTenue() +
     '<div><h2 class="sec">Paliers <small>' + (pal.some(x => x.cache) ? "privé en mode discret" : nbFaits + " franchis sur " + pal.length) + "</small></h2></div>" +
     '<details class="pl-aide"' + (palOuverts.has("_aide") ? " open" : "") + ' data-grp="_aide"><summary>Comment ça marche ?</summary><p>🎁 = récompense · touche un palier franchi pour revoir sa fête</p></details>' +
     '<div class="pl-blocs">' + blocs + "</div>" +
     htmlVestiaire() + htmlBilansMoi();
 }
 function brancherMissions(v) {
-  const z = v.querySelector("#m-million-z"); if (z) afficherMillion(z);
+  afficherMillionM(v);
+  v.querySelectorAll("[data-rc-fam]").forEach(b => b.addEventListener("click", () => {   // lot 51 : « À venir » ouvre sa famille de paliers
+    const g = b.dataset.rcFam, d = v.querySelector('details.pl-bloc[data-fam="' + g + '"]'); if (!d) return;
+    const grp = d.parentElement.closest("details.pl-grp"); if (grp) { grp.open = true; palOuverts.add(grp.dataset.grp); }
+    d.open = true; palOuverts.add(g); d.scrollIntoView({ block: "start", behavior: reduit ? "auto" : "smooth" });
+  }));
   v.querySelectorAll("details.pl-bloc").forEach(d => d.addEventListener("toggle", () => { if (d.open) palOuverts.add(d.dataset.fam); else palOuverts.delete(d.dataset.fam); }));
   v.querySelectorAll("details[data-grp]").forEach(d => d.addEventListener("toggle", () => { if (d.open) palOuverts.add(d.dataset.grp); else palOuverts.delete(d.dataset.grp); }));
   const pal = paliers();
