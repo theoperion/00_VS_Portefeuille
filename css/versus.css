@@ -515,7 +515,7 @@ button.bt-e { cursor: pointer; color: var(--ink); }
 .gp-mois button[aria-pressed="true"] { background: var(--accent); color: #0B0D12; border-color: var(--accent); }
 .gp-carte { width: 100%; margin-top: 10px; }
 .gp-liste { display: grid; border-radius: 14px; background: var(--panel); border: 1px solid var(--rule); overflow: hidden; }
-.gp-l { display: grid; grid-template-columns: 22px 38px minmax(0, 1fr) 30px 48px; gap: 8px; align-items: center; padding: 9px 12px; border-top: 1px solid var(--rule-2); }
+.gp-l { display: grid; grid-template-columns: 22px 38px minmax(0, 1fr) 50px; gap: 8px; align-items: center; padding: 9px 12px; border-top: 1px solid var(--rule-2); }
 .gp-l:first-child { border-top: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 14%, var(--panel)), var(--panel) 70%); }
 .gp-l .rk { font: italic 800 19px/1 var(--f-display); text-align: center; color: var(--ink-3); }
 .gp-l:first-child .rk { color: var(--gold); }
@@ -523,7 +523,7 @@ button.bt-e { cursor: pointer; color: var(--ink); }
 .gp-l .nm { min-width: 0; overflow: hidden; }
 .gp-l .nm b { display: block; font: italic 700 16px/1.1 var(--f-display); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gp-l .nm small { display: block; font-size: 11.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.gp-l > .rk { grid-column: 1; } .gp-l > .av { grid-column: 2; } .gp-l > .nm { grid-column: 3; } .gp-l > .gp-c { grid-column: 4; justify-self: center; } .gp-l > .pt { grid-column: 5; }
+.gp-l > .rk { grid-column: 1; } .gp-l > .av { grid-column: 2; } .gp-l > .nm { grid-column: 3; } .gp-l > .pt { grid-column: 4; }
 .ch-l > .rk { grid-column: 1; } .ch-l > .av { grid-column: 2; } .ch-l > .nm { grid-column: 3; } .ch-l > .pt { grid-column: 4; }
 .gp-l .pt, .ch-l .pt { font-variant-numeric: tabular-nums; }
 .gp-l .pt { text-align: right; } .gp-l .pt b { display: block; font: 700 19px/1 var(--f-num); } .gp-l .pt small { font: 600 10.5px/1 var(--f-num); color: var(--ink-3); }
@@ -556,7 +556,7 @@ button.bt-e { cursor: pointer; color: var(--ink); }
 .tuto .btn.ghost { background: transparent; color: #F4F5F8; border-color: rgba(255,255,255,.2); }
 /* vignette d'habillage de piste */
 .vg-piste { width: 100%; height: 56px; border-radius: 8px; }
-@media (max-width: 360px) { .gp-l { grid-template-columns: 18px 34px minmax(0, 1fr) 28px 42px; gap: 6px; padding: 8px; } .main-cartes { gap: 4px; } .carte small { display: none; } }
+@media (max-width: 360px) { .gp-l { grid-template-columns: 18px 34px minmax(0, 1fr) 44px; gap: 6px; padding: 8px; } .main-cartes { gap: 4px; } .carte small { display: none; } }
 @media (prefers-reduced-motion: reduce) { .gp-svg .gp-moi, .gp-meteo, .gp-meteo::after, .gp-svg .gp-fl, .gp-svg .gp-et { animation: none !important; } }
 
 /* Avatar : pastille animée derrière le casque */
@@ -1568,6 +1568,19 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .gp-dec { white-space: nowrap; font-family: "JetBrains Mono", monospace; font-size: .92em; }
 @media (prefers-reduced-motion: reduce) { .gp-com-t { animation: none; } }
 .gp-l .nm small.gp-dec { white-space: normal; color: var(--ink-2); margin-top: 1px; }
+/* lot53 · liste du mois : 3 zones, 2 pastilles au plus ; le calcul (« 6 de place + … = 13 pts ») seulement en touchant la ligne */
+.gp-l.dep { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.gp-l.dep:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.gp-l .gp-det { display: none; }
+.gp-l.ouvert .gp-det { display: block; margin-top: 4px; }
+.gp-l.ouvert .gp-det .gp-dec { font-size: 11.5px; line-height: 1.35; }
+.gp-det-x { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; } .gp-det-x .gp-x { margin-left: 0; }
+.gp-x.gp-xc { font-size: 11px; padding: 2px 5px 2px 4px; } .gp-x.gp-xc.cache { background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 35%, #0b0d12), color-mix(in srgb, var(--accent) 60%, #0b0d12)); color: #fff; }
+.gp-x.plus { cursor: inherit; background: none; color: var(--ink-3); padding: 2px 2px; letter-spacing: .05em; }
+.gp-l .pt small { display: inline-block; white-space: nowrap; }
+.gp-l.dep .pt small::after { content: "▾"; display: inline-block; margin-left: 2px; font-size: 9px; opacity: .7; transition: transform .2s; }
+.gp-l.ouvert .pt small::after { transform: rotate(180deg); }
+.gp-l .pt small.top { padding: 1px 4px; border-radius: 5px; background: linear-gradient(135deg, #F7CF55, #C98E22); color: #2A1A03; font-weight: 800; }
 .gp-btns { flex-wrap: wrap; justify-content: flex-end; max-width: 64%; } .gp-hud { max-width: 36%; flex-wrap: wrap; }
 /* V16.20 · 5e bande du logo : cachée tant qu'il n'y a que 4 pilotes */
 .logo .l5 { display: none; } .j5 .logo .l5 { display: inline-block; }

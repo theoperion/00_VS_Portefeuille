@@ -266,6 +266,7 @@ function etapeParDefaut(etapes, y) {
   return etapes[j].k && !etapes[j].avenir && etapes[j].k > vu ? j : etapes.length - 1;
 }
 let GP_ETAPE = null, GP_ANIM = null;
+const GP_OUVERTS = new Set();   // lot53 : lignes du mois dépliées pendant la visite seulement (tout revient replié à la réouverture, règle de Théo)
 /** lot47 · tour de chauffe (jusqu'au 31/12/2026) : un classement d'EXEMPLE sous la grille = la performance 2026 (PEA + assurance-vie,
  *  depuis le 1er janvier 2026), comme l'onglet Classement. Il ne compte pas et ne dévoile rien de la saison 2027. */
 function classementExemple() {
@@ -308,21 +309,29 @@ function htmlGrandPrix(y) {
     const devant = r ? ordre[r - 1] : null, ecart = devant ? et.pts[devant] - et.pts[n] : 0, x = et.m ? et.m.l.find(z => z.nom === n) : null;
     const ca = et.k ? carteDe(y, n, et.k) : null, cdef = ca && ca.c ? carteDef(ca.c) : null;
     const res = x && x.carte ? (x.carte.invalide ? (x.carte.piege ? " Interdite ce mois-ci (piège 🥵 Chaleur) : sans effet." : " Pas encore piochée à ce moment-là : sans effet.") : " Résultat : " + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + " pt" + (Math.abs(x.carte.gain) > 1 ? "s" : "") + (x.carte.circ ? ", dont +1 d'atout du circuit" : "") + (x.carte.bouchon ? ", sans le +1 d'atout : bouchon, plusieurs pilotes l'ont jouée" : "") + (x.carte.sab ? " · " + x.carte.cible + " " + x.carte.sab : "") + ".") : "";
-    const carte = ca ? (ca.cache && !cdef ? '<span class="gp-c cache" data-bdg="Carte posée face cachée : révélée le ' + jourLimite(et.k) + ' du mois.">🂠</span>' : cdef ? '<span class="gp-c" data-bdg="' + esc(cdef.ico + " " + cdef.nom + " : " + cdef.def + res) + '">' + cdef.ico + (x && x.carte ? "<small>" + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + "</small>" : "") + "</span>" : '<span class="gp-c vide"></span>') : '<span class="gp-c vide"></span>';
-    const extra = x ? (x.vainq ? '<span class="gp-x or" data-bdg="🪱 Le Chevaucheur des sables : vainqueur du mois, +2.">🪱+2</span>' : "") +
-      (x.piege === "nuit" && x.dernier ? '<span class="gp-x" data-bdg="🌃 Safety car de nuit : le dernier du mois marque 2 points de place.">🌃+2</span>' : "") +
-      (x.equipe ? '<span class="gp-x" data-bdg="🤝 Bonus d\'équipe : tout le monde a battu le S&P 500 ce mois-ci, +1.">🤝+1</span>' : "") +
-      (x.serie ? '<span class="gp-x" data-bdg="🔥 Série : ' + x.serie + ' mois d\'affilée sans finir dernier, +1.">🔥+1</span>' : "") +
-      (x.defi ? '<span class="gp-x" data-bdg="' + esc((defiDuMois(et.k) || {}).ico + " Défi du mois réussi : " + (defiDuMois(et.k) || {}).txt + ", +1.") + '">🏁+1</span>' : "") +
-      (x.prono ? '<span class="gp-x" data-bdg="🔮 Pronostic : ' + esc((x.prono.v || "—") + (x.prono.i ? ", S&P " + (x.prono.i === "h" ? "plus de +1 %" : "pas plus de +1 %") : "") + (x.prono.p !== null && x.prono.p !== undefined ? ", pole " + String(x.prono.p).replace(".", ",") + " %" + (x.prono.pole ? " (la plus proche)" : "") : "")) + " → +" + x.prono.pts + '.">🔮+' + x.prono.pts + "</span>" : "") +
-      (x.rival ? '<span class="gp-x or" data-bdg="😈 Rival de la saison : devant ' + esc(x.rival) + ' au championnat, +3.">😈+3</span>' : "") +
-      (x.regul !== undefined ? '<span class="gp-x or" data-bdg="🛡️ Trophée de la régularité : le moins souvent dernier de la saison, +3.">🛡️+3</span>' : "") +
-      (x.vise || []).map(z => '<span class="gp-x" data-bdg="🎲 Pari de ' + esc(z.par) + " contre " + esc(n) + " : " + (z.gain > 0 ? esc(z.par) + " a fini devant, +2 pour lui." : z.gain < 0 ? esc(n) + " a tenu bon, " + esc(z.par) + " perd 1 point." : "égalité parfaite, 0.") + '">🎲' + (z.gain > 0 ? "" : "✓") + "</span>").join("") +
-      (x.mult > 1 ? '<span class="gp-x or" data-bdg="' + esc(et.m.spec ? et.m.spec.ico + " " + et.m.spec.nom + " : points de place doublés." : "Points doublés.") + '">×2</span>' : "") +
-      (x.pioche && x.pioche.length && regleVisible("pioche") && !estChauffe(y) ? '<span class="gp-x" data-bdg="🎴 Carte' + (x.pioche.length > 1 ? "s" : "") + " piochée" + (x.pioche.length > 1 ? "s" : "") + " ce mois-ci" + (n === qui ? " : " + esc(x.pioche.map(c => carteDef(c).nom).join(", ")) : "") + '.">🎴</span>' : "") : "";
-    const jn = (c.jeu || {})[n], niv = x ? x.niv + (x.monte || 0) : jn && !et.m ? 1 : (jn ? jn.niv : 1);
-    return '<div class="gp-l' + (n === qui ? " ici" : "") + '"><span class="rk">' + (r + 1) + "</span>" + avatar(n) + '<div class="nm"><b><span' + (attrLivree(n) ? attrLivree(n).replace(' class="', ' class="gp-nom ') : ' class="gp-nom"') + (saisonJouee() ? ' data-gp-fiche="' + esc(n) + '" role="button" tabindex="0" aria-label="Fiche et vitrine de ' + esc(n) + '"' : "") + ">" + esc(n) + (saisonJouee() ? '<i class="gp-vers-fiche" aria-hidden="true">›</i>' : "") + "</span>" + (regleVisible("niveaux") ? '<span class="gp-niv" data-bdg="Niveau d\'écurie ' + niv + ' : chaque niveau gagné donne une carte bonus.">N' + niv + "</span>" : "") + extra + "</b>" +   // V16.21 : plus de « à X pts de … » (alourdissait, demande de Théo) : seul le décompte du mois reste
-      (x ? '<small class="gp-dec">' + esc(decompte(x, et.m.spec)) + "</small>" : "") + "</div>" + carte + '<span class="pt"><b>' + et.pts[n] + "</b><small>pts</small></span></div>";
+    // lot53 (Conseil, règle « une ligne = 3 zones ») : place · tête + NOM › + 2 pastilles au plus · total ; le calcul du mois ne s'ouvre qu'en touchant la ligne
+    const P = [], I = [], pas = (w, pr, h) => P.push({ w, pr, h });   // P = bonus qui comptent (triés), I = infos sans point (seulement dans le détail)
+    if (ca && !x) { if (ca.cache && !cdef) P.push({ w: 0, pr: 0, h: '<span class="gp-x gp-xc cache" data-bdg="Carte posée face cachée : révélée le ' + jourLimite(et.k) + ' du mois.">🂠</span>' }); else if (cdef) P.push({ w: 0, pr: 0, h: '<span class="gp-x gp-xc" data-bdg="' + esc(cdef.ico + " " + cdef.nom + " : " + cdef.def) + '">' + cdef.ico + "</span>" }); }
+    if (x) {
+      if (x.carte && cdef) { const g = x.carte.gain, h = '<span class="gp-x gp-xc' + (g < 0 ? " mal" : "") + '" data-bdg="' + esc(cdef.ico + " " + cdef.nom + " : " + cdef.def + res) + '">' + cdef.ico + (g ? (g > 0 ? "+" : "−") + Math.abs(g) : "") + "</span>"; if (g) pas(Math.abs(g), g > 0 ? 2 : 0, h); else I.push(h); }
+      if (x.vainq) pas(x.vainq, 3, '<span class="gp-x or" data-bdg="🪱 Le Chevaucheur des sables : vainqueur du mois, +2.">🪱+2</span>');
+      if (x.piege === "nuit" && x.dernier) pas(2, 3, '<span class="gp-x" data-bdg="🌃 Safety car de nuit : le dernier du mois marque 2 points de place.">🌃+2</span>');
+      if (x.equipe) pas(1, 1, '<span class="gp-x" data-bdg="🤝 Bonus d\'équipe : tout le monde a battu le S&P 500 ce mois-ci, +1.">🤝+1</span>');
+      if (x.serie) pas(1, 1, '<span class="gp-x" data-bdg="🔥 Série : ' + x.serie + ' mois d\'affilée sans finir dernier, +1.">🔥+1</span>');
+      if (x.defi) pas(1, 1, '<span class="gp-x" data-bdg="' + esc((defiDuMois(et.k) || {}).ico + " Défi du mois réussi : " + (defiDuMois(et.k) || {}).txt + ", +1.") + '">🏁+1</span>');
+      if (x.prono) { const h = '<span class="gp-x' + (x.prono.pts < 0 ? " mal" : "") + '" data-bdg="🔮 Pronostic : ' + esc((x.prono.v || "—") + (x.prono.i ? ", S&P " + (x.prono.i === "h" ? "plus de +1 %" : "pas plus de +1 %") : "") + (x.prono.p !== null && x.prono.p !== undefined ? ", pole " + String(x.prono.p).replace(".", ",") + " %" + (x.prono.pole ? " (la plus proche)" : "") : "")) + " → " + (x.prono.pts < 0 ? "−" + -x.prono.pts : "+" + x.prono.pts) + '.">🔮' + (x.prono.pts < 0 ? "−" + -x.prono.pts : "+" + x.prono.pts) + "</span>"; if (x.prono.pts) pas(Math.abs(x.prono.pts), x.prono.pts > 0 ? 1.5 : 0, h); else I.push(h); }
+      if (x.rival) pas(3, 4, '<span class="gp-x or" data-bdg="😈 Rival de la saison : devant ' + esc(x.rival) + ' au championnat, +3.">😈+3</span>');
+      if (x.regul !== undefined) pas(3, 4, '<span class="gp-x or" data-bdg="🛡️ Trophée de la régularité : le moins souvent dernier de la saison, +3.">🛡️+3</span>');
+      if (x.mult > 1) { const h = '<span class="gp-x or" data-bdg="' + esc(et.m.spec ? et.m.spec.ico + " " + et.m.spec.nom + " : points de place doublés." : "Points doublés.") + '">×2</span>'; if (x.base) pas(x.base * (x.mult - 1), 3, h); else I.push(h); }
+      (x.vise || []).forEach(z => I.push('<span class="gp-x" data-bdg="🎲 Pari de ' + esc(z.par) + " contre " + esc(n) + " : " + (z.gain > 0 ? esc(z.par) + " a fini devant, +2 pour lui." : z.gain < 0 ? esc(n) + " a tenu bon, " + esc(z.par) + " perd 1 point." : "égalité parfaite, 0.") + '">🎲' + (z.gain > 0 ? "" : "✓") + "</span>"));
+      if (x.pioche && x.pioche.length && regleVisible("pioche") && !estChauffe(y)) I.push('<span class="gp-x" data-bdg="🎴 Carte' + (x.pioche.length > 1 ? "s" : "") + " piochée" + (x.pioche.length > 1 ? "s" : "") + " ce mois-ci" + (n === qui ? " : " + esc(x.pioche.map(c => carteDef(c).nom).join(", ")) : "") + '.">🎴</span>');
+    }
+    P.sort((u, v) => v.w - u.w || v.pr - u.pr);
+    const reste = P.length > 2, extra = P.slice(0, 2).map(z => z.h).join("") + (reste ? '<span class="gp-x plus" aria-hidden="true">…</span>' : "");
+    const det = x ? '<div class="gp-det"><small class="gp-dec">' + esc(decompte(x, et.m.spec)) + "</small>" + (P.length > 2 || I.length ? '<span class="gp-det-x">' + P.slice(2).map(z => z.h).join("") + I.join("") + "</span>" : "") + "</div>" : "";
+    const jn = (c.jeu || {})[n], niv = x ? x.niv + (x.monte || 0) : jn && !et.m ? 1 : (jn ? jn.niv : 1), cle = n + "|" + et.k, ouv = x && GP_OUVERTS.has(cle), top = x && x.rg === 1;
+    return '<div class="gp-l' + (n === qui ? " ici" : "") + (x ? " dep" : "") + (ouv ? " ouvert" : "") + '"' + (x ? ' data-gp-det="' + esc(cle) + '" tabindex="0" aria-expanded="' + !!ouv + '" aria-label="' + esc(n + " : " + (x.p > 0 ? "+" : "") + x.p + " pt" + (Math.abs(x.p) > 1 ? "s" : "") + " ce mois-ci" + (top ? ", meilleur du mois" : "") + ". Toucher pour le détail.") + '"' : "") + '><span class="rk">' + (r + 1) + "</span>" + avatar(n) + '<div class="nm"><b><span' + (attrLivree(n) ? attrLivree(n).replace(' class="', ' class="gp-nom ') : ' class="gp-nom"') + (saisonJouee() ? ' data-gp-fiche="' + esc(n) + '" role="button" tabindex="0" aria-label="Fiche et vitrine de ' + esc(n) + '"' : "") + ">" + esc(n) + (saisonJouee() ? '<i class="gp-vers-fiche" aria-hidden="true">›</i>' : "") + "</span>" + (regleVisible("niveaux") ? '<span class="gp-niv" data-bdg="Niveau d\'écurie ' + niv + ' : chaque niveau gagné donne une carte bonus.">N' + niv + "</span>" : "") + extra + "</b>" +
+      det + "</div>" + '<span class="pt"><b>' + et.pts[n] + "</b><small" + (top ? ' class="top"' : "") + ">" + (x ? (x.p > 0 ? "+" : "") + x.p : "pts") + "</small></span></div>";
   }).join("");
   const cal = htmlCalendrierGP(y, kGP);
   const rap = rappelCartes(), versStand = rap ? '<button class="gp-stand" type="button" data-aller-stand>🃏 <span><b>Fenêtre ouverte</b> : pose ta carte de ' + esc(moisLong(rap.k)) + "</span> ›</button>" : "";
@@ -879,6 +888,10 @@ function scenarioCourse(mc) {
   return { scen, gains: G, noms, wTour2: wDe(1), wLigne: wDe(TOURS_GP) };
 }
 function clampN(v, a, b) { return v < a ? a : v > b ? b : v; }
+/** lot53 · toucher une ligne du mois déplie / replie le calcul (le nom › ouvre la fiche, une pastille explique son bonus) */
+function basculerLigneGP(l) { const k = l.dataset.gpDet, o = !l.classList.contains("ouvert"); l.classList.toggle("ouvert", o); l.setAttribute("aria-expanded", String(o)); if (o) GP_OUVERTS.add(k); else GP_OUVERTS.delete(k); }
+document.addEventListener("click", ev => { const l = ev.target.closest && ev.target.closest(".gp-l[data-gp-det]"); if (!l || ev.target.closest("[data-bdg], [data-gp-fiche], a, button")) return; basculerLigneGP(l); });
+document.addEventListener("keydown", ev => { if (ev.key !== "Enter" && ev.key !== " ") return; const l = ev.target.classList && ev.target.classList.contains("gp-l") && ev.target.dataset.gpDet ? ev.target : null; if (!l) return; ev.preventDefault(); basculerLigneGP(l); });
 /* ---------- V16.18 · Le décompte des points d'un pilote : « 4 place + 1 🎯 + 2 🎲 = 7 » ---------- */
 function decompte(x, spec) {
   const l = [(x.mult > 1 ? x.base + "×2" : String(x.base)) + " de place"], add = (v, t) => { if (v) l.push((v > 0 ? "+ " : "− ") + Math.abs(v) + " " + t); };
