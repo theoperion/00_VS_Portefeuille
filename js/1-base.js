@@ -95,6 +95,7 @@ function css(n) { return getComputedStyle(document.documentElement).getPropertyV
 function couleurReelle(c) { const m = /var\((--[\w-]+)\)/.exec(c); return m ? css(m[1]) : c; }
 
 const PERIODES = [["mois", "Mois en cours (dernier relevé)"], ["3m", "3 derniers mois"], ["6m", "6 derniers mois"], ["ytd", "Année en cours"], ["12m", "12 derniers mois"], ["comp", "Depuis la date de comparaison"], ["tout", "Depuis le début"]];
+if (!PERIODES.some(([k]) => k === ETAT.per)) ETAT.per = "ytd";   // lot47 : filtres mémorisés sur l'appareil (versus.etat) ; un choix disparu revient au défaut
 
 const F0_2 = nf(0, 2);
 function axeEur(t) { return ETAT.discret === "oui" ? "" : Math.abs(t) >= 1000 ? (t < 0 ? "−" : "") + F0_2.format(Math.abs(t) / 1000) + "k" : F0.format(t); }   // v16.83 : « 22,5k », plus « 23k »
@@ -222,6 +223,7 @@ function vueJoueur() { return !window.APERCUS_FINIS && adminActif() && !!stock.g
 function simulation() { return !!window.DATE_SIM || vueJoueur(); }
 const MSG_SIMULATION = "👁️ Simulation : rien n'est envoyé. Repasse en admin, aujourd'hui, pour agir pour de vrai.";
 function afficherTout() {
+  try { if (!(Number.isInteger(ETAT.i1) && ETAT.i1 >= 0 && ETAT.i1 < D.marche.indices.length)) ETAT.i1 = 0; } catch (e) { ETAT.i1 = 0; }   // lot47 : indice mémorisé disparu → le premier
   try { document.documentElement.classList.toggle("j5", !!(D && D.personnes && D.personnes.length >= 5)); } catch (e) { }   // V16.20 : 5e bande du logo
   if (stock.get("versus.accent") === "ecurie") appliquerAccent("ecurie");
   // indice mémorisé hors liste (changement du nombre d'indices) : retour au S&P 500
@@ -330,20 +332,28 @@ function rendreTicker() {
 /* ---------- Filtres partagés ---------- */
 /* Sélecteurs communs : enveloppe, période, indice de référence et second indice côte à côte */
 function i2Actif() { return ok(ETAT.i2c) && ETAT.i2c >= 0 && ETAT.i2c !== ETAT.i1 && ETAT.i2c < D.marche.indices.length ? ETAT.i2c : -1; }
+/* lot47 (Théo, 20/11) · filtres compacts : enveloppe et période en petites pastilles (un toucher), indices en petites listes (trop de choix) ;
+   ils prennent le moins de place possible pour laisser la place au classement, aux graphiques et aux images. Mêmes réglages qu'avant (ETAT.env/per/i1/i2c). */
+const PER_COURT = { mois: "1 m", "3m": "3 m", "6m": "6 m", ytd: "Année", "12m": "12 m", comp: "Réf.", tout: "Tout" };
+const ENV_COURT = ["Tout", "PEA", "AV"];
 function filtres(avecIndices, avecPeriode = true, avecSecond = true) {
   const opt = (v, l, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? " selected" : "") + ">" + esc(l) + "</option>";
-  const env = '<label class="sel"><span>Enveloppe</span><select id="f-env">' + ENVELOPPES.slice(0, 3).map((e, i) => opt(i, e, ETAT.env)).join("")   /* v17.29 : le Versus ne compte que PEA + assurance-vie */ + "</select></label>";
-  const per = avecPeriode ? '<label class="sel"><span>Période</span><select id="f-per">' + PERIODES.map(([k, l]) => opt(k, l, ETAT.per)).join("") + "</select></label>" : "";
-  const idx = avecIndices ? '<label class="sel"><span>Indice</span><select id="f-i1">' + D.marche.indices.map((n, i) => opt(i, n, ETAT.i1)).join("") + "</select></label>" : "";
-  const idx2 = avecIndices && avecSecond ? '<label class="sel"><span>2e indice</span><select id="f-i2c">' + opt(-1, "Aucun", i2Actif()) + D.marche.indices.map((n, i) => i === ETAT.i1 ? "" : opt(i, n, i2Actif())).join("") + "</select></label>" : "";
-  const n = [env, per, idx, idx2].filter(Boolean).length;
-  return '<div class="filtres' + (n === 3 ? " trois" : "") + '">' + env + per + idx + idx2 + "</div>";
+  const pastille = (att, v, l, titre, cur) => '<button type="button" ' + att + '="' + v + '" aria-pressed="' + (String(v) === String(cur)) + '" title="' + esc(titre) + '">' + esc(l) + "</button>";
+  const env = '<div class="f-seg f-env" role="group" aria-label="Enveloppe">' + ENVELOPPES.slice(0, 3).map((e, i) => pastille("data-f-env", i, ENV_COURT[i], i ? e : "Portefeuille (PEA + assurance-vie)", ETAT.env)).join("") + "</div>";   /* v17.29 : le Versus ne compte que PEA + assurance-vie */
+  const idx = avecIndices ? '<label class="f-mini"><span class="sr">Indice</span><select id="f-i1" aria-label="Indice">' + D.marche.indices.map((n, i) => opt(i, n, ETAT.i1)).join("") + "</select></label>" : "";
+  const idx2 = avecIndices && avecSecond ? '<label class="f-mini f-i2"><span class="sr">2e indice</span><select id="f-i2c" aria-label="2e indice">' + opt(-1, "+ 2e indice", i2Actif()) + D.marche.indices.map((n, i) => i === ETAT.i1 ? "" : opt(i, "+ " + n, i2Actif())).join("") + "</select></label>" : "";
+  const per = avecPeriode ? '<div class="f-seg f-per" role="group" aria-label="Période">' + PERIODES.map(([k, l]) => pastille("data-f-per", k, PER_COURT[k] || l, l, ETAT.per)).join("") + "</div>" : "";
+  return '<div class="filtres-c"><div class="f-l1">' + env + (idx || idx2 ? '<div class="f-idx">' + idx + idx2 + "</div>" : "") + "</div>" + per + "</div>";
 }
 function brancherFiltres(vue) {
-  [["#f-env", "env", Number], ["#f-per", "per", String], ["#f-i1", "i1", Number], ["#f-i2c", "i2c", Number]].forEach(([s, k, f]) => {
+  [["#f-i1", "i1", Number], ["#f-i2c", "i2c", Number]].forEach(([s, k, f]) => {
     const el = document.querySelector("#v-" + vue + " " + s);
     if (el) el.addEventListener("change", () => { ETAT[k] = f(el.value); if (k === "i1" && ETAT.i2 === ETAT.i1) ETAT.i2 = ETAT.i1 === 1 ? 0 : 1; garder(); rendreVue(vue); });
   });
+  document.querySelectorAll("#v-" + vue + " [data-f-env], #v-" + vue + " [data-f-per]").forEach(b => b.addEventListener("click", () => {
+    if (b.dataset.fEnv !== undefined) ETAT.env = Number(b.dataset.fEnv); else ETAT.per = b.dataset.fPer;
+    garder(); rendreVue(vue);
+  }));
 }
 function cadre() {
   const fin = finGlobale(D, ETAT.env);
@@ -533,11 +543,11 @@ function rendreClassement() {
   const punchy = typeof podiumCache !== "function" || !podiumCache();
   let rPrev = {}, rNow = {};
   if (punchy) try { rNow = rangs(env, deb, fin); rPrev = deb && cleMoins(fin, 1) <= deb ? {} : rangs(env, deb, cleMoins(fin, 1)); } catch (e) { rNow = {}; rPrev = {}; }
-  const fleche = nom => { if (!punchy || !rPrev[nom] || !rNow[nom]) return ""; const d = rPrev[nom] - rNow[nom]; return d > 0 ? '<i class="fl up" title="+' + d + ' place(s) depuis le mois dernier">▲' + d + "</i>" : d < 0 ? '<i class="fl down" title="' + d + ' place(s) depuis le mois dernier">▼' + (-d) + "</i>" : '<i class="fl eq" title="même place que le mois dernier">=</i>'; };
+  const fleche = nom => { if (!punchy || !rPrev[nom] || !rNow[nom]) return ""; const d = rPrev[nom] - rNow[nom]; return d > 0 ? '<i class="fl up" title="+' + d + ' place(s) depuis le mois dernier">▲' + d + "</i>" : d < 0 ? '<i class="fl down" title="' + d + ' place(s) depuis le mois dernier">▼' + (-d) + "</i>" : ""; };   // lot47 : pas de « = » (seuls les changements de place se voient)
   const mini = s => {
     if (!punchy || !s.chemin || s.chemin.length < 3) return "";
     const v = s.chemin.slice(-7).map(c => c.v), lo = Math.min(...v), hi = Math.max(...v), H = 14, W = 44, X = i => (i * W / (v.length - 1)).toFixed(1), Y = x => (H - 1 - (hi > lo ? (x - lo) / (hi - lo) : .5) * (H - 2)).toFixed(1);
-    return '<svg class="mini-c" viewBox="0 0 ' + W + " " + H + '" aria-hidden="true"><path fill="none" stroke="' + couleur(s.nom) + '" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" d="' + lisse(v.map((x, i) => [+X(i), +Y(x)])) + '"/></svg>';
+    return '<svg class="mini-c" viewBox="0 0 ' + W + " " + H + '" aria-hidden="true"><path fill="none" stroke="' + couleur(s.nom) + '" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" pathLength="1" d="' + lisse(v.map((x, i) => [+X(i), +Y(x)])) + '"/><circle class="mini-pt" cx="' + X(v.length - 1) + '" cy="' + Y(v[v.length - 1]) + '" r="2.2" fill="' + couleur(s.nom) + '"/></svg>';   // lot47 : le point vivant au bout de la mini-courbe
   };
   const tour = lignes.map(s => {
     if (s.fantome) {
@@ -545,9 +555,17 @@ function rendreClassement() {
     }
     rang++;
     const ecart = s.i1 ? s.twr - s.i1.twr : null;
-    return '<div class="pos" tabindex="0" role="button" aria-expanded="false" data-key="' + esc(s.nom) + '" data-nom="' + esc(s.nom) + '"><span class="rk">' + rang + fleche(s.nom) + '</span><div class="who">' + (saisonVisible() ? avatar(s.nom) : '<i style="background:' + couleur(s.nom) + '"></i>') + '<div><b' + attrLivree(s.nom) + '>' + esc(s.nom) + couronne(s.nom) +
-      (s.nom === ETAT.moi ? '<span class="tag ici">moi</span>' : "") + badgesNom(s.nom) + (manque.has(s.nom) ? '<span class="tag manque">relevé à saisir</span>' : "") +
-      "</b><small>" + pts(ecart) + " vs " + esc(D.marche.indices[i1]) + (s.n < nMois ? " · " + s.n + " mois" : "") + mini(s) + '</small></div></div><span class="t ' + sens(s.twr) + '" data-cv="' + s.twr + '" data-cf="pct">' + pct(s.twr) + "</span>" +
+    /* lot47 · RÈGLE D'AFFICHAGE D'UNE LIGNE (Conseil du Classement, 20/11) — toujours 3 zones, jamais plus de 2 lignes de texte :
+       gauche = place (+ ▲/▼ seulement si elle a bougé) · milieu = tête + NOM (+ 👑 s'il est gagné) / une seule « ligne vivante » · droite = perf + écart au leader.
+       « Moi » = ligne surlignée (plus d'étiquette). Relevé manquant = la ligne vivante le dit (⏳), au lieu d'une étiquette coupée.
+       Ligne vivante : tour de chauffe = écart à l'indice + mini-courbe ; saison (dès le 1/1/2027) = 3 badges au plus (+N) + mini-courbe,
+       l'écart à l'indice passant en tête du détail (la ligne pointillée de l'indice le montre déjà dans le classement). */
+    const vivante = manque.has(s.nom) ? '<span class="a-saisir">⏳ relevé à saisir</span>'
+      : typeof saisonJouee === "function" && saisonJouee() && typeof badgesLigne === "function" && badgesLigne(s.nom) ? badgesLigne(s.nom) + (s.n < nMois ? '<span class="nmois">' + s.n + " mois</span>" : "") + mini(s)
+      : pts(ecart) + " vs " + esc(D.marche.indices[i1]) + (s.n < nMois ? " · " + s.n + " mois" : "") + mini(s);
+    return '<div class="pos' + (s.nom === ETAT.moi ? " ici" : "") + '" tabindex="0" role="button" aria-expanded="false" data-key="' + esc(s.nom) + '" data-nom="' + esc(s.nom) + '"><span class="rk">' + rang + fleche(s.nom) + '</span><div class="who">' + (saisonVisible() ? avatar(s.nom) : '<i style="background:' + couleur(s.nom) + '"></i>') + '<div><b' + attrLivree(s.nom) + '>' + esc(s.nom) + couronne(s.nom) +
+      (s.nom === ETAT.moi ? '<span class="sr">(moi)</span>' : "") +
+      "</b><small>" + vivante + '</small></div></div><span class="t ' + sens(s.twr) + '" data-cv="' + s.twr + '" data-cf="pct">' + pct(s.twr) + "</span>" +
       (s === leader ? '<span class="g lead">LEADER</span>' : '<span class="g">' + pts(s.twr - leader.twr) + "</span>") + "</div>";
   }).join("");
 
@@ -577,9 +595,9 @@ function rendreClassement() {
     '<div><h2 class="sec">Classement <span class="h-boutons"><button class="million-b' + (D.premierMillion ? " pris" : "") + '" type="button" id="info-million" aria-label="Premier millionnaire">👑</button><button class="vers-fiches" type="button" id="vers-fiches" aria-label="Ouvrir les fiches de chacun"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.4c2.3.1 3.9 1.6 4.8 4.6"/></svg>Fiches</button></span></h2></div>' +
     (typeof plaqueMillion === "function" ? plaqueMillion() : "") + filtres(true) +
     '<div class="periode">' + esc(textePeriode(deb, fin, nMois)) + (deb && st.some(s => s.n < nMois) ? " · chaque courbe démarre au premier relevé de la personne" : "") + " · performance (TWR), versements neutralisés</div>" +
-    '<div class="tour' + (animer ? " entree" : "") + '"><div class="tour-h"><span>Pos.</span><span>Portefeuille</span><span>TWR · écart</span></div>' + tour + "</div>" +
-    '<p class="tour-aide">👆 Touche un pilote pour ses stats et sa fiche (portefeuille, lignes, historique).</p>' +
-    (saisonJouee() ? '<p class="leg-bdg"><b>Badges</b> 🟡 en tête du championnat · 🏆 champion de saison · ⚡💥… exclusifs gagnés (un seul exemplaire) · plaque gagnée en défi. <span>Touche un badge pour savoir ce qu\'il veut dire.</span></p>' : "") +
+    '<div class="tour' + (animer ? " entree" : "") + '"><div class="tour-h"><span>Pos.</span><span>Portefeuille</span><span>TWR<span class="h-long"> · écart</span></span></div>' + tour + "</div>" +
+    '<p class="tour-aide">👆 Touche un pilote pour ses stats et sa fiche' + (saisonJouee() ? " (sa vitrine, son historique)" : " (son historique mois par mois)") + ".</p>" +
+    (saisonJouee() ? '<p class="leg-bdg"><b>Sur les lignes</b> tête cerclée d\'or = en tête du championnat · 🏆 champion de saison · ⚡💥… exclusifs (un seul exemplaire) · « +N » = les autres, dans la vitrine. <span>Touche un badge pour savoir ce qu\'il veut dire.</span></p>' : "") +
     "<div>" + '<h2 class="sec">La course <small>performance cumulée</small></h2></div>' +
     boiteGraphe("g-course", series.map(s => ({ nom: s.nom, c: s.c, dash: s.dash }))) +
     (ks.length > 2 && st.length > 1 ? '<div><h2 class="sec">Les positions <small>place au classement à chaque fin de mois</small></h2></div>' + boiteGraphe("g-places", st.map(s => ({ nom: s.nom, c: couleur(s.nom) }))) : "") +
@@ -620,7 +638,10 @@ function rendreClassement() {
       if (suiv && suiv.classList.contains("detail")) { suiv.remove(); el.setAttribute("aria-expanded", "false"); return; }
       const c = (l, val, cls) => "<div><span>" + l + '</span><b class="' + (cls || "") + '">' + val + "</b></div>";
       const d = document.createElement("div"); d.className = "detail";
-      d.innerHTML = '<button class="btn acc fiche-go" type="button">📂 Fiche de ' + esc(s.nom) + ' <small>portefeuille, lignes, historique</small> ›</button><div class="mini">' + c("Volatilité", volTxt(s)) + c("Sharpe", sharpeTxt(s)) + c("Pire baisse", pct(s.baisseMax), sens(s.baisseMax)) +
+      const lead = typeof saisonJouee === "function" && saisonJouee() && typeof leaderSaison === "function" && leaderSaison() === s.nom;
+      d.innerHTML = '<button class="btn acc fiche-go" type="button">📂 Fiche de ' + esc(s.nom) + " <small>" + (typeof saisonJouee === "function" && saisonJouee() ? "vitrine, portefeuille, historique" : "portefeuille, historique mois par mois") + "</small> ›</button>" +
+        (lead ? '<p class="det-lead">🟡 En tête du championnat de la saison : sa tête est cerclée d\'or jusqu\'à ce qu\'un autre le dépasse.</p>' : "") +
+        '<div class="mini">' + c("Écart vs " + esc(D.marche.indices[i1]), pts(s.i1 ? s.twr - s.i1.twr : null), sens(s.i1 ? s.twr - s.i1.twr : null)) + c("Volatilité", volTxt(s)) + c("Sharpe", sharpeTxt(s)) + c("Pire baisse", pct(s.baisseMax), sens(s.baisseMax)) +
         c("Meilleur (" + moisCourt(s.meilleur.k) + ")", pct(s.meilleur.r), sens(s.meilleur.r)) + c("Pire (" + moisCourt(s.pire.k) + ")", pct(s.pire.r), sens(s.pire.r)) + c("MWR", pct(s.mwr), sens(s.mwr)) +
         c(esc(D.marche.indices[i1]) + " même période", pct(s.i1 && s.i1.twr)) + c("Mois battant l'indice", pct(s.i1 && s.i1.battus, 0, false)) + c("Plus-value période", eur(s.pvPeriode, 0, true), sens(s.pvPeriode)) +
         "</div>";

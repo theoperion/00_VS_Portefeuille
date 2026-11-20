@@ -708,7 +708,10 @@ function armerRetour() {
 /* ---------- Réglages ---------- */
 function ouvrirReglages(section) {
   $("#champ-api").value = stock.get(CLES.api) || API_URL; aRevoquer = null; $("#reglages").hidden = false; chargerCodes(); majMoiReglages();
-  { const pb = document.getElementById("ouvrir-portrait"); if (pb) pb.hidden = !portraitDispo(); }   // V16.56 : Mon portrait à partir du samedi 21/11, 11 h
+  /* lot47 · Podium (saison) : toucher le nom d'un pilote ouvre directement sa fiche (et sa vitrine) */
+document.addEventListener("click", ev => { const t = ev.target.closest && ev.target.closest("[data-gp-fiche]"); if (!t) return; ev.stopPropagation(); ETAT.fiche = t.dataset.gpFiche; garder(); allerA("fiche"); });
+document.addEventListener("keydown", ev => { const t = ev.target.closest && ev.target.closest("[data-gp-fiche]"); if (!t || (ev.key !== "Enter" && ev.key !== " ")) return; ev.preventDefault(); ETAT.fiche = t.dataset.gpFiche; garder(); allerA("fiche"); });
+{ const pb = document.getElementById("ouvrir-portrait"); if (pb) pb.hidden = !portraitDispo(); }   // V16.56 : Mon portrait à partir du samedi 21/11, 11 h
   { const ce = document.querySelector('[data-accent-choix="ecurie"]'); if (ce) ce.style.display = saisonJouee() ? "" : "none"; }   // v17.5 : pas de couleur « Mon écurie » avant la Saison 1 (tour de chauffe = bases seulement)
   if (section) { const s = document.getElementById(section); if (s) plierRegl(s, false); if (s) setTimeout(() => { s.scrollIntoView({ block: "start" }); const i = s.querySelector("input"); if (i && !i.value) i.focus(); }, 30); }
 }

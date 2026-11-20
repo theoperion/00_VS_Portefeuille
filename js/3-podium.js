@@ -524,6 +524,24 @@ function badgesNom(nom, e) {
   if (autres.length) h += '<span class="bdg bdg-plus" data-bdg="' + esc(nom + " a aussi : " + autres.map(b => b.ico + " " + b.nom).join(", ") + ". Chacun choisit les 3 badges affichés sur sa ligne dans Podium › Écurie › Badges.") + '">+' + autres.length + "</span>";
   return h;
 }
+/** lot47 · badges de la « ligne vivante » du Classement (saison seulement) : les 3 épinglés au plus, puis « +N ».
+ *  Plus de 🟡 ici : le leader du championnat se voit à sa tête cerclée d'or (et c'est expliqué dans le détail de sa ligne). */
+function badgesLigne(nom, e) {
+  if (basesSeules() || !saisonJouee()) return "";
+  const tous = badgesPossedes(nom); if (!tous.length) return "";
+  const vus = badgesAffiches(nom, e), autres = tous.filter(b => !vus.some(x => x.id === b.id));
+  return '<span class="bdgs">' + vus.map(b => b.html).join("") + (autres.length ? '<span class="bdg bdg-plus" data-bdg="' + esc(nom + " a aussi : " + autres.map(b => b.ico + " " + b.nom).join(", ") + ". Tout est dans sa vitrine (touche sa ligne, puis sa fiche). Chacun choisit ses 3 badges dans Podium › Écurie › Badges.") + '">+' + autres.length + "</span>" : "") + "</span>";
+}
+/** lot47 · la vitrine de la fiche commence par un palmarès en 3 chiffres (saison seulement, comme toute la vitrine) */
+function palmaresVitrine(nom) {
+  const ys = anneesSaison(), y = ys[ys.length - 1]; let titres = 0, manches = 0, tete = 0;
+  try { titres = ys.filter(a => { const c = championnat(a); return c.complete && c.classement[0] === nom; }).length; } catch (e) { /* rien */ }
+  try { const c = championnat(y); manches = c.mois.filter(m => (m.l || []).some(x => x.nom === nom && x.rg === 1)).length; tete = moisEnTete(nom, y); } catch (e) { /* rien */ }
+  const tous = badgesPossedes(nom);
+  const case_ = (n, l) => '<div><b>' + n + "</b><small>" + l + "</small></div>";
+  return '<div class="vt-palm">' + case_(titres, titres > 1 ? "titres" : "titre") + case_(manches, manches > 1 ? "manches gagnées" : "manche gagnée") + case_(tete, "mois en tête") + "</div>" +
+    (tous.length ? '<div class="vt-etagere" aria-label="Badges de ' + esc(nom) + '">' + tous.slice(0, 8).map(b => '<span class="vt-niche">' + b.html.replace('class="bdg', 'class="bdg vt-b') + "</span>").join("") + (tous.length > 8 ? '<span class="vt-niche plus">+' + (tous.length - 8) + "</span>" : "") + "</div>" : "");
+}
 const EX_OUVERTS = new Set();
 function htmlCourseExclusifs() {
   const pm = D.premierMillion, idx = D.marche.indices[iRef()];
@@ -999,7 +1017,7 @@ function htmlChoixBadges(qui, e) {
     (auto ? "Pour l'instant, l'appli choisit tes 3 plus prestigieux." : "") + "</p>" +
     '<div class="bdg-grille">' + tous.map(b => { const on = vus.includes(b.id), rang = on ? vus.indexOf(b.id) + 1 : 0;
       return '<button type="button" class="bdg-c' + (on ? " on" : "") + (b.niv ? " n" + b.niv : "") + '" data-ecu-bdg="' + b.id + '" aria-pressed="' + on + '"><span class="ico">' + b.ico + "</span><span>" + esc(b.nom) + "</span>" + (on ? '<i class="rg">' + (auto ? "auto" : rang) + "</i>" : "") + "</button>"; }).join("") + "</div>" +
-    '<div class="bdg-apercu"><small>Aperçu de ta ligne</small><b>' + esc(qui) + "</b>" + badgesNom(qui, e) + "</div>" +
+    '<div class="bdg-apercu"><small>Aperçu de ta ligne</small><b>' + esc(qui) + "</b>" + badgesLigne(qui, e) + "</div>" +
     (auto ? "" : '<button class="lien" type="button" id="ecu-bdg-auto">Laisser l\'appli choisir</button>') + "</div>";
 }
 let ECU_VOIR = null;
@@ -1286,7 +1304,7 @@ function vitrineFiche(nom) {
   const parMonde = MONDES.map(mo => { const tot = DEFIS.filter(d => d.niv === mo.niv).length + TROPHEES_MONDES.filter(t => t.monde === mo.id).length;
     const ok = DEFIS.filter(d => d.niv === mo.niv && E[d.id].ok).length + TROPHEES_MONDES.filter(t => t.monde === mo.id && TM[t.id][nom] && TM[t.id][nom].ok).length;
     return '<span style="--mc:' + mo.c + '">' + mo.ico + " " + ok + "/" + tot + "</span>"; }).join("");
-  return '<div class="vitrine">' + (plaqueDe(nom) ? '<div class="vt-plaque">' + plaqueDe(nom).replace('class="plaque"', 'class="plaque grande"') + "</div>" : "") + '<div class="vt-h"><b>🗄️ La vitrine de ' + esc(nom) + "</b><small>" + cartes.length + " carte" + (cartes.length > 1 ? "s" : "") + " · badges par monde</small></div>" +
+  return '<div class="vitrine">' + (plaqueDe(nom) ? '<div class="vt-plaque">' + plaqueDe(nom).replace('class="plaque"', 'class="plaque grande"') + "</div>" : "") + '<div class="vt-h"><b>🗄️ La vitrine de ' + esc(nom) + "</b><small>" + cartes.length + " carte" + (cartes.length > 1 ? "s" : "") + " · badges par monde</small></div>" + palmaresVitrine(nom) +
     (cartes.length ? '<div class="vt-cartes">' + cartes.map(id => '<button type="button" data-carte-coll="' + id + '">' + htmlCarteColl(id, "m", [nom]) + "</button>").join("") + "</div>" : '<p class="info">Pas encore de carte : la course aux exclusifs ne fait que commencer.</p>') +
     '<div class="vt-badges">' + parMonde + "</div></div>";
 }

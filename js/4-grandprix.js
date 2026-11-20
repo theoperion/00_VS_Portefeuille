@@ -266,6 +266,18 @@ function etapeParDefaut(etapes, y) {
   return etapes[j].k && !etapes[j].avenir && etapes[j].k > vu ? j : etapes.length - 1;
 }
 let GP_ETAPE = null, GP_ANIM = null;
+/** lot47 · tour de chauffe (jusqu'au 31/12/2026) : un classement d'EXEMPLE sous la grille = la performance 2026 (PEA + assurance-vie,
+ *  depuis le 1er janvier 2026), comme l'onglet Classement. Il ne compte pas et ne dévoile rien de la saison 2027. */
+function classementExemple() {
+  try {
+    const fin = Math.min(finGlobale(D, 0), 202612), deb = 202512, qui = quiEcurie();
+    const l = D.personnes.map(p => stats(D, p, 0, deb, fin, null, null)).filter(s => s.n > 0 && ok(s.twr)).sort((a, b) => b.twr - a.twr);
+    if (!l.length) return "";
+    return '<div class="ex26"><div class="ex26-h"><b>Classement 2026</b><small>pour l\'exemple · ne compte pas</small></div>' +
+      l.map((s, i) => '<div class="ex26-l' + (s.nom === qui ? " ici" : "") + '"><span class="rk">' + (i + 1) + "</span>" + avatar(s.nom) + '<span class="nm">' + esc(s.nom) + '</span><span class="t ' + sens(s.twr) + '">' + pct(s.twr) + "</span></div>").join("") +
+      '<p class="ex26-p">Performance depuis le 1<sup>er</sup> janvier 2026 (PEA + assurance-vie), jusqu\'à fin ' + esc(MOIS_L[fin % 100 - 1]) + ". Le championnat, lui, démarre de zéro le 1<sup>er</sup> janvier.</p></div>";
+  } catch (e) { return ""; }
+}
 function htmlGrandPrix(y) {
   const etapes = etapesGP(y), c = championnat(y);
   const i = GP_ETAPE !== null && GP_ETAPE < etapes.length ? GP_ETAPE : etapeParDefaut(etapes, y), et = etapes[i];
@@ -309,7 +321,7 @@ function htmlGrandPrix(y) {
       (x.mult > 1 ? '<span class="gp-x or" data-bdg="' + esc(et.m.spec ? et.m.spec.ico + " " + et.m.spec.nom + " : points de place doublés." : "Points doublés.") + '">×2</span>' : "") +
       (x.pioche && x.pioche.length && regleVisible("pioche") && !estChauffe(y) ? '<span class="gp-x" data-bdg="🎴 Carte' + (x.pioche.length > 1 ? "s" : "") + " piochée" + (x.pioche.length > 1 ? "s" : "") + " ce mois-ci" + (n === qui ? " : " + esc(x.pioche.map(c => carteDef(c).nom).join(", ")) : "") + '.">🎴</span>' : "") : "";
     const jn = (c.jeu || {})[n], niv = x ? x.niv + (x.monte || 0) : jn && !et.m ? 1 : (jn ? jn.niv : 1);
-    return '<div class="gp-l' + (n === qui ? " ici" : "") + '"><span class="rk">' + (r + 1) + "</span>" + avatar(n) + '<div class="nm"><b><span' + (attrLivree(n) ? attrLivree(n).replace(' class="', ' class="gp-nom ') : ' class="gp-nom"') + ">" + esc(n) + "</span>" + (regleVisible("niveaux") ? '<span class="gp-niv" data-bdg="Niveau d\'écurie ' + niv + ' : chaque niveau gagné donne une carte bonus.">N' + niv + "</span>" : "") + extra + "</b>" +   // V16.21 : plus de « à X pts de … » (alourdissait, demande de Théo) : seul le décompte du mois reste
+    return '<div class="gp-l' + (n === qui ? " ici" : "") + '"><span class="rk">' + (r + 1) + "</span>" + avatar(n) + '<div class="nm"><b><span' + (attrLivree(n) ? attrLivree(n).replace(' class="', ' class="gp-nom ') : ' class="gp-nom"') + (saisonJouee() ? ' data-gp-fiche="' + esc(n) + '" role="button" tabindex="0" aria-label="Fiche et vitrine de ' + esc(n) + '"' : "") + ">" + esc(n) + (saisonJouee() ? '<i class="gp-vers-fiche" aria-hidden="true">›</i>' : "") + "</span>" + (regleVisible("niveaux") ? '<span class="gp-niv" data-bdg="Niveau d\'écurie ' + niv + ' : chaque niveau gagné donne une carte bonus.">N' + niv + "</span>" : "") + extra + "</b>" +   // V16.21 : plus de « à X pts de … » (alourdissait, demande de Théo) : seul le décompte du mois reste
       (x ? '<small class="gp-dec">' + esc(decompte(x, et.m.spec)) + "</small>" : "") + "</div>" + carte + '<span class="pt"><b>' + et.pts[n] + "</b><small>pts</small></span></div>";
   }).join("");
   const cal = htmlCalendrierGP(y, kGP);
@@ -319,7 +331,7 @@ function htmlGrandPrix(y) {
       !et.m && kGP === SAISON.premiere * 100 + 1 ? '<p class="info gp-depart"><span class="gp-de' + (stock.get("versus.deJanvier") ? "" : (stock.set("versus.deJanvier", "1"), " roule")) + '" aria-hidden="true">🎲</span> Grille tirée au sort : tout le monde part à 0 point.</p>' : "");   // v17.5 (Théo) : sur la grille de la chauffe, du 21/11 au 31/12
   const titreAt = at ? '<div class="gp-atouts"><span class="at" data-bdg="' + esc("Atout de " + G.ville + " : " + at.atout.ico + " " + at.atout.nom + " y gagne +1 quand elle marque (sauf bouchon).") + '">' + at.atout.ico + " " + esc(at.atout.nom) + " +1</span></div>" : (indiceCircuit(kGP) ? htmlIndice(indiceCircuit(kGP)) : "");
   return versStand + att + '<div class="gp-h"><div><span class="s-k">' + (c.chauffe ? "Tour de chauffe" : et.avenir ? "Manche " + i + " · sur la grille" : et.k ? "Manche " + i : "Départ") + " · " + esc(moisLong(kGP)) + '</span><h3 class="gp-titre">' + G.drap + " " + esc(G.gp) + '</h3><p class="gp-met">' + esc(G.ville) + " · " + met.ico + " " + esc(met.txt) + (spe ? " " + spe.ico + " <b>" + esc(spe.nom) + "</b> : " + esc(spe.txt) : vuesV2(ci) && pgm ? ' <span data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " <b>" + esc(pgm.nom) + "</b></span>" : "") + '</p></div><button class="btn ghost gp-rejouer" type="button" id="gp-rejouer">▶ Rejouer</button></div>' +
-    titreAt + piste + (v2 ? '<div class="gp-vues2">' + selVuesGP(vue, "") + menuV2 + '<button class="gp-plein-gros" type="button" id="gp-plein-gros"><span aria-hidden="true">⛶</span> Plein écran</button></div>' : "") + chips + '<div class="gp-liste">' + lignes + "</div>" + (et.m ? '<button class="btn ghost gp-carte" type="button" id="gp-carte">📸 Carte postale · ' + esc(moisLong(et.k)) + "</button>" : "") + cal +
+    titreAt + piste + (v2 ? '<div class="gp-vues2">' + selVuesGP(vue, "") + menuV2 + '<button class="gp-plein-gros" type="button" id="gp-plein-gros"><span aria-hidden="true">⛶</span> Plein écran</button></div>' : "") + chips + '<div class="gp-liste">' + lignes + "</div>" + (c.chauffe && !saisonJouee() ? classementExemple() : "") + (et.m ? '<button class="btn ghost gp-carte" type="button" id="gp-carte">📸 Carte postale · ' + esc(moisLong(et.k)) + "</button>" : "") + cal +
     '<p class="info">Chaque mois, une manche sur un nouveau circuit : départ dans l\'ordre du championnat, et le meilleur du mois boucle le tour.' + " Touche une icône pour le détail, une voiture pour la suivre." + (c.chauffe ? " 🔥 Rien ne compte pendant la chauffe." : "") + ' <a href="#" class="lien-regles" data-regles="gp">Règles</a></p>' +
     htmlDetailPoints(y);
 }
