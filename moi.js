@@ -127,6 +127,27 @@ function injecterStyle() {
 .moi .vs-n b { display: inline; font: 700 18px/1 var(--f-num); color: var(--ink); letter-spacing: 0; text-transform: none; font-style: normal; }
 .moi .vs-prof.th .vs-n, .moi .vs-prof.th .vs-n b { color: #F4F5F8; }
 .moi .vs-n small { display: block; font: 500 11px/1.2 var(--f-text); margin: 2px 0 0; }
+/* v17.19 · Ma tenue (haut de Missions) + encart « Nouveau » */
+.moi .vs-tenue { display: grid; gap: 8px; padding: 10px 12px 12px; border-radius: 16px; border: 1px solid var(--rule); background: var(--panel); }
+.moi .vs-tenue .vt-h { all: unset; box-sizing: border-box; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; cursor: pointer; }
+.moi .vs-tenue .vt-h b { font: italic 800 14px/1 var(--f-display); letter-spacing: .06em; text-transform: uppercase; }
+.moi .vs-tenue .vt-h small { font: 500 12px/1 var(--f-text); color: var(--ink-3); white-space: nowrap; }
+.moi .vs-tenue .vt-r { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
+.moi .vs-tenue .vt-o { all: unset; box-sizing: border-box; min-width: 0; display: grid; justify-items: center; gap: 4px; padding: 7px 2px 6px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--rule-2, var(--rule)); cursor: pointer; text-align: center; }
+.moi .vs-tenue .vt-o:focus-visible, .moi .vs-tenue .vt-h:focus-visible { outline: 2px solid var(--accent); }
+.moi .vs-tenue .vt-p { height: 26px; width: 100%; display: grid; place-items: center; overflow: hidden; }
+.moi .vs-tenue .vt-p .m-flaps { --fh: 17px; gap: 1px; flex-wrap: nowrap; }
+.moi .vs-tenue .vt-p .m-flap { width: 13px; height: 19px; font-size: 12px; border-radius: 2px; box-shadow: none; }
+.moi .vs-tenue .vt-p .m-flap::after { height: 1px; }
+.moi .vs-tenue .vt-p .m-af { max-width: none; } .moi .vs-tenue .vt-p .t-ticket .tk-h, .moi .vs-tenue .vt-p .t-billet .bl-c, .moi .vs-tenue .vt-p .t-billet::after { display: none; }
+.moi .vs-tenue .vt-p .vs-sw { width: 34px; height: 22px; } .moi .vs-tenue .vt-p .vs-cb { width: 40px; height: 20px; }
+.moi .vs-tenue .vt-p .vs-em { font-size: 20px; }
+.moi .vs-tenue .vt-n { max-width: 100%; padding: 0; font-size: 10px; letter-spacing: -.02em; font-weight: 600; line-height: 1.15; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.moi .vs-nv { display: flex; align-items: center; gap: 8px; padding: 7px 6px 7px 10px; border-radius: 12px; background: color-mix(in srgb, var(--gold) 14%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); font-size: 12.5px; line-height: 1.3; }
+.moi .vs-nv > span { flex: 1; min-width: 0; }
+.moi .vs-nv .btn { padding: 6px 12px; font-size: 12.5px; }
+.moi .vs-nv .vt-x { all: unset; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: var(--ink-3); cursor: pointer; font-size: 14px; }
+.moi .vs-nv .vt-x:focus-visible { outline: 2px solid var(--accent); }
 /* Vestiaire */
 .moi .vs-o { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
 .moi .vs-o .chip { display: grid; justify-items: center; gap: 3px; padding: 7px 3px 6px; border-radius: 10px; min-width: 0; }
@@ -3888,7 +3909,7 @@ function actifM(t) { const s = SORTES.find(x => x[0] === t), v = PREF[s[3]] || B
 function afficheurActif() { return actifM("aff"); }
 function themeActif() { return defObj("theme", actifM("theme")); }
 function couleurMoi() { const t = themeActif(); return t && t[2] ? t[2] : maCouleur(); }
-function equiper(t, id) { const s = SORTES.find(x => x[0] === t); PREF[s[3]] = id; garderPref(); if (t === "aff") dernierFlap = ""; }
+function equiper(t, id) { const s = SORTES.find(x => x[0] === t); PREF[s[3]] = id; garderPref(); if (t === "aff") dernierFlap = "";  connaitreObj(cleObj(t, id)); }
 /* D'où vient un objet (pour le « ? ») */
 function origineObj(t, id) {
   if (BASE_M[t] === id) return { base: true };
@@ -3907,6 +3928,45 @@ function apercuObj(t, id) {
   if (t === "fete" || t === "emb") return '<span class="vs-em">' + d[2] + "</span>";
   if (t === "titre") return '<span class="vs-ti">« ' + esc(d[1]) + " »</span>";
   return "";
+}
+/* v17.19 · objets « nouveaux » : gagnés mais pas encore équipés ni écartés (mémorisé sur l'appareil, une liste par personne).
+   Au tout premier passage, tout ce qu'on a déjà est noté comme connu (pas d'encart pour l'existant). */
+function objConnus() { try { const l = JSON.parse(stock.get(cleStock("objConnus")) || "null"); return Array.isArray(l) ? l : null; } catch (e) { return null; } }
+function connaitreObj(k) { if (!identiteSure()) return; const l = objConnus(); if (!l || l.includes(k)) return; l.push(k); stock.set(cleStock("objConnus"), JSON.stringify(l)); }
+function objetsNouveaux() {
+  if (!M || !identiteSure()) return [];
+  const E = etatObjets(), base = new Set(Object.entries(BASE_M).map(([t, id]) => cleObj(t, id)));
+  const tous = []; SORTES.forEach(([t]) => CATALOGUE[t].forEach(d => { const k = cleObj(t, d[0]); if (E.ok.has(k) && !base.has(k)) tous.push(k); }));
+  const l = objConnus();
+  if (!l) { stock.set(cleStock("objConnus"), JSON.stringify(tous)); return []; }
+  const c = new Set(l);
+  return tous.filter(k => !c.has(k) && !SORTES.some(([t]) => actifM(t) === k.split(".")[1] && k.split(".")[0] === t));
+}
+function apercuTenue(t, id) { return t === "aff" ? '<span class="m-flaps">' + flaps("12", false, id) + "</span>" : t === "titre" ? '<span class="vs-em">' + SORTES.find(x => x[0] === t)[2] + "</span>" : apercuObj(t, id); }
+function htmlTenue() {
+  const E = etatObjets();
+  const tot = Object.values(CATALOGUE).reduce((n, l) => n + l.length, 0), nb = Object.entries(CATALOGUE).reduce((n, [s, l]) => n + l.filter(d => E.ok.has(cleObj(s, d[0]))).length, 0);
+  const nv = objetsNouveaux(), k = nv[0];
+  let encart = "";
+  if (k) {
+    const [t, id] = k.split("."), s = SORTES.find(x => x[0] === t);
+    encart = '<div class="vs-nv" role="status"><span>🎁 <b>Nouveau :</b> ' + esc(s[1].toLowerCase()) + " « " + esc(nomObj(t, id)) + " »" + (nv.length > 1 ? " <small>(+" + (nv.length - 1) + ")</small>" : "") + "</span>" +
+      '<button class="btn acc" type="button" data-vt-eq="' + k + '">Équiper</button><button class="vt-x" type="button" data-vt-vu="' + k + '" aria-label="Plus tard">✕</button></div>';
+  }
+  return '<section class="vs-tenue" aria-label="Ma tenue"><button type="button" class="vt-h" data-vt-ouv="' + (SORTES.some(x => x[0] === PREF.vest) ? PREF.vest : "aff") + '"><b>Ma tenue</b><small>' + nb + " / " + tot + " objets · privé ›</small></button>" +
+    '<div class="vt-r">' + SORTES.map(([t, l]) => { const id = actifM(t), n = nomObj(t, id);
+      return '<button type="button" class="vt-o" data-vt-ouv="' + t + '" aria-label="' + esc(l + " : " + n + ", changer") + '" title="' + esc(l + " : " + n) + '"><span class="vt-p">' + apercuTenue(t, id) + '</span><span class="vt-n">' + esc(l) + "</span></button>"; }).join("") +
+    "</div>" + encart + "</section>";
+}
+function brancherTenue(v) {
+  v.querySelectorAll("[data-vt-ouv]").forEach(b => b.addEventListener("click", () => {
+    PREF.vest = b.dataset.vtOuv; PREF.acc["m-vest"] = true; garderPref(); vsSel = null; rendre();
+    const d = document.querySelector('#v-moi details[data-acc="m-vest"]'); if (d) d.scrollIntoView({ block: "start", behavior: reduit ? "auto" : "smooth" });
+  }));
+  const eq = v.querySelector("[data-vt-eq]");
+  if (eq) eq.addEventListener("click", () => { const [t, id] = eq.dataset.vtEq.split("."); equiper(t, id); rendre(); if (t === "fete") lancerFete(id); else toast(nomObj(t, id) + " équipé."); });
+  const vu = v.querySelector("[data-vt-vu]");
+  if (vu) vu.addEventListener("click", () => { connaitreObj(vu.dataset.vtVu); rendre(); });
 }
 let vsSel = null;
 function htmlVestiaire() {
@@ -4056,7 +4116,7 @@ function htmlMissions() {
       '</summary><div class="pl-liste">' + l.map(ligneP).join("") + "</div></details>";
   }).join("");
   /* C (v16.93) : million, paliers, bilans, puis le Vestiaire replié */
-  return '<div id="m-million-z"></div>' +
+  return '<div id="m-million-z"></div>' + htmlTenue() +
     '<div><h2 class="sec">Paliers <small>' + (pal.some(x => x.cache) ? "privé en mode discret" : nbFaits + " franchis sur " + pal.length) + "</small></h2></div>" +
     '<div class="pl-blocs">' + blocs + "</div>" +
     '<p class="info">Un palier sur deux, et toujours le dernier de chaque famille, débloque une récompense pour ton onglet Moi : afficheur, thème, courbe, fête, emblème ou titre. D\'autres sont cachées. Tout reste privé et à toi, même si tu repasses sous le palier. Touche un palier franchi pour revoir sa fête.</p>' +
@@ -4066,7 +4126,7 @@ function brancherMissions(v) {
   const z = v.querySelector("#m-million-z"); if (z) afficherMillion(z);
   v.querySelectorAll("details.pl-bloc").forEach(d => d.addEventListener("toggle", () => { if (d.open) palOuverts.add(d.dataset.fam); else palOuverts.delete(d.dataset.fam); }));
   const pal = paliers();
-  brancherVestiaire(v);
+  brancherVestiaire(v); brancherTenue(v);
   v.querySelectorAll("[data-m-cloture]").forEach(b => b.addEventListener("click", () => ouvrirCloture(+b.dataset.mCloture)));
   v.querySelectorAll("[data-m-bilan]").forEach(b => b.addEventListener("click", () => ouvrirDiapos("Mon patrimoine · " + b.dataset.mBilan, diaposPrivees(+b.dataset.mBilan))));
   v.querySelectorAll("[data-palier]").forEach(b => b.addEventListener("click", () => { const x = pal.find(p => p.id === b.dataset.palier); if (x && x.atteint) feter(x); }));
