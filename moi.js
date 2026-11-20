@@ -457,6 +457,8 @@ function injecterStyle() {
 .moi .m-idx-mk button { all: unset; box-sizing: border-box; background: var(--panel); padding: 9px 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; cursor: pointer; }
 .moi .m-idx-mk button[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 14%, var(--panel)); box-shadow: inset 3px 0 0 var(--accent); }
 .moi .m-idx-mk button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.moi .m-idx-mk button:last-child:nth-child(odd) { grid-column: 1 / -1; }   /* v17.41 : 9 cases (Nasdaq ×3) : la dernière prend la rangée, pas de trou */
+.moi .m-idx-mk b small { font: 500 10px/1 var(--f-text); color: var(--ink-3); margin-right: 5px; }
 .moi .m-mk-panneau:not(:empty) { margin-top: 10px; padding: 10px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); display: grid; gap: 8px; }
 .moi .m-mk-svg { width: 100%; height: auto; display: block; }
 .moi .m-mk-svg text { font: 10px var(--f-num, sans-serif); fill: var(--ink-2); }
@@ -1815,14 +1817,53 @@ function pretHtml() {
     "</div>";
 }
 /* ---- V15.4 · Marchés : 8 cases (variation du jour, lue dans le Versus), courbe d'un an au toucher, « Comparer » en base 100 ---- */
-const COUL_MK = ["#5B8DEF", "#2BB673", "#9B6BFF", "#E5484D", "#F2A33A", "#18A9C7", "#D6619E", "#C9A227", "#8C7B5A"];
+const COUL_MK = ["#5B8DEF", "#2BB673", "#9B6BFF", "#E5484D", "#F2A33A", "#18A9C7", "#D6619E", "#C9A227", "#8C7B5A", "#E8590C"];   // v17.41 : 10e = Nasdaq ×3
 let marcheOuvert = null, mkCaches = {};   // V15.19 : toutes les courbes affichées par défaut, or couvert compris
 function marchesMoi() { const Dv = dVersus(); const m = Dv && Dv.marchesMoi; return m && (m.jour || []).length ? m : null; }
+/* v17.41 (Théo) : les cases suivent la période de la carte Bourse (Jour · 5 j · 1 M · 6 M · Janv. · 1 an), mêmes bornes (`debutPer`).
+   Source : clôtures quotidiennes `quot` (serveur Versus V63) ; à défaut, les courbes hebdomadaires (≈). En « Jour », bourse fermée :
+   la dernière séance du marché (clôture / clôture d'avant) au lieu d'un tiret. En séance, la variation en direct s'ajoute à la dernière clôture. */
+function closMk(nom) {   // { d: [aaaammjj], v: [cours] } sans trous, du plus ancien au plus récent ; hebdo = true si seulement les semaines
+  const m = marchesMoi(), q = m && m.quot, out = { d: [], v: [], hebdo: false };
+  const sq = q && (q.s || []).find(x => x.nom === nom);
+  if (sq && (q.d || []).length) { q.d.forEach((d, i) => { if (sq.v[i] > 0) { out.d.push(+d); out.v.push(sq.v[i]); } }); return out; }
+  const se = serieMk(nom); if (!se) return out; out.hebdo = true;
+  (m.semaines || []).forEach((k, i) => { const v = se.v[i]; if (v > 0 && (!out.v.length || v !== out.v[out.v.length - 1] || i === m.semaines.length - 1)) { out.d.push(+k.replace(/-/g, "")); out.v.push(v); } });
+  return out;
+}
+function varMk(x, per) {   // → { v, du (aaaa-mm-jj de la séance montrée, null = en direct), hebdo }
+  const c = closMk(x.nom), n = c.v.length, auj = +isoJour(new Date()).replace(/-/g, ""), live = typeof x.pct === "number";
+  const iso = k => String(k).replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"), dLast = n ? c.d[n - 1] : 0;
+  if (!per) {
+    if (live) return { v: x.pct, du: null };
+    if (n < 2 || c.hebdo) return { v: null };
+    return { v: c.v[n - 1] / c.v[n - 2] - 1, du: iso(dLast) };
+  }
+  if (!n) return { v: null };
+  const enDirect = live && !c.hebdo && dLast < auj, fin = enDirect ? new Date() : dateNum(Math.min(dLast, auj));   // hebdo : la clé de la semaine est son vendredi
+  const num = d => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  let i0 = -1;
+  if (per === "5j" && !c.hebdo) i0 = n - 1 - (enDirect ? 4 : 5);   // 5 séances : la clôture d'avant la 1re (aujourd'hui compte en séance)
+  else {
+    const d0 = per === "5j" ? new Date(fin.getFullYear(), fin.getMonth(), fin.getDate() - 7, 12) : debutPer(per, fin), c0 = num(d0);
+    c.d.forEach((d, i) => { if (d <= c0) i0 = i; });
+    if (i0 >= 0 && (d0 - dateNum(c.d[i0])) / 864e5 > (c.hebdo ? 8 : 6)) i0 = -1;   // historique trop court : pas de chiffre inventé
+  }
+  if (i0 < 0 || (i0 >= n - 1 && !enDirect)) return { v: null };
+  let v = c.v[n - 1] / c.v[i0] - 1; if (enDirect) v = (1 + v) * (1 + x.pct) - 1;
+  return { v, du: enDirect || c.hebdo ? null : iso(dLast), hebdo: c.hebdo };
+}
 function htmlMarches() {
-  const m = marchesMoi(), h = (m.jour.find(x => x.heure) || {}).heure;
-  return '<div class="m-mk"><div class="m-mk-t"><h2 class="sec">Marchés <small>' + (h ? "cours du " + esc(h.replace(" ", " à ").replace(":", " h ")) + " · " : "") + "touche pour la courbe</small></h2>" +
+  const m = marchesMoi(), h = (m.jour.find(x => x.heure) || {}).heure, per = PERIODES_J[VUEJ] ? VUEJ : null;
+  const vs = m.jour.map(x => varMk(x, per)), dus = vs.map(r => r.du).filter(Boolean).sort(), duMax = dus[dus.length - 1], tousSeance = vs.every(r => r.du || r.v === null);
+  const jc = iso => { const d = new Date(iso + "T12:00:00"); return JOURS_C[d.getDay()] + " " + frDate(iso).slice(0, 5); };
+  const sous = per ? PERIODES_J[per][2] + (vs.some(r => r.hebdo) ? " (≈ d'après les cours de la semaine)" : "") + " · "
+    : tousSeance && duMax ? "dernière séance · " + jc(duMax) + " · " : (h ? "cours du " + esc(h.replace(" ", " à ").replace(":", " h ")) + " · " : "");
+  const marque = r => r.du && (!tousSeance || r.du !== duMax) ? "<small>" + frDate(r.du).slice(0, 5) + "</small>" : "";   // case en retard sur les autres (ex. ×3 avant l'ouverture de New York)
+  return '<div class="m-mk"><div class="m-mk-t"><h2 class="sec">Marchés <small>' + sous + "touche pour la courbe</small></h2>" +
     '<button class="mini-btn" type="button" data-mk="cmp" aria-pressed="' + (marcheOuvert === "cmp") + '">Comparer</button></div>' +
-    '<div class="m-idx m-idx-mk">' + m.jour.map((x, i) => '<button type="button" data-mk="' + i + '" aria-pressed="' + (marcheOuvert === i) + '"><span>' + esc(x.nom) + '</span><b class="' + sens(x.pct) + '">' + (x.pct === null ? "—" : pct(x.pct, 2)) + "</b></button>").join("") + "</div>" +
+    '<div class="m-idx m-idx-mk">' + m.jour.map((x, i) => { const r = vs[i];
+      return '<button type="button" data-mk="' + i + '" aria-pressed="' + (marcheOuvert === i) + '"' + (r.du ? ' title="Séance du ' + frDate(r.du) + '"' : "") + '><span>' + esc(x.nom) + '</span><b class="' + sens(r.v) + '">' + marque(r) + (ok(r.v) ? pct(r.v, per && per !== "5j" ? 1 : 2) : "—") + "</b></button>"; }).join("") + "</div>" +
     '<div class="m-mk-panneau" id="m-mk-panneau">' + panneauMarche() + "</div></div>";
 }
 function serieMk(nom) { const m = marchesMoi(); return m && (m.series || []).find(x => x.nom === nom); }
@@ -1846,7 +1887,7 @@ function panneauMarche() {
   if (marcheOuvert === "cmp") {
     const lignes = m.series.map((x, i) => ({ nom: x.nom, v: x.v, c: COUL_MK[i % COUL_MK.length] }));
     return '<div class="m-mk-chips">' + lignes.map(l => '<button type="button" class="chip" data-mk-cache="' + esc(l.nom) + '" aria-pressed="' + !mkCaches[l.nom] + '"><i style="background:' + l.c + '"></i>' + esc(l.nom) + " " + '<small class="' + sens(varSur(l.v, 52)) + '">' + pct(varSur(l.v, 52), 0) + "</small></button>").join("") + "</div>" +
-      courbesSVG(lignes.filter(l => !mkCaches[l.nom]), true) + '<p class="info">Base 100 il y a un an, une valeur par semaine (ETF en euros ; « Or couvert € » suivi par le GLD en dollars). Touche un nom pour l\'afficher ou le masquer.</p>';
+      courbesSVG(lignes.filter(l => !mkCaches[l.nom]), true) + '<p class="info">Base 100 il y a un an, une valeur par semaine (ETF en euros ; « Or couvert € » suivi par le GLD en dollars ; « Nasdaq ×3 » suivi par le TQQQ, proche du QQQ3, converti en euros). Touche un nom pour l\'afficher ou le masquer.</p>';
   }
   const j = m.jour[marcheOuvert], se = j && serieMk(j.nom); if (!se) return '<p class="info">Pas d\'historique pour ce marché.</p>';
   const c = COUL_MK[m.series.indexOf(se) % COUL_MK.length], t = (lab, n) => '<span>' + lab + ' <b class="' + sens(varSur(se.v, n)) + '">' + pct(varSur(se.v, n), 1) + "</b></span>";
