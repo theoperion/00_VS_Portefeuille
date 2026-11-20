@@ -1320,7 +1320,7 @@ function htmlDefis() {
       : '<div class="sec-l"><b>??? </b><small>Trophée secret : personne ne l\'a encore trouvé.</small></div>';
   }).join("") + "</div>";
   return (estChauffe(saisonCourante()) ? '<div class="chauffe-b">🔥 <span>Tour de chauffe : les trophées démarrent le 1<sup>er</sup> janvier 2027. Voici ce qui t\'attend.</span></div>' : "") +
-    bandeauMillion() + htmlPlateau() +
+    htmlPlateau() +   /* v17.30 (Théo) : plus de bandeau « Premier millionnaire » dans le Podium (il est dans Moi) */
     '<div><h3 class="s-h3">Les trophées <small>' + total + " au total</small></h3></div>" + resume +
     '<p class="info">Chaque trophée débloque un objet pour ton écurie, et reste acquis pour toujours. <b>Défis</b> : chacun peut les réussir. <b>Exclusifs</b> : un seul exemplaire, pour le premier qui y arrive (à égalité le même mois : la meilleure valeur du critère, puis la performance du mois, puis le cumul). Calculé sur les relevés publics du Versus, ' + esc(idx) + " comme référence.</p>" +
     '<div class="ex-liste">' + raretes + "</div>" + secrets;

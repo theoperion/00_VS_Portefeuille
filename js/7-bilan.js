@@ -319,7 +319,7 @@ function rendreFiche() {
     const s = stats(D, p, env, deb, finP, i1, null);
     const tuile = (lab, val, cls, sub) => '<div><span class="lab">' + lab + '</span><span class="val ' + (cls || "") + '">' + val + '</span><span class="sub">' + (sub || "&nbsp;") + "</span></div>";
     // toutes enveloppes, même période
-    const envs = ENVELOPPES.map((nom, e) => ({ nom, s: stats(D, p, e, deb, finP, i1, null) })).filter(x => ok(x.s.valeur) && x.s.valeur > 0);
+    const envs = ENVELOPPES.slice(0, 3).map((nom, e) => ({ nom, s: stats(D, p, e, deb, finP, i1, null) })).filter(x => ok(x.s.valeur) && x.s.valeur > 0);
     const totalV = (envs.find(x => x.nom === "Portefeuille") || {}).s;
     // courbe valeur / versé
     const pts2 = sAll.filter(x => x.k >= (deb || 0) && x.k <= finP && ok(x.val));
