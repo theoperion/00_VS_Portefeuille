@@ -488,3 +488,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 20/11/2026 | ven | **v17.66 · Courbe du championnat toujours visible** (Théo) : au Podium › Course, la courbe des points cumulés n'est plus cachée dans « Détail des points » (qui garde le bilan, le tableau mois par mois et le barème, replié). |
 | 20/11/2026 | ven | **v17.67 · Courbe du championnat plus vivante** (Théo) : la ligne du leader est plus épaisse et finit par un anneau doré qui pulse 3 fois (rien si animations réduites) ; la courbe se dessinait déjà de gauche à droite. |
 | 20/11/2026 | ven | **v17.68 · Portrait par défaut de Nicolas** (Théo) : bouclés courts bruns, barbe courte, T-shirt bordeaux (nouvelle couleur de tenue, disponible pour tous dans Mon portrait), sourire en coin. |
+| 20/11/2026 | ven | **v17.69 · Portrait de Nicolas retouché** (Théo, 2e photo) : visage plus rond, front dégagé, sourire ; 2e tête enregistrée « Au ski » (veste de ski rouge). |

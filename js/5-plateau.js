@@ -356,7 +356,7 @@ const PRESETS_TETE = {
   theo: [["Portrait", "01011110000"]],
   clement: [["Portrait", "12110001010"]],
   kevin: [["Portrait", "10422210640"]],
-  nicolas: [["Portrait", "16020082000"]],   // v17.68 (Théo) : bouclés courts bruns, barbe courte, T-shirt bordeaux, sourire en coin
+  nicolas: [["Portrait", "16020080002"], ["Au ski", "16020600102"]],   // v17.69 (Théo, 2 photos) : bouclés courts bruns, front dégagé, barbe courte, visage rond, sourire ; T-shirt bordeaux ou veste de ski rouge
   devlin: [["Bouclés", "03050601261"], ["Attachés", "07020012021"], ["Coupé court", "06050601261"]]
 };
 function normNom(n) { return String(n || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(); }
