@@ -3890,14 +3890,21 @@ function controleAvis() {
 /** v17.34 (Conseil) : le relevé du Versus selon le profil ; fichier relié = envoyé tout seul (aucune saisie proposée ici) */
 function versusRelie() { return !!(M && M.versusLie === true); }
 function moisDuReleve() { const d = new Date(), fin = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); return d.getDate() >= fin - 2 || d.getDate() <= 5; }
+/** v17.81 (Théo) : dernier relevé AUTOMATIQUE de ce joueur, lu dans le journal du Versus (import du Versus OU envoi du fichier) → Date ou null */
+function dernierImportAuto() {
+  const Dv = dVersus(), qui = (M && M.personne) || (typeof moiVrai === "function" ? moiVrai() : null) || ETAT.moi;
+  const j = Dv && (Dv.journal || []).find(x => x.personne === qui && x.action === "Import auto" && x.statut !== "Annulé");   // journal : du plus récent au plus ancien
+  const d = j && new Date(j.t); return d && !isNaN(d) ? d : null;
+}
 function htmlCarteReleveVersus() {
-  if (versusRelie()) {   // v17.81 (Théo) : le relevé automatique se voit de nouveau
+  const der = dernierImportAuto();
+  if (versusRelie() || der) {   // v17.81 (Théo) : le relevé automatique se voit de nouveau (Théo : lu par le Versus ; Clément, Devlin : envoyé par leur fichier)
     const a = new Date(), j = typeof jourReleve === "function" ? jourReleve(a.getFullYear(), a.getMonth() + 1) : null;
     const prochain = j && j >= new Date(a.getFullYear(), a.getMonth(), a.getDate()) ? j : (typeof jourReleve === "function" ? jourReleve(a.getFullYear(), a.getMonth() + 2) : null);
     const fr = d => d ? String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") : "";
-    const dn = /^(\d{4})-(\d{2})-(\d{2})T(\d{2})/.exec(M.versusDernier || "");   // heure ronde (19 h, 20 h), donnée par le fichier
+    const r = der && new Date(Math.round(der.getTime() / 36e5) * 36e5);   // heure ronde : 19 h 11 → 19 h, 19 h 40 → 20 h
     return '<p class="m-rv-auto">🏁 Relevé du mois pour le Versus : <b>automatique</b>' + (prochain ? " · prochain le " + fr(prochain) + " vers 19 h (dernier jour ouvré)" : "") +
-      (dn ? '<small>Dernier envoyé le ' + dn[3] + "/" + dn[2] + " à " + (+dn[4]) + " h ✓</small>" : "") + "</p>";
+      (r ? "<small>Dernier envoyé le " + fr(r) + " à " + r.getHours() + " h ✓</small>" : "") + "</p>";
   }
   if (typeof ouvrirSaisie !== "function") return "";
   const fort = moisDuReleve();
