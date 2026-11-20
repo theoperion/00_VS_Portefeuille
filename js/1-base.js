@@ -94,7 +94,7 @@ function couleur(nom) { const i = D.personnes.findIndex(p => p.nom === nom); ret
 function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 function couleurReelle(c) { const m = /var\((--[\w-]+)\)/.exec(c); return m ? css(m[1]) : c; }
 
-const PERIODES = [["mois", "Mois en cours (dernier relevé)"], ["3m", "3 derniers mois"], ["6m", "6 derniers mois"], ["ytd", "Année en cours"], ["12m", "12 derniers mois"], ["comp", "Depuis le début du championnat"], ["tout", "Depuis le début"]];
+const PERIODES = [["mois", "Mois en cours (dernier relevé)"], ["6m", "6 derniers mois"], ["ytd", "Depuis le 1er janvier"], ["12m", "12 derniers mois"], ["tout", "Depuis le début"]];   // v17.94 (Théo) : mêmes périodes que Moi (1 M · 6 M · Janv. · 1 an · Tout) ; « 3 m » et « Championnat » retirés
 delete ETAT.ptsOuvert; delete ETAT.calOuvert;   // v17.58 (Théo) : à chaque ouverture de l'appli, les rubriques dépliables reviennent repliées (l'ouverture ne vaut que pendant la visite)
 if (!PERIODES.some(([k]) => k === ETAT.per)) ETAT.per = "ytd";
 if (ETAT.perAn !== new Date().getFullYear()) { if (ETAT.perAn) ETAT.per = "ytd"; ETAT.perAn = new Date().getFullYear(); garder(); }   // v17.57 (Théo) : chaque 1er janvier, la période revient sur « Année » (= début du championnat) ; ensuite le choix reste mémorisé   // lot47 : filtres mémorisés sur l'appareil (versus.etat) ; un choix disparu revient au défaut
@@ -336,7 +336,7 @@ function rendreTicker() {
 function i2Actif() { return ok(ETAT.i2c) && ETAT.i2c >= 0 && ETAT.i2c !== ETAT.i1 && ETAT.i2c < D.marche.indices.length ? ETAT.i2c : -1; }
 /* lot47 (Théo, 20/11) · filtres compacts : enveloppe et période en petites pastilles (un toucher), indices en petites listes (trop de choix) ;
    ils prennent le moins de place possible pour laisser la place au classement, aux graphiques et aux images. Mêmes réglages qu'avant (ETAT.env/per/i1/i2c). */
-const PER_COURT = { mois: "1 m", "3m": "3 m", "6m": "6 m", ytd: "Année", "12m": "12 m", comp: "Championnat", tout: "Tout" };
+const PER_COURT = { mois: "1 M", "6m": "6 M", ytd: "Janv.", "12m": "1 an", tout: "Tout" };
 const ENV_COURT = ["Tout", "PEA", "AV"];
 function filtres(avecIndices, avecPeriode = true, avecSecond = true) {
   const opt = (v, l, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? " selected" : "") + ">" + esc(l) + "</option>";
