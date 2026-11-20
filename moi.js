@@ -544,8 +544,25 @@ function injecterStyle() {
 .moi .m-rep .b { height: 8px; background: var(--rule-2); border-radius: 4px; overflow: hidden; }
 .moi .m-rep .b i { display: block; height: 100%; background: var(--s1); border-radius: 4px; }
 .moi .m-rep .p, .moi .m-rep .e { text-align: right; font: 500 12px/1 var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; } .moi .m-rep .e { color: var(--ink-3); }
-.moi .grille td.m-c { cursor: pointer; min-width: 46px; height: 34px; font-size: 11px; }
-.moi .grille td.m-c.sel { box-shadow: inset 0 0 0 2px var(--ink); }
+.moi .mpm { display: grid; gap: 10px; }
+.moi .mpm-an { padding: 10px; border-radius: 14px; border: 1px solid var(--rule); background: var(--panel); min-width: 0; }
+.moi .mpm-t { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 2px 10px; min-height: 38px; padding: 0 2px 8px; }
+.moi .mpm-t .mpm-h { font: 600 14px/1.15 var(--f-text); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .moi .mpm-t .mpm-h b { color: var(--ink); font: italic 800 17px/1 var(--f-display); letter-spacing: .03em; }
+.moi .mpm-t .mpm-p { font: 700 17px/1.1 var(--f-num); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; } .moi .mpm-t .mpm-p.up { color: var(--up); } .moi .mpm-t .mpm-p.down { color: var(--down); }
+.moi .mpm-t small { font: 500 12px/1.2 var(--f-num); color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .moi .mpm-t .mpm-e { text-align: right; color: var(--ink-2); }
+.moi .mpm-g { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+.moi .mpm-c { all: unset; box-sizing: border-box; display: grid; align-content: center; justify-items: center; gap: 2px; min-width: 0; height: 56px; padding: 4px 2px; border-radius: 9px; background: var(--panel-2); color: var(--ink); text-align: center; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; position: relative; }
+.moi .mpm-g.sans-e .mpm-c { height: 46px; }
+.moi .mpm-c i { font: 700 9.5px/1 var(--f-display); font-style: normal; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.moi .mpm-c b { font: 700 13.5px/1.1 var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.moi .mpm-c small { font: 500 10.5px/1.1 var(--f-num); font-variant-numeric: tabular-nums; color: var(--ink-2); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.moi .mpm-c.vide { cursor: default; background: none; box-shadow: inset 0 0 0 1px var(--rule-2); opacity: .6; }
+.moi .mpm-c.cours { box-shadow: inset 0 0 0 1.5px var(--ink-3); } .moi .mpm-c.cours i::after { content: " •"; color: var(--accent); }
+.moi .mpm-c.on { box-shadow: inset 0 0 0 2px var(--ink); }
+.moi .mpm-c:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.moi .mpm-plus > summary { cursor: pointer; padding: 6px 2px; font: 600 13px/1.2 var(--f-text); color: var(--ink-2); } .moi .mpm-plus[open] { display: grid; gap: 10px; }
+.moi .mpm-aide { margin-top: 6px; }
 .moi .m-jr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .moi .m-jr b { display: block; font: 700 12px/1 var(--f-display); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 4px; }
 .moi .m-jr .l { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 8px; padding: 5px 0; border-bottom: 1px solid var(--rule-2); font-size: 12px; }
@@ -2251,27 +2268,49 @@ function moisParMois(c) {
     return { an: Math.floor(r[0] / 10000), mois: Math.floor(r[0] / 100) % 100, twr, eur: eurM };
   });
 }
+/* Mois par mois (lot 43, Conseil) : un calendrier par année, 4 colonnes × 3 rangées, % en gros ET € en petit dans chaque case
+   (plus de bascule), teinte selon le signe et l'ampleur du %. Toucher une case = son détail (mois, %, résultat, versé) à la place du total
+   de l'année, au même endroit et à la même hauteur : rien ne bouge. Mode discret : seulement des %. Calculs : moisParMois (inchangée). */
+function versesMois(c) {   // versé de chaque mois (fins de mois, comme moisParMois) ; null sans la colonne du versé
+  const K = colsS(c), R = rowsS(c); if (K.a < 0 || R.length < 2) return null;
+  const out = {}; let prec = null;
+  R.forEach((r, i) => { const s = R[i + 1]; if (s && Math.floor(s[0] / 100) === Math.floor(r[0] / 100)) return; out[Math.floor(r[0] / 100)] = r[K.a] - (prec ? prec[K.a] : 0); prec = r; });
+  return out;
+}
+function teinteMpm(r, max) {   // même vert/rouge que le reste de l'appli, plafonné pour garder le texte lisible
+  if (!ok(r) || Math.abs(r) < 5e-5) return "";
+  const a = Math.min(1, Math.abs(r) / max) * .4 + .1;
+  return "background:color-mix(in srgb, var(" + (r > 0 ? "--up" : "--down") + ") " + Math.round(a * 100) + "%, var(--panel))";
+}
 function blocMois() {
   const cS = compteS(), m = moisParMois(cS);
   if (!m.length) return cS && colsS(cS).i < 0 ? '<div><h2 class="sec">Mois par mois</h2></div>' + seulTout("Mois par mois") : "";
-  const sansEur = m.some(x => x.eur === null), discret = ETAT.discret === "oui", enEur = PREF.moisMode !== "pct" && !discret && !sansEur;   // lot 27 : en € par défaut (privé, jamais dans le Versus) ; en mode discret, seulement le %
+  const discret = ETAT.discret === "oui", sansEur = m.some(x => x.eur === null), avecEur = !discret && !sansEur;
+  const V = avecEur ? versesMois(cS) : null, now = new Date(), anN = now.getFullYear(), moN = now.getMonth() + 1;
+  const eurC = v => Math.abs(v) >= 10000 ? kEur(v) + NB + "€" : eur(v, 0, true);
   const ans = Array.from(new Set(m.map(x => x.an))).sort().reverse();
-  const maxP = Math.max(.04, ...m.map(x => Math.abs(x.twr))), maxE = Math.max(500, ...m.map(x => Math.abs(x.eur || 0)));
-  const lignes = ans.map(an => {
-    const ms = m.filter(x => x.an === an);
-    const tot = ms.reduce((p, x) => p * (1 + x.twr), 1) - 1, totE = ms.reduce((p, x) => p + x.eur, 0);
-    return '<tr><td class="nom">' + an + "</td>" + MOIS.map((nm, i) => {
-      const x = ms.find(y => y.mois === i + 1);
-      if (!x) return '<td class="vide">·</td>';
-      const det = esc("<b>" + MOIS_L[i] + " " + an + "</b> : " + (enEur ? "résultat " + eur(x.eur, 0, true) + " · " + pct(x.twr) + " (TWR)" : pct(x.twr) + " (TWR)" + (discret || x.eur === null ? "" : " · résultat " + eur(x.eur, 0, true))));
-      return '<td class="m-c" tabindex="0" style="' + teinte(enEur ? x.eur : x.twr, enEur ? maxE : maxP) + '" data-cel="' + det + '">' + (enEur ? kEur(x.eur) : pct(x.twr)) + "</td>";
-    }).join("") + '<td style="' + teinte(enEur ? totE : tot, enEur ? maxE * 3 : maxP * 3) + '"><b>' + (enEur ? kEur(totE) : pct(tot)) + "</b></td></tr>";
-  }).join("");
-  return '<div><h2 class="sec">Mois par mois <small>' + (enEur ? "résultat en euros, sans tes versements" : "TWR, sans l'effet des versements") + "</small></h2></div>" +
-    '<div class="seg" role="group" aria-label="Unité"><button type="button" data-m-mois="eur" aria-pressed="' + enEur + '"' + (discret || sansEur ? " disabled" : "") + '>Résultat (€)</button><button type="button" data-m-mois="pct" aria-pressed="' + !enEur + '">Performance (%)</button></div>' +
-    (discret ? '<p class="info">Mode discret : les euros sont masqués, la grille passe en %.</p>' : sansEur ? seulTout("Le résultat en euros") : "") +
-    '<div class="scroll-x"><table class="grille"><thead><tr><th></th>' + MOIS.map(x => "<th>" + x + "</th>").join("") + "<th>Année</th></tr></thead><tbody>" + lignes + "</tbody></table></div>" +
-    '<p class="resume" id="m-mois-sel">Touche un mois pour le détail.</p>';
+  const maxP = Math.max(.03, ...m.map(x => Math.abs(x.twr)));
+  // une ligne de tête à 2 étages, toujours la même hauteur : [titre · % en gros] / [contexte · €]
+  const tete = (titre, ctx, p, e) => '<span class="mpm-h">' + titre + '</span><b class="mpm-p ' + sens(p) + '">' + pct(p) + '</b><small class="mpm-x">' + ctx + "</small>" + '<small class="mpm-e">' + e + "</small>";
+  const carte = an => {
+    const ms = m.filter(x => x.an === an), tot = ms.reduce((p, x) => p * (1 + x.twr), 1) - 1, totE = ms.reduce((p, x) => p + x.eur, 0);
+    const ctxA = an !== anN && ms.length === 12 ? "année entière" : "depuis " + MOIS_L[ms[0].mois - 1];
+    const teteA = tete("<b>" + an + "</b>", esc(ctxA), tot, avecEur ? eurC(totE) : "");
+    const cases = MOIS.map((nm, i) => {
+      const x = ms.find(y => y.mois === i + 1), cours = an === anN && i + 1 === moN;
+      if (!x) return '<span class="mpm-c vide"><i>' + nm + "</i></span>";
+      const v = V ? V[an * 100 + i + 1] : null, e = avecEur ? eurC(x.eur) : "";
+      const ctx = (cours ? "en cours" : "") + (ok(v) ? (cours ? " · " : "") + "versé " + eur(v, 0) : "");
+      const det = tete("<b>" + majuscule(MOIS_L[i]) + " " + an + "</b>", ctx || (avecEur ? "résultat" : "hors versements"), x.twr, e);
+      return '<button type="button" class="mpm-c' + (cours ? " cours" : "") + '" style="' + teinteMpm(x.twr, maxP) + '" data-mpm="' + esc(det) + '" aria-label="' + esc(MOIS_L[i] + " " + an + " : " + pct(x.twr) + (e ? ", " + e : "")) + '"><i>' + nm + "</i><b>" + pct(x.twr) + "</b>" + (e ? "<small>" + e + "</small>" : "") + "</button>";
+    }).join("");
+    return '<section class="mpm-an"><div class="mpm-t" aria-live="polite" data-mpm-an="' + esc(teteA) + '">' + teteA + '</div><div class="mpm-g' + (avecEur ? "" : " sans-e") + '">' + cases + "</div></section>";
+  };
+  const recents = ans.slice(0, 3).map(carte).join(""), vieux = ans.slice(3);
+  return '<div><h2 class="sec">Mois par mois <small>' + (avecEur ? "% hors versements · € = résultat" : "% hors versements") + (cS ? " · " + esc(cS.lib) : "") + "</small></h2></div>" +
+    (discret ? '<p class="info">Mode discret : seulement les %.</p>' : sansEur ? seulTout("Le résultat en euros") : "") +
+    '<div class="mpm">' + recents + (vieux.length ? '<details class="mpm-plus"><summary>Années d\'avant (' + vieux.join(", ") + ")</summary>" + vieux.map(carte).join("") + "</details>" : "") + "</div>" +
+    '<p class="info mpm-aide">Touche un mois : son détail remplace le total de l\'année.</p>';
 }
 /* Répartition : une seule barre à 100 % ; masquée quand il n'y a qu'une catégorie (seuls les critères qui séparent vraiment sont proposés) */
 const COUL_REP = ["#5B8DEF", "#2BB673", "#9B6BFF", "#F2A33A", "#18A9C7", "#E5484D", "#D6619E", "#C9A227", "#8C7B5A"];
@@ -2305,12 +2344,12 @@ function brancherStats(v) {
   v.querySelectorAll("[data-m-mode]").forEach(b => b.addEventListener("click", () => { PREF.mode = b.dataset.mMode; garderPref(); re(b); }));
   v.querySelectorAll("[data-m-per]").forEach(b => b.addEventListener("click", () => { PREF.per = b.dataset.mPer; garderPref(); re(b); }));
   v.querySelectorAll("[data-m-compte]").forEach(b => b.addEventListener("click", () => { PREF.compte = b.dataset.mCompte; garderPref(); re(b); }));
-  v.querySelectorAll("[data-m-mois]").forEach(b => b.addEventListener("click", () => { if (b.disabled) return; PREF.moisMode = b.dataset.mMois; garderPref(); re(b); }));
   v.querySelectorAll("[data-m-rep]").forEach(b => b.addEventListener("click", () => { PREF.rep = b.dataset.mRep; garderPref(); re(b); }));
-  v.querySelectorAll("td[data-cel]").forEach(td => {
-    const f = () => { v.querySelectorAll("td.m-c.sel").forEach(x => x.classList.remove("sel")); td.classList.add("sel"); v.querySelector("#m-mois-sel").innerHTML = td.dataset.cel; };
-    td.addEventListener("click", f); td.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); f(); } });
-  });
+  v.querySelectorAll(".mpm-c[data-mpm]").forEach(c => c.addEventListener("click", () => {   // lot 43 : détail à la place du total de l'année, sans rien déplacer ; re-toucher = retour à l'année
+    const an = c.closest(".mpm-an"), t = an.querySelector(".mpm-t"), deja = c.classList.contains("on");
+    v.querySelectorAll(".mpm-c.on").forEach(x => { x.classList.remove("on"); const t2 = x.closest(".mpm-an").querySelector(".mpm-t"); t2.innerHTML = t2.dataset.mpmAn; });
+    if (!deja) { c.classList.add("on"); t.innerHTML = c.dataset.mpm; }
+  }));
   v.querySelectorAll("tr.m-pf-r").forEach(tr => {
     const f = () => { const d = v.querySelector('tr[data-pf-d="' + tr.dataset.pf + '"]'); if (!d) return; d.hidden = !d.hidden; tr.setAttribute("aria-expanded", String(!d.hidden)); tr.classList.toggle("ouvert", !d.hidden); };
     tr.addEventListener("click", f); tr.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); f(); } });
