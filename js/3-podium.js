@@ -10,7 +10,7 @@
    Référence fixe : portefeuille total contre le S&P 500, quels que soient les filtres.
    ============================================================ */
 // noel : dévoilement détaillé dans le teaser ; chauffe : tour de chauffe de décembre 2026 (tout marche, rien ne compte)
-const SAISON = { premiere: 2027, depart: new Date(2027, 0, 1), chauffe: new Date(Date.UTC(2026, 10, 21, 14, 0)), noel: new Date(2026, 10, 20) };
+const SAISON = { premiere: 2027, depart: new Date(2027, 0, 1), chauffe: new Date(Date.UTC(2026, 10, 21, 9, 0)), noel: new Date(2026, 10, 20) };
 const CHAUFFE_K = 202612;
 function saisonOuverte() { return Date.now() >= SAISON.depart.getTime(); }
 function chauffeOuverte() { return Date.now() >= SAISON.chauffe.getTime(); }
@@ -810,8 +810,8 @@ function teaser() {
   const now = new Date(), noel = false;   // v17.14 (Théo) : la page d'attente reste comme avant le 20/11 (rien sur ce qui arrive)
   const qui = D.personnes.some(p => p.nom === ETAT.moi) ? ETAT.moi : (D.personnes[0] || {}).nom;
   const e = Object.assign({}, BASE_ECURIE, { numero: numeroParDefaut(qui) });
-  return '<section class="teaser">' + svgVoiture({ nom: qui, e, drapeau: compteRebours(now), roule: true, reflet: true, label: "Tour de chauffe le samedi 21 novembre à 15 h, saison 1 le 1er janvier 2027" }) +
-    '<div class="t-txt"><div class="t-saison">Saison 1</div><div class="t-date">🔥 Tour de chauffe le samedi 21 novembre à 15 h · 🏁 départ le 1<sup>er</sup> janvier 2027</div>' +
+  return '<section class="teaser">' + svgVoiture({ nom: qui, e, drapeau: compteRebours(now), roule: true, reflet: true, label: "Tour de chauffe le samedi 21 novembre à 10 h, saison 1 le 1er janvier 2027" }) +
+    '<div class="t-txt"><div class="t-saison">Saison 1</div><div class="t-date">🔥 Tour de chauffe le samedi 21 novembre à 10 h · 🏁 départ le 1<sup>er</sup> janvier 2027</div>' +
     '<p class="t-phrase">Tout le monde sur la ligne de départ.<br>Même point de départ, mêmes chances.</p>' +
     (noel ? '<div class="t-concept">' +
       '<div><b>🔥 Tour de chauffe</b><span>Décembre pour découvrir les règles, sans que rien ne compte. Vos cartes de janvier se posent pendant les fêtes.</span></div>' +
@@ -913,10 +913,10 @@ function dessinerChampionnat(y) {
 function quiEcurie() { return moiVrai(); }
 /* V16.24 · « Mon portrait » : la tête de chacun se règle hors de l'Écurie (Réglages, ou toucher sa tête dans le Classement), dès le tour de chauffe */
 /** V16.56 · « Mon portrait » s'ouvre à tous le samedi 21 novembre 2026 à 11 h (heure de Paris) ; l'admin le voit avant */
-const PORTRAIT_OUVRE = Date.UTC(2026, 10, 21, 14, 0);   // samedi 21/11 15 h (Paris ; décalé de 9 h à 15 h, Théo 20/11), comme le tour de chauffe
+const PORTRAIT_OUVRE = Date.UTC(2026, 10, 21, 9, 0);   // samedi 21/11 10 h (Paris ; Théo 20/11 soir), comme le tour de chauffe
 function portraitDispo() { return (adminActif() && !vueJoueur()) || Date.now() >= PORTRAIT_OUVRE; }   // v16.71 : avant le 21/11, seulement en mode admin actif (avant : visible avec la clé admin même en mode non admin)
 function ouvrirPortrait() {
-  if (!portraitDispo()) { toast("👤 Mon portrait arrive samedi 21 novembre à 15 h."); return; }
+  if (!portraitDispo()) { toast("👤 Mon portrait arrive samedi 21 novembre à 10 h."); return; }
   const qui = quiEcurie(); if (!qui || !D) { toast("Choisis d'abord qui tu es dans les Réglages."); return; }
   const rg = document.getElementById("reglages"); if (rg && !rg.hidden) rg.hidden = true;
   ECU = { nom: qui, e: equipDe(qui) };
