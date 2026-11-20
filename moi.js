@@ -356,6 +356,8 @@ function injecterStyle() {
 .moi .m-per button { all: unset; box-sizing: border-box; cursor: pointer; min-height: 32px; display: flex; align-items: center; justify-content: center; padding: 0 2px; border-radius: 10px; white-space: nowrap; overflow: hidden; text-overflow: clip; }
 .moi .m-per button[aria-pressed="true"] { background: var(--ink); color: var(--bg, #0B0D12); }
 .moi .m-per button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.moi .m-vsmk { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--rule); font: 600 12px/1 var(--f-text); color: var(--ink-2); }
+.moi .m-vsmk:focus-visible { outline: 2px solid var(--accent); }
 .moi .m-per-n { flex-basis: 100%; margin-top: -3px; font-size: 11.5px; color: var(--ink-3); }
 .moi .m-jour[role="button"] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .moi .m-5j-v { font-style: normal; opacity: .7; margin-left: 2px; }
@@ -1203,6 +1205,7 @@ function htmlJourBase() {
       '<div class="m-jour"' + (det5 ? ' role="button" tabindex="0" aria-expanded="' + cinqOuvert + '" title="Jour par jour"' : "") + '><span class="badge big-b ' + sens(s.jour) + '">' + fleche(s.jour) + " " + eur(s.jour, 0, true) + " · " + pct(s.jourPct, 2) + "</span>" +
         "<span>" + (suffixe ? esc(suffixe) : hausse + " en hausse · " + baisse + " en baisse") + (det5 ? ' <i class="m-5j-v" aria-hidden="true">' + (cinqOuvert ? "▴" : "▾") + "</i>" : "") + "</span>" + (s.jourNote ? '<small class="m-per-n">' + esc(s.jourNote) + "</small>" : "") + "</div>" +
       (det5 ? htmlCinq() : "") +
+      '<button type="button" class="m-vsmk" id="m-vsmk">📈 Face aux marchés <span aria-hidden="true">›</span></button>' +   // v17.44 (Théo) : raccourci vers les marchés, même période
       (majCourte() ? '<small class="m-maj">' + esc(majCourte()) + "</small>" : "") +
     "</div>" +
     bandeDebut(s) +
@@ -1295,6 +1298,7 @@ function alertesDeclenchees() {
 }
 function brancherJour(v) {
   brancherDefs(v); brancherSignal(v); brancherMarches(v);
+  { const vm = v.querySelector("#m-vsmk"); if (vm) vm.addEventListener("click", () => { const mk = v.querySelector(".m-mk"); if (mk) mk.scrollIntoView({ behavior: "smooth", block: "start" }); }); }
   v.querySelectorAll(".m-per [data-per]").forEach(b => b.addEventListener("click", () => { const k = b.dataset.per; PREF.varP = k === "jour" ? null : k; delete PREF.var5; delete PREF.seance; garderPref(); rendre(); }));   // 19/11 : Jour ⇄ 5 séances
   const b5 = v.querySelector('.m-jour[role="button"]'); if (b5) { const bascule = () => { cinqOuvert = !cinqOuvert; rendre(); };
     b5.addEventListener("click", bascule); b5.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); bascule(); } }); }
