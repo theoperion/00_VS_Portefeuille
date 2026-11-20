@@ -347,12 +347,13 @@ function injecterStyle() {
 .moi .av-leg i { display: inline-block; width: 12px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; } .moi .av-leg i.pt { background: repeating-linear-gradient(90deg, var(--ink-3) 0 4px, transparent 4px 7px); } .moi .av-leg i.rd { width: 7px; height: 7px; border-radius: 50%; }
 .moi .av-rdv { display: grid; gap: 6px; } .moi .av-rdv > div { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; } .moi .av-rdv > div > span { flex: 1; } .moi .av-rdv .mini-btn { flex: none; } .moi .av-rdv i { font-style: normal; } .moi .av-rdv small { display: block; color: var(--ink-3); font-size: 12px; }
 /* 19/11 · pastille Jour | 5 j en haut à droite de la carte (remplace le bandeau « Voir la semaine ») */
-.moi .m-hero.a-per > .eyebrow { padding-right: 92px; }
-.moi .m-per { all: unset; box-sizing: border-box; cursor: pointer; position: absolute; top: -4px; right: 0; display: inline-flex; padding: 2px; border-radius: 999px; border: 1px solid var(--rule); background: var(--panel); font: 600 11.5px/1 var(--f-text); color: var(--ink-3); -webkit-tap-highlight-color: transparent; }
-#v-moi.th .m-per { top: 10px; right: 10px; --bg: #0B0D12; }
-.moi .m-per button { all: unset; cursor: pointer; padding: 5px 8px; border-radius: 999px; white-space: nowrap; }
+/* v17.23 (Conseil) : 6 périodes en rangée pleine largeur sous le titre (cibles de 32 px, rien ne chevauche le titre, même à 360 px sur iPhone) */
+.moi .m-per { all: unset; box-sizing: border-box; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2px; padding: 2px; border-radius: 12px; border: 1px solid var(--rule); background: var(--panel); font: 600 12.5px/1 var(--f-text); color: var(--ink-3); -webkit-tap-highlight-color: transparent; }
+#v-moi.th .m-per { --bg: #0B0D12; }
+.moi .m-per button { all: unset; box-sizing: border-box; cursor: pointer; min-height: 32px; display: flex; align-items: center; justify-content: center; padding: 0 2px; border-radius: 10px; white-space: nowrap; overflow: hidden; text-overflow: clip; }
 .moi .m-per button[aria-pressed="true"] { background: var(--ink); color: var(--bg, #0B0D12); }
-.moi .m-per:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.moi .m-per button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.moi .m-per-n { flex-basis: 100%; margin-top: -3px; font-size: 11.5px; color: var(--ink-3); }
 .moi .m-jour[role="button"] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .moi .m-5j-v { font-style: normal; opacity: .7; margin-left: 2px; }
 .moi .m-5j { display: grid; gap: 5px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--rule); background: var(--panel); }
@@ -1023,7 +1024,7 @@ function seanceProposee() {
    aujourd'hui (nuit, week-end : fini le « ■ 0 € · 0,00 % »), et la pastille « Jour | 5 j » de la carte passe aux 5 dernières séances
    (semaine glissante : « 1 semaine » de Perf lignes). Le choix est gardé sur l'appareil (PREF.var5). Rien n'est écrit : c'est une vue. */
 function modeSeance() { return seanceProposee(); }
-const PERIODES_J = { "5j": ["s1", "5 j", "5 séances"], "1m": ["m1", "1 M", "1 mois"], "1a": ["a1", "1 an", "1 an"] };   // v17.22 (Théo) : Jour | 5 j | 1 M | 1 an
+const PERIODES_J = { "5j": ["s1", "5 j", "5 séances"], "1m": ["m1", "1 M", "1 mois"], "6m": ["m6", "6 M", "6 mois"], "ytd": ["ytd", "Janv.", "depuis janvier"], "1a": ["a1", "1 an", "1 an"] };   // v17.23 (Conseil) : Jour | 5 j | 1 M | 6 M | Janv. | 1 an
 function periodeJ() { const p = PREF.varP || (PREF.var5 === true ? "5j" : null); return p && PERIODES_J[p] && seanceDu() ? p : null; }
 function mode5j() { return periodeJ() === "5j"; }
 const JOURS_C = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
@@ -1035,8 +1036,33 @@ function seances5() {
   return out;
 }
 function lib5j() { const s = seances5(); return "sur 5 séances · du " + frDate(s[0]).slice(0, 5) + " au " + frDate(s[4]).slice(0, 5); }
-function libPer(p) { if (p === "5j") return lib5j(); const fin = new Date((seanceProposee() ? seanceDu() : isoJour(new Date())) + "T12:00:00"), d = new Date(fin); if (p === "1m") d.setMonth(d.getMonth() - 1); else d.setFullYear(d.getFullYear() - 1);
-  const c = p === "1m" ? x => frDate(isoJour(x)).slice(0, 5) : x => frDate(isoJour(x)); return "sur " + PERIODES_J[p][2] + " · du " + c(d) + " au " + c(fin); }
+/** fin de la période = la dernière séance (ou aujourd'hui quand la bourse bouge) ; début = mêmes bornes que Stats (`fenetre`) */
+function finPer() { return new Date((seanceProposee() ? seanceDu() : isoJour(new Date())) + "T12:00:00"); }
+function debutPer(p, fin) {
+  if (p === "5j") { const d = new Date(seances5()[0] + "T12:00:00"); d.setDate(d.getDate() - 1); return d; }   // la veille de la 1re des 5 séances
+  if (p === "ytd") return new Date(fin.getFullYear() - 1, 11, 31, 12);
+  const m = new Date(fin.getFullYear(), fin.getMonth() - ({ "1m": 1, "6m": 6, "1a": 12 }[p] || 1), 1);   // le 31/05 − 3 mois = le 28/02 (comme Stats)
+  return new Date(m.getFullYear(), m.getMonth(), Math.min(fin.getDate(), new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate()), 12);
+}
+function libPer(p) { if (p === "5j") return lib5j(); const fin = finPer(), d = debutPer(p, fin), court = x => frDate(isoJour(x)).slice(0, 5);
+  if (p === "ytd") return "depuis le 1er janvier · au " + court(fin);
+  const c = p === "1a" ? x => frDate(isoJour(x)) : court; return "sur " + PERIODES_J[p][2] + " · du " + c(d) + " au " + c(fin); }
+/** v17.23 : le total d'une période vient de l'HISTORIQUE du fichier, versements neutralisés (comme le TWR de Stats) :
+    % = ip(fin) / ip(début) − 1 ; € = écart de valeur − écart d'apports. Début = dernière séance ≤ la date de début.
+    En séance, la variation en direct s'ajoute à la dernière ligne de l'historique. null = historique trop court ou en retard. */
+function totalHisto(p) {
+  const h = M.historique, cols = h && h.cols || [], rows = h && h.rows || [], ki = cols.indexOf("ip"), kv = cols.indexOf("v"), ka = cols.indexOf("a"), s = M.synthese || {};
+  if (ki < 0 || kv < 0 || !rows.length) return null;
+  const num = d => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(), fin = finPer(), d0 = debutPer(p, fin), cF = num(fin), c0 = num(d0);
+  let i0 = -1, i1 = -1; rows.forEach((r, i) => { if (r[0] <= c0) i0 = i; if (r[0] <= cF) i1 = i; });
+  if (i0 < 0 || i1 <= i0) return null;
+  const a = rows[i0], b = rows[i1];
+  if ((num(d0) !== a[0] && (dateNum(c0) - dateNum(a[0])) / 864e5 > 6) || !(a[ki] > 0 && b[ki] > 0) || !ok(a[kv]) || !ok(b[kv])) return null;   // trou dans l'historique
+  let pc = b[ki] / a[ki] - 1, e = (b[kv] - a[kv]) - (ka >= 0 && ok(a[ka]) && ok(b[ka]) ? b[ka] - a[ka] : 0);
+  if (b[0] < cF) { if (seanceProposee() || !ok(s.jour)) return null;   // la dernière séance manque encore à l'historique
+    pc = (1 + pc) * (1 + (s.jourPct || 0)) - 1; e += s.jour; }
+  return { e, p: pc };
+}
 function mSeance(m, cinq) {
   const perf = m.perfLignes || {}, c = JSON.parse(JSON.stringify(m)); c.__seance = true; let tot = 0;
   (c.groupes || []).forEach(g => {
@@ -1048,8 +1074,9 @@ function mSeance(m, cinq) {
     if (g.total) { g.total.jour = j; const base = (g.total.valeur || 0) - j; g.total.pct = base ? j / base : 0; }
     tot += j;
   });
-  const sy = c.synthese = Object.assign({}, c.synthese), base = (sy.valeur || 0) - tot;
-  sy.jour = tot; sy.jourPct = base ? tot / base : 0; sy.jourLibelle = cinq ? libPer(cinq) : "";   // séance : la date est déjà dans le titre de la carte
+  const sy = c.synthese = Object.assign({}, c.synthese), base = (sy.valeur || 0) - tot, th = cinq ? totalHisto(cinq) : null;
+  sy.jour = tot; sy.jourPct = base ? tot / base : 0; sy.jourLibelle = cinq ? libPer(cinq) : "";
+  if (th) { sy.jour = th.e; sy.jourPct = th.p; } if (cinq) sy.jourNote = th ? "versements exclus" : "estimation d'après les cours";   // v17.23 : total = historique (sinon somme des lignes)   // séance : la date est déjà dans le titre de la carte
   return c;
 }
 /** 5 j : le détail jour par jour, lu dans ton historique (sans l'effet des versements) ; aujourd'hui en séance = la variation en direct */
@@ -1112,13 +1139,13 @@ function htmlJourBase() {
   const indices = (M.indices || []).filter(i => i.nom !== "1 USD en EUR");
   const nomIdx = n => n.replace(/\s*\((ETF\s)?([^)]*)\)/, "");
   const v5 = !!PERIODES_J[VUEJ], per = !!seanceDu(), det5 = VUEJ === "5j" && !!CINQ;
-  return '<div class="m-hero' + (per ? " a-per" : "") + '">' +
+  return '<div class="m-hero">' +
       '<span class="eyebrow">' + embHero() + (v5 ? "Bourse · " + PERIODES_J[VUEJ][2] : VUEJ === "seance" ? "Dernière séance · " + esc(libSeance()) : 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "")) + "</span>" +
-      /* Théo, 19/11 : pastille discrète Jour | 5 j (un toucher bascule, le choix reste sur l'appareil) */
+      /* Théo, 19/11 : pastille Jour | 5 j ; v17.23 : rangée de 6 périodes sous le titre (un toucher bascule, le choix reste sur l'appareil) */
       (per ? '<div class="m-per" role="group" aria-label="Période de la variation">' + [["jour", "Jour"]].concat(Object.keys(PERIODES_J).map(k => [k, PERIODES_J[k][1]])).map(([k, l]) => '<button type="button" data-per="' + k + '" aria-pressed="' + ((v5 ? VUEJ : "jour") === k) + '">' + l + "</button>").join("") + "</div>" : "") +
       '<div class="m-flaps" role="img" aria-label="' + esc(texteFlap) + '">' + flaps(texteFlap, animer) + "</div>" +
       '<div class="m-jour"' + (det5 ? ' role="button" tabindex="0" aria-expanded="' + cinqOuvert + '" title="Jour par jour"' : "") + '><span class="badge big-b ' + sens(s.jour) + '">' + fleche(s.jour) + " " + eur(s.jour, 0, true) + " · " + pct(s.jourPct, 2) + "</span>" +
-        "<span>" + (suffixe ? esc(suffixe) : hausse + " en hausse · " + baisse + " en baisse") + (det5 ? ' <i class="m-5j-v" aria-hidden="true">' + (cinqOuvert ? "▴" : "▾") + "</i>" : "") + "</span></div>" +
+        "<span>" + (suffixe ? esc(suffixe) : hausse + " en hausse · " + baisse + " en baisse") + (det5 ? ' <i class="m-5j-v" aria-hidden="true">' + (cinqOuvert ? "▴" : "▾") + "</i>" : "") + "</span>" + (s.jourNote ? '<small class="m-per-n">' + esc(s.jourNote) + "</small>" : "") + "</div>" +
       (det5 ? htmlCinq() : "") +
       (majCourte() ? '<small class="m-maj">' + esc(majCourte()) + "</small>" : "") +
     "</div>" +
