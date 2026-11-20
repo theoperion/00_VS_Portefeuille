@@ -188,6 +188,7 @@ function majVueDOM(vue) {
   document.querySelectorAll("[data-gpv]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.gpv === vue)));
   const s = suiviGP(); document.querySelectorAll("[data-suivre]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.suivre === s)));
 }
+const PRECHARGE_CARTES = {};   // v17.32
 function choisirVueGP(v, y) {
   const pi = document.getElementById("gp-piste"), de3d = pi && !pi.classList.contains("en2d") && GP_INST && GP_INST.api.type === "3d";
   ETAT.gp2d = v === "2d" ? "1" : "0"; if (v !== "2d") ETAT.gpVue3 = v; garder();
@@ -278,7 +279,10 @@ function htmlGrandPrix(y) {
   const menuV2 = '<details class="gp-plus"><summary aria-label="Plus d\'options">⋯</summary><div class="gp-plus-m">' + (piste3D() ? '<button type="button" class="gp-survol-b" id="gp-survol">🛸 Survol guidé</button>' : "") +   // v17.10 : toujours utilisable (passe tout seul en 📺 Visite)
     '<button type="button" id="gp-ba">🎬 Bande-annonce</button><button type="button" id="gp-fin">⏭ Aller à l\'arrivée</button></div></details>';
   const suiviH = v2 && !deux ? '<div class="gp-suivi" role="group" aria-label="Voiture suivie">' + ordre.map(n => '<button type="button" data-suivre="' + esc(n) + '" style="--c:' + couleur(n) + '" aria-pressed="' + (n === suivi) + '" aria-label="Suivre ' + esc(n) + '">' + avatar(n) + "</button>").join("") + "</div>" : "";
-  const piste = '<div class="gp-piste' + (deux ? " en2d" : "") + (v2 ? " v2 vue-" + vue : "") + '" id="gp-piste" data-circuit="' + ci + '"><div class="gp-scene" id="gp-scene"></div>' +
+  const fondCuit = (() => { try { const k = (Piste.TRACES[ci] || {}).peint, c = self.CARTES_CUITES; if (!k || !c || !c[k]) return ""; const u = "img/cartes/" + k + ".webp?v=" + c[k];
+    if (!(PRECHARGE_CARTES[u])) { const im = new Image(); im.src = u; try { im.decode().catch(() => { }); } catch (e) { } PRECHARGE_CARTES[u] = im; }   // v17.32 : image gardée décodée en mémoire
+    return u; } catch (e) { return ""; } })();
+  const piste = '<div class="gp-piste' + (deux ? " en2d" : "") + (v2 ? " v2 vue-" + vue : "") + '" id="gp-piste" data-circuit="' + ci + '"><div class="gp-scene" id="gp-scene"' + (deux && fondCuit ? ' style="background:#0B0D12 url(\'' + fondCuit + '\') center/cover no-repeat"' : "") + '></div>' +   // v17.32 (Théo) : plus de flash noir en revenant à la carte 2D
     '<div class="gp-zones">' + (at ? '<span class="gp-zone at" data-zone="atout">' + at.atout.ico + ' <b>+1</b></span>' : "") + "</div>" +
     '<div class="gp-tags3">' + ordre.map(n => '<span class="gp-t3' + (n === qui ? " ici" : "") + '" data-gpt3="' + esc(n) + '" style="--c:' + couleur(n) + '" title="' + esc(n) + '">' + avatar(n) + '<i class="gp-rg"></i></span>').join("") + "</div>" +
     '<div class="gp-pops"></div><div class="gp-com" aria-live="polite"></div>' + fxCircuit(G.fx) +
