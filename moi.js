@@ -557,11 +557,13 @@ function injecterStyle() {
 .moi .m-idx-mk b small { font: 500 10px/1 var(--f-text); color: var(--ink-3); margin-right: 5px; }
 .moi .m-mk-panneau:not(:empty) { margin-top: 10px; padding: 10px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); display: grid; gap: 8px; }
 .moi .m-mk-svg { width: 100%; height: auto; display: block; }
+.moi .m-mk { scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 112px); }   /* lot 61 : 📈 › amène le titre « Marchés » juste sous les onglets collants (avant : caché dessous) */
 .moi .m-mk-svg text { font: 10px var(--f-num, sans-serif); fill: var(--ink-2); }
 .moi .m-mk-svg .gr { stroke: var(--rule); stroke-width: 1; }
 .moi .m-mk-svg .b100 { stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 3 3; opacity: .6; }
 .moi .m-mk-res { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; font-size: 13px; color: var(--ink-2); }
 .moi .m-mk-res > b:first-child { color: var(--ink); font-size: 14px; margin-right: auto; }
+.moi .m-mk-res .m-mk-per { color: var(--ink); font-weight: 600; }
 .moi .m-mk-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .moi .m-mk-chips .chip { font-size: 12px; padding: 5px 9px; display: inline-flex; align-items: center; gap: 5px; }
 .moi .m-mk-chips .chip i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
@@ -630,7 +632,12 @@ function injecterStyle() {
   overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .moi .chips.m-filtre::-webkit-scrollbar { display: none; }
 .moi .chips.m-filtre .chip { flex: none; padding: 5px 9px; border: 0; border-radius: 7px; background: none; color: var(--ink-2); font: 600 12px/1.15 var(--f-text); white-space: nowrap; }
-.moi .chips.m-filtre .chip[aria-pressed="true"] { background: var(--ink); color: var(--panel); border: 0; box-shadow: 0 1px 3px rgba(0,0,0,.25); }   /* v17.75 (Théo) : la pastille choisie ressort nettement (comme l'ancien bouton foncé) */
+.moi .chips.m-filtre .chip[aria-pressed="true"] { background: #EDF0F4; color: #11151B; border: 0; box-shadow: 0 0 0 1px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.4); }   /* v17.75 (Théo) : la pastille choisie ressort nettement (comme l'ancien bouton foncé) */
+/* lot 61 (Théo) : couleurs FIXES, plus var(--ink)/var(--panel) que les thèmes de Moi redéfinissent dans la carte du haut (texte blanc sur blanc = pastille vide).
+   Sombre : clair + texte foncé ; clair : foncé + texte blanc ; carte du haut avec un thème : la couleur du thème + texte foncé (comme les onglets) */
+:root[data-theme="light"] .moi .chips.m-filtre .chip[aria-pressed="true"] { background: #11151B; color: #FFFFFF; box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 1px 3px rgba(0,0,0,.25); }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .moi .chips.m-filtre .chip[aria-pressed="true"] { background: #11151B; color: #FFFFFF; box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 1px 3px rgba(0,0,0,.25); } }
+#v-moi.th .m-hero .chips.m-filtre .chip[aria-pressed="true"] { background: var(--mc, #F4F5F8); color: #0B0D12; box-shadow: 0 0 0 1px rgba(0,0,0,.28), 0 1px 4px rgba(0,0,0,.45); }
 .moi .chips.m-filtre.m-cpt > .k { padding-left: 6px; }
 @media (max-width: 360px) { .moi .chips.m-filtre .chip { font-size: 11.5px; padding: 5px 7px; } }
 .moi .m-seul { padding: 6px 0 2px; }
@@ -1444,7 +1451,7 @@ function htmlJourBase() {
       /* v17.75 (Théo) : « Bourse fermée » passe dans la ligne du titre (plus de badge à part, −30 px) */
       /* Théo, 19/11 : pastille Jour | 5 j ; v17.23 : rangée de 6 périodes sous le titre (un toucher bascule, le choix reste sur l'appareil) */
       '<div class="m-per-l">' + (per ? '<div class="chips m-filtre m-per" role="group" aria-label="Période de la variation">' + boutonsPer(v5, "") + "</div>" : "") +
-        '<button type="button" class="m-vsmk" id="m-vsmk" aria-label="Face aux marchés" title="Face aux marchés"><span aria-hidden="true">📈 ›</span></button></div>' +   // lot 58 : l'ancien bouton large devient une icône (même effet : défiler jusqu'aux Marchés)
+        '<button type="button" class="m-vsmk" id="m-vsmk" aria-label="Face aux marchés : comparer les courbes" title="Face aux marchés : comparer les courbes"><span aria-hidden="true">📈 ›</span></button></div>' +   // lot 58 : l'ancien bouton large devient une icône (même effet : défiler jusqu'aux Marchés)
       '<div class="m-flaps" role="img" aria-label="' + esc(texteFlap) + '">' + flaps(texteFlap, animer) + "</div>" +
       '<div class="m-jour"' + (det5 ? ' role="button" tabindex="0" aria-expanded="' + cinqOuvert + '" title="Jour par jour"' : "") + '><span class="badge big-b ' + sens(s.jour) + '">' + fleche(s.jour) + " " + eur(s.jour, 0, true) + " · " + pct(s.jourPct, 2) + "</span>" +
         "<span>" + (suffixe ? esc(suffixe) : hausse + " en hausse · " + baisse + " en baisse") + (det5 ? ' <i class="m-5j-v" aria-hidden="true">' + (cinqOuvert ? "▴" : "▾") + "</i>" : "") + "</span>" + (majCourte() ? '<small class="m-maj">' + esc(majCourte()) + "</small>" : "") + (s.jourNote ? '<small class="m-per-n">' + esc(s.jourNote) + "</small>" : "") + "</div>" +
@@ -1544,7 +1551,9 @@ function alertesDeclenchees() {
 }
 function brancherJour(v) {
   brancherDefs(v); brancherSignal(v); brancherMarches(v);
-  { const vm = v.querySelector("#m-vsmk"); if (vm) vm.addEventListener("click", () => { const mk = v.querySelector(".m-mk"); if (mk) mk.scrollIntoView({ behavior: "smooth", block: "start" }); }); }
+  { const vm = v.querySelector("#m-vsmk"); if (vm) vm.addEventListener("click", () => { const mk = v.querySelector(".m-mk"); if (!mk) return;   // lot 61 (Théo) : défile jusqu'aux Marchés ET ouvre « Comparer »
+    if (marcheOuvert !== "cmp" && marchesMoi()) { marcheOuvert = "cmp"; const pn = mk.querySelector("#m-mk-panneau"); if (pn) pn.innerHTML = panneauMarche(); mk.querySelectorAll("[data-mk]").forEach(b => b.setAttribute("aria-pressed", String(String(marcheOuvert) === b.dataset.mk))); }
+    mk.scrollIntoView({ behavior: "smooth", block: "start" }); }); }
   v.querySelectorAll(".m-per [data-per], .m-per-bas [data-per]").forEach(b => b.addEventListener("click", () => { const k = b.dataset.per; PREF.varP = k === "jour" ? null : k; delete PREF.var5; delete PREF.seance; garderPref(); if (b.dataset.perB) garderPlace(b, rendre); else rendre(); }));   // lot 50 : rangée du bas = même réglage, la page ne saute pas   // 19/11 : Jour ⇄ 5 séances
   const b5 = v.querySelector('.m-jour[role="button"]'); if (b5) { const bascule = () => { cinqOuvert = !cinqOuvert; rendre(); };
     b5.addEventListener("click", bascule); b5.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); bascule(); } }); }
@@ -2137,27 +2146,53 @@ function closMk(nom) {   // { d: [aaaammjj], v: [cours] } sans trous, du plus an
   (m.semaines || []).forEach((k, i) => { const v = se.v[i]; if (v > 0 && (!out.v.length || v !== out.v[out.v.length - 1] || i === m.semaines.length - 1)) { out.d.push(+k.replace(/-/g, "")); out.v.push(v); } });
   return out;
 }
-function varMk(x, per) {   // → { v, du (aaaa-mm-jj de la séance montrée, null = en direct), hebdo }
+/** lot 61 : bornes communes aux cases ET aux courbes (une seule règle) : i0 = la clôture de départ (dernière ≤ début de la période) */
+function bornesMk(x, per) {
   const c = closMk(x.nom), n = c.v.length, auj = +isoJour(new Date()).replace(/-/g, ""), live = typeof x.pct === "number";
-  const iso = k => String(k).replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"), dLast = n ? c.d[n - 1] : 0;
-  if (!per) {
-    if (live) return { v: x.pct, du: null };
-    if (n < 2 || c.hebdo) return { v: null };
-    return { v: c.v[n - 1] / c.v[n - 2] - 1, du: iso(dLast) };
-  }
-  if (!n) return { v: null };
-  const enDirect = live && !c.hebdo && dLast < auj, fin = enDirect ? new Date() : dateNum(Math.min(dLast, auj));   // hebdo : la clé de la semaine est son vendredi
+  const dLast = n ? c.d[n - 1] : 0, enDirect = !!(n && live && !c.hebdo && dLast < auj), fin = enDirect ? new Date() : dateNum(Math.min(dLast || auj, auj));   // hebdo : la clé de la semaine est son vendredi
   const num = d => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
   let i0 = -1;
-  if (per === "5j" && !c.hebdo) i0 = n - 1 - (enDirect ? 4 : 5);   // 5 séances : la clôture d'avant la 1re (aujourd'hui compte en séance)
-  else {
+  if (n && per === "5j" && !c.hebdo) i0 = n - 1 - (enDirect ? 4 : 5);   // 5 séances : la clôture d'avant la 1re (aujourd'hui compte en séance)
+  else if (n) {
     const d0 = per === "5j" ? new Date(fin.getFullYear(), fin.getMonth(), fin.getDate() - 7, 12) : debutPer(per, fin), c0 = num(d0);
     c.d.forEach((d, i) => { if (d <= c0) i0 = i; });
     if (i0 >= 0 && (d0 - dateNum(c.d[i0])) / 864e5 > (c.hebdo ? 8 : 6)) i0 = -1;   // historique trop court : pas de chiffre inventé
   }
-  if (i0 < 0 || (i0 >= n - 1 && !enDirect)) return { v: null };
-  let v = c.v[n - 1] / c.v[i0] - 1; if (enDirect) v = (1 + v) * (1 + x.pct) - 1;
-  return { v, du: enDirect || c.hebdo ? null : iso(dLast), hebdo: c.hebdo };
+  const vide = !n || i0 < 0 || (i0 >= n - 1 && !enDirect);
+  return { c, n, i0, enDirect, auj, vide };
+}
+function varMk(x, per) {   // → { v, du (aaaa-mm-jj de la séance montrée, null = en direct), hebdo }
+  const iso = k => String(k).replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
+  if (!per) {
+    const c = closMk(x.nom), n = c.v.length;
+    if (typeof x.pct === "number") return { v: x.pct, du: null };
+    if (n < 2 || c.hebdo) return { v: null };
+    return { v: c.v[n - 1] / c.v[n - 2] - 1, du: iso(c.d[n - 1]) };
+  }
+  const B = bornesMk(x, per), c = B.c, n = B.n; if (B.vide) return { v: null };
+  let v = c.v[n - 1] / c.v[B.i0] - 1; if (B.enDirect) v = (1 + v) * (1 + x.pct) - 1;
+  return { v, du: B.enDirect || c.hebdo ? null : iso(c.d[n - 1]), hebdo: c.hebdo };
+}
+/** lot 61 (Théo) : la courbe suit la période choisie (dans les 2 sens avec la carte Bourse). → { d: [aaaammjj], v, hebdo } ou null.
+    Départ = la même clôture que la case (base 100), fin = dernière clôture (+ le point en direct en séance). Clôtures quotidiennes `quot` ;
+    « 1 an » : une valeur par semaine (dernière clôture de chaque semaine, départ et fin gardés) ; sans `quot` : les semaines (≈). */
+function fenMk(x, per) {
+  const B = bornesMk(x, per); if (B.vide) return null;
+  let d = B.c.d.slice(B.i0), v = B.c.v.slice(B.i0);
+  if (per === "1a" && !B.c.hebdo) {
+    const sem = k => { const t = dateNum(k); t.setDate(t.getDate() + ((5 - t.getDay() + 7) % 7)); return isoJour(t); };
+    const gard = d.map((k, i) => i === 0 || i === d.length - 1 || sem(k) !== sem(d[i + 1]));
+    d = d.filter((k, i) => gard[i]); v = v.filter((k, i) => gard[i]);
+  }
+  if (B.enDirect) { d.push(B.auj); v.push(v[v.length - 1] * (1 + x.pct)); }
+  return d.length > 1 ? { d, v, hebdo: B.c.hebdo } : null;
+}
+/** période des courbes : celle de la carte ; « Jour » (ou pas de pastilles) → 5 séances, et sans clôtures quotidiennes → 1 an comme avant */
+function perCourbe() { const p = PERIODES_J[VUEJ] ? VUEJ : null; if (p) return p; const m = marchesMoi(); return m && m.quot && seanceDu() ? "5j" : "1a"; }
+function txtBase(d0, per, hebdo) {
+  const t = dateNum(d0), j = t.getDate() === 1 ? "1er" : t.getDate();
+  const pj = PERIODES_J[VUEJ] ? "" : per === "5j" ? "« Jour » : la courbe montre les 5 dernières séances. " : "";
+  return pj + "Base 100 au " + j + " " + ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"][t.getMonth()] + " " + t.getFullYear() + " (" + PERIODES_J[per][2] + ")" + (hebdo || per === "1a" ? ", une valeur par semaine" + (hebdo ? " (≈)" : "") : ", une clôture par séance");
 }
 function htmlMarches() {
   const m = marchesMoi(), h = (m.jour.find(x => x.heure) || {}).heure, per = PERIODES_J[VUEJ] ? VUEJ : null;
@@ -2174,33 +2209,43 @@ function htmlMarches() {
     '<div class="m-mk-panneau" id="m-mk-panneau">' + panneauMarche() + "</div></div>";
 }
 function serieMk(nom) { const m = marchesMoi(); return m && (m.series || []).find(x => x.nom === nom); }
-function varSur(v, n) { const f = v[v.length - 1], d = v[Math.max(0, v.length - 1 - n)]; return f && d ? f / d - 1 : null; }
-function courbesSVG(lignes, base100) {
-  const m = marchesMoi(), sem = m.semaines, W = 320, H = 150, g = 34, dr = 6, hb = 18;
-  const pts = lignes.map(l => { const i0 = l.v.findIndex(x => x); return l.v.map(x => x && base100 ? x / l.v[i0] * 100 : x); });
-  const tous = pts.flat().filter(x => x); if (!tous.length) return "";
-  let lo = Math.min(...tous), hi = Math.max(...tous); const mg = (hi - lo) * .08 || 1; lo -= mg; hi += mg;
-  const X = i => g + i * (W - g - dr) / Math.max(1, sem.length - 1), Y = v => 6 + (hi - v) / (hi - lo) * (H - 6 - hb);
-  const fmt = v => base100 ? Math.round(v) : v >= 100 ? Math.round(v) : v.toFixed(v >= 10 ? 1 : 2);
-  const mois = i => ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."][+sem[i].slice(5, 7) - 1] + " " + sem[i].slice(2, 4);
+function courbesSVG(lignes, base100, per) {   // lot 61 : lignes = [{ nom, d: [aaaammjj], v, c }] ; abscisse = le temps (les séances manquantes d'un marché ne décalent rien)
+  const W = 320, H = 150, g = 34, dr = 6, hb = 18;
+  lignes = lignes.filter(l => l.d && l.d.length > 1); if (!lignes.length) return "";
+  const pts = lignes.map(l => l.v.map(x => base100 ? x / l.v[0] * 100 : x));
+  const tous = pts.flat(); let lo = Math.min(...tous), hi = Math.max(...tous); const mg = (hi - lo) * .08 || 1; lo -= mg; hi += mg;
+  const ts = lignes.map(l => l.d.map(k => dateNum(k).getTime())), t0 = Math.min(...ts.map(t => t[0])), t1 = Math.max(...ts.map(t => t[t.length - 1]));
+  const X = t => g + (t - t0) / Math.max(1, t1 - t0) * (W - g - dr), Y = v => 6 + (hi - v) / (hi - lo) * (H - 6 - hb);
+  const fmt = v => base100 ? (hi - lo < 6 ? v.toFixed(1).replace(".", ",") : Math.round(v)) : v >= 100 ? Math.round(v) : v.toFixed(v >= 10 ? 1 : 2);
+  const MC = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+  const lab = t => { const d = new Date(t); return per === "1a" ? MC[d.getMonth()] + " " + String(d.getFullYear()).slice(2) : dateCourte(d); };
   const grille = [lo + mg, (lo + hi) / 2, hi - mg].map(v => '<line x1="' + g + '" x2="' + (W - dr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" class="gr"/><text x="' + (g - 4) + '" y="' + (Y(v) + 3.5).toFixed(1) + '" text-anchor="end">' + fmt(v) + "</text>").join("");
   const b100 = base100 && lo < 100 && hi > 100 ? '<line x1="' + g + '" x2="' + (W - dr) + '" y1="' + Y(100).toFixed(1) + '" y2="' + Y(100).toFixed(1) + '" class="b100"/>' : "";
-  const traits = pts.map((p, k) => '<path fill="none" stroke="' + lignes[k].c + '" stroke-width="' + (lignes.length > 1 ? 1.6 : 2.2) + '" stroke-linejoin="round" d="' + lisse(p.map((v, i) => v ? [X(i), Y(v)] : null).filter(Boolean)) + '"/>').join("");
-  return '<svg class="m-mk-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(lignes.map(l => l.nom).join(", ")) + ' sur un an">' + grille + b100 + traits +
-    '<text x="' + g + '" y="' + (H - 4) + '">' + mois(0) + '</text><text x="' + (W - dr) + '" y="' + (H - 4) + '" text-anchor="end">' + mois(sem.length - 1) + "</text></svg>";
+  const peu = Math.max(...pts.map(p => p.length)) <= 8;   // 5 séances : on voit chaque clôture
+  const traits = pts.map((p, k) => { const xy = p.map((v, i) => [X(ts[k][i]), Y(v)]);
+    return '<path fill="none" stroke="' + lignes[k].c + '" stroke-width="' + (lignes.length > 1 ? 1.6 : 2.2) + '" stroke-linejoin="round" d="' + (peu ? "M" + xy.map(q => q[0].toFixed(1) + " " + q[1].toFixed(1)).join("L") : lisse(xy)) + '"/>' +
+      (peu && lignes.length === 1 ? xy.map(q => '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="2.4" fill="' + lignes[k].c + '"/>').join("") : ""); }).join("");
+  return '<svg class="m-mk-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(lignes.map(l => l.nom).join(", ")) + " sur " + (PERIODES_J[per] ? PERIODES_J[per][2] : "un an") + '">' + grille + b100 + traits +
+    '<text x="' + g + '" y="' + (H - 4) + '">' + lab(t0) + '</text><text x="' + (W - dr) + '" y="' + (H - 4) + '" text-anchor="end">' + lab(t1) + "</text></svg>";
 }
 function panneauMarche() {
   const m = marchesMoi(); if (!m || marcheOuvert === null || !(m.semaines || []).length) return "";
+  const per = perCourbe(), cas = nom => m.jour.find(x => x.nom === nom) || { nom, pct: null };
+  const varF = f => f ? f.v[f.v.length - 1] / f.v[0] - 1 : null, debut = fs => fs.filter(Boolean).map(f => f.d[0]).sort((a, b) => a - b)[0];
   if (marcheOuvert === "cmp") {
     /* lot 50 (Théo) : pastilles dans l'ordre des cases (« Nasdaq ×3 » juste après « Nasdaq ×2 ») ; chaque courbe garde sa couleur */
     const rang = nom => { const i = m.jour.findIndex(x => x.nom === nom); return i < 0 ? 99 : i; };
-    const lignes = m.series.map((x, i) => ({ nom: x.nom, v: x.v, c: COUL_MK[i % COUL_MK.length], i })).sort((a, b) => rang(a.nom) - rang(b.nom) || a.i - b.i);
-    return '<div class="m-mk-chips">' + lignes.map(l => '<button type="button" class="chip" data-mk-cache="' + esc(l.nom) + '" aria-pressed="' + !mkCaches[l.nom] + '"><i style="background:' + l.c + '"></i>' + esc(NOMS_MK[l.nom] || l.nom) + " " + '<small class="' + sens(varSur(l.v, 52)) + '">' + pct(varSur(l.v, 52), 0) + "</small></button>").join("") + "</div>" +
-      courbesSVG(lignes.filter(l => !mkCaches[l.nom]), true) + '<p class="info">Base 100 il y a un an, une valeur par semaine (ETF en euros ; « Or couvert » (protégé de la variation du dollar) suivi par le GLD ; « Nasdaq ×3 » suivi par le TQQQ, proche du QQQ3, converti en euros). Touche un nom pour l\'afficher ou le masquer.</p>';
+    const lignes = m.series.map((x, i) => Object.assign({ nom: x.nom, c: COUL_MK[i % COUL_MK.length], i }, fenMk(cas(x.nom), per) || { d: null, v: [] })).sort((a, b) => rang(a.nom) - rang(b.nom) || a.i - b.i);
+    const vis = lignes.filter(l => !mkCaches[l.nom] && l.d), d0 = debut(vis.length ? vis : lignes.filter(l => l.d));
+    return '<div class="m-mk-chips">' + lignes.map(l => '<button type="button" class="chip" data-mk-cache="' + esc(l.nom) + '" aria-pressed="' + !mkCaches[l.nom] + '"><i style="background:' + l.c + '"></i>' + esc(NOMS_MK[l.nom] || l.nom) + " " + '<small class="' + sens(varF(l.d && l)) + '">' + (l.d ? pct(varF(l), per === "5j" ? 1 : 0) : "—") + "</small></button>").join("") + "</div>" +
+      (courbesSVG(vis, true, per) || '<p class="info">Pas encore assez d\'historique pour cette période.</p>') +
+      '<p class="info m-mk-base">' + (d0 ? txtBase(d0, per, lignes.some(l => l.hebdo)) + ". " : "") + 'ETF en euros ; « Or couvert » (protégé de la variation du dollar) suivi par le GLD ; « Nasdaq ×3 » suivi par le TQQQ, proche du QQQ3, converti en euros. Touche un nom pour l\'afficher ou le masquer.</p>';
   }
   const j = m.jour[marcheOuvert], se = j && serieMk(j.nom); if (!se) return '<p class="info">Pas d\'historique pour ce marché.</p>';
-  const c = COUL_MK[m.series.indexOf(se) % COUL_MK.length], t = (lab, n) => '<span>' + lab + ' <b class="' + sens(varSur(se.v, n)) + '">' + pct(varSur(se.v, n), 1) + "</b></span>";
-  return '<div class="m-mk-res"><b>' + esc(NOMS_MK[j.nom] || j.nom) + "</b>" + t("1 mois", 4) + t("3 mois", 13) + t("1 an", 52) + "</div>" + courbesSVG([{ nom: se.nom, v: se.v, c: c }], false) +
+  // lot 61 : les repères 1 mois · 6 mois · 1 an suivent la même règle que les cases (plus les semaines ≈ quand les clôtures existent) ; la période choisie en premier
+  const c = COUL_MK[m.series.indexOf(se) % COUL_MK.length], f = fenMk(j, per), t = (lab, v, fort) => ok(v) ? '<span' + (fort ? ' class="m-mk-per"' : "") + ">" + lab + ' <b class="' + sens(v) + '">' + pct(v, 1) + "</b></span>" : "";
+  return '<div class="m-mk-res"><b>' + esc(NOMS_MK[j.nom] || j.nom) + "</b>" + (f ? t(PERIODES_J[per][2], varF(f), true) : "") + ["1m", "6m", "1a"].filter(k => k !== per).map(k => t(PERIODES_J[k][2], varMk(j, k).v)).join("") + "</div>" +
+    (f ? courbesSVG([{ nom: se.nom, d: f.d, v: f.v, c: c }], true, per) + '<p class="info m-mk-base">' + txtBase(f.d[0], per, f.hebdo) + ".</p>" : '<p class="info">Pas encore assez d\'historique pour cette période.</p>') +
     (/^Or/.test(j.nom) && serieMk("Or couvert €") ? '<p class="info">Couvert ou non ? <button class="lien" type="button" data-mk="cmp-or">Comparer l\'or couvert et non couvert</button></p>' : "");
 }
 function brancherMarches(v) {
