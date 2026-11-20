@@ -3468,7 +3468,17 @@ function typeInfo(nom) { return refData().types.find(t => t.nom === nom) || { tr
 function qteBrute(v) { return !ok(v) ? "—" : nf(0, 6).format(v); }   // quantités de la saisie : jamais masquées
 
 /** Dernière enveloppe utilisée si elle existe encore dans le fichier, sinon la première */
+/* v17.70 (Théo) : compte favori de la saisie, par personne (évite de le choisir à chaque fois) ; AV = l'assurance-vie des versements (pas Quintessa/Artema) si possible */
+const FAVORI_ENV = { "Théo": "PEA", "Clément": "AV", "Devlin": "PEA" };
+function envFavori() {
+  const qui = (M && M.personne) || (typeof moiVrai === "function" ? moiVrai() : null) || ETAT.moi || "";
+  const n = x => String(x || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+  const k = Object.keys(FAVORI_ENV).find(x => n(x) === n(qui)); if (!k) return "";
+  const ouv = (refData().enveloppes || []).filter(e => typeof e !== "string" && e.regime === FAVORI_ENV[k] && (!e.statut || e.statut === "Ouvert" || e.statut === "À ouvrir"));
+  const e = ouv.find(x => !/quintessa|artema/i.test(x.nom || "")) || ouv[0]; return e ? e.nom : "";
+}
 function envParDefaut() {
+  const fav = envFavori(); if (fav) return fav;
   const l = (refData().enveloppes || []).map(e => typeof e === "string" ? e : e.nom), der = stock.get("versus.moi.derniereEnv");
   return der && (!l.length || l.includes(der)) ? der : (l[0] || der || "");
 }
@@ -3477,9 +3487,10 @@ function envParDefaut() {
 function envsParType() { try { return JSON.parse(stock.get("versus.moi.envType") || "{}") || {}; } catch (e) { return {}; } }
 function envPourType(type) {
   const ouv = (refData().enveloppes || []).filter(e => typeof e !== "string" && (!e.statut || e.statut === "Ouvert" || e.statut === "À ouvrir"));
+  if (type === "Relevé" || type === "Frais en parts") { const m0 = envsParType()[type]; if (m0 && ouv.some(e => e.nom === m0)) return m0; const av = ouv.find(e => e.regime === "AV"); if (av) return av.nom; }
+  const fav = envFavori(); if (fav) return fav;   // v17.70 : le compte favori passe avant le dernier utilisé
   const m = envsParType()[type];
   if (m && ouv.some(e => e.nom === m)) return m;
-  if (type === "Relevé" || type === "Frais en parts") { const av = ouv.find(e => e.regime === "AV"); if (av) return av.nom; }
   return "";
 }
 /** le journal du plus récent au plus ancien, sans les ordres en cours d'envoi */
