@@ -786,6 +786,7 @@ function injecterStyle() {
 .moi .m-imp.ouvert { padding: 10px 12px; border: 1px solid var(--accent); border-radius: 10px; background: color-mix(in srgb, var(--accent) 7%, var(--panel)); font-size: 13px; }
 .moi .m-imp-t { font-size: 13.5px; }
 .moi .m-rv-auto { margin: 10px 0 0; font: 500 12.5px/1.4 var(--f-text); color: var(--ink-2); }
+.moi .m-rv-auto small { display: block; color: var(--up); font-size: 12px; }
 .moi .m-meme { all: unset; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; width: 100%; margin: 0 0 10px; padding: 11px 14px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); cursor: pointer; font: 600 14px/1.25 var(--f-text); color: var(--ink); }
 .moi .m-meme small { font-weight: 500; color: var(--ink-2); font-size: 12.5px; }
 .moi .m-imp .aide, .moi .m-imp-n { display: block; margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
@@ -3894,7 +3895,9 @@ function htmlCarteReleveVersus() {
     const a = new Date(), j = typeof jourReleve === "function" ? jourReleve(a.getFullYear(), a.getMonth() + 1) : null;
     const prochain = j && j >= new Date(a.getFullYear(), a.getMonth(), a.getDate()) ? j : (typeof jourReleve === "function" ? jourReleve(a.getFullYear(), a.getMonth() + 2) : null);
     const fr = d => d ? String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") : "";
-    return '<p class="m-rv-auto">🏁 Relevé du mois pour le Versus : <b>automatique</b>' + (prochain ? " · prochain le " + fr(prochain) + " (dernier jour ouvré, le soir)" : "") + "</p>";
+    const dn = /^(\d{4})-(\d{2})-(\d{2})T(\d{2})/.exec(M.versusDernier || "");   // heure ronde (19 h, 20 h), donnée par le fichier
+    return '<p class="m-rv-auto">🏁 Relevé du mois pour le Versus : <b>automatique</b>' + (prochain ? " · prochain le " + fr(prochain) + " vers 19 h (dernier jour ouvré)" : "") +
+      (dn ? '<small>Dernier envoyé le ' + dn[3] + "/" + dn[2] + " à " + (+dn[4]) + " h ✓</small>" : "") + "</p>";
   }
   if (typeof ouvrirSaisie !== "function") return "";
   const fort = moisDuReleve();
