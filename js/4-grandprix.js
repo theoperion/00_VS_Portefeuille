@@ -1211,7 +1211,8 @@ function chauffeDefinitive() {
   const c = championnat(y), m = c.complete ? c.mois.find(x => x.k === CHAUFFE_K) : null; if (!m || c.classement.length < 2) return null;
   let t = jourReleve(Math.floor(CHAUFFE_K / 100), CHAUFFE_K % 100).getTime();
   m.l.forEach(x => { const j = typeof derniereSaisie === "function" ? derniereSaisie(x.nom, CHAUFFE_K) : null, tj = j ? new Date(j.t).getTime() : NaN; if (tj > t) t = tj; });
-  return Date.now() >= t + 48 * 3600e3 ? { podium: c.classement.slice(0, 3) } : null;
+  const rang = {}; m.l.forEach(x => { rang[x.nom] = x.rg; });   // v17.53 : ex æquo en tête → tous à l'honneur
+  return Date.now() >= t + 48 * 3600e3 ? { podium: c.classement.slice(0, 3), rang } : null;
 }
 /** à l'ouverture (ou à l'arrivée de la course de chauffe) : la cérémonie, si elle est due et pas encore vue ici */
 function verifierFeteChauffe(apresCourse) {
@@ -1219,23 +1220,26 @@ function verifierFeteChauffe(apresCourse) {
   if (+(stock.get("versus.gpVu." + (SAISON.premiere - 1)) || 0) < CHAUFFE_K) return;   // course pas encore vue : on ne gâche pas le résultat
   if (document.querySelector(".tuto, .revel, .regles, .ba, .ere-voile" + (apresCourse ? "" : ", .gp-plein"))) return;   // une cérémonie à la fois : ce sera pour la prochaine ouverture
   const def = chauffeDefinitive(); if (!def) return;
-  stock.set(FETE_CH.cle, String(CHAUFFE_K)); feteChauffe(def.podium, false);
+  stock.set(FETE_CH.cle, String(CHAUFFE_K)); feteChauffe(def.podium, false, def.rang);
 }
 /** aperçu admin : la vraie si la manche est définitive, sinon un exemple inventé (ordre fixe tiré des prénoms, aucun chiffre) ; rien n'est gardé */
 function apercuFeteChauffe() {
-  const def = chauffeDefinitive(); feteChauffe(def ? def.podium : fauxVerdict(CHAUFFE_K).du.map(x => x.nom).slice(0, 3), !def);
+  const def = chauffeDefinitive(); feteChauffe(def ? def.podium : fauxVerdict(CHAUFFE_K).du.map(x => x.nom).slice(0, 3), !def, def ? def.rang : null);
 }
 const BONNET_SVG = '<svg class="fc-bonnet" viewBox="0 0 64 48" aria-hidden="true"><path d="M8 38C10 20 22 7 38 6C47 6 54 12 57 22C52 18 47 17 44 20C45 27 46 33 46 38Z" fill="#D62839"/><path d="M38 6C47 6 54 12 57 22C52 18 47 17 44 20" fill="#A51C2B"/><rect x="4" y="34" width="46" height="10" rx="5" fill="#F7F4EE"/><circle cx="57" cy="23" r="6" fill="#F7F4EE"/></svg>';
-function feteChauffe(podium, apercu) {
+function feteChauffe(podium, apercu, rang) {
   if (FETE_CH.ouverte || !podium || !podium.length) return;
-  const v = podium[0], moi = moiPilote(), bravo = v === moi, G = GPS.abudhabi || {}, tete = n => avatar(n, Object.assign({}, equipDe(n), { vignette: true }));
+  const rg = n => rang && rang[n] ? rang[n] : podium.indexOf(n) + 1;   // v17.53 (Théo) : ex æquo en tête = tous à l'honneur
+  const vs = podium.filter(n => rg(n) === 1); if (!vs.length) vs.push(podium[0]);
+  const v = vs.map(n => n).join(" & "), moi = moiPilote(), bravo = vs.includes(moi), duo = vs.length > 1, G = GPS.abudhabi || {}, tete = n => avatar(n, Object.assign({}, equipDe(n), { vignette: true }));
   const o = document.createElement("div"); o.className = "fc-voile" + (ANIM ? "" : " fixe"); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
-  o.setAttribute("aria-label", bravo ? "Bravo, tu remportes le tour de chauffe" : v + " remporte le tour de chauffe");
-  const marche = (n, r) => n ? '<div class="fc-m fc-m' + r + (n === moi ? " moi" : "") + '" style="--c:' + couleur(n) + '">' + tete(n) + "<b>" + esc(n) + "</b>" + (n === moi && !bravo ? "<small>toi</small>" : "") + '<i class="fc-socle">' + r + "</i></div>" : "";
+  o.setAttribute("aria-label", bravo ? (duo ? "Bravo, tu partages la victoire du tour de chauffe" : "Bravo, tu remportes le tour de chauffe") : v + (duo ? " remportent ex æquo le tour de chauffe" : " remporte le tour de chauffe"));
+  const marche = (n, r) => n ? (r = Math.min(3, rg(n)), '<div class="fc-m fc-m' + r + (n === moi ? " moi" : "") + '" style="--c:' + couleur(n) + '">' + tete(n) + "<b>" + esc(n) + "</b>" + (n === moi && !bravo ? "<small>toi</small>" : "") + '<i class="fc-socle">' + r + "</i></div>") : "";
   o.innerHTML = '<canvas class="fc-neige" aria-hidden="true"></canvas><div class="fc-c">' + (apercu ? '<span class="fc-apercu">Aperçu admin · exemple inventé</span>' : "") +
     '<span class="fc-k">' + esc((G.drap || "🎅") + " " + (G.gp || "L'Atelier du Père Noël")) + "</span>" +
-    '<div class="fc-heros" style="--c:' + couleur(v) + '"><i class="fc-halo"></i>' + tete(v) + BONNET_SVG + "</div>" +
-    (bravo ? '<h3 class="fc-t">Bravo&nbsp;!</h3><p class="fc-s">Tu remportes le tour de chauffe</p>' : '<h3 class="fc-t">' + esc(v) + '</h3><p class="fc-s">Vainqueur du tour de chauffe</p>') +
+    '<div class="fc-herosx' + (duo ? " duo" : "") + '">' + vs.map(n => '<div class="fc-heros" style="--c:' + couleur(n) + '"><i class="fc-halo"></i>' + tete(n) + BONNET_SVG + "</div>").join("") + "</div>" +
+    (bravo ? '<h3 class="fc-t">Bravo&nbsp;!</h3><p class="fc-s">' + (duo ? "Tu partages la victoire du tour de chauffe" : "Tu remportes le tour de chauffe") + "</p>"
+      : '<h3 class="fc-t">' + esc(v) + '</h3><p class="fc-s">' + (duo ? "Vainqueurs ex æquo du tour de chauffe" : "Vainqueur du tour de chauffe") + "</p>") +
     '<div class="fc-podium">' + marche(podium[1], 2) + marche(podium[0], 1) + marche(podium[2], 3) + "</div>" +
     '<small class="fc-passer">Touche pour continuer</small></div>';
   document.body.appendChild(o); FETE_CH.ouverte = o;
@@ -1243,7 +1247,7 @@ function feteChauffe(podium, apercu) {
   const fermer = () => { if (fini) return; fini = true; clearTimeout(tAuto); o.classList.add("sort"); document.removeEventListener("keydown", clavier); setTimeout(() => { cancelAnimationFrame(raf); o.remove(); if (FETE_CH.ouverte === o) FETE_CH.ouverte = null; }, 260); };
   const clavier = e => { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") fermer(); };
   o.addEventListener("click", fermer); document.addEventListener("keydown", clavier);
-  const tAuto = setTimeout(fermer, 4800);
+  const tAuto = 0;   // v17.53 (Théo) : plus de fermeture automatique, on touche l'écran pour passer
   requestAnimationFrame(() => o.classList.add("on"));
   if (window.SONS) { setTimeout(() => { if (!fini) { SONS.jingle("garage", "motif"); SONS.vibrer(bravo ? [60, 50, 60, 50, 180] : 40); } }, 450); setTimeout(() => { if (!fini) SONS.jingle("garage", "accord"); }, 1650); }
   if (!ANIM) return;
