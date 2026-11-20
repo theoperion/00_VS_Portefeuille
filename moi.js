@@ -785,7 +785,7 @@ function injecterStyle() {
 .moi .m-imp-b { justify-self: start; }
 .moi .m-imp.ouvert { padding: 10px 12px; border: 1px solid var(--accent); border-radius: 10px; background: color-mix(in srgb, var(--accent) 7%, var(--panel)); font-size: 13px; }
 .moi .m-imp-t { font-size: 13.5px; }
-.moi .m-imp .aide, .moi .m-imp-n { margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
+.moi .m-imp .aide, .moi .m-imp-n { display: block; margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
 .moi .m-imp-n.petit { font-size: 12px; color: var(--ink-3); overflow-wrap: anywhere; }
 .moi .m-imp-n.warn, .moi .m-imp-msg { margin: 0; color: var(--down); font-weight: 600; font-size: 12.5px; }
 .moi .m-imp-a { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -819,6 +819,42 @@ function injecterStyle() {
 .moi .alerte.info { border-color: var(--accent); }
 .moi.sans-aide .aide.m-garde { display: block !important; }   /* le versement lié touche à l'exactitude : jamais masqué */
 .moi .form { display: grid; gap: 14px; }
+/* v17.78 (lot60, Théo) · « + » en plein écran (profil complet seulement) et parcours en étapes */
+#m-saisie.m-voile-plein { align-items: stretch; }
+.feuille.m-plein { height: 100vh; height: 100dvh; max-height: none; min-height: 0; border-radius: 0; display: flex; flex-direction: column; gap: 14px; padding-top: max(8px, env(safe-area-inset-top, 0px)); overscroll-behavior: contain; }
+.feuille.m-plein > h3 { position: sticky; top: calc(-1 * max(8px, env(safe-area-inset-top, 0px))); z-index: 3; margin: 0 -4px; padding: 8px 4px; background: var(--bg); }
+.feuille.m-plein > #m-pane-ordre:not([hidden]) { flex: 1 0 auto; display: flex; flex-direction: column; }
+.feuille.m-plein #m-form-ordre { flex: 1 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.feuille.m-plein #m-form-ordre > .m-pied { margin-top: auto; }
+.moi .m-etapes { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; }
+.moi .m-etapes li { flex: 1 1 0; min-width: 0; border-top: 3px solid var(--rule); padding-top: 5px; font-size: 11.5px; line-height: 1.2; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.moi .m-etapes li.cur { border-color: var(--accent); color: var(--ink); font-weight: 700; }
+.moi .m-etapes li.fait { border-color: color-mix(in srgb, var(--accent) 45%, var(--rule)); }
+.moi .m-etapes i { font-style: normal; font-weight: 700; }
+.moi .m-et-b { all: unset; box-sizing: border-box; cursor: pointer; color: var(--ink-2); display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; padding: 4px 0; margin: -4px 0; }
+.moi .m-et-b:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.moi .types.m-tuiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.moi .types .type-btn.m-tuile { font-size: 16px; }
+.moi .m-tuile { display: grid; gap: 5px; justify-items: start; text-align: left; padding: 16px 14px; min-height: 76px; align-content: center; border-radius: 14px; font-size: 15px; }
+.moi .m-tuile small { font: 400 12px/1.3 var(--f-text); color: var(--ink-3); letter-spacing: 0; text-transform: none; font-style: normal; }
+.moi .m-imp.m-imp-petit { justify-items: end; margin-bottom: -6px; }
+.moi .m-imp-p { border: 1px solid var(--rule); background: var(--panel); color: var(--ink-2); border-radius: 999px; padding: 6px 12px; font: 600 12.5px/1.2 var(--f-text); cursor: pointer; letter-spacing: 0; text-transform: none; font-style: normal; }
+.moi .m-imp-p:focus-visible, .moi .m-choix:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.moi .m-aide-e { margin: -4px 0 0; font-size: 12.5px; line-height: 1.4; color: var(--ink-3); }
+.moi .m-q { display: grid; gap: 10px; }
+.moi .m-q-t { font-size: 16px; line-height: 1.3; }
+.moi .m-choix { all: unset; box-sizing: border-box; cursor: pointer; display: grid; gap: 4px; width: 100%; padding: 13px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); font-size: 14.5px; color: var(--ink); }
+.moi .m-choix small { font-size: 12.5px; line-height: 1.35; color: var(--ink-3); }
+.moi .m-choix[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.moi .m-choix[aria-pressed="true"] b::before { content: "✓ "; color: var(--accent); }
+.moi .m-vers-m { margin: -2px 0 2px 14px; }
+.moi .m-q .aide.lie { margin-top: 0; }
+.moi .m-relire { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); }
+.moi .m-relire .phrase-ordre { margin: 0; font-size: 15px; line-height: 1.45; }
+.moi .m-relire .m-pu { margin: 0; }
+.moi .m-relire .aide.lie { margin-top: -4px; }
+.moi .m-relire-a { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.moi .m-vers-l { margin: 0; font-size: 13.5px; font-weight: 600; }
 .moi .rang.trois { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .moi .champ select, .moi .champ input[type="date"], .moi .champ input[type="text"] { font: 500 15px/1.2 var(--f-text); padding: 11px 12px; border-radius: 10px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); width: 100%; min-width: 0; }
 .moi .champ input[inputmode="decimal"] { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
@@ -3585,7 +3621,8 @@ function assurerFeuille() {
   if ($f("m-saisie")) return;
   const d = document.createElement("div");
   d.className = "voile"; d.id = "m-saisie"; d.hidden = true;
-  d.innerHTML = '<div class="feuille moi m-feuille" role="dialog" aria-modal="true" aria-labelledby="m-titre-saisie">' +
+  d.classList.add("m-voile-plein");
+  d.innerHTML = '<div class="feuille moi m-feuille m-plein" role="dialog" aria-modal="true" aria-labelledby="m-titre-saisie">' +
     '<h3 id="m-titre-saisie"><span><span id="m-titre-t">Saisir</span> <button class="m-qm" type="button" id="f-guide" aria-label="Comment saisir un ordre">?</button></span><span class="m-tete-a"><button class="icon-btn m-menu-b" type="button" id="f-menu" aria-label="Plus d\'options" aria-expanded="false">⋯</button><button class="icon-btn" type="button" id="m-fermer-saisie" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span></h3>' +
     /* v17.34 (Conseil) : 2 onglets seulement ; « Mon fichier » (ex-« Mes comptes ») est un panneau à part, ouvert par la cloche et Réglages ;
        le relevé du Versus n'est plus un onglet (il ouvrait une autre feuille) : voir la carte de Mouvement et la ligne d'état de l'Historique */
@@ -3593,36 +3630,43 @@ function assurerFeuille() {
       '<button type="button" data-m-pane="ordre">Mouvement</button><button type="button" data-m-pane="journal">Historique</button></div>' +
     '<div id="m-pane-ordre"></div><div id="m-pane-journal" hidden></div><div id="m-pane-maj" hidden></div></div>';
   document.body.appendChild(d);
-  d.addEventListener("click", e => { if (e.target === d) fermerSaisieM(); });
-  $f("m-fermer-saisie").addEventListener("click", fermerSaisieM);
+  d.addEventListener("click", e => { if (e.target === d) fermerSaisieM(true); });
+  $f("m-fermer-saisie").addEventListener("click", () => fermerSaisieM(true));
   $f("f-guide").addEventListener("click", guideOrdre);
   $f("f-menu").addEventListener("click", () => { menuOuvert = !menuOuvert; rendreFormulaire(); });
   d.querySelectorAll("[data-m-pane]").forEach(b => b.addEventListener("click", () => { confirmeSuppr = null; paneSaisie(b.dataset.mPane); }));
-  document.addEventListener("keydown", e => { if (e.key === "Escape") fermerSaisieM(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !d.hidden) fermerSaisieM(true); });
 }
 /* Guide de la saisie d'un ordre de bourse : s'ouvre tout seul la première fois, puis depuis « ❓ » */
 const TUTO_ORDRE = [
   { ico: "🧾", t: "Saisir un ordre, en bref", html: true, p:
     "<b>1 ordre = 1 ligne</b>, recopiée de ton courtier à la date d'exécution.<br>" +
-    "• <b>Achat</b> : recopie ton avis d'opéré dans son ordre : date d'exécution, quantité, cours, courtage, montant net. <b>2 des 3</b> (quantité, cours, montant net) suffisent, le 3e se calcule ; les 3 tapés, l'appli vérifie (✓). La touche « Suivant » du clavier passe au champ d'après. Le <b>versement</b> qui paie l'achat est coché : décoche si l'argent était déjà sur le compte.<br>" +
+    "• <b>Achat</b>, en 4 étapes : <b>Quoi ?</b> · <b>Les chiffres</b> de ton avis d'opéré, dans son ordre (date d'exécution, quantité, cours, courtage, montant net : <b>2 des 3</b> suffisent, le 3e se calcule ; les 3 tapés, l'appli vérifie ✓) · <b>Versement</b> : as-tu viré de l'argent pour cet achat ? · <b>Relire</b>, puis enregistrer. « Suivant » du clavier passe au champ d'après ; le bouton retour du téléphone revient à l'étape d'avant. 📄 <b>Importer un avis</b> remplit tout depuis le PDF.<br>" +
     "• <b>Versement</b> : l'argent que tu mets sur un compte (ton montant habituel est proposé).<br>" +
     "• <b>Valeur AV</b> : la valeur d'une ligne d'assurance-vie, recopiée de ton relevé, à la date du relevé.<br>" +
     "• <b>Autres</b> : vente, retrait, dividende, frais… ; chaque type s'explique quand tu le choisis.<br>" +
-    "Relis la phrase 📝 au-dessus du bouton avant de valider. Une erreur ? Onglet <b>Historique</b> : supprimable pendant 7 jours." }
+    "Relis la phrase 📝 avant de valider. Une erreur ? Onglet <b>Historique</b> : supprimable pendant 7 jours." }
 ];
 function guideOrdre() { if (typeof ouvrirGuide === "function") ouvrirGuide("Saisir un ordre", TUTO_ORDRE, "C'est compris"); }
 function ouvrirSaisieM(partiel, onglet) {
   injecterStyle(); assurerFeuille(); lireCache();
   if (!M) { toast("Lecture de ton fichier en cours, réessaie dans un instant."); charger(false); return; }
   F = formulaire(partiel); IMP = null;   // v17.76 : un import en cours ne survit pas à une nouvelle ouverture de « + »
+  etape = partiel ? 2 : 1;   // v17.78 (lot60) : « + » s'ouvre sur « Quoi ? » ; un ordre pré-rempli (rappel, raccourci, Refaire) va droit aux chiffres
   synchroniser();
   nommerRaccourci = false; detailsOuverts = false; plusTypes = false; menuOuvert = false;
   $f("m-saisie").hidden = false;
   paneSaisie(onglet || "ordre");
   if ((onglet || "ordre") === "ordre" && identiteSure() && !stock.get(cleStock("guideOrdre")) && !simulationM()) { stock.set(cleStock("guideOrdre"), "1"); setTimeout(guideOrdre, 250); }
 }
-function fermerSaisieM() { const s = $f("m-saisie"); if (s) s.hidden = true; confirmeSuppr = null; gererRaccourcis = false; }
+function fermerSaisieM(garder) {
+  const s = $f("m-saisie");
+  /* v17.78 (lot60) : ✕, Échap ou retour = ce qui est tapé reste gardé pendant la visite (jamais après un envoi : envoyerOrdre ferme sans garder) */
+  if (garder === true && s && !s.hidden && F && paneCourant === "ordre" && etape > 1 && entame()) brouillons[F.type] = { F: Object.assign({}, F), IMP: IMP };
+  if (s) s.hidden = true; confirmeSuppr = null; gererRaccourcis = false;
+}
 function paneSaisie(o) {
+  paneCourant = o;
   document.querySelectorAll("[data-m-pane]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mPane === o)));
   ["ordre", "journal", "maj"].forEach(k => { const z = $f("m-pane-" + k); z.hidden = k !== o; if (k !== o) z.innerHTML = ""; });   // jamais deux formulaires « Nouvel actif » à la fois
   /* « Mon fichier » : même feuille, sans les onglets de la saisie */
@@ -3730,6 +3774,55 @@ function brancherNouvelActif(na, apres, annuler) {
   });
 }
 let plusTypes = false, menuOuvert = false;
+/* v17.78 (lot60, Théo : « on se noie ») · parcours guidé en étapes : 1 Quoi ? · 2 Les chiffres · 3 Le versement (achat) · 4 Relire ;
+   les données envoyées ne changent pas (même F, même envoyerOrdre) ; seul l'affichage est découpé.
+   Bouton retour du téléphone = étape précédente (depuis l'étape 1 : ferme « + ») ; ce qui est tapé reste gardé pendant la visite (brouillons). */
+let etape = 1, paneCourant = "ordre";
+const brouillons = {};
+const NOMS_ETAPES = { 1: "Quoi ?", 2: "Les chiffres", 3: "Versement", 4: "Relire" };
+function etapesDe(t) { return t === "Achat" ? [1, 2, 3, 4] : t === "Vente" ? [1, 2, 4] : [1, 2]; }
+function etapeFinale() { const l = etapesDe(F.type); return etape === l[l.length - 1]; }
+function etapeApres() { const l = etapesDe(F.type), i = l.indexOf(etape); return i >= 0 ? l[i + 1] || 0 : 0; }
+function etapeAvant() { const l = etapesDe(F.type), i = l.indexOf(etape); return i > 0 ? l[i - 1] : 0; }
+/** analyser() comme si l'on était à cette étape : ce qui se règle plus loin (versement, espèces, doublon) ne bloque pas encore */
+function analyserEtape(n) {
+  if (n >= 4 || etapeFinaleN(n)) return analyser();
+  const F0 = F; F = Object.assign({}, F0, n === 2 ? { okEspeces: true, okDoublon: true, apport: false } : { okDoublon: true });
+  try { return analyser(); } finally { F = F0; }
+}
+function etapeFinaleN(n) { const l = etapesDe(F.type); return n === l[l.length - 1]; }
+function entame() { return ["qte", "montant", "prix", "frais", "montantApport"].some(k => String(F[k] || "").trim()) || F.dateChoisie || F.envChoisi || !!IMP || !!F.na; }
+/** l'import est relu d'un coup (carte de relecture) seulement si TOUT est sûr ; sinon on montre les chiffres */
+function importPret() {
+  if (!F.imp || !IMP || !IMP.ops || F.na || !(F.type === "Achat" || F.type === "Vente")) return false;
+  const op = IMP.ops[F.imp.i] || {};
+  if ((op.manque && op.manque.length) || op.ecart || !F.imp.envSur || (F.imp.propose && !F.imp.confirme)) return false;
+  return controleAvis().c === "ok" && !analyserEtape(2).bloque;
+}
+function allerEtape(n) {
+  if (n === 1) {
+    if (entame()) brouillons[F.type] = { F: Object.assign({}, F), IMP: IMP };   // rien n'est perdu : revenir au même type le retrouve
+    F = formulaire(null); IMP = null; plusTypes = false;
+  }
+  etape = n; menuOuvert = false; nommerRaccourci = false; rendreFormulaire();
+  const f = document.querySelector("#m-saisie .m-feuille"); if (f) f.scrollTop = 0;
+}
+function etapeSuivante() {
+  const n = etapeApres(); if (!n) return;
+  if (analyserEtape(etape).bloque) { majRecap(); return; }
+  allerEtape(n);
+  if (n === 2) setTimeout(premierChamp, 30);
+}
+function premierChamp() { const el = ["f-actif", "f-qte", "f-montant"].map(id => $f(id)).find(e => e && !e.value); if (el && el.tagName === "INPUT") el.focus(); }
+/** bouton retour du téléphone (7-bilan.js) : true = géré ici (étape précédente) ; false = on ferme « + » */
+function retourSaisie() {
+  const s = $f("m-saisie"); if (!s || s.hidden || !F) return false;
+  if (paneCourant === "journal") { paneSaisie("ordre"); return true; }
+  if (paneCourant !== "ordre") return false;
+  if (menuOuvert) { menuOuvert = false; nommerRaccourci = false; rendreFormulaire(); return true; }
+  if (etape === 1) { if (IMP) { IMP = null; rendreFormulaire(); return true; } return false; }
+  allerEtape(etapeAvant() || 1); return true;
+}
 /* V15.2 : aides masquables (menu « ⋯ » de la saisie), retenu sur l'appareil */
 function majAides() { const f = document.querySelector("#m-saisie .m-feuille"); if (f) f.classList.toggle("sans-aide", PREF.aides === false); }
 let detailsOuverts = false;
@@ -4020,7 +4113,7 @@ function formulaireImport(i) {
   }
   return f;
 }
-function choisirOpImport(i) { IMP.i = i; F = formulaireImport(i); detailsOuverts = !!F.montantApport; rendreFormulaire(); const z = $f("m-pane-ordre"); if (z) z.scrollTop = 0; }
+function choisirOpImport(i) { IMP.i = i; F = formulaireImport(i); detailsOuverts = !!F.montantApport; etape = importPret() ? 4 : 2; rendreFormulaire(); const z = $f("m-pane-ordre"); if (z) z.scrollTop = 0; }
 function importerTexte(txt, source) {
   const r = lireAvis(txt);
   if (!r.ops.length) { IMP.msg = source === "pdf" ? "Aucune opération trouvée dans ce PDF. Est-ce bien un avis d'opéré ? Tu peux aussi coller son texte." : "Aucune opération trouvée dans ce texte : colle tout l'avis d'opéré (de « Désignation » à « Montant NET »)."; rendreFormulaire(); return; }
@@ -4033,9 +4126,9 @@ function libOpImport(op) {
   return (op.type ? libType(op.type) : "Opération ?") + (op.qte ? " " + op.qte : "") + " " + nom + (op.date ? " · " + dateCourteIso(op.date) : "") + (!discret && lireNombre(op.montant) > 0 ? " · " + nf(2, 2).format(lireNombre(op.montant)) + NB + "€" : "");
 }
 function htmlImport(bourse) {
-  const avis = bourse ? '<p class="info m-avis">📄 Ton <b>avis d\'opéré</b> sous les yeux (pas le cours de l\'appli) : remplis de haut en bas, dans le même ordre.</p>' : "";   // v17.27 (Théo) ; v17.73 : ordre de l'avis
+  const avis = "";   // v17.78 (lot60) : la ligne « avis sous les yeux » (v17.27) est devenue l'aide de l'étape « Les chiffres »
   if (!M || M.simple || !envsOuverts().length || (!IMP && !["Achat", "Vente", "Frais en parts", "Relevé"].includes(F.type))) return avis;
-  if (!IMP) return '<div class="m-imp"><button class="btn m-imp-b" type="button" id="f-imp">📄 Importer mon avis d\'opéré</button></div>' + avis;
+  if (!IMP) return '<div class="m-imp m-imp-petit"><button class="m-imp-p" type="button" id="f-imp">📄 Importer un avis</button></div>';   // v17.78 (lot60, Théo) : en petit
   if (!IMP.ops) return '<div class="m-imp ouvert"><b class="m-imp-t">📄 Importer mon avis d\'opéré</b>' +
     '<p class="aide">Lu dans ton téléphone : le fichier n\'est envoyé nulle part. Tu relis tout avant d\'enregistrer.</p>' +
     '<p class="aide">Pas de PDF (versement programmé, frais Linxea, page Quintessa…) ? <b>Copie les valeurs</b> depuis le site (appui long sur le tableau › Tout sélectionner › Copier), ou fais une <b>capture d\'écran</b> et utilise <b>Google Lens › Copier le texte</b>, puis « Coller le texte » ici.</p>' +   // v17.77 (Théo)
@@ -4060,7 +4153,7 @@ function htmlImport(bourse) {
 }
 function brancherImport() {
   const z = $f("m-pane-ordre"); if (!z) return;
-  if ($f("f-imp")) $f("f-imp").addEventListener("click", () => { IMP = { panneau: true }; rendreFormulaire(); });
+  if ($f("f-imp")) $f("f-imp").addEventListener("click", () => { IMP = { panneau: true }; if (etape === 1) F = formulaire(null); rendreFormulaire(); });
   z.querySelectorAll("#f-imp-fin").forEach(b => b.addEventListener("click", () => { IMP = null; if (F.imp) { F.imp = null; F.na = null; } rendreFormulaire(); }));
   if ($f("f-imp-coller")) $f("f-imp-coller").addEventListener("click", () => { IMP.coller = !IMP.coller; IMP.msg = ""; rendreFormulaire(); setTimeout(() => { const t = $f("f-imp-txt"); if (t) t.focus(); }, 30); });
   if ($f("f-imp-txt")) $f("f-imp-txt").addEventListener("input", e => { IMP.texte = e.target.value; });
@@ -4077,7 +4170,7 @@ function brancherImport() {
     IMP.lecture = false; importerTexte(txt, "pdf");
   });
   z.querySelectorAll("[data-imp-op]").forEach(b => b.addEventListener("click", () => choisirOpImport(+b.dataset.impOp)));
-  if ($f("f-imp-ok")) $f("f-imp-ok").addEventListener("click", () => { F.imp.confirme = true; const op = IMP.ops[F.imp.i]; op.choix.actif = F.actif; retenirIsin(cleOp(op), F.actif); rendreFormulaire(); });
+  if ($f("f-imp-ok")) $f("f-imp-ok").addEventListener("click", () => { F.imp.confirme = true; const op = IMP.ops[F.imp.i]; op.choix.actif = F.actif; retenirIsin(cleOp(op), F.actif); if (importPret()) etape = 4; rendreFormulaire(); });
 }
 function especesEnv(env) { const g = ((M && M.groupes) || []).find(x => x.env === env), le = g && (g.lignes || []).find(l => l.especes); return le && typeof le.valeur === "number" ? le.valeur : null; }
 /** bascule vente + achat du même avis : la vente, déjà enregistrée, crédite les espèces tant que le fichier n'a pas été relu (sinon elle y est déjà) */
@@ -4093,7 +4186,7 @@ function suiteImport(S) {
   if (k < 0) { IMP = null; return; }
   setTimeout(() => {
     if (!IMP || !M) return;
-    IMP.i = k; F = formulaireImport(k); nommerRaccourci = false; detailsOuverts = !!F.montantApport; plusTypes = false; menuOuvert = false;
+    IMP.i = k; F = formulaireImport(k); nommerRaccourci = false; detailsOuverts = !!F.montantApport; plusTypes = false; menuOuvert = false; etape = importPret() ? 4 : 2;
     $f("m-saisie").hidden = false; paneSaisie("ordre");
     toast("Opération " + (k + 1) + "/" + IMP.ops.length + " pré-remplie : relis puis enregistre.");
   }, 700);
@@ -4101,9 +4194,10 @@ function suiteImport(S) {
 /** le texte sous la case du versement, pour une opération importée (Théo, 20/11 : jamais de versement déduit d'autre chose) */
 function gardeImport() {
   const im = F.imp;
-  if (im.versDoc) return F.apport ? "Versement repris du document : vérifie son montant." : "Décoché : le versement est déjà enregistré avec le 1er support de ce document.";
-  if (im.bascule && !F.apport) return "Décoché : la vente du même avis paie cet achat (aucun versement ajouté). Coche si tu as aussi viré de l'argent.";
-  return "L'avis ne dit pas d'où vient l'argent : vérifie le versement" + (F.apport ? " (coché : l'argent viré est enregistré juste avant l'achat)." : ".");
+  /* v17.78 (lot60) : textes de l'étape « Versement » (Oui / Non) */
+  if (im.versDoc) return F.apport ? "Versement repris du document : vérifie son montant." : "Le versement est déjà enregistré avec le 1er support de ce document.";
+  if (im.bascule && !F.apport) return "La vente du même avis paie cet achat : aucun versement ajouté. Choisis « Oui » si tu as aussi viré de l'argent.";
+  return "L'avis ne dit pas d'où vient l'argent : vérifie le versement.";
 }
 function rendreFormulaire() {
   majAides();
@@ -4123,7 +4217,7 @@ function rendreFormulaire() {
   const courantsAutres = autres.filter(t => (AUTRES_TYPES[t] || { g: "Courant" }).g === "Courant"), raresAutres = autres.filter(t => !courantsAutres.includes(t));
   const hab = F.type === "Apport" && ETAT.discret === "oui" && !String(F.montant || "").trim() ? montantHabituel(F.env) : 0;
   const A = aidesCalcul(), auj = aujourdhuiISO(), hier = isoDecale(auj, -1), prop = dateProposee();
-  const libDate = F.type === "Relevé" ? "Date du relevé" : F.type === "Solde initial" ? "Début du suivi" : bourse ? "Date d'exécution (avis d'opéré)" : "Date";
+  const libDate = F.type === "Relevé" ? "Date du relevé" : F.type === "Solde initial" ? "Début du suivi" : bourse ? "Date d'exécution" : "Date";
   /* v17.34 · la date est visible pour TOUS les types (plus de repli) : Aujourd'hui · Hier · Autre date */
   const puce = (d, lib, id) => '<button type="button" class="chip" id="' + id + '" data-date="' + d + '" aria-pressed="' + (F.date === d && (F.dateChoisie || !DATE_OBLIG.includes(F.type))) + '">' + lib + "</button>";
   const blocDate = '<div class="champ m-date"><label for="f-date">' + libDate + (DATE_OBLIG.includes(F.type) ? " · obligatoire" : "") + "</label><div class=\"m-date-l\">" +
@@ -4134,35 +4228,43 @@ function rendreFormulaire() {
      touche « Suivant » du clavier (enterkeyhint) ; erreur d'un champ écrite sous ce champ (span .m-err) */
   const nb = (id, val, ph, cls, kh) => '<input id="' + id + '" type="text" inputmode="decimal" enterkeyhint="' + (kh || "next") + '" autocomplete="off" value="' + esc(val) + '" placeholder="' + esc(ph) + '"' + (cls ? ' class="' + cls + '"' : "") + ' aria-describedby="' + id + '-err">';
   const err = id => '<span class="m-err" id="' + id + '-err" role="alert" hidden></span>';
-  const champQte = avecQte ? '<div class="champ"><label for="f-qte">' + (bourse ? "Quantité (parts)" : "Nombre de parts") + "</label>" + nb("f-qte", F.qte, "0") +
+  const champQte = avecQte ? '<div class="champ"><label for="f-qte">' + (bourse ? "Quantité" : "Nombre de parts") + "</label>" + nb("f-qte", F.qte, "0") +
     '<span class="calc" id="f-qte-calc"' + (A.qte ? "" : " hidden") + ">" + esc(A.qte) + "</span>" + err("f-qte") + "</div>" : "";
-  const libM = bourse ? (F.type === "Achat" ? "Montant net débité" : "Montant net crédité") : LIB_MONTANT[F.type] || "Montant";
-  const champMontant = '<div class="champ"><label for="f-montant">' + esc(libM) + " (€)</label>" + nb("f-montant", F.montant, "0,00", F.montantAuto || F.montantHab ? "auto" : "", F.type === "Achat" && F.apport && detailsOuverts ? "next" : "done") +
+  const libM = bourse ? (F.type === "Achat" ? "Net débité" : "Net crédité") : LIB_MONTANT[F.type] || "Montant";
+  const champMontant = '<div class="champ"><label for="f-montant">' + esc(libM) + " (€)</label>" + nb("f-montant", F.montant, "0,00", F.montantAuto || F.montantHab ? "auto" : "", etapeFinale() ? "done" : "next") +
     '<span class="calc" id="f-montant-calc"' + (A.montant ? "" : " hidden") + ">" + esc(A.montant) + "</span>" + err("f-montant") +
     (hab > 0 ? '<button class="lien" type="button" id="f-hab">Reprendre ton versement habituel</button>' : "") + "</div>";
-  const champFrais = avecFrais ? '<div class="champ"><label for="f-frais">Courtage, frais (€)</label>' + nb("f-frais", F.frais, "0 si aucun", F.fraisAuto ? "auto" : "") +
+  const champFrais = avecFrais ? '<div class="champ"><label for="f-frais">Frais, courtage (€)</label>' + nb("f-frais", F.frais, "0 si aucun", F.fraisAuto ? "auto" : "") +
     '<span class="calc" id="f-frais-calc"' + (A.frais ? "" : " hidden") + ">" + esc(A.frais) + "</span>" + err("f-frais") + "</div>" : "";
   const pcalc = () => { const n = netOrdre(), q = lireNombre(F.qte); return !F.prixTape && n > 0 && q > 0 && ETAT.discret !== "oui" ? "≈ " + nf(2, 4).format(n / q) : "0,00"; };
-  const champCours = bourse ? '<div class="champ"><label for="f-prix">Cours (€/part)</label>' + nb("f-prix", F.prixTape ? F.prix : "", pcalc()) + "</div>" : "";
+  const champCours = bourse ? '<div class="champ"><label for="f-prix">Cours (€)</label>' + nb("f-prix", F.prixTape ? F.prix : "", pcalc()) + "</div>" : "";
   const ctl = controleAvis();
   const champPrix = avecQte && F.type !== "Frais en parts" ? '<p class="m-pu' + (ctl.c ? " " + ctl.c : "") + '" id="f-pu" aria-live="polite"' + (ctl.t ? "" : " hidden") + ">" + esc(ctl.t) + "</p>" : "";
-  $f("m-pane-ordre").innerHTML =
-    '<form class="form" id="m-form-ordre" novalidate>' +
-      (menuOuvert ? '<div class="m-menu" role="menu">' +
+  /* v17.78 (lot60, Théo : « trop d'informations d'un coup ») · parcours en étapes, un écran à la fois ; mêmes champs, mêmes identifiants, même envoi */
+  const fin = etapeFinale(), seq = etape === 1 ? [1, 2, 3, 4] : etapesDe(F.type), discretE = ETAT.discret === "oui", euros = v => discretE ? "•••" + NB + "€" : nf(2, 2).format(v) + NB + "€";
+  const barre = '<ol class="m-etapes" aria-label="Étapes de la saisie">' + seq.map((n, k) => { const fait = n < etape, cur = n === etape, lib = '<i>' + (k + 1) + "</i> " + esc(n === 1 && etape > 1 ? libType(F.type) : NOMS_ETAPES[n]);
+    return '<li class="' + (fait ? "fait" : cur ? "cur" : "") + '"' + (cur ? ' aria-current="step"' : "") + ">" + (fait ? '<button type="button" class="m-et-b" data-etape="' + n + '" aria-label="Revenir à l\'étape ' + (k + 1) + '">' + lib + "</button>" : "<span>" + lib + "</span>") + "</li>"; }).join("") + "</ol>";
+  const menu = menuOuvert ? '<div class="m-menu" role="menu">' +
         (nommerRaccourci
           ? '<div class="nommer"><input id="f-nom-rac" type="text" maxlength="40" aria-label="Nom du raccourci" value="' + esc(nomParDefaut()) + '"><button class="mini-btn" type="button" id="rac-ok">Créer</button><button class="lien" type="button" id="rac-annuler">Annuler</button></div>'
-          : '<button class="lien" type="button" id="rac-creer">Enregistrer comme raccourci</button>') +
-        '<button class="lien" type="button" id="f-vider">Vider le formulaire</button>' +
-        '<button class="lien" type="button" id="f-aides">' + (PREF.aides === false ? "Afficher les aides" : "Masquer les aides") + "</button></div>" : "") +
-      htmlCarteReleveVersus() +
-      rendreRaccourcis() +
-      '<div class="types" role="group" aria-label="Type d\'opération">' + courants.map(t => '<button type="button" class="type-btn" data-type="' + t + '" aria-pressed="' + (F.type === t) + '">' + esc(libType(t)) + "</button>").join("") +
-        '<button type="button" class="type-btn plus-types" id="f-plus-types" aria-pressed="' + autreType + '" aria-expanded="' + panneau + '">Autres' + (panneau ? " ▴" : " ▾") + "</button></div>" +
-      (!panneau ? "" : '<div class="m-autres" role="group" aria-label="Autres types">' + courantsAutres.map(chipT).join("") +
+          : etape > 1 ? '<button class="lien" type="button" id="rac-creer">Enregistrer comme raccourci</button>' : "") +
+        (etape > 1 ? '<button class="lien" type="button" id="f-vider">Vider le formulaire</button>' : "") +
+        '<button class="lien" type="button" id="f-aides">' + (PREF.aides === false ? "Afficher les aides" : "Masquer les aides") + "</button></div>" : "";
+  const SOUS = { Achat: "d'après ton avis d'opéré", Apport: "argent viré sur un compte", "Relevé": "d'après ton relevé", Vente: "d'après ton avis d'opéré" };
+  const tuile = t => '<button type="button" class="type-btn m-tuile" data-type="' + esc(t) + '" aria-pressed="false">' + esc(libType(t)) + "<small>" + esc(brouillons[t] ? "✎ ta saisie est gardée" : SOUS[t] || "") + "</small></button>";
+  const aideE = (t) => t && PREF.aides !== false ? '<p class="m-aide-e">' + t + "</p>" : "";
+  let corps = "";
+  if (etape === 1 && IMP) corps = htmlImport(false);   // import ouvert : rien d'autre à l'écran (retour = fermer le panneau)
+  else if (etape === 1) corps =
+      htmlImport(false) +
+      '<div class="types m-tuiles" role="group" aria-label="Type d\'opération">' + courants.map(tuile).join("") +
+        '<button type="button" class="type-btn m-tuile plus-types" id="f-plus-types" aria-expanded="' + plusTypes + '">Autres ' + (plusTypes ? "▴" : "▾") + "<small>" + (courants.includes("Vente") ? "dividende, frais, retrait…" : "vente, dividende, frais…") + "</small></button></div>" +
+      (!plusTypes ? "" : '<div class="m-autres" role="group" aria-label="Autres types">' + courantsAutres.map(chipT).join("") +
         (raresAutres.length ? '<span class="m-autres-t">Plus rares</span>' + raresAutres.map(chipT).join("") : "") + "</div>") +
+      rendreRaccourcis() + htmlCarteReleveVersus();
+  else if (etape === 2) corps =
       (AUTRES_TYPES[F.type] && PREF.aides !== false ? '<p class="info aide">ℹ️ <b>' + esc(AUTRES_TYPES[F.type].lib) + "</b> : " + esc(AUTRES_TYPES[F.type].d) + "</p>" : "") +
-      htmlImport(bourse) +   // v17.76 (lot59) : « 📄 Importer mon avis d'opéré » + la ligne « avis sous les yeux » (v17.27, v17.73)
-      /* v17.73 (lot57) : compte et actif sur une ligne ; « Nouvel actif » est le dernier choix de la liste */
+      htmlImport(bourse) +
       (avecActif ? '<div class="rang m-ca">' : "") +
       '<div class="champ"><label for="fo-env">Compte</label><select id="fo-env">' +
         groupeEnv(ouvertes.filter(e => e.perimetre === "Portefeuille"), "Bourse") + groupeEnv(ouvertes.filter(e => e.perimetre !== "Portefeuille"), "Épargne") + "</select></div>" +
@@ -4172,18 +4274,26 @@ function rendreFormulaire() {
         (F.na ? "" : '<option value="__nouvel">＋ Nouvel actif…</option>') + "</select>" + err("f-actif") + "</div></div>" +
         (F.na ? htmlNouvelActif(F.na, true) : "") : "") +
       blocDate +
-      /* v17.34 · règle de Théo du 20/11 : achat / vente = tout visible ; v17.73 : dans l'ordre de l'avis (quantité, cours, courtage, montant net) */
       (bourse ? '<div class="rang m-avis2">' + champQte + champCours + '</div><div class="rang m-avis2">' + champFrais + champMontant + "</div>" : avecQte ? champQte + champMontant : champMontant) + (bourse ? "" : champFrais) + champPrix +
-      (F.type === "Achat" ? '<label class="coche"><input type="checkbox" id="f-apport"' + (F.apport ? " checked" : "") + '> Avec le versement qui paie cet achat</label>' +
-        '<span class="aide lie m-garde">' + (F.imp ? esc(gardeImport()) : F.apport ? "L'argent viré est enregistré juste avant l'achat." : F.refait ? "Coche si tu as viré de l'argent pour cet achat (le versement d'origine est une ligne à part)." : "Décoché : l'argent était déjà sur le compte (vente, dividende, versement précédent).") + "</span>" +
-        (F.apport ? '<details class="m-plus" id="f-vers"' + (detailsOuverts ? " open" : "") + '><summary>Montant du versement s\'il diffère <small id="f-details-res">' + esc(resumeDetails()) + "</small></summary><div class=\"m-plus-c\">" +
-          '<div class="champ"><label for="f-mapport">Montant du versement (€)</label><input id="f-mapport" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montantApport) + '" placeholder="Comme l\'achat"><span class="aide">Laisse vide : même montant que l\'achat.</span></div></div></details>' : "") : "") +
-      '<div class="recap" id="m-recap"></div>' +
+      aideE(bourse && !F.imp ? "Tout est sur ton <b>avis d'opéré</b>, dans cet ordre (jamais le cours de l'appli). Pas encore reçu ? Chez Fortuneo il arrive souvent le lendemain : reviens plus tard." : F.type === "Relevé" ? "Sur ton relevé : la <b>valeur totale</b> de la ligne, à la date du relevé." : "") +
+      '<div class="recap" id="m-recap"></div>';
+  else if (etape === 3) { const esp = especesEnv(F.env), m = lireNombre(F.montant), garde = F.imp ? gardeImport() : F.refait ? "Le versement d'origine est une ligne à part : choisis « Oui » seulement si tu as viré de l'argent pour cet achat." : "";
+    corps = '<div class="m-q" role="group" aria-labelledby="m-q-t"><b class="m-q-t" id="m-q-t">As-tu viré de l\'argent pour payer cet achat ?</b>' +
+      '<button type="button" class="m-choix" data-apport="1" aria-pressed="' + !!F.apport + '"><b>Oui, un virement</b><small>On enregistre aussi ce virement, juste avant l\'achat' + (m > 0 && !discretE ? " (" + euros(m) + " sauf si tu indiques un autre montant)" : "") + ".</small></button>" +
+      (F.apport ? '<div class="champ m-vers-m"><label for="f-mapport">Montant viré, s\'il diffère (€)</label><input id="f-mapport" type="text" inputmode="decimal" enterkeyhint="next" autocomplete="off" value="' + esc(F.montantApport) + '" placeholder="Le même que l\'achat" aria-describedby="f-mapport-err">' + err("f-mapport") + "</div>" : "") +
+      '<button type="button" class="m-choix" data-apport="0" aria-pressed="' + !F.apport + '"><b>Non, l\'argent était déjà sur le compte</b><small>' + (esp !== null ? "Espèces sur " + esc(F.env) + " : " + euros(esp) + " (virement fait avant, vente…)." : "Virement fait avant, vente, dividende…") + "</small></button>" +
+      (garde ? '<span class="aide lie m-garde">' + esc(garde) + "</span>" : "") + "</div>"; }
+  else { const ma = lireNombre(F.montantApport), m = lireNombre(F.montant), im = F.imp || {};
+    const vers = F.type !== "Achat" ? "" : '<p class="m-vers-l">' + (F.apport ? "💶 + versement de " + euros(ma > 0 ? ma : m > 0 ? m : 0) : "💶 Sans versement : " + (im.versDoc ? "déjà enregistré avec le 1er support du document" : im.bascule ? "payé par la vente du même avis" : "payé par les espèces du compte")) + "</p>" + (F.imp && (im.versDoc ? F.apport : !(im.bascule && !F.apport)) ? '<span class="aide lie m-garde">' + esc(gardeImport()) + "</span>" : "");
+    corps = (IMP && IMP.ops && F.imp && IMP.ops.length > 1 ? '<p class="m-imp-n petit">📄 Opération ' + (F.imp.i + 1) + "/" + IMP.ops.length + " de l'avis</p>" : F.imp ? '<p class="m-imp-n petit">📄 Lu dans ton avis : relis, puis enregistre.</p>' : "") +
+      '<div class="m-relire"><p class="phrase-ordre" id="m-phrase"></p>' + champPrix + vers +
+      '<div class="m-relire-a"><button class="lien" type="button" data-etape="2">Modifier les chiffres</button>' + (F.type === "Achat" ? '<button class="lien" type="button" data-etape="3">Modifier le versement</button>' : "") + "</div></div>" +
+      '<div class="recap" id="m-recap"></div>'; }
+  $f("m-pane-ordre").innerHTML =
+    '<form class="form m-etape-' + etape + '" id="m-form-ordre" novalidate>' + barre + menu + corps +
       '<div class="alertes" id="m-alertes"></div>' +
-      '<div class="m-pied">' +
-        '<p class="phrase-ordre" id="m-phrase"></p>' +
-        '<button class="btn plein acc" type="submit" id="f-envoyer">' + esc(libBoutonOrdre()) + '</button>' +
-      "</div>" +
+      (etape === 1 ? "" : '<div class="m-pied">' + (fin && etape !== 4 ? '<p class="phrase-ordre" id="m-phrase"></p>' : "") +
+        '<button class="btn plein acc" type="submit" id="f-envoyer">' + esc(fin ? libBoutonOrdre() : "Suivant ›") + "</button></div>") +
     "</form>";
   const form = $f("m-form-ordre");
   if ($f("f-guide")) $f("f-guide").hidden = PREF.aides === false;
@@ -4191,7 +4301,14 @@ function rendreFormulaire() {
   if ($f("f-vers")) $f("f-vers").addEventListener("toggle", () => { detailsOuverts = $f("f-vers").open; });
   if ($f("f-rv")) $f("f-rv").addEventListener("click", () => ouvrirReleveVersus(false));
   form.querySelectorAll("[data-type]").forEach(b => b.addEventListener("click", () => {
-    const t = b.dataset.type; if (t === F.type) return;
+    const t = b.dataset.type;
+    if (etape === 1) {   // v17.78 (lot60) : « Quoi ? » → les chiffres ; une saisie laissée par « retour » est reprise telle quelle
+      const br = brouillons[t];
+      if (br) { delete brouillons[t]; F = br.F; IMP = br.IMP; toast("Ta saisie est reprise."); allerEtape(2); return; }
+      if (t === F.type) { allerEtape(2); setTimeout(premierChamp, 30); return; }
+      etape = 2; setTimeout(premierChamp, 30);
+    }
+    if (t === F.type) return;
     plusTypes = !courants.includes(t);
     let env = F.envChoisi ? F.env : envPourType(t) || envParDefaut() || F.env;
     if (t === "Relevé") { const av = ouvertes.find(e => e.regime === "AV"), cur = ouvertes.find(e => e.nom === env); if (av && (!cur || cur.regime !== "AV")) env = envPourType(t) || av.nom; }   // v17.34 : « Valeur AV » bascule d'office sur une assurance-vie
@@ -4200,18 +4317,21 @@ function rendreFormulaire() {
     F = formulaire({ type: t, date: date, dateChoisie: !!date && F.dateChoisie, env: env, envChoisi: F.envChoisi && env === F.env, actif: AVEC_ACTIF.includes(t) && env === F.env ? F.actif : "", montant: F.montantAuto || F.montantHab ? "" : F.montant });
     synchroniser(); rendreFormulaire();
   }));
-  $f("f-plus-types").addEventListener("click", () => { plusTypes = !panneau; if (!plusTypes && autreType) F = formulaire({ type: "Achat", date: DATE_OBLIG.includes(F.type) ? "" : F.date, env: F.env, envChoisi: F.envChoisi }); rendreFormulaire(); });
+  if ($f("f-plus-types")) $f("f-plus-types").addEventListener("click", () => { if (etape === 1) { plusTypes = !plusTypes; rendreFormulaire(); return; } plusTypes = !panneau; if (!plusTypes && autreType) F = formulaire({ type: "Achat", date: DATE_OBLIG.includes(F.type) ? "" : F.date, env: F.env, envChoisi: F.envChoisi }); rendreFormulaire(); });
   if ($f("f-aides")) $f("f-aides").addEventListener("click", () => { PREF.aides = PREF.aides === false; garderPref(); majAides(); menuOuvert = false; rendreFormulaire(); });
-  $f("fo-env").addEventListener("change", e => { if (F.imp && IMP && IMP.ops) { IMP.ops[F.imp.i].choix.env = e.target.value; F = formulaireImport(F.imp.i); rendreFormulaire(); return; } F = formulaire({ type: F.type, date: F.date, dateChoisie: F.dateChoisie, env: e.target.value, envChoisi: true, montant: F.montantAuto || F.montantHab ? "" : F.montant, frais: F.fraisAuto ? "" : F.frais }); synchroniser(); rendreFormulaire(); });
+  if ($f("fo-env")) $f("fo-env").addEventListener("change", e => { if (F.imp && IMP && IMP.ops) { IMP.ops[F.imp.i].choix.env = e.target.value; F = formulaireImport(F.imp.i); rendreFormulaire(); return; } F = formulaire({ type: F.type, date: F.date, dateChoisie: F.dateChoisie, env: e.target.value, envChoisi: true, montant: F.montantAuto || F.montantHab ? "" : F.montant, frais: F.fraisAuto ? "" : F.frais }); synchroniser(); rendreFormulaire(); });
   if ($f("f-actif")) $f("f-actif").addEventListener("change", e => { if (F.imp && IMP && IMP.ops && e.target.value !== "__nouvel") { IMP.ops[F.imp.i].choix.actif = e.target.value; F = formulaireImport(F.imp.i); rendreFormulaire(); return; }   // v17.76 : choisi à la main = confirmé
     if (e.target.value === "__nouvel") { e.target.value = F.actif; F.na = F.imp ? Object.assign(nouvelNA(F.env), { nom: F.imp.nom || "", isin: F.imp.isin || "", code: (ISIN_CONNUS[F.imp.isin] || [])[0] || "", ticker: (ISIN_CONNUS[F.imp.isin] || [])[1] || "" }) : nouvelNA(F.env); rendreFormulaire(); setTimeout(() => { const el = $f("fn-code"); if (el) el.focus(); }, 30); return; } F = formulaire({ type: F.type, date: F.date, dateChoisie: F.dateChoisie, env: F.env, envChoisi: F.envChoisi, actif: e.target.value, montant: F.montantAuto ? "" : F.montant, frais: F.frais, fraisAuto: F.fraisAuto, apport: F.apport, montantApport: F.montantApport, refait: F.refait, qte: F.qteTape ? F.qte : "", qteTape: F.qteTape, auto: false }); synchroniser(); rendreFormulaire(); });
   if ($f("f-apport")) $f("f-apport").addEventListener("change", e => { F.apport = e.target.checked; F.okDoublon = false; rendreFormulaire(); });
+  form.querySelectorAll("[data-apport]").forEach(b => b.addEventListener("click", () => { const v = b.dataset.apport === "1"; if (v === !!F.apport) return; F.apport = v; F.okDoublon = false; F.okEspeces = false; rendreFormulaire();
+    setTimeout(() => { const el = v ? $f("f-mapport") : null; const c = form.querySelector('[data-apport="' + (v ? 1 : 0) + '"]'); if (c) c.focus(); }, 20); }));
+  form.querySelectorAll("[data-etape]").forEach(b => b.addEventListener("click", () => allerEtape(+b.dataset.etape)));
   if ($f("f-hab")) $f("f-hab").addEventListener("click", () => { F.montant = saisieNombre(hab, 2); F.montantHab = true; rendreFormulaire(); });
   if ($f("f-prix-voir")) $f("f-prix-voir").addEventListener("click", () => { F.prixVu = true; rendreFormulaire(); setTimeout(() => { const el = $f("f-prix"); if (el) el.focus(); }, 30); });
   form.querySelectorAll("[data-date]").forEach(b => b.addEventListener("click", () => { F.date = b.dataset.date; F.dateChoisie = true; F.forcer = null; F.erreur = ""; rendreFormulaire(); }));
   // 14.5 : le nouvel actif se crée ici même, sans quitter la saisie d'ordre
   if ($f("f-nouvel-actif")) $f("f-nouvel-actif").addEventListener("click", () => { F.na = nouvelNA(F.env); rendreFormulaire(); setTimeout(() => { const el = $f("fn-code"); if (el) el.focus(); }, 30); });
-  if (F.na) brancherNouvelActif(F.na, a => { if (F.imp && IMP && IMP.ops) { retenirIsin(cleOp(IMP.ops[F.imp.i]), a.code); IMP.ops[F.imp.i].choix.actif = a.code; F = formulaireImport(F.imp.i); toast("Actif " + a.code + " créé : relis l'opération."); rendreFormulaire(); return; } F.actif = a.code; F.na = null; toast("Actif " + a.code + " créé : tu peux saisir ton ordre."); rendreFormulaire(); }, () => { F.na = null; rendreFormulaire(); });
+  if (F.na) brancherNouvelActif(F.na, a => { if (F.imp && IMP && IMP.ops) { retenirIsin(cleOp(IMP.ops[F.imp.i]), a.code); IMP.ops[F.imp.i].choix.actif = a.code; F = formulaireImport(F.imp.i); toast("Actif " + a.code + " créé : relis l'opération."); if (importPret()) etape = 4; rendreFormulaire(); return; } F.actif = a.code; F.na = null; toast("Actif " + a.code + " créé : tu peux saisir ton ordre."); rendreFormulaire(); }, () => { F.na = null; rendreFormulaire(); });
   [["f-date", "date"], ["f-montant", "montant"], ["f-frais", "frais"], ["f-mapport", "montantApport"], ["f-qte", "qte"], ["f-prix", "prix"]].forEach(([id, k]) => {
     const el = $f(id);
     if (!el) return;
@@ -4255,7 +4375,7 @@ function rendreFormulaire() {
   });
   if ($f("f-vider")) $f("f-vider").addEventListener("click", () => { F = formulaire({ type: F.type, env: F.env, envChoisi: F.envChoisi, auto: false }); nommerRaccourci = false; menuOuvert = false; rendreFormulaire(); });
   brancherImport();
-  form.addEventListener("submit", e => { e.preventDefault(); envoyerOrdre(false); });
+  form.addEventListener("submit", e => { e.preventDefault(); if (etapeFinale()) envoyerOrdre(false); else etapeSuivante(); });
   /* v17.73 (lot57) · touche Entrée / « Suivant » du clavier : champ suivant de l'avis ; après le dernier, le clavier se ferme et le bouton se montre
      (jamais d'envoi depuis le clavier : on relit la phrase, puis on touche le bouton) */
   form.addEventListener("keydown", e => {
@@ -4264,6 +4384,7 @@ function rendreFormulaire() {
     const ordre = ["f-qte", "f-prix", "f-frais", "f-montant", "f-mapport"].map(id => $f(id)).filter(el => el && el.offsetParent !== null && !el.closest("details:not([open])"));
     const i = ordre.indexOf(e.target), suiv = i >= 0 ? ordre[i + 1] : null;
     if (suiv) { suiv.focus(); if (suiv.select) suiv.select(); return; }
+    if (!etapeFinale()) { e.target.blur(); etapeSuivante(); return; }   // v17.78 (lot60) : Entrée valide l'étape (jamais l'envoi)
     e.target.blur(); const b = $f("f-envoyer"); if (b) b.scrollIntoView({ block: "nearest" });
   });
   majRecap();
@@ -4365,7 +4486,7 @@ function analyser() {
       if (le && typeof le.valeur === "number") {
         const vers = F.apport ? (lireNombre(F.montantApport) > 0 ? lireNombre(F.montantApport) : m) : 0, dispo = le.valeur + vers + creditImport(F.env, le.valeur);   // v17.76 (lot59) : vente du même avis déjà enregistrée
         if (m - dispo > .01) { bloque = true; if (!manque) manque = "Les espèces ne couvrent pas cet achat";
-          msg.push(["conf", "Il n'y a que " + (discret ? "•••" : nf(2, 2).format(le.valeur)) + " € d'espèces sur " + esc(F.env) + (F.apport ? " (+ le versement)" : "") + " : il manque " + (discret ? "•••" : nf(2, 2).format(m - dispo)) + " €. " + (F.apport ? "Vérifie le montant du versement." : "Coche « Avec le versement qui paie cet achat », ou saisis d'abord ton virement.") + " Confirme seulement si tes espèces dans l'appli ne sont pas à jour.", "especes"]); }
+          msg.push(["conf", "Il n'y a que " + (discret ? "•••" : nf(2, 2).format(le.valeur)) + " € d'espèces sur " + esc(F.env) + (F.apport ? " (+ le versement)" : "") + " : il manque " + (discret ? "•••" : nf(2, 2).format(m - dispo)) + " €. " + (F.apport ? "Vérifie le montant du versement." : "Choisis « Oui, un virement », ou saisis d'abord ton virement.") + " Confirme seulement si tes espèces dans l'appli ne sont pas à jour.", "especes"]); }
       }
     }
     /* écart au cours : seulement si le nombre de parts a été TAPÉ (sinon un « écart 0 % » rassurerait à tort) */
@@ -4379,7 +4500,7 @@ function analyser() {
   if (F.actif && q > 0 && t.quantite) lignes.push(["Détenu après l'ordre", qteBrute(+(tenu + q * t.quantite).toFixed(6)) + " " + esc(F.actif)]);
   if (F.type === "Achat" && F.apport) {
     const ma = lireNombre(F.montantApport);
-    if (ma !== null && (isNaN(ma) || ma <= 0)) { bloque = true; msg.push(["err", "Montant de l'apport illisible."]); }
+    if (ma !== null && (isNaN(ma) || ma <= 0)) { bloque = true; msg.push(["err", "Montant de l'apport illisible.", "", "f-mapport"]); }
   }
   /* G2 · dates : programmée (déjà là), jour sans bourse, ordre ancien, début de mois */
   if (F.date && F.date > aujourdhuiISO()) msg.push(["warn", "Ordre programmé : il restera ignoré par les calculs jusqu'au " + frDate(F.date) + "."]);
@@ -4401,7 +4522,7 @@ function analyser() {
   return { bloque, msg, lignes, doutes, manque, champ };
 }
 /** La phrase de relecture : l'ordre dit en une phrase courte et naturelle, pour repérer une erreur d'un coup d'œil (v16.92) */
-function phraseOrdre() {
+function phraseOrdre(sansVers) {   // v17.78 (lot60) : sansVers = relecture d'un achat, le versement est dit sur sa propre ligne
   const m = lireNombre(F.montant), q = lireNombre(F.qte), fr = lireNombre(F.frais), ma = lireNombre(F.montantApport);
   if ((!(m > 0) && F.type !== "Ajustement espèces") || millierDouteux(F.montant)) return "";   // v16.83 : pas de « 1,50 € » relu tant que « 1.500 » est en doute
   if (m === null || !isFinite(m) || m === 0) return "";
@@ -4418,6 +4539,7 @@ function phraseOrdre() {
     case "Achat": case "Vente": { const p = lireNombre(F.prix), n = netOrdre(), pu = F.prixTape && p > 0 ? p : n > 0 && q > 0 ? +(n / q).toFixed(4) : 0;   // v17.73 (lot57) : le cours dans la phrase
       if (pu > 0 && q > 0 && !discret) titres += " à " + B(nbCours(pu)); }
       if (F.type === "Vente") { t = "Vente " + titres + " pour " + e(m) + frais + " sur " + env + le + "."; break; }
+      if (sansVers) { t = "Achat " + titres + " pour " + e(m) + frais + " sur " + env + le + "."; break; }
       t = (F.apport ? B("+ un versement de " + (discret ? "•••" + NB + "€" : nf(Number.isInteger(+(ma > 0 ? ma : m).toFixed(2)) ? 0 : 2, 2).format(ma > 0 ? ma : m) + NB + "€")) + ", puis achat " : "Achat ") + titres + " pour " + e(m) + frais + " sur " + env + le + "." + (F.apport ? "" : " Sans versement (argent déjà sur le compte)."); break;
     case "Apport": t = "Versement de " + e(m) + " sur " + env + le + "."; break;
     case "Retrait": t = "Retrait de " + e(m) + " sur " + env + le + "."; break;
@@ -4434,10 +4556,12 @@ function phraseOrdre() {
   return "📝 " + t;
 }
 function majRecap() {
-  const a = analyser();
-  if ($f("m-phrase")) { const ph = phraseOrdre(); $f("m-phrase").innerHTML = ph; $f("m-phrase").hidden = !ph; }
-  $f("m-recap").innerHTML = a.lignes.map(l => "<div><span>" + l[0] + "</span><b>" + l[1] + "</b></div>").join("");
-  $f("m-recap").hidden = !a.lignes.length;
+  if (etape === 1 || !$f("f-envoyer")) return;   // v17.78 (lot60) : « Quoi ? » n'a ni champ ni bouton
+  const a0 = analyser(), fin = etapeFinale(), a = fin ? a0 : analyserEtape(etape);
+  /* chaque étape ne montre que ses alertes : les chiffres (2), le versement et les espèces (3), tout à la relecture */
+  if (etape === 3) { a.msg = a.msg.filter(m => m[2] === "especes" || m[3] === "f-mapport"); a.doutes = (a.doutes || []).filter(([k]) => k === "montantApport"); }
+  if ($f("m-phrase")) { const ph = phraseOrdre(etape === 4 && F.type === "Achat"); $f("m-phrase").innerHTML = ph; $f("m-phrase").hidden = !ph; }
+  if ($f("m-recap")) { $f("m-recap").innerHTML = a.lignes.map(l => "<div><span>" + l[0] + "</span><b>" + l[1] + "</b></div>").join(""); $f("m-recap").hidden = !a.lignes.length; }
   const A = aidesCalcul();
   [["f-montant-calc", "montant"], ["f-qte-calc", "qte"], ["f-frais-calc", "frais"]].forEach(([id, k]) => { const el = $f(id); if (el) { el.textContent = A[k]; el.hidden = !A[k]; } });
   if ($f("f-details-res")) $f("f-details-res").textContent = resumeDetails();
@@ -4462,7 +4586,7 @@ function majRecap() {
   $f("m-alertes").innerHTML = al;
   const btn = $f("f-envoyer");
   btn.disabled = a.bloque;
-  btn.textContent = a.bloque ? a.manque : libBoutonOrdre(true);
+  btn.textContent = a.bloque ? a.manque : fin ? libBoutonOrdre(true) : "Suivant ›";
   btn.classList.toggle("manque", !!a.bloque);
   if ($f("tout-vendre")) $f("tout-vendre").addEventListener("click", () => { F.qte = saisieNombre(quantiteTenue(F.env, F.actif), 8); F.pilote = "qte"; F.qteTape = true; synchroniser(); $f("f-qte").value = F.qte; majRecap(); });
   if ($f("forcer")) $f("forcer").addEventListener("click", () => envoyerOrdre(true));
@@ -4507,6 +4631,7 @@ async function envoyerOrdre(forcer) {
   const rep = await posterFichier({ action: "ordre", ordres: ordres, forcer: !!forcer });
   if (M && M.ref) M.ref.journal = (M.ref.journal || []).filter(o => !o.envoi);
   if (rep.ok) { if (ordres.some(o => o.type === "Frais en parts" && /Linxea/i.test(o.enveloppe || ""))) stock.set(cleStock("fraisLx"), isoJour(new Date()));   // v17.77 : rappel des frais Linxea fait
+    delete brouillons[sauvegarde.type];
     if (window.SONS) SONS.succes(); toast(rep.message || "Ordre enregistré."); charger(true); suiteImport(sauvegarde); return; }
   if (rep.erreur === "cle") { cleRefusee(rep.message); toast("Clé refusée par ton fichier."); if (vueMoi()) rendre(); return; }
   if (rep.erreur === "incertain") { ordresIncertains = ordresIncertains.concat(enAttente.map(o => Object.assign({}, o, { envoi: true }))); toast("L'ordre a peut-être été enregistré : vérifie l'Historique avant de renvoyer."); charger(true); return; }   // v16.83 : jamais rouvert rempli (doublon)
@@ -6601,6 +6726,7 @@ window.Moi = {
   reporterRappel(k) { const pt = plusTard(); pt[k] = Date.now() + 864e5; stock.set(cleStock("plusTard"), JSON.stringify(pt)); signalerCloche(); if (vueMoi()) rendre(); },
   ouvrirMaj() { lireCache(); if (M) { reglageOuvert = null; ouvrirSaisieM(null, "maj"); } },
   saisir(partiel, onglet) { lireCache(); if (M && M.simple) ouvrirSoldes(); else ouvrirSaisieM(partiel, onglet); },
+  retourSaisie,
   rafraichir(frais) { if (configure()) { rendre(); charger(!!frais); } },
   testerVersus() { return configure() ? posterFichier({ action: "testerVersus" }) : Promise.resolve({ ok: false, message: "Aucun fichier relié à cet appareil." }); },
   connecter(url, k) {

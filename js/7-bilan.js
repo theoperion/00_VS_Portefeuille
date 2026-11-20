@@ -672,6 +672,7 @@ function fermerFenetreOuverte() {
   const ouverts = [...document.querySelectorAll(".voile")].filter(x => !x.hidden && getComputedStyle(x).display !== "none");
   if (!ouverts.length) return false;
   const v = ouverts[ouverts.length - 1], b = v.querySelector('[aria-label="Fermer"]');
+  if (v.id === "m-saisie" && window.Moi && window.Moi.retourSaisie && window.Moi.retourSaisie()) return true;   // v17.78 (lot60, Théo) : « + » de Moi revient d'abord à l'étape précédente
   if (b) b.click(); else if (v.id) v.hidden = true; else v.remove();
   return true;
 }
