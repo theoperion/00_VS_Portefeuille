@@ -771,6 +771,16 @@ function injecterStyle() {
 .moi .m-date-l input[type="date"] { flex: 1 1 auto; min-width: 0; width: auto; padding: 9px 8px; }
 .moi .m-pu { margin: -6px 0 0; font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .moi .m-pu-l { justify-self: start; font-size: 12.5px; margin-top: -10px; }
+/* v17.73 (lot57) · saisie dans l'ordre de l'avis d'opéré : 2 champs par ligne, contrôle ✓, erreur sous le champ, 1er champ manquant entouré */
+.moi .m-pu[hidden], .moi .m-err[hidden] { display: none; }
+.moi .m-pu.ok { color: var(--up); font-weight: 600; }
+.moi .m-pu.warn { color: var(--down); font-weight: 600; }
+.moi .m-err { display: block; font-size: 12px; line-height: 1.35; font-weight: 600; color: var(--down); }
+.moi .champ input.a-erreur { border-color: var(--down); box-shadow: 0 0 0 1px var(--down); }
+.moi .champ select.a-remplir, .moi .champ input.a-remplir { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.moi .m-avis2, .moi .m-ca { align-items: start; }
+.moi .m-avis2 > .champ > label, .moi .m-ca > .champ > label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.moi .m-avis2 .champ input { padding-inline: 10px; }
 .moi .m-pied { position: sticky; bottom: calc(-22px - env(safe-area-inset-bottom, 0px)); z-index: 2; display: grid; gap: 8px; margin: 0 -4px; padding: 10px 4px calc(12px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(to bottom, transparent, var(--bg) 14px); }
 .moi .m-pied .phrase-ordre { margin: 0; }
 .moi .m-pied .phrase-ordre[hidden] { display: none; }
@@ -3578,7 +3588,7 @@ function assurerFeuille() {
 const TUTO_ORDRE = [
   { ico: "🧾", t: "Saisir un ordre, en bref", html: true, p:
     "<b>1 ordre = 1 ligne</b>, recopiée de ton courtier à la date d'exécution.<br>" +
-    "• <b>Achat</b> : recopie ton avis d'opéré dans son ordre : date d'exécution, nombre de parts, montant <b>frais compris</b>, frais. Le prix par part se calcule tout seul. Le <b>versement</b> qui paie l'achat est coché : décoche si l'argent était déjà sur le compte.<br>" +
+    "• <b>Achat</b> : recopie ton avis d'opéré dans son ordre : date d'exécution, quantité, cours, courtage, montant net. <b>2 des 3</b> (quantité, cours, montant net) suffisent, le 3e se calcule ; les 3 tapés, l'appli vérifie (✓). La touche « Suivant » du clavier passe au champ d'après. Le <b>versement</b> qui paie l'achat est coché : décoche si l'argent était déjà sur le compte.<br>" +
     "• <b>Versement</b> : l'argent que tu mets sur un compte (ton montant habituel est proposé).<br>" +
     "• <b>Valeur AV</b> : la valeur d'une ligne d'assurance-vie, recopiée de ton relevé, à la date du relevé.<br>" +
     "• <b>Autres</b> : vente, retrait, dividende, frais… ; chaque type s'explique quand tu le choisis.<br>" +
@@ -3622,11 +3632,12 @@ function synchroniser() {
   if (!AVEC_QTE.includes(F.type)) return;
   F.arrondi = false;
   /* v17.34 · un montant n'est estimé que d'après un prix par part TAPÉ (jamais d'après un prix lui-même calculé) */
-  if (F.pilote === "qte" && F.prixTape && (F.montantAuto || !String(F.montant || "").trim())) {
+  /* v17.73 (lot57) : quantité ET cours tapés, dans n'importe quel ordre (avant : seulement cours puis quantité) */
+  if (F.qteTape && F.prixTape && (F.montantAuto || !String(F.montant || "").trim())) {
     const q = lireNombre(F.qte), p = lireNombre(F.prix), fr = lireNombre(F.frais) || 0;
     if (q > 0 && p > 0) { F.montant = saisieNombre(q * p - (isNaN(fr) ? 0 : fr) * typeInfo(F.type).tresorerie, 2); F.montantAuto = true; }
     else if (F.montantAuto) { F.montant = ""; F.montantAuto = false; }
-  } else if (F.montantAuto && !F.prixTape) { F.montant = ""; F.montantAuto = false; }
+  } else if (F.montantAuto && !(F.qteTape && F.prixTape)) { F.montant = ""; F.montantAuto = false; }
   const net = netOrdre();
   if (!(net > 0)) return;
   /* v17.34 (garde-fou G1) : un nombre ou un prix TAPÉ n'est jamais écrasé par un calcul ; si les deux sont tapés, analyser() vérifie la cohérence */
@@ -3722,19 +3733,32 @@ function dateProposee() {
 /* v16.97 · les petites phrases sous les champs calculés ou pré-remplis (toujours visibles, même « aides masquées ») */
 function aidesCalcul() {
   const out = { montant: "", qte: "", frais: "" };
-  if (F.montantAuto && AVEC_QTE.includes(F.type)) out.montant = "Estimé : nombre de parts × ton prix par part" + (lireNombre(F.frais) > 0 ? (F.type === "Vente" ? " − frais" : " + frais") : "") + ". Remplace-le par le montant exact de ton avis d'opéré.";
+  if (F.montantAuto && AVEC_QTE.includes(F.type)) out.montant = "Calculé : quantité × cours" + (lireNombre(F.frais) > 0 ? (F.type === "Vente" ? " − courtage" : " + courtage") : "") + ". Compare-le au montant net de ton avis (c'est lui qui compte).";
   else if (F.montantHab && F.type === "Apport") out.montant = "Ton versement habituel sur ce compte : change-le si besoin.";
-  if (AVEC_QTE.includes(F.type) && F.pilote === "prix" && !F.qteTape && lireNombre(F.qte) > 0) out.qte = "Calculé avec ton prix par part : recopie plutôt le nombre de ton avis d'opéré.";
+  if (AVEC_QTE.includes(F.type) && F.pilote === "prix" && !F.qteTape && lireNombre(F.qte) > 0) out.qte = "Calculé avec le cours : recopie plutôt la quantité de ton avis d'opéré.";
   if (F.fraisAuto && AVEC_FRAIS.includes(F.type)) out.frais = "Repris de ta dernière opération : à vérifier sur l'avis.";
   return out;
 }
 /** la ligne « soit … €/part », toujours affichée pour un achat ou une vente (contrôle de lecture de l'avis) */
 function lignePrixPart() {
   if (!AVEC_QTE.includes(F.type) || F.type === "Frais en parts") return "";
-  const net = netOrdre(), q = lireNombre(F.qte), p = lireNombre(F.prix);
-  if (F.prixTape && p > 0) return "Prix par part tapé : " + cours(p) + ".";
-  if (net > 0 && q > 0) return "Soit " + cours(net / q) + " par part" + (F.type === "Achat" ? " (hors frais)" : " (avant frais)") + " : compare avec ton avis.";
-  return "Le prix par part se calcule avec le nombre de parts et le montant.";
+  return controleAvis().t;
+}
+/* v17.73 (lot57, Conseil) · calcul croisé quantité × cours ± courtage = montant net : 2 des 3 suffisent, le 3e se calcule ;
+   les 3 tapés : contrôle au centime (✓ ou écart dit en clair ; au-delà de 1 % / 1 €, analyser() demande de confirmer) */
+function nbCours(v) { return nf(2, 4).format(v) + NB + "€"; }
+function controleAvis() {
+  const q = lireNombre(F.qte), p = lireNombre(F.prix), m = lireNombre(F.montant), fr = lireNombre(F.frais) || 0, t = typeInfo(F.type).tresorerie, discret = ETAT.discret === "oui";
+  const signe = F.type === "Vente" ? " − " : " + ", net = netOrdre();
+  if (F.qteTape && F.prixTape && q > 0 && p > 0 && m > 0 && !F.montantAuto) {
+    const attendu = q * p - (isNaN(fr) ? 0 : fr) * t, ec = m - attendu;
+    const calc = discret ? "Quantité × cours" + signe + "courtage" : qteBrute(q) + " × " + nbCours(p) + (fr > 0 ? signe + nf(2, 2).format(fr) + NB + "€" : "") + " = " + nf(2, 2).format(attendu) + NB + "€";
+    if (Math.abs(ec) < .015) return { t: "✓ " + calc + (discret ? " = montant net" : "") + " : ça colle avec ton avis.", c: "ok" };
+    return { t: "⚠ " + calc + (discret ? " ≠ montant net" : "") + " : écart de " + (discret ? "•••" : nf(2, 2).format(Math.abs(ec))) + NB + "€ avec le montant net. Vérifie le cours, le courtage et le montant.", c: "warn" };
+  }
+  if (F.montantAuto || (F.pilote === "prix" && !F.qteTape && q > 0)) return { t: "", c: "" };   // la phrase est déjà sous le champ calculé
+  if (net > 0 && q > 0) return { t: "Soit " + (discret ? cours(net / q) : nbCours(+(net / q).toFixed(4))) + " par part" + (F.type === "Achat" ? " (hors frais)" : " (avant frais)") + " : compare avec le cours de ton avis.", c: "" };
+  return { t: "Remplis 2 des 3 (quantité, cours, montant net) : le 3e se calcule. Les 3 : l'appli vérifie.", c: "" };
 }
 /** v17.34 (Conseil) : le relevé du Versus selon le profil ; fichier relié = envoyé tout seul (aucune saisie proposée ici) */
 function versusRelie() { return !!(M && M.versusLie === true); }
@@ -3772,17 +3796,23 @@ function rendreFormulaire() {
   const blocDate = '<div class="champ m-date"><label for="f-date">' + libDate + (DATE_OBLIG.includes(F.type) ? " · obligatoire" : "") + "</label><div class=\"m-date-l\">" +
     (DATE_OBLIG.includes(F.type) ? (prop ? puce(prop, "Le " + dateCourteIso(prop) + " ?", "f-date-prop") : "") : puce(auj, "Aujourd'hui", "f-date-auj") + puce(hier, "Hier", "f-date-hier")) +
     '<input id="f-date" type="date" aria-label="Autre date" value="' + esc(F.date) + '"></div>' +
-    (F.type === "Relevé" && prop && !F.date ? '<span class="aide">Proposé : ton relevé précédent + 1 mois. Touche-le pour confirmer, ou choisis la date de ton relevé.</span>' : "") + "</div>";
-  const champQte = avecQte ? '<div class="champ"><label for="f-qte">Nombre de parts' + (bourse ? " (avis d'opéré)" : "") + '</label><input id="f-qte" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.qte) + '" placeholder="0">' +
-    '<span class="calc" id="f-qte-calc"' + (A.qte ? "" : " hidden") + ">" + esc(A.qte) + "</span></div>" : "";
-  const champMontant = '<div class="champ"><label for="f-montant">' + esc(LIB_MONTANT[F.type] || "Montant") + ' (€)</label><input id="f-montant" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montant) + '" placeholder="0,00"' + (F.montantAuto || F.montantHab ? ' class="auto"' : "") + ">" +
-    '<span class="calc" id="f-montant-calc"' + (A.montant ? "" : " hidden") + ">" + esc(A.montant) + "</span>" +
+    (F.type === "Relevé" && prop && !F.date ? '<span class="aide">Proposé : ton relevé précédent + 1 mois. Touche-le pour confirmer, ou choisis la date de ton relevé.</span>' : "") + '<span class="m-err" id="f-date-err" role="alert" hidden></span></div>';
+  /* v17.73 (lot57, Conseil) · achat / vente : les champs dans l'ordre d'un avis d'opéré (quantité, cours, courtage, montant net), deux par ligne ;
+     touche « Suivant » du clavier (enterkeyhint) ; erreur d'un champ écrite sous ce champ (span .m-err) */
+  const nb = (id, val, ph, cls, kh) => '<input id="' + id + '" type="text" inputmode="decimal" enterkeyhint="' + (kh || "next") + '" autocomplete="off" value="' + esc(val) + '" placeholder="' + esc(ph) + '"' + (cls ? ' class="' + cls + '"' : "") + ' aria-describedby="' + id + '-err">';
+  const err = id => '<span class="m-err" id="' + id + '-err" role="alert" hidden></span>';
+  const champQte = avecQte ? '<div class="champ"><label for="f-qte">' + (bourse ? "Quantité (parts)" : "Nombre de parts") + "</label>" + nb("f-qte", F.qte, "0") +
+    '<span class="calc" id="f-qte-calc"' + (A.qte ? "" : " hidden") + ">" + esc(A.qte) + "</span>" + err("f-qte") + "</div>" : "";
+  const libM = bourse ? (F.type === "Achat" ? "Montant net débité" : "Montant net crédité") : LIB_MONTANT[F.type] || "Montant";
+  const champMontant = '<div class="champ"><label for="f-montant">' + esc(libM) + " (€)</label>" + nb("f-montant", F.montant, "0,00", F.montantAuto || F.montantHab ? "auto" : "", F.type === "Achat" && F.apport && detailsOuverts ? "next" : "done") +
+    '<span class="calc" id="f-montant-calc"' + (A.montant ? "" : " hidden") + ">" + esc(A.montant) + "</span>" + err("f-montant") +
     (hab > 0 ? '<button class="lien" type="button" id="f-hab">Reprendre ton versement habituel</button>' : "") + "</div>";
-  const champFrais = avecFrais ? '<div class="champ"><label for="f-frais">Dont frais (€)</label><input id="f-frais" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.frais) + '" placeholder="0,00"' + (F.fraisAuto ? ' class="auto"' : "") + ">" +
-    '<span class="calc" id="f-frais-calc"' + (A.frais ? "" : " hidden") + ">" + esc(A.frais) + '</span><span class="aide">Courtage de l\'avis (vide si aucun).</span></div>' : "";
-  const champPrix = avecQte && F.type !== "Frais en parts" ? '<p class="m-pu" id="f-pu">' + esc(lignePrixPart()) + "</p>" +
-    (F.prixVu || F.prixTape ? '<div class="champ"><label for="f-prix">Prix par part (€)</label><input id="f-prix" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.prixTape ? F.prix : "") + '" placeholder="0,00"><span class="aide">Si tu connais le prix mais pas le nombre de parts.</span></div>'
-      : '<button class="lien m-pu-l" type="button" id="f-prix-voir">Je connais le prix par part, pas le nombre de parts</button>') : "";
+  const champFrais = avecFrais ? '<div class="champ"><label for="f-frais">Courtage, frais (€)</label>' + nb("f-frais", F.frais, "0 si aucun", F.fraisAuto ? "auto" : "") +
+    '<span class="calc" id="f-frais-calc"' + (A.frais ? "" : " hidden") + ">" + esc(A.frais) + "</span>" + err("f-frais") + "</div>" : "";
+  const pcalc = () => { const n = netOrdre(), q = lireNombre(F.qte); return !F.prixTape && n > 0 && q > 0 && ETAT.discret !== "oui" ? "≈ " + nf(2, 4).format(n / q) : "0,00"; };
+  const champCours = bourse ? '<div class="champ"><label for="f-prix">Cours (€/part)</label>' + nb("f-prix", F.prixTape ? F.prix : "", pcalc()) + "</div>" : "";
+  const ctl = controleAvis();
+  const champPrix = avecQte && F.type !== "Frais en parts" ? '<p class="m-pu' + (ctl.c ? " " + ctl.c : "") + '" id="f-pu" aria-live="polite"' + (ctl.t ? "" : " hidden") + ">" + esc(ctl.t) + "</p>" : "";
   $f("m-pane-ordre").innerHTML =
     '<form class="form" id="m-form-ordre" novalidate>' +
       (menuOuvert ? '<div class="m-menu" role="menu">' +
@@ -3798,16 +3828,19 @@ function rendreFormulaire() {
       (!panneau ? "" : '<div class="m-autres" role="group" aria-label="Autres types">' + courantsAutres.map(chipT).join("") +
         (raresAutres.length ? '<span class="m-autres-t">Plus rares</span>' + raresAutres.map(chipT).join("") : "") + "</div>") +
       (AUTRES_TYPES[F.type] && PREF.aides !== false ? '<p class="info aide">ℹ️ <b>' + esc(AUTRES_TYPES[F.type].lib) + "</b> : " + esc(AUTRES_TYPES[F.type].d) + "</p>" : "") +
-      (bourse ? '<p class="info m-avis">📄 Recopie ton <b>avis d\'opéré</b> (souvent le lendemain), pas le cours de l\'appli.</p>' : "") +   // v17.27 (Théo)
+      (bourse ? '<p class="info m-avis">📄 Ton <b>avis d\'opéré</b> sous les yeux (pas le cours de l\'appli) : remplis de haut en bas, dans le même ordre.</p>' : "") +   // v17.27 (Théo) ; v17.73 : ordre de l'avis
+      /* v17.73 (lot57) : compte et actif sur une ligne ; « Nouvel actif » est le dernier choix de la liste */
+      (avecActif ? '<div class="rang m-ca">' : "") +
       '<div class="champ"><label for="fo-env">Compte</label><select id="fo-env">' +
         groupeEnv(ouvertes.filter(e => e.perimetre === "Portefeuille"), "Bourse") + groupeEnv(ouvertes.filter(e => e.perimetre !== "Portefeuille"), "Épargne") + "</select></div>" +
-      (avecActif ? '<div class="champ"><label for="f-actif">Actif</label><select id="f-actif"><option value="">Choisir l\'actif…</option>' +
+      (avecActif ? '<div class="champ"><label for="f-actif">Actif</label><select id="f-actif" aria-describedby="f-actif-err"><option value="">Choisir…</option>' +
         (tenus.length ? '<optgroup label="Détenus sur ce compte">' + tenus.map(optA).join("") + "</optgroup>" : "") +
-        '<optgroup label="Autres actifs">' + autresActifs.map(optA).join("") + "</optgroup></select>" +
-        (F.na ? htmlNouvelActif(F.na, true) : '<span class="aide">Actif absent de la liste ? <button class="lien" type="button" id="f-nouvel-actif">Ajouter un nouvel actif</button></span>') + "</div>" : "") +
+        '<optgroup label="Autres actifs">' + autresActifs.map(optA).join("") + "</optgroup>" +
+        (F.na ? "" : '<option value="__nouvel">＋ Nouvel actif…</option>') + "</select>" + err("f-actif") + "</div></div>" +
+        (F.na ? htmlNouvelActif(F.na, true) : "") : "") +
       blocDate +
-      /* v17.34 · règle de Théo du 20/11 : achat / vente = tout visible, dans l'ordre de l'avis d'opéré (date, parts, montant, frais) */
-      (avecQte ? champQte + champMontant : champMontant) + champFrais + champPrix +
+      /* v17.34 · règle de Théo du 20/11 : achat / vente = tout visible ; v17.73 : dans l'ordre de l'avis (quantité, cours, courtage, montant net) */
+      (bourse ? '<div class="rang m-avis2">' + champQte + champCours + '</div><div class="rang m-avis2">' + champFrais + champMontant + "</div>" : avecQte ? champQte + champMontant : champMontant) + (bourse ? "" : champFrais) + champPrix +
       (F.type === "Achat" ? '<label class="coche"><input type="checkbox" id="f-apport"' + (F.apport ? " checked" : "") + '> Avec le versement qui paie cet achat</label>' +
         '<span class="aide lie m-garde">' + (F.apport ? "L'argent viré est enregistré juste avant l'achat." : F.refait ? "Coche si tu as viré de l'argent pour cet achat (le versement d'origine est une ligne à part)." : "Décoché : l'argent était déjà sur le compte (vente, dividende, versement précédent).") + "</span>" +
         (F.apport ? '<details class="m-plus" id="f-vers"' + (detailsOuverts ? " open" : "") + '><summary>Montant du versement s\'il diffère <small id="f-details-res">' + esc(resumeDetails()) + "</small></summary><div class=\"m-plus-c\">" +
@@ -3837,7 +3870,7 @@ function rendreFormulaire() {
   $f("f-plus-types").addEventListener("click", () => { plusTypes = !panneau; if (!plusTypes && autreType) F = formulaire({ type: "Achat", date: DATE_OBLIG.includes(F.type) ? "" : F.date, env: F.env, envChoisi: F.envChoisi }); rendreFormulaire(); });
   if ($f("f-aides")) $f("f-aides").addEventListener("click", () => { PREF.aides = PREF.aides === false; garderPref(); majAides(); menuOuvert = false; rendreFormulaire(); });
   $f("fo-env").addEventListener("change", e => { F = formulaire({ type: F.type, date: F.date, dateChoisie: F.dateChoisie, env: e.target.value, envChoisi: true, montant: F.montantAuto || F.montantHab ? "" : F.montant, frais: F.fraisAuto ? "" : F.frais }); synchroniser(); rendreFormulaire(); });
-  if ($f("f-actif")) $f("f-actif").addEventListener("change", e => { F = formulaire({ type: F.type, date: F.date, dateChoisie: F.dateChoisie, env: F.env, envChoisi: F.envChoisi, actif: e.target.value, montant: F.montantAuto ? "" : F.montant, frais: F.frais, fraisAuto: F.fraisAuto, apport: F.apport, montantApport: F.montantApport, refait: F.refait, qte: F.qteTape ? F.qte : "", qteTape: F.qteTape, auto: false }); synchroniser(); rendreFormulaire(); });
+  if ($f("f-actif")) $f("f-actif").addEventListener("change", e => { if (e.target.value === "__nouvel") { e.target.value = F.actif; F.na = nouvelNA(F.env); rendreFormulaire(); setTimeout(() => { const el = $f("fn-code"); if (el) el.focus(); }, 30); return; } F = formulaire({ type: F.type, date: F.date, dateChoisie: F.dateChoisie, env: F.env, envChoisi: F.envChoisi, actif: e.target.value, montant: F.montantAuto ? "" : F.montant, frais: F.frais, fraisAuto: F.fraisAuto, apport: F.apport, montantApport: F.montantApport, refait: F.refait, qte: F.qteTape ? F.qte : "", qteTape: F.qteTape, auto: false }); synchroniser(); rendreFormulaire(); });
   if ($f("f-apport")) $f("f-apport").addEventListener("change", e => { F.apport = e.target.checked; F.okDoublon = false; rendreFormulaire(); });
   if ($f("f-hab")) $f("f-hab").addEventListener("click", () => { F.montant = saisieNombre(hab, 2); F.montantHab = true; rendreFormulaire(); });
   if ($f("f-prix-voir")) $f("f-prix-voir").addEventListener("click", () => { F.prixVu = true; rendreFormulaire(); setTimeout(() => { const el = $f("f-prix"); if (el) el.focus(); }, 30); });
@@ -3888,6 +3921,16 @@ function rendreFormulaire() {
   });
   if ($f("f-vider")) $f("f-vider").addEventListener("click", () => { F = formulaire({ type: F.type, env: F.env, envChoisi: F.envChoisi, auto: false }); nommerRaccourci = false; menuOuvert = false; rendreFormulaire(); });
   form.addEventListener("submit", e => { e.preventDefault(); envoyerOrdre(false); });
+  /* v17.73 (lot57) · touche Entrée / « Suivant » du clavier : champ suivant de l'avis ; après le dernier, le clavier se ferme et le bouton se montre
+     (jamais d'envoi depuis le clavier : on relit la phrase, puis on touche le bouton) */
+  form.addEventListener("keydown", e => {
+    if (e.key !== "Enter" || e.isComposing || !(e.target instanceof HTMLInputElement) || e.target.type === "checkbox") return;
+    e.preventDefault();
+    const ordre = ["f-qte", "f-prix", "f-frais", "f-montant", "f-mapport"].map(id => $f(id)).filter(el => el && el.offsetParent !== null && !el.closest("details:not([open])"));
+    const i = ordre.indexOf(e.target), suiv = i >= 0 ? ordre[i + 1] : null;
+    if (suiv) { suiv.focus(); if (suiv.select) suiv.select(); return; }
+    e.target.blur(); const b = $f("f-envoyer"); if (b) b.scrollIntoView({ block: "nearest" });
+  });
   majRecap();
 }
 function nomParDefaut() {
@@ -3927,19 +3970,20 @@ function analyser() {
   const r = refData(), t = typeInfo(F.type), discret = ETAT.discret === "oui";
   const q = lireNombre(F.qte), m = lireNombre(F.montant), frBrut = lireNombre(F.frais), fr = frBrut || 0;
   const msg = [], lignes = [];
-  let bloque = false, manque = "";
-  const manquer = t2 => { bloque = true; if (!manque) manque = t2; };
+  let bloque = false, manque = "", champ = "";
+  /* v17.73 (lot57) : le 1er champ qui manque est signalé sur le champ lui-même (et plus seulement dans le bouton) */
+  const manquer = (t2, id) => { bloque = true; if (!manque) { manque = t2; champ = id || ""; } };
   const eurD = v => discret ? "" : " (environ " + Math.round(v).toLocaleString("fr-FR") + " €)";
-  if (AVEC_ACTIF.includes(F.type) && !F.actif) manquer("Choisis l'actif");
-  if (!F.date) { manquer(F.type === "Relevé" ? "Indique la date de ton relevé" : F.type === "Solde initial" ? "Indique la date de début du suivi" : "Choisis la date"); if (DATE_OBLIG.includes(F.type)) msg.push(["info", F.type === "Relevé" ? "La date du relevé est obligatoire : c'est elle qui date la valeur (pas le jour où tu la saisis)." : "La date de début du suivi est obligatoire."]); }
+  if (AVEC_ACTIF.includes(F.type) && !F.actif) manquer("Choisis l'actif", "f-actif");
+  if (!F.date) { manquer(F.type === "Relevé" ? "Indique la date de ton relevé" : F.type === "Solde initial" ? "Indique la date de début du suivi" : "Choisis la date", "f-date"); if (DATE_OBLIG.includes(F.type)) msg.push(["info", F.type === "Relevé" ? "La date du relevé est obligatoire : c'est elle qui date la valeur (pas le jour où tu la saisis)." : "La date de début du suivi est obligatoire."]); }
   if (AVEC_QTE.includes(F.type)) {
-    if (q === null) manquer(F.type === "Achat" || F.type === "Vente" ? "Indique le nombre de parts de ton avis d'opéré" : "Indique le nombre de parts");
-    else if (isNaN(q) || q <= 0) { bloque = true; msg.push(["err", "La quantité doit être supérieure à 0."]); }
+    if (q === null) manquer(F.type === "Achat" || F.type === "Vente" ? "Indique la quantité de ton avis d'opéré" : "Indique le nombre de parts", "f-qte");
+    else if (isNaN(q) || q <= 0) { bloque = true; msg.push(["err", isNaN(q) ? "Quantité illisible : des chiffres et une virgule seulement." : "La quantité doit être supérieure à 0.", "", "f-qte"]); }
   }
-  if (m === null) manquer(F.type === "Achat" ? "Indique le montant débité de ton avis" : F.type === "Vente" ? "Indique le montant crédité de ton avis" : F.type === "Relevé" ? "Indique la valeur de ton relevé" : "Indique le montant");
-  else if (isNaN(m)) { bloque = true; msg.push(["err", "Montant illisible."]); }
-  else if (F.type !== "Ajustement espèces" && m <= 0) { bloque = true; msg.push(["err", "Le montant doit être positif : c'est le type qui donne le sens."]); }
-  else if (F.type === "Ajustement espèces" && m === 0) { bloque = true; msg.push(["err", "Une correction de 0 € ne change rien : indique l'écart (négatif si sortie)."]); }   // G7
+  if (m === null) manquer(F.type === "Achat" ? "Indique le montant net débité de ton avis" : F.type === "Vente" ? "Indique le montant net crédité de ton avis" : F.type === "Relevé" ? "Indique la valeur de ton relevé" : "Indique le montant", "f-montant");
+  else if (isNaN(m)) { bloque = true; msg.push(["err", "Montant illisible : des chiffres et une virgule seulement (ex. 1519,99).", "", "f-montant"]); }
+  else if (F.type !== "Ajustement espèces" && m <= 0) { bloque = true; msg.push(["err", "Le montant doit être positif : c'est le type qui donne le sens.", "", "f-montant"]); }
+  else if (F.type === "Ajustement espèces" && m === 0) { bloque = true; msg.push(["err", "Une correction de 0 € ne change rien : indique l'écart (négatif si sortie).", "", "f-montant"]); }   // G7
   /* v16.78 · relevé d'assurance-vie : un montant bien plus petit que la ligne ressemble au prix d'UNE part (ex. 99,96 € au lieu de ~15 850 €) */
   if (F.type === "Relevé" && F.actif && m > 0 && M && M.histoAV) {
     let ref = 0; (M.histoAV.ordres || []).forEach(o => { if (o[2] !== F.actif) return; if (o[1] === "Relevé" && o[3] > ref * .2) ref = o[3]; else if (o[1] === "Achat") ref += o[3]; else if (o[1] === "Vente") ref -= o[3]; });
@@ -3959,24 +4003,24 @@ function analyser() {
   if (doutes.length) { bloque = true; if (!manque) manque = "Réponds à la question sur le montant"; }
   /* G5 · frais : jamais négatifs (le fichier les refuserait), signalés au-delà de 5 % du montant */
   if (AVEC_FRAIS.includes(F.type)) {
-    if (isNaN(frBrut) || fr < 0 || (fr && m > 0 && fr > m)) { bloque = true; msg.push(["err", fr < 0 ? "Les frais ne peuvent pas être négatifs : recopie-les sans le signe moins." : "Les frais doivent être positifs et inférieurs au montant."]); }
+    if (isNaN(frBrut) || fr < 0 || (fr && m > 0 && fr > m)) { bloque = true; msg.push(["err", fr < 0 ? "Les frais ne peuvent pas être négatifs : recopie-les sans le signe moins." : "Les frais doivent être positifs et inférieurs au montant.", "", "f-frais"]); }
     else if (fr > 0 && m > 0 && fr > m * .05) msg.push(["warn", "Frais de plus de 5 % du montant : vérifie-les sur ton avis d'opéré."]);
   }
   const tenu = F.actif ? quantiteTenue(F.env, F.actif) : 0;
   const c = F.actif ? r.cours[F.actif] : null;
   if ((F.type === "Vente" || F.type === "Frais en parts") && F.actif) {
     lignes.push(["Détenu aujourd'hui", qteBrute(tenu) + " " + esc(F.actif) + (tenu > 0 && F.type === "Vente" ? ' <button class="mini-btn" type="button" id="tout-vendre">Tout</button>' : "")]);
-    if (q > tenu + 1e-9) { bloque = true; msg.push(["err", "Tu ne détiens que " + qteBrute(tenu) + " " + F.actif + " dans " + F.env + "."]); }
+    if (q > tenu + 1e-9) { bloque = true; msg.push(["err", "Tu ne détiens que " + qteBrute(tenu) + " " + F.actif + " dans " + F.env + ".", "", "f-qte"]); }
   }
   /* G6 · parts à virgule sur un PEA (ou une ligne en parts entières) : jamais d'arrondi automatique, un simple avertissement */
   if (AVEC_QTE.includes(F.type) && F.type !== "Frais en parts" && q > 0 && Math.abs(q - Math.round(q)) > 1e-9 && partsEntieres())
     msg.push(["warn", "Sur un PEA les parts sont entières : recopie le nombre de ton avis d'opéré."]);
   if ((F.type === "Achat" || F.type === "Vente") && q > 0 && m > 0) {
     const pu = (m + fr * t.tresorerie) / q, p = lireNombre(F.prix);
-    /* G1 · prix ET nombre de parts tapés : montant ≈ parts × prix ± frais, à 1 % (ou 1 €) près, sinon on demande */
+    /* G1 · prix ET nombre de parts tapés : montant ≈ parts × prix ± frais, à 2 centimes près (Théo, 20/11 : l'avis Fortuneo tombe juste), sinon on demande */
     if (F.prixTape && F.qteTape && p > 0) {
       const attendu = q * p - fr * t.tresorerie;
-      if (Math.abs(attendu - m) > Math.max(m * .01, 1) && !F.okCoherence) { bloque = true; if (!manque) manque = "Vérifie le montant, les parts et le prix";
+      if (Math.abs(attendu - m) > .02 && !F.okCoherence) { bloque = true; if (!manque) manque = "Vérifie le montant, les parts et le prix";
         msg.push(["conf", "Montant, parts et prix ne collent pas : " + (discret ? "" : qteBrute(q) + " × " + nf(2, 4).format(p) + " € " + (F.type === "Achat" ? "+" : "−") + " frais = " + nf(2, 2).format(attendu) + " €, et non " + nf(2, 2).format(m) + " €. ") + "Corrige ou confirme.", "coherence"]); }
     }
     /* écart au cours : seulement si le nombre de parts a été TAPÉ (sinon un « écart 0 % » rassurerait à tort) */
@@ -4009,7 +4053,7 @@ function analyser() {
   if (dbl && !F.okDoublon) { bloque = true; if (!manque) manque = "Confirme : déjà enregistré ?";
     msg.push(["conf", "Déjà enregistré le " + frDate(String(dbl.date).slice(0, 10)) + " : " + libType(dbl.type) + (dbl.actif ? " " + dbl.actif : "") + (discret ? "" : " de " + nf(0, 2).format(dbl.montant) + " €") + (dbl.envoi ? " (envoi en cours)" : "") + ". Doublon ?", "doublon"]); }
   if (bloque && !manque) manque = msg.some(x => x[0] === "err") ? "Corrige l'alerte ci-dessus" : "Complète le formulaire";
-  return { bloque, msg, lignes, doutes, manque };
+  return { bloque, msg, lignes, doutes, manque, champ };
 }
 /** La phrase de relecture : l'ordre dit en une phrase courte et naturelle, pour repérer une erreur d'un coup d'œil (v16.92) */
 function phraseOrdre() {
@@ -4022,12 +4066,14 @@ function phraseOrdre() {
   const quand = F.date ? dateCourteIso(F.date) : "date à choisir", le = ", le " + B(quand);
   const actifs = refData().actifs || [], a = actifs.find(x => x.code === F.actif), nomA = esc(a && a.nom && a.nom.length <= 22 ? a.nom : F.actif || "");
   const de = n => (/^[aeiouyhàâéèêîôû]/i.test(n) ? "d'" : "de ") + B(n);
-  const titres = AVEC_QTE.includes(F.type) && q > 0 ? de(qteBrute(q) + " " + esc(F.actif)).replace(/^d'/, "de ") : F.actif ? de(nomA) : "";
+  let titres = AVEC_QTE.includes(F.type) && q > 0 ? de(qteBrute(q) + " " + esc(F.actif)).replace(/^d'/, "de ") : F.actif ? de(nomA) : "";
   const frais = !AVEC_FRAIS.includes(F.type) || isNaN(fr) || fr < 0 ? "" : fr > 0 ? " (dont " + e(fr) + " de frais" + (F.fraisAuto ? ", comme la dernière fois : à vérifier" : "") + ")" : " (sans frais)";
   let t;
   switch (F.type) {
-    case "Achat": t = (F.apport ? B("+ un versement de " + (discret ? "•••" + NB + "€" : nf(Number.isInteger(+(ma > 0 ? ma : m).toFixed(2)) ? 0 : 2, 2).format(ma > 0 ? ma : m) + NB + "€")) + ", puis achat " : "Achat ") + titres + " pour " + e(m) + frais + " sur " + env + le + "." + (F.apport ? "" : " Sans versement (argent déjà sur le compte)."); break;
-    case "Vente": t = "Vente " + titres + " pour " + e(m) + frais + " sur " + env + le + "."; break;
+    case "Achat": case "Vente": { const p = lireNombre(F.prix), n = netOrdre(), pu = F.prixTape && p > 0 ? p : n > 0 && q > 0 ? +(n / q).toFixed(4) : 0;   // v17.73 (lot57) : le cours dans la phrase
+      if (pu > 0 && q > 0 && !discret) titres += " à " + B(nbCours(pu)); }
+      if (F.type === "Vente") { t = "Vente " + titres + " pour " + e(m) + frais + " sur " + env + le + "."; break; }
+      t = (F.apport ? B("+ un versement de " + (discret ? "•••" + NB + "€" : nf(Number.isInteger(+(ma > 0 ? ma : m).toFixed(2)) ? 0 : 2, 2).format(ma > 0 ? ma : m) + NB + "€")) + ", puis achat " : "Achat ") + titres + " pour " + e(m) + frais + " sur " + env + le + "." + (F.apport ? "" : " Sans versement (argent déjà sur le compte)."); break;
     case "Apport": t = "Versement de " + e(m) + " sur " + env + le + "."; break;
     case "Retrait": t = "Retrait de " + e(m) + " sur " + env + le + "."; break;
     case "Intérêts": t = "Dividende ou intérêts de " + e(m) + " reçus sur " + env + le + "."; break;
@@ -4050,9 +4096,17 @@ function majRecap() {
   const A = aidesCalcul();
   [["f-montant-calc", "montant"], ["f-qte-calc", "qte"], ["f-frais-calc", "frais"]].forEach(([id, k]) => { const el = $f(id); if (el) { el.textContent = A[k]; el.hidden = !A[k]; } });
   if ($f("f-details-res")) $f("f-details-res").textContent = resumeDetails();
-  if ($f("f-pu")) $f("f-pu").textContent = lignePrixPart();
   if ((a.doutes || []).some(([k]) => k === "montantApport") && $f("f-vers") && !$f("f-vers").open) { $f("f-vers").open = true; detailsOuverts = true; }
-  let al = a.msg.map(m => m[0] === "conf"
+  /* v17.73 (lot57) : une erreur qui concerne un champ s'écrit sous ce champ ; le 1er champ qui manque est entouré (seulement après une 1re saisie) */
+  const sousChamp = m => m[3] && $f(m[3] + "-err");
+  document.querySelectorAll("#m-form-ordre .m-err").forEach(el => { const m = a.msg.find(x => x[3] && x[3] + "-err" === el.id), c = $f(el.id.slice(0, -4));
+    el.textContent = m ? m[1] : ""; el.hidden = !m; if (c) { c.classList.toggle("a-erreur", !!m); if (m) c.setAttribute("aria-invalid", "true"); else c.removeAttribute("aria-invalid"); } });
+  document.querySelectorAll("#m-form-ordre .a-remplir").forEach(el => el.classList.remove("a-remplir"));
+  const entame = ["qte", "montant", "prix", "frais"].some(k => String(F[k] || "").trim()) || F.dateChoisie;
+  if (a.champ && entame && $f(a.champ)) $f(a.champ).classList.add("a-remplir");
+  if ($f("f-prix") && !F.prixTape) { const n = netOrdre(), q = lireNombre(F.qte); $f("f-prix").placeholder = n > 0 && q > 0 && ETAT.discret !== "oui" ? "≈ " + nf(2, 4).format(n / q) : "0,00"; }
+  if ($f("f-pu")) { const c = controleAvis(); $f("f-pu").textContent = c.t; $f("f-pu").hidden = !c.t; $f("f-pu").className = "m-pu" + (c.c ? " " + c.c : ""); }
+  let al = a.msg.filter(m => !sousChamp(m)).map(m => m[0] === "conf"
     ? '<div class="alerte warn">' + esc(m[1]) + '<br><button class="btn" type="button" data-conf="' + m[2] + '">' + (m[2] === "doublon" ? "Enregistrer quand même" : "C'est bien mon avis") + '</button> <button class="btn ghost" type="button" data-corr="' + m[2] + '">Corriger</button></div>'
     : '<div class="alerte ' + m[0] + '">' + esc(m[1]) + "</div>").join("");
   (a.doutes || []).forEach(([k]) => { const t = String(F[k]).trim(), l = lectureMilliers(t);
