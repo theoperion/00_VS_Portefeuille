@@ -1347,13 +1347,22 @@ function totalHisto(p) {
     pc = (1 + pc) * (1 + (s.jourPct || 0)) - 1; e += s.jour; }
   return { e, p: pc };
 }
+/** v17.85 (Théo) : lignes dont Google Finance n'a pas l'historique (EPA:GOLD) → variation de la période d'après les clôtures du marché équivalent (Marchés du Versus) */
+const PROXY_LIGNE = { GOLD: "Or" };   // Amundi Physical Gold (€, non couvert) ≈ « Or non couvert »
+function proxyPer(code, per) {
+  try { const nom = PROXY_LIGNE[code], m = nom && marchesMoi(); if (!m) return null;
+    const x = (m.jour || []).find(y => y.nom === nom); if (!x) return null;
+    const r = varMk(x, per); return typeof r.v === "number" && isFinite(r.v) ? r.v : null; } catch (e) { return null; }
+}
 function mSeance(m, cinq) {
   const perf = m.perfLignes || {}, c = JSON.parse(JSON.stringify(m)); c.__seance = true; let tot = 0;
   (c.groupes || []).forEach(g => {
     let j = 0;
     g.lignes.forEach(l => { if (l.especes) return; const p = perf[g.env + "|" + l.code];
       const v = p ? (cinq ? p[PERIODES_J[cinq][0]] : p.seance) : null;   // 5 j : « 1 semaine » de Perf lignes (cours d'il y a 5 séances)
-      if (typeof v === "number") { l.pct = v; l.jour = (l.valeur || 0) * v / (1 + v); } else if (cinq) { l.pct = null; l.jour = 0; }
+      let w = v;
+      if (typeof w !== "number" && cinq) w = proxyPer(l.code, cinq);   // v17.85 (Théo) : GOLD sans historique Google → l'historique de la case « Or non couvert »
+      if (typeof w === "number") { l.pct = w; l.jour = (l.valeur || 0) * w / (1 + w); } else if (cinq) { l.pct = null; l.jour = 0; }
       j += l.jour || 0; });
     if (g.total) { g.total.jour = j; const base = (g.total.valeur || 0) - j; g.total.pct = base ? j / base : 0; }
     tot += j;
