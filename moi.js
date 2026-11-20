@@ -517,6 +517,11 @@ function injecterStyle() {
 .moi .m-ec3 .m-ec-t { padding: 9px 9px; } .moi .m-ec3 .m-ec-t .k { font-size: 10px; letter-spacing: .04em; } .moi .m-ec3 .m-ec-t b { font-size: 17px; } .moi .m-ec3 .m-ec-t small { font-size: 11px; }
 .moi .m-ec-t b.up { color: var(--up); } .moi .m-ec-t b.down { color: var(--down); } .moi .m-ec-t.ok { border-color: color-mix(in srgb, var(--up) 45%, var(--rule)); }
 .moi .m-seg3 button { padding: 9px 4px; font-size: 12.5px; line-height: 1.15; }
+/* lot 35 : un seul choix de compte en haut de Stats */
+.moi .m-cpt { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; background: var(--panel); border: 1px solid var(--rule); }
+.moi .m-cpt > .k { flex: none; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+.moi .m-cpt .chips { gap: 5px; min-width: 0; } .moi .m-cpt .chip { padding: 6px 10px; font-size: 12.5px; }
+.moi .m-seul { padding: 6px 0 2px; }
 .moi .m-ecart { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--rule); }
 .moi .m-ecart > b { font: italic 800 28px/1 var(--f-display); white-space: nowrap; color: var(--ink); } .moi .m-ecart > b.up { color: var(--up); } .moi .m-ecart > b.down { color: var(--down); }
 .moi .m-ecart > span { display: grid; gap: 3px; font-size: 13px; font-weight: 600; color: var(--ink); min-width: 0; } .moi .m-ecart small { font: 500 11.5px/1.3 var(--f-num); color: var(--ink-3); overflow-wrap: anywhere; }
@@ -1917,6 +1922,35 @@ function seriesDisponibles() {
 }
 /** Valeur et apports : tout le portefeuille, ou une enveloppe quand le fichier en donne le détail */
 function seriesValeur() { const cols = (M.historique || {}).cols || []; return seriesDisponibles().map(([k, l]) => k === "ip" ? ["", "Tout"] : [k, l]).filter(([k]) => !k || cols.includes("v_" + k)); }
+/* lot 35 (Théo) : UN seul choix de compte en haut de Stats (Tout · PEA · Assurance-vie · CTO · Crypto), appliqué à TOUS les blocs,
+   mémorisé sur l'appareil (PREF.compte, "" = Tout). Seuls les comptes de bourse que la personne possède sont proposés.
+   Un bloc qui ne peut pas être calculé pour un compte seul (détail absent du fichier) le dit en une ligne au lieu d'afficher un chiffre faux. */
+const COMPTES_S = [["pea", /PEA/, "PEA"], ["av", /^AV|Assurance/i, "Assurance-vie"], ["cto", /CTO/, "CTO"], ["cr", /Crypto/i, "Crypto"]];
+function comptesStats() {
+  const envs = (M.enveloppes || []).filter(e => e.type === "env"), out = [];
+  COMPTES_S.forEach(([k, re, lib]) => { const e = envs.find(x => re.test(x.nom || "")); if (e) out.push({ k, lib, nom: e.nom, env: e }); });
+  return out;
+}
+/** Compte choisi (null = Tout). Avec un seul compte de bourse, pas de choix : Tout. */
+function compteS() { const l = comptesStats(); return l.length > 1 ? l.find(c => c.k === PREF.compte) || null : null; }
+/** Colonnes de l'historique pour le compte : indice de performance, valeur, versé (−1 si le fichier ne les donne pas) */
+function colsS(c) {
+  const cols = (M.historique || {}).cols || [];
+  return c ? { i: cols.indexOf(c.k), v: cols.indexOf("v_" + c.k), a: cols.indexOf("a_" + c.k) } : { i: cols.indexOf("ip"), v: cols.indexOf("v"), a: cols.indexOf("a") };
+}
+/** Relevés du compte : Tout = tous ; un compte = à partir de son premier relevé non vide (pas de mois à 0 avant son ouverture) */
+function rowsS(c) {
+  const h = M.historique, rows = h && h.rows || [];
+  if (!c) return rows;
+  const k = colsS(c), j = k.v >= 0 ? k.v : k.i, i0 = j < 0 ? -1 : rows.findIndex(r => r[j] > 0);
+  return i0 < 0 ? [] : rows.slice(i0);
+}
+const seulTout = quoi => '<p class="info m-seul">' + quoi + " : disponible pour Tout seulement (ton fichier ne donne pas ce détail par compte).</p>";
+function choixCompte() {
+  const l = comptesStats(); if (l.length < 2) return "";
+  const c = compteS(), b = (k, lib) => '<button class="chip" type="button" data-m-compte="' + k + '" aria-pressed="' + ((c ? c.k : "") === k) + '">' + esc(lib) + "</button>";
+  return '<div class="m-cpt" role="group" aria-label="Compte affiché dans toutes les stats"><span class="k">Compte</span><div class="chips">' + b("", "Tout") + l.map(x => b(x.k, x.lib)).join("") + "</div></div>";
+}
 function fenetre(rows, per) {
   if (!rows.length || per === "tout") return rows;
   const fin = dateNum(rows[rows.length - 1][0]);
@@ -1934,22 +1968,21 @@ const MODES_C = [["base", "Contre le marché"], ["gain", "Gain cumulé (€)"], 
 function modeCourbe() { return MODES_C.some(x => x[0] === PREF.mode) ? PREF.mode : "base"; }
 function htmlStats() {
   const h = M.historique, envs = M.enveloppes || [];
-  const mode = modeCourbe(), per = PREF.per, choix = seriesDisponibles();
+  const mode = modeCourbe(), per = PREF.per, c = compteS();
   const derniere = h && h.rows && h.rows.length ? dateNum(h.rows[h.rows.length - 1][0]) : null;
-  const chipsEnv = mode === "base" ? (choix.length > 1 ? '<div class="chips" role="group" aria-label="Ce que tu compares">' + choix.map(([k, l]) => '<button class="chip" type="button" data-m-serie="' + k + '" aria-pressed="' + (PREF.serie === k) + '">' + esc(l) + "</button>").join("") + "</div>" : "")
-    : (seriesValeur().length > 1 ? '<div class="chips" role="group" aria-label="Enveloppe">' + seriesValeur().map(([k, l]) => '<button class="chip" type="button" data-m-envv="' + k + '" aria-pressed="' + ((PREF.envV || "") === k) + '">' + esc(l) + "</button>").join("") + "</div>" : "");
   const courbe = h && h.rows && h.rows.length > 1 ?
-    '<div class="seg m-seg3" role="group" aria-label="Type de courbe">' + MODES_C.map(([k, l]) => '<button type="button" data-m-mode="' + k + '" aria-pressed="' + (mode === k) + '">' + l + "</button>").join("") + "</div>" + chipsEnv +
+    '<div class="seg m-seg3" role="group" aria-label="Type de courbe">' + MODES_C.map(([k, l]) => '<button type="button" data-m-mode="' + k + '" aria-pressed="' + (mode === k) + '">' + l + "</button>").join("") + "</div>" +
     '<div class="chips" role="group" aria-label="Période">' + PERIODES_M.map(([k, l]) => '<button class="chip" type="button" data-m-per="' + k + '" aria-pressed="' + (per === k) + '">' + l + "</button>").join("") + "</div>" +
     '<div class="m-ecart" id="m-ecart" hidden></div><div id="m-courbe-box"></div><p class="resume" id="m-resume"></p>' : '<div class="vide">Pas encore assez de relevés pour tracer une courbe.</div>';
-  return blocMoisEnCours() +
-    '<div><h2 class="sec">Ma bourse <small>' + (M.simple ? "fin de mois" : "au jour le jour") + (derniere ? " · relevé du " + dateLongue(derniere) : "") + "</small></h2></div>" + courbe +
+  return choixCompte() + blocMoisEnCours() +
+    '<div><h2 class="sec">' + (c ? esc(c.lib) : "Ma bourse") + ' <small>' + (M.simple ? "fin de mois" : "au jour le jour") + (derniere ? " · relevé du " + dateLongue(derniere) : "") + "</small></h2></div>" + courbe +
     blocMois() + (M.simple ? "" : blocRisque()) + blocJours() + blocRepartition() + blocPerformances(envs) + blocFrais();
 }
 /* Performances : repliées, 4 colonnes (1 mois, depuis janv., 1 an, depuis le début) ; 1 semaine, 6 mois, MWR et volatilité au toucher d'une ligne */
 function blocPerformances(envs) {
   if (!envs.some(e => ["m1", "ytd", "a1", "twr"].some(k => ok(e[k])))) return "";   // rien à montrer (profil simple sans bourse)
-  const pf = envs.find(e => e.type === "total") || envs[0] || {};
+  const cS = compteS(); if (cS) envs = [cS.env].concat(envs.filter(e => e.type === "indice"));   // lot 35 : le compte choisi face aux indices
+  const pf = cS ? cS.env : envs.find(e => e.type === "total") || envs[0] || {};
   const resume = ["m1", "ytd", "twr"].map((k, i) => '<span>' + ["1 mois", "janv.", "début"][i] + ' <b class="' + sens(pf[k]) + '">' + pct(pf[k]) + "</b></span>").join("");
   const c = (e, k) => '<td class="' + (e.type === "indice" ? "" : sens(e[k])) + '">' + pct(e[k]) + "</td>";
   const ligne = (e, i) => '<tr class="m-pf-r' + (e.type === "indice" ? " indice" : "") + '" tabindex="0" role="button" aria-expanded="false" data-pf="' + i + '"><td>' + esc(e.nom) + ' <i class="m-pf-v" aria-hidden="true">▾</i></td>' + ["m1", "ytd", "a1", "twr"].map(k => c(e, k)).join("") + "</tr>" +
@@ -1962,18 +1995,21 @@ function blocPerformances(envs) {
 function dessinerCourbe() {
   const zone = document.getElementById("m-courbe-box"); if (!zone) return;
   const h = M.historique; if (!h || !h.rows || h.rows.length < 2) return;
-  const C = n => h.cols.indexOf(n), mode = modeCourbe();
-  const rows = fenetre(h.rows, PREF.per), mc = couleurMoi(), cb = defObj("courbe", actifM("courbe")) || COURBES_M[0];
+  const C = n => h.cols.indexOf(n), mode = modeCourbe(), cS = compteS(), kS = colsS(cS);
+  const vide = t => { zone.innerHTML = t; const r = document.getElementById("m-resume"); if (r) r.innerHTML = ""; };
+  if (cS && (mode === "base" ? kS.i < 0 : kS.v < 0 || kS.a < 0)) return vide(seulTout(mode === "base" ? "Courbe contre le marché" : mode === "gain" ? "Gain cumulé" : "Valeur et apports"));
+  const rS = rowsS(cS); if (rS.length < 2) return vide('<div class="vide">Pas encore assez de relevés pour ce compte.</div>');
+  const rows = fenetre(rS, PREF.per), mc = couleurMoi(), cb = defObj("courbe", actifM("courbe")) || COURBES_M[0];
   let series;
-  const ev = seriesValeur().find(x => x[0] && x[0] === PREF.envV), kv = ev ? "_" + ev[0] : "";
+  const ev = cS ? [cS.k, cS.lib] : null, kv = ev ? "_" + ev[0] : "";
   if (mode === "valeur") {
     series = [{ nom: ev ? "Valeur · " + ev[1] : "Valeur", k: C(kv ? "v" + kv : "v"), c: cb[2] || mc, w: 2.2, aire: true, fx: cb[3] }, { nom: ev ? "Versé · " + ev[1] : "Apports cumulés", k: C(kv ? "a" + kv : "a"), c: "var(--idx)", w: 1.6, marche: true, dash: true }];
   } else if (mode === "gain") {
     const kV = C(kv ? "v" + kv : "v"), kA = C(kv ? "a" + kv : "a");
     series = kV >= 0 && kA >= 0 ? [{ nom: ev ? "Gain · " + ev[1] : "Gain cumulé", k: kV, kA, c: cb[2] || mc, w: 2.2, fx: cb[3], gain: true }] : [];
   } else {
-    const ch = seriesDisponibles().find(x => x[0] === PREF.serie) || ["ip", "Portefeuille"];
-    series = [{ nom: ch[1], k: C(ch[0]) >= 0 ? C(ch[0]) : C("ip"), c: cb[2] || mc, w: 2.2, base: true, fx: cb[3] },
+    const ch = cS ? [cS.k, cS.lib] : ["ip", "Portefeuille"];
+    series = [{ nom: ch[1], k: C(ch[0]), c: cb[2] || mc, w: 2.2, base: true, fx: cb[3] },
       { nom: "S&P 500 (en €, ETF)", k: C("isp"), c: "var(--idx)", w: 1.6, base: true, dash: "5 4" },
       { nom: "Nasdaq-100", k: C("inq"), c: "var(--gold)", w: 1.6, base: true, dash: "1.5 3.5" }];
   }
@@ -2054,14 +2090,24 @@ function risqueAn(rows, k) {
   const rf = ((dVersus() || {}).marche || {}).tauxSansRisque || 0;
   return { vol: et, sharpe: et > 0 ? (moy * 252 - rf) / et : null };
 }
+/** Part des séances en hausse sur la dernière année (indice de performance du compte : sans l'effet des versements) */
+function hausseAn(rows, k) {
+  if (!rows.length) return null;
+  const deb = rows[rows.length - 1][0] - 10000; let n = 0, up = 0;
+  for (let i = 1; i < rows.length; i++) if (rows[i - 1][0] >= deb && rows[i - 1][k] > 0 && rows[i][k] > 0) { n++; if (rows[i][k] > rows[i - 1][k]) up++; }
+  return n >= 20 ? up / n : null;
+}
 function blocRisque() {
   const h = M.historique; if (!h || !h.rows || h.rows.length < 2) return "";
-  const k = h.cols.indexOf("ip"); if (k < 0) return "";
-  const B = baisses(h.rows, k), R = h.rows, dc = i => dateCourte(dateNum(R[i][0])) + "/" + String(R[i][0]).slice(2, 4);
-  const envs = M.enveloppes || [], pf = envs.find(e => e.type === "total") || {}, idx = envs.find(e => e.type === "indice" && /S&P/i.test(e.nom || "")) || {};
+  const cS = compteS(), k = colsS(cS).i;
+  if (k < 0) return cS ? acc("m-risque", "Risque", "au jour le jour", seulTout("Risque"), true) : "";
+  const R = rowsS(cS); if (R.length < 2) return "";
+  const B = baisses(R, k), dc = i => dateCourte(dateNum(R[i][0])) + "/" + String(R[i][0]).slice(2, 4);
+  const envs = M.enveloppes || [], pf = cS ? cS.env : envs.find(e => e.type === "total") || {}, idx = envs.find(e => e.type === "indice" && /S&P/i.test(e.nom || "")) || {};
   /* Sharpe et volatilité du S&P sur la même année : ceux de ton fichier quand il les donne ; sinon les deux recalculés ici, de la même façon */
   let moiSh = pf.sharpe, spSh = idx.sharpe, moiVol = pf.vol, spVol = idx.vol, calc = false;
-  if (!ok(spSh)) { const a = risqueAn(R, k), b = risqueAn(R, h.cols.indexOf("isp")); if (a && b) { moiSh = a.sharpe; spSh = b.sharpe; moiVol = a.vol; spVol = b.vol; calc = true; } }
+  if (!ok(spSh) || (cS && !(ok(moiSh) && ok(moiVol)))) { const a = risqueAn(R, k), b = risqueAn(R, h.cols.indexOf("isp")); if (a && b) { moiSh = a.sharpe; spSh = b.sharpe; moiVol = a.vol; spVol = b.vol; calc = true; } }
+  const hausse = cS && !ok(pf.hausse) ? hausseAn(R, k) : pf.hausse;
   const auHaut = B.actuel > -0.0005;
   const retour = B.iCreux < 0 ? null : B.iRetour >= 0 ? duree(R[B.iCreux][0], R[B.iRetour][0]) : null;
   const phrase = (auHaut ? "Tu es <b>à ton plus haut</b>" : "Tu es à <b class=\"down\">" + pct(B.actuel) + "</b> de ton plus haut") +
@@ -2076,17 +2122,18 @@ function blocRisque() {
       tuile("Volatilité 1 an", pct(moiVol, 1, false), "", ok(spVol) ? "S&amp;P 500 : " + pct(spVol, 1, false) : "écart type annualisé", "La volatilité mesure l'ampleur des secousses : plus elle est haute, plus ta valeur monte et descend fort d'un jour à l'autre. Elle se lit en comparaison avec le S&P 500.") +
       tuile("Sharpe 1 an", ok(moiSh) ? F2.format(moiSh) : "—", "", ok(spSh) ? "S&amp;P 500 : " + F2.format(spSh) + " sur la même année" : "rendement pour le risque pris",
         "Sharpe : ce que tu as gagné au-dessus d'un placement sans risque, pour chaque unité de secousse. Il se lit en comparaison : au-dessus du S&P 500, tu as été mieux payé que le marché pour le risque pris." + (calc ? " Ici, les deux sont recalculés sur tes relevés de l'année." : "")) +
-      tuile("Jours en hausse", pct(pf.hausse, 0, false), "", "sur les 12 derniers mois") +
+      tuile("Jours en hausse", pct(hausse, 0, false), "", "sur les 12 derniers mois") +
     "</div>", true);
 }
-function joursRecords() {
+function joursRecords(c) {
   const h = M.historique; if (!h || !h.rows || h.rows.length < 2) return [];
-  const ki = h.cols.indexOf("ip"), kv = h.cols.indexOf("v"), ka = h.cols.indexOf("a"), out = [];
+  const K = colsS(c), ki = K.i, kv = K.v, ka = K.a, out = [], R = rowsS(c);
+  if (c && (ki < 0 || kv < 0 || ka < 0) || R.length < 2) return [];
   // 14.4.2 : seuls comptent les jours où le portefeuille valait au moins la moitié de sa valeur actuelle
   // (les % des débuts, sur quelques centaines d'euros, ne sont pas comparables) ; se recale seul après un gros versement
-  const actuel = h.rows[h.rows.length - 1][kv], seuil = actuel > 0 ? actuel / 2 : 0;
-  for (let i = 1; i < h.rows.length; i++) {
-    const a = h.rows[i - 1], b = h.rows[i];
+  const actuel = R[R.length - 1][kv], seuil = actuel > 0 ? actuel / 2 : 0;
+  for (let i = 1; i < R.length; i++) {
+    const a = R[i - 1], b = R[i];
     if ((dateNum(b[0]) - dateNum(a[0])) / 864e5 > 4.5 || !(a[ki] > 0) || !(b[ki] > 0)) continue;
     if (!(a[kv] >= seuil) || !(b[kv] >= seuil)) continue;
     out.push({ j: b[0], p: b[ki] / a[ki] - 1, e: (b[kv] - a[kv]) - (b[ka] - a[ka]) });
@@ -2097,26 +2144,44 @@ function joursRecords() {
 function blocMoisEnCours() {
   const t = [], now = new Date(), discret = ETAT.discret === "oui", finM = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   const tuileB = (k, big, small, cls, extra) => t.push('<div class="m-ec-t' + (extra ? " " + extra : "") + '"><span class="k">' + k + '</span><b class="' + (cls || "") + '">' + big + "</b><small>" + small + "</small></div>");
-  const mpm = moisParMois(), der = mpm[mpm.length - 1];
+  const cS = compteS(), mpm = moisParMois(cS), der = mpm[mpm.length - 1], absents = [];
   let moLib = MOIS_L[now.getMonth()] + " " + now.getFullYear();
   if (der) {
     const ceMois = der.an === now.getFullYear() && der.mois === now.getMonth() + 1;
     moLib = MOIS_L[der.mois - 1] + " " + der.an;
-    tuileB(ceMois ? "Résultat du mois" : "Résultat de " + MOIS_L[der.mois - 1], discret ? pct(der.twr) : eur(der.eur, 0, true), discret ? "en € : masqué (mode discret)" : pct(der.twr) + " hors versements", sens(discret ? der.twr : der.eur));
+    const sansEur = der.eur === null; if (sansEur && !discret) absents.push("le résultat en euros");
+    tuileB(ceMois ? "Résultat du mois" : "Résultat de " + MOIS_L[der.mois - 1], discret || sansEur ? pct(der.twr) : eur(der.eur, 0, true), discret ? "en € : masqué (mode discret)" : sansEur ? "hors versements" : pct(der.twr) + " hors versements", sens(discret || sansEur ? der.twr : der.eur));
   }
   try {
-    const sv = serieVersements(), mo = MOIS_L[now.getMonth()];
+    const sv = cS ? versementsCompte(cS) : serieVersements(), mo = MOIS_L[now.getMonth()];
+    if (!sv) absents.push("la série de versements");
+    else
     if (sv.liste.length) tuileB("Versements d'affilée", sv.actuelle + " mois", "record " + sv.record + " · " + (sv.moisEnCours ? '<span class="up">' + esc(mo) + " fait ✓</span>" : '<span class="warn">' + esc(mo) + " : jusqu'au " + dateCourte(finM) + "</span>"), "", sv.moisEnCours ? "ok" : "attente");
   } catch (e) { /* pas de parcours : tuile absente */ }
-  const h = M.historique, k = h && h.cols ? h.cols.indexOf("ip") : -1;
-  if (k >= 0 && h.rows.length > 1) {
-    const B = baisses(h.rows, k), auHaut = B.actuel > -0.0005;
-    tuileB("Depuis ton plus haut", auHaut ? "au top" : pct(B.actuel), auHaut ? "nouveau plus haut ✓" : "plus haut le " + dateCourte(dateNum(h.rows[B.iMax][0])), auHaut ? "up" : "down");
-  }
-  return t.length ? '<div><h2 class="sec">Ce mois-ci <small>' + esc(moLib) + '</small></h2></div><div class="m-ec m-ec' + t.length + '">' + t.join("") + "</div>" : "";
+  const h = M.historique, k = h && h.cols ? colsS(cS).i : -1, R = rowsS(cS);
+  if (k >= 0 && R.length > 1) {
+    const B = baisses(R, k), auHaut = B.actuel > -0.0005;
+    tuileB("Depuis ton plus haut", auHaut ? "au top" : pct(B.actuel), auHaut ? "nouveau plus haut ✓" : "plus haut le " + dateCourte(dateNum(R[B.iMax][0])), auHaut ? "up" : "down");
+  } else if (cS && h && h.rows && h.rows.length > 1) absents.push("le résultat du mois et le plus haut");
+  const info = absents.length ? seulTout(majuscule(absents.join(", "))) : "";
+  return t.length || info ? '<div><h2 class="sec">Ce mois-ci <small>' + esc(moLib) + (cS ? " · " + esc(cS.lib) : "") + '</small></h2></div>' + (t.length ? '<div class="m-ec m-ec' + t.length + '">' + t.join("") + "</div>" : "") + info : "";
+}
+/** Versements d'affilée d'un compte (lot 35) : un mois compte quand le versé du compte y augmente (relevés du soir) ; null sans ce détail */
+function versementsCompte(c) {
+  const K = colsS(c), R = rowsS(c); if (K.a < 0 || !R.length) return null;
+  const fin = {}; R.forEach(r => { fin[String(r[0]).slice(0, 4) + "-" + String(r[0]).slice(4, 6)] = r[K.a]; });
+  const auj = cleMoisD(new Date()), debut = String(R[0][0]).slice(0, 4) + "-" + String(R[0][0]).slice(4, 6), liste = [];
+  let avant = 0, vu = 0;
+  for (let m = debut; m <= auj; m = moisSuivant(m, 1)) { const a = fin[m] === undefined ? avant : fin[m]; liste.push({ m, ok: a - avant > 0.5 }); avant = a; vu++; if (vu > 600) break; }
+  let run = 0, record = 0; liste.forEach(x => { run = x.ok ? run + 1 : 0; if (run > record) record = run; });
+  const moisEnCours = !!(liste.length && liste[liste.length - 1].m === auj && liste[liste.length - 1].ok);
+  let actuelle = 0; for (let i = liste.length - 1 - (moisEnCours ? 0 : 1); i >= 0 && liste[i].ok; i--) actuelle++;
+  return { actuelle, record, moisEnCours, liste };
 }
 function blocJours() {
-  const l = joursRecords(); if (l.length < 5) return "";
+  const cS = compteS(), K = colsS(cS);
+  if (cS && !M.simple && (K.i < 0 || K.v < 0 || K.a < 0)) return '<div><h2 class="sec">Records perso</h2></div>' + seulTout("Meilleurs et pires jours");
+  const l = joursRecords(cS); if (l.length < 5) return "";
   const tri = l.slice().sort((x, y) => y.p - x.p), best = tri.slice(0, 5), pire = tri.slice(-5).reverse();
   const date = j => dateLongue(dateNum(j));
   const liste = (titre, xs) => "<div><b>" + titre + "</b>" + xs.map((x, i) => '<div class="l"><span>' + (i + 1) + ". " + date(x.j) + '</span><span class="' + sens(x.p) + '">' + pct(x.p, 2) + '</span><span class="' + sens(x.e) + '">' + eur(x.e, 0, true) + "</span></div>").join("") + "</div>";
@@ -2124,39 +2189,42 @@ function blocJours() {
   return '<div><h2 class="sec">Records perso <small>top 5 en dépliant</small></h2></div>' +
     '<details class="acc m-compact m-jc" data-acc="m-jours"' + (PREF.acc["m-jours"] ? " open" : "") + "><summary>" + pastille("▲ Meilleur jour", best[0], "up") + pastille("▼ Pire jour", pire[0], "down") + "</summary>" +
     '<div><div class="m-jr">' + liste("Top 5", best) + liste("Flop 5", pire) + "</div>" +
-    '<p class="info">Sur ' + l.length + " jours de bourse depuis le " + dateLongue(dateNum(l[0].j)) + ", classés en performance (sans l'effet de tes versements). Seuls comptent les jours où ton portefeuille valait au moins la moitié de sa valeur actuelle : après un gros versement, la période se recale toute seule.</p></div></details>";
+    '<p class="info">Sur ' + l.length + " jours de bourse depuis le " + dateLongue(dateNum(l[0].j)) + ", classés en performance (sans l'effet de tes versements). Seuls comptent les jours où " + (cS ? "ce compte" : "ton portefeuille") + " valait au moins la moitié de sa valeur actuelle : après un gros versement, la période se recale toute seule.</p></div></details>";
 }
-function moisParMois() {
+/** Mois par mois : Tout (sans argument, comme avant) ou un compte (lot 35) ; eur = null quand le fichier ne donne pas valeur et versé du compte */
+function moisParMois(c) {
   const h = M.historique; if (!h || !h.rows || h.rows.length < 2) return [];
-  const kv = h.cols.indexOf("v"), ka = h.cols.indexOf("a"), ki = h.cols.indexOf("ip");
+  const K = colsS(c), kv = K.v, ka = K.a, ki = K.i, R = rowsS(c), sansEur = kv < 0 || ka < 0;
+  if (ki < 0 || R.length < 2) return [];
   const fins = [];
-  h.rows.forEach((r, i) => { const m = Math.floor(r[0] / 100), s = h.rows[i + 1]; if (!s || Math.floor(s[0] / 100) !== m) fins.push(r); });
+  R.forEach((r, i) => { const m = Math.floor(r[0] / 100), s = R[i + 1]; if (!s || Math.floor(s[0] / 100) !== m) fins.push(r); });
   let prec = null;
   return fins.map(r => {
-    const twr = prec ? r[ki] / prec[ki] - 1 : r[ki] / h.rows[0][ki] - 1;
-    const eurM = prec ? (r[kv] - prec[kv]) - (r[ka] - prec[ka]) : r[kv] - r[ka];
+    const twr = prec ? r[ki] / prec[ki] - 1 : r[ki] / R[0][ki] - 1;
+    const eurM = sansEur ? null : prec ? (r[kv] - prec[kv]) - (r[ka] - prec[ka]) : r[kv] - r[ka];
     prec = r;
     return { an: Math.floor(r[0] / 10000), mois: Math.floor(r[0] / 100) % 100, twr, eur: eurM };
   });
 }
 function blocMois() {
-  const m = moisParMois(); if (!m.length) return "";
-  const discret = ETAT.discret === "oui", enEur = PREF.moisMode !== "pct" && !discret;   // lot 27 : en € par défaut (privé, jamais dans le Versus) ; en mode discret, seulement le %
+  const cS = compteS(), m = moisParMois(cS);
+  if (!m.length) return cS && colsS(cS).i < 0 ? '<div><h2 class="sec">Mois par mois</h2></div>' + seulTout("Mois par mois") : "";
+  const sansEur = m.some(x => x.eur === null), discret = ETAT.discret === "oui", enEur = PREF.moisMode !== "pct" && !discret && !sansEur;   // lot 27 : en € par défaut (privé, jamais dans le Versus) ; en mode discret, seulement le %
   const ans = Array.from(new Set(m.map(x => x.an))).sort().reverse();
-  const maxP = Math.max(.04, ...m.map(x => Math.abs(x.twr))), maxE = Math.max(500, ...m.map(x => Math.abs(x.eur)));
+  const maxP = Math.max(.04, ...m.map(x => Math.abs(x.twr))), maxE = Math.max(500, ...m.map(x => Math.abs(x.eur || 0)));
   const lignes = ans.map(an => {
     const ms = m.filter(x => x.an === an);
     const tot = ms.reduce((p, x) => p * (1 + x.twr), 1) - 1, totE = ms.reduce((p, x) => p + x.eur, 0);
     return '<tr><td class="nom">' + an + "</td>" + MOIS.map((nm, i) => {
       const x = ms.find(y => y.mois === i + 1);
       if (!x) return '<td class="vide">·</td>';
-      const det = esc("<b>" + MOIS_L[i] + " " + an + "</b> : " + (enEur ? "résultat " + eur(x.eur, 0, true) + " · " + pct(x.twr) + " (TWR)" : pct(x.twr) + " (TWR)" + (discret ? "" : " · résultat " + eur(x.eur, 0, true))));
+      const det = esc("<b>" + MOIS_L[i] + " " + an + "</b> : " + (enEur ? "résultat " + eur(x.eur, 0, true) + " · " + pct(x.twr) + " (TWR)" : pct(x.twr) + " (TWR)" + (discret || x.eur === null ? "" : " · résultat " + eur(x.eur, 0, true))));
       return '<td class="m-c" tabindex="0" style="' + teinte(enEur ? x.eur : x.twr, enEur ? maxE : maxP) + '" data-cel="' + det + '">' + (enEur ? kEur(x.eur) : pct(x.twr)) + "</td>";
     }).join("") + '<td style="' + teinte(enEur ? totE : tot, enEur ? maxE * 3 : maxP * 3) + '"><b>' + (enEur ? kEur(totE) : pct(tot)) + "</b></td></tr>";
   }).join("");
   return '<div><h2 class="sec">Mois par mois <small>' + (enEur ? "résultat en euros, sans tes versements" : "TWR, sans l'effet des versements") + "</small></h2></div>" +
-    '<div class="seg" role="group" aria-label="Unité"><button type="button" data-m-mois="eur" aria-pressed="' + enEur + '"' + (discret ? " disabled" : "") + '>Résultat (€)</button><button type="button" data-m-mois="pct" aria-pressed="' + !enEur + '">Performance (%)</button></div>' +
-    (discret ? '<p class="info">Mode discret : les euros sont masqués, la grille passe en %.</p>' : "") +
+    '<div class="seg" role="group" aria-label="Unité"><button type="button" data-m-mois="eur" aria-pressed="' + enEur + '"' + (discret || sansEur ? " disabled" : "") + '>Résultat (€)</button><button type="button" data-m-mois="pct" aria-pressed="' + !enEur + '">Performance (%)</button></div>' +
+    (discret ? '<p class="info">Mode discret : les euros sont masqués, la grille passe en %.</p>' : sansEur ? seulTout("Le résultat en euros") : "") +
     '<div class="scroll-x"><table class="grille"><thead><tr><th></th>' + MOIS.map(x => "<th>" + x + "</th>").join("") + "<th>Année</th></tr></thead><tbody>" + lignes + "</tbody></table></div>" +
     '<p class="resume" id="m-mois-sel">Touche un mois pour le détail.</p>';
 }
@@ -2166,19 +2234,22 @@ function blocRepartition() {
   const actifs = (M.ref || {}).actifs || [];
   const info = c => actifs.find(a => a.code === c) || {};
   const CLES = { classe: l => info(l.code).classe || "Non classé", zone: l => info(l.code).zone || "Non renseignée", ligne: l => l.code, levier: l => { const v = Number(info(l.code).levier) || 1; return v > 1 ? "Levier ×" + v : "Sans levier"; } };
-  const grouper = cle => { const g = {}; (M.groupes || []).forEach(gr => gr.lignes.forEach(l => { if (!l.especes && l.valeur > 0) { const k = cle(l); g[k] = (g[k] || 0) + l.valeur; } })); return Object.entries(g).sort((a, b) => b[1] - a[1]); };
+  const cS = compteS(), grs = (M.groupes || []).filter(gr => !cS || gr.env === cS.nom);
+  const grouper = cle => { const g = {}; grs.forEach(gr => gr.lignes.forEach(l => { if (!l.especes && l.valeur > 0) { const k = cle(l); g[k] = (g[k] || 0) + l.valeur; } })); return Object.entries(g).sort((a, b) => b[1] - a[1]); };
   const dispo = [["classe", "Classe"], ["zone", "Zone"], ["ligne", "Ligne"], ["levier", "Levier"]].map(([k, l]) => [k, l, grouper(CLES[k])]).filter(x => x[2].length >= 2);
-  if (!dispo.length) return "";
+  if (!dispo.length) return "";   // une seule ligne (ou aucune) : rien à répartir
   const sel = dispo.find(x => x[0] === PREF.rep) || dispo[0], tri = sel[2], tot = tri.reduce((a, x) => a + x[1], 0) || 1;
   const coul = i => COUL_REP[i % COUL_REP.length];
-  return '<div><h2 class="sec">Répartition <small>lignes du portefeuille</small></h2></div>' +
+  return '<div><h2 class="sec">Répartition <small>' + (cS ? "lignes du compte " + esc(cS.lib) : "lignes du portefeuille") + "</small></h2></div>" +
     (dispo.length > 1 ? '<div class="chips" role="group" aria-label="Répartir par">' + dispo.map(([k, l]) => '<button class="chip" type="button" data-m-rep="' + k + '" aria-pressed="' + (sel[0] === k) + '">' + l + "</button>").join("") + "</div>" : "") +
     '<div class="m-rep-barre" role="img" aria-label="Répartition par ' + esc(sel[1].toLowerCase()) + '">' + tri.map(([k, v], i) => '<i style="flex:' + v + ";background:" + coul(i) + '" title="' + esc(k) + " · " + pct(v / tot, 1, false) + '"></i>').join("") + "</div>" +
     '<div class="m-rep">' + tri.map(([k, v], i) => '<div><span class="n"><i style="background:' + coul(i) + '"></i>' + esc(k) + '</span><span class="p">' + pct(v / tot, 1, false) + '</span><span class="e">' + eur(v) + "</span></div>").join("") + "</div>";
 }
 function blocFrais() {
-  const f = M.frais || []; if (!f.length) return "";
-  const tot = f.find(r => /^Total/.test(r.nom));
+  let f = M.frais || []; if (!f.length) return "";
+  const cS = compteS();
+  if (cS) { f = f.filter(r => r.nom === cS.nom); if (!f.length) return acc("m-frais", "Frais payés", esc(cS.lib), seulTout("Les frais"), false); }
+  const tot = cS ? f[0] : f.find(r => /^Total/.test(r.nom));
   return acc("m-frais", "Frais payés", tot ? eur(tot.total, 0) + " au total" : "courtage, gestion", '<div class="m-liste">' +
     f.map(r => '<div class="r' + (/^Total/.test(r.nom) ? " total" : "") + '"><span class="a">' + esc(r.nom) + '</span><span class="b">' + eur(r.total, 2) + "</span>" +
       '<span class="c">cette année ' + eur(r.annee, 2) + '</span><span class="d">' + pct(r.pct, 2, false) + " des versements</span></div>").join("") + "</div>", false);
@@ -2188,8 +2259,7 @@ function brancherStats(v) {
   const re = b => garderPlace(b, rendre);
   v.querySelectorAll("[data-m-mode]").forEach(b => b.addEventListener("click", () => { PREF.mode = b.dataset.mMode; garderPref(); re(b); }));
   v.querySelectorAll("[data-m-per]").forEach(b => b.addEventListener("click", () => { PREF.per = b.dataset.mPer; garderPref(); re(b); }));
-  v.querySelectorAll("[data-m-serie]").forEach(b => b.addEventListener("click", () => { PREF.serie = b.dataset.mSerie; garderPref(); re(b); }));
-  v.querySelectorAll("[data-m-envv]").forEach(b => b.addEventListener("click", () => { PREF.envV = b.dataset.mEnvv; garderPref(); re(b); }));
+  v.querySelectorAll("[data-m-compte]").forEach(b => b.addEventListener("click", () => { PREF.compte = b.dataset.mCompte; garderPref(); re(b); }));
   v.querySelectorAll("[data-m-mois]").forEach(b => b.addEventListener("click", () => { if (b.disabled) return; PREF.moisMode = b.dataset.mMois; garderPref(); re(b); }));
   v.querySelectorAll("[data-m-rep]").forEach(b => b.addEventListener("click", () => { PREF.rep = b.dataset.mRep; garderPref(); re(b); }));
   v.querySelectorAll("td[data-cel]").forEach(td => {
