@@ -785,6 +785,7 @@ function injecterStyle() {
 .moi .m-imp-b { justify-self: start; }
 .moi .m-imp.ouvert { padding: 10px 12px; border: 1px solid var(--accent); border-radius: 10px; background: color-mix(in srgb, var(--accent) 7%, var(--panel)); font-size: 13px; }
 .moi .m-imp-t { font-size: 13.5px; }
+.moi .m-rv-auto { margin: 10px 0 0; font: 500 12.5px/1.4 var(--f-text); color: var(--ink-2); }
 .moi .m-meme { all: unset; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; width: 100%; margin: 0 0 10px; padding: 11px 14px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); cursor: pointer; font: 600 14px/1.25 var(--f-text); color: var(--ink); }
 .moi .m-meme small { font-weight: 500; color: var(--ink-2); font-size: 12.5px; }
 .moi .m-imp .aide, .moi .m-imp-n { display: block; margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
@@ -3889,7 +3890,13 @@ function controleAvis() {
 function versusRelie() { return !!(M && M.versusLie === true); }
 function moisDuReleve() { const d = new Date(), fin = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); return d.getDate() >= fin - 2 || d.getDate() <= 5; }
 function htmlCarteReleveVersus() {
-  if (versusRelie() || typeof ouvrirSaisie !== "function") return "";
+  if (versusRelie()) {   // v17.81 (Théo) : le relevé automatique se voit de nouveau
+    const a = new Date(), j = typeof jourReleve === "function" ? jourReleve(a.getFullYear(), a.getMonth() + 1) : null;
+    const prochain = j && j >= new Date(a.getFullYear(), a.getMonth(), a.getDate()) ? j : (typeof jourReleve === "function" ? jourReleve(a.getFullYear(), a.getMonth() + 2) : null);
+    const fr = d => d ? String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") : "";
+    return '<p class="m-rv-auto">🏁 Relevé du mois pour le Versus : <b>automatique</b>' + (prochain ? " · prochain le " + fr(prochain) + " (dernier jour ouvré, le soir)" : "") + "</p>";
+  }
+  if (typeof ouvrirSaisie !== "function") return "";
   const fort = moisDuReleve();
   return '<button class="m-rv' + (fort ? " fort" : "") + '" type="button" id="f-rv"><span>🏁 <b>Relevé du mois pour le Versus</b>' + (fort ? "<small>C'est le moment : la valeur de tes comptes en fin de mois.</small>" : "") + "</span><i>›</i></button>";
 }
