@@ -27,7 +27,7 @@ const CLES = { api: "versus.api", cle: "versus.cle", theme: "versus.theme", cach
 /* En simulation (date simulée ou vue joueur de l'admin), ce qui est « vu » (révélation, annonces, paliers, clôture…), l'état des onglets
    et les choix privés de Moi vivent dans une mémoire de session : le vrai stockage reste intact, et on retrouve tout en revenant à l'admin. */
 const SIMULATION = (() => { try { return !!window.DATE_SIM || !!localStorage.getItem("versus.vueJoueur"); } catch (e) { return !!window.DATE_SIM; } })();
-const CLES_SIM = /^versus\.(etat|tuto1|revele|nouveaute\.|gpVu\.|chauffe1|saison1|recapVu|rappelMasque|mesCartes|mesDuels|moi\.(?!api$|cle$))/;   // v16.83 : tous les choix privés de Moi, sauf l'adresse et la clé du fichier
+const CLES_SIM = /^versus\.(etat|tuto1|revele|nouveaute\.|gpVu\.|chauffe1|chauffeFete|saison1|recapVu|rappelMasque|mesCartes|mesDuels|moi\.(?!api$|cle$))/;   // v16.83 : tous les choix privés de Moi, sauf l'adresse et la clé du fichier
 const MEM_SIM = {};
 const stock = {
   get(k) { if (SIMULATION && k in MEM_SIM) return MEM_SIM[k]; try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -249,6 +249,7 @@ function afficherTout() {
   rendreVue(vueActive());
   majRappels();
   if (SOURCE === "api") setTimeout(() => { if (typeof ereApres === "function") ereApres(verifierRevelation, "revel"); else verifierRevelation(); }, 900);   // v16.93 : la scène du premier million passe avant
+  if (SOURCE === "api" && typeof verifierFeteChauffe === "function") setTimeout(() => ereApres(() => verifierFeteChauffe(false), "chauffeFete"), 1500);   // v17.49 : le vainqueur du tour de chauffe (une fois, après la révélation s'il y en a une)
   $("#etat-source").textContent = SOURCE === "demo" ? "Source : démonstration (aucune adresse d'API)." : SOURCE === "cache" ? "Source : copie locale, l'API n'a pas répondu." : "Source : le fichier « Versus Portefeuille ».";
   $("#choix-moi").innerHTML = D.personnes.map(p => '<button class="chip" type="button" data-moi="' + esc(p.nom) + '" aria-pressed="' + (p.nom === ETAT.moi) + '"><i style="background:' + couleur(p.nom) + '"></i>' + esc(p.nom) + "</button>").join("");
   document.querySelectorAll("[data-moi]").forEach(x => x.addEventListener("click", () => { ETAT.moi = x.dataset.moi; ETAT.fiche = x.dataset.moi; garder(); afficherTout(); }));

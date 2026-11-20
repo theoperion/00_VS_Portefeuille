@@ -1035,7 +1035,8 @@ function brancherGP(v, y) {
   // V16.16 : la manche n'est marquée « vue » qu'à l'arrivée (quitter pendant la bande-annonce ou la course ne la fait plus perdre)
   // V16.17 : un seul départ — après la bande-annonce (qui finit sur les 5 feux), la course part sans refaire les feux
   const finCourse = () => { if (window.SONS && et.m) { const v1 = et.m.l.slice().sort((a, b) => a.rg - b.rg)[0]; if (v1) SONS.arrivee(saisonVisible() && !estChauffe(y) ? equipDe(v1.nom).klaxon : "fanfare", v1.nom === ETAT.moi, (Piste.TRACES[ci] || {}).peint); }   // V16.43 : la foule et le klaxon du vainqueur
-    if (et.k && !et.avenir && et.k > +(stock.get(cleVu) || 0)) stock.set(cleVu, String(et.k)); bullesGP(y, i); commenter(y, i, -1); };
+    if (et.k && !et.avenir && et.k > +(stock.get(cleVu) || 0)) stock.set(cleVu, String(et.k)); bullesGP(y, i); commenter(y, i, -1);
+    if (et.k === CHAUFFE_K && estChauffe(y)) setTimeout(() => ereApres(() => verifierFeteChauffe(true), "chauffeFete"), 3200); };   // v17.49 : course de chauffe regardée + manche définitive → le vainqueur à l'honneur
   const jouer = feux => { if (vueGP(ci) === "visite" && api.type === "3d") choisirVueGP("poursuite", y);   // v17.6 : la Visite n'a pas de voitures : la course se regarde en 🚁 Hélico
     const f = feux !== false && i >= 1 && api.type === "3d", d = SC ? (api.type === "3d" ? 17000 : 12000) : api.type === "3d" ? 6400 : 3000; commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0); if (window.SONS) SONS.course(d, f ? 3200 : 0, (Piste.TRACES[ci] || {}).peint);   // V16.43 : feux, moteurs ; v17.48 : + le thème du circuit (Noël)
     if (SC) api.jouerScenario(SC.scen, d, finCourse, f); else api.jouer(mc.depart, mc.arrivee, d, finCourse, f); };
@@ -1195,4 +1196,62 @@ function ouvrirCircuits2027(ci0) {
   const fermer = () => { if (api) { try { api.detruire(); } catch (e) { } } o.remove(); };
   o.querySelector(".rg-x").addEventListener("click", fermer); o.addEventListener("click", ev => { if (ev.target === o) fermer(); });
   monter();
+}
+/* ---------- v17.49 · 🎅 Le vainqueur du tour de chauffe : une mini-cérémonie, une fois par appareil ----------
+   Quand : la manche de décembre 2026 (l'Atelier du Père Noël) est DÉFINITIVE = tous les relevés de décembre saisis, puis 48 h après le dernier
+   (heure lue dans le journal ; jamais avant le dernier jour ouvré de décembre + 48 h). Avant : provisoire, pas de cérémonie.
+   Le résultat reste caché jusqu'à la course : si la course n'a pas encore été regardée sur cet appareil, la cérémonie attend son arrivée.
+   Ce qu'on voit (≤ 5 s, un toucher ferme) : neige, la tête du vainqueur avec un bonnet, son nom, le podium des 3 premiers ; grelots si le son est activé.
+   Rien d'autre : pas de points, pas de chiffres, rien sur la suite. Calculé avec les données déjà reçues (aucun appel serveur). */
+const FETE_CH = { cle: "versus.chauffeFete", fin: new Date(SAISON.premiere, 1, 1).getTime(), ouverte: null };
+/** la manche de chauffe est-elle définitive ? → { podium: [noms dans l'ordre] } ou null */
+function chauffeDefinitive() {
+  if (typeof D === "undefined" || !D || !D.personnes || apercuSaison()) return null;
+  const y = SAISON.premiere - 1; if (!estChauffe(y)) return null;
+  const c = championnat(y), m = c.complete ? c.mois.find(x => x.k === CHAUFFE_K) : null; if (!m || c.classement.length < 2) return null;
+  let t = jourReleve(Math.floor(CHAUFFE_K / 100), CHAUFFE_K % 100).getTime();
+  m.l.forEach(x => { const j = typeof derniereSaisie === "function" ? derniereSaisie(x.nom, CHAUFFE_K) : null, tj = j ? new Date(j.t).getTime() : NaN; if (tj > t) t = tj; });
+  return Date.now() >= t + 48 * 3600e3 ? { podium: c.classement.slice(0, 3) } : null;
+}
+/** à l'ouverture (ou à l'arrivée de la course de chauffe) : la cérémonie, si elle est due et pas encore vue ici */
+function verifierFeteChauffe(apresCourse) {
+  if (FETE_CH.ouverte || Date.now() >= FETE_CH.fin || stock.get(FETE_CH.cle) === String(CHAUFFE_K)) return;
+  if (+(stock.get("versus.gpVu." + (SAISON.premiere - 1)) || 0) < CHAUFFE_K) return;   // course pas encore vue : on ne gâche pas le résultat
+  if (document.querySelector(".tuto, .revel, .regles, .ba, .ere-voile" + (apresCourse ? "" : ", .gp-plein"))) return;   // une cérémonie à la fois : ce sera pour la prochaine ouverture
+  const def = chauffeDefinitive(); if (!def) return;
+  stock.set(FETE_CH.cle, String(CHAUFFE_K)); feteChauffe(def.podium, false);
+}
+/** aperçu admin : la vraie si la manche est définitive, sinon un exemple inventé (ordre fixe tiré des prénoms, aucun chiffre) ; rien n'est gardé */
+function apercuFeteChauffe() {
+  const def = chauffeDefinitive(); feteChauffe(def ? def.podium : fauxVerdict(CHAUFFE_K).du.map(x => x.nom).slice(0, 3), !def);
+}
+const BONNET_SVG = '<svg class="fc-bonnet" viewBox="0 0 64 48" aria-hidden="true"><path d="M8 38C10 20 22 7 38 6C47 6 54 12 57 22C52 18 47 17 44 20C45 27 46 33 46 38Z" fill="#D62839"/><path d="M38 6C47 6 54 12 57 22C52 18 47 17 44 20" fill="#A51C2B"/><rect x="4" y="34" width="46" height="10" rx="5" fill="#F7F4EE"/><circle cx="57" cy="23" r="6" fill="#F7F4EE"/></svg>';
+function feteChauffe(podium, apercu) {
+  if (FETE_CH.ouverte || !podium || !podium.length) return;
+  const v = podium[0], moi = moiPilote(), bravo = v === moi, G = GPS.abudhabi || {}, tete = n => avatar(n, Object.assign({}, equipDe(n), { vignette: true }));
+  const o = document.createElement("div"); o.className = "fc-voile" + (ANIM ? "" : " fixe"); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
+  o.setAttribute("aria-label", bravo ? "Bravo, tu remportes le tour de chauffe" : v + " remporte le tour de chauffe");
+  const marche = (n, r) => n ? '<div class="fc-m fc-m' + r + (n === moi ? " moi" : "") + '" style="--c:' + couleur(n) + '">' + tete(n) + "<b>" + esc(n) + "</b>" + (n === moi && !bravo ? "<small>toi</small>" : "") + '<i class="fc-socle">' + r + "</i></div>" : "";
+  o.innerHTML = '<canvas class="fc-neige" aria-hidden="true"></canvas><div class="fc-c">' + (apercu ? '<span class="fc-apercu">Aperçu admin · exemple inventé</span>' : "") +
+    '<span class="fc-k">' + esc((G.drap || "🎅") + " " + (G.gp || "L'Atelier du Père Noël")) + "</span>" +
+    '<div class="fc-heros" style="--c:' + couleur(v) + '"><i class="fc-halo"></i>' + tete(v) + BONNET_SVG + "</div>" +
+    (bravo ? '<h3 class="fc-t">Bravo&nbsp;!</h3><p class="fc-s">Tu remportes le tour de chauffe</p>' : '<h3 class="fc-t">' + esc(v) + '</h3><p class="fc-s">Vainqueur du tour de chauffe</p>') +
+    '<div class="fc-podium">' + marche(podium[1], 2) + marche(podium[0], 1) + marche(podium[2], 3) + "</div>" +
+    '<small class="fc-passer">Touche pour continuer</small></div>';
+  document.body.appendChild(o); FETE_CH.ouverte = o;
+  let raf = 0, fini = false;
+  const fermer = () => { if (fini) return; fini = true; clearTimeout(tAuto); o.classList.add("sort"); document.removeEventListener("keydown", clavier); setTimeout(() => { cancelAnimationFrame(raf); o.remove(); if (FETE_CH.ouverte === o) FETE_CH.ouverte = null; }, 260); };
+  const clavier = e => { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") fermer(); };
+  o.addEventListener("click", fermer); document.addEventListener("keydown", clavier);
+  const tAuto = setTimeout(fermer, 4800);
+  requestAnimationFrame(() => o.classList.add("on"));
+  if (window.SONS) { setTimeout(() => { if (!fini) { SONS.jingle("garage", "motif"); SONS.vibrer(bravo ? [60, 50, 60, 50, 180] : 40); } }, 450); setTimeout(() => { if (!fini) SONS.jingle("garage", "accord"); }, 1650); }
+  if (!ANIM) return;
+  const cv = o.querySelector(".fc-neige"), cx = cv.getContext("2d"), dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight;
+  cv.width = W * dpr; cv.height = H * dpr; cx.scale(dpr, dpr);
+  const fl = Array.from({ length: Math.round(Math.min(90, W * H / 6000)) }, () => ({ x: Math.random() * W, y: Math.random() * H - H, r: 1 + Math.random() * 2.6, v: .5 + Math.random() * 1.3, p: Math.random() * 6.28 }));
+  const pas = () => { cx.clearRect(0, 0, W, H); cx.fillStyle = "rgba(255,255,255,.85)"; cx.beginPath();
+    fl.forEach(f => { f.y += f.v; f.p += .02; f.x += Math.sin(f.p) * .4; if (f.y > H + 4) { f.y = -4; f.x = Math.random() * W; } cx.moveTo(f.x + f.r, f.y); cx.arc(f.x, f.y, f.r, 0, 6.283); });
+    cx.fill(); if (!fini) raf = requestAnimationFrame(pas); };
+  raf = requestAnimationFrame(pas);
 }
