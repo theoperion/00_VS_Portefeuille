@@ -1,13 +1,13 @@
 /* ============================================================
    V16.43 · Sons et vibrations du Versus
    Tout est fabriqué par l'appli (Web Audio), aucun fichier son.
-   Son COUPÉ par défaut (choix de Théo) : bouton 🔊 de la course, ou Réglages.
+   Son ACTIVÉ par défaut ; v17.48 : petit bouton 🔊/🔇 sous la piste et en plein écran (« versus.son »), qui coupe TOUT (musique, bruitages, jingles).
    Vibrations activées par défaut (Android ; l'iPhone ne sait pas faire vibrer une page web).
    ============================================================ */
 const SONS = (() => {
   const lire = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } };
   const ecrire = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* rien */ } };
-  const actif = () => true;   // v17.4 (Théo) : son TOUJOURS actif, plus de réglage ni de bouton 🔊 (le volume du téléphone suffit)   // v16.74 : son ACTIVÉ par défaut (Théo), coupable dans Réglages ou 🔊
+  const actif = () => lire("versus.son", "1") !== "0";   // v17.48 (Théo) : le petit bouton 🔊/🔇 revient (sous la piste et en plein écran), son ACTIVÉ par défaut, mémorisé sur l'appareil   // (v17.4 l'avait retiré)
   const vibreOK = () => lire("versus.vibre", "1") !== "0";
   let ctx = null, maitre = null, bruitBuf = null, moteur = null;
   const timers = new Set();
@@ -53,7 +53,7 @@ const SONS = (() => {
   }
   function vibrer(motif) { if (!vibreOK() || !navigator.vibrate) return; try { navigator.vibrate(motif); } catch (e) { /* rien */ } }
   function plus_tard(ms, fn) { const id = setTimeout(() => { timers.delete(id); fn(); }, ms); timers.add(id); return id; }
-  function arreter() { timers.forEach(clearTimeout); timers.clear(); moteurStop(); musiqueStop(.3); }
+  function arreter() { timers.forEach(clearTimeout); timers.clear(); moteurStop(); musiqueStop(.3); themeStop(.3); }
 
   /* ---------- les moteurs : un grondement qui monte pendant la course ---------- */
   function moteurStop(fondu) {
@@ -165,13 +165,18 @@ const SONS = (() => {
     });
     if (J.couche) INSTR[J.couche[0]](c, out, t, 0, J.couche[1], J.couche[2], N);
   }
+  /* v17.48 · « Jingle Bells » (James Lord Pierpont, 1857 : domaine public ; c'est aussi « Vive le vent »), le refrain en do majeur.
+     [demi-tons depuis do, durée en temps] ; A = mesures 1-4 (« Jingle bells, jingle bells… »), B = 5-8, C = 13-16. Le refrain = A B A C (64 temps). */
+  const NOEL_A = [[4, 1], [4, 1], [4, 2], [4, 1], [4, 1], [4, 2], [4, 1], [7, 1], [0, 1.5], [2, .5], [4, 4]];
+  const NOEL_B = [[5, 1], [5, 1], [5, 1.5], [5, .5], [5, 1], [4, 1], [4, 1], [4, .5], [4, .5], [4, 1], [2, 1], [2, 1], [4, 1], [2, 2], [7, 2]];
+  const NOEL_C = [[5, 1], [5, 1], [5, 1], [5, 1], [5, 1], [4, 1], [4, 1], [4, .5], [4, .5], [7, 1], [7, 1], [5, 1], [2, 1], [0, 4]];
   /* les recettes. pas = ce que joue chaque temps de la mesure ; bruit = [instrument, temps, durée s, volume, demi-tons] ; motif = [demi-tons, temps] */
   const MUSIQUES = {
-    garage: {   // L'Atelier du Père Noël : petite marche à deux temps, do majeur
-      tempo: 120, tonique: 523.25, mel: "celesta", vMel: .5, motif: [[7, .5], [9, .5], [7, .5], [4, .5], [5, .5], [12, 1.5]],
-      pas: [[["clochette", -12, .2], ["grelots", 0, .12, .12]], [["clochette", -5, .13], ["clochette", -8, .13], ["grelots", 0, .08, .1]]],
-      bruit: [["grelots", 0, .9, .3]],
-      tension: { sous: 2, puls: [["bloc", 0, .3, 1], ["grelots", 0, .16, 2, .12]], inst: "celesta", decal: [-12, -7], v: .45, retard: 1, accent: [["grelots", 0, .6, .25]] },
+    garage: {   // v17.48 · L'Atelier du Père Noël : « Jingle Bells » (J. L. Pierpont, 1857, domaine public ; « Vive le vent » en France), arrangement maison célesta + grelots + pizzicati
+      tempo: 192, tonique: 523.25, mel: "celesta", vMel: .42, motif: NOEL_A,
+      pas: [[["pizz", -12, .2], ["grelots", 0, .08, .1]], [["pizz", -8, .1], ["pizz", -5, .1], ["grelots", 0, .12, .1]], [["pizz", -17, .18], ["grelots", 0, .08, .1]], [["pizz", -8, .1], ["pizz", -5, .1], ["grelots", 0, .12, .1]]],
+      bruit: [["grelots", 0, .9, .26], ["cloche", 0, 2.2, .06]],
+      tension: { sous: 2, motif: NOEL_B.concat(NOEL_C), puls: [["grelots", 0, .1, 1, .09], ["pizz", -12, .2, 4], ["pizz", -5, .12, 4, .3]], inst: "celesta", decal: [0], v: .36, retard: 0, accent: [["grelots", 0, .6, .22]] },
       fin: [["grelots", 0, 1.1, .28], ["clochette", .08, 1.2, .14, 24]] },
     chateau: {   // valse à trois temps, do mineur ; boîte à musique, clavecin, cloche, balai qui passe
       tempo: 180, tonique: 523.25, mel: "boite", vMel: .5, motif: [[0, 1], [3, 1], [7, 1], [8, 1.5], [7, .5], [11, 2]],
@@ -244,6 +249,73 @@ const SONS = (() => {
       tension: { sous: 2, puls: [["timbale", -12, .38, 2], ["tek", 0, .18, 1]], inst: ["celesta", "clavecin", "flute", "harpe", "mailloche", "accordeon", "glock", "orgue", "boite", "cuivre"], decal: [-12, -7, -5], v: .26, retard: 1, monte: [["montee", 2, .14]] },
       fin: [["timbale", 0, 1, .45, -12], ["cuivre", 0, 1.4, .15, -12], ["cuivre", 0, 1.4, .12, -5], ["glock", 0, 1.2, .13, 24], ["celesta", .08, 1.2, .12, 28]] }
   };
+  /* ==================== v17.48 · Le thème de la COURSE (un par circuit, clé « peint ») ====================
+     Joué en fond, volume bas, de « C'est parti » à l'arrivée (fondu avant le jingle et le klaxon), puis plus rien.
+     Une recette = tempo, tonique, longueur de la boucle (en temps) et partition(add) qui pose une boucle : add(temps, instrument, demi-tons, durée en temps, volume).
+     Posé petit à petit sur l'horloge audio (≈ 1 s d'avance), jamais au-delà de la fin de la course : aucune boucle infinie. */
+  const THEMES_COURSE = {
+    garage: {   // L'Atelier du Père Noël : « Jingle Bells » (1857), arrangement maison : célesta, grelots, pizzicati, cloche, glockenspiel
+      tempo: 192, tonique: 523.25, longueur: 64, gain: .26,   // 16 mesures à 192 = une boucle de 20 s pile
+      partition(add) {
+        // la mélodie au célesta ; la 2e moitié doublée à l'octave par un glockenspiel discret
+        let t = 0; NOEL_A.concat(NOEL_B, NOEL_A, NOEL_C).forEach(([st, d]) => { add(t, "celesta", st, d, .3); if (t >= 32) add(t, "glock", st + 12, d, .07); t += d; });
+        // l'harmonie, une mesure par accord : [fondamentale, quinte] pour la basse pizzicato (temps 1 et 3), [2 notes] pour le contretemps (temps 2 et 4)
+        const H = { C: [-12, -17, [-8, -5]], F: [-7, -12, [-3, 0]], D7: [-10, -15, [-6, 0]], G7: [-17, -10, [-7, -1]] };
+        "C C C C F C D7 G7 C C C C F C G7 C".split(" ").forEach((a, m) => { const [r, q, cc] = H[a], b = m * 4;
+          add(b, "pizz", r, 1, .2); add(b + 2, "pizz", q, 1, .16);
+          [1, 3].forEach(k => cc.forEach(st => add(b + k, "pizz", st, 1, .075)));
+          // les grelots du traîneau à chaque croche, plus forts sur 2 et 4
+          for (let k = 0; k < 8; k++) add(b + k / 2, "grelots", 0, .3, k === 2 || k === 6 ? .085 : .04);
+          // les sabots du cheval (mesures 5-8 et 13-16)
+          if (m % 8 >= 4) [0, 2].forEach(k => add(b + k + .5, "bloc", 0, .2, .05));
+        });
+        // la cloche au début de chaque grande phrase, et un arpège de glockenspiel dans les notes tenues (mesures 4, 8, 12)
+        [0, 32].forEach(b => add(b, "cloche", 0, 4, .045));
+        [[12, [7, 12, 16, 19, 24]], [28, [11, 14, 17, 19, 23]], [44, [7, 12, 16, 19, 24]]].forEach(([b, l]) => l.forEach((st, k) => add(b + 1 + k * .5, "glock", st, .5, .06)));
+        // mesure 16 : une petite cascade de clochettes qui relance la boucle
+        [12, 14, 16, 17, 19, 21, 23, 24].forEach((st, k) => add(62 + k * .25, "clochette", st, .25, .03 + k * .004));
+      } }
+  };
+  let theme = null, coursePlan = null;
+  function partitionTheme(T) {
+    if (T._evs) return T._evs; const E = [];
+    T.partition((t, i, st, d, v) => E.push({ t, i, f: T.tonique * Math.pow(2, (st || 0) / 12), d, v }));
+    return (T._evs = E.sort((a, b) => a.t - b.t));
+  }
+  function themeStop(f) {
+    if (!theme) return; const M = theme; theme = null; clearInterval(M.iv);
+    try { const t = M.c.currentTime; M.bus.gain.cancelScheduledValues(t); M.bus.gain.setValueAtTime(M.bus.gain.value, t); M.bus.gain.linearRampToValueAtTime(0, t + (f || .02)); } catch (e) { /* rien */ }
+    setTimeout(() => { M.N.forEach(x => { try { x.stop(); } catch (e) { } }); M.N = []; try { M.bus.disconnect(); } catch (e) { } }, (f || .02) * 1000 + 120);
+  }
+  /** pose le thème de la course sur (c, sortie) de t0 à t0 + duree (s), en commençant « depuis » secondes dans la boucle ; avance = posé au fil de l'eau */
+  function poserTheme(T, c, out, t0, duree, depuis, N, avance) {
+    const b = 60 / T.tempo, L = T.longueur * b, evs = partitionTheme(T), fin = t0 + duree, M = { k: 0, j: 0 };
+    const base = t0 - ((depuis || 0) % L);   // le début de la boucle en cours
+    let i = evs.findIndex(e => base + e.t * b >= t0 - .001); if (i < 0) i = evs.length;
+    M.pose = jusqua => {
+      for (;;) {
+        if (i >= evs.length) { i = 0; M.k++; }
+        const e = evs[i], tt = base + M.k * L + e.t * b; if (tt > jusqua || tt >= fin - .05) return tt < fin - .05;
+        try { INSTR[e.i](c, out, tt, e.f, Math.min(e.d * b, fin - tt), e.v, N); } catch (er) { /* rien */ } i++;
+      }
+    };
+    M.pose(avance == null ? fin : t0 + avance); return M;
+  }
+  /** le thème d'un circuit pendant la course : duree en s ; renvoie true s'il joue */
+  function themeCourse(cle, duree, depuis) {
+    themeStop(.05); const T = THEMES_COURSE[cle], c = audio(); if (!T || !c || duree < .4) return false;
+    const bus = c.createGain(), t0 = c.currentTime + .03, fin = t0 + duree; bus.connect(maitre);
+    bus.gain.setValueAtTime(0, t0); bus.gain.linearRampToValueAtTime(T.gain, t0 + (depuis ? .5 : .25));
+    bus.gain.setValueAtTime(T.gain, Math.max(t0 + .5, fin - .5)); bus.gain.linearRampToValueAtTime(0, fin + .1);   // filet : il s'éteint seul à la fin prévue
+    const M = theme = { c, bus, N: [], cle };
+    const P = poserTheme(T, c, bus, t0, duree, depuis, M.N, 1.2);
+    M.iv = setInterval(() => { if (theme !== M) return; if (!P.pose(c.currentTime + 1.2)) { clearInterval(M.iv); } }, 300);
+    plus_tard((duree + .6) * 1000, () => { if (theme === M) themeStop(.05); });
+    return true;
+  }
+  /* outil d'écoute (tests) : le thème rendu hors ligne, n secondes */
+  function ecouteTheme(cle, n) { const T = THEMES_COURSE[cle]; return horsLigne(n, (c, m) => { const bus = c.createGain(); bus.gain.value = T.gain; bus.connect(m); poserTheme(T, c, bus, 0, n, 0, []); }); }
+
   /* la partition : la liste des notes, en secondes depuis le début de la bande-annonce */
   function composer(R, o) {
     const b = 60 / R.tempo, E = [], P = o.plans.map(x => x / 1000), tF = o.tFeux / 1000, tO = o.tOut / 1000;
@@ -262,7 +334,7 @@ const SONS = (() => {
     if (z - a > .3) {
       const sub = b / (T.sous || 1), av = tt => Math.max(0, Math.min(1, (tt - a) / (z - a))), pasDe = tt => T.accel ? 1 - T.accel * av(tt) : 1;   // accel : le tempo s'emballe
       for (let k = 0, tk = a; tk < z - .02; k++, tk += sub * pasDe(tk)) { const x = av(tk); T.puls.forEach(([i, st, v, tous, d]) => { if (k % (tous || 1) === 0) add(tk, i, st, d || sub, v * (.45 + .55 * x), false, x); }); }
-      let tt = a + (T.retard || 0) * b, n = 0; [].concat(T.decal).forEach(dc => R.motif.forEach(([st, d]) => { const ins = [].concat(T.inst), i = ins[n++ % ins.length];   // une liste d'instruments = la cascade (Multivers)
+      let tt = a + (T.retard || 0) * b, n = 0; [].concat(T.decal).forEach(dc => (T.motif || R.motif).forEach(([st, d]) => { const ins = [].concat(T.inst), i = ins[n++ % ins.length];   // une liste d'instruments = la cascade (Multivers)
         if (tt < z - .15) add(tt, i, (T.inverse ? -st : st) + dc, Math.min(d * b, z - tt), T.v, false, av(tt)); tt += d * b * pasDe(tt); }));   // le motif plus bas, puis un cran plus haut : ça monte ; inverse : il descend (Envers)
       P.slice(1).forEach(p => (T.accent || []).forEach(([i, dt, d, v, st]) => add(p + dt, i, st, d, v)));
       (T.monte || []).forEach(([i, d, v]) => add(Math.max(a, z - d), i, 0, Math.min(d, z - a), v));
@@ -397,10 +469,15 @@ const SONS = (() => {
 
   const API = {
     sacre,
-    actif, vibreOK, arreter, vibrer, klaxon, musiqueBA, bloque, debloquer, MUSIQUES, JINGLE_TIMBRE, _ecoute: ecoute, _ecouteJingles: ecouteJingles, _partition: composer,
+    actif, vibreOK, arreter, vibrer, klaxon, musiqueBA, bloque, debloquer, MUSIQUES, JINGLE_TIMBRE, _ecoute: ecoute, _ecouteJingles: ecouteJingles, _ecouteTheme: ecouteTheme, THEMES_COURSE, themeJoue: () => !!theme, _partition: composer,
     /** V16.75 · le jingle « VER-SUS ! » dans le timbre d'un univers : mode « motif » (3 notes enchaînées) ou « accord » (tenu ~1 s) */
     jingle(cle, mode) { const c = audio(); if (!c) return; try { jingleSur(c, maitre, c.currentTime + .02, cle, mode || "motif", []); } catch (e) { /* rien */ } },
-    basculer(on) { ecrire("versus.son", on ? "1" : "0"); if (on) { audio(); note(880, .12, "sine", .15); note(1320, .2, "sine", .12, .1); } else arreter(); document.querySelectorAll("[data-son]").forEach(majBouton); majReglages(); },
+    basculer(on) { ecrire("versus.son", on ? "1" : "0");
+      if (on) { audio(); note(880, .12, "sine", .15); note(1320, .2, "sine", .12, .1);
+        // v17.48 : rallumé en pleine course : le thème reprend là où en est la course (jusqu'à l'arrivée prévue)
+        const P = coursePlan, now = performance.now(); if (P && now >= P.debut && now < P.debut + P.duree - 500) themeCourse(P.cle, (P.debut + P.duree - now) / 1000, (now - P.debut) / 1000);
+      } else arreter();   // coupé : thème, musique de la bande-annonce, moteurs et bips programmés s'arrêtent ; plus rien ne part tant que c'est coupé (audio() renvoie null)
+      document.querySelectorAll("[data-son]").forEach(majBouton); majReglages(); },
     vibrations(on) { ecrire("versus.vibre", on ? "1" : "0"); if (on) vibrer(40); majReglages(); },
     /** les 5 feux puis le départ : feux en ms avant le départ (0 = départ tout de suite) */
     depart(avant) {
@@ -408,11 +485,14 @@ const SONS = (() => {
       if (avant > 0) for (let q = 0; q < 5; q++) plus_tard(t0 + q * pas, () => { note(440, .16, "square", .12); vibrer(30); });
       plus_tard(avant > 0 ? avant : 0, () => { note(880, .45, "square", .16); vibrer(120); });
     },
-    course(duree, avant) { arreter(); if (!actif() && !vibreOK()) return; API.depart(avant || 0); plus_tard(avant || 0, () => moteurs(duree / 1000)); },
+    /** la course : feux (avant, ms), moteurs ; v17.48 : cle = clé « peint » du circuit, son thème (THEMES_COURSE) joue de « C'est parti » à l'arrivée */
+    course(duree, avant, cle) { arreter(); coursePlan = cle && THEMES_COURSE[cle] ? { cle, debut: performance.now() + (avant || 0), duree } : null;
+      if (!actif() && !vibreOK()) return; API.depart(avant || 0); plus_tard(avant || 0, () => { moteurs(duree / 1000); if (coursePlan) themeCourse(cle, duree / 1000 + .3, 0); }); },
     /** l'arrivée : la foule, le klaxon du vainqueur ; une vibration de victoire si c'est toi */
     arrivee(styleKlaxon, cEstMoi, cle) {
+      const th = !!theme; coursePlan = null; themeStop(.45);   // v17.48 : le thème s'efface en fondu, avant le jingle et le klaxon
       moteurStop(1.2); souffle(2.4, [700, 1100], .28, 0, .4); souffle(1.6, 2600, .1, .3, .2, "highpass");
-      if (cle) { plus_tard(250, () => API.jingle(cle, "motif")); plus_tard(1300, () => klaxon(styleKlaxon)); }   // V16.75 : « VER-SUS ! » dans le timbre du mois, puis le klaxon du vainqueur
+      if (cle) { plus_tard(th ? 450 : 250, () => API.jingle(cle, "motif")); plus_tard(th ? 1500 : 1300, () => klaxon(styleKlaxon)); }   // V16.75 : « VER-SUS ! » dans le timbre du mois, puis le klaxon du vainqueur
       else plus_tard(500, () => klaxon(styleKlaxon)); vibrer(cEstMoi ? [80, 60, 80, 60, 250] : 60);
     },
     /** les 5 feux de la bande-annonce (aux mêmes moments que l'image) */
@@ -455,7 +535,7 @@ const SONS = (() => {
   });
   // un bouton 🔊 qui apparaît dans la page se met tout seul à jour
   new MutationObserver(() => { document.querySelectorAll("[data-son]:not([data-son-ok])").forEach(b => { b.setAttribute("data-son-ok", ""); majBouton(b); }); majReglages(); }).observe(document.documentElement, { childList: true, subtree: true });
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { timers.forEach(clearTimeout); timers.clear(); moteurStop(); } });   // V16.75 : la musique de la bande-annonce se met en pause avec elle (ctx.suspend), on ne la coupe pas
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { timers.forEach(clearTimeout); timers.clear(); moteurStop(); themeStop(.1); coursePlan = null; } });   // V16.75 : la musique de la bande-annonce se met en pause avec elle (ctx.suspend), on ne la coupe pas
   return API;
 })();
 window.SONS = SONS;   // v16.69 : « const » ne crée pas window.SONS, et tous les « if (window.SONS) » de l'appli restaient faux (sons et vibrations muets depuis la v16.43)

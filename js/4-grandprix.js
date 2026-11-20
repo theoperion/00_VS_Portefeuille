@@ -276,8 +276,8 @@ function htmlGrandPrix(y) {
   const deux = ETAT.gp2d !== "0" || !piste3D(), cam = camGP();   // V16.58 : la 2D par défaut
   const v2 = vuesV2(ci), vue = vueGP(ci), suivi = v2 ? suiviGP() : null;   // v17.6
   // v17.6 · la piste « V2 » ne garde AUCUN bouton sur l'image : vue, plein écran et « ⋯ » (bande-annonce, arrivée, survol) passent juste en dessous
-  const menuV2 = '<details class="gp-plus"><summary aria-label="Plus d\'options">⋯</summary><div class="gp-plus-m">' + (piste3D() ? '<button type="button" class="gp-survol-b" id="gp-survol">🛸 Survol guidé</button>' : "") +   // v17.10 : toujours utilisable (passe tout seul en 📺 Visite)
-    '<button type="button" id="gp-ba">🎬 Bande-annonce</button><button type="button" id="gp-fin">⏭ Aller à l\'arrivée</button></div></details>';
+  const menuV2 = '<div class="gp-outils"><button class="gp-son-b" type="button" data-son aria-label="Couper le son">🔊</button>' + '<details class="gp-plus"><summary aria-label="Plus d\'options">⋯</summary><div class="gp-plus-m">' + (piste3D() ? '<button type="button" class="gp-survol-b" id="gp-survol">🛸 Survol guidé</button>' : "") +   // v17.10 : toujours utilisable (passe tout seul en 📺 Visite)
+    '<button type="button" id="gp-ba">🎬 Bande-annonce</button><button type="button" id="gp-fin">⏭ Aller à l\'arrivée</button></div></details></div>';   // v17.48 : le petit 🔊/🔇 à côté de « ⋯ »
   const suiviH = v2 && !deux ? '<div class="gp-suivi" role="group" aria-label="Voiture suivie">' + ordre.map(n => '<button type="button" data-suivre="' + esc(n) + '" style="--c:' + couleur(n) + '" aria-pressed="' + (n === suivi) + '" aria-label="Suivre ' + esc(n) + '">' + avatar(n) + "</button>").join("") + "</div>" : "";
   const fondCuit = (() => { try { const k = (Piste.TRACES[ci] || {}).peint, c = self.CARTES_CUITES; if (!k || !c || !c[k]) return ""; const u = "img/cartes/" + k + ".webp?v=" + c[k];
     if (!(PRECHARGE_CARTES[u])) { const im = new Image(); im.src = u; try { im.decode().catch(() => { }); } catch (e) { } PRECHARGE_CARTES[u] = im; }   // v17.32 : image gardée décodée en mémoire
@@ -1037,7 +1037,7 @@ function brancherGP(v, y) {
   const finCourse = () => { if (window.SONS && et.m) { const v1 = et.m.l.slice().sort((a, b) => a.rg - b.rg)[0]; if (v1) SONS.arrivee(saisonVisible() && !estChauffe(y) ? equipDe(v1.nom).klaxon : "fanfare", v1.nom === ETAT.moi, (Piste.TRACES[ci] || {}).peint); }   // V16.43 : la foule et le klaxon du vainqueur
     if (et.k && !et.avenir && et.k > +(stock.get(cleVu) || 0)) stock.set(cleVu, String(et.k)); bullesGP(y, i); commenter(y, i, -1); };
   const jouer = feux => { if (vueGP(ci) === "visite" && api.type === "3d") choisirVueGP("poursuite", y);   // v17.6 : la Visite n'a pas de voitures : la course se regarde en 🚁 Hélico
-    const f = feux !== false && i >= 1 && api.type === "3d", d = SC ? (api.type === "3d" ? 17000 : 12000) : api.type === "3d" ? 6400 : 3000; commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0); if (window.SONS) SONS.course(d, f ? 3200 : 0);   // V16.43 : feux, moteurs
+    const f = feux !== false && i >= 1 && api.type === "3d", d = SC ? (api.type === "3d" ? 17000 : 12000) : api.type === "3d" ? 6400 : 3000; commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0); if (window.SONS) SONS.course(d, f ? 3200 : 0, (Piste.TRACES[ci] || {}).peint);   // V16.43 : feux, moteurs ; v17.48 : + le thème du circuit (Noël)
     if (SC) api.jouerScenario(SC.scen, d, finCourse, f); else api.jouer(mc.depart, mc.arrivee, d, finCourse, f); };
   const apresBA = () => { if (GP_INST && GP_INST.api === api && document.body.contains(GP_INST.boite)) jouer(false); };   // v16.27 : piste reconstruite entre-temps : on ne lance rien
   if (GP_REJOUER && i > 0 && !et.avenir) { GP_REJOUER = false; setTimeout(jouer, 150); }
@@ -1095,7 +1095,7 @@ function pleinV2(o, y) {
   const P = GP_PLEIN; P.v2 = true; o.classList.add("v2");
   /* Théo, 19/11 : [Carte | Visite | Hélico | Survol] puis ▶ ⏭ ✕, ronds et en icônes seules */
   o.insertAdjacentHTML("beforeend", '<div class="gpp-bar">' + selVuesGP(vueGP(document.getElementById("gp-piste").dataset.circuit), "mini", true) +
-    '<button class="gpp-b gpp-play" type="button" aria-label="Rejouer la course" title="Rejouer">▶</button><button class="gpp-b gpp-fin" type="button" aria-label="Aller à l\'arrivée" title="Aller à l\'arrivée">⏭</button><button class="gpp-b gpp-fermer" type="button" aria-label="Fermer le plein écran">✕</button></div>' +
+    '<button class="gpp-b gpp-son" type="button" data-son aria-label="Couper le son">🔊</button><button class="gpp-b gpp-play" type="button" aria-label="Rejouer la course" title="Rejouer">▶</button><button class="gpp-b gpp-fin" type="button" aria-label="Aller à l\'arrivée" title="Aller à l\'arrivée">⏭</button><button class="gpp-b gpp-fermer" type="button" aria-label="Fermer le plein écran">✕</button></div>' +
     '<div class="gpp-tourne" hidden><b>📱↻</b> Tourne ton téléphone<br><small>pour voir le circuit en grand</small></div>');
   const stopSv = () => { try { if (GP_INST && GP_INST.api.arreterSurvol) GP_INST.api.arreterSurvol(); } catch (e) { } };
   o.querySelectorAll(".gpp-bar [data-gpv]").forEach(b => b.addEventListener("click", () => { stopSv(); choisirVueGP(b.dataset.gpv, y); majSurvolPlein(true); }));
