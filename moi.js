@@ -947,7 +947,7 @@ function rendre() {
     ({ jour: M.simple ? htmlJourSimple : htmlJour, patrimoine: htmlPatrimoine, stats: htmlStats, missions: htmlMissions, artema: htmlArtema })[o]();
   v.querySelectorAll("[data-m-ong]").forEach(b => b.addEventListener("click", () => { PREF.onglet = b.dataset.mOng; garderPref(); rendre(); window.scrollTo(0, 0); }));
   brancherAFaire(v); brancherEcheances(v);
-  v.querySelectorAll("details.acc[data-acc]").forEach(d => d.addEventListener("toggle", () => { PREF.acc[d.dataset.acc] = d.open; garderPref(); if (d.open && d.dataset.acc === "m-courbe") dessinerCourbe(); if (d.open && d.dataset.acc === "m-ep-temps") dessinerEpargne(); if (d.open && d.dataset.acc === "m-pret") dessinerPret(); }));
+  v.querySelectorAll("details.acc[data-acc]").forEach(d => d.addEventListener("toggle", () => { PREF.acc[d.dataset.acc] = d.open; garderPref(); if (d.open && d.dataset.acc === "m-courbe") dessinerCourbe(); if (d.open && d.dataset.acc === "m-ep-temps") dessinerEpargne(); if (d.open && d.dataset.acc === "m-pret") dessinerPret(); if (d.open && d.dataset.acc === "m-ptemps") dessinerPatrimoine(); }));
   ({ artema: brancherArtema, jour: M.simple ? brancherJourSimple : brancherJour, patrimoine: brancherPatrimoine, stats: brancherStats, missions: brancherMissions })[o](v);
   if (SRC === "api") verifierPaliers();
   verifierCloture();
@@ -1351,9 +1351,9 @@ function htmlPatrimoine() {
       '<div class="m-leg3">' + parts.filter(p => p[1] > 0 || !(dette && p[3] === "p-immo")).map(p => '<button type="button" data-cible="' + p[3] + '"><i style="background:var(' + p[2] + ')"></i><span>' + p[0] + '</span><span class="num">' + eur(p[1]) + '</span><span class="pc">' + (p[1] >= 0 ? pct(p[1] / tot, 0, false) : "") + "</span></button>").join("") +
         (dette ? '<button type="button" class="m-dette" data-cible="p-immo"><i></i><span>Immobilier : dette nette</span><span class="num down">' + eur(immoNet) + '</span><span class="pc"></span></button>' : "") + "</div></div>" +
     /* lot 27 (Conseil) : sous le total, le patrimoine dans le temps (financier par défaut) puis l'unique Projection 2034, repliée */
-    blocPatrimoineTemps() + htmlProjection() +
-    /* v16.87 (Théo) : l'assurance-vie Banque Populaire en premier, la bourse en second (elle est déjà sur Aujourd'hui), puis l'épargne et l'immobilier */
+    /* v17.38 (Théo) : l'assurance-vie mise en avant juste sous le total ; le patrimoine dans le temps et la projection, repliés, viennent après */
     (sup.length ? bloc("p-av", "--c-av", "Quintessa", "par support", htmlAV(sup)) : "") +
+    blocPatrimoineTemps() + htmlProjection() +
     bloc("p-epargne", "--s2", "Épargne", esc(s.epargneLibelle || ""), liste(ep, rEp) + blocEpargneTemps()) +
     (net.avecImmo ? bloc("p-immo", "--s3", "Immobilier", "prix d'achat, prêts restants", pretHtml() + liste(imm, rImm) + blocPret()) : "") +
     bloc("p-bourse", "--s1", "Bourse", "portefeuille", liste(envs, rEnv)) +   // v17.21 (Théo) : la bourse en dernier (elle a déjà sa place dans Aujourd'hui)
@@ -2580,13 +2580,13 @@ function blocPatrimoineTemps() {
     .concat(brut && aImmo ? [{ nom: "Prêts restants", c: "var(--down)", op: .5 }] : []);
   const der = d[d.length - 1], prem = d.find(x => x.complet) || d[0];
   const net = x => x.bourse + x.epargne + (aImmo ? x.immo : 0);
-  return '<div><h2 class="sec">Patrimoine dans le temps <small>fin de mois</small></h2></div>' +
+  return acc("m-ptemps", "Patrimoine dans le temps", "fin de mois · depuis fin " + esc(libMoisK(prem.k)) + " : " + (ETAT.discret === "oui" ? "•••" : eur(net(der) - net(prem), 0, true)), 
     (aImmo0 ? '<div class="seg m-seg3" role="group" aria-label="Ce qui est compté">' + [["fin", "Financier"], ["net", "Avec l'immobilier"], ["brut", "Brut (dette)"]].map(([k, l]) => '<button type="button" data-m-patri="' + k + '" aria-pressed="' + (mp === k) + '">' + l + "</button>").join("") + "</div>" : "") +
     (det0.utile ? '<div class="chips" role="group" aria-label="Niveau de détail"><button class="chip" type="button" data-m-patridet="" aria-pressed="' + !voirDet + '">Vue d\'ensemble</button><button class="chip" type="button" data-m-patridet="1" aria-pressed="' + voirDet + '">Détail par compte</button></div>' : "") +
     boiteEmpile("g-patri", leg) +
     '<p class="resume">' + (!aImmo ? "Financier : épargne, bourse et assurance-vie" + (aImmo0 ? ", sans l'immobilier (comme le million). " : ". ") : brut ? "Brut : l'appartement compté à son prix, les prêts restants en dessous de zéro. Les pointillés suivent ton patrimoine net. " : "Net : l'immobilier compte pour son prix moins les prêts restants. ") +
       (voirDet ? "Détail : une couche par enveloppe de bourse" + (det.bourse.length ? "" : " (ton fichier ne garde pas leur valeur mois par mois : la bourse reste en un bloc)") + " et une par livret. " : "") +
-      "Depuis fin " + esc(libMoisK(prem.k)) + " : <b class=\"" + sens(net(der) - net(prem)) + "\">" + eur(net(der) - net(prem), 0, true) + "</b>.</p>";
+      "Depuis fin " + esc(libMoisK(prem.k)) + " : <b class=\"" + sens(net(der) - net(prem)) + "\">" + eur(net(der) - net(prem), 0, true) + "</b>.</p>", false);   // v17.38 (Théo) : replié par défaut
 }
 function dessinerPatrimoine() {
   const box = document.getElementById("g-patri"); if (!box) return;
