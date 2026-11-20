@@ -2974,7 +2974,7 @@ function formulaire(partiel) {
   if (!f.pilote) f.pilote = f.qte ? "qte" : "prix";
   if (f.type === "Achat" && !("apport" in p)) f.apport = true;   // cas le plus courant : on vire l'argent puis on achète
   if (auto) preRemplir(f);
-  if (AVEC_QTE.includes(f.type) && f.actif && !f.prix && !f.qte) { const c = refData().cours[f.actif]; if (c) { f.prix = saisieNombre(c, c < 10 ? 4 : 2); f.prixAuto = true; } }
+  // v17.27 (Théo) : plus jamais de prix pré-rempli avec le cours de l'appli : tout vient de l'avis d'opéré
   return f;
 }
 function depuisRaccourci(rc) {
@@ -3047,14 +3047,14 @@ function synchroniser() {
   if (!AVEC_QTE.includes(F.type)) return;
   F.arrondi = false;
   if (F.pilote === "qte" && (F.montantAuto || !String(F.montant || "").trim())) {
-    const q = lireNombre(F.qte), p = lireNombre(F.prix) || coursActif(), fr = lireNombre(F.frais) || 0;
+    const q = lireNombre(F.qte), p = lireNombre(F.prix), fr = lireNombre(F.frais) || 0;
     if (q > 0 && p > 0) { F.montant = saisieNombre(q * p - (isNaN(fr) ? 0 : fr) * typeInfo(F.type).tresorerie, 2); F.montantAuto = true; }
     else if (F.montantAuto) { F.montant = ""; F.montantAuto = false; }
   }
   const net = netOrdre();
   if (!(net > 0)) return;
   if (F.pilote === "prix") {
-    const p = F.prixAuto && coursActif() ? coursActif() : lireNombre(F.prix);
+    const p = lireNombre(F.prix);
     if (p > 0) {
       const q = net / p;   // v17.26 (Théo) : jamais d'arrondi automatique des parts ; c'est une estimation à remplacer par le chiffre exact de l'avis d'opéré
       if (F.prixAuto) F.prix = saisieNombre(p, p < 10 ? 4 : 2);
@@ -3130,7 +3130,7 @@ function aidesCalcul() {
   if (F.montantAuto && AVEC_QTE.includes(F.type)) out.montant = "Estimé : nombre de parts × cours (" + cours(lireNombre(F.prix) || c) + ")" + (lireNombre(F.frais) > 0 ? (F.type === "Vente" ? " − frais" : " + frais") : "") + ". Remplace-le par le montant exact de ton avis d'opéré.";
   else if (F.montantHab && F.type === "Apport") out.montant = "Ton versement habituel sur ce compte : change-le si besoin.";
   if (AVEC_QTE.includes(F.type) && F.pilote === "prix" && lireNombre(F.qte) > 0) out.qte = F.prixAuto && c ? "Calculé avec le cours connu (" + cours(c) + ")" + (F.arrondi ? ", arrondi à des parts entières" : "") + ". Corrige-le si ton avis d'opéré dit autre chose." : "Calculé avec ton prix par part.";
-  if (F.fraisAuto && AVEC_FRAIS.includes(F.type)) out.frais = "Comme ta dernière opération de ce type sur ce compte.";
+  if (F.fraisAuto && AVEC_FRAIS.includes(F.type)) out.frais = "Repris de ta dernière opération : vérifie-les sur ton avis d'opéré.";
   return out;
 }
 function rendreFormulaire() {
@@ -3160,6 +3160,7 @@ function rendreFormulaire() {
       (!panneau ? "" : '<div class="m-autres" role="group" aria-label="Autres types">' + courantsAutres.map(chipT).join("") +
         (raresAutres.length ? '<span class="m-autres-t">Plus rares</span>' + raresAutres.map(chipT).join("") : "") + "</div>") +
       (AUTRES_TYPES[F.type] && PREF.aides !== false ? '<p class="info">ℹ️ <b>' + esc(AUTRES_TYPES[F.type].lib) + "</b> : " + esc(AUTRES_TYPES[F.type].d) + "</p>" : "") +
+      (F.type === "Achat" || F.type === "Vente" ? '<p class="info m-avis">📄 <b>Attends ton avis d\'opéré</b> (le PDF de ton courtier, souvent le lendemain chez Fortuneo) et recopie ses chiffres exacts : montant, nombre de parts, prix et frais. Pas le cours affiché dans l\'appli.</p>' : "") +   // v17.27 (Théo)
       '<div class="champ"><label for="fo-env">Compte</label><select id="fo-env">' +
         groupeEnv(ouvertes.filter(e => e.perimetre === "Portefeuille"), "Bourse") + groupeEnv(ouvertes.filter(e => e.perimetre !== "Portefeuille"), "Épargne") + "</select></div>" +
       (avecActif ? '<div class="champ"><label for="f-actif">Actif</label><select id="f-actif"><option value="">Choisir l\'actif…</option>' +
