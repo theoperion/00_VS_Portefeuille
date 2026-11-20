@@ -441,3 +441,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 20/11/2026 | ven | **v17.19 · Tuiles de la carte du jour** : largeur minimale 80 px et texte qui ne déborde plus (« BTC -15,28 % » sortait de sa tuile sur iPhone). |
 | 20/11/2026 | ven | **v17.20 · Moi se met à jour en silence** (Théo) : plus de bandeau bleu « Chiffres de la dernière ouverture · mise à jour… » ; seulement une petite ligne si le fichier ne répond vraiment pas. |
 | 20/11/2026 | ven | **v17.21 · Patrimoine : la bourse en dernier** (Théo) : Quintessa, Épargne, Immobilier, puis Bourse (déjà détaillée dans Aujourd'hui). |
+| 20/11/2026 | ven | **v17.22 · Bourse : Jour | 5 j | 1 M | 1 an** (Théo) : la pastille de la carte verte propose aussi 1 mois et 1 an (Perf lignes m1/a1) ; titre court « Bourse · 5 séances / 1 mois / 1 an ». |

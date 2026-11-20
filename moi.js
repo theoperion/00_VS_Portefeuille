@@ -329,8 +329,8 @@ function injecterStyle() {
 .moi .m-hero.a-per > .eyebrow { padding-right: 92px; }
 .moi .m-per { all: unset; box-sizing: border-box; cursor: pointer; position: absolute; top: -4px; right: 0; display: inline-flex; padding: 2px; border-radius: 999px; border: 1px solid var(--rule); background: var(--panel); font: 600 11.5px/1 var(--f-text); color: var(--ink-3); -webkit-tap-highlight-color: transparent; }
 #v-moi.th .m-per { top: 10px; right: 10px; --bg: #0B0D12; }
-.moi .m-per span { padding: 5px 9px; border-radius: 999px; }
-.moi .m-per[aria-pressed="false"] span:first-child, .moi .m-per[aria-pressed="true"] span:last-child { background: var(--ink); color: var(--bg, #0B0D12); }
+.moi .m-per button { all: unset; cursor: pointer; padding: 5px 8px; border-radius: 999px; white-space: nowrap; }
+.moi .m-per button[aria-pressed="true"] { background: var(--ink); color: var(--bg, #0B0D12); }
 .moi .m-per:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .moi .m-jour[role="button"] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .moi .m-5j-v { font-style: normal; opacity: .7; margin-left: 2px; }
@@ -1002,7 +1002,9 @@ function seanceProposee() {
    aujourd'hui (nuit, week-end : fini le « ■ 0 € · 0,00 % »), et la pastille « Jour | 5 j » de la carte passe aux 5 dernières séances
    (semaine glissante : « 1 semaine » de Perf lignes). Le choix est gardé sur l'appareil (PREF.var5). Rien n'est écrit : c'est une vue. */
 function modeSeance() { return seanceProposee(); }
-function mode5j() { return PREF.var5 === true && !!seanceDu(); }
+const PERIODES_J = { "5j": ["s1", "5 j", "5 séances"], "1m": ["m1", "1 M", "1 mois"], "1a": ["a1", "1 an", "1 an"] };   // v17.22 (Théo) : Jour | 5 j | 1 M | 1 an
+function periodeJ() { const p = PREF.varP || (PREF.var5 === true ? "5j" : null); return p && PERIODES_J[p] && seanceDu() ? p : null; }
+function mode5j() { return periodeJ() === "5j"; }
 const JOURS_C = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
 function libSeance() { const d = seanceDu(); if (!d) return ""; const x = new Date(d + "T12:00:00"); return JOURS_C[x.getDay()] + " " + frDate(d).slice(0, 5); }
 /** les 5 dernières séances (jours ouvrés, fériés non retirés) : la dernière = aujourd'hui si la bourse bouge, sinon la dernière séance connue */
@@ -1012,19 +1014,21 @@ function seances5() {
   return out;
 }
 function lib5j() { const s = seances5(); return "sur 5 séances · du " + frDate(s[0]).slice(0, 5) + " au " + frDate(s[4]).slice(0, 5); }
+function libPer(p) { if (p === "5j") return lib5j(); const fin = new Date((seanceProposee() ? seanceDu() : isoJour(new Date())) + "T12:00:00"), d = new Date(fin); if (p === "1m") d.setMonth(d.getMonth() - 1); else d.setFullYear(d.getFullYear() - 1);
+  const c = p === "1m" ? x => frDate(isoJour(x)).slice(0, 5) : x => frDate(isoJour(x)); return "sur " + PERIODES_J[p][2] + " · du " + c(d) + " au " + c(fin); }
 function mSeance(m, cinq) {
   const perf = m.perfLignes || {}, c = JSON.parse(JSON.stringify(m)); c.__seance = true; let tot = 0;
   (c.groupes || []).forEach(g => {
     let j = 0;
     g.lignes.forEach(l => { if (l.especes) return; const p = perf[g.env + "|" + l.code];
-      const v = p ? (cinq ? p.s1 : p.seance) : null;   // 5 j : « 1 semaine » de Perf lignes (cours d'il y a 5 séances)
+      const v = p ? (cinq ? p[PERIODES_J[cinq][0]] : p.seance) : null;   // 5 j : « 1 semaine » de Perf lignes (cours d'il y a 5 séances)
       if (typeof v === "number") { l.pct = v; l.jour = (l.valeur || 0) * v / (1 + v); } else if (cinq) { l.pct = null; l.jour = 0; }
       j += l.jour || 0; });
     if (g.total) { g.total.jour = j; const base = (g.total.valeur || 0) - j; g.total.pct = base ? j / base : 0; }
     tot += j;
   });
   const sy = c.synthese = Object.assign({}, c.synthese), base = (sy.valeur || 0) - tot;
-  sy.jour = tot; sy.jourPct = base ? tot / base : 0; sy.jourLibelle = cinq ? lib5j() : "";   // séance : la date est déjà dans le titre de la carte
+  sy.jour = tot; sy.jourPct = base ? tot / base : 0; sy.jourLibelle = cinq ? libPer(cinq) : "";   // séance : la date est déjà dans le titre de la carte
   return c;
 }
 /** 5 j : le détail jour par jour, lu dans ton historique (sans l'effet des versements) ; aujourd'hui en séance = la variation en direct */
@@ -1051,8 +1055,8 @@ function htmlCinq() {
     '<p>Jour par jour d\'après ton historique, sans l\'effet de tes versements. Le total au-dessus suit le cours de chaque ligne.</p></div>';
 }
 function htmlJour() {
-  const cinq = mode5j();
-  CINQ = cinq ? joursCinq() : null; VUEJ = cinq ? "5j" : modeSeance() ? "seance" : "jour";
+  const cinq = periodeJ();
+  CINQ = cinq === "5j" ? joursCinq() : null; VUEJ = cinq || (modeSeance() ? "seance" : "jour");
   if (VUEJ === "jour") return htmlJourBase();
   const m0 = M; M = mSeance(m0, cinq);
   try { return htmlJourBase(); } finally { M = m0; }
@@ -1086,11 +1090,11 @@ function htmlJourBase() {
   }
   const indices = (M.indices || []).filter(i => i.nom !== "1 USD en EUR");
   const nomIdx = n => n.replace(/\s*\((ETF\s)?([^)]*)\)/, "");
-  const v5 = VUEJ === "5j", per = !!seanceDu(), det5 = v5 && !!CINQ;
+  const v5 = !!PERIODES_J[VUEJ], per = !!seanceDu(), det5 = VUEJ === "5j" && !!CINQ;
   return '<div class="m-hero' + (per ? " a-per" : "") + '">' +
-      '<span class="eyebrow">' + embHero() + (v5 ? "Bourse · semaine glissante" : VUEJ === "seance" ? "Dernière séance · " + esc(libSeance()) : 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "")) + "</span>" +
+      '<span class="eyebrow">' + embHero() + (v5 ? "Bourse · " + PERIODES_J[VUEJ][2] : VUEJ === "seance" ? "Dernière séance · " + esc(libSeance()) : 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "")) + "</span>" +
       /* Théo, 19/11 : pastille discrète Jour | 5 j (un toucher bascule, le choix reste sur l'appareil) */
-      (per ? '<button class="m-per" type="button" id="m-per" aria-pressed="' + v5 + '" aria-label="' + (v5 ? "Variation sur 5 séances : toucher pour revenir au jour" : "Variation du jour : toucher pour voir les 5 dernières séances") + '"><span>Jour</span><span>5 j</span></button>' : "") +
+      (per ? '<div class="m-per" role="group" aria-label="Période de la variation">' + [["jour", "Jour"]].concat(Object.keys(PERIODES_J).map(k => [k, PERIODES_J[k][1]])).map(([k, l]) => '<button type="button" data-per="' + k + '" aria-pressed="' + ((v5 ? VUEJ : "jour") === k) + '">' + l + "</button>").join("") + "</div>" : "") +
       '<div class="m-flaps" role="img" aria-label="' + esc(texteFlap) + '">' + flaps(texteFlap, animer) + "</div>" +
       '<div class="m-jour"' + (det5 ? ' role="button" tabindex="0" aria-expanded="' + cinqOuvert + '" title="Jour par jour"' : "") + '><span class="badge big-b ' + sens(s.jour) + '">' + fleche(s.jour) + " " + eur(s.jour, 0, true) + " · " + pct(s.jourPct, 2) + "</span>" +
         "<span>" + (suffixe ? esc(suffixe) : hausse + " en hausse · " + baisse + " en baisse") + (det5 ? ' <i class="m-5j-v" aria-hidden="true">' + (cinqOuvert ? "▴" : "▾") + "</i>" : "") + "</span></div>" +
@@ -1105,7 +1109,7 @@ function htmlJourBase() {
         '<label class="m-coche"><input type="checkbox" id="m-detail"' + (detail ? " checked" : "") + "> Lignes</label>" +
         "</div>" +
       /* F (v16.93) : le tri se choisit par puces (un toucher au lieu d'une liste déroulante) */
-      (detail ? '<div class="chips m-tri-p" role="group" aria-label="Classer les lignes">' + [["env", "Enveloppe"], ["jour", v5 ? "5 j" : "Jour"], ["poids", "Montant"], ["pv", "Plus-value"]].map(([k, l]) => '<button class="chip" type="button" data-m-tri="' + k + '" aria-pressed="' + (tri === k) + '">' + l + "</button>").join("") + "</div>" : "") +
+      (detail ? '<div class="chips m-tri-p" role="group" aria-label="Classer les lignes">' + [["env", "Enveloppe"], ["jour", v5 ? PERIODES_J[VUEJ][1] : "Jour"], ["poids", "Montant"], ["pv", "Plus-value"]].map(([k, l]) => '<button class="chip" type="button" data-m-tri="' + k + '" aria-pressed="' + (tri === k) + '">' + l + "</button>").join("") + "</div>" : "") +
       liste +
       (detail ? '<p class="info" style="margin-top:6px">Touche une ligne pour ses performances et son prix de revient.</p>' : "") +
     "</div>" +
@@ -1187,7 +1191,7 @@ function alertesDeclenchees() {
 }
 function brancherJour(v) {
   brancherDefs(v); brancherSignal(v); brancherMarches(v);
-  const bp = v.querySelector("#m-per"); if (bp) bp.addEventListener("click", () => { PREF.var5 = !mode5j(); delete PREF.seance; garderPref(); rendre(); });   // 19/11 : Jour ⇄ 5 séances
+  v.querySelectorAll(".m-per [data-per]").forEach(b => b.addEventListener("click", () => { const k = b.dataset.per; PREF.varP = k === "jour" ? null : k; delete PREF.var5; delete PREF.seance; garderPref(); rendre(); }));   // 19/11 : Jour ⇄ 5 séances
   const b5 = v.querySelector('.m-jour[role="button"]'); if (b5) { const bascule = () => { cinqOuvert = !cinqOuvert; rendre(); };
     b5.addEventListener("click", bascule); b5.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); bascule(); } }); }
   v.querySelectorAll(".m-l[data-code]").forEach(el => {
