@@ -37,6 +37,9 @@ Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles 
 - **Être innovant et ambitieux** (« pousser l'IA et le code dans leurs retranchements ») et **challenger Théo** : donner un avis franc, dire quand une idée peut être meilleure, proposer une alternative.
 - **Travailler ensemble** : Claude propose → Théo choisit et valide → Claude construit. Après chaque étape, relancer avec la suite et 2 ou 3 idées nouvelles.
 
+## Publication (Théo, 20/11 soir, remplace « ne met rien en ligne »)
+Quand le Conseil/les agents ont validé et que les tests passent : PUBLIER directement, sans demander à Théo si ça lui plaît et sans lui envoyer de captures avant/après (il n'en veut pas). Lui dire seulement ce qui a été mis en ligne. Ne lui poser que les vraies questions (règles du jeu, désaccord).
+
 ## Règles à ne jamais enfreindre
 0 bis. (v17.29/V61, Théo, 20/11) Le Versus ne compte et ne montre QUE le PEA et l'assurance-vie, pour TOUS les joueurs : CTO et crypto ne sont jamais enregistrés dans le Sheet du Versus ni affichés (rétroactif fait pour 2026). Ils restent suivis dans Moi (privé).
 0. (v16.77/V51, Théo) Le détail des lignes de bourse de Moi reste PRIVÉ pour tous : plus de partage dans le Versus, ni par l'appli ni par le relevé automatique (LiaisonVersus.js), onglet « Lignes app » supprimé ; ne pas le remettre.
