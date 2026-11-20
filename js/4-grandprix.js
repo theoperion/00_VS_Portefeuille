@@ -1048,7 +1048,8 @@ function brancherGP(v, y) {
   const sv = v.querySelector("#gp-survol"); if (sv) sv.addEventListener("click", () => { if (GP_INST && GP_INST.api.enCours()) { toast("Attends la fin de la course pour le survol."); return; }
     const pl = sv.closest("details"); if (pl) pl.open = false;
     // v17.10 : depuis la Carte 2D ou l'Hélico, on passe d'abord en 📺 Visite (la carte 3D seule), puis le survol part
-    if (vue && vue !== "visite") { choisirVueGP("visite", y); setTimeout(() => { if (GP_INST && GP_INST.api.type === "3d" && !GP_INST.api.enCours()) GP_INST.api.survol(12000); }, 700); return; }
+    const vueMaint = vueGP(ci) || vue;   // v17.41 : la vue ACTUELLE (elle a pu changer sans redessiner la page : Hélico → Survol ne marchait pas)
+    if (vueMaint && vueMaint !== "visite") { choisirVueGP("visite", y); setTimeout(() => { if (GP_INST && GP_INST.api.type === "3d" && !GP_INST.api.enCours()) GP_INST.api.survol(12000); }, 700); return; }
     if (!GP_INST || GP_INST.api.type !== "3d") return; GP_INST.api.survol(12000); });   // V16.59 : visite guidée
   const cb = v.querySelector("#gp-cam-b"); if (cb) cb.addEventListener("click", () => { const l = ["tv", "helico", "bord"], n = l[(l.indexOf(camGP()) + 1) % l.length]; ETAT.gpCam = n; garder(); if (GP_INST) GP_INST.api.camera(n); majBoutonsGP(); });
   const rj = v.querySelector("#gp-rejouer"); if (rj) rj.addEventListener("click", () => { if (i > 0 && !et.avenir) jouer(); else toast(et.avenir ? "Cette manche se court ce mois-ci : la course se joue dès que tout le monde a saisi son relevé." : "Le départ n'a pas encore eu lieu : choisis un mois."); });

@@ -460,3 +460,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 20/11/2026 | ven | **v17.38 · Patrimoine : l'assurance-vie d'abord** (Théo) : Quintessa juste sous le total ; « Patrimoine dans le temps » replié par défaut (résumé dans le titre), puis la projection repliée. |
 | 20/11/2026 | ven | **v17.39 · Énigme en entier en plein écran** (Théo) : énigme, 2e indice, chaud-froid et chercheurs affichés en entier en plein écran (Visite et carte 2D). Scripts perso Théo 35 / Clément 14 / Devlin 13 : historique avec valeur et versé par compte (Stats par compte en €). |
 | 20/11/2026 | ven | **v17.40 · Le cours de chaque ligne visible** (Théo) : rangée du bas de chaque ligne de bourse = valeur · cours · plus-value %, sans ouvrir le détail. |
+| 20/11/2026 | ven | **v17.41 · Survol depuis l'Hélico réparé** (Théo) : le bouton Survol lisait la vue au moment de l'affichage de la page ; il lit maintenant la vue actuelle et repasse en Visite avant de lancer le survol. |
