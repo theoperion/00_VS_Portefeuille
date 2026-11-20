@@ -15,11 +15,15 @@ function ageCopie() { const t = +stock.get(K.cacheLe) || 0; if (!t) return ""; c
 function majuscule(t) { t = String(t || ""); return t.charAt(0).toUpperCase() + t.slice(1); }
 const PREF = Object.assign({ onglet: "jour", patri: "fin", tri: "env", mode: "base", per: "6m", serie: "ip", moisMode: "eur", rep: "classe", acc: {} },
   (() => { try { return JSON.parse(stock.get(K.pref) || "{}"); } catch (e) { return {}; } })());
+delete PREF.varP; delete PREF.var5;   // lot 50 (Théo) : la période d'Aujourd'hui (Jour · 5 j · 1 M…) n'est pas mémorisée : chaque ouverture repart sur « Jour »
 delete PREF.million;   // E (v16.93) : plus de mode « net » pour le million (ancienne préférence oubliée)
 /* lot 27 (Conseil, validé par Théo) : Stats s'ouvre sur « Contre le marché », Mois par mois en €, Risque ouvert ; le patrimoine dans le temps part en FINANCIER.
    Migration unique : les anciens réglages par défaut enregistrés sur l'appareil ne doivent pas masquer les nouveaux. */
 if (!PREF.stats27) { PREF.mode = "base"; PREF.moisMode = "eur"; PREF.patri = "fin"; delete PREF.acc["m-risque"]; delete PREF.effort; delete PREF.rendement; PREF.stats27 = 1; }
-function garderPref() { stock.set(K.pref, JSON.stringify(PREF)); }
+/* lot 50 (Théo, règle de tout Moi) : les rubriques dépliables reviennent repliées (ou à leur défaut) à chaque ouverture de l'appli ;
+   leur état ne vaut que pendant la visite (PREF.acc en mémoire, jamais écrit sur l'appareil). Seuls les filtres sont mémorisés. */
+PREF.acc = {};
+function garderPref() { stock.set(K.pref, JSON.stringify(Object.assign({}, PREF, { acc: {} }))); }
 
 let M = null;            // dernières données reçues de ton fichier
 let RAW = null;          // profil simple : réponse brute de l'API (comptes, soldes, réglages)
@@ -476,7 +480,12 @@ function injecterStyle() {
 .moi .ms-fige { font-size: 13px; opacity: .7; }
 .moi #ms-form .seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .moi .rang2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.moi .m-carte { display: flex; flex-wrap: wrap; gap: 3px; }
+.moi .m-carte { display: flex; flex-direction: column; gap: 3px; }
+.moi .m-carte-r { display: flex; gap: 3px; min-height: 40px; min-width: 0; }
+.moi .m-carte-r .m-tuile { min-width: 46px; min-height: 0; padding: 5px 6px; }
+.moi .m-per-bas { margin: 0 0 6px; }
+.moi .m-ferme { justify-self: start; align-self: start; display: inline-block; padding: 3px 8px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--rule-2); font: 600 11.5px/1.2 var(--f-text); color: var(--ink-2); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.moi .m-carte-l { margin: -6px 2px 0; font-size: 11px; line-height: 1.3; color: var(--ink-3); }
 .moi .m-tuile { all: unset; box-sizing: border-box; cursor: pointer; flex: 1 1 64px; min-width: 80px; min-height: 54px; padding: 7px 7px; overflow: hidden; border-radius: 8px; background: var(--panel); border: 1px solid var(--rule); display: grid; align-content: space-between; gap: 2px; }
 .moi .m-tuile:focus-visible { outline: 2px solid var(--accent); }
 .moi .m-tuile b { font: 700 13px/1.1 var(--f-num); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -596,9 +605,17 @@ function injecterStyle() {
 .moi .m-ec-t b.up { color: var(--up); } .moi .m-ec-t b.down { color: var(--down); } .moi .m-ec-t.ok { border-color: color-mix(in srgb, var(--up) 45%, var(--rule)); }
 .moi .m-seg3 button { padding: 9px 4px; font-size: 12.5px; line-height: 1.15; }
 /* lot 35 : un seul choix de compte en haut de Stats */
-.moi .m-cpt { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; background: var(--panel); border: 1px solid var(--rule); }
-.moi .m-cpt > .k { flex: none; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
-.moi .m-cpt .chips { gap: 5px; min-width: 0; } .moi .m-cpt .chip { padding: 6px 10px; font-size: 12.5px; }
+.moi .m-cpt > .k { flex: none; align-self: center; margin-right: 2px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+/* lot 50 (Théo, règle générale) : filtres de Moi (compte, période, horizon…) = une rangée de petites pastilles, une seule ligne,
+   défilement horizontal dans la rangée si elle est trop longue (jamais la page) ; la place est pour les graphiques.
+   Même apparence que les filtres du Classement (.f-seg, v17.56) : rail gris, la pastille choisie en relief. */
+.moi .chips.m-filtre { flex-wrap: nowrap; gap: 2px; width: fit-content; min-width: 0; max-width: 100%; justify-self: start; padding: 2px; border-radius: 9px; background: var(--panel-2); border: 1px solid var(--rule-2);
+  overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.moi .chips.m-filtre::-webkit-scrollbar { display: none; }
+.moi .chips.m-filtre .chip { flex: none; padding: 5px 9px; border: 0; border-radius: 7px; background: none; color: var(--ink-2); font: 600 12px/1.15 var(--f-text); white-space: nowrap; }
+.moi .chips.m-filtre .chip[aria-pressed="true"] { background: var(--panel); color: var(--ink); border: 0; box-shadow: 0 1px 2px rgba(0,0,0,.14), inset 0 0 0 1px var(--rule); }
+.moi .chips.m-filtre.m-cpt > .k { padding-left: 6px; }
+@media (max-width: 360px) { .moi .chips.m-filtre .chip { font-size: 11.5px; padding: 5px 7px; } }
 .moi .m-seul { padding: 6px 0 2px; }
 .moi .m-ecart { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--rule); }
 .moi .m-ecart > b { font: italic 800 28px/1 var(--f-display); white-space: nowrap; color: var(--ink); } .moi .m-ecart > b.up { color: var(--up); } .moi .m-ecart > b.down { color: var(--down); }
@@ -637,7 +654,16 @@ function injecterStyle() {
 .moi .mpm-c.cours { box-shadow: inset 0 0 0 1.5px var(--ink-3); } .moi .mpm-c.cours i::after { content: " •"; color: var(--accent); }
 .moi .mpm-c.on { box-shadow: inset 0 0 0 2px var(--ink); }
 .moi .mpm-c:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.moi .mpm-plus > summary { cursor: pointer; padding: 6px 2px; font: 600 13px/1.2 var(--f-text); color: var(--ink-2); } .moi .mpm-plus[open] { display: grid; gap: 10px; }
+/* lot 50 : années d'avant repliées en une ligne (année · ★ n/m · %), dépliées : la même tête à 2 étages que l'année en cours */
+.moi .acc.mpm-y { padding: 0; }
+.moi .acc.mpm-y > summary.mpm-t { grid-template-columns: minmax(0, 1fr) auto 12px; min-height: 0; padding: 10px 12px 8px; }
+.moi .acc.mpm-y > summary.mpm-t::after { grid-column: 3; grid-row: 1 / span 2; align-self: center; margin: 0 2px 4px 0; }
+.moi .acc.mpm-y > summary .mpm-h { grid-column: 1; grid-row: 1; } .moi .acc.mpm-y > summary .mpm-p { grid-column: 2; grid-row: 1; }
+.moi .acc.mpm-y > summary .mpm-x { grid-column: 1; grid-row: 2; } .moi .acc.mpm-y > summary .mpm-e { grid-column: 2; grid-row: 2; }
+.moi .acc.mpm-y:not([open]) > summary.mpm-t { grid-template-columns: auto minmax(0, 1fr) auto 12px; align-items: baseline; padding: 10px 12px; }
+.moi .acc.mpm-y:not([open]) > summary .mpm-x { grid-column: 2; grid-row: 1; } .moi .acc.mpm-y:not([open]) > summary .mpm-p { grid-column: 3; grid-row: 1; font-size: 15px; }
+.moi .acc.mpm-y:not([open]) > summary .mpm-e { display: none; } .moi .acc.mpm-y:not([open]) > summary.mpm-t::after { grid-column: 4; grid-row: 1; margin: 0 2px 2px 0; }
+.moi .acc.mpm-y > div { display: block; padding: 0 10px 10px; }
 .moi .mpm-aide { margin-top: 6px; }
 .moi .m-jr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .moi .m-jr b { display: block; font: 700 12px/1 var(--f-display); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 4px; }
@@ -1038,6 +1064,9 @@ function rendre() {
   brancherAFaire(v); brancherEcheances(v);
   v.querySelectorAll("details.acc[data-acc]").forEach(d => d.addEventListener("toggle", () => { PREF.acc[d.dataset.acc] = d.open; garderPref(); if (d.open && d.dataset.acc === "m-courbe") dessinerCourbe(); if (d.open && d.dataset.acc === "m-ep-temps") dessinerEpargne(); if (d.open && d.dataset.acc === "m-pret") dessinerPret(); if (d.open && d.dataset.acc === "m-ptemps") dessinerPatrimoine(); }));
   ({ artema: brancherArtema, jour: M.simple ? brancherJourSimple : brancherJour, patrimoine: brancherPatrimoine, stats: brancherStats, missions: brancherMissions })[o](v);
+  v.querySelectorAll(".m-filtre").forEach(r => {   // lot 50 : la pastille choisie reste visible dans une rangée qui défile
+    const b = r.querySelector('[aria-pressed="true"]'); if (!b) return; const rr = r.getBoundingClientRect(), br = b.getBoundingClientRect();
+    if (br.right > rr.right) r.scrollLeft += br.right - rr.right + 8; });
   if (SRC === "api") verifierPaliers();
   verifierCloture();
 }
@@ -1171,6 +1200,15 @@ const PERIODES_J = { "5j": ["s1", "5 j", "5 séances"], "1m": ["m1", "1 M", "1 m
 function periodeJ() { const p = PREF.varP || (PREF.var5 === true ? "5j" : null); return p && PERIODES_J[p] && seanceDu() ? p : null; }
 function mode5j() { return periodeJ() === "5j"; }
 const JOURS_C = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+/** lot 50 (Théo) : bourse de Paris fermée ? (avant 9 h, après 17 h 30, week-end, ou jour sans séance = férié : la dernière séance n'est pas
+    aujourd'hui et aucune ligne ne bouge, cf. seanceProposee). → { ferme, lib : « jeu. 19/11 » = la séance dont viennent les chiffres } */
+function bourseFermee() {
+  const n = new Date(), mn = n.getHours() * 60 + n.getMinutes(), we = n.getDay() % 6 === 0, sansSeance = seanceProposee();
+  const ferme = we || mn < 9 * 60 || mn >= 17 * 60 + 30 || sansSeance;
+  const d = sansSeance ? seanceDu() : !we && mn >= 9 * 60 ? isoJour(n) : seanceDu();
+  return { ferme, lib: d ? JOURS_C[new Date(d + "T12:00:00").getDay()] + " " + frDate(d).slice(0, 5) : "" };
+}
+function badgeFerme(bf) { return '<span class="m-ferme" title="Les chiffres sont ceux de la dernière séance">🔒 Bourse fermée' + (bf.lib ? " · séance du " + esc(bf.lib) : "") + "</span>"; }
 function libSeance() { const d = seanceDu(); if (!d) return ""; const x = new Date(d + "T12:00:00"); return JOURS_C[x.getDay()] + " " + frDate(d).slice(0, 5); }
 /** les 5 dernières séances (jours ouvrés, fériés non retirés) : la dernière = aujourd'hui si la bourse bouge, sinon la dernière séance connue */
 function seances5() {
@@ -1259,14 +1297,21 @@ function htmlJourBase() {
   const suffixe = (s.jourLibelle || "").replace(/^Variation du jour\s*·?\s*/, "");
   const toutes = lignesTenues();
   const detail = PREF.lignes !== false;
-  const tri = detail ? (PREF.tri || "env") : "env";
+  const tri = detail && ["env", "jour", "poids", "pv"].includes(PREF.tri) ? PREF.tri : "env";   // lot 50 : choix mémorisé disparu = choix par défaut
   const hausse = toutes.filter(l => l.pct > 1e-9).length, baisse = toutes.filter(l => l.pct < -1e-9).length;
-  // carte du jour : une tuile par ligne, taille = poids dans le portefeuille, couleur = variation du jour
+  /* carte de la période : une tuile par ligne, couleur = signe et force de la variation (%).
+     lot 50 (Théo : « je sais déjà qu'il y en a plus sur le Monde » ; mini-Conseil data-viz + investisseur, unanime) : taille = |gain ou perte en €
+     sur la période choisie (Jour, 5 j, 1 M…)| = ce qui a vraiment fait bouger le portefeuille, au lieu de l'argent placé. Plancher de 3 % pour
+     que chaque ticker reste lisible et touchable ; rien n'a bougé (avant l'ouverture) = tailles égales. Mode discret : la taille reste, aucun €. */
   const maxP = Math.max(.01, ...toutes.map(l => Math.abs(l.pct || 0)));
-  const totalV = toutes.reduce((a, l) => a + (l.valeur || 0), 0) || 1;
-  const carte = toutes.slice().sort((a, b) => (b.valeur || 0) - (a.valeur || 0)).map(l =>
-    '<button type="button" class="m-tuile" data-aller-ligne="' + esc(l.env + "|" + l.code) + '" style="flex:' + Math.max(1, Math.round((l.valeur || 0) / totalV * 100)) + " 1 calc(" + Math.max(0, ((l.valeur || 0) / totalV * 100) - 2).toFixed(1) + '% - 3px);' + (Math.abs(l.pct || 0) > 1e-9 ? teinte(l.pct, maxP) : "") + '">' +
-    "<b>" + esc(l.code) + "</b><span>" + pct(l.pct, 2) + "</span></button>").join("");
+  const gainL = l => ok(l.jour) ? l.jour : ok(l.pct) && l.pct > -1 ? (l.valeur || 0) * l.pct / (1 + l.pct) : 0;
+  const totG = toutes.reduce((a, l) => a + Math.abs(gainL(l)), 0), egal = totG < 1;
+  const part = l => egal ? 1 / Math.max(1, toutes.length) : Math.max(.03, Math.abs(gainL(l)) / totG);
+  const triees = toutes.slice().sort((a, b) => part(b) - part(a) || (b.valeur || 0) - (a.valeur || 0)), hC = hauteurCarte(triees.length);
+  const tuileC = l => '<button type="button" class="m-tuile" data-aller-ligne="' + esc(l.env + "|" + l.code) + '" style="flex:' + (part(l) * 100).toFixed(2) + " 1 0;" + (Math.abs(l.pct || 0) > 1e-9 ? teinte(l.pct, maxP) : "") + '">' +
+    "<b>" + esc(l.code) + "</b><span>" + pct(l.pct, 2) + "</span></button>";
+  /* bandes horizontales (treemap « squarified ») : hauteur d'une bande ∝ sa part, largeur d'une tuile ∝ sa part dans la bande → surface ∝ part */
+  const carte = rangsCarte(triees.map(part), 340, hC).map(r => '<div class="m-carte-r" style="flex:' + (r.s * 100).toFixed(2) + ' 1 0">' + r.i.map(i => tuileC(triees[i])).join("") + "</div>").join("");
   // liste : par enveloppe (en-tête avec le jour de l'enveloppe) ou toutes ensemble triées
   let liste;
   if (tri === "env") {
@@ -1281,11 +1326,12 @@ function htmlJourBase() {
   }
   const indices = (M.indices || []).filter(i => i.nom !== "1 USD en EUR");
   const nomIdx = n => n.replace(/\s*\((ETF\s)?([^)]*)\)/, "");
-  const v5 = !!PERIODES_J[VUEJ], per = !!seanceDu(), det5 = VUEJ === "5j" && !!CINQ;
+  const v5 = !!PERIODES_J[VUEJ], per = !!seanceDu(), det5 = VUEJ === "5j" && !!CINQ, bf = bourseFermee();
   return '<div class="m-hero">' +
-      '<span class="eyebrow">' + embHero() + (v5 ? "Bourse · " + PERIODES_J[VUEJ][2] : VUEJ === "seance" ? "Dernière séance · " + esc(libSeance()) : 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "")) + "</span>" +
+      '<span class="eyebrow">' + embHero() + (v5 ? "Bourse · " + PERIODES_J[VUEJ][2] : bf.ferme ? "Bourse · dernière séance" : 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "")) + "</span>" +
+      (!v5 && bf.ferme ? badgeFerme(bf) : "") +
       /* Théo, 19/11 : pastille Jour | 5 j ; v17.23 : rangée de 6 périodes sous le titre (un toucher bascule, le choix reste sur l'appareil) */
-      (per ? '<div class="m-per" role="group" aria-label="Période de la variation">' + [["jour", "Jour"]].concat(Object.keys(PERIODES_J).map(k => [k, PERIODES_J[k][1]])).map(([k, l]) => '<button type="button" data-per="' + k + '" aria-pressed="' + ((v5 ? VUEJ : "jour") === k) + '">' + l + "</button>").join("") + "</div>" : "") +
+      (per ? '<div class="m-per" role="group" aria-label="Période de la variation">' + boutonsPer(v5, "") + "</div>" : "") +
       '<div class="m-flaps" role="img" aria-label="' + esc(texteFlap) + '">' + flaps(texteFlap, animer) + "</div>" +
       '<div class="m-jour"' + (det5 ? ' role="button" tabindex="0" aria-expanded="' + cinqOuvert + '" title="Jour par jour"' : "") + '><span class="badge big-b ' + sens(s.jour) + '">' + fleche(s.jour) + " " + eur(s.jour, 0, true) + " · " + pct(s.jourPct, 2) + "</span>" +
         "<span>" + (suffixe ? esc(suffixe) : hausse + " en hausse · " + baisse + " en baisse") + (det5 ? ' <i class="m-5j-v" aria-hidden="true">' + (cinqOuvert ? "▴" : "▾") + "</i>" : "") + "</span>" + (s.jourNote ? '<small class="m-per-n">' + esc(s.jourNote) + "</small>" : "") + "</div>" +
@@ -1294,19 +1340,35 @@ function htmlJourBase() {
       (majCourte() ? '<small class="m-maj">' + esc(majCourte()) + "</small>" : "") +
     "</div>" +
     bandeDebut(s) +
-    (toutes.length >= 3 ? '<div class="m-carte" role="group" aria-label="Carte du jour : une tuile par ligne">' + carte + "</div>" : "") +   // lot 27 : sous 3 lignes, la carte n'apprend rien
+    (toutes.length >= 3 ? '<div class="m-carte" style="min-height:' + hC + 'px" role="group" aria-label="Une tuile par ligne : taille = gain ou perte en euros sur la période, couleur = variation en %">' + carte + "</div>" +
+      '<p class="m-carte-l">' + (egal ? "Rien n'a encore bougé : tuiles de même taille." + (!v5 && bf.ferme ? " Bourse fermée." : "") : "Taille = ce que la ligne a fait gagner ou perdre" + (v5 ? " sur la période" : bf.ferme ? " sur la séance du " + esc(bf.lib) + " (bourse fermée)" : " aujourd'hui") + ".") + "</p>" : "") +   // lot 27 : sous 3 lignes, la carte n'apprend rien
     blocSignal() +
     "<div>" +
       '<div class="m-tri"><h2 class="sec">' + (detail ? "Mes lignes" : "Mes enveloppes") + "</h2>" +
         '<label class="m-coche"><input type="checkbox" id="m-detail"' + (detail ? " checked" : "") + "> Lignes</label>" +
         "</div>" +
       /* F (v16.93) : le tri se choisit par puces (un toucher au lieu d'une liste déroulante) */
-      (detail ? '<div class="chips m-tri-p" role="group" aria-label="Classer les lignes">' + [["env", "Enveloppe"], ["jour", v5 ? PERIODES_J[VUEJ][1] : "Jour"], ["poids", "Montant"], ["pv", "Plus-value"]].map(([k, l]) => '<button class="chip" type="button" data-m-tri="' + k + '" aria-pressed="' + (tri === k) + '">' + l + "</button>").join("") + "</div>" : "") +
+      (detail ? '<div class="chips m-filtre m-tri-p" role="group" aria-label="Classer les lignes">' + [["env", "Enveloppe"], ["jour", v5 ? PERIODES_J[VUEJ][1] : "Jour"], ["poids", "Montant"], ["pv", "Plus-value"]].map(([k, l]) => '<button class="chip" type="button" data-m-tri="' + k + '" aria-pressed="' + (tri === k) + '">' + l + "</button>").join("") + "</div>" : "") +
       liste +
       (detail ? '<p class="info" style="margin-top:6px">Touche une ligne pour ses performances et son prix de revient.</p>' : "") +
     "</div>" +
     (marchesMoi() ? htmlMarches() : indices.length ? '<div><h2 class="sec">Marchés <small>variation du jour</small></h2><div class="m-idx">' + indices.map(i => '<div><span>' + esc(nomIdx(i.nom)) + '</span><b class="' + sens(i.pct) + '">' + pct(i.pct, 2) + "</b></div>").join("") + "</div></div>" : "") +
     "";
+}
+/** boutons de période (Jour · 5 j · 1 M · 6 M · Janv. · 1 an) ; bas = la rangée au-dessus des Marchés (lot 50), même réglage que la carte Bourse */
+function boutonsPer(v5, bas) {
+  return [["jour", "Jour"]].concat(Object.keys(PERIODES_J).map(k => [k, PERIODES_J[k][1]])).map(([k, l]) => '<button type="button"' + (bas ? ' class="chip" data-per-b="1"' : "") + ' data-per="' + k + '" aria-pressed="' + ((v5 ? VUEJ : "jour") === k) + '">' + l + "</button>").join("");
+}
+/** lot 50 : hauteur de la carte des lignes selon leur nombre */
+function hauteurCarte(n) { return n <= 3 ? 112 : n <= 6 ? 140 : n <= 10 ? 172 : 204; }
+/** parts (triées, plus grande d'abord) → bandes [{ i: [indices], s: part de la bande }] ; on ajoute une tuile à la bande tant que la pire
+    proportion (largeur/hauteur) ne se dégrade pas, sur une carte de W × H (téléphone) */
+function rangsCarte(parts, W, H) {
+  const tot = parts.reduce((a, p) => a + p, 0) || 1, ps = parts.map(p => p / tot), pire = (idx, sm) => Math.max(...idx.map(i => { const w = ps[i] / sm * W, h = sm * H; return Math.max(w / h, h / w); }));
+  const rangs = []; let cur = [], sm = 0;
+  ps.forEach((p, i) => { if (cur.length && pire(cur.concat(i), sm + p) > pire(cur, sm)) { rangs.push({ i: cur, s: sm }); cur = []; sm = 0; } cur.push(i); sm += p; });
+  if (cur.length) rangs.push({ i: cur, s: sm });
+  return rangs;
 }
 function enteteEnv(nom, valeur, jour, jourPct, pv, pvPct) {
   return '<div class="m-env-h"><b>' + esc(nom) + '</b><span class="v">' + eur(valeur) + "</span>" +
@@ -1384,7 +1446,7 @@ function alertesDeclenchees() {
 function brancherJour(v) {
   brancherDefs(v); brancherSignal(v); brancherMarches(v);
   { const vm = v.querySelector("#m-vsmk"); if (vm) vm.addEventListener("click", () => { const mk = v.querySelector(".m-mk"); if (mk) mk.scrollIntoView({ behavior: "smooth", block: "start" }); }); }
-  v.querySelectorAll(".m-per [data-per]").forEach(b => b.addEventListener("click", () => { const k = b.dataset.per; PREF.varP = k === "jour" ? null : k; delete PREF.var5; delete PREF.seance; garderPref(); rendre(); }));   // 19/11 : Jour ⇄ 5 séances
+  v.querySelectorAll(".m-per [data-per], .m-per-bas [data-per]").forEach(b => b.addEventListener("click", () => { const k = b.dataset.per; PREF.varP = k === "jour" ? null : k; delete PREF.var5; delete PREF.seance; garderPref(); if (b.dataset.perB) garderPlace(b, rendre); else rendre(); }));   // lot 50 : rangée du bas = même réglage, la page ne saute pas   // 19/11 : Jour ⇄ 5 séances
   const b5 = v.querySelector('.m-jour[role="button"]'); if (b5) { const bascule = () => { cinqOuvert = !cinqOuvert; rendre(); };
     b5.addEventListener("click", bascule); b5.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); bascule(); } }); }
   v.querySelectorAll(".m-l[data-code]").forEach(el => {
@@ -2003,10 +2065,11 @@ function htmlMarches() {
   const vs = m.jour.map(x => varMk(x, per)), dus = vs.map(r => r.du).filter(Boolean).sort(), duMax = dus[dus.length - 1], tousSeance = vs.every(r => r.du || r.v === null);
   const jc = iso => { const d = new Date(iso + "T12:00:00"); return JOURS_C[d.getDay()] + " " + frDate(iso).slice(0, 5); };
   const sous = per ? PERIODES_J[per][2] + (vs.some(r => r.hebdo) ? " (≈ d'après les cours de la semaine)" : "") + " · "
-    : tousSeance && duMax ? "dernière séance · " + jc(duMax) + " · " : (h ? "cours du " + esc(h.replace(" ", " à ").replace(":", " h ")) + " · " : "");
+    : tousSeance && duMax ? (bourseFermee().ferme ? "🔒 bourse fermée · " : "") + "dernière séance · " + jc(duMax) + " · " : (h ? "cours du " + esc(h.replace(" ", " à ").replace(":", " h ")) + " · " : "");
   const marque = r => r.du && (!tousSeance || r.du !== duMax) ? "<small>" + frDate(r.du).slice(0, 5) + "</small>" : "";   // case en retard sur les autres (ex. ×3 avant l'ouverture de New York)
   return '<div class="m-mk"><div class="m-mk-t"><h2 class="sec">Marchés <small>' + sous + "touche pour la courbe</small></h2>" +
     '<button class="mini-btn" type="button" data-mk="cmp" aria-pressed="' + (marcheOuvert === "cmp") + '">Comparer</button></div>' +
+    (seanceDu() ? '<div class="chips m-filtre m-per-bas" role="group" aria-label="Période des marchés (la même que la carte Bourse)">' + boutonsPer(!!per, true) + "</div>" : "") +
     '<div class="m-idx m-idx-mk">' + m.jour.map((x, i) => { const r = vs[i];
       return '<button type="button" data-mk="' + i + '" aria-pressed="' + (marcheOuvert === i) + '"' + (r.du ? ' title="Séance du ' + frDate(r.du) + '"' : "") + '><span>' + esc(NOMS_MK[x.nom] || x.nom) + '</span><b class="' + sens(r.v) + '">' + marque(r) + (ok(r.v) ? pct(r.v, per && per !== "5j" ? 1 : 2) : "—") + "</b></button>"; }).join("") + "</div>" +
     '<div class="m-mk-panneau" id="m-mk-panneau">' + panneauMarche() + "</div></div>";
@@ -2030,7 +2093,9 @@ function courbesSVG(lignes, base100) {
 function panneauMarche() {
   const m = marchesMoi(); if (!m || marcheOuvert === null || !(m.semaines || []).length) return "";
   if (marcheOuvert === "cmp") {
-    const lignes = m.series.map((x, i) => ({ nom: x.nom, v: x.v, c: COUL_MK[i % COUL_MK.length] }));
+    /* lot 50 (Théo) : pastilles dans l'ordre des cases (« Nasdaq ×3 » juste après « Nasdaq ×2 ») ; chaque courbe garde sa couleur */
+    const rang = nom => { const i = m.jour.findIndex(x => x.nom === nom); return i < 0 ? 99 : i; };
+    const lignes = m.series.map((x, i) => ({ nom: x.nom, v: x.v, c: COUL_MK[i % COUL_MK.length], i })).sort((a, b) => rang(a.nom) - rang(b.nom) || a.i - b.i);
     return '<div class="m-mk-chips">' + lignes.map(l => '<button type="button" class="chip" data-mk-cache="' + esc(l.nom) + '" aria-pressed="' + !mkCaches[l.nom] + '"><i style="background:' + l.c + '"></i>' + esc(NOMS_MK[l.nom] || l.nom) + " " + '<small class="' + sens(varSur(l.v, 52)) + '">' + pct(varSur(l.v, 52), 0) + "</small></button>").join("") + "</div>" +
       courbesSVG(lignes.filter(l => !mkCaches[l.nom]), true) + '<p class="info">Base 100 il y a un an, une valeur par semaine (ETF en euros ; « Or couvert » (protégé de la variation du dollar) suivi par le GLD ; « Nasdaq ×3 » suivi par le TQQQ, proche du QQQ3, converti en euros). Touche un nom pour l\'afficher ou le masquer.</p>';
   }
@@ -2135,7 +2200,7 @@ const seulTout = quoi => '<p class="info m-seul">' + quoi + " : disponible pour 
 function choixCompte() {
   const l = comptesStats(); if (l.length < 2) return "";
   const c = compteS(), b = (k, lib) => '<button class="chip" type="button" data-m-compte="' + k + '" aria-pressed="' + ((c ? c.k : "") === k) + '">' + esc(lib) + "</button>";
-  return '<div class="m-cpt" role="group" aria-label="Compte affiché dans toutes les stats"><span class="k">Compte</span><div class="chips">' + b("", "Tout") + l.map(x => b(x.k, x.lib)).join("") + "</div></div>";
+  return '<div class="chips m-filtre m-cpt" role="group" aria-label="Compte affiché dans toutes les stats"><span class="k">Compte</span>' + b("", "Tout") + l.map(x => b(x.k, x.lib)).join("") + "</div>";
 }
 function fenetre(rows, per) {
   if (!rows.length || per === "tout") return rows;
@@ -2154,11 +2219,12 @@ const MODES_C = [["base", "Contre le marché"], ["gain", "Gain cumulé (€)"], 
 function modeCourbe() { return MODES_C.some(x => x[0] === PREF.mode) ? PREF.mode : "base"; }
 function htmlStats() {
   const h = M.historique, envs = M.enveloppes || [];
+  if (!PERIODES_M.some(x => x[0] === PREF.per)) PREF.per = "6m";   // lot 50 : période mémorisée absente = 6 mois (par défaut)
   const mode = modeCourbe(), per = PREF.per, c = compteS();
   const derniere = h && h.rows && h.rows.length ? dateNum(h.rows[h.rows.length - 1][0]) : null;
   const courbe = h && h.rows && h.rows.length > 1 ?
-    '<div class="seg m-seg3" role="group" aria-label="Type de courbe">' + MODES_C.map(([k, l]) => '<button type="button" data-m-mode="' + k + '" aria-pressed="' + (mode === k) + '">' + l + "</button>").join("") + "</div>" +
-    '<div class="chips" role="group" aria-label="Période">' + PERIODES_M.map(([k, l]) => '<button class="chip" type="button" data-m-per="' + k + '" aria-pressed="' + (per === k) + '">' + l + "</button>").join("") + "</div>" +
+    '<div class="chips m-filtre" role="group" aria-label="Type de courbe">' + MODES_C.map(([k, l]) => '<button class="chip" type="button" data-m-mode="' + k + '" aria-pressed="' + (mode === k) + '">' + l + "</button>").join("") + "</div>" +
+    '<div class="chips m-filtre" role="group" aria-label="Période">' + PERIODES_M.map(([k, l]) => '<button class="chip" type="button" data-m-per="' + k + '" aria-pressed="' + (per === k) + '">' + l + "</button>").join("") + "</div>" +
     '<div class="m-ecart" id="m-ecart" hidden></div><div id="m-courbe-box"></div><p class="resume" id="m-resume"></p>' : '<div class="vide">Pas encore assez de relevés pour tracer une courbe.</div>';
   return choixCompte() + blocMoisEnCours() +
     '<div><h2 class="sec">' + (c ? esc(c.lib) : "Ma bourse") + ' <small>' + (M.simple ? "fin de mois" : "au jour le jour") + (derniere ? " · relevé du " + dateLongue(derniere) : "") + "</small></h2></div>" + courbe +
@@ -2436,12 +2502,16 @@ function blocMois() {
       const det = tete("<b>" + majuscule(MOIS_L[i]) + " " + an + "</b>", esc(ctx) || (avecEur ? "résultat" : "hors versements"), x.twr, e);
       return '<button type="button" class="mpm-c' + (cours ? " cours" : "") + '" style="' + teinteMpm(x.twr, maxP) + '" data-mpm="' + esc(det) + '" aria-label="' + esc(MOIS_L[i] + " " + an + " : " + pct(x.twr) + (e ? ", " + e : "") + (bat ? ", mieux que le S&P 500 (" + pct(x.sp) + ")" : spTxt ? ", S&P 500 " + pct(x.sp) : "")) + '"><i>' + nm + "</i><b>" + pct(x.twr) + "</b>" + (e ? "<small>" + e + "</small>" : "") + (bat ? '<span class="mpm-sp" aria-hidden="true">★</span>' : "") + "</button>";
     }).join("");
-    return '<section class="mpm-an"><div class="mpm-t" aria-live="polite" data-mpm-an="' + esc(teteA) + '">' + teteA + '</div><div class="mpm-g' + (avecEur ? "" : " sans-e") + '">' + cases + "</div></section>";
+    const grille = '<div class="mpm-g' + (avecEur ? "" : " sans-e") + '">' + cases + "</div>";
+    /* lot 50 (Théo) : seule l'année en cours est dépliée ; les années d'avant = une ligne repliée (année · % · ★ n/m), dépliée au toucher,
+       état gardé pendant la visite comme les autres accordéons (PREF.acc["mpm-aaaa"]). La tête de l'année est le résumé : le détail d'un mois s'y affiche aussi. */
+    if (an !== ouvertA) return '<details class="acc mpm-an mpm-y" data-acc="mpm-' + an + '"' + (PREF.acc["mpm-" + an] ? " open" : "") + '><summary class="mpm-t" data-mpm-an="' + esc(teteA) + '">' + teteA + "</summary><div>" + grille + "</div></details>";
+    return '<section class="mpm-an"><div class="mpm-t" aria-live="polite" data-mpm-an="' + esc(teteA) + '">' + teteA + "</div>" + grille + "</section>";
   };
-  const recents = ans.slice(0, 3).map(carte).join(""), vieux = ans.slice(3);
+  const ouvertA = ans.includes(anN) ? anN : ans[0];   // année en cours (à défaut : la plus récente)
   return '<div><h2 class="sec">Mois par mois <small>' + (avecEur ? "% hors versements · € = résultat" : "% hors versements") + (cS ? " · " + esc(cS.lib) : "") + "</small></h2></div>" +
     (discret ? '<p class="info">Mode discret : seulement les %.</p>' : sansEur ? seulTout("Le résultat en euros") : "") +
-    '<div class="mpm">' + recents + (vieux.length ? '<details class="mpm-plus"><summary>Années d\'avant (' + vieux.join(", ") + ")</summary>" + vieux.map(carte).join("") + "</details>" : "") + "</div>" +
+    '<div class="mpm">' + ans.map(carte).join("") + "</div>" +
     '<p class="info mpm-aide">Touche un mois : son détail remplace le total de l\'année.' + (m.some(x => ok(x.sp)) ? ' <span class="mpm-leg"><b>★</b> = mieux que le S&amp;P 500 ce mois-là (hors versements).</span>' : "") + "</p>";
 }
 /* Répartition : une seule barre à 100 % ; masquée quand il n'y a qu'une catégorie (seuls les critères qui séparent vraiment sont proposés) */
@@ -2457,7 +2527,7 @@ function blocRepartition() {
   const sel = dispo.find(x => x[0] === PREF.rep) || dispo[0], tri = sel[2], tot = tri.reduce((a, x) => a + x[1], 0) || 1;
   const coul = i => COUL_REP[i % COUL_REP.length];
   return '<div><h2 class="sec">Répartition <small>' + (cS ? "lignes du compte " + esc(cS.lib) : "lignes du portefeuille") + "</small></h2></div>" +
-    (dispo.length > 1 ? '<div class="chips" role="group" aria-label="Répartir par">' + dispo.map(([k, l]) => '<button class="chip" type="button" data-m-rep="' + k + '" aria-pressed="' + (sel[0] === k) + '">' + l + "</button>").join("") + "</div>" : "") +
+    (dispo.length > 1 ? '<div class="chips m-filtre" role="group" aria-label="Répartir par">' + dispo.map(([k, l]) => '<button class="chip" type="button" data-m-rep="' + k + '" aria-pressed="' + (sel[0] === k) + '">' + l + "</button>").join("") + "</div>" : "") +
     '<div class="m-rep-barre" role="img" aria-label="Répartition par ' + esc(sel[1].toLowerCase()) + '">' + tri.map(([k, v], i) => '<i style="flex:' + v + ";background:" + coul(i) + '" title="' + esc(k) + " · " + pct(v / tot, 1, false) + '"></i>').join("") + "</div>" +
     '<div class="m-rep">' + tri.map(([k, v], i) => '<div><span class="n"><i style="background:' + coul(i) + '"></i>' + esc(k) + '</span><span class="p">' + pct(v / tot, 1, false) + '</span><span class="e">' + eur(v) + "</span></div>").join("") + "</div>";
 }
@@ -2482,6 +2552,7 @@ function brancherStats(v) {
     v.querySelectorAll(".mpm-c.on").forEach(x => { x.classList.remove("on"); const t2 = x.closest(".mpm-an").querySelector(".mpm-t"); t2.innerHTML = t2.dataset.mpmAn; });
     if (!deja) { c.classList.add("on"); t.innerHTML = c.dataset.mpm; }
   }));
+  v.querySelectorAll("details.mpm-y").forEach(d => d.addEventListener("toggle", () => { if (d.open) return; const c = d.querySelector(".mpm-c.on"); if (c) { c.classList.remove("on"); const t = d.querySelector(".mpm-t"); t.innerHTML = t.dataset.mpmAn; } }));
   v.querySelectorAll("tr.m-pf-r").forEach(tr => {
     const f = () => { const d = v.querySelector('tr[data-pf-d="' + tr.dataset.pf + '"]'); if (!d) return; d.hidden = !d.hidden; tr.setAttribute("aria-expanded", String(!d.hidden)); tr.classList.toggle("ouvert", !d.hidden); };
     tr.addEventListener("click", f); tr.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); f(); } });
@@ -2740,8 +2811,10 @@ function departGraphes() {
   return k ? DEPART_GRAPHES[k] : null;
 }
 function departK() { const d = departGraphes(); return d ? +d.slice(0, 4) * 100 + +d.slice(5, 7) : null; }
-/** « depuis fin juil. 2026 » ; au point de départ d'un profil et en version longue : « depuis l'achat de l'appartement (fin juil. 2026) » */
-function txtDepuis(k, long) { return long && k === departK() ? "depuis l'achat de l'appartement (fin " + libMoisK(k) + ")" : "depuis fin " + libMoisK(k); }
+/** « depuis fin juil. 2026 » ; au point de départ d'un profil : « depuis l'achat (juil. 2026) », en version longue « depuis l'achat de l'appartement (juillet 2026) ».
+   lot 50 (Théo, 20/11 : « l'appartement, je l'ai depuis début juillet ») : on ne dit plus « fin juillet ». Le premier point reste le relevé réel de fin
+   juillet (le plancher : fin juin, l'argent n'était pas encore parti, la courbe aurait commencé en haut) ; l'axe vertical part toujours de 0 (`empile`). */
+function txtDepuis(k, long) { return k === departK() ? (long ? "depuis l'achat de l'appartement (" + MOIS_L[k % 100 - 1] + " " + Math.floor(k / 100) + ")" : "depuis l'achat (" + libMoisK(k) + ")") : "depuis fin " + libMoisK(k); }
 /** garde les points à partir du mois de départ du profil (k = aaaamm) ; s'il en resterait moins de 2, on garde tout */
 function depuisDepart(liste, cle) {
   const d = departGraphes(); if (!d) return liste;
@@ -2822,8 +2895,8 @@ function blocPatrimoineTemps() {
   const parAn = [], dk = departK();
   if (dk) d.forEach(x => { if (x.k % 100 !== 12) return; const a = d.find(y => y.k === x.k - 100); if (a && a.k >= dk) parAn.push(" En " + Math.floor(x.k / 100) + " : <b class=\"" + sens(net(x) - net(a)) + "\">" + eur(net(x) - net(a), 0, true) + "</b>."); });
   return acc("m-ptemps", "Patrimoine dans le temps", "fin de mois · " + esc(txtDepuis(prem.k)) + " : " + (ETAT.discret === "oui" ? "•••" : eur(net(der) - net(prem), 0, true)), 
-    (aImmo0 ? '<div class="seg m-seg3" role="group" aria-label="Ce qui est compté">' + [["fin", "Financier"], ["net", "Avec l'immobilier"], ["brut", "Brut (dette)"]].map(([k, l]) => '<button type="button" data-m-patri="' + k + '" aria-pressed="' + (mp === k) + '">' + l + "</button>").join("") + "</div>" : "") +
-    (det0.utile ? '<div class="chips" role="group" aria-label="Niveau de détail"><button class="chip" type="button" data-m-patridet="" aria-pressed="' + !voirDet + '">Vue d\'ensemble</button><button class="chip" type="button" data-m-patridet="1" aria-pressed="' + voirDet + '">Détail par compte</button></div>' : "") +
+    (aImmo0 ? '<div class="chips m-filtre" role="group" aria-label="Ce qui est compté">' + [["fin", "Financier"], ["net", "Avec l'immobilier"], ["brut", "Brut (dette)"]].map(([k, l]) => '<button class="chip" type="button" data-m-patri="' + k + '" aria-pressed="' + (mp === k) + '">' + l + "</button>").join("") + "</div>" : "") +
+    (det0.utile ? '<div class="chips m-filtre" role="group" aria-label="Niveau de détail"><button class="chip" type="button" data-m-patridet="" aria-pressed="' + !voirDet + '">Vue d\'ensemble</button><button class="chip" type="button" data-m-patridet="1" aria-pressed="' + voirDet + '">Détail par compte</button></div>' : "") +
     boiteEmpile("g-patri", leg) +
     '<p class="resume">' + (!aImmo ? "Financier : épargne, bourse et assurance-vie" + (aImmo0 ? ", sans l'immobilier (comme le million). " : ". ") : brut ? "Brut : l'appartement compté à son prix, les prêts restants en dessous de zéro. Les pointillés suivent ton patrimoine net. " : "Net : l'immobilier compte pour son prix moins les prêts restants. ") +
       (voirDet ? "Détail : une couche par enveloppe de bourse" + (det.bourse.length ? "" : " (ton fichier ne garde pas leur valeur mois par mois : la bourse reste en un bloc)") + " et une par livret. " : "") +
@@ -3128,7 +3201,7 @@ function htmlProjection() {
   const rVal = Math.round(P.r / REND_PAS) * REND_PAS * 100;
   const corps = '<div class="m-proj">' +
     '<p class="pj-mil" id="pj-mil">' + phraseMil(P) + "</p>" +
-    '<div class="seg pj-hor" role="group" aria-label="Horizon de la projection">' + HORIZONS_PROJ.map(h => '<button type="button" data-pj-h="' + h + '" aria-pressed="' + (h === P.h) + '">' + h + "</button>").join("") + "</div>" +
+    '<div class="chips m-filtre" role="group" aria-label="Horizon de la projection">' + HORIZONS_PROJ.map(h => '<button class="chip" type="button" data-pj-h="' + h + '" aria-pressed="' + (h === P.h) + '">' + h + "</button>").join("") + "</div>" +
     '<div class="pj-tuiles">' + tuile(pr, "Prudent") + tuile(ce, "Central") + tuile(op, "Optimiste") + "</div>" +
     '<div class="pj-graph" id="pj-graph">' + svgProjection(P) + "</div>" + legProj(P) +
     '<div class="pj-plus">' +
@@ -3325,7 +3398,7 @@ function htmlComparateur() {
   const m0 = ok(PREF.euroM) ? PREF.euroM : null;
   const corps = '<div class="m-euro">' +
     '<div class="eu-saisie"><label for="eu-m"><span>Montant à placer (€)</span><input id="eu-m" type="text" inputmode="decimal" autocomplete="off" placeholder="1 000" value="' + (m0 !== null && !discret ? saisieNombre(m0, 2) : "") + '"></label></div>' +
-    '<div class="chips" role="group" aria-label="J\'en aurai besoin dans">' + HORIZONS.map(([k, l]) => '<button class="chip" type="button" data-eu-h="' + k + '" aria-pressed="' + (h === k) + '">' + l + "</button>").join("") + "</div>" +
+    '<div class="chips m-filtre" role="group" aria-label="J\'en aurai besoin dans">' + HORIZONS.map(([k, l]) => '<button class="chip" type="button" data-eu-h="' + k + '" aria-pressed="' + (h === k) + '">' + l + "</button>").join("") + "</div>" +
     '<div id="eu-res">' + resComparateur(m0 !== null && !discret ? m0 : 1000, h, discret) + "</div>" +
     '<p class="info">Indicatif, pas un conseil financier. Rendements attendus : les taux de ton fichier quand ils sont saisis, sinon des repères moyens (bourse ' + pctR(TAUX_REPLI.bourse) + " par an sur longue période, jamais garanti). Les règles fiscales peuvent changer.</p></div>";
   return acc("m-euro", "Où mettre le prochain euro ?", "tes enveloppes comparées", corps, false);
@@ -3340,7 +3413,7 @@ function resComparateur(montant, h, discret) {
 }
 function brancherComparateur(v) {
   const z = v.querySelector(".m-euro"); if (!z) return;
-  const maj = () => { const m = lireNombre(z.querySelector("#eu-m").value); z.querySelector("#eu-res").innerHTML = resComparateur(m > 0 ? m : 1000, PREF.euroH || "moyen", ETAT.discret === "oui"); };
+  const maj = () => { const m = lireNombre(z.querySelector("#eu-m").value); z.querySelector("#eu-res").innerHTML = resComparateur(m > 0 ? m : 1000, HORIZONS.some(x => x[0] === PREF.euroH) ? PREF.euroH : "moyen", ETAT.discret === "oui"); };
   z.querySelector("#eu-m").addEventListener("input", e => { const m = lireNombre(e.target.value); if (m > 0 && m < 1e8) PREF.euroM = m; else delete PREF.euroM; garderPref(); maj(); });
   z.querySelectorAll("[data-eu-h]").forEach(b => b.addEventListener("click", () => { PREF.euroH = b.dataset.euH; garderPref(); z.querySelectorAll("[data-eu-h]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); maj(); }));
 }
