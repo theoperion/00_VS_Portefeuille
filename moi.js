@@ -785,9 +785,9 @@ function injecterStyle() {
 .moi .m-imp-b { justify-self: start; }
 .moi .m-imp.ouvert { padding: 10px 12px; border: 1px solid var(--accent); border-radius: 10px; background: color-mix(in srgb, var(--accent) 7%, var(--panel)); font-size: 13px; }
 .moi .m-imp-t { font-size: 13.5px; }
-.moi .m-rv-auto { margin: 10px 0 0; font: 500 12.5px/1.4 var(--f-text); color: var(--ink-2); }
-.moi .m-rv-auto small { display: block; color: var(--up); font-size: 12px; }
-.moi .m-rv-auto.fait { color: var(--ink); }
+.moi .m-rv-auto { margin: 18px 0 0; font: 500 11.5px/1.4 var(--f-text); color: var(--ink-2); }
+.moi .m-rv-auto small { display: block; color: var(--up); font-size: 11px; }
+.moi .m-rv-auto.fait { color: var(--ink-2); }
 .moi .m-rv-auto.fait small { color: var(--ink-2); }
 .moi .m-meme { all: unset; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; width: 100%; margin: 0 0 10px; padding: 11px 14px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); cursor: pointer; font: 600 14px/1.25 var(--f-text); color: var(--ink); }
 .moi .m-meme small { font-weight: 500; color: var(--ink-2); font-size: 12.5px; }
@@ -1144,6 +1144,7 @@ function rendre() {
     return;
   }
   lireCache(); signalerCloche();
+  bulleReleve();
   if (!M) {
     v.innerHTML = erreur ? '<div class="m-vide"><p>Impossible de lire ton fichier.</p><p class="info">' + esc(majuscule(erreur).replace(/\.?$/, ".")) + '</p><button class="btn" type="button" id="m-reessayer">Réessayer</button></div>'
       : '<div class="m-vide"><div class="m-flaps" aria-hidden="true">' + flaps("MOI", !reduit) + "</div><p>Ouverture de ton fichier…</p><p class=\"info\">La première lecture prend quelques secondes. Ensuite, les derniers chiffres s'affichent tout de suite pendant la mise à jour.</p></div>";
@@ -3898,6 +3899,16 @@ function dernierImportAuto() {
   const Dv = dVersus(), qui = (M && M.personne) || (typeof moiVrai === "function" ? moiVrai() : null) || ETAT.moi;
   const j = Dv && (Dv.journal || []).find(x => x.personne === qui && x.action === "Import auto" && x.statut !== "Annulé");   // journal : du plus récent au plus ancien
   const d = j && new Date(j.t); return d && !isNaN(d) ? d : null;
+}
+/** v17.83 (Théo) : une seule petite bulle (qui s'en va toute seule) à la 1re ouverture après l'envoi du relevé ; ensuite, seulement la ligne en bas de « + » */
+function bulleReleve() {
+  try {
+    const der = dernierImportAuto(); if (!der || Date.now() - der.getTime() > 4 * 864e5 || typeof toast !== "function") return;
+    const cle = "versus.rvVu", k = der.toISOString().slice(0, 10); if (localStorage.getItem(cle) === k) return;
+    localStorage.setItem(cle, k);
+    const r = new Date(Math.round(der.getTime() / 36e5) * 36e5), m = MOIS_RV[der.getMonth()];
+    toast("✅ Relevé " + (/^[aeiouy]/i.test(m) ? "d'" : "de ") + m + " envoyé au Versus (" + String(r.getDate()).padStart(2, "0") + "/" + String(r.getMonth() + 1).padStart(2, "0") + " à " + r.getHours() + " h)");
+  } catch (e) { /* stockage indisponible : pas de bulle */ }
 }
 function htmlCarteReleveVersus() {
   const der = dernierImportAuto();
