@@ -176,6 +176,7 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
 ## À venir
 - 5ᵉ joueur : **Nicolas**, au plus tard le 1er janvier 2027 (PEA, peut-être une assurance-vie) ; à voir la semaine du 23/11.
   À prévoir : son fichier + script, l'ajouter au Versus, barème à 5 = 6·4·2·1·0 (validé, codé v16.20 : `baremeJ`), couleur `--p4` vert citron, 5e bande du logo `.l5` visible dès 5 pilotes, vérifs d'affichage.
+- **Courbe du championnat qui raconte (Théo, 20/11, semaine prochaine)** : au toucher d'un mois sur la courbe (Podium › Course), la bulle dit qui a pris ou perdu la tête ce mois-là (« Février : Clément passe en tête »).
 - **Titre de Moi dans le Versus (Théo, 20/11, pour la refonte des badges)** : chacun pourra choisir de montrer son titre (L'Horloger…, objets « titre » du Vestiaire de Moi) sous son nom au Classement, sans aucun chiffre.
 - **Fiche-vitrine (Théo, 20/11, pour JANVIER, pas avant ; CODÉE en v17.56, cachée jusqu'au 1/1)** : raccourci depuis le classement du Podium vers la fiche de chaque joueur ; en haut de la fiche, une vitrine = palmarès + badges (à prévoir avec la refonte des badges en ~20 familles ; Conseil Classement lot47).
 - Objets à collectionner : Théo veut une **montée en puissance par paliers** (premiers paliers = beaux objets ; paliers
