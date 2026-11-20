@@ -1840,7 +1840,12 @@ function pretHtml() {
 /* ---- V15.4 · Marchés : 8 cases (variation du jour, lue dans le Versus), courbe d'un an au toucher, « Comparer » en base 100 ---- */
 const COUL_MK = ["#5B8DEF", "#2BB673", "#9B6BFF", "#E5484D", "#F2A33A", "#18A9C7", "#D6619E", "#C9A227", "#8C7B5A", "#E8590C"];   // v17.41 : 10e = Nasdaq ×3
 let marcheOuvert = null, mkCaches = {};   // V15.19 : toutes les courbes affichées par défaut, or couvert compris
-function marchesMoi() { const Dv = dVersus(); const m = Dv && Dv.marchesMoi; return m && (m.jour || []).length ? m : null; }
+function marchesMoi() { const Dv = dVersus(); const m = Dv && Dv.marchesMoi; if (!(m && (m.jour || []).length)) return null;
+  // v17.49 (Théo) : l'or en deux cases côte à côte, « Or non couvert » puis « Or couvert € » (sa variation vient des clôtures, comme le ×3)
+  const i = m.jour.findIndex(x => x.nom === "Or");
+  if (i >= 0 && !m.jour.some(x => x.nom === "Or couvert €") && (m.series || []).some(x => x.nom === "Or couvert €")) m.jour.splice(i + 1, 0, { nom: "Or couvert €", pct: null, heure: "" });
+  return m; }
+const NOMS_MK = { "Or": "Or non couvert" };   // v17.49 : nom affiché dans la case (le nom technique reste « Or »)
 /* v17.41 (Théo) : les cases suivent la période de la carte Bourse (Jour · 5 j · 1 M · 6 M · Janv. · 1 an), mêmes bornes (`debutPer`).
    Source : clôtures quotidiennes `quot` (serveur Versus V63) ; à défaut, les courbes hebdomadaires (≈). En « Jour », bourse fermée :
    la dernière séance du marché (clôture / clôture d'avant) au lieu d'un tiret. En séance, la variation en direct s'ajoute à la dernière clôture. */
@@ -1884,7 +1889,7 @@ function htmlMarches() {
   return '<div class="m-mk"><div class="m-mk-t"><h2 class="sec">Marchés <small>' + sous + "touche pour la courbe</small></h2>" +
     '<button class="mini-btn" type="button" data-mk="cmp" aria-pressed="' + (marcheOuvert === "cmp") + '">Comparer</button></div>' +
     '<div class="m-idx m-idx-mk">' + m.jour.map((x, i) => { const r = vs[i];
-      return '<button type="button" data-mk="' + i + '" aria-pressed="' + (marcheOuvert === i) + '"' + (r.du ? ' title="Séance du ' + frDate(r.du) + '"' : "") + '><span>' + esc(x.nom) + '</span><b class="' + sens(r.v) + '">' + marque(r) + (ok(r.v) ? pct(r.v, per && per !== "5j" ? 1 : 2) : "—") + "</b></button>"; }).join("") + "</div>" +
+      return '<button type="button" data-mk="' + i + '" aria-pressed="' + (marcheOuvert === i) + '"' + (r.du ? ' title="Séance du ' + frDate(r.du) + '"' : "") + '><span>' + esc(NOMS_MK[x.nom] || x.nom) + '</span><b class="' + sens(r.v) + '">' + marque(r) + (ok(r.v) ? pct(r.v, per && per !== "5j" ? 1 : 2) : "—") + "</b></button>"; }).join("") + "</div>" +
     '<div class="m-mk-panneau" id="m-mk-panneau">' + panneauMarche() + "</div></div>";
 }
 function serieMk(nom) { const m = marchesMoi(); return m && (m.series || []).find(x => x.nom === nom); }
@@ -1912,7 +1917,7 @@ function panneauMarche() {
   }
   const j = m.jour[marcheOuvert], se = j && serieMk(j.nom); if (!se) return '<p class="info">Pas d\'historique pour ce marché.</p>';
   const c = COUL_MK[m.series.indexOf(se) % COUL_MK.length], t = (lab, n) => '<span>' + lab + ' <b class="' + sens(varSur(se.v, n)) + '">' + pct(varSur(se.v, n), 1) + "</b></span>";
-  return '<div class="m-mk-res"><b>' + esc(j.nom) + "</b>" + t("1 mois", 4) + t("3 mois", 13) + t("1 an", 52) + "</div>" + courbesSVG([{ nom: se.nom, v: se.v, c: c }], false) +
+  return '<div class="m-mk-res"><b>' + esc(NOMS_MK[j.nom] || j.nom) + "</b>" + t("1 mois", 4) + t("3 mois", 13) + t("1 an", 52) + "</div>" + courbesSVG([{ nom: se.nom, v: se.v, c: c }], false) +
     (/^Or/.test(j.nom) && serieMk("Or couvert €") ? '<p class="info">Couvert ou non ? <button class="lien" type="button" data-mk="cmp-or">Comparer l\'or couvert et non couvert</button></p>' : "");
 }
 function brancherMarches(v) {
