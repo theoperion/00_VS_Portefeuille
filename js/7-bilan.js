@@ -262,7 +262,7 @@ function rendreMois() {
   const pal = palmares(D, env, i1, i2);
   const gagnees = {}; D.personnes.forEach(p => gagnees[p.nom] = 0); pal.forEach(l => { if (l.vainqueur) gagnees[l.vainqueur]++; });
 
-  v.innerHTML = blocBilans() + filtres(true) +
+  v.innerHTML = filtres(true) +   // v18.5 (Théo) : bilans et récaps tout en bas (on les revoit quand on veut)
     '<div class="periode">' + esc(textePeriode(deb || null, fin, ks.length)) + "</div>" +
     palmaresMois(env, deb, fin, ks) +
     blocDuel(env, deb, fin) +
@@ -278,7 +278,7 @@ function rendreMois() {
       D.personnes.map(p => '<td class="' + sens(l.personnes[p.nom]) + '">' + (p.nom in l.personnes ? pct(l.personnes[p.nom]) : "—") + "</td>").join("") +
       '<td class="muted">' + pct(l.i1) + "</td>" + (i2s >= 0 ? '<td class="muted">' + pct(l.i2) + "</td>" : "") + "<td>" + (l.vainqueur ? '<span class="pastille" style="background:' + couleur(l.vainqueur) + '"></span>' + esc(l.vainqueur) : "—") + "</td></tr>").join("") +
     "<tr><td>Années gagnées</td>" + D.personnes.map(p => "<td>" + gagnees[p.nom] + "</td>").join("") + "<td></td>" + (i2s >= 0 ? "<td></td>" : "") + "<td></td></tr>" +
-    "</tbody></table></div></div>";
+    "</tbody></table></div></div>" + blocBilans();
   brancherFiltres("mois");
   brancherBilans(v);
   v.querySelectorAll("[data-bilan]").forEach(b => { if (!b.closest(".bilans-bloc")) b.addEventListener("click", () => ouvrirBilan(+b.dataset.bilan)); });
