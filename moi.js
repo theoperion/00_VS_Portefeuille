@@ -1250,8 +1250,8 @@ function ligneJour(l, avecEnv) {
   return '<div class="m-l" role="button" tabindex="0" aria-expanded="false" data-code="' + esc(l.code) + '" data-env="' + esc(l.env) + '">' +
     '<div class="g"><b>' + esc(l.code) + (avecEnv ? '<span class="tag">' + esc(String(l.env).split(" ")[0]) + "</span>" : "") + "</b><small>" + esc(l.nom || "") + "</small></div>" +
     '<div class="d"><span class="badge ' + sens(l.pct) + '">' + pct(l.pct, 2) + '</span><small class="' + sens(l.jour) + '">' + eur(l.jour, 0, true) + "</small></div>" +
-    /* F (v16.93) : rangée du bas allégée (valeur · plus-value en %), le cours et le poids sont dans le détail */
-    '<div class="b"><span>' + eur(l.valeur) + '</span><span class="' + sens(l.pv) + '">PV ' + pct(l.pvPct) + "</span></div>" +
+    /* F (v16.93) puis v17.40 : rangée du bas = valeur · cours · plus-value en % (le poids reste dans le détail) */
+    '<div class="b"><span>' + eur(l.valeur) + "</span>" + (ok(l.cours) ? '<span class="m-cours"><i>cours</i> ' + cours(l.cours) + "</span>" : "") + '<span class="' + sens(l.pv) + '">PV ' + pct(l.pvPct) + "</span></div>" +   // v17.40 (Théo) : le cours de chaque ligne visible sans ouvrir le détail
     "</div>";
 }
 function basculerLigne(el) {
