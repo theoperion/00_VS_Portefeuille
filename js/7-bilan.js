@@ -329,7 +329,7 @@ function rendreFiche() {
     const max = Math.max(.04, ...sAll.filter(x => typeof x.r === "number").map(x => Math.abs(x.r)));
 
     v.innerHTML = chips + (typeof ficheMillion === "function" ? ficheMillion(p.nom) : "") + (typeof vitrineFiche === "function" ? vitrineFiche(p.nom) : "") + filtres(true) +
-      '<div class="periode">' + esc(textePeriode(deb, finP, s.n)) + (s.debutK && deb && s.debutK > cleMoins(deb, -1) ? " · l'enveloppe a démarré après le début demandé" : "") + "</div>" +
+      '<div class="periode">' + esc(textePeriode(deb, finP, s.n)) + (s.debutK && deb && s.debutK > cleMoins(deb, -1) ? " · enveloppe ouverte plus tard" : "") + "</div>" +
       '<div class="hero"><span class="eyebrow">' + esc(ENVELOPPES[env]) + " · " + esc(p.nom) + '</span><span class="big" data-cv="' + s.valeur + '" data-cf="eur">' + eur(s.valeur) + '</span><div class="sous"><span class="badge ' + sens(s.pvLatente) + '">' + eur(s.pvLatente, 0, true) + " · " + pct(s.pvLatentePct) + "</span><span>de plus-value pour " + eur(s.verse) + " versés</span></div></div>" +
       (s.n ? '<div class="tuiles">' +
         tuile("Performance (TWR)", pct(s.twr), sens(s.twr), "MWR <b>" + pct(s.mwr) + "</b>" + timingVersements(s)) +

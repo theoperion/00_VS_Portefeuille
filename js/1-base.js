@@ -363,7 +363,8 @@ function cadre() {
   return { fin, deb };
 }
 function textePeriode(deb, fin, n) {
-  return (deb ? "Du " + finMois(deb) : "Depuis le premier relevé") + " au " + finMois(fin) + " · " + n + " mois";
+  const c = k => finMois(k).replace(/\/(\d{2})(\d{2})$/, "/$2");   // v18.9 (Théo) : une seule ligne, dates courtes (31/10/25)
+  return (deb ? c(deb) : "1er relevé") + " → " + c(fin) + " · " + n + " mois";
 }
 
 /* ---------- Animations (coupées si « réduire les animations ») ---------- */
@@ -597,7 +598,7 @@ function rendreClassement() {
     (anomalies.length ? '<div style="display:grid;gap:6px">' + anomalies.map(t => '<div class="alerte warn">' + t + "</div>").join("") + "</div>" : "") +
     '<div><h2 class="sec">Classement <span class="h-boutons"><button class="million-b' + (D.premierMillion ? " pris" : "") + '" type="button" id="info-million" aria-label="Premier millionnaire">👑</button><button class="vers-fiches" type="button" id="vers-fiches" aria-label="Ouvrir les fiches de chacun"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.4c2.3.1 3.9 1.6 4.8 4.6"/></svg>Fiches</button></span></h2></div>' +
     (typeof plaqueMillion === "function" ? plaqueMillion() : "") + filtres(true) +
-    '<div class="periode">' + esc(textePeriode(deb, fin, nMois)) + (deb && st.some(s => s.n < nMois) ? " · chaque courbe démarre au premier relevé de la personne" : "") + " · performance (TWR), versements neutralisés</div>" +
+    '<div class="periode" title="Performance (TWR), versements neutralisés' + (deb && st.some(s => s.n < nMois) ? " ; chaque courbe démarre au premier relevé de la personne" : "") + '">' + esc(textePeriode(deb, fin, nMois)) + " · TWR, versements neutralisés</div>" +
     '<div class="tour' + (animer ? " entree" : "") + '"><div class="tour-h"><span>Pos.</span><span>Portefeuille</span><span>TWR<span class="h-long"> · écart</span></span></div>' + tour + "</div>" +
     '<p class="tour-aide">👆 Touche un pilote pour ouvrir sa fiche' + (saisonJouee() ? " (vitrine, historique)" : " (historique mois par mois)") + ".</p>" +
     (saisonJouee() ? '<p class="leg-bdg"><b>Sur les lignes</b> tête cerclée d\'or = en tête du championnat · 🏆 champion de saison · ⚡💥… exclusifs (un seul exemplaire) · « +N » = les autres, dans la vitrine. <span>Touche un badge pour savoir ce qu\'il veut dire.</span></p>' : "") +
