@@ -907,7 +907,7 @@ function htmlDetailPoints(y) {
 function dessinerChampionnat(y) {
   const box = $("#g-champ"); if (!box) return;
   const c = championnat(y), ks = [c.deb].concat(c.mois.map(m => m.k));
-  tracer(box, { x: ks, series: c.classement.map(n => ({ nom: n, v: [0].concat(c.mois.map(m => m.cumul[n] !== undefined ? m.cumul[n] : null)), c: couleur(n), w: n === ETAT.moi ? 2.8 : 2, fx: equipDe(n).trainee })),
+  tracer(box, { x: ks, series: c.classement.map(n => ({ nom: n, v: [0].concat(c.mois.map(m => m.cumul[n] !== undefined ? m.cumul[n] : null)), c: couleur(n), w: n === c.classement[0] && c.mois.length ? 3.6 : n === ETAT.moi ? 2.8 : 2, lead: n === c.classement[0] && c.mois.length > 0, fx: equipDe(n).trainee })),
     finEtiq: true, h: 190, fmt: x => x + " pts", fmtAxe: t => Number.isInteger(t) ? String(t) : "", titreX: k => k === c.deb ? "Départ" : "Fin " + moisCourt(k) });
 }
 function quiEcurie() { return moiVrai(); }

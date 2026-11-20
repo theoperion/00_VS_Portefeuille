@@ -458,6 +458,7 @@ function tracer(box, conf) {
     o += '<path d="' + d + '" fill="none" stroke="' + C(s.c) + '" stroke-width="' + (s.w || 2) + '" stroke-linejoin="round" stroke-linecap="round"' + (s.dash ? ' stroke-dasharray="' + (s.dash === true ? "5 4" : s.dash) + '"' : "") + "/>";
     if (dernier !== null) {
       o += '<circle cx="' + X(dernier).toFixed(1) + '" cy="' + Y(s.v[dernier]).toFixed(1) + '" r="3.5" fill="' + C(s.c) + '" stroke="' + C("var(--panel)") + '" stroke-width="2"/>';
+      if (s.lead) o += '<circle class="g-lead' + (ANIM ? " anim" : "") + '" cx="' + X(dernier).toFixed(1) + '" cy="' + Y(s.v[dernier]).toFixed(1) + '" r="7" fill="none" stroke="' + C("var(--gold)") + '" stroke-width="2"/>';   // v17.67 : le leader a un anneau doré qui pulse au bout de sa courbe
       if (conf.finEtiq) fins.push({ y: Y(s.v[dernier]), t: conf.fmt(s.v[dernier]), c: s.c });
     }
   });
