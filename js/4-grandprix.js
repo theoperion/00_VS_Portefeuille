@@ -168,7 +168,7 @@ function piste3D() { return !!(window.Piste && Piste.supporte()); }
    + gros bouton « ⛶ Plein écran » (vrai plein écran, paysage). D'abord sur le circuit de Noël seulement : on ajoute les autres ici quand ils sont prêts. */
 const VUES_V2 = ["abudhabi"];
 const VUES_TXT = { "2d": ["🗺️", "Carte"], visite: ["📺", "Visite"], poursuite: ["🚁", "Hélico"] };
-function vuesV2(ci) { return VUES_V2.includes(ci); }
+function vuesV2(ci) { return true; }   // v17.33 (Théo) : les nouvelles vues et le plein écran partout (aperçu « Tout afficher » compris), comme au tour de chauffe
 /** la vue choisie sur un circuit « V2 » : "2d", "visite" ou "poursuite" (null sur les autres circuits) */
 function vueGP(ci) { if (!vuesV2(ci)) return null; return ETAT.gp2d !== "0" || !piste3D() ? "2d" : ETAT.gpVue3 === "poursuite" ? "poursuite" : "visite"; }
 /** la voiture suivie en 🚁 Hélico : la sienne par défaut, sinon la 1re */
