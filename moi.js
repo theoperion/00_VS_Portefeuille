@@ -785,6 +785,8 @@ function injecterStyle() {
 .moi .m-imp-b { justify-self: start; }
 .moi .m-imp.ouvert { padding: 10px 12px; border: 1px solid var(--accent); border-radius: 10px; background: color-mix(in srgb, var(--accent) 7%, var(--panel)); font-size: 13px; }
 .moi .m-imp-t { font-size: 13.5px; }
+.moi .m-meme { all: unset; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; width: 100%; margin: 0 0 10px; padding: 11px 14px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); cursor: pointer; font: 600 14px/1.25 var(--f-text); color: var(--ink); }
+.moi .m-meme small { font-weight: 500; color: var(--ink-2); font-size: 12.5px; }
 .moi .m-imp .aide, .moi .m-imp-n { display: block; margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
 .moi .m-imp-n.petit { font-size: 12px; color: var(--ink-3); overflow-wrap: anywhere; }
 .moi .m-imp-n.warn, .moi .m-imp-msg { margin: 0; color: var(--down); font-weight: 600; font-size: 12.5px; }
@@ -3779,6 +3781,18 @@ let plusTypes = false, menuOuvert = false;
    Bouton retour du téléphone = étape précédente (depuis l'étape 1 : ferme « + ») ; ce qui est tapé reste gardé pendant la visite (brouillons). */
 let etape = 1, paneCourant = "ordre";
 const brouillons = {};
+/* v17.79 (Théo) : « ↻ Même achat que la dernière fois » sur « Quoi ? » : compte + actif du dernier achat, droit aux chiffres (les chiffres viennent toujours de l'avis) */
+function dernierAchat() {
+  const l = ((M && M.ref && M.ref.journal) || []).filter(o => o.type === "Achat" && o.enveloppe && o.actif && !o.envoi).sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+  const o = l[0]; if (!o) return null;
+  const ouv = (refData().enveloppes || []).some(e => typeof e !== "string" && e.nom === o.enveloppe && (!e.statut || e.statut === "Ouvert" || e.statut === "À ouvrir"));
+  return ouv ? { env: o.enveloppe, actif: o.actif, date: String(o.date || "").slice(0, 10) } : null;
+}
+function htmlMemeAchat() {
+  const d = dernierAchat(); if (!d) return "";
+  const mm = d.date && d.date.slice(0, 7) === isoJour(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 15)).slice(0, 7);
+  return '<button type="button" class="m-meme" id="f-meme">↻ <b>Même achat que ' + (mm ? "le mois dernier" : "la dernière fois") + "</b><small>" + esc(d.actif) + " · " + esc(d.env) + "</small></button>";
+}
 const NOMS_ETAPES = { 1: "Quoi ?", 2: "Les chiffres", 3: "Versement", 4: "Relire" };
 function etapesDe(t) { return t === "Achat" ? [1, 2, 3, 4] : t === "Vente" ? [1, 2, 4] : [1, 2]; }
 function etapeFinale() { const l = etapesDe(F.type); return etape === l[l.length - 1]; }
@@ -4256,7 +4270,7 @@ function rendreFormulaire() {
   let corps = "";
   if (etape === 1 && IMP) corps = htmlImport(false);   // import ouvert : rien d'autre à l'écran (retour = fermer le panneau)
   else if (etape === 1) corps =
-      htmlImport(false) +
+      htmlImport(false) + htmlMemeAchat() +
       '<div class="types m-tuiles" role="group" aria-label="Type d\'opération">' + courants.map(tuile).join("") +
         '<button type="button" class="type-btn m-tuile plus-types" id="f-plus-types" aria-expanded="' + plusTypes + '">Autres ' + (plusTypes ? "▴" : "▾") + "<small>" + (courants.includes("Vente") ? "dividende, frais, retrait…" : "vente, dividende, frais…") + "</small></button></div>" +
       (!plusTypes ? "" : '<div class="m-autres" role="group" aria-label="Autres types">' + courantsAutres.map(chipT).join("") +
@@ -4317,6 +4331,7 @@ function rendreFormulaire() {
     F = formulaire({ type: t, date: date, dateChoisie: !!date && F.dateChoisie, env: env, envChoisi: F.envChoisi && env === F.env, actif: AVEC_ACTIF.includes(t) && env === F.env ? F.actif : "", montant: F.montantAuto || F.montantHab ? "" : F.montant });
     synchroniser(); rendreFormulaire();
   }));
+  if ($f("f-meme")) $f("f-meme").addEventListener("click", () => { const d = dernierAchat(); if (d) ouvrirSaisieM({ type: "Achat", env: d.env, actif: d.actif }); });   // v17.79
   if ($f("f-plus-types")) $f("f-plus-types").addEventListener("click", () => { if (etape === 1) { plusTypes = !plusTypes; rendreFormulaire(); return; } plusTypes = !panneau; if (!plusTypes && autreType) F = formulaire({ type: "Achat", date: DATE_OBLIG.includes(F.type) ? "" : F.date, env: F.env, envChoisi: F.envChoisi }); rendreFormulaire(); });
   if ($f("f-aides")) $f("f-aides").addEventListener("click", () => { PREF.aides = PREF.aides === false; garderPref(); majAides(); menuOuvert = false; rendreFormulaire(); });
   if ($f("fo-env")) $f("fo-env").addEventListener("change", e => { if (F.imp && IMP && IMP.ops) { IMP.ops[F.imp.i].choix.env = e.target.value; F = formulaireImport(F.imp.i); rendreFormulaire(); return; } F = formulaire({ type: F.type, date: F.date, dateChoisie: F.dateChoisie, env: e.target.value, envChoisi: true, montant: F.montantAuto || F.montantHab ? "" : F.montant, frais: F.fraisAuto ? "" : F.frais }); synchroniser(); rendreFormulaire(); });
