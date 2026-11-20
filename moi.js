@@ -432,14 +432,15 @@ function injecterStyle() {
 .moi .av-leg i { display: inline-block; width: 12px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; } .moi .av-leg i.pt { background: repeating-linear-gradient(90deg, var(--ink-3) 0 4px, transparent 4px 7px); } .moi .av-leg i.rd { width: 7px; height: 7px; border-radius: 50%; }
 .moi .av-rdv { display: grid; gap: 6px; } .moi .av-rdv > div { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; } .moi .av-rdv > div > span { flex: 1; } .moi .av-rdv .mini-btn { flex: none; } .moi .av-rdv i { font-style: normal; } .moi .av-rdv small { display: block; color: var(--ink-3); font-size: 12px; }
 /* 19/11 · pastille Jour | 5 j en haut à droite de la carte (remplace le bandeau « Voir la semaine ») */
-/* v17.23 (Conseil) : 6 périodes en rangée pleine largeur sous le titre (cibles de 32 px, rien ne chevauche le titre, même à 360 px sur iPhone) */
-.moi .m-per { all: unset; box-sizing: border-box; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2px; padding: 2px; border-radius: 12px; border: 1px solid var(--rule); background: var(--panel); font: 600 12.5px/1 var(--f-text); color: var(--ink-3); -webkit-tap-highlight-color: transparent; }
-#v-moi.th .m-per { --bg: #0B0D12; }
-.moi .m-per button { all: unset; box-sizing: border-box; cursor: pointer; min-height: 32px; display: flex; align-items: center; justify-content: center; padding: 0 2px; border-radius: 10px; white-space: nowrap; overflow: hidden; text-overflow: clip; }
-.moi .m-per button[aria-pressed="true"] { background: var(--ink); color: var(--bg, #0B0D12); }
-.moi .m-per button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.moi .m-vsmk { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--rule); font: 600 12px/1 var(--f-text); color: var(--ink-2); }
-.moi .m-vsmk:focus-visible { outline: 2px solid var(--accent); }
+/* lot 58 (Théo : « les jours, les réduire comme sur les Marchés ; Face aux marchés à côté, juste une icône ») : la rangée de périodes reprend
+   les petites pastilles des Marchés (.chips.m-filtre, ~30 px), l'icône 📈 à sa droite (zone tactile 40×40, marges négatives : la rangée garde ~30 px) */
+.moi .m-per-l { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.moi .m-per-l .m-per { flex: 0 1 auto; }
+.moi .m-vsmk { all: unset; box-sizing: border-box; flex: none; margin: -5px -5px -5px auto; width: 40px; height: 40px; display: grid; place-items: center; cursor: pointer; border-radius: 50%; -webkit-tap-highlight-color: transparent; }
+.moi .m-vsmk span { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--rule-2); font-size: 15px; line-height: 1; box-sizing: border-box; }
+.moi .m-vsmk:active span { background: var(--panel); }
+.moi .m-vsmk:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.moi .m-jour .m-maj { margin: 0; font-size: 11px; }
 .moi .m-per-n { flex-basis: 100%; margin-top: -3px; font-size: 11.5px; color: var(--ink-3); }
 .moi .m-jour[role="button"] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .moi .m-5j-v { font-style: normal; opacity: .7; margin-left: 2px; }
@@ -1372,13 +1373,12 @@ function htmlJourBase() {
       '<span class="eyebrow">' + embHero() + (v5 ? "Bourse · " + PERIODES_J[VUEJ][2] : bf.ferme ? "Bourse · dernière séance" : 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "")) + "</span>" +
       (!v5 && bf.ferme ? badgeFerme(bf) : "") +
       /* Théo, 19/11 : pastille Jour | 5 j ; v17.23 : rangée de 6 périodes sous le titre (un toucher bascule, le choix reste sur l'appareil) */
-      (per ? '<div class="m-per" role="group" aria-label="Période de la variation">' + boutonsPer(v5, "") + "</div>" : "") +
+      '<div class="m-per-l">' + (per ? '<div class="chips m-filtre m-per" role="group" aria-label="Période de la variation">' + boutonsPer(v5, "") + "</div>" : "") +
+        '<button type="button" class="m-vsmk" id="m-vsmk" aria-label="Face aux marchés" title="Face aux marchés"><span aria-hidden="true">📈</span></button></div>' +   // lot 58 : l'ancien bouton large devient une icône (même effet : défiler jusqu'aux Marchés)
       '<div class="m-flaps" role="img" aria-label="' + esc(texteFlap) + '">' + flaps(texteFlap, animer) + "</div>" +
       '<div class="m-jour"' + (det5 ? ' role="button" tabindex="0" aria-expanded="' + cinqOuvert + '" title="Jour par jour"' : "") + '><span class="badge big-b ' + sens(s.jour) + '">' + fleche(s.jour) + " " + eur(s.jour, 0, true) + " · " + pct(s.jourPct, 2) + "</span>" +
-        "<span>" + (suffixe ? esc(suffixe) : hausse + " en hausse · " + baisse + " en baisse") + (det5 ? ' <i class="m-5j-v" aria-hidden="true">' + (cinqOuvert ? "▴" : "▾") + "</i>" : "") + "</span>" + (s.jourNote ? '<small class="m-per-n">' + esc(s.jourNote) + "</small>" : "") + "</div>" +
+        "<span>" + (suffixe ? esc(suffixe) : hausse + " en hausse · " + baisse + " en baisse") + (det5 ? ' <i class="m-5j-v" aria-hidden="true">' + (cinqOuvert ? "▴" : "▾") + "</i>" : "") + "</span>" + (majCourte() ? '<small class="m-maj">' + esc(majCourte()) + "</small>" : "") + (s.jourNote ? '<small class="m-per-n">' + esc(s.jourNote) + "</small>" : "") + "</div>" +
       (det5 ? htmlCinq() : "") +
-      '<button type="button" class="m-vsmk" id="m-vsmk">📈 Face aux marchés <span aria-hidden="true">›</span></button>' +   // v17.44 (Théo) : raccourci vers les marchés, même période
-      (majCourte() ? '<small class="m-maj">' + esc(majCourte()) + "</small>" : "") +
     "</div>" +
     bandeDebut(s) +
     (toutes.length >= 3 ? barres + '<p class="m-carte-l">' + (!bouge ? "Rien n'a encore bougé." + (!v5 && bf.ferme ? " Bourse fermée" + (bf.lib ? " (séance du " + esc(bf.lib) + ")" : "") + "." : "") : "Du meilleur au pire, en %" + (v5 ? " sur la période" : bf.ferme ? " sur la séance du " + esc(bf.lib) + " (bourse fermée)" : " aujourd'hui") + ".") + "</p>" : "") +   // lot 27 : sous 3 lignes, la carte n'apprend rien
@@ -1397,7 +1397,7 @@ function htmlJourBase() {
 }
 /** boutons de période (Jour · 5 j · 1 M · 6 M · Janv. · 1 an) ; bas = la rangée au-dessus des Marchés (lot 50), même réglage que la carte Bourse */
 function boutonsPer(v5, bas) {
-  return [["jour", "Jour"]].concat(Object.keys(PERIODES_J).map(k => [k, PERIODES_J[k][1]])).map(([k, l]) => '<button type="button"' + (bas ? ' class="chip" data-per-b="1"' : "") + ' data-per="' + k + '" aria-pressed="' + ((v5 ? VUEJ : "jour") === k) + '">' + l + "</button>").join("");
+  return [["jour", "Jour"]].concat(Object.keys(PERIODES_J).map(k => [k, PERIODES_J[k][1]])).map(([k, l]) => '<button type="button" class="chip"' + (bas ? ' data-per-b="1"' : "") + ' data-per="' + k + '" aria-pressed="' + ((v5 ? VUEJ : "jour") === k) + '">' + l + "</button>").join("");
 }
 function enteteEnv(nom, valeur, jour, jourPct, pv, pvPct) {
   return '<div class="m-env-h"><b>' + esc(nom) + '</b><span class="v">' + eur(valeur) + "</span>" +
