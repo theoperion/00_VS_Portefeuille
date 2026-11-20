@@ -103,6 +103,7 @@ Commit (message en français, « vX.Y : … »), ligne dans le journal de `MODE_
   Clément chaque 20 du mois avec son relevé (1er : 20/12/2026). Les deux démarrent une fois le niveau initial saisi. Rappel « Relevé Quintessa (Artema) » (Paramètres!V9, 20/11, Théo) : 1er rappel au 1er point d'indice (Théo 07/12/2026, Clément 20/12/2026), puis rythme normal (Théo le 1er du mois, Clément le 20). Clément : rappel séparé « Versement Linxea du mois » (Paramètres!S13, le 20, dès novembre).
 
 ## Points de vigilance connus
+- **Règle d'affichage (Théo, 20/11)** : à chaque réouverture de l'appli, toutes les rubriques dépliables reviennent REPLIÉES (l'ouverture ne vaut que pendant la visite) ; seuls les FILTRES sont mémorisés (sauf la période de Moi › Aujourd'hui, toujours « Jour ») ; chaque 1er janvier la période des filtres revient sur « Année ». Filtres = petites pastilles compactes (listes déroulantes seulement quand il y a beaucoup de choix, ex. marchés).
 - Bouton retour (v15.27, modèle de l'appli Budget) : validé par Théo, ne pas y toucher sans raison.
 - Le cosmétique « Filtre de course » (ex-« Ambiance » : Nocturne, Golden hour, Hiver, Synthwave) n'est plus qu'une
   touche par-dessus le thème du circuit (`ambiance()` dans `piste.js`, v16.5) : le thème (`def.amb`) s'applique toujours.
