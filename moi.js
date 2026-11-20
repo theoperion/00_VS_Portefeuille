@@ -4505,7 +4505,8 @@ async function envoyerOrdre(forcer) {
   if (M && M.ref) M.ref.journal = enAttente.reverse().concat(M.ref.journal || []);
   const rep = await posterFichier({ action: "ordre", ordres: ordres, forcer: !!forcer });
   if (M && M.ref) M.ref.journal = (M.ref.journal || []).filter(o => !o.envoi);
-  if (rep.ok) { if (window.SONS) SONS.succes(); toast(rep.message || "Ordre enregistré."); charger(true); suiteImport(sauvegarde); return; }
+  if (rep.ok) { if (ordres.some(o => o.type === "Frais en parts" && /Linxea/i.test(o.enveloppe || ""))) stock.set(cleStock("fraisLx"), isoJour(new Date()));   // v17.77 : rappel des frais Linxea fait
+    if (window.SONS) SONS.succes(); toast(rep.message || "Ordre enregistré."); charger(true); suiteImport(sauvegarde); return; }
   if (rep.erreur === "cle") { cleRefusee(rep.message); toast("Clé refusée par ton fichier."); if (vueMoi()) rendre(); return; }
   if (rep.erreur === "incertain") { ordresIncertains = ordresIncertains.concat(enAttente.map(o => Object.assign({}, o, { envoi: true }))); toast("L'ordre a peut-être été enregistré : vérifie l'Historique avant de renvoyer."); charger(true); return; }   // v16.83 : jamais rouvert rempli (doublon)
   toast(rep.erreur === "avertissement" ? "Ordre à confirmer." : "Ordre non enregistré.");
@@ -5906,6 +5907,7 @@ function partielRappel(k) {
   if (k === "releve") return { type: "Relevé", env: quint, actif: "ARTEMA" };
   if (k === "interets") return { type: "Intérêts", env: (r.enveloppes.find(e => /Livret A/.test(e.nom)) || {}).nom, date: (new Date().getFullYear() - 1) + "-12-31" };
   if (k === "versement") { const rc = (r.raccourcis || []).find(x => /Quintessa/.test(x.env)); return rc ? depuisRaccourci(rc) : { env: quint }; }
+  if (k === "fraisLx") return { type: "Frais en parts", env: envLinxea() };   // v17.77
   if (k === "linxea") { const lx = (r.enveloppes.find(e => /Linxea/.test(e.nom)) || {}).nom, rc = (r.raccourcis || []).find(x => /Linxea/.test(x.env)); return rc ? depuisRaccourci(rc) : { type: "Apport", env: lx }; }
   return null;
 }
@@ -5925,13 +5927,25 @@ function brancherBandeauRappel(v) { brancherAFaire(v); }
    - phraseBilan : UNE ligne en tête d'Aujourd'hui (total, variation depuis la fin du mois dernier, LA chose à faire) ;
    - tachesAFaire / htmlAFaire : tous les rappels dus du fichier au même endroit (remplace le bandeau), « Faire » et « Plus tard » (2 jours) ;
    - ouvrirPointArtema : valeur de la ligne (€, relevé) ET niveau de l'indice (pts) en une fois, par les actions existantes « ordre » et « artema ». */
-const VERBES_RAPPEL = { point: "faire le point Artema", releve: "saisir ton relevé Artema", artemaActuel: "saisir l'indice Artema", artemaInitial: "saisir le niveau de départ d'Artema",
+const VERBES_RAPPEL = { fraisLx: "saisir les frais de gestion Linxea", point: "faire le point Artema", releve: "saisir ton relevé Artema", artemaActuel: "saisir l'indice Artema", artemaInitial: "saisir le niveau de départ d'Artema",
   taux: "mettre à jour les taux des livrets", fondsEuros: "vérifier le taux du fonds euros", interets: "saisir les intérêts des livrets", appart: "revoir la valeur de l'appartement",
   calendrier: "compléter les jours fériés des bourses", versement: "saisir ton versement Quintessa", linxea: "saisir ton versement Linxea", soldes: "mettre à jour tes soldes" };
 const ICO_RAPPEL = { point: "🎯", releve: "🧾", artemaActuel: "🎯", artemaInitial: "📌", taux: "🏦", fondsEuros: "💶", interets: "🏦", appart: "🏠", calendrier: "📅", versement: "💸", linxea: "💸", soldes: "🏦" };
 const POINT_ART = ["releve", "artemaActuel"];
 function reporte(k) { return (plusTard()[k] || 0) > Date.now(); }
 /** les tâches dues, la plus ancienne d'abord ; o = "artema" : seulement celles d'Artema */
+/* v17.77 (Théo) : rappel des frais de gestion Linxea, prélevés en parts vers le 20 de mars, juin, septembre et décembre.
+   Dû à partir du 20 du dernier mois de trimestre passé, tant qu'aucun « Frais en parts » n'a été saisi sur le contrat Linxea depuis. */
+function envLinxea() { const r = refData(); return ((r.enveloppes || []).find(e => typeof e !== "string" && /Linxea/i.test(e.nom || "") && (!e.statut || e.statut === "Ouvert")) || {}).nom || ""; }
+function fraisLxDu() {
+  const lx = envLinxea(); if (!lx) return null;
+  const auj = isoJour(new Date()), y = +auj.slice(0, 4), m = +auj.slice(5, 7);
+  let due = null; for (let k = 0; k < 5 && !due; k++) { const mm = m - k, yy = y + Math.floor((mm - 1) / 12), m2 = ((mm - 1) % 12 + 12) % 12 + 1; if (m2 % 3 === 0) { const d = yy + "-" + String(m2).padStart(2, "0") + "-20"; if (d <= auj) due = d; } }
+  if (!due || due < "2026-09-20") return null;   // premier rappel : les frais de septembre 2026
+  const faits = ((M && M.ref && M.ref.journal) || []).filter(o => o.type === "Frais en parts" && o.enveloppe === lx).map(o => String(o.date || "").slice(0, 10));
+  const local = stock.get(cleStock("fraisLx")) || ""; if (local) faits.push(local);
+  return faits.some(d => d >= due.slice(0, 8) + "01") ? null : due;
+}
 function tachesAFaire(o) {
   const l = []; if (!M) return l;
   const quand = iso => { if (!iso || !/^\d{4}-\d\d-\d\d/.test(iso)) return "à faire"; const j = Math.round((new Date(isoJour(new Date()) + "T12:00:00") - new Date(iso.slice(0, 10) + "T12:00:00")) / 864e5);
@@ -5947,6 +5961,7 @@ function tachesAFaire(o) {
   dus.filter(x => !pts.includes(x)).forEach(x => { const k = kk(x), d = dIso(x); l.push({ k, cles: [k], titre: nomCourtRappel(x), date: d, quand: quand(d) }); });
   // v16.99 (Théo) : les 5 ans du PEA / les 8 ans d'une assurance-vie, annoncés 3 mois avant (jusqu'à 30 j après), « Compris » les range
   annivsFiscaux().filter(a => !annivVus()[a.k] && !reporte(a.k)).forEach(a => l.push({ k: a.k, cles: [a.k], titre: a.titre, date: "", quand: a.quand, ico: "🎂", anniv: a }));
+  { const fx = fraisLxDu(); if (fx && !reporte("fraisLx")) l.push({ k: "fraisLx", cles: ["fraisLx"], titre: "Frais de gestion Linxea à saisir", date: fx, quand: quand(fx), ico: "🧾" }); }
   if (feAVerifier()) l.push({ k: "fondsEuros", cles: ["fondsEuros"], titre: "Fonds euros : ton taux estimé tient toujours ?", date: "", quand: "tous les 3 mois", fe: true });
   l.forEach((t, i) => { t.i = i; t.ico = t.ico || ICO_RAPPEL[t.k] || "◷"; t.verbe = t.anniv ? "noter : " + t.titre.toLowerCase() : VERBES_RAPPEL[t.k] || "faire : " + t.titre.toLowerCase(); });
   l.sort((a, b) => (a.date || "9") < (b.date || "9") ? -1 : (a.date || "9") > (b.date || "9") ? 1 : a.i - b.i);
