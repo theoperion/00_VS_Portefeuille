@@ -1660,6 +1660,22 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .moi .pj-plus-t { margin: 0; font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
 .moi .pj-h { margin: 2px 0 0; font: 700 12px/1.2 var(--f-display); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
 .moi .pj-hyp { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; line-height: 1.45; color: var(--ink-2); display: grid; gap: 3px; }
+/* lot 41 · Projection : horizon, 2e curseur (rendement), réglages gardés, hypothèses repliées */
+.moi .pj-hor button { padding: 7px 6px; font: 700 13px var(--f-num); }
+.moi .pj-reg-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 26px; }
+.moi .pj-reg-h > span { font: 700 11.5px/1.2 var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.moi .pj-reg-h small { font: 400 11px var(--f-text); letter-spacing: 0; text-transform: none; color: var(--ink-3); margin-left: 4px; }
+.moi .pj-raz { border: 1px solid var(--rule); background: var(--panel); color: var(--accent-ink); border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.moi .pj-raz[hidden] { display: none; }
+.moi .pj-plus label + input[type=range] + label { margin-top: 4px; }
+.moi .pj-repere { margin: -2px 0 0; font-size: 11.5px; line-height: 1.35; color: var(--ink-3); }
+.moi .pj-plus-t { border-top: 1px solid var(--rule-2); padding-top: 7px; }
+.moi .pj-hyp-d > summary { list-style: none; cursor: pointer; padding: 6px 0; font-size: 13px; font-weight: 600; color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+.moi .pj-hyp-d > summary::-webkit-details-marker { display: none; }
+.moi .pj-hyp-d > summary i { font-style: normal; display: inline-block; transition: transform .15s; }
+.moi .pj-hyp-d[open] > summary i { transform: rotate(90deg); }
+.moi .pj-hyp-d .pj-h { display: flex; align-items: center; gap: 6px; }
+.moi .mm-regle .lien { font-size: inherit; padding: 0; margin-left: 2px; }
 .moi .m-ech { display: grid; gap: 0; }
 .moi .ec-r { display: grid; grid-template-columns: 62px 22px minmax(0, 1fr); gap: 8px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--rule-2); }
 .moi .ec-d { font: 700 12px/1.3 var(--f-num); color: var(--ink-2); padding-top: 1px; }

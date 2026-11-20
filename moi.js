@@ -2684,23 +2684,26 @@ function moisPourMillion(v0, c, rAn) {
   for (let n = 1; n <= 12 * 80; n++) { v = v * (1 + i) + c; if (v >= CIBLE) return n; }
   return null;
 }
-/* lot 27 (Conseil) : UNE seule date du million dans toute l'appli (Missions, titre et curseur de la Projection 2034) :
-   patrimoine financier d'aujourd'hui, ton rythme d'épargne réel, rendement central de la projection. Plus de 2e simulateur. */
+/* lot 27 (Conseil) : UNE seule date du million dans toute l'appli (Missions, titre et curseurs de la Projection) :
+   patrimoine financier d'aujourd'hui, ton rythme d'épargne réel, rendement central de la projection. Plus de 2e simulateur.
+   lot 41 (Théo) : elle SUIT les réglages de la Projection (versement en plus, rendement), mémorisés sur l'appareil ; regle = ils diffèrent du fichier. */
 function millionEstime() {
-  const P = M ? calculProjection(0) : null; if (!P) return null;
-  return { v: P.v, c: P.c, r: P.mix.r, n: P.nM, quand: P.nM === null ? null : dateDansMois(P.nM), source: P.source };
+  const g = M ? reglagesProj() : null, P = g ? calculProjection(g.plus, g.r, g.h) : null; if (!P) return null;
+  return { v: P.v, c: P.cp, r: P.r, n: P.nMp, quand: P.nMp === null ? null : dateDansMois(P.nMp), source: P.source, regle: P.regle, cF: P.c, rF: P.rF };
 }
 function textesMillion(E, v) {
   const discret = ETAT.discret === "oui", n = E ? E.n : null, quand = E ? E.quand : null;
   const prochain = JALONS.concat([CIBLE]).find(j => j > v);
   const nProchain = E && prochain ? moisPourMillion(v * CIBLE / prochain, E.c * CIBLE / prochain, E.r) : null;   // même calcul, mis à l'échelle du jalon
   const eta = !E ? "Pas encore assez de chiffres pour estimer la date."
-    : quand ? 'À ton rythme, <b>millionnaire en ' + MOIS_L[quand.getMonth()] + " " + quand.getFullYear() + "</b>" + (n > 0 ? " · dans " + (n >= 24 ? Math.floor(n / 12) + " ans" + (n % 12 ? " et " + (n % 12) + " mois" : "") : n + " mois") : "") + "."
+    : quand ? (E.regle ? "Selon tes réglages" : "À ton rythme") + ', <b>millionnaire en ' + MOIS_L[quand.getMonth()] + " " + quand.getFullYear() + "</b>" + (n > 0 ? " · dans " + (n >= 24 ? Math.floor(n / 12) + " ans" + (n % 12 ? " et " + (n % 12) + " mois" : "") : n + " mois") : "") + "."
     : "À ton rythme actuel, le million reste hors de portée : la projection montre l'effet d'un effort en plus.";
   const sub = prochain && prochain < CIBLE && nProchain !== null ? "Prochain jalon : <b>" + F0.format(prochain / 1000) + " 000 €</b>" + (discret ? "" : ", encore " + eur(prochain - v)) + (nProchain ? " · ≈ " + (nProchain >= 24 ? Math.round(nProchain / 12) + " ans" : nProchain + " mois") : "") : "";
   return { n, quand, eta, sub };
 }
-function lienProjection() { return '<button type="button" class="mm-lien" data-m-voirproj>Voir la projection 2034 ›</button>'; }
+function lienProjection() { return '<button type="button" class="mm-lien" data-m-voirproj>Voir la projection ›</button>'; }
+/* lot 41 : rappel discret quand la date vient des réglages de la Projection, avec le retour aux valeurs du fichier */
+function mentionReglages(E) { return E && E.regle ? '<p class="mm-mini mm-regle">Selon tes réglages de la Projection (' + (E.c !== E.cF ? "+" + F0.format(E.c - E.cF) + " €/mois, " : "") + pctR(E.r) + ' par an). <button type="button" class="lien" data-m-razproj>↺ valeurs du fichier</button></p>' : ""; }
 function htmlMillion() {
   if (!M) return "";
   const E = millionEstime(), v = E ? E.v : (valeurMillion() || 0), part = Math.max(0, Math.min(1, v / CIBLE)), T = textesMillion(E, v);
@@ -2714,7 +2717,7 @@ function htmlMillion() {
     '<p class="mm-mini">Masqué en mode discret. Désactive-le dans Réglages pour voir ta progression.</p></section>';
   if (reduitM) return '<section class="m-million reduit" style="--mc:' + couleurMoi() + '">' + tete +
     '<p class="mm-ligne"><b>' + F1.format(part * 100) + ' %</b><span>' + (T.quand ? "millionnaire en " + MOIS_L[T.quand.getMonth()] + " " + T.quand.getFullYear() : E ? "hors de portée à ce rythme" : "") + "</span></p>" +
-    '<div class="mm-rail mini"><i style="width:' + (part * 100).toFixed(2) + '%"></i></div>' + (T.sub ? '<p class="mm-mini">' + T.sub + "</p>" : "") + (E ? lienProjection() : "") + "</section>";
+    '<div class="mm-rail mini"><i style="width:' + (part * 100).toFixed(2) + '%"></i></div>' + (T.sub ? '<p class="mm-mini">' + T.sub + "</p>" : "") + mentionReglages(E) + (E ? lienProjection() : "") + "</section>";
   return '<section class="m-million" style="--mc:' + couleurMoi() + '">' + tete +
     '<div class="mm-pct"><b>' + F1.format(part * 100) + '</b><span>%</span></div>' +
     '<div class="m-flaps mm-flaps" aria-label="' + esc(texteFlap) + ' euros">' + flaps(texteFlap + NB + "€", false) + "</div>" +
@@ -2722,7 +2725,8 @@ function htmlMillion() {
     '<p class="mm-note">Patrimoine financier : épargne, bourse et assurance-vie. L\'immobilier ne compte pas.</p>' +
     '<p class="mm-eta" id="mm-eta">' + T.eta + "</p>" +
     '<p class="mm-sub" id="mm-sub">' + T.sub + "</p>" +
-    (E ? '<p class="mm-note">Même calcul que la Projection 2034 (scénario central, ' + pctR(E.r) + " par an ; ton rythme : ≈ " + F0.format(E.c) + " €/mois" + (E.source ? ", " + esc(E.source) : "") + ").</p>" + lienProjection() : "") +
+    (E ? (E.regle ? mentionReglages(E) + '<p class="mm-note">Même calcul que la Projection (scénario central). Ton fichier seul : ' + pctR(E.rF) + " par an, ≈ " + F0.format(E.cF) + " €/mois" + (E.source ? ", " + esc(E.source) : "") + ".</p>"
+      : '<p class="mm-note">Même calcul que la Projection (scénario central, ' + pctR(E.r) + " par an ; ton rythme : ≈ " + F0.format(E.c) + " €/mois" + (E.source ? ", " + esc(E.source) : "") + ").</p>") + lienProjection() : "") +
     '<p class="mm-badge">' + badgeMillion() + "</p>" +
   "</section>";
 }
@@ -2744,6 +2748,7 @@ async function revendiquerMillion() {
 }
 function brancherMillion(el) {
   const r = el.querySelector("#mm-reduire"); if (r) r.addEventListener("click", () => { PREF.millionReduit = PREF.millionReduit === false; garderPref(); afficherMillion(el); });
+  el.querySelectorAll("[data-m-razproj]").forEach(b => b.addEventListener("click", () => { razReglagesProj(); afficherMillion(el); }));
   el.querySelectorAll("[data-m-voirproj]").forEach(b => b.addEventListener("click", () => {   // lot 27 : la projection unique est dans Patrimoine
     PREF.onglet = "patrimoine"; PREF.acc["m-proj"] = true; garderPref(); rendre();
     const d = document.querySelector('#v-moi details[data-acc="m-proj"]'); if (d) d.scrollIntoView({ block: "start", behavior: reduit ? "auto" : "smooth" }); else window.scrollTo(0, 0);
@@ -2764,7 +2769,16 @@ const PLAFONDS_LIVRETS = [[/livret\s*a\b/i, 22950, "livretA", "Livret A"], [/ldd
   [/livret\s*jeune/i, 1600, "livretJeune", "Livret jeune"], [/\bpel\b|plan d'[ée]pargne logement/i, 61200, "pel", "PEL"], [/\bcel\b|compte d'[ée]pargne logement/i, 15300, "cel", "CEL"]];
 const PLAFOND_PEA = 150000, ECART_SCENARIO = .02, FIN_PROJ = "2034-12-31";
 const PLUS_MAX = 500, PLUS_PAS = 50, PLUS_PROPOSE = 100;
-let projPlus = 0;   // curseur « Et si je versais plus ? » : toujours à 0 à l'ouverture
+/* lot 41 (Théo) : réglages de la Projection mémorisés sur l'appareil (PREF.proj) : versement en plus, rendement central choisi
+   (null = celui du fichier), horizon. Ils pilotent aussi la date du million de Missions (millionEstime). */
+const HORIZONS_PROJ = [2034, 2040, 2050], HORIZON_DEF = 2034, REND_MAX = .10, REND_PAS = .005;
+function reglagesProj() {
+  const g = PREF.proj || {}, plus = Math.max(0, Math.min(PLUS_MAX, Math.round((+g.plus || 0) / PLUS_PAS) * PLUS_PAS));
+  const r = typeof g.r === "number" && isFinite(g.r) ? Math.max(0, Math.min(REND_MAX, g.r)) : null;
+  return { plus, r, h: HORIZONS_PROJ.includes(g.h) ? g.h : HORIZON_DEF };
+}
+function garderReglagesProj(o) { PREF.proj = Object.assign(reglagesProj(), o); garderPref(); }
+function razReglagesProj() { const h = reglagesProj().h; PREF.proj = h === HORIZON_DEF ? undefined : { h }; if (!PREF.proj) delete PREF.proj; garderPref(); }
 function genreLivret(r) { const t = (r.nom || "") + " " + (r.type || ""); return PLAFONDS_LIVRETS.find(p => p[0].test(t)) || null; }
 function tauxLivret(r) { if (ok(r.taux) && r.taux > 0) return { r: r.taux, repli: false }; const g = genreLivret(r); return { r: TAUX_REPLI[g ? g[2] : "autreLivret"], repli: true }; }
 function tauxFondsEuros() { const fe = (M.parametres || {}).fondsEuros || {}; return ok(fe.taux) && fe.taux > 0 ? { r: fe.taux, repli: false, fe } : { r: TAUX_REPLI.fondsEuros, repli: true, fe }; }
@@ -2784,97 +2798,145 @@ function mixFinancier() {
 }
 function moisJusquA(iso) { const a = new Date(), f = new Date(iso + "T12:00:00"); return Math.max(1, (f.getFullYear() - a.getFullYear()) * 12 + f.getMonth() - a.getMonth()); }
 function serieProj(v, c, rAn, n) { const i = Math.pow(1 + Math.max(-.5, rAn), 1 / 12) - 1, out = [v]; let x = v; for (let k = 1; k <= n; k++) { x = x * (1 + i) + c; out.push(x); } return out; }
-/** tout le calcul de la projection (sans effet de bord) ; plus = euros ajoutés chaque mois par le curseur */
-function calculProjection(plus) {
+/** tout le calcul de la projection (sans effet de bord) ; plus = euros ajoutés chaque mois par le curseur ;
+    rCentral = rendement central choisi (absent/null = moyenne pondérée du fichier) ; h = année de fin (absente = 2034).
+    nM = mois jusqu'au million selon le fichier seul ; nMp = selon les réglages (versement + rendement choisis). */
+function calculProjection(plus, rCentral, h) {
   if (!M) return null;
   const mix = mixFinancier(); if (!mix) return null;
-  const ry = rythmeMillion(), c = ry ? ry.c : 0, n = moisJusquA(FIN_PROJ), cp = c + (plus || 0);
-  const sc = [["prudent", Math.max(0, mix.r - ECART_SCENARIO)], ["central", mix.r], ["optimiste", mix.r + ECART_SCENARIO]].map(([k, r]) => ({ k, r, s: serieProj(mix.total, cp, r, n) }));
+  h = HORIZONS_PROJ.includes(h) ? h : HORIZON_DEF; plus = plus || 0;
+  const fin = h + "-12-31", choisi = typeof rCentral === "number" && isFinite(rCentral), r = choisi ? rCentral : mix.r;
+  const ry = rythmeMillion(), c = ry ? ry.c : 0, n = moisJusquA(fin), cp = c + plus;
+  const sc = [["prudent", Math.max(0, r - ECART_SCENARIO)], ["central", r], ["optimiste", r + ECART_SCENARIO]].map(([k, rr]) => ({ k, r: rr, s: serieProj(mix.total, cp, rr, n) }));
   sc.forEach(x => { x.fin = x.s[n]; });
-  const nM = moisPourMillion(mix.total, c, mix.r), nMp = moisPourMillion(mix.total, cp, mix.r);
-  return { v: mix.total, mix, c, plus: plus || 0, cp, n, sc, verse: mix.total + cp * n, source: ry ? ry.source : "", nM, nMp };
+  const nM = moisPourMillion(mix.total, c, mix.r), nMp = moisPourMillion(mix.total, cp, r);
+  return { v: mix.total, mix, c, plus, cp, n, h, fin, r, rF: mix.r, choisi, regle: plus > 0 || choisi, sc, verse: mix.total + cp * n, source: ry ? ry.source : "", nM, nMp };
 }
 function dateDansMois(n) { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + n, 1); }
-function jalonsProjection() {
-  const l = [], fin = FIN_PROJ, auj = isoJour(new Date());
+function jalonsProjection(fin) {
+  fin = fin || FIN_PROJ; const l = [], auj = isoJour(new Date());
   if (aArtema()) ARTEMA.rdv.forEach((x, i) => { if (x[0] >= auj && x[0] <= fin) l.push({ d: x[0], k: "artema", t: x[3] ? "Artema : fin" : "Artema : rendez-vous " + (i + 1) }); });
   const p = M.prets; if (p && p.fin && p.fin >= auj && p.fin <= fin) l.push({ d: p.fin, k: "pret", t: "Fin du prêt" });
   return l;
 }
-function svgProjection2034(P) {
+function svgProjection(P) {
   const W = 320, H = 176, m = { l: 38, r: 8, t: 10, b: 30 }, iw = W - m.l - m.r, ih = H - m.t - m.b, n = P.n;
   const mx = Math.max(...P.sc[2].s) * 1.06 || 1, X = k => m.l + k / n * iw, Y = v => m.t + ih - Math.max(0, Math.min(v, mx)) / mx * ih;
   const d = arr => arr.map((v, k) => (k ? "L" : "M") + X(k).toFixed(1) + " " + Y(v).toFixed(1)).join("");
-  const pas = mx > 2e6 ? 5e5 : mx > 8e5 ? 2.5e5 : mx > 3e5 ? 1e5 : mx > 1.2e5 ? 5e4 : mx > 4e4 ? 1e4 : 5e3;
+  const pas = mx > 1.2e7 ? 2.5e6 : mx > 5e6 ? 1e6 : mx > 2e6 ? 5e5 : mx > 8e5 ? 2.5e5 : mx > 3e5 ? 1e5 : mx > 1.2e5 ? 5e4 : mx > 4e4 ? 1e4 : 5e3;
   let o = "";
-  for (let t = 0; t <= mx; t += pas) o += '<line class="gr" x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + Y(t).toFixed(1) + '" y2="' + Y(t).toFixed(1) + '"/><text x="' + (m.l - 4) + '" y="' + (Y(t) + 3.5).toFixed(1) + '" text-anchor="end">' + (t ? kEurP(t).replace(" ", "") : "0") + "</text>";
+  for (let t = 0; t <= mx; t += pas) o += '<line class="gr" x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + Y(t).toFixed(1) + '" y2="' + Y(t).toFixed(1) + '"/><text x="' + (m.l - 4) + '" y="' + (Y(t) + 3.5).toFixed(1) + '" text-anchor="end">' + (t ? kEurProj(t).replace(" ", "") : "0") + "</text>";
   if (mx > CIBLE * .7) o += '<line class="mil" x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + Y(CIBLE).toFixed(1) + '" y2="' + Y(CIBLE).toFixed(1) + '"/><text class="mil-t" x="' + (W - m.r) + '" y="' + (Y(CIBLE) - 3).toFixed(1) + '" text-anchor="end">1 million</text>';
   const a0 = new Date(), kDe = iso => Math.max(0, Math.min(n, (+iso.slice(0, 4) - a0.getFullYear()) * 12 + (+iso.slice(5, 7) - 1 - a0.getMonth()) + (+iso.slice(8, 10) - 1) / 30));
-  for (let y = a0.getFullYear() + 1; y <= 2034; y++) { if ((y - a0.getFullYear()) % 2) continue; const x = X(kDe(y + "-01-01")); o += '<text x="' + x.toFixed(1) + '" y="' + (H - m.b + 13) + '" text-anchor="middle">' + y + "</text>"; }
+  const court = P.h - a0.getFullYear() <= 9;   // 2034 : une année sur deux ; 2040/2050 : tous les 5 ans
+  for (let y = a0.getFullYear() + 1; y <= P.h; y++) { if (court ? (y - a0.getFullYear()) % 2 : y % 5) continue; const x = X(kDe(y + "-01-01")); o += '<text x="' + x.toFixed(1) + '" y="' + (H - m.b + 13) + '" text-anchor="middle">' + y + "</text>"; }
   const [pr, ce, op] = P.sc;
   o += '<path class="bande" d="' + d(op.s) + pr.s.map((v, k) => "L" + X(n - k).toFixed(1) + " " + Y(pr.s[n - k]).toFixed(1)).join("") + 'Z"/>';
   o += '<path class="l-pr" d="' + d(pr.s) + '"/><path class="l-op" d="' + d(op.s) + '"/><path class="l-ce" d="' + d(ce.s) + '"/>';
-  if (P.plus) { const base = serieProj(P.v, P.c, ce.r, n); o += '<path class="l-base" d="' + d(base) + '"/>'; }
+  if (P.regle) { const base = serieProj(P.v, P.c, P.rF, n); o += '<path class="l-base" d="' + d(base) + '"/>'; }   // la courbe du fichier seul, pour comparer
   o += '<circle class="pt" cx="' + X(0).toFixed(1) + '" cy="' + Y(P.v).toFixed(1) + '" r="3"/><circle class="pt" cx="' + X(n).toFixed(1) + '" cy="' + Y(ce.fin).toFixed(1) + '" r="3.5"/>';
-  jalonsProjection().forEach(j => { const x = X(kDe(j.d)), yb = H - m.b; o += '<g class="j-' + j.k + '"><title>' + esc(j.t) + " · " + frDate(j.d) + '</title><line x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + m.t + '" y2="' + yb + '"/>' +
+  jalonsProjection(P.fin).forEach(j => { const x = X(kDe(j.d)), yb = H - m.b; o += '<g class="j-' + j.k + '"><title>' + esc(j.t) + " · " + frDate(j.d) + '</title><line x1="' + x.toFixed(1) + '" x2="' + x.toFixed(1) + '" y1="' + m.t + '" y2="' + yb + '"/>' +
     (j.k === "artema" ? '<path d="M' + x.toFixed(1) + " " + (yb - 5) + "l4 4l-4 4l-4 -4z" + '"/>' : '<circle cx="' + x.toFixed(1) + '" cy="' + (yb - 1) + '" r="4"/>') + "</g>"; });
-  return '<svg class="pj-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Projection du patrimoine financier jusqu\'en 2034">' + o + "</svg>";
+  return '<svg class="pj-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Projection du patrimoine financier jusqu\'en ' + P.h + '">' + o + "</svg>";
 }
 const pctR = r => String(Math.round(r * 1000) / 10).replace(".", ",") + NB + "%";
+/* au-delà du million, une décimale (2,4 M€) : à l'horizon 2050 « 2 M€ » serait trop grossier */
+const kEurProj = v => v >= 1e6 ? (v % 1e6 ? F1 : F0).format(v / 1e6) + NB + "M€" : kEurP(v);
+const arrK = v => kEurProj(Math.round(v / 1000) * 1000);
 const NOMS_FAM = { livrets: "livrets", fe: "fonds euros", uc: "Artema et autres supports", bourse: "bourse", autres: "le reste" };
+const moisProj = n => { const q = dateDansMois(n); return MOIS_L[q.getMonth()] + " " + q.getFullYear(); };
+const dureeM = g => g >= 24 ? Math.floor(g / 12) + " ans" + (g % 12 ? " et " + (g % 12) + " mois" : "") : g + " mois";
 function phrasePlus(P) {
-  if (!P.plus) return 'Fais glisser pour voir l\'effet d\'un petit effort en plus (essaie +' + PLUS_PROPOSE + " €).";
-  const q = P.nMp === null ? null : dateDansMois(P.nMp), gain = P.nM !== null && P.nMp !== null ? P.nM - P.nMp : null;
-  const fin = P.sc[1].fin - serieProj(P.v, P.c, P.sc[1].r, P.n)[P.n];
-  const dur = g => g >= 24 ? Math.floor(g / 12) + " ans" + (g % 12 ? " et " + (g % 12) + " mois" : "") : g + " mois";
-  return "<b>+" + F0.format(P.plus) + " €/mois</b> → " + (q ? (gain > 0 ? "million <b>" + dur(gain) + " plus tôt</b>, en " + MOIS_L[q.getMonth()] + " " + q.getFullYear() : "million en " + MOIS_L[q.getMonth()] + " " + q.getFullYear()) : "million encore hors de portée en 80 ans") +
-    " · fin 2034 : <b>+" + kEurP(Math.max(0, fin)) + "</b> (central).";
+  if (!P.regle) return 'Fais glisser pour voir l\'effet d\'un petit effort en plus (essaie +' + PLUS_PROPOSE + " €).";
+  const ecart = P.nM !== null && P.nMp !== null ? P.nM - P.nMp : null;
+  const quoi = [P.plus ? "+" + F0.format(P.plus) + " €/mois" : "", P.choisi ? pctR(P.r) + " par an" : ""].filter(Boolean).join(" · ");
+  const mil = P.nMp === 0 ? "million déjà atteint" : P.nMp === null ? "million encore hors de portée en 80 ans"
+    : ecart > 0 ? "million <b>" + dureeM(ecart) + " plus tôt</b>, en " + moisProj(P.nMp) : ecart < 0 ? "million <b>" + dureeM(-ecart) + " plus tard</b>, en " + moisProj(P.nMp) : "million en " + moisProj(P.nMp);
+  const d = P.sc[1].fin - serieProj(P.v, P.c, P.rF, P.n)[P.n];
+  return "<b>" + quoi + "</b> → " + mil + " · fin " + P.h + " : <b>" + (d < 0 ? MOINS : "+") + kEurProj(Math.abs(d)) + "</b> par rapport à ton fichier (central).";
+}
+function phraseMil(P) {
+  return P.nMp === 0 ? "Million atteint : bravo."
+    : P.nMp !== null ? (P.regle ? "Selon tes réglages (central)" : "À ton rythme (central)") + " : <b>millionnaire en " + moisProj(P.nMp) + "</b>."
+    : "À ce rythme, le million reste hors de portée : essaie les curseurs.";
+}
+function resumeProj(P) { return "fin " + P.h + " ≈ " + arrK(P.sc[1].fin) + (P.nMp === 0 ? " · million atteint" : P.nMp !== null ? " · million en " + MOIS_C[dateDansMois(P.nMp).getMonth()] + " " + dateDansMois(P.nMp).getFullYear() : "") + (P.regle ? " · selon tes réglages" : ""); }
+function legProj(P) {
+  const jal = jalonsProjection(P.fin);
+  return '<div class="pj-leg"><span><i class="ce"></i>central</span><span><i class="bd"></i>de prudent à optimiste</span>' + (P.regle ? '<span class="pj-bs"><i class="bs"></i>selon ton fichier</span>' : "") +
+    (jal.some(j => j.k === "artema") ? '<span><i class="ar"></i>Artema</span>' : "") + (jal.some(j => j.k === "pret") ? '<span><i class="pt"></i>fin du prêt</span>' : "") + "</div>";
+}
+function hypProj(P) {
+  const ce = P.sc[1], pret = M.prets && M.prets.fin;
+  const familles = P.mix.fam.filter(f => f.part >= .02).map(f => NOMS_FAM[f.k] + " " + pctR(f.r)).join(", ");
+  const apresPret = pret && pret > isoJour(new Date()) && pret <= P.fin && M.prets.mensualite > 0
+    ? (() => { const k = moisJusquA(pret), i = Math.pow(1 + ce.r, 1 / 12) - 1, mens = M.prets.mensualite; let x = 0; for (let j = k; j < P.n; j++) x = x * (1 + i) + mens; return "<li>Ton prêt se termine le " + frDate(pret) + " : si tu épargnes ensuite ta mensualité (" + eur(mens) + "), cela ferait ≈ +" + arrK(x) + " de plus fin " + P.h + " (pas compté dans la courbe).</li>"; })()
+    : pret && pret > P.fin ? "<li>Ton prêt se termine le " + frDate(pret) + ", après la frise.</li>" : "";
+  return "<li>Départ : ton patrimoine financier d'aujourd'hui, " + arrK(P.v) + " (épargne, bourse, assurance-vie). L'immobilier ne compte pas.</li>" +
+    "<li>Chaque mois : " + eur(P.c) + (P.plus ? " + " + eur(P.plus) + " (curseur)" : "") + " versés" + (P.source ? " (ton rythme : " + esc(P.source) + ")" : "") + ". Fin " + P.h + ", tu auras versé en tout ≈ " + arrK(P.verse) + ", le reste vient des intérêts.</li>" +
+    "<li>Rendement central : " + pctR(ce.r) + " par an" + (P.choisi ? ", choisi avec le curseur (ton fichier : " + pctR(P.rF) + " : " + esc(familles) + ")." : " (" + esc(familles) + ").") + "</li>" +
+    (aArtema() ? "<li>Artema : rendez-vous chaque début décembre de 2029 à 2033, fin le 1er décembre 2034 (◆ sur la frise). La courbe ne suppose aucun remboursement anticipé.</li>" : "") + apresPret +
+    "<li>Ni impôts, ni inflation, ni retraits. Un repère pour se projeter, pas une prévision.</li>";
 }
 function htmlProjection() {
   if (!M) return "";
-  const P = calculProjection(projPlus); if (!P) return "";
-  if (ETAT.discret === "oui") return acc("m-proj", "Projection 2034", "patrimoine financier", '<p class="info">Masquée en mode discret (la courbe laisse deviner le montant). Désactive-le dans Réglages pour la voir.</p>', false);
-  const [pr, ce, op] = P.sc, art = aArtema(), pret = M.prets && M.prets.fin;
-  const tuile = (x, lab) => '<div class="pj-t pj-' + x.k + '"><span>' + lab + '</span><b>' + kEurP(Math.round(x.fin / 1000) * 1000) + "</b><small>" + pctR(x.r) + " par an</small></div>";
-  const familles = P.mix.fam.filter(f => f.part >= .02).map(f => NOMS_FAM[f.k] + " " + pctR(f.r)).join(", ");
-  const jal = jalonsProjection();
-  const leg = '<div class="pj-leg"><span><i class="ce"></i>central</span><span><i class="bd"></i>de prudent à optimiste</span>' + (P.plus ? '<span><i class="bs"></i>sans le curseur</span>' : "") +
-    (jal.some(j => j.k === "artema") ? '<span><i class="ar"></i>Artema</span>' : "") + (jal.some(j => j.k === "pret") ? '<span><i class="pt"></i>fin du prêt</span>' : "") + "</div>";
-  const apresPret = pret && pret > isoJour(new Date()) && pret <= FIN_PROJ && M.prets.mensualite > 0
-    ? (() => { const k = moisJusquA(pret), i = Math.pow(1 + ce.r, 1 / 12) - 1, mens = M.prets.mensualite; let x = 0; for (let j = k; j < P.n; j++) x = x * (1 + i) + mens; return "<li>Ton prêt se termine le " + frDate(pret) + " : si tu épargnes ensuite ta mensualité (" + eur(mens) + "), cela ferait ≈ +" + kEurP(Math.round(x / 1000) * 1000) + " de plus fin 2034 (pas compté dans la courbe).</li>"; })()
-    : pret && pret > FIN_PROJ ? "<li>Ton prêt se termine le " + frDate(pret) + ", après la frise.</li>" : "";
+  const g = reglagesProj(), P = calculProjection(g.plus, g.r, g.h); if (!P) return "";
+  if (ETAT.discret === "oui") return acc("m-proj", "Projection", "patrimoine financier", '<p class="info">Masquée en mode discret (la courbe laisse deviner le montant). Désactive-le dans Réglages pour la voir.</p>', false);
+  const [pr, ce, op] = P.sc;
+  const tuile = (x, lab) => '<div class="pj-t pj-' + x.k + '"><span>' + lab + '</span><b>' + arrK(x.fin) + "</b><small>" + pctR(x.r) + " par an</small></div>";
+  const rVal = Math.round(P.r / REND_PAS) * REND_PAS * 100;
   const corps = '<div class="m-proj">' +
-    '<p class="pj-mil">' + (P.nM === 0 ? "Million atteint : bravo." : P.nM !== null ? "À ton rythme (central) : <b>millionnaire en " + MOIS_L[dateDansMois(P.nM).getMonth()] + " " + dateDansMois(P.nM).getFullYear() + "</b>." : "À ton rythme actuel, le million reste hors de portée : essaie le curseur.") + "</p>" +
+    '<p class="pj-mil" id="pj-mil">' + phraseMil(P) + "</p>" +
+    '<div class="seg pj-hor" role="group" aria-label="Horizon de la projection">' + HORIZONS_PROJ.map(h => '<button type="button" data-pj-h="' + h + '" aria-pressed="' + (h === P.h) + '">' + h + "</button>").join("") + "</div>" +
     '<div class="pj-tuiles">' + tuile(pr, "Prudent") + tuile(ce, "Central") + tuile(op, "Optimiste") + "</div>" +
-    '<div class="pj-graph" id="pj-graph">' + svgProjection2034(P) + "</div>" + leg +
-    '<div class="pj-plus"><label for="pj-plus"><span>Et si je versais plus chaque mois ?</span><b id="pj-plus-v">+' + F0.format(P.plus) + " €</b></label>" +
+    '<div class="pj-graph" id="pj-graph">' + svgProjection(P) + "</div>" + legProj(P) +
+    '<div class="pj-plus">' +
+      '<div class="pj-reg-h"><span>Tes réglages <small>gardés sur cet appareil</small></span><button type="button" class="pj-raz" id="pj-raz" aria-label="Revenir aux valeurs du fichier"' + (P.regle ? "" : " hidden") + ">↺ fichier</button></div>" +
+      '<label for="pj-plus"><span>Et si je versais plus chaque mois ?</span><b id="pj-plus-v">+' + F0.format(P.plus) + " €</b></label>" +
       '<input type="range" id="pj-plus" min="0" max="' + PLUS_MAX + '" step="' + PLUS_PAS + '" value="' + P.plus + '" aria-describedby="pj-plus-t">' +
+      '<label for="pj-rend"><span>Rendement par an</span><b id="pj-rend-v">' + pctR(P.r) + "</b></label>" +
+      '<input type="range" id="pj-rend" min="0" max="' + REND_MAX * 100 + '" step="' + REND_PAS * 100 + '" value="' + rVal + '" aria-describedby="pj-rend-t">' +
+      '<p class="pj-repere" id="pj-rend-t">Ton fichier : ' + pctR(P.rF) + ". Repère : sur longue période, un ETF Monde a fait ≈ 6 à 8 % par an avant inflation, sans garantie.</p>" +
       '<p class="pj-plus-t" id="pj-plus-t">' + phrasePlus(P) + "</p></div>" +
-    '<div data-aide><h4 class="pj-h">Les hypothèses <button type="button" class="qm-b" aria-label="Pourquoi ces chiffres ?">?</button></h4>' +
-    '<span class="aide">Chaque famille garde son rendement habituel : les livrets et le fonds euros à leur taux (celui de ton fichier quand il est saisi), la bourse à ' + pctR(TAUX_REPLI.bourse) + ' par an en moyenne sur longue période. Le scénario prudent retire ' + F0.format(ECART_SCENARIO * 100) + ' points par an à tout, l\'optimiste en ajoute ' + F0.format(ECART_SCENARIO * 100) + '. La bourse peut perdre 20 % ou plus certaines années : la vraie courbe ne sera jamais aussi lisse.</span>' +
-    '<ul class="pj-hyp"><li>Départ : ton patrimoine financier d\'aujourd\'hui, ' + kEurP(Math.round(P.v / 1000) * 1000) + " (épargne, bourse, assurance-vie). L'immobilier ne compte pas.</li>" +
-      "<li>Chaque mois : " + eur(P.c) + (P.plus ? " + " + eur(P.plus) + " (curseur)" : "") + " versés" + (P.source ? " (ton rythme : " + esc(P.source) + ")" : "") + ". Fin 2034, tu auras versé en tout ≈ " + kEurP(Math.round(P.verse / 1000) * 1000) + ", le reste vient des intérêts.</li>" +
-      "<li>Rendement central : " + pctR(ce.r) + " par an (" + esc(familles) + ").</li>" +
-      (art ? "<li>Artema : rendez-vous chaque début décembre de 2029 à 2033, fin le 1er décembre 2034 (◆ sur la frise). La courbe ne suppose aucun remboursement anticipé.</li>" : "") + apresPret +
-      "<li>Ni impôts, ni inflation, ni retraits. Un repère pour se projeter, pas une prévision.</li></ul></div></div>";
+    /* lot 41 (Théo) : les hypothèses prennent trop de place, repliées par défaut */
+    '<details class="pj-hyp-d"><summary>Hypothèses <i aria-hidden="true">›</i></summary><div data-aide><p class="pj-h">Pourquoi ces chiffres ? <button type="button" class="qm-b" aria-label="Pourquoi ces chiffres ?">?</button></p>' +
+    '<span class="aide">Chaque famille garde son rendement habituel : les livrets et le fonds euros à leur taux (celui de ton fichier quand il est saisi), la bourse à ' + pctR(TAUX_REPLI.bourse) + ' par an en moyenne sur longue période ; le curseur « Rendement par an » remplace cette moyenne par la tienne. Le scénario prudent retire ' + F0.format(ECART_SCENARIO * 100) + ' points par an, l\'optimiste en ajoute ' + F0.format(ECART_SCENARIO * 100) + '. La bourse peut perdre 20 % ou plus certaines années : la vraie courbe ne sera jamais aussi lisse.</span>' +
+    '<ul class="pj-hyp" id="pj-hyp">' + hypProj(P) + "</ul></div></details></div>";
   /* lot 27 : la seule projection de l'appli, repliée, avec son résumé dans le titre (même date du million que Missions) */
-  const qM = P.nM === null ? null : dateDansMois(P.nM);
-  return acc("m-proj", "Projection 2034", "fin 2034 ≈ " + kEurP(Math.round(ce.fin / 1000) * 1000) + (P.nM === 0 ? " · million atteint" : qM ? " · million en " + MOIS_C[qM.getMonth()] + " " + qM.getFullYear() : ""), corps, false);
+  return acc("m-proj", "Projection", '<span id="pj-resume">' + resumeProj(P) + "</span>", corps, false);
 }
 function brancherProjection(v) {
   const z = v.querySelector(".m-proj"); if (!z) return;
   z.querySelectorAll(".qm-b").forEach(q => q.addEventListener("click", e => { e.preventDefault(); const a = q.closest("[data-aide]"); if (a) a.classList.toggle("aide-on"); }));
-  const r = z.querySelector("#pj-plus"); if (!r) return;
-  r.addEventListener("input", () => {
-    projPlus = Math.max(0, Math.min(PLUS_MAX, Math.round(+r.value / PLUS_PAS) * PLUS_PAS));
-    const P = calculProjection(projPlus); if (!P) return;
-    z.querySelector("#pj-graph").innerHTML = svgProjection2034(P);
-    z.querySelector("#pj-plus-v").textContent = "+" + F0.format(projPlus) + " €";
+  const r = z.querySelector("#pj-plus"), rr = z.querySelector("#pj-rend"); if (!r || !rr) return;
+  let tache = 0;
+  /* un seul recalcul par image (requestAnimationFrame) : le curseur reste fluide même à l'horizon 2050 */
+  const maj = () => { if (tache) return; tache = requestAnimationFrame(() => { tache = 0;
+    const g = reglagesProj(), P = calculProjection(g.plus, g.r, g.h); if (!P) return;
+    z.querySelector("#pj-graph").innerHTML = svgProjection(P);
+    z.querySelector("#pj-plus-v").textContent = "+" + F0.format(P.plus) + " €";
+    z.querySelector("#pj-rend-v").textContent = pctR(P.r);
     z.querySelector("#pj-plus-t").innerHTML = phrasePlus(P);
-    const tu = z.querySelectorAll(".pj-t b"); P.sc.forEach((x, i) => { if (tu[i]) tu[i].textContent = kEurP(Math.round(x.fin / 1000) * 1000); });
-    const leg = z.querySelector(".pj-leg"), bs = leg && leg.querySelector(".bs");
-    if (leg && projPlus && !bs) leg.insertAdjacentHTML("beforeend", '<span class="pj-bs"><i class="bs"></i>sans le curseur</span>'); else if (leg && !projPlus && bs) bs.parentNode.remove();
-  });
+    z.querySelector("#pj-mil").innerHTML = phraseMil(P);
+    z.querySelector("#pj-hyp").innerHTML = hypProj(P);
+    const tu = z.querySelectorAll(".pj-t b"); P.sc.forEach((x, i) => { if (tu[i]) tu[i].textContent = arrK(x.fin); });
+    const ts = z.querySelectorAll(".pj-t small"); P.sc.forEach((x, i) => { if (ts[i]) ts[i].textContent = pctR(x.r) + " par an"; });
+    const leg = z.querySelector(".pj-leg"); if (leg) leg.outerHTML = legProj(P);
+    const rs = document.getElementById("pj-resume"); if (rs) rs.textContent = resumeProj(P);
+    z.querySelector("#pj-raz").hidden = !P.regle;
+    z.querySelectorAll("[data-pj-h]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.pjH === P.h)));
+  }); };
+  r.addEventListener("input", () => { PREF.proj = Object.assign(reglagesProj(), { plus: Math.max(0, Math.min(PLUS_MAX, Math.round(+r.value / PLUS_PAS) * PLUS_PAS)) }); maj(); });
+  rr.addEventListener("input", () => {
+    const x = Math.max(0, Math.min(REND_MAX, Math.round(+rr.value / (REND_PAS * 100)) * REND_PAS)), mix = mixFinancier();
+    /* le cran le plus proche du rendement du fichier = le fichier lui-même (pas de « réglage » fantôme à 0,1 point près) */
+    const surFichier = mix && Math.abs(x - Math.round(mix.r / REND_PAS) * REND_PAS) < 1e-9;
+    PREF.proj = Object.assign(reglagesProj(), { r: surFichier ? null : x }); maj(); });
+  [r, rr].forEach(e => e.addEventListener("change", garderPref));   // écrit sur l'appareil au lâcher, pas à chaque pixel
+  z.querySelectorAll("[data-pj-h]").forEach(b => b.addEventListener("click", () => { garderReglagesProj({ h: +b.dataset.pjH }); maj(); }));
+  z.querySelector("#pj-raz").addEventListener("click", () => {
+    razReglagesProj(); const P = calculProjection(0, null, reglagesProj().h);
+    r.value = "0"; if (P) rr.value = String(Math.round(P.rF / REND_PAS) * REND_PAS * 100); maj(); });
 }
 
 /* ---- Calendrier unique des échéances (+ fichier .ics pour l'agenda, fabriqué dans le téléphone) ---- */
