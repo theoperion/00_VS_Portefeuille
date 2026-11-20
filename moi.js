@@ -3417,6 +3417,7 @@ function cleRappel(n) {
   if (/^Intérêts annuels/.test(n)) return "interets";
   if (/appartement/i.test(n)) return "appart";
   if (/^Versement Quintessa/.test(n)) return "versement";
+  if (/^Versement Linxea/.test(n)) return "linxea";   // v17.23 : Clément, rappel séparé du relevé Artema
   if (/Calendrier/.test(n)) return "calendrier";
   return "";
 }
@@ -4235,6 +4236,7 @@ function partielRappel(k) {
   if (k === "releve") return { type: "Relevé", env: quint, actif: "ARTEMA" };
   if (k === "interets") return { type: "Intérêts", env: (r.enveloppes.find(e => /Livret A/.test(e.nom)) || {}).nom, date: (new Date().getFullYear() - 1) + "-12-31" };
   if (k === "versement") { const rc = (r.raccourcis || []).find(x => /Quintessa/.test(x.env)); return rc ? depuisRaccourci(rc) : { env: quint }; }
+  if (k === "linxea") { const lx = (r.enveloppes.find(e => /Linxea/.test(e.nom)) || {}).nom, rc = (r.raccourcis || []).find(x => /Linxea/.test(x.env)); return rc ? depuisRaccourci(rc) : { type: "Apport", env: lx }; }
   return null;
 }
 function faireRappel(k) {
@@ -4255,8 +4257,8 @@ function brancherBandeauRappel(v) { brancherAFaire(v); }
    - ouvrirPointArtema : valeur de la ligne (€, relevé) ET niveau de l'indice (pts) en une fois, par les actions existantes « ordre » et « artema ». */
 const VERBES_RAPPEL = { point: "faire le point Artema", releve: "saisir ton relevé Artema", artemaActuel: "saisir l'indice Artema", artemaInitial: "saisir le niveau de départ d'Artema",
   taux: "mettre à jour les taux des livrets", fondsEuros: "vérifier le taux du fonds euros", interets: "saisir les intérêts des livrets", appart: "revoir la valeur de l'appartement",
-  calendrier: "compléter les jours fériés des bourses", versement: "saisir ton versement Quintessa", soldes: "mettre à jour tes soldes" };
-const ICO_RAPPEL = { point: "🎯", releve: "🧾", artemaActuel: "🎯", artemaInitial: "📌", taux: "🏦", fondsEuros: "💶", interets: "🏦", appart: "🏠", calendrier: "📅", versement: "💸", soldes: "🏦" };
+  calendrier: "compléter les jours fériés des bourses", versement: "saisir ton versement Quintessa", linxea: "saisir ton versement Linxea", soldes: "mettre à jour tes soldes" };
+const ICO_RAPPEL = { point: "🎯", releve: "🧾", artemaActuel: "🎯", artemaInitial: "📌", taux: "🏦", fondsEuros: "💶", interets: "🏦", appart: "🏠", calendrier: "📅", versement: "💸", linxea: "💸", soldes: "🏦" };
 const POINT_ART = ["releve", "artemaActuel"];
 function reporte(k) { return (plusTard()[k] || 0) > Date.now(); }
 /** les tâches dues, la plus ancienne d'abord ; o = "artema" : seulement celles d'Artema */
@@ -4500,7 +4502,7 @@ function notifications() {
 function signalerCloche() { if (typeof majCloche === "function") majCloche(configure() ? notifications().niveau : null); }
 /* V15.7 · noms courts et clairs des rappels (le Sheet garde ses intitulés longs) */
 const NOMS_RAPPEL = { releve: "Relevé du mois", taux: "Taux des livrets", fondsEuros: "Rendement du fonds euros", artemaInitial: "Artema : niveau de départ", artemaActuel: "Artema : niveau actuel",
-  interets: "Intérêts des livrets", appart: "Valeur de l'appartement", calendrier: "Jours fériés des bourses", versement: "Versement Quintessa" };
+  interets: "Intérêts des livrets", appart: "Valeur de l'appartement", calendrier: "Jours fériés des bourses", versement: "Versement Quintessa", linxea: "Versement Linxea" };
 function nomCourtRappel(x) { const k = cleRappel(x.nom); if (k === "releve" && /Linxea/i.test(x.nom)) return "Relevé du mois (Artema + Linxea)"; if (k === "releve") return "Relevé du mois (Artema)"; return NOMS_RAPPEL[k] || nomRappel(x.nom); }
 function quandRappel(x) {
   if (!x.prochaine || !/^\d{4}-/.test(x.prochaine)) return "";

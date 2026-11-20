@@ -442,3 +442,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 20/11/2026 | ven | **v17.20 · Moi se met à jour en silence** (Théo) : plus de bandeau bleu « Chiffres de la dernière ouverture · mise à jour… » ; seulement une petite ligne si le fichier ne répond vraiment pas. |
 | 20/11/2026 | ven | **v17.21 · Patrimoine : la bourse en dernier** (Théo) : Quintessa, Épargne, Immobilier, puis Bourse (déjà détaillée dans Aujourd'hui). |
 | 20/11/2026 | ven | **v17.22 · Bourse : Jour | 5 j | 1 M | 1 an** (Théo) : la pastille de la carte verte propose aussi 1 mois et 1 an (Perf lignes m1/a1) ; titre court « Bourse · 5 séances / 1 mois / 1 an ». |
+| 20/11/2026 | ven | **v17.23 · Rappel « Versement Linxea »** (Théo, pour Clément) : séparé du relevé Artema dans son fichier (Paramètres!S13, le 20 de chaque mois, dès novembre ; relevé Artema dès le 20/12) ; l'appli le reconnaît (« Faire » ouvre un versement sur Linxea). |

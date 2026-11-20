@@ -62,7 +62,7 @@ Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles 
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **17.22**.
+  hors connexion `sw.js`). Version actuelle : **17.23**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
@@ -97,7 +97,7 @@ Commit (message en français, « vX.Y : … »), ligne dans le journal de `MODE_
 - v16.85 : écran refait (`issueArtema` = fonction unique des issues, verdict, jauge, frise des rendez-vous, simulateur, courbe `parametres.artema.histo` = onglet « Artema histo » des fichiers Théo/Clément). v16.91 : formulaire « 🎯 Point Artema » (valeur € + niveau en une fois, via les actions existantes ordre Relevé ARTEMA + artema actuel), boîte unique « À faire (N) » (v17.2, Théo : phrase-bilan SUPPRIMÉE, « Mes échéances » dans la cloche, pas d'export agenda : « pollution visuelle ») ; les rappels artemaActuel/releve ouvrent le Point Artema.
 - Niveau de l'indice saisi à la main (pas sur Google Finance) : rappels « artemaInitial » / « artemaActuel » du fichier.
   Rythme du rappel « niveau actuel » (Paramètres!V8 de chaque fichier, 18/11) : Théo chaque lundi (1er : 07/12/2026),
-  Clément chaque 20 du mois avec son relevé (1er : 20/12/2026). Les deux démarrent une fois le niveau initial saisi. Rappel « Relevé Quintessa (Artema) » (Paramètres!V9, 20/11, Théo) : 1er rappel au 1er point d'indice (Théo 07/12/2026, Clément 20/12/2026), puis rythme normal (Théo le 1er du mois, Clément le 20).
+  Clément chaque 20 du mois avec son relevé (1er : 20/12/2026). Les deux démarrent une fois le niveau initial saisi. Rappel « Relevé Quintessa (Artema) » (Paramètres!V9, 20/11, Théo) : 1er rappel au 1er point d'indice (Théo 07/12/2026, Clément 20/12/2026), puis rythme normal (Théo le 1er du mois, Clément le 20). Clément : rappel séparé « Versement Linxea du mois » (Paramètres!S13, le 20, dès novembre).
 
 ## Points de vigilance connus
 - Bouton retour (v15.27, modèle de l'appli Budget) : validé par Théo, ne pas y toucher sans raison.
