@@ -471,3 +471,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 20/11/2026 | ven | **v17.49 · L'or en deux cases** (Théo) : Marchés de Moi : « Or non couvert » et, à côté, « Or couvert € » (même période que les autres cases, d'après les clôtures). |
 | 20/11/2026 | ven | **v17.50 · Mini-cérémonie du vainqueur de la chauffe** : une fois par appareil, quand la manche de décembre est close (tous les relevés + 48 h, jamais avant le 31/12 + 48 h, pas après le 1/2/2027), après la course si elle n'a pas été vue : tête du vainqueur avec bonnet, podium des 3, neige, jingle ; aucun chiffre ni rien sur la suite ; aperçu admin « 🎅 » (exemple inventé). |
 | 20/11/2026 | ven | **v17.51 · Or : noms en français** (Théo) : « Or non couvert » / « Or couvert » (sans « € ») dans les cases et la comparaison des Marchés. |
+| 20/11/2026 | ven | **v17.52 · Son réactivé à chaque ouverture** (Théo) : couper le son (🔇) ne vaut que jusqu'à la fermeture de l'appli. |

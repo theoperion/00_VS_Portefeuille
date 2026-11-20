@@ -9,6 +9,7 @@ const SONS = (() => {
   const ecrire = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* rien */ } };
   const actif = () => lire("versus.son", "1") !== "0";   // v17.48 (Théo) : le petit bouton 🔊/🔇 revient (sous la piste et en plein écran), son ACTIVÉ par défaut, mémorisé sur l'appareil   // (v17.4 l'avait retiré)
   const vibreOK = () => lire("versus.vibre", "1") !== "0";
+  ecrire("versus.son", "1");   // v17.52 (Théo) : à chaque ouverture de l'appli, le son est RÉACTIVÉ (couper ne vaut que pour la visite en cours)
   let ctx = null, maitre = null, bruitBuf = null, moteur = null;
   const timers = new Set();
 
