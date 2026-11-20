@@ -861,7 +861,7 @@ async function actionLiaison(action, corps) {
   $("#liaison-res").innerHTML = '<p class="info">En cours…</p>';
   const rep = await posterAdmin(Object.assign({ action }, corps || {}));
   $("#liaison-res").innerHTML = '<p class="info">' + esc(rep.message || (rep.ok ? "OK" : "Échec")) + "</p>" +
-    (rep.detail ? rep.detail.map(d => "<div><span>" + esc(d.enveloppe) + "</span><b>" + eur(d.valeur, 2) + " · versé " + eur(d.verse, 2, true) + "</b></div>").join("") : "");
+    (rep.detail ? rep.detail.map(d => "<div><span>" + esc(d.enveloppe) + "</span><b>lu ✓</b></div>").join("") : "");   // v17.84 : jamais les montants des autres joueurs (règle 1), seulement « lu ✓ »
   return rep;
 }
 $("#liaison-bascule").addEventListener("click", async () => { const rep = await actionLiaison("liaison", { actif: !(D.liaison && D.liaison.active) }); if (rep.ok) { D.liaison = Object.assign({}, D.liaison, { active: !(D.liaison && D.liaison.active) }); majLiaison(); } });

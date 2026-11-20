@@ -785,7 +785,9 @@ function injecterStyle() {
 .moi .m-imp-b { justify-self: start; }
 .moi .m-imp.ouvert { padding: 10px 12px; border: 1px solid var(--accent); border-radius: 10px; background: color-mix(in srgb, var(--accent) 7%, var(--panel)); font-size: 13px; }
 .moi .m-imp-t { font-size: 13.5px; }
-.moi .m-rv-auto { margin: 18px 0 0; font: 500 11.5px/1.4 var(--f-text); color: var(--ink-2); }
+.moi .m-rv-auto { all: unset; box-sizing: border-box; display: block; position: relative; width: 100%; margin: 18px 0 0; padding: 6px 22px 6px 0; cursor: pointer; font: 500 11.5px/1.4 var(--f-text); color: var(--ink-2); }
+.moi .m-rv-auto > i { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: 16px; opacity: .6; }
+.moi .m-rv-auto:focus-visible { outline: 2px solid var(--accent); border-radius: 6px; }
 .moi .m-rv-auto small { display: block; color: var(--up); font-size: 11px; }
 .moi .m-rv-auto.fait { color: var(--ink-2); }
 .moi .m-rv-auto.fait small { color: var(--ink-2); }
@@ -3918,10 +3920,10 @@ function htmlCarteReleveVersus() {
     const prochain = j && !fait && j >= new Date(a.getFullYear(), a.getMonth(), a.getDate()) ? j : (typeof jourReleve === "function" ? jourReleve(a.getFullYear(), a.getMonth() + 2) : null);
     const fr = d => d ? String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") : "";
     const r = der && new Date(Math.round(der.getTime() / 36e5) * 36e5);   // heure ronde : 19 h 11 → 19 h, 19 h 40 → 20 h
-    if (fait) return '<p class="m-rv-auto fait">✅ <b>Relevé ' + (/^[aeiouy]/i.test(MOIS_RV[a.getMonth()]) ? "d'" : "de ") + MOIS_RV[a.getMonth()] + " envoyé</b> au Versus le " + fr(r) + " à " + r.getHours() + " h" +
-      (prochain ? "<small>Prochain le " + fr(prochain) + " vers 19 h, automatiquement</small>" : "") + "</p>";
-    return '<p class="m-rv-auto">🏁 Relevé du mois pour le Versus : <b>automatique</b>' + (prochain ? " · prochain le " + fr(prochain) + " vers 19 h (dernier jour ouvré)" : "") +
-      (r ? "<small>Dernier envoyé le " + fr(r) + " à " + r.getHours() + " h ✓</small>" : "") + "</p>";
+    if (fait) return '<button type="button" class="m-rv-auto fait" id="f-rv-h" title="Voir mes relevés">✅ <b>Relevé ' + (/^[aeiouy]/i.test(MOIS_RV[a.getMonth()]) ? "d'" : "de ") + MOIS_RV[a.getMonth()] + " envoyé</b> au Versus le " + fr(r) + " à " + r.getHours() + " h" +
+      (prochain ? "<small>Prochain le " + fr(prochain) + " vers 19 h, automatiquement</small>" : "") + '<i aria-hidden="true">›</i></button>';
+    return '<button type="button" class="m-rv-auto" id="f-rv-h" title="Voir mes relevés">🏁 Relevé du mois pour le Versus : <b>automatique</b>' + (prochain ? " · prochain le " + fr(prochain) + " vers 19 h (dernier jour ouvré)" : "") +
+      (r ? "<small>Dernier envoyé le " + fr(r) + " à " + r.getHours() + " h ✓</small>" : "") + '<i aria-hidden="true">›</i></button>';
   }
   if (typeof ouvrirSaisie !== "function") return "";
   const fort = moisDuReleve();
@@ -4348,6 +4350,7 @@ function rendreFormulaire() {
   if ($f("f-menu")) $f("f-menu").setAttribute("aria-expanded", String(menuOuvert));
   if ($f("f-vers")) $f("f-vers").addEventListener("toggle", () => { detailsOuverts = $f("f-vers").open; });
   if ($f("f-rv")) $f("f-rv").addEventListener("click", () => ouvrirReleveVersus(false));
+  if ($f("f-rv-h")) $f("f-rv-h").addEventListener("click", () => ouvrirReleveVersus(true));   // v17.84 (Théo) : relevé automatique → l'historique des relevés reste accessible
   form.querySelectorAll("[data-type]").forEach(b => b.addEventListener("click", () => {
     const t = b.dataset.type;
     if (etape === 1) {   // v17.78 (lot60) : « Quoi ? » → les chiffres ; une saisie laissée par « retour » est reprise telle quelle
@@ -6685,7 +6688,8 @@ function rendreSimple() {
       '<button class="btn acc plein" type="submit" id="ms-envoyer">' + (depart ? "Fixer la valeur de départ" : "Enregistrer") + "</button>" +
       '<p class="info">' + (depart ? "Regarde le montant exact dans ton appli bancaire avant de valider." : (ETAT_S.type === "Intérêts" ? "Les intérêts tombent en général au 1er janvier (livrets) : ils augmentent ton solde sans compter comme un versement dans tes séries." : ETAT_S.type === "Retrait" ? "Un retrait ne peut pas dépasser le solde du compte à cette date." : "Un versement compte dans ta série de mois avec un versement (Missions).") +
         " Solde actuel : <b>" + eur(solde || 0, 2) + "</b>. Une saisie se supprime pendant " + jm + " jours dans l'historique, puis elle est figée.") + "</p></form>";
-    if (z.querySelector("#f-rv")) z.querySelector("#f-rv").addEventListener("click", () => ouvrirReleveVersus(false));   // v17.34 : le relevé du Versus, en tête de Mouvement
+    if (z.querySelector("#f-rv")) z.querySelector("#f-rv").addEventListener("click", () => ouvrirReleveVersus(false));
+    if (z.querySelector("#f-rv-h")) z.querySelector("#f-rv-h").addEventListener("click", () => ouvrirReleveVersus(true));   // v17.34 : le relevé du Versus, en tête de Mouvement
     z.querySelectorAll("[data-ms-c]").forEach(b => b.addEventListener("click", () => { ETAT_S.compte = b.dataset.msC; rendreSimple(); }));
     z.querySelectorAll("[data-ms-t]").forEach(b => b.addEventListener("click", () => { ETAT_S.type = b.dataset.msT; rendreSimple(); }));
     z.querySelector("#ms-form").addEventListener("submit", async e => {
