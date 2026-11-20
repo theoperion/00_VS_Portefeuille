@@ -482,16 +482,22 @@ function injecterStyle() {
 .moi .ms-fige { font-size: 13px; opacity: .7; }
 .moi #ms-form .seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .moi .rang2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.moi .m-carte { display: flex; flex-direction: column; gap: 3px; }
-.moi .m-carte-r { display: flex; gap: 3px; min-height: 40px; min-width: 0; }
-.moi .m-carte-r .m-tuile { min-width: 46px; min-height: 0; padding: 5px 6px; }
+.moi .m-barres { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1px 12px; padding: 3px 8px; border-radius: 12px; border: 1px solid var(--rule); background: var(--panel); }   /* lot 52 : barres classées */
+.moi .m-barres.deux { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(var(--nr), auto); grid-auto-flow: column; }
+.moi .m-barre { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 44px minmax(0, 1fr) 58px 60px; align-items: center; gap: 8px; height: 22px; padding: 0 3px; border-radius: 6px; min-width: 0; }
+.moi .m-barres.sans-eur .m-barre { grid-template-columns: 44px minmax(0, 1fr) 58px; }
+.moi .m-barres.deux .m-barre { grid-template-columns: 40px minmax(0, 1fr) 52px; gap: 5px; padding: 0 1px; }
+.moi .m-barre:focus-visible { outline: 2px solid var(--accent); } .moi .m-barre:active { background: var(--panel-2); }
+.moi .m-barre b { font: 700 12px/1 var(--f-num); letter-spacing: .01em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.moi .m-b-t { position: relative; height: 9px; border-radius: 3px; background: color-mix(in srgb, var(--rule-2) 70%, transparent); }
+.moi .m-b-t::before { content: ""; position: absolute; left: 50%; top: -4px; bottom: -4px; width: 1px; background: var(--ink-3); opacity: .55; }
+.moi .m-b-f { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: var(--ink-3); } .moi .m-b-f.up { background: var(--up); } .moi .m-b-f.down { background: var(--down); }
+.moi .m-b-p { font: 600 12px/1 var(--f-num); font-variant-numeric: tabular-nums; letter-spacing: -.02em; text-align: right; white-space: nowrap; color: var(--ink-2); }
+.moi .m-b-p.up { color: var(--up); } .moi .m-b-p.down { color: var(--down); }
+.moi .m-barre small { font: 500 11px/1 var(--f-num); font-variant-numeric: tabular-nums; letter-spacing: -.02em; text-align: right; white-space: nowrap; overflow: hidden; color: var(--ink-3); }
 .moi .m-per-bas { margin: 0 0 6px; }
 .moi .m-ferme { justify-self: start; align-self: start; display: inline-block; padding: 3px 8px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--rule-2); font: 600 11.5px/1.2 var(--f-text); color: var(--ink-2); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .moi .m-carte-l { margin: -6px 2px 0; font-size: 11px; line-height: 1.3; color: var(--ink-3); }
-.moi .m-tuile { all: unset; box-sizing: border-box; cursor: pointer; flex: 1 1 64px; min-width: 80px; min-height: 54px; padding: 7px 7px; overflow: hidden; border-radius: 8px; background: var(--panel); border: 1px solid var(--rule); display: grid; align-content: space-between; gap: 2px; }
-.moi .m-tuile:focus-visible { outline: 2px solid var(--accent); }
-.moi .m-tuile b { font: 700 13px/1.1 var(--f-num); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.moi .m-tuile span { font: 600 12px/1.1 var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: clip; letter-spacing: -.01em; }   /* v17.19 : « -15,28 % » ne dépasse plus (iPhone) */
 .moi .m-tri { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 10px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
 .moi .m-tri .m-coche { padding-bottom: 0; }
 .moi .m-tri-p { margin: 8px 0 2px; } .moi .m-tri-p .chip { padding: 6px 11px; font-size: 12.5px; }
@@ -1301,19 +1307,19 @@ function htmlJourBase() {
   const detail = PREF.lignes !== false;
   const tri = detail && ["env", "jour", "poids", "pv"].includes(PREF.tri) ? PREF.tri : "env";   // lot 50 : choix mémorisé disparu = choix par défaut
   const hausse = toutes.filter(l => l.pct > 1e-9).length, baisse = toutes.filter(l => l.pct < -1e-9).length;
-  /* carte de la période : une tuile par ligne, couleur = signe et force de la variation (%).
-     lot 50 (Théo : « je sais déjà qu'il y en a plus sur le Monde » ; mini-Conseil data-viz + investisseur, unanime) : taille = |gain ou perte en €
-     sur la période choisie (Jour, 5 j, 1 M…)| = ce qui a vraiment fait bouger le portefeuille, au lieu de l'argent placé. Plancher de 3 % pour
-     que chaque ticker reste lisible et touchable ; rien n'a bougé (avant l'ouverture) = tailles égales. Mode discret : la taille reste, aucun €. */
-  const maxP = Math.max(.01, ...toutes.map(l => Math.abs(l.pct || 0)));
+  /* lot 52 (Théo : « ce n'est pas du tout en fonction de la perte de perf en % » ; mini-Conseil data-viz + investisseur + joueur pressé, unanime) :
+     la carte en tuiles (taille = gain en €, v17.62) laisse place à des barres classées du meilleur au pire % de la période. Une ligne par ticker,
+     barre centrée sur 0 (à droite = hausse, à gauche = baisse), longueur ∝ |%| : la plus forte variation a toujours la plus longue barre.
+     € en petit à droite ; plus de 7 lignes = deux colonnes sans € (jamais plus haut que l'ancienne carte). Mode discret : aucun €, le % reste. */
+  const maxP = Math.max(.001, ...toutes.map(l => Math.abs(l.pct || 0)));
   const gainL = l => ok(l.jour) ? l.jour : ok(l.pct) && l.pct > -1 ? (l.valeur || 0) * l.pct / (1 + l.pct) : 0;
-  const totG = toutes.reduce((a, l) => a + Math.abs(gainL(l)), 0), egal = totG < 1;
-  const part = l => egal ? 1 / Math.max(1, toutes.length) : Math.max(.03, Math.abs(gainL(l)) / totG);
-  const triees = toutes.slice().sort((a, b) => part(b) - part(a) || (b.valeur || 0) - (a.valeur || 0)), hC = hauteurCarte(triees.length);
-  const tuileC = l => '<button type="button" class="m-tuile" data-aller-ligne="' + esc(l.env + "|" + l.code) + '" style="flex:' + (part(l) * 100).toFixed(2) + " 1 0;" + (Math.abs(l.pct || 0) > 1e-9 ? teinte(l.pct, maxP) : "") + '">' +
-    "<b>" + esc(l.code) + "</b><span>" + pct(l.pct, 2) + "</span></button>";
-  /* bandes horizontales (treemap « squarified ») : hauteur d'une bande ∝ sa part, largeur d'une tuile ∝ sa part dans la bande → surface ∝ part */
-  const carte = rangsCarte(triees.map(part), 340, hC).map(r => '<div class="m-carte-r" style="flex:' + (r.s * 100).toFixed(2) + ' 1 0">' + r.i.map(i => tuileC(triees[i])).join("") + "</div>").join("");
+  const bouge = toutes.some(l => Math.abs(l.pct || 0) > 1e-9), deuxC = toutes.length > 7, sansEur = deuxC || ETAT.discret === "oui";
+  const triees = toutes.slice().sort((a, b) => (b.pct || 0) - (a.pct || 0) || (b.valeur || 0) - (a.valeur || 0));
+  const barreL = l => { const p = l.pct || 0, w = Math.abs(p) > 1e-9 ? Math.max(2, Math.abs(p) / maxP * 50) : 0, g = gainL(l);
+    return '<button type="button" class="m-barre" data-aller-ligne="' + esc(l.env + "|" + l.code) + '" title="' + esc((l.nom || l.code) + " · " + pct(l.pct, 2)) + '">' +
+      "<b>" + esc(l.code) + '</b><span class="m-b-t">' + (w ? '<i class="m-b-f ' + sens(p) + '" style="width:' + w.toFixed(1) + "%;" + (p > 0 ? "left" : "right") + ':50%"></i>' : "") + "</span>" +
+      '<span class="m-b-p ' + sens(p) + '">' + pct(l.pct, 2) + "</span>" + (sansEur ? "" : "<small>" + (ok(g) && Math.abs(g) >= .5 ? eur(g, 0, true) : "") + "</small>") + "</button>"; };
+  const barres = '<div class="m-barres' + (deuxC ? " deux" : "") + (sansEur ? " sans-eur" : "") + '" style="--nr:' + (deuxC ? Math.ceil(triees.length / 2) : triees.length) + '" role="group" aria-label="Une barre par ligne, de la meilleure à la pire variation en %">' + triees.map(barreL).join("") + "</div>";
   // liste : par enveloppe (en-tête avec le jour de l'enveloppe) ou toutes ensemble triées
   let liste;
   if (tri === "env") {
@@ -1342,8 +1348,7 @@ function htmlJourBase() {
       (majCourte() ? '<small class="m-maj">' + esc(majCourte()) + "</small>" : "") +
     "</div>" +
     bandeDebut(s) +
-    (toutes.length >= 3 ? '<div class="m-carte" style="min-height:' + hC + 'px" role="group" aria-label="Une tuile par ligne : taille = gain ou perte en euros sur la période, couleur = variation en %">' + carte + "</div>" +
-      '<p class="m-carte-l">' + (egal ? "Rien n'a encore bougé : tuiles de même taille." + (!v5 && bf.ferme ? " Bourse fermée." : "") : "Taille = ce que la ligne a fait gagner ou perdre" + (v5 ? " sur la période" : bf.ferme ? " sur la séance du " + esc(bf.lib) + " (bourse fermée)" : " aujourd'hui") + ".") + "</p>" : "") +   // lot 27 : sous 3 lignes, la carte n'apprend rien
+    (toutes.length >= 3 ? barres + '<p class="m-carte-l">' + (!bouge ? "Rien n'a encore bougé." + (!v5 && bf.ferme ? " Bourse fermée" + (bf.lib ? " (séance du " + esc(bf.lib) + ")" : "") + "." : "") : "Du meilleur au pire, en %" + (v5 ? " sur la période" : bf.ferme ? " sur la séance du " + esc(bf.lib) + " (bourse fermée)" : " aujourd'hui") + ".") + "</p>" : "") +   // lot 27 : sous 3 lignes, la carte n'apprend rien
     blocSignal() +
     "<div>" +
       '<div class="m-tri"><h2 class="sec">' + (detail ? "Mes lignes" : "Mes enveloppes") + "</h2>" +
@@ -1360,17 +1365,6 @@ function htmlJourBase() {
 /** boutons de période (Jour · 5 j · 1 M · 6 M · Janv. · 1 an) ; bas = la rangée au-dessus des Marchés (lot 50), même réglage que la carte Bourse */
 function boutonsPer(v5, bas) {
   return [["jour", "Jour"]].concat(Object.keys(PERIODES_J).map(k => [k, PERIODES_J[k][1]])).map(([k, l]) => '<button type="button"' + (bas ? ' class="chip" data-per-b="1"' : "") + ' data-per="' + k + '" aria-pressed="' + ((v5 ? VUEJ : "jour") === k) + '">' + l + "</button>").join("");
-}
-/** lot 50 : hauteur de la carte des lignes selon leur nombre */
-function hauteurCarte(n) { return n <= 3 ? 112 : n <= 6 ? 140 : n <= 10 ? 172 : 204; }
-/** parts (triées, plus grande d'abord) → bandes [{ i: [indices], s: part de la bande }] ; on ajoute une tuile à la bande tant que la pire
-    proportion (largeur/hauteur) ne se dégrade pas, sur une carte de W × H (téléphone) */
-function rangsCarte(parts, W, H) {
-  const tot = parts.reduce((a, p) => a + p, 0) || 1, ps = parts.map(p => p / tot), pire = (idx, sm) => Math.max(...idx.map(i => { const w = ps[i] / sm * W, h = sm * H; return Math.max(w / h, h / w); }));
-  const rangs = []; let cur = [], sm = 0;
-  ps.forEach((p, i) => { if (cur.length && pire(cur.concat(i), sm + p) > pire(cur, sm)) { rangs.push({ i: cur, s: sm }); cur = []; sm = 0; } cur.push(i); sm += p; });
-  if (cur.length) rangs.push({ i: cur, s: sm });
-  return rangs;
 }
 function enteteEnv(nom, valeur, jour, jourPct, pv, pvPct) {
   return '<div class="m-env-h"><b>' + esc(nom) + '</b><span class="v">' + eur(valeur) + "</span>" +
