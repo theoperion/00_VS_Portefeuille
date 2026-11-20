@@ -835,7 +835,8 @@ function barreAdmin() {
   /* V16.63 · avant le 1er décembre : un raccourci vers le tour de chauffe tel que les joueurs le verront (admin seulement, simulation : rien n'est envoyé) */
   const dec = !chauffeOuverte() && !(m === "joueur" && (stock.get("versus.dateSim") || "").startsWith("2026-12")) ? '<button type="button" class="ba-dec" data-badec="1">🔥 Voir décembre · l’Atelier du Père Noël, comme les joueurs le 3 décembre</button>' : "";
   const circ = '<button type="button" class="ba-dec" data-bacirc="1">🗺️ Circuits 2027 · les 13 circuits en 2D et en 3D (aperçu)</button>';   // v16.81
-  return '<div class="barre-admin"><div class="ba-h"><b>👑 Admin</b><div class="ba-seg">' + b("tout", "Tout afficher") + b("joueur", "Vue joueur") + b("reel", "Le réel") + "</div></div>" + plus + dec + circ + "<small>" + desc + "</small></div>";
+  const tres = '<button type="button" class="ba-dec" data-batres="1">🗝️ Aperçu du trésor · la chasse au trésor avec un exemple inventé (rien n’est envoyé)</button>';   // v17.26
+  return '<div class="barre-admin"><div class="ba-h"><b>👑 Admin</b><div class="ba-seg">' + b("tout", "Tout afficher") + b("joueur", "Vue joueur") + b("reel", "Le réel") + "</div></div>" + plus + dec + circ + tres + "<small>" + desc + "</small></div>";
 }
 function brancherBarreAdmin(v) {
   const reglerMode = m => {
@@ -847,6 +848,7 @@ function brancherBarreAdmin(v) {
   };
   v.querySelectorAll("[data-madm]").forEach(x => x.addEventListener("click", () => reglerMode(x.dataset.madm)));
   v.querySelectorAll("[data-bacirc]").forEach(x => x.addEventListener("click", () => ouvrirCircuits2027()));
+  v.querySelectorAll("[data-batres]").forEach(x => x.addEventListener("click", () => ouvrirApercuTresor()));
   v.querySelectorAll("[data-badec]").forEach(x => x.addEventListener("click", () => { stock.set("versus.apercuSaison", "0"); stock.set("versus.vueJoueur", joueurAdmin()); stock.set("versus.dateSim", "2026-12-03"); ETAT.podium = "gp"; GP_ETAPE = null; garder(); location.reload(); }));
   v.querySelectorAll("[data-badate]").forEach(x => x.addEventListener("click", () => { if (x.dataset.badate) stock.set("versus.dateSim", x.dataset.badate); else stock.del("versus.dateSim"); location.reload(); }));
 }

@@ -608,12 +608,13 @@ function etiquettesGP(api) {
    Les emplacements ne sont pas dans l'appli : le serveur ne les donne qu'à partir du 1er du mois du circuit (saison 2027),
    à tout le monde, admin compris. L'objet n'apparaît que de très près (zoom faible), superposé au décor ; un toucher le ramasse. ---------- */
 const TRESOR_DEBUT = 20261201, TRESOR_D = 92;   // distance (mètres du décor) en dessous de laquelle l'objet se montre (v16.64 : plus difficile, il faut zoomer au maximum et regarder au ras du sol)
-let TRESORS = null, TRESORS_T = 0, TRESOR_EL = null;
+let TRESORS = null, TRESORS_T = 0, TRESOR_EL = null, TRESOR_APERCU = null;   // v17.26 : TRESOR_APERCU = aperçu admin en cours (exemple inventé, rien n'est envoyé)
 function tresorsOuverts() { return aujNum() >= TRESOR_DEBUT && SOURCE === "api" && !simulation(); }
 async function chargerTresors() {
-  if (TRESORS || !tresorsOuverts() || Date.now() - TRESORS_T < 60000) return; TRESORS_T = Date.now();
+  if (TRESOR_APERCU || TRESORS || !tresorsOuverts() || Date.now() - TRESORS_T < 60000) return; TRESORS_T = Date.now();
   const rep = await posterAdmin({ action: "tresors" });
   if (!rep || !rep.ok) return;
+  if (TRESOR_APERCU) { TRESOR_APERCU.sauve.T = { l: rep.tresors || [], trouves: rep.trouves || [], total: rep.total || 0 }; return; }   // réponse arrivée pendant l'aperçu : remise à la fermeture
   TRESORS = { l: rep.tresors || [], trouves: rep.trouves || [], total: rep.total || 0 }; poserTresorDOM(document);
 }
 function tresorDuCircuit(ci) { if (!TRESORS) return null; const t = TRESORS.l.find(x => x.circuit === ci); return t && TRESORS.trouves.indexOf(ci) < 0 ? t : null; }
@@ -632,10 +633,10 @@ const TRESOR_SVG = {
 };
 /** pose (ou retire) le compteur, l'énigme du mois et l'objet dans la page Course ; sans rien recalculer d'autre */
 function poserTresorDOM(v) {
-  const pi = (v || document).querySelector ? (v || document).querySelector("#gp-piste") : null; if (!pi) return;
+  const AP = TRESOR_APERCU, pi = (v || document).querySelector ? (v || document).querySelector("#gp-piste, .gp-piste-ap") : null; if (!pi || (AP && !AP.o.contains(pi))) return;   // pendant l'aperçu, la vraie page n'est pas touchée
   pi.querySelectorAll(".gp-tresor, .gp-enigme, .gp-tresor-appel").forEach(e => e.remove()); TRESOR_EL = null;
-  const met = document.querySelector(".gp-h .gp-met"), cpt = met && met.querySelector(".gp-tresors");
-  if (!TRESORS || !tresorsOuverts()) { if (cpt) cpt.remove(); return; }
+  const met = (AP ? AP.o : document).querySelector(".gp-h .gp-met"), cpt = met && met.querySelector(".gp-tresors"), ga = AP ? AP.api : GP_INST && GP_INST.api;
+  if (!TRESORS || !(AP || tresorsOuverts())) { if (cpt) cpt.remove(); return; }
   const n = TRESORS.total || 0, txt = "🗝️ " + n + " trésor" + (n > 1 ? "s" : "") + " trouvé" + (n > 1 ? "s" : "");
   if (met) { if (cpt) cpt.textContent = txt; else met.insertAdjacentHTML("beforeend", ' <span class="gp-tresors">' + txt + "</span>"); }
   const tc = TRESORS.l.find(x => x.circuit === pi.dataset.circuit); if (!tc) return;
@@ -643,19 +644,19 @@ function poserTresorDOM(v) {
   if (!t) {   // déjà trouvé : plus d'objet, mais l'énigme résolue et le classement des chercheurs restent consultables
     pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme trouvee">✅ <i>Trésor trouvé !</i><span class="gp-chercheurs">' + chercheursTxt(tc) + "</span></div>");
     const en0 = pi.querySelector(".gp-enigme"); TRESOR_EL = { pi, b: null, en: en0, t: tc, vu: false, pris: true };
-    en0.addEventListener("click", () => en0.classList.toggle("ouverte")); if (GP_INST) majTresor(GP_INST.api, pi); return;
+    en0.addEventListener("click", () => en0.classList.toggle("ouverte")); if (ga) majTresor(ga, pi); return;
   }
   /* v16.67 · rappel en carte 2D (vue par défaut) : un trésor attend sur ce circuit → un toucher ouvre la Visite 3D (validé par le Conseil) */
   const premiere = !stock.get("versus.tresorAide");
   pi.insertAdjacentHTML("beforeend", '<button class="gp-tresor-appel" type="button">' + (ind ? "💡 2e indice tombé · " : "🗝️ Un trésor se cache ici · ") + "<b>Chercher en 3D</b>" + (premiere ? "<small>Zoome au maximum, au ras du sol.</small>" : "") + "</button>");
-  pi.querySelector(".gp-tresor-appel").addEventListener("click", ev => { ev.stopPropagation(); stock.set("versus.tresorAide", "1"); if (pi.classList.contains("v2")) { choisirVueGP("visite"); return; } const bv = document.getElementById("gp-vue"); if (bv && pi.classList.contains("en2d")) bv.click(); });
+  pi.querySelector(".gp-tresor-appel").addEventListener("click", ev => { ev.stopPropagation(); if (AP) { AP.vers3d(); return; } stock.set("versus.tresorAide", "1"); if (pi.classList.contains("v2")) { choisirVueGP("visite"); return; } const bv = document.getElementById("gp-vue"); if (bv && pi.classList.contains("en2d")) bv.click(); });
   pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme" title="Énigme du mois : un objet est caché dans le décor de ce circuit. Approche-toi en Visite 3D. Touche pour lire la suite.">' + (ind ? "💡" : "🗝️") + ' <i>' + esc(t.enigme) + "</i>" + ind + '<span class="gp-chercheurs">' + chercheursTxt(t) + "</span></div>" +
     '<button class="gp-tresor t-' + esc(t.type) + '" type="button" aria-label="Un objet du film : touche-le !" tabindex="-1">' + (TRESOR_SVG[t.type] || TRESOR_SVG.gemme) + "</button>");
   const b = pi.querySelector(".gp-tresor"), en = pi.querySelector(".gp-enigme");
   TRESOR_EL = { pi, b, en, t, vu: false };
   en.addEventListener("click", () => en.classList.toggle("ouverte"));
   b.addEventListener("click", ev => { ev.stopPropagation(); trouverTresor(t, b); });
-  if (GP_INST) majTresor(GP_INST.api, pi);
+  if (ga) majTresor(ga, pi);
 }
 /** à chaque image : l'objet suit le décor, seulement en Visite 3D (hélico, hors course et survol), de très près et à l'écran */
 function majTresor(api, pi) {
@@ -676,12 +677,73 @@ async function trouverTresor(t, b) {
   if (!reduit) { const fx = document.createElement("div"); fx.className = "gp-tresor-fx"; fx.style.left = x + "px"; fx.style.top = y + "px";
     fx.innerHTML = Array.from({ length: 14 }, (_, k) => '<i style="--a:' + (k / 14 * 360).toFixed(0) + "deg;--d:" + (26 + (k % 3) * 12) + 'px"></i>').join(""); T.pi.appendChild(fx); setTimeout(() => fx.remove(), 1300); }
   if (window.SONS) { SONS.succes(); setTimeout(() => SONS.klaxon("billets"), 250); SONS.vibrer([40, 50, 120]); }
-  const rep = await posterAdmin({ action: "tresorTrouve", circuit: t.circuit });
+  const rep = TRESOR_APERCU ? TRESOR_APERCU.trouver(t) : await posterAdmin({ action: "tresorTrouve", circuit: t.circuit });   // aperçu : réponse inventée, rien ne part au serveur
   if (rep && rep.ok) { TRESORS.trouves = rep.trouves || TRESORS.trouves.concat([t.circuit]); TRESORS.total = rep.total || TRESORS.trouves.length;
     if (!rep.deja) { const l = TRESORS.l.find(x => x.circuit === t.circuit), n = moiVrai(); if (l && !(l.chercheurs || []).some(x => x.nom === n)) { const d = new Date(); (l.chercheurs = l.chercheurs || []).push({ nom: n, j: d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate() }); } }
     toast(rep.deja ? "🗝️ Déjà trouvé !" : "🗝️ Trouvé" + (rep.rang === 1 ? " en premier ! 🥇" : rep.rang ? " (" + rep.rang + "e)" : " !") + " " + TRESORS.total + " trésor" + (TRESORS.total > 1 ? "s" : "") + " dans ta besace.");
-    setTimeout(() => poserTresorDOM(document), reduit ? 0 : 900); }
+    setTimeout(() => poserTresorDOM(TRESOR_APERCU ? TRESOR_APERCU.o : document), reduit ? 0 : 900); }
   else { T.pris = false; b.classList.remove("pris"); toast((rep && rep.message) || "Trouvaille non enregistrée : réessaie."); }
+}
+/** v17.26 · 🗝️ Aperçu admin de la chasse au trésor : une énigme, un 2e indice, des chercheurs et une cachette D'EXEMPLE, inventés
+    (sans rapport avec les vrais trésors). Rien n'est envoyé au serveur, rien n'est gardé ; à la fermeture, l'état réel revient. */
+function ouvrirApercuTresor() {
+  if (TRESOR_APERCU) return;
+  const ci = "interlagos", G = GPS[ci] || {};
+  const F = { circuit: ci, type: "gemme", p: null, enigme: "Énigme d'exemple : je suis rond, je brille quand la nuit tombe, et pourtant je ne suis pas la lune." };
+  const IND = "Indice d'exemple : lève les yeux vers ce qui est le plus haut.", CH = [{ nom: "Pilote A", j: 20271104 }, { nom: "Pilote B", j: 20271109 }];
+  let vue = "2d", apres = false, avecCh = false, trouves = [];
+  const o = document.createElement("div"); o.className = "regles tap"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Aperçu du trésor");
+  const ch = (k, v, lib) => '<button type="button" class="chip" data-tap' + k + '="' + v + '">' + lib + "</button>";
+  o.innerHTML = '<div class="rg-c"><div class="tap-band">👁️ Aperçu · exemple inventé · rien n\'est envoyé</div>' +
+    '<div class="rg-h gp-h"><b>🗝️ Aperçu du trésor</b> <span class="gp-met"></span><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div>' +
+    '<div class="tap-l"><span>Vue</span>' + ch("v", "2d", "🗺️ Carte 2D") + ch("v", "visite", "🔎 Visite 3D") + "</div>" +
+    '<div class="tap-l"><span>2e indice</span>' + ch("i", "0", "Avant le 11") + ch("i", "1", "Après le 11") + "</div>" +
+    '<div class="tap-l"><span>Chercheurs</span>' + ch("c", "0", "Personne") + ch("c", "1", "2 d'exemple") + "</div>" +
+    '<div class="tap-l">' + ch("a", "pres", "🎯 Me placer près de la cachette") + ch("a", "rejouer", "↺ Rejouer la trouvaille") + "</div>" +
+    '<div class="gp-piste gp-piste-ap" data-circuit="' + ci + '"></div>' +
+    '<p class="info">' + esc(G.gp || ci) + " · cachette posée au hasard. En Visite 3D : zoome au maximum, au ras du sol, puis touche l'objet. L'énigme se lit en touchant le bandeau du bas.</p></div>";
+  document.body.appendChild(o);
+  const pi = o.querySelector(".gp-piste-ap");
+  const AP = TRESOR_APERCU = { o, api: null, sauve: { T: TRESORS, Tt: TRESORS_T },
+    trouver(t) { const deja = trouves.indexOf(t.circuit) >= 0; if (!deja) trouves.push(t.circuit); return { ok: true, deja, trouves: trouves.slice(), total: trouves.length, rang: (avecCh ? CH.length : 0) + 1 }; },
+    vers3d() { vue = "visite"; monter(); } };
+  const donnees = () => { F.indice2 = apres ? IND : undefined; F.chercheurs = avecCh ? CH.map(x => Object.assign({}, x)) : []; TRESORS = { l: [F], trouves: trouves.slice(), total: trouves.length }; };
+  const pres = () => { const a = AP.api; if (a && a.type === "3d" && F.p) a.viser([F.p[0], F.p[2]], .13, .55); };
+  /* cachette d'exemple : un point quelconque du sol, choisi une fois pour tomber à l'écran en vue rapprochée */
+  const cachette = a => { if (F.p || !a || a.type !== "3d" || !a.projeter) return; const { w, h } = a.taille(); let best = null;
+    for (let x = -600; x <= 600; x += 8) for (let z = -600; z <= 600; z += 8) { const e = a.projeter([x, 1, z]); if (!e || !e.vis || e.d > 70) continue; const s = Math.hypot(e.x - w / 2, e.y - h * .55); if (!best || s < best.s) best = { s, p: [x, 1, z] }; }
+    if (!best) return; F.p = best.p; poserTresorDOM(o); a.viser(null, .3, .38); };   // puis on prend de la hauteur : à l’admin de la retrouver (ou 🎯)
+  const monter = () => {
+    if (AP.api) { try { AP.api.detruire(); } catch (e) { } AP.api = null; } pi.innerHTML = ""; pi.classList.toggle("en2d", vue === "2d");
+    o.querySelectorAll("[data-tapv]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tapv === vue)));
+    o.querySelectorAll("[data-tapi]").forEach(b => b.setAttribute("aria-pressed", String((b.dataset.tapi === "1") === apres)));
+    o.querySelectorAll("[data-tapc]").forEach(b => b.setAttribute("aria-pressed", String((b.dataset.tapc === "1") === avecCh)));
+    o.querySelector('[data-tapa="pres"]').disabled = vue === "2d";
+    donnees();
+    if (window.Piste) {
+      const boite = document.createElement("div"); boite.className = "cg-rendu"; pi.appendChild(boite);
+      const vs = voituresGP(), pts = Object.fromEntries(D.personnes.map(p => [p.nom, 0]));
+      const a = AP.api = Piste.monter(boite, { circuit: ci, meteo: "soleil", mode: vue === "2d" ? "2d" : "3d", camera: "helico", sansVoitures: vue !== "2d", tour: 0, voitures: vs, pts, focus: vs[0] && vs[0].nom, accent: couleurAccent(),
+        titre: G.gp || ci, portrait: n => avatar(n, Object.assign({}, equipDe(n), { skin: (Piste.TRACES[ci] || {}).peint })), image: x => majTresor(x, pi) });
+      if (a.type !== "3d") pi.classList.add("en2d");
+      else if (!F.p) { let n = 0; const essai = () => { if (AP.api !== a || F.p || ++n > 12) return; try { if (a.mode() === "helico") { a.viser(null, .13, .55); setTimeout(() => { if (AP.api === a) cachette(a); if (!F.p) setTimeout(essai, 300); }, 700); return; } } catch (e) { } setTimeout(essai, 400); }; setTimeout(essai, 400); }
+      else setTimeout(() => { if (AP.api === a) a.viser(null, .3, .38); }, 300);
+    }
+    poserTresorDOM(o);
+  };
+  o.querySelectorAll("[data-tapv]").forEach(b => b.addEventListener("click", () => { if (vue !== b.dataset.tapv) { vue = b.dataset.tapv; monter(); } }));
+  o.querySelectorAll("[data-tapi]").forEach(b => b.addEventListener("click", () => { apres = b.dataset.tapi === "1"; monter(); }));
+  o.querySelectorAll("[data-tapc]").forEach(b => b.addEventListener("click", () => { avecCh = b.dataset.tapc === "1"; monter(); }));
+  o.querySelector('[data-tapa="pres"]').addEventListener("click", pres);
+  o.querySelector('[data-tapa="rejouer"]').addEventListener("click", () => { trouves = []; donnees(); poserTresorDOM(o); if (AP.api) { AP.api.reveiller(); pres(); } toast("↺ Objet remis en place (aperçu)."); });
+  const fermer = () => {
+    if (TRESOR_APERCU !== AP) return;
+    if (AP.api) { try { AP.api.detruire(); } catch (e) { } }
+    o.remove(); TRESOR_APERCU = null; TRESOR_EL = null; TRESORS = AP.sauve.T; TRESORS_T = AP.sauve.Tt;
+    poserTresorDOM(document); if (GP_INST) { try { GP_INST.api.reveiller(); } catch (e) { } }
+  };
+  o.querySelector(".rg-x").addEventListener("click", fermer); o.addEventListener("click", ev => { if (ev.target === o) fermer(); });
+  monter();
 }
 /** Ce que chacun a marqué ce mois-ci, en bulles au-dessus des voitures, à l'arrivée */
 function bullesGP(y, i) {

@@ -1744,3 +1744,11 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 @media (max-width: 560px) { .gpp-bar { left: calc(env(safe-area-inset-left, 0px) + 8px); flex-wrap: wrap; justify-content: flex-end; row-gap: 6px; } }
 /* 19/11 : en portrait, le sélecteur (avec 🛸 Survol) sur la 1re ligne, ▶ ⏭ ✕ ensemble sur la 2de */
 @media (max-width: 560px) { .gpp-bar { row-gap: 3px; } .gpp-bar::after { content: ""; flex-basis: 100%; height: 0; order: 1; } .gpp-bar .gpp-b { order: 2; } }
+/* v17.26 · 🗝️ Aperçu admin du trésor (exemple inventé) */
+.tap .rg-c { width: min(100%, 760px); }
+.tap-band { position: sticky; top: 0; z-index: 6; margin: -2px 0 8px; padding: 6px 10px; border-radius: 10px; background: #FFE08A; color: #2A1E05; font: 700 12.5px/1.2 var(--f-text); text-align: center; }
+.tap .gp-h .gp-met { flex: 1; margin-left: 8px; font-size: 12px; opacity: .85; }
+.tap-l { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 6px; }
+.tap-l > span { min-width: 76px; font: 600 12px/1.2 var(--f-text); color: var(--muted, inherit); }
+.tap-l .chip[disabled] { opacity: .45; }
+.gp-piste-ap { width: 100%; height: min(58vh, 480px); margin-top: 4px; }
