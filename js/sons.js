@@ -297,7 +297,7 @@ const SONS = (() => {
       for (;;) {
         if (i >= evs.length) { i = 0; M.k++; }
         const e = evs[i], tt = base + M.k * L + e.t * b; if (tt > jusqua || tt >= fin - .05) return tt < fin - .05;
-        try { INSTR[e.i](c, out, tt, e.f, Math.min(e.d * b, fin - tt), e.v, N); } catch (er) { /* rien */ } i++;
+        try { INSTR[e.i](c, typeof out === "function" ? out(e) : out, tt, e.f, Math.min(e.d * b, fin - tt), e.v, N); } catch (er) { /* rien */ } i++;   // v17.59 : out peut choisir le bus selon l'instrument (ambiance)
       }
     };
     M.pose(avance == null ? fin : t0 + avance); return M;
@@ -316,6 +316,79 @@ const SONS = (() => {
   }
   /* outil d'écoute (tests) : le thème rendu hors ligne, n secondes */
   function ecouteTheme(cle, n) { const T = THEMES_COURSE[cle]; return horsLigne(n, (c, m) => { const bus = c.createGain(); bus.gain.value = T.gain; bus.connect(m); poserTheme(T, c, bus, 0, n, 0, []); }); }
+
+  /* ==================== v17.59 · L'AMBIANCE du plein écran (seulement les circuits qui ont un thème, aujourd'hui l'Atelier du Père Noël) ====================
+     Dès l'entrée en plein écran et hors course (Carte au repos, Visite, Hélico, Survol) : une version douce du thème, célesta + grelots seulement
+     (ni pizzicati ni basse), plus lente et plus basse que le thème de la course. Pendant la course (▶) : le thème complet ; à l'arrivée, après le
+     jingle et le klaxon, l'ambiance revient en fondu. 4 parties enchaînées sans coupure (anti-lassitude) : la mélodie · les accords seuls ·
+     la mélodie (2e refrain) · une respiration de grelots presque silencieuse ; après une pause, elle reprend à la partie suivante.
+     Se tait en fondu : sortie du plein écran, 3 min sans toucher l'écran (reprend au toucher suivant), onglet caché, 🔇 ; jamais deux à la fois.
+     Posée petit à petit sur l'horloge audio (≈ 1,2 s d'avance) par la même mécanique que le thème ; la liste des sons gardés est bornée. */
+  const AMBIANCES = {
+    garage: { tempo: 152, tonique: 523.25, gain: .14, longueur: 112, sections: [0, 32, 64, 96],
+      partition(add) {
+        // les accords, sans basse (rien sous do 4) : [3 notes] par mesure
+        const H = { C: [-12, -8, -5], F: [-7, -3, 0], D7: [-10, -6, 0], G7: [-5, -1, 5] };
+        const grelots = (b0, nb) => { for (let m = 0; m < nb; m++) [1, 3].forEach(k => add(b0 + m * 4 + k, "grelots", 0, .3, .045)); };
+        const melodie = (b0, l, v) => { let t = b0; l.forEach(([st, d]) => { add(t, "celesta", st, d, v); t += d; }); };
+        // 1 · la mélodie (refrain, 1re moitié) et une note d'accord douce par mesure
+        melodie(0, NOEL_A.concat(NOEL_B), .24); grelots(0, 8);
+        "C C C C F C D7 G7".split(" ").forEach((a, m) => add(m * 4, "celesta", H[a][1], 2, .06));
+        // 2 · les accords seuls, en arpège montant ; un frisson de grelots par mesure
+        "C C F C C F G7 C".split(" ").forEach((a, m) => { const b = 32 + m * 4; H[a].forEach((st, k) => add(b + k, "celesta", st, 1, .15 - k * .015)); add(b + 3, "celesta", H[a][0] + 12, 1, .08); add(b, "grelots", 0, .6, .035); });
+        // 3 · la mélodie (2e moitié du refrain)
+        melodie(64, NOEL_A.concat(NOEL_C), .22); grelots(64, 8);
+        "C C C C F C G7 C".split(" ").forEach((a, m) => add(64 + m * 4, "celesta", H[a][1], 2, .06));
+        // 4 · la respiration : deux longs frissons de grelots, deux notes isolées, puis presque rien
+        add(96, "grelots", 0, 2, .05); add(100, "celesta", 7, 2, .08); add(104, "grelots", 0, 1.5, .04); add(108, "celesta", 12, 3, .055);
+      } }
+  };
+  const AMB_CHALEUR = [1, 1.2, 1.4, 1.65];   // bonus chasse au trésor : les grelots un peu plus présents, au même palier que la jauge chaud-froid affichée (jamais plus fin, jamais avant)
+  let amb = null;
+  const AMB = { cle: null, calme: 180000, dernier: performance.now(), courseJusqua: 0, pos: {}, chaleur: -1, iv: null };
+  const ambBloquee = () => !AMB.cle || !AMBIANCES[AMB.cle] || !actif() || document.visibilityState === "hidden" || performance.now() - AMB.dernier > AMB.calme ||
+    performance.now() < AMB.courseJusqua || !!theme || !!moteur || !!(mus && !mus.fini) ||
+    !!document.querySelector(".fc-voile, .ba, .ere-voile");   // une cérémonie (fête de la chauffe, bande-annonce, premier million) a son propre son : l'ambiance attend qu'elle se ferme
+  function ambStop(f) {
+    if (!amb) return; const M = amb; amb = null; clearInterval(M.iv);
+    try { const T = AMBIANCES[M.cle], L = T.longueur * 60 / T.tempo, ici = ((M.c.currentTime - M.t0) + M.depuis) % L, b = 60 / T.tempo;   // la partie suivante, pour la reprise
+      AMB.pos[M.cle] = (T.sections.map(s => s * b).find(s => s > ici + .05) || 0) % L; } catch (e) { /* rien */ }
+    try { const t = M.c.currentTime; M.bus.gain.cancelScheduledValues(t); M.bus.gain.setValueAtTime(M.bus.gain.value, t); M.bus.gain.linearRampToValueAtTime(0, t + (f || .05)); } catch (e) { /* rien */ }
+    setTimeout(() => { M.N.forEach(x => { try { x.stop(); } catch (e) { } }); M.N = []; try { M.bus.disconnect(); } catch (e) { } }, (f || .05) * 1000 + 150);
+  }
+  function ambDemarrer() {
+    const T = AMBIANCES[AMB.cle], c = audio(); if (!T || !c) return;
+    const bus = c.createGain(), busG = c.createGain(), t0 = c.currentTime + .05, depuis = AMB.pos[AMB.cle] || 0, monte = depuis ? 1.5 : 2.5;
+    bus.gain.setValueAtTime(0, t0); bus.gain.linearRampToValueAtTime(T.gain, t0 + monte); bus.connect(maitre);
+    busG.gain.value = AMB_CHALEUR[Math.max(0, AMB.chaleur)] || 1; busG.connect(bus);
+    const M = amb = { c, bus, busG, N: [], cle: AMB.cle, t0, depuis };
+    const P = poserTheme(T, c, e => e.i === "grelots" ? busG : bus, t0, Infinity, depuis, M.N, 1.2);
+    M.iv = setInterval(() => { if (amb !== M) return; P.pose(c.currentTime + 1.2); if (M.N.length > 500) M.N.splice(0, M.N.length - 300); }, 300);   // les sons déjà joués sont oubliés : la liste reste bornée
+  }
+  /** démarre ou coupe l'ambiance selon l'état (appelée par la sentinelle, au toucher, et à chaque changement) */
+  function ambVerifier(fondu) {
+    const non = ambBloquee();
+    if (non && amb) ambStop(fondu || (performance.now() - AMB.dernier > AMB.calme ? 3 : .4));
+    else if (!non && !amb) ambDemarrer();
+    else if (amb && amb.cle !== AMB.cle) { ambStop(.5); ambDemarrer(); }
+  }
+  /** le plein écran s'ouvre (clé « peint » du circuit) ou se ferme (null) */
+  function ambiance(cle) {
+    const k = cle && AMBIANCES[cle] ? cle : null;
+    if (k === AMB.cle && (k ? AMB.iv : true)) return !!k;
+    AMB.cle = k; AMB.dernier = performance.now();
+    if (!k) { clearInterval(AMB.iv); AMB.iv = null; AMB.chaleur = -1; ambStop(1.2); return false; }
+    if (!AMB.iv) AMB.iv = setInterval(() => ambVerifier(), 500);   // la sentinelle n'existe que pendant le plein écran d'un circuit à thème
+    ambVerifier(); return true;
+  }
+  /** bonus chasse au trésor : n = palier de la jauge chaud-froid AFFICHÉE (0-3), -1 = pas de jauge à l'écran */
+  function chaleur(n) {
+    n = n == null || n < 0 ? -1 : Math.min(3, n | 0); if (n === AMB.chaleur) return; AMB.chaleur = n;
+    if (!amb) return; try { const g = amb.busG.gain, t = amb.c.currentTime; g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(AMB_CHALEUR[Math.max(0, n)], t + .6); } catch (e) { /* rien */ }
+  }
+  ["pointerdown", "keydown", "touchstart", "wheel"].forEach(ev => document.addEventListener(ev, () => { const dormait = performance.now() - AMB.dernier > AMB.calme; AMB.dernier = performance.now(); if (dormait && AMB.iv) ambVerifier(); }, { passive: true, capture: true }));
+  /* outil d'écoute (tests) : l'ambiance rendue hors ligne, n secondes, les parties enchaînées */
+  function ecouteAmbiance(cle, n) { const T = AMBIANCES[cle]; return horsLigne(n, (c, m) => { const bus = c.createGain(); bus.gain.value = T.gain; bus.connect(m); poserTheme(T, c, bus, 0, n, 0, []); }); }
 
   /* la partition : la liste des notes, en secondes depuis le début de la bande-annonce */
   function composer(R, o) {
@@ -471,13 +544,16 @@ const SONS = (() => {
   const API = {
     sacre,
     actif, vibreOK, arreter, vibrer, klaxon, musiqueBA, bloque, debloquer, MUSIQUES, JINGLE_TIMBRE, _ecoute: ecoute, _ecouteJingles: ecouteJingles, _ecouteTheme: ecouteTheme, THEMES_COURSE, themeJoue: () => !!theme, _partition: composer,
+    /** v17.59 · l'ambiance douce du plein écran (circuits à thème) ; chaleur = bonus chasse au trésor (palier de la jauge affichée) */
+    ambiance, chaleur, AMBIANCES, ambianceJoue: () => !!amb, _ambN: () => amb ? amb.N.length : 0, _ambGrelots: () => amb ? amb.busG.gain.value : 0, _ecouteAmbiance: ecouteAmbiance, _amb: AMB,
     /** V16.75 · le jingle « VER-SUS ! » dans le timbre d'un univers : mode « motif » (3 notes enchaînées) ou « accord » (tenu ~1 s) */
     jingle(cle, mode) { const c = audio(); if (!c) return; try { jingleSur(c, maitre, c.currentTime + .02, cle, mode || "motif", []); } catch (e) { /* rien */ } },
     basculer(on) { ecrire("versus.son", on ? "1" : "0");
       if (on) { audio(); note(880, .12, "sine", .15); note(1320, .2, "sine", .12, .1);
         // v17.48 : rallumé en pleine course : le thème reprend là où en est la course (jusqu'à l'arrivée prévue)
         const P = coursePlan, now = performance.now(); if (P && now >= P.debut && now < P.debut + P.duree - 500) themeCourse(P.cle, (P.debut + P.duree - now) / 1000, (now - P.debut) / 1000);
-      } else arreter();   // coupé : thème, musique de la bande-annonce, moteurs et bips programmés s'arrêtent ; plus rien ne part tant que c'est coupé (audio() renvoie null)
+      } else { arreter(); ambStop(.08); }   // coupé : thème, musique de la bande-annonce, moteurs et bips programmés s'arrêtent ; plus rien ne part tant que c'est coupé (audio() renvoie null)
+      if (AMB.iv) ambVerifier();   // v17.59 : en plein écran, l'ambiance repart (ou se tait) aussitôt
       document.querySelectorAll("[data-son]").forEach(majBouton); majReglages(); },
     vibrations(on) { ecrire("versus.vibre", on ? "1" : "0"); if (on) vibrer(40); majReglages(); },
     /** les 5 feux puis le départ : feux en ms avant le départ (0 = départ tout de suite) */
@@ -487,11 +563,13 @@ const SONS = (() => {
       plus_tard(avant > 0 ? avant : 0, () => { note(880, .45, "square", .16); vibrer(120); });
     },
     /** la course : feux (avant, ms), moteurs ; v17.48 : cle = clé « peint » du circuit, son thème (THEMES_COURSE) joue de « C'est parti » à l'arrivée */
-    course(duree, avant, cle) { arreter(); coursePlan = cle && THEMES_COURSE[cle] ? { cle, debut: performance.now() + (avant || 0), duree } : null;
+    course(duree, avant, cle) { AMB.courseJusqua = performance.now() + (avant || 0) + duree + 3000; ambStop(.4);   // v17.59 : l'ambiance s'efface avant les feux (filet : elle revient au plus tard 3 s après l'arrivée prévue)
+      arreter(); coursePlan = cle && THEMES_COURSE[cle] ? { cle, debut: performance.now() + (avant || 0), duree } : null;
       if (!actif() && !vibreOK()) return; API.depart(avant || 0); plus_tard(avant || 0, () => { moteurs(duree / 1000); if (coursePlan) themeCourse(cle, duree / 1000 + .3, 0); }); },
     /** l'arrivée : la foule, le klaxon du vainqueur ; une vibration de victoire si c'est toi */
     arrivee(styleKlaxon, cEstMoi, cle) {
-      const th = !!theme; coursePlan = null; themeStop(.45);   // v17.48 : le thème s'efface en fondu, avant le jingle et le klaxon
+      const th = !!theme; coursePlan = null; themeStop(.45);
+      AMB.courseJusqua = performance.now() + (cle ? (th ? 1500 : 1300) : 500) + 1400;   // v17.59 : l'ambiance revient après le jingle et le klaxon   // v17.48 : le thème s'efface en fondu, avant le jingle et le klaxon
       moteurStop(1.2); souffle(2.4, [700, 1100], .28, 0, .4); souffle(1.6, 2600, .1, .3, .2, "highpass");
       if (cle) { plus_tard(th ? 450 : 250, () => API.jingle(cle, "motif")); plus_tard(th ? 1500 : 1300, () => klaxon(styleKlaxon)); }   // V16.75 : « VER-SUS ! » dans le timbre du mois, puis le klaxon du vainqueur
       else plus_tard(500, () => klaxon(styleKlaxon)); vibrer(cEstMoi ? [80, 60, 80, 60, 250] : 60);
@@ -536,7 +614,7 @@ const SONS = (() => {
   });
   // un bouton 🔊 qui apparaît dans la page se met tout seul à jour
   new MutationObserver(() => { document.querySelectorAll("[data-son]:not([data-son-ok])").forEach(b => { b.setAttribute("data-son-ok", ""); majBouton(b); }); majReglages(); }).observe(document.documentElement, { childList: true, subtree: true });
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { timers.forEach(clearTimeout); timers.clear(); moteurStop(); themeStop(.1); coursePlan = null; } });   // V16.75 : la musique de la bande-annonce se met en pause avec elle (ctx.suspend), on ne la coupe pas
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { timers.forEach(clearTimeout); timers.clear(); moteurStop(); themeStop(.1); ambStop(.1); coursePlan = null; } else if (AMB.iv) ambVerifier(); });   // v17.59 : l'ambiance se tait onglet caché, revient au retour   // V16.75 : la musique de la bande-annonce se met en pause avec elle (ctx.suspend), on ne la coupe pas
   return API;
 })();
 window.SONS = SONS;   // v16.69 : « const » ne crée pas window.SONS, et tous les « if (window.SONS) » de l'appli restaient faux (sons et vibrations muets depuis la v16.43)

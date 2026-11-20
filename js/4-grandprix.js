@@ -652,7 +652,7 @@ function poserTresorDOM(v) {
   const pi = (v || document).querySelector ? (v || document).querySelector("#gp-piste") : null; if (!pi) return;
   if (TRESOR_APERCU && pi.dataset.circuit !== TRESOR_APERCU.ci) quitterApercuTresor(false);   // v17.35 : autre circuit affiché → l'aperçu s'arrête, l'état réel revient
   const AP = TRESOR_APERCU;
-  pi.querySelectorAll(".gp-tresor, .gp-enigme, .gp-tresor-appel, .gp-jauge, .tap-band").forEach(e => e.remove()); TRESOR_EL = null;
+  pi.querySelectorAll(".gp-tresor, .gp-enigme, .gp-tresor-appel, .gp-jauge, .tap-band").forEach(e => e.remove()); TRESOR_EL = null; sonChaleur(-1);
   if (AP) { apBandeau(pi); apCachette(); }
   const met = document.querySelector(".gp-h .gp-met"), cpt = met && met.querySelector(".gp-tresors"), ga = GP_INST && GP_INST.api;
   if (!TRESORS || !(AP || tresorsOuverts())) { if (cpt) cpt.remove(); return; }
@@ -686,7 +686,8 @@ function majTresor(api, pi) {
   /* v17.35 : en hauteur (portrait), la caméra recule toute seule pour montrer le circuit ; on ramène la distance à celle d'un écran en largeur → même difficulté dans toutes les orientations */
   const e = libre && !T.pris && T.t.p && api.zoom() <= .2 ? api.projeter(T.t.p) : null, d = e && e.vis ? e.d / (api.recul ? api.recul() : 1) : 1e9, al = d < TRESOR_D ? Math.min(.92, (TRESOR_D - d) / 16) : 0;
   if (T.j) { const c = libre && !T.pris && T.t.p && api.cible ? api.cible() : null; T.j.classList.toggle("cache", !c);
-    if (c) { const n = palierChaud(Math.hypot(c.x - T.t.p[0], c.z - T.t.p[2]), c.r, al > 0); if (n !== T.jn) { T.jn = n; T.j.dataset.n = n; T.j.innerHTML = '<span class="gj-segs">' + [0, 1, 2, 3].map(k => "<i" + (k <= n ? ' class="on"' : "") + "></i>").join("") + "</span><b>" + JAUGE_TXT[n] + "</b>"; } } }
+    if (c) { const n = palierChaud(Math.hypot(c.x - T.t.p[0], c.z - T.t.p[2]), c.r, al > 0); if (n !== T.jn) { T.jn = n; T.j.dataset.n = n; T.j.innerHTML = '<span class="gj-segs">' + [0, 1, 2, 3].map(k => "<i" + (k <= n ? ' class="on"' : "") + "></i>").join("") + "</span><b>" + JAUGE_TXT[n] + "</b>"; } }
+    sonChaleur(c ? T.jn : -1); }   // v17.59 : les grelots de l'ambiance suivent le palier AFFICHÉ (rien de plus, rien avant)
   if (!T.b) return;
   if (!al) { if (T.vu) { T.b.style.opacity = "0"; T.b.style.pointerEvents = "none"; T.vu = false; } return; }
   const s = Math.max(15, Math.min(26, 1500 / d));
@@ -695,6 +696,9 @@ function majTresor(api, pi) {
 }
 /** v17.35 · jauge chaud-froid : 4 paliers vagues selon la distance au sol entre le point visé et l'objet (relative à la taille du circuit), AUCUNE direction ;
     « Brûlant » quand l'objet devient visible (ou presque dessus) */
+/** v17.59 · bonus validé par le Conseil : en Visite, les grelots de l'ambiance (plein écran d'un circuit à thème) suivent la jauge chaud-froid,
+    exactement le même palier, au même moment, seulement quand la jauge est à l'écran (-1 = pas de jauge : volume normal) */
+function sonChaleur(n) { if (window.SONS && SONS.chaleur) SONS.chaleur(n); }
 const JAUGE_TXT = ["❄️ Froid", "🌡️ Tiède", "🔥 Chaud", "🔥🔥 Brûlant !"];
 function palierChaud(dh, r, vu) { const R = Math.max(150, r || 0); return vu || dh < R * .07 ? 3 : dh < R * .22 ? 2 : dh < R * .5 ? 1 : 0; }
 async function trouverTresor(t, b) {
@@ -1151,7 +1155,8 @@ function placerPlein(y) {
   const ch = document.querySelector(".saison .gp-mois"); P.o.querySelector(".gpp-mois").innerHTML = ch ? ch.outerHTML : "";
   P.o.querySelectorAll(".gpp-mois [data-gpe]").forEach(b => b.addEventListener("click", () => { GP_ETAPE = +b.dataset.gpe; GP_REJOUER = true; rendreTrophees(); }));
   const sel = P.o.querySelector('.gpp-mois [aria-pressed="true"]'); if (sel && !P.v2) sel.scrollIntoView({ inline: "center", block: "nearest" });
-  if (P.v2) { majVueDOM(vueGP(pi.dataset.circuit)); P.survol = null; majSurvolPlein(true); }
+  if (P.v2) { majVueDOM(vueGP(pi.dataset.circuit)); P.survol = null; majSurvolPlein(true);
+    if (window.SONS && SONS.ambiance) SONS.ambiance((Piste.TRACES[pi.dataset.circuit] || {}).peint); }   // v17.59 : l'ambiance douce du circuit (s'il a un thème : Noël), autre circuit = rien
   GP_ETQ = null;
   if (GP_INST) { GP_INST.api.redim(); majTourPlein(GP_INST.api.courant(), true); }
 }
@@ -1168,6 +1173,7 @@ function majTourPlein(cur, force) {
 }
 function fermerPleinGP() {
   const P = GP_PLEIN; if (!P) return; GP_PLEIN = null;
+  if (window.SONS && SONS.ambiance) SONS.ambiance(null);   // v17.59 : l'ambiance s'efface en fondu
   const pi = P.o.querySelector(".gp-piste");
   if (pi && P.ancre && P.ancre.isConnected) P.ancre.replaceWith(pi); else if (P.ancre) P.ancre.remove();
   document.removeEventListener("keydown", P.esc); if (P.svTimer) clearInterval(P.svTimer);
