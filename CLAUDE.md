@@ -174,6 +174,7 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
 ## À venir
 - 5ᵉ joueur : **Nicolas**, au plus tard le 1er janvier 2027 (PEA, peut-être une assurance-vie) ; à voir la semaine du 23/11.
   À prévoir : son fichier + script, l'ajouter au Versus, barème à 5 = 6·4·2·1·0 (validé, codé v16.20 : `baremeJ`), couleur `--p4` vert citron, 5e bande du logo `.l5` visible dès 5 pilotes, vérifs d'affichage.
+- **Fiche-vitrine (Théo, 20/11, pour JANVIER, pas avant)** : raccourci depuis le classement du Podium vers la fiche de chaque joueur ; en haut de la fiche, une vitrine = palmarès + badges (à prévoir avec la refonte des badges en ~20 familles ; Conseil Classement lot47).
 - Objets à collectionner : Théo veut une **montée en puissance par paliers** (premiers paliers = beaux objets ; paliers
   hauts = effets dans l'appli, comme le badge millionnaire) à la place des cartes actuelles (« ignobles ») : proposer, ne pas coder.
 
