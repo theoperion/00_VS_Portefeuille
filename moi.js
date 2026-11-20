@@ -382,10 +382,10 @@ function injecterStyle() {
 .moi #ms-form .seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .moi .rang2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .moi .m-carte { display: flex; flex-wrap: wrap; gap: 3px; }
-.moi .m-tuile { all: unset; box-sizing: border-box; cursor: pointer; flex: 1 1 64px; min-width: 64px; min-height: 54px; padding: 7px 8px; border-radius: 8px; background: var(--panel); border: 1px solid var(--rule); display: grid; align-content: space-between; gap: 2px; }
+.moi .m-tuile { all: unset; box-sizing: border-box; cursor: pointer; flex: 1 1 64px; min-width: 80px; min-height: 54px; padding: 7px 7px; overflow: hidden; border-radius: 8px; background: var(--panel); border: 1px solid var(--rule); display: grid; align-content: space-between; gap: 2px; }
 .moi .m-tuile:focus-visible { outline: 2px solid var(--accent); }
 .moi .m-tuile b { font: 700 13px/1.1 var(--f-num); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.moi .m-tuile span { font: 600 12px/1.1 var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.moi .m-tuile span { font: 600 12px/1.1 var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: clip; letter-spacing: -.01em; }   /* v17.19 : « -15,28 % » ne dépasse plus (iPhone) */
 .moi .m-tri { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 10px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
 .moi .m-tri .m-coche { padding-bottom: 0; }
 .moi .m-tri-p { margin: 8px 0 2px; } .moi .m-tri-p .chip { padding: 6px 11px; font-size: 12.5px; }
