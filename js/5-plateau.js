@@ -341,7 +341,7 @@ async function lancerDuel(y, k, cible) {
 const TETE = {
   peau: ["#F6D5B8", "#EBC29F", "#D8A47C", "#B47A50", "#7F5034"],
   cheveux: ["#2A1C13", "#4A2F1E", "#7A5230", "#C9A063", "#141414", "#8E939B", "#9C4A22", "#C26A35"],
-  tenues: ["#D63333", "#17181B", "#5E6B3C", "#2F5FD0", "#EDEDED", "#7A3FB8", "#F08DB5", "#F2A33A"],
+  tenues: ["#D63333", "#17181B", "#5E6B3C", "#2F5FD0", "#EDEDED", "#7A3FB8", "#F08DB5", "#F2A33A", "#6B1F2C"],   // v17.68 : + bordeaux (Nicolas)
   coupes: ["Chauve", "Court", "Mèche", "Bouclés longs", "Rasé", "En pétard", "Bouclés courts", "Attachés"],
   barbes: ["Rasé de près", "3 jours", "Barbe courte", "Bouc", "Moustache", "Moustache + bouc"],
   lunettes: ["Sans", "Fines", "Rondes", "Soleil"],
@@ -350,12 +350,13 @@ const TETE = {
   formes: ["Ovale", "Fin", "Rond"]
 };
 const CHAMPS_TETE = ["peau", "coupe", "cheveux", "barbe", "lunettes", "style", "couleur", "expr", "dessous", "barbeC", "forme"];
-const BORNES_TETE = [5, 8, 8, 6, 4, 7, 8, 3, 8, 8, 3];
+const BORNES_TETE = [5, 8, 8, 6, 4, 7, 9, 3, 9, 8, 3];
 /* Portraits de départ, d'après les photos (plusieurs pour ceux qui changent souvent de tête) : chacun peut ensuite retoucher le sien */
 const PRESETS_TETE = {
   theo: [["Portrait", "01011110000"]],
   clement: [["Portrait", "12110001010"]],
   kevin: [["Portrait", "10422210640"]],
+  nicolas: [["Portrait", "16020082000"]],   // v17.68 (Théo) : bouclés courts bruns, barbe courte, T-shirt bordeaux, sourire en coin
   devlin: [["Bouclés", "03050601261"], ["Attachés", "07020012021"], ["Coupé court", "06050601261"]]
 };
 function normNom(n) { return String(n || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(); }
