@@ -95,6 +95,7 @@ function css(n) { return getComputedStyle(document.documentElement).getPropertyV
 function couleurReelle(c) { const m = /var\((--[\w-]+)\)/.exec(c); return m ? css(m[1]) : c; }
 
 const PERIODES = [["mois", "Mois en cours (dernier relevé)"], ["3m", "3 derniers mois"], ["6m", "6 derniers mois"], ["ytd", "Année en cours"], ["12m", "12 derniers mois"], ["comp", "Depuis le début du championnat"], ["tout", "Depuis le début"]];
+delete ETAT.ptsOuvert; delete ETAT.calOuvert;   // v17.58 (Théo) : à chaque ouverture de l'appli, les rubriques dépliables reviennent repliées (l'ouverture ne vaut que pendant la visite)
 if (!PERIODES.some(([k]) => k === ETAT.per)) ETAT.per = "ytd";
 if (ETAT.perAn !== new Date().getFullYear()) { if (ETAT.perAn) ETAT.per = "ytd"; ETAT.perAn = new Date().getFullYear(); garder(); }   // v17.57 (Théo) : chaque 1er janvier, la période revient sur « Année » (= début du championnat) ; ensuite le choix reste mémorisé   // lot47 : filtres mémorisés sur l'appareil (versus.etat) ; un choix disparu revient au défaut
 
