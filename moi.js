@@ -863,7 +863,8 @@ function rendre() {
   if (Date.now() - dernierAppel > 5 * 60e3 && !enCours && !erreur) setTimeout(() => charger(false), 0);
   noterVisite();
   const o = ONGLETS.some(x => x[0] === PREF.onglet) || (PREF.onglet === "artema" && aArtema()) ? PREF.onglet : "jour";
-  const bandeau = SRC === "cache" ? '<div class="demo-band">' + (enCours ? "Mise à jour de ton fichier…" : erreur ? "Ton fichier n'a pas répondu (" + esc(String(erreur).replace(/\.$/, "")) + ") · chiffres de la dernière ouverture" + (ageCopie() ? " (" + ageCopie() + ")" : "") + "." : "Chiffres de la dernière ouverture · mise à jour…") + " <small>" + esc(M.majTexte || "") + "</small></div>" : "";
+  const bandeau = SRC === "cache" && erreur && !enCours ? '<p class="info" style="margin:6px 2px;font-size:12px;opacity:.75">📴 Ton fichier n\'a pas répondu : chiffres de la dernière ouverture' + (ageCopie() ? " (" + ageCopie() + ")" : "") + ".</p>" : "";   // v17.20 (Théo) : la mise à jour se fait en silence, en arrière-plan
+  const bandeauAncien = SRC === "cache" ? '<div class="demo-band">' + (enCours ? "Mise à jour de ton fichier…" : erreur ? "Ton fichier n'a pas répondu (" + esc(String(erreur).replace(/\.$/, "")) + ") · chiffres de la dernière ouverture" + (ageCopie() ? " (" + ageCopie() + ")" : "") + "." : "Chiffres de la dernière ouverture · mise à jour…") + " <small>" + esc(M.majTexte || "") + "</small></div>" : "";
   v.innerHTML =
     '<div class="seg m-onglets" role="tablist" aria-label="Moi">' + ONGLETS.map(([k, l]) => '<button type="button" role="tab" data-m-ong="' + k + '" aria-pressed="' + (o === k) + '" aria-selected="' + (o === k) + '">' + l + "</button>").join("") + "</div>" +
     bandeau + (o === "jour" ? htmlAFaire() : "")   /* v17.2 (Théo) : plus de phrase-bilan ; les échéances passent dans la cloche */ +   /* v16.95 : calendrier unique des échéances */   // v16.87 : phrase-bilan + boîte unique « À faire » (ailleurs, la cloche suffit)
