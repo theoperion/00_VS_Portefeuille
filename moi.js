@@ -121,6 +121,8 @@ function injecterStyle() {
   --ink: #F4F5F8; --ink-2: rgba(244,245,248,.8); --ink-3: rgba(244,245,248,.58); --rule: rgba(255,255,255,.14); --rule-2: rgba(255,255,255,.1); --panel: rgba(255,255,255,.06); --panel-2: rgba(255,255,255,.08); --up: #4ADE80; --down: #FF6B6B; --up-bg: rgba(74,222,128,.14); --down-bg: rgba(255,107,107,.14); }
 #v-moi.th .m-onglets button[aria-pressed="true"] { background: var(--mc); color: #0B0D12; }
 .moi .m-hero { position: relative; }
+.moi .m-titre-h { font-style: italic; text-transform: none; letter-spacing: .02em; opacity: .9; }
+.moi .vs-expl { margin-top: 4px; font-size: 12px; opacity: .7; }
 .moi .m-emb { font-style: normal; font-size: 15px; line-height: 1; margin-right: 6px; letter-spacing: 0; vertical-align: -1px; }
 /* Profil */
 .moi .vs-prof { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--rule); background: var(--panel); }
@@ -4739,11 +4741,13 @@ function htmlDetailObj() {
   else if (org.famille) quoi = o ? "Gagné avec un palier « " + esc(org.famille) + " »." : org.absente ? "Pas disponible pour ton profil (pas de paliers « " + esc(org.famille) + " »)." : "À gagner dans les paliers « " + esc(org.famille) + " ».";
   else quoi = o ? "Déjà à toi." : "Pas encore disponible pour ton profil.";
   const actif = actifM(t) === id;
-  return '<div class="vs-dl"><span class="vs-di">' + (cache ? "?" : sorte[2]) + "</span><div><b>" + esc(cache ? "???" : d[1]) + "</b> <small>" + esc(sorte[1]) + "</small><p>" + quoi + "</p></div></div>" +
+  return '<div class="vs-dl"><span class="vs-di">' + (cache ? "?" : sorte[2]) + "</span><div><b>" + esc(cache ? "???" : d[1]) + "</b> <small>" + esc(sorte[1]) + "</small><p>" + quoi + '</p><p class="vs-expl">' + esc(sorte[1]) + " : " + EXPL_SORTE[t] + ".</p></div></div>" +
     '<div class="vs-da">' + (o && !actif ? '<button class="btn" type="button" data-vs-eq="' + vsSel + '">Équiper</button>' : o ? '<span class="vs-eq">✓ Équipé</span>' : "") +
       (t === "fete" && !cache ? '<button class="btn ghost" type="button" data-vs-essai="' + id + '">Essayer</button>' : "") + "</div>";
 }
-function embHero() { return '<i class="m-emb" title="' + esc(nomObj("emb", actifM("emb"))) + '">' + apercuEmb(actifM("emb")) + "</i>"; }
+function embHero() { return '<i class="m-emb" title="' + esc(nomObj("emb", actifM("emb"))) + '">' + apercuEmb(actifM("emb")) + "</i>" + '<span class="m-titre-h">' + esc(nomObj("titre", actifM("titre"))) + "</span> · "; }   // v17.63 (Théo) : le titre équipé est visible en haut de Moi
+/* v17.63 (Théo) : à quoi sert chaque sorte d'objet */
+const EXPL_SORTE = { aff: "change le style des chiffres de ton total, en haut de Moi", theme: "change les couleurs de la carte du haut de Moi", courbe: "change le style de ta courbe dans Stats", fete: "change l'animation quand tu franchis un palier", emb: "la petite icône en haut de Moi, devant ton titre", titre: "ton surnom, affiché en haut de Moi à côté de l'emblème" };
 function lancerFete(id) { const d = defObj("fete", id || actifM("fete")); if (typeof confettis === "function" && !reduit) confettis(d && d[3] ? d[3] : undefined); }
 function brancherVestiaire(v) {
   const maj = () => { const z = v.querySelector("#vs-d"); if (z) { z.innerHTML = htmlDetailObj(); brancherDetail(); } v.querySelectorAll(".vs-t").forEach(x => x.classList.toggle("vs-sel", !!vsSel && x.querySelector("[data-vs]").dataset.vs === vsSel)); };
