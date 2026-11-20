@@ -398,10 +398,12 @@ function tracer(box, conf) {
   svg.setAttribute("viewBox", "0 0 " + W + " " + H); svg.setAttribute("height", H);
   const vals = conf.series.flatMap(s => s.v).filter(ok);
   if (conf.ligneH !== undefined) vals.push(conf.ligneH);
+  if (conf.ligneZero) vals.push(0);   // lot 27 : « Gain cumulé » se lit depuis la ligne zéro
   let mn = Math.min(...vals), mx = Math.max(...vals);
   const pad = (mx - mn) * .08 || Math.abs(mx) * .05 || 1;
   mn -= pad; mx += pad;
   if (conf.zeroMin && mn < 0 && Math.min(...vals) >= 0) mn = 0;
+  if (conf.depuisZero && Math.min(...vals) >= 0) mn = 0;   // lot 27 : « Valeur et apports » part de zéro (l'écart n'est pas grossi à l'œil)
   const brut = (mx - mn) / 4, p10 = Math.pow(10, Math.floor(Math.log10(brut)));
   const pas = [1, 2, 2.5, 5, 10].map(x => x * p10).find(x => x >= brut);
   const ticks = []; for (let v = Math.ceil(mn / pas) * pas; v <= mx; v += pas) ticks.push(+v.toFixed(8));
@@ -409,7 +411,7 @@ function tracer(box, conf) {
   const C = n2 => couleurReelle(n2);
   let o = "";
   ticks.forEach(t => {
-    o += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + Y(t).toFixed(1) + '" y2="' + Y(t).toFixed(1) + '" stroke="' + C(conf.base && Math.abs(t) < 1e-9 ? "var(--ink-3)" : "var(--rule)") + '" stroke-width="1"/>';
+    o += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + Y(t).toFixed(1) + '" y2="' + Y(t).toFixed(1) + '" stroke="' + C((conf.base || conf.ligneZero) && Math.abs(t) < 1e-9 ? "var(--ink-3)" : "var(--rule)") + '" stroke-width="1"/>';
     o += '<text x="' + (m.l - 6) + '" y="' + (Y(t) + 3.5).toFixed(1) + '" text-anchor="end">' + esc(conf.fmtAxe(t)) + "</text>";
   });
   let dx = -99;

@@ -13,9 +13,12 @@ const K = { api: "versus.moi.api", cle: "versus.moi.cle", cache: "versus.moi.cac
 /* v16.83 · âge de la copie affichée quand le fichier ne répond pas */
 function ageCopie() { const t = +stock.get(K.cacheLe) || 0; if (!t) return ""; const mn = Math.max(0, Math.round((Date.now() - t) / 60e3)); return mn < 1 ? "à l'instant" : mn < 60 ? "il y a " + mn + " min" : mn < 48 * 60 ? "il y a " + Math.round(mn / 60) + " h" : "il y a " + Math.round(mn / 1440) + " j"; }
 function majuscule(t) { t = String(t || ""); return t.charAt(0).toUpperCase() + t.slice(1); }
-const PREF = Object.assign({ onglet: "jour", patri: "net", tri: "env", mode: "valeur", per: "6m", serie: "ip", moisMode: "pct", rep: "classe", acc: {} },
+const PREF = Object.assign({ onglet: "jour", patri: "fin", tri: "env", mode: "base", per: "6m", serie: "ip", moisMode: "eur", rep: "classe", acc: {} },
   (() => { try { return JSON.parse(stock.get(K.pref) || "{}"); } catch (e) { return {}; } })());
 delete PREF.million;   // E (v16.93) : plus de mode « net » pour le million (ancienne préférence oubliée)
+/* lot 27 (Conseil, validé par Théo) : Stats s'ouvre sur « Contre le marché », Mois par mois en €, Risque ouvert ; le patrimoine dans le temps part en FINANCIER.
+   Migration unique : les anciens réglages par défaut enregistrés sur l'appareil ne doivent pas masquer les nouveaux. */
+if (!PREF.stats27) { PREF.mode = "base"; PREF.moisMode = "eur"; PREF.patri = "fin"; delete PREF.acc["m-risque"]; delete PREF.effort; delete PREF.rendement; PREF.stats27 = 1; }
 function garderPref() { stock.set(K.pref, JSON.stringify(PREF)); }
 
 let M = null;            // dernières données reçues de ton fichier
@@ -504,8 +507,31 @@ function injecterStyle() {
 .moi .m-barres text { font: 500 10.5px var(--f-num); fill: var(--ink-3); }
 .moi .legend i.carre { width: 10px; height: 10px; border: 0; border-radius: 2px; display: inline-block; margin-right: 6px; vertical-align: -1px; transform: skewX(-12deg); }
 .moi .m-rep { display: grid; }
-.moi .m-rep > div { display: grid; grid-template-columns: minmax(64px, 28%) minmax(0, 1fr) 46px 72px; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--rule); font-size: 13px; }
+.moi .m-rep > div { display: grid; grid-template-columns: minmax(0, 1fr) 52px 78px; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--rule); font-size: 13px; }
 .moi .m-rep .n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+/* lot 27 : Stats en profondeur (bandeau du mois, écart en grand, courbe des baisses, répartition en une barre, performances à 4 colonnes) */
+.moi .m-rep .n i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 7px; vertical-align: -1px; }
+.moi .m-rep-barre { display: flex; height: 16px; border-radius: 8px; overflow: hidden; gap: 2px; margin: 4px 0 2px; }
+.moi .m-rep-barre i { display: block; min-width: 3px; }
+.moi .m-ec.m-ec3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } .moi .m-ec.m-ec1 { grid-template-columns: minmax(0, 1fr); }
+.moi .m-ec3 .m-ec-t { padding: 9px 9px; } .moi .m-ec3 .m-ec-t .k { font-size: 10px; letter-spacing: .04em; } .moi .m-ec3 .m-ec-t b { font-size: 17px; } .moi .m-ec3 .m-ec-t small { font-size: 11px; }
+.moi .m-ec-t b.up { color: var(--up); } .moi .m-ec-t b.down { color: var(--down); } .moi .m-ec-t.ok { border-color: color-mix(in srgb, var(--up) 45%, var(--rule)); }
+.moi .m-seg3 button { padding: 9px 4px; font-size: 12.5px; line-height: 1.15; }
+.moi .m-ecart { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--rule); }
+.moi .m-ecart > b { font: italic 800 28px/1 var(--f-display); white-space: nowrap; color: var(--ink); } .moi .m-ecart > b.up { color: var(--up); } .moi .m-ecart > b.down { color: var(--down); }
+.moi .m-ecart > span { display: grid; gap: 3px; font-size: 13px; font-weight: 600; color: var(--ink); min-width: 0; } .moi .m-ecart small { font: 500 11.5px/1.3 var(--f-num); color: var(--ink-3); overflow-wrap: anywhere; }
+.moi .m-dd-w { display: grid; gap: 6px; margin-bottom: 8px; }
+.moi .m-dd .ba { fill: var(--down); fill-opacity: .18; } .moi .m-dd .bl { fill: none; stroke: var(--down); stroke-width: 1.6; stroke-linejoin: round; }
+.moi .m-dd .bz { fill: var(--ink-3); fill-opacity: .08; } .moi .m-dd .bp { fill: var(--down); stroke: var(--panel); stroke-width: 2; } .moi .m-dd .bt { font-weight: 700; fill: var(--down); }
+.moi .m-dd-t { margin-bottom: 8px; }
+.moi .tuiles.m-t3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .moi .tuiles.m-t3 > div { padding: 8px 8px; min-width: 0; }
+.moi .tuiles.m-t3 .lab { font-size: 11px; } .moi .tuiles.m-t3 .val { font-size: 15px; white-space: nowrap; } .moi .tuiles.m-t3 .sub { font-size: 11px; overflow-wrap: anywhere; }
+.moi .m-perf4 { width: 100%; table-layout: fixed; } .moi .m-perf4 th:first-child, .moi .m-perf4 td:first-child { width: 34%; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.moi .m-perf4 th, .moi .m-perf4 td { text-align: right; padding-left: 4px; padding-right: 4px; }
+.moi .m-perf4 tr.m-pf-r { cursor: pointer; } .moi .m-pf-v { font-style: normal; color: var(--ink-3); font-size: 10px; } .moi .m-pf-r.ouvert .m-pf-v { display: inline-block; transform: rotate(180deg); }
+.moi .m-perf4 tr.m-pf-d td { text-align: left; white-space: normal; font-size: 12px; color: var(--ink-2); background: var(--rule-2); }
+.m-million .mm-lien { justify-self: start; font: 600 12.5px/1 var(--f-ui, inherit); color: var(--gold); background: none; border: 0; padding: 4px 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.moi .pj-mil { margin: 0 0 8px; font-size: 13.5px; color: var(--ink-2); } .moi .pj-mil b { color: var(--ink); }
 .moi .m-rep .b { height: 8px; background: var(--rule-2); border-radius: 4px; overflow: hidden; }
 .moi .m-rep .b i { display: block; height: 100%; background: var(--s1); border-radius: 4px; }
 .moi .m-rep .p, .moi .m-rep .e { text-align: right; font: 500 12px/1 var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; } .moi .m-rep .e { color: var(--ink-3); }
@@ -539,7 +565,7 @@ function injecterStyle() {
 @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .moi { --e1: #B7791F; --e2: #0F8F7E; --e3: #8B3FD9; --e4: #D35A1F; --e5: #1E88B8; --c-bourse: #2F62C8; --c-epargne: #9A7400; --c-av: #12866B; --c-immo: #C24E2A; } }
 :root[data-theme="light"] .moi { --e1: #B7791F; --e2: #0F8F7E; --e3: #8B3FD9; --e4: #D35A1F; --e5: #1E88B8; --c-bourse: #2F62C8; --c-epargne: #9A7400; --c-av: #12866B; --c-immo: #C24E2A; }
 @media (max-width: 430px) {
-  .moi .m-rep > div { grid-template-columns: minmax(60px, 26%) minmax(0, 1fr) 44px 66px; }
+  .moi .m-rep > div { grid-template-columns: minmax(0, 1fr) 48px 72px; }
 }
 
 /* signal levier (repris de Cote) */
@@ -691,17 +717,6 @@ function injecterStyle() {
 .m-million .mm-ligne b { font: italic 800 28px/1 var(--f-display); color: var(--gold); }
 .m-million .mm-ligne span { font-size: 13.5px; color: rgba(255,255,255,.8); }
 .m-million .mm-rail.mini { position: relative; top: 0; height: 8px; }
-.m-million .mm-sim { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.m-million .mm-sim label { display: grid; gap: 5px; font-size: 12px; color: rgba(255,255,255,.75); }
-.m-million .mm-sim input { font: 600 16px/1.2 var(--f-num); padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.07); color: #fff; width: 100%; min-width: 0; }
-.m-million .mm-sim input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
-.m-million .mm-graph { display: grid; gap: 4px; }
-.m-million .mm-svg { width: 100%; height: auto; display: block; }
-.m-million .mm-svg text { font: 500 9.5px var(--f-num); fill: rgba(255,255,255,.55); }
-.m-million .mm-leg { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px; color: rgba(255,255,255,.7); }
-.m-million .mm-leg i { display: inline-block; width: 14px; height: 0; border-top: 2.4px solid #F5C542; vertical-align: middle; margin-right: 6px; }
-.m-million .mm-leg i.sans { border-top: 1.6px dashed rgba(255,255,255,.6); }
-.m-million .mm-raz { all: unset; cursor: pointer; color: var(--gold); text-decoration: underline; }
 .m-million .mm-badge { margin: 0; padding: 9px 11px; border-radius: 10px; font-size: 12.5px; line-height: 1.4; color: rgba(255,255,255,.85); background: rgba(245,197,66,.1); border: 1px dashed rgba(245,197,66,.45); }
 .m-million .mm-badge b { color: #F5C542; }
 .m-million .mm-note { margin: 0; font-size: 11.5px; color: rgba(255,255,255,.5); }
@@ -893,7 +908,7 @@ function rendre() {
     ({ jour: M.simple ? htmlJourSimple : htmlJour, patrimoine: htmlPatrimoine, stats: htmlStats, missions: htmlMissions, artema: htmlArtema })[o]();
   v.querySelectorAll("[data-m-ong]").forEach(b => b.addEventListener("click", () => { PREF.onglet = b.dataset.mOng; garderPref(); rendre(); window.scrollTo(0, 0); }));
   brancherAFaire(v); brancherEcheances(v);
-  v.querySelectorAll("details.acc[data-acc]").forEach(d => d.addEventListener("toggle", () => { PREF.acc[d.dataset.acc] = d.open; garderPref(); if (d.open && d.dataset.acc === "m-courbe") dessinerCourbe(); }));
+  v.querySelectorAll("details.acc[data-acc]").forEach(d => d.addEventListener("toggle", () => { PREF.acc[d.dataset.acc] = d.open; garderPref(); if (d.open && d.dataset.acc === "m-courbe") dessinerCourbe(); if (d.open && d.dataset.acc === "m-ep-temps") dessinerEpargne(); if (d.open && d.dataset.acc === "m-pret") dessinerPret(); }));
   ({ artema: brancherArtema, jour: M.simple ? brancherJourSimple : brancherJour, patrimoine: brancherPatrimoine, stats: brancherStats, missions: brancherMissions })[o](v);
   if (SRC === "api") verifierPaliers();
   verifierCloture();
@@ -1150,7 +1165,7 @@ function htmlJourBase() {
       (majCourte() ? '<small class="m-maj">' + esc(majCourte()) + "</small>" : "") +
     "</div>" +
     bandeDebut(s) +
-    '<div class="m-carte" role="group" aria-label="Carte du jour : une tuile par ligne">' + carte + "</div>" +
+    (toutes.length >= 3 ? '<div class="m-carte" role="group" aria-label="Carte du jour : une tuile par ligne">' + carte + "</div>" : "") +   // lot 27 : sous 3 lignes, la carte n'apprend rien
     blocSignal() +
     "<div>" +
       '<div class="m-tri"><h2 class="sec">' + (detail ? "Mes lignes" : "Mes enveloppes") + "</h2>" +
@@ -1296,10 +1311,12 @@ function htmlPatrimoine() {
     '<div><div class="stack" role="img" aria-label="Répartition du patrimoine">' + posit.map(p => '<i style="flex:' + p[1] + ";background:var(" + p[2] + ')"></i>').join("") + "</div>" +
       '<div class="m-leg3">' + parts.filter(p => p[1] > 0 || !(dette && p[3] === "p-immo")).map(p => '<button type="button" data-cible="' + p[3] + '"><i style="background:var(' + p[2] + ')"></i><span>' + p[0] + '</span><span class="num">' + eur(p[1]) + '</span><span class="pc">' + (p[1] >= 0 ? pct(p[1] / tot, 0, false) : "") + "</span></button>").join("") +
         (dette ? '<button type="button" class="m-dette" data-cible="p-immo"><i></i><span>Immobilier : dette nette</span><span class="num down">' + eur(immoNet) + '</span><span class="pc"></span></button>' : "") + "</div></div>" +
+    /* lot 27 (Conseil) : sous le total, le patrimoine dans le temps (financier par défaut) puis l'unique Projection 2034, repliée */
+    blocPatrimoineTemps() + htmlProjection() +
     /* v16.87 (Théo) : l'assurance-vie Banque Populaire en premier, la bourse en second (elle est déjà sur Aujourd'hui), puis l'épargne et l'immobilier */
     (sup.length ? bloc("p-av", "--c-av", "Quintessa", "par support", htmlAV(sup)) : "") +
-    bloc("p-epargne", "--s2", "Épargne", esc(s.epargneLibelle || ""), liste(ep, rEp)) +
-    (net.avecImmo ? bloc("p-immo", "--s3", "Immobilier", "prix d'achat, prêts restants", pretHtml() + liste(imm, rImm)) : "") +
+    bloc("p-epargne", "--s2", "Épargne", esc(s.epargneLibelle || ""), liste(ep, rEp) + blocEpargneTemps()) +
+    (net.avecImmo ? bloc("p-immo", "--s3", "Immobilier", "prix d'achat, prêts restants", pretHtml() + liste(imm, rImm) + blocPret()) : "") +
     bloc("p-bourse", "--s1", "Bourse", "portefeuille", liste(envs, rEnv)) +   // v17.21 (Théo) : la bourse en dernier (elle a déjà sa place dans Aujourd'hui)
     (fis.length ? acc("m-fis", "Si tout était retiré", "résultat net d'impôt estimé", liste(fis, rFis), false) : "") +
     htmlComparateur();   // v16.95 : où mettre le prochain euro
@@ -1847,7 +1864,11 @@ function graduations(mn, mx, n) {
   return t;
 }
 function brancherPatrimoine(v) {
-  brancherAV(v); brancherComparateur(v);
+  brancherAV(v); brancherComparateur(v); brancherProjection(v);
+  const re = b => garderPlace(b, rendre);
+  v.querySelectorAll("[data-m-patri]").forEach(b => b.addEventListener("click", () => { PREF.patri = b.dataset.mPatri; garderPref(); re(b); }));
+  v.querySelectorAll("[data-m-patridet]").forEach(b => b.addEventListener("click", () => { PREF.patriDet = b.dataset.mPatridet; garderPref(); re(b); }));
+  dessinerPatrimoine(); dessinerEpargne(); dessinerPret();
   v.querySelectorAll("[data-cible]").forEach(b => b.addEventListener("click", () => { const c = document.getElementById(b.dataset.cible); if (c) c.scrollIntoView({ block: "start", behavior: reduit ? "auto" : "smooth" }); }));
 }
 
@@ -1872,46 +1893,62 @@ function fenetre(rows, per) {
   let i0 = 0; rows.forEach((r, i) => { if (r[0] <= cle) i0 = i; });
   return rows.slice(i0);
 }
+/* lot 27 (Conseil validé par Théo) : Stats = « ma bourse en profondeur ». Ordre : bandeau du mois, courbe « Contre le marché »,
+   Mois par mois (€ par défaut), Risque (ouvert, courbe des baisses), records perso, Répartition, Performances et Frais repliés.
+   Le patrimoine dans le temps, la Projection 2034, l'épargne livret par livret et le prêt sont dans Patrimoine. */
+const MODES_C = [["base", "Contre le marché"], ["gain", "Gain cumulé (€)"], ["valeur", "Valeur et apports"]];
+function modeCourbe() { return MODES_C.some(x => x[0] === PREF.mode) ? PREF.mode : "base"; }
 function htmlStats() {
   const h = M.historique, envs = M.enveloppes || [];
-  const mode = PREF.mode, per = PREF.per, choix = seriesDisponibles();
+  const mode = modeCourbe(), per = PREF.per, choix = seriesDisponibles();
   const derniere = h && h.rows && h.rows.length ? dateNum(h.rows[h.rows.length - 1][0]) : null;
-  const perfLigne = e => '<tr class="' + (e.type === "indice" ? "indice" : "") + '"><td>' + esc(e.nom) + "</td>" +
-    ["s1", "m1", "m6", "ytd", "a1", "twr", "mwr"].map(k => '<td class="' + (e.type === "indice" ? "" : sens(e[k])) + '">' + pct(e[k]) + "</td>").join("") + "<td>" + pct(e.vol, 1, false) + "</td></tr>";
+  const chipsEnv = mode === "base" ? (choix.length > 1 ? '<div class="chips" role="group" aria-label="Ce que tu compares">' + choix.map(([k, l]) => '<button class="chip" type="button" data-m-serie="' + k + '" aria-pressed="' + (PREF.serie === k) + '">' + esc(l) + "</button>").join("") + "</div>" : "")
+    : (seriesValeur().length > 1 ? '<div class="chips" role="group" aria-label="Enveloppe">' + seriesValeur().map(([k, l]) => '<button class="chip" type="button" data-m-envv="' + k + '" aria-pressed="' + ((PREF.envV || "") === k) + '">' + esc(l) + "</button>").join("") + "</div>" : "");
   const courbe = h && h.rows && h.rows.length > 1 ?
-    '<div class="seg" role="group" aria-label="Type de courbe"><button type="button" data-m-mode="valeur" aria-pressed="' + (mode === "valeur") + '">Valeur et apports</button><button type="button" data-m-mode="base" aria-pressed="' + (mode === "base") + '">Performance vs indices</button></div>' +
-    (mode === "valeur" && seriesValeur().length > 1 ? '<div class="chips" role="group" aria-label="Enveloppe">' + seriesValeur().map(([k, l]) => '<button class="chip" type="button" data-m-envv="' + k + '" aria-pressed="' + ((PREF.envV || "") === k) + '">' + esc(l) + "</button>").join("") + "</div>" : "") +
-    (mode === "base" && choix.length > 1 ? '<div class="chips" role="group" aria-label="Ce que tu compares">' + choix.map(([k, l]) => '<button class="chip" type="button" data-m-serie="' + k + '" aria-pressed="' + (PREF.serie === k) + '">' + esc(l) + "</button>").join("") + "</div>" : "") +
+    '<div class="seg m-seg3" role="group" aria-label="Type de courbe">' + MODES_C.map(([k, l]) => '<button type="button" data-m-mode="' + k + '" aria-pressed="' + (mode === k) + '">' + l + "</button>").join("") + "</div>" + chipsEnv +
     '<div class="chips" role="group" aria-label="Période">' + PERIODES_M.map(([k, l]) => '<button class="chip" type="button" data-m-per="' + k + '" aria-pressed="' + (per === k) + '">' + l + "</button>").join("") + "</div>" +
-    '<div id="m-courbe-box"></div><p class="resume" id="m-resume"></p>' : '<div class="vide">Pas encore assez de relevés pour tracer une courbe.</div>';
+    '<div class="m-ecart" id="m-ecart" hidden></div><div id="m-courbe-box"></div><p class="resume" id="m-resume"></p>' : '<div class="vide">Pas encore assez de relevés pour tracer une courbe.</div>';
+  return blocMoisEnCours() +
+    '<div><h2 class="sec">Ma bourse <small>' + (M.simple ? "fin de mois" : "au jour le jour") + (derniere ? " · relevé du " + dateLongue(derniere) : "") + "</small></h2></div>" + courbe +
+    blocMois() + (M.simple ? "" : blocRisque()) + blocJours() + blocRepartition() + blocPerformances(envs) + blocFrais();
+}
+/* Performances : repliées, 4 colonnes (1 mois, depuis janv., 1 an, depuis le début) ; 1 semaine, 6 mois, MWR et volatilité au toucher d'une ligne */
+function blocPerformances(envs) {
+  if (!envs.some(e => ["m1", "ytd", "a1", "twr"].some(k => ok(e[k])))) return "";   // rien à montrer (profil simple sans bourse)
   const pf = envs.find(e => e.type === "total") || envs[0] || {};
   const resume = ["m1", "ytd", "twr"].map((k, i) => '<span>' + ["1 mois", "janv.", "début"][i] + ' <b class="' + sens(pf[k]) + '">' + pct(pf[k]) + "</b></span>").join("");
-  /* C (v16.93) : Stats s'ouvre sur la courbe ; « En ce moment » ne garde que ce qui n'est pas ailleurs */
-  return '<div><h2 class="sec">Courbe <small>' + (derniere ? "relevé du " + dateLongue(derniere) : "") + "</small></h2></div>" + courbe +
-    htmlProjection() +   /* v16.95 : projection 2034, sous la courbe */
-    blocEnCours() + blocJours() +
-    '<details class="acc m-compact" data-acc="m-perf"' + (PREF.acc["m-perf"] ? " open" : "") + '><summary><span class="t">Performances</span><span class="m-cp-r">' + resume + "</span></summary>" +
-      '<div><div class="scroll-x"><table class="tab m-perf-t"><thead><tr><th>Enveloppe</th><th>1 sem.</th><th>1 mois</th><th>6 mois</th><th>Janv.</th><th>1 an</th><th>Début</th><th>MWR</th><th>Vol.</th></tr></thead><tbody>' + envs.map(perfLigne).join("") + "</tbody></table></div></div></details>" +
-    blocPatrimoineTemps() + blocEpargneTemps() + blocPret() +
-    (M.simple ? blocMois() : blocRisque() + blocMois() + blocRepartition() + blocFrais());
+  const c = (e, k) => '<td class="' + (e.type === "indice" ? "" : sens(e[k])) + '">' + pct(e[k]) + "</td>";
+  const ligne = (e, i) => '<tr class="m-pf-r' + (e.type === "indice" ? " indice" : "") + '" tabindex="0" role="button" aria-expanded="false" data-pf="' + i + '"><td>' + esc(e.nom) + ' <i class="m-pf-v" aria-hidden="true">▾</i></td>' + ["m1", "ytd", "a1", "twr"].map(k => c(e, k)).join("") + "</tr>" +
+    '<tr class="m-pf-d" data-pf-d="' + i + '" hidden><td colspan="5">1 sem. <b class="' + sens(e.s1) + '">' + pct(e.s1) + "</b> · 6 mois <b class=\"" + sens(e.m6) + '">' + pct(e.m6) + "</b>" +
+      (e.type === "indice" ? "" : ' · MWR <b class="' + sens(e.mwr) + '">' + pct(e.mwr) + "</b>") + " · volatilité <b>" + pct(e.vol, 1, false) + "</b></td></tr>";
+  return '<details class="acc m-compact" data-acc="m-perf"' + (PREF.acc["m-perf"] ? " open" : "") + '><summary><span class="t">Performances</span><span class="m-cp-r">' + resume + "</span></summary>" +
+    '<div><table class="tab m-perf-t m-perf4"><thead><tr><th>Enveloppe</th><th>1 mois</th><th>Janv.</th><th>1 an</th><th>Début</th></tr></thead><tbody>' + envs.map(ligne).join("") + "</tbody></table>" +
+    '<p class="info">Touche une ligne pour la semaine, les 6 mois, le MWR et la volatilité.</p></div></details>';
 }
 function dessinerCourbe() {
   const zone = document.getElementById("m-courbe-box"); if (!zone) return;
   const h = M.historique; if (!h || !h.rows || h.rows.length < 2) return;
-  const C = n => h.cols.indexOf(n);
+  const C = n => h.cols.indexOf(n), mode = modeCourbe();
   const rows = fenetre(h.rows, PREF.per), mc = couleurMoi(), cb = defObj("courbe", actifM("courbe")) || COURBES_M[0];
   let series;
-  if (PREF.mode === "valeur") {
-    const ev = seriesValeur().find(x => x[0] && x[0] === PREF.envV), kv = ev ? "_" + ev[0] : "";
+  const ev = seriesValeur().find(x => x[0] && x[0] === PREF.envV), kv = ev ? "_" + ev[0] : "";
+  if (mode === "valeur") {
     series = [{ nom: ev ? "Valeur · " + ev[1] : "Valeur", k: C(kv ? "v" + kv : "v"), c: cb[2] || mc, w: 2.2, aire: true, fx: cb[3] }, { nom: ev ? "Versé · " + ev[1] : "Apports cumulés", k: C(kv ? "a" + kv : "a"), c: "var(--idx)", w: 1.6, marche: true, dash: true }];
+  } else if (mode === "gain") {
+    const kV = C(kv ? "v" + kv : "v"), kA = C(kv ? "a" + kv : "a");
+    series = kV >= 0 && kA >= 0 ? [{ nom: ev ? "Gain · " + ev[1] : "Gain cumulé", k: kV, kA, c: cb[2] || mc, w: 2.2, fx: cb[3], gain: true }] : [];
   } else {
     const ch = seriesDisponibles().find(x => x[0] === PREF.serie) || ["ip", "Portefeuille"];
     series = [{ nom: ch[1], k: C(ch[0]) >= 0 ? C(ch[0]) : C("ip"), c: cb[2] || mc, w: 2.2, base: true, fx: cb[3] },
-      { nom: "S&P 500", k: C("isp"), c: "var(--idx)", w: 1.6, base: true, dash: "5 4" },
+      { nom: "S&P 500 (en €, ETF)", k: C("isp"), c: "var(--idx)", w: 1.6, base: true, dash: "5 4" },
       { nom: "Nasdaq-100", k: C("inq"), c: "var(--gold)", w: 1.6, base: true, dash: "1.5 3.5" }];
   }
   series = series.filter(s => s.k >= 0);
-  series.forEach(s => { const b = (rows.find(r => ok(r[s.k]) && r[s.k] !== 0) || [])[s.k] || 1; s.v = rows.map(r => ok(r[s.k]) ? (s.base ? r[s.k] / b - 1 : r[s.k]) : null); });
+  if (!series.length) { zone.innerHTML = '<div class="vide">Ton fichier ne donne pas encore ce détail.</div>'; return; }
+  series.forEach(s => {
+    if (s.gain) { s.v = rows.map(r => ok(r[s.k]) && ok(r[s.kA]) ? r[s.k] - r[s.kA] : null); return; }   // gain cumulé = valeur − versé (depuis le début)
+    const b = (rows.find(r => ok(r[s.k]) && r[s.k] !== 0) || [])[s.k] || 1; s.v = rows.map(r => ok(r[s.k]) ? (s.base ? r[s.k] / b - 1 : r[s.k]) : null);
+  });
   zone.innerHTML = boiteGraphe("g-moi", series.map(s => ({ nom: s.nom, c: s.c, dash: s.dash === "1.5 3.5" ? "dot" : !!s.dash })));
   const court = PREF.per === "1m";
   const etiqX = (k, kp) => {
@@ -1920,38 +1957,93 @@ function dessinerCourbe() {
     if (court) return d.getDay() < p.getDay() ? dateCourte(d) : "";
     return d.getMonth() !== p.getMonth() ? (d.getMonth() === 0 ? String(d.getFullYear()) : MOIS[d.getMonth()]) : "";
   };
-  const base = PREF.mode === "base";
-  tracer(document.getElementById("g-moi"), { x: rows.map(r => r[0]), zeroMin: !base, base, finEtiq: base,
+  const base = mode === "base", gain = mode === "gain";
+  tracer(document.getElementById("g-moi"), { x: rows.map(r => r[0]), zeroMin: !base, depuisZero: mode === "valeur", ligneZero: gain, base, finEtiq: base,
     series: series.map(s => ({ nom: s.nom, v: s.v, c: s.c, w: s.w, aire: s.aire, marche: s.marche, dash: s.dash, fx: s.fx })),
-    fmt: base ? (x => pct(x)) : (x => eur(x)), fmtAxe: base ? (t => pct(t, 0)) : axeEur, titreX: k => dateLongue(dateNum(k)), etiqX });
+    fmt: base ? (x => pct(x)) : gain ? (x => eur(x, 0, true)) : (x => eur(x)), fmtAxe: base ? (t => pct(t, 0)) : axeEur, titreX: k => dateLongue(dateNum(k)), etiqX });
   const n = rows.length, d0 = dateNum(rows[0][0]), d1 = dateNum(rows[n - 1][0]);
-  const r = document.getElementById("m-resume");
-  if (!base) {
+  const r = document.getElementById("m-resume"), gros = document.getElementById("m-ecart");
+  const grand = (val, cls, lab, sous) => { if (!gros) return; gros.hidden = false; gros.innerHTML = '<b class="' + cls + '">' + val + "</b><span>" + lab + (sous ? "<small>" + sous + "</small>" : "") + "</span>"; };
+  if (mode === "valeur") {
     const i0 = Math.max(0, series[0].v.findIndex(x => ok(x))), d0b = dateNum(rows[i0][0]);
     const dv = (series[0].v[n - 1] || 0) - (series[0].v[i0] || 0), da = series[1] ? (series[1].v[n - 1] || 0) - (series[1].v[i0] || 0) : 0;
-    r.innerHTML = "Du " + dateLongue(d0b) + " au " + dateLongue(d1) + " : valeur <b>" + eur(dv, 0, true) + "</b>, dont apports <b>" + eur(da, 0, true) + '</b>, soit un gain de <b class="' + sens(dv - da) + '">' + eur(dv - da, 0, true) + "</b>.";
+    r.innerHTML = "Du " + dateLongue(d0b) + " au " + dateLongue(d1) + " : valeur <b>" + eur(dv, 0, true) + "</b>, dont apports <b>" + eur(da, 0, true) + '</b>, soit un gain de <b class="' + sens(dv - da) + '">' + eur(dv - da, 0, true) + "</b>. L'axe part de zéro.";
+  } else if (gain) {
+    const v = series[0].v, i0 = Math.max(0, v.findIndex(x => ok(x))), fin = v[n - 1], d0b = dateNum(rows[i0][0]);
+    const kV = series[0].k, kA = rows[n - 1][C(kv ? "a" + kv : "a")];
+    grand(eur(fin, 0, true), sens(fin), "gagnés depuis le début", "valeur " + eur(rows[n - 1][kV]) + " − versé " + eur(kA));
+    r.innerHTML = "Gain cumulé = valeur moins tout ce que tu as versé : il ne bouge pas quand tu verses, seulement quand la bourse bouge. Du " + dateLongue(d0b) + " au " + dateLongue(d1) + ' : <b class="' + sens(fin - v[i0]) + '">' + eur(fin - (v[i0] || 0), 0, true) + "</b>.";
   } else {
-    const p = series[0].v[n - 1], sp = series[1] ? series[1].v[n - 1] : null;
+    const p = series[0].v[n - 1], sp = series[1] && series[1].nom.startsWith("S&P") ? series[1].v[n - 1] : null, nq = series.find(s => s.nom === "Nasdaq-100");
+    if (ok(p) && ok(sp)) grand(pts(p - sp), sens(p - sp), (p - sp >= 0 ? "d'avance" : "de retard") + " sur le S&amp;P 500", esc(series[0].nom) + " " + pct(p) + " · S&amp;P 500 " + pct(sp) + (nq && ok(nq.v[n - 1]) ? " · Nasdaq " + pct(nq.v[n - 1]) : ""));
     r.innerHTML = "Du " + dateLongue(d0) + " au " + dateLongue(d1) + ' : <b class="' + sens(p) + '">' + pct(p) + "</b>" +
-      (ok(sp) ? ", S&amp;P 500 <b>" + pct(sp) + '</b>, écart <b class="' + sens(p - sp) + '">' + pts(p - sp) + "</b>" : "") + ". Indices rebasés au début de la période, apports neutralisés.";
+      (ok(sp) ? ", S&amp;P 500 <b>" + pct(sp) + '</b>, écart <b class="' + sens(p - sp) + '">' + pts(p - sp) + "</b>" : "") + ". Indices rebasés au début de la période, apports neutralisés" + (M.simple ? "" : " ; au jour le jour (le Versus compte en fin de mois)") + ".";
   }
+}
+/* ---- Risque au jour le jour : baisses depuis le plus haut (indice « ip » : sans l'effet de tes versements) ---- */
+function baisses(rows, k) {
+  let max = -Infinity, iMax = -1, pire = 0, iPic = -1, iCreux = -1;
+  const dd = rows.map((r, i) => { const v = r[k]; if (!(v > 0)) return null; if (v > max) { max = v; iMax = i; } const d = v / max - 1; if (d < pire) { pire = d; iCreux = i; iPic = iMax; } return d; });
+  let iRetour = -1;
+  if (iCreux >= 0) { const cible = rows[iPic][k]; for (let i = iCreux + 1; i < rows.length; i++) if (rows[i][k] >= cible) { iRetour = i; break; } }
+  let der = dd.length - 1; while (der > 0 && dd[der] === null) der--;
+  return { dd, actuel: dd[der] || 0, pire, iPic, iCreux, iRetour, iMax };
+}
+function duree(a, b) {   // entre deux dates aaaammjj, en jours (moins de 45 j), sinon en mois / ans
+  const j = Math.round((dateNum(b) - dateNum(a)) / 864e5);
+  if (j < 45) return j + " jour" + (j > 1 ? "s" : "");
+  const m = Math.round(j / 30.44); if (m < 24) return m + " mois";
+  return Math.floor(m / 12) + " ans" + (m % 12 ? " et " + (m % 12) + " mois" : "");
+}
+function svgBaisses(rows, B) {
+  const W = 320, H = 132, m = { l: 34, r: 8, t: 8, b: 18 }, iw = W - m.l - m.r, ih = H - m.t - m.b, n = rows.length;
+  const bas = Math.min(-.02, B.pire * 1.12), X = i => m.l + (n > 1 ? i / (n - 1) : 0) * iw, Y = v => m.t + (v / bas) * ih;
+  const pas = -bas > .3 ? .1 : -bas > .12 ? .05 : -bas > .05 ? .02 : .01;
+  let o = "";
+  for (let t = 0; t >= bas - 1e-9; t -= pas) o += '<line class="gr" x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + Y(t).toFixed(1) + '" y2="' + Y(t).toFixed(1) + '"' + (t === 0 ? ' style="stroke:var(--ink-3)"' : "") + '/><text x="' + (m.l - 4) + '" y="' + (Y(t) + 3.5).toFixed(1) + '" text-anchor="end">' + (t === 0 ? "0" : MOINS + Math.round(-t * 100)) + " %</text>";
+  let d = "", first = -1, last = -1;
+  B.dd.forEach((v, i) => { if (v === null) return; d += (first < 0 ? "M" : "L") + X(i).toFixed(1) + " " + Y(v).toFixed(1); if (first < 0) first = i; last = i; });
+  if (B.iCreux >= 0) { const xa = X(B.iPic), xb = X(B.iRetour >= 0 ? B.iRetour : n - 1); o += '<rect class="bz" x="' + xa.toFixed(1) + '" y="' + m.t + '" width="' + Math.max(1, xb - xa).toFixed(1) + '" height="' + ih + '"/>'; }
+  if (d) o += '<path class="ba" d="' + d + "L" + X(last).toFixed(1) + " " + Y(0).toFixed(1) + "L" + X(first).toFixed(1) + " " + Y(0).toFixed(1) + 'Z"/><path class="bl" d="' + d + '"/>';
+  if (B.iCreux >= 0) { const x = X(B.iCreux), y = Y(B.pire), droite = x > W - 90; o += '<circle class="bp" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3.5"/><text class="bt" x="' + (x + (droite ? -6 : 6)).toFixed(1) + '" y="' + Math.min(H - m.b - 2, y + 4).toFixed(1) + '" text-anchor="' + (droite ? "end" : "start") + '">pire ' + pct(B.pire) + "</text>"; }
+  const a0 = dateNum(rows[0][0]), a1 = dateNum(rows[n - 1][0]);
+  o += '<text x="' + m.l + '" y="' + (H - 4) + '">' + dateCourte(a0) + "/" + String(a0.getFullYear()).slice(2) + '</text><text x="' + (W - m.r) + '" y="' + (H - 4) + '" text-anchor="end">' + dateCourte(a1) + "/" + String(a1.getFullYear()).slice(2) + "</text>";
+  return '<svg class="m-mk-svg m-dd" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Baisses depuis le plus haut">' + o + "</svg>";
+}
+/* Sharpe et volatilité d'une série d'indice sur la dernière année (même méthode pour toi et le S&P : rendements du soir, 252 séances) */
+function risqueAn(rows, k) {
+  if (k < 0 || rows.length < 30) return null;
+  const fin = rows[rows.length - 1][0], deb = fin - 10000, r = [];
+  for (let i = 1; i < rows.length; i++) if (rows[i - 1][0] >= deb && rows[i - 1][k] > 0 && rows[i][k] > 0) r.push(rows[i][k] / rows[i - 1][k] - 1);
+  if (r.length < 30) return null;
+  const moy = r.reduce((a, x) => a + x, 0) / r.length, et = Math.sqrt(r.reduce((a, x) => a + (x - moy) * (x - moy), 0) / (r.length - 1)) * Math.sqrt(252);
+  const rf = ((dVersus() || {}).marche || {}).tauxSansRisque || 0;
+  return { vol: et, sharpe: et > 0 ? (moy * 252 - rf) / et : null };
 }
 function blocRisque() {
   const h = M.historique; if (!h || !h.rows || h.rows.length < 2) return "";
   const k = h.cols.indexOf("ip"); if (k < 0) return "";
-  let max = -Infinity, dateMax = null, pire = 0, datePire = null, dateHaut = null;
-  h.rows.forEach(r => { if (r[k] > max) { max = r[k]; dateMax = r[0]; } const dd = r[k] / max - 1; if (dd < pire) { pire = dd; datePire = r[0]; dateHaut = dateMax; } });
-  const actuel = h.rows[h.rows.length - 1][k] / max - 1;
-  const pf = (M.enveloppes || []).find(e => e.type === "total") || {}, sp = (M.synthese || {}).sp500;
-  const dc = n => dateCourte(dateNum(n)) + "/" + String(n).slice(2, 4);
-  return acc("m-risque", "Risque", "portefeuille, relevés du soir", '<div class="tuiles">' +
-    tuile("Baisse actuelle", pct(actuel), sens(actuel), actuel > -0.0005 ? "au plus haut" : "depuis le plus haut du " + dc(dateMax)) +
-    tuile("Pire baisse", pct(pire), "down", datePire ? "du " + dc(dateHaut) + " au " + dc(datePire) : "—") +
-    tuile("Volatilité 1 an", pct(pf.vol, 1, false), "", "écart type annualisé") +
-    tuile("Sharpe 1 an", ok(pf.sharpe) ? F2.format(pf.sharpe) : "—", sens(pf.sharpe), "rendement / risque, &gt; 1 = bon", "Sharpe : le rendement obtenu pour le risque pris. Plus c'est haut, mieux c'est.") +
-    tuile("Jours en hausse", pct(pf.hausse, 0, false), "", "sur les 12 derniers mois") +
-    tuile("Écart avec le S&amp;P 500", ok(pf.twr) && ok(sp) ? pts(pf.twr - sp) : "—", sens(pf.twr - sp), "depuis le début (TWR)") +
-    "</div>", false);
+  const B = baisses(h.rows, k), R = h.rows, dc = i => dateCourte(dateNum(R[i][0])) + "/" + String(R[i][0]).slice(2, 4);
+  const envs = M.enveloppes || [], pf = envs.find(e => e.type === "total") || {}, idx = envs.find(e => e.type === "indice" && /S&P/i.test(e.nom || "")) || {};
+  /* Sharpe et volatilité du S&P sur la même année : ceux de ton fichier quand il les donne ; sinon les deux recalculés ici, de la même façon */
+  let moiSh = pf.sharpe, spSh = idx.sharpe, moiVol = pf.vol, spVol = idx.vol, calc = false;
+  if (!ok(spSh)) { const a = risqueAn(R, k), b = risqueAn(R, h.cols.indexOf("isp")); if (a && b) { moiSh = a.sharpe; spSh = b.sharpe; moiVol = a.vol; spVol = b.vol; calc = true; } }
+  const auHaut = B.actuel > -0.0005;
+  const retour = B.iCreux < 0 ? null : B.iRetour >= 0 ? duree(R[B.iCreux][0], R[B.iRetour][0]) : null;
+  const phrase = (auHaut ? "Tu es <b>à ton plus haut</b>" : "Tu es à <b class=\"down\">" + pct(B.actuel) + "</b> de ton plus haut") +
+    (B.iCreux < 0 ? "." : " ; ta pire baisse, <b>" + pct(B.pire) + "</b>, " + (retour ? "a été effacée en <b>" + retour + "</b>." : "n'est pas encore effacée (creux le " + dc(B.iCreux) + ")."));
+  return acc("m-risque", "Risque", M.simple ? "fin de mois" : "au jour le jour", '<div class="m-dd-w">' + svgBaisses(R, B) + '<p class="resume">' + phrase + "</p></div>" +
+    '<div class="tuiles m-petit m-t3 m-dd-t">' +
+      tuile("Baisse actuelle", pct(B.actuel), sens(B.actuel), auHaut ? "au plus haut" : "plus haut le " + dc(B.iMax)) +
+      tuile("Pire baisse", B.iCreux < 0 ? pct(0) : pct(B.pire), B.iCreux < 0 ? "" : "down", B.iCreux < 0 ? "aucune baisse" : "du " + dc(B.iPic) + " au " + dc(B.iCreux)) +
+      tuile("Temps de retour", B.iCreux < 0 ? "—" : retour || "pas encore", "", B.iCreux < 0 ? "" : retour ? "du creux au retour, le " + dc(B.iRetour) : "depuis le creux du " + dc(B.iCreux)) +
+    "</div>" +
+    '<div class="tuiles m-petit m-t3">' +
+      tuile("Volatilité 1 an", pct(moiVol, 1, false), "", ok(spVol) ? "S&amp;P 500 : " + pct(spVol, 1, false) : "écart type annualisé", "La volatilité mesure l'ampleur des secousses : plus elle est haute, plus ta valeur monte et descend fort d'un jour à l'autre. Elle se lit en comparaison avec le S&P 500.") +
+      tuile("Sharpe 1 an", ok(moiSh) ? F2.format(moiSh) : "—", "", ok(spSh) ? "S&amp;P 500 : " + F2.format(spSh) + " sur la même année" : "rendement pour le risque pris",
+        "Sharpe : ce que tu as gagné au-dessus d'un placement sans risque, pour chaque unité de secousse. Il se lit en comparaison : au-dessus du S&P 500, tu as été mieux payé que le marché pour le risque pris." + (calc ? " Ici, les deux sont recalculés sur tes relevés de l'année." : "")) +
+      tuile("Jours en hausse", pct(pf.hausse, 0, false), "", "sur les 12 derniers mois") +
+    "</div>", true);
 }
 function joursRecords() {
   const h = M.historique; if (!h || !h.rows || h.rows.length < 2) return [];
@@ -1967,19 +2059,27 @@ function joursRecords() {
   }
   return out;
 }
-/* « En ce moment » : ce qui avance ce mois-ci (série de versements, prochain jalon). C (v16.93) : palier et vestiaire sont dans Missions */
-function blocEnCours() {
-  const t = [], now = new Date(), mo = MOIS_L[now.getMonth()], finM = new Date(now.getFullYear(), now.getMonth() + 1, 0), discret = ETAT.discret === "oui";
-  const tuile = (k, big, small, cls, aller) => t.push('<' + (aller ? 'button type="button" data-m-aller="' + aller + '"' : "div") + ' class="m-ec-t' + (cls ? " " + cls : "") + '"><span class="k">' + k + "</span><b>" + big + "</b><small>" + small + "</small></" + (aller ? "button" : "div") + ">");
+/* Bandeau « Ce mois-ci » (remplace « En ce moment ») : résultat du mois en €, série de versements, baisse depuis le plus haut */
+function blocMoisEnCours() {
+  const t = [], now = new Date(), discret = ETAT.discret === "oui", finM = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const tuileB = (k, big, small, cls, extra) => t.push('<div class="m-ec-t' + (extra ? " " + extra : "") + '"><span class="k">' + k + '</span><b class="' + (cls || "") + '">' + big + "</b><small>" + small + "</small></div>");
+  const mpm = moisParMois(), der = mpm[mpm.length - 1];
+  let moLib = MOIS_L[now.getMonth()] + " " + now.getFullYear();
+  if (der) {
+    const ceMois = der.an === now.getFullYear() && der.mois === now.getMonth() + 1;
+    moLib = MOIS_L[der.mois - 1] + " " + der.an;
+    tuileB(ceMois ? "Résultat du mois" : "Résultat de " + MOIS_L[der.mois - 1], discret ? pct(der.twr) : eur(der.eur, 0, true), discret ? "en € : masqué (mode discret)" : pct(der.twr) + " hors versements", sens(discret ? der.twr : der.eur));
+  }
   try {
-    const sv = serieVersements();
-    if (sv.liste.length) tuile("Versements d'affilée", sv.actuelle + " mois", "record " + sv.record + "<br>" + (sv.moisEnCours ? '<span class="up">' + esc(mo) + " fait ✓</span>" : '<span class="warn">' + esc(mo) + " : pas encore (jusqu'au " + dateCourte(finM) + ")</span>"), sv.moisEnCours ? "ok" : "attente");
+    const sv = serieVersements(), mo = MOIS_L[now.getMonth()];
+    if (sv.liste.length) tuileB("Versements d'affilée", sv.actuelle + " mois", "record " + sv.record + " · " + (sv.moisEnCours ? '<span class="up">' + esc(mo) + " fait ✓</span>" : '<span class="warn">' + esc(mo) + " : jusqu'au " + dateCourte(finM) + "</span>"), "", sv.moisEnCours ? "ok" : "attente");
   } catch (e) { /* pas de parcours : tuile absente */ }
-  try {
-    const P = paramsMillion(), j = JALONS.concat([CIBLE]).find(x => x > P.v);
-    if (j) tuile("Prochain jalon", discret ? "•••" : F0.format(j / 1000) + NB + "000 €", discret ? "cap sur le million · privé" : "encore " + eur(j - P.v), "", "missions");
-  } catch (e) { /* idem */ }
-  return t.length ? '<div><h2 class="sec">En ce moment <small>' + esc(mo) + " " + now.getFullYear() + '</small></h2></div><div class="m-ec">' + t.join("") + "</div>" : "";
+  const h = M.historique, k = h && h.cols ? h.cols.indexOf("ip") : -1;
+  if (k >= 0 && h.rows.length > 1) {
+    const B = baisses(h.rows, k), auHaut = B.actuel > -0.0005;
+    tuileB("Depuis ton plus haut", auHaut ? "au top" : pct(B.actuel), auHaut ? "nouveau plus haut ✓" : "plus haut le " + dateCourte(dateNum(h.rows[B.iMax][0])), auHaut ? "up" : "down");
+  }
+  return t.length ? '<div><h2 class="sec">Ce mois-ci <small>' + esc(moLib) + '</small></h2></div><div class="m-ec m-ec' + t.length + '">' + t.join("") + "</div>" : "";
 }
 function blocJours() {
   const l = joursRecords(); if (l.length < 5) return "";
@@ -1987,7 +2087,8 @@ function blocJours() {
   const date = j => dateLongue(dateNum(j));
   const liste = (titre, xs) => "<div><b>" + titre + "</b>" + xs.map((x, i) => '<div class="l"><span>' + (i + 1) + ". " + date(x.j) + '</span><span class="' + sens(x.p) + '">' + pct(x.p, 2) + '</span><span class="' + sens(x.e) + '">' + eur(x.e, 0, true) + "</span></div>").join("") + "</div>";
   const pastille = (lib, x, cls) => '<span class="m-jc-p ' + cls + '"><i>' + lib + '</i><b>' + pct(x.p, 2) + "</b><small>" + dateCourte(dateNum(x.j)) + "/" + String(x.j).slice(2, 4) + " · " + eur(x.e, 0, true) + "</small></span>";
-  return '<details class="acc m-compact m-jc" data-acc="m-jours"' + (PREF.acc["m-jours"] ? " open" : "") + "><summary>" + pastille("▲ Meilleur jour", best[0], "up") + pastille("▼ Pire jour", pire[0], "down") + "</summary>" +
+  return '<div><h2 class="sec">Records perso <small>top 5 en dépliant</small></h2></div>' +
+    '<details class="acc m-compact m-jc" data-acc="m-jours"' + (PREF.acc["m-jours"] ? " open" : "") + "><summary>" + pastille("▲ Meilleur jour", best[0], "up") + pastille("▼ Pire jour", pire[0], "down") + "</summary>" +
     '<div><div class="m-jr">' + liste("Top 5", best) + liste("Flop 5", pire) + "</div>" +
     '<p class="info">Sur ' + l.length + " jours de bourse depuis le " + dateLongue(dateNum(l[0].j)) + ", classés en performance (sans l'effet de tes versements). Seuls comptent les jours où ton portefeuille valait au moins la moitié de sa valeur actuelle : après un gros versement, la période se recale toute seule.</p></div></details>";
 }
@@ -2006,7 +2107,7 @@ function moisParMois() {
 }
 function blocMois() {
   const m = moisParMois(); if (!m.length) return "";
-  const enEur = PREF.moisMode === "eur";
+  const discret = ETAT.discret === "oui", enEur = PREF.moisMode !== "pct" && !discret;   // lot 27 : en € par défaut (privé, jamais dans le Versus) ; en mode discret, seulement le %
   const ans = Array.from(new Set(m.map(x => x.an))).sort().reverse();
   const maxP = Math.max(.04, ...m.map(x => Math.abs(x.twr))), maxE = Math.max(500, ...m.map(x => Math.abs(x.eur)));
   const lignes = ans.map(an => {
@@ -2015,29 +2116,31 @@ function blocMois() {
     return '<tr><td class="nom">' + an + "</td>" + MOIS.map((nm, i) => {
       const x = ms.find(y => y.mois === i + 1);
       if (!x) return '<td class="vide">·</td>';
-      const det = esc("<b>" + MOIS_L[i] + " " + an + "</b> : " + pct(x.twr) + " (TWR) · résultat " + eur(x.eur, 0, true));
+      const det = esc("<b>" + MOIS_L[i] + " " + an + "</b> : " + (enEur ? "résultat " + eur(x.eur, 0, true) + " · " + pct(x.twr) + " (TWR)" : pct(x.twr) + " (TWR)" + (discret ? "" : " · résultat " + eur(x.eur, 0, true))));
       return '<td class="m-c" tabindex="0" style="' + teinte(enEur ? x.eur : x.twr, enEur ? maxE : maxP) + '" data-cel="' + det + '">' + (enEur ? kEur(x.eur) : pct(x.twr)) + "</td>";
     }).join("") + '<td style="' + teinte(enEur ? totE : tot, enEur ? maxE * 3 : maxP * 3) + '"><b>' + (enEur ? kEur(totE) : pct(tot)) + "</b></td></tr>";
   }).join("");
-  return '<div><h2 class="sec">Mois par mois <small>' + (enEur ? "résultat en euros" : "TWR, sans l'effet des versements") + "</small></h2></div>" +
-    '<div class="seg" role="group" aria-label="Unité"><button type="button" data-m-mois="pct" aria-pressed="' + !enEur + '">Performance (%)</button><button type="button" data-m-mois="eur" aria-pressed="' + enEur + '">Résultat (€)</button></div>' +
+  return '<div><h2 class="sec">Mois par mois <small>' + (enEur ? "résultat en euros, sans tes versements" : "TWR, sans l'effet des versements") + "</small></h2></div>" +
+    '<div class="seg" role="group" aria-label="Unité"><button type="button" data-m-mois="eur" aria-pressed="' + enEur + '"' + (discret ? " disabled" : "") + '>Résultat (€)</button><button type="button" data-m-mois="pct" aria-pressed="' + !enEur + '">Performance (%)</button></div>' +
+    (discret ? '<p class="info">Mode discret : les euros sont masqués, la grille passe en %.</p>' : "") +
     '<div class="scroll-x"><table class="grille"><thead><tr><th></th>' + MOIS.map(x => "<th>" + x + "</th>").join("") + "<th>Année</th></tr></thead><tbody>" + lignes + "</tbody></table></div>" +
     '<p class="resume" id="m-mois-sel">Touche un mois pour le détail.</p>';
 }
+/* Répartition : une seule barre à 100 % ; masquée quand il n'y a qu'une catégorie (seuls les critères qui séparent vraiment sont proposés) */
+const COUL_REP = ["#5B8DEF", "#2BB673", "#9B6BFF", "#F2A33A", "#18A9C7", "#E5484D", "#D6619E", "#C9A227", "#8C7B5A"];
 function blocRepartition() {
-  const rep = PREF.rep || "classe";
   const actifs = (M.ref || {}).actifs || [];
   const info = c => actifs.find(a => a.code === c) || {};
-  const cle = { classe: l => info(l.code).classe || "Non classé", zone: l => info(l.code).zone || "Non renseignée", ligne: l => l.code, levier: l => { const v = Number(info(l.code).levier) || 1; return v > 1 ? "Levier ×" + v : "Sans levier"; } }[rep] || (l => l.code);
-  const groupes = {};
-  (M.groupes || []).forEach(g => g.lignes.forEach(l => { if (!l.especes && l.valeur > 0) { const k = cle(l); groupes[k] = (groupes[k] || 0) + l.valeur; } }));
-  const tot = Object.values(groupes).reduce((a, b) => a + b, 0) || 1;
-  const tri = Object.entries(groupes).sort((a, b) => b[1] - a[1]);
-  if (!tri.length) return "";
-  const max = tri[0][1];
+  const CLES = { classe: l => info(l.code).classe || "Non classé", zone: l => info(l.code).zone || "Non renseignée", ligne: l => l.code, levier: l => { const v = Number(info(l.code).levier) || 1; return v > 1 ? "Levier ×" + v : "Sans levier"; } };
+  const grouper = cle => { const g = {}; (M.groupes || []).forEach(gr => gr.lignes.forEach(l => { if (!l.especes && l.valeur > 0) { const k = cle(l); g[k] = (g[k] || 0) + l.valeur; } })); return Object.entries(g).sort((a, b) => b[1] - a[1]); };
+  const dispo = [["classe", "Classe"], ["zone", "Zone"], ["ligne", "Ligne"], ["levier", "Levier"]].map(([k, l]) => [k, l, grouper(CLES[k])]).filter(x => x[2].length >= 2);
+  if (!dispo.length) return "";
+  const sel = dispo.find(x => x[0] === PREF.rep) || dispo[0], tri = sel[2], tot = tri.reduce((a, x) => a + x[1], 0) || 1;
+  const coul = i => COUL_REP[i % COUL_REP.length];
   return '<div><h2 class="sec">Répartition <small>lignes du portefeuille</small></h2></div>' +
-    '<div class="chips" role="group" aria-label="Répartir par">' + [["classe", "Classe"], ["zone", "Zone"], ["ligne", "Ligne"], ["levier", "Levier"]].map(([k, l]) => '<button class="chip" type="button" data-m-rep="' + k + '" aria-pressed="' + (rep === k) + '">' + l + "</button>").join("") + "</div>" +
-    '<div class="m-rep">' + tri.map(([k, v]) => '<div><span class="n">' + esc(k) + '</span><span class="b"><i style="width:' + (v / max * 100).toFixed(1) + '%"></i></span><span class="p">' + pct(v / tot, 1, false) + '</span><span class="e">' + eur(v) + "</span></div>").join("") + "</div>";
+    (dispo.length > 1 ? '<div class="chips" role="group" aria-label="Répartir par">' + dispo.map(([k, l]) => '<button class="chip" type="button" data-m-rep="' + k + '" aria-pressed="' + (sel[0] === k) + '">' + l + "</button>").join("") + "</div>" : "") +
+    '<div class="m-rep-barre" role="img" aria-label="Répartition par ' + esc(sel[1].toLowerCase()) + '">' + tri.map(([k, v], i) => '<i style="flex:' + v + ";background:" + coul(i) + '" title="' + esc(k) + " · " + pct(v / tot, 1, false) + '"></i>').join("") + "</div>" +
+    '<div class="m-rep">' + tri.map(([k, v], i) => '<div><span class="n"><i style="background:' + coul(i) + '"></i>' + esc(k) + '</span><span class="p">' + pct(v / tot, 1, false) + '</span><span class="e">' + eur(v) + "</span></div>").join("") + "</div>";
 }
 function blocFrais() {
   const f = M.frais || []; if (!f.length) return "";
@@ -2048,23 +2151,23 @@ function blocFrais() {
 }
 function brancherStats(v) {
   brancherDefs(v);
-  v.querySelectorAll("[data-m-aller]").forEach(b => b.addEventListener("click", () => { PREF.onglet = b.dataset.mAller; garderPref(); rendre(); window.scrollTo(0, 0); }));
   const re = b => garderPlace(b, rendre);
   v.querySelectorAll("[data-m-mode]").forEach(b => b.addEventListener("click", () => { PREF.mode = b.dataset.mMode; garderPref(); re(b); }));
   v.querySelectorAll("[data-m-per]").forEach(b => b.addEventListener("click", () => { PREF.per = b.dataset.mPer; garderPref(); re(b); }));
   v.querySelectorAll("[data-m-serie]").forEach(b => b.addEventListener("click", () => { PREF.serie = b.dataset.mSerie; garderPref(); re(b); }));
   v.querySelectorAll("[data-m-envv]").forEach(b => b.addEventListener("click", () => { PREF.envV = b.dataset.mEnvv; garderPref(); re(b); }));
-  v.querySelectorAll("[data-m-mois]").forEach(b => b.addEventListener("click", () => { PREF.moisMode = b.dataset.mMois; garderPref(); re(b); }));
+  v.querySelectorAll("[data-m-mois]").forEach(b => b.addEventListener("click", () => { if (b.disabled) return; PREF.moisMode = b.dataset.mMois; garderPref(); re(b); }));
   v.querySelectorAll("[data-m-rep]").forEach(b => b.addEventListener("click", () => { PREF.rep = b.dataset.mRep; garderPref(); re(b); }));
   v.querySelectorAll("td[data-cel]").forEach(td => {
     const f = () => { v.querySelectorAll("td.m-c.sel").forEach(x => x.classList.remove("sel")); td.classList.add("sel"); v.querySelector("#m-mois-sel").innerHTML = td.dataset.cel; };
     td.addEventListener("click", f); td.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); f(); } });
   });
+  v.querySelectorAll("tr.m-pf-r").forEach(tr => {
+    const f = () => { const d = v.querySelector('tr[data-pf-d="' + tr.dataset.pf + '"]'); if (!d) return; d.hidden = !d.hidden; tr.setAttribute("aria-expanded", String(!d.hidden)); tr.classList.toggle("ouvert", !d.hidden); };
+    tr.addEventListener("click", f); tr.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); f(); } });
+  });
   const g = v.querySelector(".grille"); if (g) { const sx = g.closest(".scroll-x"); if (sx) sx.scrollLeft = sx.scrollWidth; }
-  v.querySelectorAll("[data-m-patri]").forEach(b => b.addEventListener("click", () => { PREF.patri = b.dataset.mPatri; garderPref(); re(b); }));
-  v.querySelectorAll("[data-m-patridet]").forEach(b => b.addEventListener("click", () => { PREF.patriDet = b.dataset.mPatridet; garderPref(); re(b); }));
-  dessinerCourbe(); dessinerPatrimoine(); dessinerEpargne(); dessinerPret();
-  brancherProjection(v);
+  dessinerCourbe();
 }
 
 /* ================= Signal levier Nasdaq (repris tel quel de Cote V5.6 : mêmes données, mêmes règles, mêmes textes) ================= */
@@ -2364,25 +2467,27 @@ function couchesPatrimoine(d, brut, aImmo, det) {
   if (aImmo) couches.push(brut ? { nom: "Appartement", v: d.map(x => x.prix), c: "var(--s3)" } : { nom: "Immobilier net", v: d.map(x => x.immo), c: "var(--s3)" });
   return couches;
 }
+function modePatri(aImmo) { return aImmo && (PREF.patri === "net" || PREF.patri === "brut") ? PREF.patri : "fin"; }   // lot 27 : financier par défaut (comme le million)
 function blocPatrimoineTemps() {
   const d = donneesPatrimoine(); if (!d) return "";
-  const brut = PREF.patri === "brut", aImmo = d.some(x => x.prix > 0);
+  const aImmo0 = d.some(x => x.prix > 0), mp = modePatri(aImmo0), brut = mp === "brut", aImmo = aImmo0 && mp !== "fin";
   const det0 = detailPatrimoine(d), voirDet = det0.utile && PREF.patriDet === "1", det = voirDet ? det0 : null;
   const leg = couchesPatrimoine(d, brut, aImmo, det).map(c => ({ nom: c.nom, c: c.c, op: c.op }))
     .concat(brut && aImmo ? [{ nom: "Prêts restants", c: "var(--down)", op: .5 }] : []);
   const der = d[d.length - 1], prem = d.find(x => x.complet) || d[0];
-  const net = x => x.bourse + x.epargne + x.immo;
+  const net = x => x.bourse + x.epargne + (aImmo ? x.immo : 0);
   return '<div><h2 class="sec">Patrimoine dans le temps <small>fin de mois</small></h2></div>' +
-    (aImmo ? '<div class="seg" role="group" aria-label="Brut ou net"><button type="button" data-m-patri="net" aria-pressed="' + !brut + '">Net</button><button type="button" data-m-patri="brut" aria-pressed="' + brut + '">Brut (dette à part)</button></div>' : "") +
+    (aImmo0 ? '<div class="seg m-seg3" role="group" aria-label="Ce qui est compté">' + [["fin", "Financier"], ["net", "Avec l'immobilier"], ["brut", "Brut (dette)"]].map(([k, l]) => '<button type="button" data-m-patri="' + k + '" aria-pressed="' + (mp === k) + '">' + l + "</button>").join("") + "</div>" : "") +
     (det0.utile ? '<div class="chips" role="group" aria-label="Niveau de détail"><button class="chip" type="button" data-m-patridet="" aria-pressed="' + !voirDet + '">Vue d\'ensemble</button><button class="chip" type="button" data-m-patridet="1" aria-pressed="' + voirDet + '">Détail par compte</button></div>' : "") +
     boiteEmpile("g-patri", leg) +
-    '<p class="resume">' + (brut ? "Brut : l'appartement compté à son prix, les prêts restants en dessous de zéro. Les pointillés suivent ton patrimoine net. " : "Net : l'immobilier compte pour son prix moins les prêts restants. ") +
+    '<p class="resume">' + (!aImmo ? "Financier : épargne, bourse et assurance-vie" + (aImmo0 ? ", sans l'immobilier (comme le million). " : ". ") : brut ? "Brut : l'appartement compté à son prix, les prêts restants en dessous de zéro. Les pointillés suivent ton patrimoine net. " : "Net : l'immobilier compte pour son prix moins les prêts restants. ") +
       (voirDet ? "Détail : une couche par enveloppe de bourse" + (det.bourse.length ? "" : " (ton fichier ne garde pas leur valeur mois par mois : la bourse reste en un bloc)") + " et une par livret. " : "") +
       "Depuis fin " + esc(libMoisK(prem.k)) + " : <b class=\"" + sens(net(der) - net(prem)) + "\">" + eur(net(der) - net(prem), 0, true) + "</b>.</p>";
 }
 function dessinerPatrimoine() {
   const box = document.getElementById("g-patri"); if (!box) return;
-  const d = donneesPatrimoine(), brut = PREF.patri === "brut", aImmo = d.some(x => x.prix > 0);
+  const d = donneesPatrimoine(); if (!d) return;
+  const aImmo0 = d.some(x => x.prix > 0), mp = modePatri(aImmo0), brut = mp === "brut", aImmo = aImmo0 && mp !== "fin";
   const det0 = detailPatrimoine(d), det = det0.utile && PREF.patriDet === "1" ? det0 : null;
   empile(box, { x: d.map(x => x.k), couches: couchesPatrimoine(d, brut, aImmo, det), trait: !!det, negs: brut && aImmo ? [{ nom: "Prêts restants", v: d.map(x => x.dette), c: "var(--down)" }] : [],
     ligne: brut && aImmo ? { nom: "Patrimoine net", v: d.map(x => x.bourse + x.epargne + x.immo) } : null });
@@ -2401,37 +2506,22 @@ function donneesEpargne() {
 }
 function blocEpargneTemps() {
   const d = donneesEpargne();
-  if (!d) return M.epargneMois === undefined && (M.epargne || []).length ? '<div><h2 class="sec">Épargne livret par livret</h2></div><p class="info">Ce graphique a besoin de la version 10 de ton API patrimoine (nouveau déploiement).</p>' : "";
+  if (!d) return M.epargneMois === undefined && (M.epargne || []).length && typeof estAdmin === "function" && estAdmin() ? '<p class="info">Admin : « livret par livret » a besoin de la version 10 de l\'API patrimoine.</p>' : "";   // lot 27 : message technique réservé à l'admin
   const der = d.couches.map(c => c.v[c.v.length - 1]), tot = der.reduce((a, b) => a + b, 0);
-  return '<div><h2 class="sec">Épargne livret par livret <small>fin de mois</small></h2></div>' + boiteEmpile("g-epargne", d.couches) +
-    '<p class="resume">Aujourd\'hui : ' + d.couches.map((c, i) => esc(c.nom) + " <b>" + eur(der[i]) + "</b>").join(" · ") + " · total <b>" + eur(tot) + "</b>.</p>";
+  return acc("m-ep-temps", "Livret par livret", "fin de mois", boiteEmpile("g-epargne", d.couches) +
+    '<p class="resume">Aujourd\'hui : ' + d.couches.map((c, i) => esc(c.nom) + " <b>" + eur(der[i]) + "</b>").join(" · ") + " · total <b>" + eur(tot) + "</b>.</p>", false);
 }
-function dessinerEpargne() { const box = document.getElementById("g-epargne"); const d = donneesEpargne(); if (box && d) empile(box, { x: d.x, couches: d.couches }); }
-/* B · prêt : capital restant dû, passé plein, à venir en pointillés */
+function dessinerEpargne() { const box = document.getElementById("g-epargne"); if (!box || !box.offsetParent) return; const d = donneesEpargne(); if (d) empile(box, { x: d.x, couches: d.couches }); }
+/* B · prêt année par année (lot 27 : seulement le graphique, replié sous Immobilier ; les chiffres clés sont déjà dans les tuiles du prêt) */
 function blocPret() {
   const p = M.prets; if (!p || !(p.mensuel || []).length) return "";
-  const mens = p.mensuel, emprunte = Math.max(...mens.map(r => r[1])), auj = isoJour(new Date());
-  const restant = p.actuel ? p.actuel.restant : mens[0][1], rembourse = emprunte - restant;
-  const t = (lab, val, cls, sub) => "<div><span class=\"lab\">" + lab + '</span><span class="val ' + (cls || "") + '">' + val + '</span><span class="sub">' + sub + "</span></div>";
-  return acc("m-pret", "Ton prêt immobilier", "année par année", '<div class="chart-box pret-an" id="g-pret"></div>' +
-    '<div class="tuiles m-petit m-pret-t">' +
-      t("Remboursé", pct(rembourse / emprunte, 1, false), "up", eur(rembourse) + " sur " + eur(emprunte)) +
-      t("Restant dû", eur(restant), "", p.actuel ? "au " + frDate(p.actuel.date) : "") +
-      t("Intérêts restants", eur(p.interetsRestants), "", "payés en " + new Date().getFullYear() + " : " + eur(p.interetsAnnee)) +
-      t(p.fin && /^dans /.test(dansDuree(p.fin)) ? "Fin des prêts dans" : "Fin des prêts", p.fin ? dansDuree(p.fin).replace(/^dans /, "") : "—", "", p.fin ? "le " + frDate(p.fin) : "") +
-      (p.prochaine && (p.banque || p.prochaine.assurance !== undefined && p.prochaine.assurance !== null) ? t("Prochaine échéance", eur(p.prochaine.echeance + (p.banque ? 0 : p.prochaine.assurance || 0), 2), "", "le " + frDate(p.prochaine.date) + ", assurance comprise" + (p.banque ? " (ta part)" : "")) : "") +
-      tuileCapitalMois(p, t) +
-    "</div>", false);
-}
-/* V15.13 · 6e tuile du prêt : dans la prochaine échéance, ce qui rembourse vraiment (capital) et ce qui part (intérêts, assurance) */
-function tuileCapitalMois(p, t) {
-  const pr = p.prochaine, av = p.actuel; if (!pr || !av || !(av.restant > pr.restant)) return "";
-  const capital = av.restant - pr.restant, ass = p.banque ? 0 : pr.assurance || 0, total = (pr.echeance || 0) + ass, interets = Math.max(0, total - capital - ass);
-  return t("Dont capital", eur(capital, 0), "up", (total > 0 ? Math.round(capital / total * 100) + " % de l'échéance · " : "") + "intérêts " + eur(interets, 0) + (ass ? " · assurance " + eur(ass, 2) : ""));
+  const emprunte = Math.max(...p.mensuel.map(r => r[1])), restant = p.actuel ? p.actuel.restant : p.mensuel[0][1];
+  return acc("m-pret", "Le prêt année par année", emprunte > 0 ? "remboursé " + pct((emprunte - restant) / emprunte, 0, false) : "", '<div class="chart-box pret-an" id="g-pret"></div>', false);
 }
 /* V15.15 · le prêt année par année : barres « capital remboursé » + « intérêts payés » (passé plein, à venir pâle, année en cours entourée) */
 function dessinerPret() {
   const box = document.getElementById("g-pret"); if (!box) return;
+  const discret = ETAT.discret === "oui";   // lot 27 : aucun montant en mode discret (ni axe, ni bulle)
   const mens = M.prets.mensuel || []; if (mens.length < 2) { box.innerHTML = ""; return; }
   const avecInt = mens.some(r => r[2] > 0), parAn = {};
   for (let i = 1; i < mens.length; i++) { const y = +String(mens[i][0]).slice(0, 4), a = parAn[y] = parAn[y] || { cap: 0, int: 0 }; a.cap += Math.max(0, mens[i - 1][1] - mens[i][1]); a.int += mens[i][2] || 0; }
@@ -2439,10 +2529,10 @@ function dessinerPret() {
   const W = 320, H = 170, g = 34, dr = 4, hb = 18, n = ys.length, max = Math.max(...ys.map(y => parAn[y].cap + parAn[y].int)) || 1;
   const pas = (W - g - dr) / n, bw = Math.max(4, pas * .7), Y = v => 8 + (1 - v / max) * (H - 8 - hb);
   const kE = v => v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1).replace(".", ",") + " k" : String(Math.round(v));
-  const grille = [max, max / 2].map(v => '<line x1="' + g + '" x2="' + (W - dr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" class="gr"/><text x="' + (g - 4) + '" y="' + (Y(v) + 3.5).toFixed(1) + '" text-anchor="end">' + kE(v) + "</text>").join("");
+  const grille = [max, max / 2].map(v => '<line x1="' + g + '" x2="' + (W - dr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" class="gr"/><text x="' + (g - 4) + '" y="' + (Y(v) + 3.5).toFixed(1) + '" text-anchor="end">' + (discret ? "" : kE(v)) + "</text>").join("");
   const barres = ys.map((y, i) => {
     const a = parAn[y], x = g + i * pas + (pas - bw) / 2, op = y <= an ? 1 : .42, yc = Y(a.cap), yi = Y(a.cap + a.int);
-    return '<g opacity="' + op + '"><title>' + y + " : " + Math.round(a.cap).toLocaleString("fr-FR") + " € de capital" + (avecInt ? ", " + Math.round(a.int).toLocaleString("fr-FR") + " € d'intérêts" : "") + "</title>" +
+    return '<g opacity="' + op + '"><title>' + y + (discret ? "" : " : " + Math.round(a.cap).toLocaleString("fr-FR") + " € de capital" + (avecInt ? ", " + Math.round(a.int).toLocaleString("fr-FR") + " € d'intérêts" : "")) + "</title>" +
       '<rect x="' + x.toFixed(1) + '" y="' + yc.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(0, H - hb - yc).toFixed(1) + '" rx="2" fill="var(--accent)"/>' +
       (avecInt && a.int > 0 ? '<rect x="' + x.toFixed(1) + '" y="' + yi.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(0, yc - yi).toFixed(1) + '" rx="2" fill="#F2A33A"/>' : "") +
       (y === an ? '<rect x="' + (x - 2).toFixed(1) + '" y="' + (yi - 2).toFixed(1) + '" width="' + (bw + 4).toFixed(1) + '" height="' + (H - hb - yi + 2).toFixed(1) + '" rx="3" fill="none" stroke="var(--ink)" stroke-width="1.2"/>' : "") + "</g>";
@@ -2490,64 +2580,37 @@ function moisPourMillion(v0, c, rAn) {
   for (let n = 1; n <= 12 * 80; n++) { v = v * (1 + i) + c; if (v >= CIBLE) return n; }
   return null;
 }
-function paramsMillion() {
-  const v = valeurMillion() || 0, ry = rythmeMillion(), c0 = ry ? ry.c : null;
-  const c = ok(PREF.effort) ? PREF.effort : (c0 || 0), R = ok(PREF.rendement) ? PREF.rendement : 0.05;
-  return { v, c0, c, R, source: ry ? ry.source : "" };
+/* lot 27 (Conseil) : UNE seule date du million dans toute l'appli (Missions, titre et curseur de la Projection 2034) :
+   patrimoine financier d'aujourd'hui, ton rythme d'épargne réel, rendement central de la projection. Plus de 2e simulateur. */
+function millionEstime() {
+  const P = M ? calculProjection(0) : null; if (!P) return null;
+  return { v: P.v, c: P.c, r: P.mix.r, n: P.nM, quand: P.nM === null ? null : dateDansMois(P.nM), source: P.source };
 }
-/* projection mois par mois jusqu'au million (40 ans au plus), avec et sans épargne nouvelle */
-function projection(v, c, R) {
-  const i = Math.pow(1 + R, 1 / 12) - 1, avec = [v], sans = [v];
-  let a = v, z = v;
-  for (let n = 1; n <= 480; n++) { a = a * (1 + i) + c; z = z * (1 + i); avec.push(a); sans.push(z); if (a >= CIBLE && n % 12 === 0) break; }
-  return { avec, sans };
-}
-function svgProjection(v, c, R) {
-  const { avec, sans } = projection(v, c, R), n = avec.length - 1;
-  const W = 320, H = 150, m = { l: 34, r: 8, t: 8, b: 18 }, iw = W - m.l - m.r, ih = H - m.t - m.b;
-  const mx = Math.max(CIBLE * 1.05, ...avec.slice(0, n + 1)), X = k => m.l + k / n * iw, Y = val => m.t + ih - Math.min(val, mx) / mx * ih;
-  const d = arr => arr.map((val, k) => (k ? "L" : "M") + X(k).toFixed(1) + " " + Y(val).toFixed(1)).join("");
-  const discret = ETAT.discret === "oui";
-  let o = "";
-  [0, 250000, 500000, 750000, 1000000].forEach(t => {
-    o += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + Y(t).toFixed(1) + '" y2="' + Y(t).toFixed(1) + '" stroke="rgba(255,255,255,' + (t === CIBLE ? ".55" : ".08") + ')"' + (t === CIBLE ? ' stroke-dasharray="4 3"' : "") + "/>";
-    o += '<text x="' + (m.l - 5) + '" y="' + (Y(t) + 3.5).toFixed(1) + '" text-anchor="end">' + (t === 0 ? "0" : t === CIBLE ? "1M" : (t / 1000) + "k") + "</text>";
-  });
-  const an0 = new Date().getFullYear(), mo0 = new Date().getMonth();
-  let dx = -99;
-  for (let k = 0; k <= n; k++) { if ((mo0 + k) % 12 !== 0) continue; const y = an0 + Math.floor((mo0 + k) / 12), x = X(k); if (x - dx < 44) continue; dx = x; o += '<text x="' + x.toFixed(1) + '" y="' + (H - 4) + '" text-anchor="middle">' + y + "</text>"; }
-  o += '<path d="' + d(avec) + "L" + X(n).toFixed(1) + " " + Y(0).toFixed(1) + "L" + X(0).toFixed(1) + " " + Y(0).toFixed(1) + 'Z" fill="url(#mm-deg)" stroke="none"/>';
-  o += '<path d="' + d(sans) + '" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1.4" stroke-dasharray="3 3"/>';
-  o += '<path d="' + d(avec) + '" fill="none" stroke="#F5C542" stroke-width="2.4" stroke-linejoin="round"/>';
-  const kM = avec.findIndex(val => val >= CIBLE);
-  if (kM > 0) o += '<circle cx="' + X(kM).toFixed(1) + '" cy="' + Y(CIBLE).toFixed(1) + '" r="4.5" fill="#fff" stroke="#F5C542" stroke-width="2"/>';
-  return '<svg class="mm-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Projection jusqu\'au million"><defs><linearGradient id="mm-deg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#F5C542" stop-opacity=".35"/><stop offset="1" stop-color="#F5C542" stop-opacity="0"/></linearGradient></defs>' + o + "</svg>" +
-    '<div class="mm-leg"><span><i></i>avec ' + (discret ? "ton épargne" : F0.format(Math.round(c)) + " €/mois") + '</span><span><i class="sans"></i>sans rien ajouter</span></div>';
-}
-function textesMillion(P) {
-  const n = moisPourMillion(P.v, P.c, P.R), discret = ETAT.discret === "oui";
-  const quand = n === null ? null : new Date(new Date().getFullYear(), new Date().getMonth() + n, 1);
-  const prochain = JALONS.concat([CIBLE]).find(j => j > P.v);
-  const nProchain = prochain ? moisPourMillion(P.v * CIBLE / prochain, P.c * CIBLE / prochain, P.R) : null;   // même calcul, mis à l'échelle du jalon
-  const eta = quand ? 'À ce rythme, <b>millionnaire en ' + MOIS_L[quand.getMonth()] + " " + quand.getFullYear() + "</b>" + (n > 0 ? " · dans " + (n >= 24 ? Math.floor(n / 12) + " ans" + (n % 12 ? " et " + (n % 12) + " mois" : "") : n + " mois") : "") + "."
-    : "Avec ces hypothèses, le million reste hors de portée en 40 ans : augmente l'épargne ou le rendement pour voir.";
-  const sub = prochain && prochain < CIBLE && nProchain !== null ? "Prochain jalon : <b>" + F0.format(prochain / 1000) + " 000 €</b>" + (discret ? "" : ", encore " + eur(prochain - P.v)) + (nProchain ? " · ≈ " + (nProchain >= 24 ? Math.round(nProchain / 12) + " ans" : nProchain + " mois") : "") : "";
+function textesMillion(E, v) {
+  const discret = ETAT.discret === "oui", n = E ? E.n : null, quand = E ? E.quand : null;
+  const prochain = JALONS.concat([CIBLE]).find(j => j > v);
+  const nProchain = E && prochain ? moisPourMillion(v * CIBLE / prochain, E.c * CIBLE / prochain, E.r) : null;   // même calcul, mis à l'échelle du jalon
+  const eta = !E ? "Pas encore assez de chiffres pour estimer la date."
+    : quand ? 'À ton rythme, <b>millionnaire en ' + MOIS_L[quand.getMonth()] + " " + quand.getFullYear() + "</b>" + (n > 0 ? " · dans " + (n >= 24 ? Math.floor(n / 12) + " ans" + (n % 12 ? " et " + (n % 12) + " mois" : "") : n + " mois") : "") + "."
+    : "À ton rythme actuel, le million reste hors de portée : la projection montre l'effet d'un effort en plus.";
+  const sub = prochain && prochain < CIBLE && nProchain !== null ? "Prochain jalon : <b>" + F0.format(prochain / 1000) + " 000 €</b>" + (discret ? "" : ", encore " + eur(prochain - v)) + (nProchain ? " · ≈ " + (nProchain >= 24 ? Math.round(nProchain / 12) + " ans" : nProchain + " mois") : "") : "";
   return { n, quand, eta, sub };
 }
+function lienProjection() { return '<button type="button" class="mm-lien" data-m-voirproj>Voir la projection 2034 ›</button>'; }
 function htmlMillion() {
   if (!M) return "";
-  const P = paramsMillion(), part = Math.max(0, Math.min(1, P.v / CIBLE)), T = textesMillion(P);
+  const E = millionEstime(), v = E ? E.v : (valeurMillion() || 0), part = Math.max(0, Math.min(1, v / CIBLE)), T = textesMillion(E, v);
   const discret = ETAT.discret === "oui", reduitM = PREF.millionReduit !== false;
-  const texteFlap = discret ? "•••" : F0.format(Math.round(P.v));
-  const piste = JALONS.map(j => '<span class="mj' + (P.v >= j ? " passe" : "") + '" style="left:' + (j / CIBLE * 100) + '%"><i></i><b>' + (j / 1000) + "k</b></span>").join("");
+  const texteFlap = discret ? "•••" : F0.format(Math.round(v));
+  const piste = JALONS.map(j => '<span class="mj' + (v >= j ? " passe" : "") + '" style="left:' + (j / CIBLE * 100) + '%"><i></i><b>' + (j / 1000) + "k</b></span>").join("");
   const tete = '<div class="mm-h"><span class="mm-k">Cap sur le million</span><span class="mm-d"><span class="mm-prive">privé</span>' +
     '<button type="button" class="mm-plus" id="mm-reduire" aria-expanded="' + !reduitM + '">' + (reduitM ? "Voir plus ▾" : "Réduire ▴") + "</button></span></div>";
   /* D (v16.93) : en mode discret, ni %, ni jauge, ni date, ni jalon (tout cela laisse deviner le montant) */
   if (discret) return '<section class="m-million reduit discret" style="--mc:' + couleurMoi() + '"><div class="mm-h"><span class="mm-k">Cap sur le million</span><span class="mm-d"><span class="mm-prive">privé</span></span></div>' +
     '<p class="mm-mini">Masqué en mode discret. Désactive-le dans Réglages pour voir ta progression.</p></section>';
   if (reduitM) return '<section class="m-million reduit" style="--mc:' + couleurMoi() + '">' + tete +
-    '<p class="mm-ligne"><b>' + F1.format(part * 100) + ' %</b><span>' + (T.quand ? "millionnaire en " + MOIS_L[T.quand.getMonth()] + " " + T.quand.getFullYear() : "hors de portée à ce rythme") + "</span></p>" +
-    '<div class="mm-rail mini"><i style="width:' + (part * 100).toFixed(2) + '%"></i></div>' + (T.sub ? '<p class="mm-mini">' + T.sub + "</p>" : "") + "</section>";
+    '<p class="mm-ligne"><b>' + F1.format(part * 100) + ' %</b><span>' + (T.quand ? "millionnaire en " + MOIS_L[T.quand.getMonth()] + " " + T.quand.getFullYear() : E ? "hors de portée à ce rythme" : "") + "</span></p>" +
+    '<div class="mm-rail mini"><i style="width:' + (part * 100).toFixed(2) + '%"></i></div>' + (T.sub ? '<p class="mm-mini">' + T.sub + "</p>" : "") + (E ? lienProjection() : "") + "</section>";
   return '<section class="m-million" style="--mc:' + couleurMoi() + '">' + tete +
     '<div class="mm-pct"><b>' + F1.format(part * 100) + '</b><span>%</span></div>' +
     '<div class="m-flaps mm-flaps" aria-label="' + esc(texteFlap) + ' euros">' + flaps(texteFlap + NB + "€", false) + "</div>" +
@@ -2555,12 +2618,8 @@ function htmlMillion() {
     '<p class="mm-note">Patrimoine financier : épargne, bourse et assurance-vie. L\'immobilier ne compte pas.</p>' +
     '<p class="mm-eta" id="mm-eta">' + T.eta + "</p>" +
     '<p class="mm-sub" id="mm-sub">' + T.sub + "</p>" +
-    '<div class="mm-sim"><label><span>Épargne par mois (€)</span><input id="mm-effort" type="text" inputmode="numeric" autocomplete="off" value="' + Math.round(P.c) + '"></label>' +
-      '<label><span>Rendement par an (%)</span><input id="mm-rend" type="text" inputmode="decimal" autocomplete="off" value="' + String(+(P.R * 100).toFixed(1)).replace(".", ",") + '"></label></div>' +
-    '<p class="mm-note" id="mm-rythme">' + (P.c0 !== null ? "Ton rythme estimé : ≈ " + (discret ? "•••" : F0.format(P.c0)) + " €/mois (" + esc(P.source) + ")" + (ok(PREF.effort) || ok(PREF.rendement) ? ' · <button type="button" class="mm-raz" id="mm-raz">revenir à ton rythme et 5 %</button>' : "") : "") + "</p>" +
-    '<div class="mm-graph" id="mm-graph">' + svgProjection(P.v, P.c, P.R) + "</div>" +
+    (E ? '<p class="mm-note">Même calcul que la Projection 2034 (scénario central, ' + pctR(E.r) + " par an ; ton rythme : ≈ " + F0.format(E.c) + " €/mois" + (E.source ? ", " + esc(E.source) : "") + ").</p>" + lienProjection() : "") +
     '<p class="mm-badge">' + badgeMillion() + "</p>" +
-    '<p class="mm-note">Simulation : épargne et rendement constants, intérêts composés chaque mois. Un repère pour se motiver, pas une prévision.</p>' +
   "</section>";
 }
 function badgeMillion() {
@@ -2579,18 +2638,12 @@ async function revendiquerMillion() {
     if (rep2.ok) { stock.set("versus.moi.million", qui); if (typeof window.charger === "function") window.charger(true); }   // v16.93 : plus de message, la cérémonie EST l'annonce (rechargement direct vers la scène)
   } catch (e) { /* réessai à la prochaine ouverture */ }
 }
-function majSimulation(el) {
-  const P = paramsMillion(), T = textesMillion(P);
-  el.querySelector("#mm-eta").innerHTML = T.eta;
-  el.querySelector("#mm-sub").innerHTML = T.sub;
-  el.querySelector("#mm-graph").innerHTML = svgProjection(P.v, P.c, P.R);
-}
 function brancherMillion(el) {
   const r = el.querySelector("#mm-reduire"); if (r) r.addEventListener("click", () => { PREF.millionReduit = PREF.millionReduit === false; garderPref(); afficherMillion(el); });
-  const e = el.querySelector("#mm-effort"), t = el.querySelector("#mm-rend");
-  if (e) e.addEventListener("input", () => { const x = lireNombre(e.value); if (x >= 0 && x <= 100000) { PREF.effort = x; garderPref(); majSimulation(el); } });
-  if (t) t.addEventListener("input", () => { const x = lireNombre(t.value); if (x >= -10 && x <= 30) { PREF.rendement = x / 100; garderPref(); majSimulation(el); } });
-  const z = el.querySelector("#mm-raz"); if (z) z.addEventListener("click", () => { delete PREF.effort; delete PREF.rendement; garderPref(); afficherMillion(el); });
+  el.querySelectorAll("[data-m-voirproj]").forEach(b => b.addEventListener("click", () => {   // lot 27 : la projection unique est dans Patrimoine
+    PREF.onglet = "patrimoine"; PREF.acc["m-proj"] = true; garderPref(); rendre();
+    const d = document.querySelector('#v-moi details[data-acc="m-proj"]'); if (d) d.scrollIntoView({ block: "start", behavior: reduit ? "auto" : "smooth" }); else window.scrollTo(0, 0);
+  }));
 }
 function afficherMillion(el) {
   injecterStyle(); lireCache();
@@ -2687,6 +2740,7 @@ function htmlProjection() {
     ? (() => { const k = moisJusquA(pret), i = Math.pow(1 + ce.r, 1 / 12) - 1, mens = M.prets.mensualite; let x = 0; for (let j = k; j < P.n; j++) x = x * (1 + i) + mens; return "<li>Ton prêt se termine le " + frDate(pret) + " : si tu épargnes ensuite ta mensualité (" + eur(mens) + "), cela ferait ≈ +" + kEurP(Math.round(x / 1000) * 1000) + " de plus fin 2034 (pas compté dans la courbe).</li>"; })()
     : pret && pret > FIN_PROJ ? "<li>Ton prêt se termine le " + frDate(pret) + ", après la frise.</li>" : "";
   const corps = '<div class="m-proj">' +
+    '<p class="pj-mil">' + (P.nM === 0 ? "Million atteint : bravo." : P.nM !== null ? "À ton rythme (central) : <b>millionnaire en " + MOIS_L[dateDansMois(P.nM).getMonth()] + " " + dateDansMois(P.nM).getFullYear() + "</b>." : "À ton rythme actuel, le million reste hors de portée : essaie le curseur.") + "</p>" +
     '<div class="pj-tuiles">' + tuile(pr, "Prudent") + tuile(ce, "Central") + tuile(op, "Optimiste") + "</div>" +
     '<div class="pj-graph" id="pj-graph">' + svgProjection2034(P) + "</div>" + leg +
     '<div class="pj-plus"><label for="pj-plus"><span>Et si je versais plus chaque mois ?</span><b id="pj-plus-v">+' + F0.format(P.plus) + " €</b></label>" +
@@ -2699,7 +2753,9 @@ function htmlProjection() {
       "<li>Rendement central : " + pctR(ce.r) + " par an (" + esc(familles) + ").</li>" +
       (art ? "<li>Artema : rendez-vous chaque début décembre de 2029 à 2033, fin le 1er décembre 2034 (◆ sur la frise). La courbe ne suppose aucun remboursement anticipé.</li>" : "") + apresPret +
       "<li>Ni impôts, ni inflation, ni retraits. Un repère pour se projeter, pas une prévision.</li></ul></div></div>";
-  return acc("m-proj", "Projection 2034", "fin 2034 ≈ " + kEurP(Math.round(ce.fin / 1000) * 1000) + " (central)", corps, true);
+  /* lot 27 : la seule projection de l'appli, repliée, avec son résumé dans le titre (même date du million que Missions) */
+  const qM = P.nM === null ? null : dateDansMois(P.nM);
+  return acc("m-proj", "Projection 2034", "fin 2034 ≈ " + kEurP(Math.round(ce.fin / 1000) * 1000) + (P.nM === 0 ? " · million atteint" : qM ? " · million en " + MOIS_C[qM.getMonth()] + " " + qM.getFullYear() : ""), corps, false);
 }
 function brancherProjection(v) {
   const z = v.querySelector(".m-proj"); if (!z) return;
