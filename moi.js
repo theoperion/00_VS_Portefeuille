@@ -3414,7 +3414,8 @@ function echeancesMoi() {
     add({ d: d || auj, ico: point ? "🎯" : ICO_RAPPEL[k] || "◷", t: point ? "Point Artema" : nomCourtRappel(x), s: du ? (d && d < auj ? "en retard, prévu le " + frDate(d) : "à faire maintenant") : point ? nomCourtRappel(x) + " et niveau de l'indice" : "rappel de ton fichier", du, k: "r-" + k });
   });
   // relevé du Versus : chaque fin de mois
-  add({ d: finDuMois(new Date()), ico: "🏁", t: "Relevé du mois pour le Versus", s: M.versusLie === true ? "ton fichier l'envoie tout seul" : "à saisir dans le Versus en fin de mois", k: "versus", rrule: "FREQ=MONTHLY;BYMONTHDAY=-1" });
+  { const auto = versusRelie() || !!dernierImportAuto(), n = new Date(), jr = typeof jourReleve === "function" ? jourReleve(n.getFullYear(), n.getMonth() + 1) : null;   // v17.99 (Théo) : relevé automatique → on le dit (Kévin garde « à saisir »)
+    add({ d: jr ? isoJour(jr) : finDuMois(n), ico: "🏁", t: "Relevé du mois pour le Versus", s: auto ? "automatique, vers 19 h (dernier jour ouvré) : rien à faire" : "à saisir dans le Versus en fin de mois", k: "versus", rrule: "FREQ=MONTHLY;BYMONTHDAY=-1" }); }
   // Artema : photo de départ, rendez-vous, fin
   if (aArtema()) {
     if (auj <= ARTEMA.photo[1]) add({ d: ARTEMA.photo[0], ico: "📸", t: "Artema : photo de départ", s: "moyenne des 2, 3 et 4 décembre 2026", k: "art-photo" });
