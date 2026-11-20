@@ -51,8 +51,8 @@ function effetCarte(c, x, l, avant, iR, ctx) {
   return 0;
 }
 /** Mois où l'on peut encore poser une carte : le mois en cours jusqu'au 1er inclus, sinon le suivant */
-/* Fenêtre des cartes et des duels pour le mois K : du 20 du mois d'avant au 1er de K inclus (chauffe : du 21/11 à 10 h au 1er décembre, v17.61) */
-const CHAUFFE_OUVRE = Date.UTC(2026, 10, 21, 9, 0);   // 10 h (Théo, 20/11 soir ; 9 h → 15 h → 10 h)   // v17.1 (Théo) : tour de chauffe ouvert le samedi 21/11 à 9 h (heure de Paris), pas avant
+/* Fenêtre des cartes et des duels pour le mois K : du 20 du mois d'avant au 1er de K inclus (chauffe : du 21/11 à 11 h au 1er décembre, v17.61) */
+const CHAUFFE_OUVRE = Date.UTC(2026, 10, 21, 10, 0);   // 10 h (Théo, 20/11 soir ; 9 h → 15 h → 10 h)   // v17.1 (Théo) : tour de chauffe ouvert le samedi 21/11 à 9 h (heure de Paris), pas avant
 function moisCarteOuvert() {
   const d = new Date(), k = d.getFullYear() * 100 + d.getMonth() + 1;
   if (d.getTime() < CHAUFFE_OUVRE && k <= CHAUFFE_K) return null;
@@ -60,7 +60,7 @@ function moisCarteOuvert() {
   return d.getDate() >= 20 ? cleMoins(k, -1) : null;
 }
 /** Prochaine fenêtre quand tout est fermé : { k, du } */
-function prochaineFenetre() { if (Date.now() < CHAUFFE_OUVRE) return { k: CHAUFFE_K, du: "21 novembre à 10 h" }; const d = new Date(), k = d.getFullYear() * 100 + d.getMonth() + 1; return { k: cleMoins(k, -1), du: "20 " + moisLong(k).replace(/ \d{4}$/, "") }; }
+function prochaineFenetre() { if (Date.now() < CHAUFFE_OUVRE) return { k: CHAUFFE_K, du: "21 novembre à 11 h" }; const d = new Date(), k = d.getFullYear() * 100 + d.getMonth() + 1; return { k: cleMoins(k, -1), du: "20 " + moisLong(k).replace(/ \d{4}$/, "") }; }
 /** Mois sur lequel on peut poser une carte (ou lancer un duel) depuis l'onglet de la saison y, ou null */
 function kOuvertPour(y) {
   const k = moisCarteOuvert(); if (!k) return null;
@@ -415,7 +415,7 @@ function htmlCartes(y) {
   const kPr = kOuvert ? cleMoins(kOuvert, 1) : null;
   const reste = CARTES.filter(c => !(kPr && (joues[c.id] || []).includes(kPr))).length + pioche.filter(c => !joues[c.id]).length, aVenir = j.deck.length - j.i;
   const pf = prochaineFenetre();
-  const fermeture = !kOuvert ? '<p class="c-ferme">🔒 ' + (estChauffe(y) && Date.now() < CHAUFFE_OUVRE ? "Les cartes du tour de chauffe s'ouvrent samedi 21 novembre à 10 h." : estChauffe(y) ? "Les cartes du tour de chauffe se posaient jusqu'au 1er décembre. Celles de janvier se posent dans l'onglet Saison 1, du 20 décembre au 1er janvier." + (moisCarteOuvert() === (SAISON.premiere * 100 + 1) ? ' <button class="lien" type="button" data-saison="' + SAISON.premiere + '">Poser ma carte de janvier ›</button>' : "") : moisCarteOuvert() ? "La fenêtre ouverte concerne une autre saison : change d'onglet en haut." : "Fenêtre fermée. Prochaine ouverture le " + esc(pf.du) + ", pour " + esc(moisLong(pf.k)) + ".") + "</p>" : "";
+  const fermeture = !kOuvert ? '<p class="c-ferme">🔒 ' + (estChauffe(y) && Date.now() < CHAUFFE_OUVRE ? "Les cartes du tour de chauffe s'ouvrent samedi 21 novembre à 11 h." : estChauffe(y) ? "Les cartes du tour de chauffe se posaient jusqu'au 1er décembre. Celles de janvier se posent dans l'onglet Saison 1, du 20 décembre au 1er janvier." + (moisCarteOuvert() === (SAISON.premiere * 100 + 1) ? ' <button class="lien" type="button" data-saison="' + SAISON.premiere + '">Poser ma carte de janvier ›</button>' : "") : moisCarteOuvert() ? "La fenêtre ouverte concerne une autre saison : change d'onglet en haut." : "Fenêtre fermée. Prochaine ouverture le " + esc(pf.du) + ", pour " + esc(moisLong(pf.k)) + ".") + "</p>" : "";
   return '<div><h3 class="s-h3">Mes cartes <small>' + reste + " en main" + (regleVisible("pioche") && !basesSeules() ? " · " + aVenir + " dans la pioche" : "") + "</small></h3></div>" +
     '<p class="info">Touche une carte pour la poser. Une par mois ; une carte de base se rejoue, mais pas deux mois de suite.' + (basesSeules() ? "" : " Une carte bonus ne sert qu\'une fois.") + (regleVisible("pioche") && !basesSeules() ? (regleVisible("niveaux") ? " Tu en pioches une nouvelle à chaque niveau gagné et quand tu finis dernier d\'un mois." : " Tu en pioches une nouvelle quand tu finis dernier d\'un mois.") : "") + (ap ? " Aperçu : choisis le mois avec les puces ci-dessous ; rien n'est envoyé." : "") + "</p>" +
     (ap ? '<div class="gp-mois">' + etapesGP(y).slice(1).map(x => '<button type="button" data-gpcible="' + x.k + '" aria-pressed="' + (x.k === kOuvert) + '">' + esc(moisCourt(x.k)) + "</button>").join("") + "</div>" : "") +
@@ -458,7 +458,7 @@ function assurerRappel(vue) {
   const x = el.querySelector(".rp-x"); if (x) x.addEventListener("click", () => { stock.set("versus.rappelMasque", String(aujNum())); majRappels(); toast("D'accord, je te le rappelle demain."); });
 }
 /** V15.1 : avant l'annonce du 21 novembre 2026, rien du Podium dans les onglets Classement, Mois et Moi (pas de spoil) ; l'onglet Podium garde son teaser */
-function podiumCache() { return Date.now() < CHAUFFE_OUVRE && !apercuSaison(); }   // v17.90 : à l'heure d'ouverture (10 h), plus seulement au jour   // l'admin en « Tout afficher » voit tout
+function podiumCache() { return Date.now() < CHAUFFE_OUVRE && !apercuSaison(); }   // v17.90 : à l'heure d'ouverture (11 h), plus seulement au jour   // l'admin en « Tout afficher » voit tout
 /** Bandeaux de toutes les vues + pastille sur l'onglet Podium */
 function majRappels() {
   VUES_RAPPEL.forEach(id => assurerRappel(document.getElementById(id)));
@@ -529,7 +529,7 @@ function htmlStand(y) {
     etat = '<div class="st-etat"><div class="st-h"><span class="st-feu ferme"></span><b>Fenêtre fermée</b></div>' +
       (recus.length ? '<p class="duel-recu">⚔️ ' + recus.map(esc).join(" et ") + " t'" + (recus.length > 1 ? "ont" : "a") + " défié pour " + esc(moisLong(kc)) + " : le meilleur du mois prend 1 point à l'autre.</p>" : "") +
       (paris.length ? '<p class="duel-recu">🎲 ' + paris.map(esc).join(" et ") + " t'" + (paris.length > 1 ? "ont" : "a") + " lancé un Pari pour " + esc(moisLong(kc)) + " : finis devant et " + (paris.length > 1 ? "ils perdent" : "il perd") + " 1 point ; sinon, +2 pour " + (paris.length > 1 ? "eux" : "lui") + ".</p>" : "") + "<small>" +
-      (estChauffe(y) && Date.now() < CHAUFFE_OUVRE ? "Les cartes du tour de chauffe s'ouvrent samedi 21 novembre à 10 h." : estChauffe(y) ? "Les cartes du tour de chauffe se posaient jusqu'au 1er décembre." + (autre ? ' <button class="lien" type="button" data-saison="' + SAISON.premiere + '">Poser ma carte de janvier ›</button>' : " Celles de janvier se poseront du 20 décembre au 1<sup>er</sup> janvier.")
+      (estChauffe(y) && Date.now() < CHAUFFE_OUVRE ? "Les cartes du tour de chauffe s'ouvrent samedi 21 novembre à 11 h." : estChauffe(y) ? "Les cartes du tour de chauffe se posaient jusqu'au 1er décembre." + (autre ? ' <button class="lien" type="button" data-saison="' + SAISON.premiere + '">Poser ma carte de janvier ›</button>' : " Celles de janvier se poseront du 20 décembre au 1<sup>er</sup> janvier.")
         : autre ? 'La fenêtre ouverte concerne une autre saison : <button class="lien" type="button" data-saison="' + (autre === CHAUFFE_K ? SAISON.premiere - 1 : Math.floor(autre / 100)) + '">y aller ›</button>'
         : "Prochaine ouverture le <b>" + esc(pf.du) + "</b>, pour " + esc(moisLong(pf.k)) + ". En attendant, prépare ta stratégie : ta main est ci-dessous.") + "</small></div>";
   }

@@ -68,14 +68,14 @@ Quand le Conseil/les agents ont validé et que les tests passent : PUBLIER direc
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **18.7**.
+  hors connexion `sw.js`). Version actuelle : **18.8**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
 ## Serveur Apps Script (dépôt app_scripts)
 - Prérequis une fois par machine : `npx -y @google/clasp@3.4.1 login` (compte Google de Théo) → crée `~/.clasprc.json`.
 - Versus : `sh outils/mettre-en-ligne-versus.sh "V31 : ce qui change"` (APPLI=chemin de ce dépôt si besoin).
-  Versions actuelles : VS_VERSION 67, version Google 82.
+  Versions actuelles : VS_VERSION 68, version Google 83.
 - Scripts perso : dans `portefeuille-epargne/<nom>` : `clasp push --force` puis `python3 ../../outils/deployer.py "desc"`
   (garde les mêmes adresses). Versions actuelles : Théo 38, Clément 16, Devlin 15 (20/11 : bloc levier, jour du versement, SL_CONSEILS, saisie_propre) (20/11 : historique par compte) (v34 : cache pré-calculé toutes les 10 min, `prechaufferDonnees`, installé au 1er appel).
 - Sheets en direct : `outils/gs.py` (`SS(id).get/put/batch`). Classeurs : Théo `1pbpJRMwZR64LqP_wwlhiw-6m7-lUg-Q3pVAF4Dv9j8U`,
