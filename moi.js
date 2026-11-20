@@ -613,6 +613,40 @@ function injecterStyle() {
 /* saisie (feuille ➕) */
 .moi.m-feuille { min-height: 70vh; }
 .moi .m-seg4 button { font-size: 12.5px; padding: 10px 4px; }
+/* v17.34 · saisie simplifiée (Conseil) : 2 onglets, date visible, phrase + bouton collés en bas, menu ⋯ */
+#m-titre-saisie > span:first-child { display: inline-flex; align-items: center; gap: 8px; }
+#m-titre-saisie .m-tete-a { display: inline-flex; align-items: center; gap: 4px; }
+.moi .m-qm { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--rule); background: var(--panel); color: var(--ink-2); font: 700 13px/1 var(--f-text); cursor: pointer; padding: 0; letter-spacing: 0; font-style: normal; }
+.moi .m-qm[hidden], .moi .m-menu-b[hidden], .moi .m-seg2[hidden] { display: none; }
+.moi .m-menu-b { font: 800 18px/1 var(--f-text); letter-spacing: 0; font-style: normal; color: var(--ink-2); }
+.moi .m-menu-b[aria-expanded="true"] { color: var(--accent); }
+.moi .m-menu { display: flex; flex-wrap: wrap; gap: 8px 16px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--panel); }
+.moi .m-menu .nommer { flex-basis: 100%; }
+.moi .m-date-l { display: flex; gap: 6px; align-items: center; min-width: 0; }
+.moi .m-date-l .chip { flex: 0 0 auto; padding: 9px 11px; }
+.moi .m-date-l input[type="date"] { flex: 1 1 auto; min-width: 0; width: auto; padding: 9px 8px; }
+.moi .m-pu { margin: -6px 0 0; font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.moi .m-pu-l { justify-self: start; font-size: 12.5px; margin-top: -10px; }
+.moi .m-pied { position: sticky; bottom: calc(-22px - env(safe-area-inset-bottom, 0px)); z-index: 2; display: grid; gap: 8px; margin: 0 -4px; padding: 10px 4px calc(12px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(to bottom, transparent, var(--bg) 14px); }
+.moi .m-pied .phrase-ordre { margin: 0; }
+.moi .m-pied .phrase-ordre[hidden] { display: none; }
+.moi #f-envoyer.manque { font-size: 13px; letter-spacing: .02em; text-transform: none; font-style: normal; }
+.moi .m-rv { all: unset; box-sizing: border-box; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; border: 1px dashed var(--rule); border-radius: 10px; font-size: 13px; color: var(--ink-2); }
+.moi .m-rv span { display: block; min-width: 0; } .moi .m-rv small { display: block; margin-top: 2px; font-size: 12px; color: var(--ink-3); } .moi .m-rv i { font-style: normal; font-size: 18px; color: var(--ink-3); }
+.moi .m-rv.fort { border-style: solid; border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--panel)); color: var(--ink); padding: 11px 12px; }
+.moi .m-rv-etat { margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: var(--panel); border: 1px solid var(--rule); font-size: 13px; color: var(--ink-2); display: grid; gap: 6px; }
+.moi .m-rv-etat p { margin: 0; } .moi .m-rv-corr { justify-self: start; font-size: 12.5px; }
+.moi .jmois { margin: 14px 0 0; font: italic 800 12px/1 var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.moi .jmois:first-child { margin-top: 4px; }
+.moi .jr .ja { flex-wrap: wrap; }
+.moi .jconf { flex-basis: 100%; font-size: 12px; color: var(--ink-2); }
+.moi .m-na { display: grid; gap: 10px; margin-top: 4px; }
+.moi .m-na.cadre { margin-top: 8px; padding: 10px; border: 1px solid var(--rule-2); border-radius: 10px; }
+.moi .m-na-t { display: block; } .moi .m-na-a { display: flex; gap: 14px; align-items: center; }
+.moi .rap-h.fixe { grid-template-columns: minmax(0, 1fr) auto; }
+.nt-tous small { flex: 1; margin-left: 8px; font-weight: 400; font-size: 12px; color: var(--ink-3); }
+.moi .alerte.info { border-color: var(--accent); }
+.moi.sans-aide .aide.m-garde { display: block !important; }   /* le versement lié touche à l'exactitude : jamais masqué */
 .moi .form { display: grid; gap: 14px; }
 .moi .rang.trois { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .moi .champ select, .moi .champ input[type="date"], .moi .champ input[type="text"] { font: 500 15px/1.2 var(--f-text); padding: 11px 12px; border-radius: 10px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); width: 100%; min-width: 0; }
@@ -2945,7 +2979,9 @@ const AVEC_FRAIS = ["Achat", "Vente"];
 const PRINCIPAUX = ["Achat", "Vente", "Apport", "Retrait"];
 /* v16.97 · types rangés par fréquence : 3 boutons (Achat, Versement, Relevé si assurance-vie, sinon Vente), le reste sous « Autres ».
    Seuls les libellés changent : le nom enregistré dans le fichier reste celui du type (« Apport », « Intérêts »…) */
-const LIB_TYPE = { "Apport": "Versement", "Intérêts": "Dividende / intérêts", "Relevé": "Relevé", "Ajustement espèces": "Correction d'espèces", "Solde initial": "Solde de départ", "Frais en parts": "Frais en parts" };
+const LIB_TYPE = { "Apport": "Versement", "Intérêts": "Dividende / intérêts", "Relevé": "Valeur AV", "Ajustement espèces": "Correction d'espèces", "Solde initial": "Solde de départ", "Frais en parts": "Frais en parts" };
+/* v17.34 · date obligatoire, sans valeur par défaut : une valeur d'assurance-vie et un solde de départ sont datés par le relevé, pas par le jour de la saisie */
+const DATE_OBLIG = ["Relevé", "Solde initial"];
 const ORDRE_AUTRES = ["Vente", "Retrait", "Intérêts", "Frais", "Relevé", "Frais en parts", "Ajustement espèces", "Solde initial"];
 function libType(t) { return LIB_TYPE[t] || t; }
 function aAV() { return (refData().enveloppes || []).some(e => e.regime === "AV" && (!e.statut || e.statut === "Ouvert")); }
@@ -2960,7 +2996,7 @@ const AUTRES_TYPES = {
   "Solde initial": { lib: "Solde initial", g: "Rare", d: "L'argent déjà présent sur l'enveloppe au moment où tu commences le suivi." }
 };
 const LIB_MONTANT = {
-  "Achat": "Montant débité, frais compris", "Vente": "Montant crédité, net de frais", "Apport": "Montant viré sur le compte",
+  "Achat": "Montant débité, frais compris (avis d'opéré)", "Vente": "Montant crédité, net de frais (avis d'opéré)", "Apport": "Montant viré sur le compte",
   "Retrait": "Montant retiré", "Relevé": "Valeur indiquée sur le relevé", "Intérêts": "Intérêts versés",
   "Frais en parts": "Valeur des parts prélevées", "Frais": "Frais débités", "Ajustement espèces": "Écart d'espèces (négatif si sortie)",
   "Solde initial": "Solde à la date choisie"
@@ -2971,7 +3007,9 @@ const $f = id => document.getElementById(id);
 function aujourdhuiISO() { return isoJour(new Date()); }
 function lireNombre(v) {
   if (v === null || v === undefined) return null;
-  const t = String(v).replace(/[\s  €]/g, "").replace(",", ".");
+  let t = String(v).replace(/[\s  €]/g, "").replace(/[\u2212\u2013]/g, "-");   // v17.34 : « −500 » copié, comme lireNb (7-bilan.js)
+  if (t.includes(",") && t.includes(".")) t = t.replace(/\./g, "");   // « 1.520,50 » : le point sépare les milliers
+  t = t.replace(",", ".");
   if (t === "") return null;
   const n = Number(t);
   return isFinite(n) ? n : NaN;
@@ -3023,9 +3061,11 @@ function preRemplir(f) {
 }
 function formulaire(partiel) {
   const p = partiel || {}, auto = p.auto !== false;
-  const f = Object.assign({ type: "Achat", date: aujourdhuiISO(), env: "", actif: "", qte: "", prix: "", pilote: "", montant: "", frais: "", apport: false, montantApport: "", forcer: null, erreur: "",
-    prixAuto: false, montantAuto: false, montantHab: false, fraisAuto: false, actifAuto: false, envChoisi: false }, p);
+  const f = Object.assign({ type: "Achat", date: DATE_OBLIG.includes(p.type) ? "" : aujourdhuiISO(), env: "", actif: "", qte: "", prix: "", pilote: "", montant: "", frais: "", apport: false, montantApport: "", forcer: null, erreur: "",
+    prixAuto: false, montantAuto: false, montantHab: false, fraisAuto: false, actifAuto: false, envChoisi: false, dateChoisie: false, qteTape: false, prixTape: false, prixVu: false, okCoherence: false, okDoublon: false }, p);
   delete f.auto;
+  if (!f.date && !DATE_OBLIG.includes(f.type)) f.date = aujourdhuiISO();   // v17.34 : en quittant « Valeur AV » (date vide), on revient à aujourd'hui
+  if (f.qte && !("qteTape" in p)) f.qteTape = true;   // Refaire / raccourci : la quantité vient d'une saisie, pas d'un calcul
   if (!f.env) f.env = (auto && envPourType(f.type)) || envParDefaut();
   if (!f.pilote) f.pilote = f.qte ? "qte" : "prix";
   if (f.type === "Achat" && !("apport" in p)) f.apport = true;   // cas le plus courant : on vire l'argent puis on achète
@@ -3033,39 +3073,40 @@ function formulaire(partiel) {
   // v17.27 (Théo) : plus jamais de prix pré-rempli avec le cours de l'appli : tout vient de l'avis d'opéré
   return f;
 }
+/* v17.34 · un raccourci d'achat ou de vente ne rejoue plus la quantité, le prix ni les frais (ils viennent de l'avis du jour) ;
+   les raccourcis déjà enregistrés gardent leurs champs dans le fichier, seule leur relecture change */
 function depuisRaccourci(rc) {
-  return { type: rc.type, env: rc.env, actif: rc.actif || "", montant: rc.montant !== null && rc.montant !== undefined ? saisieNombre(rc.montant, 2) : "", frais: rc.frais ? saisieNombre(rc.frais, 2) : "", qte: rc.quantite ? saisieNombre(rc.quantite, 6) : "", apport: !!rc.apport, montantApport: rc.montantApport ? saisieNombre(rc.montantApport, 2) : "" };
+  const ordreBourse = rc.type === "Achat" || rc.type === "Vente";
+  return { type: rc.type, env: rc.env, actif: rc.actif || "", montant: rc.montant !== null && rc.montant !== undefined ? saisieNombre(rc.montant, 2) : "", frais: !ordreBourse && rc.frais ? saisieNombre(rc.frais, 2) : "", qte: !ordreBourse && rc.quantite ? saisieNombre(rc.quantite, 6) : "", apport: !!rc.apport, montantApport: rc.montantApport ? saisieNombre(rc.montantApport, 2) : "" };
 }
 function assurerFeuille() {
   if ($f("m-saisie")) return;
   const d = document.createElement("div");
   d.className = "voile"; d.id = "m-saisie"; d.hidden = true;
   d.innerHTML = '<div class="feuille moi m-feuille" role="dialog" aria-modal="true" aria-labelledby="m-titre-saisie">' +
-    '<h3 id="m-titre-saisie">Saisir <button class="icon-btn" type="button" id="m-fermer-saisie" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3>' +
-    '<div class="seg m-seg4" role="group" aria-label="Saisie">' +
-      '<button type="button" data-m-pane="ordre">Mouvement</button><button type="button" data-m-pane="journal">Historique</button>' +
-      '<button type="button" data-m-pane="maj">Mes comptes</button><button type="button" data-m-pane="versus">Relevé Versus</button></div>' +
+    '<h3 id="m-titre-saisie"><span><span id="m-titre-t">Saisir</span> <button class="m-qm" type="button" id="f-guide" aria-label="Comment saisir un ordre">?</button></span><span class="m-tete-a"><button class="icon-btn m-menu-b" type="button" id="f-menu" aria-label="Plus d\'options" aria-expanded="false">⋯</button><button class="icon-btn" type="button" id="m-fermer-saisie" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span></h3>' +
+    /* v17.34 (Conseil) : 2 onglets seulement ; « Mon fichier » (ex-« Mes comptes ») est un panneau à part, ouvert par la cloche et Réglages ;
+       le relevé du Versus n'est plus un onglet (il ouvrait une autre feuille) : voir la carte de Mouvement et la ligne d'état de l'Historique */
+    '<div class="seg m-seg2" role="group" aria-label="Saisie" id="m-seg">' +
+      '<button type="button" data-m-pane="ordre">Mouvement</button><button type="button" data-m-pane="journal">Historique</button></div>' +
     '<div id="m-pane-ordre"></div><div id="m-pane-journal" hidden></div><div id="m-pane-maj" hidden></div></div>';
   document.body.appendChild(d);
   d.addEventListener("click", e => { if (e.target === d) fermerSaisieM(); });
   $f("m-fermer-saisie").addEventListener("click", fermerSaisieM);
-  d.querySelectorAll("[data-m-pane]").forEach(b => b.addEventListener("click", () => {
-    confirmeSuppr = null;
-    if (b.dataset.mPane === "versus") { fermerSaisieM(); if (typeof ouvrirSaisie === "function") ouvrirSaisie(); return; }
-    paneSaisie(b.dataset.mPane);
-  }));
+  $f("f-guide").addEventListener("click", guideOrdre);
+  $f("f-menu").addEventListener("click", () => { menuOuvert = !menuOuvert; rendreFormulaire(); });
+  d.querySelectorAll("[data-m-pane]").forEach(b => b.addEventListener("click", () => { confirmeSuppr = null; paneSaisie(b.dataset.mPane); }));
   document.addEventListener("keydown", e => { if (e.key === "Escape") fermerSaisieM(); });
 }
 /* Guide de la saisie d'un ordre de bourse : s'ouvre tout seul la première fois, puis depuis « ❓ » */
 const TUTO_ORDRE = [
   { ico: "🧾", t: "Saisir un ordre, en bref", html: true, p:
     "<b>1 ordre = 1 ligne</b>, recopiée de ton courtier à la date d'exécution.<br>" +
-    "• <b>Achat</b> : le compte, l'actif et le montant de l'avis d'opéré <b>frais compris</b> sont proposés ; le nombre de parts se calcule avec le cours (corrige-le si besoin). Le <b>versement</b> qui paie l'achat est coché : décoche si l'argent était déjà sur le compte.<br>" +
+    "• <b>Achat</b> : recopie ton avis d'opéré dans son ordre : date d'exécution, nombre de parts, montant <b>frais compris</b>, frais. Le prix par part se calcule tout seul. Le <b>versement</b> qui paie l'achat est coché : décoche si l'argent était déjà sur le compte.<br>" +
     "• <b>Versement</b> : l'argent que tu mets sur un compte (ton montant habituel est proposé).<br>" +
-    "• <b>Relevé</b> : la valeur d'une ligne d'assurance-vie, recopiée de ton relevé.<br>" +
+    "• <b>Valeur AV</b> : la valeur d'une ligne d'assurance-vie, recopiée de ton relevé, à la date du relevé.<br>" +
     "• <b>Autres</b> : vente, retrait, dividende, frais… ; chaque type s'explique quand tu le choisis.<br>" +
-    "La date (aujourd'hui), les frais et le prix par part sont sous <b>Plus de détails</b>.<br>" +
-    "Relis la phrase 📝 avant de valider. Une erreur ? Onglet <b>Historique</b> : supprimable pendant 7 jours." }
+    "Relis la phrase 📝 au-dessus du bouton avant de valider. Une erreur ? Onglet <b>Historique</b> : supprimable pendant 7 jours." }
 ];
 function guideOrdre() { if (typeof ouvrirGuide === "function") ouvrirGuide("Saisir un ordre", TUTO_ORDRE, "C'est compris"); }
 function ouvrirSaisieM(partiel, onglet) {
@@ -3073,7 +3114,7 @@ function ouvrirSaisieM(partiel, onglet) {
   if (!M) { toast("Lecture de ton fichier en cours, réessaie dans un instant."); charger(false); return; }
   F = formulaire(partiel);
   synchroniser();
-  nommerRaccourci = false; detailsOuverts = false; plusTypes = false;
+  nommerRaccourci = false; detailsOuverts = false; plusTypes = false; menuOuvert = false;
   $f("m-saisie").hidden = false;
   paneSaisie(onglet || "ordre");
   if ((onglet || "ordre") === "ordre" && identiteSure() && !stock.get(cleStock("guideOrdre")) && !simulationM()) { stock.set(cleStock("guideOrdre"), "1"); setTimeout(guideOrdre, 250); }
@@ -3081,7 +3122,9 @@ function ouvrirSaisieM(partiel, onglet) {
 function fermerSaisieM() { const s = $f("m-saisie"); if (s) s.hidden = true; confirmeSuppr = null; gererRaccourcis = false; }
 function paneSaisie(o) {
   document.querySelectorAll("[data-m-pane]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mPane === o)));
-  ["ordre", "journal", "maj"].forEach(k => { $f("m-pane-" + k).hidden = k !== o; });
+  ["ordre", "journal", "maj"].forEach(k => { const z = $f("m-pane-" + k); z.hidden = k !== o; if (k !== o) z.innerHTML = ""; });   // jamais deux formulaires « Nouvel actif » à la fois
+  /* « Mon fichier » : même feuille, sans les onglets de la saisie */
+  $f("m-seg").hidden = o === "maj"; $f("m-titre-t").textContent = o === "maj" ? "Mon fichier" : "Saisir"; $f("f-guide").hidden = o !== "ordre" || PREF.aides === false; $f("f-menu").hidden = o !== "ordre";
   if (o === "ordre") rendreFormulaire(); else if (o === "journal") rendreJournal(); else rendreMaj();
 }
 /* quantité <-> prix par part : celui que tu as saisi en dernier pilote l'autre */
@@ -3102,22 +3145,20 @@ function partsEntieres() {
 function synchroniser() {
   if (!AVEC_QTE.includes(F.type)) return;
   F.arrondi = false;
-  if (F.pilote === "qte" && (F.montantAuto || !String(F.montant || "").trim())) {
+  /* v17.34 · un montant n'est estimé que d'après un prix par part TAPÉ (jamais d'après un prix lui-même calculé) */
+  if (F.pilote === "qte" && F.prixTape && (F.montantAuto || !String(F.montant || "").trim())) {
     const q = lireNombre(F.qte), p = lireNombre(F.prix), fr = lireNombre(F.frais) || 0;
     if (q > 0 && p > 0) { F.montant = saisieNombre(q * p - (isNaN(fr) ? 0 : fr) * typeInfo(F.type).tresorerie, 2); F.montantAuto = true; }
     else if (F.montantAuto) { F.montant = ""; F.montantAuto = false; }
-  }
+  } else if (F.montantAuto && !F.prixTape) { F.montant = ""; F.montantAuto = false; }
   const net = netOrdre();
   if (!(net > 0)) return;
+  /* v17.34 (garde-fou G1) : un nombre ou un prix TAPÉ n'est jamais écrasé par un calcul ; si les deux sont tapés, analyser() vérifie la cohérence */
   if (F.pilote === "prix") {
     const p = lireNombre(F.prix);
-    if (p > 0) {
-      const q = net / p;   // v17.26 (Théo) : jamais d'arrondi automatique des parts ; c'est une estimation à remplacer par le chiffre exact de l'avis d'opéré
-      if (F.prixAuto) F.prix = saisieNombre(p, p < 10 ? 4 : 2);
-      F.qte = saisieNombre(q, 6);
-    }
+    if (p > 0 && !F.qteTape) F.qte = saisieNombre(net / p, 6);   // v17.26 (Théo) : jamais d'arrondi automatique des parts
   }
-  else { const q = lireNombre(F.qte); if (q > 0) F.prix = saisieNombre(net / q, 4); }
+  else { const q = lireNombre(F.qte); if (q > 0 && !F.prixTape) F.prix = saisieNombre(net / q, 4); }
 }
 function rendreRaccourcis() {
   const liste = refData().raccourcis || [];
@@ -3131,63 +3172,105 @@ function rendreRaccourcis() {
     (liste.length ? '<button class="lien" type="button" id="rac-gerer">' + (gererRaccourcis ? "Terminé" : "Gérer") + "</button>" : '<span class="info">aucun pour l\'instant : « Enregistrer comme raccourci » en bas</span>') +
     "</div>";
 }
-/* ---- 14.5 · Nouvel actif directement dans la saisie d'ordre ---- */
-function boiteNouvelActif() {
-  const na = F.na;
-  return '<div class="m-na" style="margin-top:8px;padding:10px;border:1px solid var(--rule-2);border-radius:10px">' +
-    '<b style="display:block;margin-bottom:6px">Nouvel actif</b>' +
+/* ---- 14.5 · Nouvel actif : v17.34, UN SEUL formulaire, pendant la saisie d'un ordre comme dans « Mon fichier » (mêmes champs, même action) ---- */
+const CLASSES_BASE = ["Actions", "Obligations", "Or", "Crypto", "Monétaire", "Immobilier"], ZONES_BASE = ["Monde", "États-Unis", "Europe", "France", "Émergents", "Asie"];
+function nouvelNA(env) {
+  const e = (refData().enveloppes || []).find(x => x.nom === env) || {};
+  return { code: "", nom: "", ticker: "", classe: e.regime === "Crypto" ? "Crypto" : "Actions", zone: "Monde", levier: "1", manuel: "", msg: "", envoi: false };
+}
+function htmlNouvelActif(na, cadre) {
+  const p = (M && M.parametres) || {};
+  const classes = Array.from(new Set((p.classes || []).concat(CLASSES_BASE))), zones = Array.from(new Set((p.zones || []).concat(ZONES_BASE)));
+  const opt = (l, v) => l.map(x => '<option value="' + esc(x) + '"' + (String(x) === String(v) ? " selected" : "") + ">" + esc(x) + "</option>").join("");
+  return '<div class="m-na' + (cadre ? " cadre" : "") + '">' + (cadre ? '<b class="m-na-t">Nouvel actif</b>' : "") +
     '<div class="rang"><div class="champ"><label for="fn-code">Code (court)</label><input id="fn-code" type="text" autocomplete="off" autocapitalize="characters" placeholder="ex. CW8" value="' + esc(na.code) + '"></div>' +
     '<div class="champ"><label for="fn-nom">Nom</label><input id="fn-nom" type="text" autocomplete="off" autocapitalize="sentences" placeholder="ex. Amundi MSCI World" value="' + esc(na.nom) + '"></div></div>' +
     '<div class="champ"><label for="fn-ticker">Ticker Google Finance</label><div class="ligne-champ"><input id="fn-ticker" type="text" autocomplete="off" autocapitalize="characters" placeholder="ex. EPA:CW8" value="' + esc(na.ticker) + '"><button class="mini-btn" type="button" id="fn-verif">Vérifier</button></div>' +
-    '<span class="aide" id="fn-res">' + esc(na.msg || "EPA: pour Paris, ETR: pour Xetra, CURRENCY:ETHEUR pour une crypto.") + "</span></div>" +
-    '<button class="btn" type="button" id="fn-ok">Créer et choisir</button> <button class="lien" type="button" id="fn-ko" style="margin-left:10px">Annuler</button></div>';
+    '<span class="aide" id="fn-res">' + esc(na.msg || "EPA: pour Paris, ETR: pour Xetra, CURRENCY:ETHEUR pour une crypto. Sans ticker, indique un cours manuel.") + "</span></div>" +
+    '<div class="rang"><div class="champ"><label for="fn-classe">Classe</label><select id="fn-classe">' + opt(classes, na.classe) + "</select></div>" +
+    '<div class="champ"><label for="fn-zone">Zone</label><select id="fn-zone">' + opt(zones, na.zone) + "</select></div></div>" +
+    '<div class="rang"><div class="champ"><label for="fn-levier">Levier</label><select id="fn-levier">' + opt(["1", "2", "3"], na.levier) + "</select></div>" +
+    '<div class="champ"><label for="fn-manuel">Cours manuel (€)</label><input id="fn-manuel" type="text" inputmode="decimal" autocomplete="off" placeholder="si pas de ticker" value="' + esc(na.manuel) + '"></div></div>' +
+    '<div class="m-na-a"><button class="btn" type="button" id="fn-ok">' + (cadre ? "Créer et choisir" : "Ajouter l'actif") + "</button>" + (cadre ? '<button class="lien" type="button" id="fn-ko">Annuler</button>' : "") + "</div></div>";
 }
-function brancherNouvelActif() {
-  const lire = () => { F.na.code = ($f("fn-code").value || "").trim().toUpperCase(); F.na.nom = ($f("fn-nom").value || "").trim(); F.na.ticker = ($f("fn-ticker").value || "").trim().toUpperCase(); };
-  ["fn-code", "fn-nom", "fn-ticker"].forEach(id => $f(id).addEventListener("input", lire));
-  const msg = t => { F.na.msg = t; const el = $f("fn-res"); if (el) el.textContent = t; };
-  $f("fn-ko").addEventListener("click", () => { F.na = null; rendreFormulaire(); });
+/** apres(a) : une fois l'actif créé dans le fichier ; annuler() : bouton « Annuler » (saisie d'ordre seulement) */
+function brancherNouvelActif(na, apres, annuler) {
+  const lire = () => { na.code = ($f("fn-code").value || "").trim().toUpperCase(); na.nom = ($f("fn-nom").value || "").trim(); na.ticker = ($f("fn-ticker").value || "").trim().toUpperCase();
+    na.classe = $f("fn-classe").value; na.zone = $f("fn-zone").value; na.levier = $f("fn-levier").value; na.manuel = ($f("fn-manuel").value || "").trim(); };
+  ["fn-code", "fn-nom", "fn-ticker", "fn-manuel"].forEach(id => $f(id).addEventListener("input", lire));
+  ["fn-classe", "fn-zone", "fn-levier"].forEach(id => $f(id).addEventListener("change", lire));
+  const msg = t => { na.msg = t; const el = $f("fn-res"); if (el) el.textContent = t; };
+  if ($f("fn-ko")) $f("fn-ko").addEventListener("click", annuler);
   $f("fn-verif").addEventListener("click", async () => {
-    lire(); if (!F.na.ticker) { msg("Saisis d'abord un ticker."); return; }
+    lire(); if (!na.ticker) { msg("Saisis d'abord un ticker."); return; }
     msg("Vérification auprès de Google Finance…");
-    const rep = await posterFichier({ action: "verifierTicker", ticker: F.na.ticker });
-    if (rep.ok) { if (!F.na.nom && rep.nom) { F.na.nom = rep.nom; $f("fn-nom").value = rep.nom; } msg("✓ " + F.na.ticker + " reconnu : " + cours(rep.cours) + (rep.nom ? " · " + rep.nom : "")); }
+    const rep = await posterFichier({ action: "verifierTicker", ticker: na.ticker });
+    if (rep.ok) { if (!na.nom && rep.nom) { na.nom = rep.nom; $f("fn-nom").value = rep.nom; } msg("✓ " + na.ticker + " reconnu : " + cours(rep.cours) + (rep.nom ? " · " + rep.nom : "")); }
     else msg(rep.message || "Ticker introuvable.");
   });
   $f("fn-ok").addEventListener("click", async () => {
-    lire(); const na = F.na, r = refData();
+    lire(); const r = refData(), manuel = lireNombre(na.manuel);
     if (!/^[A-Z0-9_]{2,12}$/.test(na.code) || !na.nom) { msg("Code (2 à 12 lettres ou chiffres) et nom obligatoires."); return; }
     if (r.actifs.some(x => x.code === na.code)) { msg("Le code " + na.code + " existe déjà : choisis-le dans la liste."); return; }
-    if (!na.ticker) { msg("Indique le ticker Google Finance (le cours manuel se règle dans Réglages › Moi)."); return; }
-    const env = r.enveloppes.find(e => e.nom === F.env) || {};
-    const a = { code: na.code, nom: na.nom, ticker: na.ticker, classe: env.regime === "Crypto" ? "Crypto" : "Actions", zone: "Monde", levier: 1, coursManuel: null };
-    const b = $f("fn-ok"); b.disabled = true; b.textContent = "Création…";
+    if (!na.ticker && !(manuel > 0)) { msg("Indique un ticker Google Finance ou un cours manuel."); return; }
+    const a = { code: na.code, nom: na.nom, ticker: na.ticker, classe: na.classe, zone: na.zone, levier: lireNombre(na.levier) || 1, coursManuel: manuel };
+    const b = $f("fn-ok"), lib = b.textContent; b.disabled = true; b.textContent = "Création…";
     const rep = await posterFichier({ action: "actif", actif: a });
-    if (!rep.ok) { b.disabled = false; b.textContent = "Créer et choisir"; msg(rep.message || "Erreur inattendue."); return; }
+    if (!rep.ok) {
+      if (rep.erreur === "cle") { cleRefusee(rep.message); fermerSaisieM(); toast("Clé refusée par ton fichier."); if (vueMoi()) rendre(); return; }
+      b.disabled = false; b.textContent = lib; msg(rep.message || "Erreur inattendue."); if (rep.erreur === "incertain") charger(true); return;
+    }
     r.actifs.push({ code: a.code, nom: a.nom, classe: a.classe });
-    F.actif = a.code; F.na = null; toast("Actif " + a.code + " créé : tu peux saisir ton ordre."); rendreFormulaire();
+    apres(a, rep);
   });
 }
-let plusTypes = false;
-/* V15.2 : aides masquables (« Masquer les aides » en bas de la saisie), retenu sur l'appareil */
+let plusTypes = false, menuOuvert = false;
+/* V15.2 : aides masquables (menu « ⋯ » de la saisie), retenu sur l'appareil */
 function majAides() { const f = document.querySelector("#m-saisie .m-feuille"); if (f) f.classList.toggle("sans-aide", PREF.aides === false); }
 let detailsOuverts = false;
-/* v16.97 · ce qui est replié sous « Plus de détails », résumé en une ligne (rien n'est caché sans qu'on le voie) */
+/* v17.34 · seul le montant du versement reste replié (vide = même montant que l'achat), avec son résumé d'une ligne */
 function resumeDetails() {
-  const an = String(new Date().getFullYear()), d = F.date || "";
-  const parts = [d === aujourdhuiISO() ? "aujourd'hui" : d ? "le " + (d.slice(0, 4) === an ? d.slice(8, 10) + "/" + d.slice(5, 7) : frDate(d)) : "date à choisir"];
-  if (AVEC_FRAIS.includes(F.type)) { const fr = lireNombre(F.frais); parts.push(fr > 0 ? "frais " + nf(2, 2).format(fr) + NB + "€" : "sans frais"); }
-  if (F.type === "Achat" && F.apport) { const ma = lireNombre(F.montantApport); if (ma > 0) parts.push("versement " + nf(0, 2).format(ma) + NB + "€"); }
-  return parts.join(" · ");
+  const ma = lireNombre(F.montantApport);
+  return ma > 0 ? (ETAT.discret === "oui" ? "montant à part" : nf(0, 2).format(ma) + NB + "€") : "même montant que l'achat";
+}
+function dateCourteIso(d) { const an = String(new Date().getFullYear()); return !d ? "" : d.slice(0, 4) === an ? d.slice(8, 10) + "/" + d.slice(5, 7) : frDate(d); }
+function isoDecale(iso, jours, mois) { const d = new Date(iso + "T12:00:00"); d.setMonth(d.getMonth() + (mois || 0)); d.setDate(d.getDate() + (jours || 0)); return isoJour(d); }
+/* v17.34 · « Valeur AV » : la date n'est jamais celle du jour par défaut ; on PROPOSE le relevé précédent + 1 mois, à confirmer d'un tap */
+function dateProposee() {
+  if (F.type !== "Relevé") return "";
+  const der = journalRecent().find(o => o.type === "Relevé" && o.enveloppe === F.env && (!F.actif || o.actif === F.actif));
+  if (!der || !/^\d{4}-\d{2}-\d{2}/.test(der.date)) return "";
+  const d = isoDecale(der.date.slice(0, 10), 0, 1);
+  return d <= aujourdhuiISO() ? d : "";
 }
 /* v16.97 · les petites phrases sous les champs calculés ou pré-remplis (toujours visibles, même « aides masquées ») */
 function aidesCalcul() {
-  const c = coursActif(), out = { montant: "", qte: "", frais: "" };
-  if (F.montantAuto && AVEC_QTE.includes(F.type)) out.montant = "Estimé : nombre de parts × cours (" + cours(lireNombre(F.prix) || c) + ")" + (lireNombre(F.frais) > 0 ? (F.type === "Vente" ? " − frais" : " + frais") : "") + ". Remplace-le par le montant exact de ton avis d'opéré.";
+  const out = { montant: "", qte: "", frais: "" };
+  if (F.montantAuto && AVEC_QTE.includes(F.type)) out.montant = "Estimé : nombre de parts × ton prix par part" + (lireNombre(F.frais) > 0 ? (F.type === "Vente" ? " − frais" : " + frais") : "") + ". Remplace-le par le montant exact de ton avis d'opéré.";
   else if (F.montantHab && F.type === "Apport") out.montant = "Ton versement habituel sur ce compte : change-le si besoin.";
-  if (AVEC_QTE.includes(F.type) && F.pilote === "prix" && lireNombre(F.qte) > 0) out.qte = F.prixAuto && c ? "Calculé avec le cours connu (" + cours(c) + ")" + (F.arrondi ? ", arrondi à des parts entières" : "") + ". Corrige-le si ton avis d'opéré dit autre chose." : "Calculé avec ton prix par part.";
-  if (F.fraisAuto && AVEC_FRAIS.includes(F.type)) out.frais = "Repris de ta dernière opération : vérifie-les sur ton avis d'opéré.";
+  if (AVEC_QTE.includes(F.type) && F.pilote === "prix" && !F.qteTape && lireNombre(F.qte) > 0) out.qte = "Calculé avec ton prix par part : recopie plutôt le nombre de ton avis d'opéré.";
+  if (F.fraisAuto && AVEC_FRAIS.includes(F.type)) out.frais = "Repris de ta dernière opération : à vérifier sur l'avis.";
   return out;
+}
+/** la ligne « soit … €/part », toujours affichée pour un achat ou une vente (contrôle de lecture de l'avis) */
+function lignePrixPart() {
+  if (!AVEC_QTE.includes(F.type) || F.type === "Frais en parts") return "";
+  const net = netOrdre(), q = lireNombre(F.qte), p = lireNombre(F.prix);
+  if (F.prixTape && p > 0) return "Prix par part tapé : " + cours(p) + ".";
+  if (net > 0 && q > 0) return "Soit " + cours(net / q) + " par part" + (F.type === "Achat" ? " (hors frais)" : " (avant frais)") + " : compare avec ton avis.";
+  return "Le prix par part se calcule avec le nombre de parts et le montant.";
+}
+/** v17.34 (Conseil) : le relevé du Versus selon le profil ; fichier relié = envoyé tout seul (aucune saisie proposée ici) */
+function versusRelie() { return !!(M && M.versusLie === true); }
+function moisDuReleve() { const d = new Date(), fin = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); return d.getDate() >= fin - 2 || d.getDate() <= 5; }
+function htmlCarteReleveVersus() {
+  if (versusRelie() || typeof ouvrirSaisie !== "function") return "";
+  const fort = moisDuReleve();
+  return '<button class="m-rv' + (fort ? " fort" : "") + '" type="button" id="f-rv"><span>🏁 <b>Relevé du mois pour le Versus</b>' + (fort ? "<small>C'est le moment : la valeur de tes comptes en fin de mois.</small>" : "") + "</span><i>›</i></button>";
+}
+function ouvrirReleveVersus(journal) {
+  fermerSaisieM(); { const s2 = $f("ms-saisie"); if (s2) s2.hidden = true; } if (typeof ouvrirSaisie !== "function") return;
+  ouvrirSaisie(); if (journal && typeof ongletReleves === "function") ongletReleves("journal");
 }
 function rendreFormulaire() {
   majAides();
@@ -3202,85 +3285,103 @@ function rendreFormulaire() {
   const optA = c => '<option value="' + esc(c) + '"' + (c === F.actif ? " selected" : "") + ">" + esc(c) + (nomA(c) ? " · " + esc(nomA(c)) : "") + "</option>";
   const autresActifs = r.actifs.map(a => a.code).filter(c => !tenus.includes(c));
   if (AVEC_ACTIF.includes(F.type) && !F.actif && F.type !== "Achat" && tenus.length) { F.actif = tenus[0]; F = formulaire(Object.assign({}, F, { auto: false })); synchroniser(); }
-  const avecActif = AVEC_ACTIF.includes(F.type), avecQte = AVEC_QTE.includes(F.type), avecFrais = AVEC_FRAIS.includes(F.type);
+  const avecActif = AVEC_ACTIF.includes(F.type), avecQte = AVEC_QTE.includes(F.type), avecFrais = AVEC_FRAIS.includes(F.type), bourse = F.type === "Achat" || F.type === "Vente";
   const chipT = t => '<button type="button" class="chip" data-type="' + esc(t) + '" aria-pressed="' + (F.type === t) + '">' + esc(libType(t)) + "</button>";
   const courantsAutres = autres.filter(t => (AUTRES_TYPES[t] || { g: "Courant" }).g === "Courant"), raresAutres = autres.filter(t => !courantsAutres.includes(t));
   const hab = F.type === "Apport" && ETAT.discret === "oui" && !String(F.montant || "").trim() ? montantHabituel(F.env) : 0;
-  const A = aidesCalcul();
+  const A = aidesCalcul(), auj = aujourdhuiISO(), hier = isoDecale(auj, -1), prop = dateProposee();
+  const libDate = F.type === "Relevé" ? "Date du relevé" : F.type === "Solde initial" ? "Début du suivi" : bourse ? "Date d'exécution (avis d'opéré)" : "Date";
+  /* v17.34 · la date est visible pour TOUS les types (plus de repli) : Aujourd'hui · Hier · Autre date */
+  const puce = (d, lib, id) => '<button type="button" class="chip" id="' + id + '" data-date="' + d + '" aria-pressed="' + (F.date === d && (F.dateChoisie || !DATE_OBLIG.includes(F.type))) + '">' + lib + "</button>";
+  const blocDate = '<div class="champ m-date"><label for="f-date">' + libDate + (DATE_OBLIG.includes(F.type) ? " · obligatoire" : "") + "</label><div class=\"m-date-l\">" +
+    (DATE_OBLIG.includes(F.type) ? (prop ? puce(prop, "Le " + dateCourteIso(prop) + " ?", "f-date-prop") : "") : puce(auj, "Aujourd'hui", "f-date-auj") + puce(hier, "Hier", "f-date-hier")) +
+    '<input id="f-date" type="date" aria-label="Autre date" value="' + esc(F.date) + '"></div>' +
+    (F.type === "Relevé" && prop && !F.date ? '<span class="aide">Proposé : ton relevé précédent + 1 mois. Touche-le pour confirmer, ou choisis la date de ton relevé.</span>' : "") + "</div>";
+  const champQte = avecQte ? '<div class="champ"><label for="f-qte">Nombre de parts' + (bourse ? " (avis d'opéré)" : "") + '</label><input id="f-qte" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.qte) + '" placeholder="0">' +
+    '<span class="calc" id="f-qte-calc"' + (A.qte ? "" : " hidden") + ">" + esc(A.qte) + "</span></div>" : "";
+  const champMontant = '<div class="champ"><label for="f-montant">' + esc(LIB_MONTANT[F.type] || "Montant") + ' (€)</label><input id="f-montant" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montant) + '" placeholder="0,00"' + (F.montantAuto || F.montantHab ? ' class="auto"' : "") + ">" +
+    '<span class="calc" id="f-montant-calc"' + (A.montant ? "" : " hidden") + ">" + esc(A.montant) + "</span>" +
+    (hab > 0 ? '<button class="lien" type="button" id="f-hab">Reprendre ton versement habituel</button>' : "") + "</div>";
+  const champFrais = avecFrais ? '<div class="champ"><label for="f-frais">Dont frais (€)</label><input id="f-frais" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.frais) + '" placeholder="0,00"' + (F.fraisAuto ? ' class="auto"' : "") + ">" +
+    '<span class="calc" id="f-frais-calc"' + (A.frais ? "" : " hidden") + ">" + esc(A.frais) + '</span><span class="aide">Courtage de l\'avis (vide si aucun).</span></div>' : "";
+  const champPrix = avecQte && F.type !== "Frais en parts" ? '<p class="m-pu" id="f-pu">' + esc(lignePrixPart()) + "</p>" +
+    (F.prixVu || F.prixTape ? '<div class="champ"><label for="f-prix">Prix par part (€)</label><input id="f-prix" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.prixTape ? F.prix : "") + '" placeholder="0,00"><span class="aide">Si tu connais le prix mais pas le nombre de parts.</span></div>'
+      : '<button class="lien m-pu-l" type="button" id="f-prix-voir">Je connais le prix par part, pas le nombre de parts</button>') : "";
   $f("m-pane-ordre").innerHTML =
     '<form class="form" id="m-form-ordre" novalidate>' +
-      (PREF.aides === false ? "" : '<button class="lien guide-l" type="button" id="f-guide">❓ Comment saisir un ordre</button>') +
+      (menuOuvert ? '<div class="m-menu" role="menu">' +
+        (nommerRaccourci
+          ? '<div class="nommer"><input id="f-nom-rac" type="text" maxlength="40" aria-label="Nom du raccourci" value="' + esc(nomParDefaut()) + '"><button class="mini-btn" type="button" id="rac-ok">Créer</button><button class="lien" type="button" id="rac-annuler">Annuler</button></div>'
+          : '<button class="lien" type="button" id="rac-creer">Enregistrer comme raccourci</button>') +
+        '<button class="lien" type="button" id="f-vider">Vider le formulaire</button>' +
+        '<button class="lien" type="button" id="f-aides">' + (PREF.aides === false ? "Afficher les aides" : "Masquer les aides") + "</button></div>" : "") +
+      htmlCarteReleveVersus() +
       rendreRaccourcis() +
       '<div class="types" role="group" aria-label="Type d\'opération">' + courants.map(t => '<button type="button" class="type-btn" data-type="' + t + '" aria-pressed="' + (F.type === t) + '">' + esc(libType(t)) + "</button>").join("") +
         '<button type="button" class="type-btn plus-types" id="f-plus-types" aria-pressed="' + autreType + '" aria-expanded="' + panneau + '">Autres' + (panneau ? " ▴" : " ▾") + "</button></div>" +
       (!panneau ? "" : '<div class="m-autres" role="group" aria-label="Autres types">' + courantsAutres.map(chipT).join("") +
         (raresAutres.length ? '<span class="m-autres-t">Plus rares</span>' + raresAutres.map(chipT).join("") : "") + "</div>") +
-      (AUTRES_TYPES[F.type] && PREF.aides !== false ? '<p class="info">ℹ️ <b>' + esc(AUTRES_TYPES[F.type].lib) + "</b> : " + esc(AUTRES_TYPES[F.type].d) + "</p>" : "") +
-      (F.type === "Achat" || F.type === "Vente" ? '<p class="info m-avis">📄 <b>Attends ton avis d\'opéré</b> (le PDF de ton courtier, souvent le lendemain chez Fortuneo) et recopie ses chiffres exacts : montant, nombre de parts, prix et frais. Pas le cours affiché dans l\'appli.</p>' : "") +   // v17.27 (Théo)
+      (AUTRES_TYPES[F.type] && PREF.aides !== false ? '<p class="info aide">ℹ️ <b>' + esc(AUTRES_TYPES[F.type].lib) + "</b> : " + esc(AUTRES_TYPES[F.type].d) + "</p>" : "") +
+      (bourse ? '<p class="info m-avis">📄 Recopie ton <b>avis d\'opéré</b> (souvent le lendemain), pas le cours de l\'appli.</p>' : "") +   // v17.27 (Théo)
       '<div class="champ"><label for="fo-env">Compte</label><select id="fo-env">' +
         groupeEnv(ouvertes.filter(e => e.perimetre === "Portefeuille"), "Bourse") + groupeEnv(ouvertes.filter(e => e.perimetre !== "Portefeuille"), "Épargne") + "</select></div>" +
       (avecActif ? '<div class="champ"><label for="f-actif">Actif</label><select id="f-actif"><option value="">Choisir l\'actif…</option>' +
         (tenus.length ? '<optgroup label="Détenus sur ce compte">' + tenus.map(optA).join("") + "</optgroup>" : "") +
         '<optgroup label="Autres actifs">' + autresActifs.map(optA).join("") + "</optgroup></select>" +
-        (F.na ? boiteNouvelActif() : '<span class="aide">Actif absent de la liste ? <button class="lien" type="button" id="f-nouvel-actif">Ajouter un nouvel actif</button></span>') + "</div>" : "") +
-      '<div class="champ"><label for="f-montant">' + esc(LIB_MONTANT[F.type] || "Montant") + ' (€)</label><input id="f-montant" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montant) + '" placeholder="0,00"' + (F.montantAuto || F.montantHab ? ' class="auto"' : "") + ">" +
-        '<span class="calc" id="f-montant-calc"' + (A.montant ? "" : " hidden") + ">" + esc(A.montant) + "</span>" +
-        (hab > 0 ? '<button class="lien" type="button" id="f-hab">Reprendre ton versement habituel</button>' : "") +
-        (F.type === "Achat" || F.type === "Vente" ? '<span class="aide">Recopie-le depuis ton avis d\'opéré (le document de ton courtier).</span>' : "") + "</div>" +
-      (avecQte ? '<div class="champ"><label for="f-qte">Nombre de parts</label><input id="f-qte" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.qte) + '" placeholder="0">' +
-        '<span class="calc" id="f-qte-calc"' + (A.qte ? "" : " hidden") + ">" + esc(A.qte) + "</span></div>" : "") +
+        (F.na ? htmlNouvelActif(F.na, true) : '<span class="aide">Actif absent de la liste ? <button class="lien" type="button" id="f-nouvel-actif">Ajouter un nouvel actif</button></span>') + "</div>" : "") +
+      blocDate +
+      /* v17.34 · règle de Théo du 20/11 : achat / vente = tout visible, dans l'ordre de l'avis d'opéré (date, parts, montant, frais) */
+      (avecQte ? champQte + champMontant : champMontant) + champFrais + champPrix +
       (F.type === "Achat" ? '<label class="coche"><input type="checkbox" id="f-apport"' + (F.apport ? " checked" : "") + '> Avec le versement qui paie cet achat</label>' +
-        '<span class="aide lie">' + (F.apport ? "L'argent viré est enregistré juste avant l'achat." : "Décoché : l'argent était déjà sur le compte (vente, dividende, versement précédent).") + "</span>" : "") +
-      '<details class="m-plus" id="f-details"' + (detailsOuverts ? " open" : "") + '><summary>Plus de détails <small id="f-details-res">' + esc(resumeDetails()) + "</small></summary><div class=\"m-plus-c\">" +
-        '<div class="champ"><label for="f-date">Date</label><input id="f-date" type="date" value="' + esc(F.date) + '"></div>' +
-        (avecQte ? '<div class="champ"><label for="f-prix">Prix par part (€)</label><input id="f-prix" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.prix) + '" placeholder="0,00"><span class="aide">Se calcule tout seul ; tape-le si tu connais le prix mais pas le nombre de parts.</span></div>' : "") +
-        (avecFrais ? '<div class="champ"><label for="f-frais">Dont frais (€)</label><input id="f-frais" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.frais) + '" placeholder="0,00">' +
-          '<span class="calc" id="f-frais-calc"' + (A.frais ? "" : " hidden") + ">" + esc(A.frais) + '</span><span class="aide">Les frais de courtage (0 ou vide si tu n\'en as pas).</span></div>' : "") +
-        (F.type === "Achat" && F.apport ? '<div class="champ"><label for="f-mapport">Montant du versement (€)</label><input id="f-mapport" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montantApport) + '" placeholder="Comme l\'achat"><span class="aide">Laisse vide : même montant que l\'achat.</span></div>' : "") +
-      "</div></details>" +
-      '<p class="phrase-ordre" id="m-phrase"></p>' +
+        '<span class="aide lie m-garde">' + (F.apport ? "L'argent viré est enregistré juste avant l'achat." : F.refait ? "Coche si tu as viré de l'argent pour cet achat (le versement d'origine est une ligne à part)." : "Décoché : l'argent était déjà sur le compte (vente, dividende, versement précédent).") + "</span>" +
+        (F.apport ? '<details class="m-plus" id="f-vers"' + (detailsOuverts ? " open" : "") + '><summary>Montant du versement s\'il diffère <small id="f-details-res">' + esc(resumeDetails()) + "</small></summary><div class=\"m-plus-c\">" +
+          '<div class="champ"><label for="f-mapport">Montant du versement (€)</label><input id="f-mapport" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montantApport) + '" placeholder="Comme l\'achat"><span class="aide">Laisse vide : même montant que l\'achat.</span></div></div></details>' : "") : "") +
       '<div class="recap" id="m-recap"></div>' +
       '<div class="alertes" id="m-alertes"></div>' +
-      '<button class="btn plein acc" type="submit" id="f-envoyer">' + esc(libBoutonOrdre()) + '</button>' +
-      '<div class="pied-form">' +
-        (nommerRaccourci
-          ? '<div class="nommer"><input id="f-nom-rac" type="text" maxlength="40" aria-label="Nom du raccourci" value="' + esc(nomParDefaut()) + '"><button class="mini-btn" type="button" id="rac-ok">Créer</button><button class="lien" type="button" id="rac-annuler">Annuler</button></div>'
-          : '<button class="lien" type="button" id="rac-creer">Enregistrer comme raccourci</button>') +
-        '<button class="lien" type="button" id="f-vider">Vider le formulaire</button>' +
-        '<button class="lien" type="button" id="f-aides">' + (PREF.aides === false ? "Afficher les aides" : "Masquer les aides") + "</button>" +
+      '<div class="m-pied">' +
+        '<p class="phrase-ordre" id="m-phrase"></p>' +
+        '<button class="btn plein acc" type="submit" id="f-envoyer">' + esc(libBoutonOrdre()) + '</button>' +
       "</div>" +
     "</form>";
   const form = $f("m-form-ordre");
-  if ($f("f-guide")) $f("f-guide").addEventListener("click", guideOrdre);
-  $f("f-details").addEventListener("toggle", () => { detailsOuverts = $f("f-details").open; });
+  if ($f("f-guide")) $f("f-guide").hidden = PREF.aides === false;
+  if ($f("f-menu")) $f("f-menu").setAttribute("aria-expanded", String(menuOuvert));
+  if ($f("f-vers")) $f("f-vers").addEventListener("toggle", () => { detailsOuverts = $f("f-vers").open; });
+  if ($f("f-rv")) $f("f-rv").addEventListener("click", () => ouvrirReleveVersus(false));
   form.querySelectorAll("[data-type]").forEach(b => b.addEventListener("click", () => {
     const t = b.dataset.type; if (t === F.type) return;
     plusTypes = !courants.includes(t);
-    const env = F.envChoisi ? F.env : envPourType(t) || envParDefaut() || F.env;
-    F = formulaire({ type: t, date: F.date, env: env, envChoisi: F.envChoisi, actif: AVEC_ACTIF.includes(t) && env === F.env ? F.actif : "", montant: F.montantAuto || F.montantHab ? "" : F.montant });
+    let env = F.envChoisi ? F.env : envPourType(t) || envParDefaut() || F.env;
+    if (t === "Relevé") { const av = ouvertes.find(e => e.regime === "AV"), cur = ouvertes.find(e => e.nom === env); if (av && (!cur || cur.regime !== "AV")) env = envPourType(t) || av.nom; }   // v17.34 : « Valeur AV » bascule d'office sur une assurance-vie
+    /* la date d'un relevé ou d'un solde de départ ne passe jamais à un autre type (et inversement) : elle est propre à ce document */
+    const date = DATE_OBLIG.includes(t) || DATE_OBLIG.includes(F.type) ? "" : F.date;
+    F = formulaire({ type: t, date: date, dateChoisie: !!date && F.dateChoisie, env: env, envChoisi: F.envChoisi && env === F.env, actif: AVEC_ACTIF.includes(t) && env === F.env ? F.actif : "", montant: F.montantAuto || F.montantHab ? "" : F.montant });
     synchroniser(); rendreFormulaire();
   }));
-  $f("f-plus-types").addEventListener("click", () => { plusTypes = !panneau; if (!plusTypes && autreType) F = formulaire({ type: "Achat", date: F.date, env: F.env, envChoisi: F.envChoisi }); rendreFormulaire(); });
-  $f("f-aides").addEventListener("click", () => { PREF.aides = PREF.aides === false; garderPref(); majAides(); rendreFormulaire(); });
-  $f("fo-env").addEventListener("change", e => { F = formulaire({ type: F.type, date: F.date, env: e.target.value, envChoisi: true, montant: F.montantAuto || F.montantHab ? "" : F.montant, frais: F.fraisAuto ? "" : F.frais }); synchroniser(); rendreFormulaire(); });
-  if ($f("f-actif")) $f("f-actif").addEventListener("change", e => { F = formulaire({ type: F.type, date: F.date, env: F.env, envChoisi: F.envChoisi, actif: e.target.value, montant: F.montantAuto ? "" : F.montant, frais: F.frais, fraisAuto: F.fraisAuto, apport: F.apport, montantApport: F.montantApport, auto: false }); synchroniser(); rendreFormulaire(); });
-  if ($f("f-apport")) $f("f-apport").addEventListener("change", e => { F.apport = e.target.checked; rendreFormulaire(); });
+  $f("f-plus-types").addEventListener("click", () => { plusTypes = !panneau; if (!plusTypes && autreType) F = formulaire({ type: "Achat", date: DATE_OBLIG.includes(F.type) ? "" : F.date, env: F.env, envChoisi: F.envChoisi }); rendreFormulaire(); });
+  if ($f("f-aides")) $f("f-aides").addEventListener("click", () => { PREF.aides = PREF.aides === false; garderPref(); majAides(); menuOuvert = false; rendreFormulaire(); });
+  $f("fo-env").addEventListener("change", e => { F = formulaire({ type: F.type, date: F.date, dateChoisie: F.dateChoisie, env: e.target.value, envChoisi: true, montant: F.montantAuto || F.montantHab ? "" : F.montant, frais: F.fraisAuto ? "" : F.frais }); synchroniser(); rendreFormulaire(); });
+  if ($f("f-actif")) $f("f-actif").addEventListener("change", e => { F = formulaire({ type: F.type, date: F.date, dateChoisie: F.dateChoisie, env: F.env, envChoisi: F.envChoisi, actif: e.target.value, montant: F.montantAuto ? "" : F.montant, frais: F.frais, fraisAuto: F.fraisAuto, apport: F.apport, montantApport: F.montantApport, refait: F.refait, qte: F.qteTape ? F.qte : "", qteTape: F.qteTape, auto: false }); synchroniser(); rendreFormulaire(); });
+  if ($f("f-apport")) $f("f-apport").addEventListener("change", e => { F.apport = e.target.checked; F.okDoublon = false; rendreFormulaire(); });
   if ($f("f-hab")) $f("f-hab").addEventListener("click", () => { F.montant = saisieNombre(hab, 2); F.montantHab = true; rendreFormulaire(); });
+  if ($f("f-prix-voir")) $f("f-prix-voir").addEventListener("click", () => { F.prixVu = true; rendreFormulaire(); setTimeout(() => { const el = $f("f-prix"); if (el) el.focus(); }, 30); });
+  form.querySelectorAll("[data-date]").forEach(b => b.addEventListener("click", () => { F.date = b.dataset.date; F.dateChoisie = true; F.forcer = null; F.erreur = ""; rendreFormulaire(); }));
   // 14.5 : le nouvel actif se crée ici même, sans quitter la saisie d'ordre
-  if ($f("f-nouvel-actif")) $f("f-nouvel-actif").addEventListener("click", () => { F.na = { code: "", nom: "", ticker: "", msg: "" }; rendreFormulaire(); setTimeout(() => { const el = $f("fn-code"); if (el) el.focus(); }, 30); });
-  if (F.na) brancherNouvelActif();
+  if ($f("f-nouvel-actif")) $f("f-nouvel-actif").addEventListener("click", () => { F.na = nouvelNA(F.env); rendreFormulaire(); setTimeout(() => { const el = $f("fn-code"); if (el) el.focus(); }, 30); });
+  if (F.na) brancherNouvelActif(F.na, a => { F.actif = a.code; F.na = null; toast("Actif " + a.code + " créé : tu peux saisir ton ordre."); rendreFormulaire(); }, () => { F.na = null; rendreFormulaire(); });
   [["f-date", "date"], ["f-montant", "montant"], ["f-frais", "frais"], ["f-mapport", "montantApport"], ["f-qte", "qte"], ["f-prix", "prix"]].forEach(([id, k]) => {
     const el = $f(id);
     if (!el) return;
     el.addEventListener("input", () => {
-      F[k] = el.value; F.forcer = null; F.erreur = "";
+      F[k] = el.value; F.forcer = null; F.erreur = ""; F.okCoherence = false; F.okDoublon = false;
+      if (k === "date") { F.dateChoisie = true; form.querySelectorAll("[data-date]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.date === F.date))); }
       if (k === "qte" || k === "prix") F.pilote = k;
-      if (k === "prix") F.prixAuto = false;
+      if (k === "qte") F.qteTape = !!el.value.trim();
+      if (k === "prix") { F.prixAuto = false; F.prixTape = !!el.value.trim(); }
       if (k === "montant") { F.montantAuto = false; F.montantHab = false; el.classList.remove("auto"); }
-      if (k === "frais") F.fraisAuto = false;
+      if (k === "frais") { F.fraisAuto = false; el.classList.remove("auto"); }
       synchroniser();
       if (k !== "qte" && $f("f-qte")) $f("f-qte").value = F.qte;
-      if (k !== "prix" && $f("f-prix")) $f("f-prix").value = F.prix;
       if (k !== "montant" && $f("f-montant")) { $f("f-montant").value = F.montant; $f("f-montant").classList.toggle("auto", !!F.montantAuto); }
       majRecap();
     });
@@ -3304,12 +3405,12 @@ function rendreFormulaire() {
     const nom = ($f("f-nom-rac").value || "").trim() || nomParDefaut();
     const liste = (refData().raccourcis || []).slice();
     liste.push({ nom: nom, type: F.type, env: F.env, actif: AVEC_ACTIF.includes(F.type) ? F.actif : "", montant: lireNombre(F.montant), frais: lireNombre(F.frais), quantite: F.pilote === "qte" ? lireNombre(F.qte) : null, apport: F.type === "Achat" && F.apport, montantApport: lireNombre(F.montantApport) });
-    nommerRaccourci = false;
+    nommerRaccourci = false; menuOuvert = false;
     sauverRaccourcis(liste);
     rendreFormulaire();
     toast("Raccourci « " + nom + " » créé.");
   });
-  $f("f-vider").addEventListener("click", () => { F = formulaire({ type: F.type, env: F.env, envChoisi: F.envChoisi, auto: false }); nommerRaccourci = false; rendreFormulaire(); });
+  if ($f("f-vider")) $f("f-vider").addEventListener("click", () => { F = formulaire({ type: F.type, env: F.env, envChoisi: F.envChoisi, auto: false }); nommerRaccourci = false; menuOuvert = false; rendreFormulaire(); });
   form.addEventListener("submit", e => { e.preventDefault(); envoyerOrdre(false); });
   majRecap();
 }
@@ -3336,68 +3437,120 @@ async function sauverRaccourcis(liste) {
   const rep = await posterFichier({ action: "raccourcis", raccourcis: liste });
   if (!rep.ok) toast("Raccourcis non enregistrés sur ton fichier : " + (rep.message || "erreur"));
 }
+/* v17.34 · ordres dont l'envoi est resté incertain (délai dépassé) : comptés pour le garde-fou des doublons tant que le fichier n'a pas été relu */
+let ordresIncertains = [];
+function joursEntre(a, b) { return Math.abs(Math.round((new Date(String(a).slice(0, 10) + "T12:00:00") - new Date(String(b).slice(0, 10) + "T12:00:00")) / 864e5)); }
+/** garde-fou G3 : la même opération (type, compte, actif, montant à 1 centime près) dans les 3 jours, envois en cours ou incertains compris */
+function doublonOrdre(m) {
+  if (!(m > 0) || !F.date) return null;
+  const l = (refData().journal || []).concat(ordresIncertains);
+  return l.find(o => o.type === F.type && o.enveloppe === F.env && (!AVEC_ACTIF.includes(F.type) || (o.actif || "") === (F.actif || "")) &&
+    Math.abs((+o.montant || 0) - m) <= .01 && o.date && joursEntre(o.date, F.date) <= 3) || null;
+}
 function analyser() {
-  const r = refData(), t = typeInfo(F.type);
-  const q = lireNombre(F.qte), m = lireNombre(F.montant), fr = lireNombre(F.frais) || 0;
+  const r = refData(), t = typeInfo(F.type), discret = ETAT.discret === "oui";
+  const q = lireNombre(F.qte), m = lireNombre(F.montant), frBrut = lireNombre(F.frais), fr = frBrut || 0;
   const msg = [], lignes = [];
-  let bloque = false;
-  if (!F.date) { bloque = true; msg.push(["err", "Choisis une date."]); }
-  if (AVEC_ACTIF.includes(F.type) && !F.actif) bloque = true;
-  if (m === null) bloque = true;
+  let bloque = false, manque = "";
+  const manquer = t2 => { bloque = true; if (!manque) manque = t2; };
+  const eurD = v => discret ? "" : " (environ " + Math.round(v).toLocaleString("fr-FR") + " €)";
+  if (AVEC_ACTIF.includes(F.type) && !F.actif) manquer("Choisis l'actif");
+  if (!F.date) { manquer(F.type === "Relevé" ? "Indique la date de ton relevé" : F.type === "Solde initial" ? "Indique la date de début du suivi" : "Choisis la date"); if (DATE_OBLIG.includes(F.type)) msg.push(["info", F.type === "Relevé" ? "La date du relevé est obligatoire : c'est elle qui date la valeur (pas le jour où tu la saisis)." : "La date de début du suivi est obligatoire."]); }
+  if (AVEC_QTE.includes(F.type)) {
+    if (q === null) manquer(F.type === "Achat" || F.type === "Vente" ? "Indique le nombre de parts de ton avis d'opéré" : "Indique le nombre de parts");
+    else if (isNaN(q) || q <= 0) { bloque = true; msg.push(["err", "La quantité doit être supérieure à 0."]); }
+  }
+  if (m === null) manquer(F.type === "Achat" ? "Indique le montant débité de ton avis" : F.type === "Vente" ? "Indique le montant crédité de ton avis" : F.type === "Relevé" ? "Indique la valeur de ton relevé" : "Indique le montant");
   else if (isNaN(m)) { bloque = true; msg.push(["err", "Montant illisible."]); }
   else if (F.type !== "Ajustement espèces" && m <= 0) { bloque = true; msg.push(["err", "Le montant doit être positif : c'est le type qui donne le sens."]); }
+  else if (F.type === "Ajustement espèces" && m === 0) { bloque = true; msg.push(["err", "Une correction de 0 € ne change rien : indique l'écart (négatif si sortie)."]); }   // G7
   /* v16.78 · relevé d'assurance-vie : un montant bien plus petit que la ligne ressemble au prix d'UNE part (ex. 99,96 € au lieu de ~15 850 €) */
   if (F.type === "Relevé" && F.actif && m > 0 && M && M.histoAV) {
     let ref = 0; (M.histoAV.ordres || []).forEach(o => { if (o[2] !== F.actif) return; if (o[1] === "Relevé" && o[3] > ref * .2) ref = o[3]; else if (o[1] === "Achat") ref += o[3]; else if (o[1] === "Vente") ref -= o[3]; });
-    if (ref > 0 && m < ref * .2) msg.push(["warn", "Ce montant ressemble au prix d'une seule part. Sur ton relevé, prends la VALEUR TOTALE de la ligne (environ " + Math.round(ref).toLocaleString("fr-FR") + " €)."]);
+    if (ref > 0 && m < ref * .2) msg.push(["warn", "Ce montant ressemble au prix d'une seule part. Sur ton relevé, prends la VALEUR TOTALE de la ligne" + eurD(ref) + "."]);
   }
-  /* v16.83 · un apport bien plus petit que d'habitude (comme le garde-fou du relevé) */
+  /* v16.83 · un apport bien plus petit que d'habitude ; v17.34 (G4) : ou 5 fois plus grand (un zéro de trop ?) */
   if (F.type === "Apport" && m > 0) {
     const hab = mediane((r.journal || []).filter(o => o.type === "Apport" && o.enveloppe === F.env && !o.envoi).map(o => o.montant));
-    if (hab > 0 && m < hab * .2) msg.push(["warn", "Ce montant est bien plus petit que tes versements habituels sur " + F.env + " (environ " + Math.round(hab).toLocaleString("fr-FR") + " €) : vérifie la virgule."]);
+    if (hab > 0 && m < hab * .2) msg.push(["warn", "Ce montant est bien plus petit que tes versements habituels sur " + F.env + eurD(hab) + " : vérifie la virgule."]);
+    if (hab > 0 && m > hab * 5) msg.push(["warn", "Un zéro de trop ? Ce versement est plus de 5 fois plus grand que d'habitude sur " + F.env + eurD(hab) + "."]);
+  }
+  if (F.type === "Achat" && m > 0 && F.actif) {
+    const habA = mediane((r.journal || []).filter(o => o.type === "Achat" && o.actif === F.actif && !o.envoi).map(o => o.montant));
+    if (habA > 0 && m > habA * 5) msg.push(["warn", "Un zéro de trop ? Cet achat est plus de 5 fois plus grand que tes achats habituels de " + F.actif + eurD(habA) + "."]);
   }
   const doutes = [["montant", "f-montant"]].concat(AVEC_FRAIS.includes(F.type) ? [["frais", "f-frais"]] : [], F.type === "Achat" && F.apport ? [["montantApport", "f-mapport"]] : []).filter(([k]) => millierDouteux(F[k]));
-  if (doutes.length) bloque = true;
-  if (AVEC_QTE.includes(F.type)) {
-    if (q === null) bloque = true;
-    else if (isNaN(q) || q <= 0) { bloque = true; msg.push(["err", "La quantité doit être supérieure à 0."]); }
+  if (doutes.length) { bloque = true; if (!manque) manque = "Réponds à la question sur le montant"; }
+  /* G5 · frais : jamais négatifs (le fichier les refuserait), signalés au-delà de 5 % du montant */
+  if (AVEC_FRAIS.includes(F.type)) {
+    if (isNaN(frBrut) || fr < 0 || (fr && m > 0 && fr > m)) { bloque = true; msg.push(["err", fr < 0 ? "Les frais ne peuvent pas être négatifs : recopie-les sans le signe moins." : "Les frais doivent être positifs et inférieurs au montant."]); }
+    else if (fr > 0 && m > 0 && fr > m * .05) msg.push(["warn", "Frais de plus de 5 % du montant : vérifie-les sur ton avis d'opéré."]);
   }
-  if (isNaN(fr) || (fr && m > 0 && fr > m)) { bloque = true; msg.push(["err", "Les frais doivent être positifs et inférieurs au montant."]); }
   const tenu = F.actif ? quantiteTenue(F.env, F.actif) : 0;
   const c = F.actif ? r.cours[F.actif] : null;
   if ((F.type === "Vente" || F.type === "Frais en parts") && F.actif) {
     lignes.push(["Détenu aujourd'hui", qteBrute(tenu) + " " + esc(F.actif) + (tenu > 0 && F.type === "Vente" ? ' <button class="mini-btn" type="button" id="tout-vendre">Tout</button>' : "")]);
     if (q > tenu + 1e-9) { bloque = true; msg.push(["err", "Tu ne détiens que " + qteBrute(tenu) + " " + F.actif + " dans " + F.env + "."]); }
   }
-  if ((F.type === "Achat" || F.type === "Vente") && q > 0 && m > 0 && c) {
-    const pu = (m + fr * t.tresorerie) / q;
-    lignes.push(["Cours actuel", nf(c < 1 ? 4 : 2, c < 1 ? 4 : 2).format(c) + NB + "€ · écart " + pct(pu / c - 1)]);
-    if (Math.abs(pu / c - 1) > .5) msg.push(["warn", "Écart de plus de 50 % avec le cours actuel : vérifie la quantité et le montant (virgule mal placée ?)."]);
+  /* G6 · parts à virgule sur un PEA (ou une ligne en parts entières) : jamais d'arrondi automatique, un simple avertissement */
+  if (AVEC_QTE.includes(F.type) && F.type !== "Frais en parts" && q > 0 && Math.abs(q - Math.round(q)) > 1e-9 && partsEntieres())
+    msg.push(["warn", "Sur un PEA les parts sont entières : recopie le nombre de ton avis d'opéré."]);
+  if ((F.type === "Achat" || F.type === "Vente") && q > 0 && m > 0) {
+    const pu = (m + fr * t.tresorerie) / q, p = lireNombre(F.prix);
+    /* G1 · prix ET nombre de parts tapés : montant ≈ parts × prix ± frais, à 1 % (ou 1 €) près, sinon on demande */
+    if (F.prixTape && F.qteTape && p > 0) {
+      const attendu = q * p - fr * t.tresorerie;
+      if (Math.abs(attendu - m) > Math.max(m * .01, 1) && !F.okCoherence) { bloque = true; if (!manque) manque = "Vérifie le montant, les parts et le prix";
+        msg.push(["conf", "Montant, parts et prix ne collent pas : " + (discret ? "" : qteBrute(q) + " × " + nf(2, 4).format(p) + " € " + (F.type === "Achat" ? "+" : "−") + " frais = " + nf(2, 2).format(attendu) + " €, et non " + nf(2, 2).format(m) + " €. ") + "Corrige ou confirme.", "coherence"]); }
+    }
+    /* écart au cours : seulement si le nombre de parts a été TAPÉ (sinon un « écart 0 % » rassurerait à tort) */
+    if (c && F.qteTape) {
+      const ec = pu / c - 1;
+      if (Math.abs(ec) > .05) lignes.push(["Cours de l'appli", (discret ? "" : nf(c < 1 ? 4 : 2, c < 1 ? 4 : 2).format(c) + NB + "€ · ") + "écart " + pct(ec)]);
+      if (Math.abs(ec) > .5) msg.push(["warn", "Écart de plus de 50 % avec le cours actuel : vérifie la quantité et le montant (virgule mal placée ?)."]);
+      else if (Math.abs(ec) > .1) msg.push(["warn", "Écart de plus de 10 % avec le cours de l'appli : vérifie le nombre de parts et le montant sur ton avis."]);
+    }
   }
   if (F.actif && q > 0 && t.quantite) lignes.push(["Détenu après l'ordre", qteBrute(+(tenu + q * t.quantite).toFixed(6)) + " " + esc(F.actif)]);
   if (F.type === "Achat" && F.apport) {
     const ma = lireNombre(F.montantApport);
     if (ma !== null && (isNaN(ma) || ma <= 0)) { bloque = true; msg.push(["err", "Montant de l'apport illisible."]); }
-    lignes.push(["Versement enregistré avant l'achat", nf(2, 2).format(ma === null ? m : ma) + NB + "€"]);
   }
+  /* G2 · dates : programmée (déjà là), jour sans bourse, ordre ancien, début de mois */
   if (F.date && F.date > aujourdhuiISO()) msg.push(["warn", "Ordre programmé : il restera ignoré par les calculs jusqu'au " + frDate(F.date) + "."]);
-  return { bloque, msg, lignes, doutes };
+  else if (F.date) {
+    const jour = new Date(F.date + "T12:00:00").getDay(), env = (r.enveloppes || []).find(e => e.nom === F.env) || {}, ouv = env.ouverture ? String(env.ouverture).slice(0, 10) : "";
+    if ((F.type === "Achat" || F.type === "Vente") && (jour === 0 || jour === 6)) msg.push(["warn", "Le " + frDate(F.date) + " est un " + (jour === 0 ? "dimanche" : "samedi") + " : jour sans bourse. Prends la date d'exécution de ton avis."]);
+    if ((F.type !== "Solde initial" && joursEntre(F.date, aujourdhuiISO()) > 31) || (ouv && F.date < ouv)) msg.push(["warn", ouv && F.date < ouv ? "Date avant l'ouverture de " + F.env + " (" + frDate(ouv) + ") : c'est bien la bonne ?" : "Ordre ancien : c'est bien la date d'exécution ?"]);
+    if (!DATE_OBLIG.includes(F.type) && !F.dateChoisie && F.date === aujourdhuiISO() && new Date().getDate() <= 5)
+      msg.push(["info", "Exécuté le mois dernier ? Choisis la date de ton avis : le mois compte pour ton relevé du Versus."]);
+  }
+  /* G7 · un 2e solde de départ sur le même compte */
+  if (F.type === "Solde initial" && (r.journal || []).some(o => o.type === "Solde initial" && o.enveloppe === F.env))
+    msg.push(["warn", F.env + " a déjà un solde de départ : un 2e fausserait ses espèces. Pour corriger, supprime l'ancien ou fais une correction d'espèces."]);
+  /* G3 · doublon (confirmation dans l'appli, jamais « forcer » côté fichier) */
+  const dbl = !bloque ? doublonOrdre(m) : null;   // seulement quand tout le reste est bon
+  if (dbl && !F.okDoublon) { bloque = true; if (!manque) manque = "Confirme : déjà enregistré ?";
+    msg.push(["conf", "Déjà enregistré le " + frDate(String(dbl.date).slice(0, 10)) + " : " + libType(dbl.type) + (dbl.actif ? " " + dbl.actif : "") + (discret ? "" : " de " + nf(0, 2).format(dbl.montant) + " €") + (dbl.envoi ? " (envoi en cours)" : "") + ". Doublon ?", "doublon"]); }
+  if (bloque && !manque) manque = msg.some(x => x[0] === "err") ? "Corrige l'alerte ci-dessus" : "Complète le formulaire";
+  return { bloque, msg, lignes, doutes, manque };
 }
 /** La phrase de relecture : l'ordre dit en une phrase courte et naturelle, pour repérer une erreur d'un coup d'œil (v16.92) */
 function phraseOrdre() {
   const m = lireNombre(F.montant), q = lireNombre(F.qte), fr = lireNombre(F.frais), ma = lireNombre(F.montantApport);
   if ((!(m > 0) && F.type !== "Ajustement espèces") || millierDouteux(F.montant)) return "";   // v16.83 : pas de « 1,50 € » relu tant que « 1.500 » est en doute
   if (m === null || !isFinite(m) || m === 0) return "";
-  const B = x => "<b>" + x + "</b>", e = v => { const d = Number.isInteger(+v.toFixed(2)) ? 0 : 2; return B(nf(d, d).format(v) + NB + "€"); };
-  const env = B(esc(F.env || "?")), an = String(new Date().getFullYear());
-  const quand = (F.date || "").slice(0, 4) === an ? (F.date || "").slice(8, 10) + "/" + (F.date || "").slice(5, 7) : frDate(F.date), le = ", le " + B(quand);
+  const discret = ETAT.discret === "oui";   // G10 : aucun montant en clair en mode discret
+  const B = x => "<b>" + x + "</b>", e = v => { if (discret) return B("•••" + NB + "€"); const d = Number.isInteger(+v.toFixed(2)) ? 0 : 2; return B(nf(d, d).format(v) + NB + "€"); };
+  const env = B(esc(F.env || "?"));
+  const quand = F.date ? dateCourteIso(F.date) : "date à choisir", le = ", le " + B(quand);
   const actifs = refData().actifs || [], a = actifs.find(x => x.code === F.actif), nomA = esc(a && a.nom && a.nom.length <= 22 ? a.nom : F.actif || "");
   const de = n => (/^[aeiouyhàâéèêîôû]/i.test(n) ? "d'" : "de ") + B(n);
   const titres = AVEC_QTE.includes(F.type) && q > 0 ? de(qteBrute(q) + " " + esc(F.actif)).replace(/^d'/, "de ") : F.actif ? de(nomA) : "";
-  const frais = !AVEC_FRAIS.includes(F.type) ? "" : fr > 0 ? " (dont " + e(fr) + " de frais)" : " (sans frais)";
+  const frais = !AVEC_FRAIS.includes(F.type) || isNaN(fr) || fr < 0 ? "" : fr > 0 ? " (dont " + e(fr) + " de frais" + (F.fraisAuto ? ", comme la dernière fois : à vérifier" : "") + ")" : " (sans frais)";
   let t;
   switch (F.type) {
-    case "Achat": t = "Achat " + titres + " pour " + e(m) + frais + " sur " + env + le + ". " + (F.apport ? "Avec un versement de " + e(ma > 0 ? ma : m) + "." : "Sans versement (argent déjà sur le compte)."); break;
+    case "Achat": t = (F.apport ? B("+ un versement de " + (discret ? "•••" + NB + "€" : nf(Number.isInteger(+(ma > 0 ? ma : m).toFixed(2)) ? 0 : 2, 2).format(ma > 0 ? ma : m) + NB + "€")) + ", puis achat " : "Achat ") + titres + " pour " + e(m) + frais + " sur " + env + le + "." + (F.apport ? "" : " Sans versement (argent déjà sur le compte)."); break;
     case "Vente": t = "Vente " + titres + " pour " + e(m) + frais + " sur " + env + le + "."; break;
     case "Apport": t = "Versement de " + e(m) + " sur " + env + le + "."; break;
     case "Retrait": t = "Retrait de " + e(m) + " sur " + env + le + "."; break;
@@ -3405,10 +3558,10 @@ function phraseOrdre() {
     case "Frais": t = "Frais de " + e(m) + " débités sur " + env + le + "."; break;
     case "Relevé": {
       const plusieursAV = (refData().enveloppes || []).filter(x => x.regime === "AV").length > 1;
-      t = "Valeur " + (F.actif ? de(nomA) + " " : "") + "sur ton relevé" + (plusieursAV ? " (" + env + ")" : "") + " : " + e(m) + " au " + B(quand) + "."; break; }
+      t = "Valeur " + (F.actif ? de(nomA) + " " : "") + "sur ton relevé" + (plusieursAV ? " (" + env + ")" : "") + " : " + e(m) + (F.date ? " au " + B(quand) : ", date du relevé à choisir") + "."; break; }
     case "Frais en parts": t = "Frais prélevés en parts : " + (q > 0 ? B(qteBrute(q) + " " + esc(F.actif)) + " pour " : "") + e(m) + " sur " + env + le + "."; break;
     case "Ajustement espèces": t = "Ajustement des espèces de " + e(m) + " sur " + env + le + "."; break;
-    case "Solde initial": t = "Solde de départ de " + e(m) + " sur " + env + ", au " + B(quand) + "."; break;
+    case "Solde initial": t = "Solde de départ de " + e(m) + " sur " + env + (F.date ? ", au " + B(quand) : ", date de début à choisir") + "."; break;
     default: t = esc((AUTRES_TYPES[F.type] || {}).lib || F.type) + " de " + e(m) + " sur " + env + le + ".";
   }
   return "📝 " + t;
@@ -3418,13 +3571,14 @@ function majRecap() {
   if ($f("m-phrase")) { const ph = phraseOrdre(); $f("m-phrase").innerHTML = ph; $f("m-phrase").hidden = !ph; }
   $f("m-recap").innerHTML = a.lignes.map(l => "<div><span>" + l[0] + "</span><b>" + l[1] + "</b></div>").join("");
   $f("m-recap").hidden = !a.lignes.length;
-  /* v16.97 · phrases des champs calculés, résumé de « Plus de détails », qu'on ouvre tout seul si un champ replié pose problème */
   const A = aidesCalcul();
   [["f-montant-calc", "montant"], ["f-qte-calc", "qte"], ["f-frais-calc", "frais"]].forEach(([id, k]) => { const el = $f(id); if (el) { el.textContent = A[k]; el.hidden = !A[k]; } });
   if ($f("f-details-res")) $f("f-details-res").textContent = resumeDetails();
-  const replie = !F.date || (a.doutes || []).some(([k]) => k !== "montant") || a.msg.some(m => m[0] === "err" && /frais|apport/i.test(m[1]));
-  if (replie && $f("f-details") && !$f("f-details").open) { $f("f-details").open = true; detailsOuverts = true; }
-  let al = a.msg.map(m => '<div class="alerte ' + m[0] + '">' + esc(m[1]) + "</div>").join("");
+  if ($f("f-pu")) $f("f-pu").textContent = lignePrixPart();
+  if ((a.doutes || []).some(([k]) => k === "montantApport") && $f("f-vers") && !$f("f-vers").open) { $f("f-vers").open = true; detailsOuverts = true; }
+  let al = a.msg.map(m => m[0] === "conf"
+    ? '<div class="alerte warn">' + esc(m[1]) + '<br><button class="btn" type="button" data-conf="' + m[2] + '">' + (m[2] === "doublon" ? "Enregistrer quand même" : "C'est bien mon avis") + '</button> <button class="btn ghost" type="button" data-corr="' + m[2] + '">Corriger</button></div>'
+    : '<div class="alerte ' + m[0] + '">' + esc(m[1]) + "</div>").join("");
   (a.doutes || []).forEach(([k]) => { const t = String(F[k]).trim(), l = lectureMilliers(t);
     al += '<div class="alerte warn">« ' + esc(t) + ' » veut dire ' + esc((+l.milliers).toLocaleString("fr-FR")) + NB + '€ ?<br><button class="btn" type="button" data-millier="' + k + '" data-mv="' + esc(l.milliers) + '">Oui, ' + esc((+l.milliers).toLocaleString("fr-FR")) + NB + "€</button>" +
       (l.virgule ? ' <button class="btn ghost" type="button" data-millier="' + k + '" data-mv="' + esc(l.virgule) + '">Non, ' + esc(l.virgule) + NB + "€</button>" : "") + "</div>"; });
@@ -3433,19 +3587,25 @@ function majRecap() {
   $f("m-alertes").innerHTML = al;
   const btn = $f("f-envoyer");
   btn.disabled = a.bloque;
-  btn.textContent = libBoutonOrdre();
-  if ($f("tout-vendre")) $f("tout-vendre").addEventListener("click", () => { F.qte = saisieNombre(quantiteTenue(F.env, F.actif), 8); F.pilote = "qte"; synchroniser(); $f("f-qte").value = F.qte; if ($f("f-prix")) $f("f-prix").value = F.prix; majRecap(); });
+  btn.textContent = a.bloque ? a.manque : libBoutonOrdre(true);
+  btn.classList.toggle("manque", !!a.bloque);
+  if ($f("tout-vendre")) $f("tout-vendre").addEventListener("click", () => { F.qte = saisieNombre(quantiteTenue(F.env, F.actif), 8); F.pilote = "qte"; F.qteTape = true; synchroniser(); $f("f-qte").value = F.qte; majRecap(); });
   if ($f("forcer")) $f("forcer").addEventListener("click", () => envoyerOrdre(true));
+  $f("m-alertes").querySelectorAll("[data-conf]").forEach(b => b.addEventListener("click", () => { if (b.dataset.conf === "doublon") F.okDoublon = true; else F.okCoherence = true; majRecap(); }));
+  $f("m-alertes").querySelectorAll("[data-corr]").forEach(b => b.addEventListener("click", () => { const el = $f(b.dataset.corr === "doublon" ? "f-date" : "f-montant"); if (el) { el.focus(); el.scrollIntoView({ block: "center" }); } }));
   $f("m-alertes").querySelectorAll("[data-millier]").forEach(b => b.addEventListener("click", () => {
     const k = b.dataset.millier, id = { montant: "f-montant", frais: "f-frais", montantApport: "f-mapport" }[k];
     F[k] = b.dataset.mv; if ($f(id)) $f(id).value = F[k];
-    synchroniser(); if ($f("f-qte")) $f("f-qte").value = F.qte; if ($f("f-prix")) $f("f-prix").value = F.prix;
+    synchroniser(); if ($f("f-qte")) $f("f-qte").value = F.qte;
     majRecap();
   }));
 }
-/* v16.83 · le bouton dit ce qu'on enregistre (un Relevé n'est pas un « ordre ») */
-function libBoutonOrdre() {
-  return F.type === "Achat" && F.apport ? "Enregistrer le versement et l'achat" : ({ "Relevé": "Enregistrer la valeur", "Apport": "Enregistrer le versement", "Retrait": "Enregistrer le retrait", "Intérêts": "Enregistrer les intérêts", "Frais": "Enregistrer les frais", "Solde initial": "Enregistrer le solde", "Achat": "Enregistrer l'achat", "Vente": "Enregistrer la vente", "Frais en parts": "Enregistrer les frais", "Ajustement espèces": "Enregistrer l'ajustement" })[F.type] || "Enregistrer l'ordre";
+/* v16.83 · le bouton dit ce qu'on enregistre (un Relevé n'est pas un « ordre ») ; v17.34 : et pour combien (••• en mode discret) */
+function libBoutonOrdre(montant) {
+  const lib = F.type === "Achat" && F.apport ? "Enregistrer le versement et l'achat" : ({ "Relevé": "Enregistrer la valeur", "Apport": "Enregistrer le versement", "Retrait": "Enregistrer le retrait", "Intérêts": "Enregistrer les intérêts", "Frais": "Enregistrer les frais", "Solde initial": "Enregistrer le solde", "Achat": "Enregistrer l'achat", "Vente": "Enregistrer la vente", "Frais en parts": "Enregistrer les frais", "Ajustement espèces": "Enregistrer l'ajustement" })[F.type] || "Enregistrer l'ordre";
+  const m = lireNombre(F.montant);
+  if (!montant || !(m !== null && isFinite(m) && m !== 0)) return lib;
+  return lib + " · " + (ETAT.discret === "oui" ? "•••" : nf(Number.isInteger(+m.toFixed(2)) ? 0 : 2, 2).format(m) + NB + "€");
 }
 /* Envoi optimiste : la feuille se ferme tout de suite, l'enregistrement continue en arrière-plan */
 async function envoyerOrdre(forcer) {
@@ -3473,29 +3633,52 @@ async function envoyerOrdre(forcer) {
   if (M && M.ref) M.ref.journal = (M.ref.journal || []).filter(o => !o.envoi);
   if (rep.ok) { if (window.SONS) SONS.succes(); toast(rep.message || "Ordre enregistré."); charger(true); return; }
   if (rep.erreur === "cle") { cleRefusee(rep.message); toast("Clé refusée par ton fichier."); if (vueMoi()) rendre(); return; }
-  if (rep.erreur === "incertain") { toast("L'ordre a peut-être été enregistré : vérifie l'Historique avant de renvoyer."); charger(true); return; }   // v16.83 : jamais rouvert rempli (doublon)
+  if (rep.erreur === "incertain") { ordresIncertains = ordresIncertains.concat(enAttente.map(o => Object.assign({}, o, { envoi: true }))); toast("L'ordre a peut-être été enregistré : vérifie l'Historique avant de renvoyer."); charger(true); return; }   // v16.83 : jamais rouvert rempli (doublon)
   toast(rep.erreur === "avertissement" ? "Ordre à confirmer." : "Ordre non enregistré.");
   F = sauvegarde;
   if (rep.erreur === "avertissement") F.forcer = rep.message; else F.erreur = rep.message || "Erreur inattendue.";
   $f("m-saisie").hidden = false;
   paneSaisie("ordre");
 }
+/** le versement saisi avec un achat (même date, même compte, saisi dans l'appli) : supprimer l'achat ne le supprime pas */
+function versementJumeau(j, i) {
+  const o = j[i]; if (!o || o.type !== "Achat") return -1;
+  return j.findIndex((x, k) => k !== i && !x.envoi && x.app && x.type === "Apport" && x.date === o.date && x.enveloppe === o.enveloppe);
+}
+let confirmeRV = false;
 function rendreJournal() {
   const j = refData().journal || [];
   const auj = aujourdhuiISO();
   const z = $f("m-pane-journal");
-  if (!j.length) { z.innerHTML = '<div class="vide">Aucun ordre pour l\'instant.</div>'; return; }
-  z.innerHTML = '<p class="info">Les 30 derniers ordres de ton onglet Ordres. « Refaire » reprend un ordre à la date du jour ; seuls les ordres saisis depuis l\'app depuis moins de 7 jours peuvent être supprimés.</p><div class="m-jo">' +
-    j.map((o, i) => '<div class="jr' + (o.envoi ? " envoi" : "") + '"><div class="jd">' + o.date.slice(8, 10) + "/" + o.date.slice(5, 7) + "<small>" + o.date.slice(0, 4) + "</small></div>" +
-      '<div class="jm"><b>' + esc(o.type) + (o.actif ? " " + esc(o.actif) : "") + (o.envoi ? '<span class="tag app">envoi…</span>' : "") + (o.date > auj ? '<span class="tag prog">programmé</span>' : "") + (o.app ? '<span class="tag app">saisi ici</span>' : "") + "</b>" +
-      "<span>" + esc(o.enveloppe) + (o.quantite !== null && o.quantite !== undefined ? " · " + qteBrute(o.quantite) + " part" + (o.quantite > 1 ? "s" : "") : "") + (o.frais ? " · frais " + eur(o.frais, 2) : "") + "</span></div>" +
+  /* v17.34 (Conseil) : fichier relié au Versus = relevé envoyé tout seul ; la saisie à la main reste possible, avec un avertissement */
+  const ligneRV = !versusRelie() || typeof ouvrirSaisie !== "function" ? "" : '<div class="m-rv-etat"><p>🏁 <b>Relevé du Versus</b> : envoyé automatiquement par ton fichier. <button class="lien" type="button" id="j-rv-voir">Voir les relevés</button></p>' +
+    (confirmeRV ? '<p class="alerte warn">Une saisie à la main ne sera plus remplacée par l\'import de ton fichier. <button class="btn" type="button" id="j-rv-ok">Saisir quand même</button> <button class="lien" type="button" id="j-rv-non">Annuler</button></p>'
+      : '<button class="lien m-rv-corr" type="button" id="j-rv-corr">Corriger à la main</button>') + "</div>";
+  if (!j.length) { z.innerHTML = '<div class="vide">Aucune opération pour l\'instant.</div>' + ligneRV; brancherRV(z); return; }
+  const net = o => (+o.montant || 0) + (+o.frais || 0) * typeInfo(o.type).tresorerie;
+  let mois = "", rang = 0;
+  const lignes = j.map((o, i) => {
+    const m = String(o.date).slice(0, 7), tete = m !== mois ? '<h5 class="jmois">' + esc(libMois(m, true)) + "</h5>" : ""; mois = m;
+    const refaire = !o.envoi && (o.app || rang < 5); if (!o.envoi) rang++;
+    const pu = (o.type === "Achat" || o.type === "Vente") && o.quantite > 0 && o.montant > 0 ? " · " + cours(net(o) / o.quantite) + "/part" : "";
+    const jum = confirmeSuppr === i ? versementJumeau(j, i) : -1;
+    return tete + '<div class="jr' + (o.envoi ? " envoi" : "") + '"><div class="jd">' + o.date.slice(8, 10) + "/" + o.date.slice(5, 7) + "<small>" + o.date.slice(0, 4) + "</small></div>" +
+      '<div class="jm"><b>' + esc(libType(o.type)) + (o.actif ? " " + esc(o.actif) : "") + (o.envoi ? '<span class="tag app">envoi…</span>' : "") + (o.date > auj ? '<span class="tag prog">programmé</span>' : "") + (o.app ? '<span class="tag app">saisi ici</span>' : "") + "</b>" +
+      "<span>" + esc(o.enveloppe) + (o.quantite !== null && o.quantite !== undefined ? " · " + qteBrute(o.quantite) + " part" + (o.quantite > 1 ? "s" : "") : "") + pu + (o.frais ? " · frais " + eur(o.frais, 2) : "") + "</span></div>" +
       '<div class="jv">' + eur(o.montant, 2) + "</div>" +
-      (o.envoi ? "" : '<div class="ja"><button class="lien" type="button" data-refaire="' + i + '">Refaire</button>' +
-      (o.app ? '<button class="lien danger" type="button" data-suppr="' + i + '">' + (confirmeSuppr === i ? "Confirmer la suppression" : "Supprimer") + "</button>" : "") + "</div>") + "</div>").join("") + "</div>";
+      (o.envoi || (!refaire && !o.app) ? "" : '<div class="ja">' + (refaire ? '<button class="lien" type="button" data-refaire="' + i + '">Refaire</button>' : "") +
+      (!o.app ? "" : confirmeSuppr !== i ? '<button class="lien danger" type="button" data-suppr="' + i + '">Supprimer</button>'
+        : jum >= 0 ? '<span class="jconf">Le versement de ' + eur(j[jum].montant, 2) + ' lié reste enregistré.</span><button class="lien danger" type="button" data-suppr="' + i + '">Supprimer l\'achat seul</button><button class="lien danger" type="button" data-suppr2="' + i + '" data-jum="' + jum + '">Supprimer aussi le versement</button>'
+        : '<button class="lien danger" type="button" data-suppr="' + i + '">Confirmer la suppression</button>') + "</div>") + "</div>";
+  }).join("");
+  z.innerHTML = '<p class="info aide">Supprimable 7 jours si saisi ici · Refaire = même opération, date du jour.</p><div class="m-jo">' + lignes + "</div>" + ligneRV;
+  brancherRV(z);
   z.querySelectorAll("[data-refaire]").forEach(b => b.addEventListener("click", () => {
     const o = j[+b.dataset.refaire];
-    ouvrirSaisieM({ type: o.type, env: o.enveloppe, actif: o.actif || "", qte: o.quantite !== null && o.quantite !== undefined ? saisieNombre(o.quantite, 8) : "", montant: saisieNombre(o.montant, 2), frais: o.frais ? saisieNombre(o.frais, 2) : "", auto: false }, "ordre");
+    /* v17.34 : un achat refait arrive SANS le versement (celui d'origine est une ligne à part du journal) */
+    ouvrirSaisieM({ type: o.type, env: o.enveloppe, actif: o.actif || "", qte: o.quantite !== null && o.quantite !== undefined ? saisieNombre(o.quantite, 8) : "", montant: saisieNombre(o.montant, 2), frais: o.frais ? saisieNombre(o.frais, 2) : "", apport: false, refait: true, auto: false }, "ordre");
   }));
+  const supprimer = async (o, quoi) => { const rep = await posterFichier({ action: "supprimer", ordre: o }); if (!rep.ok) toast((quoi ? quoi + " : " : "") + (rep.message || "Suppression impossible.")); return rep; };
   z.querySelectorAll("[data-suppr]").forEach(b => b.addEventListener("click", async () => {
     const i = +b.dataset.suppr;
     if (confirmeSuppr !== i) { confirmeSuppr = i; rendreJournal(); return; }
@@ -3504,10 +3687,28 @@ function rendreJournal() {
     M.ref.journal = j.filter((x, k) => k !== i);
     rendreJournal();
     toast("Suppression en cours…");
-    const rep = await posterFichier({ action: "supprimer", ordre: o });
+    const rep = await supprimer(o);
     if (rep.ok) { toast(rep.message || "Ordre supprimé."); charger(true); }
-    else { toast(rep.message || "Suppression impossible."); M.ref.journal = j; if (!$f("m-saisie").hidden) rendreJournal(); }
+    else { M.ref.journal = j; if (!$f("m-saisie").hidden) rendreJournal(); }
   }));
+  /* l'achat puis son versement : l'un APRÈS l'autre, le second seulement si le premier a réussi */
+  z.querySelectorAll("[data-suppr2]").forEach(b => b.addEventListener("click", async () => {
+    const i = +b.dataset.suppr2, k = +b.dataset.jum, o = j[i], v = j[k];
+    confirmeSuppr = null;
+    M.ref.journal = j.filter((x, n) => n !== i && n !== k); rendreJournal();
+    toast("Suppression en cours…");
+    const r1 = await supprimer(o, "Achat");
+    if (!r1.ok) { M.ref.journal = j; if (!$f("m-saisie").hidden) rendreJournal(); return; }
+    const r2 = await supprimer(v, "Achat supprimé, mais pas le versement");
+    if (r2.ok) toast("Achat et versement supprimés.");
+    charger(true);
+  }));
+}
+function brancherRV(z) {
+  if (z.querySelector("#j-rv-voir")) z.querySelector("#j-rv-voir").addEventListener("click", () => ouvrirReleveVersus(true));
+  if (z.querySelector("#j-rv-corr")) z.querySelector("#j-rv-corr").addEventListener("click", () => { confirmeRV = true; rendreJournal(); });
+  if (z.querySelector("#j-rv-non")) z.querySelector("#j-rv-non").addEventListener("click", () => { confirmeRV = false; rendreJournal(); });
+  if (z.querySelector("#j-rv-ok")) z.querySelector("#j-rv-ok").addEventListener("click", () => { confirmeRV = false; ouvrirReleveVersus(false); });
 }
 
 /* ---- Mises à jour du fichier : rappels (taux, fonds euros, Artema, appartement), nouvel actif, alertes de cours ---- */
@@ -3566,49 +3767,43 @@ function formReglage(k) {
   return "";
 }
 function coursConnu(c) { const r = refData(); let v = r.cours[c]; (M.groupes || []).forEach(g => g.lignes.forEach(l => { if (l.code === c && l.cours) v = l.cours; })); return v; }
+/** v17.34 · « Mon fichier » : la dernière valeur connue de chaque réglage (les rappels « à faire » restent dans la cloche et dans À faire) */
+function valeurFichier(k) {
+  const p = (M && M.parametres) || {}, n4 = v => ok(+v) && v !== "" && v !== null ? nf(0, 4).format(+v) : "";
+  if (k === "taux") { const t = p.taux || {}; return [["Livret A", t.livretA], ["LDDS", t.ldds], ["LEP", t.lep]].filter(x => ok(x[1])).map(x => x[0] + " " + pct(x[1], 2, false)).join(" · "); }
+  if (k === "fondsEuros") { const f = p.fondsEuros || {}; return f.taux ? pct(f.taux, 2, false) + (f.annee ? " (" + f.annee + ")" : "") + (f.bonus ? " + bonus " + pct(f.bonus, 2, false) : "") : ""; }
+  if (k === "artemaInitial") { const a = p.artema || {}; return n4(a.initial) ? "niveau " + n4(a.initial) : "pas encore saisi"; }
+  if (k === "artemaActuel") { const a = p.artema || {}; return n4(a.actuel) ? "niveau " + n4(a.actuel) + (a.date ? " au " + frDate(String(a.date).slice(0, 10)) : "") : "pas encore saisi"; }
+  if (k === "appart") { const a = p.appart || {}; return a.prix ? eur(a.prix) : ""; }
+  return "";
+}
+let naFichier = null;
 function rendreMaj() {
   const z = $f("m-pane-maj"); const p = (M && M.parametres) || null;
   if (!p) { z.innerHTML = '<p class="info">Paramètres de ton fichier indisponibles.</p>'; return; }
   const r = refData();
-  const utile = x => cleRappel(x.nom) && ((x.prochaine && /^\d{4}-/.test(x.prochaine)) || /À faire|mettre à jour/i.test(x.statut || ""));
-  const htmlRap = x => {
-    const k = cleRappel(x.nom);
-    const etat = /À faire|mettre à jour/i.test(x.statut) ? "faire" : /À jour|Fait/.test(x.statut) ? "ok" : "neutre";
-    const quand = x.prochaine && /^\d{4}-/.test(x.prochaine) ? "prochaine le " + frDate(x.prochaine) : (x.derniere && !/^\d{4}-/.test(String(x.derniere)) ? String(x.derniere) : (x.derniere ? "dernière le " + frDate(x.derniere) : ""));
-    const ouvert = reglageOuvert === k;
-    return '<div class="rap' + (ouvert ? " ouvert" : "") + '" data-reg="' + k + '">' +
-      (k ? '<button type="button" class="rap-h" data-rap="' + k + '" aria-expanded="' + ouvert + '">' : '<div class="rap-h fixe">') + '<span class="pt ' + etat + '"></span><span class="rap-n">' + esc(nomCourtRappel(x)) + "<small>" + esc(etat === "faire" ? "à faire " + quandRappel(x) : quandRappel(x) ? "prochaine " + quandRappel(x) : quand) + "</small></span>" +
-      '<span class="st ' + etat + '">' + (etat === "faire" ? "À faire" : etat === "ok" ? "À jour" : "—") + "</span>" + (k ? "</button>" : "</div>") +
+  /* chaque valeur du fichier sous son nom : dernière valeur, date, « Mettre à jour » (plus de pastilles À faire / À jour : c'est la cloche) */
+  const htmlVal = x => {
+    const k = cleRappel(x.nom), ouvert = !!k && reglageOuvert === k, maj = !!k && (!!partielRappel(k) || !!formReglage(k) || k === "releve" || k === "artemaActuel");
+    const val = k ? valeurFichier(k) : "";
+    const der = x.derniere && /^\d{4}-/.test(String(x.derniere)) ? "mis à jour le " + frDate(String(x.derniere).slice(0, 10)) : x.derniere ? String(x.derniere) : "";
+    const quand = !der && x.prochaine && /^\d{4}-/.test(x.prochaine) ? "prochaine le " + frDate(String(x.prochaine).slice(0, 10)) : "";
+    return '<div class="rap' + (ouvert ? " ouvert" : "") + '" data-reg="' + k + '"><div class="rap-h fixe">' +
+      '<span class="rap-n">' + esc(nomCourtRappel(x)) + "<small>" + esc([val, der || quand].filter(Boolean).join(" · ") || "—") + "</small></span>" +
+      (maj ? '<button type="button" class="mini-btn" data-rap="' + k + '" aria-expanded="' + ouvert + '">' + (ouvert ? "Fermer" : "Mettre à jour") + "</button>" : "") + "</div>" +
       (ouvert ? '<div class="rap-c">' + formReglage(k) + "</div>" : "") + "</div>";
   };
-  const tous = rappelsFichier(), autres = tous.filter(x => !utile(x));
-  const rappels = tous.filter(utile).sort((x, y) => (/À faire/i.test(y.statut || "") ? 1 : 0) - (/À faire/i.test(x.statut || "") ? 1 : 0) || String(x.prochaine).localeCompare(String(y.prochaine))).map(htmlRap).join("") +
-    (autres.length ? '<details class="rap-autres"><summary>Valeurs fixes du fichier (' + autres.length + ") · rarement à changer</summary>" + autres.map(htmlRap).join("") + "</details>" : "");
+  const tous = rappelsFichier().slice().sort((x, y) => (cleRappel(y.nom) ? 1 : 0) - (cleRappel(x.nom) ? 1 : 0));
   const alertes = M.alertes || [];
   const codesAlerte = Array.from(new Set((r.detenu || []).map(d => d.code).concat(r.actifs.filter(a => r.cours[a.code]).map(a => a.code))));
-  const classes = Array.from(new Set((p.classes || []).concat(["Actions", "Obligations", "Or", "Crypto", "Monétaire", "Immobilier"])));
-  const zones = Array.from(new Set((p.zones || []).concat(["Monde", "États-Unis", "Europe", "France", "Émergents", "Asie"])));
-  const opt = (l, v) => l.map(x => '<option value="' + esc(x) + '"' + (x === v ? " selected" : "") + ">" + esc(x) + "</option>").join("");
-  const mA = reglageMsg.actif ? '<div class="alerte ' + reglageMsg.actif[0] + '">' + esc(reglageMsg.actif[1]) + "</div>" : "";
   const mAl = reglageMsg.alertes ? '<div class="alerte ' + reglageMsg.alertes[0] + '">' + esc(reglageMsg.alertes[1]) + "</div>" : "";
   const pre = alertePre || {};
+  if (!naFichier) naFichier = nouvelNA("");
   z.innerHTML =
     (reglageOuvert && !rappelsFichier().some(x => cleRappel(x.nom) === reglageOuvert) && formReglage(reglageOuvert) ? '<div class="rap ouvert seul" data-reg="' + reglageOuvert + '"><div class="rap-c">' + formReglage(reglageOuvert) + "</div></div>" : "") +
-    '<h4 class="m-h4">Rappels <small>touche une ligne pour la mettre à jour</small></h4><div class="raps">' + rappels + "</div>" +
-    '<details class="maj-pli" data-reg="actif"' + (reglageMsg.actif ? " open" : "") + '><summary>➕ Ajouter un actif <small>aussi possible pendant la saisie d\'un ordre</small></summary>' +
-      '<form class="form reg-form" data-form="actif">' +
-        '<div class="rang">' + champ("a-code", "Code (court, unique)", "", { ph: "ex. CW8", texte: "maj" }) + champ("a-nom", "Nom", "", { ph: "ex. Amundi MSCI World", texte: true }) + "</div>" +
-        '<div class="champ"><label for="a-ticker">Ticker Google Finance</label><div class="ligne-champ"><input id="a-ticker" type="text" autocomplete="off" autocapitalize="characters" placeholder="ex. EPA:CW8"><button class="mini-btn" type="button" id="a-verif">Vérifier</button></div><span class="aide" id="a-verif-res">EPA: pour Paris, ETR: pour Xetra, CURRENCY:ETHEUR pour une crypto. Sans ticker, saisis un cours manuel.</span></div>' +
-        '<div class="rang">' +
-          '<div class="champ"><label for="a-classe">Classe</label><select id="a-classe">' + opt(classes, "Actions") + "</select></div>" +
-          '<div class="champ"><label for="a-zone">Zone</label><select id="a-zone">' + opt(zones, "Monde") + "</select></div>" +
-        "</div>" +
-        '<div class="rang">' +
-          '<div class="champ"><label for="a-levier">Levier</label><select id="a-levier"><option>1</option><option>2</option><option>3</option></select></div>' +
-          champ("a-manuel", "Cours manuel (€)", "", { ph: "si pas de ticker" }) +
-        "</div>" + mA +
-        '<button class="btn" type="submit">Ajouter l\'actif</button>' +
-      "</form></details>" +
+    (tous.length ? '<h4 class="m-h4">Valeurs du fichier <small>les rappels à faire sont dans la cloche 🔔</small></h4><div class="raps">' + tous.map(htmlVal).join("") + "</div>" : "") +
+    '<details class="maj-pli" data-reg="actif"' + (naFichier.msg && naFichier.code ? " open" : "") + '><summary>➕ Ajouter un actif <small>aussi possible pendant la saisie d\'un ordre</small></summary>' +
+      htmlNouvelActif(naFichier, false) + "</details>" +
     '<details class="maj-pli" data-reg="alertes"' + (reglageMsg.alertes || alertePre || alertes.length ? " open" : "") + '><summary>🔔 Alertes de cours <small>' + (alertes.length ? alertes.length + " en veille" : "aucune") + "</small></summary>" +
       (alertes.length ? '<div class="m-liste">' + alertes.map((a, i) => {
         const c = coursConnu(a.code), declenchee = c && (a.sens === "sous" ? c < a.seuil : c > a.seuil);
@@ -3626,6 +3821,7 @@ function rendreMaj() {
   alertePre = null;
   z.querySelectorAll("[data-rap]").forEach(b => b.addEventListener("click", () => {
     const k = b.dataset.rap;
+    if ((k === "artemaActuel" || k === "releve") && aArtema()) { fermerSaisieM(); ouvrirPointArtema(k); return; }   // même chemin que « Faire » de la cloche
     const pr = partielRappel(k); if (pr) { F = formulaire(pr); synchroniser(); paneSaisie("ordre"); return; }
     reglageOuvert = reglageOuvert === k ? null : k;
     delete reglageMsg[k];
@@ -3636,17 +3832,7 @@ function rendreMaj() {
     const liste = alertes.slice(); liste.splice(+b.dataset.supprAlerte, 1);
     envoyerReglage("alertes", { action: "alertes", alertes: liste }, null, () => { M.alertes = liste; });
   }));
-  const v = $f("a-verif");
-  if (v) v.addEventListener("click", async () => {
-    const t = ($f("a-ticker").value || "").trim().toUpperCase();
-    const res = $f("a-verif-res");
-    if (!t) { res.textContent = "Saisis d'abord un ticker."; return; }
-    v.disabled = true; res.textContent = "Vérification auprès de Google Finance…";
-    const rep = await posterFichier({ action: "verifierTicker", ticker: t });
-    v.disabled = false;
-    if (rep.ok) { res.textContent = "✓ " + t + " reconnu : " + cours(rep.cours) + (rep.nom ? " · " + rep.nom : ""); if (!$f("a-nom").value && rep.nom) $f("a-nom").value = rep.nom; }
-    else res.textContent = rep.message || "Ticker introuvable.";
-  });
+  brancherNouvelActif(naFichier, (a, rep) => { naFichier = null; toast(rep.message || "Actif " + a.code + " ajouté."); rendreMaj(); signalerCloche(); charger(true); }, () => {});
 }
 function lireChamp(id) { const el = $f(id); return el ? el.value.trim() : ""; }
 function soumettreReglage(type, form) {
@@ -4652,7 +4838,7 @@ function quandRappel(x) {
   const j = Math.round((new Date(x.prochaine.slice(0, 10) + "T12:00:00") - new Date(isoJour(new Date()) + "T12:00:00")) / 864e5);
   return j < 0 ? "depuis le " + frDate(x.prochaine) : j === 0 ? "aujourd'hui" : j === 1 ? "demain" : j <= 45 ? "dans " + j + " jours" : "le " + frDate(x.prochaine);
 }
-/* La cloche : seulement ce qui demande une action (sans doublon), avec « Faire » et « Plus tard » ; la liste complète vit dans Saisir › Mes comptes */
+/* La cloche : seulement ce qui demande une action (sans doublon), avec « Faire » et « Plus tard » ; les valeurs du fichier vivent dans « Mon fichier » (v17.34) */
 /* V15.15 · rappel discret, tous les 3 mois : réajuster (ou confirmer) le taux estimé du fonds euros */
 function feAVerifier() {
   const fe = M && M.parametres && M.parametres.fondsEuros; if (!fe || !fe.taux) return false;
@@ -4683,7 +4869,7 @@ function htmlNotifications() {
       : carte("vert", "✓", "Tout est à jour", "Aucun rappel ni anomalie." + (prochain ? " Prochain : " + esc(nomCourtRappel(prochain)) + " " + esc(quandRappel(prochain)) + "." : ""))) +
     htmlEcheancesNotif() +
     (M.marches ? '<h4 class="m-h4">Marchés</h4><div class="m-status">' + marches(M.marches) + "</div>" : "") +
-    (rappelsFichier().length ? '<button class="nt-tous" type="button" data-notif-maj>Tous les rappels et réglages du fichier <span>›</span></button>' : "") + "</div>";
+    (rappelsFichier().length ? '<button class="nt-tous" type="button" data-notif-maj>Mon fichier <small>valeurs, actifs, alertes</small> <span>›</span></button>' : "") + "</div>";
 }
 
 /* ================= Profil simple (Kévin) : épargne saisie à la main, bourse lue dans le Versus =================
@@ -4890,7 +5076,7 @@ function htmlJourSimple() {
           return '<div class="ms-r"><b>' + esc(x.nom) + '</b><span class="v">' + eur(x.solde) + "</span><small>" + esc(x.type || "") + '</small><small class="s"><span class="badge ' + (vieux ? "warn" : "flat") + '">mis à jour ' + ilYa(x.date) + "</span></small></div>"; }).join("") + "</div>" +
     "</div>" +
     '<button class="btn acc plein" type="button" id="ms-ouvrir">✏️ Mettre à jour mes soldes</button>' +
-    '<p class="info">Ton épargne, c\'est toi qui la saisis, quand tu veux : seul le dernier solde compte, les anciens servent aux courbes. Ta bourse vient de tes relevés du Versus (➕ › Relevé Versus).</p>';
+    '<p class="info">Ton épargne, c\'est toi qui la saisis, quand tu veux : seul le dernier solde compte, les anciens servent aux courbes. Ta bourse vient de tes relevés du Versus (➕ › Mouvement › « Relevé du mois pour le Versus »).</p>';
 }
 function brancherJourSimple(v) {
   const def = v.querySelector(".m-def-l");
@@ -4914,16 +5100,13 @@ function assurerFeuilleSimple() {
   d.innerHTML = '<div class="feuille moi m-feuille" role="dialog" aria-modal="true" aria-labelledby="ms-titre">' +
     '<h3 id="ms-titre">Saisir <button class="icon-btn" type="button" id="ms-fermer" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></h3>' +
     '<div class="seg m-seg4" role="group" aria-label="Saisie"><button type="button" data-ms-pane="soldes">Mouvement</button><button type="button" data-ms-pane="historique">Historique</button>' +
-      '<button type="button" data-ms-pane="comptes">Mes comptes</button><button type="button" data-ms-pane="versus">Relevé Versus</button></div>' +
+      '<button type="button" data-ms-pane="comptes">Mes comptes</button></div>' +
     '<div id="ms-corps"></div></div>';
   document.body.appendChild(d);
   const fermer = () => { d.hidden = true; confirmeS = null; };
   d.addEventListener("click", e => { if (e.target === d) fermer(); });
   $f("ms-fermer").addEventListener("click", fermer);
-  d.querySelectorAll("[data-ms-pane]").forEach(b => b.addEventListener("click", () => {
-    if (b.dataset.msPane === "versus") { fermer(); if (typeof ouvrirSaisie === "function") ouvrirSaisie(); return; }
-    paneS = b.dataset.msPane; confirmeS = null; rendreSimple();
-  }));
+  d.querySelectorAll("[data-ms-pane]").forEach(b => b.addEventListener("click", () => { paneS = b.dataset.msPane; confirmeS = null; rendreSimple(); }));
   document.addEventListener("keydown", e => { if (e.key === "Escape") fermer(); });
 }
 function ouvrirSoldes(o) {
@@ -4959,7 +5142,7 @@ function rendreSimple() {
     const sel = ouverts.find(c => c.nom === ETAT_S.compte) || ouverts[0], depart = !aDepart(sel.nom), solde = der[sel.nom] ? der[sel.nom][2] : null;
     const types = [["Versement", "➕ Versement"], ["Retrait", "➖ Retrait"], ["Intérêts", "💶 Intérêts"]];
     if (!types.some(t => t[0] === ETAT_S.type)) ETAT_S.type = "Versement";
-    z.innerHTML = '<div class="ms-liste">' + ouverts.map(c => '<button type="button" class="ms-l ms-c' + (c.nom === sel.nom ? " on" : "") + '" data-ms-c="' + esc(c.nom) + '"><span class="ms-n"><b>' + esc(c.nom) + "</b><small>" + (aDepart(c.nom) ? "solde " + eur(der[c.nom] ? der[c.nom][2] : 0, 2) : "valeur de départ à saisir") + "</small></span></button>").join("") + "</div>" +
+    z.innerHTML = htmlCarteReleveVersus() + '<div class="ms-liste">' + ouverts.map(c => '<button type="button" class="ms-l ms-c' + (c.nom === sel.nom ? " on" : "") + '" data-ms-c="' + esc(c.nom) + '"><span class="ms-n"><b>' + esc(c.nom) + "</b><small>" + (aDepart(c.nom) ? "solde " + eur(der[c.nom] ? der[c.nom][2] : 0, 2) : "valeur de départ à saisir") + "</small></span></button>").join("") + "</div>" +
       '<form class="form" id="ms-form" novalidate>' +
       (depart
         ? '<p class="ms-note">🏁 <b>Valeur de départ de ' + esc(sel.nom) + '</b> : le montant sur le compte à cette date. Elle se saisit <b>une seule fois</b> et se fige ensuite : après, seuls les versements, retraits et intérêts font bouger le solde.</p>'
@@ -4969,6 +5152,7 @@ function rendreSimple() {
       '<button class="btn acc plein" type="submit" id="ms-envoyer">' + (depart ? "Fixer la valeur de départ" : "Enregistrer") + "</button>" +
       '<p class="info">' + (depart ? "Regarde le montant exact dans ton appli bancaire avant de valider." : (ETAT_S.type === "Intérêts" ? "Les intérêts tombent en général au 1er janvier (livrets) : ils augmentent ton solde sans compter comme un versement dans tes séries." : ETAT_S.type === "Retrait" ? "Un retrait ne peut pas dépasser le solde du compte à cette date." : "Un versement compte dans ta série de mois avec un versement (Missions).") +
         " Solde actuel : <b>" + eur(solde || 0, 2) + "</b>. Une saisie se supprime pendant " + jm + " jours dans l'historique, puis elle est figée.") + "</p></form>";
+    if (z.querySelector("#f-rv")) z.querySelector("#f-rv").addEventListener("click", () => ouvrirReleveVersus(false));   // v17.34 : le relevé du Versus, en tête de Mouvement
     z.querySelectorAll("[data-ms-c]").forEach(b => b.addEventListener("click", () => { ETAT_S.compte = b.dataset.msC; rendreSimple(); }));
     z.querySelectorAll("[data-ms-t]").forEach(b => b.addEventListener("click", () => { ETAT_S.type = b.dataset.msT; rendreSimple(); }));
     z.querySelector("#ms-form").addEventListener("submit", async e => {

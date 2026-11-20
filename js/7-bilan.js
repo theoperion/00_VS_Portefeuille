@@ -751,6 +751,11 @@ $("#moi-enregistrer").addEventListener("click", () => {
   prechaufferMoi();
   if (vueActive() === "moi") { $("#reglages").hidden = true; rendreMoi(); }
 });
+/* v17.34 : « Mon fichier » (valeurs du fichier, ajout d'actif, alertes de cours), ex-onglet « Mes comptes » de la saisie */
+$("#moi-fichier").addEventListener("click", () => {
+  if (!moiConnecte()) { $("#moi-etat").textContent = "Connecte d'abord ton fichier ci-dessus."; return; }
+  chargerModuleMoi(() => { $("#reglages").hidden = true; window.Moi.ouvrirMaj(); });
+});
 $("#moi-tester-versus").addEventListener("click", async () => {
   const el = $("#moi-versus-etat");
   if (!window.Moi || !window.Moi.testerVersus) { el.textContent = "Ouvre d'abord l'onglet Moi une fois, puis réessaie."; return; }
