@@ -507,3 +507,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 20/11/2026 | ven | **v17.85 · L'or sans tiret sur 5 j / 1 M…** (Théo) : Google Finance n'a pas l'historique d'EPA:GOLD (Perf lignes vide) ; l'appli reprend alors la variation de la case « Or non couvert » des Marchés sur la même période (`PROXY_LIGNE`, `proxyPer`). |
 | 20/11/2026 | ven | **v17.86 · Point du vendredi** (idée de Claude, validée par Théo) : du vendredi 17 h 35 au lundi 9 h, une seule bulle à la 1re ouverture de Moi : semaine du portefeuille (5 séances, versements exclus), meilleure et pire ligne, face au S&P 500 (`pointVendredi`, une fois par semaine, rien ne reste à l'écran ; pas pour le profil simple ; pas le soir où la bulle du relevé s'affiche). |
 | 20/11/2026 | ven | **v17.87** (Théo) : Moi › Patrimoine, la rubrique « Quintessa » s'appelle « AV Quintessa ». |
+| 20/11/2026 | ven | **v17.88** (Théo) : « point du vendredi » retiré (la pastille 5 j donne déjà la semaine). |

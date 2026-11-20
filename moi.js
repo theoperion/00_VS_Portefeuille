@@ -1146,7 +1146,7 @@ function rendre() {
     return;
   }
   lireCache(); signalerCloche();
-  if (!bulleReleve()) pointVendredi();
+  bulleReleve();   // v17.88 (Théo) : plus de « point du vendredi » (la pastille 5 j suffit)
   if (!M) {
     v.innerHTML = erreur ? '<div class="m-vide"><p>Impossible de lire ton fichier.</p><p class="info">' + esc(majuscule(erreur).replace(/\.?$/, ".")) + '</p><button class="btn" type="button" id="m-reessayer">Réessayer</button></div>'
       : '<div class="m-vide"><div class="m-flaps" aria-hidden="true">' + flaps("MOI", !reduit) + "</div><p>Ouverture de ton fichier…</p><p class=\"info\">La première lecture prend quelques secondes. Ensuite, les derniers chiffres s'affichent tout de suite pendant la mise à jour.</p></div>";
@@ -3922,28 +3922,6 @@ function bulleReleve() {
     return true;
   } catch (e) { /* stockage indisponible : pas de bulle */ }
   return false;
-}
-/** v17.86 (Théo) · « point du vendredi » : après la clôture du vendredi (jusqu'au lundi 9 h), UNE bulle à la 1re ouverture :
-    la semaine du portefeuille (5 séances, versements exclus), meilleure et pire ligne, et face au S&P 500. Rien n'est gardé à l'écran. */
-function pointVendredi() {
-  try {
-    if (!M || M.simple || typeof toast !== "function" || !M.perfLignes) return;
-    const n = new Date(), jd = n.getDay(), mn = n.getHours() * 60 + n.getMinutes();
-    if (!((jd === 5 && mn >= 17 * 60 + 35) || jd === 6 || jd === 0 || (jd === 1 && mn < 9 * 60))) return;
-    const ven = new Date(n); ven.setDate(n.getDate() - ((jd + 2) % 7)); const k = isoJour(ven);   // le vendredi de la semaine écoulée
-    if (seanceDu() !== k) return;   // vendredi férié ou données pas à jour : pas de bilan bancal
-    const cle = "versus.pointVen"; if (localStorage.getItem(cle) === k) return;
-    const c = mSeance(M, "5j"), sy = c.synthese || {}; if (!ok(sy.jourPct)) return;
-    const ls = []; (c.groupes || []).forEach(g => g.lignes.forEach(l => { if (!l.especes && ok(l.pct) && (l.valeur || 0) >= 1) ls.push(l); }));
-    ls.sort((a, b) => b.pct - a.pct);
-    const mk = (marchesMoi() || { jour: [] }).jour.find(x => x.nom === "S&P 500"), sp = mk ? varMk(mk, "5j").v : null;
-    const discret = ETAT.discret === "oui";
-    let t = "📅 Ta semaine : " + pct(sy.jourPct, 1) + (discret || !ok(sy.jour) ? "" : " (" + eur(sy.jour, 0, true) + ")");
-    if (ls.length >= 2) t += " · meilleure : " + ls[0].code + " " + pct(ls[0].pct, 1) + " · pire : " + ls[ls.length - 1].code + " " + pct(ls[ls.length - 1].pct, 1);
-    if (ok(sp)) t += " · S&P 500 " + pct(sp, 1) + (sy.jourPct > sp ? " : battu ✓" : " : devant toi cette fois");
-    localStorage.setItem(cle, k);
-    toast(t);
-  } catch (e) { /* pas de bilan si une donnée manque */ }
 }
 function htmlCarteReleveVersus() {
   const der = dernierImportAuto();
