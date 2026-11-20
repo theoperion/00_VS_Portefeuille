@@ -1606,7 +1606,7 @@ function htmlPatrimoine() {
         (dette ? '<button type="button" class="m-dette" data-cible="p-immo"><i></i><span>Immobilier : dette nette</span><span class="num down">' + eur(immoNet) + '</span><span class="pc"></span></button>' : "") + "</div></div>" +
     /* lot 27 (Conseil) : sous le total, le patrimoine dans le temps (financier par défaut) puis l'unique Projection 2034, repliée */
     /* v17.38 (Théo) : l'assurance-vie mise en avant juste sous le total ; le patrimoine dans le temps et la projection, repliés, viennent après */
-    (sup.length ? bloc("p-av", "--c-av", "Quintessa", "par support", htmlAV(sup)) : "") +
+    (sup.length ? bloc("p-av", "--c-av", "AV Quintessa", "par support", htmlAV(sup)) : "") +
     blocPatrimoineTemps() + htmlProjection() +
     bloc("p-epargne", "--s2", "Épargne", esc(s.epargneLibelle || ""), totalInterets(PV) + liste(ep, rEp) + blocEpargneTemps()) +
     (net.avecImmo ? bloc("p-immo", "--s3", "Immobilier", "prix d'achat, prêts restants", pretHtml() + liste(imm, rImm) + blocPret()) : "") +
