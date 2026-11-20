@@ -1362,14 +1362,14 @@ function proxyPer(code, per) {
     const r = varMk(x, per); return typeof r.v === "number" && isFinite(r.v) ? r.v : null; } catch (e) { return null; }
 }
 function mSeance(m, cinq) {
-  const perf = m.perfLignes || {}, c = JSON.parse(JSON.stringify(m)); c.__seance = true; let tot = 0;
+  const perf = m.perfLignes || {}, c = JSON.parse(JSON.stringify(m)), dSeance = seanceDu(); c.__seance = true; let tot = 0;
   (c.groupes || []).forEach(g => {
     let j = 0;
     g.lignes.forEach(l => { if (l.especes) return; const p = perf[g.env + "|" + l.code];
-      const v = p ? (cinq ? p[PERIODES_J[cinq][0]] : p.seance) : null;   // 5 j : « 1 semaine » de Perf lignes (cours d'il y a 5 séances)
+      const v = p ? (cinq ? p[PERIODES_J[cinq][0]] : (p.seanceDu && dSeance && p.seanceDu < dSeance ? null : p.seance)) : null;   // 5 j : « 1 semaine » de Perf lignes ; v18.4 : jamais la variation d'une séance plus ancienne présentée comme la dernière
       let w = v;
       if (typeof w !== "number" && cinq) w = proxyPer(l.code, cinq);   // v17.85 (Théo) : GOLD sans historique Google → l'historique de la case « Or non couvert »
-      if (typeof w === "number") { l.pct = w; l.jour = (l.valeur || 0) * w / (1 + w); } else if (cinq) { l.pct = null; l.jour = 0; }
+      if (typeof w === "number") { l.pct = w; l.jour = (l.valeur || 0) * w / (1 + w); } else if (cinq || (p && p.seanceDu && dSeance && p.seanceDu < dSeance)) { l.pct = null; l.jour = 0; }
       j += l.jour || 0; });
     if (g.total) { g.total.jour = j; const base = (g.total.valeur || 0) - j; g.total.pct = base ? j / base : 0; }
     tot += j;
@@ -5321,7 +5321,7 @@ const FETES_M = [["confettis", "Confettis", "🎊", null], ["damier", "Damier", 
   ["meteores", "Météores", "☄️", "meteores"],
   ["aube", "Lever de soleil", "🌅", ["🌅", "☀️", "✨", "🌤️"]], ["feuilles", "Feuilles d'automne", "🍂", ["🍂", "🍁", "🍂", "🌰"]]];   // lot 56   // lot 55 · fête spéciale : des traînées lumineuses traversent l'écran
 const EMBLEMES_M = [["pousse", "Pousse", "🌱"], ["abeille", "Abeille", "🐝"], ["hibou", "Hibou", "🦉"], ["tortue", "Tortue", "🐢"], ["renard", "Renard", "🦊"],
-  ["aigle", "Aigle", "🦅"], ["lion", "Lion", "🦁"], ["dragon", "Dragon", "🐉"], ["couronne", "Couronne", "👑"], ["taureau", "Taureau", "🐂"],
+  ["aigle", "Aigle", "🦅"], ["lion", "Lion", "🦁"], ["dragon", "Dragon", "🐉"], ["couronne", "Étoile", "⭐"], ["taureau", "Taureau", "🐂"],
   ["fourmi", "Petite fourmi", "🐜"], ["ecureuil", "Écureuil", "🐿️"], ["castor", "Castor", "🦫"], ["dauphin", "Dauphin", "🐬"], ["loup", "Loup", "🐺"],
   ["chene", "Chêne", "🌳"], ["boussole", "Boussole", "🧭"], ["ancre", "Ancre", "⚓"], ["phare", "Phare", "🗼"], ["comete-e", "Comète", "☄️"],
   ["montagne", "Montagne", "⛰️"],   // lot 54 · prestige (5 ans sans vendre)

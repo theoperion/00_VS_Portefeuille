@@ -946,7 +946,7 @@ function bullePortrait(essai) {
   } catch (e) { }
 }
 let ECU_SLOT = "pilote";
-const ICONES_KLAXON = { confettis: "🎊", damier: "🏁", feu: "🎆", parade: "🎺", billets: "💸", fanfare: "👑", cibles: "🎯", fusees: "🚀", trophees: "🏆" };
+const ICONES_KLAXON = { confettis: "🎊", damier: "🏁", feu: "🎆", parade: "🎺", billets: "💸", fanfare: "📯", cibles: "🎯", fusees: "🚀", trophees: "🏆" };
 /** Rareté d'un objet : série (de base), bronze, argent, or, légendaire, secret, unique (premier millionnaire) */
 function rareteItem(slot, id) {
   if (BASE_ECURIE[slot] === id) return { cls: "r-serie", lib: "Série" };
