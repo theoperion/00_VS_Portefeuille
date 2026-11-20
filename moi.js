@@ -3791,7 +3791,7 @@ function dernierAchat() {
 function htmlMemeAchat() {
   const d = dernierAchat(); if (!d) return "";
   const mm = d.date && d.date.slice(0, 7) === isoJour(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 15)).slice(0, 7);
-  return '<button type="button" class="m-meme" id="f-meme">↻ <b>Même achat que ' + (mm ? "le mois dernier" : "la dernière fois") + "</b><small>" + esc(d.actif) + " · " + esc(d.env) + "</small></button>";
+  return '<button type="button" class="m-meme" id="f-meme">↻ <b>Même titre que ' + (mm ? "le mois dernier" : "la dernière fois") + '</b><small>' + esc(d.actif) + " · " + esc(d.env) + " · parts et montant à recopier de ton nouvel avis</small></button>";
 }
 const NOMS_ETAPES = { 1: "Quoi ?", 2: "Les chiffres", 3: "Versement", 4: "Relire" };
 function etapesDe(t) { return t === "Achat" ? [1, 2, 3, 4] : t === "Vente" ? [1, 2, 4] : [1, 2]; }
