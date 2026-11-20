@@ -3735,7 +3735,8 @@ function paneSaisie(o) {
   ["ordre", "journal", "maj"].forEach(k => { const z = $f("m-pane-" + k); z.hidden = k !== o; if (k !== o) z.innerHTML = ""; });   // jamais deux formulaires « Nouvel actif » à la fois
   /* « Mon fichier » : même feuille, sans les onglets de la saisie */
   $f("m-seg").hidden = o === "maj"; $f("m-titre-t").textContent = o === "maj" ? "Mon fichier" : "Saisir"; $f("f-guide").hidden = o !== "ordre" || PREF.aides === false; $f("f-menu").hidden = o !== "ordre";
-  if (o === "ordre") rendreFormulaire(); else if (o === "journal") rendreJournal(); else rendreMaj();
+  try { if (o === "ordre") rendreFormulaire(); else if (o === "journal") rendreJournal(); else rendreMaj(); }
+  catch (e) { const z = $f("m-pane-" + o); if (z) z.innerHTML = '<p class="alerte">Cet écran n\'a pas pu s\'afficher (' + esc((e && e.message) || String(e)) + '). Envoie une capture à Théo/Claude.</p>'; console.error(e); }   // v17.93 : jamais d'écran vide
 }
 /* quantité <-> prix par part : celui que tu as saisi en dernier pilote l'autre */
 function netOrdre() {
@@ -6834,11 +6835,25 @@ window.Moi = {
   pointArtema() { lireCache(); if (M) ouvrirPointArtema("point"); },
   feVerifie() { stock.set(cleStock("feVu"), String(Date.now())); signalerCloche(); },
   reporterRappel(k) { const pt = plusTard(); pt[k] = Date.now() + 864e5; stock.set(cleStock("plusTard"), JSON.stringify(pt)); signalerCloche(); if (vueMoi()) rendre(); },
-  ouvrirMaj() { lireCache(); if (M) { reglageOuvert = null; ouvrirSaisieM(null, "maj"); } },
+  ouvrirMaj() {   // v17.93 (Théo) : fichier pas encore lu → on le lit puis on ouvre (avant : rien ne s'ouvrait, écran vide)
+    lireCache();
+    if (M) { reglageOuvert = null; ouvrirSaisieM(null, "maj"); return; }
+    if (typeof toast === "function") toast("Lecture de ton fichier en cours…");
+    const essai = (n) => { lireCache(); if (M) { reglageOuvert = null; ouvrirSaisieM(null, "maj"); } else if (n > 0) setTimeout(() => essai(n - 1), 1000); else if (typeof toast === "function") toast("Ton fichier ne répond pas pour l'instant : réessaie dans un moment."); };
+    charger(false); setTimeout(() => essai(30), 1000);
+  },
   saisir(partiel, onglet) { lireCache(); if (M && M.simple) ouvrirSoldes(); else ouvrirSaisieM(partiel, onglet); },
   retourSaisie,
   rafraichir(frais) { if (configure()) { rendre(); charger(!!frais); } },
-  testerVersus() { return configure() ? posterFichier({ action: "testerVersus" }) : Promise.resolve({ ok: false, message: "Aucun fichier relié à cet appareil." }); },
+  testerVersus() {   // v17.93 (Théo) : fichier lu directement par le Versus (Théo) → on le dit clairement, avec le dernier relevé
+    if (!configure()) return Promise.resolve({ ok: false, message: "Aucun fichier relié à cet appareil." });
+    return posterFichier({ action: "testerVersus" }).then(r => {
+      const der = dernierImportAuto();
+      if (r && r.ok && r.pret === false && der && !versusRelie()) { const h = new Date(Math.round(der.getTime() / 36e5) * 36e5);
+        return { ok: true, message: "✅ Ton relevé est lu automatiquement par le Versus, le dernier jour ouvré du mois vers 19 h (dernier : " + String(h.getDate()).padStart(2, "0") + "/" + String(h.getMonth() + 1).padStart(2, "0") + " à " + h.getHours() + " h)." }; }
+      return r;
+    });
+  },
   connecter(url, k) {
     url = String(url || "").trim();
     if (url) stock.set(K.api, url);
