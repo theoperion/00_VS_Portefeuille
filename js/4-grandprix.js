@@ -1268,7 +1268,7 @@ function feteChauffe(podium, apercu, rang) {
   const marche = (n, r) => n ? (r = Math.min(3, rg(n)), '<div class="fc-m fc-m' + r + (n === moi ? " moi" : "") + '" style="--c:' + couleur(n) + '">' + tete(n) + "<b>" + esc(n) + "</b>" + (n === moi && !bravo ? "<small>toi</small>" : "") + '<i class="fc-socle">' + r + "</i></div>") : "";
   o.innerHTML = '<canvas class="fc-neige" aria-hidden="true"></canvas><div class="fc-c">' + (apercu ? '<span class="fc-apercu">Aperçu admin · exemple inventé</span>' : "") +
     '<span class="fc-k">' + esc((G.drap || "🎅") + " " + (G.gp || "L'Atelier du Père Noël")) + "</span>" +
-    '<div class="fc-herosx' + (duo ? " duo" : "") + '">' + vs.map(n => '<div class="fc-heros" style="--c:' + couleur(n) + '"><i class="fc-halo"></i>' + tete(n) + BONNET_SVG + "</div>").join("") + "</div>" +
+    '<div class="fc-herosx' + (duo ? " duo" : "") + '">' + vs.map(n => '<div class="fc-heros" style="--c:' + couleur(n) + '"><i class="fc-halo"></i>' + avatar(n, Object.assign({}, equipDe(n), { vignette: true, skin: "noel" })) + "</div>") /* v18.3 : bonnet dessiné sur la tête */.join("") + "</div>" +
     (bravo ? '<h3 class="fc-t">Bravo&nbsp;!</h3><p class="fc-s">' + (duo ? "Tu partages la victoire du tour de chauffe" : "Tu remportes le tour de chauffe") + "</p>"
       : '<h3 class="fc-t">' + esc(v) + '</h3><p class="fc-s">' + (duo ? "Vainqueurs ex æquo du tour de chauffe" : "Vainqueur du tour de chauffe") + "</p>") +
     '<div class="fc-podium">' + marche(podium[1], 2) + marche(podium[0], 1) + marche(podium[2], 3) + "</div>" +

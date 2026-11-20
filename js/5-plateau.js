@@ -375,6 +375,8 @@ function encodeTete(o) { return CHAMPS_TETE.map((c, i) => String(Math.max(0, Mat
 /** V16.35 · accessoire du thème, posé sur la tête de chacun UNIQUEMENT dans les cartes 2D des circuits (clé = TRACES[id].peint).
  *  Chaque entrée renvoie { derriere?, corps?, cache? (masque la frange), dessus } dans le repère 40×40 de svgTete. */
 const SKINS_TETE = {
+  // v18.3 (Théo) : bonnet de Noël du vainqueur du tour de chauffe, dessiné SUR la tête (bande de fourrure au front, pointe tombante, pompon)
+  noel: () => ({ cache: true, dessus: '<path d="M10.8 10.8C11.2 4.6 15.8 1.2 21 1.3C26.6 1.5 30.6 4.2 32.6 8.8C30.6 7.4 28.6 7 27.1 7.6C27.9 8.6 28.7 9.7 29.2 10.8Z" fill="#D62839"/><path d="M21 1.3C26.6 1.5 30.6 4.2 32.6 8.8C30.6 7.4 28.6 7 27.1 7.6C25.6 5 23.6 2.6 21 1.3Z" fill="#A51C2B"/><path d="M14 4.6C16 2.8 18.4 2 21 2" stroke="#fff" stroke-width=".6" opacity=".25" fill="none" stroke-linecap="round"/><rect x="9.6" y="9.4" width="20.8" height="4" rx="2" fill="#FBFAF7" stroke="#DDD9D0" stroke-width=".35"/><circle cx="32.7" cy="9.7" r="2.5" fill="#FBFAF7" stroke="#DDD9D0" stroke-width=".35"/>' }),
   // décembre · Garage : casquette de mécano à la couleur du pilote
   garage: c => ({ dessus: '<path d="M11.2 11.8C11 6.4 14.8 3.6 20 3.6S29 6.4 28.8 11.8Z" fill="' + c + '"/><path d="M11.2 11.8C11 6.4 14.8 3.6 20 3.6" fill="none" stroke="#fff" stroke-width=".5" opacity=".35"/><path d="M20 3.6V11.8" stroke="rgba(0,0,0,.2)" stroke-width=".5"/><path d="M9.6 11.4C13 13.6 27 13.6 30.4 11.4C30 13.8 27.6 14.6 20 14.6S10 13.8 9.6 11.4Z" fill="#1B1D22"/><circle cx="20" cy="8" r="2.1" fill="#fff"/><path d="M18.9 7.2L20 9.2 21.1 7.2" stroke="' + c + '" stroke-width=".7" fill="none"/>' }),
   // janvier · Forêt : couronne de feuilles et une luciole
