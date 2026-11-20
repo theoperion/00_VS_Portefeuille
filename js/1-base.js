@@ -94,8 +94,9 @@ function couleur(nom) { const i = D.personnes.findIndex(p => p.nom === nom); ret
 function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 function couleurReelle(c) { const m = /var\((--[\w-]+)\)/.exec(c); return m ? css(m[1]) : c; }
 
-const PERIODES = [["mois", "Mois en cours (dernier relevé)"], ["3m", "3 derniers mois"], ["6m", "6 derniers mois"], ["ytd", "Année en cours"], ["12m", "12 derniers mois"], ["comp", "Depuis la date de comparaison"], ["tout", "Depuis le début"]];
-if (!PERIODES.some(([k]) => k === ETAT.per)) ETAT.per = "ytd";   // lot47 : filtres mémorisés sur l'appareil (versus.etat) ; un choix disparu revient au défaut
+const PERIODES = [["mois", "Mois en cours (dernier relevé)"], ["3m", "3 derniers mois"], ["6m", "6 derniers mois"], ["ytd", "Année en cours"], ["12m", "12 derniers mois"], ["comp", "Depuis le début du championnat"], ["tout", "Depuis le début"]];
+if (!PERIODES.some(([k]) => k === ETAT.per)) ETAT.per = "ytd";
+if (ETAT.perAn !== new Date().getFullYear()) { if (ETAT.perAn) ETAT.per = "ytd"; ETAT.perAn = new Date().getFullYear(); garder(); }   // v17.57 (Théo) : chaque 1er janvier, la période revient sur « Année » (= début du championnat) ; ensuite le choix reste mémorisé   // lot47 : filtres mémorisés sur l'appareil (versus.etat) ; un choix disparu revient au défaut
 
 const F0_2 = nf(0, 2);
 function axeEur(t) { return ETAT.discret === "oui" ? "" : Math.abs(t) >= 1000 ? (t < 0 ? "−" : "") + F0_2.format(Math.abs(t) / 1000) + "k" : F0.format(t); }   // v16.83 : « 22,5k », plus « 23k »
@@ -334,7 +335,7 @@ function rendreTicker() {
 function i2Actif() { return ok(ETAT.i2c) && ETAT.i2c >= 0 && ETAT.i2c !== ETAT.i1 && ETAT.i2c < D.marche.indices.length ? ETAT.i2c : -1; }
 /* lot47 (Théo, 20/11) · filtres compacts : enveloppe et période en petites pastilles (un toucher), indices en petites listes (trop de choix) ;
    ils prennent le moins de place possible pour laisser la place au classement, aux graphiques et aux images. Mêmes réglages qu'avant (ETAT.env/per/i1/i2c). */
-const PER_COURT = { mois: "1 m", "3m": "3 m", "6m": "6 m", ytd: "Année", "12m": "12 m", comp: "Réf.", tout: "Tout" };
+const PER_COURT = { mois: "1 m", "3m": "3 m", "6m": "6 m", ytd: "Année", "12m": "12 m", comp: "Championnat", tout: "Tout" };
 const ENV_COURT = ["Tout", "PEA", "AV"];
 function filtres(avecIndices, avecPeriode = true, avecSecond = true) {
   const opt = (v, l, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? " selected" : "") + ">" + esc(l) + "</option>";
