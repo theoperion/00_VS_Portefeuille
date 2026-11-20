@@ -913,7 +913,7 @@ function phrasesCourse(y, i) {
   if (m.piege) milieu.push({ p: 1.5, t: m.piege.ico + " Piège du circuit : " + m.piege.nom + "." });
   if (m.spec) milieu.push({ p: 1.5, t: m.spec.ico + " " + m.spec.nom + " : " + m.spec.txt.replace(/\.$/, "") + "." });
   milieu.sort((a, b) => b.p - a.p);
-  const chg = av[0] !== ap[0] ? "👑 " + ap[0] + " prend la tête du championnat !" : null;
+  const chg = av[0] !== ap[0] ? "🥇 " + ap[0] + " prend la tête du championnat !" : null;
   const fin = (v ? "🏁 " + v.nom + " remporte la manche (+" + v.p + " pts)" + (v.bonus ? ", et bat l'indice 🎯" : "") + "." : "🏁 Arrivée !") + (chg ? " " + chg : "");
   return { debut, milieu: milieu.slice(0, 2).map(z => z.t), fin };
 }

@@ -296,7 +296,7 @@ function palmaresMois(env, deb, fin, ksDesc) {
   const part = total ? '<div class="vic-part" aria-hidden="true">' + tri.filter(x => x.victoires).map(x => '<i style="flex:' + x.victoires + ";background:" + couleur(x.nom) + '"><span>' + esc(x.nom) + " " + x.victoires + "</span></i>").join("") + "</div>" : "";
   const lignes = tri.map((x, i) => {
     const bande = ks.map(k => { const a = aRendement(D.personnes.find(p => p.nom === x.nom), env, k); return '<i class="' + (gagnant[k] === x.nom ? "g" : a ? "j" : "a") + '" title="' + esc(moisLong(k)) + '"' + (gagnant[k] === x.nom ? ' style="background:' + couleur(x.nom) + '"' : "") + "></i>"; }).join("");
-    const puces = [x.serie >= 2 ? "🔥 " + x.serie + " d'affilée" : null, x.record >= 2 ? "record " + x.record : null, x.enTete ? "👑 " + x.enTete + " mois en tête" : null, "🎯 bat l'indice " + pct(x.mois ? x.battu / x.mois : null, 0, false)].filter(Boolean);
+    const puces = [x.serie >= 2 ? "🔥 " + x.serie + " d'affilée" : null, x.record >= 2 ? "record " + x.record : null, x.enTete ? "🥇 " + x.enTete + " mois en tête" : null, "🎯 bat l'indice " + pct(x.mois ? x.battu / x.mois : null, 0, false)].filter(Boolean);
     return '<div class="vic-l' + (i === 0 && x.victoires ? " tete" : "") + '" style="--c:' + couleur(x.nom) + '"><span class="vic-n">' + x.victoires + "<small>/" + x.mois + "</small></span>" +
       '<div class="vic-c"><b>' + esc(x.nom) + couronne(x.nom) + '</b><div class="vic-b">' + bande + '</div><div class="vic-s">' + puces.map(t => "<span>" + esc(t) + "</span>").join("") + "</div></div></div>";
   }).join("");

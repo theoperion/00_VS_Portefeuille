@@ -559,7 +559,7 @@ function rendreClassement() {
     rang++;
     const ecart = s.i1 ? s.twr - s.i1.twr : null;
     /* lot47 · RÈGLE D'AFFICHAGE D'UNE LIGNE (Conseil du Classement, 20/11) — toujours 3 zones, jamais plus de 2 lignes de texte :
-       gauche = place (+ ▲/▼ seulement si elle a bougé) · milieu = tête + NOM (+ 👑 s'il est gagné) / une seule « ligne vivante » · droite = perf + écart au leader.
+       gauche = place (+ ▲/▼ seulement si elle a bougé) · milieu = tête + NOM (+ 👑 premier millionnaire) / une seule « ligne vivante » · droite = perf + écart au leader.
        « Moi » = ligne surlignée (plus d'étiquette). Relevé manquant = la ligne vivante le dit (⏳), au lieu d'une étiquette coupée.
        Ligne vivante : tour de chauffe = écart à l'indice + mini-courbe ; saison (dès le 1/1/2027) = 3 badges au plus (+N) + mini-courbe,
        l'écart à l'indice passant en tête du détail (la ligne pointillée de l'indice le montre déjà dans le classement). */

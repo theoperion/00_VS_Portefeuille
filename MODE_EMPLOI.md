@@ -523,3 +523,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 21/11/2026 | sam | **v18.1** (Théo) : rappel des taux des livrets : « Livret A, LDDS et LEP » (révisés le 1er février et le 1er août), pas seulement le Livret A. |
 | 21/11/2026 | sam | **Fichiers Théo, Clément, Devlin** (Théo) : rappel « Intérêts annuels des livrets » le **1er janvier** au lieu du 2 (Paramètres colonne V, formule `DATE(…;1;1)`). |
 | 21/11/2026 | sam | **Fichiers Théo, Clément, Devlin** : rappel « Taux des livrets » (Paramètres!V5) : le 1er février et le 1er août de chaque année, même si la mise à jour est faite en janvier (avant : une mise à jour en janvier sautait le 1er février). |
+| 21/11/2026 | sam | **v18.2** (Théo) : le 1er n'a plus la couronne (réservée au premier millionnaire) : 🥇 sur le podium du mois (Classement), « 🥇 N mois en tête » et « 🥇 X prend la tête du championnat ». |

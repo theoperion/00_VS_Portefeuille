@@ -62,7 +62,7 @@ function carteVerdict(v) {
     if (!x) return '<div class="vp-m vp-' + place + ' vide"></div>';
     const rg = rangDe(x), bat = idxOk && x.r > v.iR;
     return '<div class="vp-m vp-' + place + (rg === 1 ? " champ" : "") + '" style="--c:' + couleur(x.nom) + '" data-fiche="' + esc(x.nom) + '" role="button" tabindex="0" aria-label="Fiche de ' + esc(x.nom) + '">' +
-      '<div class="vp-p">' + (rg === 1 ? '<span class="vp-cour" aria-hidden="true">👑</span>' : "") + tete(x.nom) + '<b style="color:' + couleur(x.nom) + '">' + esc(x.nom) + "</b>" + (typeof plaqueDe === "function" && plaqueDe(x.nom) ? '<span class="vp-plq">' + plaqueDe(x.nom) + "</span>" : "") +
+      '<div class="vp-p">' + (rg === 1 ? '<span class="vp-cour" aria-hidden="true">🥇</span>' : "") + tete(x.nom) + '<b style="color:' + couleur(x.nom) + '">' + esc(x.nom) + "</b>" + (typeof plaqueDe === "function" && plaqueDe(x.nom) ? '<span class="vp-plq">' + plaqueDe(x.nom) + "</span>" : "") +
       '<em class="' + sens(x.r) + '" data-cv="' + x.r + '" data-cf="pct">' + pct(x.r) + "</em>" + (bat ? '<i class="vp-bat" title="Bat ' + nomI + '">🎯</i>' : "") + "</div>" +
       '<div class="vp-s"><span class="vp-rg">' + rg + "</span>" + (rg === 1 ? "<small>champion</small>" : "") + "</div></div>";
   };
