@@ -6844,6 +6844,7 @@ window.Moi = {
   },
   saisir(partiel, onglet) { lireCache(); if (M && M.simple) ouvrirSoldes(); else ouvrirSaisieM(partiel, onglet); },
   retourSaisie,
+  envoieSeul() { lireCache(); return versusRelie(); },   // v17.96 : le fichier envoie-t-il lui-même son relevé au Versus ?
   rafraichir(frais) { if (configure()) { rendre(); charger(!!frais); } },
   testerVersus() {   // v17.93 (Théo) : fichier lu directement par le Versus (Théo) → on le dit clairement, avec le dernier relevé
     if (!configure()) return Promise.resolve({ ok: false, message: "Aucun fichier relié à cet appareil." });
