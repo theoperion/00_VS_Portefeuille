@@ -1611,7 +1611,7 @@ function lienArtema() {
   const E = etatArtema(), p = E.prochain, txt = E.phase === "attente" || E.phase === "photo" ? "photo de départ les 2–4 déc." : E.phase === "depart" ? "niveau de départ à saisir" : p ? "prochain rendez-vous : " + moisAn(p.ev) : "terminé";
   const X = r => (Math.max(0, Math.min(1, (r - .4) / .9)) * 96 + 2).toFixed(1);
   const mini = E.ratio ? '<svg class="art-mini" viewBox="0 0 100 22" aria-label="Indice à ' + Math.round(E.ratio * 100) + ' % de son départ"><rect x="2" y="12" width="' + (X(.6) - 2) + '" height="6" rx="3" fill="#C8414E"/><rect x="' + X(.6) + '" y="12" width="' + (X(1) - X(.6)) + '" height="6" fill="#F2B33A"/><rect x="' + X(1) + '" y="12" width="' + (98 - X(1)) + '" height="6" rx="3" fill="#3DDC97"/><path d="M' + X(E.ratio) + ' 10l-3-5h6z" fill="currentColor"/><text x="' + X(E.ratio) + '" y="4.5" text-anchor="middle" font-size="7" font-weight="700" fill="currentColor">' + Math.round(E.ratio * 100) + ' %</text></svg>' : "";
-  return '<button type="button" class="art-lien" data-m-aller="artema" style="--c:' + COUL_AV.artema + '"><span><b>🎯 Suivi Artema</b><small>' + esc(txt) + "</small></span>" + mini + '<i aria-hidden="true">›</i></button>';
+  return '<button type="button" class="art-lien" data-m-aller="artema" style="--c:' + COUL_AV.artema + '"><span><b>🎯 Suivi du produit structuré Artema</b><small>' + esc(txt) + "</small></span>" + mini + '<em class="art-voir">Voir le détail ›</em></button>';   // v17.45 (Théo) : plus visible, on voit que ça s'ouvre
 }
 /* ---- ⑥ le simulateur « Et si ? » : un curseur, six rendez-vous, un seul calcul (issueArtema) ---- */
 let artSim = { v: null, i: null, ouvert: false }, artCourbeTout = false, artTrois = false;

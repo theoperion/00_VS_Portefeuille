@@ -1789,3 +1789,10 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .gp-plein .gp-enigme .gp-indice, .gp-plein .gp-enigme .gp-chercheurs { display: block; }
 .gp-plein .gp-piste.en2d .gp-enigme:not(.cache) { display: block; }
 .gp-plein .gp-piste.en2d .gp-tresor-appel { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 56px); }
+
+/* v17.45 : le lien vers le suivi Artema se voit (bordure pleine, bouton « Voir le détail ») */
+.art-lien { border-width: 1.5px; padding: 12px; box-shadow: 0 2px 10px color-mix(in srgb, var(--c) 18%, transparent); }
+.art-lien > span { flex: 1 1 auto; min-width: 0; }
+.art-lien b { font-size: 14px; white-space: normal; }
+.art-lien .art-voir { flex: none; margin-left: auto; padding: 6px 10px; border-radius: 999px; background: var(--c); color: #fff; font: 700 12px/1 var(--f-text); font-style: normal; white-space: nowrap; }
+@media (max-width: 400px) { .art-lien .art-mini, .art-lien .art-jw.mini { display: none; } }
