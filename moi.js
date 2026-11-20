@@ -3431,8 +3431,12 @@ function echeancesMoi() {
   });
   const an = new Date().getFullYear();
   if ((M.epargne || []).some(r => !/^Total/.test(r.nom || "") && genreLivret(r))) {
-    add({ d: an + "-12-31", ico: "🏦", t: "Intérêts des livrets", s: "versés sur tes livrets le 31 décembre", k: "liv-int", rrule: "FREQ=YEARLY" });
-    [an + "-02-01", an + "-08-01", (an + 1) + "-02-01"].filter(d => d >= auj).slice(0, 1).forEach(d => add({ d, ico: "📣", t: "Nouveau taux possible du Livret A", s: "révisé en principe le 1er février et le 1er août", k: "liv-taux" }));
+    // v18.0 (Théo) : pas de doublon avec les rappels du fichier (« Intérêts des livrets » le 2 janv., « Taux des livrets » le 1er févr.) : on enrichit le rappel à la place
+    const ksF = new Set(M.simple ? [] : rappelsFichier().map(x => cleRappel(x.nom)).filter(Boolean)), enrichir = (k, txt) => l.filter(x => x.k === "r-" + k).forEach(x => { x.s = /^rappel de ton fichier$/.test(x.s || "") ? txt : txt + " · " + x.s; });
+    if (ksF.has("interets")) enrichir("interets", "versés le 31 décembre, à noter dans ton fichier");
+    else add({ d: an + "-12-31", ico: "🏦", t: "Intérêts des livrets", s: "versés sur tes livrets le 31 décembre", k: "liv-int", rrule: "FREQ=YEARLY" });
+    if (ksF.has("taux")) enrichir("taux", "nouveau taux possible du Livret A (1er février et 1er août)");
+    else [an + "-02-01", an + "-08-01", (an + 1) + "-02-01"].filter(d => d >= auj).slice(0, 1).forEach(d => add({ d, ico: "📣", t: "Nouveau taux possible du Livret A", s: "révisé en principe le 1er février et le 1er août", k: "liv-taux" }));
   }
   const fe = ((M.parametres || {}).fondsEuros) || {};
   if (fe.bonus && fe.bonusFin) add({ d: String(fe.bonusFin).slice(0, 10), ico: "💶", t: "Fin du bonus du fonds euros", s: "bonus de " + pct(fe.bonus, 2, false), k: "fe-bonus" });
