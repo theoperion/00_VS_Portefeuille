@@ -2127,13 +2127,14 @@ function pretHtml() {
     "</div>";
 }
 /* ---- V15.4 · Marchés : 8 cases (variation du jour, lue dans le Versus), courbe d'un an au toucher, « Comparer » en base 100 ---- */
-const COUL_MK = ["#5B8DEF", "#2BB673", "#9B6BFF", "#E5484D", "#F2A33A", "#18A9C7", "#D6619E", "#C9A227", "#8C7B5A", "#E8590C"];   // v17.41 : 10e = Nasdaq ×3
+const COUL_MK = ["#5B8DEF", "#2BB673", "#9B6BFF", "#E5484D", "#F2A33A", "#18A9C7", "#D6619E", "#C9A227", "#8C7B5A", "#E8590C", "#F7931A", "#627EEA"];   // v19.0 : 11e Bitcoin, 12e Ethereum   // v17.41 : 10e = Nasdaq ×3
 let marcheOuvert = null, mkCaches = {};   // V15.19 : toutes les courbes affichées par défaut, or couvert compris
 function marchesMoi() { const Dv = dVersus(); const m = Dv && Dv.marchesMoi; if (!(m && (m.jour || []).length)) return null;
   // v17.49 (Théo) : l'or en deux cases côte à côte, « Or non couvert » puis « Or couvert € » (sa variation vient des clôtures, comme le ×3)
   const i = m.jour.findIndex(x => x.nom === "Or");
   if (i >= 0 && !m.jour.some(x => x.nom === "Or couvert €") && (m.series || []).some(x => x.nom === "Or couvert €")) m.jour.splice(i + 1, 0, { nom: "Or couvert €", pct: null, heure: "" });
   return m; }
+const CRYPTO_MK = ["Bitcoin", "Ethereum"];   // v19.0 (Théo) : deux cryptos « pour rigoler », 24 h sur 24
 const NOMS_MK = { "Or": "Or non couvert", "Or couvert €": "Or couvert" };   // v17.49 : nom affiché dans la case (le nom technique reste « Or »)
 /* v17.41 (Théo) : les cases suivent la période de la carte Bourse (Jour · 5 j · 1 M · 6 M · Janv. · 1 an), mêmes bornes (`debutPer`).
    Source : clôtures quotidiennes `quot` (serveur Versus V63) ; à défaut, les courbes hebdomadaires (≈). En « Jour », bourse fermée :
@@ -2202,7 +2203,7 @@ function txtBase(d0, per, hebdo) {
 }
 function htmlMarches() {
   const m = marchesMoi(), h = (m.jour.find(x => x.heure) || {}).heure, per = PERIODES_J[VUEJ] ? VUEJ : null;
-  const vs = m.jour.map(x => varMk(x, per)), dus = vs.map(r => r.du).filter(Boolean).sort(), duMax = dus[dus.length - 1], tousSeance = vs.every(r => r.du || r.v === null);
+  const vs = m.jour.map(x => varMk(x, per)), dus = vs.map(r => r.du).filter(Boolean).sort(), duMax = dus[dus.length - 1], tousSeance = vs.every((r, i) => r.du || r.v === null || CRYPTO_MK.includes(m.jour[i].nom));   // v19.0 : la crypto cote en continu, elle ne change pas « bourse fermée »
   const jc = iso => { const d = new Date(iso + "T12:00:00"); return JOURS_C[d.getDay()] + " " + frDate(iso).slice(0, 5); };
   const sous = per ? PERIODES_J[per][2] + (vs.some(r => r.hebdo) ? " (≈ d'après les cours de la semaine)" : "") + " · "
     : tousSeance && duMax ? (bourseFermee().ferme ? "🔒 bourse fermée · " : "") + "dernière séance · " + jc(duMax) + " · " : (h ? "cours du " + esc(h.replace(" ", " à ").replace(":", " h ")) + " · " : "");
