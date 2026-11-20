@@ -436,8 +436,8 @@ function injecterStyle() {
    les petites pastilles des Marchés (.chips.m-filtre, ~30 px), l'icône 📈 à sa droite (zone tactile 40×40, marges négatives : la rangée garde ~30 px) */
 .moi .m-per-l { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .moi .m-per-l .m-per { flex: 0 1 auto; }
-.moi .m-vsmk { all: unset; box-sizing: border-box; flex: none; margin: -5px -5px -5px auto; width: 40px; height: 40px; display: grid; place-items: center; cursor: pointer; border-radius: 50%; -webkit-tap-highlight-color: transparent; }
-.moi .m-vsmk span { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--rule-2); font-size: 15px; line-height: 1; box-sizing: border-box; }
+.moi .m-vsmk { all: unset; box-sizing: border-box; flex: none; margin: -5px -5px -5px auto; min-width: 40px; height: 40px; padding: 0 5px; display: grid; place-items: center; cursor: pointer; border-radius: 50%; -webkit-tap-highlight-color: transparent; }
+.moi .m-vsmk span { height: 30px; padding: 0 10px; display: grid; place-items: center; border-radius: 15px; white-space: nowrap; font-weight: 700; color: var(--ink-2); background: var(--panel-2); border: 1px solid var(--rule-2); font-size: 15px; line-height: 1; box-sizing: border-box; }
 .moi .m-vsmk:active span { background: var(--panel); }
 .moi .m-vsmk:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .moi .m-jour .m-maj { margin: 0; font-size: 11px; }
@@ -630,7 +630,7 @@ function injecterStyle() {
   overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
 .moi .chips.m-filtre::-webkit-scrollbar { display: none; }
 .moi .chips.m-filtre .chip { flex: none; padding: 5px 9px; border: 0; border-radius: 7px; background: none; color: var(--ink-2); font: 600 12px/1.15 var(--f-text); white-space: nowrap; }
-.moi .chips.m-filtre .chip[aria-pressed="true"] { background: var(--panel); color: var(--ink); border: 0; box-shadow: 0 1px 2px rgba(0,0,0,.14), inset 0 0 0 1px var(--rule); }
+.moi .chips.m-filtre .chip[aria-pressed="true"] { background: var(--ink); color: var(--panel); border: 0; box-shadow: 0 1px 3px rgba(0,0,0,.25); }   /* v17.75 (Théo) : la pastille choisie ressort nettement (comme l'ancien bouton foncé) */
 .moi .chips.m-filtre.m-cpt > .k { padding-left: 6px; }
 @media (max-width: 360px) { .moi .chips.m-filtre .chip { font-size: 11.5px; padding: 5px 7px; } }
 .moi .m-seul { padding: 6px 0 2px; }
@@ -1370,11 +1370,11 @@ function htmlJourBase() {
   const nomIdx = n => n.replace(/\s*\((ETF\s)?([^)]*)\)/, "");
   const v5 = !!PERIODES_J[VUEJ], per = !!seanceDu(), det5 = VUEJ === "5j" && !!CINQ, bf = bourseFermee();
   return '<div class="m-hero">' +
-      '<span class="eyebrow">' + embHero() + (v5 ? "Bourse · " + PERIODES_J[VUEJ][2] : bf.ferme ? "Bourse · dernière séance" : 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "")) + "</span>" +
-      (!v5 && bf.ferme ? badgeFerme(bf) : "") +
+      '<span class="eyebrow">' + embHero() + (v5 ? "Bourse · " + PERIODES_J[VUEJ][2] : bf.ferme ? '<span title="Les chiffres sont ceux de la dernière séance">🔒 Bourse fermée' + (bf.lib ? " · " + esc(bf.lib) : "") + "</span>" : 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "")) + "</span>" +
+      /* v17.75 (Théo) : « Bourse fermée » passe dans la ligne du titre (plus de badge à part, −30 px) */
       /* Théo, 19/11 : pastille Jour | 5 j ; v17.23 : rangée de 6 périodes sous le titre (un toucher bascule, le choix reste sur l'appareil) */
       '<div class="m-per-l">' + (per ? '<div class="chips m-filtre m-per" role="group" aria-label="Période de la variation">' + boutonsPer(v5, "") + "</div>" : "") +
-        '<button type="button" class="m-vsmk" id="m-vsmk" aria-label="Face aux marchés" title="Face aux marchés"><span aria-hidden="true">📈</span></button></div>' +   // lot 58 : l'ancien bouton large devient une icône (même effet : défiler jusqu'aux Marchés)
+        '<button type="button" class="m-vsmk" id="m-vsmk" aria-label="Face aux marchés" title="Face aux marchés"><span aria-hidden="true">📈 ›</span></button></div>' +   // lot 58 : l'ancien bouton large devient une icône (même effet : défiler jusqu'aux Marchés)
       '<div class="m-flaps" role="img" aria-label="' + esc(texteFlap) + '">' + flaps(texteFlap, animer) + "</div>" +
       '<div class="m-jour"' + (det5 ? ' role="button" tabindex="0" aria-expanded="' + cinqOuvert + '" title="Jour par jour"' : "") + '><span class="badge big-b ' + sens(s.jour) + '">' + fleche(s.jour) + " " + eur(s.jour, 0, true) + " · " + pct(s.jourPct, 2) + "</span>" +
         "<span>" + (suffixe ? esc(suffixe) : hausse + " en hausse · " + baisse + " en baisse") + (det5 ? ' <i class="m-5j-v" aria-hidden="true">' + (cinqOuvert ? "▴" : "▾") + "</i>" : "") + "</span>" + (majCourte() ? '<small class="m-maj">' + esc(majCourte()) + "</small>" : "") + (s.jourNote ? '<small class="m-per-n">' + esc(s.jourNote) + "</small>" : "") + "</div>" +
@@ -3882,7 +3882,7 @@ function rendreFormulaire() {
     const el = $f(id);
     if (!el) return;
     el.addEventListener("input", () => {
-      F[k] = el.value; F.forcer = null; F.erreur = ""; F.okCoherence = false; F.okDoublon = false;
+      F[k] = el.value; F.forcer = null; F.erreur = ""; F.okCoherence = false; F.okDoublon = false; F.okEspeces = false;
       if (k === "date") { F.dateChoisie = true; form.querySelectorAll("[data-date]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.date === F.date))); }
       if (k === "qte" || k === "prix") F.pilote = k;
       if (k === "qte") F.qteTape = !!el.value.trim();
@@ -4023,6 +4023,15 @@ function analyser() {
       if (Math.abs(attendu - m) > .02 && !F.okCoherence) { bloque = true; if (!manque) manque = "Vérifie le montant, les parts et le prix";
         msg.push(["conf", "Montant, parts et prix ne collent pas : " + (discret ? "" : qteBrute(q) + " × " + nf(2, 4).format(p) + " € " + (F.type === "Achat" ? "+" : "−") + " frais = " + nf(2, 2).format(attendu) + " €, et non " + nf(2, 2).format(m) + " €. ") + "Corrige ou confirme.", "coherence"]); }
     }
+    /* v17.75 (Théo) : un achat que les espèces du compte ne couvrent pas (sans versement, ou versement trop petit) est arrêté : on confirme ou on corrige */
+    if (F.type === "Achat" && !F.okEspeces) {
+      const g = (M.groupes || []).find(x => x.env === F.env), le = g && (g.lignes || []).find(l => l.especes);
+      if (le && typeof le.valeur === "number") {
+        const vers = F.apport ? (lireNombre(F.montantApport) > 0 ? lireNombre(F.montantApport) : m) : 0, dispo = le.valeur + vers;
+        if (m - dispo > .01) { bloque = true; if (!manque) manque = "Les espèces ne couvrent pas cet achat";
+          msg.push(["conf", "Il n'y a que " + (discret ? "•••" : nf(2, 2).format(le.valeur)) + " € d'espèces sur " + esc(F.env) + (F.apport ? " (+ le versement)" : "") + " : il manque " + (discret ? "•••" : nf(2, 2).format(m - dispo)) + " €. " + (F.apport ? "Vérifie le montant du versement." : "Coche « Avec le versement qui paie cet achat », ou saisis d'abord ton virement.") + " Confirme seulement si tes espèces dans l'appli ne sont pas à jour.", "especes"]); }
+      }
+    }
     /* écart au cours : seulement si le nombre de parts a été TAPÉ (sinon un « écart 0 % » rassurerait à tort) */
     if (c && F.qteTape) {
       const ec = pu / c - 1;
@@ -4107,7 +4116,7 @@ function majRecap() {
   if ($f("f-prix") && !F.prixTape) { const n = netOrdre(), q = lireNombre(F.qte); $f("f-prix").placeholder = n > 0 && q > 0 && ETAT.discret !== "oui" ? "≈ " + nf(2, 4).format(n / q) : "0,00"; }
   if ($f("f-pu")) { const c = controleAvis(); $f("f-pu").textContent = c.t; $f("f-pu").hidden = !c.t; $f("f-pu").className = "m-pu" + (c.c ? " " + c.c : ""); }
   let al = a.msg.filter(m => !sousChamp(m)).map(m => m[0] === "conf"
-    ? '<div class="alerte warn">' + esc(m[1]) + '<br><button class="btn" type="button" data-conf="' + m[2] + '">' + (m[2] === "doublon" ? "Enregistrer quand même" : "C'est bien mon avis") + '</button> <button class="btn ghost" type="button" data-corr="' + m[2] + '">Corriger</button></div>'
+    ? '<div class="alerte warn">' + esc(m[1]) + '<br><button class="btn" type="button" data-conf="' + m[2] + '">' + (m[2] === "doublon" ? "Enregistrer quand même" : m[2] === "especes" ? "Mes espèces ne sont pas à jour" : "C'est bien mon avis") + '</button> <button class="btn ghost" type="button" data-corr="' + m[2] + '">Corriger</button></div>'
     : '<div class="alerte ' + m[0] + '">' + esc(m[1]) + "</div>").join("");
   (a.doutes || []).forEach(([k]) => { const t = String(F[k]).trim(), l = lectureMilliers(t);
     al += '<div class="alerte warn">« ' + esc(t) + ' » veut dire ' + esc((+l.milliers).toLocaleString("fr-FR")) + NB + '€ ?<br><button class="btn" type="button" data-millier="' + k + '" data-mv="' + esc(l.milliers) + '">Oui, ' + esc((+l.milliers).toLocaleString("fr-FR")) + NB + "€</button>" +
@@ -4121,7 +4130,7 @@ function majRecap() {
   btn.classList.toggle("manque", !!a.bloque);
   if ($f("tout-vendre")) $f("tout-vendre").addEventListener("click", () => { F.qte = saisieNombre(quantiteTenue(F.env, F.actif), 8); F.pilote = "qte"; F.qteTape = true; synchroniser(); $f("f-qte").value = F.qte; majRecap(); });
   if ($f("forcer")) $f("forcer").addEventListener("click", () => envoyerOrdre(true));
-  $f("m-alertes").querySelectorAll("[data-conf]").forEach(b => b.addEventListener("click", () => { if (b.dataset.conf === "doublon") F.okDoublon = true; else F.okCoherence = true; majRecap(); }));
+  $f("m-alertes").querySelectorAll("[data-conf]").forEach(b => b.addEventListener("click", () => { if (b.dataset.conf === "doublon") F.okDoublon = true; else if (b.dataset.conf === "especes") F.okEspeces = true; else F.okCoherence = true; majRecap(); }));
   $f("m-alertes").querySelectorAll("[data-corr]").forEach(b => b.addEventListener("click", () => { const el = $f(b.dataset.corr === "doublon" ? "f-date" : "f-montant"); if (el) { el.focus(); el.scrollIntoView({ block: "center" }); } }));
   $f("m-alertes").querySelectorAll("[data-millier]").forEach(b => b.addEventListener("click", () => {
     const k = b.dataset.millier, id = { montant: "f-montant", frais: "f-frais", montantApport: "f-mapport" }[k];
