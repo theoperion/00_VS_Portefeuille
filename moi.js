@@ -787,6 +787,8 @@ function injecterStyle() {
 .moi .m-imp-t { font-size: 13.5px; }
 .moi .m-rv-auto { margin: 10px 0 0; font: 500 12.5px/1.4 var(--f-text); color: var(--ink-2); }
 .moi .m-rv-auto small { display: block; color: var(--up); font-size: 12px; }
+.moi .m-rv-auto.fait { color: var(--ink); }
+.moi .m-rv-auto.fait small { color: var(--ink-2); }
 .moi .m-meme { all: unset; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; width: 100%; margin: 0 0 10px; padding: 11px 14px; border-radius: 14px; background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); cursor: pointer; font: 600 14px/1.25 var(--f-text); color: var(--ink); }
 .moi .m-meme small { font-weight: 500; color: var(--ink-2); font-size: 12.5px; }
 .moi .m-imp .aide, .moi .m-imp-n { display: block; margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
@@ -3891,6 +3893,7 @@ function controleAvis() {
 function versusRelie() { return !!(M && M.versusLie === true); }
 function moisDuReleve() { const d = new Date(), fin = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); return d.getDate() >= fin - 2 || d.getDate() <= 5; }
 /** v17.81 (Théo) : dernier relevé AUTOMATIQUE de ce joueur, lu dans le journal du Versus (import du Versus OU envoi du fichier) → Date ou null */
+const MOIS_RV = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 function dernierImportAuto() {
   const Dv = dVersus(), qui = (M && M.personne) || (typeof moiVrai === "function" ? moiVrai() : null) || ETAT.moi;
   const j = Dv && (Dv.journal || []).find(x => x.personne === qui && x.action === "Import auto" && x.statut !== "Annulé");   // journal : du plus récent au plus ancien
@@ -3900,9 +3903,12 @@ function htmlCarteReleveVersus() {
   const der = dernierImportAuto();
   if (versusRelie() || der) {   // v17.81 (Théo) : le relevé automatique se voit de nouveau (Théo : lu par le Versus ; Clément, Devlin : envoyé par leur fichier)
     const a = new Date(), j = typeof jourReleve === "function" ? jourReleve(a.getFullYear(), a.getMonth() + 1) : null;
-    const prochain = j && j >= new Date(a.getFullYear(), a.getMonth(), a.getDate()) ? j : (typeof jourReleve === "function" ? jourReleve(a.getFullYear(), a.getMonth() + 2) : null);
+    const fait = der && der.getFullYear() === a.getFullYear() && der.getMonth() === a.getMonth();   // v17.82 (Théo) : le relevé de CE mois est déjà parti
+    const prochain = j && !fait && j >= new Date(a.getFullYear(), a.getMonth(), a.getDate()) ? j : (typeof jourReleve === "function" ? jourReleve(a.getFullYear(), a.getMonth() + 2) : null);
     const fr = d => d ? String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") : "";
     const r = der && new Date(Math.round(der.getTime() / 36e5) * 36e5);   // heure ronde : 19 h 11 → 19 h, 19 h 40 → 20 h
+    if (fait) return '<p class="m-rv-auto fait">✅ <b>Relevé ' + (/^[aeiouy]/i.test(MOIS_RV[a.getMonth()]) ? "d'" : "de ") + MOIS_RV[a.getMonth()] + " envoyé</b> au Versus le " + fr(r) + " à " + r.getHours() + " h" +
+      (prochain ? "<small>Prochain le " + fr(prochain) + " vers 19 h, automatiquement</small>" : "") + "</p>";
     return '<p class="m-rv-auto">🏁 Relevé du mois pour le Versus : <b>automatique</b>' + (prochain ? " · prochain le " + fr(prochain) + " vers 19 h (dernier jour ouvré)" : "") +
       (r ? "<small>Dernier envoyé le " + fr(r) + " à " + r.getHours() + " h ✓</small>" : "") + "</p>";
   }
