@@ -2148,8 +2148,11 @@ function closMk(nom) {   // { d: [aaaammjj], v: [cours] } sans trous, du plus an
 }
 /** lot 61 : bornes communes aux cases ET aux courbes (une seule règle) : i0 = la clôture de départ (dernière ≤ début de la période) */
 function bornesMk(x, per) {
-  const c = closMk(x.nom), n = c.v.length, auj = +isoJour(new Date()).replace(/-/g, ""), live = typeof x.pct === "number";
-  const dLast = n ? c.d[n - 1] : 0, enDirect = !!(n && live && !c.hebdo && dLast < auj), fin = enDirect ? new Date() : dateNum(Math.min(dLast || auj, auj));   // hebdo : la clé de la semaine est son vendredi
+  const c = closMk(x.nom), n = c.v.length, live = typeof x.pct === "number";
+  // v18.7 : la variation du Versus est celle de SA séance (« 20/11 17:35 ») : elle ne s'ajoute que si l'historique s'arrête avant cette séance (pas de double compte le lundi matin)
+  const mh = /^(\d{2})\/(\d{2})/.exec(x.heure || ""), a0 = new Date(), yh = mh && +mh[2] > a0.getMonth() + 1 ? a0.getFullYear() - 1 : a0.getFullYear();
+  const auj = mh ? yh * 10000 + +mh[2] * 100 + +mh[1] : +isoJour(a0).replace(/-/g, "");
+  const dLast = n ? c.d[n - 1] : 0, enDirect = !!(n && live && !c.hebdo && dLast < auj), fin = enDirect ? dateNum(auj) : dateNum(Math.min(dLast || auj, auj));   // hebdo : la clé de la semaine est son vendredi
   const num = d => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
   let i0 = -1;
   if (n && per === "5j" && !c.hebdo) i0 = n - 1 - (enDirect ? 4 : 5);   // 5 séances : la clôture d'avant la 1re (aujourd'hui compte en séance)
@@ -2165,7 +2168,10 @@ function varMk(x, per) {   // → { v, du (aaaa-mm-jj de la séance montrée, nu
   const iso = k => String(k).replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
   if (!per) {
     const c = closMk(x.nom), n = c.v.length;
-    if (typeof x.pct === "number") return { v: x.pct, du: null };
+    if (typeof x.pct === "number") {   // v18.7 : le Versus donne la variation de la DERNIÈRE séance même bourse fermée ; datée si ce n'est pas aujourd'hui
+      const m = /^(\d{2})\/(\d{2})/.exec(x.heure || ""), a = new Date(), y = m && +m[2] > a.getMonth() + 1 ? a.getFullYear() - 1 : a.getFullYear(), d = m ? y + "-" + m[2] + "-" + m[1] : null;
+      return { v: x.pct, du: d && d !== isoJour(a) ? d : null };
+    }
     if (n < 2 || c.hebdo) return { v: null };
     return { v: c.v[n - 1] / c.v[n - 2] - 1, du: iso(c.d[n - 1]) };
   }
