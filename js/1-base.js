@@ -599,7 +599,7 @@ function rendreClassement() {
     (typeof plaqueMillion === "function" ? plaqueMillion() : "") + filtres(true) +
     '<div class="periode">' + esc(textePeriode(deb, fin, nMois)) + (deb && st.some(s => s.n < nMois) ? " · chaque courbe démarre au premier relevé de la personne" : "") + " · performance (TWR), versements neutralisés</div>" +
     '<div class="tour' + (animer ? " entree" : "") + '"><div class="tour-h"><span>Pos.</span><span>Portefeuille</span><span>TWR<span class="h-long"> · écart</span></span></div>' + tour + "</div>" +
-    '<p class="tour-aide">👆 Touche un pilote pour ses stats et sa fiche' + (saisonJouee() ? " (sa vitrine, son historique)" : " (son historique mois par mois)") + ".</p>" +
+    '<p class="tour-aide">👆 Touche un pilote pour ouvrir sa fiche' + (saisonJouee() ? " (vitrine, historique)" : " (historique mois par mois)") + ".</p>" +
     (saisonJouee() ? '<p class="leg-bdg"><b>Sur les lignes</b> tête cerclée d\'or = en tête du championnat · 🏆 champion de saison · ⚡💥… exclusifs (un seul exemplaire) · « +N » = les autres, dans la vitrine. <span>Touche un badge pour savoir ce qu\'il veut dire.</span></p>' : "") +
     "<div>" + '<h2 class="sec">La course <small>performance cumulée</small></h2></div>' +
     boiteGraphe("g-course", series.map(s => ({ nom: s.nom, c: s.c, dash: s.dash }))) +
@@ -635,7 +635,9 @@ function rendreClassement() {
   expliquerBadges(v);
   if (animer) compterChiffres(v.querySelector(".tour"));
   v.querySelectorAll(".pos[data-nom]").forEach(el => {
-    const ouvrir = () => {
+    el.removeAttribute("aria-expanded");
+    const ouvrir = () => { ETAT.fiche = el.dataset.nom; garder(); allerA("fiche"); };   // v18.6 (Théo) : un toucher = la fiche, directement (plus de détail intermédiaire)
+    const ancienDetail = () => {
       const s = st.find(x => x.nom === el.dataset.nom);
       const suiv = el.nextElementSibling;
       if (suiv && suiv.classList.contains("detail")) { suiv.remove(); el.setAttribute("aria-expanded", "false"); return; }
