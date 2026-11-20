@@ -3610,7 +3610,7 @@ function lireNombre(v) {
 function millierDouteux(v) { return /^\d{1,3}(\.\d{3})+$/.test(String(v === null || v === undefined ? "" : v).replace(/[\s  €]/g, "")); }
 function lectureMilliers(v) { const t = String(v).replace(/[\s  €]/g, ""); return { milliers: t.replace(/\./g, ""), virgule: (t.match(/\./g) || []).length === 1 ? saisieNombre(+t, 6) : null }; }
 function mediane(l) { const x = l.filter(v => v > 0).sort((a, b) => a - b); return x.length ? x[Math.floor(x.length / 2)] : 0; }
-function saisieNombre(n, dec) { return n === null || n === undefined || !isFinite(n) ? "" : String(+n.toFixed(dec)).replace(".", ","); }
+function saisieNombre(n, dec) { const x = n === null || n === undefined || n === "" ? NaN : Number(n); return !isFinite(x) ? "" : String(+x.toFixed(dec)).replace(".", ","); }   // v17.97 : un nombre arrivé en texte du fichier (« 1.7 ») ne casse plus « Mon fichier »
 function refData() { return (M && M.ref) || { enveloppes: [], types: [], actifs: [], cours: {}, detenu: [], journal: [], raccourcis: [] }; }
 function quantiteTenue(env, code) { const x = refData().detenu.find(d => d.env === env && d.code === code); return x ? x.qte : 0; }
 function typeInfo(nom) { return refData().types.find(t => t.nom === nom) || { tresorerie: 0, quantite: 0, flux: 0 }; }
@@ -6412,6 +6412,8 @@ function notifications() {
   const anomalie = M.anomalies && !/^\s*✓/.test(M.anomalies);
   if (anomalie) items.push({ t: "rouge", txt: M.anomalies });
   alertesDeclenchees().forEach(a => items.push({ t: "rouge", txt: "Alerte de cours : " + a }));
+  { const Dv = dVersus(), l = Dv && Dv.liaison;   // v17.97 (Théo) : relevés automatiques du Versus éteints → rappel à l'admin seulement, jusqu'à ce qu'il les active
+    if (l && l.active === false && typeof vraiAdmin === "function" && vraiAdmin()) items.push({ t: "rouge", txt: "Relevés automatiques de fin de mois désactivés : Réglages › Relevés automatiques de fin de mois (admin) › Activer" }); }
   const d = dateRappel(M.rappel);
   const aFaire = /À mettre à jour/.test(M.rappel || "") || (d && d - Date.now() < 2 * 864e5);
   if (feAVerifier()) items.push({ t: "orange", txt: "Fonds euros : taux estimé à vérifier" });
@@ -6449,6 +6451,8 @@ function htmlNotifications() {
   const carte = (cls, ic, titre, sous, actions) => '<div class="nt ' + cls + '"><span class="nt-ic">' + ic + '</span><div class="nt-t"><b>' + titre + "</b>" + (sous ? "<small>" + sous + "</small>" : "") + "</div>" + (actions || "") + "</div>";
   const items = [];
   if (anomalie) items.push(carte("rouge", "!", "Anomalie dans tes saisies", propre(M.anomalies)));
+  { const Dv = dVersus(), l = Dv && Dv.liaison;   // v17.97 (Théo) : relevés automatiques du Versus éteints → rappel à l'admin jusqu'à l'activation
+    if (l && l.active === false && typeof vraiAdmin === "function" && vraiAdmin()) items.push(carte("rouge", "⚠", "Relevés automatiques de fin de mois désactivés", "sans eux, le Versus ne lira pas vos fichiers le dernier jour ouvré du mois", '<div class="nt-a"><button class="mini-btn" type="button" data-notif-liaison>Activer</button></div>')); }
   alertes.forEach(a => items.push(carte("rouge", "🔔", "Alerte de cours", esc(a))));
   dus.forEach(x => { const k = cleRappel(x.nom) || x.nom;
     items.push(carte("orange", "◷", esc(nomCourtRappel(x)), "à faire " + esc(quandRappel(x)), '<div class="nt-a"><button class="mini-btn" type="button" data-notif-faire="' + esc(k) + '">Faire</button><button class="lien" type="button" data-notif-tard="' + esc(k) + '">Plus tard</button></div>')); });
