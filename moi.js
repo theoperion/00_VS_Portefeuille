@@ -145,6 +145,7 @@ function injecterStyle() {
 .moi .vs-tenue .vt-p .m-af { max-width: none; } .moi .vs-tenue .vt-p .t-ticket .tk-h, .moi .vs-tenue .vt-p .t-billet .bl-c, .moi .vs-tenue .vt-p .t-billet::after { display: none; }
 .moi .vs-tenue .vt-p .vs-sw { width: 34px; height: 22px; } .moi .vs-tenue .vt-p .vs-cb { width: 40px; height: 20px; }
 .moi .vs-tenue .vt-p .vs-em { font-size: 20px; }
+.moi .vs-tenue .vt-n .vt-c { display: none; } @media (max-width: 370px) { .moi .vs-tenue .vt-n .vt-l { display: none; } .moi .vs-tenue .vt-n .vt-c { display: inline; } }
 .moi .vs-tenue .vt-n { max-width: 100%; padding: 0; font-size: 10px; letter-spacing: -.02em; font-weight: 600; line-height: 1.15; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .moi .vs-nv { display: flex; align-items: center; gap: 8px; padding: 7px 6px 7px 10px; border-radius: 12px; background: color-mix(in srgb, var(--gold) 14%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); font-size: 12.5px; line-height: 1.3; }
 .moi .vs-nv > span { flex: 1; min-width: 0; }
@@ -167,7 +168,7 @@ function injecterStyle() {
 .moi .vs-t.verrou .vs-p > :not(.vs-l) { filter: saturate(.35) brightness(.6); opacity: .8; }
 .moi .vs-t.secret .vs-p > .vs-em { filter: none; opacity: 1; color: var(--ink-3); font: 800 20px/1 var(--f-display); }
 .moi .vs-l { position: absolute; font-style: normal; font-size: 12px; right: 6px; bottom: 0; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
-.moi .vs-nm { max-width: 100%; padding: 0 3px; font-size: 10.5px; font-weight: 600; line-height: 1.15; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.moi .vs-nm { max-width: 100%; padding: 0 3px; font-size: 10.5px; font-weight: 600; line-height: 1.25; color: var(--ink-2); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; hyphens: auto; }   /* lot 44 : « Ticket de caisse » sur 2 lignes, plus tronqué */
 .moi .vs-t.verrou .vs-nm { color: var(--ink-3); }
 .moi .vs-ok { position: absolute; top: 4px; left: 6px; font-size: 10px; font-weight: 800; color: var(--mc); }
 .moi .vs-q { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--rule); background: var(--panel-2); color: var(--ink-3); font: 700 10.5px/1 var(--f-text); cursor: pointer; }
@@ -218,11 +219,58 @@ function injecterStyle() {
 /* fête : récompenses débloquées */
 .m-fete .mf-recs { display: grid; gap: 8px; width: min(320px, 86vw); }
 .m-fete .mf-rec { display: grid; grid-template-columns: 34px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 10px; align-items: center; text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(245,197,66,.45); background: rgba(255,255,255,.06); color: #F4F5F8; cursor: pointer; }
-.m-fete .mf-rec span { grid-row: span 2; font-size: 24px; line-height: 1; text-align: center; }
+.m-fete .mf-rec > span { grid-row: span 2; font-size: 24px; line-height: 1; text-align: center; }
 .m-fete .mf-rec b { font: italic 800 15px/1.15 var(--f-display); letter-spacing: .05em; text-transform: uppercase; }
 .m-fete .mf-rec small { font-size: 12px; opacity: .7; }
 .m-fete .mf-rec.fait { border-color: #3DDC97; } .m-fete .mf-rec.fait small { color: #3DDC97; opacity: 1; }
 @media (max-width: 360px) { .moi .vs-g { gap: 5px; } .moi .vs-nm { font-size: 10px; } }
+/* lot 44 · aperçus réduits des objets (Ce mois-ci, résumé des familles, fêtes) */
+.moi .cm-ap, .moi .pb-ap, .moi .mf-ap { display: grid; place-items: center; overflow: hidden; flex: none; }
+.moi .cm-ap .m-flaps, .moi .pb-ap .m-flaps, .moi .mf-ap .m-flaps { --fh: 17px; gap: 1px; flex-wrap: nowrap; }
+.moi .cm-ap .m-flap, .moi .pb-ap .m-flap, .moi .mf-ap .m-flap { width: 13px; height: 19px; font-size: 12px; border-radius: 2px; box-shadow: none; }
+.moi .cm-ap .m-flap::after, .moi .pb-ap .m-flap::after, .moi .mf-ap .m-flap::after { height: 1px; }
+.moi .cm-ap .m-af, .moi .pb-ap .m-af, .moi .mf-ap .m-af { max-width: none; }
+.moi :is(.cm-ap, .pb-ap, .mf-ap) :is(.t-ticket .tk-h, .t-billet .bl-c, .t-billet::after) { display: none; }
+.moi :is(.cm-ap, .pb-ap, .mf-ap) .vs-sw { width: 34px; height: 22px; } .moi :is(.cm-ap, .pb-ap, .mf-ap) .vs-cb { width: 40px; height: 20px; }
+.moi :is(.cm-ap, .pb-ap, .mf-ap) .vs-em { font-size: 20px; }
+.moi .nw { white-space: nowrap; }
+/* lot 44 · carte « Ce mois-ci » */
+.moi .m-cemois { display: grid; gap: 8px; padding: 11px 12px 12px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--gold) 50%, var(--rule)); background: color-mix(in srgb, var(--gold) 9%, var(--panel)); }
+.moi .m-cemois.fait { border-color: color-mix(in srgb, var(--up) 55%, var(--rule)); background: color-mix(in srgb, var(--up) 10%, var(--panel)); }
+.moi .m-cemois .cm-k { font: 700 11px/1 var(--f-display); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.moi .m-cemois.fait .cm-k, .moi .m-cemois.fait .cm-t b { color: var(--up); }
+.moi .m-cemois .cm-t { margin: 0; font-size: 15px; line-height: 1.3; color: var(--ink); }
+.moi .m-cemois .cm-s { margin: -4px 0 0; font-size: 13px; line-height: 1.35; color: var(--ink-2); }
+.moi .m-cemois .cm-o { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 12px; background: var(--panel-2); }
+.moi .m-cemois .cm-o .cm-ap { width: 44px; height: 28px; }
+.moi .m-cemois .cm-o > span:last-child { display: grid; gap: 1px; min-width: 0; } .moi .m-cemois .cm-o small { font-size: 11.5px; color: var(--ink-3); }
+.moi .m-cemois .cm-o b { font: italic 800 14px/1.15 var(--f-display); letter-spacing: .05em; text-transform: uppercase; }
+.moi .m-cemois .cm-p { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding-top: 8px; border-top: 1px solid var(--rule-2, var(--rule)); }
+.moi .m-cemois .cm-pt { font-size: 12.5px; color: var(--ink-2); } .moi .m-cemois .cm-pt b { color: var(--ink); white-space: nowrap; }
+.moi .m-cemois .cm-f { display: flex; gap: 5px; }
+.moi .m-cemois .cm-fi { display: grid; justify-items: center; gap: 2px; width: 46px; padding: 4px 0 3px; border-radius: 9px; border: 1px dashed var(--rule); opacity: .75; }
+.moi .m-cemois .cm-fi.pro { border: 1px solid var(--gold); opacity: 1; }
+.moi .m-cemois .cm-fi .cm-ap { width: 42px; height: 24px; } .moi .m-cemois .cm-fi small { font: 600 10px/1 var(--f-num); color: var(--ink-3); }
+/* lot 44 · groupes de familles, aide repliée, récompense suivante */
+.moi details.pl-grp { border-radius: 12px; }
+.moi details.pl-grp > summary { list-style: none; cursor: pointer; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--rule); font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.moi details.pl-grp > summary::-webkit-details-marker, .moi details.pl-aide > summary::-webkit-details-marker { display: none; }
+.moi details.pl-grp > summary::after { content: " ›"; } .moi details.pl-grp[open] > summary::after { content: " ‹"; }
+.moi details.pl-grp > summary small { font: 500 12px/1 var(--f-num); color: var(--ink-3); }
+.moi details.pl-grp[data-grp="_finies"] > summary { color: var(--up); border-style: solid; border-color: color-mix(in srgb, var(--up) 35%, var(--rule)); }
+.moi details.pl-grp > .pl-blocs { margin-top: 8px; }
+.moi details.pl-aide { margin: -4px 0 8px; font-size: 12.5px; color: var(--ink-3); }
+.moi details.pl-aide > summary { list-style: none; cursor: pointer; display: inline-block; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.moi details.pl-aide p { margin: 4px 0 0; }
+.moi .pl-bloc .pb-r { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; font-size: 12px; line-height: 1.3; color: var(--ink-2); white-space: normal; font-weight: 500; }
+.moi .pl-bloc .pb-r b { color: var(--gold); font-weight: 700; }
+.moi .pl-bloc .pb-ap { width: 42px; height: 24px; }
+/* lot 44 · fête : le vrai objet et « Équiper » en avant */
+.m-fete .mf-rec { grid-template-columns: 52px minmax(0, 1fr) auto; }
+.m-fete .mf-rec .mf-ap { grid-row: span 2; width: 52px; height: 32px; font-size: 24px; }
+.m-fete .mf-rec .mf-eq { grid-column: 3; grid-row: 1 / span 2; font-style: normal; padding: 7px 12px; border-radius: 999px; background: #F5C542; color: #1A1406; font: 700 12.5px/1 var(--f-text); white-space: nowrap; }
+.m-fete .mf-rec.fait .mf-eq { background: #3DDC97; }
+.m-fete .mf-l { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13.5px; opacity: .85; text-align: left; }
 .moi .m-flaps { --fh: clamp(40px, 12.6vw, 64px); }
 .m-million .mm-flaps { --fh: clamp(32px, 10vw, 48px); }
 .moi .aff-c .m-flaps { --fh: 24px; }
@@ -817,18 +865,11 @@ function injecterStyle() {
 .moi .mois12 .ok i { background: linear-gradient(to bottom, var(--gold) 0 50%, color-mix(in srgb, var(--gold) 82%, #000) 50% 100%); }
 .moi .mois12 .cours i { outline: 2px solid var(--ink); outline-offset: 1px; }
 .moi .mois12 b { font: 600 10px/1 var(--f-num); color: var(--ink-3); }
-.moi .paliers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.moi .palier { all: unset; box-sizing: border-box; display: grid; gap: 7px; align-content: start; padding: 12px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); min-width: 0; }
-.moi .palier.fait { cursor: pointer; border-color: color-mix(in srgb, var(--gold) 50%, var(--rule)); }
-.moi .palier.fait:focus-visible, .moi .pl-r.fait:focus-visible { outline: 2px solid var(--accent); }
+.moi .pl-r.fait:focus-visible { outline: 2px solid var(--accent); }
 .moi .pastille { justify-self: start; position: relative; padding: 7px 9px; border-radius: 6px; background: linear-gradient(to bottom, var(--flap-2) 0 50%, var(--flap) 50% 100%); color: var(--flap-ink); font: 600 15px/1 var(--f-num); letter-spacing: .04em; }
-.moi .palier.fait .pastille, .moi .pl-r.fait .pastille { color: #F5C542; }
-.moi .palier:not(.fait) .pastille, .moi .pl-r:not(.fait) .pastille { opacity: .55; }
-.moi .palier .pl-t { font-size: 13px; font-weight: 600; line-height: 1.3; }
-.moi .palier .pl-s { font-size: 11.5px; color: var(--ink-3); line-height: 1.35; }
-.moi .palier.fait .pl-s { color: var(--up); font-weight: 600; }
-.moi .palier .jauge { height: 6px; }
-.moi .palier .jauge i, .moi .pl-r .jauge i { background: var(--gold); }
+.moi .pl-r.fait .pastille { color: #F5C542; }
+.moi .pl-r:not(.fait) .pastille { opacity: .7; }
+.moi .pl-r .jauge i { background: var(--gold); }
 .moi .tous-paliers { display: grid; gap: 10px; }
 .moi .tous-paliers h3.m-sous { display: flex; justify-content: space-between; align-items: baseline; }
 .moi .tous-paliers h3.m-sous small { font: 500 12px/1 var(--f-num); color: var(--ink-3); }
@@ -874,7 +915,6 @@ function injecterStyle() {
 .moi.pa .pa-vide { margin: 0; font-size: 12.5px; color: var(--ink-3); text-align: center; }
 .moi.pa .pa-pied { margin: 0; font-size: 13px; color: var(--ink-2); text-align: center; }
 .moi.pa #pa-envoyer.arme { background: var(--gold); color: #1A1406; }
-@media (max-width: 380px) { .moi .paliers { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { .moi .m-flap.go, .moi .m-flap.af-prisme, .moi .m-flap.af-lingot::after { animation: none; } }
 `;
   document.head.appendChild(st);
@@ -4263,8 +4303,9 @@ function bilanAnneeM(an) {
   return { an, verse, gain, twr, sp, meilleur: tri[0] || null, pire: tri.length > 1 ? tri[tri.length - 1] : null, fin: dateNum(r1[0]), valeurFin: r1[kv] };
 }
 /* Paliers : chaque famille est une suite de seuils */
+/* lot 44 : le 3e champ sert enfin : true = en vitrine (le comportement d'abord), false = « Autres paliers » (replié) */
 const FAMILLES = [
-  ["pat", "Patrimoine financier", true], ["serie", "Séries de versements", true], ["vente", "Sans vendre", true], ["gainsAn", "Année en cours", true],
+  ["serie", "Séries de versements", true], ["vente", "Sans vendre", true], ["pat", "Patrimoine financier", true], ["gainsAn", "Année en cours", false],
   ["bourse", "Portefeuille bourse", false], ["verse", "Argent versé en bourse", false], ["gains", "Gains cumulés", false],
   ["mois", "Mois avec un versement (au total)", false], ["annee", "Ancienneté", false], ["fisc", "Fiscalité allégée", false]
 ];
@@ -4323,7 +4364,17 @@ function paliers() {
   const an = new Date().getFullYear(), b = bilanAnneeM(an);
   if (b && b.verse > 0) {
     const atteint = b.gain > b.verse;
-    ajoute("gainsAn", "gains" + an, "G>V", "Les gains " + an + " dépassent tes versements de l'année", atteint, atteint ? moisAuj : null,
+    /* lot 44 : date figée au premier mois où la condition est vraie (même calcul que bilanAnneeM, arrêté à chaque relevé), pour la clôture du mois */
+    let quandG = null;
+    if (atteint && rows.length && kv >= 0 && ka >= 0) {
+      const r0 = rows.filter(r => Math.floor(r[0] / 10000) < an).pop();
+      for (const r of rows) {
+        if (Math.floor(r[0] / 10000) !== an) continue;
+        const ve = r[ka] - (r0 ? r0[ka] : 0), ga = (r[kv] - (r0 ? r0[kv] : 0)) - ve;
+        if (ve > 0 && ga > ve) { quandG = String(r[0]).slice(0, 4) + "-" + String(r[0]).slice(4, 6); break; }
+      }
+    }
+    ajoute("gainsAn", "gains" + an, "G>V", "Les gains " + an + " dépassent tes versements de l'année", atteint, atteint ? quandG || moisAuj : null,
       Math.max(0, b.gain) / b.verse, "gains " + eur(b.gain, 0, true) + " · versements " + eur(b.verse), "GAINS > VERSÉ");
   }
   return out;
@@ -4370,9 +4421,10 @@ const THEMES_M = [
   ["platine", "Platine", "#F1F5F9", "radial-gradient(120% 90% at 85% 0%, rgba(241,245,249,.25), transparent 60%), linear-gradient(150deg, #15171B, #3A3F47 60%, #17191D)"]
 ];
 // [id, nom, couleur (null = celle du thème), effet de la courbe]
-const COURBES_M = [["classique", "Classique", null, null], ["etincelles", "Étincelles", null, "etincelles"], ["or", "Or", "#E8B931", "halo"],
-  ["neon", "Néon", "#FF4FD8", "halo"], ["comete", "Comète", "#2FD1C0", "comete"], ["flammes", "Flammes", "#FF7A1A", "flammes"],
-  ["menthe", "Menthe", "#34D399", null], ["corail", "Corail", "#FF7F6B", null], ["lavande", "Lavande", "#A78BFA", "halo"], ["glace", "Glace", "#7DD3FC", "etincelles"],
+// lot 44 : noms affichés dédoublonnés (les identifiants stockés ne changent pas)
+const COURBES_M = [["classique", "Classique", null, null], ["etincelles", "Étincelles", null, "etincelles"], ["or", "Fil d'or", "#E8B931", "halo"],
+  ["neon", "Néon rose", "#FF4FD8", "halo"], ["comete", "Queue de comète", "#2FD1C0", "comete"], ["flammes", "Flammes", "#FF7A1A", "flammes"],
+  ["menthe", "Trait menthe", "#34D399", null], ["corail", "Trait corail", "#FF7F6B", null], ["lavande", "Halo lavande", "#A78BFA", "halo"], ["glace", "Glace", "#7DD3FC", "etincelles"],
   ["rubis", "Rubis", "#F43F5E", "halo"], ["soleil", "Soleil", "#FACC15", "comete"], ["plasma", "Plasma", "#22D3EE", "halo"], ["braise", "Braise", "#F97316", "etincelles"], ["argent", "Argent", "#CBD5E1", "comete"]];
 // [id, nom, aperçu, style passé à confettis()]
 const FETES_M = [["confettis", "Confettis", "🎊", null], ["damier", "Damier", "🏁", "damier"], ["feu", "Feu d'artifice", "🎆", "feu"], ["billets", "Pluie de billets", "💸", "billets"],
@@ -4381,7 +4433,7 @@ const FETES_M = [["confettis", "Confettis", "🎊", null], ["damier", "Damier", 
   ["trefles", "Trèfles", "🍀", ["🍀", "🍀", "✨", "🌿"]], ["diamants", "Diamants", "💎", ["💎", "💎", "✨", "💍"]], ["taureaux", "Taureaux", "🐂", ["🐂", "📈", "🐂", "💹"]], ["champagne", "Champagne", "🍾", ["🍾", "🥂", "✨", "🎉"]]];
 const EMBLEMES_M = [["pousse", "Pousse", "🌱"], ["abeille", "Abeille", "🐝"], ["hibou", "Hibou", "🦉"], ["tortue", "Tortue", "🐢"], ["renard", "Renard", "🦊"],
   ["aigle", "Aigle", "🦅"], ["lion", "Lion", "🦁"], ["dragon", "Dragon", "🐉"], ["couronne", "Couronne", "👑"], ["taureau", "Taureau", "🐂"],
-  ["fourmi", "Fourmi", "🐜"], ["ecureuil", "Écureuil", "🐿️"], ["castor", "Castor", "🦫"], ["dauphin", "Dauphin", "🐬"], ["loup", "Loup", "🐺"],
+  ["fourmi", "Petite fourmi", "🐜"], ["ecureuil", "Écureuil", "🐿️"], ["castor", "Castor", "🦫"], ["dauphin", "Dauphin", "🐬"], ["loup", "Loup", "🐺"],
   ["chene", "Chêne", "🌳"], ["boussole", "Boussole", "🧭"], ["ancre", "Ancre", "⚓"], ["phare", "Phare", "🗼"], ["comete-e", "Comète", "☄️"]];
 const TITRES_M = [["investisseur", "Investisseur"], ["metronome", "Le Métronome"], ["diamant", "Main de diamant"], ["batisseur", "Bâtisseur"], ["rentier", "Rentier"],
   ["veteran", "Vétéran"], ["optimiseur", "Optimiseur fiscal"], ["legende", "Légende"], ["millionnaire", "Millionnaire"], ["increvable", "Increvable"],
@@ -4465,13 +4517,14 @@ function recompensesPaliers(pal) {
   FAMILLES.forEach(([g]) => {
     const l = pal.filter(x => x.groupe === g), R = REC_FAM[g]; if (!R || !l.length) return;
     const cases = l.map((x, i) => i).filter(i => i % 2 === 1 || i === l.length - 1);
-    cases.forEach((i, j) => { const r = j === cases.length - 1 ? R[R.length - 1] : j < R.length - 1 ? R[j] : null; if (r) map.set(l[i].id, r); });
+    // lot 44 : moins de paliers récompensés que de récompenses prévues (Fiscalité avec 1 ou 2 enveloppes) → le dernier palier prend tout ce qui reste
+    cases.forEach((i, j) => { const r = j === cases.length - 1 ? [].concat(...R.slice(Math.min(j, R.length - 1))) : j < R.length - 1 ? R[j] : null; if (r) map.set(l[i].id, r); });
   });
   return map;
 }
 let MEMO_OBJ = { m: null, ok: null, pal: null, rec: null, sec: null };
 function etatObjets() {
-  if (MEMO_OBJ.m === M && M) return MEMO_OBJ;
+  if (MEMO_OBJ.m === M && M && MEMO_OBJ.d === ETAT.discret) return MEMO_OBJ;   // lot 44 : basculer le mode discret vide la mémoire (oublierObjets)
   const ok = new Set(Object.entries(BASE_M).map(([t, id]) => cleObj(t, id)));
   let vus = []; try { vus = JSON.parse(stock.get(cleStock("objets")) || "[]"); } catch (e) { vus = []; }
   if (!M || !M.personne || M.personne === ETAT.moi) try { JSON.parse(stock.get("versus.moi.afficheurs") || "[]").forEach(id => { if (defObj("aff", id)) ok.add(cleObj("aff", id)); }); } catch (e) { /* ancien format */ }
@@ -4483,7 +4536,7 @@ function etatObjets() {
     try { sec = secretsAtteints(); SECRETS_M.forEach(s => { if (sec.has(s.id)) s.rec.forEach(([t, id]) => ok.add(cleObj(t, id))); }); } catch (e) { /* idem */ }
     if (identiteSure()) stock.set(cleStock("objets"), JSON.stringify(Array.from(ok)));
   }
-  MEMO_OBJ = { m: M, ok, pal, rec, sec };
+  MEMO_OBJ = { m: M, ok, pal, rec, sec, d: ETAT.discret };
   return MEMO_OBJ;
 }
 function oublierObjets() { MEMO_OBJ = { m: null, ok: null, pal: null, rec: null, sec: null }; }
@@ -4497,9 +4550,9 @@ function origineObj(t, id) {
   if (BASE_M[t] === id) return { base: true };
   const E = etatObjets();
   for (const s of SECRETS_M) if (s.rec.some(r => r[0] === t && r[1] === id)) return { secret: s, ok: E.sec.has(s.id) };
-  for (const [pid, l] of E.rec) if (l.some(r => r[0] === t && r[1] === id)) return { palier: E.pal.find(x => x.id === pid) };
+  for (const [pid, l] of E.rec) if (l.some(r => r[0] === t && r[1] === id)) return { palier: masquerPalier(E.pal.find(x => x.id === pid)) };
   { const i = REGULARITE_M.findIndex(r => r[0] === t && r[1] === id); if (i >= 0) return { regul: i + 1, faits: moisVerses() }; }
-  for (const [g, R] of Object.entries(REC_FAM)) if (R.some(c => c.some(r => r[0] === t && r[1] === id))) return { famille: (FAMILLES.find(f => f[0] === g) || [, g])[1] };
+  for (const [g, R] of Object.entries(REC_FAM)) if (R.some(c => c.some(r => r[0] === t && r[1] === id))) return { famille: (FAMILLES.find(f => f[0] === g) || [, g])[1], absente: !E.pal.some(x => x.groupe === g) };   // lot 44 : famille absente du profil
   return {};
 }
 function apercuObj(t, id) {
@@ -4525,6 +4578,7 @@ function objetsNouveaux() {
   return tous.filter(k => !c.has(k) && !SORTES.some(([t]) => actifM(t) === k.split(".")[1] && k.split(".")[0] === t));
 }
 function apercuTenue(t, id) { return t === "aff" ? '<span class="m-flaps">' + flaps("12", false, id) + "</span>" : t === "titre" ? '<span class="vs-em">' + SORTES.find(x => x[0] === t)[2] + "</span>" : apercuObj(t, id); }
+const COURT_SORTE = { aff: "Affich.", emb: "Embl." };   // lot 44 : libellés courts de Ma tenue à 360 px
 function htmlTenue() {
   const E = etatObjets();
   const tot = Object.values(CATALOGUE).reduce((n, l) => n + l.length, 0), nb = Object.entries(CATALOGUE).reduce((n, [s, l]) => n + l.filter(d => E.ok.has(cleObj(s, d[0]))).length, 0);
@@ -4537,7 +4591,7 @@ function htmlTenue() {
   }
   return '<section class="vs-tenue" aria-label="Ma tenue"><button type="button" class="vt-h" data-vt-ouv="' + (SORTES.some(x => x[0] === PREF.vest) ? PREF.vest : "aff") + '"><b>Ma tenue</b><small>' + nb + " / " + tot + " objets · privé ›</small></button>" +
     '<div class="vt-r">' + SORTES.map(([t, l]) => { const id = actifM(t), n = nomObj(t, id);
-      return '<button type="button" class="vt-o" data-vt-ouv="' + t + '" aria-label="' + esc(l + " : " + n + ", changer") + '" title="' + esc(l + " : " + n) + '"><span class="vt-p">' + apercuTenue(t, id) + '</span><span class="vt-n">' + esc(l) + "</span></button>"; }).join("") +
+      return '<button type="button" class="vt-o" data-vt-ouv="' + t + '" aria-label="' + esc(l + " : " + n + ", changer") + '" title="' + esc(l + " : " + n) + '"><span class="vt-p">' + apercuTenue(t, id) + '</span><span class="vt-n"><span class="vt-l">' + esc(l) + '</span><span class="vt-c">' + esc(COURT_SORTE[t] || l) + "</span></span></button>"; }).join("") +
     "</div>" + encart + "</section>";
 }
 function brancherTenue(v) {
@@ -4584,11 +4638,12 @@ function htmlDetailObj() {
   let quoi;
   if (org.base) quoi = "Fourni de base.";
   else if (org.secret) quoi = o || org.ok ? "Récompense cachée « " + esc(org.secret.nom) + " » : " + esc(org.secret.quoi) : "Récompense cachée. Indice : <i>" + esc(org.secret.indice) + "</i>";
+  else if (org.palier && org.palier.cache) { const p = org.palier; quoi = p.atteint ? "Gagné avec un palier « " + esc((FAMILLES.find(f => f[0] === p.groupe) || [, ""])[1]) + " » (masqué en mode discret)." : "À gagner avec un palier « " + esc((FAMILLES.find(f => f[0] === p.groupe) || [, ""])[1]) + " » (masqué en mode discret)."; }   // lot 44 : ni seuil, ni %, ni jauge, ni « encore … € »
   else if (org.palier) { const p = org.palier; quoi = p.atteint ? "Gagné avec le palier « " + esc(p.titre) + " »" + (p.quand ? ", franchi en " + esc(libMois(p.quand)) : "") + "."
       : "À gagner : « " + esc(p.titre) + " » · " + pct(Math.max(0, Math.min(1, p.part)), 0, false) + (p.reste ? " · " + esc(p.reste) : "") + '<span class="jauge"><i style="width:' + Math.round(Math.max(0, Math.min(1, p.part)) * 100) + '%"></i></span>'; }
   else if (org.regul) quoi = org.faits >= org.regul ? "Gagné par ta régularité : ton " + org.regul + (org.regul === 1 ? "er" : "e") + " mois avec un versement."
       : "Régularité : se débloque à ton " + org.regul + (org.regul === 1 ? "er" : "e") + " mois avec un versement (tu en es à " + org.faits + ")." + '<span class="jauge"><i style="width:' + Math.round(Math.min(1, org.faits / org.regul) * 100) + '%"></i></span>';
-  else if (org.famille) quoi = o ? "Gagné avec un palier « " + esc(org.famille) + " »." : "À gagner dans les paliers « " + esc(org.famille) + " ».";
+  else if (org.famille) quoi = o ? "Gagné avec un palier « " + esc(org.famille) + " »." : org.absente ? "Pas disponible pour ton profil (pas de paliers « " + esc(org.famille) + " »)." : "À gagner dans les paliers « " + esc(org.famille) + " ».";
   else quoi = o ? "Déjà à toi." : "Pas encore disponible pour ton profil.";
   const actif = actifM(t) === id;
   return '<div class="vs-dl"><span class="vs-di">' + (cache ? "?" : sorte[2]) + "</span><div><b>" + esc(cache ? "???" : d[1]) + "</b> <small>" + esc(sorte[1]) + "</small><p>" + quoi + "</p></div></div>" +
@@ -4624,41 +4679,94 @@ function verifierPaliers() {
   const E = etatObjets();
   const faits = E.pal.filter(x => x.atteint), ids = faits.map(x => x.id);
   let vus = null; try { vus = JSON.parse(stock.get(cleStock("paliers")) || stock.get("versus.moi.paliers") || "null"); } catch (e) { vus = null; }
-  const nouveaux = vus === null ? [] : faits.filter(x => !vus.includes(x.id));
-  stock.set(cleStock("paliers"), JSON.stringify(Array.from(new Set((vus || []).concat(ids)))));
+  const vusF = new Set((vus || []).map(cleFete));   // lot 44 : « Sans vendre » déjà fêté = même seuil, quelle que soit la date de la dernière vente
+  const nouveaux = vus === null ? [] : faits.filter(x => !vus.includes(x.id) && !vusF.has(cleFete(x.id)));
+  stock.set(cleStock("paliers"), JSON.stringify(Array.from(new Set((vus || []).concat(ids, ids.map(cleFete))))));
   let sv = null; try { sv = JSON.parse(stock.get(cleStock("secrets")) || "null"); } catch (e) { sv = null; }
   const secrets = sv === null ? [] : SECRETS_M.filter(s => E.sec.has(s.id) && !sv.includes(s.id));
   stock.set(cleStock("secrets"), JSON.stringify(Array.from(new Set((sv || []).concat(Array.from(E.sec))))));
   // V15.5 : objets gagnés par la régularité (un par mois versé) : fêtés eux aussi, regroupés
-  const rv = stock.get(cleStock("regul")), nbR = Math.min(REGULARITE_M.length, moisVerses()), avR = rv === null ? 0 : +rv || 0;
+  // lot 44 : clé absente (premier lancement, nouveau téléphone, nouveau joueur) → on note sans fêter, comme les paliers et les objets cachés
+  const rv = stock.get(cleStock("regul")), nV = moisVerses(), nbR = Math.min(REGULARITE_M.length, nV), avR = rv === null ? nbR : +rv || 0;
   stock.set(cleStock("regul"), String(nbR));
-  const regul = nbR > avR ? [{ regul: true, titre: nbR - avR > 1 ? "Ta régularité paie : " + (nbR - avR) + " nouveaux objets" : "Un mois de plus avec un versement", grand: nbR + " MOIS", recs: REGULARITE_M.slice(avR, nbR), quand: null, id: null }] : [];
+  const regul = nbR > avR ? [{ regul: true, titre: nbR - avR > 1 ? "Ta régularité paie : " + (nbR - avR) + " nouveaux objets" : "Un mois de plus avec un versement", grand: nV + " MOIS", recs: REGULARITE_M.slice(avR, nbR), quand: null, id: null }] : [];
   const file = nouveaux.concat(secrets.map(secret => ({ secret, titre: secret.nom, grand: "?!", quand: null, id: null })), regul);
-  if (file.length) { const go = () => feter(file[0], file.slice(1)); if (typeof window.ereApres === "function") window.ereApres(go, "feteMoi"); else go(); }   // v16.93 : attend la scène du premier million
+  if (file.length) { const go = () => lancerFetes(file); if (typeof window.ereApres === "function") window.ereApres(go, "feteMoi"); else go(); }   // v16.93 : attend la scène du premier million
 }
-function feter(x, suite) {
-  injecterStyle();
-  const o = document.createElement("div");
-  o.className = "m-fete moi"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
-  const recs = x.recs || (x.secret ? x.secret.rec : (etatObjets().rec.get(x.id) || []));
-  const aff = recs.find(r => r[0] === "aff");
-  o.innerHTML = '<div><span class="mf-k">' + (x.regul ? "🛡️ Régularité" : x.secret ? "Récompense cachée trouvée" : "Palier franchi") + '</span><div class="m-flaps">' + flaps(x.grand, !reduit, aff ? aff[1] : null) + "</div><h3>" + esc(x.titre) + "</h3>" +
-    (x.regul ? "<p>Chaque mois où tu verses débloque un objet. Le prochain : ton " + (moisVerses() + 1) + "<sup>e</sup> mois.</p>" : x.secret ? "<p>" + esc(x.secret.quoi) + "</p>" : x.quand ? "<p>Franchi en " + esc(libMois(x.quand, true)) + ".</p>" : "") +
-    (recs.length ? '<p class="mf-af">Débloque :</p><div class="mf-recs">' + recs.map(([t, id]) => {
-      const s = SORTES.find(y => y[0] === t);
-      return '<button class="mf-rec" type="button" data-mf-eq="' + t + "." + id + '"><span>' + (t === "emb" || t === "fete" ? defObj(t, id)[2] : s[2]) + "</span><b>" + esc(nomObj(t, id)) + "</b><small>" + esc(s[1]) + " · équiper</small></button>";
-    }).join("") + "</div>" : "") +
-    '<button class="wr-btn" type="button" data-continuer>Continuer</button></div>';
-  document.body.appendChild(o);
-  const fermer = () => { o.remove(); if (suite && suite.length) feter(suite[0], suite.slice(1)); };   // enchaîne sans trou (la clôture attend la fin des fêtes)
+/* lot 44 : clé de fête d'un palier = famille + seuil (sans la date de la dernière vente pour « Sans vendre ») */
+function cleFete(id) { return String(id).replace(/^(vente\d+)-.*$/, "$1"); }
+function recsDe(x) { return x.recs || (x.secret ? x.secret.rec : (etatObjets().rec.get(x.id) || [])); }
+/** le prochain palier non franchi d'une famille qui donne un objet */
+function prochaineRec(groupe) { const E = etatObjets(), x = E.pal.find(p => p.groupe === groupe && !p.atteint && E.rec.has(p.id)); return x ? { x, r: E.rec.get(x.id) } : null; }
+function regulEpuisee() { return moisVerses() >= REGULARITE_M.length; }
+/** lot 44 : un seul écran pour un rattrapage ; un simple toast pour un palier sans objet ; la pleine fête pour un objet ou la régularité */
+function lancerFetes(file) {
+  if (file.length > 1) return feterRecap(file);
+  const x = file[0];
+  if (recsDe(x).length || x.regul) feter(x); else toastPalier(x);
+}
+function toastPalier(x) {
+  const m = masquerPalier(x), n = prochaineRec(x.groupe);
+  toast("Palier franchi : " + m.titre + " ✓" + (n ? " · prochaine récompense : " + nomObj(n.r[0][0], n.r[0][1]) : ""));
+}
+/** l'aperçu d'un objet dans une fête (le vrai objet : palette, nuancier, courbe…) */
+function apercuFete(t, id) { return t === "aff" ? '<span class="m-flaps">' + flaps("12", false, id) + "</span>" : t === "titre" ? '<span class="vs-em">🏷️</span>' : apercuObj(t, id); }
+function htmlRecsFete(recs) {
+  return '<div class="mf-recs">' + recs.map(([t, id]) => {
+    const s = SORTES.find(y => y[0] === t);
+    return '<button class="mf-rec" type="button" data-mf-eq="' + t + "." + id + '" aria-label="' + esc("Équiper " + s[1].toLowerCase() + " " + nomObj(t, id)) + '"><span class="mf-ap">' + apercuFete(t, id) + "</span><b>" + esc(nomObj(t, id)) + "</b><small>" + esc(s[1]) + '</small><em class="mf-eq">Équiper</em></button>';
+  }).join("") + "</div>";
+}
+function brancherFete(o, fermer) {
   o.querySelector("[data-continuer]").addEventListener("click", fermer);
   o.querySelectorAll("[data-mf-eq]").forEach(b => b.addEventListener("click", () => {
     const [t, id] = b.dataset.mfEq.split("."); oublierObjets(); equiper(t, id);
-    b.classList.add("fait"); b.querySelector("small").textContent = "équipé ✓";
+    o.querySelectorAll(".mf-rec.fait").forEach(y => { if (y !== b && y.dataset.mfEq.split(".")[0] === t) { y.classList.remove("fait"); y.querySelector(".mf-eq").textContent = "Équiper"; } });
+    b.classList.add("fait"); b.querySelector(".mf-eq").textContent = "Équipé ✓";
     if (t === "fete") lancerFete(id);
     if (vueMoi()) rendre();
   }));
   const t0 = Date.now(); o.addEventListener("click", e => { if (e.target === o && Date.now() - t0 > 2200) fermer(); });   // V15.9 : laisse l'afficheur finir
+}
+function feter(x, suite) {
+  injecterStyle();
+  if (ETAT.discret === "oui" && FAM_EUR.includes(x.groupe)) x = Object.assign(masquerPalier(x), { grand: "•••", quand: null });   // lot 44 : mode discret, ni seuil ni date
+  const o = document.createElement("div");
+  o.className = "m-fete moi"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
+  const recs = recsDe(x);
+  const aff = recs.find(r => r[0] === "aff"), fini = x.regul && regulEpuisee();
+  o.innerHTML = '<div><span class="mf-k">' + (x.regul ? "🛡️ Régularité" : x.secret ? "Récompense cachée trouvée" : "Palier franchi") + '</span><div class="m-flaps">' + flaps(x.grand, !reduit, aff ? aff[1] : null) + "</div><h3>" + esc(x.titre) + "</h3>" +
+    (x.regul ? "<p>" + (fini ? "Tu as gagné les " + REGULARITE_M.length + " objets de la régularité. Ta série continue de compter dans les paliers." : "Chaque mois où tu verses débloque un objet. Le prochain : ton " + (moisVerses() + 1) + "<sup>e</sup> mois.") + "</p>" : x.secret ? "<p>" + esc(x.secret.quoi) + "</p>" : x.quand ? "<p>Franchi en " + esc(libMois(x.quand, true)) + ".</p>" : "") +
+    (recs.length ? '<p class="mf-af">' + (recs.length > 1 ? "Tes " + recs.length + " objets" : "Ton objet") + " · touche pour l'équiper</p>" + htmlRecsFete(recs) : "") +
+    '<button class="wr-btn" type="button" data-continuer>Continuer</button></div>';
+  document.body.appendChild(o);
+  const fermer = () => { o.remove(); if (suite && suite.length) feter(suite[0], suite.slice(1)); };   // enchaîne sans trou (la clôture attend la fin des fêtes)
+  brancherFete(o, fermer);
+  lancerFete();
+}
+/** lot 44 : rattrapage (plusieurs paliers, objets cachés, régularité) : un seul écran récapitulatif */
+function feterRecap(file) {
+  injecterStyle();
+  const disc = ETAT.discret === "oui";
+  const pals = file.filter(x => !x.regul && !x.secret), secs = file.filter(x => x.secret), reg = file.find(x => x.regul);
+  const vus = new Set(), recs = [];
+  file.forEach(x => recsDe(x).forEach(r => { const k = cleObj(r[0], r[1]); if (!vus.has(k)) { vus.add(k); recs.push(r); } }));
+  const morceaux = [];
+  if (pals.length) morceaux.push(pals.length + (pals.length > 1 ? " paliers franchis" : " palier franchi"));
+  if (secs.length) morceaux.push(secs.length + (secs.length > 1 ? " récompenses cachées" : " récompense cachée"));
+  if (reg) morceaux.push((reg.recs.length) + (reg.recs.length > 1 ? " mois de régularité" : " mois de régularité"));
+  const titre = morceaux.join(" + ") + (recs.length ? " · " + recs.length + (recs.length > 1 ? " objets" : " objet") : "");
+  const lignes = pals.map(x => disc && FAM_EUR.includes(x.groupe) ? masquerPalier(x).titre : x.titre).concat(secs.map(x => "Cachée : " + x.secret.nom));
+  const aff = recs.find(r => r[0] === "aff");
+  const o = document.createElement("div");
+  o.className = "m-fete moi"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
+  o.innerHTML = '<div><span class="mf-k">Du nouveau</span><div class="m-flaps">' + flaps(recs.length ? "+" + recs.length : String(pals.length || 1), !reduit, aff ? aff[1] : null) + "</div><h3>" + esc(titre) + "</h3>" +
+    (lignes.length ? '<ul class="mf-l">' + lignes.slice(0, 8).map(l => "<li>✓ " + esc(l) + "</li>").join("") + (lignes.length > 8 ? "<li>… et " + (lignes.length - 8) + " de plus</li>" : "") + "</ul>" : "") +
+    (reg ? "<p>" + (regulEpuisee() ? "Tu as gagné les " + REGULARITE_M.length + " objets de la régularité." : "Régularité : " + moisVerses() + " mois versés · prochain objet au " + (moisVerses() + 1) + "<sup>e</sup>.") + "</p>" : "") +
+    (recs.length ? '<p class="mf-af">Touche un objet pour l\'équiper</p>' + htmlRecsFete(recs) : "") +
+    '<button class="wr-btn" type="button" data-continuer>Continuer</button></div>';
+  document.body.appendChild(o);
+  brancherFete(o, () => o.remove());
   lancerFete();
 }
 const palOuverts = new Set();
@@ -4671,47 +4779,83 @@ function htmlBilansMoi() {
 /* D (v16.93) : en mode discret, les paliers en euros ne montrent ni le seuil, ni la jauge, ni le % (ils laisseraient deviner le montant) */
 const FAM_EUR = ["pat", "bourse", "verse", "gains", "gainsAn"];
 function masquerPalier(x) {
-  if (ETAT.discret !== "oui" || !FAM_EUR.includes(x.groupe)) return x;
+  if (!x || ETAT.discret !== "oui" || !FAM_EUR.includes(x.groupe)) return x;
   return Object.assign({}, x, { court: "•••", titre: x.titre.replace(/\d[\d\s\u202F\u00A0.,]*\s?€/g, "•••" + NB + "€"), reste: "", cache: true });
+}
+/* lot 44 · carte « Ce mois-ci » : le versement du mois d'abord (aucun euro : compatible mode discret ; aucune règle changée) */
+function htmlCeMois() {
+  let sv; try { sv = serieVersements(); } catch (e) { return ""; }
+  if (!sv || !sv.liste.length) return "";
+  const now = new Date(), mo = MOIS_L[now.getMonth()], Mo = mo.charAt(0).toUpperCase() + mo.slice(1);
+  const finM = new Date(now.getFullYear(), now.getMonth() + 1, 0), fin = String(finM.getDate()).padStart(2, "0") + "/" + String(finM.getMonth() + 1).padStart(2, "0");
+  const n = moisVerses(), L = REGULARITE_M.length, fini = n >= L, e = k => k + (k === 1 ? "<sup>er</sup>" : "<sup>e</sup>");
+  const obj = (r, lab) => '<span class="cm-o"><span class="cm-ap">' + apercuFete(r[0], r[1]) + "</span><span><small>" + lab + "</small><b>" + esc(nomObj(r[0], r[1])) + "</b></span></span>";
+  let tete, sous = "", o = "";
+  if (sv.moisEnCours) {
+    tete = "<b>" + esc(Mo) + " fait ✓</b> · série de " + sv.actuelle + " mois";
+    if (n <= L) o = obj(REGULARITE_M[n - 1], "objet gagné ce mois-ci");
+  } else {
+    tete = "<b>" + esc(Mo) + " : pas encore versé</b>";
+    sous = sv.actuelle ? "Ta série de <b>" + sv.actuelle + " mois</b> est en jeu jusqu'au " + fin + "." : "Un versement d'ici le " + fin + ", même petit, lance ta série.";
+    if (!fini) o = obj(REGULARITE_M[n], "ton prochain objet");
+  }
+  const suite = fini ? [] : REGULARITE_M.slice(n, n + 3);
+  const piste = '<div class="cm-p"><span class="cm-pt">Régularité : <b>' + n + " mois versés</b>" + (fini ? " · les " + L + " objets gagnés" : " · prochain objet au " + e(n + 1)) + "</span>" +
+    (suite.length ? '<span class="cm-f" aria-label="Les prochains objets de la régularité">' + suite.map((r, i) => '<span class="cm-fi' + (i === 0 ? " pro" : "") + '" title="' + esc(nomObj(r[0], r[1])) + '"><span class="cm-ap">' + apercuFete(r[0], r[1]) + "</span><small>" + e(n + 1 + i) + "</small></span>").join("") + "</span>" : "") + "</div>";
+  return '<section class="m-cemois' + (sv.moisEnCours ? " fait" : "") + '" aria-label="Ce mois-ci"><span class="cm-k">Ce mois-ci</span><p class="cm-t">' + tete + "</p>" + (sous ? '<p class="cm-s">' + sous + "</p>" : "") + o + piste + "</section>";
+}
+const pctNw = v => '<span class="nw">' + pct(Math.max(0, Math.min(1, v)), 0, false) + "</span>";
+/** le chemin qui reste jusqu'à un palier (« encore 2 mois », « 70 % ») ; masqué en mode discret pour les familles en euros */
+function cheminP(x) {
+  if (x.cache) return "•••";
+  if (x.groupe === "serie" || x.groupe === "mois") {
+    const n = +String(x.id).replace(/\D/g, ""), sv = serieVersements(), fait = x.groupe === "serie" ? sv.actuelle : sv.liste.filter(z => z.ok).length, r = Math.max(1, n - fait);
+    return "encore " + r + " mois" + (x.groupe === "serie" ? " d'affilée" : "");
+  }
+  return pctNw(x.part);
 }
 function htmlMissions() {
   const pal = paliers().map(masquerPalier), nbFaits = pal.filter(x => x.atteint).length;
-  const carte = x => '<button type="button" class="palier' + (x.atteint ? " fait" : "") + '" data-palier="' + esc(x.id) + '"' + (x.atteint ? "" : " disabled") + '>' +
-    '<span class="pastille">' + esc(x.court) + '</span><span class="pl-t">' + esc(x.titre) + "</span>" +
-    (x.atteint ? '<span class="pl-s">✓ franchi en ' + esc(libMois(x.quand)) + "</span>"
-               : '<span class="jauge"><i style="width:' + Math.round(Math.max(0, Math.min(1, x.part)) * 100) + '%"></i></span><span class="pl-s">' + esc(x.reste) + "</span>") + "</button>";
   const E = etatObjets(), recDe = id => E.rec.get(id) || [];
   const icone = (t, id) => t === "emb" || t === "fete" ? defObj(t, id)[2] : SORTES.find(x => x[0] === t)[2];
-  const htmlRecs = x => { const l = recDe(x.id); return l.length ? '<em class="pl-rec">' + l.map(([t, id]) => "<span>" + icone(t, id) + " " + esc(nomObj(t, id)) + "</span>").join("") + "</em>" : ""; };
+  const htmlRecs = x => { const l = recDe(x.id); return l.length && !x.cache ? '<em class="pl-rec">' + l.map(([t, id]) => "<span>" + icone(t, id) + " " + esc(nomObj(t, id)) + "</span>").join("") + "</em>" : ""; };
   const ligneP = x => '<button type="button" class="pl-r' + (x.atteint ? " fait" : "") + '" data-palier="' + esc(x.id) + '"' + (x.atteint ? "" : " disabled") + '>' +
     '<span class="pastille">' + esc(x.court) + '</span><span class="pl-t">' + esc(x.titre) + htmlRecs(x) + (x.atteint || x.cache ? "" : '<span class="jauge"><i style="width:' + Math.round(Math.max(0, Math.min(1, x.part)) * 100) + '%"></i></span><small>' + esc(x.reste) + "</small>") + "</span>" +
-    (x.atteint ? '<span class="pl-s">✓ ' + esc(libMois(x.quand)) + "</span>" : '<span class="pl-s">' + (x.cache ? "•••" : pct(Math.max(0, Math.min(1, x.part)), 0, false)) + "</span>") + "</button>";
-  const blocs = FAMILLES.map(([g, nom]) => {
-    const l = pal.filter(x => x.groupe === g); if (!l.length) return "";
+    (x.atteint ? '<span class="pl-s">✓' + (x.cache ? "" : " " + esc(libMois(x.quand))) + "</span>" : '<span class="pl-s">' + (x.cache ? "•••" : pctNw(x.part)) + "</span>") + "</button>";
+  const derVente = ((M.ref || {}).parcours || {}).derniereVente;
+  const bloc = (g, nom) => {
+    const l = pal.filter(x => x.groupe === g); if (!l.length) return null;
     const faits = l.filter(x => x.atteint).length, suiv = l.find(x => !x.atteint), cache = l.some(x => x.cache);
-    const recs = l.filter(x => !x.atteint).reduce((n, x) => n + recDe(x.id).length, 0);
-    return '<details class="pl-bloc' + (suiv ? "" : " complet") + '" data-fam="' + g + '"' + (palOuverts.has(g) ? " open" : "") + "><summary>" +
+    const pr = l.find(x => !x.atteint && recDe(x.id).length), r = pr ? recDe(pr.id)[0] : null;
+    const html = '<details class="pl-bloc' + (suiv ? "" : " complet") + '" data-fam="' + g + '"' + (palOuverts.has(g) ? " open" : "") + "><summary>" +
       '<span class="pb-t">' + esc(nom) + '</span><span class="pb-n">' + (cache ? "•••" : faits + " / " + l.length) + "</span>" +
-      '<span class="jauge"><i style="width:' + (cache ? 0 : Math.round(faits / l.length * 100)) + '%"></i></span>' +
-      '<span class="pb-s">' + (cache ? "Masqué en mode discret" : suiv ? "Prochain : <b>" + esc(suiv.titre) + "</b> · " + pct(Math.max(0, Math.min(1, suiv.part)), 0, false) : "Tout est franchi ✓") +
-        (recs ? ' · <span class="pb-r">🎁 ' + recs + (recs > 1 ? " récompenses" : " récompense") + " à gagner</span>" : "") + "</span>" +
+      (cache ? "" : '<span class="jauge" title="vers le prochain palier"><i style="width:' + (suiv ? Math.round(Math.max(0, Math.min(1, suiv.part)) * 100) : 100) + '%"></i></span>') +
+      '<span class="pb-s">' + (cache ? "Masqué en mode discret" : suiv ? "Prochain : <b>" + esc(suiv.titre) + "</b> · " + cheminP(suiv) : "Tout est franchi ✓") +
+        (g === "vente" && derVente ? " · depuis ta dernière vente le " + esc(frDate(derVente)) : "") + "</span>" +
+      (r && !cache ? '<span class="pb-r"><span class="pb-ap">' + apercuFete(r[0], r[1]) + "</span><span>🎁 <b>" + esc(nomObj(r[0], r[1])) + "</b>" + (recDe(pr.id).length > 1 ? " +" + (recDe(pr.id).length - 1) : "") + " · " + cheminP(pr) + "</span></span>" : "") +
       '</summary><div class="pl-liste">' + l.map(ligneP).join("") + "</div></details>";
-  }).join("");
-  /* C (v16.93) : million, paliers, bilans, puis le Vestiaire replié */
-  return '<div id="m-million-z"></div>' + htmlTenue() +
+    return { g, html, complet: !suiv };
+  };
+  const tous = FAMILLES.map(([g, nom, vitrine]) => Object.assign(bloc(g, nom) || {}, { vitrine })).filter(x => x.html);
+  const vit = tous.filter(x => x.vitrine && !x.complet), aut = tous.filter(x => !x.vitrine && !x.complet), fin = tous.filter(x => x.complet);
+  const groupe = (cle, titre, l) => l.length ? '<details class="pl-grp" data-grp="' + cle + '"' + (palOuverts.has(cle) ? " open" : "") + "><summary>" + titre + '</summary><div class="pl-blocs">' + l.map(x => x.html).join("") + "</div></details>" : "";
+  const blocs = vit.map(x => x.html).join("") + groupe("_autres", "Autres paliers <small>(" + aut.length + ")</small>", aut) + groupe("_finies", "✓ " + fin.length + (fin.length > 1 ? " familles terminées" : " famille terminée"), fin);
+  /* lot 44 : Ce mois-ci, million, tenue, paliers, Vestiaire, puis les bilans */
+  return htmlCeMois() + '<div id="m-million-z"></div>' + htmlTenue() +
     '<div><h2 class="sec">Paliers <small>' + (pal.some(x => x.cache) ? "privé en mode discret" : nbFaits + " franchis sur " + pal.length) + "</small></h2></div>" +
+    '<details class="pl-aide"' + (palOuverts.has("_aide") ? " open" : "") + ' data-grp="_aide"><summary>Comment ça marche ?</summary><p>🎁 = récompense · touche un palier franchi pour revoir sa fête</p></details>' +
     '<div class="pl-blocs">' + blocs + "</div>" +
-    '<p class="info">Un palier sur deux, et toujours le dernier de chaque famille, débloque une récompense pour ton onglet Moi : afficheur, thème, courbe, fête, emblème ou titre. D\'autres sont cachées. Tout reste privé et à toi, même si tu repasses sous le palier. Touche un palier franchi pour revoir sa fête.</p>' +
-    htmlBilansMoi() + htmlVestiaire();
+    htmlVestiaire() + htmlBilansMoi();
 }
 function brancherMissions(v) {
   const z = v.querySelector("#m-million-z"); if (z) afficherMillion(z);
   v.querySelectorAll("details.pl-bloc").forEach(d => d.addEventListener("toggle", () => { if (d.open) palOuverts.add(d.dataset.fam); else palOuverts.delete(d.dataset.fam); }));
+  v.querySelectorAll("details[data-grp]").forEach(d => d.addEventListener("toggle", () => { if (d.open) palOuverts.add(d.dataset.grp); else palOuverts.delete(d.dataset.grp); }));
   const pal = paliers();
   brancherVestiaire(v); brancherTenue(v);
   v.querySelectorAll("[data-m-cloture]").forEach(b => b.addEventListener("click", () => ouvrirCloture(+b.dataset.mCloture)));
   v.querySelectorAll("[data-m-bilan]").forEach(b => b.addEventListener("click", () => ouvrirDiapos("Mon patrimoine · " + b.dataset.mBilan, diaposPrivees(+b.dataset.mBilan))));
-  v.querySelectorAll("[data-palier]").forEach(b => b.addEventListener("click", () => { const x = pal.find(p => p.id === b.dataset.palier); if (x && x.atteint) feter(x); }));
+  v.querySelectorAll("[data-palier]").forEach(b => b.addEventListener("click", () => { const x = pal.find(p => p.id === b.dataset.palier); if (x && x.atteint) lancerFetes([x]); }));   // lot 44 : sans objet → un simple toast
 }
 
 /* ================= Bilan de patrimoine de l'année (privé : seulement sur ton appareil) ================= */
