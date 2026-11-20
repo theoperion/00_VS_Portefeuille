@@ -835,7 +835,7 @@ function barreAdmin() {
   /* V16.63 · avant le 1er décembre : un raccourci vers le tour de chauffe tel que les joueurs le verront (admin seulement, simulation : rien n'est envoyé) */
   const dec = !chauffeOuverte() && !(m === "joueur" && (stock.get("versus.dateSim") || "").startsWith("2026-12")) ? '<button type="button" class="ba-dec" data-badec="1">🔥 Voir décembre · l’Atelier du Père Noël, comme les joueurs le 3 décembre</button>' : "";
   const circ = '<button type="button" class="ba-dec" data-bacirc="1">🗺️ Circuits 2027 · les 13 circuits en 2D et en 3D (aperçu)</button>';   // v16.81
-  const tres = '<button type="button" class="ba-dec" data-batres="1">🗝️ Aperçu du trésor · la chasse au trésor avec un exemple inventé (rien n’est envoyé)</button>';   // v17.26
+  const tres = '<button type="button" class="ba-dec" data-batres="1"' + (TRESOR_APERCU ? ' aria-pressed="true">🗝️ Aperçu du trésor en cours · ✕ Quitter' : ">🗝️ Aperçu du trésor · sur la page Course, en 📺 Visite, avec un exemple inventé (rien n’est envoyé)") + "</button>";   // v17.26 ; v17.35 : directement sur la page Course
   return '<div class="barre-admin"><div class="ba-h"><b>👑 Admin</b><div class="ba-seg">' + b("tout", "Tout afficher") + b("joueur", "Vue joueur") + b("reel", "Le réel") + "</div></div>" + plus + dec + circ + tres + "<small>" + desc + "</small></div>";
 }
 function brancherBarreAdmin(v) {

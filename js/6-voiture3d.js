@@ -169,6 +169,7 @@ function rendreTrophees() {
   // admin : la première fois, le Podium s'ouvre sur « tout afficher »
   // (l'ancienne ouverture automatique sur « tout afficher » est supprimée : l'admin choisit dans Réglages › Mode admin)
   const vis = saisonVisible();
+  if (typeof TRESOR_APERCU !== "undefined" && TRESOR_APERCU && (!vis || ongletPodium() !== "gp")) quitterApercuTresor(false);   // v17.35 : on quitte la page Course → fin de l'aperçu du trésor
   v.innerHTML = (D && adminActif() && !window.APERCUS_FINIS ? barreAdmin() : "") + (vis ? blocSaison() : teaser());   // v17.5 : plus de bandeau « Premier millionnaire » dans le teaser (les badges attendent janvier)
   brancherBarreAdmin(v);
   const im = $("#info-million-t"); if (im) im.addEventListener("click", () => toast(texteMillion()));

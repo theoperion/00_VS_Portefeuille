@@ -6622,7 +6622,10 @@
       arreterSurvol() { if (I.survol) { I.survol = null; I.pan = [0, 0]; I.zoom = 1; I.incl = .72; reveiller(); } },
       ecran, ecranMonde, projeter, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim, reveiller, taille: () => ({ w: I.cssW, h: I.cssH }),
       /** zoom de la Visite 3D (1 = vue d'ensemble, 0,12 = au plus près) et mode de caméra */
-      zoom: () => I.zoom, mode: () => I.mode, survolEnCours: () => !!I.survol,
+      zoom: () => I.zoom, mode: () => I.mode, survolEnCours: () => !!I.survol, cible: () => ({ x: T.cx + I.pan[0], z: T.cz + I.pan[1], r: Math.max(T.rx, T.rz) }),   // v17.35 : point visé par la caméra (jauge chaud-froid)
+      /** v17.35 · recul automatique de la Visite (1 en paysage ; > 1 sur un écran en hauteur, où la caméra se place plus loin pour tout montrer) : même formule que camVoulue */
+      recul: () => { const asp = cv.width / Math.max(1, cv.height), rv = Math.max(T.rx, T.rz / Math.min(1, asp * .9) * (asp < 1 ? 1.25 : 1)); return Math.max(1, rv / Math.max(T.rx, T.rz)); },
+
       /** place la caméra de la Visite (tests, cérémonies) : centre [x, z] du monde, zoom, inclinaison, orbite */
       viser(c, z, incl, orb) { if (I.mode !== "helico") return; I.survol = null; if (c) I.pan = [clamp(c[0] - T.cx, -T.rx, T.rx), clamp(c[1] - T.cz, -T.rz, T.rz)]; if (z) I.zoom = clamp(z, .12, 2.4); if (incl) I.incl = clamp(incl, .18, 1.4); if (orb !== undefined) I.orbite = orb; I.saut = true; reveiller(); },
       detruire() {

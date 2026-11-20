@@ -632,6 +632,7 @@ function montrerVue(v) {
   if (!VUES.includes(v)) v = "classement";
   if (v === "classement" && VUE_AFFICHEE !== null && VUE_AFFICHEE !== "classement") ANIM_CL = true;   // on (re)vient sur l'onglet : les animations se rejouent
   VUE_AFFICHEE = v;
+  if (v !== "trophees" && typeof TRESOR_APERCU !== "undefined" && TRESOR_APERCU) quitterApercuTresor(false);   // v17.35 : changer d'onglet arrête l'aperçu du trésor
   document.querySelectorAll(".view").forEach(s => { s.hidden = s.dataset.vue !== v; });
   document.body.classList.toggle("vue-moi", v === "moi");
   document.querySelectorAll(".onglet").forEach(t => t.setAttribute("aria-current", t.dataset.vue === v || (v === "fiche" && t.dataset.vue === "classement") ? "page" : "false"));
