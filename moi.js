@@ -780,6 +780,22 @@ function injecterStyle() {
 .moi .champ input.a-erreur { border-color: var(--down); box-shadow: 0 0 0 1px var(--down); }
 .moi .champ select.a-remplir, .moi .champ input.a-remplir { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .moi .m-avis2, .moi .m-ca { align-items: start; }
+/* v17.76 (lot59) · « 📄 Importer mon avis d'opéré » */
+.moi .m-imp { display: grid; gap: 8px; }
+.moi .m-imp-b { justify-self: start; }
+.moi .m-imp.ouvert { padding: 10px 12px; border: 1px solid var(--accent); border-radius: 10px; background: color-mix(in srgb, var(--accent) 7%, var(--panel)); font-size: 13px; }
+.moi .m-imp-t { font-size: 13.5px; }
+.moi .m-imp .aide, .moi .m-imp-n { margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
+.moi .m-imp-n.petit { font-size: 12px; color: var(--ink-3); overflow-wrap: anywhere; }
+.moi .m-imp-n.warn, .moi .m-imp-msg { margin: 0; color: var(--down); font-weight: 600; font-size: 12.5px; }
+.moi .m-imp-a { display: flex; flex-wrap: wrap; gap: 8px; }
+.moi .m-imp-a label.btn { cursor: pointer; }
+.moi .m-imp textarea { width: 100%; box-sizing: border-box; min-height: 96px; font: 12px/1.35 ui-monospace, monospace; padding: 8px; border: 1px solid var(--rule); border-radius: 8px; background: var(--bg, var(--panel)); color: var(--ink); }
+.moi .m-imp-l { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.moi .m-imp-o { all: unset; box-sizing: border-box; cursor: pointer; display: block; width: 100%; padding: 7px 10px; border: 1px solid var(--rule); border-radius: 8px; font-size: 12.5px; background: var(--panel); overflow-wrap: anywhere; }
+.moi .m-imp-o[aria-current="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); font-weight: 600; }
+.moi .m-imp-o.fait { opacity: .6; cursor: default; color: var(--up); }
+.moi .m-na-isin { margin: 0; }
 .moi .m-avis2 > .champ > label, .moi .m-ca > .champ > label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .moi .m-avis2 .champ input { padding-inline: 10px; }
 .moi .m-pied { position: sticky; bottom: calc(-22px - env(safe-area-inset-bottom, 0px)); z-index: 2; display: grid; gap: 8px; margin: 0 -4px; padding: 10px 4px calc(12px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(to bottom, transparent, var(--bg) 14px); }
@@ -3598,7 +3614,7 @@ function guideOrdre() { if (typeof ouvrirGuide === "function") ouvrirGuide("Sais
 function ouvrirSaisieM(partiel, onglet) {
   injecterStyle(); assurerFeuille(); lireCache();
   if (!M) { toast("Lecture de ton fichier en cours, réessaie dans un instant."); charger(false); return; }
-  F = formulaire(partiel);
+  F = formulaire(partiel); IMP = null;   // v17.76 : un import en cours ne survit pas à une nouvelle ouverture de « + »
   synchroniser();
   nommerRaccourci = false; detailsOuverts = false; plusTypes = false; menuOuvert = false;
   $f("m-saisie").hidden = false;
@@ -3674,6 +3690,7 @@ function htmlNouvelActif(na, cadre) {
     '<div class="champ"><label for="fn-nom">Nom</label><input id="fn-nom" type="text" autocomplete="off" autocapitalize="sentences" placeholder="ex. Amundi MSCI World" value="' + esc(na.nom) + '"></div></div>' +
     '<div class="champ"><label for="fn-ticker">Ticker Google Finance</label><div class="ligne-champ"><input id="fn-ticker" type="text" autocomplete="off" autocapitalize="characters" placeholder="ex. EPA:CW8" value="' + esc(na.ticker) + '"><button class="mini-btn" type="button" id="fn-verif">Vérifier</button></div>' +
     '<span class="aide" id="fn-res">' + esc(na.msg || "EPA: pour Paris, ETR: pour Xetra, CURRENCY:ETHEUR pour une crypto. Sans ticker, indique un cours manuel.") + "</span></div>" +
+    (na.isin ? '<p class="aide m-na-isin">ISIN repris du document : <b>' + esc(na.isin) + "</b></p>" : "") +
     '<div class="rang"><div class="champ"><label for="fn-classe">Classe</label><select id="fn-classe">' + opt(classes, na.classe) + "</select></div>" +
     '<div class="champ"><label for="fn-zone">Zone</label><select id="fn-zone">' + opt(zones, na.zone) + "</select></div></div>" +
     '<div class="rang"><div class="champ"><label for="fn-levier">Levier</label><select id="fn-levier">' + opt(["1", "2", "3"], na.levier) + "</select></div>" +
@@ -3701,6 +3718,7 @@ function brancherNouvelActif(na, apres, annuler) {
     if (r.actifs.some(x => x.code === na.code)) { msg("Le code " + na.code + " existe déjà : choisis-le dans la liste."); return; }
     if (!na.ticker && !(manuel > 0)) { msg("Indique un ticker Google Finance ou un cours manuel."); return; }
     const a = { code: na.code, nom: na.nom, ticker: na.ticker, classe: na.classe, zone: na.zone, levier: lireNombre(na.levier) || 1, coursManuel: manuel };
+    if (na.isin) a.isin = na.isin;   // v17.76 : seulement depuis un import (champ déjà lu par le fichier)
     const b = $f("fn-ok"), lib = b.textContent; b.disabled = true; b.textContent = "Création…";
     const rep = await posterFichier({ action: "actif", actif: a });
     if (!rep.ok) {
@@ -3772,6 +3790,320 @@ function ouvrirReleveVersus(journal) {
   fermerSaisieM(); { const s2 = $f("ms-saisie"); if (s2) s2.hidden = true; } if (typeof ouvrirSaisie !== "function") return;
   ouvrirSaisie(); if (journal && typeof ongletReleves === "function") ongletReleves("journal");
 }
+/* ---- v17.76 (lot59, Théo) · « 📄 Importer mon avis d'opéré » : le PDF (ou son texte collé) est lu DANS le téléphone, rien n'est envoyé ;
+   chaque opération de l'avis pré-remplit la saisie habituelle (mêmes champs, même envoi), l'utilisateur relit et valide toujours.
+   Jamais de valeur inventée : un champ absent de l'avis reste vide et est signalé. pdf.js est chargé à la demande depuis cdnjs. ---- */
+const PDFJS_URL = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+/* quelques ETF connus (ISIN → code habituel, ticker Google Finance) : seulement pour PROPOSER l'actif, jamais l'imposer */
+const ISIN_CONNUS = {
+  FR0010342592: ["LQQ", "EPA:LQQ"], FR0011871110: ["PUST", "EPA:PUST"], FR0011871128: ["PSP5", "EPA:PSP5"], LU1681043599: ["CW8", "EPA:CW8"],
+  FR0011869353: ["EWLD", "EPA:EWLD"], FR0010755611: ["CL2", "EPA:CL2"], FR0011550185: ["ESE", "EPA:ESE"]
+};
+let IMP = null;   // { panneau, coller, texte, msg, lecture, compte, ops: [...], i }
+let pdfjsP = null;
+function chargerPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if (pdfjsP) return pdfjsP;
+  pdfjsP = new Promise((ok, ko) => {
+    const s = document.createElement("script"), fin = setTimeout(() => echec(), 20000);
+    function echec() { clearTimeout(fin); pdfjsP = null; s.remove(); ko(new Error("pdfjs")); }
+    s.src = PDFJS_URL + "pdf.min.js"; s.crossOrigin = "anonymous"; s.referrerPolicy = "no-referrer";
+    s.onload = () => { clearTimeout(fin); if (!window.pdfjsLib) { echec(); return; } window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_URL + "pdf.worker.min.js"; ok(window.pdfjsLib); };
+    s.onerror = echec;
+    document.head.appendChild(s);
+  });
+  return pdfjsP;
+}
+/** texte d'un PDF, ligne par ligne (morceaux regroupés par hauteur, de gauche à droite) */
+async function textePdf(fichier) {
+  const lib = await chargerPdfJs();
+  const doc = await lib.getDocument({ data: new Uint8Array(await fichier.arrayBuffer()), isEvalSupported: false, disableFontFace: true, useSystemFonts: false }).promise;
+  const lignes = [];
+  for (let n = 1; n <= Math.min(doc.numPages, 6); n++) {
+    const tc = await (await doc.getPage(n)).getTextContent(), rangs = [];
+    tc.items.forEach(it => { if (!it.str || !it.transform) return; const y = it.transform[5], x = it.transform[4], h = Math.abs(it.transform[3]) || 10;
+      let r = rangs.find(l => Math.abs(l.y - y) < h * .45); if (!r) { r = { y: y, items: [] }; rangs.push(r); } r.items.push({ x: x, w: it.width || 0, h: h, s: it.str }); });
+    rangs.sort((a, b) => b.y - a.y).forEach(r => {
+      r.items.sort((a, b) => a.x - b.x); let t = "", fin = null;
+      r.items.forEach(it => { if (fin !== null) { const ec = it.x - fin; t += ec > it.h * 1.2 ? "   " : ec > it.h * .12 ? " " : ""; } t += it.s; fin = it.x + it.w; });
+      lignes.push(t);
+    });
+  }
+  try { doc.destroy(); } catch (e) {}
+  return lignes.join("\n");
+}
+const NUM_AV = "(\\d{1,3}(?: \\d{3})+(?:,\\d+)?|\\d+(?:[.,]\\d+)?)";
+const chiffre = v => String(v || "").replace(/ /g, "").replace(".", ",");
+/** cohérence d'une ligne lue : quantité × cours ± frais = montant (au centime) */
+function ecartOp(op) {
+  const q = lireNombre(op.qte), p = lireNombre(op.cours), fr = lireNombre(op.frais) || 0, m = lireNombre(op.montant);
+  if (!(q > 0 && p > 0 && m > 0) || !op.type) return false;
+  const att = op.type === "Achat" ? q * p + fr : op.type === "Vente" ? q * p - fr : q * p;
+  return Math.abs(m - att) >= .015;
+}
+const LIB_MANQUE = { date: "date", type: "type d'opération", qte: "quantité", cours: "cours", frais: "courtage", montant: "montant net", actif: "support" };
+function finirOp(op, attendus) { op.manque = attendus.filter(c => !op[c]).map(c => op.src === "linxea" && c === "qte" ? "nombre de parts" : op.src === "linxea" && c === "cours" ? "valeur de la part" : op.src === "linxea" && c === "montant" ? "montant" : LIB_MANQUE[c]); op.ecart = ecartOp(op); return op; }
+/** lit un avis (texte) par ses LIBELLÉS (pas par colonnes) : Fortuneo (avis d'opéré) ou Linxea Spirit 2 (confirmation de versement, tableaux copiés du site) */
+function lireAvis(brut) {
+  const t = String(brut || "").replace(/[    ]/g, " ").replace(/\r/g, "");
+  if (/\bSens\b/.test(t) && /Montant\s+net/i.test(t)) return lireFortuneo(t);
+  if (/Niveau de risque/i.test(t) && /^\s*Valeur\d?\s+\d/im.test(t)) return lireQuintessa(t);
+  if (/linxea|spirica|nombre de parts|valeur de (?:la )?parts?|versement libre|frais de gestion sur UC|rachat partiel/i.test(t)) return lireLinxea(t);
+  return lireFortuneo(t);
+}
+/* Quintessa (BPCE Vie) : pas de PDF, la page de l'espace client copiée. Chaque support = un RELEVÉ (« Valeur AV ») de sa valeur ;
+   le panneau de détail (Quantité, valeur unitaire) n'est lu que pour information : un relevé n'enregistre que la valeur */
+function lireQuintessa(t) {
+  const L = t.split("\n").map(x => x.trim()), ops = [], auj = aujourdhuiISO();
+  const val = (l, lab) => { const x = l.match(new RegExp("^" + lab + "\\s*" + NUM_AV + "\\s*€", "i")); return x ? chiffre(x[1]) : ""; };
+  L.forEach((l, n) => {
+    if (!/^Niveau de risque/i.test(l)) return;
+    let k = n - 1; while (k >= 0 && !L[k]) k--;
+    const nom = L[k] || ""; if (!nom || /Indicateurs/i.test(nom)) return;   // panneau de détail : lu plus bas
+    let v = ""; for (let j = n + 1; j <= n + 4 && j < L.length && !v; j++) v = val(L[j], "Valeur\\d?(?!\\d?\\s*unitaire)");
+    if (!v) return;
+    const op = { src: "quintessa", type: "Relevé", nom: nom, isin: "", date: auj, montant: v, dateAuto: true };
+    if (/artema/i.test(nom)) op.note = "Le niveau de l'indice Artema n'est pas sur cette page : la « valeur unitaire » du site n'est PAS ce niveau. Saisis-le à la main dans « 🎯 Point Artema ».";
+    ops.push(finirOp(op, ["montant"]));
+  });
+  /* panneau de détail : nom (avant « Indicateurs financiers »), Quantité, Valeur unitaire, Valorisation */
+  L.forEach((l, n) => {
+    if (!/^Indicateurs financiers/i.test(l)) return;
+    let k = n - 1; while (k >= 0 && !L[k]) k--;
+    const nom = L[k] || "", bloc = L.slice(n, n + 16);
+    const q = (bloc.map(x => x.match(new RegExp("^Quantit[ée]\\s*" + NUM_AV + "\\s*$", "i"))).find(Boolean) || [])[1];
+    const vu = bloc.map(x => val(x, "Valeur\\d?\\s*unitaire")).find(Boolean) || "", vt = bloc.map(x => val(x, "Valorisation\\d?")).find(Boolean) || "";
+    const cible = ops.find(o => motsActif(o.nom).join(" ") === motsActif(nom).join(" ")) || ops.find(o => vt && o.montant === vt);
+    if (cible) { cible.qteInfo = q ? chiffre(q) : ""; cible.vuInfo = vu; }
+  });
+  ops.forEach(o => { const info = o.qteInfo || o.vuInfo ? "Lu dans le détail : " + (o.qteInfo ? o.qteInfo + " parts" : "") + (o.qteInfo && o.vuInfo ? " · " : "") + (o.vuInfo ? "valeur unitaire " + o.vuInfo + " €" : "") + " (pour information : un relevé n'enregistre que la valeur)." : "";
+    o.note = [info, o.note, "Valeur du site au jour du copier-coller : la date est mise à aujourd'hui, change-la si tu as copié un autre jour."].filter(Boolean).join(" "); });
+  return { compte: "QUINTESSA", ops: ops };
+}
+function lireFortuneo(t) {
+  const mc = t.match(/COMPTE\s+(PEA[\s-]*PME|PEA|TITRES|ORDINAIRE|CTO)\b/i) || t.match(/\b(PEA[\s-]*PME|PEA|COMPTE[\s-]*TITRES|CTO)\b/i);
+  const compte = !mc ? "" : /PME/i.test(mc[1]) ? "PEA-PME" : /PEA/i.test(mc[1]) ? "PEA" : "CTO";
+  const marques = []; let m; const re = /\(\s*([A-Z]{2}[A-Z0-9]{9}\d)\s*\)/g;
+  while ((m = re.exec(t))) marques.push({ i: m.index, fin: re.lastIndex, isin: m[1] });
+  if (!marques.length) { const rs = /\bSens\b/g; while ((m = rs.exec(t))) { const d0 = t.lastIndexOf("\n", m.index), d1 = d0 > 0 ? t.lastIndexOf("\n", d0 - 1) + 1 : 0; marques.push({ i: d1, fin: d1, isin: "" }); } }   // avis sans ISIN : un bloc par « Sens »
+  const champ = (bloc, lab) => { const x = bloc.match(new RegExp(lab + "\\s*:?\\s*" + NUM_AV, "i")); return x ? chiffre(x[1]) : ""; };
+  const ops = marques.map((k, n) => {
+    const debLigne = t.lastIndexOf("\n", k.i) + 1, avant = t.slice(debLigne, k.i);
+    const nom = (avant.includes(":") ? avant.slice(avant.lastIndexOf(":") + 1) : avant).replace(/^[^A-Za-z0-9]+/, "").replace(/\s+/g, " ").trim();
+    const bloc = t.slice(k.fin, n + 1 < marques.length ? marques[n + 1].i : t.length);
+    const d = bloc.match(/\b(\d{2})[-\/.](\d{2})[-\/.](\d{4})\b/), h = bloc.match(/\b(\d{2}):(\d{2})(?::\d{2})?\b/);
+    const s = bloc.match(/\bSens\s*:?\s*(Achat|Vente)/i) || bloc.match(/\b(Achat|Vente)\s+(?:comptant|au comptant|SRD)/i);
+    const op = { src: "fortuneo", nom: nom, isin: k.isin, date: d ? d[3] + "-" + d[2] + "-" + d[1] : "", heure: h ? h[1] + ":" + h[2] : "", type: s ? (/^a/i.test(s[1]) ? "Achat" : "Vente") : "",
+      qte: champ(bloc, "Quantit[ée]s?"), cours: champ(bloc, "\\bCours(?:\\s+d'ex[ée]cution)?"), brut: champ(bloc, "Montant\\s+brut"),
+      frais: champ(bloc, "(?:Courtage(?:\\s+et\\s+commissions?)?|Commissions?|Frais\\s+de\\s+courtage)"), montant: champ(bloc, "Montant\\s+net") };
+    return finirOp(op, ["date", "type", "qte", "cours", "frais", "montant"]);
+  }).filter(o => o.type || o.qte || o.montant);
+  return { compte: compte, ops: ops };
+}
+/* Linxea Spirit 2 (Spirica) : « Confirmation de versement libre » (PDF) ou tableaux copiés du site (liste des opérations, « Détail du versement… »).
+   Versement → Achat du support AVEC le versement (montant versé) ; frais de gestion → Frais en parts ; rachat → Vente du support puis Retrait. */
+function lireLinxea(t) {
+  const L = t.split("\n"), ops = [], isoFr = d => d ? d.slice(6, 10) + "-" + d.slice(3, 5) + "-" + d.slice(0, 2) : "";
+  const euros = s => { const r = []; const re = new RegExp(NUM_AV + "\\s*€", "g"); let x; while ((x = re.exec(s))) r.push(chiffre(x[1])); return r; };
+  const nature = s => /frais de gestion/i.test(s) ? "frais" : /rachat/i.test(s) ? "rachat" : /arbitrage/i.test(s) ? "arbitrage" : /versement/i.test(s) ? "versement" : "";
+  const total = (() => { const x = t.match(new RegExp("montant du versement[^\\d\\n]*" + NUM_AV + "\\s*€", "i")) || t.match(new RegExp("Votre versement[^\\d\\n]*" + NUM_AV + "\\s*€", "i")); return x ? chiffre(x[1]) : ""; })();
+  const reIsin = /(?:^|[\s\t])([A-Z]{2}[A-Z0-9]{9}\d)(?=[\s\t]|$)/;
+  const blocs = {};   // un versement / rachat par tableau de détail
+  let teteNature = "";
+  L.forEach((ligne, n) => {
+    const nat = nature(ligne); if (nat && !reIsin.test(ligne) && !/^\s*(Frais de gestion|Versement|Rachat|Arbitrage)/i.test(ligne)) teteNature = nat;   // titre (« Détail du versement… », « Confirmation… »)
+    /* 1 · une ligne de support (avec son ISIN) : la plus complète */
+    const mi = ligne.match(reIsin);
+    if (mi && /\d{2}\/\d{2}\/\d{4}/.test(ligne)) {
+      const apres = ligne.slice(ligne.indexOf(mi[1]) + 12), ds = apres.match(/\d{2}\/\d{2}\/\d{4}/g) || [];
+      const sansDates = apres.replace(/\d{2}\/\d{2}\/\d{4}/g, " ").replace(new RegExp(NUM_AV + "\\s*[€%]", "g"), " ");
+      const restes = sansDates.match(new RegExp("(?:^|\\s)" + NUM_AV + "(?=\\s|$)", "g")) || [];
+      let nom = (apres.match(/^[\s\t]*([^\t\d€]*[A-Za-z][^\t€]*?)(?=\t|\s{2,}|\s\d)/) || [])[1] || "";
+      if (!nom.trim()) {   // PDF : le nom du support est au-dessus (et parfois en dessous) de la ligne
+        const av = (L[n - 1] || "").trim(), ap = (L[n + 1] || "").trim();
+        nom = (/ISIN|Support/i.test(av) ? "" : av) + (ap && !/\d|€|Page/i.test(ap) ? " " + ap : "");
+      }
+      const e = euros(apres), nat2 = teteNature || nature(t) || "versement";
+      const brut = e[0] || "", net = e.length >= 4 ? e[2] : e[1] || "", vp = e.length >= 4 ? e[3] : e[2] || "", fraisCol = e.length >= 4 ? e[1] : "";
+      const parts = restes.length ? chiffre(restes[restes.length - 1].trim()) : "";
+      const op = { src: "linxea", nom: nom.replace(/\s+/g, " ").trim(), isin: mi[1], date: isoFr(ds[ds.length - 1]), qte: parts, cours: vp, brut: brut, net: net };
+      const fr = fraisCol || (lireNombre(brut) > 0 && lireNombre(net) > 0 && Math.abs(lireNombre(brut) - lireNombre(net)) >= .005 ? saisieNombre(lireNombre(brut) - lireNombre(net), 2) : "");
+      const cle = nat2 + "|" + op.date;
+      if (nat2 === "frais") { op.type = "Frais en parts"; op.montant = net || brut; ops.push(finirOp(op, ["date", "qte", "montant"])); }
+      else if (nat2 === "rachat") { op.type = "Vente"; op.montant = brut; op.frais = fr; ops.push(finirOp(op, ["date", "qte", "cours", "montant"])); (blocs[cle] = blocs[cle] || []).push(op); }
+      else if (nat2 === "versement") { op.type = "Achat"; op.montant = brut; op.frais = fr; const prem = !blocs[cle]; (blocs[cle] = blocs[cle] || []).push(op);
+        op.apport = prem; op.montantApport = prem && total && lireNombre(total) - lireNombre(brut) > .005 ? total : ""; op.versDoc = true;
+        if (!prem) op.note = "Le versement est déjà enregistré avec le 1er support de ce document."; ops.push(finirOp(op, ["date", "qte", "cours", "montant"])); }
+      else { op.type = ""; op.note = "Arbitrage : à saisir à la main (une vente puis un achat)."; ops.push(finirOp(op, ["type"])); }
+      return;
+    }
+    /* 2 · une ligne de la liste des opérations (sans support ni parts) */
+    const ml = ligne.match(/^\s*(Frais de gestion(?: sur UC)?|Versement[^\t\d€]*|Rachat[^\t\d€]*|Arbitrage[^\t\d€]*)/i);
+    if (ml && euros(ligne).length) {
+      const e = euros(ligne), ds = ligne.match(/\d{2}\/\d{2}\/\d{4}/g) || [], nat2 = nature(ml[1]), date = isoFr(ds[ds.length - 1]);
+      const op = { src: "linxea", liste: true, nom: ml[1].trim(), isin: "", date: date, qte: "", cours: "", brut: e[0] || "", net: e[1] || "" };
+      const conseil = "Le support et le nombre de parts ne sont pas dans la liste : copie aussi le tableau « Détail » de cette opération sur le site.";
+      if (nat2 === "frais") { op.type = "Frais en parts"; op.montant = op.net || op.brut; op.note = "Frais prélevés en parts : indique le nombre de parts (détail de l'opération sur le site). L'appli ne l'invente pas."; ops.push(finirOp(op, ["date", "actif", "qte", "montant"])); }
+      else if (nat2 === "versement") { op.type = "Achat"; op.montant = op.brut; op.apport = true; op.versDoc = true; op.montantApport = "";
+        op.frais = lireNombre(op.brut) > 0 && lireNombre(op.net) > 0 && Math.abs(lireNombre(op.brut) - lireNombre(op.net)) >= .005 ? saisieNombre(lireNombre(op.brut) - lireNombre(op.net), 2) : "";
+        op.note = conseil; ops.push(finirOp(op, ["date", "actif", "qte", "cours", "montant"])); }
+      else if (nat2 === "rachat") { op.type = "Vente"; op.montant = op.brut; op.note = conseil; ops.push(finirOp(op, ["date", "actif", "qte", "cours", "montant"]));
+        ops.push(finirOp({ src: "linxea", liste: true, type: "Retrait", nom: "Retrait du rachat", isin: "", date: date, montant: op.brut, brut: op.brut, net: op.net,
+          note: "L'argent du rachat sort du contrat : montant brut " + op.brut + " €" + (op.net && op.net !== op.brut ? ", net reçu " + op.net + " € (après prélèvements)" : "") + ". Vérifie le montant avant d'enregistrer." }, ["date", "montant"])); }
+      else { op.type = ""; op.note = "Arbitrage : à saisir à la main (une vente puis un achat)."; ops.push(finirOp(op, ["type"])); }
+    }
+  });
+  /* rachat détaillé : la sortie d'argent (Retrait) après les ventes */
+  Object.keys(blocs).filter(k => k.startsWith("rachat|")).forEach(k => { const l = blocs[k], s = l.reduce((a, o) => a + (lireNombre(o.montant) || 0), 0), i = ops.indexOf(l[l.length - 1]);
+    ops.splice(i + 1, 0, finirOp({ src: "linxea", type: "Retrait", nom: "Retrait du rachat", isin: "", date: l[0].date, montant: saisieNombre(s, 2), note: "L'argent du rachat sort du contrat : vérifie le montant (net reçu après prélèvements sur le site)." }, ["date", "montant"])); });
+  /* une ligne de liste déjà détaillée par un tableau collé (même nature, même date, même montant) : gardée une seule fois */
+  const detail = ops.filter(o => !o.liste);
+  const garde = ops.filter(o => !o.liste || !detail.some(d => d.type === o.type && d.date === o.date));
+  return { compte: "LINXEA", ops: garde };
+}
+function envsOuverts() { return (refData().enveloppes || []).filter(e => typeof e !== "string" && (!e.statut || e.statut === "Ouvert" || e.statut === "À ouvrir")); }
+/** le compte de l'avis (PEA, PEA-PME, CTO) → l'enveloppe de l'appli ; sûr seulement s'il n'y en a qu'une */
+function envDeAvis(compte) {
+  const tous = envsOuverts(), l = tous.filter(e => e.perimetre === "Portefeuille"), txt = e => (e.regime || "") + " " + (e.nom || "");
+  if (compte === "QUINTESSA") { const q = tous.filter(e => /quintessa/i.test(e.nom || "")); return q.length ? { nom: q[0].nom, sur: q.length === 1 } : { nom: "", sur: false }; }
+  if (compte === "LINXEA") { const lx = tous.filter(e => /linxea/i.test(e.nom || "")), av = tous.filter(e => e.regime === "AV");
+    return lx.length ? { nom: lx[0].nom, sur: lx.length === 1 } : { nom: av.length === 1 ? av[0].nom : "", sur: false }; }
+  const ok = compte === "PEA-PME" ? l.filter(e => /PME/i.test(txt(e))) : compte === "PEA" ? l.filter(e => /PEA/i.test(txt(e)) && !/PME/i.test(txt(e))) : compte === "CTO" ? l.filter(e => /CTO|titres|ordinaire/i.test(txt(e))) : [];
+  return ok.length ? { nom: ok[0].nom, sur: ok.length === 1 } : { nom: "", sur: false };
+}
+function memoIsin() { try { return JSON.parse(stock.get(cleStock("isin")) || "{}") || {}; } catch (e) { return {}; } }
+/** la clé retenue sur l'appareil pour retrouver l'actif choisi : l'ISIN, sinon (Quintessa, sans ISIN) le nom du support */
+function cleOp(op) { return op.isin || (op.src === "quintessa" && op.nom ? "nom:" + motsActif(op.nom).join(" ") : ""); }
+function retenirIsin(isin, code) { if (!isin || !code) return; const m = memoIsin(); if (m[isin] === code) return; m[isin] = code; stock.set(cleStock("isin"), JSON.stringify(m)); }
+const MOTS_VIDES = new Set("TRACKER UCITS ETF UC ACC DIST D C EUR SICAV FCP THE DE DU LA LE LES P AMUN AMD AMUNDI LYXOR ISHARES BNP PARIBAS EASY ACTION ACTIONS INDEX".split(" "));
+function motsActif(t) {
+  return String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/S&P/g, "SP").replace(/[^A-Z0-9]+/g, " ").trim().split(" ")
+    .map(w => w === "NASD" ? "NASDAQ" : w === "MONDE" ? "WORLD" : w).filter(w => w && !MOTS_VIDES.has(w));
+}
+const MOTS_FAIBLES = new Set(["PEA", "MSCI", "SWAP", "PHYSICAL", "ETC", "SP"]);
+function levierNom(t) { return /\b3X\b|X3\b|\b3 ?X/i.test(t) ? 3 : /\b2X\b|X2\b|LEV|DAILY ?\(?2/i.test(t) ? 2 : 1; }
+/** l'actif de l'appli pour une ligne de l'avis : { code, sur, raison } ; sûr par l'ISIN (déjà choisi ici, ou ETF connu), sinon proposé d'après le nom */
+function actifDeAvis(op) {
+  const actifs = refData().actifs || [], existe = c => actifs.some(a => a.code === c);
+  if (!op.isin && op.src === "linxea") return { code: "", sur: false, raison: "" };   // ligne de liste Linxea : pas de support
+  const memo = memoIsin()[cleOp(op)]; if (memo && existe(memo)) return { code: memo, sur: true, raison: "isin" };
+  const connu = ISIN_CONNUS[op.isin]; if (connu && existe(connu[0])) return { code: connu[0], sur: true, raison: "isin" };
+  const mo = motsActif(op.nom), lev = levierNom(op.nom);
+  const notes = actifs.map(a => {
+    const ma = motsActif(a.code + " " + (a.nom || "")), la = +a.levier || (levierNom(a.nom || "") > 1 ? levierNom(a.nom) : 0);
+    let s = mo.filter(w => w.length >= 2 && !/^\d?X$|^LEV$/.test(w) && ma.some(v => v === w || (w.length >= 4 && v.length >= 4 && (v.startsWith(w) || w.startsWith(v)))))
+      .reduce((t, w) => t + (MOTS_FAIBLES.has(w) ? .5 : 1), 0);   // « PEA », « MSCI » : peu distinctifs
+    if (mo.includes(String(a.code).toUpperCase())) s += 3;
+    if (s >= 1 && la) s += la === lev ? 1 : -3;   // levier différent : presque sûrement pas la bonne ligne
+    return { code: a.code, s: s };
+  }).sort((a, b) => b.s - a.s);
+  if (notes[0] && notes[0].s >= 2 && (!notes[1] || notes[0].s > notes[1].s)) return { code: notes[0].code, sur: false, raison: "nom" };
+  return { code: "", sur: false, raison: "" };
+}
+/** une opération de l'avis → le formulaire habituel (aucun calcul, aucune valeur inventée) */
+function formulaireImport(i) {
+  const op = IMP.ops[i], ch = op.choix || (op.choix = {});
+  const envA = ch.env ? { nom: ch.env, sur: true } : envDeAvis(IMP.compte), env = envA.nom || F.env || envParDefaut();
+  const act = ch.actif !== undefined ? { code: ch.actif, sur: true } : actifDeAvis(op);
+  /* Théo (20/11) : l'avis ne dit pas d'où vient l'argent ; une vente ET un achat le même jour (bascule) = l'achat est payé par la vente */
+  const bascule = op.src === "fortuneo" && op.type === "Achat" && IMP.ops.some(o => o !== op && o.type === "Vente" && o.date && o.date === op.date);
+  const p = { type: op.type || (F && AVEC_QTE.includes(F.type) ? F.type : "Achat"), env: env, envChoisi: true, actif: act.code, date: op.date, dateChoisie: !!op.date,
+    qte: op.qte, qteTape: !!op.qte, prix: op.cours, prixTape: !!op.cours, prixVu: true, pilote: op.qte ? "qte" : "prix", montant: op.montant || "", frais: op.frais || "", auto: false,
+    imp: { i: i, isin: op.isin, nom: op.nom, envSur: envA.sur, actifSur: act.sur, propose: act.sur ? "" : act.code, confirme: act.sur, bascule: bascule, versDoc: !!op.versDoc, src: op.src } };
+  if (op.type === "Achat" && op.apport !== undefined) { p.apport = op.apport; p.montantApport = op.montantApport || ""; }   // Linxea : le versement est dans le document
+  else if (op.type === "Achat" && bascule) p.apport = false;
+  const f = formulaire(p);
+  if (!op.date) { f.date = ""; f.dateChoisie = false; }
+  if (!act.code && op.isin && AVEC_ACTIF.includes(f.type)) {
+    const connu = ISIN_CONNUS[op.isin] || [];
+    f.na = Object.assign(nouvelNA(env), { code: connu[0] || "", nom: op.nom, ticker: connu[1] || "", isin: op.isin, levier: String(levierNom(op.nom)) });
+  }
+  return f;
+}
+function choisirOpImport(i) { IMP.i = i; F = formulaireImport(i); detailsOuverts = !!F.montantApport; rendreFormulaire(); const z = $f("m-pane-ordre"); if (z) z.scrollTop = 0; }
+function importerTexte(txt, source) {
+  const r = lireAvis(txt);
+  if (!r.ops.length) { IMP.msg = source === "pdf" ? "Aucune opération trouvée dans ce PDF. Est-ce bien un avis d'opéré ? Tu peux aussi coller son texte." : "Aucune opération trouvée dans ce texte : colle tout l'avis d'opéré (de « Désignation » à « Montant NET »)."; rendreFormulaire(); return; }
+  Object.assign(IMP, { compte: r.compte, ops: r.ops, panneau: false, coller: false, texte: "", msg: "", lecture: false });
+  choisirOpImport(0);
+}
+function libOpImport(op) {
+  const discret = ETAT.discret === "oui", code = op.choix && op.choix.actif || actifDeAvis(op).code;
+  const nom = code || (op.nom.length > 22 ? op.nom.slice(0, 21) + "…" : op.nom) || op.isin || "titre ?";
+  return (op.type ? libType(op.type) : "Opération ?") + (op.qte ? " " + op.qte : "") + " " + nom + (op.date ? " · " + dateCourteIso(op.date) : "") + (!discret && lireNombre(op.montant) > 0 ? " · " + nf(2, 2).format(lireNombre(op.montant)) + NB + "€" : "");
+}
+function htmlImport(bourse) {
+  const avis = bourse ? '<p class="info m-avis">📄 Ton <b>avis d\'opéré</b> sous les yeux (pas le cours de l\'appli) : remplis de haut en bas, dans le même ordre.</p>' : "";   // v17.27 (Théo) ; v17.73 : ordre de l'avis
+  if (!M || M.simple || !envsOuverts().length || (!IMP && !["Achat", "Vente", "Frais en parts", "Relevé"].includes(F.type))) return avis;
+  if (!IMP) return '<div class="m-imp"><button class="btn m-imp-b" type="button" id="f-imp">📄 Importer mon avis d\'opéré</button></div>' + avis;
+  if (!IMP.ops) return '<div class="m-imp ouvert"><b class="m-imp-t">📄 Importer mon avis d\'opéré</b>' +
+    '<p class="aide">Lu dans ton téléphone : le fichier n\'est envoyé nulle part. Tu relis tout avant d\'enregistrer.</p>' +
+    '<div class="m-imp-a"><label class="btn" for="f-imp-pdf"' + (IMP.lecture ? ' aria-disabled="true"' : "") + '>' + (IMP.lecture ? "Lecture…" : "Choisir le PDF") + '</label><input id="f-imp-pdf" type="file" accept="application/pdf" hidden>' +
+      '<button class="btn ghost" type="button" id="f-imp-coller" aria-expanded="' + !!IMP.coller + '">Coller le texte</button></div>' +
+    (IMP.coller ? '<textarea id="f-imp-txt" rows="5" aria-label="Texte de l\'avis d\'opéré" placeholder="Ouvre l\'avis, « Tout sélectionner », « Copier », puis colle ici.">' + esc(IMP.texte || "") + '</textarea><button class="btn" type="button" id="f-imp-lire">Lire ce texte</button>' : "") +
+    (IMP.msg ? '<p class="m-imp-msg" role="alert">' + esc(IMP.msg) + "</p>" : "") +
+    '<button class="lien" type="button" id="f-imp-fin">Annuler</button></div>';
+  const op = IMP.ops[IMP.i] || {}, im = F.imp && F.imp.i === IMP.i ? F.imp : null, n = IMP.ops.length;
+  const notes = [];
+  if (op.manque && op.manque.length) notes.push('<p class="m-imp-n warn">⚠ Pas trouvé dans ' + (IMP.compte === "LINXEA" ? "le document" : "l\'avis") + ' : <b>' + esc(op.manque.join(", ")) + "</b>. Laissé vide : recopie-le.</p>");
+  if (op.note) notes.push('<p class="m-imp-n">ℹ️ ' + esc(op.note) + "</p>");
+  if (op.ecart) notes.push('<p class="m-imp-n warn">⚠ Sur le document, quantité × cours ± frais ne donne pas le montant : vérifie ces chiffres.</p>');
+  if (im && !im.envSur) notes.push('<p class="m-imp-n">Compte de l\'avis : <b>' + esc(IMP.compte || "non trouvé") + "</b>. Choisis le bon compte ci-dessous.</p>");
+  if (im && im.propose && !im.confirme && F.actif === im.propose) notes.push('<p class="m-imp-n warn">Actif proposé d\'après le nom « ' + esc(op.nom) + ' » : <b>' + esc(im.propose) + '</b>. <button class="mini-btn" type="button" id="f-imp-ok">✓ C\'est le bon</button> ou choisis-en un autre.</p>');
+  if (F.na && F.na.isin) notes.push('<p class="m-imp-n">« ' + esc(op.nom) + ' » n\'est pas encore dans ton fichier : crée-le ci-dessous (nom et ISIN repris de l\'avis).</p>');
+  return '<div class="m-imp ouvert"><b class="m-imp-t">📄 ' + (n > 1 ? n + " opérations trouvées" : "1 opération trouvée") + (n > 1 ? " · saisies une par une" : "") + "</b>" +
+    (n > 1 ? '<ol class="m-imp-l">' + IMP.ops.map((o, k) => '<li><button type="button" class="m-imp-o' + (o.fait ? " fait" : "") + '" data-imp-op="' + k + '" aria-current="' + (k === IMP.i) + '"' + (o.fait ? " disabled" : "") + ">" +
+      (o.fait ? "✓ " : k + 1 + ". ") + esc(libOpImport(o)) + (o.ecart || (o.manque && o.manque.length) ? " ⚠" : "") + "</button></li>").join("") + "</ol>" : '<p class="m-imp-n">' + esc(libOpImport(op)) + "</p>") +
+    (op.isin ? '<p class="m-imp-n petit">' + esc(op.nom || "") + " · " + esc(op.isin) + (op.heure ? " · " + esc(op.heure) : "") + "</p>" : "") +
+    notes.join("") + '<p class="m-imp-n petit">Relis les champs ci-dessous, puis enregistre' + (n > 1 ? " : l'opération suivante se pré-remplit ensuite." : ".") + ' <button class="lien" type="button" id="f-imp-fin">Fermer l\'import</button></p></div>';
+}
+function brancherImport() {
+  const z = $f("m-pane-ordre"); if (!z) return;
+  if ($f("f-imp")) $f("f-imp").addEventListener("click", () => { IMP = { panneau: true }; rendreFormulaire(); });
+  z.querySelectorAll("#f-imp-fin").forEach(b => b.addEventListener("click", () => { IMP = null; if (F.imp) { F.imp = null; F.na = null; } rendreFormulaire(); }));
+  if ($f("f-imp-coller")) $f("f-imp-coller").addEventListener("click", () => { IMP.coller = !IMP.coller; IMP.msg = ""; rendreFormulaire(); setTimeout(() => { const t = $f("f-imp-txt"); if (t) t.focus(); }, 30); });
+  if ($f("f-imp-txt")) $f("f-imp-txt").addEventListener("input", e => { IMP.texte = e.target.value; });
+  if ($f("f-imp-lire")) $f("f-imp-lire").addEventListener("click", () => importerTexte(IMP.texte, "texte"));
+  if ($f("f-imp-pdf")) $f("f-imp-pdf").addEventListener("change", async e => {
+    const fi = e.target.files && e.target.files[0]; if (!fi || IMP.lecture) return;
+    if (fi.size > 8e6) { IMP.msg = "Ce fichier est trop gros pour un avis d'opéré (plus de 8 Mo)."; rendreFormulaire(); return; }
+    IMP.lecture = true; IMP.msg = ""; rendreFormulaire();
+    let txt = "";
+    try { txt = await textePdf(fi); }
+    catch (err) { IMP.lecture = false; IMP.coller = true;
+      IMP.msg = err && err.message === "pdfjs" ? "Le lecteur de PDF n'a pas pu se charger (hors connexion ?). Colle plutôt le texte de l'avis ci-dessous." : "Ce PDF n'a pas pu être lu. Colle plutôt le texte de l'avis ci-dessous.";
+      rendreFormulaire(); return; }
+    IMP.lecture = false; importerTexte(txt, "pdf");
+  });
+  z.querySelectorAll("[data-imp-op]").forEach(b => b.addEventListener("click", () => choisirOpImport(+b.dataset.impOp)));
+  if ($f("f-imp-ok")) $f("f-imp-ok").addEventListener("click", () => { F.imp.confirme = true; const op = IMP.ops[F.imp.i]; op.choix.actif = F.actif; retenirIsin(cleOp(op), F.actif); rendreFormulaire(); });
+}
+function especesEnv(env) { const g = ((M && M.groupes) || []).find(x => x.env === env), le = g && (g.lignes || []).find(l => l.especes); return le && typeof le.valeur === "number" ? le.valeur : null; }
+/** bascule vente + achat du même avis : la vente, déjà enregistrée, crédite les espèces tant que le fichier n'a pas été relu (sinon elle y est déjà) */
+function creditImport(env, valeur) {
+  if (!F || !F.imp || !IMP || !IMP.ops) return 0;
+  return IMP.ops.reduce((a, o) => a + (o.fait && o.type === "Vente" && o.envEnvoi === env && o.especesAvant === valeur ? lireNombre(o.montant) || 0 : 0), 0);
+}
+/** après l'envoi réussi d'une opération importée : la suivante se pré-remplit (toujours à relire et valider) */
+function suiteImport(S) {
+  if (!S || !S.imp || !IMP || !IMP.ops) return;
+  const op = IMP.ops[S.imp.i]; if (op) { op.fait = true; if (S.actif) retenirIsin(cleOp(op), S.actif); op.especesAvant = especesEnv(S.env); op.envEnvoi = S.env; }
+  const k = IMP.ops.findIndex(o => !o.fait);
+  if (k < 0) { IMP = null; return; }
+  setTimeout(() => {
+    if (!IMP || !M) return;
+    IMP.i = k; F = formulaireImport(k); nommerRaccourci = false; detailsOuverts = !!F.montantApport; plusTypes = false; menuOuvert = false;
+    $f("m-saisie").hidden = false; paneSaisie("ordre");
+    toast("Opération " + (k + 1) + "/" + IMP.ops.length + " pré-remplie : relis puis enregistre.");
+  }, 700);
+}
+/** le texte sous la case du versement, pour une opération importée (Théo, 20/11 : jamais de versement déduit d'autre chose) */
+function gardeImport() {
+  const im = F.imp;
+  if (im.versDoc) return F.apport ? "Versement repris du document : vérifie son montant." : "Décoché : le versement est déjà enregistré avec le 1er support de ce document.";
+  if (im.bascule && !F.apport) return "Décoché : la vente du même avis paie cet achat (aucun versement ajouté). Coche si tu as aussi viré de l'argent.";
+  return "L'avis ne dit pas d'où vient l'argent : vérifie le versement" + (F.apport ? " (coché : l'argent viré est enregistré juste avant l'achat)." : ".");
+}
 function rendreFormulaire() {
   majAides();
   const r = refData();
@@ -3784,7 +4116,7 @@ function rendreFormulaire() {
   const nomA = c => (r.actifs.find(a => a.code === c) || {}).nom || "";
   const optA = c => '<option value="' + esc(c) + '"' + (c === F.actif ? " selected" : "") + ">" + esc(c) + (nomA(c) ? " · " + esc(nomA(c)) : "") + "</option>";
   const autresActifs = r.actifs.map(a => a.code).filter(c => !tenus.includes(c));
-  if (AVEC_ACTIF.includes(F.type) && !F.actif && F.type !== "Achat" && tenus.length) { F.actif = tenus[0]; F = formulaire(Object.assign({}, F, { auto: false })); synchroniser(); }
+  if (AVEC_ACTIF.includes(F.type) && !F.actif && F.type !== "Achat" && tenus.length && !F.imp) { F.actif = tenus[0]; F = formulaire(Object.assign({}, F, { auto: false })); synchroniser(); }
   const avecActif = AVEC_ACTIF.includes(F.type), avecQte = AVEC_QTE.includes(F.type), avecFrais = AVEC_FRAIS.includes(F.type), bourse = F.type === "Achat" || F.type === "Vente";
   const chipT = t => '<button type="button" class="chip" data-type="' + esc(t) + '" aria-pressed="' + (F.type === t) + '">' + esc(libType(t)) + "</button>";
   const courantsAutres = autres.filter(t => (AUTRES_TYPES[t] || { g: "Courant" }).g === "Courant"), raresAutres = autres.filter(t => !courantsAutres.includes(t));
@@ -3828,7 +4160,7 @@ function rendreFormulaire() {
       (!panneau ? "" : '<div class="m-autres" role="group" aria-label="Autres types">' + courantsAutres.map(chipT).join("") +
         (raresAutres.length ? '<span class="m-autres-t">Plus rares</span>' + raresAutres.map(chipT).join("") : "") + "</div>") +
       (AUTRES_TYPES[F.type] && PREF.aides !== false ? '<p class="info aide">ℹ️ <b>' + esc(AUTRES_TYPES[F.type].lib) + "</b> : " + esc(AUTRES_TYPES[F.type].d) + "</p>" : "") +
-      (bourse ? '<p class="info m-avis">📄 Ton <b>avis d\'opéré</b> sous les yeux (pas le cours de l\'appli) : remplis de haut en bas, dans le même ordre.</p>' : "") +   // v17.27 (Théo) ; v17.73 : ordre de l'avis
+      htmlImport(bourse) +   // v17.76 (lot59) : « 📄 Importer mon avis d'opéré » + la ligne « avis sous les yeux » (v17.27, v17.73)
       /* v17.73 (lot57) : compte et actif sur une ligne ; « Nouvel actif » est le dernier choix de la liste */
       (avecActif ? '<div class="rang m-ca">' : "") +
       '<div class="champ"><label for="fo-env">Compte</label><select id="fo-env">' +
@@ -3842,7 +4174,7 @@ function rendreFormulaire() {
       /* v17.34 · règle de Théo du 20/11 : achat / vente = tout visible ; v17.73 : dans l'ordre de l'avis (quantité, cours, courtage, montant net) */
       (bourse ? '<div class="rang m-avis2">' + champQte + champCours + '</div><div class="rang m-avis2">' + champFrais + champMontant + "</div>" : avecQte ? champQte + champMontant : champMontant) + (bourse ? "" : champFrais) + champPrix +
       (F.type === "Achat" ? '<label class="coche"><input type="checkbox" id="f-apport"' + (F.apport ? " checked" : "") + '> Avec le versement qui paie cet achat</label>' +
-        '<span class="aide lie m-garde">' + (F.apport ? "L'argent viré est enregistré juste avant l'achat." : F.refait ? "Coche si tu as viré de l'argent pour cet achat (le versement d'origine est une ligne à part)." : "Décoché : l'argent était déjà sur le compte (vente, dividende, versement précédent).") + "</span>" +
+        '<span class="aide lie m-garde">' + (F.imp ? esc(gardeImport()) : F.apport ? "L'argent viré est enregistré juste avant l'achat." : F.refait ? "Coche si tu as viré de l'argent pour cet achat (le versement d'origine est une ligne à part)." : "Décoché : l'argent était déjà sur le compte (vente, dividende, versement précédent).") + "</span>" +
         (F.apport ? '<details class="m-plus" id="f-vers"' + (detailsOuverts ? " open" : "") + '><summary>Montant du versement s\'il diffère <small id="f-details-res">' + esc(resumeDetails()) + "</small></summary><div class=\"m-plus-c\">" +
           '<div class="champ"><label for="f-mapport">Montant du versement (€)</label><input id="f-mapport" type="text" inputmode="decimal" autocomplete="off" value="' + esc(F.montantApport) + '" placeholder="Comme l\'achat"><span class="aide">Laisse vide : même montant que l\'achat.</span></div></div></details>' : "") : "") +
       '<div class="recap" id="m-recap"></div>' +
@@ -3869,15 +4201,16 @@ function rendreFormulaire() {
   }));
   $f("f-plus-types").addEventListener("click", () => { plusTypes = !panneau; if (!plusTypes && autreType) F = formulaire({ type: "Achat", date: DATE_OBLIG.includes(F.type) ? "" : F.date, env: F.env, envChoisi: F.envChoisi }); rendreFormulaire(); });
   if ($f("f-aides")) $f("f-aides").addEventListener("click", () => { PREF.aides = PREF.aides === false; garderPref(); majAides(); menuOuvert = false; rendreFormulaire(); });
-  $f("fo-env").addEventListener("change", e => { F = formulaire({ type: F.type, date: F.date, dateChoisie: F.dateChoisie, env: e.target.value, envChoisi: true, montant: F.montantAuto || F.montantHab ? "" : F.montant, frais: F.fraisAuto ? "" : F.frais }); synchroniser(); rendreFormulaire(); });
-  if ($f("f-actif")) $f("f-actif").addEventListener("change", e => { if (e.target.value === "__nouvel") { e.target.value = F.actif; F.na = nouvelNA(F.env); rendreFormulaire(); setTimeout(() => { const el = $f("fn-code"); if (el) el.focus(); }, 30); return; } F = formulaire({ type: F.type, date: F.date, dateChoisie: F.dateChoisie, env: F.env, envChoisi: F.envChoisi, actif: e.target.value, montant: F.montantAuto ? "" : F.montant, frais: F.frais, fraisAuto: F.fraisAuto, apport: F.apport, montantApport: F.montantApport, refait: F.refait, qte: F.qteTape ? F.qte : "", qteTape: F.qteTape, auto: false }); synchroniser(); rendreFormulaire(); });
+  $f("fo-env").addEventListener("change", e => { if (F.imp && IMP && IMP.ops) { IMP.ops[F.imp.i].choix.env = e.target.value; F = formulaireImport(F.imp.i); rendreFormulaire(); return; } F = formulaire({ type: F.type, date: F.date, dateChoisie: F.dateChoisie, env: e.target.value, envChoisi: true, montant: F.montantAuto || F.montantHab ? "" : F.montant, frais: F.fraisAuto ? "" : F.frais }); synchroniser(); rendreFormulaire(); });
+  if ($f("f-actif")) $f("f-actif").addEventListener("change", e => { if (F.imp && IMP && IMP.ops && e.target.value !== "__nouvel") { IMP.ops[F.imp.i].choix.actif = e.target.value; F = formulaireImport(F.imp.i); rendreFormulaire(); return; }   // v17.76 : choisi à la main = confirmé
+    if (e.target.value === "__nouvel") { e.target.value = F.actif; F.na = F.imp ? Object.assign(nouvelNA(F.env), { nom: F.imp.nom || "", isin: F.imp.isin || "", code: (ISIN_CONNUS[F.imp.isin] || [])[0] || "", ticker: (ISIN_CONNUS[F.imp.isin] || [])[1] || "" }) : nouvelNA(F.env); rendreFormulaire(); setTimeout(() => { const el = $f("fn-code"); if (el) el.focus(); }, 30); return; } F = formulaire({ type: F.type, date: F.date, dateChoisie: F.dateChoisie, env: F.env, envChoisi: F.envChoisi, actif: e.target.value, montant: F.montantAuto ? "" : F.montant, frais: F.frais, fraisAuto: F.fraisAuto, apport: F.apport, montantApport: F.montantApport, refait: F.refait, qte: F.qteTape ? F.qte : "", qteTape: F.qteTape, auto: false }); synchroniser(); rendreFormulaire(); });
   if ($f("f-apport")) $f("f-apport").addEventListener("change", e => { F.apport = e.target.checked; F.okDoublon = false; rendreFormulaire(); });
   if ($f("f-hab")) $f("f-hab").addEventListener("click", () => { F.montant = saisieNombre(hab, 2); F.montantHab = true; rendreFormulaire(); });
   if ($f("f-prix-voir")) $f("f-prix-voir").addEventListener("click", () => { F.prixVu = true; rendreFormulaire(); setTimeout(() => { const el = $f("f-prix"); if (el) el.focus(); }, 30); });
   form.querySelectorAll("[data-date]").forEach(b => b.addEventListener("click", () => { F.date = b.dataset.date; F.dateChoisie = true; F.forcer = null; F.erreur = ""; rendreFormulaire(); }));
   // 14.5 : le nouvel actif se crée ici même, sans quitter la saisie d'ordre
   if ($f("f-nouvel-actif")) $f("f-nouvel-actif").addEventListener("click", () => { F.na = nouvelNA(F.env); rendreFormulaire(); setTimeout(() => { const el = $f("fn-code"); if (el) el.focus(); }, 30); });
-  if (F.na) brancherNouvelActif(F.na, a => { F.actif = a.code; F.na = null; toast("Actif " + a.code + " créé : tu peux saisir ton ordre."); rendreFormulaire(); }, () => { F.na = null; rendreFormulaire(); });
+  if (F.na) brancherNouvelActif(F.na, a => { if (F.imp && IMP && IMP.ops) { retenirIsin(cleOp(IMP.ops[F.imp.i]), a.code); IMP.ops[F.imp.i].choix.actif = a.code; F = formulaireImport(F.imp.i); toast("Actif " + a.code + " créé : relis l'opération."); rendreFormulaire(); return; } F.actif = a.code; F.na = null; toast("Actif " + a.code + " créé : tu peux saisir ton ordre."); rendreFormulaire(); }, () => { F.na = null; rendreFormulaire(); });
   [["f-date", "date"], ["f-montant", "montant"], ["f-frais", "frais"], ["f-mapport", "montantApport"], ["f-qte", "qte"], ["f-prix", "prix"]].forEach(([id, k]) => {
     const el = $f(id);
     if (!el) return;
@@ -3920,6 +4253,7 @@ function rendreFormulaire() {
     toast("Raccourci « " + nom + " » créé.");
   });
   if ($f("f-vider")) $f("f-vider").addEventListener("click", () => { F = formulaire({ type: F.type, env: F.env, envChoisi: F.envChoisi, auto: false }); nommerRaccourci = false; menuOuvert = false; rendreFormulaire(); });
+  brancherImport();
   form.addEventListener("submit", e => { e.preventDefault(); envoyerOrdre(false); });
   /* v17.73 (lot57) · touche Entrée / « Suivant » du clavier : champ suivant de l'avis ; après le dernier, le clavier se ferme et le bouton se montre
      (jamais d'envoi depuis le clavier : on relit la phrase, puis on touche le bouton) */
@@ -3975,6 +4309,7 @@ function analyser() {
   const manquer = (t2, id) => { bloque = true; if (!manque) { manque = t2; champ = id || ""; } };
   const eurD = v => discret ? "" : " (environ " + Math.round(v).toLocaleString("fr-FR") + " €)";
   if (AVEC_ACTIF.includes(F.type) && !F.actif) manquer("Choisis l'actif", "f-actif");
+  else if (F.imp && F.imp.propose && !F.imp.confirme && F.actif === F.imp.propose) manquer("Confirme l'actif proposé", "f-actif");   // v17.76 : proposé, jamais imposé
   if (!F.date) { manquer(F.type === "Relevé" ? "Indique la date de ton relevé" : F.type === "Solde initial" ? "Indique la date de début du suivi" : "Choisis la date", "f-date"); if (DATE_OBLIG.includes(F.type)) msg.push(["info", F.type === "Relevé" ? "La date du relevé est obligatoire : c'est elle qui date la valeur (pas le jour où tu la saisis)." : "La date de début du suivi est obligatoire."]); }
   if (AVEC_QTE.includes(F.type)) {
     if (q === null) manquer(F.type === "Achat" || F.type === "Vente" ? "Indique la quantité de ton avis d'opéré" : "Indique le nombre de parts", "f-qte");
@@ -4027,7 +4362,7 @@ function analyser() {
     if (F.type === "Achat" && !F.okEspeces) {
       const g = (M.groupes || []).find(x => x.env === F.env), le = g && (g.lignes || []).find(l => l.especes);
       if (le && typeof le.valeur === "number") {
-        const vers = F.apport ? (lireNombre(F.montantApport) > 0 ? lireNombre(F.montantApport) : m) : 0, dispo = le.valeur + vers;
+        const vers = F.apport ? (lireNombre(F.montantApport) > 0 ? lireNombre(F.montantApport) : m) : 0, dispo = le.valeur + vers + creditImport(F.env, le.valeur);   // v17.76 (lot59) : vente du même avis déjà enregistrée
         if (m - dispo > .01) { bloque = true; if (!manque) manque = "Les espèces ne couvrent pas cet achat";
           msg.push(["conf", "Il n'y a que " + (discret ? "•••" : nf(2, 2).format(le.valeur)) + " € d'espèces sur " + esc(F.env) + (F.apport ? " (+ le versement)" : "") + " : il manque " + (discret ? "•••" : nf(2, 2).format(m - dispo)) + " €. " + (F.apport ? "Vérifie le montant du versement." : "Coche « Avec le versement qui paie cet achat », ou saisis d'abord ton virement.") + " Confirme seulement si tes espèces dans l'appli ne sont pas à jour.", "especes"]); }
       }
@@ -4170,7 +4505,7 @@ async function envoyerOrdre(forcer) {
   if (M && M.ref) M.ref.journal = enAttente.reverse().concat(M.ref.journal || []);
   const rep = await posterFichier({ action: "ordre", ordres: ordres, forcer: !!forcer });
   if (M && M.ref) M.ref.journal = (M.ref.journal || []).filter(o => !o.envoi);
-  if (rep.ok) { if (window.SONS) SONS.succes(); toast(rep.message || "Ordre enregistré."); charger(true); return; }
+  if (rep.ok) { if (window.SONS) SONS.succes(); toast(rep.message || "Ordre enregistré."); charger(true); suiteImport(sauvegarde); return; }
   if (rep.erreur === "cle") { cleRefusee(rep.message); toast("Clé refusée par ton fichier."); if (vueMoi()) rendre(); return; }
   if (rep.erreur === "incertain") { ordresIncertains = ordresIncertains.concat(enAttente.map(o => Object.assign({}, o, { envoi: true }))); toast("L'ordre a peut-être été enregistré : vérifie l'Historique avant de renvoyer."); charger(true); return; }   // v16.83 : jamais rouvert rempli (doublon)
   toast(rep.erreur === "avertissement" ? "Ordre à confirmer." : "Ordre non enregistré.");
