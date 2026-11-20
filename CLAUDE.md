@@ -68,7 +68,7 @@ Quand le Conseil/les agents ont validé et que les tests passent : PUBLIER direc
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **17.97**.
+  hors connexion `sw.js`). Version actuelle : **17.98**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
@@ -177,6 +177,7 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
 - Maquettes de travail : scratchpad `galerie/` (perdu avec la session ; les peintres sont dans `piste.js`, rendu via `tpeints.js`, `PEINT=clé`, `ANIM=1 ATT=2600`).
 
 ## À venir
+- **Transfert des fichiers de Clément (semaine du 23/11) puis Devlin** : GUIDER Théo pas à pas (fiche courte comme celle de Carla). Points à ne pas oublier : Théo reste éditeur du fichier (le Versus V65 continue de le lire) ; le nouveau propriétaire lance UNE FOIS `installerTout` (déclencheur `releveFinDeMois`, son fichier envoie lui-même son relevé) ; vérifier ensuite Réglages › « Tester l'envoi du relevé » chez lui et Réglages › Relevés automatiques (admin) › Tester chez Théo. La liaison du Versus (bouton « Activer », un seul interrupteur pour tous) doit rester activée (rappel rouge dans la cloche admin sinon, v17.97).
 - 5ᵉ joueur : **Nicolas**, au plus tard le 1er janvier 2027 (PEA, peut-être une assurance-vie) ; à voir la semaine du 23/11.
   À prévoir : son fichier + script, l'ajouter au Versus, barème à 5 = 6·4·2·1·0 (validé, codé v16.20 : `baremeJ`), couleur `--p4` vert citron, portrait par défaut prêt (v17.68, `PRESETS_TETE.nicolas`), 5e bande du logo `.l5` visible dès 5 pilotes, vérifs d'affichage.
 - **Courbe du championnat qui raconte (Théo, 20/11, semaine prochaine)** : au toucher d'un mois sur la courbe (Podium › Course), la bulle dit qui a pris ou perdu la tête ce mois-là (« Février : Clément passe en tête »).

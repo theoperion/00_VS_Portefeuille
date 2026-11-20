@@ -476,7 +476,7 @@ function majVueJoueur() {
   sec.hidden = window.APERCUS_FINIS || !adminActif() || !D || !D.personnes;
   if (sec.hidden) return;
   const vj = stock.get("versus.vueJoueur") || "", ds = stock.get("versus.dateSim") || "";
-  $("#choix-vue").innerHTML = '<button class="chip" type="button" data-vuej="" aria-pressed="' + !vj + '">👑 Admin</button><button class="chip" type="button" data-vuej="' + esc(joueurAdmin()) + '" aria-pressed="' + !!vj + '">👁️ Joueur (toi, sans admin)</button>';
+  $("#choix-vue").innerHTML = '<button class="chip" type="button" data-vuej="" aria-pressed="' + !vj + '">🛠️ Admin</button><button class="chip" type="button" data-vuej="' + esc(joueurAdmin()) + '" aria-pressed="' + !!vj + '">👁️ Joueur (toi, sans admin)</button>';
   $("#choix-date").innerHTML = DATES_SIM.map(([d, l]) => '<button class="chip" type="button" data-dsim="' + d + '" aria-pressed="' + (ds === d) + '">' + esc(l) + "</button>").join("");
   document.querySelectorAll("[data-vuej]").forEach(b => b.addEventListener("click", () => { if (b.dataset.vuej) { stock.set("versus.vueJoueur", b.dataset.vuej); stock.set("versus.apercuSaison", "0"); } else { stock.del("versus.vueJoueur"); stock.del("versus.dateSim"); } location.reload(); }));
   document.querySelectorAll("[data-dsim]").forEach(b => b.addEventListener("click", () => { if (b.dataset.dsim) stock.set("versus.dateSim", b.dataset.dsim); else stock.del("versus.dateSim"); location.reload(); }));
