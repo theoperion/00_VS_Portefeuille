@@ -1306,7 +1306,7 @@ function seanceProposee() {
    aujourd'hui (nuit, week-end : fini le « ■ 0 € · 0,00 % »), et la pastille « Jour | 5 j » de la carte passe aux 5 dernières séances
    (semaine glissante : « 1 semaine » de Perf lignes). Le choix est gardé sur l'appareil (PREF.var5). Rien n'est écrit : c'est une vue. */
 function modeSeance() { return seanceProposee(); }
-const PERIODES_J = { "5j": ["s1", "5 j", "5 séances"], "1m": ["m1", "1 M", "1 mois"], "6m": ["m6", "6 M", "6 mois"], "ytd": ["ytd", "Janv.", "depuis janvier"], "1a": ["a1", "1 an", "1 an"] };   // v17.23 (Conseil) : Jour | 5 j | 1 M | 6 M | Janv. | 1 an
+const PERIODES_J = { "5j": ["s1", "5 j", "5 séances"], "1m": ["m1", "1 M", "1 mois"], "6m": ["m6", "6 M", "6 mois"], "ytd": ["ytd", "YTD", "depuis janvier"], "1a": ["a1", "1 an", "1 an"] };   // v17.23 (Conseil) : Jour | 5 j | 1 M | 6 M | Janv. | 1 an
 function periodeJ() { const p = PREF.varP || (PREF.var5 === true ? "5j" : null); return p && PERIODES_J[p] && seanceDu() ? p : null; }
 function mode5j() { return periodeJ() === "5j"; }
 const JOURS_C = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
@@ -1523,7 +1523,7 @@ function basculerLigne(el) {
   const e = (lab, v, sig) => "<div><span>" + lab + '</span><b class="' + (sig ? sens(v) : "") + '">' + (ok(v) ? eur(v, 2, sig) : "—") + "</b></div>";
   const d = document.createElement("div");
   d.className = "m-ligne-det";
-  d.innerHTML = '<div class="mini">' + m("1 semaine", p.s1) + m("1 mois", p.m1) + m("6 mois", p.m6) + m("Depuis janv.", p.ytd) + m("1 an", p.a1) +
+  d.innerHTML = '<div class="mini">' + m("1 semaine", p.s1) + m("1 mois", p.m1) + m("6 mois", p.m6) + m("YTD", p.ytd) + m("1 an", p.a1) +
     "<div><span>Cours</span><b>" + cours(l.cours) + "</b></div><div><span>Poids</span><b>" + pct(l.poids, 1, false) + "</b></div>" +
     "<div><span>Quantité × PRU</span><b>" + qte(l.qte) + " × " + cours(l.pru) + "</b></div>" + e("Plus-value", l.pv, true) +
     e("Coût de revient", pos.cout) + e("Plus-value réalisée", pos.pvr, true) + e("Frais payés", pos.frais) +
@@ -2307,7 +2307,7 @@ function brancherPatrimoine(v) {
 }
 
 /* ================= Onglet Stats ================= */
-const PERIODES_M = [["1m", "1 mois"], ["3m", "3 mois"], ["6m", "6 mois"], ["ytd", "Depuis janv."], ["1a", "1 an"], ["tout", "Tout"]];
+const PERIODES_M = [["1m", "1 mois"], ["3m", "3 mois"], ["6m", "6 mois"], ["ytd", "YTD"], ["1a", "1 an"], ["tout", "Tout"]];
 function seriesDisponibles() {
   const noms = (M.enveloppes || []).filter(e => e.type === "env").map(e => e.nom);
   const cols = (M.historique || {}).cols || [];
@@ -2385,7 +2385,7 @@ function blocPerformances(envs) {
     '<tr class="m-pf-d" data-pf-d="' + i + '" hidden><td colspan="5">1 sem. <b class="' + sens(e.s1) + '">' + pct(e.s1) + "</b> · 6 mois <b class=\"" + sens(e.m6) + '">' + pct(e.m6) + "</b>" +
       (e.type === "indice" ? "" : ' · MWR <b class="' + sens(e.mwr) + '">' + pct(e.mwr) + "</b>") + " · volatilité <b>" + pct(e.vol, 1, false) + "</b></td></tr>";
   return '<details class="acc m-compact" data-acc="m-perf"' + (PREF.acc["m-perf"] ? " open" : "") + '><summary><span class="t">Performances</span><span class="m-cp-r">' + resume + "</span></summary>" +
-    '<div><table class="tab m-perf-t m-perf4"><thead><tr><th>Enveloppe</th><th>1 mois</th><th>Janv.</th><th>1 an</th><th>Début</th></tr></thead><tbody>' + envs.map(ligne).join("") + "</tbody></table>" +
+    '<div><table class="tab m-perf-t m-perf4"><thead><tr><th>Enveloppe</th><th>1 mois</th><th>YTD</th><th>1 an</th><th>Début</th></tr></thead><tbody>' + envs.map(ligne).join("") + "</tbody></table>" +
     '<p class="info">Touche une ligne pour la semaine, les 6 mois, le MWR et la volatilité.</p></div></details>';
 }
 function dessinerCourbe() {
