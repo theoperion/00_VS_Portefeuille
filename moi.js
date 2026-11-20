@@ -4038,6 +4038,7 @@ function htmlImport(bourse) {
   if (!IMP) return '<div class="m-imp"><button class="btn m-imp-b" type="button" id="f-imp">📄 Importer mon avis d\'opéré</button></div>' + avis;
   if (!IMP.ops) return '<div class="m-imp ouvert"><b class="m-imp-t">📄 Importer mon avis d\'opéré</b>' +
     '<p class="aide">Lu dans ton téléphone : le fichier n\'est envoyé nulle part. Tu relis tout avant d\'enregistrer.</p>' +
+    '<p class="aide">Pas de PDF (versement programmé, frais Linxea, page Quintessa…) ? <b>Copie les valeurs</b> depuis le site (appui long sur le tableau › Tout sélectionner › Copier), ou fais une <b>capture d\'écran</b> et utilise <b>Google Lens › Copier le texte</b>, puis « Coller le texte » ici.</p>' +   // v17.77 (Théo)
     '<div class="m-imp-a"><label class="btn" for="f-imp-pdf"' + (IMP.lecture ? ' aria-disabled="true"' : "") + '>' + (IMP.lecture ? "Lecture…" : "Choisir le PDF") + '</label><input id="f-imp-pdf" type="file" accept="application/pdf" hidden>' +
       '<button class="btn ghost" type="button" id="f-imp-coller" aria-expanded="' + !!IMP.coller + '">Coller le texte</button></div>' +
     (IMP.coller ? '<textarea id="f-imp-txt" rows="5" aria-label="Texte de l\'avis d\'opéré" placeholder="Ouvre l\'avis, « Tout sélectionner », « Copier », puis colle ici.">' + esc(IMP.texte || "") + '</textarea><button class="btn" type="button" id="f-imp-lire">Lire ce texte</button>' : "") +
