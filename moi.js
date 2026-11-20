@@ -250,6 +250,14 @@ function injecterStyle() {
 .moi .m-cemois .cm-t { margin: 0; font-size: 15px; line-height: 1.3; color: var(--ink); }
 .moi .m-cemois .cm-s { margin: 0; font-size: 13px; line-height: 1.35; color: var(--ink-2); }
 .moi .m-cemois .cm-pt { margin: 0; font-size: 12.5px; line-height: 1.35; color: var(--ink-2); } .moi .m-cemois .cm-pt b { color: var(--ink); white-space: nowrap; }
+.moi .m-cemois .cm-cf { display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: 11px; color: var(--ink-2); }   /* lot 56 · carte de fidélité */
+.moi .m-cemois .cf-k, .moi .m-cemois .cf-n { flex: none; font: 700 11px/1 var(--f-display); letter-spacing: .04em; } .moi .m-cemois .cf-n { color: var(--ink); }
+.moi .m-cemois .cf-c { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; }
+.moi .m-cemois .cf-c i { font-style: normal; display: grid; place-items: center; height: 19px; border-radius: 50%; font: 600 9.5px/1 var(--f-display); border: 1px dashed var(--rule); color: var(--ink-2); opacity: .75; }
+.moi .m-cemois .cf-c i.cf-ok { border: 1.5px solid var(--up); background: color-mix(in srgb, var(--up) 22%, transparent); color: var(--up); opacity: 1; font-size: 11px; transform: rotate(-8deg); }
+.moi .m-cemois .cf-c i.cf-jk { border-style: solid; opacity: 1; font-size: 10px; }
+.moi .m-cemois .cf-c i.cf-cour { border: 1.5px dashed var(--gold); color: var(--gold); opacity: 1; }
+.moi .m-cemois .cf-c i.cf-rate { opacity: .35; text-decoration: line-through; } .moi .m-cemois .cf-c i.cf-hors { opacity: .3; border-style: dotted; }
 /* lot 51 · couronne du million (détail replié) */
 .moi .mi-haut { display: flex; justify-content: flex-end; }
 .moi .mi-cour { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 3px 10px 3px 8px; border-radius: 999px; cursor: pointer; white-space: nowrap;
@@ -4381,7 +4389,8 @@ async function envoyerReglage(k, corps, form, local) {
    Rien de ce qui a été gagné ne se perd : les objets de la régularité gagnés jusqu'à REGLES_V1_JUSQUA (anciennes règles) restent acquis,
    et chaque objet déjà placé sur un palier reste sur ce palier ou arrive plus tôt. */
 const SERIES = [3, 6, 9, 12, 18, 24, 30, 36, 48, 60, 72, 84, 96, 108, 120];   // lot 55 : + 84 et 108 (un palier chaque décembre des années 7 à 10)
-const REGLES_V1_JUSQUA = "2026-11";   // dernier mois des anciennes règles : à caler sur le mois de mise en ligne
+const REGLES_V1_JUSQUA = "2026-11";
+const REGLES_VER = "3";   // lot 54 = "2" (paliers rapprochés) ; lot 56 = "3" (nouvelles missions) : ce qui était déjà mérité arrive dans l'écran unique « Les paliers se rapprochent »   // dernier mois des anciennes règles : à caler sur le mois de mise en ligne
 function cleMoisD(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); }
 function moisSuivant(m, n) { return cleMoisD(new Date(+m.slice(0, 4), +m.slice(5, 7) - 1 + n, 1)); }
 function libMois(m, long) { const i = +m.slice(5, 7) - 1; return (long ? MOIS_L[i] : MOIS[i]) + " " + m.slice(0, 4); }
@@ -4431,8 +4440,11 @@ function bilanAnneeM(an) {
 /* lot 44 : le 3e champ sert enfin : true = en vitrine (le comportement d'abord), false = « Autres paliers » (replié) */
 /* lot 54 : « Année en cours » (gains > versements) récompensait le fait de verser MOINS → remplacée par « Année de versements » ;
    « Argent versé » passe en vitrine (ce qu'on fait), les familles du marché restent dans « Autres paliers » */
+/* lot 56 (idées validées par Théo) : Versé avant le 5, Défi d'automne, Fidèle à la règle (vitrine) ; Mois économes, Retours après une pause, Saisie propre (autres) */
 const FAMILLES = [
   ["serie", "Séries de versements", true], ["vente", "Sans vendre", true], ["verse", "Argent versé en bourse", true], ["pat", "Patrimoine financier", true],
+  ["jourj", "Versé avant le 5", true], ["automne", "Défi d'automne", true], ["regle", "Fidèle à la règle", true],
+  ["eco", "Mois économes", false], ["retour", "Retours après une pause", false], ["propre", "Saisie propre", false],
   ["anv", "Année de versements", false], ["mois", "Mois avec un versement (au total)", false], ["annee", "Ancienneté", false],
   ["bourse", "Portefeuille bourse", false], ["gains", "Gains cumulés", false], ["fisc", "Fiscalité allégée", false]
 ];
@@ -4498,8 +4510,108 @@ function paliers() {
       out[out.length - 1].manque = manque > jouables ? null : manque;
     });
   }
+  try { paliers56(ajoute, out); } catch (e) { /* lot 56 : données incomplètes, les autres familles restent */ }
   return out;
 }
+/* ================= lot 56 · nouvelles missions (idées validées par Théo) =================
+   Toutes se lisent sur les données du fichier (aucun euro affiché) ; une famille sans données n'apparaît pas (profil simple, ancien script). */
+const ECO_S = [1, 3, 6, 12, 24, 36], JJ_S = [3, 6, 12, 24, 36, 60], AUT_S = [1, 2, 3, 4, 5, 6, 8, 10], RET_S = [1, 2, 3, 5, 8], REG_S = [3, 6, 12, 24, 36], PROPRE_S = [10, 25, 50, 100, 200];
+const JOUR_J = 5;   // « versé avant le 5 » = premier versement du mois du 1er au 5
+function missions56() {
+  const p = ((M && M.ref) || {}).parcours || {}, sv = serieVersements(), L = sv.liste, now = new Date(), auj = cleMoisD(now), jour = now.getDate();
+  const par = {}; (p.mois || []).forEach(x => { par[x.m] = x; });
+  const ap = m => +((par[m] || {}).apports) || 0;
+  /* a · Mois économe : le mois verse plus que la moyenne des 6 mois d'avant (6 mois d'historique, dont au moins 3 versés).
+     Un mois sans versement n'entre pas dans la moyenne : sinon une simple pause rendrait « économes » les mois normaux qui suivent. */
+  const eco = [];
+  L.forEach((x, i) => { if (i < 6 || !x.ok) return; const v = L.slice(i - 6, i).map(y => ap(y.m)).filter(a => a > 0); if (v.length < 3) return;
+    if (ap(x.m) > v.reduce((t, a) => t + a, 0) / v.length + 1) eco.push(x.m); });
+  /* b · Versé avant le 5 : série de mois dont le premier versement tombe du 1er au 5 (le jour vient des scripts perso du lot 56) */
+  let jj = null;
+  if (p.jours === true || (p.mois || []).some(x => typeof x.j1 === "number")) {
+    let run = 0, rec = 0; const at = {};
+    L.forEach(x => {
+      const j1 = (par[x.m] || {}).j1, tot = x.ok && typeof j1 === "number" && j1 <= JOUR_J;
+      if (tot) run++; else if (x.m === auj && jour <= JOUR_J) { /* encore possible ce mois-ci */ } else run = 0;
+      if (run > rec) rec = run; JJ_S.forEach(n => { if (run >= n && !at[n]) at[n] = x.m; });
+    });
+    const j1 = (par[auj] || {}).j1;
+    jj = { run, rec, at, fait: typeof j1 === "number" && j1 <= JOUR_J, possible: jour <= JOUR_J };
+  }
+  /* e · Défi d'automne : un versement en octobre, novembre et décembre de la même année */
+  const ans = {}; L.forEach(x => { const mo = +x.m.slice(5, 7); if (mo < 10) return; const a = x.m.slice(0, 4); (ans[a] = ans[a] || { n: 0, l: [] }); if (x.ok) { ans[a].n++; ans[a].l.push(mo); } });
+  const aut = Object.keys(ans).filter(a => ans[a].n === 3).sort().map(a => a + "-12");
+  const moA = now.getMonth() + 1, anA = auj.slice(0, 4), cur = ans[anA] || { n: 0, l: [] };
+  const autRate = moA >= 10 && L.some(x => +x.m.slice(5, 7) >= 10 && x.m.slice(0, 4) === anA && x.m < auj && !x.ok) || (moA >= 10 && !L.some(x => x.m === anA + "-10"));
+  /* g · Retours : après un mois sans versement, 3 mois versés d'affilée */
+  const ret = []; for (let i = 3; i < L.length; i++) if (!L[i - 3].ok && L[i].ok && L[i - 1].ok && L[i - 2].ok) ret.push(L[i].m);
+  let pause = -1; L.forEach((x, i) => { if (!x.ok && x.m !== auj) pause = i; });
+  const apres = pause >= 0 ? L.slice(pause + 1).filter(x => x.ok).length : 0, enRetour = pause >= 0 && apres < 3;
+  /* c · Fidèle à la règle : les achats du bloc levier du mois suivent l'apport conseillé par le signal (noté chaque soir par SignalLevier depuis le lot 56) */
+  let regle = null; const g = M && M.signal, cons = g && g.conseils && typeof g.conseils === "object" ? g.conseils : null;
+  if (cons && Object.keys(cons).length && (p.mois || []).some(x => x.ach !== undefined)) {
+    const fid = [];
+    Object.keys(cons).sort().forEach(m => {
+      if (m > auj) return; const x = par[m] || {}, c = (cons[m] || []).map(Number), lev = (x.lev || []).map(Number);
+      if (!(x.ach > 0) || !c.length) return;
+      if (lev.every(l => c.includes(l)) && (lev.length > 0 || c.includes(0))) fid.push(m);
+    });
+    const c0 = (cons[auj] || []).map(Number);
+    regle = { fid, conseil: c0.length ? c0[c0.length - 1] : null, fait: fid.includes(auj) };
+  }
+  /* d · Saisie propre : avis d'opéré saisis depuis l'app sans correction (compteur des scripts perso du lot 56) */
+  const sp = p.saisie && typeof p.saisie.record === "number" ? p.saisie : null;
+  return { eco, jj, aut, autCur: { n: cur.n, rate: autRate, mo: moA }, ret, enRetour, apres, aPause: pause >= 0, regle, sp };
+}
+function paliers56(ajoute, out) {
+  if (!M) return;
+  const X = missions56(), moisAuj = cleMoisD(new Date()), der = () => out[out.length - 1];
+  const fixe = (mr, chemin) => { const x = der(); x.mr = mr; if (chemin) x.chemin = chemin; };
+  const s = (n, mot) => n + " " + mot + (n > 1 && !/s$/.test(mot) ? "s" : "");
+  // b · Versé avant le 5
+  if (X.jj) JJ_S.forEach(n => {
+    ajoute("jourj", "jourj" + n, n + "M", n + " mois d'affilée versés d'ici le " + JOUR_J, X.jj.rec >= n, X.jj.at[n] || null, X.jj.run / n,
+      "série actuelle : " + X.jj.run + " / " + n + " mois" + (X.jj.fait ? " · ce mois-ci ✓" : X.jj.possible ? " · verse d'ici le " + JOUR_J : ""), n + " MOIS");
+    const r = Math.max(1, n - X.jj.run); fixe(r, "encore " + s(r, "mois") + " versé" + (r > 1 ? "s" : "") + " d'ici le " + JOUR_J);
+  });
+  // e · Défi d'automne
+  { const nb = X.aut.length, c = X.autCur, enJeu = c.mo >= 10 && !c.rate && c.n < 3;
+    const mr = enJeu ? 3 - c.n : 12 - c.mo + 1, che = enJeu ? "encore " + s(3 - c.n, "mois") + " (oct. · nov. · déc.)" : "en oct., nov. et déc.";
+    const etat = enJeu ? "cette année : " + c.n + " / 3 (oct. · nov. · déc.)" : c.mo >= 10 && c.rate ? "raté cette année · on recommence en octobre" : "à jouer en octobre, novembre et décembre";
+    if (L56(X)) AUT_S.forEach(n => {
+      ajoute("automne", "automne" + n, n + "×", n === 1 ? "Défi d'automne : un versement en octobre, novembre et décembre" : "Défi d'automne réussi " + n + " fois", nb >= n, X.aut[n - 1] || null,
+        (nb + (enJeu ? c.n / 3 : 0)) / n, etat, n === 1 ? "AUTOMNE" : n + " AUTOMNES");
+      fixe(n === nb + 1 ? mr : 99, n === nb + 1 ? che : "réussi " + nb + " / " + n + " fois");
+    }); }
+  // a · Mois économes
+  if (L56(X)) ECO_S.forEach(n => {
+    ajoute("eco", "eco" + n, n + "×", n === 1 ? "Un mois économe : plus versé que ta moyenne des 6 mois d'avant" : n + " mois économes (plus versé que ta moyenne des 6 mois d'avant)", X.eco.length >= n, X.eco[n - 1] || null,
+      X.eco.length / n, X.eco.length + " / " + n + " mois économes", n + " MOIS");
+    fixe(99, n === X.eco.length + 1 ? "verse plus que ta moyenne" : X.eco.length + " / " + n + " mois");
+  });
+  // g · Retours après une pause (seulement après un premier mois sans versement)
+  if (X.aPause || X.ret.length) RET_S.forEach(n => {
+    ajoute("retour", "retour" + n, n + "×", n === 1 ? "Un retour : 3 mois versés d'affilée après un mois sans versement" : n + " retours après une pause", X.ret.length >= n, X.ret[n - 1] || null,
+      (X.ret.length + (X.enRetour ? X.apres / 3 : 0)) / n, X.enRetour ? "retour en cours : " + X.apres + " / 3 mois versés" : X.ret.length + " / " + n + " retours", n === 1 ? "RETOUR" : n + " RETOURS");
+    const ici = X.enRetour && n === X.ret.length + 1;
+    fixe(ici ? 3 - X.apres : 99, ici ? "encore " + s(3 - X.apres, "mois") + " versé" + (3 - X.apres > 1 ? "s" : "") : X.ret.length + " / " + n + " retours");
+  });
+  // c · Fidèle à la règle (Théo : signal levier)
+  if (X.regle) REG_S.forEach(n => {
+    const f = X.regle.fid, r = Math.max(1, n - f.length);
+    ajoute("regle", "regle" + n, n + "M", n + " mois où tes achats du levier suivent l'apport conseillé", f.length >= n, f[n - 1] || null, f.length / n,
+      f.length + " / " + n + " mois" + (X.regle.fait ? " · ce mois-ci ✓" : X.regle.conseil !== null ? " · ce mois-ci : " + (X.regle.conseil === 0 ? "pas d'achat de levier (cash)" : "achat ×" + X.regle.conseil) : ""), n + " MOIS");
+    fixe(r, "encore " + s(r, "mois"));
+  });
+  // d · Saisie propre
+  if (X.sp) PROPRE_S.forEach(n => {
+    const at = X.sp.at || {}, k = Math.max(1, n - (X.sp.n || 0));
+    ajoute("propre", "propre" + n, String(n), n + " avis d'opéré saisis depuis l'appli (une correction met la série en pause)", X.sp.record >= n, at[n] || (X.sp.record >= n ? moisAuj : null), (X.sp.n || 0) / n,
+      "série actuelle : " + (X.sp.n || 0) + " / " + n + " avis", n + " AVIS");
+    fixe(99, "encore " + s(k, "avis"));
+  });
+}
+function L56(X) { try { return serieVersements().liste.length > 0; } catch (e) { return false; } }
 /* le plus haut palier franchi et le suivant, par famille */
 function paliersCles(liste, familles) {
   return liste.filter((x, i) => familles.includes(x.groupe) &&
@@ -4546,7 +4658,10 @@ const THEMES_M = [
   // lot 55 · pour boucher les longs trous après 5 ans (5e champ « vivant » = le fond bouge doucement)
   ["crepuscule", "Crépuscule", "#FDA4AF", "radial-gradient(130% 80% at 50% 115%, rgba(251,146,60,.45), transparent 60%), linear-gradient(170deg, #120A2A, #3B1D5C 55%, #7A2E4F)"],
   ["ambre", "Ambre", "#FBBF24", "radial-gradient(110% 90% at 15% 0%, rgba(251,191,36,.30), transparent 60%), linear-gradient(150deg, #1E1003, #5C3507 60%, #2A1704)"],
-  ["opale", "Opale", "#E9D5FF", "linear-gradient(120deg, #1B2A4A, #3E2C63, #1E4B5A, #4A2A4F, #1B2A4A)", "vivant"]
+  ["opale", "Opale", "#E9D5FF", "linear-gradient(120deg, #1B2A4A, #3E2C63, #1E4B5A, #4A2A4F, #1B2A4A)", "vivant"],
+  // lot 56 · nouvelles missions (Mois économes, Défi d'automne)
+  ["prairie", "Prairie", "#A3E635", "radial-gradient(120% 80% at 20% 0%, rgba(163,230,53,.28), transparent 60%), linear-gradient(150deg, #0D1A05, #2C4A10 60%, #12210A)"],
+  ["automne", "Automne", "#F59E0B", "radial-gradient(110% 80% at 85% 110%, rgba(234,88,12,.40), transparent 60%), linear-gradient(150deg, #1F0F05, #5A2A0C 55%, #3B1A08)"]
 ];
 // [id, nom, couleur (null = celle du thème), effet de la courbe]
 // lot 44 : noms affichés dédoublonnés (les identifiants stockés ne changent pas)
@@ -4555,26 +4670,30 @@ const COURBES_M = [["classique", "Classique", null, null], ["etincelles", "Étin
   ["menthe", "Trait menthe", "#34D399", null], ["corail", "Trait corail", "#FF7F6B", null], ["lavande", "Halo lavande", "#A78BFA", "halo"], ["glace", "Glace", "#7DD3FC", "etincelles"],
   ["rubis", "Rubis", "#F43F5E", "halo"], ["soleil", "Soleil", "#FACC15", "comete"], ["plasma", "Plasma", "#22D3EE", "halo"], ["braise", "Braise", "#F97316", "etincelles"], ["argent", "Argent", "#CBD5E1", "comete"],
   ["aurore", "Aurore boréale", "#7CF5C4", "comete"],   // lot 54 · prestige (15 ans)
-  ["pulsar", "Pulsar", "#F0ABFC", "pulsar"], ["cuivre", "Cuivre", "#D97706", "comete"]];   // lot 55 · Pulsar vivant : une lueur court le long de la courbe
+  ["pulsar", "Pulsar", "#F0ABFC", "pulsar"], ["cuivre", "Cuivre", "#D97706", "comete"],
+  ["jade", "Jade", "#10B981", "halo"], ["nacre", "Nacre", "#FBCFE8", "etincelles"]];   // lot 56 · Mois économes, anniversaire surprise   // lot 55 · Pulsar vivant : une lueur court le long de la courbe
 // [id, nom, aperçu, style passé à confettis()]
 const FETES_M = [["confettis", "Confettis", "🎊", null], ["damier", "Damier", "🏁", "damier"], ["feu", "Feu d'artifice", "🎆", "feu"], ["billets", "Pluie de billets", "💸", "billets"],
   ["lingots", "Lingots", "🪙", "lingots"], ["etoiles", "Étoiles", "✨", "etoiles"], ["fusees", "Fusées", "🚀", "fusees"],
   ["ballons", "Ballons", "🎈", ["🎈", "🎈", "🎉", "🎈"]], ["fleurs", "Pétales", "🌸", ["🌸", "🌼", "🌷", "🌸"]], ["coeurs", "Cœurs", "💚", ["💚", "💙", "💜", "💛"]], ["neige", "Flocons", "❄️", ["❄️", "❄️", "✨", "❄️"]],
   ["trefles", "Trèfles", "🍀", ["🍀", "🍀", "✨", "🌿"]], ["diamants", "Diamants", "💎", ["💎", "💎", "✨", "💍"]], ["taureaux", "Taureaux", "🐂", ["🐂", "📈", "🐂", "💹"]], ["champagne", "Champagne", "🍾", ["🍾", "🥂", "✨", "🎉"]],
   ["feudor", "Gerbes d'or", "🎇", ["🎇", "✨", "🌟", "🎇"]],   // lot 54 · prestige (150 mois versés)
-  ["meteores", "Météores", "☄️", "meteores"]];   // lot 55 · fête spéciale : des traînées lumineuses traversent l'écran
+  ["meteores", "Météores", "☄️", "meteores"],
+  ["aube", "Lever de soleil", "🌅", ["🌅", "☀️", "✨", "🌤️"]], ["feuilles", "Feuilles d'automne", "🍂", ["🍂", "🍁", "🍂", "🌰"]]];   // lot 56   // lot 55 · fête spéciale : des traînées lumineuses traversent l'écran
 const EMBLEMES_M = [["pousse", "Pousse", "🌱"], ["abeille", "Abeille", "🐝"], ["hibou", "Hibou", "🦉"], ["tortue", "Tortue", "🐢"], ["renard", "Renard", "🦊"],
   ["aigle", "Aigle", "🦅"], ["lion", "Lion", "🦁"], ["dragon", "Dragon", "🐉"], ["couronne", "Couronne", "👑"], ["taureau", "Taureau", "🐂"],
   ["fourmi", "Petite fourmi", "🐜"], ["ecureuil", "Écureuil", "🐿️"], ["castor", "Castor", "🦫"], ["dauphin", "Dauphin", "🐬"], ["loup", "Loup", "🐺"],
   ["chene", "Chêne", "🌳"], ["boussole", "Boussole", "🧭"], ["ancre", "Ancre", "⚓"], ["phare", "Phare", "🗼"], ["comete-e", "Comète", "☄️"],
   ["montagne", "Montagne", "⛰️"],   // lot 54 · prestige (5 ans sans vendre)
-  ["sablier", "Sablier", "⏳"], ["sequoia", "Séquoia", "🌲"], ["baleine", "Baleine", "🐋"]];   // lot 55
+  ["sablier", "Sablier", "⏳"], ["sequoia", "Séquoia", "🌲"], ["baleine", "Baleine", "🐋"],
+  ["tirelire", "Tirelire", "🐷"], ["matin", "Réveil matin", "⏰"], ["erable", "Feuille d'érable", "🍁"], ["arcenciel", "Arc-en-ciel", "🌈"], ["cible", "Cible", "🎯"], ["plume", "Plume", "✒️"]];   // lot 56   // lot 55
 const TITRES_M = [["investisseur", "Investisseur"], ["metronome", "Le Métronome"], ["diamant", "Main de diamant"], ["batisseur", "Bâtisseur"], ["rentier", "Rentier"],
   ["veteran", "Vétéran"], ["optimiseur", "Optimiseur fiscal"], ["legende", "Légende"], ["millionnaire", "Millionnaire"], ["increvable", "Increvable"],
   ["fourmi", "La Fourmi"], ["regulier", "Régulier"], ["horloger", "L'Horloger"], ["patient", "Patient"], ["capitaine", "Capitaine"],
   ["stratege", "Stratège"], ["marathonien", "Marathonien"], ["sage", "Le Sage"], ["roc", "Le Roc"], ["maitre", "Maître du temps"],
   ["inebranlable", "L'Inébranlable"],   // lot 54 · prestige (120 mois d'affilée)
-  ["pilier", "Le Pilier"], ["infatigable", "L'Infatigable"]];   // lot 55
+  ["pilier", "Le Pilier"], ["infatigable", "L'Infatigable"],
+  ["econome", "L'Économe"], ["matinal", "Le Matinal"], ["toujourla", "Toujours là"], ["discipline", "Le Discipliné"], ["scribe", "Le Scribe"]];   // lot 56   // lot 55
 const SORTES = [["aff", "Afficheur", "🔢", "afficheur"], ["theme", "Thème", "🎨", "themeM"], ["courbe", "Courbe", "📈", "courbe"],
   ["fete", "Fête", "🎉", "fete"], ["emb", "Emblème", "🛡️", "emb"], ["titre", "Titre", "🏷️", "titre"]];
 const CATALOGUE = { aff: AFFICHEURS, theme: THEMES_M, courbe: COURBES_M, fete: FETES_M, emb: EMBLEMES_M, titre: TITRES_M };
@@ -4611,8 +4730,19 @@ const REC_PAL = {
   gains1000: [["courbe", "etincelles"]], gains10000: [["aff", "carte"]], gains50000: [["fete", "lingots"]], gains100000: [["titre", "rentier"]],
   // lot 55 · après 5 ans il restait des trous jusqu'à 22 mois : un anniversaire chaque janvier, une série chaque décembre (années 6 à 9)
   annee6: [["emb", "sablier"]], annee7: [["theme", "crepuscule"]], annee8: [["courbe", "pulsar"]], annee9: [["aff", "paillettes"]],
-  serie84: [["titre", "pilier"]], serie96: [["emb", "sequoia"]], serie108: [["fete", "meteores"]]
+  serie84: [["titre", "pilier"]], serie96: [["emb", "sequoia"]], serie108: [["fete", "meteores"]],
+  // lot 56 · nouvelles missions (peu d'objets par famille : pas d'inflation pour un épargnant régulier)
+  eco1: [["emb", "tirelire"]], eco3: [["courbe", "jade"]], eco6: [["titre", "econome"]], eco12: [["theme", "prairie"]],
+  jourj3: [["emb", "matin"]], jourj12: [["titre", "matinal"]], jourj24: [["fete", "aube"]],
+  automne1: [["emb", "erable"]], automne3: [["theme", "automne"]], automne5: [["fete", "feuilles"]],
+  retour1: [["emb", "arcenciel"]], retour3: [["titre", "toujourla"]],
+  regle3: [["emb", "cible"]], regle12: [["titre", "discipline"]],
+  propre10: [["emb", "plume"]], propre50: [["titre", "scribe"]],
+  annee4: [["courbe", "nacre"]]   // lot 56 · Objet surprise : l'anniversaire de la 4e année n'avait pas d'objet
 };
+/* lot 56 · Objet surprise : chaque anniversaire du premier ordre donne un objet, gardé secret jusqu'au jour J (🎁 « Surprise ») */
+function estSurprise(t, id) { return Object.keys(REC_PAL).some(k => /^annee\d+$/.test(k) && REC_PAL[k].some(r => r[0] === t && r[1] === id)); }
+function surpriseCachee(t, id) { return estSurprise(t, id) && !(M && etatObjets().ok.has(cleObj(t, id))); }
 /* lot 55 · « Année de versements » : à partir de la 6e année civile où tu verses au moins 6 mois, un objet à ce palier 6/12 (vers juin) */
 const ANV6_RANG = { 6: [["theme", "ambre"]], 7: [["titre", "infatigable"]], 8: [["emb", "baleine"]], 9: [["courbe", "cuivre"]], 10: [["theme", "opale"]] };
 /** lot 55 · années civiles (avant l'an donné) avec au moins 6 mois versés */
@@ -4748,7 +4878,7 @@ function etatObjets() {
     try { objetsParRegle(pal, rec, sec).forEach((src, k) => ok.add(k)); } catch (e) { /* idem */ }
     if (identiteSure()) {
       // lot 54 : avant la première écriture avec les nouvelles règles, on garde la liste d'avant (pour l'écran unique « Les paliers se rapprochent »)
-      if (stock.get(cleStock("regles")) !== "2" && stock.get(cleStock("objetsV1")) === null && stock.get(cleStock("objets")) !== null) stock.set(cleStock("objetsV1"), stock.get(cleStock("objets")));
+      if (stock.get(cleStock("regles")) !== REGLES_VER && stock.get(cleStock("objetsV1")) === null && stock.get(cleStock("objets")) !== null) stock.set(cleStock("objetsV1"), stock.get(cleStock("objets")));
       stock.set(cleStock("objets"), JSON.stringify(Array.from(ok)));
     }
   }
@@ -4837,7 +4967,7 @@ function htmlVestiaire() {
   }).join("") + "</div>";
   const actif = actifM(t);
   const tuiles = CATALOGUE[t].map(d => {
-    const id = d[0], o = E.ok.has(cleObj(t, id)), org = o ? null : origineObj(t, id), cache = !o && org.secret;
+    const id = d[0], o = E.ok.has(cleObj(t, id)), org = o ? null : origineObj(t, id), cache = !o && (org.secret || estSurprise(t, id));   // lot 56 : surprise = cachée comme un secret
     const lab = cache ? "???" : d[1];
     return '<div class="vs-t' + (o ? "" : " verrou") + (cache ? " secret" : "") + (id === actif ? " on" : "") + (vsSel === cleObj(t, id) ? " vs-sel" : "") + '">' +
       '<button type="button" class="vs-b" data-vs="' + t + "." + id + '" aria-label="' + esc(lab) + (id === actif ? " (équipé)" : o ? " (équiper)" : " (verrouillé)") + '">' +
@@ -4852,10 +4982,11 @@ function htmlVestiaire() {
 function htmlDetailObj() {
   if (!vsSel) return '<p class="vs-aide">Touche un objet pour l\'équiper, ou « ? » pour savoir d\'où il vient.</p>';
   const [t, id] = vsSel.split("."), d = defObj(t, id); if (!d) return "";
-  const E = etatObjets(), o = E.ok.has(vsSel), org = origineObj(t, id), cache = !o && org.secret;
+  const E = etatObjets(), o = E.ok.has(vsSel), sur = !o && estSurprise(t, id), org = origineObj(t, id), cache = !o && (org.secret || sur);
   const sorte = SORTES.find(x => x[0] === t);
   let quoi;
   if (org.base) quoi = "Fourni de base.";
+  else if (sur) { const p = org.palier; quoi = "🎁 Objet surprise : il se dévoile le mois d'un anniversaire de ton premier ordre" + (p && p.reste ? " (" + esc(p.reste) + ")" : "") + "."; }   // lot 56
   else if (org.secret) quoi = o || org.ok ? "Récompense cachée « " + esc(org.secret.nom) + " » : " + esc(org.secret.quoi) : "Récompense cachée. Indice : <i>" + esc(org.secret.indice) + "</i>";
   else if (org.palier && org.palier.cache) { const p = org.palier; quoi = p.atteint ? "Gagné avec un palier « " + esc((FAMILLES.find(f => f[0] === p.groupe) || [, ""])[1]) + " » (masqué en mode discret)." : "À gagner avec un palier « " + esc((FAMILLES.find(f => f[0] === p.groupe) || [, ""])[1]) + " » (masqué en mode discret)."; }   // lot 44 : ni seuil, ni %, ni jauge, ni « encore … € »
   else if (org.palier) { const p = org.palier; quoi = p.atteint ? "Gagné avec le palier « " + esc(p.titre) + " »" + (p.quand ? ", franchi en " + esc(libMois(p.quand)) : "") + "."
@@ -4904,7 +5035,7 @@ function verifierPaliers() {
   let vus = null; try { vus = JSON.parse(stock.get(cleStock("paliers")) || stock.get("versus.moi.paliers") || "null"); } catch (e) { vus = null; }
   const vusF = new Set((vus || []).map(cleFete));   // lot 44 : « Sans vendre » déjà fêté = même seuil, quelle que soit la date de la dernière vente
   // lot 54 : premier passage avec les nouvelles règles → les paliers déjà franchis (anciens comme nouveaux) sont notés sans fête
-  const migre = stock.get(cleStock("regles")) !== "2";
+  const migre = stock.get(cleStock("regles")) !== REGLES_VER;   // lot 56 : "3" (nouvelles missions) ; même écran unique qu'au lot 54
   const nouveaux = vus === null || migre ? [] : faits.filter(x => !vus.includes(x.id) && !vusF.has(cleFete(x.id)));
   stock.set(cleStock("paliers"), JSON.stringify(Array.from(new Set((vus || []).concat(ids, ids.map(cleFete))))));
   let sv = null; try { sv = JSON.parse(stock.get(cleStock("secrets")) || "null"); } catch (e) { sv = null; }
@@ -4922,13 +5053,14 @@ function verifierPaliers() {
   if (migre) {
     let v1 = null; try { v1 = JSON.parse(stock.get(cleStock("objetsV1")) || "null"); } catch (e) { v1 = null; }
     if (Array.isArray(v1) && vus !== null) { const avant = new Set(v1); maj = Array.from(E.ok).filter(k => !avant.has(k) && BASE_M[k.split(".")[0]] !== k.split(".")[1]).map(k => k.split(".")); }
-    stock.set(cleStock("regles"), "2"); stock.del(cleStock("objetsV1"));
+    stock.set(cleStock("regles"), REGLES_VER); stock.del(cleStock("objetsV1"));
   }
   const go = maj.length ? () => feterMaj(maj) : file.length ? () => lancerFetes(file) : null;
   if (go) { if (typeof window.ereApres === "function") window.ereApres(go, "feteMoi"); else go(); }   // v16.93 : attend la scène du premier million
 }
 /** lot 55 : la vente qui compte pour « Sans vendre ». Un script récent envoie derniereVenteHorsLevier (les ventes de la stratégie levier,
- *  LQQ ×2, QQQ3 ×3 et bascules ×1 → ×2, ne cassent pas la série) ; un ancien script n'envoie que derniereVente (toute vente casse la série). */
+ *  LQQ ×2, QQQ3 ×3 et bascules ×1 → ×2, ne cassent pas la série) ; un ancien script n'envoie que derniereVente (toute vente casse la série).
+ *  lot 56 (Théo) : les scripts perso comptent aussi le Nasdaq-100 ×1 de la règle dans le bloc levier : le vendre ne casse plus la série. */
 function derniereVenteSV(p) {
   p = p || {};
   if (Object.prototype.hasOwnProperty.call(p, "derniereVenteHorsLevier")) return { date: p.derniereVenteHorsLevier || null, horsLevier: true, levier: p.derniereVenteLevier || null };
@@ -4952,7 +5084,7 @@ function feterMaj(recs) {
   const aff = recs.find(r => r[0] === "aff"), o = document.createElement("div");
   o.className = "m-fete moi"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
   o.innerHTML = '<div><span class="mf-k">Nouveaux paliers</span><div class="m-flaps">' + flaps("+" + recs.length, !reduit, aff ? aff[1] : null) + "</div><h3>Les paliers se rapprochent</h3>" +
-    "<p>Des paliers intermédiaires arrivent dans tes Missions. Ce que tu avais déjà fait te rapporte " + (recs.length > 1 ? recs.length + " objets" : "un objet") + " de plus. Tout ce que tu avais est gardé.</p>" +
+    "<p>Tes Missions s'enrichissent (paliers intermédiaires, versé avant le 5, défi d'automne, mois économes…). Ce que tu avais déjà fait te rapporte " + (recs.length > 1 ? recs.length + " objets" : "un objet") + " de plus. Tout ce que tu avais est gardé.</p>" +
     '<p class="mf-af">Touche un objet pour l\'équiper</p>' + htmlRecsFete(recs.slice(0, 12)) + (recs.length > 12 ? "<p>… et " + (recs.length - 12) + " autres dans ton vestiaire.</p>" : "") +
     '<button class="wr-btn" type="button" data-continuer>Continuer</button></div>';
   document.body.appendChild(o);
@@ -4967,7 +5099,7 @@ function lancerFetes(file) {
 }
 function toastPalier(x) {
   const m = masquerPalier(x), n = prochaineRec(x.groupe);
-  toast("Palier franchi : " + m.titre + " ✓" + (n ? " · prochaine récompense : " + nomObj(n.r[0][0], n.r[0][1]) : ""));
+  toast("Palier franchi : " + m.titre + " ✓" + (n ? " · prochaine récompense : " + (surpriseCachee(n.r[0][0], n.r[0][1]) ? "une surprise" : nomObj(n.r[0][0], n.r[0][1])) : ""));
 }
 /** l'aperçu d'un objet dans une fête (le vrai objet : palette, nuancier, courbe…) */
 function apercuFete(t, id) { return t === "aff" ? '<span class="m-flaps">' + flaps("12", false, id) + "</span>" : t === "titre" ? '<span class="vs-em">🏷️</span>' : apercuObj(t, id); }
@@ -5061,7 +5193,17 @@ function htmlCeMois(cour) {
   // lot 54 : le joker vient d'être utilisé (mois précédent) → on le dit
   if (jk && jk === moisSuivant(cleMoisD(now), -1) && sv.actuelle) sous = (sous ? sous + " " : "") + "🛟 Joker utilisé en " + esc(libJ) + " : ta série a tenu.";
   const piste = '<p class="cm-pt">Régularité : <b>' + n + " mois versés</b>" + (fini ? " · les " + L + " objets gagnés" : " · prochain objet au " + e(RI.auMois)) + "</p>";
-  return '<section class="m-cemois' + (sv.moisEnCours ? " fait" : "") + '" aria-label="Ce mois-ci"><div class="cm-h"><span class="cm-k">Ce mois-ci</span>' + (cour || "") + '</div><p class="cm-t">' + tete + "</p>" + (sous ? '<p class="cm-s">' + sous + "</p>" : "") + piste + "</section>";
+  return '<section class="m-cemois' + (sv.moisEnCours ? " fait" : "") + '" aria-label="Ce mois-ci"><div class="cm-h"><span class="cm-k">Ce mois-ci</span>' + (cour || "") + '</div><p class="cm-t">' + tete + "</p>" + (sous ? '<p class="cm-s">' + sous + "</p>" : "") + piste + carteFidelite(sv) + "</section>";
+}
+/* lot 56 · carte de fidélité (Théo) : 12 cases tamponnées pour les mois versés de l'année ; une seule ligne, rien à déplier, aucun euro */
+function carteFidelite(sv) {
+  const an = cleMoisD(new Date()).slice(0, 4), auj = cleMoisD(new Date()), par = {}; sv.liste.forEach(x => { par[x.m] = x; });
+  let nb = 0; const cases = MOIS_L.map((nom, i) => {
+    const m = an + "-" + String(i + 1).padStart(2, "0"), x = par[m];
+    const cl = x && x.ok ? "ok" : x && x.joker ? "jk" : x && m < auj ? "rate" : m === auj ? "cour" : x ? "" : "hors"; if (cl === "ok") nb++;
+    return '<i class="cf-' + (cl || "vide") + '" title="' + esc(nom + (cl === "ok" ? " : versé" : cl === "jk" ? " : joker" : cl === "rate" ? " : sans versement" : cl === "cour" ? " : en cours" : "")) + '">' + (cl === "ok" ? "✓" : cl === "jk" ? "🛟" : esc(nom.charAt(0).toUpperCase())) + "</i>";
+  }).join("");
+  return '<div class="cm-cf" role="img" aria-label="' + esc("Carte de fidélité " + an + " : " + nb + " mois tamponnés sur 12") + '"><span class="cf-k">' + an + '</span><span class="cf-c">' + cases + '</span><b class="cf-n">' + nb + "/12</b></div>";
 }
 /* lot 51 (Théo) : le million n'est plus un gros bloc ; une couronne discrète (« 👑 4,2 % ») en haut de Missions, un toucher déplie le détail.
    Replié à chaque ouverture de l'appli : l'ouverture n'est pas mémorisée (règle de Théo). Même calcul qu'avant (patrimoine financier seulement). */
@@ -5112,7 +5254,8 @@ function recompensesAVenir(n) {
 }
 function htmlRecompensesM() {
   const s = new Date(), auj = s.getFullYear() + "-" + String(s.getMonth() + 1).padStart(2, "0");
-  const carte = (x, sous, attr) => '<' + (attr ? 'button type="button" ' + attr : "span") + ' class="rc-c' + (x.quoi ? " av" : "") + '" title="' + esc(nomObj(x.r[0], x.r[1])) + '"><span class="rc-ap">' + apercuFete(x.r[0], x.r[1]) + '</span><b>' + esc(nomObj(x.r[0], x.r[1])) + (x.plus ? " <em>+" + x.plus + "</em>" : "") + "</b><small>" + sous + "</small></" + (attr ? "button" : "span") + ">";
+  const carte = (x, sous, attr) => { const sur = x.quoi && surpriseCachee(x.r[0], x.r[1]), nm = sur ? "Surprise" : nomObj(x.r[0], x.r[1]);   // lot 56 : l'objet d'anniversaire reste secret
+    return '<' + (attr ? 'button type="button" ' + attr : "span") + ' class="rc-c' + (x.quoi ? " av" : "") + '" title="' + esc(nm) + '"><span class="rc-ap">' + (sur ? '<span class="vs-em">🎁</span>' : apercuFete(x.r[0], x.r[1])) + '</span><b>' + esc(nm) + (x.plus ? " <em>+" + x.plus + "</em>" : "") + "</b><small>" + sous + "</small></" + (attr ? "button" : "span") + ">"; };
   const rec = recompensesRecentes(3), av = recompensesAVenir(3);
   if (!rec.length && !av.length) return "";
   const ligne = (k, l) => '<div class="rc-l"><span class="rc-k">' + k + '</span><div class="rc-g">' + l + "</div></div>";
@@ -5122,6 +5265,7 @@ function htmlRecompensesM() {
 }
 /** lot 54 · combien de mois avant un palier « en temps » (séries, mois versés, sans vendre, ancienneté…) ; null pour les paliers en euros */
 function moisRestants(x) {
+  if (typeof x.mr === "number") return x.mr;   // lot 56 : les nouvelles missions disent elles-mêmes combien de mois il reste
   if (FAM_EUR.includes(x.groupe)) return null;
   const n = +String(x.id).replace(/^\D+/, "").replace(/\D.*$/, "") || 0;
   if (x.groupe === "serie") return Math.max(1, n - serieVersements().actuelle);
@@ -5134,6 +5278,7 @@ const pctNw = v => '<span class="nw">' + pct(Math.max(0, Math.min(1, v)), 0, fal
 /** le chemin qui reste jusqu'à un palier (« encore 2 mois », « 70 % ») ; masqué en mode discret pour les familles en euros */
 function cheminP(x) {
   if (x.cache) return "•••";
+  if (x.chemin) return esc(x.chemin);   // lot 56
   if (x.groupe === "serie" || x.groupe === "mois") {
     const n = +String(x.id).replace(/\D/g, ""), sv = serieVersements(), fait = x.groupe === "serie" ? sv.actuelle : sv.liste.filter(z => z.ok).length, r = Math.max(1, n - fait);
     return "encore " + r + " mois" + (x.groupe === "serie" ? " d'affilée" : "");
@@ -5145,7 +5290,7 @@ function htmlMissions() {
   const pal = paliers().map(masquerPalier), nbFaits = pal.filter(x => x.atteint).length;
   const E = etatObjets(), recDe = id => E.rec.get(id) || [];
   const icone = (t, id) => t === "emb" || t === "fete" ? defObj(t, id)[2] : SORTES.find(x => x[0] === t)[2];
-  const htmlRecs = x => { const l = recDe(x.id); return l.length && !x.cache ? '<em class="pl-rec">' + l.map(([t, id]) => "<span>" + icone(t, id) + " " + esc(nomObj(t, id)) + "</span>").join("") + "</em>" : ""; };
+  const htmlRecs = x => { const l = recDe(x.id); return l.length && !x.cache ? '<em class="pl-rec">' + l.map(([t, id]) => "<span>" + (surpriseCachee(t, id) ? "🎁 Surprise" : icone(t, id) + " " + esc(nomObj(t, id))) + "</span>").join("") + "</em>" : ""; };
   const ligneP = x => '<button type="button" class="pl-r' + (x.atteint ? " fait" : "") + '" data-palier="' + esc(x.id) + '"' + (x.atteint ? "" : " disabled") + '>' +
     '<span class="pastille">' + esc(x.court) + '</span><span class="pl-t">' + esc(x.titre) + htmlRecs(x) + (x.atteint || x.cache ? "" : '<span class="jauge"><i style="width:' + Math.round(Math.max(0, Math.min(1, x.part)) * 100) + '%"></i></span><small>' + esc(x.reste) + "</small>") + "</span>" +
     (x.atteint ? '<span class="pl-s">✓' + (x.cache ? "" : " " + esc(libMois(x.quand))) + "</span>" : '<span class="pl-s">' + (x.cache ? "•••" : pctNw(x.part)) + "</span>") + "</button>";
@@ -5158,8 +5303,8 @@ function htmlMissions() {
       '<span class="pb-t">' + esc(nom) + '</span><span class="pb-n">' + (cache ? "•••" : faits + " / " + l.length) + "</span>" +
       (cache ? "" : '<span class="jauge" title="vers le prochain palier"><i style="width:' + (suiv ? Math.round(Math.max(0, Math.min(1, suiv.part)) * 100) : 100) + '%"></i></span>') +
       '<span class="pb-s">' + (cache ? "Masqué en mode discret" : suiv ? "Prochain : <b>" + esc(suiv.titre) + "</b> · " + cheminP(suiv) : "Tout est franchi ✓") +
-        (g === "vente" && derVente ? " · depuis ta dernière vente" + (dvSV.horsLevier ? " (hors levier)" : "") + " le " + esc(frDate(derVente)) : g === "vente" && dvSV.levier ? " · aucune vente hors levier (les ventes de la règle du levier ne comptent pas)" : "") + "</span>" +
-      (r && !cache ? '<span class="pb-r"><span class="pb-ap">' + apercuFete(r[0], r[1]) + "</span><span>🎁 <b>" + esc(nomObj(r[0], r[1])) + "</b>" + (recDe(pr.id).length > 1 ? " +" + (recDe(pr.id).length - 1) : "") + " · " + cheminP(pr) + "</span></span>" : "") +
+        (g === "vente" && derVente ? " · depuis ta dernière vente" + (dvSV.horsLevier ? " (hors levier)" : "") + " le " + esc(frDate(derVente)) : g === "vente" && dvSV.levier ? " · aucune vente hors levier (les ventes du Nasdaq ×1, ×2 et ×3 de la règle ne comptent pas)" : "") + "</span>" +
+      (r && !cache ? '<span class="pb-r"><span class="pb-ap">' + (surpriseCachee(r[0], r[1]) ? '<span class="vs-em">🎁</span>' : apercuFete(r[0], r[1])) + "</span><span>🎁 <b>" + esc(surpriseCachee(r[0], r[1]) ? "Surprise" : nomObj(r[0], r[1])) + "</b>" + (recDe(pr.id).length > 1 ? " +" + (recDe(pr.id).length - 1) : "") + " · " + cheminP(pr) + "</span></span>" : "") +
       '</summary><div class="pl-liste">' + l.map(ligneP).join("") + "</div></details>";
     return { g, html, complet: !suiv };
   };
@@ -5172,7 +5317,8 @@ function htmlMissions() {
   const ce = htmlCeMois(puceMillion());
   return (ce || '<div class="mi-haut">' + puceMillion() + "</div>") + '<div id="m-million-z" class="mi-det" hidden></div>' + htmlRecompensesM() + htmlTenue() +
     '<div><h2 class="sec">Paliers <small>' + (pal.some(x => x.cache) ? "privé en mode discret" : nbFaits + " franchis sur " + pal.length) + "</small></h2></div>" +
-    '<details class="pl-aide"' + (palOuverts.has("_aide") ? " open" : "") + ' data-grp="_aide"><summary>Comment ça marche ?</summary><p>🎁 = récompense · touche un palier franchi pour revoir sa fête</p><p>Régularité : un objet à chacun de tes 3 premiers mois versés, puis un tous les 2 mois versés. 🛟 Un mois sauté par an ne casse pas ta série.</p></details>' +
+    '<details class="pl-aide"' + (palOuverts.has("_aide") ? " open" : "") + ' data-grp="_aide"><summary>Comment ça marche ?</summary><p>🎁 = récompense · touche un palier franchi pour revoir sa fête</p><p>Régularité : un objet à chacun de tes 3 premiers mois versés, puis un tous les 2 mois versés. 🛟 Un mois sauté par an ne casse pas ta série.</p>' +
+      '<p>Sans vendre : vendre le Nasdaq ×1, ×2 ou ×3 de la règle du levier ne compte pas. Défi d\'automne : verser en octobre, novembre et décembre. Mois économe : verser plus que ta moyenne des 6 mois d\'avant. Après une pause, 3 mois versés d\'affilée = un retour. 🎁 Chaque anniversaire de ton premier ordre cache un objet surprise.</p></details>' +
     '<div class="pl-blocs">' + blocs + "</div>" +
     htmlVestiaire() + htmlBilansMoi();
 }

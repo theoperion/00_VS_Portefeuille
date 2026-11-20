@@ -65,7 +65,7 @@ Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles 
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **17.71**.
+  hors connexion `sw.js`). Version actuelle : **17.72**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
@@ -74,7 +74,7 @@ Seul l'URGENT pour le lancement de décembre : vidéo teaser avec les nouvelles 
 - Versus : `sh outils/mettre-en-ligne-versus.sh "V31 : ce qui change"` (APPLI=chemin de ce dépôt si besoin).
   Versions actuelles : VS_VERSION 64, version Google 79.
 - Scripts perso : dans `portefeuille-epargne/<nom>` : `clasp push --force` puis `python3 ../../outils/deployer.py "desc"`
-  (garde les mêmes adresses). Versions actuelles : Théo 36, Clément 15, Devlin 14 (20/11 : derniereVenteHorsLevier) (20/11 : historique par compte) (v34 : cache pré-calculé toutes les 10 min, `prechaufferDonnees`, installé au 1er appel).
+  (garde les mêmes adresses). Versions actuelles : Théo 37, Clément 16, Devlin 15 (20/11 : bloc levier, jour du versement, SL_CONSEILS, saisie_propre) (20/11 : historique par compte) (v34 : cache pré-calculé toutes les 10 min, `prechaufferDonnees`, installé au 1er appel).
 - Sheets en direct : `outils/gs.py` (`SS(id).get/put/batch`). Classeurs : Théo `1pbpJRMwZR64LqP_wwlhiw-6m7-lUg-Q3pVAF4Dv9j8U`,
   Clément `1srJuvBQ7Pksf0gpO1v3XLC8E7FVSBihKdEnFmGXD6LU`, Devlin `1xilETvIo9uR7RhHJHNbP1x1FPK0knWCtNh2IB6mJxGY`,
   Versus `1p9bZv5jP-BAnlAUVhsPKd2TeEyZDk8RG2vzia9p0kUk` (ne lire ceux de Clément/Devlin que pour une
