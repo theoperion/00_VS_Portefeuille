@@ -34,8 +34,8 @@ function anneesPodium() {
   if (!saisonOuverte() && !janvierAnnonce()) return l;   // v17.5 : pas de Saison 1 avant le 20 décembre
   for (let y = SAISON.premiere; y <= Math.max(SAISON.premiere, new Date(Date.now()).getFullYear()); y++) l.push(y); return l;
 }
-/** Jour limite (exclu) pour poser une carte ou lancer un duel : le 2, ou le 6 pour le tour de chauffe */
-function jourLimite(k) { return k === CHAUFFE_K ? 6 : 2; }
+/** Jour limite (exclu) pour poser une carte ou lancer un duel : le 2 (chauffe comprise depuis v17.61) */
+function jourLimite(k) { return 2; }   // v17.61 (Théo) : la chauffe suit la règle de la saison (cartes jusqu'au 1er inclus, révélation le 2)
 /** Saisons jouées (2027, 2028…) ; en aperçu, une répétition sur 2026 */
 function anneesSaison() {
   if (!saisonOuverte()) return apercuSaison() ? [SAISON.premiere - 1] : [];

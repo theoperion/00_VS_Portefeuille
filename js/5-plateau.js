@@ -565,7 +565,7 @@ function htmlRegles(tout, modeReserve) {
   return (modeReserve ? "" : '<div class="rg-sommaire">' + sommaire.map(([id, l]) => '<button type="button" data-rg="' + id + '">' + l + "</button>").join("") + "</div>") +
     (modeReserve ? "" : s("essentiel", "⚡", "L'essentiel",
       "<p>Chaque mois, les pilotes sont classés sur la <b>performance de leur PEA et de leur assurance-vie</b> (versements neutralisés : seul le % compte ; les autres comptes restent privés). La saison va de janvier à décembre ; le plus de points gagne.</p>" + schemaMois +
-      '<p class="rg-note">🔥 Décembre 2026 = tour de chauffe : tout marche, rien ne compte (cartes jusqu\'au 5).</p>')) +
+      '<p class="rg-note">🔥 Décembre 2026 = tour de chauffe : tout marche, rien ne compte (cartes jusqu\'au 1er décembre).</p>')) +
     s("champ", "🏁", "Les points du mois", schemaBareme + schemaCalcul +
       "<ul><li>Ex æquo : mêmes points. Un mois ne descend jamais sous 0.</li><li>Le mois compte quand tout le monde a saisi son relevé.</li><li>Égalité au championnat : le plus de victoires, puis la meilleure performance cumulée.</li></ul>") +
     s("cartes", "🃏", "Les cartes", schemaCartes +
