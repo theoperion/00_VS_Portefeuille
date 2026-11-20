@@ -1845,7 +1845,7 @@ function marchesMoi() { const Dv = dVersus(); const m = Dv && Dv.marchesMoi; if 
   const i = m.jour.findIndex(x => x.nom === "Or");
   if (i >= 0 && !m.jour.some(x => x.nom === "Or couvert €") && (m.series || []).some(x => x.nom === "Or couvert €")) m.jour.splice(i + 1, 0, { nom: "Or couvert €", pct: null, heure: "" });
   return m; }
-const NOMS_MK = { "Or": "Or non couvert" };   // v17.49 : nom affiché dans la case (le nom technique reste « Or »)
+const NOMS_MK = { "Or": "Or non couvert", "Or couvert €": "Or couvert" };   // v17.49 : nom affiché dans la case (le nom technique reste « Or »)
 /* v17.41 (Théo) : les cases suivent la période de la carte Bourse (Jour · 5 j · 1 M · 6 M · Janv. · 1 an), mêmes bornes (`debutPer`).
    Source : clôtures quotidiennes `quot` (serveur Versus V63) ; à défaut, les courbes hebdomadaires (≈). En « Jour », bourse fermée :
    la dernière séance du marché (clôture / clôture d'avant) au lieu d'un tiret. En séance, la variation en direct s'ajoute à la dernière clôture. */
