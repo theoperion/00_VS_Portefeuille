@@ -593,6 +593,18 @@ function injecterStyle() {
 .moi .nv-tot .nv-n .nv-v { font: 600 14px/1.1 var(--f-num); color: var(--ink); }
 .moi .nv-rep { grid-column: 1 / -1; display: flex; gap: 2px; height: 6px; border-radius: 3px; overflow: hidden; }
 .moi .nv-rep i { flex-basis: 0; min-width: 3px; background: var(--ce); }
+/* lot 65 : « Lignes » = le même tableau à plat, classé en touchant l'en-tête */
+.moi .m-tri .m-vue-l { flex: none; }
+.moi .nv-triable button { all: unset; box-sizing: border-box; cursor: pointer; text-align: right; white-space: nowrap; padding: 3px 0; border-radius: 4px; }
+.moi .nv-triable button:first-child { text-align: left; }
+.moi .nv-triable button[aria-pressed="true"] { color: var(--ink); }
+.moi .nv-triable button:focus-visible { outline: 2px solid var(--accent); }
+.moi .nv-plat { background: none; box-shadow: none; }
+.moi .nv-plat .m-l.nv-li { position: relative; }
+.moi .nv-plat .m-l.nv-li::before { content: ""; position: absolute; left: -15px; top: 0; bottom: 0; width: 3px; background: var(--ce); }
+.moi .nv-e { display: inline-block; vertical-align: 1px; margin-left: 6px; padding: 1px 5px; border-radius: 4px; font: 600 9.5px/1.2 var(--f-num); letter-spacing: .02em; color: var(--ce); background: color-mix(in srgb, var(--ce) 14%, transparent); }
+.moi .m-envs.plat .nv-ln b small { margin-left: 5px; }
+.moi .nv-info { margin: 6px 0 0; font-size: 11.5px; color: var(--ink-3); }
 .moi .m-mk-t { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .moi .m-idx-mk { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .moi .m-idx-mk button { all: unset; box-sizing: border-box; background: var(--panel); padding: 9px 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; cursor: pointer; }
@@ -2069,8 +2081,7 @@ function htmlJourBase() {
   const animer = !reduit && texteFlap !== dernierFlap; dernierFlap = texteFlap;
   const suffixe = (s.jourLibelle || "").replace(/^Variation du jour\s*·?\s*/, "");
   const toutes = lignesTenues();
-  const detail = PREF.lignes !== false;
-  const tri = detail && ["env", "jour", "poids", "pv"].includes(PREF.tri) ? PREF.tri : "env";   // lot 50 : choix mémorisé disparu = choix par défaut
+  const detail = PREF.vueL === "lignes";   // lot 65 (Conseil) : deux vues du même tableau, « Enveloppes » (par défaut) ou « Lignes » à plat ; plus de case ni de puces de tri
   const hausse = toutes.filter(l => l.pct > 1e-9).length, baisse = toutes.filter(l => l.pct < -1e-9).length;
   /* lot 52 (Théo : « ce n'est pas du tout en fonction de la perte de perf en % » ; mini-Conseil data-viz + investisseur + joueur pressé, unanime) :
      la carte en tuiles (taille = gain en €, v17.62) laisse place à des barres classées du meilleur au pire % de la période. Une ligne par ticker,
@@ -2085,14 +2096,7 @@ function htmlJourBase() {
       "<b>" + esc(l.code) + '</b><span class="m-b-t">' + (w ? '<i class="m-b-f ' + sens(p) + '" style="width:' + w.toFixed(1) + "%;" + (p > 0 ? "left" : "right") + ':50%"></i>' : "") + "</span>" +
       '<span class="m-b-p ' + sens(p) + '">' + pct(l.pct, 2) + "</span>" + (sansEur ? "" : "<small>" + (ok(g) && Math.abs(g) >= .5 ? eur(g, 0, true) : "") + "</small>") + "</button>"; };
   const barres = '<div class="m-barres' + (deuxC ? " deux" : "") + (sansEur ? " sans-eur" : "") + '" style="--nr:' + (deuxC ? Math.ceil(triees.length / 2) : triees.length) + '" role="group" aria-label="Une barre par ligne, de la meilleure à la pire variation en %">' + triees.map(barreL).join("") + "</div>";
-  // liste : par enveloppe (en-tête avec le jour de l'enveloppe) ou toutes ensemble triées
-  let liste;
-  if (tri === "env") {
-    liste = htmlEnveloppes(s, detail);   // lot 64 : « Mes enveloppes » refaite (toucher une enveloppe = ses lignes)
-  } else {
-    const cle = { poids: l => -(l.valeur || 0), jour: l => -(l.pct || 0), pv: l => -(l.pvPct || 0) }[tri];
-    liste = '<div class="m-env">' + toutes.slice().sort((a, b) => cle(a) - cle(b)).map(l => ligneJour(l, true)).join("") + "</div>";
-  }
+  const liste = htmlEnveloppes(s, detail);   // lot 64-65 : le tableau, par enveloppe ou toutes les lignes à plat (tri en touchant l'en-tête)
   const indices = (M.indices || []).filter(i => i.nom !== "1 USD en EUR");
   const nomIdx = n => n.replace(/\s*\((ETF\s)?([^)]*)\)/, "");
   const v5 = !!PERIODES_J[VUEJ], per = !!seanceDu(), det5 = VUEJ === "5j" && !!CINQ, bf = bourseFermee();
@@ -2113,12 +2117,9 @@ function htmlJourBase() {
     blocSignal() +
     "<div>" +
       '<div class="m-tri"><h2 class="sec">' + (detail ? "Mes lignes" : "Mes enveloppes") + "</h2>" +
-        '<label class="m-coche"><input type="checkbox" id="m-detail"' + (detail ? " checked" : "") + "> Lignes</label>" +
-        "</div>" +
-      /* F (v16.93) : le tri se choisit par puces (un toucher au lieu d'une liste déroulante) */
-      (detail ? '<div class="chips m-filtre m-tri-p" role="group" aria-label="Classer les lignes">' + [["env", "Enveloppe"], ["jour", v5 ? PERIODES_J[VUEJ][1] : "Jour"], ["poids", "Montant"], ["pv", "Plus-value"]].map(([k, l]) => '<button class="chip" type="button" data-m-tri="' + k + '" aria-pressed="' + (tri === k) + '">' + l + "</button>").join("") + "</div>" : "") +
+        '<div class="f-seg m-vue-l" role="group" aria-label="Afficher">' + [["env", "Par enveloppe"], ["lignes", "Toutes les lignes"]].map(([k, l]) => '<button type="button" data-m-vue="' + k + '" aria-pressed="' + ((detail ? "lignes" : "env") === k) + '">' + l + "</button>").join("") + "</div></div>" +
       liste +
-      (detail ? '<p class="info" style="margin-top:6px">Touche une ligne pour ses performances et son prix de revient.</p>' : "") +
+      '<p class="info nv-info">' + (detail ? "Touche un titre de colonne pour classer, une ligne pour son détail." : "Touche une enveloppe pour voir ses lignes.") + "</p>" +
     "</div>" +
     (per ? '<div class="f-seg f-per m-per-flot" role="group" aria-label="Période : la carte du haut, tes lignes et les Marchés">' + boutonsPer(v5, "") + "</div>" : "") +
     (marchesMoi() ? htmlMarches() : indices.length ? '<div><h2 class="sec">Marchés <small>variation du jour</small></h2><div class="m-idx">' + indices.map(i => '<div><span>' + esc(nomIdx(i.nom)) + '</span><b class="' + sens(i.pct) + '">' + pct(i.pct, 2) + "</b></div>").join("") + "</div></div>" : "") +
@@ -2130,30 +2131,46 @@ function boutonsPer(v5, bas) {
 }
 const ENV_OUV = new Set();   // lot 64 : enveloppes dépliées pendant la visite (toutes repliées à chaque réouverture de l'appli)
 /** lot 64 (B, Théo) : un seul bloc en tableau : Enveloppe (valeur, poids en mini-jauge, ses actifs en étiquettes) | période choisie | plus-value latente ;
-    rangée Portefeuille en pied + répartition ; toucher une rangée = ses lignes dessous, mêmes colonnes ; tout = case « Lignes » */
-function htmlEnveloppes(s, tout) {
+    rangée Portefeuille en pied + répartition ; toucher une rangée = ses lignes dessous, mêmes colonnes.
+    lot 65 (Conseil) : plat = « Lignes » : toutes les lignes dans le même tableau (étiquette d'enveloppe), classées en touchant l'en-tête
+    (Montant, période, plus-value ; un 2e toucher inverse le sens) ; les espèces restent en bas */
+function htmlEnveloppes(s, plat) {
   const gs = M.groupes || [], lib = PERIODES_J[VUEJ] ? PERIODES_J[VUEJ][1] : VUEJ === "seance" ? "Séance" : "Jour";
   const somme = gs.reduce((a, g) => a + Math.max(0, (g.total || {}).valeur || 0), 0) || 1, ce = gi => "--ce:var(--e" + (gi % 5 + 1) + ")";
   const col = (e, p, dec, plus) => '<span class="nv-c"><b class="' + sens(p) + '">' + pct(p, dec) + '</b><small class="' + sens(e) + '">' + eur(e, 0, true) + "</small>" + (plus || "") + "</span>";
   const pru = l => ok(l.pru) ? '<small class="nv-pru"><i>PRU</i> ' + cours(l.pru).replace(/\s?€$/, "") + "</small>" : "";
-  const ligne = (g, l) => l.especes
-    ? '<div class="m-l nv-li especes"><span class="nv-ln"><b>Espèces</b><span class="nv-v">' + eur(l.valeur) + "</span></span><span></span><span></span><span></span></div>"
-    : '<div class="m-l nv-li" role="button" tabindex="0" aria-expanded="false" data-code="' + esc(l.code) + '" data-env="' + esc(g.env) + '" title="' + esc(l.nom || l.code) + '">' +
-      '<span class="nv-ln"><b>' + esc(l.code) + (l.nom ? "<small>" + esc(l.nom) + "</small>" : "") + '</b><span class="nv-v">' + eur(l.valeur) + "</span>" +
+  const tag = (g, gi) => plat ? '<span class="nv-e" style="' + ce(gi) + '">' + esc(String(g.env).split(" ")[0]) + "</span>" : "";
+  const ligne = (g, l, gi) => l.especes
+    ? '<div class="m-l nv-li especes"' + (plat ? ' style="' + ce(gi) + '"' : "") + '><span class="nv-ln"><b>Espèces' + tag(g, gi) + '</b><span class="nv-v">' + eur(l.valeur) + "</span></span><span></span><span></span><span></span></div>"
+    : '<div class="m-l nv-li" role="button" tabindex="0" aria-expanded="false" data-code="' + esc(l.code) + '" data-env="' + esc(g.env) + '" title="' + esc(l.nom || l.code) + '"' + (plat ? ' style="' + ce(gi) + '"' : "") + ">" +
+      '<span class="nv-ln"><b>' + esc(l.code) + tag(g, gi) + (l.nom ? "<small>" + esc(l.nom) + "</small>" : "") + '</b><span class="nv-v">' + eur(l.valeur) + "</span>" +
       (ok(l.cours) ? '<span class="nv-cr"><i>cours</i> ' + cours(l.cours) + "</span>" : "") + "</span>" +
       col(l.jour, l.pct, 2) + col(l.pv, l.pvPct, 1, pru(l)) + '<span class="nv-ch" aria-hidden="true">›</span></div>';
   const actifs = g => { const c = g.lignes.filter(l => !l.especes && l.code).sort((a, b) => (b.valeur || 0) - (a.valeur || 0)), n = 4;
     return c.length ? '<span class="nv-a">' + c.slice(0, n).map(l => "<span>" + esc(l.code) + "</span>").join("") + (c.length > n ? '<span class="plus">+' + (c.length - n) + "</span>" : "") + "</span>" : ""; };
-  const rangs = gs.map((g, gi) => {
-    const t = g.total || {}, ouv = tout || ENV_OUV.has(g.env), w = Math.max(0, t.valeur || 0) / somme;
-    return '<div class="m-enve' + (ouv ? " ouvert" : "") + '" style="' + ce(gi) + '" data-env-nom="' + esc(g.env) + '">' +
-      '<button type="button" class="nv-h" aria-expanded="' + ouv + '"><span class="nv-n"><b>' + esc(g.env) + '</b><span class="nv-v">' + eur(t.valeur) + "</span>" +
-      '<span class="nv-j" aria-hidden="true"><i style="width:' + (w * 100).toFixed(1) + '%"></i></span><em>' + pct(w, 0, false) + "</em></span>" +
-      col(t.jour, t.pct, 2) + col(t.pv, t.pvPct, 1) + '<span class="nv-ch" aria-hidden="true">▾</span>' + actifs(g) + "</button>" +
-      '<div class="nv-l"' + (ouv ? "" : " hidden") + ">" + g.lignes.filter(l => !l.especes || Math.abs(l.valeur || 0) >= 0.5).map(l => ligne(g, l)).join("") + "</div></div>";
-  }).join("");
+  let corps, tete;
+  if (plat) {
+    const tri = ["poids", "jour", "pv"].includes(PREF.tri) ? PREF.tri : "poids", inv = PREF.triInv === true;
+    const cle = { poids: l => l.valeur || 0, jour: l => l.pct || 0, pv: l => l.pvPct || 0 }[tri];
+    const toutes = [], esp = [];
+    gs.forEach((g, gi) => g.lignes.forEach(l => { if (l.especes) { if (Math.abs(l.valeur || 0) >= 0.5) esp.push([g, l, gi]); } else toutes.push([g, l, gi]); }));
+    toutes.sort((a, b) => (inv ? 1 : -1) * (cle(a[1]) - cle(b[1])));
+    corps = '<div class="nv-l nv-plat">' + toutes.concat(esp).map(x => ligne(x[0], x[1], x[2])).join("") + "</div>";
+    const bt = (k, l) => '<button type="button" data-m-tri="' + k + '" aria-pressed="' + (tri === k) + '">' + l + (tri === k ? (inv ? " ▴" : " ▾") : "") + "</button>";
+    tete = '<div class="nv-tete nv-g nv-triable" role="group" aria-label="Classer les lignes">' + bt("poids", "Montant") + bt("jour", esc(lib)) + bt("pv", "Plus-value") + "<span></span></div>";
+  } else {
+    corps = gs.map((g, gi) => {
+      const t = g.total || {}, ouv = ENV_OUV.has(g.env), w = Math.max(0, t.valeur || 0) / somme;
+      return '<div class="m-enve' + (ouv ? " ouvert" : "") + '" style="' + ce(gi) + '" data-env-nom="' + esc(g.env) + '">' +
+        '<button type="button" class="nv-h" aria-expanded="' + ouv + '"><span class="nv-n"><b>' + esc(g.env) + '</b><span class="nv-v">' + eur(t.valeur) + "</span>" +
+        '<span class="nv-j" aria-hidden="true"><i style="width:' + (w * 100).toFixed(1) + '%"></i></span><em>' + pct(w, 0, false) + "</em></span>" +
+        col(t.jour, t.pct, 2) + col(t.pv, t.pvPct, 1) + '<span class="nv-ch" aria-hidden="true">▾</span>' + actifs(g) + "</button>" +
+        '<div class="nv-l"' + (ouv ? "" : " hidden") + ">" + g.lignes.filter(l => !l.especes || Math.abs(l.valeur || 0) >= 0.5).map(l => ligne(g, l, gi)).join("") + "</div></div>";
+    }).join("");
+    tete = '<div class="nv-tete nv-g"><span>Enveloppe</span><span>' + esc(lib) + "</span><span>Plus-value</span><span></span></div>";
+  }
   const rep = gs.map((g, gi) => '<i style="' + ce(gi) + ";flex-grow:" + Math.max(0, (g.total || {}).valeur || 0).toFixed(0) + '" title="' + esc(g.env) + '"></i>').join("");
-  return '<div class="m-envs"><div class="nv-tete nv-g"><span>Enveloppe</span><span>' + esc(lib) + "</span><span>Plus-value</span><span></span></div>" + rangs +
+  return '<div class="m-envs' + (plat ? " plat" : "") + '">' + tete + corps +
     '<div class="nv-tot nv-g"><span class="nv-n"><b>Portefeuille</b><span class="nv-v">' + eur(s.valeur) + "</span></span>" + col(s.jour, s.jourPct, 2) + col(s.latente, s.latentePct, 1) + "<span></span>" +
     (gs.length > 1 ? '<span class="nv-rep" role="img" aria-label="Répartition par enveloppe">' + rep + "</span>" : "") + "</div></div>";
 }
@@ -2185,15 +2202,6 @@ function bandeDebut(s) {
     c("mwr", 'MWR<i class="qm" aria-hidden="true">?</i>', pct(s.mwr), sens(s.mwr), "timing " + esc(s.timing || "—")) +
     c("twr", 'TWR<i class="qm" aria-hidden="true">?</i>', pct(s.twr), sens(s.twr), "S&amp;P " + pct(s.sp500)) +
     '</div><p class="m-def-l" hidden></p></div>';
-}
-function ligneJour(l, avecEnv) {
-  if (l.especes) return '<div class="m-l especes"><div class="g"><b>Espèces</b></div><div class="d"><span class="v">' + eur(l.valeur) + "</span></div></div>";
-  return '<div class="m-l" role="button" tabindex="0" aria-expanded="false" data-code="' + esc(l.code) + '" data-env="' + esc(l.env) + '">' +
-    '<div class="g"><b>' + esc(l.code) + (avecEnv ? '<span class="tag">' + esc(String(l.env).split(" ")[0]) + "</span>" : "") + "</b><small>" + esc(l.nom || "") + "</small></div>" +
-    '<div class="d"><span class="badge ' + sens(l.pct) + '">' + pct(l.pct, 2) + '</span><small class="' + sens(l.jour) + '">' + eur(l.jour, 0, true) + "</small></div>" +
-    /* F (v16.93) puis v17.40 : rangée du bas = valeur · cours · plus-value en % (le poids reste dans le détail) */
-    '<div class="b"><span>' + eur(l.valeur) + "</span>" + (ok(l.cours) ? '<span class="m-cours"><i>cours</i> ' + cours(l.cours) + "</span>" : "") + '<span class="' + sens(l.pv) + '">PV ' + pct(l.pvPct) + "</span></div>" +   // v17.40 (Théo) : le cours de chaque ligne visible sans ouvrir le détail
-    "</div>";
 }
 function basculerLigne(el) {
   const ouvert = el.querySelector(".m-ligne-det");
@@ -2253,9 +2261,9 @@ function brancherJour(v) {
     el.scrollIntoView({ block: "center", behavior: reduit ? "auto" : "smooth" });
     el.classList.add("eclair"); setTimeout(() => el.classList.remove("eclair"), 1200);
   }));
-  v.querySelectorAll("[data-m-tri]").forEach(b => b.addEventListener("click", () => { PREF.tri = b.dataset.mTri; garderPref(); garderPlace(b, rendre); }));
+  v.querySelectorAll("[data-m-tri]").forEach(b => b.addEventListener("click", () => { const k = b.dataset.mTri; PREF.triInv = PREF.tri === k ? !PREF.triInv : false; PREF.tri = k; garderPref(); garderPlace(b, rendre); }));   // lot 65 : en-tête de colonne ; 2e toucher = sens inverse
   v.querySelectorAll(".nv-h").forEach(b => b.addEventListener("click", () => basculerEnv(b.closest("[data-env-nom]"))));   // lot 64
-  const dt = v.querySelector("#m-detail"); if (dt) dt.addEventListener("change", () => { PREF.lignes = dt.checked; garderPref(); rendre(); });
+  v.querySelectorAll("[data-m-vue]").forEach(b => b.addEventListener("click", () => { PREF.vueL = b.dataset.mVue === "lignes" ? "lignes" : "env"; garderPref(); garderPlace(b, rendre); }));   // lot 65 : Enveloppes | Lignes (filtre mémorisé)
   const def = v.querySelector(".m-def-l");
   v.querySelectorAll("[data-def]").forEach(b => b.addEventListener("click", () => {
     const on = b.getAttribute("aria-pressed") !== "true";
