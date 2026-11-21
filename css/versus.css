@@ -1004,6 +1004,14 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .tuiles .val { font: 600 19px/1.15 var(--f-num); font-variant-numeric: tabular-nums; }
 .tuiles .sub { font-size: 11.5px; color: var(--ink-3); }
 .tuiles .sub b { font-family: var(--f-num); font-weight: 600; color: var(--ink-2); }
+/* lot69 (Théo : « sobre, droit au but ») : tuiles d'une ligne chacune (libellé, valeur, sous-texte), jamais de retour à la ligne ;
+   les rubriques du bas (Toutes enveloppes, Mois par mois) sont repliées */
+#v-fiche .tuiles > div { padding: 9px 12px; gap: 2px; }
+#v-fiche .tuiles .lab, #v-fiche .tuiles .val, #v-fiche .tuiles .sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#v-fiche .tuiles .sub .lien { font: inherit; padding: 0; margin-left: 2px; }
+.f-plis { display: grid; gap: 8px; }
+.f-pli[open] > .scroll-x { margin: 0; }
+.f-pli .stack { margin-top: 2px; }
 .stack { display: flex; gap: 2px; height: 16px; border-radius: 4px; overflow: hidden; }
 .stack i { display: block; height: 100%; min-width: 3px; }
 

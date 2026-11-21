@@ -305,6 +305,7 @@ function palmaresMois(env, deb, fin, ksDesc) {
 }
 
 /* ---------- Vue Fiche ---------- */
+const FICHE_OUVERTS = new Set();   // lot69 : rubriques dépliées pendant la visite seulement (tout revient replié à la réouverture, règle de Théo)
 function rendreFiche() {
   const p = D.personnes.find(x => x.nom === ETAT.fiche) || D.personnes[0];
   const env = ETAT.env, i1 = ETAT.i1;
@@ -318,12 +319,10 @@ function rendreFiche() {
     const deb = debutPeriode(D, ETAT.per, finP);
     const s = stats(D, p, env, deb, finP, i1, null);
     const tuile = (lab, val, cls, sub) => '<div><span class="lab">' + lab + '</span><span class="val ' + (cls || "") + '">' + val + '</span><span class="sub">' + (sub || "&nbsp;") + "</span></div>";
+    const pli = (id, titre, petit, corps) => '<details class="pts-det f-pli" data-fpli="' + id + '"' + (FICHE_OUVERTS.has(id) ? " open" : "") + "><summary>" + titre + " <small>" + petit + "</small></summary>" + corps + "</details>";   // lot69 : fermé par défaut
     // toutes enveloppes, même période
     const envs = ENVELOPPES.slice(0, 3).map((nom, e) => ({ nom, s: stats(D, p, e, deb, finP, i1, null) })).filter(x => ok(x.s.valeur) && x.s.valeur > 0);
     const totalV = (envs.find(x => x.nom === "Portefeuille") || {}).s;
-    // courbe valeur / versé
-    const pts2 = sAll.filter(x => x.k >= (deb || 0) && x.k <= finP && ok(x.val));
-    const vx = pts2.map(x => x.k);
     // grille annuelle
     const annees = [...new Set(sAll.filter(x => typeof x.r === "number").map(x => Math.floor(x.k / 100)))].sort().reverse();
     const max = Math.max(.04, ...sAll.filter(x => typeof x.r === "number").map(x => Math.abs(x.r)));
@@ -332,27 +331,29 @@ function rendreFiche() {
       '<div class="periode">' + esc(textePeriode(deb, finP, s.n)) + (s.debutK && deb && s.debutK > cleMoins(deb, -1) ? " · enveloppe ouverte plus tard" : "") + "</div>" +
       '<div class="hero"><span class="eyebrow">' + esc(ENVELOPPES[env]) + " · " + esc(p.nom) + '</span><span class="big" data-cv="' + s.valeur + '" data-cf="eur">' + eur(s.valeur) + '</span><div class="sous"><span class="badge ' + sens(s.pvPeriode) + '">' + eur(s.pvPeriode, 0, true) + " · " + pct(s.twr) + "</span><span>" + ({ mois: "sur 1 mois", "6m": "sur 6 mois", ytd: "depuis janvier", "12m": "sur 1 an", tout: "depuis le début" }[ETAT.per] || "sur la période") + " · versements exclus</span></div></div>" +   // v20.15 (Théo) : la valeur reste fixe, la variation suit la période
       (s.n ? '<div class="tuiles">' +
-        tuile("Performance (TWR)", pct(s.twr), sens(s.twr), "MWR <b>" + pct(s.mwr) + "</b>" + timingVersements(s)) +
-        tuile(esc(D.marche.indices[i1]) + " même période", pct(s.i1 && s.i1.twr), "", s.i1 ? "Écart <b class=\"" + sens(s.twr - s.i1.twr) + "\">" + pts(s.twr - s.i1.twr) + "</b>" : "indice indisponible") +
-        tuile("Pire baisse depuis un plus haut", pct(s.baisseMax), sens(s.baisseMax), "Actuelle <b>" + pct(s.baisseActuelle) + "</b>") +
-        tuile("Volatilité annualisée", volTxt(s), "", s.n < RECUL ? "moins de " + RECUL + " mois de données" : "Sharpe <b>" + sharpeTxt(s) + "</b>") +
-        tuile("Meilleur mois (" + moisCourt(s.meilleur.k) + ")", pct(s.meilleur.r), sens(s.meilleur.r), "Pire (" + moisCourt(s.pire.k) + ") <b>" + pct(s.pire.r) + "</b>") +
-        tuile("Plus-value depuis le début", eur(s.pvLatente, 0, true), sens(s.pvLatente), (ok(s.pvLatentePct) ? "<b>" + pct(s.pvLatentePct) + "</b> · " : "") + "pour " + eur(s.verse) + " versés") +   // v20.15 : la plus-value de la période est montée sous la valeur
+        // lot69 (Théo : « sobre, droit au but ») : libellés courts, une ligne par tuile (valeur + une ligne courte), plus de graphique
+        tuile("Performance TWR", pct(s.twr), sens(s.twr), "MWR <b>" + pct(s.mwr) + "</b>" + timingVersements(s)) +
+        tuile(esc(D.marche.indices[i1]), pct(s.i1 && s.i1.twr), "", s.i1 ? "Écart <b class=\"" + sens(s.twr - s.i1.twr) + "\">" + pts(s.twr - s.i1.twr) + "</b>" : "indisponible") +
+        tuile("Pire baisse", pct(s.baisseMax), sens(s.baisseMax), "Actuelle <b>" + pct(s.baisseActuelle) + "</b>") +
+        tuile("Volatilité", volTxt(s), "", s.n < RECUL ? "moins de " + RECUL + " mois" : "Sharpe <b>" + sharpeTxt(s) + "</b>") +
+        tuile("Meilleur mois · " + moisCourt(s.meilleur.k), pct(s.meilleur.r), sens(s.meilleur.r), "Pire · " + moisCourt(s.pire.k) + " <b>" + pct(s.pire.r) + "</b>") +
+        tuile("Plus-value totale", eur(s.pvLatente, 0, true), sens(s.pvLatente), (ok(s.pvLatentePct) ? "<b>" + pct(s.pvLatentePct) + "</b> · " : "") + eur(s.verse) + " versés") +   // v20.15 : la plus-value de la période est montée sous la valeur
         "</div>" : '<div class="vide">Pas de rendement sur cette période.</div>') +
-      (vx.length > 1 ? '<div><h2 class="sec">Valeur et versements <small>fin de mois</small></h2></div>' + boiteGraphe("g-fiche", [{ nom: "Valeur", c: couleur(p.nom) }, { nom: "Versé cumulé", c: "var(--idx)", dash: true }]) : "") +
-      (env === 0 && envs.length > 1 ? '<div><h2 class="sec">Toutes enveloppes <small>même période</small></h2><div class="scroll-x"><table class="tab"><thead><tr><th>Enveloppe</th><th>TWR</th><th>Volatilité</th><th>Valeur</th><th>Plus-value</th><th>Poids</th></tr></thead><tbody>' +
+      '<div class="f-plis">' +
+      (env === 0 && envs.length > 1 ? pli("env", "Toutes enveloppes", "même période", '<div class="scroll-x"><table class="tab"><thead><tr><th>Enveloppe</th><th>TWR</th><th>Volatilité</th><th>Valeur</th><th>Plus-value</th><th>Poids</th></tr></thead><tbody>' +
         envs.map(x => "<tr><td>" + esc(x.nom) + '</td><td class="' + sens(x.s.twr) + '">' + pct(x.s.twr) + "</td><td>" + (x.s.n ? volTxt(x.s) : "—") + "</td><td>" + eur(x.s.valeur) + '</td><td class="' + sens(x.s.pvLatente) + '">' + eur(x.s.pvLatente, 0, true) + "<br><small>" + pct(x.s.pvLatentePct) + "</small></td><td>" + pct(totalV ? x.s.valeur / totalV.valeur : null, 0, false) + "</td></tr>").join("") +
         "</tbody></table></div>" +
-        '<div class="stack" style="margin-top:12px" role="img" aria-label="Répartition">' + envs.filter(x => x.nom !== "Portefeuille").map((x, j) => '<i title="' + esc(x.nom) + '" style="flex:' + x.s.valeur + ";background:color-mix(in srgb, " + couleur(p.nom) + " " + (100 - j * 22) + '%, var(--panel))"></i>').join("") + "</div></div>" : "") +
-      '<div><h2 class="sec">Mois par mois <small>' + esc(ENVELOPPES[env]) + '</small></h2><div class="scroll-x"><table class="grille"><thead><tr><th></th>' + MOIS.map(m => "<th>" + m + "</th>").join("") + "<th>Année</th></tr></thead><tbody>" +
+        '<div class="stack" role="img" aria-label="Répartition">' + envs.filter(x => x.nom !== "Portefeuille").map((x, j) => '<i title="' + esc(x.nom) + '" style="flex:' + x.s.valeur + ";background:color-mix(in srgb, " + couleur(p.nom) + " " + (100 - j * 22) + '%, var(--panel))"></i>').join("") + "</div>") : "") +
+      pli("mois", "Mois par mois", esc(ENVELOPPES[env]), '<div class="scroll-x"><table class="grille"><thead><tr><th></th>' + MOIS.map(m => "<th>" + m + "</th>").join("") + "<th>Année</th></tr></thead><tbody>" +
         annees.map(y => { const st = stats(D, p, env, (y - 1) * 100 + 12, y * 100 + 12, null, null); return '<tr><td class="nom">' + y + "</td>" + MOIS.map((m, j) => { const x = sAll.find(z => z.k === y * 100 + j + 1); return x && typeof x.r === "number" ? '<td style="' + teinte(x.r, max) + '">' + pct(x.r) + "</td>" : '<td class="vide">·</td>'; }).join("") + '<td style="' + teinte(st.twr, max * 3) + '"><b>' + pct(st.twr) + "</b></td></tr>"; }).join("") +
-      "</tbody></table></div></div>" +
-      "";
-    if (vx.length > 1) tracer($("#g-fiche"), { x: vx, zeroMin: true, series: [{ nom: "Valeur", v: pts2.map(x => x.val), c: couleur(p.nom), aire: true, w: 2.2 }, { nom: "Versé cumulé", v: pts2.map(x => x.cum), c: "var(--idx)", marche: true, dash: true, w: 1.6 }], fmt: x => eur(x), fmtAxe: axeEur, titreX: k => "Fin " + moisCourt(k) });
+      "</tbody></table></div>") +
+      "</div>";
+    v.querySelectorAll("details[data-fpli]").forEach(d => d.addEventListener("toggle", () => { if (d.open) FICHE_OUVERTS.add(d.dataset.fpli); else FICHE_OUVERTS.delete(d.dataset.fpli); }));
     compterChiffres(v.querySelector(".hero"));
   }
   brancherFiltres("fiche");
   v.querySelectorAll("[data-fiche]").forEach(b => b.addEventListener("click", () => { ETAT.fiche = b.dataset.fiche; garder(); rendreFiche(); }));
+  v.querySelectorAll(".f-timing[data-toast]").forEach(b => b.addEventListener("click", () => toast(b.dataset.toast)));
   v.querySelectorAll(".vitrine [data-carte-coll]").forEach(b => b.addEventListener("click", () => ouvrirCarteColl(b.dataset.carteColl)));
 }
 
@@ -370,7 +371,8 @@ function lireNb(t) {
 function timingVersements(s) {
   if (!ok(s.mwr) || !ok(s.twr) || Math.abs(s.mwr - s.twr) < 0.005) return "";
   const bon = s.mwr > s.twr;
-  return '<br><button class="lien" type="button" onclick="toast(\'Le TWR mesure tes placements, le MWR ton argent : l\\\'écart montre si tes versements sont arrivés au bon moment.\')">Timing des versements : <b class="' + (bon ? "up" : "down") + '">' + (bon ? "favorable" : "défavorable") + " (" + pts(s.mwr - s.twr) + ")</b></button>";
+  const txt = "Timing des versements " + (bon ? "favorable" : "défavorable") + " (" + pts(s.mwr - s.twr) + "). Le TWR mesure tes placements, le MWR ton argent : l'écart montre si tes versements sont arrivés au bon moment.";
+  return ' <button class="lien f-timing" type="button" data-toast="' + esc(txt) + '" aria-label="' + esc(txt) + '">timing <b class="' + (bon ? "up" : "down") + '">' + (bon ? "▲" : "▼") + "</b></button>";   // lot69 : tient sur la ligne du MWR, le détail au toucher
 }
 function enSaisie(n) { return ok(n) ? String(n).replace(".", ",") : ""; }
 function ouvrirSaisie() {
