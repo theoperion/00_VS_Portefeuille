@@ -834,6 +834,74 @@ function injecterStyle() {
 .moi .sig-cto .aide { flex-basis: 100%; }
 .moi .sig-case-aide { padding: 8px 0; border-bottom: 1px solid var(--rule); }
 .moi .sig-case-aide .aide { display: block; margin-top: 0; }
+/* lot 66 · bloc Levier en clair : deux règles séparées (position / versement), jauges des seuils, phrases « pour toi », rubriques repliables */
+.moi .sig-voir { margin-left: auto; font: 600 11.5px/1 var(--f-text); color: var(--ink-3); }
+.moi .sig > .sig-msg { border-top: 1px solid var(--rule); }
+.moi .sg-bloc { display: grid; gap: 6px; padding: 9px 12px 10px 14px; border-top: 1px solid var(--rule); }
+.moi .sg-k { font: 700 10px/1.1 var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.moi .sg-k small { margin-left: 6px; font: 400 11px/1 var(--f-text); letter-spacing: 0; text-transform: none; }
+.moi .sg-lignes { gap: 0; padding-top: 4px; padding-bottom: 4px; }
+.moi .sg-pl { display: grid; grid-template-columns: 76px minmax(0, 1fr) 16px; align-items: center; gap: 0 8px; padding: 6px 0; cursor: pointer; border-radius: 6px; }
+.moi .sg-pl + .sg-pl { border-top: 1px solid var(--rule-2); }
+.moi .sg-pl:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.moi .sg-pp { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-width: 0; }
+.moi .sg-ou { font: 600 12px/1.2 var(--f-num); color: var(--ink-2); white-space: nowrap; }
+.moi .sg-pi { font-size: 13px; color: var(--ink-3); text-align: right; } .moi .sg-pl.on .sg-pi { color: var(--accent-ink); }
+.moi .sg-pl .sg-ph { grid-column: 1 / -1; margin-top: 6px; }
+.moi .sg-pl .sg-ph[hidden] { display: none; }
+.moi .sg-pl .sig-pos { margin: 0; font-size: 12px; padding: 5px 8px; }
+.moi .sg-ph { min-width: 0; font-size: 12.5px; line-height: 1.35; color: var(--ink-2); }
+.moi .sg-ph b { color: var(--ink); font-weight: 600; }
+.moi .sg-ph .sub { display: block; font-size: 11px; color: var(--ink-3); }
+.moi .sg-pl .aide, .moi .sg-bloc > .aide { grid-column: 1 / -1; }
+.moi .sg-pl.diff.on { background: color-mix(in srgb, var(--gold) 8%, transparent); margin: 0 -8px; padding-inline: 8px; }
+.moi .sg-pl .sig-lab { white-space: nowrap; }
+.moi .sg-diff { font-style: normal; font: 700 10.5px/1 var(--f-text); padding: 2px 6px; border-radius: 4px; color: var(--gold); background: color-mix(in srgb, var(--gold) 16%, transparent); white-space: nowrap; }
+.moi .sg-cles .r { padding: 9px 0; }
+.moi .sg-pt { display: block; font-size: 12.5px; line-height: 1.4; color: var(--ink); }
+.moi .sg-pt i { font: 700 9.5px/1 var(--f-display); font-style: normal; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); margin-right: 4px; }
+.moi .sg-j { position: relative; display: block; height: 26px; margin: 4px 6px 0; }
+.moi .sg-j .sg-t { position: absolute; left: 0; right: 0; top: 4px; height: 6px; border-radius: 3px; background: var(--rule-2); overflow: hidden; }
+.moi .sg-j .z { position: absolute; top: 0; bottom: 0; } .moi .sg-j .z.ok { background: color-mix(in srgb, var(--up) 45%, transparent); }
+.moi .sg-j .z.mi { background: color-mix(in srgb, var(--gold) 50%, transparent); } .moi .sg-j .z.ko { background: color-mix(in srgb, var(--down) 40%, transparent); }
+.moi .sg-j .m { position: absolute; top: 1px; width: 2px; height: 12px; margin-left: -1px; background: var(--ink-2); }
+.moi .sg-j small { position: absolute; top: 15px; transform: translateX(-50%); font: 500 10px/1 var(--f-num); color: var(--ink-3); white-space: nowrap; }
+.moi .sg-j .p { position: absolute; top: 0; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 2px var(--panel); }
+.moi .sg-net { display: grid; gap: 4px; margin-top: 2px; }
+.moi .sg-net > span { display: grid; grid-template-columns: 22px minmax(0, 1fr) 48px; align-items: center; gap: 8px; font: 500 11.5px/1 var(--f-num); color: var(--ink-2); }
+.moi .sg-net em { height: 8px; border-radius: 4px; background: var(--rule-2); overflow: hidden; } .moi .sg-net em b { display: block; height: 100%; border-radius: 4px; background: var(--ink-3); }
+.moi .sg-net > span.best { color: var(--ink); font-weight: 700; } .moi .sg-net > span.best em b { background: var(--accent); }
+.moi .sg-net > span > span { text-align: right; } .moi .sg-net i { font-style: normal; }
+.moi details.sg-rub { border: 1px solid var(--rule); border-radius: 10px; margin-top: 8px; background: var(--panel); }
+.moi details.sg-rub > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: minmax(0, 1fr) auto 12px; align-items: center; gap: 8px; padding: 10px 11px; }
+.moi details.sg-rub > summary::-webkit-details-marker { display: none; }
+.moi details.sg-rub > summary span { font: 700 11.5px/1.2 var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.moi details.sg-rub > summary b { font: 600 12px/1.1 var(--f-num); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
+.moi details.sg-rub > summary b.acc { color: var(--accent-ink); } .moi details.sg-rub > summary b.down { color: var(--down); }
+.moi details.sg-rub > summary::after { content: "›"; font: 600 16px/1 var(--f-num); color: var(--ink-3); transition: transform .2s; }
+.moi details.sg-rub[open] > summary::after { transform: rotate(90deg); }
+.moi details.sg-rub > summary:focus-visible { outline: 2px solid var(--accent); border-radius: 10px; }
+.moi details.sg-rub > :not(summary) { margin-left: 11px; margin-right: 11px; }
+.moi details.sg-rub .r:last-child { border-bottom: 0; }
+.moi .sg-intro { margin: 0 0 2px; font-size: 12.5px; line-height: 1.4; color: var(--ink-2); } .moi .sg-intro small { color: var(--ink-3); }
+.moi .sg-frise { list-style: none; margin: 6px 0 4px 4px; padding: 0 0 0 14px; border-left: 2px solid var(--rule); display: grid; gap: 8px; }
+.moi .sg-frise li { position: relative; display: grid; grid-template-columns: 62px auto; gap: 1px 8px; align-items: baseline; }
+.moi .sg-frise li::before { content: ""; position: absolute; left: -19px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--panel); border: 2px solid currentColor; color: var(--ink-3); }
+.moi .sg-frise .d { font: 500 11px/1.2 var(--f-num); color: var(--ink-3); }
+.moi .sg-frise .ty { font: 600 13px/1.2 var(--f-text); color: var(--ink); } .moi .sg-frise .ty small { margin-left: 4px; font: 700 10px/1 var(--f-display); letter-spacing: .06em; color: var(--ink-3); }
+.moi .sg-frise li.t-ACHAT::before, .moi .sg-frise li.t-x2::before, .moi .sg-frise li.t-RELAIS::before { color: var(--up); } .moi .sg-frise li.t-VENTE::before { color: var(--down); }
+.moi .sg-frise li.t-x1::before { color: var(--p0); } .moi .sg-frise li.t-CREUX::before, .moi .sg-frise li.t-EVITEE::before { color: var(--accent); } .moi .sg-frise li.t-REFUS::before { color: var(--gold); }
+.moi .sg-frise .x i { font: 700 9.5px/1 var(--f-display); font-style: normal; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-right: 3px; } .moi .sg-frise .x b { display: block; margin-top: 2px; font: 600 11.5px/1.2 var(--f-num); }
+.moi .sg-frise .x { grid-column: 1 / -1; font-size: 12px; line-height: 1.35; color: var(--ink-2); }
+.moi .sg-consigne { margin: 0; padding: 10px 12px 4px 14px; font: 700 15px/1.3 var(--f-text); color: var(--ink); }
+.moi .sg-consigne + .sig-msg { border-top: 0; padding-top: 2px; padding-left: 14px; }
+.moi .sig > .sig-msg.ordre, .moi .sig > .sig-msg.alerte { margin: 4px 8px 0; padding: 8px 10px; border: 0; border-radius: 8px; } .moi .sig > .sig-msg.ordre + .sg-bloc, .moi .sig > .sig-msg.alerte + .sg-bloc { margin-top: 8px; }
+.moi .sg-perim { margin: 0; padding: 7px 12px 9px 14px; border-top: 1px solid var(--rule); font-size: 11.5px; line-height: 1.35; color: var(--ink-3); }
+.moi .sg-def { display: block; margin-bottom: 2px; color: var(--ink-2); }
+.moi .sg-def i { font: 700 9.5px/1 var(--f-display); font-style: normal; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-right: 3px; }
+.moi .sg-cles .r .a small { font: 400 11px/1 var(--f-text); color: var(--ink-3); margin-left: 4px; }
+.moi details.sg-rub[data-rub="curieux"] .sig-h:first-child { margin-top: 4px; }
+.moi .sig-detail > .sg-perim { border-top: 0; padding: 10px 0 0; }
 .moi .m-status { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--ink-2); }
 /* saisie (feuille ➕) */
 .moi.m-feuille { min-height: 70vh; }
@@ -3458,6 +3526,7 @@ function brancherStats(v) {
 
 /* ================= Signal levier Nasdaq (repris tel quel de Cote V5.6 : mêmes données, mêmes règles, mêmes textes) ================= */
 let signalOuvert = false;
+const SIG_RUB = new Set();   // lot 66 : rubriques du bloc Levier ouvertes pendant la visite
 function blocSignal() {
   const g = M.signal;
   if (!g || !g.position) return "";
@@ -3526,9 +3595,23 @@ function blocSignal() {
     journal: "ACHAT / VENTE : signal de tendance (EMA " + EMAS + " semaines). ×1 / ×2 : alarme de volatilité (au CTO, ×2 veut dire retour au QQQ3 ×3). CREUX : entrée anticipée. RELAIS : la tendance reprend une position creux, rien à acheter. VENTE ÉVITÉE : vente et creux le même jour, position gardée. REFUS : un creux bloqué par une sécurité." +
       (g.signaux && g.signaux.length ? auj("dernier signal " + esc(g.signaux[0].type) + " le " + frDate(g.signaux[0].date)) : "")
   };
+  /* lot 66 (Conseil design, Théo : « je ne comprends pas à quoi servent les indicateurs ») : PRÉSENTATION seulement, mêmes données et mêmes calculs.
+     En haut : « Ta position » (ce que tu détiens, PEA puis CTO) et « Ton versement du mois » (l'argent nouveau), deux règles distinctes rendues visibles ;
+     dans le détail : chaque indicateur = valeur + jauge des seuils + une phrase « pour toi » ; rubriques repliables (fermées à chaque ouverture) ; journal en frise. */
   const seuil = g.creux ? "relais par l'EMA" : g.expose ? "avant la vente" : "avant l'achat";
   const vol = g.vol20 === null || g.vol20 === undefined ? "—" : F1.format(g.vol20) + NNBSP + "%";
   const volCls = g.vol20 !== null && g.vol20 >= g.volHaut ? "down" : "";
+  const ok_ = v => v !== null && v !== undefined && isFinite(v);
+  /* jauge : échelle [mn, mx], zones colorées, repères étiquetés, pointeur sur la valeur */
+  const jauge = (mn, mx, v, zones, marques) => { const x = t => Math.max(0, Math.min(100, (t - mn) / (mx - mn) * 100)).toFixed(1);
+    return '<span class="sg-j" aria-hidden="true"><span class="sg-t">' + (zones || []).map(z => '<i class="z ' + z[2] + '" style="left:' + x(z[0]) + "%;width:" + (x(z[1]) - x(z[0])).toFixed(1) + '%"></i>').join("") + "</span>" +
+      (marques || []).map(m => '<i class="m" style="left:' + x(m[0]) + '%"></i><small style="left:' + x(m[0]) + '%">' + m[1] + "</small>").join("") +
+      (ok_(v) ? '<b class="p" style="left:' + x(v) + '%"></b>' : "") + "</span>"; };
+  const phrase = t => t ? '<span class="sg-pt"><i>Pour toi</i> ' + t + "</span>" : "";
+  /* ligne du détail avec jauge et phrase (même aide « ? » qu'avant) */
+  const ligneJ = (a, b, c, bCls, ex, jg, pt) => '<div class="r sg-r" data-aide><span class="a">' + a + (ex ? qm : "") + '</span><span class="b ' + (bCls || "") + '">' + b + "</span>" +
+    (jg ? '<span class="c" style="grid-column:1/-1">' + jg + "</span>" : "") + (pt ? '<span class="c" style="grid-column:1/-1">' + phrase(pt) + "</span>" : "") +
+    (c ? '<span class="c" style="grid-column:1/-1">' + c + "</span>" : "") + (ex ? '<span class="c aide-l" style="grid-column:1/-1">' + aide(ex) + "</span>" : "") + "</div>";
   let msg = "";
   if (g.transition) msg = '<p class="sig-msg ordre">⏵ PEA : ' + esc(g.ordre) + "</p>" + (g.positionCTO && g.ordreCTO && g.ordreCTO !== "Aucun" ? '<p class="sig-msg ordre">⏵ CTO : ' + esc(g.ordreCTO) + "</p>" : "");
   else if (g.provisoire && g.provisoire.changement) msg = '<p class="sig-msg alerte">Séance US en cours : ' + esc(g.provisoire.position) + " si la clôture reste à ce niveau (provisoire)</p>";
@@ -3544,58 +3627,115 @@ function blocSignal() {
     if (x.type === "VENTE") fusion.push({ type: "VENTE ÉVITÉE", date: x.date, detail: "Creux détecté le même jour : la position est gardée, aucun ordre." });
   });
   const typeCls = t => t === "VENTE ÉVITÉE" ? "t-EVITEE" : "t-" + String(t).replace("×1", "x1").replace("×2", "x2");
-  const journal = fusion.slice(0, 8).map(x =>
-    '<div class="r"><span class="a ' + typeCls(x.type) + '">' + esc(x.type) + '</span><span class="b">' + esc(court(x.date)) + '</span><span class="c" style="grid-column:1/-1">' + esc(x.detail) + "</span></div>").join("");
+  /* historique des bascules : le journal, dit en clair (« ×2 → ×1 ») ; « depuis » = la seule mesure après coup déjà fournie (perfDepuis, dernière entrée) */
+  const BASC = { "ACHAT": "cash → ×2 · achat", "VENTE": "×2 → cash · vente", "×1": "×2 → ×1 · alarme", "×2": "×1 → ×2 · fin d'alarme", "CREUX": "cash → achat anticipé", "RELAIS": "creux → position normale", "VENTE ÉVITÉE": "vente évitée, position gardée", "REFUS": "achat anticipé refusé" };
+  const journal = '<ol class="sg-frise">' + fusion.slice(0, 8).map(x =>
+    '<li class="' + typeCls(x.type) + '"><span class="d">' + esc(court(x.date)) + '</span><span class="ty">' + esc(BASC[x.type] || x.type) + ' <small>' + esc(x.type) + '</small></span><span class="x"><i>Pourquoi</i> ' + esc(x.detail) +
+      (g.expose && x.date === g.depuis && /ACHAT|CREUX/.test(x.type) && g.perfDepuis !== null && g.perfDepuis !== undefined ? ' <b class="' + sens(g.perfDepuis) + '">Depuis : Nasdaq ' + p(g.perfDepuis) + "</b>" : "") + "</span></li>").join("") + "</ol>";
 
   /* arbitrage du DCA : ×1 / ×2 au PEA, ×3 au CTO, nets d'impôt (formule d'espérance du Pine) */
   const a = g.arbitrage;
+  const ouA = a ? (a.optimal === 3 ? "CTO · QQQ3" : a.optimal === 2 ? "PEA · LQQ" : "PEA · ETF ×1") : "";
+  const levierPos = !g.expose ? 0 : g.reduit ? 1 : 2;   // ce que tu détiens au PEA
+  const ecartApport = a && g.expose && a.optimal !== levierPos;
   let arb = "";
   if (a) {
     const tMax = x => x === undefined || x === null ? "" : x < 0 ? "taux max : aucun" : x >= 50 ? "taux max > 50 %" : "taux max " + F1.format(x) + NNBSP + "%";
-    const ou = a.optimal === 3 ? "CTO · QQQ3" : a.optimal === 2 ? "PEA · LQQ" : "PEA · ETF ×1";
-    arb = '<h4 class="sig-h">Apport du mois <small>formule d\'espérance, pas une prévision</small></h4>' +
-      ligne(g.expose ? "Verdict" : "Hors marché", g.expose ? "×" + a.optimal + " · " + ou : "cash PEA · or CTO", g.expose && a.avance !== undefined ? "avance de " + F1.format(a.avance) + " pt/an sur le deuxième choix, après impôt" : "le DCA ne va jamais sur ce que le signal dit de ne pas détenir", g.expose ? "acc" : "down", EX.verdict) +
+    const barres = a.rendX1 !== undefined ? (() => { const vs = [[1, a.rendX1], [2, a.rendX2]].concat(a.cto ? [[3, a.rendX3]] : []), mx = Math.max(1, ...vs.map(v => Math.abs(v[1] || 0)));
+      return '<span class="sg-net">' + vs.map(([k, v]) => '<span class="' + (k === a.optimal ? "best" : "") + '"><i>×' + k + '</i><em><b style="width:' + (Math.abs(v || 0) / mx * 100).toFixed(1) + '%"></b></em><span>' + F1.format(v) + " %</span></span>").join("") + "</span>"; })() : "";
+    arb = '<h4 class="sig-h">Apport du mois · ton versement <small>formule d\'espérance, pas une prévision</small></h4>' +
+      '<p class="sg-intro">Pour l\'argent NOUVEAU du mois seulement. Le calcul estime ce que rapporterait <b>en moyenne, sur le long terme</b> (c\'est ça, l\'« espérance ») chaque choix ×1, ×2' + (a.cto ? " ou ×3" : "") + ", après impôt, à partir de 3 chiffres : <b>μ</b> = la croissance moyenne du Nasdaq, <b>σ</b> = son agitation (volatilité sur un an), <b>r</b> = le taux d'intérêt américain, que paient les ETF à levier pour emprunter.</p>" +
+      ligne(g.expose ? "Verdict" : "Hors marché", g.expose ? "×" + a.optimal + " · " + ouA : "cash PEA · or CTO", g.expose && a.avance !== undefined ? "avance de " + F1.format(a.avance) + " pt/an sur le deuxième choix, après impôt" : "le DCA ne va jamais sur ce que le signal dit de ne pas détenir", g.expose ? "acc" : "down", EX.verdict) +
       ligne("Données", "μ " + F1.format(a.mu) + " · σ " + F1.format(a.sigma) + " · r " + F2.format(a.taux) + " %", "μ = pente " + "5 ans du Nasdaq, dividendes compris · σ sur 252 séances · r = taux Fed (" + esc(a.tauxSource || "FRED") + ")", "", EX.donnees) +
-      (a.rendX1 !== undefined ? ligne("Net/an", "×1 " + F1.format(a.rendX1) + " · ×2 " + F1.format(a.rendX2) + (a.cto ? " · ×3 " + F1.format(a.rendX3) : "") + " %", "rendement annuel attendu après impôt : ×1 et ×2 au PEA (impôt à la sortie), ×3 au CTO (" + (g.tauxCTO ? F1.format(g.tauxCTO) : "31,4") + " % à chaque vente, tous les " + F1.format(a.H || 1.2) + " an)", "", EX.net) : "") +
+      (a.rendX1 !== undefined ? ligneJ("Net/an", "×1 " + F1.format(a.rendX1) + " · ×2 " + F1.format(a.rendX2) + (a.cto ? " · ×3 " + F1.format(a.rendX3) : "") + " %", "rendement annuel attendu après impôt : ×1 et ×2 au PEA (impôt à la sortie), ×3 au CTO (" + (g.tauxCTO ? F1.format(g.tauxCTO) : "31,4") + " % à chaque vente, tous les " + F1.format(a.H || 1.2) + " an)", "", EX.net, barres,
+        "la plus longue barre est le meilleur choix pour ton versement, si les conditions du jour duraient.") : "") +
       ligne("×2 contre ×1 (PEA)", pct(a.ecart / 100, 1) + "/an " + coche(a.ecart > 0), tMax(a.tauxMax), "", EX.x21) +
       (a.cto && a.ecart32 !== undefined ? ligne("×3 CTO contre ×2 PEA", pct(a.ecart32 / 100, 1) + "/an " + coche(a.ecart32 > 0), tMax(a.tauxMax32) + (a.sigmaMax3 === undefined ? "" : " · " + (a.sigmaMax3 < 0 ? "×3 : jamais, quelle que soit la volatilité" : a.sigmaMax3 >= 100 ? "×3 quelle que soit la volatilité" : "×3 seulement si σ ≤ " + F1.format(a.sigmaMax3) + " %")), "", EX.x32) : "") +
-      (a.cto && a.muReqBrut !== undefined ? ligne("μ seuil ×3", (a.muReqBrut >= 200 ? "> 200" : F1.format(a.muReqBrut)) + " / " + (a.muReqNet === null ? "n/d" : a.muReqNet >= 200 ? "> 200" : F1.format(a.muReqNet)) + " %/an " + coche(a.muReqNet === null ? null : a.pente >= a.muReqNet), "pente minimale du Nasdaq pour que le ×3 batte le ×2, brut / net d'impôt · pente 5 ans actuelle : " + F1.format(a.pente) + " % (un repère sur le passé : records juste avant les retournements)", "", EX.museuil) : "");
+      (a.cto && a.muReqBrut !== undefined ? ligneJ("μ seuil ×3", (a.muReqBrut >= 200 ? "> 200" : F1.format(a.muReqBrut)) + " / " + (a.muReqNet === null ? "n/d" : a.muReqNet >= 200 ? "> 200" : F1.format(a.muReqNet)) + " %/an " + coche(a.muReqNet === null ? null : a.pente >= a.muReqNet), "pente minimale du Nasdaq pour que le ×3 batte le ×2, brut / net d'impôt · pente 5 ans actuelle : " + F1.format(a.pente) + " % (un repère sur le passé : records juste avant les retournements)", "", EX.museuil,
+        a.muReqNet === null || a.muReqNet >= 200 ? "" : jauge(0, Math.max(30, a.muReqNet * 1.25, a.pente * 1.25), a.pente, [[a.muReqNet, Math.max(30, a.muReqNet * 1.25, a.pente * 1.25), "ok"]], [[a.muReqBrut, "brut"], [a.muReqNet, "net"]]),
+        a.muReqNet === null ? "" : a.pente >= a.muReqNet ? "la croissance actuelle du Nasdaq suffit pour que le ×3 au CTO vaille le coup malgré l'impôt." : "il faudrait une croissance de " + F1.format(a.muReqNet) + " %/an pour que le ×3 au CTO batte le ×2 au PEA ; elle est de " + F1.format(a.pente) + " %.") : "") +
+      "";
   }
 
   /* creux : les 4 conditions du Pine */
   const j = g.jauges;
+  const creuxPt = g.creux ? "ta position actuelle vient de cette règle (achat anticipé" + (g.creuxDepuis ? " le " + frDate(g.creuxDepuis) : "") + ") : pas de vente tant que le Nasdaq n'est pas revenu au-dessus de sa tendance de fond."
+    : g.expose ? "tu es en position : cette règle ne sert pas aujourd'hui." : "hors marché, elle peut te faire racheter AVANT le signal normal, si la baisse est assez large et que les 3 sécurités sont vertes.";
   const creux = '<h4 class="sig-h">Entrée sur creux <small>utile seulement hors marché</small></h4>' +
+    '<p class="sg-intro">Une règle de rattrapage : après une forte chute, elle permet de racheter AVANT le signal normal, si la baisse est assez profonde et si 3 sécurités disent que ce n\'est ni une bulle (marché monté trop vite) ni une récession (chômage qui monte).</p>' +
+    '<p class="sg-intro">' + phrase(creuxPt) + "</p>" +
     ligne("Verdict", esc(g.creuxVerdict || "—"), g.expose && !g.creux ? "en position : la règle ne sert pas" : "", g.creux ? "acc" : "", EX.creux) +
-    (j ? ligne("Largeur (proxy)", p1(j.ecartSMA) + " " + coche(j.declLargeur), "déclenche quand le Nasdaq est à " + F1.format(Math.abs(j.seuilEcart)) + " % ou plus sous sa moyenne " + j.smaLen + " séances", "", EX.largeur) +
-      ligne("1 · Bulle", (j.bulle === null ? "—" : "×" + F2.format(j.bulle)) + " " + coche(j.bulle === null ? null : j.okBulle), "montée sur 5 ans au pic des 2 ans, doit rester < ×" + F2.format(j.seuilBulle), "", EX.bulle) +
-      ligne("2 · Sahm", (j.sahm === null ? "—" : F2.format(j.sahm)) + " " + coche(j.sahm === null ? null : j.okSahm), "chômage US, doit rester < " + F2.format(j.seuilSahm), "", EX.sahm) +
-      ligne("3 · Sahm 25-54 ans", (j.prime === null ? "—" : F2.format(j.prime)) + " " + coche(j.prime === null ? null : j.okPrime), "emploi des 25-54 ans, doit rester < " + F2.format(j.seuilPrime), "", EX.prime) +
+    (j ? ligneJ("Largeur (proxy)", p1(j.ecartSMA) + " " + coche(j.declLargeur), "déclenche quand le Nasdaq est à " + F1.format(Math.abs(j.seuilEcart)) + " % ou plus sous sa moyenne " + j.smaLen + " séances", "", EX.largeur,
+        ok_(j.ecartSMA) ? jauge(-25, 15, j.ecartSMA, [[-25, j.seuilEcart, "ok"]], [[j.seuilEcart, F0.format(j.seuilEcart) + " %"], [0, "0"]]) : "",
+        ok_(j.ecartSMA) ? (j.declLargeur ? "la baisse est assez large pour déclencher le creux." : "il manque " + F1.format(Math.max(0, j.ecartSMA - j.seuilEcart)) + " points de baisse pour déclencher le creux.") : "") +
+      ligneJ("1 · Bulle", (j.bulle === null ? "—" : "×" + F2.format(j.bulle)) + " " + coche(j.bulle === null ? null : j.okBulle), "montée sur 5 ans au pic des 2 ans, doit rester < ×" + F2.format(j.seuilBulle), "", EX.bulle,
+        ok_(j.bulle) ? jauge(0, Math.max(j.seuilBulle * 1.6, j.bulle * 1.15), j.bulle, [[0, j.seuilBulle, "ok"], [j.seuilBulle, Math.max(j.seuilBulle * 1.6, j.bulle * 1.15), "ko"]], [[j.seuilBulle, "×" + F0.format(j.seuilBulle)]]) : "",
+        ok_(j.bulle) ? (j.okBulle ? "pas de bulle : un creux pourrait être acheté." : "marché jugé en bulle : un creux serait refusé.") : "") +
+      ligneJ("2 · Sahm", (j.sahm === null ? "—" : F2.format(j.sahm)) + " " + coche(j.sahm === null ? null : j.okSahm), "chômage US, doit rester < " + F2.format(j.seuilSahm), "", EX.sahm,
+        ok_(j.sahm) ? jauge(0, Math.max(j.seuilSahm * 2, j.sahm * 1.15), j.sahm, [[0, j.seuilSahm, "ok"], [j.seuilSahm, Math.max(j.seuilSahm * 2, j.sahm * 1.15), "ko"]], [[j.seuilSahm, F2.format(j.seuilSahm)]]) : "",
+        ok_(j.sahm) ? (j.okSahm ? "pas de signe de récession par le chômage." : "le chômage monte : risque de récession, creux refusé.") : "") +
+      ligneJ("3 · Sahm 25-54 ans", (j.prime === null ? "—" : F2.format(j.prime)) + " " + coche(j.prime === null ? null : j.okPrime), "emploi des 25-54 ans, doit rester < " + F2.format(j.seuilPrime), "", EX.prime,
+        ok_(j.prime) ? jauge(0, Math.max(j.seuilPrime * 2, j.prime * 1.15), j.prime, [[0, j.seuilPrime, "ok"], [j.seuilPrime, Math.max(j.seuilPrime * 2, j.prime * 1.15), "ko"]], [[j.seuilPrime, F2.format(j.seuilPrime)]]) : "",
+        ok_(j.prime) ? (j.okPrime ? "l'emploi tient : pas d'alerte." : "l'emploi recule : creux refusé.") : "") +
       ligne("Armée", j.arme ? "oui" : "non", "une seule entrée par épisode : se réarme quand la tendance repasse acheteuse", "", EX.arme) : "");
 
   const levier = '<h4 class="sig-h">Levier <small>PEA ×2 / CTO ×3 ↔ ×1</small></h4>' +
+    '<p class="sg-intro">Un ETF ×2 (LQQ) fait deux fois les mouvements du Nasdaq, à la hausse comme à la baisse. Quand le marché s\'agite trop, ces allers-retours le grignotent : l\'alarme repasse alors en ×1.</p>' +
     ligne("Volatilité 20 séances", vol + " " + coche(g.vol20 === null ? null : g.vol20 < g.volHaut), "passe en ×1 au-dessus de " + g.volHaut + " %, revient sous " + (g.volBas || 25) + " % · position creux exemptée", "", EX.vol20) +
     ligne("Alarme Omen", "non suivie", "données NYSE introuvables gratuitement : seule la volatilité pilote le ×1", "", EX.omen);
 
+  /* les 3 indicateurs clés, en clair */
+  const VHt = g.volHaut || 30, VBt = g.volBas || 25;
+  const dPt = !ok_(g.distance) ? "" : g.creux ? "le Nasdaq est " + (g.distance < 0 ? "encore sous" : "au-dessus de") + " sa tendance de fond ; tant qu'il n'est pas revenu au-dessus, ta position prise sur le creux est gardée, sans vente."
+    : g.expose ? (g.distance > 0 ? "tout va bien : le Nasdaq peut encore baisser d'environ " + F1.format(g.distance) + " % avant que la règle dise de vendre." : "le Nasdaq est passé sous le seuil de vente.")
+    : (g.distance < 0 ? "le Nasdaq doit encore monter d'environ " + F1.format(-g.distance) + " % pour que la règle dise de racheter." : "le Nasdaq est au-dessus du seuil d'achat.");
+  const vPt = !ok_(g.vol20) ? "" : g.vol20 >= VHt ? "le marché secoue fort. Au-dessus de " + VHt + " %, on réduit le levier à ×1 ; on remonte à ×2 quand ça redescend sous " + VBt + " %."
+    : g.vol20 >= VBt ? "entre les deux : on ne change rien (si tu es en ×1 tu y restes jusqu'à " + VBt + " %, si tu es en ×2 tu y restes jusqu'à " + VHt + " %)."
+    : "marché calme : le ×2 est autorisé.";
+  const dMin = Math.min(-10, (g.distance || 0) - 3), dMax = Math.max(15, (g.distance || 0) + 3), vMax = Math.max(45, (g.vol20 || 0) + 5);
+  const def = t => '<span class="sg-def"><i>C\'est quoi ?</i> ' + t + "</span>";
+  const cles = '<div class="m-liste sg-cles">' +
+    ligneJ("Tendance <small>distance</small>", p(g.distance), def("on compare le Nasdaq à sa moyenne des " + (g.emaSem || 45) + " dernières semaines (sa « tendance de fond », EMA). Nettement en dessous (bande −" + (g.bande || 5) + " %) : la règle vend ; repassé au-dessus : elle rachète.") + seuil + (g.bandeSortie ? " · seuil de vente " + F0.format(g.bandeSortie) + " pts" : ""), g.distance < 0 && g.expose ? "down" : "", EX.distance,
+      ok_(g.distance) ? jauge(dMin, dMax, g.distance, [[dMin, 0, "ko"], [0, dMax, "ok"]], [[0, g.creux ? "tendance" : g.expose ? "vente" : "achat"]]) : "", dPt) +
+    ligneJ("Agitation <small>volatilité</small>", vol, def("à quel point le Nasdaq bouge fort d'un jour à l'autre, sur les 20 dernières séances. Un marché calme, c'est 15 à 20 %.") + "20 j · ×1 au-dessus de " + g.volHaut + NNBSP + "%", volCls, EX.vol,
+      ok_(g.vol20) ? jauge(0, vMax, g.vol20, [[0, VBt, "ok"], [VBt, VHt, "mi"], [VHt, vMax, "ko"]], [[VBt, VBt + " %"], [VHt, VHt + " %"]]) : "", vPt) +
+    (g.creux && g.creuxDepuis ? ligneJ("En creux depuis", esc(court(g.creuxDepuis)), "position ouverte le " + esc(court(g.depuis)) + " · Nasdaq " + p(g.perfDepuis), "", EX.depuis)
+      : ligneJ("Depuis", esc(court(g.depuis)), g.expose ? "Nasdaq " + p(g.perfDepuis) : g.joursDepuis + " j hors marché", "", EX.depuis)) +
+    "</div>";
+
   const detail = '<div class="sig-detail"' + (signalOuvert ? "" : " hidden") + ">" +
-    '<div class="sig-cells">' +
-      cell("Distance", p(g.distance), g.distance < 0 && g.expose ? "down" : "", seuil, "distance") +
-      cell("Volatilité", vol, volCls, "20 j · ×1 au-dessus de " + g.volHaut + NNBSP + "%", "vol") +
-      (g.creux && g.creuxDepuis ? cell("En creux depuis", esc(court(g.creuxDepuis)), "", "position ouverte le " + esc(court(g.depuis)) + " · Nasdaq " + p(g.perfDepuis), "depuis")
-        : cell("Depuis", esc(court(g.depuis)), "", g.expose ? "Nasdaq " + p(g.perfDepuis) : g.joursDepuis + " j hors marché", "depuis")) +
-    "</div>" +
-    ["distance", "vol", "depuis"].map(k => '<div class="sig-case-aide" data-pour="' + k + '" hidden><span class="aide">' + EX[k] + "</span></div>").join("") +
-    '<div class="m-liste">' + arb + levier + creux + '<div data-aide><h4 class="sig-h"><span>Journal' + qm + '</span><small>8 derniers signaux</small></h4>' + aide(EX.journal) + "</div>" + journal + "</div>" +
+    '<p class="sg-perim">Cette stratégie ne concerne que ton levier Nasdaq (PEA)' + (g.positionCTO ? " et ton CTO" : "") + ". Le reste de ton portefeuille n'est pas concerné.</p>" +
+    '<h4 class="sig-h">Les 2 voyants qui décident</h4>' + cles +
+    '<div data-aide><h4 class="sig-h"><span>Historique des bascules' + qm + '</span><small>journal · 8 derniers changements</small></h4>' + aide(EX.journal) + "</div>" + journal +
+    '<details class="sg-rub" data-rub="curieux"><summary><span>Pour les curieux</span><b>tous les indicateurs</b></summary><div class="m-liste">' + arb + levier + creux + "</div></details>" +
     '<div class="sig-pied">Calcul du ' + esc(g.majLe || "") + " · données " + esc(g.source || "") + " · EMA " + (g.emaSem || 45) + " sem. " + F0.format(g.ema) + " · seuil de vente " + F0.format(g.bandeSortie) + "</div>" +
   "</div>";
 
-  /* vue courte : la position à tenir sur chaque compte, l'apport du mois, et l'ordre éventuel */
+  /* vue courte : UNE consigne, puis deux règles en deux blocs : ce que tu détiens (position) / où va l'argent nouveau (apport) */
+  const posPEA = !g.expose ? "reste en cash : le Nasdaq est sous sa tendance de fond."
+    : g.reduit ? "garde le Nasdaq-100 ×1 : le marché est trop agité (volatilité " + vol + ", alarme au-dessus de " + g.volHaut + " %)" + (g.creux ? ". Position prise sur un creux : aucune vente tant que le Nasdaq n'est pas revenu au-dessus de sa tendance de fond." : ".")
+    : g.creux ? "garde le LQQ ×2 : position prise sur un creux, aucune vente tant que le Nasdaq n'est pas revenu au-dessus de sa tendance de fond." : "garde le LQQ ×2 : le Nasdaq est au-dessus de sa tendance et le marché est assez calme.";
+  const ctoCls = g.positionCTO === "OR" ? "or" : /×1/.test(g.positionCTO || "") ? "x1" : "x3";
+  const posCTO = g.positionCTO === "OR" ? "or, au lieu du cash du PEA." : /×1/.test(g.positionCTO || "") ? "même alarme : Nasdaq-100 ×1 au lieu du QQQ3 (×3)." : "même signal que le PEA, en ×3.";
+  const apportTxt = a && g.expose ? (ecartApport
+      ? "un autre calcul, qui regarde le long terme, préfère ×" + a.optimal + " pour l'argent nouveau" + (a.avance !== undefined ? " (avance " + F1.format(a.avance) + " pt/an)" : "") + ". Ce n'est pas la même règle que ta position" + (g.reduit ? " (×1 à cause de l'alarme)" : "") + " : rien à vendre ni à racheter."
+      : "même levier que ta position" + (a.avance !== undefined ? " (avance " + F1.format(a.avance) + " pt/an)" : "") + ".") : "";
+  const ligneP = (lab, ex, pastilles, ph, cl) => '<div class="sg-pl' + (cl || "") + '" role="button" tabindex="0" aria-expanded="false"' + (ex ? " data-aide" : "") + '><span class="sig-lab">' + lab + (ex ? qm : "") + "</span>" +
+    '<span class="sg-pp">' + pastilles + '</span><span class="sg-pi" aria-hidden="true">ⓘ</span><span class="sg-ph" hidden>' + ph + "</span>" + (ex ? aide(ex) : "") + "</div>";
+  const consigne = g.transition ? "À faire à la prochaine ouverture de la bourse :" : g.provisoire && g.provisoire.changement ? "À faire : rien pour l'instant, la séance américaine n'est pas finie." : "À faire : rien. Garde ce que tu as.";
   return '<div class="sig ' + cls + '">' +
     '<button type="button" class="sig-tete" aria-expanded="' + signalOuvert + '">' +
-      '<span class="sig-lab">' + (g.positionCTO ? "Levier · PEA + CTO" : "Signal levier · PEA") + '</span><span class="sig-pos">' + esc(g.position) + '</span><span class="chev" aria-hidden="true">›</span>' +
+      '<span class="sig-lab">' + (g.positionCTO ? "Levier · PEA + CTO" : "Signal levier · PEA") + '</span><span class="sig-voir">' + (signalOuvert ? "Masquer" : "Comprendre") + '</span><span class="chev" aria-hidden="true">›</span>' +
     "</button>" +
-    (g.positionCTO ? '<div class="sig-cto" data-aide><span class="sig-lab">CTO' + qm + '</span><span class="sig-pos cto-' + (g.positionCTO === "OR" ? "or" : /×1/.test(g.positionCTO) ? "x1" : "x3") + '">' + esc(g.positionCTO) + '</span><span class="sub">même signal · ×1 si alarme · or hors marché</span>' + aide(EX.cto) + "</div>" : "") +
-    (a && g.expose ? '<div class="sig-cto" data-aide><span class="sig-lab">Apport' + qm + '</span><span class="sig-pos cto-' + (a.optimal === 3 ? "x3" : a.optimal === 2 ? "x2" : "x1") + '">×' + a.optimal + '</span><span class="sub">' + (a.optimal === 3 ? "CTO · QQQ3" : a.optimal === 2 ? "PEA · LQQ" : "PEA · ETF ×1") + " · net d'impôt</span>" + aide(EX.apport) + "</div>" : "") +
-    msg + detail +
+    '<p class="sg-consigne' + (g.transition ? " ordre" : "") + '">' + consigne + "</p>" + msg +
+    /* lot 66 b (Théo) : vue repliée = consigne + 3 lignes à pastilles ; la phrase d'une ligne s'ouvre en la touchant (une seule à la fois) */
+    '<div class="sg-bloc sg-lignes">' +
+      ligneP("PEA", "", '<span class="sig-pos">' + esc(g.position) + "</span>", "<b>Ta position</b> (ce que tu détiens) : " + posPEA) +
+      (g.positionCTO ? ligneP("CTO", EX.cto, '<span class="sig-pos cto-' + ctoCls + '">' + esc(g.positionCTO) + "</span>", posCTO + ' <span class="sub">même signal · ×1 si alarme · or hors marché</span>') : "") +
+      (a && g.expose ? ligneP("Apport", EX.apport, '<span class="sig-pos cto-' + (a.optimal === 3 ? "x3" : a.optimal === 2 ? "x2" : "x1") + '">×' + a.optimal + '</span><span class="sg-ou">' + ouA + "</span>" + (ecartApport ? '<em class="sg-diff">≠ ta position</em>' : ""),
+        "<b>Ton versement du mois</b> (l'argent nouveau seulement, net d'impôt) : " + apportTxt, ecartApport ? " diff" : "") : "") +
+    "</div>" +
+    detail +
   "</div>";
 }
 function brancherSignal(v) {
@@ -3611,7 +3751,13 @@ function brancherSignal(v) {
     const z = q.closest("[data-aide]"); if (z) z.classList.toggle("aide-on");
   });
   const t = carte.querySelector(".sig-tete");
-  t.addEventListener("click", () => { signalOuvert = !signalOuvert; t.setAttribute("aria-expanded", String(signalOuvert)); carte.querySelector(".sig-detail").hidden = !signalOuvert; });
+  t.addEventListener("click", () => { signalOuvert = !signalOuvert; t.setAttribute("aria-expanded", String(signalOuvert)); carte.querySelector(".sig-detail").hidden = !signalOuvert; const vv = t.querySelector(".sig-voir"); if (vv) vv.textContent = signalOuvert ? "Masquer" : "Comprendre"; });
+  carte.querySelectorAll('.sg-pl[role="button"]').forEach(l => { const bascule = () => { const on = !l.classList.contains("on");
+      carte.querySelectorAll(".sg-pl.on").forEach(x => { x.classList.remove("on"); x.setAttribute("aria-expanded", "false"); x.querySelector(".sg-ph").hidden = true; });
+      if (on) { l.classList.add("on"); l.setAttribute("aria-expanded", "true"); l.querySelector(".sg-ph").hidden = false; } };
+    l.addEventListener("click", ev => { if (ev.target.closest(".qm-b, .aide")) return; bascule(); });
+    l.addEventListener("keydown", ev => { if ((ev.key === "Enter" || ev.key === " ") && ev.target === l) { ev.preventDefault(); bascule(); } }); });   // lot 66 b
+  carte.querySelectorAll("details.sg-rub").forEach(d => { if (SIG_RUB.has(d.dataset.rub)) d.open = true; d.addEventListener("toggle", () => { if (d.open) SIG_RUB.add(d.dataset.rub); else SIG_RUB.delete(d.dataset.rub); }); });   // lot 66 : ouvertes pendant la visite, fermées à chaque ouverture de l'appli
 }
 
 /* ================= Graphiques du patrimoine (onglet Stats) ================= */
