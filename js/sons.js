@@ -612,6 +612,10 @@ const SONS = (() => {
       else if (k === "crypto") eclairs.forEach((e, i) => { note([2200, 160], .2, "square", .05, e, fBus); note([1400 + i * 90, 300], .16, "sawtooth", .035, e + .02, fBus); souffle(.14, 4500, .12, e, .002, "highpass", fBus); });
       else if (k === "sommet") { [523.3, 659.3, 784, 1046.5, 1318.5].forEach((f, i) => { note(f, 1.4, "sine", .07, .3 + i * .28, fBus); note(f / 2, 1.6, "triangle", .03, .3 + i * .28, fBus); }); }
       else if (k === "serie") { [392, 440, 493.9, 587.3, 659.3].forEach((f, i) => note(f, .5, "triangle", .07, .3 + i * .32, fBus)); [523.3, 659.3, 784].forEach(f => note(f, 1.6, "sine", .05, 2, fBus)); }
+      else if (k === "record") { [392, 493.9, 587.3, 784].forEach((f, i) => note(f, 1.2, "sine", .06, .25 + i * .22, fBus)); }   // lot 63 · sobres
+      else if (k === "pirebaisse") { [440, 554.4, 659.3].forEach((f, i) => note(f, .9, "triangle", .05, .3 + i * .3, fBus)); }
+      else if (k === "volhaut") { souffle(dur * .9, [300, 900], .08, .1, .8, "bandpass", fBus); souffle(dur * .7, [900, 350], .05, .9, .6, "bandpass", fBus); }
+      else if (k === "volbas") { [261.6, 392].forEach(f => note(f, 2.6, "sine", .04, .2, fBus)); }
       else if (k === "plat") { [196, 293.7].forEach(f => note(f, 3, "sine", .04, .2, fBus)); [0.9, 2.2, 3.3].forEach(t => { note([1250, 520], .18, "sine", .06, t, fBus); }); }   // lot 62 c · Calme plat : une nappe douce, trois gouttes
       else if (k === "relache") { [[392, 0], [329.6, .5], [392, 1.1], [329.6, 1.6]].forEach(([f, t]) => note(f, .7, "triangle", .045, .3 + t, fBus)); }
     },

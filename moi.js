@@ -628,6 +628,7 @@ function injecterStyle() {
 .moi .m-mk-chips .chip b small { margin-right: 4px; font-size: 10px; color: var(--ink-3); font-weight: 600; }
 .moi .m-mk-chips .chip[aria-pressed="false"] b.flat, .moi .m-mk-chips .chip[aria-pressed="false"] span { color: var(--ink-3); }
 .moi .m-mk-res .lien { margin-right: 8px; }
+.moi .m-mk-chips .chip.m-mk-moi { grid-column: 1 / -1; }   /* lot 63 : « Mon portefeuille » en tête, sur toute la largeur */
 .moi .m-idx { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
 .moi .m-idx div { background: var(--panel); padding: 8px 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; }
 .moi .m-idx span { font-size: 12.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1170,6 +1171,9 @@ function injecterStyle() {
 .m-folle.serie .mfo-c { margin-top: -30vh; } .m-folle.serie .mfo-p { color: #F4FFE8; text-shadow: 0 0 20px rgba(163,230,53,.55), 0 2px 0 rgba(0,0,0,.5); }
 .m-folle.relache { background: linear-gradient(180deg, rgba(7,10,28,.97), rgba(20,22,52,.96)); } .m-folle.relache .mfo-k { color: #C4B5FD; }
 .m-folle.relache .mfo-p { color: #E8E6FF; text-shadow: 0 0 20px rgba(196,181,253,.5); }
+.m-folle.record, .m-folle.pirebaisse, .m-folle.volhaut, .m-folle.volbas { background: linear-gradient(180deg, rgba(8,12,26,.96), rgba(14,20,38,.96)); }   /* lot 63 : sobres */
+.m-folle.record .mfo-k { color: #7CF5C4; } .m-folle.pirebaisse .mfo-k { color: #9EC2FF; } .m-folle.volhaut .mfo-k { color: #B9C6E0; } .m-folle.volbas .mfo-k { color: #C5F06B; }
+.m-folle.record .mfo-p, .m-folle.pirebaisse .mfo-p, .m-folle.volhaut .mfo-p, .m-folle.volbas .mfo-p { color: #F4F7FF; text-shadow: 0 0 18px rgba(160,190,255,.35), 0 2px 0 rgba(0,0,0,.5); }
 .m-folle.plat { background: linear-gradient(180deg, rgba(8,16,34,.97), rgba(10,30,44,.96)); } .m-folle.plat .mfo-k { color: #9EE3F0; }
 .m-folle.plat .mfo-c { margin-top: -30vh; } .m-folle.plat .mfo-p { color: #EEFBFF; text-shadow: 0 0 20px rgba(158,227,240,.45), 0 2px 0 rgba(0,0,0,.5); }
 .m-folle .mfo-p.long { font-size: clamp(48px, 15vw, 80px); }
@@ -1185,6 +1189,7 @@ function injecterStyle() {
 .moi .m-ev-a { display: flex; gap: 8px; } .moi .m-ev-a .btn { padding: 7px 14px; }
 .moi .m-ev-b:focus-visible, .moi .m-ev-x:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .moi [data-ev="feu"] { --evc: #FF6E28; } .moi [data-ev="krach"] { --evc: #96AAD2; } .moi [data-ev="crypto"] { --evc: #F7931A; } .moi [data-ev="joie"] { --evc: #FF6FA8; }
+.moi [data-ev="record"] { --evc: #5EEAD4; } .moi [data-ev="pirebaisse"] { --evc: #7FB2FF; } .moi [data-ev="volhaut"] { --evc: #96AAD2; } .moi [data-ev="volbas"] { --evc: #A3E635; }
 .moi [data-ev="serie"] { --evc: #5EEAD4; } .moi [data-ev="sommet"] { --evc: #FFA08C; } .moi [data-ev="relache"] { --evc: #C4B5FD; } .moi [data-ev="plat"] { --evc: #7CCFE0; }
 
 /* l'ambiance de la journée sur Aujourd'hui : derrière le contenu, quelques braises qui montent (ou paillettes d'or qui scintillent) */
@@ -1205,6 +1210,8 @@ function injecterStyle() {
 .moi .m-amb.sommet { background: radial-gradient(90% 30% at 50% -6%, rgba(255,160,140,.14), transparent 70%); }
 .moi .m-amb.serie { background: radial-gradient(100% 26% at 50% -4%, rgba(163,230,53,.10), transparent 70%); }
 .moi .m-amb.relache { background: linear-gradient(180deg, rgba(90,80,180,.10), transparent 45%); }
+.moi .m-amb.volhaut { background: linear-gradient(90deg, rgba(150,170,210,.10), transparent 40%, rgba(150,170,210,.08)); } .moi .m-amb.volbas { background: radial-gradient(100% 26% at 50% -4%, rgba(163,230,53,.08), transparent 70%); }
+.moi .m-amb.record i, .moi .m-amb.pirebaisse i { background: var(--c); box-shadow: 0 0 6px 1px var(--c); animation: mAmbJoie var(--d) ease-in-out var(--r) infinite; }
 .moi .m-amb.plat { background: linear-gradient(0deg, rgba(90,170,200,.10), transparent 35%); }   /* lot 62 c : Calme plat = une simple teinte, rien ne bouge */
 .moi .m-amb.crypto { background: radial-gradient(100% 30% at 50% -4%, rgba(247,147,26,.10), transparent 70%); }
 @media (prefers-reduced-motion: reduce) { .moi .m-amb { display: none; } }
@@ -1462,7 +1469,7 @@ function seanceProposee() {
    aujourd'hui (nuit, week-end : fini le « ■ 0 € · 0,00 % »), et la pastille « Jour | 5 j » de la carte passe aux 5 dernières séances
    (semaine glissante : « 1 semaine » de Perf lignes). Le choix est gardé sur l'appareil (PREF.var5). Rien n'est écrit : c'est une vue. */
 function modeSeance() { return seanceProposee(); }
-const PERIODES_J = { "5j": ["s1", "5 j", "5 séances"], "1m": ["m1", "1 M", "1 mois"], "6m": ["m6", "6 M", "6 mois"], "ytd": ["ytd", "YTD", "depuis janvier"], "1a": ["a1", "1 an", "1 an"] };   // v17.23 (Conseil) : Jour | 5 j | 1 M | 6 M | Janv. | 1 an
+const PERIODES_J = { "5j": ["s1", "5 j", "5 séances"], "1m": ["m1", "1 M", "1 mois"], "6m": ["m6", "6 M", "6 mois"], "ytd": ["ytd", "YTD", "depuis janvier"], "1a": ["a1", "1 an", "1 an"], "tout": ["tout", "Tout", "depuis le début"] };   // lot 63 (Théo) : + « Tout » = depuis la 1re ligne de l'historique   // v17.23 (Conseil) : Jour | 5 j | 1 M | 6 M | Janv. | 1 an
 function periodeJ() { const p = PREF.varP || (PREF.var5 === true ? "5j" : null); return p && PERIODES_J[p] && seanceDu() ? p : null; }
 function mode5j() { return periodeJ() === "5j"; }
 const JOURS_C = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
@@ -1486,12 +1493,14 @@ function lib5j() { const s = seances5(); return "sur 5 séances · du " + frDate
 /** fin de la période = la dernière séance (ou aujourd'hui quand la bourse bouge) ; début = mêmes bornes que Stats (`fenetre`) */
 function finPer() { return new Date((seanceProposee() ? seanceDu() : isoJour(new Date())) + "T12:00:00"); }
 function debutPer(p, fin) {
+  if (p === "tout") { const r = M && M.historique && M.historique.rows; return r && r.length ? dateNum(r[0][0]) : new Date(2000, 0, 1, 12); }   // lot 63 : le début du portefeuille
   if (p === "5j") { const d = new Date(seances5()[0] + "T12:00:00"); d.setDate(d.getDate() - 1); return d; }   // la veille de la 1re des 5 séances
   if (p === "ytd") return new Date(fin.getFullYear() - 1, 11, 31, 12);
   const m = new Date(fin.getFullYear(), fin.getMonth() - ({ "1m": 1, "6m": 6, "1a": 12 }[p] || 1), 1);   // le 31/05 − 3 mois = le 28/02 (comme Stats)
   return new Date(m.getFullYear(), m.getMonth(), Math.min(fin.getDate(), new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate()), 12);
 }
 function libPer(p) { if (p === "5j") return lib5j(); const fin = finPer(), d = debutPer(p, fin), court = x => frDate(isoJour(x)).slice(0, 5);
+  if (p === "tout") return "depuis le début · du " + frDate(isoJour(d)) + " au " + court(fin) + " · lignes : depuis l'achat";
   if (p === "ytd") return "depuis le 1er janvier · au " + court(fin);
   const c = p === "1a" ? x => frDate(isoJour(x)) : court; return "sur " + PERIODES_J[p][2] + " · du " + c(d) + " au " + c(fin); }
 /** v17.23 : le total d'une période vient de l'HISTORIQUE du fichier, versements neutralisés (comme le TWR de Stats) :
@@ -1523,7 +1532,7 @@ function mSeance(m, cinq) {
     let j = 0;
     g.lignes.forEach(l => { if (l.especes) return; const p = perf[g.env + "|" + l.code];
       const v = p ? (cinq ? p[PERIODES_J[cinq][0]] : (p.seanceDu && dSeance && p.seanceDu < dSeance ? null : p.seance)) : null;   // 5 j : « 1 semaine » de Perf lignes ; v18.4 : jamais la variation d'une séance plus ancienne présentée comme la dernière
-      let w = v;
+      let w = cinq === "tout" ? (ok(l.pvPct) ? l.pvPct : null) : v;   // lot 63 : « Tout » = chaque ligne depuis son achat (sa plus-value en %)
       if (typeof w !== "number" && cinq) w = proxyPer(l.code, cinq);   // v17.85 (Théo) : GOLD sans historique Google → l'historique de la case « Or non couvert »
       if (typeof w === "number") { l.pct = w; l.jour = (l.valeur || 0) * w / (1 + w); } else if (cinq || (p && p.seanceDu && dSeance && p.seanceDu < dSeance)) { l.pct = null; l.jour = 0; }
       j += l.jour || 0; });
@@ -1677,6 +1686,12 @@ function sceneEv(kind, g, W, H, t, dt, st, eclairs, pousser, rnd, SP, finE) {
     for (let i = 0; i < SERIE_N; i++) { const ts = .3 + i * .32; if (t < ts) continue; const a = Math.PI + (i + .5) / SERIE_N * Math.PI, x = cx + Math.cos(a) * R * 1.1, y = cy + Math.sin(a) * R * 1.1, u = Math.min(1, (t - ts) / .3);
       g.globalAlpha = u * .8; g.drawImage(SP.c[i % SP.c.length], x - 10 * u, y - 10 * u, 20 * u, 20 * u); if (!st["s" + i]) { st["s" + i] = 1; for (let j = 0; j < 14; j++) pousser({ k: "s", x, y, vx: rnd(-120, 120), vy: rnd(-160, 20), v: 0, vie: rnd(.5, .9), sp: SP.c[j % SP.c.length], tl: rnd(3, 5) }); } }
     g.globalAlpha = 1;
+  } else if (["record", "pirebaisse", "volhaut", "volbas"].includes(kind)) {   // lot 63 : effets sobres (un halo, quelques particules), 3,5 s
+    const col = { record: "94,234,212", pirebaisse: "127,178,255", volhaut: "150,170,210", volbas: "163,230,53" }[kind], T1b = Math.min(1, t / .8);
+    g.globalCompositeOperation = "lighter"; g.globalAlpha = .5 * T1b;
+    const gr = g.createRadialGradient(W / 2, H * .42, 0, W / 2, H * .42, W * .8); gr.addColorStop(0, "rgba(" + col + ",.45)"); gr.addColorStop(1, "rgba(" + col + ",0)"); g.fillStyle = gr; g.fillRect(0, 0, W, H); g.globalAlpha = 1;
+    if (!finE) { if (kind === "volhaut") { for (let i = 0, k2 = Math.round(90 * dt + Math.random()); i < k2; i++) pousser({ k: "l", x: -20, y: rnd(.1, .95) * H, vx: rnd(700, 1100), vy: rnd(-30, 30), v: 0, vie: rnd(.5, .9) }); }
+      else { st.a = (st.a || 0) + dt * (kind === "volbas" ? 10 : 26); while (st.a >= 1) { st.a--; pousser({ k: "s", x: rnd(0, W), y: kind === "volbas" ? rnd(-10, H * .3) : H + 5, vx: rnd(-15, 15), vy: kind === "volbas" ? rnd(10, 30) : -rnd(160, 280), v: 0, vie: kind === "volbas" ? rnd(2.5, 3.5) : rnd(1.4, 2.2), sp: kind === "record" ? SP.c[1] : kind === "volbas" ? SP.c[4] : SP.c[2], tl: rnd(2.5, 4.5) }); } } }
   } else if (kind === "plat") {   // la mer d'huile : un horizon au crépuscule, le reflet du soleil, des ronds dans l'eau qui s'élargissent lentement
     const hy = H * .62, T1b = Math.min(1, t / 1.2);
     g.globalCompositeOperation = "source-over"; g.globalAlpha = T1b;
@@ -1708,7 +1723,7 @@ function lancerFolle(x, revoir) {
     '<b class="mfo-p' + (T.big.length > 8 ? " long" : "") + '">' + esc(T.big) + "</b>" + ((feu || joie) && !disc && ok(x.e) && Math.abs(x.e) >= 1 ? '<span class="mfo-e">' + eur(x.e, 0, true) + "</span>" : "") + "<p>" + esc(T.phr) + '</p></div><span class="mfo-t">Touche pour continuer</span>';
   document.body.appendChild(o);
   try { o.focus({ preventScroll: true }); } catch (e) { /* rien */ }
-  const S = window.SONS, duree = reduit ? 2800 : fort ? 5000 : niv === 2 ? 4600 : kind === "relache" ? 3600 : 4300, t0 = performance.now();
+  const S = window.SONS, duree = reduit ? 2800 : fort ? 5000 : niv === 2 ? 4600 : kind === "relache" || ["record", "pirebaisse", "volhaut", "volbas"].includes(kind) ? 3600 : 4300, t0 = performance.now();
   let fini = false, raf = 0;
   const fermer = () => { if (fini) return; fini = true; cancelAnimationFrame(raf); removeEventListener("resize", taille); if (S && S.folleStop) S.folleStop(); o.classList.add("fin");
     setTimeout(() => { o.remove(); try { verifierPaliers(); } catch (e) { /* rien */ } }, 450); };   // lot 62 d : une fête de palier en attente passe APRÈS l'effet (jamais par-dessus)
@@ -1812,16 +1827,20 @@ function derniereFolle(k) {
    où Paris (lignes EPA:) ou New York (lignes NASDAQ:/NYSE…) est fermée. Concernés : Krach et Sommet = tout le monde (le S&P 500 est la référence
    du jeu) ; Tempête crypto = seulement si tu as du Bitcoin ; Relâche = seulement si tu as des lignes sur la place fermée.
    lot 62 c : Calme plat = 20 séances d'affilée de ton portefeuille sans bouger de plus de 1 % (historique du fichier), priorité la plus basse. */
-const EV_PRIO = ["feu", "joie", "krach", "crypto", "sommet", "serie", "relache", "plat"];   // lot 62 c : ta journée folle passe avant le krach (Moi parle de TON portefeuille ; le krach reste en pastille) ; « Calme plat » en dernier
-const KRACH_SEUIL = -.03, CRYPTO_SEUIL = .10, SOMMET_MIN = 250, SOMMET_ECART = 20, SERIE_N = 5, SP_RECORD_CONNU = 6000, CALME_N = 20, CALME_SEUIL = .01;   // lot 62 c : Calme plat = 20 séances sans ±1 %   // SP_RECORD_CONNU : plancher prudent si la série est en points d'indice
+const EV_PRIO = ["feu", "joie", "krach", "crypto", "record", "sommet", "pirebaisse", "volhaut", "serie", "volbas", "relache", "plat"];   // lot 63 : + 4 événements de risque (les records personnels avant ceux du S&P ; la volatilité basse avec les événements calmes)   // lot 62 c : ta journée folle passe avant le krach (Moi parle de TON portefeuille ; le krach reste en pastille) ; « Calme plat » en dernier
+const KRACH_SEUIL = -.03, CRYPTO_SEUIL = .10, SOMMET_MIN = 250, SOMMET_ECART = 40, SERIE_N = 7, SP_RECORD_CONNU = 6000, CALME_N = 20, CALME_SEUIL = .01;   // lot 62 c : Calme plat = 20 séances sans ±1 %   // SP_RECORD_CONNU : plancher prudent si la série est en points d'indice
 const EV_DEF = {
   feu: { ic: "🧯", nom: "Incendie", quoi: "ton portefeuille perd 2,8 % ou plus en une séance (Explosion à −3,5 %, Journée noire à −5 %)" },
   joie: { ic: "🎆", nom: "Feu d'artifice", quoi: "ton portefeuille gagne 2,8 % ou plus en une séance (Pluie de bonbons à +3,5 %, Bouquet final à +5 %)" },
   krach: { ic: "⛈️", nom: "Krach mondial", quoi: "le S&P 500 perd 3 % ou plus en une séance" },
   crypto: { ic: "⚡", nom: "Tempête crypto", quoi: "le Bitcoin bouge de 10 % ou plus en 24 h (si tu en as)" },
-  sommet: { ic: "🏔️", nom: "Sommet du S&P 500", quoi: "le S&P 500 bat son record après au moins un mois sans record" },
-  serie: { ic: "🌈", nom: "Série verte", quoi: "ton portefeuille monte 5 séances d'affilée" },
+  sommet: { ic: "🏔️", nom: "Sommet du S&P 500", quoi: "le S&P 500 bat son record après au moins deux mois sans record" },
+  serie: { ic: "🌈", nom: "Série verte", quoi: "ton portefeuille monte 7 séances d'affilée" },   // lot 63 : 7 (à 5, ≈ 5 fois par an : trop fréquent)
   relache: { ic: "😴", nom: "Bourse en relâche", quoi: "un jour férié ferme la bourse de tes lignes" },
+  record: { ic: "🧗", nom: "Record battu", quoi: "ton portefeuille dépasse son plus haut après une baisse de 10 % ou plus" },
+  pirebaisse: { ic: "🩹", nom: "Pire baisse effacée", quoi: "ton portefeuille rattrape la plus grosse baisse de l'année (5 % ou plus), une fois par an" },
+  volhaut: { ic: "🌬️", nom: "Volatilité très élevée", quoi: "ta volatilité sur 1 mois dépasse 90 % de ton historique (30 % par an si l'historique est court)" },
+  volbas: { ic: "🍃", nom: "Volatilité au plus bas", quoi: "ta volatilité sur 3 mois passe sous 90 % de ton historique (8 % par an si l'historique est court)" },
   plat: { ic: "🌊", nom: "Calme plat", quoi: "ton portefeuille ne bouge jamais de plus de 1 % pendant 20 séances d'affilée" }
 };
 function ambCoupee(k) { return Array.isArray(PREF.ambOff) && PREF.ambOff.includes(k); }
@@ -1870,6 +1889,7 @@ function evDe(k) {
   else if (k === "crypto") { if (aDuBitcoin()) varsEv(closEv("Bitcoin"), 4).forEach(x => { if (Math.abs(x.p) >= CRYPTO_SEUIL - 1e-9) out.push({ k, d: x.d, p: x.p }); }); }
   else if (k === "sommet") { const c = closEv("S&P 500"); let max = 0, iMax = -1;
     c.forEach((x, i) => { if (i >= SOMMET_MIN && x.v > max && i - iMax >= SOMMET_ECART && (x.v < 1000 || x.v > SP_RECORD_CONNU)) out.push({ k, d: x.d, v: x.v, avant: max, dAvant: c[iMax].d }); if (x.v > max) { max = x.v; iMax = i; } }); }
+  else if (k === "record" || k === "pirebaisse" || k === "volhaut" || k === "volbas") evRisque(k).forEach(x => out.push(x));
   else if (k === "plat") { const l = seancesHisto(); let n = 0;   // lot 62 c : une fois par période calme (à la 20e séance), pas tous les jours qui suivent
     l.forEach((x, i) => { const suite = i > 0 && x.i - l[i - 1].i <= 3; n = Math.abs(x.p) <= CALME_SEUIL + 1e-9 ? (suite && n ? n + 1 : 1) : 0; if (n === CALME_N) out.push({ k, d: x.d, de: l[i - CALME_N + 1].d }); }); }
   else if (k === "serie") { const l = seancesHisto(); let n = 0, cum = 1;
@@ -1888,12 +1908,36 @@ function evenementsActifs() { const m = evMasques(); return evenementsListe().fi
    pour créer des événements d'anciennes séances ; les événements « de durée » (série verte, calme plat) se calculent sur l'historique mais ne
    naissent que si la condition devient vraie à la dernière séance. Exception : la séance du 20/11/2026. */
 const EV_EXCEPTION = "2026-11-20";
+/** lot 63 · les événements de risque (historique du fichier, versements neutralisés : indice « ip ») ; seuils dans EV_DEF.
+    Volatilité = écart-type des variations quotidiennes × √252 ; seuil personnel = centile 90 (haut) ou 10 (bas) des valeurs passées dès 250 valeurs,
+    sinon un seuil fixe (30 % / 8 %). Un seul événement par épisode : il faut repasser franchement de l'autre côté (×0,8 ou ×1,25) pour réarmer. */
+const VOL_HAUT_FIXE = .30, VOL_BAS_FIXE = .08, VOL_MIN_PERSO = 250;
+function evRisque(k) {
+  const l = seancesHisto(), h = M.historique, ki = h.cols.indexOf("ip"), out = []; if (l.length < 2) return out;
+  const ip = l.map(x => h.rows[x.i][ki]);
+  if (k === "record") { let mx = l[0].ip0, dMx = null, creux = 0;
+    l.forEach((x, i) => { if (ip[i] > mx) { if (creux <= -.10 + 1e-9) out.push({ k, d: x.d, creux, dAvant: dMx }); mx = ip[i]; dMx = x.d; creux = 0; } else creux = Math.min(creux, ip[i] / mx - 1); }); }
+  else if (k === "pirebaisse") { let an = "", mx = 0, pire = 0, pic = 0, dPic = null, dMx = null, fait = false;
+    l.forEach((x, i) => { const a = x.d.slice(0, 4); if (a !== an) { an = a; mx = x.ip0; dMx = null; pire = 0; pic = 0; dPic = null; fait = false; }
+      if (ip[i] > mx) { mx = ip[i]; dMx = x.d; } const dd = ip[i] / mx - 1; if (dd < pire) { pire = dd; pic = mx; dPic = dMx; }
+      if (!fait && pire <= -.05 + 1e-9 && ip[i] > pic) { fait = true; out.push({ k, d: x.d, pire, dAvant: dPic, an }); } }); }
+  else { const N = k === "volhaut" ? 21 : 63, haut = k === "volhaut", vs = [], tri = [];
+    let arme = true;
+    l.forEach((x, i) => { if (i < N - 1) return; const w = l.slice(i - N + 1, i + 1).map(y => y.p), m = w.reduce((a, b) => a + b, 0) / N, v = Math.sqrt(w.reduce((a, b) => a + (b - m) * (b - m), 0) / (N - 1) * 252);
+      const perso = tri.length >= VOL_MIN_PERSO, thr = perso ? tri[Math.floor(tri.length * (haut ? .9 : .1))] : (haut ? VOL_HAUT_FIXE : VOL_BAS_FIXE);
+      if (arme && (haut ? v > thr : v < thr)) { arme = false; out.push({ k, d: x.d, vol: v, perso }); }
+      else if (!arme && (haut ? v < thr * .8 : v > thr * 1.25)) arme = true;
+      let a = 0, b = tri.length; while (a < b) { const c = (a + b) >> 1; if (tri[c] < v) a = c + 1; else b = c; } tri.splice(a, 0, v); }); }   // centile sur les valeurs PASSÉES seulement
+  if (k === "pirebaisse") { const rec = evRisque("record").map(x => x.d); return out.filter(x => !rec.includes(x.d)).reverse(); }   // le même jour qu'un record : le record suffit
+  return out.reverse();
+}
 function evNaissants() {
   const out = [], exc = d => d === EV_EXCEPTION;
   try { const x = journeeFolle(); if (x) out.push(Object.assign({}, x, { k: x.sens < 0 ? "feu" : "joie", folle: true })); } catch (e) { /* rien */ }
   const dernier = (k, fin) => { try { const l = evDe(k); if (!fin) return; l.filter(x => x.d === fin || exc(x.d)).forEach(x => out.push(x)); } catch (e) { /* données absentes */ } };
   const finSP = (closEv("S&P 500").slice(-1)[0] || {}).d, finBTC = (closEv("Bitcoin").slice(-1)[0] || {}).d, finH = (seancesHisto().slice(-1)[0] || {}).d;
   dernier("krach", finSP); dernier("sommet", finSP); dernier("crypto", finBTC); dernier("serie", finH); dernier("plat", finH); dernier("relache", isoJour(new Date()));
+  ["record", "pirebaisse", "volhaut", "volbas"].forEach(k => dernier(k, finH));   // lot 63 : naissent seulement à la dernière séance de l'historique
   return out;
 }
 let MEMO_EV = { m: null, j: "", l: null };
@@ -1902,7 +1946,7 @@ function evenementsListe() {
   const auj = isoJour(new Date()); if (MEMO_EV.m === M && MEMO_EV.j === auj && MEMO_EV.l) return MEMO_EV.l.map(x => Object.assign({}, x));
   let nes = []; try { nes = JSON.parse(stock.get(cleStock("evNes")) || "[]"); } catch (e) { nes = []; } if (!Array.isArray(nes)) nes = [];
   let change = false;
-  evNaissants().forEach(x => { x.cle = x.folle ? cleFolle(x) : x.k + ":" + x.d; const y = { k: x.k, d: x.d, p: x.p, e: x.e, v: x.v, avant: x.avant, dAvant: x.dAvant, de: x.de, places: x.places, lib: x.lib, sens: x.sens, niv: x.niv, fort: x.fort, folle: x.folle };
+  evNaissants().forEach(x => { x.cle = x.folle ? cleFolle(x) : x.k + ":" + x.d; const y = { k: x.k, d: x.d, p: x.p, e: x.e, v: x.v, avant: x.avant, dAvant: x.dAvant, de: x.de, places: x.places, lib: x.lib, sens: x.sens, niv: x.niv, fort: x.fort, folle: x.folle, creux: x.creux, pire: x.pire, an: x.an, vol: x.vol, perso: x.perso };
     const i = nes.findIndex(z => z.k === x.k && z.d === x.d);
     if (i < 0) { nes.push(y); change = true; } else if (JSON.stringify(nes[i]) !== JSON.stringify(Object.assign({}, nes[i], y, { niv: Math.max(nes[i].niv || 0, y.niv || 0) || undefined }))) { nes[i] = Object.assign({}, nes[i], y, { niv: Math.max(nes[i].niv || 0, y.niv || 0) || undefined }); if (nes[i].folle) nes[i].fort = nes[i].niv === 3; change = true; } });   // même séance revue (en direct) : chiffre mis à jour, palier jamais baissé
   const lim = limEv(); nes = nes.filter(x => x.d >= isoJour(new Date(Date.now() - 400 * 864e5)));
@@ -1927,8 +1971,13 @@ function textesEv(x) {
   if (x.k === "crypto") return { k: "Tempête crypto", big: pct(x.p, 1), sub: "Bitcoin en 24 h · " + lib, phr: x.p < 0 ? "Le Bitcoin plonge. Ta bourse, elle, n'a rien vu." : "Le Bitcoin s'emballe. Garde la tête froide.", carte: "Bitcoin " + pct(x.p, 1) + " le " + lc };
   if (x.k === "sommet") { const e = x.avant > 0 ? x.v / x.avant - 1 : null, p = pts(x.v);
     return { k: "Sommet du S&P 500", big: p || "Record", sub: "Clôture " + (lib === "Aujourd'hui" ? "d'aujourd'hui" : "du " + lc) + (ok(e) ? " · " + pct(e, 1) + " au-dessus du record du " + frDate(x.dAvant).slice(0, 5) : ""), phr: "Jamais aussi haut sur toutes les données connues. Profite de la vue, puis continue de grimper.", carte: (p ? p + " · " : "") + "record battu le " + lc }; }
+  const pc = (v, n) => pct(v, n || 1, false);
+  if (x.k === "record") return { k: "Record battu", big: "Record", sub: "au-dessus de ton plus haut" + (x.dAvant ? " du " + frDate(x.dAvant).slice(0, 5) : "") + ", après " + pct(x.creux, 1) + " · " + lc, phr: "Tu as tenu pendant la baisse : c'est exactement comme ça qu'on gagne.", carte: "nouveau plus haut après " + pct(x.creux, 1) + " le " + lc };
+  if (x.k === "pirebaisse") return { k: "Pire baisse effacée", big: "Effacée", sub: "la baisse de " + pct(x.pire, 1) + " de " + x.an + (x.dAvant ? " (depuis le " + frDate(x.dAvant).slice(0, 5) + ")" : "") + " est rattrapée · " + lc, phr: "Plus aucune trace de la pire baisse de l'année.", carte: "baisse de " + pct(x.pire, 1) + " rattrapée le " + lc };
+  if (x.k === "volhaut") return { k: "Volatilité très élevée", big: pc(x.vol, 0), sub: "par an, sur 1 mois · " + (x.perso ? "plus haute que 90 % de ton historique" : "au-dessus de 30 %") + " · " + lc, phr: "Ça secoue plus que d'habitude. Rien à faire de spécial : ton plan est fait pour ça.", carte: "volatilité sur 1 mois " + pc(x.vol, 0) + " le " + lc };
+  if (x.k === "volbas") return { k: "Volatilité au plus bas", big: pc(x.vol, 1), sub: "par an, sur 3 mois · " + (x.perso ? "plus basse que 90 % de ton historique" : "sous 8 %") + " · " + lc, phr: "Ton portefeuille n'a presque jamais été aussi tranquille.", carte: "volatilité sur 3 mois " + pc(x.vol, 1) + " le " + lc };
   if (x.k === "plat") return { k: "Calme plat", big: CALME_N + " séances", sub: "sans bouger de plus de 1 % · du " + frDate(x.de).slice(0, 5) + " au " + lc, phr: "Mer d'huile. Les meilleurs placements sont souvent les plus ennuyeux.", carte: CALME_N + " séances sans ±1 %, jusqu'au " + lc };
-  if (x.k === "serie") return { k: "Série verte", big: SERIE_N + " séances", sub: "de hausse d'affilée · " + pct(x.p, 1) + " · jusqu'au " + lc, phr: "Cinq jours de soleil sur ton portefeuille. Profite, ça ne dure jamais.", carte: SERIE_N + " séances en hausse jusqu'au " + lc };
+  if (x.k === "serie") return { k: "Série verte", big: SERIE_N + " séances", sub: "de hausse d'affilée · " + pct(x.p, 1) + " · jusqu'au " + lc, phr: SERIE_N + " jours de soleil d'affilée sur ton portefeuille. Profite, ça ne dure jamais.", carte: SERIE_N + " séances en hausse jusqu'au " + lc };
   if (x.k === "relache") { const pl = x.places.map(p => p === "paris" ? "Paris" : "New York").join(" et ");
     return { k: "Bourse en relâche", big: "Fermée", sub: pl + " · " + x.lib, phr: "Les marchés font la sieste. Toi aussi, si tu veux.", carte: pl + " fermée · " + x.lib }; }
   const feu = x.sens < 0;
@@ -1999,14 +2048,16 @@ function habillerFolle(v) {
   if (ambCoupee(x.k) || reduit) return;
   hero.classList.add("m-amb-" + x.k);
   const a = document.createElement("div"); a.className = "m-amb " + x.k + (x.fort ? " fort" : ""); a.setAttribute("aria-hidden", "true");
-  const COUL = { joie: ["#FF6FA8", "#5EEAD4", "#7FB2FF", "#C4B5FD", "#A3E635"], crypto: ["#F7931A", "#FFB347", "#C4B5FD"], relache: ["#E0E7FF", "#C4B5FD", "#FDE68A"], serie: ["#A3E635", "#5EEAD4", "#7FB2FF"] }[x.k] || ["#FFB347"];
+  const COUL = { joie: ["#FF6FA8", "#5EEAD4", "#7FB2FF", "#C4B5FD", "#A3E635"], crypto: ["#F7931A", "#FFB347", "#C4B5FD"], relache: ["#E0E7FF", "#C4B5FD", "#FDE68A"], serie: ["#A3E635", "#5EEAD4", "#7FB2FF"], record: ["#5EEAD4", "#E0F7F3"], pirebaisse: ["#7FB2FF", "#C4B5FD"] }[x.k] || ["#FFB347"];
   const monte = x.k === "feu", tombe = x.k === "krach";
-  let h = ""; if (!["sommet", "plat"].includes(x.k)) for (let i = 0; i < NB_AMB; i++) { const r = (i * 0.618034) % 1, r2 = (i * 0.414214 + .3) % 1;
+  let h = ""; if (!["sommet", "plat", "volhaut", "volbas"].includes(x.k)) for (let i = 0; i < NB_AMB; i++) { const r = (i * 0.618034) % 1, r2 = (i * 0.414214 + .3) % 1;
     h += '<i style="left:' + (3 + r * 94).toFixed(1) + "%;" + (monte || tombe ? "" : "top:" + (4 + r2 * 80).toFixed(1) + "%;") + "--d:" + (monte ? 7 + r2 * 6 : tombe ? 1.4 + r2 * .8 : 3 + r2 * 3).toFixed(2) + "s;--r:" + (-(r2 * 12)).toFixed(2) + "s;--s:" + (2 + r * 2.5).toFixed(1) + "px;--c:" + COUL[i % COUL.length] + '"></i>'; }
   a.innerHTML = h; v.prepend(a);
 }
+let LIVEJ = null;   // lot 63 : la variation en direct de la carte « Jour » (pour le dernier point de « Mon portefeuille »)
 function htmlJour() {
   const cinq = periodeJ();
+  { const s = M.synthese || {}; LIVEJ = !seanceProposee() && ok(s.jourPct) && Math.abs(s.jourPct) > 1e-9 ? s.jourPct : null; }
   CINQ = cinq === "5j" ? joursCinq() : null; VUEJ = cinq || (modeSeance() ? "seance" : "jour");
   if (VUEJ === "jour") return htmlJourBase();
   const m0 = M; M = mSeance(m0, cinq);
@@ -2806,6 +2857,7 @@ function bornesMk(x, per) {
     const d0 = per === "5j" ? new Date(fin.getFullYear(), fin.getMonth(), fin.getDate() - 7, 12) : debutPer(per, fin), c0 = num(d0);
     c.d.forEach((d, i) => { if (d <= c0) i0 = i; });
     if (i0 >= 0 && (d0 - dateNum(c.d[i0])) / 864e5 > (c.hebdo ? 8 : 6)) i0 = -1;   // historique trop court : pas de chiffre inventé
+    if (i0 < 0 && per === "tout") i0 = 0;   // lot 63 : « Tout » : le plus ancien disponible (dit sous la courbe)
   }
   const vide = !n || i0 < 0 || (i0 >= n - 1 && !enDirect);
   return { c, n, i0, enDirect, auj, vide };
@@ -2831,7 +2883,7 @@ function varMk(x, per) {   // → { v, du (aaaa-mm-jj de la séance montrée, nu
 function fenMk(x, per) {
   const B = bornesMk(x, per); if (B.vide) return null;
   let d = B.c.d.slice(B.i0), v = B.c.v.slice(B.i0);
-  if (per === "1a" && !B.c.hebdo) {
+  if ((per === "1a" || per === "tout") && !B.c.hebdo) {
     const sem = k => { const t = dateNum(k); t.setDate(t.getDate() + ((5 - t.getDay() + 7) % 7)); return isoJour(t); };
     const gard = d.map((k, i) => i === 0 || i === d.length - 1 || sem(k) !== sem(d[i + 1]));
     d = d.filter((k, i) => gard[i]); v = v.filter((k, i) => gard[i]);
@@ -2844,7 +2896,7 @@ function perCourbe() { const p = PERIODES_J[VUEJ] ? VUEJ : null; if (p) return p
 function txtBase(d0, per, hebdo) {
   const t = dateNum(d0), j = t.getDate() === 1 ? "1er" : t.getDate();
   const pj = PERIODES_J[VUEJ] ? "" : per === "5j" ? "« Jour » : la courbe montre les 5 dernières séances. " : "";
-  return pj + "Base 100 au " + j + " " + ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"][t.getMonth()] + " " + t.getFullYear() + " (" + PERIODES_J[per][2] + ")" + (hebdo || per === "1a" ? ", une valeur par semaine" + (hebdo ? " (≈)" : "") : ", une clôture par séance");
+  return pj + "Base 100 au " + j + " " + ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"][t.getMonth()] + " " + t.getFullYear() + " (" + PERIODES_J[per][2] + ")" + (hebdo || per === "1a" || per === "tout" ? ", une valeur par semaine" + (hebdo ? " (≈)" : "") : ", une clôture par séance");
 }
 function htmlMarches() {
   const m = marchesMoi(), h = (m.jour.find(x => x.heure) || {}).heure, per = PERIODES_J[VUEJ] ? VUEJ : null;
@@ -2855,12 +2907,33 @@ function htmlMarches() {
   const marque = r => r.du && (!tousSeance || r.du !== duMax) ? "<small>" + frDate(r.du).slice(0, 5) + "</small>" : "";   // marché en retard sur les autres (ex. ×3 avant l'ouverture de New York)
   /* lot 62 c (Théo) : plus de grille de 12 cases (doublon) : une pastille par marché = son % sur la période de la barre du bas ET l'interrupteur de sa courbe
      (pleine = affichée, pointillée = masquée) ; un toucher long = la courbe de ce marché seul */
-  const noms = m.series.map(x => x.nom), S = mkVisibles(noms);
+  const noms = m.series.map(x => x.nom), S = mkVisibles(noms), fm = fenMoi(perCourbe()), pm = (M.synthese || {}).jourPct;   // lot 63 : le % de la carte du haut, pour la même période
+  const moi = fm ? '<button type="button" class="chip m-mk-moi' + (moiVisible() ? " on" : "") + '" data-mk-moi="1" aria-pressed="' + moiVisible() + '" style="--mkc:var(--ink)"><i></i><span>' + NOM_MOI + '</span><b class="' + sens(pm) + '">' + (ok(pm) ? pct(pm, per && per !== "5j" ? 1 : 2) : "—") + "</b></button>" : "";
   return '<div class="m-mk"><div class="m-mk-t"><h2 class="sec">Marchés <small>' + sous + "</small></h2></div>" +
-    '<div class="m-mk-chips" role="group" aria-label="Marchés : touche pour afficher ou masquer la courbe, toucher long pour la courbe seule">' + m.jour.map((x, i) => { const r = vs[i], k = noms.indexOf(x.nom), on = S.has(x.nom);
+    '<div class="m-mk-chips" role="group" aria-label="Marchés : touche pour afficher ou masquer la courbe, toucher long pour la courbe seule">' + moi + m.jour.map((x, i) => { const r = vs[i], k = noms.indexOf(x.nom), on = S.has(x.nom);
       return '<button type="button" class="chip' + (on ? " on" : "") + '" data-mk-cache="' + esc(x.nom) + '" data-mk-i="' + i + '" aria-pressed="' + on + '" style="--mkc:' + (k >= 0 ? COUL_MK[k % COUL_MK.length] : "var(--ink-3)") + '"' + (r.du ? ' title="Séance du ' + frDate(r.du) + '"' : "") + '><i></i><span>' + esc(NOMS_MK[x.nom] || x.nom) + '</span><b class="' + sens(r.v) + '">' + marque(r) + (ok(r.v) ? pct(r.v, per && per !== "5j" ? 1 : 2) : "—") + "</b></button>"; }).join("") + "</div>" +
     '<div class="m-mk-panneau" id="m-mk-panneau">' + panneauMarche() + "</div></div>";
 }
+/** lot 63 (Théo) : « Mon portefeuille » dans les courbes : l'indice de l'historique (versements neutralisés), mêmes bornes que les marchés ;
+    en séance, son dernier point = la variation du jour de la carte du haut. → { d: [aaaammjj], v } ou null */
+const NOM_MOI = "Mon portefeuille";
+function fenMoi(per) {
+  const h = M && !M.simple && M.historique, cols = h && h.cols || [], rows = h && h.rows || [], ki = cols.indexOf("ip"); if (ki < 0 || rows.length < 2) return null;
+  const c = { d: [], v: [] }; rows.forEach((r, i) => { if (!(r[ki] > 0)) return; if (c.v.length && r[ki] === c.v[c.v.length - 1] && i < rows.length - 1) return; c.d.push(+r[0]); c.v.push(r[ki]); });   // une valeur par séance
+  const auj = +isoJour(new Date()).replace(/-/g, ""), n = c.v.length, direct = LIVEJ !== null && n && c.d[n - 1] < auj;
+  const fin = direct ? dateNum(auj) : dateNum(c.d[n - 1]), num = d => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  let i0 = -1;
+  if (per === "5j") i0 = n - 1 - (direct ? 4 : 5);
+  else if (per === "tout") i0 = 0;
+  else { const d0 = debutPer(per, fin), c0 = num(d0); c.d.forEach((d, i) => { if (d <= c0) i0 = i; }); if (i0 >= 0 && (d0 - dateNum(c.d[i0])) / 864e5 > 6) i0 = -1; }
+  if (i0 < 0) return null;
+  let d = c.d.slice(i0), v = c.v.slice(i0);
+  if (per === "1a" || per === "tout") { const sem = k => { const t = dateNum(k); t.setDate(t.getDate() + ((5 - t.getDay() + 7) % 7)); return isoJour(t); };
+    const g = d.map((k, i) => i === 0 || i === d.length - 1 || sem(k) !== sem(d[i + 1])); d = d.filter((k, i) => g[i]); v = v.filter((k, i) => g[i]); }
+  if (direct) { d.push(auj); v.push(v[v.length - 1] * (1 + LIVEJ)); }
+  return d.length > 1 ? { d, v } : null;
+}
+function moiVisible() { return PREF.mkMoi !== false; }   // affichée par défaut, masquable comme les autres
 function serieMk(nom) { const m = marchesMoi(); return m && (m.series || []).find(x => x.nom === nom); }
 function courbesSVG(lignes, base100, per) {   // lot 61 : lignes = [{ nom, d: [aaaammjj], v, c }] ; abscisse = le temps (les séances manquantes d'un marché ne décalent rien)
   const W = 320, H = 150, g = 34, dr = 6, hb = 18;
@@ -2871,12 +2944,14 @@ function courbesSVG(lignes, base100, per) {   // lot 61 : lignes = [{ nom, d: [a
   const X = t => g + (t - t0) / Math.max(1, t1 - t0) * (W - g - dr), Y = v => 6 + (hi - v) / (hi - lo) * (H - 6 - hb);
   const fmt = v => base100 ? (hi - lo < 6 ? v.toFixed(1).replace(".", ",") : Math.round(v)) : v >= 100 ? Math.round(v) : v.toFixed(v >= 10 ? 1 : 2);
   const MC = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
-  const lab = t => { const d = new Date(t); return per === "1a" ? MC[d.getMonth()] + " " + String(d.getFullYear()).slice(2) : dateCourte(d); };
+  const lab = t => { const d = new Date(t); return per === "1a" || per === "tout" ? MC[d.getMonth()] + " " + String(d.getFullYear()).slice(2) : dateCourte(d); };
   const grille = [lo + mg, (lo + hi) / 2, hi - mg].map(v => '<line x1="' + g + '" x2="' + (W - dr) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" class="gr"/><text x="' + (g - 4) + '" y="' + (Y(v) + 3.5).toFixed(1) + '" text-anchor="end">' + fmt(v) + "</text>").join("");
   const b100 = base100 && lo < 100 && hi > 100 ? '<line x1="' + g + '" x2="' + (W - dr) + '" y1="' + Y(100).toFixed(1) + '" y2="' + Y(100).toFixed(1) + '" class="b100"/>' : "";
   const peu = Math.max(...pts.map(p => p.length)) <= 8;   // 5 séances : on voit chaque clôture
-  const traits = pts.map((p, k) => { const xy = p.map((v, i) => [X(ts[k][i]), Y(v)]);
-    return '<path fill="none" stroke="' + lignes[k].c + '" stroke-width="' + (lignes.length > 1 ? 1.6 : 2.2) + '" stroke-linejoin="round" d="' + (peu ? "M" + xy.map(q => q[0].toFixed(1) + " " + q[1].toFixed(1)).join("L") : lisse(xy)) + '"/>' +
+  const traits = pts.map((p, k) => { const xy = p.map((v, i) => [X(ts[k][i]), Y(v)]), L = lignes[k], dd = peu ? "M" + xy.map(q => q[0].toFixed(1) + " " + q[1].toFixed(1)).join("L") : lisse(xy);
+    const st = c => /^var\(/.test(c) ? ' style="stroke:' + c + '"' : ' stroke="' + c + '"';   // lot 63 : une couleur du thème (var(--ink)) passe par style
+    return (L.halo ? '<path fill="none"' + st(L.halo) + ' stroke-opacity=".35" stroke-width="' + ((L.w || 2.2) + 4) + '" stroke-linejoin="round" stroke-linecap="round" d="' + dd + '"/>' : "") +
+      '<path fill="none"' + st(L.c) + ' stroke-width="' + (L.w || (lignes.length > 1 ? 1.6 : 2.2)) + '" stroke-linejoin="round" stroke-linecap="round" d="' + dd + '"/>' +
       (peu && lignes.length === 1 ? xy.map(q => '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="2.4" fill="' + lignes[k].c + '"/>').join("") : ""); }).join("");
   return '<svg class="m-mk-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(lignes.map(l => l.nom).join(", ")) + " sur " + (PERIODES_J[per] ? PERIODES_J[per][2] : "un an") + '">' + grille + b100 + traits +
     '<text x="' + g + '" y="' + (H - 4) + '">' + lab(t0) + '</text><text x="' + (W - dr) + '" y="' + (H - 4) + '" text-anchor="end">' + lab(t1) + "</text></svg>";
@@ -2889,10 +2964,12 @@ function panneauMarche() {
     /* lot 50 (Théo) : pastilles dans l'ordre des cases (« Nasdaq ×3 » juste après « Nasdaq ×2 ») ; chaque courbe garde sa couleur */
     const rang = nom => { const i = m.jour.findIndex(x => x.nom === nom); return i < 0 ? 99 : i; };
     const lignes = m.series.map((x, i) => Object.assign({ nom: x.nom, c: COUL_MK[i % COUL_MK.length], i }, fenMk(cas(x.nom), per) || { d: null, v: [] })).sort((a, b) => rang(a.nom) - rang(b.nom) || a.i - b.i);
-    const S = mkVisibles(lignes.map(l => l.nom)), vis = lignes.filter(l => S.has(l.nom) && l.d), d0 = debut(vis.length ? vis : lignes.filter(l => l.d));
+    const S = mkVisibles(lignes.map(l => l.nom)), vis = lignes.filter(l => S.has(l.nom) && l.d), fm = moiVisible() ? fenMoi(per) : null;
+    if (fm) vis.push({ nom: NOM_MOI, d: fm.d, v: fm.v, c: "var(--ink)", w: 2.6, halo: couleurMoi() });   // lot 63 : toujours au premier plan (dessinée en dernier)
+    const d0 = debut(vis.length ? vis : lignes.filter(l => l.d)), dm = per === "tout" && fm ? fm.d[0] : null, dmk = per === "tout" ? debut(vis.filter(l => l.nom !== NOM_MOI)) : null;
     const autre = !mkParDefaut() ? '<button class="lien" type="button" data-mk-defaut="1">Revenir aux 4 courbes de base</button>' : "";
     return (vis.length ? courbesSVG(vis, true, per) || '<p class="info">Pas encore assez d\'historique pour cette période.</p>' : '<p class="info m-mk-rien">Aucune courbe : touche une pastille pour l\'afficher.</p>') +
-      '<p class="info m-mk-base">' + (d0 ? txtBase(d0, per, lignes.some(l => l.hebdo)) + ". " : "") + "ETF en euros (Or couvert ≈ GLD, Nasdaq ×3 ≈ TQQQ). Toucher long : un marché seul. " + autre + "</p>";
+      '<p class="info m-mk-base">' + (d0 ? txtBase(d0, per, lignes.some(l => l.hebdo)) + ". " : "") + (dm && dmk && dmk > dm ? "Les marchés n'ont pas d'historique avant le " + frDate(isoN(dmk)) + " : leurs courbes partent de là. " : "") + "ETF en euros (Or couvert ≈ GLD, Nasdaq ×3 ≈ TQQQ). Toucher long : un marché seul. " + autre + "</p>";
   }
   const j = m.jour[marcheOuvert], se = j && serieMk(j.nom); if (!se) return '<p class="info">Pas d\'historique pour ce marché.</p>';
   // lot 61 : les repères 1 mois · 6 mois · 1 an suivent la même règle que les cases (plus les semaines ≈ quand les clôtures existent) ; la période choisie en premier
@@ -2915,9 +2992,10 @@ function brancherMarches(v) {
   ["pointerup", "pointercancel", "pointerleave"].forEach(t => z.addEventListener(t, () => clearTimeout(long)));
   z.addEventListener("contextmenu", e => { if (e.target.closest("[data-mk-i]")) e.preventDefault(); });
   z.addEventListener("click", e => {
-    const b = e.target.closest("[data-mk],[data-mk-cache],[data-mk-defaut]"); if (!b) return;
+    const b = e.target.closest("[data-mk],[data-mk-cache],[data-mk-defaut],[data-mk-moi]"); if (!b) return;
     if (longFait) { longFait = false; return; }
     const noms = () => marchesMoi().series.map(x => x.nom);
+    if (b.dataset.mkMoi) { PREF.mkMoi = !moiVisible(); if (PREF.mkMoi) delete PREF.mkMoi; garderPref(); marcheOuvert = "cmp"; garderPlace(b, () => { maj(); b.classList.toggle("on", moiVisible()); b.setAttribute("aria-pressed", String(moiVisible())); }); return; }
     if (b.dataset.mkCache) { if (!noms().includes(b.dataset.mkCache)) return; mkBasculer(b.dataset.mkCache, noms()); marcheOuvert = "cmp"; garderPlace(b, maj); return; }
     if (b.dataset.mkDefaut) { mkTemp = null; delete PREF.mkVis; garderPref(); marcheOuvert = "cmp"; maj(); return; }
     const k = b.dataset.mk;
