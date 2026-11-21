@@ -165,6 +165,7 @@ function injecterStyle() {
 .moi .vs-o .chip b { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .moi .vs-o .chip small { font: 500 10.5px/1 var(--f-num); color: var(--ink-3); }
 .moi .vs-o .chip[aria-pressed="true"] small { color: inherit; opacity: .75; }
+.moi .vs-o .chip[data-vt="amb"] { grid-column: -2; }   /* lot 62 c (Théo) : « Ambiances » tout à droite, après les autres onglets */
 .moi .vs-g { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .moi .vs-t { position: relative; min-width: 0; }
 .moi .vs-b { all: unset; box-sizing: border-box; width: 100%; display: grid; justify-items: center; gap: 4px; padding: 8px 2px 7px; border-radius: 10px; border: 1px solid var(--rule); background: var(--panel); cursor: pointer; text-align: center; }
@@ -576,6 +577,13 @@ function injecterStyle() {
 .moi .m-mk-chips .chip[aria-pressed="false"] i { background: none; border: 1.5px solid var(--mkc); }
 .moi .m-mk-chips .chip[aria-pressed="false"] small { opacity: .7; }
 .moi .m-mk-rien { margin: 18px 0; text-align: center; }
+.moi .m-mk-chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; margin-bottom: 8px; }   /* lot 62 c : 2 pastilles par ligne */
+.moi .m-mk-chips .chip { display: flex; justify-content: flex-start; border-radius: 10px; min-height: 34px; padding: 5px 8px; font-size: 12.5px; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+.moi .m-mk-chips .chip span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; line-height: 1.35; }   /* l'accent de « Émergents » n'est pas rogné */
+.moi .m-mk-chips .chip b { flex: none; font: 600 12px/1 var(--f-num); font-variant-numeric: tabular-nums; }
+.moi .m-mk-chips .chip b small { margin-right: 4px; font-size: 10px; color: var(--ink-3); font-weight: 600; }
+.moi .m-mk-chips .chip[aria-pressed="false"] b.flat, .moi .m-mk-chips .chip[aria-pressed="false"] span { color: var(--ink-3); }
+.moi .m-mk-res .lien { margin-right: 8px; }
 .moi .m-idx { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
 .moi .m-idx div { background: var(--panel); padding: 8px 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; }
 .moi .m-idx span { font-size: 12.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1099,7 +1107,9 @@ function injecterStyle() {
 @keyframes mfoIn { from { opacity: 0; transform: translateY(14px) scale(.92); } to { opacity: 1; transform: none; } }
 .m-folle.feu.on .mfo-p { animation: mfoIn .7s cubic-bezier(.2,.9,.25,1.2) .16s both, mfoVacille 2.2s ease-in-out .9s infinite; }
 @keyframes mfoVacille { 0%, 100% { filter: brightness(1); } 30% { filter: brightness(1.12); } 55% { filter: brightness(.94); } 75% { filter: brightness(1.08); } }
-.m-folle.feu.fort.on .mfo-c { animation: mfoSecousse .5s linear .05s 1; }
+.m-folle.feu.fort.on .mfo-c, .m-folle.feu.explo.on .mfo-c { animation: mfoSecousse .5s linear .05s 1; }
+.m-folle.joie.bonbons { background: radial-gradient(120% 70% at 50% -10%, rgba(120,40,110,.6), transparent 70%), rgba(14,8,24,.95); } .m-folle.joie.bonbons .mfo-k { color: #FF9FCB; }
+.m-folle.joie.bonbons .mfo-p { color: #FFF5FB; text-shadow: 0 0 18px rgba(255,111,168,.7), 0 0 46px rgba(94,234,212,.4), 0 2px 0 rgba(30,0,20,.5); }
 @keyframes mfoSecousse { 0%, 100% { transform: none; } 20% { transform: translate(-5px, 2px); } 40% { transform: translate(4px, -3px); } 60% { transform: translate(-3px, 2px); } 80% { transform: translate(2px, -1px); } }
 .m-folle.joie.fort.on .mfo-p { animation: mfoIn .7s cubic-bezier(.2,.9,.25,1.2) .16s both, mfoAurore 3s ease-in-out 1s infinite; }
 @keyframes mfoAurore { 50% { text-shadow: 0 0 24px rgba(163,230,53,.8), 0 0 64px rgba(94,234,212,.6), 0 2px 0 rgba(0,20,30,.5); } }
@@ -1116,18 +1126,23 @@ function injecterStyle() {
 .m-folle.serie .mfo-c { margin-top: -30vh; } .m-folle.serie .mfo-p { color: #F4FFE8; text-shadow: 0 0 20px rgba(163,230,53,.55), 0 2px 0 rgba(0,0,0,.5); }
 .m-folle.relache { background: linear-gradient(180deg, rgba(7,10,28,.97), rgba(20,22,52,.96)); } .m-folle.relache .mfo-k { color: #C4B5FD; }
 .m-folle.relache .mfo-p { color: #E8E6FF; text-shadow: 0 0 20px rgba(196,181,253,.5); }
+.m-folle.plat { background: linear-gradient(180deg, rgba(8,16,34,.97), rgba(10,30,44,.96)); } .m-folle.plat .mfo-k { color: #9EE3F0; }
+.m-folle.plat .mfo-c { margin-top: -30vh; } .m-folle.plat .mfo-p { color: #EEFBFF; text-shadow: 0 0 20px rgba(158,227,240,.45), 0 2px 0 rgba(0,0,0,.5); }
 .m-folle .mfo-p.long { font-size: clamp(48px, 15vw, 80px); }
-.moi .m-ev { display: flex; align-items: stretch; gap: 0; margin-top: -4px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); overflow: hidden; }
-.moi .m-ev-b { all: unset; box-sizing: border-box; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 8px 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.moi .m-ev-i { font-size: 20px; line-height: 1; flex: none; }
-.moi .m-ev-t { min-width: 0; font-size: 12.5px; line-height: 1.3; color: var(--ink-2); }
-.moi .m-ev-t small { display: block; font: 700 10px/1.2 var(--f-text); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
-.moi .m-ev-t b { color: var(--ink); }
-.moi .m-ev-r { flex: none; margin-left: auto; color: var(--ink-3); font-size: 15px; }
-.moi .m-ev-x { all: unset; box-sizing: border-box; flex: none; width: 40px; display: grid; place-items: center; cursor: pointer; color: var(--ink-3); border-left: 1px solid var(--rule); font-size: 13px; }
+.moi .m-ev { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -4px; }   /* lot 62 c (Théo) : de petites pastilles sous la carte du haut, rien de pleine largeur */
+.moi .m-ev-p { display: inline-flex; align-items: stretch; max-width: 100%; border: 1px solid color-mix(in srgb, var(--evc, var(--rule)) 45%, var(--rule)); border-radius: 999px; background: var(--panel); overflow: hidden; }
+.moi .m-ev-p.on { border-color: var(--evc, var(--accent)); background: color-mix(in srgb, var(--evc, var(--accent)) 14%, var(--panel)); }
+.moi .m-ev-p .m-ev-b { all: unset; box-sizing: border-box; position: relative; display: inline-flex; align-items: center; gap: 5px; min-width: 0; min-height: 30px; padding: 3px 2px 3px 10px; font: 600 12.5px/1.2 var(--f-text); color: var(--ink); cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
+.moi .m-ev-p .m-ev-b small { color: var(--ink-3); font-weight: 600; }
+.moi .m-ev-p .m-ev-x { all: unset; box-sizing: border-box; display: grid; place-items: center; width: 28px; min-height: 30px; color: var(--ink-3); font-size: 11px; cursor: pointer; }
+.moi .m-ev-nvp { position: absolute; top: 3px; left: 3px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.moi .m-ev.conf { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); }
+.moi .m-ev-q { margin: 0; font-size: 13px; line-height: 1.4; color: var(--ink-2); } .moi .m-ev-q b { color: var(--ink); }
+.moi .m-ev-a { display: flex; gap: 8px; } .moi .m-ev-a .btn { padding: 7px 14px; }
 .moi .m-ev-b:focus-visible, .moi .m-ev-x:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.moi .m-ev[data-ev="feu"] { border-color: rgba(255,110,40,.45); } .moi .m-ev[data-ev="krach"] { border-color: rgba(150,170,210,.5); } .moi .m-ev[data-ev="crypto"] { border-color: rgba(247,147,26,.5); }
-.moi .m-ev[data-ev="joie"], .moi .m-ev[data-ev="serie"] { border-color: rgba(94,234,212,.5); } .moi .m-ev[data-ev="sommet"] { border-color: rgba(255,160,140,.5); } .moi .m-ev[data-ev="relache"] { border-color: rgba(196,181,253,.5); }
+.moi [data-ev="feu"] { --evc: #FF6E28; } .moi [data-ev="krach"] { --evc: #96AAD2; } .moi [data-ev="crypto"] { --evc: #F7931A; } .moi [data-ev="joie"] { --evc: #FF6FA8; }
+.moi [data-ev="serie"] { --evc: #5EEAD4; } .moi [data-ev="sommet"] { --evc: #FFA08C; } .moi [data-ev="relache"] { --evc: #C4B5FD; } .moi [data-ev="plat"] { --evc: #7CCFE0; }
+
 /* l'ambiance de la journée sur Aujourd'hui : derrière le contenu, quelques braises qui montent (ou paillettes d'or qui scintillent) */
 .moi .m-amb { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
 .moi .m-amb.feu { background: radial-gradient(120% 34% at 50% 104%, rgba(255,96,30,.16), transparent 70%); }
@@ -1146,6 +1161,7 @@ function injecterStyle() {
 .moi .m-amb.sommet { background: radial-gradient(90% 30% at 50% -6%, rgba(255,160,140,.14), transparent 70%); }
 .moi .m-amb.serie { background: radial-gradient(100% 26% at 50% -4%, rgba(163,230,53,.10), transparent 70%); }
 .moi .m-amb.relache { background: linear-gradient(180deg, rgba(90,80,180,.10), transparent 45%); }
+.moi .m-amb.plat { background: linear-gradient(0deg, rgba(90,170,200,.10), transparent 35%); }   /* lot 62 c : Calme plat = une simple teinte, rien ne bouge */
 .moi .m-amb.crypto { background: radial-gradient(100% 30% at 50% -4%, rgba(247,147,26,.10), transparent 70%); }
 @media (prefers-reduced-motion: reduce) { .moi .m-amb { display: none; } }
 /* « Le jour J » : un palier rond de patrimoine financier sans objet fait passer un reflet d'or sur le total (une fois) */
@@ -1505,7 +1521,7 @@ function htmlCinq() {
    Palier fort : −5 % / +5 %.
    Source : l'historique de ton fichier (variation de l'indice « ip », versements neutralisés) ; la séance en cours (ou la dernière séance)
    tant que l'historique ne l'a pas encore. Une fois par séance, par palier et par appareil. Jamais dans le Versus, jamais pour le profil simple. */
-const FOLLE_SEUIL = .03, FOLLE_FORT = .05, FOLLE_JOURS = 7;   // Théo : une fenêtre d'environ une semaine (rattrapage compris)
+const FOLLE_SEUIL = .028, FOLLE_MID = .035, FOLLE_FORT = .05, FOLLE_JOURS = 7;   // lot 62 c (Théo) : 3 paliers par sens : 2,8 % · 3,5 % · 5 %   // Théo : une fenêtre d'environ une semaine (rattrapage compris)
 const JOURS_L = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
 function isoN(n) { const s = String(n); return s.slice(0, 4) + "-" + s.slice(4, 6) + "-" + s.slice(6, 8); }
 /** séances de l'historique : { d, p (variation, versements neutralisés), e (€ gagnés ou perdus hors versements), ip0 (niveau d'avant), i } */
@@ -1537,9 +1553,10 @@ function journeeFolle() {
   try { seancesHisto().forEach(x => { if (x.d >= lim && x.d <= auj) c.set(x.d, x); }); } catch (e) { /* historique incomplet */ }
   try { const x = seanceCarte(); if (x && x.d >= lim && (x.direct || !c.has(x.d))) c.set(x.d, x); } catch (e) { /* idem */ }   // en direct : la séance du jour l'emporte sur une ligne d'historique de la matinée
   const x = Array.from(c.values()).sort((a, b) => a.d < b.d ? 1 : -1).find(y => Math.abs(y.p) >= FOLLE_SEUIL - 1e-9);
-  return x ? Object.assign({}, x, { sens: x.p > 0 ? 1 : -1, fort: Math.abs(x.p) >= FOLLE_FORT - 1e-9 }) : null;
+  const niv = x ? (Math.abs(x.p) >= FOLLE_FORT - 1e-9 ? 3 : Math.abs(x.p) >= FOLLE_MID - 1e-9 ? 2 : 1) : 0;
+  return x ? Object.assign({}, x, { sens: x.p > 0 ? 1 : -1, niv, fort: niv === 3 }) : null;
 }
-function cleFolle(x) { return x.d + (x.sens > 0 ? "+" : "-") + (x.fort ? 2 : 1); }
+function cleFolle(x) { return x.d + (x.sens > 0 ? "+" : "-") + (x.niv || (x.fort ? 3 : 1)); }   // lot 62 c : palier 1 · 2 · 3
 function libJourFolle(d) { if (d === isoJour(new Date())) return "Aujourd'hui"; const x = new Date(d + "T12:00:00"); return majuscule(JOURS_L[x.getDay()]) + " " + frDate(d).slice(0, 5); }
 /** sprite rond et flou (dessiné une fois) */
 function spriteFolle(r, stops) {
@@ -1615,6 +1632,17 @@ function sceneEv(kind, g, W, H, t, dt, st, eclairs, pousser, rnd, SP, finE) {
     for (let i = 0; i < SERIE_N; i++) { const ts = .3 + i * .32; if (t < ts) continue; const a = Math.PI + (i + .5) / SERIE_N * Math.PI, x = cx + Math.cos(a) * R * 1.1, y = cy + Math.sin(a) * R * 1.1, u = Math.min(1, (t - ts) / .3);
       g.globalAlpha = u * .8; g.drawImage(SP.c[i % SP.c.length], x - 10 * u, y - 10 * u, 20 * u, 20 * u); if (!st["s" + i]) { st["s" + i] = 1; for (let j = 0; j < 14; j++) pousser({ k: "s", x, y, vx: rnd(-120, 120), vy: rnd(-160, 20), v: 0, vie: rnd(.5, .9), sp: SP.c[j % SP.c.length], tl: rnd(3, 5) }); } }
     g.globalAlpha = 1;
+  } else if (kind === "plat") {   // la mer d'huile : un horizon au crépuscule, le reflet du soleil, des ronds dans l'eau qui s'élargissent lentement
+    const hy = H * .62, T1b = Math.min(1, t / 1.2);
+    g.globalCompositeOperation = "source-over"; g.globalAlpha = T1b;
+    const ciel = g.createLinearGradient(0, 0, 0, hy); ciel.addColorStop(0, "rgba(10,24,48,0)"); ciel.addColorStop(1, "rgba(120,170,190,.35)"); g.fillStyle = ciel; g.fillRect(0, 0, W, hy);
+    const mer = g.createLinearGradient(0, hy, 0, H); mer.addColorStop(0, "rgba(40,90,110,.55)"); mer.addColorStop(1, "rgba(6,20,30,.2)"); g.fillStyle = mer; g.fillRect(0, hy, W, H - hy);
+    g.globalCompositeOperation = "lighter"; g.drawImage(SP.chaud, W / 2 - 46, hy - 70, 92, 92);   // le soleil posé sur l'horizon
+    for (let i = 0; i < 14; i++) { const y = hy + 6 + i * i * 1.6, w = (60 - i * 3) * (1 + .08 * Math.sin(t * 1.3 + i)); g.globalAlpha = T1b * (.35 - i * .02); g.fillStyle = "#FFE2B8"; g.fillRect(W / 2 - w / 2, y, w, 2); }
+    g.globalCompositeOperation = "source-over"; g.lineWidth = 1.2;
+    [0, 1.3, 2.6].forEach((t0, j) => { const u = ((t - t0) % 3.9) / 3.9; if (t < t0) return; const x0 = W * [.3, .7, .5][j], y0 = hy + H * [.12, .2, .28][j];
+      g.globalAlpha = T1b * (1 - u) * .6; g.strokeStyle = "#BFE7F2"; g.beginPath(); g.ellipse(x0, y0, 10 + u * W * .22, (10 + u * W * .22) * .18, 0, 0, Math.PI * 2); g.stroke(); });
+    g.globalAlpha = 1; g.globalCompositeOperation = "lighter";
   } else if (kind === "relache") {   // la sieste : un croissant de lune, des étoiles, des « z » qui montent
     if (!st.e) st.e = Array.from({ length: 40 }, () => [rnd(0, W), rnd(0, H * .6), rnd(0, 6), rnd(.6, 1.6)]);
     g.globalCompositeOperation = "lighter"; st.e.forEach(e => { g.globalAlpha = T1 * (.35 + .35 * Math.sin(t * 2 + e[2])); g.drawImage(SP.braise, e[0] - e[3] * 2, e[1] - e[3] * 2, e[3] * 4, e[3] * 4); });
@@ -1627,15 +1655,15 @@ function sceneEv(kind, g, W, H, t, dt, st, eclairs, pousser, rnd, SP, finE) {
 /** le grand effet. revoir = rejoué à la demande (rien n'est noté) */
 function lancerFolle(x, revoir) {
   injecterStyle();
-  const kind = x.k || (x.sens < 0 ? "feu" : "joie"), feu = kind === "feu", joie = kind === "joie", fort = !!x.fort, disc = ETAT.discret === "oui", T = textesEv(Object.assign({ k: kind }, x));   // lot 62 b : un seul moteur pour tous les événements
+  const kind = x.k || (x.sens < 0 ? "feu" : "joie"), feu = kind === "feu", joie = kind === "joie", fort = !!x.fort, niv = x.niv || (fort ? 3 : 1), explo = feu && niv === 2, bonbons = joie && niv === 2, disc = ETAT.discret === "oui", T = textesEv(Object.assign({ k: kind }, x));   // lot 62 b : un seul moteur pour tous les événements
   const o = document.createElement("div");
-  o.className = "m-folle moi " + kind + (fort ? " fort" : "") + (reduit ? " calme" : "");
+  o.className = "m-folle moi " + kind + (fort ? " fort" : "") + (explo ? " explo" : "") + (bonbons ? " bonbons" : "") + (reduit ? " calme" : "");
   o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", T.k + " : " + T.sub + ", " + T.big); o.tabIndex = -1;
   o.innerHTML = '<canvas aria-hidden="true"></canvas><div class="mfo-c"><span class="mfo-k">' + esc(T.k) + '</span><span class="mfo-d">' + esc(T.sub) + "</span>" +
     '<b class="mfo-p' + (T.big.length > 8 ? " long" : "") + '">' + esc(T.big) + "</b>" + ((feu || joie) && !disc && ok(x.e) && Math.abs(x.e) >= 1 ? '<span class="mfo-e">' + eur(x.e, 0, true) + "</span>" : "") + "<p>" + esc(T.phr) + '</p></div><span class="mfo-t">Touche pour continuer</span>';
   document.body.appendChild(o);
   try { o.focus({ preventScroll: true }); } catch (e) { /* rien */ }
-  const S = window.SONS, duree = reduit ? 2800 : fort ? 5000 : kind === "relache" ? 3600 : 4300, t0 = performance.now();
+  const S = window.SONS, duree = reduit ? 2800 : fort ? 5000 : niv === 2 ? 4600 : kind === "relache" ? 3600 : 4300, t0 = performance.now();
   let fini = false, raf = 0;
   const fermer = () => { if (fini) return; fini = true; cancelAnimationFrame(raf); removeEventListener("resize", taille); if (S && S.folleStop) S.folleStop(); o.classList.add("fin"); setTimeout(() => o.remove(), 450); };
   o.addEventListener("click", fermer); o.addEventListener("keydown", e => { if (["Escape", "Enter", " "].includes(e.key)) { e.preventDefault(); fermer(); } });
@@ -1643,10 +1671,10 @@ function lancerFolle(x, revoir) {
   requestAnimationFrame(() => o.classList.add("on"));
   /* son : la séquence est écrite à l'avance (mêmes instants que l'image) */
   const fusees = [];
-  if (joie) { const n = fort ? 10 : 7; for (let i = 0; i < n; i++) { const l = (i < 2 ? 0 : .1 + (i - 1) * (fort ? .38 : .46)) + Math.random() * .12, bas = i % 3 === 2;   // deux fusées d'entrée, puis une salve régulière ; une sur trois éclate plus bas, sur les côtés
+  if (joie && !bonbons) { const n = fort ? 10 : 7; for (let i = 0; i < n; i++) { const l = (i < 2 ? 0 : .1 + (i - 1) * (fort ? .38 : .46)) + Math.random() * .12, bas = i % 3 === 2;   // deux fusées d'entrée, puis une salve régulière ; une sur trois éclate plus bas, sur les côtés
     fusees.push({ l, b: l + .7 + Math.random() * .2, x: bas ? (i % 2 ? .82 : .18) : .14 + ((i * .37 + Math.random() * .2) % .72), y: bas ? .5 + Math.random() * .12 : .1 + Math.random() * .24, gros: fort && i === n - 1 }); } }
   const eclairs = kind === "krach" ? [.35, 1.5, 2.6, 3.4] : kind === "crypto" ? [.2, .9, 1.5, 2.2, 2.8, 3.3] : [];
-  try { if (S) { if (feu) S.folleFeu(duree / 1000 - .3, fort); else if (joie) { fusees.forEach(f => S.fusee(f.l, f.b, f.gros)); if (fort) S.aurore(1, duree / 1000 - 1.4); } else if (S.evenement) S.evenement(kind, duree / 1000, eclairs); } } catch (e) { /* son indisponible */ }
+  try { if (S) { if (explo && S.explosion) S.explosion(); if (bonbons && S.bonbons) S.bonbons(duree / 1000 - .8); if (feu) S.folleFeu(duree / 1000 - .3, fort || explo); else if (joie) { fusees.forEach(f => S.fusee(f.l, f.b, f.gros)); if (fort) S.aurore(1, duree / 1000 - 1.4); } else if (S.evenement) S.evenement(kind, duree / 1000, eclairs); } } catch (e) { /* son indisponible */ }
   const cv = o.querySelector("canvas"), g = cv.getContext && cv.getContext("2d");
   let W = 0, H = 0; const dpr = Math.min(1.5, window.devicePixelRatio || 1);
   function taille() { W = innerWidth; H = innerHeight; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0); }
@@ -1657,7 +1685,7 @@ function lancerFolle(x, revoir) {
   const pousser = q => { if (P.length < MAX) P.push(q); };
   const pas = now => {
     if (fini) return;
-    const dt = Math.min(.05, (now - der) / 1000), t = (now - t0) / 1000, T = duree / 1000; der = now;
+    const dt = Math.max(0, Math.min(.05, (now - der) / 1000)), t = Math.max(0, (now - t0) / 1000), T = duree / 1000; der = Math.max(der, now);   // la 1re image peut dater d'avant t0
     g.clearRect(0, 0, W, H);
     const finE = t > T - 1.1;   // plus rien ne naît dans la dernière seconde
     if (feu) {
@@ -1666,7 +1694,14 @@ function lancerFolle(x, revoir) {
         pousser({ k: "f", x: x0, y: H + 30, vx: rnd(-10, 10), vy: -rnd(150, 300) * (fort ? 1.3 : 1) * (H / 800), v: 0, vie: rnd(.7, 1.4), tl: rnd(26, 50) * (W < 500 ? 1 : 1.3) }); }
       accB += (finE ? 0 : fort ? 40 : 24) * dt; while (accB >= 1) { accB--; pousser({ k: "b", x: rnd(0, W), y: H + 5, vx: rnd(-30, 30), vy: -rnd(70, 190), v: 0, vie: rnd(1.8, 3.4), ph: rnd(0, 6), tl: rnd(2, 4) }); }
       if (fort && t < .35) { g.fillStyle = "rgba(255,120,40," + (.35 * (1 - t / .35)) + ")"; g.fillRect(0, 0, W, H); }   // l'éclair du départ
-    } else if (!joie) { sceneEv(kind, g, W, H, t, dt, T0, eclairs, pousser, rnd, SP, finE); } else {
+      if (explo) {   // lot 62 c · Explosion : flash blanc, onde de choc, débris qui retombent (le feu prend ensuite)
+        if (t < .45) { g.fillStyle = "rgba(255,236,200," + (.8 * (1 - t / .45)) + ")"; g.fillRect(0, 0, W, H); }
+        if (!T0.deb) { T0.deb = 1; for (let i = 0; i < 70; i++) { const a = -Math.PI * rnd(.08, .92), v0 = rnd(250, 620); pousser({ k: "d", x: W / 2 + rnd(-20, 20), y: H * .74, vx: Math.cos(a) * v0, vy: Math.sin(a) * v0, v: 0, vie: rnd(1.3, 2.2), r: rnd(0, 6), vr: rnd(-9, 9), tl: rnd(3, 8) }); } }
+        if (t < .9) { const u = t / .9; g.globalCompositeOperation = "lighter"; g.globalAlpha = (1 - u) * .7; g.strokeStyle = "#FFD9A8"; g.lineWidth = 6 * (1 - u) + 1; g.beginPath(); g.ellipse(W / 2, H * .74, u * W * .9, u * W * .3, 0, 0, Math.PI * 2); g.stroke(); g.globalAlpha = 1; g.globalCompositeOperation = "source-over"; }
+      }
+    } else if (!joie) { sceneEv(kind, g, W, H, t, dt, T0, eclairs, pousser, rnd, SP, finE); } else if (bonbons) {   // lot 62 c · Pluie de bonbons : des bonbons emballés multicolores tombent en tournant
+      accB += (finE ? 0 : 55) * dt * Math.min(1, t / .4); while (accB >= 1) { accB--; pousser({ k: "c", x: rnd(0, W), y: -20, vx: rnd(-25, 25), vy: rnd(140, 260), v: 0, vie: 4, r: rnd(0, 6), vr: rnd(-4, 4), tl: rnd(9, 15), col: ["#FF6FA8", "#5EEAD4", "#7FB2FF", "#C4B5FD", "#A3E635", "#FFB86B"][Math.floor(rnd(0, 6))] }); }
+    } else {
       fusees.forEach(f => {
         if (!f.parti && t >= f.l) { f.parti = 1; pousser({ k: "r", x: f.x * W, y: H + 10, x1: f.x * W + rnd(-20, 20), y1: f.y * H, t0: t, d: f.b - f.l, v: 0, vie: f.b - f.l }); }
         if (!f.eclate && t >= f.b) { f.eclate = 1; const n = f.gros ? 150 : fort ? 95 : 75, sp0 = SP.c[Math.floor(Math.random() * SP.c.length)], v0 = (f.gros ? 310 : 230) * Math.min(1.3, W / 390);
@@ -1696,6 +1731,12 @@ function lancerFolle(x, revoir) {
         g.globalAlpha = 1; g.drawImage(SP.or, x - 6, y - 6, 12, 12);
       } else if (q.k === "e") { const fr = Math.pow(.25, dt); q.vx *= fr; q.vy = q.vy * fr + 120 * dt; q.x += q.vx * dt; q.y += q.vy * dt;
         g.globalAlpha = (1 - u) * (u > .65 ? .5 + .5 * Math.sin(q.v * 40) : 1); g.drawImage(q.sp, q.x - q.tl, q.y - q.tl, q.tl * 2, q.tl * 2);
+      } else if (q.k === "d") { q.vy += 700 * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.r += q.vr * dt; g.globalCompositeOperation = "source-over"; g.globalAlpha = Math.min(1, (1 - u) * 2);
+        g.save(); g.translate(q.x, q.y); g.rotate(q.r); g.fillStyle = "#2A2220"; g.fillRect(-q.tl, -q.tl * .6, q.tl * 2, q.tl * 1.2); g.fillStyle = "rgba(255,140,50,.85)"; g.fillRect(-q.tl, -q.tl * .6, q.tl * 2, 1.5); g.restore(); g.globalCompositeOperation = "lighter";
+      } else if (q.k === "c") { q.x += (q.vx + Math.sin(q.v * 2 + q.r) * 20) * dt; q.y += q.vy * dt; q.r += q.vr * dt; if (q.y > H + 30) { q.v = q.vie; continue; }
+        g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; const L = q.tl; g.save(); g.translate(q.x, q.y); g.rotate(q.r); g.fillStyle = q.col;
+        g.beginPath(); g.moveTo(-L * .9, 0); g.lineTo(-L * 1.6, -L * .55); g.lineTo(-L * 1.6, L * .55); g.closePath(); g.fill(); g.beginPath(); g.moveTo(L * .9, 0); g.lineTo(L * 1.6, -L * .55); g.lineTo(L * 1.6, L * .55); g.closePath(); g.fill();
+        g.beginPath(); g.ellipse(0, 0, L, L * .62, 0, 0, Math.PI * 2); g.fill(); g.fillStyle = "rgba(255,255,255,.55)"; g.fillRect(-L * .35, -L * .62, L * .22, L * 1.24); g.fillRect(L * .2, -L * .62, L * .22, L * 1.24); g.restore(); g.globalCompositeOperation = "lighter";
       } else if (q.k === "l") { q.x += q.vx * dt; q.y += q.vy * dt; g.globalCompositeOperation = "source-over"; g.strokeStyle = "rgba(190,205,230," + (.45 * (1 - u)) + ")"; g.lineWidth = 1.2; g.beginPath(); g.moveTo(q.x, q.y); g.lineTo(q.x - q.vx * .03, q.y - q.vy * .03); g.stroke(); g.globalCompositeOperation = "lighter";
       } else if (q.k === "s") { q.vy += 300 * dt; q.x += q.vx * dt; q.y += q.vy * dt; g.globalAlpha = 1 - u; g.drawImage(q.sp, q.x - q.tl, q.y - q.tl, q.tl * 2, q.tl * 2);
       } else if (q.k === "z") { q.x += Math.sin(q.v * 1.5 + q.ph) * 12 * dt; q.y += q.vy * dt; g.globalCompositeOperation = "source-over"; g.globalAlpha = Math.min(1, u * 4) * (1 - u); g.fillStyle = "#E0E7FF"; g.font = "italic 800 " + q.tl + "px sans-serif"; g.fillText("z", q.x, q.y); g.globalCompositeOperation = "lighter";
@@ -1723,21 +1764,25 @@ function derniereFolle(k) {
    Sommet = clôture du S&P 500 au-dessus de TOUTES les clôtures connues (≥ 250 séances de données) après au moins 20 séances sans record ;
    Série verte = 5 séances de hausse d'affilée de ton portefeuille (historique du fichier, versements neutralisés) ; Relâche = jour férié de semaine
    où Paris (lignes EPA:) ou New York (lignes NASDAQ:/NYSE…) est fermée. Concernés : Krach et Sommet = tout le monde (le S&P 500 est la référence
-   du jeu) ; Tempête crypto = seulement si tu as du Bitcoin ; Relâche = seulement si tu as des lignes sur la place fermée. */
-const EV_PRIO = ["krach", "feu", "joie", "crypto", "sommet", "serie", "relache"];   // la journée folle (feu / joie) passe juste après le krach
-const KRACH_SEUIL = -.03, CRYPTO_SEUIL = .10, SOMMET_MIN = 250, SOMMET_ECART = 20, SERIE_N = 5, SP_RECORD_CONNU = 6000;   // SP_RECORD_CONNU : plancher prudent si la série est en points d'indice
+   du jeu) ; Tempête crypto = seulement si tu as du Bitcoin ; Relâche = seulement si tu as des lignes sur la place fermée.
+   lot 62 c : Calme plat = 20 séances d'affilée de ton portefeuille sans bouger de plus de 1 % (historique du fichier), priorité la plus basse. */
+const EV_PRIO = ["feu", "joie", "krach", "crypto", "sommet", "serie", "relache", "plat"];   // lot 62 c : ta journée folle passe avant le krach (Moi parle de TON portefeuille ; le krach reste en pastille) ; « Calme plat » en dernier
+const KRACH_SEUIL = -.03, CRYPTO_SEUIL = .10, SOMMET_MIN = 250, SOMMET_ECART = 20, SERIE_N = 5, SP_RECORD_CONNU = 6000, CALME_N = 20, CALME_SEUIL = .01;   // lot 62 c : Calme plat = 20 séances sans ±1 %   // SP_RECORD_CONNU : plancher prudent si la série est en points d'indice
 const EV_DEF = {
-  feu: { ic: "🧯", nom: "Incendie", quoi: "après une séance à −3 % ou pire de ton portefeuille" },
-  joie: { ic: "🎆", nom: "Feu d'artifice", quoi: "après une séance à +3 % ou mieux de ton portefeuille" },
+  feu: { ic: "🧯", nom: "Incendie", quoi: "ton portefeuille perd 2,8 % ou plus en une séance (Explosion à −3,5 %, Journée noire à −5 %)" },
+  joie: { ic: "🎆", nom: "Feu d'artifice", quoi: "ton portefeuille gagne 2,8 % ou plus en une séance (Pluie de bonbons à +3,5 %, Bouquet final à +5 %)" },
   krach: { ic: "⛈️", nom: "Krach mondial", quoi: "le S&P 500 perd 3 % ou plus en une séance" },
   crypto: { ic: "⚡", nom: "Tempête crypto", quoi: "le Bitcoin bouge de 10 % ou plus en 24 h (si tu en as)" },
   sommet: { ic: "🏔️", nom: "Sommet du S&P 500", quoi: "le S&P 500 bat son record après au moins un mois sans record" },
   serie: { ic: "🌈", nom: "Série verte", quoi: "ton portefeuille monte 5 séances d'affilée" },
-  relache: { ic: "😴", nom: "Bourse en relâche", quoi: "un jour férié ferme la bourse de tes lignes" }
+  relache: { ic: "😴", nom: "Bourse en relâche", quoi: "un jour férié ferme la bourse de tes lignes" },
+  plat: { ic: "🌊", nom: "Calme plat", quoi: "ton portefeuille ne bouge jamais de plus de 1 % pendant 20 séances d'affilée" }
 };
 function ambCoupee(k) { return Array.isArray(PREF.ambOff) && (PREF.ambOff.includes(k) || PREF.ambOff.includes("tout")); }
 function evTousCoupes() { return Array.isArray(PREF.ambOff) && PREF.ambOff.includes("tout"); }
-const libCourt = d => { const j = new Date(d + "T12:00:00"); return JOURS_C[j.getDay()] + " " + frDate(d).slice(0, 5); };
+/** lot 62 c : le nom d'une journée folle selon son palier (Incendie · Explosion · Journée noire / Feu d'artifice · Pluie de bonbons · Bouquet final) */
+function nomEv(x) { const n = (x.niv || 1) - 1; return x.k === "feu" ? ["Incendie", "Explosion", "Journée noire"][n] : x.k === "joie" ? ["Feu d'artifice", "Pluie de bonbons", "Bouquet final"][n] : EV_DEF[x.k].nom; }
+const libCourt = d => { const j = new Date(d + "T12:00:00"); return JOURS_C[j.getDay()] + " " + (j.getFullYear() === new Date().getFullYear() ? frDate(d).slice(0, 5) : frDate(d)); };   // l'année quand ce n'est pas celle-ci
 /** clôtures quotidiennes d'un marché du Versus { d, v } (+ la séance en direct quand le Versus l'a et que les clôtures ne l'ont pas encore) */
 function closEv(nom) {
   const m = marchesMoi(), q = m && m.quot, sq = q && (q.s || []).find(x => x.nom === nom), out = []; if (!sq) return out;
@@ -1776,6 +1821,8 @@ function evDe(k) {
   else if (k === "crypto") { if (aDuBitcoin()) varsEv(closEv("Bitcoin"), 4).forEach(x => { if (Math.abs(x.p) >= CRYPTO_SEUIL - 1e-9) out.push({ k, d: x.d, p: x.p }); }); }
   else if (k === "sommet") { const c = closEv("S&P 500"); let max = 0, iMax = -1;
     c.forEach((x, i) => { if (i >= SOMMET_MIN && x.v > max && i - iMax >= SOMMET_ECART && (x.v < 1000 || x.v > SP_RECORD_CONNU)) out.push({ k, d: x.d, v: x.v, avant: max, dAvant: c[iMax].d }); if (x.v > max) { max = x.v; iMax = i; } }); }
+  else if (k === "plat") { const l = seancesHisto(); let n = 0;   // lot 62 c : une fois par période calme (à la 20e séance), pas tous les jours qui suivent
+    l.forEach((x, i) => { const suite = i > 0 && x.i - l[i - 1].i <= 3; n = Math.abs(x.p) <= CALME_SEUIL + 1e-9 ? (suite && n ? n + 1 : 1) : 0; if (n === CALME_N) out.push({ k, d: x.d, de: l[i - CALME_N + 1].d }); }); }
   else if (k === "serie") { const l = seancesHisto(); let n = 0, cum = 1;
     l.forEach((x, i) => { const suite = i > 0 && x.i - l[i - 1].i <= 3; if (x.p > 0) { n = suite && n ? n + 1 : 1; cum = n === 1 ? 1 + x.p : cum * (1 + x.p); } else n = 0; if (n === SERIE_N) out.push({ k, d: x.d, p: cum - 1 }); }); }
   else if (k === "relache") { const t = tickersTenus(), pl = [["paris", /^EPA:/], ["ny", /^(NASDAQ|NYSE|NYSEARCA|NYSEAMERICAN|BATS):/]].filter(([, re]) => t.some(x => re.test(x))).map(p => p[0]);
@@ -1785,16 +1832,22 @@ function evDe(k) {
   return out.sort((a, b) => a.d < b.d ? 1 : -1);
 }
 /** l'événement en cours (un seul), ou null */
-function evenementActif() {
-  if (!M || M.simple) return null;
+/** lot 62 c (Théo) : TOUS les événements en cours (un par genre, le plus récent de sa fenêtre), du plus fort au plus faible, sans ceux qu'on a retirés (✕) */
+function evenementsActifs() { const m = evMasques(); return evenementsListe().filter(x => !m.includes(x.cle)); }
+function evenementsListe() {
+  if (!M || M.simple) return [];
   const auj = isoJour(new Date()), lim = limEv(), cand = [];
   try { const x = journeeFolle(); if (x) cand.push(Object.assign({}, x, { k: x.sens < 0 ? "feu" : "joie", folle: true })); } catch (e) { /* rien */ }
-  ["krach", "crypto", "sommet", "serie", "relache"].forEach(k => { try { const x = evDe(k)[0]; if (x && x.d <= auj && (k === "relache" ? x.d === auj : x.d >= lim)) cand.push(x); } catch (e) { /* données absentes */ } });
+  ["krach", "crypto", "sommet", "serie", "relache", "plat"].forEach(k => { try { const x = evDe(k)[0]; if (x && x.d <= auj && (k === "relache" ? x.d === auj : x.d >= lim)) cand.push(x); } catch (e) { /* données absentes */ } });
   cand.sort((a, b) => EV_PRIO.indexOf(a.k) - EV_PRIO.indexOf(b.k) || (a.d < b.d ? 1 : -1));
-  const x = cand[0]; if (!x) return null;
-  x.cle = x.folle ? cleFolle(x) : x.k + ":" + x.d;
-  return x;
+  cand.forEach(x => { x.cle = x.folle ? cleFolle(x) : x.k + ":" + x.d; });
+  return cand;
 }
+/** lot 62 c (Théo) : ✕ = masquer (pas supprimer) : l'événement reste dans Vestiaire › Ambiances, où « Oui » le remet, jusqu'à la fin de sa fenêtre */
+function evenementsTous() { return evenementsListe(); }
+function evenementActif() { return evenementsActifs()[0] || null; }
+/** dernier jour de la fenêtre d'un événement (aaaa-mm-jj) */
+function finEv(x) { if (x.k === "relache") return x.d; const d = new Date(x.d + "T12:00:00"); d.setDate(d.getDate() + FOLLE_JOURS); return isoJour(d); }
 function limEv() { const n = new Date(); return isoJour(new Date(n.getFullYear(), n.getMonth(), n.getDate() - FOLLE_JOURS, 12)); }
 /** textes d'un événement : kicker, gros chiffre, ligne du dessous, phrase, carte « pourquoi » */
 function textesEv(x) {
@@ -1803,29 +1856,31 @@ function textesEv(x) {
   if (x.k === "crypto") return { k: "Tempête crypto", big: pct(x.p, 1), sub: "Bitcoin en 24 h · " + lib, phr: x.p < 0 ? "Le Bitcoin plonge. Ta bourse, elle, n'a rien vu." : "Le Bitcoin s'emballe. Garde la tête froide.", carte: "Bitcoin " + pct(x.p, 1) + " le " + lc };
   if (x.k === "sommet") { const e = x.avant > 0 ? x.v / x.avant - 1 : null, p = pts(x.v);
     return { k: "Sommet du S&P 500", big: p || "Record", sub: "Clôture " + (lib === "Aujourd'hui" ? "d'aujourd'hui" : "du " + lc) + (ok(e) ? " · " + pct(e, 1) + " au-dessus du record du " + frDate(x.dAvant).slice(0, 5) : ""), phr: "Jamais aussi haut sur toutes les données connues. Profite de la vue, puis continue de grimper.", carte: (p ? p + " · " : "") + "record battu le " + lc }; }
+  if (x.k === "plat") return { k: "Calme plat", big: CALME_N + " séances", sub: "sans bouger de plus de 1 % · du " + frDate(x.de).slice(0, 5) + " au " + lc, phr: "Mer d'huile. Les meilleurs placements sont souvent les plus ennuyeux.", carte: CALME_N + " séances sans ±1 %, jusqu'au " + lc };
   if (x.k === "serie") return { k: "Série verte", big: SERIE_N + " séances", sub: "de hausse d'affilée · " + pct(x.p, 1) + " · jusqu'au " + lc, phr: "Cinq jours de soleil sur ton portefeuille. Profite, ça ne dure jamais.", carte: SERIE_N + " séances en hausse jusqu'au " + lc };
   if (x.k === "relache") { const pl = x.places.map(p => p === "paris" ? "Paris" : "New York").join(" et ");
     return { k: "Bourse en relâche", big: "Fermée", sub: pl + " · " + x.lib, phr: "Les marchés font la sieste. Toi aussi, si tu veux.", carte: pl + " fermée · " + x.lib }; }
   const feu = x.sens < 0;
-  return { k: feu ? (x.fort ? "Journée noire" : "Journée folle") : (x.fort ? "Bouquet final" : "Journée folle"), big: pct(x.p, 1), sub: lib, carte: "ton portefeuille " + pct(x.p, 1) + " le " + lc,
-    phr: feu ? (x.fort ? "Grosse brûlure. Ceux qui tiennent dix ans ont tous vécu des jours comme celui-ci." : "La bourse prend feu. Toi, tu gardes ton plan.") : (x.fort ? "Une séance comme on en voit peu. Savoure, et ne change rien." : "Feu d'artifice sur ton portefeuille.") };
+  const n = (x.niv || (x.fort ? 3 : 1)) - 1;
+  return { k: (feu ? ["Journée folle", "Explosion", "Journée noire"] : ["Journée folle", "Pluie de bonbons", "Bouquet final"])[n], big: pct(x.p, 2), sub: lib, carte: "ton portefeuille " + pct(x.p, 2) + " le " + lc,   // 2 décimales, comme la carte du haut
+    phr: (feu ? ["La bourse prend feu. Toi, tu gardes ton plan.", "Ça a sauté fort. Respire : ton plan, lui, tient debout.", "Grosse brûlure. Ceux qui tiennent dix ans ont tous vécu des jours comme celui-ci."]
+      : ["Feu d'artifice sur ton portefeuille.", "Il pleut des bonbons sur ton portefeuille. Croque, mais ne change rien.", "Une séance comme on en voit peu. Savoure, et ne change rien."])[n] };
 }
 /** à l'ouverture de Moi › Aujourd'hui : le grand effet de l'événement en cours, une fois par événement et par appareil */
+/** à l'ouverture de Moi › Aujourd'hui : UN seul grand effet (le plus fort des événements pas encore vus) ; les autres nouveaux sont notés « vus »
+    sans être joués (pas de cascade) et gardent une pastille « nouveau » dans la carte Événements tant qu'on ne les a pas touchés */
+function evListe(k) { try { const l = JSON.parse(stock.get(cleStock(k)) || "[]"); return Array.isArray(l) ? l : []; } catch (e) { return []; } }
+function evAjoute(k, cles, max) { const l = evListe(k); cles.forEach(c => { if (!l.includes(c)) l.push(c); }); stock.set(cleStock(k), JSON.stringify(l.slice(-(max || 60)))); }
+function folleVue(x) { const pre = x.d + (x.sens > 0 ? "+" : "-"); return evListe("folles").some(k => k.startsWith(pre) && +k.slice(-1) >= (x.niv || 1)); }   // déjà vue (ou plus forte)
+function evVu(x) { return x.folle ? folleVue(x) : evListe("evVus").includes(x.cle); }
 function verifierEvenement() {
   if (!M || M.simple || SRC !== "api" || PREF.onglet !== "jour" || !vueMoi() || document.hidden || !identiteSure() || evTousCoupes()) return;
   if (document.querySelector(".m-fete, .m-folle")) return;   // une fête de palier passe d'abord ; on réessaiera au prochain affichage
-  const x = evenementActif(); if (!x || evMasque(x)) return;
-  if (x.folle) {
-    let vus = []; try { vus = JSON.parse(stock.get(cleStock("folles")) || "[]"); } catch (e) { vus = []; }
-    if (!Array.isArray(vus)) vus = [];
-    const pre = x.d + (x.sens > 0 ? "+" : "-"); if (vus.some(k => k.startsWith(pre) && +k.slice(-1) >= (x.fort ? 2 : 1))) return;   // déjà vue (ou plus forte)
-    vus.push(cleFolle(x)); stock.set(cleStock("folles"), JSON.stringify(vus.slice(-40)));
-  } else {
-    let vus = []; try { vus = JSON.parse(stock.get(cleStock("evVus")) || "[]"); } catch (e) { vus = []; }
-    if (!Array.isArray(vus)) vus = []; if (vus.includes(x.cle)) return;
-    vus.push(x.cle); stock.set(cleStock("evVus"), JSON.stringify(vus.slice(-60)));
-  }
-  const go = () => lancerFolle(x);
+  const L = evenementsActifs(), nv = L.filter(x => !evVu(x)); if (!nv.length) return;
+  const x = nv[0];
+  nv.forEach(y => { if (y.folle) evAjoute("folles", [cleFolle(y)], 40); else evAjoute("evVus", [y.cle]); });   // tous notés : un seul est joué
+  evAjoute("evJoues", [x.cle]);
+  const go = () => { lancerFolle(x); rendre(); };   // la carte Événements se met à jour (pastille « nouveau » des autres)
   if (typeof window.ereApres === "function") window.ereApres(go, "folleMoi"); else go();
 }
 function evMasques() { try { const l = JSON.parse(stock.get(cleStock("evMasques")) || "[]"); return Array.isArray(l) ? l : []; } catch (e) { return []; } }
@@ -1834,33 +1889,48 @@ function evMasque(x) { return evMasques().includes(x.cle); }
 function derniereEv(k) { try { const x = evDe(k)[0]; return x ? x.d : null; } catch (e) { return null; } }
 function htmlAmbFolles() {
   if (!M || M.simple) return "";
-  const x = evenementActif(), tout = evTousCoupes(), lignes = EV_PRIO.map(k => {
-    const der = x && x.k === k ? x.d : derniereEv(k); if (!der) return "";   // jamais vécu (ou pas concerné) : pas listé
-    const D = EV_DEF[k], actif = !!x && x.k === k && !tout;
-    return '<div class="vs-amb-l' + (actif ? "" : " grise") + '"><span class="vs-em">' + D.ic + "</span><span><b>" + esc(D.nom) + "</b><small>" + (actif ? "en cours · " + libCourt(x.d) : "dernier : " + libCourt(der) + " · " + esc(D.quoi)) + "</small></span>" +
-      (actif ? '<span class="chips m-filtre" role="group" aria-label="' + esc("Ambiance " + D.nom) + '"><button class="chip" type="button" data-amb="' + k + '" data-amb-on="1" aria-pressed="' + !ambCoupee(k) + '">Oui</button><button class="chip" type="button" data-amb="' + k + '" data-amb-on="" aria-pressed="' + ambCoupee(k) + '">Non</button></span>' : '<span class="vs-amb-x">🔒</span>') + "</div>";
+  const L = evenementsTous(), masq = evMasques(), tout = evTousCoupes(), lignes = EV_PRIO.map(k => {
+    const x = L.find(y => y.k === k), der = x ? x.d : derniereEv(k); if (!der) return "";   // jamais vécu (ou pas concerné) : pas listé
+    const D = EV_DEF[k], actif = !!x && !tout;
+    return '<div class="vs-amb-l' + (actif ? "" : " grise") + '"><span class="vs-em">' + (x && actif ? icoEv(x) : D.ic) + "</span><span><b>" + esc(x && actif ? nomEv(x) : D.nom) + "</b><small>" + (actif ? "séance du " + libCourt(x.d) + " · jusqu'au " + libCourt(finEv(x)) + (masq.includes(x.cle) ? " · masqué" : "") : "dernier : " + libCourt(der) + " · " + esc(D.quoi)) + "</small></span>" +
+      (actif ? (on => '<span class="chips m-filtre" role="group" aria-label="' + esc("Afficher " + nomEv(x)) + '"><button class="chip" type="button" data-ev-vis="' + esc(x.cle) + '" data-ev-on="1" aria-pressed="' + on + '">Oui</button><button class="chip" type="button" data-ev-vis="' + esc(x.cle) + '" data-ev-on="" aria-pressed="' + !on + '">Non</button></span>')(!masq.includes(x.cle) && !ambCoupee(k)) : '<span class="vs-amb-x">🔒</span>') + "</div>";
   }).join("");
-  return lignes ? '<div class="vs-amb"><div class="vs-amb-g"><span><b>Événements rares</b><small>Effet, petite carte et ambiance sur Aujourd\'hui, environ une semaine. « Non » = appli sobre.</small></span>' +
+  return lignes ? '<div class="vs-amb"><div class="vs-amb-g"><span><b>Événements rares</b><small>Effet, pastille et ambiance sur Aujourd\'hui, environ une semaine. « Non » = appli sobre.</small></span>' +
     '<span class="chips m-filtre" role="group" aria-label="Événements rares"><button class="chip" type="button" data-amb="tout" data-amb-on="1" aria-pressed="' + !tout + '">Oui</button><button class="chip" type="button" data-amb="tout" data-amb-on="" aria-pressed="' + tout + '">Non</button></span></div>' +
     (reduit ? "<small>Ambiances coupées sur ce téléphone (moins d'animations demandé).</small>" : "") + lignes + "</div>" : "";
 }
-/** sur Aujourd'hui : la petite carte « pourquoi » (toucher = revoir, ✕ = masquer cet événement) et l'ambiance */
+/** sur Aujourd'hui (lot 62 c, Théo) : une rangée de petites pastilles sous la carte du haut, une par événement en cours (« 💥 Explosion · ven. 20/11 ») ;
+    toucher = rejouer l'effet et choisir l'ambiance de fond (une seule à la fois, par défaut la plus forte) ; ✕ = demande de confirmation, puis masque
+    (carte et ambiance) : l'événement se remet dans Missions › Vestiaire › Ambiances jusqu'à la fin de sa fenêtre. */
 const NB_AMB = 14;
+function evChoisi(L) { const c = stock.get(cleStock("evAmb")); return L.find(x => x.cle === c) || L.find(x => !ambCoupee(x.k)) || L[0]; }
+function icoEv(y) { return y.k === "feu" && y.niv === 2 ? "💥" : y.k === "joie" && y.niv === 2 ? "🍬" : EV_DEF[y.k].ic; }
 function habillerFolle(v) {
-  const x = evenementActif(), hero = v.querySelector(".m-hero"); if (!x || !hero || evTousCoupes() || evMasque(x)) return;
-  const T = textesEv(x), D = EV_DEF[x.k];
-  const c = document.createElement("div"); c.className = "m-ev"; c.dataset.ev = x.k;
-  c.innerHTML = '<button type="button" class="m-ev-b" aria-label="' + esc("Événement : " + T.k + ", " + T.carte + ". Toucher pour revoir") + '"><span class="m-ev-i" aria-hidden="true">' + D.ic + '</span><span class="m-ev-t"><small>Événement</small><b>' + esc(T.k) + "</b> · " + esc(T.carte) + '</span><span class="m-ev-r" aria-hidden="true">↻</span></button>' +
-    '<button type="button" class="m-ev-x" aria-label="Masquer cet événement">✕</button>';
-  c.querySelector(".m-ev-b").addEventListener("click", () => lancerFolle(x, true));
-  c.querySelector(".m-ev-x").addEventListener("click", () => { const l = evMasques(); l.push(x.cle); stock.set(cleStock("evMasques"), JSON.stringify(l.slice(-60))); toast("Événement masqué. Réglages dans Missions › Vestiaire › Ambiances."); rendre(); });
+  const L = evenementsActifs(), hero = v.querySelector(".m-hero"); if (!L.length || !hero || evTousCoupes()) return;
+  const x = evChoisi(L), joues = evListe("evJoues");
+  const c = document.createElement("div"); c.className = "m-ev"; c.setAttribute("role", "group"); c.setAttribute("aria-label", "Événements en cours");
+  const pastilles = () => L.map(y => { const T = textesEv(y), nv = !joues.includes(y.cle), on = y === x;
+    return '<span class="m-ev-p' + (on ? " on" : "") + '" data-ev="' + y.k + '"><button type="button" class="m-ev-b" data-ev-cle="' + esc(y.cle) + '" aria-pressed="' + on + '" title="' + esc("Événement : " + T.carte + ". Toucher pour revoir l'effet") + '" aria-label="' + esc("Événement " + nomEv(y) + " : " + T.carte + (nv ? ", nouveau" : "") + ". Toucher pour revoir l'effet et choisir son ambiance") + '">' +
+      (nv ? '<i class="m-ev-nvp" aria-hidden="true"></i>' : "") + '<span aria-hidden="true">' + icoEv(y) + "</span>" + esc(nomEv(y)) + " <small>· " + esc(libCourt(y.d)) + "</small></button>" +
+      '<button type="button" class="m-ev-x" data-ev-x="' + esc(y.cle) + '" aria-label="' + esc("Masquer " + nomEv(y)) + '">✕</button></span>'; }).join("");
+  const brancher = () => {
+    c.querySelectorAll("[data-ev-cle]").forEach(b => b.addEventListener("click", () => { const y = L.find(z => z.cle === b.dataset.evCle); if (!y) return;
+      stock.set(cleStock("evAmb"), y.cle); evAjoute("evJoues", [y.cle]); rendre(); lancerFolle(y, true); }));
+    c.querySelectorAll("[data-ev-x]").forEach(b => b.addEventListener("click", () => { const y = L.find(z => z.cle === b.dataset.evX); if (!y) return;
+      c.classList.add("conf"); c.innerHTML = '<p class="m-ev-q">Masquer l\'événement <b>' + esc(nomEv(y)) + "</b> ? Tu pourras le remettre jusqu'au " + esc(libCourt(finEv(y))) + " dans Missions › Vestiaire › Ambiances.</p>" +
+        '<span class="m-ev-a"><button type="button" class="btn acc" data-ev-ok>Masquer</button><button type="button" class="btn ghost" data-ev-non>Annuler</button></span>';
+      c.querySelector("[data-ev-ok]").addEventListener("click", () => { evAjoute("evMasques", [y.cle]); rendre(); });
+      c.querySelector("[data-ev-non]").addEventListener("click", () => { c.classList.remove("conf"); c.innerHTML = pastilles(); brancher(); });
+      c.querySelector("[data-ev-non]").focus(); }));
+  };
+  c.innerHTML = pastilles(); brancher();
   hero.insertAdjacentElement("afterend", c);
   if (ambCoupee(x.k) || reduit) return;
   hero.classList.add("m-amb-" + x.k);
   const a = document.createElement("div"); a.className = "m-amb " + x.k + (x.fort ? " fort" : ""); a.setAttribute("aria-hidden", "true");
   const COUL = { joie: ["#FF6FA8", "#5EEAD4", "#7FB2FF", "#C4B5FD", "#A3E635"], crypto: ["#F7931A", "#FFB347", "#C4B5FD"], relache: ["#E0E7FF", "#C4B5FD", "#FDE68A"], serie: ["#A3E635", "#5EEAD4", "#7FB2FF"] }[x.k] || ["#FFB347"];
   const monte = x.k === "feu", tombe = x.k === "krach";
-  let h = ""; if (!["sommet"].includes(x.k)) for (let i = 0; i < NB_AMB; i++) { const r = (i * 0.618034) % 1, r2 = (i * 0.414214 + .3) % 1;
+  let h = ""; if (!["sommet", "plat"].includes(x.k)) for (let i = 0; i < NB_AMB; i++) { const r = (i * 0.618034) % 1, r2 = (i * 0.414214 + .3) % 1;
     h += '<i style="left:' + (3 + r * 94).toFixed(1) + "%;" + (monte || tombe ? "" : "top:" + (4 + r2 * 80).toFixed(1) + "%;") + "--d:" + (monte ? 7 + r2 * 6 : tombe ? 1.4 + r2 * .8 : 3 + r2 * 3).toFixed(2) + "s;--r:" + (-(r2 * 12)).toFixed(2) + "s;--s:" + (2 + r * 2.5).toFixed(1) + "px;--c:" + COUL[i % COUL.length] + '"></i>'; }
   a.innerHTML = h; v.prepend(a);
 }
@@ -2016,7 +2086,7 @@ function alertesDeclenchees() {
 function brancherJour(v) {
   brancherDefs(v); brancherSignal(v); brancherMarches(v);
   { const vm = v.querySelector("#m-vsmk"); if (vm) vm.addEventListener("click", () => { const mk = v.querySelector(".m-mk"); if (!mk) return;   // lot 61 (Théo) : défile jusqu'aux Marchés ET ouvre « Comparer »
-    if (marcheOuvert !== "cmp" && marchesMoi()) { marcheOuvert = "cmp"; const pn = mk.querySelector("#m-mk-panneau"); if (pn) pn.innerHTML = panneauMarche(); mk.querySelectorAll("[data-mk]").forEach(b => b.setAttribute("aria-pressed", String(String(marcheOuvert) === b.dataset.mk))); }
+    if (marcheOuvert !== "cmp" && marchesMoi()) { marcheOuvert = "cmp"; const pn = mk.querySelector("#m-mk-panneau"); if (pn) pn.innerHTML = panneauMarche(); majPastillesMk(mk); }
     mk.scrollIntoView({ behavior: "smooth", block: "start" }); }); }
   v.querySelectorAll(".m-per-flot [data-per]").forEach(b => b.addEventListener("click", () => { const k = b.dataset.per; PREF.varP = k === "jour" ? null : k; delete PREF.var5; delete PREF.seance; garderPref(); garderPlace(b, rendre); }));   // lot 62 : une seule barre (flottante, en bas) ; la page ne saute pas   // lot 50 : rangée du bas = même réglage, la page ne saute pas   // 19/11 : Jour ⇄ 5 séances
   const b5 = v.querySelector('.m-jour[role="button"]'); if (b5) { const bascule = () => { cinqOuvert = !cinqOuvert; rendre(); };
@@ -2592,7 +2662,7 @@ function pretHtml() {
 }
 /* ---- V15.4 · Marchés : 8 cases (variation du jour, lue dans le Versus), courbe d'un an au toucher, « Comparer » en base 100 ---- */
 const COUL_MK = ["#5B8DEF", "#2BB673", "#9B6BFF", "#E5484D", "#F2A33A", "#18A9C7", "#D6619E", "#C9A227", "#8C7B5A", "#E8590C", "#F7931A", "#627EEA"];   // v19.0 : 11e Bitcoin, 12e Ethereum   // v17.41 : 10e = Nasdaq ×3
-let marcheOuvert = null, mkTemp = null;   // lot 62 : mkTemp = vue passagère (« Comparer l'or couvert et non couvert »), jamais mémorisée
+let marcheOuvert = "cmp", mkTemp = null;   // lot 62 c (Théo) : la comparaison est toujours là ; un nombre = la courbe d'un seul marché (toucher long)   // lot 62 : mkTemp = vue passagère (« Comparer l'or couvert et non couvert »), jamais mémorisée
 /* lot 62 (Théo, Conseil) : « Comparer » montre 4 courbes par défaut (le monde, les États-Unis, la tech, l'or) ; les autres s'allument d'un toucher
    sur leur pastille. C'est un filtre : le choix est mémorisé sur l'appareil (PREF.mkVis = noms affichés). */
 const MK_DEFAUT = ["S&P 500", "MSCI Monde", "Nasdaq-100", "Or"];
@@ -2680,13 +2750,15 @@ function htmlMarches() {
   const m = marchesMoi(), h = (m.jour.find(x => x.heure) || {}).heure, per = PERIODES_J[VUEJ] ? VUEJ : null;
   const vs = m.jour.map(x => varMk(x, per)), dus = vs.map(r => r.du).filter(Boolean).sort(), duMax = dus[dus.length - 1], tousSeance = vs.every((r, i) => r.du || r.v === null || CRYPTO_MK.includes(m.jour[i].nom));   // v19.0 : la crypto cote en continu, elle ne change pas « bourse fermée »
   const jc = iso => { const d = new Date(iso + "T12:00:00"); return JOURS_C[d.getDay()] + " " + frDate(iso).slice(0, 5); };
-  const sous = per ? PERIODES_J[per][2] + (vs.some(r => r.hebdo) ? " (≈ d'après les cours de la semaine)" : "") + " · "
-    : tousSeance && duMax ? (bourseFermee().ferme ? "🔒 bourse fermée · " : "") + "dernière séance · " + jc(duMax) + " · " : (h ? "cours du " + esc(h.replace(" ", " à ").replace(":", " h ")) + " · " : "");
-  const marque = r => r.du && (!tousSeance || r.du !== duMax) ? "<small>" + frDate(r.du).slice(0, 5) + "</small>" : "";   // case en retard sur les autres (ex. ×3 avant l'ouverture de New York)
-  return '<div class="m-mk"><div class="m-mk-t"><h2 class="sec">Marchés <small>' + sous + "touche pour la courbe</small></h2>" +
-    '<button class="mini-btn" type="button" data-mk="cmp" aria-pressed="' + (marcheOuvert === "cmp") + '">Comparer</button></div>' +
-    '<div class="m-idx m-idx-mk">' + m.jour.map((x, i) => { const r = vs[i];
-      return '<button type="button" data-mk="' + i + '" aria-pressed="' + (marcheOuvert === i) + '"' + (r.du ? ' title="Séance du ' + frDate(r.du) + '"' : "") + '><span>' + esc(NOMS_MK[x.nom] || x.nom) + '</span><b class="' + sens(r.v) + '">' + marque(r) + (ok(r.v) ? pct(r.v, per && per !== "5j" ? 1 : 2) : "—") + "</b></button>"; }).join("") + "</div>" +
+  const sous = per ? PERIODES_J[per][2] + (vs.some(r => r.hebdo) ? " (≈ d'après les cours de la semaine)" : "")
+    : tousSeance && duMax ? (bourseFermee().ferme ? "🔒 bourse fermée · " : "") + "dernière séance · " + jc(duMax) : (h ? "cours du " + esc(h.replace(" ", " à ").replace(":", " h ")) : "");
+  const marque = r => r.du && (!tousSeance || r.du !== duMax) ? "<small>" + frDate(r.du).slice(0, 5) + "</small>" : "";   // marché en retard sur les autres (ex. ×3 avant l'ouverture de New York)
+  /* lot 62 c (Théo) : plus de grille de 12 cases (doublon) : une pastille par marché = son % sur la période de la barre du bas ET l'interrupteur de sa courbe
+     (pleine = affichée, pointillée = masquée) ; un toucher long = la courbe de ce marché seul */
+  const noms = m.series.map(x => x.nom), S = mkVisibles(noms);
+  return '<div class="m-mk"><div class="m-mk-t"><h2 class="sec">Marchés <small>' + sous + "</small></h2></div>" +
+    '<div class="m-mk-chips" role="group" aria-label="Marchés : touche pour afficher ou masquer la courbe, toucher long pour la courbe seule">' + m.jour.map((x, i) => { const r = vs[i], k = noms.indexOf(x.nom), on = S.has(x.nom);
+      return '<button type="button" class="chip' + (on ? " on" : "") + '" data-mk-cache="' + esc(x.nom) + '" data-mk-i="' + i + '" aria-pressed="' + on + '" style="--mkc:' + (k >= 0 ? COUL_MK[k % COUL_MK.length] : "var(--ink-3)") + '"' + (r.du ? ' title="Séance du ' + frDate(r.du) + '"' : "") + '><i></i><span>' + esc(NOMS_MK[x.nom] || x.nom) + '</span><b class="' + sens(r.v) + '">' + marque(r) + (ok(r.v) ? pct(r.v, per && per !== "5j" ? 1 : 2) : "—") + "</b></button>"; }).join("") + "</div>" +
     '<div class="m-mk-panneau" id="m-mk-panneau">' + panneauMarche() + "</div></div>";
 }
 function serieMk(nom) { const m = marchesMoi(); return m && (m.series || []).find(x => x.nom === nom); }
@@ -2719,29 +2791,38 @@ function panneauMarche() {
     const lignes = m.series.map((x, i) => Object.assign({ nom: x.nom, c: COUL_MK[i % COUL_MK.length], i }, fenMk(cas(x.nom), per) || { d: null, v: [] })).sort((a, b) => rang(a.nom) - rang(b.nom) || a.i - b.i);
     const S = mkVisibles(lignes.map(l => l.nom)), vis = lignes.filter(l => S.has(l.nom) && l.d), d0 = debut(vis.length ? vis : lignes.filter(l => l.d));
     const autre = !mkParDefaut() ? '<button class="lien" type="button" data-mk-defaut="1">Revenir aux 4 courbes de base</button>' : "";
-    return '<div class="m-mk-chips" role="group" aria-label="Courbes affichées : touche une pastille pour afficher ou masquer sa courbe">' + lignes.map(l => '<button type="button" class="chip' + (S.has(l.nom) ? " on" : "") + '" data-mk-cache="' + esc(l.nom) + '" aria-pressed="' + S.has(l.nom) + '" style="--mkc:' + l.c + '"><i></i>' + esc(NOMS_MK[l.nom] || l.nom) + " " + '<small class="' + sens(varF(l.d && l)) + '">' + (l.d ? pct(varF(l), per === "5j" ? 1 : 0) : "—") + "</small></button>").join("") + "</div>" +
-      (vis.length ? courbesSVG(vis, true, per) || '<p class="info">Pas encore assez d\'historique pour cette période.</p>' : '<p class="info m-mk-rien">Aucune courbe : touche une pastille pour l\'afficher.</p>') +
-      '<p class="info m-mk-base">' + (d0 ? txtBase(d0, per, lignes.some(l => l.hebdo)) + ". " : "") + 'ETF en euros ; « Or couvert » (protégé de la variation du dollar) suivi par le GLD ; « Nasdaq ×3 » suivi par le TQQQ, proche du QQQ3, converti en euros. Touche une pastille pour afficher ou masquer sa courbe (ton choix est gardé). ' + autre + "</p>";
+    return (vis.length ? courbesSVG(vis, true, per) || '<p class="info">Pas encore assez d\'historique pour cette période.</p>' : '<p class="info m-mk-rien">Aucune courbe : touche une pastille pour l\'afficher.</p>') +
+      '<p class="info m-mk-base">' + (d0 ? txtBase(d0, per, lignes.some(l => l.hebdo)) + ". " : "") + "ETF en euros (Or couvert ≈ GLD, Nasdaq ×3 ≈ TQQQ). Toucher long : un marché seul. " + autre + "</p>";
   }
   const j = m.jour[marcheOuvert], se = j && serieMk(j.nom); if (!se) return '<p class="info">Pas d\'historique pour ce marché.</p>';
   // lot 61 : les repères 1 mois · 6 mois · 1 an suivent la même règle que les cases (plus les semaines ≈ quand les clôtures existent) ; la période choisie en premier
   const c = COUL_MK[m.series.indexOf(se) % COUL_MK.length], f = fenMk(j, per), t = (lab, v, fort) => ok(v) ? '<span' + (fort ? ' class="m-mk-per"' : "") + ">" + lab + ' <b class="' + sens(v) + '">' + pct(v, 1) + "</b></span>" : "";
-  return '<div class="m-mk-res"><b>' + esc(NOMS_MK[j.nom] || j.nom) + "</b>" + (f ? t(PERIODES_J[per][2], varF(f), true) : "") + ["1m", "6m", "1a"].filter(k => k !== per).map(k => t(PERIODES_J[k][2], varMk(j, k).v)).join("") + "</div>" +
+  return '<div class="m-mk-res"><button class="lien" type="button" data-mk="cmp">← Tous</button><b>' + esc(NOMS_MK[j.nom] || j.nom) + "</b>" + (f ? t(PERIODES_J[per][2], varF(f), true) : "") + ["1m", "6m", "1a"].filter(k => k !== per).map(k => t(PERIODES_J[k][2], varMk(j, k).v)).join("") + "</div>" +
     (f ? courbesSVG([{ nom: se.nom, d: f.d, v: f.v, c: c }], true, per) + '<p class="info m-mk-base">' + txtBase(f.d[0], per, f.hebdo) + ".</p>" : '<p class="info">Pas encore assez d\'historique pour cette période.</p>') +
     (/^Or/.test(j.nom) && serieMk("Or couvert €") ? '<p class="info">Couvert ou non ? <button class="lien" type="button" data-mk="cmp-or">Comparer l\'or couvert et non couvert</button></p>' : "");
 }
+function majPastillesMk(z) {
+  const m = marchesMoi(), S = m ? mkVisibles(m.series.map(x => x.nom)) : new Set(), seul = typeof marcheOuvert === "number";
+  z.querySelectorAll("[data-mk-cache]").forEach(b => { const on = S.has(b.dataset.mkCache), sel = seul && +b.dataset.mkI === marcheOuvert; b.classList.toggle("on", seul ? sel : on); b.setAttribute("aria-pressed", String(seul ? sel : on)); });
+}
 function brancherMarches(v) {
   const z = v.querySelector(".m-mk"); if (!z) return;
-  const maj = () => { const pn = z.querySelector("#m-mk-panneau"); pn.innerHTML = panneauMarche(); z.querySelectorAll("[data-mk]").forEach(b => b.setAttribute("aria-pressed", String(String(marcheOuvert) === b.dataset.mk))); };
+  const maj = () => { const pn = z.querySelector("#m-mk-panneau"); pn.innerHTML = panneauMarche(); majPastillesMk(z); };
+  majPastillesMk(z);
+  let long = null, longFait = false;   // toucher long (0,5 s) sur une pastille = la courbe de ce marché seul
+  z.addEventListener("pointerdown", e => { const b = e.target.closest("[data-mk-i]"); if (!b) return; longFait = false; clearTimeout(long);
+    long = setTimeout(() => { longFait = true; mkTemp = null; marcheOuvert = +b.dataset.mkI; maj(); if (window.SONS && SONS.vibrer) SONS.vibrer(15); }, 500); });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(t => z.addEventListener(t, () => clearTimeout(long)));
+  z.addEventListener("contextmenu", e => { if (e.target.closest("[data-mk-i]")) e.preventDefault(); });
   z.addEventListener("click", e => {
     const b = e.target.closest("[data-mk],[data-mk-cache],[data-mk-defaut]"); if (!b) return;
+    if (longFait) { longFait = false; return; }
     const noms = () => marchesMoi().series.map(x => x.nom);
-    if (b.dataset.mkCache) { mkBasculer(b.dataset.mkCache, noms()); garderPlace(b, maj); return; }
-    if (b.dataset.mkDefaut) { mkTemp = null; delete PREF.mkVis; garderPref(); maj(); return; }
+    if (b.dataset.mkCache) { if (!noms().includes(b.dataset.mkCache)) return; mkBasculer(b.dataset.mkCache, noms()); marcheOuvert = "cmp"; garderPlace(b, maj); return; }
+    if (b.dataset.mkDefaut) { mkTemp = null; delete PREF.mkVis; garderPref(); marcheOuvert = "cmp"; maj(); return; }
     const k = b.dataset.mk;
     if (k === "cmp-or") { marcheOuvert = "cmp"; mkTemp = new Set(noms().filter(n => /^Or/.test(n))); maj(); return; }   // vue passagère : le choix mémorisé ne bouge pas
-    const val = k === "cmp" ? "cmp" : +k;
-    mkTemp = null; marcheOuvert = marcheOuvert === val ? null : val; maj();
+    if (k === "cmp") { mkTemp = null; marcheOuvert = "cmp"; maj(); }
   });
 }
 /* « dans 14 ans 3 mois » jusqu'à une date (aaaa-mm-jj) */
@@ -5816,7 +5897,8 @@ const EMBLEMES_M = [["pousse", "Pousse", "🌱"], ["abeille", "Abeille", "🐝"]
   ["montagne", "Montagne", "⛰️"],   // lot 54 · prestige (5 ans sans vendre)
   ["sablier", "Sablier", "⏳"], ["sequoia", "Séquoia", "🌲"], ["baleine", "Baleine", "🐋"],
   ["tirelire", "Tirelire", "🐷"], ["matin", "Réveil matin", "⏰"], ["erable", "Feuille d'érable", "🍁"], ["arcenciel", "Arc-en-ciel", "🌈"], ["cible", "Cible", "🎯"], ["plume", "Plume", "✒️"],
-  ["montagnes", "Montagnes russes", "🎢"]];   // lot 62 · secret   // lot 56   // lot 55
+  ["montagnes", "Montagnes russes", "🎢"],
+  ["camion", "Camion de pompiers", "🚒"]];   // lot 62 c · secret « Pompier de service »   // lot 62 · secret   // lot 56   // lot 55
 const TITRES_M = [["investisseur", "Investisseur"], ["metronome", "Le Métronome"], ["diamant", "Main de diamant"], ["batisseur", "Bâtisseur"], ["rentier", "Rentier"],
   ["veteran", "Vétéran"], ["optimiseur", "Optimiseur fiscal"], ["legende", "Légende"], ["millionnaire", "Millionnaire"], ["increvable", "Increvable"],
   ["fourmi", "La Fourmi"], ["regulier", "Régulier"], ["horloger", "L'Horloger"], ["patient", "Patient"], ["capitaine", "Capitaine"],
@@ -5824,7 +5906,8 @@ const TITRES_M = [["investisseur", "Investisseur"], ["metronome", "Le Métronome
   ["inebranlable", "L'Inébranlable"],   // lot 54 · prestige (120 mois d'affilée)
   ["pilier", "Le Pilier"], ["infatigable", "L'Infatigable"],
   ["econome", "L'Économe"], ["matinal", "Le Matinal"], ["toujourla", "Toujours là"], ["discipline", "Le Discipliné"], ["scribe", "Le Scribe"],
-  ["survivant", "Survivant du brasier"]];   // lot 62 · secret   // lot 56   // lot 55
+  ["survivant", "Survivant du brasier"],
+  ["pompier", "Pompier de service"]];   // lot 62 c · secret   // lot 62 · secret   // lot 56   // lot 55
 const SORTES = [["aff", "Afficheur", "🔢", "afficheur"], ["theme", "Thème", "🎨", "themeM"], ["courbe", "Courbe", "📈", "courbe"],
   ["fete", "Fête", "🎉", "fete"], ["emb", "Emblème", "🛡️", "emb"], ["titre", "Titre", "🏷️", "titre"]];
 const CATALOGUE = { aff: AFFICHEURS, theme: THEMES_M, courbe: COURBES_M, fete: FETES_M, emb: EMBLEMES_M, titre: TITRES_M };
@@ -5929,8 +6012,9 @@ const SECRETS_M = [
      Calculés sur l'historique du fichier (variation de l'indice « ip », versements neutralisés), plus la séance en direct de la carte « Jour ». */
   { id: "brasier", invisible: true, nom: "Survivant du brasier", quoi: "Une séance à −5 % ou pire sur ton portefeuille (versements exclus), et tu es toujours là.", rec: [["theme", "brasier"], ["titre", "survivant"]] },
   { id: "bouquet", invisible: true, nom: "Bouquet final", quoi: "Une séance à +5 % ou mieux sur ton portefeuille (versements exclus).", rec: [["theme", "bouquet"], ["fete", "bouquet"]] },
-  { id: "phenix", invisible: true, nom: "Phénix", quoi: "Après une séance à −3 % ou pire, ton portefeuille repasse au-dessus de son niveau d'avant la chute en moins d'un mois.", rec: [["theme", "phenix"]] },
-  { id: "montagnes", invisible: true, nom: "Montagnes russes", quoi: "Une séance à +3 % ou mieux et une à −3 % ou pire en cinq séances.", rec: [["emb", "montagnes"]] }
+  { id: "phenix", invisible: true, nom: "Phénix", quoi: "Après une séance à −2,8 % ou pire, ton portefeuille repasse au-dessus de son niveau d'avant la chute en moins d'un mois.", rec: [["theme", "phenix"]] },
+  { id: "montagnes", invisible: true, nom: "Montagnes russes", quoi: "Une séance à +2,8 % ou mieux et une à −2,8 % ou pire en cinq séances.", rec: [["emb", "montagnes"]] },
+  { id: "pompier", invisible: true, nom: "Pompier de service", quoi: "Un versement le jour même ou dans les 3 jours qui suivent une séance à −2,8 % ou pire de ton portefeuille.", rec: [["titre", "pompier"], ["emb", "camion"]] }
 ];
 /** lot 62 : objet d'un secret invisible pas encore gagné → absent du Vestiaire et des totaux */
 function objInvisible(t, id, E) { return SECRETS_M.some(x => x.invisible && x.rec.some(r => r[0] === t && r[1] === id)) && !(E || etatObjets()).ok.has(cleObj(t, id)); }
@@ -5945,6 +6029,14 @@ function secretsFolles(ok) {
   const h = M.historique, ki = h.cols.indexOf("ip"), rows = h.rows;
   l.forEach(y => { if (y.p > -FOLLE_SEUIL + 1e-9 || ok.has("phenix")) return; const lim = +isoJour(new Date(new Date(y.d + "T12:00:00").getTime() + 31 * 864e5)).replace(/-/g, "");
     for (let k = y.i + 1; k < rows.length && rows[k][0] <= lim; k++) if (rows[k][ki] > y.ip0) { ok.add("phenix"); break; } });
+  /* lot 62 c · Pompier de service : un versement entre le jour de la chute et 3 jours après. Deux sources : les apports cumulés de l'historique
+     (colonne « a » : tout l'historique, sur tout appareil) et le journal des ordres du fichier (type Apport, 30 derniers ordres, jamais un ordre programmé à venir). */
+  const ka = h.cols.indexOf("a"), auj = isoJour(new Date()), plus3 = d => isoJour(new Date(new Date(d + "T12:00:00").getTime() + 3 * 864e5));
+  const vers = new Set();
+  const nb = v => typeof v === "number" && isFinite(v);   // (ici « ok » est l'ensemble des secrets, pas la fonction commune)
+  if (ka >= 0) for (let k = 1; k < rows.length; k++) if (nb(rows[k][ka]) && nb(rows[k - 1][ka]) && rows[k][ka] - rows[k - 1][ka] > .5) vers.add(isoN(rows[k][0]));
+  (((M.ref || {}).journal) || []).forEach(o => { if (/^Apport/i.test(o.type || "") && (o.montant || 0) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(o.date || "") && o.date <= auj) vers.add(o.date); });
+  if (vers.size) tous.forEach(y => { if (y.p > -FOLLE_SEUIL + 1e-9 || ok.has("pompier")) return; const f = plus3(y.d); for (const d of vers) if (d >= y.d && d <= f) { ok.add("pompier"); break; } });
 }
 const cleObj = (t, id) => t + "." + id;
 const cleStock = k => "versus.moi." + k + "." + ((M && M.personne) || ETAT.moi || "moi");   // une liste par personne (l'admin peut ouvrir le fichier d'un autre)
@@ -6173,7 +6265,12 @@ function brancherVestiaire(v) {
     else maj();
   }));
   v.querySelectorAll("[data-vsq]").forEach(b => b.addEventListener("click", () => { vsSel = vsSel === b.dataset.vsq ? null : b.dataset.vsq; maj(); }));
-  v.querySelectorAll("[data-amb]").forEach(b => b.addEventListener("click", () => {   // lot 62 : couper / remettre l'ambiance d'une journée folle (pendant sa semaine)
+  v.querySelectorAll("[data-ev-vis]").forEach(b => b.addEventListener("click", () => {   // lot 62 c : afficher / masquer un événement pendant sa fenêtre (carte + ambiance)
+    const c = b.dataset.evVis, k = c.replace(/^(\d{4}-\d{2}-\d{2})[+-]\d$/, "").split(":")[0];
+    let m = evMasques().filter(x => x !== c); if (!b.dataset.evOn) m.push(c); stock.set(cleStock("evMasques"), JSON.stringify(m.slice(-60)));
+    if (b.dataset.evOn && Array.isArray(PREF.ambOff)) { PREF.ambOff = PREF.ambOff.filter(x => x === "tout" || (k && x !== k) || (!k && !["feu", "joie"].includes(x))); if (!PREF.ambOff.length) delete PREF.ambOff; garderPref(); }
+    garderPlace(b, rendre); }));
+  v.querySelectorAll("[data-amb]").forEach(b => b.addEventListener("click", () => {   // lot 62 : l'interrupteur général (appli sobre)
     const k = b.dataset.amb, l = (Array.isArray(PREF.ambOff) ? PREF.ambOff : []).filter(x => x !== k); if (!b.dataset.ambOn) l.push(k);
     if (l.length) PREF.ambOff = l; else delete PREF.ambOff; garderPref(); garderPlace(b, rendre); }));
   brancherDetail();

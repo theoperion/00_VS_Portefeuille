@@ -601,6 +601,9 @@ const SONS = (() => {
     },
     /** l'aurore du bouquet final : un accord doux et lent (pas de jingle ni de musique de l'ère d'or) */
     aurore(dt, dur) { const c = fBus ? audio() : folleBus(); if (!c) return; [220, 277.2, 329.6, 440].forEach((f, i) => { note(f, dur, "sine", .05, dt + i * .15, fBus); note(f * 1.005, dur, "triangle", .018, dt + i * .15, fBus); }); },
+    /** lot 62 c · l'Explosion (un coup sourd et un souffle) et la Pluie de bonbons (des « plop » joyeux, gamme pentatonique) */
+    explosion() { const c = folleBus(); vibrer([140, 60, 90]); if (!c) return; note([130, 28], 1.3, "sine", .6, 0, fBus); souffle(1.1, [2600, 140], .6, 0, .003, "lowpass", fBus); souffle(.5, 5000, .2, .02, .002, "highpass", fBus); },
+    bonbons(dur) { const c = fBus ? audio() : folleBus(); if (!c) return; const g = [523.3, 587.3, 659.3, 784, 880, 1046.5]; for (let i = 0; i < 18; i++) { const t = .1 + i * dur / 18 + Math.random() * .08; note([g[Math.floor(Math.random() * g.length)] * 1.5, g[0]], .14, "sine", .07, t, fBus); } [0, .4, .8].forEach(t => plus_tard(t * 1000 + 200, () => vibrer(15))); },
     /** lot 62 b · les événements rares : orage (krach), arcs électriques (crypto), arpège (sommet), cinq notes (série verte), berceuse (relâche) */
     evenement(k, dur, eclairs) {
       const c = folleBus(); (eclairs || []).forEach(e => plus_tard(e * 1000, () => vibrer(k === "krach" ? [70, 40, 140] : 25))); if (!c) return;
@@ -609,6 +612,7 @@ const SONS = (() => {
       else if (k === "crypto") eclairs.forEach((e, i) => { note([2200, 160], .2, "square", .05, e, fBus); note([1400 + i * 90, 300], .16, "sawtooth", .035, e + .02, fBus); souffle(.14, 4500, .12, e, .002, "highpass", fBus); });
       else if (k === "sommet") { [523.3, 659.3, 784, 1046.5, 1318.5].forEach((f, i) => { note(f, 1.4, "sine", .07, .3 + i * .28, fBus); note(f / 2, 1.6, "triangle", .03, .3 + i * .28, fBus); }); }
       else if (k === "serie") { [392, 440, 493.9, 587.3, 659.3].forEach((f, i) => note(f, .5, "triangle", .07, .3 + i * .32, fBus)); [523.3, 659.3, 784].forEach(f => note(f, 1.6, "sine", .05, 2, fBus)); }
+      else if (k === "plat") { [196, 293.7].forEach(f => note(f, 3, "sine", .04, .2, fBus)); [0.9, 2.2, 3.3].forEach(t => { note([1250, 520], .18, "sine", .06, t, fBus); }); }   // lot 62 c · Calme plat : une nappe douce, trois gouttes
       else if (k === "relache") { [[392, 0], [329.6, .5], [392, 1.1], [329.6, 1.6]].forEach(([f, t]) => note(f, .7, "triangle", .045, .3 + t, fBus)); }
     },
     folleStop() { if (!fBus || !ctx) return; const b = fBus; fBus = null; try { const t = ctx.currentTime; b.gain.cancelScheduledValues(t); b.gain.setValueAtTime(b.gain.value, t); b.gain.linearRampToValueAtTime(0, t + .25); setTimeout(() => { try { b.disconnect(); } catch (e) { /* rien */ } }, 400); } catch (e) { /* rien */ } }
