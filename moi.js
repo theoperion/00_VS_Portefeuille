@@ -2808,9 +2808,39 @@ function htmlArtema() {
     htmlSim(E) +
     "<h4>L'indice, saisie après saisie</h4>" + htmlCourbeArtema(E) +
     '<details class="art-d"><summary>Tous les rendez-vous</summary>' + tableau + "</details>" +
+    htmlIndiceArtema() +
     '<details class="art-d"><summary>Comment marche Artema ?</summary><div class="art-cas"><div><i>📸</i>Déc. 2026 : photo de départ de l\'indice (moyenne des clôtures du 2 au 4 décembre).</div><div><i>⏳</i>Jusqu\'en 2029 : rien ne se passe, la valeur bouge avec les marchés.</div><div><i>🎯</i>Chaque début décembre de 2029 à 2033 : si l\'indice est au moins à son départ → Artema s\'arrête (remboursement anticipé automatique), capital + gain. Le gain grossit de 9,5 points par année d\'attente.</div><div><i>🏁</i>1er décembre 2034 : au moins au départ → +76 % · entre −40 % et 0 → capital · sous 60 % du départ → perte égale à toute la baisse.</div><div><i>🙅</i>Rien à décider : sortir avant se fait au prix du marché (protection perdue).</div></div></details>' +
     '<div class="art-mentions">Montants estimés (tes parts, 0,80 %/an de frais du contrat), avant impôts et prélèvements sociaux. · L\'indice retire 50 points par an à son NIVEAU (pas 50 %), un peu chaque jour : vers 1 250 points, c\'est environ 4 % par an (plus si l\'indice baisse, moins s\'il monte). Ce frein finance le gain promis et la protection : l\'indice monte donc moins vite que la bourse, c\'est normal. · Capital soumis au risque de défaut de Natixis. · Fiscalité : rien à l\'arrêt d\'Artema, l\'argent reste dans le contrat.</div>' +
     "</div></div>";
+}
+/* v20.19 (Théo) : « L'indice et les risques » : composition et risques, d'après la brochure Natixis (données au lancement de l'indice, 31/03/2026) et le DIC */
+const INDICE_ARTEMA = {
+  pays: [["États-Unis", 60], ["Allemagne", 19.75], ["Pays-Bas", 7.12], ["France", 6.26], ["Espagne", 3.03], ["Italie", 1.61], ["Finlande", 1.55], ["Suède", 0.68]],
+  secteurs: [["Matériel électronique", 22.9], ["Semi-conducteurs", 17.27], ["Logiciels", 15.67], ["Conseil / services informatiques", 10.5], ["Fournisseurs d'énergie", 9.24], ["Télécoms et réseaux (installation)", 8.22], ["Centres de données (construction, exploitation)", 8.27], ["Autres (vente, composants, appareils, matières premières, opérateurs)", 7.93]],
+  euro: ["A2A", "ASML", "Aurubis", "Boliden", "Capgemini", "Cellnex", "Dassault Systèmes", "Ferrovial", "Infineon", "Nexans", "Nexi", "Nokia", "Prysmian", "SAP", "Siemens", "Siemens Energy", "SPIE", "Telefónica", "Vinci", "Wolters Kluwer"],
+  us: ["Adobe", "AMD", "Applied Materials", "Broadcom", "Cisco", "Cognizant", "Constellation Energy", "Digital Realty", "eBay", "Equinix", "First Solar", "HP Enterprise", "HubSpot", "IBM", "MercadoLibre", "Monolithic Power", "Palo Alto Networks", "PG&E", "Seagate", "Workday"]
+};
+function htmlIndiceArtema() {
+  const I = INDICE_ARTEMA, barre = ([n, v]) => '<div class="ai-l"><span>' + esc(n) + '</span><i><b style="width:' + Math.round(v / I.pays[0][1] * 100 * (v <= 60 ? 1 : 1)) + '%"></b></i><em>' + String(v).replace(".", ",") + NBS + "%</em></div>";
+  const barreS = ([n, v]) => '<div class="ai-l"><span>' + esc(n) + '</span><i><b style="width:' + Math.round(v / 22.9 * 100) + '%"></b></i><em>' + String(v).replace(".", ",") + NBS + "%</em></div>";
+  const echelle = [1, 2, 3, 4, 5, 6, 7].map(k => '<span' + (k === 5 ? ' class="on"' : "") + ">" + k + "</span>").join("");
+  return '<details class="art-d art-ind"><summary>L\'indice et les risques</summary>' +
+    '<p class="art-gris">40 entreprises de la « chaîne de la digitalisation » (puces, logiciels, data centers, réseaux, énergie), choisies aussi sur des critères ESG : 20 de la zone euro (40 % du poids) et 20 américaines (60 %), pondérées par leur taille en bourse. Indice de SGX, administré par Scientific Beta.</p>' +
+    "<h5>Pays</h5>" + I.pays.map(barre).join("") +
+    "<h5>Secteurs</h5>" + I.secteurs.map(barreS).join("") +
+    '<details class="art-d"><summary>Les 40 entreprises</summary><p class="ai-n"><b>Zone euro</b> · ' + I.euro.map(esc).join(" · ") + '</p><p class="ai-n"><b>États-Unis</b> · ' + I.us.map(esc).join(" · ") + "</p></details>" +
+    "<h5>Niveau de risque officiel</h5>" + '<div class="ai-sri" role="img" aria-label="Risque 5 sur 7">' + echelle + '</div><p class="art-gris">5 sur 7 : « entre moyen et élevé » (DIC Natixis).</p>' +
+    '<ul class="ai-r">' +
+      "<li><b>Pas de garantie du capital</b> : à la fin (déc. 2034), si l'indice est sous 60 % de son départ, tu perds toute la baisse (ex. −45 % → tu récupères 55 %).</li>" +
+      "<li><b>Le frein de 50 points</b> : les dividendes réinvestis ont rapporté en moyenne 29 points par an sur 8 ans, moins que les 50 retirés : l'indice perd donc environ 21 points par an par rapport aux actions elles-mêmes.</li>" +
+      "<li><b>Gain plafonné</b> : 9,5 % par année écoulée, même si l'indice monte beaucoup plus.</li>" +
+      "<li><b>Très concentré sur la tech</b> et à 60 % en dollars : le change € / $ joue aussi.</li>" +
+      "<li><b>Risque Natixis</b> : si la banque fait défaut, tu peux tout perdre (notes A+ / A2 / A+).</li>" +
+      "<li><b>Frais</b> : 4,47 % à l'entrée, déjà inclus dans le prix (dont jusqu'à 3,6 % de commission pour la banque qui le vend), plus les 0,80 %/an de ton contrat.</li>" +
+      "<li><b>Sortie avant l'heure</b> : au prix du marché du jour, avec une perte possible.</li>" +
+    "</ul>" +
+    '<p class="art-gris">Exemples de la brochure : indice à 140 % la 3e année → 128,5 % (arrêt) · à 70 % à la fin → 100 % · à 45 % à la fin → 45 %. Source : brochure Natixis (répartition au 31/03/2026) et DIC ; ce n\'est pas un conseil financier.</p>' +
+  "</details>";
 }
 function brancherArtema(v) {
   v.querySelectorAll("[data-m-aller]").forEach(b => b.addEventListener("click", () => { PREF.onglet = b.dataset.mAller; garderPref(); rendre(); window.scrollTo(0, 0); }));
