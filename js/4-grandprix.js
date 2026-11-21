@@ -450,11 +450,11 @@ function assurerRappel(vue) {
   if (!r || masque) { if (ici) ici.remove(); return; }
   const cle = r.k + "-" + r.j; if (ici && ici.dataset.cle === cle) return;
   if (ici) ici.remove();
-  vue.insertAdjacentHTML("afterbegin", '<div class="rappel' + (r.j <= 1 ? " urgent" : "") + '" data-cle="' + cle + '" role="status"><span class="rp-i">🃏</span><div class="rp-t"><b>' + (r.carte && r.prono ? "Ta carte et ton pronostic" : r.carte ? "Ta carte" : "Ton pronostic") + " de " + esc(moisLong(r.k).replace(/ \d{4}$/, "")) + "</b><small>" +
-    (r.j <= 1 ? "Dernier jour : la fenêtre se ferme ce soir." : "Fenêtre ouverte · il te reste " + r.j + " jours.") + (regleVisible("duels") && regleActive("duels", r.k) ? " Un duel aussi, si tu veux." : "") + '</small></div><button class="btn acc rp-go" type="button">Y aller</button>' +
-    "</div>");
+  // v19.9 (Théo) : rappel réduit à une seule ligne compacte, toute la ligne mène au Stand
+  vue.insertAdjacentHTML("afterbegin", '<button type="button" class="rappel rp-court' + (r.j <= 1 ? " urgent" : "") + '" data-cle="' + cle + '" role="status"><span class="rp-i">🃏</span><span class="rp-t"><b>' + (r.carte && r.prono ? "Carte et pronostic" : r.carte ? "Ta carte" : "Ton pronostic") + " de " + esc(moisLong(r.k)) + "</b> · " +
+    (r.j <= 1 ? "dernier jour" : r.j + " j restants") + '</span><span class="rp-f" aria-hidden="true">›</span></button>');
   const el = vue.querySelector(":scope > .rappel");
-  el.querySelector(".rp-go").addEventListener("click", allerAuStand);
+  el.addEventListener("click", allerAuStand);
   const x = el.querySelector(".rp-x"); if (x) x.addEventListener("click", () => { stock.set("versus.rappelMasque", String(aujNum())); majRappels(); toast("D'accord, je te le rappelle demain."); });
 }
 /** V15.1 : avant l'annonce du 21 novembre 2026, rien du Podium dans les onglets Classement, Mois et Moi (pas de spoil) ; l'onglet Podium garde son teaser */

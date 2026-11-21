@@ -923,11 +923,12 @@ function ouvrirPortrait() {
   const o = document.createElement("div"); o.className = "regles portrait"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Mon portrait");
   o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>👤 Mon portrait</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div><div class="rg-corps">' +
     '<div class="showroom pt-apercu"><div class="sr-id">' + avatar(qui, Object.assign({}, ECU.e, { vignette: true })) + "<b>" + esc(qui) + '</b></div></div>' + htmlPilote(qui, ECU.e) +
-    '<div class="btn-row"><button class="btn acc" type="button" id="pt-garder">Enregistrer</button></div><p class="info">Ton portrait s\'affiche dans le Classement, la Course et partout ailleurs. Tout le monde le voit.</p></div></div>';
+    '<div class="btn-row"><button class="btn acc" type="button" id="pt-garder">Enregistrer</button></div><p class="info">Ton portrait s\'affiche dans le Classement, la Course et partout ailleurs. Tout le monde le voit. Pour le changer plus tard : ⚙️ Réglages › Mon portrait.</p></div></div>';
   document.body.appendChild(o);
   const fermer = () => { o.remove(); ECU = null; };
   o.addEventListener("click", ev => { if (ev.target === o) fermer(); }); o.querySelector(".rg-x").addEventListener("click", fermer);
-  o.querySelector("#pt-garder").addEventListener("click", () => { o.remove(); garderEcurie(); try { rendreVue(vueActive()); } catch (e) { } });
+  o.querySelector("#pt-garder").addEventListener("click", () => { o.remove(); garderEcurie(); try { rendreVue(vueActive()); } catch (e) { }
+    try { if (!stock.get("versus.portraitOu")) { stock.set("versus.portraitOu", "1"); setTimeout(() => toast("👤 Portrait enregistré ! Pour le changer plus tard : ⚙️ Réglages › Mon portrait, ou touche ta tête dans le Classement."), 600); } } catch (e) { } });   // v19.9 (Théo) : dire une fois où il se trouve
   brancherPilote(o);
 }
 /* V16.26 · la bulle « Fais ton portrait ! » : une seule fois, pour qui n'a jamais réglé sa tête, à partir du lancement */
@@ -939,7 +940,7 @@ function bullePortrait(essai) {
     if (document.querySelector(".tuto, .regles, .ba, .revel, .voile:not([hidden])")) { if ((essai || 0) < 8) setTimeout(() => bullePortrait((essai || 0) + 1), 4000); return; }
     stock.set("versus.bullePortrait", "1");
     const b = document.createElement("div"); b.className = "bulle-portrait"; b.setAttribute("role", "dialog"); b.setAttribute("aria-label", "Fais ton portrait");
-    b.innerHTML = '<div class="bp-av">' + avatar(qui) + '</div><div class="bp-t"><b>👤 Fais ton portrait !</b><small>Choisis ta tête : elle s\'affichera partout à côté de ton nom.</small></div><div class="bp-b"><button class="btn acc" type="button" data-bp="go">C\'est parti</button><button class="btn ghost" type="button" data-bp="non">Plus tard</button></div>';
+    b.innerHTML = '<div class="bp-av">' + avatar(qui) + '</div><div class="bp-t"><b>👤 Fais ton portrait !</b><small>Choisis ta tête : elle s\'affichera partout à côté de ton nom. Tu pourras la changer quand tu veux dans ⚙️ Réglages › Mon portrait.</small></div><div class="bp-b"><button class="btn acc" type="button" data-bp="go">C\'est parti</button><button class="btn ghost" type="button" data-bp="non">Plus tard</button></div>';
     document.body.appendChild(b);
     b.querySelector('[data-bp="go"]').addEventListener("click", () => { b.remove(); ouvrirPortrait(); });
     b.querySelector('[data-bp="non"]').addEventListener("click", () => { b.remove(); toast("Ton portrait t'attend dans Réglages, ou touche ta tête dans le Classement."); });
