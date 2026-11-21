@@ -442,18 +442,33 @@ function allerAuStand() {
   ETAT.podium = "stand"; garder();
   if (vueActive() === "trophees") rendreTrophees(); else allerA("trophees");
 }
+/* v20.2 (Théo) : petite ligne « Fais ton portrait » sous le rappel de carte, dans tous les onglets, tant que le joueur n'a pas de portrait */
+function assurerRappelPortrait(vue) {
+  try {
+    const ici = vue.querySelector(":scope > .rappel-portrait");
+    const qui = typeof quiEcurie === "function" ? quiEcurie() : null, eq = qui && D && D.ecurie && D.ecurie[qui] && D.ecurie[qui].equip || {};
+    const voir = qui && !podiumCache() && typeof portraitDispo === "function" && portraitDispo() && !eq.tete && SOURCE === "api";
+    if (!voir) { if (ici) ici.remove(); return; }
+    if (ici) return;
+    const apres = vue.querySelector(":scope > .rappel");
+    const html = '<button type="button" class="rappel rp-court rappel-portrait"><span class="rp-i">👤</span><span class="rp-t"><b>Fais ton portrait</b> · choisis ta tête (Réglages › Mon portrait)</span><span class="rp-f" aria-hidden="true">›</span></button>';
+    if (apres) apres.insertAdjacentHTML("afterend", html); else vue.insertAdjacentHTML("afterbegin", html);
+    vue.querySelector(":scope > .rappel-portrait").addEventListener("click", () => { if (typeof ouvrirPortrait === "function") ouvrirPortrait(); });
+  } catch (e) { }
+}
 function assurerRappel(vue) {
   if (!vue || !VUES_RAPPEL.includes(vue.id)) return;
-  if (podiumCache()) { const ici0 = vue.querySelector(":scope > .rappel"); if (ici0) ici0.remove(); return; }
+  setTimeout(() => assurerRappelPortrait(vue), 0);
+  if (podiumCache()) { const ici0 = vue.querySelector(":scope > .rappel:not(.rappel-portrait)"); if (ici0) ici0.remove(); return; }
   const r = rappelCartes(), masque = false;   // V15.1 : plus de « rappelle-moi demain » : le rappel reste tant que ce n'est pas fait
-  const ici = vue.querySelector(":scope > .rappel");
+  const ici = vue.querySelector(":scope > .rappel:not(.rappel-portrait)");
   if (!r || masque) { if (ici) ici.remove(); return; }
   const cle = r.k + "-" + r.j; if (ici && ici.dataset.cle === cle) return;
   if (ici) ici.remove();
   // v19.9 (Théo) : rappel réduit à une seule ligne compacte, toute la ligne mène au Stand
   vue.insertAdjacentHTML("afterbegin", '<button type="button" class="rappel rp-court' + (r.j <= 1 ? " urgent" : "") + '" data-cle="' + cle + '" role="status"><span class="rp-i">🃏</span><span class="rp-t"><b>' + (r.carte && r.prono ? "Carte et pronostic" : r.carte ? "Ta carte" : "Ton pronostic") + " de " + esc(moisLong(r.k)) + "</b> · " +
     (r.j <= 1 ? "dernier jour" : r.j + " j restants") + '</span><span class="rp-f" aria-hidden="true">›</span></button>');
-  const el = vue.querySelector(":scope > .rappel");
+  const el = vue.querySelector(":scope > .rappel:not(.rappel-portrait)");
   el.addEventListener("click", allerAuStand);
   const x = el.querySelector(".rp-x"); if (x) x.addEventListener("click", () => { stock.set("versus.rappelMasque", String(aujNum())); majRappels(); toast("D'accord, je te le rappelle demain."); });
 }
@@ -462,6 +477,7 @@ function podiumCache() { return Date.now() < CHAUFFE_OUVRE && !apercuSaison(); }
 /** Bandeaux de toutes les vues + pastille sur l'onglet Podium */
 function majRappels() {
   VUES_RAPPEL.forEach(id => assurerRappel(document.getElementById(id)));
+  { const vt = document.getElementById("v-trophees"); if (vt) setTimeout(() => assurerRappelPortrait(vt), 0); }   // v20.2 : aussi dans le Podium
   const t = document.querySelector('.onglet[data-vue="trophees"]'); if (!t) return;
   let p = t.querySelector(".pastille-nav"); const r = rappelCartes();
   if (r && !p) t.insertAdjacentHTML("beforeend", '<i class="pastille-nav" aria-label="Carte à poser"></i>'); else if (!r && p) p.remove();
