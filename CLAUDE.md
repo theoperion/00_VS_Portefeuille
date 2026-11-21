@@ -42,8 +42,8 @@ Quand le Conseil/les agents ont validé et que les tests passent : PUBLIER direc
 
 Précision (Théo, 21/11) : ce dont on a parlé ensemble ET validé par le Conseil → en ligne directement ; une idée NOUVELLE de Claude (ex. nouveaux événements temporaires « journées folles », nouveaux cosmétiques) → la PROPOSER à Théo avant de la mettre en ligne.
 
-## Rythme des mises en ligne (leçon du 21/11, 8 h : 3 versions en 2 min → appli sans mise en page chez Théo)
-GEL : aucune publication dans les 2 h avant un lancement ou une échéance (ouverture du Podium, relevé du 30/11 au soir, 1er du mois, révélations). Regrouper : UNE version propre par lot terminé, jamais de rafale. Depuis v19.5, sw.js sert la dernière bonne copie si GitHub Pages renvoie une erreur pendant un déploiement.
+## Rythme des mises en ligne (Théo, 21/11)
+PAS de gel : ce qui est prêt et validé se publie, même juste avant un lancement. Juste regrouper en une version par lot terminé (pas de rafale de versions en 2 minutes). Depuis v19.5, sw.js sert la dernière bonne copie si GitHub Pages renvoie une erreur pendant un déploiement.
 
 ## Méthode de validation (Théo, 21/11 : remplace les notes sur 10, trop subjectives et lentes)
 Double validation FACTUELLE par oui/non, chaque point prouvé par capture ou test. Contrôleur 1 (technique) : 0 erreur JS, requêtes au fichier identiques (requetes60 avant/après), sonde94 OK, fluidité, cas limites (dates simulées, une seule fois, profil simple, non concerné), réglages son/animations respectés, aucun chiffre d'un autre joueur. Contrôleur 2 (expérience) : lisible à 390 px en clair ET sombre, on comprend ce qui se passe, rien ne se recouvre (bouton +, cloche, bulles, barres), rangé avec l'existant, libellés courts, cohérent avec les décisions de Théo. Un seul NON → corriger ce point et le revérifier. Pas de note.
