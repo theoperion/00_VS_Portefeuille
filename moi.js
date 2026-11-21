@@ -1727,7 +1727,7 @@ function derniereFolle(k) {
 const EV_PRIO = ["krach", "feu", "joie", "crypto", "sommet", "serie", "relache"];   // la journée folle (feu / joie) passe juste après le krach
 const KRACH_SEUIL = -.03, CRYPTO_SEUIL = .10, SOMMET_MIN = 250, SOMMET_ECART = 20, SERIE_N = 5, SP_RECORD_CONNU = 6000;   // SP_RECORD_CONNU : plancher prudent si la série est en points d'indice
 const EV_DEF = {
-  feu: { ic: "🔥", nom: "Incendie", quoi: "après une séance à −3 % ou pire de ton portefeuille" },
+  feu: { ic: "🧯", nom: "Incendie", quoi: "après une séance à −3 % ou pire de ton portefeuille" },
   joie: { ic: "🎆", nom: "Feu d'artifice", quoi: "après une séance à +3 % ou mieux de ton portefeuille" },
   krach: { ic: "⛈️", nom: "Krach mondial", quoi: "le S&P 500 perd 3 % ou plus en une séance" },
   crypto: { ic: "⚡", nom: "Tempête crypto", quoi: "le Bitcoin bouge de 10 % ou plus en 24 h (si tu en as)" },
