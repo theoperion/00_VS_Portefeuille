@@ -377,11 +377,15 @@ function devoiler(rect, de, a) {
   requestAnimationFrame(pas);
 }
 /* Chiffres qui défilent : éléments marqués data-cv (valeur) et data-cf (« pct » ou « eur ») */
+const DERNIERS_CV = new Map();
 function compterChiffres(racine) {
   if (!ANIM || !racine) return;
   racine.querySelectorAll("[data-cv]").forEach(el => {
     const fin = Number(el.dataset.cv), f = el.dataset.cf === "eur" ? (v => eur(v)) : (v => pct(v));
     if (!isFinite(fin) || (el.dataset.cf === "eur" && ETAT.discret === "oui")) return;
+    /* v20.15 (Théo) : un chiffre qui n'a pas changé (ex. la valeur du portefeuille quand on change de période) ne défile pas de nouveau */
+    const vue = (el.closest(".view") || {}).id || "", cle = vue + "|" + [...racine.querySelectorAll("[data-cv]")].indexOf(el) + "|" + el.dataset.cf;
+    if (DERNIERS_CV.get(cle) === fin) { el.textContent = f(fin); return; } DERNIERS_CV.set(cle, fin);
     const t0 = performance.now(), duree = 750;
     const pas = t => { const x = Math.min(1, Math.max(0, t - t0) / duree); el.textContent = f(fin * adoucir(x)); if (x < 1) requestAnimationFrame(pas); else el.textContent = f(fin); };
     requestAnimationFrame(pas);

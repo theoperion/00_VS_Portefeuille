@@ -330,14 +330,14 @@ function rendreFiche() {
 
     v.innerHTML = chips + (typeof ficheMillion === "function" ? ficheMillion(p.nom) : "") + (typeof vitrineFiche === "function" ? vitrineFiche(p.nom) : "") + filtres(true) +
       '<div class="periode">' + esc(textePeriode(deb, finP, s.n)) + (s.debutK && deb && s.debutK > cleMoins(deb, -1) ? " · enveloppe ouverte plus tard" : "") + "</div>" +
-      '<div class="hero"><span class="eyebrow">' + esc(ENVELOPPES[env]) + " · " + esc(p.nom) + '</span><span class="big" data-cv="' + s.valeur + '" data-cf="eur">' + eur(s.valeur) + '</span><div class="sous"><span class="badge ' + sens(s.pvLatente) + '">' + eur(s.pvLatente, 0, true) + " · " + pct(s.pvLatentePct) + "</span><span>de plus-value pour " + eur(s.verse) + " versés</span></div></div>" +
+      '<div class="hero"><span class="eyebrow">' + esc(ENVELOPPES[env]) + " · " + esc(p.nom) + '</span><span class="big" data-cv="' + s.valeur + '" data-cf="eur">' + eur(s.valeur) + '</span><div class="sous"><span class="badge ' + sens(s.pvPeriode) + '">' + eur(s.pvPeriode, 0, true) + " · " + pct(s.twr) + "</span><span>" + ({ mois: "sur 1 mois", "6m": "sur 6 mois", ytd: "depuis janvier", "12m": "sur 1 an", tout: "depuis le début" }[ETAT.per] || "sur la période") + " · versements exclus</span></div></div>" +   // v20.15 (Théo) : la valeur reste fixe, la variation suit la période
       (s.n ? '<div class="tuiles">' +
         tuile("Performance (TWR)", pct(s.twr), sens(s.twr), "MWR <b>" + pct(s.mwr) + "</b>" + timingVersements(s)) +
         tuile(esc(D.marche.indices[i1]) + " même période", pct(s.i1 && s.i1.twr), "", s.i1 ? "Écart <b class=\"" + sens(s.twr - s.i1.twr) + "\">" + pts(s.twr - s.i1.twr) + "</b>" : "indice indisponible") +
         tuile("Pire baisse depuis un plus haut", pct(s.baisseMax), sens(s.baisseMax), "Actuelle <b>" + pct(s.baisseActuelle) + "</b>") +
         tuile("Volatilité annualisée", volTxt(s), "", s.n < RECUL ? "moins de " + RECUL + " mois de données" : "Sharpe <b>" + sharpeTxt(s) + "</b>") +
         tuile("Meilleur mois (" + moisCourt(s.meilleur.k) + ")", pct(s.meilleur.r), sens(s.meilleur.r), "Pire (" + moisCourt(s.pire.k) + ") <b>" + pct(s.pire.r) + "</b>") +
-        tuile("Plus-value sur la période", eur(s.pvPeriode, 0, true), sens(s.pvPeriode), "Versé <b>" + eur(s.versePeriode) + "</b>") +
+        tuile("Plus-value depuis le début", eur(s.pvLatente, 0, true), sens(s.pvLatente), (ok(s.pvLatentePct) ? "<b>" + pct(s.pvLatentePct) + "</b> · " : "") + "pour " + eur(s.verse) + " versés") +   // v20.15 : la plus-value de la période est montée sous la valeur
         "</div>" : '<div class="vide">Pas de rendement sur cette période.</div>') +
       (vx.length > 1 ? '<div><h2 class="sec">Valeur et versements <small>fin de mois</small></h2></div>' + boiteGraphe("g-fiche", [{ nom: "Valeur", c: couleur(p.nom) }, { nom: "Versé cumulé", c: "var(--idx)", dash: true }]) : "") +
       (env === 0 && envs.length > 1 ? '<div><h2 class="sec">Toutes enveloppes <small>même période</small></h2><div class="scroll-x"><table class="tab"><thead><tr><th>Enveloppe</th><th>TWR</th><th>Volatilité</th><th>Valeur</th><th>Plus-value</th><th>Poids</th></tr></thead><tbody>' +
