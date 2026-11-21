@@ -529,6 +529,12 @@ function htmlGPStand(k) {
 }
 /* lot68 (Théo, 21/11) : pendant la fenêtre, qui a déjà posé sa carte du mois k — jamais laquelle (dos de carte ou « en attente ») ;
    disparaît avec la fenêtre (révélation le jourLimite). On ne lit que « posée ou pas » : ni l'id ni la cible ne sortent d'ici. */
+/** v20.12 (Théo) : « 2/4 » sur l'onglet Stand pendant la fenêtre des cartes (combien ont posé, jamais laquelle) */
+function compteCartesTab(y) {
+  try { const k = kCartes(y); if (!k || apercuSaison() || !D || !D.personnes || D.personnes.length < 2) return "";
+    const n = D.personnes.filter(p => { const c = carteDe(y, p.nom, k); return !!(c && (c.c || c.cache)); }).length;
+    return ' <small class="pod-cc" aria-label="' + n + " carte" + (n > 1 ? "s" : "") + " posée" + (n > 1 ? "s" : "") + " sur " + D.personnes.length + '">' + n + "/" + D.personnes.length + "</small>"; } catch (e) { return ""; }
+}
 function htmlPeloton(y, k, qui) {
   if (!k || !D || !D.personnes || D.personnes.length < 2) return "";
   const l = D.personnes.map(p => { const c = carteDe(y, p.nom, k); return { nom: p.nom, ok: !!(c && (c.c || c.cache)) }; }), n = l.filter(x => x.ok).length;
