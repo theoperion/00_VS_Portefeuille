@@ -86,7 +86,7 @@ Double validation FACTUELLE par oui/non, chaque point prouvé par capture ou tes
 - Versus : `sh outils/mettre-en-ligne-versus.sh "V31 : ce qui change"` (APPLI=chemin de ce dépôt si besoin).
   Versions actuelles : VS_VERSION 71, version Google 86.
 - Scripts perso : dans `portefeuille-epargne/<nom>` : `clasp push --force` puis `python3 ../../outils/deployer.py "desc"`
-  (garde les mêmes adresses). Versions actuelles : Théo 38, Clément 16, Devlin 15 (20/11 : bloc levier, jour du versement, SL_CONSEILS, saisie_propre) (20/11 : historique par compte) (v34 : cache pré-calculé toutes les 10 min, `prechaufferDonnees`, installé au 1er appel).
+  (garde les mêmes adresses). Versions actuelles : Théo 39 (mail levier refait), Clément 16, Devlin 15 (20/11 : bloc levier, jour du versement, SL_CONSEILS, saisie_propre) (20/11 : historique par compte) (v34 : cache pré-calculé toutes les 10 min, `prechaufferDonnees`, installé au 1er appel).
 - Sheets en direct : `outils/gs.py` (`SS(id).get/put/batch`). Classeurs : Théo `1pbpJRMwZR64LqP_wwlhiw-6m7-lUg-Q3pVAF4Dv9j8U`,
   Clément `1srJuvBQ7Pksf0gpO1v3XLC8E7FVSBihKdEnFmGXD6LU`, Devlin `1xilETvIo9uR7RhHJHNbP1x1FPK0knWCtNh2IB6mJxGY`,
   Versus `1p9bZv5jP-BAnlAUVhsPKd2TeEyZDk8RG2vzia9p0kUk` (ne lire ceux de Clément/Devlin que pour une
