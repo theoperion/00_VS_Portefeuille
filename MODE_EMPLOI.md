@@ -555,3 +555,4 @@ Légende : ⬜ à faire · 🟡 proposé, attend ton OK · 🔧 en cours · ✅ 
 | 21/11/2026 | sam | **v20.11 · Cartes posées** (Théo, lot68) : dans le Stand, boîte « Fenêtre ouverte » : « Cartes posées 2/4 » + têtes (carte face cachée cochée ou en attente), jamais laquelle (`htmlPeloton`) ; visible pendant la fenêtre, disparaît à la révélation (le 2 du mois, chauffe comprise). |
 | 21/11/2026 | sam | **v20.12 · 2/4 sur l'onglet Stand** (Théo) : pendant la fenêtre des cartes, l'onglet Stand du Podium affiche en petit combien ont posé leur carte (`compteCartesTab`), jamais laquelle ; disparaît à la révélation. |
 | 21/11/2026 | sam | **v20.13 · Médaille devant le portrait** (Théo) : la 🥇 du champion du Verdict passait derrière la tête (`.vp-cour` z-index 2). |
+| 21/11/2026 | sam | **v20.14 · Fiches : barre des périodes flottante** (Théo) : dans Classement › Fiches (les 4 joueurs), la barre 1 M · 6 M · YTD · 1 an · Tout descend au pouce, comme sur Classement et Mois. |

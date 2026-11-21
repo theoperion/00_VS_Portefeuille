@@ -1934,7 +1934,7 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 
 /* v18.9 (Théo) : sur Classement et Mois, la barre des périodes descend au pouce, juste au-dessus des onglets (et du bouton +),
    en pastille flottante discrète ; le haut garde Tout/PEA/AV et les indices. */
-#v-classement .f-per, #v-mois .f-per, #v-moi .m-per-flot {
+#v-classement .f-per, #v-mois .f-per, #v-fiche .f-per, #v-moi .m-per-flot {
   position: fixed; z-index: 24; left: 50%; transform: translateX(-50%);
   bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
   width: min(608px, calc(100% - 32px));
@@ -1943,8 +1943,8 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   box-shadow: 0 6px 18px rgba(0,0,0,.28), 0 0 0 1px var(--rule-2);
 }
-#v-classement .f-per button, #v-mois .f-per button, #v-moi .m-per-flot button { padding-top: 8px; padding-bottom: 8px; font-size: 13px; }
-#v-classement, #v-mois, #v-moi.m-flot { padding-bottom: 54px; }   /* lot 62 : la même barre dans Moi › Aujourd'hui (#v-moi.m-flot = la barre est là) */
+#v-classement .f-per button, #v-mois .f-per button, #v-fiche .f-per button, #v-moi .m-per-flot button { padding-top: 8px; padding-bottom: 8px; font-size: 13px; }
+#v-classement, #v-mois, #v-fiche, #v-moi.m-flot { padding-bottom: 54px; }   /* lot 62 : la même barre dans Moi › Aujourd'hui (#v-moi.m-flot = la barre est là) */
 .toast { bottom: calc(140px + env(safe-area-inset-bottom, 0px)); }
 .bulle-portrait { bottom: calc(env(safe-area-inset-bottom, 0px) + 132px); }
 
