@@ -1192,7 +1192,7 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .vp-p em { font: 700 13px/1 var(--f-num); font-style: normal; font-variant-numeric: tabular-nums; }
 .vp-1 .vp-p em { font-size: 15px; }
 .vp-bat { position: absolute; top: -2px; right: -10px; font-style: normal; font-size: 14px; }
-.vp-cour { position: absolute; top: -20px; font-size: 22px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
+.vp-cour { position: absolute; z-index: 2; top: -22px; font-size: 22px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
 .vp-s { width: 100%; display: grid; justify-items: center; align-content: start; gap: 1px; padding-top: 8px; border-radius: 12px 12px 4px 4px; position: relative; overflow: hidden;
   background: linear-gradient(180deg, color-mix(in srgb, var(--c) 55%, var(--panel-2)), color-mix(in srgb, var(--c) 18%, var(--panel-2))); }
 .vp-s .vp-rg { font: italic 900 26px/1 var(--f-display); color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.18); }
