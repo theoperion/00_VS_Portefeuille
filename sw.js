@@ -20,12 +20,18 @@ async function reseauDabord(e, ms) {
     .then(rep => { if (rep && rep.ok) { const copie = rep.clone(); return caches.open(VERSION).then(c => c.put(req, copie)).then(() => rep); } return rep; });
   e.waitUntil(frais.catch(() => null));   // réseau lent : la nouvelle version est gardée même si elle arrive après le délai
   const cache = await caches.open(VERSION);
+  // v19.5 : une réponse ratée (404/500 pendant une mise en ligne de GitHub) ou trop lente ne casse plus l'appli :
+  // on sert la copie gardée, même d'une version précédente, et à défaut on attend le réseau au lieu d'échouer
+  const garde = async () => (await cache.match(req, { ignoreSearch: req.mode === "navigate" })) || (await caches.match(req, { ignoreSearch: req.mode === "navigate" }))
+    || (req.mode === "navigate" ? (await cache.match("index.html")) || (await caches.match("index.html")) : null);
   try {
-    return await Promise.race([frais, delai(ms)]);
+    const rep = await Promise.race([frais, delai(ms)]);
+    if (rep && rep.ok) return rep;
+    return (await garde()) || rep;
   } catch (err) {
-    const c = await cache.match(req, { ignoreSearch: req.mode === "navigate" }) || (req.mode === "navigate" ? await cache.match("index.html") : null);
+    const c = await garde();
     if (c) return c;
-    throw err;
+    try { return await frais; } catch (e2) { throw err; }
   }
 }
 async function cacheDabord(req) {
