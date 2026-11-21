@@ -16,7 +16,8 @@ function majuscule(t) { t = String(t || ""); return t.charAt(0).toUpperCase() + 
 const PREF = Object.assign({ onglet: "jour", patri: "fin", tri: "env", mode: "base", per: "6m", serie: "ip", moisMode: "eur", rep: "classe", acc: {} },
   (() => { try { return JSON.parse(stock.get(K.pref) || "{}"); } catch (e) { return {}; } })());
 delete PREF.varP; delete PREF.var5;   // lot 50 (Théo) : la période d'Aujourd'hui (Jour · 5 j · 1 M…) n'est pas mémorisée : chaque ouverture repart sur « Jour »
-delete PREF.million;   // E (v16.93) : plus de mode « net » pour le million (ancienne préférence oubliée)
+delete PREF.million;
+if (Array.isArray(PREF.ambOff)) { PREF.ambOff = PREF.ambOff.filter(x => x !== "tout"); if (!PREF.ambOff.length) delete PREF.ambOff; }   // lot 62 d : l'ancien interrupteur général « Non » est remis à « Oui »   // E (v16.93) : plus de mode « net » pour le million (ancienne préférence oubliée)
 /* lot 27 (Conseil, validé par Théo) : Stats s'ouvre sur « Contre le marché », Mois par mois en €, Risque ouvert ; le patrimoine dans le temps part en FINANCIER.
    Migration unique : les anciens réglages par défaut enregistrés sur l'appareil ne doivent pas masquer les nouveaux. */
 if (!PREF.stats27) { PREF.mode = "base"; PREF.moisMode = "eur"; PREF.patri = "fin"; delete PREF.acc["m-risque"]; delete PREF.effort; delete PREF.rendement; PREF.stats27 = 1; }
@@ -142,6 +143,7 @@ function injecterStyle() {
 .moi .vs-tenue .vt-h b { font: italic 800 12.5px/1 var(--f-display); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }
 .moi .vs-tenue .vt-h small { font: 500 11.5px/1 var(--f-num, var(--f-text)); color: var(--ink-3); white-space: nowrap; }
 .moi .vs-tenue .vt-r { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
+.moi .vs-tenue .vt-r.a7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }   /* lot 62 d : + l'ambiance en cours */
 .moi .vs-tenue .vt-o { all: unset; box-sizing: border-box; position: relative; min-width: 0; height: 38px; display: grid; place-items: center; padding: 0 1px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--rule-2, var(--rule)); cursor: pointer; }
 .moi .vs-tenue .vt-o:focus-visible, .moi .vs-tenue .vt-h:focus-visible { outline: 2px solid var(--accent); }
 .moi .vs-tenue .vt-p { height: 26px; width: 100%; display: grid; place-items: center; overflow: hidden; }
@@ -1549,10 +1551,11 @@ function seanceCarte() {
 /** la journée folle en cours (la plus récente des 4 derniers jours), ou null */
 function journeeFolle() {
   if (!M || M.simple) return null;
-  const n = new Date(), auj = isoJour(n), lim = isoJour(new Date(n.getFullYear(), n.getMonth(), n.getDate() - FOLLE_JOURS, 12)), c = new Map();
-  try { seancesHisto().forEach(x => { if (x.d >= lim && x.d <= auj) c.set(x.d, x); }); } catch (e) { /* historique incomplet */ }
-  try { const x = seanceCarte(); if (x && x.d >= lim && (x.direct || !c.has(x.d))) c.set(x.d, x); } catch (e) { /* idem */ }   // en direct : la séance du jour l'emporte sur une ligne d'historique de la matinée
-  const x = Array.from(c.values()).sort((a, b) => a.d < b.d ? 1 : -1).find(y => Math.abs(y.p) >= FOLLE_SEUIL - 1e-9);
+  /* lot 62 d (Théo, 21/11) : seulement la DERNIÈRE séance, avec le chiffre exact de la carte du haut (on ne relit jamais l'historique pour faire naître
+     un événement passé). Seule exception voulue : la séance du vendredi 20/11/2026, pour qu'elle s'affiche encore les jours suivants. */
+  const c = []; try { const x = seanceCarte(); if (x) c.push(x); } catch (e) { /* données absentes */ }
+  if (!c.some(y => y.d === EV_EXCEPTION) && isoJour(new Date()) <= finEv({ k: "feu", d: EV_EXCEPTION })) try { const y = seancesHisto().find(z => z.d === EV_EXCEPTION); if (y) c.push(y); } catch (e) { /* idem */ }
+  const x = c.find(y => Math.abs(y.p) >= FOLLE_SEUIL - 1e-9);
   const niv = x ? (Math.abs(x.p) >= FOLLE_FORT - 1e-9 ? 3 : Math.abs(x.p) >= FOLLE_MID - 1e-9 ? 2 : 1) : 0;
   return x ? Object.assign({}, x, { sens: x.p > 0 ? 1 : -1, niv, fort: niv === 3 }) : null;
 }
@@ -1665,7 +1668,8 @@ function lancerFolle(x, revoir) {
   try { o.focus({ preventScroll: true }); } catch (e) { /* rien */ }
   const S = window.SONS, duree = reduit ? 2800 : fort ? 5000 : niv === 2 ? 4600 : kind === "relache" ? 3600 : 4300, t0 = performance.now();
   let fini = false, raf = 0;
-  const fermer = () => { if (fini) return; fini = true; cancelAnimationFrame(raf); removeEventListener("resize", taille); if (S && S.folleStop) S.folleStop(); o.classList.add("fin"); setTimeout(() => o.remove(), 450); };
+  const fermer = () => { if (fini) return; fini = true; cancelAnimationFrame(raf); removeEventListener("resize", taille); if (S && S.folleStop) S.folleStop(); o.classList.add("fin");
+    setTimeout(() => { o.remove(); try { verifierPaliers(); } catch (e) { /* rien */ } }, 450); };   // lot 62 d : une fête de palier en attente passe APRÈS l'effet (jamais par-dessus)
   o.addEventListener("click", fermer); o.addEventListener("keydown", e => { if (["Escape", "Enter", " "].includes(e.key)) { e.preventDefault(); fermer(); } });
   setTimeout(fermer, duree);
   requestAnimationFrame(() => o.classList.add("on"));
@@ -1778,8 +1782,8 @@ const EV_DEF = {
   relache: { ic: "😴", nom: "Bourse en relâche", quoi: "un jour férié ferme la bourse de tes lignes" },
   plat: { ic: "🌊", nom: "Calme plat", quoi: "ton portefeuille ne bouge jamais de plus de 1 % pendant 20 séances d'affilée" }
 };
-function ambCoupee(k) { return Array.isArray(PREF.ambOff) && (PREF.ambOff.includes(k) || PREF.ambOff.includes("tout")); }
-function evTousCoupes() { return Array.isArray(PREF.ambOff) && PREF.ambOff.includes("tout"); }
+function ambCoupee(k) { return Array.isArray(PREF.ambOff) && PREF.ambOff.includes(k); }
+function evTousCoupes() { return false; }   // lot 62 d (Théo) : plus d'interrupteur général (on coupait tout par erreur) ; seulement Oui/Non par événement
 /** lot 62 c : le nom d'une journée folle selon son palier (Incendie · Explosion · Journée noire / Feu d'artifice · Pluie de bonbons · Bouquet final) */
 function nomEv(x) { const n = (x.niv || 1) - 1; return x.k === "feu" ? ["Incendie", "Explosion", "Journée noire"][n] : x.k === "joie" ? ["Feu d'artifice", "Pluie de bonbons", "Bouquet final"][n] : EV_DEF[x.k].nom; }
 const libCourt = d => { const j = new Date(d + "T12:00:00"); return JOURS_C[j.getDay()] + " " + (j.getFullYear() === new Date().getFullYear() ? frDate(d).slice(0, 5) : frDate(d)); };   // l'année quand ce n'est pas celle-ci
@@ -1788,8 +1792,11 @@ function closEv(nom) {
   const m = marchesMoi(), q = m && m.quot, sq = q && (q.s || []).find(x => x.nom === nom), out = []; if (!sq) return out;
   (q.d || []).forEach((d, i) => { if (sq.v[i] > 0) out.push({ d: isoN(d), v: sq.v[i] }); });
   const j = (m.jour || []).find(x => x.nom === nom), mh = j && typeof j.pct === "number" && /^(\d{2})\/(\d{2})/.exec(j.heure || "");
+  /* lot 62 d (Théo, 21/11) : la variation du Versus (`jour`, datée par son heure) fait foi pour SA séance : la clôture Google du jour peut manquer
+     (pas encore là le lendemain matin) ou être une valeur de la journée (cours en séance). On remplace (ou on ajoute) cette séance. */
   if (mh && out.length) { const a = new Date(), y = +mh[2] > a.getMonth() + 1 ? a.getFullYear() - 1 : a.getFullYear(), dj = y + "-" + mh[2] + "-" + mh[1];
-    if (dj > out[out.length - 1].d && dj <= isoJour(a)) out.push({ d: dj, v: out[out.length - 1].v * (1 + j.pct), direct: true }); }
+    if (dj <= isoJour(a)) { const k = out.findIndex(x => x.d >= dj), av = (k < 0 ? out : out.slice(0, k)).pop();
+      if (av) { const x = { d: dj, v: av.v * (1 + j.pct), versus: true }; if (k < 0) out.push(x); else if (out[k].d === dj) out[k] = x; } } }
   return out;
 }
 function varsEv(c, gapMax) { const out = []; for (let i = 1; i < c.length; i++) if ((new Date(c[i].d + "T12:00:00") - new Date(c[i - 1].d + "T12:00:00")) / 864e5 <= gapMax) out.push({ d: c[i].d, p: c[i].v / c[i - 1].v - 1, v: c[i].v }); return out; }
@@ -1834,14 +1841,36 @@ function evDe(k) {
 /** l'événement en cours (un seul), ou null */
 /** lot 62 c (Théo) : TOUS les événements en cours (un par genre, le plus récent de sa fenêtre), du plus fort au plus faible, sans ceux qu'on a retirés (✕) */
 function evenementsActifs() { const m = evMasques(); return evenementsListe().filter(x => !m.includes(x.cle)); }
+/* lot 62 d (Théo, 21/11) : un événement NAÎT le jour où la dernière séance remplit sa condition (chiffre de la carte du haut, variation du jour
+   des marchés), avec la date de cette séance, puis vit sa semaine : il est gardé sur l'appareil (« evNes »). On ne scanne jamais l'historique
+   pour créer des événements d'anciennes séances ; les événements « de durée » (série verte, calme plat) se calculent sur l'historique mais ne
+   naissent que si la condition devient vraie à la dernière séance. Exception : la séance du 20/11/2026. */
+const EV_EXCEPTION = "2026-11-20";
+function evNaissants() {
+  const out = [], exc = d => d === EV_EXCEPTION;
+  try { const x = journeeFolle(); if (x) out.push(Object.assign({}, x, { k: x.sens < 0 ? "feu" : "joie", folle: true })); } catch (e) { /* rien */ }
+  const dernier = (k, fin) => { try { const l = evDe(k); if (!fin) return; l.filter(x => x.d === fin || exc(x.d)).forEach(x => out.push(x)); } catch (e) { /* données absentes */ } };
+  const finSP = (closEv("S&P 500").slice(-1)[0] || {}).d, finBTC = (closEv("Bitcoin").slice(-1)[0] || {}).d, finH = (seancesHisto().slice(-1)[0] || {}).d;
+  dernier("krach", finSP); dernier("sommet", finSP); dernier("crypto", finBTC); dernier("serie", finH); dernier("plat", finH); dernier("relache", isoJour(new Date()));
+  return out;
+}
+let MEMO_EV = { m: null, j: "", l: null };
 function evenementsListe() {
   if (!M || M.simple) return [];
-  const auj = isoJour(new Date()), lim = limEv(), cand = [];
-  try { const x = journeeFolle(); if (x) cand.push(Object.assign({}, x, { k: x.sens < 0 ? "feu" : "joie", folle: true })); } catch (e) { /* rien */ }
-  ["krach", "crypto", "sommet", "serie", "relache", "plat"].forEach(k => { try { const x = evDe(k)[0]; if (x && x.d <= auj && (k === "relache" ? x.d === auj : x.d >= lim)) cand.push(x); } catch (e) { /* données absentes */ } });
+  const auj = isoJour(new Date()); if (MEMO_EV.m === M && MEMO_EV.j === auj && MEMO_EV.l) return MEMO_EV.l.map(x => Object.assign({}, x));
+  let nes = []; try { nes = JSON.parse(stock.get(cleStock("evNes")) || "[]"); } catch (e) { nes = []; } if (!Array.isArray(nes)) nes = [];
+  let change = false;
+  evNaissants().forEach(x => { x.cle = x.folle ? cleFolle(x) : x.k + ":" + x.d; const y = { k: x.k, d: x.d, p: x.p, e: x.e, v: x.v, avant: x.avant, dAvant: x.dAvant, de: x.de, places: x.places, lib: x.lib, sens: x.sens, niv: x.niv, fort: x.fort, folle: x.folle };
+    const i = nes.findIndex(z => z.k === x.k && z.d === x.d);
+    if (i < 0) { nes.push(y); change = true; } else if (JSON.stringify(nes[i]) !== JSON.stringify(Object.assign({}, nes[i], y, { niv: Math.max(nes[i].niv || 0, y.niv || 0) || undefined }))) { nes[i] = Object.assign({}, nes[i], y, { niv: Math.max(nes[i].niv || 0, y.niv || 0) || undefined }); if (nes[i].folle) nes[i].fort = nes[i].niv === 3; change = true; } });   // même séance revue (en direct) : chiffre mis à jour, palier jamais baissé
+  const lim = limEv(); nes = nes.filter(x => x.d >= isoJour(new Date(Date.now() - 400 * 864e5)));
+  if (change) stock.set(cleStock("evNes"), JSON.stringify(nes.slice(-60)));
+  const parK = {}; nes.filter(x => x.d <= auj && (x.k === "relache" ? x.d === auj : x.d >= lim)).forEach(x => { if (!parK[x.k] || parK[x.k].d < x.d) parK[x.k] = x; });   // un par genre : le plus récent
+  const cand = Object.values(parK).map(x => Object.assign({}, x));
   cand.sort((a, b) => EV_PRIO.indexOf(a.k) - EV_PRIO.indexOf(b.k) || (a.d < b.d ? 1 : -1));
   cand.forEach(x => { x.cle = x.folle ? cleFolle(x) : x.k + ":" + x.d; });
-  return cand;
+  MEMO_EV = { m: M, j: auj, l: cand };
+  return cand.map(x => Object.assign({}, x));
 }
 /** lot 62 c (Théo) : ✕ = masquer (pas supprimer) : l'événement reste dans Vestiaire › Ambiances, où « Oui » le remet, jusqu'à la fin de sa fenêtre */
 function evenementsTous() { return evenementsListe(); }
@@ -1873,9 +1902,10 @@ function evListe(k) { try { const l = JSON.parse(stock.get(cleStock(k)) || "[]")
 function evAjoute(k, cles, max) { const l = evListe(k); cles.forEach(c => { if (!l.includes(c)) l.push(c); }); stock.set(cleStock(k), JSON.stringify(l.slice(-(max || 60)))); }
 function folleVue(x) { const pre = x.d + (x.sens > 0 ? "+" : "-"); return evListe("folles").some(k => k.startsWith(pre) && +k.slice(-1) >= (x.niv || 1)); }   // déjà vue (ou plus forte)
 function evVu(x) { return x.folle ? folleVue(x) : evListe("evVus").includes(x.cle); }
+let evAttente = 0;
 function verifierEvenement() {
   if (!M || M.simple || SRC !== "api" || PREF.onglet !== "jour" || !vueMoi() || document.hidden || !identiteSure() || evTousCoupes()) return;
-  if (document.querySelector(".m-fete, .m-folle")) return;   // une fête de palier passe d'abord ; on réessaiera au prochain affichage
+  if (document.querySelector(".m-fete, .m-folle")) { clearTimeout(evAttente); evAttente = setTimeout(verifierEvenement, 1500); return; }   // une fête de palier passe d'abord ; l'effet suit quand elle est fermée (jamais les deux ensemble)
   const L = evenementsActifs(), nv = L.filter(x => !evVu(x)); if (!nv.length) return;
   const x = nv[0];
   nv.forEach(y => { if (y.folle) evAjoute("folles", [cleFolle(y)], 40); else evAjoute("evVus", [y.cle]); });   // tous notés : un seul est joué
@@ -1886,7 +1916,7 @@ function verifierEvenement() {
 function evMasques() { try { const l = JSON.parse(stock.get(cleStock("evMasques")) || "[]"); return Array.isArray(l) ? l : []; } catch (e) { return []; } }
 function evMasque(x) { return evMasques().includes(x.cle); }
 /** Vestiaire › Ambiances : un interrupteur général, puis une ligne par événement déjà vécu (grisée hors de sa semaine) */
-function derniereEv(k) { try { const x = evDe(k)[0]; return x ? x.d : null; } catch (e) { return null; } }
+function derniereEv(k) { try { const l = JSON.parse(stock.get(cleStock("evNes")) || "[]"); const x = (Array.isArray(l) ? l : []).filter(y => y.k === k).sort((a, b) => a.d < b.d ? 1 : -1)[0]; return x ? x.d : null; } catch (e) { return null; } }   // lot 62 d : seulement les événements nés sur cet appareil
 function htmlAmbFolles() {
   if (!M || M.simple) return "";
   const L = evenementsTous(), masq = evMasques(), tout = evTousCoupes(), lignes = EV_PRIO.map(k => {
@@ -1895,8 +1925,7 @@ function htmlAmbFolles() {
     return '<div class="vs-amb-l' + (actif ? "" : " grise") + '"><span class="vs-em">' + (x && actif ? icoEv(x) : D.ic) + "</span><span><b>" + esc(x && actif ? nomEv(x) : D.nom) + "</b><small>" + (actif ? "séance du " + libCourt(x.d) + " · jusqu'au " + libCourt(finEv(x)) + (masq.includes(x.cle) ? " · masqué" : "") : "dernier : " + libCourt(der) + " · " + esc(D.quoi)) + "</small></span>" +
       (actif ? (on => '<span class="chips m-filtre" role="group" aria-label="' + esc("Afficher " + nomEv(x)) + '"><button class="chip" type="button" data-ev-vis="' + esc(x.cle) + '" data-ev-on="1" aria-pressed="' + on + '">Oui</button><button class="chip" type="button" data-ev-vis="' + esc(x.cle) + '" data-ev-on="" aria-pressed="' + !on + '">Non</button></span>')(!masq.includes(x.cle) && !ambCoupee(k)) : '<span class="vs-amb-x">🔒</span>') + "</div>";
   }).join("");
-  return lignes ? '<div class="vs-amb"><div class="vs-amb-g"><span><b>Événements rares</b><small>Effet, pastille et ambiance sur Aujourd\'hui, environ une semaine. « Non » = appli sobre.</small></span>' +
-    '<span class="chips m-filtre" role="group" aria-label="Événements rares"><button class="chip" type="button" data-amb="tout" data-amb-on="1" aria-pressed="' + !tout + '">Oui</button><button class="chip" type="button" data-amb="tout" data-amb-on="" aria-pressed="' + tout + '">Non</button></span></div>' +
+  return lignes ? '<div class="vs-amb"><small>Les événements rares de la semaine : pastille et ambiance sur Aujourd\'hui. « Non » masque un événement, « Oui » le remet.</small>' +
     (reduit ? "<small>Ambiances coupées sur ce téléphone (moins d'animations demandé).</small>" : "") + lignes + "</div>" : "";
 }
 /** sur Aujourd'hui (lot 62 c, Théo) : une rangée de petites pastilles sous la carte du haut, une par événement en cours (« 💥 Explosion · ven. 20/11 ») ;
@@ -6022,7 +6051,7 @@ function catVis(t, E) { return CATALOGUE[t].filter(d => !objInvisible(t, d[0], E
 /** lot 62 : les secrets des journées folles (séances de l'historique + la séance en direct) */
 function secretsFolles(ok) {
   const l = seancesHisto(); let x = null; try { x = seanceCarte(); } catch (e) { x = null; }
-  const tous = l.concat(x && !l.some(y => y.d === x.d) ? [x] : []);
+  const tous = l.filter(y => !x || y.d !== x.d).concat(x ? [x] : []);   // lot 62 d : la séance de la carte du haut remplace sa ligne d'historique
   if (tous.some(y => y.p <= -FOLLE_FORT + 1e-9)) ok.add("brasier");
   if (tous.some(y => y.p >= FOLLE_FORT - 1e-9)) ok.add("bouquet");
   for (let i = 0; i < l.length; i++) for (let j = Math.max(0, i - 4); j < i; j++) if ((l[i].p >= FOLLE_SEUIL - 1e-9 && l[j].p <= -FOLLE_SEUIL + 1e-9) || (l[i].p <= -FOLLE_SEUIL + 1e-9 && l[j].p >= FOLLE_SEUIL - 1e-9)) ok.add("montagnes");
@@ -6183,10 +6212,13 @@ function htmlTenue() {
       '<button class="btn acc" type="button" data-vt-eq="' + k + '">Équiper</button><button class="vt-x" type="button" data-vt-vu="' + k + '" aria-label="Plus tard">✕</button></div>';
   }
   return '<section class="vs-tenue" aria-label="Ma tenue"><button type="button" class="vt-h" data-vt-ouv="' + (SORTES.some(x => x[0] === PREF.vest) ? PREF.vest : "aff") + '" aria-label="' + esc("Ma tenue : " + nb + " objets sur " + tot + ", ouvrir le vestiaire") + '"><b>Ma tenue</b><small>' + nb + " / " + tot + " ›</small></button>" +
-    '<div class="vt-r">' + SORTES.map(([t, l]) => { const id = actifM(t), n = nomObj(t, id);
+    '<div class="vt-r' + (ambTenue() ? " a7" : "") + '">' + SORTES.map(([t, l]) => { const id = actifM(t), n = nomObj(t, id);
       return '<button type="button" class="vt-o" data-vt-ouv="' + t + '" aria-label="' + esc(l + " : " + n + ", changer") + '" title="' + esc(l + " : " + n) + '"><span class="vt-p">' + apercuTenue(t, id) + '</span><span class="vt-n"><span class="vt-l">' + esc(l) + '</span><span class="vt-c">' + esc(COURT_SORTE[t] || l) + "</span></span></button>"; }).join("") +
+    (ambT => ambT ? '<button type="button" class="vt-o" data-vt-ouv="amb" aria-label="' + esc("Ambiance : " + nomEv(ambT) + ", régler") + '" title="' + esc("Ambiance : " + nomEv(ambT)) + '"><span class="vt-p"><span class="vs-em">' + icoEv(ambT) + '</span></span><span class="vt-n"><span class="vt-l">Ambiance</span><span class="vt-c">Amb.</span></span></button>' : "")(ambTenue()) +   // lot 62 d (Théo)
     "</div>" + encart + "</section>";
 }
+/** lot 62 d : l'ambiance affichée sur Aujourd'hui (ou null) */
+function ambTenue() { try { if (!M || M.simple || evTousCoupes() || reduit) return null; const L = evenementsActifs(); if (!L.length) return null; const x = evChoisi(L); return x && !ambCoupee(x.k) ? x : null; } catch (e) { return null; } }
 function brancherTenue(v) {
   v.querySelectorAll("[data-vt-ouv]").forEach(b => b.addEventListener("click", () => {
     PREF.vest = b.dataset.vtOuv; PREF.acc["m-vest"] = true; garderPref(); vsSel = null; rendre();
@@ -6280,6 +6312,7 @@ function brancherVestiaire(v) {
 let paliersVerifies = false;
 function verifierPaliers() {
   if (!M || paliersVerifies || !identiteSure()) return;
+  if (document.querySelector(".m-folle")) return;   // lot 62 d (Théo, 21/11) : jamais par-dessus un effet d'événement (un toucher « pour continuer » tombait sur « Équiper »)
   if (!vueMoi()) return;   // la fête attend qu'on soit sur Moi (sinon elle tomberait sur le Classement au démarrage)
   paliersVerifies = true;
   noterVisite(); oublierObjets();
