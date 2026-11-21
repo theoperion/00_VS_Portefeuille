@@ -551,6 +551,48 @@ function injecterStyle() {
 .moi .m-l .b i { font-style: normal; opacity: .75; }
 .moi .m-l.especes { cursor: default; color: var(--ink-3); } .moi .m-l.especes:hover { background: none; }
 .moi .m-l.especes .g b { font: 500 13px/1.1 var(--f-text); }
+/* lot 64 (Théo, choix B) : « Mes enveloppes » en tableau d'un seul bloc : Enveloppe (valeur, poids, actifs) | période choisie | plus-value ;
+   toucher une rangée = ses lignes dessous, dans les mêmes colonnes (valeur, cours, PRU, période, plus-value € et %) ; répartition sous le total */
+.moi .m-envs { margin-top: 8px; border-radius: 12px; border: 1px solid var(--rule); background: var(--panel); overflow: hidden; }
+.moi .nv-g { display: grid; grid-template-columns: minmax(0, 1fr) 74px 82px 10px; align-items: center; gap: 0 10px; }
+.moi .nv-tete { padding: 7px 12px 4px 15px; border-bottom: 1px solid var(--rule-2); font: 700 10px/1.1 var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.moi .nv-tete span:nth-child(n+2) { text-align: right; }
+.moi .m-enve + .m-enve, .moi .m-enve + .nv-tot { border-top: 1px solid var(--rule-2); }
+.moi .nv-h { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 74px 82px 10px; align-items: center; gap: 0 10px; padding: 7px 12px 7px 15px; box-shadow: inset 3px 0 0 var(--ce); }
+.moi .nv-h:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.moi .m-enve.ouvert .nv-h { background: color-mix(in srgb, var(--ce) 9%, transparent); }
+.moi .nv-n { display: grid; grid-template-columns: auto minmax(16px, 1fr) auto; align-items: center; gap: 3px 7px; min-width: 0; }
+.moi .nv-n b { grid-column: 1 / -1; font: 600 14px/1.2 var(--f-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.moi .nv-n .nv-v { font: 500 12px/1.1 var(--f-num); font-variant-numeric: tabular-nums; color: var(--ink-2); white-space: nowrap; }
+.moi .nv-n .nv-j { height: 4px; border-radius: 2px; background: var(--rule-2); overflow: hidden; }
+.moi .nv-n .nv-j i { display: block; height: 100%; border-radius: 2px; background: var(--ce); }
+.moi .nv-n em { font: 600 10.5px/1 var(--f-num); font-style: normal; color: var(--ink-3); }
+.moi .nv-c { display: grid; gap: 2px; justify-items: end; min-width: 0; }
+.moi .nv-c b { font: 600 13.5px/1.1 var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.moi .nv-c small { font: 500 11.5px/1.1 var(--f-num); font-variant-numeric: tabular-nums; white-space: nowrap; opacity: .85; }
+.moi .nv-ch { font-size: 10px; color: var(--ink-3); text-align: right; transition: transform .2s; }
+.moi .m-enve.ouvert > .nv-h .nv-ch { transform: rotate(180deg); color: var(--ce); }
+.moi .nv-a { grid-column: 1 / -1; display: flex; gap: 4px; margin-top: 4px; min-width: 0; overflow: hidden; white-space: nowrap; }
+.moi .nv-a span { flex: none; padding: 1px 5px; border-radius: 4px; background: var(--rule-2); font: 600 10px/1.2 var(--f-num); letter-spacing: .02em; color: var(--ink-2); }
+.moi .nv-a span.plus { background: none; padding-inline: 2px; color: var(--ink-3); }
+.moi .m-enve.ouvert .nv-a { display: none; }
+.moi .nv-l { padding: 0 12px 0 15px; box-shadow: inset 3px 0 0 var(--ce); background: var(--panel-2); }
+.moi .nv-l[hidden] { display: none; }
+.moi .m-l.nv-li { grid-template-columns: minmax(0, 1fr) 74px 82px 10px; gap: 0 10px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--rule); }
+.moi .m-l.nv-li:last-child { border-bottom: 0; }
+.moi .nv-ln { display: grid; gap: 2px; min-width: 0; }
+.moi .nv-ln b { font: 700 13.5px/1.2 var(--f-num); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.moi .nv-ln b small { margin-left: 6px; font: 400 11px/1 var(--f-text); letter-spacing: 0; color: var(--ink-3); }
+.moi .nv-ln .nv-v { font: 600 12.5px/1.15 var(--f-num); font-variant-numeric: tabular-nums; }
+.moi .nv-ln .nv-cr, .moi .nv-li .nv-pru { font: 400 10.5px/1.15 var(--f-num); font-variant-numeric: tabular-nums; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 1; }
+.moi .nv-ln .nv-cr i, .moi .nv-li .nv-pru i { font-style: normal; opacity: .8; }
+.moi .nv-li .nv-ch { align-self: center; font-size: 13px; }
+.moi .m-l.nv-li.especes .nv-ln b { font: 500 13px/1.2 var(--f-text); color: var(--ink-3); }
+.moi .nv-tot { padding: 7px 12px 9px 15px; background: var(--panel-2); border-top: 2px solid var(--ink) !important; row-gap: 7px; }
+.moi .nv-tot .nv-n b { font: 700 10.5px/1.2 var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.moi .nv-tot .nv-n .nv-v { font: 600 14px/1.1 var(--f-num); color: var(--ink); }
+.moi .nv-rep { grid-column: 1 / -1; display: flex; gap: 2px; height: 6px; border-radius: 3px; overflow: hidden; }
+.moi .nv-rep i { flex-basis: 0; min-width: 3px; background: var(--ce); }
 .moi .m-mk-t { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .moi .m-idx-mk { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .moi .m-idx-mk button { all: unset; box-sizing: border-box; background: var(--panel); padding: 9px 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; cursor: pointer; }
@@ -1995,11 +2037,7 @@ function htmlJourBase() {
   // liste : par enveloppe (en-tête avec le jour de l'enveloppe) ou toutes ensemble triées
   let liste;
   if (tri === "env") {
-    liste = (M.groupes || []).map((g, gi) => {
-      const t = g.total || {};
-      return '<div class="m-env" style="--ce:var(--e' + (gi % 5 + 1) + ')">' + enteteEnv(g.env, t.valeur, t.jour, t.pct, t.pv, t.pvPct) +
-        (detail ? g.lignes.filter(l => !l.especes || Math.abs(l.valeur || 0) >= 0.5).map(l => ligneJour(Object.assign({ env: g.env }, l))).join("") : "") + "</div>";
-    }).join("") + (detail ? "" : '<div class="m-env total">' + enteteEnv("Portefeuille", s.valeur, s.jour, s.jourPct, s.latente, s.latentePct) + "</div>");
+    liste = htmlEnveloppes(s, detail);   // lot 64 : « Mes enveloppes » refaite (toucher une enveloppe = ses lignes)
   } else {
     const cle = { poids: l => -(l.valeur || 0), jour: l => -(l.pct || 0), pv: l => -(l.pvPct || 0) }[tri];
     liste = '<div class="m-env">' + toutes.slice().sort((a, b) => cle(a) - cle(b)).map(l => ligneJour(l, true)).join("") + "</div>";
@@ -2039,9 +2077,40 @@ function htmlJourBase() {
 function boutonsPer(v5, bas) {
   return [["jour", "Jour"]].concat(Object.keys(PERIODES_J).map(k => [k, PERIODES_J[k][1]])).map(([k, l]) => '<button type="button"' + (bas ? ' class="chip" data-per-b="1"' : "") + ' data-per="' + k + '" aria-pressed="' + ((v5 ? VUEJ : "jour") === k) + '">' + l + "</button>").join("");
 }
-function enteteEnv(nom, valeur, jour, jourPct, pv, pvPct) {
-  return '<div class="m-env-h"><b>' + esc(nom) + '</b><span class="v">' + eur(valeur) + "</span>" +
-    '<span class="pv ' + sens(pv) + '">PV ' + eur(pv, 0, true) + " · " + pct(pvPct) + '</span><span class="j ' + sens(jour) + '">' + eur(jour, 0, true) + " · " + pct(jourPct, 2) + "</span></div>";
+const ENV_OUV = new Set();   // lot 64 : enveloppes dépliées pendant la visite (toutes repliées à chaque réouverture de l'appli)
+/** lot 64 (B, Théo) : un seul bloc en tableau : Enveloppe (valeur, poids en mini-jauge, ses actifs en étiquettes) | période choisie | plus-value latente ;
+    rangée Portefeuille en pied + répartition ; toucher une rangée = ses lignes dessous, mêmes colonnes ; tout = case « Lignes » */
+function htmlEnveloppes(s, tout) {
+  const gs = M.groupes || [], lib = PERIODES_J[VUEJ] ? PERIODES_J[VUEJ][1] : VUEJ === "seance" ? "Séance" : "Jour";
+  const somme = gs.reduce((a, g) => a + Math.max(0, (g.total || {}).valeur || 0), 0) || 1, ce = gi => "--ce:var(--e" + (gi % 5 + 1) + ")";
+  const col = (e, p, dec, plus) => '<span class="nv-c"><b class="' + sens(p) + '">' + pct(p, dec) + '</b><small class="' + sens(e) + '">' + eur(e, 0, true) + "</small>" + (plus || "") + "</span>";
+  const pru = l => ok(l.pru) ? '<small class="nv-pru"><i>PRU</i> ' + cours(l.pru).replace(/\s?€$/, "") + "</small>" : "";
+  const ligne = (g, l) => l.especes
+    ? '<div class="m-l nv-li especes"><span class="nv-ln"><b>Espèces</b><span class="nv-v">' + eur(l.valeur) + "</span></span><span></span><span></span><span></span></div>"
+    : '<div class="m-l nv-li" role="button" tabindex="0" aria-expanded="false" data-code="' + esc(l.code) + '" data-env="' + esc(g.env) + '" title="' + esc(l.nom || l.code) + '">' +
+      '<span class="nv-ln"><b>' + esc(l.code) + (l.nom ? "<small>" + esc(l.nom) + "</small>" : "") + '</b><span class="nv-v">' + eur(l.valeur) + "</span>" +
+      (ok(l.cours) ? '<span class="nv-cr"><i>cours</i> ' + cours(l.cours) + "</span>" : "") + "</span>" +
+      col(l.jour, l.pct, 2) + col(l.pv, l.pvPct, 1, pru(l)) + '<span class="nv-ch" aria-hidden="true">›</span></div>';
+  const actifs = g => { const c = g.lignes.filter(l => !l.especes && l.code).sort((a, b) => (b.valeur || 0) - (a.valeur || 0)), n = 4;
+    return c.length ? '<span class="nv-a">' + c.slice(0, n).map(l => "<span>" + esc(l.code) + "</span>").join("") + (c.length > n ? '<span class="plus">+' + (c.length - n) + "</span>" : "") + "</span>" : ""; };
+  const rangs = gs.map((g, gi) => {
+    const t = g.total || {}, ouv = tout || ENV_OUV.has(g.env), w = Math.max(0, t.valeur || 0) / somme;
+    return '<div class="m-enve' + (ouv ? " ouvert" : "") + '" style="' + ce(gi) + '" data-env-nom="' + esc(g.env) + '">' +
+      '<button type="button" class="nv-h" aria-expanded="' + ouv + '"><span class="nv-n"><b>' + esc(g.env) + '</b><span class="nv-v">' + eur(t.valeur) + "</span>" +
+      '<span class="nv-j" aria-hidden="true"><i style="width:' + (w * 100).toFixed(1) + '%"></i></span><em>' + pct(w, 0, false) + "</em></span>" +
+      col(t.jour, t.pct, 2) + col(t.pv, t.pvPct, 1) + '<span class="nv-ch" aria-hidden="true">▾</span>' + actifs(g) + "</button>" +
+      '<div class="nv-l"' + (ouv ? "" : " hidden") + ">" + g.lignes.filter(l => !l.especes || Math.abs(l.valeur || 0) >= 0.5).map(l => ligne(g, l)).join("") + "</div></div>";
+  }).join("");
+  const rep = gs.map((g, gi) => '<i style="' + ce(gi) + ";flex-grow:" + Math.max(0, (g.total || {}).valeur || 0).toFixed(0) + '" title="' + esc(g.env) + '"></i>').join("");
+  return '<div class="m-envs"><div class="nv-tete nv-g"><span>Enveloppe</span><span>' + esc(lib) + "</span><span>Plus-value</span><span></span></div>" + rangs +
+    '<div class="nv-tot nv-g"><span class="nv-n"><b>Portefeuille</b><span class="nv-v">' + eur(s.valeur) + "</span></span>" + col(s.jour, s.jourPct, 2) + col(s.latente, s.latentePct, 1) + "<span></span>" +
+    (gs.length > 1 ? '<span class="nv-rep" role="img" aria-label="Répartition par enveloppe">' + rep + "</span>" : "") + "</div></div>";
+}
+function estOuverte(el) { return el.classList.contains("ouvert"); }
+function basculerEnv(el) {
+  const ouv = !el.classList.contains("ouvert");
+  el.classList.toggle("ouvert", ouv); el.querySelector(".nv-l").hidden = !ouv; el.querySelector(".nv-h").setAttribute("aria-expanded", String(ouv));
+  if (ouv) ENV_OUV.add(el.dataset.envNom); else ENV_OUV.delete(el.dataset.envNom);
 }
 /* « cours du 16/11 à 17 h 35 » (point 10 : heure de mise à jour en petit) */
 function majCourte() {
@@ -2128,11 +2197,13 @@ function brancherJour(v) {
     const [env, code] = b.dataset.allerLigne.split("|");
     const el = Array.from(v.querySelectorAll(".m-l[data-code]")).find(x => x.dataset.env === env && x.dataset.code === code);
     if (!el) return;
+    { const ce = el.closest("[data-env-nom]"); if (ce && !estOuverte(ce)) basculerEnv(ce); }   // lot 64 : la ligne est dans une enveloppe repliée
     if (!el.querySelector(".m-ligne-det")) basculerLigne(el);
     el.scrollIntoView({ block: "center", behavior: reduit ? "auto" : "smooth" });
     el.classList.add("eclair"); setTimeout(() => el.classList.remove("eclair"), 1200);
   }));
   v.querySelectorAll("[data-m-tri]").forEach(b => b.addEventListener("click", () => { PREF.tri = b.dataset.mTri; garderPref(); garderPlace(b, rendre); }));
+  v.querySelectorAll(".nv-h").forEach(b => b.addEventListener("click", () => basculerEnv(b.closest("[data-env-nom]"))));   // lot 64
   const dt = v.querySelector("#m-detail"); if (dt) dt.addEventListener("change", () => { PREF.lignes = dt.checked; garderPref(); rendre(); });
   const def = v.querySelector(".m-def-l");
   v.querySelectorAll("[data-def]").forEach(b => b.addEventListener("click", () => {
