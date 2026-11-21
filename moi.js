@@ -1598,6 +1598,11 @@ function totalHisto(p) {
   const a = rows[i0], b = rows[i1];
   if ((num(d0) !== a[0] && (dateNum(c0) - dateNum(a[0])) / 864e5 > 6) || !(a[ki] > 0 && b[ki] > 0) || !ok(a[kv]) || !ok(b[kv])) return null;   // trou dans l'historique
   let pc = b[ki] / a[ki] - 1, e = (b[kv] - a[kv]) - (ka >= 0 && ok(a[ka]) && ok(b[ka]) ? b[ka] - a[ka] : 0);
+  /* v20.10 (Théo) : la dernière séance = le chiffre de la carte « Jour » (cours de clôture de chaque ligne), pas l'instantané de 18 h de l'historique */
+  { const sc = seanceCarteSure(), z = i1 - 1;
+    if (sc && b[0] === cF && sc.d === isoN(b[0]) && z >= i0 && rows[z][ki] > 0 && ok(rows[z][kv])) {
+      pc = (rows[z][ki] / a[ki]) * (1 + sc.p) - 1;
+      e = (rows[z][kv] - a[kv]) - (ka >= 0 && ok(a[ka]) && ok(rows[z][ka]) ? rows[z][ka] - a[ka] : 0) + sc.e; } }
   if (b[0] < cF) { if (seanceProposee() || !ok(s.jour)) return null;   // la dernière séance manque encore à l'historique
     pc = (1 + pc) * (1 + (s.jourPct || 0)) - 1; e += s.jour; }
   return { e, p: pc };
@@ -1632,9 +1637,11 @@ let CINQ = null, cinqOuvert = false, VUEJ = "jour";   // VUEJ : "jour" | "seance
 function joursCinq() {
   const h = M.historique, cols = h && h.cols || [], rows = h && h.rows || [], ki = cols.indexOf("ip"), kv = cols.indexOf("v"), ka = cols.indexOf("a"), s = M.synthese || {};
   const auj = isoJour(new Date()), live = !seanceProposee();
+  const sc = seanceCarteSure();   // v20.10 (Théo) : la séance que montre la carte « Jour » garde EXACTEMENT son chiffre dans le détail 5 j
   const out = seances5().map(iso => {
     const x = { iso }, n = +iso.replace(/-/g, "");
     if (iso === auj && live && ok(s.jour)) { x.p = s.jourPct; x.e = s.jour; return x; }
+    if (sc && sc.d === iso) { x.p = sc.p; x.e = sc.e; return x; }
     const i = rows.findIndex(r => r[0] === n), a = rows[i - 1], b = rows[i];
     if (i > 0 && ki >= 0 && a[ki] > 0 && b[ki] > 0 && (dateNum(b[0]) - dateNum(a[0])) / 864e5 < 4.5) { x.p = b[ki] / a[ki] - 1; x.e = kv >= 0 ? (b[kv] - a[kv]) - (ka >= 0 ? b[ka] - a[ka] : 0) : null; }
     return x;
@@ -1672,6 +1679,8 @@ function seancesHisto() {
   }
   return out;
 }
+/** v20.10 : seanceCarte() sans jamais lever d'erreur ni lire une copie de séance */
+function seanceCarteSure() { try { return M && !M.__seance ? seanceCarte() : null; } catch (e) { return null; } }
 /** la séance du jour (en direct) ou la dernière séance, telle que la carte « Jour » la montre */
 function seanceCarte() {
   if (!M || M.__seance) return null;
