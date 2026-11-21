@@ -1105,9 +1105,29 @@ function injecterStyle() {
 @keyframes mfoAurore { 50% { text-shadow: 0 0 24px rgba(163,230,53,.8), 0 0 64px rgba(94,234,212,.6), 0 2px 0 rgba(0,20,30,.5); } }
 .m-folle.calme .mfo-c > *, .m-folle.calme .mfo-p, .m-folle.calme .mfo-c { animation: none !important; }
 @media (prefers-reduced-motion: reduce) { .m-folle .mfo-c > *, .m-folle .mfo-p, .m-folle .mfo-c { animation: none !important; } }
-/* le repère du jour (🧯 incendie, 🎆 fête), à côté du chiffre : toucher = revoir l'effet */
-.moi .m-folle-m { all: unset; cursor: pointer; display: inline-grid; place-items: center; width: 32px; height: 32px; margin: -4px -4px -4px -2px; font-size: 17px; line-height: 1; border-radius: 50%; -webkit-tap-highlight-color: transparent; }
-.moi .m-folle-m:focus-visible { outline: 2px solid var(--accent); }
+/* lot 62 b · les autres événements : un fond par scène (le texte reste lisible), la petite carte « pourquoi » sur Aujourd'hui */
+.m-folle.krach { background: linear-gradient(180deg, rgba(40,46,60,.9), rgba(8,10,16,.96) 60%); } .m-folle.krach .mfo-k { color: #B9C6E0; }
+.m-folle.krach .mfo-p { color: #F1F4FA; text-shadow: 0 0 22px rgba(170,190,230,.6), 0 2px 0 rgba(0,0,0,.6); }
+.m-folle.crypto { background: radial-gradient(110% 60% at 50% 50%, rgba(60,24,90,.7), transparent 70%), rgba(8,5,14,.95); } .m-folle.crypto .mfo-k { color: #F7931A; }
+.m-folle.crypto .mfo-p { color: #FFF3E2; text-shadow: 0 0 18px rgba(247,147,26,.8), 0 0 46px rgba(196,181,253,.45), 0 2px 0 rgba(0,0,0,.6); }
+.m-folle.sommet { background: linear-gradient(180deg, rgba(20,26,70,.96), rgba(70,40,90,.95) 55%, rgba(14,16,38,.97)); } .m-folle.sommet .mfo-k { color: #FFC9B0; }
+.m-folle.sommet .mfo-c { margin-top: -34vh; } .m-folle.sommet .mfo-p { color: #FFF6F0; text-shadow: 0 0 22px rgba(255,160,140,.6), 0 2px 0 rgba(0,0,0,.5); }
+.m-folle.serie { background: radial-gradient(120% 60% at 50% 100%, rgba(40,90,70,.6), transparent 70%), rgba(6,14,16,.95); } .m-folle.serie .mfo-k { color: #A3E635; }
+.m-folle.serie .mfo-c { margin-top: -30vh; } .m-folle.serie .mfo-p { color: #F4FFE8; text-shadow: 0 0 20px rgba(163,230,53,.55), 0 2px 0 rgba(0,0,0,.5); }
+.m-folle.relache { background: linear-gradient(180deg, rgba(7,10,28,.97), rgba(20,22,52,.96)); } .m-folle.relache .mfo-k { color: #C4B5FD; }
+.m-folle.relache .mfo-p { color: #E8E6FF; text-shadow: 0 0 20px rgba(196,181,253,.5); }
+.m-folle .mfo-p.long { font-size: clamp(48px, 15vw, 80px); }
+.moi .m-ev { display: flex; align-items: stretch; gap: 0; margin-top: -4px; border: 1px solid var(--rule); border-radius: 12px; background: var(--panel); overflow: hidden; }
+.moi .m-ev-b { all: unset; box-sizing: border-box; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 8px 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.moi .m-ev-i { font-size: 20px; line-height: 1; flex: none; }
+.moi .m-ev-t { min-width: 0; font-size: 12.5px; line-height: 1.3; color: var(--ink-2); }
+.moi .m-ev-t small { display: block; font: 700 10px/1.2 var(--f-text); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.moi .m-ev-t b { color: var(--ink); }
+.moi .m-ev-r { flex: none; margin-left: auto; color: var(--ink-3); font-size: 15px; }
+.moi .m-ev-x { all: unset; box-sizing: border-box; flex: none; width: 40px; display: grid; place-items: center; cursor: pointer; color: var(--ink-3); border-left: 1px solid var(--rule); font-size: 13px; }
+.moi .m-ev-b:focus-visible, .moi .m-ev-x:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.moi .m-ev[data-ev="feu"] { border-color: rgba(255,110,40,.45); } .moi .m-ev[data-ev="krach"] { border-color: rgba(150,170,210,.5); } .moi .m-ev[data-ev="crypto"] { border-color: rgba(247,147,26,.5); }
+.moi .m-ev[data-ev="joie"], .moi .m-ev[data-ev="serie"] { border-color: rgba(94,234,212,.5); } .moi .m-ev[data-ev="sommet"] { border-color: rgba(255,160,140,.5); } .moi .m-ev[data-ev="relache"] { border-color: rgba(196,181,253,.5); }
 /* l'ambiance de la journée sur Aujourd'hui : derrière le contenu, quelques braises qui montent (ou paillettes d'or qui scintillent) */
 .moi .m-amb { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
 .moi .m-amb.feu { background: radial-gradient(120% 34% at 50% 104%, rgba(255,96,30,.16), transparent 70%); }
@@ -1118,7 +1138,15 @@ function injecterStyle() {
 @keyframes mAmbBraise { 0% { transform: translate(0, 0); opacity: 0; } 10% { opacity: .9; } 50% { transform: translate(14px, -45vh); } 80% { opacity: .5; } 100% { transform: translate(-8px, -88vh); opacity: 0; } }
 @keyframes mAmbJoie { 0%, 100% { opacity: 0; transform: translateY(0) scale(.4); } 45% { opacity: .95; transform: translateY(10px) scale(1); } 70% { opacity: .2; transform: translateY(16px) scale(.6); } }
 .moi .m-hero.m-amb-feu .m-jour .badge { box-shadow: 0 0 0 1px rgba(255,110,40,.45), 0 0 14px rgba(255,90,30,.35); }
-.moi .m-hero.m-amb-joie .m-jour .badge { box-shadow: 0 0 0 1px rgba(94,234,212,.5), 0 0 14px rgba(255,111,168,.3); }
+.moi .m-hero.m-amb-joie .m-jour .badge, .moi .m-hero.m-amb-serie .m-jour .badge { box-shadow: 0 0 0 1px rgba(94,234,212,.5), 0 0 14px rgba(255,111,168,.3); }
+.moi .m-amb.crypto i, .moi .m-amb.relache i, .moi .m-amb.serie i { background: var(--c); box-shadow: 0 0 6px 1px var(--c); animation: mAmbJoie var(--d) ease-in-out var(--r) infinite; }
+.moi .m-amb.krach { background: linear-gradient(180deg, rgba(120,140,180,.10), transparent 40%); }
+.moi .m-amb.krach i { top: -12vh; width: 1px; height: 10vh; border-radius: 0; background: linear-gradient(180deg, transparent, rgba(170,190,230,.45)); animation: mAmbPluie var(--d) linear var(--r) infinite; }
+@keyframes mAmbPluie { from { transform: translate(0, 0) rotate(12deg); } to { transform: translate(-16vh, 125vh) rotate(12deg); } }
+.moi .m-amb.sommet { background: radial-gradient(90% 30% at 50% -6%, rgba(255,160,140,.14), transparent 70%); }
+.moi .m-amb.serie { background: radial-gradient(100% 26% at 50% -4%, rgba(163,230,53,.10), transparent 70%); }
+.moi .m-amb.relache { background: linear-gradient(180deg, rgba(90,80,180,.10), transparent 45%); }
+.moi .m-amb.crypto { background: radial-gradient(100% 30% at 50% -4%, rgba(247,147,26,.10), transparent 70%); }
 @media (prefers-reduced-motion: reduce) { .moi .m-amb { display: none; } }
 /* « Le jour J » : un palier rond de patrimoine financier sans objet fait passer un reflet d'or sur le total (une fois) */
 .moi .m-hero .m-flaps.m-jourj { position: relative; }
@@ -1127,6 +1155,8 @@ function injecterStyle() {
 @media (prefers-reduced-motion: reduce) { .moi .m-hero .m-flaps.m-jourj::after { animation: none; display: none; } }
 /* réglage du Vestiaire */
 .moi .vs-amb { display: grid; gap: 8px; margin-top: 10px; }
+.moi .vs-amb-g { display: flex; align-items: center; gap: 10px; padding: 4px 2px 8px; border-bottom: 1px solid var(--rule); }
+.moi .vs-amb-g > span:first-child { flex: 1 1 auto; min-width: 0; } .moi .vs-amb-g .chips, .moi .vs-amb-l .chips { flex: none; } .moi .vs-amb-g b { display: block; font-size: 14px; } .moi .vs-amb-g small { display: block; font-size: 11.5px; color: var(--ink-3); line-height: 1.3; }
 .moi .vs-amb-t { font: italic 800 14px/1.1 var(--f-display); letter-spacing: .05em; text-transform: uppercase; }
 .moi .vs-amb > small { font-size: 12px; color: var(--ink-3); margin-top: -4px; }
 .moi .vs-amb-l { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--rule); background: var(--panel); }
@@ -1239,7 +1269,7 @@ function rendre() {
   v.querySelectorAll("details.acc[data-acc]").forEach(d => d.addEventListener("toggle", () => { PREF.acc[d.dataset.acc] = d.open; garderPref(); if (d.open && d.dataset.acc === "m-courbe") dessinerCourbe(); if (d.open && d.dataset.acc === "m-ep-temps") dessinerEpargne(); if (d.open && d.dataset.acc === "m-pret") dessinerPret(); if (d.open && d.dataset.acc === "m-ptemps") dessinerPatrimoine(); }));
   ({ artema: brancherArtema, jour: M.simple ? brancherJourSimple : brancherJour, patrimoine: brancherPatrimoine, stats: brancherStats, missions: brancherMissions })[o](v);
   v.classList.toggle("m-flot", !!v.querySelector(".m-per-flot"));   // lot 62 : place pour la barre des périodes flottante (rien n'est caché dessous)
-  if (o === "jour" && !M.simple) { try { habillerFolle(v); } catch (e) { /* jamais bloquant */ } setTimeout(() => { try { verifierFolle(); } catch (e) { /* idem */ } }, 650); }   // lot 62 : journées folles
+  if (o === "jour" && !M.simple) { try { habillerFolle(v); } catch (e) { /* jamais bloquant */ } setTimeout(() => { try { verifierEvenement(); } catch (e) { /* idem */ } }, 650); }   // lot 62 : journées folles et événements rares
   v.querySelectorAll(".m-filtre").forEach(r => {   // lot 50 : la pastille choisie reste visible dans une rangée qui défile
     const b = r.querySelector('[aria-pressed="true"]'); if (!b) return; const rr = r.getBoundingClientRect(), br = b.getBoundingClientRect();
     if (br.right > rr.right) r.scrollLeft += br.right - rr.right + 8; });
@@ -1511,18 +1541,6 @@ function journeeFolle() {
 }
 function cleFolle(x) { return x.d + (x.sens > 0 ? "+" : "-") + (x.fort ? 2 : 1); }
 function libJourFolle(d) { if (d === isoJour(new Date())) return "Aujourd'hui"; const x = new Date(d + "T12:00:00"); return majuscule(JOURS_L[x.getDay()]) + " " + frDate(d).slice(0, 5); }
-/** à l'ouverture de Moi › Aujourd'hui (données fraîches du fichier) : le grand effet, une fois par séance et par palier sur cet appareil */
-function verifierFolle() {
-  if (!M || M.simple || SRC !== "api" || PREF.onglet !== "jour" || !vueMoi() || document.hidden || !identiteSure()) return;
-  if (document.querySelector(".m-fete, .m-folle")) return;   // une fête de palier passe d'abord ; on réessaiera au prochain affichage
-  const x = journeeFolle(); if (!x) return;
-  let vus = []; try { vus = JSON.parse(stock.get(cleStock("folles")) || "[]"); } catch (e) { vus = []; }
-  if (!Array.isArray(vus)) vus = [];
-  const pre = x.d + (x.sens > 0 ? "+" : "-"); if (vus.some(k => k.startsWith(pre) && +k.slice(-1) >= (x.fort ? 2 : 1))) return;   // déjà vue (ou plus forte)
-  vus.push(cleFolle(x)); stock.set(cleStock("folles"), JSON.stringify(vus.slice(-40)));
-  const go = () => lancerFolle(x);
-  if (typeof window.ereApres === "function") window.ereApres(go, "folleMoi"); else go();
-}
 /** sprite rond et flou (dessiné une fois) */
 function spriteFolle(r, stops) {
   const c = document.createElement("canvas"); c.width = c.height = r * 2; const g = c.getContext("2d"), gr = g.createRadialGradient(r, r, 0, r, r, r);
@@ -1537,6 +1555,7 @@ function spritesFolle() {
     orange: spriteFolle(32, [[0, "rgba(255,150,40,.95)"], [.4, "rgba(235,80,25,.55)"], [1, "rgba(200,40,15,0)"]]),
     rouge: spriteFolle(32, [[0, "rgba(210,50,25,.8)"], [.5, "rgba(140,25,15,.35)"], [1, "rgba(80,10,5,0)"]]),
     fumee: spriteFolle(32, [[0, "rgba(70,60,58,.45)"], [1, "rgba(40,35,35,0)"]]),
+    nuage: spriteFolle(32, [[0, "rgba(96,106,128,.95)"], [.55, "rgba(60,68,86,.7)"], [1, "rgba(30,34,46,0)"]]),
     braise: spriteFolle(8, [[0, "#FFF3C0"], [.35, "rgba(255,170,60,.95)"], [1, "rgba(255,90,20,0)"]]),
     or: spriteFolle(10, [[0, "#FFFBEA"], [.3, "rgba(255,214,92,.95)"], [1, "rgba(255,180,40,0)"]]),
     c: ["#FF6FA8", "#5EEAD4", "#7FB2FF", "#C4B5FD", "#A3E635", "#FFB86B", "#FFFFFF"].map(sp)
@@ -1554,21 +1573,69 @@ function auroreFolle(W, H) {
     g.lineTo(W, h); g.closePath(); g.fill(); });
   return c;
 }
+/** lot 62 b · les scènes des événements rares (une image par appel ; st = mémoire de la scène) */
+function sceneEv(kind, g, W, H, t, dt, st, eclairs, pousser, rnd, SP, finE) {
+  const T1 = Math.min(1, t / .8);
+  if (kind === "krach") {   // l'orage : nuages bas, pluie oblique, éclairs blancs (pas de feu : ce n'est pas ton portefeuille)
+    if (!st.n) st.n = Array.from({ length: 9 }, (_, i) => ({ x: (i / 8) * W * 1.2 - W * .1, y: rnd(-.04, .1) * H, r: rnd(.28, .42) * W, v: rnd(6, 16) }));
+    g.globalCompositeOperation = "source-over";
+    st.n.forEach(n => { n.x += n.v * dt; g.globalAlpha = .9 * T1; g.drawImage(SP.nuage, n.x - n.r, n.y - n.r * .6, n.r * 2, n.r * 1.2); });
+    if (!finE) for (let i = 0, k = Math.round(280 * dt * T1 + Math.random()); i < k; i++) pousser({ k: "l", x: rnd(0, W * 1.2), y: rnd(-20, H * .2), vx: -120, vy: rnd(650, 900), v: 0, vie: rnd(.8, 1.3) });
+    eclairs.forEach((e, i) => { const u = (t - e) / .3; if (u < 0 || u > 1) return;
+      if (!st["b" + i]) { let x = rnd(.2, .8) * W, y = H * .08; const pts = [[x, y]]; while (y < H * rnd(.5, .7)) { x += rnd(-38, 38); y += rnd(22, 46); pts.push([x, y]); } st["b" + i] = pts; }
+      g.globalAlpha = (1 - u) * .55; g.fillStyle = "#DDE6FF"; g.fillRect(0, 0, W, H);
+      const pts = st["b" + i]; g.globalAlpha = 1 - u; g.strokeStyle = "rgba(220,230,255,.35)"; g.lineWidth = 7; g.lineJoin = "round"; g.beginPath(); pts.forEach((p, j) => j ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke();
+      g.strokeStyle = "#FFFFFF"; g.lineWidth = 2; g.stroke(); });
+    g.globalAlpha = 1; g.globalCompositeOperation = "lighter";
+  } else if (kind === "crypto") {   // l'orage électrique : arcs orange (couleur du Bitcoin) et violets, étincelles
+    g.globalCompositeOperation = "lighter";
+    eclairs.forEach((e, i) => { const u = (t - e) / .22; if (u < 0 || u > 1) return;
+      if (!st["a" + i]) { const a = [rnd(0, W), rnd(.05, .45) * H], b = [rnd(0, W), rnd(.55, .95) * H], pts = [a]; for (let j = 1; j < 12; j++) pts.push([a[0] + (b[0] - a[0]) * j / 12 + rnd(-26, 26), a[1] + (b[1] - a[1]) * j / 12 + rnd(-14, 14)]); pts.push(b); st["a" + i] = pts;
+        for (let j = 0; j < 26; j++) pousser({ k: "s", x: b[0], y: b[1], vx: rnd(-220, 220), vy: rnd(-260, 40), v: 0, vie: rnd(.5, 1), sp: SP.braise, tl: rnd(2, 4) }); }
+      const pts = st["a" + i], col = i % 2 ? "196,181,253" : "247,147,26";
+      [[10, .25], [4, .6], [1.6, 1]].forEach(([w, a]) => { g.globalAlpha = (1 - u) * a; g.strokeStyle = a === 1 ? "#FFF6E8" : "rgb(" + col + ")"; g.lineWidth = w; g.beginPath(); pts.forEach((p, j) => j ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke(); });
+      g.globalAlpha = (1 - u) * .12; g.fillStyle = "rgb(" + col + ")"; g.fillRect(0, 0, W, H); });
+    g.globalAlpha = 1;
+  } else if (kind === "sommet") {   // l'aube sur un sommet : le soleil se lève derrière la montagne, un petit drapeau est planté
+    if (!st.m) { const pts = [[0, H * .78]], n = 9; for (let i = 1; i < n; i++) pts.push([W * i / n, H * (i === 5 ? .5 : rnd(.62, .76))]); pts.push([W, H * .74]); st.m = pts; st.pic = pts[5]; }
+    const lev = Math.min(1, t / 2.4), sy = H * (.66 - .14 * (1 - Math.pow(1 - lev, 2))), px = st.pic[0], py = st.pic[1];
+    g.globalCompositeOperation = "lighter"; g.globalAlpha = .55 * T1;
+    const gr = g.createRadialGradient(px, sy, 0, px, sy, W * .9); gr.addColorStop(0, "rgba(255,190,150,.9)"); gr.addColorStop(.25, "rgba(255,120,140,.35)"); gr.addColorStop(1, "rgba(80,90,200,0)"); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    g.globalAlpha = .18 * T1; g.fillStyle = "#FFE4CF"; for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2 + t * .15; g.beginPath(); g.moveTo(px, sy); g.lineTo(px + Math.cos(a - .05) * W, sy + Math.sin(a - .05) * W); g.lineTo(px + Math.cos(a + .05) * W, sy + Math.sin(a + .05) * W); g.fill(); }
+    g.globalAlpha = 1; g.drawImage(SP.chaud, px - 60, sy - 60, 120, 120);
+    g.globalCompositeOperation = "source-over"; g.fillStyle = "#0B1026"; g.beginPath(); g.moveTo(0, H); st.m.forEach(p => g.lineTo(p[0], p[1])); g.lineTo(W, H); g.fill();
+    g.fillStyle = "rgba(255,255,255,.85)"; g.beginPath(); g.moveTo(px, py); g.lineTo(px - 16, py + 18); g.lineTo(px - 5, py + 14); g.lineTo(px, py + 20); g.lineTo(px + 6, py + 13); g.lineTo(px + 17, py + 19); g.fill();   // la neige du sommet
+    if (t > 1.4) { const f = Math.min(1, (t - 1.4) / .4), hp = 34 * f; g.strokeStyle = "#E8ECF5"; g.lineWidth = 2; g.beginPath(); g.moveTo(px, py); g.lineTo(px, py - hp); g.stroke();
+      if (f >= 1) { const w = Math.sin(t * 6) * 3; g.fillStyle = "#5EEAD4"; g.beginPath(); g.moveTo(px, py - hp); g.lineTo(px + 20, py - hp + 5 + w); g.lineTo(px, py - hp + 12); g.fill(); } }
+    g.globalCompositeOperation = "lighter";
+  } else if (kind === "serie") {   // l'arc-en-ciel se dessine, cinq petits soleils s'allument (un par séance)
+    const cx = W / 2, cy = H * .8, R = Math.min(W * .62, H * .5), pr = Math.min(1, t / 1.6), cols = ["#FF5D73", "#FF9F45", "#FFD45C", "#7BE495", "#5EEAD4", "#7FB2FF", "#B794F4"];
+    g.globalCompositeOperation = "lighter"; g.lineCap = "round";
+    cols.forEach((c, i) => { g.globalAlpha = .42; g.strokeStyle = c; g.lineWidth = R * .024; g.beginPath(); g.arc(cx, cy, R * (1 - i * .045), Math.PI, Math.PI + pr * Math.PI); g.stroke(); });
+    for (let i = 0; i < SERIE_N; i++) { const ts = .3 + i * .32; if (t < ts) continue; const a = Math.PI + (i + .5) / SERIE_N * Math.PI, x = cx + Math.cos(a) * R * 1.1, y = cy + Math.sin(a) * R * 1.1, u = Math.min(1, (t - ts) / .3);
+      g.globalAlpha = u * .8; g.drawImage(SP.c[i % SP.c.length], x - 10 * u, y - 10 * u, 20 * u, 20 * u); if (!st["s" + i]) { st["s" + i] = 1; for (let j = 0; j < 14; j++) pousser({ k: "s", x, y, vx: rnd(-120, 120), vy: rnd(-160, 20), v: 0, vie: rnd(.5, .9), sp: SP.c[j % SP.c.length], tl: rnd(3, 5) }); } }
+    g.globalAlpha = 1;
+  } else if (kind === "relache") {   // la sieste : un croissant de lune, des étoiles, des « z » qui montent
+    if (!st.e) st.e = Array.from({ length: 40 }, () => [rnd(0, W), rnd(0, H * .6), rnd(0, 6), rnd(.6, 1.6)]);
+    g.globalCompositeOperation = "lighter"; st.e.forEach(e => { g.globalAlpha = T1 * (.35 + .35 * Math.sin(t * 2 + e[2])); g.drawImage(SP.braise, e[0] - e[3] * 2, e[1] - e[3] * 2, e[3] * 4, e[3] * 4); });
+    const mx = W * .78, my = H * .16, r = Math.min(W, H) * .09; g.globalCompositeOperation = "source-over"; g.globalAlpha = T1;
+    g.fillStyle = "#F3F0D8"; g.beginPath(); g.arc(mx, my, r, 0, Math.PI * 2); g.fill(); g.fillStyle = "#070A1C"; g.beginPath(); g.arc(mx + r * .45, my - r * .2, r * .9, 0, Math.PI * 2); g.fill();
+    st.z = (st.z || 0) + dt; if (st.z > .55 && !finE) { st.z = 0; pousser({ k: "z", x: W * rnd(.35, .6), y: H * .78, vy: -rnd(40, 60), v: 0, vie: 2.6, ph: rnd(0, 6), tl: rnd(18, 30) }); }
+    g.globalAlpha = 1; g.globalCompositeOperation = "lighter";
+  }
+}
 /** le grand effet. revoir = rejoué à la demande (rien n'est noté) */
 function lancerFolle(x, revoir) {
   injecterStyle();
-  const feu = x.sens < 0, fort = x.fort, disc = ETAT.discret === "oui";
-  const k = feu ? (fort ? "Journée noire" : "Journée folle") : (fort ? "Bouquet final" : "Journée folle");
-  const phr = feu ? (fort ? "Grosse brûlure. Ceux qui tiennent dix ans ont tous vécu des jours comme celui-ci." : "La bourse prend feu. Toi, tu gardes ton plan.")
-    : (fort ? "Une séance comme on en voit peu. Savoure, et ne change rien." : "Feu d'artifice sur ton portefeuille.");
+  const kind = x.k || (x.sens < 0 ? "feu" : "joie"), feu = kind === "feu", joie = kind === "joie", fort = !!x.fort, disc = ETAT.discret === "oui", T = textesEv(Object.assign({ k: kind }, x));   // lot 62 b : un seul moteur pour tous les événements
   const o = document.createElement("div");
-  o.className = "m-folle moi " + (feu ? "feu" : "joie") + (fort ? " fort" : "") + (reduit ? " calme" : "");
-  o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", k + " : " + libJourFolle(x.d) + ", " + pct(x.p, 1)); o.tabIndex = -1;
-  o.innerHTML = '<canvas aria-hidden="true"></canvas><div class="mfo-c"><span class="mfo-k">' + esc(k) + '</span><span class="mfo-d">' + esc(libJourFolle(x.d)) + "</span>" +
-    '<b class="mfo-p">' + pct(x.p, 1) + "</b>" + (!disc && ok(x.e) && Math.abs(x.e) >= 1 ? '<span class="mfo-e">' + eur(x.e, 0, true) + "</span>" : "") + "<p>" + esc(phr) + '</p></div><span class="mfo-t">Touche pour continuer</span>';
+  o.className = "m-folle moi " + kind + (fort ? " fort" : "") + (reduit ? " calme" : "");
+  o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", T.k + " : " + T.sub + ", " + T.big); o.tabIndex = -1;
+  o.innerHTML = '<canvas aria-hidden="true"></canvas><div class="mfo-c"><span class="mfo-k">' + esc(T.k) + '</span><span class="mfo-d">' + esc(T.sub) + "</span>" +
+    '<b class="mfo-p' + (T.big.length > 8 ? " long" : "") + '">' + esc(T.big) + "</b>" + ((feu || joie) && !disc && ok(x.e) && Math.abs(x.e) >= 1 ? '<span class="mfo-e">' + eur(x.e, 0, true) + "</span>" : "") + "<p>" + esc(T.phr) + '</p></div><span class="mfo-t">Touche pour continuer</span>';
   document.body.appendChild(o);
   try { o.focus({ preventScroll: true }); } catch (e) { /* rien */ }
-  const S = window.SONS, duree = reduit ? 2800 : fort ? 5600 : 4300, t0 = performance.now();
+  const S = window.SONS, duree = reduit ? 2800 : fort ? 5000 : kind === "relache" ? 3600 : 4300, t0 = performance.now();
   let fini = false, raf = 0;
   const fermer = () => { if (fini) return; fini = true; cancelAnimationFrame(raf); removeEventListener("resize", taille); if (S && S.folleStop) S.folleStop(); o.classList.add("fin"); setTimeout(() => o.remove(), 450); };
   o.addEventListener("click", fermer); o.addEventListener("keydown", e => { if (["Escape", "Enter", " "].includes(e.key)) { e.preventDefault(); fermer(); } });
@@ -1576,16 +1643,17 @@ function lancerFolle(x, revoir) {
   requestAnimationFrame(() => o.classList.add("on"));
   /* son : la séquence est écrite à l'avance (mêmes instants que l'image) */
   const fusees = [];
-  if (!feu) { const n = fort ? 10 : 7; for (let i = 0; i < n; i++) { const l = (i < 2 ? 0 : .1 + (i - 1) * (fort ? .38 : .46)) + Math.random() * .12, bas = i % 3 === 2;   // deux fusées d'entrée, puis une salve régulière ; une sur trois éclate plus bas, sur les côtés
+  if (joie) { const n = fort ? 10 : 7; for (let i = 0; i < n; i++) { const l = (i < 2 ? 0 : .1 + (i - 1) * (fort ? .38 : .46)) + Math.random() * .12, bas = i % 3 === 2;   // deux fusées d'entrée, puis une salve régulière ; une sur trois éclate plus bas, sur les côtés
     fusees.push({ l, b: l + .7 + Math.random() * .2, x: bas ? (i % 2 ? .82 : .18) : .14 + ((i * .37 + Math.random() * .2) % .72), y: bas ? .5 + Math.random() * .12 : .1 + Math.random() * .24, gros: fort && i === n - 1 }); } }
-  try { if (S) { if (feu) S.folleFeu(duree / 1000 - .3, fort); else { fusees.forEach(f => S.fusee(f.l, f.b, f.gros)); if (fort) S.aurore(1, duree / 1000 - 1.4); } } } catch (e) { /* son indisponible */ }
+  const eclairs = kind === "krach" ? [.35, 1.5, 2.6, 3.4] : kind === "crypto" ? [.2, .9, 1.5, 2.2, 2.8, 3.3] : [];
+  try { if (S) { if (feu) S.folleFeu(duree / 1000 - .3, fort); else if (joie) { fusees.forEach(f => S.fusee(f.l, f.b, f.gros)); if (fort) S.aurore(1, duree / 1000 - 1.4); } else if (S.evenement) S.evenement(kind, duree / 1000, eclairs); } } catch (e) { /* son indisponible */ }
   const cv = o.querySelector("canvas"), g = cv.getContext && cv.getContext("2d");
   let W = 0, H = 0; const dpr = Math.min(1.5, window.devicePixelRatio || 1);
   function taille() { W = innerWidth; H = innerHeight; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0); }
   if (reduit || !g) return;   // version calme : un fond qui s'allume, le chiffre, rien qui bouge
   taille(); addEventListener("resize", taille);
   const SP = spritesFolle(), P = [], rnd = (a, b) => a + Math.random() * (b - a), MAX = 900;
-  let der = t0, acc = 0, accB = 0, aur = null;
+  let der = t0, acc = 0, accB = 0, aur = null; const T0 = {};
   const pousser = q => { if (P.length < MAX) P.push(q); };
   const pas = now => {
     if (fini) return;
@@ -1598,7 +1666,7 @@ function lancerFolle(x, revoir) {
         pousser({ k: "f", x: x0, y: H + 30, vx: rnd(-10, 10), vy: -rnd(150, 300) * (fort ? 1.3 : 1) * (H / 800), v: 0, vie: rnd(.7, 1.4), tl: rnd(26, 50) * (W < 500 ? 1 : 1.3) }); }
       accB += (finE ? 0 : fort ? 40 : 24) * dt; while (accB >= 1) { accB--; pousser({ k: "b", x: rnd(0, W), y: H + 5, vx: rnd(-30, 30), vy: -rnd(70, 190), v: 0, vie: rnd(1.8, 3.4), ph: rnd(0, 6), tl: rnd(2, 4) }); }
       if (fort && t < .35) { g.fillStyle = "rgba(255,120,40," + (.35 * (1 - t / .35)) + ")"; g.fillRect(0, 0, W, H); }   // l'éclair du départ
-    } else {
+    } else if (!joie) { sceneEv(kind, g, W, H, t, dt, T0, eclairs, pousser, rnd, SP, finE); } else {
       fusees.forEach(f => {
         if (!f.parti && t >= f.l) { f.parti = 1; pousser({ k: "r", x: f.x * W, y: H + 10, x1: f.x * W + rnd(-20, 20), y1: f.y * H, t0: t, d: f.b - f.l, v: 0, vie: f.b - f.l }); }
         if (!f.eclate && t >= f.b) { f.eclate = 1; const n = f.gros ? 150 : fort ? 95 : 75, sp0 = SP.c[Math.floor(Math.random() * SP.c.length)], v0 = (f.gros ? 310 : 230) * Math.min(1.3, W / 390);
@@ -1628,6 +1696,9 @@ function lancerFolle(x, revoir) {
         g.globalAlpha = 1; g.drawImage(SP.or, x - 6, y - 6, 12, 12);
       } else if (q.k === "e") { const fr = Math.pow(.25, dt); q.vx *= fr; q.vy = q.vy * fr + 120 * dt; q.x += q.vx * dt; q.y += q.vy * dt;
         g.globalAlpha = (1 - u) * (u > .65 ? .5 + .5 * Math.sin(q.v * 40) : 1); g.drawImage(q.sp, q.x - q.tl, q.y - q.tl, q.tl * 2, q.tl * 2);
+      } else if (q.k === "l") { q.x += q.vx * dt; q.y += q.vy * dt; g.globalCompositeOperation = "source-over"; g.strokeStyle = "rgba(190,205,230," + (.45 * (1 - u)) + ")"; g.lineWidth = 1.2; g.beginPath(); g.moveTo(q.x, q.y); g.lineTo(q.x - q.vx * .03, q.y - q.vy * .03); g.stroke(); g.globalCompositeOperation = "lighter";
+      } else if (q.k === "s") { q.vy += 300 * dt; q.x += q.vx * dt; q.y += q.vy * dt; g.globalAlpha = 1 - u; g.drawImage(q.sp, q.x - q.tl, q.y - q.tl, q.tl * 2, q.tl * 2);
+      } else if (q.k === "z") { q.x += Math.sin(q.v * 1.5 + q.ph) * 12 * dt; q.y += q.vy * dt; g.globalCompositeOperation = "source-over"; g.globalAlpha = Math.min(1, u * 4) * (1 - u); g.fillStyle = "#E0E7FF"; g.font = "italic 800 " + q.tl + "px sans-serif"; g.fillText("z", q.x, q.y); g.globalCompositeOperation = "lighter";
       } else if (q.k === "flash") { g.globalAlpha = (1 - u) * .4; g.drawImage(SP.chaud, q.x - q.tl, q.y - q.tl, q.tl * 2, q.tl * 2);
       }
     }
@@ -1636,9 +1707,6 @@ function lancerFolle(x, revoir) {
   };
   raf = requestAnimationFrame(pas);
 }
-/** les deux ambiances (Vestiaire) : « feu » (Incendie, après −3 %) et « joie » (Feu d'artifice, après +3 %) ; PREF.ambOff = celles que tu as coupées */
-const AMB_FOLLES = [["feu", "Incendie", "🔥", "après une séance à −3 % ou pire"], ["joie", "Feu d'artifice", "🎆", "après une séance à +3 % ou mieux"]];
-function ambCoupee(k) { return Array.isArray(PREF.ambOff) && PREF.ambOff.includes(k); }
 /** la dernière journée folle d'un genre (historique du fichier + celles vues sur cet appareil) : aaaa-mm-jj ou null */
 function derniereFolle(k) {
   const sg = k === "feu" ? -1 : 1; let d = null;
@@ -1646,30 +1714,154 @@ function derniereFolle(k) {
   try { const l = JSON.parse(stock.get(cleStock("folles")) || "[]"); (Array.isArray(l) ? l : []).forEach(c => { if (c.charAt(10) === (sg > 0 ? "+" : "-") && (!d || c.slice(0, 10) > d)) d = c.slice(0, 10); }); } catch (e) { /* rien */ }
   return d;
 }
+/* ==================== lot 62 b · Événements rares de Moi (validés par Théo) ====================
+   Même mécanique que les journées folles : un grand effet à la 1re ouverture de Moi › Aujourd'hui, une petite carte qui dit POURQUOI
+   (« Événement · … »), une ambiance discrète pendant environ une semaine (le jour même pour la relâche), puis grisé dans Vestiaire › Ambiances.
+   JAMAIS deux à la fois : le plus prioritaire des événements en cours gagne (ordre EV_PRIO). Profil simple : rien.
+   Seuils (Conseil, lot 62) : Krach = S&P 500 −3 % ou pire en une séance (≈ 3 séances par an depuis 1990, groupées : ≈ 1 à 2 événements par an
+   une fois regroupées sur une semaine) ; Tempête crypto = Bitcoin ±10 % d'une clôture à l'autre (≈ 3-4 fois par an en 2023-2025, bien plus avant) ;
+   Sommet = clôture du S&P 500 au-dessus de TOUTES les clôtures connues (≥ 250 séances de données) après au moins 20 séances sans record ;
+   Série verte = 5 séances de hausse d'affilée de ton portefeuille (historique du fichier, versements neutralisés) ; Relâche = jour férié de semaine
+   où Paris (lignes EPA:) ou New York (lignes NASDAQ:/NYSE…) est fermée. Concernés : Krach et Sommet = tout le monde (le S&P 500 est la référence
+   du jeu) ; Tempête crypto = seulement si tu as du Bitcoin ; Relâche = seulement si tu as des lignes sur la place fermée. */
+const EV_PRIO = ["krach", "feu", "joie", "crypto", "sommet", "serie", "relache"];   // la journée folle (feu / joie) passe juste après le krach
+const KRACH_SEUIL = -.03, CRYPTO_SEUIL = .10, SOMMET_MIN = 250, SOMMET_ECART = 20, SERIE_N = 5, SP_RECORD_CONNU = 6000;   // SP_RECORD_CONNU : plancher prudent si la série est en points d'indice
+const EV_DEF = {
+  feu: { ic: "🔥", nom: "Incendie", quoi: "après une séance à −3 % ou pire de ton portefeuille" },
+  joie: { ic: "🎆", nom: "Feu d'artifice", quoi: "après une séance à +3 % ou mieux de ton portefeuille" },
+  krach: { ic: "⛈️", nom: "Krach mondial", quoi: "le S&P 500 perd 3 % ou plus en une séance" },
+  crypto: { ic: "⚡", nom: "Tempête crypto", quoi: "le Bitcoin bouge de 10 % ou plus en 24 h (si tu en as)" },
+  sommet: { ic: "🏔️", nom: "Sommet du S&P 500", quoi: "le S&P 500 bat son record après au moins un mois sans record" },
+  serie: { ic: "🌈", nom: "Série verte", quoi: "ton portefeuille monte 5 séances d'affilée" },
+  relache: { ic: "😴", nom: "Bourse en relâche", quoi: "un jour férié ferme la bourse de tes lignes" }
+};
+function ambCoupee(k) { return Array.isArray(PREF.ambOff) && (PREF.ambOff.includes(k) || PREF.ambOff.includes("tout")); }
+function evTousCoupes() { return Array.isArray(PREF.ambOff) && PREF.ambOff.includes("tout"); }
+const libCourt = d => { const j = new Date(d + "T12:00:00"); return JOURS_C[j.getDay()] + " " + frDate(d).slice(0, 5); };
+/** clôtures quotidiennes d'un marché du Versus { d, v } (+ la séance en direct quand le Versus l'a et que les clôtures ne l'ont pas encore) */
+function closEv(nom) {
+  const m = marchesMoi(), q = m && m.quot, sq = q && (q.s || []).find(x => x.nom === nom), out = []; if (!sq) return out;
+  (q.d || []).forEach((d, i) => { if (sq.v[i] > 0) out.push({ d: isoN(d), v: sq.v[i] }); });
+  const j = (m.jour || []).find(x => x.nom === nom), mh = j && typeof j.pct === "number" && /^(\d{2})\/(\d{2})/.exec(j.heure || "");
+  if (mh && out.length) { const a = new Date(), y = +mh[2] > a.getMonth() + 1 ? a.getFullYear() - 1 : a.getFullYear(), dj = y + "-" + mh[2] + "-" + mh[1];
+    if (dj > out[out.length - 1].d && dj <= isoJour(a)) out.push({ d: dj, v: out[out.length - 1].v * (1 + j.pct), direct: true }); }
+  return out;
+}
+function varsEv(c, gapMax) { const out = []; for (let i = 1; i < c.length; i++) if ((new Date(c[i].d + "T12:00:00") - new Date(c[i - 1].d + "T12:00:00")) / 864e5 <= gapMax) out.push({ d: c[i].d, p: c[i].v / c[i - 1].v - 1, v: c[i].v }); return out; }
+/** tickers des lignes tenues (Perf lignes) */
+function tickersTenus() { const p = (M && M.perfLignes) || {}; return lignesTenues().map(l => String(((p[l.env + "|" + l.code] || {}).ticker) || "").toUpperCase()); }
+function aDuBitcoin() {
+  if (lignesTenues().some(l => (l.valeur || 0) > 0 && /\bBTC\b|BITCOIN/i.test((l.code || "") + " " + (l.nom || "")))) return true;
+  if (tickersTenus().some(t => /BTC/.test(t))) return true;
+  return (M.enveloppes || []).some(e => /crypto/i.test((e.nom || "") + " " + (e.regime || "")) && e.type !== "total" && (e.valeur || 0) > 0);
+}
+/** jours fériés de semaine où la bourse ferme : Paris (Euronext) et New York (NYSE/Nasdaq) → nom du jour ou "" */
+function paques(an) { const a = an % 19, b = Math.floor(an / 100), c = an % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), j = ((h + l - 7 * m + 114) % 31) + 1; return new Date(an, mo - 1, j, 12); }
+function ferie(iso, place) {
+  const x = new Date(iso + "T12:00:00"), an = x.getFullYear(), mo = x.getMonth() + 1, j = x.getDate(), jsem = x.getDay(); if (jsem % 6 === 0) return "";
+  const P = paques(an), dP = Math.round((x - P) / 864e5);
+  if (dP === -2) return "Vendredi saint";
+  if (place === "paris") return mo === 1 && j === 1 ? "Jour de l'an" : dP === 1 ? "Lundi de Pâques" : mo === 5 && j === 1 ? "Fête du travail" : mo === 12 && (j === 25 || j === 26) ? (j === 25 ? "Noël" : "Lendemain de Noël") : "";
+  const obs = (m0, j0) => { const d = new Date(an, m0 - 1, j0, 12), w = d.getDay(); if (w === 6) d.setDate(d.getDate() - 1); if (w === 0) d.setDate(d.getDate() + 1); return d.getMonth() + 1 === mo && d.getDate() === j; };
+  const nieme = (m0, w0, n) => mo === m0 && jsem === w0 && (n > 0 ? Math.ceil(j / 7) === n : j + 7 > new Date(an, mo, 0).getDate());
+  if ((mo === 1 && j === 1) || (mo === 1 && j === 2 && jsem === 1)) return "Jour de l'an";
+  if (nieme(1, 1, 3)) return "Martin Luther King Day"; if (nieme(2, 1, 3)) return "Presidents' Day"; if (nieme(5, 1, -1)) return "Memorial Day";
+  if (obs(6, 19)) return "Juneteenth"; if (obs(7, 4)) return "Independence Day"; if (nieme(9, 1, 1)) return "Labor Day"; if (nieme(11, 4, 4)) return "Thanksgiving"; if (obs(12, 25)) return "Noël";
+  return "";
+}
+/** tous les événements (passés compris) d'un genre, du plus récent au plus ancien : { k, d, … } */
+function evDe(k) {
+  const out = [];
+  if (k === "krach") varsEv(closEv("S&P 500"), 5).forEach(x => { if (x.p <= KRACH_SEUIL + 1e-9) out.push({ k, d: x.d, p: x.p }); });
+  else if (k === "crypto") { if (aDuBitcoin()) varsEv(closEv("Bitcoin"), 4).forEach(x => { if (Math.abs(x.p) >= CRYPTO_SEUIL - 1e-9) out.push({ k, d: x.d, p: x.p }); }); }
+  else if (k === "sommet") { const c = closEv("S&P 500"); let max = 0, iMax = -1;
+    c.forEach((x, i) => { if (i >= SOMMET_MIN && x.v > max && i - iMax >= SOMMET_ECART && (x.v < 1000 || x.v > SP_RECORD_CONNU)) out.push({ k, d: x.d, v: x.v, avant: max, dAvant: c[iMax].d }); if (x.v > max) { max = x.v; iMax = i; } }); }
+  else if (k === "serie") { const l = seancesHisto(); let n = 0, cum = 1;
+    l.forEach((x, i) => { const suite = i > 0 && x.i - l[i - 1].i <= 3; if (x.p > 0) { n = suite && n ? n + 1 : 1; cum = n === 1 ? 1 + x.p : cum * (1 + x.p); } else n = 0; if (n === SERIE_N) out.push({ k, d: x.d, p: cum - 1 }); }); }
+  else if (k === "relache") { const t = tickersTenus(), pl = [["paris", /^EPA:/], ["ny", /^(NASDAQ|NYSE|NYSEARCA|NYSEAMERICAN|BATS):/]].filter(([, re]) => t.some(x => re.test(x))).map(p => p[0]);
+    if (pl.length) { const n = new Date(); for (let i = 0; i < 400; i++) { const d = isoJour(new Date(n.getFullYear(), n.getMonth(), n.getDate() - i, 12)), f = pl.map(p => [p, ferie(d, p)]).filter(x => x[1]);
+      if (f.length) out.push({ k, d, places: f.map(x => x[0]), lib: f[0][1] }); } } }
+  else if (k === "feu" || k === "joie") { const d = derniereFolle(k); if (d) out.push({ k, d }); }
+  return out.sort((a, b) => a.d < b.d ? 1 : -1);
+}
+/** l'événement en cours (un seul), ou null */
+function evenementActif() {
+  if (!M || M.simple) return null;
+  const auj = isoJour(new Date()), lim = limEv(), cand = [];
+  try { const x = journeeFolle(); if (x) cand.push(Object.assign({}, x, { k: x.sens < 0 ? "feu" : "joie", folle: true })); } catch (e) { /* rien */ }
+  ["krach", "crypto", "sommet", "serie", "relache"].forEach(k => { try { const x = evDe(k)[0]; if (x && x.d <= auj && (k === "relache" ? x.d === auj : x.d >= lim)) cand.push(x); } catch (e) { /* données absentes */ } });
+  cand.sort((a, b) => EV_PRIO.indexOf(a.k) - EV_PRIO.indexOf(b.k) || (a.d < b.d ? 1 : -1));
+  const x = cand[0]; if (!x) return null;
+  x.cle = x.folle ? cleFolle(x) : x.k + ":" + x.d;
+  return x;
+}
+function limEv() { const n = new Date(); return isoJour(new Date(n.getFullYear(), n.getMonth(), n.getDate() - FOLLE_JOURS, 12)); }
+/** textes d'un événement : kicker, gros chiffre, ligne du dessous, phrase, carte « pourquoi » */
+function textesEv(x) {
+  const lib = libJourFolle(x.d), lc = libCourt(x.d), pts = v => v >= 1000 ? F0.format(Math.round(v)) + NB + "pts" : "";
+  if (x.k === "krach") return { k: "Krach mondial", big: pct(x.p, 1), sub: "S&P 500 · " + lib, phr: "Le monde entier tousse. Les krachs passent, les plans réguliers restent.", carte: "S&P 500 " + pct(x.p, 1) + " le " + lc };
+  if (x.k === "crypto") return { k: "Tempête crypto", big: pct(x.p, 1), sub: "Bitcoin en 24 h · " + lib, phr: x.p < 0 ? "Le Bitcoin plonge. Ta bourse, elle, n'a rien vu." : "Le Bitcoin s'emballe. Garde la tête froide.", carte: "Bitcoin " + pct(x.p, 1) + " le " + lc };
+  if (x.k === "sommet") { const e = x.avant > 0 ? x.v / x.avant - 1 : null, p = pts(x.v);
+    return { k: "Sommet du S&P 500", big: p || "Record", sub: "Clôture " + (lib === "Aujourd'hui" ? "d'aujourd'hui" : "du " + lc) + (ok(e) ? " · " + pct(e, 1) + " au-dessus du record du " + frDate(x.dAvant).slice(0, 5) : ""), phr: "Jamais aussi haut sur toutes les données connues. Profite de la vue, puis continue de grimper.", carte: (p ? p + " · " : "") + "record battu le " + lc }; }
+  if (x.k === "serie") return { k: "Série verte", big: SERIE_N + " séances", sub: "de hausse d'affilée · " + pct(x.p, 1) + " · jusqu'au " + lc, phr: "Cinq jours de soleil sur ton portefeuille. Profite, ça ne dure jamais.", carte: SERIE_N + " séances en hausse jusqu'au " + lc };
+  if (x.k === "relache") { const pl = x.places.map(p => p === "paris" ? "Paris" : "New York").join(" et ");
+    return { k: "Bourse en relâche", big: "Fermée", sub: pl + " · " + x.lib, phr: "Les marchés font la sieste. Toi aussi, si tu veux.", carte: pl + " fermée · " + x.lib }; }
+  const feu = x.sens < 0;
+  return { k: feu ? (x.fort ? "Journée noire" : "Journée folle") : (x.fort ? "Bouquet final" : "Journée folle"), big: pct(x.p, 1), sub: lib, carte: "ton portefeuille " + pct(x.p, 1) + " le " + lc,
+    phr: feu ? (x.fort ? "Grosse brûlure. Ceux qui tiennent dix ans ont tous vécu des jours comme celui-ci." : "La bourse prend feu. Toi, tu gardes ton plan.") : (x.fort ? "Une séance comme on en voit peu. Savoure, et ne change rien." : "Feu d'artifice sur ton portefeuille.") };
+}
+/** à l'ouverture de Moi › Aujourd'hui : le grand effet de l'événement en cours, une fois par événement et par appareil */
+function verifierEvenement() {
+  if (!M || M.simple || SRC !== "api" || PREF.onglet !== "jour" || !vueMoi() || document.hidden || !identiteSure() || evTousCoupes()) return;
+  if (document.querySelector(".m-fete, .m-folle")) return;   // une fête de palier passe d'abord ; on réessaiera au prochain affichage
+  const x = evenementActif(); if (!x || evMasque(x)) return;
+  if (x.folle) {
+    let vus = []; try { vus = JSON.parse(stock.get(cleStock("folles")) || "[]"); } catch (e) { vus = []; }
+    if (!Array.isArray(vus)) vus = [];
+    const pre = x.d + (x.sens > 0 ? "+" : "-"); if (vus.some(k => k.startsWith(pre) && +k.slice(-1) >= (x.fort ? 2 : 1))) return;   // déjà vue (ou plus forte)
+    vus.push(cleFolle(x)); stock.set(cleStock("folles"), JSON.stringify(vus.slice(-40)));
+  } else {
+    let vus = []; try { vus = JSON.parse(stock.get(cleStock("evVus")) || "[]"); } catch (e) { vus = []; }
+    if (!Array.isArray(vus)) vus = []; if (vus.includes(x.cle)) return;
+    vus.push(x.cle); stock.set(cleStock("evVus"), JSON.stringify(vus.slice(-60)));
+  }
+  const go = () => lancerFolle(x);
+  if (typeof window.ereApres === "function") window.ereApres(go, "folleMoi"); else go();
+}
+function evMasques() { try { const l = JSON.parse(stock.get(cleStock("evMasques")) || "[]"); return Array.isArray(l) ? l : []; } catch (e) { return []; } }
+function evMasque(x) { return evMasques().includes(x.cle); }
+/** Vestiaire › Ambiances : un interrupteur général, puis une ligne par événement déjà vécu (grisée hors de sa semaine) */
+function derniereEv(k) { try { const x = evDe(k)[0]; return x ? x.d : null; } catch (e) { return null; } }
 function htmlAmbFolles() {
   if (!M || M.simple) return "";
-  const x = journeeFolle(), lignes = AMB_FOLLES.map(([k, nom, ic, quoi]) => {
-    const der = derniereFolle(k); if (!der) return "";   // jamais vécue : pas listée
-    const actif = !!x && (x.sens < 0 ? "feu" : "joie") === k, j = new Date(der + "T12:00:00"), lib = JOURS_C[j.getDay()] + " " + frDate(der).slice(0, 5);
-    return '<div class="vs-amb-l' + (actif ? "" : " grise") + '"><span class="vs-em">' + ic + "</span><span><b>" + esc(nom) + "</b><small>" + (actif ? "en cours · séance du " + lib : "dernière : " + lib + " · " + esc(quoi)) + "</small></span>" +
-      (actif ? '<span class="chips m-filtre" role="group" aria-label="' + esc("Ambiance " + nom) + '"><button class="chip" type="button" data-amb="' + k + '" data-amb-on="1" aria-pressed="' + !ambCoupee(k) + '">Oui</button><button class="chip" type="button" data-amb="' + k + '" data-amb-on="" aria-pressed="' + ambCoupee(k) + '">Non</button></span>' : '<span class="vs-amb-x">🔒</span>') + "</div>";
+  const x = evenementActif(), tout = evTousCoupes(), lignes = EV_PRIO.map(k => {
+    const der = x && x.k === k ? x.d : derniereEv(k); if (!der) return "";   // jamais vécu (ou pas concerné) : pas listé
+    const D = EV_DEF[k], actif = !!x && x.k === k && !tout;
+    return '<div class="vs-amb-l' + (actif ? "" : " grise") + '"><span class="vs-em">' + D.ic + "</span><span><b>" + esc(D.nom) + "</b><small>" + (actif ? "en cours · " + libCourt(x.d) : "dernier : " + libCourt(der) + " · " + esc(D.quoi)) + "</small></span>" +
+      (actif ? '<span class="chips m-filtre" role="group" aria-label="' + esc("Ambiance " + D.nom) + '"><button class="chip" type="button" data-amb="' + k + '" data-amb-on="1" aria-pressed="' + !ambCoupee(k) + '">Oui</button><button class="chip" type="button" data-amb="' + k + '" data-amb-on="" aria-pressed="' + ambCoupee(k) + '">Non</button></span>' : '<span class="vs-amb-x">🔒</span>') + "</div>";
   }).join("");
-  return lignes ? '<div class="vs-amb"><small>Sur Moi › Aujourd\'hui, environ une semaine après la séance. Ensuite, grisée jusqu\'à la prochaine.' + (reduit ? " Coupées sur ce téléphone (moins d'animations demandé)." : "") + "</small>" + lignes + "</div>" : "";
+  return lignes ? '<div class="vs-amb"><div class="vs-amb-g"><span><b>Événements rares</b><small>Effet, petite carte et ambiance sur Aujourd\'hui, environ une semaine. « Non » = appli sobre.</small></span>' +
+    '<span class="chips m-filtre" role="group" aria-label="Événements rares"><button class="chip" type="button" data-amb="tout" data-amb-on="1" aria-pressed="' + !tout + '">Oui</button><button class="chip" type="button" data-amb="tout" data-amb-on="" aria-pressed="' + tout + '">Non</button></span></div>' +
+    (reduit ? "<small>Ambiances coupées sur ce téléphone (moins d'animations demandé).</small>" : "") + lignes + "</div>" : "";
 }
-/** l'ambiance du jour sur Aujourd'hui (et le petit repère 🧯 / 🎆 à côté du chiffre, qui rejoue l'effet) */
+/** sur Aujourd'hui : la petite carte « pourquoi » (toucher = revoir, ✕ = masquer cet événement) et l'ambiance */
 const NB_AMB = 14;
 function habillerFolle(v) {
-  const x = journeeFolle(), hero = v.querySelector(".m-hero"); if (!x || !hero) return;
-  const feu = x.sens < 0, j = hero.querySelector(".m-jour .badge");
-  if (j) { const b = document.createElement("button"); b.type = "button"; b.className = "m-folle-m"; b.dataset.folleRevoir = "1"; b.textContent = feu ? "🧯" : "🎆";
-    const lab = (feu ? "Journée folle (incendie) · " : "Journée folle (fête) · ") + libJourFolle(x.d).toLowerCase() + " " + pct(x.p, 1) + " · toucher pour revoir"; b.title = lab; b.setAttribute("aria-label", lab);
-    b.addEventListener("click", e => { e.stopPropagation(); lancerFolle(x, true); }); j.insertAdjacentElement("afterend", b); }
-  if (ambCoupee(feu ? "feu" : "joie") || reduit) return;
-  hero.classList.add(feu ? "m-amb-feu" : "m-amb-joie");
-  const a = document.createElement("div"); a.className = "m-amb " + (feu ? "feu" : "joie") + (x.fort ? " fort" : ""); a.setAttribute("aria-hidden", "true");
-  const COUL = ["#FF6FA8", "#5EEAD4", "#7FB2FF", "#C4B5FD", "#A3E635"];
-  let h = ""; for (let i = 0; i < NB_AMB; i++) { const r = (i * 0.618034) % 1, r2 = (i * 0.414214 + .3) % 1;
-    h += '<i style="left:' + (3 + r * 94).toFixed(1) + "%;" + (feu ? "" : "top:" + (4 + r2 * 80).toFixed(1) + "%;") + "--d:" + (feu ? 7 + r2 * 6 : 3 + r2 * 3).toFixed(2) + "s;--r:" + (-(r2 * 12)).toFixed(2) + "s;--s:" + (2 + r * 2.5).toFixed(1) + "px;--c:" + COUL[i % COUL.length] + '"></i>'; }
+  const x = evenementActif(), hero = v.querySelector(".m-hero"); if (!x || !hero || evTousCoupes() || evMasque(x)) return;
+  const T = textesEv(x), D = EV_DEF[x.k];
+  const c = document.createElement("div"); c.className = "m-ev"; c.dataset.ev = x.k;
+  c.innerHTML = '<button type="button" class="m-ev-b" aria-label="' + esc("Événement : " + T.k + ", " + T.carte + ". Toucher pour revoir") + '"><span class="m-ev-i" aria-hidden="true">' + D.ic + '</span><span class="m-ev-t"><small>Événement</small><b>' + esc(T.k) + "</b> · " + esc(T.carte) + '</span><span class="m-ev-r" aria-hidden="true">↻</span></button>' +
+    '<button type="button" class="m-ev-x" aria-label="Masquer cet événement">✕</button>';
+  c.querySelector(".m-ev-b").addEventListener("click", () => lancerFolle(x, true));
+  c.querySelector(".m-ev-x").addEventListener("click", () => { const l = evMasques(); l.push(x.cle); stock.set(cleStock("evMasques"), JSON.stringify(l.slice(-60))); toast("Événement masqué. Réglages dans Missions › Vestiaire › Ambiances."); rendre(); });
+  hero.insertAdjacentElement("afterend", c);
+  if (ambCoupee(x.k) || reduit) return;
+  hero.classList.add("m-amb-" + x.k);
+  const a = document.createElement("div"); a.className = "m-amb " + x.k + (x.fort ? " fort" : ""); a.setAttribute("aria-hidden", "true");
+  const COUL = { joie: ["#FF6FA8", "#5EEAD4", "#7FB2FF", "#C4B5FD", "#A3E635"], crypto: ["#F7931A", "#FFB347", "#C4B5FD"], relache: ["#E0E7FF", "#C4B5FD", "#FDE68A"], serie: ["#A3E635", "#5EEAD4", "#7FB2FF"] }[x.k] || ["#FFB347"];
+  const monte = x.k === "feu", tombe = x.k === "krach";
+  let h = ""; if (!["sommet"].includes(x.k)) for (let i = 0; i < NB_AMB; i++) { const r = (i * 0.618034) % 1, r2 = (i * 0.414214 + .3) % 1;
+    h += '<i style="left:' + (3 + r * 94).toFixed(1) + "%;" + (monte || tombe ? "" : "top:" + (4 + r2 * 80).toFixed(1) + "%;") + "--d:" + (monte ? 7 + r2 * 6 : tombe ? 1.4 + r2 * .8 : 3 + r2 * 3).toFixed(2) + "s;--r:" + (-(r2 * 12)).toFixed(2) + "s;--s:" + (2 + r * 2.5).toFixed(1) + "px;--c:" + COUL[i % COUL.length] + '"></i>'; }
   a.innerHTML = h; v.prepend(a);
 }
 function htmlJour() {
@@ -5924,7 +6116,7 @@ function htmlVestiaire() {
   const onglets = '<div class="chips vs-o" role="tablist" aria-label="Sortes d\'objets">' + SORTES.map(([s, l, ic]) => {
     const n = CATALOGUE[s].filter(d => E.ok.has(cleObj(s, d[0]))).length;
     return '<button class="chip" type="button" role="tab" data-vt="' + s + '" aria-pressed="' + (s === t) + '">' + "<b>" + ic + " " + l + "</b><small>" + n + " / " + catVis(s, E).length + "</small></button>";
-  }).join("") + (amb ? '<button class="chip" type="button" role="tab" data-vt="amb" aria-pressed="' + (t === "amb") + '"><b>✨ Ambiances</b><small>journées folles</small></button>' : "") + "</div>";
+  }).join("") + (amb ? '<button class="chip" type="button" role="tab" data-vt="amb" aria-pressed="' + (t === "amb") + '"><b>✨ Ambiances</b><small>événements</small></button>' : "") + "</div>";
   if (t === "amb") return acc("m-vest", "Vestiaire", nb + " / " + tot + " objets · privé", prof + onglets + amb, false);
   const actif = actifM(t);
   const tuiles = catVis(t, E).map(d => {

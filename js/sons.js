@@ -601,6 +601,16 @@ const SONS = (() => {
     },
     /** l'aurore du bouquet final : un accord doux et lent (pas de jingle ni de musique de l'ère d'or) */
     aurore(dt, dur) { const c = fBus ? audio() : folleBus(); if (!c) return; [220, 277.2, 329.6, 440].forEach((f, i) => { note(f, dur, "sine", .05, dt + i * .15, fBus); note(f * 1.005, dur, "triangle", .018, dt + i * .15, fBus); }); },
+    /** lot 62 b · les événements rares : orage (krach), arcs électriques (crypto), arpège (sommet), cinq notes (série verte), berceuse (relâche) */
+    evenement(k, dur, eclairs) {
+      const c = folleBus(); (eclairs || []).forEach(e => plus_tard(e * 1000, () => vibrer(k === "krach" ? [70, 40, 140] : 25))); if (!c) return;
+      if (k === "krach") { souffle(dur, 5200, .09, 0, .8, "highpass", fBus); souffle(dur, 1400, .06, 0, .8, "bandpass", fBus);
+        eclairs.forEach(e => { souffle(.08, 3000, .3, e, .002, "highpass", fBus); souffle(1.8, [420, 55], .5, e + .12, .02, "lowpass", fBus); note([75, 32], 1.6, "sine", .4, e + .12, fBus); }); }
+      else if (k === "crypto") eclairs.forEach((e, i) => { note([2200, 160], .2, "square", .05, e, fBus); note([1400 + i * 90, 300], .16, "sawtooth", .035, e + .02, fBus); souffle(.14, 4500, .12, e, .002, "highpass", fBus); });
+      else if (k === "sommet") { [523.3, 659.3, 784, 1046.5, 1318.5].forEach((f, i) => { note(f, 1.4, "sine", .07, .3 + i * .28, fBus); note(f / 2, 1.6, "triangle", .03, .3 + i * .28, fBus); }); }
+      else if (k === "serie") { [392, 440, 493.9, 587.3, 659.3].forEach((f, i) => note(f, .5, "triangle", .07, .3 + i * .32, fBus)); [523.3, 659.3, 784].forEach(f => note(f, 1.6, "sine", .05, 2, fBus)); }
+      else if (k === "relache") { [[392, 0], [329.6, .5], [392, 1.1], [329.6, 1.6]].forEach(([f, t]) => note(f, .7, "triangle", .045, .3 + t, fBus)); }
+    },
     folleStop() { if (!fBus || !ctx) return; const b = fBus; fBus = null; try { const t = ctx.currentTime; b.gain.cancelScheduledValues(t); b.gain.setValueAtTime(b.gain.value, t); b.gain.linearRampToValueAtTime(0, t + .25); setTimeout(() => { try { b.disconnect(); } catch (e) { /* rien */ } }, 400); } catch (e) { /* rien */ } }
   };
   /** lot 62 : le bus des journées folles (un nouveau à chaque effet) */
