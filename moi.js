@@ -2568,6 +2568,9 @@ const ARTEMA = {
   lien: "https://equityderivatives.natixis.com/fr/indice/rdigtdg/"
 };
 const JOUR_MS = 864e5, jours = (a, b) => (new Date(b) - new Date(a)) / JOUR_MS;
+/* v20.20 (Théo) : le gain affiché NET des 0,80 %/an de frais du contrat (au lieu des 28,5 % / +9,5 pts bruts de la brochure) */
+const netArt = i => { const x = ARTEMA.rdv[i]; return (1 + x[2]) * Math.pow(1 - ARTEMA.fgse, jours(ARTEMA.emission, x[1]) / 365.25) - 1; };
+const pasNetArt = () => (netArt(4) - netArt(0)) / 4;
 function aArtema() { return !!(M && (M.supports || []).some(r => /artema/i.test(r.nom || "") && (r.valeur || r.investi))); }
 /** tout ce qu'il faut savoir sur ton Artema à une date (v16.8x : parts exposées, repli estimé, dernier relevé, historique des niveaux) */
 function etatArtema() {
@@ -2628,7 +2631,7 @@ const ilYaJ = j => j <= 0 ? "aujourd'hui" : j === 1 ? "hier" : "il y a " + j + N
 const PERIME_J = 35, NBS = "\u00A0";
 /** une issue en une ligne (montant, gain, rendement) */
 function texteIssue(s, avecTra) {
-  if (s.etat === "attente") return "rien ne se passerait : on attendrait " + moisAn(ARTEMA.rdv[ARTEMA.rdv.findIndex(x => x[0] === s.ev) + 1][0]) + ", où le gain possible monte à <b" + (s.r >= ARTEMA.barriere ? ' class="up"' : "") + ">+" + pc1(s.prochainC) + NBS + "%</b>";
+  if (s.etat === "attente") return "rien ne se passerait : on attendrait " + moisAn(ARTEMA.rdv[ARTEMA.rdv.findIndex(x => x[0] === s.ev) + 1][0]) + ", où le gain possible monte à <b" + (s.r >= ARTEMA.barriere ? ' class="up"' : "") + ">+" + pc1(netArt(ARTEMA.rdv.findIndex(x => x[0] === s.ev) + 1)) + NBS + "% net</b>";
   return (s.etat === "arret" ? "Artema s'arrête : " : s.etat === "capital" ? "capital rendu (moins les frais) : " : "perte égale à la baisse : ") +
     "<b>≈ " + e10(s.montant) + "</b> (" + g10(s.gain) + (avecTra && s.tra !== null ? ", ≈ " + pct(s.tra, 1, false) + "/an" : "") + ")";
 }
@@ -2670,7 +2673,7 @@ function verdictArtema(E) {
       heroArtema(s.etat === "arret" ? "v" : s.etat === "capital" ? "o" : "r", s.etat === "arret" ? "Artema s'arrête, tu toucherais" : s.etat === "capital" ? "capital rendu (moins les frais)" : "perte égale à la baisse", s);
   if (c === "r" && !s.fin) t += '<small>La barrière des 60 % ne compte qu\'au 1er déc. 2034 : passer dessous avant ne déclenche rien.</small>';
   else if (c === "o" && !s.fin) t += "<small>Capital protégé jusqu'à −40 % à l'échéance seulement, sauf faillite de Natixis.</small>";
-  else if (c === "v" && !s.fin) t += "<small>Remboursement anticipé automatique si l'indice est encore au moins à son départ ce jour-là. Sinon, le gain grossit de 9,5 points par année d'attente.</small>";
+  else if (c === "v" && !s.fin) t += "<small>Remboursement anticipé automatique si l'indice est encore au moins à son départ ce jour-là. Sinon, le gain net grossit d'environ " + pc1(pasNetArt()) + " points par année d'attente.</small>";
   return [c, t];
 }
 /** le chiffre héros : ce que tu toucherais (plus gros que le versé) */
@@ -2698,7 +2701,7 @@ const SIM_MIN = 40, SIM_MAX = 150;
 function zoneSim(v) { return v >= 100 ? 2 : v >= 60 ? 1 : 0; }
 function resSim(E, v, i) {
   const r = v / 100, s = issueArtema(E, r, i), cl = s.etat === "arret" ? "v" : s.etat === "attente" ? "g" : s.etat === "capital" ? "o" : "r";
-  const titre = { arret: "Artema s'arrête", attente: "Rien ne se passe, on attend l'an prochain (+9,5 pts)", capital: "Capital rendu (moins les frais)", perte: "Perte = baisse" }[s.etat];
+  const titre = { arret: "Artema s'arrête", attente: "Rien ne se passe, on attend l'an prochain (+" + pc1(pasNetArt()) + " pts nets)", capital: "Capital rendu (moins les frais)", perte: "Perte = baisse" }[s.etat];
   const k0 = Math.max(0, E.ip);
   const lignes = ARTEMA.rdv.map((x, k) => {
     const q = issueArtema(E, r, k), passe = k < k0;
@@ -2706,7 +2709,7 @@ function resSim(E, v, i) {
     return '<tr class="' + (passe ? "gris" : q.etat) + (k === i ? " on" : "") + '"><td>' + moisAn(x[0]) + (q.fin ? " · fin" : "") + "</td><td>" + val + "</td><td>" + (passe || q.etat === "attente" ? "" : g10(q.gain)) + "</td></tr>";
   }).join("");
   return '<div class="art-sres ' + cl + '"><div class="t">' + titre + '</div><div class="m"><b>' + (s.montant === null ? "—" : "≈ " + e10(s.montant)) + "</b>" +
-    (s.montant === null ? "<small>prochain rendez-vous : " + moisAn(ARTEMA.rdv[i + 1][0]) + " (+" + pc1(s.prochainC) + " % possible)</small>" : "<small>" + g10(s.gain) + (s.tra !== null ? " · ≈ " + pct(s.tra, 1, false) + "/an" : "") + "</small>") + "</div>" +
+    (s.montant === null ? "<small>prochain rendez-vous : " + moisAn(ARTEMA.rdv[i + 1][0]) + " (+" + pc1(netArt(i + 1)) + " % net possible)</small>" : "<small>" + g10(s.gain) + (s.tra !== null ? " · ≈ " + pct(s.tra, 1, false) + "/an" : "") + "</small>") + "</div>" +
     '<p>si l\'indice est à ' + v + NBS + "% de son départ le " + jourCourt(s.ev) + (i > 0 ? ", sans l'avoir retrouvé aux rendez-vous d'avant" : "") + pastilleEstime(E) + "</p></div>" +
     '<p class="art-sp">Le même ' + v + NBS + "%, selon le rendez-vous où il est atteint :</p>" +
     '<table class="art-t art-esc">' + lignes + "</table>" + '<p class="art-gris">Estimé, frais du contrat déduits, avant impôts et prélèvements sociaux. On ne touche qu\'une seule fois : au premier rendez-vous où l\'indice est au moins à son départ.</p>';
@@ -2772,7 +2775,7 @@ function htmlArtema() {
   const cible = avantPhoto ? ARTEMA.photo[1] : E.arrete ? E.arrete.pay : p ? p.ev : null, rb = cible ? rebours(E.auj, cible) : null;
   const rbTxt = rb ? (rb.total <= 0 ? "aujourd'hui" : rb.y ? rb.y + " an" + (rb.y > 1 ? "s" : "") : rb.m ? rb.m + " mois" : rb.total + " j") : "—", rbSous = rb && rb.total > 0 ? (rb.y ? (rb.m ? rb.m + " mois · " : "") + rb.j + " j" : rb.m ? rb.j + " j" : "") : "";
   let rdvTxt;
-  if (avantPhoto) rdvTxt = "<b>2, 3 et 4 décembre 2026</b> : photo de départ de l'indice. Ensuite, rien ne se passe jusqu'au premier rendez-vous, le 7 déc. 2029.<br>Pour sortir à ce rendez-vous, l'indice doit être <b>au moins à son niveau de départ</b> (0 % ou plus : pas besoin qu'il monte) → +28,5 %. Sinon, on retente chaque année, avec 9,5 % de plus.";
+  if (avantPhoto) rdvTxt = "<b>2, 3 et 4 décembre 2026</b> : photo de départ de l'indice. Ensuite, rien ne se passe jusqu'au premier rendez-vous, le 7 déc. 2029.<br>Pour sortir à ce rendez-vous, l'indice doit être <b>au moins à son niveau de départ</b> (0 % ou plus : pas besoin qu'il monte) → +" + pc1(netArt(0)) + " % net de frais. Sinon, on retente chaque année, avec environ " + pc1(pasNetArt()) + " points nets de plus.";
   else if (E.arrete) rdvTxt = "<b>Argent versé vers le " + jourCourt(E.arrete.pay) + "</b> (si Artema s'est bien arrêté le " + jourCourt(E.arrete.ev, true) + ")." + (p ? "<br>Sinon, prochain rendez-vous le " + jourCourt(p.ev) + "." : "");
   else if (!p) rdvTxt = "Artema est terminé.";
   else {
@@ -2792,7 +2795,7 @@ function htmlArtema() {
       '<p class="art-gris">Prix de marché : il peut être sous ton versé même si l\'indice est au-dessus du départ ; vendre avant fait perdre la protection.</p>';
   }
   const tableau = '<table class="art-t"><tr><th>Si ça s\'arrête en</th><th>Gain</th><th>Tu récupères</th><th>Par an</th></tr>' +
-    E.ech.map(e => '<tr class="' + (p && e.ev === p.ev ? "on" : "") + (e.ev < E.auj ? " passe" : "") + '"><td>' + moisAn(e.ev) + (e.fin ? " · fin" : "") + '</td><td class="up">+' + pc1(e.c) + " %</td><td>" + e10(e.montant) + "</td><td>≈ " + pct(e.tra, 1, false) + "</td></tr>").join("") +
+    E.ech.map(e => '<tr class="' + (p && e.ev === p.ev ? "on" : "") + (e.ev < E.auj ? " passe" : "") + '"><td>' + moisAn(e.ev) + (e.fin ? " · fin" : "") + '</td><td class="up">+' + pc1(E.verse ? e.gain / E.verse : netArt(E.ech.indexOf(e))) + " %</td><td>" + e10(e.montant) + "</td><td>≈ " + pct(e.tra, 1, false) + "</td></tr>").join("") +
     '<tr class="note"><td colspan="4">Une ligne = le cas où l\'indice est au moins à son départ ce jour-là (et ne l\'était pas avant). À la fin seulement, s\'il ne l\'a jamais retrouvé : entre 60 et 100 % → ≈ ' + e10(E.finPlat) + " (ton capital moins les frais) · sous 60 % → perte égale à la baisse.</td></tr></table>";
   const bientot = p && jours(E.auj, p.ev) <= 10 && jours(E.auj, p.ev) > 0 ? '<div class="art-alerte">🔔 <b>Rendez-vous Artema le ' + jourMois(p.ev) + "</b> : pense à saisir le niveau de clôture de l'indice ce jour-là pour savoir s'il s'arrête.</div>" : "";
   const apres = !E.passe ? "" : '<div class="art-alerte">🎯 Le rendez-vous du ' + jourMois(E.passe.ev) + " est passé. " + (E.arrete ? "L'assureur placera l'argent sur un autre support vers le " + frDate(E.passe.pay) : "Si l'indice était au moins à son départ ce jour-là, Artema a été remboursé le " + frDate(E.passe.pay) + (E.ratio && E.dateAct && E.dateAct >= E.passe.ev ? "" : " (saisis le niveau de clôture du " + frDate(E.passe.ev).slice(0, 5) + " pour en avoir le cœur net)") + " et l'assureur a placé l'argent sur un autre support") + " : <b>choisis où le mettre</b> (Saisir › ordre).</div>";
@@ -2809,7 +2812,7 @@ function htmlArtema() {
     "<h4>L'indice, saisie après saisie</h4>" + htmlCourbeArtema(E) +
     '<details class="art-d"><summary>Tous les rendez-vous</summary>' + tableau + "</details>" +
     htmlIndiceArtema() +
-    '<details class="art-d"><summary>Comment marche Artema ?</summary><div class="art-cas"><div><i>📸</i>Déc. 2026 : photo de départ de l\'indice (moyenne des clôtures du 2 au 4 décembre).</div><div><i>⏳</i>Jusqu\'en 2029 : rien ne se passe, la valeur bouge avec les marchés.</div><div><i>🎯</i>Chaque début décembre de 2029 à 2033 : si l\'indice est au moins à son départ → Artema s\'arrête (remboursement anticipé automatique), capital + gain. Le gain grossit de 9,5 points par année d\'attente.</div><div><i>🏁</i>1er décembre 2034 : au moins au départ → +76 % · entre −40 % et 0 → capital · sous 60 % du départ → perte égale à toute la baisse.</div><div><i>🙅</i>Rien à décider : sortir avant se fait au prix du marché (protection perdue).</div></div></details>' +
+    '<details class="art-d"><summary>Comment marche Artema ?</summary><div class="art-cas"><div><i>📸</i>Déc. 2026 : photo de départ de l\'indice (moyenne des clôtures du 2 au 4 décembre).</div><div><i>⏳</i>Jusqu\'en 2029 : rien ne se passe, la valeur bouge avec les marchés.</div><div><i>🎯</i>Chaque début décembre de 2029 à 2033 : si l\'indice est au moins à son départ → Artema s\'arrête (remboursement anticipé automatique), capital + gain (+' + pc1(netArt(0)) + ' % net de frais la 1re fois). Le gain net grossit d\'environ ' + pc1(pasNetArt()) + ' points par année d\'attente.</div><div><i>🏁</i>1er décembre 2034 : au moins au départ → +' + pc1(netArt(5)) + ' % net · entre −40 % et 0 → capital · sous 60 % du départ → perte égale à toute la baisse.</div><div><i>🙅</i>Rien à décider : sortir avant se fait au prix du marché (protection perdue).</div></div></details>' +
     '<div class="art-mentions">Montants estimés (tes parts, 0,80 %/an de frais du contrat), avant impôts et prélèvements sociaux. · L\'indice retire 50 points par an à son NIVEAU (pas 50 %), un peu chaque jour : vers 1 250 points, c\'est environ 4 % par an (plus si l\'indice baisse, moins s\'il monte). Ce frein finance le gain promis et la protection : l\'indice monte donc moins vite que la bourse, c\'est normal. · Capital soumis au risque de défaut de Natixis. · Fiscalité : rien à l\'arrêt d\'Artema, l\'argent reste dans le contrat.</div>' +
     "</div></div>";
 }
@@ -2833,13 +2836,13 @@ function htmlIndiceArtema() {
     '<ul class="ai-r">' +
       "<li><b>Pas de garantie du capital</b> : à la fin (déc. 2034), si l'indice est sous 60 % de son départ, tu perds toute la baisse (ex. −45 % → tu récupères 55 %).</li>" +
       "<li><b>Le frein de 50 points</b> : les dividendes réinvestis ont rapporté en moyenne 29 points par an sur 8 ans, moins que les 50 retirés : l'indice perd donc environ 21 points par an par rapport aux actions elles-mêmes.</li>" +
-      "<li><b>Gain plafonné</b> : 9,5 % par année écoulée, même si l'indice monte beaucoup plus.</li>" +
+      "<li><b>Gain plafonné</b> : environ " + pc1(pasNetArt()) + " points nets de frais par année d'attente, même si l'indice monte beaucoup plus.</li>" +
       "<li><b>Très concentré sur la tech</b> et à 60 % en dollars : le change € / $ joue aussi.</li>" +
       "<li><b>Risque Natixis</b> : si la banque fait défaut, tu peux tout perdre (notes A+ / A2 / A+).</li>" +
       "<li><b>Frais</b> : 4,47 % à l'entrée, déjà inclus dans le prix (dont jusqu'à 3,6 % de commission pour la banque qui le vend), plus les 0,80 %/an de ton contrat.</li>" +
       "<li><b>Sortie avant l'heure</b> : au prix du marché du jour, avec une perte possible.</li>" +
     "</ul>" +
-    '<p class="art-gris">Exemples de la brochure : indice à 140 % la 3e année → 128,5 % (arrêt) · à 70 % à la fin → 100 % · à 45 % à la fin → 45 %. Source : brochure Natixis (répartition au 31/03/2026) et DIC ; ce n\'est pas un conseil financier.</p>' +
+    '<p class="art-gris">Exemples de la brochure (avant frais du contrat) : indice à 140 % la 3e année → 128,5 % (arrêt) · à 70 % à la fin → 100 % · à 45 % à la fin → 45 %. Source : brochure Natixis (répartition au 31/03/2026) et DIC ; ce n\'est pas un conseil financier.</p>' +
   "</details>";
 }
 function brancherArtema(v) {
@@ -4386,7 +4389,7 @@ function echeancesMoi() {
   // Artema : photo de départ, rendez-vous, fin
   if (aArtema()) {
     if (auj <= ARTEMA.photo[1]) add({ d: ARTEMA.photo[0], ico: "📸", t: "Artema : photo de départ", s: "moyenne des 2, 3 et 4 décembre 2026", k: "art-photo" });
-    ARTEMA.rdv.forEach((x, i) => add({ d: x[0], ico: "🎯", t: x[3] ? "Artema : fin du produit" : "Artema : rendez-vous " + (i + 1) + " sur 5", s: x[3] ? "dernière constatation de l'indice" : "si l'indice est au moins à son départ : arrêt, capital + " + pc1(x[2]) + " %", k: "art-" + i, loin: true }));
+    ARTEMA.rdv.forEach((x, i) => add({ d: x[0], ico: "🎯", t: x[3] ? "Artema : fin du produit" : "Artema : rendez-vous " + (i + 1) + " sur 5", s: x[3] ? "dernière constatation de l'indice" : "si l'indice est au moins à son départ : arrêt, capital + " + pc1(netArt(i)) + " % net de frais", k: "art-" + i, loin: true }));
   }
   // prêt : prochaine échéance (tous les mois) et fin
   const p = M.prets;
