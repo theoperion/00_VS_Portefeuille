@@ -6746,7 +6746,7 @@ function htmlMissions() {
     const html = '<details class="pl-bloc' + (suiv ? "" : " complet") + '" data-fam="' + g + '"' + (palOuverts.has(g) ? " open" : "") + "><summary>" +
       '<span class="pb-t">' + esc(nom) + '</span><span class="pb-n">' + (cache ? "•••" : faits + " / " + l.length) + "</span>" +
       (cache ? "" : '<span class="jauge" title="vers le prochain palier"><i style="width:' + (suiv ? Math.round(Math.max(0, Math.min(1, suiv.part)) * 100) : 100) + '%"></i></span>') +
-      '<span class="pb-s">' + (cache ? "Masqué en mode discret" : suiv ? "Prochain : <b>" + esc(suiv.titre) + "</b> · " + cheminP(suiv) : "Tout est franchi ✓") +
+      '<span class="pb-s">' + (cache ? "Masqué en mode discret" : suiv ? "Prochain : <b>" + esc(suiv.titre) + "</b> · " + cheminP(suiv) : g === "anv" ? "Tout est franchi pour " + new Date().getFullYear() + " ✓ · on recommence en janvier" : "Tout est franchi ✓") +
         (g === "vente" && derVente ? " · depuis ta dernière vente" + (dvSV.horsLevier ? " (hors levier)" : "") + " le " + esc(frDate(derVente)) : g === "vente" && dvSV.levier ? " · aucune vente hors levier (les ventes du Nasdaq ×1, ×2 et ×3 de la règle ne comptent pas)" : "") + "</span>" +
       (r && !cache ? '<span class="pb-r"><span class="pb-ap">' + (surpriseCachee(r[0], r[1]) ? '<span class="vs-em">🎁</span>' : apercuFete(r[0], r[1])) + "</span><span>🎁 <b>" + esc(surpriseCachee(r[0], r[1]) ? "Surprise" : nomObj(r[0], r[1])) + "</b>" + (recDe(pr.id).length > 1 ? " +" + (recDe(pr.id).length - 1) : "") + " · " + cheminP(pr) + "</span></span>" : "") +
       '</summary><div class="pl-liste">' + l.map(ligneP).join("") + "</div></details>";
@@ -6755,7 +6755,11 @@ function htmlMissions() {
   const tous = FAMILLES.map(([g, nom, vitrine]) => Object.assign(bloc(g, nom) || {}, { vitrine })).filter(x => x.html);
   const vit = tous.filter(x => x.vitrine && !x.complet), aut = tous.filter(x => !x.vitrine && !x.complet), fin = tous.filter(x => x.complet);
   const groupe = (cle, titre, l) => l.length ? '<details class="pl-grp" data-grp="' + cle + '"' + (palOuverts.has(cle) ? " open" : "") + "><summary>" + titre + '</summary><div class="pl-blocs">' + l.map(x => x.html).join("") + "</div></details>" : "";
-  const blocs = vit.map(x => x.html).join("") + groupe("_autres", "Autres paliers <small>(" + aut.length + ")</small>", aut) + groupe("_finies", "✓ " + fin.length + (fin.length > 1 ? " familles terminées" : " famille terminée"), fin);
+  const blocs = vit.map(x => x.html).join("") + groupe("_autres", "Autres paliers <small>(" + aut.length + ")</small>", aut) + groupe("_finies", (() => {   // v20.6 (Théo) : « Année de versements » n'est finie que pour l'année, elle revient en janvier
+    const an = new Date().getFullYear(), anv = fin.some(x => x.g === "anv"), n = fin.length;
+    if (anv && n === 1) return "✓ 1 famille finie pour " + an + " · revient en janvier";
+    return "✓ " + n + (n > 1 ? " familles terminées" : " famille terminée") + (anv ? " <small>(dont une qui revient en janvier)</small>" : "");
+  })(), fin);
   /* lot 44 : Ce mois-ci, million, tenue, paliers, Vestiaire, puis les bilans */
   /* lot 51 (Théo) : couronne du million dans l'en-tête de Ce mois-ci (détail replié), Récompenses (récentes / à venir), tenue compacte */
   const ce = htmlCeMois(puceMillion());
