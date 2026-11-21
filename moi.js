@@ -1574,7 +1574,7 @@ function htmlCinq() {
    Palier fort : −5 % / +5 %.
    Source : l'historique de ton fichier (variation de l'indice « ip », versements neutralisés) ; la séance en cours (ou la dernière séance)
    tant que l'historique ne l'a pas encore. Une fois par séance, par palier et par appareil. Jamais dans le Versus, jamais pour le profil simple. */
-const FOLLE_SEUIL = .028, FOLLE_MID = .035, FOLLE_FORT = .05, FOLLE_JOURS = 7;   // lot 62 c (Théo) : 3 paliers par sens : 2,8 % · 3,5 % · 5 %   // Théo : une fenêtre d'environ une semaine (rattrapage compris)
+const FOLLE_SEUIL = .028, FOLLE_MID = .035, FOLLE_FORT = .05, FOLLE_JOURS = 3;   // v20.3 (Théo) : 3 jours au lieu d'une semaine ;   // lot 62 c (Théo) : 3 paliers par sens : 2,8 % · 3,5 % · 5 %   // Théo : une fenêtre d'environ une semaine (rattrapage compris)
 const JOURS_L = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
 function isoN(n) { const s = String(n); return s.slice(0, 4) + "-" + s.slice(4, 6) + "-" + s.slice(6, 8); }
 /** séances de l'historique : { d, p (variation, versements neutralisés), e (€ gagnés ou perdus hors versements), ip0 (niveau d'avant), i } */
