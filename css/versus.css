@@ -387,6 +387,18 @@ button.bt-e { cursor: pointer; color: var(--ink); }
 .st-feu { width: 10px; height: 10px; border-radius: 50%; background: #3DDC97; box-shadow: 0 0 0 3px color-mix(in srgb, #3DDC97 30%, transparent); animation: avScint 1.4s ease-in-out infinite alternate; } .st-feu.ferme { background: var(--ink-3); box-shadow: none; animation: none; }
 .st-check { display: flex; flex-wrap: wrap; gap: 6px; } .st-check span { padding: 6px 10px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--rule); font: 600 12.5px/1 var(--f-text); color: var(--ink-2); }
 .st-check span.ok { background: color-mix(in srgb, #3DDC97 18%, var(--panel)); color: var(--ink); border-color: color-mix(in srgb, #3DDC97 45%, var(--rule)); }
+/* lot68 : qui a déjà posé sa carte (jamais laquelle) */
+.st-pel { display: grid; gap: 7px; padding-top: 9px; border-top: 1px dashed var(--rule); }
+.st-pel-t { font: 600 12.5px/1.2 var(--f-text); color: var(--ink-2); } .st-pel-t b { color: var(--ink); font-family: var(--f-num); }
+.st-pel-l { display: flex; flex-wrap: wrap; gap: 6px 10px; }
+.st-pel-p { position: relative; display: grid; justify-items: center; gap: 3px; width: 54px; }
+.st-pel-p .av { width: 34px; height: 34px; }
+.st-pel-p small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 11px/1.1 var(--f-text) !important; color: var(--ink-2) !important; }
+.st-pel-p.ici small { color: var(--ink) !important; font-weight: 800 !important; }
+.st-pel-p:not(.ok) .av { opacity: .42; filter: grayscale(1); }
+.st-pel-c { position: absolute; top: 17px; left: 32px; width: 16px; height: 21px; display: grid; place-items: center; border-radius: 3px; font: 900 11px/1 var(--f-text); font-style: normal; z-index: 2; text-shadow: 0 0 2px rgba(0,0,0,.7), 0 0 1px rgba(0,0,0,.9);
+  background: repeating-linear-gradient(45deg, var(--accent) 0 3px, color-mix(in srgb, var(--accent) 78%, #000) 3px 6px); color: #fff; border: 1.5px solid var(--panel); box-shadow: 0 1px 3px rgba(0,0,0,.35); transform: rotate(8deg); }
+.st-pel-p:not(.ok) .st-pel-c { background: var(--panel-2); color: var(--ink-3); text-shadow: none; border: 1.5px dashed var(--ink-3); box-shadow: none; transform: none; }
 .st-etat small { font-size: 12.5px; line-height: 1.45; color: var(--ink-2); }
 .at-brouillon { flex-wrap: wrap; } .at-brouillon .btn-row { display: flex; gap: 10px; align-items: center; }
 .gp-cal { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; font: 600 12px/1 var(--f-text); color: var(--ink-2); }

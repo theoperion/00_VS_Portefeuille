@@ -527,6 +527,15 @@ function htmlGPStand(k) {
   return '<div class="st-gp">' + (window.Piste ? Piste.vignette(ci) : "") + "<div><b>" + g.drap + " " + esc(g.gp) + "</b><small>" + esc(g.ville) + " · " + esc(g.txt) + "</small>" +
     (a ? '<small class="gp-atouts" style="margin-top:6px"><span class="at">' + a.atout.ico + " " + esc(a.atout.nom) + ' +1</span></small>' : indiceCircuit(k) ? htmlIndice(indiceCircuit(k), true) : "") + "</div></div>";
 }
+/* lot68 (Théo, 21/11) : pendant la fenêtre, qui a déjà posé sa carte du mois k — jamais laquelle (dos de carte ou « en attente ») ;
+   disparaît avec la fenêtre (révélation le jourLimite). On ne lit que « posée ou pas » : ni l'id ni la cible ne sortent d'ici. */
+function htmlPeloton(y, k, qui) {
+  if (!k || !D || !D.personnes || D.personnes.length < 2) return "";
+  const l = D.personnes.map(p => { const c = carteDe(y, p.nom, k); return { nom: p.nom, ok: !!(c && (c.c || c.cache)) }; }), n = l.filter(x => x.ok).length;
+  return '<div class="st-pel"><span class="st-pel-t">' + (n === l.length ? "Tout le monde a posé sa carte" : "Cartes posées") + " <b>" + n + "/" + l.length + "</b></span>" +
+    '<div class="st-pel-l">' + l.map(x => '<span class="st-pel-p' + (x.ok ? " ok" : "") + (x.nom === qui ? " ici" : "") + '" data-bdg="' + esc(x.nom + (x.ok ? " : carte posée, face cachée jusqu'au " + jourLimite(k) + " " + moisLong(k).replace(/ \d{4}$/, "") + "." : " : pas encore de carte.")) + '">' +
+      avatar(x.nom) + '<i class="st-pel-c" aria-hidden="true">' + (x.ok ? "✓" : "…") + "</i><small>" + esc(x.nom) + "</small></span>").join("") + "</div></div>";
+}
 function htmlStand(y) {
   const qui = moiPilote();
   if (!qui || !D.personnes.some(p => p.nom === qui)) return '<div class="vide">Choisis ton nom dans les réglages pour jouer.</div>';
@@ -536,7 +545,7 @@ function htmlStand(y) {
     const c = carteDe(y, qui, k), d = duelDe(y, qui, k), j = ap ? null : joursRestants(k);
     etat = '<div class="st-etat ouvert"><div class="st-h"><span class="st-feu"></span><b>Fenêtre ouverte<small>pour ' + esc(moisLong(k)) + "</small></b>" + (j !== null ? "<em>" + (j <= 1 ? "dernier jour" : "il reste " + j + " jours") + "</em>" : "<em>aperçu</em>") + "</div>" +
       '<div class="st-check"><span class="' + (c && c.c ? "ok" : "") + '">' + (c && c.c ? "✓ Carte posée" : "🃏 Carte à poser") + "</span>" + (regleVisible("duels") && regleActive("duels", k) ? '<span class="' + (d && d.cible ? "ok" : "") + '">' + (d && d.cible ? "✓ Duel lancé" : "⚔️ Duel (facultatif)") + "</span>" : "") + "</div>" +
-      "<small>Jusqu'au " + "1<sup>er</sup>" + " " + esc(moisLong(k).replace(/ \d{4}$/, "")) + " inclus. Tout reste caché jusqu'à la révélation, le " + jourLimite(k) + ".</small>" + (k === CHAUFFE_K ? "" : htmlGPStand(k)) + "</div>";   // v17.46 (Théo) : au tour de chauffe, pas de rappel du circuit (ni atout ni piège)
+      (ap ? "" : htmlPeloton(y, k, qui)) + "<small>Jusqu'au " + "1<sup>er</sup>" + " " + esc(moisLong(k).replace(/ \d{4}$/, "")) + " inclus. Tout reste caché jusqu'à la révélation, le " + jourLimite(k) + ".</small>" + (k === CHAUFFE_K ? "" : htmlGPStand(k)) + "</div>";   // v17.46 (Théo) : au tour de chauffe, pas de rappel du circuit (ni atout ni piège)
   } else {
     const autre = moisCarteOuvert();
     const d = new Date(), kc = d.getFullYear() * 100 + d.getMonth() + 1, revele = d.getDate() >= jourLimite(kc) && Math.floor(kc / 100) === y && regleActive("duels", kc);

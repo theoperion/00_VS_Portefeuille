@@ -77,7 +77,7 @@ Double validation FACTUELLE par oui/non, chaque point prouvé par capture ou tes
 - `moi.js` (onglet Moi : rappels, assurance vie, prêt, marchés, séance/semaine), `moteur.js` (calculs),
   `piste.js` (moteur 3D WebGL maison + carte 2D des circuits), `css/versus.css`.
 - **Version** : `version.js` (`app` + `date`) — seul endroit à changer à chaque mise en ligne (sert aussi au cache
-  hors connexion `sw.js`). Version actuelle : **20.10**.
+  hors connexion `sw.js`). Version actuelle : **20.11**.
 - Le calcul des points est partagé avec le serveur : `outils/extraire-podium.js` (dans app_scripts) régénère
   `versus/PodiumCommun.js` à partir de l'appli. Un changement de règle de score ⇒ remettre le serveur en ligne.
 
@@ -186,6 +186,7 @@ films, séries, la bande des 4 ; jamais de licence). Pas de copie « à l'identi
 - Maquettes de travail : scratchpad `galerie/` (perdu avec la session ; les peintres sont dans `piste.js`, rendu via `tpeints.js`, `PEINT=clé`, `ANIM=1 ATT=2600`).
 
 ## À venir
+- **Défilement horizontal du Podium à 390 px (repéré au lot68, 21/11)** : la page fait ~455 px de large (déjà avant le lot68) : à corriger.
 - **Variation de clôture par ligne dans l'historique (Théo, 21/11, semaine prochaine)** : le script de Théo enregistre chaque jour, en plus de l'instantané de 18 h, la variation de clôture de chaque ligne, pour que le détail 5 j des jours ANCIENS colle aussi à ce qu'affichait « Jour » (écart dû à la crypto 24 h/24 et aux VL de l'AV). v20.10 a déjà aligné la DERNIÈRE séance sur la carte Jour.
 - **Événements de course et accessoires des pilotes en 3D (Théo, 21/11, semaine prochaine)** : aujourd'hui seulement en 2D (`EVENEMENTS` de piste.js : bâche, ver, escalier, foudre… ; `SKINS_TETE` sur les têtes). Les ajouter aux vues Hélico/Visite circuit par circuit, EN MÊME TEMPS que la refonte 3D de chaque décor (ordre : Dune → Ratatouille → Odyssée → …), pas les 13 d'un coup.
 - **Vidéo tuto-teaser « Moi » (Théo 21/11, APRÈS les événements temporaires)** : un TUTO de quelques minutes (pas 45 s), avec son, pour Clément et Devlin (toutes les fonctions ajoutées) qui donne aussi envie à Kévin : uniquement les fonctions COMMUNES à tous (pas de spécificités d'un joueur : pas d'Artema, pas de prêt…), par chapitres courts (Aujourd'hui : carte du haut, périodes, barres, marchés, levier ; « + » et import d'avis ; Patrimoine ; Stats ; Missions/cosmétiques ; cloche/échéances ; événements) ; FAUSSES données réalistes et modestes, patrimoine plafonné à ~10 000 €, jamais les chiffres de personne ; PAS de liste « quoi envoyer » à la fin (Théo la donnera à Kévin lui-même s'il est intéressé). Méthode des teasers (Playwright + bande-son synthétisée) MAIS direction artistique DIFFÉRENTE du Versus (pas épique) : chill, posée, mode tuto (musique douce, rythme calme, titres de chapitres sobres) ; le Conseil tranche les détails. Montrer à Théo avant envoi.
