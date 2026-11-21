@@ -2772,7 +2772,7 @@ function htmlArtema() {
   const cible = avantPhoto ? ARTEMA.photo[1] : E.arrete ? E.arrete.pay : p ? p.ev : null, rb = cible ? rebours(E.auj, cible) : null;
   const rbTxt = rb ? (rb.total <= 0 ? "aujourd'hui" : rb.y ? rb.y + " an" + (rb.y > 1 ? "s" : "") : rb.m ? rb.m + " mois" : rb.total + " j") : "—", rbSous = rb && rb.total > 0 ? (rb.y ? (rb.m ? rb.m + " mois · " : "") + rb.j + " j" : rb.m ? rb.j + " j" : "") : "";
   let rdvTxt;
-  if (avantPhoto) rdvTxt = "<b>2, 3 et 4 décembre 2026</b> : photo de départ de l'indice. Ensuite, rien ne se passe jusqu'au premier rendez-vous, le 7 déc. 2029.";
+  if (avantPhoto) rdvTxt = "<b>2, 3 et 4 décembre 2026</b> : photo de départ de l'indice. Ensuite, rien ne se passe jusqu'au premier rendez-vous, le 7 déc. 2029.<br>Pour sortir à ce rendez-vous, l'indice doit être <b>au moins à son niveau de départ</b> (0 % ou plus : pas besoin qu'il monte) → +28,5 %. Sinon, on retente chaque année, avec 9,5 % de plus.";
   else if (E.arrete) rdvTxt = "<b>Argent versé vers le " + jourCourt(E.arrete.pay) + "</b> (si Artema s'est bien arrêté le " + jourCourt(E.arrete.ev, true) + ")." + (p ? "<br>Sinon, prochain rendez-vous le " + jourCourt(p.ev) + "." : "");
   else if (!p) rdvTxt = "Artema est terminé.";
   else {
@@ -2809,7 +2809,7 @@ function htmlArtema() {
     "<h4>L'indice, saisie après saisie</h4>" + htmlCourbeArtema(E) +
     '<details class="art-d"><summary>Tous les rendez-vous</summary>' + tableau + "</details>" +
     '<details class="art-d"><summary>Comment marche Artema ?</summary><div class="art-cas"><div><i>📸</i>Déc. 2026 : photo de départ de l\'indice (moyenne des clôtures du 2 au 4 décembre).</div><div><i>⏳</i>Jusqu\'en 2029 : rien ne se passe, la valeur bouge avec les marchés.</div><div><i>🎯</i>Chaque début décembre de 2029 à 2033 : si l\'indice est au moins à son départ → Artema s\'arrête (remboursement anticipé automatique), capital + gain. Le gain grossit de 9,5 points par année d\'attente.</div><div><i>🏁</i>1er décembre 2034 : au moins au départ → +76 % · entre −40 % et 0 → capital · sous 60 % du départ → perte égale à toute la baisse.</div><div><i>🙅</i>Rien à décider : sortir avant se fait au prix du marché (protection perdue).</div></div></details>' +
-    '<div class="art-mentions">Montants estimés (tes parts, 0,80 %/an de frais du contrat), avant impôts et prélèvements sociaux. · L\'indice retire 50 points par an : il monte moins vite que la bourse, c\'est normal. · Capital soumis au risque de défaut de Natixis. · Fiscalité : rien à l\'arrêt d\'Artema, l\'argent reste dans le contrat.</div>' +
+    '<div class="art-mentions">Montants estimés (tes parts, 0,80 %/an de frais du contrat), avant impôts et prélèvements sociaux. · L\'indice retire 50 points par an à son NIVEAU (pas 50 %), un peu chaque jour : vers 1 250 points, c\'est environ 4 % par an (plus si l\'indice baisse, moins s\'il monte). Ce frein finance le gain promis et la protection : l\'indice monte donc moins vite que la bourse, c\'est normal. · Capital soumis au risque de défaut de Natixis. · Fiscalité : rien à l\'arrêt d\'Artema, l\'argent reste dans le contrat.</div>' +
     "</div></div>";
 }
 function brancherArtema(v) {
