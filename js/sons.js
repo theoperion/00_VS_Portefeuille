@@ -35,22 +35,22 @@ const SONS = (() => {
   }
   const bruit = () => bruitDe(ctx);
   /** une note : fréquence (ou [début, fin] pour une glissade), durée, forme, volume, décalage */
-  function note(f, dur, type, vol, dt) {
+  function note(f, dur, type, vol, dt, out) {   // lot 62 : out = une sortie à part (sinon la sortie générale)
     const c = audio(); if (!c) return;
     const t = c.currentTime + (dt || 0), o = c.createOscillator(), g = c.createGain();
     o.type = type || "sine";
     if (Array.isArray(f)) { o.frequency.setValueAtTime(f[0], t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f[1]), t + dur); } else o.frequency.setValueAtTime(f, t);
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol || .3, t + Math.min(.02, dur / 4)); g.gain.exponentialRampToValueAtTime(.0005, t + dur);
-    o.connect(g); g.connect(maitre); o.start(t); o.stop(t + dur + .05);
+    o.connect(g); g.connect(out || maitre); o.start(t); o.stop(t + dur + .05);
   }
   /** un souffle de bruit filtré : durée, fréquence du filtre (ou [début, fin]), volume, décalage, attaque */
-  function souffle(dur, fq, vol, dt, att, type) {
+  function souffle(dur, fq, vol, dt, att, type, out) {
     const c = audio(); if (!c) return;
     const t = c.currentTime + (dt || 0), s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
     s.buffer = bruit(); s.loop = true; fl.type = type || "bandpass"; fl.Q.value = 1.2;
     if (Array.isArray(fq)) { fl.frequency.setValueAtTime(fq[0], t); fl.frequency.exponentialRampToValueAtTime(fq[1], t + dur); } else fl.frequency.value = fq;
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol || .3, t + (att || .02)); g.gain.exponentialRampToValueAtTime(.0005, t + dur);
-    s.connect(fl); fl.connect(g); g.connect(maitre); s.start(t); s.stop(t + dur + .05);
+    s.connect(fl); fl.connect(g); g.connect(out || maitre); s.start(t); s.stop(t + dur + .05);
   }
   function vibrer(motif) { if (!vibreOK() || !navigator.vibrate) return; try { navigator.vibrate(motif); } catch (e) { /* rien */ } }
   function plus_tard(ms, fn) { const id = setTimeout(() => { timers.delete(id); fn(); }, ms); timers.add(id); return id; }
@@ -582,8 +582,30 @@ const SONS = (() => {
       const c = audio(); if (c) try { if (mus && !mus.fini) mus.finale(); else jingleSur(c, maitre, c.currentTime + .01, cleBA, "accord", []); } catch (e) { /* rien */ }
       vibrer(110); },
     ev(k) { try { if (EV[k]) EV[k](); } catch (e) { /* rien */ } },
-    succes() { note(1046, .12, "sine", .12); note(1568, .25, "sine", .12, .1); vibrer(30); }
+    succes() { note(1046, .12, "sine", .12); note(1568, .25, "sine", .12, .1); vibrer(30); },
+    /* lot 62 · « Journées folles » de Moi (tout synthétisé, sur un bus à part que « Passer » coupe net) */
+    /** l'incendie : grondement grave, souffle des flammes, crépitements ; fort = un coup sourd au début */
+    folleFeu(dur, fort) {
+      const c = folleBus(); vibrer(fort ? [90, 50, 90, 50, 320] : [60, 40, 60, 40, 160]); if (!c) return;
+      if (fort) note([95, 38], 1.4, "sine", .5, 0, fBus);
+      souffle(dur, [170, 85], .34, 0, .6, "lowpass", fBus); souffle(dur * .9, [420, 900], .12, .15, .8, "bandpass", fBus);
+      for (let i = 0, n = fort ? 80 : 50; i < n; i++) souffle(.03 + Math.random() * .03, 2200 + Math.random() * 3800, .07 + Math.random() * .13, .2 + Math.random() * (dur - .6), .002, "highpass", fBus);
+    },
+    /** une fusée : sifflet de dtL à dtB (secondes), éclatement, petits crépitements ; une vibration brève à l'éclatement */
+    fusee(dtL, dtB, grosse) {
+      plus_tard(dtB * 1000, () => vibrer(grosse ? 40 : 18));
+      const c = fBus ? audio() : folleBus(); if (!c) return;
+      note([480 + Math.random() * 120, 1500 + Math.random() * 600], Math.max(.2, dtB - dtL), "sine", .035, dtL, fBus);
+      souffle(.55, [1800, 220], grosse ? .5 : .36, dtB, .003, "lowpass", fBus); note([150, 48], .4, "sine", grosse ? .4 : .28, dtB, fBus);
+      for (let i = 0; i < (grosse ? 16 : 9); i++) souffle(.025, 3000 + Math.random() * 4000, .05 + Math.random() * .07, dtB + .25 + Math.random() * .9, .002, "highpass", fBus);
+    },
+    /** l'aurore du bouquet final : un accord doux et lent (pas de jingle ni de musique de l'ère d'or) */
+    aurore(dt, dur) { const c = fBus ? audio() : folleBus(); if (!c) return; [220, 277.2, 329.6, 440].forEach((f, i) => { note(f, dur, "sine", .05, dt + i * .15, fBus); note(f * 1.005, dur, "triangle", .018, dt + i * .15, fBus); }); },
+    folleStop() { if (!fBus || !ctx) return; const b = fBus; fBus = null; try { const t = ctx.currentTime; b.gain.cancelScheduledValues(t); b.gain.setValueAtTime(b.gain.value, t); b.gain.linearRampToValueAtTime(0, t + .25); setTimeout(() => { try { b.disconnect(); } catch (e) { /* rien */ } }, 400); } catch (e) { /* rien */ } }
   };
+  /** lot 62 : le bus des journées folles (un nouveau à chaque effet) */
+  let fBus = null;
+  function folleBus() { const c = audio(); if (!c) return null; try { if (fBus) fBus.disconnect(); } catch (e) { /* rien */ } fBus = c.createGain(); fBus.gain.value = 1; fBus.connect(maitre); return c; }
 
   /* ---------- boutons : 🔊 de la course (data-son) et Réglages ---------- */
   function majBouton(b) { const on = actif(); b.textContent = on ? "🔊" : "🔇"; b.setAttribute("aria-pressed", String(on)); b.setAttribute("aria-label", on ? "Couper le son" : "Activer le son"); }
