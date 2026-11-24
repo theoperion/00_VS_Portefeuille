@@ -9763,10 +9763,11 @@
      Un rotor (ctx.rotors.push dans un decorXxx) qui porte a.vivant = (x, t, C) => matrice | null est replacé à chaque image d'après la course,
      au lieu de suivre matRotor. x = ce rotor (on peut y garder un état d'une image à l'autre : x.p, x.cap…), t = temps en secondes,
      C = { V: voitures affichées [{ nom, x, y, z, cap, s, rang }], enCourse (un scénario de course se joue), e (avancement 0 → 1 ; 1 hors course),
-     premier(), dernier() }. Sans voiture (📺 Visite), V est vide : le décor reprend sa vie « au repos ». C n'est calculé qu'une fois par image,
+     premier(), dernier() } (e reste figé pendant la pause ⏸). Rendu : une matrice, ou null pour cacher l'objet à cette image ; pour garder
+     l'animation ordinaire, rendre matRotor(x, t) (on peut d'abord déplacer x.x, x.y, x.z, x.cap). Aide : vivantVise(). Sans voiture (📺 Visite), V est vide : le décor reprend sa vie « au repos ». C n'est calculé qu'une fois par image,
      et seulement si un rotor vivant existe. Ne jamais modifier les voitures : c'est le décor qui réagit, jamais le résultat. */
   function contexteVivant(I, VV) {
-    const a = I.anim, e = a ? clamp((performance.now() - a.t0) / a.duree, 0, 1) : 1, L = VV.map(x => ({ nom: x.v.nom, x: x.x, y: x.y, z: x.z, cap: x.cap, s: x.s, rang: x.rang || 99 }));
+    const a = I.anim, e = a ? clamp(((I.suspendu || performance.now()) - a.t0) / a.duree, 0, 1) : 1, L = VV.map(x => ({ nom: x.v.nom, x: x.x, y: x.y, z: x.z, cap: x.cap, s: x.s, rang: x.rang || 99 }));
     return { V: L, enCourse: !!(a && a.scen), e, premier: () => L.slice().sort((p, q) => p.rang - q.rang)[0], dernier: () => L.slice().sort((p, q) => q.rang - p.rang || p.s - q.s)[0] };
   }
   /** aide du crochet vivant (Anneau, 24/11) : a.vivant = vivantVise("premier" | "dernier", atteint?) → l'objet se tourne en douceur (autour de la
