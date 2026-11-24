@@ -704,7 +704,7 @@ function victoires(env, jusqua, depuis) {
     const bests = tri.length > 1 ? tri.filter(z => tri[0].r - z.r < 1e-9).map(z => z.nom) : [];   // égalité en tête : victoire pour chacun (comme au Podium)
     D.personnes.forEach(p => {
       if (bests.includes(p.nom)) { res[p.nom].victoires++; courant[p.nom] = (courant[p.nom] || 0) + 1; res[p.nom].record = Math.max(res[p.nom].record, courant[p.nom]); }
-      else if (du.some(x => x.nom === p.nom)) courant[p.nom] = 0;
+      else courant[p.nom] = 0;   // v20.33 (Théo, 24/11) : un mois d'absence casse aussi la série de victoires
     });
     // en tête du classement de l'année à la fin de ce mois
     const y = Math.floor(k / 100), deb = (y - 1) * 100 + 12;

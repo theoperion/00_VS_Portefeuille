@@ -21,7 +21,7 @@ Chaque mois, les pilotes sont classés sur la **performance de leur portefeuille
 
 **Points du mois = place + 🎯 + carte (≤ +4) + bonus.** Ex æquo : mêmes points. Un mois ne descend jamais sous 0. Nouveau pilote : il entre en jeu à son premier mois complet (le mois d'ouverture ou du premier versement ne compte pas ; décision de Théo, 24/11/2026). Égalité au championnat : le plus de victoires, puis la meilleure performance cumulée.
 
-**Relevé en retard (décision de Théo, 24/11/2026) :** tant qu'il manque un relevé, les résultats du mois restent cachés pour tout le monde (suspense). **7 jours après le jour du relevé**, le mois se joue sans le retardataire : il ne marque rien ce mois-là, et il est recompté s'il saisit son relevé ensuite (sauf un exclusif déjà gagné, qui reste acquis). Aspiration : on vise le premier pilote présent devant soi. « Le huit » : cumul des deux mois seulement si chacun a joué le mois d'avant.
+**Relevé en retard (décision de Théo, 24/11/2026) :** tant qu'il manque un relevé, les résultats du mois restent cachés pour tout le monde (suspense). **7 jours après le jour du relevé**, le mois se joue sans le retardataire : il ne marque rien ce mois-là, et il est recompté s'il saisit son relevé ensuite (sauf un exclusif déjà gagné, qui reste acquis). Aspiration : on vise le premier pilote présent devant soi. « Le huit » : cumul des deux mois seulement si chacun a joué le mois d'avant. Un mois d'absence **casse les séries** (victoires, mois sans finir dernier) mais ne compte **pas** comme une dernière place (Increvable).
 
 ## 🃏 Les cartes (une par mois, au plus +4)
 

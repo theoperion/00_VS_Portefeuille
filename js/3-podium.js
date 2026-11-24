@@ -150,6 +150,7 @@ function championnat(y) {
       const ok3 = !x.dernier; SERIE[x.nom] = ok3 ? (SERIE[x.nom] || 0) + 1 : 0;
       if (!ch && ok3 && regleActive("serie", k) && SERIE[x.nom] % 3 === 0) { x.serie = SERIE[x.nom]; x.p += 1; }
     });
+    Object.keys(SERIE).forEach(n => { if (!l.some(x => x.nom === n)) SERIE[n] = 0; });   // v20.33 (Théo, 24/11) : absent ce mois-là → la série repart de zéro
     // pronostic du mois : +1 vainqueur juste (victoire partagée comprise), +1 si juste sur « le S&P 500 fait-il plus de +1 % ? » (V15)
     // ⏱️ pole position (V15) : le chiffre le plus proche du S&P 500 du mois gagne +1 (partagé en cas d'égalité)
     if (!ch && regleActive("prono", k)) {
