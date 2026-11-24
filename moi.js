@@ -1335,7 +1335,19 @@ function cleRefusee(msg) { stock.set(K.refus, "1"); erreur = "Ton fichier a refu
 /* v16.83 · changement d'adresse ou de clé pendant une lecture : connecter() augmente la génération et coupe la lecture en cours ;
    une réponse d'une génération (ou d'une adresse) périmée est jetée, puis on relit le bon fichier */
 let generation = 0, ctrlLecture = null;
+/** v20.34 (Théo, 24/11) · le Versus peut donner à un joueur la NOUVELLE adresse de son fichier Moi (ex. Kévin passe au profil complet) :
+ *  l'appli s'y range toute seule, avec la même clé ; l'ancienne copie locale est oubliée. Jamais en simulation, jamais pour un autre joueur. */
+function adopterNouvelleAdresse() {
+  try {
+    const Dv = dVersus(), na = Dv && Dv.moiAdresse;
+    if (!na || !configure() || (typeof simulationM === "function" && simulationM())) return false;
+    if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(na) || adresse() === na) return false;
+    stock.set(K.api, na); stock.del(K.cache); stock.del(K.cacheLe); stock.del(K.refus); RAW = null; M = null; generation++;
+    return true;
+  } catch (e) { return false; }
+}
 async function charger(frais) {
+  if (adopterNouvelleAdresse()) frais = true;
   if (!configure() || (stock.get(K.refus) && !frais)) return;
   if (enCours) { if (frais) rechargerApres = true; return; }
   enCours = true; erreur = "";
