@@ -764,6 +764,7 @@ async function trouverTresor(t, b) {
 const TAP_EX = { type: "gemme", enigme: "Énigme d'exemple : je suis rond, je brille quand la nuit tombe, et pourtant je ne suis pas la lune.",
   ind: "Indice d'exemple : lève les yeux vers ce qui est le plus haut.", ch: [{ nom: "Pilote A", j: 20271104 }, { nom: "Pilote B", j: 20271109 }] };
 function ouvrirApercuTresor() {
+  if (!apercuAutorise()) return;   // v20.40 : double sécurité
   if (TRESOR_APERCU) { quitterApercuTresor(true); return; }
   if (typeof vueActive === "function" && vueActive() !== "trophees") allerA("trophees");
   if (saisonVisible() && ongletPodium() !== "gp") { ETAT.podium = "gp"; garder(); rendreTrophees(); }
@@ -1235,6 +1236,7 @@ function fermerPleinGP() {
 
 /* ---------- v16.81 · ADMIN : visite des circuits 2027 (2D, hélico 3D, Visite rapprochée), sans attendre le mois ni la saison ---------- */
 function ouvrirCircuits2027(ci0) {
+  if (!apercuAutorise()) return;   // v20.40 : double sécurité (en plus du bouton réservé à l'admin)
   const MOIS_C = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
   const liste = [["abudhabi", "Chauffe · déc. 26"]].concat(CAL_GP.map((c, i) => [c, MOIS_C[i] + " 27"]));
   let ci = ci0 || liste[0][0], vue = "2d", api = null;
@@ -1290,6 +1292,7 @@ function verifierFeteChauffe(apresCourse) {
 }
 /** aperçu admin : la vraie si la manche est définitive, sinon un exemple inventé (ordre fixe tiré des prénoms, aucun chiffre) ; rien n'est gardé */
 function apercuFeteChauffe() {
+  if (!apercuAutorise()) return;   // v20.40 : double sécurité
   const def = chauffeDefinitive(); feteChauffe(def ? def.podium : fauxVerdict(CHAUFFE_K).du.map(x => x.nom).slice(0, 3), !def, def ? def.rang : null);
 }
 const BONNET_SVG = '<svg class="fc-bonnet" viewBox="0 0 64 48" aria-hidden="true"><path d="M8 38C10 20 22 7 38 6C47 6 54 12 57 22C52 18 47 17 44 20C45 27 46 33 46 38Z" fill="#D62839"/><path d="M38 6C47 6 54 12 57 22C52 18 47 17 44 20" fill="#A51C2B"/><rect x="4" y="34" width="46" height="10" rx="5" fill="#F7F4EE"/><circle cx="57" cy="23" r="6" fill="#F7F4EE"/></svg>';

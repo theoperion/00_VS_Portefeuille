@@ -14,7 +14,7 @@ const SAISON = { premiere: 2027, depart: new Date(2027, 0, 1), chauffe: new Date
 const CHAUFFE_K = 202612;
 function saisonOuverte() { return Date.now() >= SAISON.depart.getTime(); }
 function chauffeOuverte() { return Date.now() >= SAISON.chauffe.getTime(); }
-function apercuSaison() { return !window.APERCUS_FINIS && !saisonOuverte() && estAdmin() && stock.get("versus.apercuSaison") === "1"; }
+function apercuSaison() { return !window.APERCUS_FINIS && !saisonOuverte() && estAdmin() && apercuAutorise() && stock.get("versus.apercuSaison") === "1"; }
 function saisonVisible() { return saisonOuverte() || apercuSaison() || chauffeOuverte(); }
 /** La « saison » 2026 hors aperçu admin, c'est le tour de chauffe : décembre seul, sans défis, badges ni exclusifs */
 function estChauffe(y) { return y === SAISON.premiere - 1 && !apercuSaison(); }

@@ -219,6 +219,9 @@ function gestionAdmin() { return vraiAdmin() && !vueJoueur() && !window.DATE_SIM
 function vraiAdmin() { return typeof D === "undefined" || !D || !D.session || D.session.role === "admin"; }
 /** Mode admin : la clé d'administration reste, mais par défaut l'appli se comporte comme pour un joueur (réglage « Mode admin ») */
 function adminActif() { try { return vraiAdmin() && sessionStorage.getItem("versus.adminOn") === "1"; } catch (e) { return false; } }
+/** v20.40 (audit, double sécurité) : un aperçu admin (Circuits 2027, Voir décembre, trésor, fête, saison simulée) ne s'ouvre que si
+    le SERVEUR a dit « admin » pour cette session ET que le mode admin est allumé. Sans données (pas encore chargées), c'est non. */
+function apercuAutorise() { try { return typeof D !== "undefined" && !!D && !!D.session && D.session.role === "admin" && sessionStorage.getItem("versus.adminOn") === "1"; } catch (e) { return false; } }
 /** Le joueur que l'admin incarne quand le mode admin est coupé */
 function joueurAdmin() { const l = (typeof D !== "undefined" && D && D.personnes) || []; return (l.find(p => /^th[ée]o$/i.test(p.nom)) || l[0] || {}).nom; }   // la clé admin est Théo, point
 /** Qui je suis vraiment : mon joueur, jamais celui que je regarde (l'admin reste son propre joueur, Théo) */
