@@ -87,7 +87,7 @@ function ouvrirRecap(k) {
       (li.lignes.length > 8 ? '<p class="wr-aide">+ ' + (li.lignes.length - 8) + " autres lignes</p>" : "") + '<p class="wr-aide">Lignes au ' + esc(isoFr(li.date)) + " · % = poids dans son portefeuille</p>"
       : '<p class="wr-aide">Lignes non partagées ce mois-ci.</p>';
     L.push({ c: couleur(x.nom), h: '<div class="wr-k">' + (j + 1) + (j ? "e" : "er") + " du mois" + (rg ? " · " + rg + (rg > 1 ? "e" : "er") + " sur l'année" : "") + '</div><div class="wr-mid" style="color:' + couleur(x.nom) + '">' + esc(x.nom) + '</div><div class="wr-big ' + cls(x.r) + '">' + pct(x.r) + "</div>" +
-      '<p class="wr-p">Portefeuille : <b>' + eur(cur.val) + "</b>" + (cur.verse ? " · versé ce mois-ci : <b>" + eur(cur.verse) + "</b>" : "") + (ok(iR) ? " · " + (x.r > iR ? "devant" : "derrière") + " " + esc(nomI) : "") + ".</p>" + lignes });
+      '<p class="wr-p">' + (estPrive(x.nom) ? (ok(iR) ? (x.r > iR ? "Devant" : "Derrière") + " " + esc(nomI) + "." : "") : "Portefeuille : <b>" + eur(cur.val) + "</b>" + (cur.verse ? " · versé ce mois-ci : <b>" + eur(cur.verse) + "</b>" : "") + (ok(iR) ? " · " + (x.r > iR ? "devant" : "derrière") + " " + esc(nomI) : "") + ".") + "</p>" + lignes });
   });
   // 4. lignes stars (seulement si des lignes sont partagées)
   const avecR = toutes.filter(l => ok(l.r));
@@ -331,7 +331,7 @@ function rendreFiche() {
 
     v.innerHTML = chips + (typeof ficheMillion === "function" ? ficheMillion(p.nom) : "") + (typeof vitrineFiche === "function" ? vitrineFiche(p.nom) : "") + filtres(true) +
       '<div class="periode">' + esc(textePeriode(deb, finP, s.n)) + (s.debutK && deb && s.debutK > cleMoins(deb, -1) ? " · enveloppe ouverte plus tard" : "") + "</div>" +
-      '<div class="hero"><span class="eyebrow">' + esc(ENVELOPPES[env]) + " · " + esc(p.nom) + '</span><span class="big" data-cv="' + s.valeur + '" data-cf="eur">' + eur(s.valeur) + '</span><div class="sous"><span class="badge ' + sens(s.pvPeriode) + '">' + eur(s.pvPeriode, 0, true) + " · " + pct(s.twr) + "</span><span>" + ({ mois: "sur 1 mois", "6m": "sur 6 mois", ytd: "depuis janvier", "12m": "sur 1 an", tout: "depuis le début" }[ETAT.per] || "sur la période") + " · versements exclus</span></div></div>" +   // v20.15 (Théo) : la valeur reste fixe, la variation suit la période
+      '<div class="hero"><span class="eyebrow">' + esc(ENVELOPPES[env]) + " · " + esc(p.nom) + '</span><span class="big"' + (estPrive(p.nom) ? "" : ' data-cv="' + s.valeur + '" data-cf="eur"') + ">" + (estPrive(p.nom) ? pct(s.twr) : eur(s.valeur)) + '</span><div class="sous"><span class="badge ' + sens(estPrive(p.nom) ? s.twr : s.pvPeriode) + '">' + (estPrive(p.nom) ? "🔒 montants privés" : eur(s.pvPeriode, 0, true) + " · " + pct(s.twr)) + "</span><span>" + ({ mois: "sur 1 mois", "6m": "sur 6 mois", ytd: "depuis janvier", "12m": "sur 1 an", tout: "depuis le début" }[ETAT.per] || "sur la période") + " · versements exclus</span></div></div>" +   // v20.15 (Théo) : la valeur reste fixe, la variation suit la période
       (s.n ? '<div class="tuiles">' +
         // lot69 (Théo : « sobre, droit au but ») : libellés courts, une ligne par tuile (valeur + une ligne courte), plus de graphique
         tuile("Performance TWR", pct(s.twr), sens(s.twr), "MWR <b>" + pct(s.mwr) + "</b>" + timingVersements(s)) +
@@ -339,11 +339,11 @@ function rendreFiche() {
         tuile("Pire baisse", pct(s.baisseMax), sens(s.baisseMax), "Actuelle <b>" + pct(s.baisseActuelle) + "</b>") +
         tuile("Volatilité", volTxt(s), "", s.n < RECUL ? "moins de " + RECUL + " mois" : "Sharpe <b>" + sharpeTxt(s) + "</b>") +
         tuile("Meilleur mois · " + moisCourt(s.meilleur.k), pct(s.meilleur.r), sens(s.meilleur.r), "Pire · " + moisCourt(s.pire.k) + " <b>" + pct(s.pire.r) + "</b>") +
-        tuile("Plus-value totale", eur(s.pvLatente, 0, true), sens(s.pvLatente), (ok(s.pvLatentePct) ? "<b>" + pct(s.pvLatentePct) + "</b> · " : "") + eur(s.verse) + " versés") +   // v20.15 : la plus-value de la période est montée sous la valeur
+        (estPrive(p.nom) ? tuile("Gain total", pct(s.pvLatentePct), sens(s.pvLatentePct), "🔒 montants privés") : tuile("Plus-value totale", eur(s.pvLatente, 0, true), sens(s.pvLatente), (ok(s.pvLatentePct) ? "<b>" + pct(s.pvLatentePct) + "</b> · " : "") + eur(s.verse) + " versés")) +   // v20.15 : la plus-value de la période est montée sous la valeur
         "</div>" : '<div class="vide">Pas de rendement sur cette période.</div>') +
       '<div class="f-plis">' +
       (env === 0 && envs.length > 1 ? pli("env", "Toutes enveloppes", "même période", '<div class="scroll-x"><table class="tab"><thead><tr><th>Enveloppe</th><th>TWR</th><th>Volatilité</th><th>Valeur</th><th>Plus-value</th><th>Poids</th></tr></thead><tbody>' +
-        envs.map(x => "<tr><td>" + esc(x.nom) + '</td><td class="' + sens(x.s.twr) + '">' + pct(x.s.twr) + "</td><td>" + (x.s.n ? volTxt(x.s) : "—") + "</td><td>" + eur(x.s.valeur) + '</td><td class="' + sens(x.s.pvLatente) + '">' + eur(x.s.pvLatente, 0, true) + "<br><small>" + pct(x.s.pvLatentePct) + "</small></td><td>" + pct(totalV ? x.s.valeur / totalV.valeur : null, 0, false) + "</td></tr>").join("") +
+        envs.map(x => "<tr><td>" + esc(x.nom) + '</td><td class="' + sens(x.s.twr) + '">' + pct(x.s.twr) + "</td><td>" + (x.s.n ? volTxt(x.s) : "—") + "</td><td>" + eurDe(p.nom, x.s.valeur) + '</td><td class="' + sens(x.s.pvLatente) + '">' + eurDe(p.nom, x.s.pvLatente, 0, true) + "<br><small>" + pct(x.s.pvLatentePct) + "</small></td><td>" + pct(totalV ? x.s.valeur / totalV.valeur : null, 0, false) + "</td></tr>").join("") +
         "</tbody></table></div>" +
         '<div class="stack" role="img" aria-label="Répartition">' + envs.filter(x => x.nom !== "Portefeuille").map((x, j) => '<i title="' + esc(x.nom) + '" style="flex:' + x.s.valeur + ";background:color-mix(in srgb, " + couleur(p.nom) + " " + (100 - j * 22) + '%, var(--panel))"></i>').join("") + "</div>") : "") +
       pli("mois", "Mois par mois", esc(ENVELOPPES[env]), '<div class="scroll-x"><table class="grille"><thead><tr><th></th>' + MOIS.map(m => "<th>" + m + "</th>").join("") + "<th>Année</th></tr></thead><tbody>" +
@@ -411,7 +411,7 @@ function rendreJournal() {
       const src = st.etat === "vide" ? "Pas encore de relevé" : st.j ? (st.j.action === "Import auto" ? "Import automatique le " : "Saisi dans l'app le ") + dateHeure(new Date(st.j.t)) + (st.j.action === "Saisie" ? " par " + esc(st.j.par) : "") + (st.etat === "modif" ? " · jusqu'au " + dateHeure(st.lim) : "") : "Saisi dans le Sheet";
       const actions = !peutModifier(p.nom) || SOURCE !== "api" ? "" : st.etat === "vide" ? '<button class="lien" type="button" data-jsaisir="' + r[0] + '">Saisir</button>'
         : st.etat === "modif" ? '<button class="lien" type="button" data-jsaisir="' + r[0] + '">Modifier</button><button class="lien danger" type="button" data-jannuler="' + st.j.ligne + '">' + (aAnnuler === st.j.ligne ? "Confirmer l'annulation" : "Annuler la saisie") + "</button>" : "";
-      return '<div class="jl"><span class="m">' + esc(moisLong(r[0])) + '</span><span class="st">' + badge + '</span><span class="s">' + src + '</span><span class="v">' + (st.etat === "vide" ? "" : eur(total(r)) + '<br><small class="muted" style="font-weight:400">versé ' + eur(verse(r), 0, true) + "</small>") + "</span>" + (actions ? '<div class="a">' + actions + "</div>" : "") + "</div>";
+      return '<div class="jl"><span class="m">' + esc(moisLong(r[0])) + '</span><span class="st">' + badge + '</span><span class="s">' + src + '</span><span class="v">' + (st.etat === "vide" ? "" : eurDe(p.nom, total(r)) + '<br><small class="muted" style="font-weight:400">versé ' + eurDe(p.nom, verse(r), 0, true) + "</small>") + "</span>" + (actions ? '<div class="a">' + actions + "</div>" : "") + "</div>";
     }).join("") + "</div>";
   document.querySelectorAll("[data-jp]").forEach(b => b.addEventListener("click", () => { JNOM = b.dataset.jp; aAnnuler = null; rendreJournal(); }));
   document.querySelectorAll("[data-jsaisir]").forEach(b => b.addEventListener("click", () => { R = { nom: p.nom, k: +b.dataset.jsaisir, forcer: null, erreur: "", envoi: false, tout: false }; chargerValeurs(); ongletReleves("nouveau"); }));
@@ -460,12 +460,13 @@ function etatReleve(nom, k) {
   return { etat: "fige", j };
 }
 function dateHeure(d) { return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") + " à " + String(d.getHours()).padStart(2, "0") + " h " + String(d.getMinutes()).padStart(2, "0"); }
-function peutModifier(nom) { return estAdmin() || nom === SESSION.nom; }
+function peutModifier(nom) { return (estAdmin() && !estPrive(nom)) || nom === SESSION.nom; }   // V20.26 : les montants des autres ne sont jamais envoyés, donc pas de saisie pour eux dans l'appli
 function utilisees(p) { return NOMS_ENV.map((_, e) => p.rows.some(r => ok(r[2][2 * e + 1]) || (r[2][2 * e] || 0) !== 0)); }
 function rendreSaisie() {
+  if (!peutModifier(R.nom)) R.nom = moiVrai();   // v20.26 : jamais de saisie pour un pilote dont les montants sont privés
   const p = D.personnes.find(x => x.nom === R.nom);
   if (!p.rows.length || R.k === null) {
-    $("#corps-saisie").innerHTML = '<div class="chips" role="group" aria-label="Personne">' + D.personnes.filter(x => estAdmin() || x.nom === SESSION.nom).map(x => '<button class="chip" type="button" data-rp="' + esc(x.nom) + '" aria-pressed="' + (x.nom === R.nom) + '"><i style="background:' + couleur(x.nom) + '"></i>' + esc(x.nom) + "</button>").join("") + "</div>" +
+    $("#corps-saisie").innerHTML = '<div class="chips" role="group" aria-label="Personne">' + D.personnes.filter(x => peutModifier(x.nom)).map(x => '<button class="chip" type="button" data-rp="' + esc(x.nom) + '" aria-pressed="' + (x.nom === R.nom) + '"><i style="background:' + couleur(x.nom) + '"></i>' + esc(x.nom) + "</button>").join("") + "</div>" +
       '<p class="info" style="margin-top:12px">Pas encore de mois daté dans l\'onglet Data ' + esc(p.nom) + " : la première ligne apparaît au prochain jour de relevé.</p>";
     document.querySelectorAll("[data-rp]").forEach(b => b.addEventListener("click", () => { R.nom = b.dataset.rp; choisirMoisParDefaut(); rendreSaisie(); }));
     return;
@@ -484,7 +485,7 @@ function rendreSaisie() {
   const bandeauEtat = fige ? '<div class="alerte">Relevé figé : ' + (st.j ? "saisi il y a plus de " + JOURS_MODIF() + " jours" : "saisi dans le Sheet") + ". Il ne se modifie plus que dans l'onglet Data " + esc(p.nom) + " du Sheet.</div>"
     : st.etat === "modif" ? '<div class="alerte warn">Déjà saisi ' + (st.j.action === "Import auto" ? "par l'import automatique" : "le " + dateHeure(new Date(st.j.t))) + " : modifiable jusqu'au " + dateHeure(st.lim) + ".</div>" : "";
   $("#corps-saisie").innerHTML = '<form class="form" id="form-releve" novalidate style="display:grid;gap:14px">' +
-    '<div class="chips" role="group" aria-label="Personne">' + D.personnes.filter(x => estAdmin() || x.nom === SESSION.nom).map(x => '<button class="chip" type="button" data-rp="' + esc(x.nom) + '" aria-pressed="' + (x.nom === R.nom) + '"><i style="background:' + couleur(x.nom) + '"></i>' + esc(x.nom) + "</button>").join("") + "</div>" +
+    '<div class="chips" role="group" aria-label="Personne">' + D.personnes.filter(x => peutModifier(x.nom)).map(x => '<button class="chip" type="button" data-rp="' + esc(x.nom) + '" aria-pressed="' + (x.nom === R.nom) + '"><i style="background:' + couleur(x.nom) + '"></i>' + esc(x.nom) + "</button>").join("") + "</div>" +
     '<label class="sel"><span>Mois (valeurs au ' + finMois(R.k) + ')</span><select id="r-mois">' + opts + "</select></label>" + bandeauEtat +
     '<button class="lien guide-l" type="button" id="r-guide">❓ Comment remplir mon relevé</button>' +
     (imp.visible && R.nom === imp.nom && R.k === imp.k ? '<div class="import-l"><button class="btn acc" type="button" id="r-importer"' + (imp.actif ? "" : " disabled") + '>Importer depuis Portefeuille & Épargne</button><small>' + esc(imp.texte) + "</small></div>" : "") +

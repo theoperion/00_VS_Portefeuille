@@ -19,6 +19,7 @@ Le championnat entre amis : chaque mois, les pilotes (Théo, Kévin, Clément, D
 - Rubriques dépliables refermées à chaque ouverture ; seuls les filtres sont mémorisés. Bouton retour (v15.27) : ne pas y toucher. Glisser pour changer d'onglet : **abandonné**. Icônes maison codées mais coupées (`ICONES_ACTIVES = false`).
 
 ## Notions du code
+- **Liaison avec les fichiers des amis (décision de Théo, 24/11)** : après transfert, leur script est figé (plus de mise à jour). Le serveur Versus doit donc **toujours accepter** leurs appels tels quels (`importPatrimoine`, `liaisonPatrimoine` et leurs champs, adresse `/exec` officielle inchangée) : on peut ajouter des choses, jamais en retirer ni en renommer.
 - Calcul des points partagé avec le serveur : `app_scripts/outils/extraire-podium.js` régénère `versus/PodiumCommun.js`. Changer une règle de score ⇒ remettre le serveur en ligne.
 - Cartes 2D : peintres `PEINTS[clé]` dans `piste.js` (`peindre` = carte 2D, `deco` = décor 3D). Après toute retouche d'un peintre : `node outils-tests/cuire-cartes.js` (fonds `img/cartes/*.webp`) puis publier.
 - Sons : `js/sons.js` (Web Audio synthétisé, aucune note de film). Vues Carte / Visite / Hélico + plein écran.

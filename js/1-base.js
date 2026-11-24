@@ -47,6 +47,9 @@ const nf = (a, b) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: a, 
 const F0 = nf(0, 0), F1 = nf(1, 1), F2 = nf(2, 2);
 const ok = v => v !== null && v !== undefined && isFinite(v);
 function sg(v) { return v > 0 ? "+" : v < 0 ? MOINS : ""; }
+/** v20.26 (Théo, 24/11) · jamais un montant des autres : le serveur les remet à l'échelle et marque le pilote « prive » ; ses euros s'affichent « — » */
+function estPrive(nom) { try { const p = D.personnes.find(x => x.nom === nom); return !!(p && p.prive); } catch (e) { return false; } }
+function eurDe(nom, v, dec, signe) { return estPrive(nom) ? "—" : eur(v, dec, signe); }
 function eur(v, dec = 0, signe = false) {
   if (!ok(v)) return "—";
   if (ETAT.discret === "oui") return (signe ? sg(v) : "") + "•••" + NB + "€";
@@ -610,11 +613,11 @@ function rendreClassement() {
     "<div>" + '<h2 class="sec">La course <small>performance cumulée</small></h2></div>' +
     boiteGraphe("g-course", series.map(s => ({ nom: s.nom, c: s.c, dash: s.dash }))) +
     (ks.length > 2 && st.length > 1 ? '<div><h2 class="sec">Les positions <small>place au classement à chaque fin de mois</small></h2></div>' + boiteGraphe("g-places", st.map(s => ({ nom: s.nom, c: couleur(s.nom) }))) : "") +
-    '<div><h2 class="sec">Gain réel <small>depuis l\'ouverture · ' + esc(ENVELOPPES[env]) + "</small></h2>" +
-    pv.map(s => '<div class="barre"><span class="a"><i style="width:9px;height:9px;border-radius:2px;transform:skewX(-12deg);background:' + couleur(s.nom) + '"></i>' + esc(s.nom) + '</span><span class="b ' + sens(s.pvLatente) + '">' + eur(s.pvLatente, 0, true) + "</span>" +
-      '<span class="c"><span class="jauge"><i style="width:' + (Math.abs(s.pvLatentePct || 0) / maxPv * 100).toFixed(1) + "%;background:" + (s.pvLatente >= 0 ? "var(--up)" : "var(--down)") + '"></i></span><span>' + pct(s.pvLatentePct) + " · " + eur(s.valeur) + " pour " + eur(s.verse) + " versés</span></span></div>").join("") + "</div>" +
-    '<div><h2 class="sec">Régularité <small>sur la période</small></h2><div class="scroll-x"><table class="tab"><thead><tr><th>Personne</th><th>Mois positifs</th><th>Bat ' + esc(D.marche.indices[i1]) + "</th><th>Versé</th><th>Plus-value</th></tr></thead><tbody>" +
-    tri.map(s => '<tr><td><span class="pastille" style="background:' + couleur(s.nom) + '"></span>' + esc(s.nom) + "</td><td>" + pct(s.positifs, 0, false) + "</td><td>" + pct(s.i1 && s.i1.battus, 0, false) + "</td><td>" + eur(s.versePeriode) + '</td><td class="' + sens(s.pvPeriode) + '">' + eur(s.pvPeriode, 0, true) + "</td></tr>").join("") +
+    '<div><h2 class="sec">Gain réel <small>depuis l\'ouverture · ' + esc(ENVELOPPES[env]) + (D.personnes.some(p => p.prive) ? " · 🔒 montants des autres privés" : "") + "</small></h2>" +
+    pv.map(s => '<div class="barre"><span class="a"><i style="width:9px;height:9px;border-radius:2px;transform:skewX(-12deg);background:' + couleur(s.nom) + '"></i>' + esc(s.nom) + '</span><span class="b ' + sens(s.pvLatente) + '">' + (estPrive(s.nom) ? pct(s.pvLatentePct) : eur(s.pvLatente, 0, true)) + "</span>" +
+      '<span class="c"><span class="jauge"><i style="width:' + (Math.abs(s.pvLatentePct || 0) / maxPv * 100).toFixed(1) + "%;background:" + (s.pvLatente >= 0 ? "var(--up)" : "var(--down)") + '"></i></span><span>' + (estPrive(s.nom) ? "gain sur ce qui a été versé" : pct(s.pvLatentePct) + " · " + eur(s.valeur) + " pour " + eur(s.verse) + " versés") + "</span></span></div>").join("") + "</div>" +
+    '<div><h2 class="sec">Régularité <small>sur la période</small></h2><div class="scroll-x"><table class="tab"><thead><tr><th>Personne</th><th>Mois positifs</th><th>Bat ' + esc(D.marche.indices[i1]) + "</th><th>Gain %</th></tr></thead><tbody>" +
+    tri.map(s => '<tr><td><span class="pastille" style="background:' + couleur(s.nom) + '"></span>' + esc(s.nom) + "</td><td>" + pct(s.positifs, 0, false) + "</td><td>" + pct(s.i1 && s.i1.battus, 0, false) + '</td><td class="' + sens(s.twr) + '">' + pct(s.twr) + "</td></tr>").join("") +
     "</tbody></table></div></div>";
 
   brancherFiltres("classement");
@@ -654,7 +657,7 @@ function rendreClassement() {
         (lead ? '<p class="det-lead">🟡 En tête du championnat de la saison : sa tête est cerclée d\'or jusqu\'à ce qu\'un autre le dépasse.</p>' : "") +
         '<div class="mini">' + c("Écart vs " + esc(D.marche.indices[i1]), pts(s.i1 ? s.twr - s.i1.twr : null), sens(s.i1 ? s.twr - s.i1.twr : null)) + c("Volatilité", volTxt(s)) + c("Sharpe", sharpeTxt(s)) + c("Pire baisse", pct(s.baisseMax), sens(s.baisseMax)) +
         c("Meilleur (" + moisCourt(s.meilleur.k) + ")", pct(s.meilleur.r), sens(s.meilleur.r)) + c("Pire (" + moisCourt(s.pire.k) + ")", pct(s.pire.r), sens(s.pire.r)) + c("MWR", pct(s.mwr), sens(s.mwr)) +
-        c(esc(D.marche.indices[i1]) + " même période", pct(s.i1 && s.i1.twr)) + c("Mois battant l'indice", pct(s.i1 && s.i1.battus, 0, false)) + c("Plus-value période", eur(s.pvPeriode, 0, true), sens(s.pvPeriode)) +
+        c(esc(D.marche.indices[i1]) + " même période", pct(s.i1 && s.i1.twr)) + c("Mois battant l'indice", pct(s.i1 && s.i1.battus, 0, false)) + c("Plus-value période", eurDe(s.nom, s.pvPeriode, 0, true), sens(s.pvPeriode)) +
         "</div>";
       d.querySelector(".fiche-go").addEventListener("click", () => { ETAT.fiche = s.nom; garder(); allerA("fiche"); });
       el.after(d); el.setAttribute("aria-expanded", "true");
@@ -673,7 +676,7 @@ function anomaliesDonnees(env) {
     const r = rows[rows.length - 1], pr = rows[rows.length - 2];
     ["PEA", "Assurance vie"].forEach((nom, e) => {
       const v = r[2][2 * e + 1], pv = pr[2][2 * e + 1], ve = r[2][2 * e] || 0;
-      if (!ok(v) && ok(pv) && pv > 0) out.push("<b>" + esc(p.nom) + "</b>, " + esc(moisLong(r[0])) + " : valeur " + nom + " manquante (" + eur(pv) + " le mois d'avant). Le total du portefeuille est faussé.");
+      if (!ok(v) && ok(pv) && pv > 0) out.push("<b>" + esc(p.nom) + "</b>, " + esc(moisLong(r[0])) + " : valeur " + nom + " manquante (" + eurDe(p.nom, pv) + " le mois d'avant). Le total du portefeuille est faussé.");
       else if (ok(v) && ok(pv) && pv > 0 && pv + ve / 2 > 0) {
         const x = (v - pv - ve) / (pv + ve / 2);
         if (Math.abs(x) > .25) out.push("<b>" + esc(p.nom) + "</b>, " + esc(moisLong(r[0])) + " : " + nom + " " + pct(x, 0) + " sur le mois, à vérifier.");
