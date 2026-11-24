@@ -252,8 +252,10 @@ function rendreMois() {
   const v = $("#v-mois");
   if (!fin) { v.innerHTML = filtres(true) + '<div class="vide">Aucun relevé pour cette enveloppe.</div>'; brancherFiltres("mois"); return; }
   const deb = debutPeriode(D, ETAT.per, fin) || 0;
-  const ks = [...new Set(D.personnes.flatMap(p => serie(p, env).filter(x => typeof x.r === "number" && x.k <= fin && x.k > deb).map(x => x.k)))].sort((a, b) => a - b).reverse();
-  const lignes = D.personnes.map(p => { const s = serie(p, env); return { nom: p.nom, r: ks.map(k => { const x = s.find(y => y.k === k); return x && typeof x.r === "number" ? x.r : null; }) }; });
+  const ks = [...new Set(D.personnes.flatMap(p => serieJeu(p, env).filter(x => typeof x.r === "number" && x.k <= fin && x.k > deb).map(x => x.k)))].sort((a, b) => a - b).reverse();
+  // v20.25 : le mois d'ouverture d'un compte (avant le premier mois complet) est grisé, hors jeu, et ne peut pas être « meilleur du mois »
+  const lignes = D.personnes.map(p => { const s = serie(p, env); return { nom: p.nom, r: ks.map(k => rJeu(p, env, k)),
+    ouv: ks.map(k => { const x = s.find(y => y.k === k); return !!(x && typeof x.r === "number" && rJeu(p, env, k) === null); }) }; });
   const ri = n => { const m = {}; D.marche.mois.forEach(l => m[l[0]] = l[n + 1]); return ks.map(k => ok(m[k]) ? m[k] : null); };
   const max = Math.max(.04, ...lignes.flatMap(l => l.r).filter(ok).map(Math.abs));
   const meilleurs = ks.map((k, j) => { let b = null; lignes.forEach(l => { if (ok(l.r[j]) && (b === null || l.r[j] > b.r)) b = { nom: l.nom, r: l.r[j] }; }); const ex = b && lignes.filter(l => ok(l.r[j]) && Math.abs(l.r[j] - b.r) < 1e-9).length > 1;
@@ -268,7 +270,7 @@ function rendreMois() {
     blocDuel(env, deb, fin) +
     '<div><h2 class="sec">Mois par mois <small>' + esc(ENVELOPPES[env]) + " · ★ meilleur du mois · le plus récent à gauche</small></h2></div>" +
     '<div class="scroll-x"><table class="grille"><thead><tr><th></th>' + ks.map(k => "<th>" + esc(moisCourt(k)) + "</th>").join("") + "</tr></thead><tbody>" +
-    lignes.map(l => '<tr><td class="nom"><i style="background:' + couleur(l.nom) + '"></i>' + esc(l.nom) + "</td>" + l.r.map((r, j) => cell(r, meilleurs[j] === l.nom)).join("") + "</tr>").join("") +
+    lignes.map(l => '<tr><td class="nom"><i style="background:' + couleur(l.nom) + '"></i>' + esc(l.nom) + "</td>" + l.r.map((r, j) => l.ouv[j] ? '<td class="vide ouv" title="Mois d\'ouverture du compte : hors jeu (on entre au premier mois complet)">—</td>' : cell(r, meilleurs[j] === l.nom)).join("") + "</tr>").join("") +
     (i2s >= 0 ? [i1, i2s] : [i1]).map(n => '<tr class="indice"><td class="nom"><i style="background:var(--idx)"></i>' + esc(D.marche.indices[n]) + "</td>" + ri(n).map(r => cell(r, false)).join("") + "</tr>").join("") +
     "</tbody></table></div>" +
     '<div class="leg-grille"><span><i style="' + teinte(max, max) + '"></i>hausse</span><span><i style="' + teinte(-max, max) + '"></i>baisse</span><span><i style="box-shadow:inset 0 0 0 2px var(--gold)"></i>meilleur du mois entre vous</span></div>' +

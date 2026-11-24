@@ -187,8 +187,8 @@ function rendreTrophees() {
 function duel(env, a, b, deb, fin) {
   const pa = D.personnes.find(p => p.nom === a), pb = D.personnes.find(p => p.nom === b);
   if (!pa || !pb) return null;
-  const sb = {}; serie(pb, env).forEach(z => { if (typeof z.r === "number") sb[z.k] = z.r; });
-  const mois = serie(pa, env).filter(z => typeof z.r === "number" && sb[z.k] !== undefined && (!deb || z.k > deb) && (!fin || z.k <= fin)).map(z => ({ k: z.k, ra: z.r, rb: sb[z.k] }));
+  const sb = {}; serieJeu(pb, env).forEach(z => { if (typeof z.r === "number") sb[z.k] = z.r; });   // v20.25 : sans le mois d'ouverture
+  const mois = serieJeu(pa, env).filter(z => typeof z.r === "number" && sb[z.k] !== undefined && (!deb || z.k > deb) && (!fin || z.k <= fin)).map(z => ({ k: z.k, ra: z.r, rb: sb[z.k] }));
   const d = { a, b, n: mois.length, wa: 0, wb: 0, nuls: 0, va: 1, vb: 1, gros: null, forme: [], serie: null };
   mois.forEach(m => {
     const e = m.ra - m.rb, g = Math.abs(e) < 1e-9 ? null : e > 0 ? a : b;

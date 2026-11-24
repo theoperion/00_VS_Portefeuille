@@ -578,7 +578,7 @@ function htmlRegles(tout, modeReserve) {
       "<p>Chaque mois, les pilotes sont classés sur la <b>performance de leur PEA et de leur assurance-vie</b> (versements neutralisés : seul le % compte ; les autres comptes restent privés). La saison va de janvier à décembre ; le plus de points gagne.</p>" + schemaMois +
       '<p class="rg-note">🔥 Décembre 2026 = tour de chauffe : tout marche, rien ne compte (cartes jusqu\'au 1er décembre).</p>')) +
     s("champ", "🏁", "Les points du mois", schemaBareme + schemaCalcul +
-      "<ul><li>Ex æquo : mêmes points. Un mois ne descend jamais sous 0.</li><li>Le mois compte quand tout le monde a saisi son relevé.</li><li>Égalité au championnat : le plus de victoires, puis la meilleure performance cumulée.</li></ul>") +
+      "<ul><li>Ex æquo : mêmes points. Un mois ne descend jamais sous 0.</li><li>Nouveau pilote : il entre en jeu à son <b>premier mois complet</b> (le mois où il ouvre ou alimente son compte ne compte pas).</li><li>Le mois compte quand tout le monde a saisi son relevé.</li><li>Égalité au championnat : le plus de victoires, puis la meilleure performance cumulée.</li></ul>") +
     s("cartes", "🃏", "Les cartes", schemaCartes +
       "<ul><li><b>Une par mois</b>, face cachée dans le Stand (modifiable jusqu'au 1<sup>er</sup>), révélée le 2.</li><li>Rejouable, mais <b>pas deux mois de suite</b>. Au plus <b>+" + PLAFOND_CARTE + "</b> par mois.</li>" +
       (vC ? "<li>🗺️ <b>Atout du circuit</b> : chaque circuit préfère une carte ; si tu la joues <b>et qu'elle marque</b> : <b>+1</b> (secret jusqu'au 2, un indice 🔍 avant ; si 2 pilotes ou plus marquent avec : personne n'a le +1).</li>" : "") + "</ul>") +

@@ -7,9 +7,21 @@
 /** Référence fixe de la saison (bonus, défis) : portefeuille total contre le S&P 500, quels que soient les filtres */
 function iRef() { const i = D.marche.indices.findIndex(n => /S&P\s*500/i.test(n)); return i < 0 ? 0 : i; }
 function rangTxt(n) { return n === 1 ? "1er" : n + "e"; }
-function aRendement(p, env, k) { return serie(p, env).some(z => z.k === k && typeof z.r === "number"); }
+/** v20.25 (Théo, 24/11) · un pilote entre au jeu au PREMIER MOIS COMPLET : à partir du tour de chauffe, le mois ne compte pour lui
+    que s'il avait déjà une valeur positive à un relevé antérieur (un compte ouvert ou alimenté en cours de mois attend le mois suivant ;
+    un relevé oublié ne fait pas perdre le mois d'après).
+    Les mois d'avant décembre 2026 (historique, hors jeu) ne changent pas. */
+const DEBUT_MOIS_COMPLET = 202612;
+function rJeu(p, env, k) {
+  const s = serie(p, env), x = s.find(z => z.k === k && typeof z.r === "number"); if (!x) return null;
+  if (k >= DEBUT_MOIS_COMPLET && !s.some(z => z.k < k && z.val > 0)) return null;
+  return x.r;
+}
+/** La série d'un pilote telle que le jeu la voit : le mois d'ouverture n'a pas de rendement (victoires, duels, palmarès) */
+function serieJeu(p, env) { return serie(p, env).map(z => typeof z.r === "number" && rJeu(p, env, z.k) === null ? Object.assign({}, z, { r: null }) : z); }
+function aRendement(p, env, k) { return rJeu(p, env, k) !== null; }
 function rendementsDuMois(env, k) {
-  return D.personnes.map(p => { const x = serie(p, env).find(z => z.k === k && typeof z.r === "number"); return x ? { nom: p.nom, r: x.r } : null; }).filter(Boolean);
+  return D.personnes.map(p => { const r = rJeu(p, env, k); return r !== null ? { nom: p.nom, r } : null; }).filter(Boolean);
 }
 /** Places au classement cumulé ]deb, k] (seulement les personnes qui ont un relevé ce mois-là) */
 function rangs(env, deb, k) {
@@ -41,7 +53,7 @@ function verdictMois(env, k) {
 /** Mois qui ont un verdict possible (au moins deux relevés) */
 function moisVerdict(env) {
   const fin = finGlobale(D, env);
-  return [...new Set(D.personnes.flatMap(p => serie(p, env).filter(z => typeof z.r === "number" && z.k <= fin).map(z => z.k)))]
+  return [...new Set(D.personnes.flatMap(p => serie(p, env).filter(z => z.k <= fin && rJeu(p, env, z.k) !== null).map(z => z.k)))]
     .filter(k => rendementsDuMois(env, k).length >= 2).sort((a, b) => a - b);
 }
 let VK = null;   // mois du verdict affiché (null = le dernier)

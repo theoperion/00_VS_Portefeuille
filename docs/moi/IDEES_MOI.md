@@ -30,4 +30,4 @@ Ce fichier n'est **pas** lu automatiquement : seulement quand Théo le demande. 
 - **Marchés de l'onglet Moi** : ajouter les semi-conducteurs (SEMI) et SOXL (×3 des semi-conducteurs ; Théo a écrit ×4, à vérifier), pour tout le monde.
 - **Fiche de chaque produit** : ajouter la volatilité de l'ETF à levier aux autres données.
 - **Connecteur TradingView** pour l'historique des cours (à étudier : disponibilité, fiabilité).
-- **Kévin** : commencer à préparer les onglets de son fichier Excel avec le PEA et l'assurance-vie (lien avec le kit « Moi » pour Kévin ci-dessus).
+- **Kévin** (dans un second temps) : créer son fichier « Portefeuille & Épargne » à partir du « Modèle vierge » (comme Nicolas : copie du modèle, historique vierge), avec son PEA Fortuneo et son assurance-vie Linxea Avenir 2, en reprenant les infos de son petit fichier actuel (très simple, à retrouver) ; écrire pour Théo une marche à suivre simple pour que Kévin lui transmette ses données (exports Fortuneo et Linxea). Lien avec le kit « Moi » pour Kévin ci-dessus.

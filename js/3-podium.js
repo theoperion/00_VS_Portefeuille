@@ -45,7 +45,9 @@ function numeroSaison(y) { return Math.max(1, y - SAISON.premiere + 1); }
 
 /* ---------- Championnat : 6 / 4 / 2 / 0 point (V15 : le dernier ne marque plus, prendre trop de risque se paie), +1 si le mois bat le S&P 500 ---------- */
 const BAREME = [6, 4, 2, 0], BAREME5 = [6, 4, 2, 1, 0];   // V16.20 : à 5 pilotes (Nicolas), le 4e garde 1 point (validé par Théo le 19/11)
-function baremeJ(n) { return (n !== undefined ? n : (typeof D !== "undefined" && D && D.personnes ? D.personnes.length : 4)) >= 5 ? BAREME5 : BAREME; }
+function baremeJ(n) { return (n !== undefined ? n : nbPilotesEnJeu()) >= 5 ? BAREME5 : BAREME; }
+/** v20.25 · pilotes déjà en jeu (au moins un relevé avec une valeur) : un nouveau venu ne change le barème affiché qu'une fois lancé */
+function nbPilotesEnJeu() { try { return D.personnes.filter(p => serie(p, 0).some(z => z.val > 0)).length || D.personnes.length; } catch (e) { return 4; } }
 function ptsRang(r, n) { const b = baremeJ(n); return b[r - 1] !== undefined ? b[r - 1] : 0; }
 /* ---------- V15 · Défi du mois : un par mois de l'année, annoncé le 20 du mois d'avant ; +1 à chaque pilote qui le réussit ---------- */
 const DEFIS_MOIS = {

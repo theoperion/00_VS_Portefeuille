@@ -534,7 +534,7 @@ function rendreClassement() {
 
   // En bref : dernier mois
   const der = fin;
-  const duMois = D.personnes.map(p => { const x = serie(p, env).find(s => s.k === der && typeof s.r === "number"); return x ? { nom: p.nom, r: x.r } : null; }).filter(Boolean).sort((a, b) => b.r - a.r);
+  const duMois = D.personnes.map(p => { const r = rJeu(p, env, der); return r !== null ? { nom: p.nom, r } : null; }).filter(Boolean).sort((a, b) => b.r - a.r);
   const iDer = (D.marche.mois.find(l => l[0] === der) || [])[i1 + 1];
   const battent = st.filter(s => s.i1 && s.twr > s.i1.twr).map(s => s.nom);
   const anomalies = anomaliesDonnees(env);
@@ -571,7 +571,7 @@ function rendreClassement() {
        l'écart à l'indice passant en tête du détail (la ligne pointillée de l'indice le montre déjà dans le classement). */
     const vivante = manque.has(s.nom) ? '<span class="a-saisir">⏳ relevé à saisir</span>'
       : typeof saisonJouee === "function" && saisonJouee() && typeof badgesLigne === "function" && badgesLigne(s.nom) ? badgesLigne(s.nom) + (s.n < nMois ? '<span class="nmois">' + s.n + " mois</span>" : "") + mini(s)
-      : pts(ecart) + " vs " + esc(D.marche.indices[i1]) + (s.n < nMois ? " · " + s.n + " mois" : "") + mini(s);
+      : pts(ecart) + " vs " + esc(D.marche.indices[i1]) + (s.n < nMois ? '<span class="nmois">' + s.n + " mois</span>" : "") + mini(s);   // v20.25 : « N mois » à part (plus de ligne coupée à 5 pilotes)
     return '<div class="pos' + (s.nom === ETAT.moi ? " ici" : "") + '" tabindex="0" role="button" aria-expanded="false" data-key="' + esc(s.nom) + '" data-nom="' + esc(s.nom) + '"><span class="rk">' + rang + fleche(s.nom) + '</span><div class="who">' + (saisonVisible() ? avatar(s.nom) : '<i style="background:' + couleur(s.nom) + '"></i>') + '<div><b' + attrLivree(s.nom) + '>' + esc(s.nom) + couronne(s.nom) +
       (s.nom === ETAT.moi ? '<span class="sr">(moi)</span>' : "") +
       "</b><small>" + vivante + '</small></div></div><span class="t ' + sens(s.twr) + '" data-cv="' + s.twr + '" data-cf="pct">' + pct(s.twr) + "</span>" +
@@ -687,10 +687,10 @@ function aUnReleveBrut(b) { return [1, 3, 5, 7].some(i => ok(b[i])); }
 /* ---------- Victoires mensuelles, séries et mois en tête ---------- */
 function victoires(env, jusqua, depuis) {
   const fin = jusqua || finGlobale(D, env), deb = depuis || 0;
-  const ks = [...new Set(D.personnes.flatMap(p => serie(p, env).filter(x => typeof x.r === "number" && x.k <= fin && x.k > deb).map(x => x.k)))].sort((a, b) => a - b);
+  const ks = [...new Set(D.personnes.flatMap(p => serieJeu(p, env).filter(x => typeof x.r === "number" && x.k <= fin && x.k > deb).map(x => x.k)))].sort((a, b) => a - b);
   const res = {};
   D.personnes.forEach(p => res[p.nom] = { victoires: 0, serie: 0, record: 0, enTete: 0, battu: 0, mois: 0 });
-  const series = D.personnes.map(p => ({ nom: p.nom, s: serie(p, env) }));
+  const series = D.personnes.map(p => ({ nom: p.nom, s: serieJeu(p, env) }));   // v20.25 : sans le mois d'ouverture
   const iMois = {}; D.marche.mois.forEach(l => iMois[l[0]] = l[ETAT.i1 + 1]);
   const courant = {};
   ks.forEach(k => {
@@ -705,7 +705,7 @@ function victoires(env, jusqua, depuis) {
     // en tête du classement de l'année à la fin de ce mois
     const y = Math.floor(k / 100), deb = (y - 1) * 100 + 12;
     let lead = null, lt = -Infinity;
-    D.personnes.forEach(p => { const st = stats(D, p, env, deb, k, null, null); if (st.n && st.twr > lt && serie(p, env).some(z => z.k === k && typeof z.r === "number")) { lt = st.twr; lead = p.nom; } });
+    D.personnes.forEach(p => { const st = stats(D, p, env, deb, k, null, null); if (st.n && st.twr > lt && rJeu(p, env, k) !== null) { lt = st.twr; lead = p.nom; } });
     if (lead) res[lead].enTete++;
   });
   D.personnes.forEach(p => res[p.nom].serie = courant[p.nom] || 0);

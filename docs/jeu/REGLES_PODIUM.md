@@ -19,7 +19,7 @@ Chaque mois, les pilotes sont classés sur la **performance de leur portefeuille
 |---|---|---|---|---|---|
 | Points | **6** | **4** | **2** | **0** | **+1** |
 
-**Points du mois = place + 🎯 + carte (≤ +4) + bonus.** Ex æquo : mêmes points. Un mois ne descend jamais sous 0. Égalité au championnat : le plus de victoires, puis la meilleure performance cumulée.
+**Points du mois = place + 🎯 + carte (≤ +4) + bonus.** Ex æquo : mêmes points. Un mois ne descend jamais sous 0. Nouveau pilote : il entre en jeu à son premier mois complet (le mois d'ouverture ou du premier versement ne compte pas ; décision de Théo, 24/11/2026). Égalité au championnat : le plus de victoires, puis la meilleure performance cumulée.
 
 ## 🃏 Les cartes (une par mois, au plus +4)
 

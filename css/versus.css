@@ -1883,6 +1883,7 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .pos.ici:hover { background: color-mix(in srgb, var(--accent) 11%, var(--panel)); }
 .pos .who small .a-saisir { color: var(--down); font-weight: 600; }
 .pos .who small .nmois { margin-left: 6px; }
+@media (max-width: 430px) { .pos .who small .nmois + .mini-c { display: none; } }   /* v20.25 : à 5 pilotes, « N mois » passe avant la mini-courbe sur téléphone */
 .pos .who small .bdgs { display: inline-flex; gap: 3px; vertical-align: -2px; }
 .pos .who small .bdgs .bdg { margin-left: 0; padding: 1px 5px; font-size: 11px; vertical-align: 0; }
 .pos .who small .bdgs + .mini-c, .pos .who small .nmois + .mini-c { margin-left: 8px; }
