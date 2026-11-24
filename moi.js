@@ -2542,8 +2542,8 @@ function htmlAV(sup) {
   const rap = k => (rappelsFichier().find(x => cleRappel(x.nom) === k) || {}).prochaine;
   const du = k => rappelsFichier().some(x => cleRappel(x.nom) === k && rappelDu(x));   // v16.83 : un rappel déjà dû est dans la cloche, pas répété ici
   const rdv = [];
-  if ((ar.initial === null || ar.initial === undefined || ar.initial === "") && !du("artemaInitial")) rdv.push(["📌", "Artema : niveau de départ de l'indice", rap("artemaInitial") ? "à saisir dès le " + frDate(rap("artemaInitial")) : "à saisir"]);
-  if (rap("releve") && !du("releve")) rdv.push(["◷", "Relevé du mois (Artema)", quandRappel({ prochaine: rap("releve") }) || frDate(rap("releve"))]);
+  if (aArtema() && (ar.initial === null || ar.initial === undefined || ar.initial === "") && !du("artemaInitial")) rdv.push(["📌", "Artema : niveau de départ de l'indice", rap("artemaInitial") ? "à saisir dès le " + frDate(rap("artemaInitial")) : "à saisir"]);
+  if (rap("releve") && !du("releve")) rdv.push(["◷", aArtema() ? "Relevé du mois (Artema)" : "Relevé du mois", quandRappel({ prochaine: rap("releve") }) || frDate(rap("releve"))]);
   if (fe.taux) rdv.push(["💶", "Fonds euros : " + pct(fe.taux, 2, false) + " net (" + (fe.annee || "—") + ")" + (fe.bonus ? " + bonus " + pct(fe.bonus, 2, false) + (fe.bonusFin ? " jusqu'au " + frDate(fe.bonusFin) : "") : ""), (rap("fondsEuros") ? "vrai taux vers le " + frDate(rap("fondsEuros")) + " · " : "") + "estimation ajustable", "fondsEuros"]);
   const sel = S && S.s[avSel] ? avSel : "total";
   const nDus = tachesAFaire().filter(t => t.cles.some(k => /^(artema|releve|fondsEuros|versement)/.test(k))).length;   // v16.87 : ce qui est dû vit dans « À faire »
@@ -7178,7 +7178,8 @@ function dateRappel(txt) { const m = /(\d{2})\/(\d{2})\/(\d{4})\s*$/.exec(String
 /* le bloc Rappels du fichier s'arrête avant le tableau « Mes actifs » */
 function rappelsFichier() {
   const out = [];
-  for (const r of ((M.parametres || {}).rappels || [])) { if (/^Mes actifs/.test(r.nom || "")) break; if (r.nom) out.push(r); }
+  const sansArt = !aArtema();   // pas de support Artema (Devlin, Kévin…) : ses rappels de niveau d'indice n'ont pas lieu d'être
+  for (const r of ((M.parametres || {}).rappels || [])) { if (/^Mes actifs/.test(r.nom || "")) break; if (r.nom && !(sansArt && /^artema(Initial|Actuel)$/.test(cleRappel(r.nom)))) out.push(r); }
   return out;
 }
 /* V15.2 · rappels : un bandeau dans Moi quand c'est dû, « Faire » (ouvre la bonne saisie) ou « Plus tard » (2 jours) */
