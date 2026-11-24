@@ -56,6 +56,8 @@ function injecterStyle() {
   --flap: #1C222B; --flap-2: #262E39; --flap-ink: #F2F4F7; --flap-line: #0B0E12; --flap-acc: #B8A9FF; }
 .moi .m-onglets { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 62px); z-index: 15; box-shadow: 0 6px 10px -6px var(--shade); }
 .moi .m-hero { display: grid; gap: 10px; }
+.moi .m-attente { display: grid; gap: 6px; padding: 14px 16px; border-radius: 14px; border: 1px dashed var(--rule); background: var(--panel); line-height: 1.45; }   /* v20.37 */
+.moi .m-attente span { color: var(--ink-2); font-size: 14px; }
 .moi .m-flaps { display: flex; flex-wrap: wrap; gap: 4px; }
 .moi .m-flap { position: relative; width: clamp(26px, 8.4vw, 44px); height: clamp(40px, 12.6vw, 64px); display: grid; place-items: center; border-radius: 6px;
   background: linear-gradient(to bottom, var(--flap-2) 0 50%, var(--flap) 50% 100%); color: var(--flap-ink); font: 600 clamp(22px, 7.4vw, 40px)/1 var(--f-num);
@@ -2193,7 +2195,13 @@ function htmlJourBase() {
   const indices = (M.indices || []).filter(i => i.nom !== "1 USD en EUR");
   const nomIdx = n => n.replace(/\s*\((ETF\s)?([^)]*)\)/, "");
   const v5 = !!PERIODES_J[VUEJ], per = !!seanceDu(), det5 = VUEJ === "5j" && !!CINQ, bf = bourseFermee();
-  return '<div class="m-hero">' +
+  /* v20.37 (Théo, 24/11) : fichier avec un historique mais aucune ligne de bourse encore saisie (nouveau joueur, Kévin avant sa photo de départ) :
+     pas de gros « 0 € » inquiétant, un encadré qui explique. */
+  const hist = M.historique && M.historique.rows ? M.historique.rows.length : 0;
+  const attente = !M.simple && !toutes.length && !(s.valeur > 0) && hist > 0;
+  const ATT = '<div class="m-hero"><div class="m-hero-t"><span class="eyebrow">' + embHero() + "Bourse</span></div>" +
+    '<div class="m-attente" role="status"><b>⏳ Tes lignes arrivent bientôt.</b><span>Ta bourse s\'affichera ici, au cours du jour, dès que tes lignes (PEA, assurance-vie…) seront saisies dans ton fichier. En attendant, tes statistiques et ton « Mois par mois » viennent de tes relevés du Versus.</span></div></div>';
+  return (attente ? ATT : '<div class="m-hero">' +
       '<div class="m-hero-t"><span class="eyebrow">' + embHero() + (v5 ? "Bourse · " + PERIODES_J[VUEJ][2] : bf.ferme ? '<span title="Les chiffres sont ceux de la dernière séance">🔒 Bourse fermée' + (bf.lib ? " · " + esc(bf.lib) : "") + "</span>" : 'Bourse aujourd\'hui' + (!majCourte() && heureCours() ? " · " + esc(heureCours()) : "")) + "</span>" +
       /* v17.75 (Théo) : « Bourse fermée » passe dans la ligne du titre (plus de badge à part, −30 px) */
       /* Théo, 19/11 : pastille Jour | 5 j ; v17.23 : rangée de 6 périodes sous le titre (un toucher bascule, le choix reste sur l'appareil) */
@@ -2204,8 +2212,8 @@ function htmlJourBase() {
       '<div class="m-jour"' + (det5 ? ' role="button" tabindex="0" aria-expanded="' + cinqOuvert + '" title="Jour par jour"' : "") + '><span class="badge big-b ' + sens(s.jour) + '">' + fleche(s.jour) + " " + eur(s.jour, 0, true) + " · " + pct(s.jourPct, 2) + "</span>" +
         "<span>" + (suffixe ? esc(suffixe) : hausse + " en hausse · " + baisse + " en baisse") + (det5 ? ' <i class="m-5j-v" aria-hidden="true">' + (cinqOuvert ? "▴" : "▾") + "</i>" : "") + "</span>" + (majCourte() ? '<small class="m-maj">' + esc(majCourte()) + "</small>" : "") + (s.jourNote ? '<small class="m-per-n">' + esc(s.jourNote) + "</small>" : "") + "</div>" +
       (det5 ? htmlCinq() : "") +
-    "</div>" +
-    bandeDebut(s) +
+    "</div>") +
+    (attente ? "" : bandeDebut(s)) +
     (toutes.length >= 3 ? barres + '<p class="m-carte-l">' + (!bouge ? "Rien n'a encore bougé." + (!v5 && bf.ferme ? " Bourse fermée" + (bf.lib ? " (séance du " + esc(bf.lib) + ")" : "") + "." : "") : "Du meilleur au pire, en %" + (v5 ? " sur la période" : bf.ferme ? " sur la séance du " + esc(bf.lib) + " (bourse fermée)" : " aujourd'hui") + ".") + "</p>" : "") +   // lot 27 : sous 3 lignes, la carte n'apprend rien
     blocSignal() +
     "<div>" +

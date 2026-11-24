@@ -8,7 +8,7 @@ const SONS = (() => {
   const lire = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } };
   const ecrire = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* rien */ } };
   const actif = () => lire("versus.son", "1") !== "0";   // v17.48 (Théo) : le petit bouton 🔊/🔇 revient (sous la piste et en plein écran), son ACTIVÉ par défaut, mémorisé sur l'appareil   // (v17.4 l'avait retiré)
-  const vibreOK = () => lire("versus.vibre", "1") !== "0";
+  const vibreOK = () => false;   // v20.37 (Théo, 24/11) : vibrations retirées (elles ne marchaient pas), réglage supprimé
   ecrire("versus.son", "1");   // v17.52 (Théo) : à chaque ouverture de l'appli, le son est RÉACTIVÉ (couper ne vaut que pour la visite en cours)
   let ctx = null, maitre = null, bruitBuf = null, moteur = null;
   const timers = new Set();
@@ -637,19 +637,17 @@ const SONS = (() => {
     else if (b.hasAttribute("data-son-choix")) API.basculer(b.dataset.sonChoix === "1");
     else API.vibrations(b.dataset.vibreChoix === "1");
   });
-  /* v16.70 · « Tester » dans Réglages : joue un bip, vibre, et dit ce que le navigateur permet (pour comprendre un téléphone muet) */
+  /* v16.70 · « Tester » dans Réglages : joue un bip et dit ce que le navigateur permet (pour comprendre un téléphone muet) */
   document.addEventListener("click", e => {
     if (!(e.target.closest && e.target.closest("#son-test"))) return;
     const etaitCoupe = !actif(); if (etaitCoupe) ecrire("versus.son", "1");
     const c = audio(); note(880, .15, "sine", .3); note(1320, .25, "sine", .25, .15);
-    const vib = !!navigator.vibrate; let vibOk = false; try { vibOk = vib && navigator.vibrate([60, 60, 120]); } catch (er) { vibOk = false; }
     if (etaitCoupe) ecrire("versus.son", "0");
     const d = document.getElementById("son-diag"); if (!d) return;
     setTimeout(() => {
       const etat = !c ? "impossible (ce navigateur ne gère pas le son web)" : c.state === "running" ? "OK, un bip vient de partir" : "bloqué par le navigateur (" + c.state + ")";
       d.hidden = false;
-      d.textContent = "Son : " + etat + ". Si tu n'entends rien : volume « multimédia » du téléphone, Bluetooth connecté ailleurs ? Vibration : " +
-        (!vib ? "pas gérée par ce navigateur (c’est le cas sur iPhone et sur certaines versions de Firefox)." : vibOk ? "demandée au téléphone." : "refusée par le navigateur.") + (etaitCoupe ? " (Le son reste coupé dans l'appli : active-le au-dessus.)" : "");
+      d.textContent = "Son : " + etat + ". Si tu n'entends rien : volume « multimédia » du téléphone, Bluetooth connecté ailleurs ?" + (etaitCoupe ? " (Le son reste coupé dans l'appli : active-le au-dessus.)" : "");
     }, 400);
   });
   // un bouton 🔊 qui apparaît dans la page se met tout seul à jour
