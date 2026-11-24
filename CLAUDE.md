@@ -12,6 +12,7 @@ Ne lire que la fiche de la partie du chantier en cours. Ancienne fiche et journa
 - Une chose à la fois, étape par étape. Une version publiée par lot terminé (pas de rafale).
 - **Idées** : toute idée non finalisée va dans le fichier d'idées de sa partie (jamais dans les fiches). Ne le lire que si Théo le demande.
 - Pas de tâche programmée sans demande explicite de Théo, une seule à la fois.
+- GitHub (Théo, 24/11) : Claude fusionne lui-même ses demandes de fusion (PR) une fois les tests passés, sans demander à Théo à chaque fois.
 - Toujours finir par : ce qui est en ligne, tests passés, explication courte, et quels agents ont relu et pourquoi.
 
 ## Règles à ne jamais enfreindre
