@@ -16,10 +16,10 @@ function fausses(complet) {
     liaison: { active: true, personnes: [] }, lignes: {}, premierMillion: null, session: { role: "perso", nom: "Théo" }, monRappel: null, rappelsReleve: {},
     mesCartes: {}, mesDuels: {}, mesPronos: {}, monRival: {}, monVote: {} };
 }
-async function parcourir(b, complet) {
+async function parcourir(b, complet, quand) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block" }), p = await ctx.newPage(), err = [];
   p.on("pageerror", e => err.push(e.message));
-  await p.clock.setFixedTime(new Date("2026-12-01T10:00:00"));
+  await p.clock.setFixedTime(new Date(quand || "2026-12-01T10:00:00"));
   await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(fausses(complet)) }));
   await p.addInitScript(() => { localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.tuto1", "1"); });
   await p.goto("http://localhost:8771/index.html");
@@ -37,7 +37,7 @@ async function parcourir(b, complet) {
   return { texte: textes.join("\n"), err, etat };
 }
 (async () => {
-  const b = await chromium.launch(), inc = await parcourir(b, false), comp = await parcourir(b, true); await b.close();
+  const b = await chromium.launch(), inc = await parcourir(b, false), comp = await parcourir(b, true), tard = await parcourir(b, false, "2026-12-09T10:00:00"); await b.close();
   const ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); };
   const sig = t => ["7,3 %", "6,4 %", "5,5 %", "4,6 %", "7,31", "6,42", "5,53", "4,64"].filter(s => t.includes(s));
   ok(!inc.err.length && !comp.err.length, "0 erreur JS " + JSON.stringify(inc.err.concat(comp.err)));
@@ -48,5 +48,7 @@ async function parcourir(b, complet) {
   ok(inc.etat.champ && inc.etat.champ.k === 202611 && !inc.etat.champ.complet && !inc.etat.champ.du, "verdict de novembre « en attente », sans aucun résultat (novembre ne compte pas au championnat : saison en janvier)");
   ok(sig(comp.texte).length >= 2, "témoin : mois complet, les % de novembre apparaissent " + JSON.stringify(sig(comp.texte)));
   ok(!comp.etat.attente, "témoin : mois complet, rien n'est voilé");
+  ok(!tard.err.length && !tard.etat.attente && sig(tard.texte).length >= 2, "délai de 7 jours passé (9/12) : novembre se dévoile sans Devlin " + JSON.stringify(sig(tard.texte)));
+  ok(/Pas de relevé pour\s*Devlin/.test(tard.texte) || tard.etat.champ && tard.etat.champ.complet, "délai passé : le verdict de novembre est rendu (Devlin noté sans relevé)");
   process.exit(ko.length ? 1 : 0);
 })();
