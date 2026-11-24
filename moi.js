@@ -1548,6 +1548,19 @@ function patrimoineNet() {
   const l = imm.find(x => /^Patrimoine net/.test(x.nom));
   return l ? { avecImmo: true, montant: l.montant, note: l.note } : { avecImmo: false, montant: s.financier, note: "" };
 }
+/* v20.38 (Théo, 24/11) : fichier avec un historique mais aucune ligne de bourse encore saisie (nouveau joueur ; Kévin avant sa photo de départ) */
+function enAttenteLignes() {
+  if (!M || M.simple || !(M.historique && M.historique.rows && M.historique.rows.length)) return false;
+  return !lignesTenues().length && !((M.synthese || {}).valeur > 0);
+}
+/* Anomalies du fichier à montrer. En attente de lignes, « Relevé automatique en retard » est masqué : les photos quotidiennes ne sont pas
+   encore lancées exprès. Il revient tout seul dès que des lignes existent. Les autres anomalies restent toujours visibles. */
+function anomaliesVues() {
+  const a = M && M.anomalies; if (!a || /^\s*✓/.test(a)) return "";
+  if (!enAttenteLignes()) return a;
+  const parts = a.replace(/^[⚠\s]+/u, "").split(/\s+▸\s+/).filter(p => !/^Relevé automatique en retard/.test(p.trim()));
+  return parts.length ? "⚠ " + parts.join("     ▸ ") : "";
+}
 function lignesTenues() {
   const out = [];
   (M.groupes || []).forEach(g => g.lignes.forEach(l => { if (!l.especes) out.push(Object.assign({ env: g.env }, l)); }));
@@ -2197,8 +2210,7 @@ function htmlJourBase() {
   const v5 = !!PERIODES_J[VUEJ], per = !!seanceDu(), det5 = VUEJ === "5j" && !!CINQ, bf = bourseFermee();
   /* v20.37 (Théo, 24/11) : fichier avec un historique mais aucune ligne de bourse encore saisie (nouveau joueur, Kévin avant sa photo de départ) :
      pas de gros « 0 € » inquiétant, un encadré qui explique. */
-  const hist = M.historique && M.historique.rows ? M.historique.rows.length : 0;
-  const attente = !M.simple && !toutes.length && !(s.valeur > 0) && hist > 0;
+  const attente = enAttenteLignes();
   const ATT = '<div class="m-hero"><div class="m-hero-t"><span class="eyebrow">' + embHero() + "Bourse</span></div>" +
     '<div class="m-attente" role="status"><b>⏳ Tes lignes arrivent bientôt.</b><span>Ta bourse s\'affichera ici, au cours du jour, dès que tes lignes (PEA, assurance-vie…) seront saisies dans ton fichier. En attendant, tes statistiques et ton « Mois par mois » viennent de tes relevés du Versus.</span></div></div>';
   return (attente ? ATT : '<div class="m-hero">' +
@@ -7511,8 +7523,8 @@ function marquerFaits(cles) {
 function notifications() {
   if (!M) return { niveau: "", items: [] };
   const items = [];
-  const anomalie = M.anomalies && !/^\s*✓/.test(M.anomalies);
-  if (anomalie) items.push({ t: "rouge", txt: M.anomalies });
+  const anomalie = anomaliesVues();
+  if (anomalie) items.push({ t: "rouge", txt: anomalie });
   alertesDeclenchees().forEach(a => items.push({ t: "rouge", txt: "Alerte de cours : " + a }));
   { const Dv = dVersus(), l = Dv && Dv.liaison;   // v17.97 (Théo) : relevés automatiques du Versus éteints → rappel à l'admin seulement, jusqu'à ce qu'il les active
     if (l && l.active === false && typeof vraiAdmin === "function" && vraiAdmin()) items.push({ t: "rouge", txt: "Relevés automatiques de fin de mois désactivés : Réglages › Relevés automatiques de fin de mois (admin) › Activer" }); }
@@ -7547,12 +7559,12 @@ function htmlNotifications() {
   if (!M) return '<p class="info">Lecture de ton fichier en cours…</p>';
   injecterStyle();
   const propre = t => esc(String(t || "").replace(/^[✓⚠🔔✏️\s]+/u, "").trim()).replace(/ +▸ /g, "<br>▸ ");
-  const anomalie = M.anomalies && !/^\s*✓/.test(M.anomalies), alertes = alertesDeclenchees(), dus = rappelsFichier().filter(rappelDu);
+  const anomalie = anomaliesVues(), alertes = alertesDeclenchees(), dus = rappelsFichier().filter(rappelDu);
   const reportes = rappelsFichier().filter(x => /À faire|mettre à jour|retard|⚠|✏/i.test(x.statut || "") && rappelReporte(x));
   const sansListe = !rappelsFichier().length && /À mettre à jour/.test(M.rappel || "");   // profil simple : un seul texte de rappel
   const carte = (cls, ic, titre, sous, actions) => '<div class="nt ' + cls + '"><span class="nt-ic">' + ic + '</span><div class="nt-t"><b>' + titre + "</b>" + (sous ? "<small>" + sous + "</small>" : "") + "</div>" + (actions || "") + "</div>";
   const items = [];
-  if (anomalie) items.push(carte("rouge", "!", "Anomalie dans tes saisies", propre(M.anomalies)));
+  if (anomalie) items.push(carte("rouge", "!", "Anomalie dans tes saisies", propre(anomalie)));
   { const Dv = dVersus(), l = Dv && Dv.liaison;   // v17.97 (Théo) : relevés automatiques du Versus éteints → rappel à l'admin jusqu'à l'activation
     if (l && l.active === false && typeof vraiAdmin === "function" && vraiAdmin()) items.push(carte("rouge", "⚠", "Relevés automatiques de fin de mois désactivés", "sans eux, le Versus ne lira pas vos fichiers le dernier jour ouvré du mois", '<div class="nt-a"><button class="mini-btn" type="button" data-notif-liaison>Activer</button></div>')); }
   alertes.forEach(a => items.push(carte("rouge", "🔔", "Alerte de cours", esc(a))));
