@@ -578,7 +578,7 @@ function htmlRegles(tout, modeReserve) {
       "<p>Chaque mois, les pilotes sont classés sur la <b>performance de leur PEA et de leur assurance-vie</b> (versements neutralisés : seul le % compte ; les autres comptes restent privés). La saison va de janvier à décembre ; le plus de points gagne.</p>" + schemaMois +
       '<p class="rg-note">🔥 Décembre 2026 = tour de chauffe : tout marche, rien ne compte (cartes jusqu\'au 1er décembre).</p>')) +
     s("champ", "🏁", "Les points du mois", schemaBareme + schemaCalcul +
-      "<ul><li>Ex æquo : mêmes points. Un mois ne descend jamais sous 0.</li><li>Nouveau pilote : il entre en jeu à son <b>premier mois complet</b> (le mois où il ouvre ou alimente son compte ne compte pas).</li><li>Le mois compte quand tout le monde a saisi son relevé.</li><li>Égalité au championnat : le plus de victoires, puis la meilleure performance cumulée.</li></ul>") +
+      "<ul><li>Ex æquo : mêmes points. Un mois ne descend jamais sous 0.</li><li>Nouveau pilote : il entre en jeu à son <b>premier mois complet</b> (le mois où il ouvre ou alimente son compte ne compte pas).</li><li>Le mois compte quand tout le monde a saisi son relevé ; 7 jours après le jour du relevé, il se joue sans le retardataire (rattrapable s'il saisit son relevé ensuite).</li><li>Égalité au championnat : le plus de victoires, puis la meilleure performance cumulée.</li></ul>") +
     s("cartes", "🃏", "Les cartes", schemaCartes +
       "<ul><li><b>Une par mois</b>, face cachée dans le Stand (modifiable jusqu'au 1<sup>er</sup>), révélée le 2.</li><li>Rejouable, mais <b>pas deux mois de suite</b>. Au plus <b>+" + PLAFOND_CARTE + "</b> par mois.</li>" +
       (vC ? "<li>🗺️ <b>Atout du circuit</b> : chaque circuit préfère une carte ; si tu la joues <b>et qu'elle marque</b> : <b>+1</b> (secret jusqu'au 2, un indice 🔍 avant ; si 2 pilotes ou plus marquent avec : personne n'a le +1).</li>" : "") + "</ul>") +
@@ -649,7 +649,7 @@ function ouvrirGuide(titre, diapos, finLib) {
 }
 /* Guide du relevé mensuel du Versus (ouvert tout seul la première fois, puis depuis « ❓ ») */
 const TUTO_RELEVE = [
-  { ico: "📅", t: "Une fois par mois", html: true, p: "Le <b>dernier jour ouvré du mois</b>, après la clôture de 18 h, la ligne du mois s'ouvre. Saisis ton relevé ce soir-là ou dans les jours qui suivent : la course avance quand tout le monde l'a fait." },
+  { ico: "📅", t: "Une fois par mois", html: true, p: "Le <b>dernier jour ouvré du mois</b>, après la clôture de 18 h, la ligne du mois s'ouvre. Saisis ton relevé ce soir-là ou dans les jours qui suivent : la course avance quand tout le monde l'a fait (au plus tard 7 jours après : sans le retardataire)." },
   { ico: "💶", t: "Versé ce mois", html: true, p: "Pour chaque enveloppe (PEA, assurance vie, CTO, crypto) : l'argent que tu as <b>viré dessus</b> pendant le mois. Négatif si tu en as retiré, 0 si rien. Pas tes achats d'actions : seulement ce qui entre ou sort de l'enveloppe." },
   { ico: "📈", t: "Valeur fin de mois", html: true, p: "La <b>valeur totale</b> de l'enveloppe affichée par ta banque le dernier jour : titres et espèces compris. 0 si l'enveloppe est vidée. C'est elle qui fait ta performance du mois." },
   { ico: "✏️", t: "7 jours pour corriger", html: true, p: "Après l'envoi, ton relevé reste <b>modifiable et annulable 7 jours</b> (onglet Journal), puis il est figé. Pareil pour les relevés remplis automatiquement : 7 jours pour les corriger. L'app te prévient si un chiffre a l'air bizarre." }

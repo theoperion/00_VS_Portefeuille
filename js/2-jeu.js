@@ -50,6 +50,13 @@ function voilerMoisIncomplet() {
   }
   D.moisVoiles = voiles;
 }
+/** v20.31 (Théo, 24/11) · Un relevé manquant ne bloque pas le mois plus de 7 jours après le jour du relevé (dernier jour ouvré) :
+ *  ensuite le mois se dévoile et se joue sans lui (il ne marque rien ce mois-là) ; s'il rattrape son relevé plus tard, il est recompté. */
+const DELAI_RELEVE_JOURS = 7;
+function delaiReleveDepasse(k) {
+  const j = jourReleve(Math.floor(k / 100), k % 100);
+  return Date.now() >= new Date(j.getFullYear(), j.getMonth(), j.getDate() + DELAI_RELEVE_JOURS + 1).getTime();   // à partir de minuit après le 7e jour
+}
 function verdictMois(env, k) {
   if (D && D.attenteMois && (!k || k === D.attenteMois.k)) return { k: D.attenteMois.k, env, du: [], manquent: D.attenteMois.manquent, complet: false, voile: true };   // v20.30 : mois incomplet, rien n'en sort
   const fin = k || finGlobale(D, env); if (!fin) return null;
@@ -57,6 +64,7 @@ function verdictMois(env, k) {
   const prev = cleMoins(fin, 1);
   const attendus = D.personnes.filter(p => aRendement(p, env, prev) || aRendement(p, env, fin)).map(p => p.nom);
   const manquent = attendus.filter(n => !du.some(x => x.nom === n));
+  const delai = manquent.length > 0 && delaiReleveDepasse(fin);   // v20.31 (Théo, 24/11) : 7 jours après le jour du relevé, le mois se joue sans le retardataire
   if (du.length < 2) return manquent.length && du.length ? { k: fin, env, du, manquent, complet: false } : null;
   let remontee = null;
   if (fin % 100 > 1) {
@@ -68,7 +76,7 @@ function verdictMois(env, k) {
   const iR = (D.marche.mois.find(l => l[0] === fin) || [])[ETAT.i1 + 1];
   const exaequo = (r) => du.filter(x => Math.abs(x.r - r) < 1e-9).map(x => x.nom).join(" et ");
   return { k: fin, env, du, champion: { nom: exaequo(du[0].r), r: du[0].r, seul: du[0].r - du[1].r > 1e-9 }, lanterne: { nom: exaequo(du[du.length - 1].r), r: du[du.length - 1].r }, remontee, leader, iR: ok(iR) ? iR : null,
-    battent: ok(iR) ? du.filter(x => x.r > iR).map(x => x.nom) : null, manquent, complet: !manquent.length };
+    battent: ok(iR) ? du.filter(x => x.r > iR).map(x => x.nom) : null, manquent, complet: !manquent.length || delai, sansReleve: delai ? manquent.slice() : [] };
 }
 /** Mois qui ont un verdict possible (au moins deux relevés) */
 function moisVerdict(env) {
@@ -107,6 +115,7 @@ function carteVerdict(v) {
   return '<div class="verdict vp"><div class="v-h"><span>' + navVerdict(v) + "Verdict · " + esc(moisLong(v.k)) + (v.env ? " · " + esc(ENVELOPPES[v.env]) : "") + "</span></div>" +
     '<div class="vp-podium">' + marche(top[1], 2) + marche(top[0], 1) + marche(top[2], 3) + "</div>" +
     (autres ? '<div class="vp-suite">' + autres + "</div>" : "") + barreIdx +
+    ((v.sansReleve || []).length ? '<p class="v-n">⏱️ Pas de relevé pour ' + v.sansReleve.map(n => "<b>" + esc(n) + "</b>").join(" et ") + " 7 jours après la date : mois joué sans " + (v.sansReleve.length > 1 ? "eux" : "lui") + " (rattrapable s'" + (v.sansReleve.length > 1 ? "ils saisissent leur" : "il saisit son") + " relevé).</p>" : "") +
     '<p class="v-n">Uniquement le mois de ' + esc(moisLong(v.k)) + ". Sur un seul mois, la chance pèse plus que le talent. Touche un pilote pour sa fiche.</p></div>";
 }
 function brancherVerdict(v) {
