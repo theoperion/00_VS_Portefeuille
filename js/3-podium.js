@@ -931,13 +931,13 @@ function blocSaison() {
     (ys.length > 1 ? '<div class="s-ys">' + ys.map(a => '<button type="button" class="chip-s' + (a === y ? " on" : "") + '" data-saison="' + a + '">' + (estChauffe(a) ? "🔥 Chauffe" : "Saison " + numeroSaison(a)) + "</button>").join("") + "</div>" : "") +
     (ch ? '<div class="chauffe-b">🔥 <span><b>Tour de chauffe</b> : les règles de base, et rien ne compte. Le championnat démarre le 1<sup>er</sup> janvier. <a href="#" class="lien-regles" data-regles="essentiel">En savoir plus</a></span></div>' : "") +
     (standSeul(y) ? '<div class="chauffe-b">🏁 <span><b>Saison 1</b> : le championnat démarre le 1<sup>er</sup> janvier. D\'ici le 1<sup>er</sup> janvier, dans le Stand : pose ta carte, fais ton pronostic (avec ta pole) et choisis ton rival.</span></div>' : "") +
-    '<div class="pod-tabs" role="group" aria-label="Saison">' + (standSeul(y) ? "" : b("gp", "<span>" + icoOu("course", "🏁") + "</span>Course")) + b("stand", "<span>" + icoOu("stand", "🃏") + "</span>Stand" + compteCartesTab(y) + (rappelCartes() ? '<i class="pastille" aria-label="à faire"></i>' : "")) + (basesSeules() ? "" : b("ecurie", "<span>" + icoOu("ecurie", "🏎️") + "</span>Écurie")) + b("defis", "<span>" + icoOu("trophees", "🏆") + "</span>Trophées") + "</div>" +
+    '<div class="pod-tabs" role="group" aria-label="Saison">' + (standSeul(y) ? "" : b("gp", "<span>" + icoOu("course", "🏁") + "</span>Course")) + b("stand", "<span>" + icoOu("stand", "🃏") + "</span>Stand" + compteCartesTab(y) + (rappelCartes() ? '<i class="pastille" aria-label="à faire"></i>' : "")) + (basesSeules() ? "" : b("ecurie", "<span>" + icoOu("ecurie", "🏎️") + "</span>Écurie") + b("defis", "<span>" + icoOu("trophees", "🏆") + "</span>Trophées")) + "</div>" +
     '<div class="s-corps">' + (o === "ecurie" ? htmlEcurie() : o === "defis" ? htmlVitrines() : o === "stand" ? htmlStand(y) : htmlGrandPrix(y)) + "</div>" +
     (false && adminActif() && !window.APERCUS_FINIS ? '<button class="reserve-b" type="button" id="reserve-ouvrir">🧪 <span><b>Règles et idées en réserve</b><small>admin · ce qui est en jeu, ce qui dort, les réglages</small></span> ›</button>' : "") + "</section>";
 }
 /** Onglet du Podium : l'ancien « Championnat » est maintenant dans le Grand Prix */
-function ongletPodium() {   // refonte des badges : l'onglet Trophées est ouvert dès le tour de chauffe (aperçu « voici ce qui t'attend », sans détenteurs)
-  if (standSeul(saisonCourante())) return ETAT.podium === "defis" ? "defis" : "stand"; return (basesSeules() ? ["gp", "stand", "defis"] : ["gp", "stand", "ecurie", "defis"]).includes(ETAT.podium) ? ETAT.podium : "gp";
+function ongletPodium() {   // v20.44 (règle de Théo) : pendant la chauffe et le Stand de fin décembre, PAS d'onglet Trophées pour les joueurs (révélations du 20/12 et du 1/1) ; l'admin voit tout en « Tout afficher »
+  if (standSeul(saisonCourante())) return "stand"; return (basesSeules() ? ["gp", "stand"] : ["gp", "stand", "ecurie", "defis"]).includes(ETAT.podium) ? ETAT.podium : "gp";
 }
 /** Détail des points (l'ancien onglet Championnat), replié sous la course */
 function htmlDetailPoints(y) {
