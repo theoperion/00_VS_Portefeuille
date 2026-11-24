@@ -30,3 +30,4 @@ Le championnat entre amis : chaque mois, les pilotes (Théo, Kévin, Clément, D
 3. **Écran « La Coupe brisée »** avant janvier (serveur V49 prêt).
 4. **Refonte des badges** avant janvier : à **réduire** avec Théo à l'essentiel faisable d'ici là (le reste dans `IDEES_JEU.md`).
 5. **Teasers vidéo de décembre** (un par pan de règles, ~6/12 cartes, ~13/12 trésors + Coupe évoquée, ~20/12 écurie si prête, ~28/12 révélation des 12 univers ; couverture « VERSUS · ÉPISODE N »).
+6. **Tests du jeu à ajouter** (essai de l'agent `jeu-code-donnees`, 24/11) : un test Playwright « simple joueur, sans admin » aux dates 3/12, 20/12, 31/12 et 1/1 qui vérifie qu'aucune barre ni aperçu d'admin n'apparaît ; et `ouvrirCircuits2027()` (js/4-grandprix.js) devrait revérifier qu'on est admin (double sécurité).
