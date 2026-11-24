@@ -824,7 +824,7 @@ function revelerEclat(e, rang) {
   if (window.SONS && SONS.jingle) try { SONS.jingle("garage", "motif"); } catch (er) { /* sans son */ }
 }
 /** Refonte des badges (Théo, 24/11) · le PREMIER à trouver le trésor du mois : grande révélation dorée (comme un secret doré), son nom gravé ;
- *  la trouvaille compte aussi pour la couronne du Flair (3 points au 1er). Animations réduites : tout s'affiche d'un coup, sans mouvement. */
+ *  la trouvaille compte aussi pour le titre du Flair (3 points au 1er). Animations réduites : tout s'affiche d'un coup, sans mouvement. */
 function ceremonieEclat(e, c, i) {
   const moi = moiVrai() || "toi", G = GPS[e.circuit];
   const o = document.createElement("div"); o.className = "revel cb-or" + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Premier à trouver le trésor");
@@ -832,7 +832,7 @@ function ceremonieEclat(e, c, i) {
     (c ? '<div class="cbo-coupe">' + svgCoupe(c, i) + "</div>" : "") +
     "<h3>Éclat de " + esc(e.matiere || "") + "</h3>" + (G ? '<small class="cbo-u">' + G.drap + " " + esc(G.gp) + "</small>" : "") +
     '<p class="cbo-grave">Gravé à ton nom : <b>' + esc(moi) + "</b></p><p>" + esc(e.texte || "") + "</p>" + (e.symbole ? '<p class="cb-s1">Un signe y est gravé : <b>' + esc(e.symbole) + "</b></p>" : "") +
-    (typeof saisonJouee === "function" && saisonJouee() ? '<p class="cbo-flair">🔍 +3 au score de chercheur (couronne du Flair) · aucun point au championnat</p>' : "") +
+    (typeof saisonJouee === "function" && saisonJouee() ? '<p class="cbo-flair">🔍 +3 au score de chercheur (titre du Flair) · aucun point au championnat</p>' : "") +
     '<div class="btn-row">' + (c ? '<button class="btn acc" type="button" data-cb-voir>Voir la Coupe</button>' : "") + '<button class="btn ghost" type="button" data-cb-ok>Génial !</button></div></div>';
   document.body.appendChild(o);
   const t0 = Date.now(), fermer = () => o.remove();
