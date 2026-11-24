@@ -51,7 +51,10 @@ Dans `.claude/agents/`, préfixés `moi-` ou `jeu-` (4 au plus par partie). Mét
 | `moi-code-donnees` | rien ne casse, saisie jamais perdue, jamais le chiffre d'un autre joueur, rien de personnel dans le dépôt public | ✅ essai réussi (24/11) |
 | `moi-utilisateur` | une personne au téléphone comprend tout du premier coup | ✅ essai réussi (24/11) |
 | `moi-avocat-du-diable` | conteste chaque idée ou gros changement | ✅ essai réussi (24/11) |
-| agents du jeu | à définir avec Théo | — |
+| `jeu-arbitre` | chaque point du championnat donné selon les règles, appli et serveur d'accord | ✅ essai réussi (24/11) |
+| jeu-code-donnees | rien ne casse, fluide, jamais un montant (seulement des %), aucun secret qui fuit | à écrire |
+| jeu-joueur | une personne au téléphone comprend tout, rien ne se recouvre | à écrire |
+| jeu-avocat-du-diable | conteste chaque idée ou gros changement | à écrire |
 
 ## À revoir à la fin du tri (décision de Théo, 24/11)
 - Dépôt public : fiche de transfert PDF (`docs/transferts/`) et identifiants des fichiers Google dans `archives/` ; décider où les ranger.
