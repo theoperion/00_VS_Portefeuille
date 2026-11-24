@@ -1,10 +1,10 @@
 # Versus : fiche commune pour Claude
 
-Fiche courte, lue automatiquement. Ce dépôt contient **deux applis**, chacune avec sa conversation :
-- **Perso · Versus** (le jeu : championnat entre amis) → lire aussi **`docs/jeu/FICHE_JEU.md`** ; idées dans `docs/jeu/IDEES_JEU.md`.
-- **Perso · Moi** (le suivi privé du portefeuille de Théo) → lire aussi **`docs/moi/FICHE_MOI.md`** ; idées dans `docs/moi/IDEES_MOI.md`.
+Fiche courte, lue automatiquement. Ce dépôt contient **deux applis**, suivies dans **une seule conversation « Perso · Versus »** (choix de Théo, 24/11), un chantier à la fois, avec `/clear` entre un chantier du jeu et un chantier de Moi :
+- **le jeu** (championnat entre amis) → pour un chantier du jeu, lire **`docs/jeu/FICHE_JEU.md`** ; idées dans `docs/jeu/IDEES_JEU.md` ; agents `jeu-*`.
+- **Moi** (le suivi privé du portefeuille) → pour un chantier de Moi, lire **`docs/moi/FICHE_MOI.md`** ; idées dans `docs/moi/IDEES_MOI.md` ; agents `moi-*`.
 
-Chaque conversation ne lit que sa fiche et ne touche qu'à ses fichiers. Ancienne fiche et journal des versions (jusqu'au 24/11/2026) : `archives/`, à ne lire que si Théo le demande.
+Ne lire que la fiche de la partie du chantier en cours. Ancienne fiche et journal des versions (jusqu'au 24/11/2026) : `archives/`, à ne lire que si Théo le demande.
 
 ## Règles de travail (communes)
 - Théo est **non technique** : Claude fait tout, en français simple, sans jargon.
@@ -19,7 +19,7 @@ Chaque conversation ne lit que sa fiche et ne touche qu'à ses fichiers. Ancienn
 2. **Aucun identifiant, jeton ou secret** dans GitHub (`~/.clasprc.json` reste sur la machine). Le dépôt est **public**.
 3. Opération destructive sur un Google Sheet : seulement sur instruction explicite de Théo.
 4. Ne pas toucher aux autres applis (budgets, Compagnie de l'Aube, carnets).
-5. `app_scripts` (serveur, privé) est partagé : toujours `git pull --rebase` avant de pousser. Les deux conversations Versus/Moi travaillent dans le **même dépôt** : toujours récupérer `main` avant de commencer et avant de pousser.
+5. `app_scripts` (serveur, privé) est partagé : toujours `git pull --rebase` avant de pousser. Toujours récupérer `main` avant de commencer et avant de pousser.
 6. Tests : jamais les vraies données ; intercepter `https://script.google.com/**` avec de fausses données.
 
 ## Où est quoi
