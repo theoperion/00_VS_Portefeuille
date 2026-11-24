@@ -542,7 +542,7 @@ async function envoyerReleve(forcer) {
   const valeurs = R.v.map(t => { const n = lireNb(t); return ok(n) ? n : null; });
   if (simulation()) { toast(MSG_SIMULATION); return; }
   if (SOURCE === "cache" && EN_CHARGEMENT) { toast("Mise à jour des chiffres en cours : réessaie dans quelques secondes."); return; }
-  if (SOURCE !== "api") { toast(SOURCE === "demo" ? "Aperçu : le relevé est contrôlé mais rien n'est écrit sans adresse d'API." : ERREUR_SERVEUR ? "Le fichier a répondu par une erreur : le relevé n'a pas été envoyé." : "Hors connexion : le relevé n'a pas été envoyé."); if (SOURCE === "demo") $("#saisie").hidden = true; return; }
+  if (SOURCE !== "api") { toast(ERREUR_SERVEUR ? "Le fichier a répondu par une erreur : le relevé n'a pas été envoyé." : "Hors connexion : le relevé n'a pas été envoyé."); return; }
   R.envoi = true; R.erreur = ""; majSaisie(null);
   let rep;
   try { rep = await envoyerApi(apiUrl(), { cle: stock.get(CLES.cle), action: "releve", personne: R.nom, mois: R.k, valeurs, forcer: !!forcer }); }
@@ -879,7 +879,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") { $("#saisie
 let attente, largeur = window.innerWidth;
 window.addEventListener("resize", () => { if (window.innerWidth === largeur) return; largeur = window.innerWidth; clearTimeout(attente); attente = setTimeout(() => { if (D) rendreVue(vueActive()); }, 150); });
 if (window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (D) rendreVue(vueActive()); });
-document.addEventListener("visibilitychange", () => { if (document.hidden) return; if (SOURCE !== "demo") charger(false); if (window.Moi) { if (vueActive() === "moi") window.Moi.rafraichir(false); else window.Moi.prechauffer(); } });
+document.addEventListener("visibilitychange", () => { if (document.hidden) return; if (SOURCE) charger(false); if (window.Moi) { if (vueActive() === "moi") window.Moi.rafraichir(false); else window.Moi.prechauffer(); } });
 
 /* ---------- Démarrage ---------- */
 appliquerTheme(stock.get(CLES.theme) || "auto");
@@ -906,7 +906,7 @@ async function verifierMiseAJour() {
 /* ---------- Version affichée dans les Réglages ---------- */
 function majVersion() {
   const el = $("#version-app"); if (!el) return;
-  const api = D && D.version ? "API V" + D.version : SOURCE === "demo" ? "API : démo" : "API : —";
+  const api = D && D.version ? "API V" + D.version : "API : —";
   el.innerHTML = "<b>Versus " + esc(APP_VERSION) + "</b> · " + esc(APP_DATE) + "<br>" + esc(api) + (navigator.serviceWorker && navigator.serviceWorker.controller ? " · hors connexion prêt ✓" : "");
 }
 

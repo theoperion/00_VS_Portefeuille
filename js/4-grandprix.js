@@ -1067,6 +1067,7 @@ function bandeAnnonce(y, i, ensuite) {
   o.querySelector(".ba-passer").addEventListener("click", e => { e.stopPropagation(); fermer(true); });
   BA_OUVERTE = { fermer };
 }
+let GP_RELANCES = 0;   // audit B6 : relances automatiques du circuit 3D après une coupure du navigateur
 function brancherGP(v, y) {
   const etapes = etapesGP(y), i = GP_ETAPE !== null && GP_ETAPE < etapes.length ? GP_ETAPE : etapeParDefaut(etapes, y), et = etapes[i];
   const pi = v.querySelector("#gp-piste"), scene = v.querySelector("#gp-scene"); if (!pi || !scene) return;
@@ -1082,7 +1083,8 @@ function brancherGP(v, y) {
     const api = Piste.monter(boite, { circuit: ci, meteo: met, ambiance: amb, mode: deux ? "2d" : "3d", camera: vue === "poursuite" ? "poursuite" : camGP(), sansVoitures: vue === "visite", tour: TOUR_GP, voitures: vs, pts: et.pts, focus,
       atoutCol: at ? "#3DDC97" : null, piegeCol: null, accent: couleurAccent(), titre: GPS[ci].gp + ", " + GPS[ci].ville, portrait: n => avatar(n, Object.assign({}, equipDe(n), { skin: (Piste.TRACES[ci] || {}).peint })),   // V16.35 : sa tête + l'accessoire du thème
       image: etiquettesGP, toucher: n => { if (vueGP(ci) === "poursuite") { suivreGP(n); return; } ETAT.gpFocus = n; garder(); if (GP_INST) GP_INST.api.focus(n); toast("👀 " + n + " est mis en avant."); },
-      perdu: () => { if (GP_INST && GP_INST.boite === boite) GP_INST = null; } });
+      perdu: () => { if (GP_INST && GP_INST.boite === boite) GP_INST = null;   // audit B6 : circuit coupé par le navigateur → on le relance (2 fois au plus)
+        if (GP_RELANCES < 2 && typeof rendreTrophees === "function") { GP_RELANCES++; setTimeout(() => { if (boite.isConnected && !document.hidden) rendreTrophees(); }, 400); } } });
     GP_INST = { cle, api, boite };
     if (api.type === "2d" && !deux) { pi.classList.add("en2d"); const cb = pi.querySelector("#gp-cam-b"); if (cb) cb.remove(); }
   }
