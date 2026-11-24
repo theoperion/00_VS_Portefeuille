@@ -847,8 +847,9 @@ function apercuCoupe() { if (!apercuAutorise()) return; ouvrirCoupe(COUPE_EX); }
     le circuit affiché reçoit une énigme, un 2e indice, des chercheurs et une cachette D'EXEMPLE, inventés (sans rapport avec les vrais trésors),
     et passe en 📺 Visite ; tout le parcours des joueurs marche (carte 2D, Visite, plein écran, trouvaille). Rien n'est envoyé au serveur,
     rien n'est gardé : « ✕ Quitter » (ou changer d'onglet ou de circuit) remet l'état réel. */
-const TAP_EX = { type: "gemme", enigme: "Énigme d'exemple : je suis rond, je brille quand la nuit tombe, et pourtant je ne suis pas la lune.",
-  ind: "Indice d'exemple : lève les yeux vers ce qui est le plus haut.", ch: [{ nom: "Pilote A", j: 20271104 }, { nom: "Pilote B", j: 20271109 }] };
+/* v20.45 (Théo) : l'exemple dit vrai sur SA cachette (posée au hasard au ras du sol, près du milieu de l'écran) ; les vraies énigmes, elles, décrivent le décor exact autour de chaque trésor */
+const TAP_EX = { type: "gemme", enigme: "Énigme d'exemple : une petite gemme orange a roulé hors de la piste. Elle attend au ras du sol, pas loin du centre de la carte, là où personne ne regarde.",
+  ind: "Indice d'exemple : descends tout près du sol et zoome au maximum : elle n'apparaît que de très près.", ch: [{ nom: "Pilote A", j: 20271104 }, { nom: "Pilote B", j: 20271109 }] };
 function ouvrirApercuTresor() {
   if (!apercuAutorise()) return;   // v20.40 : double sécurité
   if (TRESOR_APERCU) { quitterApercuTresor(true); return; }
