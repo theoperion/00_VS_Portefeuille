@@ -198,7 +198,7 @@ function choisirVueGP(v, y) {
   else rendreTrophees();
   if (v === "2d" || TRESOR_APERCU) return;   // v17.35 : pendant l'aperçu du trésor, rien de gardé
   const cle = "versus.aideVue." + v; if (stock.get(cle)) return; stock.set(cle, "1");
-  setTimeout(() => toast(v === "visite" ? "📺 Visite : glisse pour tourner, pince pour zoomer, deux doigts pour te déplacer. Les voitures sont au garage : à toi le décor !" : "🚁 Hélico : la caméra suit ta voiture. Touche une pastille pour suivre un autre pilote."), 600);
+  setTimeout(() => toast(v === "visite" ? "📺 Visite : glisse pour tourner, pince pour zoomer. De près, glisse pour te déplacer, ou utilise le joystick en bas. Les voitures sont au garage : à toi le décor !" : "🚁 Hélico : la caméra suit ta voiture. Touche une pastille pour suivre un autre pilote."), 600);
 }
 function suivreGP(n) { ETAT.gpSuivi = n; garder(); if (GP_INST && GP_INST.api.type === "3d") GP_INST.api.focus(n); const pi = document.getElementById("gp-piste"); majVueDOM(pi ? vueGP(pi.dataset.circuit) : null); }
 function couleurAccent() { try { return getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#9B87FF"; } catch (e) { return "#9B87FF"; } }
