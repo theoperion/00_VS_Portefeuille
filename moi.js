@@ -4834,8 +4834,8 @@ function htmlDernierAchatLigne() {
     .sort((a, b) => String(b.date).localeCompare(String(a.date)))[0];
   if (!o) return "";
   const pu = o.quantite > 0 && o.montant > 0 ? (o.montant - (o.frais || 0)) / o.quantite : 0;   // montant du journal = net débité, frais compris : on les retire pour comparer au cours de l'avis
-  const prix = pu > 0 && ETAT.discret !== "oui" ? " à " + nbCours(pu) + " la part (hors frais)" : "";
-  return '<p class="m-pu" id="f-dernier">Dernier achat de cette ligne : le ' + esc(frDate(String(o.date).slice(0, 10))) + prix + "</p>";
+  const prix = pu > 0 && ETAT.discret !== "oui" ? ", au cours de " + nbCours(pu) + " (hors frais)" : "";   // même mot que le champ « Cours » (relecture moi-utilisateur)
+  return '<p class="m-pu" id="f-dernier">Dernier achat de ' + esc(F.actif) + " sur ce compte : le " + esc(frDate(String(o.date).slice(0, 10))) + prix + "</p>";
 }
 function htmlMemeAchat() {
   const d = dernierAchat(); if (!d) return "";

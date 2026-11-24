@@ -181,7 +181,7 @@ async function verifierConfiguration(url) {
 function ouvrirCle(msg, creation) {
   CREATION = !!creation;
   $("#ecran-cle").hidden = false;
-  $("#texte-cle").textContent = CREATION ? "Première ouverture : choisis la clé d'accès de l'application (6 caractères minimum). Elle sera demandée sur chaque nouvel appareil et reste enregistrée sur celui-ci."
+  $("#texte-cle").textContent = CREATION ? "Première ouverture : choisis la clé d'accès de l'application (12 caractères minimum). Elle sera demandée sur chaque nouvel appareil et reste enregistrée sur celui-ci."
     : "Entre la clé d'accès pour ouvrir le classement. Elle reste enregistrée sur cet appareil.";
   $("#champ-cle2").hidden = !CREATION;
   $("#valider-cle").textContent = CREATION ? "Créer la clé" : "Ouvrir";
