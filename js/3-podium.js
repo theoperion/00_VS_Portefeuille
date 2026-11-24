@@ -293,7 +293,7 @@ function etatDefis(nom) {
 /* ---------- Écurie : ce qui se débloque, ce qui est équipé ---------- */
 const ITEMS = {
   casque: { uni: "Uni", carbone: "Carbone", eclair: "Éclair", damier: "Damier", tortue: "Tortue", chrome: "Chrome", etoile: "Étoile", holo: "Holo", couronne: "Couronne", foudre: "Foudre", phenix: "Phénix", glace: "Glace", galaxie: "Galaxie", empereur: "Empereur" },
-  circuit: { classique: "Jour de course", monaco: "Nocturne", desert: "Golden hour", neige: "Hiver", neon: "Synthwave" },
+  circuit: { classique: "Jour de course", monaco: "Nocturne", desert: "Heure dorée", neige: "Hiver", neon: "Synthwave" },
   fond: { couleur: "Couleur", carbone: "Carbone", aurore: "Aurore", flammes: "Flammes", neon: "Néon", damier: "Damier", or: "Or", galaxie: "Galaxie" },
   finition: { aucune: "Aucune", argent: "Liseré argent", or: "Liseré or", neon: "Liseré néon", diamant: "Diamant", lauriers: "Lauriers", etoilee: "Étoilée", soleil: "Soleil" },
   livree: { couleur: "Couleur", chrome: "Chrome", or: "Or", neon: "Néon", arcenciel: "Prisme", oranime: "Or vivant", platine: "Platine", rubis: "Rubis", galaxie: "Galaxie", orrose: "Or rose" },
@@ -622,7 +622,7 @@ function texteOrigineItem(qui, slot, id) {
   if (org.monde) {
     const t = org.monde, o = (etatTropheesMondes()[t.id] || {})[qui] || { ok: false, p: 0, c: 1 }, u = univers(t.univers), ou = universVisible() && u ? " · " + u.drap + " " + u.nom : "";
     return ouvert ? { t: "🏆 Trophée « " + t.nom + " »" + ou, p: "Gagné en réussissant : " + t.def + "." }
-      : { t: "🏆 Trophée « " + t.nom + " »" + ou, p: "Pour l'ouvrir : " + t.def + ". Tout le monde peut l'avoir.", prog: o.c ? o.p / o.c : 0, pt: o.p ? o.p + " / " + o.c : "" };
+      : { t: "🏆 Trophée « " + t.nom + " »" + ou, p: "Pour l'ouvrir : " + t.def + ". Tout le monde peut l'avoir.", prog: o.c ? o.p / o.c : 0, pt: o.p ? o.p + " / " + o.c + uniteTM(t) : "" };
   }
   if (org.gant) { const y = anneesSaison().slice(-1)[0], n = y ? (etatGant(y)[qui] || { n: 0 }).n : 0;
     return ouvert ? { t: "🧤 Gant de l'infini", p: "Gagné en allumant les 6 pierres du Gant dans une saison." } : { t: "🧤 Gant de l'infini", p: "Allume les 6 pierres du Gant dans la saison (onglet Trophées).", prog: n / 6, pt: n + " / 6 pierres" }; }
@@ -1343,21 +1343,23 @@ function svgGant(p) {
 function nomPilote(n) { return '<span class="nmp" style="--c:' + couleur(n) + '"><i></i>' + esc(n) + "</span>"; }
 function htmlGant(apercu, noms, moi, y) {
   const G = apercu ? {} : etatGant(y), g = (moi && G[moi]) || { p: [0, 0, 0, 0, 0, 0], n: 0 }, idx = D.marche.indices[iRef()];
-  return '<div class="gant' + (g.n === 6 ? " complet" : "") + '"><div class="gant-h">' + svgGant(g.p) + '<div class="gant-t"><b>🧤 Le Gant de l\'infini</b><small>Le grand objet de la saison : allume ses 6 pierres avant décembre.</small>' +
+  return '<div class="gant' + (g.n === 6 ? " complet" : "") + '"><div class="gant-h">' + svgGant(g.p) + '<div class="gant-t"><b>🧤 Le Gant de l\'infini</b><small>Le grand objet de la saison : allume ses 6 pierres d\'ici la fin de la saison (décembre compris).</small>' +
     '<span class="gant-n"><b>' + g.n + "</b> / 6 pierres" + (g.n === 6 ? " · complet !" : "") + "</span></div></div>" +
     '<ol class="pierres">' + PIERRES.map((pi, i) => '<li class="' + (g.p[i] ? "on" : "") + '" style="--pc:' + pi.c + '"><i aria-hidden="true"></i><span><b>' + esc(pi.nom) + "</b><small>" + esc(pi.def.replace("l'indice", "le " + idx)) + (g.p[i] ? " · ✓ " + esc(moisLong(g.p[i])) : "") + "</small></span></li>").join("") + "</ol>" +
     (apercu ? "" : '<div class="gant-autres"><small>Les autres pilotes (combien de pierres) :</small>' + noms.filter(n => n !== moi).map(n => '<span class="nmp" style="--c:' + couleur(n) + '"><i></i>' + esc(n) + " <b>" + ((G[n] || { n: 0 }).n) + "</b>/6</span>").join("") + "</div>") +
-    '<p class="gant-r">Gant complet : ' + esc(libGains(GANT.gain)) + " " + htmlUnivers(GANT.univers) + "</p></div>";
+    '<p class="gant-r">Gant complet : ' + esc(libGains(GANT.gain)) + " (se gagne en " + htmlUnivers(GANT.univers) + ")</p></div>";
 }
+/** unité des compteurs d'avancement (« 2/6 mois », « 3/15 % »…) : relecture joueur v20.44 */
+function uniteTM(t) { return ({ "m-horsreseau": " mois", "m-neonvert": " mois", "m-nuitblanche": " défis", "m-faveur": " pts", "m-epice": " %" })[t && t.id] || ""; }
 /** Les 12 trophées, dans l'ordre du calendrier de leurs univers */
 function htmlTropheesMondes(apercu, noms, moi) {
   const TM = apercu ? null : etatTropheesMondes(), l = TROPHEES_MONDES.slice().sort((a, b) => CAL_GP.indexOf(a.univers) - CAL_GP.indexOf(b.univers));
   const mes = TM && moi ? TROPHEES_MONDES.filter(t => TM[t.id][moi] && TM[t.id][moi].ok).length : 0;
-  return '<h4 class="vit-h4">Les 12 trophées <small>' + (apercu ? "un par univers" : (moi ? "à toi : " + mes + " / 12" : "")) + "</small></h4>" +
+  return '<h4 class="vit-h4">Les 12 trophées <small>' + (apercu ? "un par univers" : (moi ? "à toi : " + mes + " / 12" : "")) + "</small></h4>" + (apercu ? "" : '<p class="info tm-leg">Les ● sous chaque trophée : un par pilote, en couleur s\'il l\'a.</p>') +
     '<div class="tm-grille">' + l.map(t => {
       const o = TM && moi ? TM[t.id][moi] : null, qui = TM ? noms.filter(n => TM[t.id][n] && TM[t.id][n].ok) : [];
       return '<button type="button" class="tm' + (o && o.ok ? " a-moi" : "") + '" data-badge="' + t.id + '" data-bt="monde"><span class="tm-i">' + t.ico + '</span><span class="tm-t"><b>' + esc(t.nom) + "</b>" + htmlUnivers(t.univers) + "</span>" +
-        (TM ? '<span class="tm-e">' + (o && o.ok ? "✓" : o && o.p ? o.p + "/" + o.c : "") + '</span><span class="rt-dots">' + noms.map(n => '<i title="' + esc(n) + '"' + (qui.includes(n) ? ' class="on" style="background:' + couleur(n) + '"' : "") + "></i>").join("") + "</span>" : "") + "</button>";
+        (TM ? '<span class="tm-e">' + (o && o.ok ? "✓" : o && o.p ? o.p + "/" + o.c + uniteTM(t) : "") + '</span><span class="rt-dots">' + noms.map(n => '<i title="' + esc(n) + '"' + (qui.includes(n) ? ' class="on" style="background:' + couleur(n) + '"' : "") + "></i>").join("") + "</span>" : "") + "</button>";
     }).join("") + "</div>";
 }
 function htmlSecrets(apercu, noms, moi) {
@@ -1390,7 +1392,7 @@ function htmlVitrines() {
   const apercu = !saisonJouee(), noms = D.personnes.map(p => p.nom), moi = moiPilote(), y = anneesSaison().slice(-1)[0];
   return (apercu ? '<div class="chauffe-b">🔥 <span>Tour de chauffe : les trophées, les secrets et les couronnes démarrent le 1<sup>er</sup> janvier 2027. Voici ce qui t\'attend.</span></div>' : "") +
     (D.premierMillion ? bandeauMillion() : "") +   /* v17.31 (Théo) : le bandeau « Premier millionnaire » n'apparaît qu'une fois le badge gagné, puis pour toujours */
-    '<nav class="vit-nav" aria-label="Les 3 vitrines"><a href="#vit-trophees">🏆 Trophées</a><a href="#vit-secrets">🔍 Secrets</a><a href="#vit-couronnes">👑 Couronnes</a></nav>' +
+    '<nav class="vit-nav" aria-label="Les 3 vitrines"><a href="#vit-trophees">🏆 Mes trophées</a><a href="#vit-secrets">🔍 Secrets</a><a href="#vit-couronnes">👑 Couronnes</a></nav>' +
     '<section class="vit" id="vit-trophees"><h3 class="vit-h">🏆 Mes trophées <small>ce que je construis · tout le monde peut tout avoir</small></h3>' + htmlGant(apercu, noms, moi, y) + htmlTropheesMondes(apercu, noms, moi) + "</section>" +
     htmlSecrets(apercu, noms, moi) + htmlCouronnes(apercu, y);
 }
