@@ -756,32 +756,32 @@ async function trouverTresor(t, b) {
   if (rep && rep.ok) { TRESORS.trouves = rep.trouves || TRESORS.trouves.concat([t.circuit]); TRESORS.total = rep.total || TRESORS.trouves.length;
     if (!rep.deja) { const l = TRESORS.l.find(x => x.circuit === t.circuit), n = moiVrai(); if (l && !(l.chercheurs || []).some(x => x.nom === n)) { const d = new Date(); (l.chercheurs = l.chercheurs || []).push({ nom: n, j: d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate() }); } }
     toast(rep.deja ? "🗝️ Déjà trouvé !" : "🗝️ Trouvé" + (rep.rang === 1 ? " en premier ! 🥇" : rep.rang ? " (" + rep.rang + "e)" : " !") + " " + TRESORS.total + " trésor" + (TRESORS.total > 1 ? "s" : "") + " dans ta besace.");
-    if (rep.eclat && !rep.deja) { noterEclat(rep.eclat, moiVrai()); setTimeout(() => revelerEclat(rep.eclat), reduit ? 300 : 1300); }   // v20.42 : l'éclat de la Coupe rendu par ce trésor
+    if (rep.eclat && !rep.deja) { noterEclat(rep.eclat, moiVrai(), rep.rang); setTimeout(() => revelerEclat(rep.eclat), reduit ? 300 : 1300); }   // v20.42 : l'éclat de la Coupe rendu par ce trésor
     setTimeout(() => poserTresorDOM(document), reduit ? 0 : 900); }
   else { T.pris = false; b.classList.remove("pris"); toast((rep && rep.message) || "Trouvaille non enregistrée : réessaie."); }
 }
 /* ---------- 🏆 v20.41 · « La Coupe brisée » (fil rouge de la saison 2027) ----------
-   Le CONTENU (prologue, matières, textes, signes) n'est jamais dans l'appli ni dans ce dépôt public : il vient du serveur (Eclats.js, privé),
-   seulement pour les éclats déjà trouvés ou dont le mois est fini. Ici : l'écran qui l'affiche, et des exemples INVENTÉS pour l'aperçu admin. */
+   Le CONTENU (prologue, matières, textes, signes) n'est jamais dans l'appli ni dans ce dépôt public : il vient du serveur (Eclats.js, privé).
+   v20.43 (Théo) : la Coupe est PERSONNELLE. Chacun ne reçoit que les éclats qu'il a trouvés lui-même ; un mois fini sans trouvaille = éclat
+   « manque » (un de moins pour l'énigme, tant pis). Des autres : seulement combien l'ont trouvé, jamais le contenu. Exemples INVENTÉS pour l'aperçu admin. */
 const MOIS_COUPE = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
 const ECLAT_EX = { matiere: "verre d'exemple", couleur: "#7FB8FF", symbole: "★", texte: "Texte d'exemple : ici, deux phrases racontent ce que l'éclat a vécu dans ce monde. La seconde glisse une pièce du mystère." };
-const COUPE_EX = { exemple: true, prologue: "Prologue d'exemple : la vraie histoire s'affichera ici le 1er janvier.", n: 5,
+const COUPE_EX = { exemple: true, prologue: "Prologue d'exemple : la vraie histoire s'affichera ici le 1er janvier.", n: 4,
   eclats: ["silverstone", "djeddah", "melbourne", "suzuka", "miami", "montreal", "bahrein", "spa", "lasvegas", "singapour", "interlagos", "monza"].map((c, i) =>
-    i < 3 ? { circuit: c, mois: i + 1, etat: "trouve", par: ["Pilote A", "Pilote B", "Pilote A"][i], matiere: "matière d'exemple " + (i + 1), couleur: ["#E8B04A", "#9DB4E8", "#E7A1C4"][i], symbole: ["★", "◆", "★"][i], texte: ECLAT_EX.texte }
-      : i < 5 ? { circuit: c, mois: i + 1, etat: i === 3 ? "terne" : "trouve", par: i === 4 ? "Pilote C" : undefined, matiere: "matière d'exemple " + (i + 1), couleur: i === 3 ? "#CFE3EE" : "#3BD5E0", symbole: i === 3 ? "●" : "◆", texte: ECLAT_EX.texte }
-      : { circuit: c, mois: i + 1, etat: "avenir" }) };
+    i < 5 && i !== 3 ? { circuit: c, mois: i + 1, etat: "trouve", rang: [1, 3, 2, 0, 1][i], nb: [2, 4, 3, 0, 1][i], premier: "Pilote A", matiere: "matière d'exemple " + (i + 1), couleur: ["#E8B04A", "#9DB4E8", "#E7A1C4", "", "#3BD5E0"][i], symbole: ["★", "◆", "★", "", "◆"][i], texte: ECLAT_EX.texte }
+      : i === 3 ? { circuit: c, mois: 4, etat: "manque", nb: 2, premier: "Pilote B" } : { circuit: c, mois: i + 1, etat: "avenir", nb: i === 5 ? 1 : 0, premier: i === 5 ? "Pilote C" : null }) };
 function coupeDonnees() { return TRESOR_APERCU && TRESOR_APERCU.coupeEx ? COUPE_EX : TRESORS && TRESORS.coupe || null; }
 /** une trouvaille rend son éclat tout de suite (sans attendre le prochain chargement) */
-function noterEclat(e, nom) { const c = TRESORS && TRESORS.coupe; if (!c || !c.eclats) return; const x = c.eclats.find(z => z.circuit === e.circuit); if (!x || x.etat === "trouve") return;
-  Object.assign(x, { etat: "trouve", par: nom, matiere: e.matiere, couleur: e.couleur, texte: e.texte, symbole: e.symbole }); c.n = c.eclats.filter(z => z.etat !== "avenir").length; }
-/** la Coupe en 12 éclats (3 rangées de 4 dans la vasque, ordre des mois) ; trouvé = sa couleur, terne = grisé, à venir = vide */
+function noterEclat(e, nom, rang) { const c = TRESORS && TRESORS.coupe; if (!c || !c.eclats) return; const x = c.eclats.find(z => z.circuit === e.circuit); if (!x || x.etat === "trouve") return;
+  Object.assign(x, { etat: "trouve", rang: rang || (x.nb || 0) + 1, nb: (x.nb || 0) + 1, premier: x.premier || nom, matiere: e.matiere, couleur: e.couleur, texte: e.texte, symbole: e.symbole }); c.n = c.eclats.filter(z => z.etat === "trouve").length; }
+/** la Coupe en 12 éclats (3 rangées de 4 dans la vasque, ordre des mois) ; trouvé (par moi) = sa couleur, manqué = trou sombre, à venir = vide */
 function svgCoupe(c, actif) {
   const L = [[-60, -52], [-24, -52], [10, -52], [40, -52], [60, -52]], fissX = [[-60, -24, 10, 40, 60], [-54, -20, 6, 33, 54], [-47, -17, 9, 29, 47], [-38, -13, 4, 22, 38]], Y = [-52, -30, -8, 14];
   const jit = [[0, 2, -2, 1, 0], [0, -3, 2, -2, 0], [0, 2, -1, 3, 0], [0, 0, 0, 0, 0]];
   let g = "";
   for (let r = 0; r < 3; r++) for (let q = 0; q < 4; q++) { const i = r * 4 + q, e = (c.eclats || [])[i] || { etat: "avenir" };
     const p = [[fissX[r][q], Y[r] + jit[r][q]], [fissX[r][q + 1], Y[r] + jit[r][q + 1]], [fissX[r + 1][q + 1], Y[r + 1] + jit[r + 1][q + 1]], [fissX[r + 1][q], Y[r + 1] + jit[r + 1][q]]];
-    const d = "M" + p.map(z => z.join(" ")).join("L") + "Z", coul = e.etat === "avenir" ? "transparent" : e.couleur || "#999";
+    const d = "M" + p.map(z => z.join(" ")).join("L") + "Z", coul = e.etat === "trouve" ? e.couleur || "#999" : "transparent";
     g += '<path class="cb-ec e-' + e.etat + (i === actif ? " actif" : "") + '" data-ec="' + i + '" d="' + d + '" fill="' + esc(coul) + '"/>'; }
   return '<svg class="cb-svg" viewBox="-75 -60 150 126" aria-hidden="true"><path d="M-61 -53H61L41 17Q30 30 0 30Q-30 30 -41 17Z" class="cb-fond"/>' + g +
     '<path d="M-10 30H10L7 52H-7Z" class="cb-pied"/><path d="M-30 52H30Q34 52 34 58V62H-34V58Q-34 52 -30 52Z" class="cb-pied"/><path d="M-64 -53H64" class="cb-bord"/></svg>';
@@ -789,11 +789,13 @@ function svgCoupe(c, actif) {
 function ouvrirCoupe(c0) {
   const c = c0 || coupeDonnees(); if (!c) return;
   document.querySelectorAll(".coupe-b").forEach(x => x.remove());
-  const nomGP = ci => (GPS[ci] ? GPS[ci].drap + " " + GPS[ci].gp : ci), signes = (c.eclats || []).filter(e => e.etat !== "avenir" && e.symbole).map(e => e.symbole);
+  const nomGP = ci => (GPS[ci] ? GPS[ci].drap + " " + GPS[ci].gp : ci), signes = (c.eclats || []).filter(e => e.etat === "trouve" && e.symbole).map(e => e.symbole);
+  const autres = e => e.nb ? (e.nb === 1 ? "1 pilote l'a trouvé" : e.nb + " pilotes l'ont trouvé") + (e.premier ? " (le 1er : " + esc(e.premier) + ")" : "") : "personne ne l'a encore trouvé";
   const ligne = (e, i) => '<li class="cb-l e-' + e.etat + '" data-ec="' + i + '" style="--c:' + esc(e.couleur || "transparent") + '"><span class="cb-m">' + MOIS_COUPE[i] + "</span><div><b>" + esc(nomGP(e.circuit)) + "</b>" +
-    (e.etat === "avenir" ? "<small>À trouver en " + ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"][i] + " : le trésor du mois rendra cet éclat.</small>"
-      : "<small>" + (e.etat === "trouve" ? "Éclat de " + esc(e.matiere || "") + (e.par ? " · rendu par " + esc(e.par) : "") : "Éclat terne de " + esc(e.matiere || "") + " · personne ne l'a trouvé, la piste l'a rendu") + "</small><p>" + esc(e.texte || "") + "</p>") +
-    "</div>" + (e.etat !== "avenir" && e.symbole ? '<span class="cb-s" title="Le signe gravé sur cet éclat">' + esc(e.symbole) + "</span>" : "") + "</li>";
+    (e.etat === "avenir" ? "<small>À trouver en " + ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"][i] + " : trouve le trésor du mois pour gagner cet éclat" + (e.nb ? " · " + autres(e) : "") + ".</small>"
+      : e.etat === "manque" ? "<small>Tu n'as pas trouvé le trésor de ce mois : cet éclat te manquera pour l'énigme. " + autres(e) + ".</small>"
+      : "<small>Éclat de " + esc(e.matiere || "") + " · trouvé " + (e.rang === 1 ? "en premier 🥇" : e.rang ? "en " + e.rang + "e" : "") + (e.nb > 1 ? " · " + e.nb + " pilotes l'ont" : "") + "</small><p>" + esc(e.texte || "") + "</p>") +
+    "</div>" + (e.etat === "trouve" && e.symbole ? '<span class="cb-s" title="Le signe gravé sur cet éclat">' + esc(e.symbole) + "</span>" : "") + "</li>";
   const o = document.createElement("div"); o.className = "regles coupe-b"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "La Coupe brisée");
   o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>🏆 La Coupe brisée' + (c.exemple ? " · aperçu (exemple inventé)" : "") + '</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div>' +
     '<div class="cb-haut">' + svgCoupe(c) + '<div><p class="cb-n"><b>' + (c.n || 0) + "</b> éclat" + ((c.n || 0) > 1 ? "s" : "") + " sur 12</p><p class=\"cb-pro\">" + esc(c.prologue || "") + "</p></div></div>" +
