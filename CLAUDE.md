@@ -56,6 +56,11 @@ Dans `.claude/agents/`, préfixés `moi-` ou `jeu-` (4 au plus par partie). Mét
 | `jeu-joueur` | une personne au téléphone comprend tout, rien ne se recouvre | ✅ essai réussi (24/11) |
 | `jeu-avocat-du-diable` | conteste chaque idée ou gros changement | ✅ essai réussi (24/11) |
 
+### Renforts prévus (seulement au démarrage du chantier, puis retirés)
+- Décors 3D et cartes : un « directeur artistique » (beauté, effet waouh).
+- Teasers vidéo de décembre : adapter les agents vidéo de Chez moi (ton épique).
+- Copilote (Moi) : équipe allocation d'actifs, tendance/levier, test sur l'historique, fiscalité, avocat du diable.
+
 ## À revoir à la fin du tri (décision de Théo, 24/11)
 - Dépôt public : fiche de transfert PDF (`docs/transferts/`) et identifiants des fichiers Google dans `archives/` ; décider où les ranger.
 - `archives/MODE_EMPLOI_2026-11-24.md` : supprimer à terme (l'historique Git garde déjà chaque version).
