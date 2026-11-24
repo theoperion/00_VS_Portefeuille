@@ -16,7 +16,7 @@ Ce fichier n'est **pas** lu automatiquement : seulement quand Théo le demande. 
 ## Autres
 - Ranger le code en dossiers `jeu/` et `moi/` (plus lisible) : seulement avec des tests, au moment d'un nettoyage du code (adresses de chargement et copie hors connexion à adapter).
 - Course plus longue et plus grandiose (sans réforme des points).
-- Courbe du championnat qui raconte (« Février : Clément passe en tête »).
+- Après janvier, si l'envie d'échanger revient : 3 ou 4 réactions en émojis sur le résultat du mois (une par joueur, sans texte). Le chat en direct est écarté (24/11).
 - Mode photo ; décor qui réagit au classement ; un trésor sur **tous** les circuits.
 - Objets de collection : reliques 2D illustrées avec effet holographique et montée en puissance par paliers, à la place des cartes actuelles.
 - Tickets d'or : « tablette du mois » à déballer ; tirages par graine fixée au 1er janvier (empreinte affichée).
