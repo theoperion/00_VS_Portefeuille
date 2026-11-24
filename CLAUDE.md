@@ -49,7 +49,7 @@ Dans `.claude/agents/`, préfixés `moi-` ou `jeu-` (4 au plus par partie). Mét
 |---|---|---|
 | `moi-patrimoine` | chaque chiffre de Moi juste, partout pareil, fidèle aux règles et aux documents officiels | ✅ essai réussi (24/11) |
 | `moi-code-donnees` | rien ne casse, saisie jamais perdue, jamais le chiffre d'un autre joueur, rien de personnel dans le dépôt public | ✅ essai réussi (24/11) |
-| `moi-utilisateur` | une personne au téléphone comprend tout du premier coup | essai en cours |
+| `moi-utilisateur` | une personne au téléphone comprend tout du premier coup | ✅ essai réussi (24/11) |
 | `moi-avocat-du-diable` | conteste chaque idée ou gros changement | ✅ essai réussi (24/11) |
 | agents du jeu | à définir avec Théo | — |
 
