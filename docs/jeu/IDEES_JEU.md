@@ -14,6 +14,7 @@ Ce fichier n'est **pas** lu automatiquement : seulement quand Théo le demande. 
 - Voiture de course 3D refaite (carrosserie, roues, ailerons, numéro, ombre).
 
 ## Autres
+- Ranger le code en dossiers `jeu/` et `moi/` (plus lisible) : seulement avec des tests, au moment d'un nettoyage du code (adresses de chargement et copie hors connexion à adapter).
 - Course plus longue et plus grandiose (sans réforme des points).
 - Courbe du championnat qui raconte (« Février : Clément passe en tête »).
 - Mode photo ; décor qui réagit au classement ; un trésor sur **tous** les circuits.

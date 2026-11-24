@@ -1,6 +1,6 @@
 # Fiche du jeu Versus (conversation « Perso · Versus »)
 
-Le championnat entre amis : chaque mois, les pilotes (Théo, Kévin, Clément, Devlin ; Nicolas à venir) sont classés sur la **performance en %** de leur portefeuille (PEA et assurance-vie seulement), avec cartes, pronostics, course, trésors et badges. Règles complètes : `REGLES_PODIUM.md`. Saison : janvier → décembre ; **décembre 2026 = tour de chauffe** (tout marche, rien ne compte, ouvert aux joueurs depuis le 21/11).
+Le championnat entre amis : chaque mois, les pilotes (Théo, Kévin, Clément, Devlin ; Nicolas à venir) sont classés sur la **performance en %** de leur portefeuille (PEA et assurance-vie seulement), avec cartes, pronostics, course, trésors et badges. Règles complètes : `docs/jeu/REGLES_PODIUM.md`. Saison : janvier → décembre ; **décembre 2026 = tour de chauffe** (tout marche, rien ne compte, ouvert aux joueurs depuis le 21/11).
 
 ## Secrets (Théo joue aussi)
 - Emplacements, énigmes des trésors et contenu de « La Coupe brisée » : **uniquement** dans `app_scripts/versus/Tresors.js` et `Eclats.js` (privé). Ne jamais les recopier ici ni les dire à Théo.

@@ -1,8 +1,8 @@
 # Versus : fiche commune pour Claude
 
 Fiche courte, lue automatiquement. Ce dépôt contient **deux applis**, chacune avec sa conversation :
-- **Perso · Versus** (le jeu : championnat entre amis) → lire aussi **`FICHE_JEU.md`** ; idées dans `IDEES_JEU.md`.
-- **Perso · Moi** (le suivi privé du portefeuille de Théo) → lire aussi **`FICHE_MOI.md`** ; idées dans `IDEES_MOI.md`.
+- **Perso · Versus** (le jeu : championnat entre amis) → lire aussi **`docs/jeu/FICHE_JEU.md`** ; idées dans `docs/jeu/IDEES_JEU.md`.
+- **Perso · Moi** (le suivi privé du portefeuille de Théo) → lire aussi **`docs/moi/FICHE_MOI.md`** ; idées dans `docs/moi/IDEES_MOI.md`.
 
 Chaque conversation ne lit que sa fiche et ne touche qu'à ses fichiers. Ancienne fiche et journal des versions (jusqu'au 24/11/2026) : `archives/`, à ne lire que si Théo le demande.
 
@@ -27,10 +27,12 @@ Chaque conversation ne lit que sa fiche et ne touche qu'à ses fichiers. Ancienn
 |---|---|
 | `index.html`, `css/versus.css`, `sw.js`, `manifest.webmanifest` | communs |
 | `version.js` (`app` + `date`) : **seul endroit à changer** à chaque mise en ligne (sert aussi au cache hors connexion). Version actuelle : **20.20** | commun |
-| `js/1-base.js` … `js/8-eredor-demarrage.js`, `js/icones.js`, `js/sons.js`, `piste.js`, `img/cartes/`, `REGLES_PODIUM.md` | jeu |
+| `js/1-base.js` … `js/8-eredor-demarrage.js`, `js/icones.js`, `js/sons.js`, `piste.js`, `img/cartes/` | jeu |
 | `moi.js`, `moteur.js` (calculs) | Moi |
 | `outils-tests/` | tests (harness, scènes 3D, captures) |
-| `FICHE_TRANSFERT.md/.pdf` | transfert des fichiers de Clément et Devlin |
+| `docs/jeu/` | fiche, idées et règles du championnat (`REGLES_PODIUM.md`) |
+| `docs/moi/` | fiche et idées de Moi |
+| `docs/transferts/` | transfert des fichiers de Clément et Devlin (`FICHE_TRANSFERT.md/.pdf`) |
 | Serveur : dépôt privé `theoperion/app_scripts` (`versus/` = serveur du jeu ; `portefeuille-epargne/<nom>` = scripts perso) | — |
 
 ## Tester et publier
@@ -44,5 +46,5 @@ Chaque conversation ne lit que sa fiche et ne touche qu'à ses fichiers. Ancienn
 À définir avec Théo pour chaque partie (4 au plus, même méthode que le Budget : besoin réel → rôle en une phrase → points de contrôle validés par Théo → essai avec une erreur cachée).
 
 ## À revoir à la fin du tri (décision de Théo, 24/11)
-- Dépôt public : fiches de transfert PDF et identifiants des fichiers Google dans `archives/` ; décider où les ranger.
+- Dépôt public : fiche de transfert PDF (`docs/transferts/`) et identifiants des fichiers Google dans `archives/` ; décider où les ranger.
 - `archives/MODE_EMPLOI_2026-11-24.md` : supprimer à terme (l'historique Git garde déjà chaque version).
