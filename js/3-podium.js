@@ -101,6 +101,7 @@ function championnat(y) {
   /* v16.84 · « Tout afficher » (admin) : la saison simulée va jusqu'à décembre ; les mois sans vrais résultats reçoivent des résultats INVENTÉS (fixes, marqués simule) */
   const simu = !ch && y === SAISON.premiere - 1 && apercuSaison(), listeK = moisVerdict(0).filter(k => k > deb && k <= f);
   if (simu) for (let k = y * 100 + 1; k <= f; k++) if (!listeK.includes(k) && k > Math.min(...listeK.concat([f]))) listeK.push(k);
+  if (D.attenteMois && D.attenteMois.k > deb && Math.floor(D.attenteMois.k / 100) === y && !listeK.includes(D.attenteMois.k)) listeK.push(D.attenteMois.k);   // v20.30 : le mois voilé reste « en attente »
   listeK.sort((a, b) => a - b).forEach(k => {
     let v = verdictMois(0, k);
     if (simu && (!v || !v.complet)) v = fauxVerdict(k);

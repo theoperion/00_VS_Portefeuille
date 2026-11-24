@@ -5150,7 +5150,34 @@ function lireLinxea(t) {
   /* une ligne de liste déjà détaillée par un tableau collé (même nature, même date, même montant) : gardée une seule fois */
   const detail = ops.filter(o => !o.liste);
   const garde = ops.filter(o => !o.liste || !detail.some(d => d.type === o.type && d.date === o.date));
+  if (!garde.length) return { compte: "LINXEA", ops: lireLinxeaFiche(t, nature) };   // v20.30 : la fiche « Libellé : valeur » de l'appli/du site Linxea
   return { compte: "LINXEA", ops: garde };
+}
+/* v20.30 (Théo, 24/11) · Linxea en « fiche » (copiée depuis l'appli ou le site) : un support par bloc, une ligne « Libellé : valeur » par champ.
+   Ex. « Amundi Physical Gold ETC C 100 % / Montant brut : 100,00 € / Frais (€) : - / Montant net : 100,00 € / Date de valeur : 13/08/2026 /
+   Valeur de part : 150,00 € / Nombre de parts : 0,6667 ». Rien n'est inventé : un champ absent reste vide et est signalé. */
+function lireLinxeaFiche(t, nature) {
+  const L = t.split("\n").map(x => x.trim()), ops = [], isoFr = d => d ? d.slice(6, 10) + "-" + d.slice(3, 5) + "-" + d.slice(0, 2) : "";
+  const debuts = L.map((l, i) => /^Montant\s+brut\b/i.test(l) ? i : -1).filter(i => i >= 0);
+  const nat = nature(t) || "versement";
+  debuts.forEach((d, n) => {
+    let h = d - 1; while (h >= 0 && (!L[h] || /:\s*\S/.test(L[h]) && !/^[^:]*\d+\s*%\s*$/.test(L[h]))) h--;
+    const tete = h >= 0 ? L[h] : "", fin = n + 1 < debuts.length ? (() => { let x = debuts[n + 1] - 1; while (x > d && !L[x]) x--; return x; })() : L.length;
+    const bloc = L.slice(d, fin).join("\n");
+    const val = lab => { const x = bloc.match(new RegExp("^\\s*" + lab + "[^:\\n]*:\\s*(?:" + NUM_AV + ")?", "im")); return x && x[1] ? chiffre(x[1]) : ""; };
+    const dt = bloc.match(/^\s*Date[^:\n]*:\s*(\d{2}\/\d{2}\/\d{4})/im) || bloc.match(/(\d{2}\/\d{2}\/\d{4})/);
+    const isin = (bloc + "\n" + tete).match(/\b([A-Z]{2}[A-Z0-9]{9}\d)\b/);
+    const nom = tete.replace(/\s*\d+(?:[.,]\d+)?\s*%\s*$/, "").replace(/\b[A-Z]{2}[A-Z0-9]{9}\d\b/, "").replace(/\s+/g, " ").trim();
+    const brut = val("Montant\\s+brut"), net = val("Montant\\s+net"), fraisLu = val("Frais");
+    const frais = fraisLu || (lireNombre(brut) > 0 && lireNombre(net) > 0 && Math.abs(lireNombre(brut) - lireNombre(net)) >= .005 ? saisieNombre(lireNombre(brut) - lireNombre(net), 2) : "");
+    const op = { src: "linxea", nom: nom, isin: isin ? isin[1] : "", date: dt ? isoFr(dt[1]) : "", qte: val("Nombre\\s+de\\s+parts?"), cours: val("Valeur\\s+(?:de\\s+(?:la\\s+)?)?parts?"), brut: brut, net: net };
+    if (nat === "frais") { op.type = "Frais en parts"; op.montant = net || brut; ops.push(finirOp(op, ["date", "qte", "montant"])); }
+    else if (nat === "rachat") { op.type = "Vente"; op.montant = brut || net; op.frais = frais; ops.push(finirOp(op, ["date", "qte", "cours", "montant"])); }
+    else { op.type = "Achat"; op.montant = brut || net; op.frais = frais; op.apport = n === 0; op.versDoc = true; op.montantApport = "";
+      if (n > 0) op.note = "Le versement est déjà enregistré avec le 1er support de ce document.";
+      ops.push(finirOp(op, ["date", "qte", "cours", "montant"])); }
+  });
+  return ops;
 }
 function envsOuverts() { return (refData().enveloppes || []).filter(e => typeof e !== "string" && (!e.statut || e.statut === "Ouvert" || e.statut === "À ouvrir")); }
 /** le compte de l'avis (PEA, PEA-PME, CTO) → l'enveloppe de l'appli ; sûr seulement s'il n'y en a qu'une */
@@ -7528,7 +7555,7 @@ function recevoir(json) {
   if (json && json.profil === "simple") { RAW = json; M = adapterSimple(json); }
   else { RAW = null; M = json; }
 }
-function dVersus() { return typeof D !== "undefined" && D ? D : null; }
+function dVersus() { return typeof D_BRUT !== "undefined" && D_BRUT ? D_BRUT : typeof D !== "undefined" && D ? D : null; }   // v20.30 : Moi lit la copie brute (ses propres chiffres)
 /** Propriétaire d'un fichier simple : le nom enregistré dans le fichier ; à défaut, la personne connectée avec son code (jamais l'admin) */
 function proprietaire(raw) {
   const Dv = dVersus(), nom = ((raw && raw.reglages) || {}).personne;

@@ -157,7 +157,7 @@ async function charger(frais) {
       if (json.erreur === "config") { stock.del(CLES.cle); ouvrirCle("", true); return; }
       const er = new Error(json.message || "Réponse inattendue du fichier"); er.serveur = true; throw er;
     }
-    ERREUR_SERVEUR = ""; DEMARRAGE = false; D = json; SOURCE = "api"; EN_CHARGEMENT = false; stock.set(CLES.cache, JSON.stringify(json)); afficherTout();
+    ERREUR_SERVEUR = ""; DEMARRAGE = false; D = json; voilerMoisIncomplet(); SOURCE = "api"; EN_CHARGEMENT = false; stock.set(CLES.cache, JSON.stringify(json)); afficherTout();
     setTimeout(() => { try { annoncerExclusifs(); } catch (e) { /* rien */ } }, 1200);
     setTimeout(() => { try { bullePortrait(); } catch (e) { /* rien */ } }, 2500);   // V16.26
     setTimeout(() => revendiquerExclusifs().then(() => { if (vueActive() === "trophees" || vueActive() === "classement") rendreVue(vueActive()); }).catch(() => {}), 0);
@@ -166,7 +166,7 @@ async function charger(frais) {
     EN_CHARGEMENT = false;
     ERREUR_SERVEUR = e && e.serveur ? String(e.message || e) : "";   // le fichier a répondu, mais avec une erreur : on la montre
     const c = stock.get(CLES.cache);
-    if (c) { try { D = JSON.parse(c); SOURCE = "cache"; afficherTout(); return; } catch (er) { /* cache illisible */ } }
+    if (c) { try { D = JSON.parse(c); voilerMoisIncomplet(); SOURCE = "cache"; afficherTout(); return; } catch (er) { /* cache illisible */ } }
     $("#v-classement").innerHTML = '<div class="vide">Impossible de joindre le fichier.<br><small>' + esc(e.message || e) + '</small><br><br><button class="btn" type="button" id="reessayer">Réessayer</button></div>';
     $("#reessayer").addEventListener("click", () => charger(true));
   } finally { btn.classList.remove("spin"); EN_CHARGEMENT = false; }
@@ -527,6 +527,7 @@ function rendreClassement() {
   const idx = statsIndice(D, i1, deb, fin);
   const finPf = finGlobale(D, 0);
   const manque = new Set(D.personnes.filter(p => { const s = serie(p, 0).filter(x => x.val); return s.length && s[s.length - 1].k < finPf; }).map(p => p.nom));
+  if (D.attenteMois) D.attenteMois.manquent.forEach(n => manque.add(n));   // v20.30 : mois voilé, on dit seulement qui on attend
   const tri = st.slice().sort((a, b) => b.twr - a.twr);
   const leader = tri[0];
   const lignes = tri.slice();
@@ -547,7 +548,7 @@ function rendreClassement() {
   const verdict = VK ? verdictMois(env, VK) : dernierVerdict;
   const enSerie = Object.entries(pal).filter(([, x]) => x.serie >= 2).sort((a, b) => b[1].serie - a[1].serie)[0];
   let bref = "";
-  if (duMois.length && !(verdict && verdict.complet)) bref += "<b>" + esc(moisLong(der)) + "</b> : meilleur mois pour <b>" + esc(duMois[0].nom) + "</b> (" + pct(duMois[0].r) + ")" + (duMois.length > 1 ? ", plus dur pour <b>" + esc(duMois[duMois.length - 1].nom) + "</b> (" + pct(duMois[duMois.length - 1].r) + ")" : "") + (ok(iDer) ? ", " + esc(D.marche.indices[i1]) + " " + pct(iDer) : "") + ". ";
+  if (duMois.length && !(verdict && (verdict.complet || verdict.voile))) bref += "<b>" + esc(moisLong(der)) + "</b> : meilleur mois pour <b>" + esc(duMois[0].nom) + "</b> (" + pct(duMois[0].r) + ")" + (duMois.length > 1 ? ", plus dur pour <b>" + esc(duMois[duMois.length - 1].nom) + "</b> (" + pct(duMois[duMois.length - 1].r) + ")" : "") + (ok(iDer) ? ", " + esc(D.marche.indices[i1]) + " " + pct(iDer) : "") + ". ";
   if (enSerie) bref += "<b>" + esc(enSerie[0]) + "</b> enchaîne " + enSerie[1].serie + " victoires mensuelles d'affilée. ";
   if (leader) bref += "Sur la période, <b>" + esc(leader.nom) + "</b> mène avec " + pct(leader.twr) + (battent.length ? ", " + battent.map(esc).join(" et ") + (battent.length > 1 ? " battent " : " bat ") + esc(D.marche.indices[i1]) + " à mois égaux." : " ; personne ne bat " + esc(D.marche.indices[i1]) + " à mois égaux.");
 
@@ -671,7 +672,7 @@ function rendreClassement() {
 function anomaliesDonnees(env) {
   const out = [];
   D.personnes.forEach(p => {
-    const rows = p.rows.filter(r => aUnReleveBrut(r[2]));
+    const rows = p.rows.filter(r => aUnReleveBrut(r[2]) && !(D.moisVoiles || []).includes(r[0]));   // v20.30 : rien sur un mois voilé
     if (rows.length < 2) return;
     const r = rows[rows.length - 1], pr = rows[rows.length - 2];
     ["PEA", "Assurance vie"].forEach((nom, e) => {

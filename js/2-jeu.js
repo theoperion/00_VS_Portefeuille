@@ -31,7 +31,27 @@ function rangs(env, deb, k) {
 function debAnnee(k) { return (Math.floor(k / 100) - 1) * 100 + 12; }
 
 /* ---------- Verdict du mois ---------- */
+/* v20.30 (Théo, 24/11) · SUSPENSE : tant qu'un mois n'est pas complet (il manque le relevé d'un pilote attendu), rien de ce mois ne se voit
+   (ni %, ni places, ni meilleur/pire, ni courbes ou cumuls). On garde la copie brute (D_BRUT : saisie, journal, Moi de Kévin) et, à part,
+   seulement { k, manquent } pour dire qui on attend. Les colonnes calculées (r[3]) du mois incomplet sont vidées dans D. */
+let D_BRUT = null;
+function voilerMoisIncomplet() {
+  D_BRUT = D; D.attenteMois = null;
+  if (!D || !D.personnes || !D.personnes.length) return;
+  const copie = JSON.parse(JSON.stringify(D)), voiles = [];
+  D = copie; D.attenteMois = null;
+  let k = finGlobale(D, 0), garde = 0;
+  while (k && garde++ < 3) {
+    const v = verdictMois(0, k);
+    if (!v || v.complet) break;
+    voiles.push(k); if (!D.attenteMois) D.attenteMois = { k: v.k, manquent: v.manquent.slice() };
+    D.personnes.forEach(p => p.rows.forEach(r => { if (r[0] === k && Array.isArray(r[3])) r[3] = r[3].map(() => null); }));
+    k = cleMoins(k, 1);
+  }
+  D.moisVoiles = voiles;
+}
 function verdictMois(env, k) {
+  if (D && D.attenteMois && (!k || k === D.attenteMois.k)) return { k: D.attenteMois.k, env, du: [], manquent: D.attenteMois.manquent, complet: false, voile: true };   // v20.30 : mois incomplet, rien n'en sort
   const fin = k || finGlobale(D, env); if (!fin) return null;
   const du = rendementsDuMois(env, fin).sort((a, b) => b.r - a.r);
   const prev = cleMoins(fin, 1);
