@@ -11,7 +11,7 @@ Le championnat entre amis : chaque mois, les pilotes (Théo, Kévin, Clément, D
 - Le Versus ne compte et ne montre **que** le PEA et l'assurance-vie, pour tous ; CTO et crypto jamais dans le Sheet du Versus. Le détail des lignes de Moi reste privé (pas de partage dans le Versus).
 - **Références assumées** (films, séries, livres : gant de l'infini, ticket d'or, anneau…), mais tout est **dessiné par nous** : aucune image ni logo officiel, pas de visage d'acteur, répliques courtes. Une carte = une seule grande scène (pas de mosaïque).
 - Calendrier 2027 : jan Dune, fév Château, mars goûter (Alice), avr Anneau, mai Pandora, juin Étoiles (Côté obscur), juil Ratatouille, août Envers, sept Odyssée, oct Chocolaterie (sans Halloween), nov Titans, déc Multivers (Finale). Circuit de chauffe : « L'Atelier du Père Noël ». Mois spéciaux attachés au circuit (`circuitDe`).
-- Course : 2 tours ; grille = classement d'avant le mois ; résultat du mois caché jusqu'à la course ; manche close = tous les relevés + 48 h.
+- Course : 2 tours ; grille = classement d'avant le mois ; résultat du mois caché jusqu'à la course ; manche close = tous les relevés (ou 7 jours après le jour du relevé, sans le retardataire : `delaiReleveDepasse`, v20.31) + 48 h.
 - Barème à 5 joueurs : 6·4·2·1·0 (`baremeJ`). Chauffe = bases seulement (pas d'écurie, trophées, badges avant janvier).
 - Gant de l'infini, ticket d'or (5 par saison, tirés par le serveur), badges qu'on se vole (sur places/points, jamais %), « Increvable » (ex-Lanterne rouge), Némésis partagée : validés pour la refonte des badges.
 - Trésors : rappel dans l'appli seulement, jamais de mail aux joueurs. Le million = patrimoine **financier** seulement.

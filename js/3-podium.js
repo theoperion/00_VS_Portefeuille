@@ -108,7 +108,8 @@ function championnat(y) {
     if (!v || !v.complet) { if (v) attente = v; return; }
     const PG = ch ? null : piegeMois(y, k), iR = indiceMois(k);   // V15.5 : piège du circuit
     // « Le huit » : les places se jouent sur ce mois et le précédent cumulés ; sinon sur le mois seul
-    const rc = x => { if (PG && PG.id === "huit" && prevL) { const p = prevL.find(z => z.nom === x.nom); if (p) return (1 + x.r) * (1 + p.r) - 1; } return x.r; };
+    const huit = PG && PG.id === "huit" && prevL && v.du.every(x => prevL.some(z => z.nom === x.nom));   // v20.31 : cumul seulement si chacun a joué le mois d'avant (sinon tous sur le mois seul)
+    const rc = x => { if (huit) { const p = prevL.find(z => z.nom === x.nom); return (1 + x.r) * (1 + p.r) - 1; } return x.r; };
     const du = v.du.map(x => Object.assign({}, x, { rc: rc(x) })).sort((a, b) => b.rc - a.rc), n = du.length;
     // places : ex æquo à 1e-9 près ; « Murs proches » : à moins de 0,2 point du pilote juste devant, on partage sa place
     const RG = []; du.forEach((x, i) => { RG[i] = i && du[i - 1].rc - x.rc < (PG && PG.id === "murs" ? 0.002 : 0) + 1e-9 ? RG[i - 1] : i + 1; });

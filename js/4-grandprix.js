@@ -39,7 +39,9 @@ function moiPilote() { return moiVrai(); }
 function effetCarte(c, x, l, avant, iR, ctx) {
   if (!c || !c.c || c.cache && !c.revele) return 0;
   const up = (ctx && ctx.up) || { m: 0, a: 0, p: 0 };
-  if (c.c === "aspiration" && avant) { const pl = avant[x.nom], dev = pl > 1 ? Object.keys(avant).find(n => avant[n] === pl - 1) : null, xd = dev && l.find(z => z.nom === dev); return xd && x.r > xd.r + 1e-12 ? 2 + up.a : 0; }
+  if (c.c === "aspiration" && avant) {   // v20.31 : le premier pilote PRÉSENT ce mois-ci juste devant soi (un absent est sauté)
+    const pl = avant[x.nom], devant = Object.keys(avant).filter(n => avant[n] < pl && l.some(z => z.nom === n)).sort((a, b) => avant[b] - avant[a]);
+    const xd = devant.length ? l.find(z => z.nom === devant[0]) : null; return xd && x.r > xd.r + 1e-12 ? 2 + up.a : 0; }
   if (c.c === "turbo") return x.bonus ? 2 + up.m : 0;
   const pg = (ctx && ctx.piege) || null;   // V15.5 : piège du circuit
   if (c.c === "pluie") return iR !== null && iR < 0 && x.r > iR + 1e-12 ? 2 + up.p + (pg && pg.id === "ardennes" ? 1 : 0) : 0;   // V15 : il faut aussi faire mieux que l'indice
@@ -335,7 +337,7 @@ function htmlGrandPrix(y) {
   }).join("");
   const cal = htmlCalendrierGP(y, kGP);
   const rap = rappelCartes(), versStand = rap ? '<button class="gp-stand" type="button" data-aller-stand>🃏 <span><b>Fenêtre ouverte</b> : pose ta carte de ' + esc(moisLong(rap.k)) + "</span> ›</button>" : "";
-  const att = (c.attente ? '<div class="bref">⏳ ' + esc(moisLong(c.attente.k)) + " : la course avance dès que tout le monde a saisi son relevé (il manque " + c.attente.manquent.map(n => "<b>" + esc(n) + "</b>").join(" et ") + ").</div>" : "") +
+  const att = (c.attente ? '<div class="bref">⏳ ' + esc(moisLong(c.attente.k)) + " : la course avance dès que tout le monde a saisi son relevé, au plus tard 7 jours après la date (il manque " + c.attente.manquent.map(n => "<b>" + esc(n) + "</b>").join(" et ") + ").</div>" : "") +
     (c.chauffe && !et.m && Date.now() < SAISON.depart.getTime() ? '<p class="info gp-depart">🏁 Grille de départ : la performance de novembre. La course se joue avec le relevé de fin décembre.</p>' :
       !et.m && kGP === SAISON.premiere * 100 + 1 ? '<p class="info gp-depart"><span class="gp-de' + (stock.get("versus.deJanvier") ? "" : (stock.set("versus.deJanvier", "1"), " roule")) + '" aria-hidden="true">🎲</span> Grille tirée au sort : tout le monde part à 0 point.</p>' : "");   // v17.5 (Théo) : sur la grille de la chauffe, du 21/11 au 31/12
   const titreAt = at ? '<div class="gp-atouts"><span class="at" data-bdg="' + esc("Atout de " + G.ville + " : " + at.atout.ico + " " + at.atout.nom + " y gagne +1 quand elle marque (sauf bouchon).") + '">' + at.atout.ico + " " + esc(at.atout.nom) + " +1</span></div>" : (indiceCircuit(kGP) ? htmlIndice(indiceCircuit(kGP)) : "");
