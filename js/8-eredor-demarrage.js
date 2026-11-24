@@ -492,7 +492,7 @@ if (location.hash === "#stand") { ETAT.podium = "stand"; const ko = moisCarteOuv
 montrerVue(vueActive());
 (function () {   // la dernière copie s'affiche tout de suite ; la mise à jour arrive par-dessus
   const c = stock.get(CLES.cache); if (!c || !apiUrl() || !stock.get(CLES.cle)) return;
-  try { D = JSON.parse(c); SOURCE = "cache"; EN_CHARGEMENT = true; afficherTout(); } catch (e) { D = null; }
+  try { D = JSON.parse(c); voilerMoisIncomplet(); SOURCE = "cache"; EN_CHARGEMENT = true; afficherTout(); } catch (e) { D = null; }
 })();
 charger(false);
 window.addEventListener("online", () => { if (SOURCE === "cache") charger(false); if (window.Moi && moiConnecte()) window.Moi.rafraichir(false); });   // v16.83 : Moi se relit aussi au retour du réseau
