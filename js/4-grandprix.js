@@ -756,7 +756,7 @@ async function trouverTresor(t, b) {
   if (rep && rep.ok) { TRESORS.trouves = rep.trouves || TRESORS.trouves.concat([t.circuit]); TRESORS.total = rep.total || TRESORS.trouves.length;
     if (!rep.deja) { const l = TRESORS.l.find(x => x.circuit === t.circuit), n = moiVrai(); if (l && !(l.chercheurs || []).some(x => x.nom === n)) { const d = new Date(); (l.chercheurs = l.chercheurs || []).push({ nom: n, j: d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate() }); } }
     toast(rep.deja ? "🗝️ Déjà trouvé !" : "🗝️ Trouvé" + (rep.rang === 1 ? " en premier ! 🥇" : rep.rang ? " (" + rep.rang + "e)" : " !") + " " + TRESORS.total + " trésor" + (TRESORS.total > 1 ? "s" : "") + " dans ta besace.");
-    if (rep.eclat && !rep.deja) { noterEclat(rep.eclat, moiVrai(), rep.rang); setTimeout(() => revelerEclat(rep.eclat), reduit ? 300 : 1300); }   // v20.42 : l'éclat de la Coupe rendu par ce trésor
+    if (rep.eclat && !rep.deja) { noterEclat(rep.eclat, moiVrai(), rep.rang); setTimeout(() => revelerEclat(rep.eclat, rep.rang), reduit ? 300 : 1300); }   // refonte des badges : 1er trouveur = cérémonie dorée   // v20.42 : l'éclat de la Coupe rendu par ce trésor
     setTimeout(() => poserTresorDOM(document), reduit ? 0 : 900); }
   else { T.pris = false; b.classList.remove("pris"); toast((rep && rep.message) || "Trouvaille non enregistrée : réessaie."); }
 }
@@ -808,9 +808,10 @@ function ouvrirCoupe(c0) {
   o.querySelectorAll(".cb-svg [data-ec]").forEach(p => p.addEventListener("click", () => { const l = o.querySelector('.cb-l[data-ec="' + p.dataset.ec + '"]'); if (l) { l.scrollIntoView({ block: "center", behavior: reduit ? "auto" : "smooth" }); l.classList.remove("flash"); void l.offsetWidth; l.classList.add("flash"); } }));
   o.querySelector(".rg-x").focus();
 }
-/** la révélation d'un éclat, juste après une trouvaille */
-function revelerEclat(e) {
+/** la révélation d'un éclat, juste après une trouvaille ; rang 1 (le premier à trouver le trésor) : cérémonie dorée plein écran */
+function revelerEclat(e, rang) {
   const c = coupeDonnees(), i = c && c.eclats ? c.eclats.findIndex(z => z.circuit === e.circuit) : -1;
+  if (rang === 1) { ceremonieEclat(e, c, i); return; }
   const o = document.createElement("div"); o.className = "regles coupe-b cb-rev"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Un éclat de la Coupe");
   o.innerHTML = '<div class="rg-c" style="--c:' + esc(e.couleur || "#F5C542") + '"><span class="tuto-k">🏆 Un éclat de la Coupe</span>' + (c ? svgCoupe(c, i) : "") +
     "<h3>Éclat de " + esc(e.matiere || "") + "</h3><p>" + esc(e.texte || "") + "</p>" + (e.symbole ? '<p class="cb-s1">Un signe y est gravé : <b>' + esc(e.symbole) + "</b></p>" : "") +
@@ -820,6 +821,25 @@ function revelerEclat(e) {
   o.querySelector("[data-cb-ok]").addEventListener("click", fermer);
   const v = o.querySelector("[data-cb-voir]"); if (v) v.addEventListener("click", () => { fermer(); ouvrirCoupe(); });
   if (window.SONS && SONS.jingle) try { SONS.jingle("garage", "motif"); } catch (er) { /* sans son */ }
+}
+/** Refonte des badges (Théo, 24/11) · le PREMIER à trouver le trésor du mois : grande révélation dorée (comme un secret doré), son nom gravé ;
+ *  la trouvaille compte aussi pour la couronne du Flair (3 points au 1er). Animations réduites : tout s'affiche d'un coup, sans mouvement. */
+function ceremonieEclat(e, c, i) {
+  const moi = moiVrai() || "toi", G = GPS[e.circuit];
+  const o = document.createElement("div"); o.className = "revel cb-or" + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Premier à trouver le trésor");
+  o.innerHTML = '<div class="rv-c cbo-c" style="--c:' + esc(e.couleur || "#F5C542") + '"><span class="cbo-rayons" aria-hidden="true"></span><span class="tuto-k">🥇 Premier à trouver le trésor</span>' +
+    (c ? '<div class="cbo-coupe">' + svgCoupe(c, i) + "</div>" : "") +
+    "<h3>Éclat de " + esc(e.matiere || "") + "</h3>" + (G ? '<small class="cbo-u">' + G.drap + " " + esc(G.gp) + "</small>" : "") +
+    '<p class="cbo-grave">Gravé à ton nom : <b>' + esc(moi) + "</b></p><p>" + esc(e.texte || "") + "</p>" + (e.symbole ? '<p class="cb-s1">Un signe y est gravé : <b>' + esc(e.symbole) + "</b></p>" : "") +
+    (typeof saisonJouee === "function" && saisonJouee() ? '<p class="cbo-flair">🔍 +3 au score de chercheur (couronne du Flair) · aucun point au championnat</p>' : "") +
+    '<div class="btn-row">' + (c ? '<button class="btn acc" type="button" data-cb-voir>Voir la Coupe</button>' : "") + '<button class="btn ghost" type="button" data-cb-ok>Génial !</button></div></div>';
+  document.body.appendChild(o);
+  const t0 = Date.now(), fermer = () => o.remove();
+  o.addEventListener("click", ev => { if (ev.target === o && Date.now() - t0 > 1500) fermer(); });
+  o.querySelector("[data-cb-ok]").addEventListener("click", fermer);
+  const v = o.querySelector("[data-cb-voir]"); if (v) v.addEventListener("click", () => { fermer(); ouvrirCoupe(); });
+  try { confettis("trophees"); } catch (er) { /* sans fête */ }
+  if (window.SONS && SONS.jingle) setTimeout(() => { try { SONS.jingle("defaut", "accord"); } catch (er) { /* sans son */ } }, 700);
 }
 /** aperçu admin : l'écran de la Coupe avec un exemple inventé (rien du vrai contenu) */
 function apercuCoupe() { if (!apercuAutorise()) return; ouvrirCoupe(COUPE_EX); }

@@ -41,6 +41,13 @@ async function page(b, s, quand, sombre, admin) {
     const a = await p.evaluate(async () => { try { montrerVue("trophees"); } catch (e) { } await new Promise(r => setTimeout(r, 500)); const bt = document.querySelector("[data-bacoupe]"); if (bt) bt.click(); await new Promise(r => setTimeout(r, 300));
       const o = document.querySelector(".coupe-b"); return { bouton: !!bt, txt: o ? o.innerText : "" }; });
     ok(!err.length && a.bouton && /exemple inventé/i.test(a.txt), "admin : bouton « Aperçu · La Coupe brisée », exemple inventé"); await ctx.close(); }
+  { const { ctx, p } = await page(b, { role: "perso", nom: "Théo" }, "2027-04-03T10:00:00", false, false);   // v20.44 : le bouton retour ferme la cérémonie dorée
+    const f = await p.evaluate(async () => { TRESORS = null; TRESORS_T = 0; await chargerTresors(); ceremonieEclat({ circuit: "suzuka", matiere: "M", couleur: "#CFE3EE", symbole: "◎", texte: "T" }, coupeDonnees(), 3);
+      const avant = !!document.querySelector(".cb-or"); fermerFenetreOuverte(); return { avant, apres: !!document.querySelector(".cb-or") }; });
+    ok(f.avant && !f.apres, "le bouton retour ferme la cérémonie dorée du premier trouveur"); await ctx.close(); }
+  { const { ctx, p } = await page(b, { role: "perso", nom: "Clément" }, "2026-12-15T10:00:00", false, false);   // pendant la chauffe : pas de mention du Flair (nouveauté de janvier)
+    const t = await p.evaluate(() => { ceremonieEclat({ circuit: "abudhabi", matiere: "M", couleur: "#CFE3EE", texte: "T" }, null, -1); const o = document.querySelector(".cb-or"); return o ? o.innerText : ""; });
+    ok(t && !/Flair|couronne/i.test(t), "15/12/2026 : la cérémonie du premier trouveur ne parle pas encore du Flair"); await ctx.close(); }
   { const { ctx, p } = await page(b, { role: "perso", nom: "Clément" }, "2026-12-20T10:00:00", false, true);
     const j = await p.evaluate(() => { apercuCoupe(); return !!document.querySelector(".coupe-b"); }); ok(!j, "joueur : l'aperçu admin ne s'ouvre pas"); await ctx.close(); }
   await b.close();

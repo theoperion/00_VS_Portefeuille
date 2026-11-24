@@ -2025,3 +2025,93 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .cb-rev .cb-svg { width: 150px; margin: 8px auto; }
 .cb-rev h3 { margin: 4px 0 6px; } .cb-rev p { line-height: 1.5; } .cb-rev .btn-row { justify-content: center; }
 @media (prefers-reduced-motion: reduce) { .cb-l.flash { animation: none; } }
+
+/* Refonte des badges (Théo, 24/11) · l'onglet Trophées en 3 vitrines : mes trophées (+ le Gant), les secrets (doré / argenté), les couronnes */
+.univ { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--ink-2); white-space: normal; max-width: 100%; }
+.univ.cache { color: var(--ink-3); font-weight: 500; }
+.vit-nav { display: flex; gap: 6px; margin: 2px 0 6px; overflow-x: auto; }
+.vit-nav a { flex: 1 0 auto; text-align: center; padding: 7px 10px; border-radius: 999px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); font: 600 12.5px/1.2 var(--f-text); text-decoration: none; }
+.vit { display: grid; gap: 10px; scroll-margin-top: 70px; }
+.vit + .vit { margin-top: 14px; }
+.vit-h { margin: 6px 0 0; font: italic 800 19px/1.1 var(--f-display); letter-spacing: .05em; text-transform: uppercase; color: var(--ink); }
+.vit-h small, .vit-h4 small { display: block; margin-top: 3px; font: 500 12px/1.3 var(--f-text); color: var(--ink-3); letter-spacing: 0; text-transform: none; }
+.vit-h4 { margin: 4px 0 0; font: italic 800 14px/1.1 var(--f-display); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.nmp { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; } .nmp i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+/* le Gant de l'infini */
+.gant { border-radius: 16px; padding: 12px; display: grid; gap: 10px; border: 1px solid color-mix(in srgb, #D9A431 45%, var(--rule)); background: radial-gradient(90% 70% at 0% 0%, color-mix(in srgb, #D9A431 16%, transparent), transparent 70%), var(--panel); }
+.gant.complet { box-shadow: 0 0 0 2px #D9A431 inset; }
+.gant-h { display: flex; gap: 12px; align-items: center; }
+.gant-svg { width: 92px; flex: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,.25)); }
+.gant-svg .pierre { fill: #2A2F3A; stroke: #6B4508; stroke-width: 1.4; }
+.gant-svg .pierre.on { fill: var(--pc); stroke: #FFF6C8; }
+@media (prefers-reduced-motion: no-preference) { .gant-svg .pierre.on { animation: pierreBrille 2.8s ease-in-out infinite; } }
+@keyframes pierreBrille { 50% { opacity: .78; } }
+.gant-t { display: grid; gap: 4px; min-width: 0; } .gant-t > b { font: italic 800 18px/1.1 var(--f-display); text-transform: uppercase; letter-spacing: .04em; }
+.gant-t small { font-size: 12px; color: var(--ink-3); } .gant-n { font-size: 13px; color: var(--ink-2); } .gant-n b { font: 800 20px/1 var(--f-num); color: var(--gold); }
+.pierres { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.pierres li { display: flex; gap: 9px; align-items: flex-start; font-size: 12.5px; color: var(--ink-3); }
+.pierres li i { flex: none; width: 14px; height: 14px; margin-top: 2px; border-radius: 50%; border: 2px solid var(--pc); background: transparent; }
+.pierres li.on { color: var(--ink); } .pierres li.on i { background: var(--pc); box-shadow: 0 0 6px var(--pc); }
+.pierres li span { display: grid; gap: 1px; min-width: 0; } .pierres li b { font-size: 13px; } .pierres li small { font-size: 11.5px; color: var(--ink-3); }
+.gant-autres { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12.5px; color: var(--ink-2); } .gant-autres small { width: 100%; color: var(--ink-3); font-size: 11.5px; }
+.gant-autres b { font: 800 14px/1 var(--f-num); color: var(--ink); }
+.gant-r { margin: 0; font-size: 12px; color: var(--ink-2); }
+/* les 12 trophées */
+.tm-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.tm { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; grid-template-rows: auto auto; gap: 2px 8px; align-items: center; padding: 9px 10px; border-radius: 12px; border: 1px solid var(--rule); background: var(--panel); -webkit-tap-highlight-color: transparent; min-width: 0; }
+.tm .tm-i { grid-row: 1 / 3; font-size: 22px; line-height: 1; text-align: center; }
+.tm .tm-t { display: grid; gap: 2px; min-width: 0; } .tm .tm-t b { font-size: 12.5px; line-height: 1.2; color: var(--ink); }
+.tm .tm-e { font: 700 11px/1 var(--f-num); color: var(--ink-3); } .tm.a-moi { border-color: color-mix(in srgb, var(--up) 55%, var(--rule)); background: color-mix(in srgb, var(--up) 8%, var(--panel)); } .tm.a-moi .tm-e { color: var(--up); font-size: 14px; }
+.tm .rt-dots { grid-column: 2 / 4; }
+.tm:active, .sec-t:active { transform: scale(.98); }
+/* les secrets */
+.sec-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.sec-t { all: unset; box-sizing: border-box; cursor: pointer; display: grid; gap: 3px; align-content: start; justify-items: start; padding: 10px; border-radius: 14px; border: 1px solid var(--rule); background: var(--panel); min-width: 0; -webkit-tap-highlight-color: transparent; }
+.sec-t > b { font-size: 13px; line-height: 1.2; color: var(--ink); }
+.sec-i { font-size: 26px; line-height: 1.1; }
+.sec-t.cache { border-style: dashed; background: var(--panel-2); }
+.sec-t.cache > b { color: var(--ink-2); font-style: italic; }
+.sil { filter: brightness(0) opacity(.32); }
+:root[data-theme="dark"] .sil { filter: brightness(0) invert(1) opacity(.22); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sil { filter: brightness(0) invert(1) opacity(.22); } }
+.flou { font-size: 11.5px; line-height: 1.35; color: var(--ink-3); filter: blur(1.4px); user-select: none; }
+.sec-t.ouvert { border-color: color-mix(in srgb, #E8B04A 55%, var(--rule)); background: linear-gradient(160deg, color-mix(in srgb, #E8B04A 14%, var(--panel)), var(--panel) 60%); }
+.sec-t.m-or { box-shadow: 0 0 0 2px #E8B04A inset; } .sec-t.m-arg { box-shadow: 0 0 0 2px #AEB8C4 inset; }
+.sec-q { display: grid; gap: 2px; font-size: 11.5px; color: var(--ink-2); min-width: 0; max-width: 100%; }
+.sec-q .q-or { display: flex; flex-wrap: wrap; gap: 2px 6px; } .sec-q .q-arg { color: var(--ink-3); overflow-wrap: anywhere; }
+.bd-med.sil { filter: none; color: transparent; text-shadow: 0 0 0 rgba(255,255,255,.28); }
+.sec-histoire { margin: 0; padding: 8px 10px; border-radius: 10px; font-size: 13px !important; text-align: left; background: rgba(247,207,85,.14); color: #F7CF55 !important; }
+.sec-rangs { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; text-align: left; }
+.sec-rangs li { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 10px; background: rgba(255,255,255,.06); border-left: 3px solid var(--c); }
+.sec-rangs li > span { font-size: 18px; } .sec-rangs li div { display: grid; gap: 1px; } .sec-rangs li b { font-size: 13px; } .sec-rangs li small { font-size: 11.5px; color: rgba(244,245,248,.72); }
+.sec-rangs li.h-or { background: rgba(247,207,85,.14); }
+.ea-hist { color: #F7CF55 !important; font-weight: 600; }
+.bdg.ex.or { border-color: rgba(232,176,74,.7); background: rgba(232,176,74,.14); }
+.bdg.ex.arg { border-color: rgba(174,184,196,.7); background: rgba(174,184,196,.14); }
+.bdg.ex.cour { border-color: rgba(245,197,66,.8); background: rgba(245,197,66,.18); }
+/* les couronnes */
+.cour-l { display: grid; gap: 8px; }
+.cour { display: grid; grid-template-columns: 40px minmax(0, 1fr) minmax(86px, auto); gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--rule); border-left: 4px solid var(--c); background: var(--panel); }
+.cour.a-moi { background: color-mix(in srgb, var(--gold) 10%, var(--panel)); }
+.cour-i { font-size: 30px; line-height: 1; text-align: center; } .cour.libre .cour-i { filter: grayscale(1) opacity(.5); }
+.cour-t { display: grid; gap: 2px; min-width: 0; } .cour-t b { font: italic 800 15px/1.1 var(--f-display); text-transform: uppercase; letter-spacing: .04em; } .cour-t small { font-size: 11.5px; line-height: 1.35; color: var(--ink-3); }
+.cour-q { display: grid; gap: 1px; justify-items: end; text-align: right; min-width: 0; } .cour-q b { color: var(--c); font: 800 15px/1.1 var(--f-text); } .cour-q small { font-size: 11px; color: var(--ink-3); }
+/* La Coupe brisée : cérémonie dorée du premier trouveur */
+.cb-or { --panel: #1a1f2b; --ink: #F4F5F8; --ink-3: #9AA3B2; z-index: 97; background: radial-gradient(circle at 50% 40%, rgba(90,62,8,.92), rgba(5,7,12,.94) 70%); }
+.cbo-c { position: relative; overflow: hidden; border: 2px solid #F7CF55; background: radial-gradient(80% 60% at 50% 0%, rgba(247,207,85,.35), transparent 70%), linear-gradient(180deg, #2a1f08, #0d0b06); box-shadow: 0 0 40px rgba(247,207,85,.35); }
+.cbo-c > * { position: relative; }
+.cbo-c > .cbo-rayons { position: absolute; inset: -40%; background: repeating-conic-gradient(from 0deg, rgba(247,207,85,.14) 0 10deg, transparent 10deg 24deg); pointer-events: none; }
+.cbo-c .tuto-k { color: #F7CF55; }
+.cbo-c h3 { color: #F7CF55; font-size: 24px; }
+.cbo-coupe { width: 170px; margin: 0 auto; filter: drop-shadow(0 0 14px rgba(247,207,85,.55)); }
+.cbo-u { font-size: 12px; color: rgba(244,245,248,.75); }
+.cbo-grave { font-size: 14px !important; color: #F4F5F8 !important; } .cbo-grave b { color: #F7CF55; font: italic 800 18px/1 var(--f-display); text-transform: uppercase; letter-spacing: .06em; padding: 2px 8px; border: 1px solid rgba(247,207,85,.6); border-radius: 6px; }
+.cbo-flair { font-size: 12.5px !important; color: #F7CF55 !important; }
+@media (prefers-reduced-motion: no-preference) {
+  .cb-or:not(.reduit) .cbo-rayons { animation: cboTourne 18s linear infinite; }
+  .cb-or:not(.reduit) .cbo-c { animation: cboVient .6s cubic-bezier(.3,1.4,.5,1) both; }
+  .cb-or:not(.reduit) .cbo-coupe { animation: eaPop .9s cubic-bezier(.3,1.6,.5,1) .2s both; }
+}
+@keyframes cboTourne { to { transform: rotate(360deg); } }
+@keyframes cboVient { from { transform: scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (max-width: 360px) { .tm-grille, .sec-grille { grid-template-columns: minmax(0, 1fr); } .cour { grid-template-columns: 34px minmax(0, 1fr); } .cour-q { grid-column: 2; justify-items: start; text-align: left; } }

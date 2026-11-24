@@ -712,6 +712,8 @@ function fermerFenetreOuverte() {
   // V16.16 : les fenêtres plein écran de la Course (bande-annonce, carte postale / règles, plein écran) passent avant le reste
   if (typeof BA_OUVERTE !== "undefined" && BA_OUVERTE) { BA_OUVERTE.fermer(false); return true; }
   const dialogues = [...document.querySelectorAll(".regles")]; if (dialogues.length) { const d = dialogues[dialogues.length - 1], x = d.querySelector(".rg-x"); if (x) x.click(); else d.remove(); return true; }
+  { const rv = [...document.querySelectorAll(".revel")], d = rv[rv.length - 1];   // v20.44 : cérémonies et fiches de badges (relecture joueur : le retour les ferme)
+    if (d) { const x = d.querySelector('[data-cb-ok], [data-cc="ok"], .rg-x, [aria-label="Fermer"]'); if (x) x.click(); else d.remove(); return true; } }
   if (typeof GP_PLEIN !== "undefined" && GP_PLEIN) { fermerPleinGP(); return true; }
   const ouverts = [...document.querySelectorAll(".voile")].filter(x => !x.hidden && getComputedStyle(x).display !== "none");
   if (!ouverts.length) return false;
