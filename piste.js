@@ -479,6 +479,7 @@
       for (let i = 0; i < 6; i++) { const a = i / 6 * TAU; branche(g, [34 + Math.cos(a) * 3, 0, Math.sin(a) * 3], [34, 5, 0], .5, .3, v("#6B4A30")); } feu(g, 34, 2, 0, 2); lum.push([px + 34, 8, pz, 1, .7, .35, 26]);
       G.poser(g, px, 0, pz, 0, 1); return [[px, pz, 60]]; }
     if (R.t === "faille") { const [px, pz] = ici(90), g = new Geo(), r = alea(13), P = [];
+      if (PEINTS.envers && PEINTS.envers.deco) return [[px, pz, 80]];   // août 2027 : decorEnvers dessine la faille et la créature à cette place
       for (let i = 0; i <= 12; i++) P.push([(r() - .5) * 6, i * 4.5, (r() - .5) * 2]); tube(g, P, t => .6 + Math.sin(t * PI) * 2.6, v("#FF2B3D"), 1);
       tube(g, P.map(p => [p[0], p[1], p[2] - .2]), t => 1.2 + Math.sin(t * PI) * 4, v("#5A0A14"), .4);
       for (let i = 0; i < 16; i++) { const a = r() * TAU, d = 14 + r() * 26; g.boule(Math.cos(a) * d, 8 + r() * 40, Math.sin(a) * d, 1 + r() * 2.6, v("#3A3438"), 0, .8); }
@@ -8210,6 +8211,409 @@
       for (let q = -2; q <= 2; q++) g.tri([-1.6 * k, 0, 0], [-3.6 * k, 0, (q - .5) * .7 * k], [-3.6 * k, 0, (q + .5) * .7 * k], B2, 0, [0, 1, 0]); }
   }
 
+  /* ---------- Août 2027 · Grand Prix du Monde à l'envers : le décor 3D sur mesure ----------
+     Comme la carte 2D, la faille rouge coupe le monde en deux (z ≈ 288, la couture de la carte). Au nord, la petite ville de 1985
+     la nuit : la grand-rue (maison aux guirlandes, cinéma à la marquise, salle d'arcade au néon, station-service), le quartier aux
+     maisons illuminées, la piscine, le bois et sa cabane dans l'arbre, le laboratoire grillagé ; les 5 copains à vélo filent sur la
+     grand-rue, phares allumés. Au sud, le Monde à l'envers : LA MÊME ville en miroir, éteinte, mangée par les lianes, sol de cendre,
+     arbres morts, spores qui montent, R U N en lettres de feu. La créature à la tête en pétales jaillit de la faille au centre et
+     plante ses griffes dans la grand-rue ; deux portails d'éclairs enjambent la piste là où elle bascule d'un monde à l'autre ; dans
+     le ciel du nord, l'ombre géante aux longues pattes et des éclairs rouges. Tout est dessiné par nous (aucun visage, aucun logo). */
+  function decorEnvers(ctx) {
+    const { T, sol, eau, lum, rotors } = ctx, v = h => hex(h), r = alea(1983), so = sol.ov(), occupe = [];
+    const [FX, FZ] = posRepere(TRACES.spa, T, { t: "faille" }).map(u => u / KU);
+    const zf = x => (360 + 5 * Math.sin(x * KU / 47 + 1) + 3 * Math.sin(x * KU / 13)) / KU;   // la couture de la carte, en mètres
+    const BOIS = v("#D8C8A0"), PRUNE = v("#4A2A3A"), BRIQUE = v("#7A1E2E"), MARINE = v("#26244A"), CREME = v("#FFE6A8"), CHAUD = v("#FFC86A"), ROSE = v("#FF4FD8"),
+      ROUGE = v("#FF2B3D"), SANG = v("#5A0A16"), CENDRE = v("#34323E"), CHAIR = v("#3A2630"), ASPH = v("#2A2A31"), JAUNE = v("#E8C84A"), BLANC = v("#EDE8DE"),
+      GAZON = v("#1A2620"), NOIR = v("#120A10"), LIANE = v("#1C1016"), GRIS = v("#7E8088"), VITRE = v("#0C1024"), PEAU = v("#F2CDB0");
+    const AMP = ["#FF3B3B", "#2BD46A", "#4C9AFF", "#F7D84A", "#FF8A3D", "#FF6FA8"].map(v);
+    const ps = T.a(-30, -(DEMI + 22)), pt2 = T.a(-20, DEMI + 18), stands = [[ps.x, ps.z, 74], [pt2.x, pt2.z, 80]];
+    const ok = (x, z, R, m) => T.dist(x, z) > DEMI + (m === undefined ? 12 : m) + R && !stands.some(o => Math.hypot(x - o[0], z - o[1]) < o[2] + R) && !occupe.some(o => Math.hypot(x - o[0], z - o[1]) < o[2] + R);
+    const prendre = (x, z, R) => occupe.push([x, z, R]);
+    const I4 = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]), dernierDe = C => C.V.length ? C.dernier() : null;   // décor vivant : crochet unique a.vivant(x, t, C) (voir contexteVivant)
+    const CLIG = [new Geo(), new Geo(), new Geo()], CHASSE = [new Geo(), new Geo()];
+    // ---- outils de forme
+    const tub = (g, P, R, col, em, n) => { n = n || 5; let prec = null;
+      P.forEach((p, i) => { const a = P[Math.max(0, i - 1)], b = P[Math.min(P.length - 1, i + 1)], d = norme(sous(b, a)), u = norme(croix(d, Math.abs(d[1]) > .9 ? [1, 0, 0] : [0, 1, 0])), w = croix(d, u), rr = typeof R === "function" ? R(i / (P.length - 1)) : R, an = [];
+        for (let k = 0; k <= n; k++) { const t = k / n * TAU, c = Math.cos(t), s = Math.sin(t); an.push([p[0] + (u[0] * c + w[0] * s) * rr, p[1] + (u[1] * c + w[1] * s) * rr, p[2] + (u[2] * c + w[2] * s) * rr]); }
+        if (prec) for (let k = 0; k < n; k++) g.quad(prec[k], prec[k + 1], an[k + 1], an[k], typeof col === "function" ? col(i, k) : col, em || 0, sous(mel(an[k], an[k + 1], .5), p));
+        prec = an; }); };
+    const barre = (g, a, b, l, col, em) => { const d = norme(sous(b, a)), u = norme(croix(d, Math.abs(d[1]) > .9 ? [1, 0, 0] : [0, 1, 0])), w = croix(d, u), h = l / 2;
+      const C = (p, su, sw) => [p[0] + (u[0] * su + w[0] * sw) * h, p[1] + (u[1] * su + w[1] * sw) * h, p[2] + (u[2] * su + w[2] * sw) * h];
+      g.bloc([C(a, -1, -1), C(a, 1, -1), C(a, 1, 1), C(a, -1, 1), C(b, -1, -1), C(b, 1, -1), C(b, 1, 1), C(b, -1, 1)], col, em || 0); };
+    const fil = (g, a, b, sag, col, ep, n) => { let p = a; n = n || 6; const e = ep || .09; for (let k = 1; k <= n; k++) { const t = k / n, q = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t - sag * 4 * t * (1 - t), a[2] + (b[2] - a[2]) * t];
+      g.quad([p[0], p[1] - e, p[2]], [q[0], q[1] - e, q[2]], [q[0], q[1] + e, q[2]], [p[0], p[1] + e, p[2]], col, 0, [0, 0, 1]); p = q; } };
+    const perle = (g, x, y, z, s, c, em) => { g.quad([x - s, y, z], [x, y + s * 1.5, z], [x + s, y, z], [x, y - s * 1.5, z], c, em, [0, 0, 1]); g.quad([x, y, z - s], [x, y + s * 1.5, z], [x, y, z + s], [x, y - s * 1.5, z], c, em, [1, 0, 0]); };
+    const courbe = (a, c, b, n) => [...Array(n + 1)].map((_, j) => { const t = j / n, u = 1 - t; return [0, 1, 2].map(k => u * u * a[k] + 2 * u * t * c[k] + t * t * b[k]); });
+    const tourne = (p, cap) => { const c = Math.cos(cap), s = Math.sin(cap); return [p[0] * c + p[2] * s, p[1], -p[0] * s + p[2] * c]; };
+    // un bâtiment : sa géométrie, ses ampoules qui clignotent (3 groupes), ses lumières ; posé d'un coup
+    const bati = () => ({ g: new Geo(), c: [new Geo(), new Geo(), new Geo()], l: [] });
+    const poserBat = (B, x, z, cap, R) => { sol.poser(B.g, x, 0, z, cap, 1); B.c.forEach((c, k) => CLIG[k].poser(c, x, 0, z, cap, 1)); B.l.forEach(l => { const p = tourne(l, cap); lum.push([x + p[0], l[1], z + p[2], l[3], l[4], l[5], l[6]]); }); if (R) prendre(x, z, R); };
+    const guirlande = (B, a, b, n, sag, k0, eteinte) => { fil(B.g, a, b, sag, v("#1E2A1A"), .07, 3);
+      for (let i = 0; i <= n; i++) { const t = i / n, x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t - sag * 4 * t * (1 - t), z = a[2] + (b[2] - a[2]) * t, c = AMP[(k0 + i) % 6];
+        if (eteinte) { perle(B.g, x, y - .35, z, .17, mel(c, [.2, .2, .22], .75), 0); continue; }
+        perle(B.g, x, y - .35, z, .2, c, .9); perle(B.c[(k0 + i) % 3], x, y - .35, z + .02, .34, mel(c, [1, 1, 1], .5), 1);
+        if (B.halos && i % 3 === 1) B.l.push([x, y - .4, z + .4, c[0], c[1], c[2], 2.6]); } };
+    const vieillir = c => mel(mel(c, [.34, .35, .44], .68), [.45, .1, .16], .12);   // le Monde à l'envers : couleurs passées à la cendre gris-bleu, un reflet rouge
+    // les lianes du Monde à l'envers qui grimpent sur un mur (repère local du bâtiment : façade en +z)
+    const lianesMur = (B, w, h, d, n) => { for (let k = 0; k < n; k++) { const x0 = (r() - .5) * w * .9, z0 = d / 2 + .5, x1 = x0 + (r() - .5) * 6, y1 = h * (.6 + r() * .5);
+      const P = courbe([x0 + (r() - .5) * 4, 0, z0 + 2.5], [x0 + (r() - .5) * 3, y1 * .5, z0 + .2], [x1, y1, z0 - .1], 5); tub(B.g, P, t => .55 - t * .35, LIANE, 0, 4);
+      barre(B.g, P[2], [P[2][0] + (r() - .5) * 4, P[2][1] + 1.5, z0], .25, LIANE); } };
+    // police de pixels (5 × 7) pour les enseignes : ARCADE, RUN
+    const FONTE = { A: ["01110", "10001", "10001", "11111", "10001", "10001", "10001"], R: ["11110", "10001", "10001", "11110", "10100", "10010", "10001"], C: ["01111", "10000", "10000", "10000", "10000", "10000", "01111"],
+      D: ["11110", "10001", "10001", "10001", "10001", "10001", "11110"], E: ["11111", "10000", "10000", "11110", "10000", "10000", "11111"], U: ["10001", "10001", "10001", "10001", "10001", "10001", "01110"], N: ["10001", "11001", "10101", "10101", "10011", "10001", "10001"] };
+    const pixels = (mot, miroir) => { const out = []; mot.split("").forEach((L, q) => FONTE[L].forEach((ligne, row) => { const l = miroir ? ligne.split("").reverse().join("") : ligne; let c0 = -1;
+      for (let c = 0; c <= 5; c++) { if (l[c] === "1") { if (c0 < 0) c0 = c; } else if (c0 >= 0) { out.push([(miroir ? mot.length - 1 - q : q) * 6 + c0, (miroir ? mot.length - 1 - q : q) * 6 + c, row]); c0 = -1; } } })); return out; };
+
+    // ================= 1. le sol : gazon sombre au nord, cendre rougie par la faille au sud =================
+    for (let i = 0; i < 60 && i < sol.d.length; i += 10) { const c = v("#1E1A22"); sol.d[i + 6] = c[0]; sol.d[i + 7] = c[1]; sol.d[i + 8] = c[2]; }
+    if (sol.o) sol.o.d.length = 0;   // les taches génériques du sol : remplacées par les nôtres
+    { const C = 30, X0 = -330, Z0 = -280;
+      const carre = (x, z, c) => { const xm = x + c / 2, zm = z + c / 2, d = zm - zf(xm), nord = d < 0, f = clamp(1 - Math.abs(d) / 240, 0, 1), loin = clamp((Math.hypot(xm - T.cx, (zm - T.cz) * 1.3) - 520) / 260, 0, 1), rr = r();
+        let col = nord ? mel(GAZON, v("#24342A"), rr * .7) : mel(v("#3E4258"), v("#4E3A5A"), rr * .7);
+        col = nord ? mel(col, v("#3A1820"), Math.pow(f, 5) * .6) : mel(col, v("#7A1A2E"), f * f * .6);
+        col = mel(col, v("#1E1A22"), loin * (nord ? 1 : .6));
+        so.quad([x, .03, z], [x + c, .03, z], [x + c, .03, z + c], [x, .03, z + c], col, nord ? .04 : .16 + f * .14, [0, 1, 0]); };
+      const remplir = (x, z, c, n) => { if (T.dist(x + c / 2, z + c / 2) > DEMI + 7 + c * .72) return carre(x, z, c); if (n >= 2) return; for (let p = 0; p < 2; p++) for (let q = 0; q < 2; q++) remplir(x + p * c / 2, z + q * c / 2, c / 2, n + 1); };
+      for (let a = 0; a < 50; a++) for (let b = 0; b < 40; b++) remplir(X0 + a * C, Z0 + b * C, C, 0); }
+
+    // ================= 2. LA FAILLE : déchirure rouge d'un bord à l'autre ; s'ouvre en grand au centre et là où la piste bascule =================
+    const CR = []; for (let i = 0; i < T.N; i++) { const j = (i + 1) % T.N, a = T.Z[i] - zf(T.X[i]), b = T.Z[j] - zf(T.X[j]); if ((a < 0) !== (b < 0)) CR.push({ i: j, x: T.X[j], z: T.Z[j] }); }
+    { const ouv = x => 1 + 7 * Math.exp(-Math.pow((x - FX) / 34, 2)) + CR.reduce((t, F) => t + 3.5 * Math.exp(-Math.pow((x - F.x) / 26, 2)), 0);
+      const PAS = 4, BORD = [];
+      for (let x = -330; x <= 1180; x += PAS) { const w = ouv(x), j = (r() - .5) * 1.4; BORD.push([x, zf(x) + (r() - .5) * 1.2, w * (.8 + r() * .4) + j * .3, w * (.8 + r() * .4) - j * .3]); }
+      for (let k = 0; k < BORD.length - 1; k++) { const [x0, z0, a0, b0] = BORD[k], [x1, z1, a1, b1] = BORD[k + 1];
+        if (T.dist((x0 + x1) / 2, (z0 + z1) / 2) < DEMI + 7 + Math.max(a0, b0)) continue;
+        so.quad([x0, .07, z0 - a0 - 1.6], [x1, .07, z1 - a1 - 1.6], [x1, .07, z1 - a1], [x0, .07, z0 - a0], SANG, .45, [0, 1, 0]);
+        so.quad([x0, .07, z0 + b0], [x1, .07, z1 + b1], [x1, .07, z1 + b1 + 1.6], [x0, .07, z0 + b0 + 1.6], SANG, .45, [0, 1, 0]);
+        so.quad([x0, .09, z0 - a0], [x1, .09, z1 - a1], [x1, .09, z1 + b1], [x0, .09, z0 + b0], ROUGE, 1, [0, 1, 0]);
+        so.quad([x0, .11, z0 - a0 * .3], [x1, .11, z1 - a1 * .3], [x1, .11, z1 + b1 * .3], [x0, .11, z0 + b0 * .3], v("#FFC8CE"), 1, [0, 1, 0]);
+        if (k % 9 === 0) lum.push([x0, 2, z0, 1, .16, .22, 20 + Math.max(a0, b0) * 3]);
+        // plaques de bitume / de terre soulevées le long de la lèvre
+        if (k % 2 === 0 && x0 > -200 && x0 < 1060) [-1, 1].forEach(sd => { if (r() < .35) return; const e = sd < 0 ? a0 : b0, zz = z0 + sd * (e + 1.8 + r() * 1.5), L = 2.5 + r() * 2.2, P = .8 + r() * 1.6, h = .5 + r() * 1.4, col = sd < 0 ? v("#3A3640") : v("#2A2230");
+          sol.bloc([[x0, 0, zz - P], [x0 + L, 0, zz - P], [x0 + L, sd < 0 ? h : .1, zz + P], [x0, sd < 0 ? h : .1, zz + P], [x0, .3, zz - P], [x0 + L, .3, zz - P], [x0 + L, (sd < 0 ? h : .1) + .3, zz + P], [x0, (sd < 0 ? h : .1) + .3, zz + P]].map(p => sd < 0 ? p : [p[0], p[1] === .1 ? h : p[1] === .4 ? h + .3 : p[1] === .3 ? .3 : 0, p[2]]), col, .05, { 5: SANG, em: { 5: .5 } }); }); }
+    }
+    // ---- les deux portails d'éclairs qui enjambent la piste (on passe d'un monde à l'autre) : piliers de lianes, arche de foudre haut au-dessus
+    CR.forEach((F, q) => { const p = T.a(F.i * T.ds, 0), n = [-p.tz, p.tx], o = DEMI + 6, A0 = [p.x + n[0] * o, 0, p.z + n[1] * o], B0 = [p.x - n[0] * o, 0, p.z - n[1] * o], H = 19;
+      [A0, B0].forEach(b => { tub(sol, courbe(b, [b[0] + (r() - .5) * 3, H * .5, b[2] + (r() - .5) * 3], [b[0], H, b[2]], 5), t => 1.6 - t * .9, LIANE, .02, 6);
+        for (let k = 0; k < 4; k++) { const a = k / 4 * TAU + r(); tub(sol, courbe([b[0] + Math.cos(a) * 4, 0, b[2] + Math.sin(a) * 4], [b[0] + Math.cos(a) * 2, H * .3, b[2] + Math.sin(a) * 2], [b[0], H * (.5 + r() * .4), b[2]], 4), t => .7 - t * .45, LIANE, 0, 4); }
+        sol.boule(b[0], H, b[2], 1.6, ROUGE, 1); lum.push([b[0], H, b[2], 1, .2, .25, 34]); prendre(b[0], b[2], 8); });
+      const arc = []; for (let k = 0; k <= 10; k++) { const t = k / 10; arc.push([A0[0] + (B0[0] - A0[0]) * t + (k % 2 ? 1 : -1) * (k && k < 10 ? 1.2 : 0), H + 4 * Math.sin(PI * t) + (k % 2 ? 1.5 : -.5) * (k && k < 10 ? 1 : 0), A0[2] + (B0[2] - A0[2]) * t]); }
+      tub(sol, arc, .35, v("#FFE0E4"), 1, 4); tub(CLIG[q % 3], arc.map(p => [p[0], p[1] + .1, p[2]]), 1.1, ROUGE, 1, 5);
+      lum.push([p.x, H + 3, p.z, 1, .25, .3, 46]);
+      // VIVANT : quand une voiture passe sous le portail, il se surcharge (arche épaisse, deux éclairs qui frappent le sol)
+      const sur = new Geo(); tub(sur, arc.map(p => [p[0], p[1] + .2, p[2]]), 2.2, v("#FF6A78"), 1, 6); tub(sur, arc, .8, v("#FFFFFF"), 1, 4);
+      [A0, B0].forEach(b => { let a = [b[0], H, b[2]]; for (let k = 1; k <= 5; k++) { const c = [b[0] + (k % 2 ? 1.4 : -1.4) * (k < 5 ? 1 : 0), H - k * H / 5, b[2] + (k % 2 ? -1 : 1) * (k < 5 ? 1 : 0)]; barre(sur, a, c, .9, v("#FFE0E4"), 1); barre(sur, a, c, 2.2, ROUGE, 1); a = c; } });
+      rotors.push({ g: sur, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant: (o, t, C) => { if (!C.V.length) return null; if (!C.V.some(c => Math.hypot(c.x - p.x, c.z - p.z) < 34)) return null; return (t * 7 % 1) < .65 ? I4 : null; } } }); });
+
+    // ================= 3. LA CRÉATURE : elle jaillit de la grande faille et plante ses griffes dans la grand-rue =================
+    { const g = new Geo(), PE = v("#2E1E26"), PE2 = v("#4A2632"), cx = FX, cz = FZ, KC = 1.45;   // KC : la créature domine la grand-rue
+      // le trou : anneau de terre et de bitume arrachés, cœur rouge
+      for (let k = 0; k < 26; k++) { const a = k / 26 * TAU, R = 11 + r() * 2.5, L = 3 + r() * 2, x = Math.cos(a) * R, z = Math.sin(a) * R, h = 1.2 + r() * 2.4, ta = [Math.cos(a), Math.sin(a)], tg = [-Math.sin(a), Math.cos(a)];
+        const C = (u, w, y) => [x + ta[0] * u + tg[0] * w, y, z + ta[1] * u + tg[1] * w];
+        g.bloc([C(-1.6, -L / 2, 0), C(1.6, -L / 2, 0), C(1.6, L / 2, 0), C(-1.6, L / 2, 0), C(-1.6, -L / 2, h), C(1.6, -L / 2, h * .3), C(1.6, L / 2, h * .3), C(-1.6, L / 2, h)], z < 0 ? v("#3A3640") : v("#2A2230"), .04, { 2: SANG, em: { 2: .4 } }); }
+      for (let k = 0; k < 16; k++) { const a0 = k / 16 * TAU, a1 = (k + 1) / 16 * TAU; g.tri([0, .14, 0], [Math.cos(a0) * 11, .14, Math.sin(a0) * 11], [Math.cos(a1) * 11, .14, Math.sin(a1) * 11], ROUGE, 1, [0, 1, 0]); g.tri([0, .16, 0], [Math.cos(a0) * 6, .16, Math.sin(a0) * 6], [Math.cos(a1) * 6, .16, Math.sin(a1) * 6], v("#FFD0D6"), 1, [0, 1, 0]); }
+      // le corps penché vers la ville (vers le nord = -z)
+      const dos = [[0, -1, 1], [0, 5, 0], [0, 11, -1.6], [0, 17, -3.6], [0, 21.5, -5.6]];
+      tub(g, dos, t => [3, 3.6, 4.8, 5.2, 3.4][Math.round(t * 4)], (i, k) => k === 2 || k === 3 ? PE2 : PE, .1, 8);
+      tub(g, [[0, 21, -5.4], [0, 24.5, -7.2], [0, 27, -9]], [1.8, 1.4, 1.2].length && (t => 1.9 - t * .7), PE, .1, 6);
+      // muscles soulignés de rouge (la lumière monte de la faille)
+      [[-2.6, 1], [2.6, 1], [-1.4, .6], [1.4, .6]].forEach(([u, e]) => tub(g, [[u, 2, 2.2], [u * 1.2, 8, .9], [u * 1.35, 14, -1.4], [u * .9, 19, -4.6]], .16, v("#C8384A"), e, 3));
+      // les bras : épaule → coude haut → main qui griffe la chaussée
+      [-1, 1].forEach(sg => { const ep = [sg * 5, 18.5, -4.5], co = [sg * 14, 20, -9.5], po = [sg * 12.5, 3.2, -16];
+        tub(g, [ep, [sg * 9.5, 20.5, -6.5], co], t => 2 - t * .5, PE, .1, 6); tub(g, [co, [sg * 14, 12, -14], po], t => 1.5 - t * .5, PE, .1, 6);
+        tub(g, [[sg * 9.5, 20, -6.8], [sg * 13.9, 19.2, -9.9], [sg * 13.6, 11.5, -14.4]], .2, v("#C8384A"), .7, 3);
+        g.boule(po[0], po[1], po[2], 2, PE2, .1, .8);
+        for (let f = 0; f < 5; f++) { const a = (f - 2) * .42 + (sg > 0 ? 0 : 0), d = [Math.sin(a) * sg, -Math.cos(a)], b = [po[0] + d[0] * 2.4, 2.6, po[2] + d[1] * 2.4], tip = [po[0] + d[0] * 6.2, .4, po[2] + d[1] * 6.2];
+          tub(g, [[po[0], po[1], po[2]], [b[0], b[1] + 1.4, b[2]], tip], t => .62 - t * .3, PE, .08, 4);
+          barre(g, tip, [tip[0] + d[0] * 1.3, -.2, tip[2] + d[1] * 1.3], .34, v("#F4EAD8"), .25);
+          // la chaussée se fend sous la griffe
+          const W = (u, w) => [cx + (tip[0] + d[0] * u + w) * KC, .12, cz + (tip[2] + d[1] * u + w * .6) * KC];
+          so.quad(W(0, -.35), W(4.5, -.15), W(4.5, .15), W(0, .35), ROUGE, 1, [0, 1, 0]); } });
+      // vrilles de fumée noire autour de la taille
+      for (let k = 0; k < 7; k++) { const a = k / 7 * TAU + .3, R = 6 + r() * 2; tub(g, courbe([Math.cos(a) * R, 0, Math.sin(a) * R], [Math.cos(a) * (R + 3), 4 + r() * 3, Math.sin(a) * (R + 3)], [Math.cos(a + .6) * (R - 1), 7 + r() * 6, Math.sin(a + .6) * (R - 1)], 4), t => .9 - t * .7, LIANE, .05, 4); }
+      sol.poser(g, cx, 0, cz, 0, KC); prendre(cx, cz, 16 * KC);
+      // la tête : 5 pétales qui s'ouvrent et se referment (gueule rouge, rangées de dents), centrée au bout du cou
+      const HX = cx, HY = 28 * KC, HZ = cz - 9.5 * KC;
+      sol.boule(HX, HY - .4, HZ, 1.6 * KC, v("#2A0508"), .6); lum.push([HX, HY + 3, HZ, 1, .35, .4, 30]); lum.push([cx, 4, cz, 1, .15, .2, 70]);
+      for (let q = 0; q < 5; q++) { const p = new Geo(), L = 7.5;
+        const S = [0, .2, .4, .6, .8, 1].map(u => { const e = 1.15 - u * .75, x = 1.1 + L * u * Math.cos(e) * .9, y = L * u * Math.sin(e) * .85, w = 2.6 * Math.sin(PI * Math.pow(u * .92 + .04, .8)); return [x, y, w]; });
+        for (let k = 0; k < S.length - 1; k++) { const [x0, y0, w0] = S[k], [x1, y1, w1] = S[k + 1];
+          p.quad([x0, y0, -w0], [x1, y1, -w1], [x1, y1, w1], [x0, y0, w0], v("#D8203A"), .55, [-1, 1, 0]);
+          p.quad([x0 + .35, y0 - .3, -w0], [x1 + .35, y1 - .3, -w1], [x1 + .35, y1 - .3, w1], [x0 + .35, y0 - .3, w0], v("#3A242C"), .08, [1, -1, 0]);
+          if (k > 0 && k < 5) [-1, 1].forEach(s => { const z = s * w0 * .8; p.tri([x0 - .05, y0 + .05, z], [x0 + .4, y0 + .3, z - s * .2], [x0 - .5, y0 + 1.1, z - s * .5], v("#FFF4E4"), .35, [-1, 1, 0]); p.tri([x0 + (x1 - x0) * .5, y0 + (y1 - y0) * .5 + .05, z * .9], [x0 + (x1 - x0) * .5 + .4, y0 + (y1 - y0) * .5 + .3, z * .9 - s * .2], [x0 + (x1 - x0) * .5 - .5, y0 + (y1 - y0) * .5 + 1, z * .9 - s * .5], v("#FFF4E4"), .35, [-1, 1, 0]); }); }
+        for (let i = 0; i < p.d.length; i += 10) { p.d[i] *= KC; p.d[i + 1] *= KC; p.d[i + 2] *= KC; }
+        // VIVANT : quand la DERNIÈRE voiture est passée dans le Monde à l'envers, la gueule s'ouvre en grand et palpite plus vite
+        rotors.push({ g: p, x: HX, y: HY, z: HZ, cap: q / 5 * TAU + .3, v: 0, a: { osc: [.22, 1.25], ph: q * .07, vivant: (o, t, C) => { const d = dernierDe(C); if (!d) return matRotor(o, t);
+          const c = d.z > zf(d.x) ? 1 : 0; o.ouv = (o.ouv || 0) + (c - (o.ouv || 0)) * .04; return mul(modele(o.x, o.y, o.z, o.cap, 0, 1 + o.ouv * .25), rotZ(.22 * Math.sin(t * (1.25 + o.ouv * 2.5) + q * .44) - o.ouv * .6)); } } }); }
+      // VIVANT : LA LIANE CHASSERESSE. De la gueule de la créature, une liane rouge s'étire jusqu'à la DERNIÈRE voiture et la suit partout
+      //          (un trait lisible d'un coup d'œil : « elle traque le dernier »). Géométrie d'une longueur 1 le long de +x, étirée à chaque image.
+      { const g = new Geo(), N = 18, LV = 300, P = [...Array(N + 1)].map((_, k) => { const u = k / N; return [u * LV, 16 * Math.sin(u * PI) + 3 * Math.sin(u * 3 * PI) * Math.sin(u * PI), 4 * Math.sin(u * 4 * PI + 1) * Math.sin(u * PI)]; });
+        tub(g, P, t => 3.4 - t * 2.2, v("#4A1824"), .3, 6); tub(g, P.map(p => [p[0], p[1] + 2.6 - p[0] / LV * 1.6, p[2]]), t => 1.6 - t * .9, ROUGE, 1, 4);
+        for (let k = 0; k < 5; k++) { const a = k / 5 * TAU; barre(g, [LV, 0, 0], [LV + .6, -1.8 + Math.sin(a) * .4, Math.cos(a) * 1.6], .3, v("#FFC8CE"), 1); }
+        const S = new Float32Array(16); rotors.push({ g, x: HX, y: HY - 1, z: HZ, cap: 0, v: 0, a: { vivant: (o, t, C) => { const d = dernierDe(C); if (!d) return null;
+          o.cx = o.cx === undefined ? d.x : o.cx + (d.x - o.cx) * .12; o.cz = o.cz === undefined ? d.z : o.cz + (d.z - o.cz) * .12;
+          const dx = o.cx - o.x, dz = o.cz - o.z, dy = 1.6 - o.y, hz = Math.hypot(dx, dz) || 1, L = Math.hypot(hz, dy), e = 1 + .12 * Math.sin(t * 7);
+          S[0] = L / 300; S[5] = e; S[10] = e; S[15] = 1; return mul(modele(o.x, o.y, o.z, Math.atan2(-dz, dx), Math.atan2(dy, hz), 1), S); } } }); }
+    }
+
+    // ================= 4. les bâtiments de la grand-rue (façade en +z), et leurs jumeaux éteints du Monde à l'envers =================
+    const pignon = (B, w, d, h, rh, mur, toit, o) => { const g = B.g; o = o || .8;
+      g.tri([-w / 2, h, d / 2], [w / 2, h, d / 2], [0, h + rh, d / 2], mur, 0, [0, 0, 1]); g.tri([-w / 2, h, -d / 2], [w / 2, h, -d / 2], [0, h + rh, -d / 2], mur, 0, [0, 0, -1]);
+      [-1, 1].forEach(s => g.bloc([[s * (w / 2 + o), h - .4, -d / 2 - o], [0, h + rh, -d / 2 - o], [0, h + rh, d / 2 + o], [s * (w / 2 + o), h - .4, d / 2 + o], [s * (w / 2 + o), h - .1, -d / 2 - o], [0, h + rh + .3, -d / 2 - o], [0, h + rh + .3, d / 2 + o], [s * (w / 2 + o), h - .1, d / 2 + o]], toit, 0)); };
+    const fenetre = (B, x, y, z, w, h, lit, E, sens) => { const o = B.g.ov(), n = [0, 0, sens || 1], zz = z + (sens || 1) * .06;
+      o.quad([x - w / 2 - .25, y - .25, zz], [x + w / 2 + .25, y - .25, zz], [x + w / 2 + .25, y + h + .25, zz], [x - w / 2 - .25, y + h + .25, zz], E ? v("#3A3640") : BLANC, 0, n);
+      o.quad([x - w / 2, y, zz + .03 * (sens || 1)], [x + w / 2, y, zz + .03 * (sens || 1)], [x + w / 2, y + h, zz + .03 * (sens || 1)], [x - w / 2, y + h, zz + .03 * (sens || 1)], E ? v("#06040A") : lit ? CHAUD : VITRE, E ? 0 : lit ? .95 : .1, n);
+      if (!E && lit) o.quad([x - .06, y, zz + .05 * (sens || 1)], [x + .06, y, zz + .05 * (sens || 1)], [x + .06, y + h, zz + .05 * (sens || 1)], [x - .06, y + h, zz + .05 * (sens || 1)], v("#6A4A30"), .3, n); };
+    const talkie = (g, x, y, z, cap) => { const t = new Geo(); t.boite(0, 0, 0, .34, .7, .16, v("#1A1A1E"), 0); t.boite(.1, .7, 0, .05, .7, .05, v("#2A2A2E"), 0); t.boite(-.06, .52, .085, .12, .08, .02, v("#FF3030"), .9); t.boite(0, .18, .085, .24, .22, .02, v("#3A3A40"), 0); g.poser(t, x, y, z, cap, 1); };
+    const velo = (g, x, z, cap, col, couche) => { const b = new Geo(), R = .62, roue = cx => { for (let k = 0; k < 10; k++) { const a0 = k / 10 * TAU, a1 = (k + 1) / 10 * TAU; b.quad([cx + Math.cos(a0) * R, R + Math.sin(a0) * R, 0], [cx + Math.cos(a1) * R, R + Math.sin(a1) * R, 0], [cx + Math.cos(a1) * (R - .12), R + Math.sin(a1) * (R - .12), 0], [cx + Math.cos(a0) * (R - .12), R + Math.sin(a0) * (R - .12), 0], v("#141216"), 0, [0, 0, 1]); } };
+      roue(-.95); roue(.95); const s = [-.25, 1.25, 0], h = [.7, 1.35, 0], p = [0, .62, 0];
+      [[[-.95, R, 0], p], [p, s], [s, h], [h, [.95, R, 0]], [[-.95, R, 0], s], [p, [.7, 1.3, 0]]].forEach(([a, c]) => barre(b, a, c, .09, col, .05));
+      barre(b, [.62, 1.62, -.35], [.62, 1.62, .35], .07, GRIS); b.boite(-.28, 1.3, 0, .5, .1, .22, NOIR); b.boite(.86, 1.38, 0, .14, .14, .14, v("#FFF6C8"), couche ? 0 : .9);
+      if (couche) { const t = new Geo(); t.d = b.d.map((u, i) => { const m = i % 10; return m === 1 ? u * 0 + b.d[i - 1] * 0 + (b.d[i + 1] + .15) : m === 2 ? -b.d[i - 1] : u; }); g.poser(t, x, .2, z, cap, 1); }
+      else g.poser(b, x, 0, z, cap, 1); };
+
+    // maison en bois à étage, porche, cheminée ; guirlandes (3 rangées de grosses ampoules sur la façade, comme sur la carte, et le long du toit)
+    const maison = (E, w, d, alpha, k0) => { const B = bati(), g = B.g, h = 7.2, mur = E ? vieillir(alpha ? BOIS : AMP[k0 % 6] && mel(BOIS, AMP[(k0 + 2) % 6], .25)) : alpha ? BOIS : mel(BOIS, AMP[(k0 + 2) % 6], .25), toit = E ? vieillir(PRUNE) : PRUNE;
+      g.boite(0, 0, 0, w, h, d, mur); g.boite(0, 0, 0, w + .4, .7, d + .4, E ? v("#2A2630") : v("#5A4E4A"));
+      for (let q = 1; q < 6; q++) g.ov().quad([-w / 2, q * 1.2, d / 2 + .04], [w / 2, q * 1.2, d / 2 + .04], [w / 2, q * 1.2 + .12, d / 2 + .04], [-w / 2, q * 1.2 + .12, d / 2 + .04], mel(mur, [0, 0, 0], .2), 0, [0, 0, 1]);
+      pignon(B, w, d, h, 3.4, mur, toit); g.boite(w * .28, h, -d * .15, 1.4, 5.2, 1.4, E ? v("#3A3036") : v("#7A3A2E"));
+      // porche : plancher, 4 poteaux, auvent, marches, porte
+      g.boite(0, 0, d / 2 + 1.6, w * .7, .6, 3.2, E ? v("#2E2A30") : v("#8A6A4A")); [-1, -.33, .33, 1].forEach(t => g.boite(t * w * .33, .6, d / 2 + 2.9, .3, 2.8, .3, E ? v("#5A5660") : BLANC));
+      g.boite(0, 3.4, d / 2 + 1.7, w * .74, .3, 3.6, toit); g.boite(0, 0, d / 2 + 3.7, 2.4, .3, .9, E ? v("#2E2A30") : v("#7A5A3A"));
+      g.ov().quad([-1, .6, d / 2 + .05], [1, .6, d / 2 + .05], [1, 3, d / 2 + .05], [-1, 3, d / 2 + .05], E ? v("#1A1418") : v("#6A4A3A"), E ? 0 : .1, [0, 0, 1]);
+      [[-w * .33, 1.6], [w * .33, 1.6], [-w * .33, 4.6], [0, 4.6], [w * .33, 4.6]].forEach(([x, y], q) => fenetre(B, x, y, d / 2, 1.8, 1.7, (q + k0) % 3 !== 0, E));
+      fenetre(B, 0, h + .6, d / 2, 1.2, 1.2, k0 % 2 === 0, E);
+      if (alpha && !E) talkie(g, -2.2, .3, d / 2 + 3.75, .5);
+      B.halos = alpha && !E; if (alpha) [5.9, 5.0, 4.1].forEach((y, q) => guirlande(B, [-w / 2 + .6, y, d / 2 + .25], [w / 2 - .6, y, d / 2 + .25], 9, .35, q * 2, E));
+      guirlande(B, [-w / 2 - .8, h - .3, d / 2 + .9], [0, h + 3.3, d / 2 + .9], 7, .1, k0, E); guirlande(B, [0, h + 3.3, d / 2 + .9], [w / 2 + .8, h - .3, d / 2 + .9], 7, .1, k0 + 3, E);
+      guirlande(B, [-w * .35, 3.2, d / 2 + 3.4], [w * .35, 3.2, d / 2 + 3.4], 8, .25, k0 + 1, E);
+      if (!E) B.l.push([0, 4, d / 2 + 5, 1, .8, .55, 16]);
+      if (E) lianesMur(B, w, h + 2, d, 4);
+      return B; };
+    // le cinéma : façade brique, fronton à gradins, marquise sans texte bordée d'ampoules qui courent, guichet, affiches, enseigne verticale
+    const cinema = E => { const B = bati(), g = B.g, w = 32, d = 22, h = 14, mur = E ? vieillir(BRIQUE) : BRIQUE, fonce = E ? vieillir(v("#4A1220")) : v("#4A1220");
+      g.boite(0, 0, 0, w, h, d, mur); g.boite(0, h, 0, w + 1, 1.2, d + 1, fonce); g.boite(0, h + 1.2, d / 2 - 2, 18, 3, 4, fonce); g.boite(0, h + 4.2, d / 2 - 2, 9, 2.2, 4, fonce);
+      for (let q = 0; q < 6; q++) g.boite(-w / 2 + 2.5 + q * 5.4, h - 3, d / 2 + .15, 1, 3, .3, fonce);
+      // marquise
+      g.boite(0, 6.2, d / 2 + 3, w + 2, 3.6, 6, fonce, 0, 0, { dessous: true, 0: E ? v("#1A1416") : v("#FFD98A"), em: { 0: E ? 0 : .8 } });
+      g.ov().quad([-w / 2, 6.6, d / 2 + 6.05], [w / 2, 6.6, d / 2 + 6.05], [w / 2, 9.4, d / 2 + 6.05], [-w / 2, 9.4, d / 2 + 6.05], E ? v("#2A2426") : CREME, E ? 0 : 1, [0, 0, 1]);
+      if (!E) for (let q = 0; q < 2; q++) for (let k = 0; k < 9; k++) if (r() < .8) g.boite(-12.5 + k * 3.1 + r() * .6, 7.2 + q * 1.15, d / 2 + 6.12, 1.6 + r() * 1.2, .7, .06, v("#2A1418"), 0);
+      for (let k = 0; k <= 30; k++) [9.9, 6.0].forEach((y, q) => { const x = -w / 2 - 1 + k * (w + 2) / 30; g.boite(x, y, d / 2 + 6.1, .3, .3, .2, E ? v("#3A3436") : v("#C8762A"), E ? 0 : .6); if (!E) CHASSE[(k + q) % 2].boite(x, y - .1, d / 2 + 6.2, .5, .5, .3, v("#FFE6A0"), 1); });
+      // portes, guichet, affiches
+      g.ov().quad([-6, 0, d / 2 + .05], [6, 0, d / 2 + .05], [6, 5, d / 2 + .05], [-6, 5, d / 2 + .05], E ? v("#0A0608") : v("#FFD98A"), E ? 0 : .9, [0, 0, 1]);
+      for (let q = -2; q <= 2; q++) g.ov().quad([q * 2.4 - .08, 0, d / 2 + .09], [q * 2.4 + .08, 0, d / 2 + .09], [q * 2.4 + .08, 5, d / 2 + .09], [q * 2.4 - .08, 5, d / 2 + .09], fonce, 0, [0, 0, 1]);
+      g.boite(0, 0, d / 2 + 1.6, 3.2, 3.2, 2.6, fonce); g.ov().quad([-1.2, 1.4, d / 2 + 2.95], [1.2, 1.4, d / 2 + 2.95], [1.2, 2.8, d / 2 + 2.95], [-1.2, 2.8, d / 2 + 2.95], E ? v("#0A0608") : v("#FFF4D8"), E ? 0 : .9, [0, 0, 1]);
+      [-12, -8.5, 8.5, 12].forEach((x, q) => { g.ov().quad([x - 1.4, .8, d / 2 + .05], [x + 1.4, .8, d / 2 + .05], [x + 1.4, 4.8, d / 2 + .05], [x - 1.4, 4.8, d / 2 + .05], E ? v("#1A1618") : v("#E8DCC0"), E ? 0 : .7, [0, 0, 1]);
+        if (!E) { const c = [v("#C83A4A"), v("#2E4A8A"), v("#E2B93B"), v("#3A2A5A")][q]; g.ov().quad([x - 1.15, 1.05, d / 2 + .09], [x + 1.15, 1.05, d / 2 + .09], [x + 1.15, 4.55, d / 2 + .09], [x - 1.15, 4.55, d / 2 + .09], c, .6, [0, 0, 1]);
+          g.ov().quad([x - .35, 1.4, d / 2 + .12], [x + .35, 1.4, d / 2 + .12], [x + .25, 3.4, d / 2 + .12], [x - .25, 3.4, d / 2 + .12], v("#140C10"), .1, [0, 0, 1]); g.ov().boule(x, 3.7, d / 2 + .12, .32, v("#140C10"), .1, 1); } });
+      // enseigne verticale (bandes lumineuses, sans lettres) qui clignote
+      g.boite(w / 2 - 3, 9.6, d / 2 + 1.6, .8, 11, 3, fonce); for (let q = 0; q < 6; q++) { g.boite(w / 2 - 3, 10.4 + q * 1.7, d / 2 + 1.6, .9, .9, 3.1, E ? v("#2A2426") : v("#FF5A4A"), E ? 0 : .85); if (!E) B.c[q % 3].boite(w / 2 - 3, 10.3 + q * 1.7, d / 2 + 1.6, 1.1, 1.1, 3.3, v("#FFE0B0"), 1); }
+      if (!E) { B.l.push([0, 8, d / 2 + 8, 1, .82, .5, 34]); B.l.push([w / 2 - 3, 15, d / 2 + 3, 1, .4, .3, 16]); } else lianesMur(B, w, h, d, 7);
+      return B; };
+    // la salle d'arcade : enseigne ARCADE en néon rose (qui grésille), grande vitrine ouverte sur 5 bornes colorées
+    const arcade = E => { const B = bati(), g = B.g, w = 28, d = 18, h = 11, mur = E ? vieillir(MARINE) : MARINE;
+      g.boite(0, 5.6, 0, w, h - 5.6, d, mur, 0, 0, { dessous: true, 0: v("#140E22") }); g.boite(-w / 2 + .8, 0, 0, 1.6, 5.6, d, mur); g.boite(w / 2 - .8, 0, 0, 1.6, 5.6, d, mur); g.boite(0, 0, -d / 2 + .5, w, 5.6, 1, mur);
+      g.boite(0, 0, 0, w - 3, .15, d - 1, E ? v("#120C14") : v("#2A1A4A"), E ? 0 : .2); g.boite(0, h, 0, w + .6, .8, d + .6, v("#140C10"));
+      const pal = ["#C8283A", "#2E6AE0", "#E2B93B", "#2BB673", "#9A4AE0"], ecr = ["#7CF0FF", "#FFE07A", "#FF9AE0", "#9AFF8A", "#FFD0A0"];
+      for (let q = 0; q < 5; q++) { const x = -9.6 + q * 4.8, z = -d / 2 + 2.6, c = E ? vieillir(v(pal[q])) : v(pal[q]); g.boite(x, 0, z, 2.2, 4.2, 1.8, c); g.boite(x, 4.2, z + .2, 2.3, .8, 1.4, E ? NOIR : v(ecr[q]), E ? 0 : .9);
+        g.bloc([[x - .95, 2.5, z + .91], [x + .95, 2.5, z + .91], [x + .95, 2.5, z + 1.5], [x - .95, 2.5, z + 1.5], [x - .95, 2.6, z + .91], [x + .95, 2.6, z + .91], [x + .95, 2.6, z + 1.5], [x - .95, 2.6, z + 1.5]], v("#1A1A22"));
+        g.ov().quad([x - .85, 2.75, z + .92], [x + .85, 2.75, z + .92], [x + .85, 3.95, z + .92], [x - .85, 3.95, z + .92], E ? v("#06040A") : v(ecr[(q + 2) % 5]), E ? 0 : 1, [0, 0, 1]);
+        if (!E) { g.boite(x - .4, 2.6, z + 1.2, .12, .4, .12, NOIR); g.boule(x - .4, 3.05, z + 1.2, .14, v("#FF3030"), .8); [.15, .45].forEach(u => g.boule(x + u, 2.66, z + 1.25, .1, v(ecr[q]), .9)); } }
+      if (!E) B.l.push([0, 3, d / 2 - 2, .6, .4, 1, 22]);
+      // l'enseigne
+      g.boite(0, 6.4, d / 2 + .5, 21.4, 4.4, .6, v("#120E26")); const p = .5, px = pixels("ARCADE", E), x0 = -px.reduce((m, q) => Math.max(m, q[1]), 0) * p / 2;
+      [[-10.6, 6.4, 10.6, 6.6], [-10.6, 10.6, 10.6, 10.8], [-10.8, 6.4, -10.6, 10.8], [10.6, 6.4, 10.8, 10.8]].forEach(([a, b, c, e]) => g.boite((a + c) / 2, b, d / 2 + .85, c - a + .1, e - b, .2, E ? v("#3A2034") : v("#E0479A"), E ? 0 : 1));
+      px.forEach(([c0, c1, row]) => { const x = x0 + (c0 + c1) / 2 * p, y = 10.05 - row * p; g.boite(x, y - p * .45, d / 2 + .9, (c1 - c0) * p - .08, p * .9, .16, E ? v("#3A2034") : v("#FF6FD8"), E ? .05 : 1);
+        if (!E) B.c[0].boite(x, y - p * .5, d / 2 + 1.0, (c1 - c0) * p, p, .08, v("#FFE0F6"), 1); });
+      if (!E) B.l.push([0, 8.6, d / 2 + 3, 1, .3, .85, 26]); else lianesMur(B, w, h, d, 6);
+      return B; };
+    // boutique de la grand-rue (auvent rayé, vitrine)
+    const boutique = (E, w, k) => { const B = bati(), g = B.g, d = 12, h = 6.5 + k % 2 * 2, mur = E ? vieillir(v(["#6A5A4A", "#4A5A6A", "#7A6A4A", "#5A4A5A"][k % 4])) : v(["#6A5A4A", "#4A5A6A", "#7A6A4A", "#5A4A5A"][k % 4]);
+      g.boite(0, 0, 0, w, h, d, mur); g.boite(0, h, 0, w + .4, .6, d + .4, mel(mur, [0, 0, 0], .4)); g.boite(0, h - 2, d / 2 + .1, w * .8, 1.4, .3, E ? v("#2A2426") : v("#F2EEE6"), E ? 0 : .5);
+      fenetre(B, -w * .18, .8, d / 2, w * .45, 2.8, true, E); g.ov().quad([w * .22, 0, d / 2 + .05], [w * .36, 0, d / 2 + .05], [w * .36, 3, d / 2 + .05], [w * .22, 3, d / 2 + .05], E ? v("#0A0608") : v("#5A3A2A"), 0, [0, 0, 1]);
+      for (let q = 0; q < 8; q++) { const x0 = -w / 2 + q * w / 8, x1 = x0 + w / 8; g.quad([x0, 4.2, d / 2], [x1, 4.2, d / 2], [x1, 3.4, d / 2 + 2.2], [x0, 3.4, d / 2 + 2.2], E ? vieillir(q % 2 ? BLANC : v("#C8283A")) : q % 2 ? BLANC : v(["#C8283A", "#2E6A4A", "#2E4A8A", "#C87A2A"][k % 4]), .08, [0, 1, 1]); }
+      if (!E) B.l.push([0, 3, d / 2 + 3, 1, .8, .55, 12]); else lianesMur(B, w, h, d, 3);
+      return B; };
+    // la station-service : auvent éclairé par en dessous, 2 pompes, petite boutique, mât de prix
+    const station = E => { const B = bati(), g = B.g;
+      [[-9, -4], [9, -4], [-9, 4], [9, 4]].forEach(([x, z]) => g.boite(x, 0, z, .7, 5.2, .7, E ? v("#4A4650") : BLANC));
+      g.boite(0, 5.2, 0, 24, 1, 12, E ? vieillir(v("#C8283A")) : v("#C8283A"), 0, 0, { dessous: true, 0: E ? v("#1A161A") : v("#F4F0E0"), em: { 0: E ? 0 : .9 } });
+      [-4, 4].forEach(x => { g.boite(x, 0, 0, 1, .3, 3, v("#5A5660")); g.boite(x, .3, 0, .8, 2, 1.1, E ? v("#3A3640") : v("#E8E2D0")); g.boite(x, 1.6, .56, .6, .5, .05, E ? NOIR : v("#9AFFB0"), E ? 0 : .8); });
+      g.boite(0, 0, -12, 14, 4.5, 8, E ? vieillir(v("#8A8478")) : v("#B8B0A0")); fenetre(B, -2, .8, -8, 6, 2.6, true, E);
+      g.boite(13, 0, 6, .5, 9, .5, GRIS); g.boite(13, 7, 6, 3.6, 2.6, .5, E ? v("#2A2426") : v("#F4F0E0"), E ? 0 : .7);
+      if (!E) for (let q = 0; q < 2; q++) g.boite(13, 7.5 + q * 1.1, 6.3, 2.6, .5, .05, v("#C8283A"), .8);
+      if (!E) { B.l.push([0, 4.5, 0, .9, .95, 1, 24]); } else lianesMur(B, 14, 4.5, 8, 2);
+      return B; };
+    // la voiture des années 80 (break à panneaux de bois, ou la jeep de la police)
+    const auto = (g, x, z, cap, type, E) => { const b = new Geo(), c = E ? vieillir(v(type === "police" ? "#C8B48A" : type === "van" ? "#E8E6E0" : "#6A3A2A")) : v(type === "police" ? "#C8B48A" : type === "van" ? "#E8E6E0" : "#6A3A2A"), L = type === "van" ? 5.6 : 5;
+      b.boite(0, .45, 0, L, 1.1, 2, c); b.boite(type === "van" ? .1 : -.4, 1.55, 0, type === "van" ? L - .4 : L * .62, type === "van" ? 1.5 : 1, 1.9, type === "police" ? v("#F2EEE6") : c);
+      if (type === "wagon" && !E) b.ov().boite(0, .7, 0, L * .9, .5, 2.04, v("#8A5A2A"));
+      [[-1, 1], [1, 1], [-1, -1], [1, -1]].forEach(([a, s]) => b.cylindre(a * L * .32, .45, s * .98, .45, .1, 6, NOIR));
+      b.ov().boite(L / 2 + .02, .8, .65, .05, .3, .4, E ? NOIR : v("#FFF6C8"), E ? 0 : 1); b.ov().boite(L / 2 + .02, .8, -.65, .05, .3, .4, E ? NOIR : v("#FFF6C8"), E ? 0 : 1);
+      b.ov().boite(-L / 2 - .02, .8, .7, .05, .25, .35, v("#C81020"), E ? 0 : .8); b.ov().boite(-L / 2 - .02, .8, -.7, .05, .25, .35, v("#C81020"), E ? 0 : .8);
+      if (type === "police" && !E) { b.boite(-.4, 2.55, .4, .5, .3, .7, v("#2E6AE0"), 1); b.boite(-.4, 2.55, -.4, .5, .3, .7, v("#FF2020"), 1); }
+      g.poser(b, x, 0, z, cap, 1); };
+    // lampadaire au sodium (allumé à Hawkins, mort et couvert de lianes en bas)
+    const lampa = (x, z, cap, E) => { sol.boite(x, 0, z, .35, 8, .35, E ? v("#2A2630") : v("#4A4A52")); const t = tourne([1.6, 0, 0], cap); sol.boite(x + t[0] / 2, 7.8, z + t[2] / 2, 1.8, .25, .3, v("#4A4A52"), 0, cap);
+      sol.boite(x + t[0], 7.4, z + t[2], .8, .4, .5, E ? v("#2A2426") : v("#FFC070"), E ? 0 : 1, cap); if (!E) lum.push([x + t[0], 7, z + t[2], 1, .72, .4, 15]);
+      else tub(sol, courbe([x + 1.5, 0, z + 1], [x + .5, 3, z + .4], [x + .2, 6.5, z], 3), .22, LIANE, 0, 4); };
+
+    // ---- la grand-rue de Hawkins et son reflet
+    const RUE = [[240, "police"], [297, "alpha"], [347, "b0"], [376, "b1"], [444, "cine"], [494, "b2"], [522, "b3"], [598, "arcade"], [680, "station"]];
+    [false, true].forEach(E => {
+      const sg = E ? 1 : -1, cap = E ? PI : 0;
+      // la chaussée, ses lignes, le trottoir
+      for (let x = 140; x < 760; x += 6) { const za = zf(x) + sg * 7, zb = zf(x) + sg * 26, zc = zf(x) + sg * 16.5, xm = x + 3;
+        if (T.dist(xm, zc) < DEMI + 16) continue;
+        so.quad([x, .05, za], [x + 6, .05, zf(x + 6) + sg * 7], [x + 6, .05, zf(x + 6) + sg * 26], [x, .05, zb], E ? v("#1C1820") : ASPH, E ? .03 : .05, [0, 1, 0]);
+        if ((x / 6) % 2 === 0 && !(E && r() < .4)) so.quad([x, .08, zc - .2], [x + 3.5, .08, zc - .2], [x + 3.5, .08, zc + .2], [x, .08, zc + .2], E ? v("#4A3A22") : JAUNE, E ? 0 : .35, [0, 1, 0]);
+        so.quad([x, .08, zb - sg * .4], [x + 6, .08, zf(x + 6) + sg * 25.6], [x + 6, .08, zf(x + 6) + sg * 26], [x, .08, zb], E ? v("#3A3640") : v("#C8C4BA"), .1, [0, 1, 0]);
+        so.quad([x, .07, zb], [x + 6, .07, zf(x + 6) + sg * 26], [x + 6, .07, zf(x + 6) + sg * 31], [x, .07, zb + sg * 5], E ? v("#2A2630") : v("#6A6870"), .04, [0, 1, 0]); }
+      RUE.forEach(([x, type], q) => { const zfa = zf(x) + sg * 31; let B, dd;
+        if (type === "alpha") { B = maison(E, 20, 14, true, 0); dd = 14 + 8; }
+        else if (type === "cine") { B = cinema(E); dd = 22; }
+        else if (type === "arcade") { B = arcade(E); dd = 18; }
+        else if (type === "station") { B = station(E); dd = 14; }
+        else if (type === "police") { B = boutique(E, 18, 1); dd = 12; }
+        else { const w = { b0: 18, b1: 14, b2: 14, b3: 16 }[type]; B = boutique(E, w, q); dd = 12; }
+        const zc = zfa + sg * (type === "alpha" ? 7 + 4 : type === "station" ? 6 : dd / 2), R = { cine: 22, arcade: 19, station: 20, alpha: 16 }[type] || 11;
+        if (!ok(x, zc, R - 6, 4)) return;
+        poserBat(B, x, zc, cap, R); if (E) lum.push([x, 1.5, zfa - 3, 1, .18, .24, 22 + R]);
+        if (type === "police") auto(sol, x + 12, zfa + sg * 2.5, cap + PI / 2, "police", E);
+        if (type === "station") auto(sol, x - 4, zc - sg * 0, cap + PI / 2, "wagon", E); });
+      // lampadaires côté façades, voitures garées le long du trottoir
+      for (let x = 160; x < 740; x += 38) { const z = zf(x) + sg * 27.5; if (ok(x, z, 1, 6)) lampa(x, z, cap - PI / 2, E); }
+      [[330, "wagon"], [560, "van"]].forEach(([x, ty]) => auto(sol, x, zf(x) + sg * 23.5, E ? PI : 0, ty, E));
+    });
+    prendre(450, zf(450) - 30, 1);   // (réservé : rien de générique ne s'y pose)
+
+    // ================= 5. les 5 copains à vélo (couleurs des pilotes), phares allumés, qui filent vers l'est sur la grand-rue =================
+    for (let k = 0; k < 5; k++) { const x = 590 + k * 11 + (k % 2) * 2, z = zf(x) - 12.5 - (k % 2) * 2.6, c = v(COULEURS_5[k]), g = new Geo(), PE = v(["#F2CDB0", "#D9A27A", "#F5D4BC", "#C98E66", "#E8BC98"][k]), CH = v(["#3A2416", "#C89A4A", "#1A1410", "#7A3A1A", "#2A1C12"][k]);
+      velo(g, 0, 0, 0, c, false); barre(g, [-.25, 1.35, .18], [.45, .7, .22], .22, v("#2A3A5A")); barre(g, [-.25, 1.35, -.18], [.1, .75, -.22], .22, v("#2A3A5A"));
+      barre(g, [-.25, 1.4, 0], [.15, 2.55, 0], .62, c, .15); barre(g, [.05, 2.4, .25], [.62, 1.65, .32], .16, c); barre(g, [.05, 2.4, -.25], [.62, 1.65, -.32], .16, c);
+      g.boule(.22, 2.95, 0, .36, PE, .05, 1, true); g.boule(.16, 3.08, 0, .37, CH, 0, .7); g.boite(-.38, 1.8, 0, .3, .6, .5, v(["#3A5A3A", "#5A3A2A", "#2A3A5A", "#5A2A3A", "#4A4A2A"][k]));
+      g.quad([1.02, .2, -.7], [6, .14, -1.9], [6, .14, 1.9], [1.02, .2, .7], v("#7A6E48"), .5, [0, 1, 0]);
+      sol.poser(g, x, 0, z, 0, 1.15); lum.push([x + 2.5, 1.6, z, 1, .95, .7, 9]); }
+
+    // ================= 6. le quartier : rues, maisons illuminées, boîtes aux lettres, vélos posés, talkies sur les marches =================
+    const TROT = []; const rueDroite = (a, b, E) => { const dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz), n = Math.ceil(L / 8), nx = -dz / L, nz = dx / L;
+      for (let k = 0; k < n; k++) { const t0 = k / n, t1 = (k + 1) / n, P = t => [a[0] + dx * t, a[1] + dz * t], p0 = P(t0), p1 = P(t1); if (T.dist((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2) < DEMI + 14) continue;
+        so.quad([p0[0] + nx * 5, .05, p0[1] + nz * 5], [p1[0] + nx * 5, .05, p1[1] + nz * 5], [p1[0] - nx * 5, .05, p1[1] - nz * 5], [p0[0] - nx * 5, .05, p0[1] - nz * 5], E ? v("#34303E") : ASPH, E ? .12 : .04, [0, 1, 0]);
+        if (E && k % 3 === 1) so.quad([p0[0] + nx * 1.5, .07, p0[1] + nz * 1.5], [p1[0] - nx * .5, .07, p1[1] - nz * .5], [p1[0] - nx * 1.2, .07, p1[1] - nz * 1.2], [p0[0] + nx * .8, .07, p0[1] + nz * .8], v("#8A1A2A"), .7, [0, 1, 0]); } };
+    const maisonsLe = (a, b, E, k0) => { const dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz), nx = -dz / L, nz = dx / L; rueDroite(a, b, E); let k = k0;
+      for (let t = 18; t < L - 10; t += 40) [1, -1].forEach(s => { const x = a[0] + dx * t / L + nx * s * 19, z = a[1] + dz * t / L + nz * s * 19, w = 13 + r() * 3, d = 10;
+        if (!ok(x, z, 13, 6)) return; const cap = Math.atan2(-nx * s, -nz * s), B = maison(E, w, d, false, k++); poserBat(B, x, z, cap, 14);
+        const pb = tourne([w / 2 + 1, 0, d / 2 + 6.5], cap); sol.boite(x + pb[0], 0, z + pb[2], .15, 1.1, .15, GRIS); sol.boite(x + pb[0], 1.1, z + pb[2], .5, .45, .8, E ? v("#2A2630") : v("#3A4A8A"), 0, cap);
+        const pc = tourne([-w / 2 + 1.5, 0, d / 2 + 4.5], cap); if (r() < .55) velo(sol, x + pc[0], z + pc[2], cap + 1.2, E ? vieillir(AMP[k % 6]) : AMP[k % 6], E);
+        if (!E && r() < .4) { const pt = tourne([.8, 0, d / 2 + 3.9], cap); talkie(sol, x + pt[0], .35, z + pt[2], cap + .4); }
+        // la palissade blanche devant la pelouse
+        const p0 = tourne([-w / 2 - 1, 0, d / 2 + 6], cap), p1 = tourne([-1.5, 0, d / 2 + 6], cap); if (!E) for (let q = 0; q <= 3; q++) { const u = q / 3; sol.boite(x + p0[0] + (p1[0] - p0[0]) * u, 0, z + p0[2] + (p1[2] - p0[2]) * u, .18, 1.1, .12, BLANC, .05, cap); }
+        if (E && r() < .7) { const pa = tourne([(r() - .5) * w, 0, d / 2 + 5], cap); arbreMort(x + pa[0], z + pa[2], .6 + r() * .3); } }); };
+    const arbreMort = (x, z, s, libre) => { const P = [[x, 0, z]]; let p = [x, 0, z]; for (let k = 1; k < 4; k++) { p = [p[0] + (r() - .5) * 2 * s, k * 4 * s, p[2] + (r() - .5) * 2 * s]; P.push(p); }
+      tub(sol, P, t => (1.1 - t * .8) * s, NOIR, .02, 4);
+      for (let b = 0; b < 3; b++) { const o = P[1 + b], a = b * 2.1 + r(), l = (5 + r() * 4) * s; tub(sol, courbe(o, [o[0] + Math.cos(a) * l * .5, o[1] + l * .25, o[2] + Math.sin(a) * l * .5], [o[0] + Math.cos(a) * l, o[1] + l * .7, o[2] + Math.sin(a) * l], 2), t => (.45 - t * .35) * s, NOIR, .02, 3); }
+      if (!libre) prendre(x, z, 4 * s); };
+    // la rue transversale et la petite rue qui monte vers le nord, puis leurs reflets au sud
+    maisonsLe([245, 140], [640, 140], false, 1); maisonsLe([405, 250], [405, 165], false, 7);
+    maisonsLe([210, 2 * 288 - 140], [470, 2 * 288 - 140], true, 1);
+    // à l'ouest, hors de la piste : l'allée bordée de maisons
+    maisonsLe([30, 60], [30, 250], false, 11);
+
+    // ================= 7. la piscine municipale (l'eau éclairée, lignes de nage, plongeoir, chaise du maître-nageur) et son double asséché =================
+    const piscine = (x0, z0, E) => { if (!ok(x0, z0, 24, 4)) return; const W = 34, Dp = 20;
+      sol.boite(x0, 0, z0, W + 10, .25, Dp + 10, E ? v("#2A2630") : v("#B8B4AC"), E ? 0 : .05);
+      if (!E) { eau.quad([x0 - W / 2, .3, z0 - Dp / 2], [x0 + W / 2, .3, z0 - Dp / 2], [x0 + W / 2, .3, z0 + Dp / 2], [x0 - W / 2, .3, z0 + Dp / 2], v("#2FB8D8"), .45, [0, 1, 0]);
+        for (let q = 1; q < 5; q++) { const z = z0 - Dp / 2 + q * Dp / 5; for (let k = 0; k < 17; k++) sol.boite(x0 - W / 2 + 1 + k * 2, .3, z, .9, .2, .2, k % 2 ? v("#F2EEE6") : v("#C8283A"), .2); }
+        lum.push([x0, 1, z0, .3, .85, 1, 40]); }
+      else { sol.boite(x0, .25, z0, W, .02, Dp, v("#0E0A10")); for (let q = 0; q < 9; q++) tub(sol, courbe([x0 - W / 2 + r() * W, .3, z0 - Dp / 2], [x0 + (r() - .5) * W, 1.5, z0 + (r() - .5) * Dp], [x0 - W / 2 + r() * W, .3, z0 + Dp / 2], 5), .35 + r() * .3, LIANE, 0, 4); }
+      sol.boite(x0 - W / 2 - 2.5, 0, z0, 4, 1, 1, E ? v("#3A3640") : BLANC); sol.boite(x0 - W / 2 + 1, .9, z0, 6, .2, .8, E ? v("#3A3640") : v("#2E6AE0"));
+      const ch = [x0 + 6, z0 - Dp / 2 - 3]; [[-.6, -.6], [.6, -.6], [-.6, .6], [.6, .6]].forEach(([a, b]) => barre(sol, [ch[0] + a, 0, ch[1] + b], [ch[0] + a * .5, 3.2, ch[1] + b * .5], .14, E ? v("#4A4650") : BLANC)); sol.boite(ch[0], 3.2, ch[1], 1, .2, 1, E ? v("#3A3640") : v("#C8283A"));
+      for (let q = 0; q < 5; q++) { const x = x0 - 12 + q * 6, z = z0 + Dp / 2 + 3.2; sol.bloc([[x - .5, .3, z - .9], [x + .5, .3, z - .9], [x + .5, .3, z + .9], [x - .5, .3, z + .9], [x - .5, .55, z - .9], [x + .5, .55, z - .9], [x + .5, 1.2, z + .9], [x - .5, 1.2, z + .9]], E ? v("#2A2630") : v(["#F2EEE6", "#2E6AE0", "#E2B93B"][q % 3])); }
+      for (let q = 0; q <= 16; q++) { const t = q / 16; [[x0 - W / 2 - 5 + t * (W + 10), z0 - Dp / 2 - 5], [x0 - W / 2 - 5 + t * (W + 10), z0 + Dp / 2 + 5]].forEach(([x, z]) => sol.boite(x, 0, z, .15, 2, .15, GRIS)); }
+      fil(sol, [x0 - W / 2 - 5, 1.9, z0 - Dp / 2 - 5], [x0 + W / 2 + 5, 1.9, z0 - Dp / 2 - 5], 0, GRIS, .06); fil(sol, [x0 - W / 2 - 5, 1.9, z0 + Dp / 2 + 5], [x0 + W / 2 + 5, 1.9, z0 + Dp / 2 + 5], 0, GRIS, .06);
+      prendre(x0, z0, 26); };
+    piscine(652, 205, false); piscine(652, 2 * 288 - 205, true);
+
+    // ================= 8. le laboratoire grillagé (au nord-est, hors de la piste) : bâtiment blanc, grillage et barbelés, guérite, projecteurs, porte rouge =================
+    { const lx = 872, lz = 150; if (ok(lx, lz, 40, 10)) { const g = new Geo();
+      g.boite(0, 0, 0, 48, 10, 24, v("#C8CCD0")); g.boite(0, 10, 0, 49, .8, 25, v("#8A9098")); g.boite(-14, 10.8, -4, 10, 4, 8, v("#A8ACB2"));
+      for (let q = 0; q < 3; q++) g.cylindre(8 + q * 5, 10.8, -6, .8, 5 + q, 6, v("#8A9098"));
+      for (let e = 0; e < 2; e++) for (let q = 0; q < 11; q++) { const x = -21 + q * 4.2, lit = r() < .5; g.ov().quad([x - 1.2, 2 + e * 4, 12.05], [x + 1.2, 2 + e * 4, 12.05], [x + 1.2, 4 + e * 4, 12.05], [x - 1.2, 4 + e * 4, 12.05], lit ? v("#D8F0FF") : VITRE, lit ? .85 : .1, [0, 0, 1]); }
+      g.boite(0, 0, 13.5, 8, 4, 3, v("#B8BCC2")); g.boite(0, 4, 14, 10, .4, 5, v("#8A9098")); g.ov().quad([-2, 0, 15.05], [2, 0, 15.05], [2, 3.2, 15.05], [-2, 3.2, 15.05], v("#FF2B3D"), 1, [0, 0, 1]);
+      g.boite(18, 0, 13, 2, .1, 6, ROUGE, .9);
+      // le grillage : poteaux, 3 fils, croisillons, barbelés penchés
+      const C = [[-38, -24], [38, -24], [38, 34], [-38, 34]];
+      for (let s = 0; s < 4; s++) { const [ax, az] = C[s], [bx, bz] = C[(s + 1) % 4], L = Math.hypot(bx - ax, bz - az), n = Math.round(L / 4);
+        for (let q = 0; q < n; q++) { const t0 = q / n, t1 = (q + 1) / n, a = [ax + (bx - ax) * t0, az + (bz - az) * t0], b = [ax + (bx - ax) * t1, az + (bz - az) * t1];
+          if (s === 2 && Math.abs(a[0]) < 5) continue;
+          g.boite(a[0], 0, a[1], .2, 3.4, .2, v("#6A6E74")); [.3, 1.6, 2.9].forEach(y => barre(g, [a[0], y, a[1]], [b[0], y, b[1]], .05, v("#7A7E84")));
+          barre(g, [a[0], .3, a[1]], [b[0], 2.9, b[1]], .04, v("#5A5E64")); barre(g, [a[0], 2.9, a[1]], [b[0], .3, b[1]], .04, v("#5A5E64"));
+          barre(g, [a[0], 3.4, a[1]], [a[0], 4.1, a[1] + (s === 0 ? -.5 : s === 2 ? .5 : 0)], .06, v("#6A6E74")); barre(g, [a[0], 4, a[1]], [b[0], 4, b[1]], .04, v("#9A9EA4")); } }
+      g.boite(-8, 0, 36, 3, 2.8, 3, v("#C8CCD0")); g.ov().quad([-9.2, 1.2, 37.55], [-6.8, 1.2, 37.55], [-6.8, 2.4, 37.55], [-9.2, 2.4, 37.55], v("#FFE6A8"), 1, [0, 0, 1]);
+      for (let q = 0; q < 6; q++) g.boite(-4 + q * 1.4, 1.2, 34, 1.4, .2, .2, q % 2 ? BLANC : v("#C8283A"), .2);
+      [[-38, -24], [38, -24], [38, 34], [-38, 34]].forEach(([x, z]) => { g.boite(x, 0, z, .4, 12, .4, v("#4A4E54")); g.boite(x, 12, z, 1.6, .8, 1, v("#E8F4FF"), 1); lum.push([lx + x, 12, lz + z, .85, .92, 1, 26]); });
+      sol.poser(g, lx, 0, lz, 0, 1); auto(sol, lx + 6, lz + 42, PI / 2, "van", false); prendre(lx, lz, 48); lum.push([lx, 2, lz + 16, 1, .2, .25, 18]); } }
+
+    // ================= 9. le bois au nord : pins sombres, et la cabane dans l'arbre (planches, échelle de corde, talkie, lampe) =================
+    { const kx = 300, kz = 16; if (ok(kx, kz, 14, 6)) { const g = new Geo(), TR = v("#3A2A1E"), PL = v("#7A5A3A");
+      tub(g, [[0, 0, 0], [.4, 4, .2], [.2, 9, 0], [-.3, 14, .3]], t => 1.5 - t * .7, TR, 0, 7);
+      [[1, 0], [-1, .4], [.3, 1], [-.4, -1]].forEach(([a, b]) => tub(g, courbe([0, 9, 0], [a * 3, 11, b * 3], [a * 6, 14, b * 6], 3), .45, TR, 0, 5));
+      [[0, 17, 0, 6], [4, 15, 3, 4.5], [-4, 15.5, -2, 4.6], [2, 16, -4, 4.2], [-3, 14.5, 4, 4]].forEach(([x, y, z, R]) => g.boule(x, y, z, R, v("#1E3A26"), .03, .8, true));
+      g.boite(0, 6.5, 0, 7, .4, 6, PL); for (let q = 0; q < 8; q++) g.boite(-3.3 + q * .94, 6.9, 2.9, .15, 1, .12, PL);
+      g.boite(-.8, 6.9, -.8, 4.2, 3, 3.6, v("#8A6A4A")); g.bloc([[-3.1, 9.9, -2.8], [1.5, 9.9, -2.8], [1.5, 9.9, 1.2], [-3.1, 9.9, 1.2], [-3.1, 11.2, -2.8], [1.5, 10.4, -2.8], [1.5, 10.4, 1.2], [-3.1, 11.2, 1.2]], v("#5A4030"));
+      g.ov().quad([-1.6, 8, 1.04], [-.2, 8, 1.04], [-.2, 9.2, 1.04], [-1.6, 9.2, 1.04], CHAUD, .9, [0, 0, 1]);
+      [-.4, .4].forEach(u => barre(g, [2.6 + u, 0, 2.6], [2.6 + u, 6.6, 2.6], .06, v("#C8B48A"))); for (let q = 1; q < 11; q++) barre(g, [2.2, q * .6, 2.6], [3, q * .6, 2.6], .07, PL);
+      g.boite(-2.8, 10.4, -.8, .08, 2.4, .08, GRIS); g.boite(-2.4, 12.2, -.8, .8, .5, .04, v("#C8283A"), .3);
+      talkie(g, 2, 6.9, 1.8, .6); guirlande({ g, c: CLIG.map(() => new Geo()), l: [] }, [-3.2, 6.6, 3], [3.2, 6.6, 3], 8, .3, 2, false);
+      velo(g, 5, 4, 2.2, v("#2BD46A"), true);
+      sol.poser(g, kx, 0, kz, .2, 1); lum.push([kx - 1, 8.5, kz + 2, 1, .8, .5, 12]); prendre(kx, kz, 12);
+      // son double au Monde à l'envers : l'arbre est mort, la cabane penche
+      const mz = 2 * 288 - kz; if (ok(kx, mz, 12, 6)) { arbreMort(kx, mz, 1.5); const h = new Geo(); h.boite(0, 6.5, 0, 7, .4, 6, vieillir(PL)); h.boite(-.8, 6.9, -.8, 4.2, 3, 3.6, vieillir(v("#8A6A4A"))); lianesMur({ g: h }, 4, 9, 3.6, 3); sol.poser(h, kx, 0, mz, .2 + PI, 1); prendre(kx, mz, 12); } } }
+    // les pins : le bois au nord (et le long des bords de la ville), des arbres morts noirs au sud
+    const pin = (x, z, s) => { const c = mel(v("#14301E"), v("#1E4228"), r()); sol.cylindre(x, 0, z, .4 * s, 2 * s, 3, v("#2A1E16")); sol.cylindre(x, 1.6 * s, z, 3.2 * s, 5.8 * s, 5, c, 0, 0); sol.cylindre(x, 4.8 * s, z, 2.2 * s, 4.8 * s, 5, mel(c, [1, 1, 1], .05), 0, 0); };
+    for (let x = -320; x < 1180; x += 28) for (let z = -280; z < 860; z += 28) { const X = x + (r() - .5) * 20, Z = z + (r() - .5) * 20, nord = Z < zf(X) - 6, d = T.dist(X, Z);
+      if (Math.abs(Z - zf(X)) < 12) continue;
+      const dens = nord ? (Z < 30 ? .6 : .14) : (Z > 560 ? .28 : .1); if (r() > dens || !ok(X, Z, 3, 8)) continue;
+      if (Math.hypot(X - T.cx, (Z - T.cz) * 1.25) > 860) continue;
+      if (nord) pin(X, Z, .9 + r() * .7); else if (r() < .5 && d > 30) arbreMort(X, Z, .8 + r() * .7, true); else sol.poser(objet("arbremort", r, ctx.A), X, 0, Z, r() * TAU, 1.4 + r()); }
+
+    // ================= 10. le Monde à l'envers : lianes au sol, R U N en lettres de feu, spores qui montent, éclairs rouges =================
+    for (let k = 0; k < 46; k++) { const x = -150 + r() * 1150, z = zf(x) + 14 + r() * 520; if (!ok(x, z, 2, 3)) continue; const a = r() * TAU, L = 20 + r() * 30, P = [];
+      for (let q = 0; q <= 8; q++) { const t = q / 8; P.push([x + Math.cos(a + Math.sin(t * 5) * .4) * L * t, .1 + Math.sin(t * PI) * .5, z + Math.sin(a + Math.sin(t * 5) * .4) * L * t]); }
+      if (P.some(p => T.dist(p[0], p[2]) < DEMI + 8)) continue; tub(sol, P, t => .8 - t * .55, LIANE, .04, 4); tub(sol, P.map(p => [p[0], p[1] + .5, p[2]]), t => .3 - t * .2, v("#C8283A"), .8, 3);
+      if (k % 4 === 0) lum.push([x, 1, z, 1, .2, .26, 26]); }
+    // les racines de la faille : de grosses lianes qui sortent de la déchirure et rampent vers les maisons du Monde à l'envers
+    for (let k = 0; k < 10; k++) { const x0 = 150 + k * 62 + (r() - .5) * 20, z0 = zf(x0) + 4, a = PI / 2 + (r() - .5) * 1.1, L = 60 + r() * 70, P = [];
+      for (let q = 0; q <= 10; q++) { const t = q / 10, w = Math.sin(t * 7 + k) * 6 * t; P.push([x0 + Math.cos(a) * L * t - Math.sin(a) * w, .4 + Math.sin(t * PI) * 1.6 + (q % 3 === 1 ? .8 : 0), z0 + Math.sin(a) * L * t + Math.cos(a) * w]); }
+      const n = P.findIndex(p => T.dist(p[0], p[2]) < DEMI + 9 || stands.some(o => Math.hypot(p[0] - o[0], p[2] - o[1]) < o[2])); const Q = n < 0 ? P : P.slice(0, n); if (Q.length < 3) continue;
+      tub(sol, Q, t => 1.8 - t * 1.3, LIANE, .05, 5); tub(sol, Q.map(p => [p[0], p[1] + 1.2, p[2]]), t => .55 - t * .4, v("#E0283A"), .9, 3); }
+    { const p = 2, px = pixels("RUN", false), W = 17 * p * 1.6, x0 = 425 - W / 2, z0 = 350, NIV = [new Geo(), new Geo(), new Geo()];
+      if (ok(425, 372, 18, 2)) { px.forEach(([c0, c1, row]) => { const L = Math.floor(c0 / 6), xa = x0 + c0 * p * 1.6, xb = x0 + c1 * p * 1.6, za = z0 + row * p * 2.2, zb = za + p * 2.2 - .3;
+          so.quad([xa, .1, za], [xb - .3, .1, za], [xb - .3, .1, zb], [xa, .1, zb], v("#8A0A1E"), .7, [0, 1, 0]); NIV[L].quad([xa - .3, .14, za - .3], [xb, .14, za - .3], [xb, .14, zb + .3], [xa - .3, .14, zb + .3], v("#FF3A50"), 1, [0, 1, 0]); });
+        NIV.forEach((g, q) => rotors.push({ g, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { clig: [3.4, .55 - q * .12], ph: -q * .12 } })); lum.push([425, 3, 372, 1, .15, .2, 40]); prendre(425, 372, 32); } }
+    // spores : petites grappes pâles qui montent lentement (surtout au-dessus de la faille et du Monde à l'envers)
+    const spore = n => { const g = new Geo(); for (let k = 0; k < n; k++) { const x = (r() - .5) * 8, y = r() * 6, z = (r() - .5) * 8, s = .12 + r() * .14; g.quad([x - s, y, z], [x, y + s, z], [x + s, y, z], [x, y - s, z], v("#F0E0E8"), .85, [0, 0, 1]); g.quad([x, y, z - s], [x, y + s, z], [x, y, z + s], [x, y - s, z], v("#F0E0E8"), .85, [1, 0, 0]); } return g; };
+    for (let q = 0; q < 18; q++) { const x = q < 8 ? FX - 70 + q * 20 : 120 + r() * 640, z = q < 8 ? FZ + (r() - .5) * 10 : zf(x) + 20 + r() * 180; rotors.push({ g: spore(14), x, y: 1, z, cap: r() * TAU, v: .15, a: { ax: "y", p: 9 + r() * 5, ph: r(), h: 16 + r() * 10, dx: (r() - .5) * 6, dz: -4 - r() * 6, souffle: true, k0: .8, k1: 1.2 } }); }
+    // éclairs rouges : au sud dans le ciel du Monde à l'envers, et au nord autour de l'ombre géante
+    const eclair = (x, y, z, L) => { const g = new Geo(); let p = [x, y, z]; for (let k = 0; k < 9; k++) { const q = [p[0] + (r() - .5) * L * .5, p[1] - L * (.6 + r() * .3), p[2] + (r() - .5) * L * .3]; barre(g, p, q, 1.4, v("#FFD0D6"), 1); barre(g, p, q, 3.6, ROUGE, 1); if (k === 4) { let b = q; for (let j = 0; j < 3; j++) { const c = [b[0] + L * .5, b[1] - L * .4, b[2]]; barre(g, b, c, 1.6, ROUGE, 1); b = c; } } p = q; } return g; };
+    [[200, 300, 820], [700, 260, 900], [-150, 280, -600], [520, 340, -760], [1100, 300, -420]].forEach(([x, y, z], q) => rotors.push({ g: eclair(0, 0, 0, 26), x, y, z, cap: r() * TAU, v: 0, a: { clig: [3.1 + q * .9, .07], ph: q * .31 } }));
+
+    // ================= 11. l'ombre géante dans le ciel du nord : un corps de fumée noire et de longues pattes qui descendent derrière le bois =================
+    { const g = new Geo(), cx = -60, cy = 260, cz = -620, OM = v("#160C14");
+      [[0, 0, 0, 70], [-60, -10, 20, 46], [60, -14, 10, 50], [-20, 40, -10, 44], [30, 34, 20, 40], [0, -40, 30, 40]].forEach(([x, y, z, R]) => g.boule(cx + x, cy + y, cz + z, R, OM, .02, .7, true));
+      for (let k = 0; k < 8; k++) { const a = (k / 7 - .5) * 2.6, bx = cx + Math.sin(a) * 90, bz = cz + 30, fx = cx + Math.sin(a) * (380 + r() * 120), fz = cz + 140 + r() * 260 - Math.abs(Math.sin(a)) * 60;
+        const P = courbe([bx, cy - 30, bz], [(bx + fx) / 2 + Math.sin(a) * 120, cy + 80 + r() * 60, (bz + fz) / 2], [fx, 0, fz], 7);
+        tub(g, P, t => 16 - t * 13, OM, .02, 5); tub(g, P.map(p => [p[0], p[1] + 5, p[2] + 6]), t => 3.2 - t * 2.6, v("#6A1424"), .55, 3); }
+      sol.poser(g, 0, 0, 0, 0, 1); lum.push([cx, cy - 60, cz + 80, 1, .2, .25, 160]); }
+
+    CLIG.forEach((g, k) => rotors.push({ g, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { clig: [1.6, .55], ph: k / 3 } }));
+    CHASSE.forEach((g, k) => rotors.push({ g, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { clig: [.8, .5], ph: k / 2 } }));
+    // tout le reste du sol est déjà habité : aucun décor générique ne s'y pose
+    occupe.push([T.cx, T.cz, 6000]);
+    return occupe;
+  }
+
   const PEINTS_NUIT = { pandora: peindrePandora, ratatouille: peindreRatatouille, arene: peindreArene2, etoiles: peindreEtoiles4, anneau: peindreAnneau4, chocolat: peindreChocolat4, terrier: peindreGouter, chateau: peindreChateau5, plateau: peindrePlateau, envers: peindreEnvers3, multivers: peindreMultivers, dunes: peindreDunes4, titans: peindreTitans4, odyssee: peindreOdyssee2 };   // v16.34 : 10 cartes refaites au niveau de l'Arène
   const PEINTS = { foret: { peindre: peindreForet3, deco: decorForet }, garage: { peindre: peindreGarage6, deco: decorNoel } };
   Object.keys(PEINTS_NUIT).forEach(k => { PEINTS[k] = { peindre: PEINTS_NUIT[k] }; });
@@ -8221,6 +8625,7 @@
   PEINTS.ratatouille.deco = decorPetitChef;   // juillet 2027 · le Grand Prix du Petit Chef : décor 3D sur mesure
   PEINTS.etoiles.deco = decorEtoiles;   // V16.53 : décor 3D (7/10)   // V16.52 : décor 3D (7/10)   // V16.51 : décor 3D sur mesure (boucle du critique, 7/10)
   PEINTS.pandora.deco = decorPandora;   // mai 2027 · Pandora : décor 3D sur mesure (24/11/2026)
+  PEINTS.envers.deco = decorEnvers;   // août 2027 · le Monde à l'envers : décor 3D sur mesure (deux mondes, la créature, la liane qui traque le dernier)
 
   /* ---------- Construction de la scène statique ---------- */
   function construire(def, T, A, Z) {
@@ -9258,9 +9663,21 @@
           // le ver surgit 0,03 tour derrière le dernier et le talonne
           if (q > .52) { ou = O.dedans(der(.03), 60); const z = Math.min(1, (q - .52) / .44), k = Math.sin(z * Math.PI); gueule.setAttribute("opacity", O.f(Math.min(1, k * 3))); gueule.setAttribute("transform", "translate(" + O.f(ou[0]) + " " + O.f(ou[1] + 10) + ")"); gueule.firstChild.querySelector(".ver").setAttribute("transform", "scale(" + O.f(.9 + k * .6) + " " + O.f(Math.max(.05, k) * 1.5) + ")"); }
           b.setAttribute("opacity", O.f(q < .7 ? 1 : Math.max(0, 1 - (q - .7) * 6))); }, () => { bosses.remove(); jets.remove(); gueule.remove(); b.remove(); }); } }; },
-    /* août · le monde bascule à l'envers un instant */
-    envers(x) { const O = outilsEv(x); let fait = false;
-      return { raz() { fait = false; x.svg.style.transform = ""; x.svg.style.filter = ""; }, maj(e, c, en) { if (!en || fait || e < .5 || !x.anime) return; fait = true; O.son("envers"); const sv = x.svg;
+    /* août · DÉCOR VIVANT : la créature traque la DERNIÈRE voiture. Une liane rouge part de sa gueule et la suit partout (comme en 3D) ;
+       quand ce dernier est dans le Monde à l'envers (sous la faille), la gueule s'embrase. Chaque voiture qui traverse la faille fait
+       jaillir un éclair. À mi-course, le monde bascule à l'envers un instant (et revient). */
+    envers(x) { const O = outilsEv(x), H = x.lieux.demo, YF = 360; let fait = false, bas = {};
+      const li = H ? O.el('<path fill="none" stroke="#1A0E14" stroke-width="13" stroke-linecap="round"/><path fill="none" stroke="#FF2B3D" stroke-width="5" stroke-linecap="round"/><path fill="none" stroke="#FFD0D6" stroke-width="1.6" stroke-linecap="round"/><circle r="10" fill="none" stroke="#FF2B3D" stroke-width="3"/>') : null;
+      const gu = H ? O.el('<circle r="46" fill="#FF2B3D" opacity=".35"/><circle r="26" fill="#FF7A86" opacity=".6"/><circle r="11" fill="#FFF4F6" opacity=".9"/>') : null;
+      if (li) { li.style.display = "none"; gu.setAttribute("transform", "translate(" + O.f(H[0]) + " " + O.f(H[1]) + ")"); gu.style.transition = "opacity .6s"; gu.style.opacity = "0"; gu.style.pointerEvents = li.style.pointerEvents = "none"; }
+      const chasser = (c, en) => { const n = O.dernier(c), p = O.voiture(n); if (!li || !p) return; const t = performance.now() / 1000, ec = Math.hypot(p[0] - H[0], p[1] - H[1]);
+        const mx = (H[0] + p[0]) / 2 + Math.sin(t * 2.3) * ec * .12, my = Math.min(H[1], p[1]) - 50 + Math.cos(t * 1.7) * 26, d = "M" + O.f(H[0]) + " " + O.f(H[1]) + "Q" + O.f(mx) + " " + O.f(my) + " " + O.f(p[0]) + " " + O.f(p[1]);
+        li.style.display = ""; li.querySelectorAll("path").forEach(e => e.setAttribute("d", d)); const cc = li.querySelector("circle"); cc.setAttribute("cx", O.f(p[0])); cc.setAttribute("cy", O.f(p[1])); cc.setAttribute("r", O.f(10 + 3 * Math.sin(t * 8)));
+        gu.style.opacity = p[1] > YF ? "1" : "0";
+        // une voiture traverse la faille : un éclair jaillit sur elle
+        Object.keys(c).forEach(m => { const q = O.voiture(m); if (!q) return; const b = q[1] > YF; if (en && x.anime && bas[m] !== undefined && bas[m] !== b) { const z = O.el('<path d="M-6 -60L8 -34L-8 -18L10 6" fill="none" stroke="#FF2B3D" stroke-width="9" opacity=".6"/><path d="M-6 -60L8 -34L-8 -18L10 6" fill="none" stroke="#FFFFFF" stroke-width="3"/><circle r="16" fill="#FF7A86" opacity=".5"/>');
+          z.setAttribute("transform", "translate(" + O.f(q[0]) + " " + O.f(q[1]) + ")"); z.style.pointerEvents = "none"; O.fondu(z, 700); } bas[m] = b; }); };
+      return { raz() { fait = false; bas = {}; x.svg.style.transform = ""; x.svg.style.filter = ""; }, maj(e, c, en) { chasser(c, en); if (!en || fait || e < .5 || !x.anime) return; fait = true; O.son("envers"); const sv = x.svg;
         sv.style.transition = "transform .5s ease-in-out, filter .5s"; sv.style.transform = "scaleY(-1)"; sv.style.filter = "hue-rotate(160deg) saturate(1.6) brightness(.8)";
         setTimeout(() => { sv.style.transform = ""; sv.style.filter = ""; setTimeout(() => { sv.style.transition = ""; const b = O.bulle(540, 360, "On revient de loin…", 26); setTimeout(() => b.remove(), 1600); }, 550); }, 1700); } }; },
     /* septembre · un portail orange s'ouvre devant le leader */
