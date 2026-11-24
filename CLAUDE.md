@@ -53,8 +53,8 @@ Dans `.claude/agents/`, préfixés `moi-` ou `jeu-` (4 au plus par partie). Mét
 | `moi-avocat-du-diable` | conteste chaque idée ou gros changement | ✅ essai réussi (24/11) |
 | `jeu-arbitre` | chaque point du championnat donné selon les règles, appli et serveur d'accord | ✅ essai réussi (24/11) |
 | `jeu-code-donnees` | rien ne casse, fluide, jamais un montant (seulement des %), aucun secret qui fuit | ✅ essai réussi (24/11) |
-| jeu-joueur | une personne au téléphone comprend tout, rien ne se recouvre | à écrire |
-| jeu-avocat-du-diable | conteste chaque idée ou gros changement | à écrire |
+| `jeu-joueur` | une personne au téléphone comprend tout, rien ne se recouvre | ✅ essai réussi (24/11) |
+| `jeu-avocat-du-diable` | conteste chaque idée ou gros changement | ✅ essai réussi (24/11) |
 
 ## À revoir à la fin du tri (décision de Théo, 24/11)
 - Dépôt public : fiche de transfert PDF (`docs/transferts/`) et identifiants des fichiers Google dans `archives/` ; décider où les ranger.
