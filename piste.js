@@ -6304,6 +6304,7 @@
   function tampon(gl, g) { const f = g.f || new Float32Array(g.d), b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, f, gl.STATIC_DRAW); return { b, n: f.length / 10 }; }
   /* Un seul contexte WebGL, réutilisé d'un circuit à l'autre (en créer un à chaque fois est lent et iOS en limite le nombre) */
   const RESERVE = [];
+  const ZOOM_EXPLO = .75;   // v20.39 : en dessous (Visite zoomée), un doigt déplace la carte et le joystick apparaît
   function contexte() {
     while (RESERVE.length) { const c = RESERVE.pop(); if (!c.gl.isContextLost()) return c; }
     const cv = document.createElement("canvas"); cv.className = "p3-cv";
@@ -6396,7 +6397,9 @@
         if (I.survol) { const S = I.survol, q = Math.min(1, (performance.now() - S.t0) / S.dur), w = Math.sin(Math.PI * q), e = q * q * (3 - 2 * q), p = T.a(S.s0 + e * T.L * .92, 0);
           I.pan = [(p.x - T.cx) * Math.min(1, w * 1.6), (p.z - T.cz) * Math.min(1, w * 1.6)]; I.zoom = 1 - .72 * w; I.incl = .72 - .42 * w; I.orbite = S.o0 + e * 2.4;
           if (q >= 1) { const fin = S.fin; I.survol = null; I.pan = [0, 0]; I.zoom = 1; I.incl = .72; if (fin) setTimeout(fin, 0); } }
-        else if (!I.tir && ANIM()) I.orbite += dt * .05;
+        else if (!I.tir && !I.joy && I.zoom >= ZOOM_EXPLO && ANIM()) I.orbite += dt * .05;   // v20.39 : de près, la carte ne tourne plus toute seule
+        if (I.joy && !I.survol) { const k = Math.max(T.rx, T.rz) * I.zoom * dt * 1.1, an = I.orbite + .6, s = Math.sin(an), c = Math.cos(an), dx = I.joy[0], dy = I.joy[1];   // v20.39 : pousser vers le haut = avancer, vers la droite = aller à droite
+          I.pan = [clamp(I.pan[0] + (dx * s + dy * c) * k, -T.rx, T.rx), clamp(I.pan[1] + (-dx * c + dy * s) * k, -T.rz, T.rz)]; }
         const fov = .9, rv = Math.max(T.rx, T.rz / Math.min(1, asp * .9) * (asp < 1 ? 1.25 : 1)), dist = rv / Math.tan(fov / 2) * .92 * I.zoom;
         // V16.58 · Visite : inclinaison (glisser haut/bas) et déplacement (deux doigts) ; zoom jusqu'à 0,12
         const a = I.orbite + .6, h = dist * (I.incl || .72), cx = T.cx + I.pan[0], cz = T.cz + I.pan[1];
@@ -6551,8 +6554,8 @@
       dessiner(t, dt);
       if (o.image) o.image(api);
       // cadence : 60 i/s en mouvement, 30 au repos, rien quand tout est calme
-      const bouge = I.anim || I.survol || I.tir || I.enRoute || I.artifice.length || (I.inactif < 40 && (nbP || A.eclairs || (ANIM() && I.mode !== "bord")));
-      I.inactif += dt; if (I.anim || I.tir) I.inactif = 0;
+      const bouge = I.anim || I.survol || I.tir || I.joy || I.enRoute || I.artifice.length || (I.inactif < 40 && (nbP || A.eclairs || (ANIM() && I.mode !== "bord")));
+      I.inactif += dt; if (I.anim || I.tir || I.joy) I.inactif = 0; majJoy();
       if (I.actif && bouge && document.visibilityState !== "hidden") raf = requestAnimationFrame(image); else I.endormi = true;
     }
     function reveiller() { I.inactif = 0; if (!raf && I.actif) { I.endormi = false; I.dernier = 0; raf = requestAnimationFrame(image); } }
@@ -6572,9 +6575,14 @@
     ecoute("pointermove", ev => {
       if (!I.tir || !pointeurs.has(ev.pointerId)) return; pointeurs.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
       if (pointeurs.size >= 2) { const [a, b] = [...pointeurs.values()], d = Math.hypot(a.x - b.x, a.y - b.y), m = [(a.x + b.x) / 2, (a.y + b.y) / 2];
-        if (!I.tir.d0) { I.tir.d0 = d; I.tir.z = I.zoom; I.tir.m0 = m; I.tir.p0 = I.pan.slice(); } I.zoom = clamp(I.tir.z * I.tir.d0 / d, .12, 2.4);
-        if (I.mode === "helico") { const k = Math.max(T.rx, T.rz) * I.zoom * .004, dx = (m[0] - I.tir.m0[0]) * k, dy = (m[1] - I.tir.m0[1]) * k, an = I.orbite + .6, s = Math.sin(an), c = Math.cos(an);
+        const ang = Math.atan2(b.y - a.y, b.x - a.x);
+        if (!I.tir.d0) { I.tir.d0 = d; I.tir.z = I.zoom; I.tir.m0 = m; I.tir.p0 = I.pan.slice(); I.tir.a0 = ang; I.tir.o2 = I.orbite; } I.zoom = clamp(I.tir.z * I.tir.d0 / d, .12, 2.4);
+        if (I.mode === "helico") { let da = ang - I.tir.a0; da = Math.atan2(Math.sin(da), Math.cos(da)); I.orbite = I.tir.o2 - da; }   // v20.39 : tourner deux doigts fait pivoter la carte
+        if (I.mode === "helico") { const k = Math.max(T.rx, T.rz) * I.zoom * .0047, dx = (I.tir.m0[0] - m[0]) * k, dy = (I.tir.m0[1] - m[1]) * k, an = I.orbite + .6, s = Math.sin(an), c = Math.cos(an);
           I.pan = [clamp(I.tir.p0[0] + dx * s + dy * c, -T.rx, T.rx), clamp(I.tir.p0[1] - dx * c + dy * s, -T.rz, T.rz)]; } }
+      else if (I.mode === "helico" && I.tir.z < ZOOM_EXPLO) {   // v20.39 (Théo) : de près, un doigt DÉPLACE la carte (comme un plan), sans dézoomer
+        const k = Math.max(T.rx, T.rz) * I.zoom * .0047, dx = (I.tir.x - ev.clientX) * k, dy = (I.tir.y0 - ev.clientY) * k, an = I.orbite + .6, s = Math.sin(an), c = Math.cos(an);   // le décor suit le doigt
+        I.pan = [clamp(I.tir.p0[0] + dx * s + dy * c, -T.rx, T.rx), clamp(I.tir.p0[1] - dx * c + dy * s, -T.rz, T.rz)]; }
       else if (I.mode !== "bord") { I.orbite = I.tir.o - (ev.clientX - I.tir.x) * .008; if (I.mode === "helico") I.incl = clamp(I.tir.i + (ev.clientY - I.tir.y0) * .004, .18, 1.4); }
     });
     /* v20.32 (Théo) · zoom au doigt : quand le nombre de doigts change (2e doigt posé, un doigt levé après un pincement),
@@ -6589,6 +6597,20 @@
     ecoute("pointerup", fin); ecoute("pointercancel", fin);
     ecoute("wheel", ev => { ev.preventDefault(); I.zoom = clamp(I.zoom * (ev.deltaY > 0 ? 1.1 : .9), .12, 2.4); reveiller(); }, { passive: false });
     cv.style.touchAction = "pan-y";
+    /* v20.39 (Théo) · Visite de près : un petit joystick en bas au centre pour se promener sur la carte sans dézoomer (chasse au détail caché).
+       Il n'apparaît qu'en Visite (hélico) une fois zoomé ; pousser le bouton fait avancer la vue dans cette direction, plus loin = plus vite. */
+    const hote = cv.parentNode, joy = document.createElement("div"), bouton = document.createElement("i");
+    joy.className = "p3-joy"; joy.setAttribute("role", "slider"); joy.setAttribute("aria-label", "Se déplacer sur la carte"); joy.hidden = true; joy.appendChild(bouton);
+    joy.style.cssText = "position:absolute;left:50%;margin-left:-46px;bottom:calc(env(safe-area-inset-bottom, 0px) + 14px);width:92px;height:92px;border-radius:50%;background:rgba(10,14,22,.38);border:1.5px solid rgba(255,255,255,.55);box-shadow:0 2px 10px rgba(0,0,0,.35);touch-action:none;z-index:5;backdrop-filter:blur(3px)";
+    bouton.style.cssText = "position:absolute;left:50%;top:50%;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 1px 6px rgba(0,0,0,.4);pointer-events:none";
+    if (hote) { if (getComputedStyle(hote).position === "static") hote.style.position = "relative"; hote.appendChild(joy); }
+    const poserJoy = ev => { const r = joy.getBoundingClientRect(), R = r.width / 2; let x = (ev.clientX - r.left - R) / R, y = (ev.clientY - r.top - R) / R; const n = Math.hypot(x, y); if (n > 1) { x /= n; y /= n; }
+      I.joy = Math.hypot(x, y) < .12 ? [0, 0] : [x, y]; bouton.style.transform = "translate(" + (x * R * .62) + "px," + (y * R * .62) + "px)"; reveiller(); };
+    const lacherJoy = () => { I.joy = null; bouton.style.transform = ""; };
+    joy.addEventListener("pointerdown", ev => { ev.stopPropagation(); ev.preventDefault(); I.survol = null; try { joy.setPointerCapture(ev.pointerId); } catch (e) { } poserJoy(ev); });
+    joy.addEventListener("pointermove", ev => { if (I.joy) { ev.stopPropagation(); poserJoy(ev); } });
+    joy.addEventListener("pointerup", lacherJoy); joy.addEventListener("pointercancel", lacherJoy); joy.addEventListener("lostpointercapture", lacherJoy);
+    function majJoy() { const voir = I.mode === "helico" && !I.survol && (I.zoom < ZOOM_EXPLO || !!I.joy); if (joy.hidden === voir) joy.hidden = !voir; }
     function ecran(n) {
       const x = voitureDe(n); if (!x || !PV) return null; if (I.sansVoit || I.mode === "bord" && n === I.focus) return { vis: false }; const p = appliquer(PV, [x.x, x.y + 3.2, x.z, 1]); if (p[3] <= .5) return { vis: false };
       return { x: (p[0] / p[3] * .5 + .5) * I.cssW, y: (1 - (p[1] / p[3] * .5 + .5)) * I.cssH, vis: Math.abs(p[0] / p[3]) < 1.15 && Math.abs(p[1] / p[3]) < 1.2, d: p[3] };
@@ -6648,7 +6670,7 @@
       viser(c, z, incl, orb) { if (I.mode !== "helico") return; I.survol = null; if (c) I.pan = [clamp(c[0] - T.cx, -T.rx, T.rx), clamp(c[1] - T.cz, -T.rz, T.rz)]; if (z) I.zoom = clamp(z, .12, 2.4); if (incl) I.incl = clamp(incl, .18, 1.4); if (orb !== undefined) I.orbite = orb; I.saut = true; reveiller(); },
       detruire() {
         I.detruit = true; I.actif = false; if (raf) cancelAnimationFrame(raf); if (ro) ro.disconnect(); document.removeEventListener("visibilitychange", vis);
-        ecoutes.forEach(([t, f, op]) => cv.removeEventListener(t, f, op));
+        ecoutes.forEach(([t, f, op]) => cv.removeEventListener(t, f, op)); joy.remove();
         [B.sol, B.solOv, B.piste, B.pisteOv, B.eau].concat(V.map(x => x.b), RO.map(x => x.b)).forEach(t => { if (t) gl.deleteBuffer(t.b); });   // v16.27 : les objets qui tournent (moulin…) sont aussi libérés [bL, bP, bFX, bPT].forEach(b => gl.deleteBuffer(b));
         cv.remove(); if (!gl.isContextLost()) RESERVE.push(C);   // le contexte servira au prochain circuit
       }

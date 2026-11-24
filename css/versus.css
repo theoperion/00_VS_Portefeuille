@@ -1823,6 +1823,7 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .gp-jauge[data-n="3"] .gj-segs i.on { background: #FF3B2F; }
 .gp-jauge[data-n="3"] { background: rgba(120,20,10,.72); }
 .gp-plein.v2 .gp-jauge { left: calc(env(safe-area-inset-left, 0px) + 10px); bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); }
+.gp-piste:has(.gp-jauge:not(.cache)) .p3-joy, .gp-piste:has(.gp-enigme) .p3-joy { bottom: calc(env(safe-area-inset-bottom, 0px) + 74px) !important; }   /* v20.39 : le joystick remonte au-dessus de la jauge et de l'énigme */
 @media (orientation: portrait) {   /* plein écran tenu en portrait : la barre des vues passe sur deux lignes → le bandeau de l'aperçu descend, la jauge monte au-dessus de l'énigme */
   .gp-plein.v2 .tap-band { top: calc(env(safe-area-inset-top, 0px) + 106px); }
   .gp-plein.v2 .gp-jauge { bottom: calc(env(safe-area-inset-bottom, 0px) + 48px); }
