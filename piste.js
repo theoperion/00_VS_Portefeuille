@@ -5141,6 +5141,358 @@
     const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#pa-ciel)"/>`, "#1A0A4A", .08); RES.portraits = PORTR; RES.lieux = { arbre: [AX, LY] }; return RES;
   }
 
+  /* ---------- Mai 2027 · Pandora : le décor 3D sur mesure (24/11/2026, directeur artistique) ----------
+     Comme la carte 2D : UNE forêt de nuit éclairée par en dessous. Dans l'échancrure du tracé, l'Arbre des Âmes géant (racines
+     lumineuses, dôme de branches, rideau de filaments roses et violets, graines sacrées qui montent, le peuple à genoux en cercle).
+     Dans la boucle de gauche le cavalier galope vers l'Arbre sur son cheval à six pattes (traces de pas qui s'allument), sous les
+     champignons géants ; dans la boucle de droite l'archère tend son arc vers le ciel, debout sur une grande racine en arche.
+     Autour : montagnes flottantes reliées par des lianes, cascades qui tombent dans le vide et finissent en brume, une petite île
+     flottante au-dessus de la forêt, les 5 montures volantes à nos couleurs perchées (le grand chasseur rouge tourne dans le ciel),
+     la lagune luminescente au sud-ouest où le grand cétacé jaillit, la base humaine abandonnée à l'est (métal, conteneurs, un
+     exosquelette couché, un appareil écrasé, le feu rouge qui clignote encore) que la forêt reprend. */
+  function decorPandora(ctx) {
+    const { T, sol, lum, rotors } = ctx, v = h => hex(h), r = alea(2027), occupe = [], so = sol.ov();
+    const MARGE = DEMI + 22;   // la piste et ses bas-côtés restent dégagés
+    const dP = (x, z) => T.dist(x, z);   // exacte jusqu'à 48 m (au-delà : très loin) ; tous les seuils ci-dessous restent sous 48 m
+    const ps = T.a(-30, -(DEMI + 22)), pt2 = T.a(-20, DEMI + 18);   // stands et tribune (posés par construire)
+    const EXCL = [[ps.x, ps.z, 70], [pt2.x, pt2.z, 74]];
+    const ok = (x, z, R) => dP(x, z) > MARGE + (R || 0) && !EXCL.some(e => Math.hypot(x - e[0], z - e[1]) < e[2] + (R || 0));
+    const catmull = (C, n) => { const P = []; for (let i = 0; i < C.length - 1; i++) { const p0 = C[Math.max(0, i - 1)], p1 = C[i], p2 = C[i + 1], p3 = C[Math.min(C.length - 1, i + 2)];
+      for (let j = 0; j < n; j++) { const t = j / n, t2 = t * t, t3 = t2 * t; P.push([0, 1, 2].map(a => .5 * (2 * p1[a] + (-p0[a] + p2[a]) * t + (2 * p0[a] - 5 * p1[a] + 4 * p2[a] - p3[a]) * t2 + (-p0[a] + 3 * p1[a] - 3 * p2[a] + p3[a]) * t3))); } }
+      P.push(C[C.length - 1].slice()); return P; };
+        // les couleurs de la carte : nuit bleue, cyan, violet de l'Arbre, rose des filaments
+    const CY = v("#5FF2FF"), CY2 = v("#B8FAFF"), VI = v("#B07BFF"), VI2 = v("#E0B8FF"), ROSE = v("#F8DCFF"), MAG = v("#FF6AD8"), VERT = v("#6CFFB4"), OR = v("#FFE070"), BLANC = v("#F6FEFF");
+    const ECORCE = v("#34226E"), ECORCE2 = v("#5A3AA8"), PEAU = v("#3A7AD8"), PEAU2 = v("#28549E"), RAYE = v("#A8F0FF"), NOIR = v("#0A0E26");
+    const ROC2 = v("#2E2A70"), ROC3 = v("#9A70E8"), HERBE = v("#1A5E66"), HERBE2 = v("#24767A"), MOUS = v("#10304A"), MOUS2 = v("#1A2C5E");
+    const TIGE = v("#123A40"), FEUIL = v("#1A5A5E");
+
+    /** tube à 8 faces le long d'une suite de points, rayon fixe ou fonction de t (0 → 1) ; local, car le nom « tube » est pris deux fois dans ce fichier */
+    const tuyau = (g, P, R, col, em) => { let prec = null;
+      P.forEach((p, i) => { const a = P[Math.max(0, i - 1)], b = P[Math.min(P.length - 1, i + 1)], d = norme(sous(b, a)), u = norme(croix(d, Math.abs(d[1]) > .9 ? [1, 0, 0] : [0, 1, 0])), w = croix(d, u), rr = typeof R === "function" ? R(i / (P.length - 1)) : R, an = [];
+        for (let k = 0; k <= 8; k++) { const t = k / 8 * TAU; an.push([p[0] + (u[0] * Math.cos(t) + w[0] * Math.sin(t)) * rr, p[1] + (u[1] * Math.cos(t) + w[1] * Math.sin(t)) * rr, p[2] + (u[2] * Math.cos(t) + w[2] * Math.sin(t)) * rr]); }
+        if (prec) for (let k = 0; k < 8; k++) g.quad(prec[k], prec[k + 1], an[k + 1], an[k], col, em, sous(mel(an[k], an[k + 1], .5), p));
+        prec = an; }); };
+    /** ruban croisé (deux plans) le long d'une suite de points : filaments, lianes, cascades */
+    const ruban = (g, P, w, col, em, cols) => { for (let i = 0; i < P.length - 1; i++) { const a = P[i], b = P[i + 1], d = norme(sous(b, a)), u = norme(croix(d, Math.abs(d[1]) > .9 ? [1, 0, 0] : [0, 1, 0])), q = croix(d, u), c = cols ? cols(i) : col;
+      [u, q].forEach(e => g.quad([a[0] - e[0] * w, a[1] - e[1] * w, a[2] - e[2] * w], [a[0] + e[0] * w, a[1] + e[1] * w, a[2] + e[2] * w], [b[0] + e[0] * w, b[1] + e[1] * w, b[2] + e[2] * w], [b[0] - e[0] * w, b[1] - e[1] * w, b[2] - e[2] * w], c, em, croix(d, e))); } };
+    /** liane qui pend entre deux points (chaînette) */
+    const liane = (g, a, b, creux, w, col, em) => { const P = []; for (let i = 0; i <= 12; i++) { const t = i / 12; P.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t - creux * 4 * t * (1 - t), a[2] + (b[2] - a[2]) * t]); } ruban(g, P, w, col, em); return P; };
+    /** fleur lumineuse : tige, 5 pétales qui brillent, un cœur */
+    const fleur = (g, x, z, h, col, k) => { k = k || 1; branche(g, [x, 0, z], [x, h, z], .08 * k, .05 * k, TIGE);
+      for (let p = 0; p < 5; p++) { const a = p / 5 * TAU, c = [x + Math.cos(a) * .55 * k, h + .25 * k, z + Math.sin(a) * .55 * k]; g.tri([x, h, z], c, [x + Math.cos(a + .6) * .45 * k, h + .32 * k, z + Math.sin(a + .6) * .45 * k], col, 1, [0, 1, 0]); }
+      g.tri([x - .12 * k, h + .3 * k, z], [x + .12 * k, h + .3 * k, z], [x, h + .12 * k, z], OR, 1, [0, 1, 0]); };
+    /** fougère : un éventail de frondes, pointes lumineuses */
+    const fougere = (g, x, z, h, col) => { const n = 6 + Math.floor(r() * 3); for (let k = 0; k < n; k++) { const a = k / n * TAU + r(), L = h * (.8 + r() * .4), c = [x + Math.cos(a) * L * .7, L * .75, z + Math.sin(a) * L * .7], tip = [x + Math.cos(a) * L, L * .45, z + Math.sin(a) * L];
+      g.tri([x - Math.sin(a) * .25, .05, z + Math.cos(a) * .25], [x + Math.sin(a) * .25, .05, z - Math.cos(a) * .25], c, FEUIL, .05, [0, 1, 0]); g.tri([c[0] - Math.sin(a) * .5, c[1], c[2] + Math.cos(a) * .5], [c[0] + Math.sin(a) * .5, c[1], c[2] - Math.cos(a) * .5], tip, col, .9, [0, 1, 0]); } };
+    /** champignon géant : pied pâle, chapeau sombre tacheté, lamelles qui brillent dessous */
+    const champi = (g, x, z, h, R, col) => { g.cylindre(x, 0, z, R * .16, h, 7, v("#C8D4F0"), .12, R * .12); g.cylindre(x, 0, z, R * .3, h * .1, 7, v("#8A9AC8"), .05, R * .16);
+      g.cylindre(x, h - R * .12, z, R * .25, R * .1, 9, col, 1, R); g.boule(x, h - .02, z, R, v("#3A2A7A"), .25, .42, true);
+      const o = g.ov(); for (let k = 0; k < 7; k++) { const a = r() * TAU, d = r() * R * .7, y = h + R * .42 * Math.sqrt(1 - (d / R) ** 2) + .02, t = R * (.06 + r() * .06), px = x + Math.cos(a) * d, pz = z + Math.sin(a) * d; o.quad([px - t, y, pz], [px, y, pz - t], [px + t, y, pz], [px, y, pz + t], col, 1, [0, 1, 0]); } };
+    /** une monture volante (local : face avant vers +x) ; perchée = ailes repliées, sinon ailes déployées */
+    const ikran = (col, vol, sc) => { const g = new Geo(), o = g.ov(), k = sc || 1, c = hex(col), fonce = mel(c, [.05, .06, .2], .5), clair = mel(c, [1, 1, 1], .45), S = p => fois(p, k);
+      branche(g, S([-2.6, 0, 0]), S([2.4, .3, 0]), .9 * k, .7 * k, fonce, .3); branche(g, S([2.4, .3, 0]), S([4.6, 1.9, 0]), .6 * k, .38 * k, fonce, .3);
+      branche(g, S([4.6, 1.9, 0]), S([6.9, 1.4, 0]), .5 * k, .08 * k, c); branche(g, S([5.4, 1.7, 0]), S([6.8, 1.15, 0]), .3 * k, .05 * k, v("#F2E8C8"));   // tête, bec
+      g.tri(S([4.4, 2.2, 0]), S([5.8, 2.1, 0]), S([3.4, 3.6, 0]), clair, .5, [0, 0, 1]); g.tri(S([4.4, 2.2, 0]), S([3.4, 3.6, 0]), S([5.8, 2.1, 0]), clair, .5, [0, 0, -1]);   // crête
+      [-1, 1].forEach(sd => o.boule(...S([5.6, 2.05, sd * .38]), .14 * k, OR, 1));
+      branche(g, S([-2.6, 0, 0]), S([-7, .5, 0]), .55 * k, .06 * k, fonce); g.tri(S([-6.2, .5, -.1]), S([-8.4, 1.6, 0]), S([-8.2, -.4, 0]), c, .3, [0, 0, 1]); g.tri(S([-6.2, .5, .1]), S([-8.2, -.4, 0]), S([-8.4, 1.6, 0]), c, .3, [0, 0, -1]);
+      for (let q = -2; q <= 2; q++) o.boite(...S([q * 1.1, .85, 0]), .35 * k, .12 * k, 1.1 * k, clair, .8);   // bandes lumineuses du dos
+      [-1, 1].forEach(sd => { if (vol) { const ep = S([1, .4, sd * .6]), co = S([1.6, 1.6, sd * 4.6]), bout = S([-1.2, 1, sd * 10]), ar = S([-3, .1, sd * .8]), m = S([-2.4, .5, sd * 6]);
+          [[ep, co, ar], [co, bout, m], [co, m, ar]].forEach(([a, b, d], i) => { g.tri(a, b, d, i === 1 ? c : mel(c, fonce, .4), .25, [0, 1, 0]); g.tri(a, d, b, fonce, .05, [0, -1, 0]); });
+          branche(g, ep, co, .25 * k, .2 * k, clair, .4); branche(g, co, bout, .2 * k, .05 * k, clair, .6); }
+        else { const ep = S([1.2, .5, sd * .8]), co = S([-.4, 3.4, sd * 1.5]), bout = S([-4.6, .9, sd * 1.4]), ar = S([-2.4, .1, sd * .9]);
+          g.tri(ep, co, ar, c, .25, [0, 0, sd]); g.tri(co, bout, ar, mel(c, fonce, .4), .2, [0, 0, sd]); branche(g, ep, co, .22 * k, .2 * k, clair, .4); branche(g, co, bout, .2 * k, .05 * k, clair, .5);
+          branche(g, S([.6, -.2, sd * .5]), S([.9, -2.2, sd * .7]), .2 * k, .14 * k, fonce); } });
+      return g; };
+    /** une personne du peuple de la forêt (3 m, peau bleue rayée, tresse) ; pose : "debout", "genou", "arc" ; local : regarde vers +x */
+    const navi = (g, x, y, z, cap, pose, ech) => { const n = new Geo(), o = n.ov(), JA = PEAU2, PAGNE = v("#5A3A2A");
+      if (pose === "genou") { branche(n, [0, .05, -.28], [-.7, .1, -.3], .17, .14, JA); branche(n, [0, .05, .28], [-.7, .1, .3], .17, .14, JA); branche(n, [0, .05, -.28], [.1, .9, -.24], .19, .17, JA); branche(n, [0, .05, .28], [.1, .9, .24], .19, .17, JA); }
+      else { branche(n, [0, 0, -.22], [0, 1.45, -.2], .14, .18, JA); branche(n, [0, 0, .22], [0, 1.45, .2], .14, .18, JA); }
+      const y0 = pose === "genou" ? .85 : 1.4;
+      n.bloc([[-.24, y0, -.36], [.22, y0, -.36], [.22, y0, .36], [-.24, y0, .36], [-.2, y0 + 1.1, -.42], [.2, y0 + 1.1, -.42], [.2, y0 + 1.1, .42], [-.2, y0 + 1.1, .42]], PEAU, .35);
+      n.boite(0, y0 - .05, 0, .5, .32, .78, PAGNE); n.boule(.02, y0 + 1.5, 0, .3, PEAU, .35, 1.15);
+      [-1, 1].forEach(sd => { n.tri([0, y0 + 1.55, sd * .26], [-.08, y0 + 1.95, sd * .5], [-.12, y0 + 1.5, sd * .3], PEAU, .1, [0, 0, sd]); o.boule(.28, y0 + 1.55, sd * .1, .055, OR, 1); });
+      branche(n, [-.22, y0 + 1.6, 0], [-.5, y0 + .3, 0], .1, .05, NOIR);   // la tresse
+      for (let k = 0; k < 4; k++) o.boite(.21, y0 + .2 + k * .24, (k % 2 - .5) * .3, .02, .07, .18, RAYE, .7);
+      if (pose === "genou") [-1, 1].forEach(sd => branche(n, [0, y0 + 1, sd * .42], [.55, y0 + 1.9, sd * .75], .09, .07, PEAU));
+      else if (pose === "arc") { branche(n, [0, y0 + 1, -.42], [.55, y0 + 1.85, -.3], .09, .07, PEAU); branche(n, [0, y0 + 1, .42], [.2, y0 + 1.35, .1], .09, .07, PEAU);
+        const B = t => [.6 + Math.sin(t * PI) * .45, y0 + 1.85 + (t - .5) * 2.2, -.3 + (t - .5) * .8]; const P = []; for (let i = 0; i <= 6; i++) P.push(B(i / 6)); ruban(n, P, .05, v("#3A2414"));
+        ruban(n, [P[0], [.25, y0 + 1.4, .1], P[6]], .015, BLANC, .8); branche(n, [.25, y0 + 1.4, .1], [1.9, y0 + 3.3, -.55], .03, .03, v("#E8D8B8")); o.boule(1.9, y0 + 3.3, -.55, .07, CY, 1); }
+      else [-1, 1].forEach(sd => branche(n, [0, y0 + 1, sd * .42], [.05, y0 + .1, sd * .5], .09, .07, PEAU));
+      g.poser(n, x, y, z, cap, ech || 1); };
+
+    /* le sol de la forêt : mousse sombre en taches, et des milliers de points lumineux (la mousse s'allume sous les pas) */
+    const touffe = (g, x, z, h, col) => { for (let q = 0; q < 5; q++) { const a = q / 5 * TAU + r(), c = Math.cos(a), s = Math.sin(a), l = h * (.6 + r() * .5);
+      g.tri([x - s * .1, 0, z + c * .1], [x + s * .1, 0, z - c * .1], [x + c * l * .45, l, z + s * l * .45], q % 2 ? col : mel(col, [.05, .1, .2], .55), q % 2 ? .75 : .3, [c, .3, s]); } };
+    { const g = new Geo();
+      for (let k = 0, n = 0; k < 12000 && n < 720; k++) { const x = -120 + r() * 1000, z = -80 + r() * 760; if (!ok(x, z, -8)) continue; n++;
+        const pres = dP(x, z) < MARGE + 40, c = [CY, VERT, VI2, CY2][Math.floor(r() * r() * 4)], m = pres ? 6 + Math.floor(r() * 6) : 3 + Math.floor(r() * 3);
+        for (let j = 0; j < m; j++) { const a = r() * TAU, d = r() * (pres ? 3.5 : 6); if (r() < .5) touffe(g, x + Math.cos(a) * d, z + Math.sin(a) * d, .5 + r() * .9, c);
+          else { const t = .18 + r() * .22, px = x + Math.cos(a) * d, pz = z + Math.sin(a) * d; so.quad([px - t, .07, pz], [px, .07, pz - t], [px + t, .07, pz], [px, .07, pz + t], c, 1, [0, 1, 0]); } } }
+      sol.poser(g, 0, 0, 0, 0, 1); }
+    for (let k = 0, n = 0; k < 6000 && n < 1100; k++) { const x = -200 + r() * 1180, z = -160 + r() * 900; if (!ok(x, z, -6)) continue; n++;
+      const t = .22 + r() * .35, c = [CY, VI2, VERT, CY2, MAG][Math.floor(r() * r() * 5)]; so.quad([x - t, .06, z], [x, .06, z - t], [x + t, .06, z], [x, .06, z + t], c, 1, [0, 1, 0]); }
+
+    /** une graine sacrée : petite méduse blanche aux filaments roses */
+    const graine = () => { const b = new Geo(); b.boule(0, 0, 0, .42, BLANC, 1, .7); for (let t = 0; t < 6; t++) { const a = t / 6 * TAU; branche(b, [Math.cos(a) * .3, -.05, Math.sin(a) * .3], [Math.cos(a) * .7, -1.1, Math.sin(a) * .7], .05, .02, ROSE, 1); } return b; };
+    /* ================= 1. L'ARBRE DES ÂMES, dans l'échancrure du tracé ================= */
+    const TC = [432, 432];
+    { const NA = 96, NR = 10, Rm = 200, C0 = v("#6A44C8"), C1 = v("#141E46"), bout = [];
+      for (let k = 0; k <= NA; k++) { const a = k / NA * TAU; let R = 0; while (R < Rm && dP(TC[0] + Math.cos(a) * (R + 1), TC[1] + Math.sin(a) * (R + 1)) > DEMI + 12.5) R += 1; bout.push(R); }
+      const at = (k, l) => { const R = bout[k] * l / NR, a = k / NA * TAU; return [TC[0] + Math.cos(a) * R, .025, TC[1] + Math.sin(a) * R]; };
+      for (let k = 0; k < NA; k++) for (let l = 0; l < NR; l++) { const d = (bout[k] + bout[k + 1]) / 2 * (l + .5) / NR, t = Math.min(1, d / Rm), e = .6 * (1 - t) ** 1.6 + .05;
+        so.quad(at(k, l), at(k + 1, l), at(k + 1, l + 1), at(k, l + 1), mel(C0, C1, t ** .6), e, [0, 1, 0]); } }
+    { const g = new Geo(), o = g.ov(), [cx, cz] = TC, HT = 44;
+      // le tronc noueux : plusieurs tiges torsadées qui montent ensemble, veines lumineuses
+      for (let q = 0; q < 5; q++) { const a = q / 5 * TAU, P = []; for (let i = 0; i <= 8; i++) { const t = i / 8, rr = 6.5 * (1 - t) ** 1.6 + 1.6, aa = a + t * 1.9; P.push([cx + Math.cos(aa) * rr, t * HT, cz + Math.sin(aa) * rr]); }
+        tuyau(g, P, t => 3.2 - t * 1.7, q % 2 ? ECORCE : ECORCE2, .35); ruban(g, P.map(p => [p[0] + (p[0] - cx) * .25, p[1], p[2] + (p[2] - cz) * .25]), .12, VI2, .9); }
+      g.cylindre(cx, 0, cz, 5.5, HT, 9, ECORCE, .3, 2.2);
+      g.boule(cx, HT + 1, cz, 2.6, ROSE, 1, 1, true);
+      // les racines : elles courent sur le sol, lumineuses, et replongent avant la piste (plus longues vers le sud, côté lagune)
+      for (let q = 0; q < 13; q++) { const a = q / 13 * TAU + .2, sud = Math.max(0, Math.sin(a)), L0 = 34 + sud * 46 + r() * 8; let L = L0;
+        while (L > 14 && !ok(cx + Math.cos(a + .25) * L, cz + Math.sin(a + .25) * L, 2)) L -= 3;
+        const P = catmull([[cx + Math.cos(a) * 3, 6, cz + Math.sin(a) * 3], [cx + Math.cos(a) * 9, 1.6, cz + Math.sin(a) * 9], [cx + Math.cos(a + .12) * L * .5, .5, cz + Math.sin(a + .12) * L * .5], [cx + Math.cos(a + .25) * L, -1.2, cz + Math.sin(a + .25) * L]], 4);
+        tuyau(g, P, t => 2.4 - t * 1.8, ECORCE2, .5); ruban(g, P.map(p => [p[0], p[1] + .9, p[2]]), .11, VI2, .85);
+        for (let k = 0; k < 4; k++) { const p = P[3 + k * 2] || P[P.length - 2]; o.boule(p[0], .1, p[2], .5 + r() * .5, VI2, 1, .3); } }
+      // l'anneau de lumière au sol et les cercles du peuple
+      for (let c = 0; c < 3; c++) { const R0 = 10 + c * 9, N = 40 + c * 16; for (let k = 0; k < N; k++) { const a = k / N * TAU, b = (k + .6) / N * TAU;
+        so.quad([cx + Math.cos(a) * R0, .08, cz + Math.sin(a) * R0], [cx + Math.cos(b) * R0, .08, cz + Math.sin(b) * R0], [cx + Math.cos(b) * (R0 + .5), .08, cz + Math.sin(b) * (R0 + .5)], [cx + Math.cos(a) * (R0 + .5), .08, cz + Math.sin(a) * (R0 + .5)], c === 1 ? ROSE : VI, .9, [0, 1, 0]); } }
+      // le dôme : 14 grandes branches qui montent puis retombent, et le rideau de filaments
+      const BR = [];
+      for (let q = 0; q < 14; q++) { const a = q / 14 * TAU + r() * .1, R = 50 + r() * 6, u = [Math.cos(a), 0, Math.sin(a)], at = (d, y) => [cx + u[0] * d, y, cz + u[2] * d];
+        const P = catmull([[cx, HT - 2, cz], at(12, HT + 11), at(28, HT + 16), at(42, HT + 12), at(R, HT + 4)], 4); tuyau(g, P, t => 1.5 - t * 1.1, ECORCE2, .45); ruban(g, P.map(p => [p[0], p[1] + .9, p[2]]), .09, VI2, .8); BR.push({ P, a, R }); }
+      const FIL = new Geo();
+      const filament = (top, d, c) => { const e = d / 54, bas = Math.max(5, 7 + e ** 1.5 * 26 + r() * 6), x = top[0], z = top[2]; if (dP(x, z) < DEMI + 6 || top[1] - bas < 3) return null;
+        const sw = (r() - .5) * 1.6, P = [top, [x + sw * .4, top[1] - (top[1] - bas) * .35, z], [x + sw, top[1] - (top[1] - bas) * .7, z + sw * .3], [x + sw * .8, bas, z + sw * .5]]; ruban(FIL, P, .11, c, .85); FIL.ov().boule(P[3][0], P[3][1], P[3][2], .22, BLANC, 1); return P; };
+      const FILS = [];
+      BR.forEach((b, q) => { for (let i = 3; i < b.P.length; i++) { const p = b.P[i], d = Math.hypot(p[0] - cx, p[2] - cz); if (d < 10) continue; const f = filament(p, d, [v("#F0A8FF"), v("#C080FF"), v("#FFC8F0")][(i + q) % 3]); if (f) FILS.push(f); } });
+      for (let k = 0; k < 90; k++) { const a = r() * TAU, d = 12 + r() * 40, y = HT + 14 - (d / 52) ** 2 * 9; const f = filament([cx + Math.cos(a) * d, y, cz + Math.sin(a) * d], d, [v("#E098FF"), v("#B070FF"), v("#FFB8EC")][k % 3]); if (f) FILS.push(f); }
+      g.poser(FIL, 0, 0, 0, 0, 1);
+      // des perles de lumière qui descendent le long de quelques filaments
+      for (let k = 0; k < 6; k++) { const b = new Geo(), H = 30, x0 = cx + Math.cos(k) * 26, z0 = cz + Math.sin(k) * 26; FILS.filter(f => Math.hypot(f[0][0] - x0, f[0][2] - z0) < 16 && f[0][1] - f[3][1] > 26).slice(0, 4).forEach(f => b.boule(f[0][0] - x0, f[0][1] - HT - 12, f[0][2] - z0, .3, BLANC, 1));
+        if (b.n) rotors.push({ g: b, x: x0, y: HT + 12, z: z0, cap: 0, v: 0, a: { p: 4 + k * .5, ph: k / 6, h: -H * .8, vis: [.05, .95] } }); }
+      // le peuple, à genoux en cercle autour de l'Arbre, bras levés vers les filaments
+      for (let k = 0; k < 11; k++) { const a = k / 11 * TAU + .15, x = cx + Math.cos(a) * 19.5, z = cz + Math.sin(a) * 19.5; navi(g, x, 0, z, Math.atan2(Math.sin(a), -Math.cos(a)), "genou"); }
+      // la monture de Nicolas, perchée tout en haut du dôme
+      { const b = BR[3], p = b.P[6]; g.poser(ikran(COULEURS_5[4], false, .55), p[0], p[1] + 1.5, p[2], -b.a + PI / 2, 1); }
+      sol.poser(g, 0, 0, 0, 0, 1);
+      lum.push([cx, HT + 2, cz, .95, .7, 1, 90], [cx, 2, cz, .8, .5, 1, 60], [cx, HT + 16, cz, .7, .45, 1, 120]);
+      // les graines sacrées : de petites méduses blanches qui montent de l'Arbre et dérivent
+      for (let k = 0; k < 7; k++) { const a = k / 7 * TAU + r(), d = 10 + r() * 26, b = new Geo(); for (let j = 0; j < 4; j++) b.poser(graine(), (r() - .5) * 9, (r() - .5) * 5, (r() - .5) * 9, r() * TAU, .8 + r() * .5);
+        rotors.push({ g: b, x: cx + Math.cos(a) * d, y: 3 + r() * 6, z: cz + Math.sin(a) * d, cap: r() * TAU, v: .15, a: { ax: "y", p: 11 + r() * 7, ph: k / 7, h: 30 + r() * 16, dx: (r() - .5) * 14, dz: (r() - .5) * 14, souffle: true, k0: .9, k1: 1.2, bob: [.5, 1.4] } }); }
+      occupe.push([cx, cz, 60]); }
+
+    /* ================= 2. LE CAVALIER, au galop vers l'Arbre (boucle de gauche), sur son cheval à six pattes ================= */
+    const CAV = [262, 424];
+    { const g = new Geo(), o = g.ov(), CH = v("#4A66B4"), CH2 = v("#30468A");
+      const P = [[-3.2, 2.5, 0], [-1, 2.8, 0], [1.6, 2.7, 0], [3, 3.1, 0]]; tuyau(g, P, t => 1.05 - Math.abs(t - .4) * .5, CH, .45);
+      tuyau(g, [[3, 3.1, 0], [4.4, 4.8, 0], [5.4, 6, 0]], t => .55 - t * .2, CH, .45);   // le long cou
+      branche(g, [5.2, 6, 0], [7, 5.4, 0], .45, .2, CH2); [-1, 1].forEach(sd => { o.boule(6.3, 5.9, sd * .32, .1, OR, 1);
+        const an = catmull([[5.4, 6.4, sd * .2], [4.4, 7.4, sd * .5], [2.6, 7.2, sd * .7], [1.4, 6.3, sd * .8]], 3); ruban(g, an, .06, CH2); o.boule(...an[an.length - 1], .14, CY, 1); });   // antennes
+      branche(g, [-3.2, 2.6, 0], [-6, 1.8, 0], .35, .05, CH2);
+      [[2.4, 1], [0, -1], [-2.4, 1]].forEach(([x, ph]) => [-1, 1].forEach(sd => { const av = ph * sd > 0, g1 = [x, 2.2, sd * .6], ge = [x + (av ? 1.3 : -1.1), 1.1, sd * .75], pi = [x + (av ? 2 : -2.2), .05, sd * .8];
+        branche(g, g1, ge, .3, .2, CH); branche(g, ge, pi, .2, .12, CH2); o.boule(pi[0], .2, pi[2], .16, CY, 1); }));
+      for (let k = 0; k < 6; k++) o.boite(-2.6 + k * 1.1, 3.55 - Math.abs(k - 2.5) * .05, 0, .25, .08, 1.5, CY, .9);   // rayures lumineuses du dos
+      navi(g, .4, 3.2, 0, 0, "debout");
+      sol.poser(g, CAV[0], 0, CAV[1], Math.atan2(-(TC[1] - CAV[1]), TC[0] - CAV[0]), 1.7);
+      // ses traces : des pas qui s'allument l'un après l'autre dans la mousse, depuis l'ouest
+      for (let k = 0; k < 9; k++) { const t = k / 8, x = 190 + t * (CAV[0] - 200), z = 452 - t * 24 + (k % 2 ? 1.6 : -1.6); if (!ok(x, z, -4)) continue; const b = new Geo();
+        b.boule(0, 0, 0, .9, VERT, 1, .1); b.boule(.9, 0, .5, .35, VERT, 1, .1); b.boule(.9, 0, -.5, .35, VERT, 1, .1);
+        rotors.push({ g: b, x, y: .1, z, cap: -.1, v: 0, a: { p: 3.2, ph: -t * .6, vis: [.05, .6] } }); }
+      // deux chevaux libres qui broutent plus loin
+      [[208, 352, 2.2], [232, 330, 2.8]].forEach(([x, z, cap]) => { if (!ok(x, z, 4)) return; const h = new Geo(); tuyau(h, [[-3, 2.4, 0], [0, 2.7, 0], [3, 2.6, 0]], .95, CH, .3); tuyau(h, [[3, 2.6, 0], [4.6, 1.4, 0], [5.6, .5, 0]], .45, CH, .3);
+        for (let q = -1; q <= 1; q++) [-1, 1].forEach(sd => branche(h, [q * 2.3, 2.1, sd * .55], [q * 2.3 + .2, 0, sd * .7], .25, .14, CH2)); h.ov().boule(5.4, .7, .3, .1, OR, 1); for (let k = 0; k < 5; k++) h.ov().boite(-2.2 + k * 1.1, 3.6, 0, .22, .06, 1.3, CY, .8);
+        sol.poser(h, x, 0, z, cap, 1.15); });
+      occupe.push([CAV[0], CAV[1], 20]); }
+
+    /* ================= 3. L'ARCHÈRE, debout sur la grande racine en arche (boucle de droite), l'arc tendu vers le ciel ================= */
+    const RA = [562, 456], RB = [668, 340];
+    { const g = new Geo(), o = g.ov(), mid = [(RA[0] + RB[0]) / 2, (RA[1] + RB[1]) / 2], u = norme([RB[0] - RA[0], 0, RB[1] - RA[1]]);
+      const P = catmull([[RA[0] - u[0] * 8, -6, RA[1] - u[2] * 8], [RA[0], 2.5, RA[1]], [mid[0] - u[0] * 30, 14, mid[1] - u[2] * 30], [mid[0], 17, mid[1]], [mid[0] + u[0] * 30, 14, mid[1] + u[2] * 30], [RB[0], 2.5, RB[1]], [RB[0] + u[0] * 9, -6, RB[1] + u[2] * 9]], 5);
+      tuyau(g, P, t => 3.3 - Math.sin(t * PI) * 1.1, ECORCE2, .5); ruban(g, P.map(p => [p[0], p[1] + 2.6, p[2]]), .1, VI2, .9); ruban(g, P.map(p => [p[0] + u[2] * 2.1, p[1] + 1, p[2] - u[0] * 2.1]), .08, ROSE, .9);
+      // des radicelles et des lianes qui pendent sous l'arche
+      for (let k = 6; k < P.length - 6; k += 3) { const p = P[k]; ruban(g, [[p[0], p[1] - 2.5, p[2]], [p[0] + .3, p[1] * .55, p[2] + .2], [p[0] + .1, p[1] * .2 + 1, p[2] - .2]], .07, v("#2A6A6A"), .2); o.boule(p[0] + .1, p[1] * .2 + 1, p[2] - .2, .18, CY, 1); }
+      // les deux pieds de la racine : bourrelets de terre, mousse, fougères
+      [RA, RB].forEach(([x, z], q) => { g.boule(x + u[0] * (q ? 7.5 : -7.5), 0, z + u[2] * (q ? 7.5 : -7.5), 5.2, MOUS2, .15, .5); fougere(g, x + u[2] * 5, z - u[0] * 5, 2.4, CY); fougere(g, x - u[2] * 6, z + u[0] * 6, 2, VERT); });
+      // au pied d'en bas : des fleurs roses ; au pied d'en haut : des clochettes bleues et une flèche tombée
+      for (let k = 0; k < 7; k++) fleur(g, RA[0] + (r() - .5) * 7, RA[1] + 4 + r() * 4, .6 + r() * .4, MAG);
+      for (let k = 0; k < 11; k++) { const a = k / 11 * TAU + r() * .4, d = 1.6 + r() * 2.6, x = RB[0] + u[0] * 3 + u[2] * -4.5 + Math.cos(a) * d, z = RB[1] + u[2] * 3 + u[0] * 4.5 + Math.sin(a) * d; branche(g, [x, 0, z], [x + .1, .7, z], .05, .04, TIGE); g.cylindre(x + .1, .38, z, .26, .32, 6, CY, 1, .08); }
+      branche(g, [RB[0] + u[0] * 2 - u[2] * 3, .15, RB[1] + u[2] * 2 + u[0] * 3], [RB[0] + u[0] * 4.5 - u[2] * 1.2, .15, RB[1] + u[2] * 4.5 + u[0] * 1.2], .07, .06, v("#E8D8B8"), .3);
+      o.tri([RB[0] + u[0] * 4.5 - u[2] * 1.2, .2, RB[1] + u[2] * 4.5 + u[0] * 1.2], [RB[0] + u[0] * 4.2 - u[2] * 1.7, .2, RB[1] + u[2] * 4.2 + u[0] * 1.7], [RB[0] + u[0] * 4.9 - u[2] * .9, .2, RB[1] + u[2] * 4.9 + u[0] * .9], BLANC, .6, [0, 1, 0]);
+      // l'archère, au sommet, tournée vers l'Arbre, l'arc pointé vers le ciel
+      const capA = Math.atan2(-(TC[1] - mid[1]), TC[0] - mid[0]); navi(g, mid[0], 19.6, mid[1], capA, "arc", 1.5);
+      sol.poser(g, 0, 0, 0, 0, 1); lum.push([mid[0], 20, mid[1], .6, .9, 1, 18]);
+      occupe.push([mid[0], mid[1], 92]); }
+
+    /* ================= 4. Les champignons géants, les plantes-spirales qui se rétractent, les fleurs (dans les boucles) ================= */
+    { const g = new Geo(), COLS = [CY, MAG, VI2, VERT];
+      const coins = [[214, 300, 46], [300, 150, 40], [215, 170, 40], [600, 280, 30], [660, 150, 38], [520, 210, 26], [690, 450, 20], [190, 470, 20]];
+      coins.forEach(([x0, z0, R0], q) => { for (let k = 0, n = 0; k < 40 && n < 8; k++) { const a = r() * TAU, d = r() * R0, x = x0 + Math.cos(a) * d, z = z0 + Math.sin(a) * d, h = 4 + r() * 9, R = h * (.4 + r() * .2); if (!ok(x, z, R) || occupe.some(o => Math.hypot(x - o[0], z - o[1]) < o[2] + R)) continue; n++;
+        champi(g, x, z, h, R, COLS[(q + n) % 4]); if (n < 2) lum.push([x, h - 1, z, ...[[.4, .9, 1], [1, .45, .85], [.8, .65, 1], [.45, 1, .7]][(q + n) % 4], 12]); } });
+      // fleurs, fougères, boules lumineuses : partout dans le sous-bois, plus serré près de la piste (on les voit de près)
+      for (let k = 0, n = 0; k < 4000 && n < 260; k++) { const x = 120 + r() * 640, z = 40 + r() * 560; if (!ok(x, z, 1) || occupe.some(o => Math.hypot(x - o[0], z - o[1]) < o[2] * .8)) continue; n++;
+        const t = r(); if (t < .45) fleur(g, x, z, .5 + r() * .7, COLS[Math.floor(r() * 4)], .8 + r() * .6); else if (t < .8) fougere(g, x, z, 1.4 + r() * 1.8, r() < .5 ? CY : VERT);
+        else { g.boule(x, .2, z, .4 + r() * .5, [CY, VI2, MAG][Math.floor(r() * 3)], 1, .8); g.boule(x + .6, .1, z + .3, .25, VERT, 1, .8); } }
+      for (let k = 0, n = 0; k < 3000 && n < 70; k++) { const x = 140 + r() * 600, z = 60 + r() * 480; if (!ok(x, z, 2) || occupe.some(o => Math.hypot(x - o[0], z - o[1]) < o[2])) continue; n++;
+        const h = 3 + r() * 4, a = r() * TAU, P = catmull([[x, 0, z], [x + Math.cos(a) * .4, h * .6, z + Math.sin(a) * .4], [x + Math.cos(a) * 1.6, h, z + Math.sin(a) * 1.6], [x + Math.cos(a) * 2.4, h * .82, z + Math.sin(a) * 2.4]], 3), c = n % 3 ? CY : MAG;
+        ruban(g, P, .09, TIGE, .2); for (let j = 0; j < 3; j++) { const p = P[P.length - 1 - j * 2]; g.boule(p[0], p[1] - .5 - j * .15, p[2], .42 - j * .08, c, 1, 1.3); }
+        if (n % 4 === 0) lum.push([P[P.length - 1][0], h * .7, P[P.length - 1][2], ...(c === CY ? [.4, .95, 1] : [1, .45, .85]), 6]); }
+      for (let k = 0, n = 0; k < 600 && n < 10; k++) { const x = 140 + r() * 600, z = 60 + r() * 480, a = r() * TAU, L = 7 + r() * 6; if (!ok(x, z, L * .6) || occupe.some(o => Math.hypot(x - o[0], z - o[1]) < o[2] + L * .5)) continue; n++;
+        const A0 = [x - Math.cos(a) * L / 2, .7, z - Math.sin(a) * L / 2], B0 = [x + Math.cos(a) * L / 2, .5, z + Math.sin(a) * L / 2]; branche(g, A0, B0, .8, .6, ECORCE2, .25);
+        for (let j = 0; j < 6; j++) { const t = .1 + j * .15, p = mel(A0, B0, t), sd = j % 2 ? 1 : -1; g.cylindre(p[0] - Math.sin(a) * sd * .75, p[1] + .1, p[2] + Math.cos(a) * sd * .75, .45, .08, 6, j % 3 ? CY : OR, 1, .1); }
+        fougere(g, B0[0] + 1, B0[2] + 1, 1.4, VERT); }
+      for (let k = 0, n = 0; k < 600 && n < 14; k++) { const x = 140 + r() * 600, z = 60 + r() * 480, R = 1.5 + r() * 2.5; if (!ok(x, z, R) || occupe.some(o => Math.hypot(x - o[0], z - o[1]) < o[2] + R)) continue; n++;
+        g.boule(x, 0, z, R, v("#2A2A5A"), .2, .7); for (let j = 0; j < 5; j++) { const a = r() * TAU, y = R * .7 * (.3 + r() * .6), d = Math.sqrt(Math.max(0, R * R - (y / .7) ** 2)) * 1.02; g.boule(x + Math.cos(a) * d, y, z + Math.sin(a) * d, .25, j % 2 ? VERT : CY2, 1, .4); } }
+      sol.poser(g, 0, 0, 0, 0, 1);
+      // les plantes-spirales orange qui se rétractent d'un coup puis se redéploient
+      const spirale = () => { const b = new Geo(); branche(b, [0, 0, 0], [0, 4.2, 0], .12, .08, v("#5A2A1A")); for (let k = 0; k < 14; k++) { const a = k * .9, y = 1.2 + k * .22, R = 1.1 - k * .05; b.tri([0, y, 0], [Math.cos(a) * R, y + .1, Math.sin(a) * R], [Math.cos(a + .9) * R, y + .32, Math.sin(a + .9) * R], k % 2 ? v("#FF7A3A") : v("#FFB04A"), .7, [0, 1, 0]); } return b; };
+      for (let k = 0, n = 0; k < 300 && n < 8; k++) { const x = 170 + r() * 560, z = 100 + r() * 400; if (!ok(x, z, 2) || occupe.some(o => Math.hypot(x - o[0], z - o[1]) < o[2])) continue; n++;
+        rotors.push({ g: spirale(), x, y: 0, z, cap: r() * TAU, v: 0, a: { p: 6 + r() * 4, ph: r(), vis: [.12, .97] } }); }
+      // des yeux qui brillent dans le noir, au bord de la forêt (on n'y voit que les yeux)
+      const yeux = new Geo();
+      for (let k = 0, n = 0; k < 400 && n < 16; k++) { const x = 110 + r() * 660, z = 30 + r() * 520; if (!ok(x, z, 6)) continue; n++; const c = n % 3 ? v("#C8FF6A") : v("#FFE070"), a = r() * TAU;
+        [-1, 1].forEach(sd => yeux.boule(x + Math.cos(a) * .35 * sd, 1 + (n % 2) * .3, z + Math.sin(a) * .35 * sd, .1, c, 1)); }
+      sol.poser(yeux, 0, 0, 0, 0, 1); }
+
+    /* ================= 5. LES MONTAGNES FLOTTANTES, les lianes, les cascades dans le vide ================= */
+    const mont = (g, cx, ty, cz, R, H, detail) => { const N = detail ? 14 : 9, NIV = detail ? 6 : 4, rings = [];
+      for (let l = 0; l <= NIV; l++) { const t = l / NIV, ring = []; for (let k = 0; k <= N; k++) { const a = k / N * TAU, rr = R * (1 - t ** 1.25) * (.8 + .25 * Math.sin(a * 3 + cx) + .12 * r()) + (l === NIV ? 0 : 1); ring.push([cx + Math.cos(a) * rr, ty - t * H - (l ? r() * 4 : 0), cz + Math.sin(a) * rr]); } rings.push(ring); }
+      for (let l = 0; l < NIV; l++) for (let k = 0; k < N; k++) g.quad(rings[l][k], rings[l][k + 1], rings[l + 1][k + 1], rings[l + 1][k], mel(ROC2, ROC3, (l / NIV) ** 1.2), .15 + .45 * l / NIV, sous(mel(rings[l][k], rings[l + 1][k + 1], .5), [cx, ty - H * .5, cz]));
+      for (let k = 0; k < N; k++) { const a = rings[0][k], b = rings[0][k + 1]; g.tri([cx, ty + R * .12, cz], [b[0], b[1] + 1.5, b[2]], [a[0], a[1] + 1.5, a[2]], k % 2 ? HERBE : HERBE2, .3, [0, 1, 0]); g.quad(a, b, [b[0], b[1] + 1.5, b[2]], [a[0], a[1] + 1.5, a[2]], HERBE, .3, sous(a, [cx, a[1], cz])); }
+      // arbres sur le dessus, racines et lianes qui pendent dessous
+      for (let k = 0; k < (detail ? 9 : 4); k++) { const a = r() * TAU, d = r() * R * .65, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d, y = ty + R * .12 * (1 - d / R), h = 6 + r() * 10;
+        branche(g, [x, y, z], [x, y + h, z], .6, .3, ECORCE2, .3); g.boule(x, y + h, z, 3 + r() * 2.5, k % 2 ? v("#1A4E5E") : v("#263A78"), .3, .7); if (detail) g.boule(x, y + h + 1.2, z, .7, [CY, MAG, VI2][k % 3], 1, .6); }
+      for (let k = 0; k < (detail ? 12 : 5); k++) { const a = r() * TAU, d = R * (.4 + r() * .5), x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d, y = ty - H * (d / R < .6 ? .5 : .2), L = 8 + r() * 22;
+        ruban(g, [[x, y, z], [x + (r() - .5) * 2, y - L * .5, z], [x + (r() - .5) * 3, y - L, z + (r() - .5) * 2]], .14, v("#2A6A5A"), .15); if (detail) g.boule(x, y - L, z, .4, VERT, 1); }
+      return rings; };
+    const chute = (g, x, y, z, L, dir, w) => { const P = []; for (let i = 0; i <= 8; i++) { const t = i / 8; P.push([x + dir[0] * (3 + t * 4), y - t * L, z + dir[1] * (3 + t * 4)]); }
+      const lat = [-dir[1], dir[0]]; [-1, 0, 1].forEach(j => ruban(g, P.map((p, i) => [p[0] + lat[0] * j * w * 1.5 * (1 + i / 8), p[1] - Math.abs(j) * 2, p[2] + lat[1] * j * w * 1.5 * (1 + i / 8)]), w * (j ? .8 : 1.1), null, .9, i => mel(j ? v("#B8E8FF") : v("#F0FAFF"), v("#1E1A50"), (i / 8) ** .8)));
+      { const b = new Geo(); for (let q = 0; q < 3; q++) b.boule(dir[0] * q * .4, q * L * .3, dir[1] * q * .4, w * .8, CY2, 1, 2.6); rotors.push({ g: b, x: P[0][0], y: P[0][1] - L * .6, z: P[0][2], cap: 0, v: 0, a: { p: 1.8, ph: r(), h: -L * .3, dx: dir[0] * 1.5, dz: dir[1] * 1.5, vis: [.02, .9] } }); }
+      lum.push([P[6][0], P[6][1], P[6][2], .7, .65, 1, 16]);
+      return P; };
+    const SOM = {};
+    { const g = new Geo();
+      const M = { m1: [36, 118, 176, 44, 62, 1], m2: [-34, 92, 334, 28, 40, 1], m3: [92, 146, -44, 40, 56, 1], m4: [840, 124, 164, 46, 60, 1], m5: [944, 98, 312, 28, 38, 1],
+        n1: [300, 172, -190, 64, 80, 0], n2: [610, 196, -230, 76, 92, 0], n3: [880, 150, -70, 40, 50, 0], o1: [-190, 130, 80, 50, 60, 0], o2: [-150, 110, 560, 46, 56, 0], e1: [1090, 140, 420, 54, 64, 0] };
+      Object.keys(M).forEach(k => { const [x, y, z, R, H, d] = M[k]; mont(g, x, y, z, R, H, d); SOM[k] = [x, y, z, R]; });
+      // les lianes qui relient les montagnes
+      [["m1", "m2"], ["m1", "m3"], ["m4", "m5"], ["m3", "n1"], ["m4", "n3"]].forEach(([a, b]) => { const A = SOM[a], B = SOM[b], d = norme([B[0] - A[0], 0, B[2] - A[2]]);
+        for (let q = 0; q < 3; q++) liane(g, [A[0] + d[0] * A[3] * .8 + q * 2, A[1] - 6 - q * 3, A[2] + d[2] * A[3] * .8], [B[0] - d[0] * B[3] * .8, B[1] - 6 - q * 2, B[2] - d[2] * B[3] * .8], 14 + q * 6, .22, q ? v("#1E5A50") : v("#2A7A6A"), q ? .1 : .3); });
+      // les cascades : elles tombent du bord et finissent en brume, sans jamais toucher le sol
+      [["m1", .3, 70], ["m1", -.6, 56], ["m2", .2, 50], ["m4", 2.9, 72], ["m5", 3.3, 50], ["m3", 1.2, 64], ["n2", 1.6, 90]].forEach(([k, a, L]) => { const [x, y, z, R] = SOM[k], dir = [Math.cos(a), Math.sin(a)]; chute(g, x + dir[0] * R * .8, y + 1, z + dir[1] * R * .8, L, dir, 1.6); });
+      // les montures perchées sur les bords des montagnes (aux couleurs des pilotes)
+      [["m1", .2, 2], ["m4", 3.4, 3]].forEach(([k, a, c]) => { const [x, y, z, R] = SOM[k]; g.poser(ikran(COULEURS_5[c], false, .7), x + Math.cos(a) * R * .7, y + 4, z + Math.sin(a) * R * .7, -a, 1); });
+      sol.poser(g, 0, 0, 0, 0, 1);
+      lum.push([SOM.m1[0], SOM.m1[1] - 40, SOM.m1[2], .55, .4, 1, 60], [SOM.m4[0], SOM.m4[1] - 40, SOM.m4[2], .55, .4, 1, 60]); }
+
+    /* ================= 6. La petite île flottante au-dessus de la forêt (deux montures y dorment), ses lianes jusqu'au sol ================= */
+    const ILE = [590, 38, 186];
+    { const g = new Geo(), [x, y, z] = ILE; mont(g, x, y, z, 15, 22, 1);
+      for (let q = 0; q < 6; q++) { const a = q / 6 * TAU + .3, R = 10, top = [x + Math.cos(a) * R, y - 8, z + Math.sin(a) * R], bas = [x + Math.cos(a) * (R + 6) + (r() - .5) * 6, 0, z + Math.sin(a) * (R + 6) + (r() - .5) * 6];
+        ruban(g, [top, [mel(top, bas, .4)[0] + 1, mel(top, bas, .4)[1], mel(top, bas, .4)[2]], [mel(top, bas, .75)[0] - 1, mel(top, bas, .75)[1], mel(top, bas, .75)[2]], bas], .16, v("#2A7A6A"), .25); g.boule(bas[0], 0, bas[2], 1.4, MOUS2, .05, .4); }
+      chute(g, x + 10, y + 1, z - 6, 26, [.8, -.6], .8);
+      [[0, -1.2], [1, 2]].forEach(([c, a]) => g.poser(ikran(COULEURS_5[c], false, .6), x + Math.cos(a) * 6, y + 4.5, z + Math.sin(a) * 6, -a + PI / 2, 1));
+      sol.poser(g, 0, 0, 0, 0, 1); lum.push([x, y - 10, z, .5, .45, 1, 34]); occupe.push([x, z, 24]); }
+
+    /* ================= 7. Dans le ciel : le grand chasseur rouge qui tourne au-dessus de l'Arbre, deux montures sauvages autour de l'île ================= */
+    { const tour = (geo, R, sens) => { const g = new Geo(); g.poser(geo, R, 0, 0, sens > 0 ? PI / 2 : -PI / 2, 1); return g; };
+      /* DÉCOR VIVANT (crochet a.vivant, voir contexteVivant) : au repos, le grand chasseur rouge tourne au-dessus de l'Arbre ; dès que les voitures
+         sont là, il plane au-dessus du PREMIER et change de pilote quand la tête change ; à l'arrivée il pique sur le vainqueur (comme la carte 2D).
+         Une grappe de graines sacrées fait pareil, au ras des voitures : la forêt a choisi son pilote. */
+      const suivre = (x, t, C, cible, vite) => { const dt = x.tp === undefined ? 1 : Math.min(.1, Math.max(0, t - x.tp)); x.tp = t; if (!x.p) x.p = cible.slice();
+        const k = 1 - Math.exp(-dt * vite), av = x.p.slice(); x.p = x.p.map((u, i) => u + (cible[i] - u) * k);
+        const dx = x.p[0] - av[0], dz = x.p[2] - av[2]; if (Math.hypot(dx, dz) > .02) { const c = Math.atan2(-dz, dx); x.cp = x.cp === undefined ? c : x.cp + Math.atan2(Math.sin(c - x.cp), Math.cos(c - x.cp)) * Math.min(1, dt * 4); }
+        return x.p; };
+      rotors.push({ g: ikran("#C8381E", true, 2.4), x: TC[0], y: 112, z: TC[1], cap: 0, v: 0, a: { vivant(x, t, C) {
+        const L = C.V.length ? C.premier() : null, fin = L && C.enCourse && C.e > .975; let cible;
+        if (L) { const ax = Math.cos(L.cap), az = -Math.sin(L.cap), h = fin ? 7 : 26; cible = [L.x + ax * 10 + Math.cos(t * .8) * (fin ? 2 : 9), L.y + h + Math.sin(t * 1.6) * 1.5, L.z + az * 10 - Math.sin(t * .8) * (fin ? 2 : 9)]; }
+        else { const a = t * .12; cible = [TC[0] + Math.cos(a) * 120, 112 + Math.sin(t * .4) * 6, TC[1] - Math.sin(a) * 120]; }
+        const p = suivre(x, t, C, cible, L ? 3 : 1.2); x.k = lisse(x.k || 1, L ? .5 : 1, .05);
+        return modele(p[0], p[1], p[2], x.cp || 0, Math.sin(t * 2.2) * .06, x.k); } } });
+      { const b = new Geo(); for (let j = 0; j < 7; j++) { const a = j / 7 * TAU; b.poser(graine(), Math.cos(a) * 3.2, Math.sin(j * 1.7) * 1.2, Math.sin(a) * 3.2, a, .9); }
+        rotors.push({ g: b, x: TC[0], y: 30, z: TC[1], cap: 0, v: 0, a: { vivant(x, t, C) { const L = C.V.length ? C.premier() : null;
+          const cible = L ? [L.x, L.y + 6 + Math.sin(t * 2) * .6, L.z] : [TC[0], 26 + Math.sin(t * .5) * 3, TC[1]], p = suivre(x, t, C, cible, L ? 5 : 1);
+          return mul(modele(p[0], p[1], p[2], 0, 0, L ? 1 : 1.6), rotY(t * .8)); } } }); }
+      rotors.push({ g: tour(ikran("#4A8A9A", true, .8), 34, 1), x: ILE[0], y: 58, z: ILE[2], cap: 0, v: .35, a: { ax: "y", ph: .2, bob: [3, .9] } });
+      rotors.push({ g: tour(ikran("#7A5ACF", true, .75), 46, -1), x: ILE[0], y: 66, z: ILE[2], cap: 0, v: -.28, a: { ax: "y", ph: .6, bob: [4, .7] } }); }
+
+    /* ================= 8. LA LAGUNE LUMINESCENTE (sud-ouest) et LE GRAND CÉTACÉ qui jaillit ================= */
+    const LC = [30, 560];
+    { const g = new Geo(), o = g.ov(), N = 40, bord = [];
+      for (let k = 0; k < N; k++) { const a = k / N * TAU; let R = 150 + 26 * Math.sin(a * 3 + 1) + 14 * Math.sin(a * 7);
+        while (R > 30 && !ok(LC[0] + Math.cos(a) * R, LC[1] + Math.sin(a) * R, 4)) R -= 4; bord.push([LC[0] + Math.cos(a) * R, .12, LC[1] + Math.sin(a) * R]); }
+      for (let k = 0; k < N; k++) { const a = bord[k], b = bord[(k + 1) % N]; o.tri([LC[0], .1, LC[1]], [b[0], .1, b[2]], [a[0], .1, a[2]], v("#0A2448"), .2, [0, 1, 0]); o.quad(a, b, [b[0] + (b[0] - LC[0]) * .02, .14, b[2] + (b[2] - LC[1]) * .02], [a[0] + (a[0] - LC[0]) * .02, .14, a[2] + (a[2] - LC[1]) * .02], CY, .9, [0, 1, 0]); }
+      // le plancton lumineux en spirales à la surface
+      for (let s = 0; s < 3; s++) { const c0 = [LC[0] + (r() - .5) * 120, LC[1] + (r() - .5) * 80]; for (let k = 0; k < 90; k++) { const a = k * .21 + s, R = 3 + k * .55, x = c0[0] + Math.cos(a) * R, z = c0[1] + Math.sin(a) * R;
+        if (Math.hypot(x - LC[0], z - LC[1]) > 100 || !ok(x, z, 6)) continue; const t = .3 + r() * .3; o.quad([x - t, .16, z], [x, .16, z - t], [x + t, .16, z], [x, .16, z + t], k % 3 ? CY : CY2, 1, [0, 1, 0]); } }
+      // le cétacé : le corps qui sort de l'eau en arc, nageoires, taches lumineuses, ventre clair
+      const W0 = [44, 0, 506], dirW = norme([1, 0, -.4]), q = norme(croix([0, 1, 0], dirW)), at = (s, y, l) => [W0[0] + dirW[0] * s + q[0] * l, y, W0[2] + dirW[2] * s + q[2] * l];
+      const B = catmull([at(-44, -8, 0), at(-27, -1.5, 0), at(-9, 9, 0), at(9, 18, 0), at(22, 22, 0), at(34, 20, 0)], 3);
+      tuyau(g, B, t => t < .8 ? 2.2 + Math.sin(t * PI * .9) * 3.8 : 4.6 - (t - .8) * 17, v("#3A6AB0"), .35);
+      ruban(g, B.map((p, i) => [p[0], p[1] - (i < B.length - 3 ? 4.2 : 2), p[2]]), 1.1, v("#BCD8F0"), .45);
+      for (let k = 3; k < B.length - 2; k++) [-1, 1].forEach(sd => { const p = B[k]; o.boule(p[0] + q[0] * sd * 4.6, p[1] + 1.2, p[2] + q[2] * sd * 4.6, .6, CY, 1); o.boule(p[0], p[1] + 5.6 - Math.abs(k - 9) * .2, p[2], .45, CY2, 1); });
+      [-1, 1].forEach(sd => { const p = B[11]; g.tri([p[0], p[1] - 1, p[2]], [p[0] + q[0] * sd * 14 - dirW[0] * 6, p[1] - 6, p[2] + q[2] * sd * 14 - dirW[2] * 6], [p[0] - dirW[0] * 9, p[1] - 3, p[2] - dirW[2] * 9], v("#24467E"), .3, [0, 1, 0]); });
+      { const h = B[B.length - 2]; [-1, 1].forEach(sd => o.boule(h[0] + q[0] * sd * 3.6 - dirW[0] * 2, h[1] + 1, h[2] + q[2] * sd * 3.6 - dirW[2] * 2, .6, BLANC, 1)); }
+      // la gerbe et les anneaux d'eau là où il sort
+      for (let k = 0; k < 3; k++) { const b = new Geo(); for (let j = 0; j < 24; j++) { const a0 = j / 24 * TAU, a1 = (j + .6) / 24 * TAU; b.quad([Math.cos(a0) * 6, 0, Math.sin(a0) * 6], [Math.cos(a1) * 6, 0, Math.sin(a1) * 6], [Math.cos(a1) * 6.6, 0, Math.sin(a1) * 6.6], [Math.cos(a0) * 6.6, 0, Math.sin(a0) * 6.6], BLANC, .8, [0, 1, 0]); }
+        const p = at(-20, 0, 0); rotors.push({ g: b, x: p[0], y: .25, z: p[2], cap: 0, v: 0, a: { p: 3, ph: k / 3, k0: .4, k1: 2.4, souffle: true } }); }
+      for (let k = 0; k < 5; k++) { const b = new Geo(); b.boule(0, 0, 0, .7, CY2, .8); const p = at(-20 + (r() - .5) * 10, 0, (r() - .5) * 10); rotors.push({ g: b, x: p[0], y: 0, z: p[2], cap: 0, v: 0, a: { p: 1.8 + r(), ph: r(), chemin: [[0, 0, 0], [(r() - .5) * 8, 8 + r() * 6, (r() - .5) * 8], [(r() - .5) * 14, 0, (r() - .5) * 14]], vis: [.02, .95] } }); }
+      sol.poser(g, 0, 0, 0, 0, 1);
+      // un deuxième cétacé fait le tour de la lagune, le dos à fleur d'eau
+      { const b = new Geo(); tuyau(b, catmull([[-12, -1, 40], [0, 1.6, 40], [12, -1, 40]], 3), t => 1 + Math.sin(t * PI) * 2.2, v("#2E5A9A"), .3); for (let k = -2; k <= 2; k++) b.ov().boule(k * 3, 2.6, 41.5, .35, CY, 1);
+        rotors.push({ g: b, x: LC[0] - 20, y: 0, z: LC[1] + 20, cap: 0, v: .09, a: { ax: "y", bob: [.6, .8] } }); }
+      lum.push([LC[0], 1, LC[1], .3, .85, 1, 80], [W0[0] + 15, 10, W0[2] - 5, .4, .9, 1, 30]);
+      occupe.push([LC[0], LC[1], 170]); }
+
+    /* ================= 9. LA BASE HUMAINE ABANDONNÉE (à l'est) : du métal que la forêt reprend ================= */
+    const BASE = [818, 396];
+    { const g = new Geo(), o = g.ov(), [bx, bz] = BASE, M1 = v("#6A7284"), M2 = v("#4A5262"), M3 = v("#9AA2B0"), ROUILLE = v("#8A4A2A"), JAUNE = v("#E2B23A");
+      g.boite(bx, 0, bz, 66, .5, 56, v("#2A2E36"));   // la dalle de béton
+      for (let k = 0; k < 14; k++) o.boite(bx - 30 + r() * 60, .5, bz - 26 + r() * 52, 2 + r() * 6, .02, .2 + r() * .4, v("#14181E"));   // fissures
+      // les conteneurs, empilés ou renversés
+      [[-20, -16, 0, 0, "#B05A2A"], [-20, -16, 2.6, .08, "#2A4A7A"], [-6, -18, 0, .3, "#6A7A3A"], [-24, 2, 0, 1.4, "#B05A2A"], [22, 18, 0, -.2, "#2A4A7A"]].forEach(([x, z, y, cap, c]) => {
+        g.boite(bx + x, y, bz + z, 12, 2.6, 4.8, v(c), .15, cap); for (let k = -5; k <= 5; k += 2) o.boite(bx + x + Math.cos(cap) * k * .55, y + .2, bz + z - Math.sin(cap) * k * .55, .2, 2.2, 4.85, mel(v(c), [0, 0, 0], .3), 0, cap); });
+      // le module d'habitation : fenêtres éteintes, porte ouverte qui brille faiblement, toit enfoncé
+      g.boite(bx + 10, 0, bz - 10, 20, 5, 10, M1, .12, .1); g.boite(bx + 10, 5, bz - 10, 21, .5, 11, M2, 0, .1);
+      for (let k = 0; k < 4; k++) o.boite(bx + 3 + k * 4.4 * Math.cos(.1), 2.5, bz - 4.9 + -k * 4.4 * Math.sin(.1), 2.6, 1.2, .1, k === 2 ? v("#2A4A5A") : v("#10141A"), k === 2 ? .4 : 0, .1);
+      // le mât et son feu rouge qui clignote encore
+      { const mx = bx - 4, mz = bz + 6; for (let k = 0; k < 4; k++) branche(g, [mx + (k % 2 ? 1.2 : -1.2), 0, mz + (k < 2 ? 1.2 : -1.2)], [mx, 30, mz], .18, .1, M3);
+        for (let y = 4; y < 28; y += 4) g.boite(mx, y, mz, 2.2 - y * .06, .15, 2.2 - y * .06, M3); g.boite(mx - .8, 22, mz, .2, 3, 3, M3); const b = new Geo(); b.boule(0, 0, 0, .6, v("#FF2A2A"), 1);
+        rotors.push({ g: b, x: mx, y: 30.4, z: mz, cap: 0, v: 0, a: { clig: [1.6, .25] } }); lum.push([mx, 30.4, mz, 1, .12, .1, 14]);
+        liane(g, [mx, 26, mz], [bx + 10, 5.2, bz - 10], 4, .12, v("#2A7A6A"), .3); liane(g, [mx, 18, mz], [bx - 20, 5.2, bz - 16], 3, .12, v("#2A7A6A"), .3); }
+      // l'exosquelette couché sur le flanc, la verrière brisée, un bras tendu, la main ouverte
+      { const ex = bx + 16, ez = bz + 2; g.boite(ex, .5, ez, 5, 3.6, 4, M1, .12, .6); o.boite(ex + 1.6, 2, ez - 1.1, 2.2, 2, .1, v("#3A8A9A"), .45, .6);
+        branche(g, [ex - 2, 1.4, ez + 1], [ex - 6, .9, ez + 3.2], .9, .8, M2); branche(g, [ex - 6, .9, ez + 3.2], [ex - 9.5, .6, ez + 2.8], .8, .7, M2);   // jambe
+        branche(g, [ex + 2, 2.6, ez + 2], [ex + 5, 1, ez + 6], .7, .6, M2); branche(g, [ex + 5, 1, ez + 6], [ex + 8.5, .6, ez + 7.6], .6, .5, M3);   // bras tendu
+        for (let k = 0; k < 4; k++) branche(g, [ex + 8.5, .6, ez + 7.6], [ex + 9.8 + k * .2, .5 + (k === 3 ? .6 : 0), ez + 6.6 + k * .7], .18, .12, M3);
+        for (let k = 0; k < 4; k++) o.boite(ex - 1.5 + k, 4.12, ez, .5, .05, 3, k % 2 ? JAUNE : v("#1A1A1A"), 0, .6);
+        fleur(g, ex + 9.4, ez + 8.2, .6, CY); fougere(g, ex - 4, ez - 3, 2, VERT); }
+      // l'appareil volant écrasé, nez dans la mousse, deux hélices carénées
+      { const ax = bx - 6, az = bz + 22, ca = -.5; g.boite(ax, 0, az, 14, 4, 5, M1, 0, ca); g.boite(ax + 7 * Math.cos(ca), 0, az - 7 * Math.sin(ca), 4, 2.6, 4, M2, 0, ca);
+        [-1, 1].forEach(sd => { const x = ax - Math.sin(ca) * sd * 5.6, z = az - Math.cos(ca) * sd * 5.6; g.cylindre(x, sd > 0 ? 1.2 : .2, z, 2.6, 1.2, 10, M2, 0); g.cylindre(x, sd > 0 ? 1.3 : .3, z, 2.2, 1.1, 10, v("#14181E"), 0); });
+        o.boite(ax + 5.5 * Math.cos(ca), 2.2, az - 5.5 * Math.sin(ca), 1.6, 1.2, 4.2, v("#2A3A4A"), .2, ca); o.boite(ax, 4.02, az, 8, .05, .6, JAUNE, 0, ca); }
+      // fûts, caisses, la clôture tombée envahie de lianes, la forêt qui reprend (fougères, fleurs, une racine qui soulève la dalle)
+      for (let k = 0; k < 10; k++) { const x = bx - 28 + r() * 20, z = bz - 8 + r() * 30; if (k % 3) g.cylindre(x, .5, z, .6, 1.8, 7, k % 2 ? ROUILLE : v("#3A5A8A")); else g.boite(x, .5, z, 1.6, 1.4, 1.6, v("#6A5A3A"), 0, r()); }
+      for (let k = 0; k < 18; k++) { const t = k / 17, x = bx - 33 + t * 8, z = bz - 26 + t * 54; branche(g, [x, 0, z], [x + (k % 4 === 1 ? 1.6 : 0), k % 4 === 1 ? 1.2 : 3.4, z], .1, .1, M3); if (k) liane(g, [x - 8 / 17, 3, z - 54 / 17], [x, 3, z], .7, .05, M3, 0); }
+      for (let k = 0; k < 22; k++) { const x = bx - 30 + r() * 62, z = bz - 26 + r() * 52; if (dP(x, z) < MARGE) continue; if (k % 2) fougere(g, x, z, 1.6 + r() * 1.4, k % 4 === 1 ? CY : VERT); else fleur(g, x, z, .6, [CY, MAG, VI2][k % 3]); }
+      tuyau(g, catmull([[bx + 34, -2, bz + 10], [bx + 26, 1.6, bz + 8], [bx + 18, .8, bz + 12], [bx + 10, -1.5, bz + 14]], 3), t => 1.6 - t * .6, ECORCE2, .1);
+      sol.poser(g, 0, 0, 0, 0, 1); lum.push([bx + 10, 3, bz - 4, .3, .7, .8, 10]);
+      occupe.push([bx, bz, 50]); }
+
+    /* ================= 10. LA FORÊT tout autour : grands arbres sombres aux lianes lumineuses (cadre de la scène) ================= */
+    { const g = new Geo();
+      for (let k = 0, n = 0; k < 2000 && n < 56; k++) { const x = -260 + r() * 1320, z = -260 + r() * 1040, R = 5 + r() * 4; if (!ok(x, z, 10) || occupe.some(o => Math.hypot(x - o[0], z - o[1]) < o[2] + R) || (x > 150 && x < 720 && z > 80 && z < 500 && r() < .7)) continue; n++;
+        const h = 22 + r() * 30 + Math.min(20, dP(x, z) * .1); g.cylindre(x, 0, z, 1.6, h, 6, ECORCE, .25, .9);
+        for (let b = 0; b < 3; b++) { const a = r() * TAU; branche(g, [x, h * (.55 + b * .12), z], [x + Math.cos(a) * 6, h * (.7 + b * .1), z + Math.sin(a) * 6], .5, .2, ECORCE); }
+        for (let b = 0; b < 3; b++) { const a = b / 3 * TAU + r(), d = b ? 4 : 0; g.boule(x + Math.cos(a) * d, h + (b ? -1 : 1.5), z + Math.sin(a) * d, R * (b ? .75 : .95), b % 2 ? v("#16405A") : v("#202E70"), .25, .6); }
+        const c = [CY, VI2, VERT][n % 3], P = []; for (let i = 0; i <= 8; i++) { const t = i / 8; P.push([x + Math.cos(t * 9 + n) * 1.8, t * h * .85, z + Math.sin(t * 9 + n) * 1.8]); } ruban(g, P, .1, c, 1);
+        occupe.push([x, z, R + 2]); }
+      sol.poser(g, 0, 0, 0, 0, 1); }
+
+    // la forêt est pleine : on interdit les petits décors génériques posés au hasard (une seule grande zone, testée en premier)
+    occupe.unshift([T.cx, T.cz, 4000]);
+    return occupe;
+  }
+
   function peindreGarage6(T, Z, def) {
     const K = kit(T, def, 1227, "g6-"), { s, a, r, f, W, H } = K, an = x => K.anime ? x : "", INK = `stroke="#07080B" stroke-width="1.6" stroke-linejoin="round"`, IN1 = `stroke="#07080B" stroke-width="1" stroke-linejoin="round"`;
     const G = (x, y, sc, rot, sy) => `<g transform="translate(${f(x)} ${f(y)})${sc && (sc !== 1 || sy) ? ` scale(${sc}${sy ? " " + sy : ""})` : ""}${rot ? ` rotate(${f(rot)})` : ""}">`;
@@ -6457,6 +6809,7 @@
   PEINTS.multivers.deco = decorMultivers;   // V16.52 : décor 3D (7/10)
   PEINTS.terrier.deco = decorGouter;
   PEINTS.etoiles.deco = decorEtoiles;   // V16.53 : décor 3D (7/10)   // V16.52 : décor 3D (7/10)   // V16.51 : décor 3D sur mesure (boucle du critique, 7/10)
+  PEINTS.pandora.deco = decorPandora;   // mai 2027 · Pandora : décor 3D sur mesure (24/11/2026)
 
   /* ---------- Construction de la scène statique ---------- */
   function construire(def, T, A, Z) {
@@ -6970,8 +7323,8 @@
           const rb = roues[i][sd > 0 ? 0 : 1], Mw = mul(M, mul(modele(wx, rr, sd * wz, 0, 0, 1), rotZ(-x.rot * .6 / rr)));
           gl.uniformMatrix4fv(U.uM, false, Mw); lier(gl, PL, rb); gl.drawArrays(gl.TRIANGLES, 0, rb.n); }));
       });
-      // décors qui tournent (ailes du moulin…)
-      gl.uniform4f(U.uTint, 1, 1, 1, 0); RO.forEach(x => { const M = matRotor(x, t); if (!M) return; gl.uniformMatrix4fv(U.uM, false, M); lier(gl, PL, x.b); gl.drawArrays(gl.TRIANGLES, 0, x.b.n); });
+      // décors qui tournent (ailes du moulin…) ; décor VIVANT : un rotor qui a a.vivant suit la course (voir contexteVivant)
+      gl.uniform4f(U.uTint, 1, 1, 1, 0); let CV = null; RO.forEach(x => { const M = x.a && x.a.vivant ? x.a.vivant(x, t, CV || (CV = contexteVivant(I, VV))) : matRotor(x, t); if (!M) return; gl.uniformMatrix4fv(U.uM, false, M); lier(gl, PL, x.b); gl.drawArrays(gl.TRIANGLES, 0, x.b.n); });
       gl.uniform1f(U.uSpec, 0);
       [PL.A.aN].forEach(a => gl.disableVertexAttribArray(a));
       // effets transparents : ombres, traînées
@@ -7179,6 +7532,16 @@
   function rotY(a) { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, 0, 0, 0, 1]); }
   function rotZ(a) { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]); }
   const ANIM = () => !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  /* ---------- Décor VIVANT en 3D (crochet générique, pour tous les circuits ; 24/11/2026) ----------
+     Un rotor (ctx.rotors.push dans un decorXxx) qui porte a.vivant = (x, t, C) => matrice | null est replacé à chaque image d'après la course,
+     au lieu de suivre matRotor. x = ce rotor (on peut y garder un état d'une image à l'autre : x.p, x.cap…), t = temps en secondes,
+     C = { V: voitures affichées [{ nom, x, y, z, cap, s, rang }], enCourse (un scénario de course se joue), e (avancement 0 → 1 ; 1 hors course),
+     premier(), dernier() }. Sans voiture (📺 Visite), V est vide : le décor reprend sa vie « au repos ». C n'est calculé qu'une fois par image,
+     et seulement si un rotor vivant existe. Ne jamais modifier les voitures : c'est le décor qui réagit, jamais le résultat. */
+  function contexteVivant(I, VV) {
+    const a = I.anim, e = a ? clamp((performance.now() - a.t0) / a.duree, 0, 1) : 1, L = VV.map(x => ({ nom: x.v.nom, x: x.x, y: x.y, z: x.z, cap: x.cap, s: x.s, rang: x.rang || 99 }));
+    return { V: L, enCourse: !!(a && a.scen), e, premier: () => L.slice().sort((p, q) => p.rang - q.rang)[0], dernier: () => L.slice().sort((p, q) => q.rang - p.rang || p.s - q.s)[0] };
+  }
   /** traînée : un ruban derrière la voiture, à la couleur de la cosmétique */
   function rubanTrainee(x, out) {
     const pos = [x.x - x.tx * 4.1, x.y + .75, x.z - x.tz * 4.1];
@@ -7365,8 +7728,15 @@
     },
     /* ---------- V16.38 · un événement pour chaque mois (attachés aux voitures : ils survivent aux nouvelles cartes) ---------- */
     /* mai 2027 · Pandora : à l'arrivée, un grand oiseau-dragon plonge en piqué au-dessus du vainqueur */
-    pandora(x) { const O = outilsEv(x); let fait = false;
-      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("pandora"); const n = O.premier(c), p = O.dedans(O.voiture(n)); if (!p) return;
+    /* + décor VIVANT (24/11/2026, comme en 3D) : une grappe de graines sacrées plane au-dessus du PREMIER, glisse vers le nouveau premier quand la tête change */
+    pandora(x) { const O = outilsEv(x); let fait = false, gp = null, pos = null;
+      const graines = () => { const R = O.rp(); let h = ""; for (let j = 0; j < 6; j++) { const a = j / 6 * Math.PI * 2, u = Math.cos(a) * R * 1.5, v = Math.sin(a) * R * .7 - R * 2.4;
+          h += '<g transform="translate(' + O.f(u) + " " + O.f(v) + ')"><g>' + (x.anime ? '<animateTransform attributeName="transform" type="translate" values="0 0;0 ' + O.f(-R * .45) + ';0 0" dur="' + (1.6 + j * .23).toFixed(2) + 's" repeatCount="indefinite"/>' : "") +
+            '<circle r="' + O.f(R * .7) + '" fill="#E8C8FF" opacity=".28"/><path d="M' + O.f(-R * .32) + " 0A" + O.f(R * .32) + " " + O.f(R * .32) + " 0 0 1 " + O.f(R * .32) + ' 0Z" fill="#FFFFFF"/><path d="M' + O.f(-R * .2) + " 0v" + O.f(R * .45) + "M0 0v" + O.f(R * .55) + "M" + O.f(R * .2) + " 0v" + O.f(R * .45) + '" stroke="#F8DCFF" stroke-width="' + O.f(R * .07) + '"/></g></g>'; }
+        return O.el('<g style="pointer-events:none">' + h + "</g>"); };
+      const suivre = (c, en) => { const n = O.premier(c), p = n && O.voiture(n); if (!p) return; if (!gp) gp = graines();
+        pos = pos && en ? [pos[0] + (p[0] - pos[0]) * .12, pos[1] + (p[1] - pos[1]) * .12] : p; gp.setAttribute("transform", "translate(" + O.f(pos[0]) + " " + O.f(pos[1]) + ")"); };
+      return { raz() { fait = false; }, maj(e, c, en) { try { suivre(c, en && x.anime); } catch (er) { } if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("pandora"); const n = O.premier(c), p = O.dedans(O.voiture(n)); if (!p) return;
         const g = O.el('<g><path d="M0 0L-70 -26L-40 -4L-90 10L-36 8L0 16L36 8L90 10L40 -4L70 -26Z" fill="#E8542A" stroke="#5A1A0A" stroke-width="2.5"/><path d="M-40 -4L-70 -26M40 -4L70 -26M-36 8L-90 10M36 8L90 10" stroke="#F2B33A" stroke-width="2"/><path d="M0 16L-8 40L0 34L8 40Z" fill="#C2401E"/><path d="M0 -6L-6 -22L0 -16L6 -22Z" fill="#F2B33A"/><circle cx="0" cy="2" r="3.5" fill="#3AE0FF"/></g>');
         const b = O.bulle(p[0], p[1] - 130, "Le grand oiseau t’a choisi, " + n + " !", 20);
         O.anim(1800, q => { const u = p[0] - 320 + q * 640, v = p[1] - 40 - Math.sin(q * Math.PI) * -120 - 150 + q * 0; g.setAttribute("transform", "translate(" + O.f(u) + " " + O.f(p[1] - 170 + Math.sin(q * Math.PI) * 120) + ") rotate(" + O.f(-8 + q * 16) + ") scale(" + O.f(1.2 + Math.sin(q * Math.PI) * .5) + ")"); g.setAttribute("opacity", O.f(q < .1 ? q * 10 : q > .85 ? (1 - q) * 6.6 : 1)); }, () => { g.remove(); setTimeout(() => b.remove(), 700); }); } }; },
