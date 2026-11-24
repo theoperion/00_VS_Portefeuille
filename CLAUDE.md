@@ -43,7 +43,15 @@ Chaque conversation ne lit que sa fiche et ne touche qu'à ses fichiers. Ancienn
 - Validation (Théo, 21/11) : contrôles oui/non prouvés par test ou capture, pas de notes sur 10. Un seul NON → corriger et revérifier.
 
 ## Agents
-À définir avec Théo pour chaque partie (4 au plus, même méthode que le Budget : besoin réel → rôle en une phrase → points de contrôle validés par Théo → essai avec une erreur cachée).
+Dans `.claude/agents/`, préfixés `moi-` ou `jeu-` (4 au plus par partie). Méthode (comme le Budget) : besoin réel → rôle en une phrase → points de contrôle validés par Théo → essai avec une erreur cachée.
+
+| Agent | Rôle | État |
+|---|---|---|
+| `moi-patrimoine` | chaque chiffre de Moi juste, partout pareil, fidèle aux règles et aux documents officiels | ✅ essai réussi (24/11) |
+| moi-code-donnees | rien ne casse, saisie jamais perdue ni arrondie, jamais le chiffre d'un autre joueur, rien de personnel dans le dépôt public | à écrire |
+| moi-utilisateur | une personne au téléphone comprend tout du premier coup | à écrire |
+| moi-avocat-du-diable | conteste chaque idée ou gros changement | à écrire |
+| agents du jeu | à définir avec Théo | — |
 
 ## À revoir à la fin du tri (décision de Théo, 24/11)
 - Dépôt public : fiche de transfert PDF (`docs/transferts/`) et identifiants des fichiers Google dans `archives/` ; décider où les ranger.

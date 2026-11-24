@@ -17,6 +17,7 @@ L'onglet **Moi** : le suivi **privé** du portefeuille de chacun (lignes de bour
 - Niveau de l'indice saisi à la main (rappels « artemaInitial » / « artemaActuel ») : Théo chaque lundi (1er : 07/12/2026), Clément chaque 20 du mois (1er : 20/12/2026).
 
 ## À faire (dans l'ordre)
+0. **Petit correctif trouvé le 24/11** (essai de l'agent `moi-patrimoine`) : `lireNombre` (moi.js) lit mal un nombre au format anglais (« 1,234.56 » → 1,23). Règle proposée : le dernier des deux signes est la virgule décimale. À faire avec le « go » de Théo.
 1. **5/12/2026 ou juste après** : calculer pour Théo le niveau de départ d'Artema = moyenne des clôtures **officielles** de l'indice (RDIGTDG, page Natixis) des 2, 3 et 4 décembre, puis l'aider à le saisir. Si Natixis publie sa valeur officielle, c'est elle qui compte.
 2. **Mail du signal levier** plus clair et plus visuel (consigne en tête, phrases simples, historique), sans changer les calculs.
 3. **Scène secrète du premier millionnaire** (surprise : ne jamais la décrire à Théo ; une fois par appareil + « Revoir le sacre »). Priorité à reconfirmer avec Théo.
