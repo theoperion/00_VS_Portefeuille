@@ -862,7 +862,8 @@ function barreAdmin() {
   const circ = '<button type="button" class="ba-dec" data-bacirc="1">🗺️ Circuits 2027 · les 13 circuits en 2D et en 3D (aperçu)</button>';   // v16.81
   const tres = '<button type="button" class="ba-dec" data-batres="1"' + (TRESOR_APERCU ? ' aria-pressed="true">🗝️ Aperçu du trésor en cours · ✕ Quitter' : ">🗝️ Aperçu du trésor · sur la page Course, en 📺 Visite, avec un exemple inventé (rien n’est envoyé)") + "</button>";   // v17.26 ; v17.35 : directement sur la page Course
   const fete = '<button type="button" class="ba-dec" data-bafete="1">🎅 Aperçu · le vainqueur de la chauffe (la mini-cérémonie que tout le monde verra une fois, 48 h après le dernier relevé de décembre ; exemple inventé tant que la manche n’est pas finie)</button>';   // v17.49
-  return '<div class="barre-admin"><div class="ba-h"><b>🛠️ Admin</b><div class="ba-seg">' + b("tout", "Tout afficher") + b("joueur", "Vue joueur") + b("reel", "Le réel") + "</div></div>" + plus + dec + fete + circ + tres + "<small>" + desc + "</small></div>";
+  const coupe = '<button type="button" class="ba-dec" data-bacoupe="1">🏆 Aperçu · La Coupe brisée (exemple inventé : le vrai contenu reste secret, même pour toi)</button>';   // v20.42
+  return '<div class="barre-admin"><div class="ba-h"><b>🛠️ Admin</b><div class="ba-seg">' + b("tout", "Tout afficher") + b("joueur", "Vue joueur") + b("reel", "Le réel") + "</div></div>" + plus + dec + fete + circ + tres + coupe + "<small>" + desc + "</small></div>";
 }
 function brancherBarreAdmin(v) {
   const reglerMode = m => {
@@ -876,6 +877,7 @@ function brancherBarreAdmin(v) {
   v.querySelectorAll("[data-bacirc]").forEach(x => x.addEventListener("click", () => ouvrirCircuits2027()));
   v.querySelectorAll("[data-bafete]").forEach(x => x.addEventListener("click", () => apercuFeteChauffe()));
   v.querySelectorAll("[data-batres]").forEach(x => x.addEventListener("click", () => ouvrirApercuTresor()));
+  v.querySelectorAll("[data-bacoupe]").forEach(x => x.addEventListener("click", () => apercuCoupe()));
   v.querySelectorAll("[data-badec]").forEach(x => x.addEventListener("click", () => { stock.set("versus.apercuSaison", "0"); stock.set("versus.vueJoueur", joueurAdmin()); stock.set("versus.dateSim", "2026-12-03"); ETAT.podium = "gp"; GP_ETAPE = null; garder(); location.reload(); }));
   v.querySelectorAll("[data-badate]").forEach(x => x.addEventListener("click", () => { if (x.dataset.badate) stock.set("versus.dateSim", x.dataset.badate); else stock.del("versus.dateSim"); location.reload(); }));
 }
