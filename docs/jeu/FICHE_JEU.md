@@ -34,7 +34,7 @@ Page privée https://claude.ai/artifact/GKGooSad6sJmpAhfUv65Tm : chaque règle o
 
 ## À faire (dans l'ordre)
 1. **Révélation du 1/1** (validée par Théo le 24/11) : au lieu de la fenêtre « Nouvelles règles » d'un bloc, une entrée en saison avec une règle par toucher (son, décor de Janvier). À faire en v20.25.
-2. **Nicolas**, 5ᵉ joueur, au plus tard le 1/1/2027 : son fichier + script, l'ajouter au Versus, couleur `--p4`, portrait `PRESETS_TETE.nicolas`, vérifs d'affichage.
+2. **Nicolas**, 5ᵉ joueur, au plus tard le 1/1/2027. Fait (24/11) : « Portefeuille & Épargne · Modèle vierge (ne pas partager) » (vidé à partir du fichier de Devlin, à ne jamais partager car son historique de versions garde les chiffres de Devlin) et « Portefeuille & Épargne Nicolas » (copie du modèle, historique vierge ; PEA seul, ~1 000 € sur un ETF à venir, pas d'AV au début). Reste : autoriser son script (`installerTout`, compte de Théo), l'ajouter au Versus (feuille de relevés, code, couleur `--p4`, portrait `PRESETS_TETE.nicolas`), serveur (clasp), vérifs d'affichage à 5. **Règle validée par Théo (24/11)** : un joueur entre au classement le premier mois complet où son PEA est alimenté.
 3. **Écran « La Coupe brisée »** avant janvier (serveur V49 prêt).
 4. **Refonte des badges** avant janvier : à **réduire** avec Théo à l'essentiel faisable d'ici là (le reste dans `IDEES_JEU.md`).
 5. **Teasers vidéo de décembre** (un par pan de règles, ~6/12 cartes, ~13/12 trésors + Coupe évoquée, ~20/12 écurie si prête, ~28/12 révélation des 12 univers ; couverture « VERSUS · ÉPISODE N »).
