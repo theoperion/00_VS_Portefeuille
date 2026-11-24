@@ -29,6 +29,9 @@ Le championnat entre amis : chaque mois, les pilotes (Théo, Kévin, Clément, D
 - Test : `node outils-tests/tannonce.js` (simple joueur, dates 19/12, 20/12, 31/12, 1/1, 2/1, fausses données).
 - `versus/PodiumCommun.js` garde l'ancien `annonceEtape` (sans effet sur les points) : le régénérer à la prochaine mise en ligne du serveur.
 
+## Carte des chantiers (pour Théo seulement, pas dans l'appli)
+Page privée https://claude.ai/artifact/GKGooSad6sJmpAhfUv65Tm : chaque règle ou chantier avec son état (fait, en cours, prévu, idée, réserve) et les idées que Théo y note. **Au début de chaque chantier du jeu, relire ses idées et ses états** (outil ArtifactData, collections `etats` et `idees`), et mettre à jour les états à la fin de chaque version.
+
 ## À faire (dans l'ordre)
 1. **Révélation du 1/1** (validée par Théo le 24/11) : au lieu de la fenêtre « Nouvelles règles » d'un bloc, une entrée en saison avec une règle par toucher (son, décor de Janvier). À faire en v20.25.
 2. **Nicolas**, 5ᵉ joueur, au plus tard le 1/1/2027 : son fichier + script, l'ajouter au Versus, couleur `--p4`, portrait `PRESETS_TETE.nicolas`, vérifs d'affichage.
