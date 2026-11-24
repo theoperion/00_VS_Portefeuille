@@ -5027,9 +5027,12 @@
       const p = P(i, sd, MARCHES[0][0] + .6, MARCHES[0][1] + .4); lum.push([p[0], p[1], p[2], .65, .85, 1, 9]); }
     for (let i = Math.round(30 / T.ds), n = 0; i < T.N; i += Math.round(132 / T.ds), n++) { const sd = n % 2 ? 1 : -1; if (enBaie(i)) continue;
       const o = bord(i, sd, MARCHES[2][0] + 8, MARCHES[2][0]); if (o < MARCHES[2][0] + 6) continue; const p = P(i, sd, o, HD), [nx, nz] = nrm(i), g = new Geo();
-      g.cylindre(0, 0, 0, 3.2, 2.6, 8, clair[2], .2); g.boite(0, 2.6, 0, 5, 3.2, 4.4, clair[0], .22); g.ov().boite(0, 3.6, 2.22, 2.6, 1, .1, v("#FF6A3A"), 1);
-      branche(g, [-1.1, 4.2, 1.6], [-1.1, 7.6, 7.2], .32, .22, sombre); branche(g, [1.1, 4.2, 1.6], [1.1, 7.6, 7.2], .32, .22, sombre);
-      sol.poser(g, p[0], HD, p[2], Math.atan2(-sd * nx, -sd * nz), 1); lum.push([p[0] - nx * sd * 5, HD + 8, p[2] - nz * sd * 5, 1, .35, .25, 7]); }
+      g.cylindre(0, 0, 0, 3.2, 2.6, 8, clair[2], .2); g.cylindre(0, 2.6, 0, 2.4, .5, 8, sombre, .1); sol.poser(g, p[0], HD, p[2], 0, 1);
+      // v20.46 : la tête de la tourelle pivote lentement (elle balaie le ciel), canons jumeaux, fenêtre orange du tireur
+      const h = new Geo(); h.boite(0, 0, 0, 5, 3.2, 4.4, clair[0], .22); h.boite(0, 3.2, -.4, 3.2, .7, 3, clair[1], .22); h.boite(0, 1, 2.25, 2.6, 1, .1, v("#FF6A3A"), 1);
+      branche(h, [-1.1, 1.6, 1.6], [-1.1, 5, 7.2], .32, .22, sombre); branche(h, [1.1, 1.6, 1.6], [1.1, 5, 7.2], .32, .22, sombre); h.boule(-1.1, 5, 7.2, .3, v("#FF7A5A"), 1); h.boule(1.1, 5, 7.2, .3, v("#FF7A5A"), 1);
+      rotors.push({ g: h, x: p[0], y: HD + 3.1, z: p[2], cap: Math.atan2(-sd * nx, -sd * nz), v: 0, a: { vivant: viseLeader(n % 2 ? .22 : -.18, n * .9) } });
+      lum.push([p[0] - nx * sd * 5, HD + 8, p[2] - nz * sd * 5, 1, .35, .25, 7]); }
     // blocs techniques au bord de la tranchée (ils découpent l'horizon vu du fond), avec bandes lumineuses
     for (let i = Math.round(12 / T.ds), n = 0; i < T.N; i += Math.round((50 + r() * 60) / T.ds), n++) { const sd = r() < .5 ? 1 : -1; if (enBaie(i)) continue;
       const o = bord(i, sd, MARCHES[2][0] + 8 + r() * 8, MARCHES[2][0]); if (o < MARCHES[2][0] + 6) continue; const p = P(i, sd, o, HD), w = 5 + r() * 9, l = 5 + r() * 7, h = 2.5 + r() * 4, cap = Math.atan2(-T.TZ[i], T.TX[i]), g = new Geo();
@@ -5220,6 +5223,146 @@
       branche(g, [1.8, .1, .6], [2.2, 5.4, .8], .12, .1, c, .8);
       sol.poser(g, x, HD, z, PI / 2 + .6, 3.2); lum.push([x, HD + 14, z, .7, .95, 1, 40]); occupe.push([x, z, 24]); }
 
+    // ================= 9. LA STATION VIVANTE (v20.46) : conduits, hangar plein, salle du trône à colonnes, pont de commandement et ses passerelles,
+    //                     aire d'atterrissage, conteneurs, radar, lune, astéroïdes, escadron en vol, feux qui clignotent =================
+    { const q = alea(1983), CL = [[], [], []], CH = [[], [], [], [], [], []];
+      // feux qui clignotent par 3 groupes (balises rouges) ; une ampoule éteinte sombre reste à sa place
+      const feu = (k, x, y, z, s, col) => { CL[k % 3].push([x, y, z, s, col || rougeL]); sol.boite(x, y - .05, z, s * 1.1, s * .5, s * 1.1, v("#3A1418"), .1); };
+      const mat = (x, z, h) => { const g = new Geo(); g.cylindre(0, 0, 0, 1.6, 2, 6, sombre, .1, 1.1); g.cylindre(0, 2, 0, .45, h, 5, clair[2], .25, .22); [.35, .62, .86].forEach(t => g.boite(0, h * t, 0, 2.6 - t * 1.6, .3, .3, clair[1], .25)); g.boule(0, h + 2.2, 0, .9, clair[0], .25);
+        sol.poser(g, x, HD, z, q() * TAU, 1); feu(Math.floor(q() * 3), x, HD + h + 3.2, z, 1.4); };
+
+      // ---- 9a. les conduits de la tranchée : un gros tuyau sur la face du haut, un plus fin sur l'autre gradin, colliers tous les 4 tronçons ; grilles d'aération au sol des gradins
+      for (let i = 0, n = 0; i < T.N; i += 3, n++) { const j = (i + 3) % T.N; if (enBaie(i) || enBaie(j)) continue;
+        [1, -1].forEach(sd => { const a = P(i, sd, MARCHES[2][0] - .7, 12.4), b = P(j, sd, MARCHES[2][0] - .7, 12.4); branche(sol, a, b, .6, .6, sd > 0 ? v("#A3ABB5") : v("#959DA8"), .36);
+          if (sd > 0) { const a2 = P(i, sd, MARCHES[1][0] - .45, 7.4), b2 = P(j, sd, MARCHES[1][0] - .45, 7.4); branche(sol, a2, b2, .3, .3, v("#4E5662"), .2); }
+          if (n % 4 === 0) { sol.boite(a[0], 11.6, a[2], 1.6, 1.6, 1.6, sombre, .12, Math.atan2(-T.TZ[i], T.TX[i])); so.boite(a[0], 12.2, a[2], 1.66, .3, 1.66, bleuL, 1, Math.atan2(-T.TZ[i], T.TX[i])); if (n % 8 === 0) so.quad(P(i, sd, MARCHES[2][0] - .08, 13.6), P(i, sd, MARCHES[2][0] - .08, 14.1), [P(i, sd, MARCHES[2][0] - .08, 14.1)[0] + T.TX[i] * .8, 14.1, P(i, sd, MARCHES[2][0] - .08, 14.1)[2] + T.TZ[i] * .8], [P(i, sd, MARCHES[2][0] - .08, 13.6)[0] + T.TX[i] * .8, 13.6, P(i, sd, MARCHES[2][0] - .08, 13.6)[2] + T.TZ[i] * .8], v("#7CFF8A"), 1, [0, 1, 0]); }
+          if (n % 5 === 2) { const c = P(i, sd, MARCHES[0][0] + 3, MARCHES[0][1] + .04), t = [T.TX[i], T.TZ[i]], nn = nrm(i), w = 1.6, l = 2.4, pt = (u, s) => [c[0] + t[0] * u + nn[0] * sd * s, MARCHES[0][1] + .04, c[2] + t[1] * u + nn[1] * sd * s];
+            so.quad(pt(-l, -w), pt(l, -w), pt(l, w), pt(-l, w), v("#14181E"), .05, [0, 1, 0]); for (let k = -3; k <= 3; k++) { const u = k * .6; so.quad([pt(u - .1, -w)[0], MARCHES[0][1] + .07, pt(u - .1, -w)[2]], [pt(u + .1, -w)[0], MARCHES[0][1] + .07, pt(u + .1, -w)[2]], [pt(u + .1, w)[0], MARCHES[0][1] + .07, pt(u + .1, w)[2]], [pt(u - .1, w)[0], MARCHES[0][1] + .07, pt(u - .1, w)[2]], k % 3 ? v("#5A626C") : v("#FF8A3A"), k % 3 ? .3 : .9, [0, 1, 0]); } } }); }
+
+      // ---- 9b. le hangar plein : un chasseur en croix sur ses jambes, une navette aux ailes repliées devant le portail, caisses, réservoirs, deux passerelles, feux de piste qui courent, droïde-souris
+      { const { x0, x1, z0, z1 } = HG, hx = (x0 + x1) / 2;
+        const xw = new Geo(); xw.poser(chasseurX(), 0, 0, 0, 0, 1.6); [[-1.8, 0], [2.6, 0], [-1, 1.6], [-1, -1.6]].forEach(([a, b]) => xw.boite(a, -3.2, b, .35, 2.8, .35, sombre, .1));
+        sol.poser(xw, x1 - 15, 3.2, z0 + 22, PI / 2, 1); lum.push([x1 - 15, 8, z0 + 22, .9, .9, 1, 16]);
+        // l'échelle d'accès et le petit chariot de maintenance à côté
+        { const e = new Geo(); for (let k = 0; k < 6; k++) e.boite(0, k * .9, 0, 1.6, .12, .3, v("#F0C040"), .4); e.boite(-.8, 0, 0, .15, 5.4, .15, v("#F0C040"), .4); e.boite(.8, 0, 0, .15, 5.4, .15, v("#F0C040"), .4); sol.poser(e, x1 - 8, 0, z0 + 25, .3, 1); }
+        { const c = new Geo(); c.boite(0, .5, 0, 3.4, 1.4, 2, v("#B04A3A"), .3); c.boite(-.6, 1.9, 0, 1.8, 1, 1.6, v("#5A606A"), .25); c.ov().boite(.8, 1.92, 0, .8, .06, .6, vertL, 1); [[-1.2, -1], [1.2, -1], [-1.2, 1], [1.2, 1]].forEach(([a, b]) => c.cylindre(a, 0, b, .45, .5, 6, sombre)); sol.poser(c, x1 - 26, 0, z0 + 34, .5, 1); }
+        // la navette (nez vers le portail sud, ailes repliées)
+        sol.poser(navette(), hx, .1, z1 - 34, -PI / 2, 1.5); lum.push([hx, 14, z1 - 34, .85, .9, 1, 26]);
+        // caisses empilées le long des murs (teintes sable, bandes jaunes), réservoirs à l'est
+        const caisse = (x, z, s, cap, n) => { for (let k = 0; k < n; k++) { const c = [v("#8A7A5E"), v("#6E6658"), v("#9A8E70"), v("#5E6A74")][Math.floor(q() * 4)]; sol.boite(x + (q() - .5) * .4, k * s, z + (q() - .5) * .4, s, s, s, c, .22, cap + (q() - .5) * .2); so.boite(x, k * s + s * .45, z, s + .04, s * .12, s + .04, v("#E0B040"), .5, cap); } };
+        [[x0 + 5, z0 + 60, 3.2, 3], [x0 + 5, z0 + 64, 3.2, 2], [x0 + 9, z0 + 60, 2.6, 1], [x0 + 5, z1 - 70, 3.6, 2], [x0 + 5, z1 - 66, 3.6, 3], [x0 + 9.5, z1 - 68, 2.4, 2], [x1 - 5, z1 - 64, 3, 2], [x0 + 5, z0 + 120, 2.8, 4], [x0 + 8.6, z0 + 121, 2.8, 2]].forEach(([x, z, s, n], k) => caisse(x, z, s, k * .7, n));
+        for (let k = 0; k < 3; k++) { const z = z0 + 112 + k * 9, x = x1 - 6; sol.cylindre(x, 0, z, 3.4, 9, 10, k % 2 ? v("#C4C9D0") : v("#B8BEC6"), .3, 3.4); sol.boule(x, 9, z, 3.4, v("#C4C9D0"), .3, .4); so.cylindre(x, 6, z, 3.46, .6, 10, rougeL, .9); branche(sol, [x - 3.3, 2, z], [x - 9, .4, z + 4], .3, .3, v("#2A2E36"), .1); }
+        // deux passerelles au ras du pont (rambardes, feux rouges dessous) : on les voit d'en haut, le cargo passe dessous
+        [z0 + 44, z1 - 58].forEach((zp, k) => { sol.boite(hx, HD - 1.2, zp, x1 - x0 + 2, 1.2, 4.2, v("#3A4250"), .15); [-2, 2].forEach(e => { sol.boite(hx, HD, zp + e, x1 - x0 + 2, 1.1, .2, clair[0], .25); for (let x = x0 + 4; x < x1; x += 5) sol.boite(x, HD, zp + e, .2, 1.1, .2, clair[0], .25); });
+          for (let x = x0 + 8, m = 0; x < x1 - 4; x += 12, m++) feu(m + k, x, HD - 1.6, zp, .7); });
+        // feux de piste au sol, qui courent vers le portail (6 groupes allumés à tour de rôle)
+        for (let z = z0 + 8, m = 0; z < z1 - 4; z += 9, m++) [-14, 14].forEach(e => CH[m % 6].push([hx + e, .1, z]));
+        // le droïde-souris qui fait l'aller-retour, et un astromécano dont le dôme tourne
+        { const s = new Geo(); s.boite(0, .1, 0, 2.2, 1.1, 1.5, v("#1A1C22"), .1); s.boite(.6, 1.2, 0, .8, .25, .9, v("#2E323A"), .15); s.boite(1.12, .5, 0, .06, .3, .9, v("#FF4A4A"), 1); s.boite(-1.12, .5, -.4, .06, .2, .2, v("#7CD8FF"), 1);
+          const za = z0 + 150, zb = z1 - 50, xm = x0 + 16; rotors.push({ g: s, x: xm, y: 0, z: za, cap: 0, v: 0, a: { p: 14, chemin: [[0, 0, 0], [6, 0, (zb - za) * .3], [0, 0, (zb - za) * .6], [-4, 0, zb - za], [0, 0, (zb - za) * .6], [6, 0, (zb - za) * .3], [0, 0, 0]], oriente: true } }); }
+        { const b = new Geo(); b.cylindre(0, 0, 0, .6, 1.1, 8, v("#F4F6F8"), .3); b.boite(0, .4, .58, .5, .4, .06, v("#2A5AD8"), .5); b.boite(-.72, 0, 0, .25, 1.3, .35, v("#E8ECEF"), .3); b.boite(.72, 0, 0, .25, 1.3, .35, v("#E8ECEF"), .3);
+          const k = 3.4, bb = new Geo(); bb.poser(b, 0, 0, 0, 0, k); sol.poser(bb, x1 - 22, 0, z1 - 82, PI / 2, 1);
+          const d = new Geo(); d.boule(0, 0, 0, .6, v("#C8D0DA"), .35, .75); d.boite(0, .12, .55, .2, .2, .12, v("#FF3A3A"), 1); d.boite(.3, .3, .45, .14, .14, .14, v("#3A3A44"), .2); const dd = new Geo(); dd.poser(d, 0, 0, 0, 0, k);
+          rotors.push({ g: dd, x: x1 - 22, y: 1.1 * k, z: z1 - 82, cap: 0, v: 1.2, a: { ax: "y" } }); } }
+
+      // ---- 9c. la salle du trône : deux rangées de colonnes sombres à filets violets, braseros rouges, tapis rouge jusqu'au trône
+      { const tx = 614; for (let k = 0; k < 6; k++) [-1, 1].forEach(sd => { const x = tx + sd * 50, z = 306 + k * 26, g = new Geo(), H = 21;
+          g.boite(0, 0, 0, 5, 1.2, 5, v("#3A3048"), .2); g.boite(0, 1.2, 0, 3.8, H, 3.8, v("#221C2E"), .14); g.boite(0, H + 1.2, 0, 5, 1.2, 5, v("#3A3048"), .2);
+          g.boite(-sd * 1.92, 3, 0, .1, H - 4, .5, v("#B890FF"), 1); g.boite(0, 3, 1.92, .5, H - 4, .1, v("#8A60D8"), .8); g.boite(0, 3, -1.92, .5, H - 4, .1, v("#8A60D8"), .8);
+          sol.poser(g, x, HD, z, 0, 1); if (k % 2 === 0) lum.push([x - sd * 3, HD + 12, z, .7, .45, 1, 14]);
+          if (k % 2) { const b = new Geo(); b.cylindre(0, 0, 0, 1.2, 2.6, 8, v("#2A2A32"), .1, 1.6); b.cylindre(0, 2.6, 0, 1.4, .5, 8, v("#FF5A3A"), 1, .9); sol.poser(b, x - sd * 7, HD, z, 0, 1); lum.push([x - sd * 7, HD + 4, z, 1, .45, .25, 10]); } });
+        for (let k = 0; k < 4; k++) { const zt = 446 - k * 32, zb = k < 3 ? 446 - (k + 1) * 32 : 336, y = HD + (k + 1) * 1.8 + .03; so.quad([tx - 5, y, zb], [tx + 5, y, zb], [tx + 5, y, zt], [tx - 5, y, zt], v("#8A1424"), .45, [0, 1, 0]);
+          so.quad([tx - 5, y - 1.8, zt + .07], [tx + 5, y - 1.8, zt + .07], [tx + 5, y, zt + .07], [tx - 5, y, zt + .07], v("#6A0E1A"), .4, [0, 0, 1]); }
+        so.quad([tx - 5, HD + .03, 446], [tx + 5, HD + .03, 446], [tx + 5, HD + .03, 462], [tx - 5, HD + .03, 462], v("#8A1424"), .45, [0, 1, 0]); }
+
+      // ---- 9d. le pont de commandement (entre le rideau et la verrière) : plate-forme, pupitres, table holographique où tourne la station, officiers en gris, deux tours reliées par une passerelle
+      { const cx = 432, cz = 182, g = new Geo();
+        g.cylindre(0, 0, 0, 26, 3, 16, v("#4A5260"), .25); g.cylindre(0, 3, 0, 24, .3, 16, v("#6A727C"), .3); so.cylindre(cx, HD + 3.02, cz, 22, .1, 16, v("#2A3040"), .2);
+        for (let k = 0; k < 16; k++) { const a = k / 16 * TAU, x = Math.cos(a) * 26.05, z = Math.sin(a) * 26.05; if (k % 2) g.boite(x, 1.4, z, .4, .4, .4, bleuL, 1); }
+        for (let k = 0; k < 10; k++) { const a = k / 10 * TAU + .3, x = Math.cos(a) * 18, z = Math.sin(a) * 18, cap = -a; if (k === 2 || k === 7) continue; g.boite(x, 3.3, z, 2, 2.2, 5, v("#2A2E36"), .12, cap); g.boite(x - Math.cos(a) * 1.05, 5.1, z - Math.sin(a) * 1.05, .1, .6, 4.4, k % 3 ? v("#7CD8FF") : v("#FF6A5A"), 1, cap); }
+        g.cylindre(0, 3.3, 0, 5.2, 2.4, 14, v("#1E222A"), .1); g.cylindre(0, 5.7, 0, 5, .12, 14, v("#3A8CFF"), .9);
+        // trois officiers (silhouettes grises, casquettes) penchés sur les pupitres
+        [[1.1, 15.5], [3.9, 15], [5.6, 15.8]].forEach(([a, d]) => { const x = Math.cos(a) * d, z = Math.sin(a) * d; g.cylindre(x, 3.3, z, .55, 1.9, 7, v("#5A606A"), .15, .45); g.boule(x, 5.6, z, .38, v("#5A606A"), .15); g.cylindre(x, 5.85, z, .42, .25, 7, v("#3A3E46"), .1); });
+        sol.poser(g, cx, HD, cz, 0, 1); lum.push([cx, HD + 10, cz, .45, .7, 1, 30]);
+        // l'hologramme de la station (sphère en anneaux, parabole, tranchée) : il tourne au-dessus de la table
+        { const h = new Geo(), c = v("#9FE0FF"), R = 3.6; for (let k = 0; k < 3; k++) { const y = (k - 1) * 1.6, rr = Math.sqrt(R * R - y * y); for (let s = 0; s < 14; s++) { const a0 = s / 14 * TAU, a1 = (s + 1) / 14 * TAU; branche(h, [Math.cos(a0) * rr, y, Math.sin(a0) * rr], [Math.cos(a1) * rr, y, Math.sin(a1) * rr], .07, .07, c, 1); } }
+          for (let s = 0; s < 6; s++) { const p = s / 6 * PI; let a = null; for (let k = 0; k <= 10; k++) { const t = k / 10 * PI, b = [Math.sin(t) * Math.cos(p) * R, Math.cos(t) * R, Math.sin(t) * Math.sin(p) * R]; if (a) branche(h, a, b, .06, .06, c, 1); a = b; } }
+          h.cylindre(1.9, .9, 1.9, 1.1, .2, 10, v("#7CFF8A"), 1, .3); h.boite(0, -.15, 0, R * 2.1, .3, .25, v("#CFEFFF"), 1);
+          rotors.push({ g: h, x: cx, y: HD + 10.2, z: cz, cap: 0, v: .5, a: { ax: "y", bob: [.3, 1.2] } }); }
+        // deux tours de communication et la passerelle haute qui les relie (rambardes, balises)
+        [[352, 142], [512, 142]].forEach(([x, z], k) => { const t = new Geo(); t.cylindre(0, 0, 0, 6, 26, 10, v("#5A626C"), .24, 4.6); t.cylindre(0, 26, 0, 6.4, 3, 10, v("#7A828C"), .28); t.ov().cylindre(0, 27.2, 0, 6.46, .6, 10, bleuL, 1);
+          for (let y = 5; y < 24; y += 4.5) t.ov().boite(0, y, 5.1 - y * .02, 1.4, .8, .1, jaune, .9); t.cylindre(0, 29, 0, .3, 9, 5, clair[0], .25); sol.poser(t, x, HD, z, k * PI, 1); feu(k, x, HD + 38.4, z, 1.2); feu(k + 1, x, HD + 30, z + 6.6, .8); });
+        { const y = HD + 22, za = 142; sol.boite(432, y, za, 148, 1.1, 3.4, v("#3A4250"), .18); [-1.6, 1.6].forEach(e => { sol.boite(432, y + 1.1, za + e, 148, .15, .15, clair[0], .3); for (let x = 362; x <= 502; x += 4) sol.boite(x, y + 1.1, za + e, .12, 1.1, .12, clair[1], .25); });
+          for (let x = 366; x < 500; x += 10) so.quad([x, y - .02, za - .8], [x + 2, y - .02, za - .8], [x + 2, y - .02, za + .8], [x, y - .02, za + .8], rougeL, 1, [0, -1, 0]);
+          branche(sol, [432, y, za + 1.7], [432, HD + 3, cz - 26], .5, .5, v("#3A4250"), .18); branche(sol, [432, y - 3, za], [432, HD + 3, cz - 24], .25, .25, clair[2], .25); } }
+
+      // ---- 9e. au-delà de la piste : aire d'atterrissage (une navette se pose et repart), conteneurs, grand radar, mâts à balises
+      { const ax = 300, az = 652, R = 28;
+        for (let k = 0; k < 32; k++) { const a0 = k / 32 * TAU, a1 = (k + 1) / 32 * TAU, p = (a, rr, y) => [ax + Math.cos(a) * rr, y, az + Math.sin(a) * rr];
+          sol.quad(p(a0, 0, HD + .6), p(a0, R, HD + .6), p(a1, R, HD + .6), p(a1, 0, HD + .6), v("#3A404A"), .2, [0, 1, 0]); sol.quad(p(a0, R, HD), p(a1, R, HD), p(a1, R, HD + .6), p(a0, R, HD + .6), v("#2A2E36"), .15, [Math.cos(a0), 0, Math.sin(a0)]);
+          so.quad(p(a0, R - 3.4, HD + .63), p(a0, R - 2.4, HD + .63), p(a1, R - 2.4, HD + .63), p(a1, R - 3.4, HD + .63), v("#E0B040"), .7, [0, 1, 0]); if (k % 4 === 0) feu(k / 4, p(a0, R - .9, 0)[0], HD + .9, p(a0, R - .9, 0)[2], .8, v("#FFE6A8")); }
+        [[-1, 0], [1, 0]].forEach(([e]) => so.quad([ax + e * 9 - 1, HD + .64, az - 10], [ax + e * 9 + 1, HD + .64, az - 10], [ax + e * 9 + 1, HD + .64, az + 10], [ax + e * 9 - 1, HD + .64, az + 10], v("#E0B040"), .7, [0, 1, 0])); so.quad([ax - 9, HD + .64, az - 1], [ax + 9, HD + .64, az - 1], [ax + 9, HD + .64, az + 1], [ax - 9, HD + .64, az + 1], v("#E0B040"), .7, [0, 1, 0]);
+        const nv = new Geo(); nv.poser(navette(), 0, 0, 0, 0, 1.7);
+        rotors.push({ g: nv, x: ax, y: HD + .7, z: az, cap: 2.4, v: 0, a: { p: 28, chemin: [[0, 90, -60], [0, 46, -24], [0, 18, -6], [0, 5, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 5, 0], [0, 18, 6], [0, 46, 24], [0, 90, 60]], vis: [.03, .97] } });
+        lum.push([ax, HD + 12, az, .9, .85, .6, 34]); }
+      { const bx = 640, bz = 640; for (let a = 0; a < 4; a++) for (let b = 0; b < 3; b++) { const n = 1 + Math.floor(q() * 3), c = [v("#8A3A2E"), v("#3A5A7A"), v("#7A7A6A"), v("#4A6A4A")][Math.floor(q() * 4)];
+          for (let k = 0; k < n; k++) { const x = bx + a * 15, z = bz + b * 7.5, cap = (q() - .5) * .08; sol.boite(x, HD + k * 6, z, 13, 6, 6.6, mel(c, [0, 0, 0], k * .12), .2, cap); so.boite(x, HD + k * 6 + 4.6, z, 13.06, .4, 6.66, v("#D8DCE0"), .35, cap); } }
+        lum.push([bx + 22, HD + 20, bz + 8, 1, .8, .55, 30]); }
+      { const rx = 860, rz = 160, t = new Geo(); t.cylindre(0, 0, 0, 9, 4, 10, v("#4A5260"), .2, 8); t.cylindre(0, 4, 0, 3.2, 26, 8, v("#6A727C"), .25, 2.4); t.ov().cylindre(0, 18, 0, 2.86, .6, 8, bleuL, 1);
+        sol.poser(t, rx, HD, rz, 0, 1); feu(2, rx, HD + 31, rz, 1.4);
+        const d = new Geo(); for (let a = 0; a < 3; a++) for (let s = 0; s < 14; s++) { const r0 = a * 4, r1 = (a + 1) * 4, p0 = s / 14 * PI - PI / 2, p1 = (s + 1) / 14 * PI - PI / 2, Q = (rr, p) => [-2 - rr * rr * .04 + 0, Math.sin(p) * rr, Math.cos(p) * rr];
+          d.quad(Q(r0, p0), Q(r0, p1), Q(r1, p1), Q(r1, p0), a % 2 ? v("#C4CBD3") : v("#AEB6C0"), .3, [1, 0, 0]); }
+        d.boite(0, -1, 0, 3, 2, 3, v("#3A424C"), .2); branche(d, [-2, 0, 0], [5, 0, 0], .2, .1, clair[0], .3); d.boule(5.2, 0, 0, .5, rougeL, 1);
+        rotors.push({ g: d, x: rx, y: HD + 32, z: rz, cap: 0, v: .4, a: { ax: "y" } }); lum.push([rx, HD + 22, rz, .5, .8, 1, 20]); }
+      [[820, 470], [130, 620], [960, 620], [-30, 200], [760, -150], [20, -40], [520, 760], [1000, 40]].forEach(([x, z]) => { if (trou(x, z, true) || T.dist(x, z) < 50) return; mat(x, z, 14 + q() * 16); });
+
+      // ---- 9g. la batterie de turbolasers (derrière le rideau rouge) : socle à deux étages, tête qui pivote, deux longs canons, paraboles d'angle
+      { const bx = 248, bz = 194, g = new Geo();
+        g.boite(0, 0, 0, 24, 5, 24, v("#5C646E"), .24); g.boite(0, 5, 0, 15, 5, 15, v("#6C747F"), .26); g.cylindre(0, 10, 0, 5.6, 1.2, 12, sombre, .1);
+        [-1, 1].forEach(a => [-1, 1].forEach(b => { g.boite(a * 9.5, 5, b * 9.5, 3.4, 1.6, 3.4, v("#4A525C"), .2); g.cylindre(a * 9.5, 6.6, b * 9.5, .3, 1.6, 5, clair[0], .25); g.boule(a * 9.5, 8.6, b * 9.5, 1.5, clair[1], .3, .35); }));
+        for (let k = 0; k < 4; k++) { const a = k / 4 * TAU; g.ov().boite(Math.cos(a) * 12.05, 2.2, Math.sin(a) * 12.05, Math.abs(Math.sin(a)) * 16 + .1, .4, Math.abs(Math.cos(a)) * 16 + .1, v("#CFEFFF"), 1); }
+        for (let k = 0; k < 5; k++) g.boite(-11.4 + k * .1, k * 1, 12.4 + k * .9, 2.4, 1, .9, v("#4A525C"), .2);   // un escalier de service
+        sol.poser(g, bx, HD, bz, .35, 1); lum.push([bx, HD + 18, bz, .55, .8, 1, 26]); feu(0, bx + 6, HD + 11.6, bz - 6, 1); feu(2, bx - 6, HD + 11.6, bz + 6, 1);
+        const h = new Geo(); h.boite(0, 0, 0, 9, 4.6, 8, clair[0], .26); h.boite(-1, 4.6, 0, 5, 1.4, 5, clair[1], .26); h.boite(4.55, 1.8, 0, .1, 1.2, 4, v("#FF6A3A"), 1);
+        [-1.8, 1.8].forEach(z => { branche(h, [3, 2.2, z], [22, 5.6, z], .7, .45, sombre); h.boite(21.5, 5, z, 1.4, 1.2, 1.4, v("#2A2E36"), .1); h.boule(22.4, 5.7, z, .45, vertL, 1); });
+        rotors.push({ g: h, x: bx, y: HD + 11.2, z: bz, cap: 1.2, v: .12, a: { ax: "y" } }); }
+      // ---- 9h. le pont de la station vu de près : trappes cerclées de bleu, grilles d'aération, bandes de guidage (à plat, le sol reste net)
+      libreSol.forEach(([x, z, , s]) => { const m = s / 30;
+        for (let a = 0; a < m; a++) for (let b = 0; b < m; b++) { const u0 = x + a * 30, w0 = z + b * 30, cx = u0 + 15, cz = w0 + 15, y = HD + .06; if (occupe.some(o => Math.hypot(cx - o[0], cz - o[1]) < o[2] + 12) || q() > .42) continue;
+          const t = q(), U = u0 + 4 + q() * 14, W = w0 + 4 + q() * 14, Qd = (x0, z0, x1, z1, c, e, yy) => so.quad([x0, yy || y, z0], [x1, yy || y, z0], [x1, yy || y, z1], [x0, yy || y, z1], c, e, [0, 1, 0]);
+          if (t < .4) { Qd(U, W, U + 8, W + 8, v("#565E68"), .3); [[U, W, U + 8, W + .35], [U, W + 7.65, U + 8, W + 8], [U, W, U + .35, W + 8], [U + 7.65, W, U + 8, W + 8]].forEach(([a0, b0, a1, b1]) => Qd(a0, b0, a1, b1, v("#9FD8FF"), .8, y + .01)); Qd(U + 3.4, W + 3.4, U + 4.6, W + 4.6, q() < .3 ? rougeL : v("#D8F2FF"), 1, y + .01); }
+          else if (t < .75) { Qd(U, W, U + 9, W + 4.4, v("#3A4048"), .2); for (let k = 0; k < 7; k++) Qd(U + .6 + k * 1.2, W + .5, U + 1.1 + k * 1.2, W + 3.9, v("#7E8690"), .35, y + .01); }
+          else { const vert = q() < .5; for (let k = 0; k < 5; k++) vert ? Qd(U + 2, W + k * 4.6 - 6, U + 2.7, W + k * 4.6 - 3.4, jaune, .6) : Qd(U + k * 4.6 - 6, W + 2, U + k * 4.6 - 3.4, W + 2.7, jaune, .6); } } });
+      // ---- 9f. le ciel : une lune grise criblée de cratères près de la planète, trois champs d'astéroïdes qui dérivent, un escadron qui patrouille à droite
+      { const mx = -270, my = 125, mz = -240, R = 56, nla = 10, nlo = 18, sun = norme([1, .35, .9]);
+        for (let i = 0; i < nla; i++) for (let j = 0; j < nlo; j++) { const t0 = i / nla * PI, t1 = (i + 1) / nla * PI, p0 = j / nlo * TAU, p1 = (j + 1) / nlo * TAU;
+          const Pp = (t, p) => [mx + Math.sin(t) * Math.cos(p) * R, my + Math.cos(t) * R, mz + Math.sin(t) * Math.sin(p) * R], nn = norme(sous(Pp((t0 + t1) / 2, (p0 + p1) / 2), [mx, my, mz]));
+          const jour = Math.max(0, point(nn, sun)), cr = h3(i, j, 9) < .22, c = mel(cr ? v("#5A5E66") : v("#8E939C"), v("#F0F2F6"), jour * .5);
+          const a = Pp(t0, p0), b = Pp(t0, p1), cc = Pp(t1, p1), d = Pp(t1, p0); if (i === 0) sol.tri(a, cc, d, c, .55 + jour * .35, nn); else if (i === nla - 1) sol.tri(a, b, cc, c, .55 + jour * .35, nn); else sol.quad(a, b, cc, d, c, .55 + jour * .35, nn); }
+        for (let k = 0; k < 9; k++) { const t = .5 + q() * 2, p = q() * TAU, nn = [Math.sin(t) * Math.cos(p), Math.cos(t), Math.sin(t) * Math.sin(p)], o = [mx + nn[0] * (R + .3), my + nn[1] * (R + .3), mz + nn[2] * (R + .3)], u = norme(croix(nn, [0, 1, 0])), w = croix(nn, u), rr = 3 + q() * 7;
+          for (let s = 0; s < 8; s++) { const a0 = s / 8 * TAU, a1 = (s + 1) / 8 * TAU; so.tri(o, [o[0] + (u[0] * Math.cos(a0) + w[0] * Math.sin(a0)) * rr, o[1] + (u[1] * Math.cos(a0) + w[1] * Math.sin(a0)) * rr, o[2] + (u[2] * Math.cos(a0) + w[2] * Math.sin(a0)) * rr], [o[0] + (u[0] * Math.cos(a1) + w[0] * Math.sin(a1)) * rr, o[1] + (u[1] * Math.cos(a1) + w[1] * Math.sin(a1)) * rr, o[2] + (u[2] * Math.cos(a1) + w[2] * Math.sin(a1)) * rr], v("#4E525A"), .5, nn); } } }
+      [[-150, 46, -170, 110, 13], [540, 60, -270, 120, 14], [960, 40, -320, 90, 10]].forEach(([cx, cy, cz, RR, n], k) => { const g = new Geo();
+        for (let s = 0; s < n; s++) { const a = q() * TAU, d = 20 + q() * RR, x = Math.cos(a) * d, z = Math.sin(a) * d, y = (q() - .5) * 40, rr = 2 + q() * q() * 12, c = mel(v("#4A4038"), v("#7A7068"), q());
+          g.boule(x, y, z, rr, c, .3, .55 + q() * .5, 1); if (rr > 6) g.boule(x + rr * .5, y + rr * .2, z - rr * .3, rr * .55, mel(c, [0, 0, 0], .15), .3, .7); }
+        rotors.push({ g, x: cx, y: cy, z: cz, cap: q() * TAU, v: (k % 2 ? -1 : 1) * (.035 + k * .01), a: { ax: "y", bob: [3, .2], ph: k * .3 } }); });
+      { const C = [960, 70, 300], rx = 150, rz = 250, NP = 24, chem = []; for (let k = 0; k <= NP; k++) { const a = k / NP * TAU; chem.push([Math.cos(a) * rx, Math.sin(a * 2) * 8, Math.sin(a) * rz]); }
+        const xw = new Geo(); xw.poser(chasseurX(), 0, 0, 0, 0, 2.2); const tie = new Geo(); tie.poser(chasseurTIE(), 0, 0, 0, 0, 2);
+        [[0, 0, 0], [-.012, 9, 0], [-.012, -9, 0], [-.024, 18, 4], [-.024, -18, 4]].forEach(([dph, dl, dy], k) => rotors.push({ g: xw, x: C[0] + dl, y: C[1] + dy, z: C[2], cap: 0, v: 0, a: { p: 34, ph: dph, chemin: chem, oriente: true, bob: [1.2, .9 + k * .13] } }));
+        [-.07, -.085].forEach((dph, k) => rotors.push({ g: tie, x: C[0] + (k ? 7 : -7), y: C[1] + 6, z: C[2], cap: 0, v: 0, a: { p: 34, ph: dph, chemin: chem, oriente: true, bob: [1.6, 1.3] } }));
+        lum.push([C[0] + rx, C[1], C[2], .55, .75, 1, 20]); }
+
+      // ---- 9i. DÉCOR VIVANT : un chasseur ennemi talonne le PREMIER dans la tranchée et lui tire des rafales vertes (en Visite sans voitures, il patrouille seul)
+      { const tie = new Geo(); tie.poser(chasseurTIE(), 0, 0, 0, 0, 1.9); tie.boule(-3.2, 0, 0, 1.1, v("#FF5A3A"), 1);
+        const tir = new Geo(); [-1.1, 1.1].forEach(z => { tir.boite(0, -.5, z, 9, 1, 1, v("#9CFFA8"), 1); tir.boite(-6, -.3, z, 3, .6, .6, vertL, 1); });
+        rotors.push({ g: tie, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant: (r, t, C) => { const c = chasse(r.mem || (r.mem = {}), t, C); r.x = c.p.x; r.y = c.y; r.z = c.p.z; r.cap = c.cap; return matRotor(r, t); } } });
+        rotors.push({ g: tir, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant: (r, t, C) => { const c = chasse(r.mem || (r.mem = {}), t, C), f = (t / .9) % 1; if (f > .42) return null; const k = f / .42;
+          r.x = c.p.x + (c.cible[0] - c.p.x) * k; r.y = c.y + (c.cible[1] - c.y) * k; r.z = c.p.z + (c.cible[2] - c.p.z) * k; r.cap = Math.atan2(-(c.cible[2] - c.p.z), c.cible[0] - c.p.x); return matRotor(r, t); } } }); }
+
+      // ---- les feux qui clignotent (3 groupes décalés) et les feux de piste du hangar qui courent (6 groupes)
+      CL.forEach((L, k) => { const g = new Geo(); L.forEach(([x, y, z, s, c]) => g.boite(x, y, z, s, s * .8, s, c, 1)); rotors.push({ g, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { clig: [1.8, .4], ph: k / 3 } }); });
+      CH.forEach((L, k) => { const g = new Geo(); L.forEach(([x, y, z]) => g.boite(x, y, z, 1.6, .18, 1.6, v("#FFE6A8"), 1)); rotors.push({ g, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { clig: [1.2, .3], ph: -k / 6 } });
+        L.forEach(([x, , z]) => so.quad([x - .8, .08, z - .8], [x + .8, .08, z - .8], [x + .8, .08, z + .8], [x - .8, .08, z + .8], v("#5A4A2C"), .3, [0, 1, 0])); }); }
+
     // les cubes génériques du décor n'ont rien à faire ici : toute la zone est déclarée occupée
     for (let a = -700; a <= 1500; a += 150) for (let b = -700; b <= 1300; b += 150) occupe.push([a, b, 115]);
     return occupe;
@@ -5235,6 +5378,27 @@
       [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([a, b]) => { const M = X([-1.6, 0, 0], [1, 0, 0], [0, Math.cos(.26 * a), Math.sin(.26 * a)], [0, -Math.sin(.26 * a), Math.cos(.26 * a)]);
         blocX(g, M, 0, 0, b * 2.8, 2.4, .18, 4.6, blanc, .12); blocX(g, M, .3, .12, b * 2.2, 1.4, .05, .9, rouge, .4); blocX(g, M, -.6, 0, b * 1.4, 2.4, .7, .7, blanc, .12);
         blocX(g, M, -2, 0, b * 1.4, .3, .5, .5, v("#FF7A9A"), 1); blocX(g, M, 2.4, 0, b * 5, 3, .12, .12, v("#9AA3AE"), .12); });
+      return g; }
+    // v20.46 · décor vivant (crochet unique a.vivant, voir contexteVivant) : la position du chasseur qui talonne le premier (pure, lissée dans m : le chasseur et ses tirs calculent la même chose)
+    function chasse(m, t, C) { const dt = m.t === undefined ? 0 : Math.min(.1, Math.max(0, t - m.t)); m.t = t;
+      const L = C.V.length ? C.premier() : null, but = L ? L.s - 30 : t * 40;
+      if (m.s === undefined || Math.abs(but - m.s) > 240) m.s = but; else m.s += (but - m.s) * (1 - Math.exp(-dt * 5));
+      const p = T.a(m.s, Math.sin(t * 1.3) * 2.6), y = (p.y || 0) + 12 + Math.sin(t * 2.1) * .8, q = L ? [L.x, L.y + 1.2, L.z] : (() => { const a = T.a(m.s + 26, 0); return [a.x, a.y + 1, a.z]; })();
+      return { p, y, cap: Math.atan2(-p.tz, p.tx), cible: q }; }
+    // v20.46 · décor vivant : une tourelle balaie le ciel lentement, et se tourne vers le PREMIER quand il passe à moins de 220 m
+    function viseLeader(vit, ph) { return (r, t, C) => { const m = r.mem || (r.mem = {}); if (m.c0 === undefined) { m.c0 = r.cap; m.c = r.cap + ph; }
+      const dt = m.t === undefined ? 0 : Math.min(.1, Math.max(0, t - m.t)); m.t = t; let but = m.c0 + ph + t * vit;
+      if (C.V.length) { const L = C.premier(), dx = L.x - r.x, dz = L.z - r.z; if (dx * dx + dz * dz < 220 * 220) but = Math.atan2(dx, dz); }
+      const d = ((but - m.c) % TAU + 3 * PI) % TAU - PI; m.c += Math.max(-2.4 * dt, Math.min(2.4 * dt, d)); r.cap = m.c; return matRotor(r, t); }; }
+    // v20.46 · la navette aux ailes repliées (nez vers +x, posée sur ses trois patins) : fuselage, cockpit vitré, grand aileron dorsal, deux ailes relevées
+    function navette() { const g = new Geo(), b = v("#D6DAE0"), b2 = v("#A8AEB8"), n = v("#2A2E36");
+      g.boite(0, 1.6, 0, 9, 3, 4.4, b, .3); g.boite(5.8, 1.9, 0, 2.6, 2.2, 3, b, .3); g.boite(7.12, 2.4, 0, .1, .9, 2.2, v("#9FE0FF"), .9); g.boite(-4.9, 2, 0, .8, 2.2, 3.2, b2, .25);
+      [-1.1, 1.1].forEach(z => g.boite(-5.35, 2.4, z, .1, 1.2, .8, v("#9FE0FF"), 1));
+      g.bloc([[-4, 4.6, -.25], [2.4, 4.6, -.25], [2.4, 4.6, .25], [-4, 4.6, .25], [-4.6, 14, -.2], [-1.6, 14, -.2], [-1.6, 14, .2], [-4.6, 14, .2]], b, .3);
+      g.ov().boite(-2.6, 11.5, 0, 2.2, .3, .55, v("#B04A3A"), .3);
+      [-1, 1].forEach(sd => { g.bloc([[-3.4, 3.2, sd * 2.2], [2.2, 3.2, sd * 2.2], [2.2, 3.6, sd * 2.2], [-3.4, 3.6, sd * 2.2], [-4.6, 11.4, sd * 4.4], [-1.2, 11.4, sd * 4.4], [-1.2, 11.4, sd * 4.8], [-4.6, 11.4, sd * 4.8]], b2, .28);
+        g.boite(-2.9, 11.4, sd * 4.6, 3, .3, .5, v("#FF7A9A"), .8); });
+      [[3.5, 0], [-3, -1.4], [-3, 1.4]].forEach(([a, c]) => { g.boite(a, 0, c, .4, 1.6, .4, n, .1); g.boite(a, 0, c, 1.2, .2, 1.2, n, .1); });
       return g; }
   }
 
@@ -8530,9 +8694,19 @@
           if (q > .7) { const z = (q - .7) / .3; g.querySelector(".eclat").setAttribute("opacity", O.f(Math.sin(z * Math.PI))); g.querySelector(".eclat").setAttribute("transform", "rotate(" + O.f(z * 90) + " 0 48)"); }
           if (q > .85) g.setAttribute("opacity", O.f((1 - q) / .15));
           b.placer(p[0], p[1] + r + 50); if (q > .62) b.setAttribute("opacity", O.f(Math.max(0, 1 - (q - .62) / .15))); }, () => { g.remove(); b.remove(); }); } }; },
-    /* juin · le chasseur du vainqueur fait un looping au-dessus de la ligne */
-    etoiles(x) { const O = outilsEv(x); let fait = false;
-      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("etoiles"); const n = O.premier(c), p = O.voiture(n); if (!p) return; const col = (x.V[n] && x.V[n].couleur) || "#4C9AFF", r = O.rp();
+    /* juin · DÉCOR VIVANT (v20.46, comme en 3D) : pendant la course, un chasseur ennemi talonne le PREMIER dans la tranchée et lui tire des rafales vertes
+       (il change de proie quand le premier change) ; à l'arrivée, il disparaît et le chasseur du vainqueur fait un looping au-dessus de la ligne */
+    etoiles(x) { const O = outilsEv(x); let fait = false, tie = null, sT = null, t0 = 0;
+      const ote = () => { if (tie) { tie.remove(); tie = null; } sT = null; };
+      const chasse = c => { const n = O.premier(c); if (!n || !c[n]) return; const cible = O.voiture(n); if (!cible) return; const r = O.rp(), but = c[n].s - 34, now = performance.now();
+        if (!tie) { t0 = now; tie = O.el('<line class="tir" stroke="#7CFF8A" stroke-width="5" stroke-linecap="round" opacity="0"/><line class="tir2" stroke="#E8FFE0" stroke-width="2" stroke-linecap="round" opacity="0"/>' +
+          '<g class="tie"><path d="M-7 -14H7M-7 14H7" stroke="#2E333C" stroke-width="5" stroke-linecap="round"/><path d="M-6 -14H6M-6 14H6" stroke="#8A929C" stroke-width="1.4"/><path d="M0 -12V12" stroke="#5A606A" stroke-width="2.4"/><circle r="6" fill="#8A929C" stroke="#1B1D22" stroke-width="1.4"/><circle cx="2.4" r="2.6" fill="#1B1D22"/><circle cx="-6.5" r="1.8" fill="#FF6A3A"/></g>'); }
+        sT = sT === null || Math.abs(but - sT) > 200 ? but : sT + (but - sT) * .18;   // il glisse vers sa nouvelle proie, sans sauter
+        const a = O.pt(sT, Math.sin(now / 420) * 2), b = O.pt(sT + 2, Math.sin(now / 420) * 2), d = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI, k = r / 9;
+        tie.querySelector(".tie").setAttribute("transform", "translate(" + O.f(a[0]) + " " + O.f(a[1]) + ") rotate(" + O.f(d) + ") scale(" + O.f(k) + ")");
+        const f = ((now - t0) / 700) % 1, vu = f < .45, u0 = Math.min(1, f / .45), u1 = Math.max(0, u0 - .3);
+        tie.querySelectorAll("line").forEach(l => { l.setAttribute("opacity", vu ? ".95" : "0"); if (!vu) return; l.setAttribute("x1", O.f(a[0] + (cible[0] - a[0]) * u1)); l.setAttribute("y1", O.f(a[1] + (cible[1] - a[1]) * u1)); l.setAttribute("x2", O.f(a[0] + (cible[0] - a[0]) * u0)); l.setAttribute("y2", O.f(a[1] + (cible[1] - a[1]) * u0)); }); };
+      return { raz() { fait = false; ote(); }, maj(e, c, en) { if (en && x.anime && !fait && e < .985) chasse(c); else ote(); if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("etoiles"); const n = O.premier(c), p = O.voiture(n); if (!p) return; const col = (x.V[n] && x.V[n].couleur) || "#4C9AFF", r = O.rp();
         const V = O.vue(), dir = p[0] > (V[0] + V[2]) / 2 ? -1 : 1, R = 70;
         const pos = q => { const a = q * Math.PI * 2, s = Math.sin(q * Math.PI); return [p[0] + dir * (-170 + q * 340) + dir * Math.sin(a) * R * s, p[1] - 10 + (1 - Math.cos(a)) * R * s * (p[1] - V[1] < 2 * R + 30 ? 1 : -1)]; };
         const trace = O.el('<path fill="none" stroke="' + col + '" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><path fill="none" stroke="' + col + '" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>');
