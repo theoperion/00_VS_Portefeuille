@@ -86,6 +86,8 @@ Dernier d'un mois → **1 carte bonus**, jouable dès le mois suivant, une fois 
 - **La route des 4 mondes** : chaque exclusif est une **carte de collection** unique (texte d'ambiance, fragment d'histoire réservé à son détenteur) ; les défis et 12 trophées de monde sont des **badges** pour tous ; chacun a sa **vitrine** sur sa fiche.
 - **Écurie** : purement cosmétique, débloquée par les défis et les exclusifs.
 - **Trophées** : défis 🥉🥈🥇💎 acquis pour toujours ; **exclusifs** 💎 pour le premier qui réussit (même mois : chacun) ; **👑 premier millionnaire** (patrimoine financier, montant jamais montré). Le serveur refait tous les calculs (anti-triche).
+- **⚔️ Titres** (v20.45, ex-« couronnes ») : 🚩 le Drapeau de tête (leader du championnat), 🔥 la Flamme (plus longue série sans finir dernier), 🔍 le Flair (meilleur chercheur de trésors) ; ils se volent chaque mois, aucun point. Le 👑 reste réservé au Premier millionnaire.
+- **🎫 Ticket d'or** (🍫 Chocolaterie, octobre 2027) : une tablette à déballer par jour et par pilote ; 5 tickets pour la saison, posés à l'avance sur 5 jours tirés au sort par le serveur (graine secrète ; son empreinte SHA-256 est dans les règles de l'appli dès le 1/1/2027, la graine et les jours sont dévoilés après le 31/10) ; le premier qui déballe à partir du jour d'un ticket le gagne, un seul par pilote ; un ticket encore caché le 31 au soir est perdu. Aucun point : cérémonie, badge 🎫, plaque « Ticket d'or ».
 
 ---
 

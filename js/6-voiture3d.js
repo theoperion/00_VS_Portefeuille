@@ -188,6 +188,8 @@ function rendreTrophees() {
   }
   if (saisonOuverte() && !stock.get("versus.saison1")) { stock.set("versus.saison1", "1"); toast("🏁 Saison 1 : c'est parti !"); confettis("damier"); }
   majRappels();
+  // v20.47 · 🎫 tickets d'or (badges, plaque de l'Écurie) : chargés une fois à partir d'octobre 2027, puis on redessine
+  if (typeof chargerTickets === "function" && !TICKETS && Date.now() >= TICKET_MOIS.debut.getTime()) chargerTickets().then(() => { if (TICKETS && vueActive() === "trophees" && ongletPodium() !== "gp") rendreTrophees(); }).catch(() => {});
   if (!saisonOuverte() && chauffeOuverte() && !janvierAnnonce() && !apercuSaison() && !stock.get("versus.chauffe1")) { stock.set("versus.chauffe1", "1"); toast("🔥 Tour de chauffe : essaie tout, rien ne compte !"); confettis("damier"); }
 }
 

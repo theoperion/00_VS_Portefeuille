@@ -1218,6 +1218,7 @@ function brancherGP(v, y) {
   const cal = v.querySelector("#gp-calend"); if (cal) cal.addEventListener("toggle", () => { ETAT.calOuvert = cal.open ? "1" : "0"; garder(); });
   GP_ETQ = null;
   if (GP_PLEIN) placerPlein(y);
+  chargerTickets(); poserTabletteDOM(document);   // v20.47 : 🎫 la tablette du jour (Chocolaterie, octobre 2027)
   chargerTresors(); poserTresorDOM(GP_PLEIN ? document : v);   // v17.55 : en plein écran la piste a été déplacée dans la fenêtre (énigme absente en Carte plein écran)
   etiquettesGP(api);
 }
@@ -1415,4 +1416,133 @@ function feteChauffe(podium, apercu, rang) {
     fl.forEach(f => { f.y += f.v; f.p += .02; f.x += Math.sin(f.p) * .4; if (f.y > H + 4) { f.y = -4; f.x = Math.random() * W; } cx.moveTo(f.x + f.r, f.y); cx.arc(f.x, f.y, f.r, 0, 6.283); });
     cx.fill(); if (!fini) raf = requestAnimationFrame(pas); };
   raf = requestAnimationFrame(pas);
+}
+
+/* ---------- 🎫 v20.47 · Le ticket d'or (mécanique du circuit de la Chocolaterie, octobre 2027) ----------
+   Du 1er au 31 octobre 2027, sur la page Course de la Chocolaterie, chaque pilote déballe UNE tablette par jour.
+   5 tickets d'or pour la saison : le serveur (app_scripts/versus/TicketsOr.js) a tiré 5 jours une fois pour toutes ;
+   le premier qui déballe ce jour-là (ou après, si personne ne l'a fait) gagne le ticket ; un seul par pilote. Aucun point.
+   L'appli ne connaît JAMAIS le tirage : elle reçoit l'empreinte (dès le 1/1/2027, affichée dans les règles), les gagnants,
+   et la graine seulement après le 31 octobre. Aperçu admin : exemple INVENTÉ, rien n'est envoyé (double sécurité apercuAutorise). */
+const TICKET_CI = "singapour";
+let TICKETS_T = 0, TICKET_APERCU = null, NTAB = 0;
+const MOTS_TABLETTE = ["Juste du chocolat… délicieux quand même.", "Pas de ticket. Mais 100 % cacao, 0 % regret.", "Rien de doré là-dedans, à part ton sourire plein de chocolat.",
+  "Le ticket se cache ailleurs. Celle-ci, tu peux la manger.", "Une tablette, zéro ticket, des miettes partout.", "Le chocolatier te fait un clin d'œil : reviens demain.",
+  "Toujours pas d'or… mais c'est praliné !", "Le papier brille, pas le ticket. Demain, peut-être ?", "Les petits ouvriers chantent quand même. Pour le chocolat."];
+/** les tickets se chargent à partir du 1/1/2027 (empreinte dans les règles), pour de vrai seulement (pas en simulation) */
+function ticketsOuverts() { return Date.now() >= TICKET_MOIS.regles.getTime() && SOURCE === "api" && !simulation(); }
+function moisTablettes() { const n = aujNum(); return n >= 20271001 && n <= 20271031; }
+async function chargerTickets(force) {
+  if (!ticketsOuverts() || (!force && (TICKETS || Date.now() - TICKETS_T < 60000))) return;
+  TICKETS_T = Date.now();
+  const rep = await posterAdmin({ action: "tickets" });
+  if (!rep || !rep.ok || !rep.ouvert) return;
+  TICKETS = rep; poserTabletteDOM(document);
+}
+/** la tablette, dessinée par nous : papier violet et or (déchiré en deux), papier d'argent, carrés de chocolat ; un ticket doré glissé dessous si gagné */
+function svgTablette(u) {
+  const G = "M0 0H113L106 12 115 24 104 37 114 49 105 61 115 73 106 86 113 98 108 110H0Z", Dd = "M113 0H220V110H108L113 98 106 86 115 73 105 61 114 49 104 37 115 24 106 12Z";
+  const carres = []; for (let i = 0; i < 6; i++) for (let k = 0; k < 3; k++) carres.push('<rect x="' + (17 + i * 32) + '" y="' + (13 + k * 30) + '" width="28" height="26" rx="3" fill="url(#' + u + 'c)" stroke="#2A1205" stroke-width="1"/><path d="M' + (20 + i * 32) + " " + (16 + k * 30) + "h22" + '" stroke="#C98A55" stroke-width="1.4" opacity=".5"/>');
+  const papier = '<rect width="220" height="110" rx="6" fill="url(#' + u + 'p)"/><path d="M0 34H220M0 76H220" stroke="#F7CF55" stroke-width="3"/><path d="M0 37H220M0 73H220" stroke="#9A6716" stroke-width="1"/>' +
+    '<rect x="62" y="40" width="96" height="30" rx="15" fill="#F7CF55" stroke="#7A4A0C" stroke-width="1.2"/><text x="110" y="60" text-anchor="middle" style="font:italic 800 15px var(--f-display);letter-spacing:.14em;fill:#4A1236">CHOCOLAT</text>' +
+    '<text x="110" y="24" text-anchor="middle" style="font:800 9px var(--f-display);letter-spacing:.4em;fill:#FFE596">VERSUS</text><text x="110" y="96" text-anchor="middle" style="font:700 8px var(--f-text);letter-spacing:.2em;fill:#FFE596;opacity:.85">FONDANT · OCTOBRE</text>';
+  return '<svg class="tb-svg" viewBox="-6 -6 232 122" aria-hidden="true"><defs>' +
+    '<linearGradient id="' + u + 'p" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9B2C7A"/><stop offset=".5" stop-color="#5E1248"/><stop offset="1" stop-color="#3A0A2C"/></linearGradient>' +
+    '<linearGradient id="' + u + 'c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A4A22"/><stop offset="1" stop-color="#4A230F"/></linearGradient>' +
+    '<linearGradient id="' + u + 'f" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4F6F8"/><stop offset=".5" stop-color="#AEB7C2"/><stop offset="1" stop-color="#E3E8EE"/></linearGradient>' +
+    '<clipPath id="' + u + 'g"><path d="' + G + '"/></clipPath><clipPath id="' + u + 'd"><path d="' + Dd + '"/></clipPath>' +
+    '<g id="' + u + 'w">' + papier + "</g></defs>" +
+    '<rect x="-3" y="-3" width="226" height="116" rx="7" fill="url(#' + u + 'f)"/>' +
+    '<g class="tb-choco"><rect x="8" y="6" width="204" height="98" rx="5" fill="#3A1A08"/>' + carres.join("") + "</g>" +
+    '<g class="tb-ticket"><path d="M40 30H180V48A7 7 0 0 0 180 62V80H40V62A7 7 0 0 0 40 48Z" fill="#F7CF55" stroke="#7A4A0C" stroke-width="2"/><path d="M62 32V78" stroke="#7A4A0C" stroke-dasharray="3 3"/>' +
+    '<text x="120" y="61" text-anchor="middle" style="font:italic 800 17px var(--f-display);letter-spacing:.08em;fill:#5A3405">TICKET D\'OR</text></g>' +
+    '<g class="tb-papier tb-g"><use href="#' + u + 'w" clip-path="url(#' + u + 'g)"/><path d="M113 0L106 12 115 24 104 37 114 49 105 61 115 73 106 86 113 98 108 110" fill="none" stroke="#FFE7F6" stroke-width="1.2" opacity=".6"/></g>' +
+    '<g class="tb-papier tb-d"><use href="#' + u + 'w" clip-path="url(#' + u + 'd)"/></g></svg>';
+}
+/** la carte « tablette du jour » : l'état (déjà déballée ou non) et le bouton ; o = { apercu } */
+function htmlTablette(T, apercu) {
+  const fait = !!(T && T.dejaAujourdhui), reste = T ? Math.max(0, (T.n || 5) - (T.gagnants || []).length) : 5, mien = T && T.monTicket;
+  return '<div class="gp-tablette' + (fait ? " ouverte" : "") + (fait && T.dernier && T.dernier.ticket ? " gagne" : "") + '" data-ci="' + TICKET_CI + '">' +
+    '<div class="tb-h"><b>🍫 La tablette du jour' + (apercu ? " · aperçu (exemple inventé)" : "") + "</b><small>" + (reste ? "🎫 " + reste + " ticket" + (reste > 1 ? "s" : "") + " d'or encore caché" + (reste > 1 ? "s" : "") + " dans les tablettes d'octobre" : "🎫 Les 5 tickets d'or ont été trouvés") + "</small></div>" +
+    '<div class="tb-boite">' + svgTablette("tb" + (++NTAB)) + "</div>" +
+    '<p class="tb-mot" aria-live="polite">' + (fait ? esc((T.dernier && T.dernier.mot) || "Tablette déballée aujourd'hui. Reviens demain !") : "Une tablette par jour, du 1er au 31 octobre. Déballe la tienne : il y a peut-être un ticket d'or dedans.") + "</p>" +
+    (fait ? '<p class="tb-fait">✅ Déballée aujourd\'hui · la prochaine demain</p>' : '<button class="btn acc tb-b" type="button" data-deballer>🍫 Déballer ma tablette</button>') +
+    (mien ? '<p class="tb-mien">🎫 Tu as le ticket d\'or n° ' + mien + " : la plaque « Ticket d'or » t'attend dans l'Écurie.</p>" : "") +
+    ((T && T.gagnants || []).length ? '<p class="tb-g-l">' + T.gagnants.map(g => "🎫 " + esc(g.nom)).join(" · ") + "</p>" : "") + "</div>";
+}
+/** pose la carte sous la piste de la Chocolaterie (octobre 2027 seulement, ou l'aperçu admin) */
+function poserTabletteDOM(v) {
+  document.querySelectorAll(".gp-tablette:not(.tk-ap)").forEach(e => e.remove());
+  const pi = document.querySelector("#gp-piste"); if (!pi || pi.dataset.circuit !== TICKET_CI) return;
+  if (!TICKETS || !TICKETS.enCours || !moisTablettes()) return;
+  pi.insertAdjacentHTML("afterend", htmlTablette(TICKETS, false));
+  brancherTablette(pi.nextElementSibling, false);
+}
+function brancherTablette(el, apercu) {
+  const b = el && el.querySelector("[data-deballer]"); if (!b) return;
+  b.addEventListener("click", () => deballer(el, apercu));
+}
+/** déballer : le papier se déchire (sauf animations réduites), puis chocolat… ou ticket d'or */
+async function deballer(el, apercu) {
+  const b = el.querySelector("[data-deballer]"); if (!b || b.disabled) return; b.disabled = true; b.textContent = "Ça se déchire…";
+  if (window.SONS && SONS.actif && SONS.actif()) try { SONS.vibrer([20, 30, 20]); } catch (e) { /* sans vibreur */ }
+  const rep = apercu ? apercu.deballer() : await posterAdmin({ action: "deballer" });
+  if (!rep || !rep.ok) { b.disabled = false; b.textContent = "🍫 Déballer ma tablette"; toast(rep && rep.message ? rep.message : "Le serveur ne répond pas : réessaie."); if (rep && rep.erreur === "deja" && !apercu) { if (TICKETS) TICKETS.dejaAujourdhui = true; poserTabletteDOM(document); } return; }
+  const mot = rep.ticket ? "🎫 Un ticket d'or brille sous le papier !" : MOTS_TABLETTE[(aujNum() + Math.floor(Math.random() * 97)) % MOTS_TABLETTE.length];
+  el.classList.add("ouverte"); if (rep.ticket) el.classList.add("gagne");
+  const m = el.querySelector(".tb-mot"); if (m) m.textContent = mot;
+  b.remove();
+  const T = apercu ? apercu.T : TICKETS;
+  if (T) { T.dejaAujourdhui = true; T.dernier = { ticket: rep.ticket, mot }; if (rep.gagnants) T.gagnants = rep.gagnants; if (rep.monTicket) T.monTicket = rep.monTicket;
+    const r = Math.max(0, (T.n || 5) - (T.gagnants || []).length), sm = el.querySelector(".tb-h small"); if (sm) sm.textContent = r ? "🎫 " + r + " ticket" + (r > 1 ? "s" : "") + " d'or encore caché" + (r > 1 ? "s" : "") + " dans les tablettes d'octobre" : "🎫 Les 5 tickets d'or ont été trouvés"; }
+  if (window.SONS) try { rep.ticket ? SONS.succes() : SONS.klaxon("confettis"); } catch (e) { /* sans son */ }
+  if (rep.ticket) setTimeout(() => ceremonieTicket(rep.ticket, !!apercu), reduit ? 200 : 1300);
+  else if (!apercu) setTimeout(() => poserTabletteDOM(document), reduit ? 0 : 2600);
+}
+/** la cérémonie plein écran : l'ascenseur de verre monte, les portes s'ouvrent sur le ticket d'or ; le nom, la plaque gagnée, aucun point */
+function ceremonieTicket(n, exemple) {
+  const moi = exemple ? "Pilote d'exemple" : (moiVrai() || "toi");
+  const o = document.createElement("div"); o.className = "revel tk-or" + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Ticket d'or");
+  const e = typeof equipDe === "function" && D && D.personnes.some(p => p.nom === moiVrai()) ? equipDe(moiVrai()) : {};
+  o.innerHTML = '<div class="rv-c tk-c"><span class="cbo-rayons" aria-hidden="true"></span><span class="tuto-k">🎫 Ticket d\'or n° ' + n + " / 5" + (exemple ? " · exemple inventé" : "") + "</span>" +
+    '<div class="tk-scene" aria-hidden="true"><div class="tk-cage"><span class="tk-cable"></span><div class="tk-verre"><span class="tk-p tk-pg"></span><span class="tk-p tk-pd"></span>' +
+    '<svg class="tk-ticket" viewBox="0 0 220 110"><defs><linearGradient id="tkg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF6CC"/><stop offset=".3" stop-color="#F7CF55"/><stop offset=".55" stop-color="#C98E22"/><stop offset=".8" stop-color="#FFE596"/><stop offset="1" stop-color="#9A6716"/></linearGradient></defs>' +
+    '<path d="M4 4H216V44A11 11 0 0 0 216 66V106H4V66A11 11 0 0 0 4 44Z" fill="url(#tkg)" stroke="#6B430C" stroke-width="3"/><path d="M40 8V102" stroke="#6B430C" stroke-width="1.5" stroke-dasharray="4 4"/>' +
+    '<text x="128" y="50" text-anchor="middle" style="font:italic 800 22px var(--f-display);letter-spacing:.1em;fill:#4A2C05">TICKET D\'OR</text><text x="128" y="74" text-anchor="middle" style="font:700 11px var(--f-text);letter-spacing:.3em;fill:#6B430C">N° ' + n + " · 2027</text>" +
+    '<path d="M22 46L25 53 32 54 27 59 28 66 22 62 16 66 17 59 12 54 19 53Z" fill="#FFF6CC" stroke="#6B430C" stroke-width="1"/></svg></div></div></div>' +
+    "<h3>Un ticket d'or !</h3><p class=\"cbo-grave\">Trouvé dans la tablette de <b>" + esc(moi) + "</b></p>" +
+    "<p>Cinq tickets pour toute la saison, un seul par pilote : celui-ci est à toi pour toujours. Il brille dans ta vitrine 🏆 Mes trophées.</p>" +
+    '<div class="tk-obj"><span>Objet d\'écurie exclusif</span>' + (typeof vignetteItem === "function" ? vignetteItem("plaque", "ticketor", moiVrai() || "", e) : "") + "</div>" +
+    '<p class="cbo-flair">Aucun point au championnat : seulement la gloire (et la plaque).</p>' +
+    '<div class="btn-row">' + (exemple ? "" : '<button class="btn acc" type="button" data-tk-vit>Voir ma vitrine</button>') + '<button class="btn ghost" type="button" data-tk-ok>Génial !</button></div></div>';
+  document.body.appendChild(o);
+  const t0 = Date.now(), fermer = () => o.remove();
+  o.addEventListener("click", ev => { if (ev.target === o && Date.now() - t0 > 1500) fermer(); });
+  o.querySelector("[data-tk-ok]").addEventListener("click", fermer);
+  const vt = o.querySelector("[data-tk-vit]"); if (vt) vt.addEventListener("click", () => { fermer(); ETAT.podium = "defis"; garder(); if (typeof allerA === "function") allerA("trophees"); rendreTrophees(); setTimeout(() => { const s = document.querySelector("#vit-tickets"); if (s) s.scrollIntoView({ block: "center" }); }, 300); });
+  setTimeout(() => { try { confettis("ouvriers"); } catch (er) { /* sans fête */ } }, reduit ? 0 : 1600);
+  if (window.SONS && SONS.jingle) setTimeout(() => { try { SONS.jingle("defaut", "accord"); } catch (er) { /* sans son */ } }, reduit ? 100 : 1500);
+}
+/** 🎫 aperçu admin (double sécurité) : une tablette d'exemple dans une fenêtre ; 1re tablette = chocolat, 2e = ticket d'or. Rien n'est envoyé. */
+function apercuTicket() {
+  if (!apercuAutorise()) return;
+  const T = { n: 5, gagnants: [{ nom: "Pilote A", n: 1 }], dejaAujourdhui: false, monTicket: null };
+  let essais = 0;
+  const AP = { T, deballer: () => { essais++; return essais === 1 ? { ok: true, ticket: null } : { ok: true, ticket: 2, gagnants: T.gagnants.concat([{ nom: "Pilote d'exemple", n: 2 }]), monTicket: 2 }; } };
+  const o = document.createElement("div"); o.className = "regles tk-apercu"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Aperçu du ticket d'or");
+  const corps = () => '<div class="rg-c"><div class="rg-h"><b>🎫 Aperçu · le ticket d\'or</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div>' +
+    '<p class="info">Exemple inventé : rien n\'est envoyé au serveur, le vrai tirage reste secret, même pour toi. 1re tablette : du chocolat ; 2e : un ticket d\'or.</p>' +
+    htmlTablette(T, true).replace('class="gp-tablette', 'class="gp-tablette tk-ap') + (essais === 1 ? '<button class="btn ghost" type="button" data-tk-encore>🔄 Une autre tablette (exemple)</button>' : "") + "</div>";
+  const rendre = () => { o.innerHTML = corps(); o.querySelector(".rg-x").addEventListener("click", () => o.remove()); brancherTablette(o.querySelector(".gp-tablette"), AP);
+    const en = o.querySelector("[data-tk-encore]"); if (en) en.addEventListener("click", () => { T.dejaAujourdhui = false; T.dernier = null; rendre(); }); };
+  const b0 = AP.deballer; AP.deballer = () => { const r = b0(); setTimeout(rendre, r.ticket ? 2200 : 1600); return r; };
+  rendre(); document.body.appendChild(o);
+}
+/** règles : l'empreinte du tirage (dès le 1/1/2027), le tirage dévoilé après le 31 octobre */
+function regleTicket() {
+  if (Date.now() < TICKET_MOIS.regles.getTime()) return "";
+  const T = TICKETS, emp = T && T.empreinte ? '<code class="tk-emp">' + esc(T.empreinte) + "</code>" : '<span class="tk-emp attente">(empreinte en chargement…)</span>';
+  const rev = T && T.revele ? " Tirage dévoilé : les tickets étaient posés le " + T.revele.jours.map(j => j % 100).join(", ") + " octobre (graine <code class=\"tk-emp\">" + esc(T.revele.graine) + "</code>)." : " Le tirage sera dévoilé le 1<sup>er</sup> novembre 2027 : chacun pourra vérifier que personne n'y a touché.";
+  return '<li id="rg-ticket"><b>🎫 Ticket d\'or</b> (🍫 Chocolaterie, octobre 2027) : chaque jour du mois, déballe ta tablette sur la page Course. 5 tickets d\'or pour la saison, cachés à l\'avance par le serveur (tirage au sort tenu secret : personne ne le connaît) ; le premier qui déballe le bon jour (ou le lendemain si personne ne l\'a fait) le gagne, un seul par pilote. Aucun point : une cérémonie, le badge 🎫 et la plaque « Ticket d\'or ». ' +
+    "Empreinte du tirage : " + emp + "." + rev + "</li>";
 }

@@ -589,6 +589,7 @@ function badgesPossedes(nom) {
   // les titres qu'il détient en ce moment (on se les vole chaque mois)
   const C = etatTitres(anneesSaison().slice(-1)[0]);
   TITRES.forEach(c => { const o = C[c.id]; if (o && o.nom === nom) l.push({ id: "t-" + c.id, ico: c.ico, nom: c.nom, niv: 4, html: '<span class="bdg ex titre t-' + c.id + '" data-bdg="' + esc(c.ico + " " + c.nom + " : titre détenu par " + nom + " depuis " + moisLong(o.depuis) + " (" + c.court + "). Il se vole chaque mois.") + '">' + c.ico + "</span>" }); });
+  { const tk = gagnantsTicket().find(g => g.nom === nom); if (tk) l.push({ id: "ticket", ico: "🎫", nom: "Ticket d'or", niv: 4, html: '<span class="bdg ex n4 ticket" data-bdg="' + esc("🎫 Ticket d'or n° " + tk.n + " : " + nom + " l'a trouvé dans sa tablette de la Chocolaterie (5 par saison, un par pilote).") + '">🎫</span>' }); }
   if (anneesSaison().some(y => (etatGant(y)[nom] || { n: 0 }).n === 6)) l.push({ id: "gant", ico: "🧤", nom: "Gant de l'infini", niv: 4, html: '<span class="bdg ex n4" data-bdg="' + esc("🧤 Gant de l'infini : " + nom + " a allumé les 6 pierres dans une saison.") + '">🧤</span>' });
   exclusifsDe(nom).sort((a, b) => b.niv - a.niv).forEach(x => l.push({ id: x.id, ico: x.ico, nom: x.nom, niv: x.niv, html: '<span class="bdg ex n' + x.niv + ' or" data-bdg="' + esc("🥇 " + x.ico + " " + x.nom + " · secret doré : " + nom + " a été le premier à " + x.def.replace("l'indice", "le " + idx) + ". Il garde " + libGains(gainsSecret(x)) + ", en un seul exemplaire.") + '">' + x.ico + "</span>" }));
   secretsArgentDe(nom).sort((a, b) => b.niv - a.niv).forEach(x => l.push({ id: "a-" + x.id, ico: x.ico, nom: x.nom + " (argent)", niv: 0, html: '<span class="bdg ex arg" data-bdg="' + esc("🥈 " + x.ico + " " + x.nom + " · secret argenté : " + nom + " l'a réussi aussi (" + x.def.replace("l'indice", "le " + idx) + "), après le premier.") + '">' + x.ico + "</span>" }));
@@ -964,7 +965,8 @@ function barreAdmin() {
   const tres = '<button type="button" class="ba-dec" data-batres="1"' + (TRESOR_APERCU ? ' aria-pressed="true">🗝️ Aperçu du trésor en cours · ✕ Quitter' : ">🗝️ Aperçu du trésor · sur la page Course, en 📺 Visite, avec un exemple inventé (rien n’est envoyé)") + "</button>";   // v17.26 ; v17.35 : directement sur la page Course
   const fete = '<button type="button" class="ba-dec" data-bafete="1">🎅 Aperçu · le vainqueur de la chauffe (la mini-cérémonie que tout le monde verra une fois, 48 h après le dernier relevé de décembre ; exemple inventé tant que la manche n’est pas finie)</button>';   // v17.49
   const coupe = '<button type="button" class="ba-dec" data-bacoupe="1">🏆 Aperçu · La Coupe brisée (exemple inventé : le vrai contenu reste secret, même pour toi)</button>';   // v20.42
-  return '<div class="barre-admin"><div class="ba-h"><b>🛠️ Admin</b><div class="ba-seg">' + b("tout", "Tout afficher") + b("joueur", "Vue joueur") + b("reel", "Le réel") + "</div></div>" + plus + dec + fete + circ + tres + coupe + "<small>" + desc + "</small></div>";
+  const ticket = '<button type="button" class="ba-dec" data-baticket="1">🎫 Aperçu · le ticket d’or (une tablette d’exemple : chocolat, puis ticket et cérémonie ; rien n’est envoyé, le vrai tirage reste secret, même pour toi)</button>';   // v20.47
+  return '<div class="barre-admin"><div class="ba-h"><b>🛠️ Admin</b><div class="ba-seg">' + b("tout", "Tout afficher") + b("joueur", "Vue joueur") + b("reel", "Le réel") + "</div></div>" + plus + dec + fete + circ + tres + coupe + ticket + "<small>" + desc + "</small></div>";
 }
 function brancherBarreAdmin(v) {
   const reglerMode = m => {
@@ -979,6 +981,7 @@ function brancherBarreAdmin(v) {
   v.querySelectorAll("[data-bafete]").forEach(x => x.addEventListener("click", () => apercuFeteChauffe()));
   v.querySelectorAll("[data-batres]").forEach(x => x.addEventListener("click", () => ouvrirApercuTresor()));
   v.querySelectorAll("[data-bacoupe]").forEach(x => x.addEventListener("click", () => apercuCoupe()));
+  v.querySelectorAll("[data-baticket]").forEach(x => x.addEventListener("click", () => apercuTicket()));
   v.querySelectorAll("[data-badec]").forEach(x => x.addEventListener("click", () => { stock.set("versus.apercuSaison", "0"); stock.set("versus.vueJoueur", joueurAdmin()); stock.set("versus.dateSim", "2026-12-03"); ETAT.podium = "gp"; GP_ETAPE = null; garder(); location.reload(); }));
   v.querySelectorAll("[data-badate]").forEach(x => x.addEventListener("click", () => { if (x.dataset.badate) stock.set("versus.dateSim", x.dataset.badate); else stock.del("versus.dateSim"); location.reload(); }));
 }
@@ -1464,13 +1467,21 @@ function htmlTitres(apercu, y) {
         '<div class="cour-q">' + (o ? '<b>' + esc(o.nom) + "</b><small>depuis " + esc(moisLong(o.depuis)) + "</small><small>" + esc(o.txt) + "</small>" : "<small>" + esc(vide) + "</small>") + "</div></div>";
     }).join("") + "</div></section>";
 }
+/** 🎫 Les tickets d'or (section à part de « Mes trophées ») : à partir d'octobre 2027 (ou dès qu'un ticket est trouvé), 5 places, le nom des gagnants */
+function htmlTickets(moi) {
+  const g = gagnantsTicket(); if (!ticketVisible() && !g.length) return "";
+  const fini = Date.now() >= TICKET_MOIS.fin.getTime();
+  return '<div class="vit-tk" id="vit-tickets"><h4>🎫 Les tickets d\'or <small>🍫 Chocolaterie · 5 pour toute la saison, un par pilote</small></h4><div class="tk-l">' +
+    [1, 2, 3, 4, 5].map(n => { const x = g.find(z => z.n === n);
+      return '<div class="tk-s' + (x ? " pris" : "") + (x && x.nom === moi ? " a-moi" : "") + '"><span class="tk-n">n° ' + n + "</span>" + (x ? "<b>" + esc(x.nom) + "</b>" : "<small>" + (fini ? "resté dans sa tablette" : "à trouver") + "</small>") + "</div>"; }).join("") + "</div></div>";
+}
 /** L'onglet Trophées */
 function htmlVitrines() {
   const apercu = !saisonJouee(), noms = D.personnes.map(p => p.nom), moi = moiPilote(), y = anneesSaison().slice(-1)[0];
   return (apercu ? '<div class="chauffe-b">🔥 <span>Tour de chauffe : les trophées, les secrets et les titres démarrent le 1<sup>er</sup> janvier 2027. Voici ce qui t\'attend.</span></div>' : "") +
     (D.premierMillion ? bandeauMillion() : "") +   /* v17.31 (Théo) : le bandeau « Premier millionnaire » n'apparaît qu'une fois le badge gagné, puis pour toujours */
     '<nav class="vit-nav" aria-label="Les 3 vitrines"><a href="#vit-trophees">🏆 Mes trophées</a><a href="#vit-secrets">🔍 Secrets</a><a href="#vit-titres">⚔️ Titres</a></nav>' +
-    '<section class="vit" id="vit-trophees"><h3 class="vit-h">🏆 Mes trophées <small>ce que je construis · tout le monde peut tout avoir</small></h3>' + htmlGant(apercu, noms, moi, y) + htmlTropheesMondes(apercu, noms, moi) + "</section>" +
+    '<section class="vit" id="vit-trophees"><h3 class="vit-h">🏆 Mes trophées <small>ce que je construis · tout le monde peut tout avoir</small></h3>' + htmlGant(apercu, noms, moi, y) + htmlTropheesMondes(apercu, noms, moi) + (apercu ? "" : htmlTickets(moi)) + "</section>" +
     htmlSecrets(apercu, noms, moi) + htmlTitres(apercu, y);
 }
 /** Ouvrir un secret : caché (silhouette + indice) ou découvert (carte dorée, son histoire, les argentés) */
@@ -1532,6 +1543,8 @@ function brancherVitrines(v) {
   v.querySelectorAll(".vit-nav a").forEach(a => a.addEventListener("click", ev => { ev.preventDefault(); const c = v.querySelector(a.getAttribute("href")); if (c) c.scrollIntoView({ block: "start", behavior: reduit ? "auto" : "smooth" }); }));
   // le Flair a besoin des trésors (qui a trouvé quoi) : on les charge, puis on redessine une fois
   if (saisonJouee() && typeof chargerTresors === "function" && typeof TRESORS !== "undefined" && !TRESORS) chargerTresors().then(() => { if (TRESORS && vueActive() === "trophees" && ongletPodium() === "defis") rendreTrophees(); }).catch(() => {});
+  // v20.47 · 🎫 les tickets d'or (badges, vitrine, plaque) : chargés à partir d'octobre 2027, puis on redessine une fois
+  if (saisonJouee() && typeof chargerTickets === "function" && !TICKETS && Date.now() >= TICKET_MOIS.debut.getTime()) chargerTickets().then(() => { if (TICKETS && vueActive() === "trophees" && ongletPodium() !== "gp") rendreTrophees(); }).catch(() => {});
 }
 /* La vitrine d'un pilote (fiche du Classement) : ses secrets dorés (cartes), ses argentés, ses trophées, son Gant, ses titres */
 function vitrineFiche(nom) {
