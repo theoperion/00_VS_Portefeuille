@@ -785,7 +785,8 @@ function plierRegl(sec, ferme) {
 const MOI_CLES = { api: "versus.moi.api", cle: "versus.moi.cle" };
 function adresseFichierValide(a) { return /^https:\/\/script\.google(usercontent)?\.com\/.+\/exec$/.test(String(a || "").trim()); }
 function majMoiReglages(msg) {
-  const a = stock.get(MOI_CLES.api) || "", k = stock.get(MOI_CLES.cle);
+  const k = stock.get(MOI_CLES.cle);   // v20.35 : nouveau joueur → l'adresse de son fichier, connue du Versus, est déjà remplie ; il n'a que sa clé à taper
+  const a = stock.get(MOI_CLES.api) || (typeof D !== "undefined" && D && adresseFichierValide(D.moiAdresse) ? D.moiAdresse : "");
   $("#moi-api").value = a; $("#moi-cle").value = "";
   $("#moi-cle").placeholder = k ? "Clé enregistrée (laisse vide pour la garder)" : "Clé d'accès";
   $("#moi-oublier").hidden = !a && !k;

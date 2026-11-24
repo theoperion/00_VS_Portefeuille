@@ -627,6 +627,7 @@ function injecterStyle() {
 /* lot 62 : pastille allumée = bord et pastille pleine de sa couleur ; éteinte = pastille creuse, texte atténué (le % reste lisible) */
 .moi .m-mk-chips { gap: 5px; }
 .moi .m-mk-chips .chip { gap: 4px; min-height: 30px; padding: 4px 8px; font-size: 11.5px; }
+.moi .m-mk-chips .m-mk-plus { border-style: dashed; color: var(--ink-2); font-weight: 600; }   /* v20.35 : « + N autres » */
 .moi .m-mk-chips .chip small { font-size: 10.5px; }
 .moi .m-mk-chips .chip.on { color: var(--ink); border-color: color-mix(in srgb, var(--mkc) 75%, var(--rule)); background: color-mix(in srgb, var(--mkc) 14%, var(--panel)); }
 .moi .m-mk-chips .chip[aria-pressed="false"] { opacity: 1; color: var(--ink-3); background: none; border-style: dashed; }
@@ -2949,7 +2950,7 @@ function pretHtml() {
     "</div>";
 }
 /* ---- V15.4 · Marchés : 8 cases (variation du jour, lue dans le Versus), courbe d'un an au toucher, « Comparer » en base 100 ---- */
-const COUL_MK = ["#5B8DEF", "#2BB673", "#9B6BFF", "#E5484D", "#F2A33A", "#18A9C7", "#D6619E", "#C9A227", "#8C7B5A", "#E8590C", "#F7931A", "#627EEA"];   // v19.0 : 11e Bitcoin, 12e Ethereum   // v17.41 : 10e = Nasdaq ×3
+const COUL_MK = ["#5B8DEF", "#2BB673", "#9B6BFF", "#E5484D", "#F2A33A", "#18A9C7", "#D6619E", "#C9A227", "#8C7B5A", "#E8590C", "#F7931A", "#627EEA", "#00B3A4", "#B8336A"];   // v20.35 : 13e Semi-conducteurs, 14e Semis ×3   // v19.0 : 11e Bitcoin, 12e Ethereum   // v17.41 : 10e = Nasdaq ×3
 let marcheOuvert = "cmp", mkTemp = null;   // lot 62 c (Théo) : la comparaison est toujours là ; un nombre = la courbe d'un seul marché (toucher long)   // lot 62 : mkTemp = vue passagère (« Comparer l'or couvert et non couvert »), jamais mémorisée
 /* lot 62 (Théo, Conseil) : « Comparer » montre 4 courbes par défaut (le monde, les États-Unis, la tech, l'or) ; les autres s'allument d'un toucher
    sur leur pastille. C'est un filtre : le choix est mémorisé sur l'appareil (PREF.mkVis = noms affichés). */
@@ -2968,7 +2969,9 @@ function marchesMoi() { const Dv = dVersus(); const m = Dv && Dv.marchesMoi; if 
   if (i >= 0 && !m.jour.some(x => x.nom === "Or couvert €") && (m.series || []).some(x => x.nom === "Or couvert €")) m.jour.splice(i + 1, 0, { nom: "Or couvert €", pct: null, heure: "" });
   return m; }
 const CRYPTO_MK = ["Bitcoin", "Ethereum"];   // v19.0 (Théo) : deux cryptos « pour rigoler », 24 h sur 24
-const NOMS_MK = { "Or": "Or non couvert", "Or couvert €": "Or couvert" };   // v17.49 : nom affiché dans la case (le nom technique reste « Or »)
+const NOMS_MK = { "Or": "Or non couvert", "Or couvert €": "Or couvert", "Semi-conducteurs": "Semi-conducteurs" };
+/* v20.35 (Théo, 24/11) : 6 marchés en vue, les autres derrière « + N autres » (ceux dont la courbe est affichée restent toujours visibles) */
+const PRIO_MK = ["S&P 500", "Nasdaq-100", "Nasdaq ×2", "Semi-conducteurs", "Or", "Bitcoin"];   // v17.49 : nom affiché dans la case (le nom technique reste « Or »)
 /* v17.41 (Théo) : les cases suivent la période de la carte Bourse (Jour · 5 j · 1 M · 6 M · Janv. · 1 an), mêmes bornes (`debutPer`).
    Source : clôtures quotidiennes `quot` (serveur Versus V63) ; à défaut, les courbes hebdomadaires (≈). En « Jour », bourse fermée :
    la dernière séance du marché (clôture / clôture d'avant) au lieu d'un tiret. En séance, la variation en direct s'ajoute à la dernière clôture. */
@@ -3048,7 +3051,8 @@ function htmlMarches() {
   const moi = fm ? '<button type="button" class="chip m-mk-moi' + (moiVisible() ? " on" : "") + '" data-mk-moi="1" aria-pressed="' + moiVisible() + '" style="--mkc:var(--ink)"><i></i><span>' + NOM_MOI + '</span><b class="' + sens(pm) + '">' + (ok(pm) ? pct(pm, per && per !== "5j" ? 1 : 2) : "—") + "</b></button>" : "";
   return '<div class="m-mk"><div class="m-mk-t"><h2 class="sec">Marchés <small>' + sous + "</small></h2></div>" +
     '<div class="m-mk-chips" role="group" aria-label="Marchés : touche pour afficher ou masquer la courbe, toucher long pour la courbe seule">' + moi + m.jour.map((x, i) => { const r = vs[i], k = noms.indexOf(x.nom), on = S.has(x.nom);
-      return '<button type="button" class="chip' + (on ? " on" : "") + '" data-mk-cache="' + esc(x.nom) + '" data-mk-i="' + i + '" aria-pressed="' + on + '" style="--mkc:' + (k >= 0 ? COUL_MK[k % COUL_MK.length] : "var(--ink-3)") + '"' + (r.du ? ' title="Séance du ' + frDate(r.du) + '"' : "") + '><i></i><span>' + esc(NOMS_MK[x.nom] || x.nom) + '</span><b class="' + sens(r.v) + '">' + marque(r) + (ok(r.v) ? pct(r.v, per && per !== "5j" ? 1 : 2) : "—") + "</b></button>"; }).join("") + "</div>" +
+      if (PREF.mkTout !== true && !PRIO_MK.includes(x.nom) && !on) return "";   // v20.35 : rangé derrière « + N autres »
+      return '<button type="button" class="chip' + (on ? " on" : "") + '" data-mk-cache="' + esc(x.nom) + '" data-mk-i="' + i + '" aria-pressed="' + on + '" style="--mkc:' + (k >= 0 ? COUL_MK[k % COUL_MK.length] : "var(--ink-3)") + '"' + (r.du ? ' title="Séance du ' + frDate(r.du) + '"' : "") + '><i></i><span>' + esc(NOMS_MK[x.nom] || x.nom) + '</span><b class="' + sens(r.v) + '">' + marque(r) + (ok(r.v) ? pct(r.v, per && per !== "5j" ? 1 : 2) : "—") + "</b></button>"; }).join("") + (() => { const n = m.jour.filter(x => !PRIO_MK.includes(x.nom) && !S.has(x.nom)).length; return PREF.mkTout === true ? '<button type="button" class="chip m-mk-plus" data-mk-plus="1" aria-expanded="true">Moins ▴</button>' : n ? '<button type="button" class="chip m-mk-plus" data-mk-plus="1" aria-expanded="false">+ ' + n + " autre" + (n > 1 ? "s" : "") + " ▾</button>" : ""; })() + "</div>" +
     '<div class="m-mk-panneau" id="m-mk-panneau">' + panneauMarche() + "</div></div>";
 }
 /** lot 63 (Théo) : « Mon portefeuille » dans les courbes : l'indice de l'historique (versements neutralisés), mêmes bornes que les marchés ;
@@ -3129,8 +3133,9 @@ function brancherMarches(v) {
   ["pointerup", "pointercancel", "pointerleave"].forEach(t => z.addEventListener(t, () => clearTimeout(long)));
   z.addEventListener("contextmenu", e => { if (e.target.closest("[data-mk-i]")) e.preventDefault(); });
   z.addEventListener("click", e => {
-    const b = e.target.closest("[data-mk],[data-mk-cache],[data-mk-defaut],[data-mk-moi]"); if (!b) return;
+    const b = e.target.closest("[data-mk],[data-mk-cache],[data-mk-defaut],[data-mk-moi],[data-mk-plus]"); if (!b) return;
     if (longFait) { longFait = false; return; }
+    if (b.dataset.mkPlus) { if (PREF.mkTout === true) delete PREF.mkTout; else PREF.mkTout = true; garderPref(); garderPlace(b, rendre); return; }   // v20.35 : « + N autres » / « Moins »
     const noms = () => marchesMoi().series.map(x => x.nom);
     if (b.dataset.mkMoi) { PREF.mkMoi = !moiVisible(); if (PREF.mkMoi) delete PREF.mkMoi; garderPref(); marcheOuvert = "cmp"; garderPlace(b, () => { maj(); b.classList.toggle("on", moiVisible()); b.setAttribute("aria-pressed", String(moiVisible())); }); return; }
     if (b.dataset.mkCache) { if (!noms().includes(b.dataset.mkCache)) return; mkBasculer(b.dataset.mkCache, noms()); marcheOuvert = "cmp"; garderPlace(b, maj); return; }
