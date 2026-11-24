@@ -6320,6 +6320,7 @@
   function tampon(gl, g) { const f = g.f || new Float32Array(g.d), b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, f, gl.STATIC_DRAW); return { b, n: f.length / 10 }; }
   /* Un seul contexte WebGL, réutilisé d'un circuit à l'autre (en créer un à chaque fois est lent et iOS en limite le nombre) */
   const RESERVE = [];
+  const ZOOM_MIN = .04;   // v20.45 (Théo) : on zoome 3 fois plus près qu'avant (0,12) pour aller au plus petit détail du décor
   const ZOOM_EXPLO = .75;   // v20.39 : en dessous (Visite zoomée), un doigt déplace la carte et le joystick apparaît
   function contexte() {
     while (RESERVE.length) { const c = RESERVE.pop(); if (!c.gl.isContextLost()) return c; }
@@ -6592,7 +6593,7 @@
       if (!I.tir || !pointeurs.has(ev.pointerId)) return; pointeurs.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
       if (pointeurs.size >= 2) { const [a, b] = [...pointeurs.values()], d = Math.hypot(a.x - b.x, a.y - b.y), m = [(a.x + b.x) / 2, (a.y + b.y) / 2];
         const ang = Math.atan2(b.y - a.y, b.x - a.x);
-        if (!I.tir.d0) { I.tir.d0 = d; I.tir.z = I.zoom; I.tir.m0 = m; I.tir.p0 = I.pan.slice(); I.tir.a0 = ang; I.tir.o2 = I.orbite; } I.zoom = clamp(I.tir.z * I.tir.d0 / d, .12, 2.4);
+        if (!I.tir.d0) { I.tir.d0 = d; I.tir.z = I.zoom; I.tir.m0 = m; I.tir.p0 = I.pan.slice(); I.tir.a0 = ang; I.tir.o2 = I.orbite; } I.zoom = clamp(I.tir.z * I.tir.d0 / d, ZOOM_MIN, 2.4);
         if (I.mode === "helico") { let da = ang - I.tir.a0; da = Math.atan2(Math.sin(da), Math.cos(da)); I.orbite = I.tir.o2 - da; }   // v20.39 : tourner deux doigts fait pivoter la carte
         if (I.mode === "helico") { const k = Math.max(T.rx, T.rz) * I.zoom * .0047, dx = (I.tir.m0[0] - m[0]) * k, dy = (I.tir.m0[1] - m[1]) * k, an = I.orbite + .6, s = Math.sin(an), c = Math.cos(an);
           I.pan = [clamp(I.tir.p0[0] + dx * s + dy * c, -T.rx, T.rx), clamp(I.tir.p0[1] - dx * c + dy * s, -T.rz, T.rz)]; } }
@@ -6611,7 +6612,7 @@
       if (t && !t.multi && performance.now() - t.t < 300 && Math.hypot(ev.clientX - t.x0, ev.clientY - t.y0) < 8) { const n = toucher(ev.clientX, ev.clientY); if (n && o.toucher) o.toucher(n); }
     };
     ecoute("pointerup", fin); ecoute("pointercancel", fin);
-    ecoute("wheel", ev => { ev.preventDefault(); I.zoom = clamp(I.zoom * (ev.deltaY > 0 ? 1.1 : .9), .12, 2.4); reveiller(); }, { passive: false });
+    ecoute("wheel", ev => { ev.preventDefault(); I.zoom = clamp(I.zoom * (ev.deltaY > 0 ? 1.1 : .9), ZOOM_MIN, 2.4); reveiller(); }, { passive: false });
     cv.style.touchAction = "pan-y";
     /* v20.39 (Théo) · Visite de près : un petit joystick en bas au centre pour se promener sur la carte sans dézoomer (chasse au détail caché).
        Il n'apparaît qu'en Visite (hélico) une fois zoomé ; pousser le bouton fait avancer la vue dans cette direction, plus loin = plus vite. */
@@ -6683,7 +6684,7 @@
       recul: () => { const asp = cv.width / Math.max(1, cv.height), rv = Math.max(T.rx, T.rz / Math.min(1, asp * .9) * (asp < 1 ? 1.25 : 1)); return Math.max(1, rv / Math.max(T.rx, T.rz)); },
 
       /** place la caméra de la Visite (tests, cérémonies) : centre [x, z] du monde, zoom, inclinaison, orbite */
-      viser(c, z, incl, orb) { if (I.mode !== "helico") return; I.survol = null; if (c) I.pan = [clamp(c[0] - T.cx, -T.rx, T.rx), clamp(c[1] - T.cz, -T.rz, T.rz)]; if (z) I.zoom = clamp(z, .12, 2.4); if (incl) I.incl = clamp(incl, .18, 1.4); if (orb !== undefined) I.orbite = orb; I.saut = true; reveiller(); },
+      viser(c, z, incl, orb) { if (I.mode !== "helico") return; I.survol = null; if (c) I.pan = [clamp(c[0] - T.cx, -T.rx, T.rx), clamp(c[1] - T.cz, -T.rz, T.rz)]; if (z) I.zoom = clamp(z, ZOOM_MIN, 2.4); if (incl) I.incl = clamp(incl, .18, 1.4); if (orb !== undefined) I.orbite = orb; I.saut = true; reveiller(); },
       detruire() {
         I.detruit = true; I.actif = false; if (raf) cancelAnimationFrame(raf); if (ro) ro.disconnect(); document.removeEventListener("visibilitychange", vis);
         ecoutes.forEach(([t, f, op]) => cv.removeEventListener(t, f, op)); joy.remove();
