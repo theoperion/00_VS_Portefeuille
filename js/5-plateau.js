@@ -29,7 +29,7 @@ const ETAPES = [
   { id: "regularite", ico: "🛡️", nom: "Le trophée de la régularité", ouvre: 202712, regle: "speciaux", resume: "Fin de saison : +3 au pilote qui a fini le moins souvent dernier (départage : le plus de mois positifs)." },
   { id: "vote", ico: "🗳️", nom: "Le vote de fin de saison", ouvre: 202712, regle: "speciaux", resume: "Du 2 au 31 décembre, vote pour « le coup de la saison » (pas pour toi). Résultat le 1er janvier : le gagnant reçoit la plaque « Coup de la saison »." },
   { id: "equipe", ico: "🤝", nom: "Le bonus d'équipe", ouvre: 202701, regle: "championnat", resume: "Si tous les pilotes battent le S&P 500 le même mois : +1 pour chacun." },
-  { id: "serie", ico: "🔥", nom: "La série", ouvre: 202701, regle: "championnat", resume: "+1 à chaque 3e mois d'affilée sans finir dernier (3 mois, 6 mois…). La série repart de zéro dès que tu finis dernier." },
+  { id: "serie", ico: "🔥", nom: "La série", ouvre: 202701, regle: "championnat", resume: "+1 à chaque 3e mois d'affilée sans finir dernier (3 mois, 6 mois…). La série repart de zéro dès que tu finis dernier ou que tu n'as pas de relevé ce mois-là." },
   { id: "finale", ico: "🏆", nom: "La Finale", ouvre: 202712, regle: "speciaux", resume: "Décembre, dernier mois de la saison : les points de place comptent double pour tout le monde." },
   { id: "duels", ico: "⚔️", nom: "Les duels", reserve: true, regle: "duels", resume: "Chaque mois, tu peux défier un rival, dans la même fenêtre que ta carte. Le meilleur du mois lui prend 1 point." },
   /* Réserve : des idées codées et prêtes, mais éteintes. Rien ne s'en voit, rien ne compte, tant que l'admin ne leur donne pas une date

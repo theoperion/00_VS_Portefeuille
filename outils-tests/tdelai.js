@@ -16,7 +16,7 @@ const data = { ok: true, version: 75, genere: "2027-02-10T10:00:00", majTexte: "
     await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(data) }));
     await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); });
     await p.goto("http://localhost:8771/index.html"); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes); await p.waitForTimeout(1500);
-    R[quand] = await p.evaluate(() => { const c = championnat(2027), j = c.mois.find(m => m.k === 202701); return { attente: c.attente && c.attente.k, jan: j ? j.l.map(z => [z.nom, z.base]) : null }; }); R[quand].err = err;
+    R[quand] = await p.evaluate(() => { const c = championnat(2027), j = c.mois.find(m => m.k === 202701); const v = victoires(0); return { attente: c.attente && c.attente.k, jan: j ? j.l.map(z => [z.nom, z.base]) : null, serieKevin: v["Kévin"].serie, recordKevin: v["Kévin"].record }; }); R[quand].err = err;
     await p.close(); }
   await b.close();
   const ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); }, a = R["2027-02-03T10:00:00"], z = R["2027-02-10T10:00:00"];
@@ -24,4 +24,5 @@ const data = { ok: true, version: 75, genere: "2027-02-10T10:00:00", majTexte: "
   ok(a.attente === 202701 && !a.jan, "le 3/02 (5 jours après le relevé du 29/01), janvier attend encore Kévin : aucun point");
   ok(!z.attente && z.jan && z.jan.length === 3 && !z.jan.some(x => x[0] === "Kévin"), "le 10/02 (délai passé), janvier se joue sans Kévin : " + JSON.stringify(z.jan));
   ok(z.jan && z.jan.map(x => x[1]).join() === "6,4,2", "barème normal pour les présents (6·4·2), rien pour l'absent");
+  ok(z.serieKevin === 0, "absent en janvier : sa série de victoires en cours est cassée (série " + z.serieKevin + ", record gardé " + z.recordKevin + ")");
   process.exit(ko.length ? 1 : 0); })();
