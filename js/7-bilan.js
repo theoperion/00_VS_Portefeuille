@@ -926,7 +926,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") { $("#saisie
 let attente, largeur = window.innerWidth;
 window.addEventListener("resize", () => { if (window.innerWidth === largeur) return; largeur = window.innerWidth; clearTimeout(attente); attente = setTimeout(() => { if (D) rendreVue(vueActive()); }, 150); });
 if (window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (D) rendreVue(vueActive()); });
-document.addEventListener("visibilitychange", () => { if (document.hidden) return; if (SOURCE) charger(false); if (window.Moi) { if (vueActive() === "moi") window.Moi.rafraichir(false); else window.Moi.prechauffer(); } });
+document.addEventListener("visibilitychange", () => { if (document.hidden) return; verifierMiseAJour(); if (SOURCE) charger(false); if (window.Moi) { if (vueActive() === "moi") window.Moi.rafraichir(false); else window.Moi.prechauffer(); } });
 
 /* ---------- Démarrage ---------- */
 appliquerTheme(stock.get(CLES.theme) || "auto");
@@ -940,10 +940,19 @@ if (ETAT.ouverture === "fiche" || ETAT.ouverture === "moi") { ETAT.ouverture = "
 })();
 /* ---------- Nouvelle version en ligne ? (comparée à celle de la page sur GitHub) ---------- */
 async function verifierMiseAJour() {
-  if (location.protocol !== "https:") return;
+  if (location.protocol !== "https:" && location.hostname !== "localhost") return;   // v20.37 : localhost pour les tests
   try {
     const t = await (await fetch(location.pathname.replace(/[^/]*$/, "") + "version.js?t=" + Date.now(), { cache: "no-store" })).text();   // jamais gardé par sw.js
     const m = /app:\s*"([^"]+)"/.exec(t); if (!m || m[1] === APP_VERSION) return;
+    /* v20.37 (Théo, 24/11) : mise à jour toute seule, sans bandeau, si on n'est pas en train de saisir (une seule tentative par version et par session) */
+    const ae = document.activeElement, occupe = (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) || ($("#saisie") && !$("#saisie").hidden)
+      || ($("#reglages") && !$("#reglages").hidden) || [...document.querySelectorAll('[role="dialog"]')].some(x => !x.hidden && x.offsetParent !== null);
+    let deja = ""; try { deja = sessionStorage.getItem("versus.majAuto") || ""; } catch (e) { /* stockage indisponible */ }
+    if (!occupe && deja !== m[1]) {
+      try { sessionStorage.setItem("versus.majAuto", m[1]); } catch (e) { /* rien */ }
+      try { const r = await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch (e) { /* rien */ }
+      location.reload(); return;
+    }
     const b = $("#maj-band"); if (!b) return;
     b.hidden = false;
     b.innerHTML = "<span>🆕 Version " + esc(m[1]) + " disponible (tu as la " + APP_VERSION + ").</span>" + '<button class="lien" type="button" id="maj-go">Mettre à jour</button>';
