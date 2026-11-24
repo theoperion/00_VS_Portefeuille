@@ -13,17 +13,19 @@ const CARTES_BONUS = [
 ];
 /* ---------- Nouveautés au goutte-à-goutte : chaque règle s'ouvre à sa date ----------
    ouvre = premier mois où la règle compte. Elle est annoncée (et expliquée) le 20 du mois d'avant, à l'ouverture de sa fenêtre.
+   v20.24 (Théo, choix C élargi) : pour le premier mois de la saison, seules les règles marquées « jouer » (à choisir pendant la fenêtre :
+   carte, piège, mois spécial, défi, pronostic, pole, rival) sont annoncées le 20 décembre ; les autres le 1er janvier.
    Avant ça, on ne montre que son nom et son mois. Pour avancer ou repousser une étape : changer « ouvre ». */
 const ETAPES = [
-  { id: "circuits", ico: "🗺️", nom: "L'atout des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque Grand Prix favorise une carte : +1 quand elle marque. Secret jusqu'au 2 (un indice avant), et bouchon si plusieurs la jouent." },
+  { id: "circuits", jouer: true, ico: "🗺️", nom: "L'atout des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque Grand Prix favorise une carte : +1 quand elle marque. Secret jusqu'au 2 (un indice avant), et bouchon si plusieurs la jouent." },
   { id: "pioche", ico: "🎴", nom: "Le rattrapage", ouvre: 202701, regle: "pioche", resume: "Tu finis dernier d'un mois ? Tu pioches une carte bonus (une fois par saison chacune), à jouer à partir du mois suivant. Tes cartes piochées t'attendent dans le Stand." },
   { id: "monaco", ico: "🌑", nom: "L'éclipse", ouvre: 202701, quand: "juin 2027", regle: "speciaux", resume: "Un mois de la saison, une éclipse tombe sur le circuit : le dernier du championnat marque ses points de place en double. La date est dans le calendrier du Grand Prix." },   // v17.5 : nom sans univers, mois corrigé (juin)
-  { id: "pieges", ico: "🪤", nom: "Les pièges des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque circuit sans mois spécial a son piège, une petite règle qui ne vaut que ce mois-là. Il s\'affiche dès le 20 du mois d\'avant, avec la carte." },
-  { id: "gpspeciaux", ico: "🏁", nom: "Les mois spéciaux", ouvre: 202701, regle: "speciaux", resume: "Janvier : le vainqueur du mois marque +2 de plus. Décembre, la Finale : en plus des places doublées, le 🎯 vaut +2 au lieu de +1." },   // v17.5 : sans nom d'univers (révélation fin décembre)
-  { id: "prono", ico: "🔮", nom: "Le pronostic du mois", ouvre: 202701, regle: "championnat", resume: "Dans la fenêtre de ta carte : qui gagne le mois (+1 si juste) et le S&P 500 fera-t-il plus de +1 % (+1 si juste). Secret jusqu'au 2." },
-  { id: "pole", ico: "🅿️", nom: "La pole position", ouvre: 202701, regle: "championnat", resume: "Avec ton pronostic, donne ton chiffre pour le S&P 500 du mois (ex. +1,8 %). Le plus proche marque +1 (partagé en cas d'égalité)." },
-  { id: "defi", ico: "🏁", nom: "Le défi du mois", ouvre: 202701, regle: "championnat", resume: "Chaque mois a son défi (battre le Nasdaq, faire mieux que l'or, finir positif…), annoncé le 20 du mois d'avant : +1 à chaque pilote qui le réussit." },
-  { id: "rival", ico: "😈", nom: "Le rival de la saison", ouvre: 202701, regle: "championnat", resume: "Entre le 20 décembre et le 1er janvier, choisis un rival secret. Fin décembre, si tu finis devant lui au championnat : +3. Révélé à la Finale." },
+  { id: "pieges", jouer: true, ico: "🪤", nom: "Les pièges des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque circuit sans mois spécial a son piège, une petite règle qui ne vaut que ce mois-là. Il s\'affiche dès le 20 du mois d\'avant, avec la carte." },
+  { id: "gpspeciaux", jouer: true, ico: "📅", nom: "Les mois spéciaux", ouvre: 202701, regle: "speciaux", resume: "Certains mois ont une règle spéciale à la place du piège. Janvier : le vainqueur du mois marque +2 de plus." },   // v20.24 : annoncée le 20/12, donc sans la Finale (dévoilée plus tard) ; v17.5 : sans nom d'univers (révélation fin décembre)
+  { id: "prono", jouer: true, ico: "🔮", nom: "Le pronostic du mois", ouvre: 202701, regle: "championnat", resume: "Avec ta carte (du 20 au 1er) : qui gagne le mois (+1 si juste) et le S&P 500 fera-t-il plus de +1 % (+1 si juste). Secret jusqu'au 2." },
+  { id: "pole", jouer: true, ico: "🅿️", nom: "La pole position", ouvre: 202701, regle: "championnat", resume: "Avec ton pronostic, donne ton chiffre pour le S&P 500 du mois (ex. +1,8 %). Le plus proche marque +1 (partagé en cas d'égalité)." },
+  { id: "defi", jouer: true, ico: "🏁", nom: "Le défi du mois", ouvre: 202701, regle: "championnat", resume: "Chaque mois a son défi (battre le Nasdaq, faire mieux que l'or, finir positif…), annoncé le 20 du mois d'avant : +1 à chaque pilote qui le réussit." },
+  { id: "rival", jouer: true, ico: "😈", nom: "Le rival de la saison", ouvre: 202701, regle: "championnat", resume: "Entre le 20 décembre et le 1er janvier, choisis un rival secret. Fin décembre, si tu finis devant lui au championnat : +3. Révélé en décembre." },
   { id: "regularite", ico: "🛡️", nom: "Le trophée de la régularité", ouvre: 202712, regle: "speciaux", resume: "Fin de saison : +3 au pilote qui a fini le moins souvent dernier (départage : le plus de mois positifs)." },
   { id: "vote", ico: "🗳️", nom: "Le vote de fin de saison", ouvre: 202712, regle: "speciaux", resume: "Du 2 au 31 décembre, vote pour « le coup de la saison » (pas pour toi). Résultat le 1er janvier : le gagnant reçoit la plaque « Coup de la saison »." },
   { id: "equipe", ico: "🤝", nom: "Le bonus d'équipe", ouvre: 202701, regle: "championnat", resume: "Si tous les pilotes battent le S&P 500 le même mois : +1 pour chacun." },
@@ -42,7 +44,13 @@ function ouvreEtape(e) { return programmee(e) || e.ouvre || 999912; }
 /** Règle en réserve : codée mais éteinte, tant que l'admin ne lui a pas donné de date */
 function enReserve(e) { return !!(e && e.reserve && !programmee(e)); }
 function etapesJeu() { return ETAPES.filter(e => !enReserve(e)); }
-function annonceEtape(e) { return cleMoins(ouvreEtape(e), 1) * 100 + 20; }
+function annonceEtape(e) {
+  const o = ouvreEtape(e);
+  if (o === SAISON.premiere * 100 + 1 && !e.jouer && (!programmee(e) || programmee(e) === e.ouvre)) return o * 100 + 1;   // v20.24 : le 1er janvier (une autre date réglée par l'admin reprend la règle du 20)
+  return cleMoins(o, 1) * 100 + 20;
+}
+/** Date d'annonce en clair : « 20 décembre 2026 », « 1er janvier 2027 » */
+function dateAnnonce(e) { const a = annonceEtape(e), j = a % 100; return (j === 1 ? "1er" : String(j)) + " " + moisLong(Math.floor(a / 100)); }
 /** La règle compte-t-elle pour le mois k ? (l'aperçu admin montre tout) */
 function regleActive(id, k) { const e = etape(id); if (enReserve(e)) return false; if (apercuSaison()) return true; return !e || (!!k && k >= ouvreEtape(e)); }
 /** La règle est-elle déjà annoncée (expliquée) ? */
@@ -66,7 +74,7 @@ function ouvrirEtapeAdmin(id) {
   const res = enReserve(e), cur = res ? (moisCarteOuvert() || prochaineFenetre().k) : ouvreEtape(e), visible = regleVisible(e.id), mo = moisCarteOuvert() || prochaineFenetre().k;
   o.innerHTML = '<div class="tuto-c etape-adm"><span class="tuto-k">Admin · ' + (res ? "🧪 en réserve, éteinte" : visible ? "déjà annoncée" : "🔒 pas encore visible") + '</span><div class="tuto-i">' + e.ico + "</div><h3>" + esc(e.nom) + "</h3><p>" + esc(e.resume) + "</p>" +
     (res ? '<p class="ea-date">En réserve : personne ne la voit, elle ne compte pas. Donne-lui une date pour la mettre en jeu ; elle sera annoncée le 20 du mois d\'avant.</p>'
-      : '<p class="ea-date">S\'ouvre pour <b>' + esc(moisLong(cur)) + "</b>" + (visible ? "" : " · annoncée aux autres le " + esc(String(annonceEtape(e) % 100)) + " " + esc(moisLong(cleMoins(cur, 1)))) + ".</p>") +
+      : '<p class="ea-date">S\'ouvre pour <b>' + esc(moisLong(cur)) + "</b>" + (visible ? "" : " · annoncée aux autres le " + esc(dateAnnonce(e))) + ".</p>") +
     '<label class="ea-l">Nouvelle date <select id="ea-mois">' + mois.map(k => '<option value="' + k + '"' + (k === cur ? " selected" : "") + ">" + esc(moisLong(k)) + "</option>").join("") + "</select></label>" +
     '<div class="btn-row"><button class="btn acc" type="button" data-ea="date">Enregistrer la date</button><button class="btn ghost" type="button" data-ea="maintenant">Ouvrir pour ' + esc(moisLong(mo).replace(/ \d{4}$/, "")) + "</button></div>" +
     '<div class="btn-row"><button class="btn ghost" type="button" data-ea="regle">Voir la règle complète</button><button class="btn ghost" type="button" data-ea="origine"' + (res ? " disabled" : "") + ">" + (e.reserve ? "Remettre en réserve" : "Date d'origine") + "</button></div>" +
@@ -100,7 +108,7 @@ function ouvrirReserve() {
   if (!adminActif()) return;
   const o = document.createElement("div"); o.className = "regles"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Règles et idées en réserve");
   const auj = aujNum();
-  const etat = e => enReserve(e) ? "🧪 en réserve" : regleActive(e.id, Math.floor(auj / 100)) ? "✅ en jeu depuis " + moisLong(ouvreEtape(e)) : regleVisible(e.id) ? "📣 annoncée · compte dès " + moisLong(ouvreEtape(e)) : "🔒 " + moisLong(ouvreEtape(e)) + " (annoncée le 20 du mois d'avant)";
+  const etat = e => enReserve(e) ? "🧪 en réserve" : regleActive(e.id, Math.floor(auj / 100)) ? "✅ en jeu depuis " + moisLong(ouvreEtape(e)) : regleVisible(e.id) ? "📣 annoncée · compte dès " + moisLong(ouvreEtape(e)) : "🔒 " + moisLong(ouvreEtape(e)) + " (annoncée le " + dateAnnonce(e) + ")";
   const ligne = e => '<li><button type="button" class="lien" data-etape="' + e.id + '">' + e.ico + " " + esc(e.nom) + "</button> · <small>" + esc(etat(e)) + "</small><br><small>" + esc(e.resume) + "</small></li>";
   const tmp = document.createElement("div"); tmp.innerHTML = htmlRegles(true, true);
   const sect = id => { const x = tmp.querySelector("#rg-" + id); return x ? x.outerHTML.replace('id="rg-', 'id="rs-') : ""; };
@@ -296,7 +304,7 @@ function htmlRival(y, kOuvert) {
   if (!fenetre) return r && r.r ? '<p class="info">😈 Ton rival secret de ' + y + " : <b>" + esc(r.r) + "</b>. +3 si tu finis devant lui au championnat.</p>" : "";
   const c = RIVAL_CHOIX || (r && r.r) || null;
   return '<div><h3 class="s-h3">😈 Rival de la saison <small>' + y + "</small></h3></div>" +
-    '<div class="c-action duel"><p>Choisis un rival <b>secret</b> pour toute la saison : si tu finis devant lui au championnat en décembre, <b>+3</b>. Modifiable jusqu\'au 1<sup>er</sup> janvier, révélé à la Finale.</p>' +
+    '<div class="c-action duel"><p>Choisis un rival <b>secret</b> pour toute la saison : si tu finis devant lui au championnat en décembre, <b>+3</b>. Modifiable jusqu\'au 1<sup>er</sup> janvier, révélé en décembre.</p>' +
     '<div class="chips" role="group" aria-label="Rival de la saison">' + autres.map(n => '<button class="chip" type="button" data-rs="' + esc(n) + '" aria-pressed="' + (c === n) + '">' + esc(n) + "</button>").join("") + "</div>" +
     (r && r.r && !RIVAL_CHOIX ? "<p>✓ Rival choisi : <b>" + esc(r.r) + "</b>.</p>" : '<button class="btn acc" type="button" id="rival-ok"' + (c ? "" : " disabled") + ">Choisir " + (c ? esc(c) : "mon rival") + "</button>") + "</div>";
 }
@@ -548,7 +556,7 @@ function htmlPilote(qui, e) {
 function htmlRegles(tout, modeReserve) {
   const idx = esc(D.marche.indices[iRef()]), y = Math.max(saisonCourante() || 0, SAISON.premiere), mo = monacoMois(y);
   const s = (id, ico, t, corps) => '<section class="rg-s" id="rg-' + id + '"><h4>' + ico + " " + t + "</h4>" + corps + "</section>";
-  const secret = !tout && !modeReserve && !estAdmin() && !saisonJouee();   // v17.9 (Théo) : jusqu'au 1er janvier, les joueurs ne lisent que les règles de décembre (rien d'autre, même après le 20/12)
+  const secret = !tout && !modeReserve && !estAdmin() && !saisonJouee() && !janvierAnnonce();   // v20.24 : dès le 20/12, les règles annoncées (à jouer en janvier) se lisent ; v17.9 (Théo) : jusqu'au 20 décembre, les joueurs ne lisent que les règles de décembre
   const vu = id => !secret && (modeReserve || (tout && !enReserve(etape(id))) || regleVisible(id));
   const vP = vu("pioche"), vN = vu("niveaux"), vA = vu("atelier"), vM = vu("monaco"), vF = vu("finale"), vC = vu("circuits"), vS = vu("gpspeciaux");
   const vB = ["prono", "pole", "defi", "rival", "equipe", "serie", "regularite"].some(vu), bientot = tout || modeReserve || (!saisonJouee() && !estAdmin()) ? [] : etapesJeu().filter(e => !regleVisible(e.id));   // v17.8 (Théo) : rien de « Bientôt » pour les joueurs avant la saison
@@ -584,13 +592,13 @@ function htmlRegles(tout, modeReserve) {
       (vu("regularite") ? "<div><b>🛡️ Régularité</b><span>fin de saison : le moins souvent dernier (puis le plus de mois positifs)</span><em>+3</em></div>" : "") + "</div>") : "") +
     (!vSp ? "" : s("speciaux", "📅", "Les mois spéciaux", '<div class="rg-tab">' +
       (vM && univ ? "<div><b>🌑 Le Côté obscur</b><span>" + (regleActive("monaco", mo) ? esc(moisLong(mo)) : "juin") + " : le dernier du championnat</span><em>place ×2</em></div>" : "") +
-      (vS && univJanv ? "<div><b>🪱 Le Chevaucheur des sables</b><span>janvier : le vainqueur du mois</span><em>+2</em></div>" : "") + (vS && univ ? "<div><b>🦸 Le Rassemblement des héros</b><span>décembre (avec la Finale) : le 🎯</span><em>vaut +2</em></div>" : vS ? "<div><b>🎯 Bonus de la Finale</b><span>décembre : le 🎯</span><em>vaut +2</em></div>" : "") +
+      (vS && univJanv ? "<div><b>🪱 Le Chevaucheur des sables</b><span>janvier : le vainqueur du mois</span><em>+2</em></div>" : "") + (vS && univ ? "<div><b>🦸 Le Rassemblement des héros</b><span>décembre (avec la Finale) : le 🎯</span><em>vaut +2</em></div>" : "") +   // v20.24 : rien sur la Finale avant la saison
       (vM && !univ ? "<div><b>🌑 L'éclipse</b><span>un mois de la saison : le dernier du championnat</span><em>place ×2</em></div>" : "") +
       (vF ? "<div><b>🏆 Finale</b><span>décembre : tout le monde</span><em>place ×2</em></div>" : "") +
       (vu("vote") ? "<div><b>🗳️ Vote</b><span>2 → 31 décembre : « le coup de la saison » (pas pour soi)</span><em>plaque</em></div>" : "") + "</div>")) +
     (vu("pieges") ? s("pieges", "🪤", "Les pièges des circuits", "<p>Les autres mois, le circuit a son <b>piège</b> : une petite règle qui ne vaut que ce mois-là. Il s'affiche dès le 20 du mois d'avant (Stand et Classement).</p>" +
       '<div class="rg-tab">' + CAL_GP.filter((id, i) => PIEGES[id] && (univ || (univJanv && i === 0))).map(id => "<div><b>" + GPS[id].drap + " " + esc(GPS[id].ville) + "</b><span>" + PIEGES[id].ico + " <b>" + esc(PIEGES[id].nom) + "</b> : " + esc(PIEGES[id].txt) + "</span><em>" + esc(moisCourt(y * 100 + CAL_GP.indexOf(id) + 1).replace(/ \d+$/, "")) + "</em></div>").join("") + "</div>" +
-      (univ ? '<p class="rg-note">Le Côté obscur tombe en juin, sur la Bataille spatiale.</p>' : '<p class="rg-note">Les circuits et leurs pièges se dévoilent fin décembre.</p>')) : "") +
+      (univ ? '<p class="rg-note">Le Côté obscur tombe en juin, sur la Bataille spatiale.</p>' : '<p class="rg-note">Janvier n\'a pas de piège : c\'est un mois spécial (le vainqueur du mois marque +2). Les autres circuits et leurs pièges se dévoilent plus tard.</p>')) : "") +
     (vP ? s("pioche", "🎴", "Le rattrapage",
       "<p>Dernier d'un mois ? Tu pioches <b>1 carte bonus</b>, jouable dès le mois suivant, une fois par saison :</p><ul>" + CARTES_BONUS.map(c => "<li>" + c.ico + " <b>" + esc(c.nom) + "</b> : " + esc(c.court || c.def) + "</li>").join("") + "</ul>") : "") +
     (vN ? s("niveaux", "🔧", vA ? "Niveaux et atelier" : "Niveaux d'écurie",

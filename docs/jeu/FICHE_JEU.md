@@ -24,8 +24,13 @@ Le championnat entre amis : chaque mois, les pilotes (Théo, Kévin, Clément, D
 - Sons : `js/sons.js` (Web Audio synthétisé, aucune note de film). Vues Carte / Visite / Hélico + plein écran.
 - Aperçus admin : « 🗺️ Circuits 2027 », « 🔥 Voir décembre », « Tout afficher » (saison simulée).
 
+## Annonce des règles 2027 (v20.24, choix « C élargi » de Théo, 24/11)
+- Le 20/12 : seulement les règles à jouer pendant la fenêtre de janvier (marque `jouer: true` dans `ETAPES`, js/5-plateau.js) : atout, pièges, mois spéciaux (janvier n'a pas de piège : c'est un mois spécial), pronostic, pole, défi, rival. Les autres règles de janvier : le 1/1. Ensuite, chaque règle s'annonce le 20 du mois d'avant.
+- Test : `node outils-tests/tannonce.js` (simple joueur, dates 19/12, 20/12, 31/12, 1/1, 2/1, fausses données).
+- `versus/PodiumCommun.js` garde l'ancien `annonceEtape` (sans effet sur les points) : le régénérer à la prochaine mise en ligne du serveur.
+
 ## À faire (dans l'ordre)
-1. **Urgent, avant le 20/12** : aujourd'hui l'appli annonce les règles d'un mois dès le 20 du mois d'avant (`annonceEtape`, js/5-plateau.js), donc les règles de janvier s'afficheraient chez les joueurs le 20/12. **Décision de Théo (24/11, choix C)** : le 20/12, montrer seulement ce qui sert à jouer janvier (le piège et le défi du mois, pour choisir sa carte) ; tout le reste des nouvelles règles de 2027 seulement le 1/1. Vérifier aussi que la fenêtre « NOUVELLES RÈGLES » est à jour.
+1. **Révélation du 1/1** (validée par Théo le 24/11) : au lieu de la fenêtre « Nouvelles règles » d'un bloc, une entrée en saison avec une règle par toucher (son, décor de Janvier). À faire en v20.25.
 2. **Nicolas**, 5ᵉ joueur, au plus tard le 1/1/2027 : son fichier + script, l'ajouter au Versus, couleur `--p4`, portrait `PRESETS_TETE.nicolas`, vérifs d'affichage.
 3. **Écran « La Coupe brisée »** avant janvier (serveur V49 prêt).
 4. **Refonte des badges** avant janvier : à **réduire** avec Théo à l'essentiel faisable d'ici là (le reste dans `IDEES_JEU.md`).
