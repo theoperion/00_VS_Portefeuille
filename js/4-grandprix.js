@@ -831,7 +831,7 @@ function ceremonieEclat(e, c, i) {
     (c ? '<div class="cbo-coupe">' + svgCoupe(c, i) + "</div>" : "") +
     "<h3>Éclat de " + esc(e.matiere || "") + "</h3>" + (G ? '<small class="cbo-u">' + G.drap + " " + esc(G.gp) + "</small>" : "") +
     '<p class="cbo-grave">Gravé à ton nom : <b>' + esc(moi) + "</b></p><p>" + esc(e.texte || "") + "</p>" + (e.symbole ? '<p class="cb-s1">Un signe y est gravé : <b>' + esc(e.symbole) + "</b></p>" : "") +
-    '<p class="cbo-flair">🔍 +3 points de chercheur pour la couronne du Flair (aucun point au championnat)</p>' +
+    (typeof saisonJouee === "function" && saisonJouee() ? '<p class="cbo-flair">🔍 +3 au score de chercheur (couronne du Flair) · aucun point au championnat</p>' : "") +
     '<div class="btn-row">' + (c ? '<button class="btn acc" type="button" data-cb-voir>Voir la Coupe</button>' : "") + '<button class="btn ghost" type="button" data-cb-ok>Génial !</button></div></div>';
   document.body.appendChild(o);
   const t0 = Date.now(), fermer = () => o.remove();

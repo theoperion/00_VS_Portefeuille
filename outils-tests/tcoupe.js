@@ -45,6 +45,9 @@ async function page(b, s, quand, sombre, admin) {
     const f = await p.evaluate(async () => { TRESORS = null; TRESORS_T = 0; await chargerTresors(); ceremonieEclat({ circuit: "suzuka", matiere: "M", couleur: "#CFE3EE", symbole: "◎", texte: "T" }, coupeDonnees(), 3);
       const avant = !!document.querySelector(".cb-or"); fermerFenetreOuverte(); return { avant, apres: !!document.querySelector(".cb-or") }; });
     ok(f.avant && !f.apres, "le bouton retour ferme la cérémonie dorée du premier trouveur"); await ctx.close(); }
+  { const { ctx, p } = await page(b, { role: "perso", nom: "Clément" }, "2026-12-15T10:00:00", false, false);   // pendant la chauffe : pas de mention du Flair (nouveauté de janvier)
+    const t = await p.evaluate(() => { ceremonieEclat({ circuit: "abudhabi", matiere: "M", couleur: "#CFE3EE", texte: "T" }, null, -1); const o = document.querySelector(".cb-or"); return o ? o.innerText : ""; });
+    ok(t && !/Flair|couronne/i.test(t), "15/12/2026 : la cérémonie du premier trouveur ne parle pas encore du Flair"); await ctx.close(); }
   { const { ctx, p } = await page(b, { role: "perso", nom: "Clément" }, "2026-12-20T10:00:00", false, true);
     const j = await p.evaluate(() => { apercuCoupe(); return !!document.querySelector(".coupe-b"); }); ok(!j, "joueur : l'aperçu admin ne s'ouvre pas"); await ctx.close(); }
   await b.close();

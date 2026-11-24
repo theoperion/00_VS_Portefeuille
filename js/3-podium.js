@@ -423,6 +423,7 @@ function premiersExclusifs() {
       const c = championnat(y), wins = {};
       let precPlaces = null;
       c.mois.forEach(m => {
+        Object.keys(st).forEach(n => { if (!m.l.some(z => z.nom === n)) { st[n].run = 0; st[n].bat = 0; } });   // v20.44 (arbitre) : un mois d'absence casse les séries (REGLES_PODIUM)
         m.l.forEach(x => {
           const s = st[x.nom] = st[x.nom] || { run: 0, prod: 1, pic: 1, creux: false, pts: 0, bonus: 0, bat: 0, tete: 0 };
           if (x.rg === 1) note("premiersang", x.nom, m.k, x.r);
@@ -1203,7 +1204,7 @@ const PIERRES = [
   { id: "victoire", c: "#9B5CFF", nom: "Pierre de la victoire", def: "gagner un mois" },
   { id: "indice", c: "#3D8BFF", nom: "Pierre de l'indice", def: "3 mois devant l'indice dans la saison" },
   { id: "carte", c: "#FF3B4E", nom: "Pierre de la carte", def: "marquer des points avec une carte" },
-  { id: "pari", c: "#FFD23D", nom: "Pierre de l'audace", def: "gagner un 🎲 Pari contre le leader du championnat (celui en tête au départ du mois)" },
+  { id: "pari", c: "#FFD23D", nom: "Pierre de l'audace", def: "gagner un 🎲 Pari contre le leader du championnat (celui en tête au départ du mois, donc dès février)" },
   { id: "tenace", c: "#2FD16A", nom: "Pierre de la ténacité", def: "3 mois d'affilée sans finir dernier" },
   { id: "retour", c: "#FF8A2B", nom: "Pierre du retour", def: "finir dernier un mois, puis gagner un mois plus tard" }
 ];
@@ -1218,14 +1219,14 @@ function etatGant(y) {
   D.personnes.forEach(p => { out[p.nom] = { p: [0, 0, 0, 0, 0, 0], n: 0 }; R[p.nom] = { bat: 0, run: 0, dernier: false }; });
   let avant = null;
   if (!c.chauffe) c.mois.forEach(m => {
-    const lead = avant ? Object.keys(avant).find(n => avant[n] === 1) : null;   // leader du championnat au départ du mois (la grille)
+    const leads = avant ? Object.keys(avant).filter(n => avant[n] === 1) : [];   // leader(s) du championnat au départ du mois (la grille), ex æquo compris
     m.l.forEach(x => {
       const o = out[x.nom], r = R[x.nom]; if (!o) return;
       const allume = i => { if (!o.p[i]) { o.p[i] = m.k; o.n++; } };
       if (x.rg === 1) allume(0);
       if (m.iR !== null && x.r > m.iR) { r.bat++; if (r.bat >= 3) allume(1); }
       if (x.carte && x.carte.gain > 0) allume(2);
-      if (x.carte && x.carte.id === "pari" && x.carte.gain > 0 && lead && x.carte.cible === lead) allume(3);
+      if (x.carte && x.carte.id === "pari" && x.carte.gain > 0 && leads.includes(x.carte.cible)) allume(3);
       r.run = x.dernier ? 0 : r.run + 1; if (r.run >= 3) allume(4);
       if (x.rg === 1 && r.dernier) allume(5);
       if (x.dernier) r.dernier = true;
@@ -1253,15 +1254,17 @@ function etatCouronnes(y) {
     const c = championnat(y); let co = null, fl = null; const run = {};
     if (!c.chauffe) c.mois.forEach(m => {
       // la Couronne : 1re place du championnat après ce mois (classement final, bonus compris, pour le dernier mois d'une saison complète)
-      const der = m === c.mois[c.mois.length - 1] && c.complete, lead = der ? c.classement[0] : Object.keys(m.places).find(n => m.places[n] === 1);
-      if (lead && (!co || co.nom !== lead)) co = { nom: lead, depuis: m.k }; if (co) co.val = m.cumul[co.nom];
+      const der = m === c.mois[c.mois.length - 1] && c.complete, leads = der ? [c.classement[0]] : Object.keys(m.places).filter(n => m.places[n] === 1);
+      // v20.44 (arbitre) : à égalité parfaite, le détenteur garde la Couronne ; sans détenteur parmi les ex æquo, personne ne la prend
+      if (co && leads.includes(co.nom)) { /* il la garde */ } else co = leads.length === 1 ? { nom: leads[0], depuis: m.k } : null; if (co) co.val = m.cumul[co.nom];
       // la Flamme : série en cours de mois sans finir dernier (absent = série remise à zéro)
       D.personnes.forEach(p => { const x = m.l.find(z => z.nom === p.nom); run[p.nom] = x ? (x.dernier ? 0 : (run[p.nom] || 0) + 1) : 0; });
       const mx = Math.max(0, ...Object.values(run));
       if (!mx) { fl = null; return; }
       const cands = Object.keys(run).filter(n => run[n] === mx);
       if (fl && cands.includes(fl.nom)) { fl.val = mx; return; }   // à égalité, le détenteur la garde
-      fl = { nom: cands.sort((a, b) => (m.places[a] || 99) - (m.places[b] || 99))[0], depuis: m.k, val: mx };   // séries égales (commencées le même mois) : le mieux classé
+      const tri = cands.sort((a, b) => (m.places[a] || 99) - (m.places[b] || 99));   // séries égales (commencées le même mois) : le mieux classé
+      fl = tri.length > 1 && (m.places[tri[0]] || 99) === (m.places[tri[1]] || 99) ? null : { nom: tri[0], depuis: m.k, val: mx };   // v20.44 : égalité parfaite, personne
     });
     base = MEMO_COUR.m[cle] = {
       couronne: co ? Object.assign(co, { txt: co.val + " points" }) : null,
@@ -1292,20 +1295,21 @@ function etatTropheesMondes() {
   anneesSaison().forEach(y => {
     const ch = championnat(y), R = {}; noms.forEach(n => R[n] = { pos: 0, posRun: 0, defis: 0, cum: 1, dern: false });
     ch.mois.forEach(m => {
-      const gag = (m.l.find(z => z.rg === 1) || {}).nom;
+      const gagnants = m.l.filter(z => z.rg === 1).map(z => z.nom);   // v20.44 (arbitre) : victoire partagée comprise
+      noms.forEach(n => { if (!m.l.some(z => z.nom === n)) R[n].posRun = 0; });   // un mois d'absence casse la série
       m.l.forEach(x => {
         const r = R[x.nom]; if (!r) return;
         if (x.carte && x.carte.gain > 0) monte("m-carte", x.nom, 1, 1);
-        if (x.prono && x.prono.v && x.prono.v === gag) monte("m-voeu", x.nom, 1, 1);
+        if (x.prono && x.prono.v && gagnants.includes(x.prono.v)) monte("m-voeu", x.nom, 1, 1);
         if (x.prono && x.prono.pole) monte("m-hacker", x.nom, 1, 1);
-        if (x.prono && x.prono.v === gag && x.prono.pole && x.prono.i && m.iR !== null && (x.prono.i === "h") === (m.iR > 0.01)) monte("m-pantheon", x.nom, 1, 1);
+        if (x.prono && gagnants.includes(x.prono.v) && x.prono.pole && x.prono.i && m.iR !== null && (x.prono.i === "h") === (m.iR > 0.01)) monte("m-pantheon", x.nom, 1, 1);
         r.posRun = x.r > 0 ? r.posRun + 1 : 0; monte("m-horsreseau", x.nom, r.posRun, 3);
         if (x.r > 0) r.pos++; monte("m-neonvert", x.nom, r.pos, 6);
         if (m.iR !== null && m.iR < 0 && x.r > 0) monte("m-survivant", x.nom, 1, 1);
         if (r.dern && x.rg <= 3) monte("m-twist", x.nom, 1, 1); r.dern = !!x.dernier;
         if (x.defi) r.defis++; monte("m-nuitblanche", x.nom, r.defis, 3);
         monte("m-faveur", x.nom, x.p, 12);
-        r.cum *= 1 + x.r; monte("m-epice", x.nom, Math.max(0, Math.round((r.cum - 1) * 100)), 15);
+        r.cum *= 1 + x.r; monte("m-epice", x.nom, Math.max(0, Math.floor((r.cum - 1) * 100 + 1e-9)), 15);   // v20.44 : 14,5 % ne suffit pas
       });
     });
     D.personnes.forEach(p => { if (serie(p, 0).some(z => z.k > ch.deb && z.k <= ch.f && z.val && (z.verse || 0) > 0)) monte("m-pousse", p.nom, 1, 1); });
@@ -1371,7 +1375,7 @@ function htmlSecrets(apercu, noms, moi) {
     '<p class="info">Chaque secret reste caché tant que personne ne l\'a réussi. Le <b>premier</b> gagne la version <b>dorée</b>, son nom gravé et un objet d\'écurie que personne d\'autre n\'aura ; du 2e au 5e, la version <b>argentée</b>. Chaque secret garde son histoire.</p>' + tab +
     '<div class="sec-grille">' + SECRETS_SAISON.map(x => {
       const r = R[x.id];
-      if (!r.or) return '<button type="button" class="sec-t cache" data-secret="' + x.id + '"><span class="sec-i sil" aria-hidden="true">' + x.ico + '</span><b>Secret ' + esc(NIV_EX[x.niv].toLowerCase()) + '</b><small class="flou">' + esc(x.indice) + "</small></button>";
+      if (!r.or) return '<button type="button" class="sec-t cache" data-secret="' + x.id + '"><span class="sec-i sil" aria-hidden="true">🔍</span><b>Secret ' + esc(NIV_EX[x.niv].toLowerCase()) + '</b><small class="flou">' + esc(x.indice) + "</small></button>";
       const mOr = r.or.noms.includes(moi), mArg = r.argent.some(o => o.nom === moi);
       return '<button type="button" class="sec-t ouvert' + (mOr ? " a-moi m-or" : mArg ? " a-moi m-arg" : "") + '" data-secret="' + x.id + '"><span class="sec-i">' + x.ico + "</span><b>" + esc(x.nom) + "</b>" + htmlUnivers(x.univers) +
         '<span class="sec-q"><span class="q-or">🥇 ' + r.or.noms.map(nomPilote).join(" ") + "</span>" + (r.argent.length ? '<span class="q-arg">🥈 ' + r.argent.map(o => esc(o.nom)).join(", ") + "</span>" : "") + "</span></button>";
@@ -1403,7 +1407,7 @@ function ouvrirSecret(id) {
   const apercu = !saisonJouee(), r = apercu ? { or: null, argent: [], tous: [] } : rangsSecret(id), moi = moiPilote(), mo = mondeDeNiv(x.niv), cc = CARTES_COLL[id], idx = D.marche.indices[iRef()];
   const ov = document.createElement("div"); ov.className = "revel cc-ov sec-ov"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
   const tete = '<span class="tuto-k">🔍 Secret ' + esc(NIV_EX[x.niv].toLowerCase()) + (universVisible() && univers(x.univers) ? " · " + univers(x.univers).drap + " " + esc(univers(x.univers).nom) : "") + "</span>";
-  if (!r.or) ov.innerHTML = '<div class="rv-c cc-c" style="--mc:' + mo.c + '">' + tete + '<div class="bd-med sil" style="--mc:' + mo.c + '">' + x.ico + "</div><h3>Secret caché</h3>" +
+  if (!r.or) ov.innerHTML = '<div class="rv-c cc-c" style="--mc:' + mo.c + '">' + tete + '<div class="bd-med sil" style="--mc:' + mo.c + '">🔍</div><h3>Secret caché</h3>' +
     '<p class="cc-a">Indice : « ' + esc(x.indice) + " »</p><p class=\"cc-cond\">Personne ne l'a encore réussi. Le premier gagnera la version dorée, son nom gravé et un objet d'écurie que personne d'autre n'aura. Les suivants (jusqu'au 5e) auront la version argentée.</p>" +
     '<div class="btn-row"><button class="btn acc" type="button" data-cc="ok">Fermer</button></div></div>';
   else {

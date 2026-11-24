@@ -89,13 +89,13 @@ const deborde = () => [...document.querySelectorAll("#v-trophees *")].filter(x =
     ok(!err.length && n.on === 4 && n.svg === 4, "Nicolas voit 4 pierres allumées sur son Gant " + JSON.stringify(n));
     await ctx.close();
   }
-  { // avant le 1/1/2027 : rien des nouvelles vitrines pour un joueur (révélations du 20/12 et du 1/1)
-    const { ctx, p, err } = await page(b, "2026-12-15T10:00:00", { role: "perso", nom: "Clément" }, false, true);
+  for (const QD of ["2026-12-03T10:00:00", "2026-12-15T10:00:00", "2026-12-20T10:00:00", "2026-12-31T22:00:00"]) { // avant le 1/1/2027 : rien des nouvelles vitrines pour un joueur, même en forçant (révélations du 20/12 et du 1/1)
+    const { ctx, p, err } = await page(b, QD, { role: "perso", nom: "Clément" }, false, true);
     const a = await p.evaluate(() => { const v = document.querySelector("#v-trophees"), t = v.innerText;
       return { onglet: !!v.querySelector('[data-pod="defis"]'), att: /Voici ce qui t'attend/.test(t), vit: !!v.querySelector("#vit-secrets") && !!v.querySelector(".gant"),
         detenteurs: v.querySelectorAll(".sec-t.ouvert, .cour-q b, .gant-autres, .tm .rt-dots").length, cache: v.querySelectorAll(".sec-t.cache").length, univ: v.querySelectorAll(".univ:not(.cache)").length, ecurie: !!v.querySelector('[data-pod="ecurie"]') }; });
     await p.screenshot({ path: DOSSIER + "/apercu-15-12-2026.png", fullPage: true });
-    ok(!err.length && !a.onglet && !a.vit && !a.detenteurs && !a.ecurie && !/secret|Gant de l'infini|couronne/i.test(await p.evaluate(() => document.querySelector("#v-trophees").innerText)), "15/12/2026 : le joueur n'a ni onglet Trophées ni Écurie, rien des vitrines ne fuit avant janvier (règle de Théo) " + JSON.stringify(a));
+    ok(!err.length && !a.onglet && !a.vit && !a.detenteurs && !a.ecurie && !/secret|Gant de l'infini|couronne/i.test(await p.evaluate(() => document.querySelector("#v-trophees").innerText)), QD.slice(0, 10) + " : le joueur n'a ni onglet Trophées ni Écurie, rien des vitrines ne fuit avant janvier (règle de Théo) " + JSON.stringify(a));
     await ctx.close();
   }
   await b.close();
