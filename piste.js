@@ -6778,6 +6778,7 @@
   /* Un seul contexte WebGL, réutilisé d'un circuit à l'autre (en créer un à chaque fois est lent et iOS en limite le nombre) */
   const RESERVE = [];
   const ZOOM_MIN = .04;   // v20.45 (Théo) : on zoome 3 fois plus près qu'avant (0,12) pour aller au plus petit détail du décor
+  const PAN_LARGE = 1.6; // v20.46 (Théo) : la Visite sort du rectangle de la piste pour explorer la ville, les falaises, le décor autour
   const ZOOM_EXPLO = .75;   // v20.39 : en dessous (Visite zoomée), un doigt déplace la carte et le joystick apparaît
   function contexte() {
     while (RESERVE.length) { const c = RESERVE.pop(); if (!c.gl.isContextLost()) return c; }
@@ -6873,7 +6874,7 @@
           if (q >= 1) { const fin = S.fin; I.survol = null; I.pan = [0, 0]; I.zoom = 1; I.incl = .72; if (fin) setTimeout(fin, 0); } }
         else if (!I.tir && !I.joy && I.zoom >= ZOOM_EXPLO && ANIM()) I.orbite += dt * .05;   // v20.39 : de près, la carte ne tourne plus toute seule
         if (I.joy && !I.survol) { const k = Math.max(T.rx, T.rz) * I.zoom * dt * 1.1, an = I.orbite + .6, s = Math.sin(an), c = Math.cos(an), dx = I.joy[0], dy = I.joy[1];   // v20.39 : pousser vers le haut = avancer, vers la droite = aller à droite
-          I.pan = [clamp(I.pan[0] + (dx * s + dy * c) * k, -T.rx, T.rx), clamp(I.pan[1] + (-dx * c + dy * s) * k, -T.rz, T.rz)]; }
+          I.pan = [clamp(I.pan[0] + (dx * s + dy * c) * k, -T.rx * PAN_LARGE, T.rx * PAN_LARGE), clamp(I.pan[1] + (-dx * c + dy * s) * k, -T.rz * PAN_LARGE, T.rz * PAN_LARGE)]; }
         const fov = .9, rv = Math.max(T.rx, T.rz / Math.min(1, asp * .9) * (asp < 1 ? 1.25 : 1)), dist = rv / Math.tan(fov / 2) * .92 * I.zoom;
         // V16.58 · Visite : inclinaison (glisser haut/bas) et déplacement (deux doigts) ; zoom jusqu'à 0,12
         const a = I.orbite + .6, h = dist * (I.incl || .72), cx = T.cx + I.pan[0], cz = T.cz + I.pan[1];
@@ -7053,10 +7054,10 @@
         if (!I.tir.d0) { I.tir.d0 = d; I.tir.z = I.zoom; I.tir.m0 = m; I.tir.p0 = I.pan.slice(); I.tir.a0 = ang; I.tir.o2 = I.orbite; } I.zoom = clamp(I.tir.z * I.tir.d0 / d, ZOOM_MIN, 2.4);
         if (I.mode === "helico") { let da = ang - I.tir.a0; da = Math.atan2(Math.sin(da), Math.cos(da)); I.orbite = I.tir.o2 - da; }   // v20.39 : tourner deux doigts fait pivoter la carte
         if (I.mode === "helico") { const k = Math.max(T.rx, T.rz) * I.zoom * .0047, dx = (I.tir.m0[0] - m[0]) * k, dy = (I.tir.m0[1] - m[1]) * k, an = I.orbite + .6, s = Math.sin(an), c = Math.cos(an);
-          I.pan = [clamp(I.tir.p0[0] + dx * s + dy * c, -T.rx, T.rx), clamp(I.tir.p0[1] - dx * c + dy * s, -T.rz, T.rz)]; } }
+          I.pan = [clamp(I.tir.p0[0] + dx * s + dy * c, -T.rx * PAN_LARGE, T.rx * PAN_LARGE), clamp(I.tir.p0[1] - dx * c + dy * s, -T.rz * PAN_LARGE, T.rz * PAN_LARGE)]; } }
       else if (I.mode === "helico" && I.tir.z < ZOOM_EXPLO) {   // v20.39 (Théo) : de près, un doigt DÉPLACE la carte (comme un plan), sans dézoomer
         const k = Math.max(T.rx, T.rz) * I.zoom * .0047, dx = (I.tir.x - ev.clientX) * k, dy = (I.tir.y0 - ev.clientY) * k, an = I.orbite + .6, s = Math.sin(an), c = Math.cos(an);   // le décor suit le doigt
-        I.pan = [clamp(I.tir.p0[0] + dx * s + dy * c, -T.rx, T.rx), clamp(I.tir.p0[1] - dx * c + dy * s, -T.rz, T.rz)]; }
+        I.pan = [clamp(I.tir.p0[0] + dx * s + dy * c, -T.rx * PAN_LARGE, T.rx * PAN_LARGE), clamp(I.tir.p0[1] - dx * c + dy * s, -T.rz * PAN_LARGE, T.rz * PAN_LARGE)]; }
       else if (I.mode !== "bord") { I.orbite = I.tir.o - (ev.clientX - I.tir.x) * .008; if (I.mode === "helico") I.incl = clamp(I.tir.i + (ev.clientY - I.tir.y0) * .004, .18, 1.4); }
     });
     /* v20.32 (Théo) · zoom au doigt : quand le nombre de doigts change (2e doigt posé, un doigt levé après un pincement),
@@ -7141,7 +7142,7 @@
       recul: () => { const asp = cv.width / Math.max(1, cv.height), rv = Math.max(T.rx, T.rz / Math.min(1, asp * .9) * (asp < 1 ? 1.25 : 1)); return Math.max(1, rv / Math.max(T.rx, T.rz)); },
 
       /** place la caméra de la Visite (tests, cérémonies) : centre [x, z] du monde, zoom, inclinaison, orbite */
-      viser(c, z, incl, orb) { if (I.mode !== "helico") return; I.survol = null; if (c) I.pan = [clamp(c[0] - T.cx, -T.rx, T.rx), clamp(c[1] - T.cz, -T.rz, T.rz)]; if (z) I.zoom = clamp(z, ZOOM_MIN, 2.4); if (incl) I.incl = clamp(incl, .18, 1.4); if (orb !== undefined) I.orbite = orb; I.saut = true; reveiller(); },
+      viser(c, z, incl, orb) { if (I.mode !== "helico") return; I.survol = null; if (c) I.pan = [clamp(c[0] - T.cx, -T.rx * PAN_LARGE, T.rx * PAN_LARGE), clamp(c[1] - T.cz, -T.rz * PAN_LARGE, T.rz * PAN_LARGE)]; if (z) I.zoom = clamp(z, ZOOM_MIN, 2.4); if (incl) I.incl = clamp(incl, .18, 1.4); if (orb !== undefined) I.orbite = orb; I.saut = true; reveiller(); },
       detruire() {
         I.detruit = true; I.actif = false; if (raf) cancelAnimationFrame(raf); if (ro) ro.disconnect(); document.removeEventListener("visibilitychange", vis);
         ecoutes.forEach(([t, f, op]) => cv.removeEventListener(t, f, op)); joy.remove();
