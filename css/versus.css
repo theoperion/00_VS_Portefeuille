@@ -1988,3 +1988,5 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .rm-s.manque { color: var(--ink-2); }
 .rm-b { min-height: 40px; padding: 0 4px; white-space: nowrap; }
 .rm-ok { color: var(--ink-2); white-space: nowrap; }
+/* v20.32 (Théo) · en plein écran, la carte 3D garde tous les gestes (pincer, incliner, déplacer) : le navigateur ne les vole plus */
+.gp-plein canvas { touch-action: none !important; }

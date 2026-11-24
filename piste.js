@@ -6566,7 +6566,9 @@
     // ----- interactions : glisser pour tourner, pincer / molette pour zoomer, toucher une voiture pour la suivre -----
     const pointeurs = new Map(), ecoutes = [], ecoute = (type, f, opt) => { cv.addEventListener(type, f, opt); ecoutes.push([type, f, opt]); };
     ecoute("pointerdown", ev => { if (I.survol) { I.survol = null; }   // V16.59 : toucher reprend la main
-      pointeurs.set(ev.pointerId, { x: ev.clientX, y: ev.clientY }); I.tir = { x: ev.clientX, o: I.orbite, z: I.zoom, i: I.incl, d0: null, m0: null, p0: I.pan.slice(), t: performance.now(), x0: ev.clientX, y0: ev.clientY }; try { cv.setPointerCapture(ev.pointerId); } catch (e) { } reveiller(); });
+      pointeurs.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+      if (I.tir && pointeurs.size > 1) rancrer();   // 2e doigt : on repart d'ici (le toucher court du 1er doigt ne compte plus)
+      else I.tir = { x: ev.clientX, o: I.orbite, z: I.zoom, i: I.incl, d0: null, m0: null, p0: I.pan.slice(), t: performance.now(), x0: ev.clientX, y0: ev.clientY }; try { cv.setPointerCapture(ev.pointerId); } catch (e) { } reveiller(); });
     ecoute("pointermove", ev => {
       if (!I.tir || !pointeurs.has(ev.pointerId)) return; pointeurs.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
       if (pointeurs.size >= 2) { const [a, b] = [...pointeurs.values()], d = Math.hypot(a.x - b.x, a.y - b.y), m = [(a.x + b.x) / 2, (a.y + b.y) / 2];
@@ -6575,9 +6577,14 @@
           I.pan = [clamp(I.tir.p0[0] + dx * s + dy * c, -T.rx, T.rx), clamp(I.tir.p0[1] - dx * c + dy * s, -T.rz, T.rz)]; } }
       else if (I.mode !== "bord") { I.orbite = I.tir.o - (ev.clientX - I.tir.x) * .008; if (I.mode === "helico") I.incl = clamp(I.tir.i + (ev.clientY - I.tir.y0) * .004, .18, 1.4); }
     });
+    /* v20.32 (Théo) · zoom au doigt : quand le nombre de doigts change (2e doigt posé, un doigt levé après un pincement),
+       le geste repart de la position ACTUELLE de la caméra. Avant, le doigt restant reprenait depuis le début du geste :
+       la caméra sautait (comme une remise à zéro) et le zoom était pénible. */
+    const rancrer = () => { if (!I.tir) return; const l = [...pointeurs.values()], p = l[0]; if (!p) return;
+      Object.assign(I.tir, { x: p.x, y0: p.y, o: I.orbite, i: I.incl, z: I.zoom, d0: null, m0: null, p0: I.pan.slice(), multi: I.tir.multi || l.length > 1 }); };
     const fin = ev => {
-      const t = I.tir; pointeurs.delete(ev.pointerId); if (pointeurs.size) return; I.tir = null;
-      if (t && performance.now() - t.t < 300 && Math.hypot(ev.clientX - t.x0, ev.clientY - t.y0) < 8) { const n = toucher(ev.clientX, ev.clientY); if (n && o.toucher) o.toucher(n); }
+      const t = I.tir; pointeurs.delete(ev.pointerId); if (pointeurs.size) { rancrer(); return; } I.tir = null;
+      if (t && !t.multi && performance.now() - t.t < 300 && Math.hypot(ev.clientX - t.x0, ev.clientY - t.y0) < 8) { const n = toucher(ev.clientX, ev.clientY); if (n && o.toucher) o.toucher(n); }
     };
     ecoute("pointerup", fin); ecoute("pointercancel", fin);
     ecoute("wheel", ev => { ev.preventDefault(); I.zoom = clamp(I.zoom * (ev.deltaY > 0 ? 1.1 : .9), .12, 2.4); reveiller(); }, { passive: false });
@@ -6633,7 +6640,7 @@
       arreterSurvol() { if (I.survol) { I.survol = null; I.pan = [0, 0]; I.zoom = 1; I.incl = .72; reveiller(); } },
       ecran, ecranMonde, projeter, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim, reveiller, taille: () => ({ w: I.cssW, h: I.cssH }),
       /** zoom de la Visite 3D (1 = vue d'ensemble, 0,12 = au plus près) et mode de caméra */
-      zoom: () => I.zoom, mode: () => I.mode, survolEnCours: () => !!I.survol, cible: () => ({ x: T.cx + I.pan[0], z: T.cz + I.pan[1], r: Math.max(T.rx, T.rz) }),   // v17.35 : point visé par la caméra (jauge chaud-froid)
+      zoom: () => I.zoom, orbite: () => I.orbite, mode: () => I.mode, survolEnCours: () => !!I.survol, cible: () => ({ x: T.cx + I.pan[0], z: T.cz + I.pan[1], r: Math.max(T.rx, T.rz) }),   // v17.35 : point visé par la caméra (jauge chaud-froid)
       /** v17.35 · recul automatique de la Visite (1 en paysage ; > 1 sur un écran en hauteur, où la caméra se place plus loin pour tout montrer) : même formule que camVoulue */
       recul: () => { const asp = cv.width / Math.max(1, cv.height), rv = Math.max(T.rx, T.rz / Math.min(1, asp * .9) * (asp < 1 ? 1.25 : 1)); return Math.max(1, rv / Math.max(T.rx, T.rz)); },
 
