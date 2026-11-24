@@ -915,6 +915,8 @@ function dessinerChampionnat(y) {
    saison complète suit le classement final (bonus de fin de saison compris). Rien les autres mois. */
 function noteTete(c, k) {
   const i = c.mois.findIndex(m => m.k === k); if (i < 0) return "";
+  if (c.chauffe) { const p = premiersChauffe(c); if (i !== 0 || !p.length) return "";   // tour de chauffe : pas de départage (relecture jeu-arbitre)
+    return "🥇 " + p.join(" & ") + (p.length > 1 ? " prennent la tête ex æquo" : " prend la tête"); }
   const tete = j => { if (j < 0) return null; const m = c.mois[j]; if (j === c.mois.length - 1 && c.complete) return c.classement[0];
     return Object.keys(m.places).find(n => m.places[n] === 1) || null; };
   const t = tete(i), avant = tete(i - 1); if (!t || t === avant) return "";
