@@ -2122,3 +2122,23 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 @keyframes cboTourne { to { transform: rotate(360deg); } }
 @keyframes cboVient { from { transform: scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (max-width: 360px) { .tm-grille, .sec-grille { grid-template-columns: minmax(0, 1fr); } .cour { grid-template-columns: 34px minmax(0, 1fr); } .cour-i { width: 34px; height: 34px; } .titre-svg { width: 28px; height: 28px; } .cour-q { grid-column: 2; justify-items: start; text-align: left; } }
+
+/* v20.46 · objets d'écurie des univers (Chocolaterie, Mur des titans, Petit Chef, Merveilles) : tout dessiné par nous */
+.lv-chocolat, .lv-carte { -webkit-background-clip: text; background-clip: text; color: transparent !important; }
+.lv-chocolat { background-image: linear-gradient(90deg, #8B4A23, #D9965B 38%, #6B3417 62%, #C98A55); }
+.lv-carte { background-image: repeating-linear-gradient(90deg, #E0303F 0 .55em, #5E6672 .55em 1.1em); }
+:root[data-theme="dark"] .lv-carte { background-image: repeating-linear-gradient(90deg, #FF5A66 0 .55em, #E8ECF2 .55em 1.1em); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .lv-carte { background-image: repeating-linear-gradient(90deg, #FF5A66 0 .55em, #E8ECF2 .55em 1.1em); } }
+/* Câbles d'acier : un filin torsadé (gris acier, torons sombres) le long de la courbe */
+.fx-cables { stroke: #AEB7C2 !important; stroke-width: 5.5; opacity: .85; stroke-dasharray: 2.4 1.4; animation: fxDefile 1.6s linear infinite; }
+.voiture .vt-gaz { animation: vtGaz 1.2s ease-out infinite; transform-box: fill-box; transform-origin: right center; }
+@keyframes vtGaz { 0% { opacity: .85; transform: scale(.7); } 100% { opacity: .2; transform: scale(1.25) translateX(-6px); } }
+/* Chat qui sourit : rayures violet et rose, deux yeux et le sourire qui apparaissent et disparaissent */
+.av-chat { background: repeating-linear-gradient(-32deg, #7B2FA8 0 3.5px, #D96BC0 3.5px 7px); box-shadow: inset 0 0 0 1.5px #4A1468, 0 0 6px rgba(217,107,192,.5); }
+.av-chat::before { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M5 24C10 34 30 34 35 24C29 29 11 29 5 24Z' fill='%23FFF6FB' stroke='%234A1468' stroke-width='1'/%3E%3Cpath d='M9 26.6V29M13 28V31M17 28.8V32M21 29V32.2M25 28.6V31.6M29 27.6V30.4' stroke='%234A1468' stroke-width='.8'/%3E%3Cellipse cx='9' cy='9' rx='3.2' ry='2.2' fill='%23F6E94B'/%3E%3Cellipse cx='31' cy='9' rx='3.2' ry='2.2' fill='%23F6E94B'/%3E%3Cpath d='M9 7.2V10.8M31 7.2V10.8' stroke='%23261033' stroke-width='1.2'/%3E%3C/svg%3E") center / 100% 100% no-repeat; animation: avChat 5s ease-in-out infinite; }
+@keyframes avChat { 0%, 100% { opacity: 1; } 45%, 60% { opacity: .1; } }
+/* Plaques émaillées : Ratatouille (plaque de rue parisienne bleue, cadre vert) et Ticket d'or (feuille d'or) */
+.plaque .pl-ico { width: 1.25em; height: 1.25em; vertical-align: -.25em; margin-right: .3em; }
+.plaque.pl-ratatouille { color: #fff; background: linear-gradient(180deg, #2A5DB0, #1B3F82); border: 1px solid #12623A; box-shadow: inset 0 0 0 1.5px #2E8B57, inset 0 0 0 2.5px #fff, 0 1px 2px rgba(0,0,0,.3); padding: 1px 7px; font-family: Georgia, serif; letter-spacing: .06em; }
+.plaque.pl-ticketor { color: #4A2C05; background: linear-gradient(110deg, #B7791F, #FFE596 30%, #F7CF55 50%, #FFF6CC 62%, #C98E22); border: 1px solid #7A4A0C; box-shadow: inset 0 1px 0 #FFF6CC, 0 0 6px rgba(247,207,85,.45); }
+@media (prefers-reduced-motion: reduce) { .fx-cables, .voiture .vt-gaz, .av-chat::before { animation: none !important; } }

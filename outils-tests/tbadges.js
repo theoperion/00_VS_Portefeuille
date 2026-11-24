@@ -52,6 +52,8 @@ const deborde = () => [...document.querySelectorAll("#v-trophees *")].filter(x =
         nSec: sec.length, nCache: v.querySelectorAll(".sec-t.cache .sil").length, decTxt: dec ? dec.innerText : "", decOuvert: dec && dec.classList.contains("ouvert"),
         gantNico: (() => { const s = [...v.querySelectorAll(".gant-autres .nmp")].find(x => /Nicolas/.test(x.textContent)); return s ? s.textContent.replace(/\s+/g, " ").trim() : ""; })(),
         gantCalc: etatGant(2027).Nicolas.n, leader: championnat(2027).classement[0], drapeau: cour("drapeau"), flamme: cour("flamme"), flair: cour("flair"),
+        orphelins: Object.keys(ITEMS).flatMap(sl => Object.keys(ITEMS[sl]).filter(id => BASE_ECURIE[sl] !== id && !Object.keys(origineItem(sl, id)).length).map(id => sl + "." + id)),
+        univ4: ["singapour", "interlagos", "bahrein", "melbourne"].map(u => [u, TROPHEES_MONDES.filter(t => t.univers === u).flatMap(t => t.gain).concat(SECRETS_SAISON.filter(x => x.univers === u).flatMap(x => x.bonus ? [x.bonus] : [])).map(g => g.join("."))]),
         tropheesN: v.querySelectorAll(".tm").length, titres: (() => { const s = v.querySelector("#vit-titres"); return s ? { txt: s.textContent, svg: s.querySelectorAll(".cour-i .titre-svg").length, nav: (v.querySelector(".vit-nav") || {}).textContent || "" } : null; })(), euro: /€/.test(t) }; });
     const deb = await p.evaluate(`(${deborde})()`);
     ok(!err.length, "0 erreur JS" + tag + " " + JSON.stringify(err));
@@ -62,6 +64,9 @@ const deborde = () => [...document.querySelectorAll("#v-trophees *")].filter(x =
     ok(r.gantCalc === 4 && /Nicolas 4\s*\/6/.test(r.gantNico), "le Gant de Nicolas (construit pour 4 pierres) montre 4 / 6 " + JSON.stringify(r.gantNico) + tag);
     ok(r.drapeau === r.leader && r.flamme === "Kévin" && r.flair === "Clément", "le Drapeau de tête au leader (" + r.leader + "), la Flamme à Kévin, le Flair à Clément " + JSON.stringify([r.drapeau, r.flamme, r.flair]) + tag);
     ok(r.titres && /⚔️ Les titres/.test(r.titres.txt) && /ils se volent/.test(r.titres.txt) && /Drapeau de tête/.test(r.titres.txt) && r.titres.svg === 3 && !/👑|couronne/i.test(r.titres.txt + r.titres.nav), "vitrine « ⚔️ Les titres » : 3 emblèmes dessinés (🚩 🔥 🔍), aucun 👑 ni « couronne » (réservés au Premier millionnaire)" + tag);
+    ok(!r.orphelins.length, "chaque objet de l'écurie se gagne quelque part (trophée, secret, Gant, million, vote, ticket d'or ou réserve 2028) " + JSON.stringify(r.orphelins) + tag);
+    { const U = Object.fromEntries(r.univ4), A = { singapour: ["livree.chocolat", "klaxon.ouvriers"], interlagos: ["casque.eclaireur", "trainee.cables"], bahrein: ["casque.toque", "plaque.ratatouille"], melbourne: ["livree.carte", "fond.chat"] };
+      ok(Object.keys(A).every(u => A[u].every(g => U[u].includes(g))), "les 8 nouveaux objets récompensent leur univers (Chocolaterie, Mur des titans, Petit Chef, Merveilles) " + JSON.stringify(U) + tag); }
     ok(r.tropheesN === 12, "12 trophées des mondes" + tag);
     ok(!r.euro, "aucun montant « € » dans l'onglet" + tag);
     ok(!deb.length, "390 px : rien ne déborde " + JSON.stringify(deb) + tag);
