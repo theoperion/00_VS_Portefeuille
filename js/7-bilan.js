@@ -363,7 +363,7 @@ let R = null;
 function lireNb(t) {
   if (t === null || t === undefined) return null;
   let x = String(t).replace(/[\s\u00a0\u202f€]/g, "").replace(/[\u2212\u2013]/g, "-");   // « −500 » copié depuis l'appli
-  if (x.includes(",") && x.includes(".")) x = x.replace(/\./g, "");   // « 1.234,56 » : le point sépare les milliers
+  if (x.includes(",") && x.includes(".")) x = x.lastIndexOf(",") > x.lastIndexOf(".") ? x.replace(/\./g, "") : x.replace(/,/g, "");   // v20.21 : le dernier signe marque les centimes (« 1.234,56 » français, « 1,234.56 » anglais)
   x = x.replace(",", ".");
   if (x === "") return null; const n = Number(x); return isFinite(n) ? n : NaN;
 }

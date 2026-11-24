@@ -4574,7 +4574,7 @@ function aujourdhuiISO() { return isoJour(new Date()); }
 function lireNombre(v) {
   if (v === null || v === undefined) return null;
   let t = String(v).replace(/[\s  €]/g, "").replace(/[\u2212\u2013]/g, "-");   // v17.34 : « −500 » copié, comme lireNb (7-bilan.js)
-  if (t.includes(",") && t.includes(".")) t = t.replace(/\./g, "");   // « 1.520,50 » : le point sépare les milliers
+  if (t.includes(",") && t.includes(".")) t = t.lastIndexOf(",") > t.lastIndexOf(".") ? t.replace(/\./g, "") : t.replace(/,/g, "");   // v20.21 : le dernier signe marque les centimes (« 1.234,56 » français, « 1,234.56 » anglais)
   t = t.replace(",", ".");
   if (t === "") return null;
   const n = Number(t);
