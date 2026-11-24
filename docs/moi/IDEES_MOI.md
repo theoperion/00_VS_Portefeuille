@@ -22,3 +22,12 @@ Ce fichier n'est **pas** lu automatiquement : seulement quand Théo le demande. 
 - **Risque Google Finance** : les cours dépendent de GOOGLEFINANCE (peut être limité ou arrêté). Prévoir une source de cours interchangeable et un mode secours (derniers cours connus, saisie manuelle).
 - Comparaison honnête avec Finary, TradingView, Yahoo Finance, Google Finance : où Moi est meilleur (personnalisation, jeu, données chez soi), où il ne l'est pas.
 - Nettoyage du code : retirer l'export agenda (.ics) resté inactif dans `moi.js` (`icsEcheances`, `telechargerIcs`, bouton `#ec-ics` jamais affiché), puisque Théo l'a refusé.
+
+## 3. Notées par Théo le 24/11 (pas encore regardées)
+- **À vérifier en premier (possible erreur)** : l'événement « crash du S&P 500 » de vendredi s'affiche encore aujourd'hui. Règle attendue : un événement n'apparaît qu'à la clôture du jour, si ses conditions sont remplies.
+- **Durée des événements** : visibles le jour même et le lendemain, retirés à l'ouverture du jour suivant ; un événement du vendredi reste tout le week-end.
+- **Stratégie levier** : ajouter un indicateur « cash » pour savoir quand repasser en ×1 quand le prix casse la moyenne mobile, tout en gardant la règle actuelle (qui a permis de rester investi aujourd'hui). À examiner avec l'équipe d'agents du copilote.
+- **Marchés de l'onglet Moi** : ajouter les semi-conducteurs (SEMI) et SOXL (×3 des semi-conducteurs ; Théo a écrit ×4, à vérifier), pour tout le monde.
+- **Fiche de chaque produit** : ajouter la volatilité de l'ETF à levier aux autres données.
+- **Connecteur TradingView** pour l'historique des cours (à étudier : disponibilité, fiabilité).
+- **Kévin** : commencer à préparer les onglets de son fichier Excel avec le PEA et l'assurance-vie (lien avec le kit « Moi » pour Kévin ci-dessus).

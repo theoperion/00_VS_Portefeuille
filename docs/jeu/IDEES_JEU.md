@@ -13,6 +13,11 @@ Ce fichier n'est **pas** lu automatiquement : seulement quand Théo le demande. 
 - Visite / Hélico plus fluides.
 - Voiture de course 3D refaite (carrosserie, roues, ailerons, numéro, ombre).
 
+## Idées de Théo du 24/11 (à classer avec lui)
+- **Badges des secrets** : un badge par objet secret trouvé, version prestigieuse pour le 1er découvreur, versions plus simples du 2e au 5e (selon le nombre de joueurs). Le badge est lié à l'objet (aucune utilité à Noël). Dès janvier, chaque objet raconte une histoire sur toute l'année, peut-être différente pour les premiers découvreurs (modalités à définir). Recoupe la famille « Chercheur » ci-dessus : à fusionner.
+- **Course au jour le jour** : faire avancer les voitures chaque jour selon la Bourse, plutôt qu'une fois par mois. À trancher : contredit la décision « résultat du mois caché jusqu'à la course » ; n'est faisable que pour les joueurs dont le patrimoine est relié automatiquement (pas avec des relevés mensuels saisis à la main). Piste douce : la course du mois reste la vraie, et une « séance d'essais » quotidienne montre seulement le S&P 500 et la météo (aucune position de joueur).
+- **Teasers ↔ carte des chantiers** (validée par Théo) : chaque épisode « VERSUS · ÉPISODE N » révèle une branche ; la carte privée de Théo montre ce qui a déjà été dévoilé aux joueurs.
+
 ## Autres
 - Ranger le code en dossiers `jeu/` et `moi/` (plus lisible) : seulement avec des tests, au moment d'un nettoyage du code (adresses de chargement et copie hors connexion à adapter).
 - Course plus longue et plus grandiose (sans réforme des points).
