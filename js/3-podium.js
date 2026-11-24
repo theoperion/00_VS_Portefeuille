@@ -908,7 +908,18 @@ function dessinerChampionnat(y) {
   const box = $("#g-champ"); if (!box) return;
   const c = championnat(y), ks = [c.deb].concat(c.mois.map(m => m.k));
   tracer(box, { x: ks, series: c.classement.map(n => ({ nom: n, v: [0].concat(c.mois.map(m => m.cumul[n] !== undefined ? m.cumul[n] : null)), c: couleur(n), w: n === c.classement[0] && c.mois.length ? 3.6 : n === ETAT.moi ? 2.8 : 2, lead: n === c.classement[0] && c.mois.length > 0, fx: equipDe(n).trainee })),
-    finEtiq: true, h: 190, fmt: x => x + " pts", fmtAxe: t => Number.isInteger(t) ? String(t) : "", titreX: k => k === c.deb ? "Départ" : "Fin " + moisCourt(k) });
+    finEtiq: true, h: 190, fmt: x => x + " pts", fmtAxe: t => Number.isInteger(t) ? String(t) : "", titreX: k => k === c.deb ? "Départ" : "Fin " + moisCourt(k), noteX: k => noteTete(c, k) });
+}
+/* v20.23 (idée de Théo du 20/11, avis de l'agent jeu-avocat-du-diable) · la courbe raconte : le mois où le leader change, la bulle le dit.
+   Leader = 1re place officielle du mois (même départage que le Classement : points, victoires, performance cumulée) ; le dernier mois d'une
+   saison complète suit le classement final (bonus de fin de saison compris). Rien les autres mois. */
+function noteTete(c, k) {
+  const i = c.mois.findIndex(m => m.k === k); if (i < 0) return "";
+  const tete = j => { if (j < 0) return null; const m = c.mois[j]; if (j === c.mois.length - 1 && c.complete) return c.classement[0];
+    return Object.keys(m.places).find(n => m.places[n] === 1) || null; };
+  const t = tete(i), avant = tete(i - 1); if (!t || t === avant) return "";
+  const m = c.mois[i], egal = Object.keys(m.cumul).filter(n => n !== t && m.cumul[n] === m.cumul[t]).length > 0;
+  return "🥇 " + t + (i === 0 ? " prend la tête" : " passe en tête") + (egal ? " (à égalité de points, au départage)" : "");
 }
 function quiEcurie() { return moiVrai(); }
 /* V16.24 · « Mon portrait » : la tête de chacun se règle hors de l'Écurie (Réglages, ou toucher sa tête dans le Classement), dès le tour de chauffe */

@@ -484,7 +484,8 @@ function tracer(box, conf) {
     dots.innerHTML = conf.series.filter(s => ok(s.v[i])).map(s => '<circle cx="' + x.toFixed(1) + '" cy="' + Y(s.v[i]).toFixed(1) + '" r="4" fill="' + C(s.c) + '" stroke="' + C("var(--panel)") + '" stroke-width="2"/>').join("");
     const lignes = conf.series.filter(s => ok(s.v[i])).sort((a, b) => b.v[i] - a.v[i]);
     tip.hidden = false;
-    tip.innerHTML = "<b>" + esc(conf.titreX(xs[i])) + "</b>" + lignes.map(s => '<div class="row" style="--c:' + C(s.c) + '"><span>' + esc(s.nom) + "</span><span>" + conf.fmt(s.v[i]) + "</span></div>").join("");
+    const note = conf.noteX ? conf.noteX(xs[i]) : "";   // v20.23 · une phrase facultative sous le titre (courbe du championnat : qui passe en tête)
+    tip.innerHTML = "<b>" + esc(conf.titreX(xs[i])) + "</b>" + (note ? '<div class="tip-note">' + esc(note) + "</div>" : "") + lignes.map(s => '<div class="row" style="--c:' + C(s.c) + '"><span>' + esc(s.nom) + "</span><span>" + conf.fmt(s.v[i]) + "</span></div>").join("");
     const bx = box.getBoundingClientRect(), px = x / W * r.width + (r.left - bx.left), tw = tip.offsetWidth;
     let left = px + 14; if (left + tw > bx.width - 6) left = px - tw - 14;
     tip.style.left = Math.max(6, left) + "px"; tip.style.top = "38px";
