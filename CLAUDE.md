@@ -18,7 +18,7 @@ Ne lire que la fiche de la partie du chantier en cours. Ancienne fiche et journa
 1. Théo ne doit **jamais voir les données financières de Clément, Devlin, Kévin** (ni copie dans un dépôt, une capture, un message). Leurs fichiers ne se lisent que pour une opération technique.
 2. **Aucun identifiant, jeton ou secret** dans GitHub (`~/.clasprc.json` reste sur la machine). Le dépôt est **public**.
 3. Opération destructive sur un Google Sheet : seulement sur instruction explicite de Théo.
-4. Ne pas toucher aux autres applis (budgets, Compagnie de l'Aube, carnets).
+4. Ne pas toucher aux autres applis (budgets, Compagnie de l'Aube, carnets). Dans `app_scripts`, ne modifier **que** `versus/`, `portefeuille-epargne/` et, si besoin, `outils/` (jamais `carnet-t3/`, `carnet-t4-carla/`, `compagnie-de-l-aube/`). À la fin de chaque version, lister à Théo les fichiers modifiés, dépôt par dépôt.
 5. `app_scripts` (serveur, privé) est partagé : toujours `git pull --rebase` avant de pousser. Toujours récupérer `main` avant de commencer et avant de pousser.
 6. Tests : jamais les vraies données ; intercepter `https://script.google.com/**` avec de fausses données.
 
