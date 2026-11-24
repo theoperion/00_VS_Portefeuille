@@ -2057,6 +2057,40 @@
     // ================= 1. la nappe : grands carreaux doux, quelques plis, qui pâlissent vers les bords
     for (let k = 0; k < 6; k++) { const x = r() * W, y = r() * H, L0 = 200 + r() * 260; s.push(`<path d="M${f(x)} ${f(y)}q${f(L0 * .5)} ${f(-20 + r() * 40)} ${f(L0)} ${f(10 + r() * 30)}" stroke="#FFFFFF" stroke-width="${f(14 + r() * 14)}" fill="none" opacity=".2" stroke-linecap="round" filter="url(#gt-flou8)"/><path d="M${f(x + 6)} ${f(y + 16)}q${f(L0 * .5)} ${f(-20 + r() * 40)} ${f(L0)} ${f(10 + r() * 30)}" stroke="#7A1E2E" stroke-width="9" fill="none" opacity=".07" stroke-linecap="round" filter="url(#gt-flou8)"/>`); }
     s.push(`<rect width="${W}" height="${H}" fill="url(#gt-pale)"/>`);
+    // ================= 1 bis (v20.45, comme le décor 3D). Au fond, par-delà l'ourlet de dentelle de la nappe : la pelouse, les collines bleutées dans la brume,
+    //   le château de cœur et le dossier des chaises géantes ; sur les bords : l'arbre tordu du Chat, le bois de champignons, la petite porte et la table de verre
+    { const Y = 34;
+      s.push(`<linearGradient id="gt-loin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9D6EE"/><stop offset=".6" stop-color="#F2E2D2"/><stop offset="1" stop-color="#E8EED0"/></linearGradient>`);
+      s.push(`<rect width="${W}" height="${Y + 2}" fill="url(#gt-loin)"/>`);
+      // le dossier des chaises géantes (barreaux à gauche, fauteuil rayé à droite), pâlis par la distance
+      s.push(`<g opacity=".55"><path d="M96 ${Y}V-4M140 ${Y}V-4" stroke="#8A5A32" stroke-width="5"/>${[2, 11, 20].map(v => `<path d="M96 ${v}H140" stroke="#8A5A32" stroke-width="3.4"/>`).join("")}
+        <path d="M842 ${Y}V8Q842 -6 868 -6Q894 -6 894 8V${Y}Z" fill="#F4A6B8" stroke="#C88A9A" stroke-width="1.2"/>${[851, 868, 885].map(x => `<path d="M${x} ${Y}V0" stroke="#FFF4EA" stroke-width="5"/>`).join("")}</g>`);
+      // les collines, de la plus lointaine (bleutée) à la plus proche (verte)
+      const coll = (y0, amp, n, col, op, ph) => { let d = `M0 ${Y + 2}V${f(y0)}`; for (let k = 0; k < n; k++) { const x0 = k * W / n, x1 = (k + 1) * W / n; d += `Q${f((x0 + x1) / 2)} ${f(y0 - amp * (.6 + .4 * Math.sin(k * 2.1 + ph)))} ${f(x1)} ${f(y0)}`; } return `<path d="${d}V${Y + 2}Z" fill="${col}" opacity="${op}"/>`; };
+      s.push(coll(20, 16, 7, "#A4B2D8", .9, 0));
+      // le château de cœur, minuscule sur sa colline
+      s.push(`<g opacity=".75" transform="translate(604 ${Y - 14})"><rect x="-16" y="-10" width="32" height="12" fill="#F6E8EC"/><rect x="-8" y="-20" width="16" height="12" fill="#FBEFF2"/>${[[-18, -18, 22], [18, -18, 22], [-6, -30, 32], [6, -30, 32]].map(([x, y, h]) => `<rect x="${x - 2.5}" y="${y}" width="5" height="${h - 10}" fill="#F6E8EC"/><path d="M${x - 3.4} ${y}L${x} ${y - 9}L${x + 3.4} ${y}Z" fill="#D8344E"/>`).join("")}<path d="M-4 -40v-6M4 -40v-6" stroke="#1E1A24" stroke-width=".6"/>${sym("c", 0, -12, 3.4, "#D8344E")}${sym("c", -2, -46, 1.8, "#D8344E")}<path d="M-3 2v-6a3 3 0 0 1 6 0v6z" fill="#3A2420"/></g>`);
+      s.push(coll(27, 11, 9, "#92BC78", .95, 1.3) + coll(32, 6, 13, "#7DBE5A", 1, 2.6));
+      // l'ourlet de dentelle : festons blancs ajourés, ruban rose brodé
+      s.push(`<path d="M0 ${Y}${Array.from({ length: Math.ceil(W / 16) + 1 }, (_, k) => `A8 8 0 0 0 ${f(k * 16 + 16)} ${Y}`).join("")}V${Y - 3}H0Z" fill="#FFFDF6" stroke="#E2BCC8" stroke-width="1"/>`);
+      s.push(`<g fill="#F2C8D2">${Array.from({ length: Math.ceil(W / 16) }, (_, k) => `<circle cx="${k * 16 + 8}" cy="${Y + 3}" r="1.8"/>`).join("")}</g><path d="M0 ${Y + 11}H${W}" stroke="#F4A6B8" stroke-width="3" stroke-dasharray="10 5" opacity=".8"/>`); }
+    // l'arbre tordu du Chat, au bord gauche : branches en spirales, feuillage violet et turquoise, la queue rayée qui pend
+    s.push(ombreL(20, 404, 40, 120, .2));
+    s.push(`${G(22, 404, 1)}<path d="M-8 0C-2 -40 -22 -70 -2 -110C6 -126 -6 -140 4 -156" stroke="#4A3448" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M-4 -112Q22 -122 34 -146M-6 -128Q-24 -134 -30 -156" stroke="#4A3448" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      <path d="M34 -146q8 -10 -1 -14q-7 -2 -6 5" stroke="#4A3448" stroke-width="2.4" fill="none"/>${[[34, -152, 15, "#3AA89A"], [-28, -160, 13, "#9A5AC8"], [4, -170, 17, "#9A5AC8"], [18, -176, 11, "#3AA89A"], [-12, -186, 10, "#3AA89A"]].map(([x, y, R, c]) => `<circle cx="${x}" cy="${y}" r="${R}" fill="${c}" ${INK}/>`).join("")}
+      ${[0, 1, 2, 3, 4].map(k => `<path d="M${-30 + (k % 2) * 2} ${-150 + k * 8}l0 8" stroke="${k % 2 ? "#C890E8" : "#7A3AA8"}" stroke-width="5.5" stroke-linecap="round"/>`).join("")}<path d="M-6 2q-8 4 -16 2M-6 2q8 5 16 3" stroke="#4A3448" stroke-width="4" fill="none" stroke-linecap="round"/></g>`);
+    // … et son sourire qui s'y pose un instant (puis s'efface)
+    a.push(`<g opacity="0">${an(`<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;.5;.56;.7;.76;1" dur="12s" repeatCount="indefinite"/>`)}<path d="M4 252Q24 270 44 252Q24 262 4 252Z" fill="#FFFDF6" stroke="#6A2A6A" stroke-width="2"/>${[11, 18, 25, 32, 38].map(x => `<path d="M${x} ${f(256 + Math.sin((x - 4) / 40 * PI) * 3)}v5" stroke="#7A6A8A" stroke-width=".8"/>`).join("")}<ellipse cx="14" cy="242" rx="4" ry="3" fill="#F2E25A" stroke="#3A2420" stroke-width=".8"/><ellipse cx="34" cy="242" rx="4" ry="3" fill="#F2E25A" stroke="#3A2420" stroke-width=".8"/><path d="M14 240v4M34 240v4" stroke="#1E1A24" stroke-width="1.4"/></g>`);
+    // le bois de champignons autour de la Chenille (aucun n'est rouge : le grand chapeau rouge reste le sien)
+    [[24, 566, 1, "#8A5AC8"], [12, 716, .55, "#4CA0D8"]].forEach(([x, y, sc, c]) => s.push(`${G(x, y, sc)}<path d="M-9 26L-6 -4H6L9 26Z" fill="#F7E6C8" ${INK}/><path d="M-34 0Q-30 -34 0 -36Q30 -34 34 0Q0 8 -34 0Z" fill="${c}" ${INK}/>${[[-16, -16, 5], [6, -24, 4.4], [20, -10, 4]].map(([u, v, R]) => `<circle cx="${u}" cy="${v}" r="${R}" fill="#FFF4EA" ${INK}/>`).join("")}</g>`));
+    // la petite porte dans la haie de roses, et la table de verre avec la clé d'or et la fiole « Bois-moi »
+    s.push(ombreL(262, 712, 110, 40, .22));
+    s.push(`${G(262, 712, 1)}<rect x="-52" y="-40" width="104" height="42" rx="10" fill="#2F6A3A" ${INK}/>${[-44, -30, -16, 0, 16, 30, 44].map((x, k) => `<circle cx="${x}" cy="${-40 + (k % 2) * 3}" r="8" fill="#4E9A52" ${INK}/>`).join("")}${[[-40, -24], [-26, -12], [-34, -2], [20, -26], [34, -14], [42, -30], [10, -6], [-14, -30]].map(([x, y], k) => `<circle cx="${x}" cy="${y}" r="3.4" fill="${k % 3 ? "#D21E3A" : "#FFFFFF"}" ${INK}/>`).join("")}
+      <path d="M-7 2V-14a7 7 0 0 1 14 0V2Z" fill="#9A6A3A" ${INK}/><circle cx="4" cy="-6" r="1.3" fill="${OR}"/></g>`);
+    s.push(`${G(186, 702, 1)}<ellipse cx="0" cy="12" rx="22" ry="4" fill="#4A1424" opacity=".18"/><path d="M-14 12L-8 -14M14 12L8 -14M0 14V-14" stroke="#9FD0F0" stroke-width="2.2"/><ellipse cx="0" cy="-15" rx="20" ry="5.5" fill="#D8F0FF" fill-opacity=".85" stroke="#7AAAD0" stroke-width="1.2"/>
+      <circle cx="-9" cy="-17" r="2.6" fill="none" stroke="${OR}" stroke-width="1.6"/><path d="M-6.5 -17H4M2 -17v2.4M0 -17v2" stroke="${OR}" stroke-width="1.6"/><path d="M9 -17V-25H12V-17Z" fill="#5AA0E0" stroke="#1F4E86" stroke-width=".8"/><path d="M9.6 -27h1.8v2h-1.8z" fill="#C8A070"/></g>`);
+    // des montres qui flottent, chacune à son heure
+    [[1046, 470, 13, 0], [560, 700, 11, 1], [430, 18, 9, 2]].forEach(([x, y, R, k]) => a.push(`<g transform="translate(${x} ${y})"><g>${an(`<animateTransform attributeName="transform" type="rotate" values="-14;14;-14" dur="${6 + k * 1.5}s" repeatCount="indefinite"/>`)}<path d="M0 ${-R - 5}a3 3 0 1 1 .1 0" stroke="${OR}" stroke-width="1.6" fill="none"/><circle r="${R}" fill="#FFF8E6" stroke="${OR}" stroke-width="2.6"/>${[0, 1, 2, 3].map(q => `<path d="M0 ${-R + 2}v2.4" stroke="${ENC}" stroke-width="1" transform="rotate(${q * 90})"/>`).join("")}<path d="M0 0L${f(R * .5)} ${f(-R * .3)}M0 0L${f(-R * .2)} ${f(-R * .7)}" stroke="${ENC}" stroke-width="1.2" stroke-linecap="round"/></g></g>`));
     // le soleil d'après-midi : grand halo doré en haut à gauche + flaque de lumière sur le héros
     s.push(`<circle cx="0" cy="0" r="420" fill="url(#gt-pool)"/><ellipse cx="330" cy="330" rx="260" ry="250" fill="url(#gt-pool)" opacity=".7"/>`);
     // ================= 2. la grande flaque de thé (le lac du tracé)
@@ -4542,6 +4576,7 @@
       tourne(c, "z", .25); g.poser(c, 9, 8, 17.5, -.45, 1); tourne(g, "z", -.08);
       poser(g, p[0], p[1], 44, vers(p[0], p[1], lx, lz), 0, 1.35); } }
     // ---- 5. le sourire du Chat, qui flotte au-dessus de la nappe (avec ses yeux jaunes)
+    const CHAT = {};   // v20.45 : il réapparaît aussi dans son arbre (plus bas)
     { const x = m(492), z = m(168), y = 60, W = 40, h = 16, g = new Geo(), lev = v("#6A2A6A"), bas = [], haut = [];
       for (let k = 0; k <= 14; k++) { const t = -1 + k / 7, cu = 1 - t * t; bas.push([t * W, -h * cu, 0]); haut.push([t * W, -h * .38 * cu + 1.2 * t * t, 0]); }
       for (let k = 0; k < 14; k++) g.quad(haut[k], haut[k + 1], bas[k + 1], bas[k], PORC, .25, [0, 0, 1]);
@@ -4550,7 +4585,7 @@
       const ye = new Geo(); [-1, 1].forEach(sd => { ye.boule(sd * 16, 17, 0, 7.4, v("#F2E25A"), .35, .62, true); ye.boite(sd * 16, 13.8, 0, 1.3, 6.4, 15.2, NOIR); ye.boule(sd * 16 - 2.4, 19.6, 3.4, 1.3, v("#FFFFFF"), 1); });
       for (let k = 0; k < 7; k++) { const a = PI * (.1 + k * .13); ye.boule(Math.cos(a) * 44, 8 + Math.sin(a) * 26 - 14, -4, 3.2 - Math.abs(k - 3) * .4, k % 2 ? v("#C890E8") : v("#9A5AC8"), .2, .6); }
       const cs = vers(x, z, T.cx, T.cz + 300);
-      rotors.push({ g, x, y, z, cap: cs, v: 0, a: { p: 18, vis: [.02, .5], visX: true, bob: [2.4, .6] } }); rotors.push({ g: ye, x, y, z, cap: cs, v: 0, a: { p: 18, vis: [.08, .38], bob: [2.4, .6] } });
+      rotors.push({ g, x, y, z, cap: cs, v: 0, a: { p: 18, vis: [.02, .36], visX: true, bob: [2.4, .6] } }); rotors.push({ g: ye, x, y, z, cap: cs, v: 0, a: { p: 18, vis: [.07, .3], bob: [2.4, .6] } }); CHAT.g = g; CHAT.ye = ye;
       // … puis il réapparaît ailleurs, plus petit, au bord de la piste (et ainsi de suite)
       [[.3, 34], [.74, 36]].forEach(([fr, o], q) => { const i = Math.floor(fr * T.N), n = [-T.TZ[i], T.TX[i]], sd = Math.hypot(T.X[i] + n[0] - T.cx, T.Z[i] + n[1] - T.cz) > Math.hypot(T.X[i] - T.cx, T.Z[i] - T.cz) ? 1 : -1;
         const x2 = T.X[i] + n[0] * sd * o, z2 = T.Z[i] + n[1] * sd * o, c2 = vers(x2, z2, T.X[i], T.Z[i]), w = q ? [.76, .99] : [.52, .74];
@@ -4605,8 +4640,8 @@
       g.poser(b, 26, 0, 6, 0, 1.4);
       const k = new Geo(); k.cylindre(0, 0, 0, 5, 3, 12, v("#C8884A")); k.cylindre(0, 3, 0, 5.1, .8, 12, v("#FFF4EA")); [[-1.6, 0], [0, 0], [1.6, 0]].forEach(([u]) => k.ov().boite(u, 3.8, 0, 1, .1, .6, ROUGE)); k.boule(0, 4.4, 0, 1, ROUGE, .1);
       g.poser(k, -24, 0, 10, 0, 1.4); poser(g, p[0], p[1], 44, 0, 0, 1.3); } }
-    // ---- 10. les 4 places des pilotes : grandes tasses à leur couleur, sur soucoupes (là où la carte pose leurs portraits)
-    [[388, 556], [478, 572], [568, 570], [656, 540]].forEach(([u, w], k) => { const p = place(m(u), m(w), 26); if (!p) return; const g = new Geo(), c = v(COULEURS_J[k]);
+    // ---- 10. les 5 places des pilotes : grandes tasses à leur couleur, sur soucoupes (là où la carte pose leurs portraits ; v20.45 : la 5e, celle de Nicolas)
+    [[370, 548], [448, 566], [526, 570], [604, 556], [680, 526]].forEach(([u, w], k) => { const p = place(m(u), m(w), 26); if (!p) return; const g = new Geo(), c = v(COULEURS_5[k]);
       tasse(g, 0, 0, 0, 14, c, mel(c, [1, 1, 1], .55)); g.ov().boite(0, 8, 14, 9, 3.4, .1, PORC, .1, 0);
       const os = new Geo(); os.cylindre(0, 0, 0, 7, 2, 10, OR, .05); os.boule(0, 2, 0, 1.6, ROUGE, .1); g.poser(os, -16, 0, -14, 0, 1);
       poser(g, p[0], p[1], 28, vers(p[0], p[1], T.cx, T.cz) + PI / 2, 0, 1.2); vapeur(p[0], 19, p[1], 2.6, 18); });
@@ -4619,7 +4654,11 @@
       g.boule(2.4, 34.8, 2.6, .5, NOIR); g.boule(4.6, 34.8, 2.6, .5, NOIR);
       g.cylindre(10, 23.4, 4, 2, 4, 8, v("#7AD0C0"), .1, 1.2); branche(g, [5.4, 32.6, 1], [10, 27.4, 4], .25, .25, v("#B88A3A"));
       [[6, 44, 4], [9, 54, 6], [13, 66, 8]].forEach(([x, y, R]) => { for (let q = 0; q < 12; q++) { const a = q / 12 * TAU; g.boule(x + Math.cos(a) * R, y + Math.sin(a) * R * .7, 0, R * .28, v("#EEF4FF"), .25, 1); } });
-      poser(g, p[0], p[1], 34, vers(p[0], p[1], T.cx, T.cz) - PI / 2, 0, 1.3); } }
+      poser(g, p[0], p[1], 34, vers(p[0], p[1], T.cx, T.cz) - PI / 2, 0, 1.3);
+      // v20.45 · de vrais ronds de fumée qui montent, grossissent et s'effacent
+      const cC = vers(p[0], p[1], T.cx, T.cz) - PI / 2, bo = monde([6.4, 40, 1.4], p[0], 0, p[1], cC), rond = new Geo();
+      for (let q = 0; q < 12; q++) { const a = q / 12 * TAU; rond.boule(Math.cos(a) * 3.2, Math.sin(a) * 2.2, 0, .9, v("#EEF4FF"), .3, 1); }
+      for (let q = 0; q < 3; q++) rotors.push({ g: rond, x: bo[0] * 1.3 - p[0] * .3, y: bo[1] * 1.3, z: bo[2] * 1.3 - p[1] * .3, cap: cC, v: 0, a: { p: 7.5, ph: q / 3, h: 38, dx: 6, k0: .5, k1: 2.2, souffle: true } }); } }
     // ---- 12. la grande tasse fumante, dans le coin en bas à droite (comme sur la carte)
     { const p = place(m(1050), m(706), 46); if (p) { const g = new Geo(); tasse(g, 0, 0, 0, 34, PORC, ROUGE); g.ov().cylindre(0, 14, 0, 30.6, 3, 16, ROUGE, 0, 32);
       poser(g, p[0], p[1], 52, r() * TAU); vapeur(p[0], 38, p[1], 6, 46, 4);
@@ -4634,6 +4673,237 @@
       tube(g, [[R * .8, R * .6, 0], [R * 1.3, R * .9, 0], [R * 1.55, R * 1.3, 0], [R * 1.7, R * 1.45, 0]], k => R * (.22 - k * .12), v("#F4A6B8"));
       tube(g, [0, 1, 2, 3, 4, 5, 6, 7, 8].map(k => { const a = PI * .62 - k / 8 * PI * 1.24; return [-R * .65 - Math.cos(a) * R * .55, R * .8 + Math.sin(a) * R * .55, 0]; }), R * .1, v("#F4A6B8"));
       poser(g, p[0], p[1], 38, vers(p[0], p[1], lx, lz) - PI / 2); } }
+    // ================= v20.45 · LES MERVEILLES EN PROFONDEUR (plans successifs) : la nappe → les recoins du jardin (terrier sous le grand arbre, arbre du Chat,
+    //   bois de champignons, petite porte et table de verre, panneaux qui montrent tout, Lapin pressé, petite table du goûter et ses chaises dépareillées,
+    //   échiquier, croquet aux flamants, roseraie qu'on repeint, fleurs qui parlent, montres qui flottent) → la pelouse, l'ourlet de dentelle et les chaises
+    //   géantes autour de la nappe → les fleurs immenses, les champignons-montagnes, les collines et le château de cœur dans la brume
+    { const q = alea(1872), BOIS = v("#8A5A32"), BOIS2 = v("#5E3A22"), FEUIL = v("#4E9A52"), FEUIL2 = v("#2F6A3A"), BLANC = v("#FFFFFF"), CRE = v("#FFF4EA"), PINK = v("#F4A6B8"),
+        TERRE = v("#7A5236"), NUIT = v("#160B08"), GAZON = v("#7FBF5E"), ENCRE = v("#3A2420"), VERRE = v("#BFE6FF"), so3 = sol.ov();
+      const ell = (th, k) => [T.cx + Math.cos(th) * k, T.cz + Math.sin(th) * k / 1.15];
+      const coeur = (g, x, y, z, R, col, em) => [1, -1].forEach(sd => { const zz = z + sd * .06; disque(g, x - R * .48, y + R * .28, zz, R * .52, col, em, sd); disque(g, x + R * .48, y + R * .28, zz, R * .52, col, em, sd); g.tri([x - R * .98, y + R * .14, zz], [x + R * .98, y + R * .14, zz], [x, y - R, zz], col, em, [0, 0, sd]); });
+      const oct = (g, x, y, z, R, col, em) => { const P = [[x + R, y, z], [x - R, y, z], [x, y + R, z], [x, y - R, z], [x, y, z + R], [x, y, z - R]];   // petit grain à 8 faces (roses, baies, pois)
+        [[0, 2, 4], [2, 1, 4], [1, 3, 4], [3, 0, 4], [2, 0, 5], [1, 2, 5], [3, 1, 5], [0, 3, 5]].forEach(([a, b, c]) => g.tri(P[a], P[b], P[c], col, em || 0, [(P[a][0] + P[b][0] + P[c][0]) / 3 - x, (P[a][1] + P[b][1] + P[c][1]) / 3 - y, (P[a][2] + P[b][2] + P[c][2]) / 3 - z])); };
+      const visage = (g, x, y, z, R) => { [-1, 1].forEach(sd => { oct(g, x + sd * R * .34, y + R * .18, z, R * .17, BLANC, .1); oct(g, x + sd * R * .34, y + R * .16, z + R * .13, R * .08, NOIR); }); oct(g, x, y - R * .34, z, R * .15, v("#8A2030")); };
+      const petale = (g, x, y, z, a, r0, r1, w, col, em) => { const ca = Math.cos(a), sa = Math.sin(a), m0 = (r0 + r1) / 2; g.quad([x + ca * r0, y + sa * r0, z], [x + ca * m0 - sa * w, y + sa * m0 + ca * w, z + w * .3], [x + ca * r1, y + sa * r1, z], [x + ca * m0 + sa * w, y + sa * m0 - ca * w, z + w * .3], col, em || 0, [0, 0, 1]); };
+      // une chaise (face avant +z, assise à ~6 m) : 0 trône de la Reine, 1 chaise à barreaux, 2 fauteuil rayé, 3 chaise de jardin au dossier en cœur, 4 chaise du Chapelier
+      const chaise = ty => { const g = new Geo(), pieds = [[-3.4, -3], [3.4, -3], [-3.4, 3], [3.4, 3]];
+        if (ty === 0) { const RV = v("#B8203A"); pieds.forEach(([x, z]) => { g.cylindre(x, 0, z, .55, 5.2, 6, OR, .05, .4); g.boule(x, .3, z, .8, OR, .05); });
+          g.boite(0, 4.8, 0, 8.8, .7, 7.8, OR, .05); g.boite(0, 5.5, .2, 8, 1.3, 7, RV); g.boite(0, 5.2, -3.5, 8.8, 11.4, .8, OR, .05); g.boite(0, 6.4, -3.05, 7.4, 9.4, .2, RV);
+          coeur(g, 0, 18.6, -3.5, 2.8, OR, .1); [-1, 1].forEach(sd => { g.boite(sd * 4.2, 5.2, .4, .7, 3.6, 6.4, OR, .05); g.boule(sd * 4.2, 8.8, 3.6, .8, OR, .1); g.boule(sd * 4.4, 16.8, -3.5, .9, OR, .1); }); }
+        else if (ty === 1) { pieds.forEach(([x, z]) => g.boite(x, 0, z, .8, z < 0 ? 19 : 5.6, .8, BOIS)); [-3.4, 3.4].forEach(x => g.boule(x, 19.4, -3, .8, BOIS2));
+          g.boite(0, 5.2, 0, 8, .8, 7, v("#D8B060")); for (let k = 0; k < 4; k++) g.boite(0, 9 + k * 2.6, -3, 6.2, .9, .4, BOIS2); [-1, 1].forEach(sd => g.boite(sd * 3.4, 1.6, 0, .4, .4, 6, BOIS2)); }
+        else if (ty === 2) { [[-4, -3.4], [4, -3.4], [-4, 3.4], [4, 3.4]].forEach(([x, z]) => g.cylindre(x, 0, z, .6, 2.4, 6, BOIS2, 0, .4));
+          g.boite(0, 2.4, 0, 9.4, 3, 8.4, PINK); g.boite(0, 5.4, .4, 8, 1, 7, CRE); for (let k = 0; k < 6; k++) g.boite(-3.75 + k * 1.5, 5.4, -3.6, 1.5, 10, 1.4, k % 2 ? CRE : PINK);
+          g.boule(0, 15.2, -3.6, 4.6, PINK, 0, .5); [-1, 1].forEach(sd => { g.boite(sd * 4.6, 5.4, 0, 1.6, 3, 8, PINK); g.boule(sd * 4.6, 8.6, 3.6, 1.2, CRE); }); }
+        else if (ty === 3) { pieds.forEach(([x, z]) => branche(g, [x * 1.15, 0, z * 1.15], [x, 5.4, z], .3, .3, BLANC)); g.cylindre(0, 5.4, 0, 4.4, .6, 14, BLANC);
+          [-2.6, 2.6].forEach(x => branche(g, [x, 6, -2.8], [x * 1.2, 11, -3.2], .3, .3, BLANC)); coeur(g, 0, 14, -3.3, 4.6, BLANC, .05); coeur(g, 0, 14.2, -3.1, 2.6, PINK, .1); }
+        else { pieds.forEach(([x, z]) => branche(g, [x * 1.1, 0, z * 1.1 + (z > 0 ? .8 : 0)], [x, 5.2, z], .5, .4, NOIR)); g.boite(0, 5, 0, 8, 1.2, 7.2, v("#3E7A4A"));
+          g.boite(0, 5.4, -3.4, 7.6, 14, 1, v("#5A3A6A")); for (let k = 0; k < 5; k++) g.boule(-3 + k * 1.5, 12, -2.8, .55, OR, .1);
+          g.cylindre(0, 19.4, -3.4, 5.2, .5, 14, v("#4A2E58")); g.cylindre(0, 19.8, -3.4, 3.2, 6.2, 12, v("#5A3A6A"), 0, 3.6); g.cylindre(0, 20.6, -3.4, 3.3, 1.2, 12, v("#E05A6A")); }
+        return g; };
+      // une montre de gousset (face +z, centrée en 0), aiguilles figées
+      const montre = (R, col, ang) => { const g = new Geo(), c = new Geo(), ov = g.ov(), Zf = R * .14;
+        c.cylindre(0, -R * .12, 0, R, R * .24, 12, col, .08); c.cylindre(0, -R * .125, 0, R * .86, R * .255, 12, v("#FFF8E6"), .1); c.cylindre(0, -R * .13, 0, R * .5, .01, 8, col, .08);
+        tourne(c, "x", PI / 2); g.poser(c, 0, 0, 0, 0, 1);
+        for (let k = 0; k < 12; k++) { const a = k / 12 * TAU, L = k % 3 ? .07 : .14, ca = Math.cos(a), sa = Math.sin(a), w = R * .03;
+          ov.quad([ca * R * .76 - sa * w, sa * R * .76 + ca * w, Zf], [ca * R * .76 + sa * w, sa * R * .76 - ca * w, Zf], [ca * R * (.76 - L) + sa * w, sa * R * (.76 - L) - ca * w, Zf], [ca * R * (.76 - L) - sa * w, sa * R * (.76 - L) + ca * w, Zf], NOIR, 0, [0, 0, 1]); }
+        [[ang, .64, .05], [ang * 2.7 + 1, .44, .08]].forEach(([a, L, l]) => { const ca = Math.cos(a), sa = Math.sin(a); ov.tri([-sa * R * l, ca * R * l, Zf + .02], [sa * R * l, -ca * R * l, Zf + .02], [ca * R * L, sa * R * L, Zf + .02], NOIR, 0, [0, 0, 1]); });
+        g.cylindre(0, R * .96, 0, R * .13, R * .18, 8, col, .08); const an = []; for (let k = 0; k <= 6; k++) { const a = k / 6 * TAU; an.push([Math.cos(a) * R * .2, R * 1.36 + Math.sin(a) * R * .2, 0]); } tube(g, an, R * .05, col, .08, 4);
+        return g; };
+      const champi = (h, R, col, pois) => { const g = new Geo(); g.cylindre(0, 0, 0, R * .26, h, 7, v("#F7E6C8"), 0, R * .2); g.cylindre(0, h - R * .02, 0, R * .92, R * .05, 10, v("#E8D2B0")); g.boule(0, h, 0, R, col, 0, .5, true);
+        if (pois && R > 5) for (let k = 0; k < 6; k++) { const a = k / 6 * TAU + q() * .5, d = R * (k ? .64 : .05); oct(g, Math.cos(a) * d, h + Math.sqrt(Math.max(0, 1 - d * d / (R * R))) * R * .5, Math.sin(a) * d, R * .14, pois); }
+        return g; };
+      // une fleur qui parle (tête face +z, bouche ouverte) : 0 marguerite, 1 lys tigré, 2 rose, 3 violette, 4 tulipe
+      const fleur = (ty, H, pen) => { const g = new Geo(), x = pen, y = H, R = H * .14;
+        branche(g, [0, 0, 0], [pen * .35, H * .55, 0], H * .028, H * .022, FEUIL2); branche(g, [pen * .35, H * .55, 0], [x, y - R * .4, 0], H * .022, H * .018, FEUIL2);
+        [-1, 1].forEach(sd => { const y0 = H * (.22 + (sd + 1) * .1); g.quad([pen * .1, y0, 0], [sd * H * .2, y0 + H * .08, H * .05], [sd * H * .32, y0 + H * .2, 0], [sd * H * .1, y0 + H * .1, -H * .05], FEUIL, 0, [0, 1, 0]); });
+        if (ty === 0 || ty === 3) { const n = ty ? 5 : 14, pc = ty ? v("#8A5AC8") : BLANC; for (let k = 0; k < n; k++) petale(g, x, y, -.3, k / n * TAU + .3, R * .5, R * (ty ? 1.9 : 2.2), R * (ty ? .62 : .3), pc, .05);
+          disque(g, x, y, .1, R * (ty ? .62 : 1), v("#F7C83A"), .05, 1); disque(g, x, y, -.4, R * (ty ? .62 : 1), FEUIL2, 0, -1); visage(g, x, y, .3, R * (ty ? .7 : 1)); }
+        else if (ty === 1) { for (let k = 0; k < 6; k++) petale(g, x, y, -.3, k / 6 * TAU + .5, R * .3, R * 2.3, R * .5, v("#F2842A"), .05); for (let k = 0; k < 10; k++) { const a = q() * TAU, d = R * (.8 + q() * 1.1); g.boule(x + Math.cos(a) * d, y + Math.sin(a) * d, .3, R * .07, v("#7A2A10")); }
+          disque(g, x, y, .1, R * .7, v("#F7D84A"), .05, 1); visage(g, x, y, .3, R * .75); }
+        else { const c = ty === 2 ? ROUGE : v("#F06A9A"); g.boule(x, y, 0, R * 1.3, c, 0, ty === 2 ? 1 : 1.3, true); for (let k = 0; k < 5; k++) { const a = k / 5 * TAU; g.boule(x + Math.cos(a) * R * .9, y + R * .5, Math.sin(a) * R * .9, R * .55, mel(c, [0, 0, 0], .15), 0, 1); }
+          visage(g, x, y - R * .1, R * 1.25, R * .9); }
+        return g; };
+      const lapinR = () => { const g = new Geo(), VE = v("#C8283A");
+        [-1, 1].forEach(sd => { branche(g, [0, 4.4, sd * 1.1], [sd * 1.5, 1, sd * 1.2], .75, .55, BLANC); g.boule(sd * 1.5 + .5, .6, sd * 1.2, 1, BLANC, 0, .55); });
+        g.boule(0, 6.4, 0, 2.8, VE, 0, 1.25, true); g.boule(.6, 9, 0, 1.5, BLANC, 0, .6); g.boule(1, 10.8, 0, 2.1, BLANC, 0, 1, true); g.boule(2.7, 10.3, 0, .9, BLANC); g.boule(3.5, 10.5, 0, .32, PINK, .1);
+        [-1, 1].forEach(sd => { g.boule(2.3, 11.3, sd * .95, .36, NOIR); branche(g, [.6, 12.3, sd * .7], [-.8, 17.6, sd * 1.4], .75, .45, BLANC); branche(g, [.85, 12.6, sd * .7], [-.5, 17.2, sd * 1.4], .4, .22, PINK); branche(g, [.6, 8.4, sd * 2.4], [3, 6.8, sd * 1.6], .6, .5, VE); });
+        g.cylindre(3.4, 5.8, 1.6, 1.1, .5, 10, OR, .25); g.boule(3.4, 6.5, 1.6, .25, OR, .3); g.boule(-2.8, 5.6, 0, 1.1, BLANC); return g; };
+      const flamant = () => { const g = new Geo(), F = v("#F47A9E"), F2 = v("#E05A86");
+        branche(g, [0, 0, 0], [0, 9, 0], .25, .25, F2); branche(g, [0, 6.4, 0], [1.6, 7.4, .3], .22, .22, F2); g.boite(.6, 0, 0, 1.8, .2, 1, F2);
+        g.boule(0, 11, 0, 3.4, F, 0, .62, true); g.boule(-2.8, 11.6, 0, 2, F2, 0, .45);
+        const cou = [[2.4, 12], [3.8, 15], [2.6, 18.4], [3.4, 21], [5, 21.4]]; for (let k = 0; k < cou.length - 1; k++) branche(g, [cou[k][0], cou[k][1], 0], [cou[k + 1][0], cou[k + 1][1], 0], .75 - k * .08, .66 - k * .08, F);
+        g.boule(5.2, 21.4, 0, 1.1, F); branche(g, [5.9, 21.6, 0], [7.6, 20.1, 0], .45, .15, NOIR); [-1, 1].forEach(sd => g.boule(5.5, 21.9, sd * .85, .2, NOIR)); return g; };
+      const herisson = () => { const g = new Geo(), Hh = v("#7A5A3E"); g.boule(0, 2.2, 0, 2.4, Hh, 0, .85, true); g.boule(2.2, 1.8, 0, .9, v("#D8B890")); g.boule(3, 1.9, 0, .3, NOIR);
+        for (let k = 0; k < 16; k++) { const a = k / 16 * TAU * 3, b = .25 + (k % 4) * .35, d = [Math.cos(a) * Math.cos(b), Math.sin(b), Math.sin(a) * Math.cos(b)]; if (d[0] > .65) continue; branche(g, [d[0] * 2, 2.2 + d[1] * 1.8, d[2] * 2], [d[0] * 3.7, 2.2 + d[1] * 3.4, d[2] * 3.7], .45, .05, v("#4A3424")); }
+        return g; };
+      // pièces d'échecs (S = échelle) : 0 pion, 1 tour, 2 cavalier, 3 fou, 4 dame, 5 roi
+      const piece = (ty, col, S) => { const g = new Geo(), c2 = mel(col, [0, 0, 0], .2), h = [6, 9, 7, 10, 13, 14][ty] * S;
+        g.cylindre(0, 0, 0, 3.2 * S, S, 10, c2); g.cylindre(0, S, 0, 2.6 * S, .8 * S, 10, col, 0, 2.2 * S); g.cylindre(0, 1.8 * S, 0, 1.9 * S, h, 8, col, 0, 1.1 * S); g.cylindre(0, 1.8 * S + h, 0, 1.8 * S, .6 * S, 8, c2);
+        const y = 2.4 * S + h;
+        if (ty === 0) g.boule(0, y + 1.2 * S, 0, 1.8 * S, col, 0, 1, true);
+        else if (ty === 1) { g.cylindre(0, y, 0, 2.2 * S, 2.4 * S, 12, col); for (let k = 0; k < 5; k++) { const a = k / 5 * TAU; g.boite(Math.cos(a) * 1.7 * S, y + 2.4 * S, Math.sin(a) * 1.7 * S, S, 1.2 * S, S, col, 0, -a); } }
+        else if (ty === 2) { g.boite(0, y - .4 * S, -.4 * S, 2.4 * S, 4.6 * S, 3 * S, col); g.boite(0, y + 2.2 * S, 1.4 * S, 2.2 * S, 1.8 * S, 3.8 * S, col); g.boite(0, y + 1 * S, -1.8 * S, .8 * S, 4 * S, 1 * S, c2);
+          [-1, 1].forEach(sd => { g.cylindre(sd * .7 * S, y + 4.1 * S, -.6 * S, .5 * S, 1.2 * S, 5, col, 0, 0); g.boule(sd * 1.15 * S, y + 3.2 * S, .8 * S, .3 * S, NOIR); }); }
+        else if (ty === 3) { g.boule(0, y + 2 * S, 0, 2 * S, col, 0, 1.35, true); g.boule(0, y + 4.9 * S, 0, .6 * S, c2); }
+        else if (ty === 4) { g.cylindre(0, y, 0, 1.6 * S, 2 * S, 12, col, 0, 2.4 * S); for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; g.boule(Math.cos(a) * 2.2 * S, y + 2.3 * S, Math.sin(a) * 2.2 * S, .5 * S, c2); } g.boule(0, y + 2.4 * S, 0, 1.3 * S, col, 0, .7); }
+        else { g.cylindre(0, y, 0, 1.7 * S, 2.2 * S, 12, col, 0, 2.2 * S); g.boite(0, y + 2.2 * S, 0, .7 * S, 3.4 * S, .7 * S, c2); g.boite(0, y + 3.8 * S, 0, 2.4 * S, .7 * S, .7 * S, c2); }
+        return g; };
+      const haie = (L, Hh, ep) => { const g = new Geo(); g.boite(0, 0, 0, L, Hh, ep, FEUIL2); for (let k = 0; k <= L / 5; k++) g.boule(-L / 2 + k * 5, Hh, 0, ep * .62, FEUIL, 0, .7); return g; };
+      const theiere = (R, c) => { const g = new Geo(); g.boule(0, R, 0, R, c, 0, .85, true); g.cylindre(0, R * 1.6, 0, R * .45, R * .3, 10, c, 0, R * .3); g.boule(0, R * 2, 0, R * .16, OR, .1);
+        branche(g, [R * .8, R * .8, 0], [R * 1.7, R * 1.6, 0], R * .18, R * .08, c); tube(g, [0, 1, 2, 3, 4, 5, 6].map(k => { const a = PI * .6 - k / 6 * PI * 1.2; return [-R * .75 - Math.cos(a) * R * .5, R + Math.sin(a) * R * .5, 0]; }), R * .09, c); return g; };
+      const fiole = (s, c) => { const g = new Geo(), vv = v(c || "#5AA0E0"); g.cylindre(0, 0, 0, s, s * 2.2, 10, vv, .2); g.cylindre(0, s * 2.2, 0, s, s * .8, 10, vv, .2, s * .35); g.cylindre(0, s * 3, 0, s * .35, s * .8, 6, vv, .2); g.cylindre(0, s * 3.8, 0, s * .45, s * .5, 6, v("#C8A070"));
+        g.ov().cylindre(0, s * .6, 0, s * 1.02, s * .9, 10, v("#FFFDF6")); return g; };
+      const pose = (g, P, R, cap) => { poser(g, P[0], P[1], R, cap); };
+
+      // ---------- A. la pelouse autour de la nappe, l'ourlet de dentelle (festons) et un ruban rose brodé
+      { const N = 120, k0 = 1012, kM = 1080, k1 = 1745, P = (a, k) => { const e = ell(a, k); return [e[0], .05, e[1]]; };
+        for (let i = 0; i < N; i++) { const a0 = i / N * TAU, a1 = (i + 1) / N * TAU;
+          for (let j = 0; j < 4; j++) { const b0 = a0 + (a1 - a0) * j / 4, b1 = a0 + (a1 - a0) * (j + 1) / 4, f0 = k0 + 24 * Math.sin(PI * j / 4), f1 = k0 + 24 * Math.sin(PI * (j + 1) / 4);
+            so3.quad(P(b0, f0), P(b1, f1), P(b1, kM), P(b0, kM), v("#5E9A48"), 0, [0, 1, 0]); }
+          so3.quad(P(a0, kM), P(a1, kM), P(a1, k1), P(a0, k1), i % 2 ? GAZON : v("#8ACB66"), 0, [0, 1, 0]);
+          const c = ell((a0 + a1) / 2, k0 + 8); for (let k = 0; k < 5; k++) { const b = k / 5 * TAU, d = (k + 1) / 5 * TAU; so3.tri([c[0], .05, c[1]], [c[0] + Math.cos(b) * 5, .05, c[1] + Math.sin(b) * 5], [c[0] + Math.cos(d) * 5, .05, c[1] + Math.sin(d) * 5], v("#F2C8D2"), 0, [0, 1, 0]); }
+          so3.quad(P(a0, 1000), P(a1, 1000), P(a1, 1009), P(a0, 1009), i % 4 ? PINK : ROUGE, 0, [0, 1, 0]); } }
+      // ---------- B. les collines du pays des merveilles, de plus en plus bleues ; sur l'une d'elles, le château de cœur
+      for (let i = 0; i < 22; i++) { const a = i / 22 * TAU + q() * .18, k = 1430 + q() * 280, R = 200 + q() * 190, e = ell(a, k), g = new Geo();
+        g.boule(0, 0, 0, R, mel(v("#86C46A"), v("#A8A8DA"), (k - 1430) / 280 * .6 + q() * .2), 0, .22 + q() * .14);
+        if (i % 3 === 0) for (let t = 0; t < 4; t++) { const u = (q() - .5) * R * .9, w = (q() - .5) * R * .5, hh = R * .2 * (1 - (u * u + w * w) / (R * R)); g.cylindre(u, hh - 2, w, 3, 30, 6, BOIS2); g.boule(u, hh + 38, w, 18 + q() * 8, i % 2 ? v("#5AA05A") : v("#E88AB0"), 0, 1); }
+        sol.poser(g, e[0], 0, e[1], q() * TAU, 1); }
+      { const [x, z] = ell(3.75, 1330), hill = new Geo(); hill.boule(0, 0, 0, 280, v("#8CC070"), 0, .3, true); sol.poser(hill, x, 0, z, 0, 1);
+        const g = new Geo(), MUR = v("#F6E8EC"), RO = v("#D8344E"), S = 1.3;
+        g.boite(0, 0, 0, 200, 70, 70, MUR); g.boite(0, 70, -6, 110, 60, 46, v("#FBEFF2")); g.boite(0, 0, 35.3, 34, 40, .6, NUIT); disque(g, 0, 40, 35.6, 17, NUIT, 0, 1);
+        for (let k = 0; k < 12; k++) { g.boite(-96 + k * 17.4, 70, 34, 8, 8, 4, MUR); g.boite(-52 + k * 9.4, 130, 16, 5, 6, 4, MUR); }
+        coeur(g, 0, 104, 17.3, 15, RO, .25); [-1, 1].forEach(sd => { g.boite(sd * 50, 18, 35.4, 14, 34, .5, RO); g.ov().boite(sd * 50, 30, 35.7, 6, 6, .1, BLANC, 0, PI / 4); });
+        [[-100, -34, 16, 128], [100, -34, 16, 128], [-100, 34, 16, 112], [100, 34, 16, 112], [-40, -10, 13, 190], [40, -10, 13, 200]].forEach(([u, w, R, Hh], k) => {
+          g.cylindre(u, 0, w, R, Hh, 12, MUR); g.cylindre(u, Hh, w, R * 1.15, 3, 12, MUR); g.cylindre(u, Hh + 3, w, R * 1.2, R * 3.4, 12, k % 2 ? RO : v("#E8607A"), 0, 0);
+          for (let t = 0; t < 3; t++) g.boite(u, Hh * (.4 + t * .18), w + R - .4, 3, 7, 1, NUIT); branche(g, [u, Hh + R * 3.4, w], [u, Hh + R * 3.4 + 26, w], .8, .8, NOIR); coeur(g, u + 7, Hh + R * 3.4 + 20, w, 5.6, RO, .3); });
+        sol.poser(g, x, 72, z, vers(x, z, T.cx, T.cz), S); }
+      // ---------- C. les chaises géantes du goûter, toutes dépareillées, tirées autour de la nappe (sur la pelouse)
+      [2.55, 3.2, 4.35, 5.0, 5.7, .45, 1.3].forEach((a, k) => { const [x, z] = ell(a, 1110); sol.poser(chaise(k % 5), x, 0, z, vers(x, z, T.cx, T.cz) + (q() - .5) * .35, 13 + q() * 3); });
+      // ---------- D. au loin : des fleurs immenses et des champignons-montagnes
+      for (let i = 0; i < 14; i++) { const a = i / 14 * TAU + .22; if ([2.55, 3.2, 3.75, 4.35, 5.0, 5.7, .45, 1.3].some(b => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b))) < .14)) continue;
+        const [x, z] = ell(a, 1230 + q() * 120); if (i % 4 === 3) { const c = ["#F29A3A", "#8A5AC8", "#4CA0D8", "#F2D04A"][i % 4]; sol.poser(champi(80 + q() * 60, 90 + q() * 50, v(c), CRE), x, 0, z, 0, 1); }
+        else sol.poser(fleur(i % 5, 160 + q() * 90, (q() - .5) * 40), x, 0, z, vers(x, z, T.cx, T.cz), 1); }
+
+      // ---------- E. le terrier du Lapin, entre les racines du grand arbre (au nord-ouest) : on y tombe en tournoyant
+      { const p = place(56, 30, 24); if (p) { const [x, z] = p, g = new Geo(), cap = vers(x, z, T.cx, T.cz);
+          g.boule(0, 0, -20, 32, v("#6FA858"), 0, .55, true); g.boule(-22, 0, -8, 18, v("#79B460"), 0, .5);
+          for (let k = 0; k < 16; k++) { const a0 = k / 16 * TAU, a1 = (k + 1) / 16 * TAU; g.ov().tri([0, .5, 0], [Math.cos(a0) * 13, .5, Math.sin(a0) * 10], [Math.cos(a1) * 13, .5, Math.sin(a1) * 10], NUIT, 0, [0, 1, 0]);
+            g.quad([Math.cos(a0) * 13, .35, Math.sin(a0) * 10], [Math.cos(a1) * 13, .35, Math.sin(a1) * 10], [Math.cos(a1) * 17.5, 1.8 + (k % 3) * .6, Math.sin(a1) * 14.5], [Math.cos(a0) * 17.5, 1.8 + ((k + 2) % 3) * .6, Math.sin(a0) * 14.5], TERRE, 0, [0, 1, 0]); }
+          [[-30, -22], [24, -28], [-34, 8], [30, 2]].forEach(([u, w]) => tube(g, [[u, -2, w], [u * .7, 8, w * .7], [u * .3, 9, w * .3], [u * -.05, 3, w * -.05 - 4], [u * -.2, -2, w * -.2 - 6]], 2, BOIS2));
+          g.boite(16, 0, 10, .6, 9, .6, BOIS2); g.boite(18.6, 7, 10, 6, 2.4, .4, CRE, 0, .2); g.ov().boite(18.6, 7.6, 10.22, 4, .5, .05, ENCRE, 0, .2);   // un petit écriteau
+          poser(g, x, z, 30, cap);
+          const tombe = [() => { const t = new Geo(); tasse(t, 0, 0, 0, 2.2, PINK, PORC); return t; }, () => montre(2.8, OR, .8), () => { const t = new Geo(); t.cylindre(0, 0, 0, 1.6, 3, 10, v("#F29A2A"), .1); t.cylindre(0, 3, 0, 1.7, .6, 10, BLANC); t.ov().cylindre(0, 1, 0, 1.62, 1, 10, CRE); return t; },
+            () => { const t = new Geo(); t.boite(0, 0, 0, 3.4, 4.8, .2, BLANC); symbole(t.ov(), "c", 0, 2.4, .12, 1.1, 1); return t; }];
+          tombe.forEach((f0, k) => { const ch = []; for (let j = 0; j <= 14; j++) { const t = j / 14, a = t * TAU * 1.6 + k * 1.57, rr = 11 * (1 - t * .75); ch.push([Math.cos(a) * rr, 44 * (1 - t) - 4, Math.sin(a) * rr * .8]); }
+            rotors.push({ g: f0(), x, y: 0, z, cap: 0, v: 1.4, a: { p: 8, ph: k / 4, chemin: ch, vis: [.02, .97], ax: "y" } }); }); } }
+      { const p = place(-6, -40, 40); if (p) { const [x, z] = p, g = new Geo(), tr = [[0, 0, 0], [6, 45, 3], [-5, 90, -3], [2, 128, 0]];
+          for (let k = 0; k < 3; k++) branche(g, tr[k], tr[k + 1], 20 - k * 5, 15 - k * 5, v("#6A4A30"));
+          [[-58, 168, 14], [50, 176, -18], [4, 190, 36], [-10, 182, -38]].forEach(([u, w, e]) => { branche(g, tr[3], [u * .6, w - 16, e * .6], 7, 4, v("#6A4A30")); branche(g, [u * .6, w - 16, e * .6], [u, w, e], 4, 2, v("#6A4A30")); });
+          [[-58, 178, 14, 44], [50, 186, -18, 48], [4, 206, 36, 42], [-10, 196, -38, 40], [0, 214, 0, 52], [-34, 202, -6, 34], [30, 204, 16, 36]].forEach(([u, w, e, R], k) => g.boule(u, w, e, R, [FEUIL, v("#5AAA5A"), v("#6CB860")][k % 3], 0, .78, true));
+          for (let k = 0; k < 8; k++) { const a = k / 8 * TAU + .3; tube(g, [[Math.cos(a) * 14, 6, Math.sin(a) * 14], [Math.cos(a) * 34, 7, Math.sin(a) * 34], [Math.cos(a + .2) * 60, 2, Math.sin(a + .2) * 60], [Math.cos(a + .3) * 80, -3, Math.sin(a + .3) * 80]], 4.5 - (k % 3), v("#6A4A30")); }
+          poser(g, x, z, 50, 0); } }
+      // ---------- F. l'arbre tordu du Chat (à l'ouest) : son sourire s'y pose un instant, la queue rayée pend d'une branche
+      { const p = place(2, 300, 26); if (p) { const [x, z] = p, g = new Geo(), TR = v("#4A3448"), tr = [[0, 0, 0], [7, 22, 0], [-4, 44, 4], [3, 62, 0]];
+          for (let k = 0; k < 3; k++) branche(g, tr[k], tr[k + 1], 6 - k * 1.5, 4.5 - k * 1.5, TR);
+          [[-28, 72, 6], [26, 78, -4], [4, 90, 14], [-6, 84, -16]].forEach(([u, w, e]) => { branche(g, tr[3], [u, w, e], 2.4, 1.2, TR); const sp = []; for (let j = 0; j <= 10; j++) { const a = j / 10 * TAU * 1.2, rr = 4 * (1 - j / 12); sp.push([u + Math.cos(a) * rr * Math.sign(u || 1), w + Math.sin(a) * rr, e]); } tube(g, sp, .6, TR); });
+          [[-28, 76, 6, 9], [26, 82, -4, 10], [4, 95, 14, 8], [-6, 88, -16, 8], [10, 70, 6, 7]].forEach(([u, w, e, R], k) => g.boule(u, w, e, R, k % 2 ? v("#3AA89A") : v("#9A5AC8"), 0, .8, true));
+          for (let k = 0; k < 6; k++) { const a = k / 6 * TAU; tube(g, [[Math.cos(a) * 4, 3, Math.sin(a) * 4], [Math.cos(a) * 12, 2, Math.sin(a) * 12], [Math.cos(a + .3) * 20, -1, Math.sin(a + .3) * 20]], 1.4, TR); }
+          poser(g, x, z, 26, 0);
+          const cc = vers(x, z, T.cx, T.cz), gp = monde([0, 0, 6], x, 66, z, cc);
+          if (CHAT.g) { rotors.push({ g: CHAT.g, x: gp[0], y: 66, z: gp[2], cap: cc, v: 0, a: { p: 18, vis: [.38, .5], visX: true, bob: [1.2, .8], k0: .42, k1: .42 } }); rotors.push({ g: CHAT.ye, x: gp[0], y: 66, z: gp[2], cap: cc, v: 0, a: { p: 18, vis: [.41, .47], bob: [1.2, .8], k0: .42, k1: .42 } }); }
+          const qu = new Geo(), qp = [[0, 0, 0], [1, -5, 0], [-1, -10, 1], [1.5, -15, 0], [3.5, -18, 0], [5, -17, 0]]; for (let k = 0; k < qp.length - 1; k++) branche(qu, qp[k], qp[k + 1], 1.3, 1.2, k % 2 ? v("#C890E8") : v("#7A3AA8"));
+          rotors.push({ g: qu, x: x - 24, y: 70, z: z + 6, cap: 0, v: 0, a: { p: 18, vis: [.37, .52], osc: [.25, 1.6] } }); } }
+      // ---------- F bis. DÉCOR VIVANT : pendant la course, le sourire du Chat se pose au-dessus de la DERNIÈRE voiture et la suit en se moquant
+      //   (il vole de l'une à l'autre quand la dernière change ; caché sans voitures). Même mécanique sur la carte 2D (EVENEMENTS.terrier).
+      //   Crochet unique a.vivant (voir contexteVivant) : on déplace l'objet puis matRotor fait le reste (taille k0) ; null = caché.
+      if (CHAT.g) { const suit = k => (x, t, C) => { if (!C.V.length) return null; const d = C.dernier();
+          const tx = d.x, tz = d.z, ty = (d.y || 0) + 18 + Math.sin(t * 2.2) * 1.2, w = x.prec ? .08 : 1; x.x += (tx - x.x) * w; x.y += (ty - x.y) * w; x.z += (tz - x.z) * w; x.prec = 1;
+          x.cap = Math.atan2(T.cx - x.x, T.cz - x.z); if (k && (t * .5) % 1 > .86) return null;   // les yeux clignent
+          return matRotor(x, t); };
+        rotors.push({ g: CHAT.g, x: T.cx, y: 15, z: T.cz, cap: 0, v: 0, a: { k0: .42, k1: .42, vivant: suit(0) } }); rotors.push({ g: CHAT.ye, x: T.cx, y: 15, z: T.cz, cap: 0, v: 0, a: { k0: .42, k1: .42, vivant: suit(1) } }); }
+      // ---------- G. le bois de champignons autour de la Chenille (aucun n'est rouge : le sien reste le seul grand chapeau rouge)
+      { const CH = [["#F29A3A", CRE], ["#8A5AC8", v("#E8D8FF")], ["#4CA0D8", CRE], ["#F2D04A", v("#FFFFFF")], ["#E8DCC8", v("#B8906A")], ["#5AC8A0", CRE], ["#B07AE0", CRE], ["#F2B08A", v("#FFFFFF")]];
+        [[-34, 582, 18], [-74, 632, 26], [8, 640, 14], [96, 612, 16], [140, 586, 11], [-20, 700, 28], [70, 690, 18], [150, 650, 20], [-100, 520, 14], [-70, 440, 20], [-40, 380, 12], [120, 720, 22]].forEach(([u, w, R], k) => {
+          const p = place(u, w, R * .9); if (!p) return; const [c, po] = CH[k % CH.length]; pose(champi(R * (.7 + q() * .7), R, v(c), po), p, R * .9, q() * TAU);
+          if (k % 3 === 0) for (let t = 0; t < 3; t++) { const pp = place(p[0] + (q() - .5) * R * 3, p[1] + (q() - .5) * R * 3, 4); if (pp) pose(champi(3 + q() * 4, 3 + q() * 2.5, v(CH[(k + t + 1) % CH.length][0]), CRE), pp, 4, 0); } }); }
+      // ---------- H. la petite porte dans la haie, la table de verre avec la clé d'or, « Bois-moi » et « Mange-moi »
+      { const p = place(226, 574, 30); if (p) { const [x, z] = p, g = new Geo();
+          g.poser(haie(52, 24, 8), 0, 0, -14, 0, 1); for (let k = 0; k < 18; k++) oct(g, -24 + k * 2.8, 4 + q() * 18, -9.8, 1.2, k % 3 ? ROUGE : BLANC, .05);
+          g.boite(0, 0, -9.75, 4.4, 6, .5, v("#9A6A3A")); disque(g, 0, 6, -9.45, 2.2, v("#9A6A3A"), 0, 1); g.ov().boite(0, .4, -9.45, 3.4, 5.4, .05, v("#7A4A22")); g.boule(1.4, 3, -9.3, .35, OR, .3); g.boite(-1.4, 2.6, -9.4, .3, .8, .1, NUIT);
+          [0, 1, 2].forEach(k => { const a = k / 3 * TAU + .5; branche(g, [Math.cos(a) * 6, 0, Math.sin(a) * 6 + 4], [Math.cos(a) * 3.4, 13, Math.sin(a) * 3.4 + 4], .4, .3, VERRE, .35); });
+          g.cylindre(0, 13, 4, 7.4, .5, 18, VERRE, .4); g.cylindre(0, 13.5, 4, 7.1, .06, 18, v("#E8F6FF"), .5);
+          const an = []; for (let k = 0; k <= 10; k++) { const a = k / 10 * TAU; an.push([-3.4 + Math.cos(a) * 1.1, 13.9, 4 + Math.sin(a) * 1.1]); } tube(g, an, .28, OR, .35);
+          g.boite(.4, 13.6, 4, 5.4, .5, .5, OR, .35); g.boite(2.6, 13.6, 4.6, .6, .5, 1.2, OR, .35); g.boite(1.6, 13.6, 4.5, .5, .5, .9, OR, .35);
+          g.poser(fiole(.7, "#5AA0E0"), 3.2, 13.56, 7, 0, 1); g.boite(-2, 0, 5, 3.2, 2.6, 3.2, VERRE, .3); g.boite(-2, 2.6, 5, 2.4, 1.2, 2.4, v("#C8884A")); g.ov().boite(-2, 3.8, 5, 2.4, .05, 2.4, v("#FFF4EA"));
+          for (let k = 0; k < 5; k++) oct(g, -2.8 + k * .4, 3.9, 4.6 + (k % 2) * .5, .22, ROUGE, .1);
+          poser(g, x, z, 30, vers(x, z, T.cx, T.cz)); } }
+      // ---------- I. le carrefour aux panneaux qui montrent toutes les directions (et les chemins qui partent partout), le Lapin pressé qui en fait le tour
+      { const p = place(446, 594, 16); if (p) { const [x, z] = p, g = new Geo(), cols = ["#F4A6B8", "#A6DCC8", "#F7E08A", "#C8B0F0", "#4C9AFF", "#F2B08A", "#FFFFFF", "#D21E3A", "#7FBF5E", "#F29A3A"];
+          g.cylindre(0, 0, 0, .9, 36, 8, BOIS2, 0, .7); g.boule(0, 36.4, 0, 1.4, ROUGE, .1);
+          for (let k = 0; k < 10; k++) { const a = k * 2.39, y = 9 + k * 2.7, L = 8 + q() * 5, c = v(cols[k]), b = new Geo();
+            b.boite(L / 2, -.9, 0, L, 1.8, .4, c, .22); b.tri([L, -1.4, 0], [L + 2.4, 0, 0], [L, 1.4, 0], c, .22, [0, 0, 1]); b.ov().boite(L * .5, -.22, .21, L * .6, .45, .02, ENCRE); b.ov().boite(L * .5, -.22, -.21, L * .6, .45, .02, ENCRE); b.boite(-.4, -1, 0, 1.2, 2, .6, BOIS2);
+            tourne(b, "z", (q() - .5) * .6); g.poser(b, 0, y, 0, a, 1); }
+          poser(g, x, z, 18, 0);
+          for (let k = 0; k < 5; k++) { const a = k / 5 * TAU + .4; let px = x + Math.cos(a) * 3, pz = z + Math.sin(a) * 3; for (let j = 0; j < 12; j++) { const b = a + Math.sin(j * .7 + k) * .35, nx = px + Math.cos(b) * 6, nz = pz + Math.sin(b) * 6;
+              if (T.dist(nx, nz) < DEMI + 8 || dansLac(nx, nz, 4)) break; const w = 4 - j * .16, n0 = [-Math.sin(b) * w, Math.cos(b) * w];
+              so3.quad([px + n0[0], .45, pz + n0[1]], [nx + n0[0], .45, nz + n0[1]], [nx - n0[0], .45, nz - n0[1]], [px - n0[0], .45, pz - n0[1]], v("#E6CBA0"), 0, [0, 1, 0]); px = nx; pz = nz; } }
+          const ch = []; for (let j = 0; j <= 28; j++) { const a = -j / 28 * TAU; ch.push([Math.cos(a) * 28, 0, Math.sin(a) * 19]); }
+          rotors.push({ g: lapinR(), x, y: 0, z, cap: 0, v: 0, a: { p: 11, chemin: ch, oriente: true } }); } }
+      // ---------- J. la petite table du goûter (à notre taille… presque) : nappe, théières, tasses, « Mange-moi », « Bois-moi », le Loir dans sa théière, 11 chaises dépareillées
+      { const p = place(640, 610, 64); if (p) { const [x, z] = p, g = new Geo(), L = 96, Wd = 18, Ht = 9, y0 = Ht + 1.2, pal = ["#F4A6B8", "#A6DCC8", "#F7E08A", "#C8B0F0", "#4C9AFF", "#F2B08A"];
+          [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, -1], [0, 1]].forEach(([a, b]) => g.boite(a * (L / 2 - 3), 0, b * (Wd / 2 - 2), 1.6, Ht, 1.6, BOIS2));
+          g.boite(0, Ht - 2.6, 0, L + 1.4, 3.8, Wd + 1.4, BLANC); for (let k = 0; k < 12; k++) for (let w = 0; w < 2; w++) { const u = -L / 2 + 4 + k * 8, e = -Wd / 4 + w * Wd / 2 + (k % 2 ? 0 : 0); if ((k + w) % 2) g.ov().quad([u - 4, y0 + .01, e - 4.5], [u + 4, y0 + .01, e - 4.5], [u + 4, y0 + .01, e + 4.5], [u - 4, y0 + .01, e + 4.5], v("#F8CCD6"), 0, [0, 1, 0]); }
+          for (let k = 0; k < 10; k++) { const u = -L / 2 + 6 + k * 9.4, sd = k % 2 ? 1 : -1, rr = 1.5 + q() * .6, cx = u + (q() - .5) * 2, cz = sd * (5 + q());
+            g.cylindre(cx, y0, cz, rr * 1.5, rr * .12, 8, PORC); g.cylindre(cx, y0 + rr * .12, cz, rr * .62, rr * .9, 8, v(pal[k % 6]), 0, rr); g.cylindre(cx, y0 + rr * .9, cz, rr * .92, .05, 8, THE, .05); branche(g, [cx + rr * .9, y0 + rr * .8, cz], [cx + rr * 1.3, y0 + rr * .4, cz], rr * .14, rr * .14, v(pal[k % 6])); }
+          [[-30, 0, "#4C7AC8"], [6, 1, "#F4A6B8"], [34, -1, "#A6DCC8"]].forEach(([u, e, c]) => g.poser(theiere(3, v(c)), u, y0, e, q() * TAU, 1));
+          { const t = theiere(3.2, PORC2); t.boule(0, 6.6, 0, 1.4, v("#B8987A"), 0, .9); t.boule(-.6, 7.6, .6, .5, v("#C8A88A")); t.boule(.6, 7.6, .6, .5, v("#C8A88A")); g.poser(t, 44, y0, 3, -.6, 1); }
+          [[-14, 0], [20, 0]].forEach(([u, e], k) => { g.cylindre(u, y0, e, .5, 7, 6, OR, .05); [[0, 6], [3.6, 4]].forEach(([yy, R]) => { g.cylindre(u, y0 + yy, e, R, .4, 14, PORC); for (let t = 0; t < 6; t++) { const a = t / 6 * TAU + k; oct(g, u + Math.cos(a) * R * .6, y0 + yy + 1, e + Math.sin(a) * R * .6, .7, v(pal[(t + k) % 6])); } }); });
+          [[-22, 3], [-6, -4], [28, 4], [-40, -3]].forEach(([u, e]) => { g.cylindre(u, y0, e, 2.4, .3, 12, PORC); g.boite(u, y0 + .3, e, 2.6, 1.8, 2.6, v("#C8884A"), 0, q()); g.ov().boite(u, y0 + 2.1, e, 2.6, .05, 2.6, CRE, 0, 0); for (let t = 0; t < 4; t++) oct(g, u - .9 + t * .6, y0 + 2.2, e + (t % 2 ? .4 : -.3), .25, ROUGE, .1); });
+          [[-10, 4, "#5AA0E0"], [14, -4, "#9A6AD8"], [40, -5, "#5AC8A0"]].forEach(([u, e, c]) => g.poser(fiole(.8, c), u, y0, e, q() * TAU, 1));
+          for (let k = 0; k < 8; k++) { const sd = k % 2 ? 1 : -1, u = -L / 2 + 12 + Math.floor(k / 2) * 23 + (q() - .5) * 4; g.poser(chaise((k * 3) % 5), u, 0, sd * (Wd / 2 + 4 + q() * 2), (sd > 0 ? PI : 0) + (q() - .5) * .6, .95 + q() * .2); }
+          g.poser(chaise(0), -L / 2 - 6, 0, 0, PI / 2, 1.25);
+          poser(g, x, z, 64, vers(x, z, T.cx, T.cz) + PI / 2); } }
+      // ---------- K. l'échiquier géant (de l'autre côté du miroir) : une partie en cours, un cavalier blanc renversé
+      { const p = place(940, 404, 62); if (p) { const [x, z] = p, g = new Geo(), C = 10.5, RO = v("#C8283A"), BL = v("#F6F0E6");
+          g.boite(0, 0, 0, C * 8 + 5, 1, C * 8 + 5, v("#6A4024")); g.ov().boite(0, 1, 0, C * 8 + 1.6, .02, C * 8 + 1.6, OR, .05);
+          for (let a = 0; a < 8; a++) for (let b = 0; b < 8; b++) { const u = (a - 4) * C, w = (b - 4) * C; g.ov().quad([u, 1.04, w], [u + C, 1.04, w], [u + C, 1.04, w + C], [u, 1.04, w + C], (a + b) % 2 ? RO : BL, 0, [0, 1, 0]); }
+          [[5, 0, 4, 0], [4, 0, 3, 1], [1, 0, 0, 0], [2, 0, 6, 2], [0, 0, 1, 2], [0, 0, 2, 3], [0, 0, 5, 2], [3, 0, 2, 0], [5, 1, 4, 7], [4, 1, 2, 5], [1, 1, 7, 7], [3, 1, 5, 6], [0, 1, 3, 4], [0, 1, 6, 5], [0, 1, 0, 6], [2, 1, 1, 5, 1]].forEach(([ty, c, a, b, tombe]) => {
+            const pc = piece(ty, c ? BL : RO, 1.25), u = (a - 3.5) * C, w = (b - 3.5) * C; if (tombe) { tourne(pc, "z", PI / 2); g.poser(pc, u + 4, 1 + 3.2, w, .4, 1); } else g.poser(pc, u, 1, w, c ? PI : 0, 1); });
+          poser(g, x, z, 62, .35); } }
+      // ---------- L. le croquet de la Reine : pelouse rayée, arceaux (dont deux soldats pliés en deux), flamants-maillets, hérissons-balles
+      { const p = place(942, 238, 56); if (p) { const [x, z] = p, g = new Geo(), cap = vers(x, z, T.cx, T.cz), Lx = 92, Lz = 62;
+          g.boite(0, 0, 0, Lx, .6, Lz, v("#5E9A48")); for (let k = 0; k < 9; k++) g.ov().quad([-Lx / 2 + k * Lx / 9, .61, -Lz / 2], [-Lx / 2 + (k + 1) * Lx / 9, .61, -Lz / 2], [-Lx / 2 + (k + 1) * Lx / 9, .61, Lz / 2], [-Lx / 2 + k * Lx / 9, .61, Lz / 2], k % 2 ? v("#6FB850") : v("#84CA62"), 0, [0, 1, 0]);
+          [[-30, -14], [-6, 16], [22, -10]].forEach(([u, w]) => tube(g, [0, 1, 2, 3, 4, 5, 6, 7, 8].map(k => { const a = PI - k / 8 * PI; return [u + Math.cos(a) * 3.4, .6 + Math.sin(a) * 6, w]; }), .4, BLANC, .1));
+          [[-18, 4, 0], [36, 12, 1]].forEach(([u, w, k]) => { for (let j = 0; j < 8; j++) { const a0 = PI - j / 8 * PI, a1 = PI - (j + 1) / 8 * PI, P0 = [u + Math.cos(a0) * 5.5, .6 + Math.sin(a0) * 6.5], P1 = [u + Math.cos(a1) * 5.5, .6 + Math.sin(a1) * 6.5];
+              g.quad([P0[0], P0[1], w - 2.6], [P1[0], P1[1], w - 2.6], [P1[0], P1[1], w + 2.6], [P0[0], P0[1], w + 2.6], j % 2 ? BLANC : v("#FFFDF6"), 0, [0, 1, 0]); }
+            symbole(g.ov(), ["c", "k"][k], u, 7.15, w + 2.65, 1.4, 1); g.boule(u - 5.7, 1.6, w, 1.6, PEAU); g.boule(u - 5.9, 2.4, w, 1.7, NOIR, 0, .6); g.boite(u + 5.5, .6, w - 1.4, 1, .6, 1, NOIR); g.boite(u + 5.5, .6, w + 1.4, 1, .6, 1, NOIR); });
+          [[-34, 6], [-2, -18], [30, 20]].forEach(([u, w], k) => g.poser(herisson(), u, .6, w, k * 2.1, 1));
+          [[-40, -24, .4], [12, 26, 2.6]].forEach(([u, w, c]) => g.poser(flamant(), u, .6, w, c, 1));
+          poser(g, x, z, 56, cap);
+          const fm = flamant(); tourne(fm, "z", PI); const pv = monde([4, 0, -2], x, 0, z, cap); rotors.push({ g: fm, x: pv[0], y: 22.6, z: pv[2], cap, v: 0, a: { osc: [.45, 1.7] } });
+          const hp = monde([-18, 0, -20], x, 0, z, cap), hr = []; for (let j = 0; j <= 8; j++) hr.push([Math.cos(cap) * 26 * Math.sin(j / 8 * PI), 0, -Math.sin(cap) * 26 * Math.sin(j / 8 * PI)]);
+          rotors.push({ g: herisson(), x: hp[0], y: .6, z: hp[2], cap, v: 1.6, a: { p: 9, chemin: hr, ax: "y" } }); } }
+      // ---------- M. la roseraie de la Reine : haies de roses blanches que les cartes repeignent en rouge (pots, pinceaux, échelle), arche de roses
+      { const p = place(902, 72, 60); if (p) { const [x, z] = p, g = new Geo(), cap = vers(x, z, T.cx, T.cz);
+          [-22, 0, 22].forEach((w, rI) => { g.poser(haie(62, 10, 7), 0, 0, w, 0, 1);
+            for (let k = 0; k < 26; k++) [-1, 1].forEach(sd => { const u = -29 + k * 2.3 + q(), peint = rI === 2 ? u < 4 : rI === 1 ? q() < .7 : true; oct(g, u, 3 + q() * 7, w + sd * 3.7, 1.35, peint ? ROUGE : BLANC, .05); }); });
+          [-1, 1].forEach(sd => { g.boite(sd * 9, 0, 34, 2, 14, 2, FEUIL2); }); const ar = []; for (let k = 0; k <= 10; k++) { const a = PI - k / 10 * PI; ar.push([Math.cos(a) * 9, 14 + Math.sin(a) * 8, 34]); } tube(g, ar, 1.4, FEUIL2);
+          ar.forEach(([u, w, e], k) => oct(g, u, w + 1.4, e, 1.5, k % 2 ? ROUGE : BLANC, .05)); for (let k = 0; k < 8; k++) oct(g, 9 * (k % 2 ? 1 : -1) + (q() - .5) * 2, 2 + k * 1.6, 35.2, 1.3, k % 3 ? ROUGE : BLANC, .05);
+          [[-14, 26], [2, 26], [-4, 4]].forEach(([u, w], k) => { g.cylindre(u + 5, 0, w - 3, 1.8, 3, 10, v("#9AA3AE")); g.cylindre(u + 5, 3, w - 3, 1.6, .1, 10, ROUGE, .1); for (let t = 0; t < 3; t++) g.boule(u + 3.4 + t * 1.4, .25, w - 4.4 - t * .5, .7, ROUGE, .1, .3); });
+          branche(g, [24, 0, 16], [21, 15, 11.4], .4, .4, BOIS); branche(g, [27.5, 0, 15], [24.5, 15, 10.4], .4, .4, BOIS); for (let k = 1; k < 6; k++) { const t = k / 6; branche(g, [24 - 3 * t, 15 * t, 16 - 4.6 * t], [27.5 - 3 * t, 15 * t, 15 - 4.6 * t], .25, .25, BOIS); }
+          poser(g, x, z, 60, cap);
+          [[-12, 31], [4, 31], [-2, 9]].forEach(([u, w], k) => { const sp = monde([u, 0, w], x, 0, z, cap); poser(soldat(k), sp[0], sp[2], 1, cap + PI);
+            const br = new Geo(); branche(br, [0, 0, 0], [0, 7, 0], .3, .3, BOIS); br.boite(0, 7, 0, 1.4, 2.4, .8, ROUGE, .1); const hp = monde([u - 5.6, 0, w - 1.6], x, 0, z, cap);
+            rotors.push({ g: br, x: hp[0], y: 9.4, z: hp[2], cap, v: 0, a: { osc: [.6, 2.6], ph: k * .3 } }); }); } }
+      // ---------- N. les fleurs qui parlent, au nord, penchées vers la piste (trois se balancent en bavardant)
+      for (let k = 0; k < 12; k++) { const u = 236 + k * 27 + (q() - .5) * 8, w = -2 + (k % 2) * 16 + (q() - .5) * 8, Hh = 16 + q() * 20, p = place(u, w, Hh * .28 + 3); if (!p) continue;
+        const fg = fleur(k % 5, Hh, (q() - .5) * 6), cc = vers(p[0], p[1], T.cx, T.cz);
+        if (k % 4 === 1) { rotors.push({ g: fg, x: p[0], y: 0, z: p[1], cap: cc, v: 0, a: { osc: [.07, 1.1 + k * .1], ph: k * .2 } }); occupe.push([p[0], p[1], Hh * .28 + 3]); } else pose(fg, p, Hh * .28 + 3, cc); }
+      // ---------- O. les montres et pendules qui flottent, chacune à son heure (aucune n'est à l'heure)
+      [[150, 566, 38, 4, OR], [520, 650, 52, 5.4, v("#C9CED6")], [770, 650, 44, 4.4, OR], [990, 130, 48, 6, v("#E8A0B4")], [880, 478, 36, 4, OR], [62, 168, 58, 5, v("#C9CED6")], [300, -46, 46, 4.6, OR], [612, -34, 66, 6.4, v("#E8A0B4")], [-60, 470, 50, 4.2, OR]].forEach(([x, z, y, R, c], k) =>
+        rotors.push({ g: montre(R, c, q() * TAU), x, y, z, cap: q() * TAU, v: (k % 2 ? 1 : -1) * (.2 + q() * .25), a: { ax: "y", bob: [2.4, .5 + q() * .4], ph: q() } }));
+    }
     // ---- 14. tout autour : petite vaisselle, sucres, macarons, cartes tombées, rosiers blancs repeints en rouge
     { const types = ["tasse", "sucre", "macaron", "carte", "rosier", "carte", "biscuit", "tasse", "rosier", "cuillere"], pal = ["#F4A6B8", "#A6DCC8", "#F7E08A", "#C8B0F0", "#4C9AFF", "#F2B08A"];
       let n = 0; for (let e = 0; e < 2400 && n < 120; e++) { const x = T.cx + (r() - .5) * (T.rx * 2 + 520), z = T.cz + (r() - .5) * (T.rz * 2 + 460), ty = types[n % types.length], R = { tasse: 8, sucre: 4, macaron: 4, carte: 6, rosier: 7, biscuit: 5, cuillere: 9 }[ty];
@@ -8172,19 +8442,24 @@
     },
     /* mars · « Changement de place ! » : le premier et le dernier échangent leurs places un instant (pour rire, rien ne change à l'arrivée) */
     terrier(x) {
-      const O = outilsEv(x); let duo = null, b = null, lien = null;
+      const O = outilsEv(x); let duo = null, b = null, lien = null, cp = null, tc = 0;
+      // v20.45 · décor vivant : le sourire du Chat suit la DERNIÈRE voiture (comme en 3D)
+      const chat = O.el('<g style="pointer-events:none"><ellipse cx="-11" cy="-12" rx="6" ry="4.4" fill="#F2E25A" stroke="#3A2420" stroke-width="1.2"/><ellipse cx="11" cy="-12" rx="6" ry="4.4" fill="#F2E25A" stroke="#3A2420" stroke-width="1.2"/><path d="M-11 -15v6M11 -15v6" stroke="#1E1A24" stroke-width="2"/><path d="M-26 0Q0 24 26 0Q0 11 -26 0Z" fill="#FFFDF6" stroke="#6A2A6A" stroke-width="2.6" stroke-linejoin="round"/><path d="M-17 4.6v5M-8.6 7.4v6M0 8.4v6.6M8.6 7.4v6M17 4.6v5" stroke="#7A6A8A" stroke-width="1.1"/></g>'); chat.setAttribute("opacity", "0");
       // V16.45 : échange plus long (entrée et sortie en 0,05 au lieu de 0,03) pour être lisible sur téléphone
       const m = e => e < .3 || e > .5 ? 0 : e < .35 ? (e - .3) / .05 : e > .45 ? (.5 - e) / .05 : 1;
       const fin = () => { if (b) b.remove(); b = null; if (lien) lien.remove(); lien = null; };
       return {
-        raz() { duo = null; fin(); },
+        raz() { duo = null; cp = null; chat.setAttribute("opacity", "0"); fin(); },
         permuter(e, pts) { if (!x.anime) return; if (!duo && e >= .3 && e < .5) { const n = Object.keys(pts).sort((a, c) => pts[c] - pts[a]); if (n.length > 1) { duo = [n[0], n[n.length - 1]];
             // un trait pointillé relie les deux pastilles, avec la montre du Lapin blanc écartée du trait
             lien = O.el('<path d="M0 0" fill="none" stroke="#FFF3C8" stroke-width="5" stroke-dasharray="4 10" stroke-linecap="round"/><g><circle r="17" fill="#F2C94C" stroke="#5A3A10" stroke-width="3"/><circle r="12" fill="#FFF8E6"/><path d="M0 0V-9M0 0L6 3" stroke="#3A2A10" stroke-width="2.4" stroke-linecap="round"/><path d="M0 -17V-24" stroke="#5A3A10" stroke-width="4"/></g><circle class="a1" r="10" fill="none" stroke="#FFD86B" stroke-width="4"/><circle class="a2" r="10" fill="none" stroke="#FFD86B" stroke-width="4"/>');
             b = O.bulle(540, 360, "Changement de place !", 22); O.son("changement"); } }
           if (!duo) return; const k = m(e), a = pts[duo[0]], c = pts[duo[1]]; if (k > 0) { pts[duo[0]] = a + (c - a) * k; pts[duo[1]] = c + (a - c) * k; }
           if (e > .51) fin(); },
-        maj(e) { if (!lien || !duo) return; const a = O.voiture(duo[0]), c = O.voiture(duo[1]); if (!a || !c) return;
+        maj(e, cc) { const nd = cc && O.dernier(cc), pd = nd && O.voiture(nd);
+          if (pd) { const vv = O.vue(), hh = O.rp() + 30, qq = O.dedans([pd[0], pd[1] - hh > vv[1] + 28 ? pd[1] - hh : pd[1] + hh], 30), now = performance.now(), w = cp && now - tc < 300 ? 1 - Math.exp(-(now - tc) / 120) : 1; tc = now; cp = cp ? [cp[0] + (qq[0] - cp[0]) * w, cp[1] + (qq[1] - cp[1]) * w] : qq; const bo = x.anime ? Math.sin(e * 90) * 3 : 0;
+            chat.setAttribute("transform", "translate(" + O.f(cp[0]) + " " + O.f(cp[1] + bo) + ") scale(1.5)"); chat.setAttribute("opacity", ".95"); }
+          if (!lien || !duo) return; const a = O.voiture(duo[0]), c = O.voiture(duo[1]); if (!a || !c) return;
           const mx = (a[0] + c[0]) / 2, my = (a[1] + c[1]) / 2, d = Math.hypot(c[0] - a[0], c[1] - a[1]) || 1, rr = O.rp() * 1.6, C = O.centre();
           // la courbe se bombe vers l'intérieur de la piste ; la montre est au-delà du sommet de la courbe (elle ne cache plus de pastille)
           let nx = (c[1] - a[1]) / d, ny = -(c[0] - a[0]) / d; if (nx * (C[0] - mx) + ny * (C[1] - my) < 0) { nx = -nx; ny = -ny; }
