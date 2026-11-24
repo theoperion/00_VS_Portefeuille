@@ -741,6 +741,7 @@
   }
   function mixHex(c1, c2, t) { const a = hex(c1), b = hex(c2), m = [0, 1, 2].map(i => Math.round((a[i] + (b[i] - a[i]) * t) * 255)); return "#" + m.map(v => v.toString(16).padStart(2, "0")).join(""); }
   const COULEURS_J = ["#4C9AFF", "#2BB6A3", "#FF6FA8", "#F2994A"];   // les 4 pilotes, pour les clins d'œil
+  const COULEURS_5 = [...COULEURS_J, "#B4E33D"], NOMS_5 = ["Théo", "Kévin", "Clément", "Devlin", "Nicolas"];   // les 5 places à portrait (Nicolas = k 4) ; COULEURS_J reste à 4 (clins d'œil décoratifs)
   /* ---------- Juin · Plateau maudit (jeu de plateau géant dans la jungle) ---------- */
   function peindrePlateau(T, Z, def) {
     const K = kit(T, def, 61, "pl-"), { s, r, f, W, H } = K, [X, Y] = K.rep({ t: "plateau" });
@@ -990,12 +991,12 @@
     { const px = 10, py = 8, pw = 252, ph = 112; s.push(`<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="12" fill="url(#hg-ciel)" stroke="#9AF4FF" stroke-width="1.5" opacity=".95"/>`);
       for (let k = 0; k < 24; k++) s.push(`<circle cx="${f(px + 6 + r() * (pw - 12))}" cy="${f(py + 6 + r() * (ph - 12))}" r="${f(.4 + r() * .8)}" fill="#FFF" opacity="${(.3 + r() * .6).toFixed(2)}"/>`);
       s.push(`<text x="${px + pw / 2}" y="${py + 16}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="10.5" fill="#F7E3A0">Puisse le sort vous être favorable</text>`);
-      const NOMS = ["Théo", "Kévin", "Clément", "Devlin"], CHEV = [`<path d="M-11 -8Q-10 -20 0 -20Q10 -20 11 -8Q6 -14 0 -13Q-6 -14 -11 -8Z" fill="#4A2E1A"/>`, `<path d="M-12 -7Q-12 -21 0 -21Q12 -21 12 -7L15 -6L12 -10Q2 -16 -12 -7Z" fill="#2A2A34"/><path d="M-12 -8h27" stroke="#1A1A22" stroke-width="2"/>`,
+      const CHEV = [`<path d="M-11 -8Q-10 -20 0 -20Q10 -20 11 -8Q6 -14 0 -13Q-6 -14 -11 -8Z" fill="#4A2E1A"/>`, `<path d="M-12 -7Q-12 -21 0 -21Q12 -21 12 -7L15 -6L12 -10Q2 -16 -12 -7Z" fill="#2A2A34"/><path d="M-12 -8h27" stroke="#1A1A22" stroke-width="2"/>`,
         `${[-9, -4, 1, 6, 10].map((u, q) => `<circle cx="${u}" cy="${-14 - (q % 2) * 3}" r="4.6" fill="#6A4022"/>`).join("")}`, `<path d="M-11 -6Q-12 -20 0 -20Q12 -20 11 -6Q8 -12 0 -12Q-8 -12 -11 -6Z" fill="#8A5A2A"/><path d="M-9 4Q0 14 9 4Q6 10 0 11Q-6 10 -9 4Z" fill="#8A5A2A"/>`];
-      COULEURS_J.forEach((c, k) => { const x = px + 34 + k * 61, y = py + 58; PORTR.push({ k, x, y, r: 20 }); s.push(`${G(x, y, 1)}<circle r="24" fill="${c}" opacity=".25"/><circle r="21" fill="#0A1430" stroke="${c}" stroke-width="2"/></g>`);   // v16.31 : les vrais portraits sont posés par l'appli
-        s.push(`<text x="${x}" y="${py + 98}" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="10" fill="${c}">${NOMS[k]}</text>`);
+      COULEURS_5.forEach((c, k) => { const x = px + 34 + k * 46, y = py + 58; PORTR.push({ k, x, y, r: 17 }); s.push(`${G(x, y, .82)}<circle r="24" fill="${c}" opacity=".25"/><circle r="21" fill="#0A1430" stroke="${c}" stroke-width="2"/></g>`);   // v16.31 : les vrais portraits sont posés par l'appli (5 places depuis Nicolas)
+        s.push(`<text x="${x}" y="${py + 97}" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="9.5" fill="${c}">${NOMS_5[k]}</text>`);
       });
-      if (K.anime) a.push(`<g>${`<animateTransform attributeName="transform" type="translate" values="${PORTR.map(p => p.x + " " + p.y).join(";")}" calcMode="discrete" dur="8s" repeatCount="indefinite"/>`}<circle r="25" fill="none" stroke="#FFF2B8" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.2;.8;1" dur="2s" repeatCount="indefinite"/></circle></g>`);
+      if (K.anime) a.push(`<g>${`<animateTransform attributeName="transform" type="translate" values="${PORTR.map(p => p.x + " " + p.y).join(";")}" calcMode="discrete" dur="10s" repeatCount="indefinite"/>`}<circle r="21" fill="none" stroke="#FFF2B8" stroke-width="2" opacity="0"><animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.2;.8;1" dur="2s" repeatCount="indefinite"/></circle></g>`);
     }
     // ---- 11. les parachutes argentés des sponsors (cadeaux aux rubans des 4)
     for (let k = 0; k < 3; k++) { let p = null; for (let e = 0; e < 3000 && !p; e++) { const x = 60 + r() * (W - 120), y = 170 + r() * (H - 250); if (dome(x, y) < .85 && [3, 4, 9, 10][k] === sect(x, y) && K.libre(x, y, 14, 4) && !LAB.some(l => l && Math.hypot(l[0] - x, l[1] - y + 20) < 60)) p = [x, y]; } if (!p) continue;
@@ -1182,17 +1183,18 @@
     s.push(`${G(DX, HY, HS)}<circle r="13" fill="#2A0508" stroke="#FF7A86" stroke-width="1.2"/></g>`);
     a.push(`${G(DX, HY, HS)}<g>${an(`<animateTransform attributeName="transform" type="scale" values="1;1.08;1;.88;1" keyTimes="0;.3;.55;.8;1" dur="4.5s" repeatCount="indefinite"/>`)}${petales(5)}<circle r="8" fill="#2A0508"/><circle r="4.5" fill="#FF3B4E" opacity=".85"/></g></g>`);
 
-    // ---- 7. les 4 copains à vélo, aux couleurs des pilotes, en file sur la chaussée : ils filent dans le sens de la course,
+    // ---- 7. les 5 copains à vélo, aux couleurs des pilotes, en file sur la chaussée : ils filent dans le sens de la course,
     //      phares en faisceaux (l'appli pose les vrais portraits des pilotes sur leurs têtes)
-    const PORTR = [], SK = 1.15, PEAU = ["#F2CDB0", "#D9A27A", "#F5D4BC", "#C98E66"], CHEV = ["#3A2416", "#C89A4A", "#1A1410", "#7A3A1A"];
+    const PORTR = [], SK = 1, PEAU = ["#F2CDB0", "#D9A27A", "#F5D4BC", "#C98E66", "#E8BC98"], CHEV = ["#3A2416", "#C89A4A", "#1A1410", "#7A3A1A", "#2A1C12"];
     const gamin = (c, k) => `<ellipse cx="0" cy="1" rx="30" ry="4" fill="#000" opacity=".5"/>
       <circle cx="-17" cy="-12" r="11.5" fill="none" stroke="#140C10" stroke-width="4"/><circle cx="17" cy="-12" r="11.5" fill="none" stroke="#140C10" stroke-width="4"/><circle cx="-17" cy="-12" r="11.5" fill="none" stroke="#FF8A96" stroke-width="1.2" opacity=".7"/><circle cx="17" cy="-12" r="11.5" fill="none" stroke="#FF8A96" stroke-width="1.2" opacity=".7"/>
       <path d="M-17 -12L-5 -30H13L17 -12M-5 -30L0 -12L13 -30M13 -30L11 -39h8M-9 -33h9" stroke="${c}" stroke-width="3.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="21" cy="-36" r="3.4" fill="#FFF6C8" stroke="#140C10"/>
       <path d="M-3 -36L1 -22L-1 -12" stroke="#2A3A5A" stroke-width="5.5" fill="none" stroke-linecap="round"/><path d="M-10 -36L-5 -60H8L11 -38Z" fill="${c}" ${INK}/><path d="M5 -56L17 -40" stroke="${c}" stroke-width="5.5" stroke-linecap="round"/>
       <circle cx="3" cy="-74" r="13" fill="${PEAU[k]}" ${INK}/><path d="M-10 -75Q-10 -90 3 -89Q16 -88 16 -75Q8 -82 -10 -75Z" fill="${CHEV[k]}" ${INK}/><circle cx="7" cy="-74" r="1.5" fill="#140C10"/><circle cx="12" cy="-74" r="1.5" fill="#140C10"/><path d="M6 -68q3 2 6 0" stroke="#140C10" stroke-width="1.2" fill="none"/>`;
-    const KIDS = [0, 1, 2, 3].map(k => [722 + k * 68, 354 - 7 * Math.sin(PI * k / 3)]);
+    const KIDS = [0, 1, 2, 3, 4].map(k => [714 + k * 53, 354 - 7 * Math.sin(PI * k / 4)]);
     KIDS.forEach(([x0, y0], k) => { a.push(`${G(x0, y0, SK)}<path d="M21 -36L122 -70L122 0Z" fill="url(#e3-phA)" opacity="${K.anime ? .8 : .85}">${an(`<animate attributeName="opacity" values=".85;.55;.9;.85" keyTimes="0;.4;.7;1" dur="${(1.8 + k * .3).toFixed(1)}s" repeatCount="indefinite"/>`)}</path></g>`);
-      s.push(`${G(x0, y0, SK)}${gamin(COULEURS_J[k], k)}</g>`); PORTR.push({ k, x: Math.round(x0 + 3 * SK), y: Math.round(y0 - 74 * SK), r: 14 }); });
+      s.push(`${G(x0, y0, SK)}${gamin(COULEURS_5[k], k)}</g>`); PORTR.push({ k, x: Math.round(x0 + 3 * SK), y: Math.round(y0 - 74 * SK), r: 13 }); });
+
 
     // ---- 8. ce qui vit : marquise et guirlande qui clignotent, ARCADE qui grésille, R U N qui s'allume, spores qui montent vers la faille
     for (let q = 0; q < 3; q++) a.push(`<g opacity="${K.anime ? 0 : .8}">${an(`<animate attributeName="opacity" values="0;.9;.9;0;0" keyTimes="0;.1;.4;.5;1" dur="2.4s" begin="${(q * .8).toFixed(1)}s" repeatCount="indefinite"/>`)}${AMPS.filter((p, j) => j % 3 === q && p[0] < 372).map(([u, v, c]) => `<circle cx="${f(u)}" cy="${f(v + 4)}" r="9" fill="${c}" opacity=".45"/><circle cx="${f(u)}" cy="${f(v + 4)}" r="2.6" fill="#FFFFFF"/>`).join("")}</g>`);
@@ -1332,15 +1334,16 @@
       s.push(`<path d="M${hx - 16} ${hy - 58}C${hx - 20} ${hy - 76} ${hx - 12} ${hy - 90} ${hx + 2} ${hy - 92}C${hx + 14} ${hy - 90} ${hx + 20} ${hy - 76} ${hx + 16} ${hy - 58}Q${hx} ${hy - 52} ${hx - 16} ${hy - 58}Z" fill="#4A7A38" stroke="#142A0E" stroke-width="1.3"/><path d="M${hx - 16} ${hy - 60}C${hx - 20} ${hy - 76} ${hx - 12} ${hy - 90} ${hx + 2} ${hy - 92}" fill="none" stroke="#FFB070" stroke-width="1.8" opacity=".85"/><path d="M${hx + 2} ${hy - 90}Q${hx + 4} ${hy - 72} ${hx} ${hy - 56}" stroke="#2A4A1E" stroke-width="1.2" fill="none" opacity=".6"/><rect x="${hx - 13}" y="${hy - 50}" width="26" height="30" rx="8" fill="#7A5230" stroke="#2A160A" stroke-width="1.2"/><path d="M${hx - 13} ${hy - 38}h26" stroke="#4A2E18" stroke-width="1.4"/><rect x="${hx - 16}" y="${hy - 56}" width="32" height="9" rx="4.5" fill="#B89A6A" stroke="#2A160A" stroke-width="1"/><path d="M${hx - 11} ${hy - 26}h22" stroke="#FFB070" stroke-width="1" opacity=".5"/><path d="M${hx - 6} ${hy - 58}l6 5l6 -5" fill="#E2B93B" stroke="#5A3A10" stroke-width=".8"/>`);
       s.push(`<path d="M${hx + 12} ${hy - 48}Q${hx + 26} ${hy - 40} ${hx + 30} ${hy - 26}" stroke="#3E6A30" stroke-width="6" stroke-linecap="round" fill="none"/>`); } s.push(`</g>`);
 
-    // ================= 5. CUL-DE-SAC : les 4 portes rondes (cadres-portraits), alignées dans la colline =================
-    const PORTR = [], NOMS = ["Théo", "Kévin", "Clément", "Devlin"], PORTES = [[366, 510], [456, 500], [546, 500], [636, 510]];
-    PORTES.forEach(([x, y], k) => { const c = CJ[k]; PORTR.push({ k, x, y, r: 20 });
-      s.push(`<path d="M${x - 40} ${y + 8}C${x - 38} ${y - 40} ${x + 38} ${y - 40} ${x + 40} ${y + 8}" fill="#5E9A34" stroke="#2A4A14" stroke-width="1.2"/><path d="M${x - 34} ${y - 14}C${x - 26} ${y - 36} ${x + 26} ${y - 36} ${x + 34} ${y - 14}" stroke="#D4E870" stroke-width="2" fill="none" opacity=".7"/><path d="M${x} ${y + 30}Q${x + (k < 2 ? -10 : 10)} ${y + 50} ${x + (k < 2 ? -4 : 4)} ${y + 72}" stroke="#E6CC92" stroke-width="5" fill="none" stroke-linecap="round" opacity=".85"/>`);
+    // ================= 5. CUL-DE-SAC : les 5 portes rondes (cadres-portraits), alignées dans la colline =================
+    const PORTR = [], PORTES = [[333, 512], [417, 502], [501, 498], [585, 502], [669, 512]];
+    PORTES.forEach(([x, y], k) => { const c = COULEURS_5[k], sg = Math.sign(k - 2); PORTR.push({ k, x, y, r: 20 });
+      s.push(`<path d="M${x - 40} ${y + 8}C${x - 38} ${y - 40} ${x + 38} ${y - 40} ${x + 40} ${y + 8}" fill="#5E9A34" stroke="#2A4A14" stroke-width="1.2"/><path d="M${x - 34} ${y - 14}C${x - 26} ${y - 36} ${x + 26} ${y - 36} ${x + 34} ${y - 14}" stroke="#D4E870" stroke-width="2" fill="none" opacity=".7"/><path d="M${x} ${y + 30}Q${x + sg * 10} ${y + 50} ${x + sg * 4} ${y + 72}" stroke="#E6CC92" stroke-width="5" fill="none" stroke-linecap="round" opacity=".85"/>`);
       s.push(`<circle cx="${x}" cy="${y + 2}" r="33" fill="#2A4A14" opacity=".35"/><circle cx="${x}" cy="${y}" r="30" fill="#9A6A3A" stroke="#1E120C" stroke-width="1.4"/>${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(q => { const t = q / 12 * TAU; return `<path d="M${f(x + Math.cos(t) * 25)} ${f(y + Math.sin(t) * 25)}L${f(x + Math.cos(t) * 30)} ${f(y + Math.sin(t) * 30)}" stroke="#5A3A1E" stroke-width="1.2"/>`; }).join("")}<circle cx="${x}" cy="${y}" r="24.5" fill="${c}" stroke="#1E120C" stroke-width="1.6"/><circle cx="${x}" cy="${y}" r="20.5" fill="#2A1A10" stroke="${mixHex(c, "#000000", .35)}" stroke-width="1.4"/><path d="M${x - 30} ${y - 6}A30 30 0 0 1 ${x + 6} ${y - 30}" stroke="#FFE7A0" stroke-width="2" fill="none" opacity=".7"/>`);
-      s.push(`<text x="${x}" y="${y + 52}" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="19" fill="${mixHex(c, "#FFFFFF", .45)}" stroke="#1E120C" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${NOMS[k]}</text>`);
-      a.push(`<circle cx="${x}" cy="${y}" r="28" fill="none" stroke="#FFF4C0" stroke-width="2.4" opacity="${K.anime ? 0 : .6}">${an(`<animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.08;.22;1" dur="10s" begin="${k * 2.5}s" repeatCount="indefinite"/>`)}</circle>`); });
+      s.push(`<text x="${x}" y="${y + 52}" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="17" fill="${mixHex(c, "#FFFFFF", .45)}" stroke="#1E120C" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${NOMS_5[k]}</text>`);
+      a.push(`<circle cx="${x}" cy="${y}" r="28" fill="none" stroke="#FFF4C0" stroke-width="2.4" opacity="${K.anime ? 0 : .6}">${an(`<animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.08;.22;1" dur="10s" begin="${k * 2}s" repeatCount="indefinite"/>`)}</circle>`); });
     // cheminées sur la colline
-    [[411, 468], [591, 468]].forEach(([x, y]) => s.push(`<path d="M${x - 6} ${y}v-18h12v18z" fill="#A87A52" stroke="#1E120C"/><path d="M${x - 8} ${y - 18}h16v-4h-16z" fill="#6A4A2E" stroke="#1E120C"/>`));
+    [[459, 466], [543, 466]].forEach(
+([x, y]) => s.push(`<path d="M${x - 6} ${y}v-18h12v18z" fill="#A87A52" stroke="#1E120C"/><path d="M${x - 8} ${y - 18}h16v-4h-16z" fill="#6A4A2E" stroke="#1E120C"/>`));
 
     // touffes d'herbe au premier plan (donnent l'échelle du plan le plus proche)
     [[230, 716, 1.3], [330, 706, 1], [640, 712, 1.2], [760, 700, .9], [150, 690, .8]].forEach(([x, y, sc]) => { let o = ""; for (let q = -3; q <= 3; q++) o += `<path d="M${f(q * 4)} 0Q${f(q * 6)} ${f(-14 - Math.abs(3 - Math.abs(q)) * 5)} ${f(q * 9 + 3)} ${f(-22 - (3 - Math.abs(q)) * 5)}" stroke="${q % 2 ? "#2E6A1E" : "#9ACB4A"}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`; s.push(`${G(x, y, sc)}${o}</g>`); });
@@ -1963,13 +1966,14 @@
     const HER = [[572, 224, .64, 0, -8], [532, 206, .56, 1, -8], [566, 256, .56, 2, -8], [492, 192, .5, 3, -8]];
     HER.forEach(([x, y, S, k, ro]) => s.push(`${G(x, y, S, ro)}<g filter="url(#c5-sil2)">${pilote()}</g><path d="M-30 -14L-40 -12L-29 -9C-20 -6 -14 -4 -8 -3L-9 -6C-16 -7 -22 -9 -30 -12Z" fill="${CJ[k]}" opacity=".8"/></g>`));
 
-    // ---- 10. le cartouche « Les 4 attrapeurs » (portraits posés par l'appli)
-    const NOMS = ["Théo", "Kévin", "Clément", "Devlin"], PORTR = [];
-    s.push(`<rect x="690" y="652" width="378" height="64" rx="10" fill="#0E1230" opacity=".88"/><rect x="692" y="654" width="374" height="14" rx="8" fill="#FFD27A" opacity=".15"/><rect x="690" y="652" width="378" height="64" rx="10" fill="none" stroke="${OR}" stroke-width="2"/><rect x="693" y="655" width="372" height="58" rx="7.5" fill="none" stroke="#8A6A2A" stroke-width="1"/>`);
-    [0, 1, 2, 3].forEach(k => { const x = 734 + k * 66, y = 676, R = 18; PORTR.push({ k, x, y, r: R });
+    // ---- 10. le cartouche « Les 5 attrapeurs » (portraits posés par l'appli)
+    const PORTR = [];
+    s.push(`<rect x="664" y="652" width="404" height="64" rx="10" fill="#0E1230" opacity=".88"/><rect x="666" y="654" width="400" height="14" rx="8" fill="#FFD27A" opacity=".15"/><rect x="664" y="652" width="404" height="64" rx="10" fill="none" stroke="${OR}" stroke-width="2"/><rect x="667" y="655" width="398" height="58" rx="7.5" fill="none" stroke="#8A6A2A" stroke-width="1"/>`);
+    [0, 1, 2, 3, 4].forEach(k => { const x = 704 + k * 58, y = 676, R = 17; PORTR.push({ k, x, y, r: R });
       [-1, 1].forEach(sg => s.push(`<g transform="translate(${x} ${y}) rotate(${sg * 32})"><path d="M-28 0H22" stroke="#3A2414" stroke-width="3.6" stroke-linecap="round"/><path d="M-28 0H22" stroke="#7A4E22" stroke-width="2" stroke-linecap="round"/><path d="M22 -1L34 -5Q37 0 34 5L22 1Z" fill="#A8823E" stroke="#3A2414" stroke-width="1"/></g>`));
-      s.push(`<circle cx="${x}" cy="${y}" r="${R + 2}" fill="#1A1440" stroke="${CJ[k]}" stroke-width="3"/><circle cx="${x}" cy="${y}" r="${R}" fill="#1A1440"/><text x="${x}" y="709" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="700" font-size="9" fill="#E8EEFF">${NOMS[k]}</text>`); });
-    s.push(`<text x="1017" y="679" text-anchor="middle" font-family="Georgia, serif" font-weight="700" font-size="12" letter-spacing="1" fill="${OR}">LES 4</text><text x="1017" y="695" text-anchor="middle" font-family="Georgia, serif" font-weight="700" font-size="10.5" letter-spacing="1" fill="${OR}">ATTRAPEURS</text>`);
+      s.push(`<circle cx="${x}" cy="${y}" r="${R + 2}" fill="#1A1440" stroke="${COULEURS_5[k]}" stroke-width="3"/><circle cx="${x}" cy="${y}" r="${R}" fill="#1A1440"/><text x="${x}" y="709" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="700" font-size="9" fill="#E8EEFF">${NOMS_5[k]}</text>`); });
+    s.push(`<text x="1017" y="679" text-anchor="middle" font-family="Georgia, serif" font-weight="700" font-size="12" letter-spacing="1" fill="${OR}">LES 5</text>
+<text x="1017" y="695" text-anchor="middle" font-family="Georgia, serif" font-weight="700" font-size="10.5" letter-spacing="1" fill="${OR}">ATTRAPEURS</text>`);
 
     // ================= COUCHE ANIMÉE =================
     a.push(`<radialGradient id="c5-flamme" r="50%"><stop offset="0" stop-color="#FFF6D0"/><stop offset=".35" stop-color="#FFC85A" stop-opacity=".8"/><stop offset="1" stop-color="#FFB347" stop-opacity="0"/></radialGradient>`);
@@ -2164,17 +2168,19 @@
         <ellipse cx="-10" cy="-97" rx="3" ry="2" fill="#F29A9A" opacity=".7"/><ellipse cx="8" cy="-97" rx="3" ry="2" fill="#F29A9A" opacity=".7"/><path d="M-4 -96q2.6 2 5 0" stroke="${ENC}" stroke-width="1" fill="none" stroke-linecap="round"/></g>`);
       // la vapeur de sa tasse (couche animée)
       for (let k = 0; k < 2; k++) a.push(`<path d="M${f(x - 50 * SC + k * 8)} ${f(y - 98 * SC)}q-6 -10 0 -20t0 -20" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" opacity="${vu(0) ? .55 : 0}">${an(`<animate attributeName="opacity" values="0;.7;0" dur="3.4s" begin="${k * 1.7}s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="translate" values="0 6;0 -12" dur="3.4s" begin="${k * 1.7}s" repeatCount="indefinite"/>`)}</path>`); }
-    // ================= 10. les 4 places des pilotes : fauteuils-tasses à leur couleur, dossier ovale doré (portrait), prénom peint sur la tasse
-    const PORTR = [], NOMS = ["Théo", "Kévin", "Clément", "Devlin"], PL = [[388, 556], [478, 572], [568, 570], [656, 540]], SS = .95;
-    PL.forEach(([x, y0], k) => { const c = COULEURS_J[k];
+    // ================= 10. les 5 places des pilotes : fauteuils-tasses à leur couleur, dossier ovale doré (portrait), prénom peint sur la tasse
+    const PORTR = [], PL = [[376, 558], [450, 572], [524, 576], [598, 568], [672, 544]], SS = .82;
+    PL.forEach(([x, y0], k) => { const c = COULEURS_5[k];
       s.push(ombreL(x, y0 + 8, 90, 120, .3));
       s.push(`${G(x, y0, SS)}<path d="M-22 -40L-18 -70M22 -40L18 -70" stroke="#8A5C14" stroke-width="6"/>
-        <ellipse cx="0" cy="-88" rx="33" ry="37" fill="url(#gt-or)" ${INK}/><ellipse cx="0" cy="-88" rx="27" ry="31" fill="${mixHex(c, "#FFFFFF", .55)}" ${INK}/>${sym(["c", "p", "k", "t"][k], 0, -129, 5, k % 2 ? NOIR : ROUGE)}
+        <ellipse cx="0" cy="-88" rx="33" ry="37" fill="url(#gt-or)" ${INK}/><ellipse cx="0" cy="-88" rx="27" ry="31" fill="${mixHex(c, "#FFFFFF", .55)}" ${INK}/>${sym(["c", "p", "k", "t", "c"][k], 0, -129, 5, k % 2 ? NOIR : ROUGE)}
         <ellipse cx="0" cy="18" rx="54" ry="10" fill="url(#gt-porc)" ${INK}/>
         <path d="M44 -30q20 0 18 18q-2 14 -24 12" stroke="${ENC}" stroke-width="9.6" fill="none"/><path d="M44 -30q20 0 18 18q-2 14 -24 12" stroke="${c}" stroke-width="7" fill="none"/>
         <path d="M-44 -40Q-46 4 -23 16H23Q46 4 44 -40Z" fill="${c}" ${INK}/><path d="M-37 -30Q-37 0 -21 10" stroke="#FFFFFF" stroke-width="4" fill="none" opacity=".45" stroke-linecap="round"/>
         <ellipse cx="0" cy="-40" rx="44" ry="10" fill="${mixHex(c, "#FFFFFF", .4)}" ${INK}/><ellipse cx="0" cy="-39" rx="37" ry="6.4" fill="#7A3A10"/>
-        <text y="-6" text-anchor="middle" ${TXT} font-size="27" fill="#FFFFFF" stroke="${mixHex(c, "#000000", .5)}" stroke-width="3.4" paint-order="stroke" stroke-linejoin="round"${NOMS[k].length > 5 ? ` textLength="78" lengthAdjust="spacingAndGlyphs"` : ""}>${NOMS[k]}</text></g>`);
+        <text y="-6" text-anchor="middle" ${TXT} font-size="27" fill="#FFFFFF" stroke="${mixHex(c, "#000000", .5)}" stroke-width="3.4" paint-order="stroke" stroke-linejoin="round"${NOMS_5[k].length > 5 ? ` textLength="70" lengthAdjust="spacingAndGlyphs"` : ""}
+>${NOMS_5[k]}</text></g>`);
+
       PORTR.push({ k, x: +x.toFixed(1), y: +(y0 - 88 * SS).toFixed(1), r: +(27 * SS).toFixed(1) }); });
     // ================= 11. la Chenille sur son champignon, dehors en bas à gauche : « Qui es-tu ? » en ronds de fumée qui montent
     { const x = 74, y = 668, SC = 1.5;
@@ -2205,7 +2211,7 @@
      Grandes scènes illustrées autour de la piste-hyperespace : la station de combat qui tire, deux destroyers, le duel au sabre
      au-dessus du puits du réacteur, l'empereur et ses éclairs devant la verrière, le petit maître vert qui soulève un chasseur du marais,
      les deux droïdes à la table d'holo-échecs (le monument 3D « holodome »), le cargo rond à quai, le chasseur de primes,
-     la planète aux deux soleils, et l'Escadron Versus (les 4 pilotes, leurs vrais portraits posés par l'appli). Tout est dessiné ici. */
+     la planète aux deux soleils, et l'Escadron Versus (les 5 pilotes, leurs vrais portraits posés par l'appli). Tout est dessiné ici. */
   function peindreEtoiles4(T, Z, def) {
     const K = kit(T, def, 67, "s4-"), { s, a, r, f, W, H } = K, an = x => K.anime ? x : "", VIS = K.anime ? 0 : 1, INK = `stroke="#05070F" stroke-width="1.2"`;
     const hA = [], haloA = (x, y, R, c, op) => { const id = "s4-a" + c.replace("#", ""); if (!hA.includes(id)) { hA.push(id); a.unshift(`<radialGradient id="${id}" r="50%"><stop offset="0" stop-color="${c}" stop-opacity=".9"/><stop offset=".35" stop-color="${c}" stop-opacity=".4"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`); } a.push(`<circle cx="${f(x)}" cy="${f(y)}" r="${f(R)}" fill="url(#${id})" opacity="${op}"/>`); };
@@ -2373,18 +2379,19 @@
     // ---- 8. l'ombre d'un destroyer qui glisse sur toute la station
     { const L = 520, w = L * .33, tri = `M${f(L * .55)} 0L${f(-L * .45)} ${f(-w)}L${f(-L * .45)} ${f(w)}Z`;
       a.push(`<g opacity="${K.anime ? .2 : 0}">${an(`<animateMotion dur="40s" repeatCount="indefinite" path="M-420,980 L1500,-300"/>`)}<g transform="rotate(-34)"><path d="${tri}" fill="#000814"/><path d="M${f(-L * .4)} -24h${f(L * .3)}v48h${f(-L * .3)}z" fill="#000814"/></g></g>`); }
-    // ---- 9. l'Escadron Versus (marge droite, sur fond d'ombre) : 4 chasseurs nez dans le sens de la course, hublots-portraits
-    const PORTR = [], NOMS = ["Théo", "Kévin", "Clément", "Devlin"];
+    // ---- 9. l'Escadron Versus (marge droite, sur fond d'ombre) : 5 chasseurs nez dans le sens de la course, hublots-portraits
+    const PORTR = [], SE = .7;   // 5 chasseurs (Nicolas) : un peu plus petits et plus serrés
     const chasseur = c => `<path d="M-30 -6L-8 -6L-20 -52L-36 -52Z" fill="#DDE2E6" ${INK}/><path d="M-30 6L-8 6L-20 52L-36 52Z" fill="#DDE2E6" ${INK}/><path d="M-24 -40L-13 -40M-24 40L-13 40" stroke="${c}" stroke-width="5"/><path d="M-22 -52h46M-22 52h46" stroke="#8A939E" stroke-width="3" stroke-linecap="round"/><path d="M24 -52h8M24 52h8" stroke="#3A414C" stroke-width="2"/>
       <rect x="-44" y="-20" width="26" height="9" rx="4" fill="#9AA3AE" ${INK}/><rect x="-44" y="11" width="26" height="9" rx="4" fill="#9AA3AE" ${INK}/><path d="M-50 -12L0 -16Q20 -26 40 -12L66 0L40 12Q20 26 0 16L-50 12Z" fill="#EEF1F4" ${INK}/><path d="M40 -12L66 0L40 12Z" fill="${c}"/><path d="M-50 -12h22v24h-22z" fill="#C8CED6" ${INK}/><path d="M-40 -12v24" stroke="${c}" stroke-width="4"/><path d="M-48 -9L0 -13" stroke="#FFFFFF" stroke-width="1.6" opacity=".8"/><circle cx="-14" r="27" fill="#EEF1F4" ${INK}/><circle cx="-14" r="27" fill="none" stroke="${c}" stroke-width="3" stroke-dasharray="10 6"/>`;
     { s.push(`<linearGradient id="s4-colh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#05070F" stop-opacity="0"/><stop offset=".22" stop-color="#05070F" stop-opacity=".88"/><stop offset="1" stop-color="#05070F" stop-opacity=".94"/></linearGradient><linearGradient id="s4-colv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".74" stop-color="#FFFFFF"/><stop offset=".86" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>`); s.push(`<mask id="s4-colm"><rect x="930" width="150" height="${H}" fill="url(#s4-colv)"/></mask><rect x="930" width="150" height="${H}" fill="url(#s4-colh)" mask="url(#s4-colm)"/>`);
-      COULEURS_J.forEach((c, k) => { const fx = 1010, fy = 84 + k * 128, cy = fy - 11.2; K.prendre(fx, fy, 56);
-        s.push(`<g transform="translate(${f(fx + 14 * OX)} ${f(fy + 14 * OY)}) rotate(90) scale(.8)" opacity=".5" filter="url(#s4-flou)"><path d="M-50 -12L0 -16Q20 -26 40 -12L66 0L40 12Q20 26 0 16L-50 12ZM-30 -6L-8 -6L-20 -52L-36 -52ZM-30 6L-8 6L-20 52L-36 52Z" fill="#000"/></g>`);
-        s.push(`${G(fx, fy, .8, 90)}${chasseur(c)}</g>`);
-        s.push(`<circle cx="${f(fx)}" cy="${f(cy)}" r="25" fill="${c}" opacity=".45"/><circle cx="${f(fx)}" cy="${f(cy)}" r="22.5" fill="#0A1430" stroke="${c}" stroke-width="3"/><path d="M${f(fx - 16)} ${f(cy - 16)}a22 22 0 0 1 14 -6" stroke="#FFFFFF" stroke-width="2" fill="none" opacity=".6"/>`);
-        PORTR.push({ k, x: +fx.toFixed(1), y: +cy.toFixed(1), r: 20 });
-        s.push(`<text x="${f(fx)}" y="${f(fy + 74)}" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="900" font-size="18" fill="${mixHex(c, "#FFFFFF", .3)}" stroke="#05070F" stroke-width="4" paint-order="stroke">${NOMS[k]}</text>`);
-        a.push(`<g>${an(`<animate attributeName="opacity" values="1;.45;1" dur="${(.3 + k * .06).toFixed(2)}s" repeatCount="indefinite"/>`)}${G(fx, fy, .8)}<path d="M-15.5 -44l4 -${16 + k}l4 ${16 + k}zM11.5 -44l4 -${16 + k}l4 ${16 + k}z" fill="#FF9A5A"/><path d="M-13.5 -44l2 -9l2 9zM13.5 -44l2 -9l2 9z" fill="#FFF0C8"/></g></g>`); }); }
+      COULEURS_5.forEach((c, k) => { const fx = 1010, fy = 66 + k * 106, cy = fy - 14 * SE; K.prendre(fx, fy, 50);
+        s.push(`<g transform="translate(${f(fx + 14 * OX)} ${f(fy + 14 * OY)}) rotate(90) scale(${SE})" opacity=".5" filter="url(#s4-flou)"><path d="M-50 -12L0 -16Q20 -26 40 -12L66 0L40 12Q20 26 0 16L-50 12ZM-30 -6L-8 -6L-20 -52L-36 -52ZM-30 6L-8 6L-20 52L-36 52Z" fill="#000"/></g>`);
+        s.push(`${G(fx, fy, SE, 90)}${chasseur(c)}</g>`);
+        s.push(`<circle cx="${f(fx)}" cy="${f(cy)}" r="22" fill="${c}" opacity=".45"/><circle cx="${f(fx)}" cy="${f(cy)}" r="20" fill="#0A1430" stroke="${c}" stroke-width="3"/><path d="M${f(fx - 14)} ${f(cy - 14)}a19 19 0 0 1 12 -5" stroke="#FFFFFF" stroke-width="2" fill="none" opacity=".6"/>`);
+        PORTR.push({ k, x: +fx.toFixed(1), y: +cy.toFixed(1), r: 18 });
+        s.push(`<text x="${f(fx)}" y="${f(fy + 62)}" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="900" font-size="16" fill="${mixHex(c, "#FFFFFF", .3)}" stroke="#05070F" stroke-width="4" paint-order="stroke">${NOMS_5[k]}</text>`);
+        a.push(`<g>${an(`<animate attributeName="opacity" values="1;.45;1" dur="${(.3 + k * .06).toFixed(2)}s" repeatCount="indefinite"/>`)}${G(fx, fy, SE)}
+<path d="M-15.5 -44l4 -${16 + k}l4 ${16 + k}zM11.5 -44l4 -${16 + k}l4 ${16 + k}z" fill="#FF9A5A"/><path d="M-13.5 -44l2 -9l2 9zM13.5 -44l2 -9l2 9z" fill="#FFF0C8"/></g></g>`); }); }
     // ---- 10. dans la tranchée : les 4 pilotes (traînées de réacteurs) poursuivis par trois chasseurs aux ailes hexagonales
     COULEURS_J.forEach((c, k) => a.push(K.surPiste(.04 + k * .03, `${G(0, 0, .62)}<path d="M-20 -5H-74M-20 5H-74" stroke="${c}" stroke-width="5" stroke-linecap="round" opacity=".35"/><path d="M-20 -5H-46M-20 5H-46" stroke="#FFF0C8" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>${xwing(c, true)}</g>`, 34, k * 1)));
     a.push(K.surPiste(.985, `${G(0, 0, .8)}<path d="M14 0h34" stroke="#4BFF6A" stroke-width="3" stroke-linecap="round"/>${tieHex()}</g>${G(-34, -12, .62)}${tieHex()}</g>${G(-34, 12, .62)}${tieHex()}</g>`, 34, 33.4));
@@ -2560,16 +2567,17 @@
     // la poussière d'épice qui monte du cratère
     for (let q = 0; q < 2; q++) { const d = (3.2 + q * .8).toFixed(1); let g = ""; for (let k = 0; k < 5; k++) g += `<circle cx="${f(BX + (q ? 70 : -80) + (r() - .5) * 30)}" cy="${f(BY - 40 - k * 14)}" r="${f(8 + k * 4)}" fill="${k % 2 ? "#FF9A4A" : "#F2C88E"}" opacity="${(.6 - k * .08).toFixed(2)}"/>`;
       a.push(`<g opacity="${K.anime ? 0 : .7}">${an(`<animateTransform attributeName="transform" type="translate" values="0 10;${q ? 30 : -30} -60" dur="${d}s" begin="${(q * 1.4).toFixed(1)}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.85;0" dur="${d}s" begin="${(q * 1.4).toFixed(1)}s" repeatCount="indefinite"/>`)}${g}</g>`); }
-    // ================= le cartouche des 4 pilotes (en haut à droite) : vrais portraits posés par l'appli =================
+    // ================= le cartouche des 5 pilotes (en haut à droite) : vrais portraits posés par l'appli =================
     const PORTR = [];
-    { const pw = 252, ph = 118, px = W - pw - 10, py = 8, NOMS = ["Théo", "Kévin", "Clément", "Devlin"];
+    { const pw = 252, ph = 118, px = W - pw - 10, py = 8;
       s.push(`<linearGradient id="d4-or" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE6B0"/><stop offset=".4" stop-color="#E8A84A"/><stop offset="1" stop-color="#7A4A16"/></linearGradient>`);
       s.push(`<rect x="${px + 3}" y="${py + 4}" width="${pw}" height="${ph}" rx="12" fill="#000" opacity=".4"/><rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="12" fill="#2A1620" stroke="url(#d4-or)" stroke-width="2.6" opacity=".97"/><rect x="${px + 5}" y="${py + 5}" width="${pw - 10}" height="${ph - 10}" rx="9" fill="none" stroke="#E8A84A" stroke-width=".8" opacity=".6"/>`);
       s.push(`<text x="${px + pw / 2}" y="${py + 19}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#F8D49A">« Le sable n'oublie personne. »</text>`);
-      COULEURS_J.forEach((c, k) => { const x = px + 36 + k * 60, y = py + 60; PORTR.push({ k, x, y, r: 20 });
-        s.push(`${G(x, y, 1)}<path d="M-26 14Q-28 -26 0 -28Q28 -26 26 14Q20 26 0 26Q-20 26 -26 14Z" fill="#6A5442" stroke="#2A1408" stroke-width="1.2"/><path d="M-24 10Q-26 -22 0 -24" stroke="#9A8068" stroke-width="1.4" fill="none"/><circle r="21" fill="#1A0E14" stroke="${c}" stroke-width="2.2"/><path d="M-20 18Q0 30 20 18L22 26H-22Z" fill="${c}" stroke="#2A1408" stroke-width=".8"/></g>`);
-        s.push(`<text x="${x}" y="${py + 106}" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="10.5" fill="${c}">${NOMS[k]}</text>`);
-        a.push(`<circle cx="${x}" cy="${y}" r="23" fill="none" stroke="#7CD0FF" stroke-width="2" opacity="0">${an(`<animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.1;.25;1" dur="8s" begin="${k * 2}s" repeatCount="indefinite"/>`)}</circle>`); }); }
+      COULEURS_5.forEach((c, k) => { const x = px + 34 + k * 46, y = py + 60; PORTR.push({ k, x, y, r: 17 });
+        s.push(`${G(x, y, .82)}<path d="M-26 14Q-28 -26 0 -28Q28 -26 26 14Q20 26 0 26Q-20 26 -26 14Z" fill="#6A5442" stroke="#2A1408" stroke-width="1.2"/><path d="M-24 10Q-26 -22 0 -24" stroke="#9A8068" stroke-width="1.4" fill="none"/><circle r="21" fill="#1A0E14" stroke="${c}" stroke-width="2.2"/><path d="M-20 18Q0 30 20 18L22 26H-22Z" fill="${c}" stroke="#2A1408" stroke-width=".8"/></g>`);
+        s.push(`<text x="${x}" y="${py + 104}" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="10" fill="${c}">${NOMS_5[k]}</text>`);
+        a.push(`<circle cx="${x}" cy="${y}" r="20" fill="none" stroke="#7CD0FF" stroke-width="2" opacity="0">${an(`<animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.1;.25;1" dur="10s" begin="${k * 2}s" repeatCount="indefinite"/>`)}</circle>`); }); }
+
     for (let i = 0; i <= 20; i++) { const [x, y] = crs(i / 20); K.prendre(x, y, wd(i / 20) * .6); }
     // ---- l'épice bleue qui scintille dans le sable (discrète)
     a.push(`<defs><radialGradient id="d4-pb" r="50%"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".3" stop-color="#5AC8FF" stop-opacity=".9"/><stop offset="1" stop-color="#2A7AFF" stop-opacity="0"/></radialGradient></defs>`);
@@ -2845,14 +2853,14 @@
     a.push(`<g${K.anime ? "" : ` transform="translate(430 180) rotate(-30)"`}>${an(`<animateMotion dur="20s" repeatCount="indefinite" rotate="auto" path="M${cx + 250} ${cy - 24}A250 108 0 1 0 ${cx - 250} ${cy - 24}A250 108 0 1 0 ${cx + 250} ${cy - 24}"/>`)}${armure}</g>`);
     const bouclier = `<g><circle r="10" fill="#C8202A" ${INK}/><circle r="7.6" fill="#F4F1EA"/><circle r="5.4" fill="#C8202A"/><circle r="3.6" fill="#2A4AC8"/><path d="M0 -3.2L.9 -1L3.1 -1L1.4 .4L2 2.7L0 1.3L-2 2.7L-1.4 .4L-3.1 -1L-.9 -1Z" fill="#FFF"/></g>`;
     a.push(`<g${K.anime ? "" : ` transform="translate(440 228)"`}>${an(`<animateMotion dur="7s" repeatCount="indefinite" path="M420 330L470 214L640 236L600 360Z"/>`)}<g>${an(`<animateTransform attributeName="transform" type="rotate" from="0" to="360" dur=".8s" repeatCount="indefinite"/>`)}${bouclier}</g></g>`); }
-  // ---- 12. le panneau des 4 variants (portraits posés par l'appli dans des portails)
+  // ---- 12. le panneau des 5 variants (portraits posés par l'appli dans des portails)
   const PORTR = [];
   { const px = 10, py = 600, pw = 252, ph = 110; s.push(`<rect x="${px + 3}" y="${py + 4}" width="${pw}" height="${ph}" rx="6" fill="#000" opacity=".5"/><rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="6" fill="#120A2E" stroke="#FFF2C8" stroke-width="2.5"/><rect x="${px + 4}" y="${py + 4}" width="${pw - 8}" height="${ph - 8}" rx="4" fill="none" stroke="#FF8A1E" stroke-width="1"/>`);
-    s.push(`<text x="${px + pw / 2}" y="${py + 19}" text-anchor="middle" ${FONTE} font-size="12" letter-spacing="1" fill="#FFE84A" stroke="#C8202A" stroke-width="2.6" paint-order="stroke">LES 4 VARIANTS</text>`);
-    const NOMS = ["Théo", "Kévin", "Clément", "Devlin"];
-    COULEURS_J.forEach((col, k) => { const x = px + 34 + k * 61, y = py + 56; PORTR.push({ k, x, y, r: 20 });
-      s.push(`<circle cx="${x}" cy="${y}" r="27" fill="#FF8A1E" opacity=".25"/><circle cx="${x}" cy="${y}" r="24" fill="none" stroke="#FF8A1E" stroke-width="2.5"/><circle cx="${x}" cy="${y}" r="21" fill="#0A0820" stroke="${col}" stroke-width="2"/><text x="${x}" y="${py + 98}" text-anchor="middle" ${FONTE} font-size="12" fill="${col}" stroke="#0A0614" stroke-width="2.4" paint-order="stroke">${NOMS[k]}</text>`);
-      a.push(`<g>${an(`<animateTransform attributeName="transform" type="rotate" from="${k % 2 ? 360 : 0} ${x} ${y}" to="${k % 2 ? 0 : 360} ${x} ${y}" dur="${5 + k}s" repeatCount="indefinite"/>`)}<circle cx="${x}" cy="${y}" r="26.5" fill="none" stroke="#FFD27A" stroke-width="2.4" stroke-dasharray="1.4 5" stroke-linecap="round"/></g>`); }); }
+    s.push(`<text x="${px + pw / 2}" y="${py + 19}" text-anchor="middle" ${FONTE} font-size="12" letter-spacing="1" fill="#FFE84A" stroke="#C8202A" stroke-width="2.6" paint-order="stroke">LES 5 VARIANTS</text>`);
+    COULEURS_5.forEach((col, k) => { const x = px + 32 + k * 47, y = py + 56; PORTR.push({ k, x, y, r: 17 });
+      s.push(`<circle cx="${x}" cy="${y}" r="23" fill="#FF8A1E" opacity=".25"/><circle cx="${x}" cy="${y}" r="20.5" fill="none" stroke="#FF8A1E" stroke-width="2.2"/><circle cx="${x}" cy="${y}" r="18" fill="#0A0820" stroke="${col}" stroke-width="2"/><text x="${x}" y="${py + 96}" text-anchor="middle" ${FONTE} font-size="9.5" fill="${col}" stroke="#0A0614" stroke-width="2.2" paint-order="stroke">${NOMS_5[k]}</text>`);
+      a.push(`<g>${an(`<animateTransform attributeName="transform" type="rotate" from="${k % 2 ? 360 : 0} ${x} ${y}" to="${k % 2 ? 0 : 360} ${x} ${y}" dur="${5 + k}s" repeatCount="indefinite"/>`)}<circle cx="${x}" cy="${y}" r="22.6"
+ fill="none" stroke="#FFD27A" stroke-width="2.4" stroke-dasharray="1.4 5" stroke-linecap="round"/></g>`); }); }
   // les 4 pilotes sur la piste
   COULEURS_J.forEach((col, k) => a.push(K.surPiste(.05 + k * .03, `<g><path d="M-8 -3.6h12l4 2v3.2l-4 2h-12z" fill="${col}" ${INK}/><rect x="-9" y="-5.4" width="3" height="10.8" rx="1" fill="#140E1E"/><rect x="7" y="-4.6" width="2.4" height="9.2" rx="1" fill="#140E1E"/><circle cx="0" cy="0" r="2" fill="#F4F1EA"/></g>`, 40, k * 1.2)));
   // étoiles qui scintillent (deux nappes, deux animations)
@@ -2872,7 +2880,7 @@
     /* Octobre · La Salle du chocolat (v3 : « la salle vue de la porte », UNE scène, UNE lumière, en plein jour).
        Héros : la grande cascade de chocolat au fond de la salle, au cœur du huit, éclairée par l'unique verrière du plafond.
        La rivière part de son bassin, passe sous le pont en sucre d'orge et descend en S jusqu'au premier plan, où le
-       bateau-bonbon rose des ouvriers est grand. L'ascenseur de verre (les 4 pilotes à bord : l'appli pose leurs vrais
+       bateau-bonbon rose des ouvriers est grand. L'ascenseur de verre (les 5 pilotes à bord : l'appli pose leurs vrais
        portraits dans les hublots) crève la verrière en laissant une traînée d'or. Boucle gauche : la prairie comestible
        (arbre à sucettes, champignons-bonbons, fleurs-tasses, une gamine devenue myrtille). Boucle droite : le tuyau de verre
        où un petit gourmand remonte, et le bouquet de sucettes. Tout est dessiné ici, aucune image ni logo. */
@@ -3014,7 +3022,7 @@
       `<path d="M-36 -2Q-45 -4 -44 -12Q-43 -18 -37 -17Q-33 -15 -36 -12" stroke="#FF7EB6" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M-36 -2Q-45 -4 -44 -12Q-43 -18 -37 -17" stroke="#FFF4F8" stroke-width="1.6" fill="none" stroke-dasharray="2.4 2.4"/>`;
     a.push(`<g transform="translate(${BX} ${BY})"><g>${an(`<animateTransform attributeName="transform" type="rotate" values="-3;3;-3" dur="3.2s" repeatCount="indefinite"/>`)}<g transform="scale(${BS})"><ellipse cx="2" cy="13" rx="40" ry="5" fill="#2A1208" opacity=".4"/>${rames(-1)}${rames(1)}${rameur(-21, "#E8423A")}${rameur(-7, "#7EC8F0")}${rameur(7, "#FFD04A")}${rameur(21, "#B6E36A")}${coque}</g></g></g>`);
 
-    // ---- 10. l'ascenseur de verre qui crève la verrière (les 4 pilotes à bord), traînée d'or depuis la gauche
+    // ---- 10. l'ascenseur de verre qui crève la verrière (les 5 pilotes à bord), traînée d'or depuis la gauche
     const PORTR = [], EX = 652, EY = 48, EW = 216, EH = 112, ANG = 14, ca = Math.cos(ANG * PI / 180), sa = Math.sin(ANG * PI / 180);
     const loc = (lx, ly) => [EX + lx * ca + ly * sa, EY - lx * sa + ly * ca];
     const TRAI = `M110 132Q330 30 ${f(loc(-EW / 2, EH / 2 - 10)[0])} ${f(loc(-EW / 2, EH / 2 - 10)[1])}`;
@@ -3024,14 +3032,16 @@
     let asc = `<g transform="translate(${EX} ${EY}) rotate(${-ANG})">`;
     asc += `<rect x="${-EW / 2 + 10}" y="${-EH / 2 + 14}" width="${EW}" height="${EH}" rx="10" fill="#2A1208" opacity=".45" filter="url(#c4-flou8)"/>`;
     asc += `<rect x="${-EW / 2}" y="${-EH / 2}" width="${EW}" height="${EH}" rx="10" fill="#3A6A8A" fill-opacity=".35"/>`;
-    COULEURS_J.forEach((c, k) => { const x = -81 + k * 54, y = 2, [gx, gy] = loc(x, y); PORTR.push({ k, x: +gx.toFixed(1), y: +gy.toFixed(1), r: 21 });
-      asc += `<path d="M${x - 22} ${EH / 2 - 2}Q${x - 22} ${y + 22} ${x} ${y + 22}Q${x + 22} ${y + 22} ${x + 22} ${EH / 2 - 2}Z" fill="${c}" ${INK}/><path d="M${x - 6} ${y + 22}l6 8l6 -8" fill="#FFF8EE" ${INK}/>` +
+    const SA = .84, BAIE = EW / 5;   // 5 pilotes (Nicolas) : 5 baies, enfants un peu plus petits
+    COULEURS_5.forEach((c, k) => { const X0 = -EW / 2 + BAIE * (k + .5), Y0 = 2, x = 0, y = 0, [gx, gy] = loc(X0, Y0); PORTR.push({ k, x: +gx.toFixed(1), y: +gy.toFixed(1), r: +(21 * SA).toFixed(1) });
+      asc += `<g transform="translate(${f(X0)} ${Y0}) scale(${SA})"><path d="M${x - 22} ${f((EH / 2 - 2 - Y0) / SA)}Q${x - 22} ${y + 22} ${x} ${y + 22}Q${x + 22} ${y + 22} ${x + 22} ${f((EH / 2 - 2 - Y0) / SA)}Z" fill="${c}" ${INK}/><path d="M${x - 6} ${y + 22}l6 8l6 -8" fill="#FFF8EE" ${INK}/>` +
         `<circle cx="${x}" cy="${y}" r="24" fill="${c}" ${INK}/><circle cx="${x}" cy="${y}" r="21" fill="${PEAU}"/><path d="M${x - 21} ${y - 3}Q${x - 20} ${y - 22} ${x} ${y - 22}Q${x + 20} ${y - 22} ${x + 21} ${y - 3}Q${x + 8} ${y - 12} ${x - 21} ${y - 3}Z" fill="${mixHex(c, "#2A140A", .35)}"/>` +
-        `<circle cx="${x - 7}" cy="${y + 1}" r="2.6" fill="#2A140A"/><circle cx="${x + 7}" cy="${y + 1}" r="2.6" fill="#2A140A"/><path d="M${x - 8} ${y + 9}Q${x} ${y + 16} ${x + 8} ${y + 9}" stroke="#2A140A" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="${x - 12}" cy="${y + 8}" r="3.4" fill="#FF8A8A" opacity=".5"/><circle cx="${x + 12}" cy="${y + 8}" r="3.4" fill="#FF8A8A" opacity=".5"/>`; });
+        `<circle cx="${x - 7}" cy="${y + 1}" r="2.6" fill="#2A140A"/><circle cx="${x + 7}" cy="${y + 1}" r="2.6" fill="#2A140A"/><path d="M${x - 8} ${y + 9}Q${x} ${y + 16} ${x + 8} ${y + 9}" stroke="#2A140A" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="${x - 12}" cy="${y + 8}" r="3.4" fill="#FF8A8A" opacity=".5"/><circle cx="${x + 12}" cy="${y + 8}" r="3.4" fill="#FF8A8A" opacity=".5"/></g>`; });
     asc += `<rect x="${-EW / 2}" y="${-EH / 2}" width="${EW}" height="${EH}" rx="10" fill="url(#c4-verre)"/>`;
     asc += `<path d="M${-EW / 2 + 20} ${-EH / 2 + 6}L${-EW / 2 + 60} ${-EH / 2 + 6}L${-EW / 2 + 22} ${EH / 2 - 6}L${-EW / 2 + 6} ${EH / 2 - 6}ZM30 ${-EH / 2 + 6}L46 ${-EH / 2 + 6}L10 ${EH / 2 - 6}L-6 ${EH / 2 - 6}Z" fill="#FFFFFF" opacity=".22"/>`;
     asc += `<rect x="${-EW / 2}" y="${-EH / 2}" width="${EW}" height="${EH}" rx="10" fill="none" stroke="url(#c4-or)" stroke-width="7"/><rect x="${-EW / 2}" y="${-EH / 2}" width="${EW}" height="${EH}" rx="10" fill="none" stroke="#6A440E" stroke-width="1.4"/>`;
-    [-1, 0, 1].forEach(u => asc += `<path d="M${u * 54} ${-EH / 2}V${EH / 2}" stroke="url(#c4-or)" stroke-width="4"/><path d="M${u * 54} ${-EH / 2}V${EH / 2}" stroke="#6A440E" stroke-width=".8" opacity=".6"/>`);
+    [-1.5, -.5, .5, 1.5].forEach(u => asc += `<path d="M${f(u * BAIE)} ${-EH / 2}V${EH / 2}" stroke="url(#c4-or)" stroke-width="3.4"/><path d="M${f(u * BAIE)} ${-EH / 2}V${EH / 2}" stroke="#6A440E" stroke-width=".8" opacity=".6"/>`);
+
     asc += `<path d="M${-EW / 2 - 6} ${-EH / 2 + 2}Q0 ${-EH / 2 - 34} ${EW / 2 + 6} ${-EH / 2 + 2}Z" fill="url(#c4-or)" stroke="#6A440E" stroke-width="1.6"/>`;
     asc += `<rect x="${-EW / 2 - 8}" y="${EH / 2 - 4}" width="${EW + 16}" height="12" rx="5" fill="url(#c4-or)" stroke="#6A440E" stroke-width="1.6"/>`;
     for (let k = 0; k < 9; k++) asc += `<circle cx="${f(-EW / 2 + 4 + k * (EW - 8) / 8)}" cy="${EH / 2 + 2}" r="1.8" fill="#6A440E"/>`;
@@ -3248,11 +3258,12 @@
       for (let j = 0; j < 6; j++) { const [x, y] = at(126 + j * 4); o += `<circle cx="${f(x + (r() - .5) * 10)}" cy="${f(y + (r() - .5) * 10)}" r="${f(12 + j * 3)}" fill="url(#t4-vap)" opacity="${f(.25 + j * .05)}"/>`; }
       [150, 158, 166, 174].forEach((i, k) => { const [x, y, ang] = at(i), droite = Math.cos(ang / 57.3) >= 0; o += `<g transform="translate(${f(x + (k % 2 ? 5 : -5))} ${f(y)}) scale(${droite ? 1.2 : -1.2} 1.2)">${cheval("#3E6A3A")}</g>`; });
       s.push(o); }
-    // ---- les 4 soldats (= les 4 pilotes) qui volent vers le Colosse : un câble droit et tendu chacun, planté dans la nuque ou l'épaule
-    const SOL = [[462, 178], [826, 172], [392, 266], [884, 256]], ANC = [[GX - 60, HY + 40], [GX + 62, HY + 42], [GX - 188, HY + 96], [GX + 190, HY + 98]];
+    // ---- les 5 soldats (= les 5 pilotes) qui volent vers le Colosse : un câble droit et tendu chacun, planté dans la nuque ou l'épaule
+    const SOL = [[462, 178], [826, 172], [392, 266], [884, 256], [300, 168]], ANC = [[GX - 60, HY + 40], [GX + 62, HY + 42], [GX - 188, HY + 96], [GX + 190, HY + 98], [GX - 120, HY + 70]];
     const PORTR = [];
     { let o = "";
-      SOL.forEach(([x, y], k) => { const c = COULEURS_J[k], [hx, hy] = ANC[k], ang = Math.atan2(hy - y, hx - x) * 57.3, sg = hx > x ? 1 : -1;
+      SOL.forEach(([x, y], k) => { const c = COULEURS_5[k],
+ [hx, hy] = ANC[k], ang = Math.atan2(hy - y, hx - x) * 57.3, sg = hx > x ? 1 : -1;
         o += `<path d="M${f(x + sg * 4)} ${f(y + 22)}L${hx} ${hy}" stroke="#1A0C08" stroke-width="3.2" opacity=".55"/><path d="M${f(x + sg * 4)} ${f(y + 22)}L${hx} ${hy}" stroke="#F8F0E0" stroke-width="1.6"/><circle cx="${hx}" cy="${hy}" r="3" fill="#E8E8E8" stroke="#1A0C08" stroke-width="1"/>`;
         // le soldat, de profil vers son câble : cape verte qui claque derrière, deux lames qui brillent, tête claire (l'appli y pose le portrait)
         o += `${G(x, y, 1)}<g transform="scale(${-sg} 1)"><path d="M2 12Q22 18 36 40L22 38L28 52Q8 40 -2 24Z" fill="#3E6A3A" stroke="#1A2A14" stroke-width="1.6" stroke-linejoin="round"/><path d="M4 14Q22 22 32 38" stroke="#7AA86A" stroke-width="1.4" fill="none"/>` +
@@ -3412,7 +3423,7 @@
       s.push(`<path d="M940 0Q930 40 950 80Q940 130 980 170Q1010 210 1050 200Q1080 190 1080 160V0Z" fill="#8ADCC6" opacity=".35" filter="url(#o2-flou8)"/><path d="M952 0Q944 40 962 78Q954 124 990 160Q1016 192 1050 186Q1080 178 1080 150V0Z" fill="#3A3452" ${INK}/><path d="M962 78Q954 124 990 160Q1016 192 1050 186" stroke="#E8B878" stroke-width="3" fill="none" opacity=".7"/><path d="M968 30Q980 60 972 90" stroke="#6A5E82" stroke-width="3" fill="none"/><path d="M984 64Q990 100 1010 112Q1030 104 1028 72Q1014 56 984 64Z" fill="#0A0614"/>`);
       const tete = (u, v, ang) => `<path d="M1006 92Q${f((1006 + u) / 2 + 20)} ${f((92 + v) / 2 - 40)} ${f(u)} ${f(v)}" stroke="#1A1020" stroke-width="15" fill="none" stroke-linecap="round"/><path d="M1006 92Q${f((1006 + u) / 2 + 20)} ${f((92 + v) / 2 - 40)} ${f(u)} ${f(v)}" stroke="#4A8A6A" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M1006 92Q${f((1006 + u) / 2 + 20)} ${f((92 + v) / 2 - 40)} ${f(u)} ${f(v)}" stroke="#C8E89A" stroke-width="2" fill="none" opacity=".5" transform="translate(2 3)"/>${G(u, v, 2.6, ang)}<path d="M0 -5Q10 -6 14 -2L8 0L14 2Q10 6 0 5Q-4 0 0 -5Z" fill="#5AA07A" ${INK}/><path d="M9 -1.4l1.4 1.4l1 -1.4" stroke="#FFF" stroke-width=".8" fill="none"/><circle cx="4" cy="-2.2" r="1.6" fill="#FFE04A"/><circle cx="4.3" cy="-2.2" r=".6" fill="#1A1020"/><path d="M-1 -5l-3 -4M1 -5l1 -5" stroke="#2A5A3A" stroke-width="1.6"/></g>`;
       [[0, [[868, 112, 165], [884, 176, 145], [932, 222, 120]]], [1, [[1000, 252, 95], [892, 52, -165], [1052, 246, 80]]]].forEach(([q, L]) => a.push(`<g>${an(`<animateTransform attributeName="transform" type="rotate" values="${q ? 4 : -4} 1006 92;${q ? -5 : 5} 1006 92;${q ? 4 : -4} 1006 92" dur="${3 + q}s" repeatCount="indefinite"/>`)}${L.map(([u, v, an2]) => tete(u, v, an2)).join("")}</g>`)); }
-    // ---- 8. ITHAQUE dorée (l'arrivée) : la côte fondue dans la mer, le palais en trois-quarts, les 4 boucliers-portraits, le grand arc
+    // ---- 8. ITHAQUE dorée (l'arrivée) : la côte fondue dans la mer, le palais en trois-quarts, les 5 boucliers-portraits, le grand arc
     const PORTR = [];
     { const [x, y] = ITH; K.prendre(x, y, 150);
       const cote = `M690 720Q700 660 750 612Q810 560 880 532Q950 500 1010 470Q1050 452 1080 446V720Z`;
@@ -3427,10 +3438,12 @@
         <path d="M${PX} ${PY - 126}L${PX + dx} ${PY - 126 + dy}L${PX + L + 12 + dx} ${PY - 70 + dy}L${PX + L + 12} ${PY - 70}Z" fill="#C8603A" ${INK}/>${[1, 2, 3, 4].map(q => `<path d="M${f(PX + (L + 12) * q / 5)} ${f(PY - 126 + 56 * q / 5)}l${dx} ${dy}" stroke="#8A3A22" stroke-width="1.2"/>`).join("")}<path d="M${PX} ${PY - 126}L${PX + dx} ${PY - 126 + dy}" stroke="#FFD98A" stroke-width="2"/>
         <path d="M${PX - L - 12} ${PY - 70}L${PX} ${PY - 126}L${PX + L + 12} ${PY - 70}Z" fill="#B5482E" ${INK}/><path d="M${PX - L + 6} ${PY - 74}L${PX} ${PY - 116}L${PX + L - 6} ${PY - 74}Z" fill="url(#o2-marbre)" ${INK}/><circle cx="${PX}" cy="${PY - 90}" r="8" fill="url(#o2-or)" ${INK}/>`);
       s.push(`<pattern id="o2-grecque" width="12" height="6" patternUnits="userSpaceOnUse"><rect width="12" height="6" fill="#F2E6C8"/><path d="M1 5V1h4v3H3V3M7 5V1h4v3H9V3" stroke="#B5482E" stroke-width=".9" fill="none"/></pattern>`);
-      // 4 grands boucliers de bronze peints (l'appli pose les vrais portraits au centre ; sans portrait, le bouclier reste beau)
-      COULEURS_J.forEach((c, k) => { const u = PX - 90 + k * 60, v = PY - 30; PORTR.push({ k, x: u, y: v, r: 21 });
-        s.push(`<circle cx="${u - 3}" cy="${v + 3}" r="29" fill="#000" opacity=".3"/><circle cx="${u}" cy="${v}" r="28" fill="url(#o2-or)" ${INK}/><circle cx="${u}" cy="${v}" r="25" fill="${c}"/><circle cx="${u}" cy="${v}" r="22" fill="url(#o2-bronze)" stroke="#5A3410" stroke-width="1"/><circle cx="${u}" cy="${v}" r="15" fill="none" stroke="#6A440E" stroke-width="1.4"/>${Array.from({ length: 8 }, (_, q) => { const t = q / 8 * TAU; return `<path d="M${f(u + Math.cos(t) * 7)} ${f(v + Math.sin(t) * 7)}L${f(u + Math.cos(t) * 13)} ${f(v + Math.sin(t) * 13)}" stroke="#6A440E" stroke-width="1.6"/>`; }).join("")}<circle cx="${u}" cy="${v}" r="5" fill="url(#o2-or)" stroke="#6A440E" stroke-width="1"/><path d="M${u - 18} ${v - 8}A20 20 0 0 1 ${u - 4} ${v - 20}" stroke="#FFF2C8" stroke-width="2.4" fill="none" opacity=".7"/>`); });
-      a.push(`<g>${COULEURS_J.map((c, k) => `<circle cx="${PX - 90 + k * 60}" cy="${PY - 30}" r="29" fill="none" stroke="#FFF6C8" stroke-width="3" opacity="0">${an(`<animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.08;.2;1" dur="8s" begin="${k * 2}s" repeatCount="indefinite"/>`)}</circle>`).join("")}</g>`);
+      // 5 grands boucliers de bronze peints (l'appli pose les vrais portraits au centre ; sans portrait, le bouclier reste beau)
+      const SB = .82, UB = k => PX - 96 + k * 48;   // 5 boucliers (Nicolas) : un peu plus petits pour tenir sous le fronton
+      COULEURS_5.forEach((c, k) => { const U = UB(k), V = PY - 30, u = 0, v = 0; PORTR.push({ k, x: U, y: V, r: 17 });
+        s.push(`<g transform="translate(${U} ${V}) scale(${SB})"><circle cx="${u - 3}" cy="${v + 3}" r="29" fill="#000" opacity=".3"/><circle cx="${u}" cy="${v}" r="28" fill="url(#o2-or)" ${INK}/><circle cx="${u}" cy="${v}" r="25" fill="${c}"/><circle cx="${u}" cy="${v}" r="22" fill="url(#o2-bronze)" stroke="#5A3410" stroke-width="1"/><circle cx="${u}" cy="${v}" r="15" fill="none" stroke="#6A440E" stroke-width="1.4"/>${Array.from({ length: 8 }, (_, q) => { const t = q / 8 * TAU; return `<path d="M${f(u + Math.cos(t) * 7)} ${f(v + Math.sin(t) * 7)}L${f(u + Math.cos(t) * 13)} ${f(v + Math.sin(t) * 13)}" stroke="#6A440E" stroke-width="1.6"/>`; }).join("")}<circle cx="${u}" cy="${v}" r="5" fill="url(#o2-or)" stroke="#6A440E" stroke-width="1"/><path d="M${u - 18} ${v - 8}A20 20 0 0 1 ${u - 4} ${v - 20}" stroke="#FFF2C8" stroke-width="2.4" fill="none" opacity=".7"/></g>`); });
+      a.push(`<g>${COULEURS_5.map((c, k) => `<circle cx="${UB(k)}" cy="${PY - 30}" r="24" fill="none" stroke="#FFF6C8" stroke-width="3" opacity="0">${an(`<animate attributeName="opacity" values="0;1;0;0" keyTimes="0;.08;.2;1" dur="10s" begin="${k * 2}s"
+ repeatCount="indefinite"/>`)}</circle>`).join("")}</g>`);
       // le grand arc d'Ulysse, tendu sur la plage : sa flèche file vers la ligne d'arrivée
       { const [bx, by] = [742, 652], p0 = K.P[0], ang = Math.atan2(p0[1] - by, p0[0] - bx) * 180 / PI;
         s.push(`${G(bx, by, 1, ang)}<path d="M8 -46Q-22 0 8 46" stroke="#1A1020" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M8 -46Q-22 0 8 46" stroke="#8A5226" stroke-width="5.4" fill="none" stroke-linecap="round"/><path d="M5 -40Q-14 0 5 40" stroke="#E2B26A" stroke-width="1.6" fill="none"/><path d="M8 -46L-26 0L8 46" stroke="#FFF6E0" stroke-width="1.4" fill="none"/></g>`);
@@ -3642,14 +3655,15 @@
       s.push(h); K.prendre(AX, AY - 220, 160);
     }
 
-    // ---- 9. le passe arrondi (premier plan) : 4 assiettes sous 4 lampes chauffantes = les portraits des 4 pilotes
+    // ---- 9. le passe arrondi (premier plan) : 5 assiettes sous 5 lampes chauffantes = les portraits des 5 pilotes
     const PORTR = [];
-    { const xs = [240, 336, 432, 528], yA = x => 598 - Math.sin((x - 170) / 420 * PI) * 10, R = 35;
+    { const xs = [220, 300, 380, 460, 540], yA = x => 598 - Math.sin((x - 170) / 420 * PI) * 10, R = 29;
       s.push(`<path d="M170 560Q380 524 590 560L584 644H176Z" fill="#4A2A1A" ${INK}/><path d="M164 556Q380 516 596 556L596 566Q380 528 164 566Z" fill="#C8C0B8" ${INK}/><path d="M176 572Q380 540 584 572" stroke="#FFC870" stroke-width="2" opacity=".6" fill="none"/>`);
-      xs.forEach((x, k) => { const c = COULEURS_J[k], y = yA(x); PORTR.push({ k, x, y: Math.round(y), r: R });
-        s.push(`<path d="M${x - 18} 520L${x - 48} ${f(y + 20)}H${x + 48}L${x + 18} 520Z" fill="url(#rt-cone)"/>`);
-        K.halo(x, 526, 48, "#FFE6A8", .75); s.push(`<path d="M${x} 500V508" stroke="#2A1A14" stroke-width="3"/><path d="M${x - 20} 522Q${x} 500 ${x + 20} 522Z" fill="#B86A32" ${INK1}/><ellipse cx="${x}" cy="522" rx="14" ry="3.4" fill="#FFF0B8"/>`);
-        s.push(`${G(x, y)}<ellipse cx="3" cy="${R + 6}" rx="${R + 6}" ry="6" fill="#000" opacity=".35"/><circle r="${R + 9}" fill="#FFFFFF" ${INK}/><circle r="${R + 9}" fill="none" stroke="#E8DCC8" stroke-width="3" stroke-dasharray="2 5"/><circle r="${R + 2.5}" fill="none" stroke="${c}" stroke-width="6"/><circle r="${R}" fill="#1A1420"/></g>`); });
+      xs.forEach((x, k) => { const c = COULEURS_5[k], y = yA(x); PORTR.push({ k, x, y: Math.round(y), r: R });
+        s.push(`<path d="M${x - 18} 520L${x - 40} ${f(y + 20)}H${x + 40}L${x + 18} 520Z" fill="url(#rt-cone)"/>`);
+        K.halo(x, 526, 42, "#FFE6A8", .75); s.push(`<path d="M${x} 500V508" stroke="#2A1A14" stroke-width="3"/><path d="M${x - 20} 522Q${x} 500 ${x + 20} 522Z" fill="#B86A32" ${INK1}/><ellipse cx="${x}" cy="522" rx="14" ry="3.4" fill="#FFF0B8"/>`);
+        s.push(`${G(x, y)}<ellipse cx="3" cy="${R + 6}" rx="${R + 6}" ry="6" fill="#000" opacity=".35"/><circle r="${R + 8}" fill="#FFFFFF" ${INK}/><circle r="${R + 8}" fill="none" stroke="#E8DCC8" stroke-width="3" stroke-dasharray="2 5"/><circle r="${R + 2.5}" fill="none" stroke="${c}" stroke-width="5"/>
+<circle r="${R}" fill="#1A1420"/></g>`); });
       s.push(`<path d="M200 500H560" stroke="#2A1A14" stroke-width="4"/>`);
     }
 
@@ -4715,7 +4729,7 @@
 
   function peindrePandora(T, Z, def) {
     /* ---------- Saison 2028 · Pandora la nuit (tracé monaco) — v2 : UNE forêt nocturne éclairée par un seul Arbre des Âmes géant.
-       Lecture dans le sens de la course : le grand chasseur rouge ouvre le ciel (haut gauche), les 4 ikrans des pilotes plongent vers la droite
+       Lecture dans le sens de la course : le grand chasseur rouge ouvre le ciel (haut gauche), les 5 ikrans des pilotes plongent vers la droite
        (cavaliers dont la tête = cadre-portrait, RES.portraits), l'archère tend son arc vers le ciel (« Je te vois. »), le cavalier galope vers l'Arbre,
        le grand cétacé jaillit de la lagune. Tout est éclairé par en dessous par l'Arbre (liserés côté Arbre, ombres de l'autre). */
     const K = kit(T, def, 2028, "pa-"), { s, a, r, f, W, H } = K, an = x => K.anime ? x : "", INK = `stroke="#030512" stroke-width="1.4" stroke-linejoin="round"`;
@@ -4862,9 +4876,10 @@
         <g>${an(`<animateTransform attributeName="transform" type="rotate" values="0 6 6;-8 6 6;0 6 6" dur="2.4s" repeatCount="indefinite"/>`)}${lit(x, y + 60, sc, rot, [[`M30 4Q-6 36 -104 62Q-78 68 -66 86Q-48 70 -28 82Q-22 62 -2 62Q8 40 42 12Z`, mixHex("#D0401E", NUIT, .15), "#FFC0D0"]], 3.4)}<path d="M28 8Q-10 38 -98 62M30 10Q-12 48 -58 78M34 12Q8 44 -18 74" stroke="#FFC24A" stroke-width="3" fill="none" opacity=".9"/><path d="M-30 30Q-50 46 -70 52" stroke="#2A0808" stroke-width="2.4" fill="none" opacity=".6"/></g>
         <path d="M-8 -12Q0 -24 10 -14" fill="${PEAU}" ${INK}/><circle cx="2" cy="-22" r="4.4" fill="${PEAU}" ${INK}/></g>`); }
 
-    // ---- 11. LES 4 IKRANS des pilotes, de trois-quarts, qui plongent vers la droite ; la tête du cavalier = le cadre-portrait (RES.portraits)
-    const IKR = [[332, 214, 16], [512, 262, 22], [668, 214, 14], [830, 310, 22]], SCI = .9, RP = 23;
-    COULEURS_J.forEach((c, k) => { const [x, y, rot] = IKR[k], cor = mixHex(c, NUIT, .55), bord = mixHex(c, "#F4E0FF", .55), memb = mixHex(c, NUIT, .15), c2 = mixHex(c, "#FFFFFF", .5), du = (1.3 + k * .17).toFixed(2); K.prendre(x, y, 70);
+    // ---- 11. LES 5 IKRANS des pilotes, de trois-quarts, qui plongent vers la droite ; la tête du cavalier = le cadre-portrait (RES.portraits)
+    const IKR = [[326, 206, 16], [508, 258, 22], [668, 208, 14], [830, 306, 22], [318, 356, 18]], SCI = .82, RP = 21;
+    COULEURS_5.forEach((c, k) => {
+ const [x, y, rot] = IKR[k], cor = mixHex(c, NUIT, .55), bord = mixHex(c, "#F4E0FF", .55), memb = mixHex(c, NUIT, .15), c2 = mixHex(c, "#FFFFFF", .5), du = (1.3 + k * .17).toFixed(2); K.prendre(x, y, 70);
       const R = RP / SCI, hx = 2, hy = -34 - R * .85;
       a.push(`${G(x, y, SCI, rot)}<g>${an(`<animateTransform attributeName="transform" type="rotate" values="0 10 6;-9 10 6;0 10 6" dur="${du}s" repeatCount="indefinite"/>`)}${lit(x, y + 30, SCI, rot, [[`M10 6Q-20 34 -70 48Q-54 52 -48 62Q-34 50 -20 58Q-14 42 4 38Q14 24 26 8Z`, mixHex(c, NUIT, .65), mixHex(c, "#F4E0FF", .3)]], 2)}</g>
         ${lit(x, y, SCI, rot, [[`M-34 0Q-64 6 -86 22Q-80 10 -78 4Q-96 6 -104 -2Q-82 -8 -64 -8Q-48 -9 -34 -6Z`, cor, bord], [`M36 -12Q54 -18 64 -6Q70 2 82 4L102 12Q88 17 76 16Q68 21 60 19Q48 14 42 8Q36 6 32 5Z`, cor, bord], [`M-38 -8Q-6 -22 26 -14Q40 -10 46 0Q34 12 14 13Q-12 15 -38 6Z`, cor, bord],
@@ -4973,23 +4988,23 @@
     for (let k = 0; k < FEN.length; k++) { const x = FEN[k]; feston(x - 4, FY + FH + 6, x + 84, FY + FH + 6, 4, 14, 3); }
 
     // =============== 3. au fond à gauche, les boxes des pilotes : portes rouge sombre, couronne de houx, chaussette à la couleur du pilote
-    const PORTR = [], BX0 = 160, BW = 76, PY0 = 214;
+    const PORTR = [], BX0 = 150, BW = 64, PY0 = 214, WR = 19;   // 5 boxes (Nicolas) : un peu plus étroites
     const houx = (x, y, R) => { let d = ""; for (let q = 0; q < 10; q++) { const t = q / 10 * TAU; d += `<ellipse cx="${f(x + Math.cos(t) * R)}" cy="${f(y + Math.sin(t) * R)}" rx="${f(R * .5)}" ry="${f(R * .26)}" transform="rotate(${f(t * 57.3 + 90)} ${f(x + Math.cos(t) * R)} ${f(y + Math.sin(t) * R)})" fill="${q % 2 ? "#2E7A44" : "#1E5A30"}" stroke="#0A1A0E" stroke-width=".8"/>`; }
       [[.3, 1], [1.9, .9], [3.6, 1], [5.0, .9]].forEach(([t, k]) => d += `<circle cx="${f(x + Math.cos(t) * R * k)}" cy="${f(y + Math.sin(t) * R * k)}" r="${f(R * .2)}" fill="#E0242C"/>`);
       return d + `<path d="M${f(x - R * .45)} ${f(y + R * .8)}L${f(x)} ${f(y + R * 1.05)}L${f(x + R * .45)} ${f(y + R * .8)}L${f(x + R * .3)} ${f(y + R * 1.45)}L${f(x)} ${f(y + R * 1.15)}L${f(x - R * .3)} ${f(y + R * 1.45)}Z" fill="#D8262E" stroke="#5A0A10" stroke-width=".8"/>`; };
-    CJ.forEach((c, k) => { const x0 = BX0 + k * BW, xm = x0 + BW / 2;
+    COULEURS_5.forEach((c, k) => { const x0 = BX0 + k * BW, xm = x0 + BW / 2;
       s.push(`<rect x="${x0 + 4}" y="${PY0}" width="${BW - 8}" height="${HZ - PY0 - 8}" fill="url(#g6-porte)"/>`);
       for (let y = PY0 + 8; y < HZ - 10; y += 9) s.push(`<path d="M${x0 + 5} ${y}H${x0 + BW - 5}" stroke="#000" stroke-opacity=".28" stroke-width="1.6"/><path d="M${x0 + 5} ${y + 1.6}H${x0 + BW - 5}" stroke="#FFD8A0" stroke-opacity=".08" stroke-width="1"/>`);
-      s.push(houx(xm, PY0 + 46, 22));
+      s.push(houx(xm, PY0 + 46, WR));
       // la chaussette pend à la poignée, à la couleur du pilote, revers crème
-      const hx = xm + 10, hy = HZ - 74;
-      s.push(`<g transform="translate(${hx} ${hy}) scale(1.12) translate(${-hx} ${-hy})"><rect x="${hx - 9}" y="${hy - 3}" width="18" height="5" rx="2" fill="#C9A24A" ${IN1}/><path d="M${hx} ${hy + 2}V${hy + 8}" stroke="#E8D8B0" stroke-width="1.5"/>
+      const hx = xm + 8, hy = HZ - 74;
+      s.push(`<g transform="translate(${hx} ${hy}) scale(1.02) translate(${-hx} ${-hy})"><rect x="${hx - 9}" y="${hy - 3}" width="18" height="5" rx="2" fill="#C9A24A" ${IN1}/><path d="M${hx} ${hy + 2}V${hy + 8}" stroke="#E8D8B0" stroke-width="1.5"/>
         <path d="M${hx - 8} ${hy + 14}V${hy + 34}Q${hx - 8} ${hy + 46} ${hx + 4} ${hy + 46}H${hx + 14}Q${hx + 20} ${hy + 46} ${hx + 20} ${hy + 40}Q${hx + 20} ${hy + 34} ${hx + 10} ${hy + 33}H${hx + 6}V${hy + 14}Z" fill="${c}" ${IN1}/>
         <rect x="${hx - 10}" y="${hy + 6}" width="18" height="10" rx="3" fill="#FFF6E4" ${IN1}/><path d="M${hx - 6} ${hy + 24}H${hx + 4}M${hx - 6} ${hy + 30}H${hx + 4}" stroke="#FFFFFF" stroke-opacity=".55" stroke-width="2"/></g>`);
-      PORTR.push({ k, x: +xm.toFixed(1), y: +(PY0 + 46).toFixed(1), r: 18 });
+      PORTR.push({ k, x: +xm.toFixed(1), y: +(PY0 + 46).toFixed(1), r: 15.5 });
     });
-    for (let k = 0; k <= 4; k++) s.push(`<rect x="${BX0 + k * BW - 4}" y="${PY0 - 6}" width="8" height="${HZ - PY0}" fill="#2A1614" ${IN1}/>`);
-    s.push(`<rect x="${BX0 - 6}" y="${PY0 - 10}" width="${4 * BW + 12}" height="8" fill="#3A201C" ${IN1}/>`);
+    for (let k = 0; k <= 5; k++) s.push(`<rect x="${BX0 + k * BW - 4}" y="${PY0 - 6}" width="8" height="${HZ - PY0}" fill="#2A1614" ${IN1}/>`);
+    s.push(`<rect x="${BX0 - 6}" y="${PY0 - 10}" width="${5 * BW + 12}" height="8" fill="#3A201C" ${IN1}/>`);
 
     s.push(`<ellipse cx="300" cy="200" rx="300" ry="150" fill="url(#g6-chaud)" opacity=".1" style="mix-blend-mode:screen"/>`);
     // =============== 4. la poutre de bois chaud (reflets dorés des guirlandes), ses festons, l'étoile du sapin et les suspensions de papier
@@ -5031,7 +5046,8 @@
     flaque(MX - 10, MY - 50, 410, 155, 1);
     flaque(MX + 20, MY + 4, 450, 52, 1);
     SPOTS.forEach(([x, sd, x1, y1, w, ang]) => s.push(`<path d="M${x} 158V166" stroke="#16141A" stroke-width="4"/><g transform="translate(${x} 174) rotate(${f(ang)})"><rect x="-17" y="-12" width="34" height="26" rx="5" fill="#3A2420" ${INK}/><ellipse cx="0" cy="14" rx="13" ry="4.5" fill="#FFF0C8" ${IN1}/></g><circle cx="${f(x - Math.sin(ang / 57.3) * 14)}" cy="${f(174 + Math.cos(ang / 57.3) * 14)}" r="16" fill="#FFE2A8" opacity=".7" filter="url(#g6-flou)"/>`));
-    CJ.forEach((c, k) => s.push(houx(BX0 + k * BW + BW / 2, PY0 + 46, 22)));
+    COULEURS_5.forEach((c, k) => s.push(houx(BX0 + k * BW + BW / 2, PY0 + 46, WR)));
+
     const RR = [-190, -44, 44], RV = [214, -40, 40];
     const BA = "M-262 -10L-266 -42Q-210 -50 -160 -62Q-100 -80 -62 -108L-48 -130L-34 -106Q-26 -92 -6 -88Q24 -100 54 -92Q84 -82 112 -72L160 -62Q150 -38 164 -12Q120 -6 80 -12Q20 -8 -40 -12Q-140 -6 -262 -10Z";
     const AIL = "M-306 -142Q-244 -150 -172 -138L-170 -120Q-240 -128 -304 -122Z";
