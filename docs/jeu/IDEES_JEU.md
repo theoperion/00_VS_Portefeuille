@@ -8,6 +8,11 @@ Ce fichier n'est **pas** lu automatiquement : seulement quand Théo le demande. 
 - Réserve cachée : Œuf de dragon, Némésis, Communauté, Increvable, rareté affichée (écran masqué : retirer `false &&` dans `js/3-podium.js`).
 - Titre de Moi sous son nom au Classement (sans chiffre) ; fiche-vitrine (codée en v17.56, cachée jusqu'au 1/1).
 
+## Réserve 2028 (refonte des badges, 24/11)
+- 11 exclusifs gardés dans le code (`saison: 2028` dans `EXCLUSIFS`, js/3-podium.js ; ni affichés ni comptés, objets retirés de l'écurie) : 🎯 Dans le mille (klaxon Dans le mille), 🤝 Fidèle au poste (plaque), 🔢 Pointeur (plaque), 🏆 Trentenaire (klaxon Pluie de trophées), 💎 Inarrêtable (finition Diamant), 🧊 Sang-glacé (casque Glace), 🎺 Soixante (klaxon Fanfare royale), 🪐 Le mur des 25 % (livrée Galaxie), 🌈 Marathonien (traînée Arc-en-ciel), 🌹 Le mur des 50 % (livrée Or rose), 🦅 Empereur (casque Empereur).
+- Les 16 anciens défis et les 5 anciens secrets (Photo finish, Contre-attaque, Le casse, Tortue, Remontada) restent aussi dans le code (`DEFIS`, `SECRETS_ANCIENS`), sans affichage : Photo finish ferait un bon secret 2028.
+- Univers sans objet vraiment à leur image (à dessiner) : Chocolaterie, Mur des titans, Petit Chef, Merveilles (pas de théière ni de chapeau).
+
 ## Décors 3D et course (en pause depuis le 23/11, à ne reprendre qu'avec le feu vert de Théo)
 - Décors 3D des circuits un par un (ordre : Dune → Ratatouille → Odyssée → Envers → Titans → Pandora → Anneau → Chocolaterie), avec leurs événements de course et les accessoires des pilotes en 3D. Méthode rapide : 1 modeleur → 1 contrôleur oui/non → 1 retouche → publication.
 - Visite / Hélico plus fluides.
