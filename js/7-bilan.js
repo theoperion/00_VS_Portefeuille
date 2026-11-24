@@ -913,6 +913,14 @@ async function actionLiaison(action, corps) {
 }
 $("#liaison-bascule").addEventListener("click", async () => { const rep = await actionLiaison("liaison", { actif: !(D.liaison && D.liaison.active) }); if (rep.ok) { D.liaison = Object.assign({}, D.liaison, { active: !(D.liaison && D.liaison.active) }); majLiaison(); } });
 $("#liaison-test").addEventListener("click", () => actionLiaison("testerLiaison"));
+/* v20.36 (Théo, 24/11) : « Santé des Moi » : pour chaque joueur, dernière photo et relevé de fin de mois prêt. Jamais un montant (le serveur n'envoie que des dates et des oui/non). */
+$("#liaison-sante").addEventListener("click", async () => {
+  const b = $("#liaison-sante"); b.disabled = true; $("#liaison-res").innerHTML = '<p class="info">Contrôle en cours (une vingtaine de secondes)…</p>';
+  const rep = await posterAdmin({ action: "santeMoi" }); b.disabled = false;
+  if (!rep.ok || !rep.joueurs) { $("#liaison-res").innerHTML = '<p class="info">' + esc(rep.message || "Contrôle impossible.") + "</p>"; return; }
+  $("#liaison-res").innerHTML = '<p class="info sante-titre">' + esc(rep.message) + "</p>" +
+    rep.joueurs.map(j => '<div class="sante' + (j.rouge ? " rouge" : "") + '"><b>' + esc(j.nom) + "</b><span>" + esc(j.texte).replace(/ · /g, "<br>") + "</span></div>").join("");
+});
 $("#liaison-import").addEventListener("click", async () => { const rep = await actionLiaison("importer"); if (rep.ok) { await charger(true); majLiaison(); } });
 document.addEventListener("keydown", e => { if (e.key === "Escape") { $("#saisie").hidden = true; $("#reglages").hidden = true; $("#notifs").hidden = true; } });
 let attente, largeur = window.innerWidth;
