@@ -21,3 +21,4 @@ Ce fichier n'est **pas** lu automatiquement : seulement quand Théo le demande. 
 - **Script de déclaration d'impôts** de Théo (HTML, dans son Google Drive, fonctionne) : à revérifier ensemble ; piste d'un récapitulatif annuel d'aide à la déclaration (sans engagement de responsabilité).
 - **Risque Google Finance** : les cours dépendent de GOOGLEFINANCE (peut être limité ou arrêté). Prévoir une source de cours interchangeable et un mode secours (derniers cours connus, saisie manuelle).
 - Comparaison honnête avec Finary, TradingView, Yahoo Finance, Google Finance : où Moi est meilleur (personnalisation, jeu, données chez soi), où il ne l'est pas.
+- Nettoyage du code : retirer l'export agenda (.ics) resté inactif dans `moi.js` (`icsEcheances`, `telechargerIcs`, bouton `#ec-ics` jamais affiché), puisque Théo l'a refusé.
