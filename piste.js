@@ -6325,7 +6325,18 @@
   }
   function lier(gl, P, t) { gl.bindBuffer(gl.ARRAY_BUFFER, t.b); gl.vertexAttribPointer(P.A.aP, 3, gl.FLOAT, false, 40, 0); gl.vertexAttribPointer(P.A.aN, 3, gl.FLOAT, false, 40, 12); gl.vertexAttribPointer(P.A.aC, 4, gl.FLOAT, false, 40, 24); }
 
-  function supporte() { try { const c = document.createElement("canvas"); return !!(window.WebGLRenderingContext && (c.getContext("webgl") || c.getContext("experimental-webgl"))); } catch (e) { return false; } }
+  /* audit B6 : testé UNE fois, et le contexte d'essai est rendu aussitôt (avant, chaque appel ouvrait un contexte 3D jamais libéré :
+     le navigateur finissait par couper celui du circuit, qui restait noir) */
+  let SUPPORTE = null;
+  function supporte() {
+    if (SUPPORTE !== null) return SUPPORTE;
+    try {
+      const c = document.createElement("canvas"), g = window.WebGLRenderingContext && (c.getContext("webgl") || c.getContext("experimental-webgl"));
+      SUPPORTE = !!g;
+      try { const x = g && g.getExtension && g.getExtension("WEBGL_lose_context"); if (x) x.loseContext(); } catch (e) { /* rien à rendre */ }
+    } catch (e) { SUPPORTE = false; }
+    return SUPPORTE;
+  }
 
   /* ---------- Placement des voitures sur la piste, à partir des points ---------- */
   /** V16.3 · position de chaque voiture : la distance suit les points sans jamais sauter ;

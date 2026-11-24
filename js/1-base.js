@@ -19,7 +19,7 @@ window.APERCUS_FINIS = Date.now() >= new Date(2027, 1, 1).getTime();
 })();
 /* ============================================================
    CONFIGURATION : colle ici l'adresse de la web app (se termine par /exec),
-   ou saisis-la dans Réglages. Vide = chiffres de démonstration.
+   ou saisis-la dans Réglages.
    ============================================================ */
 const API_URL = "https://script.google.com/macros/s/AKfycbxVNsHSYTTqolDYjZX18ECAFcNhSJH5Wv4pxZweTpTHbVsm538hE9UI5QSI8ZlofUTf/exec";
 
@@ -36,7 +36,7 @@ const stock = {
 };
 const $ = s => document.querySelector(s);
 const reduit = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-let D = null, SOURCE = "demo";
+let D = null, SOURCE = "";   // "" = rien de chargé, "api" ou "cache" (audit E3 : plus de mode démo)
 const ETAT = Object.assign({ env: 0, per: "ytd", i1: 0, i2: 1, moi: "Théo", fiche: null, bandeau: "fige", discret: "non", ouverture: "dernier" }, (() => { try { return JSON.parse(stock.get(CLES.etat) || "{}"); } catch (e) { return {}; } })());
 if (!(ETAT.env >= 0 && ETAT.env <= 2)) ETAT.env = 0;   // v17.29 : CTO et crypto ne sont plus dans le Versus
 function garder() { stock.set(CLES.etat, JSON.stringify(ETAT)); }
@@ -143,7 +143,7 @@ try { const a = stock.get(CLES.api); if (a && a.trim() !== API_URL) stock.del(CL
 function apiUrl() { return (stock.get(CLES.api) || API_URL || "").trim(); }
 async function charger(frais) {
   const url = apiUrl();
-  if (!url) { if (!window.DEMO_DATA) { toast("Ajoute l'adresse de l'API dans Réglages."); return; } D = window.DEMO_DATA; SOURCE = "demo"; afficherTout(); return; }
+  if (!url) { toast("Ajoute l'adresse de l'API dans Réglages."); return; }
   const cle = stock.get(CLES.cle);
   if (!cle) { await verifierConfiguration(url); return; }
   const btn = $("#btn-maj"); btn.classList.add("spin"); EN_CHARGEMENT = true;
@@ -237,7 +237,7 @@ function afficherTout() {
   if (!(ETAT.i2 >= 0 && ETAT.i2 < nbIdx)) ETAT.i2 = Math.min(1, nbIdx - 1);
   if (ETAT.i2c === undefined || ETAT.i2c === null) ETAT.i2c = ok(ETAT.i2) ? ETAT.i2 : -1;
   if (ETAT.i2c >= nbIdx) ETAT.i2c = -1;
-  SESSION = D.session || (SOURCE === "demo" ? { role: "admin" } : { role: "perso" });   // V16.25 : sans session renvoyée par le serveur, jamais de droits admin par défaut
+  SESSION = D.session || { role: "perso" };   // V16.25 : sans session renvoyée par le serveur, jamais de droits admin par défaut
   if (vueJoueur()) SESSION = { role: "perso", nom: joueurAdmin(), simule: true };   // vue joueur = toi, sans tes droits d'admin (jamais un autre joueur)
   else if (vraiAdmin() && !adminActif()) SESSION = { role: "perso", nom: joueurAdmin(), adminCoupe: true };
   if (D.personnes.find(p => p.nom === moiVrai())) { if (ETAT.moi !== moiVrai()) { ETAT.moi = moiVrai(); ETAT.fiche = moiVrai(); garder(); } } else if (!estAdmin() && D.personnes.find(p => p.nom === SESSION.nom)) { if (ETAT.moi !== SESSION.nom) { ETAT.moi = SESSION.nom; ETAT.fiche = SESSION.nom; garder(); } }
@@ -245,8 +245,7 @@ function afficherTout() {
   if (!ETAT.fiche || !D.personnes.find(p => p.nom === ETAT.fiche)) ETAT.fiche = ETAT.moi;
   const b = $("#bandeau");
   b.hidden = SOURCE === "api" || (SOURCE === "cache" && !ERREUR_SERVEUR);   // v17.11 (Théo) : plus de grand bandeau « hors connexion » : une pastille 📴 discrète sur « Relevé Versus »   // copie affichée au démarrage pendant la mise à jour : pas d'alerte
-  b.textContent = SOURCE === "demo" ? "Aperçu · chiffres du fichier au 29/10/2026. Ajoute l'adresse de l'API dans Réglages pour passer en direct."
-    : ERREUR_SERVEUR ? "⚠️ Le fichier a répondu par une erreur : « " + ERREUR_SERVEUR + " ». Chiffres affichés : " + (D.majTexte || "dernière copie") + "."
+  b.textContent = ERREUR_SERVEUR ? "⚠️ Le fichier a répondu par une erreur : « " + ERREUR_SERVEUR + " ». Chiffres affichés : " + (D.majTexte || "dernière copie") + "."
     : "📴 Hors connexion · " + (D.majTexte || "dernières données reçues") + ". Tout se consulte ; les saisies se font quand le réseau revient.";
   // V15.2 : pastille courte (le long texte était coupé) ; le détail reste dans l'info-bulle. « Relevé Versus · nov. 2026 » : un seul sens pour « relevé »
   { const st = $("#sous-titre"), k = typeof finGlobale === "function" ? finGlobale(D, 0) : null;
@@ -257,7 +256,7 @@ function afficherTout() {
   majRappels();
   if (SOURCE === "api") setTimeout(() => { if (typeof ereApres === "function") ereApres(verifierRevelation, "revel"); else verifierRevelation(); }, 900);   // v16.93 : la scène du premier million passe avant
   if (SOURCE === "api" && typeof verifierFeteChauffe === "function") setTimeout(() => ereApres(() => verifierFeteChauffe(false), "chauffeFete"), 1500);   // v17.49 : le vainqueur du tour de chauffe (une fois, après la révélation s'il y en a une)
-  $("#etat-source").textContent = SOURCE === "demo" ? "Source : démonstration (aucune adresse d'API)." : SOURCE === "cache" ? "Source : copie locale, l'API n'a pas répondu." : "Source : le fichier « Versus Portefeuille ».";
+  $("#etat-source").textContent = SOURCE === "cache" ? "Source : copie locale, l'API n'a pas répondu." : "Source : le fichier « Versus Portefeuille ».";
   $("#choix-moi").innerHTML = D.personnes.map(p => '<button class="chip" type="button" data-moi="' + esc(p.nom) + '" aria-pressed="' + (p.nom === ETAT.moi) + '"><i style="background:' + couleur(p.nom) + '"></i>' + esc(p.nom) + "</button>").join("");
   document.querySelectorAll("[data-moi]").forEach(x => x.addEventListener("click", () => { ETAT.moi = x.dataset.moi; ETAT.fiche = x.dataset.moi; garder(); afficherTout(); }));
   $("#bloc-moi").hidden = true;   // plus de « Je suis » : chacun est lui-même

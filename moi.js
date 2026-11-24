@@ -2571,7 +2571,11 @@ const JOUR_MS = 864e5, jours = (a, b) => (new Date(b) - new Date(a)) / JOUR_MS;
 /* v20.20 (Théo) : le gain affiché NET des 0,80 %/an de frais du contrat (au lieu des 28,5 % / +9,5 pts bruts de la brochure) */
 const netArt = i => { const x = ARTEMA.rdv[i]; return (1 + x[2]) * Math.pow(1 - ARTEMA.fgse, jours(ARTEMA.emission, x[1]) / 365.25) - 1; };
 const pasNetArt = () => (netArt(4) - netArt(0)) / 4;
-function aArtema() { return !!(M && (M.supports || []).some(r => /artema/i.test(r.nom || "") && (r.valeur || r.investi))); }
+function aArtema() {   // 24/11/2026 : c'est le serveur qui dit si Artema est suivi (artema.suivi, ligne ARTEMA des positions) ; anciens scripts : la ligne Artema des supports
+  if (!M) return false; const a = (M.parametres || {}).artema;
+  if (a && typeof a.suivi === "boolean") return a.suivi;
+  return (M.supports || []).some(r => /artema/i.test(r.nom || "") && (r.valeur || r.investi));
+}
 /** tout ce qu'il faut savoir sur ton Artema à une date (v16.8x : parts exposées, repli estimé, dernier relevé, historique des niveaux) */
 function etatArtema() {
   const row = (M.supports || []).find(r => /artema/i.test(r.nom || "")) || {}, ar = (M.parametres || {}).artema || {}, auj = isoJour(new Date());
