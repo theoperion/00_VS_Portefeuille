@@ -1,5 +1,5 @@
 /* Test (refonte des badges, Théo 24/11) · l'onglet Trophées en 3 vitrines : 🏆 Mes trophées (+ Gant de l'infini), 🔍 Les secrets (doré / argenté),
-   👑 Les couronnes ; plus de tableau « Défis » ; cérémonie dorée de la Coupe pour le premier trouveur ; aperçu sans détenteurs avant le 1/1/2027.
+   ⚔️ Les titres (🚩 Drapeau de tête, 🔥 Flamme, 🔍 Flair : rien qui ressemble au 👑 du Premier millionnaire) ; plus de tableau « Défis » ; cérémonie dorée de la Coupe pour le premier trouveur ; aperçu sans détenteurs avant le 1/1/2027.
    Fausses données uniquement (serveur Google intercepté) ; serveur local ouvert : python3 -m http.server 8771 &  puis  node outils-tests/tbadges.js
    Saison inventée au 15/03/2027 (janvier et février joués) :
    - janvier : Kévin +6 % (1er), Théo +2 %, Clément +1 %, Devlin +0,5 %, Nicolas −3 % (dernier)
@@ -48,19 +48,25 @@ const deborde = () => [...document.querySelectorAll("#v-trophees *")].filter(x =
     const r = await p.evaluate(() => { const v = document.querySelector("#v-trophees"), t = v.innerText;
       const sec = [...v.querySelectorAll(".sec-t")], dec = v.querySelector('.sec-t[data-secret="decollage"]');
       const cour = id => { const c = v.querySelector('.cour[data-cour="' + id + '"] .cour-q b'); return c ? c.textContent : null; };
-      return { vit: ["#vit-trophees", "#vit-secrets", "#vit-couronnes"].every(s => v.querySelector(s)), t, defis: !!v.querySelector(".defis-m, .tr-bloc") || /Chasseur d'indice|Six de rang|Métronome/.test(t) || /\bDéfis\b/.test(t),
+      return { vit: ["#vit-trophees", "#vit-secrets", "#vit-titres"].every(s => v.querySelector(s)), t, defis: !!v.querySelector(".defis-m, .tr-bloc") || /Chasseur d'indice|Six de rang|Métronome/.test(t) || /\bDéfis\b/.test(t),
         nSec: sec.length, nCache: v.querySelectorAll(".sec-t.cache .sil").length, decTxt: dec ? dec.innerText : "", decOuvert: dec && dec.classList.contains("ouvert"),
         gantNico: (() => { const s = [...v.querySelectorAll(".gant-autres .nmp")].find(x => /Nicolas/.test(x.textContent)); return s ? s.textContent.replace(/\s+/g, " ").trim() : ""; })(),
-        gantCalc: etatGant(2027).Nicolas.n, leader: championnat(2027).classement[0], couronne: cour("couronne"), flamme: cour("flamme"), flair: cour("flair"),
-        tropheesN: v.querySelectorAll(".tm").length, euro: /€/.test(t) }; });
+        gantCalc: etatGant(2027).Nicolas.n, leader: championnat(2027).classement[0], drapeau: cour("drapeau"), flamme: cour("flamme"), flair: cour("flair"),
+        orphelins: Object.keys(ITEMS).flatMap(sl => Object.keys(ITEMS[sl]).filter(id => BASE_ECURIE[sl] !== id && !Object.keys(origineItem(sl, id)).length).map(id => sl + "." + id)),
+        univ4: ["singapour", "interlagos", "bahrein", "melbourne"].map(u => [u, TROPHEES_MONDES.filter(t => t.univers === u).flatMap(t => t.gain).concat(SECRETS_SAISON.filter(x => x.univers === u).flatMap(x => x.bonus ? [x.bonus] : [])).map(g => g.join("."))]),
+        tropheesN: v.querySelectorAll(".tm").length, titres: (() => { const s = v.querySelector("#vit-titres"); return s ? { txt: s.textContent, svg: s.querySelectorAll(".cour-i .titre-svg").length, nav: (v.querySelector(".vit-nav") || {}).textContent || "" } : null; })(), euro: /€/.test(t) }; });
     const deb = await p.evaluate(`(${deborde})()`);
     ok(!err.length, "0 erreur JS" + tag + " " + JSON.stringify(err));
-    ok(r.vit, "les 3 vitrines s'affichent au 15/03/2027 (🏆 Mes trophées, 🔍 Les secrets, 👑 Les couronnes)" + tag);
+    ok(r.vit, "les 3 vitrines s'affichent au 15/03/2027 (🏆 Mes trophées, 🔍 Les secrets, ⚔️ Les titres)" + tag);
     ok(!r.defis, "plus de tableau « Défis » (ni les 16 anciens défis)" + tag);
     ok(r.nSec === 12 && r.nCache >= 6 && r.nCache < 12, "12 secrets visibles, cachés (silhouette) tant que personne ne les a (" + r.nCache + " cachés)" + tag);
     ok(r.decOuvert && /🥇\s*Kévin/.test(r.decTxt) && /🥈\s*Nicolas, Clément/.test(r.decTxt), "« Décollage » réussi par 3 pilotes : 1 doré (Kévin) + 2 argentés (Nicolas, Clément) " + JSON.stringify(r.decTxt) + tag);
     ok(r.gantCalc === 4 && /Nicolas 4\s*\/6/.test(r.gantNico), "le Gant de Nicolas (construit pour 4 pierres) montre 4 / 6 " + JSON.stringify(r.gantNico) + tag);
-    ok(r.couronne === r.leader && r.flamme === "Kévin" && r.flair === "Clément", "la Couronne au leader (" + r.leader + "), la Flamme à Kévin, le Flair à Clément " + JSON.stringify([r.couronne, r.flamme, r.flair]) + tag);
+    ok(r.drapeau === r.leader && r.flamme === "Kévin" && r.flair === "Clément", "le Drapeau de tête au leader (" + r.leader + "), la Flamme à Kévin, le Flair à Clément " + JSON.stringify([r.drapeau, r.flamme, r.flair]) + tag);
+    ok(r.titres && /⚔️ Les titres/.test(r.titres.txt) && /ils se volent/.test(r.titres.txt) && /Drapeau de tête/.test(r.titres.txt) && r.titres.svg === 3 && !/👑|couronne/i.test(r.titres.txt + r.titres.nav), "vitrine « ⚔️ Les titres » : 3 emblèmes dessinés (🚩 🔥 🔍), aucun 👑 ni « couronne » (réservés au Premier millionnaire)" + tag);
+    ok(!r.orphelins.length, "chaque objet de l'écurie se gagne quelque part (trophée, secret, Gant, million, vote, ticket d'or ou réserve 2028) " + JSON.stringify(r.orphelins) + tag);
+    { const U = Object.fromEntries(r.univ4), A = { singapour: ["livree.chocolat", "klaxon.ouvriers"], interlagos: ["casque.eclaireur", "trainee.cables"], bahrein: ["casque.toque", "plaque.ratatouille"], melbourne: ["livree.carte", "fond.chat"] };
+      ok(Object.keys(A).every(u => A[u].every(g => U[u].includes(g))), "les 8 nouveaux objets récompensent leur univers (Chocolaterie, Mur des titans, Petit Chef, Merveilles) " + JSON.stringify(U) + tag); }
     ok(r.tropheesN === 12, "12 trophées des mondes" + tag);
     ok(!r.euro, "aucun montant « € » dans l'onglet" + tag);
     ok(!deb.length, "390 px : rien ne déborde " + JSON.stringify(deb) + tag);
@@ -95,7 +101,7 @@ const deborde = () => [...document.querySelectorAll("#v-trophees *")].filter(x =
       return { onglet: !!v.querySelector('[data-pod="defis"]'), att: /Voici ce qui t'attend/.test(t), vit: !!v.querySelector("#vit-secrets") && !!v.querySelector(".gant"),
         detenteurs: v.querySelectorAll(".sec-t.ouvert, .cour-q b, .gant-autres, .tm .rt-dots").length, cache: v.querySelectorAll(".sec-t.cache").length, univ: v.querySelectorAll(".univ:not(.cache)").length, ecurie: !!v.querySelector('[data-pod="ecurie"]') }; });
     await p.screenshot({ path: DOSSIER + "/apercu-15-12-2026.png", fullPage: true });
-    ok(!err.length && !a.onglet && !a.vit && !a.detenteurs && !a.ecurie && !/secret|Gant de l'infini|couronne/i.test(await p.evaluate(() => document.querySelector("#v-trophees").innerText)), QD.slice(0, 10) + " : le joueur n'a ni onglet Trophées ni Écurie, rien des vitrines ne fuit avant janvier (règle de Théo) " + JSON.stringify(a));
+    ok(!err.length && !a.onglet && !a.vit && !a.detenteurs && !a.ecurie && !/secret|Gant de l'infini|titre|drapeau/i.test(await p.evaluate(() => document.querySelector("#v-trophees").innerText)), QD.slice(0, 10) + " : le joueur n'a ni onglet Trophées ni Écurie, rien des vitrines ne fuit avant janvier (règle de Théo) " + JSON.stringify(a));
     await ctx.close();
   }
   await b.close();

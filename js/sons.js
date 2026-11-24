@@ -472,10 +472,19 @@ const SONS = (() => {
   };
   function klaxon(style) {
     const c = audio(); if (!c) return;
+    if (style === "ouvriers") return fanfareOuvriers();
     const m = MEL[style] || MEL.confettis; let dt = 0;
     m.forEach(([f, d]) => { note(f, d + .1, "square", .12, dt); note(Array.isArray(f) ? f : f * 1.5, d + .1, "triangle", .1, dt); dt += d; });
   }
 
+  /** v20.46 · « Fanfare des petits ouvriers » (Chocolaterie) : une petite marche à nous, sautillante (tuba staccato, carillon qui répond, « pouet » final).
+   *  Composée ici, aucune note d'une musique de film. */
+  function fanfareOuvriers() {
+    const tuba = [[196, 0], [262, .18], [196, .36], [262, .54], [220, .72], [247, .9], [262, 1.08]];
+    tuba.forEach(([f, t]) => { note(f, .14, "sawtooth", .07, t); note(f / 2, .14, "triangle", .12, t); });
+    [[1047, .2], [1319, .38], [1568, .56], [1319, .74], [1760, .92], [2093, 1.1]].forEach(([f, t]) => note(f, .22, "sine", .06, t));
+    note([392, 523], .3, "square", .08, 1.3); note([523, 784], .35, "triangle", .1, 1.32);
+  }
   /* ---------- les événements de course (un par carte) ---------- */
   const EV = {
     pandora: () => { souffle(1.4, [300, 1800], .35, 0, .5); note([700, 1400], .5, "sawtooth", .08, .5); note([1400, 900], .4, "sawtooth", .07, 1); vibrer([60, 40, 120]); },

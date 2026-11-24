@@ -1,11 +1,11 @@
-/* Test v20.39 · se promener dans la Visite 3D zoomée (tous les circuits : moteur commun piste.js).
+/* Test v20.39 · se promener dans la Visite 3D zoomée (tous les circuits : moteur commun piste.js). (v20.46 : sur un circuit léger, le décor de Dune est trop lourd pour le navigateur de test sans carte graphique)
    Lancer depuis la racine du dépôt, serveur local ouvert : python3 -m http.server 8771 &  puis  node outils-tests/tnavig.js */
 const { chromium } = require("playwright");
 (async () => { const b = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
   const p = await (await b.newContext({ viewport: { width: 520, height: 400 } })).newPage(), err = []; p.on("pageerror", e => err.push(e.message));
   await p.setContent('<div id="b" style="width:500px;height:380px"></div>'); await p.addScriptTag({ url: "http://localhost:8771/piste.js" });
   const r = await p.evaluate(async () => { const pause = ms => new Promise(r => setTimeout(r, ms));
-    const api = Piste.monter(document.getElementById("b"), { circuit: Object.keys(Piste.TRACES)[0], mode: "3d", camera: "helico", voitures: [] });
+    const api = Piste.monter(document.getElementById("b"), { circuit: "monaco", mode: "3d", camera: "helico", voitures: [] });
     const cv = document.querySelector("#b canvas"), joy = document.querySelector("#b .p3-joy"), ev = (el, t, id, x, y) => el.dispatchEvent(new PointerEvent(t, { pointerId: id, clientX: x, clientY: y, bubbles: true }));
     await pause(300); const out = { joyLarge: joy && !joy.hidden };
     // vue d'ensemble : un doigt fait tourner (comme avant), la cible ne bouge pas

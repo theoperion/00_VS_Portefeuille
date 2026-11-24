@@ -94,7 +94,7 @@ function carteVerdict(v) {
   if (!v) return "";
   if (!v.complet) return '<div class="bref">⏳ Verdict de <b>' + esc(moisLong(v.k)) + "</b> dès que tout le monde a saisi son relevé : il manque " + v.manquent.map(n => "<b>" + esc(n) + "</b>").join(" et ") + "." +
     (moisVerdict(v.env).some(k => k < v.k) ? ' <button class="lien" type="button" data-vk="' + moisVerdict(v.env).filter(k => k < v.k).pop() + '">Voir le verdict précédent</button>' : "") + "</div>";
-  // V15.8 · le verdict en podium : marches 2-1-3, pilotes qui tombent sur leur marche, couronne pour le vainqueur ; puis les suivants et l'indice
+  // V15.8 · le verdict en podium : marches 2-1-3, pilotes qui tombent sur leur marche, médaille pour le vainqueur ; puis les suivants et l'indice
   const n = v.du.length, idxOk = v.iR !== null, nomI = esc(D.marche.indices[ETAT.i1]);
   const rangDe = x => v.du.findIndex(y => Math.abs(y.r - x.r) < 1e-9) + 1, rangDernier = rangDe(v.du[n - 1]);
   const tete = nom => (typeof avatar === "function" && saisonVisible() ? avatar(nom) : '<span class="vp-ini" style="--c:' + couleur(nom) + '">' + esc(nom.slice(0, 1)) + "</span>");

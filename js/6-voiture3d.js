@@ -13,11 +13,11 @@ function couleurCss(c) { if (!/^var\(/.test(c)) return c; const v = getComputedS
 function matiereLivree(lv, c) {
   return ({ chrome: { c: "#DCE3EA", m: 1 }, or: { c: "#E9B949", m: .95 }, oranime: { c: "#F2C452", m: 1, anim: "or" }, platine: { c: "#EEF3FA", m: .85 },
     rubis: { c: "#B0002E", m: .7 }, orrose: { c: "#E3A792", m: .9 }, neon: { c: "#0D1017", m: .2, neon: c }, arcenciel: { c: c, m: .5, anim: "arc" },
-    galaxie: { c: "#2A1458", m: .5, etoiles: true } })[lv] || { c: c, m: .45 };
+    galaxie: { c: "#2A1458", m: .5, etoiles: true }, chocolat: { c: "#5A2D14", m: .6, choco: true }, carte: { c: "#F6F2E8", m: .2, cartes: true } })[lv] || { c: c, m: .45 };
 }
 function modeleF1(nom, e) {
   const c = couleurCss(couleur(nom)), lv = matiereLivree(e.livree, c);
-  const casq = { uni: c, carbone: "#2d333d", eclair: c, damier: "#f0f0ec", tortue: "#2F8A45", chrome: "#d4dae1", etoile: "#F7CF55", holo: "#B98CFF", couronne: "#F7CF55", foudre: "#141c33", phenix: "#FF8A1F", glace: "#BFEFFC", galaxie: "#5B2A9E", empereur: "#6B2FB3" }[e.casque] || c;
+  const casq = { uni: c, carbone: "#2d333d", eclair: c, damier: "#f0f0ec", tortue: "#2F8A45", chrome: "#d4dae1", etoile: "#F7CF55", holo: "#B98CFF", couronne: "#F7CF55", foudre: "#141c33", phenix: "#FF8A1F", glace: "#BFEFFC", galaxie: "#5B2A9E", empereur: "#6B2FB3", eclaireur: "#2F6B3B", toque: "#FAFAF6" }[e.casque] || c;
   const F = [], CARB = { c: "#1C2027", m: .35 }, NOIR = { c: "#101216", m: .1 }, JANTE = { c: "#AEB6C0", m: 1 }, PEINT = lv;
   const quad = (a, b, cc, d, mat, tag) => F.push({ v: [a, b, cc, d], mat, tag });
   const tri = (a, b, cc, mat, tag) => F.push({ v: [a, b, cc], mat, tag });
@@ -117,6 +117,12 @@ function dessiner3D(ctx, W, H, mod, yaw, t, opts) {
     ctx.beginPath(); P.pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath();
     if (P.ligne) { ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 1.4; ctx.stroke(); return; }
     ctx.fill(); ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = .7; ctx.stroke();
+    // v20.46 · Carte à jouer : un cœur ou un pique au milieu des grands panneaux ; Chocolat fondant : une goutte claire qui pend
+    if ((m.cartes || m.choco) && /ponton|capot|nez|coque/.test(P.tag || "")) {
+      const cx = P.pts.reduce((a, p) => a + p[0], 0) / P.pts.length, cy = P.pts.reduce((a, p) => a + p[1], 0) / P.pts.length, r = Math.min(9, Math.max(2.5, Math.sqrt(Math.abs(aireP(P.pts))) * .22));
+      if (m.cartes && r > 3) { ctx.font = "700 " + Math.round(r * 2) + "px Georgia, serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = (Math.round(cx + cy) % 2) ? "#D62839" : "#15171B"; ctx.fillText((Math.round(cx + cy) % 2) ? "♥" : "♠", cx, cy); }
+      if (m.choco) { ctx.fillStyle = "rgba(42,18,5,.55)"; ctx.beginPath(); ctx.ellipse(cx, cy, r * .45, r * .8, 0, 0, 6.2832); ctx.fill(); ctx.fillStyle = "rgba(243,201,155,.55)"; ctx.beginPath(); ctx.ellipse(cx - r * .15, cy - r * .3, r * .12, r * .22, 0, 0, 6.2832); ctx.fill(); }
+    }
     if (m.etoiles) { ctx.fillStyle = "rgba(255,255,255,.75)"; const c0 = P.pts[0]; for (let i = 0; i < 2; i++) { const p = P.pts[(i + 1) % P.pts.length]; ctx.fillRect((c0[0] + p[0]) / 2, (c0[1] + p[1]) / 2, 1.2, 1.2); } }
     if (m.neon && (P.tag === "ponton" || P.tag === "nez" || P.tag === "aileronAv" || P.tag === "aileronAr" || P.tag === "capot")) {
       ctx.save(); ctx.shadowColor = m.neon; ctx.shadowBlur = 8; ctx.strokeStyle = m.neon; ctx.lineWidth = 1.3; ctx.stroke(); ctx.restore();
@@ -125,8 +131,10 @@ function dessiner3D(ctx, W, H, mod, yaw, t, opts) {
   // numéro sur le capot, côté visible
   const zt = tr([0, 0, 1])[2] - tr([0, 0, 0])[2], side = zt > 0 ? 1 : -1, pn = pr(tr([-.35, .5, side * .74])), nv = [0, 0, Math.abs(zt)];
   if (nv[2] > .15) { ctx.save(); ctx.font = "italic 800 " + Math.round(pn[2] * .26) + "px " + getComputedStyle(document.body).getPropertyValue("--f-display"); ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillStyle = ["chrome", "or", "oranime", "platine", "orrose"].includes(opts.livree) ? "#11151B" : "#fff"; ctx.globalAlpha = Math.min(1, nv[2] * 1.6); ctx.fillText(String(opts.numero || ""), pn[0], pn[1]); ctx.restore(); }
+    ctx.fillStyle = LIVREES_CLAIRES.includes(opts.livree) ? "#11151B" : "#fff"; ctx.globalAlpha = Math.min(1, nv[2] * 1.6); ctx.fillText(String(opts.numero || ""), pn[0], pn[1]); ctx.restore(); }
 }
+/** aire (signée) d'un polygone projeté */
+function aireP(pts) { let a = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; a += p[0] * q[1] - q[0] * p[1]; } return a / 2; }
 function normale(q) { const a = [q[1][0] - q[0][0], q[1][1] - q[0][1], q[1][2] - q[0][2]], b = [q[2][0] - q[0][0], q[2][1] - q[0][1], q[2][2] - q[0][2]]; return norm3([a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]); }
 function norm3(v) { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; }
 function dot3(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
@@ -180,6 +188,8 @@ function rendreTrophees() {
   }
   if (saisonOuverte() && !stock.get("versus.saison1")) { stock.set("versus.saison1", "1"); toast("🏁 Saison 1 : c'est parti !"); confettis("damier"); }
   majRappels();
+  // v20.47 · 🎫 tickets d'or (badges, plaque de l'Écurie) : chargés une fois à partir d'octobre 2027, puis on redessine
+  if (typeof chargerTickets === "function" && !TICKETS && Date.now() >= TICKET_MOIS.debut.getTime()) chargerTickets().then(() => { if (TICKETS && vueActive() === "trophees" && ongletPodium() !== "gp") rendreTrophees(); }).catch(() => {});
   if (!saisonOuverte() && chauffeOuverte() && !janvierAnnonce() && !apercuSaison() && !stock.get("versus.chauffe1")) { stock.set("versus.chauffe1", "1"); toast("🔥 Tour de chauffe : essaie tout, rien ne compte !"); confettis("damier"); }
 }
 
@@ -251,11 +261,12 @@ function confettis(style) {
   const hasard = l => l[Math.floor(Math.random() * l.length)];
   let ps;
   if (emo) ps = Array.from({ length: 46 }, () => ({ x: Math.random() * W, y: -20 - Math.random() * H * .6, vx: (Math.random() - .5) * 1.5, vy: 2 + Math.random() * 3, r: (Math.random() - .5) * .8, vr: (Math.random() - .5) * .06, e: hasard(emo), g: .04 }));
+  else if (style === "ouvriers") ps = Array.from({ length: 54 }, (_, i) => ({ x: Math.random() * W, y: -30 - Math.random() * H * .7, vx: (Math.random() - .5) * 1.4, vy: 2.2 + Math.random() * 2.8, r: Math.random() * 6.28, vr: (Math.random() - .5) * .12, bonbon: i % 3 ? hasard(["#E8475F", "#F2B705", "#3DB4E8", "#7ED957", "#B46CF0", "#FF8FB8"]) : null, choco: !(i % 3), g: .03 }));   // v20.46 · Fanfare des petits ouvriers
   else if (style === "meteores") ps = Array.from({ length: 26 }, (_, i) => { const v = 7 + Math.random() * 5; return { x: Math.random() * W * 1.2, y: -40 - Math.random() * H * .5, vx: -v * .55, vy: v, meteore: true, w: 2 + Math.random() * 1.8, c: Math.random() < .35 ? css("--gold") : "#FFFFFF", g: 0, retard: Math.floor(i * 3.2) }; });   // lot 55 : traînées lumineuses (fête « Météores » de Moi)
   else if (style === "feu") ps = [[.25, .32], [.5, .2], [.75, .3], [.4, .45], [.62, .42]].flatMap(([fx, fy], j) => { const col = hasard(pal); return Array.from({ length: 34 }, (_, i) => { const a = i / 34 * 6.283, v = 3 + Math.random() * 2.5; return { x: W * fx, y: H * fy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rond: true, w: 3.2, c: Math.random() < .3 ? css("--gold") : col, g: .06, retard: j * 9 }; }); });
   else ps = Array.from({ length: 110 }, () => ({ x: W / 2 + (Math.random() - .5) * W * .3, y: H * .3, vx: (Math.random() - .5) * 10, vy: -Math.random() * 10 - 4,
     r: Math.random() * 6.28, vr: (Math.random() - .5) * .3, w: style === "damier" ? 8 : 6 + Math.random() * 5, h: style === "damier" ? 8 : 3 + Math.random() * 4, c: style === "damier" ? (Math.random() < .5 ? "#111" : "#f4f4f4") : hasard(pal), g: .3 }));
-  const t0 = performance.now(), duree = emo ? 3400 : 2600;
+  const t0 = performance.now(), duree = emo || style === "ouvriers" ? 3400 : 2600;
   let f = 0;
   const pas = t => {
     const e = t - t0; x.clearRect(0, 0, W, H); f++;
@@ -264,6 +275,10 @@ function confettis(style) {
       p.vy += p.g; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r = (p.r || 0) + (p.vr || 0);
       x.save(); x.translate(p.x, p.y); x.rotate(p.r || 0); x.globalAlpha = Math.max(0, 1 - e / duree);
       if (p.meteore) { x.rotate(Math.atan2(p.vy, p.vx)); const q = x.createLinearGradient(-90, 0, 0, 0); q.addColorStop(0, "rgba(255,255,255,0)"); q.addColorStop(1, p.c); x.strokeStyle = q; x.lineWidth = p.w; x.lineCap = "round"; x.beginPath(); x.moveTo(-90, 0); x.lineTo(0, 0); x.stroke(); x.fillStyle = "#fff"; x.beginPath(); x.arc(0, 0, p.w * 1.3, 0, 6.283); x.fill(); }
+      else if (p.bonbon) { x.fillStyle = p.bonbon; x.strokeStyle = "rgba(0,0,0,.25)"; x.lineWidth = 1;
+        [-1, 1].forEach(s => { x.beginPath(); x.moveTo(s * 7, 0); x.lineTo(s * 13, -5); x.lineTo(s * 12, 0); x.lineTo(s * 13, 5); x.closePath(); x.fill(); x.stroke(); });
+        x.beginPath(); x.ellipse(0, 0, 8, 6, 0, 0, 6.2832); x.fill(); x.stroke(); x.strokeStyle = "rgba(255,255,255,.75)"; x.lineWidth = 1.6; x.beginPath(); x.moveTo(-4, -4); x.lineTo(1, 4); x.moveTo(1, -5); x.lineTo(5, 3); x.stroke(); }
+      else if (p.choco) { x.fillStyle = "#5A2D14"; x.fillRect(-9, -7, 18, 14); x.fillStyle = "#7A3F1D"; [[-8, -6], [0.5, -6], [-8, 0.5], [0.5, 0.5]].forEach(([a, b]) => x.fillRect(a, b, 7.5, 5.5)); x.fillStyle = "rgba(243,201,155,.5)"; x.fillRect(-8, -6, 7.5, 1.4); }
       else if (p.e) { x.font = "24px serif"; x.textAlign = "center"; x.fillText(p.e, 0, 0); }
       else if (p.rond) { x.fillStyle = p.c; x.beginPath(); x.arc(0, 0, p.w, 0, 6.283); x.fill(); }
       else { x.fillStyle = p.c; if (style === "damier") { x.strokeStyle = "rgba(0,0,0,.25)"; x.strokeRect(-p.w / 2, -p.h / 2, p.w, p.h); } x.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); }

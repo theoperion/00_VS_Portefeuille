@@ -2026,7 +2026,7 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .cb-rev h3 { margin: 4px 0 6px; } .cb-rev p { line-height: 1.5; } .cb-rev .btn-row { justify-content: center; }
 @media (prefers-reduced-motion: reduce) { .cb-l.flash { animation: none; } }
 
-/* Refonte des badges (Théo, 24/11) · l'onglet Trophées en 3 vitrines : mes trophées (+ le Gant), les secrets (doré / argenté), les couronnes */
+/* Refonte des badges (Théo, 24/11) · l'onglet Trophées en 3 vitrines : mes trophées (+ le Gant), les secrets (doré / argenté), les titres */
 .univ { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--ink-2); white-space: normal; max-width: 100%; }
 .univ.cache { color: var(--ink-3); font-weight: 500; }
 .vit-nav { display: flex; gap: 6px; margin: 2px 0 6px; overflow-x: auto; }
@@ -2088,12 +2088,19 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .ea-hist { color: #F7CF55 !important; font-weight: 600; }
 .bdg.ex.or { border-color: rgba(232,176,74,.7); background: rgba(232,176,74,.14); }
 .bdg.ex.arg { border-color: rgba(174,184,196,.7); background: rgba(174,184,196,.14); }
-.bdg.ex.cour { border-color: rgba(245,197,66,.8); background: rgba(245,197,66,.18); }
-/* les couronnes */
+/* les titres (v20.45) : chacun sa couleur, jamais l'or du Premier millionnaire */
+.bdg.ex.titre { border-color: #E5484D; background: rgba(229,72,77,.14); }
+.bdg.ex.titre.t-flamme { border-color: #FF7A1A; background: rgba(255,122,26,.14); }
+.bdg.ex.titre.t-flair { border-color: #2EC4B6; background: rgba(46,196,182,.14); }
 .cour-l { display: grid; gap: 8px; }
 .cour { display: grid; grid-template-columns: 40px minmax(0, 1fr) minmax(86px, auto); gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--rule); border-left: 4px solid var(--c); background: var(--panel); }
-.cour.a-moi { background: color-mix(in srgb, var(--gold) 10%, var(--panel)); }
-.cour-i { font-size: 30px; line-height: 1; text-align: center; } .cour.libre .cour-i { filter: grayscale(1) opacity(.5); }
+.cour { background-image: linear-gradient(90deg, color-mix(in srgb, var(--tc) 9%, transparent), transparent 60%); }
+.cour.a-moi { background-color: color-mix(in srgb, var(--tc) 12%, var(--panel)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tc) 45%, transparent); }
+.cour-i { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: color-mix(in srgb, var(--tc) 16%, var(--panel)); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--tc) 55%, transparent); } .cour.libre .cour-i { filter: grayscale(1) opacity(.5); }
+.titre-svg { width: 32px; height: 32px; display: block; }
+.titre-svg .ti-flotte { transform-origin: 11px 14px; animation: tiFlotte 2.6s ease-in-out infinite; } .titre-svg .ti-flamme { transform-origin: 20px 36px; animation: tiFlamme 1.4s ease-in-out infinite alternate; }
+@keyframes tiFlotte { 50% { transform: skewY(-4deg) scaleX(.96); } } @keyframes tiFlamme { to { transform: scale(1.05, .96); } }
+@media (prefers-reduced-motion: reduce) { .titre-svg .ti-flotte, .titre-svg .ti-flamme { animation: none; } }
 .cour-t { display: grid; gap: 2px; min-width: 0; } .cour-t b { font: italic 800 15px/1.1 var(--f-display); text-transform: uppercase; letter-spacing: .04em; } .cour-t small { font-size: 11.5px; line-height: 1.35; color: var(--ink-3); }
 .cour-q { display: grid; gap: 1px; justify-items: end; text-align: right; min-width: 0; } .cour-q b { color: var(--c); font: 800 15px/1.1 var(--f-text); } .cour-q small { font-size: 11px; color: var(--ink-3); }
 /* La Coupe brisée : cérémonie dorée du premier trouveur */
@@ -2114,4 +2121,73 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 }
 @keyframes cboTourne { to { transform: rotate(360deg); } }
 @keyframes cboVient { from { transform: scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
-@media (max-width: 360px) { .tm-grille, .sec-grille { grid-template-columns: minmax(0, 1fr); } .cour { grid-template-columns: 34px minmax(0, 1fr); } .cour-q { grid-column: 2; justify-items: start; text-align: left; } }
+@media (max-width: 360px) { .tm-grille, .sec-grille { grid-template-columns: minmax(0, 1fr); } .cour { grid-template-columns: 34px minmax(0, 1fr); } .cour-i { width: 34px; height: 34px; } .titre-svg { width: 28px; height: 28px; } .cour-q { grid-column: 2; justify-items: start; text-align: left; } }
+
+/* v20.46 · objets d'écurie des univers (Chocolaterie, Mur des titans, Petit Chef, Merveilles) : tout dessiné par nous */
+.lv-chocolat, .lv-carte { -webkit-background-clip: text; background-clip: text; color: transparent !important; }
+.lv-chocolat { background-image: linear-gradient(90deg, #8B4A23, #D9965B 38%, #6B3417 62%, #C98A55); }
+.lv-carte { background-image: repeating-linear-gradient(90deg, #E0303F 0 .55em, #5E6672 .55em 1.1em); }
+:root[data-theme="dark"] .lv-carte { background-image: repeating-linear-gradient(90deg, #FF5A66 0 .55em, #E8ECF2 .55em 1.1em); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .lv-carte { background-image: repeating-linear-gradient(90deg, #FF5A66 0 .55em, #E8ECF2 .55em 1.1em); } }
+/* Câbles d'acier : un filin torsadé (gris acier, torons sombres) le long de la courbe */
+.fx-cables { stroke: #AEB7C2 !important; stroke-width: 5.5; opacity: .85; stroke-dasharray: 2.4 1.4; animation: fxDefile 1.6s linear infinite; }
+.voiture .vt-gaz { animation: vtGaz 1.2s ease-out infinite; transform-box: fill-box; transform-origin: right center; }
+@keyframes vtGaz { 0% { opacity: .85; transform: scale(.7); } 100% { opacity: .2; transform: scale(1.25) translateX(-6px); } }
+/* Chat qui sourit : rayures violet et rose, deux yeux et le sourire qui apparaissent et disparaissent */
+.av-chat { background: repeating-linear-gradient(-32deg, #7B2FA8 0 3.5px, #D96BC0 3.5px 7px); box-shadow: inset 0 0 0 1.5px #4A1468, 0 0 6px rgba(217,107,192,.5); }
+.av-chat::before { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M5 24C10 34 30 34 35 24C29 29 11 29 5 24Z' fill='%23FFF6FB' stroke='%234A1468' stroke-width='1'/%3E%3Cpath d='M9 26.6V29M13 28V31M17 28.8V32M21 29V32.2M25 28.6V31.6M29 27.6V30.4' stroke='%234A1468' stroke-width='.8'/%3E%3Cellipse cx='9' cy='9' rx='3.2' ry='2.2' fill='%23F6E94B'/%3E%3Cellipse cx='31' cy='9' rx='3.2' ry='2.2' fill='%23F6E94B'/%3E%3Cpath d='M9 7.2V10.8M31 7.2V10.8' stroke='%23261033' stroke-width='1.2'/%3E%3C/svg%3E") center / 100% 100% no-repeat; animation: avChat 5s ease-in-out infinite; }
+@keyframes avChat { 0%, 100% { opacity: 1; } 45%, 60% { opacity: .1; } }
+/* Plaques émaillées : Ratatouille (plaque de rue parisienne bleue, cadre vert) et Ticket d'or (feuille d'or) */
+.plaque .pl-ico { width: 1.25em; height: 1.25em; vertical-align: -.25em; margin-right: .3em; }
+.plaque.pl-ratatouille { color: #fff; background: linear-gradient(180deg, #2A5DB0, #1B3F82); border: 1px solid #12623A; box-shadow: inset 0 0 0 1.5px #2E8B57, inset 0 0 0 2.5px #fff, 0 1px 2px rgba(0,0,0,.3); padding: 1px 7px; font-family: Georgia, serif; letter-spacing: .06em; }
+.plaque.pl-ticketor { color: #4A2C05; background: linear-gradient(110deg, #B7791F, #FFE596 30%, #F7CF55 50%, #FFF6CC 62%, #C98E22); border: 1px solid #7A4A0C; box-shadow: inset 0 1px 0 #FFF6CC, 0 0 6px rgba(247,207,85,.45); }
+@media (prefers-reduced-motion: reduce) { .fx-cables, .voiture .vt-gaz, .av-chat::before { animation: none !important; } }
+
+/* v20.47 · 🎫 Le ticket d'or : la tablette du jour (page Course de la Chocolaterie), la cérémonie, la vitrine */
+.gp-tablette { margin: 12px 0; padding: 12px 14px 14px; border-radius: 16px; border: 1px solid color-mix(in srgb, #9B2C7A 45%, var(--rule)); background: radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, #9B2C7A 14%, var(--panel)), var(--panel)); display: grid; gap: 8px; justify-items: center; text-align: center; }
+.gp-tablette .tb-h { display: grid; gap: 2px; justify-items: center; } .gp-tablette .tb-h b { font: italic 800 16px/1.1 var(--f-display); text-transform: uppercase; letter-spacing: .04em; } .gp-tablette .tb-h small { font-size: 12px; color: var(--ink-3); }
+.tb-boite { width: min(260px, 100%); filter: drop-shadow(0 6px 10px rgba(0,0,0,.25)); }
+.tb-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.tb-svg .tb-ticket { opacity: 0; }
+.gp-tablette.gagne .tb-svg .tb-ticket { opacity: 1; filter: drop-shadow(0 0 8px #F7CF55); }
+.tb-svg .tb-papier { transition: transform .9s cubic-bezier(.3,.9,.4,1), opacity .9s ease-in; transform-box: view-box; transform-origin: 110px 55px; }
+.gp-tablette.ouverte .tb-svg .tb-g { transform: translate(-70px, 18px) rotate(-16deg); opacity: 0; }
+.gp-tablette.ouverte .tb-svg .tb-d { transform: translate(70px, -12px) rotate(12deg); opacity: 0; }
+.gp-tablette:not(.ouverte) .tb-boite { animation: tbAttend 2.8s ease-in-out infinite; }
+@keyframes tbAttend { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-2deg); } 90% { transform: rotate(2deg); } 95% { transform: rotate(-1deg); } }
+.gp-tablette .tb-mot { margin: 0; font-size: 14px; line-height: 1.4; max-width: 34ch; }
+.gp-tablette.ouverte .tb-mot { font-weight: 700; }
+.gp-tablette .tb-fait, .gp-tablette .tb-mien, .gp-tablette .tb-g-l { margin: 0; font-size: 12.5px; color: var(--ink-3); } .gp-tablette .tb-mien { color: var(--ink); font-weight: 700; }
+.tk-apercu .gp-tablette { margin: 8px 0; }
+/* la cérémonie : nuit chocolat, rayons dorés, l'ascenseur de verre monte et s'ouvre sur le ticket */
+.tk-or { --panel: #1d1222; --ink: #F8F1E8; --ink-3: #C4AFC0; z-index: 97; background: radial-gradient(circle at 50% 35%, rgba(120,30,90,.9), rgba(20,8,4,.95) 72%); }
+.tk-c { position: relative; overflow: hidden; border: 2px solid #F7CF55; background: radial-gradient(80% 60% at 50% 0%, rgba(247,207,85,.3), transparent 70%), linear-gradient(180deg, #3A1A0A, #140803); box-shadow: 0 0 40px rgba(247,207,85,.35); text-align: center; }
+.tk-c > * { position: relative; } .tk-c > .cbo-rayons { position: absolute; }
+.tk-c .tuto-k { color: #F7CF55; } .tk-c h3 { color: #F7CF55; font-size: 26px; margin: 6px 0 2px; }
+.tk-scene { height: 190px; display: grid; place-items: end center; overflow: hidden; margin: 6px 0 4px; }
+.tk-cage { position: relative; width: 200px; height: 170px; }
+.tk-cable { position: absolute; left: 50%; top: -200px; width: 2px; height: 200px; background: linear-gradient(#0000, #C9D0D8); }
+.tk-verre { position: absolute; inset: 0; border-radius: 8px; border: 3px solid #C98E22; background: linear-gradient(135deg, rgba(220,240,255,.28), rgba(255,255,255,.06) 50%, rgba(220,240,255,.2)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.4), 0 0 24px rgba(247,207,85,.35); display: grid; place-items: center; overflow: hidden; }
+.tk-verre::before { content: ""; position: absolute; left: -30%; top: 0; width: 40%; height: 100%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.35), transparent); transform: skewX(-15deg); }
+.tk-p { position: absolute; top: 0; bottom: 0; width: 50%; z-index: 2; background: linear-gradient(90deg, rgba(200,230,255,.45), rgba(255,255,255,.15)); border: 1px solid rgba(247,207,85,.7); }
+.tk-pg { left: 0; } .tk-pd { right: 0; }
+.tk-ticket { width: 170px; height: auto; filter: drop-shadow(0 0 12px rgba(247,207,85,.8)); }
+.tk-obj { display: grid; gap: 4px; justify-items: center; margin: 8px 0; } .tk-obj span { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #F7CF55; }
+.tk-or:not(.reduit) .tk-cage { animation: tkMonte 1.3s cubic-bezier(.2,.8,.3,1) both; }
+.tk-or:not(.reduit) .tk-pg { animation: tkPorteG .7s ease-in 1.25s both; } .tk-or:not(.reduit) .tk-pd { animation: tkPorteD .7s ease-in 1.25s both; }
+.tk-or:not(.reduit) .tk-ticket { animation: tkTicket 1.1s cubic-bezier(.3,1.5,.5,1) 1.6s both; }
+.tk-or:not(.reduit) .cbo-rayons { animation: cboTourne 18s linear infinite; }
+.tk-or.reduit .tk-p { display: none; }
+@keyframes tkMonte { from { transform: translateY(240px); } to { transform: translateY(0); } }
+@keyframes tkPorteG { to { transform: translateX(-100%); opacity: .2; } } @keyframes tkPorteD { to { transform: translateX(100%); opacity: .2; } }
+@keyframes tkTicket { from { transform: scale(.5) rotate(-8deg); } 60% { transform: scale(1.12) rotate(3deg); } to { transform: scale(1) rotate(0); } }
+@media (prefers-reduced-motion: reduce) { .gp-tablette .tb-boite, .tk-or .tk-cage, .tk-or .tk-p, .tk-or .tk-ticket { animation: none !important; } .tb-svg .tb-papier { transition: none; } }
+/* la vitrine : 5 tickets, les gagnants en or */
+.vit-tk { margin-top: 14px; } .vit-tk h4 { margin: 0 0 8px; font: italic 800 15px/1.2 var(--f-display); text-transform: uppercase; } .vit-tk h4 small { display: block; font: 400 12px var(--f-text); text-transform: none; color: var(--ink-3); }
+.tk-l { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.tk-s { display: grid; gap: 2px; justify-items: center; padding: 8px 2px; border-radius: 8px; border: 1.5px dashed var(--rule); font-size: 11px; text-align: center; min-width: 0; color: var(--ink-3); }
+.tk-s b { font-size: 12px; color: #4A2C05; overflow: hidden; text-overflow: ellipsis; max-width: 100%; white-space: nowrap; } .tk-s .tk-n { font-weight: 800; }
+.tk-s.pris { border: 1.5px solid #7A4A0C; color: #6B430C; background: linear-gradient(120deg, #C98E22, #FFE596 35%, #F7CF55 55%, #FFF6CC 70%, #C98E22); box-shadow: 0 0 8px rgba(247,207,85,.4); }
+.tk-s.a-moi { outline: 2px solid var(--ink); outline-offset: 2px; }
+.bdg.ex.ticket { border-color: #C98E22; background: linear-gradient(120deg, rgba(247,207,85,.35), rgba(255,246,204,.5)); }
+.tk-emp { font-size: 10.5px; word-break: break-all; }
