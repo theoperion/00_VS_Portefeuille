@@ -482,7 +482,7 @@ function tracer(box, conf) {
     const x = X(i);
     cross.setAttribute("x1", x); cross.setAttribute("x2", x); cross.setAttribute("visibility", "visible");
     dots.innerHTML = conf.series.filter(s => ok(s.v[i])).map(s => '<circle cx="' + x.toFixed(1) + '" cy="' + Y(s.v[i]).toFixed(1) + '" r="4" fill="' + C(s.c) + '" stroke="' + C("var(--panel)") + '" stroke-width="2"/>').join("");
-    const lignes = conf.series.filter(s => ok(s.v[i])).sort((a, b) => b.v[i] - a.v[i]);
+    const lignes = conf.series.filter(s => ok(s.v[i])).sort((a, b) => b.v[i] - a.v[i] || (conf.rangX ? conf.rangX(xs[i], a.nom) - conf.rangX(xs[i], b.nom) : 0));   // v20.23 : ex æquo dans l'ordre officiel (option)
     tip.hidden = false;
     const note = conf.noteX ? conf.noteX(xs[i]) : "";   // v20.23 · une phrase facultative sous le titre (courbe du championnat : qui passe en tête)
     tip.innerHTML = "<b>" + esc(conf.titreX(xs[i])) + "</b>" + (note ? '<div class="tip-note">' + esc(note) + "</div>" : "") + lignes.map(s => '<div class="row" style="--c:' + C(s.c) + '"><span>' + esc(s.nom) + "</span><span>" + conf.fmt(s.v[i]) + "</span></div>").join("");

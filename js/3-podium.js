@@ -908,11 +908,17 @@ function dessinerChampionnat(y) {
   const box = $("#g-champ"); if (!box) return;
   const c = championnat(y), ks = [c.deb].concat(c.mois.map(m => m.k));
   tracer(box, { x: ks, series: c.classement.map(n => ({ nom: n, v: [0].concat(c.mois.map(m => m.cumul[n] !== undefined ? m.cumul[n] : null)), c: couleur(n), w: n === c.classement[0] && c.mois.length ? 3.6 : n === ETAT.moi ? 2.8 : 2, lead: n === c.classement[0] && c.mois.length > 0, fx: equipDe(n).trainee })),
-    finEtiq: true, h: 190, fmt: x => x + " pts", fmtAxe: t => Number.isInteger(t) ? String(t) : "", titreX: k => k === c.deb ? "Départ" : "Fin " + moisCourt(k), noteX: k => noteTete(c, k) });
+    finEtiq: true, h: 190, fmt: x => x + " pts", fmtAxe: t => Number.isInteger(t) ? String(t) : "", titreX: k => k === c.deb ? "Départ" : "Fin " + moisCourt(k), noteX: k => noteTete(c, k), rangX: (k, n) => rangMois(c, k, n) });
 }
 /* v20.23 (idée de Théo du 20/11, avis de l'agent jeu-avocat-du-diable) · la courbe raconte : le mois où le leader change, la bulle le dit.
    Leader = 1re place officielle du mois (même départage que le Classement : points, victoires, performance cumulée) ; le dernier mois d'une
    saison complète suit le classement final (bonus de fin de saison compris). Rien les autres mois. */
+/** place officielle d'un pilote à la fin du mois k (dernier mois d'une saison complète : classement final, bonus compris) ; sert à ranger les ex æquo dans la bulle */
+function rangMois(c, k, n) {
+  const i = c.mois.findIndex(m => m.k === k); if (i < 0) return 99;
+  if (i === c.mois.length - 1 && c.complete && !c.chauffe) { const r = c.classement.indexOf(n); return r < 0 ? 99 : r + 1; }
+  return c.mois[i].places[n] || 99;
+}
 function noteTete(c, k) {
   const i = c.mois.findIndex(m => m.k === k); if (i < 0) return "";
   if (c.chauffe) { const p = premiersChauffe(c); if (i !== 0 || !p.length) return "";   // tour de chauffe : pas de départage (relecture jeu-arbitre)
