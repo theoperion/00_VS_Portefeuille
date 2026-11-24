@@ -9591,7 +9591,8 @@
       if (!calme && I.dernier) { I.ft = I.ft * .92 + (now - I.dernier) * .08; if (I.ft > 26 && I.q > 1) { if (++I.lents > 40) { I.q = Math.max(1, I.q - .25); I.lents = 0; I.ft = 16; redim(); } } else I.lents = 0; }
       I.dernier = now;
       // animation des points
-      if (I.anim) {
+      if (I.anim && I.suspendu) V.forEach(x => { x.vit = lisse(x.vit, 0, .1); });   // ⏸ course en pause : les voitures restent où elles sont
+      else if (I.anim) {
         const a = I.anim, e = clamp((now - a.t0) / a.duree, 0, 1), k = e < .5 ? 2 * e * e : 1 - Math.pow(-2 * e + 2, 2) / 2;
         if (a.feux) { const f = (now - a.t00) / 1000; I.feuxDepart = f < 3.2 ? Math.floor(f / .6) + 1 : f < 4 ? 6 : -1; }
         if (a.scen) I.pts = a.scen(e); else Object.keys(a.a).forEach(n => { I.pts[n] = (a.de[n] || 0) + ((a.a[n] || 0) - (a.de[n] || 0)) * k; });   // v16.28 : scénario de course (3 tours)
@@ -9604,7 +9605,7 @@
       dessiner(t, dt);
       if (o.image) o.image(api);
       // cadence : 60 i/s en mouvement, 30 au repos, rien quand tout est calme
-      const bouge = I.anim || I.survol || I.tir || I.joy || I.enRoute || I.artifice.length || (I.inactif < 40 && (nbP || A.eclairs || (ANIM() && I.mode !== "bord")));
+      const bouge = (I.anim && !I.suspendu) || I.survol || I.tir || I.joy || I.enRoute || I.artifice.length || (I.inactif < 40 && (nbP || A.eclairs || (ANIM() && I.mode !== "bord")));
       I.inactif += dt; if (I.anim || I.tir || I.joy) I.inactif = 0; majJoy();
       if (I.actif && bouge && document.visibilityState !== "hidden") raf = requestAnimationFrame(image); else I.endormi = true;
     }
@@ -9683,22 +9684,26 @@
     ecoute("webglcontextlost", e => { e.preventDefault(); if (I.detruit) return; I.actif = false; if (o.perdu) o.perdu(); });
     const api = {
       type: "3d", T, zones: Z, stats: () => ({ sol: B.sol.n, piste: B.piste.n, ov: B.solOv.n + B.pisteOv.n, eau: B.eau ? B.eau.n : 0, lum: LUM.length, tConstr: I.tConstr }),
-      placer(pts) { I.anim = null; I.pts = Object.assign({}, pts); placer(true); I.feuxDepart = -1; reveiller(); },
+      placer(pts) { I.anim = null; I.suspendu = null; I.pts = Object.assign({}, pts); placer(true); I.feuxDepart = -1; reveiller(); },
       regler(x) { Object.assign(o, x); },
       pause(b) { I.pause = !!b; if (!b) reveiller(); },
+      /** course : ⏸ suspendre (true) / ▶ reprendre (false) là où elle en était (l'horloge de l'animation est décalée du temps passé en pause) */
+      suspendre(b) { if (!I.anim) { I.suspendu = null; return; } if (b && !I.suspendu) I.suspendu = performance.now();
+        else if (!b && I.suspendu) { const d = performance.now() - I.suspendu; I.anim.t0 += d; I.anim.t00 += d; I.suspendu = null; } reveiller(); },
+      suspendu: () => !!(I.anim && I.suspendu),
       /** v16.28 · course scénarisée : scen(e) → distances (en tours) de chaque voiture, e de 0 à 1 */
       jouerScenario(scen, duree, fin, depart) {
         if (!ANIM()) { api.placer(scen(1)); if (fin) fin(); return; }
         I.pts = scen(0); placer(true); V.forEach(x => x.hist = []);
         const now = performance.now(), dl = depart ? 3200 : 0;
-        I.anim = { scen, de: scen(0), a: scen(1), t0: now + dl, t00: now, duree, fin, feux: !!depart };
+        I.suspendu = null; I.anim = { scen, de: scen(0), a: scen(1), t0: now + dl, t00: now, duree, fin, feux: !!depart };
         if (depart) I.feuxDepart = 0; I.saut = I.mode !== "helico"; reveiller();
       },   // V16.17 : la 3D se met en pause sous la bande-annonce
       jouer(de, a, duree, fin, depart) {
         if (!ANIM()) { api.placer(a); if (fin) fin(); return; }   // V16.17 : « animations réduites » respecté en 3D comme en 2D
         I.pts = Object.assign({}, de); placer(true); V.forEach(x => x.hist = []);
         const now = performance.now(), dl = depart ? 3200 : 0;
-        I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: now + dl, t00: now, duree: duree || 5200, fin, feux: !!depart };
+        I.suspendu = null; I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: now + dl, t00: now, duree: duree || 5200, fin, feux: !!depart };
         if (depart) I.feuxDepart = 0; I.saut = I.mode !== "helico"; reveiller();
       },
       camera(m) { I.saut = m === "poursuite" && I.mode !== m; if (I.saut) I.orbite = 0; I.mode = m; I.zoom = 1; I.incl = .72; I.pan = [0, 0]; reveiller(); },
@@ -10199,7 +10204,7 @@
       if (o.image) o.image(api);
     }
     function boucle(now) {
-      raf = 0; if (!svg.isConnected) return; const a = I.anim; if (!a) return;
+      raf = 0; if (!svg.isConnected) return; const a = I.anim; if (!a || I.suspendu) return;
       const e = clamp((now - a.t0) / a.duree, 0, 1), k = e < .5 ? 2 * e * e : 1 - Math.pow(-2 * e + 2, 2) / 2;
       I.e = e; if (a.scen) { I.pts = a.scen(e); if (EV && EV.permuter) try { EV.permuter(e, I.pts); } catch (er) { } } else Object.keys(a.a).forEach(n => I.pts[n] = (a.de[n] || 0) + ((a.a[n] || 0) - (a.de[n] || 0)) * k); poser();
       if (e < 1) raf = requestAnimationFrame(boucle); else { I.anim = null; if (a.fin) a.fin(); }
@@ -10239,11 +10244,14 @@
     const ro = window.ResizeObserver ? new ResizeObserver(() => { const r = boite.getBoundingClientRect(); taille = { w: r.width, h: r.height }; if (o.image) o.image(api); }) : null; if (ro) ro.observe(boite);
     const api = {
       type: "2d", T, zones: Z,
-      placer(pts) { I.anim = null; I.pts = Object.assign({}, pts); poser(); },
+      placer(pts) { I.anim = null; I.suspendu = null; I.pts = Object.assign({}, pts); poser(); },
       regler(x) { Object.assign(o, x); },
-      jouer(de, a, duree, fin) { if (!ANIM()) { api.placer(a); if (fin) fin(); return; } I.pts = Object.assign({}, de); poser(); I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: performance.now(), duree: Math.min(duree || 2600, 3200), fin }; if (!raf) raf = requestAnimationFrame(boucle); },
-      jouerScenario(scen, duree, fin) { if (EV && EV.raz) EV.raz(); if (!ANIM()) { api.placer(scen(1)); if (fin) fin(); return; } I.e = 0; I.pts = scen(0); poser(); I.anim = { scen, de: scen(0), a: scen(1), t0: performance.now(), duree, fin }; if (!raf) raf = requestAnimationFrame(boucle); },
-      camera() { }, focus() { }, voitures() { }, survol(d, fin) { if (fin) fin(); }, arreterSurvol() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); if (o.image) o.image(api); }, reveiller() { if (I.anim && !raf) raf = requestAnimationFrame(boucle); },   // V16.16 : la course reprend si la piste a été détachée
+      suspendre(b) { if (!I.anim) { I.suspendu = null; return; } if (b && !I.suspendu) { I.suspendu = performance.now(); if (raf) { cancelAnimationFrame(raf); raf = 0; } }
+        else if (!b && I.suspendu) { I.anim.t0 += performance.now() - I.suspendu; I.suspendu = null; if (!raf) raf = requestAnimationFrame(boucle); } },
+      suspendu: () => !!(I.anim && I.suspendu),
+      jouer(de, a, duree, fin) { if (!ANIM()) { api.placer(a); if (fin) fin(); return; } I.suspendu = null; I.pts = Object.assign({}, de); poser(); I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: performance.now(), duree: Math.min(duree || 2600, 3200), fin }; if (!raf) raf = requestAnimationFrame(boucle); },
+      jouerScenario(scen, duree, fin) { if (EV && EV.raz) EV.raz(); if (!ANIM()) { api.placer(scen(1)); if (fin) fin(); return; } I.suspendu = null; I.e = 0; I.pts = scen(0); poser(); I.anim = { scen, de: scen(0), a: scen(1), t0: performance.now(), duree, fin }; if (!raf) raf = requestAnimationFrame(boucle); },
+      camera() { }, focus() { }, voitures() { }, survol(d, fin) { if (fin) fin(); }, arreterSurvol() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); if (o.image) o.image(api); }, reveiller() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); },   // V16.16 : la course reprend si la piste a été détachée
       /** v17.10 · zoom et déplacement de la carte (plein écran) : true pour l'activer, false pour l'arrêter et recentrer */
       zoom2D(b) { ZM.on = !!b; svg.style.touchAction = b ? "none" : ""; svg.classList.toggle("zoomable", ZM.on); if (!b) recentrer(); },
       detruire() { if (raf) cancelAnimationFrame(raf); if (ZM.raf) cancelAnimationFrame(ZM.raf); if (ro) ro.disconnect(); svg.remove(); rec.remove(); }

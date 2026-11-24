@@ -98,6 +98,7 @@ async function poserCarte(y, k, carte, cible) {
 
 /* ---------- Météo : tirée de l'indice du mois ---------- */
 function meteoMois(k) {
+  const dv = k ? directGP(k) : null; if (dv && dv.j >= 1 && !dv.fini) return meteoDirect(dv.r);   // v20.48 : mois en cours = le S&P depuis le 1er
   const r = k ? indiceMois(k) : null;
   if (r === null) return { id: "beau", ico: "🌤️", nom: "Beau temps", txt: "Départ sous un ciel dégagé." };
   const idx = D.marche.indices[iRef()], t = idx + " " + pct(r);
@@ -107,6 +108,78 @@ function meteoMois(k) {
   return { id: "orage", ico: "⛈️", nom: "Orage", txt: t + " : déluge sur le circuit, accrochez-vous." };
 }
 
+/* ---------- v20.48 (Théo) · LA COURSE EN DIRECT pendant le mois (avant les résultats) : seulement le tour 1.
+   Le peloton part dans l'ordre de la grille (classement d'avant le mois ; janvier 2027 : le tour de chauffe), à écart FIXE (aucune info sur les %).
+   Avancement du peloton (en tours, 0 = ligne de départ, 1 = ligne d'arrivée) au jour d du mois (N jours) :
+     brut(d) = d/N + DIRECT_AMPL × m(d) × sin(π·d/N), m(d) = S&P 500 depuis le 1er au soir du jour d / DIRECT_SP, borné à [−1, 1] ;
+     brut plafonné à 0,97 avant le dernier jour ; le dernier jour = 1 (ligne d'arrivée).
+     avance(j) = max(brut(1), …, brut(j)) : JAMAIS de recul d'un jour à l'autre.
+   Source du S&P : les clôtures quotidiennes envoyées à tous (D.marchesMoi.quot, série « S&P 500 ») + la séance du jour (D.marchesMoi.jour) ;
+   sans clôtures : D.marche (mois en cours) ; sans rien : le peloton avance avec les jours seulement. Aucun point n'en dépend. ---------- */
+const DIRECT_AMPL = .12, DIRECT_SP = .04, DIRECT_ECART = .04;
+function closSP() {
+  const m = typeof D !== "undefined" && D && D.marchesMoi, q = m && m.quot; if (!q || !q.d || !q.s) return null;
+  const s = q.s.find(x => /S&P\s*500/i.test(x.nom)); if (!s) return null; const l = [];
+  q.d.forEach((d, i) => { const v = s.v[i]; if (v > 0) l.push([+d, v]); });
+  const j = (m.jour || []).find(x => /S&P\s*500/i.test(x.nom)), mh = j && typeof j.pct === "number" && /^(\d{2})\/(\d{2})/.exec(j.heure || "");   // la séance du jour (en direct)
+  if (mh && l.length) { const a = new Date(), y = +mh[2] > a.getMonth() + 1 ? a.getFullYear() - 1 : a.getFullYear(), dj = y * 10000 + +mh[2] * 100 + +mh[1], av = l.filter(x => x[0] < dj).pop();
+    if (av && !l.some(x => x[0] === dj)) { l.push([dj, av[1] * (1 + j.pct)]); l.sort((a, b) => a[0] - b[0]); } }
+  return l.length ? l : null;
+}
+/** S&P 500 depuis le 1er du mois k, au soir du jour d (null = inconnu) */
+function spAuJour(k, d, L) {
+  if (L) { const d0 = k * 100, ref = L.filter(x => x[0] <= d0).pop(), cur = L.filter(x => x[0] <= d0 + d).pop(); if (ref) return cur && cur[0] > d0 ? cur[1] / ref[1] - 1 : 0; }
+  const a = new Date(), kAuj = a.getFullYear() * 100 + a.getMonth() + 1, r = k === kAuj ? indiceMois(k) : null; return ok(r) ? r : null;   // repli : D.marche (mois en cours)
+}
+let MEMO_DIRECT = { d: null, cle: "", v: null };
+/** { j (jour, 0 = mois pas commencé, N+1 = mois fini), N, f (avance du peloton en tours), r (S&P depuis le 1er), fini } */
+function directGP(k) {
+  if (!k) return null; const a = new Date(), kAuj = a.getFullYear() * 100 + a.getMonth() + 1, N = new Date(Math.floor(k / 100), k % 100, 0).getDate();
+  const j = kAuj < k ? 0 : kAuj > k ? N + 1 : a.getDate(), cle = k + "|" + j + "|" + (typeof D !== "undefined" && D ? D.genere : "");
+  if (MEMO_DIRECT.d === D && MEMO_DIRECT.cle === cle) return MEMO_DIRECT.v;
+  const L = closSP(); let f = 0, r = null;
+  for (let d = 1; d <= Math.min(j, N); d++) { r = spAuJour(k, d, L); const m = r === null ? 0 : clampN(r / DIRECT_SP, -1, 1);
+    f = Math.max(f, d >= N ? 1 : clampN(d / N + DIRECT_AMPL * m * Math.sin(Math.PI * d / N), 0, .97)); }
+  const v = { j, N, f, r, fini: j > N }; MEMO_DIRECT = { d: D, cle, v }; return v;
+}
+function meteoDirect(r) {
+  const idx = D.marche.indices[iRef()] || "S&P 500", t = idx + " " + pct(r) + " depuis le 1er";
+  if (r === null) return { id: "beau", ico: "🌤️", nom: "Beau temps", txt: "Le peloton avance avec les jours du mois." };
+  if (r >= 0.015) return { id: "soleil", ico: "☀️", nom: "Grand soleil", txt: t + " : le peloton prend de l'avance." };
+  if (r >= 0) return { id: "beau", ico: "🌤️", nom: "Beau temps", txt: t + " : le peloton roule un peu devant." };
+  if (r > -0.03) return { id: "pluie", ico: "🌧️", nom: "Pluie", txt: t + " : piste glissante, le peloton ralentit." };
+  return { id: "orage", ico: "⛈️", nom: "Orage", txt: t + " : déluge, le peloton prend du retard." };
+}
+/** la manche i se court-elle en direct (mois en cours, résultats pas connus) ? → { dv, grille, pts } ou null */
+function courseDirect(etapes, i, kGP) {
+  const et = etapes[i]; if (!et || et.m || i !== etapes.length - 1 || apercuSaison()) return null;
+  const dv = directGP(kGP); if (!dv || dv.j < 1) return null;
+  const grille = mancheGP(etapes, i, kGP).grille, pts = {}; grille.forEach((n, r) => { pts[n] = dv.f - r * DIRECT_ECART; });
+  const dep = {}; grille.forEach((n, r) => { dep[n] = -r * DIRECT_ECART; });
+  return { dv, grille, pts, dep };
+}
+/** v20.48 · le bandeau de sous-titres SOUS le dessin : à gauche le tour (ou « Direct »), à droite une ligne de commentaire, les bulles de points, ou l'état de la manche */
+function bandeauST(y, et, i, kGP, dir, met, mc0) {
+  let tour = "", info = "";
+  if (dir) { tour = '<i class="gp-live" aria-hidden="true"></i>Direct · Tour <b>1</b>/' + TOURS_GP;
+    info = dir.dv.fini ? "🏁 Le mois est fini : le peloton attend sur la ligne. Le tour 2 se court dès que tous les relevés sont là." : met.ico + " Jour " + dir.dv.j + "/" + dir.dv.N + " · " + met.txt; }
+  else if (!et.m) { tour = "Sur la grille"; info = "🚦 Départ le 1<sup>er</sup> " + esc(moisLong(kGP).replace(/ \d{4}$/, "")) + " : le peloton avancera avec les jours du mois."; }
+  else info = "🏁 Course courue · ▶ Rejouer pour la revoir.";
+  return '<div class="gp-st"><span class="gp-tour">' + tour + '</span><div class="gp-st-l"><div class="gp-com" aria-live="polite"></div><div class="gp-pops"></div><div class="gp-st-info">' + (/<sup>/.test(info) ? info : esc(info)) + "</div></div></div>";
+}
+/** 📐 le schéma de la course (sous la piste et dans les règles) : 4 étapes dessinées, une phrase courte chacune */
+function svgSchemaCourse() {
+  const voit = (x, y, c, n) => '<g transform="translate(' + x + " " + y + ')"><circle r="7" fill="' + c + '" stroke="#fff" stroke-width="1.5"/><text y="3" text-anchor="middle" class="sc-n">' + n + "</text></g>";
+  const C = ["#E5484D", "#3E8BFF", "#F2B33D", "#3DDC97", "#B4E33D"], route = '<path d="M8 46H112" class="sc-route"/>', ligne = x => '<g class="sc-ligne"><rect x="' + x + '" y="34" width="4" height="24"/></g>';
+  const e = [
+    ['<svg viewBox="0 0 120 64" aria-hidden="true">' + route + ligne(96) + voit(84, 40, C[0], 1) + voit(70, 52, C[1], 2) + voit(56, 40, C[2], 3) + voit(42, 52, C[3], 4) + '<text x="60" y="18" text-anchor="middle" class="sc-t">🚦</text></svg>', "La grille : l'ordre du classement d'avant le mois."],
+    ['<svg viewBox="0 0 120 64" aria-hidden="true">' + route + '<rect x="30" y="4" width="28" height="22" rx="4" class="sc-cal"/><text x="44" y="20" text-anchor="middle" class="sc-tc">10</text><path d="M64 15H88" class="sc-fl" marker-end="url(#scf)"/>' + voit(98, 46, C[0], 1) + voit(84, 46, C[1], 2) + voit(70, 46, C[2], 3) + voit(56, 46, C[3], 4) + "</svg>", "Chaque jour du mois, le peloton avance (au dernier jour : la ligne)."],
+    ['<svg viewBox="0 0 120 64" aria-hidden="true"><text x="22" y="22" text-anchor="middle" class="sc-t">☀️</text><text x="22" y="40" text-anchor="middle" class="sc-up">S&amp;P ↑</text><text x="22" y="56" text-anchor="middle" class="sc-p">en avance</text><text x="90" y="22" text-anchor="middle" class="sc-t">🌧️</text><text x="90" y="40" text-anchor="middle" class="sc-down">S&amp;P ↓</text><text x="90" y="56" text-anchor="middle" class="sc-p">en retard</text><path d="M56 8V58" class="sc-sep"/></svg>', "Le S&P 500 du mois : il pousse ou freine tout le monde (jamais de recul)."],
+    ['<svg viewBox="0 0 120 64" aria-hidden="true">' + route + ligne(96) + '<text x="98" y="26" text-anchor="middle" class="sc-t">🏁</text>' + voit(108, 46, C[2], 1) + voit(86, 40, C[0], 2) + voit(72, 52, C[3], 3) + voit(56, 46, C[1], 4) + "</svg>", "Mois clos : tour 2, l'ordre des vraies performances."]
+  ];
+  return '<ol class="gp-schema-l"><svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><marker id="scf" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L8 4L0 8Z" class="sc-fm"/></marker></defs></svg>' +
+    e.map((x, k) => '<li><span class="sc-k">' + (k + 1) + "</span>" + x[0] + "<p>" + esc(x[1]) + "</p></li>").join("") + "</ol>";
+}
 /* ---------- Grands Prix : un circuit à thème par mois (le dessin 3D / 2D est dans piste.js) ---------- */
 const GPS = {
   abudhabi: { gp: "L'Atelier du Père Noël", ville: "Atelier du Père Noël", drap: "🎅", fx: "garage", txt: "Là où les lutins montent les voitures de 2027, sous la neige et les guirlandes : le tour de chauffe." },
@@ -236,6 +309,13 @@ function grilleSansClassement(k, noms) {
     return { avant, de: "novembre" };
   }
   if (k === SAISON.premiere * 100 + 1) {
+    // v20.48 (Théo) : janvier 2027 part dans l'ordre du tour de chauffe de décembre (tant qu'il n'est pas connu : sa grille, novembre) ; absents derrière, par ordre alphabétique
+    const zero = Object.fromEntries(noms.map(n => [n, 0])), alpha = (a, b) => a.localeCompare(b, "fr");
+    if (estChauffe(SAISON.premiere - 1)) {
+      const ch = championnat(SAISON.premiere - 1); let tete = ch.complete ? ch.classement.filter(n => noms.includes(n)) : [], de = "chauffe";
+      if (!tete.length) { const g = grilleSansClassement(CHAUFFE_K, noms); if (g) { tete = noms.filter(n => g.avant[n] >= 0).sort((a, b) => g.avant[b] - g.avant[a] || noms.indexOf(a) - noms.indexOf(b)); de = "chauffe-grille"; } }
+      if (tete.length) return { avant: zero, ordre: tete.concat(noms.filter(n => !tete.includes(n)).sort(alpha)), de };
+    }
     const l = noms.slice().sort(); let h = 2166136261; for (const ch of k + "|" + l.join("|")) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
     const alea = () => { h = h + 0x6D2B79F5 >>> 0; let t = h; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };   // mulberry32
     for (let j = l.length - 1; j > 0; j--) { const r = Math.floor(alea() * (j + 1)); [l[j], l[r]] = [l[r], l[j]]; }
@@ -285,23 +365,24 @@ function htmlGrandPrix(y) {
   const etapes = etapesGP(y), c = championnat(y);
   const i = GP_ETAPE !== null && GP_ETAPE < etapes.length ? GP_ETAPE : etapeParDefaut(etapes, y), et = etapes[i];
   const qui = quiEcurie(), kGP = et.k || (c.chauffe ? CHAUFFE_K : y * 100 + 1), ci = circuitDe(kGP), G = GPS[ci], at = atoutsVus(kGP);
-  const met = meteoMois(et.k), spe = et.k ? moisSpecial(y, et.k) : null, pgm = et.m && et.m.piege ? et.m.piege : null;
+  const met = meteoMois(et.k || (!et.m ? kGP : null)), spe = et.k ? moisSpecial(y, et.k) : null, pgm = et.m && et.m.piege ? et.m.piege : null;
   const mc0 = !et.m ? mancheGP(etapes, i, kGP) : null, ordre = mc0 && mc0.grilleDe ? mc0.grille : Object.keys(et.pts).sort((a, b) => et.pts[b] - et.pts[a] || (c.tot[b] ? c.tot[b].v : 0) - (c.tot[a] ? c.tot[a].v : 0));   // v17.10 : sur la grille, l'ordre de départ (novembre pour la chauffe, tirage en janvier)
   const tete = ordre[0], tourTete = Math.floor((et.pts[tete] || 0) / TOUR_GP) + 1;
   const deux = ETAT.gp2d !== "0" || !piste3D(), cam = camGP();   // V16.58 : la 2D par défaut
   const v2 = vuesV2(ci), vue = vueGP(ci), suivi = v2 ? suiviGP() : null;   // v17.6
+  const dir = courseDirect(etapes, i, kGP), stH = v2 ? bandeauST(y, et, i, kGP, dir, met, mc0) : "";   // v20.48 : course en direct + sous-titres sous le dessin
   // v17.6 · la piste « V2 » ne garde AUCUN bouton sur l'image : vue, plein écran et « ⋯ » (bande-annonce, arrivée, survol) passent juste en dessous
   const menuV2 = '<div class="gp-outils"><button class="gp-son-b" type="button" data-son aria-label="Couper le son">🔊</button>' + '<details class="gp-plus"><summary aria-label="Plus d\'options">⋯</summary><div class="gp-plus-m">' + (piste3D() ? '<button type="button" class="gp-survol-b" id="gp-survol">🛸 Survol guidé</button>' : "") +   // v17.10 : toujours utilisable (passe tout seul en 📺 Visite)
-    '<button type="button" id="gp-ba">🎬 Bande-annonce</button><button type="button" id="gp-fin">⏭ Aller à l\'arrivée</button></div></details></div>';   // v17.48 : le petit 🔊/🔇 à côté de « ⋯ »
+    '<button type="button" id="gp-ba">🎬 Bande-annonce</button><button type="button" id="gp-fin">⏭ Aller à l\'arrivée</button><button type="button" id="gp-photo">📷 Mode photo</button></div></details></div>';   // v17.48 : le petit 🔊/🔇 à côté de « ⋯ »
   const suiviH = v2 && !deux ? '<div class="gp-suivi" role="group" aria-label="Voiture suivie">' + ordre.map(n => '<button type="button" data-suivre="' + esc(n) + '" style="--c:' + couleur(n) + '" aria-pressed="' + (n === suivi) + '" aria-label="Suivre ' + esc(n) + '">' + avatar(n) + "</button>").join("") + "</div>" : "";
   const fondCuit = (() => { try { const k = (Piste.TRACES[ci] || {}).peint, c = self.CARTES_CUITES; if (!k || !c || !c[k]) return ""; const u = "img/cartes/" + k + ".webp?v=" + c[k];
     if (!(PRECHARGE_CARTES[u])) { const im = new Image(); im.src = u; try { im.decode().catch(() => { }); } catch (e) { } PRECHARGE_CARTES[u] = im; }   // v17.32 : image gardée décodée en mémoire
     return u; } catch (e) { return ""; } })();
   const piste = '<div class="gp-piste' + (deux ? " en2d" : "") + (v2 ? " v2 vue-" + vue : "") + '" id="gp-piste" data-circuit="' + ci + '"><div class="gp-scene" id="gp-scene"' + (deux && fondCuit ? ' style="background:#0B0D12 url(\'' + fondCuit + '\') center/cover no-repeat"' : "") + '></div>' +   // v17.32 (Théo) : plus de flash noir en revenant à la carte 2D
-    '<div class="gp-zones">' + (at ? '<span class="gp-zone at" data-zone="atout">' + at.atout.ico + ' <b>+1</b></span>' : "") + "</div>" +
+    (v2 ? "" : '<div class="gp-zones">' + (at ? '<span class="gp-zone at" data-zone="atout">' + at.atout.ico + ' <b>+1</b></span>' : "") + "</div>") +   // v20.48 : plus d'étiquette d'atout posée sur le dessin (l'atout est écrit sous le titre)
     '<div class="gp-tags3">' + ordre.map(n => '<span class="gp-t3' + (n === qui ? " ici" : "") + '" data-gpt3="' + esc(n) + '" style="--c:' + couleur(n) + '" title="' + esc(n) + '">' + avatar(n) + '<i class="gp-rg"></i></span>').join("") + "</div>" +
-    '<div class="gp-pops"></div><div class="gp-com" aria-live="polite"></div>' + fxCircuit(G.fx) +
-    (v2 ? '<div class="gp-hud"><span class="gp-tour"></span></div>' :   // v17.6 : « Sur la grille » et la météo sont déjà dans le titre ; il ne reste que « Tour 1/2 » pendant la course
+    (v2 ? "" : '<div class="gp-pops"></div><div class="gp-com" aria-live="polite"></div>') + fxCircuit(G.fx) +
+    (v2 ? stH :   // v20.48 (Théo) : aucun texte posé sur le dessin : tour, commentaires et bulles passent en sous-titres, dans un bandeau sous la course   // v17.6 : « Sur la grille » et la météo sont déjà dans le titre ; il ne reste que « Tour 1/2 » pendant la course
     '<div class="gp-hud"><span class="gp-tour">' + (et.k && !et.avenir ? "Manche <b>" + i + "</b>" : "Sur la grille") + "</span><span>" + met.ico + " " + esc(met.nom) + "</span></div>") +
     (v2 ? "" : '<div class="gp-btns">' +
     '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en vue hélico 3D" : "Revenir à la carte 2D") + '">' + (deux ? "🚁 Hélico 3D" : "🗺️ Carte 2D") + '</button><button class="gp-vue gp-son" type="button" data-son aria-label="Son">🔇</button>' + (deux ? "" : '<button class="gp-vue" type="button" id="gp-survol" aria-label="Visite guidée">🎬 Survol</button>') + '<button class="gp-vue" type="button" id="gp-ba" aria-label="Bande-annonce">' + icoOu("bandeannonce", "🎬") + '</button><button class="gp-vue" type="button" id="gp-fin" aria-label="Aller directement à la fin de la course">' + icoOu("arrivee", "⏭") + '</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">' + icoOu("pleinecran", "⛶") + '</button>' + "</div>") + suiviH +
@@ -339,10 +420,10 @@ function htmlGrandPrix(y) {
   const rap = rappelCartes(), versStand = rap ? '<button class="gp-stand" type="button" data-aller-stand>🃏 <span><b>Fenêtre ouverte</b> : pose ta carte de ' + esc(moisLong(rap.k)) + "</span> ›</button>" : "";
   const att = (c.attente ? '<div class="bref">⏳ ' + esc(moisLong(c.attente.k)) + " : la course avance dès que tout le monde a saisi son relevé, au plus tard 7 jours après la date (il manque " + c.attente.manquent.map(n => "<b>" + esc(n) + "</b>").join(" et ") + ").</div>" : "") +
     (c.chauffe && !et.m && Date.now() < SAISON.depart.getTime() ? '<p class="info gp-depart">🏁 Grille de départ : la performance de novembre. La course se joue avec le relevé de fin décembre.</p>' :
-      !et.m && kGP === SAISON.premiere * 100 + 1 ? '<p class="info gp-depart"><span class="gp-de' + (stock.get("versus.deJanvier") ? "" : (stock.set("versus.deJanvier", "1"), " roule")) + '" aria-hidden="true">🎲</span> Grille tirée au sort : tout le monde part à 0 point.</p>' : "");   // v17.5 (Théo) : sur la grille de la chauffe, du 21/11 au 31/12
+      !et.m && kGP === SAISON.premiere * 100 + 1 ? '<p class="info gp-depart">' + (mc0 && /^chauffe/.test(mc0.grilleDe || "") ? "🏁 Grille de départ : l'ordre du tour de chauffe de décembre" + (mc0.grilleDe === "chauffe-grille" ? " (sa grille, tant que son résultat n'est pas connu)" : "") + ", les nouveaux derrière. Tout le monde part à 0 point." : '<span class="gp-de' + (stock.get("versus.deJanvier") ? "" : (stock.set("versus.deJanvier", "1"), " roule")) + '" aria-hidden="true">🎲</span> Grille tirée au sort : tout le monde part à 0 point.') + "</p>" : "");   // v17.5 (Théo) : sur la grille de la chauffe, du 21/11 au 31/12
   const titreAt = at ? '<div class="gp-atouts"><span class="at" data-bdg="' + esc("Atout de " + G.ville + " : " + at.atout.ico + " " + at.atout.nom + " y gagne +1 quand elle marque (sauf bouchon).") + '">' + at.atout.ico + " " + esc(at.atout.nom) + " +1</span></div>" : (indiceCircuit(kGP) ? htmlIndice(indiceCircuit(kGP)) : "");
-  return versStand + att + '<div class="gp-h"><div><span class="s-k">' + (c.chauffe ? "Tour de chauffe" : et.avenir ? "Manche " + i + " · sur la grille" : et.k ? "Manche " + i : "Départ") + " · " + esc(moisLong(kGP)) + '</span><h3 class="gp-titre">' + G.drap + " " + esc(G.gp) + '</h3><p class="gp-met">' + esc(G.ville) + " · " + met.ico + " " + esc(met.txt) + (spe ? " " + spe.ico + " <b>" + esc(spe.nom) + "</b> : " + esc(spe.txt) : vuesV2(ci) && pgm ? ' <span data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " <b>" + esc(pgm.nom) + "</b></span>" : "") + '</p></div><button class="btn ghost gp-rejouer" type="button" id="gp-rejouer">▶ Rejouer</button></div>' +
-    titreAt + piste + (v2 ? '<div class="gp-vues2">' + selVuesGP(vue, "") + menuV2 + '<button class="gp-plein-gros" type="button" id="gp-plein-gros"><span aria-hidden="true">⛶</span> Plein écran</button></div>' : "") + chips + '<div class="gp-liste">' + lignes + "</div>" + (et.m ? '<button class="btn ghost gp-carte" type="button" id="gp-carte">📸 Carte postale · ' + esc(moisLong(et.k)) + "</button>" : "") + cal +
+  return versStand + att + '<div class="gp-h"><div><span class="s-k">' + (c.chauffe ? "Tour de chauffe" + (dir ? " · en direct" : "") : et.avenir ? "Manche " + i + (dir ? " · en direct" : " · sur la grille") : et.k ? "Manche " + i : "Départ") + " · " + esc(moisLong(kGP)) + '</span><h3 class="gp-titre">' + G.drap + " " + esc(G.gp) + '</h3><p class="gp-met">' + esc(G.ville) + " · " + met.ico + " " + esc(met.txt) + (spe ? " " + spe.ico + " <b>" + esc(spe.nom) + "</b> : " + esc(spe.txt) : vuesV2(ci) && pgm ? ' <span data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " <b>" + esc(pgm.nom) + "</b></span>" : "") + '</p></div><div class="gp-hb"><button class="btn ghost gp-pause" type="button" id="gp-pause" aria-label="Mettre la course en pause" hidden>⏸ Pause</button><button class="btn ghost gp-rejouer" type="button" id="gp-rejouer">▶ ' + (dir ? "Revoir" : "Rejouer") + "</button></div></div>" +
+    titreAt + piste + (v2 ? '<div class="gp-vues2">' + selVuesGP(vue, "") + menuV2 + '<button class="gp-plein-gros" type="button" id="gp-plein-gros"><span aria-hidden="true">⛶</span> Plein écran</button></div>' : "") + (v2 ? '<details class="gp-schema"><summary>📐 Comment avance la course ?</summary>' + svgSchemaCourse() + "</details>" : "") + chips + '<div class="gp-liste">' + lignes + "</div>" + (et.m ? '<button class="btn ghost gp-carte" type="button" id="gp-carte">📸 Carte postale · ' + esc(moisLong(et.k)) + "</button>" : "") + cal +
     '<p class="info">Chaque mois, une manche sur un nouveau circuit : départ dans l\'ordre du championnat, et le meilleur du mois boucle le tour.' + " Touche une icône pour le détail, une voiture pour la suivre." + (c.chauffe ? " 🔥 Rien ne compte pendant la chauffe." : "") + ' <a href="#" class="lien-regles" data-regles="gp">Règles</a></p>' +
     htmlDetailPoints(y);
 }
@@ -629,7 +710,7 @@ function cacheEtq(pi) {
   if (GP_ETQ && GP_ETQ.pi === pi && !GP_ETQ.sale) return GP_ETQ;
   const el = (l, f) => [...pi.querySelectorAll(l)].map(e => Object.assign({ e, tr: null, op: null }, f ? f(e) : {}));
   GP_ETQ = { pi, plein: pi.classList.contains("plein"), tags: el("[data-gpt3]", e => ({ n: e.dataset.gpt3, rg: e.querySelector(".gp-rg"), rgv: null })),
-    pops: el("[data-pop]", e => ({ n: e.dataset.pop })), zones: el("[data-zone]", e => ({ z: e.dataset.zone })), tour: pi.querySelector("#gp-tour"), tourv: null };
+    pops: el(":scope > .gp-pops [data-pop]", e => ({ n: e.dataset.pop })), zones: el("[data-zone]", e => ({ z: e.dataset.zone })), tour: pi.querySelector("#gp-tour"), tourv: null };
   return GP_ETQ;
 }
 function poser1(o, op, tr) { if (o.op !== op) { o.e.style.opacity = op; o.op = op; } if (tr !== null && o.tr !== tr) { o.e.style.transform = tr; o.tr = tr; } }
@@ -657,6 +738,7 @@ function etiquettesGP(api) {
   { const h = pi.querySelector(".gp-tour"); if (h) { if (GP_SCEN && api.enCours()) { const tr = Math.min(TOURS_GP, Math.floor(Math.max(0, ...Object.values(cur))) + 1); if (h.dataset.tr !== String(tr)) { if (!h.dataset.tr) h.dataset.orig = h.innerHTML; h.innerHTML = "Tour <b>" + tr + "</b>/" + TOURS_GP; h.dataset.tr = tr; } } else if (h.dataset.tr) { h.innerHTML = h.dataset.orig || ""; delete h.dataset.orig; delete h.dataset.tr; } } }   // v16.28
   if (api.enCours() && C.tour) { const v = Math.floor(Math.max(0, ...Object.values(cur)) / TOUR_GP) + 1; if (v !== C.tourv) { C.tour.textContent = v; C.tourv = v; } }
   if (GP_PLEIN) majTourPlein(cur);
+  majPauseGP();
   // v17.8 · 🚁 Hélico : la rangée de têtes « voiture suivie » se range dans l'ordre de la course, avec la place de chacun
   if (C.suivi === undefined) C.suivi = [...document.querySelectorAll("[data-suivre]")].map(e => ({ e, n: e.dataset.suivre, v: "" }));
   C.suivi.forEach(o => { const r = 1 + ordre.filter(m => cur[m] > (cur[o.n] || 0) + 1e-9).length, v = String(r); if (o.v !== v) { o.v = v; o.e.style.order = r; o.e.dataset.rg = v; } });
@@ -931,11 +1013,11 @@ function apCachette() {
 function bullesGP(y, i) {
   const pi = document.getElementById("gp-piste"), et = etapesGP(y)[i]; if (!pi || !et || !et.m) return;
   const box = pi.querySelector(".gp-pops"); if (!box) return; box.innerHTML = "";
-  et.m.l.forEach(x => {
+  et.m.l.slice().sort((a, b) => a.rg - b.rg).forEach(x => {
     const extra = [];
     if (x.carte && !x.carte.invalide && x.carte.gain) { const cd = carteDef(x.carte.id); extra.push((cd ? cd.ico : "🃏") + (x.carte.gain > 0 ? "+" : "") + x.carte.gain); }
     if (x.bonus) extra.push("🎯+" + x.bonus); if (x.mult > 1) extra.push("×2"); if (x.vainq) extra.push("🇬🇧+2"); if (x.equipe) extra.push("🤝+1"); if (x.serie) extra.push("🔥+1"); if (x.defi) extra.push("🏁+1"); if (x.prono && x.prono.pts) extra.push("🔮+" + x.prono.pts); if (x.rival) extra.push("😈+3"); if (x.regul !== undefined) extra.push("🛡️+3");
-    box.insertAdjacentHTML("beforeend", '<span class="gp-pop" data-pop="' + esc(x.nom) + '" style="--c:' + couleur(x.nom) + '"><b>' + (x.p >= 0 ? "+" : "") + x.p + " pt" + (Math.abs(x.p) > 1 ? "s" : "") + "</b>" + (extra.length ? "<small>" + esc(extra.join(" ")) + "</small>" : "") + "</span>");
+    box.insertAdjacentHTML("beforeend", '<span class="gp-pop" data-pop="' + esc(x.nom) + '" style="--c:' + couleur(x.nom) + '" title="' + esc(x.nom) + '" aria-label="' + esc(x.nom + " " + (x.p >= 0 ? "+" : "") + x.p + " points") + '">' + avatar(x.nom) + "<b>" + (x.p >= 0 ? "+" : "") + x.p + '<i class="gp-pop-u"> pt' + (Math.abs(x.p) > 1 ? "s" : "") + "</i></b>" + (extra.length ? "<small>" + esc(extra.join(" ")) + "</small>" : "") + "</span>");
   });
   if (GP_ETQ) GP_ETQ.sale = true;
   if (GP_INST) { GP_INST.api.reveiller(); etiquettesGP(GP_INST.api); }
@@ -1049,11 +1131,41 @@ function commenter(y, i, duree, delai) {
   const box = document.querySelector("#gp-piste .gp-com"); if (!box) return; const P = phrasesCourse(y, i); if (!P) { box.innerHTML = ""; return; }
   const dire = (t, dur) => { const b = document.querySelector("#gp-piste .gp-com"); if (!b) return; b.innerHTML = '<span class="gp-com-t">' + esc(t) + "</span>"; if (dur) GP_COM.push(setTimeout(() => { const bb = document.querySelector("#gp-piste .gp-com"); if (bb) bb.innerHTML = ""; }, dur)); };
   if (duree < 0) { dire(P.fin, 7000); return; }
-  const d0 = delai || 0, n = duree - d0;
-  if (GP_SCEN) { const l = [[0, P.debut[0]], [.24, P.milieu[0]], [GP_SCEN.wTour2 || W_TOUR[1], "🏁 Dernier tour !" + (P.milieu[1] ? " · " + P.milieu[1] : "")]].filter(x => x[1]);
-    l.forEach(([w, t]) => GP_COM.push(setTimeout(() => dire(t, 0), d0 + w * n + 150))); return; }
-  const l = P.debut.concat(P.milieu);
-  l.forEach((t, k) => GP_COM.push(setTimeout(() => dire(t, 0), d0 + k * n / Math.max(1, l.length) + 150)));
+  const d0 = delai || 0, n = duree - d0, q = P.debut.concat(P.milieu);
+  const l = (GP_SCEN ? [[0, P.debut[0]], [.24, P.milieu[0]], [GP_SCEN.wTour2 || W_TOUR[1], "🏁 Dernier tour !" + (P.milieu[1] ? " · " + P.milieu[1] : "")]].filter(x => x[1]) : q.map((t, k) => [k / Math.max(1, q.length), t])).map(([w, t]) => [d0 + w * n + 150, t]);
+  // v20.48 : les phrases suivent l'horloge de la course (⏸ pause = le commentaire attend aussi)
+  const H = GP_HORLOGE; let k0 = -1; const iv = setInterval(() => { if (GP_HORLOGE !== H || !H) { clearInterval(iv); return; } const t = tempsCourse(H); let k = -1; l.forEach((x, j) => { if (x[0] <= t) k = j; }); if (k > k0) { k0 = k; dire(l[k][1], 0); } if (t > duree + 400) clearInterval(iv); }, 120);
+  GP_COM.push(iv);
+}
+/* ---------- v20.48 (Théo) · ⏸ Pause / ▶ Reprendre : l'animation, le commentaire et le son s'arrêtent, puis repartent là où ils en étaient ---------- */
+let GP_HORLOGE = null;   // { t0, pauses, pause, total (ms, feux compris), feux, cle }
+function tempsCourse(H) { return (H.pause || performance.now()) - H.t0 - H.pauses; }
+function enPauseGP() { const a = GP_INST && GP_INST.api; return !!(a && a.suspendu && a.suspendu()); }
+function basculerPauseGP(forcer) {
+  const api = GP_INST && GP_INST.api; if (!api || !api.suspendre || !api.enCours()) { majPauseGP(); return; }
+  const p = forcer !== undefined ? forcer : !api.suspendu(); if (p === api.suspendu()) return; api.suspendre(p); const H = GP_HORLOGE, now = performance.now();
+  if (H) { if (p) H.pause = now; else if (H.pause) { H.pauses += now - H.pause; H.pause = 0; } }
+  if (window.SONS) { if (p) { if (SONS.pauseCourse) SONS.pauseCourse(); }
+    else if (H && H.son) { const t = tempsCourse(H), avant = Math.max(0, H.feux - t), reste = H.total - Math.max(t, H.feux); if (reste > 300) SONS.course(reste, avant, H.cle); } }
+  majPauseGP();
+}
+let PAUSE_V = "";   // (gardé pour compatibilité : remis à zéro à chaque rendu)
+function majPauseGP() {
+  const api = GP_INST && GP_INST.api, en = !!(api && api.enCours && api.enCours()), p = en && enPauseGP(), v = en + "|" + p;
+  document.querySelectorAll("#gp-pause, .gpp-pause").forEach(b => { if (b.dataset.v === v) return; b.hidden = !en; b.dataset.v = v; b.setAttribute("aria-pressed", String(p));
+    b.setAttribute("aria-label", p ? "Reprendre la course" : "Mettre la course en pause"); b.textContent = p ? "▶ Reprendre" : "⏸ Pause"; });
+}
+/* ---------- v20.48 (Théo) · 📷 Mode photo : toute l'interface disparaît (boutons, sous-titres, bandeaux, têtes) pour admirer le décor ; un toucher (ou Échap, ou le retour) la ramène ---------- */
+function modePhotoGP(on, y) {
+  if (on && !GP_PLEIN) { ouvrirPleinGP(y); setTimeout(() => modePhotoGP(true, y), 350); return; }
+  const P = GP_PLEIN; if (!P) return; if (!!P.photo === !!on) return; P.photo = !!on;
+  P.o.classList.toggle("photo", P.photo);
+  if (P.photo) { const h = document.createElement("div"); h.className = "gpp-photo-aide"; h.textContent = "📷 Mode photo · touche l'écran pour revenir"; P.o.appendChild(h); setTimeout(() => h.remove(), 2600);
+    let d = null; P.photoDown = ev => { d = { x: ev.clientX, y: ev.clientY, t: performance.now() }; };
+    P.photoUp = ev => { if (!d) return; const tap = Math.hypot(ev.clientX - d.x, ev.clientY - d.y) < 8 && performance.now() - d.t < 350; d = null; if (tap && performance.now() - P.photoT > 400) { ev.stopPropagation(); ev.preventDefault(); modePhotoGP(false); } };
+    P.photoT = performance.now(); P.o.addEventListener("pointerdown", P.photoDown, true); P.o.addEventListener("pointerup", P.photoUp, true); }
+  else { P.o.removeEventListener("pointerdown", P.photoDown, true); P.o.removeEventListener("pointerup", P.photoUp, true); const h = P.o.querySelector(".gpp-photo-aide"); if (h) h.remove(); }
+  GP_ETQ = null; if (GP_INST) { GP_INST.api.redim(); requestAnimationFrame(() => GP_INST && GP_INST.api.redim()); }
 }
 /* ---------- 🎬 V16.12 · Bande-annonce avant la course · V16.70 : « le circuit, la règle, le trésor » (affiche de cinéma) ---------- */
 const BA_STYLE = {   // couleurs et police de chaque circuit (la bande-annonce prend le ton de l'univers)
@@ -1163,13 +1275,13 @@ function bandeAnnonce(y, i, ensuite) {
   o.querySelector(".ba-passer").addEventListener("click", e => { e.stopPropagation(); fermer(true); });
   BA_OUVERTE = { fermer };
 }
-let GP_RELANCES = 0;   // audit B6 : relances automatiques du circuit 3D après une coupure du navigateur
+let GP_RELANCES = 0, GP_DIRECT_VU = "";   // audit B6 : relances automatiques du circuit 3D après une coupure du navigateur
 function brancherGP(v, y) {
   const etapes = etapesGP(y), i = GP_ETAPE !== null && GP_ETAPE < etapes.length ? GP_ETAPE : etapeParDefaut(etapes, y), et = etapes[i];
   const pi = v.querySelector("#gp-piste"), scene = v.querySelector("#gp-scene"); if (!pi || !scene) return;
   if (!window.Piste) { scene.innerHTML = '<p class="gp-nopiste">Circuit indisponible : recharge l\'appli.</p>'; return; }
   const c = championnat(y), kGP = et.k || (c.chauffe ? CHAUFFE_K : y * 100 + 1), ci = circuitDe(kGP), deux = pi.classList.contains("en2d"), qui = quiEcurie();
-  const amb = (equipDe(qui) || {}).circuit || "classique", met = meteoMois(et.k).id, at = atoutsVus(kGP), vs = voituresGP(), vue = vueGP(ci);
+  const amb = (equipDe(qui) || {}).circuit || "classique", met = meteoMois(et.k || (!et.m ? kGP : null)).id, at = atoutsVus(kGP), vs = voituresGP(), vue = vueGP(ci);
   const cle = [ci, met, amb, deux ? "2d" : "3d", JSON.stringify(vs), at ? at.atout.id : "", couleurAccent()].join("|");
   if (GP_INST && GP_INST.cle === cle) { scene.appendChild(GP_INST.boite); GP_INST.api.redim(); }
   else {
@@ -1187,21 +1299,28 @@ function brancherGP(v, y) {
   // V16.10 · une manche par mois : grille de départ dans l'ordre du classement d'avant le mois ; le meilleur du mois boucle exactement un tour
   if (vue && vue !== "2d") appliquerVue3(GP_INST.api, vue);
   const api = GP_INST.api, mc = mancheGP(etapes, i, kGP), SC = i > 0 && !et.avenir && et.m && api.jouerScenario ? scenarioCourse(mc) : null; GP_SCEN = SC;
-  if (api.regler) api.regler({ tour: SC ? 1 : mc.tour, grille: SC ? null : mc.grille });   // v17.8 : en course scénarisée, les écarts viennent tous du scénario   // v16.28 : en course scénarisée, les distances sont en tours
-  const pDep = SC ? SC.scen(0) : mc.depart, pArr = SC ? SC.scen(1) : mc.arrivee;
+  const DR = SC ? null : courseDirect(etapes, i, kGP);   // v20.48 : la course en direct (tour 1, le peloton avance avec le mois et le S&P)
+  if (api.regler) api.regler({ tour: SC || DR ? 1 : mc.tour, grille: SC || DR ? null : mc.grille });   // v17.8 : en course scénarisée, les écarts viennent tous du scénario   // v16.28 : en course scénarisée, les distances sont en tours
+  const pDep = SC ? SC.scen(0) : DR ? DR.dep : mc.depart, pArr = SC ? SC.scen(1) : DR ? DR.pts : mc.arrivee;
   const cleVu = "versus.gpVu." + y, vu = +(stock.get(cleVu) || 0);
   // V16.16 : la manche n'est marquée « vue » qu'à l'arrivée (quitter pendant la bande-annonce ou la course ne la fait plus perdre)
   // V16.17 : un seul départ — après la bande-annonce (qui finit sur les 5 feux), la course part sans refaire les feux
-  const finCourse = () => { if (window.SONS && et.m) { const v1 = et.m.l.slice().sort((a, b) => a.rg - b.rg)[0]; if (v1) SONS.arrivee(saisonVisible() && !estChauffe(y) ? equipDe(v1.nom).klaxon : "fanfare", v1.nom === ETAT.moi, (Piste.TRACES[ci] || {}).peint); }   // V16.43 : la foule et le klaxon du vainqueur
+  const finCourse = () => { setTimeout(majPauseGP, 0); if (window.SONS && et.m) { const v1 = et.m.l.slice().sort((a, b) => a.rg - b.rg)[0]; if (v1) SONS.arrivee(saisonVisible() && !estChauffe(y) ? equipDe(v1.nom).klaxon : "fanfare", v1.nom === ETAT.moi, (Piste.TRACES[ci] || {}).peint); }   // V16.43 : la foule et le klaxon du vainqueur
     if (et.k && !et.avenir && et.k > +(stock.get(cleVu) || 0)) stock.set(cleVu, String(et.k)); bullesGP(y, i); commenter(y, i, -1);
     if (et.k === CHAUFFE_K && estChauffe(y)) setTimeout(() => ereApres(() => verifierFeteChauffe(true), "chauffeFete"), 3200); };   // v17.49 : course de chauffe regardée + manche définitive → le vainqueur à l'honneur
   const jouer = feux => { if (vueGP(ci) === "visite" && api.type === "3d") choisirVueGP("poursuite", y);   // v17.6 : la Visite n'a pas de voitures : la course se regarde en 🚁 Hélico
-    const f = feux !== false && i >= 1 && api.type === "3d", d = SC ? (api.type === "3d" ? 17000 : 12000) : api.type === "3d" ? 6400 : 3000; commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0); if (window.SONS) SONS.course(d, f ? 3200 : 0, (Piste.TRACES[ci] || {}).peint);   // V16.43 : feux, moteurs ; v17.48 : + le thème du circuit (Noël)
-    if (SC) api.jouerScenario(SC.scen, d, finCourse, f); else api.jouer(mc.depart, mc.arrivee, d, finCourse, f); };
+    if (DR) { const d = api.type === "3d" ? 4200 : 3000; GP_HORLOGE = { t0: performance.now(), pauses: 0, pause: 0, total: d, feux: 0, cle: null, son: false }; api.jouer(DR.dep, DR.pts, d, () => majPauseGP(), false); majPauseGP(); return; }   // v20.48 : le mois jusqu'à aujourd'hui, en accéléré, sans feux ni moteurs
+    const f = feux !== false && i >= 1 && api.type === "3d", d = SC ? (api.type === "3d" ? 17000 : 12000) : api.type === "3d" ? 6400 : 3000, cleS = (Piste.TRACES[ci] || {}).peint;
+    GP_HORLOGE = { t0: performance.now(), pauses: 0, pause: 0, total: d + (f ? 3200 : 0), feux: f ? 3200 : 0, cle: cleS, son: true };
+    commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0); if (window.SONS) SONS.course(d, f ? 3200 : 0, cleS);   // V16.43 : feux, moteurs ; v17.48 : + le thème du circuit (Noël)
+    if (SC) api.jouerScenario(SC.scen, d, finCourse, f); else api.jouer(mc.depart, mc.arrivee, d, finCourse, f); majPauseGP(); };
   const apresBA = () => { if (GP_INST && GP_INST.api === api && document.body.contains(GP_INST.boite)) jouer(false); };   // v16.27 : piste reconstruite entre-temps : on ne lance rien
   if (GP_REJOUER && i > 0 && !et.avenir) { GP_REJOUER = false; setTimeout(jouer, 150); }
   else if (!et.avenir && et.k && et.k > vu && i > 0) { api.placer(pDep); if (!BA_OUVERTE) setTimeout(() => ereApres(() => { if (!BA_OUVERTE) bandeAnnonce(y, i, apresBA); }, "ba"), 300); }   // v16.93 : ereApres = après la scène du premier million
-  else { if (!api.enCours()) api.placer(pArr); const kBA = et.k || 0, cleBA = "versus.baVu." + y; if (et.avenir && kBA && kBA > +(stock.get(cleBA) || 0)) { stock.set(cleBA, String(kBA)); setTimeout(() => ereApres(() => bandeAnnonce(y, i, null), "ba"), 400); } }
+  else { const kBA = et.k || 0, cleBA = "versus.baVu." + y, baDue = et.avenir && kBA && kBA > +(stock.get(cleBA) || 0), cleDir = DR ? kGP + "|" + DR.dv.j : "";
+    if (DR && GP_DIRECT_VU !== cleDir && !api.enCours() && !(vueGP(ci) === "visite" && api.type === "3d")) { GP_DIRECT_VU = cleDir; api.placer(DR.dep);   // v20.48 : en arrivant, le peloton refait le mois jusqu'à aujourd'hui (une fois par jour et par visite)
+      if (baDue) { stock.set(cleBA, String(kBA)); setTimeout(() => ereApres(() => bandeAnnonce(y, i, apresBA), "ba"), 400); } else setTimeout(() => { if (GP_INST && GP_INST.api === api && !api.enCours()) jouer(false); }, 450); }
+    else { if (!api.enCours()) api.placer(pArr); if (baDue) { stock.set(cleBA, String(kBA)); setTimeout(() => ereApres(() => bandeAnnonce(y, i, null), "ba"), 400); } } }
   GP_REJOUER = false;
   const vu3 = v.querySelector("#gp-vue"); if (vu3) vu3.addEventListener("click", () => { const vers3d = pi.classList.contains("en2d"); ETAT.gp2d = vers3d ? "0" : "1"; garder(); rendreTrophees(); if (vers3d && !TRESOR_APERCU && !stock.get("versus.aideVisite")) { stock.set("versus.aideVisite", "1"); setTimeout(() => { toast("🧭 Visite 3D : glisse pour tourner, vers le haut ou le bas pour incliner, pince pour zoomer, deux doigts pour te déplacer. 🎬 Survol : la visite guidée."); try { if (GP_INST && GP_INST.api.type === "3d" && !GP_INST.api.enCours()) GP_INST.api.survol(12000); } catch (e) { } }, 900); } });
   const sv = v.querySelector("#gp-survol"); if (sv) sv.addEventListener("click", () => { if (GP_INST && GP_INST.api.enCours()) { toast("Attends la fin de la course pour le survol."); return; }
@@ -1211,9 +1330,11 @@ function brancherGP(v, y) {
     if (vueMaint && vueMaint !== "visite") { choisirVueGP("visite", y); setTimeout(() => { if (GP_INST && GP_INST.api.type === "3d" && !GP_INST.api.enCours()) GP_INST.api.survol(12000); }, 700); return; }
     if (!GP_INST || GP_INST.api.type !== "3d") return; GP_INST.api.survol(12000); });   // V16.59 : visite guidée
   const cb = v.querySelector("#gp-cam-b"); if (cb) cb.addEventListener("click", () => { const l = ["tv", "helico", "bord"], n = l[(l.indexOf(camGP()) + 1) % l.length]; ETAT.gpCam = n; garder(); if (GP_INST) GP_INST.api.camera(n); majBoutonsGP(); });
-  const rj = v.querySelector("#gp-rejouer"); if (rj) rj.addEventListener("click", () => { if (i > 0 && !et.avenir) jouer(); else toast(et.avenir ? "Cette manche se court ce mois-ci : la course se joue dès que tout le monde a saisi son relevé." : "Le départ n'a pas encore eu lieu : choisis un mois."); });
-  const fb = v.querySelector("#gp-fin"); if (fb) fb.addEventListener("click", () => { if (api.enCours()) { api.placer(pArr); finCourse(); } else toast(i > 0 && !et.avenir ? "La course est déjà arrivée : ↻ Rejouer pour la revoir." : "Pas encore de course pour ce mois-ci."); });
+  const rj = v.querySelector("#gp-rejouer"); if (rj) rj.addEventListener("click", () => { if (i > 0 && !et.avenir || DR) jouer(); else toast(et.avenir ? "Cette manche se court ce mois-ci : la course se joue dès que tout le monde a saisi son relevé." : "Le départ n'a pas encore eu lieu : choisis un mois."); });
+  const fb = v.querySelector("#gp-fin"); if (fb) fb.addEventListener("click", () => { if (api.enCours()) { api.placer(pArr); GP_HORLOGE = null; if (window.SONS && SONS.pauseCourse && enPauseGP()) SONS.pauseCourse(); if (DR) majPauseGP(); else finCourse(); } else toast(i > 0 && !et.avenir ? "La course est déjà arrivée : ↻ Rejouer pour la revoir." : "Pas encore de course pour ce mois-ci."); });
   const pl = v.querySelector("#gp-plein"); if (pl) pl.addEventListener("click", () => ouvrirPleinGP(y));
+  const pz = v.querySelector("#gp-pause"); if (pz) pz.addEventListener("click", () => basculerPauseGP());   // v20.48
+  const ph = v.querySelector("#gp-photo"); if (ph) ph.addEventListener("click", () => { const d = ph.closest("details"); if (d) d.open = false; modePhotoGP(true, y); });
   const plg = v.querySelector("#gp-plein-gros"); if (plg) plg.addEventListener("click", () => ouvrirPleinGP(y));   // v17.6
   v.querySelectorAll(".gp-vues2 [data-gpv]").forEach(b => b.addEventListener("click", () => choisirVueGP(b.dataset.gpv, y)));
   v.querySelectorAll("[data-suivre]").forEach(b => b.addEventListener("click", ev => { ev.stopPropagation(); suivreGP(b.dataset.suivre); }));
@@ -1221,7 +1342,7 @@ function brancherGP(v, y) {
   const cp = v.querySelector("#gp-carte"); if (cp) cp.addEventListener("click", () => cartePostale(y, et));
   v.querySelectorAll(".gp-mois [data-gpe]").forEach(b => b.addEventListener("click", () => { GP_ETAPE = +b.dataset.gpe; GP_REJOUER = true; rendreTrophees(); }));
   const cal = v.querySelector("#gp-calend"); if (cal) cal.addEventListener("toggle", () => { ETAT.calOuvert = cal.open ? "1" : "0"; garder(); });
-  GP_ETQ = null;
+  GP_ETQ = null; PAUSE_V = ""; majPauseGP();
   if (GP_PLEIN) placerPlein(y);
   chargerTickets(); poserTabletteDOM(document);   // v20.47 : 🎫 la tablette du jour (Chocolaterie, octobre 2027)
   chargerTresors(); poserTresorDOM(GP_PLEIN ? document : v);   // v17.55 : en plein écran la piste a été déplacée dans la fenêtre (énigme absente en Carte plein écran)
@@ -1246,7 +1367,7 @@ function ouvrirPleinGP(y) {
   o.querySelector('.gpp-x:not(.gpp-rj)').addEventListener("click", fermerPleinGP);
   // V15.6 : rejouer la course sans quitter le plein écran (même action que « Rejouer » sous la piste)
   o.querySelector(".gpp-rj").addEventListener("click", () => { const rj = document.getElementById("gp-rejouer"); if (rj) rj.click(); else toast("Choisis d'abord un mois couru."); });
-  GP_PLEIN.esc = e => { if (e.key === "Escape") fermerPleinGP(); }; document.addEventListener("keydown", GP_PLEIN.esc);
+  GP_PLEIN.esc = e => { if (e.key === "Escape") { if (GP_PLEIN && GP_PLEIN.photo) modePhotoGP(false); else fermerPleinGP(); } }; document.addEventListener("keydown", GP_PLEIN.esc);
   const pi0 = document.getElementById("gp-piste"); if (pi0 && pi0.classList.contains("v2")) pleinV2(o, y);
   placerPlein(y);
 }
@@ -1255,7 +1376,7 @@ function pleinV2(o, y) {
   const P = GP_PLEIN; P.v2 = true; o.classList.add("v2");
   /* Théo, 19/11 : [Carte | Visite | Hélico | Survol] puis ▶ ⏭ ✕, ronds et en icônes seules */
   o.insertAdjacentHTML("beforeend", '<div class="gpp-bar">' + selVuesGP(vueGP(document.getElementById("gp-piste").dataset.circuit), "mini", true) +
-    '<button class="gpp-b gpp-son" type="button" data-son aria-label="Couper le son">🔊</button><button class="gpp-b gpp-play" type="button" aria-label="Rejouer la course" title="Rejouer">▶</button><button class="gpp-b gpp-fin" type="button" aria-label="Aller à l\'arrivée" title="Aller à l\'arrivée">⏭</button><button class="gpp-b gpp-fermer" type="button" aria-label="Fermer le plein écran">✕</button></div>' +
+    '<button class="gpp-b gpp-son" type="button" data-son aria-label="Couper le son">🔊</button><button class="gpp-b gpp-pause" type="button" aria-label="Mettre la course en pause" hidden>⏸ Pause</button><button class="gpp-b gpp-play" type="button" aria-label="Rejouer la course" title="Rejouer">▶</button><button class="gpp-b gpp-fin" type="button" aria-label="Aller à l\'arrivée" title="Aller à l\'arrivée">⏭</button><button class="gpp-b gpp-photo" type="button" aria-label="Mode photo : cacher toute l\'interface" title="Mode photo">📷</button><button class="gpp-b gpp-fermer" type="button" aria-label="Fermer le plein écran">✕</button></div>' +
     '<div class="gpp-tourne" hidden><b>📱↻</b> Tourne ton téléphone<br><small>pour voir le circuit en grand</small></div>');
   const stopSv = () => { try { if (GP_INST && GP_INST.api.arreterSurvol) GP_INST.api.arreterSurvol(); } catch (e) { } };
   o.querySelectorAll(".gpp-bar [data-gpv]").forEach(b => b.addEventListener("click", () => { stopSv(); choisirVueGP(b.dataset.gpv, y); majSurvolPlein(true); }));
@@ -1263,6 +1384,8 @@ function pleinV2(o, y) {
   if (sv) sv.addEventListener("click", () => { if (P.survol) { stopSv(); majSurvolPlein(true); return; } const x = document.getElementById("gp-survol"); if (x) x.click(); sv.setAttribute("aria-pressed", "true"); P.svDemande = performance.now(); });
   P.svTimer = setInterval(() => majSurvolPlein(), 250);   // le segment reste allumé pendant le survol
   o.querySelector(".gpp-play").addEventListener("click", () => { const rj = document.getElementById("gp-rejouer"); if (rj) rj.click(); });
+  o.querySelector(".gpp-pause").addEventListener("click", () => basculerPauseGP());   // v20.48
+  o.querySelector(".gpp-photo").addEventListener("click", () => modePhotoGP(true, y));
   [["gpp-fin", "gp-fin"]].forEach(([c, id]) => { const b = o.querySelector("." + c); if (b) b.addEventListener("click", () => { const x = document.getElementById(id); if (x) x.click(); }); });   // v17.12 (Théo) : arrivée et survol aussi en plein écran
   o.querySelector(".gpp-fermer").addEventListener("click", fermerPleinGP);
   const rq = o.requestFullscreen || o.webkitRequestFullscreen;
@@ -1315,7 +1438,7 @@ function majTourPlein(cur, force) {
     l.e.style.order = r; l.rk.textContent = r + 1; l.b.textContent = pt(n); l.s.textContent = r ? "−" + (pT - pt(n)) : "en tête du mois"; });
 }
 function fermerPleinGP() {
-  const P = GP_PLEIN; if (!P) return; GP_PLEIN = null;
+  const P = GP_PLEIN; if (!P) return; if (P.photo) modePhotoGP(false); GP_PLEIN = null;
   if (window.SONS && SONS.ambiance) SONS.ambiance(null);   // v17.59 : l'ambiance s'efface en fondu
   const pi = P.o.querySelector(".gp-piste");
   if (pi && P.ancre && P.ancre.isConnected) P.ancre.replaceWith(pi); else if (P.ancre) P.ancre.remove();
