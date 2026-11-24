@@ -254,6 +254,7 @@ function afficherTout() {
   rendreTicker();
   rendreVue(vueActive());
   majRappels();
+  if (typeof rappelReleveJoueur === "function") rappelReleveJoueur();   // v20.29 : relevé manquant rappelé par Théo
   if (SOURCE === "api") setTimeout(() => { if (typeof ereApres === "function") ereApres(verifierRevelation, "revel"); else verifierRevelation(); }, 900);   // v16.93 : la scène du premier million passe avant
   if (SOURCE === "api" && typeof verifierFeteChauffe === "function") setTimeout(() => ereApres(() => verifierFeteChauffe(false), "chauffeFete"), 1500);   // v17.49 : le vainqueur du tour de chauffe (une fois, après la révélation s'il y en a une)
   $("#etat-source").textContent = SOURCE === "cache" ? "Source : copie locale, l'API n'a pas répondu." : "Source : le fichier « Versus Portefeuille ».";

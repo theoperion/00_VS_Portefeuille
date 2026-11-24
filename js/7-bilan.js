@@ -459,6 +459,43 @@ function etatReleve(nom, k) {
   if (lim && lim > new Date()) return { etat: "modif", j, lim };
   return { etat: "fige", j };
 }
+/* v20.29 (Théo, 24/11) · « Relevés du mois » : pour chaque pilote, arrivé ou pas (import automatique, saisi à la main), jamais un montant.
+   Sous le relevé de chacun dans « + » ; l'admin peut rappeler un relevé manquant (rappel dans l'appli du joueur, pas de mail). */
+function moisReleveCourant() {
+  const n = new Date(), y = n.getFullYear(), m = n.getMonth() + 1, jr = jourReleve(y, m);
+  if (n >= new Date(jr.getFullYear(), jr.getMonth(), jr.getDate(), 19, 30)) return y * 100 + m;   // le relevé de ce mois est passé (import vers 19 h)
+  const d = new Date(y, m - 2, 1); return d.getFullYear() * 100 + d.getMonth() + 1;
+}
+function htmlRelevesMois() {
+  if (typeof D === "undefined" || !D || !D.personnes) return "";
+  const k = moisReleveCourant(), adm = vraiAdmin() && !simulation() && SOURCE === "api", rap = D.rappelsReleve || {};
+  const lignes = D.personnes.map(p => {
+    const st = etatReleve(p.nom, k), j = st.j;
+    const dh = x => dateHeure(new Date(x)).replace(/ h /, "\u00a0h\u00a0").replace(/ à /, "\u00a0à ");   // l'heure ne se coupe jamais en deux
+    const t = st.etat === "vide" ? "⏳ pas encore arrivé" : j && j.action === "Import auto" ? "✅ import automatique le " + dh(j.t) : j ? "✍️ saisi dans l'appli le " + dh(j.t) : "✍️ saisi dans le Sheet";
+    const b = adm && st.etat === "vide" && p.nom !== moiVrai() ? (rap[p.nom] && rap[p.nom].cle === k ? '<small class="rm-ok">🔔 rappelé</small>' : '<button type="button" class="lien rm-b" data-rappel="' + esc(p.nom) + '">🔔 Le rappeler</button>') : "";
+    return '<div class="rm-l"><span class="rm-n"><i style="background:' + couleur(p.nom) + '"></i>' + esc(p.nom) + '</span><span class="rm-s' + (st.etat === "vide" ? " manque" : "") + '">' + t + "</span>" + b + "</div>";
+  }).join("");
+  return '<section class="rm" aria-label="Relevés du mois"><h4 class="rm-t">Relevés ' + (/^[aeiouy]/i.test(moisLong(k)) ? "d'" : "de ") + esc(moisLong(k)) + " · tout le monde</h4>" + lignes + "</section>";
+}
+function brancherRelevesMois(racine) {
+  if (!racine) return;
+  racine.querySelectorAll("[data-rappel]").forEach(b => b.addEventListener("click", async e => {
+    e.preventDefault(); e.stopPropagation(); b.disabled = true;
+    const nom = b.dataset.rappel, k = moisReleveCourant(), rep = await posterAdmin({ action: "rappelReleve", personne: nom, mois: k });
+    toast(rep.message || (rep.ok ? "Rappel envoyé." : "Rappel impossible."));
+    if (rep.ok) { D.rappelsReleve = Object.assign({}, D.rappelsReleve, { [nom]: { cle: k } }); b.outerHTML = '<small class="rm-ok">🔔 rappelé</small>'; } else b.disabled = false;
+  }));
+}
+/** Côté joueur : Théo a rappelé un relevé qui manque → une bulle à l'ouverture (une fois par jour), qui disparaît dès que le relevé est là */
+function rappelReleveJoueur() {
+  try {
+    const r = D && D.monRappel; if (!r || SOURCE !== "api" || etatReleve(moiVrai(), r.cle).etat !== "vide") return;
+    const cle = "versus.rappelVu." + r.cle, auj = new Date().toISOString().slice(0, 10); if (localStorage.getItem(cle) === auj) return;
+    localStorage.setItem(cle, auj);
+    setTimeout(() => toast("🔔 Ton relevé " + (/^[aeiouy]/i.test(moisLong(r.cle)) ? "d'" : "de ") + moisLong(r.cle) + " n'est pas arrivé au Versus : bouton + › Relevé, 1 minute."), 1200);
+  } catch (e) { /* stockage indisponible */ }
+}
 function dateHeure(d) { return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") + " à " + String(d.getHours()).padStart(2, "0") + " h " + String(d.getMinutes()).padStart(2, "0"); }
 function peutModifier(nom) { return (estAdmin() && !estPrive(nom)) || nom === SESSION.nom; }   // V20.26 : les montants des autres ne sont jamais envoyés, donc pas de saisie pour eux dans l'appli
 function utilisees(p) { return NOMS_ENV.map((_, e) => p.rows.some(r => ok(r[2][2 * e + 1]) || (r[2][2 * e] || 0) !== 0)); }
@@ -497,7 +534,8 @@ function rendreSaisie() {
     (montrer[0] && montrer[1] ? "" : '<button class="lien" type="button" id="r-tout">Afficher les autres enveloppes</button>') +
     '<p class="info">Versé : 0 si rien, négatif si retrait. Valeur : le total affiché par la banque en fin de mois, 0 si l\'enveloppe est vidée. Le rendement affiché compte le versement à moitié (arrivé en moyenne en milieu de mois).</p>' +
     '<div class="recap" id="r-recap"></div><div id="r-alertes" style="display:grid;gap:6px"></div>' +
-    (fige ? "" : '<button class="btn acc plein" type="submit" id="r-envoyer">' + (st.etat === "modif" ? "Enregistrer la modification" : "Enregistrer le relevé") + "</button>") + "</form>";
+    (fige ? "" : '<button class="btn acc plein" type="submit" id="r-envoyer">' + (st.etat === "modif" ? "Enregistrer la modification" : "Enregistrer le relevé") + "</button>") + "</form>" + htmlRelevesMois();
+  brancherRelevesMois($("#corps-saisie"));
   document.querySelectorAll("[data-rp]").forEach(b => b.addEventListener("click", () => { R.nom = b.dataset.rp; R.tout = false; choisirMoisParDefaut(); rendreSaisie(); }));
   $("#r-mois").addEventListener("change", e => { R.k = +e.target.value; chargerValeurs(); rendreSaisie(); });
   if ($("#r-importer")) $("#r-importer").addEventListener("click", async e => { if (await lancerImport(e.currentTarget)) { JNOM = R.nom; ongletReleves("journal"); } });

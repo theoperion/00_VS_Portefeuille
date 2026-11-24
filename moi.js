@@ -5359,7 +5359,7 @@ function rendreFormulaire() {
         '<button type="button" class="type-btn m-tuile plus-types" id="f-plus-types" aria-expanded="' + plusTypes + '">Autres ' + (plusTypes ? "▴" : "▾") + "<small>" + (courants.includes("Vente") ? "dividende, frais, retrait…" : "vente, dividende, frais…") + "</small></button></div>" +
       (!plusTypes ? "" : '<div class="m-autres" role="group" aria-label="Autres types">' + courantsAutres.map(chipT).join("") +
         (raresAutres.length ? '<span class="m-autres-t">Plus rares</span>' + raresAutres.map(chipT).join("") : "") + "</div>") +
-      rendreRaccourcis() + htmlCarteReleveVersus();
+      rendreRaccourcis() + htmlCarteReleveVersus() + (typeof htmlRelevesMois === "function" ? htmlRelevesMois() : "");   // v20.29 : les relevés du mois de tout le monde
   else if (etape === 2) corps =
       (AUTRES_TYPES[F.type] && PREF.aides !== false ? '<p class="info aide">ℹ️ <b>' + esc(AUTRES_TYPES[F.type].lib) + "</b> : " + esc(AUTRES_TYPES[F.type].d) + "</p>" : "") +
       htmlImport(bourse) +
@@ -5399,6 +5399,7 @@ function rendreFormulaire() {
   if ($f("f-menu")) $f("f-menu").setAttribute("aria-expanded", String(menuOuvert));
   if ($f("f-vers")) $f("f-vers").addEventListener("toggle", () => { detailsOuverts = $f("f-vers").open; });
   if ($f("f-rv")) $f("f-rv").addEventListener("click", () => ouvrirReleveVersus(false));
+  if (typeof brancherRelevesMois === "function") brancherRelevesMois($f("m-form-ordre"));
   if ($f("f-rv-h")) $f("f-rv-h").addEventListener("click", () => ouvrirReleveVersus(true));   // v17.84 (Théo) : relevé automatique → l'historique des relevés reste accessible
   form.querySelectorAll("[data-type]").forEach(b => b.addEventListener("click", () => {
     const t = b.dataset.type;
