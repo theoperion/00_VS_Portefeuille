@@ -58,7 +58,7 @@
   const F_CHAMPI = (() => { const P = [[150, 218], [210, 218], [206, 150], [292, 146], [326, 122]]; for (let a = 0.05; a < PI - .02; a += PI / 9) P.push([180 + 150 * Math.cos(a), 122 - 100 * Math.sin(a)]); P.push([34, 122], [68, 146], [154, 150]); return polyg(P, 12); })();
   const TRACES = {
     abudhabi: { pts: polyg([[40, 204], [320, 204], [320, 40], [234, 40], [234, 126], [186, 126], [186, 40], [40, 40]], 16), decor: "garage", heure: "fete", amb: "noel", peint: "garage", reperes: [] },
-    bahrein: { pts: etoile([[3, .14, .3], [5, .09, 1], [7, .05, 2.2]], 42), decor: "lucioles", heure: "crepuscule", amb: "lucioles", peint: "ratatouille", reperes: [] },   // V16.47 : janvier = Ratatouille (la Forêt garde son peintre pour plus tard)
+    bahrein: { pts: etoile([[3, .14, .3], [5, .09, 1], [7, .05, 2.2]], 42), decor: "petitchef", heure: "crepuscule", amb: "paris", peint: "ratatouille", reperes: [] },   // V16.47 : janvier = Ratatouille (la Forêt garde son peintre pour plus tard)
     djeddah: { pts: polyg([[40, 210], [320, 210], [320, 70], [290, 70], [290, 32], [240, 32], [240, 70], [200, 70], [200, 32], [150, 32], [150, 70], [110, 70], [110, 32], [60, 32], [60, 70], [40, 70]], 12), decor: "chateau", heure: "jour", amb: "magie", peint: "chateau", reperes: [] },   // février · le Château, de jour (Théo, 24/11 : « de nuit c'est très fade »)
     melbourne: { pts: F_LAC, decor: "olympe", heure: "jour", amb: "gouter", eau: [resserrer(F_LAC, .3)], peint: "terrier", reperes: [] },
     suzuka: { pts: etoile([[5, .17, .6]], 45), decor: "solstice", heure: "jour", amb: "anneau", peint: "anneau", reperes: [] },   // avril · Seigneur des Anneaux
@@ -259,6 +259,7 @@
     station: { sol: "#14171D", bord: "#2E333C", piste: "#1C1F26", kerb: ["#A8B0BA", "#E9ECEF"], murs: ["#C8D0D8", "#5A626C"], obj: [] },   // juin : la station de combat (vibreurs acier et blanc)
     multivers: { sol: "#2A2050", bord: "#4A4562", piste: "#363A46", kerb: ["#FF7A1E", "#D2C8DE"], murs: ["#FF8A1E", "#2A2438"], obj: [] },   // septembre · Secret Wars (le décor vient de decorMultivers)
     survivants: { sol: "#5D6B44", bord: "#6E7A52", piste: "#45473F", kerb: ["#6B8A42", "#45473F"], murs: ["#E9ECEF", "#9BC53D"], obj: [["ruine", 40], ["champignon", 90], ["arbre", 40]] },
+    petitchef: { sol: "#262632", bord: "#3A3440", piste: "#34323C", kerb: ["#C8302A", "#F4F0E6"], murs: ["#F4F0E6", "#C8302A"], obj: [] },   // juillet 2027 · le Petit Chef (le décor vient de decorPetitChef)
     dunes: { sol: "#D3A867", bord: "#C08F50", piste: "#C9A06A", terre: true, murs: ["#E9ECEF", "#D9822B"], obj: [["dune", 90], ["rocher", 30], ["projecteur", 10, "pres"]] },
     titans: { sol: "#6E7458", bord: "#82886A", piste: "#8A7050", terre: true, murs: ["#E9ECEF", "#8C2F2F"], obj: [["maison", 50], ["rocher", 50], ["arbre", 40]] },
     olympe: { sol: "#B8B19E", bord: "#A49D8A", piste: "#E6DFCF", kerb: ["#F2B33A", "#FFFFFF"], murs: ["#FFFFFF", "#F2B33A"], obj: [["colonne", 50], ["montagne", 9], ["nuage", 26], ["rocher", 30], ["pin", 30]] },
@@ -288,6 +289,7 @@
     if (th === "neige") { A.hiver = 1; A.sol = hex("#E8EEF4"); A.bord = hex("#D5DFEA"); A.neige = A.pluie ? 0 : 1; A.horizon = mel(A.horizon, hex("#E6EDF5"), .5); A.haut = mel(A.haut, hex("#9FB5CC"), .4); }
     if (th === "noel") { A.sol = hex("#E6EFFF"); A.bord = hex("#D2E0F6"); A.neige = 1; A.floc = [1, 1, 1, .85 + Math.min(tempete, 1) * .05]; A.flocV = 3 * Math.min(1.5, 1 + tempete * .25); }   // v16.89 · tempête plafonnée à 1,5 × la neige normale (fluidité)   // V16.63 · Noël : neige fraîche et flocons, plus serrés s'il « pleut »
     if (th === "lucioles") { A.haut = hex("#13244A"); A.horizon = hex("#4A7E7A"); A.nuit = .8; A.amb = .6; A.sCol = fois(A.sCol, .6); if (!A.pluie) { A.neige = 1; A.floc = [.85, 1, .35, .9]; A.flocV = 1.5; } }
+    if (th === "paris") { A.haut = hex("#0E1636"); A.horizon = hex("#C8784E"); A.sCol = hex("#FFD8A8"); A.soleil = norme([-.55, .5, .45]); A.amb = .6; A.nuit = .75; A.brume = .0003; if (!A.pluie) { A.neige = 1; A.floc = [1, .86, .55, .45]; A.flocV = .8; } }   // juillet 2027 · Petit Chef : nuit de Paris, poussière dorée
     if (th === "envers") { A.haut = hex("#0B0610"); A.horizon = hex("#5A1424"); A.nuit = 1; A.eclairs = 1; A.sCol = hex("#9AA6C8"); A.sol = hex("#2A2730"); A.bord = hex("#35303A"); A.envers = 1; if (!A.pluie) { A.neige = 1; A.floc = [.75, .68, .7, .6]; A.flocV = 2.5; } }
     if (th === "multivers") { A.haut = hex("#0E0828"); A.horizon = hex("#E8743A"); A.sCol = hex("#D8CCFF"); A.soleil = norme([.35, .5, .55]); A.amb = .56; A.nuit = 1; A.brume = .00016; }
     if (th === "spores") { A.horizon = mel(A.horizon, hex("#B7C27A"), .6); A.haut = mel(A.haut, hex("#33402C"), .4); if (!A.pluie) { A.neige = 1; A.floc = [.85, .92, .6, .6]; A.flocV = 2; } }
@@ -3776,6 +3778,520 @@
     s.push(`<rect width="${W}" height="${H}" fill="url(#rt-nuit)"/>`);
     K.particules(8, "#FFE2A0", 1.6, "scintille");
     const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#rt-ciel)"/>`, "#1A1440", .05); RES.portraits = PORTR; return RES;
+  }
+
+  /* ---------- Juillet 2027 · le Grand Prix du Petit Chef (bahrein) : le décor 3D sur mesure (24/11/2026, directeur artistique) ----------
+     La même scène que la carte peinte, vue « à hauteur de rat » : tout est immense. Au cœur de la boucle, la grande cuisine
+     sur son carrelage en damier, dorée par le fourneau (le piano, ses flammes bleues, la cocotte de ratatouille qui fume,
+     le petit chef rat debout sur le bord, la louche qui tourne) ; l'apprenti aux cheveux roux, de dos, mené par le rat agrippé
+     à sa tête ; le passe et ses 5 assiettes sous 5 lampes chauffantes (les couleurs des 5 pilotes) ; le plan de travail
+     (courgette tranchée, couteau, tomates), le grand livre de recettes ouvert, l'étagère à épices, la chambre froide
+     entrouverte (lueur bleue, meules, saucissons), sacs de farine. Au sud, la salle : nappes blanches, bougies, verres,
+     serveurs qui circulent, le critique à sa table. Au nord, les toits de zinc de Paris (lucarnes, cheminées qui fument,
+     rats qui courent dans la gouttière) ; au loin la grande tour de fer qui scintille ; à l'est la Seine, ses quais, deux
+     ponts et une péniche ; à l'ouest le marché aux légumes géants ; au sud-ouest, la bouche d'égout où la colonie fait la fête. */
+  function decorPetitChef(ctx) {
+    const { T, A, sol, eau, lum, rotors } = ctx, v = h => hex(h), r = alea(7027), occupe = [], so = sol.ov();
+    const GRIS = v("#8592A8"), GRIS2 = v("#AAB4C6"), ROSE = v("#F0A8B4"), NOIRR = v("#1A1220"), BLANC = v("#F6F3EC"), INOX = v("#AEB6C0"), INOX2 = v("#7E8794"),
+      FONTE = v("#2A2D34"), CUIVRE = v("#C8753A"), CUIVRE2 = v("#E8A060"), BOIS = v("#8A5A34"), BOIS2 = v("#B07A48"), ROUGE = v("#C8302A"), TOMATE = v("#E0402A"),
+      AUBERG = v("#5A2A6A"), COURG = v("#3E7A3A"), POIVJ = v("#F2C230"), FLAMME = v("#5AA8FF"), OR = v("#FFC86A"), ZINC = v("#6E7C94"), ZINC2 = v("#8C9AB0"),
+      PIERRE = v("#D6C6A4"), PIERRE2 = v("#B8A684"), VITRE = v("#FFD27A"), NUITV = v("#1C2236");
+    // ---- outils
+    const dP = (x, z) => T.dist(x, z), poly = []; for (let i = 0; i < T.N; i += 2) poly.push([T.X[i], T.Z[i]]);
+    const dedans = (x, z) => dansPoly(x, z, poly);
+    const ps = T.a(-30, -(DEMI + 22)), pt2 = T.a(-20, DEMI + 18), stands = [[ps.x, ps.z, 66], [pt2.x, pt2.z, 72]];
+    const ok = (x, z, R) => dP(x, z) > DEMI + 13 + R && !stands.some(o => Math.hypot(x - o[0], z - o[1]) < o[2] + R) && !occupe.some(o => Math.hypot(x - o[0], z - o[1]) < o[2] + R);
+    const poser = (g, x, z, R, cap, y, K) => { sol.poser(g, x, y || 0, z, cap || 0, K || 1); if (R) occupe.push([x, z, R]); };
+    const vers = (x, z, tx, tz) => Math.atan2(tx - x, tz - z);
+    const transf = (g, f) => [g.d, g.o ? g.o.d : []].forEach(d => { for (let i = 0; i < d.length; i += 10) { const p = f([d[i], d[i + 1], d[i + 2]], false), n = f([d[i + 3], d[i + 4], d[i + 5]], true); d[i] = p[0]; d[i + 1] = p[1]; d[i + 2] = p[2]; const l = Math.hypot(n[0], n[1], n[2]) || 1; d[i + 3] = n[0] / l; d[i + 4] = n[1] / l; d[i + 5] = n[2] / l; } });
+    const etire = (g, kx, ky, kz) => { transf(g, (p, n) => n ? [p[0] / kx, p[1] / ky, p[2] / kz] : [p[0] * kx, p[1] * ky, p[2] * kz]); return g; };
+    const tourneX = (g, an) => { const c = Math.cos(an), s = Math.sin(an); transf(g, p => [p[0], p[1] * c - p[2] * s, p[1] * s + p[2] * c]); return g; };
+    const tourneZ = (g, an) => { const c = Math.cos(an), s = Math.sin(an); transf(g, p => [p[0] * c - p[1] * s, p[0] * s + p[1] * c, p[2]]); return g; };
+    /** cylindre d'un point à un autre (seg faces), fermé aux deux bouts */
+    const cylH = (g, a, b, R, seg, col, em, R2) => { const d = norme(sous(b, a)), u = norme(croix(d, Math.abs(d[1]) > .9 ? [1, 0, 0] : [0, 1, 0])), w = croix(d, u), rb = R2 === undefined ? R : R2;
+      const P = (c, rr, k) => { const t = k / seg * TAU; return [c[0] + (u[0] * Math.cos(t) + w[0] * Math.sin(t)) * rr, c[1] + (u[1] * Math.cos(t) + w[1] * Math.sin(t)) * rr, c[2] + (u[2] * Math.cos(t) + w[2] * Math.sin(t)) * rr]; };
+      for (let k = 0; k < seg; k++) { const m = (k + .5) / seg * TAU, n = [u[0] * Math.cos(m) + w[0] * Math.sin(m), u[1] * Math.cos(m) + w[1] * Math.sin(m), u[2] * Math.cos(m) + w[2] * Math.sin(m)];
+        g.quad(P(a, R, k), P(a, R, k + 1), P(b, rb, k + 1), P(b, rb, k), col, em, n); g.tri(a, P(a, R, k), P(a, R, k + 1), col, em, fois(d, -1)); if (rb > .01) g.tri(b, P(b, rb, k), P(b, rb, k + 1), col, em, d); } };
+    /** disque plat de centre c, de normale n */
+    const disque = (g, c, n, R, seg, col, em) => { const d = norme(n), u = norme(croix(d, Math.abs(d[1]) > .9 ? [1, 0, 0] : [0, 1, 0])), w = croix(d, u);
+      for (let k = 0; k < seg; k++) { const a = k / seg * TAU, b = (k + 1) / seg * TAU; g.tri(c, [c[0] + (u[0] * Math.cos(a) + w[0] * Math.sin(a)) * R, c[1] + (u[1] * Math.cos(a) + w[1] * Math.sin(a)) * R, c[2] + (u[2] * Math.cos(a) + w[2] * Math.sin(a)) * R], [c[0] + (u[0] * Math.cos(b) + w[0] * Math.sin(b)) * R, c[1] + (u[1] * Math.cos(b) + w[1] * Math.sin(b)) * R, c[2] + (u[2] * Math.cos(b) + w[2] * Math.sin(b)) * R], col, em, d); } };
+    const anneau = (g, x, y, z, R0, R1, seg, col, em) => { for (let k = 0; k < seg; k++) { const a = k / seg * TAU, b = (k + 1) / seg * TAU; g.quad([x + Math.cos(a) * R0, y, z + Math.sin(a) * R0], [x + Math.cos(b) * R0, y, z + Math.sin(b) * R0], [x + Math.cos(b) * R1, y, z + Math.sin(b) * R1], [x + Math.cos(a) * R1, y, z + Math.sin(a) * R1], col, em, [0, 1, 0]); } };
+    const bouffee = s => { const g = new Geo(), bl = v("#FFFFFF"); g.boule(0, 0, 0, s * 1.1, bl, .22, .8, true); g.boule(s * .8, s * .5, s * .3, s * .8, bl, .22, .8); g.boule(-s * .6, s * .7, -s * .4, s * .7, bl, .22, .8); return g; };
+    /** marmite ouverte (paroi dehors, paroi dedans, fond, bord) : on voit ce qui mijote */
+    const marmite = (g, x, y, z, R, h, ext, int, seg, bord) => { for (let k = 0; k < seg; k++) { const a = k / seg * TAU, b = (k + 1) / seg * TAU, m = (a + b) / 2, ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
+        g.quad([x + ca * R, y, z + sa * R], [x + cb * R, y, z + sb * R], [x + cb * R * 1.02, y + h, z + sb * R * 1.02], [x + ca * R * 1.02, y + h, z + sa * R * 1.02], ext, 0, [Math.cos(m), 0, Math.sin(m)]);
+        g.quad([x + ca * R * .93, y + .4, z + sa * R * .93], [x + cb * R * .93, y + .4, z + sb * R * .93], [x + cb * R * .95, y + h, z + sb * R * .95], [x + ca * R * .95, y + h, z + sa * R * .95], int, 0, [-Math.cos(m), 0, -Math.sin(m)]); }
+      anneau(g, x, y + h, z, R * .95, R * 1.04, seg, bord || ext, .05); g.cylindre(x, y, z, R * .96, .4, seg, int); };
+    const vapeur = (x, y, z, s, h, n, gris) => { for (let q = 0; q < (n || 3); q++) { const g = bouffee(s); if (gris) for (let i = 0; i < g.d.length; i += 10) { g.d[i + 6] = .55; g.d[i + 7] = .55; g.d[i + 8] = .62; g.d[i + 9] = .05; }
+      rotors.push({ g, x, y, z, cap: q * 2.1, v: .3, a: { ax: "y", p: 3.8, ph: q / (n || 3), h, dx: s * .9, dz: -s * .5, souffle: true, k0: .5, k1: 1.6 } }); } };
+    /** le rat (museau vers +x), s = longueur du corps ; toque : le petit chef */
+    const rat = (s, toque, pelage) => { const g = new Geo(), P = pelage || GRIS, C = mel(P, v("#FFFFFF"), .45);
+      g.boule(-.16 * s, .38 * s, 0, .36 * s, P, 0, .82, true); g.boule(.16 * s, .42 * s, 0, .3 * s, P, 0, .95, true); g.boule(.2 * s, .34 * s, 0, .22 * s, C, 0, .9);
+      g.boule(.5 * s, .56 * s, 0, .2 * s, P, 0, 1, true); cylH(g, [.58 * s, .56 * s, 0], [.86 * s, .5 * s, 0], .13 * s, 6, P, 0, .04 * s); g.boule(.87 * s, .5 * s, 0, .045 * s, ROSE, .2);
+      [-1, 1].forEach(sd => { g.boule(.66 * s, .62 * s, sd * .085 * s, .034 * s, NOIRR, 0); g.boule(.67 * s, .63 * s, sd * .08 * s, .012 * s, v("#FFFFFF"), .8);
+        disque(g, [.43 * s, .78 * s, sd * .15 * s], [.9, .2, sd * .5], .12 * s, 8, P, 0); disque(g, [.44 * s, .78 * s, sd * .155 * s], [.9, .2, sd * .5], .08 * s, 8, ROSE, .1);
+        g.boule(.3 * s, .06 * s, sd * .14 * s, .07 * s, ROSE, 0, .6); g.boule(-.25 * s, .06 * s, sd * .16 * s, .08 * s, ROSE, 0, .6);
+        for (let k = 0; k < 3; k++) cylH(g, [.8 * s, .5 * s, sd * .06 * s], [.9 * s, (.47 + k * .04) * s, sd * (.2 + k * .02) * s], .004 * s + .02, 3, NOIRR, 0); });
+      const Q = [[-.48, .28, 0], [-.8, .2, .12], [-1.1, .26, .3], [-1.32, .42, .38], [-1.46, .6, .3]].map(p => [p[0] * s, p[1] * s, p[2] * s]);
+      for (let k = 0; k < Q.length - 1; k++) cylH(g, Q[k], Q[k + 1], (.05 - k * .009) * s, 5, ROSE, 0, (.05 - (k + 1) * .009) * s);
+      if (toque) { g.cylindre(.48 * s, .7 * s, 0, .13 * s, .2 * s, 10, BLANC, .15); g.boule(.48 * s, .98 * s, 0, .18 * s, BLANC, .15, .62, true); }
+      return g; };
+    /** une chaise de bistrot (assise h) */
+    const chaise = (g, x, z, cap, h) => { const c = Math.cos(cap), s = Math.sin(cap), L = (a, b) => [x + a * c + b * s, z - a * s + b * c];
+      g.cylindre(x, h, z, 3.4, .7, 8, BOIS, 0); [[-2.2, -2.2], [2.2, -2.2], [2.2, 2.2], [-2.2, 2.2]].forEach(([a, b]) => { const p = L(a, b); g.cylindre(p[0], 0, p[1], .32, h, 4, v("#3A2418"), 0); });
+      const d = L(0, -3); g.boite(d[0], h + .6, d[1], 6, 7, .5, v("#3A2418"), 0, cap); g.ov().boite(d[0], h + 3.2, d[1], 4.4, 2.4, .7, BOIS2, 0, cap); };
+
+    const legumeK = (t, k) => { if (k === 0) { t.boule(0, 3, 0, 3.4, TOMATE, .1, .85); t.cylindre(0, 5.6, 0, .4, 1, 4, v("#2E6A2A")); }
+      else if (k === 1) { t.boule(0, 2.4, 0, 2.6, AUBERG, .1, 1); etire(t, 2.1, 1, 1); t.cylindre(-5.4, 1.8, 0, 1.3, 1.6, 6, v("#2E6A2A"), 0, .3); }
+      else if (k === 2) { cylH(t, [-6, 2, 0], [6, 2, 0], 2, 8, COURG, .1); t.boule(6, 2, 0, 2, COURG, .1); }
+      else if (k === 3) { t.boule(0, 3, 0, 3, k % 2 ? POIVJ : v("#D8302A"), .1, 1.1); t.cylindre(0, 6, 0, .5, 1.4, 4, v("#2E6A2A")); }
+      else { t.boule(0, 2.8, 0, 3, v("#C89A5A"), .1, .9); t.cylindre(0, 5, 0, 1, 2, 6, v("#B08048"), 0, .1); } return t; };
+
+    // ================= 1. le sol : pavés bleus de nuit (ville), carrelage en damier (cuisine), parquet (salle) =================
+    const BASE = v("#262632");
+    for (let i = 0; i < 60 && i < sol.d.length; i += 10) { sol.d[i + 6] = BASE[0]; sol.d[i + 7] = BASE[1]; sol.d[i + 8] = BASE[2]; }
+    if (sol.o) for (let i = 0; i < sol.o.d.length; i += 30) { const tache = Math.abs(sol.o.d[i + 1] - .02) < 1e-4 && Math.abs(sol.o.d[i + 11] - .02) < 1e-4 && Math.abs(sol.o.d[i + 21] - .02) < 1e-4;
+      for (let j = 0; j < 30; j += 10) for (let k = 0; k < 3; k++) sol.o.d[i + j + 6 + k] = tache ? BASE[k] : clamp(BASE[k] * sol.o.d[i + j + 6 + k] / Math.max(.05, A.sol[k]), 0, 1); }
+    const PIANO = [420, 290], CARO1 = v("#E6DAC0"), CARO2 = v("#3A3440");
+    { const C = 14, X0 = 40, Z0 = 40;
+      const carre = (x, z, c, a, b) => { const d = Math.hypot(x + c / 2 - PIANO[0], (z + c / 2 - PIANO[1]) * 1.2), f = clamp(1 - d / 230, 0, 1), noir = (a + b) % 2;
+        so.quad([x, .05, z], [x + c, .05, z], [x + c, .05, z + c], [x, .05, z + c], noir ? mel(CARO2, v("#6A4A2A"), f * .5) : mel(CARO1, v("#FFD9A0"), f * .6), noir ? f * .12 : .04 + f * .3, [0, 1, 0]); };
+      const remplir = (x, z, c, a, b, n) => { const pres = dP(x + c / 2, z + c / 2) < DEMI + 8 + c * .72;
+        if (!pres) { if (dedans(x + c / 2, z + c / 2)) carre(x, z, c, a, b); return; } if (n >= 1) return; for (let p = 0; p < 2; p++) for (let q = 0; q < 2; q++) remplir(x + p * c / 2, z + q * c / 2, c / 2, a, b, n + 1); };
+      for (let a = 0; a < 57; a++) for (let b = 0; b < 36; b++) remplir(X0 + a * C, Z0 + b * C, C, a, b, 0); }
+    // le long de la piste : une plinthe sombre à liseré de laiton côté cuisine, une bordure de trottoir côté ville (elles cachent les bords du carrelage)
+    { const pb = (i, o) => [T.X[i] - T.TZ[i] * o, .09, T.Z[i] + T.TX[i] * o], up = [0, 1, 0];
+      for (let i = 0; i < T.N; i += 2) { const j = (i + 2) % T.N, mi = [(T.X[i] + T.X[j]) / 2 - T.TZ[i] * (DEMI + 12), (T.Z[i] + T.Z[j]) / 2 + T.TX[i] * (DEMI + 12)], sd = dedans(mi[0], mi[1]) ? 1 : -1;
+        [1, -1].forEach(c => { const cu = c === sd, o0 = c * (DEMI + 6), o1 = c * (DEMI + (cu ? 19 : 13)), o2 = c * (DEMI + (cu ? 17.6 : 11.8));
+          so.quad(pb(i, o0), pb(j, o0), pb(j, o1), pb(i, o1), cu ? v("#2A2430") : v("#6A6672"), cu ? .05 : .02, up);
+          so.quad(pb(i, o2), pb(j, o2), pb(j, o2 + c * .7), pb(i, o2 + c * .7), cu ? v("#E8B050") : v("#8A8692"), cu ? .35 : .04, up); }); } }
+    // le parquet de la salle (au sud de la ligne droite), en lames décalées
+    { const LW = 28, LH = 7, P1 = v("#6A3E24"), P2 = v("#7E4C2C"), P3 = v("#5A3420");
+      for (let z = 530; z < 760; z += LH) for (let x = 40 + ((z / LH) % 3) * 9 - 28; x < 880; x += LW) {
+        const cx = x + LW / 2, cz = z + LH / 2; if (dedans(cx, cz) || dP(cx, cz) < DEMI + 10 || cx < 40) continue;
+        const k = r(); so.quad([x + .3, .05, z + .3], [x + LW - .3, .05, z + .3], [x + LW - .3, .05, z + LH - .3], [x + .3, .05, z + LH - .3], k < .33 ? P1 : k < .66 ? P2 : P3, .03, [0, 1, 0]); } }
+
+    // ================= 2. LE PIANO : le grand fourneau, ses flammes bleues, la cocotte de ratatouille et le petit chef =================
+    { const [px, pz] = PIANO, g = new Geo(), o = g.ov(), W = 120, D = 56, H = 13, K = 1.5, Lw = (x, y, z) => [px + K * x, K * y, pz + K * z];
+      g.boite(0, 0, 0, W, H, D, INOX2); g.boite(0, H, 0, W + 2, 1.2, D + 2, FONTE); g.boite(0, 0, 0, W + 1, 1.2, D + 1, NOIRR);
+      // les portes de four, poignées de laiton, boutons (face sud, côté caméra, et face nord)
+      [-1, 1].forEach(sd => { for (let k = 0; k < 4; k++) { const x = -45 + k * 30, zz = sd * (D / 2 + .08);
+          o.quad([x - 12, 2, zz], [x + 12, 2, zz], [x + 12, 9.6, zz], [x - 12, 9.6, zz], v("#5A626E"), 0, [0, 0, sd]); o.quad([x - 9, 4, zz + sd * .05], [x + 9, 4, zz + sd * .05], [x + 9, 7.4, zz + sd * .05], [x - 9, 7.4, zz + sd * .05], v("#14161C"), .1, [0, 0, sd]);
+          cylH(g, [x - 10, 10.6, zz + sd * 1.2], [x + 10, 10.6, zz + sd * 1.2], .45, 6, v("#E8C068"), .15);
+          for (let q = 0; q < 3; q++) cylH(g, [x - 7 + q * 7, 11.9, zz], [x - 7 + q * 7, 11.9, zz + sd * 1], .75, 8, NOIRR, 0); } });
+      cylH(g, [-W / 2 - 1, 12, D / 2 + 3], [W / 2 + 1, 12, D / 2 + 3], .5, 6, v("#E8C068"), .2);
+      // 6 feux : grilles noires, couronnes de flammes bleues
+      const FEUX = [[-40, -12], [0, -12], [40, -12], [-40, 12], [0, 12], [40, 12]];
+      FEUX.forEach(([fx, fz], k) => { anneau(o, fx, H + 1.25, fz, 3.4, 5, 12, v("#0E1016"), 0);
+        for (let q = 0; q < 12; q++) { const a = q / 12 * TAU, c = Math.cos(a), s = Math.sin(a); g.tri([fx + c * 4.2 - s * .8, H + 1.3, fz + s * 4.2 + c * .8], [fx + c * 4.2 + s * .8, H + 1.3, fz + s * 4.2 - c * .8], [fx + c * 4.8, H + 3.4, fz + s * 4.8], FLAMME, 1, [c, .3, s]); }
+        [0, PI / 2].forEach(a => g.boite(fx, H + 1.2, fz, 13, .8, .8, NOIRR, 0, a));
+        lum.push([...Lw(fx, H + 3, fz), .35, .6, 1, k === 1 || k === 4 ? 12 : 15]); });
+      // LA cocotte (feu du milieu, devant) : émail rouge, couvercle posé à côté, la ratatouille en rosace
+      { const cx = 0, cz = 12, R = 10, y0 = H + 2;
+        g.cylindre(cx, y0, cz, R * .92, 1, 16, v("#7A1A14")); marmite(g, cx, y0 + 1, cz, R, 7, v("#C8302A"), v("#3A1A18"), 16, v("#1E1A1E"));
+        g.cylindre(cx, y0 + 1, cz, R * .9, 5.9, 16, v("#8A2A10"), .1);
+        cylH(g, [cx - R - 2.6, y0 + 6, cz], [cx - R + .4, y0 + 6, cz], .9, 6, v("#9A2A20")); cylH(g, [cx + R - .4, y0 + 6, cz], [cx + R + 2.6, y0 + 6, cz], .9, 6, v("#9A2A20"));
+        const RAT2 = [v("#D8341E"), v("#F2C230"), v("#3E8A3A"), v("#6A2A7A")];
+        for (let q = 0; q < 26; q++) { const a = q / 26 * TAU * 2.6, d = 1.4 + q * .27; o.cylindre(cx + Math.cos(a) * d, y0 + 6.9 + q * .006, cz + Math.sin(a) * d, 1.5, .25, 8, RAT2[q % 4], .2); }
+        // le couvercle, posé de biais sur le piano
+        { const cv = new Geo(); cv.cylindre(0, 0, 0, R * .95, 1.2, 16, v("#C8302A"), 0, R * .8); cv.boule(0, 1.6, 0, 1.3, v("#E8C068"), .2); tourneX(cv, .5); g.poser(cv, 30, H + 4, 4, .3, 1); }
+        lum.push([...Lw(cx, y0 + 9, cz), 1, .7, .4, 32]); vapeur(...Lw(cx, y0 + 9, cz), 3.4, 30, 3);
+        // la louche qui tourne dans la cocotte
+        { const lg = new Geo(); cylH(lg, [3, 0, 0], [4.5, 12, 0], .35, 6, INOX); lg.boule(3, -.2, 0, 1.6, INOX, .15, .6);
+          etire(lg, K, K, K); const q0 = Lw(cx, y0 + 6, cz); rotors.push({ g: lg, x: q0[0], y: q0[1], z: q0[2], cap: 0, v: .9, a: { ax: "y" } }); }
+        // le petit chef, debout sur le bord de la cocotte, qui goûte du bout de sa cuillère
+        { const rg = rat(6, true); g.poser(rg, cx - 5, y0 + 8.2, cz - 7.2, -.9, 1);
+          const cu = new Geo(); cylH(cu, [0, 0, 0], [0, 6, 0], .22, 5, BOIS2); cu.boule(0, 6.4, 0, .8, BOIS2, 0, .6);
+          etire(cu, K, K, K); const q1 = Lw(cx - 2.6, y0 + 11.2, cz - 6.2); rotors.push({ g: cu, x: q1[0], y: q1[1], z: q1[2], cap: 0.5, v: 0, a: { osc: [.5, 2.2] } }); } }
+      // les casseroles de cuivre, la poêle, le faitout
+      [[-40, -12, 6, 6], [40, 12, 5, 5], [0, -12, 7, 8]].forEach(([fx, fz, R, h], k) => { const y0 = H + 2;
+        marmite(g, fx, y0, fz, R, h, k === 2 ? INOX : CUIVRE, k === 2 ? INOX2 : v("#8A4A2A"), 14, k === 2 ? INOX2 : CUIVRE2);
+        g.cylindre(fx, y0 + .4, fz, R * .92, h - 1.6, 14, k === 0 ? v("#E8D8A8") : k === 1 ? v("#8A3A18") : v("#D8A870"), .15);
+        if (k < 2) cylH(g, [fx + R * .9, y0 + h - 1, fz], [fx + R + 9, y0 + h + 1, fz + (k ? 2 : -2)], .55, 6, CUIVRE2);
+        else [-1, 1].forEach(sd => cylH(g, [fx + sd * R, y0 + h - 1.6, fz], [fx + sd * (R + 2.4), y0 + h - 1.6, fz], .7, 6, INOX));
+        vapeur(...Lw(fx, y0 + h + 1, fz), 2.2, 20, 2); });
+      g.cylindre(-40, H + 2, 12, 8, 1.2, 16, FONTE, 0, 8.6); cylH(g, [-48, H + 3, 12], [-62, H + 5, 14], .7, 6, FONTE);
+      for (let q = 0; q < 5; q++) g.boule(-40 + Math.cos(q * 1.3) * 4, H + 3.4, 12 + Math.sin(q * 1.3) * 4, 1.4, q % 2 ? v("#F2C230") : v("#D8341E"), .1, .5);
+      // la barre aux ustensiles, au nord du piano : louches, écumoires et casseroles pendues
+      [-56, 56].forEach(x => g.boite(x, 0, -D / 2 - 6, 1.6, 40, 1.6, FONTE));
+      cylH(g, [-56, 39, -D / 2 - 6], [56, 39, -D / 2 - 6], .7, 6, FONTE);
+      for (let k = 0; k < 9; k++) { const x = -48 + k * 12, L = 8 + (k % 3) * 3, pend = [x, 39 - L, -D / 2 - 6];
+        cylH(g, [x, 39, -D / 2 - 6], pend, .2, 4, INOX2);
+        if (k % 2) disque(g, [x, 39 - L - 4, -D / 2 - 6], [0, 0, 1], 4 + (k % 3), 14, CUIVRE, .05);
+        else { cylH(g, pend, [x, pend[1] - 6, -D / 2 - 6], .3, 4, INOX); g.boule(x, pend[1] - 7, -D / 2 - 6, 1.6, INOX, .05, .5); } }
+      poser(g, px, pz, 100, 0, 0, K);
+      for (let k = 0; k < 4; k++) lum.push([...Lw(-45 + k * 30, 6, D / 2 + 2), 1, .6, .3, 10]); }
+
+    // ================= 3. L'apprenti, de dos, mené par le petit chef agrippé à ses cheveux =================
+    { const ax = PIANO[0] + 9, az = PIANO[1] + 70, K = 1.5, g = new Geo(), PEAU = v("#EBC2A0"), VESTE = v("#F4F1EA"), PANT = v("#2A3042"), ROUX = v("#B0502A"), ROUX2 = v("#E0783A");
+      // local : il regarde vers +z (on le tourne vers le piano)
+      [-1, 1].forEach(sd => { g.boite(sd * 2.4, 0, 0, 3.4, 15, 3.6, PANT); g.boite(sd * 2.4, 0, .8, 3.8, 1.4, 6, NOIRR); });
+      g.bloc([[-5.4, 14, -3], [5.4, 14, -3], [5.4, 14, 3.2], [-5.4, 14, 3.2], [-6.4, 26, -3.4], [6.4, 26, -3.4], [6.4, 26, 3.4], [-6.4, 26, 3.4]], VESTE, 0);
+      g.ov().quad([-5.5, 12, 3.3], [5.5, 12, 3.3], [5.5, 21, 3.3], [-5.5, 21, 3.3], v("#FFFFFF"), .05, [0, 0, 1]);
+      g.ov().quad([-5.5, 17.6, -3.15], [5.5, 17.6, -3.15], [5.5, 18.6, -3.15], [-5.5, 18.6, -3.15], v("#D8D2C4"), 0, [0, 0, -1]);
+      g.ov().quad([1, 13, -3.2], [3.4, 13, -3.2], [3.6, 18, -3.2], [1.2, 18, -3.2], v("#C83A3A"), 0, [0, 0, -1]);   // le torchon à la ceinture
+      // bras droit tendu vers la cocotte, la louche
+      cylH(g, [6, 24.6, 0], [8, 20, 6], 1.5, 6, VESTE); cylH(g, [8, 20, 6], [6, 20.4, 13], 1.3, 6, VESTE); g.boule(6, 20.4, 14, 1.3, PEAU);
+      cylH(g, [6, 21, 14], [4, 13, 22], .35, 5, INOX); g.boule(4, 12.6, 22.4, 1.6, INOX, .1, .6);
+      g.cylindre(0, 26, 0, 1.6, 2, 8, PEAU); g.boule(0, 30, 0, 3.6, PEAU, 0, 1.05, true);
+      // les cheveux roux en bataille (de dos), les oreilles
+      [[0, 31.6, -1.2, 3.6], [-1.8, 32.6, .2, 2.4], [1.8, 32.6, -.2, 2.4], [0, 33.2, 1.4, 2], [-2.4, 30.4, -1.8, 2.2], [2.4, 30.4, -1.8, 2.2], [0, 29.4, -2.6, 2.4]].forEach(([x, y, z, R], k) => g.boule(x, y, z, R, k % 3 ? ROUX : ROUX2, 0, .9, true));
+      [[-3.2, 34, -.4, -4.6, 35.4, -1], [3.4, 33.6, 0, 5, 34.8, -.6], [0, 34.4, -2, -.6, 36.4, -3]].forEach(([a, b, c, d, e, f]) => cylH(g, [a, b, c], [d, e, f], .7, 4, ROUX2, 0, .1));
+      [-1, 1].forEach(sd => g.boule(sd * 3.6, 30, .4, .8, PEAU));
+      // le petit chef sur la tête, qui tire une mèche
+      g.poser(rat(4.2, true), -.6, 34.2, -.6, -PI / 2 + .3, 1);
+      const cap = vers(ax, az, PIANO[0] + 4, PIANO[1]); poser(g, ax, az, 26, cap, 0, K);
+      // le bras gauche levé, tiré par la mèche : il monte et redescend (marionnette)
+      const bg = new Geo(); cylH(bg, [0, 0, 0], [-5, -.5, 2], 1.5, 6, VESTE); cylH(bg, [-5, -.5, 2], [-8.6, 4, 3], 1.3, 6, VESTE); bg.boule(-9, 4.6, 3, 1.3, PEAU);
+      const c = Math.cos(cap), s = Math.sin(cap), sx = ax - 6 * K * c, sz = az + 6 * K * s; etire(bg, K, K, K);
+      rotors.push({ g: bg, x: sx, y: 24.6 * K, z: sz, cap: cap + PI / 2, v: 0, a: { osc: [.35, 2.6] } }); }
+
+    // ================= 4. Le passe : 5 assiettes sous 5 lampes chauffantes (les 5 pilotes) =================
+    { const [qx, qz] = [380, 168], g = new Geo(), o = g.ov(), L = 104, K = 1.4;
+      g.boite(0, 0, 0, L, 11, 12, INOX2); g.boite(0, 11, 0, L + 2, .8, 13, INOX); o.quad([-L / 2, 1, 6.05], [L / 2, 1, 6.05], [L / 2, 9, 6.05], [-L / 2, 9, 6.05], v("#5A626E"), 0, [0, 0, 1]);
+      [-1, 1].forEach(sd => g.boite(sd * (L / 2 - 1), 11.8, -4, 1.4, 26, 1.4, FONTE)); cylH(g, [-L / 2 + 1, 37, -4], [L / 2 - 1, 37, -4], .8, 6, FONTE);
+      // le rail à bons de commande
+      cylH(g, [-L / 2 + 4, 20, -4.8], [L / 2 - 4, 20, -4.8], .3, 4, INOX); for (let k = 0; k < 11; k++) o.quad([-44 + k * 8.6, 15.4, -5.2], [-40 + k * 8.6, 15.4, -5.2], [-40 + k * 8.6, 19.8, -5.2], [-44 + k * 8.6, 19.8, -5.2], v("#F4F0E2"), .2, [0, 0, 1]);
+      g.boule(L / 2 - 6, 11.8, 2, 1.6, v("#E8C068"), .2, .7); g.cylindre(L / 2 - 6, 13.2, 2, .25, 1, 4, v("#E8C068"));   // la sonnette
+      COULEURS_5.forEach((hx, k) => { const x = -40 + k * 20, c = v(hx);
+        // l'assiette : marli blanc, filet à la couleur du pilote, ratatouille en éventail
+        g.cylindre(x, 11.8, 1, 5.4, .5, 18, BLANC, .2, 5.8); anneau(o, x, 12.32, 1, 4.6, 5.3, 18, c, .55);
+        for (let q = 0; q < 9; q++) { const a = q / 9 * PI * 1.6 + .4; o.cylindre(x + Math.cos(a) * 2.2, 12.35, 1 + Math.sin(a) * 2.2, 1.2, .3, 7, [v("#D8341E"), v("#F2C230"), v("#3E8A3A")][q % 3], .25); }
+        o.boule(x, 12.6, 1, .7, v("#3E8A3A"), .2, .5);
+        // la lampe chauffante au-dessus
+        cylH(g, [x, 37, -4], [x, 31, -1], .2, 4, FONTE); g.cylindre(x, 27, -1, 4, 4, 12, c, .15, 1.4); g.boule(x, 27.6, -1, 1.8, v("#FF9A3A"), 1, .6);
+        lum.push([qx + x * K, 26 * K, qz - K, 1, .55, .2, 16]); });
+      // les cloches empilées et la pile d'assiettes
+      for (let k = 0; k < 6; k++) g.cylindre(-L / 2 - 6, k * 1.1, 4, 5.4, .9, 14, BLANC, .1, 5.8);
+      g.boule(L / 2 + 6, 0, 4, 5, INOX, .1, .9, true); g.boule(L / 2 + 6, 4.8, 4, .8, INOX, .2);
+      poser(g, qx, qz, 84, 0, 0, K); }
+
+    // ================= 5. Le plan de travail : la courgette tranchée, le couteau, tomates et aubergine =================
+    { const [tx, tz] = [262, 304], g = new Geo(), o = g.ov(), L = 68, D = 26, K = 1.5;
+      g.boite(0, 13, 0, L, 1.6, D, INOX); [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([a, b]) => g.boite(a * (L / 2 - 2), 0, b * (D / 2 - 2), 1.6, 13, 1.6, INOX2)); g.boite(0, 3, 0, L - 4, .8, D - 4, INOX2);
+      for (let k = 0; k < 5; k++) g.cylindre(-26 + k * 12, 3.8, 0, 4, 3.2, 12, k % 2 ? BLANC : v("#D8CEC0"), 0, 4.4);   // les bols empilés en dessous
+      g.boite(-6, 14.6, 1, 34, 1.4, 18, BOIS2); o.quad([-22, 16.05, -7], [10, 16.05, -7], [10, 16.05, 9], [-22, 16.05, 9], mel(BOIS2, v("#FFE0B0"), .2), 0, [0, 1, 0]);
+      // la courgette, à moitié en rondelles
+      cylH(g, [-18, 18.4, 0], [-4, 18.4, 3], 2.4, 10, COURG); g.boule(-18.6, 18.4, -.1, 2.2, v("#2E6A2A"), 0, 1);
+      for (let k = 0; k < 7; k++) { const x = -1 + k * 3.2, z = 2 + (k % 2) * 3.4; g.cylindre(x, 16, z, 2.3, .5, 10, COURG); o.cylindre(x, 16.52, z, 2, .02, 10, v("#E8F0B0"), .1); }
+      // le couteau
+      g.boite(10, 16.2, -4, 4, .9, 1.4, NOIRR, 0, .2); o.quad([12, 16.3, -4.3], [22, 16.3, -2.4], [22, 16.3, -1.2], [12, 16.3, -3.1], v("#E4E8EE"), .4, [0, 1, 0]);
+      // tomates, aubergine, poivron, ail
+      [[22, 0, TOMATE, 3.2], [26, 6, TOMATE, 2.8], [28, -6, POIVJ, 2.8]].forEach(([x, z, c, R]) => { g.boule(x, 14.6 + R * .8, z, R, c, .05, .85, true); g.cylindre(x, 14.6 + R * 1.6, z, .3, .9, 4, v("#2E6A2A")); });
+      { const au = new Geo(); au.boule(0, 0, 0, 2.6, AUBERG, .05, 1, true); etire(au, 2.2, 1, 1); au.cylindre(-6, -.6, 0, 1.2, 1.4, 6, v("#2E6A2A"), 0, .3); tourneZ(au, PI / 2 * 0); g.poser(au, 18, 17.2, 9, .3, 1); }
+      for (let k = 0; k < 4; k++) g.boule(-28 + k * 1.6, 15.6, 9 + (k % 2), 1.1, v("#F2EAD8"), 0, 1.1);
+      poser(g, tx, tz, 60, .12, 0, K);
+      // le seau et le balai, à côté
+      { const s = new Geo(); s.cylindre(0, 0, 0, 4, 7, 12, v("#4A6A8A"), 0, 4.6); s.cylindre(0, 6.4, 0, 4.2, .2, 12, v("#5A8AB0"), .05); cylH(s, [7, 0, 3], [3, 26, 5], .4, 5, BOIS2); s.boite(7.4, 0, 3, 6, 2, 2, v("#C8A05A"), 0, .4); poser(s, tx - 70, tz + 30, 12, 0, 0, K); } }
+
+    // ================= 6. Le grand livre de recettes, ouvert (une rosace dessinée, des lignes, le signet rouge) =================
+    { const [bx, bz] = [272, 430], g = new Geo(), o = g.ov(), W = 22, D = 30, K = 1.6, PAGE = v("#FBF2DA");
+      g.boite(0, 0, 0, W * 2 + 3, 1.2, D + 3, v("#6A1E1A"));
+      [-1, 1].forEach(sd => { const P = [[0, 1.2, -D / 2], [sd * W, 1.2, -D / 2], [sd * W, 1.2, D / 2], [0, 1.2, D / 2], [0, 4.4, -D / 2], [sd * W, 3.2, -D / 2], [sd * W, 3.2, D / 2], [0, 4.4, D / 2]];
+        g.bloc(P, PAGE, .12, { 1: PAGE, 2: v("#E4D6B4"), 3: v("#E4D6B4"), 4: v("#E4D6B4"), 5: v("#E4D6B4") });
+        const y = w0 => 4.4 - (w0 / W) * 1.2 + .06, ligne = (a, b, z, ep, col) => o.quad([sd * a, y(a), z], [sd * b, y(b), z], [sd * b, y(b), z + ep], [sd * a, y(a), z + ep], col, 0, [0, 1, 0]);
+        if (sd < 0) { ligne(4, 16, -D / 2 + 3, 1.4, v("#8A1E1A")); ligne(6, 14, -D / 2 + 5.6, .4, v("#8A1E1A")); }
+        for (let k = 0; k < 16; k++) { const z = -D / 2 + (sd < 0 ? 8.4 : 3) + k * 1.4; if (z > D / 2 - 2.4 || (sd > 0 && k > 1 && k < 12)) continue; const L = 9 + ((k * 7 + (sd > 0 ? 3 : 0)) % 9); ligne(3, 3 + L, z, .3, v("#5A4A3A")); } });
+      // sur la page de droite, la ratatouille dessinée (rosace)
+      for (let q = 0; q < 14; q++) { const a = q / 14 * TAU, d = 3.4; o.cylindre(11 + Math.cos(a) * d, 3.9, Math.sin(a) * d, 1.4, .02, 8, [v("#D8341E"), v("#E8B830"), v("#3E8A3A"), v("#7A3A8A")][q % 4], .05); }
+      o.cylindre(11, 3.92, 0, 1.6, .02, 8, v("#D8341E"), .05);
+      o.quad([1, 4.5, -D / 2 - .5], [2.2, 4.5, -D / 2 - .5], [3, 1.4, -D / 2 - 6], [1.8, 1.4, -D / 2 - 6], v("#C8202A"), 0, [0, 1, 0]);   // le signet
+      cylH(g, [-24, .8, 18], [-6, .8, 24], .5, 5, BOIS2); g.boule(-25.5, .8, 17.4, 2.2, BOIS2, 0, .45);   // la cuillère en bois posée à côté
+      poser(g, bx, bz, 46, -.25, 0, K); }
+
+    // ================= 7. La chambre froide entrouverte, l'étagère à épices, la farine =================
+    { const [cx, cz] = [650, 246], g = new Geo(), o = g.ov(), W = 50, D = 40, H = 30, K = 1.4, FROID = v("#9FE4FF");
+      // les murs (porte ouverte côté ouest), le toit
+      g.boite(0, 0, -D / 2, W, H, 1.6, INOX); g.boite(0, 0, D / 2, W, H, 1.6, INOX); g.boite(W / 2, 0, 0, 1.6, H, D, INOX);
+      g.boite(-W / 2, 0, -D / 2 + 6, 1.6, H, 12, INOX); g.boite(-W / 2, 0, D / 2 - 6, 1.6, H, 12, INOX); g.boite(-W / 2, 24, 0, 1.6, 6, 16, INOX);
+      g.boite(0, H, 0, W + 2, 1.4, D + 2, INOX2);
+      o.quad([-W / 2 + .9, 1, -8], [-W / 2 + .9, 1, 8], [-W / 2 + .9, 24, 8], [-W / 2 + .9, 24, -8], FROID, .75, [-1, 0, 0]);   // la lueur bleue au fond de l'embrasure
+      { const pr = new Geo(); pr.boite(0, 0, 8, 2.2, 23.6, 16, v("#C8D2DA")); pr.ov().boite(-1.3, 10, 14, .6, 3, 1, v("#E8C068"), .2); poser(pr, cx - K * (W / 2 + 1), cz - 8 * K, 0, -1.1, 0, K); }   // la porte, grande ouverte
+      // le givre et la fumée froide qui coule par la porte
+      for (let k = 0; k < 12; k++) o.boule(-W / 2 - 1 + r() * 2, 1 + r() * 20, -8 + r() * 16, .6 + r() * .5, v("#E8F8FF"), .4);
+      for (let q = 0; q < 3; q++) { const b = bouffee(2.4); rotors.push({ g: b, x: cx - K * (W / 2 + 3), y: 1.5, z: cz - 4 + q * 5, cap: 0, v: .1, a: { ax: "y", p: 4.4, ph: q / 3, dx: -20, h: -.5, souffle: true, k0: .8, k1: 2.2 } }); }
+      lum.push([cx - K * (W / 2 + 4), 10, cz, .55, .85, 1, 28]);
+      // dedans (on le voit par la porte et par-dessus) : meules, jambons pendus, caisses de légumes
+      for (let k = 0; k < 3; k++) g.boite(4, 2 + k * 8, -D / 2 + 4, 32, .8, 6, INOX2);
+      for (let k = 0; k < 6; k++) g.cylindre(-8 + (k % 3) * 9, 2.8 + Math.floor(k / 3) * 8, -D / 2 + 4, 3.4, 2.6, 12, v("#F2C84A"), .05);
+      for (let k = 0; k < 4; k++) { const x = -4 + k * 7; cylH(g, [x, 29, 6], [x, 24, 6], .15, 3, NOIRR); { const j = new Geo(); j.boule(0, 0, 0, 2.2, v("#8A3A2A"), 0, 1.6); g.poser(j, x, 20, 6, 0, 1); } }
+      g.boite(10, 0, 12, 12, 6, 10, BOIS); for (let k = 0; k < 5; k++) g.boule(6 + (k % 3) * 4, 6.8, 9 + Math.floor(k / 3) * 5, 2, k % 2 ? TOMATE : v("#E8D8B8"), 0, .9);
+      poser(g, cx, cz, 52, 0, 0, K);
+      // l'étagère à épices (3 rayons de bocaux colorés), face au piano
+      { const e = new Geo(), L = 56, POTS = ["#D8341E", "#F2A62A", "#7A9A3A", "#E8D8A8", "#9A3A1A", "#5A3A22", "#F2D23A", "#3A6A2A", "#C85A2A", "#E8E0D0", "#B0302A", "#D89A3A"];
+        [-1, 1].forEach(sd => e.boite(sd * (L / 2), 0, 0, 1.6, 28, 9, BOIS)); for (let k = 0; k < 4; k++) e.boite(0, .6 + k * 8.4, 0, L, 1, 9, BOIS2);
+        e.boite(0, 0, -4.4, L, 28, .6, v("#5A3A22"));
+        for (let k = 0; k < 3; k++) for (let q = 0; q < 8; q++) { const x = -L / 2 + 4.6 + q * 6.6 + (k % 2) * 1.2, y = 1.6 + k * 8.4, h = 4.6 + ((q + k) % 3) * .8, c = v(POTS[(q * 5 + k * 3) % POTS.length]);
+          e.cylindre(x, y, 0, 2.1, h, 10, mel(c, v("#FFFFFF"), .35), .12); e.cylindre(x, y, 0, 1.8, h * .72, 10, c, .22); e.cylindre(x, y + h, 0, 2.2, 1, 10, k === 1 && q % 2 ? v("#E8C068") : v("#2A2A30"), .05); }
+        e.cylindre(-L / 2 + 6, 26, 0, 1.2, .4, 6, v("#E8C068"));
+        poser(e, cx - 8, cz + K * D / 2 + 9, 0, 0, 0, 1.4); occupe.push([cx - 8, cz + 40, 40]); }
+      // les sacs de farine (un éventré : une traînée blanche avec des petites traces de pattes)
+      { const f = new Geo(), SAC = v("#E2D6B8"); [[0, 0, 0], [9, 0, 2], [4, 6.4, 1]].forEach(([x, y, z]) => { const s = new Geo(); s.boule(0, 3.4, 0, 5, SAC, 0, .7, true); etire(s, 1, 1, .75); f.poser(s, x, y, z, 0, 1); f.ov().boite(x, y + 5.6, z, 4, .4, 1, v("#3A5A8A"), 0); });
+        const s = new Geo(); s.boule(0, 2, 0, 5, SAC, 0, .45, true); etire(s, 1.2, 1, .8); f.poser(s, -6, 0, 12, .6, 1);
+        for (let k = 0; k < 9; k++) f.ov().cylindre(-10 - k * 2.6 + r(), .07, 15 + k * 1.4 + r(), 1.6 + r() * 1.4, .05, 8, v("#F4F0E8"), .08);
+        for (let k = 0; k < 7; k++) f.ov().boule(-20 - k * 2.2, .1, 22 + k * 1.6 + (k % 2) * .8, .35, v("#F8F4EC"), .15, .3);
+        poser(f, 540, 384, 30, 2.4, 0, 1.6); } }
+
+    // ================= 7 bis. Le vaisselier, les faitouts posés au sol, les cageots, la poubelle et sa tapette =================
+    { const g = new Geo(), o = g.ov();
+      // le vaisselier (piles d'assiettes, casseroles de cuivre rangées, bocaux)
+      { const e = new Geo(), L = 74, H = 44, P = 12; [-1, 1].forEach(sd => e.boite(sd * L / 2, 0, 0, 2, H, P, BOIS)); for (let k = 0; k < 4; k++) e.boite(0, k * 14, 0, L, 1.2, P, BOIS2); e.boite(0, 0, -P / 2, L, H, .8, v("#4A3020"));
+        for (let k = 0; k < 6; k++) { e.cylindre(-30 + k * 12, 1.2, 0, 4.4, 4 + (k % 3) * .9, 10, BLANC, .08, 4.8); for (let q = 1; q < 5 + (k % 3); q++) e.ov().cylindre(-30 + k * 12, 1.2 + q * .9, 0, 4.85, .12, 10, v("#C8C0B0"), 0); }
+        for (let k = 0; k < 5; k++) { marmite(e, -28 + k * 14, 15.2, 0, 4.6 - (k % 2), 5, CUIVRE, v("#8A4A2A"), 12, CUIVRE2); cylH(e, [-28 + k * 14 + 4.4, 19, 0], [-28 + k * 14 + 10, 19.6, 0], .4, 4, CUIVRE2); }
+        for (let k = 0; k < 9; k++) { const x = -32 + k * 8; e.cylindre(x, 29.2, 0, 2.6, 6 + (k % 3), 10, mel(v(["#E8D8A8", "#C8402A", "#7A9A3A", "#E8B030"][k % 4]), v("#FFFFFF"), .2), .06); e.cylindre(x, 35.4 + (k % 3), 0, 2.8, 1, 10, v("#2A2A30")); }
+        for (let k = 0; k < 4; k++) e.cylindre(-24 + k * 16, 43.2, 0, 5.5, 6, 12, k % 2 ? INOX : CUIVRE, .05, 5);
+        poser(e, 246, 156, 40, .45, 0, 1); }
+      // deux faitouts géants posés par terre, qui fument encore
+      [[520, 204, 13, 18], [204, 384, 10, 14]].forEach(([x, z, R, h], k) => { marmite(g, x, 0, z, R, h, k ? INOX : CUIVRE, k ? INOX2 : v("#8A4A2A"), 18, k ? INOX2 : CUIVRE2);
+        g.cylindre(x, .4, z, R * .92, h - 2.6, 18, k ? v("#E8C878") : v("#B8481E"), .15); [-1, 1].forEach(sd => cylH(g, [x + sd * R, h - 3, z], [x + sd * (R + 4), h - 3, z], 1, 6, k ? INOX : CUIVRE2));
+        cylH(g, [x + R * .3, h - 3, z], [x + R * 1.2, h + 14, z - 3], .5, 5, BOIS2); vapeur(x, h, z, 3.2, 26, 3); lum.push([x, h + 2, z, 1, .7, .4, 18]); occupe.push([x, z, R + 6]); });
+      // les cageots de légumes, empilés de travers
+      [[360, 424, .3], [706, 250, -.4], [452, 214, .8]].forEach(([x, z, cap], k) => { const c = new Geo(), co = c.ov();
+        for (let q = 0; q < 4; q++) { const lx = (q % 2) * 15 - 7.5, ly = Math.floor(q / 2) * 8, lz = q === 3 ? 3 : 0; if (k === 2 && q > 1) continue;
+          c.boite(lx, ly, lz, 14, 1.2, 20, v("#C8A060")); [-1, 1].forEach(sd => { c.boite(lx + sd * 6.6, ly, lz, .8, 7, 20, v("#B8904E")); c.boite(lx, ly, lz + sd * 9.6, 14, 7, .8, v("#B8904E")); co.boite(lx, ly + 3.4, lz + sd * 10.05, 14, 1.4, .1, v("#E8C878")); });
+          for (let w = 0; w < 3; w++) { const kk = (q + k + w) % 5, t = new Geo(); legumeK(t, kk); c.poser(t, lx + (w - 1) * 3.6, ly + 1.2, lz + (w - 1) * 5, w, .8); } }
+        poser(c, x, z, 22, cap, 0, 1); });
+      // la poubelle à pédale, un trognon, et la tapette tendue avec son morceau de fromage (aucun rat ne s'y laisse prendre)
+      { const x = 176, z = 430; g.cylindre(x, 0, z, 7, 18, 14, INOX2, 0, 7.4); g.boule(x, 18, z, 7.4, INOX, .08, .35); g.boite(x, 0, z + 7.6, 4, 1.4, 3, NOIRR);
+        g.boule(x + 11, 2, z + 4, 2.4, v("#E8D8A0"), 0, 1.2); g.boite(x - 12, 0, z + 12, 9, .8, 5, BOIS2, 0, .5); cylH(g, [x - 15, 1.2, z + 11], [x - 9, 1.2, z + 14], .3, 4, INOX); g.boite(x - 11, .8, z + 13, 2, 1.4, 1.6, v("#F2C84A"), .15, .5); occupe.push([x, z, 14]); }
+      sol.poser(g, 0, 0, 0, 0, 1); }
+
+    // ================= 8. La salle : nappes blanches, bougies, serveurs, et le critique à sa table =================
+    const TABLES = [];
+    { const g = new Geo(), o = g.ov(), NAPPE = v("#F4F0E6");
+      const table = (x, z, R, critique) => { const h = 11;
+        g.cylindre(x, 0, z, 3.4, .8, 8, v("#2A1A12")); g.cylindre(x, .8, z, .8, h - 1, 5, v("#2A1A12"));
+        g.cylindre(x, h - 3.2, z, R + 1.2, 3.2, 12, NAPPE, .06, R + .2); g.cylindre(x, h, z, R + .2, .25, 12, NAPPE, .1);
+        if (!critique) anneau(o, x, h + .27, z, R * .3, R * .42, 10, v("#C8302A"), .1);
+        // la bougie, deux verts à pied, deux assiettes
+        g.cylindre(x, h + .25, z, .9, .8, 8, v("#C8A040"), .1); g.cylindre(x, h + 1, z, .5, 3.2, 6, v("#F8F0DA"), .2); g.boule(x, h + 4.6, z, .45, v("#FFD27A"), 1, 1.8);
+        lum.push([x, h + 5, z, 1, .78, .4, 9]);
+        [-1, 1].forEach(sd => { const a = r() * TAU; g.cylindre(x + sd * R * .6, h + .25, z + sd * 1.4, 2.6, .3, 10, BLANC, .15, 2.8);
+          const vx = x + sd * R * .45 + Math.cos(a), vz = z - sd * R * .25; g.cylindre(vx, h + .25, vz, .7, .1, 6, v("#E0E8F0"), .3); g.cylindre(vx, h + .3, vz, .1, 1.6, 4, v("#E0E8F0"), .3);
+          g.cylindre(vx, h + 1.9, vz, .4, 1.4, 8, v("#E8F0F8"), .3, .7); g.cylindre(vx, h + 2, vz, .42, .7, 8, v("#7A1424"), .1, .55);
+          chaise(g, x + sd * (R + 4), z + (critique ? 0 : sd * 2), sd > 0 ? PI / 2 : -PI / 2, 7); });
+        TABLES.push([x, z]); };
+      const essais = [[150, 590], [230, 580], [310, 590], [395, 600], [610, 590], [700, 560], [800, 470], [160, 670], [250, 680], [340, 680], [430, 690], [530, 680], [620, 680], [720, 650], [820, 580], [80, 600]];
+      essais.forEach(([x, z], k) => { if (ok(x, z, 18)) { table(x, z, 9, false); occupe.push([x, z, 18]); } });
+      // LE critique : grand, sec, en costume sombre, raide sur sa chaise haute, la fourchette levée devant LA ratatouille
+      { const [kx, kz] = [575, 650], cr = new Geo(), SOMBRE = v("#2A2632"), h = 11;
+        g.cylindre(kx, 0, kz, 3.4, .8, 10, v("#2A1A12")); g.cylindre(kx, .8, kz, .8, h - 1, 6, v("#2A1A12")); g.cylindre(kx, h - 3.2, kz, 9.6, 3.2, 18, NAPPE, .06, 8.6); g.cylindre(kx, h, kz, 8.6, .25, 18, NAPPE, .1);
+        g.cylindre(kx + 1, h + .25, kz, 3.4, .4, 16, BLANC, .2, 3.8);
+        for (let q = 0; q < 11; q++) { const a = q / 11 * PI * 1.7 + .3; o.cylindre(kx + 1 + Math.cos(a) * 1.6, h + .7 + q * .02, kz + Math.sin(a) * 1.6, 1, .25, 7, [v("#D8341E"), v("#F2C230"), v("#3E8A3A"), v("#6A2A7A")][q % 4], .25); }
+        g.cylindre(kx - 3, h + .25, kz - 4, .9, .8, 8, v("#C8A040"), .1); g.cylindre(kx - 3, h + 1, kz - 4, .5, 3.2, 6, v("#F8F0DA"), .2); g.boule(kx - 3, h + 4.6, kz - 4, .45, v("#FFD27A"), 1, 1.8);
+        lum.push([kx - 3, h + 5, kz - 4, 1, .78, .4, 9]);
+        g.cylindre(kx + 3, h + .3, kz + 4, .1, 2.4, 4, v("#E0E8F0"), .3); g.cylindre(kx + 3, h + 2.6, kz + 4, .5, 1.8, 8, v("#E8F0F8"), .3, .8); g.cylindre(kx + 3, h + 2.7, kz + 4, .52, .9, 8, v("#5A0A18"), .1, .64);
+        // la chaise haute à dossier (elle monte au-dessus de sa tête)
+        cr.boite(0, 6.6, 0, 6, 1, 6, v("#3A1A1A")); [[-2.6, -2.6], [2.6, -2.6], [2.6, 2.6], [-2.6, 2.6]].forEach(([a, b]) => cr.cylindre(a, 0, b, .35, 6.6, 4, v("#1E1218")));
+        cr.boite(-3, 7.6, 0, .9, 22, 6.4, v("#3A1A1A")); cr.boite(-3.2, 28.6, 0, 1, 1.6, 7.4, v("#1E1218"));
+        // le critique (de profil, tourné vers son assiette)
+        cr.boite(.4, 7.6, 0, 4.6, 3, 3.6, SOMBRE); cylH(cr, [2.6, 9, -1], [6, 9, -1], 1.1, 5, SOMBRE); cylH(cr, [2.6, 9, 1], [6, 9, 1], 1.1, 5, SOMBRE); cylH(cr, [6, 9, -1], [6, 1, -1], 1, 5, SOMBRE); cylH(cr, [6, 9, 1], [6, 1, 1], 1, 5, SOMBRE);
+        cr.bloc([[-2, 10, -2.6], [2, 10, -2.6], [2, 10, 2.6], [-2, 10, 2.6], [-1.6, 22, -3.4], [1.8, 22, -3.4], [1.8, 22, 3.4], [-1.6, 22, 3.4]], SOMBRE, 0);
+        cr.ov().quad([1.85, 17, -.8], [1.85, 17, .8], [1.85, 21.6, .8], [1.85, 21.6, -.8], v("#E8E4DC"), .05, [1, 0, 0]);
+        cylH(cr, [1, 21, -3.2], [6, 15.4, -3.4], .9, 5, SOMBRE); cylH(cr, [6, 15.4, -3.4], [9.6, 18.6, -1.6], .8, 5, SOMBRE); cr.boule(9.8, 18.8, -1.6, .8, v("#D8C8B4"));
+        cylH(cr, [9.8, 18.8, -1.6], [10.4, 22.4, -1.2], .15, 3, INOX); for (let q = -1; q <= 1; q++) cylH(cr, [10.4, 22.4, -1.2 + q * .2], [10.6, 23.6, -1.2 + q * .22], .07, 3, INOX);
+        cylH(cr, [1, 21, 3.2], [6.4, 16, 2.8], .9, 5, SOMBRE); cylH(cr, [6.4, 16, 2.8], [8.4, 13, 1.4], .8, 5, SOMBRE);
+        cr.cylindre(.4, 22, 0, .9, 1.8, 6, v("#D8C8B4")); { const t = new Geo(); t.boule(0, 0, 0, 2.4, v("#D8C8B4"), 0, 1.3, true); cr.poser(t, .6, 26.6, 0, 0, 1); }
+        cr.boule(-.2, 28.6, 0, 2.2, v("#3A3440"), 0, .6); cylH(cr, [2.6, 26.4, 0], [3.6, 25.2, 0], .6, 4, v("#C8B8A4"), 0, .1);
+        g.poser(cr, kx - 11, 0, kz, 0, 1);
+        occupe.push([kx, kz, 20]); TABLES.push([kx, kz]); }
+      sol.poser(g, 0, 0, 0, 0, 1);
+      // deux serveurs qui font la navette entre les tables (plateau et cloche)
+      const serveur = () => { const s = new Geo(), N = v("#1E1E26");
+        [-1, 1].forEach(sd => s.boite(0, 0, sd * 1.2, 1.8, 10, 1.6, N)); s.bloc([[-1.6, 10, -2.6], [1.6, 10, -2.6], [1.6, 10, 2.6], [-1.6, 10, 2.6], [-1.6, 17.6, -3], [1.6, 17.6, -3], [1.6, 17.6, 3], [-1.6, 17.6, 3]], v("#F2F0EA"), 0);
+        s.ov().boite(0, 4, 0, 3.6, 8, 5.8, v("#F8F6F0"), .05); s.ov().quad([1.65, 12, -1.6], [1.65, 12, 1.6], [1.65, 17.4, 1.6], [1.65, 17.4, -1.6], N, 0, [1, 0, 0]);
+        s.boule(0, 20, 0, 2.2, v("#E8C0A0"), 0, 1.1, true); s.boule(-.3, 21.4, 0, 2, v("#2A1E1A"), 0, .6);
+        cylH(s, [0, 17, -3], [3, 18, -4.6], .8, 5, v("#F2F0EA")); cylH(s, [3, 18, -4.6], [3.4, 21.6, -4.6], .7, 5, v("#F2F0EA"));
+        s.cylindre(3.4, 21.8, -4.6, 4, .3, 12, INOX, .15); s.boule(3.4, 22.1, -4.6, 3, INOX, .2, .8, true); s.boule(3.4, 24.6, -4.6, .5, INOX, .3);
+        cylH(s, [0, 17, 3], [.8, 12, 3.4], .8, 5, v("#F2F0EA")); s.ov().quad([.85, 11, 3.5], [.85, 11, 4.4], [.85, 14, 4.4], [.85, 14, 3.5], v("#FFFFFF"), .1, [1, 0, 0]);
+        return s; };
+      const tour = (pts, p, ph) => { const c = [...pts, pts[0]], L = [], n = 8; for (let k = 0; k < c.length - 1; k++) for (let j = 0; j < n; j++) { const t = j / n; L.push([c[k][0] + (c[k + 1][0] - c[k][0]) * t, 0, c[k][1] + (c[k + 1][1] - c[k][1]) * t]); } L.push(L[0].slice());
+        rotors.push({ g: serveur(), x: 0, y: 0, z: 0, cap: 0, v: 0, a: { p, ph, chemin: L, oriente: true } }); };
+      const vide = (x, z) => [x, z];
+      tour([vide(190, 628), vide(282, 632), vide(372, 640), vide(470, 646), vide(470, 726), vide(290, 720), vide(196, 714)], 42, 0);
+      tour([vide(600, 614), vide(680, 614), vide(770, 622), vide(776, 700), vide(670, 724), vide(600, 722)], 36, .4);
+      // les grandes fenêtres et le mur du fond de la salle, la nuit dehors
+      { const m = new Geo(), mo = m.ov(); m.boite(470, 0, 784, 860, 48, 4, v("#5A2A22")); m.boite(470, 0, 781.6, 860, 8, 1, v("#3A1A14"));
+        for (let k = 0; k < 10; k++) { const x = 70 + k * 88; mo.quad([x - 22, 12, 781.9], [x + 22, 12, 781.9], [x + 22, 40, 781.9], [x - 22, 40, 781.9], v("#141C3A"), .35, [0, 0, -1]);
+          mo.quad([x - 22, 40, 781.88], [x + 22, 40, 781.88], [x, 46, 781.88], [x, 46, 781.88], v("#141C3A"), .35, [0, 0, -1]);
+          mo.quad([x - .5, 12, 781.85], [x + .5, 12, 781.85], [x + .5, 43, 781.85], [x - .5, 43, 781.85], v("#C8A060"), .2, [0, 0, -1]); mo.quad([x - 22, 26, 781.85], [x + 22, 26, 781.85], [x + 22, 27, 781.85], [x - 22, 27, 781.85], v("#C8A060"), .2, [0, 0, -1]);
+          for (let q = 0; q < 3; q++) mo.boule(x - 12 + q * 11 + r() * 3, 18 + r() * 18, 781.4, .5, v("#FFE6A0"), 1); }
+        for (let k = 0; k < 11; k++) { const x = 26 + k * 88; m.boite(x, 0, 780, 5, 48, 5, v("#7A3A2A")); m.boite(x, 30, 778, 2, 1.4, 2, v("#E8C068"), .3); m.boule(x, 33, 778, 1.6, v("#FFD27A"), 1, 1.2); lum.push([x, 33, 776, 1, .8, .45, 14]); }
+        sol.poser(m, 0, 0, 0, 0, 1); occupe.push([470, 790, 30]); } }
+
+    // ================= 9. Les toits de zinc de Paris, au nord : lucarnes, cheminées qui fument, gouttière où courent des rats =================
+    { const g = new Geo(), o = g.ov(), rg = alea(1789), FUM = [];
+      const immeuble = (x, z, W, D, H, rang) => {
+        g.boite(x, 0, z, W, H, D, mel(PIERRE, PIERRE2, rg()));
+        // façade sud : fenêtres (certaines allumées), balcon filant au 2e étage
+        const et = Math.floor((H - 6) / 8), nf = Math.max(2, Math.floor(W / 9));
+        if (rang < 2) for (let e = 0; e < et; e++) for (let f = 0; f < nf; f++) { const fx = x - W / 2 + (f + .5) * W / nf, y = 4 + e * 8, al = rg() < .35;
+          o.quad([fx - 2, y, z + D / 2 + .08], [fx + 2, y, z + D / 2 + .08], [fx + 2, y + 5, z + D / 2 + .08], [fx - 2, y + 5, z + D / 2 + .08], al ? VITRE : NUITV, al ? .95 : .05, [0, 0, 1]); }
+        if (et > 2) o.quad([x - W / 2, 4 + 8 * 2 - .6, z + D / 2 + .16], [x + W / 2, 4 + 8 * 2 - .6, z + D / 2 + .16], [x + W / 2, 4 + 8 * 2 + 1.2, z + D / 2 + .16], [x - W / 2, 4 + 8 * 2 + 1.2, z + D / 2 + .16], v("#1A1A22"), 0, [0, 0, 1]);
+        o.quad([x - W / 2, H - 1.6, z + D / 2 + .1], [x + W / 2, H - 1.6, z + D / 2 + .1], [x + W / 2, H, z + D / 2 + .1], [x - W / 2, H, z + D / 2 + .1], mel(PIERRE2, v("#000000"), .2), 0, [0, 0, 1]);
+        // le toit mansardé en zinc, ses joints debout qui accrochent la lune
+        const i = 4, h = 14; g.bloc([[x - W / 2, H, z - D / 2], [x + W / 2, H, z - D / 2], [x + W / 2, H, z + D / 2], [x - W / 2, H, z + D / 2], [x - W / 2 + i, H + h, z - D / 2 + i], [x + W / 2 - i, H + h, z - D / 2 + i], [x + W / 2 - i, H + h, z + D / 2 - i], [x - W / 2 + i, H + h, z + D / 2 - i]], ZINC, 0, { 1: ZINC2 });
+        if (!rang) for (let k = 1; k < W / 4; k++) { const jx = x - W / 2 + k * 4; o.quad([jx - .2, H + .1, z + D / 2 + .05], [jx + .2, H + .1, z + D / 2 + .05], [jx + .2, H + h, z + D / 2 - i + .05], [jx - .2, H + h, z + D / 2 - i + .05], ZINC2, .12, [0, .3, 1]); }
+        // les lucarnes (petites fenêtres coiffées) sur la pente sud
+        if (rang < 2) for (let f = 0; f < nf - 1; f += rang + 1) { const lx = x - W / 2 + (f + 1) * W / nf, lz = z + D / 2 - 2, al = rg() < .45;
+          g.boite(lx, H + 2, lz, 4.4, 6, 3.6, PIERRE); g.bloc([[lx - 2.6, H + 8, lz - 1.8], [lx + 2.6, H + 8, lz - 1.8], [lx + 2.6, H + 8, lz + 1.8], [lx - 2.6, H + 8, lz + 1.8], [lx, H + 10.4, lz - 1.8], [lx, H + 10.4, lz - 1.8], [lx, H + 10.4, lz + 1.8], [lx, H + 10.4, lz + 1.8]], ZINC2, 0);
+          o.quad([lx - 1.4, H + 3, lz + 1.85], [lx + 1.4, H + 3, lz + 1.85], [lx + 1.4, H + 7, lz + 1.85], [lx - 1.4, H + 7, lz + 1.85], al ? VITRE : NUITV, al ? 1 : .05, [0, 0, 1]);
+          if (al && rang === 0) lum.push([lx, H + 5, lz + 3, 1, .8, .45, 6]); }
+        // les cheminées de brique et leurs pots de terre cuite
+        const nc = rang === 2 ? (rg() < .5 ? 1 : 0) : 1 + Math.floor(rg() * 2);
+        for (let c = 0; c < nc; c++) { const cx = x - W / 2 + 6 + rg() * (W - 12), cz = z - D / 2 + 5 + rg() * (D - 10), ch = 8 + rg() * 8;
+          g.boite(cx, H + h - 4, cz, 7, ch + 4, 3.4, v("#A85A3A")); g.boite(cx, H + h + ch, cz, 7.6, .8, 4, v("#C8B8A0"));
+          for (let k = 0; k < 3; k++) g.cylindre(cx - 2.2 + k * 2.2, H + h + ch + .8, cz, .8, 2.4, 5, v("#D8783A"), 0, .65);
+          if (rg() < .5) FUM.push([cx - 2.2 + Math.floor(rg() * 3) * 2.2, H + h + ch + 3.4, cz]); }
+        return H + h; };
+      // trois rangées d'immeubles, de plus en plus loin (et de plus en plus hauts), qui suivent la rue
+      const RANGS = [[-24, 46, 46], [-92, 54, 60], [-170, 60, 74]];
+      const gout = [];
+      RANGS.forEach(([zr, D, Hm], rang) => { let x = -140; while (x < 1000) { const W = 36 + rg() * 30, H = Hm - 10 + rg() * 16, z = zr - D / 2 - (rang ? rg() * 8 : 0);
+        if (dP(x + W / 2, z + D / 2) > DEMI + 18 && dP(x, z + D / 2) > DEMI + 18 && dP(x + W, z + D / 2) > DEMI + 18 && !(x + W > 830 && x < 990)) { const ht = immeuble(x + W / 2, z, W, D, H, rang); if (!rang) gout.push([x + 1, H + .6, z + D / 2 + 1.2], [x + W - 1, H + .6, z + D / 2 + 1.2]); }
+        x += W + (rg() < .2 ? 8 : 1.2); } });
+      // la gouttière de la première rangée, et les rats qui y courent
+      for (let k = 0; k < gout.length; k += 2) cylH(g, gout[k], gout[k + 1], .7, 6, v("#5A6478"));
+      sol.poser(g, 0, 0, 0, 0, 1);
+      FUM.slice(0, 7).forEach(([x, y, z]) => vapeur(x, y, z, 2.8, 26, 2, true));
+      for (let q = 0; q < 2 && gout.length > 6; q++) { const k0 = 2 * Math.floor(gout.length / 4) * q, seg = gout.slice(k0, k0 + 6).filter((_, j) => j % 2 === 0 || true);
+        const ch = []; seg.forEach(p => ch.push([p[0], p[1] + .3, p[2]])); if (ch.length < 2) continue;
+        for (let n = 0; n < 3; n++) rotors.push({ g: rat(3.4, false, n === 1 ? v("#6A6478") : null), x: 0, y: 0, z: 0, cap: 0, v: 0, a: { p: 9 + n * 1.3, ph: n / 3 + q * .17, chemin: ch, oriente: true, vis: [.02, .98] } }); } }
+
+    // ================= 10. La grande tour de fer, au loin, qui scintille ; la lune =================
+    { const g = new Geo(), [tx, tz] = [1180, -620], FER = v("#7A5A3A"), FERL = v("#E8A84A"), H = 330;
+      const larg = y => y < 60 ? 60 - y * .55 : y < 120 ? 27 - (y - 60) * .22 : y < 250 ? 13.8 - (y - 120) * .075 : 4 - (y - 250) * .04;
+      const coin = (y, i) => { const w = larg(y), a = i * PI / 2 + PI / 4; return [Math.cos(a) * w * 1.41, y, Math.sin(a) * w * 1.41]; };
+      const NIV = [0, 20, 40, 60, 80, 100, 120, 150, 180, 210, 240, 270, 300, 320];
+      for (let k = 0; k < NIV.length - 1; k++) for (let i = 0; i < 4; i++) { const a = coin(NIV[k], i), b = coin(NIV[k + 1], i), c = coin(NIV[k + 1], i + 1), d = coin(NIV[k], i + 1);
+        branche(g, a, b, k < 4 ? 2.6 : 1.4, k < 4 ? 2.2 : 1.2, FER, .35); branche(g, a, c, .6, .6, FER, .3); branche(g, d, b, .6, .6, FER, .3); branche(g, b, c, .7, .7, FERL, .7); }
+      // les arches entre les pieds
+      for (let i = 0; i < 4; i++) { const a0 = coin(0, i), a1 = coin(0, i + 1), P = []; for (let q = 0; q <= 8; q++) { const t = q / 8, y = 18 + Math.sin(t * PI) * 22, w = larg(y) * 1.41;
+          P.push([a0[0] + (a1[0] - a0[0]) * t, y, a0[2] + (a1[2] - a0[2]) * t]); } for (let q = 0; q < 8; q++) branche(g, P[q], P[q + 1], 1, 1, FERL, .8); }
+      [60, 120, 250].forEach((y, k) => { const w = larg(y) * 1.5; g.boite(0, y - 1, 0, w * 2, 3, w * 2, FER, .3); g.ov().boite(0, y + 2, 0, w * 2 - 1, .6, w * 2 - 1, FERL, .9); });
+      g.cylindre(0, 320, 0, 2.4, 16, 6, FERL, .8); g.cylindre(0, 336, 0, .6, 14, 4, v("#FFFFFF"), .8); g.boule(0, 352, 0, 1.6, v("#FFF4D0"), 1);
+      sol.poser(g, tx, 0, tz, .4, 1); occupe.push([tx, tz, 90]);
+      [[0, 4, 0], [0, 60, 0], [0, 122, 0], [0, 250, 0], [0, 340, 0]].forEach(([x, y, z], k) => lum.push([tx + x, y, tz + z, 1, .75, .35, k ? 40 : 60]));
+      // le scintillement : des étincelles blanches qui s'allument par vagues
+      for (let q = 0; q < 4; q++) { const sc = new Geo(), rs = alea(400 + q); for (let k = 0; k < 40; k++) { const y = rs() * 320, w = larg(y) * 1.42, a = Math.floor(rs() * 4) * PI / 2 + PI / 4 + (rs() - .5) * .3; sc.boule(Math.cos(a) * w, y, Math.sin(a) * w, 1.3, v("#FFFFFF"), 1); }
+        rotors.push({ g: sc, x: tx, y: 0, z: tz, cap: .4, v: 0, a: { clig: [.9, .45], ph: q / 4 } }); }
+      // la lune, ronde et pâle, derrière les toits
+      { const l = new Geo(); disque(l, [0, 0, 0], [0, 0, 1], 70, 24, v("#FFF2D2"), 1); disque(l, [-18, 14, .5], [0, 0, 1], 14, 12, v("#EADCB8"), 1); disque(l, [20, -10, .5], [0, 0, 1], 10, 12, v("#EADCB8"), 1); sol.poser(l, 140, 520, -1500, 0, 1); } }
+
+    // ================= 11. La Seine, à l'est : quais de pierre, deux ponts, une péniche illuminée, l'autre rive =================
+    { const g = new Geo(), o = g.ov(), X0 = 868, X1 = 968, Z0 = -420, Z1 = 980, EAUC = v("#1E3A5E");
+      eau.quad([X0, .3, Z0], [X1, .3, Z0], [X1, .3, Z1], [X0, .3, Z1], EAUC, .12, [0, 1, 0]);
+      for (let k = 0; k < 40; k++) { const z = Z0 + 40 + r() * (Z1 - Z0 - 80), x = X0 + 8 + r() * (X1 - X0 - 16), L = 4 + r() * 10; o.quad([x - L, .36, z - .4], [x + L, .36, z - .4], [x + L, .36, z + .4], [x - L, .36, z + .4], v("#FFD27A"), .5 + r() * .4, [0, 1, 0]); }   // les reflets dorés
+      [X0, X1].forEach((xq, sd) => { const s = sd ? 1 : -1; g.boite(xq + s * 2, 0, (Z0 + Z1) / 2, 4, 3.4, Z1 - Z0, PIERRE2); g.boite(xq + s * 4, 3.4, (Z0 + Z1) / 2, 1.4, 2, Z1 - Z0, PIERRE);
+        for (let z = Z0 + 30; z < Z1; z += 70) { g.cylindre(xq + s * 6, 3.4, z, .6, 16, 6, v("#1E2230")); g.boule(xq + s * 6, 20, z, 1.4, VITRE, 1, 1.3); lum.push([xq + s * 6, 20, z, 1, .82, .5, 14]); }
+        for (let k = 0; k < 24; k++) { const z = Z0 + 30 + r() * (Z1 - Z0 - 60); g.boite(xq + s * 14, 0, z, 4, 2.6, 7, v("#2A4A30")); } });   // les boîtes des bouquinistes
+      // deux ponts de pierre à arches
+      [120, 470].forEach(zp => { const W = 22, yD = 14; g.boite((X0 + X1) / 2, yD, zp, X1 - X0 + 30, 2.4, W, PIERRE); g.boite((X0 + X1) / 2, yD + 2.4, zp - W / 2 + .7, X1 - X0 + 30, 2.2, 1.4, PIERRE2); g.boite((X0 + X1) / 2, yD + 2.4, zp + W / 2 - .7, X1 - X0 + 30, 2.2, 1.4, PIERRE2);
+        const n = 3, sp = (X1 - X0) / n; for (let k = 0; k <= n; k++) { const x = X0 + k * sp; g.boite(x, 0, zp, 6, yD, W, PIERRE2); }
+        for (let k = 0; k < n; k++) { const xa = X0 + k * sp + 3, xb = X0 + (k + 1) * sp - 3, P = []; for (let q = 0; q <= 8; q++) { const t = q / 8; P.push([xa + (xb - xa) * t, 2 + Math.sin(t * PI) * (yD - 4), 0]); }
+          [-1, 1].forEach(sd => { for (let q = 0; q < 8; q++) g.quad([P[q][0], P[q][1], zp + sd * W / 2], [P[q + 1][0], P[q + 1][1], zp + sd * W / 2], [P[q + 1][0], yD, zp + sd * W / 2], [P[q][0], yD, zp + sd * W / 2], PIERRE, 0, [0, 0, sd]); }); }
+        for (let k = 0; k < 4; k++) { const x = X0 - 10 + k * 40; g.cylindre(x, yD + 2.4, zp - W / 2 + 1, .5, 12, 6, v("#1E2230")); g.boule(x, yD + 15, zp - W / 2 + 1, 1.3, VITRE, 1, 1.3); lum.push([x, yD + 15, zp - W / 2 + 1, 1, .82, .5, 12]); } });
+      // l'autre rive : une rangée d'immeubles, toits de zinc
+      { const rg = alea(1871); let z = Z0 + 10; while (z < Z1 - 30) { const D = 34 + rg() * 26, H = 46 + rg() * 24, x = X1 + 50; g.boite(x, 0, z + D / 2, 56, H, D, mel(PIERRE, PIERRE2, rg()));
+          g.bloc([[x - 28, H, z], [x + 28, H, z], [x + 28, H, z + D], [x - 28, H, z + D], [x - 24, H + 12, z + 4], [x + 24, H + 12, z + 4], [x + 24, H + 12, z + D - 4], [x - 24, H + 12, z + D - 4]], ZINC, 0, { 1: ZINC2 });
+          for (let e = 0; e < Math.floor(H / 8) - 1; e++) for (let f = 0; f < Math.floor(D / 9); f++) { const fz = z + 4 + f * 9, y = 4 + e * 8, al = rg() < .35; o.quad([x - 28.08, y, fz], [x - 28.08, y, fz + 4], [x - 28.08, y + 5, fz + 4], [x - 28.08, y + 5, fz], al ? VITRE : NUITV, al ? .95 : .05, [-1, 0, 0]); }
+          z += D + 1.4; } }
+      sol.poser(g, 0, 0, 0, 0, 1); occupe.push([918, 280, 160], [918, -200, 200], [918, 760, 200]);
+      // la péniche, amarrée, ses hublots allumés, des pots de fleurs, qui tangue doucement
+      { const p = new Geo(), po = p.ov(), L = 72;
+        p.bloc([[-L / 2, -2, -6], [L / 2 - 6, -2, -6], [L / 2 - 6, -2, 6], [-L / 2, -2, 6], [-L / 2 - 2, 4, -7.4], [L / 2, 4, -7.4], [L / 2, 4, 7.4], [-L / 2 - 2, 4, 7.4]], v("#1E2A3A"), 0);
+        p.boite(0, 4, 0, L + 1, .8, 15, v("#8A2A22")); p.boite(-6, 4.8, 0, 40, 7, 10, v("#E8DCC0")); p.boite(-6, 11.8, 0, 42, .8, 11.4, v("#4A2A1E"));
+        p.boite(22, 4.8, 0, 8, 10, 9, v("#E8DCC0")); p.boite(22, 14.8, 0, 9, .8, 10, v("#4A2A1E"));
+        for (let k = 0; k < 7; k++) [-1, 1].forEach(sd => po.quad([-23 + k * 5.6, 7, sd * 5.06], [-20 + k * 5.6, 7, sd * 5.06], [-20 + k * 5.6, 10, sd * 5.06], [-23 + k * 5.6, 10, sd * 5.06], k % 3 ? VITRE : NUITV, k % 3 ? 1 : .05, [0, 0, sd]));
+        for (let k = 0; k < 8; k++) { p.boite(-24 + k * 5.8, 12.6, 4, 2.6, 1.6, 2, v("#8A4A2A")); p.boule(-24 + k * 5.8, 14.8, 4, 1.6, [v("#E04A6A"), v("#F2C230"), v("#E8E8F0")][k % 3], .2, .8); }
+        p.cylindre(-L / 2 + 2, 4.8, 0, .4, 10, 4, v("#2A2A30")); po.quad([-L / 2 + 2.2, 11, 0], [-L / 2 + 8, 12, 0], [-L / 2 + 8, 15, 0], [-L / 2 + 2.2, 14.6, 0], v("#2A4AB0"), .1, [0, 0, 1]);
+        rotors.push({ g: p, x: X0 + 22, y: .4, z: 300, cap: PI / 2, v: 0, a: { bob: [.5, .9] } }); lum.push([X0 + 22, 10, 300, 1, .8, .5, 30]); } }
+
+    // ================= 12. Le marché aux légumes géants, à l'ouest : étals, auvents rayés, cageots =================
+    { const g = new Geo(), o = g.ov(), rm = alea(1650);
+      const legume = (x, y, z, k, e) => { const t = new Geo(), to = t.ov(), E = .12;
+        if (k === 0) { t.boule(0, 3, 0, 3.4, TOMATE, E, .85); t.cylindre(0, 5.6, 0, .4, 1, 4, v("#2E6A2A")); for (let q = 0; q < 5; q++) { const a = q / 5 * TAU; to.quad([0, 5.85, 0], [Math.cos(a) * 1.6, 5.75, Math.sin(a) * 1.6], [Math.cos(a + .3) * 1.8, 5.7, Math.sin(a + .3) * 1.8], [0, 5.85, 0], v("#3E7A3A"), 0, [0, 1, 0]); } }
+        else if (k === 1) { t.boule(0, 2.4, 0, 2.6, AUBERG, E, 1); etire(t, 2.1, 1, 1); t.cylindre(-5.4, 1.8, 0, 1.3, 1.6, 6, v("#2E6A2A"), 0, .3); }
+        else if (k === 2) { cylH(t, [-6, 2, 0], [6, 2, 0], 2, 8, COURG, E); t.boule(6, 2, 0, 2, COURG, E); t.boule(-6, 2, 0, 1.6, v("#E8C040"), E); }
+        else if (k === 3) { t.boule(0, 3, 0, 3, rm() < .5 ? POIVJ : v("#D8302A"), E, 1.1); t.cylindre(0, 6, 0, .5, 1.4, 4, v("#2E6A2A")); }
+        else { t.boule(0, 2.8, 0, 3, v("#C89A5A"), E, .9); t.cylindre(0, 5, 0, 1, 2, 6, v("#B08048"), 0, .1); }
+        g.poser(t, x, y, z, rm() * TAU, e || 1); };
+      const etal = (x, z, cap, a, b) => { const s = new Geo(), so2 = s.ov(), L = 44, D = 18, RAY = [a, b];
+        s.boite(0, 0, 0, L, 9, D, BOIS); s.boite(0, 9, 0, L + 1, .8, D + 1, BOIS2);
+        [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([p, q]) => s.boite(p * (L / 2), 0, q * (D / 2 + 3), 1, 22 + (q < 0 ? 4 : 0), 1, v("#3A2A1E")));
+        for (let k = 0; k < 11; k++) { const x0 = -L / 2 - 1 + k * (L + 2) / 11, x1 = x0 + (L + 2) / 11; s.quad([x0, 26, -D / 2 - 4], [x1, 26, -D / 2 - 4], [x1, 21, D / 2 + 6], [x0, 21, D / 2 + 6], RAY[k % 2], .05, [0, 1, .4]);
+          s.quad([x0, 21, D / 2 + 6], [x1, 21, D / 2 + 6], [(x0 + x1) / 2, 18.6, D / 2 + 6.2], [(x0 + x1) / 2, 18.6, D / 2 + 6.2], RAY[k % 2], .05, [0, 0, 1]); }
+        for (let k = 0; k < 6; k++) { const bx = -L / 2 + 4 + k * 7.2; s.boite(bx, 9.8, 0, 6.6, 1.4, 14, v("#C8A060")); so2.boite(bx, 10.2, 7.05, 6.6, .6, .1, v("#8A6A40")); }
+        sol.poser(s, x, 0, z, cap, 1);
+        const c = Math.cos(cap), sn = Math.sin(cap);
+        for (let k = 0; k < 6; k++) { const bx = -L / 2 + 4 + k * 7.2, kind = (k + Math.floor(x)) % 5; for (let q = 0; q < 3; q++) { const lx = bx, lz = -4.6 + q * 4.6; legume(x + lx * c + lz * sn, 11, z - lx * sn + lz * c, kind, .62); } } };
+      const ET = [[-26, 200, PI / 2, v("#C8302A"), v("#F4F0E6")], [-30, 300, PI / 2, v("#2E7A4A"), v("#F4F0E6")], [-26, 400, PI / 2, v("#2A4A9A"), v("#F4E8C8")], [-104, 250, PI / 2, v("#E8A030"), v("#F4F0E6")], [-104, 360, PI / 2, v("#C8302A"), v("#F4E8C8")]];
+      ET.forEach(([x, z, cap, a, b]) => { if (ok(x, z, 20)) { etal(x, z, cap, a, b); occupe.push([x, z, 28]); } });
+      // les cageots empilés, les légumes énormes tombés par terre (à hauteur de rat : une tomate grande comme une voiture)
+      [[-58, 160], [-62, 450], [-140, 300], [8, 520], [-70, 380], [-150, 200]].forEach(([x, z], k) => { if (!ok(x, z, 8)) return;
+        for (let q = 0; q < 3; q++) { g.boite(x + (q % 2) * 7, Math.floor(q / 2) * 6, z + (q === 2 ? 3 : 0), 6.6, 6, 10, v("#C8A060"), 0, .2 * k); o.boite(x + (q % 2) * 7, Math.floor(q / 2) * 6 + 2.6, z + (q === 2 ? 3 : 0), 6.8, .8, 10.2, v("#8A6A40"), 0, .2 * k); }
+        legume(x + 3, 6, z + 1, k % 5, .9); occupe.push([x, z, 10]); });
+      [[24, 116, 0, 2.6], [-10, 476, 3, 2.2], [-70, 310, 4, 2.4], [-56, 236, 1, 2], [-150, 410, 0, 3], [-170, 150, 2, 2.4]].forEach(([x, z, k, e]) => { if (ok(x, z, 6 * e)) { legume(x, 0, z, k, e); occupe.push([x, z, 7 * e]); } });
+      // la guirlande d'ampoules entre les étals
+      { const P = [[-26, 26, 176], [-26, 28, 222], [-30, 26, 276], [-30, 28, 324], [-26, 26, 376], [-26, 28, 424]]; for (let k = 0; k < P.length - 1; k++) { const a = P[k], b = P[k + 1];
+          for (let q = 0; q < 5; q++) { const t = q / 5, y = a[1] + (b[1] - a[1]) * t - Math.sin(t * PI) * 3; o.boule(a[0], y, a[2] + (b[2] - a[2]) * t, .7, v("#FFD27A"), 1); }
+          cylH(g, a, b, .1, 3, NOIRR); } [200, 300, 400].forEach(z => lum.push([-28, 24, z, 1, .8, .45, 22])); }
+      sol.poser(g, 0, 0, 0, 0, 1); }
+
+    // ================= 12 bis. Les trottoirs de Paris, côté ville : réverbères à trois globes, bancs, colonnes à affiches, platanes, fontaines =================
+    { const g = new Geo(), o = g.ov(), VERT = v("#1E3A2E"), VERT2 = v("#2E5A44"), pas = Math.round(46 / T.ds); let n = 0;
+      for (let i = 0; i < T.N; i += pas) { const nx = -T.TZ[i], nz = T.TX[i], t = DEMI + 30, s = dedans(T.X[i] + nx * t, T.Z[i] + nz * t) ? -1 : 1, x = T.X[i] + nx * t * s, z = T.Z[i] + nz * t * s;
+        if (z > 522 || !ok(x, z, 6)) continue; const cap = Math.atan2(-nx * s, -nz * s), ty = n++ % 5;
+        if (ty === 0 || ty === 3) { g.cylindre(x, 0, z, 1.6, 1.6, 8, VERT); g.cylindre(x, 1.6, z, .7, 20, 6, VERT, 0, .45); cylH(g, [x - 3.4, 20, z], [x + 3.4, 20, z], .3, 4, VERT);
+          [[-3.4, 0], [3.4, 0], [0, 0]].forEach(([dx], j) => { const y = j === 2 ? 22.6 : 20; g.boule(x + dx, y + 1.4, z, 1.5, VITRE, 1, 1.2); });
+          lum.push([x, 22, z, 1, .82, .5, 22]); }
+        else if (ty === 1) { const b = new Geo(); b.boite(0, 4, 0, 14, .8, 4.4, BOIS2); b.boite(0, 4.8, -2.4, 14, 4.4, .6, BOIS2, 0, 0); [-6, 6].forEach(dx => b.boite(dx, 0, 0, .9, 4.4, 4.4, VERT)); g.poser(b, x, 0, z, cap, 1); }
+        else if (ty === 2) { g.cylindre(x, 0, z, 4, 2, 12, VERT); g.cylindre(x, 2, z, 3.4, 18, 12, v("#2A4A38")); g.cylindre(x, 20, z, 4, 1.4, 12, VERT); g.boule(x, 21.4, z, 3.6, VERT2, 0, .7); g.boule(x, 24, z, .7, VERT2);
+          for (let k = 0; k < 4; k++) { const a = k / 4 * TAU + .3; o.quad([x + Math.cos(a - .5) * 3.45, 5, z + Math.sin(a - .5) * 3.45], [x + Math.cos(a + .5) * 3.45, 5, z + Math.sin(a + .5) * 3.45], [x + Math.cos(a + .5) * 3.45, 16, z + Math.sin(a + .5) * 3.45], [x + Math.cos(a - .5) * 3.45, 16, z + Math.sin(a - .5) * 3.45], v(["#E8C040", "#C8302A", "#F4F0E6", "#4A7AC8"][k]), .15, [Math.cos(a), 0, Math.sin(a)]); } }
+        else { anneau(g, x, .12, z, 4, 6, 12, v("#2A2A30")); g.cylindre(x, 0, z, 1.2, 14, 6, v("#5A4030")); g.boule(x, 18, z, 7, v("#2E4A2A"), 0, .8, true); g.boule(x + 4, 15, z + 2, 4.6, v("#3A5A32"), 0, .8); g.boule(x - 3, 16, z - 3, 4.4, v("#26402A"), 0, .8); }
+        occupe.push([x, z, 8]); }
+      sol.poser(g, 0, 0, 0, 0, 1); }
+
+    // ================= 13. La bouche d'égout entrouverte (au sud-ouest) : la colonie fait la fête en dessous =================
+    { const [ex, ez] = [40, 600], g = new Geo(), o = g.ov();
+      if (ok(ex, ez, 18)) {
+        anneau(g, ex, .3, ez, 11, 13, 20, v("#3A3A44"), 0); g.cylindre(ex, -6, ez, 11, 6.2, 20, v("#3A2A22"), 0);
+        g.cylindre(ex, .06, ez, 10.6, .1, 20, v("#FFA040"), .9);
+        { const pl = new Geo(); pl.cylindre(0, 0, 0, 11, 1.2, 20, v("#4A4A54")); for (let k = -3; k <= 3; k++) pl.ov().boite(k * 2.6, 1.2, 0, .8, .3, 18, v("#2A2A30")); tourneX(pl, .14); g.poser(pl, ex + 18, .6, ez + 4, .4, 1); }
+        for (let k = 0; k < 7; k++) { const a = k / 7 * TAU; o.boule(ex + Math.cos(a) * 8, .4, ez + Math.sin(a) * 8, .6, [v("#FF4A6A"), v("#FFD27A"), v("#4AC8FF")][k % 3], 1); }
+        lum.push([ex, 3, ez, 1, .6, .25, 26]); sol.poser(g, 0, 0, 0, 0, 1); occupe.push([ex, ez, 26]);
+        for (let q = 0; q < 3; q++) { const a = q / 3 * TAU; rotors.push({ g: rat(2.6, false, q === 2 ? v("#6A6478") : null), x: ex + Math.cos(a) * 5, y: .2, z: ez + Math.sin(a) * 5, cap: -a, v: 1.6, a: { ax: "y", bob: [.9, 7 + q], ph: q / 3 } }); } } }
+
+    // ================= 14. Petits riens : une baguette géante, des miettes, des bouchons, un rat qui file avec un fromage =================
+    { const g = new Geo(), o = g.ov();
+      [[540, 205, .6], [196, 205, -.4]].forEach(([x, z, cap]) => { if (!ok(x, z, 12)) return; const b = new Geo(); cylH(b, [-14, 2.2, 0], [14, 2.2, 0], 2.4, 8, v("#D89A48")); b.boule(-14, 2.2, 0, 2.4, v("#C88A38")); b.boule(14, 2.2, 0, 2.4, v("#C88A38"));
+        for (let k = 0; k < 5; k++) b.ov().boite(-10 + k * 5, 4.3, 0, 2.6, .4, 1.4, v("#F0C878"), 0, .5); g.poser(b, x, 0, z, cap, 1); occupe.push([x, z, 14]); });
+      for (let k = 0; k < 40; k++) { const x = 130 + r() * 640, z = 110 + r() * 380; if (!dedans(x, z) || !ok(x, z, 1)) continue; o.boule(x, .2, z, .4 + r() * .5, v("#E8C078"), .05, .6); }
+      [[318, 238], [500, 370], [700, 420]].forEach(([x, z]) => { if (ok(x, z, 2)) g.cylindre(x, 0, z, 1.4, 3, 8, v("#C89A6A"), 0, 1.5); });
+      sol.poser(g, 0, 0, 0, 0, 1);
+      { const fr = new Geo(); fr.poser(rat(3.4, false), 0, 0, 0, 0, 1); fr.bloc([[2.6, 1.6, -1.6], [5.4, 1.6, -1.6], [5.4, 1.6, 1.6], [2.6, 1.6, 1.6], [2.6, 3.6, -1.6], [5.4, 3.6, -1.6], [5.4, 3.6, 1.6], [2.6, 3.6, 1.6]], v("#F2C84A"), .1);
+        const ch = [[300, 0, 250], [380, 0, 236], [470, 0, 238], [540, 0, 262], [560, 0, 300], [520, 0, 360], [420, 0, 384], [330, 0, 372], [306, 0, 336], [300, 0, 250]];
+        rotors.push({ g: fr, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { p: 26, chemin: ch, oriente: true } }); } }
+
+    // ================= 15. LE DÉCOR VIVANT : le petit chef court après la voiture de tête, louche levée =================
+    // Pendant la course, il galope sur le bas-côté (côté cuisine) juste derrière le meneur ; à l'arrivée, il saute de joie à côté du vainqueur.
+    // Hors course (Visite, aucune voiture), il fait ses tours de piste tout seul : la cuisine n'est jamais immobile.
+    { const g = rat(8, true), L = T.L; cylH(g, [4.6, 4.6, 1.6], [7.4, 13.4, 2.4], .3, 5, INOX); g.boule(7.6, 14.2, 2.4, 1.3, INOX, .2, .6);
+      let sIn = 0; for (let k = 0; k < 8; k++) { const q = T.a(k / 8 * L, DEMI + 14); sIn += dedans(q.x, q.z) ? 1 : -1; } sIn = sIn >= 0 ? 1 : -1;
+      // crochet unique a.vivant (voir contexteVivant) : C.premier(), C.enCourse, C.e ; le pas de temps est gardé dans x.tp
+      rotors.push({ g, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant(x, t, C) {
+        const dt = x.tp === undefined ? .016 : Math.min(.1, Math.max(.001, t - x.tp)); x.tp = t;
+        const lead = C.V.length ? C.premier() : null, fin = lead && (!C.enCourse || C.e >= .985);
+        const but = lead ? lead.s + (fin ? 9 : -14) : t * 24;
+        if (x.etat === undefined) x.etat = but;
+        let d = ((but - x.etat) % L + L * 1.5) % L - L / 2; const av = x.etat; x.etat += d * (1 - Math.exp(-dt * (lead ? 5 : 30)));
+        const vit = Math.abs(x.etat - av) / dt, p = T.a(x.etat, sIn * (DEMI + 7)), cours = vit > 3;
+        const saut = fin && !cours ? Math.abs(Math.sin(t * 6)) * 5 : cours ? Math.abs(Math.sin(t * 16)) * 1.4 : 0;
+        return modele(p.x, p.y + .1 + saut, p.z, Math.atan2(-p.tz, p.tx) + (fin && !cours ? sIn * PI / 2 : 0), cours ? Math.sin(t * 16) * .12 : 0, 1.6); } } }); }
+
+    // tout le sol est pris : aucun décor générique (pins, champignons) ne s'y pose
+    occupe.push([T.cx, T.cz, 6000]);
+    return occupe;
   }
 
   function decorChateau(ctx) {
@@ -7702,6 +8218,7 @@
   PEINTS.multivers.deco = decorMultivers;   // V16.52 : décor 3D (7/10)
   PEINTS.terrier.deco = decorGouter;
   PEINTS.anneau.deco = decorAnneau;   // v20.46 · l'Anneau : le décor 3D sur mesure
+  PEINTS.ratatouille.deco = decorPetitChef;   // juillet 2027 · le Grand Prix du Petit Chef : décor 3D sur mesure
   PEINTS.etoiles.deco = decorEtoiles;   // V16.53 : décor 3D (7/10)   // V16.52 : décor 3D (7/10)   // V16.51 : décor 3D sur mesure (boucle du critique, 7/10)
   PEINTS.pandora.deco = decorPandora;   // mai 2027 · Pandora : décor 3D sur mesure (24/11/2026)
 
@@ -8650,8 +9167,15 @@
         const b = O.bulle(p[0], p[1] - 130, "Le grand oiseau t’a choisi, " + n + " !", 20);
         O.anim(1800, q => { const u = p[0] - 320 + q * 640, v = p[1] - 40 - Math.sin(q * Math.PI) * -120 - 150 + q * 0; g.setAttribute("transform", "translate(" + O.f(u) + " " + O.f(p[1] - 170 + Math.sin(q * Math.PI) * 120) + ") rotate(" + O.f(-8 + q * 16) + ") scale(" + O.f(1.2 + Math.sin(q * Math.PI) * .5) + ")"); g.setAttribute("opacity", O.f(q < .1 ? q * 10 : q > .85 ? (1 - q) * 6.6 : 1)); }, () => { g.remove(); setTimeout(() => b.remove(), 700); }); } }; },
     /* janvier 2027 · Ratatouille : à l'arrivée, le petit chef rat court jusqu'au vainqueur et lui pose sa toque */
-    ratatouille(x) { const O = outilsEv(x); let fait = false;
-      return { raz() { fait = false; }, maj(e, c, en) { if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("ratatouille"); const n = O.premier(c), p = O.voiture(n); if (!p) return;
+    ratatouille(x) { const O = outilsEv(x); let fait = false, chef = null, sC = null;
+      // 24/11/2026 · décor vivant : pendant la course, le petit chef (toque, louche levée) galope sur la piste juste derrière la voiture de tête
+      const poursuite = (e, c, en) => { const n = en && !fait && x.anime && e < .985 ? O.premier(c) : null;
+        if (!n || !c[n]) { if (chef) chef.setAttribute("opacity", "0"); sC = null; return; }
+        if (!chef) chef = O.el('<g style="filter: drop-shadow(0 0 1.4px #FFF4DC)"><path d="M14 4C26 6 32 -2 30 -10" stroke="#E8A0AC" stroke-width="2.6" fill="none" stroke-linecap="round"/><ellipse cx="0" cy="2" rx="15" ry="9" fill="#A99CA6" stroke="#2E2428" stroke-width="1.6"/><circle cx="-13" cy="-5" r="7.5" fill="#A99CA6" stroke="#2E2428" stroke-width="1.6"/><circle cx="-10" cy="-12" r="4" fill="#F0A8B4" stroke="#2E2428" stroke-width="1.2"/><circle cx="-21" cy="-4" r="2" fill="#F07A92"/><circle cx="-15" cy="-7" r="1.4" fill="#1A1220"/><path d="M-19 -12V-17C-23 -18 -22 -24 -18 -23C-17 -27 -11 -27 -10 -24C-6 -25 -5 -19 -9 -18V-12Z" fill="#FFFFFF" stroke="#4A4A42" stroke-width="1.2"/><path d="M-4 0L-14 -22" stroke="#C8CED8" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="-15" cy="-24" rx="4.4" ry="2.6" fill="#C8CED8" stroke="#4A4A52" stroke-width="1"/></g>');
+        const L = x.T.L, but = c[n].s - .014 * L; if (sC === null || Math.abs(but - sC) > .2 * L) sC = but; sC += (but - sC) * .25;
+        const p = O.pt(sC), q = O.pt(sC - 4), dx = p[0] - q[0], dy = p[1] - q[1], an = Math.atan2(dy, dx) * 180 / Math.PI, sc = 1.5, h = Math.abs(Math.sin(performance.now() / 70)) * 5;
+        chef.setAttribute("opacity", "1"); chef.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1] - h) + ") " + (dx >= 0 ? "rotate(" + O.f(an) + ") scale(" + (-sc) + " " + sc + ")" : "rotate(" + O.f(an - 180) + ") scale(" + sc + ")")); };
+      return { raz() { fait = false; if (chef) { chef.remove(); chef = null; } sC = null; }, maj(e, c, en) { poursuite(e, c, en); if (!en || fait || e < .985 || !x.anime) return; fait = true; if (chef) chef.setAttribute("opacity", "0"); O.son("ratatouille"); const n = O.premier(c), p = O.voiture(n); if (!p) return;
         // il arrive en courant par le côté d'où viennent les voitures (la piste déjà parcourue) et s'arrête juste à côté de la pastille
         const r = O.rp(), L = x.T.L, A = O.pt(c[n].s - .04 * L), V = O.vue(), sc = 1.8; let sd = A[0] >= p[0] ? 1 : -1;
         if (p[0] + sd * (r + 340) > V[2] || p[0] + sd * (r + 340) < V[0]) sd = -sd;
