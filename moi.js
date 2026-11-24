@@ -4826,6 +4826,16 @@ function dernierAchat() {
   const ouv = (refData().enveloppes || []).some(e => typeof e !== "string" && e.nom === o.enveloppe && (!e.statut || e.statut === "Ouvert" || e.statut === "À ouvrir"));
   return ouv ? { env: o.enveloppe, actif: o.actif, date: String(o.date || "").slice(0, 10) } : null;
 }
+/* v20.22 (Théo, avis de l'agent moi-avocat-du-diable) · rappel en lecture seule du dernier achat de la MÊME ligne (même compte, même actif) :
+   date et cours moyen payé, jamais le nombre de parts, rien de pré-rempli (tout vient de l'avis d'opéré). Cherché dans les 30 derniers ordres. */
+function htmlDernierAchatLigne() {
+  if (F.type !== "Achat" || !F.actif || F.na) return "";
+  const o = ((M && M.ref && M.ref.journal) || []).filter(x => x.type === "Achat" && x.enveloppe === F.env && x.actif === F.actif && x.date)
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)))[0];
+  if (!o) return "";
+  const prix = o.quantite > 0 && o.montant > 0 && ETAT.discret !== "oui" ? " à ≈ " + nbCours(o.montant / o.quantite) + " la part" : "";
+  return '<p class="m-pu" id="f-dernier">Dernier achat de cette ligne : le ' + esc(frDate(String(o.date).slice(0, 10))) + prix + "</p>";
+}
 function htmlMemeAchat() {
   const d = dernierAchat(); if (!d) return "";
   const mm = d.date && d.date.slice(0, 7) === isoJour(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 15)).slice(0, 7);
@@ -5356,6 +5366,7 @@ function rendreFormulaire() {
         '<optgroup label="Autres actifs">' + autresActifs.map(optA).join("") + "</optgroup>" +
         (F.na ? "" : '<option value="__nouvel">＋ Nouvel actif…</option>') + "</select>" + err("f-actif") + "</div></div>" +
         (F.na ? htmlNouvelActif(F.na, true) : "") : "") +
+      htmlDernierAchatLigne() +
       blocDate +
       (bourse ? '<div class="rang m-avis2">' + champQte + champCours + '</div><div class="rang m-avis2">' + champFrais + champMontant + "</div>" : avecQte ? champQte + champMontant : champMontant) + (bourse ? "" : champFrais) + champPrix +
       aideE(bourse && !F.imp ? "Tout est sur ton <b>avis d'opéré</b>, dans cet ordre (jamais le cours de l'appli). Pas encore reçu ? Chez Fortuneo il arrive souvent le lendemain : reviens plus tard." : F.type === "Relevé" ? "Sur ton relevé : la <b>valeur totale</b> de la ligne, à la date du relevé." : "") +
