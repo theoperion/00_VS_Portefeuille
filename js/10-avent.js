@@ -1,0 +1,609 @@
+/* Versus · 🎄 Calendrier de l'Avent du tour de chauffe (v20.61, validé par Théo le 25/11/2026)
+   Du 1er au 24 décembre 2026, une case par jour : on n'ouvre que la case du jour et celles des jours passés (date de l'appareil ;
+   l'appli n'a aucun garde-fou d'horloge ailleurs, donc date simple). Seize petits jeux de Noël (10 à 30 s, rejouables, score pour soi seul)
+   et huit surprises. AUCUN point, rien n'est envoyé au serveur : les cases ouvertes et les records vivent sur l'appareil (versus.avent*).
+   Le 24 : un souvenir pour chaque pilote (plaque « Hiver 2026 » + traînée « Flocons »), à porter dès le 24/12/2026 (js/3-podium.js, souvenirOuvert).
+   Règle du secret : aucune case ne parle de ce qui arrive (règles, circuits, nouveautés) ; le 20 dit seulement « l'annonce est arrivée ».
+   Entrée : une carte en haut du Classement, en décembre 2026 seulement (pastille tant que la case du jour n'est pas ouverte).
+   Aperçu admin (double sécurité apercuAutorise) : toutes les cases ouvrables, rien n'est gardé ni envoyé.
+   Records de Noël partagés (serveur, app_scripts/versus/Avent.js, validé par Théo) : chaque meilleur score part au serveur (scores de jeu
+   seulement), en file sur l'appareil si le réseau manque (réessai silencieux) ; 1 envoi utile par jeu et par jour. Avant le 24/12 (date du serveur),
+   chacun ne reçoit que SES records ; à partir du 24/12, la case 24 montre le meilleur de la bande par jeu et le « roi des jeux de Noël ». */
+"use strict";
+const AVENT = { debut: new Date(2026, 11, 1), fin: new Date(2027, 0, 1), annonce: 20 };
+let AVENT_APERCU = false;
+function aventPeriode() { const t = Date.now(); return t >= AVENT.debut.getTime() && t < AVENT.fin.getTime(); }
+/** le jour du calendrier (1..24 ; du 25 au 31 : 24, tout est ouvrable) ; 0 hors décembre 2026 */
+function aventJour() { return aventPeriode() ? Math.min(24, new Date().getDate()) : 0; }
+function aventApercu() { return AVENT_APERCU && !window.APERCUS_FINIS && apercuAutorise(); }
+function caseOuvrable(n) { return n >= 1 && n <= 24 && (aventApercu() || n <= aventJour()); }
+function aventOuvertes() { try { const l = JSON.parse(stock.get("versus.avent") || "[]"); return Array.isArray(l) ? l.filter(n => Number.isInteger(n) && n >= 1 && n <= 24) : []; } catch (e) { return []; } }
+function marquerOuverte(n) { if (aventApercu() || !caseOuvrable(n)) return; const l = aventOuvertes(); if (!l.includes(n)) { l.push(n); stock.set("versus.avent", JSON.stringify(l)); } }
+function recordsAvent() { try { const o = JSON.parse(stock.get("versus.aventRecords") || "{}"); return o && typeof o === "object" ? o : {}; } catch (e) { return {}; } }
+function sonAvent(k, i) { try { if (window.SONS && SONS.noel) SONS.noel(k, i); } catch (e) { /* rien */ } }
+
+/* ---------- Dessins (canvas, tout à nous) ---------- */
+const AV_COUL = ["#E63946", "#2A9D8F", "#F4B400", "#4C9AFF", "#B57BFF", "#FF8A3D"];
+function avRond(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+function avFond(G, c, sol) {
+  if (!G.s.fond) { const g = c.createLinearGradient(0, 0, 0, G.H); g.addColorStop(0, "#0A1030"); g.addColorStop(.6, "#1B2C5C"); g.addColorStop(1, "#33508A"); G.s.fond = g;
+    G.s.astres = Array.from({ length: 26 }, () => [Math.random() * G.W, Math.random() * G.H * .55, .5 + Math.random() * 1.1]); }
+  c.fillStyle = G.s.fond; c.fillRect(0, 0, G.W, G.H);
+  c.fillStyle = "rgba(255,255,255,.75)"; G.s.astres.forEach(([x, y, r]) => { c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); });
+  if (sol !== false) { c.fillStyle = "#EAF4FF"; c.beginPath(); c.moveTo(0, G.H - 34); c.quadraticCurveTo(G.W * .3, G.H - 52, G.W * .55, G.H - 36); c.quadraticCurveTo(G.W * .8, G.H - 22, G.W, G.H - 40); c.lineTo(G.W, G.H); c.lineTo(0, G.H); c.fill(); }
+}
+function avNeige(G, c) {
+  if (!G.s.flk) G.s.flk = Array.from({ length: 28 }, () => [Math.random() * G.W, Math.random() * G.H, .8 + Math.random() * 1.8, Math.random() * 6]);
+  c.fillStyle = "rgba(255,255,255,.8)";
+  G.s.flk.forEach(f => { if (!reduit) { f[1] += f[2] * .5; f[0] += Math.sin(G.horloge * 1.5 + f[3]) * .3; if (f[1] > G.H) { f[1] = -4; f[0] = Math.random() * G.W; } } c.beginPath(); c.arc(f[0], f[1], f[2], 0, 7); c.fill(); });
+}
+function avCadeau(c, x, y, w, h, col, ruban) {
+  c.fillStyle = col; avRond(c, x - w / 2, y - h / 2, w, h, 3); c.fill();
+  c.fillStyle = "rgba(0,0,0,.15)"; c.fillRect(x - w / 2, y + h / 2 - 4, w, 4);
+  c.fillStyle = ruban || "#FFE596"; c.fillRect(x - w * .09, y - h / 2, w * .18, h); c.fillRect(x - w / 2, y - h * .09, w, h * .18);
+  c.beginPath(); c.ellipse(x - w * .17, y - h / 2 - 3, w * .17, h * .13, -.5, 0, 7); c.ellipse(x + w * .17, y - h / 2 - 3, w * .17, h * .13, .5, 0, 7); c.fill();
+}
+function avCharbon(c, x, y, r) { c.fillStyle = "#2B2D33"; c.beginPath(); c.moveTo(x - r, y); c.lineTo(x - r * .4, y - r * .9); c.lineTo(x + r * .6, y - r * .8); c.lineTo(x + r, y + r * .1); c.lineTo(x + r * .3, y + r * .9); c.lineTo(x - r * .7, y + r * .7); c.fill(); c.fillStyle = "#555A66"; c.fillRect(x - r * .3, y - r * .4, r * .4, r * .3); }
+function avTraineau(c, x, y, s) {
+  c.save(); c.translate(x, y); c.scale(s, s);
+  c.strokeStyle = "#F7CF55"; c.lineWidth = 3; c.lineCap = "round"; c.beginPath(); c.moveTo(-30, 16); c.lineTo(26, 16); c.quadraticCurveTo(36, 16, 34, 6); c.stroke();
+  c.beginPath(); c.moveTo(-18, 16); c.lineTo(-18, 9); c.moveTo(14, 16); c.lineTo(14, 9); c.stroke();
+  c.fillStyle = "#C1121F"; c.beginPath(); c.moveTo(-30, -6); c.lineTo(22, -2); c.quadraticCurveTo(30, 0, 28, 10); c.lineTo(-26, 10); c.quadraticCurveTo(-34, 2, -30, -6); c.fill();
+  c.fillStyle = "#F7CF55"; c.fillRect(-26, 2, 50, 2.5);
+  c.fillStyle = "#8C5A2B"; c.beginPath(); c.ellipse(-14, -10, 13, 11, 0, 0, 7); c.fill();
+  c.fillStyle = "#2A9D8F"; c.fillRect(2, -14, 12, 12); c.fillStyle = "#FFE596"; c.fillRect(7, -14, 2.5, 12);
+  c.restore();
+}
+function avRenne(c, x, y, s, o) {
+  o = o || {}; c.save(); c.translate(x, y); c.scale(o.sens ? -s : s, s);
+  const corps = o.clair ? "#C99A6B" : "#8B5A33";
+  c.strokeStyle = corps; c.lineWidth = 3; c.lineCap = "round";
+  const ph = o.pas || 0; [[-9, 0], [-4, 1], [6, 0], [11, 1]].forEach(([lx, k]) => { c.beginPath(); c.moveTo(lx, 6); c.lineTo(lx + Math.sin(ph + k * 3) * 3, 17); c.stroke(); });
+  c.fillStyle = corps; c.beginPath(); c.ellipse(0, 2, 15, 8, 0, 0, 7); c.fill();
+  c.beginPath(); c.ellipse(15, -9, 6, 5, .3, 0, 7); c.fill(); c.fillRect(10, -8, 5, 9);
+  c.fillStyle = "#F4E2C8"; c.beginPath(); c.ellipse(-14, -1, 3, 2.5, 0, 0, 7); c.fill();
+  if (!o.sansBois) { c.strokeStyle = "#D9B27C"; c.lineWidth = 1.8; c.beginPath(); c.moveTo(13, -13); c.lineTo(10, -22); c.lineTo(6, -25); c.moveTo(10, -22); c.lineTo(13, -27); c.moveTo(17, -13); c.lineTo(19, -22); c.lineTo(23, -25); c.moveTo(19, -22); c.lineTo(17, -27); c.stroke(); }
+  c.fillStyle = "#111"; c.beginPath(); c.arc(16, -10, 1.2, 0, 7); c.fill();
+  c.fillStyle = o.nezBrun ? "#4A2C17" : "#FF2E3B"; c.beginPath(); c.arc(21, -7, 2.6, 0, 7); c.fill();
+  if (!o.nezBrun) { c.fillStyle = "rgba(255,80,90,.35)"; c.beginPath(); c.arc(21, -7, 4.5, 0, 7); c.fill(); }
+  c.restore();
+}
+function avLutin(c, x, y, s) {
+  c.save(); c.translate(x, y); c.scale(s, s);
+  c.fillStyle = "#2E8B57"; c.beginPath(); c.ellipse(0, 16, 13, 10, 0, 0, 7); c.fill();
+  c.fillStyle = "#F6D3B3"; c.beginPath(); c.arc(0, 0, 11, 0, 7); c.fill();
+  c.beginPath(); c.moveTo(-10, -1); c.lineTo(-16, -6); c.lineTo(-9, 3); c.moveTo(10, -1); c.lineTo(16, -6); c.lineTo(9, 3); c.fill();
+  c.fillStyle = "#C1121F"; c.beginPath(); c.moveTo(-12, -5); c.quadraticCurveTo(0, -12, 12, -5); c.lineTo(4, -26); c.lineTo(-12, -5); c.fill();
+  c.fillStyle = "#fff"; c.beginPath(); c.arc(4, -26, 3, 0, 7); c.fill(); c.fillRect(-12, -7, 24, 3.5);
+  c.fillStyle = "#222"; c.beginPath(); c.arc(-4, 0, 1.4, 0, 7); c.arc(4, 0, 1.4, 0, 7); c.fill();
+  c.strokeStyle = "#B5523B"; c.lineWidth = 1.2; c.beginPath(); c.arc(0, 3, 3.5, .3, 2.8); c.stroke();
+  c.restore();
+}
+function avBonhomme(c, x, y, s, echarpe) {
+  c.save(); c.translate(x, y); c.scale(s, s);
+  c.fillStyle = "#F8FBFF"; c.strokeStyle = "#AFC6E0"; c.lineWidth = 1;
+  c.beginPath(); c.arc(0, 10, 13, 0, 7); c.fill(); c.stroke(); c.beginPath(); c.arc(0, -8, 9, 0, 7); c.fill(); c.stroke();
+  c.fillStyle = echarpe || "#E63946"; c.fillRect(-9, -1, 18, 4); c.fillRect(4, -1, 4, 10);
+  c.fillStyle = "#222"; c.fillRect(-8, -20, 16, 3); c.fillRect(-5, -30, 10, 10);
+  c.beginPath(); c.arc(-3, -9, 1.2, 0, 7); c.arc(3, -9, 1.2, 0, 7); c.fill();
+  c.fillStyle = "#FF8A3D"; c.beginPath(); c.moveTo(0, -7); c.lineTo(8, -5.5); c.lineTo(0, -5); c.fill();
+  c.restore();
+}
+function avBoule(c, x, y, r, col, motif) {
+  c.strokeStyle = "#C9A227"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, y - r - 6); c.lineTo(x, y - r); c.stroke();
+  c.fillStyle = "#C9A227"; c.fillRect(x - 4, y - r - 3, 8, 4);
+  const g = c.createRadialGradient(x - r * .35, y - r * .35, r * .1, x, y, r); g.addColorStop(0, "#fff"); g.addColorStop(.25, col); g.addColorStop(1, "rgba(0,0,0,.55)");
+  c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.fillStyle = g; c.globalAlpha = .55; c.fill(); c.globalAlpha = 1;
+  c.strokeStyle = "rgba(255,255,255,.85)"; c.fillStyle = "rgba(255,255,255,.85)"; c.lineWidth = 2;
+  if (motif === 1) { c.beginPath(); c.moveTo(x - r, y); c.lineTo(x + r, y); c.stroke(); }
+  else if (motif === 2) for (let i = 0; i < 5; i++) { c.beginPath(); c.arc(x + Math.cos(i * 1.26) * r * .55, y + Math.sin(i * 1.26) * r * .55, 1.8, 0, 7); c.fill(); }
+  else if (motif === 3) { c.beginPath(); for (let i = 0; i < 6; i++) { c.moveTo(x - r + i * r / 3, y - r * .3); c.lineTo(x - r + i * r / 3 + r / 6, y + r * .3); } c.stroke(); }
+  else if (motif === 4) avFlocon(c, x, y, r * .5, "rgba(255,255,255,.9)");
+}
+function avFlocon(c, x, y, r, col) {
+  c.save(); c.translate(x, y); c.strokeStyle = col || "#fff"; c.lineWidth = Math.max(1, r / 6); c.lineCap = "round";
+  for (let i = 0; i < 6; i++) { c.rotate(Math.PI / 3); c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -r); c.moveTo(0, -r * .55); c.lineTo(-r * .25, -r * .8); c.moveTo(0, -r * .55); c.lineTo(r * .25, -r * .8); c.stroke(); }
+  c.restore();
+}
+function avChaussette(c, x, y, s, col, motif) {
+  c.save(); c.translate(x, y); c.scale(s, s);
+  c.strokeStyle = "#7A5A2B"; c.lineWidth = 1.2; c.beginPath(); c.moveTo(0, -30); c.lineTo(0, -24); c.stroke();
+  c.fillStyle = col; c.beginPath(); c.moveTo(-9, -22); c.lineTo(9, -22); c.lineTo(9, 10); c.quadraticCurveTo(9, 22, -4, 22); c.lineTo(-16, 22); c.quadraticCurveTo(-22, 14, -12, 10); c.lineTo(-9, 8); c.closePath(); c.fill();
+  c.save(); c.clip(); c.fillStyle = "rgba(255,255,255,.85)";
+  if (motif === 1) for (let i = 0; i < 4; i++) c.fillRect(-25, -12 + i * 9, 40, 3.5);
+  else if (motif === 2) for (let i = 0; i < 9; i++) { c.beginPath(); c.arc(-14 + (i % 3) * 9 + (i > 5 ? -4 : 0), -10 + Math.floor(i / 3) * 10, 1.8, 0, 7); c.fill(); }
+  else if (motif === 3) avFlocon(c, 0, 2, 6, "rgba(255,255,255,.9)");
+  else if (motif === 4) { c.beginPath(); for (let i = 0; i < 4; i++) { c.moveTo(-9 + i * 6, -14); c.lineTo(-6 + i * 6, -8); c.lineTo(-9 + i * 6, -2); } c.strokeStyle = "rgba(255,255,255,.9)"; c.lineWidth = 1.6; c.stroke(); }
+  else if (motif === 5) { c.fillRect(-25, 0, 40, 6); }
+  c.restore();
+  c.fillStyle = "#F8FBFF"; avRond(c, -11, -28, 22, 8, 3); c.fill();
+  c.restore();
+}
+function avSapin(c, x, y, s) {
+  c.save(); c.translate(x, y); c.scale(s, s);
+  c.fillStyle = "#6B4423"; c.fillRect(-3, 6, 6, 8);
+  c.fillStyle = "#1F7A4C"; [[-18, 8, 0, -8], [-14, -2, 0, -18], [-10, -12, 0, -28]].forEach(([a, b, d, e]) => { c.beginPath(); c.moveTo(a, b); c.lineTo(d, e); c.lineTo(-a, b); c.fill(); });
+  c.fillStyle = "rgba(255,255,255,.85)"; c.beginPath(); c.moveTo(-6, -20); c.lineTo(0, -28); c.lineTo(6, -20); c.fill();
+  c.restore();
+}
+function avCheminee(c, x, haut, w, H) {
+  c.fillStyle = "#9E3B2C"; c.fillRect(x - w / 2, haut, w, H - haut);
+  c.strokeStyle = "rgba(0,0,0,.25)"; c.lineWidth = 1;
+  for (let yy = haut + 10; yy < H; yy += 10) { c.beginPath(); c.moveTo(x - w / 2, yy); c.lineTo(x + w / 2, yy); c.stroke(); }
+  c.fillStyle = "#7A2A1F"; c.fillRect(x - w / 2 - 4, haut, w + 8, 10); c.fillStyle = "#F4FAFF"; c.fillRect(x - w / 2 - 4, haut - 4, w + 8, 5);
+}
+function avBonnet(c, x, y, s, col) {
+  c.save(); c.translate(x, y); c.scale(s, s);
+  c.fillStyle = col || "#C1121F"; c.beginPath(); c.moveTo(-30, 10); c.quadraticCurveTo(-26, -34, 6, -40); c.quadraticCurveTo(26, -38, 34, -22); c.quadraticCurveTo(18, -26, 22, 10); c.closePath(); c.fill();
+  c.fillStyle = "#fff"; avRond(c, -34, 4, 60, 14, 7); c.fill(); c.beginPath(); c.arc(35, -22, 7, 0, 7); c.fill();
+  c.restore();
+}
+function avTexte(c, t, x, y, taille, col, align) { c.font = "800 " + taille + "px Saira, system-ui, sans-serif"; c.textAlign = align || "center"; c.textBaseline = "middle"; c.fillStyle = col || "#fff"; c.fillText(t, x, y); }
+function avEclats(G, x, y, col) { if (reduit) return; (G.s.ecl = G.s.ecl || []).push(...Array.from({ length: 10 }, (_, i) => ({ x, y, vx: Math.cos(i * .63) * (40 + Math.random() * 60), vy: Math.sin(i * .63) * (40 + Math.random() * 60) - 30, v: .6, col }))); }
+function avMajEclats(G, c, dt) { const l = G.s.ecl; if (!l) return; for (let i = l.length - 1; i >= 0; i--) { const p = l[i]; p.v -= dt; if (p.v <= 0) { l.splice(i, 1); continue; } p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 120 * dt; c.globalAlpha = Math.min(1, p.v * 2); c.fillStyle = p.col || "#FFE596"; c.beginPath(); c.arc(p.x, p.y, 2.4, 0, 7); c.fill(); } c.globalAlpha = 1; }
+const avMelange = l => { for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [l[i], l[j]] = [l[j], l[i]]; } return l; };
+const avBorne = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* ---------- Les jeux : { nom, ico, aide, duree (s, sinon jusqu'à l'erreur), unite, bas (plus petit = mieux), fmt, init, maj, dessin, toucher } ---------- */
+const JEUX_AVENT = {
+  cadeaux: { nom: "Les cadeaux du traîneau", ico: "🎁", duree: 25, unite: "cadeaux", aide: "Glisse le doigt pour déplacer la hotte et attrape les cadeaux qui tombent du traîneau. Évite le charbon (−2) !",
+    init(G) { G.s.hx = 160; G.s.l = []; G.s.p = .4; },
+    maj(G, dt) { const S = G.s; S.tx = 160 + 115 * Math.sin(G.t * 1.3); S.p -= dt;
+      if (S.p <= 0) { S.l.push({ x: S.tx, y: 70, v: 110 + G.t * 6, ch: Math.random() < .22, col: AV_COUL[Math.floor(Math.random() * 6)] }); S.p = .55 - Math.min(.25, G.t * .012); }
+      for (let i = S.l.length - 1; i >= 0; i--) { const o = S.l[i]; o.y += o.v * dt;
+        if (o.y >= 336 && o.y <= 372 && Math.abs(o.x - S.hx) < 38) { S.l.splice(i, 1); if (o.ch) { G.score = Math.max(0, G.score - 2); G.son("rate"); } else { G.score++; G.son("pop"); avEclats(G, o.x, 350); } }
+        else if (o.y > G.H + 20) S.l.splice(i, 1); } },
+    dessin(G, c, dt) { const S = G.s; avFond(G, c); avNeige(G, c); avTraineau(c, S.tx || 160, 52, 1);
+      S.l.forEach(o => o.ch ? avCharbon(c, o.x, o.y, 10) : avCadeau(c, o.x, o.y, 22, 20, o.col));
+      c.fillStyle = "#8C5A2B"; c.beginPath(); c.moveTo(S.hx - 36, 344); c.lineTo(S.hx + 36, 344); c.lineTo(S.hx + 28, 378); c.lineTo(S.hx - 28, 378); c.fill();
+      c.strokeStyle = "#5E3A1A"; c.lineWidth = 2; for (let i = -2; i <= 2; i++) { c.beginPath(); c.moveTo(S.hx + i * 13, 346); c.lineTo(S.hx + i * 11, 376); c.stroke(); }
+      avMajEclats(G, c, dt); },
+    toucher(G, x) { G.s.hx = avBorne(x, 36, 284); } },
+
+  cheminees: { nom: "Le traîneau entre les cheminées", ico: "🛷", unite: "cheminées", aide: "Touche l'écran pour faire monter le traîneau. Passe entre les cheminées et les nuages, sans rien toucher.",
+    init(G) { G.s.y = 170; G.s.vy = -150; G.s.o = []; G.s.p = .6; },
+    maj(G, dt) { const S = G.s; S.vy += 720 * dt; S.y += S.vy * dt; S.p -= dt;
+      if (S.p <= 0) { const gap = Math.max(118, 165 - G.t * 2); S.o.push({ x: G.W + 30, gap, cy: 110 + Math.random() * 170 }); S.p = 1.55; }
+      S.o.forEach(o => { o.x -= 130 * dt; if (!o.ok && o.x + 28 < 62) { o.ok = true; G.score++; G.son("pop"); }
+        if (o.x - 28 < 98 && o.x + 28 > 62 && (S.y + 11 > o.cy + o.gap / 2 || S.y - 11 < o.cy - o.gap / 2)) G.finir(); });
+      S.o = S.o.filter(o => o.x > -50); if (S.y > G.H - 30 || S.y < -10) G.finir(); },
+    dessin(G, c) { const S = G.s; avFond(G, c); avNeige(G, c);
+      S.o.forEach(o => { avCheminee(c, o.x, o.cy + o.gap / 2, 48, G.H);
+        c.fillStyle = "#C9D6EA"; c.beginPath(); c.ellipse(o.x, o.cy - o.gap / 2 - 30, 40, 34, 0, 0, 7); c.fill(); c.fillRect(o.x - 40, 0, 80, Math.max(0, o.cy - o.gap / 2 - 30));
+        c.fillStyle = "#EAF4FF"; for (let i = -2; i <= 2; i++) { c.beginPath(); c.moveTo(o.x + i * 12 - 4, o.cy - o.gap / 2 + 2); c.lineTo(o.x + i * 12, o.cy - o.gap / 2 + 12); c.lineTo(o.x + i * 12 + 4, o.cy - o.gap / 2 + 2); c.fill(); } });
+      c.save(); c.translate(80, S.y); c.rotate(avBorne(S.vy / 900, -.4, .5)); avTraineau(c, 0, 0, .8); c.restore(); },
+    toucher(G, x, y, t) { if (t === "down") { G.s.vy = -255; G.son("pop"); } } },
+
+  renne: { nom: "Le renne pas comme les autres", ico: "🦌", duree: 25, unite: "trouvés", aide: "Un renne n'est pas comme les autres (nez, bois, couleur ou sens). Touche-le ! Une erreur coûte 1,5 s.",
+    init(G) { G.s.n = 3; avNouvelleGrille(G); },
+    maj(G, dt) { if (G.s.flash > 0) G.s.flash -= dt; },
+    dessin(G, c) { const S = G.s; avFond(G, c, false); avNeige(G, c); const n = S.n, z = 300 / n;
+      for (let i = 0; i < n * n; i++) { const cx = 10 + (i % n + .5) * z, cy = 58 + (Math.floor(i / n) + .5) * z;
+        c.fillStyle = "rgba(255,255,255,.07)"; avRond(c, cx - z / 2 + 3, cy - z / 2 + 3, z - 6, z - 6, 8); c.fill();
+        avRenne(c, cx - z * .05, cy + z * .08, z / 62, i === S.d ? S.v : {}); }
+      if (S.flash > 0) { c.fillStyle = "rgba(230,57,70," + (S.flash * .5) + ")"; c.fillRect(0, 0, G.W, G.H); } },
+    toucher(G, x, y, t) { if (t !== "down") return; const S = G.s, z = 300 / S.n, i = Math.floor((x - 10) / z), j = Math.floor((y - 58) / z);
+      if (i < 0 || j < 0 || i >= S.n || j >= S.n) return;
+      if (j * S.n + i === S.d) { G.score++; G.son("ok"); S.n = G.score >= 7 ? 5 : G.score >= 3 ? 4 : 3; avNouvelleGrille(G); }
+      else { G.t += 1.5; S.flash = .5; G.son("rate"); } } },
+
+  pile: { nom: "La pile de cadeaux", ico: "📦", unite: "cadeaux", aide: "Touche l'écran pour lâcher le cadeau qui glisse. Ce qui dépasse tombe : empile le plus haut possible !",
+    init(G) { G.s.p = [{ x: 160, w: 130, col: AV_COUL[0] }]; G.s.c = { x: 40, w: 130, d: 1 }; G.s.v = 120; G.s.cam = 0; G.s.ch = []; },
+    maj(G, dt) { const S = G.s, c0 = S.c; c0.x += c0.d * S.v * dt; if (c0.x + c0.w / 2 > 312) { c0.x = 312 - c0.w / 2; c0.d = -1; } if (c0.x - c0.w / 2 < 8) { c0.x = 8 + c0.w / 2; c0.d = 1; }
+      const cible = Math.max(0, (S.p.length - 7) * 26); S.cam += (cible - S.cam) * Math.min(1, dt * 4);
+      S.ch.forEach(o => { o.vy += 600 * dt; o.y += o.vy * dt; }); S.ch = S.ch.filter(o => o.y < G.H + 400); },
+    dessin(G, c) { const S = G.s, base = G.H - 44 + S.cam; avFond(G, c); avNeige(G, c);
+      S.p.forEach((b, i) => avCadeau(c, b.x, base - i * 26, b.w, 24, b.col));
+      if (!G.fin) avCadeau(c, S.c.x, base - S.p.length * 26 - 34, S.c.w, 24, AV_COUL[S.p.length % 6]);
+      S.ch.forEach(o => avCadeau(c, o.x, o.y, o.w, 24, o.col)); },
+    toucher(G, x, y, t) { if (t !== "down") return; const S = G.s, h = S.p[S.p.length - 1], c0 = S.c, col = AV_COUL[S.p.length % 6], base = G.H - 44 + S.cam;
+      const g = Math.max(c0.x - c0.w / 2, h.x - h.w / 2), d = Math.min(c0.x + c0.w / 2, h.x + h.w / 2);
+      if (d - g < 4) { S.ch.push({ x: c0.x, y: base - S.p.length * 26, w: c0.w, vy: 0, col }); G.son("rate"); G.finir(); return; }
+      if (Math.abs(c0.x - h.x) < 5) { S.p.push({ x: h.x, w: h.w, col }); G.son("ok"); avEclats(G, h.x, base - S.p.length * 26); }
+      else { S.p.push({ x: (g + d) / 2, w: d - g, col }); const cote = c0.x > h.x ? 1 : -1; S.ch.push({ x: cote > 0 ? (d + c0.x + c0.w / 2) / 2 : (g + c0.x - c0.w / 2) / 2, y: base - (S.p.length - 1) * 26, w: c0.w - (d - g), vy: 0, col }); G.son("pop"); }
+      G.score++; S.v = Math.min(260, S.v + 9); const n = S.p[S.p.length - 1]; S.c = { x: G.score % 2 ? 300 - n.w / 2 : 20 + n.w / 2, w: n.w, d: G.score % 2 ? -1 : 1 }; } },
+
+  boules: { nom: "Bataille de boules de neige", ico: "☃️", duree: 25, unite: "lutins", aide: "Les lutins sortent de leurs abris de neige : touche-les pour leur lancer une boule ! Laisse tranquilles les rennes (−2).",
+    init(G) { G.s.tr = [[60, 200], [160, 200], [260, 200], [60, 320], [160, 320], [260, 320]].map(([x, y]) => ({ x, y, h: 0, v: 0, type: "", vie: 0 })); G.s.p = .5; G.s.spl = []; },
+    maj(G, dt) { const S = G.s; S.p -= dt;
+      if (S.p <= 0) { const libres = S.tr.filter(t => !t.type); if (libres.length) { const t = libres[Math.floor(Math.random() * libres.length)]; t.type = Math.random() < .2 ? "renne" : "lutin"; t.vie = Math.max(.55, 1.1 - G.t * .02); t.h = 0; } S.p = Math.max(.35, .75 - G.t * .015); }
+      S.tr.forEach(t => { if (!t.type) return; t.vie -= dt; t.h = avBorne(t.vie > .15 ? t.h + dt * 6 : t.h - dt * 6, 0, 1); if (t.vie <= 0) t.type = ""; });
+      S.spl.forEach(s => s.v -= dt); S.spl = S.spl.filter(s => s.v > 0); },
+    dessin(G, c) { const S = G.s; avFond(G, c, false); c.fillStyle = "#EAF4FF"; c.fillRect(0, 140, G.W, G.H - 140); avNeige(G, c);
+      S.tr.forEach(t => { c.save(); c.beginPath(); c.rect(t.x - 50, t.y - 90, 100, 90); c.clip();
+        if (t.type === "lutin") avLutin(c, t.x, t.y + 20 - t.h * 48, 1.3); else if (t.type === "renne") avRenne(c, t.x - 4, t.y + 30 - t.h * 46, 1.2, {});
+        c.restore(); c.fillStyle = "#F8FBFF"; c.strokeStyle = "#B9D0EA"; c.lineWidth = 2; c.beginPath(); c.ellipse(t.x, t.y + 4, 48, 20, 0, Math.PI, 0); c.fill(); c.stroke(); });
+      S.spl.forEach(s => { c.globalAlpha = Math.min(1, s.v * 2); c.fillStyle = "#fff"; for (let i = 0; i < 7; i++) { c.beginPath(); c.arc(s.x + Math.cos(i) * 12, s.y + Math.sin(i * 2) * 10, 5, 0, 7); c.fill(); } c.globalAlpha = 1; }); },
+    toucher(G, x, y, t) { if (t !== "down") return; const S = G.s;
+      const v = S.tr.find(o => o.type && o.h > .3 && Math.abs(x - o.x) < 40 && y < o.y + 10 && y > o.y - 80); S.spl.push({ x, y, v: .4 });
+      if (!v) return; if (v.type === "lutin") { G.score++; G.son("pop"); } else { G.score = Math.max(0, G.score - 2); G.son("rate"); } v.vie = Math.min(v.vie, .15); } },
+
+  memory: { nom: "Le memory des boules de Noël", ico: "🔮", unite: "s", bas: true, chrono: true, fmt: s => s.toFixed(1).replace(".", ",") + " s", aide: "Retourne deux boules à la fois et retrouve les 6 paires, le plus vite possible.",
+    init(G) { G.s.k = avMelange([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]).map(id => ({ id, vu: false, ok: false })); G.s.sel = []; G.s.att = 0; },
+    maj(G, dt) { const S = G.s; G.score = G.t; if (S.att > 0) { S.att -= dt; if (S.att <= 0) { S.sel.forEach(i => S.k[i].vu = false); S.sel = []; } } },
+    dessin(G, c) { const S = G.s; avFond(G, c, false); avNeige(G, c);
+      S.k.forEach((k, i) => { const x = 22 + (i % 3) * 96, y = 64 + Math.floor(i / 3) * 80;
+        c.fillStyle = k.ok ? "rgba(255,255,255,.1)" : k.vu ? "#F4FAFF" : "#C1121F"; avRond(c, x, y, 84, 70, 10); c.fill();
+        if (k.vu || k.ok) avBoule(c, x + 42, y + 38, 20, AV_COUL[k.id], k.id % 5);
+        else { c.strokeStyle = "#F7CF55"; c.lineWidth = 2; avRond(c, x + 6, y + 6, 72, 58, 7); c.stroke(); avFlocon(c, x + 42, y + 35, 12, "rgba(255,255,255,.7)"); } }); },
+    toucher(G, x, y, t) { if (t !== "down") return; const S = G.s; if (S.att > 0 || S.sel.length >= 2) return;
+      const i = Math.floor((x - 22) / 96), j = Math.floor((y - 64) / 80); if (i < 0 || i > 2 || j < 0 || j > 3) return;
+      const n = j * 3 + i, k = S.k[n]; if (!k || k.vu || k.ok) return; k.vu = true; S.sel.push(n); G.son("pop");
+      if (S.sel.length === 2) { const [a, b] = S.sel.map(z => S.k[z]);
+        if (a.id === b.id) { a.ok = b.ok = true; S.sel = []; G.son("ok"); if (S.k.every(z => z.ok)) { G.score = G.t; G.finir(); } } else S.att = .7; } } },
+
+  flocons: { nom: "Attrape les flocons", ico: "❄️", duree: 20, unite: "flocons", aide: "Touche les flocons avant qu'ils ne fondent au sol. Les flocons dorés valent 3 !",
+    init(G) { G.s.f = []; G.s.p = 0; },
+    maj(G, dt) { const S = G.s; S.p -= dt; if (S.p <= 0) { S.f.push({ x: 30 + Math.random() * 260, y: -20, v: 45 + Math.random() * 40 + G.t * 3, w: Math.random() * 6, or: Math.random() < .12, r: 13 + Math.random() * 6 }); S.p = Math.max(.25, .5 - G.t * .01); }
+      S.f.forEach(f => { f.y += f.v * dt; f.x += Math.sin(G.t * 2 + f.w) * 22 * dt; }); S.f = S.f.filter(f => f.y < G.H - 26); },
+    dessin(G, c, dt) { avFond(G, c); G.s.f.forEach(f => avFlocon(c, f.x, f.y, f.r, f.or ? "#F7CF55" : "#fff")); avMajEclats(G, c, dt); },
+    toucher(G, x, y, t) { if (t !== "down") return; const S = G.s; let m = -1, dm = 30;
+      S.f.forEach((f, i) => { const d = Math.hypot(f.x - x, f.y - y); if (d < dm) { dm = d; m = i; } });
+      if (m < 0) return; const f = S.f[m]; S.f.splice(m, 1); G.score += f.or ? 3 : 1; G.son(f.or ? "ok" : "pop"); avEclats(G, f.x, f.y, f.or ? "#F7CF55" : "#fff"); } },
+
+  chaussettes: { nom: "Les chaussettes par paires", ico: "🧦", duree: 25, unite: "paires", aide: "Touche deux chaussettes identiques pour faire une paire. Une erreur coûte 1 s.",
+    init(G) { avNouvellesChaussettes(G); },
+    maj(G, dt) { const S = G.s; if (S.sh > 0) S.sh -= dt; if (S.l.every(z => z.ok) && !S.nv) { S.nv = .4; } if (S.nv) { S.nv -= dt; if (S.nv <= 0) avNouvellesChaussettes(G); } },
+    dessin(G, c) { const S = G.s; avFond(G, c); avNeige(G, c);
+      [150, 290].forEach(y => { c.strokeStyle = "#D9B27C"; c.lineWidth = 2; c.beginPath(); c.moveTo(0, y - 34); c.quadraticCurveTo(160, y - 18, 320, y - 34); c.stroke(); });
+      S.l.forEach((z, i) => { if (z.ok) return; const x = 35 + (i % 6) * 50 + (S.sh > 0 && S.err && S.err.includes(i) ? Math.sin(G.horloge * 60) * 3 : 0), y = i < 6 ? 150 : 290;
+        if (S.sel === i) { c.fillStyle = "rgba(247,207,85,.35)"; avRond(c, x - 22, y - 34, 44, 62, 8); c.fill(); }
+        avChaussette(c, x + 3, y, 1.15, AV_COUL[z.c], z.m); }); },
+    toucher(G, x, y, t) { if (t !== "down") return; const S = G.s, r = y > 105 && y < 185 ? 0 : y > 245 && y < 325 ? 1 : -1; if (r < 0) return;
+      const i = r * 6 + Math.round((x - 35) / 50); if (i < r * 6 || i > r * 6 + 5 || S.l[i].ok) return;
+      if (S.sel === null || S.sel === i) { S.sel = i; G.son("pop"); return; }
+      const a = S.l[S.sel], b = S.l[i];
+      if (a.c === b.c && a.m === b.m) { a.ok = b.ok = true; G.score++; G.son("ok"); } else { G.t += 1; S.sh = .35; S.err = [S.sel, i]; G.son("rate"); }
+      S.sel = null; } },
+
+  bonshommes: { nom: "La course des bonshommes de neige", ico: "⛄", unite: "s", bas: true, fmt: s => s.toFixed(1).replace(".", ",") + " s", aide: "Tape l'écran le plus vite possible pour faire avancer ton bonhomme (en bas, à ta couleur) jusqu'au drapeau, devant les lutins.",
+    init(G) { G.s.b = [0, 1, 2].map(() => ({ d: 0, v: 44 + Math.random() * 14 })); G.s.d = 0; G.s.arr = 0; },
+    maj(G, dt) { const S = G.s; S.b.forEach(b => { if (b.d < 250) { b.d += b.v * dt * (.8 + Math.random() * .4); if (b.d >= 250) S.arr++; } }); if (G.t > 30) { G.score = 30; G.msg = "Les lutins t'attendent encore à l'arrivée !"; G.finir(); } },
+    dessin(G, c) { const S = G.s; avFond(G, c, false); c.fillStyle = "#EAF4FF"; c.fillRect(0, 100, G.W, G.H - 100); avNeige(G, c);
+      for (let i = 0; i < 4; i++) { c.strokeStyle = "rgba(80,120,170,.35)"; c.setLineDash([6, 6]); c.beginPath(); c.moveTo(0, 152 + i * 62); c.lineTo(G.W, 152 + i * 62); c.stroke(); c.setLineDash([]); }
+      for (let i = 0; i < 8; i++) { c.fillStyle = i % 2 ? "#111" : "#fff"; c.fillRect(290, 100 + i * 31, 10, 31); }
+      S.b.forEach((b, i) => avLutin(c, 30 + b.d, 128 + i * 62, .95));
+      avBonhomme(c, 30 + S.d, 318, 1, G.couleur); },
+    toucher(G, x, y, t) { if (t !== "down") return; const S = G.s; S.d = Math.min(250, S.d + 8.5); if (S.d >= 250) { const place = S.arr + 1; G.score = G.t; G.msg = place === 1 ? "🥇 Premier devant les lutins !" : place + "e sur 4 : les lutins sont rapides !"; G.son("ok"); G.finir(); } } },
+
+  guirlande: { nom: "La guirlande magique", ico: "💡", unite: "lumières", aide: "Regarde l'ordre dans lequel les ampoules s'allument, puis touche-les dans le même ordre. Une de plus à chaque tour !",
+    init(G) { G.s.seq = [Math.floor(Math.random() * 4)]; G.s.i = 0; G.s.ph = "montre"; G.s.tm = .7; G.s.on = -1; G.s.k = 0; },
+    maj(G, dt) { const S = G.s; S.tm -= dt;
+      if (S.ph === "montre" && S.tm <= 0) { const pas = Math.max(.28, .5 - S.seq.length * .02);
+        if (S.on >= 0) { S.on = -1; S.tm = .15; if (S.k >= S.seq.length) { S.ph = "joue"; S.i = 0; } }
+        else { S.on = S.seq[S.k++]; G.son("ton", S.on); S.tm = pas; } }
+      else if (S.ph === "joue" && S.on >= 0 && S.tm <= 0) S.on = -1;
+      else if (S.ph === "pause" && S.tm <= 0) { S.ph = "montre"; S.k = 0; S.tm = .3; } },
+    dessin(G, c) { const S = G.s, P = [[56, 220], [128, 250], [192, 250], [264, 220]], C = ["#E63946", "#2EC46B", "#F4B400", "#4C9AFF"]; avFond(G, c); avNeige(G, c);
+      c.strokeStyle = "#1F7A4C"; c.lineWidth = 4; c.beginPath(); c.moveTo(0, 170); c.bezierCurveTo(100, 230, 220, 230, 320, 170); c.stroke();
+      P.forEach(([x, y], i) => { const on = S.on === i; c.fillStyle = "#555"; c.fillRect(x - 7, y - 40, 14, 12);
+        if (on) { c.fillStyle = C[i]; c.globalAlpha = .35; c.beginPath(); c.arc(x, y, 46, 0, 7); c.fill(); c.globalAlpha = 1; }
+        c.fillStyle = on ? C[i] : "rgba(255,255,255,.15)"; c.strokeStyle = C[i]; c.lineWidth = 3; c.beginPath(); c.ellipse(x, y, 24, 30, 0, 0, 7); c.fill(); c.stroke(); });
+      avTexte(c, S.ph === "joue" ? "À toi ! (" + S.i + " / " + S.seq.length + ")" : "Regarde bien…", 160, 330, 17, "#fff"); },
+    toucher(G, x, y, t) { const S = G.s; if (t !== "down" || S.ph !== "joue") return; const P = [[56, 220], [128, 250], [192, 250], [264, 220]];
+      const k = P.findIndex(([px, py]) => Math.hypot(px - x, py - y) < 38); if (k < 0) return;
+      S.on = k; S.tm = .25; G.son("ton", k);
+      if (k !== S.seq[S.i]) { G.son("rate"); G.finir(); return; }
+      S.i++; if (S.i >= S.seq.length) { G.score = S.seq.length; S.seq.push(Math.floor(Math.random() * 4)); S.ph = "pause"; S.tm = .8; } } },
+
+  livraison: { nom: "Livraison par la cheminée", ico: "🏠", duree: 25, unite: "livrés", aide: "Le traîneau survole les toits : touche l'écran pour lâcher un cadeau pile dans une cheminée.",
+    init(G) { G.s.m = []; G.s.c = []; let x = 140; while (x < 520) { G.s.m.push(avMaison(x)); x += 130 + Math.random() * 50; } },
+    maj(G, dt) { const S = G.s, v = 85 + G.t * 2; S.m.forEach(m => m.x -= v * dt); S.m = S.m.filter(m => m.x > -80); const der = S.m[S.m.length - 1]; if (!der || der.x < 400) S.m.push(avMaison((der ? der.x : 300) + 130 + Math.random() * 50));
+      S.c.forEach(o => { o.vy += 520 * dt; o.y += o.vy * dt;
+        S.m.forEach(m => { const cx = m.x + m.cx, top = G.H - 40 - m.h - 26; if (!o.fin && o.y >= top && o.y - o.vy * dt < top && Math.abs(o.x - cx) < 13) { o.fin = 1; G.score++; G.son("ok"); avEclats(G, cx, top); } });
+        if (!o.fin) { const m = S.m.find(z => o.x > z.x - 2 && o.x < z.x + 72); const sol = m ? G.H - 40 - m.h - 6 : G.H - 40; if (o.y >= sol) { o.fin = 2; G.son("rate"); } } });
+      S.c = S.c.filter(o => !o.fin); },
+    dessin(G, c, dt) { const S = G.s; avFond(G, c); avNeige(G, c);
+      S.m.forEach(m => { const y = G.H - 40 - m.h; avCheminee(c, m.x + m.cx, y - 26, 22, y + 10);
+        c.fillStyle = m.col; c.fillRect(m.x, y, 70, m.h + 10); c.fillStyle = "#5A2E1F"; c.beginPath(); c.moveTo(m.x - 6, y + 2); c.lineTo(m.x + 35, y - 20); c.lineTo(m.x + 76, y + 2); c.fill();
+        c.fillStyle = "#F4FAFF"; c.beginPath(); c.moveTo(m.x - 6, y + 2); c.lineTo(m.x + 35, y - 20); c.lineTo(m.x + 76, y + 2); c.lineTo(m.x + 70, y + 2); c.lineTo(m.x + 35, y - 15); c.lineTo(m.x, y + 2); c.fill();
+        c.fillStyle = "#FFD36E"; c.fillRect(m.x + 12, y + 18, 14, 14); c.fillRect(m.x + 44, y + 18, 14, 14); });
+      S.c.forEach(o => avCadeau(c, o.x, o.y, 16, 14, o.col));
+      avTraineau(c, 80, 70 + Math.sin(G.horloge * 3) * 4, .9); avMajEclats(G, c, dt); },
+    toucher(G, x, y, t) { if (t !== "down" || G.s.c.length >= 2) return; G.s.c.push({ x: 80, y: 84, vy: 0, col: AV_COUL[Math.floor(Math.random() * 6)] }); G.son("pop"); } },
+
+  rennes: { nom: "Compte les rennes", ico: "🔢", unite: "sur 5", aide: "Un troupeau passe à toute vitesse, avec quelques lutins pour te piéger. Compte seulement les rennes, puis choisis le bon nombre. 5 manches.",
+    init(G) { G.s.m = 0; avNouvelleManche(G); },
+    maj(G, dt) { const S = G.s; S.tm += dt;
+      if (S.ph === "defile") { if (S.tm > S.dur) { S.ph = "choix"; } }
+      else if (S.ph === "rep" && S.tm > 1.1) { if (S.m >= 5) G.finir(); else avNouvelleManche(G); } },
+    dessin(G, c) { const S = G.s; avFond(G, c); avNeige(G, c);
+      if (S.ph === "defile") S.l.forEach(o => { const x = -40 + (S.tm - o.d) * o.v; if (x > -40 && x < G.W + 40) { if (o.lutin) avLutin(c, x, o.y, .9); else avRenne(c, x, o.y, 1.05, { pas: S.tm * 14 }); } });
+      else { avTexte(c, S.ph === "rep" ? (S.bon ? "Bravo ! " : "Raté : ") + S.n + " renne" + (S.n > 1 ? "s" : "") : "Combien de rennes ?", 160, 120, 20);
+        S.ch.forEach((v, i) => { const x = 60 + i * 100, y = 230, on = S.ph === "rep" && v === S.n;
+          c.fillStyle = on ? "#2EC46B" : "rgba(255,255,255,.14)"; c.beginPath(); c.arc(x, y, 38, 0, 7); c.fill(); c.strokeStyle = "#F7CF55"; c.lineWidth = 2; c.stroke(); avTexte(c, String(v), x, y + 1, 30); }); }
+      avTexte(c, "Manche " + Math.min(5, S.m) + " / 5", 160, 56, 13, "rgba(255,255,255,.85)"); },
+    toucher(G, x, y, t) { const S = G.s; if (t !== "down" || S.ph !== "choix") return; const i = S.ch.findIndex((v, k) => Math.hypot(60 + k * 100 - x, 230 - y) < 44); if (i < 0) return;
+      S.bon = S.ch[i] === S.n; if (S.bon) { G.score++; G.son("ok"); } else G.son("rate"); S.ph = "rep"; S.tm = 0; } },
+
+  aurore: { nom: "Dessine ton aurore boréale", ico: "🌌", libre: true, aide: "Glisse le doigt dans le ciel : tu peins une aurore boréale qui ondule au-dessus des sapins. Pas de score, juste pour le plaisir.",
+    init(G) { G.s.tr = []; G.s.h = 120; },
+    maj() { },
+    dessin(G, c) { const S = G.s; avFond(G, c); c.globalCompositeOperation = "lighter";
+      S.tr.forEach(tr => { for (let i = 1; i < tr.length; i++) { const a = tr[i - 1], b = tr[i], o = reduit ? 0 : Math.sin(G.horloge * 1.6 + i * .25) * 3;
+        c.strokeStyle = "hsla(" + b[2] + ",90%,60%,.16)"; c.lineWidth = 30; c.lineCap = "round"; c.beginPath(); c.moveTo(a[0], a[1] + o); c.lineTo(b[0], b[1] + o); c.stroke();
+        c.strokeStyle = "hsla(" + b[2] + ",95%,70%,.5)"; c.lineWidth = 7; c.beginPath(); c.moveTo(a[0], a[1] + o); c.lineTo(b[0], b[1] + o); c.stroke(); } });
+      c.globalCompositeOperation = "source-over";
+      [[40, 352, 1.4], [92, 360, 1.1], [236, 356, 1.3], [290, 362, 1]].forEach(([x, y, s]) => avSapin(c, x, y, s)); avNeige(G, c); },
+    toucher(G, x, y, t) { const S = G.s; if (t === "down") { S.tr.push([]); }
+      if (t === "up" || !S.tr.length) return; S.h = (S.h + 2.2) % 360; S.tr[S.tr.length - 1].push([x, y, S.h]);
+      let n = S.tr.reduce((a, z) => a + z.length, 0); while (n > 1400 && S.tr.length) { n -= S.tr[0].length; S.tr.shift(); } } },
+
+  luge: { nom: "La descente en luge", ico: "🛝", unite: "m", aide: "Glisse le doigt à gauche et à droite pour éviter les sapins et les rochers. Va le plus loin possible !",
+    init(G) { G.s.x = 160; G.s.c = 160; G.s.o = []; G.s.p = .6; G.s.d = 0; G.s.tr = []; },
+    maj(G, dt) { const S = G.s, v = 150 + G.t * 9; S.d += v * dt; G.score = Math.floor(S.d / 10); S.x += (S.c - S.x) * Math.min(1, dt * 9); S.p -= dt;
+      if (S.p <= 0) { S.o.push({ x: 20 + Math.random() * 280, y: G.H + 30, r: 16 + Math.random() * 6, roc: Math.random() < .3 }); S.p = Math.max(.32, .8 - G.t * .02); }
+      S.o.forEach(o => o.y -= v * dt); S.o = S.o.filter(o => o.y > -40);
+      S.tr.unshift([S.x, 100]); S.tr.forEach(p => p[1] -= v * dt); S.tr = S.tr.slice(0, 40);
+      if (S.o.some(o => Math.hypot(o.x - S.x, o.y - 104) < o.r + 10)) { G.son("rate"); G.finir(); } },
+    dessin(G, c) { const S = G.s; c.fillStyle = "#EEF6FF"; c.fillRect(0, 0, G.W, G.H);
+      c.strokeStyle = "rgba(120,160,210,.45)"; c.lineWidth = 2; [-6, 6].forEach(dx => { c.beginPath(); S.tr.forEach((p, i) => i ? c.lineTo(p[0] + dx, p[1]) : c.moveTo(p[0] + dx, p[1])); c.stroke(); });
+      S.o.forEach(o => { if (o.roc) { c.fillStyle = "#7D8794"; c.beginPath(); c.ellipse(o.x, o.y, o.r, o.r * .75, 0, 0, 7); c.fill(); c.fillStyle = "#fff"; c.beginPath(); c.ellipse(o.x - 3, o.y - o.r * .5, o.r * .7, o.r * .3, 0, 0, 7); c.fill(); } else avSapin(c, o.x, o.y + 10, o.r / 16); });
+      c.save(); c.translate(S.x, 104); c.rotate(avBorne((S.c - S.x) / 120, -.5, .5));
+      c.fillStyle = "#C1121F"; avRond(c, -12, -16, 24, 34, 6); c.fill(); c.strokeStyle = "#F7CF55"; c.lineWidth = 3; c.beginPath(); c.moveTo(-10, 20); c.lineTo(-10, -18); c.moveTo(10, 20); c.lineTo(10, -18); c.stroke();
+      c.fillStyle = G.couleur || "#4C9AFF"; c.beginPath(); c.arc(0, 2, 8, 0, 7); c.fill(); c.restore(); avNeige(G, c); },
+    toucher(G, x) { G.s.c = avBorne(x, 16, 304); } },
+
+  gobelets: { nom: "Où est le cadeau ?", ico: "🎅", unite: "manches", aide: "Le cadeau se cache sous un bonnet, puis les bonnets se mélangent. Suis-le des yeux et touche le bon bonnet !",
+    init(G) { G.s.r = 0; avNouveauMelange(G); },
+    maj(G, dt) { const S = G.s; S.tm += dt;
+      if (S.ph === "montre" && S.tm > 1.1) { S.ph = "melange"; S.tm = 0; S.k = 0; }
+      else if (S.ph === "melange") { if (S.tm >= S.dur) { S.tm = 0; const [a, b] = S.sw[S.k]; [S.pos[a], S.pos[b]] = [S.pos[b], S.pos[a]]; S.k++; if (S.k >= S.sw.length) S.ph = "choix"; } }
+      else if (S.ph === "rep" && S.tm > 1.1) { if (S.bon) { S.r++; avNouveauMelange(G); } else G.finir(); } },
+    dessin(G, c) { const S = G.s, X = [70, 160, 250]; avFond(G, c); avNeige(G, c);
+      c.fillStyle = "#6B4423"; c.fillRect(20, 268, 280, 12);
+      [0, 1, 2].forEach(i => { let x = X[S.pos[i]], y = 250, lev = 0;
+        if (S.ph === "melange" && S.k < S.sw.length && S.sw[S.k].includes(i)) { const [a, b] = S.sw[S.k], f = avBorne(S.tm / S.dur, 0, 1), de = X[S.pos[i]], vers = X[S.pos[i === a ? b : a]]; x = de + (vers - de) * f; y = 250 + Math.sin(f * Math.PI) * (i === a ? -28 : 28); }
+        if ((S.ph === "montre") || (S.ph === "rep" && (i === S.cad || i === S.choix))) lev = 46;
+        if (i === S.cad && lev) avCadeau(c, x, 254, 30, 26, "#2A9D8F");
+        avBonnet(c, x, y - lev, .9, ["#C1121F", "#1F7A4C", "#3557A8"][i]); });
+      avTexte(c, S.ph === "choix" ? "Où est le cadeau ?" : S.ph === "rep" ? (S.bon ? "Trouvé !" : "Raté…") : S.ph === "montre" ? "Regarde bien…" : "", 160, 120, 20);
+      avTexte(c, "Manche " + (S.r + 1), 160, 56, 13, "rgba(255,255,255,.85)"); },
+    toucher(G, x, y, t) { const S = G.s; if (t !== "down" || S.ph !== "choix") return; const X = [70, 160, 250], slot = X.findIndex(px => Math.abs(px - x) < 44); if (slot < 0 || y < 170 || y > 300) return;
+      S.choix = S.pos.indexOf(slot); S.bon = S.choix === S.cad; if (S.bon) { G.score = S.r + 1; G.son("ok"); } else G.son("rate"); S.ph = "rep"; S.tm = 0; } },
+
+  feux: { nom: "Le départ du traîneau", ico: "🚦", unite: "ms", bas: true, fmt: s => Math.round(s) + " ms", aide: "Cinq boules s'allument une à une. Dès qu'elles s'éteignent : touche ! Trois essais, ton meilleur temps compte. Pas de faux départ !",
+    init(G) { G.s.es = []; avNouveauDepart(G); },
+    maj(G, dt) { const S = G.s; S.tm += dt;
+      if (S.ph === "feux") { const n = Math.min(5, Math.floor(S.tm / .7)); if (n > S.n) { S.n = n; G.son("feu"); } if (S.tm >= 3.5 + S.att) { S.ph = "go"; S.t0 = performance.now(); } }
+      else if (S.ph === "pause" && S.tm > 1.2) { if (S.es.length >= 3) { G.score = Math.min(...S.es); G.finir(); } else avNouveauDepart(G); } },
+    dessin(G, c) { const S = G.s; avFond(G, c); avNeige(G, c); c.fillStyle = "#1B1E25"; avRond(c, 20, 120, 280, 70, 14); c.fill();
+      for (let i = 0; i < 5; i++) avBoule(c, 48 + i * 56, 158, 20, S.ph === "feux" && i < S.n ? "#FF2E3B" : "#3A3F4A", 0);
+      avTexte(c, S.txt || "", 160, 250, 20); avTexte(c, "Essai " + Math.min(3, S.es.length + (S.ph === "pause" ? 0 : 1)) + " / 3", 160, 290, 14, "rgba(255,255,255,.8)");
+      if (S.es.length) avTexte(c, S.es.map(v => Math.round(v) + " ms").join(" · "), 160, 320, 14, "#FFE596"); },
+    toucher(G, x, y, t) { const S = G.s; if (t !== "down") return;
+      if (S.ph === "feux") { S.txt = "Faux départ ! On recommence."; G.son("rate"); S.ph = "pause"; S.tm = 0; }
+      else if (S.ph === "go") { const rt = performance.now() - S.t0; S.es.push(rt); S.txt = Math.round(rt) + " ms !"; G.son("go"); S.ph = "pause"; S.tm = 0; } } }
+};
+function avNouvelleGrille(G) { const S = G.s, n = S.n; S.d = Math.floor(Math.random() * n * n); S.v = [{ nezBrun: true }, { sansBois: true }, { clair: true }, { sens: true }][Math.floor(Math.random() * 4)]; }
+function avNouvellesChaussettes(G) { const S = G.s, d = avMelange([[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 1], [0, 2], [2, 4], [1, 5], [3, 3]]).slice(0, 6);
+  S.l = avMelange(d.concat(d).map(([c, m]) => ({ c, m, ok: false }))); S.sel = null; S.nv = 0; S.sh = 0; }
+function avMaison(x) { return { x, h: 50 + Math.random() * 60, cx: 14 + Math.random() * 40, col: ["#3557A8", "#2A9D8F", "#8C5A2B", "#B5523B"][Math.floor(Math.random() * 4)] }; }
+function avNouvelleManche(G) { const S = G.s; S.m++; const n = 3 + Math.floor(Math.random() * (4 + S.m)), lut = Math.floor(Math.random() * 3), v = 150 + S.m * 25;
+  S.l = Array.from({ length: n }, () => ({ lutin: false })).concat(Array.from({ length: lut }, () => ({ lutin: true }))).map(o => Object.assign(o, { d: Math.random() * 1.8, v: v * (.85 + Math.random() * .3), y: 120 + Math.random() * 200 }));
+  S.dur = 1.8 + (G.W + 80) / (v * .85); S.n = n; S.ph = "defile"; S.tm = 0;
+  const f = new Set([n]); while (f.size < 3) { const z = n + Math.floor(Math.random() * 5) - 2; if (z > 0) f.add(z); } S.ch = avMelange([...f]); }
+function avNouveauMelange(G) { const S = G.s; S.pos = [0, 1, 2]; S.cad = Math.floor(Math.random() * 3); S.ph = "montre"; S.tm = 0; S.dur = Math.max(.2, .5 - S.r * .05);
+  S.sw = Array.from({ length: 4 + S.r * 2 }, () => { const a = Math.floor(Math.random() * 3); return [a, (a + 1 + Math.floor(Math.random() * 2)) % 3]; }); }
+function avNouveauDepart(G) { const S = G.s; S.ph = "feux"; S.tm = 0; S.n = 0; S.att = .4 + Math.random() * 2.2; S.txt = "Attention…"; }
+
+/* ---------- Le moteur : un canvas, une boucle, un score pour soi seul ---------- */
+function jeuAvent(zone, id) {
+  const J = JEUX_AVENT[id], W = 320, H = 400, dpr = Math.min(2, window.devicePixelRatio || 1);
+  zone.innerHTML = '<div class="avj"><canvas class="avj-c" width="' + W * dpr + '" height="' + H * dpr + '" aria-label="' + esc(J.nom) + '"></canvas>' +
+    '<div class="avj-voile"><span class="avj-ico" aria-hidden="true">' + J.ico + '</span><b>' + esc(J.nom) + "</b><p>" + esc(J.aide) + '</p><p class="avj-rec"></p><button class="btn acc" type="button" data-avj="go">▶ ' + (J.libre ? "Dessiner" : "Jouer") + "</button></div></div>" +
+    (J.libre ? '<button class="btn ghost avj-eff" type="button" data-avj="eff">🧽 Tout effacer</button>' : "");
+  const cv = zone.querySelector("canvas"), ctx = cv.getContext("2d"), voile = zone.querySelector(".avj-voile");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  let G = null, raf = 0, last = 0, vivant = true, appui = false;
+  const fmt = v => J.fmt ? J.fmt(v) : Math.round(v) + " " + J.unite;
+  const majRecord = () => { const r = recordsAvent()[id]; voile.querySelector(".avj-rec").textContent = !J.libre && r !== undefined ? "🏅 Ton record : " + fmt(r) : ""; };
+  function nouveau(enJeu) {
+    G = { W, H, t: 0, horloge: G ? G.horloge : 0, score: 0, fin: false, enJeu, s: {}, msg: "", couleur: (() => { try { return couleur(moiVrai()); } catch (e) { return "#4C9AFF"; } })(),
+      son: (k, i) => { if (G && G.enJeu) sonAvent(k, i); }, finir: () => terminer() };
+    J.init(G);
+  }
+  function terminer() {
+    if (!G || G.fin) return; G.fin = true; G.enJeu = false;
+    const R = recordsAvent(), av = R[id], mieux = av === undefined || (J.bas ? G.score < av : G.score > av);
+    if (mieux && !aventApercu()) { R[id] = J.bas ? Math.round(G.score * 10) / 10 : G.score; stock.set("versus.aventRecords", JSON.stringify(R)); mettreEnFileAvent(id, R[id]); }
+    sonAvent("fin");
+    voile.innerHTML = '<span class="avj-ico" aria-hidden="true">' + (mieux ? "🏅" : J.ico) + "</span><b>" + esc(fmt(G.score)) + "</b>" + (G.msg ? "<p>" + esc(G.msg) + "</p>" : "") +
+      '<p class="avj-rec">' + (mieux ? (av === undefined ? "Premier score : c'est ton record !" : "Nouveau record !") : "🏅 Ton record : " + esc(fmt(av))) + '</p><button class="btn acc" type="button" data-avj="go">🔁 Rejouer</button>';
+    voile.hidden = false; brancherGo();
+  }
+  function brancherGo() { const b = voile.querySelector('[data-avj="go"]'); if (b) b.addEventListener("click", ev => { ev.stopPropagation(); nouveau(true); voile.hidden = true; last = 0; }); }
+  function boucle(ts) {
+    if (!vivant) return; raf = requestAnimationFrame(boucle);
+    if (document.hidden) { last = 0; return; }
+    const dt = last ? Math.min(.1, (ts - last) / 1000) : 0; last = ts;
+    try {
+      G.horloge += dt;
+      if (G.enJeu && !G.fin) { G.t += dt; if (J.duree && G.t >= J.duree) { G.t = J.duree; terminer(); } else J.maj(G, dt); }
+      ctx.clearRect(0, 0, W, H); J.dessin(G, ctx, dt);
+      if (G.enJeu && !J.libre) {   // le tableau de bord : score (ou chrono) à gauche, temps restant en barre
+        ctx.fillStyle = "rgba(0,0,0,.45)"; avRond(ctx, 8, 8, 128, 28, 14); ctx.fill();
+        avTexte(ctx, J.chrono ? fmt(G.t) : fmt(G.score), 20, 22, 15, "#fff", "left");
+        if (J.duree) { ctx.fillStyle = "rgba(255,255,255,.25)"; avRond(ctx, 150, 17, 160, 10, 5); ctx.fill(); ctx.fillStyle = G.t > J.duree - 5 ? "#FF5C6C" : "#F7CF55"; avRond(ctx, 150, 17, Math.max(10, 160 * (1 - G.t / J.duree)), 10, 5); ctx.fill(); }
+      }
+    } catch (e) { vivant = false; console.error(e); }
+  }
+  const pos = e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; };
+  const envoyer = (e, t) => { if (!G || !G.enJeu || G.fin || !J.toucher) return; const p = pos(e); try { J.toucher(G, p.x, p.y, t); } catch (er) { console.error(er); } };
+  cv.addEventListener("pointerdown", e => { e.preventDefault(); appui = true; try { cv.setPointerCapture(e.pointerId); } catch (er) { /* rien */ } envoyer(e, "down"); });
+  cv.addEventListener("pointermove", e => { if (appui || (e.pointerType === "mouse" && !J.libre)) envoyer(e, "move"); });
+  const lacher = e => { if (!appui) return; appui = false; envoyer(e, "up"); };
+  cv.addEventListener("pointerup", lacher); cv.addEventListener("pointercancel", lacher);
+  const eff = zone.querySelector('[data-avj="eff"]'); if (eff) eff.addEventListener("click", () => { if (G) { G.s.tr = []; } });
+  nouveau(false); majRecord(); brancherGo(); raf = requestAnimationFrame(boucle);
+  return { stop() { vivant = false; cancelAnimationFrame(raf); }, demarrer() { nouveau(true); voile.hidden = true; }, etat: () => G };
+}
+
+/* ---------- Les 24 cases ---------- */
+/* surprises : texte seul, ou une petite scène animée (traîneau). Aucun mot sur ce qui arrive, aucun chiffre sur les joueurs. */
+const CASES_AVENT = {
+  1: { type: "scene", ico: "🛷", titre: "Bienvenue dans le calendrier !", texte: "Le traîneau vient de décoller de l'Atelier du Père Noël. Chaque jour jusqu'au 24, une case s'ouvre : des petits jeux de Noël, des surprises… et un cadeau le 24 pour chaque pilote. Rien ne compte, tout est pour le plaisir." },
+  2: { type: "jeu", jeu: "cadeaux" }, 3: { type: "jeu", jeu: "renne" }, 4: { type: "jeu", jeu: "pile" },
+  5: { type: "texte", ico: "😄", titre: "La blague du paddock", texte: "Pourquoi le traîneau du Père Noël ne prend-il jamais de pénalité ?\n\n… Parce qu'il ne dépasse personne : il survole tout le monde !" },
+  6: { type: "jeu", jeu: "boules" }, 7: { type: "jeu", jeu: "memory" }, 8: { type: "jeu", jeu: "cheminees" },
+  9: { type: "texte", ico: "🔧", titre: "Les potins de l'Atelier", texte: "À l'Atelier du Père Noël, les lutins mécaniciens ont un secret de fabrication : ils changent les quatre roues d'un traîneau en moins de temps qu'il n'en faut pour emballer une chaussette.\n\nOn raconte même qu'un renne a déjà tenté de doubler par l'intérieur dans le dernier virage. Il a fini dans un tas de rubans." },
+  10: { type: "jeu", jeu: "flocons" }, 11: { type: "jeu", jeu: "chaussettes" }, 12: { type: "jeu", jeu: "bonshommes" },
+  13: { type: "compte", ico: "⏳", titre: "Le compte à rebours", texte: "Le 20 décembre, une annonce t'attend dans l'appli. Les lutins gardent l'enveloppe sous clé d'ici là : pas la peine de les chatouiller." },
+  14: { type: "jeu", jeu: "guirlande" }, 15: { type: "jeu", jeu: "livraison" },
+  16: { type: "texte", ico: "🕵️", titre: "Devine qui…", texte: "Petit défi entre pilotes, sans rien à répondre :\n\n• Devine qui a ouvert cette case avant même son café.\n• Devine qui porte le pull de Noël le plus voyant du paddock.\n• Devine qui a déjà écrit sa lettre au Père Noël… avec un graphique dedans.\n\nGarde tes soupçons pour le repas de Noël !" },
+  17: { type: "jeu", jeu: "rennes" }, 18: { type: "jeu", jeu: "aurore" }, 19: { type: "jeu", jeu: "luge" },
+  20: { type: "annonce", ico: "📣", titre: "L'annonce est arrivée !", texte: "Aujourd'hui, c'est le grand jour : l'annonce t'attend dans l'onglet Podium. Va la voir !" },
+  21: { type: "jeu", jeu: "gobelets" },
+  22: { type: "texte", ico: "🦌", titre: "La blague des rennes", texte: "Que dit un renne qui a fini dernier de la course de Noël ?\n\n… « L'an prochain, je mets le nez rouge devant ! »" },
+  23: { type: "jeu", jeu: "feux" },
+  24: { type: "cadeau", ico: "🎁", titre: "Joyeux Noël !", texte: "Un souvenir pour chaque pilote du tour de chauffe : la plaque « Hiver 2026 » et la traînée « Flocons ». Ils sont à toi dès aujourd'hui, à poser sur ta voiture. Merci d'avoir roulé ce premier mois ensemble !" }
+};
+/* l'ordre des portes sur le calendrier (mélangé, comme un vrai calendrier) */
+const ORDRE_AVENT = [7, 15, 1, 20, 11, 4, 18, 23, 9, 2, 13, 22, 5, 17, 10, 24, 3, 14, 8, 19, 12, 6, 21, 16];
+function icoCase(n) { const c = CASES_AVENT[n]; return c.type === "jeu" ? JEUX_AVENT[c.jeu].ico : c.ico; }
+function titreCase(n) { const c = CASES_AVENT[n]; return c.type === "jeu" ? JEUX_AVENT[c.jeu].nom : c.titre; }
+
+/* ---------- L'entrée (haut du Classement, décembre 2026 seulement) ---------- */
+function poserAventEntree() {
+  try {
+    const v = document.querySelector("#v-classement"); if (!v) return;
+    let el = v.querySelector(":scope > .av-entree");
+    if (!aventPeriode() || typeof D === "undefined" || !D) { if (el) el.remove(); return; }
+    const j = aventJour(), fait = aventOuvertes().includes(j), toutes = j === 24 && fait;
+    const html = '<span class="av-cal" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="3" y="6" width="26" height="23" rx="4" fill="#C1121F"/><rect x="3" y="6" width="26" height="7" rx="3" fill="#8E0E18"/><path d="M10 3v6M22 3v6" stroke="#F7CF55" stroke-width="2.4" stroke-linecap="round"/>' +
+      '<text x="16" y="25" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">' + j + "</text></svg>" + (fait ? "" : '<i class="av-pas"></i>') + "</span>" +
+      '<span class="rp-t"><b>🎄 Calendrier de l\'Avent</b> · ' + (toutes ? "joyeux Noël !" : fait ? "case du jour ouverte, reviens demain" : "la case du " + j + " t'attend") + '</span><span class="rp-f" aria-hidden="true">›</span>';
+    if (!el) { v.insertAdjacentHTML("afterbegin", '<button type="button" class="av-entree"></button>'); el = v.querySelector(":scope > .av-entree"); el.addEventListener("click", () => ouvrirAvent()); }
+    if (!AVENT_SRV_T && SOURCE === "api") setTimeout(() => chargerAvent(), 2500);   // au démarrage : la file d'attente des records repart, en silence
+    el.innerHTML = html; el.classList.toggle("a-ouvrir", !fait); el.setAttribute("aria-label", "Calendrier de l'Avent" + (fait ? "" : " : la case du " + j + " décembre n'est pas encore ouverte"));
+  } catch (e) { /* jamais bloquant */ }
+}
+if (typeof window.rendreClassement === "function") { const f0 = window.rendreClassement; window.rendreClassement = function () { const r = f0.apply(this, arguments); poserAventEntree(); return r; }; }
+
+/* ---------- Le calendrier ---------- */
+function neigeAvent(n) { if (reduit) return ""; let h = 7; const r = () => { h = (h * 9301 + 49297) % 233280; return h / 233280; };
+  return '<div class="av-neige" aria-hidden="true">' + Array.from({ length: n }, () => '<i style="--x:' + (r() * 100).toFixed(1) + "%;--d:" + (r() * 8).toFixed(2) + "s;--t:" + (6 + r() * 6).toFixed(2) + "s;--s:" + (2 + r() * 4).toFixed(1) + 'px"></i>').join("") + "</div>"; }
+function ouvrirAvent() {
+  if (!aventPeriode() && !aventApercu()) return;
+  document.querySelectorAll(".av-ov").forEach(x => x.remove());
+  const o = document.createElement("div"); o.className = "av-ov"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Calendrier de l'Avent");
+  const dessiner = () => {
+    const vues = aventOuvertes(), j = aventJour();
+    o.innerHTML = neigeAvent(36) + '<div class="av-boite"><button class="av-x" type="button" aria-label="Fermer">✕</button><div class="av-h"><b>🎄 Le calendrier de l\'Avent</b><small>' +
+      (aventApercu() ? "Aperçu admin : toutes les cases s'ouvrent, rien n'est gardé." : "Tour de chauffe · une case par jour jusqu'au 24 · rien ne compte, tout pour le plaisir") + '</small></div><div class="av-grille">' +
+      ORDRE_AVENT.map(n => { const ok = caseOuvrable(n), vu = vues.includes(n), cls = !ok ? "ferme" : vu ? "vue" : n === j ? "jour" : "libre";
+        return '<button type="button" class="av-c ' + cls + '" data-av="' + n + '" aria-label="' + (ok ? "Case du " + n + " décembre" + (vu ? ", déjà ouverte : " + esc(titreCase(n)) : "") : "Case du " + n + " décembre, fermée jusqu'au " + n) + '">' +
+          '<span class="av-dedans" aria-hidden="true">' + (ok ? icoCase(n) : "") + '</span><span class="av-porte" aria-hidden="true"><span class="av-n">' + n + "</span>" + (ok ? "" : '<span class="av-cad">🔒</span>') + "</span></button>"; }).join("") + "</div></div>";
+    o.querySelector(".av-x").addEventListener("click", fermer);
+    o.querySelectorAll("[data-av]").forEach(b => b.addEventListener("click", () => toucherCase(b, +b.dataset.av)));
+  };
+  const fermer = () => { o.remove(); AVENT_APERCU = false; poserAventEntree(); };
+  const toucherCase = (b, n) => {
+    if (!caseOuvrable(n)) { try { toast("Patience : cette case s'ouvre le " + n + " décembre."); } catch (e) { } return; }
+    const deja = b.classList.contains("vue"); marquerOuverte(n);
+    if (deja || reduit) return ouvrirCaseAvent(n, dessiner);
+    b.classList.add("ouvre"); sonAvent("porte"); setTimeout(() => { if (o.isConnected) ouvrirCaseAvent(n, dessiner); }, 650);
+  };
+  o.addEventListener("click", e => { if (e.target === o) fermer(); });
+  dessiner(); document.body.appendChild(o); poserAventEntree(); chargerAvent();
+}
+/** une case ouverte : jeu ou surprise, dans sa fenêtre (un toucher en dehors, ✕ ou Fermer pour revenir au calendrier) */
+function ouvrirCaseAvent(n, apres) {
+  if (!caseOuvrable(n)) return;
+  document.querySelectorAll(".av-case").forEach(x => x.remove());
+  const c = CASES_AVENT[n], o = document.createElement("div"); o.className = "av-case"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
+  let corps = "", inst = null;
+  if (c.type === "jeu") corps = '<div class="av-jeu"></div>';
+  else if (c.type === "scene") corps = '<div class="av-jeu av-scene"></div><p class="av-t">' + esc(c.texte) + "</p>";
+  else if (c.type === "compte") { const r = joursAvantAnnonce(); corps = '<div class="av-rebours"><span>' + (r > 0 ? "J-" + r : "🎉") + "</span><small>" + (r > 1 ? "avant l'annonce du 20 décembre" : r === 1 ? "demain, l'annonce !" : "l'annonce est arrivée") + '</small></div><p class="av-t">' + esc(c.texte) + "</p>"; }
+  else if (c.type === "cadeau") corps = htmlCadeauAvent() + '<p class="av-t">' + esc(c.texte) + '</p><div class="av-records">' + htmlRecordsAvent() + "</div>";
+  else corps = '<p class="av-t">' + esc(c.texte) + "</p>" + (c.type === "annonce" ? '<button class="btn acc" type="button" data-av-podium>📣 Aller au Podium</button>' : "");
+  o.innerHTML = neigeAvent(24) + '<div class="av-carte"><button class="av-x" type="button" aria-label="Fermer">✕</button><span class="av-k">🎄 Case du ' + n + " décembre</span><h3>" + (c.type === "jeu" ? "" : '<span aria-hidden="true">' + c.ico + "</span> ") + esc(titreCase(n)) + "</h3>" + corps +
+    '<div class="btn-row"><button class="btn ghost" type="button" data-av-fermer>Fermer</button></div></div>';
+  document.body.appendChild(o);
+  if (c.type === "jeu") inst = jeuAvent(o.querySelector(".av-jeu"), c.jeu);
+  else if (c.type === "scene") inst = sceneTraineau(o.querySelector(".av-scene"));
+  else if (c.type === "cadeau") { chargerAvent(true); try { if (typeof confettis === "function") confettis("confettis"); else sonAvent("fin"); } catch (e) { } }
+  else sonAvent("grelots");
+  const fermer = () => { if (inst) inst.stop(); o.remove(); if (apres) apres(); poserAventEntree(); };
+  o.addEventListener("click", e => { if (e.target === o) fermer(); });
+  o.querySelector(".av-x").addEventListener("click", fermer); o.querySelector("[data-av-fermer]").addEventListener("click", fermer);
+  const pd = o.querySelector("[data-av-podium]"); if (pd) pd.addEventListener("click", () => { fermer(); document.querySelectorAll(".av-ov").forEach(x => x.remove()); AVENT_APERCU = false; try { allerA("trophees"); } catch (e) { } });
+  return o;
+}
+function joursAvantAnnonce() { const d = new Date(); if (d.getFullYear() !== 2026 || d.getMonth() !== 11) return aventApercu() ? AVENT.annonce - 13 : 0; return Math.max(0, AVENT.annonce - d.getDate()); }
+/** la scène du 1er : le traîneau et ses rennes traversent le ciel, en boucle (immobile si « réduire les animations ») */
+function sceneTraineau(zone) {
+  const W = 320, H = 200, dpr = Math.min(2, window.devicePixelRatio || 1);
+  zone.innerHTML = '<canvas class="avj-c" width="' + W * dpr + '" height="' + H * dpr + '" aria-hidden="true"></canvas>';
+  const ctx = zone.querySelector("canvas").getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const G = { W, H, s: {}, horloge: 0 }; let raf = 0, vivant = true, last = 0; sonAvent("grelots");
+  const img = ts => { if (!vivant) return; const dt = last ? Math.min(.05, (ts - last) / 1000) : 0; last = ts; G.horloge += dt;
+    try { avFond(G, ctx); const x = reduit ? 170 : ((G.horloge * 70) % (W + 260)) - 130, y = 80 + Math.sin(G.horloge * 2) * 10;
+      if (!reduit) for (let i = 0; i < 14; i++) { ctx.fillStyle = "rgba(255,229,150," + (.6 - i * .04) + ")"; ctx.beginPath(); ctx.arc(x - 40 - i * 9, y + 16 + Math.sin(G.horloge * 3 + i) * 3, 2.4 - i * .12, 0, 7); ctx.fill(); }
+      avTraineau(ctx, x, y, .9); ctx.strokeStyle = "#D9B27C"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x + 28, y); ctx.lineTo(x + 112, y - 4); ctx.stroke();
+      [0, 1, 2].forEach(i => avRenne(ctx, x + 52 + i * 30, y - 4 + Math.sin(G.horloge * 6 + i) * 2, .75, { pas: G.horloge * 12 + i, nezBrun: i < 2 }));
+      [[30, 182, 1.2], [80, 188, 1], [250, 184, 1.3], [298, 190, .9]].forEach(([a, b, s]) => avSapin(ctx, a, b, s)); avNeige(G, ctx); } catch (e) { vivant = false; }
+    if (!reduit) raf = requestAnimationFrame(img); };
+  raf = requestAnimationFrame(img);
+  return { stop() { vivant = false; cancelAnimationFrame(raf); } };
+}
+/** la case 24 : la plaque et la traînée, dessinées comme dans l'écurie */
+function htmlCadeauAvent() {
+  let nom = "Théo"; try { nom = moiVrai() || (D.personnes[0] || {}).nom || nom; } catch (e) { }
+  let plaque = "", trainee = "";
+  try { plaque = '<span class="plaque grande pl-hiver26">' + iconePlaque("hiver26") + esc(ITEMS.plaque.hiver26) + "</span>"; } catch (e) { }
+  try { trainee = vignetteItem("trainee", "flocons", nom, {}); } catch (e) { }
+  return '<div class="av-cadeau"><div class="av-obj"><small>Plaque</small>' + plaque + '</div><div class="av-obj"><small>Traînée « Flocons »</small>' + trainee + "</div></div>";
+}
+/* ---------- Records de Noël partagés (serveur Versus · Avent.js) : jamais bloquant, jamais en simulation ni en aperçu ---------- */
+let AVENT_SRV = null, AVENT_SRV_T = 0, AVENT_ENVOI = false;
+function aventEnLigne() { try { return SOURCE === "api" && !simulation() && !aventApercu() && aventPeriode(); } catch (e) { return false; } }
+function fileAvent() { try { const o = JSON.parse(stock.get("versus.aventFile") || "{}"); return o && typeof o === "object" && !Array.isArray(o) ? o : {}; } catch (e) { return {}; } }
+function jourAvNum() { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
+/** un record à envoyer : gardé en file (le meilleur seulement), puis envoyé dès que possible */
+function mettreEnFileAvent(id, score) {
+  const J = JEUX_AVENT[id]; if (!J || J.libre || !aventEnLigne()) return;
+  const f = fileAvent(), d = f[id]; if (d && !(J.bas ? score < d.s : score > d.s)) return;
+  f[id] = { s: score, deja: d ? d.deja : 0 }; stock.set("versus.aventFile", JSON.stringify(f)); envoyerFileAvent();
+}
+/** la file part au serveur ; « deja » (déjà un envoi aujourd'hui pour ce jeu) = on réessaie demain ; sans réseau = plus tard, en silence */
+async function envoyerFileAvent() {
+  if (AVENT_ENVOI || !aventEnLigne()) return; AVENT_ENVOI = true;
+  try {
+    for (const jeu of Object.keys(fileAvent())) {
+      const x = fileAvent()[jeu]; if (!x || x.deja === jourAvNum()) continue;
+      const rep = await posterAdmin({ action: "avent", op: "score", jeu, score: x.s });
+      const f = fileAvent(), y = f[jeu];
+      if (rep && rep.ok) { if (y && y.s === x.s) delete f[jeu]; recevoirAvent(rep); }
+      else if (rep && ["saisie", "fini", "tot", "refus"].includes(rep.erreur)) { if (y && y.s === x.s) delete f[jeu]; }
+      else if (rep && rep.erreur === "deja") { if (y) y.deja = jourAvNum(); }
+      else break;   // pas de réseau ou serveur occupé : on garde tout pour plus tard
+      stock.set("versus.aventFile", JSON.stringify(f));
+    }
+  } catch (e) { /* jamais bloquant */ } finally { AVENT_ENVOI = false; }
+}
+/** l'état du serveur : mes records (fusionnés avec ceux de l'appareil) et, dès le 24/12, ceux de la bande */
+function recevoirAvent(rep) {
+  if (!rep || !rep.ok || !rep.ouvert) return; AVENT_SRV = rep; AVENT_SRV_T = Date.now();
+  try { const R = recordsAvent(); let ch = false;
+    Object.keys(rep.mes || {}).forEach(jeu => { const J = JEUX_AVENT[jeu], v = Number(rep.mes[jeu]); if (!J || !isFinite(v)) return; if (R[jeu] === undefined || (J.bas ? v < R[jeu] : v > R[jeu])) { R[jeu] = v; ch = true; } });
+    if (ch) stock.set("versus.aventRecords", JSON.stringify(R)); } catch (e) { }
+  const z = document.querySelector(".av-case .av-records"); if (z) z.innerHTML = htmlRecordsAvent();
+}
+async function chargerAvent(force) {
+  if (!aventEnLigne() || (!force && Date.now() - AVENT_SRV_T < 60000)) return;
+  AVENT_SRV_T = Date.now();
+  try { recevoirAvent(await posterAdmin({ action: "avent", op: "etat" })); } catch (e) { /* hors ligne : les jeux marchent quand même */ }
+  envoyerFileAvent();
+}
+/** case 24 : « 🎁 Les cadeaux du traîneau : Clément 42 » pour chaque jeu, et le roi des jeux de Noël (pour rire, aucun point) */
+function htmlRecordsAvent() {
+  const S = AVENT_SRV; if (!S || !Array.isArray(S.records) || !S.records.length) return "";
+  const L = S.records.filter(r => JEUX_AVENT[r.jeu]).map(r => { const J = JEUX_AVENT[r.jeu], f = J.fmt ? J.fmt(Number(r.score)) : Math.round(r.score) + " " + J.unite;
+    return "<li><span>" + J.ico + " " + esc(J.nom) + "</span><b>" + esc([r.nom].concat(r.ex || []).join(" et ")) + " · " + esc(f) + "</b></li>"; }).join("");
+  const roi = Array.isArray(S.roi) && S.roi.length ? '<p class="av-roi">🎅 Le roi des jeux de Noël : <b>' + esc(S.roi[0].nom) + "</b>" + (S.roi.length > 1 ? "<small>puis " + S.roi.slice(1, 5).map(x => esc(x.nom)).join(", ") + " · au cumul des places, pour rire</small>" : "") + "</p>" : "";
+  return '<h4>🏆 Les records de Noël de la bande</h4><ul>' + L + "</ul>" + roi;
+}
+/** 🎄 aperçu admin (double sécurité) : toutes les cases ouvrables, rien n'est gardé */
+function apercuAvent() { if (!apercuAutorise() || window.APERCUS_FINIS) return; AVENT_APERCU = true; ouvrirAvent(); }

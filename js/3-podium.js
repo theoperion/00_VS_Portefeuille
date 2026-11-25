@@ -307,9 +307,9 @@ const ITEMS = {
   fond: { couleur: "Couleur", carbone: "Carbone", aurore: "Aurore", flammes: "Flammes", neon: "Néon", damier: "Damier", or: "Or", galaxie: "Galaxie", chat: "Chat qui sourit", pandora: "Forêt luminescente", ampoules: "Guirlande d'ampoules", portails: "Portails" },
   finition: { aucune: "Aucune", argent: "Liseré argent", or: "Liseré or", neon: "Liseré néon", diamant: "Diamant", lauriers: "Lauriers", etoilee: "Étoilée", soleil: "Soleil", ailee: "Balle ailée", elfique: "Cape elfique", biolum: "Bioluminescence", feuilledor: "Feuille d'or" },
   livree: { couleur: "Couleur", chrome: "Chrome", or: "Or", neon: "Néon", arcenciel: "Prisme", oranime: "Or vivant", platine: "Platine", rubis: "Rubis", galaxie: "Galaxie", orrose: "Or rose", chocolat: "Chocolat fondant", carte: "Carte à jouer", ver: "Peau des sables" },
-  trainee: { simple: "Simple", halo: "Halo", flammes: "Flammes", etincelles: "Étincelles", comete: "Comète", supernova: "Supernova", turbo: "Turbo", arcenciel: "Arc-en-ciel", cables: "Câbles d'acier", sabre: "Sabre lumineux", glitch: "Faille" },
+  trainee: { simple: "Simple", halo: "Halo", flammes: "Flammes", etincelles: "Étincelles", comete: "Comète", supernova: "Supernova", turbo: "Turbo", arcenciel: "Arc-en-ciel", cables: "Câbles d'acier", flocons: "Flocons", sabre: "Sabre lumineux", glitch: "Faille" },
   klaxon: { confettis: "Confettis", damier: "Damier", feu: "Feu d'artifice", parade: "Parade", billets: "Pluie de billets", fanfare: "Fanfare royale", cibles: "Dans le mille", fusees: "Décollage", trophees: "Pluie de trophées", ouvriers: "Fanfare des petits ouvriers" },
-  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon", cheval: "Cheval de bois" }
+  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon", cheval: "Cheval de bois", hiver26: "Hiver 2026" }
 };
 const BASE_ECURIE = { casque: "uni", circuit: "classique", fond: "couleur", finition: "aucune", livree: "couleur", trainee: "simple", klaxon: "confettis", plaque: "aucune" };
 /* v20.61 (Théo, 25/11) · objets de DÉPART en plus de la série : à tout le monde, dès l'ouverture de l'écurie (1/12/2026). Les objets génériques
@@ -330,6 +330,9 @@ let TICKETS = null;
 function gagnantsTicket() { return TICKETS && Array.isArray(TICKETS.gagnants) ? TICKETS.gagnants : []; }
 /** Le mois des tablettes : octobre 2027 (circuit de la Chocolaterie, « singapour » dans CAL_GP) */
 const TICKET_MOIS = { debut: new Date(2027, 9, 1), fin: new Date(2027, 10, 1), regles: new Date(2027, 0, 1) };
+/* 🎄 Souvenir du tour de chauffe (calendrier de l'Avent, case du 24 décembre 2026, js/10-avent.js) : offert à CHAQUE pilote, à porter dès le 24/12/2026 */
+const GAINS_SOUVENIR = [["plaque", "hiver26"], ["trainee", "flocons"]], SOUVENIR_DES = new Date(2026, 11, 24);
+function souvenirOuvert() { return Date.now() >= SOUVENIR_DES.getTime() || saisonJouee(); }
 function ticketVisible() { return Date.now() >= TICKET_MOIS.debut.getTime() || gagnantsTicket().some(g => g.nom === moiPilote()); }
 function debloques(nom) {
   const o = new Set(Object.entries(BASE_ECURIE).map(([s, v]) => s + "." + v).concat(DEPART_ECURIE.map(g => g.join("."))));
@@ -339,6 +342,7 @@ function debloques(nom) {
     TROPHEES_MONDES.forEach(t => { if (TM[t.id] && TM[t.id][nom] && TM[t.id][nom].ok) t.gain.forEach(g => o.add(g.join("."))); });
     if (anneesSaison().some(y => (etatGant(y)[nom] || { n: 0 }).n === 6)) GANT.gain.forEach(g => o.add(g.join(".")));
   }
+  if (souvenirOuvert()) GAINS_SOUVENIR.forEach(g => o.add(g.join(".")));   // 🎄 souvenir du tour de chauffe, pour tous (dès le 24/12/2026)
   if (D.premierMillion && D.premierMillion.nom === nom) GAINS_MILLION.forEach(g => o.add(g.join(".")));
   succesDe(nom).forEach(x => o.add(x.gain.join(".")));                      // 🏅 l'objet commun : pour chacun qui réussit
   exclusifsDe(nom).forEach(x => gainsSecret(x).forEach(g => o.add(g.join("."))));   // 🥇 + l'exclusif : pour le premier
@@ -363,6 +367,7 @@ function origineItem(slot, id) {
   if (slot === "plaque" && id === "coupsaison") return { vote: true, legende: true };
   if (estGainTicket(slot, id)) return { ticket: true, legende: true };
   if (estDepart(slot, id)) return { depart: true };
+  if (GAINS_SOUVENIR.some(g => g[0] === slot && g[1] === id)) return { souvenir: true };
   { const m = typeof mjOrigine === "function" && mjOrigine(slot, id); if (m) return m; }   // 🎲 plaque du meilleur d'un mini-jeu (js/9-minijeux.js) : exclusif doré
   const a = (g => !!g && g[0] === slot && g[1] === id);
   const sc = SUCCES.find(x => a(x.gain) || a(x.bonus)); if (sc) return { succes: sc, exclusif: a(sc.bonus) ? sc : null };
@@ -399,10 +404,10 @@ function plaqueDe(nom) {
   const p = equipDe(nom).plaque;
   if (p === "aucune") return "";
   const o = origineItem("plaque", p), quoi = o.exclusif ? "succès doré « " + o.exclusif.nom + " » (le premier)" : o.succes ? "succès « " + o.succes.nom + " »" : o.monde ? "trophée du monde « " + nomMonde(o.monde) + " »" : o.gant ? "Gant de l'infini complet" : "";
-  return '<span class="plaque' + classePlaque(p) + '" data-bdg="' + esc("Plaque « " + ITEMS.plaque[p] + " » de " + nom + (quoi ? ", gagnée avec le " + quoi : o.ticket ? ", gagnée avec le 🎫 ticket d'or de la Chocolaterie" : o.mj ? ", gagnée comme 🥇 meilleur du mini-jeu de " + MOIS_L[o.mj % 100 - 1] : "") + ".") + '">' + iconePlaque(p) + esc(ITEMS.plaque[p]) + "</span> ";
+  return '<span class="plaque' + classePlaque(p) + '" data-bdg="' + esc("Plaque « " + ITEMS.plaque[p] + " » de " + nom + (quoi ? ", gagnée avec le " + quoi : o.ticket ? ", gagnée avec le 🎫 ticket d'or de la Chocolaterie" : o.mj ? ", gagnée comme 🥇 meilleur du mini-jeu de " + MOIS_L[o.mj % 100 - 1] : o.souvenir ? ", souvenir du tour de chauffe (décembre 2026)" : "") + ".") + '">' + iconePlaque(p) + esc(ITEMS.plaque[p]) + "</span> ";
 }
 /** v20.46 · plaques émaillées à part : Ratatouille (plaque de rue parisienne, bleue), Ticket d'or (feuille d'or), Carré d'as, et les plaques des mini-jeux ; les autres restent en métal */
-function classePlaque(id) { return ["ratatouille", "ticketor", "carredas", "epice", "voliere", "cheshire", "precieux", "eywa", "kyber", "toquedor", "joyce", "ithaque", "bataillon", "cheval"].includes(id) ? " pl-" + id : ""; }
+function classePlaque(id) { return ["ratatouille", "ticketor", "carredas", "epice", "voliere", "cheshire", "precieux", "eywa", "kyber", "toquedor", "joyce", "ithaque", "bataillon", "cheval", "hiver26"].includes(id) ? " pl-" + id : ""; }
 /** leur petit dessin, à nous : un tian de légumes en rosace (Ratatouille), un ticket doré (Ticket d'or) */
 function iconePlaque(id) {
   if (id === "ratatouille") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#F4EBD6" stroke="#8A5A2B" stroke-width="1"/>' +
@@ -423,6 +428,8 @@ function iconePlaque(id) {
     '<path d="M6 3.6L8.2 6.4 6 9.2 3.8 6.4Z" fill="#D62839"/><path d="M14 8.6C11.6 6.8 10.6 6 10.6 4.9 10.6 4 11.3 3.4 12.1 3.4 12.8 3.4 13.5 3.8 14 4.4 14.5 3.8 15.2 3.4 15.9 3.4 16.7 3.4 17.4 4 17.4 4.9 17.4 6 16.4 6.8 14 8.6Z" fill="#D62839"/>' +
     '<path d="M6 11C3.8 12.8 2.8 13.6 2.8 14.7 2.8 15.6 3.5 16.2 4.3 16.2 4.8 16.2 5.3 15.9 5.6 15.5L5.2 17H6.8L6.4 15.5C6.7 15.9 7.2 16.2 7.7 16.2 8.5 16.2 9.2 15.6 9.2 14.7 9.2 13.6 8.2 12.8 6 11Z" fill="#15171B"/>' +
     '<circle cx="14" cy="12.6" r="1.5" fill="#15171B"/><circle cx="12.4" cy="14.6" r="1.5" fill="#15171B"/><circle cx="15.6" cy="14.6" r="1.5" fill="#15171B"/><path d="M14 14.4L13.4 17H14.6Z" fill="#15171B"/></svg>';
+  if (id === "hiver26") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#1E4E8C" stroke="#CFEFFF" stroke-width="1"/><g stroke="#fff" stroke-width="1.3" stroke-linecap="round">' +
+    [0, 60, 120].map(a => '<path d="M10 3.6V16.4M10 5.6 8.4 4.2M10 5.6 11.6 4.2M10 14.4 8.4 15.8M10 14.4 11.6 15.8" transform="rotate(' + a + ' 10 10)"/>').join("") + '</g><circle cx="10" cy="10" r="1.6" fill="#CFEFFF"/></svg>';
   if (id === "ticketor") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M1 2H23V6A2 2 0 0 0 23 10V14H1V10A2 2 0 0 0 1 6Z" fill="#F7CF55" stroke="#7A4A0C" stroke-width="1"/><path d="M6 2.5V13.5" stroke="#7A4A0C" stroke-width=".7" stroke-dasharray="1.2 1"/><path d="M14 4.6L15 7 17.6 7.2 15.6 8.8 16.2 11.4 14 10 11.8 11.4 12.4 8.8 10.4 7.2 13 7Z" fill="#FFF6CC" stroke="#9A6716" stroke-width=".5"/></svg>';
   return "";
 }
@@ -708,6 +715,7 @@ function texteOrigineItem(qui, slot, id) {
   if (org.ticket) { const g = gagnantsTicket(); return { t: "💎 Légende · 🎫 Ticket d'or", p: g.some(x => x.nom === qui) ? "À toi : tu as trouvé LE ticket d'or dans ta tablette." : "Un seul ticket d'or pour toute la saison, caché dans une tablette de la 🍫 Chocolaterie." + (g.length ? " Trouvé par " + g[0].nom + "." : "") }; }
   if (org.mj) { const g = typeof gagnantsMJ === "function" ? gagnantsMJ(org.mj) : [], mois = MOIS_L[org.mj % 100 - 1];
     return { t: "🥇 Exclusif · 🗺️ mini-jeu de " + mois, p: g.includes(qui) ? "À toi : tu as été le meilleur du mini-jeu de " + mois + " (surnom du mois et plaque dorée)." : g.length ? "Gagné par " + g.join(" et ") + ", meilleur" + (g.length > 1 ? "s" : "") + " du mini-jeu de " + mois + "." : "Réservé au meilleur du mini-jeu de " + mois + " (page Course), avec son surnom du mois. Aucun point au championnat." }; }
+  if (org.souvenir) return { t: "🎄 Souvenir du tour de chauffe", p: "Offert à chaque pilote du tour de chauffe : le cadeau de la case du 24 décembre 2026, dans le calendrier de l'Avent." };
   if (org.vote) return { t: "💎 Légende · 🗳️ Coup de la saison", p: "Gagné au vote de fin de saison : les autres pilotes t'élisent pour le coup de la saison." };
   if (org.champion) { const d = detenteur(CHAMPION_EX.id); return { t: "💎 Légende · 🌿 Premier champion", p: d ? (d.noms.includes(qui) ? "À toi : tu as remporté la première saison." : "Réservé à " + d.nom + ", premier champion.") : "Réservé au vainqueur de la première saison complète." }; }
   if (org.million) return { t: "💎 Légende · 👑 Premier millionnaire", p: D.premierMillion ? (D.premierMillion.nom === qui ? "À toi : premier millionnaire du groupe." : "Réservé à " + D.premierMillion.nom + ", premier millionnaire du groupe.") : "Réservé au premier du groupe qui atteindra 1 000 000 €." };
@@ -958,6 +966,9 @@ function svgVoiture(o) {
     // 🌀 Faille : la voiture laisse derrière elle des copies décalées d'autres univers (magenta, cyan, jaune), en blocs qui sautent
     glitch: '<g class="vt-glitch">' + [[-14, 62, 50, 6, "#FF3BD4"], [6, 74, 40, 4, "#3BE8FF"], [-30, 86, 70, 7, "#FF3BD4"], [14, 97, 34, 4, "#F7F24A"], [-10, 106, 60, 6, "#3BE8FF"], [26, 68, 16, 3, "#FFFFFF"], [-40, 116, 56, 4, "#FF3BD4"], [40, 52, 14, 3, "#3BE8FF"]].map(([x, y, w, h, c], i) =>
       '<rect class="gl' + (i % 3) + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="' + c + '" opacity=".8"/>').join("") + "</g>",
+    // v20.61 · Flocons (souvenir du tour de chauffe) : une poudreuse de flocons dessinés derrière la voiture
+    flocons: '<g class="vt-flocons" stroke="#DDF2FF" stroke-width="1.6" stroke-linecap="round">' + [[28, 86, 7], [6, 102, 9], [-18, 84, 6], [14, 118, 5], [-34, 108, 7], [-50, 90, 4], [40, 108, 4]].map(([x, y, r]) =>
+      '<g transform="translate(' + x + " " + y + ')">' + [0, 60, 120].map(a => '<path d="M0 ' + -r + "V" + r + '" transform="rotate(' + a + ')"/>').join("") + "</g>").join("") + '<path d="M120 100C70 98 20 92 -60 100" stroke="#BFE6FF" stroke-width="10" opacity=".25"/></g>',
     comete: '<defs><linearGradient id="' + u + 'q" x1="1" x2="0"><stop offset="0" style="stop-color:' + c + '"/><stop offset="1" style="stop-color:' + c + '" stop-opacity="0"/></linearGradient></defs><path d="M140 78L-60 100 140 122Z" fill="url(#' + u + 'q)" opacity=".8"/>'
   }[e.trainee] || "";
   const roue = (x, y, r) => '<g transform="translate(' + x + " " + y + ')"><circle r="' + r + '" fill="url(#' + u + 'pn)"/><circle r="' + (r - 1.5) + '" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="1"/>' +
@@ -1100,9 +1111,10 @@ function barreAdmin() {
   const tres = '<button type="button" class="ba-dec" data-batres="1"' + (TRESOR_APERCU ? ' aria-pressed="true">🗝️ Aperçu du trésor en cours · ✕ Quitter' : ">🗝️ Aperçu du trésor · sur la page Course, en 📺 Visite, avec un exemple inventé (rien n’est envoyé)") + "</button>";   // v17.26 ; v17.35 : directement sur la page Course
   const fete = '<button type="button" class="ba-dec" data-bafete="1">🎅 Aperçu · le vainqueur de la chauffe (la mini-cérémonie que tout le monde verra une fois, 48 h après le dernier relevé de décembre ; exemple inventé tant que la manche n’est pas finie)</button>';   // v17.49
   const coupe = '<button type="button" class="ba-dec" data-bacoupe="1">🏆 Aperçu · La Coupe brisée (exemple inventé : le vrai contenu reste secret, même pour toi)</button>';   // v20.42
+  const avent = '<button type="button" class="ba-dec" data-baavent="1">🎄 Aperçu · le calendrier de l’Avent (toutes les cases s’ouvrent, jeux compris ; rien n’est gardé ni envoyé)</button>';   // v20.61
   const ticket = '<button type="button" class="ba-dec" data-baticket="1">🎫 Aperçu · le ticket d’or (une tablette d’exemple : chocolat, puis ticket et cérémonie ; rien n’est envoyé, le vrai tirage reste secret, même pour toi)</button>';   // v20.47
   const acc = '<button type="button" class="ba-dec" data-baacc="1">🎭 Aperçu · les accessoires du mois (les 12 univers et le bonnet de Noël, sur vos têtes)</button>';   // v20.59
-  return '<div class="barre-admin"><div class="ba-h"><b>🛠️ Admin</b><div class="ba-seg">' + b("tout", "Tout afficher") + b("joueur", "Vue joueur") + b("reel", "Le réel") + "</div></div>" + plus + dec + fete + circ + tres + coupe + ticket + acc + '<button type="button" class="ba-dec" data-bamj="1">🎲 Aperçu · les mini-jeux du mois (joués sur un faux tirage et des pilotes inventés : rien n’est enregistré, le vrai tirage reste secret, même pour toi)</button>' + "<small>" + desc + "</small></div>";
+  return '<div class="barre-admin"><div class="ba-h"><b>🛠️ Admin</b><div class="ba-seg">' + b("tout", "Tout afficher") + b("joueur", "Vue joueur") + b("reel", "Le réel") + "</div></div>" + plus + dec + fete + avent + circ + tres + coupe + ticket + acc + '<button type="button" class="ba-dec" data-bamj="1">🎲 Aperçu · les mini-jeux du mois (joués sur un faux tirage et des pilotes inventés : rien n’est enregistré, le vrai tirage reste secret, même pour toi)</button>' + "<small>" + desc + "</small></div>";
 }
 function brancherBarreAdmin(v) {
   const reglerMode = m => {
@@ -1118,6 +1130,7 @@ function brancherBarreAdmin(v) {
   v.querySelectorAll("[data-batres]").forEach(x => x.addEventListener("click", () => ouvrirApercuTresor()));
   v.querySelectorAll("[data-bacoupe]").forEach(x => x.addEventListener("click", () => apercuCoupe()));
   v.querySelectorAll("[data-baticket]").forEach(x => x.addEventListener("click", () => apercuTicket()));
+  v.querySelectorAll("[data-baavent]").forEach(x => x.addEventListener("click", () => { if (typeof apercuAvent === "function") apercuAvent(); }));
   v.querySelectorAll("[data-bamj]").forEach(x => x.addEventListener("click", () => apercuMJ(202701)));   // 🎲 mini-jeux (js/9-minijeux.js)
   v.querySelectorAll("[data-baacc]").forEach(x => x.addEventListener("click", () => apercuAccessoires()));
   v.querySelectorAll("[data-badec]").forEach(x => x.addEventListener("click", () => { stock.set("versus.apercuSaison", "0"); stock.set("versus.vueJoueur", joueurAdmin()); stock.set("versus.dateSim", "2026-12-03"); ETAT.podium = "gp"; GP_ETAPE = null; garder(); location.reload(); }));
@@ -1238,7 +1251,9 @@ function vignetteItem(slot, id, nom, e) {
     return ph ? '<img class="vg-3d" alt="" src="' + ph + '">' : svgVoiture({ nom, e: Object.assign({}, e, { livree: id, trainee: "" }) });
   }
   if (slot === "trainee") return '<svg class="vg-trainee" viewBox="0 0 200 80" aria-hidden="true"><path class="fx fx-' + id + '" d="M8 66C50 62 70 30 110 36S170 18 192 12" fill="none" style="stroke:' + couleur(nom) + '" stroke-linecap="round"/>' +
-    '<path d="M8 66C50 62 70 30 110 36S170 18 192 12" fill="none" style="stroke:' + couleur(nom) + '" stroke-width="3.5" stroke-linecap="round"/><circle cx="192" cy="12" r="5" style="fill:' + couleur(nom) + '"/></svg>';
+    '<path d="M8 66C50 62 70 30 110 36S170 18 192 12" fill="none" style="stroke:' + couleur(nom) + '" stroke-width="3.5" stroke-linecap="round"/><circle cx="192" cy="12" r="5" style="fill:' + couleur(nom) + '"/>' +
+    (id === "flocons" ? '<g class="vg-flocons" stroke="#CFEFFF" stroke-width="1.6" stroke-linecap="round" style="filter:drop-shadow(0 0 1.5px #3A8FD0)">' + [[30, 52, 6], [62, 40, 4.5], [92, 54, 7], [124, 26, 5], [150, 44, 4], [172, 16, 5.5], [48, 70, 3.5]].map(([x, y, r]) =>
+      '<g transform="translate(' + x + " " + y + ')">' + [0, 60, 120].map(a => '<path d="M0 ' + -r + "V" + r + '" transform="rotate(' + a + ')"/>').join("") + "</g>").join("") + "</g>" : "") + "</svg>";
   if (slot === "klaxon") return '<span class="it-emo">' + ICONES_KLAXON[id] + "</span>";
   return id === "aucune" ? '<span class="it-emo vide">—</span>' : '<span class="plaque grande' + classePlaque(id) + '">' + iconePlaque(id) + esc(ITEMS.plaque[id]) + "</span>";
 }

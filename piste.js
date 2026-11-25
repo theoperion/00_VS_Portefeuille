@@ -12420,7 +12420,7 @@
         [[A1, fa], [A2, fa], [B1, fb], [A2, fa], [B2, fb], [B1, fb]].forEach(([p, f]) => out.push(p[0], p[1], p[2], col[0], col[1], col[2], .7 * f)); } });
       return;
     }
-    const pal = { sabre: [[1, .16, .22], [1, .86, .86]], glitch: [[1, .23, .83], [.23, .91, 1]], flammes: [[1, .45, .1], [1, .85, .25]], turbo: [[.35, .72, 1], [.8, .95, 1]], arcenciel: null, comete: [c, mel(c, [1, 1, 1], .6)], supernova: [[.62, .52, 1], [1, 1, 1]], etincelles: [[1, .85, .3], [1, 1, .7]], halo: [c, c], simple: [[1, 1, 1], [1, 1, 1]] }[t] || [c, c];
+    const pal = { sabre: [[1, .16, .22], [1, .86, .86]], glitch: [[1, .23, .83], [.23, .91, 1]], flammes: [[1, .45, .1], [1, .85, .25]], turbo: [[.35, .72, 1], [.8, .95, 1]], arcenciel: null, comete: [c, mel(c, [1, 1, 1], .6)], supernova: [[.62, .52, 1], [1, 1, 1]], etincelles: [[1, .85, .3], [1, 1, .7]], flocons: [[.8, .92, 1], [1, 1, 1]], halo: [c, c], simple: [[1, 1, 1], [1, 1, 1]] }[t] || [c, c];
     const larg = t === "simple" ? .25 : t === "comete" || t === "supernova" ? 1 : t === "sabre" ? .32 : .7, alpha = t === "simple" ? .15 : t === "sabre" ? .7 : .38;
     const arc = [[1, .35, .37], [1, .71, .28], [.24, .86, .59], [.3, .6, 1], [.71, .48, 1]];
     for (let i = 0; i < h.length - 1; i++) {
@@ -13160,7 +13160,8 @@
   const TR_2D = { halo: [["c", 5, .35]], flammes: [["#FF6A1F", 5.2, .75], ["#FFE07A", 2, .95]], etincelles: [["#FFD27A", 2.4, .95, "0.1 4"]], comete: [["c", 6.5, .3], ["#FFFFFF", 1.6, .8]],
     supernova: [["#9B87FF", 7, .4], ["#FFFFFF", 2, .85]], turbo: [["#5AB8FF", 4, .6, "6 3"], ["#E6F6FF", 1.2, .9]], arcenciel: [["#FF5A5F", 4.2, .8], ["#FFB547", 4.2, .8], ["#3DDC97", 4.2, .8], ["#4C9AFF", 4.2, .8], ["#B46CF0", 4.2, .8]],
     cables: [["#3A424C", 1.8, .9, null, -2.6], ["#3A424C", 1.8, .9, null, 2.6], ["#D9E0E8", .8, 1, null, -2.6], ["#D9E0E8", .8, 1, null, 2.6]],
-    sabre: [["#FF2A3A", 7, .3], ["#FF4A55", 3.2, .95], ["#FFFFFF", 1.2, 1]], glitch: [["#FF3BD4", 2.6, .85, "4 3", -2.4], ["#3BE8FF", 2.6, .85, "3 4", 2.4], ["#F7F24A", 1.3, .9, "2 6"]] };   // v20.61 · Sabre lumineux, Faille
+    sabre: [["#FF2A3A", 7, .3], ["#FF4A55", 3.2, .95], ["#FFFFFF", 1.2, 1]], glitch: [["#FF3BD4", 2.6, .85, "4 3", -2.4], ["#3BE8FF", 2.6, .85, "3 4", 2.4], ["#F7F24A", 1.3, .9, "2 6"]],
+    flocons: [["#BFE6FF", 5, .35], ["#FFFFFF", 3.2, .95, "0.1 5.5"]] };   // v20.61 · Sabre lumineux, Faille ; Flocons (souvenir du tour de chauffe)
   function traineeSvg2D(v, k, parent) {
     const S = v.ecurie && TR_2D[v.trainee]; if (!S) return null;
     return S.map(([col, w, op, dash, dec], i) => { const p = document.createElementNS("http://www.w3.org/2000/svg", "path"); p.setAttribute("fill", "none"); p.setAttribute("stroke", col === "c" ? v.couleur : col); p.setAttribute("stroke-width", (w * k).toFixed(2));

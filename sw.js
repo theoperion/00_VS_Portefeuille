@@ -4,7 +4,7 @@
    Les appels à l'API (script.google.com) ne passent jamais par ici : l'appli garde elle-même ses dernières données. */
 importScripts("version.js");   // LE numéro de version (un seul endroit) : un changement là-bas met à jour le hors connexion
 const VERSION = "versus-" + ((self.VERSUS_VERSION || {}).app || "0");
-const JS = ["sons", "icones", "1-base", "2-jeu", "3-podium", "4-grandprix", "5-plateau", "6-voiture3d", "7-bilan", "8-eredor-demarrage", "9-minijeux"].map(n => "js/" + n + ".js");   // V14.2 : index.html découpé
+const JS = ["sons", "icones", "1-base", "2-jeu", "3-podium", "4-grandprix", "5-plateau", "6-voiture3d", "7-bilan", "8-eredor-demarrage", "9-minijeux", "10-avent"].map(n => "js/" + n + ".js");   // V14.2 : index.html découpé
 const COQUILLE = ["./", "index.html", "css/versus.css", "version.js", "moteur.js", "moi.js", "img/cartes/cartes.js", "piste.js", ...JS, "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "icon.svg"];
 /* v20.53 · les cartes peintes cuites (img/cartes/*.webp) sont gardées dans un cache à part, qui survit aux mises à jour : chaque image porte
    l'empreinte de son dessin (?v=…), elle n'est retéléchargée que si le dessin change. Ne sont gardées D'AVANCE que les cartes que la page demande
