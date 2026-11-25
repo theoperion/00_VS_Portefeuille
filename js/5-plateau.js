@@ -19,7 +19,7 @@ const CARTES_BONUS = [
 const ETAPES = [
   { id: "circuits", jouer: true, ico: "🗺️", nom: "L'atout des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque Grand Prix favorise une carte : +1 quand elle marque. Secret jusqu'au 2 (un indice avant), et bouchon si plusieurs la jouent." },
   { id: "pioche", ico: "🎴", nom: "Le rattrapage", ouvre: 202701, regle: "pioche", resume: "Tu finis dernier d'un mois ? Tu pioches une carte bonus (une fois par saison chacune), à jouer à partir du mois suivant. Tes cartes piochées t'attendent dans le Stand." },
-  { id: "monaco", ico: "🌑", nom: "L'éclipse", ouvre: 202701, quand: "juin 2027", regle: "speciaux", resume: "Un mois de la saison, une éclipse tombe sur le circuit : le dernier du championnat marque ses points de place en double, et au moins 2 (même s'il finit dernier du mois). La date est dans le calendrier du Grand Prix." },   // v17.5 : nom sans univers, mois corrigé (juin)
+  { id: "monaco", ico: "🌑", nom: "L'éclipse", ouvre: 202701, quand: "juin 2027", regle: "speciaux", resume: "Un mois de la saison, une éclipse tombe sur le circuit : le dernier du championnat marque ses points de place en double, et au moins 2 (même s'il finit dernier du mois). La date est dans le calendrier du Grand Prix.", nomRevele: "Le Côté obscur", resumeRevele: "En juin, sur la Bataille spatiale : le dernier du championnat avant juin marque ses points de place en double, et au moins 2 (même s'il finit dernier du mois : 2 au lieu de 0)." },   // v17.5 : nom sans univers, mois corrigé (juin)
   { id: "pieges", jouer: true, ico: "🪤", nom: "Les pièges des circuits", ouvre: 202701, regle: "circuits", resume: "Chaque circuit sans mois spécial a son piège, une petite règle qui ne vaut que ce mois-là. Il s\'affiche dès le 20 du mois d\'avant, avec la carte." },
   { id: "gpspeciaux", jouer: true, ico: "📅", nom: "Les mois spéciaux", ouvre: 202701, regle: "speciaux", resume: "Certains mois ont une règle spéciale à la place du piège. Janvier : le vainqueur du mois marque +2 de plus." },   // v20.24 : annoncée le 20/12, donc sans la Finale (dévoilée plus tard) ; v17.5 : sans nom d'univers (révélation fin décembre)
   { id: "prono", jouer: true, ico: "🔮", nom: "Le pronostic du mois", ouvre: 202701, regle: "championnat", resume: "Avec ta carte (du 20 au 1er) : qui gagne le mois (+1 si juste) et le S&P 500 fera-t-il plus de +1 % (+1 si juste). Secret jusqu'au 2." },
@@ -132,10 +132,31 @@ function nouveautesAVoir() {
   if (typeof D === "undefined" || !D || apercuSaison() || !saisonVisible()) return [];
   return etapesJeu().filter(e => regleVisible(e.id) && !stock.get("versus.nouveaute." + e.id));
 }
+/* v20.58 (Théo, 25/11) · l'annonce du 20 décembre : en plus des règles à jouer en janvier, une promesse sans rien dévoiler */
+function htmlAnnonceVingt() {
+  return '<div class="nv-plus"><b>🎁 Et ce n\'est que le début…</b>' +
+    "<p>🎮 <b>Chaque univers cache une surprise</b> : un mini-jeu à jouer ensemble, révélé le 1<sup>er</sup> de son mois.</p>" +
+    "<p>✨ <b>Dès janvier</b> : 🏆 les Trophées en 4 vitrines (Mondes, Succès, Gant, Légendes), 🏎️ la course en direct au rythme du S&amp;P 500, 🛠️ ton écurie et ta voiture personnalisée.</p></div>";
+}
+/* v20.58 · la révélation du 1er janvier : les 12 circuits dévoilés, avec le piège ou le mois spécial de chacun,
+   lus dans PIEGES et moisSpecial (donc toujours les règles à jour) ; la Finale reste cachée tant qu'elle n'est pas annoncée */
+function htmlAnnonceCircuits(y) {
+  const sansFinale = !regleVisible("finale");
+  const lignes = CAL_GP.map((id, i) => {
+    const k = y * 100 + i + 1, g = GPS[circuitDe(k)] || GPS[id], sp = moisSpecial(y, k, sansFinale), pg = sp ? null : PIEGES[circuitDe(k)], r = sp || pg;
+    if (!g || !r) return "";
+    return "<li><em>" + esc(moisCourt(k).replace(/ \d+$/, "")) + "</em><span>" + g.drap + " " + esc(g.ville) + "</span><span" + (sp ? ' class="spe"' : "") + ">" + (r.ico === g.drap ? "" : r.ico + " ") + "<b>" + esc(r.nom) + "</b> : " + esc(r.bref) + "</span></li>";
+  }).join("");
+  return '<div class="nv-plus"><b>🗺️ Les 12 circuits sont dévoilés</b><p>Chaque mois, son piège ou sa règle spéciale :</p><ul class="nv-cal">' + lignes + "</ul></div>";
+}
 function ouvrirNouveautes(l) {
   l.forEach(e => stock.set("versus.nouveaute." + e.id, "1"));
+  const y = SAISON.premiere, vingt = (y - 1) * 10000 + 1220, premier = y * 10000 + 101, revele = saisonJouee();
+  const lotVingt = l.some(e => annonceEtape(e) === vingt), lotPremier = revele && l.some(e => annonceEtape(e) === premier);
+  const nomE = e => revele && e.nomRevele || e.nom, resE = e => revele && e.resumeRevele || e.resume;   // v20.58 : dès le 1/1, l'éclipse devient le Côté obscur
   const o = document.createElement("div"); o.className = "tuto"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
-  o.innerHTML = '<div class="tuto-c' + (l.length > 2 ? " multi" : "") + '"><span class="tuto-k">' + (l.length > 1 ? "Nouvelles règles" : "Nouvelle règle") + "</span>" + l.map(e => '<div class="tuto-i">' + e.ico + "</div><h3>" + esc(e.nom) + "</h3><p>" + esc(e.resume) + "</p>").join("") +
+  o.innerHTML = '<div class="tuto-c' + (l.length > 2 ? " multi" : "") + '"><span class="tuto-k">' + (l.length > 1 ? "Nouvelles règles" : "Nouvelle règle") + "</span>" + (lotVingt && !revele ? htmlAnnonceVingt() : "") + l.map(e => '<div class="tuto-i">' + e.ico + "</div><h3>" + esc(nomE(e)) + "</h3><p>" + esc(resE(e)) + "</p>").join("") +
+    (lotPremier ? htmlAnnonceCircuits(y) : "") +
     '<div class="btn-row"><button class="btn ghost" type="button" data-nv="regles">Lire la règle</button><button class="btn acc" type="button" data-nv="ok">Compris 🏁</button></div></div>';
   document.body.appendChild(o);
   o.addEventListener("click", ev => { if (ev.target === o) o.remove(); });
@@ -160,9 +181,9 @@ function deckBonus(y, nom) {
 }
 /* ---------- Mois spéciaux ---------- */
 function monacoMois(y) { return y * 100 + 6; }   // V16.22 : le Côté obscur est toujours en juin (avant : tiré d'avril à octobre, ce qui faisait perdre son piège à un autre circuit certaines années)
-function moisSpecial(y, k) {
+function moisSpecial(y, k, sansFinale) {   // sansFinale : pour l'annonce du 1/1, la Finale n'est pas encore dévoilée (annoncée le 20 novembre)
   if (!k) return null;
-  if (k % 100 === 12 && regleActive("finale", k)) return circuitDe(k) === "monza" && regleActive("gpspeciaux", k)
+  if (k % 100 === 12 && !sansFinale && regleActive("finale", k)) return circuitDe(k) === "monza" && regleActive("gpspeciaux", k)
     ? { id: "finale", heros: true, ico: "🦸", nom: "Finale · le Rassemblement des héros", txt: "Points de place doublés pour tout le monde, et le 🎯 vaut +2 au lieu de +1.", bref: "Points de place doublés, et le 🎯 vaut 2 points" }   // V16.55 : Secret Wars en finale
     : { id: "finale", ico: "🏆", nom: "Finale", txt: "Points de place doublés pour tout le monde.", bref: "Tous les points de place sont doublés" };
   if (k === monacoMois(y) && regleActive("monaco", k)) return { id: "monaco", ico: "🌑", nom: "Le Côté obscur", txt: "Le dernier du championnat avant ce mois marque ses points de place en double, et au moins 2 (ex. 2e : 4 × 2 = 8 ; dernier du mois : 2 au lieu de 0).", bref: "Le dernier du classement marque double (2 points au moins)" };   // v20.52 (Théo, 25/11) : + le plancher de 2
@@ -628,15 +649,23 @@ function ouvrirRegles(section, tout) {
 }
 
 /* ---------- Tuto : à la première ouverture du championnat, et depuis les règles ---------- */
-const TUTO = [
-  { ico: "🏁", t: "Le Podium en bref", html: true, p:
-    "• <b>Chaque mois</b> : 6 · 4 · 2 · 0 points selon ta performance, <b>+1 🎯</b> si tu bats le S&P 500.<br>" +
-    "• <b>Ta carte</b> : une par mois, posée du 20 au 1er dans le <b>Stand</b>, révélée le 2 (jusqu'à +4).<br>" +
-    "• <b>Chaque mois aussi</b> : 🏁 un défi, 🔮 un pronostic et 🅿️ la pole position (+1 chacun).<br>" +
-    "• <b>Sur la saison</b> : 🔥 série, 😈 rival, 🛡️ régularité ; le Côté obscur, le Chevaucheur des sables, le Rassemblement des héros et la Finale ×2.<br>" +
-    "Décembre 2026 = tour de chauffe : rien ne compte. Tout le détail, avec schémas : 📖 Règles." }
-];
-function ouvrirTuto() { ouvrirGuide("Comment ça marche", TUTO, "C'est parti 🏁"); }
+/* v20.59 (Théo, 25/11) · « Le Podium en bref » : barème selon le nombre de pilotes, et chaque règle 2027 seulement une fois révélée
+   (regleVisible) ; les univers (Côté obscur, Rassemblement des héros) seulement quand ils sont dévoilés. Avant : tout était cité dès la chauffe. */
+function tutoDiapos() {
+  const idx = (D && D.marche && D.marche.indices && esc(D.marche.indices[iRef()])) || "S&amp;P 500", univ = saisonJouee(), v = id => regleVisible(id);
+  const mois = [v("defi") && "🏁 un défi", v("prono") && "🔮 un pronostic", v("pole") && "🅿️ la pole position"].filter(Boolean);
+  const saison = [v("serie") && "🔥 série", v("rival") && "😈 rival", v("regularite") && "🛡️ régularité"].filter(Boolean);
+  const spe = [univ && v("monaco") && "le Côté obscur (le dernier du championnat ×2, 2 points au moins)", v("gpspeciaux") && janvierAnnonce() && "le Chevaucheur des sables (+2 au vainqueur de janvier)",
+    univ && v("gpspeciaux") && "le Rassemblement des héros (🎯 à +2 en décembre)", v("finale") && "la Finale ×2"].filter(Boolean);
+  const liste = l => l.length > 1 ? l.slice(0, -1).join(", ") + " et " + l[l.length - 1] : l[0];
+  return [{ ico: "🏁", t: "Le Podium en bref", html: true, p:
+    "• <b>Chaque mois</b> : " + baremeJ().join(" · ") + " points selon ta performance, <b>+1 🎯</b> si tu bats le " + idx + ".<br>" +
+    "• <b>Ta carte</b> : une par mois, posée du 20 au 1er dans le <b>Stand</b>, révélée le 2 (jusqu'à +" + PLAFOND_CARTE + ").<br>" +
+    (mois.length ? "• <b>Chaque mois aussi</b> : " + liste(mois) + " (+1 chacun).<br>" : "") +
+    (saison.length || spe.length ? "• <b>Sur la saison</b> : " + [saison.join(", "), spe.length ? liste(spe) : ""].filter(Boolean).join(" ; ") + ".<br>" : "") +
+    (univ ? "" : "Décembre 2026 = tour de chauffe : rien ne compte. ") + "Tout le détail, avec schémas : 📖 Règles." }];
+}
+function ouvrirTuto() { ouvrirGuide("Comment ça marche", tutoDiapos(), "C'est parti 🏁"); }
 /** Petit guide en diapos (tuto du jeu, saisie d'un ordre, relevé du Versus) ; les textes acceptent <b> */
 function ouvrirGuide(titre, diapos, finLib) {
   const o = document.createElement("div"); o.className = "tuto"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", titre); let i = 0;

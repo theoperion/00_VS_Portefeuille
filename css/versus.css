@@ -2557,3 +2557,12 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .gant { border-color: color-mix(in srgb, #9B6BFF 40%, var(--rule)); background: radial-gradient(80% 70% at 15% 10%, color-mix(in srgb, #9B6BFF 16%, transparent), transparent 70%), var(--panel); }
 .gant.complet { box-shadow: 0 0 0 2px #B49BFF inset, 0 0 18px rgba(155,107,255,.35); }
 .gant .gant-n b { color: #9B6BFF; }
+/* v20.58 · annonces du 20/12 (promesse) et du 1/1 (les 12 circuits) */
+.nv-plus { width: 100%; display: grid; gap: 6px; margin: 2px 0 4px; padding: 12px; border-radius: 14px; text-align: left; background: rgba(247,207,85,.08); border: 1px solid rgba(247,207,85,.35); }
+.nv-plus > b { font: 800 14px/1.2 var(--f-display); letter-spacing: .03em; color: #F7CF55; text-align: center; }
+.tuto-c .nv-plus p { font-size: 13px; line-height: 1.45; }
+.nv-cal { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.nv-cal li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 0 8px; font-size: 12.5px; line-height: 1.35; color: rgba(244,245,248,.86); }
+.nv-cal em { grid-row: span 2; font: 700 10.5px/1.6 var(--f-num); font-style: normal; letter-spacing: .06em; text-transform: uppercase; color: #C9BEFF; }
+.nv-cal span:first-of-type { font-weight: 700; color: #F4F5F8; }
+.nv-cal .spe b { color: #F7CF55; }
