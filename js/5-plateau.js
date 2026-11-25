@@ -606,8 +606,8 @@ function htmlRegles(tout, modeReserve) {
     s("gp", "🏎️", base ? "La course du mois" : "Course, écurie et trophées",
       "<ul><li><b>Course</b> : une manche par mois sur un circuit à thème, départ dans l'ordre du championnat, le meilleur du mois boucle le tour ; la météo suit le " + idx + ".</li>" +
       (typeof svgSchemaCourse === "function" ? '<li class="rg-schema"><b>📐 Pendant le mois, en direct</b>' + svgSchemaCourse() + "</li>" : "") +   // v20.47 (Théo) : un schéma plutôt qu'un pavé
-      (base ? "</ul>" : '<li id="rg-ecurie"><b>Écurie</b> : casque, livrée, klaxon… purement cosmétique (ta voiture la porte en course), débloqué par les trophées, le Gant et les secrets (chaque objet vient d\'un univers).</li>' +
-      '<li id="rg-defis"><b>Trophées</b> : 🏆 <b>Mes trophées</b> (12 trophées, un par univers, + le Gant de l\'infini et ses 6 pierres), 🔍 <b>secrets</b> (doré pour le premier, argenté du 2e au 5e), ⚔️ <b>titres</b> qu\'on se vole chaque mois (🚩 Drapeau de tête, 🔥 Flamme, 🔍 Flair, aucun point), <b>👑 premier millionnaire</b> (patrimoine financier, montant jamais montré). Tout reste acquis pour toujours, sauf les titres.</li>' + (typeof regleTicket === "function" ? regleTicket() : "") + '</ul>')) +
+      (base ? "</ul>" : '<li id="rg-ecurie"><b>Écurie</b> : casque, livrée, klaxon… purement cosmétique (ta voiture la porte en course), débloqué par les mondes, les succès, le Gant et les légendes (touche « ? » sur un objet pour savoir d\'où il vient).</li>' +
+      '<li id="rg-defis"><b>Trophées</b> : 🗺️ <b>Mondes</b> (un par univers : réussissez ensemble l\'objectif commun du mini-jeu du mois et chacun gagne le trophée et ses objets ; le meilleur du mois gagne son surnom du mois et un objet exclusif doré), 🏅 <b>Succès</b> (12 objectifs visibles : l\'objet pour chacun qui réussit, l\'exclusif doré pour le premier), 🧤 <b>Gant de l\'infini</b> (6 pierres, qui brillent aussi sur ta voiture), 💎 <b>Légendes</b> (un seul gagnant : 👑 premier millionnaire, montant jamais montré ; 🌿 premier champion ; 🗳️ coup de la saison ; 🎫 ticket d\'or). À part : ⚔️ <b>titres</b> qu\'on se vole chaque mois (aucun point). Tout reste acquis pour toujours, sauf les titres.</li>' + (typeof regleTicket === "function" ? regleTicket() : "") + (typeof regleMJ === "function" ? regleMJ() : "") + '</ul>')) +
     (bientot.length ? s("bientot", "🎁", "Bientôt", "<ul>" + bientot.map(e => "<li>" + (estAdmin() ? '<button type="button" class="lien" data-etape="' + e.id + '">🔒 ' + esc(e.nom) + "</button>" : e.ico + " <b>" + esc(e.nom) + "</b>") + " · " + esc(moisEtape(e)) + "</li>").join("") + "</ul>") : "");
 }
 function ouvrirRegles(section, tout) {
@@ -623,6 +623,7 @@ function ouvrirRegles(section, tout) {
   o.querySelectorAll("[data-rg]").forEach(b => b.addEventListener("click", () => aller(b.dataset.rg)));
   if (section) setTimeout(() => aller(section), 0);
   // v20.47 · 🎫 l'empreinte du tirage du ticket d'or (dès le 1/1/2027) : chargée à l'ouverture si besoin
+  if (o.querySelector("#rg-mj .attente") && typeof chargerMJ === "function") chargerMJ(true).then(() => { const li = o.querySelector("#rg-mj"); if (li && MJ) li.outerHTML = regleMJ(); }).catch(() => {});   // 🎲 empreintes des mini-jeux
   if (o.querySelector("#rg-ticket .attente") && typeof chargerTickets === "function") chargerTickets(true).then(() => { const li = o.querySelector("#rg-ticket"); if (li && TICKETS && TICKETS.empreinte) li.outerHTML = regleTicket(); }).catch(() => {});
 }
 
