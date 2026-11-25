@@ -5036,10 +5036,10 @@
   }
 
   function decorChateau(ctx) {
-    const { T, A, sol, eau, lum, rotors } = ctx, v = h => hex(h), r = alea(213), occupe = [], nuit = !!A.nuit;
+    const { T, A, sol, eau, lum, rotors } = ctx, v = h => hex(h), r = alea(213), r0 = r, occupe = [], nuit = !!A.nuit;
     // février 2027, DE JOUR (Théo, 24/11) : pierre blonde chauffée par le soleil, toits d'ardoise bleue, pelouses vertes, lac turquoise
     const pierre = v("#C9BDA4"), pierre2 = v("#A89A80"), pierre3 = v("#E2D8C2"), toit = v("#3F5598"), toit2 = v("#4E66AC"), liser = v("#F4EEDC");
-    const roc = v("#9E9682"), roc2 = v("#857E6C"), roc3 = v("#C8BEA6"), or = v("#FFC85A"), or2 = v("#FFE6A0"), sombre = v("#28324A"), cire = v("#F6F0DC"), YT = 24, YE = .9;
+    const roc = v("#9E9682"), roc2 = v("#857E6C"), roc3 = v("#C8BEA6"), or = v("#FFC85A"), or2 = v("#FFE6A0"), sombre = v("#28324A"), cire = v("#F6F0DC"), YT = 34, YE = .9;   // YT : la falaise (34 m depuis la 3e passe, 25/11 : plus de hauteur)
     const herbe = v("#6FA052"), herbe2 = v("#5C8C44"), feuil = v("#3E7A3E"), feuil2 = v("#2F6434"), bois = v("#6A4A30"), bois2 = v("#4A3222");
     // les 4 maisons de l'école (couleurs et blasons dessinés ici) : [drap, liseré]
     const CJ = ["#A3232A", "#1E6B3C", "#20408E", "#E8B923"], MAISONS = [["#A3232A", "#E8B33A"], ["#1E6B3C", "#C9CED6"], ["#20408E", "#C08A4A"], ["#E8B923", "#2A2420"]].map(([a, b]) => [v(a), v(b)]);
@@ -5100,12 +5100,72 @@
     const creneaux = (g, x, y, z, sx, sz) => { for (let t = -sx / 2 + 1; t <= sx / 2 - 1; t += 3.2) [-1, 1].forEach(s => g.boite(x + t, y, z + s * (sz / 2 - .5), 1.6, 1.8, 1, pierre3));
       for (let t = -sz / 2 + 2.6; t <= sz / 2 - 2.6; t += 3.2) [-1, 1].forEach(s => g.boite(x + s * (sx / 2 - .5), y, z + t, 1, 1.8, 1.6, pierre3)); };
     /** rocher facetté (pour les éperons et l'éboulis) */
-    const rocher = (g, x, y, z, R, h, col) => { const n = 7, P = [], top = [x + (r() - .5) * R * .5, y + h, z + (r() - .5) * R * .5];
+    const rocher = (g, x, y, z, R, h, col, rg) => { const r = rg || r0, n = 7, P = [], top = [x + (r() - .5) * R * .5, y + h, z + (r() - .5) * R * .5];
       for (let k = 0; k < n; k++) { const t = k / n * TAU + r() * .4, rk = R * (.75 + r() * .4); P.push([[x + Math.cos(t) * rk, y, z + Math.sin(t) * rk], [x + Math.cos(t) * rk * .55, y + h * (.55 + r() * .2), z + Math.sin(t) * rk * .55]]); }
       for (let k = 0; k < n; k++) { const a = P[k], b = P[(k + 1) % n], m = Math.cos((k + .5) / n * TAU) * LUNE[0] + Math.sin((k + .5) / n * TAU) * LUNE[1], c = mel(col, roc3, Math.max(0, m) * .6);
         g.quad(a[0], b[0], b[1], a[1], c, 0, [Math.cos((k + .5) / n * TAU), .2, Math.sin((k + .5) / n * TAU)]); g.tri(a[1], b[1], top, mel(c, roc3, .25), 0, [0, 1, 0]); } };
 
-    // ================= 1. LA FALAISE : un plateau de roche haut (24 m), aux bords cassés, au-dessus du lac =================
+    // ================= 0. LE TERRAIN (3e passe, 25/11/2026 · Théo : « de haut, c'est vraiment pas dingue ») =================
+    //   un vrai relief : des collines au nord qui montent vers les montagnes, la forêt interdite sur un talus à l'est, coupé d'un RAVIN
+    //   où un ruisseau descend jusqu'au lac ; des sols variés vus d'en haut : pelouse tondue en bandes dans la boucle, prairie fleurie
+    //   dehors, sable des rives, roche des parois, sous-bois presque noir. Tout ce qui existait garde un sol à plat (relief nul autour de la
+    //   piste, du domaine, du village). Les nouveaux éléments tirent leurs hasards dans r3 (r garde sa suite pour l'ancien décor).
+    const LG = leger(), r3 = alea(4417), sm = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+    const rive = x => 584 + 10 * Math.sin(x / 37) + 6 * Math.sin(x / 13 + 1);   // la rive nord du grand lac (la même qu'en 6.)
+    const sousLac = (x, z) => x >= -500 && x <= 1400 && z > rive(x) + 3 && z < 1800;
+    const lis = z => 800 + 10 * Math.sin(z / 29) + 6 * Math.sin(z / 11);   // l'orée de la forêt interdite
+    const dansForet = (x, z, m) => x > lis(z) - m && x < 1260 + 40 * Math.sin(z / 53) + 25 * Math.sin(z / 19) && z > -50 + 22 * Math.sin(x / 41) + 12 * Math.sin(x / 17) && z < rive(x) - 16;
+    const pN = x => 459 - 26 * Math.pow(Math.sin(PI * (x - 288) / 402), .35), pS = x => 459 + (22 + 1.5 * Math.sin(x / 23)) * Math.pow(Math.sin(PI * (x - 288) / 402), .35);   // le petit lac (comme en 6.)
+    const rotX = a => { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([1, 0, 0, 0, 0, c, s, 0, 0, -s, c, 0, 0, 0, 0, 1]); };
+    const lisP = (C, n) => { const P = []; for (let i = 0; i < C.length - 1; i++) { const p0 = C[Math.max(0, i - 1)], p1 = C[i], p2 = C[i + 1], p3 = C[Math.min(C.length - 1, i + 2)];
+      for (let j = 0; j < n; j++) { const t = j / n, t2 = t * t, t3 = t2 * t; P.push(p1.map((_, a) => .5 * (2 * p1[a] + (-p0[a] + p2[a]) * t + (2 * p0[a] - 5 * p1[a] + 4 * p2[a] - p3[a]) * t2 + (-p0[a] + 3 * p1[a] - 3 * p2[a] + p3[a]) * t3))); } }
+      P.push(C[C.length - 1].slice()); return P; };
+    // le ravin : du nord (dans les collines) au lac, à travers la forêt ; ravin(x, z) = [distance au fil, position le long (0 → 1)]
+    const RAV = lisP([[790, -270], [812, -160], [850, -64], [888, 28], [912, 118], [945, 196], [1004, 248], [1056, 318], [1086, 420], [1084, 520], [1072, 640]], 6), RL = [0];
+    for (let i = 1; i < RAV.length; i++) RL.push(RL[i - 1] + Math.hypot(RAV[i][0] - RAV[i - 1][0], RAV[i][1] - RAV[i - 1][1]));
+    const SENT = lisP([[436, -64], [446, -122], [414, -190], [452, -262], [528, -318], [604, -350]], 6);   // le sentier de pierre des collines du nord (voir 12.)
+    const dPoly = (P, x, z) => { let m = 1e9; for (let i = 0; i < P.length - 1; i++) { const a = P[i], b = P[i + 1], dx = b[0] - a[0], dz = b[1] - a[1], t = clamp(((x - a[0]) * dx + (z - a[1]) * dz) / (dx * dx + dz * dz || 1), 0, 1); m = Math.min(m, Math.hypot(x - a[0] - dx * t, z - a[1] - dz * t)); } return m; };
+    const ravin = (x, z) => { if (x < 750 || x > 1130 || z < -310 || z > 680) return [1e9, 0]; let m = 1e9, u = 0;
+      for (let i = 0; i < RAV.length - 1; i++) { const a = RAV[i], b = RAV[i + 1], dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz, t = clamp(((x - a[0]) * dx + (z - a[1]) * dz) / L2, 0, 1), d = Math.hypot(x - a[0] - dx * t, z - a[1] - dz * t);
+        if (d < m) { m = d; u = (RL[i] + t * Math.sqrt(L2)) / RL[RL.length - 1]; } } return [m, u]; };
+    const hBase = (x, z) => { const wN = sm(-75, -190, z), wE = sm(850, 945, x) * (1 - wN), wW = sm(-560, -690, x) * (1 - wN);
+      let h = wN * (Math.max(0, 15 + 14 * Math.sin(x / 83 + .5) * Math.cos(z / 61) + 7 * Math.sin(x / 37 - z / 53)) + 44 * sm(-230, -780, z))
+        + wE * (20 + 6 * Math.sin(z / 47) + 3 * Math.cos(x / 31 + z / 71) + 36 * sm(1160, 1480, x) * (.7 + .3 * Math.sin(z / 90)))
+        + wW * (18 + 12 * Math.sin(z / 70) + 6 * Math.cos(x / 50));
+      const wl = sm(rive(x) - 2, rive(x) - 60, z), k = Math.max(sm(1380, 1470, x), sm(-480, -570, x)); h *= wl + (1 - wl) * k;   // toutes les rives descendent jusqu'à l'eau
+      h *= sm(44, 66, Math.hypot(x - 960, z - 300));   // la clairière de la licorne reste à plat
+      return h * (1 - sm(1450, 1880, Math.abs(x - 370))) * (1 - sm(1500, 1880, Math.abs(z - 100))); };
+    const relief = (x, z) => { const h = hBase(x, z), [d, u] = ravin(x, z); if (d >= 30) return h; const p = sm(30, 11, d), prof = (14 + .35 * h) * sm(0, .06, u) * (1 - sm(.88, 1, u));
+      return Math.max(.4 * p, h - prof * p); };
+    const axe = (a, b, A0, B0, pas) => { const L = []; for (let x = a; x <= b + .01; x += pas) L.push(x); let s = pas, x = a; while (x > A0) { s *= 1.25; x -= s; L.unshift(x); } s = pas; x = L[L.length - 1]; while (x < B0) { s *= 1.25; x += s; L.push(x); } return L; };
+    const PAS = LG ? 24 : 12, XS = axe(-560, 1300, -1900, 1900, PAS), ZS = axe(-360, 640, -1900, 1900, PAS), NX = XS.length, NZ = ZS.length, HG = new Float32Array(NX * NZ);
+    for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) HG[j * NX + i] = relief(XS[i], ZS[j]) + .03;
+    const idx = (L, x) => { let lo = 0, hi = L.length - 2; while (lo < hi) { const m = (lo + hi + 1) >> 1; if (L[m] <= x) lo = m; else hi = m - 1; } return lo; };
+    /** hauteur exacte du terrain dessiné (mêmes deux triangles par case) : pour poser arbres, rochers, bêtes */
+    const hS = (x, z) => { const i = idx(XS, x), j = idx(ZS, z), u = clamp((x - XS[i]) / (XS[i + 1] - XS[i]), 0, 1), w = clamp((z - ZS[j]) / (ZS[j + 1] - ZS[j]), 0, 1), k = j * NX + i;
+      const a = HG[k], b = HG[k + 1], c = HG[k + NX + 1], d = HG[k + NX]; return u >= w ? a + (b - a) * u + (c - b) * w : a + (c - d) * u + (d - a) * w; };
+    { // le sol d'avant : le grand plan reste dessous (hors du terrain), ses taches d'herbe s'en vont (elles flottaient sur les nouveaux sols)
+      if (sol.o) { const d = sol.o.d, n = []; for (let i = 0; i < d.length; i += 30) if (!(d[i + 1] === .02 && d[i + 11] === .02 && d[i + 21] === .02)) for (let k = 0; k < 30; k++) n.push(d[i + k]); sol.o.d = n; }
+      const PEL = [v("#6CAA4A"), v("#5A9640")], PRAI = [v("#8AB45A"), v("#76A44C"), v("#9CBC60")], FLEUR = [v("#E6D84A"), v("#B48AD6"), v("#F2EEDC"), v("#F2F0E0")];
+      const SABLE = v("#E2D09A"), SABLE2 = v("#C6AE7A"), ROCHE = v("#8C8676"), ROCHE2 = v("#6C685C"), SOUS = [v("#22301E"), v("#283622"), v("#2E3A24"), v("#33362A")], MOUSSE = v("#3E5232"), COL = v("#7EA650");
+      const boucle = TRACES.djeddah.pts, petitLac = (x, z) => x > 284 && x < 694 && z > pN(clamp(x, 289, 689)) - 7 && z < pS(clamp(x, 289, 689)) + 8;
+      const coul = (x, z, h, pente) => { const n = .5 + .25 * (Math.sin(x * .11 + z * .07) + Math.sin(x * .043 - z * .09)), w = r3(), [dr] = ravin(x, z), hb = dr < 32 ? hBase(x, z) : h;
+        if (dr < 32 && h < hb - 1.2) return dr < 12 ? mel(v("#34382C"), MOUSSE, w * .6) : mel(mel(v("#6A6252"), v("#4E4A40"), (Math.floor(h / 2.4) & 1) ? .8 : .1), MOUSSE, w * .25 + (h > hb - 4 ? .35 : 0));   // le ravin : parois rayées de strates, fond de cailloux et de mousse
+        if (pente > .7) return mel(ROCHE, ROCHE2, w * .5);
+        if (x > -520 && x < 1420 && z > rive(x) - 16 && h < 4) return z > rive(x) - 5 ? SABLE2 : mel(SABLE, v("#EEE0B2"), w * .5);   // les plages du grand lac
+        if (petitLac(x, z)) return mel(SABLE, SABLE2, .2 + w * .3);
+        if (dansForet(x, z, 6)) return mel(SOUS[Math.floor(w * 4)], MOUSSE, n * .4);   // le sous-bois de la forêt interdite
+        const nap = sm(.35, .8, Math.sin(x / 57 + 1.3) * Math.sin(z / 43 - .4) + .35 * Math.sin(x / 23 - z / 31)), fl = FLEUR[(Math.floor(x / 160) + Math.floor(z / 130) * 3 + 400) % 3];   // de grandes nappes de fleurs
+        if (z < -75 || x > 1250 || x < -560) { const c = mel(mel(COL, v("#6A9446"), n * .8 + w * .2), ROCHE, sm(32, 58, h) * .85); return h < 34 ? mel(c, v("#A85AB8"), nap * (.32 + w * .2)) : c; }   // les collines (et leur bruyère)
+        if (x > 90 && x < 775 && z > 70 && z < 510 && dansPoly(x / ECH, z / ECH, boucle)) return mel(PEL[Math.floor(x / PAS + 1000) & 1], v("#7AB45A"), n * .18);   // la pelouse tondue (bandes) dans la boucle
+        const c = mel(mel(PRAI[1], PRAI[2], n), PRAI[0], w * .3); return mel(c, fl, nap * (.28 + w * .25)); };   // la prairie fleurie
+      for (let j = 0; j < NZ - 1; j++) for (let i = 0; i < NX - 1; i++) { const k = j * NX + i, x0 = XS[i], x1 = XS[i + 1], z0 = ZS[j], z1 = ZS[j + 1];
+        if (sousLac(x0, z0) && sousLac(x1, z0) && sousLac(x0, z1) && sousLac(x1, z1)) continue;   // sous l'eau : inutile
+        const a = [x0, HG[k], z0], b = [x1, HG[k + 1], z0], c = [x1, HG[k + NX + 1], z1], d = [x0, HG[k + NX], z1], hm = (a[1] + b[1] + c[1] + d[1]) / 4;
+        const pente = Math.max(Math.abs(b[1] - a[1]) / (x1 - x0), Math.abs(d[1] - a[1]) / (z1 - z0), Math.abs(c[1] - d[1]) / (x1 - x0)), col = coul((x0 + x1) / 2, (z0 + z1) / 2, hm, pente);
+        sol.tri(a, b, c, col, 0, [0, 1, 0]); sol.tri(a, c, d, mel(col, [0, 0, 0], .035), 0, [0, 1, 0]); } }
+
+    // ================= 1. LA FALAISE : un plateau de roche haut (34 m), aux bords cassés, au-dessus du lac =================
     const PCX = 482, PCZ = 330, PHX = 156, PHZ = 98, NP = 48, tour0 = [];
     for (let k = 0; k < NP; k++) { const t = k / NP * TAU, c = Math.cos(t), s = Math.sin(t), q = Math.pow(Math.pow(Math.abs(c), 3.4) + Math.pow(Math.abs(s), 3.4), -1 / 3.4), j = 1 + (r() - .5) * .06 + (k % 5 === 2 ? .035 : 0);
       tour0.push([PCX + c * q * PHX * j, PCZ + s * q * PHZ * j]); }
@@ -5191,7 +5251,7 @@
         if (Math.abs(mx - hx) < 10 && mz > PCZ) continue;
         g.boite(mx, YT, mz, L + 1.2, 5, 1.8, pierre2, 0, cap); for (let q = 0; q < Math.floor(L / 3.6); q++) { const f = (q + .5) / Math.floor(L / 3.6); g.boite(a[0] + (b[0] - a[0]) * f, YT + 5, a[1] + (b[1] - a[1]) * f, 1.6, 1.5, 2, pierre3, 0, cap); } }
       // l'escalier taillé dans la falaise, du parvis jusqu'au ponton sur le lac
-      { const zb = anneau(NP / 4, 1)[1]; for (let q = 0; q < 16; q++) g.boite(hx, 0, zb - 2 + q * .9, 8, YT - q * 1.5, 1.2, q % 2 ? pierre2 : pierre);
+      { const zb = anneau(NP / 4, 1)[1]; for (let q = 0; q < 16; q++) g.boite(hx, 0, zb - 2 + q * .9, 8, YT - q * YT / 16, 1.2, q % 2 ? pierre2 : pierre);
         g.boite(hx, 0, piedSud + 6, 12, .9, 12, v("#3A2A1E")); [-1, 1].forEach(s => { g.boite(hx + s * 5.4, .9, piedSud + 11, .3, 4.2, .3, v("#20242B")); g.boite(hx + s * 5.4, 5.1, piedSud + 11, 1, 1.2, 1, or2, 1); lum.push([hx + s * 5.4, 5.6, piedSud + 11, 1, .85, .55, 12]); }); }
       // --- les vitraux de la Grande Salle : des losanges de couleur posés sur les grandes fenêtres (on voit les bougies flotter derrière)
       { const o = g.ov(), VIT = ["#C83A3A", "#3A6AD8", "#E8B33A", "#2E9A5A", "#9A4AD0"].map(v);
@@ -5325,25 +5385,135 @@
         rotors.push({ g: J, x: cx, y: 16, z: cz, cap: 0, v: 0, a: { vivant(x, t, C) { const L = BALLE.L, P = BALLE.p, cp = x.cp || 0;
           const cible = L ? [P[0] - Math.cos(L.cap) * 6.5, P[1] + 2.5 + Math.sin(t * 2) * .5, P[2] + Math.sin(L.cap) * 6.5] : [P[0] - Math.cos(cp) * 6, P[1] - 1.6, P[2] + Math.sin(cp) * 6];
           const p = suivre(x, t, cible, L ? 3.2 : 1.6); return modele(p[0], p[1] + Math.sin(t * 2.4) * .3, p[2], cp, 0, L ? .8 : 1); } } }); } }
-    // ================= 5. LA FORÊT INTERDITE (à l'est) : sapins serrés et sombres même en plein jour, des yeux dans l'ombre, une vieille voiture volante perdue =================
-    { const g = new Geo(); let n = 0;
-      for (let e = 0; e < 2200 && n < 250; e++) { const x = 795 + r() * 380, z = 30 + r() * 540; if (!loin(x, z, 5) || Math.hypot(x - 960, z - 300) < 34 || Math.hypot(x - 830, z - 150) < 10) continue;   // la clairière de la licorne, la toile
-        const h = 14 + r() * 16, R = h * .3, c = mel(v("#1E4630"), v("#2A5A3A"), r()); g.cylindre(x, 0, z, .5, 2, 4, v("#3A2A1E"));
-        for (let q = 0; q < 3; q++) g.cylindre(x, 2 + q * h * .26, z, R * (1 - q * .24), h * .42, 6, mel(c, [0, 0, 0], q * .08), 0, 0); n++; }
-      for (let e = 0; e < 900 && n < 340; e++) { const x = 40 + r() * 760, z = -60 + r() * 100; if (!loin(x, z, 5)) continue; const h = 12 + r() * 14, R = h * .3, c = mel(v("#2A5A3A"), v("#356A44"), r());
-        for (let q = 0; q < 2; q++) g.cylindre(x, q * h * .35, z, R * (1 - q * .3), h * .55, 6, c, 0, 0); n++; }
-      [[800, 250], [806, 410], [812, 140]].forEach(([x, z]) => { if (!loin(x, z, 2)) return; [-.45, .45].forEach(d => g.boite(x, 2.2, z + d, .15, .3, .35, v("#E8F26A"), 1)); });
+    // ================= 5. LA FORÊT INTERDITE (3e passe, 25/11/2026 · Théo : « ajouter la forêt interdite, les araignées, les créatures ailées ») =================
+    //   sur son talus à l'est : sapins noirs serrés, vieux arbres tordus aux racines à nu, sous-bois presque noir, brume basse, des yeux qui
+    //   luisent et clignent dans l'ombre, le RAVIN et son ruisseau, la grande toile tendue au-dessus du ravin et la colonie d'araignées géantes
+    //   qui bougent, des centaures à l'orée, les chevaux squelettiques aux ailes de chauve-souris dans leur clairière. Une vieille voiture volante perdue.
+    { const g = sol, FON = [v("#183A24"), v("#1C4228"), v("#22482C"), v("#1A3C34")], TR = v("#2A2018"), TR2 = v("#3E3226"), noirA = v("#17141C"), noirA2 = v("#2A2430");
+      const dansF = (x, z) => dansForet(x, z, 2) && z < rive(x) - 18;
+      const GARDE = [[960, 300, 40], [830, 150, 10], [826, 318, 8], [846, 498, 22], [838, 396, 16]];   // clairière de la licorne, première toile, voiture, clairière des sombrals, centaures
+      const libreF = (x, z, R) => loin(x, z, R) && GARDE.every(([a, b, c]) => Math.hypot(x - a, z - b) > c + R);
+      const dR = (x, z) => ravin(x, z)[0];
+      // --- les sapins noirs (sur le relief) ; un tronc seulement à l'orée, ailleurs les branches touchent le sol
+      { const NS = LG ? 300 : 640; for (let e = 0, n = 0; e < NS * 8 && n < NS; e++) { const x = 796 + r3() * 510, z = -76 + r3() * 670; if (!dansF(x, z) || !libreF(x, z, 3) || dR(x, z) < 27) continue;
+        const y = hS(x, z) - .4, h = 16 + r3() * 21, R = h * (.24 + r3() * .08), c = FON[Math.floor(r3() * 4)], ori = x < lis(z) + 36;
+        if (ori) g.cylindre(x, y, z, .55, h * .3, 4, TR);
+        g.cylindre(x, y + (ori ? h * .2 : 0), z, R, h * .52, 6, c, 0, 0); g.cylindre(x, y + h * .44, z, R * .7, h * .56, 6, mel(c, [0, 0, 0], .12), 0, 0); n++; } }
+      // --- les vieux arbres tordus (troncs noueux, branches griffues, racines à nu), plus nombreux à l'orée
+      const tordu = (x, z, s, racines) => { const y = hS(x, z) - .3, b = mel(TR, TR2, r3()), p1 = [x + (r3() - .5) * 3 * s, y + 4 * s, z + (r3() - .5) * 3 * s], p2 = [p1[0] + (r3() - .5) * 5 * s, y + 8.5 * s, p1[2] + (r3() - .5) * 5 * s];
+        branche(g, [x, y, z], p1, .95 * s, .7 * s, b); branche(g, p1, p2, .7 * s, .42 * s, b);
+        for (let q = 0; q < 3; q++) { const a = q / 3 * TAU + r3(), p3 = [p2[0] + Math.cos(a) * 5 * s, p2[1] + (.5 + r3() * 3) * s, p2[2] + Math.sin(a) * 5 * s]; branche(g, p2, p3, .38 * s, .1 * s, b);
+          if (q < 2) g.boule(p3[0], p3[1] + .6 * s, p3[2], (2.6 + r3() * 1.2) * s, mel(FON[q + 1], v("#2E3A1E"), r3() * .5), 0, .55); }
+        if (racines) for (let q = 0; q < 4; q++) { const a = q / 4 * TAU + r3(); branche(g, [x, y + .9 * s, z], [x + Math.cos(a) * 2.8 * s, y - .2, z + Math.sin(a) * 2.8 * s], .5 * s, .14 * s, b); } };
+      for (let e = 0, n = 0; e < 900 && n < (LG ? 24 : 96); e++) { const ori = e % 2 === 0, z = -30 + r3() * 600, x = ori ? lis(z) + 2 + r3() * 26 : 830 + r3() * 400; if (!dansF(x, z) || !libreF(x, z, 4) || dR(x, z) < 30) continue;
+        tordu(x, z, .9 + r3() * .6, ori || !LG); n++; }
+      // --- arbres morts au fond et au bord du ravin
+      for (let e = 0, n = 0; e < 300 && n < (LG ? 10 : 22); e++) { const i = 6 + Math.floor(r3() * (RAV.length - 14)), p = RAV[i], a = r3() * TAU, d = r3() < .5 ? 4 + r3() * 6 : 30 + r3() * 6, x = p[0] + Math.cos(a) * d, z = p[1] + Math.sin(a) * d;
+        if (!libreF(x, z, 2)) continue; const y = hS(x, z) - .3, top = [x + (r3() - .5) * 3, y + 9 + r3() * 5, z + (r3() - .5) * 3], c = v("#3A3432");
+        branche(g, [x, y, z], top, .5, .14, c); for (let q = 0; q < 4; q++) { const t = mel([x, y, z], top, .4 + r3() * .5), b = r3() * TAU; branche(g, t, [t[0] + Math.cos(b) * 3.4, t[1] + 1 + r3() * 2.4, t[2] + Math.sin(b) * 3.4], .18, .04, c); } n++; }
+      // --- le ruisseau au fond du ravin (de l'eau qui brille), ses galets ; des rochers éboulés sur les bords
+      { const e = new Geo(); for (let i = 3; i < RAV.length - 2; i++) { const a = RAV[i], b = RAV[i + 1], dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz) || 1, nx = -dz / l * 1.2, nz = dx / l * 1.2, ya = hS(a[0], a[1]) + .22, yb = hS(b[0], b[1]) + .22;
+          e.quad([a[0] + nx, ya, a[1] + nz], [b[0] + nx, yb, b[1] + nz], [b[0] - nx, yb, b[1] - nz], [a[0] - nx, ya, a[1] - nz], v("#2E6E8C"), .05, [0, 1, 0]);
+          if (i % 2) g.boule(a[0] + nx * 1.4, ya, a[1] + nz * 1.4, .5 + r3() * .5, v("#7A786E"), 0, .6); }
+        eau.poser(e, 0, 0, 0, 0, 1);
+        for (let e2 = 0, n = 0; e2 < 200 && n < (LG ? 12 : 30); e2++) { const i = 4 + Math.floor(r3() * (RAV.length - 10)), p = RAV[i], a = r3() * TAU, d = 9 + r3() * 18, x = p[0] + Math.cos(a) * d, z = p[1] + Math.sin(a) * d;
+          rocher(g, x, hS(x, z) - .4, z, 1.6 + r3() * 2.4, 1.4 + r3() * 2.6, r3() < .5 ? roc2 : v("#5E5A50"), r3); n++; } }
+      // --- la brume basse : des bancs de brouillard (petites bouffées pâles serrées) qui traînent au fond du ravin et sous les grands arbres
+      for (let e = 0, n = 0; e < 400 && n < (LG ? 8 : 26); e++) { const auRavin = e % 3 !== 2, i = 4 + Math.floor(r3() * (RAV.length - 9)), z0 = -20 + r3() * 580, x = auRavin ? RAV[i][0] : lis(z0) + 60 + r3() * 300, z = auRavin ? RAV[i][1] : z0;
+        if (!auRavin && (!dansF(x, z) || !libreF(x, z, 3))) continue; const T0 = auRavin ? norme([RAV[i + 1][0] - RAV[i][0], 0, RAV[i + 1][1] - RAV[i][1]]) : [0, 0, 1], y = hS(x, z) + .8;
+        for (let q = 0; q < 6; q++) { const f = (q - 2.5) * 3.4 + (r3() - .5) * 2, sd = (r3() - .5) * 8, px = x + T0[0] * f - T0[2] * sd, pz = z + T0[2] * f + T0[0] * sd; g.boule(px, Math.max(y, hS(px, pz) + .6) + r3() * .4, pz, 2.6 + r3() * 2, mel(v("#A8B2BA"), v("#D0D6DE"), r3()), .1, .26); } n++; }
+      // --- des yeux qui luisent dans l'ombre (trois groupes qui clignent chacun à son rythme) : à l'orée, sous les arbres, et des grappes rouges au ravin
+      { const YX = [new Geo(), new Geo(), new Geo()], COLS = ["#F2E85A", "#FF9A2A", "#A8F25A", "#F2F2FF"].map(v), rouge = v("#FF3A2A");
+        const paire = (o, x, y, z, cap, c, k) => { const s = Math.sin(cap), cc = Math.cos(cap); [-1, 1].forEach(sd => o.boite(x + s * sd * .3, y, z + cc * sd * .3, .22 * k, .16 * k, .22 * k, c, 1)); };
+        for (let e = 0, n = 0; e < 600 && n < (LG ? 22 : 40); e++) { const z = -30 + r3() * 600, x = lis(z) + 5 + r3() * (e % 3 ? 22 : 80); if (!dansF(x, z) || !libreF(x, z, 1.5)) continue;
+          paire(YX[n % 3], x, hS(x, z) + 1.2 + r3() * 2.4, z, r3() * .6 - .3, COLS[Math.floor(r3() * 4)], 1); n++; }
+        for (let q = 0; q < (LG ? 6 : 12); q++) { const i = 8 + Math.floor(r3() * (RAV.length - 20)), p = RAV[i], a = r3() * TAU, d = 6 + r3() * 8, x = p[0] + Math.cos(a) * d, z = p[1] + Math.sin(a) * d, y = hS(x, z) + .8 + r3();
+          for (let k = 0; k < 4; k++) paire(YX[q % 3], x + (k % 2) * .25, y + Math.floor(k / 2) * .3, z + (k % 2) * .1, a, rouge, .7); }
+        [[5.3, .9, 0], [7.1, .86, .3], [3.9, .92, .6]].forEach(([p, part, ph], k) => rotors.push({ g: YX[k], x: 0, y: 0, z: 0, cap: 0, v: 0, a: { clig: [p, part], ph } })); }
+      // --- LA GRANDE TOILE au-dessus du ravin, la mère des araignées dessus ; des toiles plus petites entre les arbres ; la colonie qui grouille au fond
+      /** une toile : centre C, deux directions U, V (unitaires) dans son plan, rayon R ; les fils sont de fins rubans (visibles des deux côtés) */
+      const toile = (C, U, V, R, nr, nc, w) => { const N = norme(croix(U, V)), col = v("#ECEEF6"), P = (a, k) => { const rr = R * k * (.9 + .14 * Math.sin(a * 5 + k * 3)); return [0, 1, 2].map(j => C[j] + (U[j] * Math.cos(a) + V[j] * Math.sin(a)) * rr); };
+        const fil = (a, b) => { const d = norme(sous(b, a)), s = norme(croix(d, N)), e = [s[0] * w, s[1] * w, s[2] * w]; g.quad([a[0] - e[0], a[1] - e[1], a[2] - e[2]], [b[0] - e[0], b[1] - e[1], b[2] - e[2]], [b[0] + e[0], b[1] + e[1], b[2] + e[2]], [a[0] + e[0], a[1] + e[1], a[2] + e[2]], col, .4, N); };
+        for (let q = 0; q < nr; q++) fil(C, P(q / nr * TAU, 1));
+        for (let k = 1; k <= nc; k++) for (let q = 0; q < nr; q++) fil(P(q / nr * TAU, k / (nc + .35)), P((q + 1) / nr * TAU, k / (nc + .35))); };
+      /** une araignée géante (+x = devant), s = taille ; les pattes en deux segments, le dos marqué d'un sablier pâle, huit yeux rouges */
+      const araignee = (s, col) => { const a = new Geo(), n = col || noirA, poil = mel(n, [1, 1, 1], .12);
+        a.boule(-1.25 * s, .35 * s, 0, 1.25 * s, n, 0, .8); a.boule(.25 * s, .2 * s, 0, .72 * s, noirA2, 0, .8); a.boite(-1.3 * s, 1.25 * s, 0, .9 * s, .05 * s, .3 * s, v("#B8B0A0"), .15);
+        for (let q = 0; q < 8; q++) a.boite(.85 * s + (q % 2) * .1 * s, .35 * s + Math.floor(q / 4) * .14 * s, ((q % 4) - 1.5) * .16 * s, .1 * s, .1 * s, .1 * s, v("#FF2A1A"), 1);
+        [-1, 1].forEach(sd => branche(a, [.85 * s, .05 * s, sd * .15 * s], [1.25 * s, -.35 * s, sd * .08 * s], .12 * s, .04 * s, v("#6A5A4A")));   // les crochets
+        for (let q = 0; q < 8; q++) { const sd = q < 4 ? 1 : -1, k = q % 4, b = [.5 * s - k * .28 * s, .2 * s, sd * .35 * s], gn = [.95 * s - k * .75 * s, 1.3 * s, sd * 1.7 * s], p = [1.4 * s - k * 1.15 * s, -.55 * s, sd * 2.9 * s];
+          branche(a, b, gn, .14 * s, .11 * s, k % 2 ? n : poil); branche(a, gn, p, .11 * s, .04 * s, n); }
+        return a; };
+      { const iC = RAV.findIndex(p => p[1] > 196), C0 = RAV[iC], C1 = RAV[iC + 1], U = norme([C1[0] - C0[0], 0, C1[1] - C0[1]]), yf = hS(C0[0], C0[1]), yr = hBase(C0[0], C0[1]);
+        const Vt = norme([-U[2], .28, U[0]]), C = [C0[0], yf + (yr - yf) * .72, C0[1]];
+        toile(C, U, Vt, 22, 16, 7, .16);
+        // la mère des araignées, sur sa toile ; elle tourne lentement sur elle-même et se soulève
+        const mere = araignee(2.3, v("#221C26")); rotors.push({ g: mere, x: C[0], y: C[1] + .4, z: C[2], cap: 0, v: 0, a: { vivant(x, t) { return mul(modele(x.x, x.y + .25 * Math.sin(t * 1.3), x.z, .6 * Math.sin(t * .23) + .2 * Math.sin(t * 1.7), 0, 1), rotX(-.26)); } } });
+        // la colonie : deux rondes d'araignées qui tournent autour des cocons, au fond du ravin
+        [[iC - 3, 7, .16, 5], [iC + 6, 9, -.11, 6]].forEach(([i, Rr, vit, nb]) => { const p = RAV[clamp(i, 0, RAV.length - 1)], y = hS(p[0], p[1]), ronde = new Geo();
+          for (let q = 0; q < nb; q++) { const a = q / nb * TAU, sp = araignee(.8 + (q % 3) * .25), cap = vit > 0 ? -a + PI / 2 : -a - PI / 2; ronde.poser(sp, Math.cos(a) * Rr, .6, Math.sin(a) * Rr, cap); }
+          rotors.push({ g: ronde, x: p[0], y, z: p[1], cap: 0, v: vit, a: { ax: "y", bob: [.12, 6] } });
+          for (let q = 0; q < 6; q++) { const a = r3() * TAU, d = r3() * 3.6; g.boule(p[0] + Math.cos(a) * d, y + .9, p[1] + Math.sin(a) * d, .9 + r3() * .5, v("#EAE6DA"), .1, 1.4); } });   // les cocons
+        // des araignées qui pendent au bout de leur fil (elles montent et descendent), sous la grande toile
+        [[-9, 3], [7, -5], [2, 10]].forEach(([a, b], q) => { const x = C[0] + U[0] * a - U[2] * b, z = C[2] + U[2] * a + U[0] * b, yt = C[1] + .2, yb = hS(x, z) + 3.5;
+          branche(g, [x, yt, z], [x, yb + 1.2, z], .05, .05, v("#E8EAF2"), .4);
+          rotors.push({ g: araignee(.9), x, y: yb + 1.2, z, cap: q * 2, v: 0, a: { bob: [1.6, .45 + q * .13], ph: q * .3 } }); });
+        // deux qui patrouillent au fond du ravin (aller-retour)
+        [[iC - 14, iC - 4, 50], [iC + 4, iC + 16, 64]].forEach(([i0, i1, per], q) => { const P = []; for (let i = i0; i <= i1; i++) P.push([RAV[i][0] + 4 * (q ? 1 : -1), hS(RAV[i][0], RAV[i][1]) + .5, RAV[i][1]]);
+          rotors.push({ g: araignee(1.05), x: 0, y: 0, z: 0, cap: 0, v: 0, a: { p: per, chemin: P.concat(P.slice(0, -1).reverse()), oriente: true, bob: [.1, 9] } }); });
+        // des toiles plus petites, en travers, entre les arbres du bord ; des cocons pris dedans
+        for (let q = 0; q < (LG ? 4 : 8); q++) { const i = clamp(iC - 16 + q * 5, 2, RAV.length - 3), p = RAV[i], sd = q % 2 ? 1 : -1, T0 = norme([RAV[i + 1][0] - p[0], 0, RAV[i + 1][1] - p[1]]), x = p[0] - T0[2] * sd * 24, z = p[1] + T0[0] * sd * 24, y = hS(x, z) + 6 + (q % 3) * 2;
+          toile([x, y, z], T0, norme([-T0[2] * .4, 1, T0[0] * .4]), 6 + (q % 3) * 1.6, 10, 4, .07); if (q % 2) g.boule(x + T0[0] * 2, y + 1, z + T0[2] * 2, .7, v("#EAE6DA"), .1, 1.5); } }
+      // --- LES CENTAURES à l'orée : un archer qui vise le ciel, un qui tient sa lance, deux qui guettent le château
+      { const centaure = (robe, peau, chev, arc) => { const c = new Geo(), sab = v("#2A2420"), cuir = v("#6A4426");
+          c.boule(-.2, 2.15, 0, 1.15, robe, 0, .74); c.boule(-1.5, 2.1, 0, 1.05, robe, 0, .76);   // le corps de cheval
+          [[.45, .45, -.15], [.45, -.45, .2], [-1.9, .45, -.1], [-1.9, -.45, .15]].forEach(([a, b, d]) => { branche(c, [a, 1.85, b], [a + d, .25, b], .27, .16, robe); c.boite(a + d, 0, b, .36, .3, .36, sab); });
+          branche(c, [-2.45, 2.5, 0], [-3.2, .9, 0], .32, .1, chev);   // la queue
+          branche(c, [.65, 2.55, 0], [.95, 4.25, 0], .6, .46, peau); branche(c, [.62, 2.6, 0], [.85, 3.3, 0], .66, .55, cuir);   // le torse, la ceinture de cuir
+          c.boule(1.02, 4.78, 0, .42, peau); c.boule(.9, 4.92, 0, .46, chev, 0, .8); branche(c, [.75, 4.85, 0], [.5, 3.6, 0], .36, .18, chev);   // la tête, les longs cheveux
+          branche(c, [.35, 3.3, -.4], [.25, 4.7, .4], .17, .17, cuir); for (let q = 0; q < 3; q++) branche(c, [.3, 4.5, .35], [.2 - q * .1, 5.3, .45 + q * .08], .04, .04, v("#E0D2A8"));   // le carquois
+          if (arc) { branche(c, [.95, 4.15, .42], [1.75, 4.95, .52], .15, .11, peau); branche(c, [.95, 4.15, -.42], [1.25, 4.55, -.05], .15, .11, peau);
+            let p = [1.45, 3.75]; [[2.05, 4.9], [1.75, 6.2]].forEach(q => { branche(c, [p[0], p[1], .55], [q[0], q[1], .55], .07, .07, v("#4A3020")); p = q; });
+            branche(c, [1.45, 3.75, .55], [1.25, 4.55, -.05], .02, .02, v("#F0ECE2"), .3); branche(c, [1.25, 4.55, -.05], [1.75, 6.2, .55], .02, .02, v("#F0ECE2"), .3); branche(c, [1.25, 4.55, -.05], [2.6, 5.6, .5], .04, .04, v("#C8B890")); }
+          else { branche(c, [.95, 4.15, .45], [1.35, 3.6, .55], .15, .11, peau); branche(c, [.95, 4.15, -.45], [1.1, 3.4, -.55], .15, .11, peau); branche(c, [1.4, .3, .55], [1.5, 6.6, .55], .07, .07, v("#5A3A22")); c.cylindre(1.5, 6.6, .55, .2, .8, 4, v("#C8CCD4"), 0, 0); }
+          return c; };
+        [[836, 384, PI + .2, ["#6A4630", "#B88A64", "#2A1C14"], 1], [846, 400, PI - .3, ["#3A2E28", "#8A5A3C", "#1A1414"], 0], [832, 408, PI + .6, ["#5A4A3E", "#E0B894", "#C8B8A0"], 0], [850, 390, PI - 1.2, ["#7A5236", "#C89A74", "#5A2A1A"], 0]]
+          .forEach(([x, z, cap, [ro, pe, ch], arc]) => g.poser(centaure(v(ro), v(pe), v(ch), arc), x, hS(x, z) - .1, z, cap, 1.3)); }
+      // --- LES SOMBRALS : chevaux noirs décharnés, ailes de cuir, yeux blancs ; deux dans leur clairière à l'orée, deux qui volent au-dessus des arbres
+      const sombral = () => { const s = new Geo(), n = v("#17171D"), os = v("#3C3C48"); s.boule(-.3, 2.35, 0, 1, n, 0, .6); s.boule(-1.5, 2.3, 0, .88, n, 0, .62);
+        for (let q = 0; q < 5; q++) s.boite(-1.75 + q * .42, 1.98, 0, .11, .78, 1.26, os);   // les côtes qui saillent
+        [[.4, .4, -.1], [.4, -.4, .12], [-1.9, .4, -.1], [-1.9, -.4, .1]].forEach(([a, b, d]) => { branche(s, [a, 1.95, b], [a + d, .1, b], .18, .08, n); s.boite(a + d, 0, b, .26, .22, .26, os); });
+        branche(s, [.45, 2.7, 0], [1.35, 3.95, 0], .4, .22, n); branche(s, [1.35, 3.95, 0], [2.45, 3.25, 0], .3, .13, n); branche(s, [-2.3, 2.5, 0], [-3.1, 1.2, 0], .14, .05, n);
+        [-1, 1].forEach(sd => s.boite(1.72, 3.86, sd * .24, .16, .15, .08, v("#F6F6FF"), 1)); return s; };
+      const aileCuir = (sd, k) => { const w = new Geo(), n = v("#25222C"), m = v("#3A3442"), P = [[.4, 0, 0], [0, .5, 2.4 * sd], [-.8, .7, 4.6 * sd], [-2.4, .1, 4.3 * sd], [-2.2, 0, 2.6 * sd], [-1.9, 0, 1.1 * sd], [-1.1, 0, .2 * sd]].map(p => p.map(c => c * (k || 1)));
+        for (let q = 1; q < P.length - 1; q++) w.tri([0, 0, 0], P[q], P[q + 1], q % 2 ? n : m, 0, [0, 1, 0]); branche(w, [0, 0, 0], P[1], .1, .08, n); branche(w, P[1], P[2], .08, .04, n); return w; };
+      { [[842, 494, .4, .35], [852, 506, -2.3, 1.1]].forEach(([x, z, cap, ou]) => { const s = sombral(), y = hS(x, z) - .1; [-1, 1].forEach(sd => s.poser(aileCuir(sd), .2, 2.8, sd * .55, 0)); g.poser(s, x, y, z, cap); });
+        for (let q = 0; q < 3; q++) g.boule(846 + q * 3, .3, 510 - q * 2, .6, v("#8A2A2A"), 0, .6); }   // de la viande crue (leur repas)
+      // les sombrals qui volent : un corps et deux ailes (crochet a.vivant), en ronde lente au-dessus des arbres et du ravin
+      [[1000, 400, 82, 80, 46, 0], [930, 150, 64, 86, 38, .5]].forEach(([cx, cz, R, y0, per, ph]) => { const corps = sombral(), A = [aileCuir(-1), aileCuir(1)], pose = t => { const th = (t / per + ph) * TAU;
+          return { m: mul(modele(cx + Math.cos(th) * R, y0 + 4 * Math.sin(th * 2), cz + Math.sin(th) * R, -th - PI / 2, .08 * Math.cos(th * 2), 1), rotX(.28)), f: .15 + .55 * Math.max(0, Math.sin(t * 2.6 + ph * 9)) }; };
+        rotors.push({ g: corps, x: cx, y: y0, z: cz, cap: 0, v: 0, a: { vivant: (x, t) => pose(t).m } });
+        [-1, 1].forEach((sd, k) => rotors.push({ g: A[k], x: cx, y: y0, z: cz, cap: 0, v: 0, a: { vivant: (x, t) => { const P = pose(t); return mul(P.m, mul(modele(.2, 2.8, sd * .55, 0, 0, 1), rotX(-sd * P.f))); } } })); });
       // la vieille voiture turquoise, cabossée, garée de travers entre les troncs (à l'orée de la forêt)
       { const x = 826, z = 318, c = v("#3AA8A0"), k = new Geo(); k.boite(0, .7, 0, 5.4, 1.2, 2.4, c); k.boite(-.4, 1.9, 0, 3, 1.2, 2.2, c); k.ov().quad([1.12, 2, -1], [1.12, 2, 1], [1.12, 2.9, .9], [1.12, 2.9, -.9], v("#BFE4F2"), .3, [1, 0, 0]);
         [[-1.7, -1.2], [-1.7, 1.2], [1.7, -1.2], [1.7, 1.2]].forEach(([a, b]) => k.boule(a, .55, b, .55, v("#1A1A1A"))); k.boite(2.75, .9, -.8, .1, .4, .5, or2, .8); k.boite(2.75, .9, .8, .1, .4, .5, or2, .8);
         g.poser(k, x, 0, z, .7, 1); }
-      sol.poser(g, 0, 0, 0, 0, 1);
-      for (let x = 820; x < 1180; x += 70) for (let z = 40; z < 580; z += 70) occupe.push([x, z, 50]); for (let x = 60; x < 800; x += 70) occupe.push([x, -40, 45]); }
+      // la ceinture de pins des collines du nord (plus clairs : on n'est plus dans la forêt interdite)
+      for (let e = 0, n = 0; e < 1400 && n < (LG ? 56 : 150); e++) { const x = -300 + r3() * 1120, z = -330 + r3() * 290; if (!loin(x, z, 5) || (x > 360 && x < 480 && z > -160 && z < -80) || dPoly(SENT, x, z) < 8 || Math.hypot(x - 604, z + 350) < 14) continue;
+        const y = hS(x, z) - .3, h = 11 + r3() * 13, R = h * .3, c = mel(v("#2A5A38"), v("#3A6E44"), r3()); g.cylindre(x, y, z, R, h * .55, 6, c, 0, 0); g.cylindre(x, y + h * .38, z, R * .7, h * .62, 6, mel(c, [0, 0, 0], .1), 0, 0); n++; }
+      // des affleurements de roche grise sur les hauteurs des collines (là où l'herbe devient rocaille), et des bouquets de bouleaux
+      for (let e = 0, n = 0; e < 900 && n < (LG ? 8 : 30); e++) { const x = -420 + r3() * 1600, z = -520 + r3() * 440, h = hS(x, z); if (h < 30 || dPoly(SENT, x, z) < 10 || ravin(x, z)[0] < 34) continue;
+        for (let q = 0; q < 3; q++) { const px = x + (r3() - .5) * 14, pz = z + (r3() - .5) * 14; rocher(g, px, hS(px, pz) - .6, pz, 3 + r3() * 4, 2.5 + r3() * 5, mel(roc, roc2, r3()), r3); } n++; }
+      for (let e = 0, n = 0; e < 900 && n < (LG ? 5 : 24); e++) { const x = -300 + r3() * 1300, z = -300 + r3() * 210; if (dPoly(SENT, x, z) < 9 || ravin(x, z)[0] < 34 || (x > 360 && x < 480 && z > -160 && z < -80)) continue;
+        for (let q = 0; q < 4; q++) { const px = x + (r3() - .5) * 12, pz = z + (r3() - .5) * 12, y = hS(px, pz) - .3, h = 7 + r3() * 4; g.cylindre(px, y, pz, .3, h, 5, v("#EEEAE0"), 0, .18); g.boule(px, y + h, pz, 2.4 + r3(), mel(v("#7AB04A"), v("#A8C858"), r3()), 0, .9); } n++; }
+      for (let x = 820; x < 1180; x += 70) for (let z = 40; z < 580; z += 70) occupe.push([x, z, 50]); for (let x = 60; x < 800; x += 70) occupe.push([x, -40, 45]);
+      for (let x = -120; x < 960; x += 60) occupe.push([x, -100, 40]); for (let i = 0; i < RAV.length; i += 4) occupe.push([RAV[i][0], RAV[i][1], 40]); }
 
     // ================= 6. LE LAC : au pied de la falaise (le long de la ligne droite) et au-delà, au sud ; la créature aux tentacules qui joue =================
     { const so = sol.ov(), eauC = v("#2E78B0"), eauP = v("#3A8EC0");   // YE : la surface du lac, un peu haute pour couvrir les taches d'herbe du sol (25/11)
       const x0 = 288, x1 = 690, zc = 459, zN = x => zc - 26 * Math.pow(Math.sin(PI * (x - x0) / (x1 - x0)), .35), zS = x => zc + (22 + 1.5 * Math.sin(x / 23)) * Math.pow(Math.sin(PI * (x - x0) / (x1 - x0)), .35);
-      for (let x = x0; x < x1; x += 12) { const xb = Math.min(x1, x + 12); eau.quad([x, YE, zN(x)], [xb, YE, zN(xb)], [xb, YE, zS(xb)], [x, YE, zS(x)], eauP, .08, [0, 1, 0]);
+      for (let x = x0; x < x1; x += 12) { const xb = Math.min(x1, x + 12), BD = [0, .2, .8, 1], CB = [v("#58B8C6"), eauP, v("#4CAAC4")];   // 3e passe : clair sur les bords, plus profond au milieu
+        for (let q = 0; q < 3; q++) { const za = x => zN(x) + (zS(x) - zN(x)) * BD[q], zb = x => zN(x) + (zS(x) - zN(x)) * BD[q + 1]; eau.quad([x, YE, za(x)], [xb, YE, za(xb)], [xb, YE, zb(xb)], [x, YE, zb(x)], q === 1 ? mel(eauP, eauC, .5) : CB[q], .08, [0, 1, 0]); }
         so.quad([x, YE - .1, zN(x)], [xb, YE - .1, zN(xb)], [xb, YE - .1, zS(xb)], [x, YE - .1, zS(x)], mel(eauP, [1, 1, 1], .12), .08, [0, 1, 0]); }   // le « masque » : la même eau en surcouche, juste dessous, cache les taches d'herbe du sol que la surcouche faisait passer devant l'eau au loin
       for (let k = 0; k < 12; k++) occupe.push([x0 + 20 + k * 34, zc, 26]);
       // reflets du soleil : petits traits blancs sur l'eau ; le reflet clair de la façade
@@ -5356,9 +5526,10 @@
           [[-3, c1], [-1, c2], [1, c1]].forEach(([dx, c], i) => so.quad([a[0] + dx, prof[q][1], a[1] + .4], [a[0] + dx + 2, prof[q][1], a[1] + .4], [b[0] + dx + 2.4, prof[q + 1][1], b[1] + .4], [b[0] + dx - .4, prof[q + 1][1], b[1] + .4], c, .3, [0, 0, 1])); }
         const gc = new Geo(); for (let q = 0; q < 5; q++) gc.boule(xs - 3 + r() * 6, .4, anneau(k, 1.1)[1] + r() * 4, 1.6 + r() * 1.6, v("#F0F6FF"), .2, .5); sol.poser(gc, 0, 0, 0, 0, 1); }
       // le grand lac au sud, au-delà de la ligne droite
-      const zr = x => 584 + 10 * Math.sin(x / 37) + 6 * Math.sin(x / 13 + 1), P = [], C = [450, 1100, 0];
-      for (let x = -500; x <= 1400; x += 25) P.push([x, YE, zr(x)]); P.push([1400, YE, 1800], [-500, YE, 1800]);
-      for (let k = 0; k < P.length; k++) { eau.tri([C[0], YE, C[1]], P[(k + 1) % P.length], P[k], eauC, .06, [0, 1, 0]); so.tri([C[0], YE - .1, C[1]], [P[(k + 1) % P.length][0], YE - .1, P[(k + 1) % P.length][2]], [P[k][0], YE - .1, P[k][2]], mel(eauC, [1, 1, 1], .12), .06, [0, 1, 0]); }
+      // le grand lac (3e passe) : l'eau en bandes, turquoise sur les hauts-fonds près des plages, bleu profond au large ; une frange d'écume le long de la rive
+      const zr = rive; { const DB = [0, 7, 22, 60, 150, 1216], CB = ["#62C0CC", "#44A2C8", "#3488C0", "#2A70AE", "#22609E"].map(v);
+        for (let x = -500; x < 1400; x += 25) { const xb = x + 25, zz = (xx, dd) => Math.min(1800, zr(xx) + dd); for (let q = 0; q < 5; q++) eau.quad([x, YE, zz(x, DB[q])], [xb, YE, zz(xb, DB[q])], [xb, YE, zz(xb, DB[q + 1])], [x, YE, zz(x, DB[q + 1])], CB[q], .06, [0, 1, 0]);
+          so.quad([x, YE + .06, zr(x) + .7], [xb, YE + .06, zr(xb) + .7], [xb, YE + .06, zr(xb) + 1.9], [x, YE + .06, zr(x) + 1.9], v("#F4FAFF"), .45, [0, 1, 0]); } }
       const g = new Geo();
       for (let x = -480; x <= 1380; x += 18 + r() * 24) { const z = zr(x) - 2 + r() * 3; if (!loin(x, z, 3)) continue; g.boule(x, 0, z, 1.5 + r() * 3, mel(roc, roc2, r()), 0, .6); }
       for (let k = 0; k < 60; k++) { const x = 200 + r() * 560, z0 = zr(x) + 6 + r() * 120, w = 1.5 + r() * 3; so.quad([x - w, YE + .06, z0], [x + w, YE + .06, z0], [x + w, YE + .06, z0 + .6], [x - w, YE + .06, z0 + .6], v("#EAF4FF"), .55, [0, 1, 0]); }
@@ -5400,13 +5571,15 @@
     { const g = new Geo(), so = sol.ov(), dansFalaise = (x, z) => { const dx = (x - PCX) / (PHX * 1.2), dz = (z - PCZ) / (PHZ * 1.2); return Math.pow(Math.abs(dx), 3.4) + Math.pow(Math.abs(dz), 3.4) < 1; };
       const dansTerrain = (x, z) => Math.pow((x - 180) / 66, 2) + Math.pow((z - 340) / 124, 2) < 1, dansLac = (x, z) => x > 280 && x < 700 && z > 428;
       // la prairie : semis de fleurs des champs (blanches, jaunes, mauves) et d'herbes plus foncées
-      { const FL = ["#F8F4EC", "#F2D23A", "#B88AE0", "#F4A0B8"].map(v); for (let k = 0, n = 0; k < 3000 && n < 700; k++) { const x = -60 + r() * 900, z = -40 + r() * 620; if (!loin(x, z, 2) || dansFalaise(x, z) || dansTerrain(x, z) || dansLac(x, z) || x > 790) continue;
+      { const FL = ["#F8F4EC", "#F2D23A", "#B88AE0", "#F4A0B8"].map(v); for (let k = 0, n = 0; k < 3000 && n < 700; k++) { const x = -60 + r() * 900, z = -40 + r() * 620; if (!loin(x, z, 2) || dansFalaise(x, z) || dansTerrain(x, z) || dansLac(x, z) || x > 790 || Math.hypot(x - 712, z - 356) < 30) continue;
         const c = k % 5 ? FL[k % 4] : v("#4E8A3E"), s = k % 5 ? .45 : 1.6; so.quad([x - s, .06, z], [x, .06, z - s], [x + s, .06, z], [x, .06, z + s], c, k % 5 ? .15 : 0, [0, 1, 0]); n++; } }
       // rochers épars
       for (let k = 0, n = 0; k < 400 && n < 26; k++) { const x = 110 + r() * 650, z = 180 + r() * 300; if (!loin(x, z, 6) || dansFalaise(x, z) || dansTerrain(x, z) || dansLac(x, z) || Math.hypot(x - 712, z - 356) < 30) continue; rocher(g, x, -.3, z, 1.8 + r() * 2.6, 1.5 + r() * 3, r() < .5 ? roc : roc2); n++; }
       // chemins de terre bordés de lanternes qui montent vers le château (depuis le terrain à l'ouest, depuis la cabane à l'est)
       const chemin = (pts) => { for (let i = 0; i < pts.length - 1; i++) { const [x0, z0] = pts[i], [x1, z1] = pts[i + 1], L = Math.hypot(x1 - x0, z1 - z0), px = -(z1 - z0) / L * 1.8, pz = (x1 - x0) / L * 1.8;
           so.quad([x0 + px, .05, z0 + pz], [x1 + px, .05, z1 + pz], [x1 - px, .05, z1 - pz], [x0 - px, .05, z0 - pz], v("#B8A27A"), 0, [0, 1, 0]);
+          for (let q = 0; q < L / 1.25; q++) [-.45, .45].forEach((o, k) => { const f = (q + .5) * 1.25 / L, cx = x0 + (x1 - x0) * f + px * o, cz = z0 + (z1 - z0) * f + pz * o, ux = (x1 - x0) / L * .5, uz = (z1 - z0) / L * .5, wx = px * .42, wz = pz * .42;   // 3e passe : des dalles de pierre
+            so.quad([cx - ux - wx, .08, cz - uz - wz], [cx + ux - wx, .08, cz + uz - wz], [cx + ux + wx, .08, cz + uz + wz], [cx - ux + wx, .08, cz - uz + wz], (q + k) % 3 ? v("#D2C8B2") : v("#BCB29C"), 0, [0, 1, 0]); });
           for (let q = 0; q < Math.floor(L / 16); q++) { const f = (q + .5) / Math.floor(L / 16), s = q % 2 ? 1 : -1, x = x0 + (x1 - x0) * f + px * s * 1.6, z = z0 + (z1 - z0) * f + pz * s * 1.6; if (!loin(x, z, 1)) continue;
             g.boite(x, 0, z, .25, 3.2, .25, v("#20242B")); g.boite(x, 3.2, z, .8, 1, .8, or2, .6); } } };
       chemin([[226, 316], [268, 310], [300, 300]]); chemin([[690, 330], [668, 318]]);
@@ -5485,14 +5658,14 @@
     // ================= 9 ter. LES HIBOUX DU COURRIER (de la volière au donjon), et les étincelles de magie qui tournent autour des tours =================
     { const hibou = (c, c2) => { const k = new Geo(); k.boule(0, 0, 0, .8, c, 0, 1.1); k.boule(.7, .5, 0, .55, c, 0); k.boite(1.2, .55, 0, .3, .2, .2, v("#E0A030"));
         [-1, 1].forEach(s => { k.tri([-.4, .2, s * .4], [.5, .3, s * .4], [-.2, .9, s * 3], c2, 0, [0, 1, 0]); k.tri([-.4, .2, s * .4], [-.2, .9, s * 3], [.5, .3, s * .4], c2, 0, [0, -1, 0]); }); return k; };
-      [[334, 214, 14, 40, 14], [334, 214, 22, 46, 18], [420, 260, 40, 70, 26], [482, 298, 30, 120, 30], [600, 330, 50, 60, 22]].forEach(([x, z, R, y, p], q) => { const C = []; for (let k = 0; k <= 16; k++) { const t = (q % 2 ? -1 : 1) * k / 16 * TAU; C.push([x + Math.cos(t) * R, y + 3 * Math.sin(3 * t), z + Math.sin(t) * R * .8]); }
+      [[334, 214, 14, 40, 14], [334, 214, 22, 46, 18], [420, 260, 40, 80, 26], [482, 298, 30, 130, 30], [600, 330, 50, 70, 22]].forEach(([x, z, R, y, p], q) => { const C = []; for (let k = 0; k <= 16; k++) { const t = (q % 2 ? -1 : 1) * k / 16 * TAU; C.push([x + Math.cos(t) * R, y + 3 * Math.sin(3 * t), z + Math.sin(t) * R * .8]); }
         rotors.push({ g: hibou(v(q % 3 ? "#9A7A58" : "#F4F0E6"), v(q % 3 ? "#7A5A3A" : "#E4DED0")), x: 0, y: 0, z: 0, cap: 0, v: 0, a: { p, ph: q * .2, chemin: C, oriente: true, bob: [.6, 2.4] } }); });
       // l'aller-retour d'un hibou qui porte une lettre, de la volière jusqu'au donjon
-      { const C = [], A0 = [334, 44, 214], A1 = [482, 110, 298]; for (let k = 0; k <= 20; k++) { const t = k / 20, u = t < .5 ? t * 2 : 2 - t * 2; C.push([A0[0] + (A1[0] - A0[0]) * u + (t < .5 ? 8 : -8) * Math.sin(PI * u), A0[1] + (A1[1] - A0[1]) * u + 10 * Math.sin(PI * u), A0[2] + (A1[2] - A0[2]) * u]); }
+      { const C = [], A0 = [334, 44, 214], A1 = [482, 120, 298]; for (let k = 0; k <= 20; k++) { const t = k / 20, u = t < .5 ? t * 2 : 2 - t * 2; C.push([A0[0] + (A1[0] - A0[0]) * u + (t < .5 ? 8 : -8) * Math.sin(PI * u), A0[1] + (A1[1] - A0[1]) * u + 10 * Math.sin(PI * u), A0[2] + (A1[2] - A0[2]) * u]); }
         const k = hibou(v("#F4F0E6"), v("#E4DED0")); k.boite(.2, -1, 0, .9, .6, .1, v("#F2E8C8")); k.boite(.2, -1, .06, .25, .25, .02, v("#A82020"), .2); rotors.push({ g: k, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { p: 30, chemin: C, oriente: true } }); }
       // étincelles : petites étoiles dorées et violettes qui tournoient au-dessus des tours (pas à pas, comme une baguette qu'on agite)
       const etoile = (c) => { const e = new Geo(); for (let q = 0; q < 7; q++) { const a = q / 7 * TAU, d = 2 + (q % 3) * 1.4, x = Math.cos(a) * d, z = Math.sin(a) * d, y = (q % 2) * 1.4; e.tri([x - .45, y, z], [x + .45, y, z], [x, y + 1.1, z], c, 1, [0, 0, 1]); e.tri([x, y - .5, z - .4], [x, y - .5, z + .4], [x, y + .6, z], c, 1, [1, 0, 0]); } return e; };
-      [[452, 286, 120], [514, 284, 128], [590, 292, 140], [312, 112, 112], [748, 100, 130], [482, 372, 70], [180, 340, 44], [296, 262, 20]].forEach(([x, z, y], q) => rotors.push({ g: etoile(v(q % 3 === 1 ? "#C8A0FF" : "#FFE07A")), x, y, z, cap: 0, v: q % 2 ? .9 : -.7, a: { ax: "y", ph: q * .13, bob: [1.4, .8 + q * .1] } })); }
+      [[452, 286, 130], [514, 284, 138], [590, 292, 150], [312, 112, 112], [748, 100, 130], [482, 372, 80], [180, 340, 44], [296, 262, 20]].forEach(([x, z, y], q) => rotors.push({ g: etoile(v(q % 3 === 1 ? "#C8A0FF" : "#FFE07A")), x, y, z, cap: 0, v: q % 2 ? .9 : -.7, a: { ax: "y", ph: q * .13, bob: [1.4, .8 + q * .1] } })); }
 
     // ================= 9 quater. RECOINS ET PETITS DÉTAILS (pour la chasse) : l'échiquier géant, le chaudron près des serres, les balais oubliés =================
     { const g = new Geo();
@@ -5620,11 +5793,23 @@
         cr.tri([2.2, 4.42, -.2], [2.2, 4.42, .2], [2.85, 4.05, 0], bec, .1, [1, .5, 0]); cr.tri([2.2, 4.42, .2], [2.2, 4.42, -.2], [2.25, 4.0, 0], bec, .1, [.3, -1, 0]); cr.tri([2.2, 4.42, -.2], [2.25, 4.0, 0], [2.2, 4.42, .2], bec, .1, [0, -1, 0]);
         [-1, 1].forEach(s => cr.boite(2.05, 4.42, s * .4, .14, .16, .08, v("#E86A1A"), .5));
         branche(cr, [-2.5, 2.7, 0], [-3.1, 1.4, 0], .3, .12, v("#E8E4DA")); cr.boule(-3.2, 1.1, 0, .3, v("#E8E4DA"));
-        g.poser(cr, X0, 0, Z0, C0);
-        // les ailes : un rotor par aile, posé à l'épaule ; axes du rotor : x = le flanc de l'animal, z = vers l'avant ; elles s'ouvrent lentement vers le ciel
-        [-1, 1].forEach(s => { const w = new Geo(), P = [[-2.4, 1.6, 1.1], [-3.1, .1, .9], [-1.2, -.3, .7], [.3, .5, .35]].map(([a, b, c]) => [-s * c, b, a]).map(([x, y, z]) => { const t0 = -s * .45; return [x * Math.cos(t0) - y * Math.sin(t0), x * Math.sin(t0) + y * Math.cos(t0), z]; });   // pré-levées : le battement va de « repliées » à « grandes ouvertes »
-          for (let q = 0; q < 3; q++) { const c = q === 1 ? plume : gris; w.tri([0, 0, 0], P[q], P[q + 1], c, 0, [-s, .3, 0]); w.tri([0, 0, 0], P[q + 1], P[q], c, 0, [s, -.3, 0]); }
-          const sx = .2, sz = s * 1.05; rotors.push({ g: w, x: X0 + sx * Math.cos(C0) + sz * Math.sin(C0), y: 3, z: Z0 - sx * Math.sin(C0) + sz * Math.cos(C0), cap: C0 + PI / 2, v: 0, a: { osc: [-s * .45, 1.3] } }); });
+        // 3e passe (25/11) : la créature est VIVANTE (crochet a.vivant) : elle se repose dans l'enclos et étire ses ailes ; par moments elle s'envole,
+        //   fait un grand tour au-dessus de la piste, du lac et de l'orée de la forêt, puis revient se poser à sa place (un corps, deux ailes)
+        { const C1 = -.86, CH = lisP([[X0, 0, Z0], [724, 6, 463], [770, 26, 515], [838, 46, 572], [905, 64, 522], [884, 62, 432], [806, 50, 386], [734, 28, 393], [690, 10, 418], [X0, 0, Z0]], 8), CL = [0];
+          for (let i = 1; i < CH.length; i++) CL.push(CL[i - 1] + Math.hypot(CH[i][0] - CH[i - 1][0], CH[i][1] - CH[i - 1][1], CH[i][2] - CH[i - 1][2]));
+          const LT = CL[CL.length - 1], CYC = 52, VOL = 17, at = s => { const i = idx(CL, s), w = clamp((s - CL[i]) / (CL[i + 1] - CL[i] || 1), 0, 1); return [0, 1, 2].map(j => CH[i][j] + (CH[i + 1][j] - CH[i][j]) * w); };
+          const pose = t => { const c = ((t + 20) % CYC + CYC) % CYC;
+            if (c < CYC - VOL) { const e = Math.pow(Math.max(0, Math.sin(t * .42)), 6); return { m: modele(X0, 0, Z0, C1, 0, 1), f: -.28 + e * (1.2 + .25 * Math.sin(t * 7)) }; }   // au sol : ailes repliées, de temps en temps grandes ouvertes
+            const f = (c - (CYC - VOL)) / VOL, s = f * f * (3 - 2 * f) * LT, P = at(s), Q = at(Math.min(LT, s + 3)), M = at(Math.max(0, s - 3));
+            const cap = Q[0] === P[0] && Q[2] === P[2] ? C1 : Math.atan2(-(Q[2] - P[2]), Q[0] - P[0]), cp = M[0] === P[0] && M[2] === P[2] ? cap : Math.atan2(-(P[2] - M[2]), P[0] - M[0]), dc = Math.atan2(Math.sin(cap - cp), Math.cos(cap - cp));
+            const tang = .7 * Math.atan2(Q[1] - M[1], Math.hypot(Q[0] - M[0], Q[2] - M[2]) || 1), roll = clamp(-dc * 4, -.6, .6), batt = Math.min(1, f * 12, (1 - f) * 12);
+            return { m: mul(modele(P[0], P[1], P[2], cap, tang, 1), rotX(roll)), f: .2 + batt * (.55 + .45 * Math.sin(t * 8)) }; };
+          const aile = sd => { const w = new Geo(), P = [[.5, 0, .1], [.1, .25, 2], [-.5, .45, 3.8], [-1.7, .25, 4.4], [-2.5, .05, 3.4], [-2.4, 0, 1.8], [-1.4, 0, .4]].map(([a, b, c]) => [a, b, c * sd]);
+            for (let q = 1; q < P.length - 1; q++) w.tri([0, 0, 0], P[q], P[q + 1], q % 2 ? plume : gris, 0, [0, 1, 0]);
+            for (let q = 3; q < 6; q++) branche(w, P[q], [P[q][0] - .9, P[q][1] - .05, P[q][2] * 1.05], .14, .03, q % 2 ? plume : gris2);   // les grandes plumes
+            return w; };
+          rotors.push({ g: cr, x: X0, y: 0, z: Z0, cap: C1, v: 0, a: { vivant: (x, t) => pose(t).m } });
+          [-1, 1].forEach(sd => rotors.push({ g: aile(sd), x: X0, y: 0, z: Z0, cap: 0, v: 0, a: { vivant: (x, t) => { const P = pose(t); return mul(P.m, mul(modele(.2, 2.9, sd * .75, 0, 0, 1), rotX(-sd * P.f))); } } })); }
         g.poser(eleve(2, true), X + 12, 0, Z - 15, 2); g.poser(eleve(1), X + 14, 0, Z - 13.6, 2.3);
         occupe.push([X, Z, R + 2]); } }
 
@@ -5761,12 +5946,12 @@
           for (let i = 0; i < N; i++) for (let k = 0; k < K; k++) g.quad(P(i, k), P(i + 1, k), P(i + 1, k + 1), P(i, k + 1), mel(col, herbe, ((i * 7 + k * 3) % 5) / 12), 0, [0, 1, 0]);
           return (px, pz) => { const d = Math.hypot(px - x, (pz - z) / .8); return d >= R ? 0 : h * Math.pow(Math.cos(PI / 2 * d / R), 2) - .6; }; };
         [[200, -210, 120, 26], [520, -240, 150, 34], [-140, -180, 110, 22], [840, -200, 130, 30], [1260, 120, 140, 30], [1300, 420, 120, 24], [-420, 40, 120, 26], [-460, 560, 100, 20]].forEach(([x, z, R, h], q) => {
-          const H = colline(x, z, R, h, mel(herbe, herbe2, q % 2 ? .3 : .7));
+          const H = q < 6 ? hS : colline(x, z, R, h, mel(herbe, herbe2, q % 2 ? .3 : .7));   // 3e passe : au nord et à l'est, le vrai relief (0.) remplace les dômes
           for (let e = 0; e < 9; e++) { const a = r() * TAU, d = R * (.15 + r() * .65), px = x + Math.cos(a) * d, pz = z + Math.sin(a) * d * .8;
-            for (let f = 0; f < 3; f++) { const qx = px + (r() - .5) * 9, qz = pz + (r() - .5) * 9, qy = H(qx, qz); g.cylindre(qx, qy - .5, qz, .5, 4, 5, bois); g.boule(qx, qy + 5, qz, 3.2 + r() * 2, mel(feuil, feuil2, r()), 0, .8); } } });
-        for (let q = 0; q < 16; q++) { const x = 380 + r() * 80, z = -150 + r() * 60, m = new Geo(); m.boule(0, 1, 0, .9, v("#F4F2EC"), 0, .75); m.boule(.9, 1.2, 0, .4, v("#3A3434")); [[.5, .4], [.5, -.4], [-.5, .4], [-.5, -.4]].forEach(([a, b]) => m.boite(a, 0, b, .15, .6, .15, v("#3A3434"))); g.poser(m, x, 0, z, r() * TAU); }
+            for (let f = 0; f < 3; f++) { const qx = px + (r() - .5) * 9, qz = pz + (r() - .5) * 9, qy = H(qx, qz); if (!LG) g.cylindre(qx, qy - .5, qz, .5, 4, 5, bois); g.boule(qx, qy + 5, qz, 3.2 + r() * 2, mel(feuil, feuil2, r()), 0, .8); } } });
+        for (let q = 0; q < 16; q++) { const x = 380 + r() * 80, z = -150 + r() * 60, m = new Geo(); m.boule(0, 1, 0, .9, v("#F4F2EC"), 0, .75); m.boule(.9, 1.2, 0, .4, v("#3A3434")); [[.5, .4], [.5, -.4], [-.5, .4], [-.5, -.4]].forEach(([a, b]) => m.boite(a, 0, b, .15, .6, .15, v("#3A3434"))); g.poser(m, x, hS(x, z) - .05, z, r() * TAU); }
         [[[300, -110], [470, -100], [560, -170]], [[-40, -90], [120, -120]]].forEach(L => { for (let i = 0; i < L.length - 1; i++) { const [x0, z0] = L[i], [x1, z1] = L[i + 1], n = Math.round(Math.hypot(x1 - x0, z1 - z0) / 1.6);
-          for (let q = 0; q < n; q++) { const t = q / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t; g.boite(x, 0, z, 1.7, .9 + (q % 3) * .15, 1, mel(roc, roc3, (q % 4) / 4), 0, Math.atan2(-(z1 - z0), x1 - x0)); } } }); }
+          for (let q = 0; q < n; q++) { const t = q / n, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t; g.boite(x, hS(x, z) - .3, z, 1.7, 1.2 + (q % 3) * .15, 1, mel(roc, roc3, (q % 4) / 4), 0, Math.atan2(-(z1 - z0), x1 - x0)); } } }); }
 
       // --- DES ÉLÈVES EN BALAI qui tournent autour des tours ; d'autres qui marchent vers le terrain et vers la cabane
       { const vol = (k) => { const j = new Geo(), [c1, c2] = MAISONS[k]; branche(j, [-2.2, 0, 0], [2.4, .1, 0], .12, .09, v("#7A5232")); for (let q = 0; q < 6; q++) { const a = q / 6 * TAU; branche(j, [-2, 0, 0], [-3.4, Math.cos(a) * .5, Math.sin(a) * .5], .12, .05, v("#C8A060")); }
@@ -5776,13 +5961,61 @@
         marcher([[226, 0, 316], [268, 0, 310], [300, 0, 300], [268, 0, 312]], [0, 2], 1); marcher([[690, 0, 330], [668, 0, 318], [690, 0, 334], [705, 0, 345]], [1], .9); }
 
       // --- LA PRAIRIE : des bosquets de feuillus et des buissons partout où il reste de la place (jamais sur la piste, l'eau ou les bâtiments)
-      { const libre = (x, z, R) => loin(x, z, R) && !dansFalaise(x, z) && z < zr(x) - 6 && !(x > 280 && x < 700 && z > 424 && z < 488) && occupe.every(([a, b, c]) => Math.hypot(x - a, z - b) > c + R);
-        for (let k = 0, n = 0; k < 900 && n < 70; k++) { const cx = -260 + r() * 1060, cz = -50 + r() * 620; if (!libre(cx, cz, 10)) continue; n++;
+      { const libre = (x, z, R) => loin(x, z, R) && !dansFalaise(x, z) && z < zr(x) - 6 && !(x > 280 && x < 700 && z > 424 && z < 488) && occupe.every(([a, b, c]) => Math.hypot(x - a, z - b) > c + R) && Math.hypot(x - 712, z - 356) > 34;   // le potager de la cabane reste dégagé
+        for (let k = 0, n = 0; k < 900 && n < (LG ? 40 : 70); k++) { const cx = -260 + r() * 1060, cz = -50 + r() * 620; if (!libre(cx, cz, 10)) continue; n++;
           const m = 2 + Math.floor(r() * 3); for (let e = 0; e < m; e++) { const x = cx + (r() - .5) * 12, z = cz + (r() - .5) * 12, h = 4 + r() * 3, fe = mel(v("#4A8A40"), v(e % 2 ? "#6AA04A" : "#3A7438"), r());
             branche(g, [x, 0, z], [x + (r() - .5) * 2, h, z + (r() - .5) * 2], .45, .3, v("#5A4630")); g.boule(x, h + 2, z, 2.6 + r() * 1.4, fe, 0, .8); g.boule(x + 1.4, h + .8, z + .6, 1.8 + r(), mel(fe, herbe, .3), 0, .8); }
           occupe.push([cx, cz, 9]); }
-        for (let k = 0, n = 0; k < 900 && n < 140; k++) { const x = -260 + r() * 1060, z = -50 + r() * 620; if (!libre(x, z, 2)) continue; n++; const c = mel(feuil, herbe, r() * .7);
+        for (let k = 0, n = 0; k < 900 && n < (LG ? 80 : 140); k++) { const x = -260 + r() * 1060, z = -50 + r() * 620; if (!libre(x, z, 2)) continue; n++; const c = mel(feuil, herbe, r() * .7);
           g.boule(x, .4, z, 1 + r() * .9, c, 0, .7); if (r() < .5) g.boule(x + 1, .3, z + .4, .7 + r() * .5, mel(c, herbe, .3), 0, .7); if (r() < .25) g.boule(x + .3, 1.1, z, .18, v(r() < .5 ? "#E84A5A" : "#F4F0E4"), .2); } }
+    // ================= 12. VU DU CIEL (3e passe, 25/11/2026) : le carrosse aux chevaux ailés, la tour du lac, deux aiguilles, les bannières, le sentier des collines =================
+    { const g = sol, so = sol.ov();   // écrit directement dans le sol
+      // --- LE CARROSSE BLEU PÂLE de l'école étrangère, tiré par quatre grands chevaux ailés couleur de miel, qui tourne au-dessus du domaine
+      //     (un corps + deux ailes par côté pour tout l'attelage : les chevaux sont en file, leurs épaules sur le même axe)
+      { const bleu = v("#9CC0EA"), bleu2 = v("#7AA2D4"), dore = v("#E8C25A"), miel = v("#E8C888"), miel2 = v("#D2AE6E"), crin = v("#FAF6EA"), car = new Geo(), HX = [4, 9.5, 15, 20.5];
+        car.boite(-4, 1.4, 0, 6, 3.6, 3.4, bleu); car.boite(-4, 5, 0, 6.4, .35, 3.8, dore); car.boule(-4, 5.3, 0, 2.6, bleu2, 0, .45); car.boule(-4, 6.4, 0, .45, dore, .3);
+        car.boite(-4, 1.1, 0, 7.4, .3, 3.9, dore); [[-6.2, 1.9], [-1.8, 1.9], [-6.2, -1.9], [-1.8, -1.9]].forEach(([a, b]) => { for (let q = 0; q < 8; q++) { const t0 = q / 8 * TAU, t1 = (q + 1) / 8 * TAU; branche(car, [a + Math.cos(t0) * 1.3, 1.1 + Math.sin(t0) * 1.3, b], [a + Math.cos(t1) * 1.3, 1.1 + Math.sin(t1) * 1.3, b], .09, .09, dore); } car.boite(a, 1.1, b, .3, .3, .25, dore); });
+        [-1, 1].forEach(sd => { car.ov().quad([-5.6, 2.6, sd * 1.72], [-2.4, 2.6, sd * 1.72], [-2.4, 4.3, sd * 1.72], [-5.6, 4.3, sd * 1.72], v("#FFE6B0"), .6, [0, 0, sd]); car.ov().boite(-4, 1.8, sd * 1.73, .9, .9, .05, dore, .3); });   // fenêtres éclairées, blason doré
+        branche(car, [-1, 1.6, 0], [HX[3], 2.6, 0], .1, .1, v("#5A3A22"));   // le timon
+        HX.forEach((hx, k) => { const c = k % 2 ? miel2 : miel; car.boule(hx, 3.1, 0, 1.15, c, 0, .78); car.boule(hx - 1.4, 3.05, 0, 1.05, c, 0, .8);   // le corps
+          [[.6, .4, 1.6, .2], [.6, -.4, 1.2, -.2], [-1.9, .4, -3, .5], [-1.9, -.4, -2.6, .1]].forEach(([a, b, px, py]) => { const gx = hx + (a + px) / 2 + (a > 0 ? .3 : -.2), gy = 1.9 + py * .4; branche(car, [hx + a, 2.8, b], [gx, gy, b], .26, .17, c); branche(car, [gx, gy, b], [hx + px, .9 + py, b], .17, .12, c); car.boite(hx + px, .8 + py, b, .3, .25, .3, dore); });   // les jambes au galop
+          branche(car, [hx + .6, 3.5, 0], [hx + 1.6, 5, 0], .55, .35, c); branche(car, [hx + 1.6, 5, 0], [hx + 2.6, 4.6, 0], .38, .2, c); branche(car, [hx + .3, 4.3, 0], [hx + 1.5, 5.6, 0], .2, .1, crin);   // l'encolure, la tête, la crinière
+          branche(car, [hx - 2.3, 3.4, 0], [hx - 3.4, 2.4, 0], .3, .1, crin); car.boite(hx - .6, 3.9, 0, 1.4, .25, 2.5, v("#8A2A3A"));   // la queue, le tapis de selle
+          if (k) branche(car, [hx - 2.4, 2.9, 0], [HX[k - 1] + .9, 3, 0], .06, .06, dore); });   // les traits dorés
+        const aileM = sd => { const w = new Geo(); HX.forEach(hx => { const P = [[.6, 0, .1], [.2, .3, 2.3], [-.4, .55, 4.4], [-1.8, .3, 5.2], [-2.8, .05, 4], [-2.7, 0, 2.2], [-1.6, 0, .5]].map(([a, b, c]) => [hx + a, b, c * sd]);
+          for (let q = 1; q < P.length - 1; q++) w.tri([hx, 0, 0], P[q], P[q + 1], q % 2 ? crin : v("#F0E6CC"), .05, [0, 1, 0]); for (let q = 3; q < 6; q++) branche(w, P[q], [P[q][0] - 1, P[q][1], P[q][2] * 1.05], .14, .03, crin); }); return w; };
+        const pose = t => { const th = t / 96 * TAU, R = 290, cx = 500, cz = 300; return { m: mul(modele(cx + Math.cos(th) * R, 104 + 8 * Math.sin(th * 3), cz + Math.sin(th) * R, -th - PI / 2, .05 * Math.cos(th * 3), 2.1), rotX(.22)), f: .2 + .7 * Math.sin(t * 3.1) }; };
+        rotors.push({ g: car, x: 500, y: 104, z: 300, cap: 0, v: 0, a: { vivant: (x, t) => pose(t).m } });
+        [-1, 1].forEach(sd => { const w = aileM(sd); rotors.push({ g: w, x: 500, y: 104, z: 300, cap: 0, v: 0, a: { vivant: (x, t) => { const P = pose(t); return mul(P.m, mul(modele(0, 3.6, sd * .7, 0, 0, 1), rotX(-sd * P.f))); } } }); }); }
+
+      // --- LA TOUR DU LAC : un éperon de roche dressé dans le petit lac, sa tour à flèche, et le pont couvert qui la relie au plateau
+      { const x = 352, z = 452, y1 = YT; rocher(g, x, -.5, z, 11, y1 * .55, roc, r3); rocher(g, x + 2, y1 * .4, z - 1, 8, y1 * .45, roc2, r3); g.cylindre(x, y1 * .6, z, 7.2, y1 * .4, 9, mel(roc, roc2, .5));
+        g.cylindre(x, y1 - .3, z, 7.6, .6, 9, pierre2); tour(g, x, y1, z, 5, 34, 20, { dr: CJ[2], lum: .8, dec: 2 }); occupe.push([x, z, 16]);
+        const zA = PCZ + PHZ * Math.pow(1 - Math.pow(Math.abs(x - PCX) / PHX, 3.4), 1 / 3.4) - 4, L = z - 6 - zA, zm = (zA + z - 6) / 2;   // du bord du plateau jusqu'à la tour
+        g.boite(x, YT - .2, zm, 5.2, 1, L, pierre2); [-1, 1].forEach(sd => { g.boite(x + sd * 2.4, YT + 2.5, zm, .4, 3.4, L, pierre); for (let q = 0; q < Math.floor(L / 3); q++) fen(g.ov(), x + sd * 2.62, YT + 3, zA + 1.5 + q * 3, sd, 0, .9, 1.8, false); });
+        pignon(g, x, YT + 5.9, zm, 5.6, L, 2.6, toit2, pierre, 1); for (let q = 0; q < 3; q++) { const zz = zA + (q + .5) * L / 3; g.boite(x, YT * .25, zz, 3, YT * .75 + 1.2, 3, q % 2 ? pierre2 : pierre); }
+      }
+
+      // --- deux AIGUILLES très hautes au nord du donjon, et des bannières aux couleurs des quatre maisons sur la face sud du donjon
+      [[430, 270, 4.2, 80, 32, CJ[0]], [540, 264, 4.4, 86, 34, CJ[3]]].forEach(([x, z, rr, h, hc, dr]) => { tour(g, x, YT, z, rr, h, hc, { dr, lum: .6, dec: x / 7 }); occupe.push([x, z, rr + 6]); });
+      { const o = g.ov(); for (let k = 0; k < 4; k++) { const x = 482 - 7.5 + k * 5, zz = 298 + 12.14, [c1, c2] = MAISONS[k];
+        o.quad([x - 1.7, YT + 38, zz], [x + 1.7, YT + 38, zz], [x + 1.7, YT + 56, zz], [x - 1.7, YT + 56, zz], c1, .08, [0, 0, 1]); o.tri([x - 1.7, YT + 38, zz], [x + 1.7, YT + 38, zz], [x, YT + 35, zz], c1, .08, [0, 0, 1]);
+        o.quad([x - .5, YT + 46, zz + .03], [x + .5, YT + 46, zz + .03], [x + .5, YT + 53, zz + .03], [x - .5, YT + 53, zz + .03], c2, .2, [0, 0, 1]); g.boite(x, YT + 56, zz + .3, 4, .3, .3, or); } }
+
+      // --- LE SENTIER DE PIERRE qui monte dans les collines du nord, ses lanternes, et le belvédère à colonnes tout en haut
+      { const S = SENT, dalle = (x, z, cap, c) => { const cs = Math.cos(cap), sn = Math.sin(cap), P = (a, b) => { const px = x + a * cs + b * sn, pz = z - a * sn + b * cs; return [px, hS(px, pz) + .1, pz]; };
+          so.quad(P(-.55, -.8), P(.55, -.8), P(.55, .8), P(-.55, .8), c, 0, [0, 1, 0]); };
+        for (let i = 0; i < S.length - 1; i++) { const a = S[i], b = S[i + 1], L = Math.hypot(b[0] - a[0], b[1] - a[1]), cap = Math.atan2(-(b[1] - a[1]), b[0] - a[0]), nx = -(b[1] - a[1]) / L, nz = (b[0] - a[0]) / L;
+          for (let q = 0; q < L / 1.3; q++) { const f = q * 1.3 / L, x = a[0] + (b[0] - a[0]) * f, z = a[1] + (b[1] - a[1]) * f; (LG ? [0] : [-.65, .65]).forEach(o => dalle(x + nx * (o + (r3() - .5) * .2), z + nz * (o + (r3() - .5) * .2), cap + (r3() - .5) * .3, mel(v("#D2CAB6"), v("#B4AA96"), r3()))); }
+          if (i % 4 === 2) { const x = a[0] + nx * 2.4, z = a[1] + nz * 2.4, y = hS(x, z); g.boite(x, y, z, .25, 3.2, .25, v("#20242B")); g.boite(x, y + 3.2, z, .8, 1, .8, or2, .6); } }
+        const [bx, bz] = S[S.length - 1], by = hS(bx, bz); g.cylindre(bx, by - .5, bz, 7, 1.4, 12, pierre2); for (let q = 0; q < 8; q++) { const a = q / 8 * TAU; g.cylindre(bx + Math.cos(a) * 5.6, by + .9, bz + Math.sin(a) * 5.6, .45, 6, 6, pierre3); }
+        g.cylindre(bx, by + 6.9, bz, 6.4, .8, 12, pierre2); g.boule(bx, by + 7.6, bz, 5.6, v("#5A86A8"), 0, .55); g.boule(bx, by + 10.6, bz, .5, or, .4);
+        banc(bx - 2, by + .9, bz + 1.5, .6); g.poser(eleve(2, false, true), bx + 1.5, by + .9, bz - 1, 2.2); }
+
+      // --- les reflets du château et des tours dans le petit lac (traits clairs sous la falaise), des cygnes blancs sur le grand lac
+      { for (let k = 0; k < (LG ? 16 : 36); k++) { const x = 300 + r3() * 380, z = 446 + r3() * 26, w = .6 + r3() * 1.6; so.quad([x - w, YE + .07, z], [x + w, YE + .07, z], [x + w, YE + .07, z + .35], [x - w, YE + .07, z + .35], v("#E8F2FA"), .5, [0, 1, 0]); }
+        for (let q = 0; q < 5; q++) { const c = new Geo(), bl = v("#FAFAF6"); c.boule(0, .5, 0, .9, bl, .05, .55); c.boule(-.7, .75, 0, .5, bl, .05, .7); branche(c, [.6, .6, 0], [.9, 2.1, 0], .2, .16, bl, .05); c.boule(1.15, 2.2, 0, .3, bl, .05); c.boite(1.5, 2.15, 0, .4, .12, .14, v("#E86A1A"));
+          rotors.push({ g: c, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { p: 90 + q * 11, ph: q / 5, chemin: reech(cercle(300 + q * 70, YE - .1, 640 + (q % 2) * 30, 14 + q * 2, 16, q), 1.5), oriente: true, bob: [.06, 1.3] } }); } } }
       sol.poser(g, 0, 0, 0, 0, 1); }
     // ================= 10. LES LANTERNES au bord de la piste =================
     { const ps = T.a(-30, -(DEMI + 22)), pt2 = T.a(-20, DEMI + 18), pas = Math.round(40 / T.ds);
@@ -9289,7 +9522,7 @@
         const C4 = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]].map(([a, b], k) => { const [x, z] = XZ(U0 + a * PU, W0 + b * PW); return [x, h[k], z]; });
         const n = norme(croix(sous(C4[2], C4[0]), sous(C4[1], C4[3]))), nn = n[1] < 0 ? fois(n, -1) : n, l2 = point(nn, sl), raide = 1 - nn[1];
         const col = l2 > .5 ? mel(MI, CLAIR, clamp((l2 - .5) * 2.6, 0, 1)) : l2 > .25 ? mel(FONCE, MI, (l2 - .25) * 4) : mel(POURPRE, FONCE, clamp(l2 * 4, 0, 1));
-        g.quad(C4[0], C4[1], C4[2], C4[3], mel(col, POURPRE, clamp(raide * 1.4 - .3, 0, .45)), 0, [0, 1, 0]); }
+        g.quad(C4[0], C4[1], C4[2], C4[3], mel(col, POURPRE, clamp(raide * 1.4 - .3, 0, .45)), SOL, [0, 1, 0]); }   // SOL : crêtes, creux, roche et épice de la recette waouh
       sol.poser(g, 0, 0, 0, 0, 1); }
 
     // ================= 1. LA MER DE DUNES : grands croissants sculptés par le vent d'ouest =================
@@ -9310,9 +9543,14 @@
       rows.forEach((R, i) => { rows[i] = R.pts(R.k).map(p => [p[0], hS(p[0], p[1]) + (p[2] > .01 ? p[2] : -.25), p[1]]); });   // posées sur le relief
       const tons = [SABLE, SABLE2, SABLE3, AVAL, AVAL2], var_ = .9 + r() * .14;
       for (let i = 0; i < n; i++) for (let b = 0; b < 5; b++) { const a = rows[i][b], bb = rows[i + 1][b], cc = rows[i + 1][b + 1], d = rows[i][b + 1];
-        if (a[1] < 0 && bb[1] < 0 && cc[1] < 0 && d[1] < 0) continue; duneG.quad(a, bb, cc, d, fois(tons[b], var_), 0, [0, 1, 0]); }
+        if (a[1] < 0 && bb[1] < 0 && cc[1] < 0 && d[1] < 0) continue; duneG.quad(a, bb, cc, d, fois(tons[b], var_), SOL, [0, 1, 0]); }
       for (let i = 0; i < n; i++) { const a = rows[i][3], b = rows[i + 1][3], a2 = rows[i][2], b2 = rows[i + 1][2]; if (a[1] < .5 && b[1] < .5) continue;
         const m = (p, q) => mel(p, q, .16); duneO.quad(m(a, a2), m(b, b2), b, a, CRETE, .35, [0, 1, 0]); }
+      // recette waouh : le vent d'ouest arrache des voiles de sable aux plus hautes crêtes (transparents, ils s'effacent sous le vent ; jamais près du trésor)
+      if (ctx.voile && H > 20) for (let i = 3; i < n - 3; i += 3) { const a = rows[i][3], b = rows[i + 1][3]; if (a[1] < 12 || Math.hypot(a[0] - 436, a[2] - 475) < 90) continue;
+        const hz = Math.sin(i * 12.99 + a[0] * .37) * 437.5, Lp = 40 + (hz - Math.floor(hz)) * 50, col = [1, .86, .64], P = (p, k) => [p[0] + Lp * k, p[1] + 1 + k * (8 + Lp * .08) - k * k * 4, p[2] + Lp * k * .18];
+        for (let k = 0; k < 4; k++) { const k0 = k / 4, k1 = (k + 1) / 4, al = q => [col[0], col[1], col[2], .2 * Math.pow(1 - q, 1.6)];
+          ctx.voile.quad(P(a, k0), P(b, k0), P(b, k1), P(a, k1), al(k0), al(k0), al(k1), al(k1)); } }
     };
     [[250, -260, 320, 40, -.15, 70], [600, -250, 300, 44, .1, 70], [-260, 120, 300, 46, -.2, 60], [-280, 420, 300, 42, .1, 60], [-180, -160, 260, 40, 0, 60],
      [930, 600, 300, 40, .15, 70], [760, 700, 320, 30, -.1, 70], [330, 720, 340, 26, .1, 70], [40, 700, 280, 26, -.2, 60], [-180, 700, 300, 26, 0, 60],
@@ -9811,6 +10049,12 @@
           const dx = x.p[0] - av[0], dz = x.p[2] - av[2]; if (Math.hypot(dx, dz) > .02) { const cc = Math.atan2(-dz, dx); x.cp = x.cp === undefined ? cc : x.cp + Math.atan2(Math.sin(cc - x.cp), Math.cos(cc - x.cp)) * Math.min(1, dt * 3); }
           return modele(x.p[0], x.p[1], x.p[2], x.cp || 0, Math.sin(t * 1.7) * .05, 1); } } }); } }
     // le désert est plein : on interdit les petits décors génériques (pyramides, rochers posés au hasard)
+    // ================= 26. RECETTE WAOUH : ombres de contact sous les grandes scènes (elles « pèsent » sur le sable), décalées à l'opposé du soleil couchant =================
+    // [x, z, demi-longueur, demi-largeur, cap, force] ; jamais à moins de 15 m de la cachette du trésor de janvier (436, 475 : mâchoire du squelette)
+    if (ctx.voile) { const sl = norme(A.soleil || [-.7, .3, .5]), TRES = [436, 475];
+      [[500, 212, 36, 36, 0, .5], [QUEUE[0], QUEUE[1], 42, 22, 0, .4], [CIT[0], CIT[1], 84, 66, -.25, .55], [PAL[0], PAL[1], 78, 56, .15, .45], [ARCHE[0], ARCHE[1], 46, 30, 0, .35], [EPAVE[0], EPAVE[1], 70, 34, .35, .4], [RECOLTE[0], RECOLTE[1], 40, 30, .4, .45]].forEach(([x, z, rx, rz, cap, f]) => {
+        const ox = x - sl[0] * rx * .22, oz = z - sl[2] * rz * .22; if (Math.hypot(ox - TRES[0], oz - TRES[1]) < Math.max(rx, rz) + 15) return;
+        ctx.voile.ombre(ox, hS(ox, oz) + .3, oz, rx, rz, f, cap, [.16, .04, .12]); }); }
     for (let x = -360; x <= 1220; x += 70) for (let z = -360; z <= 940; z += 70) occupe.push([x, z, 52]);
     return occupe;
   }
@@ -11503,17 +11747,17 @@
 
   /* ---------- Construction de la scène statique ---------- */
   function construire(def, T, A, Z) {
-    const sol = new Geo(), piste = new Geo(), eau = new Geo(), lum = [];
+    const sol = new Geo(), piste = new Geo(), eau = new Geo(), lum = [], voile = new Voile(), lueur = new Voile(), rayons = new Voile();   // recette waouh : couches transparentes
     const teinte = teinteur(A), r = alea(hashTxt(def.decor + def.pts.length)), D = DECORS[def.decor] || DECORS.parc, N = T.N, rue = !!def.rue;
     const tint = c => teinte ? teinte(c) : c;
     // sol : un grand plan, puis des taches de couleur pour la matière
     const ext = Math.max(T.rx, T.rz) * 3.2 + 600, cx = T.cx, cz = T.cz;
-    sol.quad([cx - ext, 0, cz - ext], [cx + ext, 0, cz - ext], [cx + ext, 0, cz + ext], [cx - ext, 0, cz + ext], A.sol, 0, [0, 1, 0]);
+    sol.quad([cx - ext, 0, cz - ext], [cx + ext, 0, cz - ext], [cx + ext, 0, cz + ext], [cx - ext, 0, cz + ext], A.sol, SOL, [0, 1, 0]);   // SOL : zones de la recette waouh (sinon inchangé)
     const so = sol.ov();
     for (let i = 0; i < 110; i++) { const x = cx + (r() - .5) * (T.rx * 2 + 500), z = cz + (r() - .5) * (T.rz * 2 + 500), s = 8 + r() * 26, a = r() * TAU, c = mel(A.sol, r() > .5 ? [1, 1, .9] : [0, 0, 0], .05 + r() * .06);
       if (T.dist(x, z) < DEMI + s) continue;
       const P = [0, 1, 2, 3, 4].map(k => [x + Math.cos(a + k * 1.26) * s * (.6 + r() * .4), .02, z + Math.sin(a + k * 1.26) * s * (.6 + r() * .4)]);
-      for (let k = 1; k < 4; k++) so.tri(P[0], P[k], P[k + 1], c, 0, [0, 1, 0]); }
+      for (let k = 1; k < 4; k++) so.tri(P[0], P[k], P[k + 1], c, SOL, [0, 1, 0]); }
     if (A.synth) for (let i = -40; i <= 40; i++) { const o = i * 30; so.quad([cx + o - .3, .05, cz - ext], [cx + o + .3, .05, cz - ext], [cx + o + .3, .05, cz + ext], [cx + o - .3, .05, cz + ext], hex("#B03AFF"), 1, [0, 1, 0]); so.quad([cx - ext, .05, cz + o - .3], [cx + ext, .05, cz + o - .3], [cx + ext, .05, cz + o + .3], [cx - ext, .05, cz + o + .3], hex("#B03AFF"), 1, [0, 1, 0]); }
     // eau
     (def.eau || []).forEach(poly => { const P = poly.map(p => [p[0] * ECH, .25, p[1] * ECH]); for (let k = 1; k < P.length - 1; k++) eau.tri(P[0], P[k], P[k + 1], A.eau || hex("#2F6E9A"), A.nuit ? .1 : .05, [0, 1, 0]); });
@@ -11529,7 +11773,7 @@
     const vib = i => Math.abs(E[i].k) > .016;
     for (let i = 0; i < N; i++) {
       const a = E[i], b = E[(i + 1) % N], up = [0, 1, 0];
-      piste.quad(P(a, DEMI), P(b, DEMI), P(b, -DEMI), P(a, -DEMI), Math.floor(i / 6) % 2 ? asph : asph2, nuitPiste, up);
+      piste.quad(P(a, DEMI), P(b, DEMI), P(b, -DEMI), P(a, -DEMI), Math.floor(i / 6) % 2 ? asph : asph2, D.terre && !nuitPiste ? SOL_PISTE : nuitPiste, up);   // terre : grain de la recette waouh
       // lignes blanches de bord
       if (D.terre) { const orn = mel(asph, [0, 0, 0], .28); [-2.6, 2.6].forEach(o => mk.quad(P(a, o - .45, .02), P(b, o - .45, .02), P(b, o + .45, .02), P(a, o + .45, .02), orn, 0, up)); }
       else {
@@ -11589,7 +11833,7 @@
     // les monuments d'abord : les autres décors s'écartent de la place qu'ils occupent
     const occupe = []; (def.reperes || []).forEach(R => { const o = repere(sol, R, T, A, teinte, [[ps.x, ps.z, 70], [pt2.x, pt2.z, 75]], lum); if (o) occupe.push(...o); });
     const rotors = [];
-    if (def.peint && PEINTS[def.peint] && PEINTS[def.peint].deco) occupe.push(...PEINTS[def.peint].deco({ T, A, sol, eau, lum, rotors, pistePose: (g, x, z, cap) => sol.poser(g, x, 0, z, cap, 1) }));
+    if (def.peint && PEINTS[def.peint] && PEINTS[def.peint].deco) occupe.push(...PEINTS[def.peint].deco({ T, A, sol, eau, lum, rotors, voile, lueur, pistePose: (g, x, z, cap) => sol.poser(g, x, 0, z, cap, 1) }));
     const pris = (x, z) => occupe.some(o => Math.hypot(x - o[0], z - o[1]) < o[2]);
     // plateau de jeu : de grandes cases sur tout le sol
     if (def.damier) for (let a = -40; a <= 40; a++) for (let b = -40; b <= 40; b++) { if ((a + b) % 2) continue; const x = cx + a * 26, z = cz + b * 26; if (Math.abs(x - cx) > ext * .7 || Math.abs(z - cz) > ext * .7 || T.dist(x + 13, z + 13) < DEMI + 26) continue;
@@ -11626,7 +11870,9 @@
       const pp = P(e, o), g = objet("lampadaire", r, A); sol.poser(g, pp[0], pp[1] - .1, pp[2], Math.atan2(e.nz * -sd, e.nx * -sd) * -1 + 0, 1);
       if (A.nuit) lum.push([pp[0] - e.nx * sd * 1.2, pp[1] + 8.8, pp[2] - e.nz * sd * 1.2, 1, .9, .7, 13]);
     }
-    return { sol, piste, eau, lum, stands: ps, portique: p0, rotors };
+    // recette waouh : les rayons du soleil (voir WAOUH)
+    const W = def.waouh || WAOUH[def.decor]; if (W && W.rayons) { const R = Object.assign({}, W.rayons); if (leger()) R.n = Math.ceil((R.n || 10) / 2); rayonsSoleil(rayons, T, A, R); }
+    return { sol, piste, eau, lum, stands: ps, portique: p0, rotors, voile, lueur, rayons };
   }
 
   /* ---------- Voiture (v16.35) : une vraie petite monoplace aux couleurs du pilote ----------
@@ -11914,25 +12160,150 @@
     return g;
   }
 
+  /* ---------- RECETTE WAOUH (25/11/2026, d'abord sur Dune) ----------
+     Ce qui manquait aux décors vus de haut : de grands aplats de sol tous pareils et aucune lumière d'ambiance. Tout tient ici, en un seul endroit,
+     et ne s'allume QUE pour les décors qui ont une ligne dans WAOUH : les autres circuits gardent mot pour mot le shader d'avant (fsScene(false), fsCiel(false)) ;
+     les programmes « waouh » ne sont compilés qu'au premier circuit qui en a besoin. Si le téléphone peine malgré la baisse de résolution, sols par zones
+     et rayons s'éteignent tout seuls (I.allege) ; brume et lumière restent.
+     POUR L'APPLIQUER À UN AUTRE CIRCUIT (3 étapes) :
+       1. ajouter une ligne WAOUH[clé du décor] (def.decor : « titans », « lucioles »…) ; un décor partagé par deux circuits (« solstice » : suzuka et arene2028)
+          prend la même recette, sinon mettre waouh: {…} directement dans TRACES[circuit] ;
+       2. dans son décor sur mesure, marquer ses grands sols avec SOL (couleur lumineuse -1, ou marquerSol(g)) : le grand plan de sol et ses taches le sont déjà ;
+       3. ajouter ses ombres de contact (ctx.voile.ombre) et, s'il a un trésor, sa cachette dans rayons.evite ; puis captures avant / après et outils-tests/twaouh.js.
+     Les blocs (tous facultatifs) :
+       brume   : { col, dens, haut, halo }   brume de profondeur qui reste au ras du sol (dens = épaisseur au sol par mètre, haut = hauteur en m où elle
+                                            a perdu 63 %, halo = lueur du soleil à travers la brume quand on regarde vers lui). Le ciel prend la même couleur à l'horizon.
+       ciel, rebond : "#rrggbb"             lumière d'ambiance colorée : ce que reçoivent les faces tournées vers le ciel / vers le sol (ombres teintées).
+       rim     : 0 à 1                      contre-jour : les silhouettes tournées vers le soleil gagnent un liseré doré.
+       etalonnage : [saturation, contraste] étalonnage « cinéma » des objets (avant la brume, qui reste douce) ; ex. [.2, .25].
+       rayons  : { n, long, larg:[haut, bas], force, col, evite:[[x, z, r]] }   rayons de soleil : des voiles de lumière additifs qui descendent du soleil
+                                            sur la piste (mode léger : moitié moins ; coupés de nuit, sous la pluie ou dans la tempête ; « réduire les animations » = fixes).
+       sol     : { echelle, haut, creux:[col, force], cretes:[col, force], roche:[col, force], taches:[col, force, seuil], grain, rides:[par m, force, angle] }
+                                            sols variés par ZONES, calculés au pixel (bruit procédural, transitions douces) : creux ombrés (bas et taches du bruit),
+                                            crêtes claires (en hauteur, faces peu pentues), roche (pentes raides), taches étirées (épice, fleurs, mousse…), grain fin,
+                                            rides (ondes du vent, sable ou eau : seulement de près, pas de moirage au loin).
+                                            Ne touche que les surfaces marquées « sol » (couleur lumineuse -1 : SOL, voir construire et marquerSol).
+     Le décor sur mesure reçoit aussi dans ctx : voile (objets transparents, ombres de contact : voile.ombre(x, y, z, rx, rz, force, cap)) et lueur (objets
+     additifs : halos, vitraux, braises). Ils sont dessinés après la scène, sans écrire la profondeur, et s'effacent dans la brume.
+     Le trésor du mois (versus/Tresors.js, côté serveur) : mettre sa cachette dans rayons.evite et ne rien poser à moins de 15 m.
+     Pistes pour la suite (non branchées, à valider avec Théo) : titans (cendres) brume grise-orangée épaisse, rayons à travers la fumée, sol cendre/roche ;
+     lucioles (Pandora) brume verte basse, rayons entre les arbres, sol mousse/fougère/terre ; egee (Odyssée) brume marine, rides sur le sable, sol sable/galets ;
+     chateau (magie) brume bleutée légère, sol herbe/pavés/fleurs ; solstice (anneau) brume dorée, sol prairie/chemins. */
+  const SOL = -1, SOL_PISTE = -2;   // SOL_PISTE : une piste de terre ne prend que le grain et les rides (pas les zones)
+  // SOL : « couleur lumineuse » des surfaces de sol : le shader y peint les zones de la recette (sans recette : rendu identique, e = max(-1, 0) = 0)
+  const WAOUH = {
+    // janvier · Dune : brume de sable chaude au loin, soleil couchant à travers la poussière, ombres violettes, sable vivant (crêtes, creux, roche, épice)
+    dunes: { brume: { col: "#F2A35C", dens: .0026, haut: 20, halo: 1.1 }, ciel: "#8068B0", rebond: "#E58A4E", rim: .5, etalonnage: [.3, .4],
+      rayons: { n: 12, long: 620, larg: [4, 34], force: .16, col: "#FFC67E", evite: [[436, 475, 15]] },   // trésor de janvier (krys dans la mâchoire du squelette)
+      sol: { echelle: 75, haut: 34, creux: ["#8E4E54", .5], cretes: ["#FFE4B0", .55], roche: ["#7E3E2C", .6], taches: ["#D9692A", .45, .8], grain: .24, rides: [.45, .09, .35] } }
+  };
+  /** marque une géométrie (ou ses sommets à partir de i0) comme du sol : le shader y peindra les zones de la recette */
+  function marquerSol(g, i0) { for (let i = (i0 || 0) + 9; i < g.d.length; i += 10) g.d[i] = SOL; }
+  /** objets transparents ou additifs du décor : position + couleur rgba par sommet (7 nombres, comme les effets des voitures) */
+  class Voile {
+    constructor() { this.d = []; }
+    get n() { return this.d.length / 7; }
+    tri(a, b, c, ca, cb, cc) { [[a, ca], [b, cb || ca], [c, cc || ca]].forEach(([p, k]) => this.d.push(p[0], p[1], p[2], k[0], k[1], k[2], k[3])); }
+    quad(a, b, c, d, ca, cb, cc, cd) { this.tri(a, b, c, ca, cb, cc); this.tri(a, c, d, ca, cc, cd || ca); }
+    /** ombre de contact douce sous un grand objet : cœur sombre, bord qui s'efface (ellipse rx × rz, tournée de cap) */
+    ombre(x, y, z, rx, rz, force, cap, col) {
+      const c = Math.cos(cap || 0), s = Math.sin(cap || 0), k = col || [.1, .03, .08], P = (a, r) => { const u = Math.cos(a) * rx * r, w = Math.sin(a) * rz * r; return [x + u * c + w * s, y, z - u * s + w * c]; };
+      const C0 = [k[0], k[1], k[2], force], C1 = [k[0], k[1], k[2], force * .7], C2 = [k[0], k[1], k[2], 0];
+      for (let j = 0; j < 20; j++) { const a0 = j / 20 * TAU, a1 = (j + 1) / 20 * TAU; this.tri([x, y, z], P(a0, .55), P(a1, .55), C0, C1, C1); this.quad(P(a0, .55), P(a0, 1), P(a1, 1), P(a1, .55), C1, C2, C2, C1); }
+    }
+  }
+  /** rayons de soleil : voiles additifs en croix, du ciel (côté soleil) jusqu'au sol ; brillants en haut, effacés au sol et sur les bords */
+  function rayonsSoleil(g, T, A, R) {
+    const s = norme(A.soleil), r = alea(4242), col = R.col ? hex(R.col) : mel(A.sCol, [1, 1, 1], .2), n = R.n || 10, Lg = R.long || 500, w0 = (R.larg || [4, 30])[0], w1 = (R.larg || [4, 30])[1];
+    const p1 = norme(croix(s, [0, 1, 0])), p2 = norme(croix(s, p1)), loin = (Q, H) => (R.evite || []).every(([x, z, rr]) => {   // distance au segment Q → H (en plan) > rayon gardé + largeur
+      const dx = H[0] - Q[0], dz = H[2] - Q[2], t = clamp(((x - Q[0]) * dx + (z - Q[2]) * dz) / (dx * dx + dz * dz || 1), 0, 1); return Math.hypot(x - Q[0] - dx * t, z - Q[2] - dz * t) > rr + w1; });
+    for (let i = 0, essais = 0; i < n && essais < n * 20; essais++) {
+      const a = r() * TAU, d = Math.sqrt(r()), Q = [T.cx + Math.cos(a) * d * T.rx * 1.15, 0, T.cz + Math.sin(a) * d * T.rz * 1.15], L = Lg * (.75 + r() * .5), H = [Q[0] + s[0] * L, Q[1] + s[1] * L, Q[2] + s[2] * L];
+      if (!loin(Q, H)) continue; i++;
+      const f = .55 + r() * .45, larg = .7 + r() * .6;
+      [p1, p2].forEach(p => { for (let k = 0; k < 6; k++) {
+        const t0 = k / 6, t1 = (k + 1) / 6, al = t => f * Math.pow(Math.sin(PI * Math.min(1, t * 1.15)), .8) * (1 - .55 * t), w = t => (w0 + (w1 - w0) * t) * larg;
+        const P = (t, o) => [H[0] + (Q[0] - H[0]) * t + p[0] * o, H[1] + (Q[1] - H[1]) * t + p[1] * o, H[2] + (Q[2] - H[2]) * t + p[2] * o];
+        const c = t => [col[0], col[1], col[2], al(t)], z = [col[0], col[1], col[2], 0];
+        g.quad(P(t0, -w(t0)), P(t1, -w(t1)), P(t1, 0), P(t0, 0), z, z, c(t1), c(t0)); g.quad(P(t0, 0), P(t1, 0), P(t1, w(t1)), P(t0, w(t0)), c(t0), c(t1), z, z); } });
+    }
+  }
+  /** réglages de la recette pour cette course : météo (tempête, pluie, nuit) et mode léger ; null = pas de recette (rendu d'avant) */
+  function recetteWaouh(def, A, LGR) {
+    const W = def.waouh || WAOUH[def.decor]; if (!W) return null;
+    const nuit = A.nuit > .5, gris = !!(A.pluie || A.sable), R = { W };
+    if (W.brume) { const b = W.brume; R.brume = [...(A.sable ? mel(hex(b.col), A.brouillard, .6) : A.pluie ? mel(hex(b.col), A.brouillard, .7) : hex(b.col)), b.dens * (A.sable ? 2.2 + A.sable : gris ? 1.6 : 1)];
+      R.brumeK = 1 / (b.haut || 30); R.halo = (b.halo || 0) * (gris ? .25 : nuit ? .3 : 1); }
+    if (W.ciel) R.ciel = mel(hex(W.ciel), A.haut, gris ? .6 : .15); if (W.rebond) R.rebond = mel(hex(W.rebond), A.sol, gris ? .6 : .1);
+    R.rim = (W.rim || 0) * (gris ? .2 : nuit ? .4 : 1);
+    if (W.etalonnage) R.grade = [W.etalonnage[0] * (gris ? .3 : 1), W.etalonnage[1] * (gris ? .5 : 1)];
+    R.rayons = W.rayons && !nuit && !gris ? W.rayons.force * (LGR ? .85 : 1) : 0;
+    if (W.sol) { const s = W.sol, z = x => x ? [...hex(x[0]), x[1]] : [0, 0, 0, 0]; const ri = s.rides || [0, 0, 0];
+      R.sol = { A: z(s.creux), B: z(s.cretes), C: z(s.roche), D: z(s.taches), P: [s.echelle || 70, s.haut || 30, s.taches ? s.taches[2] : 2, s.grain || 0], R: [ri[0], LGR ? 0 : ri[1], Math.cos(ri[2]), Math.sin(ri[2])] }; }   // mode léger : pas de rides
+    return R;
+  }
+  /** GLSL partagé : brume de profondeur au ras du sol (intégrale exacte d'une densité qui décroît avec la hauteur, sans débordement en mediump) */
+  const GL_BRUME = "uniform vec4 uBrH;uniform float uBrK;" +
+    "float brumeH(vec3 w,vec3 c){if(uBrH.a<=0.)return 0.;float k=max(uBrK,1e-4),yc=max(c.y,0.),yp=max(w.y,0.),dy=yp-yc;" +
+    "float m=abs(dy)>.5?(exp(-k*yc)-exp(-k*yp))/(k*dy):exp(-k*yp);return clamp(1.-exp(-uBrH.a*length(w-c)*m),0.,1.);}";
+  /** GLSL : sols par zones. Le bruit vient d'une petite texture calculée une fois (texBruit) : 2 lectures par pixel, bien moins cher qu'un bruit calculé
+      (r = grandes taches, g = taches étirées par le vent, b = grain fin, a = déformation des rides) ; les mipmaps évitent le scintillement au loin. */
+  const GL_SOL = "uniform vec4 uSolA;uniform vec4 uSolB;uniform vec4 uSolC;uniform vec4 uSolD;uniform vec4 uSolP;uniform vec4 uSolR;uniform sampler2D uBruit;" +
+    "vec3 sol(vec3 c,vec3 w,vec3 n,float z){vec4 N=texture2D(uBruit,w.xz/(uSolP.x*6.));float g=N.r,pe=clamp((1.-n.y)*2.6,0.,1.),dc=length(w-uCam);" +
+    "if(z>0.){float h=clamp(w.y/uSolP.y,0.,1.);" +
+    "c=mix(c,uSolA.rgb,uSolA.a*(1.-smoothstep(.04,.5,h))*smoothstep(.38,.72,g));" +
+    "c=mix(c,uSolB.rgb,uSolB.a*smoothstep(.42,.95,h+(g-.5)*.4)*(1.-pe));" +
+    "c=mix(c,uSolC.rgb,uSolC.a*smoothstep(.45,.8,pe+(g-.5)*.7));" +
+    "c=mix(c,uSolD.rgb,uSolD.a*smoothstep(uSolP.z,uSolP.z+.1,N.g)*(1.-pe));}" +
+    "float f=texture2D(uBruit,w.xz*.0061).b;" +
+    "if(uSolR.y>0.&&dc<240.)c*=1.+uSolR.y*sin(dot(w.xz,uSolR.zw)*uSolR.x*6.2832+N.a*30.)*(1.-pe)*(.55+.45*z)*(1.-smoothstep(50.,240.,dc));" +
+    "return c*(1.-uSolP.w*.5+uSolP.w*f);}";
+  /** texture de bruit répétable 128 × 128 (valeur lissée, plusieurs octaves), calculée une fois par contexte WebGL */
+  function texBruit(gl) {
+    const N = 128, D = new Uint8Array(N * N * 4), r = alea(9157);
+    const grille = P => { const G = []; for (let i = 0; i < P * P; i++) G.push(r()); return G; };
+    const vn = (G, P, Q, x, y) => { const X = x * P / N, Y = y * Q / N, i = Math.floor(X), j = Math.floor(Y), fx = X - i, fy = Y - j, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy), at = (a, b) => G[((b % Q) * P) + (a % P)];
+      return lisse(lisse(at(i, j), at(i + 1, j), sx), lisse(at(i, j + 1), at(i + 1, j + 1), sx), sy); };
+    const oct = L => { const Gs = L.map(([P, Q]) => grille(Math.max(P, Q))); return (x, y) => L.reduce((s, [P, Q, k], o) => s + k * vn(Gs[o], P, Q, x, y), 0); };   // grille carrée assez grande pour P × Q
+    const R = oct([[4, 4, .55], [8, 8, .3], [16, 16, .15]]), Gc = oct([[2, 6, .7], [4, 12, .3]]), B = oct([[16, 16, .45], [32, 32, .35], [64, 64, .2]]), Aa = oct([[8, 8, .6], [16, 16, .4]]);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const k = (y * N + x) * 4; D[k] = R(x, y) * 255; D[k + 1] = Gc(x, y) * 255; D[k + 2] = B(x, y) * 255; D[k + 3] = Aa(x, y) * 255; }
+    const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, N, N, 0, gl.RGBA, gl.UNSIGNED_BYTE, D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.generateMipmap(gl.TEXTURE_2D);
+    return t;
+  }
+
   /* ---------- WebGL ---------- */
   const VS = "attribute vec3 aP;attribute vec3 aN;attribute vec4 aC;uniform mat4 uPV;uniform mat4 uM;varying vec3 vN;varying vec4 vC;varying vec3 vW;void main(){vec4 w=uM*vec4(aP,1.);vW=w.xyz;vN=(uM*vec4(aN,0.)).xyz;vC=aC;gl_Position=uPV*w;}";
-  const FS = "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nvarying vec3 vN;varying vec4 vC;varying vec3 vW;uniform vec3 uSun;uniform vec3 uSunC;uniform vec3 uSky;uniform vec3 uGnd;uniform float uAmb;uniform vec3 uFog;uniform float uDens;uniform vec3 uCam;uniform float uSpec;uniform float uFlash;uniform vec4 uTint;uniform float uT;uniform float uEau;" +
+  /** shader de la scène : w = variante « recette waouh » (sols par zones, brume au ras du sol, contre-jour, étalonnage). Sans w : exactement le shader d'avant,
+      pour que les autres circuits ne paient rien (le programme waouh n'est compilé que s'il sert, voir programmeWaouh). */
+  const fsScene = w => "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nvarying vec3 vN;varying vec4 vC;varying vec3 vW;uniform vec3 uSun;uniform vec3 uSunC;uniform vec3 uSky;uniform vec3 uGnd;uniform float uAmb;uniform vec3 uFog;uniform float uDens;uniform vec3 uCam;uniform float uSpec;uniform float uFlash;uniform vec4 uTint;uniform float uT;uniform float uEau;" +
+    (w ? "uniform float uRim;uniform float uHalo;uniform vec2 uGrade;" + GL_BRUME + GL_SOL : "") +
     "void main(){vec3 n=normalize(vN);if(uEau>0.){n=normalize(n+vec3(sin(vW.x*.15+uT*1.3)*.06,0.,cos(vW.z*.13+uT*1.1)*.06));}" +
-    "float d=dot(n,uSun);float dif=max(d,0.)*.85+abs(d)*.15;vec3 hemi=mix(uGnd,uSky,n.y*.5+.5);vec3 base=vC.rgb*uTint.rgb;" +
+    "float d=dot(n,uSun);float dif=max(d,0.)*.85+abs(d)*.15;vec3 hemi=mix(uGnd,uSky,n.y*.5+.5);vec3 base=vC.rgb*uTint.rgb;" + (w ? "if(vC.a<-.5&&uSolP.x>0.)base=sol(base,vW,n,vC.a<-1.5?0.:1.);" : "") +
     "vec3 col=base*(hemi*uAmb+uSunC*dif);vec3 v=normalize(uCam-vW);vec3 h=normalize(uSun+v);col+=pow(max(dot(n,h),0.),48.)*uSpec*uSunC*.9;" +
+    (w ? "float rf=1.-max(dot(n,v),0.),rs=max(dot(-v,uSun),0.);col+=uSunC*base*uRim*2.*rf*rf*rf*rs*rs*(1.-.7*abs(n.y));" : "") +
     "if(uSpec>0.){float f=pow(1.-max(dot(n,v),0.),3.);col=mix(col,uSky*.9,f*uSpec*.5);}" +
     "float e=max(vC.a,uTint.a);col=mix(col,base*1.25,e);col+=uFlash*base*.5;" +
-    "float dist=length(vW-uCam);float fo=1.-exp(-dist*uDens);gl_FragColor=vec4(mix(col,uFog,clamp(fo,0.,1.)),1.);}";
+    (w ? "float l=dot(col,vec3(.299,.587,.114));col=max(mix(vec3(l),col,1.+uGrade.x),0.);col=mix(col,col*col*(3.-2.*col),uGrade.y);" : "") +
+    (w ? "float dist=length(vW-uCam);float fo=1.-exp(-dist*uDens);col=mix(col,uFog,clamp(fo,0.,1.));col=mix(col,uBrH.rgb+uSunC*uHalo*pow(max(dot(-v,uSun),0.),5.),brumeH(vW,uCam));gl_FragColor=vec4(col,1.);}"
+      : "float dist=length(vW-uCam);float fo=1.-exp(-dist*uDens);gl_FragColor=vec4(mix(col,uFog,clamp(fo,0.,1.)),1.);}");
+  const FS = fsScene(false);
   const VS_CIEL = "attribute vec3 aP;uniform mat4 uPV;uniform vec3 uCam;varying vec3 vD;void main(){vD=aP;gl_Position=uPV*vec4(uCam+aP*1500.,1.);gl_Position.z=gl_Position.w*.9999;}";
-  const FS_CIEL = "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nvarying vec3 vD;uniform vec3 uHaut;uniform vec3 uHor;uniform vec3 uFog;uniform vec3 uSun;uniform vec3 uSunC;uniform float uNuit;uniform float uSynth;uniform float uFlash;" +
+  const fsCiel = w => "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nvarying vec3 vD;uniform vec3 uHaut;uniform vec3 uHor;uniform vec3 uFog;uniform vec3 uSun;uniform vec3 uSunC;uniform float uNuit;uniform float uSynth;uniform float uFlash;" + (w ? "uniform vec4 uBrH;uniform float uHalo;" : "") +
     "float hs(vec3 p){return fract(sin(dot(p,vec3(12.9898,78.233,37.719)))*43758.5453);}" +
     "void main(){vec3 d=normalize(vD);float t=d.y;vec3 c=mix(uHor,uHaut,smoothstep(0.,mix(.55,.16,uSynth),t));if(t<0.)c=mix(uHor,uFog,smoothstep(0.,-.08,t));" +
-    "float s=max(dot(d,uSun),0.);c+=uSunC*(pow(s,800.)*3.+pow(s,12.)*.25)*(1.-uSynth);" +
+    "float s=max(dot(d,uSun),0.);" + (w ? "c=mix(c,uBrH.rgb+uSunC*uHalo*pow(s,5.),(1.-smoothstep(-.03,.22,t))*(uBrH.a>0.?.92:0.));c+=uSunC*uHalo*pow(s,3.)*.14;" : "") + "c+=uSunC*(pow(s,800.)*3.+pow(s,12.)*.25)*(1.-uSynth);" +
     "if(uSynth>0.){float r=acos(clamp(s,-1.,1.));if(r<.32&&t>-.01){float bande=step(.5,fract(t*38.));vec3 sc=mix(vec3(1.,.85,.3),vec3(1.,.2,.6),clamp(1.-(t+.02)/.3,0.,1.));c=mix(c,sc,t>.12||bande>.5?1.:0.);}}" +
     "if(uNuit>0.&&t>0.){vec3 q=floor(d*420.);float st=step(.9975,hs(q));c+=vec3(st)*uNuit*smoothstep(0.,.3,t)*.9;}" +
     "c+=uFlash*.6;gl_FragColor=vec4(c,1.);}";
+  const FS_CIEL = fsCiel(false);
   const VS_FX = "attribute vec3 aP;attribute vec4 aC;uniform mat4 uPV;varying vec4 vC;void main(){vC=aC;gl_Position=uPV*vec4(aP,1.);}";
   const FS_FX = "precision mediump float;varying vec4 vC;void main(){gl_FragColor=vC;}";
+  /** recette waouh : objets transparents et additifs du décor (voile, lueur, rayons), qui s'effacent dans la brume ; uK = force de la couche */
+  const VS_VOILE = "attribute vec3 aP;attribute vec4 aC;uniform mat4 uPV;uniform vec3 uCam;uniform float uDens;uniform float uK;varying vec4 vC;" + GL_BRUME +   // brume calculée par sommet : presque rien à faire par pixel
+    "void main(){float f=clamp(1.-exp(-length(aP-uCam)*uDens),0.,1.);vC=vec4(aC.rgb,aC.a*uK*(1.-f)*(1.-.85*brumeH(aP,uCam)));gl_Position=uPV*vec4(aP,1.);}";
+  const FS_VOILE = "precision mediump float;varying vec4 vC;void main(){gl_FragColor=vC;}";
   const VS_PT = "attribute vec3 aP;attribute vec4 aC;attribute float aS;uniform mat4 uPV;uniform float uH;varying vec4 vC;void main(){vC=aC;vec4 p=uPV*vec4(aP,1.);gl_Position=p;gl_PointSize=clamp(aS*uH/max(p.w,1.),1.,96.);}";
   const FS_PT = "precision mediump float;varying vec4 vC;void main(){vec2 q=gl_PointCoord-.5;float r=length(q)*2.;float a=smoothstep(1.,0.,r);gl_FragColor=vec4(vC.rgb,vC.a*a*a);}";
   const VS_PLUIE = "attribute vec4 aS;uniform mat4 uPV;uniform vec3 uCam;uniform float uT;uniform float uV;uniform float uLong;uniform float uNeige;uniform float uVent;varying float vA;" +
@@ -11960,7 +12331,7 @@
     if (!gl) throw new Error("webgl");
     const ciel = new Geo(); ciel.boule(0, 0, 0, 1, [1, 1, 1], 0, 1, true);
     const feu = new Geo(); feu.boule(0, 0, 0, .7, [1, 1, 1]);
-    return { cv, gl, PL: programme(gl, VS, FS), PC: programme(gl, VS_CIEL, FS_CIEL), PF: programme(gl, VS_FX, FS_FX), PP: programme(gl, VS_PT, FS_PT), PR: programme(gl, VS_PLUIE, FS_PLUIE),
+    return { cv, gl, PL: programme(gl, VS, FS), PC: programme(gl, VS_CIEL, FS_CIEL), PF: programme(gl, VS_FX, FS_FX), PP: programme(gl, VS_PT, FS_PT), PR: programme(gl, VS_PLUIE, FS_PLUIE), PW: programme(gl, VS_VOILE, FS_VOILE),
       BC: tampon(gl, ciel), FEU: tampon(gl, feu), roues: ROUES.map(([x, z, r, l]) => [tampon(gl, roue(r, l, 1)), tampon(gl, roue(r, l, -1))]) };
   }
   /* Scènes déjà construites, gardées en mémoire : revenir sur un mois ne recalcule rien */
@@ -11968,7 +12339,8 @@
   function sceneDe(cle, fab) {
     if (SCENES.has(cle)) { const v = SCENES.get(cle); SCENES.delete(cle); SCENES.set(cle, v); return v; }
     const S = fab(), fige = g => ({ f: new Float32Array(g.d) });
-    const v = { sol: fige(S.sol), solOv: fige(S.sol.ov()), piste: fige(S.piste), pisteOv: fige(S.piste.ov()), eau: S.eau.n ? fige(S.eau) : null, lum: S.lum, portique: S.portique, rotors: (S.rotors || []).map(o => ({ f: new Float32Array(o.g.d), x: o.x, y: o.y, z: o.z, cap: o.cap, v: o.v, a: o.a })) };
+    const v = { sol: fige(S.sol), solOv: fige(S.sol.ov()), piste: fige(S.piste), pisteOv: fige(S.piste.ov()), eau: S.eau.n ? fige(S.eau) : null, lum: S.lum, portique: S.portique, rotors: (S.rotors || []).map(o => ({ f: new Float32Array(o.g.d), x: o.x, y: o.y, z: o.z, cap: o.cap, v: o.v, a: o.a })),
+      voiles: [S.voile, S.lueur, S.rayons].map(g => g && g.d.length ? new Float32Array(g.d) : null) };
     SCENES.set(cle, v); while (SCENES.size > 2) SCENES.delete(SCENES.keys().next().value);
     return v;
   }
@@ -12009,7 +12381,7 @@
      Instance 3D
      ============================================================ */
   function monter3D(boite, o) {
-    const C = contexte(), cv = C.cv, gl = C.gl, PL = C.PL, PC = C.PC, PF = C.PF, PP = C.PP, PR = C.PR, BC = C.BC, roues = C.roues;
+    const C = contexte(), cv = C.cv, gl = C.gl, PF = C.PF, PP = C.PP, PR = C.PR, PW = C.PW, BC = C.BC, roues = C.roues;
     cv.setAttribute("role", "img"); cv.setAttribute("aria-label", o.titre || "Circuit"); cv.width = 2; cv.height = 2;
     boite.appendChild(cv);
     const def = TRACES[o.circuit] || TRACES.melbourne, T = echantillonner(def), A = ambiance(def, o.meteo, o.ambiance), Z = zones(T);
@@ -12025,6 +12397,17 @@
     if (o.effets && A.pluie) { const k = A.eclairs ? .7 : .82; A.amb *= k; A.sCol = fois(A.sCol, k); A.brouillard = mel(A.brouillard, [.46, .5, .56], .4); A.brume *= 1.5;
       if (!A.nuit) { A.haut = mel(A.haut, hex(A.eclairs ? "#262D3A" : "#5A6472"), .6); A.horizon = mel(A.horizon, hex(A.eclairs ? "#46505E" : "#9AA3AE"), .55); } }   // ciel plus gris, lumière plus basse
     if (!ANI) A.eclairs = 0;
+    const RW = recetteWaouh(def, A, LGR);   // recette waouh (null : rendu d'avant)
+    // les programmes « waouh » ne sont compilés qu'au premier circuit qui a une recette (puis gardés avec le contexte)
+    const PL = RW ? C.PLW || (C.PLW = programme(gl, VS, fsScene(true))) : C.PL, PC = RW ? C.PCW || (C.PCW = programme(gl, VS_CIEL, fsCiel(true))) : C.PC;
+    /** uniformes de la recette pour la scène éclairée (sans recette : tout à 0, rendu d'avant) */
+    function uniformesWaouh(gl, U) {
+      gl.uniform1f(U.uRim, RW ? RW.rim : 0); gl.uniform1f(U.uHalo, RW && RW.halo || 0); gl.uniform2fv(U.uGrade, RW && RW.grade || [0, 0]);
+      if (RW && RW.brume) { gl.uniform4fv(U.uBrH, RW.brume); gl.uniform1f(U.uBrK, RW.brumeK); } else gl.uniform4f(U.uBrH, 0, 0, 0, 0);
+      const Sl = RW && !I.allege && RW.sol; gl.uniform4fv(U.uSolP, Sl ? Sl.P : [0, 0, 0, 0]);
+      if (Sl) { gl.uniform4fv(U.uSolA, Sl.A); gl.uniform4fv(U.uSolB, Sl.B); gl.uniform4fv(U.uSolC, Sl.C); gl.uniform4fv(U.uSolD, Sl.D); gl.uniform4fv(U.uSolR, Sl.R); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, C.bruit || (C.bruit = texBruit(gl))); gl.uniform1i(U.uBruit, 0); }
+    }
+    const BV = (S.voiles || []).map(f => { if (!f) return null; const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, f, gl.STATIC_DRAW); return { b, n: f.length / 7 }; });
     const V = ecurieDes(o.voitures).map(v => ({ v, b: tampon(gl, voiture(v)), s: 0, voie: 0, rang: 0, rot: 0, hist: [], x: 0, y: 0, z: 0, cap: 0, vit: 0 }));
     // lumières (lampadaires, projecteurs) en sprites additifs
     const LUM = S.lum, bL = gl.createBuffer(); { const d = []; LUM.forEach(l => d.push(l[0], l[1], l[2], l[3], l[4], l[5], A.nuit ? .55 : 0, l[6] * 1.6)); gl.bindBuffer(gl.ARRAY_BUFFER, bL); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(d), gl.STATIC_DRAW); }
@@ -12118,11 +12501,13 @@
       gl.useProgram(PC.p); gl.depthMask(false);
       gl.uniformMatrix4fv(PC.U.uPV, false, PV); gl.uniform3fv(PC.U.uCam, I.cam.e); gl.uniform3fv(PC.U.uHaut, A.haut); gl.uniform3fv(PC.U.uHor, A.horizon); gl.uniform3fv(PC.U.uFog, A.brouillard);
       gl.uniform3fv(PC.U.uSun, A.soleil); gl.uniform3fv(PC.U.uSunC, A.sCol); gl.uniform1f(PC.U.uNuit, A.nuit); gl.uniform1f(PC.U.uSynth, A.synth); gl.uniform1f(PC.U.uFlash, fl);
+      if (RW) { gl.uniform4fv(PC.U.uBrH, RW.brume || [0, 0, 0, 0]); gl.uniform1f(PC.U.uHalo, RW.halo || 0); }
       gl.bindBuffer(gl.ARRAY_BUFFER, BC.b); gl.enableVertexAttribArray(PC.A.aP); gl.vertexAttribPointer(PC.A.aP, 3, gl.FLOAT, false, 40, 0); gl.drawArrays(gl.TRIANGLES, 0, BC.n);
       gl.depthMask(true);
       // scène éclairée
       gl.useProgram(PL.p); [PL.A.aP, PL.A.aN, PL.A.aC].forEach(a => gl.enableVertexAttribArray(a));
-      const U = PL.U; gl.uniformMatrix4fv(U.uPV, false, PV); gl.uniform3fv(U.uSun, A.soleil); gl.uniform3fv(U.uSunC, A.sCol); gl.uniform3fv(U.uSky, mel(A.haut, A.horizon, .5)); gl.uniform3fv(U.uGnd, mel(A.sol, [0, 0, 0], .4));
+      const U = PL.U; gl.uniformMatrix4fv(U.uPV, false, PV); gl.uniform3fv(U.uSun, A.soleil); gl.uniform3fv(U.uSunC, A.sCol); gl.uniform3fv(U.uSky, RW && RW.ciel || mel(A.haut, A.horizon, .5)); gl.uniform3fv(U.uGnd, RW && RW.rebond ? mel(RW.rebond, [0, 0, 0], .25) : mel(A.sol, [0, 0, 0], .4));
+      if (RW) uniformesWaouh(gl, U);
       gl.uniform1f(U.uAmb, A.amb + fl * .4); gl.uniform3fv(U.uFog, A.brouillard); gl.uniform1f(U.uDens, A.brume); gl.uniform3fv(U.uCam, I.cam.e); gl.uniform1f(U.uFlash, fl); gl.uniform1f(U.uT, t); gl.uniform4f(U.uTint, 1, 1, 1, 0);
       const ident = modele(0, 0, 0, 0, 0, 1);
       gl.uniformMatrix4fv(U.uM, false, ident); gl.uniform1f(U.uEau, 0);
@@ -12154,6 +12539,14 @@
       gl.uniform4f(U.uTint, 1, 1, 1, 0); let CV = null; RO.forEach(x => { const M = x.a && x.a.vivant ? x.a.vivant(x, t, CV || (CV = contexteVivant(I, VV))) : matRotor(x, t); if (!M) return; gl.uniformMatrix4fv(U.uM, false, M); lier(gl, PL, x.b); gl.drawArrays(gl.TRIANGLES, 0, x.b.n); });
       gl.uniform1f(U.uSpec, 0);
       [PL.A.aN].forEach(a => gl.disableVertexAttribArray(a));
+      // recette waouh : voile (ombres de contact, objets transparents), puis lueurs et rayons du soleil (additifs, qui respirent doucement)
+      if (BV.some(Boolean)) { gl.useProgram(PW.p); gl.uniformMatrix4fv(PW.U.uPV, false, PV); gl.uniform3fv(PW.U.uCam, I.cam.e); gl.uniform1f(PW.U.uDens, A.brume);
+        if (RW && RW.brume) { gl.uniform4fv(PW.U.uBrH, RW.brume); gl.uniform1f(PW.U.uBrK, RW.brumeK); } else gl.uniform4f(PW.U.uBrH, 0, 0, 0, 0);
+        gl.enableVertexAttribArray(PW.A.aP); gl.enableVertexAttribArray(PW.A.aC); gl.enable(gl.BLEND); gl.depthMask(false);
+        [[0, false, 1], [1, true, 1], [2, true, RW && !I.allege ? RW.rayons * (ANI ? .84 + .16 * Math.sin(t * .45) : 1) : 0]].forEach(([k, add, f]) => { const c = BV[k]; if (!c || f <= 0) return;
+          if (k === 0) { gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-3, -6); } gl.blendFunc(gl.SRC_ALPHA, add ? gl.ONE : gl.ONE_MINUS_SRC_ALPHA); gl.uniform1f(PW.U.uK, f);
+          gl.bindBuffer(gl.ARRAY_BUFFER, c.b); gl.vertexAttribPointer(PW.A.aP, 3, gl.FLOAT, false, 28, 0); gl.vertexAttribPointer(PW.A.aC, 4, gl.FLOAT, false, 28, 12); gl.drawArrays(gl.TRIANGLES, 0, c.n);
+          if (k === 0) gl.disable(gl.POLYGON_OFFSET_FILL); }); }
       // effets transparents : ombres, traînées
       gl.enable(gl.BLEND); gl.depthMask(false); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-3, -6);
       const fx = [], add = [];
@@ -12208,7 +12601,9 @@
       const calme = !I.anim && !I.tir && !I.enRoute && !I.artifice.length;
       if (calme && I.dernier && now - I.dernier < 31) { if (I.actif) raf = requestAnimationFrame(image); return; }
       const t = (now - I.t0) / 1000, dt = Math.min(.05, I.dernier ? (now - I.dernier) / 1000 : .016);
-      if (!calme && I.dernier) { I.ft = I.ft * .92 + (now - I.dernier) * .08; if (I.ft > 26 && I.q > 1) { if (++I.lents > 40) { I.q = Math.max(1, I.q - .25); I.lents = 0; I.ft = 16; redim(); } } else I.lents = 0; }
+      if (!calme && I.dernier) { I.ft = I.ft * .92 + (now - I.dernier) * .08; if (I.ft > 26 && I.q > 1) { if (++I.lents > 40) { I.q = Math.max(1, I.q - .25); I.lents = 0; I.ft = 16; redim(); } }
+        else if (RW && !I.allege && I.ft > 30) { if (++I.lents > 60) { I.allege = true; I.lents = 0; I.ft = 16; } }   // recette waouh : si le téléphone peine encore, sols par zones et rayons s'éteignent (brume et lumière restent)
+        else I.lents = 0; }
       I.dernier = now;
       // animation des points
       if (I.anim && I.suspendu) V.forEach(x => { x.vit = lisse(x.vit, 0, .1); });   // ⏸ course en pause : les voitures restent où elles sont
@@ -12342,6 +12737,8 @@
       ecran, ecranMonde, projeter, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim, reveiller, taille: () => ({ w: I.cssW, h: I.cssH }),
       /** v20.52 · la météo montrée (tests) et un éclair tout de suite (captures) */
       meteo: () => A.sable ? "sable" : A.pluie ? "pluie" : (def.amb === "noel" && A.neige && A.meteo !== "soleil" && A.meteo !== "beau") ? "neige" : A.dore ? "soleil" : null, particules: () => nbP,
+      /** recette waouh en cours (tests) : null sans recette ; sinon ce qui est allumé */
+      waouh: () => RW ? { brume: !!RW.brume, sol: !!(RW.sol && !I.allege), rayons: !I.allege && RW.rayons > 0 && !!(BV[2]), voile: !!BV[0], allege: !!I.allege } : null,
       eclair() { if (A.eclairs) { I.flash = 1; I.prochainEclair = 4; reveiller(); } },
       /** zoom de la Visite 3D (1 = vue d'ensemble, 0,12 = au plus près) et mode de caméra */
       zoom: () => I.zoom, orbite: () => I.orbite, mode: () => I.mode, survolEnCours: () => !!I.survol, cible: () => ({ x: T.cx + I.pan[0], z: T.cz + I.pan[1], r: Math.max(T.rx, T.rz) }),   // v17.35 : point visé par la caméra (jauge chaud-froid)
@@ -12353,7 +12750,7 @@
       detruire() {
         I.detruit = true; I.actif = false; if (raf) cancelAnimationFrame(raf); if (ro) ro.disconnect(); document.removeEventListener("visibilitychange", vis);
         ecoutes.forEach(([t, f, op]) => cv.removeEventListener(t, f, op)); joy.remove();
-        [B.sol, B.solOv, B.piste, B.pisteOv, B.eau].concat(V.map(x => x.b), RO.map(x => x.b)).forEach(t => { if (t) gl.deleteBuffer(t.b); });   // v16.27 : les objets qui tournent (moulin…) sont aussi libérés [bL, bP, bFX, bPT].forEach(b => gl.deleteBuffer(b));
+        [B.sol, B.solOv, B.piste, B.pisteOv, B.eau].concat(V.map(x => x.b), RO.map(x => x.b), BV).forEach(t => { if (t) gl.deleteBuffer(t.b); });   // v16.27 : les objets qui tournent (moulin…) sont aussi libérés [bL, bP, bFX, bPT].forEach(b => gl.deleteBuffer(b));
         cv.remove(); if (!gl.isContextLost()) RESERVE.push(C);   // le contexte servira au prochain circuit
       }
     };
