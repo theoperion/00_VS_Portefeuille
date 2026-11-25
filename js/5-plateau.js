@@ -534,7 +534,7 @@ function accessoireDuMois(quand) {
   if (k < 202612) return null;
   return k === 202612 ? "noel" : MOIS_ACCESSOIRE[d.getMonth()];
 }
-/** v20.59 · ADMIN : la planche des accessoires (12 univers + bonnet) sur les têtes de tous, et « porter partout » le temps de la session */
+/** v20.60 · ADMIN : la planche des accessoires (12 univers + bonnet) sur les têtes de tous, et « porter partout » le temps de la session */
 function apercuAccessoires() {
   if (!apercuAutorise()) return;   // double sécurité (en plus du bouton réservé à l'admin)
   const MOIS_C = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
@@ -552,7 +552,7 @@ function apercuAccessoires() {
   o.querySelector(".rg-x").addEventListener("click", fermer); o.addEventListener("click", ev => { if (ev.target === o) fermer(); });
   o.querySelectorAll("[data-acc-porte]").forEach(b => b.addEventListener("click", () => { try { if (b.dataset.accPorte) sessionStorage.setItem("versus.apercuAcc", b.dataset.accPorte); else sessionStorage.removeItem("versus.apercuAcc"); } catch (e) { /* indisponible */ } location.reload(); }));
 }
-/** v20.59 (Théo) · ACCESSOIRE DORÉ du leader : en saison seulement (jamais pendant le tour de chauffe), en tête du classement de la saison ;
+/** v20.60 (Théo) · ACCESSOIRE DORÉ du leader : en saison seulement (jamais pendant le tour de chauffe), en tête du classement de la saison ;
  *  à égalité de points, tous les co-leaders. Même règle que la couronne d'or du classement (rien du mois incomplet ne compte). */
 let MEMO_LEADERS = null;
 function leadersSaison() {
