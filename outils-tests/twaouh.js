@@ -1,49 +1,90 @@
-/* Test (25/11/2026) · RECETTE WAOUH (brume, rayons du soleil, sols par zones, voiles transparents), d'abord sur Dune (silverstone, janvier 2027).
+/* Test (25/11/2026) · RECETTE WAOUH (brume, lumière propre, rayons, sols par zones, ombres de contact, décor lointain) sur Dune, le Château et
+   l'Atelier du Père Noël ; les 12 autres circuits n'en ont pas (rendu d'avant, mot pour mot).
    Lancer depuis la racine, serveur local ouvert : python3 -m http.server 8771 &  puis  node outils-tests/twaouh.js   (PORT=… pour un autre port)
-   Vérifie : 1. (sans navigateur) rien de la recette (voiles, ombres, rayons) à moins de 15 m de la cachette du trésor de janvier ; les autres circuits
-   n'ont aucune couche transparente ; mode léger = moitié moins de rayons ; 2. (navigateur) Dune : recette allumée (brume, sols, rayons) ;
-   tempête de sable et orage : rayons atténués (jamais éteints), même lumière, la tempête reste visible ; grand soleil : rayons un peu plus forts ; « réduire les animations » : recette toujours là ; les 14 autres circuits : aucune recette ;
-   0 erreur JS. Fausses données uniquement (aucune donnée de joueur). */
-const fs = require("fs"), path = require("path");
+   Trésors : APP_SCRIPTS=/chemin/vers/app_scripts node outils-tests/twaouh.js  lit versus/Tresors.js (dépôt PRIVÉ) pour vérifier les cachettes ;
+   sans APP_SCRIPTS, cette vérification est sautée (aucune position de cachette n'est écrite dans ce dépôt public, ni affichée par ce test).
+   Vérifie : 1. (sans navigateur) Dune, Château, Atelier ont leur ligne, chacun sa brume ; les autres aucune couche ajoutée ;
+   budgets : couches transparentes ≤ 30 000 triangles (≤ 16 000 en mode léger), décor lointain ≤ 1 200 triangles ; mode léger = moitié moins de rayons ;
+   le décor lointain va jusqu'à l'horizon (plus aucun bord du monde) ; trésors : rien de neuf à moins de 15 m d'une cachette, ou effacé au rendu dès que
+   le trésor est là (tresorEvite) ; 2. (navigateur) chaque circuit : recette allumée, 0 erreur JS ; pluie : rayons atténués, jamais éteints, même brume (météo légère v20.62) ; Dune : tempête et orage
+   inchangés ; « réduire les animations » : la recette reste ; trésor du mois présent : la recette s'efface autour de lui. Fausses données uniquement. */
+const fs = require("fs"), path = require("path"), cp = require("child_process");
 const PORT = process.env.PORT || 8771, ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); };
-const src = fs.readFileSync(path.join(__dirname, "..", "piste.js"), "utf8").replace("window.Piste = {", "window.__P = { echantillonner, zones, TRACES, construire, ambiance };\n  window.Piste = {");
+const src = fs.readFileSync(path.join(__dirname, "..", "piste.js"), "utf8").replace("window.Piste = {", "window.__P = { echantillonner, zones, TRACES, construire, ambiance, WAOUH };\n  window.Piste = {");
 global.window = {}; eval(src);
-const { echantillonner, zones, TRACES, construire, ambiance } = window.__P;
-const TRESOR = [436, .4, 475];   // versus/Tresors.js (serveur) : le krys de janvier, dans la mâchoire du squelette de ver
-const scene = (id, leger) => { window.VERSUS_LEGER = leger; const def = TRACES[id], T = echantillonner(def); return construire(def, T, ambiance(def, "soleil", ""), zones(T)); };
-function prochesTresor(g) {   // distance du trésor à chaque triangle (échantillonné finement)
-  let m = 1e9; const d = g.d; for (let i = 0; i < d.length; i += 21) { const P = [0, 7, 14].map(k => [d[i + k], d[i + k + 1], d[i + k + 2]]);
-    for (let a = 0; a <= 8; a++) for (let b = 0; b <= 8 - a; b++) { const u = a / 8, v = b / 8, w = 1 - u - v, q = [0, 1, 2].map(j => P[0][j] * u + P[1][j] * v + P[2][j] * w); m = Math.min(m, Math.hypot(q[0] - TRESOR[0], q[1] - TRESOR[1], q[2] - TRESOR[2])); } }
+const { echantillonner, zones, TRACES, construire, ambiance, WAOUH } = window.__P;
+const scene = (id, leger) => { window.VERSUS_LEGER = leger; const def = TRACES[id], T = echantillonner(def); return { S: construire(def, T, ambiance(def, "soleil", ""), zones(T)), T }; };
+const AVEC = ["silverstone", "djeddah", "abudhabi"], ids = AVEC, recette = id => TRACES[id].waouh || WAOUH[TRACES[id].decor];
+// 1. une ligne par circuit, une ambiance par univers
+const sans = ids.filter(id => !recette(id));
+ok(!sans.length, "Dune, Château et Atelier du Père Noël ont leur recette " + JSON.stringify(sans));
+const autres = Object.keys(TRACES).filter(id => AVEC.indexOf(id) < 0), avecCouche = autres.filter(id => { if (recette(id)) return true; const s = scene(id, false).S; return s.voile.n + s.lueur.n + s.rayons.n > 0; });
+ok(!avecCouche.length, "les " + autres.length + " autres circuits : aucune recette, rendu d'avant " + JSON.stringify(avecCouche));
+const decors = [...new Set(ids.map(id => TRACES[id].decor))], brumes = decors.map(d => WAOUH[d] && WAOUH[d].brume && WAOUH[d].brume.col);
+ok(new Set(brumes).size === decors.length, "chaque univers a SA brume (" + decors.length + " couleurs différentes, pas la même partout)");
+ok(decors.every(d => WAOUH[d].horizon && WAOUH[d].sol), "chaque univers a son décor lointain et ses sols par zones");
+// 2. budgets, mode léger, horizon
+const R = {}, L = {};
+ids.forEach(id => { R[id] = scene(id, false); L[id] = scene(id, true); });
+const tr = S => (S.voile.n + S.lueur.n + S.rayons.n) / 3;
+ids.forEach(id => {
+  const r = R[id].S, l = L[id].S, W = recette(id);
+  ok(tr(r) <= 30000 && tr(l) <= 16000, id + " : couches transparentes " + tr(r) + " triangles (léger " + tr(l) + ")");
+  if (W.rayons && r.rayons.n) ok(l.rayons.n <= r.rayons.n * .6, id + " : mode léger = moitié moins de rayons (" + r.rayons.n / 3 + " → " + l.rayons.n / 3 + ")");
+  const T = R[id].T, ext = Math.max(T.rx, T.rz) * 3.2 + 600, d = r.sol.d; let rmax = 0;
+  for (let i = 0; i < d.length; i += 10) { const q = Math.hypot(d[i] - T.cx, d[i + 2] - T.cz); if (q > rmax) rmax = q; }
+  const H = W.horizon; W.horizon = null; const sh = scene(id, false).S.sol; W.horizon = H; const nh = (r.sol.d.length - sh.d.length) / 30;   // triangles du décor lointain seul
+  ok(nh <= 1200 && rmax > ext + 1500, id + " : décor lointain jusqu'à " + Math.round(rmax) + " m (" + nh + " triangles)");
+});
+// 3. les trésors (dépôt privé, seulement si APP_SCRIPTS est défini)
+function tresors() {
+  const A = process.env.APP_SCRIPTS; if (!A) return null; let t = "";
+  try { t = fs.readFileSync(path.join(A, "versus", "Tresors.js"), "utf8"); } catch (e) { t = cp.execSync("git -C " + JSON.stringify(A) + " show origin/main:versus/Tresors.js").toString(); }
+  const L = []; t.replace(/circuit: '(\w+)', type: '\w+', p: \[([^\]]+)\]/g, (m, c, p) => { L.push({ c, p: p.split(",").map(Number) }); return m; }); return L;
+}
+function proche(S, P) {   // distance de la cachette à chaque triangle des couches de la recette (échantillonné finement)
+  let m = 1e9; [S.voile, S.lueur, S.rayons].forEach(g => { const d = g.d; for (let i = 0; i < d.length; i += 21) { const Q = [0, 7, 14].map(k => [d[i + k], d[i + k + 1], d[i + k + 2]]);
+    if (Math.min(...Q.map(q => Math.hypot(q[0] - P[0], q[2] - P[2]))) > 900) continue;
+    for (let a = 0; a <= 6; a++) for (let b = 0; b <= 6 - a; b++) { const u = a / 6, v = b / 6, w = 1 - u - v; m = Math.min(m, Math.hypot(Q[0][0] * u + Q[1][0] * v + Q[2][0] * w - P[0], Q[0][2] * u + Q[1][2] * v + Q[2][2] * w - P[2])); } } });
   return m; }
-const S = scene("silverstone", false), SL = scene("silverstone", true);
-const dm = Math.min(prochesTresor(S.voile), prochesTresor(S.lueur), prochesTresor(S.rayons));
-ok(dm >= 15, "trésor de janvier : rien de la recette à moins de 15 m de la cachette (plus proche : " + Math.round(dm) + " m)");
-ok(S.rayons.n > 0 && S.voile.n > 0, "Dune : rayons du soleil (" + S.rayons.n / 3 + " triangles) et voiles transparents (" + S.voile.n / 3 + " triangles : ombres de contact, sable arraché aux crêtes)");
-ok(SL.rayons.n > 0 && SL.rayons.n <= S.rayons.n * .6, "mode léger : moitié moins de rayons (" + S.rayons.n / 3 + " → " + SL.rayons.n / 3 + " triangles)");
-const autres = Object.keys(TRACES).filter(id => id !== "silverstone"), avecCouche = autres.filter(id => { const s = scene(id, false); return s.voile.n + s.lueur.n + s.rayons.n > 0; });
-ok(!avecCouche.length, "les " + autres.length + " autres circuits : aucune couche transparente ajoutée " + JSON.stringify(avecCouche));
+const TR = tresors(), MASQUE = /tresorEvite\(o\.circuit\)/.test(src) && /\[t\.p\[0\], t\.p\[2\], 16, 1\]/.test(src);   // le masque au rendu (rayon 16 m)
+if (!TR) console.log("(APP_SCRIPTS non défini : vérification des cachettes sautée)");
+else {
+  ok(TR.length >= 8, "trésors lus dans le dépôt privé : " + TR.length);
+  TR.forEach(t => { if (AVEC.indexOf(t.c) < 0) return; const m = proche(R[t.c].S, t.p);   // la position ne vient QUE du dépôt privé et n'est jamais affichée
+    ok(m >= 15 || MASQUE, t.c + " : " + (m >= 15 ? "rien de la recette à moins de 15 m de la cachette" : "ombres, rayons ou voiles près de la cachette, effacés au rendu dans un rayon de 16 m dès que le trésor est là")); });
+}
 (async () => {
   const { chromium } = require("playwright");
   const b = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
-  const essai = async (reduit, f) => { const ctx = await b.newContext({ viewport: { width: 390, height: 300 }, reducedMotion: reduit ? "reduce" : "no-preference" }), p = await ctx.newPage(), err = [];
+  const essai = async (reduit, f, arg) => { const ctx = await b.newContext({ viewport: { width: 390, height: 300 }, reducedMotion: reduit ? "reduce" : "no-preference" }), p = await ctx.newPage(), err = [];
     p.on("pageerror", e => err.push(e.message)); await p.setContent('<div id="b" style="width:390px;height:300px;position:relative"></div>'); await p.addScriptTag({ url: "http://localhost:" + PORT + "/piste.js" });
-    const r = await p.evaluate(f); await ctx.close(); return { r, err }; };
+    const r = await p.evaluate(f, arg); await ctx.close(); return { r, err }; };
   const monter = (circuit, meteo, ambiance) => { const b = document.getElementById("b"); if (window.__a) window.__a.detruire(); b.innerHTML = "";
     return window.__a = Piste.monter(b, { circuit, meteo, ambiance, camera: "helico", effets: true, voitures: [{ nom: "A", couleur: "#4C9AFF" }], pts: { A: 1 } }); };
-  const F = "const monter = " + monter.toString() + ";";
-  const a = await essai(false, new Function("return (async () => {" + F + "const o = {}; o.soleil = monter('silverstone', 'soleil').waouh(); o.beau = monter('silverstone', 'beau').waouh(); await new Promise(r => setTimeout(r, 600));" +
-    "o.orage = monter('silverstone', 'orage'); o.orageW = o.orage.waouh(); o.orageM = o.orage.meteo(); o.pluie = monter('silverstone', 'pluie').waouh(); o.nuit = monter('silverstone', 'soleil', 'monaco').waouh();" +
-    "o.autres = Object.keys(Piste.TRACES).filter(id => id !== 'silverstone').map(id => [id, monter(id, 'soleil').waouh()]).filter(x => x[1]).map(x => x[0]); o.orage = null; return o; })()"));
+  const F = "const monter = " + monter.toString() + ";", attendre = "await new Promise(r => setTimeout(r, 500));";
+  const a = await essai(false, new Function("return (async () => {" + F + "const o = {}; o.soleil = monter('silverstone', 'soleil').waouh(); " + attendre +
+    "o.beau = monter('silverstone', 'beau').waouh(); " + attendre + "o.orage = monter('silverstone', 'orage'); o.orageW = o.orage.waouh(); o.orageM = o.orage.meteo(); o.pluie = monter('silverstone', 'pluie').waouh(); o.nuit = monter('silverstone', 'soleil', 'monaco').waouh();" +
+    "o.tous = {}; for (const id of Object.keys(Piste.TRACES)) { const x = monter(id, 'soleil'); " + attendre + " o.tous[id] = x.waouh(); }" +
+    "o.pluieJour = monter('djeddah', 'pluie').waouh(); o.orage = null; return o; })()"));
   const r = a.r;
   ok(r.soleil && r.soleil.brume && r.soleil.sol && r.soleil.rayons && r.soleil.voile, "Dune au soleil : brume, sols par zones, rayons du soleil et voiles allumés " + JSON.stringify(r.soleil));
-  // v20.62 (Théo : météo « très accessoire ») : la météo ne change plus la lumière ; les rayons sont atténués (jamais éteints), un peu plus forts au grand soleil
-  ok(r.orageW && r.orageW.rayons && r.orageW.brume && r.orageM === "sable" && JSON.stringify(r.orageW.brumeCol) === JSON.stringify(r.beau.brumeCol), "Dune sous l'orage : tempête de sable toujours visible (" + r.orageM + "), même brume qu'au beau temps, rayons atténués mais présents (" + (r.orageW && r.orageW.force.toFixed(3)) + ")");
-  ok(r.pluie && r.pluie.rayons && r.pluie.force < r.beau.force && r.pluie.force > 0, "Dune « pluie » (tempête de sable) : rayons atténués (" + (r.pluie && r.pluie.force.toFixed(3)) + " < " + r.beau.force.toFixed(3) + "), jamais éteints");
-  ok(r.soleil.force > r.beau.force, "grand soleil : rayons un peu plus présents (" + r.soleil.force.toFixed(3) + " > " + r.beau.force.toFixed(3) + ")");
+  // v20.62 (météo « très accessoire », branche course) : la météo n'assombrit jamais le décor ; rayons atténués sous la pluie, jamais éteints ; même brume qu'au beau temps
+  ok(r.orageW && r.orageW.rayons && r.orageW.brume && r.orageM === "sable" && JSON.stringify(r.orageW.brumeCol) === JSON.stringify(r.beau.brumeCol), "Dune sous l'orage : tempête de sable toujours visible (" + r.orageM + "), même brume qu'au beau temps, rayons atténués mais présents");
+  ok(r.pluie && r.pluie.rayons && r.pluie.force < r.beau.force && r.pluie.force > 0, "Dune « pluie » (tempête de sable) : rayons atténués (" + (r.pluie && r.pluie.force) + " < " + r.beau.force + "), jamais éteints");
+  ok(r.soleil.force > r.beau.force, "grand soleil : rayons un peu plus présents");
   ok(r.nuit && !r.nuit.rayons, "Dune avec le filtre de nuit du joueur : pas de rayons");
-  ok(!r.autres.length, "les 14 autres circuits : aucune recette (rendu d'avant) " + JSON.stringify(r.autres));
-  const c = await essai(true, new Function("return (async () => {" + F + "return monter('silverstone', 'soleil').waouh(); })()"));
-  ok(c.r && c.r.brume && c.r.sol, "« réduire les animations » : la recette reste (rayons fixes, sans respiration)");
-  ok(!a.err.length && !c.err.length, "0 erreur JS " + JSON.stringify(a.err.concat(c.err)));
+  const AV = ["silverstone", "djeddah", "abudhabi"], eteints = AV.filter(id => !(r.tous[id] && r.tous[id].brume && r.tous[id].sol && r.tous[id].voile));
+  ok(!eteints.length, "Dune, Château, Atelier : recette allumée (brume, sols, ombres ou voiles) " + JSON.stringify(eteints));
+  const sansR = Object.keys(r.tous).filter(id => AV.indexOf(id) < 0 && r.tous[id]);
+  ok(!sansR.length, "les 12 autres circuits : aucune recette au rendu " + JSON.stringify(sansR));
+  ok(r.tous.djeddah.rayons && !r.tous.abudhabi.rayons, "rayons du soleil sur le Château (jour) ; pas sur l'Atelier (soir de fête)");
+  ok(r.pluieJour && r.pluieJour.rayons && r.pluieJour.force < r.tous.djeddah.force && r.pluieJour.brume && JSON.stringify(r.pluieJour.brumeCol) === JSON.stringify(r.tous.djeddah.brumeCol), "Château sous la pluie : rayons atténués (jamais éteints), même brume (la météo n'assombrit pas)");
+  const c = await essai(true, new Function("return (async () => {" + F + "return [monter('silverstone', 'soleil').waouh(), monter('abudhabi', 'soleil').waouh()]; })()"));
+  ok(c.r.every(x => x && x.brume && x.sol), "« réduire les animations » : la recette reste (rayons fixes, paillettes fixes)");
+  const e = await essai(false, new Function("return (async () => {" + F + "window.tresorDuCircuit = ci => ci === 'djeddah' ? { p: [0, 0, 0] } : null; const x = monter('djeddah', 'soleil'); " + attendre + " const a = x.waouh().evite;" +
+    "window.tresorDuCircuit = () => null; const y = monter('djeddah', 'soleil'); " + attendre + " return [a, y.waouh().evite]; })()"));
+  ok(e.r[0] === true && e.r[1] === false, "trésor du mois présent (exemple inventé) : ombres, rayons et nappes s'effacent autour de sa cachette ; sans trésor, rien d'effacé");
+  ok(!a.err.length && !c.err.length && !e.err.length, "0 erreur JS " + JSON.stringify(a.err.concat(c.err, e.err)));
   await b.close(); console.log(ko.length ? "\n" + ko.length + " NON" : "\nTout est OUI"); process.exit(ko.length ? 1 : 0);
 })();

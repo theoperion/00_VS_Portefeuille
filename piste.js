@@ -9545,11 +9545,10 @@
       const g = new Geo(), PU = 11, PW = 30, U0 = -650, W0 = -650, NU = 213, NW = 66, XZ = (u, w) => [u * .94 - w * .34, u * .34 + w * .94], Hh = [];
       for (let j = 0; j <= NW; j++) { Hh.push([]); for (let i = 0; i <= NU; i++) { const [x, z] = XZ(U0 + i * PU, W0 + j * PW); Hh[j].push(x < -480 || x > 1300 || z < -500 || z > 1020 ? 0 : hS(x, z)); } }
       const sl = norme(A.soleil || [-.7, .3, .5]), CLAIR = v("#FFD9A0"), MI = v("#EBAE68"), FONCE = v("#C47A4C"), POURPRE = v("#8A4A5C");
-      for (let j = 0; j < NW; j++) for (let i = 0; i < NU; i++) { const h = [Hh[j][i], Hh[j][i + 1], Hh[j + 1][i + 1], Hh[j + 1][i]]; if (h.every(y => y < .05)) continue;
-        const C4 = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]].map(([a, b], k) => { const [x, z] = XZ(U0 + a * PU, W0 + b * PW); return [x, h[k], z]; });
-        const n = norme(croix(sous(C4[2], C4[0]), sous(C4[1], C4[3]))), nn = n[1] < 0 ? fois(n, -1) : n, l2 = point(nn, sl), raide = 1 - nn[1];
+      // 25/11/2026 (recette waouh) : relief LISSE (normales et couleurs par sommet, voir grilleLisse) : plus de facettes en triangles de près
+      grilleLisse(g, Hh, (i, j) => XZ(U0 + i * PU, W0 + j * PW), (nn, q) => { const l2 = point(nn, sl), raide = 1 - nn[1];
         const col = l2 > .5 ? mel(MI, CLAIR, clamp((l2 - .5) * 2.6, 0, 1)) : l2 > .25 ? mel(FONCE, MI, (l2 - .25) * 4) : mel(POURPRE, FONCE, clamp(l2 * 4, 0, 1));
-        g.quad(C4[0], C4[1], C4[2], C4[3], mel(col, POURPRE, clamp(raide * 1.4 - .3, 0, .45)), SOL, [0, 1, 0]); }   // SOL : crêtes, creux, roche et épice de la recette waouh
+        return mel(A.sol, mel(col, POURPRE, clamp(raide * 1.4 - .3, 0, .45)), clamp(q[1] / 2.5, 0, 1)); }, SOL);   // au ras du sol plat : la couleur du sable plat (raccord invisible)   // SOL : crêtes, creux, roche et épice de la recette waouh
       sol.poser(g, 0, 0, 0, 0, 1); }
 
     // ================= 1. LA MER DE DUNES : grands croissants sculptés par le vent d'ouest =================
@@ -9569,12 +9568,16 @@
       for (let i = n - 1; i >= 0; i--) rows[i].k = Math.min(rows[i].k, rows[i + 1].k + .22);
       rows.forEach((R, i) => { rows[i] = R.pts(R.k).map(p => [p[0], hS(p[0], p[1]) + (p[2] > .01 ? p[2] : -.25), p[1]]); });   // posées sur le relief
       const tons = [SABLE, SABLE2, SABLE3, AVAL, AVAL2], var_ = .9 + r() * .14;
+      // recette waouh : normales lissées le long de la dune et sur chaque versant (la crête, elle, reste vive : face au vent / face d'avalanche)
+      const Nq = (i, b) => { if (i < 0 || i >= n) return null; const a = rows[i][b], c = rows[i + 1][b + 1]; if (a[1] < 0 && c[1] < 0 && rows[i + 1][b][1] < 0 && rows[i][b + 1][1] < 0) return null; const q = norme(croix(sous(c, a), sous(rows[i][b + 1], rows[i + 1][b]))); return q[1] < 0 ? fois(q, -1) : q; };
+      const NS = (i, b, vi, vb) => { const cote = b < 3 ? [0, 1, 2] : [3, 4], s = [0, 0, 0]; [vi - 1, vi].forEach(ii => [vb - 1, vb].forEach(bb => { if (cote.indexOf(bb) < 0) return; const q = Nq(ii, bb); if (q) { s[0] += q[0]; s[1] += q[1]; s[2] += q[2]; } })); return norme(s[1] > 0 ? s : [0, 1, 0]); };
       for (let i = 0; i < n; i++) for (let b = 0; b < 5; b++) { const a = rows[i][b], bb = rows[i + 1][b], cc = rows[i + 1][b + 1], d = rows[i][b + 1];
-        if (a[1] < 0 && bb[1] < 0 && cc[1] < 0 && d[1] < 0) continue; duneG.quad(a, bb, cc, d, fois(tons[b], var_), SOL, [0, 1, 0]); }
+        if (a[1] < 0 && bb[1] < 0 && cc[1] < 0 && d[1] < 0) continue; const col = fois(tons[b], var_), na = NS(i, b, i, b), nb = NS(i, b, i + 1, b), nc = NS(i, b, i + 1, b + 1), nd = NS(i, b, i, b + 1);
+        triLisse(duneG, a, bb, cc, na, nb, nc, col, col, col, SOL); triLisse(duneG, a, cc, d, na, nc, nd, col, col, col, SOL); }
       for (let i = 0; i < n; i++) { const a = rows[i][3], b = rows[i + 1][3], a2 = rows[i][2], b2 = rows[i + 1][2]; if (a[1] < .5 && b[1] < .5) continue;
         const m = (p, q) => mel(p, q, .16); duneO.quad(m(a, a2), m(b, b2), b, a, CRETE, .35, [0, 1, 0]); }
-      // recette waouh : le vent d'ouest arrache des voiles de sable aux plus hautes crêtes (transparents, ils s'effacent sous le vent ; jamais près du trésor)
-      if (ctx.voile && H > 20) for (let i = 3; i < n - 3; i += 3) { const a = rows[i][3], b = rows[i + 1][3]; if (a[1] < 12 || Math.hypot(a[0] - 436, a[2] - 475) < 90) continue;
+      // recette waouh : le vent d'ouest arrache des voiles de sable aux plus hautes crêtes (transparents, ils s'effacent sous le vent ; effacés près du trésor du mois au rendu, voir tresorEvite)
+      if (ctx.voile && H > 20) for (let i = 3; i < n - 3; i += 3) { const a = rows[i][3], b = rows[i + 1][3]; if (a[1] < 12) continue;
         const hz = Math.sin(i * 12.99 + a[0] * .37) * 437.5, Lp = 40 + (hz - Math.floor(hz)) * 50, col = [1, .86, .64], P = (p, k) => [p[0] + Lp * k, p[1] + 1 + k * (8 + Lp * .08) - k * k * 4, p[2] + Lp * k * .18];
         for (let k = 0; k < 4; k++) { const k0 = k / 4, k1 = (k + 1) / 4, al = q => [col[0], col[1], col[2], .2 * Math.pow(1 - q, 1.6)];
           ctx.voile.quad(P(a, k0), P(b, k0), P(b, k1), P(a, k1), al(k0), al(k0), al(k1), al(k1)); } }
@@ -10081,10 +10084,10 @@
           return modele(x.p[0], x.p[1], x.p[2], x.cp || 0, Math.sin(t * 1.7) * .05, 1); } } }); } }
     // le désert est plein : on interdit les petits décors génériques (pyramides, rochers posés au hasard)
     // ================= 26. RECETTE WAOUH : ombres de contact sous les grandes scènes (elles « pèsent » sur le sable), décalées à l'opposé du soleil couchant =================
-    // [x, z, demi-longueur, demi-largeur, cap, force] ; jamais à moins de 15 m de la cachette du trésor de janvier (436, 475 : mâchoire du squelette)
-    if (ctx.voile) { const sl = norme(A.soleil || [-.7, .3, .5]), TRES = [436, 475];
+    // [x, z, demi-longueur, demi-largeur, cap, force] ; près du trésor du mois, elles s'effacent au rendu (tresorEvite : aucune position écrite ici)
+    if (ctx.voile) { const sl = norme(A.soleil || [-.7, .3, .5]);
       [[500, 212, 36, 36, 0, .5], [QUEUE[0], QUEUE[1], 42, 22, 0, .4], [CIT[0], CIT[1], 84, 66, -.25, .55], [PAL[0], PAL[1], 78, 56, .15, .45], [ARCHE[0], ARCHE[1], 46, 30, 0, .35], [EPAVE[0], EPAVE[1], 70, 34, .35, .4], [RECOLTE[0], RECOLTE[1], 40, 30, .4, .45]].forEach(([x, z, rx, rz, cap, f]) => {
-        const ox = x - sl[0] * rx * .22, oz = z - sl[2] * rz * .22; if (Math.hypot(ox - TRES[0], oz - TRES[1]) < Math.max(rx, rz) + 15) return;
+        const ox = x - sl[0] * rx * .22, oz = z - sl[2] * rz * .22;
         ctx.voile.ombre(ox, hS(ox, oz) + .3, oz, rx, rz, f, cap, [.16, .04, .12]); }); }
     for (let x = -360; x <= 1220; x += 70) for (let z = -360; z <= 940; z += 70) occupe.push([x, z, 52]);
     return occupe;
@@ -11911,6 +11914,7 @@
     }
     // recette waouh : les rayons du soleil (voir WAOUH)
     const W = def.waouh || WAOUH[def.decor]; if (W && W.rayons) { const R = Object.assign({}, W.rayons); if (leger()) R.n = Math.ceil((R.n || 10) / 2); rayonsSoleil(rayons, T, A, R); }
+    if (W) habillerWaouh(W, T, A, sol, piste, voile, lueur, lum, eau);   // recette waouh : ombres de contact, sols, flaques de lumière, nappes de brume, décor lointain
     return { sol, piste, eau, lum, stands: ps, portique: p0, rotors, voile, lueur, rayons };
   }
 
@@ -12208,15 +12212,16 @@
        1. ajouter une ligne WAOUH[clé du décor] (def.decor : « titans », « lucioles »…) ; un décor partagé par deux circuits (« solstice » : suzuka et arene2028)
           prend la même recette, sinon mettre waouh: {…} directement dans TRACES[circuit] ;
        2. dans son décor sur mesure, marquer ses grands sols avec SOL (couleur lumineuse -1, ou marquerSol(g)) : le grand plan de sol et ses taches le sont déjà ;
-       3. ajouter ses ombres de contact (ctx.voile.ombre) et, s'il a un trésor, sa cachette dans rayons.evite ; puis captures avant / après et outils-tests/twaouh.js.
+       3. ajouter ses ombres de contact (ctx.voile.ombre) ; puis captures avant / après et outils-tests/twaouh.js. Les cachettes des trésors ne s'écrivent JAMAIS ici
+          (dépôt public) : la recette s'efface toute seule autour du trésor du mois au rendu (tresorEvite).
      Les blocs (tous facultatifs) :
        brume   : { col, dens, haut, halo }   brume de profondeur qui reste au ras du sol (dens = épaisseur au sol par mètre, haut = hauteur en m où elle
                                             a perdu 63 %, halo = lueur du soleil à travers la brume quand on regarde vers lui). Le ciel prend la même couleur à l'horizon.
        ciel, rebond : "#rrggbb"             lumière d'ambiance colorée : ce que reçoivent les faces tournées vers le ciel / vers le sol (ombres teintées).
        rim     : 0 à 1                      contre-jour : les silhouettes tournées vers le soleil gagnent un liseré doré.
        etalonnage : [saturation, contraste] étalonnage « cinéma » des objets (avant la brume, qui reste douce) ; ex. [.2, .25].
-       rayons  : { n, long, larg:[haut, bas], force, col, evite:[[x, z, r]] }   rayons de soleil : des voiles de lumière additifs qui descendent du soleil
-                                            sur la piste (mode léger : moitié moins ; coupés de nuit ; atténués sous la pluie ou dans la tempête, un peu plus forts au grand soleil ; « réduire les animations » = fixes).
+       rayons  : { n, long, larg:[haut, bas], force, col, evite:[[x, z, r]] (zones de décor à garder libres, jamais une cachette) }   rayons de soleil : des voiles de lumière additifs qui descendent du soleil
+                                            sur la piste (mode léger : moitié moins ; coupés de nuit sauf rayons.nuit ; atténués sous la pluie ou dans la tempête, un peu plus forts au grand soleil ; « réduire les animations » = fixes).
        sol     : { echelle, haut, creux:[col, force], cretes:[col, force], roche:[col, force], taches:[col, force, seuil], grain, rides:[par m, force, angle] }
                                             sols variés par ZONES, calculés au pixel (bruit procédural, transitions douces) : creux ombrés (bas et taches du bruit),
                                             crêtes claires (en hauteur, faces peu pentues), roche (pentes raides), taches étirées (épice, fleurs, mousse…), grain fin,
@@ -12224,7 +12229,8 @@
                                             Ne touche que les surfaces marquées « sol » (couleur lumineuse -1 : SOL, voir construire et marquerSol).
      Le décor sur mesure reçoit aussi dans ctx : voile (objets transparents, ombres de contact : voile.ombre(x, y, z, rx, rz, force, cap)) et lueur (objets
      additifs : halos, vitraux, braises). Ils sont dessinés après la scène, sans écrire la profondeur, et s'effacent dans la brume.
-     Le trésor du mois (versus/Tresors.js, côté serveur) : mettre sa cachette dans rayons.evite et ne rien poser à moins de 15 m.
+     Le trésor du mois (versus/Tresors.js, dépôt privé) : sa position n'arrive qu'avec le trésor, depuis le serveur ; ombres, rayons, voiles et flaques s'effacent
+     dans un rayon de 16 m autour d'elle (tresorEvite). Contrôles : outils-tests/twaouh.js et outils-tests/ttresor-secret.js (avec APP_SCRIPTS).
      Pistes pour la suite (non branchées, à valider avec Théo) : titans (cendres) brume grise-orangée épaisse, rayons à travers la fumée, sol cendre/roche ;
      lucioles (Pandora) brume verte basse, rayons entre les arbres, sol mousse/fougère/terre ; egee (Odyssée) brume marine, rides sur le sable, sol sable/galets ;
      chateau (magie) brume bleutée légère, sol herbe/pavés/fleurs ; solstice (anneau) brume dorée, sol prairie/chemins. */
@@ -12234,9 +12240,145 @@
   const WAOUH = {
     // janvier · Dune : brume de sable chaude au loin, soleil couchant à travers la poussière, ombres violettes, sable vivant (crêtes, creux, roche, épice)
     dunes: { brume: { col: "#F2A35C", dens: .0026, haut: 20, halo: 1.1 }, ciel: "#8068B0", rebond: "#E58A4E", rim: .5, etalonnage: [.3, .4],
-      rayons: { n: 12, long: 620, larg: [4, 34], force: .16, col: "#FFC67E", evite: [[436, 475, 15]] },   // trésor de janvier (krys dans la mâchoire du squelette)
-      sol: { echelle: 75, haut: 34, creux: ["#8E4E54", .5], cretes: ["#FFE4B0", .55], roche: ["#7E3E2C", .6], taches: ["#D9692A", .45, .8], grain: .24, rides: [.45, .09, .35] } }
+      rayons: { n: 12, long: 620, larg: [4, 34], force: .16, col: "#FFC67E" },
+      sol: { echelle: 75, haut: 34, creux: ["#8E4E54", .5], cretes: ["#FFE4B0", .55], roche: ["#7E3E2C", .6], taches: ["#D9692A", .45, .8], grain: .24, rides: [.45, .09, .35] },
+      horizon: { type: "dunes", col: "#D8925A", haut: 80 } },   // ses ombres de contact sont posées à la main dans decorDunes
+    // 25/11/2026 · la recette étendue au Château et à l'Atelier du Père Noël, chacun avec SA lumière (les ombres de contact et les sols par zones sont calculés tout seuls : ombresAuto, marquerSolsAuto)
+    // février · le Château, de jour : soleil d'après-midi doré sur le lac, voile de brume sur la forêt interdite, prairie piquée de boutons d'or, montagnes d'Écosse au loin
+    chateau: { marque: { y: 90, ny: .8, vert: true }, soleil: ["#FFD08A", .35], brume: { col: "#F2E4C6", dens: .0018, haut: 26, halo: .9 }, ciel: "#A8CCF2", rebond: "#B4C88A", rim: .35, etalonnage: [.21, .27],
+      rayons: { n: 9, long: 560, larg: [4, 28], force: .12, col: "#FFE0A0" },
+      sol: { echelle: 80, haut: 40, creux: ["#4C7E36", .41], cretes: ["#C2D888", .47], roche: ["#8E8A78", .6], taches: ["#F2D86A", .41, .8], grain: .18 },
+      ombres: { force: .59, col: "#183A22" }, nappes: { col: "#DDE6EA", l: [[1010, 120, 170, 7, .34], [1090, 400, 150, 6, .3], [900, -10, 120, 5, .26]] },
+      horizon: { type: "montagnes", col: "#6E8CAC", haut: 170, cime: "#E8EEF6" } },
+    // décembre · l'Atelier du Père Noël : lumière froide bleutée, neige qui scintille, flaques chaudes sous les guirlandes, glaciers au loin
+    garage: { soleil: ["#CFE0FF", .3], brume: { col: "#BCD0F6", dens: .0019, haut: 30, halo: .3 }, ciel: "#9CB8FF", rebond: "#E8F0FF", rim: .25, etalonnage: [.14, .23],
+      sol: { echelle: 60, haut: 30, creux: ["#C2D4F2", .47], cretes: ["#FFFFFF", .54], roche: ["#9AAAC4", .54], taches: ["#DCE8FF", .41, .78], grain: .22 }, paillettes: 1,
+      ombres: { force: .49, col: "#2A3C80" }, flaques: { col: "#FFB45E", r: 10, force: .38, max: 70 },
+      horizon: { type: "glace", col: "#9CB6E2", haut: 190, cime: "#FFFFFF" } }
+    // (25/11/2026, Théo : on s'arrête là pour l'instant) les 12 autres circuits n'ont PAS de ligne : ils gardent exactement leur rendu d'avant.
+    // Pour en ajouter un : sa ligne ici (brume, soleil, sol, ombres, horizon…), puis captures avant / après et outils-tests/twaouh.js (liste AVEC).
   };
+  /* Habillage automatique (25/11/2026), appelé une fois par construire pour chaque décor qui a une ligne WAOUH :
+       ombres   : { force, col, min, plein }  ombres de contact calculées d'après le décor lui-même (ombresAuto) ; jamais sur la piste
+       nappes   : { col, l: [[x, z, rayon, hauteur, force]] }  nappes de brume posées au ras du sol (forêt, marais…)
+       flaques  : { col, r, force, max }  flaques de lumière chaude sur le sol sous les lampes et guirlandes du décor (additives)
+       paillettes : force                 la neige (ou le sucre) scintille de près (fixe si « réduire les animations »)
+       soleil   : [couleur, part]         teinte du soleil (doré, froid…), à luminosité égale : n'assombrit jamais
+       horizon  : { type, col, haut, cime }  le DÉCOR LOINTAIN : le sol se prolonge jusqu'à l'horizon et deux anneaux de silhouettes
+                                            (montagnes, pics, glace, collines, dunes, forêt, ville, mur, îles) se fondent dans la brume
+       Les grands sols plats du décor sur mesure (pelouses, places, planchers) sont marqués SOL tout seuls (marquerSolsAuto ; marque: false pour l'éviter). */
+  function habillerWaouh(W, T, A, sol, piste, voile, lueur, lum, eau) {
+    const LG = leger();
+    if (W.marque !== false && W.sol) marquerSolsAuto(sol, W.marque);
+    const F = W.ombres || W.flaques ? solGrille(sol, piste, T, LG) : null;
+    if (W.ombres) ombresAuto(voile, F, A, W.ombres);
+    if (W.flaques) lum.slice(0, W.flaques.max || 60).forEach(l => { if (l[1] > 40) return; const y = F.sol(l[0], l[2]) + .3, r = W.flaques.r * clamp(l[6] / 13, .6, 1.6);
+      lueur.ombre(l[0], y, l[2], r, r, W.flaques.force, 0, hex(W.flaques.col)); });
+    if (W.nappes) W.nappes.l.forEach(([x, z, r, h, f]) => [.3, .65, 1].forEach((k, i) => voile.ombre(x + i * 9, h * k, z - i * 7, r * (1 - i * .12), r * (.8 - i * .1), f / 2.4, i * .5, hex(W.nappes.col))));
+    [sol, sol.o, eau].forEach(g => { if (g) affiner(g, 150); });   // la brume se calcule par sommet : plus de grand triangle de sol (le plan du sol en fait 2 000)
+    if (W.horizon) horizonLointain(sol, T, A, W.horizon, W.brume ? hex(W.brume.col) : A.brouillard, LG);   // au loin, la brume est déjà presque pleine : grands triangles permis
+  }
+  /** recoupe les GRANDS triangles de sol (presque à plat, bas, de plus de L × L / 2 m²) en coupant leur plus long côté en deux, jusqu'à ce qu'aucun côté
+      ne dépasse L : même dessin, sommets plus serrés (les longues bandes fines, déjà serrées en travers, restent telles quelles) */
+  function affiner(g, L) {
+    const d = g.d, out = [], L2 = L * L;
+    const aire = v => { const ux = v[10] - v[0], uz = v[12] - v[2], wx = v[20] - v[0], wz = v[22] - v[2]; return Math.abs(ux * wz - uz * wx) / 2; };
+    const coupe = (v, n) => { const e = (a, b) => (v[a * 10] - v[b * 10]) ** 2 + (v[a * 10 + 1] - v[b * 10 + 1]) ** 2 + (v[a * 10 + 2] - v[b * 10 + 2]) ** 2, E = [e(0, 1), e(1, 2), e(2, 0)], m = Math.max(...E);
+      if (n > 12 || !(m > L2)) { for (let i = 0; i < 30; i++) out.push(v[i]); return; }
+      const k = E.indexOf(m), a = k, b = (k + 1) % 3, c = (k + 2) % 3, S = j => v.slice(j * 10, j * 10 + 10), M = S(a).map((x, i) => (x + v[b * 10 + i]) / 2);
+      coupe(S(a).concat(M, S(c)), n + 1); coupe(M.concat(S(b), S(c)), n + 1); };
+    let grand = false; for (let k = 0; k < d.length && !grand; k += 30) if (aire(d.slice(k, k + 30)) > L2 / 2) grand = true;
+    if (!grand) return;
+    for (let k = 0; k < d.length; k += 30) { const v = d.slice(k, k + 30); if (Math.abs(v[4]) > .7 && Math.max(v[1], v[11], v[21]) < 20 && aire(v) > L2 / 2) coupe(v, 0); else for (let i = 0; i < 30; i++) out.push(v[i]); }
+    g.d = out;
+  }
+  /** les grands sols plats et bas du décor sur mesure (pelouses, places, planchers : non lumineux, presque horizontaux, à moins de 3 m) deviennent du SOL ;
+      l'eau dessinée à plat (bleue) est laissée telle quelle */
+  function marquerSolsAuto(g, M) { const ym = M && M.y || 3, nm = M && M.ny || .97, vert = M && M.vert;   // marque: { y, ny, vert } : prairies en relief (seulement le vert : ni toits, ni pierre)
+    [g.d, g.o ? g.o.d : null].forEach(d => { if (!d) return; for (let i = 0; i < d.length; i += 30) {
+    if (d[i + 9] !== 0 || d[i + 4] < nm || d[i + 1] > ym || d[i + 11] > ym || d[i + 21] > ym) continue; const r = d[i + 6], gg = d[i + 7], b = d[i + 8]; if (b > r + .08 && b > gg) continue;
+    if (vert && !(gg > r * 1.08 && gg > b * 1.1) && (d[i + 1] > 3 || d[i + 11] > 3 || d[i + 21] > 3)) continue;
+    d[i + 9] = d[i + 19] = d[i + 29] = SOL; } }); }
+  /** le décor « vu d'en haut » sur une grille (11 m, 16 en mode léger) : hauteur du sol et du plus haut objet de chaque case, cases de la piste */
+  function solGrille(sol, piste, T, LG) {
+    const c = LG ? 16 : 11, X0 = T.cx - T.rx - 520, Z0 = T.cz - T.rz - 520, NX = Math.ceil((2 * T.rx + 1040) / c), NZ = Math.ceil((2 * T.rz + 1040) / c), NN = NX * NZ;
+    const haut = new Float32Array(NN).fill(-1e9), bas = new Float32Array(NN).fill(1e9), pis = new Uint8Array(NN);
+    const cell = (x, z) => { const i = Math.floor((x - X0) / c), j = Math.floor((z - Z0) / c); return i < 0 || j < 0 || i >= NX || j >= NZ ? -1 : j * NX + i; };
+    const ras = (d, f) => { for (let k = 0; k < d.length; k += 30) { const ax = d[k], az = d[k + 2], bx = d[k + 10], bz = d[k + 12], qx = d[k + 20], qz = d[k + 22];
+      const L = Math.max(Math.abs(bx - ax), Math.abs(bz - az), Math.abs(qx - ax), Math.abs(qz - az), Math.abs(qx - bx), Math.abs(qz - bz)); if (L > 400) continue;   // le grand plan du sol : déjà à 0
+      const n = Math.max(1, Math.ceil(L / (c * .8)));
+      for (let a = 0; a <= n; a++) for (let b = 0; a + b <= n; b++) { const u = a / n, v = b / n, w = 1 - u - v, q = cell(ax * w + bx * u + qx * v, az * w + bz * u + qz * v); if (q >= 0) f(q, d[k + 1] * w + d[k + 11] * u + d[k + 21] * v); } } };
+    [sol.d, sol.o ? sol.o.d : []].forEach(d => ras(d, (q, y) => { if (y > haut[q]) haut[q] = y; if (y < bas[q]) bas[q] = y; }));
+    ras(piste.d, q => { pis[q] = 1; });
+    const fond = new Float32Array(NN); for (let q = 0; q < NN; q++) fond[q] = bas[q] > 1e8 ? 0 : Math.max(0, bas[q]);
+    return { c, X0, Z0, NX, NZ, haut, fond, pis, cell, sol: (x, z) => { const q = cell(x, z); return q < 0 ? 0 : fond[q]; } };
+  }
+  /** OMBRES DE CONTACT automatiques : chaque case où le décor monte haut fait une ombre douce au sol, étirée à l'opposé du soleil, puis floutée ;
+      les petits objets isolés (lampadaires) s'effacent au flou ; jamais sur la piste (elle reste nette, les pastilles lisibles) */
+  function ombresAuto(voile, F, A, O) {
+    const { c, X0, Z0, NX, NZ, haut, fond, pis } = F, NN = NX * NZ, min = O.min || 5, plein = O.plein || 14, S = new Float32Array(NN);
+    const s = norme(A.soleil || [.5, .6, .4]), hz = Math.hypot(s[0], s[2]) || 1, dx = -s[0] / hz, dz = -s[2] / hz, lg = Math.min(2.5, hz / Math.max(.15, s[1]));
+    for (let j = 1; j < NZ - 1; j++) for (let i = 1; i < NX - 1; i++) { const q = j * NX + i; if (haut[q] < -1e8) continue;
+      let f = 1e9; for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) f = Math.min(f, fond[q + b * NX + a]);
+      const h = haut[q] - f, oc = clamp((h - min) / plein, 0, 1); if (oc <= 0) continue;
+      const ns = Math.min(5, Math.round(h * lg * .5 / c));
+      for (let k = 0; k <= ns; k++) { const ii = Math.round(i + dx * k), jj = Math.round(j + dz * k); if (ii < 0 || jj < 0 || ii >= NX || jj >= NZ) break; const qq = jj * NX + ii, v = oc * (1 - .5 * k / (ns + 1)); if (v > S[qq]) S[qq] = v; } }
+    const flou = (X) => { const Y = new Float32Array(NN); for (let j = 1; j < NZ - 1; j++) for (let i = 1; i < NX - 1; i++) { const q = j * NX + i; let t = 0; for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) t += X[q + b * NX + a]; Y[q] = t / 9; } return Y; };
+    const P = flou(flou(S)), col = hex(O.col || "#101018"), k = O.force || .3;
+    for (let q = 0; q < NN; q++) { if (!P[q]) continue; const i = q % NX, j = (q - i) / NX; let m = 0; for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) { const qq = q + b * NX + a; if (qq >= 0 && qq < NN && pis[qq]) m = 1; } if (m) P[q] = 0; }
+    // chaque coin se pose sur le sol le plus bas des 4 cases voisines ; là où le sol saute de plus de 2,5 m (sous un objet, au bord d'un talus), l'ombre s'efface :
+    // jamais de « rideau » d'ombre dressé à la verticale
+    const coin = (i, j) => { let v = 0, y = 1e9, y2 = -1e9; for (let b = -1; b <= 0; b++) for (let a = -1; a <= 0; a++) { const ii = clamp(i + a, 0, NX - 1), jj = clamp(j + b, 0, NZ - 1), q = jj * NX + ii; v += P[q] / 4; y = Math.min(y, fond[q]); y2 = Math.max(y2, fond[q]); }
+      return [[X0 + i * c, y + .2, Z0 + j * c], [col[0], col[1], col[2], y2 - y > 2.5 ? 0 : Math.min(1, v * k * 1.6)]]; };
+    for (let j = 1; j < NZ; j++) for (let i = 1; i < NX; i++) { const q = (j - 1) * NX + (i - 1); if (P[q] < .01 && P[Math.min(NN - 1, q + 1)] < .01 && P[Math.min(NN - 1, q + NX)] < .01) continue;
+      const A0 = coin(i - 1, j - 1), B0 = coin(i, j - 1), C0 = coin(i, j), D0 = coin(i - 1, j); if (A0[1][3] + B0[1][3] + C0[1][3] + D0[1][3] < .04) continue;
+      if (Math.max(A0[0][1], B0[0][1], C0[0][1], D0[0][1]) - Math.min(A0[0][1], B0[0][1], C0[0][1], D0[0][1]) > 2.5) continue;
+      voile.quad(A0[0], B0[0], C0[0], D0[0], A0[1], B0[1], C0[1], D0[1]); }
+  }
+  /** DÉCOR LOINTAIN : le sol se prolonge en anneau jusqu'à l'horizon, puis deux couronnes de silhouettes (proche et lointaine) qui se fondent dans la brume :
+      aucune vue (Visite comprise, caméra inclinée) ne montre plus le bord du monde. Quelques centaines de triangles. */
+  function horizonLointain(sol, T, A, H, brume, LG) {
+    const ext = Math.max(T.rx, T.rz) * 3.2 + 600, cx = T.cx, cz = T.cz, n = LG ? 32 : 48, col = hex(H.col), voile = mel(A.brouillard, brume, .5), up = [0, 1, 0];
+    // la jupe : de l'intérieur du grand plan jusqu'à 3 400 m, un peu plus bas que lui (il garde la main là où ils se chevauchent)
+    const RR = [ext * .9, ext * 1.15, ext * 1.5, ext + 1700], CC = RR.map((r, i) => mel(A.sol, voile, [0, .15, .35, .55][i]));
+    for (let k = 0; k < n; k++) for (let m = 0; m < 3; m++) { const a0 = k / n * TAU, a1 = (k + 1) / n * TAU, P = (a, r) => [cx + Math.cos(a) * r, -.6, cz + Math.sin(a) * r], r0 = RR[m], r1 = RR[m + 1];
+      triLisse(sol, P(a0, r0), P(a1, r0), P(a1, r1), up, up, up, CC[m], CC[m], CC[m + 1]); triLisse(sol, P(a0, r0), P(a1, r1), P(a0, r1), up, up, up, CC[m], CC[m + 1], CC[m + 1]); }
+    const ty = H.type, h0 = H.haut || 120, cime = H.cime ? hex(H.cime) : null;
+    const prof = (t, k) => { const S = (f, p) => Math.sin(t * f + p + k * 1.7);
+      if (ty === "montagnes" || ty === "glace" || ty === "pics") { const v = .5 + .25 * S(3, 1) + .15 * S(7, 2) + .1 * S(17, .5) + (ty === "montagnes" ? 0 : .08 * S(23, 3)); return Math.pow(clamp(v, 0, 1), ty === "pics" ? 2.2 : 1.5) * 1.3 + .08; }
+      if (ty === "collines") return .3 + .25 * (S(4, 0) + 1) / 2 + .2 * (S(9, 1) + 1) / 2;
+      if (ty === "dunes") return .25 + .35 * Math.pow(Math.abs(S(5, 0)), .7) + .15 * (S(11, 2) + 1) / 2;
+      if (ty === "foret") return .35 + .1 * S(5, 0) + (Math.round(t * 120) % 2 ? .25 : 0);
+      if (ty === "ville") { const b = Math.floor(t * 40 / TAU * 6); return .25 + .6 * ((Math.sin(b * 12.9898 + k * 7) * 43758.5453) % 1 + 1) % 1 * (.6 + .4 * (S(2, 0) + 1) / 2); }
+      if (ty === "mur") return .85 + (Math.floor(t * 90) % 2 ? .06 : 0);
+      if (ty === "iles") return Math.max(.02, Math.pow(Math.max(0, S(3, .4) * .6 + S(7, 1) * .4), 3) * 1.1);
+      return .5; };
+    [[1.03, 1, .25, LG ? 120 : 180], [1.5, 1.8, .55, LG ? 80 : 120]].forEach(([kr, kh, kf, N], k) => {
+      const R = ext * kr, c1 = mel(col, voile, kf), c0 = mel(col, voile, Math.min(1, kf + .35)), ct = cime ? mel(cime, voile, kf) : c1;
+      for (let i = 0; i < N; i++) { const a0 = i / N * TAU, a1 = (i + 1) / N * TAU, h1 = prof(a0, k) * h0 * kh, h2 = prof(a1, k) * h0 * kh;
+        const pente = ty === "ville" || ty === "mur" || ty === "foret" ? .15 : 1.4;   // relief : versants inclinés vers le dehors (vus d'en haut, des pentes et non des murs)
+        const B = (a) => [cx + Math.cos(a) * R, -6, cz + Math.sin(a) * R], Hp = (a, h) => [cx + Math.cos(a) * (R + h * pente), h, cz + Math.sin(a) * (R + h * pente)], nA = [-Math.cos(a0), pente * .6 + .1, -Math.sin(a0)], nB = [-Math.cos(a1), pente * .6 + .1, -Math.sin(a1)];
+        const t1 = cime && h1 > h0 * kh * .75 ? ct : c1, t2 = cime && h2 > h0 * kh * .75 ? ct : c1;
+        triLisse(sol, B(a0), B(a1), Hp(a1, h2), nA, nB, nB, c0, c0, t2, .45); triLisse(sol, B(a0), Hp(a1, h2), Hp(a0, h1), nA, nB, nA, c0, t2, t1, .45); } });
+  }
+  /** triangle aux normales et couleurs PAR SOMMET (surfaces lisses : le shader interpole, plus de facettes) */
+  function triLisse(g, a, b, c, na, nb, nc, ca, cb, cc, e) { [[a, na, ca], [b, nb, cb], [c, nc, cc]].forEach(([p, q, k]) => g.d.push(p[0], p[1], p[2], q[0], q[1], q[2], k[0], k[1], k[2], e || 0)); }
+  /** grille de sol LISSE : H[j][i] = hauteurs aux sommets, P(i, j) → [x, z] ; normale de chaque sommet par différences centrées, couleur col(normale)
+      calculée au sommet (dégradés doux au lieu d'aplats par facette) ; les cases toutes à plat (h < .05) sont sautées. Même nombre de triangles qu'avant. */
+  function grilleLisse(g, H, P, col, e) {
+    const NJ = H.length - 1, NI = H[0].length - 1, V = [];
+    for (let j = 0; j <= NJ; j++) { const L = []; for (let i = 0; i <= NI; i++) { const [x, z] = P(i, j); L.push([x, H[j][i], z]); } V.push(L); }
+    const N = [], C = [];
+    for (let j = 0; j <= NJ; j++) { N.push([]); C.push([]); for (let i = 0; i <= NI; i++) {
+      const di = sous(V[j][Math.min(NI, i + 1)], V[j][Math.max(0, i - 1)]), dj = sous(V[Math.min(NJ, j + 1)][i], V[Math.max(0, j - 1)][i]);
+      let q = norme(croix(dj, di)); if (q[1] < 0) q = fois(q, -1); N[j].push(q); C[j].push(col(q, V[j][i])); } }
+    for (let j = 0; j < NJ; j++) for (let i = 0; i < NI; i++) { if (H[j][i] < .05 && H[j][i + 1] < .05 && H[j + 1][i + 1] < .05 && H[j + 1][i] < .05) continue;
+      triLisse(g, V[j][i], V[j][i + 1], V[j + 1][i + 1], N[j][i], N[j][i + 1], N[j + 1][i + 1], C[j][i], C[j][i + 1], C[j + 1][i + 1], e);
+      triLisse(g, V[j][i], V[j + 1][i + 1], V[j + 1][i], N[j][i], N[j + 1][i + 1], N[j + 1][i], C[j][i], C[j + 1][i + 1], C[j + 1][i], e); }
+  }
+  /** le trésor du mois : l'appli ne connaît sa cachette qu'à partir du 1er du mois (js/4-grandprix.js, tresorDuCircuit). Dès qu'il est là, ombres, rayons, nappes
+      et flaques de la recette s'effacent dans un rayon de 16 m autour de lui (la position n'est JAMAIS écrite dans ce fichier public) */
+  function tresorEvite(circuit) { try { const t = typeof window.tresorDuCircuit === "function" ? window.tresorDuCircuit(circuit) : null; return t && t.p ? [t.p[0], t.p[2], 16, 1] : null; } catch (e) { return null; } }
   /** marque une géométrie (ou ses sommets à partir de i0) comme du sol : le shader y peindra les zones de la recette */
   function marquerSol(g, i0) { for (let i = (i0 || 0) + 9; i < g.d.length; i += 10) g.d[i] = SOL; }
   /** objets transparents ou additifs du décor : position + couleur rgba par sommet (7 nombres, comme les effets des voitures) */
@@ -12279,7 +12421,9 @@
     if (W.ciel) R.ciel = mel(hex(W.ciel), A.haut, .15); if (W.rebond) R.rebond = mel(hex(W.rebond), A.sol, .1);
     R.rim = (W.rim || 0) * (nuit ? .4 : 1);
     if (W.etalonnage) R.grade = [W.etalonnage[0], W.etalonnage[1]];
-    R.rayons = W.rayons && !nuit ? W.rayons.force * (LGR ? .85 : 1) * (gris ? RAYONS_GRIS : A.dore ? RAYONS_SOLEIL : 1) : 0;
+    R.rayons = W.rayons && (!nuit || W.rayons.nuit) ? W.rayons.force * (LGR ? .85 : 1) * (gris ? RAYONS_GRIS : A.dore ? RAYONS_SOLEIL : 1) : 0;   // météo légère (v20.62) : atténués, jamais éteints ; rayons.nuit : rais de lumière gardés la nuit (lampes, portails)
+    if (W.soleil && !gris) { const lu = c => c[0] * .299 + c[1] * .587 + c[2] * .114, t = hex(W.soleil[0]), L0 = lu(A.sCol); A.sCol = mel(A.sCol, fois(t, L0 / Math.max(.05, lu(t))), W.soleil[1]); }   // teinte du soleil, à luminosité égale
+    R.pai = W.paillettes ? W.paillettes * (gris ? .4 : 1) : 0;
     if (W.sol) { const s = W.sol, z = x => x ? [...hex(x[0]), x[1]] : [0, 0, 0, 0]; const ri = s.rides || [0, 0, 0];
       R.sol = { A: z(s.creux), B: z(s.cretes), C: z(s.roche), D: z(s.taches), P: [s.echelle || 70, s.haut || 30, s.taches ? s.taches[2] : 2, s.grain || 0], R: [ri[0], LGR ? 0 : ri[1], Math.cos(ri[2]), Math.sin(ri[2])] }; }   // mode léger : pas de rides
     return R;
@@ -12290,7 +12434,7 @@
     "float m=abs(dy)>.5?(exp(-k*yc)-exp(-k*yp))/(k*dy):exp(-k*yp);return clamp(1.-exp(-uBrH.a*length(w-c)*m),0.,1.);}";
   /** GLSL : sols par zones. Le bruit vient d'une petite texture calculée une fois (texBruit) : 2 lectures par pixel, bien moins cher qu'un bruit calculé
       (r = grandes taches, g = taches étirées par le vent, b = grain fin, a = déformation des rides) ; les mipmaps évitent le scintillement au loin. */
-  const GL_SOL = "uniform vec4 uSolA;uniform vec4 uSolB;uniform vec4 uSolC;uniform vec4 uSolD;uniform vec4 uSolP;uniform vec4 uSolR;uniform sampler2D uBruit;" +
+  const GL_SOL = "uniform vec4 uSolA;uniform vec4 uSolB;uniform vec4 uSolC;uniform vec4 uSolD;uniform vec4 uSolP;uniform vec4 uSolR;uniform vec2 uSolE;uniform sampler2D uBruit;" +
     "vec3 sol(vec3 c,vec3 w,vec3 n,float z){vec4 N=texture2D(uBruit,w.xz/(uSolP.x*6.));float g=N.r,pe=clamp((1.-n.y)*2.6,0.,1.),dc=length(w-uCam);" +
     "if(z>0.){float h=clamp(w.y/uSolP.y,0.,1.);" +
     "c=mix(c,uSolA.rgb,uSolA.a*(1.-smoothstep(.04,.5,h))*smoothstep(.38,.72,g));" +
@@ -12299,7 +12443,9 @@
     "c=mix(c,uSolD.rgb,uSolD.a*smoothstep(uSolP.z,uSolP.z+.1,N.g)*(1.-pe));}" +
     "float f=texture2D(uBruit,w.xz*.0061).b;" +
     "if(uSolR.y>0.&&dc<240.)c*=1.+uSolR.y*sin(dot(w.xz,uSolR.zw)*uSolR.x*6.2832+N.a*30.)*(1.-pe)*(.55+.45*z)*(1.-smoothstep(50.,240.,dc));" +
-    "return c*(1.-uSolP.w*.5+uSolP.w*f);}";
+    "c*=1.-uSolP.w*.5+uSolP.w*f;" +
+    "if(uSolE.x>0.&&dc<160.){vec2 q=floor(w.xz*2.5);float hs=fract(sin(dot(q,vec2(12.9898,78.233)))*43758.5453);c+=uSolE.x*step(.986,hs)*(.55+.45*sin(uT*uSolE.y+hs*90.))*(1.-smoothstep(50.,160.,dc))*(1.-pe);}" +   // paillettes : la neige scintille de près
+    "return c;}";
   /** texture de bruit répétable 128 × 128 (valeur lissée, plusieurs octaves), calculée une fois par contexte WebGL */
   function texBruit(gl) {
     const N = 128, D = new Uint8Array(N * N * 4), r = alea(9157);
@@ -12316,19 +12462,25 @@
   }
 
   /* ---------- WebGL ---------- */
+  /** recette waouh : la brume (profondeur + au ras du sol + halo du soleil) est calculée PAR SOMMET puis interpolée : bien moins cher par pixel
+      (les grands sols sont découpés finement, voir affiner) ; uniformes propres au sommet (…V) pour ne jamais en partager un avec le pixel */
+  const VS_W = "attribute vec3 aP;attribute vec3 aN;attribute vec4 aC;uniform mat4 uPV;uniform mat4 uM;uniform vec3 uCamV;uniform vec3 uSunV;uniform vec3 uSunCV;uniform vec3 uFogV;uniform float uDensV;uniform float uHaloV;" +
+    "varying vec3 vN;varying vec4 vC;varying vec3 vW;varying vec4 vFo;varying vec4 vBr;" + GL_BRUME +
+    "void main(){vec4 w=uM*vec4(aP,1.);vW=w.xyz;vN=(uM*vec4(aN,0.)).xyz;vC=aC;vFo=vec4(uFogV,clamp(1.-exp(-length(vW-uCamV)*uDensV),0.,1.));" +
+    "vec3 v=normalize(uCamV-vW);vBr=vec4(uBrH.rgb+uSunCV*uHaloV*pow(max(dot(-v,uSunV),0.),5.),brumeH(vW,uCamV));gl_Position=uPV*w;}";
   const VS = "attribute vec3 aP;attribute vec3 aN;attribute vec4 aC;uniform mat4 uPV;uniform mat4 uM;varying vec3 vN;varying vec4 vC;varying vec3 vW;void main(){vec4 w=uM*vec4(aP,1.);vW=w.xyz;vN=(uM*vec4(aN,0.)).xyz;vC=aC;gl_Position=uPV*w;}";
   /** shader de la scène : w = variante « recette waouh » (sols par zones, brume au ras du sol, contre-jour, étalonnage). Sans w : exactement le shader d'avant,
       pour que les autres circuits ne paient rien (le programme waouh n'est compilé que s'il sert, voir programmeWaouh). */
   const fsScene = w => "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nvarying vec3 vN;varying vec4 vC;varying vec3 vW;uniform vec3 uSun;uniform vec3 uSunC;uniform vec3 uSky;uniform vec3 uGnd;uniform float uAmb;uniform vec3 uFog;uniform float uDens;uniform vec3 uCam;uniform float uSpec;uniform float uFlash;uniform vec4 uTint;uniform float uT;uniform float uEau;" +
-    (w ? "uniform float uRim;uniform float uHalo;uniform vec2 uGrade;" + GL_BRUME + GL_SOL : "") +
+    (w ? "uniform float uRim;uniform vec2 uGrade;varying vec4 vFo;varying vec4 vBr;" + GL_SOL : "") +
     "void main(){vec3 n=normalize(vN);if(uEau>0.){n=normalize(n+vec3(sin(vW.x*.15+uT*1.3)*.06,0.,cos(vW.z*.13+uT*1.1)*.06));}" +
     "float d=dot(n,uSun);float dif=max(d,0.)*.85+abs(d)*.15;vec3 hemi=mix(uGnd,uSky,n.y*.5+.5);vec3 base=vC.rgb*uTint.rgb;" + (w ? "if(vC.a<-.5&&uSolP.x>0.)base=sol(base,vW,n,vC.a<-1.5?0.:1.);" : "") +
     "vec3 col=base*(hemi*uAmb+uSunC*dif);vec3 v=normalize(uCam-vW);vec3 h=normalize(uSun+v);col+=pow(max(dot(n,h),0.),48.)*uSpec*uSunC*.9;" +
-    (w ? "float rf=1.-max(dot(n,v),0.),rs=max(dot(-v,uSun),0.);col+=uSunC*base*uRim*2.*rf*rf*rf*rs*rs*(1.-.7*abs(n.y));" : "") +
+    (w ? "if(uRim>0.){float rf=1.-max(dot(n,v),0.),rs=max(dot(-v,uSun),0.);col+=uSunC*base*uRim*2.*rf*rf*rf*rs*rs*(1.-.7*abs(n.y));}" : "") +
     "if(uSpec>0.){float f=pow(1.-max(dot(n,v),0.),3.);col=mix(col,uSky*.9,f*uSpec*.5);}" +
     "float e=max(vC.a,uTint.a);col=mix(col,base*1.25,e);col+=uFlash*base*.5;" +
-    (w ? "float l=dot(col,vec3(.299,.587,.114));col=max(mix(vec3(l),col,1.+uGrade.x),0.);col=mix(col,col*col*(3.-2.*col),uGrade.y);" : "") +
-    (w ? "float dist=length(vW-uCam);float fo=1.-exp(-dist*uDens);col=mix(col,uFog,clamp(fo,0.,1.));col=mix(col,uBrH.rgb+uSunC*uHalo*pow(max(dot(-v,uSun),0.),5.),brumeH(vW,uCam));gl_FragColor=vec4(col,1.);}"
+    (w ? "if(uGrade.x+uGrade.y>0.){float l=dot(col,vec3(.299,.587,.114));col=max(mix(vec3(l),col,1.+uGrade.x),0.);col=mix(col,col*col*(3.-2.*col),uGrade.y);}" : "") +
+    (w ? "col=mix(col,vFo.rgb,vFo.a);col=mix(col,vBr.rgb,vBr.a);gl_FragColor=vec4(col,1.);}"
       : "float dist=length(vW-uCam);float fo=1.-exp(-dist*uDens);gl_FragColor=vec4(mix(col,uFog,clamp(fo,0.,1.)),1.);}");
   const FS = fsScene(false);
   const VS_CIEL = "attribute vec3 aP;uniform mat4 uPV;uniform vec3 uCam;varying vec3 vD;void main(){vD=aP;gl_Position=uPV*vec4(uCam+aP*1500.,1.);gl_Position.z=gl_Position.w*.9999;}";
@@ -12344,8 +12496,9 @@
   const FS_FX = "precision mediump float;varying vec4 vC;void main(){gl_FragColor=vC;}";
   /** recette waouh : objets transparents et additifs du décor (voile, lueur, rayons), qui s'effacent dans la brume ; uK = force de la couche */
   const VS_VOILE = "attribute vec3 aP;attribute vec4 aC;uniform mat4 uPV;uniform vec3 uCam;uniform float uDens;uniform float uK;varying vec4 vC;" + GL_BRUME +   // brume calculée par sommet : presque rien à faire par pixel
-    "void main(){float f=clamp(1.-exp(-length(aP-uCam)*uDens),0.,1.);vC=vec4(aC.rgb,aC.a*uK*(1.-f)*(1.-.85*brumeH(aP,uCam)));gl_Position=uPV*vec4(aP,1.);}";
-  const FS_VOILE = "precision mediump float;varying vec4 vC;void main(){gl_FragColor=vC;}";
+    "uniform vec4 uEv;varying vec2 vEv;" +   // uEv : cachette du trésor du mois (x, z, rayon, allumé) : rien de la recette ne s'y montre (voir tresorEvite)
+    "void main(){float f=clamp(1.-exp(-length(aP-uCam)*uDens),0.,1.);vC=vec4(aC.rgb,aC.a*uK*(1.-f)*(1.-.85*brumeH(aP,uCam)));vEv=uEv.w>0.?(aP.xz-uEv.xy)/uEv.z:vec2(9.);gl_Position=uPV*vec4(aP,1.);}";
+  const FS_VOILE = "precision mediump float;varying vec4 vC;varying vec2 vEv;void main(){gl_FragColor=vec4(vC.rgb,vC.a*smoothstep(1.,1.4,length(vEv)));}";
   const VS_PT = "attribute vec3 aP;attribute vec4 aC;attribute float aS;uniform mat4 uPV;uniform float uH;varying vec4 vC;void main(){vC=aC;vec4 p=uPV*vec4(aP,1.);gl_Position=p;gl_PointSize=clamp(aS*uH/max(p.w,1.),1.,96.);}";
   const FS_PT = "precision mediump float;varying vec4 vC;void main(){vec2 q=gl_PointCoord-.5;float r=length(q)*2.;float a=smoothstep(1.,0.,r);gl_FragColor=vec4(vC.rgb,vC.a*a*a);}";
   const VS_PLUIE = "attribute vec4 aS;uniform mat4 uPV;uniform vec3 uCam;uniform float uT;uniform float uV;uniform float uLong;uniform float uNeige;uniform float uVent;varying float vA;" +
@@ -12493,12 +12646,13 @@
     if (!ANI) { A.eclairs = 0; A.eclairCiel = 0; }   // « réduire les animations » : aucun éclair
     const RW = recetteWaouh(def, A, LGR);   // recette waouh (null : rendu d'avant)
     // les programmes « waouh » ne sont compilés qu'au premier circuit qui a une recette (puis gardés avec le contexte)
-    const PL = RW ? C.PLW || (C.PLW = programme(gl, VS, fsScene(true))) : C.PL, PC = RW ? C.PCW || (C.PCW = programme(gl, VS_CIEL, fsCiel(true))) : C.PC;
+    const PL = RW ? C.PLW || (C.PLW = programme(gl, VS_W, fsScene(true))) : C.PL, PC = RW ? C.PCW || (C.PCW = programme(gl, VS_CIEL, fsCiel(true))) : C.PC;
     /** uniformes de la recette pour la scène éclairée (sans recette : tout à 0, rendu d'avant) */
     function uniformesWaouh(gl, U) {
-      gl.uniform1f(U.uRim, RW ? RW.rim : 0); gl.uniform1f(U.uHalo, RW && RW.halo || 0); gl.uniform2fv(U.uGrade, RW && RW.grade || [0, 0]);
+      gl.uniform1f(U.uRim, RW ? RW.rim : 0); gl.uniform1f(U.uHaloV, RW && RW.halo || 0); gl.uniform2fv(U.uGrade, RW && RW.grade || [0, 0]);
+      gl.uniform3fv(U.uCamV, I.cam.e); gl.uniform3fv(U.uSunV, A.soleil); gl.uniform3fv(U.uSunCV, A.sCol); gl.uniform3fv(U.uFogV, A.brouillard); gl.uniform1f(U.uDensV, A.brume);
       if (RW && RW.brume) { gl.uniform4fv(U.uBrH, RW.brume); gl.uniform1f(U.uBrK, RW.brumeK); } else gl.uniform4f(U.uBrH, 0, 0, 0, 0);
-      const Sl = RW && !I.allege && RW.sol; gl.uniform4fv(U.uSolP, Sl ? Sl.P : [0, 0, 0, 0]);
+      const Sl = RW && !I.allege && RW.sol; gl.uniform4fv(U.uSolP, Sl ? Sl.P : [0, 0, 0, 0]); gl.uniform2f(U.uSolE, Sl ? RW.pai : 0, ANI ? 3 : 0);
       if (Sl) { gl.uniform4fv(U.uSolA, Sl.A); gl.uniform4fv(U.uSolB, Sl.B); gl.uniform4fv(U.uSolC, Sl.C); gl.uniform4fv(U.uSolD, Sl.D); gl.uniform4fv(U.uSolR, Sl.R); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, C.bruit || (C.bruit = texBruit(gl))); gl.uniform1i(U.uBruit, 0); }
     }
     const BV = (S.voiles || []).map(f => { if (!f) return null; const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, f, gl.STATIC_DRAW); return { b, n: f.length / 7 }; });
@@ -12710,9 +12864,10 @@
       [PL.A.aN].forEach(a => gl.disableVertexAttribArray(a));
       // recette waouh : voile (ombres de contact, objets transparents), puis lueurs et rayons du soleil (additifs, qui respirent doucement)
       if (BV.some(Boolean)) { gl.useProgram(PW.p); gl.uniformMatrix4fv(PW.U.uPV, false, PV); gl.uniform3fv(PW.U.uCam, I.cam.e); gl.uniform1f(PW.U.uDens, A.brume);
+        const tv = tresorEvite(o.circuit); I.evite = !!tv; gl.uniform4fv(PW.U.uEv, tv || [0, 0, 1, 0]);
         if (RW && RW.brume) { gl.uniform4fv(PW.U.uBrH, RW.brume); gl.uniform1f(PW.U.uBrK, RW.brumeK); } else gl.uniform4f(PW.U.uBrH, 0, 0, 0, 0);
         gl.enableVertexAttribArray(PW.A.aP); gl.enableVertexAttribArray(PW.A.aC); gl.enable(gl.BLEND); gl.depthMask(false);
-        [[0, false, 1], [1, true, 1], [2, true, RW && !I.allege ? RW.rayons * (ANI ? .84 + .16 * Math.sin(t * .45) : 1) : 0]].forEach(([k, add, f]) => { const c = BV[k]; if (!c || f <= 0) return;
+        [[0, false, I.allege ? 0 : 1], [1, true, 1], [2, true, RW && !I.allege ? RW.rayons * (ANI ? .84 + .16 * Math.sin(t * .45) : 1) : 0]].forEach(([k, add, f]) => { const c = BV[k]; if (!c || f <= 0) return;
           if (k === 0) { gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-3, -6); } gl.blendFunc(gl.SRC_ALPHA, add ? gl.ONE : gl.ONE_MINUS_SRC_ALPHA); gl.uniform1f(PW.U.uK, f);
           gl.bindBuffer(gl.ARRAY_BUFFER, c.b); gl.vertexAttribPointer(PW.A.aP, 3, gl.FLOAT, false, 28, 0); gl.vertexAttribPointer(PW.A.aC, 4, gl.FLOAT, false, 28, 12); gl.drawArrays(gl.TRIANGLES, 0, c.n);
           if (k === 0) gl.disable(gl.POLYGON_OFFSET_FILL); }); }
@@ -12774,7 +12929,7 @@
       if (calme && I.dernier && now - I.dernier < 31) { if (I.actif) raf = requestAnimationFrame(image); return; }
       const t = (now - I.t0) / 1000, dt = Math.min(.05, I.dernier ? (now - I.dernier) / 1000 : .016);
       if (!calme && I.dernier) { I.ft = I.ft * .92 + (now - I.dernier) * .08; if (I.ft > 26 && I.q > 1) { if (++I.lents > 40) { I.q = Math.max(1, I.q - .25); I.lents = 0; I.ft = 16; redim(); } }
-        else if (RW && !I.allege && I.ft > 30) { if (++I.lents > 60) { I.allege = true; I.lents = 0; I.ft = 16; } }   // recette waouh : si le téléphone peine encore, sols par zones et rayons s'éteignent (brume et lumière restent)
+        else if (RW && !I.allege && I.ft > 30) { if (++I.lents > 60) { I.allege = true; I.lents = 0; I.ft = 16; } }   // recette waouh : si le téléphone peine encore, sols par zones, ombres et rayons s'éteignent (brume, lumière et décor lointain restent)
         else I.lents = 0; }
       I.dernier = now;
       // v20.62 · le téléphone peine pendant le tour de présentation : on l'arrête, la course part (pas de tour qui rame)
@@ -12935,7 +13090,7 @@
       /** v20.52 · la météo montrée (tests) et un éclair tout de suite (captures) */
       meteo: () => A.sable ? "sable" : A.pluie ? "pluie" : (def.amb === "noel" && A.neige && A.meteo !== "soleil" && A.meteo !== "beau") ? "neige" : A.dore ? "soleil" : null, particules: () => nbP,
       /** recette waouh en cours (tests) : null sans recette ; sinon ce qui est allumé */
-      waouh: () => RW ? { brume: !!RW.brume, sol: !!(RW.sol && !I.allege), rayons: !I.allege && RW.rayons > 0 && !!(BV[2]), force: RW.rayons, brumeCol: RW.brume ? RW.brume.slice() : null, voile: !!BV[0], allege: !!I.allege } : null,
+      waouh: () => RW ? { brume: !!RW.brume, sol: !!(RW.sol && !I.allege), rayons: !I.allege && RW.rayons > 0 && !!(BV[2]), force: RW.rayons, brumeCol: RW.brume ? RW.brume.slice() : null, voile: !!BV[0], lueur: !!BV[1], evite: !!I.evite, allege: !!I.allege } : null,
       eclair() { if (A.eclairCiel) { eclairCiel(); I.prochainCiel = 5; reveiller(); } else if (A.eclairs) { I.flash = 1; I.prochainEclair = 4; reveiller(); } },
       /** v20.62 · intensité de l'éclair du ciel en cours (tests) */
       eclairEnCours: () => !!I.ecl,
