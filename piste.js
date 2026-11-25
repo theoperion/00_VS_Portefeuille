@@ -12277,6 +12277,7 @@
       placer(pts) { I.anim = null; I.suspendu = null; I.pts = Object.assign({}, pts); placer(true); I.feuxDepart = -1; reveiller(); },
       regler(x) { Object.assign(o, x); },
       pause(b) { I.pause = !!b; if (!b) reveiller(); },
+      cachee: () => !!I.pause,
       /** course : ⏸ suspendre (true) / ▶ reprendre (false) là où elle en était (l'horloge de l'animation est décalée du temps passé en pause) */
       suspendre(b) { if (!I.anim) { I.suspendu = null; return; } if (b && !I.suspendu) I.suspendu = performance.now();
         else if (!b && I.suspendu) { const d = performance.now() - I.suspendu; I.anim.t0 += d; I.anim.t00 += d; I.suspendu = null; } reveiller(); },
@@ -12401,7 +12402,7 @@
   /* ============================================================
      Instance 2D : la carte du circuit, sobre et lisible
      ============================================================ */
-  const CARTES_P = {};   // cartes peintes, calculées une fois par circuit
+  const CARTES_P = {}, CADRES = {};   // cartes peintes, calculées une fois par circuit ; v20.53 : cadre (viewBox) de la Carte 2D par circuit
   /** V16.17 · fond peint « cuit » en WebP (outils-tests/cuire-cartes.js) : image fixe, bien plus légère à afficher que le SVG */
   const carteCuite = k => { const c = self.CARTES_CUITES; return c && c[k] ? "img/cartes/" + k + ".webp?v=" + c[k] : null; };
   /* ---------- V16.35 · Événements en pleine course (carte 2D) ----------
@@ -12954,8 +12955,12 @@
     const acc = o.accent || "#9B87FF", k = w / 340, K = v => (v * k).toFixed(1);
     const PE = def.peint && PEINTS[def.peint] ? PEINTS[def.peint] : null, CP = PE ? (CARTES_P[def.peint] || (CARTES_P[def.peint] = PE.peindre(T, Z, def))) : null;
     const svg = document.createElementNS(NS, "svg"); svg.setAttribute("class", "p2-svg"); svg.setAttribute("viewBox", minx.toFixed(1) + " " + minz.toFixed(1) + " " + w.toFixed(1) + " " + h.toFixed(1)); svg.setAttribute("preserveAspectRatio", "xMidYMid meet"); svg.setAttribute("role", "img"); svg.setAttribute("aria-label", o.titre || "Circuit");
-    if (CP) svg.innerHTML = '<rect x="' + (minx - 400) + '" y="' + (minz - 400) + '" width="' + (w + 800) + '" height="' + (h + 800) + '" fill="' + CP.couleur + '"/>' +
-      '<g transform="scale(' + (1 / KU) + ')"><image href="' + (carteCuite(def.peint) || CP.url || (CP.url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(CP.fond))) + '" x="0" y="0" width="' + CP.W + '" height="' + CP.H + '"/>' + CP.anim +
+    // v20.53 (Théo : 2-3 s d'écran noir en arrivant sur le Podium) · le grand rectangle noir sous la carte cachait tout tant que l'image
+    // n'était pas décodée : avec une carte cuite, la même image est posée tout de suite en fond de la boîte (au pixel près, voir majFond)
+    // et le noir n'est plus que le fond des marges ; l'image du SVG se décode sans bloquer (decoding="async")
+    const CU = CP ? carteCuite(def.peint) : null;
+    if (CP) svg.innerHTML = '<rect x="' + (minx - 400) + '" y="' + (minz - 400) + '" width="' + (w + 800) + '" height="' + (h + 800) + '" fill="' + CP.couleur + '"' + (CU ? ' fill-opacity="0"' : "") + '/>' +
+      '<g transform="scale(' + (1 / KU) + ')"><image href="' + (CU || CP.url || (CP.url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(CP.fond))) + '" x="0" y="0" width="' + CP.W + '" height="' + CP.H + '" decoding="async"/>' + CP.anim +
       (CP.portraits && o.portrait ? CP.portraits.map(p => { const v = (o.voitures || [])[p.k]; const h = v ? o.portrait(v.nom) : ""; return h ? '<foreignObject x="' + (p.x - p.r) + '" y="' + (p.y - p.r) + '" width="' + 2 * p.r + '" height="' + 2 * p.r + '"><div xmlns="http://www.w3.org/1999/xhtml" class="p2-portrait">' + h + "</div></foreignObject>" : ""; }).join("") : "") + "</g>" +   // v16.31 : les vrais portraits (Mon portrait) dans les cartes qui en prévoient
       zoneTrait(Z.atout, o.atoutCol) + zoneTrait(Z.piege, o.piegeCol) + fleches +
       '<g transform="translate(' + p0.x.toFixed(1) + " " + p0.z.toFixed(1) + ") rotate(" + ang.toFixed(1) + ") scale(" + (k * .9).toFixed(2) + ')"><rect x="-1.6" y="-6" width="3.2" height="12" fill="#fff"/><rect x="-1.6" y="-6" width="1.6" height="2" fill="#111"/><rect x="0" y="-4" width="1.6" height="2" fill="#111"/><rect x="-1.6" y="-2" width="1.6" height="2" fill="#111"/><rect x="0" y="0" width="1.6" height="2" fill="#111"/><rect x="-1.6" y="2" width="1.6" height="2" fill="#111"/><rect x="0" y="4" width="1.6" height="2" fill="#111"/></g>' +
@@ -12980,6 +12985,11 @@
     /** v20.52 (Théo) · sur la grille : écart entre deux voitures = 19 px à l'écran (pastilles des pilotes jamais l'une sur l'autre), quinconce marqué */
     function grille2D() { if (!o.grille) return null; let W = taille.w, H = taille.h; if (W < 50) { const b = boite.getBoundingClientRect(); W = b.width; H = b.height; }
       const sc = W >= 50 ? Math.min(W / w, H / h) : 0; return { pas: sc ? clamp(19 / sc, 9, 90) : 30, lat: 7 }; }
+    /** v20.53 · la carte cuite en fond CSS de la boîte, exactement là où le SVG la dessine (viewBox courant, « meet » centré) : visible dès la 1re image */
+    function majFond() { if (!CU) return; let W = taille.w, H = taille.h; if (W < 50) { const b = boite.getBoundingClientRect(); W = b.width; H = b.height; } if (W < 50 || H < 20) return;
+      const vb = VBc, sc = Math.min(W / vb[2], H / vb[3]), ox = (W - vb[2] * sc) / 2 - vb[0] * sc, oy = (H - vb[3] * sc) / 2 - vb[1] * sc, px = v => v.toFixed(1) + "px";
+      const st = boite.style; if (!st.backgroundImage) { st.backgroundColor = CP.couleur; st.backgroundImage = 'url("' + CU + '")'; st.backgroundRepeat = "no-repeat"; }
+      st.backgroundSize = px(CP.W / KU * sc) + " " + px(CP.H / KU * sc); st.backgroundPosition = px(ox) + " " + px(oy); }
     const MET = o.effets ? (() => { try { return meteo2D(boite, svg, gTr, T, def, o.meteo, { vb: () => VBc, enCourse: () => !!(I.anim && !I.suspendu), voitures: () => Object.keys(V).map(n => ({ nom: n, x: V[n].x, y: V[n].y, roule: !!I.anim && !I.suspendu })) }); } catch (e) { return null; } })() : null;
     const gEv = svg.querySelector(".p2-ev"), EVf = gEv && EVENEMENTS[def.peint];   // V16.35 : événements en course
     let EV = null; try { EV = EVf ? EVf({ svg, g: gEv, T, KU, V, lieux: (CP && CP.lieux) || {}, anime: ANIM() }) : null; } catch (e) { EV = null; }
@@ -13015,7 +13025,7 @@
     const versMonde = (px, py) => { const { r, s } = echelle(); return [ZM.c[0] + (px - r.left - r.width / 2) / s, ZM.c[1] + (py - r.top - r.height / 2) / s]; };
     function appliquerVB() { ZM.raf = 0; const z = ZM.z = clamp(ZM.z, 1, 5), vw = w / z, vh = h / z;
       ZM.c = [clamp(ZM.c[0], minx + vw / 2, minx + w - vw / 2), clamp(ZM.c[1], minz + vh / 2, minz + h - vh / 2)];
-      VBc = [ZM.c[0] - vw / 2, ZM.c[1] - vh / 2, vw, vh]; svg.setAttribute("viewBox", VBc[0].toFixed(1) + " " + VBc[1].toFixed(1) + " " + vw.toFixed(1) + " " + vh.toFixed(1)); rec.hidden = z < 1.02; if (o.image) o.image(api); }
+      VBc = [ZM.c[0] - vw / 2, ZM.c[1] - vh / 2, vw, vh]; svg.setAttribute("viewBox", VBc[0].toFixed(1) + " " + VBc[1].toFixed(1) + " " + vw.toFixed(1) + " " + vh.toFixed(1)); rec.hidden = z < 1.02; majFond(); if (o.image) o.image(api); }
     const majVB = () => { if (!ZM.raf) ZM.raf = requestAnimationFrame(appliquerVB); };
     /** zoome d'un facteur f en gardant le point (px, py) de l'écran sous le doigt */
     const zoomer = (f, px, py) => { const W0 = versMonde(px, py), { r } = echelle(), z = clamp(ZM.z * f, 1, 5), s = Math.min(r.width / w, r.height / h) * z;
@@ -13036,7 +13046,7 @@
     ["pointerup", "pointercancel"].forEach(t => svg.addEventListener(t, lacher));
     svg.addEventListener("wheel", ev => { if (!ZM.on) return; ev.preventDefault(); zoomer(Math.exp(-ev.deltaY * .0015), ev.clientX, ev.clientY); }, { passive: false });
     svg.addEventListener("click", ev => { if (ZM.on && ZM.glisse) return; const r = boite.getBoundingClientRect(); let best = null, bd = 30; Object.keys(V).forEach(n => { const e = ecran(n); if (!e) return; const dd = Math.hypot(e.x + r.left - ev.clientX, e.y + 10 + r.top - ev.clientY); if (dd < bd) { bd = dd; best = n; } }); if (best && o.toucher) o.toucher(best); });
-    const ro = window.ResizeObserver ? new ResizeObserver(() => { const r = boite.getBoundingClientRect(), g0 = taille.w; taille = { w: r.width, h: r.height }; if (MET) MET.redim(r.width, r.height); if (o.grille && !I.anim && Math.abs(g0 - r.width) > 1) poser(); if (o.image) o.image(api); }) : null; if (ro) ro.observe(boite);
+    const ro = window.ResizeObserver ? new ResizeObserver(() => { const r = boite.getBoundingClientRect(), g0 = taille.w; taille = { w: r.width, h: r.height }; majFond(); if (MET) MET.redim(r.width, r.height); if (o.grille && !I.anim && Math.abs(g0 - r.width) > 1) poser(); if (o.image) o.image(api); }) : null; if (ro) ro.observe(boite);
     const api = {
       type: "2d", T, zones: Z,
       equipes: () => Object.keys(V).map(n => ({ nom: n, livree: V[n].v.livree || null, casque: V[n].v.casqueModele || null, finition: V[n].v.finition || null, trainee: V[n].v.trainee || null, numero: V[n].v.numero || null })),
@@ -13051,10 +13061,13 @@
       jouerScenario(scen, duree, fin) { if (EV && EV.raz) EV.raz(); if (!ANIM()) { api.placer(scen(1)); if (fin) fin(); return; } I.suspendu = null; I.e = 0; I.pts = scen(0); poser(); I.anim = { scen, de: scen(0), a: scen(1), t0: performance.now(), duree, fin }; if (!raf) raf = requestAnimationFrame(boucle); },
       camera() { }, focus() { }, voitures() { }, survol(d, fin) { if (fin) fin(); }, arreterSurvol() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); if (MET) MET.reveiller(); if (o.image) o.image(api); }, reveiller() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); if (MET) MET.reveiller(); },   // V16.16 : la course reprend si la piste a été détachée
       /** v17.10 · zoom et déplacement de la carte (plein écran) : true pour l'activer, false pour l'arrêter et recentrer */
+      /** v20.53 · onglet caché (true) : le décor animé (SMIL) s'arrête net, il repart au retour (false) ; la course se suspend côté appli */
+      pause(b) { I.cache = !!b; try { if (b) svg.pauseAnimations(); else svg.unpauseAnimations(); } catch (e) { } if (!b) api.reveiller(); },
+      cachee: () => !!I.cache,
       zoom2D(b) { ZM.on = !!b; svg.style.touchAction = b ? "none" : ""; svg.classList.toggle("zoomable", ZM.on); if (!b) recentrer(); },
-      detruire() { if (raf) cancelAnimationFrame(raf); if (ZM.raf) cancelAnimationFrame(ZM.raf); if (ro) ro.disconnect(); if (MET) MET.stop(); svg.remove(); rec.remove(); }
+      detruire() { if (raf) cancelAnimationFrame(raf); if (ZM.raf) cancelAnimationFrame(ZM.raf); if (ro) ro.disconnect(); if (MET) MET.stop(); svg.remove(); rec.remove(); ["backgroundImage", "backgroundColor", "backgroundSize", "backgroundPosition", "backgroundRepeat"].forEach(k => boite.style[k] = ""); }
     };
-    poser();
+    majFond(); poser();
     return api;
   }
 
@@ -13204,6 +13217,8 @@
 
   window.Piste = {
     TRACES, supporte,
+    /** v20.53 · réponse sans ouvrir de contexte 3D (boutons, choix de la vue) : le vrai test n'a lieu qu'en montant la 3D */
+    supporteVite: () => SUPPORTE !== null ? SUPPORTE : !!(window.WebGLRenderingContext),
     /** v20.48 · showroom de l'Écurie : la voiture de la course sur un plateau tournant (v = { nom, couleur, casque, casqueModele, livree, finition, numero }) */
     vitrine: monterVitrine,
     /** v20.48 · photo fixe de la même voiture (vignettes de l'Écurie) : une image PNG, gardée en mémoire ; null sans WebGL */
@@ -13219,6 +13234,16 @@
       if (o.mode !== "2d" && supporte()) { try { return monter3D(boite, o); } catch (e) { if (window.console) console.warn("Piste 3D indisponible :", e && e.message); } }
       return monter2D(boite, Object.assign({}, o, { mode: "2d" }));
     },
+    /** v20.53 · la carte cuite posée en fond CSS d'une boîte de W × H px, exactement là où la Carte 2D la dessinera (affichage immédiat,
+        avant que le dessin soit monté) : { image, couleur, taille, position } ou null */
+    fond2D(id, W, H) {
+      const def = TRACES[id], PE = def && def.peint ? PEINTS[def.peint] : null, cu = PE ? carteCuite(def.peint) : null; if (!cu || !(W > 50) || !(H > 20)) return null;
+      const c = CADRES[id] || (CADRES[id] = (() => { const T = echantillonner(def), m = 34; return [T.cx - T.rx - m, T.cz - T.rz - m, T.rx * 2 + 2 * m, T.rz * 2 + 2 * m]; })());
+      const sc = Math.min(W / c[2], H / c[3]), px = v => v.toFixed(1) + "px";
+      return { image: 'url("' + cu + '")', couleur: "#000", taille: px(1080 / KU * sc) + " " + px(720 / KU * sc), position: px((W - c[2] * sc) / 2 - c[0] * sc) + " " + px((H - c[3] * sc) / 2 - c[1] * sc) };
+    },
+    /** v20.53 · prépare à l'avance (quand le téléphone ne fait rien) le décor animé de la Carte 2D d'un circuit : le Podium le monte ensuite sans attendre */
+    prechauffer(id) { try { const def = TRACES[id], PE = def && def.peint ? PEINTS[def.peint] : null; if (!PE || CARTES_P[def.peint]) return; const T = echantillonner(def); CARTES_P[def.peint] = PE.peindre(T, zones(T), def); } catch (e) { /* sera fait au montage */ } },
     /** V16.12 · la carte peinte du circuit en image (fond de la bande-annonce), ou null */
     carte(id) {
       const def = TRACES[id], PE = def && def.peint ? PEINTS[def.peint] : null; if (!PE) return null;

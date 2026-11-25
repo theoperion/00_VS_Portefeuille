@@ -118,6 +118,9 @@ button, select, input { font: inherit; color: inherit; }
 main { padding-top: 4px; }
 .view { display: grid; gap: 22px; padding-top: 14px; }
 .view > * { min-width: 0; }
+/* v20.53 (Théo : petits lags d'un onglet à l'autre) · un onglet caché n'est plus « effacé » de la mise en page (display: none) : il est mis de côté
+   (content-visibility: hidden), le navigateur garde sa mise en page et le réaffiche presque sans calcul. Hauteur nulle, invisible et intouchable. */
+main > .view[hidden] { display: grid !important; content-visibility: hidden; visibility: hidden; height: 0 !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; border: 0 !important; overflow: hidden; pointer-events: none; }
 h2.sec { margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font: italic 800 19px/1.1 var(--f-display); letter-spacing: .06em; text-transform: uppercase; padding-bottom: 8px; border-bottom: 1px solid var(--rule); text-wrap: balance; }
 h2.sec small { font: 400 12px/1.2 var(--f-text); letter-spacing: 0; text-transform: none; color: var(--ink-3); font-style: normal; text-align: right; }
 
