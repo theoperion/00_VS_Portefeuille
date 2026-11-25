@@ -5022,10 +5022,27 @@ function ouvrirReleveVersus(journal) {
    chaque opération de l'avis pré-remplit la saisie habituelle (mêmes champs, même envoi), l'utilisateur relit et valide toujours.
    Jamais de valeur inventée : un champ absent de l'avis reste vide et est signalé. pdf.js est chargé à la demande depuis cdnjs. ---- */
 const PDFJS_URL = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
-/* quelques ETF connus (ISIN → code habituel, ticker Google Finance) : seulement pour PROPOSER l'actif, jamais l'imposer */
+/* ETF et supports courants (ISIN → code habituel, ticker Google Finance ; "" = ticker à vérifier) : seulement pour PROPOSER l'actif, jamais l'imposer.
+   v20.53 : supports de Théo + ETF courants du PEA/CTO Fortuneo et de Linxea Spirit 2. Les supports PROPRES à un joueur ne sont PAS ici
+   (dépôt public) : son fichier les donne à SON appli (colonne « ISIN » de Paramètres › Mes actifs, fonction listerMesIsin du script). */
 const ISIN_CONNUS = {
-  FR0010342592: ["LQQ", "EPA:LQQ"], FR0011871110: ["PUST", "EPA:PUST"], FR0011871128: ["PSP5", "EPA:PSP5"], LU1681043599: ["CW8", "EPA:CW8"],
-  FR0011869353: ["EWLD", "EPA:EWLD"], FR0010755611: ["CL2", "EPA:CL2"], FR0011550185: ["ESE", "EPA:ESE"]
+  // Nasdaq-100
+  FR0010342592: ["LQQ", "EPA:LQQ"], FR0011871110: ["PUST", "EPA:PUST"], LU1681038243: ["ANX", "EPA:ANX"], IE00B53SZB19: ["CNDX", "LON:CNDX"],
+  // S&P 500
+  FR0011871128: ["PSP5", "EPA:PSP5"], FR0011550185: ["ESE", "EPA:ESE"], FR0013412285: ["PE500", "EPA:PE500"], IE00B5BMR087: ["CSPX", "LON:CSPX"], LU1681048804: ["500", "EPA:500"],
+  // Monde
+  LU1681043599: ["CW8", "EPA:CW8"], FR0011869353: ["EWLD", "EPA:EWLD"], FR001400U5Q4: ["DCAM", "EPA:DCAM"], IE0002XZSHO1: ["WPEA", "EPA:WPEA"], FR0010315770: ["WLD", "EPA:WLD"],
+  IE00B4L5Y983: ["IWDA", "AMS:IWDA"], IE00BK5BQT80: ["VWCE", "ETR:VWCE"], IE00B3RBWM25: ["VWRL", "AMS:VWRL"], LU3243907741: ["ACWI", ""],
+  // Europe, France
+  FR0013412038: ["PCEU", "EPA:PCEU"], FR0011550193: ["ETZ", "EPA:ETZ"], FR0007052782: ["CAC", "EPA:CAC"], LU0908500753: ["MEUD", "EPA:MEUD"],
+  // Émergents
+  FR001400ZGO4: ["EMPEA", ""], FR0013412020: ["PAEEM", "EPA:PAEEM"], LU1681045370: ["AEEM", "EPA:AEEM"], IE00BKM4GZ66: ["EIMI", "AMS:EMIM"],
+  // Or
+  FR0013416716: ["GOLD", "EPA:GOLD"], IE00B4ND3602: ["IGLN", "LON:IGLN"],
+  // Monétaire, obligations
+  FR0010510800: ["CSH2", "EPA:CSH2"], LU0290358497: ["XEON", "ETR:XEON"],
+  // Levier (hors PEA)
+  FR0010755611: ["CL2", "EPA:CL2"]
 };
 let IMP = null;   // { panneau, coller, texte, msg, lecture, compte, ops: [...], i }
 let pdfjsP = null;
@@ -5270,6 +5287,7 @@ function actifDeAvis(op) {
   const actifs = refData().actifs || [], existe = c => actifs.some(a => a.code === c);
   if (!op.isin && op.src === "linxea") return { code: "", sur: false, raison: "" };   // ligne de liste Linxea : pas de support
   const memo = memoIsin()[cleOp(op)]; if (memo && existe(memo)) return { code: memo, sur: true, raison: "isin" };
+  const sien = op.isin && actifs.find(a => String(a.isin || "").toUpperCase() === op.isin); if (sien) return { code: sien.code, sur: true, raison: "isin" };   // v20.53 : l'ISIN noté dans SON fichier (Mes actifs)
   const connu = ISIN_CONNUS[op.isin]; if (connu && existe(connu[0])) return { code: connu[0], sur: true, raison: "isin" };
   const mo = motsActif(op.nom), lev = levierNom(op.nom);
   const notes = actifs.map(a => {
