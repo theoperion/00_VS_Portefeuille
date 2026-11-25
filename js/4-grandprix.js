@@ -1036,11 +1036,12 @@ function ceremonieChercheurNoel(rang) {
   o.innerHTML = '<div class="rv-c cbo-c"><span class="cbo-rayons" aria-hidden="true"></span><span class="tuto-k">🎅 Trésor de l\'Atelier du Père Noël</span><h3>Trouvé' + (or ? " en premier ! 🥇" : " !") + "</h3>" +
     '<p class="cn-gain">🎁 Tu gagnes la plaque <b>Chercheur de Noël</b>' + (or ? ", dans sa version dorée : tu es le premier !" : ".") + "</p>" +
     '<div class="tk-obj">' + (typeof vignetteItem === "function" ? vignetteItem("plaque", id, moi, {}) : "") + "</div>" +
-    '<p class="cbo-flair">Elle est à toi pour toujours, dans ton écurie · aucun point</p><div class="btn-row"><button class="btn ghost" type="button" data-cb-ok>Génial !</button></div></div>';
+    '<p class="cbo-flair">Elle est à toi pour toujours, dans ton écurie · aucun point</p><div class="btn-row">' + (typeof btnEquiper === "function" ? btnEquiper("plaque", id) : "") + '<button class="btn ghost" type="button" data-cb-ok>Génial !</button></div></div>';   // v20.70 · 🏎️
   document.body.appendChild(o);
   const t0 = Date.now(), fermer = () => { o.remove(); try { rendreVue(vueActive()); } catch (er) { } };
   o.addEventListener("click", ev => { if (ev.target === o && Date.now() - t0 > 1500) fermer(); });
   o.querySelector("[data-cb-ok]").addEventListener("click", fermer);
+  if (typeof brancherEquiper === "function") brancherEquiper(o, () => o.remove());
   try { confettis("trophees"); } catch (er) { /* sans fête */ }
 }
 function ceremonieEclat(e, c, i) {
@@ -1819,11 +1820,12 @@ function ceremonieTicket(n, exemple) {
     "<p>Un seul ticket dans toute l'année, et il était dans ta tablette : il est à toi pour toujours. Il brille dans tes Trophées, parmi les 💎 Légendes.</p>" +
     '<div class="tk-obj"><span>Objets d\'écurie exclusifs</span><div class="tk-objs">' + (typeof vignetteItem === "function" ? vignetteItem("plaque", "ticketor", moiVrai() || "", e) + '<span class="tk-fin">' + vignetteItem("finition", "feuilledor", moiVrai() || "", e) + "<small>Finition « Feuille d'or »</small></span>" : "") + "</div></div>" +
     '<p class="cbo-flair">Aucun point au championnat : seulement la gloire (la plaque, et ta voiture à la feuille d\'or en course).</p>' +
-    '<div class="btn-row">' + (exemple ? "" : '<button class="btn acc" type="button" data-tk-vit>Voir ma Légende</button>') + '<button class="btn ghost" type="button" data-tk-ok>Génial !</button></div></div>';
+    '<div class="btn-row">' + (exemple || typeof btnEquiper !== "function" ? "" : btnEquiper("plaque", "ticketor")) + (exemple ? "" : '<button class="btn ghost" type="button" data-tk-vit>Voir ma Légende</button>') + '<button class="btn ghost" type="button" data-tk-ok>Génial !</button></div></div>';   // v20.70 · 🏎️
   document.body.appendChild(o);
   const t0 = Date.now(), fermer = () => o.remove();
   o.addEventListener("click", ev => { if (ev.target === o && Date.now() - t0 > 1500) fermer(); });
   o.querySelector("[data-tk-ok]").addEventListener("click", fermer);
+  if (!exemple && typeof brancherEquiper === "function") brancherEquiper(o, fermer);
   const vt = o.querySelector("[data-tk-vit]"); if (vt) vt.addEventListener("click", () => { fermer(); ETAT.podium = "defis"; if (typeof VIT_ONGLET !== "undefined") VIT_ONGLET = "legendes"; garder(); if (typeof allerA === "function") allerA("trophees"); rendreTrophees(); setTimeout(() => { const s = document.querySelector("#vit-tickets"); if (s) s.scrollIntoView({ block: "center" }); }, 300); });
   setTimeout(() => { try { confettis("ouvriers"); } catch (er) { /* sans fête */ } }, reduit ? 0 : 1600);
   if (window.SONS && SONS.jingle) setTimeout(() => { try { SONS.jingle("defaut", "accord"); } catch (er) { /* sans son */ } }, reduit ? 100 : 1500);

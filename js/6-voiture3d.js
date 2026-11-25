@@ -11,7 +11,7 @@ const V3D = { inst: null };
    Même livrée, finition, casque et numéro que sur la piste ; sans WebGL, le dessin 2D du showroom reste affiché. */
 /** ce que la voiture du pilote porte (showroom et course) */
 function voitureEcurie(nom, e) {
-  return { nom, couleur: couleurReelle(couleur(nom)), casque: couleurReelle(couleurCasque(nom, e)), casqueModele: e.casque, livree: e.livree, finition: e.finition, trainee: e.trainee, numero: e.numero };
+  return { nom, couleur: couleurReelle(couleur(nom)), casque: couleurReelle(couleurCasque(nom, e)), casqueModele: e.casque, livree: e.livree, finition: e.finition, trainee: e.trainee, numero: e.numero, teintes: teintesHex(nom, e) };   // v20.70 · 🎨 couleurs choisies (rayures, casque, liseré)
 }
 /** Monte la voiture 3D dans un conteneur (remplace le dessin 2D) ; l'angle de vue est gardé d'un rendu à l'autre */
 function monter3D(box, nom, e, garage) {
@@ -27,7 +27,7 @@ if (window.Piste) Piste.ecurie = nom => {
   if (typeof D === "undefined" || !D || !D.personnes || !saisonVisible() || !ecurieOuverte() || !D.personnes.some(p => p.nom === nom)) return null;   // v20.61 : dès l'ouverture de l'écurie (1/12)
   const brut = ((D.ecurie || {})[nom] || {}).equip; if (!brut || !Object.keys(brut).length) return null;
   const e = equipDe(nom), r = voitureEcurie(nom, e);
-  r.casqueSvg = casqueForme("pc" + (++NSVG), e.casque, couleur(nom), e.finition);
+  r.casqueSvg = casqueForme("pc" + (++NSVG), e.casque, couleur(nom), e.finition, false, teintesHex(nom, e));
   return r;
 };
 
