@@ -950,6 +950,11 @@ function injecterStyle() {
 .moi .m-imp .aide, .moi .m-imp-n { display: block; margin: 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
 .moi .m-imp-n.petit { font-size: 12px; color: var(--ink-3); overflow-wrap: anywhere; }
 .moi .m-imp-n.warn, .moi .m-imp-msg { margin: 0; color: var(--down); font-weight: 600; font-size: 12.5px; }
+.moi .m-cmp-l { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.moi .m-cmp-l li { display: flex; gap: 8px; align-items: center; justify-content: space-between; font-size: 12.5px; line-height: 1.35; padding: 6px 8px; border-radius: 10px; background: var(--panel-2, rgba(127,127,127,.08)); overflow-wrap: anywhere; }
+.moi .m-cmp-l li.ko { color: var(--down); }
+.moi .m-cmp-l li.ok span { color: var(--ink-2); }
+.moi .m-cmp-b { justify-self: start; }
 .moi .m-imp-a { display: flex; flex-wrap: wrap; gap: 8px; }
 .moi .m-imp-a label.btn { cursor: pointer; }
 .moi .m-imp textarea { width: 100%; box-sizing: border-box; min-height: 96px; font: 12px/1.35 ui-monospace, monospace; padding: 8px; border: 1px solid var(--rule); border-radius: 8px; background: var(--bg, var(--panel)); color: var(--ink); }
@@ -5337,6 +5342,7 @@ function htmlImport(bourse) {
   const avis = "";   // v17.78 (lot60) : la ligne « avis sous les yeux » (v17.27) est devenue l'aide de l'étape « Les chiffres »
   if (!M || M.simple || !envsOuverts().length || (!IMP && !["Achat", "Vente", "Frais en parts", "Relevé"].includes(F.type))) return avis;
   if (!IMP) return '<div class="m-imp m-imp-petit"><button class="m-imp-p" type="button" id="f-imp">📄 Importer un avis</button></div>';   // v17.78 (lot60, Théo) : en petit
+  if (IMP.cmp) return htmlComparer();
   if (!IMP.ops) return '<div class="m-imp ouvert"><b class="m-imp-t">📄 Importer mon avis d\'opéré</b>' +
     '<p class="aide">Lu dans ton téléphone : le fichier n\'est envoyé nulle part. Tu relis tout avant d\'enregistrer.</p>' +
     '<p class="aide">Pas de PDF (versement programmé, frais Linxea, page Quintessa…) ? <b>Copie les valeurs</b> depuis le site (appui long sur le tableau › Tout sélectionner › Copier), ou fais une <b>capture d\'écran</b> et utilise <b>Google Lens › Copier le texte</b>, puis « Coller le texte » ici.</p>' +   // v17.77 (Théo)
@@ -5344,6 +5350,7 @@ function htmlImport(bourse) {
       '<button class="btn ghost" type="button" id="f-imp-coller" aria-expanded="' + !!IMP.coller + '">Coller le texte</button></div>' +
     (IMP.coller ? '<textarea id="f-imp-txt" rows="5" aria-label="Texte de l\'avis d\'opéré" placeholder="Ouvre l\'avis, « Tout sélectionner », « Copier », puis colle ici.">' + esc(IMP.texte || "") + '</textarea><button class="btn" type="button" id="f-imp-lire">Lire ce texte</button>' : "") +
     (IMP.msg ? '<p class="m-imp-msg" role="alert">' + esc(IMP.msg) + "</p>" : "") +
+    '<button class="btn ghost m-cmp-b" type="button" id="f-cmp">📋 Comparer avec mon relevé</button>' +
     '<button class="lien" type="button" id="f-imp-fin">Annuler</button></div>';
   const op = IMP.ops[IMP.i] || {}, im = F.imp && F.imp.i === IMP.i ? F.imp : null, n = IMP.ops.length;
   const notes = [];
@@ -5378,7 +5385,120 @@ function brancherImport() {
     IMP.lecture = false; importerTexte(txt, "pdf");
   });
   z.querySelectorAll("[data-imp-op]").forEach(b => b.addEventListener("click", () => choisirOpImport(+b.dataset.impOp)));
+  brancherComparer(z);
   if ($f("f-imp-ok")) $f("f-imp-ok").addEventListener("click", () => { F.imp.confirme = true; const op = IMP.ops[F.imp.i]; op.choix.actif = F.actif; retenirIsin(cleOp(op), F.actif); if (importPret()) etape = 4; rendreFormulaire(); });
+}
+/* ---- v20.53 (Théo, 25/11) · « 📋 Comparer avec mon relevé » : l'évaluation de portefeuille Fortuneo (PDF ou texte collé), lue DANS le téléphone,
+   comparée ligne par ligne (par ISIN) à ce que dit l'appli : quantité (à 0,0001 près), PRU (au centime) et versé du compte.
+   ✓ / ⚠ avec l'écart, et « Corriger » ouvre la bonne saisie, pré-remplie, que l'utilisateur relit. Rien n'est modifié seul, rien n'est gardé, rien n'est envoyé. ---- */
+const nbFr = x => { const v = String(x || "").replace(/[\s  ]/g, "").replace(",", "."); return v === "" || isNaN(+v) ? NaN : +v; };
+/** l'évaluation (texte) : { compte, date (aaaa-mm-jj), versements, total, lignes: [{ isin, nom, qte, cours, valo, pru }] } */
+function lireEvaluation(brut) {
+  const t = String(brut || "").replace(/[    ]/g, " ").replace(/\r/g, ""), L = t.split("\n"), lignes = [];
+  const NB = /^-?\d{1,3}(?: \d{3})*(?:,\d+)?$/;
+  L.forEach((l, n) => {
+    const m = l.match(/(?:^|\s)([A-Z]{2}[A-Z0-9]{9}\d)\s+(.+?)\s+(\d{2})\/(\d{2})\/(\d{2,4})\s+(.+?)\s*$/); if (!m) return;
+    const av = m[2].trim().split(/\s+/), ap = m[6].trim().split(/\s+/);
+    // après la date : valorisation, poids (%), PRU, plus-value ; la valorisation peut contenir des espaces (« 12 345,67 ») : elle est rebâtie depuis la fin
+    const pv = ap.pop(), pru = ap.pop(), poids = ap.pop(), valo = nbFr(ap.join(" "));
+    // avant la date : quantité et cours, chacun peut contenir des espaces ; on garde la coupure qui donne quantité × cours ≈ valorisation
+    let best = null;
+    for (let k = 1; k < av.length; k++) { const q = nbFr(av.slice(0, k).join(" ")), c = nbFr(av.slice(k).join(" "));
+      if (!(q > 0 && c > 0) || !NB.test(av.slice(0, k).join(" ")) || !NB.test(av.slice(k).join(" "))) continue;
+      const e = isFinite(valo) && valo > 0 ? Math.abs(q * c - valo) / valo : k === av.length - 1 ? 0 : 1; if (!best || e < best.e) best = { e, q, c }; }
+    if (!best || !(nbFr(pru) > 0)) return;
+    let nom = ""; for (let j = n - 1; j >= Math.max(0, n - 3) && !nom; j--) { const x = (L[j] || "").trim(); if (x && !/[A-Z]{2}[A-Z0-9]{9}\d|\d{2}\/\d{2}\/\d{2}|Valeur|Code|cours|Autres|^¾/i.test(x)) nom = x; }
+    const an = m[5].length === 2 ? "20" + m[5] : m[5];
+    lignes.push({ isin: m[1], nom: nom, qte: best.q, cours: best.c, valo: valo, pru: nbFr(pru), date: an + "-" + m[4] + "-" + m[3], douteux: best.e > .02 });
+  });
+  const vers = t.match(/Cumul de vos versements[^\d\n]*(\d{1,3}(?: \d{3})*,\d{2})/i), tot = t.match(/Total portefeuille au[^\d\n]*\d{1,2}\s+\S+\s+\d{4}\s+(\d{1,3}(?: \d{3})*,\d{2})/i);
+  const mc = t.match(/\b(PEA[\s-]*PME|PEA|COMPTE[\s-]*TITRES|CTO)\b/i), compte = !mc ? "" : /PME/i.test(mc[1]) ? "PEA-PME" : /PEA/i.test(mc[1]) ? "PEA" : "CTO";
+  return { compte: compte || "PEA", date: lignes.length ? lignes[0].date : "", versements: vers ? nbFr(vers[1]) : null, total: tot ? nbFr(tot[1]) : null, lignes: lignes };
+}
+/** le code de l'actif de l'appli pour un ISIN (son fichier d'abord, puis ce que l'appareil a retenu, puis les ETF connus) */
+function codeDeIsin(isin) {
+  const actifs = refData().actifs || [], a = actifs.find(x => String(x.isin || "").toUpperCase() === isin); if (a) return a.code;
+  const m = memoIsin()[isin]; if (m && actifs.some(x => x.code === m)) return m;
+  const c = ISIN_CONNUS[isin]; return c && actifs.some(x => x.code === c[0]) ? c[0] : "";
+}
+/** comparaison (aucun envoi) : [{ isin, nom, code, quoi, ok, ecart, texte, corriger }] + le versé */
+function comparerEvaluation(ev, envNom) {
+  const r = refData(), jr = (r.journal || []).filter(o => o.enveloppe === envNom && !o.envoi), apres = o => ev.date && String(o.date).slice(0, 10) > ev.date;
+  const out = [];
+  ev.lignes.forEach(l => {
+    const code = codeDeIsin(l.isin), d = code ? (r.detenu || []).find(x => x.env === envNom && x.code === code) : null;
+    if (!code) { out.push({ l, quoi: "actif", ok: false, texte: "Support inconnu de l'appli (" + l.isin + ")", corriger: null }); return; }
+    const plusTard = jr.filter(o => o.actif === code && apres(o) && typeInfo(o.type).quantite);
+    const ajust = plusTard.reduce((a, o) => a + typeInfo(o.type).quantite * (+o.quantite || 0), 0);
+    const qApp = (d ? d.qte : 0) - ajust, eq = l.qte - qApp;
+    out.push({ l, code, quoi: "qte", ok: Math.abs(eq) <= 1e-4, ecart: eq, texte: "Quantité : relevé " + qteBrute(l.qte) + ", appli " + qteBrute(+qApp.toFixed(6)) + (plusTard.length ? " (ordres après le " + frDate(ev.date) + " retirés)" : ""),
+      corriger: Math.abs(eq) > 1e-4 ? { type: eq > 0 ? "Achat" : "Vente", env: envNom, actif: code, qte: saisieNombre(Math.abs(eq), 6), date: ev.date } : null });
+    if (plusTard.length) out.push({ l, code, quoi: "pru", ok: true, sans: true, texte: "PRU : pas comparé (ordre passé après le relevé)" });
+    else if (d && typeof d.pru === "number") { const ep = l.pru - d.pru;
+      out.push({ l, code, quoi: "pru", ok: Math.abs(ep) < .01, ecart: ep, texte: "PRU : relevé " + nf(2, 4).format(l.pru) + " €, appli " + nf(2, 4).format(d.pru) + " €", corriger: Math.abs(ep) >= .01 ? { journal: true } : null }); }
+  });
+  /* lignes de l'appli absentes du relevé */
+  const vus = new Set(out.map(x => x.code).filter(Boolean));
+  (r.detenu || []).filter(x => x.env === envNom && x.qte > 1e-6 && !vus.has(x.code) && !(r.actifs || []).some(a => a.code === x.code && /esp[eè]ces/i.test(a.nom || ""))).forEach(x =>
+    out.push({ l: { isin: "", nom: x.code }, code: x.code, quoi: "qte", ok: false, ecart: -x.qte, texte: "Dans l'appli (" + qteBrute(x.qte) + ") mais pas sur le relevé", corriger: { type: "Vente", env: envNom, actif: x.code, qte: saisieNombre(x.qte, 6), date: ev.date } }));
+  /* versé du compte (cumul des versements) */
+  if (ev.versements !== null) {
+    // versé de l'appli = « Apports nets » du compte (Patrimoine › Mes enveloppes), moins les versements passés après la date du relevé
+    const fis = ((M && M.fiscalite) || []).find(x => x.nom === envNom), sens = o => (typeInfo(o.type).tresorerie || 1) * (+o.montant || 0);
+    const tot = fis && typeof fis.apports === "number" ? fis.apports - jr.filter(o => typeInfo(o.type).flux && apres(o)).reduce((a, o) => a + sens(o), 0) : null;
+    if (tot === null) { out.push({ l: { isin: "", nom: "Versé sur " + envNom }, quoi: "verse", ok: true, sans: true, texte: "Versé : pas comparé (ton fichier ne donne pas les apports de ce compte)" }); return out; }
+    const ev2 = ev.versements - tot;
+    out.push({ l: { isin: "", nom: "Versé sur " + envNom }, quoi: "verse", ok: Math.abs(ev2) < .01, ecart: ev2, texte: "Versé : relevé " + nf(2, 2).format(ev.versements) + " €, appli " + nf(2, 2).format(tot) + " €",
+      corriger: Math.abs(ev2) >= .01 ? { type: ev2 > 0 ? "Apport" : "Retrait", env: envNom, montant: saisieNombre(Math.abs(ev2), 2), date: ev.date } : null });
+  }
+  return out;
+}
+function htmlComparer() {
+  const C = IMP.cmp, discret = ETAT.discret === "oui";
+  let h = '<div class="m-imp ouvert m-cmp"><b class="m-imp-t">📋 Comparer avec mon relevé</b>' +
+    '<p class="aide">Ton « évaluation de portefeuille » Fortuneo (PDF ou texte copié) est lue dans ton téléphone : rien n\'est envoyé, rien n\'est gardé, rien n\'est modifié tout seul.</p>';
+  if (!C.res) h += '<div class="m-imp-a"><label class="btn" for="f-cmp-pdf">' + (C.lecture ? "Lecture…" : "Choisir le PDF") + '</label><input id="f-cmp-pdf" type="file" accept="application/pdf" hidden>' +
+    '<button class="btn ghost" type="button" id="f-cmp-coller" aria-expanded="' + !!C.coller + '">Coller le texte</button></div>' +
+    (C.coller ? '<textarea id="f-cmp-txt" rows="5" aria-label="Texte de l\'évaluation" placeholder="Ouvre l\'évaluation, « Tout sélectionner », « Copier », puis colle ici.">' + esc(C.texte || "") + '</textarea><button class="btn" type="button" id="f-cmp-lire">Comparer</button>' : "");
+  else {
+    const nOk = C.res.filter(x => x.ok).length;
+    h += '<p class="m-imp-n"><b>' + esc(C.env) + "</b> au " + esc(frDate(C.ev.date)) + " · " + nOk + " ✓ sur " + C.res.length + "</p>" +
+      '<ul class="m-cmp-l">' + C.res.map((x, i) => '<li class="' + (x.ok ? "ok" : "ko") + '"><span>' + (x.ok ? "✓" : "⚠") + " <b>" + esc(x.code || x.l.nom || x.l.isin) + "</b> · " + esc(discret && x.quoi !== "qte" ? x.texte.replace(/[\d\s ,.]+ €/g, "••• €") : x.texte) + "</span>" +
+        (x.corriger ? '<button class="mini-btn" type="button" data-cmp-corr="' + i + '">Corriger</button>' : "") + "</li>").join("") + "</ul>" +
+      '<button class="lien" type="button" id="f-cmp-autre">Comparer un autre relevé</button>';
+  }
+  return h + (C.msg ? '<p class="m-imp-msg" role="alert">' + esc(C.msg) + "</p>" : "") + '<button class="lien" type="button" id="f-imp-fin">Fermer</button></div>';
+}
+function lancerComparaison(txt) {
+  const C = IMP.cmp, ev = lireEvaluation(txt);
+  if (!ev.lignes.length) { C.msg = "Aucune ligne trouvée : est-ce bien ton « évaluation de portefeuille » Fortuneo ? Tu peux aussi coller son texte."; C.coller = true; rendreFormulaire(); return; }
+  const env = envDeAvis(ev.compte).nom || (F && F.env) || "";
+  if (!env) { C.msg = "Compte du relevé (" + ev.compte + ") introuvable dans ton fichier."; rendreFormulaire(); return; }
+  Object.assign(C, { ev: ev, env: env, res: comparerEvaluation(ev, env), texte: "", msg: "" });   // le texte du relevé n'est pas gardé
+  rendreFormulaire();
+}
+function brancherComparer(z) {
+  if ($f("f-cmp")) $f("f-cmp").addEventListener("click", () => { IMP.cmp = {}; rendreFormulaire(); });
+  if (!IMP || !IMP.cmp) return;
+  const C = IMP.cmp;
+  if ($f("f-cmp-coller")) $f("f-cmp-coller").addEventListener("click", () => { C.coller = !C.coller; C.msg = ""; rendreFormulaire(); });
+  if ($f("f-cmp-txt")) $f("f-cmp-txt").addEventListener("input", e => { C.texte = e.target.value; });
+  if ($f("f-cmp-lire")) $f("f-cmp-lire").addEventListener("click", () => lancerComparaison(C.texte));
+  if ($f("f-cmp-autre")) $f("f-cmp-autre").addEventListener("click", () => { IMP.cmp = {}; rendreFormulaire(); });
+  if ($f("f-cmp-pdf")) $f("f-cmp-pdf").addEventListener("change", async e => {
+    const fi = e.target.files && e.target.files[0]; if (!fi || C.lecture) return;
+    if (fi.size > 8e6) { C.msg = "Ce fichier est trop gros pour un relevé (plus de 8 Mo)."; rendreFormulaire(); return; }
+    C.lecture = true; rendreFormulaire(); let txt = "";
+    try { txt = await textePdf(fi); } catch (err) { C.lecture = false; C.coller = true; C.msg = "Ce PDF n'a pas pu être lu. Colle plutôt le texte du relevé."; rendreFormulaire(); return; }
+    C.lecture = false; lancerComparaison(txt);
+  });
+  z.querySelectorAll("[data-cmp-corr]").forEach(b => b.addEventListener("click", () => {
+    const x = C.res[+b.dataset.cmpCorr], c = x && x.corriger; if (!c) return;
+    if (c.journal) { IMP = null; paneSaisie("journal"); return; }   // PRU différent : c'est un ordre passé à corriger (Historique)
+    IMP = null;
+    F = formulaire({ type: c.type, env: c.env, envChoisi: true, actif: c.actif || "", date: c.date, dateChoisie: !!c.date, qte: c.qte || "", qteTape: !!c.qte, montant: c.montant || "", auto: false });
+    detailsOuverts = true; etape = 2; rendreFormulaire();
+  }));
 }
 function especesEnv(env) { const g = ((M && M.groupes) || []).find(x => x.env === env), le = g && (g.lignes || []).find(l => l.especes); return le && typeof le.valeur === "number" ? le.valeur : null; }
 /** bascule vente + achat du même avis : la vente, déjà enregistrée, crédite les espèces tant que le fichier n'a pas été relu (sinon elle y est déjà) */
