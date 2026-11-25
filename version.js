@@ -3,4 +3,4 @@
    À chaque mise en ligne : changer « app » et « date » ici, rien d'autre.
    Lu par index.html (affiché dans Réglages) et par sw.js (nom du cache hors connexion).
    ============================================================ */
-self.VERSUS_VERSION = { app: "20.54", date: "25 novembre 2026" };
+self.VERSUS_VERSION = { app: "20.55", date: "25 novembre 2026" };

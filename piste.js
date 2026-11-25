@@ -769,8 +769,9 @@
     return K;
   }
   function mixHex(c1, c2, t) { const a = hex(c1), b = hex(c2), m = [0, 1, 2].map(i => Math.round((a[i] + (b[i] - a[i]) * t) * 255)); return "#" + m.map(v => v.toString(16).padStart(2, "0")).join(""); }
-  const COULEURS_J = ["#4C9AFF", "#2BB6A3", "#FF6FA8", "#F2994A"];   // les 4 pilotes, pour les clins d'œil
-  const COULEURS_5 = [...COULEURS_J, "#B4E33D"], NOMS_5 = ["Théo", "Kévin", "Clément", "Devlin", "Nicolas"];   // les 5 places à portrait (Nicolas = k 4) ; COULEURS_J reste à 4 (clins d'œil décoratifs)
+  const COULEURS_J = ["#4C9AFF", "#2BB6A3", "#FF6FA8", "#F2994A"];   // les 4 premières couleurs (ne sert plus qu'aux vieilles cartes rangées : Forêt, Garage v5, Dunes v4)
+  const COULEURS_5 = [...COULEURS_J, "#B4E33D"], NOMS_5 = ["Théo", "Kévin", "Clément", "Devlin", "Nicolas"];   // les 5 pilotes (Nicolas = k 4) : portraits ET clins d'œil (chars, pions, voyageurs…) ; NJ = leur nombre
+  const NJ = COULEURS_5.length;   // 25/11 (Théo : « certaines cartes n'ont que 4 joueurs ») : tout ce qui représente les pilotes se compte sur cette liste
   /* ---------- Juin · Plateau maudit (jeu de plateau géant dans la jungle) ---------- */
   function peindrePlateau(T, Z, def) {
     const K = kit(T, def, 61, "pl-"), { s, r, f, W, H } = K, [X, Y] = K.rep({ t: "plateau" });
@@ -785,8 +786,8 @@
     K.ombre(X + 8, Y + 10, 40, 30, .5); [[-22, -6, "#F4F1EA", 4], [10, 6, "#C8283A", 6]].forEach(([dx, dy, c2, n]) => { const x = X + dx, y = Y + dy; s.push(`<rect x="${f(x - 14)}" y="${f(y - 14)}" width="28" height="28" rx="5" fill="${c2}" stroke="#111" stroke-width="1.5" transform="rotate(${f(r() * 40)} ${f(x)} ${f(y)})"/>`); const pts = n === 4 ? [[-1, -1], [1, 1], [-1, 1], [1, -1]] : [[-1, -1], [1, 1], [-1, 1], [1, -1], [-1, 0], [1, 0]]; pts.forEach(([u, v]) => s.push(`<circle cx="${f(x + u * 7)}" cy="${f(y + v * 7)}" r="2.4" fill="${c2 === "#F4F1EA" ? "#1A1A22" : "#FFFFFF"}"/>`)); });
     [[-50, 30], [44, -36], [0, 50]].forEach(([dx, dy], k) => { const x = X + dx, y = Y + dy; K.ombre(x + 5, y + 6, 13, 13, .5); s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="13" fill="${["#E5484D", "#4C8DFF", "#F2B33A"][k]}"/><circle cx="${f(x)}" cy="${f(y)}" r="7" fill="${["#FF7A7E", "#8AB4FF", "#FFD27A"][k]}"/>`); });
     s.push(`<g transform="translate(${f(X + 60)} ${f(Y + 30)})"><circle r="12" fill="#C9A24A"/><path d="M-7 -7L7 7M7 -7L-7 7" stroke="#F2E6CC" stroke-width="4"/><circle r="4" fill="#E9D3A0"/></g>`); K.prendre(X, Y, 85);
-    // clins d'œil : 4 pions aux couleurs des pilotes sur la case départ, pioche « Pioche 2 », coffre
-    const p0 = K.P[0], [nx, ny] = K.nrm(0); COULEURS_J.forEach((c2, k) => s.push(`<circle cx="${f(p0[0] + nx * 26 + k * 7)}" cy="${f(p0[1] + ny * 26)}" r="4" fill="${c2}" stroke="#111"/>`)); s.push(`<text x="${f(p0[0] + nx * 26 - 6)}" y="${f(p0[1] + ny * 26 + 14)}" font-family="Georgia" font-weight="700" font-size="8" fill="#5A3A22">DÉPART</text>`);
+    // clins d'œil : un pion par pilote (5) sur la case départ, pioche « Pioche 2 », coffre
+    const p0 = K.P[0], [nx, ny] = K.nrm(0); COULEURS_5.forEach((c2, k) => s.push(`<circle cx="${f(p0[0] + nx * 26 + k * 7)}" cy="${f(p0[1] + ny * 26)}" r="4" fill="${c2}" stroke="#111"/>`)); s.push(`<text x="${f(p0[0] + nx * 26 - 6)}" y="${f(p0[1] + ny * 26 + 14)}" font-family="Georgia" font-weight="700" font-size="8" fill="#5A3A22">DÉPART</text>`);
     K.semis(1, 16, 800, null, (x, y) => { for (let k = 0; k < 4; k++) s.push(`<rect x="${f(x - 9 + k * 2)}" y="${f(y - 12 - k * 2)}" width="18" height="26" rx="2" fill="#2E5E8C" stroke="#F4ECD8" stroke-width="1"/>`); s.push(`<text x="${f(x - 1)}" y="${f(y - 2)}" text-anchor="middle" font-family="Georgia" font-size="5.5" fill="#F4ECD8">Pioche 2</text>`); });
     K.semis(1, 14, 800, null, (x, y) => { s.push(`<rect x="${f(x - 12)}" y="${f(y - 8)}" width="24" height="16" rx="2" fill="#7A4A26" stroke="#3A2414"/><path d="M${f(x - 12)} ${f(y - 2)}h24" stroke="#E2B93B" stroke-width="2"/>`); K.halo(x, y, 24, "#F7CF55", .6); });
     // la piste : chemin de cases colorées
@@ -820,8 +821,8 @@
   /* ---------- Mai · L'Arène-horloge (les jeux de l'arène) — maquette ----------
      Une arène en pleine forêt découpée en 12 secteurs comme une horloge ; chaque heure, un piège se déclenche dans son secteur
      (l'aiguille lumineuse fait le tour en 36 s et réveille le piège qu'elle survole). Au centre : la Corne d'abondance sur son île,
-     les 24 plateaux de départ et les 12 rayons de sable ; au bord : le champ de force en hexagones ; dans le ciel : les 4 pilotes ;
-     au loin : le Capitole. Parachutes argentés des sponsors, geai moqueur qui siffle les 4 notes. */
+     les 24 plateaux de départ et les 12 rayons de sable ; au bord : le champ de force en hexagones ; dans le ciel : les 5 pilotes ;
+     au loin : le Capitole. Parachutes argentés des sponsors, geai moqueur qui siffle les 5 notes. */
   function peindreArene2(T, Z, def) {
     const K = kit(T, def, 74, "hg-"), { s, a, r, f, W, H } = K, an = x => K.anime ? x : "", INK = `stroke="#1A1410" stroke-width="1.2"`, PEAU = "#F2CDB0", OR = "#E2B93B";
     const G = (x, y, sc, rot) => `<g transform="translate(${f(x)} ${f(y)})${sc && sc !== 1 ? ` scale(${sc})` : ""}${rot ? ` rotate(${f(rot)})` : ""}">`;
@@ -861,9 +862,9 @@
     s.push(`<circle cx="${cx}" cy="${cy}" r="${f(RL + 10)}" fill="#D9C08A" opacity=".9"/><circle cx="${cx}" cy="${cy}" r="${f(RL + 3)}" fill="url(#hg-lac)"/>`);
     for (let k = 0; k < 12; k++) { const t = ang(k) - PI / 12; s.push(`<path d="M${f(cx + Math.cos(t) * 34)} ${f(cy + Math.sin(t) * 34)}L${f(cx + Math.cos(t) * (RL + 6))} ${f(cy + Math.sin(t) * (RL + 6))}" stroke="#E8D29A" stroke-width="9" stroke-linecap="round"/><path d="M${f(cx + Math.cos(t) * 34)} ${f(cy + Math.sin(t) * 34)}L${f(cx + Math.cos(t) * (RL + 6))} ${f(cy + Math.sin(t) * (RL + 6))}" stroke="#C9AE70" stroke-width="2" stroke-dasharray="3 5"/>`); }
     s.push(`<circle cx="${cx}" cy="${cy}" r="38" fill="#E8D29A" stroke="#C9AE70" stroke-width="2"/>`);
-    for (let k = 0; k < 24; k++) { const t = ang(Math.floor(k / 2)) + (k % 2 ? 1 : -1) * PI / 26, d = RL * .74, x = cx + Math.cos(t) * d, y = cy + Math.sin(t) * d, pj = [3, 9, 14, 20].indexOf(k);
+    for (let k = 0; k < 24; k++) { const t = ang(Math.floor(k / 2)) + (k % 2 ? 1 : -1) * PI / 26, d = RL * .74, x = cx + Math.cos(t) * d, y = cy + Math.sin(t) * d, pj = COULEURS_5.findIndex((_, q) => Math.round(2 + q * 24 / NJ) === k);   // un plateau par pilote, répartis autour du lac
       s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="5.2" fill="url(#hg-arg)" stroke="#4A5466" stroke-width=".8"/>`);
-      if (pj >= 0) s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="7" fill="none" stroke="${COULEURS_J[pj]}" stroke-width="1.6"/><circle cx="${f(x)}" cy="${f(y)}" r="2.6" fill="${COULEURS_J[pj]}" ${INK}/>`); }
+      if (pj >= 0) s.push(`<circle cx="${f(x)}" cy="${f(y)}" r="7" fill="none" stroke="${COULEURS_5[pj]}" stroke-width="1.6"/><circle cx="${f(x)}" cy="${f(y)}" r="2.6" fill="${COULEURS_5[pj]}" ${INK}/>`); }
     // reflets et ondes sur le lac
     for (let k = 0; k < 6; k++) { const t = r() * TAU, d = 36 + r() * (RL - 46); if (k === 0) a.push(`<ellipse cx="${f(cx + Math.cos(t) * d)}" cy="${f(cy + Math.sin(t) * d)}" rx="4" ry="2" fill="none" stroke="#E8F8FF" stroke-width=".9" opacity="0">${an(`<animate attributeName="rx" values="2;12" dur="4s" begin="${k * .7}s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="4s" begin="${k * .7}s" repeatCount="indefinite"/>`)}</ellipse>`); }
     // la Corne d'abondance : grande corne dorée en spirale, la gueule ouverte qui déverse armes et sacs
@@ -872,14 +873,14 @@
       <path d="M-24 -28q6 -4 8 2M-18 -19Q-4 -6 14 -12M-12 -14Q2 0 20 -4M-6 -3Q8 8 24 4" stroke="#8A5A14" stroke-width="1" fill="none"/>
       <ellipse cx="26" cy="-1" rx="7" ry="16" fill="#2A1A08" stroke="#8A5A14" stroke-width="1.5" transform="rotate(-12 26 -1)"/>
       <path d="M-26 -30q3 -2 5 1" stroke="#FFF6D0" stroke-width="1.4" fill="none"/><path d="M-6 -12Q8 -18 22 -14" stroke="#FFF6D0" stroke-width="1.6" fill="none" opacity=".8"/></g>`);
-    // le butin : arc et carquois, haches, lance, épée, pain, gourde, sacs aux couleurs des 4
+    // le butin : arc et carquois, haches, lance, épée, pain, gourde, sacs aux couleurs des 5
     s.push(`${G(cx + 40, cy + 2, 1.15)}<path d="M2 -16Q14 -4 2 10" stroke="#7A4A1E" stroke-width="2.2" fill="none"/><path d="M2 -16L2 10" stroke="#F4F1EA" stroke-width=".6"/>
       <rect x="8" y="-12" width="5" height="16" rx="1.5" fill="#6A3A1A" ${INK} transform="rotate(20 10 -4)"/><path d="M10 -14l-1 -5M12 -13l1 -5M14 -12l2 -4" stroke="#F4F1EA" stroke-width="1"/>
       <path d="M-4 16L30 8" stroke="#8A6A48" stroke-width="1.8"/><path d="M30 8l7 -3l-5 6z" fill="#C8D0DA" ${INK}/>
       <path d="M16 18l10 6" stroke="#5A3A1A" stroke-width="2"/><path d="M24 20q6 -2 5 6q-4 0 -5 -6z" fill="#C8D0DA" ${INK}/>
       <path d="M-2 22l16 -4" stroke="#DCE2EA" stroke-width="2.4"/><path d="M-2 22l-4 1M0 20l1 4" stroke="#C9962A" stroke-width="2"/>
       <ellipse cx="22" cy="-16" rx="5" ry="3" fill="#C98A3A" ${INK}/><rect x="-6" y="-22" width="5" height="8" rx="2" fill="#5A7A8A" ${INK}/></g>`);
-    COULEURS_J.forEach((c, k) => { const t = -.6 + k * .42, x = cx + 40 + Math.cos(t) * 30, y = cy + 4 + Math.sin(t) * 26; s.push(`${G(x, y, 1, k * 25 - 20)}<rect x="-5" y="-6" width="10" height="12" rx="3" fill="${c}" ${INK}/><rect x="-3.5" y="-2" width="7" height="4" rx="1" fill="#000" opacity=".2"/><path d="M-3 -6q3 -4 6 0" stroke="#1A1410" fill="none"/></g>`); });
+    COULEURS_5.forEach((c, k) => { const t = -.78 + k * 1.6 / (NJ - 1), x = cx + 40 + Math.cos(t) * 31, y = cy + 4 + Math.sin(t) * 27; s.push(`${G(x, y, 1, k * 75 / (NJ - 1) - 20)}<rect x="-5" y="-6" width="10" height="12" rx="3" fill="${c}" ${INK}/><rect x="-3.5" y="-2" width="7" height="4" rx="1" fill="#000" opacity=".2"/><path d="M-3 -6q3 -4 6 0" stroke="#1A1410" fill="none"/></g>`); });
     a.push(`<circle cx="${cx + 24}" cy="${cy - 2}" r="10" fill="#FFF2B8" opacity="${K.anime ? 0 : .22}">${an(`<animate attributeName="opacity" values="0;.5;0" dur="3s" repeatCount="indefinite"/>`)}</circle>`);   // reflet doré de la Corne (animé, demandé par Théo)
     // ---- 3. les scènes de pièges (une par heure)
     const scenes = {}, inter = (A, B) => A[0] < B[2] && A[2] > B[0] && A[1] < B[3] && A[3] > B[1]; let FEU = null, ECL = null;
@@ -1015,7 +1016,7 @@
       const LP = Array.from({ length: 12 }, (_, k) => LAB[k] || [-999, -999]), HW = Math.max(...LW.filter(Boolean)) + 3;
       a.push(`<g opacity=".78">${LAB.map((l, k) => l ? `<rect x="${f(l[0] - LW[k])}" y="${f(l[1] - 9)}" width="${f(LW[k] * 2)}" height="12" rx="6" fill="#F6E9C4" opacity=".6"/><text x="${f(l[0])}" y="${f(l[1] + .5)}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-weight="bold" font-size="9" fill="#2A1A0A">${NOM[k]}</text>` : "").join("")}</g>`);
       a.push(`<g transform="translate(${f(MP[0][0])} ${f(MP[0][1])})">${saut(MP)}<circle r="16" fill="none" stroke="#FFE08A" stroke-width="3">${an(`<animate attributeName="r" values="15;24;15" dur="1.5s" repeatCount="indefinite"/>`)}</circle><circle r="16" fill="none" stroke="#FFF6D0" stroke-width="1.2" opacity=".9"/></g>`); }
-    // ---- 10. le ciel de l'arène (coin haut gauche) : les visages des 4 pilotes projetés, la devise
+    // ---- 10. le ciel de l'arène (coin haut gauche) : les visages des 5 pilotes projetés, la devise
     const PORTR = [];
     { const px = 10, py = 8, pw = 252, ph = 112; s.push(`<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="12" fill="url(#hg-ciel)" stroke="#9AF4FF" stroke-width="1.5" opacity=".95"/>`);
       for (let k = 0; k < 24; k++) s.push(`<circle cx="${f(px + 6 + r() * (pw - 12))}" cy="${f(py + 6 + r() * (ph - 12))}" r="${f(.4 + r() * .8)}" fill="#FFF" opacity="${(.3 + r() * .6).toFixed(2)}"/>`);
@@ -1032,13 +1033,13 @@
       const [x, y] = p, du = (11 + k * 2.3).toFixed(1), de = (-k * 3.1).toFixed(1);
       s.push(`<ellipse cx="${f(x)}" cy="${f(y + 4)}" rx="7" ry="2.4" fill="#000" opacity=".25"/>`);
       a.push(`<g${K.anime ? "" : ` transform="translate(0 -${30 + k * 14})"`}>${an(`<animateTransform attributeName="transform" type="translate" values="0 -150;8 -80;-4 -20;0 0;0 0" keyTimes="0;.4;.65;.75;1" dur="${du}s" begin="${de}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;.08;.75;.88;1" dur="${du}s" begin="${de}s" repeatCount="indefinite"/>`)}<path d="M${f(x - 13)} ${f(y - 20)}Q${f(x)} ${f(y - 38)} ${f(x + 13)} ${f(y - 20)}Q${f(x + 6)} ${f(y - 24)} ${f(x)} ${f(y - 20)}Q${f(x - 6)} ${f(y - 24)} ${f(x - 13)} ${f(y - 20)}Z" fill="url(#hg-arg)" stroke="#5A6476" stroke-width=".8"/><path d="M${f(x - 13)} ${f(y - 20)}L${f(x - 3)} ${f(y - 3)}M${f(x + 13)} ${f(y - 20)}L${f(x + 3)} ${f(y - 3)}M${f(x)} ${f(y - 20)}V${f(y - 3)}" stroke="#C8D0DA" stroke-width=".6"/><rect x="${f(x - 4.5)}" y="${f(y - 4)}" width="9" height="8" rx="1.2" fill="#D8DEE8" stroke="#5A6476" stroke-width=".8"/><path d="M${f(x)} ${f(y - 4)}v8M${f(x - 4.5)} ${f(y)}h9" stroke="${COULEURS_J[k]}" stroke-width="1.6"/></g>`); }
-    // ---- 12. le geai moqueur : il fait le tour du lac en sifflant les 4 notes (une par pilote)
+    // ---- 12. le geai moqueur : il fait le tour du lac en sifflant les 5 notes (une par pilote)
     { const R1 = RL + 46, R2 = RL + 30; a.push(`<g${K.anime ? "" : ` transform="translate(${f(cx + R1 * .7)} ${f(cy - R2 * .7)}) rotate(-40)"`}>${an(`<animateMotion dur="16s" repeatCount="indefinite" rotate="auto" path="M${f(cx + R1)} ${f(cy)}A${f(R1)} ${f(R2)} 0 1 0 ${f(cx - R1)} ${f(cy)}A${f(R1)} ${f(R2)} 0 1 0 ${f(cx + R1)} ${f(cy)}"/>`)}<g transform="scale(1.7)"><ellipse rx="8" ry="3.6" fill="#2A2E3A" ${INK}/><circle cx="7" cy="0" r="3.2" fill="#2A2E3A" ${INK}/><path d="M10 0l4 .6l-4 .8z" fill="#1A1410"/><path d="M-7 0l-8 -3l2 3l-2 3z" fill="#1A1E28" ${INK}/><g>${an(`<animateTransform attributeName="transform" type="scale" values="1 1;1 -1;1 1" dur=".5s" repeatCount="indefinite"/>`)}<path d="M-3 0Q-2 -14 4 -15Q4 -6 3 0z" fill="#2A2E3A" ${INK}/><path d="M-1 -6Q0 -12 3 -13" stroke="#FFFFFF" stroke-width="1.6" fill="none"/></g></g></g>`);
-      a.push(`<g>${an(`<animateTransform attributeName="transform" type="translate" values="0 6;0 -6" dur="8s" repeatCount="indefinite"/>`)}${COULEURS_J.map((c, k) => `<g transform="translate(${f(cx - 40 + k * 22)} ${f(cy - RL - 22 - (k % 2) * 6)}) rotate(${k % 2 ? 8 : -8})" opacity="${K.anime ? 0 : 1}">${an(`<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;${(.08 + k * .08).toFixed(2)};${(.12 + k * .08).toFixed(2)};.6;.7;1" dur="8s" repeatCount="indefinite"/>`)}<path d="M3.6 -1V-15Q9 -12 9 -6" stroke="#FFFDF6" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse rx="5" ry="3.6" transform="rotate(-22)" fill="${c}" stroke="#FFFDF6" stroke-width="2.2"/><path d="M3.6 -1V-15Q9 -12 9 -6" stroke="${c}" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse rx="5" ry="3.6" transform="rotate(-22)" fill="${c}" stroke="#1A1410" stroke-width=".8"/></g>`).join("")}</g>`); }
+      a.push(`<g>${an(`<animateTransform attributeName="transform" type="translate" values="0 6;0 -6" dur="8s" repeatCount="indefinite"/>`)}${COULEURS_5.map((c, k) => `<g transform="translate(${f(cx - 7 - 11 * (NJ - 1) + k * 22)} ${f(cy - RL - 22 - (k % 2) * 6)}) rotate(${k % 2 ? 8 : -8})" opacity="${K.anime ? 0 : 1}">${an(`<animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;${(.08 + k * .08).toFixed(2)};${(.12 + k * .08).toFixed(2)};.6;.7;1" dur="8s" repeatCount="indefinite"/>`)}<path d="M3.6 -1V-15Q9 -12 9 -6" stroke="#FFFDF6" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse rx="5" ry="3.6" transform="rotate(-22)" fill="${c}" stroke="#FFFDF6" stroke-width="2.2"/><path d="M3.6 -1V-15Q9 -12 9 -6" stroke="${c}" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse rx="5" ry="3.6" transform="rotate(-22)" fill="${c}" stroke="#1A1410" stroke-width=".8"/></g>`).join("")}</g>`); }
     // la broche au geai (clin d'œil) près du départ
     { const p0 = K.P[0], [nx, ny] = K.nrm(0), x = p0[0] - nx * 34, y = p0[1] - ny * 34; s.push(`${G(x, y, 1)}<circle r="13" fill="url(#hg-or)" ${INK}/><circle r="10" fill="none" stroke="#8A5A14" stroke-width="1"/><path d="M-8 3Q-2 -2 4 -2L9 -6L7 -1Q4 4 -2 4Z" fill="#8A5A14"/><path d="M-4 -1Q0 -9 6 -9Q2 -4 2 -2Z" fill="#B07A1E"/><path d="M-10 6L10 -8" stroke="#6A440E" stroke-width="1.2"/></g>`); }
-    // les 4 pilotes sur la piste (petits chars de parade aux couleurs des 4)
-    COULEURS_J.forEach((c, k) => a.push(K.surPiste(.05 + k * .03, `<g><rect x="-6" y="-4" width="12" height="8" rx="3" fill="${c}" ${INK}/><path d="M-6 -4l-4 -2M-6 4l-4 2" stroke="#FFB12A" stroke-width="1.6"/><circle cx="2" cy="0" r="2.2" fill="#F4F1EA"/></g>`, 40, k * 1.2)));
+    // les 5 pilotes sur la piste (petits chars de parade, un par pilote)
+    COULEURS_5.forEach((c, k) => a.push(K.surPiste(.05 + k * .03, `<g><rect x="-6" y="-4" width="12" height="8" rx="3" fill="${c}" ${INK}/><path d="M-6 -4l-4 -2M-6 4l-4 2" stroke="#FFB12A" stroke-width="1.6"/><circle cx="2" cy="0" r="2.2" fill="#F4F1EA"/></g>`, 40, k * 1.2)));
     { const n0 = a.length; K.particules(26, "#FFE08A", 1.8, "scintille"); K.particules(20, "#BFF8FF", 1.6, "derive"); const gr = a.splice(0, 2), pts = a.splice(n0); s.unshift(...gr); pts.forEach(x => s.push(x.replace(/<animate[^>]*\/>/g, ""))); }
     const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#hg-sol)"/>`, "#2A1A3A", .12); RES.portraits = PORTR; return RES;
   }
@@ -1236,8 +1237,8 @@
     a.push(`<path d="M${cou}" fill="none" stroke="#FFFFFF" stroke-width="2" opacity=".8">${an(`<animate attributeName="opacity" values=".9;.25;1;.45;.9" keyTimes="0;.2;.45;.7;1" dur="1.6s" repeatCount="indefinite"/>`)}</path>`);
     [[X, 200, 2.6], ...FAILLES.map(F => [F.x, 110, 1.9])].forEach(([x, R, d]) => a.push(`<ellipse cx="${f(x)}" cy="${f(by(x))}" rx="${f(R * .6)}" ry="${f(R * .3)}" fill="url(#e3-fA)" opacity=".6">${an(`<animate attributeName="rx" values="${f(R * .45)};${f(R * .75)};${f(R * .45)}" dur="${d}s" repeatCount="indefinite"/><animate attributeName="opacity" values=".45;.95;.45" dur="${d}s" repeatCount="indefinite"/>`)}</ellipse>`));
 
-    // ---- 9. les 4 pilotes sur la piste (plus gros, contour blanc épais pour rester lisibles)
-    COULEURS_J.forEach((c, k) => a.push(K.surPiste(.02 + k * .03, `<g><rect x="-14" y="-8.5" width="28" height="17" rx="4.5" fill="${c}" stroke="#FFFFFF" stroke-width="2.6"/><rect x="2" y="-5.5" width="7.5" height="11" rx="1.6" fill="#BFE0FF"/><circle cx="15" cy="0" r="2.4" fill="#FFF6C8"/></g>`, 44, k * 1.3)));
+    // ---- 9. les 5 pilotes sur la piste (plus gros, contour blanc épais pour rester lisibles)
+    COULEURS_5.forEach((c, k) => a.push(K.surPiste(.02 + k * .03, `<g><rect x="-14" y="-8.5" width="28" height="17" rx="4.5" fill="${c}" stroke="#FFFFFF" stroke-width="2.6"/><rect x="2" y="-5.5" width="7.5" height="11" rx="1.6" fill="#BFE0FF"/><circle cx="15" cy="0" r="2.4" fill="#FFF6C8"/></g>`, 44, k * 1.3)));
     const RES = K.fin(`<rect width="${W}" height="${H}" fill="#1A1A2A"/>`, "#1A0A28", .06); RES.portraits = PORTR; RES.failles = FAILLES.map(F => ({ fr: F.fr, vers: F.vers }));
     RES.lieux = { faille: [DX, Math.round(YT)], demo: [DX, Math.round(HY)], ombre: [DX, Math.round(YT - 60)], cinema: [555, 246], alphabet: [MX, 240], run: [DX, RUNY - 36] }; return RES;
   }
@@ -1245,7 +1246,7 @@
   function peindreAnneau4(T, Z, def) {
     // Avril · Terre du Milieu, « le voyage en perspective » : UNE scène qui s'enfonce de la Comté (près, en bas, dorée) jusqu'au Mordor (loin, en haut, rouge).
     // Héros : la Montagne du Destin et la tour de l'Œil, géantes au fond ; la route y monte en s'amincissant et en passant du doré à la cendre.
-    const K = kit(T, def, 44, "a4-"), { s, a, r, f, W, H } = K, an = x => K.anime ? x : "", CJ = COULEURS_J, INK = `stroke="#1E120C" stroke-width="1.2"`;
+    const K = kit(T, def, 44, "a4-"), { s, a, r, f, W, H } = K, an = x => K.anime ? x : "", CJ = COULEURS_5, INK = `stroke="#1E120C" stroke-width="1.2"`;
     const G = (x, y, sc, rot) => `<g transform="translate(${f(x)} ${f(y)})${sc && sc !== 1 ? ` scale(${sc})` : ""}${rot ? ` rotate(${f(rot)})` : ""}">`;
     const titre = (x, y, txt, t, c, cont, esp) => s.push(`<text x="${f(x)}" y="${f(y)}" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="${t}" letter-spacing="${f(t * (esp || .2))}" fill="${c}" stroke="${cont}" stroke-width="${f(t * .2)}" paint-order="stroke" stroke-linejoin="round">${txt}</text>`);
     // ---- dégradés (couche fixe)
@@ -1333,7 +1334,7 @@
 
     // ================= 3. LA PLAINE DORÉE (le Rohan) et les cavaliers =================
     s.push(`<path d="M150 470Q300 410 470 430T820 420L840 520H150Z" fill="#D4AE52" opacity=".55"/><path d="M150 470Q300 410 470 430T820 420" fill="none" stroke="#F8DC88" stroke-width="2" opacity=".6"/>`);
-    // Cul-de-Sac (la colline des 4 portes, dans la boucle)
+    // Cul-de-Sac (la colline des 5 portes, dans la boucle)
     s.push(`<path d="M206 610C240 520 360 462 492 458C620 455 730 500 800 610Z" fill="url(#a4-colline)" stroke="#2A4A14" stroke-width="1.4"/><path d="M262 520C330 478 410 462 492 460C590 458 680 486 740 530" fill="none" stroke="#F4E890" stroke-width="3" opacity=".7"/>`);
 
     // ================= 4. LA COMTÉ (premier plan, collines qui débordent du cadre) =================
@@ -1413,14 +1414,14 @@
     { const [x, y] = MG; a.push(`<circle cx="${x + 77}" cy="${y - 300}" r="18" fill="#E8F4FF" opacity=".35">${an(`<animate attributeName="r" values="14;22;14" dur="2.4s" repeatCount="indefinite"/>`)}</circle><circle cx="${x + 77}" cy="${y - 300}" r="5.5" fill="#FFFFFF"/>`); }
     // l'Œil : battement, faisceau et pupille qui suivent la voiture de tête (classe an-suit : l'événement les remplace)
     a.push(`<ellipse cx="${oeilX}" cy="${oeilY}" rx="50" ry="22" fill="url(#a4-feu)" opacity=".7">${an(`<animate attributeName="rx" values="46;56;46" dur="1.6s" repeatCount="indefinite"/>`)}</ellipse>`);
-    const DUR = 48, DEB = [4.2, 2.8, 1.4, 0];
+    const DUR = 48, DEB = CJ.map((_, k) => (NJ - 1 - k) * 1.4);   // un voyageur par pilote, 1,4 s d'écart ; l'Œil suit le dernier (DEB[0])
     { const n = 32, pts = []; for (let q = 0; q <= n; q++) { const i = Math.floor(((q / n + DEB[0] / DUR) % 1) * K.N) % K.N; pts.push(K.P[i]); }
       const angs = []; pts.forEach(p => { let t = Math.atan2(p[1] - oeilY, p[0] - oeilX) * 180 / PI; if (angs.length) { const pr = angs[angs.length - 1]; while (t - pr > 180) t -= 360; while (t - pr < -180) t += 360; } angs.push(t); });
       const kt = pts.map((_, q) => q === n ? "1" : q === 0 ? "0" : (q / n).toFixed(4)).join(";"), pupille = pts.map(p => { const d = Math.hypot(p[0] - oeilX, p[1] - oeilY) || 1; return f((p[0] - oeilX) / d * 12) + " " + f((p[1] - oeilY) / d * 3); }).join(";");
       a.unshift(`<radialGradient id="a4-faisceau" gradientUnits="userSpaceOnUse" cx="${f(oeilX)}" cy="${f(oeilY)}" r="820"><stop offset="0" stop-color="#FFE0A0" stop-opacity=".75"/><stop offset=".5" stop-color="#FF9A3A" stop-opacity=".22"/><stop offset="1" stop-color="#FF7A2A" stop-opacity="0"/></radialGradient>`);
       a.push(`<path class="an-suit" d="M${f(oeilX)} ${f(oeilY - 3)}L${f(oeilX + 960)} ${f(oeilY - 56)}L${f(oeilX + 960)} ${f(oeilY + 56)}L${f(oeilX)} ${f(oeilY + 3)}Z" fill="url(#a4-faisceau)" style="mix-blend-mode:screen"${K.anime ? "" : ` transform="rotate(${f(angs[0])} ${f(oeilX)} ${f(oeilY)})"`}>${an(`<animateTransform attributeName="transform" type="rotate" values="${angs.map(t => f(t) + " " + f(oeilX) + " " + f(oeilY)).join(";")}" keyTimes="${kt}" dur="${DUR}s" begin="0s" repeatCount="indefinite"/>`)}</path>`);
       a.push(`<g class="an-suit"${K.anime ? "" : ` transform="translate(${pupille.split(";")[0]})"`}>${an(`<animateTransform attributeName="transform" type="translate" values="${pupille}" keyTimes="${kt}" dur="${DUR}s" repeatCount="indefinite"/>`)}<ellipse cx="${f(oeilX)}" cy="${f(oeilY)}" rx="3.6" ry="14" fill="#120404"/></g>`); }
-    // les 4 pilotes : 4 voyageurs encapuchonnés aux couleurs des 4
+    // les 5 pilotes : 5 voyageurs encapuchonnés, un par pilote
     CJ.forEach((c, k) => a.push(K.surPiste(.05 + DEB[k] / DUR, `<g transform="scale(1.2)"><ellipse cx="-1" cy="1" rx="7" ry="5" fill="#000" opacity=".3"/><path d="M-7 -5Q-9 0 -7 5L4 3Q6 0 4 -3Z" fill="${c}" stroke="#1A1410" stroke-width=".9"/><circle cx="3" cy="0" r="3.4" fill="${mixHex(c, "#000000", .35)}" stroke="#1A1410" stroke-width=".7"/><circle cx="4.6" cy="0" r="1.5" fill="#F2CDB0"/><path d="M-1 -4l-3 -3M-1 4l-3 3" stroke="#1A1410" stroke-width="1"/></g>`, DUR, DEB[k])));
     const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#a4-sol)"/>`, "", 0); RES.portraits = PORTR; RES.lieux = { destin: [dX, dY], oeil: [oeilX, oeilY] }; return RES;
   }
@@ -1853,20 +1854,20 @@
   /* ---------- Février · Le château, pièce par pièce (v4 : la carte du maraudeur, grandes scènes) ----------
      La carte-parchemin magique : la piste traverse le château pièce par pièce (Grande Salle, escaliers qui bougent, couloir des
      tableaux, cachots, serres, banque et son dragon, terrain de Quidditch, pont couvert). Chaque pièce est une grande scène
-     illustrée à l'encre et à l'aquarelle ; les prénoms des 4 pilotes se promènent sur la carte avec leurs traces de pas ;
+     illustrée à l'encre et à l'aquarelle ; les prénoms des pilotes se promènent sur la carte avec leurs traces de pas ;
      les 4 sabliers des points ; « Je jure solennellement… » s'écrit tout seul en haut. */
   /* ---------- Février · L'école des sorciers, la nuit (v5 : grande scène illustrée, course de balais) ----------
      (25/11/2026, Théo : « j'aimais bien la carte 2D en mode nuit, remets-la » : la carte 2D reste de NUIT, le décor 3D reste de JOUR.)
      Une seule lumière : la lune (en haut à gauche, dans la boucle du tracé) et les fenêtres dorées. Le château en grand, en légère
      perspective, sur sa falaise au-dessus du lac noir ; ses deux plus hautes tours se dressent dans les créneaux du tracé (le tracé
      de Djeddah a la forme d'un rempart). La Grande Salle est vue en coupe à travers sa verrière : plafond étoilé, bougies qui flottent,
-     4 tables aux couleurs des pilotes. Autour : le terrain de Quidditch et ses tours de gradins, le saule cogneur qui fouette, la forêt
+     4 tables (les 4 maisons). Autour : le terrain de Quidditch et ses tours de gradins, le saule cogneur qui fouette, la forêt
      interdite et ses yeux, la cabane du garde-chasse, le pont couvert, la volière d'où partent les hiboux du courrier, le dragon qui
      survole, le calmar géant qui sort une tentacule, les barques des premières années, et un cerf argenté qui chasse les détraqueurs.
-     La piste est une voie aérienne balisée d'anneaux d'or ; les 4 pilotes la courent sur leurs balais, écharpes à leurs couleurs.
-     Les 4 tableaux (à droite) reçoivent les vrais portraits posés par l'appli (RES.portraits). Tout est dessiné ici. */
+     La piste est une voie aérienne balisée d'anneaux d'or ; les 5 pilotes la courent sur leurs balais, écharpes à leurs couleurs.
+     Le cartouche « Les 5 attrapeurs » (en haut) reçoit les vrais portraits posés par l'appli (RES.portraits). Tout est dessiné ici. */
   function peindreChateau5(T, Z, def) {
-    const K = kit(T, def, 52, "c5-"), { s, a, r, f, W, H, P, N } = K, an = x => K.anime ? x : "", CJ = COULEURS_J;
+    const K = kit(T, def, 52, "c5-"), { s, a, r, f, W, H, P, N } = K, an = x => K.anime ? x : "", CJ = COULEURS_5;
     const OR = "#F2C64A";
     const G = (x, y, sc, rot) => `<g transform="translate(${f(x)} ${f(y)})${sc && sc !== 1 ? ` scale(${sc})` : ""}${rot ? ` rotate(${f(rot)})` : ""}">`;
     const LUM = [], SOMB = [];   // fenêtres allumées (halo posé après coup) / éteintes (certaines s'allument dans la couche animée)
@@ -1995,13 +1996,13 @@
     s.push(`<path d="M${f(DX + 4)} ${f(DY - 46)}h86l-7 9l7 9h-86z" fill="#000" opacity=".35" transform="translate(2 2)"/><path d="M${f(DX + 4)} ${f(DY - 46)}h86l-7 9l7 9h-86z" fill="#E8D9A8" stroke="#8A6A2A" stroke-width="1"/><text x="${f(DX + 44)}" y="${f(DY - 34.5)}" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-weight="700" font-size="10" fill="#1A1630">Méfait accompli</text>`);
     K.halo(DX, DY - 52, 34, "#FFB347", .6); K.halo(DX, DY + 52, 34, "#FFB347", .5);
 
-    // ---- 9. les 4 attrapeurs en silhouettes, en V devant la lune (seules les écharpes sont en couleur)
+    // ---- 9. les 5 attrapeurs en silhouettes, en V devant la lune (seules les écharpes sont en couleur)
     const LU = "#C8D8FF";
     s.push(`<filter id="c5-sil2" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="1.6" result="d"/><feFlood flood-color="#A8BCE8" flood-opacity=".75"/><feComposite in2="d" operator="in" result="rim"/><feFlood flood-color="#0A0E24"/><feComposite in2="SourceAlpha" operator="in" result="sil"/><feMerge><feMergeNode in="rim"/><feMergeNode in="sil"/></feMerge></filter>`);
     const pilote = () => `<path d="M-27 3.2L29 -1" stroke="#000" stroke-width="3" stroke-linecap="round"/><path d="M-25 3L-50 -8Q-57 3 -50 15Z"/><path d="M-8 -1L-1 6.5L-16 9M-8 .5L0 8L-14 10.5" stroke="#000" stroke-width="4.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` +
       `<path d="M9 -14C0 -21 -16 -22 -30 -18L-38 -19L-31 -14L-40 -12L-29 -9C-20 -6 -14 -4 -8 -3Z"/><path d="M-13 1C-13 -8 -2 -15 9 -14.5L12 -9C5 -7 -1 -3 -3 2Z"/><path d="M6 -11L12 -5L19 -1" stroke="#000" stroke-width="3.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="14" cy="-17.5" r="6.2"/>`;
     // [x, y, échelle, joueur, inclinaison] : le meneur en tête, à droite, vers la balle ailée
-    const HER = [[572, 224, .64, 0, -8], [532, 206, .56, 1, -8], [566, 256, .56, 2, -8], [492, 192, .5, 3, -8]];
+    const HER = [[572, 224, .64, 0, -8], [532, 206, .56, 1, -8], [566, 256, .56, 2, -8], [492, 192, .5, 3, -8], [500, 228, .5, 4, -8]];
     HER.forEach(([x, y, S, k, ro]) => s.push(`${G(x, y, S, ro)}<g filter="url(#c5-sil2)">${pilote()}</g><path d="M-30 -14L-40 -12L-29 -9C-20 -6 -14 -4 -8 -3L-9 -6C-16 -7 -22 -9 -30 -12Z" fill="${CJ[k]}" opacity=".8"/></g>`));
 
     // ---- 10. le cartouche « Les 5 attrapeurs » (portraits posés par l'appli)
@@ -2026,7 +2027,7 @@
     BAR.forEach(([x, y, sc], k) => { const lx = x + 14 * sc * 1.35, ly = y - 13 * sc * 1.35; a.push(`<circle cx="${f(lx)}" cy="${f(ly)}" r="9" fill="url(#c5-flamme)" opacity="${K.anime ? .6 : .8}">${an(`<animate attributeName="opacity" values=".45;.95;.6;.85;.45" keyTimes="0;.25;.5;.75;1" dur="${1.8 + k * .4}s" repeatCount="indefinite"/>`)}</circle>`); });
     // la fumée du train
     a.push(`<g>${an(`<animateTransform attributeName="transform" type="translate" values="0 0;-26 -8" dur="2.6s" repeatCount="indefinite"/>`)}${[0, 1, 2, 3].map(q => `<circle cx="${290 - q * 14}" cy="${328 - q * 4}" r="${4 + q * 2}" fill="#8A96B8" opacity="${(.55 - q * .12).toFixed(2)}"/>`).join("")}</g>`);
-    // les écharpes des 4 attrapeurs qui claquent au vent (seule couleur vive des silhouettes)
+    // les écharpes des 5 attrapeurs qui claquent au vent (seule couleur vive des silhouettes)
     HER.forEach(([x, y, S, k, ro], q) => { const v1 = "M11 -14Q0 -20 -12 -16T-34 -19", v2 = "M11 -14Q0 -11 -12 -17T-34 -13";
       a.push(`<g transform="translate(${f(x)} ${f(y)}) scale(${S}) rotate(${ro})"><path d="${v1}" stroke="${CJ[k]}" stroke-width="4.2" fill="none" stroke-linecap="round">${an(`<animate attributeName="d" values="${v1};${v2};${v1}" dur="${(.6 + q * .05).toFixed(2)}s" repeatCount="indefinite"/>`)}</path></g>`); });
     // balle d'entraînement argentée, ailes blanches, juste devant le meneur
@@ -2047,7 +2048,7 @@
 
   /* ---------- Mars · Le pays des merveilles (v3 : grandes scènes en gravures colorées, d'après le livre de 1865) ----------
      Au centre la mare de larmes (Alice y nage, la course au caucus tourne autour, une larme géante y tombe) ; au-dessus, le terrier
-     vertigineux où tout tombe en spirale ; en bas le grand goûter du Chapelier avec 4 chaises réservées aux pilotes (cadres PORTR) ;
+     vertigineux où tout tombe en spirale ; en bas le grand goûter du Chapelier avec 5 fauteuils-tasses réservés aux pilotes (cadres PORTR) ;
      à droite la Reine de cœur et son croquet aux flamants ; la Chenille sur son champignon ; la maison du Lapin où Alice a trop grandi ;
      dehors : le château de cœur, la petite porte et « BOIS-MOI », le jardin des fleurs qui parlent, le quadrille des homards au bord de mer.
      Le Chat apparaît et disparaît d'un coin à l'autre, il ne laisse que son sourire. */
@@ -2271,9 +2272,9 @@
     // ================= 13. la lumière unique de l'après-midi par-dessus tout : rayons obliques + halo / coins bas assombris
     for (let k = 0; k < 5; k++) { const a0 = .14 + k * .2, a1 = a0 + .06 + r() * .05; s.push(`<path d="M-60 -60L${f(-60 + Math.cos(a0) * 1600)} ${f(-60 + Math.sin(a0) * 1600)}L${f(-60 + Math.cos(a1) * 1600)} ${f(-60 + Math.sin(a1) * 1600)}Z" fill="#FFF0C0" opacity=".12" filter="url(#gt-flou8)"/>`); }
     s.push(`<rect width="${W}" height="${H}" fill="url(#gt-sol)"/>`);
-    // ================= 14. sur la piste : le Lapin blanc pressé, les 4 pilotes en tasses à roulettes, une traînée de pétales dans le sens de la course
+    // ================= 14. sur la piste : le Lapin blanc pressé, les 5 pilotes en tasses à roulettes, une traînée de pétales dans le sens de la course
     a.push(K.surPiste(.05, `<g transform="rotate(90) scale(.7)">${lapin.replace(/<ellipse cx="-8" cy="-62"[^>]*>|<ellipse cx="-2" cy="-62"[^>]*>/g, "")}</g>`, 30, 1.5, false));
-    COULEURS_J.forEach((c, k) => a.push(K.surPiste(.95 - k * .025, `<g transform="rotate(90) scale(1.3)"><ellipse cx="0" cy="4" rx="9" ry="3" fill="#000" opacity=".25"/><path d="M-8 -6h16l-2.6 10h-10.8z" fill="${c}" ${INK}/><ellipse cx="0" cy="-6" rx="8" ry="2.4" fill="#8A4A1A" ${INK}/><path d="M8 -4q5 1 0 5" stroke="${ENC}" fill="none"/><circle cx="-6" cy="5" r="2.4" fill="${NOIR}"/><circle cx="6" cy="5" r="2.4" fill="${NOIR}"/></g>`, 30, (.95 - k * .025) * 30, false)));
+    COULEURS_5.forEach((c, k) => a.push(K.surPiste(.95 - k * .025, `<g transform="rotate(90) scale(1.3)"><ellipse cx="0" cy="4" rx="9" ry="3" fill="#000" opacity=".25"/><path d="M-8 -6h16l-2.6 10h-10.8z" fill="${c}" ${INK}/><ellipse cx="0" cy="-6" rx="8" ry="2.4" fill="#8A4A1A" ${INK}/><path d="M8 -4q5 1 0 5" stroke="${ENC}" fill="none"/><circle cx="-6" cy="5" r="2.4" fill="${NOIR}"/><circle cx="6" cy="5" r="2.4" fill="${NOIR}"/></g>`, 30, (.95 - k * .025) * 30, false)));
     for (let k = 0; k < 6; k++) a.push(K.surPiste(.05 - (k + 1) * .008, `<path d="M0 -4Q5 -3 6 0Q5 3 0 4Q-3 0 0 -4Z" fill="${k % 2 ? "#F28AA8" : "#FFB8CC"}" stroke="#B8405E" stroke-width=".6" transform="scale(1.3)"/>`, 30, 1.5 - (k + 1) * .24, false));
     K.particules(8, "#FFF4D0", 2.4, "derive");
     const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#gt-vichy)"/>`, "#F8D8C8", .08); RES.portraits = PORTR; RES.lieux = { chapelier: [Math.round(HX + 40), Math.round(HY - 240)], flaque: [Math.round(L.cx), Math.round(L.cy)] }; return RES;
@@ -2464,8 +2465,8 @@
         s.push(`<text x="${f(fx)}" y="${f(fy + 62)}" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="900" font-size="16" fill="${mixHex(c, "#FFFFFF", .3)}" stroke="#05070F" stroke-width="4" paint-order="stroke">${NOMS_5[k]}</text>`);
         a.push(`<g>${an(`<animate attributeName="opacity" values="1;.45;1" dur="${(.3 + k * .06).toFixed(2)}s" repeatCount="indefinite"/>`)}${G(fx, fy, SE)}
 <path d="M-15.5 -44l4 -${16 + k}l4 ${16 + k}zM11.5 -44l4 -${16 + k}l4 ${16 + k}z" fill="#FF9A5A"/><path d="M-13.5 -44l2 -9l2 9zM13.5 -44l2 -9l2 9z" fill="#FFF0C8"/></g></g>`); }); }
-    // ---- 10. dans la tranchée : les 4 pilotes (traînées de réacteurs) poursuivis par trois chasseurs aux ailes hexagonales
-    COULEURS_J.forEach((c, k) => a.push(K.surPiste(.04 + k * .03, `${G(0, 0, .62)}<path d="M-20 -5H-74M-20 5H-74" stroke="${c}" stroke-width="5" stroke-linecap="round" opacity=".35"/><path d="M-20 -5H-46M-20 5H-46" stroke="#FFF0C8" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>${xwing(c, true)}</g>`, 34, k * 1)));
+    // ---- 10. dans la tranchée : les 5 pilotes (traînées de réacteurs) poursuivis par trois chasseurs aux ailes hexagonales
+    COULEURS_5.forEach((c, k) => a.push(K.surPiste(.04 + k * .03, `${G(0, 0, .62)}<path d="M-20 -5H-74M-20 5H-74" stroke="${c}" stroke-width="5" stroke-linecap="round" opacity=".35"/><path d="M-20 -5H-46M-20 5H-46" stroke="#FFF0C8" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>${xwing(c, true)}</g>`, 34, k * 1)));
     a.push(K.surPiste(.985, `${G(0, 0, .8)}<path d="M14 0h34" stroke="#4BFF6A" stroke-width="3" stroke-linecap="round"/>${tieHex()}</g>${G(-34, -12, .62)}${tieHex()}</g>${G(-34, 12, .62)}${tieHex()}</g>`, 34, 33.4));
     // explosions et feux de la coque
     [[300, 40, 0], [722, 692, 3.4]].forEach(([x, y, b]) => a.push(`<g opacity="0">${an(`<animate attributeName="opacity" values="0;1;.6;0;0" keyTimes="0;.04;.12;.26;1" dur="7s" begin="${b}s" repeatCount="indefinite"/>`)}<circle cx="${x}" cy="${y}" r="22" fill="#FF5A1A" opacity=".45"/><circle cx="${x + 3}" cy="${y - 2}" r="14" fill="#FFA03A" opacity=".8"/><circle cx="${x + 1}" cy="${y - 1}" r="7" fill="#FFF6D0"/></g>`));
@@ -2824,11 +2825,11 @@
       for (let k = 0; k < 9; k++) { const t = k / 8, x = P[0][0] + (P[3][0] - P[0][0]) * t, y = P[0][1] + (P[3][1] - P[0][1]) * t; s.push(`<path d="M${f(x - 4)} ${f(y - 16)}Q${f(x + 6)} ${f(y)} ${f(x - 4)} ${f(y + 16)}" fill="none" stroke="${FR ? C.encre : "#F4EAD6"}" stroke-width="2.2"/>`); } }
     // la queue du grand ver qui ressort au sud
     corps(cat([[566, -6, 554], [580, 14, 556], [596, 18, 552], [612, 12, 548], [626, -4, 546]], 4), 7);
-    // l'ornithoptère posé, le marteleur et les quatre marcheurs (écharpes aux couleurs des pilotes) et leurs pas
+    // l'ornithoptère posé, le marteleur et les cinq marcheurs (écharpes aux couleurs des pilotes) et leurs pas
     { const [x, y] = M(118, 318), o3 = `<path d="M-12 0Q-4 -4 10 -1Q13 0 10 1.5Q-4 4 -12 0Z" fill="${FR ? "#D8C098" : "#6E665E"}" stroke="${C.encre}" stroke-width=".8"/><path d="M-3 -2l-4 -16h3l5 16zM-3 2l-4 16h3l5 -16zM4 -2l-2 -15h3l3 15zM4 2l-2 15h3l3 -15z" fill="${FR ? "#C9A878" : "#A89E92"}" stroke="${C.encre}" stroke-width=".5"/>`;
       s.push(`<g transform="translate(${f(x)} ${f(y)}) rotate(40) scale(1.5)">${o3}</g>`);
       const [mx, my] = M(160, 404); s.push(`<circle cx="${f(mx)}" cy="${f(my)}" r="3" fill="#FF5A3A"/>` + [7, 12, 17].map(R => `<circle cx="${f(mx)}" cy="${f(my)}" r="${R}" fill="none" stroke="${C.crete}" stroke-width="1" opacity=".6"/>`).join(""));
-      COULEURS_J.forEach((c, k) => { const t = .3 + k * .1, px = mx + (x - mx) * t + (k % 2 ? 4 : -4), py = my + (y - my) * t; s.push(`<circle cx="${f(px)}" cy="${f(py)}" r="3.4" fill="${NU ? "#2A2238" : "#5A4038"}"/><circle cx="${f(px)}" cy="${f(py)}" r="1.8" fill="${c}"/><path d="M${f(px)} ${f(py)}l14 -4" stroke="${C.ombreP}" stroke-width="2.4" opacity=".3"/>`); });
+      COULEURS_5.forEach((c, k) => { const t = .3 + k * .4 / (NJ - 1), px = mx + (x - mx) * t + (k % 2 ? 4 : -4), py = my + (y - my) * t; s.push(`<circle cx="${f(px)}" cy="${f(py)}" r="3.4" fill="${NU ? "#2A2238" : "#5A4038"}"/><circle cx="${f(px)}" cy="${f(py)}" r="1.8" fill="${c}"/><path d="M${f(px)} ${f(py)}l14 -4" stroke="${C.ombreP}" stroke-width="2.4" opacity=".3"/>`); });
       let d = ""; for (let k = 0; k < 24; k++) { const t = k / 24 * .3; d += `<circle cx="${f(mx + (x - mx) * t + (k % 2 ? 1.5 : -1.5))}" cy="${f(my + (y - my) * t)}" r=".9" fill="${C.encre}" opacity=".5"/>`; } s.push(d); }
     // les deux obélisques et bannières du départ
     [-26, 26].forEach(dl => { const q = T.a(dl, DEMI + 14), [x, y] = M(q.x, q.z), o2 = om(q.x, 30, q.z); s.push(`<path d="M${f(x)} ${f(y)}L${f(o2[0])} ${f(o2[1])}" stroke="${C.ombreP}" stroke-width="5" opacity="${FR ? .2 : .4}" stroke-linecap="round"/><rect x="${f(x - 4)}" y="${f(y - 4)}" width="8" height="8" fill="${C.roc[1]}" stroke="${C.encre}" stroke-width=".8"/><rect x="${f(x - 1.6)}" y="${f(y - 1.6)}" width="3.2" height="3.2" fill="#7A1E1C"/>`); });
@@ -2890,8 +2891,8 @@
       COULEURS_5.forEach((c, k) => { const x = px + 34 + k * 46, y = py + 60; PORTR.push({ k, x, y, r: 17 });
         s.push(`<circle cx="${x}" cy="${y}" r="21" fill="${FR ? "#E2CC9A" : "#1A0E14"}" stroke="${c}" stroke-width="2.4"/>${FR ? `<circle cx="${x}" cy="${y}" r="24" fill="none" stroke="#8A2A1A" stroke-width="2" opacity=".6"/>` : ""}`);
         s.push(`<text x="${x}" y="${py + 106}" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="12" fill="${FR ? C.encre : c}">${NOMS_5[k]}</text>`); }); }
-    // les 4 pilotes sur la piste : glisseurs aux couleurs des 4
-    COULEURS_J.forEach((c, k) => a.push(K.surPiste(.04 + k * .03, `<g><ellipse cx="-14" cy="0" rx="12" ry="4" fill="${C.clair}" opacity=".55"/><path d="M-8 -5h12l6 5l-6 5h-12z" fill="${c}" stroke="#2A1408" stroke-width="1"/><circle cx="3" cy="0" r="2.4" fill="#FFF2D6"/></g>`, 40, k * 1.2)));
+    // les 5 pilotes sur la piste : glisseurs, un par pilote
+    COULEURS_5.forEach((c, k) => a.push(K.surPiste(.04 + k * .03, `<g><ellipse cx="-14" cy="0" rx="12" ry="4" fill="${C.clair}" opacity=".55"/><path d="M-8 -5h12l6 5l-6 5h-12z" fill="${c}" stroke="#2A1408" stroke-width="1"/><circle cx="3" cy="0" r="2.4" fill="#FFF2D6"/></g>`, 40, k * 1.2)));
     const RES = K.fin(`<rect width="${W}" height="${H}" fill="${C.fond}"/>`, FR ? "#8A6438" : NU ? "#0A0C30" : "#FF7A2A", FR ? .08 : .06); RES.portraits = PORTR; RES.lieux = { ver: [Math.round(GX), Math.round(GY)] }; return RES;
   }
 
@@ -3090,8 +3091,8 @@
     COULEURS_5.forEach((col, k) => { const x = px + 34 + k * 47, y = py + 58; PORTR.push({ k, x, y, r: 17 });
       s.push(`<circle cx="${x}" cy="${y}" r="23" fill="#FF8A1E" opacity=".25"/><circle cx="${x}" cy="${y}" r="20.5" fill="none" stroke="#FF8A1E" stroke-width="2.2"/><circle cx="${x}" cy="${y}" r="18" fill="#0A0820" stroke="${col}" stroke-width="2"/><text x="${x}" y="${py + 98}" text-anchor="middle" ${FONTE} font-size="9.5" fill="${col}" stroke="#0A0614" stroke-width="2.2" paint-order="stroke">${NOMS_5[k]}</text>`);
       a.push(`<g>${an(`<animateTransform attributeName="transform" type="rotate" from="${k % 2 ? 360 : 0} ${x} ${y}" to="${k % 2 ? 0 : 360} ${x} ${y}" dur="${5 + k}s" repeatCount="indefinite"/>`)}<circle cx="${x}" cy="${y}" r="22.6" fill="none" stroke="#FFD27A" stroke-width="2.4" stroke-dasharray="1.4 5" stroke-linecap="round"/></g>`); }); }
-  // les 4 pilotes sur la piste
-  COULEURS_J.forEach((col, k) => a.push(K.surPiste(.05 + k * .03, `<g><path d="M-8 -3.6h12l4 2v3.2l-4 2h-12z" fill="${col}" ${INK}/><rect x="-9" y="-5.4" width="3" height="10.8" rx="1" fill="#140E1E"/><rect x="7" y="-4.6" width="2.4" height="9.2" rx="1" fill="#140E1E"/><circle cx="0" cy="0" r="2" fill="#F4F1EA"/></g>`, 40, k * 1.2)));
+  // les 5 pilotes sur la piste
+  COULEURS_5.forEach((col, k) => a.push(K.surPiste(.05 + k * .03, `<g><path d="M-8 -3.6h12l4 2v3.2l-4 2h-12z" fill="${col}" ${INK}/><rect x="-9" y="-5.4" width="3" height="10.8" rx="1" fill="#140E1E"/><rect x="7" y="-4.6" width="2.4" height="9.2" rx="1" fill="#140E1E"/><circle cx="0" cy="0" r="2" fill="#F4F1EA"/></g>`, 40, k * 1.2)));
   // étoiles qui scintillent dans le vide
   [0, 1].forEach(q => { let g = ""; for (let k = 0; k < 18; k++) { let x, y, e = 0; do { x = r() * W; y = r() * H; e++; } while (e < 60 && Math.hypot(x - cx, y - cy) < 520); g += `<path d="M${f(x)} ${f(y - 3)}l.8 2.2l2.2 .8l-2.2 .8l-.8 2.2l-.8 -2.2l-2.2 -.8l2.2 -.8z" fill="#FFF"/>`; }
     a.push(`<g opacity="${K.anime ? 0 : .8}">${an(`<animate attributeName="opacity" values="0;1;0" dur="${(2.6 + q * 1.3).toFixed(1)}s" begin="${q}s" repeatCount="indefinite"/>`)}${g}</g>`); });
@@ -3103,7 +3104,7 @@
      Le huit traverse la grande salle de la chocolaterie à la tombée de la nuit : dans la boucle droite, la cascade et la rivière
      de chocolat (bateau-bonbon, tuyaux de verre, citrouilles en sucre sur les berges) ; dans la boucle gauche, le potager
      d'Halloween (chaudron de chocolat, citrouilles lanternes, fantômes en guimauve, la myrtille géante qu'on fait rouler) ;
-     en haut, les grilles de l'usine sous la lune orange et les 4 tickets d'or (portraits des pilotes) ; en bas, la salle des
+     en haut, les grilles de l'usine sous la lune orange et les tickets d'or (un par pilote) ; en bas, la salle des
      inventions ; aux coins, les boissons qui font voler, la salle des noix et ses écureuils, l'ascenseur de verre dans le ciel.
      Le pont du huit est un sucre d'orge torsadé. */
   function peindreChocolat4(T, Z, def) {
@@ -3287,11 +3288,11 @@
     // le petit gourmand coincé dans le tuyau (une bosse qui remonte)
     const gourmand = `<circle r="14" fill="#C8642A" ${INK}/><circle cx="-4" cy="-4" r="5" fill="#E8925A" opacity=".8"/><circle cx="0" cy="-12" r="6.4" fill="${PEAU}" ${INK}/><circle cx="-2" cy="-12.4" r=".9" fill="#2A140A"/><circle cx="2" cy="-12.4" r=".9" fill="#2A140A"/><ellipse cy="-9.6" rx="1.8" ry="1.4" fill="#8A2A1A"/>`;
     a.push(K.anime ? `<g><animateMotion dur="7s" repeatCount="indefinite" keyPoints="0;.75;.75" keyTimes="0;.85;1" calcMode="linear" path="${TUY}"/>${gourmand}</g>` : `<g transform="translate(${MARE[0] + 50} 318)">${gourmand}</g>`);
-    // 4 tickets d'or : un seul dans le rai, qui brille plus que les autres
+    // 5 tickets d'or (un par pilote, comme dans le livre) : un seul dans le rai, qui brille plus que les autres
     const ticket = c => `<g><path d="M-22 -12H22V-4a4 4 0 0 0 0 8V12H-22V4a4 4 0 0 0 0 -8Z" fill="url(#c4-or2)" stroke="#6A440E" stroke-width="1.2"/><rect x="-17" y="-8" width="34" height="16" rx="1.5" fill="none" stroke="#8A5A10" stroke-width=".8" stroke-dasharray="2.4 1.6"/><path d="M-10 4H10" stroke="${c}" stroke-width="3" stroke-linecap="round"/><path d="M-10 -2H10" stroke="#8A5A10" stroke-width="1.4"/></g>`;
     a.push(`<defs><linearGradient id="c4-or2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF6C8"/><stop offset=".45" stop-color="#F4C84A"/><stop offset="1" stop-color="#B8821A"/></linearGradient></defs>`);
     K.halo(CX + 14, 170, 60, "#FFF4C0", .9, a);
-    [[CX - 6, 150, CX + 34, 196, 9, 1.35], [1016, 236, 1044, 296, 11, 1.05], [380, 600, 350, 640, 10, 1.05], [676, 470, 690, 530, 12, 1.05]].forEach(([x0, y0, x1, y1, d, sc], k) => a.push(K.anime ? `<g><animateMotion dur="${d}s" begin="-${(k * 2.5).toFixed(1)}s" repeatCount="indefinite" path="M${x0} ${y0}Q${(x0 + x1) / 2 + (k % 2 ? 30 : -30)} ${(y0 + y1) / 2} ${x1} ${y1}Q${(x0 + x1) / 2 + (k % 2 ? -30 : 30)} ${(y0 + y1) / 2} ${x0} ${y0}"/><g><animateTransform attributeName="transform" type="rotate" values="-20;20;-20" dur="${(d / 3).toFixed(1)}s" repeatCount="indefinite"/><g transform="scale(${sc})">${ticket(COULEURS_J[k])}</g></g></g>` : `<g transform="translate(${f(x0 + (x1 - x0) * .3)} ${f(y0 + (y1 - y0) * .3)}) rotate(${k % 2 ? 14 : -12}) scale(${sc})">${ticket(COULEURS_J[k])}</g>`));
+    [[CX - 6, 150, CX + 34, 196, 9, 1.35], [1016, 236, 1044, 296, 11, 1.05], [380, 600, 350, 640, 10, 1.05], [676, 470, 690, 530, 12, 1.05], [196, 40, 228, 70, 10.5, 1.05]].forEach(([x0, y0, x1, y1, d, sc], k) => a.push(K.anime ? `<g><animateMotion dur="${d}s" begin="-${(k * 2.5).toFixed(1)}s" repeatCount="indefinite" path="M${x0} ${y0}Q${(x0 + x1) / 2 + (k % 2 ? 30 : -30)} ${(y0 + y1) / 2} ${x1} ${y1}Q${(x0 + x1) / 2 + (k % 2 ? -30 : 30)} ${(y0 + y1) / 2} ${x0} ${y0}"/><g><animateTransform attributeName="transform" type="rotate" values="-20;20;-20" dur="${(d / 3).toFixed(1)}s" repeatCount="indefinite"/><g transform="scale(${sc})">${ticket(COULEURS_5[k])}</g></g></g>` : `<g transform="translate(${f(x0 + (x1 - x0) * .3)} ${f(y0 + (y1 - y0) * .3)}) rotate(${k % 2 ? 14 : -12}) scale(${sc})">${ticket(COULEURS_5[k])}</g>`));
     for (let q = 0; q < 2; q++) { let t = ""; for (let k = 0; k < 16; k++) { const y = 120 + r() * 560, x = CX + (r() - .5) * (240 + y * .4); t += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(1 + r() * 1.6)}" fill="${q ? "#FFF2B8" : "#FFFFFF"}"/>`; } a.push(`<g opacity="${K.anime ? .2 : .7}">${an(`<animate attributeName="opacity" values=".1;.9;.1" dur="${3 + q}s" begin="${q * 1.5}s" repeatCount="indefinite"/>`)}${t}</g>`); }
 
     // ---- 12. vignettage de chocolat (pas de violet)
@@ -3305,7 +3306,7 @@
      remparts (Maria, Rose, Sina) en arcs de cercle, vus de face, en relief. La course sort par une porte de Maria, boucle
      chez les titans et rentre par l'autre porte. Le titan colossal (un quart de la carte) se dresse derrière Maria, la tête
      dans la vapeur, les mains agrippées au rempart juste au-dessus de la porte de droite ; un titan enjambe le mur à gauche,
-     une brèche crache ses gravats, des titans de trois tailles marchent vers les murs, et quatre soldats minuscules
+     une brèche crache ses gravats, des titans de trois tailles marchent vers les murs, et cinq soldats minuscules
      (capes aux couleurs des pilotes) volent au bout de leurs câbles pour donner l'échelle. */
   function peindreTitans4(T, Z, def) {
     const K = kit(T, def, 87, "t4-"), { s, a, r, f, W, H } = K, an = x => K.anime ? x : "";
@@ -3523,8 +3524,8 @@
     [[300, 220, 200, 24], [820, 230, 160, 20]].forEach(([x, y, rx, ry], k) => a.push(`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="url(#t4-brume)">${an(`<animateTransform attributeName="transform" type="translate" values="0 0;${k ? -40 : 40} 0;0 0" dur="${18 + k * 5}s" repeatCount="indefinite"/>`)}</ellipse>`));
     // le scintillement du soleil sur la mer
     a.push(`<path d="M${GX - 110} ${HZ + 3}H${GX + 110}" stroke="#FFFFFF" stroke-width="1.5" opacity=".6">${an(`<animate attributeName="opacity" values=".2;.8;.2" dur="3s" repeatCount="indefinite"/>`)}</path>`);
-    // les 4 pilotes à cheval sur la piste, capes aux couleurs des 4
-    COULEURS_J.forEach((c, k) => a.push(K.surPiste(.04 + k * .03, `<g transform="scale(1.5)"><ellipse rx="8" ry="3.4" fill="#4A3220" stroke="#1E1610" stroke-width=".7"/><ellipse cx="8" cy="0" rx="3.4" ry="2" fill="#3E2A18" stroke="#1E1610" stroke-width=".6"/><path d="M-8 0l-4 -1.5l1 1.5l-1 1.5z" fill="#1A1008"/><path d="M-5 -4.2L2 -2.8L2 2.8L-5 4.2Z" fill="${c}" stroke="#1E1610" stroke-width=".6"/><circle cx="1.5" cy="0" r="2.2" fill="#E8C4A0" stroke="#1E1610" stroke-width=".5"/></g>`, 44, k * 1.1)));
+    // les 5 pilotes à cheval sur la piste, une cape par pilote
+    COULEURS_5.forEach((c, k) => a.push(K.surPiste(.04 + k * .03, `<g transform="scale(1.5)"><ellipse rx="8" ry="3.4" fill="#4A3220" stroke="#1E1610" stroke-width=".7"/><ellipse cx="8" cy="0" rx="3.4" ry="2" fill="#3E2A18" stroke="#1E1610" stroke-width=".6"/><path d="M-8 0l-4 -1.5l1 1.5l-1 1.5z" fill="#1A1008"/><path d="M-5 -4.2L2 -2.8L2 2.8L-5 4.2Z" fill="${c}" stroke="#1E1610" stroke-width=".6"/><circle cx="1.5" cy="0" r="2.2" fill="#E8C4A0" stroke="#1E1610" stroke-width=".5"/></g>`, 44, k * 1.1)));
     K.particules(8, "#FFD8A0", 2.4, "monte");
     const RES = K.fin(`<rect width="${W}" height="${H}" fill="#22182A"/>`, "#C8642A", .1); RES.portraits = PORTR; return RES;
   }
@@ -3948,7 +3949,7 @@
         for (let k = 0; k < 6; k++) { const a = k / 6 * TAU; branche(g, [x + Math.cos(a) * 1.2, .15, z + Math.sin(a) * 1.2], [x - Math.cos(a) * .3, .5, z - Math.sin(a) * .3], .15, .12, BOIS3); g.boite(x + Math.cos(a) * 1.9, 0, z + Math.sin(a) * 1.9, .7, .45, .5, PIERRE2, 0, a); }
         g.boule(x, .7, z, .7, v("#FF8A2B"), 1, 1.4); g.boule(x, 1.3, z, .4, v("#FFD27A"), 1, 1.6); lum.push([x, 1.5, z, 1, .6, .25, 12]);
         branche(g, [x - 1.4, 0, z], [x - 1.4, 1.8, z], .05, .05, FER); branche(g, [x + 1.4, 0, z], [x + 1.4, 1.8, z], .05, .05, FER); branche(g, [x - 1.5, 1.8, z], [x + 1.5, 1.8, z], .04, .04, FER); g.cylindre(x, 1, z, .45, .6, 7, FER);   // la marmite
-        for (let k = 0; k < 5; k++) { const a = k / 5 * TAU + .6; soldat(g, x + Math.cos(a) * 3.4, 0, z + Math.sin(a) * 3.4, -a + PI, { pose: k === 2 ? "garde" : "debout", col: k < 4 ? COULEURS_J[k] : null }); }
+        for (let k = 0; k < NJ; k++) { const a = k / NJ * TAU + .6; soldat(g, x + Math.cos(a) * 3.4, 0, z + Math.sin(a) * 3.4, -a + PI, { pose: k === 2 ? "garde" : "debout", col: COULEURS_5[k % NJ] }); }
         for (let k = 0; k < 4; k++) { const px = x - 8 + k * 2.6, pz = z + 22; cheval(g, px, 0, pz, PI / 2 + (r() - .5) * .3, { seul: true, robe: [v("#4A3220"), v("#7A5A3A"), v("#2A1E16"), v("#8A6A4A")][k] }); }
         branche(g, [x - 10, 1.2, z + 20.5], [x + 3, 1.2, z + 20.5], .04, .04, v("#C8B898")); branche(g, [x - 10, 0, z + 20.5], [x - 10, 1.3, z + 20.5], .08, .08, BOIS); branche(g, [x + 3, 0, z + 20.5], [x + 3, 1.3, z + 20.5], .08, .08, BOIS);
         for (let k = 0; k < 7; k++) g.boite(x + 12 + (k % 3) * 1.3, Math.floor(k / 3) * 1.1, z - 8 + (k % 2) * 1.2, 1.1, 1.1, 1.1, k % 2 ? BOIS2 : v("#9A7448"), 0, .2);
@@ -4297,8 +4298,8 @@
     s.push(`<path d="${K.piste}" fill="none" stroke="#B5482E" stroke-width="1.8" stroke-dasharray="7 8" opacity=".55"/>`);
     a.push(`<path d="${K.piste}" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-dasharray="3 26" opacity=".75">${an(`<animate attributeName="stroke-dashoffset" values="0;-58" dur="2.4s" repeatCount="indefinite"/>`)}</path>`);
     K.depart();
-    // ---- 10. les 4 pilotes : 4 petites galères vues du dessus, voiles à leurs couleurs
-    COULEURS_J.forEach((c, k) => a.push(K.surPiste(.04 + k * .03, `<g transform="scale(1.2)"><path d="M-9 0Q-6 -4 6 -3L11 0L6 3Q-6 4 -9 0Z" fill="#6A3E1E" ${INK}/><path d="M-5 -3l-3 -4M-1 -3l-3 -4M3 -3l-3 -4M-5 3l-3 4M-1 3l-3 4M3 3l-3 4" stroke="#4A2E16" stroke-width=".9"/><rect x="-2" y="-5.5" width="4" height="11" rx="1" fill="${c}" ${INK}/></g>`, 44, k * 1.3)));
+    // ---- 10. les 5 pilotes : 5 petites galères vues du dessus, voiles à leurs couleurs
+    COULEURS_5.forEach((c, k) => a.push(K.surPiste(.04 + k * .03, `<g transform="scale(1.2)"><path d="M-9 0Q-6 -4 6 -3L11 0L6 3Q-6 4 -9 0Z" fill="#6A3E1E" ${INK}/><path d="M-5 -3l-3 -4M-1 -3l-3 -4M3 -3l-3 -4M-5 3l-3 4M-1 3l-3 4M3 3l-3 4" stroke="#4A2E16" stroke-width=".9"/><rect x="-2" y="-5.5" width="4" height="11" rx="1" fill="${c}" ${INK}/></g>`, 44, k * 1.3)));
     const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#o2-mer)"/>`, "#2A2040", .08); RES.portraits = PORTR; return RES;
   }
 
@@ -5893,7 +5894,7 @@
       [[-46, 13, 46], [-28, 11, 62], [28, 11, 62], [46, 13, 46], [0, 26, 76]].forEach(([x, w, h], q) => { g.boite(x, 0, -6, w, h, w, q === 4 ? pierre2 : pierre); g.boite(x, h, -6, w + 1.6, 1.4, w + 1.6, pierre2);
         g.cylindre(x, h + 1.4, -6, w * .66, w * 1.55, 8, vert, nuit * .1, 0); branche(g, [x, h + 1.4 + w * 1.5, -6], [x, h + 10 + w * 1.55, -6], .5, .1, lueur, 1); g.boule(x, h + 1.4 + w * 1.55, -6, 1.3, lueur, 1); lum.push([CX + x, h + 3 + w * 1.55, CZ - 6, .45, 1, .55, q === 4 ? 24 : 15]);
         for (let e = 0; e < 3; e++) o.boite(x, h * (.3 + e * .2), -6 + w / 2 + .02, 1.6, 4.5, .2, lueur, .9); });
-      [-46, -28, 28, 46].forEach((x, k) => { const w = k % 3 ? 11 : 13, h = k % 3 ? 62 : 46; o.boite(x, h - 22, -6 + w / 2 + .1, 6.5, 13, .2, v(COULEURS_J[k]), .25); o.boite(x, h - 22, -6 + w / 2 + .15, 6.5, 1, .2, v("#F4F1EA"), .2); });
+      [[-46, 13, 46], [-28, 11, 62], [0, 26, 76], [28, 11, 62], [46, 13, 46]].forEach(([x, w, h], q) => { const k = [0, 1, 4, 2, 3][q], bw = w > 20 ? 8 : 6.5, bh = w > 20 ? 16 : 13, y = h - bh - 9; o.boite(x, y, -6 + w / 2 + .1, bw, bh, .2, v(COULEURS_5[k]), .25); o.boite(x, y, -6 + w / 2 + .15, bw, 1, .2, v("#F4F1EA"), .2); });   // une bannière par pilote (la 5e, celle de Nicolas, sur la grande tour)
       o.boite(0, 0, 9.05, 11, 11, .2, v("#081008")); o.boite(0, 11, 9.1, 12, .8, .2, lueur, .8);
       // la statue du roi, sur son socle, devant la porte : armure, cape verte, capuche, masque de fer (deux fentes)
       const S = new Geo(), acier = v("#A8B2BE"), acier2 = v("#6E7884");
@@ -7395,8 +7396,8 @@
     [[574, 178], [590, 146], [562, 128], [582, 102], [598, 172], [556, 160]].forEach(([x, y], k) => { const sc = .8 + (k % 3) * .2;
       a.push(`${G(x, y, sc)}<g>${an(`<animateTransform attributeName="transform" type="translate" values="0 30;${k % 2 ? 6 : -6} 0;0 -30" dur="${(7 + k).toFixed(1)}s" begin="-${(k * 1.3).toFixed(1)}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.2;.8;1" dur="${(7 + k).toFixed(1)}s" begin="-${(k * 1.3).toFixed(1)}s" repeatCount="indefinite"/>`)}<circle r="10" fill="url(#pa-ag)"/><path d="M-5 0Q-5 -6 0 -6Q5 -6 5 0Z" fill="#FFFFFF"/>${[-3.5, -1.2, 1.2, 3.5].map(u => `<path d="M${u} 0q${f(u * 1.4)} 6 ${f(u * 2.2)} 13" stroke="#F4ECFF" stroke-width=".8" fill="none"/>`).join("")}</g></g>`); });
 
-    // ---- 13. les 4 pilotes sur la piste : petites montures-éclairs à leurs couleurs
-    COULEURS_J.forEach((c, k) => a.push(K.surPiste(.02 + k * .035, `<g transform="scale(1.15)"><circle r="9" fill="${c}" opacity=".25"/><path d="M-8 -3Q0 -6 9 0Q0 6 -8 3Z" fill="${c}" ${INK}/><path d="M-4 -3l-4 -6M-4 3l-4 6" stroke="${c}" stroke-width="2"/><circle cx="2" cy="0" r="2" fill="${PEAU}"/></g>`, 46, k * 1.4)));
+    // ---- 13. les 5 pilotes sur la piste : petites montures-éclairs à leurs couleurs
+    COULEURS_5.forEach((c, k) => a.push(K.surPiste(.02 + k * .035, `<g transform="scale(1.15)"><circle r="9" fill="${c}" opacity=".25"/><path d="M-8 -3Q0 -6 9 0Q0 6 -8 3Z" fill="${c}" ${INK}/><path d="M-4 -3l-4 -6M-4 3l-4 6" stroke="${c}" stroke-width="2"/><circle cx="2" cy="0" r="2" fill="${PEAU}"/></g>`, 46, k * 1.4)));
     K.particules(10, "#FFF4C0", 2, "scintille");
     const RES = K.fin(`<rect width="${W}" height="${H}" fill="url(#pa-ciel)"/>`, "#FFF0C8", .1); RES.portraits = PORTR; RES.lieux = { arbre: [AX, LY] }; return RES;
   }
@@ -9442,14 +9443,14 @@
     sol.poser(orni(false), ORNI[0], 0, ORNI[1], .7, 1.5); occupe.push([ORNI[0], ORNI[1], 30]);
     { const g = new Geo(); g.poser(orni(true), 0, -3, 120, 0, 2.4); rotors.push({ g, x: 236, y: 64, z: 300, cap: 0, v: -.16, a: { ax: "y", bob: [3, .9] } }); }
 
-    // ================= 9. LE MARTELEUR et LES QUATRE MARCHEURS (écharpes aux couleurs des pilotes), pas sans rythme =================
+    // ================= 9. LE MARTELEUR et LES CINQ MARCHEURS (écharpes aux couleurs des pilotes), pas sans rythme =================
     { const g = new Geo(), o = g.ov(), MET = v("#4E4A48"), MET2 = v("#7A706A");
       g.cylindre(0, 0, 0, .35, 5.2, 6, MET); g.cylindre(0, 5.2, 0, .8, 1.6, 8, MET2); g.cylindre(0, 6.8, 0, .4, .6, 6, MET); g.boule(0, 7.5, 0, .3, v("#FF5A3A"), 1);
       for (let k = 0; k < 3; k++) { const a = k / 3 * TAU; branche(g, [0, 3, 0], [Math.cos(a) * 2.4, 0, Math.sin(a) * 2.4], .12, .1, MET); }
       for (let k = 0; k < 3; k++) o.cylindre(0, .05 + k * .01, 0, 3 + k * 2.2, .02, 16, k % 2 ? AVAL : CRETE, .1);   // les ondes dans le sable
       sol.poser(g, MART[0], 0, MART[1], 0, 1.4); lum.push([MART[0], 9, MART[1], 1, .4, .25, 10]); occupe.push([MART[0], MART[1], 10]);
-      const COUL = ["#4C9AFF", "#2EC4B6", "#FF6FA8", "#F2A03A"];
-      const cm = Math.atan2(-(ORNI[1] - MART[1]), ORNI[0] - MART[0]); COUL.forEach((c, k) => { const m = new Geo(), CA = v("#5A4038"), f = .3 + k * .1, x = MART[0] + (ORNI[0] - MART[0]) * f + (k % 2 ? 2 : -2), z = MART[1] + (ORNI[1] - MART[1]) * f;
+      const COUL = COULEURS_5;   // un marcheur par pilote
+      const cm = Math.atan2(-(ORNI[1] - MART[1]), ORNI[0] - MART[0]); COUL.forEach((c, k) => { const m = new Geo(), CA = v("#5A4038"), f = .3 + k * .4 / (NJ - 1), x = MART[0] + (ORNI[0] - MART[0]) * f + (k % 2 ? 2 : -2), z = MART[1] + (ORNI[1] - MART[1]) * f;
         m.cylindre(0, 0, 0, 1, 3.4, 6, CA, 0, .55); m.boule(0, 3.9, 0, .6, v("#3A2A26"), 0, 1.1); m.boite(0, 3, 0, 1.4, .5, 1.4, v(c), .25); m.boite(.2, 2.2, -.7, .3, 1.4, .25, v(c), .25);
         branche(m, [.4, 3, .4], [1.4, 0, .5], .1, .08, v("#3A2A22")); m.quad([-.9, 3.4, -.6], [-.9, 3.4, .6], [-2.6, .6, .9], [-2.4, .4, -.9], v("#6A4A3E"), 0, [-1, .3, 0]); sol.poser(m, x, 0, z, cm, 1.6); });
       // les pas : foulées irrégulières, du marteleur jusqu'à l'ornithoptère posé
