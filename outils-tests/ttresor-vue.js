@@ -1,4 +1,5 @@
-/* Test v20.62 · chasse au trésor : l'objet n'apparaît que tout près (moins de 60 m), petit (9 à 16 px), et jamais à travers le décor.
+/* Test v20.62 · chasse au trésor : l'objet n'apparaît que tout près (moins de 60 m), petit (9 à 16 px), et jamais à travers le décor ;
+   v20.71 : et seulement pendant une recherche lancée (🔍).
    Aperçu admin uniquement (cachette d'exemple inventée, rien n'est envoyé ; les vraies cachettes sont privées, côté serveur).
    Fausses données ; serveur local ouvert (python3 -m http.server 8771). */
 const { chromium } = require("playwright");
@@ -16,9 +17,14 @@ const fausses = session => ({ ok: true, version: 84, genere: "2026-12-01T10:00:0
   await p.goto("http://localhost:8771/index.html"); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1200);
   await p.evaluate(() => { montrerVue("trophees"); }); await p.waitForTimeout(600);
   await p.evaluate(() => ouvrirApercuTresor());
-  await p.waitForFunction(() => TRESOR_APERCU && TRESOR_APERCU.F.p, null, { timeout: 20000 });
+  await p.waitForFunction(() => TRESOR_APERCU && TRESOR_APERCU.pEx, null, { timeout: 20000 });
   const etat = async () => p.evaluate(() => { const t = document.querySelector(".gp-piste .gp-tresor"), a = GP_INST.api; return { op: t ? +getComputedStyle(t).opacity : -1, w: t ? t.getBoundingClientRect().width : 0, zoom: a.zoom(), masque: a.masque(TRESOR_APERCU.F.p) }; });
   ok(await p.evaluate(() => typeof GP_INST.api.masque === "function"), "la 3D sait dire si le décor cache un point (masque)");
+  // v20.71 : avant « 🔍 Je lance ma recherche », l'objet n'existe pas, même tout près
+  await p.evaluate(() => apPres()); await p.waitForTimeout(1500);
+  const avant = await p.evaluate(() => ({ obj: !!document.querySelector(".gp-piste .gp-tresor"), bouton: !!document.querySelector(".gp-piste .gp-lancer") }));
+  ok(!avant.obj && avant.bouton, "v20.71 · tout près mais recherche pas lancée : aucun objet, le bouton 🔍 est là " + JSON.stringify(avant));
+  await p.evaluate(() => { document.querySelector(".gp-piste .gp-lancer").click(); document.querySelector(".gp-piste .gp-lancer").click(); }); await p.waitForTimeout(600);
   await p.evaluate(() => apPres()); await p.waitForTimeout(1500);
   const pres = await etat();
   ok(pres.op > .5 && pres.w >= 9 && pres.w <= 16 && !pres.masque, "🎯 tout près de la cachette d'exemple : l'objet se montre, petit (9 à 16 px) " + JSON.stringify(pres));

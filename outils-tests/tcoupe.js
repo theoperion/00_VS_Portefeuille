@@ -29,7 +29,7 @@ async function page(b, s, quand, sombre, admin) {
     await p.locator(".coupe-b .rg-c").screenshot({ path: "/tmp/coupe-" + (sombre ? "sombre" : "clair") + ".png" });
     ok(!err.length, "0 erreur JS" + tag + " " + JSON.stringify(err));
     ok(r.n === 2 && r.ecl === 12 && r.trouve === 2 && r.manque === 1, "la Coupe (personnelle) : 12 éclats, 2 trouvés par moi en couleur, 1 manqué, 9 à venir" + tag);
-    ok(/PROLOGUE-FAUX/.test(r.txt) && /TEXTE-FAUX-0/.test(r.txt) && /trouvé en 2e/.test(r.txt) && /trouvé en premier 🥇/.test(r.txt) && /◇ ○/.test(r.txt) && /te manquera pour l'énigme\. 2 pilotes l'ont trouvé \(le 1er : Clément\)/.test(r.txt) && /1 pilote l'a trouvé \(le 1er : Devlin\)/.test(r.txt) && !r.deb, "mes textes et mes signes seulement, « trouvé en premier / en 2e », éclat manqué sans contenu, combien l'ont trouvé ; rien ne déborde à 390 px" + tag);
+    ok(/PROLOGUE-FAUX/.test(r.txt) && /TEXTE-FAUX-0/.test(r.txt) && /trouvé en 2e/.test(r.txt) && /trouvé en premier 🥇/.test(r.txt) && /◇ ○/.test(r.txt) && /te manquera pour l'énigme\. 2 pilotes l'ont trouvé \(le plus rapide : Clément\)/.test(r.txt) && /1 pilote l'a trouvé \(le plus rapide : Devlin\)/.test(r.txt) && !r.deb, "mes textes et mes signes seulement, « trouvé en premier / en 2e », éclat manqué sans contenu, combien l'ont trouvé ; rien ne déborde à 390 px" + tag);
     // trouvaille : l'éclat se révèle et la Coupe passe à 4
     const v = await p.evaluate(async () => { document.querySelectorAll(".coupe-b").forEach(x => x.remove());
       const e = { circuit: "suzuka", matiere: "MATIERE-3", couleur: "#CFE3EE", symbole: "◎", texte: "TEXTE-REVELE" }; noterEclat(e, "Théo", 2); revelerEclat(e); await new Promise(r => setTimeout(r, 300));
