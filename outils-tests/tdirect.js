@@ -131,8 +131,13 @@ const horsDessin = p => p.evaluate(() => { const sc = document.querySelector("#g
     await T.p.click("#gp-plein-gros"); await T.p.waitForTimeout(900);
     const hp = await T.p.evaluate(() => { const sc = document.querySelector(".gp-plein .gp-scene").getBoundingClientRect(), st = document.querySelector(".gp-plein .gp-st").getBoundingClientRect(); return { recouvre: st.top < sc.bottom - 1, stH: Math.round(st.height), scB: Math.round(sc.bottom), stT: Math.round(st.top) }; });
     await T.p.screenshot({ path: DOSSIER + "/plein-3d-sous-titres.png" });
-    const pz = await T.p.isVisible(".gpp-pause"); await T.p.click(".gpp-pause"); await T.p.waitForTimeout(120); const q1 = await etat(T.p); await T.p.waitForTimeout(1200); const q2 = await etat(T.p);
-    await T.p.click(".gpp-pause"); await T.p.waitForTimeout(1200); const q3 = await etat(T.p);
+    // v20.58 : la course 3D dure ~20 s, mais en 3D logicielle (sans carte graphique) les captures et les clics prennent plusieurs secondes :
+    // elle était souvent déjà arrivée ici, donc ⏸ caché à juste titre et clic bloqué 30 s. On la relance depuis le plein écran (↻) et on attend
+    // qu'elle roule vraiment (feux passés) avant de vérifier ⏸ ; si ⏸ manque pendant la course, le contrôle est NON (sans attente bloquée).
+    await T.p.evaluate(() => document.querySelector(".gp-plein .gpp-play").click()); await T.p.waitForFunction(() => GP_INST && GP_INST.api.enCours() && GP_HORLOGE && tempsCourse(GP_HORLOGE) > GP_HORLOGE.feux + 300, null, { timeout: 15000 });
+    const pz = await T.p.isVisible(".gpp-pause"); let q1 = {}, q2 = { cur: 1 }, q3 = {};
+    if (pz) { await T.p.click(".gpp-pause"); await T.p.waitForTimeout(120); q1 = await etat(T.p); await T.p.waitForTimeout(1200); q2 = await etat(T.p);
+      await T.p.click(".gpp-pause"); await T.p.waitForTimeout(1200); q3 = await etat(T.p); }
     ok(!hp.recouvre && hp.stH >= 40, "plein écran : le bandeau de sous-titres est sous le dessin, il ne le recouvre pas " + JSON.stringify(hp));
     ok(pz && JSON.stringify(q1.cur) === JSON.stringify(q2.cur) && (q3.max > q2.max + 0.01 || !q3.enCours), "plein écran 3D : ⏸ fige la course, ▶ la reprend");
     await T.p.click(".gpp-photo"); await T.p.waitForTimeout(500);

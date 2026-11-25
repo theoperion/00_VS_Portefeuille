@@ -4,6 +4,8 @@
       symboles Yahoo ; mise à jour une fois par jour, faux Yahoo (aucun vrai téléchargement).
    2. Appli : même calcul que le serveur ; pastilles 🟢 / 🟠 / 🔴 à côté de chaque ligne et du total, phrase d'aide, détail d'une ligne,
       total = la même valeur que Stats › Risque, mode discret, 390 px clair et sombre, rien ne part vers le Versus.
+   3. Marchés (Moi › Aujourd'hui) : la même pastille sur chaque case et dans « un marché seul » (toucher long), calculée sur les clôtures
+      quotidiennes déjà reçues (S&P inventé vérifié à la main, « * » si moins d'un an, rien sans clôtures quotidiennes), mode discret, 390 px.
    Aucune vraie donnée : serveurs Google interceptés. Lancer depuis la racine : python3 -m http.server 8771 &  puis  node outils-tests/tvolatilite.js
    (PORT=…, APP_SCRIPTS=/chemin/vers/app_scripts, CAPTURES=dossier des captures) */
 const fs = require("fs"), vm = require("vm"), path = require("path");
@@ -149,6 +151,61 @@ async function ecran(b, sombre, discret, variante) {
   if (!discret) await p.screenshot({ path: path.join(CAP, "volatilite-" + (sombre ? "sombre" : "clair") + ".png") });
   await ctx2.close(); return Object.assign(r, { err, envois });
 }
+/* ---------- 3. Marchés (Moi › Aujourd'hui) : la même pastille de volatilité sur chaque case et dans « un marché seul » ----------
+   S&P 500 : ±1 % en alternance sur 300 séances (calcul à la main ci-dessous) ; Nasdaq ×2 : seulement 40 séances de ±3 % (« * ») ;
+   Or : pas de clôtures quotidiennes (seulement les semaines) → pas de pastille plutôt qu'un chiffre faux. */
+const sp = []; { let v = 4000; jours.forEach((d, i) => { if (i) v *= i % 2 ? 1.01 : 0.99; sp.push(v); }); }
+const nq = jours.map((d, i) => i < jours.length - 41 ? null : 0); { let v = 50; for (let i = jours.length - 41; i < jours.length; i++) { if (i > jours.length - 41) v *= (i % 2 ? 1.03 : 0.97); nq[i] = v; } }
+// à la main : n variations dans l'année glissante, p de +1 % et q de −1 % ; écart type « échantillon » = 0,01 × √(4pq / (n(n−1))) ; × √252
+const bSp = num(jours[jours.length - 1]) - 10000, iSp = jours.findIndex(d => num(d) >= bSp), nSp = jours.length - 1 - iSp;
+let pSp = 0; for (let i = iSp + 1; i < jours.length; i++) if (i % 2) pSp++;
+const VOL_SP = 0.01 * Math.sqrt(4 * pSp * (nSp - pSp) / (nSp * (nSp - 1))) * Math.sqrt(252);
+const VOL_NQ = 0.03 * Math.sqrt(4 * 20 * 20 / (40 * 39)) * Math.sqrt(252);
+function versusMk() {
+  const v = JSON.parse(JSON.stringify(versus)), N = ["S&P 500", "MSCI Monde", "Nasdaq ×2", "Or"];
+  v.marchesMoi = { jour: N.map((n, i) => ({ nom: n, pct: (i - 1) / 1000, heure: "" })), series: N.map(n => ({ nom: n, v: [1, 1] })), semaines: ["2026-11-13", "2026-11-20"],
+    quot: { d: jours.map(num), s: [{ nom: "S&P 500", v: sp }, { nom: "MSCI Monde", v: monde }, { nom: "Nasdaq ×2", v: nq }] } };
+  return v;
+}
+async function ecranMk(b, sombre, discret) {
+  const vMk = versusMk(), moi = moiDe("base");
+  const ctx2 = await b.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block", colorScheme: sombre ? "dark" : "light" }), p = await ctx2.newPage(), err = [];
+  p.on("pageerror", e => err.push(e.message));
+  await p.clock.setFixedTime(new Date("2026-11-25T10:00:00"));
+  await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi : vMk) }));
+  await p.addInitScript(d => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x");
+    localStorage.setItem("versus.etat", JSON.stringify(Object.assign({ ouverture: "moi" }, d ? { discret: "oui" } : {}))); }, discret);
+  await p.goto("http://localhost:" + PORT + "/index.html"); await p.waitForTimeout(3500);
+  await p.evaluate(() => document.querySelectorAll(".tuto, .bulle-portrait").forEach(x => x.remove()));
+  const r = await p.evaluate(() => {
+    const tuile = n => { const c = document.querySelector('.m-mk-chips [data-mk-cache="' + n + '"]'), v = c && c.querySelector(".nv-vo"); return c ? { vo: v ? v.textContent.trim() : null, h: Math.round(c.getBoundingClientRect().height), cls: v ? v.className : "" } : "absente"; };
+    const deb = [...document.querySelectorAll(".m-mk *")].filter(x => { const q = x.getBoundingClientRect(); return q.width && q.right > innerWidth + 1; }).length;
+    const chips = [...document.querySelectorAll(".m-mk-chips .chip")], sansRecouvrement = chips.every(c => [...c.children].every(e => { const a = e.getBoundingClientRect(), z = c.getBoundingClientRect(); return a.right <= z.right + 1 && a.bottom <= z.bottom + 1; }));
+    const vo = document.querySelector(".m-mk-chips .nv-vo"), cs = vo && getComputedStyle(vo), ci = vo && getComputedStyle(vo.querySelector("i"));
+    return { sp: tuile("S&P 500"), monde: tuile("MSCI Monde"), nq: tuile("Nasdaq ×2"), or: tuile("Or"), deb, largeur: document.documentElement.scrollWidth, sansRecouvrement,
+      base: (document.querySelector(".m-mk-base") || {}).textContent || "", taille: cs && cs.fontSize, carre: ci && ci.backgroundColor + "|" + ci.width,
+      eur: [...document.querySelectorAll(".m-mk .nv-vo")].some(e => /€/.test(e.textContent)) };
+  });
+  const mk = p.locator(".m-mk"); await mk.scrollIntoViewIfNeeded(); await p.waitForTimeout(200);
+  if (!discret) await mk.screenshot({ path: path.join(CAP, "marches-vol-" + (sombre ? "sombre" : "clair") + ".png") });
+  // toucher long sur S&P 500 → un marché seul
+  const seul = async nom => {
+    await p.evaluate(n => { const c = document.querySelector('.m-mk-chips [data-mk-cache="' + n + '"]'); c.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); }, nom);
+    await p.waitForTimeout(700);
+    await p.evaluate(n => { const c = document.querySelector('.m-mk-chips [data-mk-cache="' + n + '"]'); c.dispatchEvent(new PointerEvent("pointerup", { bubbles: true })); }, nom);
+    await p.waitForTimeout(200);
+    return p.evaluate(() => { const res = document.querySelector(".m-mk-res"), v = res && res.querySelector(".nv-vo"), a = document.querySelector(".m-mk-vo");
+      return { titre: res ? (res.querySelector("b") || {}).textContent : null, vo: v ? v.textContent.trim() : null, title: v ? v.title : null, aide: a ? a.textContent : null,
+        deb: [...document.querySelectorAll(".m-mk *")].filter(x => { const q = x.getBoundingClientRect(); return q.width && q.right > innerWidth + 1; }).length }; });
+  };
+  r.seulSp = await seul("S&P 500");
+  if (!discret) await mk.screenshot({ path: path.join(CAP, "marche-seul-vol-" + (sombre ? "sombre" : "clair") + ".png") });
+  await p.evaluate(() => { const t = document.querySelector('.m-mk-res [data-mk="cmp"]'); if (t) t.click(); }); await p.waitForTimeout(200);
+  r.seulNq = await seul("Nasdaq ×2");
+  await p.evaluate(() => { const t = document.querySelector('.m-mk-res [data-mk="cmp"]'); if (t) t.click(); }); await p.waitForTimeout(200);
+  r.seulOr = await seul("Or");
+  await ctx2.close(); return Object.assign(r, { err });
+}
 (async () => {
   const { chromium } = require("playwright"), b = await chromium.launch();
   for (const sombre of [false, true]) {
@@ -169,6 +226,22 @@ async function ecran(b, sombre, discret, variante) {
     ok(r.deb === 0 && r.largeur <= 390, "rien ne déborde à 390 px" + tag);
     ok(!r.envois.some(x => /vol|volatil/i.test(x.split(" ").slice(1).join(" "))), "rien de la volatilité ne part vers le Versus" + tag + " (" + r.envois.length + " appels Versus)");
   }
+  for (const sombre of [false, true]) {
+    const r = await ecranMk(b, sombre, false), tag = sombre ? " (sombre)" : " (clair)", P = v => Math.round(v * 100) + " %", sp_ = x => x && x.replace(/\s/g, " ");
+    if (!sombre) console.log("   Marchés : S&P « " + (r.sp.vo) + " » (à la main " + (VOL_SP * 100).toFixed(2) + " %, " + nSp + " variations) · Monde « " + r.monde.vo + " » · Nasdaq ×2 « " + r.nq.vo + " » (à la main " + (VOL_NQ * 100).toFixed(2) + " %) · Or « " + r.or.vo + " »");
+    ok(!r.err.length, "Marchés : 0 erreur JS" + tag + " " + JSON.stringify(r.err));
+    ok(sp_(r.sp.vo) === "🟠 vol. " + P(VOL_SP) && /agite/.test(r.sp.cls) && Math.abs(VOL_SP - 0.1589) < 0.002, "case S&P 500 : « 🟠 vol. " + P(VOL_SP) + " » = le calcul à la main (" + (VOL_SP * 100).toFixed(2) + " %)" + tag);
+    ok(sp_(r.nq.vo) === "🔴 vol. " + P(VOL_NQ) + "*" && /fort/.test(r.nq.cls), "case Nasdaq ×2 (40 séances) : « 🔴 vol. " + P(VOL_NQ) + "* » (moins d'un an)" + tag);
+    ok(r.monde.vo && /^(🟢|🟠|🔴) vol\. \d+\s%$/.test(r.monde.vo) && r.or.vo === null, "case MSCI Monde : pastille « " + r.monde.vo + " » ; Or sans clôtures quotidiennes : pas de pastille" + tag);
+    ok(r.taille === "10.5px" && /rgba\(0, 0, 0, 0\)\|auto|transparent/.test(r.carre), "même style que la pastille des lignes (10,5 px), l'émoji n'hérite pas du carré de couleur de la case" + tag + " " + r.carre);
+    ok(r.deb === 0 && r.largeur <= 390 && r.sansRecouvrement && r.sp.h <= 52, "390 px : rien ne déborde ni ne sort de sa case (case de " + r.sp.h + " px)" + tag);
+    ok(/Vol\. = volatilité 1 an \(🟢 moins de 15 % · 🟠 15 à 30 % · 🔴 plus de 30 %\)/.test(r.base), "repère expliqué sous les courbes" + tag);
+    ok(r.seulSp.titre === "S&P 500" && r.seulSp.vo === r.sp.vo && /Volatilité 1 an : agité/.test(r.seulSp.title) && /D'après \d+ séances de ce marché/.test(r.seulSp.aide || "") && r.seulSp.deb === 0, "toucher long S&P 500 : la même pastille « " + r.seulSp.vo + " » à côté du nom, + l'aide" + tag);
+    ok(r.seulNq.vo === r.nq.vo && /moins d'un an de cours : depuis le/.test(r.seulNq.aide || "") && /depuis le/.test(r.seulNq.title || ""), "toucher long Nasdaq ×2 : « " + r.seulNq.vo + " » et le sens de « * »" + tag);
+    ok(r.seulOr.titre && /^Or/.test(r.seulOr.titre) && r.seulOr.vo === null && r.seulOr.aide === null, "toucher long Or (seulement les semaines) : pas de pastille, rien d'inventé" + tag);
+  }
+  const dm = await ecranMk(b, false, true);
+  ok(!dm.err.length && dm.sp.vo && dm.sp.vo.replace(/\s/g, " ") === "🟠 vol. " + Math.round(VOL_SP * 100) + " %" && !dm.eur && dm.seulSp.vo === dm.sp.vo, "Marchés en mode discret : la volatilité (un %) reste, aucun € " + JSON.stringify({ err: dm.err, sp: dm.sp, seul: dm.seulSp.vo }));
   const nv = await ecran(b, false, false, "sansVol");
   ok(!nv.err.length && nv.cw8 && /≈/.test(nv.cw8) && nv.lqq === null && nv.ese === null && nv.tot && /vol\./.test(nv.tot), "script pas encore redéployé (pas de « vol ») : 0 erreur, CW8 « ≈ » d'après le marché, pas de pastille LQQ / ESE, total présent " + JSON.stringify(nv));
   const si = await ecran(b, false, false, "simple");

@@ -649,6 +649,13 @@ function injecterStyle() {
 .moi .m-mk-chips .chip[aria-pressed="false"] b.flat, .moi .m-mk-chips .chip[aria-pressed="false"] span { color: var(--ink-3); }
 .moi .m-mk-res .lien { margin-right: 8px; }
 .moi .m-mk-chips .chip.m-mk-moi { grid-column: 1 / -1; }   /* lot 63 : « Mon portefeuille » en tête, sur toute la largeur */
+/* 25/11/2026 (Théo) : volatilité 1 an de chaque marché, la même pastille que les lignes du portefeuille (sous le nom dans la case, à côté du nom dans « un marché seul ») */
+.moi .m-mk-chips .chip.avec-vo { flex-wrap: wrap; row-gap: 1px; align-content: center; }
+.moi .m-mk-chips .chip span.nv-vo, .moi .m-mk-res .nv-vo { flex: none; overflow: visible; font: 500 10.5px/1.15 var(--f-num); font-variant-numeric: tabular-nums; color: var(--ink-3); white-space: nowrap; }
+.moi .m-mk-chips .chip span.nv-vo { flex: 1 0 100%; padding-left: 13px; text-align: left; }
+.moi .m-mk-chips .chip .nv-vo i, .moi .m-mk-chips .chip[aria-pressed="false"] .nv-vo i { width: auto; height: auto; border: 0; border-radius: 0; background: none; display: inline; }
+.moi .m-mk-chips .chip span.nv-vo.fort, .moi .m-mk-res .nv-vo.fort { color: var(--down); } .moi .m-mk-chips .chip span.nv-vo.agite, .moi .m-mk-res .nv-vo.agite { color: var(--gold); }
+.moi .m-mk-res .nv-vo { font-size: 12px; }
 .moi .m-idx { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
 .moi .m-idx div { background: var(--panel); padding: 8px 10px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; }
 .moi .m-idx span { font-size: 12.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1998,10 +2005,14 @@ function closEv(nom) {
   const j = (m.jour || []).find(x => x.nom === nom), mh = j && typeof j.pct === "number" && /^(\d{2})\/(\d{2})/.exec(j.heure || "");
   /* lot 62 d (Théo, 21/11) : la variation du Versus (`jour`, datée par son heure) fait foi pour SA séance : la clôture Google du jour peut manquer
      (pas encore là le lendemain matin) ou être une valeur de la journée (cours en séance). On remplace (ou on ajoute) cette séance. */
-  if (mh && out.length) { const a = new Date(), y = +mh[2] > a.getMonth() + 1 ? a.getFullYear() - 1 : a.getFullYear(), dj = y + "-" + mh[2] + "-" + mh[1];
-    if (dj <= isoJour(a)) { const k = out.findIndex(x => x.d >= dj), av = (k < 0 ? out : out.slice(0, k)).pop();
+  /* v20.61 (bug de Théo, 25/11 : « Krach −3,1 % » pour un jour à −1,09 %) : `av` est lu SANS retirer la clôture d'avant (l'ancien .pop() l'enlevait :
+     la séance du jour était alors comparée à l'avant-veille, deux séances cumulées) ; une ligne Google datée d'aujourd'hui que le Versus ne confirme
+     pas (cours en séance, pas une clôture) est ignorée : la séance du jour = exactement la variation affichée dans Marchés, ou rien. */
+  const a = new Date(), auj = isoJour(a); let dj = null;
+  if (mh && out.length) { const y = +mh[2] > a.getMonth() + 1 ? a.getFullYear() - 1 : a.getFullYear(); dj = y + "-" + mh[2] + "-" + mh[1];
+    if (dj <= auj) { const k = out.findIndex(x => x.d >= dj), av = k < 0 ? out[out.length - 1] : out[k - 1];
       if (av) { const x = { d: dj, v: av.v * (1 + j.pct), versus: true }; if (k < 0) out.push(x); else if (out[k].d === dj) out[k] = x; } } }
-  return out;
+  return dj === auj ? out : out.filter(x => x.d !== auj);
 }
 function varsEv(c, gapMax) { const out = []; for (let i = 1; i < c.length; i++) if ((new Date(c[i].d + "T12:00:00") - new Date(c[i - 1].d + "T12:00:00")) / 864e5 <= gapMax) out.push({ d: c[i].d, p: c[i].v / c[i - 1].v - 1, v: c[i].v }); return out; }
 /** tickers des lignes tenues (Perf lignes) */
@@ -2086,19 +2097,25 @@ function evNaissants() {
 let MEMO_EV = { m: null, j: "", l: null };
 function evenementsListe() {
   if (!M || M.simple) return [];
-  const auj = isoJour(new Date()); if (MEMO_EV.m === M && MEMO_EV.j === auj && MEMO_EV.l) return MEMO_EV.l.map(x => Object.assign({}, x));
+  const auj = isoJour(new Date()), mk = marchesMoi(); if (MEMO_EV.m === M && MEMO_EV.mk === mk && MEMO_EV.j === auj && MEMO_EV.l) return MEMO_EV.l.map(x => Object.assign({}, x));   // v20.61 : recalcul aussi quand les marchés du Versus changent
   let nes = []; try { nes = JSON.parse(stock.get(cleStock("evNes")) || "[]"); } catch (e) { nes = []; } if (!Array.isArray(nes)) nes = [];
   let change = false;
   evNaissants().forEach(x => { x.cle = x.folle ? cleFolle(x) : x.k + ":" + x.d; const y = { k: x.k, d: x.d, p: x.p, e: x.e, v: x.v, avant: x.avant, dAvant: x.dAvant, de: x.de, places: x.places, lib: x.lib, sens: x.sens, niv: x.niv, fort: x.fort, folle: x.folle, creux: x.creux, pire: x.pire, an: x.an, vol: x.vol, perso: x.perso };
     const i = nes.findIndex(z => z.k === x.k && z.d === x.d);
     if (i < 0) { nes.push(y); change = true; } else if (JSON.stringify(nes[i]) !== JSON.stringify(Object.assign({}, nes[i], y, { niv: Math.max(nes[i].niv || 0, y.niv || 0) || undefined }))) { nes[i] = Object.assign({}, nes[i], y, { niv: Math.max(nes[i].niv || 0, y.niv || 0) || undefined }); if (nes[i].folle) nes[i].fort = nes[i].niv === 3; change = true; } });   // même séance revue (en direct) : chiffre mis à jour, palier jamais baissé
+  /* v20.61 : un événement de marché gardé sur l'appareil est revu à chaque ouverture tant que sa séance est dans les données : chiffre à jour
+     (clôture Google ou variation du Versus), et retiré si la séance ne remplit plus la condition (krach né en direct à −3,4 %, séance finie à −2,5 %). */
+  [["krach", "S&P 500"], ["crypto", "Bitcoin"], ["sommet", "S&P 500"]].forEach(([k, nom]) => { if (!nes.some(z => z.k === k) || (k === "crypto" && !aDuBitcoin())) return;
+    let c, l; try { c = closEv(nom).map(z => z.d); l = evDe(k); } catch (e) { return; } if (!c.length) return;
+    nes = nes.filter(z => { if (z.k !== k || !c.includes(z.d)) return true; const y = l.find(w => w.d === z.d);
+      if (!y) { change = true; return false; } ["p", "v", "avant", "dAvant"].forEach(f => { if (y[f] !== undefined && z[f] !== y[f]) { z[f] = y[f]; change = true; } }); return true; }); });
   const lim = limEv(); nes = nes.filter(x => x.d >= isoJour(new Date(Date.now() - 400 * 864e5)));
   if (change) stock.set(cleStock("evNes"), JSON.stringify(nes.slice(-60)));
   const parK = {}; nes.filter(x => x.d <= auj && (x.k === "relache" ? x.d === auj : x.d >= lim)).forEach(x => { if (!parK[x.k] || parK[x.k].d < x.d) parK[x.k] = x; });   // un par genre : le plus récent
   const cand = Object.values(parK).map(x => Object.assign({}, x));
   cand.sort((a, b) => EV_PRIO.indexOf(a.k) - EV_PRIO.indexOf(b.k) || (a.d < b.d ? 1 : -1));
   cand.forEach(x => { x.cle = x.folle ? cleFolle(x) : x.k + ":" + x.d; });
-  MEMO_EV = { m: M, j: auj, l: cand };
+  MEMO_EV = { m: M, mk, j: auj, l: cand };
   return cand.map(x => Object.assign({}, x));
 }
 /** lot 62 c (Théo) : ✕ = masquer (pas supprimer) : l'événement reste dans Vestiaire › Ambiances, où « Oui » le remet, jusqu'à la fin de sa fenêtre */
@@ -3101,7 +3118,8 @@ function htmlMarches() {
   return '<div class="m-mk"><div class="m-mk-t"><h2 class="sec">Marchés <small>' + sous + "</small></h2></div>" +
     '<div class="m-mk-chips" role="group" aria-label="Marchés : touche pour afficher ou masquer la courbe, toucher long pour la courbe seule">' + moi + m.jour.map((x, i) => { const r = vs[i], k = noms.indexOf(x.nom), on = S.has(x.nom);
       if (PREF.mkTout !== true && !PRIO_MK.includes(x.nom) && !on) return "";   // v20.35 : rangé derrière « + N autres »
-      return '<button type="button" class="chip' + (on ? " on" : "") + '" data-mk-cache="' + esc(x.nom) + '" data-mk-i="' + i + '" aria-pressed="' + on + '" style="--mkc:' + (k >= 0 ? COUL_MK[k % COUL_MK.length] : "var(--ink-3)") + '"' + (r.du ? ' title="Séance du ' + frDate(r.du) + '"' : "") + '><i></i><span>' + esc(NOMS_MK[x.nom] || x.nom) + '</span><b class="' + sens(r.v) + '">' + marque(r) + (ok(r.v) ? pct(r.v, per && per !== "5j" ? 1 : 2) : "—") + "</b></button>"; }).join("") + (() => { const n = m.jour.filter(x => !PRIO_MK.includes(x.nom) && !S.has(x.nom)).length; return PREF.mkTout === true ? '<button type="button" class="chip m-mk-plus" data-mk-plus="1" aria-expanded="true">Moins ▴</button>' : n ? '<button type="button" class="chip m-mk-plus" data-mk-plus="1" aria-expanded="false">+ ' + n + " autre" + (n > 1 ? "s" : "") + " ▾</button>" : ""; })() + "</div>" +
+      const vk = volMk(x.nom);
+      return '<button type="button" class="chip' + (on ? " on" : "") + (vk ? " avec-vo" : "") + '" data-mk-cache="' + esc(x.nom) + '" data-mk-i="' + i + '" aria-pressed="' + on + '" style="--mkc:' + (k >= 0 ? COUL_MK[k % COUL_MK.length] : "var(--ink-3)") + '"' + (r.du ? ' title="Séance du ' + frDate(r.du) + '"' : "") + '><i></i><span>' + esc(NOMS_MK[x.nom] || x.nom) + '</span><b class="' + sens(r.v) + '">' + marque(r) + (ok(r.v) ? pct(r.v, per && per !== "5j" ? 1 : 2) : "—") + "</b>" + pastilleVol(vk) + "</button>"; }).join("") + (() => { const n = m.jour.filter(x => !PRIO_MK.includes(x.nom) && !S.has(x.nom)).length; return PREF.mkTout === true ? '<button type="button" class="chip m-mk-plus" data-mk-plus="1" aria-expanded="true">Moins ▴</button>' : n ? '<button type="button" class="chip m-mk-plus" data-mk-plus="1" aria-expanded="false">+ ' + n + " autre" + (n > 1 ? "s" : "") + " ▾</button>" : ""; })() + "</div>" +
     '<div class="m-mk-panneau" id="m-mk-panneau">' + panneauMarche() + "</div></div>";
 }
 /** lot 63 (Théo) : « Mon portefeuille » dans les courbes : l'indice de l'historique (versements neutralisés), mêmes bornes que les marchés ;
@@ -3159,13 +3177,15 @@ function panneauMarche() {
     const d0 = debut(vis.length ? vis : lignes.filter(l => l.d)), dm = per === "tout" && fm ? fm.d[0] : null, dmk = per === "tout" ? debut(vis.filter(l => l.nom !== NOM_MOI)) : null;
     const autre = !mkParDefaut() ? '<button class="lien" type="button" data-mk-defaut="1">Revenir aux 4 courbes de base</button>' : "";
     return (vis.length ? courbesSVG(vis, true, per) || '<p class="info">Pas encore assez d\'historique pour cette période.</p>' : '<p class="info m-mk-rien">Aucune courbe : touche une pastille pour l\'afficher.</p>') +
-      '<p class="info m-mk-base">' + (d0 ? txtBase(d0, per, lignes.some(l => l.hebdo)) + ". " : "") + (dm && dmk && dmk > dm ? "Les marchés n'ont pas d'historique avant le " + frDate(isoN(dmk)) + " : leurs courbes partent de là. " : "") + "ETF en euros (Or couvert ≈ GLD, Nasdaq ×3 ≈ TQQQ). Toucher long : un marché seul. " + autre + "</p>";
+      '<p class="info m-mk-base">' + (d0 ? txtBase(d0, per, lignes.some(l => l.hebdo)) + ". " : "") + (dm && dmk && dmk > dm ? "Les marchés n'ont pas d'historique avant le " + frDate(isoN(dmk)) + " : leurs courbes partent de là. " : "") + "ETF en euros (Or couvert ≈ GLD, Nasdaq ×3 ≈ TQQQ). " + (m.jour.some(x => volMk(x.nom)) ? "Vol. = volatilité 1 an (🟢 moins de 15 % · 🟠 15 à 30 % · 🔴 plus de 30 %). " : "") + "Toucher long : un marché seul. " + autre + "</p>";
   }
   const j = m.jour[marcheOuvert], se = j && serieMk(j.nom); if (!se) return '<p class="info">Pas d\'historique pour ce marché.</p>';
   // lot 61 : les repères 1 mois · 6 mois · 1 an suivent la même règle que les cases (plus les semaines ≈ quand les clôtures existent) ; la période choisie en premier
   const c = COUL_MK[m.series.indexOf(se) % COUL_MK.length], f = fenMk(j, per), t = (lab, v, fort) => ok(v) ? '<span' + (fort ? ' class="m-mk-per"' : "") + ">" + lab + ' <b class="' + sens(v) + '">' + pct(v, 1) + "</b></span>" : "";
-  return '<div class="m-mk-res"><button class="lien" type="button" data-mk="cmp">← Tous</button><b>' + esc(NOMS_MK[j.nom] || j.nom) + "</b>" + (f ? t(PERIODES_J[per][2], varF(f), true) : "") + ["1m", "6m", "1a"].filter(k => k !== per).map(k => t(PERIODES_J[k][2], varMk(j, k).v)).join("") + "</div>" +
+  const vo = volMk(j.nom);
+  return '<div class="m-mk-res"><button class="lien" type="button" data-mk="cmp">← Tous</button><b>' + esc(NOMS_MK[j.nom] || j.nom) + "</b>" + pastilleVol(vo) + (f ? t(PERIODES_J[per][2], varF(f), true) : "") + ["1m", "6m", "1a"].filter(k => k !== per).map(k => t(PERIODES_J[k][2], varMk(j, k).v)).join("") + "</div>" +
     (f ? courbesSVG([{ nom: se.nom, d: f.d, v: f.v, c: c }], true, per) + '<p class="info m-mk-base">' + txtBase(f.d[0], per, f.hebdo) + ".</p>" : '<p class="info">Pas encore assez d\'historique pour cette période.</p>') +
+    (vo ? '<p class="info m-mk-vo">' + VOL_AIDE + (vo.an ? "" : " * moins d'un an de cours : depuis le " + frDate(isoN(vo.deb)) + ".") + " D'après " + vo.n + " séances de ce marché.</p>" : "") +
     (/^Or/.test(j.nom) && serieMk("Or couvert €") ? '<p class="info">Couvert ou non ? <button class="lien" type="button" data-mk="cmp-or">Comparer l\'or couvert et non couvert</button></p>' : "");
 }
 function majPastillesMk(z) {
@@ -3467,6 +3487,12 @@ function volPortefeuille() {
 }
 function pastilleVol(x) { if (!x) return ""; const f = feuVol(x.v);
   return '<span class="nv-vo ' + f.c + '" title="Volatilité ' + (x.an ? "1 an" : "depuis le " + frDate(isoN(x.deb))) + " : " + f.m + (x.src === "marche" ? " (≈ " + esc(x.nom) + ")" : "") + '"><i aria-hidden="true">' + f.e + "</i> vol. " + (x.src === "marche" ? "≈" : "") + pct(x.v, 0, false) + (x.an ? "" : "*") + "</span>"; }
+/** 25/11/2026 (Théo) : volatilité 1 an d'un marché des cases Marchés, depuis ses clôtures quotidiennes déjà reçues (closMk ← marchesMoi().quot),
+ *  même calcul que les lignes (volPoints). Seulement les semaines (pas de clôtures quotidiennes) : rien plutôt qu'un chiffre faux. */
+function volMk(nom) {
+  try { const c = closMk(nom); if (c.hebdo || c.d.length < 21) return null; return volPoints(c.d.map((d, i) => ({ d, v: c.v[i] }))); }
+  catch (e) { return null; }
+}
 const VOL_AIDE = "Vol. = volatilité sur 1 an : à quel point le cours bouge d'un jour à l'autre, ramenée à l'année. 🟢 calme (moins de 15 %) · 🟠 15 à 30 % · 🔴 plus de 30 %.";
 /** Sharpe et volatilité du compte (cS, ou tout le portefeuille) et du S&P sur la même année : ceux de ton fichier quand il les donne ;
  *  sinon les deux recalculés ici, de la même façon. UNE seule fonction : Stats › Risque et la pastille du total (volPortefeuille) lisent la même. */
