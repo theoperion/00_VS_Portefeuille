@@ -34,7 +34,8 @@ Le championnat entre amis : chaque mois, les pilotes (Théo, Kévin, Clément, D
 
 ## Annonce des règles 2027 (v20.24, choix « C élargi » de Théo, 24/11)
 - Le 20/12 : seulement les règles à jouer pendant la fenêtre de janvier (marque `jouer: true` dans `ETAPES`, js/5-plateau.js) : atout, pièges, mois spéciaux (janvier n'a pas de piège : c'est un mois spécial), pronostic, pole, défi, rival. Les autres règles de janvier : le 1/1. Ensuite, chaque règle s'annonce le 20 du mois d'avant.
-- Test : `node outils-tests/tannonce.js` (simple joueur, dates 19/12, 20/12, 31/12, 1/1, 2/1, fausses données).
+- Annonces (Théo, 25/11) : le 20/12, la fenêtre commence par « 🎁 Et ce n'est que le début… » (mini-jeu caché dans chaque univers, révélé le 1er de son mois ; Trophées en 4 vitrines, course en direct, écurie) : `htmlAnnonceVingt`. Le 1/1 : l'éclipse devient « Le Côté obscur » (`nomRevele`) et « 🗺️ Les 12 circuits sont dévoilés » liste chaque piège ou mois spécial, lus dans `PIEGES` et `moisSpecial` (toujours à jour ; Finale cachée tant qu'elle n'est pas annoncée) : `htmlAnnonceCircuits`. Le guide « Le Podium en bref » (`tutoDiapos`) suit le barème du nombre de pilotes et ne cite une règle 2027 qu'une fois révélée (`regleVisible`, univers après le 1/1).
+- Test : `node outils-tests/tannonce.js` (simple joueur, dates 19/12, 20/12, 31/12, 1/1, 2/1, fausses données ; vérifie aussi la promesse du 20/12, les règles à jour du 1/1 et l'absence de textes périmés ; `PORT=…`, `CAPTURES=dossier`).
 - `versus/PodiumCommun.js` garde l'ancien `annonceEtape` (sans effet sur les points) : le régénérer à la prochaine mise en ligne du serveur.
 
 ## Carte des chantiers (pour Théo seulement, pas dans l'appli)

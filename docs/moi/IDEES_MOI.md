@@ -28,11 +28,10 @@ Ce fichier n'est **pas** lu automatiquement : seulement quand Théo le demande. 
 - **Durée des événements** : visibles le jour même et le lendemain, retirés à l'ouverture du jour suivant ; un événement du vendredi reste tout le week-end.
 - **Stratégie levier** : ajouter un indicateur « cash » pour savoir quand repasser en ×1 quand le prix casse la moyenne mobile, tout en gardant la règle actuelle (qui a permis de rester investi aujourd'hui). À examiner avec l'équipe d'agents du copilote.
 - **Marchés de l'onglet Moi** : ajouter les semi-conducteurs (SEMI) et SOXL (×3 des semi-conducteurs ; Théo a écrit ×4, à vérifier), pour tout le monde.
-- **Fiche de chaque produit** : ajouter la volatilité de l'ETF à levier aux autres données.
+- **Fiche de chaque produit** : ajouter la volatilité de l'ETF à levier aux autres données (la volatilité 1 an de chaque ligne est faite (25/11) : il resterait la fiche produit).
 - **Connecteur TradingView** pour l'historique des cours (à étudier : disponibilité, fiabilité).
 - **Kévin** : passage en profil complet lancé le 24/11 (voir la fiche, À faire n°5). Piste : ensuite, relevé automatique de fin de mois vers le Versus (plus de saisie à la main).
 - **Transfert des fichiers (décision de Théo, 24/11)** : on garde le dépôt `app_scripts` (code sans données) et on transfère le Sheet **avec** son script (fiche de transfert actuelle). Conséquence acceptée : après le transfert, le script de l'ami ne se met plus à jour depuis Git (sauf s'il refait un « clasp push » lui-même ou redonne l'accès). Donc juste avant chaque transfert : pousser la dernière version du script commun dans son fichier.
 - **Bouton « J'ai mes lignes »** (24/11, Théo pas convaincu tant que Kévin envoie ses lignes) : chacun recopie lui-même son portefeuille (nom, quantité, prix de revient) depuis Moi, sans passer par Théo. Utile surtout pour de nouveaux joueurs.
 - **Cloudflare** (plus tard, décision de Théo 24/11) : remplacer les scripts Google par un petit serveur Cloudflare (plus rapide, sans Sheet). À trancher avant : source des cours, envoi du relevé au Versus, sauvegarde.
-- **Signal levier, bilan après coup** (Théo, 25/11) : quand il y a eu un creux, dire pour chaque indicateur s'il aurait fallu sortir ou non (comparer « sortir au signal » à « rester »), pour savoir quels indicateurs sont fiables.
-- **Volatilité de chaque actif** (Théo, 25/11) : afficher la volatilité (écart des variations, sur 1 an glissant) à côté de chaque ligne et du portefeuille.
+- **Bilan après coup, suite** (25/11) : faire aussi le bilan des creux refusés (bulle, emploi, emploi 25-54 ans) : « entrer sur le creux aurait fait … » ; et comparer « sortir en cash » (ce que dit la tendance) à « sortir en ×1 ».
