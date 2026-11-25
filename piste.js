@@ -12332,7 +12332,7 @@
       lueur.ombre(l[0], y, l[2], r, r, W.flaques.force, 0, hex(W.flaques.col)); });
     if (W.nappes) W.nappes.l.forEach(([x, z, r, h, f]) => [.3, .65, 1].forEach((k, i) => voile.ombre(x + i * 9, h * k, z - i * 7, r * (1 - i * .12), r * (.8 - i * .1), f / 2.4, i * .5, hex(W.nappes.col))));
     [sol, sol.o, eau].forEach(g => { if (g) affiner(g, 150); });   // la brume se calcule par sommet : plus de grand triangle de sol (le plan du sol en fait 2 000)
-    if (W.horizon) horizonLointain(sol, T, A, W.horizon, W.brume ? hex(W.brume.col) : A.brouillard, LG);   // au loin, la brume est déjà presque pleine : grands triangles permis
+    if (W.horizon && DECOR_LOINTAIN) horizonLointain(sol, T, A, W.horizon, W.brume ? hex(W.brume.col) : A.brouillard, LG);   // au loin, la brume est déjà presque pleine : grands triangles permis
   }
   /** recoupe les GRANDS triangles de sol (presque à plat, bas, de plus de L × L / 2 m²) en coupant leur plus long côté en deux, jusqu'à ce qu'aucun côté
       ne dépasse L : même dessin, sommets plus serrés (les longues bandes fines, déjà serrées en travers, restent telles quelles) */
@@ -12393,6 +12393,8 @@
   }
   /** DÉCOR LOINTAIN : le sol se prolonge en anneau jusqu'à l'horizon, puis deux couronnes de silhouettes (proche et lointaine) qui se fondent dans la brume :
       aucune vue (Visite comprise, caméra inclinée) ne montre plus le bord du monde. Quelques centaines de triangles. */
+  /* 25/11/2026 (Théo) : décor lointain coupé : trop lourd, on ne naviguait plus bien en Visite. Réglages gardés (W.horizon) pour plus tard. */
+  const DECOR_LOINTAIN = false;
   function horizonLointain(sol, T, A, H, brume, LG) {
     const ext = Math.max(T.rx, T.rz) * 3.2 + 600, cx = T.cx, cz = T.cz, n = LG ? 32 : 48, col = hex(H.col), voile = mel(A.brouillard, brume, .5), up = [0, 1, 0];
     // la jupe : de l'intérieur du grand plan jusqu'à 3 400 m, un peu plus bas que lui (il garde la main là où ils se chevauchent)
