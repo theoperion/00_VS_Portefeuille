@@ -44,10 +44,13 @@ async function ouvrir(b, quand, data, o) {
   p.on("pageerror", e => err.push(e.message)); await p.clock.setFixedTime(new Date(quand));
   const req = []; await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}"); req.push(c.action || (/action=(\w+)/.exec(r.request().url()) || [])[1] || "?");
     r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : c.action === "tickets" ? { ok: true, ouvert: false } : data) }); });
-  await p.addInitScript(([vu, d2]) => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.bullePortrait", "1"); localStorage.setItem("versus.saison1", "1");
+  await p.addInitScript(([vu, d2]) => { for (let m = 1; m <= 12; m++) localStorage.setItem("versus.piegeMois." + (202700 + m), "1");   // l'affichette du 1er du mois (tpiege) déjà vue
+    localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.bullePortrait", "1"); localStorage.setItem("versus.saison1", "1");
     localStorage.setItem("versus.gpVu.2027", String(vu)); localStorage.setItem("versus.gpVu.2026", "202612"); localStorage.setItem("versus.baVu.2027", "202712"); localStorage.setItem("versus.deJanvier", "1"); localStorage.setItem("versus.aideVisite", "1");
     localStorage.setItem("versus.feteChauffe", "202612"); }, [o.vu || 202712, o.d3 ? "0" : "1"]);
   await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1000);
+  // v20.62 : ici on teste la course elle-même : le 🎥 tour de présentation est considéré comme déjà vu dans cette ouverture (il a son test : tpresentation.js)
+  await p.evaluate(() => Object.keys(Piste.TRACES).forEach(c => GP_PRES_VUS.add(c)));
   await p.evaluate(async d3 => { document.querySelectorAll(".revel, .regles, .tuto, .bulle-portrait, .ba").forEach(x => x.remove()); ETAT.podium = "gp"; ETAT.gp2d = d3 ? "0" : "1"; GP_ETAPE = null; garder(); montrerVue("trophees"); rendreTrophees();
     await new Promise(r => setTimeout(r, 1500)); document.querySelectorAll(".revel, .ba, .ere-voile").forEach(x => x.remove()); }, !!o.d3);
   return { p, ctx, err, req };
@@ -68,6 +71,9 @@ const horsDessin = p => p.evaluate(() => { const sc = document.querySelector("#g
   const eA = await etat(A.p), hA = await horsDessin(A.p), txtA = await A.p.evaluate(() => { document.querySelectorAll("details").forEach(d => d.open = true); return document.body.innerText; });
   await A.p.screenshot({ path: DOSSIER + "/direct-2d-hausse.png", fullPage: false });
   await A.p.evaluate(() => { const s = document.querySelector(".gp-schema"); if (s) { s.open = true; s.scrollIntoView({ block: "center" }); } }); await A.p.waitForTimeout(300); await A.p.screenshot({ path: DOSSIER + "/schema-clair.png" });
+  // v20.62 (Théo) : « S&P 500 : +3,5 % depuis le 1er », le nom de l'indice et le chiffre séparés, le % en gras (vert si ça monte)
+  const ixA = await A.p.evaluate(() => { const i = document.querySelector(".gp-st-info"), b = i && i.querySelector("b.ix-up"); return { t: i ? i.textContent : "", b: !!b, col: b ? getComputedStyle(b).color : "" }; });
+  ok(/S&P 500\u00a0: \+[\d,]+\u00a0?%/.test(ixA.t.replace(/ %/, "\u00a0%")) && ixA.b && !/S&P 500 \d/.test(ixA.t), "bandeau du direct : « S&P 500 : +x % depuis le 1er », le % en gras et en vert " + JSON.stringify(ixA));
   const grilleA = await A.p.evaluate(() => mancheGP(etapesGP(2027), etapesGP(2027).length - 1, 202702).grille), classJanv = await A.p.evaluate(() => { const c = championnat(2027), m = c.mois.find(x => x.k === 202701); return Object.keys(m.cumul).sort((a, b) => m.cumul[b] - m.cumul[a]); });
   errs.push(...A.err); await A.ctx.close();
   const B = await ouvrir(b, "2027-02-10T12:00:00", donnees(202701, { sig: true, kSP: 202702, sp: down }), { vu: 202701 }); await B.p.waitForTimeout(4200);
@@ -136,10 +142,12 @@ const horsDessin = p => p.evaluate(() => { const sc = document.querySelector("#g
     // qu'elle roule vraiment (feux passés) avant de vérifier ⏸ ; si ⏸ manque pendant la course, le contrôle est NON (sans attente bloquée).
     await T.p.evaluate(() => document.querySelector(".gp-plein .gpp-play").click()); await T.p.waitForFunction(() => GP_INST && GP_INST.api.enCours() && GP_HORLOGE && tempsCourse(GP_HORLOGE) > GP_HORLOGE.feux + 300, null, { timeout: 15000 });
     const pz = await T.p.isVisible(".gpp-pause"); let q1 = {}, q2 = { cur: 1 }, q3 = {};
-    if (pz) { await T.p.click(".gpp-pause"); await T.p.waitForTimeout(120); q1 = await etat(T.p); await T.p.waitForTimeout(1200); q2 = await etat(T.p);
-      await T.p.click(".gpp-pause"); await T.p.waitForTimeout(1200); q3 = await etat(T.p); }
+    // v20.62 : clic direct (en 3D logicielle, une capture peut durer plus que la course : le clic « attendre que ce soit visible » restait bloqué 30 s)
+    const clicPause = () => T.p.evaluate(() => { const x = document.querySelector(".gpp-pause"); if (x && !x.hidden) x.click(); });
+    if (pz) { await clicPause(); await T.p.waitForTimeout(120); q1 = await etat(T.p); await T.p.waitForTimeout(1200); q2 = await etat(T.p);
+      await clicPause(); await T.p.waitForTimeout(1200); q3 = await etat(T.p); }
     ok(!hp.recouvre && hp.stH >= 40, "plein écran : le bandeau de sous-titres est sous le dessin, il ne le recouvre pas " + JSON.stringify(hp));
-    ok(pz && JSON.stringify(q1.cur) === JSON.stringify(q2.cur) && (q3.max > q2.max + 0.01 || !q3.enCours), "plein écran 3D : ⏸ fige la course, ▶ la reprend");
+    ok(pz && JSON.stringify(q1.cur) === JSON.stringify(q2.cur) && (q3.max > q2.max + 0.01 || !q3.enCours), "plein écran 3D : ⏸ fige la course, ▶ la reprend " + JSON.stringify({ pz, q1: q1.max, q2: q2.max, q3: q3.max, en3: q3.enCours }));
     await T.p.click(".gpp-photo"); await T.p.waitForTimeout(500);
     const ph = await T.p.evaluate(() => ({ photo: document.querySelector(".gp-plein").classList.contains("photo"), barre: getComputedStyle(document.querySelector(".gpp-bar")).display, st: getComputedStyle(document.querySelector(".gp-plein .gp-st")).display, sc: Math.round(document.querySelector(".gp-plein .gp-scene").getBoundingClientRect().height), h: innerHeight }));
     await T.p.waitForTimeout(2700); await T.p.screenshot({ path: DOSSIER + "/photo-3d.png" });
@@ -265,10 +273,10 @@ const horsDessin = p => p.evaluate(() => { const sc = document.querySelector("#g
       ok(d3.type === "3d" && d3.en && d3.pause, "🎬 démo en 3D : la course roule, ⏸ visible (" + d3.met + ")");
       ok(d4.fini && !d4.cours && !d4.pause, "⏭ pendant la démo : arrivée tout de suite, ⏸ disparaît");
       await Z.p.click("#gp-plein-gros"); await Z.p.waitForTimeout(900);
-      const pl = await Z.p.evaluate(() => document.querySelector(".gpp-play").textContent); await Z.p.click(".gpp-play"); await Z.p.waitForTimeout(6000);
+      const pl = await Z.p.evaluate(() => document.querySelector(".gpp-play").textContent); await Z.p.click(".gpp-play"); await Z.p.waitForTimeout(2500);
       const d5 = await Z.p.evaluate(() => ({ en: GP_DEMO && GP_DEMO.enCours, pause: !document.querySelector(".gpp-pause").hidden, titre: document.querySelector(".gpp-t").textContent }));
       await Z.p.screenshot({ path: DOSSIER + "/demo-3d-plein.png" });
-      ok(pl === "🎬" && d5.en && d5.pause && /Démo/.test(d5.titre), "plein écran : 🎬 relance une démo, ⏸ visible, « Démo » dans le titre");
+      ok(pl === "▶ Course de démo" && d5.en && d5.pause && /Démo/.test(d5.titre), "plein écran : « ▶ Course de démo » relance une démo, ⏸ visible, « Démo » dans le titre (v20.62) " + JSON.stringify({ pl, d5 }));
     } else console.log("(3D indisponible : démo 3D sautée)");
     errs.push(...Z.err); await Z.ctx.close(); }
   { const Z = await ouvrir(b, "2026-11-25T12:00:00", donnees(202611), { vu: 0, d3: true, sombre: true });

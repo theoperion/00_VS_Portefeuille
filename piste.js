@@ -292,13 +292,9 @@
     let sable = 0; if (th === "desert" && (meteo === "pluie" || meteo === "orage")) { sable = meteo === "orage" ? 2 : 1; meteo = "sable"; }   // v20.52 (Théo) · Dune : jamais de pluie, une tempête de sable
     const A = { haut: hex(h.haut), horizon: hex(h.horizon), soleil: norme(h.soleil), sCol: fois(hex(h.sCol), h.sForce), amb: h.amb, nuit: h.nuit, brume: h.brume,
       sol: hex(D.sol), bord: hex(D.bord), piste: hex(D.piste), murs: D.murs.map(hex), eau: D.eau ? hex(D.eau) : null, pluie: 0, neige: 0, eclairs: 0, mouille: 0, synth: 0, hiver: 0 };
-    const gris = hex("#7D8794");
-    if (meteo === "nuages") { A.haut = mel(A.haut, gris, .45); A.horizon = mel(A.horizon, hex("#C9D0D8"), .45); A.sCol = fois(A.sCol, .7); A.brume *= 1.3; }
-    if (meteo === "pluie" || meteo === "orage") {
-      const k = meteo === "orage" ? .85 : .65;
-      A.haut = mel(A.haut, hex(meteo === "orage" ? "#1C222D" : "#59636F"), k); A.horizon = mel(A.horizon, hex(meteo === "orage" ? "#3A4352" : "#8F99A5"), k);
-      A.sCol = fois(A.sCol, meteo === "orage" ? .3 : .45); A.amb *= .9; A.pluie = meteo === "orage" ? 1.6 : 1; A.mouille = 1; A.brume *= 1.35; A.eclairs = meteo === "orage" ? 1 : 0;
-    }
+    /* v20.62 (Théo : « la météo très accessoire ») · la météo du marché ne change JAMAIS la lumière ni les couleurs du décor (même ciel, même soleil qu'au beau temps) :
+       pluie = fines gouttes discrètes + léger reflet sur la piste ; orage = la même pluie + de temps en temps un bref éclair DANS LE CIEL (A.eclairCiel, jamais de flash plein écran) */
+    if (meteo === "pluie" || meteo === "orage") { A.pluie = 1; A.mouille = 1; A.eclairCiel = meteo === "orage" ? 1 : 0; }
     // le thème du circuit (V16.2) : il ne disparaît jamais
     if (th === "neige") { A.hiver = 1; A.sol = hex("#E8EEF4"); A.bord = hex("#D5DFEA"); A.neige = A.pluie ? 0 : 1; A.horizon = mel(A.horizon, hex("#E6EDF5"), .5); A.haut = mel(A.haut, hex("#9FB5CC"), .4); }
     if (th === "noel") { A.sol = hex("#E6EFFF"); A.bord = hex("#D2E0F6"); A.neige = 1; A.floc = [1, 1, 1, .85 + Math.min(tempete, 1) * .05]; A.flocV = 3 * Math.min(1.5, 1 + tempete * .25); }   // v16.89 · tempête plafonnée à 1,5 × la neige normale (fluidité)   // V16.63 · Noël : neige fraîche et flocons, plus serrés s'il « pleut »
@@ -310,8 +306,7 @@
     // novembre · Mur des titans : le soleil se couche sur la mer, au nord, derrière le Colosse (comme la carte)
     if (th === "cendres") { A.horizon = mel(A.horizon, hex("#E8904E"), .6); A.haut = mel(A.haut, hex("#3A2440"), .55); A.brume *= 1.15; A.soleil = norme([-.3, .26, -.9]); A.sCol = fois(hex("#FFC890"), 1.05); A.amb = .6; if (!A.pluie) { A.neige = 1; A.floc = [.62, .6, .58, .7]; A.flocV = 3; } }
     if (th === "desert" && !A.pluie && !sable) { A.neige = 1; A.floc = [.95, .8, .55, .5]; A.flocV = 9; }
-    if (sable) { A.neige = 1; A.sable = sable; A.floc = [.92, .7, .42, .8]; A.flocV = 5; A.vent = 22 + 14 * sable; A.densite = 1.3 + .4 * sable; A.eclairs = sable > 1 ? 1 : 0;
-      A.haut = mel(A.haut, hex("#9A5E32"), .55 + .15 * sable); A.horizon = mel(A.horizon, hex("#D8A060"), .65); A.sCol = fois(A.sCol, .75 - .1 * sable); A.brume *= 2 + sable; A.amb *= 1.05; }
+    if (sable) { A.neige = 1; A.sable = sable; A.floc = [.92, .7, .42, .8]; A.flocV = 5; A.vent = 22 + 14 * sable; A.densite = 1.1 + .25 * sable; A.eclairCiel = sable > 1 ? 1 : 0; }   // v20.62 : le sable vole, mais le ciel et la lumière de Dune restent ceux du beau temps
     if (th === "magie") { A.haut = hex("#3A82D6"); A.horizon = hex("#D6ECFA"); A.sCol = hex("#FFF2DC"); A.soleil = norme([.42, .62, .62]); A.amb = .6; A.brume = .00032; if (!A.pluie) { A.neige = 1; A.floc = [1, .88, .5, .8]; A.flocV = 1.1; } }   // février · le Château de jour : ciel clair, soleil au sud-est sur la façade, poussière d'étoiles dorée
     if (th === "odyssee") { A.haut = hex("#3A6CC0"); A.horizon = hex("#FFD49A"); A.sCol = hex("#FFE6BE"); A.soleil = norme([.55, .42, .62]); A.amb = .58; A.brume = .00032; }   // l'aube d'Ithaque (sud-est), comme la carte peinte
     if (th === "chocolat") { A.haut = hex("#5A2A12"); A.horizon = hex("#FFE6B8"); A.sCol = hex("#E6CCA8"); A.soleil = norme([.25, .85, .45]); A.amb = .46; A.brume = .00014; }   // octobre · dans la salle : voûte de chocolat, lumière dorée de la verrière
@@ -326,10 +321,9 @@
     if (cosm === "neige") { A.horizon = mel(A.horizon, hex("#E6EDF5"), .35); A.haut = mel(A.haut, hex("#9FB5CC"), .3); A.sCol = mel(A.sCol, hex("#DDE8F5"), .3); if (!A.neige && !A.pluie) { A.neige = 1; A.floc = [.92, .95, 1, .55]; A.flocV = 6; } }
     if (cosm === "neon") { A.horizon = mel(A.horizon, hex("#FF2E97"), .32); A.haut = mel(A.haut, hex("#2A0B5A"), .32); A.sCol = mel(A.sCol, hex("#FF77C8"), .35); if (!A.synth) A.murs = [A.murs[0], hex("#FF4FD8")]; }
     A.brouillard = mel(A.horizon, A.haut, .15);
-    if (th === "multivers" && !A.pluie) A.brouillard = hex("#3A1C5A");
-    if (sable) A.brouillard = mel(hex("#C88C52"), A.haut, .2);
+    if (th === "multivers") A.brouillard = hex("#3A1C5A");
     A.meteo = meteo;   // v20.52 : la météo réellement montrée (après Noël → neige, Dune → sable)
-    if (th === "pandora" && !A.pluie) A.brouillard = hex("#CFE6C8");   // brume dorée-verte au loin   // sol violet, liseré orange à l'horizon
+    if (th === "pandora") A.brouillard = hex("#CFE6C8");   // brume dorée-verte au loin   // sol violet, liseré orange à l'horizon
     return A;
   }
   /** teinte des décors selon l'ambiance (hiver : enneigé ; synthwave : sombre) */
@@ -4096,7 +4090,7 @@
       rotors.push({ g, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { chemin: C, oriente: true, p: 22, vis: [.01, .99], bob: [.28, 11] } }); }
     /* ================= 13. DÉCOR VIVANT : le Colosse traque la DERNIÈRE voiture ================= */
     /* La tête (un rotor vivant) tourne vers la dernière voiture et la regarde passer ; toutes les 6,5 s, une main géante de titan
-       tombe du ciel juste derrière elle, se referme sur la piste vide et remonte (comme la main de la carte 2D). Sans voiture (Visite),
+       tombe du ciel derrière elle (v20.62, course calme : toutes les 20 s, 45 m derrière), se referme sur la piste vide et remonte (comme la main de la carte 2D). Sans voiture (Visite),
        le Colosse scrute lentement l'intérieur des murs et la main reste au ciel. Le décor réagit, la course ne change jamais. */
     { const [tx, ty, tz] = TETE, g = new Geo();
       // la tête écorchée (repère local : regard vers +x, pivot au sommet du cou)
@@ -4128,16 +4122,17 @@
         const Pp = ferme ? [[-1, -.2, 4.3], [2.4, -2.2, 5], [4.6, -3.2, 2.8]] : [[-1, -.2, 4.3], [2.6, -1.6, 7.4], [5.4, -3.2, 8.8]]; tuyau(g, Pp, t => 1.4 - t * .4, peau, 0, 6);
         return g; };
       // la main ne tombe que pendant une course (hors course, e = 1)
-      const ST = { t0: null }, phase = (t, C) => { const L = C.V.length && C.e < .97 ? C.dernier() : null; if (!L) { ST.t0 = null; return null; }
-        if (ST.t0 === null) ST.t0 = t; const P = 6.5, q = ((t - ST.t0) % P) / P;
-        if (q < .34 || !ST.p) { const ax = Math.cos(L.cap), az = -Math.sin(L.cap); ST.p = [L.x - ax * 14, L.y, L.z - az * 14]; ST.cap = L.cap; }
+      // v20.62 · course calme : toutes les 20 s (au lieu de 6,5 s) et 45 m derrière la dernière voiture (au lieu de 14 m) ; la garde fait le reste
+      const ST = { t0: null, P: 20 }, phase = (t, C) => { const L = C.V.length && C.e < .97 ? C.dernier() : null; if (!L) { ST.t0 = null; return null; }
+        if (ST.t0 === null) ST.t0 = t - ST.P * .4; const P = ST.P, q = ((t - ST.t0) % P) / P;
+        if (q < .34 || !ST.p) { const ax = Math.cos(L.cap), az = -Math.sin(L.cap), d = C.enCourse ? 45 : 14; ST.p = [L.x - ax * d, L.y, L.z - az * d]; ST.cap = L.cap; }
         return q; };
       const pose = (q, ferme) => { const y = q < .34 ? 4 + (1 - q / .34) ** 2 * 90 : q < .5 ? 4 + Math.sin((q - .34) / .16 * PI) * .6 : 4 + ((q - .5) / .4) ** 2 * 100;
         return modele(ST.p[0], ST.p[1] + y, ST.p[2], ST.cap, q < .34 ? -.18 : 0, 1.5); };
       rotors.push({ g: main(false), x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant(x, t, C) { const q = phase(t, C); return q === null || q >= .36 ? null : pose(q); } } });
-      rotors.push({ g: main(true), x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant(x, t, C) { const q = ST.t0 === null ? null : ((t - ST.t0) % 6.5) / 6.5; return q === null || !ST.p || q < .36 || q > .9 ? null : pose(q, true); } } });
+      rotors.push({ g: main(true), x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant(x, t, C) { const q = ST.t0 === null ? null : ((t - ST.t0) % ST.P) / ST.P; return q === null || !ST.p || q < .36 || q > .9 ? null : pose(q, true); } } });
       const pou = new Geo(); for (let k = 0; k < 9; k++) { const a = k / 9 * TAU; pou.boule(Math.cos(a) * 6, .8, Math.sin(a) * 6, 2.4, v("#C8A880"), .15, .6); }
-      rotors.push({ g: pou, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant(x, t, C) { const q = ST.t0 === null ? null : ((t - ST.t0) % 6.5) / 6.5; if (q === null || !ST.p || q < .33 || q > .62) return null; const k = (q - .33) / .29;
+      rotors.push({ g: pou, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant(x, t, C) { const q = ST.t0 === null ? null : ((t - ST.t0) % ST.P) / ST.P; if (q === null || !ST.p || q < .33 || q > .62) return null; const k = (q - .33) / .29;
         return mul(modele(ST.p[0], ST.p[1] + .2 + k * 2, ST.p[2], 0, 0, .4 + k * 1.5), rotY(k)); } } }); }
     for (let x = -260; x < 1140; x += 30) for (let z = 220; z < 900; z += 30) if (rW(x, z) < MA.R + MA.E) occupe.push([x, z, 24]);
     return occupe;
@@ -5015,7 +5010,7 @@
         rotors.push({ g: fr, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { p: 26, chemin: ch, oriente: true } }); } }
 
     // ================= 15. LE DÉCOR VIVANT : le petit chef court après la voiture de tête, louche levée =================
-    // Pendant la course, il galope sur le bas-côté (côté cuisine) juste derrière le meneur ; à l'arrivée, il saute de joie à côté du vainqueur.
+    // Pendant la course (v20.62, course calme), il attend à mi-tour sur le bas-côté (côté cuisine) ; à l'arrivée, il court sauter de joie à côté du vainqueur.
     // Hors course (Visite, aucune voiture), il fait ses tours de piste tout seul : la cuisine n'est jamais immobile.
     { const g = rat(8, true), L = T.L; cylH(g, [4.6, 4.6, 1.6], [7.4, 13.4, 2.4], .3, 5, INOX); g.boule(7.6, 14.2, 2.4, 1.3, INOX, .2, .6);
       let sIn = 0; for (let k = 0; k < 8; k++) { const q = T.a(k / 8 * L, DEMI + 14); sIn += dedans(q.x, q.z) ? 1 : -1; } sIn = sIn >= 0 ? 1 : -1;
@@ -5023,10 +5018,10 @@
       rotors.push({ g, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant(x, t, C) {
         const dt = x.tp === undefined ? .016 : Math.min(.1, Math.max(.001, t - x.tp)); x.tp = t;
         const lead = C.V.length ? C.premier() : null, fin = lead && (!C.enCourse || C.e >= .985);
-        const but = lead ? lead.s + (fin ? 9 : -14) : t * 24;
+        const but = lead ? (courseCalme(C) ? L * .5 : lead.s + (fin ? 9 : -14)) : t * 24;   // v20.62 · course calme : il attend à mi-tour, au bord (il ne court plus derrière le meneur)
         if (x.etat === undefined) x.etat = but;
         let d = ((but - x.etat) % L + L * 1.5) % L - L / 2; const av = x.etat; x.etat += d * (1 - Math.exp(-dt * (lead ? 5 : 30)));
-        const vit = Math.abs(x.etat - av) / dt, p = T.a(x.etat, sIn * (DEMI + 7)), cours = vit > 3;
+        const vit = Math.abs(x.etat - av) / dt, p = T.a(x.etat, sIn * (DEMI + (courseCalme(C) ? 24 : 7))), cours = vit > 3;   // (course calme : il attend un peu plus loin du bord)
         const saut = fin && !cours ? Math.abs(Math.sin(t * 6)) * 5 : cours ? Math.abs(Math.sin(t * 16)) * 1.4 : 0;
         return modele(p.x, p.y + .1 + saut, p.z, Math.atan2(-p.tz, p.tx) + (fin && !cours ? sIn * PI / 2 : 0), cours ? Math.sin(t * 16) * .12 : 0, 1.6); } } }); }
 
@@ -5374,7 +5369,12 @@
         [-1, 1].forEach(s => { b.tri([0, .1, s * .4], [-.6, .7, s * 2.6], [.5, .3, s * 2.2], ai, .5, [0, 1, 0]); b.tri([0, .1, s * .4], [.5, .3, s * 2.2], [-.6, .7, s * 2.6], ai, .5, [0, -1, 0]);
           b.tri([0, .1, s * .4], [-.9, .4, s * 2], [-.6, .7, s * 2.6], v("#BFD6F2"), .4, [0, 1, 0]); b.tri([0, .1, s * .4], [-.6, .7, s * 2.6], [-.9, .4, s * 2], v("#BFD6F2"), .4, [0, -1, 0]); });
         rotors.push({ g: b, x: cx, y: 18, z: cz, cap: 0, v: 0, a: { vivant(x, t, C) {
-          const L = C.V.length ? C.premier() : null, fin = L && C.enCourse && C.e > .975; let cible;
+          if (courseCalme(C)) {   // v20.62 · course calme : un passage au loin (passageCiel), l'attrapeur sur ses talons
+            const pc = passageCiel(BALLE, t, C, T, { haut: 20 }); BALLE.k = pc ? pc.k : 0; if (!pc) return null;
+            x.p = pc.p.slice(); x.cp = pc.cap; BALLE.p = x.p; BALLE.L = null; BALLE.cap = pc.cap;
+            const c = Math.cos(Math.sin(t * 40) * .55), sn = Math.sin(Math.sin(t * 40) * .55);
+            return mul(modele(x.p[0], x.p[1], x.p[2], pc.cap, 0, 2.4 * pc.k), new Float32Array([1, 0, 0, 0, 0, c, sn, 0, 0, -sn, c, 0, 0, 0, 0, 1])); }
+          BALLE.k = 1; const L = C.V.length ? C.premier() : null, fin = L && C.enCourse && C.e > .975; let cible;
           if (L) { const ax = Math.cos(L.cap), az = -Math.sin(L.cap); cible = fin ? [L.x + Math.cos(t * 3) * 3, L.y + 5 + Math.sin(t * 6) * .4, L.z - Math.sin(t * 3) * 3]
             : [L.x + ax * 15 + Math.sin(t * 2.3) * 2.2, L.y + 6 + Math.sin(t * 3.1) * 1.4, L.z + az * 15 + Math.cos(t * 1.7) * 2.2]; }
           else cible = [cx + Math.sin(t * .37) * 34 + Math.sin(t * 1.9) * 5, 16 + 7 * Math.sin(t * .8), cz + Math.sin(t * .23 + 1) * 80 + Math.cos(t * 1.3) * 6];
@@ -5382,7 +5382,10 @@
           const c = Math.cos(Math.sin(t * 40) * .55), sn = Math.sin(Math.sin(t * 40) * .55);   // le battement d'ailes (roulis très rapide)
           return mul(modele(p[0], p[1], p[2], x.cp || 0, 0, L ? 1.3 : 1.6), new Float32Array([1, 0, 0, 0, 0, c, sn, 0, 0, -sn, c, 0, 0, 0, 0, 1])); } } }); }
       { const J = joueur(v("#E8B923"), v("#2A2420")); J.boule(1.4, 2.2, .5, .22, v("#E8C8A8"));   // l'attrapeur (robe jaune) tend la main vers la balle
-        rotors.push({ g: J, x: cx, y: 16, z: cz, cap: 0, v: 0, a: { vivant(x, t, C) { const L = BALLE.L, P = BALLE.p, cp = x.cp || 0;
+        rotors.push({ g: J, x: cx, y: 16, z: cz, cap: 0, v: 0, a: { vivant(x, t, C) {
+          if (courseCalme(C)) { if (!(BALLE.k > .02)) return null; const P = BALLE.p, c = BALLE.cap; x.p = [P[0] - Math.cos(c) * 9, P[1] + 1, P[2] + Math.sin(c) * 9]; x.cp = c;
+            return modele(x.p[0], x.p[1] + Math.sin(t * 2.4) * .3, x.p[2], c, 0, 1.4 * BALLE.k); }
+          const L = BALLE.L, P = BALLE.p, cp = x.cp || 0;
           const cible = L ? [P[0] - Math.cos(L.cap) * 6.5, P[1] + 2.5 + Math.sin(t * 2) * .5, P[2] + Math.sin(L.cap) * 6.5] : [P[0] - Math.cos(cp) * 6, P[1] - 1.6, P[2] + Math.sin(cp) * 6];
           const p = suivre(x, t, cible, L ? 3.2 : 1.6); return modele(p[0], p[1] + Math.sin(t * 2.4) * .3, p[2], cp, 0, L ? .8 : 1); } } }); } }
     // ================= 5. LA FORÊT INTERDITE (3e passe, 25/11/2026 · Théo : « ajouter la forêt interdite, les araignées, les créatures ailées ») =================
@@ -6476,7 +6479,7 @@
           rotors.push({ g: fente(10 + ra() * 8, 50 + q), x, y: .3, z, cap: ra() * TAU, v: .15 * (q % 2 ? 1 : -1), a: { ax: "y", bob: [.4, 1.3], ph: ra() } });
           const b = new Geo(); for (let k = 0; k < 8; k++) { const a = k / 8 * TAU; caillou(b, Math.cos(a) * 3.2, .3, Math.sin(a) * 3.2, .5 + ra() * .6, ROC2, 0); } b.boule(0, .05, 0, 2.6, v("#FF7A1A"), 1, .08); sol.poser(b, x, 0, z, 0, 1); lum.push([x, 6, z, 1, .5, .15, 20]); }); }
       /* ---- 11h. DÉCOR VIVANT (crochet a.vivant, voir contexteVivant) : LE MULTIVERS SE BRISE AU-DESSUS DU LEADER ----
-         Une petite planète fêlée plane au-dessus du PREMIER et change de pilote quand la tête change ; ses fêlures grandissent avec la course
+         Une petite planète fêlée (v20.62, course calme : elle passe de temps en temps au loin, dans le ciel, au lieu de planer au-dessus du PREMIER) ; ses fêlures grandissent avec la course
          (C.e) ; à l'arrivée, elle explose au-dessus du vainqueur (éclats, onde de choc, éclair), puis renaît. Au repos (📺 Visite, sans voiture),
          elle tourne devant la citadelle et rejoue sa fin toutes les 15 s. Même mécanique que la carte 2D (EVENEMENTS.multivers). */
       { const RP = 4.2, pl = new Geo(); globe(pl, [0, 0, 0], RP, 8, 12, ["#3A1A7A", "#6A3AB8", "#8A5AD0", "#B48AFF", "#7A4AC8", "#5A2AA0", "#4A2290", "#2A1060"].map(v), .4);
@@ -6489,13 +6492,16 @@
         const S = { t: -1, p: null, tb: undefined, ne: 0 };
         const etat = (t, C) => { if (S.t === t) return S; const dt = S.t < 0 ? 0 : Math.min(.1, Math.max(0, t - S.t)); S.t = t;
           const L = C.V.length ? C.premier() : null; let cible, fel;
-          if (L) { cible = [L.x, L.y + 17 + Math.sin(t * 1.7) * .8, L.z];
+          let kc = 1;
+          if (L && courseCalme(C)) { const pc = passageCiel(S, t, C, T, { haut: 34 }); S.calme = true; kc = pc ? pc.k : 0; cible = pc ? pc.p : (S.p || [L.x, L.y + 17, L.z]); }   // v20.62 · course calme : un passage au loin
+          else { if (S.calme) { S.calme = false; S.p = null; } if (L) cible = [L.x, L.y + 17 + Math.sin(t * 1.7) * .8, L.z]; }
+          if (L) {
             // (une image lente peut sauter la toute fin : si la course vient de finir sans explosion, on explose quand même)
             if (C.enCourse) { if (S.tb !== undefined && C.e < S.eb - .3) { S.tb = undefined; S.ne = t; } fel = C.e; S.ec = C.e; if (C.e > .975 && S.tb === undefined) { S.tb = t; S.eb = C.e; } }
             else { fel = .1; if (S.ec > .9 && S.tb === undefined) { S.tb = t; S.eb = 1; } S.ec = 0; if (S.tb !== undefined && t - S.tb > 7) { S.tb = undefined; S.ne = t; } }
-            S.k = 1; S.boum = S.tb === undefined ? -1 : t - S.tb; }
+            S.k = kc; S.boum = S.tb === undefined ? -1 : t - S.tb; }
           else { const u = t % 15; cible = [CX + 20, 96 + Math.sin(t * .6) * 4, CZ + 78]; fel = u / 10.5; S.boum = u > 10.5 ? u - 10.5 : -1; S.k = 2.6; if (u < 1.2) S.ne = t - u; S.tb = undefined; }
-          const kk = 1 - Math.exp(-dt * (L ? 4 : 1.5)); S.p = !S.p || dt === 0 || Math.hypot(S.p[0] - cible[0], S.p[2] - cible[2]) > 600 ? cible.slice() : S.p.map((q, i) => q + (cible[i] - q) * kk);
+          const kk = 1 - Math.exp(-dt * (L ? 4 : 1.5)); S.p = !S.p || S.calme || dt === 0 || Math.hypot(S.p[0] - cible[0], S.p[2] - cible[2]) > 600 ? cible.slice() : S.p.map((q, i) => q + (cible[i] - q) * kk);
           if (S.boum < 0) S.pb = S.p.slice(); S.fel = fel; S.nait = clamp((t - S.ne) / 1.2, 0, 1); return S; };
         const pose = (s, t, ech, rot) => mul(modele(s[0], s[1], s[2], 0, .35, ech), rotY(rot));
         rotors.push({ g: pl, x: CX, y: 150, z: CZ, cap: 0, v: 0, a: { vivant(x, t, C) { const s = etat(t, C); if (s.boum >= 0) return null; const e = s.k * s.nait * (1 + s.fel * .2); return e < .01 ? null : pose(s.p, t, e, t * .5); } } });
@@ -6849,7 +6855,12 @@
       // ---------- F bis. DÉCOR VIVANT : pendant la course, le sourire du Chat se pose au-dessus de la DERNIÈRE voiture et la suit en se moquant
       //   (il vole de l'une à l'autre quand la dernière change ; caché sans voitures). Même mécanique sur la carte 2D (EVENEMENTS.terrier).
       //   Crochet unique a.vivant (voir contexteVivant) : on déplace l'objet puis matRotor fait le reste (taille k0) ; null = caché.
-      if (CHAT.g) { const suit = k => (x, t, C) => { if (!C.V.length) return null; const d = C.dernier();
+      if (CHAT.g) { const CHS = {}, suit = k => (x, t, C) => { if (!C.V.length) return null;
+          if (courseCalme(C)) {   // v20.62 · course calme : il apparaît de temps en temps au loin, dans le ciel (passageCiel), au lieu de se poser sur la dernière voiture
+            const pc = passageCiel(CHS, t, C, T, { haut: 26 }); if (!pc) return null; x.prec = 1; x.x = pc.p[0]; x.y = pc.p[1]; x.z = pc.p[2];
+            const F = C.suivie && C.suivie(); x.cap = F ? Math.atan2(F.x - x.x, F.z - x.z) : Math.atan2(T.cx - x.x, T.cz - x.z); if (k && (t * .5) % 1 > .86) return null;
+            return echelleM(matRotor(x, t), 2.2 * pc.k); }
+          const d = C.dernier();
           const tx = d.x, tz = d.z, ty = (d.y || 0) + 18 + Math.sin(t * 2.2) * 1.2, w = x.prec ? .08 : 1; x.x += (tx - x.x) * w; x.y += (ty - x.y) * w; x.z += (tz - x.z) * w; x.prec = 1;
           x.cap = Math.atan2(T.cx - x.x, T.cz - x.z); if (k && (t * .5) % 1 > .86) return null;   // les yeux clignent
           return matRotor(x, t); };
@@ -7386,8 +7397,10 @@
       // ---- 9i. DÉCOR VIVANT : un chasseur ennemi talonne le PREMIER dans la tranchée et lui tire des rafales vertes (en Visite sans voitures, il patrouille seul)
       { const tie = new Geo(); tie.poser(chasseurTIE(), 0, 0, 0, 0, 1.9); tie.boule(-3.2, 0, 0, 1.1, v("#FF5A3A"), 1);
         const tir = new Geo(); [-1.1, 1.1].forEach(z => { tir.boite(0, -.5, z, 9, 1, 1, v("#9CFFA8"), 1); tir.boite(-6, -.3, z, 3, .6, .6, vertL, 1); });
-        rotors.push({ g: tie, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant: (r, t, C) => { const c = chasse(r.mem || (r.mem = {}), t, C); r.x = c.p.x; r.y = c.y; r.z = c.p.z; r.cap = c.cap; return matRotor(r, t); } } });
-        rotors.push({ g: tir, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant: (r, t, C) => { const c = chasse(r.mem || (r.mem = {}), t, C), f = (t / .9) % 1; if (f > .42) return null; const k = f / .42;
+        const TIE = {};   // v20.62 · course calme : il ne talonne plus le premier et ne tire plus ; il passe de temps en temps au loin (passageCiel)
+        rotors.push({ g: tie, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant: (r, t, C) => { if (courseCalme(C)) { const pc = passageCiel(TIE, t, C, T, { haut: 22 }); if (!pc) return null; return modele(pc.p[0], pc.p[1], pc.p[2], pc.cap, 0, pc.k); }
+          const c = chasse(r.mem || (r.mem = {}), t, C); r.x = c.p.x; r.y = c.y; r.z = c.p.z; r.cap = c.cap; return matRotor(r, t); } } });
+        rotors.push({ g: tir, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant: (r, t, C) => { if (courseCalme(C)) return null; const c = chasse(r.mem || (r.mem = {}), t, C), f = (t / .9) % 1; if (f > .42) return null; const k = f / .42;
           r.x = c.p.x + (c.cible[0] - c.p.x) * k; r.y = c.y + (c.cible[1] - c.y) * k; r.z = c.p.z + (c.cible[2] - c.p.z) * k; r.cap = Math.atan2(-(c.cible[2] - c.p.z), c.cible[0] - c.p.x); return matRotor(r, t); } } }); }
 
       // ---- les feux qui clignotent (3 groupes décalés) et les feux de piste du hangar qui courent (6 groupes)
@@ -7881,19 +7894,23 @@
     { const tour = (geo, R, sens) => { const g = new Geo(); g.poser(geo, R, 0, 0, sens > 0 ? PI / 2 : -PI / 2, 1); return g; };
       /* DÉCOR VIVANT (crochet a.vivant, voir contexteVivant) : au repos, le grand chasseur rouge tourne au-dessus de l'Arbre ; dès que les voitures
          sont là, il plane au-dessus du PREMIER et change de pilote quand la tête change ; à l'arrivée il pique sur le vainqueur (comme la carte 2D).
-         Une grappe de graines sacrées fait pareil, au ras des voitures : la forêt a choisi son pilote. */
+         Une grappe de graines sacrées fait pareil, au ras des voitures : la forêt a choisi son pilote.
+         v20.62 · course calme : PENDANT la course, le chasseur ne fait que passer au loin de temps en temps (passageCiel) et les graines attendent l'arrivée. */
       const suivre = (x, t, C, cible, vite) => { const dt = x.tp === undefined ? 1 : Math.min(.1, Math.max(0, t - x.tp)); x.tp = t; if (!x.p) x.p = cible.slice();
         const k = 1 - Math.exp(-dt * vite), av = x.p.slice(); x.p = x.p.map((u, i) => u + (cible[i] - u) * k);
         const dx = x.p[0] - av[0], dz = x.p[2] - av[2]; if (Math.hypot(dx, dz) > .02) { const c = Math.atan2(-dz, dx); x.cp = x.cp === undefined ? c : x.cp + Math.atan2(Math.sin(c - x.cp), Math.cos(c - x.cp)) * Math.min(1, dt * 4); }
         return x.p; };
       rotors.push({ g: ikran("#C8381E", true, 2.4), x: TC[0], y: 150, z: TC[1], cap: 0, v: 0, a: { vivant(x, t, C) {
+        if (courseCalme(C)) { const pc = passageCiel(x, t, C, T, { haut: 28 }); if (!pc) return null; x.p = pc.p.slice(); x.cp = pc.cap; x.k = .5;   // v20.62 · course calme : un passage au loin
+          return modele(pc.p[0], pc.p[1], pc.p[2], pc.cap, Math.sin(t * 2.2) * .06, .45 * pc.k); }
         const L = C.V.length ? C.premier() : null, fin = L && C.enCourse && C.e > .975; let cible;
         if (L) { const ax = Math.cos(L.cap), az = -Math.sin(L.cap), h = fin ? 7 : 26; cible = [L.x + ax * 10 + Math.cos(t * .8) * (fin ? 2 : 9), L.y + h + Math.sin(t * 1.6) * 1.5, L.z + az * 10 - Math.sin(t * .8) * (fin ? 2 : 9)]; }
         else { const a = t * .12; cible = [TC[0] + Math.cos(a) * 140, 150 + Math.sin(t * .4) * 6, TC[1] - Math.sin(a) * 140]; }
         const p = suivre(x, t, C, cible, L ? 3 : 1.2); x.k = lisse(x.k || 1, L ? .5 : 1, .05);
         return modele(p[0], p[1], p[2], x.cp || 0, Math.sin(t * 2.2) * .06, x.k); } } });
       { const b = new Geo(); for (let j = 0; j < 7; j++) { const a = j / 7 * TAU; b.poser(graine(), Math.cos(a) * 3.2, Math.sin(j * 1.7) * 1.2, Math.sin(a) * 3.2, a, .9); }
-        rotors.push({ g: b, x: TC[0], y: 30, z: TC[1], cap: 0, v: 0, a: { vivant(x, t, C) { const L = C.V.length ? C.premier() : null;
+        rotors.push({ g: b, x: TC[0], y: 30, z: TC[1], cap: 0, v: 0, a: { vivant(x, t, C) { if (courseCalme(C)) return null;   // v20.62 · course calme : les graines attendent l'arrivée
+          const L = C.V.length ? C.premier() : null;
           const cible = L ? [L.x, L.y + 6 + Math.sin(t * 2) * .6, L.z] : [TC[0], 26 + Math.sin(t * .5) * 3, TC[1]], p = suivre(x, t, C, cible, L ? 5 : 1);
           return mul(modele(p[0], p[1], p[2], 0, 0, L ? 1 : 1.6), rotY(t * .8)); } } }); }
       rotors.push({ g: tour(ikran("#4A8A9A", true, .8), 34, 1), x: ILE[0], y: 58, z: ILE[2], cap: 0, v: .35, a: { ax: "y", ph: .2, bob: [3, .9] } });
@@ -9090,7 +9107,7 @@
         sapin(g, BX - 5, 0, BZ - 13, .8, 6, true); sapin(g, BX + 6, 0, BZ + 12, .9, 6, true);
         sol.poser(g, 0, 0, 0, 0, 1); lum.push([BX + 1.6, H0 - 1.5, BZ + W + 1.6, 1, .82, .45, 16]); lum.push([BX + 1.6, H0 - 1.5, BZ - W - 1.6, 1, .82, .45, 16]); } }
 
-    // ================= 9. LE TRAÎNEAU du Père Noël (silhouette stylisée, sans visage) — DÉCOR VIVANT : il suit le premier et le couvre de cadeaux =================
+    // ================= 9. LE TRAÎNEAU du Père Noël (silhouette stylisée, sans visage) — DÉCOR VIVANT : passages discrets au large en course, tour d'honneur et cadeaux à l'arrivée =================
     { const t = new Geo(); t.boite(0, 0, 0, 5, 1.6, 2.8, ROUGE, .2); t.boite(-2, 1.4, 0, 1.6, 2, 2.8, ROUGE, .2); t.boite(2.6, .6, 0, .6, 1.4, 2.8, ROUGE, .2); [-1.3, 1.3].forEach(z => { t.boite(0, -.7, z, 6.4, .25, .25, OR, .5); t.boite(3.3, -.3, z, .3, .9, .25, OR, .5); });
       t.boite(.6, 1.6, 0, 2.6, 1.8, 2.4, v("#8A5A2A"), .1); t.boite(.6, 2.6, 0, 1.2, 1.2, 1.2, BANDE[0], .2); t.boite(1.4, 2.4, .5, 1, 1, 1, BANDE[2], .2);
       t.cylindre(-1.4, 1.6, 0, 1.1, 2.4, 8, ROUGE, .15, .8); t.cylindre(-1.4, 1.6, 0, 1.15, .4, 8, BLANC, .2); t.boule(-1.4, 4.6, 0, .75, v("#F2D3B8")); t.boule(-1.1, 4.2, 0, .8, BLANC, .2, .9);
@@ -9105,12 +9122,16 @@
         t.boule(x + 2.05, 2.45, 0, .42, v("#FF1A1A"), 1, 1, true); t.boite(x - 1.3, 1.9, 0, .5, .25, 1, OR, .6); branche(t, [12.6, 1.6, 0], [x - 1.2, 1.7, 0], .07, .07, OR, .5); }
       /* ===== DÉCOR VIVANT (v20.48 · crochet unique a.vivant, voir contexteVivant) =====
          Au repos (📺 Visite, aucune voiture) : le traîneau fait le tour du ciel au-dessus du village.
-         En course : il survole le PREMIER (et change de voiture dès que la tête change) et lui lâche un cadeau toutes les 1,4 s :
-         le paquet tombe en tournoyant, rebondit deux fois sur le BAS-CÔTÉ (entre la piste et le muret, jamais sur la piste), puis fond dans la neige.
+         En course (v20.58, Théo : « trop agressif, il gâche le suivi de la course ») : il ne suit plus le premier et ne lâche plus de cadeaux.
+         Juste un passage discret de temps en temps (le 1er après 7 s, quand la caméra est derrière la voiture, puis toutes les 16 s ; 5 s de vol), petit (taille 1,4 au lieu de 2,4) et LOIN :
+         · caméra qui suit une voiture (🚁 poursuite) : il traverse le ciel 190 m devant elle, à 24 m de haut : à l'écran il glisse au-dessus de l'horizon,
+           bien au-dessus des voitures, de leurs étiquettes et de la barre des pilotes ;
+         · vue d'ensemble : sur un grand arc autour du circuit, en dehors de son rectangle (jamais au-dessus de la piste ni d'une voiture), devant le premier.
+         Il grandit puis rapetisse en douceur (ni apparition brusque, ni flash), traînée réduite à 6 petites étincelles qui s'amenuisent. Entre deux passages, il n'est pas là.
          À l'arrivée (et tant que le classement est affiché) : tour d'honneur au-dessus du vainqueur, pluie de flocons et de cadeaux autour de lui.
          Rien ne touche aux voitures : c'est le décor qui réagit. État partagé (TR) : le traîneau calcule, les cadeaux et les étincelles le lisent (même image). */
       const g = new Geo(); g.poser(t, -5, 0, 0, 0, 1);
-      const TR = { p: null, cp: 0, k: 4.2, tp: undefined, hist: [], tH: 0, tDrop: 0, nDrop: 0, cad: [], fin: false, gagnant: null }, NCAD = 10, rd = alea(1224);
+      const TR = { p: null, cp: 0, k: 4.2, nPas: 0, tp: undefined, hist: [], tH: 0, tDrop: 0, nDrop: 0, cad: [], fin: false, gagnant: null }, NCAD = 10, rd = alea(1224);
       // un cadeau part du sac et vise le bas-côté (entre le bord de la piste et le muret de neige, à DEMI + 11)
       const lacher = (t0, de, s, sd, arrivee) => { const lat = sd * (DEMI + 3 + rd() * 4.5), q = T.a(s + (rd() - .5) * (arrivee ? 26 : 6), lat), j = TR.nDrop++ % NCAD;
         TR.cad[j] = { t0, a: de.slice(), b: [q.x, q.y || 0, q.z], cap: rd() * TAU, dv: [q.tx, q.tz] }; };
@@ -9120,14 +9141,20 @@
         if (fin && TR.gagnant !== L.nom) { TR.gagnant = L.nom; TR.tFin = t; } if (!fin) TR.gagnant = null; TR.fin = fin; TR.L = L;
         if (!L) { const a = t * .085; cible = [T.cx + Math.cos(a) * T.rx * .85, 70 + Math.sin(t * .5) * 5, T.cz - Math.sin(a) * T.rz * .85]; vite = 1.4; kv = 4.2; }
         else if (fin) { const a = t * .95; cible = [L.x + Math.cos(a) * 24, L.y + 22 + Math.sin(t * 1.7) * 1.5, L.z - Math.sin(a) * 24]; vite = 3; kv = 2.4; }
-        else { const ax = Math.cos(L.cap), az = -Math.sin(L.cap); cible = [L.x + ax * 9 + Math.sin(t * .9) * 3, L.y + 19 + Math.sin(t * 1.6) * 1.2, L.z + az * 9 + Math.cos(t * .9) * 3]; vite = 3.2; kv = 2.4; }
+        else {   // v20.58 · en course : un passage discret de temps en temps, au large (règle commune « course calme » : passageCiel)
+          TR.course = true; const pc = passageCiel(TR, t, C, T);
+          if (!pc) { TR.p = null; TR.k = 0; TR.hist.length = 0; TR.cad.length = 0; return null; }
+          const pos = pc.p; TR.cp = pc.cap; if (pc.u < .03) TR.hist.length = 0; TR.p = pos; TR.k = 1.4 * pc.k;
+          if (t - TR.tH > .09) { TR.tH = t; TR.hist.unshift([pos[0] - Math.cos(TR.cp) * 3.5 * TR.k, pos[1] + .8 * TR.k, pos[2] + Math.sin(TR.cp) * 3.5 * TR.k]); if (TR.hist.length > 30) TR.hist.pop(); }
+          return TR.k < .02 ? null : modele(pos[0], pos[1], pos[2], TR.cp, Math.sin(t * 2.1) * .03, TR.k); }
+        TR.course = false;
         if (!TR.p) TR.p = cible.slice(); const av = TR.p.slice(), kk = 1 - Math.exp(-dt * vite); TR.p = TR.p.map((u, i) => u + (cible[i] - u) * kk);
         const dx = TR.p[0] - av[0], dz = TR.p[2] - av[2]; if (Math.hypot(dx, dz) > .01) { const c = Math.atan2(-dz, dx); TR.cp += Math.atan2(Math.sin(c - TR.cp), Math.cos(c - TR.cp)) * Math.min(1, dt * 5); }
         TR.k += (kv - TR.k) * Math.min(1, dt * 1.5);   // (pas lisse() : ici ce nom désigne la sphère)
         // la traînée d'étincelles : les positions passées du traîneau
         if (t - TR.tH > .07) { TR.tH = t; TR.hist.unshift([TR.p[0] - Math.cos(TR.cp) * 3.5 * TR.k, TR.p[1] + .8 * TR.k, TR.p[2] + Math.sin(TR.cp) * 3.5 * TR.k]); if (TR.hist.length > 30) TR.hist.pop(); }
         // les cadeaux : un toutes les 1,4 s pendant la course ; à l'arrivée une averse (toutes les 0,45 s pendant 6 s), puis un de temps en temps
-        const per = !L ? 0 : fin ? (t - TR.tFin < 6 ? .45 : 1.6) : 1.4;
+        const per = !L ? 0 : t - TR.tFin < 6 ? .45 : 1.6;   // (ici L est forcément à l'arrivée : la course est traitée plus haut)
         if (per && t - TR.tDrop > per) { TR.tDrop = t; lacher(t, [TR.p[0], TR.p[1] + .5 * TR.k, TR.p[2]], fin ? L.s : L.s + 8, TR.nDrop % 2 ? 1 : -1, fin); }
         if (!per) TR.cad.length = 0;
         return modele(TR.p[0], TR.p[1], TR.p[2], TR.cp, Math.sin(t * 2.1) * .05, TR.k); } } });
@@ -9141,9 +9168,9 @@
           const v2 = u - TF; let y = 0, o = v2; for (const [du, h] of [[.42, 2.4], [.3, .9], [.18, .3]]) { if (o < du) { const w = o / du; y = h * 4 * w * (1 - w); break; } o -= du; }
           const gl = Math.min(v2, .9) * 2.2, fond = clamp((u - 5.4) / .8, 0, 1);
           return modele(d.b[0] + d.dv[0] * gl, d.b[1] + y - fond * s * .9, d.b[2] + d.dv[1] * gl, d.cap + 5 * TF + Math.min(v2, .9) * 2, 0, 1); } } }); }
-      // la traînée : 16 étincelles d'or et de neige qui suivent le traîneau
+      // la traînée : 16 étincelles d'or et de neige qui suivent le traîneau ; v20.58 : en course, 6 seulement, petites, qui s'amenuisent
       for (let k = 1; k <= 16; k++) { const e = new Geo(), sz = 1.6 - k * .07; e.boite(0, -sz / 2, 0, sz, sz, sz, k % 3 ? JAUNE : BLANC, 1, PI / 4); e.boite(0, -sz * .35, 0, sz * .7, sz * .7, sz * 1.5, k % 3 ? JAUNE : BLANC, 1, PI / 4);
-        rotors.push({ g: e, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant(x, t) { const h = TR.hist[k + 1]; if (!h) return null; const kk = TR.k / 4.2 * 2.6 + .4; return modele(h[0], h[1] + Math.sin(t * 3 + k) * .3 * kk, h[2], t * 2 + k, 0, kk); } } }); }
+        rotors.push({ g: e, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant(x, t) { const h = TR.hist[k + 1]; if (!h) return null; if (TR.course && k > 6) return null; const kk = TR.course ? TR.k * .45 * (1 - k / 7) : TR.k / 4.2 * 2.6 + .4; return modele(h[0], h[1] + Math.sin(t * 3 + k) * .3 * kk, h[2], t * 2 + k, 0, kk); } } }); }
       // à l'arrivée : la pluie de flocons et de confettis aux 5 couleurs sur le vainqueur (3 nappes décalées qui descendent)
       { const pl = new Geo(), rp = alea(2412); for (let k = 0; k < 70; k++) { const a = rp() * TAU, d = 3 + rp() * 20, y = rp() * 12, c = k % 4 ? BLANC : BANDE[k % 5], s = k % 4 ? .5 + rp() * .4 : .7;
           if (k % 4) { pl.boite(Math.cos(a) * d, y, Math.sin(a) * d, s, s, s * .3, c, 1, a); pl.boite(Math.cos(a) * d, y + s * .1, Math.sin(a) * d, s * .3, s * .8, s, c, 1, a); } else pl.boite(Math.cos(a) * d, y, Math.sin(a) * d, s, .1, s * .5, c, .8, a); }
@@ -9518,11 +9545,10 @@
       const g = new Geo(), PU = 11, PW = 30, U0 = -650, W0 = -650, NU = 213, NW = 66, XZ = (u, w) => [u * .94 - w * .34, u * .34 + w * .94], Hh = [];
       for (let j = 0; j <= NW; j++) { Hh.push([]); for (let i = 0; i <= NU; i++) { const [x, z] = XZ(U0 + i * PU, W0 + j * PW); Hh[j].push(x < -480 || x > 1300 || z < -500 || z > 1020 ? 0 : hS(x, z)); } }
       const sl = norme(A.soleil || [-.7, .3, .5]), CLAIR = v("#FFD9A0"), MI = v("#EBAE68"), FONCE = v("#C47A4C"), POURPRE = v("#8A4A5C");
-      for (let j = 0; j < NW; j++) for (let i = 0; i < NU; i++) { const h = [Hh[j][i], Hh[j][i + 1], Hh[j + 1][i + 1], Hh[j + 1][i]]; if (h.every(y => y < .05)) continue;
-        const C4 = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]].map(([a, b], k) => { const [x, z] = XZ(U0 + a * PU, W0 + b * PW); return [x, h[k], z]; });
-        const n = norme(croix(sous(C4[2], C4[0]), sous(C4[1], C4[3]))), nn = n[1] < 0 ? fois(n, -1) : n, l2 = point(nn, sl), raide = 1 - nn[1];
+      // 25/11/2026 (recette waouh) : relief LISSE (normales et couleurs par sommet, voir grilleLisse) : plus de facettes en triangles de près
+      grilleLisse(g, Hh, (i, j) => XZ(U0 + i * PU, W0 + j * PW), (nn, q) => { const l2 = point(nn, sl), raide = 1 - nn[1];
         const col = l2 > .5 ? mel(MI, CLAIR, clamp((l2 - .5) * 2.6, 0, 1)) : l2 > .25 ? mel(FONCE, MI, (l2 - .25) * 4) : mel(POURPRE, FONCE, clamp(l2 * 4, 0, 1));
-        g.quad(C4[0], C4[1], C4[2], C4[3], mel(col, POURPRE, clamp(raide * 1.4 - .3, 0, .45)), SOL, [0, 1, 0]); }   // SOL : crêtes, creux, roche et épice de la recette waouh
+        return mel(A.sol, mel(col, POURPRE, clamp(raide * 1.4 - .3, 0, .45)), clamp(q[1] / 2.5, 0, 1)); }, SOL);   // au ras du sol plat : la couleur du sable plat (raccord invisible)   // SOL : crêtes, creux, roche et épice de la recette waouh
       sol.poser(g, 0, 0, 0, 0, 1); }
 
     // ================= 1. LA MER DE DUNES : grands croissants sculptés par le vent d'ouest =================
@@ -9542,12 +9568,16 @@
       for (let i = n - 1; i >= 0; i--) rows[i].k = Math.min(rows[i].k, rows[i + 1].k + .22);
       rows.forEach((R, i) => { rows[i] = R.pts(R.k).map(p => [p[0], hS(p[0], p[1]) + (p[2] > .01 ? p[2] : -.25), p[1]]); });   // posées sur le relief
       const tons = [SABLE, SABLE2, SABLE3, AVAL, AVAL2], var_ = .9 + r() * .14;
+      // recette waouh : normales lissées le long de la dune et sur chaque versant (la crête, elle, reste vive : face au vent / face d'avalanche)
+      const Nq = (i, b) => { if (i < 0 || i >= n) return null; const a = rows[i][b], c = rows[i + 1][b + 1]; if (a[1] < 0 && c[1] < 0 && rows[i + 1][b][1] < 0 && rows[i][b + 1][1] < 0) return null; const q = norme(croix(sous(c, a), sous(rows[i][b + 1], rows[i + 1][b]))); return q[1] < 0 ? fois(q, -1) : q; };
+      const NS = (i, b, vi, vb) => { const cote = b < 3 ? [0, 1, 2] : [3, 4], s = [0, 0, 0]; [vi - 1, vi].forEach(ii => [vb - 1, vb].forEach(bb => { if (cote.indexOf(bb) < 0) return; const q = Nq(ii, bb); if (q) { s[0] += q[0]; s[1] += q[1]; s[2] += q[2]; } })); return norme(s[1] > 0 ? s : [0, 1, 0]); };
       for (let i = 0; i < n; i++) for (let b = 0; b < 5; b++) { const a = rows[i][b], bb = rows[i + 1][b], cc = rows[i + 1][b + 1], d = rows[i][b + 1];
-        if (a[1] < 0 && bb[1] < 0 && cc[1] < 0 && d[1] < 0) continue; duneG.quad(a, bb, cc, d, fois(tons[b], var_), SOL, [0, 1, 0]); }
+        if (a[1] < 0 && bb[1] < 0 && cc[1] < 0 && d[1] < 0) continue; const col = fois(tons[b], var_), na = NS(i, b, i, b), nb = NS(i, b, i + 1, b), nc = NS(i, b, i + 1, b + 1), nd = NS(i, b, i, b + 1);
+        triLisse(duneG, a, bb, cc, na, nb, nc, col, col, col, SOL); triLisse(duneG, a, cc, d, na, nc, nd, col, col, col, SOL); }
       for (let i = 0; i < n; i++) { const a = rows[i][3], b = rows[i + 1][3], a2 = rows[i][2], b2 = rows[i + 1][2]; if (a[1] < .5 && b[1] < .5) continue;
         const m = (p, q) => mel(p, q, .16); duneO.quad(m(a, a2), m(b, b2), b, a, CRETE, .35, [0, 1, 0]); }
-      // recette waouh : le vent d'ouest arrache des voiles de sable aux plus hautes crêtes (transparents, ils s'effacent sous le vent ; jamais près du trésor)
-      if (ctx.voile && H > 20) for (let i = 3; i < n - 3; i += 3) { const a = rows[i][3], b = rows[i + 1][3]; if (a[1] < 12 || Math.hypot(a[0] - 436, a[2] - 475) < 90) continue;
+      // recette waouh : le vent d'ouest arrache des voiles de sable aux plus hautes crêtes (transparents, ils s'effacent sous le vent ; effacés près du trésor du mois au rendu, voir tresorEvite)
+      if (ctx.voile && H > 20) for (let i = 3; i < n - 3; i += 3) { const a = rows[i][3], b = rows[i + 1][3]; if (a[1] < 12) continue;
         const hz = Math.sin(i * 12.99 + a[0] * .37) * 437.5, Lp = 40 + (hz - Math.floor(hz)) * 50, col = [1, .86, .64], P = (p, k) => [p[0] + Lp * k, p[1] + 1 + k * (8 + Lp * .08) - k * k * 4, p[2] + Lp * k * .18];
         for (let k = 0; k < 4; k++) { const k0 = k / 4, k1 = (k + 1) / 4, al = q => [col[0], col[1], col[2], .2 * Math.pow(1 - q, 1.6)];
           ctx.voile.quad(P(a, k0), P(b, k0), P(b, k1), P(a, k1), al(k0), al(k0), al(k1), al(k1)); } }
@@ -10010,7 +10040,8 @@
 
     // ================= 25. DÉCOR VIVANT (crochet a.vivant, voir contexteVivant) : LE VER CHASSE LA DERNIÈRE VOITURE =================
     // Au repos (📺 Visite) : une houle de sable court à côté de la piste, côté désert, et le ver jaillit en arc toutes les 15 s environ.
-    // En course : la houle se colle derrière la DERNIÈRE voiture ; à mi-course le ver bondit PAR-DESSUS la piste juste derrière elle (comme la carte 2D),
+    // En course : la houle court à côté de la piste derrière la DERNIÈRE voiture ; à mi-course le ver bondit PAR-DESSUS la piste derrière elle (comme la carte 2D ;
+    // v20.62, course calme : 95 m derrière et seulement si aucune voiture n'est à moins de 65 m ; la houle court 45 m derrière, à 42 m du centre de la piste),
     // puis replonge. Un ornithoptère « caméra » suit le PREMIER. Le décor réagit, jamais le résultat.
     { const RA = 34, RT = 9.5, CY = -.22 * RA, PH0 = 300 / 180 * PI, DUR = 8.5, W = { t: -1, b: null, fait: false, tb: -99 };
       const poly = []; for (let i = 0; i < T.N; i += 4) poly.push([T.X[i], T.Z[i]]);
@@ -10019,8 +10050,9 @@
         const L = C.V.length && C.enCourse && C.e < .985 ? C.dernier() : null;
         if (W.b && t - W.b.t0 > DUR) W.b = null;
         if (L) { if (C.e < .2) W.fait = false; if (W.b && !W.b.course) W.b = null;
-          if (!W.fait && C.e >= .5) { W.fait = true; const q = T.a(L.s - 30, 0); W.b = { t0: t, course: true, x: q.x, y: q.y - .35, z: q.z, d: [q.tz * OUT, -q.tx * OUT] }; }
-          if (!W.b && !W.fait && C.e > .1) { const q = T.a(L.s - 24, OUT * 25); W.w = { x: q.x, z: q.z, d: [q.tx, q.tz] }; } else W.w = null; }
+          // v20.62 · course calme : le saut UNIQUE du ver, 95 m derrière la dernière voiture (au lieu de 30) et seulement si aucune voiture n'est à moins de 65 m (le ver mesure 34 m de rayon)
+          if (!W.fait && C.e >= .5 && C.e < .9) { const q = T.a(L.s - 95, 0); if (C.V.every(c => Math.hypot(c.x - q.x, c.z - q.z) > 65)) { W.fait = true; W.b = { t0: t, course: true, x: q.x, y: q.y - .35, z: q.z, d: [q.tz * OUT, -q.tx * OUT] }; } }
+          if (!W.b && !W.fait && C.e > .1) { const q = T.a(L.s - 45, OUT * 42); W.w = { x: q.x, z: q.z, d: [q.tx, q.tz] }; } else W.w = null; }   // v20.62 · course calme : la houle court plus loin derrière et plus loin du bord
         else { if (W.b && W.b.course) W.b = null;
           const q = T.a((t * 26) % T.L, OUT * 33);
           if (!W.b && t - W.tb > 15 && t - (W.te || -9) > .5 && !EXCL.some(e => Math.hypot(q.x - e[0], q.z - e[1]) < e[2] + 6)) { W.te = t;   // seulement sur un sable assez plat (sinon les dunes l'avaleraient)
@@ -10035,7 +10067,7 @@
         for (let q = 0; q < 3; q++) { const c = q / 3; arc.tri(at(c - .1, H.R * 1.3, 2), at(c + .1, H.R * 1.3, 2), at(c, H.R * 2.5, 7), LEVRE, .1, H.d); arc.tri(at(c - .1, H.R * 1.36, 1.6), at(c + .1, H.R * 1.36, 1.6), at(c, H.R * 2.56, 6.6), LEVRE2, 0, fois(H.d, -1)); }
         for (let k = 0; k < 16; k++) { const b0 = at(k / 16, H.R * 1.2, 1.6); branche(arc, b0, mel(b0, at(0, 0, -2), .4), .45, .04, DENT, .2); }
         arc.boule(...at(0, 0, -2.4), 2.2, v("#FF7A2A"), 1, 1); }
-      rotors.push({ g: arc, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant(x, t, C) { const b = etat(t, C).b; if (!b) return null; const tau = (t - b.t0) / DUR; if (tau < 0 || tau > 1) return null;
+      rotors.push({ g: arc, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { garde: true, vivant(x, t, C) { const b = etat(t, C).b; if (!b) return null; const tau = (t - b.t0) / DUR; if (tau < 0 || tau > 1) return null;
         return modele(b.x, b.y + CY, b.z, Math.atan2(b.d[1], -b.d[0]), (-312 + tau * 480) / 180 * PI, 1); } } });
       // la houle : le dos du ver qui file sous le sable (bosse claire, sillon sombre, petits jets)
       const houle = new Geo(); for (let k = 0; k < 10; k++) { const x = k * 5.5, R = 9 - k * .6; houle.boule(x, -1.5, 0, R, k % 2 ? SABLE2 : SABLE3, 0, .5); [-1, 1].forEach(sd => houle.quad([x, .2, sd * R * .9], [x + 5.5, .2, sd * (R - .6) * .9], [x + 5.5, .12, sd * (R - .6) * 1.5], [x, .12, sd * R * 1.5], AVAL2, 0, [0, 1, 0])); }
@@ -10043,17 +10075,19 @@
       rotors.push({ g: houle, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant(x, t, C) { const w = etat(t, C).w; if (!w) return null; return modele(w.x, hS(w.x, w.z) - .2, w.z, Math.atan2(w.d[1], -w.d[0]), 0, 1 + .07 * Math.sin(t * 9)); } } });
       // l'ornithoptère « caméra » : il suit le PREMIER à 30 m de haut ; au repos il tourne au-dessus du circuit
       { const g = new Geo(); g.poser(orni(true), 0, 0, 0, 0, 1.5);
-        rotors.push({ g, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant(x, t, C) { const L = C.V.length && C.enCourse ? C.premier() : null; let c;
+        rotors.push({ g, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant(x, t, C) {
+          if (courseCalme(C)) { const pc = passageCiel(x, t, C, T, { haut: 26 }); if (!pc) return null; x.p = pc.p.slice(); x.cp = pc.cap; return modele(pc.p[0], pc.p[1], pc.p[2], pc.cap, Math.sin(t * 1.7) * .05, pc.k); }   // v20.62 · course calme
+          const L = C.V.length && C.enCourse ? C.premier() : null; let c;
           if (L) { const q = T.a(L.s - 36, 0); c = [q.x, L.y + 30 + Math.sin(t * 1.3) * 2, q.z]; } else { const a = t * .09; c = [T.cx + Math.cos(a) * 250, 78 + Math.sin(t * .5) * 5, T.cz - Math.sin(a) * 190]; }
           const dt = x.tp === undefined ? 1 : clamp(t - x.tp, 0, .1); x.tp = t; if (!x.p) x.p = c.slice(); const k = 1 - Math.exp(-dt * (L ? 2.5 : 1.2)), av = x.p.slice(); x.p = x.p.map((u, i) => u + (c[i] - u) * k);
           const dx = x.p[0] - av[0], dz = x.p[2] - av[2]; if (Math.hypot(dx, dz) > .02) { const cc = Math.atan2(-dz, dx); x.cp = x.cp === undefined ? cc : x.cp + Math.atan2(Math.sin(cc - x.cp), Math.cos(cc - x.cp)) * Math.min(1, dt * 3); }
           return modele(x.p[0], x.p[1], x.p[2], x.cp || 0, Math.sin(t * 1.7) * .05, 1); } } }); } }
     // le désert est plein : on interdit les petits décors génériques (pyramides, rochers posés au hasard)
     // ================= 26. RECETTE WAOUH : ombres de contact sous les grandes scènes (elles « pèsent » sur le sable), décalées à l'opposé du soleil couchant =================
-    // [x, z, demi-longueur, demi-largeur, cap, force] ; jamais à moins de 15 m de la cachette du trésor de janvier (436, 475 : mâchoire du squelette)
-    if (ctx.voile) { const sl = norme(A.soleil || [-.7, .3, .5]), TRES = [436, 475];
+    // [x, z, demi-longueur, demi-largeur, cap, force] ; près du trésor du mois, elles s'effacent au rendu (tresorEvite : aucune position écrite ici)
+    if (ctx.voile) { const sl = norme(A.soleil || [-.7, .3, .5]);
       [[500, 212, 36, 36, 0, .5], [QUEUE[0], QUEUE[1], 42, 22, 0, .4], [CIT[0], CIT[1], 84, 66, -.25, .55], [PAL[0], PAL[1], 78, 56, .15, .45], [ARCHE[0], ARCHE[1], 46, 30, 0, .35], [EPAVE[0], EPAVE[1], 70, 34, .35, .4], [RECOLTE[0], RECOLTE[1], 40, 30, .4, .45]].forEach(([x, z, rx, rz, cap, f]) => {
-        const ox = x - sl[0] * rx * .22, oz = z - sl[2] * rz * .22; if (Math.hypot(ox - TRES[0], oz - TRES[1]) < Math.max(rx, rz) + 15) return;
+        const ox = x - sl[0] * rx * .22, oz = z - sl[2] * rz * .22;
         ctx.voile.ombre(ox, hS(ox, oz) + .3, oz, rx, rz, f, cap, [.16, .04, .12]); }); }
     for (let x = -360; x <= 1220; x += 70) for (let z = -360; z <= 940; z += 70) occupe.push([x, z, 52]);
     return occupe;
@@ -10453,7 +10487,7 @@
       const fx = new Geo(), LF = 400, NF = 8, chute = EY - hS(BX, BZ) - .5; for (let q = 0; q < NF; q++) { const t0 = q / NF, t1 = (q + 1) / NF, x0 = 3 + t0 * LF, x1 = 3 + t1 * LF, y0b = -t0 * chute, y1b = -t1 * chute, w0 = .5 + t0 * 4.5, w1 = .5 + t1 * 4.5, c = mel(F1, F2, t0);
         fx.quad([x0, y0b, -w0], [x1, y1b, -w1], [x1, y1b, w1], [x0, y0b, w0], c, 1, [0, 1, 0]); fx.quad([x0, y0b - w0 * .4, 0], [x1, y1b - w1 * .4, 0], [x1, y1b + w1 * .4, 0], [x0, y0b + w0 * .4, 0], c, 1, [0, 0, 1]); }
       fx.cylindre(LF + 3, -chute - .3, 0, 5, .5, 10, F1, 1);   // la tache de lumière au sol
-      rotors.push({ g: oe, x: BX, y: EY, z: BZ, cap: 0, v: .16, a: { ax: "y", vivant: vivantVise("dernier") } }); rotors.push({ g: fx, x: BX, y: EY, z: BZ, cap: 0, v: .16, a: { ax: "y", vivant: vivantVise("dernier", LF + 3) } }); lum.push([BX, EY, BZ, 1, .6, .2, 70]);
+      rotors.push({ g: oe, x: BX, y: EY, z: BZ, cap: 0, v: .16, a: { ax: "y", vivant: vivantVise("dernier") } }); { const vise = vivantVise("dernier", LF + 3); rotors.push({ g: fx, x: BX, y: EY, z: BZ, cap: 0, v: .16, a: { ax: "y", vivant: (x, t, C) => courseCalme(C) ? null : vise(x, t, C) } }); }   // v20.62 · course calme : pas de faisceau sur les voitures lum.push([BX, EY, BZ, 1, .6, .2, 70]);
       // la bête ailée et son cavalier, qui tourne autour de la tour
       const nz = new Geo(); aigle(nz, true); const ch = []; for (let q = 0; q <= 30; q++) { const t = -q / 30 * TAU; ch.push([BX + Math.cos(t) * 75, EY - 30 + 8 * Math.sin(t * 2), BZ + Math.sin(t) * 64]); }
       rotors.push({ g: nz, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { p: 26, ph: .1, chemin: ch, oriente: true, bob: [2, .9] } }); }
@@ -10610,7 +10644,7 @@
       // VIVANT : quand une voiture passe sous le portail, il se surcharge (arche épaisse, deux éclairs qui frappent le sol)
       const sur = new Geo(); tub(sur, arc.map(p => [p[0], p[1] + .2, p[2]]), 2.2, v("#FF6A78"), 1, 6); tub(sur, arc, .8, v("#FFFFFF"), 1, 4);
       [A0, B0].forEach(b => { let a = [b[0], H, b[2]]; for (let k = 1; k <= 5; k++) { const c = [b[0] + (k % 2 ? 1.4 : -1.4) * (k < 5 ? 1 : 0), H - k * H / 5, b[2] + (k % 2 ? -1 : 1) * (k < 5 ? 1 : 0)]; barre(sur, a, c, .9, v("#FFE0E4"), 1); barre(sur, a, c, 2.2, ROUGE, 1); a = c; } });
-      rotors.push({ g: sur, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant: (o, t, C) => { if (!C.V.length) return null; if (!C.V.some(c => Math.hypot(c.x - p.x, c.z - p.z) < 34)) return null; return (t * 7 % 1) < .65 ? I4 : null; } } }); });
+      rotors.push({ g: sur, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant: (o, t, C) => { if (!C.V.length) return null; if (!C.V.some(c => Math.hypot(c.x - p.x, c.z - p.z) < 34)) return null; return I4; } } }); });   // v20.62 : surchargé tant qu'une voiture est dessous (plus de clignotement rapide)
 
     // ================= 3. LA CRÉATURE : elle jaillit de la grande faille et plante ses griffes dans la grand-rue =================
     { const g = new Geo(), PE = v("#2E1E26"), PE2 = v("#4A2632"), cx = FX, cz = FZ, KC = 1.45;   // KC : la créature domine la grand-rue
@@ -10657,7 +10691,7 @@
       { const g = new Geo(), N = 18, LV = 300, P = [...Array(N + 1)].map((_, k) => { const u = k / N; return [u * LV, 16 * Math.sin(u * PI) + 3 * Math.sin(u * 3 * PI) * Math.sin(u * PI), 4 * Math.sin(u * 4 * PI + 1) * Math.sin(u * PI)]; });
         tub(g, P, t => 3.4 - t * 2.2, v("#4A1824"), .3, 6); tub(g, P.map(p => [p[0], p[1] + 2.6 - p[0] / LV * 1.6, p[2]]), t => 1.6 - t * .9, ROUGE, 1, 4);
         for (let k = 0; k < 5; k++) { const a = k / 5 * TAU; barre(g, [LV, 0, 0], [LV + .6, -1.8 + Math.sin(a) * .4, Math.cos(a) * 1.6], .3, v("#FFC8CE"), 1); }
-        const S = new Float32Array(16); rotors.push({ g, x: HX, y: HY - 1, z: HZ, cap: 0, v: 0, a: { vivant: (o, t, C) => { const d = dernierDe(C); if (!d) return null;
+        const S = new Float32Array(16); rotors.push({ g, x: HX, y: HY - 1, z: HZ, cap: 0, v: 0, a: { vivant: (o, t, C) => { const d = dernierDe(C); if (!d || courseCalme(C)) { o.cx = undefined; return null; }   // v20.62 · course calme : la liane attend l'arrivée
           o.cx = o.cx === undefined ? d.x : o.cx + (d.x - o.cx) * .12; o.cz = o.cz === undefined ? d.z : o.cz + (d.z - o.cz) * .12;
           const dx = o.cx - o.x, dz = o.cz - o.z, dy = 1.6 - o.y, hz = Math.hypot(dx, dz) || 1, L = Math.hypot(hz, dy), e = 1 + .12 * Math.sin(t * 7);
           S[0] = L / 300; S[5] = e; S[10] = e; S[15] = 1; return mul(modele(o.x, o.y, o.z, Math.atan2(-dz, dx), Math.atan2(dy, hz), 1), S); } } }); }
@@ -11040,6 +11074,12 @@
     // décor vivant : crochet unique a.vivant(x, t, C) (voir contexteVivant) ; C.premier() = la voiture de tête
     const cible = (t, C) => { const lead = C.V.length ? C.premier() : null;
       const s = lead ? lead.s : (t * 34) % T.L, p = T.a(s + (lead ? 26 : 0), 0); return [p.x, p.y, p.z]; };
+    // v20.62 · course calme : la foudre ne tombe que toutes les 24 s (au lieu de 7), sans crépiter, et dans la mer, LOIN des voitures (à 60 m du bord, du côté le plus libre)
+    const cycle = (t, C) => courseCalme(C) ? (t / 24) % 1 : (t / FOUDRE.per) % 1;
+    const cibleF = (t, C) => { if (!courseCalme(C)) return cible(t, C); const lead = C.premier(), m = FOUDRE.m || (FOUDRE.m = {}), n = Math.floor(t / 24);
+      if (m.n !== n) { m.n = n; let best = null; [1, -1].forEach(sd => [70, 110, 150].forEach(av => { const q = T.a(lead.s + av, sd * (DEMI + 60)), d = Math.min(...C.V.map(c => Math.hypot(c.x - q.x, c.z - q.z)));
+          if (!best || d > best.d) best = { d, p: [q.x, q.y || 0, q.z] }; })); m.p = best.p; }
+      return m.p; };
     { const g = new Geo(), d = norme([1, -.42, 0]), at = k => [d[0] * k, d[1] * k, d[2] * k];
       barre(g, at(-12), at(38), .9, OR, .15); barre(g, at(-12), at(-10), 1.4, OR2, 0);
       const B = at(38); barre(g, [B[0], B[1], -4.4], [B[0], B[1], 4.4], 1.1, OR, .2);
@@ -11051,19 +11091,19 @@
     { const g = new Geo(); let y = 0, z = 0; const N = 9, P = [[0, 0, 0]]; for (let k = 1; k < N; k++) { y = (k % 2 ? 1 : -1) * (.12 + r() * .08); z = (r() - .5) * .16; P.push([k / N, y, z]); } P.push([1, 0, 0]);
       for (let k = 0; k < P.length - 1; k++) { barre(g, P[k], P[k + 1], .05, v("#FFF6C8"), 1, .05); barre(g, P[k], P[k + 1], .12, v("#9BE8FF"), 1, .02); }
       const bout = x => { const d = norme([1, -.42, 0]), c = Math.cos(x.capT), s = Math.sin(x.capT); const k = 49 * KG; return [HAND[0] + d[0] * k * c, HAND[1] + d[1] * k, HAND[2] - d[0] * k * s]; };
-      const flash = t => { const f = (t / FOUDRE.per) % 1; return f > .55 && f < .63 && (Math.floor(t * 22) % 3 !== 0); };
+      const flash = (t, C) => { const f = cycle(t, C); return f > .55 && f < .63 && (courseCalme(C) || Math.floor(t * 22) % 3 !== 0); };
       rotors.push({ g, x: 0, y: 0, z: 0, cap: 0, v: 0, a: {
-        vivant(x, t, C) { if (!flash(t)) return null; const c = cible(t - ((t / FOUDRE.per) % 1 - .55) * FOUDRE.per, C), want = Math.atan2(-(c[2] - HAND[2]), c[0] - HAND[0]); let dl = Math.atan2(Math.sin(want - capG), Math.cos(want - capG)); x.capT = capG + clamp(dl, -.5, 2.2);
+        vivant(x, t, C) { if (!flash(t, C)) return null; const c = courseCalme(C) ? cibleF(t, C) : cible(t - ((t / FOUDRE.per) % 1 - .55) * FOUDRE.per, C), want = Math.atan2(-(c[2] - HAND[2]), c[0] - HAND[0]); let dl = Math.atan2(Math.sin(want - capG), Math.cos(want - capG)); x.capT = capG + clamp(dl, -.5, 2.2);
           const A0 = bout(x), B0 = [c[0], c[1] + .5, c[2]], X = sous(B0, A0), L = Math.hypot(X[0], X[1], X[2]) || 1, Y = norme(croix(X, [0, 0, 1])), Z = norme(croix(X, Y)), k = 18;
           return new Float32Array([X[0], X[1], X[2], 0, Y[0] * k, Y[1] * k, Y[2] * k, 0, Z[0] * k, Z[1] * k, Z[2] * k, 0, A0[0], A0[1], A0[2], 1]); } } });
       // la gerbe d'écume qui jaillit là où la foudre tombe, puis retombe
       const gb = new Geo(); for (let k = 0; k < 10; k++) { const a = k / 10 * TAU; gb.boule(Math.cos(a) * 3.2, 1 + (k % 3), Math.sin(a) * 3.2, 1.8 + (k % 2), ECUME, .5, 1.2); } gb.boule(0, 4, 0, 3, v("#E8FFFA"), .8, 1.6); gb.cylindre(0, 0, 0, 5.5, .3, 14, v("#BFF4EE"), .4, 7.5);
       rotors.push({ g: gb, x: 0, y: 0, z: 0, cap: 0, v: 0, a: {
-        vivant(x, t, C) { const f = (t / FOUDRE.per) % 1; if (f < .56 || f > .8) return null; const c = cible(t - (f - .55) * FOUDRE.per, C), q = (f - .56) / .24, k = .4 + Math.sin(PI * Math.min(1, q * 1.4)) * 1.4;
+        vivant(x, t, C) { const f = cycle(t, C); if (f < .56 || f > .8) return null; const c = courseCalme(C) ? cibleF(t, C) : cible(t - (f - .55) * FOUDRE.per, C), q = (f - .56) / .24, k = .4 + Math.sin(PI * Math.min(1, q * 1.4)) * 1.4;
           return mul(modele(c[0], c[1] - .2, c[2], t * .7, 0, k), rotY(q * 2)); } } });
       // les yeux du dieu s'allument au moment de frapper
       const ge = new Geo(); [-2.7, 2.7].forEach(z => ge.boule(0, 0, z, 1.35, v("#E8FFFA"), 1, .6)); echelle(ge, KG);
-      const oe = monde([6.3, 47.6, 0]); rotors.push({ g: ge, x: oe[0], y: oe[1], z: oe[2], cap: capG, v: 0, a: { vivant(x, t) { const f = (t / FOUDRE.per) % 1; return f > .45 && f < .72 ? matRotor(x, t) : null; } } }); }
+      const oe = monde([6.3, 47.6, 0]); rotors.push({ g: ge, x: oe[0], y: oe[1], z: oe[2], cap: capG, v: 0, a: { vivant(x, t, C) { const f = cycle(t, C); return f > .45 && f < .72 ? matRotor(x, t) : null; } } }); }
 
     // ================= 4. LA VAGUE GÉANTE qui se dresse derrière le dieu et s'enroule vers lui =================
     { const g = new Geo(), NS = 32, Rv = 122, a0 = -2.66, a1 = -.34;
@@ -11714,7 +11754,9 @@
       const suivre = (x, t, cible, vite) => { const dt = x.tp === undefined ? 1 : Math.min(.1, Math.max(0, t - x.tp)); x.tp = t; if (!x.p) x.p = cible.slice();
         const k = 1 - Math.exp(-dt * vite); x.p = x.p.map((u, i) => u + (cible[i] - u) * k); return x.p; };
       rotors.push({ g: A, x: CX, y: 70, z: 300, cap: 0, v: 0, a: { vivant(x, t, C) {
-        const L = C.V.length ? C.premier() : null, fin = L && C.enCourse && C.e > .975; let cible;
+        if (courseCalme(C)) { const pc = passageCiel(ASC, t, C, T, { haut: 34 }); ASC.k = pc ? pc.k : 0; if (!pc) return null;   // v20.62 · course calme : un passage au loin
+          x.p = pc.p.slice(); ASC.p = x.p; x.c = pc.cap + PI / 2; return modele(x.p[0], x.p[1], x.p[2], x.c, Math.sin(t * 1.1) * .03, 1.1 * pc.k); }
+        ASC.k = 1; const L = C.V.length ? C.premier() : null, fin = L && C.enCourse && C.e > .975; let cible;
         if (L) { const ax = Math.cos(L.cap), az = -Math.sin(L.cap); cible = [L.x + ax * 8, L.y + (fin ? 14 : 24) + Math.sin(t * 1.5) * 1.2, L.z + az * 8]; }
         else { const a = t * .06; cible = [CX + Math.cos(a) * 190, 72 + Math.sin(t * .35) * 6, 300 - Math.sin(a) * 150]; }
         const p = suivre(x, t, cible, L ? 2.4 : 1); ASC.p = p;
@@ -11723,8 +11765,8 @@
         return modele(p[0], p[1], p[2], x.c, Math.sin(t * 1.1) * .03, L ? 1.5 : 1.7); } } });
       // le ticket d'or qui tourne sous l'ascenseur (un peu plus gros à l'arrivée)
       const tk = new Geo(); tk.boite(0, 0, 0, 5, 2.6, .16, OR, .7); tk.ov().boite(0, .7, .1, 3.6, .18, .03, OR2, .4); tk.ov().boite(0, 1.5, .1, 3.6, .24, .03, ROUGE, .4); tk.ov().boite(0, .7, -.1, 3.6, .18, .03, OR2, .4);
-      rotors.push({ g: tk, x: CX, y: 60, z: 300, cap: 0, v: 0, a: { vivant(x, t, C) { if (!ASC.p) return null; const fin = C.V.length && C.enCourse && C.e > .975, p = ASC.p;
-        return mul(modele(p[0], p[1] - 7.5 + Math.sin(t * 2.4) * .5, p[2], 0, 0, fin ? 2 : 1.3), rotY(t * 2.4)); } } }); }
+      rotors.push({ g: tk, x: CX, y: 60, z: 300, cap: 0, v: 0, a: { vivant(x, t, C) { if (!ASC.p || !(ASC.k > .02)) return null; const fin = C.V.length && C.enCourse && C.e > .975, p = ASC.p, k = ASC.k < 1 ? ASC.k : 1;
+        return mul(modele(p[0], p[1] - 7.5 * (k < 1 ? .75 : 1) + Math.sin(t * 2.4) * .5, p[2], 0, 0, (fin ? 2 : 1.3) * k), rotY(t * 2.4)); } } }); }
 
     return occupe;
   }
@@ -11872,6 +11914,7 @@
     }
     // recette waouh : les rayons du soleil (voir WAOUH)
     const W = def.waouh || WAOUH[def.decor]; if (W && W.rayons) { const R = Object.assign({}, W.rayons); if (leger()) R.n = Math.ceil((R.n || 10) / 2); rayonsSoleil(rayons, T, A, R); }
+    if (W) habillerWaouh(W, T, A, sol, piste, voile, lueur, lum, eau);   // recette waouh : ombres de contact, sols, flaques de lumière, nappes de brume, décor lointain
     return { sol, piste, eau, lum, stands: ps, portique: p0, rotors, voile, lueur, rayons };
   }
 
@@ -11928,11 +11971,13 @@
      La couleur du pilote reste toujours lisible (bande centrale, aileron de requin, caméra T, volet avant et dérives arrière). */
   const LV_METAL = { chrome: "#C9D2DC", or: "#E8C15A", oranime: "#F2C94C", platine: "#E5E8EC", orrose: "#F2B8A6", rubis: "#B0122E", galaxie: "#2B1B5A" };
   const LV_CLAIRES = ["chrome", "or", "oranime", "platine", "orrose", "carte"];
-  const FIN_COL = { argent: ["#E6EBF0", 0], or: ["#F2C14E", .1], neon: [null, 1], diamant: ["#C9F6FF", .35], lauriers: ["#E9C25A", .1], etoilee: ["#FFE596", .25], soleil: ["#FF9A2E", .45] };
+  const FIN_COL = { argent: ["#E6EBF0", 0], or: ["#F2C14E", .1], neon: [null, 1], diamant: ["#C9F6FF", .35], lauriers: ["#E9C25A", .1], etoilee: ["#FFE596", .25], soleil: ["#FF9A2E", .45],
+    ailee: ["#F2C14E", .3], elfique: ["#8FCB9A", .15], biolum: ["#5CF2E6", 1], feuilledor: ["#F5C842", .45] };   // v20.61 · finitions des mondes + Feuille d'or (ticket d'or)
   /** casques : [couleur de la bande, lumineux de la bande, visière ("iri" irisée, "or", sinon fumée), forme spéciale] */
   const CQ_DEF = { uni: ["#FFFFFF", 0], carbone: [null, 0], eclair: ["#FFD84A", .35], damier: ["#15171B", 0, 0, "damier"], tortue: ["#1D5A2C", 0], chrome: ["#2B3038", 0, "iri"], etoile: ["#FFFFFF", .2, "iri", "etoile"],
     holo: ["#7FE8FF", .8, "iri"], couronne: ["#7A4A0C", 0, "or", "couronne"], foudre: ["#5CE1FF", 1, "iri"], phenix: ["#FFF1B0", .7, "or", "flamme"], glace: ["#FFFFFF", .4, "iri"], galaxie: ["#FFB8F0", .6, "iri", "etoile"],
-    empereur: ["#F7CF55", .2, "or", "couronne"], eclaireur: ["#6B4423", 0, 0, "insigne"], toque: [null, 0, 0, "toque"] };
+    empereur: ["#F7CF55", .2, "or", "couronne"], eclaireur: ["#6B4423", 0, 0, "insigne"], toque: [null, 0, 0, "toque"],
+    anneau: ["#F7CF55", .3, "or", "anneau"], rebelle: ["#FFFFFF", 0, 0, "rebelle"], hoplite: ["#5A3412", 0, "or", "crete"], fracture: ["#FF3BD4", 1, "iri", "eclats"] };   // v20.61 · casques des mondes
   /** décalcomanie plate : polygones convexes en (u, v), posés en O sur le plan (U, V), tournés vers N */
   function decal(g, O, U, Vv, N, polys, col, em) {
     polys.forEach(P => { const q = P.map(([u, w]) => [O[0] + U[0] * u + Vv[0] * w, O[1] + U[1] * u + Vv[1] * w, O[2] + U[2] * u + Vv[2] * w]);
@@ -11980,20 +12025,30 @@
     if (f === "toque") { const bl = hex("#FAFAF6"); g.cylindre(X0, Y0 + .22, 0, .2, .26, 10, bl, .05); g.boule(X0 - .06, Y0 + .56, 0, .19, bl, .05, .8, true); g.boule(X0 + .09, Y0 + .53, .07, .13, bl, .05, .9); g.boule(X0 + .07, Y0 + .53, -.08, .13, bl, .05, .9); }
     if (f === "insigne") [-1, 1].forEach(s => { decal(g, [X0 - .06, Y0 + .1, s * .278], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [rond(0, 0, .075, 10)], hex("#F4EBD6"));
       decal(g, [X0 - .06, Y0 + .1, s * .282], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [[[-.005, -.05], [-.06, .03], [-.03, .055], [-.005, .02]]], hex("#FFFFFF")); decal(g, [X0 - .06, Y0 + .1, s * .282], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [[[.005, -.05], [.06, .03], [.03, .055], [.005, .02]]], hex("#2F6FD6")); });
+    // v20.61 · Anneau gravé : l'inscription de feu sur la bande d'or ; Pilote rebelle : l'écusson ; Casque d'Ulysse : la crête de crin ; Éclats du multivers : les fêlures lumineuses
+    if (f === "anneau") [-1, 1].forEach(s => { for (let k = 0; k < 7; k++) { const u0 = -.2 + k * .055, w = k % 3 === 1 ? .018 : .03;
+      decal(g, [X0 + u0 * s, Y0 + .145 + k * .006, s * .286], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [[[0, -.009], [w, -.009], [w, .009], [0, .009]]], hex("#FF5A1A"), 1); } });
+    if (f === "rebelle") [-1, 1].forEach(s => { decal(g, [X0 - .08, Y0 + .1, s * .279], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [rond(0, 0, .08, 12)], hex("#FFFFFF"));
+      decal(g, [X0 - .08, Y0 + .1, s * .284], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [[[0, .055], [.02, -.005], [.055, -.03], [0, -.015], [-.055, -.03], [-.02, -.005]]], hex("#C8321E")); });
+    if (f === "crete") { const rouge = hex("#C8281E"), fonce = hex("#7A120E");
+      for (let k = 0; k < 9; k++) { const t = k / 8, x = X0 - .3 + t * .5, y = Y0 + .2 + Math.sin(t * PI) * .14; g.boite(x, y, 0, .075, .2 - Math.abs(t - .45) * .12, .05, k % 2 ? fonce : rouge, .05); } }
+    if (f === "eclats") [-1, 1].forEach(s => { const P = [[[-.2, .05], [-.06, .02], [-.09, -.06]], [[-.06, .02], [.02, .1], [.06, .04]], [[-.09, -.06], [.02, -.1], [-.04, -.03]]];
+      P.forEach((t, i) => decal(g, [X0 - .02, Y0 + .08, s * (.28 + i * .002)], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [t], hex(["#FF3BD4", "#3BE8FF", "#F7F24A"][i]), 1)); });
     if (f === "etoile") [-1, 1].forEach(s => decal(g, [X0 - .1, Y0 + .14, s * .272], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], etoile5(.08), hex("#FFD84A"), .4));
     if (f === "flamme") [-1, 1].forEach(s => decal(g, [X0 - .12, Y0 + .05, s * .275], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [[[-.14, -.06], [.1, -.04], [.02, .02], [.16, .1], [-.02, .05]]], hex("#FFE07A"), .8));
   }
   function voiture(v) {
     const g = new Geo(), c = hex(v.couleur || "#4C9AFF"), lv = v.livree || "couleur";
     const metal = LV_METAL[lv];
-    const neon = lv === "neon", choco = lv === "chocolat", carte = lv === "carte", prisme = lv === "arcenciel";
-    const corps = neon ? hex("#0B0D12") : metal ? hex(metal) : choco ? hex("#6B3A1E") : carte ? hex("#F4F0E6") : c, em = neon ? 1 : 0;
+    const neon = lv === "neon", choco = lv === "chocolat", carte = lv === "carte", prisme = lv === "arcenciel", ver = lv === "ver";
+    const corps = neon ? hex("#0B0D12") : metal ? hex(metal) : choco ? hex("#6B3A1E") : carte ? hex("#F4F0E6") : ver ? hex("#D9A35A") : c, em = neon ? 1 : 0;
     // accent : la couleur du pilote sur les livrées métal / néon / spéciales, sinon un blanc cassé teinté
-    const perso = !!(neon || metal || choco || carte || prisme), accent = perso ? c : mel(c, [1, 1, 1], .82), emA = neon ? 1 : 0;
+    const perso = !!(neon || metal || choco || carte || prisme || ver), accent = perso ? c : mel(c, [1, 1, 1], .82), emA = neon ? 1 : 0;
     const carbone = hex("#16191F"), carbone2 = hex("#23272F"), cockpit = hex("#0C0E12"), titane = hex("#2C3038");
     const fonce = mel(corps, [0, 0, 0], .35), nappeChoco = hex("#2E1407");
     /** peinture à l'abscisse x (Prisme : un dégradé arc-en-ciel du museau à l'aileron) */
-    const peint = x => prisme ? hex(hsl(((x + 4) / 9.2) * 300, .78, .56)) : corps;
+    const anneauVer = [hex("#E3B46E"), hex("#A8692E")];   // v20.61 · Peau des sables : les anneaux du ver, une section claire, une sombre
+    const peint = x => prisme ? hex(hsl(((x + 4) / 9.2) * 300, .78, .56)) : ver ? anneauVer[Math.floor((x + 4) * 1.15) % 2] : corps;
     /** Chocolat fondant : le dessus est nappé de chocolat noir qui coule en gouttes sur les flancs (une section sur deux) */
     const nappage = (i, j, haut, bord) => choco && (haut.includes(j) || (bord.includes(j) && i % 2 === 0));
     // ---- monocoque, du diffuseur au museau : [x, demi-largeur, bas, haut, resserrement du haut]
@@ -12079,6 +12134,15 @@
     g.bloc([[-3.0, .15, -.9], [-3.9, .24, -.86], [-3.9, .24, .86], [-3.0, .15, .9], [-3.0, .2, -.9], [-3.9, .4, -.86], [-3.9, .4, .86], [-3.0, .2, .9]], carbone2, 0);
     tube(g, [[-3.45, .82, 0], [-3.78, .84, 0]], .07, hex("#8A8F96"), 0, 6);
     g.boite(-3.66, .5, 0, .08, .2, .26, hex("#FF2A2A"), 1);
+    // ---- v20.61 · Balle ailée : une petite balle d'or aux ailes blanches au-dessus du halo ; Cape elfique : la cape verte posée derrière le pilote
+    if (v.finition === "ailee") { g.boule(.1, 1.78, 0, .07, hex("#F2C14E"), .4); const bl = hex("#FFFDF2");
+      [-1, 1].forEach(s => { g.tri([.1, 1.79, s * .05], [.16, 1.9, s * .24], [.02, 1.84, s * .2], bl, .2, [0, 1, 0]); g.tri([.1, 1.79, s * .05], [.02, 1.84, s * .2], [.16, 1.9, s * .24], bl, .2, [0, -1, 0]); }); }
+    if (v.finition === "elfique") { const vert = hex("#3E7D4A"), vert2 = hex("#2A5A34");
+      [[0, 1, 0], [0, -1, 0]].forEach(n => g.quad([-.32, 1.36, -.2], [-.32, 1.36, .2], [-1.25, 1.12, .42], [-1.25, 1.12, -.42], n[1] > 0 ? vert : vert2, 0, n));
+      g.boule(-.34, 1.37, 0, .045, hex("#9FE0AA"), .3); }
+    // v20.61 · 🌌 Sabre lumineux : la lame rouge posée sur l'aileron de requin, poignée derrière le pilote (la traînée rouge suit en course)
+    if (v.trainee === "sabre") { tube(g, [[-1.25, 1.56, 0], [-3.75, 1.5, 0]], .05, hex("#FF2A3A"), 1, 6); tube(g, [[-1.2, 1.57, 0], [-3.7, 1.51, 0]], .022, hex("#FFF1F1"), 1, 5);
+      tube(g, [[-.95, 1.57, 0], [-1.25, 1.56, 0]], .06, hex("#2B2F36"), 0, 6); }
     // ---- finition : liseré le long de la monocoque (argent, or, néon…)
     if (colFin) [0, 5].forEach(j => { for (let i = 1; i < RM.length - 2; i++) { const a = RM[i][j], b = RM[i + 1][j], s = Math.sign(a[2]) || 1, o = .014;
       g.quad([a[0], a[1] - .02, a[2] + s * o], [b[0], b[1] - .02, b[2] + s * o], [b[0], b[1] + .02, b[2] + s * o], [a[0], a[1] + .02, a[2] + s * o], colFin, emFin, [0, 0, s]); } });
@@ -12087,6 +12151,10 @@
     [1, -1].forEach(s => {
       const N = [0, 0, s], U = [s, 0, 0], Vy = [0, 1, 0];
       if (carte) { decal(g, [-2.25, .72, s * .505], U, Vy, N, coeur(.2), hex("#D62839")); decal(g, [-1.55, .46, s * 1.2], U, Vy, N, pique(.15), hex("#15171B")); decal(g, [1.9, .6, s * .42], U, Vy, N, coeur(.11), hex("#D62839")); }
+      if (ver || v.finition === "biolum" || v.finition === "feuilledor") { const r = alea(hashTxt((v.nom || "") + s + "v")), fd = v.finition === "feuilledor", bio = v.finition === "biolum";   // v20.61 : épice bleue, spores luminescentes, feuilles d'or
+        for (let k = 0; k < (fd ? 24 : 10); k++) { const x = -2.6 + r() * 4.6, y = .36 + r() * .4, z = x > -1.2 && x < 1 ? 1.39 : x > -2.4 ? (x < -1.2 ? 1.12 : .5) : .45, t = (fd ? .085 : .025) * (.6 + r() * .8), a = r() * 3;
+          const forme = fd ? [[[-t, -t * .4], [-t * .1, -t], [t * .9, -t * .5], [t * .7, t * .6], [-t * .3, t * .8]].map(([p, q]) => [p * Math.cos(a) - q * Math.sin(a), p * Math.sin(a) + q * Math.cos(a)])] : [[[-t, 0], [0, t], [t, 0], [0, -t]]];
+          decal(g, [x, y, s * (z + .004)], U, Vy, N, forme, fd ? hex(k % 3 ? "#F5C842" : "#FFF3B8") : bio ? hex(k % 3 ? "#5CF2E6" : "#FF8AE0") : hex("#7FB8FF"), fd ? .45 : 1); } }
       if (lv === "galaxie" || lv === "neon") { const r = alea(hashTxt((v.nom || "") + s)); for (let k = 0; k < 9; k++) { const x = -2.6 + r() * 4.6, y = .4 + r() * .35, z = x > -1.2 && x < 1 ? 1.39 : x > -2.4 ? (x < -1.2 ? 1.12 : .5) : .45;
         decal(g, [x, y, s * z], U, Vy, N, [[[-.025, 0], [0, .025], [.025, 0], [0, -.025]]], lv === "neon" ? c : hex("#FFFFFF"), 1); } }
     });
@@ -12144,15 +12212,16 @@
        1. ajouter une ligne WAOUH[clé du décor] (def.decor : « titans », « lucioles »…) ; un décor partagé par deux circuits (« solstice » : suzuka et arene2028)
           prend la même recette, sinon mettre waouh: {…} directement dans TRACES[circuit] ;
        2. dans son décor sur mesure, marquer ses grands sols avec SOL (couleur lumineuse -1, ou marquerSol(g)) : le grand plan de sol et ses taches le sont déjà ;
-       3. ajouter ses ombres de contact (ctx.voile.ombre) et, s'il a un trésor, sa cachette dans rayons.evite ; puis captures avant / après et outils-tests/twaouh.js.
+       3. ajouter ses ombres de contact (ctx.voile.ombre) ; puis captures avant / après et outils-tests/twaouh.js. Les cachettes des trésors ne s'écrivent JAMAIS ici
+          (dépôt public) : la recette s'efface toute seule autour du trésor du mois au rendu (tresorEvite).
      Les blocs (tous facultatifs) :
        brume   : { col, dens, haut, halo }   brume de profondeur qui reste au ras du sol (dens = épaisseur au sol par mètre, haut = hauteur en m où elle
                                             a perdu 63 %, halo = lueur du soleil à travers la brume quand on regarde vers lui). Le ciel prend la même couleur à l'horizon.
        ciel, rebond : "#rrggbb"             lumière d'ambiance colorée : ce que reçoivent les faces tournées vers le ciel / vers le sol (ombres teintées).
        rim     : 0 à 1                      contre-jour : les silhouettes tournées vers le soleil gagnent un liseré doré.
        etalonnage : [saturation, contraste] étalonnage « cinéma » des objets (avant la brume, qui reste douce) ; ex. [.2, .25].
-       rayons  : { n, long, larg:[haut, bas], force, col, evite:[[x, z, r]] }   rayons de soleil : des voiles de lumière additifs qui descendent du soleil
-                                            sur la piste (mode léger : moitié moins ; coupés de nuit, sous la pluie ou dans la tempête ; « réduire les animations » = fixes).
+       rayons  : { n, long, larg:[haut, bas], force, col, evite:[[x, z, r]] (zones de décor à garder libres, jamais une cachette) }   rayons de soleil : des voiles de lumière additifs qui descendent du soleil
+                                            sur la piste (mode léger : moitié moins ; coupés de nuit sauf rayons.nuit ; atténués sous la pluie ou dans la tempête, un peu plus forts au grand soleil ; « réduire les animations » = fixes).
        sol     : { echelle, haut, creux:[col, force], cretes:[col, force], roche:[col, force], taches:[col, force, seuil], grain, rides:[par m, force, angle] }
                                             sols variés par ZONES, calculés au pixel (bruit procédural, transitions douces) : creux ombrés (bas et taches du bruit),
                                             crêtes claires (en hauteur, faces peu pentues), roche (pentes raides), taches étirées (épice, fleurs, mousse…), grain fin,
@@ -12160,18 +12229,212 @@
                                             Ne touche que les surfaces marquées « sol » (couleur lumineuse -1 : SOL, voir construire et marquerSol).
      Le décor sur mesure reçoit aussi dans ctx : voile (objets transparents, ombres de contact : voile.ombre(x, y, z, rx, rz, force, cap)) et lueur (objets
      additifs : halos, vitraux, braises). Ils sont dessinés après la scène, sans écrire la profondeur, et s'effacent dans la brume.
-     Le trésor du mois (versus/Tresors.js, côté serveur) : mettre sa cachette dans rayons.evite et ne rien poser à moins de 15 m.
+     Le trésor du mois (versus/Tresors.js, dépôt privé) : sa position n'arrive qu'avec le trésor, depuis le serveur ; ombres, rayons, voiles et flaques s'effacent
+     dans un rayon de 16 m autour d'elle (tresorEvite). Contrôles : outils-tests/twaouh.js et outils-tests/ttresor-secret.js (avec APP_SCRIPTS).
      Pistes pour la suite (non branchées, à valider avec Théo) : titans (cendres) brume grise-orangée épaisse, rayons à travers la fumée, sol cendre/roche ;
      lucioles (Pandora) brume verte basse, rayons entre les arbres, sol mousse/fougère/terre ; egee (Odyssée) brume marine, rides sur le sable, sol sable/galets ;
      chateau (magie) brume bleutée légère, sol herbe/pavés/fleurs ; solstice (anneau) brume dorée, sol prairie/chemins. */
+  const RAYONS_GRIS = .45, RAYONS_SOLEIL = 1.3;   // v20.62 : force des rayons waouh sous la pluie / la tempête (atténués, jamais éteints) et au grand soleil
   const SOL = -1, SOL_PISTE = -2;   // SOL_PISTE : une piste de terre ne prend que le grain et les rides (pas les zones)
   // SOL : « couleur lumineuse » des surfaces de sol : le shader y peint les zones de la recette (sans recette : rendu identique, e = max(-1, 0) = 0)
   const WAOUH = {
     // janvier · Dune : brume de sable chaude au loin, soleil couchant à travers la poussière, ombres violettes, sable vivant (crêtes, creux, roche, épice)
     dunes: { brume: { col: "#F2A35C", dens: .0026, haut: 20, halo: 1.1 }, ciel: "#8068B0", rebond: "#E58A4E", rim: .5, etalonnage: [.3, .4],
-      rayons: { n: 12, long: 620, larg: [4, 34], force: .16, col: "#FFC67E", evite: [[436, 475, 15]] },   // trésor de janvier (krys dans la mâchoire du squelette)
-      sol: { echelle: 75, haut: 34, creux: ["#8E4E54", .5], cretes: ["#FFE4B0", .55], roche: ["#7E3E2C", .6], taches: ["#D9692A", .45, .8], grain: .24, rides: [.45, .09, .35] } }
+      rayons: { n: 12, long: 620, larg: [4, 34], force: .16, col: "#FFC67E" },
+      sol: { echelle: 75, haut: 34, creux: ["#8E4E54", .5], cretes: ["#FFE4B0", .55], roche: ["#7E3E2C", .6], taches: ["#D9692A", .45, .8], grain: .24, rides: [.45, .09, .35] },
+      horizon: { type: "dunes", col: "#D8925A", haut: 80 } },   // ses ombres de contact sont posées à la main dans decorDunes
+    // 25/11/2026 · la recette étendue à 10 autres circuits (Envers, Odyssée, Chocolaterie, Multivers : en brouillon, voir WAOUH_BROUILLON), chacun avec SA lumière (les ombres de contact et les sols par zones sont calculés tout seuls : ombresAuto, marquerSolsAuto)
+    // février · le Château, de jour : soleil d'après-midi doré sur le lac, voile de brume sur la forêt interdite, prairie piquée de boutons d'or, montagnes d'Écosse au loin
+    chateau: { marque: { y: 90, ny: .8, vert: true }, soleil: ["#FFD08A", .35], brume: { col: "#F2E4C6", dens: .0018, haut: 26, halo: .9 }, ciel: "#A8CCF2", rebond: "#B4C88A", rim: .35, etalonnage: [.21, .27],
+      rayons: { n: 9, long: 560, larg: [4, 28], force: .12, col: "#FFE0A0" },
+      sol: { echelle: 80, haut: 40, creux: ["#4C7E36", .41], cretes: ["#C2D888", .47], roche: ["#8E8A78", .6], taches: ["#F2D86A", .41, .8], grain: .18 },
+      ombres: { force: .59, col: "#183A22" }, nappes: { col: "#DDE6EA", l: [[1010, 120, 170, 7, .34], [1090, 400, 150, 6, .3], [900, -10, 120, 5, .26]] },
+      horizon: { type: "montagnes", col: "#6E8CAC", haut: 170, cime: "#E8EEF6" } },
+    // décembre · l'Atelier du Père Noël : lumière froide bleutée, neige qui scintille, flaques chaudes sous les guirlandes, glaciers au loin
+    garage: { soleil: ["#CFE0FF", .3], brume: { col: "#BCD0F6", dens: .0019, haut: 30, halo: .3 }, ciel: "#9CB8FF", rebond: "#E8F0FF", rim: .25, etalonnage: [.14, .23],
+      sol: { echelle: 60, haut: 30, creux: ["#C2D4F2", .47], cretes: ["#FFFFFF", .54], roche: ["#9AAAC4", .54], taches: ["#DCE8FF", .41, .78], grain: .22 }, paillettes: 1,
+      ombres: { force: .49, col: "#2A3C80" }, flaques: { col: "#FFB45E", r: 10, force: .38, max: 70 },
+      horizon: { type: "glace", col: "#9CB6E2", haut: 190, cime: "#FFFFFF" } },
+    // mars · le goûter des Merveilles : fin d'après-midi rose et dorée, brume de conte, prairie semée de fleurs roses, collines rondes
+    olympe: { marque: { y: 90, ny: .8, vert: true }, soleil: ["#FFD4B0", .25], brume: { col: "#F6D6E6", dens: .0013, haut: 24, halo: .8 }, ciel: "#B4B0F0", rebond: "#E8C8A0", rim: .4, etalonnage: [.31, .23],
+      rayons: { n: 8, long: 520, larg: [4, 26], force: .11, col: "#FFE2C8" },
+      sol: { echelle: 55, haut: 30, creux: ["#6A9A50", .41], cretes: ["#D8E890", .41], roche: ["#A09080", .54], taches: ["#F0A0C8", .43, .8], grain: .15 },
+      ombres: { force: .53, col: "#3A2050" }, horizon: { type: "collines", col: "#8AB47A", haut: 120 } },
+    // avril (et l'Arène de 2028) · l'Anneau : après-midi doré de la Comté, poussière de blé, montagnes bleues et Mordor rougeoyant au loin
+    solstice: { marque: { y: 90, ny: .8, vert: true }, soleil: ["#FFC878", .3], brume: { col: "#F0D0A0", dens: .0021, haut: 22, halo: 1 }, ciel: "#90A8D8", rebond: "#C8B070", rim: .45, etalonnage: [.28, .3],
+      rayons: { n: 10, long: 600, larg: [4, 30], force: .15, col: "#FFD490" },
+      sol: { echelle: 70, haut: 30, creux: ["#5E8A3E", .41], cretes: ["#C8D27A", .47], roche: ["#8A8070", .6], taches: ["#E8C860", .41, .79], grain: .2 },
+      ombres: { force: .56, col: "#2A2A14" }, horizon: { type: "montagnes", col: "#6A7A90", haut: 160, cime: "#C8B8B0" } },
+    // mai · Pandora en plein jour : air turquoise, brume verte basse, rayons entre les arbres, mousse qui luit, montagnes flottantes
+    lucioles: { marque: { y: 90, ny: .8, vert: true }, soleil: ["#E8FFE0", .2], brume: { col: "#B8F0D8", dens: .0026, haut: 18, halo: .8 }, ciel: "#80D0F0", rebond: "#60C890", rim: .5, etalonnage: [.39, .23],
+      rayons: { n: 12, long: 560, larg: [3, 24], force: .16, col: "#D8FFD0" },
+      sol: { echelle: 60, haut: 30, creux: ["#2E6A48", .47], cretes: ["#8AD078", .41], roche: ["#5A6A60", .54], taches: ["#40E0D0", .41, .8], grain: .2 },
+      ombres: { force: .53, col: "#0A2A30" }, horizon: { type: "pics", col: "#5A9A9A", haut: 240, cime: "#8ED0A8" } },
+    // juin · les Étoiles : nuit froide d'acier, brume bleue de réacteur, contre-jour bleuté, flaques de lumière froide sous les projecteurs, la surface de la station jusqu'à l'horizon
+    station: { brume: { col: "#2A3A62", dens: .0014, haut: 40, halo: 0 }, ciel: "#4060A0", rebond: "#203050", rim: .5, etalonnage: [.21, .3],
+      sol: { echelle: 40, haut: 20, creux: ["#1C212C", .41], cretes: ["#3A4252", .41], roche: ["#2A2E38", .41], taches: ["#3050A0", .34, .82], grain: .3 },
+      ombres: { force: .53, col: "#000008" }, flaques: { col: "#7AB4FF", r: 9, force: .3, max: 80 }, horizon: { type: "ville", col: "#2C3448", haut: 90 } },
+    // juillet · le Petit Chef : nuit de Paris dorée, poussière de farine dans les rayons, flaques chaudes sous les lampes, toits de Paris au loin
+    petitchef: { soleil: ["#FFD8A0", .2], brume: { col: "#C08860", dens: .0019, haut: 26, halo: .5 }, ciel: "#3A4A90", rebond: "#A06040", rim: .45, etalonnage: [.28, .23],
+      rayons: { n: 6, long: 420, larg: [3, 18], force: .1, col: "#FFD8A0", nuit: true },
+      sol: { echelle: 50, haut: 25, creux: ["#34323E", .27], taches: ["#6A5A40", .30, .8], grain: .22 },
+      ombres: { force: .53, col: "#100810" }, flaques: { col: "#FFC070", r: 8, force: .28, max: 60 }, horizon: { type: "ville", col: "#2C2C4A", haut: 70 } },
+    // novembre · le Mur des titans : couchant à travers les cendres, rayons dans la fumée, sol de cendre, les Murs à l'horizon
+    titans: { soleil: ["#FFB070", .25], brume: { col: "#C8907A", dens: .003, haut: 26, halo: 1.1 }, ciel: "#806070", rebond: "#A06048", rim: .55, etalonnage: [.21, .45],
+      rayons: { n: 10, long: 620, larg: [5, 36], force: .16, col: "#FFB880" },
+      sol: { echelle: 70, haut: 30, creux: ["#4A3A40", .41], cretes: ["#A08878", .41], roche: ["#5A4440", .6], taches: ["#8A8078", .47, .76], grain: .3 },
+      ombres: { force: .56, col: "#1A0808" }, horizon: { type: "mur", col: "#6A5A58", haut: 150 } },
+    // le plateau de jeu (Monaco, hors saison) : nuit de salle de jeux, flaques chaudes sous les lampes
+    plateau: { brume: { col: "#3A3060", dens: .0013, haut: 30, halo: 0 }, ciel: "#5060A0", rebond: "#604830", rim: .4, etalonnage: [.21, .23],
+      sol: { echelle: 50, haut: 25, taches: ["#D8C8A0", .27, .8], grain: .15 },
+      ombres: { force: .53, col: "#100818" }, flaques: { col: "#FFD080", r: 7, force: .25, max: 40 }, horizon: { type: "ville", col: "#3A3452", haut: 60 } }
   };
+  /** BROUILLONS (25/11/2026) : réglages commencés mais NON appliqués (à finir) : au premier essai, ils assombrissaient la course (Envers, Multivers)
+      ou la délavaient (Odyssée : piste et mer grisées ; Chocolaterie : contraste divisé par 1,4). Gardés ici pour ne pas repartir de zéro :
+      pour en reprendre un, le retoucher puis le déplacer dans WAOUH (captures avant / après, twaouh, ttresor-secret). */
+  const WAOUH_BROUILLON = {
+    // août · le Monde à l'envers : nuit rouge d'orage, brume sang, lueurs rouges au sol sous les lampes, sol de cendre veiné de rouge, forêt morte à l'horizon
+    envers: { brume: { col: "#5A1828", dens: .0022, haut: 30, halo: 0 }, ciel: "#3A2040", rebond: "#601020", rim: .5, etalonnage: [.14, .38],
+      sol: { echelle: 50, haut: 25, creux: ["#26222C", .41], cretes: ["#4A3A44", .41], roche: ["#3A3036", .54], taches: ["#6A1A2A", .41, .8], grain: .3 },
+      ombres: { force: .53, col: "#0A0008" }, flaques: { col: "#FF4040", r: 9, force: .3, max: 80 }, horizon: { type: "foret", col: "#2A1A26", haut: 70 } },
+    // septembre · l'Odyssée : aube marine, brume de mer, vagues qui ondulent, îles bleutées au large
+    egee: { soleil: ["#FFD8A8", .25], brume: { col: "#DCE6EC", dens: .0012, haut: 20, halo: 1 }, ciel: "#88B0E8", rebond: "#60A8C0", rim: .45, etalonnage: [.28, .3],
+      rayons: { n: 9, long: 560, larg: [4, 28], force: .12, col: "#FFE4B8" },
+      sol: { echelle: 50, haut: 20, creux: ["#1A6A88", .41], cretes: ["#4AA0B8", .41], roche: ["#8A8070", .41], taches: ["#2A90A8", .41, .78], grain: .15, rides: [.3, .06, .8] },
+      ombres: { force: .44, col: "#0A2A40" }, horizon: { type: "iles", col: "#7A9AAE", haut: 110 } },
+    // octobre · la Chocolaterie : lumière dorée de la verrière en rayons, air sucré, pelouse de sucre semée de bonbons roses, collines de chocolat
+    chocolaterie: { marque: { y: 90, ny: .8, vert: true }, soleil: ["#FFE0B0", .25], brume: { col: "#F0D8C0", dens: .0018, haut: 30, halo: .6 }, ciel: "#E8C8A0", rebond: "#C08860", rim: .35, etalonnage: [.31, .23],
+      rayons: { n: 10, long: 520, larg: [4, 26], force: .15, col: "#FFE8C0" },
+      sol: { echelle: 50, haut: 25, creux: ["#7CC060", .41], cretes: ["#C8F0A0", .41], roche: ["#8A5A3A", .54], taches: ["#FF9AC8", .41, .8], grain: .15 },
+      ombres: { force: .49, col: "#3A1808" }, horizon: { type: "collines", col: "#7A4A2A", haut: 130 } },
+    // décembre 2027 · le Multivers : nuit violette, rais de lumière orange des portails, flaques orangées sous les lumières, ruines de villes à l'horizon
+    multivers: { brume: { col: "#5A2A7A", dens: .0019, haut: 30, halo: .4 }, ciel: "#6A4AC0", rebond: "#C86030", rim: .55, etalonnage: [.35, .3],
+      rayons: { n: 8, long: 500, larg: [3, 22], force: .12, col: "#FF9A50", nuit: true },
+      sol: { echelle: 50, haut: 25, creux: ["#2A1A4A", .34], taches: ["#FF7A2A", .27, .84], grain: .25 },
+      ombres: { force: .53, col: "#0A0418" }, flaques: { col: "#FF9A4A", r: 9, force: .28, max: 60 }, horizon: { type: "ville", col: "#3A2852", haut: 100 } }
+  };
+  void WAOUH_BROUILLON;
+  /* Habillage automatique (25/11/2026), appelé une fois par construire pour chaque décor qui a une ligne WAOUH :
+       ombres   : { force, col, min, plein }  ombres de contact calculées d'après le décor lui-même (ombresAuto) ; jamais sur la piste
+       nappes   : { col, l: [[x, z, rayon, hauteur, force]] }  nappes de brume posées au ras du sol (forêt, marais…)
+       flaques  : { col, r, force, max }  flaques de lumière chaude sur le sol sous les lampes et guirlandes du décor (additives)
+       paillettes : force                 la neige (ou le sucre) scintille de près (fixe si « réduire les animations »)
+       soleil   : [couleur, part]         teinte du soleil (doré, froid…), à luminosité égale : n'assombrit jamais
+       horizon  : { type, col, haut, cime }  le DÉCOR LOINTAIN : le sol se prolonge jusqu'à l'horizon et deux anneaux de silhouettes
+                                            (montagnes, pics, glace, collines, dunes, forêt, ville, mur, îles) se fondent dans la brume
+       Les grands sols plats du décor sur mesure (pelouses, places, planchers) sont marqués SOL tout seuls (marquerSolsAuto ; marque: false pour l'éviter). */
+  function habillerWaouh(W, T, A, sol, piste, voile, lueur, lum, eau) {
+    const LG = leger();
+    if (W.marque !== false && W.sol) marquerSolsAuto(sol, W.marque);
+    const F = W.ombres || W.flaques ? solGrille(sol, piste, T, LG) : null;
+    if (W.ombres) ombresAuto(voile, F, A, W.ombres);
+    if (W.flaques) lum.slice(0, W.flaques.max || 60).forEach(l => { if (l[1] > 40) return; const y = F.sol(l[0], l[2]) + .3, r = W.flaques.r * clamp(l[6] / 13, .6, 1.6);
+      lueur.ombre(l[0], y, l[2], r, r, W.flaques.force, 0, hex(W.flaques.col)); });
+    if (W.nappes) W.nappes.l.forEach(([x, z, r, h, f]) => [.3, .65, 1].forEach((k, i) => voile.ombre(x + i * 9, h * k, z - i * 7, r * (1 - i * .12), r * (.8 - i * .1), f / 2.4, i * .5, hex(W.nappes.col))));
+    [sol, sol.o, eau].forEach(g => { if (g) affiner(g, 150); });   // la brume se calcule par sommet : plus de grand triangle de sol (le plan du sol en fait 2 000)
+    if (W.horizon) horizonLointain(sol, T, A, W.horizon, W.brume ? hex(W.brume.col) : A.brouillard, LG);   // au loin, la brume est déjà presque pleine : grands triangles permis
+  }
+  /** recoupe les GRANDS triangles de sol (presque à plat, bas, de plus de L × L / 2 m²) en coupant leur plus long côté en deux, jusqu'à ce qu'aucun côté
+      ne dépasse L : même dessin, sommets plus serrés (les longues bandes fines, déjà serrées en travers, restent telles quelles) */
+  function affiner(g, L) {
+    const d = g.d, out = [], L2 = L * L;
+    const aire = v => { const ux = v[10] - v[0], uz = v[12] - v[2], wx = v[20] - v[0], wz = v[22] - v[2]; return Math.abs(ux * wz - uz * wx) / 2; };
+    const coupe = (v, n) => { const e = (a, b) => (v[a * 10] - v[b * 10]) ** 2 + (v[a * 10 + 1] - v[b * 10 + 1]) ** 2 + (v[a * 10 + 2] - v[b * 10 + 2]) ** 2, E = [e(0, 1), e(1, 2), e(2, 0)], m = Math.max(...E);
+      if (n > 12 || !(m > L2)) { for (let i = 0; i < 30; i++) out.push(v[i]); return; }
+      const k = E.indexOf(m), a = k, b = (k + 1) % 3, c = (k + 2) % 3, S = j => v.slice(j * 10, j * 10 + 10), M = S(a).map((x, i) => (x + v[b * 10 + i]) / 2);
+      coupe(S(a).concat(M, S(c)), n + 1); coupe(M.concat(S(b), S(c)), n + 1); };
+    let grand = false; for (let k = 0; k < d.length && !grand; k += 30) if (aire(d.slice(k, k + 30)) > L2 / 2) grand = true;
+    if (!grand) return;
+    for (let k = 0; k < d.length; k += 30) { const v = d.slice(k, k + 30); if (Math.abs(v[4]) > .7 && Math.max(v[1], v[11], v[21]) < 20 && aire(v) > L2 / 2) coupe(v, 0); else for (let i = 0; i < 30; i++) out.push(v[i]); }
+    g.d = out;
+  }
+  /** les grands sols plats et bas du décor sur mesure (pelouses, places, planchers : non lumineux, presque horizontaux, à moins de 3 m) deviennent du SOL ;
+      l'eau dessinée à plat (bleue) est laissée telle quelle */
+  function marquerSolsAuto(g, M) { const ym = M && M.y || 3, nm = M && M.ny || .97, vert = M && M.vert;   // marque: { y, ny, vert } : prairies en relief (seulement le vert : ni toits, ni pierre)
+    [g.d, g.o ? g.o.d : null].forEach(d => { if (!d) return; for (let i = 0; i < d.length; i += 30) {
+    if (d[i + 9] !== 0 || d[i + 4] < nm || d[i + 1] > ym || d[i + 11] > ym || d[i + 21] > ym) continue; const r = d[i + 6], gg = d[i + 7], b = d[i + 8]; if (b > r + .08 && b > gg) continue;
+    if (vert && !(gg > r * 1.08 && gg > b * 1.1) && (d[i + 1] > 3 || d[i + 11] > 3 || d[i + 21] > 3)) continue;
+    d[i + 9] = d[i + 19] = d[i + 29] = SOL; } }); }
+  /** le décor « vu d'en haut » sur une grille (11 m, 16 en mode léger) : hauteur du sol et du plus haut objet de chaque case, cases de la piste */
+  function solGrille(sol, piste, T, LG) {
+    const c = LG ? 16 : 11, X0 = T.cx - T.rx - 520, Z0 = T.cz - T.rz - 520, NX = Math.ceil((2 * T.rx + 1040) / c), NZ = Math.ceil((2 * T.rz + 1040) / c), NN = NX * NZ;
+    const haut = new Float32Array(NN).fill(-1e9), bas = new Float32Array(NN).fill(1e9), pis = new Uint8Array(NN);
+    const cell = (x, z) => { const i = Math.floor((x - X0) / c), j = Math.floor((z - Z0) / c); return i < 0 || j < 0 || i >= NX || j >= NZ ? -1 : j * NX + i; };
+    const ras = (d, f) => { for (let k = 0; k < d.length; k += 30) { const ax = d[k], az = d[k + 2], bx = d[k + 10], bz = d[k + 12], qx = d[k + 20], qz = d[k + 22];
+      const L = Math.max(Math.abs(bx - ax), Math.abs(bz - az), Math.abs(qx - ax), Math.abs(qz - az), Math.abs(qx - bx), Math.abs(qz - bz)); if (L > 400) continue;   // le grand plan du sol : déjà à 0
+      const n = Math.max(1, Math.ceil(L / (c * .8)));
+      for (let a = 0; a <= n; a++) for (let b = 0; a + b <= n; b++) { const u = a / n, v = b / n, w = 1 - u - v, q = cell(ax * w + bx * u + qx * v, az * w + bz * u + qz * v); if (q >= 0) f(q, d[k + 1] * w + d[k + 11] * u + d[k + 21] * v); } } };
+    [sol.d, sol.o ? sol.o.d : []].forEach(d => ras(d, (q, y) => { if (y > haut[q]) haut[q] = y; if (y < bas[q]) bas[q] = y; }));
+    ras(piste.d, q => { pis[q] = 1; });
+    const fond = new Float32Array(NN); for (let q = 0; q < NN; q++) fond[q] = bas[q] > 1e8 ? 0 : Math.max(0, bas[q]);
+    return { c, X0, Z0, NX, NZ, haut, fond, pis, cell, sol: (x, z) => { const q = cell(x, z); return q < 0 ? 0 : fond[q]; } };
+  }
+  /** OMBRES DE CONTACT automatiques : chaque case où le décor monte haut fait une ombre douce au sol, étirée à l'opposé du soleil, puis floutée ;
+      les petits objets isolés (lampadaires) s'effacent au flou ; jamais sur la piste (elle reste nette, les pastilles lisibles) */
+  function ombresAuto(voile, F, A, O) {
+    const { c, X0, Z0, NX, NZ, haut, fond, pis } = F, NN = NX * NZ, min = O.min || 5, plein = O.plein || 14, S = new Float32Array(NN);
+    const s = norme(A.soleil || [.5, .6, .4]), hz = Math.hypot(s[0], s[2]) || 1, dx = -s[0] / hz, dz = -s[2] / hz, lg = Math.min(2.5, hz / Math.max(.15, s[1]));
+    for (let j = 1; j < NZ - 1; j++) for (let i = 1; i < NX - 1; i++) { const q = j * NX + i; if (haut[q] < -1e8) continue;
+      let f = 1e9; for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) f = Math.min(f, fond[q + b * NX + a]);
+      const h = haut[q] - f, oc = clamp((h - min) / plein, 0, 1); if (oc <= 0) continue;
+      const ns = Math.min(5, Math.round(h * lg * .5 / c));
+      for (let k = 0; k <= ns; k++) { const ii = Math.round(i + dx * k), jj = Math.round(j + dz * k); if (ii < 0 || jj < 0 || ii >= NX || jj >= NZ) break; const qq = jj * NX + ii, v = oc * (1 - .5 * k / (ns + 1)); if (v > S[qq]) S[qq] = v; } }
+    const flou = (X) => { const Y = new Float32Array(NN); for (let j = 1; j < NZ - 1; j++) for (let i = 1; i < NX - 1; i++) { const q = j * NX + i; let t = 0; for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) t += X[q + b * NX + a]; Y[q] = t / 9; } return Y; };
+    const P = flou(flou(S)), col = hex(O.col || "#101018"), k = O.force || .3;
+    for (let q = 0; q < NN; q++) { if (!P[q]) continue; const i = q % NX, j = (q - i) / NX; let m = 0; for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) { const qq = q + b * NX + a; if (qq >= 0 && qq < NN && pis[qq]) m = 1; } if (m) P[q] = 0; }
+    // chaque coin se pose sur le sol le plus bas des 4 cases voisines ; là où le sol saute de plus de 2,5 m (sous un objet, au bord d'un talus), l'ombre s'efface :
+    // jamais de « rideau » d'ombre dressé à la verticale
+    const coin = (i, j) => { let v = 0, y = 1e9, y2 = -1e9; for (let b = -1; b <= 0; b++) for (let a = -1; a <= 0; a++) { const ii = clamp(i + a, 0, NX - 1), jj = clamp(j + b, 0, NZ - 1), q = jj * NX + ii; v += P[q] / 4; y = Math.min(y, fond[q]); y2 = Math.max(y2, fond[q]); }
+      return [[X0 + i * c, y + .2, Z0 + j * c], [col[0], col[1], col[2], y2 - y > 2.5 ? 0 : Math.min(1, v * k * 1.6)]]; };
+    for (let j = 1; j < NZ; j++) for (let i = 1; i < NX; i++) { const q = (j - 1) * NX + (i - 1); if (P[q] < .01 && P[Math.min(NN - 1, q + 1)] < .01 && P[Math.min(NN - 1, q + NX)] < .01) continue;
+      const A0 = coin(i - 1, j - 1), B0 = coin(i, j - 1), C0 = coin(i, j), D0 = coin(i - 1, j); if (A0[1][3] + B0[1][3] + C0[1][3] + D0[1][3] < .04) continue;
+      if (Math.max(A0[0][1], B0[0][1], C0[0][1], D0[0][1]) - Math.min(A0[0][1], B0[0][1], C0[0][1], D0[0][1]) > 2.5) continue;
+      voile.quad(A0[0], B0[0], C0[0], D0[0], A0[1], B0[1], C0[1], D0[1]); }
+  }
+  /** DÉCOR LOINTAIN : le sol se prolonge en anneau jusqu'à l'horizon, puis deux couronnes de silhouettes (proche et lointaine) qui se fondent dans la brume :
+      aucune vue (Visite comprise, caméra inclinée) ne montre plus le bord du monde. Quelques centaines de triangles. */
+  function horizonLointain(sol, T, A, H, brume, LG) {
+    const ext = Math.max(T.rx, T.rz) * 3.2 + 600, cx = T.cx, cz = T.cz, n = LG ? 32 : 48, col = hex(H.col), voile = mel(A.brouillard, brume, .5), up = [0, 1, 0];
+    // la jupe : de l'intérieur du grand plan jusqu'à 3 400 m, un peu plus bas que lui (il garde la main là où ils se chevauchent)
+    const RR = [ext * .9, ext * 1.15, ext * 1.5, ext + 1700], CC = RR.map((r, i) => mel(A.sol, voile, [0, .15, .35, .55][i]));
+    for (let k = 0; k < n; k++) for (let m = 0; m < 3; m++) { const a0 = k / n * TAU, a1 = (k + 1) / n * TAU, P = (a, r) => [cx + Math.cos(a) * r, -.6, cz + Math.sin(a) * r], r0 = RR[m], r1 = RR[m + 1];
+      triLisse(sol, P(a0, r0), P(a1, r0), P(a1, r1), up, up, up, CC[m], CC[m], CC[m + 1]); triLisse(sol, P(a0, r0), P(a1, r1), P(a0, r1), up, up, up, CC[m], CC[m + 1], CC[m + 1]); }
+    const ty = H.type, h0 = H.haut || 120, cime = H.cime ? hex(H.cime) : null;
+    const prof = (t, k) => { const S = (f, p) => Math.sin(t * f + p + k * 1.7);
+      if (ty === "montagnes" || ty === "glace" || ty === "pics") { const v = .5 + .25 * S(3, 1) + .15 * S(7, 2) + .1 * S(17, .5) + (ty === "montagnes" ? 0 : .08 * S(23, 3)); return Math.pow(clamp(v, 0, 1), ty === "pics" ? 2.2 : 1.5) * 1.3 + .08; }
+      if (ty === "collines") return .3 + .25 * (S(4, 0) + 1) / 2 + .2 * (S(9, 1) + 1) / 2;
+      if (ty === "dunes") return .25 + .35 * Math.pow(Math.abs(S(5, 0)), .7) + .15 * (S(11, 2) + 1) / 2;
+      if (ty === "foret") return .35 + .1 * S(5, 0) + (Math.round(t * 120) % 2 ? .25 : 0);
+      if (ty === "ville") { const b = Math.floor(t * 40 / TAU * 6); return .25 + .6 * ((Math.sin(b * 12.9898 + k * 7) * 43758.5453) % 1 + 1) % 1 * (.6 + .4 * (S(2, 0) + 1) / 2); }
+      if (ty === "mur") return .85 + (Math.floor(t * 90) % 2 ? .06 : 0);
+      if (ty === "iles") return Math.max(.02, Math.pow(Math.max(0, S(3, .4) * .6 + S(7, 1) * .4), 3) * 1.1);
+      return .5; };
+    [[1.03, 1, .25, LG ? 120 : 180], [1.5, 1.8, .55, LG ? 80 : 120]].forEach(([kr, kh, kf, N], k) => {
+      const R = ext * kr, c1 = mel(col, voile, kf), c0 = mel(col, voile, Math.min(1, kf + .35)), ct = cime ? mel(cime, voile, kf) : c1;
+      for (let i = 0; i < N; i++) { const a0 = i / N * TAU, a1 = (i + 1) / N * TAU, h1 = prof(a0, k) * h0 * kh, h2 = prof(a1, k) * h0 * kh;
+        const pente = ty === "ville" || ty === "mur" || ty === "foret" ? .15 : 1.4;   // relief : versants inclinés vers le dehors (vus d'en haut, des pentes et non des murs)
+        const B = (a) => [cx + Math.cos(a) * R, -6, cz + Math.sin(a) * R], Hp = (a, h) => [cx + Math.cos(a) * (R + h * pente), h, cz + Math.sin(a) * (R + h * pente)], nA = [-Math.cos(a0), pente * .6 + .1, -Math.sin(a0)], nB = [-Math.cos(a1), pente * .6 + .1, -Math.sin(a1)];
+        const t1 = cime && h1 > h0 * kh * .75 ? ct : c1, t2 = cime && h2 > h0 * kh * .75 ? ct : c1;
+        triLisse(sol, B(a0), B(a1), Hp(a1, h2), nA, nB, nB, c0, c0, t2, .45); triLisse(sol, B(a0), Hp(a1, h2), Hp(a0, h1), nA, nB, nA, c0, t2, t1, .45); } });
+  }
+  /** triangle aux normales et couleurs PAR SOMMET (surfaces lisses : le shader interpole, plus de facettes) */
+  function triLisse(g, a, b, c, na, nb, nc, ca, cb, cc, e) { [[a, na, ca], [b, nb, cb], [c, nc, cc]].forEach(([p, q, k]) => g.d.push(p[0], p[1], p[2], q[0], q[1], q[2], k[0], k[1], k[2], e || 0)); }
+  /** grille de sol LISSE : H[j][i] = hauteurs aux sommets, P(i, j) → [x, z] ; normale de chaque sommet par différences centrées, couleur col(normale)
+      calculée au sommet (dégradés doux au lieu d'aplats par facette) ; les cases toutes à plat (h < .05) sont sautées. Même nombre de triangles qu'avant. */
+  function grilleLisse(g, H, P, col, e) {
+    const NJ = H.length - 1, NI = H[0].length - 1, V = [];
+    for (let j = 0; j <= NJ; j++) { const L = []; for (let i = 0; i <= NI; i++) { const [x, z] = P(i, j); L.push([x, H[j][i], z]); } V.push(L); }
+    const N = [], C = [];
+    for (let j = 0; j <= NJ; j++) { N.push([]); C.push([]); for (let i = 0; i <= NI; i++) {
+      const di = sous(V[j][Math.min(NI, i + 1)], V[j][Math.max(0, i - 1)]), dj = sous(V[Math.min(NJ, j + 1)][i], V[Math.max(0, j - 1)][i]);
+      let q = norme(croix(dj, di)); if (q[1] < 0) q = fois(q, -1); N[j].push(q); C[j].push(col(q, V[j][i])); } }
+    for (let j = 0; j < NJ; j++) for (let i = 0; i < NI; i++) { if (H[j][i] < .05 && H[j][i + 1] < .05 && H[j + 1][i + 1] < .05 && H[j + 1][i] < .05) continue;
+      triLisse(g, V[j][i], V[j][i + 1], V[j + 1][i + 1], N[j][i], N[j][i + 1], N[j + 1][i + 1], C[j][i], C[j][i + 1], C[j + 1][i + 1], e);
+      triLisse(g, V[j][i], V[j + 1][i + 1], V[j + 1][i], N[j][i], N[j + 1][i + 1], N[j + 1][i], C[j][i], C[j + 1][i + 1], C[j + 1][i], e); }
+  }
+  /** le trésor du mois : l'appli ne connaît sa cachette qu'à partir du 1er du mois (js/4-grandprix.js, tresorDuCircuit). Dès qu'il est là, ombres, rayons, nappes
+      et flaques de la recette s'effacent dans un rayon de 16 m autour de lui (la position n'est JAMAIS écrite dans ce fichier public) */
+  function tresorEvite(circuit) { try { const t = typeof window.tresorDuCircuit === "function" ? window.tresorDuCircuit(circuit) : null; return t && t.p ? [t.p[0], t.p[2], 16, 1] : null; } catch (e) { return null; } }
   /** marque une géométrie (ou ses sommets à partir de i0) comme du sol : le shader y peindra les zones de la recette */
   function marquerSol(g, i0) { for (let i = (i0 || 0) + 9; i < g.d.length; i += 10) g.d[i] = SOL; }
   /** objets transparents ou additifs du décor : position + couleur rgba par sommet (7 nombres, comme les effets des voitures) */
@@ -12206,13 +12469,17 @@
   /** réglages de la recette pour cette course : météo (tempête, pluie, nuit) et mode léger ; null = pas de recette (rendu d'avant) */
   function recetteWaouh(def, A, LGR) {
     const W = def.waouh || WAOUH[def.decor]; if (!W) return null;
+    // v20.62 (Théo) · la météo ne touche plus à la lumière : brume, ciel, contre-jour et étalonnage restent ceux du beau temps ;
+    // seuls les rayons changent : atténués (jamais éteints) sous la pluie ou dans la tempête, un peu plus présents au grand soleil (A.dore)
     const nuit = A.nuit > .5, gris = !!(A.pluie || A.sable), R = { W };
-    if (W.brume) { const b = W.brume; R.brume = [...(A.sable ? mel(hex(b.col), A.brouillard, .6) : A.pluie ? mel(hex(b.col), A.brouillard, .7) : hex(b.col)), b.dens * (A.sable ? 2.2 + A.sable : gris ? 1.6 : 1)];
-      R.brumeK = 1 / (b.haut || 30); R.halo = (b.halo || 0) * (gris ? .25 : nuit ? .3 : 1); }
-    if (W.ciel) R.ciel = mel(hex(W.ciel), A.haut, gris ? .6 : .15); if (W.rebond) R.rebond = mel(hex(W.rebond), A.sol, gris ? .6 : .1);
-    R.rim = (W.rim || 0) * (gris ? .2 : nuit ? .4 : 1);
-    if (W.etalonnage) R.grade = [W.etalonnage[0] * (gris ? .3 : 1), W.etalonnage[1] * (gris ? .5 : 1)];
-    R.rayons = W.rayons && !nuit && !gris ? W.rayons.force * (LGR ? .85 : 1) : 0;
+    if (W.brume) { const b = W.brume; R.brume = [...hex(b.col), b.dens];
+      R.brumeK = 1 / (b.haut || 30); R.halo = (b.halo || 0) * (nuit ? .3 : 1); }
+    if (W.ciel) R.ciel = mel(hex(W.ciel), A.haut, .15); if (W.rebond) R.rebond = mel(hex(W.rebond), A.sol, .1);
+    R.rim = (W.rim || 0) * (nuit ? .4 : 1);
+    if (W.etalonnage) R.grade = [W.etalonnage[0], W.etalonnage[1]];
+    R.rayons = W.rayons && (!nuit || W.rayons.nuit) ? W.rayons.force * (LGR ? .85 : 1) * (gris ? RAYONS_GRIS : A.dore ? RAYONS_SOLEIL : 1) : 0;   // météo légère (v20.62) : atténués, jamais éteints ; rayons.nuit : rais de lumière gardés la nuit (lampes, portails)
+    if (W.soleil && !gris) { const lu = c => c[0] * .299 + c[1] * .587 + c[2] * .114, t = hex(W.soleil[0]), L0 = lu(A.sCol); A.sCol = mel(A.sCol, fois(t, L0 / Math.max(.05, lu(t))), W.soleil[1]); }   // teinte du soleil, à luminosité égale
+    R.pai = W.paillettes ? W.paillettes * (gris ? .4 : 1) : 0;
     if (W.sol) { const s = W.sol, z = x => x ? [...hex(x[0]), x[1]] : [0, 0, 0, 0]; const ri = s.rides || [0, 0, 0];
       R.sol = { A: z(s.creux), B: z(s.cretes), C: z(s.roche), D: z(s.taches), P: [s.echelle || 70, s.haut || 30, s.taches ? s.taches[2] : 2, s.grain || 0], R: [ri[0], LGR ? 0 : ri[1], Math.cos(ri[2]), Math.sin(ri[2])] }; }   // mode léger : pas de rides
     return R;
@@ -12223,7 +12490,7 @@
     "float m=abs(dy)>.5?(exp(-k*yc)-exp(-k*yp))/(k*dy):exp(-k*yp);return clamp(1.-exp(-uBrH.a*length(w-c)*m),0.,1.);}";
   /** GLSL : sols par zones. Le bruit vient d'une petite texture calculée une fois (texBruit) : 2 lectures par pixel, bien moins cher qu'un bruit calculé
       (r = grandes taches, g = taches étirées par le vent, b = grain fin, a = déformation des rides) ; les mipmaps évitent le scintillement au loin. */
-  const GL_SOL = "uniform vec4 uSolA;uniform vec4 uSolB;uniform vec4 uSolC;uniform vec4 uSolD;uniform vec4 uSolP;uniform vec4 uSolR;uniform sampler2D uBruit;" +
+  const GL_SOL = "uniform vec4 uSolA;uniform vec4 uSolB;uniform vec4 uSolC;uniform vec4 uSolD;uniform vec4 uSolP;uniform vec4 uSolR;uniform vec2 uSolE;uniform sampler2D uBruit;" +
     "vec3 sol(vec3 c,vec3 w,vec3 n,float z){vec4 N=texture2D(uBruit,w.xz/(uSolP.x*6.));float g=N.r,pe=clamp((1.-n.y)*2.6,0.,1.),dc=length(w-uCam);" +
     "if(z>0.){float h=clamp(w.y/uSolP.y,0.,1.);" +
     "c=mix(c,uSolA.rgb,uSolA.a*(1.-smoothstep(.04,.5,h))*smoothstep(.38,.72,g));" +
@@ -12232,7 +12499,9 @@
     "c=mix(c,uSolD.rgb,uSolD.a*smoothstep(uSolP.z,uSolP.z+.1,N.g)*(1.-pe));}" +
     "float f=texture2D(uBruit,w.xz*.0061).b;" +
     "if(uSolR.y>0.&&dc<240.)c*=1.+uSolR.y*sin(dot(w.xz,uSolR.zw)*uSolR.x*6.2832+N.a*30.)*(1.-pe)*(.55+.45*z)*(1.-smoothstep(50.,240.,dc));" +
-    "return c*(1.-uSolP.w*.5+uSolP.w*f);}";
+    "c*=1.-uSolP.w*.5+uSolP.w*f;" +
+    "if(uSolE.x>0.&&dc<160.){vec2 q=floor(w.xz*2.5);float hs=fract(sin(dot(q,vec2(12.9898,78.233)))*43758.5453);c+=uSolE.x*step(.986,hs)*(.55+.45*sin(uT*uSolE.y+hs*90.))*(1.-smoothstep(50.,160.,dc))*(1.-pe);}" +   // paillettes : la neige scintille de près
+    "return c;}";
   /** texture de bruit répétable 128 × 128 (valeur lissée, plusieurs octaves), calculée une fois par contexte WebGL */
   function texBruit(gl) {
     const N = 128, D = new Uint8Array(N * N * 4), r = alea(9157);
@@ -12249,36 +12518,43 @@
   }
 
   /* ---------- WebGL ---------- */
+  /** recette waouh : la brume (profondeur + au ras du sol + halo du soleil) est calculée PAR SOMMET puis interpolée : bien moins cher par pixel
+      (les grands sols sont découpés finement, voir affiner) ; uniformes propres au sommet (…V) pour ne jamais en partager un avec le pixel */
+  const VS_W = "attribute vec3 aP;attribute vec3 aN;attribute vec4 aC;uniform mat4 uPV;uniform mat4 uM;uniform vec3 uCamV;uniform vec3 uSunV;uniform vec3 uSunCV;uniform vec3 uFogV;uniform float uDensV;uniform float uHaloV;" +
+    "varying vec3 vN;varying vec4 vC;varying vec3 vW;varying vec4 vFo;varying vec4 vBr;" + GL_BRUME +
+    "void main(){vec4 w=uM*vec4(aP,1.);vW=w.xyz;vN=(uM*vec4(aN,0.)).xyz;vC=aC;vFo=vec4(uFogV,clamp(1.-exp(-length(vW-uCamV)*uDensV),0.,1.));" +
+    "vec3 v=normalize(uCamV-vW);vBr=vec4(uBrH.rgb+uSunCV*uHaloV*pow(max(dot(-v,uSunV),0.),5.),brumeH(vW,uCamV));gl_Position=uPV*w;}";
   const VS = "attribute vec3 aP;attribute vec3 aN;attribute vec4 aC;uniform mat4 uPV;uniform mat4 uM;varying vec3 vN;varying vec4 vC;varying vec3 vW;void main(){vec4 w=uM*vec4(aP,1.);vW=w.xyz;vN=(uM*vec4(aN,0.)).xyz;vC=aC;gl_Position=uPV*w;}";
   /** shader de la scène : w = variante « recette waouh » (sols par zones, brume au ras du sol, contre-jour, étalonnage). Sans w : exactement le shader d'avant,
       pour que les autres circuits ne paient rien (le programme waouh n'est compilé que s'il sert, voir programmeWaouh). */
   const fsScene = w => "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nvarying vec3 vN;varying vec4 vC;varying vec3 vW;uniform vec3 uSun;uniform vec3 uSunC;uniform vec3 uSky;uniform vec3 uGnd;uniform float uAmb;uniform vec3 uFog;uniform float uDens;uniform vec3 uCam;uniform float uSpec;uniform float uFlash;uniform vec4 uTint;uniform float uT;uniform float uEau;" +
-    (w ? "uniform float uRim;uniform float uHalo;uniform vec2 uGrade;" + GL_BRUME + GL_SOL : "") +
+    (w ? "uniform float uRim;uniform vec2 uGrade;varying vec4 vFo;varying vec4 vBr;" + GL_SOL : "") +
     "void main(){vec3 n=normalize(vN);if(uEau>0.){n=normalize(n+vec3(sin(vW.x*.15+uT*1.3)*.06,0.,cos(vW.z*.13+uT*1.1)*.06));}" +
     "float d=dot(n,uSun);float dif=max(d,0.)*.85+abs(d)*.15;vec3 hemi=mix(uGnd,uSky,n.y*.5+.5);vec3 base=vC.rgb*uTint.rgb;" + (w ? "if(vC.a<-.5&&uSolP.x>0.)base=sol(base,vW,n,vC.a<-1.5?0.:1.);" : "") +
     "vec3 col=base*(hemi*uAmb+uSunC*dif);vec3 v=normalize(uCam-vW);vec3 h=normalize(uSun+v);col+=pow(max(dot(n,h),0.),48.)*uSpec*uSunC*.9;" +
-    (w ? "float rf=1.-max(dot(n,v),0.),rs=max(dot(-v,uSun),0.);col+=uSunC*base*uRim*2.*rf*rf*rf*rs*rs*(1.-.7*abs(n.y));" : "") +
+    (w ? "if(uRim>0.){float rf=1.-max(dot(n,v),0.),rs=max(dot(-v,uSun),0.);col+=uSunC*base*uRim*2.*rf*rf*rf*rs*rs*(1.-.7*abs(n.y));}" : "") +
     "if(uSpec>0.){float f=pow(1.-max(dot(n,v),0.),3.);col=mix(col,uSky*.9,f*uSpec*.5);}" +
     "float e=max(vC.a,uTint.a);col=mix(col,base*1.25,e);col+=uFlash*base*.5;" +
-    (w ? "float l=dot(col,vec3(.299,.587,.114));col=max(mix(vec3(l),col,1.+uGrade.x),0.);col=mix(col,col*col*(3.-2.*col),uGrade.y);" : "") +
-    (w ? "float dist=length(vW-uCam);float fo=1.-exp(-dist*uDens);col=mix(col,uFog,clamp(fo,0.,1.));col=mix(col,uBrH.rgb+uSunC*uHalo*pow(max(dot(-v,uSun),0.),5.),brumeH(vW,uCam));gl_FragColor=vec4(col,1.);}"
+    (w ? "if(uGrade.x+uGrade.y>0.){float l=dot(col,vec3(.299,.587,.114));col=max(mix(vec3(l),col,1.+uGrade.x),0.);col=mix(col,col*col*(3.-2.*col),uGrade.y);}" : "") +
+    (w ? "col=mix(col,vFo.rgb,vFo.a);col=mix(col,vBr.rgb,vBr.a);gl_FragColor=vec4(col,1.);}"
       : "float dist=length(vW-uCam);float fo=1.-exp(-dist*uDens);gl_FragColor=vec4(mix(col,uFog,clamp(fo,0.,1.)),1.);}");
   const FS = fsScene(false);
   const VS_CIEL = "attribute vec3 aP;uniform mat4 uPV;uniform vec3 uCam;varying vec3 vD;void main(){vD=aP;gl_Position=uPV*vec4(uCam+aP*1500.,1.);gl_Position.z=gl_Position.w*.9999;}";
-  const fsCiel = w => "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nvarying vec3 vD;uniform vec3 uHaut;uniform vec3 uHor;uniform vec3 uFog;uniform vec3 uSun;uniform vec3 uSunC;uniform float uNuit;uniform float uSynth;uniform float uFlash;" + (w ? "uniform vec4 uBrH;uniform float uHalo;" : "") +
+  const fsCiel = w => "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nvarying vec3 vD;uniform vec3 uHaut;uniform vec3 uHor;uniform vec3 uFog;uniform vec3 uSun;uniform vec3 uSunC;uniform float uNuit;uniform float uSynth;uniform float uFlash;uniform vec4 uEcl;" + (w ? "uniform vec4 uBrH;uniform float uHalo;" : "") +
     "float hs(vec3 p){return fract(sin(dot(p,vec3(12.9898,78.233,37.719)))*43758.5453);}" +
     "void main(){vec3 d=normalize(vD);float t=d.y;vec3 c=mix(uHor,uHaut,smoothstep(0.,mix(.55,.16,uSynth),t));if(t<0.)c=mix(uHor,uFog,smoothstep(0.,-.08,t));" +
     "float s=max(dot(d,uSun),0.);" + (w ? "c=mix(c,uBrH.rgb+uSunC*uHalo*pow(s,5.),(1.-smoothstep(-.03,.22,t))*(uBrH.a>0.?.92:0.));c+=uSunC*uHalo*pow(s,3.)*.14;" : "") + "c+=uSunC*(pow(s,800.)*3.+pow(s,12.)*.25)*(1.-uSynth);" +
     "if(uSynth>0.){float r=acos(clamp(s,-1.,1.));if(r<.32&&t>-.01){float bande=step(.5,fract(t*38.));vec3 sc=mix(vec3(1.,.85,.3),vec3(1.,.2,.6),clamp(1.-(t+.02)/.3,0.,1.));c=mix(c,sc,t>.12||bande>.5?1.:0.);}}" +
     "if(uNuit>0.&&t>0.){vec3 q=floor(d*420.);float st=step(.9975,hs(q));c+=vec3(st)*uNuit*smoothstep(0.,.3,t)*.9;}" +
-    "c+=uFlash*.6;gl_FragColor=vec4(c,1.);}";
+    "c+=uFlash*.6;if(uEcl.w>0.)c+=vec3(.86,.9,1.)*uEcl.w*(pow(max(dot(d,uEcl.xyz),0.),7.)*.9+.06)*smoothstep(-.02,.12,t);gl_FragColor=vec4(c,1.);}";
   const FS_CIEL = fsCiel(false);
   const VS_FX = "attribute vec3 aP;attribute vec4 aC;uniform mat4 uPV;varying vec4 vC;void main(){vC=aC;gl_Position=uPV*vec4(aP,1.);}";
   const FS_FX = "precision mediump float;varying vec4 vC;void main(){gl_FragColor=vC;}";
   /** recette waouh : objets transparents et additifs du décor (voile, lueur, rayons), qui s'effacent dans la brume ; uK = force de la couche */
   const VS_VOILE = "attribute vec3 aP;attribute vec4 aC;uniform mat4 uPV;uniform vec3 uCam;uniform float uDens;uniform float uK;varying vec4 vC;" + GL_BRUME +   // brume calculée par sommet : presque rien à faire par pixel
-    "void main(){float f=clamp(1.-exp(-length(aP-uCam)*uDens),0.,1.);vC=vec4(aC.rgb,aC.a*uK*(1.-f)*(1.-.85*brumeH(aP,uCam)));gl_Position=uPV*vec4(aP,1.);}";
-  const FS_VOILE = "precision mediump float;varying vec4 vC;void main(){gl_FragColor=vC;}";
+    "uniform vec4 uEv;varying vec2 vEv;" +   // uEv : cachette du trésor du mois (x, z, rayon, allumé) : rien de la recette ne s'y montre (voir tresorEvite)
+    "void main(){float f=clamp(1.-exp(-length(aP-uCam)*uDens),0.,1.);vC=vec4(aC.rgb,aC.a*uK*(1.-f)*(1.-.85*brumeH(aP,uCam)));vEv=uEv.w>0.?(aP.xz-uEv.xy)/uEv.z:vec2(9.);gl_Position=uPV*vec4(aP,1.);}";
+  const FS_VOILE = "precision mediump float;varying vec4 vC;varying vec2 vEv;void main(){gl_FragColor=vec4(vC.rgb,vC.a*smoothstep(1.,1.4,length(vEv)));}";
   const VS_PT = "attribute vec3 aP;attribute vec4 aC;attribute float aS;uniform mat4 uPV;uniform float uH;varying vec4 vC;void main(){vC=aC;vec4 p=uPV*vec4(aP,1.);gl_Position=p;gl_PointSize=clamp(aS*uH/max(p.w,1.),1.,96.);}";
   const FS_PT = "precision mediump float;varying vec4 vC;void main(){vec2 q=gl_PointCoord-.5;float r=length(q)*2.;float a=smoothstep(1.,0.,r);gl_FragColor=vec4(vC.rgb,vC.a*a*a);}";
   const VS_PLUIE = "attribute vec4 aS;uniform mat4 uPV;uniform vec3 uCam;uniform float uT;uniform float uV;uniform float uLong;uniform float uNeige;uniform float uVent;varying float vA;" +
@@ -12353,6 +12629,59 @@
   }
 
   /* ============================================================
+     v20.62 (Théo) · 🎥 TOUR DE PRÉSENTATION : avant les feux, la caméra prend son temps (~15-20 s) pour savourer le décor,
+     en plans lents et rapprochés sur 4-6 grands repères du circuit, puis descend sur la grille de départ.
+     Remplace l'ancien « Survol guidé » (trop rapide). Un toucher ou « Passer » saute aux feux ; « réduire les animations » : plans fixes
+     reliés par un fondu au noir (aucun mouvement de caméra). Le téléphone peine : le tour s'arrête tout seul et la course part.
+     PRESENTATION[circuit] = [[x, z, h], …] : centre au sol des grands éléments EXISTANTS du décor 3D (relevés sur la géométrie de construire ou
+     repris des constantes du décor) ; h = hauteur connue (0 : mesurée sur la carte des hauteurs) ;
+     4e valeur facultative : direction préférée de la caméra autour du repère (radians ; sinon, du côté du centre du circuit). Le plan est cadré tout seul (cadrer : caméra dégagée). Règle du trésor : jamais de cadrage à moins de 30 m d'une cachette (la vérification se fait dans outils-tests/tpresentation.js,
+     à partir du dépôt privé : AUCUNE cachette n'est écrite ici).
+     ============================================================ */
+  const PRESENTATION = {
+    abudhabi: [[520, 392, 126], [506, 197, 70], [156, 171, 47], [706, 410, 37], [137, 614, 27]],          // Noël : le grand sapin, les ateliers, le village
+    bahrein: [[337, 240, 60], [131, -31, 74], [523, -43, 82], [779, -31, 74], [380, 168, 52]],           // le Petit Chef : la cuisine, les toits de Paris
+    djeddah: [[540, 264, 181], [312, 112, 123], [748, 100, 141], [352, 452, 108], [548, 386, 108]],      // le Château : les tours, la forêt, le lac
+    melbourne: [[6, 314, 101], [370, 213, 81], [573, 158, 52], [602, 392, 56]],                           // les Merveilles
+    suzuka: [[565, 405, 0, .6], [225, 252, 0], [240, 392, 0], [730, 470, 0], [-45, 125, 0]],               // l'Anneau : Cul-de-Sac, la tour, la fête, Bree
+    miami: [[432, 432, 0], [590, 38, 0], [562, 456, 0], [30, 560, 0], [818, 396, 0]],                 // Pandora : l'Arbre des Âmes, l'île flottante, l'arche, la base
+    arene2028: [[436, 383, 196], [226, 161, 13], [628, 120, 13]],
+    montreal: [[562, 10, 113], [351, 141, 54], [602, 311, 53], [129, 619, 46], [178, 285, 42]],           // la tranchée
+    silverstone: [[446, 222, 0], [196, 6, 0], [596, 552, 0], [214, 270, 0], [672, 330, 0]],          // Dune : le ver, le palais, le ver qui plonge, l'arche, la moissonneuse
+    spa: [[426, 273, 0], [652, 205, 0], [872, 150, 0], [300, 16, 0], [94, 547, 0]],                      // le Monde à l'envers : la créature, la piscine, le labo, la cabane
+    monza: [[720, 460, 185], [237, 264, 139], [438, 223, 126], [712, -24, 113], [28, 89, 94]],            // le Multivers
+    singapour: [[239, 360, 0], [452, 140, 0], [686, 416, 0], [840, 600, 0]],              // la Chocolaterie : l'arbre à sucettes, la cascade, les bonbons géants
+    interlagos: [[474, 323, 82], [107, 390, 72], [-29, 51, 76], [818, 432, 67], [432, 528, 52]],          // le Mur des titans
+    lasvegas: [[268, 420, 0], [736, 486, 0], [286, 160, 0], [772, 58, 0], [468, 300, 0]],             // l'Odyssée : Troie, Ithaque, les Sirènes, Scylla, les dieux
+    monaco: [[401, 359, 33], [695, 284, 17], [131, 505, 17], [284, 97, 17]]                               // le plateau
+  };
+  const PRES_PLAN = 2.6, PRES_DUREE_MAX = 19;   // durée d'un plan rapproché (s) ; plafond du tour
+  /** spline de Catmull-Rom paramétrée par le TEMPS (nœuds non uniformes, Barry-Goldman) : vitesse continue d'un plan à l'autre, aucun à-coup.
+      K = [{ t, v: [nombres…] }] ; renvoie les nombres interpolés au temps t */
+  function splineTemps(K, t) {
+    const n = K.length; if (t <= K[0].t) return K[0].v.slice(); if (t >= K[n - 1].t) return K[n - 1].v.slice();
+    let i = 0; while (i < n - 2 && t > K[i + 1].t) i++;
+    const P1 = K[i], P2 = K[i + 1], P0 = K[i - 1] || { t: 2 * P1.t - P2.t, v: P1.v.map((x, j) => 2 * x - P2.v[j]) }, P3 = K[i + 2] || { t: 2 * P2.t - P1.t, v: P2.v.map((x, j) => 2 * x - P1.v[j]) };
+    const L = (A, B, ta, tb) => A.v.map((x, j) => tb === ta ? x : x + (B.v[j] - x) * (t - ta) / (tb - ta)), t0 = P0.t, t1 = P1.t, t2 = P2.t, t3 = P3.t;
+    const A1 = L(P0, P1, t0, t1), A2 = L(P1, P2, t1, t2), A3 = L(P2, P3, t2, t3), m = (a, b, ta, tb) => a.map((x, j) => tb === ta ? x : x + (b[j] - x) * (t - ta) / (tb - ta));
+    return m(m(A1, A2, t0, t2), m(A2, A3, t1, t3), t1, t2);
+  }
+  /** horloge du tour : démarre et s'arrête en douceur (vitesse nulle aux deux bouts, montée en r secondes), même durée totale */
+  function horlogeDouce(D, r) {
+    const N = 240, v = i => { const t = i / N * D, a = Math.min(1, t / r), b = Math.min(1, (D - t) / r); return a * a * (3 - 2 * a) * b * b * (3 - 2 * b) + 1e-4; }, cum = [0];
+    for (let i = 1; i <= N; i++) cum.push(cum[i - 1] + (v(i - 1) + v(i)) / 2); const k = D / cum[N];
+    return t => { const x = clamp(t / D, 0, 1) * N, i = Math.min(N - 1, Math.floor(x)); return (cum[i] + (cum[i + 1] - cum[i]) * (x - i)) * k; };
+  }
+  /** les repères du circuit dans l'ordre du tour : en partant juste après la ligne de départ et en faisant le tour du circuit */
+  function reperesPresentation(circuit, T) {
+    const p0 = T.a(0, 0), ap = Math.atan2(p0.z - T.cz, p0.x - T.cx), ang = r => ((Math.atan2(r[1] - T.cz, r[0] - T.cx) - ap) % TAU + TAU) % TAU;
+    return (PRESENTATION[circuit] || []).slice().sort((a, b) => ang(a) - ang(b));
+  }
+  /** voile noir des fondus (« réduire les animations ») */
+  function voileFondu(boite) { const f = document.createElement("div"); f.className = "p-fondu"; f.setAttribute("aria-hidden", "true");
+    f.style.cssText = "position:absolute;inset:0;background:#000;opacity:0;transition:opacity .35s;pointer-events:none;z-index:3"; boite.appendChild(f); return f; }
+
+  /* ============================================================
      Instance 3D
      ============================================================ */
   function monter3D(boite, o) {
@@ -12364,22 +12693,22 @@
     const t0c = performance.now();
     const S = sceneDe([o.circuit, o.ambiance || "", A.nuit, Z.atoutCol, Z.piegeCol].join("|"), () => construire(def, T, A, Z));
     const B = { sol: tampon(gl, S.sol), solOv: tampon(gl, S.solOv), piste: tampon(gl, S.piste), pisteOv: tampon(gl, S.pisteOv), eau: S.eau ? tampon(gl, S.eau) : null };
-    const RO = (S.rotors || []).map(x => Object.assign({ b: tampon(gl, x) }, x));
+    const RO = (S.rotors || []).map(x => Object.assign({ b: tampon(gl, x), sph: x.a && x.a.vivant ? sphereGeo(x.f) : null }, x));   // sph : pour la garde « course calme »
     // v20.52 (Théo) · météo visible (course du Grand Prix seulement, o.effets) : grand soleil = lumière dorée chaude, brume de chaleur au loin, éclats sur les carrosseries ;
     // pluie = gerbes d'eau derrière les voitures et reflets sur la piste mouillée ; Noël = gerbes de neige ; Dune = tempête de sable. Coupé si « réduire les animations ».
     const ANI = ANIM(), FX = !!o.effets && ANI, LGR = leger();
-    if (o.effets && A.meteo === "soleil" && !A.nuit) { A.sCol = fois(mel(A.sCol, [1, .76, .42], .45), 1.18); A.horizon = mel(A.horizon, hex("#FFC982"), .5); A.haut = mel(A.haut, hex("#7FA6D6"), .15); A.brouillard = mel(A.brouillard, hex("#F0C68C"), .55); A.brume *= 1.6; A.amb *= 1.04; A.dore = 1; }
-    if (o.effets && A.pluie) { const k = A.eclairs ? .7 : .82; A.amb *= k; A.sCol = fois(A.sCol, k); A.brouillard = mel(A.brouillard, [.46, .5, .56], .4); A.brume *= 1.5;
-      if (!A.nuit) { A.haut = mel(A.haut, hex(A.eclairs ? "#262D3A" : "#5A6472"), .6); A.horizon = mel(A.horizon, hex(A.eclairs ? "#46505E" : "#9AA3AE"), .55); } }   // ciel plus gris, lumière plus basse
-    if (!ANI) A.eclairs = 0;
+    // v20.62 (Théo) · la météo ne change plus la lumière : grand soleil = éclats sur les carrosseries et rayons waouh un peu plus présents ; pluie = gouttes fines et léger reflet
+    if (o.effets && A.meteo === "soleil" && !A.nuit) A.dore = 1;
+    if (!ANI) { A.eclairs = 0; A.eclairCiel = 0; }   // « réduire les animations » : aucun éclair
     const RW = recetteWaouh(def, A, LGR);   // recette waouh (null : rendu d'avant)
     // les programmes « waouh » ne sont compilés qu'au premier circuit qui a une recette (puis gardés avec le contexte)
-    const PL = RW ? C.PLW || (C.PLW = programme(gl, VS, fsScene(true))) : C.PL, PC = RW ? C.PCW || (C.PCW = programme(gl, VS_CIEL, fsCiel(true))) : C.PC;
+    const PL = RW ? C.PLW || (C.PLW = programme(gl, VS_W, fsScene(true))) : C.PL, PC = RW ? C.PCW || (C.PCW = programme(gl, VS_CIEL, fsCiel(true))) : C.PC;
     /** uniformes de la recette pour la scène éclairée (sans recette : tout à 0, rendu d'avant) */
     function uniformesWaouh(gl, U) {
-      gl.uniform1f(U.uRim, RW ? RW.rim : 0); gl.uniform1f(U.uHalo, RW && RW.halo || 0); gl.uniform2fv(U.uGrade, RW && RW.grade || [0, 0]);
+      gl.uniform1f(U.uRim, RW ? RW.rim : 0); gl.uniform1f(U.uHaloV, RW && RW.halo || 0); gl.uniform2fv(U.uGrade, RW && RW.grade || [0, 0]);
+      gl.uniform3fv(U.uCamV, I.cam.e); gl.uniform3fv(U.uSunV, A.soleil); gl.uniform3fv(U.uSunCV, A.sCol); gl.uniform3fv(U.uFogV, A.brouillard); gl.uniform1f(U.uDensV, A.brume);
       if (RW && RW.brume) { gl.uniform4fv(U.uBrH, RW.brume); gl.uniform1f(U.uBrK, RW.brumeK); } else gl.uniform4f(U.uBrH, 0, 0, 0, 0);
-      const Sl = RW && !I.allege && RW.sol; gl.uniform4fv(U.uSolP, Sl ? Sl.P : [0, 0, 0, 0]);
+      const Sl = RW && !I.allege && RW.sol; gl.uniform4fv(U.uSolP, Sl ? Sl.P : [0, 0, 0, 0]); gl.uniform2f(U.uSolE, Sl ? RW.pai : 0, ANI ? 3 : 0);
       if (Sl) { gl.uniform4fv(U.uSolA, Sl.A); gl.uniform4fv(U.uSolB, Sl.B); gl.uniform4fv(U.uSolC, Sl.C); gl.uniform4fv(U.uSolD, Sl.D); gl.uniform4fv(U.uSolR, Sl.R); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, C.bruit || (C.bruit = texBruit(gl))); gl.uniform1i(U.uBruit, 0); }
     }
     const BV = (S.voiles || []).map(f => { if (!f) return null; const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, f, gl.STATIC_DRAW); return { b, n: f.length / 7 }; });
@@ -12387,7 +12716,7 @@
     // lumières (lampadaires, projecteurs) en sprites additifs
     const LUM = S.lum, bL = gl.createBuffer(); { const d = []; LUM.forEach(l => d.push(l[0], l[1], l[2], l[3], l[4], l[5], A.nuit ? .55 : 0, l[6] * 1.6)); gl.bindBuffer(gl.ARRAY_BUFFER, bL); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(d), gl.STATIC_DRAW); }
     // pluie / neige
-    const nbP = ANI ? Math.round((A.pluie ? 1600 * A.pluie : A.neige ? 1400 * (A.densite || 1) : 0) * (LGR ? .55 : 1)) : 0, bP = gl.createBuffer();   // v20.52 : mode léger = un peu plus de la moitié des gouttes ; « réduire les animations » = aucune
+    const nbP = ANI ? Math.round((A.pluie ? 900 : A.neige ? 1400 * (A.densite || 1) : 0) * (LGR ? .55 : 1)) : 0, bP = gl.createBuffer();   // v20.52 : mode léger = un peu plus de la moitié des gouttes ; « réduire les animations » = aucune
     if (nbP) { const d = [], r = alea(42); for (let i = 0; i < nbP; i++) { const x = r(), y = r(), z = r(); d.push(x, y, z, 0); if (!A.neige) d.push(x, y, z, 1); } gl.bindBuffer(gl.ARRAY_BUFFER, bP); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(d), gl.STATIC_DRAW); }
     const bFX = gl.createBuffer(), bPT = gl.createBuffer();
     const DPR = Math.min(1.5, window.devicePixelRatio || 1);
@@ -12404,14 +12733,11 @@
       const p = T.a(x.s, x.voie); x.x = p.x; x.y = p.y; x.z = p.z; x.cap = Math.atan2(-p.tz, p.tx); x.tang = Math.atan(p.pente || 0); x.tx = p.tx; x.tz = p.tz;
     }
     function camVoulue(dt) {
+      if (I.pres) return camPresentation();
       const asp = cv.width / Math.max(1, cv.height);
       if (I.mode === "helico") {
-        // V16.59 · visite guidée : la caméra descend, suit la piste au ras des décors en tournant doucement, puis remonte
-        if (I.survol) { const S = I.survol, q = Math.min(1, (performance.now() - S.t0) / S.dur), w = Math.sin(Math.PI * q), e = q * q * (3 - 2 * q), p = T.a(S.s0 + e * T.L * .92, 0);
-          I.pan = [(p.x - T.cx) * Math.min(1, w * 1.6), (p.z - T.cz) * Math.min(1, w * 1.6)]; I.zoom = 1 - .72 * w; I.incl = .72 - .42 * w; I.orbite = S.o0 + e * 2.4;
-          if (q >= 1) { const fin = S.fin; I.survol = null; I.pan = [0, 0]; I.zoom = 1; I.incl = .72; if (fin) setTimeout(fin, 0); } }
-        else if (!I.tir && !I.joy && I.zoom >= ZOOM_EXPLO && ANIM()) I.orbite += dt * .05;   // v20.39 : de près, la carte ne tourne plus toute seule
-        if (I.joy && !I.survol) { const k = Math.max(T.rx, T.rz) * I.zoom * dt * 1.1, an = I.orbite + .6, s = Math.sin(an), c = Math.cos(an), dx = I.joy[0], dy = I.joy[1];   // v20.39 : pousser vers le haut = avancer, vers la droite = aller à droite
+        if (!I.tir && !I.joy && I.zoom >= ZOOM_EXPLO && ANIM()) I.orbite += dt * .05;   // v20.39 : de près, la carte ne tourne plus toute seule
+        if (I.joy && !I.pres) { const k = Math.max(T.rx, T.rz) * I.zoom * dt * 1.1, an = I.orbite + .6, s = Math.sin(an), c = Math.cos(an), dx = I.joy[0], dy = I.joy[1];   // v20.39 : pousser vers le haut = avancer, vers la droite = aller à droite
           I.pan = [clamp(I.pan[0] + (dx * s + dy * c) * k, -T.rx * PAN_LARGE, T.rx * PAN_LARGE), clamp(I.pan[1] + (-dx * c + dy * s) * k, -T.rz * PAN_LARGE, T.rz * PAN_LARGE)]; }
         const fov = .9, rv = Math.max(T.rx, T.rz / Math.min(1, asp * .9) * (asp < 1 ? 1.25 : 1)), dist = rv / Math.tan(fov / 2) * .92 * I.zoom;
         // V16.58 · Visite : inclinaison (glisser haut/bas) et déplacement (deux doigts) ; zoom jusqu'à 0,12
@@ -12440,6 +12766,78 @@
       const ox = arr.x - x.x, oz = arr.z - x.z, c = Math.cos(sway), sn = Math.sin(sway);
       return { e: [x.x + ox * c - oz * sn, Math.max(arr.y, x.y) + h, x.z + ox * sn + oz * c], c: [x.x + x.tx * 9, x.y + 1.2, x.z + x.tz * 9], fov: .95 };
     }
+    /* v20.62 · 🎥 TOUR DE PRÉSENTATION (voir PRESENTATION) : une seule courbe douce, réglée sur le temps, qui passe par des plans rapprochés
+       autour de chaque repère (la caméra tourne lentement autour et s'en approche), puis descend sur la grille (ou revient à la vue d'avant). */
+    function vueGenerale(a) { const asp = cv.width / Math.max(1, cv.height), rv = Math.max(T.rx, T.rz / Math.min(1, asp * .9) * (asp < 1 ? 1.25 : 1)), dist = rv / Math.tan(.45) * .92;
+      return { e: [T.cx + Math.cos(a) * dist * .62, dist * .72, T.cz + Math.sin(a) * dist * .62], c: [T.cx, 0, T.cz] }; }
+    /** carte des hauteurs du décor (cases de 8 m, calculée une fois par scène) : h = plus haut point de la case ; b = max sur 3 × 3 cases (marge de la caméra) */
+    function hauteurs() {
+      if (S.hf) return S.hf; const c = 8, x0 = T.cx - T.rx * 2.4, z0 = T.cz - T.rz * 2.4, nx = Math.ceil(T.rx * 4.8 / c), nz = Math.ceil(T.rz * 4.8 / c), h = new Float32Array(nx * nz);
+      [S.sol.f, S.piste.f].forEach(f => { for (let k = 0; k < f.length; k += 10) { const i = Math.floor((f[k] - x0) / c), j = Math.floor((f[k + 2] - z0) / c); if (i >= 0 && j >= 0 && i < nx && j < nz && f[k + 1] > h[j * nx + i]) h[j * nx + i] = f[k + 1]; } });
+      const b = new Float32Array(nx * nz); for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { let m = 0; for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const q = (j + dj) * nx + i + di; if (j + dj >= 0 && j + dj < nz && i + di >= 0 && i + di < nx && h[q] > m) m = h[q]; } b[j * nx + i] = m; }
+      const lire = (A, x, z) => { const u = (x - x0) / c - .5, w = (z - z0) / c - .5, i = Math.floor(u), j = Math.floor(w), fu = u - i, fw = w - j, at = (a, d) => a < 0 || d < 0 || a >= nx || d >= nz ? 0 : A[d * nx + a];
+        return lisse(lisse(at(i, j), at(i + 1, j), fu), lisse(at(i, j + 1), at(i + 1, j + 1), fu), fw); };
+      return (S.hf = { h: (x, z) => lire(h, x, z), b: (x, z) => lire(b, x, z), haut: (x, z, r) => { let m = 0; for (let dz = -r; dz <= r; dz += c) for (let dx = -r; dx <= r; dx += c) if (dx * dx + dz * dz <= r * r) m = Math.max(m, lire(h, x + dx, z + dz)); return m; } });
+    }
+    /** le meilleur plan sur un repère : on essaie 16 directions autour, on garde la caméra dégagée (rien entre elle et le repère, pas dans un mur),
+        de préférence du côté du centre du circuit ; la caméra tourne de ±sw autour du repère pendant le plan */
+    function cadrer(x, z, h0, HF, dir) {
+      const h = Math.max(h0 || 0, HF.haut(x, z, 26)), D = clamp(h * 1.45 + 56, 100, 240), Ey = clamp(h * .72 + 30, 52, 170), cy = Math.max(4, h * .45), sw = .3, ac = dir !== undefined ? dir : Math.atan2(T.cz - z, T.cx - x);
+      let best = null;
+      for (let k = 0; k < 16; k++) { const a = ac + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * TAU / 16; let sc = Math.cos(a - ac) * 3;
+        [a - sw, a, a + sw].forEach((b, q) => { const dd = D * (q === 0 ? 1.12 : q === 2 ? .9 : 1), ex = x + Math.cos(b) * dd, ez = z + Math.sin(b) * dd, ey = Ey * (q === 0 ? 1.08 : q === 2 ? .92 : 1);
+          if (HF.haut(ex, ez, 24) + 6 > ey) sc -= 30;   // caméra dans le décor (ou collée à lui)
+          for (let n = 1; n < 14; n++) { const f = n / 14, px = ex + (x - ex) * f, pz = ez + (z - ez) * f, py = ey + (cy - ey) * f; if (Math.hypot(px - x, pz - z) < 28) break; if (HF.b(px, pz) > py - 2) { sc -= 8; break; } } });   // un obstacle devant le repère
+        if (Math.hypot(x + Math.cos(a) * D - T.cx, z + Math.sin(a) * D - T.cz) > Math.max(T.rx, T.rz) * 1.9) sc -= 4;   // trop loin, dans le fond du décor
+        if (!best || sc > best.sc) best = { sc, a }; }
+      const a = best.a, P = (b, dd, ey) => [x + Math.cos(b) * dd, ey, z + Math.sin(b) * dd];
+      return { e1: P(a - sw, D * 1.12, Ey * 1.08), e2: P(a + sw, D * .9, Ey * .92), c: [x, cy, z] };
+    }
+    function planPresentation(fin) {
+      let R = reperesPresentation(o.circuit, T); if (!R.length) return null; const HF = hauteurs();
+      const K = [], pose = (t, e, c, f) => K.push({ t, v: e.concat(c, [f || .82]) }), dist2 = (a, b) => Math.hypot(a[0] - b[0], a[2] - b[2]);
+      // pas plus de repères que le temps n'en permet (~20 s en tout, des plans lents) : on garde les plus hauts, dans l'ordre du tour
+      const nMax = 5; if (R.length > nMax) { const garde = R.slice().sort((a, b) => b[2] - a[2]).slice(0, nMax); R = R.filter(r => garde.includes(r)); }
+      // 1. vue d'ensemble, du côté du premier repère, qui glisse doucement
+      const a1 = Math.atan2(R[0][1] - T.cz, R[0][0] - T.cx) + .5, V0 = vueGenerale(a1), V1 = vueGenerale(a1 - .2);
+      pose(0, V0.e, V0.c, .9); pose(1.8, [V1.e[0], V1.e[1] * .85, V1.e[2]], V1.c, .88);
+      let t = 1.8, der = K[1].v;
+      // 2. un plan rapproché par repère : la caméra tourne lentement autour et s'approche un peu
+      R.forEach(([x, z, h, dir], k) => { const C = cadrer(x, z, h, HF, dir), L = dist2(der, C.e1), dt = clamp(L / 120, 1.5, 2.4);
+        // entre deux plans : la caméra prend de la hauteur (un arc doux), le regard glisse d'un repère à l'autre
+        if (k && L > 120) { const m = [0, 1, 2].map(j => (der[j] + C.e1[j]) / 2), cm = C.c.slice(); m[1] = Math.max(der[1], C.e1[1], HF.b(m[0], m[2]) + 25) + L * .12; pose(t + dt / 2, m, cm, .82); }
+        t += dt; pose(t, C.e1, C.c, .8); K[K.length - 1].plan = 1; t += PRES_PLAN; pose(t, C.e2, C.c, .78); der = K[K.length - 1].v; });
+      // 3. la descente sur la grille (ou le retour à la vue d'avant, pour le bouton 🎥 en Visite)
+      if (fin === "vue") { const g = I.mode === "helico" ? camVoulueHelico() : I.cam ? { e: I.cam.e.slice(), c: I.cam.c.slice() } : vueGenerale(I.orbite + .6); t += clamp(dist2(der, g.e) / 130, 2, 3); pose(t, g.e, g.c, .9); }
+      else { const g1 = T.a(-130, 0), g2 = T.a(-66, 0), c1 = T.a(-10, 0), c2 = T.a(-4, 0);   // la descente se fait dans l'axe de la piste, au-dessus des stands et des tribunes
+        const G1 = [g1.x, Math.max(g1.y + 60, HF.b(g1.x, g1.z) + 16), g1.z], L = dist2(der, G1), dt = clamp(L / 120, 1.8, 2.8);
+        if (L > 120) { const m = [0, 1, 2].map(j => (der[j] + G1[j]) / 2); m[1] = Math.max(der[1], G1[1], HF.b(m[0], m[2]) + 25) + L * .1; pose(t + dt / 2, m, [c1.x, c1.y + 2, c1.z], .86); }   // même arc doux avant la descente
+        t += dt; pose(t, [g1.x, Math.max(g1.y + 60, HF.b(g1.x, g1.z) + 16), g1.z], [c1.x, c1.y + 2, c1.z], .9);
+        t += 2.4; pose(t, [g2.x, g2.y + 15, g2.z], [c2.x, c2.y + 1, c2.z], .95); }
+      const D = K[K.length - 1].t; if (D > PRES_DUREE_MAX) K.forEach(k => { k.t *= PRES_DUREE_MAX / D; });
+      return { K, D: K[K.length - 1].t, R, HF };
+    }
+    /** la caméra de la Visite (hélico) telle qu'elle sera à la fin du tour */
+    function camVoulueHelico() { const p = I.pres; I.pres = null; const m = I.mode; I.mode = "helico"; const c = camVoulue(0); I.mode = m; I.pres = p; return c; }
+    function camPresentation() {
+      const P = I.pres, now = performance.now();
+      if (P.fixe) {   // « réduire les animations » : plans fixes (milieu de chaque plan), fondu au noir entre deux
+        const i = Math.min(P.fixes.length - 1, Math.floor((now - P.t0) / 2600)), f = (now - P.t0) / 2600 - i;
+        if (P.fondu) P.fondu.style.opacity = i < P.fixes.length - 1 && f > .86 ? "1" : f < .14 && i > 0 ? "1" : "0";
+        if (now - P.t0 >= P.fixes.length * 2600) finirPresentation(false);
+        const v = P.fixes[i]; return { e: v.slice(0, 3), c: v.slice(3, 6), fov: v[6], pres: true };
+      }
+      const t = (now - P.t0) / 1000; if (t >= P.D) finirPresentation(false);
+      const v = splineTemps(P.K, P.horloge(Math.min(t, P.D))), e = v.slice(0, 3), c = v.slice(3, 6);
+      if (t < P.D - 2.6) e[1] = Math.max(e[1], P.HF.b(e[0], e[2]) + 11);   // jamais à travers le décor (sauf la descente finale sur la grille)
+      if (P.cam0 && t < 1.4) { const w = t / 1.4, k = w * w * (3 - 2 * w); for (let j = 0; j < 3; j++) { e[j] = P.cam0.e[j] + (e[j] - P.cam0.e[j]) * k; c[j] = P.cam0.c[j] + (c[j] - P.cam0.c[j]) * k; } }
+      return { e, c, fov: v[6], pres: true };
+    }
+    function finirPresentation(passe, rame) {
+      const P = I.pres; if (!P) return; I.pres = null; I.presLents = 0; if (P.fondu) { P.fondu.style.opacity = "0"; setTimeout(() => P.fondu.remove(), 400); }
+      I.saut = I.mode === "poursuite"; I.presFini = () => { if (P.fin) P.fin({ passe: !!passe, rame: !!rame }); }; reveiller();
+      if (passe) { const f = I.presFini; I.presFini = null; setTimeout(f, 0); }
+    }
     // ----- dessin -----
     let PV = null, VP = null, H = 1;
     function dessiner(t, dt) {
@@ -12459,23 +12857,27 @@
         I.cam = { e, c, fov: I.cam ? lisse(I.cam.fov, cible.fov, k) : cible.fov }; I.enRoute = ecart > .3;
       } else {
       I.rel = null; I.fondu = null;
-      if (!I.cam || I.saut) { I.cam = { e: cible.e.slice(), c: cible.c.slice(), fov: cible.fov }; I.saut = false; }
+      if (!I.cam || I.saut || cible.pres) { I.cam = { e: cible.e.slice(), c: cible.c.slice(), fov: cible.fov }; I.saut = false; }
       const k = 1 - Math.exp(-dt * (I.mode === "bord" ? 12 : I.anim && I.mode === "tv" ? 8 : 3.2));
       let ecart = 0; for (let i = 0; i < 3; i++) { I.cam.e[i] = lisse(I.cam.e[i], cible.e[i], k); I.cam.c[i] = lisse(I.cam.c[i], cible.c[i], k); ecart += Math.abs(I.cam.e[i] - cible.e[i]) + Math.abs(I.cam.c[i] - cible.c[i]); } I.cam.fov = lisse(I.cam.fov, cible.fov, k); I.enRoute = ecart > .3;
       }
       // la caméra ne passe jamais sous le sol
       I.cam.e[1] = Math.max(I.cam.e[1], 1.5);
+      if (I.presFini) { const f = I.presFini; I.presFini = null; setTimeout(f, 0); }
       const dc = Math.hypot(I.cam.e[0] - I.cam.c[0], I.cam.e[1] - I.cam.c[1], I.cam.e[2] - I.cam.c[2]), pres = clamp(dc * .035, .5, 14);
       const proj = persp(I.cam.fov, W / Math.max(1, Hh), pres, 3600), vue = regard(I.cam.e, I.cam.c); PV = mul(proj, vue); VP = { proj, vue };
       // éclairs
       if (A.eclairs) { I.prochainEclair -= dt; if (I.prochainEclair < 0) { I.flash = 1; I.prochainEclair = 3 + Math.random() * 6; } }
       I.flash = Math.max(0, I.flash - dt * 3); const fl = I.flash > .5 ? I.flash : I.flash * .4;
+      // v20.62 · orage (météo) : un bref éclair lumineux DANS LE CIEL, devant la caméra (double éclat de 0,5 s), le décor garde sa lumière
+      if (A.eclairCiel) { I.prochainCiel = (I.prochainCiel === undefined ? 2.5 : I.prochainCiel) - dt; if (I.prochainCiel < 0) { I.prochainCiel = 5 + Math.random() * 7; eclairCiel(); } }
+      let ecl = 0; if (I.ecl) { const e = (performance.now() - I.ecl.t0) / 1000; ecl = e < .06 ? 1 : e < .12 ? .2 : e < .2 ? .75 : Math.max(0, .75 * (1 - (e - .2) / .35)); if (e > .6) I.ecl = null; }
       gl.clearColor(A.brouillard[0], A.brouillard[1], A.brouillard[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.disable(gl.CULL_FACE); gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.disable(gl.BLEND);
       // ciel
       gl.useProgram(PC.p); gl.depthMask(false);
       gl.uniformMatrix4fv(PC.U.uPV, false, PV); gl.uniform3fv(PC.U.uCam, I.cam.e); gl.uniform3fv(PC.U.uHaut, A.haut); gl.uniform3fv(PC.U.uHor, A.horizon); gl.uniform3fv(PC.U.uFog, A.brouillard);
-      gl.uniform3fv(PC.U.uSun, A.soleil); gl.uniform3fv(PC.U.uSunC, A.sCol); gl.uniform1f(PC.U.uNuit, A.nuit); gl.uniform1f(PC.U.uSynth, A.synth); gl.uniform1f(PC.U.uFlash, fl);
+      gl.uniform3fv(PC.U.uSun, A.soleil); gl.uniform3fv(PC.U.uSunC, A.sCol); gl.uniform1f(PC.U.uNuit, A.nuit); gl.uniform1f(PC.U.uSynth, A.synth); gl.uniform1f(PC.U.uFlash, fl); gl.uniform4f(PC.U.uEcl, I.ecl ? I.ecl.d[0] : 0, I.ecl ? I.ecl.d[1] : 1, I.ecl ? I.ecl.d[2] : 0, ecl * .55);
       if (RW) { gl.uniform4fv(PC.U.uBrH, RW.brume || [0, 0, 0, 0]); gl.uniform1f(PC.U.uHalo, RW.halo || 0); }
       gl.bindBuffer(gl.ARRAY_BUFFER, BC.b); gl.enableVertexAttribArray(PC.A.aP); gl.vertexAttribPointer(PC.A.aP, 3, gl.FLOAT, false, 40, 0); gl.drawArrays(gl.TRIANGLES, 0, BC.n);
       gl.depthMask(true);
@@ -12487,11 +12889,11 @@
       const ident = modele(0, 0, 0, 0, 0, 1);
       gl.uniformMatrix4fv(U.uM, false, ident); gl.uniform1f(U.uEau, 0);
       gl.uniform1f(U.uSpec, 0); lier(gl, PL, B.sol); gl.drawArrays(gl.TRIANGLES, 0, B.sol.n);
-      gl.uniform1f(U.uSpec, A.mouille * .9); lier(gl, PL, B.piste); gl.drawArrays(gl.TRIANGLES, 0, B.piste.n);
+      gl.uniform1f(U.uSpec, A.mouille * .4); lier(gl, PL, B.piste); gl.drawArrays(gl.TRIANGLES, 0, B.piste.n);
       // surcouches (marquages, fenêtres, champs) : poussées vers la caméra, elles ne scintillent plus
       gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-2, -4);
       if (B.solOv.n) { gl.uniform1f(U.uSpec, 0); lier(gl, PL, B.solOv); gl.drawArrays(gl.TRIANGLES, 0, B.solOv.n); }
-      if (B.pisteOv.n) { gl.uniform1f(U.uSpec, A.mouille * .6); lier(gl, PL, B.pisteOv); gl.drawArrays(gl.TRIANGLES, 0, B.pisteOv.n); }
+      if (B.pisteOv.n) { gl.uniform1f(U.uSpec, A.mouille * .28); lier(gl, PL, B.pisteOv); gl.drawArrays(gl.TRIANGLES, 0, B.pisteOv.n); }
       gl.disable(gl.POLYGON_OFFSET_FILL);
       if (B.eau) { gl.uniform3fv(U.uSky, mel(A.horizon, [1, 1, 1], A.nuit ? .05 : .25)); gl.uniform1f(U.uSpec, .9); gl.uniform1f(U.uEau, 1); lier(gl, PL, B.eau); gl.drawArrays(gl.TRIANGLES, 0, B.eau.n); gl.uniform1f(U.uEau, 0); }
       // feux du portique de départ
@@ -12511,14 +12913,17 @@
           gl.uniformMatrix4fv(U.uM, false, Mw); lier(gl, PL, rb); gl.drawArrays(gl.TRIANGLES, 0, rb.n); }));
       });
       // décors qui tournent (ailes du moulin…) ; décor VIVANT : un rotor qui a a.vivant suit la course (voir contexteVivant)
-      gl.uniform4f(U.uTint, 1, 1, 1, 0); let CV = null; RO.forEach(x => { const M = x.a && x.a.vivant ? x.a.vivant(x, t, CV || (CV = contexteVivant(I, VV))) : matRotor(x, t); if (!M) return; gl.uniformMatrix4fv(U.uM, false, M); lier(gl, PL, x.b); gl.drawArrays(gl.TRIANGLES, 0, x.b.n); });
+      gl.uniform4f(U.uTint, 1, 1, 1, 0); let CV = null, GC = null; RO.forEach(x => { let M = x.a && x.a.vivant ? x.a.vivant(x, t, CV || (CV = contexteVivant(I, VV))) : matRotor(x, t); if (!M) return;   // course calme : la garde (voir gardeVivant)
+        if (x.sph && courseCalme(CV)) { M = gardeVivant(x, M, GC || (GC = { PV, proj: VP.proj, W, H: Hh, VV, q: I.q || 1 })); if (!M) return; } else if (x.sph) x.gk = x.gtp = undefined;
+        gl.uniformMatrix4fv(U.uM, false, M); lier(gl, PL, x.b); gl.drawArrays(gl.TRIANGLES, 0, x.b.n); });
       gl.uniform1f(U.uSpec, 0);
       [PL.A.aN].forEach(a => gl.disableVertexAttribArray(a));
       // recette waouh : voile (ombres de contact, objets transparents), puis lueurs et rayons du soleil (additifs, qui respirent doucement)
       if (BV.some(Boolean)) { gl.useProgram(PW.p); gl.uniformMatrix4fv(PW.U.uPV, false, PV); gl.uniform3fv(PW.U.uCam, I.cam.e); gl.uniform1f(PW.U.uDens, A.brume);
+        const tv = tresorEvite(o.circuit); I.evite = !!tv; gl.uniform4fv(PW.U.uEv, tv || [0, 0, 1, 0]);
         if (RW && RW.brume) { gl.uniform4fv(PW.U.uBrH, RW.brume); gl.uniform1f(PW.U.uBrK, RW.brumeK); } else gl.uniform4f(PW.U.uBrH, 0, 0, 0, 0);
         gl.enableVertexAttribArray(PW.A.aP); gl.enableVertexAttribArray(PW.A.aC); gl.enable(gl.BLEND); gl.depthMask(false);
-        [[0, false, 1], [1, true, 1], [2, true, RW && !I.allege ? RW.rayons * (ANI ? .84 + .16 * Math.sin(t * .45) : 1) : 0]].forEach(([k, add, f]) => { const c = BV[k]; if (!c || f <= 0) return;
+        [[0, false, I.allege ? 0 : 1], [1, true, 1], [2, true, RW && !I.allege ? RW.rayons * (ANI ? .84 + .16 * Math.sin(t * .45) : 1) : 0]].forEach(([k, add, f]) => { const c = BV[k]; if (!c || f <= 0) return;
           if (k === 0) { gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-3, -6); } gl.blendFunc(gl.SRC_ALPHA, add ? gl.ONE : gl.ONE_MINUS_SRC_ALPHA); gl.uniform1f(PW.U.uK, f);
           gl.bindBuffer(gl.ARRAY_BUFFER, c.b); gl.vertexAttribPointer(PW.A.aP, 3, gl.FLOAT, false, 28, 0); gl.vertexAttribPointer(PW.A.aC, 4, gl.FLOAT, false, 28, 12); gl.drawArrays(gl.TRIANGLES, 0, c.n);
           if (k === 0) gl.disable(gl.POLYGON_OFFSET_FILL); }); }
@@ -12553,10 +12958,13 @@
       gl.disableVertexAttribArray(PP.A.aS);
       // pluie ou neige
       if (nbP) { gl.useProgram(PR.p); gl.uniformMatrix4fv(PR.U.uPV, false, PV); gl.uniform3fv(PR.U.uCam, I.cam.e); gl.uniform1f(PR.U.uT, t); gl.uniform1f(PR.U.uV, A.neige ? (A.flocV || 7) : 60);
-        gl.uniform1f(PR.U.uLong, A.neige ? 0 : 1.6); gl.uniform1f(PR.U.uVent, A.vent || 0); gl.uniform1f(PR.U.uNeige, A.neige ? 1 : 0); if (A.floc) gl.uniform4f(PR.U.uC, A.floc[0], A.floc[1], A.floc[2], A.floc[3]); else gl.uniform4f(PR.U.uC, .82, .88, .95, A.neige ? .85 : .32); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.uniform1f(PR.U.uLong, A.neige ? 0 : 1.3); gl.uniform1f(PR.U.uVent, A.vent || 0); gl.uniform1f(PR.U.uNeige, A.neige ? 1 : 0); if (A.floc) gl.uniform4f(PR.U.uC, A.floc[0], A.floc[1], A.floc[2], A.floc[3]); else gl.uniform4f(PR.U.uC, .86, .9, .96, A.neige ? .85 : .28);   // v20.62 : pluie fine et discrète gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         gl.bindBuffer(gl.ARRAY_BUFFER, bP); gl.enableVertexAttribArray(PR.A.aS); gl.vertexAttribPointer(PR.A.aS, 4, gl.FLOAT, false, 16, 0); gl.drawArrays(A.neige ? gl.POINTS : gl.LINES, 0, A.neige ? nbP : nbP * 2); gl.disableVertexAttribArray(PR.A.aS); }
       gl.depthMask(true); gl.disable(gl.BLEND);
     }
+    /** v20.62 · un éclair dans le ciel : une direction devant la caméra (± 50°), assez haut pour rester dans le ciel */
+    function eclairCiel() { const e = I.cam ? I.cam.e : [T.cx, 50, T.cz], c = I.cam ? I.cam.c : [T.cx, 0, T.cz], a = Math.atan2(c[2] - e[2], c[0] - e[0]) + (Math.random() - .5) * 1.7, h = .3 + Math.random() * .2;
+      I.ecl = { t0: performance.now(), d: norme([Math.cos(a), h, Math.sin(a)]) }; }
     /** v20.52 · gerbes (eau, neige, sable) derrière les voitures qui roulent, reflet coloré sur la piste mouillée, éclats de soleil : des points lumineux, recalculés à chaque image (aucun état) */
     const GERBE = A.pluie ? [.86, .91, .98, .34] : A.sable ? [.93, .74, .48, .3] : (def.amb === "noel" || A.hiver) ? [1, 1, 1, .38] : null, NG = LGR ? 6 : 12;
     function meteoVoitures(VV, t, pts, KV) {
@@ -12573,13 +12981,16 @@
     function image(now) {
       raf = 0; if (!cv.isConnected || I.pause) { I.endormi = true; return; }   // détachée ou en pause (bande-annonce) : on attend redim / reveiller
       // au repos (rien ne bouge vraiment), 30 images par seconde suffisent : la batterie dit merci
-      const calme = !I.anim && !I.tir && !I.enRoute && !I.artifice.length;
+      const calme = !I.anim && !I.tir && !I.enRoute && !I.artifice.length && !I.pres;
       if (calme && I.dernier && now - I.dernier < 31) { if (I.actif) raf = requestAnimationFrame(image); return; }
       const t = (now - I.t0) / 1000, dt = Math.min(.05, I.dernier ? (now - I.dernier) / 1000 : .016);
       if (!calme && I.dernier) { I.ft = I.ft * .92 + (now - I.dernier) * .08; if (I.ft > 26 && I.q > 1) { if (++I.lents > 40) { I.q = Math.max(1, I.q - .25); I.lents = 0; I.ft = 16; redim(); } }
-        else if (RW && !I.allege && I.ft > 30) { if (++I.lents > 60) { I.allege = true; I.lents = 0; I.ft = 16; } }   // recette waouh : si le téléphone peine encore, sols par zones et rayons s'éteignent (brume et lumière restent)
+        else if (RW && !I.allege && I.ft > 30) { if (++I.lents > 60) { I.allege = true; I.lents = 0; I.ft = 16; } }   // recette waouh : si le téléphone peine encore, sols par zones, ombres et rayons s'éteignent (brume, lumière et décor lointain restent)
         else I.lents = 0; }
       I.dernier = now;
+      // v20.62 · le téléphone peine pendant le tour de présentation : on l'arrête, la course part (pas de tour qui rame)
+      if (I.pres && !I.pres.fixe && window.VERSUS_PRES_LENT !== false && I.ft > (LGR ? 40 : 55)) {   // VERSUS_PRES_LENT = false : jamais arrêté (captures en 3D logicielle)
+        if (++I.presLents > 45) finirPresentation(true, true); } else if (I.pres) I.presLents = 0;
       // animation des points
       if (I.anim && I.suspendu) V.forEach(x => { x.vit = lisse(x.vit, 0, .1); });   // ⏸ course en pause : les voitures restent où elles sont
       else if (I.anim) {
@@ -12595,7 +13006,7 @@
       dessiner(t, dt);
       if (o.image) o.image(api);
       // cadence : 60 i/s en mouvement, 30 au repos, rien quand tout est calme
-      const bouge = (I.anim && !I.suspendu) || I.survol || I.tir || I.joy || I.enRoute || I.artifice.length || (I.inactif < 40 && (nbP || A.eclairs || A.dore && FX || (ANIM() && I.mode !== "bord")));
+      const bouge = (I.anim && !I.suspendu) || I.pres || I.presFini || I.tir || I.joy || I.enRoute || I.artifice.length || (I.inactif < 40 && (nbP || A.eclairs || A.eclairCiel || I.ecl || A.dore && FX || (ANIM() && I.mode !== "bord")));
       I.inactif += dt; if (I.anim || I.tir || I.joy) I.inactif = 0; majJoy();
       if (I.actif && bouge && document.visibilityState !== "hidden") raf = requestAnimationFrame(image); else I.endormi = true;
     }
@@ -12609,7 +13020,7 @@
     }
     // ----- interactions : glisser pour tourner, pincer / molette pour zoomer, toucher une voiture pour la suivre -----
     const pointeurs = new Map(), ecoutes = [], ecoute = (type, f, opt) => { cv.addEventListener(type, f, opt); ecoutes.push([type, f, opt]); };
-    ecoute("pointerdown", ev => { if (I.survol) { I.survol = null; }   // V16.59 : toucher reprend la main
+    ecoute("pointerdown", ev => { if (I.pres) { finirPresentation(true); return; }   // v20.62 : toucher le circuit saute le tour de présentation
       pointeurs.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
       if (I.tir && pointeurs.size > 1) rancrer();   // 2e doigt : on repart d'ici (le toucher court du 1er doigt ne compte plus)
       else I.tir = { x: ev.clientX, o: I.orbite, z: I.zoom, i: I.incl, d0: null, m0: null, p0: I.pan.slice(), t: performance.now(), x0: ev.clientX, y0: ev.clientY }; try { cv.setPointerCapture(ev.pointerId); } catch (e) { } reveiller(); });
@@ -12648,10 +13059,10 @@
     const poserJoy = ev => { const r = joy.getBoundingClientRect(), R = r.width / 2; let x = (ev.clientX - r.left - R) / R, y = (ev.clientY - r.top - R) / R; const n = Math.hypot(x, y); if (n > 1) { x /= n; y /= n; }
       I.joy = Math.hypot(x, y) < .12 ? [0, 0] : [x, y]; bouton.style.transform = "translate(" + (x * R * .62) + "px," + (y * R * .62) + "px)"; reveiller(); };
     const lacherJoy = () => { I.joy = null; bouton.style.transform = ""; };
-    joy.addEventListener("pointerdown", ev => { ev.stopPropagation(); ev.preventDefault(); I.survol = null; try { joy.setPointerCapture(ev.pointerId); } catch (e) { } poserJoy(ev); });
+    joy.addEventListener("pointerdown", ev => { ev.stopPropagation(); ev.preventDefault(); try { joy.setPointerCapture(ev.pointerId); } catch (e) { } poserJoy(ev); });
     joy.addEventListener("pointermove", ev => { if (I.joy) { ev.stopPropagation(); poserJoy(ev); } });
     joy.addEventListener("pointerup", lacherJoy); joy.addEventListener("pointercancel", lacherJoy); joy.addEventListener("lostpointercapture", lacherJoy);
-    function majJoy() { const voir = I.mode === "helico" && !I.survol && (I.zoom < ZOOM_EXPLO || !!I.joy); if (joy.hidden === voir) joy.hidden = !voir; }
+    function majJoy() { const voir = I.mode === "helico" && !I.pres && (I.zoom < ZOOM_EXPLO || !!I.joy); if (joy.hidden === voir) joy.hidden = !voir; }
     function ecran(n) {
       const x = voitureDe(n); if (!x || !PV) return null; if (I.sansVoit || I.mode === "bord" && n === I.focus) return { vis: false }; const p = appliquer(PV, [x.x, x.y + 3.2, x.z, 1]); if (p[3] <= .5) return { vis: false };
       return { x: (p[0] / p[3] * .5 + .5) * I.cssW, y: (1 - (p[1] / p[3] * .5 + .5)) * I.cssH, vis: Math.abs(p[0] / p[3]) < 1.15 && Math.abs(p[1] / p[3]) < 1.2, d: p[3] };
@@ -12661,6 +13072,19 @@
     function projeter(q) { if (!PV || !I.cam || !q) return null; const p = appliquer(PV, [q[0], q[1], q[2], 1]); if (p[3] <= .5) return { vis: false };
       const e = I.cam.e, d = Math.hypot(q[0] - e[0], q[1] - e[1], q[2] - e[2]);
       return { x: (p[0] / p[3] * .5 + .5) * I.cssW, y: (1 - (p[1] / p[3] * .5 + .5)) * I.cssH, vis: Math.abs(p[0] / p[3]) < 1 && Math.abs(p[1] / p[3]) < 1, d }; }
+    /** v20.62 · chasse au trésor : le décor cache-t-il ce point ? (segment caméra → point coupé par un triangle du décor fixe, à moins de 45 m du point).
+        Les triangles proches sont lus une fois par point ; ensuite quelques milliers de tests, et seulement quand la caméra a bougé. */
+    const MASQ = { k: null, t: null, e: null, r: false };
+    function masque(q) { if (!I.cam || !q) return false; const e = I.cam.e, k = q.join(",");
+      if (MASQ.k !== k) { const d = S.sol.f, R = 45, out = []; for (let i = 0; i < d.length; i += 30) { let ok = false; for (let j = 0; j < 30; j += 10) if (Math.abs(d[i + j] - q[0]) < R && Math.abs(d[i + j + 2] - q[2]) < R) { ok = true; break; } if (ok) out.push(i); } MASQ.k = k; MASQ.t = out; MASQ.e = null; }
+      if (MASQ.e && MASQ.e[0] === e[0] && MASQ.e[1] === e[1] && MASQ.e[2] === e[2]) return MASQ.r;
+      const d = S.sol.f, ox = e[0], oy = e[1], oz = e[2]; let dx = q[0] - ox, dy = q[1] - oy, dz = q[2] - oz; const L = Math.hypot(dx, dy, dz) || 1; dx /= L; dy /= L; dz /= L; let r = false;
+      for (const i of MASQ.t) { const ax = d[i], ay = d[i + 1], az = d[i + 2], e1x = d[i + 10] - ax, e1y = d[i + 11] - ay, e1z = d[i + 12] - az, e2x = d[i + 20] - ax, e2y = d[i + 21] - ay, e2z = d[i + 22] - az;
+        const px = dy * e2z - dz * e2y, py = dz * e2x - dx * e2z, pz = dx * e2y - dy * e2x, det = e1x * px + e1y * py + e1z * pz; if (det > -1e-9 && det < 1e-9) continue;
+        const iv = 1 / det, sx = ox - ax, sy = oy - ay, sz = oz - az, u = (sx * px + sy * py + sz * pz) * iv; if (u < 0 || u > 1) continue;
+        const qx = sy * e1z - sz * e1y, qy = sz * e1x - sx * e1z, qz = sx * e1y - sy * e1x, w = (dx * qx + dy * qy + dz * qz) * iv; if (w < 0 || u + w > 1) continue;
+        const h = (e2x * qx + e2y * qy + e2z * qz) * iv; if (h > 0 && h < L - .25) { r = true; break; } }
+      MASQ.e = e.slice(); MASQ.r = r; return r; }
     function toucher(cx, cy) { const r = cv.getBoundingClientRect(); let best = null, bd = 44; V.forEach(x => { const e = ecran(x.v.nom); if (!e || !e.vis) return; const d = Math.hypot(e.x + r.left - cx, e.y + r.top - cy); if (d < bd) { bd = d; best = x.v.nom; } }); return best; }
     function redim() {
       const r = boite.getBoundingClientRect(); I.cssW = Math.max(1, r.width); I.cssH = Math.max(1, r.height);
@@ -12706,24 +13130,35 @@
       /** v17.6 · la voiture suivie en poursuite : on change de voiture en glissant (fondu de 0,75 s), pas en sautant */
       focus(n) { if (I.focus !== n && I.mode === "poursuite") I.saut = true; I.focus = n; reveiller(); },
       suivie: () => I.focus, ips: () => Math.round(1000 / Math.max(1, I.ft)),
-      /** V16.59 · visite guidée (hélico) : un survol de la piste en ~12 s ; un toucher l'arrête */
-      survol(dur, fin) { if (I.mode !== "helico" || !ANIM()) { if (fin) fin(); return; } I.survol = { t0: performance.now(), dur: dur || 12000, s0: 0, o0: I.orbite, fin }; reveiller(); },
-      arreterSurvol() { if (I.survol) { I.survol = null; I.pan = [0, 0]; I.zoom = 1; I.incl = .72; reveiller(); } },
-      ecran, ecranMonde, projeter, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim, reveiller, taille: () => ({ w: I.cssW, h: I.cssH }),
+      /** v20.62 · 🎥 tour de présentation : o = { fin(info), mode: "grille" (descend sur la grille, avant les feux) | "vue" (revient à la vue d'avant) }.
+          Renvoie la durée (ms) ou 0 s'il n'y a rien à présenter. « réduire les animations » : plans fixes et fondus. */
+      presentation(op) { op = op || {}; finirPresentation(true); const P = planPresentation(op.mode); if (!P) return 0;
+        I.tir = null; I.joy = null; const fixe = !ANIM();
+        I.pres = Object.assign(P, { t0: performance.now(), fin: op.fin, fixe, horloge: horlogeDouce(P.D, 1.6), cam0: I.cam ? { e: I.cam.e.slice(), c: I.cam.c.slice() } : null });
+        if (fixe) { I.pres.fixes = [P.K[0]].concat(P.K.filter(k => k.plan), [P.K[P.K.length - 1]]).map(k => k.v); I.pres.fondu = voileFondu(boite); }
+        I.presLents = 0; reveiller(); return fixe ? I.pres.fixes.length * 2600 : Math.round(P.D * 1000); },
+      passerPresentation() { finirPresentation(true); },
+      presentationEnCours: () => !!I.pres,
+      /** tests : la courbe du tour échantillonnée (œil e et point visé c, tous les 0,1 s) et les repères */
+      planPresentation(mode) { const P = planPresentation(mode); if (!P) return null; const h = horlogeDouce(P.D, 1.6), l = [];
+        for (let t = 0; t <= P.D + 1e-6; t += .1) { const v = splineTemps(P.K, h(t)); if (t < P.D - 2.6) v[1] = Math.max(v[1], P.HF.b(v[0], v[2]) + 11); l.push({ e: v.slice(0, 3), c: v.slice(3, 6) }); } return { D: P.D, points: l, reperes: P.R }; },
+      ecran, ecranMonde, projeter, masque, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim, reveiller, taille: () => ({ w: I.cssW, h: I.cssH }),
       /** v20.52 · la météo montrée (tests) et un éclair tout de suite (captures) */
       meteo: () => A.sable ? "sable" : A.pluie ? "pluie" : (def.amb === "noel" && A.neige && A.meteo !== "soleil" && A.meteo !== "beau") ? "neige" : A.dore ? "soleil" : null, particules: () => nbP,
       /** recette waouh en cours (tests) : null sans recette ; sinon ce qui est allumé */
-      waouh: () => RW ? { brume: !!RW.brume, sol: !!(RW.sol && !I.allege), rayons: !I.allege && RW.rayons > 0 && !!(BV[2]), voile: !!BV[0], allege: !!I.allege } : null,
-      eclair() { if (A.eclairs) { I.flash = 1; I.prochainEclair = 4; reveiller(); } },
+      waouh: () => RW ? { brume: !!RW.brume, sol: !!(RW.sol && !I.allege), rayons: !I.allege && RW.rayons > 0 && !!(BV[2]), force: RW.rayons, brumeCol: RW.brume ? RW.brume.slice() : null, voile: !!BV[0], lueur: !!BV[1], evite: !!I.evite, allege: !!I.allege } : null,
+      eclair() { if (A.eclairCiel) { eclairCiel(); I.prochainCiel = 5; reveiller(); } else if (A.eclairs) { I.flash = 1; I.prochainEclair = 4; reveiller(); } },
+      /** v20.62 · intensité de l'éclair du ciel en cours (tests) */
+      eclairEnCours: () => !!I.ecl,
       /** zoom de la Visite 3D (1 = vue d'ensemble, 0,12 = au plus près) et mode de caméra */
-      zoom: () => I.zoom, orbite: () => I.orbite, mode: () => I.mode, survolEnCours: () => !!I.survol, cible: () => ({ x: T.cx + I.pan[0], z: T.cz + I.pan[1], r: Math.max(T.rx, T.rz) }),   // v17.35 : point visé par la caméra (jauge chaud-froid)
+      zoom: () => I.zoom, orbite: () => I.orbite, mode: () => I.mode, cible: () => ({ x: T.cx + I.pan[0], z: T.cz + I.pan[1], r: Math.max(T.rx, T.rz) }),   // v17.35 : point visé par la caméra (jauge chaud-froid)
       /** v17.35 · recul automatique de la Visite (1 en paysage ; > 1 sur un écran en hauteur, où la caméra se place plus loin pour tout montrer) : même formule que camVoulue */
       recul: () => { const asp = cv.width / Math.max(1, cv.height), rv = Math.max(T.rx, T.rz / Math.min(1, asp * .9) * (asp < 1 ? 1.25 : 1)); return Math.max(1, rv / Math.max(T.rx, T.rz)); },
 
       /** place la caméra de la Visite (tests, cérémonies) : centre [x, z] du monde, zoom, inclinaison, orbite */
-      viser(c, z, incl, orb) { if (I.mode !== "helico") return; I.survol = null; if (c) I.pan = [clamp(c[0] - T.cx, -T.rx * PAN_LARGE, T.rx * PAN_LARGE), clamp(c[1] - T.cz, -T.rz * PAN_LARGE, T.rz * PAN_LARGE)]; if (z) I.zoom = clamp(z, ZOOM_MIN, 2.4); if (incl) I.incl = clamp(incl, .18, 1.4); if (orb !== undefined) I.orbite = orb; I.saut = true; reveiller(); },
+      viser(c, z, incl, orb) { if (I.mode !== "helico") return; if (c) I.pan = [clamp(c[0] - T.cx, -T.rx * PAN_LARGE, T.rx * PAN_LARGE), clamp(c[1] - T.cz, -T.rz * PAN_LARGE, T.rz * PAN_LARGE)]; if (z) I.zoom = clamp(z, ZOOM_MIN, 2.4); if (incl) I.incl = clamp(incl, .18, 1.4); if (orb !== undefined) I.orbite = orb; I.saut = true; reveiller(); },
       detruire() {
-        I.detruit = true; I.actif = false; if (raf) cancelAnimationFrame(raf); if (ro) ro.disconnect(); document.removeEventListener("visibilitychange", vis);
+        I.detruit = true; I.actif = false; I.pres = null; I.presFini = null; if (raf) cancelAnimationFrame(raf); if (ro) ro.disconnect(); document.removeEventListener("visibilitychange", vis);
         ecoutes.forEach(([t, f, op]) => cv.removeEventListener(t, f, op)); joy.remove();
         [B.sol, B.solOv, B.piste, B.pisteOv, B.eau].concat(V.map(x => x.b), RO.map(x => x.b), BV).forEach(t => { if (t) gl.deleteBuffer(t.b); });   // v16.27 : les objets qui tournent (moulin…) sont aussi libérés [bL, bP, bFX, bPT].forEach(b => gl.deleteBuffer(b));
         cv.remove(); if (!gl.isContextLost()) RESERVE.push(C);   // le contexte servira au prochain circuit
@@ -12762,12 +13197,75 @@
      Un rotor (ctx.rotors.push dans un decorXxx) qui porte a.vivant = (x, t, C) => matrice | null est replacé à chaque image d'après la course,
      au lieu de suivre matRotor. x = ce rotor (on peut y garder un état d'une image à l'autre : x.p, x.cap…), t = temps en secondes,
      C = { V: voitures affichées [{ nom, x, y, z, cap, s, rang }], enCourse (un scénario de course se joue), e (avancement 0 → 1 ; 1 hors course),
-     premier(), dernier() } (e reste figé pendant la pause ⏸). Rendu : une matrice, ou null pour cacher l'objet à cette image ; pour garder
+     premier(), dernier(), suivie() (la voiture que suit la caméra en poursuite ou vue de bord, sinon null) } (e reste figé pendant la pause ⏸). Rendu : une matrice, ou null pour cacher l'objet à cette image ; pour garder
      l'animation ordinaire, rendre matRotor(x, t) (on peut d'abord déplacer x.x, x.y, x.z, x.cap). Aide : vivantVise(). Sans voiture (📺 Visite), V est vide : le décor reprend sa vie « au repos ». C n'est calculé qu'une fois par image,
      et seulement si un rotor vivant existe. Ne jamais modifier les voitures : c'est le décor qui réagit, jamais le résultat. */
+  /* ---------- RÈGLE COMMUNE « COURSE CALME » (Théo, 25/11/2026 ; d'abord sur le traîneau de Noël) ----------
+     PENDANT la course, le décor vivant reste DISCRET sur tous les circuits : rien ne se colle à une voiture ni ne la recouvre ; les grands
+     effets sont gardés pour l'arrivée (et pour la Visite sans voitures). Trois outils partagés :
+     · courseCalme(C) : vrai pendant la course, avant l'arrivée (C.e < 0,975) ;
+     · passageCiel(st, t, C, T, o) : au lieu de suivre une voiture, l'objet fait de temps en temps un passage discret (le 1er après 7 s, puis
+       toutes les 16 s ; 5 s de vol), LOIN : caméra qui suit une voiture → il traverse le ciel 190 m devant elle, 24 m de haut (à l'écran,
+       au-dessus de l'horizon, bien au-dessus des voitures) ; vue d'ensemble → sur un grand arc AU LARGE du circuit (ellipse 1,42 × le rectangle
+       de la piste + 20 m : jamais au-dessus de la piste). Renvoie null (caché) ou { p: [x, y, z], cap, k } (k : 0 → 1 → 0, en douceur) ;
+     · la GARDE (boucle de rendu, gardeVivant) : pendant la course, tout objet vivant qui passerait DEVANT une voiture à l'écran rapetisse en
+       douceur jusqu'à disparaître, puis revient quand la voie est libre (filet de sécurité pour tous les circuits). */
+  const CALME = { premier: 7, entre: 16, duree: 5, loin: 190, haut: 24, large: 110 };
+  const courseCalme = C => !!(C && C.V.length && C.enCourse && C.e < .975);
+  function passageCiel(st, t, C, T, o) {
+    o = o || {}; const P0 = st.pc || (st.pc = { tProch: null, pas: null, n: o.decale || 0, tp: t });
+    const dt = Math.min(.1, Math.max(0, t - P0.tp)); P0.tp = t;
+    if (!courseCalme(C)) { P0.tProch = null; P0.pas = null; return null; }
+    const L = C.premier(), F = C.suivie && C.suivie(), dur = o.duree || CALME.duree;
+    if (P0.tProch == null) P0.tProch = t + (o.premier || CALME.premier) + (o.decale || 0) * 3;
+    if (!P0.pas && t >= P0.tProch) {
+      if (F) P0.pas = { t0: t, sd: P0.n++ % 2 ? -1 : 1, hc: F.cap };
+      else { const rx = T.rx * 1.42 + 20, rz = T.rz * 1.42 + 20, hx = Math.cos(L.cap), hz = -Math.sin(L.cap); let th = 0, best = -9;
+        for (let i = 0; i < 72; i++) { const a = i / 72 * TAU, dx = T.cx + Math.cos(a) * rx - L.x, dz = T.cz - Math.sin(a) * rz - L.z, d = (dx * hx + dz * hz) / (Math.hypot(dx, dz) || 1); if (d > best) { best = d; th = a; } }
+        const sd = -Math.sin(th) * rx * hx - Math.cos(th) * rz * hz < 0 ? -1 : 1; P0.pas = { t0: t, a: th - sd * .2, sd, rx, rz }; } }
+    const P = P0.pas, u = P ? (t - P.t0) / dur : 1;
+    if (!P || u >= 1 || u < 0 || (P.hc !== undefined && !F)) { if (P) { P0.pas = null; P0.tProch = t + (o.entre || CALME.entre); } return null; }
+    const ap = clamp(Math.min(u, 1 - u) / .14, 0, 1), haut = o.haut || CALME.haut; let p, cap;
+    if (P.hc !== undefined) { P.hc += Math.atan2(Math.sin(F.cap - P.hc), Math.cos(F.cap - P.hc)) * Math.min(1, dt * 1.2);
+      const hx = Math.cos(P.hc), hz = -Math.sin(P.hc), lx = -hz, lz = hx, la = o.large || CALME.large, lat = P.sd * (-la + 2 * la * u), d = o.loin || CALME.loin;
+      p = [F.x + hx * d + lx * lat, (F.y || 0) + haut + Math.sin(u * PI) * 3, F.z + hz * d + lz * lat]; cap = Math.atan2(-P.sd * lz, P.sd * lx); }
+    else { const th = P.a + P.sd * u * .4; p = [T.cx + Math.cos(th) * P.rx, haut - 2 + Math.sin(u * PI) * 3, T.cz - Math.sin(th) * P.rz]; cap = Math.atan2(Math.cos(th) * P.rz * P.sd, -Math.sin(th) * P.rx * P.sd); }
+    return { p, cap, k: ap * ap * (3 - 2 * ap), u };
+  }
+  /** une matrice d'objet, réduite d'un facteur k autour de son origine */
+  function echelleM(M, k) { if (k >= .999) return M; const N = new Float32Array(M); for (const i of [0, 1, 2, 4, 5, 6, 8, 9, 10]) N[i] *= k; return N; }
+  /** la sphère qui englobe un objet (centre et rayon, dans son repère), calculée une fois */
+  function sphereGeo(f) { let a = [1e9, 1e9, 1e9], b = [-1e9, -1e9, -1e9]; for (let i = 0; i < f.length; i += 10) for (let j = 0; j < 3; j++) { a[j] = Math.min(a[j], f[i + j]); b[j] = Math.max(b[j], f[i + j]); }
+    if (a[0] > b[0]) return null; const c = [0, 1, 2].map(j => (a[j] + b[j]) / 2); let r = 0; for (let i = 0; i < f.length; i += 10) r = Math.max(r, Math.hypot(f[i] - c[0], f[i + 1] - c[1], f[i + 2] - c[2])); return { c, r }; }
+  /** la GARDE : pendant la course, x (rotor vivant) rapetisse en douceur s'il passe devant une voiture à l'écran ; renvoie la matrice (réduite) ou null.
+      Mesure (tests) : si self.__VIV est un objet, on y compte les images où un objet couvre une voiture, avant garde (brut) et après (vu). */
+  function gardeVivant(x, M, ctx) {
+    const sp = x.sph; if (!sp) return M; const S = Math.max(Math.hypot(M[0], M[1], M[2]), Math.hypot(M[4], M[5], M[6]), Math.hypot(M[8], M[9], M[10])), R = sp.r * S;
+    if (R < .05 || R > 90) return M;   // les très grands décors (ondes, planètes lointaines) ne sont pas concernés
+    const c = appliquer(M, sp.c);
+    // seuls les objets qui SE DÉPLACENT sont gardés (créatures, chasseurs, mains, ver…) ; un décor ancré qui tourne sur place (tête, tourelle, plante) reste un décor
+    if (!x.mobile && !x.a.garde) { if (!x.c0) x.c0 = c; if (Math.hypot(c[0] - x.c0[0], c[1] - x.c0[1], c[2] - x.c0[2]) > 15) x.mobile = true; else return M; }
+    const Q = appliquer(ctx.PV, c), w = Q[3], f = ctx.proj[5], hw = ctx.W / 2, hh = ctx.H / 2; let couvre = false, proche = false;
+    if (w > -R) for (const v of ctx.VV) { const cq = appliquer(ctx.PV, [v.x, v.y + 1, v.z]);   // (un objet tout entier derrière la caméra ne cache rien)
+      if (cq[3] <= .3 || w - R >= cq[3] + 4) continue;   // l'objet est derrière la voiture : il ne la cache pas
+      if (w <= R * 1.05) { couvre = proche = true; break; }
+      const dx = (Q[0] / w - cq[0] / cq[3]) * hw, dy = (Q[1] / w - cq[1] / cq[3]) * hh, ro = f * R / w * hh * .8, rc = f * 3.4 / cq[3] * hh + 3 * ctx.q, d = Math.hypot(dx, dy);
+      if (d < (ro + rc) * 1.8 + 12 * ctx.q) proche = true;   // on anticipe : il commence à s'effacer AVANT de toucher la voiture
+      if (d < ro + rc && w - R < cq[3]) { couvre = true; break; } }
+    const now = performance.now(), dtr = x.gtp ? Math.min(.25, (now - x.gtp) / 1000) : 0; x.gtp = now;   // le vrai temps écoulé (même quand les images sont lentes)
+    x.gk = x.gk === undefined ? (proche ? 0 : 1) : x.gk + ((proche ? 0 : 1) - x.gk) * Math.min(1, dtr * 8);
+    const m = self.__VIV; if (m && typeof m === "object") {   // images de course mesurées, et celles où au moins un objet couvre une voiture
+      if (m.ctx !== ctx) { m.ctx = ctx; m.img = (m.img || 0) + 1; m.fb = m.fv = false; }
+      if (couvre && !m.fb) { m.fb = true; m.brut = (m.brut || 0) + 1; } if (couvre) { const q = m.qui || (m.qui = {}), k = "r" + Math.round(sp.r * 10) / 10; q[k] = (q[k] || 0) + 1; } if (couvre && !m.fv && (m.sansGarde || x.gk > .15)) { m.fv = true; m.vu = (m.vu || 0) + 1; } if (m.sansGarde) return M; }
+    if (x.gk < .03) return null; if (x.gk > .995) return M;
+    const k = x.gk, N = new Float32Array(M); for (const i of [0, 1, 2, 4, 5, 6, 8, 9, 10]) N[i] *= k;
+    const c2 = appliquer(N, sp.c); N[12] += c[0] - c2[0]; N[13] += c[1] - c2[1]; N[14] += c[2] - c2[2];   // il rapetisse autour de son propre centre
+    return N;
+  }
   function contexteVivant(I, VV) {
     const a = I.anim, e = a ? clamp(((I.suspendu || performance.now()) - a.t0) / a.duree, 0, 1) : 1, L = VV.map(x => ({ nom: x.v.nom, x: x.x, y: x.y, z: x.z, cap: x.cap, s: x.s, rang: x.rang || 99 }));
-    return { V: L, enCourse: !!(a && a.scen), e, premier: () => L.slice().sort((p, q) => p.rang - q.rang)[0], dernier: () => L.slice().sort((p, q) => q.rang - p.rang || p.s - q.s)[0] };
+    return { V: L, enCourse: !!(a && a.scen), e, premier: () => L.slice().sort((p, q) => p.rang - q.rang)[0], dernier: () => L.slice().sort((p, q) => q.rang - p.rang || p.s - q.s)[0],
+      suivie: () => (I.mode === "poursuite" || I.mode === "bord") && L.find(x => x.nom === I.focus) || null };   // v20.58 : la voiture que suit la caméra (🚁 poursuite, vue de bord), sinon null
   }
   /** aide du crochet vivant (Anneau, 24/11) : a.vivant = vivantVise("premier" | "dernier", atteint?) → l'objet se tourne en douceur (autour de la
       verticale) vers cette voiture ; atteint = L (longueur de l'objet selon son +x local) → il s'allonge pour finir juste sur elle (faisceau, rayon…).
@@ -12792,13 +13290,14 @@
         [[A1, fa], [A2, fa], [B1, fb], [A2, fa], [B2, fb], [B1, fb]].forEach(([p, f]) => out.push(p[0], p[1], p[2], col[0], col[1], col[2], .7 * f)); } });
       return;
     }
-    const pal = { flammes: [[1, .45, .1], [1, .85, .25]], turbo: [[.35, .72, 1], [.8, .95, 1]], arcenciel: null, comete: [c, mel(c, [1, 1, 1], .6)], supernova: [[.62, .52, 1], [1, 1, 1]], etincelles: [[1, .85, .3], [1, 1, .7]], halo: [c, c], simple: [[1, 1, 1], [1, 1, 1]] }[t] || [c, c];
-    const larg = t === "simple" ? .25 : t === "comete" || t === "supernova" ? 1 : .7, alpha = t === "simple" ? .15 : .38;
+    const pal = { sabre: [[1, .16, .22], [1, .86, .86]], glitch: [[1, .23, .83], [.23, .91, 1]], flammes: [[1, .45, .1], [1, .85, .25]], turbo: [[.35, .72, 1], [.8, .95, 1]], arcenciel: null, comete: [c, mel(c, [1, 1, 1], .6)], supernova: [[.62, .52, 1], [1, 1, 1]], etincelles: [[1, .85, .3], [1, 1, .7]], flocons: [[.8, .92, 1], [1, 1, 1]], halo: [c, c], simple: [[1, 1, 1], [1, 1, 1]] }[t] || [c, c];
+    const larg = t === "simple" ? .25 : t === "comete" || t === "supernova" ? 1 : t === "sabre" ? .32 : .7, alpha = t === "simple" ? .15 : t === "sabre" ? .7 : .38;
     const arc = [[1, .35, .37], [1, .71, .28], [.24, .86, .59], [.3, .6, 1], [.71, .48, 1]];
     for (let i = 0; i < h.length - 1; i++) {
       const a = h[i], b = h[i + 1], fa = 1 - i / h.length, fb = 1 - (i + 1) / h.length, wa = larg * (.3 + fa * .7), wb = larg * (.3 + fb * .7);
-      const col = t === "arcenciel" ? arc[i % 5] : mel(pal[0], pal[1], i % 2 ? .3 : 0);
-      const P = (p, w, s) => [p[0] + p[3] * w * s, p[1], p[2] + p[4] * w * s];
+      const col = t === "arcenciel" ? arc[i % 5] : t === "glitch" ? pal[i % 2] : mel(pal[0], pal[1], i % 2 ? .3 : 0);
+      const dj = t === "glitch" ? (i % 3 - 1) * .45 : 0;   // la Faille : chaque morceau décalé de côté
+      const P = (p, w, s) => [p[0] + p[3] * (w * s + dj), p[1], p[2] + p[4] * (w * s + dj)];
       const A1 = P(a, wa, 1), A2 = P(a, wa, -1), B1 = P(b, wb, 1), B2 = P(b, wb, -1);
       [[A1, fa], [A2, fa], [B1, fb], [A2, fa], [B2, fb], [B1, fb]].forEach(([p, f]) => out.push(p[0], p[1], p[2], col[0], col[1], col[2], alpha * f));
     }
@@ -12842,7 +13341,45 @@
     const pt = (s, lat) => { const L = x.T.L, P = x.T.a(((s % L) + L) % L, lat || 0); return [P.x * x.KU, P.z * x.KU]; };
     const centre = () => [x.T.cx * x.KU, x.T.cz * x.KU];
     const flash = (col, op, dur) => { const g = el('<rect x="-600" y="-600" width="2400" height="2000" fill="' + col + '" opacity="0" style="pointer-events: none"/>'); anim(dur || 300, q => g.firstChild.setAttribute("opacity", (op * Math.sin(q * Math.PI)).toFixed(3)), () => g.remove()); };
-    return { f, el, cache, anim, voiture, vue, dedans, rp, bulle, fondu, premier, dernier, son, pt, centre, flash };
+    /* RÈGLE COMMUNE « COURSE CALME » en 2D (voir passageCiel pour la 3D) : calme(e, en) = pendant la course, avant l'arrivée.
+       passage(o) : au lieu de suivre une voiture, un petit sprite fait de temps en temps un passage discret (le 1er après o.premier ms, puis toutes
+       les 16 s ; 4,5 s), en ligne droite d'un bord à l'autre, un peu transparent, dans la bande horizontale la plus haute où il n'y a AUCUNE voiture
+       (pastille, numéro, portrait) ; si une voiture s'approche de lui, il s'efface vite (il ne passe jamais par-dessus). Pas de place : il attend.
+       o.el() fabrique le sprite (un <g>, centré, tourné vers la droite), o.k() son échelle, o.long / o.haut sa demi-longueur / demi-hauteur (repère du sprite),
+       o.gauche : sprite tourné vers la gauche. Renvoie { maj(c), fin() }. */
+    const calme = (e, en) => !!(en && x.anime && e < .985);
+    const passage = o => { let g = null, t0 = 0, y = 0, d = 1, op = 0, tp = 0, tProch = 0, n = 0; const DUR = o.duree || 4500, ENTRE = o.entre || 16000, OP = o.op || .8;
+      const libre = (c, yy, h, u, w) => Object.keys(c).every(m => { const p = voiture(m); return !p || Math.abs(p[1] - yy) > h || (u !== undefined && Math.abs(p[0] - u) > w); });
+      const fin = () => { if (g) g.remove(); g = null; tProch = 0; };
+      const maj = c => { if (!x.anime) return; const now = performance.now(), k = o.k(), V = vue(), Lg = (o.long || 135) * k, H = (o.haut || 40) * k + rp() * 3.6;
+        if (!tProch) tProch = now + (o.premier || 4000);
+        if (!g) { if (now < tProch) return; let yy = null;
+          for (let q = V[1] + ((o.haut || 40) + 6) * k + 8; q < V[3] - (o.haut || 40) * k; q += 10 * k) if (libre(c, q, H)) { yy = q; break; }
+          if (yy === null) { tProch = now + 1500; return; }
+          y = yy; d = n++ % 2 ? -1 : 1; t0 = tp = now; op = 0; g = o.el(); g.style.pointerEvents = "none"; g.setAttribute("opacity", "0"); }
+        const q = (now - t0) / DUR, dt = Math.min(100, now - tp), x0 = V[0] - Lg, x1 = V[2] + Lg, u = d > 0 ? x0 + (x1 - x0) * q : x1 - (x1 - x0) * q;
+        const li = libre(c, y, H, u, Lg + rp() * 7); tp = now;
+        const voulu = li && q < 1 ? OP * Math.max(0, Math.min(1, q / .15, (1 - q) / .15)) : 0; op += (voulu - op) * (1 - Math.exp(-dt / (li ? 160 : 50)));
+        if (q >= 1 || (!li && op < .15)) { if (g) g.remove(); g = null; tProch = now + ENTRE; return; }
+        const sx = (o.gauche ? -d : d) * k;
+        g.setAttribute("transform", "translate(" + f(u) + " " + f(y + Math.sin(now / 420) * 2.5 * k) + ") scale(" + f(o.oriente === false ? k : sx) + " " + f(k) + ")"); g.setAttribute("opacity", f(op)); };
+      return { maj, fin }; };
+    return { f, el, cache, anim, voiture, vue, dedans, rp, bulle, fondu, premier, dernier, son, pt, centre, flash, calme, passage };
+  }
+  /* GARDE « course calme » en 2D : pendant la course, chaque élément du calque des événements qui toucherait une pastille de voiture s'efface
+     en douceur (filtre d'opacité, sans toucher à l'opacité que gère l'événement lui-même), puis revient quand la voie est libre.
+     Exceptions : les bulles de texte et ce qui est fait pour entourer une voiture (classe « ev-net » : anneaux du « Changement de place »). */
+  function garde2D(gEv, V, actif) {
+    const now = performance.now(), els = [...gEv.children];
+    if (!actif) { els.forEach(g => { if (g.__gk !== undefined) { g.style.filter = g.__f0 || ""; g.__gk = undefined; } }); return; }
+    const voit = Object.values(V).map(v => v.g && v.g.getBoundingClientRect()).filter(q => q && q.width);
+    els.forEach(g => { if (g.classList.contains("ev-net") || (g.querySelector(":scope > text") && g.querySelector(':scope > rect[fill="#14161C"]'))) return;
+      if (g.style.display === "none" || g.getAttribute("opacity") === "0") return;
+      const q = g.getBoundingClientRect(); if (!q.width || q.width > 1500) return; const m = 10;
+      const touche = voit.some(v => Math.min(q.right, v.right + m) - Math.max(q.left, v.left - m) > 0 && Math.min(q.bottom, v.bottom + m) - Math.max(q.top, v.top - m) > 0);
+      if (g.__gk === undefined) { g.__gk = 1; g.__f0 = g.style.filter || ""; g.__t = now; }
+      const dt = Math.min(250, now - g.__t); g.__t = now; g.__gk += ((touche ? 0 : 1) - g.__gk) * Math.min(1, dt / 60);
+      g.style.filter = (g.__f0 ? g.__f0 + " " : "") + (g.__gk < .995 ? "opacity(" + g.__gk.toFixed(3) + ")" : ""); });
   }
   const EVENEMENTS = {
     /* avril · l'Œil suit la voiture du DERNIER ; quand le vainqueur passe la ligne, l'anneau s'envole et tombe dans la lave */
@@ -12874,10 +13411,11 @@
             () => { sp.remove(); eteint = true; }); }); };
       return {
         raz() { fait = false; eteint = false; fx.removeAttribute("opacity"); pu.removeAttribute("opacity"); },
-        maj(e, c, enCourse) { if (!eteint) viser(O.dernier(c)); if (enCourse && !fait && e >= .985 && x.anime) anneau(O.premier(c)); }
+        maj(e, c, enCourse) { if (!eteint) viser(O.dernier(c)); fx.style.display = O.calme(e, enCourse) ? "none" : "";   // v20.62 · course calme : le faisceau s'éteint pendant la course (la pupille suit toujours le dernier)
+          if (enCourse && !fait && e >= .985 && x.anime) anneau(O.premier(c)); }
       };
     },
-    /* décembre · la bâche dorée s'envole et retombe sur la voiture du vainqueur, puis se lève : révélation ; pendant la course, le traîneau du Père Noël suit le premier (v20.48) */
+    /* décembre · la bâche dorée s'envole et retombe sur la voiture du vainqueur, puis se lève : révélation ; pendant la course, le traîneau du Père Noël passe de temps en temps, petit et à l'écart (v20.58) */
     garage(x) {
       const O = outilsEv(x); let fait = false;
       // V16.45 : la vraie bâche peinte (peindreGarage5) : une monoplace bâchée, avant vers la droite, sol à y = 0, centre (466, 552), échelle .95
@@ -12909,18 +13447,21 @@
             auto.setAttribute("opacity", O.f(Math.min(1, q * 3))); eclat.setAttribute("opacity", O.f(1 - q)); eclat.setAttribute("transform", "translate(" + O.f(MX + 40) + " " + O.f(MY - 60) + ") scale(" + O.f(.6 + q * .6) + ")");
             const p = O.voiture(n); if (p) { anneau.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1]) + ")"); anneau.firstChild.setAttribute("r", O.f(O.rp() * (1.2 + (q * 3 % 1) * 1.2))); anneau.firstChild.setAttribute("opacity", O.f(1 - (q * 3 % 1))); } },
             () => { bache.remove(); eclat.remove(); anneau.remove(); setTimeout(() => { O.fondu(b2, 300); O.fondu(auto, 700); }, 1500); }); }); };
-      /* v20.48 · DÉCOR VIVANT : pendant la course, le traîneau du Père Noël (TRN2D) survole le PREMIER, change de voiture quand la tête change
-         et lui lâche un cadeau toutes les 1,4 s : le paquet tombe et rebondit sur le BAS-CÔTÉ, jamais sur la piste. À l'arrivée : tour d'honneur
-         au-dessus du vainqueur, pluie de flocons et de cadeaux, puis il s'envole. Le traîneau qui traverse la halle au repos (.g6-trn) se cache pendant ce temps. */
+      /* v20.48 · DÉCOR VIVANT du traîneau du Père Noël (TRN2D). À l'arrivée : tour d'honneur au-dessus du vainqueur, pluie de flocons et de cadeaux,
+         puis il s'envole. Le traîneau qui traverse la halle au repos (.g6-trn) se cache pendant la course.
+         v20.58 (Théo : « trop agressif, il gâche le suivi de la course ») : PENDANT la course, il ne suit plus le premier et ne lâche plus de cadeaux.
+         Juste un petit passage discret de temps en temps (le 1er après 4 s, puis toutes les 16 s ; 4,5 s de vol), en ligne droite d'un bord à l'autre,
+         petit (≈ 3 pastilles de long) et un peu transparent, dans la bande horizontale la plus haute où il n'y a AUCUNE voiture au départ (pastille, numéro, portrait) ;
+         si une voiture s'approche de lui pendant le vol, il s'efface en douceur (il ne passe jamais par-dessus). Pas de place libre : il attend. Ni flash, ni à-coup. */
       const B5 = ["#4C9AFF", "#2BB6A3", "#FF6FA8", "#F2994A", "#C6E03A"];
-      let tr = null, trP = null, trD = 1, tPrec = 0, tDrop = 0, nDrop = 0, fini = false, vol = [];
+      let tr = null, trP = null, nDrop = 0, fini = false, vol = [];
       const amb = on => x.svg.querySelectorAll(".g6-trn").forEach(n => n.style.display = on ? "" : "none");
       const kTr = () => O.rp() * .038;
       // au-dessus de la voiture s'il y a la place, sinon dessous ; jamais coupé par le bord de l'écran
       const auDessus = (p, h, mx) => { const V = O.vue(); let y = p[1] - h; if (y - 50 * kTr() < V[1]) y = p[1] + h; return [Math.max(V[0] + mx, Math.min(V[2] - mx, p[0])), Math.max(V[1] + 50 * kTr(), Math.min(V[3] - 30 * kTr(), y))]; };
       const poserTr = (p, d, k) => tr.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1]) + ") scale(" + O.f(d * k) + " " + O.f(k) + ")");
       const creerTr = () => { if (tr) return; amb(false); tr = O.el('<g style="filter: drop-shadow(0 3px 3px rgba(0,0,0,.35))">' + TRN2D(true) + "</g>"); trP = null; };
-      const oter = () => { if (tr) tr.remove(); tr = null; trP = null; vol.forEach(g => g.remove()); vol = []; amb(true); };
+      const oter = () => { if (tr) tr.remove(); tr = null; trP = null; vol.forEach(g => g.remove()); vol = []; finPa(); enC = false; amb(true); };
       // un point du bas-côté, à côté de l'abscisse s (unités de la carte) : au-delà de la bordure sucre d'orge de la piste
       const basCote = (s, sd) => { const P = O.pt(s), Q = O.pt(s + 3), dx = Q[0] - P[0], dy = Q[1] - P[1], l = Math.hypot(dx, dy) || 1; return [P[0] - dy / l * 38 * sd, P[1] + dx / l * 38 * sd]; };
       const lacher = (de, vers, k) => { const col = B5[nDrop++ % 5], g = O.el('<g><g transform="scale(' + O.f(k) + ')"><rect x="-7" y="-13" width="14" height="13" rx="1.6" fill="' + col + '" stroke="#2A0A0C" stroke-width="1.4"/><path d="M0 -13V0M-7 -7H7" stroke="#F2C64A" stroke-width="2.6"/><path d="M0 -13q-6 -7 -7 -1zM0 -13q6 -7 7 -1z" fill="#F2C64A" stroke="#7A4E12" stroke-width=".8"/></g></g>');
@@ -12929,11 +13470,10 @@
           if (q < tF) { const w = q / tF; u = de[0] + (vers[0] - de[0]) * w; v = de[1] + (vers[1] - de[1]) * w * w; a = rot * w * 4; }
           else { const w = (q - tF) / (1 - tF); u = vers[0]; let h = 0; if (w < .12) h = Math.sin(w / .12 * Math.PI) * 18 * k; else if (w < .2) h = Math.sin((w - .12) / .08 * Math.PI) * 7 * k; v = vers[1] - h; a = rot * 4 * (1 - Math.min(1, w * 5)); op = w > .8 ? (1 - w) / .2 : 1; }
           g.setAttribute("transform", "translate(" + O.f(u) + " " + O.f(v) + ") rotate(" + O.f(a) + ")"); g.setAttribute("opacity", O.f(op)); }, () => { g.remove(); vol = vol.filter(z => z !== g); }); };
-      const suivre = (c) => { const n = O.premier(c), p = O.voiture(n); if (!p) return; creerTr(); const now = performance.now(), dt = tPrec ? Math.min(100, now - tPrec) : 16, k = kTr(); tPrec = now;
-        const q = auDessus(p, 100 * k, 140 * k), cible = [q[0] + 20 * k, q[1] + Math.sin(now / 260) * 6 * k]; if (!trP) trP = cible.slice();
-        const w = 1 - Math.exp(-dt / 200), av = trP[0]; trP = [trP[0] + (cible[0] - trP[0]) * w, trP[1] + (cible[1] - trP[1]) * w];
-        if (Math.abs(trP[0] - av) > .25) trD = trP[0] > av ? 1 : -1; poserTr(trP, trD, k);
-        if (now - tDrop > 1400) { tDrop = now; lacher([trP[0] - 55 * k * trD, trP[1] - 10 * k], basCote(c[n].s + .006 * x.T.L, nDrop % 2 ? 1 : -1), k * 1.15); } };
+      // v20.58 · le passage discret pendant la course (voir plus haut ; outil commun O.passage, règle « course calme »)
+      let enC = false;
+      const PA = O.passage({ el: () => O.el('<g style="filter: drop-shadow(0 2px 2px rgba(0,0,0,.22))">' + TRN2D(true) + "</g>"), k: () => O.rp() * .021, long: 150, haut: 40 });
+      const finPa = () => PA.fin(), passage = c => PA.maj(c);
       // l'arrivée : trois tours d'honneur au-dessus du vainqueur, la pluie de flocons et de cadeaux, puis le traîneau s'envole
       const honneur = (n, s) => { const p = O.voiture(n); if (!p) return; creerTr(); fini = true; const k = kTr(), c0 = auDessus(p, 125 * k, 205 * k), de = trP ? trP.slice() : [c0[0] - 300, c0[1] - 200];
         const pluie = O.el("<g>" + Array.from({ length: 34 }, (_, i) => i % 6 ? '<circle r="' + O.f((2 + (i % 3)) * k * 1.6) + '" fill="#FFFFFF" opacity=".95"/>' : '<rect x="-4" y="-2" width="8" height="4" fill="' + B5[i % 5] + '"/>').join("") + "</g>"), fl = [...pluie.firstChild.children];
@@ -12947,8 +13487,9 @@
           poserTr(pt, d, k * (q > .82 ? 1 - (q - .82) * 2 : 1)); trP = pt;
           if (q > .1 && q < .82 && q - dern > .09) { dern = q; const sd = Math.random() < .5 ? 1 : -1; lacher([pt[0], pt[1] + 10 * k], basCote(s + (Math.random() - .5) * .04 * x.T.L, sd), k * 1.15); } },
           () => oter()); };
-      const majTr = (e, c, en) => { if (!x.anime) return; if (en && e < .985 && !fini) { suivre(c); return; } if (en && e >= .985 && !fini) { const n = O.premier(c); honneur(n, c[n].s); return; } if (!en && !fini && tr) oter(); };
-      return { raz() { fait = false; fini = false; tDrop = 0; oter(); }, maj(e, c, enCourse) { try { majTr(e, c, enCourse); } catch (er) { } if (enCourse && !fait && e >= .985 && x.anime) reveler(O.premier(c)); } };
+      const majTr = (e, c, en) => { if (!x.anime) return; if (en && e < .985 && !fini) { if (!enC) { enC = true; amb(false); } passage(c); return; }
+        if (en && e >= .985 && !fini) { finPa(); const n = O.premier(c); honneur(n, c[n].s); return; } if (!en && !fini && (tr || enC)) oter(); };
+      return { raz() { fait = false; fini = false; oter(); }, maj(e, c, enCourse) { try { majTr(e, c, enCourse); } catch (er) { } if (enCourse && !fait && e >= .985 && x.anime) reveler(O.premier(c)); } };
     },
     /* février · au 2e tour, un escalier pivote en travers de la piste… et s'écarte de justesse devant le leader
        + décor VIVANT (25/11/2026, comme en 3D) : la petite balle d'entraînement ailée (argentée, bleutée) volette au-dessus du PREMIER et file vers le nouveau premier quand la tête change */
@@ -12961,10 +13502,11 @@
           '<circle r="' + O.f(R * 1.3) + '" fill="#9CC8FF" opacity=".3"/>' + aile(-1) + aile(1) + '<circle r="' + O.f(R * .55) + '" fill="#C9D7E8" stroke="#34507A" stroke-width="' + O.f(R * .08) + '"/><path d="M' + O.f(-R * .4) + " " + O.f(-R * .1) + "Q0 " + O.f(R * .2) + " " + O.f(R * .4) + " " + O.f(-R * .1) + '" stroke="#34507A" stroke-width="' + O.f(R * .06) + '" fill="none"/><circle cx="' + O.f(-R * .18) + '" cy="' + O.f(-R * .2) + '" r="' + O.f(R * .14) + '" fill="#FFFFFF"/></g></g>'); };
       const suivre = (c, en) => { const n = O.premier(c), p = n && O.voiture(n); if (!p) return; if (!bal) bal = balle(); const R = O.rp(), cible = [p[0] + R * 1.6, p[1] - R * 2.6];
         let q = O.dedans(cible, R * 2.4); if (Math.abs(q[1] - cible[1]) > 1) q = O.dedans([p[0] + R * 3, p[1] + R * 1.4], R * 2.4);   /* trop près du bord haut : elle passe à côté */ pv = pv && en ? [pv[0] + (q[0] - pv[0]) * .1, pv[1] + (q[1] - pv[1]) * .1] : q; bal.setAttribute("transform", "translate(" + O.f(pv[0]) + " " + O.f(pv[1]) + ")"); };
-      const raz = () => { s0 = null; passe = 0; if (g) g.remove(); g = null; if (b) b.remove(); b = null; if (ouf) ouf.remove(); ouf = null; };
+      const PB = O.passage({ el: () => { const g = balle(); g.removeAttribute("transform"); return g; }, k: () => 1, long: O.rp() * 2.4, haut: O.rp() * 1.6, oriente: false, premier: 5000 });   // v20.62 · course calme : la balle passe au loin
+      const raz = () => { s0 = null; passe = 0; PB.fin(); if (g) g.remove(); g = null; if (b) b.remove(); b = null; if (ouf) ouf.remove(); ouf = null; };
       return { raz,
         maj(e, c, enCourse) {
-          try { suivre(c, enCourse && x.anime); } catch (er) { }
+          try { if (O.calme(e, enCourse)) { if (bal) bal.setAttribute("opacity", "0"); pv = null; PB.maj(c); } else { PB.fin(); if (bal) bal.setAttribute("opacity", "1"); suivre(c, enCourse && x.anime); } } catch (er) { }   // v20.62 · course calme
           if (!enCourse || !x.anime) return; const lead = O.premier(c), sl = Math.max.apply(null, Object.keys(c).map(k => c[k].s));
           if (s0 === null && e >= .5) {
             // V16.45 : un point de la piste devant le leader, à au moins 15 % du bord de la partie visible (plus d'escalier coupé par le bord)
@@ -12999,16 +13541,20 @@
       // V16.45 : échange plus long (entrée et sortie en 0,05 au lieu de 0,03) pour être lisible sur téléphone
       const m = e => e < .3 || e > .5 ? 0 : e < .35 ? (e - .3) / .05 : e > .45 ? (.5 - e) / .05 : 1;
       const fin = () => { if (b) b.remove(); b = null; if (lien) lien.remove(); lien = null; };
+      const PC = O.passage({ el: () => O.el('<g transform="scale(1.5)">' + chat.innerHTML + "</g>"), k: () => 1, long: 40, haut: 26, oriente: false, premier: 5000 });
       return {
-        raz() { duo = null; cp = null; chat.setAttribute("opacity", "0"); fin(); },
+        raz() { duo = null; cp = null; chat.setAttribute("opacity", "0"); PC.fin(); fin(); },
         permuter(e, pts) { if (!x.anime) return; if (!duo && e >= .3 && e < .5) { const n = Object.keys(pts).sort((a, c) => pts[c] - pts[a]); if (n.length > 1) { duo = [n[0], n[n.length - 1]];
             // un trait pointillé relie les deux pastilles, avec la montre du Lapin blanc écartée du trait
             lien = O.el('<path d="M0 0" fill="none" stroke="#FFF3C8" stroke-width="5" stroke-dasharray="4 10" stroke-linecap="round"/><g><circle r="17" fill="#F2C94C" stroke="#5A3A10" stroke-width="3"/><circle r="12" fill="#FFF8E6"/><path d="M0 0V-9M0 0L6 3" stroke="#3A2A10" stroke-width="2.4" stroke-linecap="round"/><path d="M0 -17V-24" stroke="#5A3A10" stroke-width="4"/></g><circle class="a1" r="10" fill="none" stroke="#FFD86B" stroke-width="4"/><circle class="a2" r="10" fill="none" stroke="#FFD86B" stroke-width="4"/>');
+            // v20.62 · course calme : le trait et les anneaux passent SOUS les pastilles (calque juste en dessous des voitures) : ils les relient sans les cacher
+            { const pv = x.svg.querySelector(".p2-v"); let so = x.svg.querySelector(".p2-ev-sous"); if (pv && !so) { so = document.createElementNS("http://www.w3.org/2000/svg", "g"); so.setAttribute("class", "p2-ev-sous"); so.setAttribute("transform", x.g.getAttribute("transform") || ""); pv.parentNode.insertBefore(so, pv); } if (so) so.appendChild(lien); else lien.classList.add("ev-net"); }
             b = O.bulle(540, 360, "Changement de place !", 22); O.son("changement"); } }
           if (!duo) return; const k = m(e), a = pts[duo[0]], c = pts[duo[1]]; if (k > 0) { pts[duo[0]] = a + (c - a) * k; pts[duo[1]] = c + (a - c) * k; }
           if (e > .51) fin(); },
-        maj(e, cc) { const nd = cc && O.dernier(cc), pd = nd && O.voiture(nd);
-          if (pd) { const vv = O.vue(), hh = O.rp() + 30, qq = O.dedans([pd[0], pd[1] - hh > vv[1] + 28 ? pd[1] - hh : pd[1] + hh], 30), now = performance.now(), w = cp && now - tc < 300 ? 1 - Math.exp(-(now - tc) / 120) : 1; tc = now; cp = cp ? [cp[0] + (qq[0] - cp[0]) * w, cp[1] + (qq[1] - cp[1]) * w] : qq; const bo = x.anime ? Math.sin(e * 90) * 3 : 0;
+        maj(e, cc, en) { const nd = cc && O.dernier(cc), pd = nd && O.voiture(nd);
+          if (O.calme(e, en)) { chat.setAttribute("opacity", "0"); cp = null; PC.maj(cc); } else PC.fin();   // v20.62 · course calme : le Chat passe au loin, il ne se pose plus sur la dernière voiture
+          if (pd && !O.calme(e, en)) { const vv = O.vue(), hh = O.rp() + 30, qq = O.dedans([pd[0], pd[1] - hh > vv[1] + 28 ? pd[1] - hh : pd[1] + hh], 30), now = performance.now(), w = cp && now - tc < 300 ? 1 - Math.exp(-(now - tc) / 120) : 1; tc = now; cp = cp ? [cp[0] + (qq[0] - cp[0]) * w, cp[1] + (qq[1] - cp[1]) * w] : qq; const bo = x.anime ? Math.sin(e * 90) * 3 : 0;
             chat.setAttribute("transform", "translate(" + O.f(cp[0]) + " " + O.f(cp[1] + bo) + ") scale(1.5)"); chat.setAttribute("opacity", ".95"); }
           if (!lien || !duo) return; const a = O.voiture(duo[0]), c = O.voiture(duo[1]); if (!a || !c) return;
           const mx = (a[0] + c[0]) / 2, my = (a[1] + c[1]) / 2, d = Math.hypot(c[0] - a[0], c[1] - a[1]) || 1, rr = O.rp() * 1.6, C = O.centre();
@@ -13025,27 +13571,34 @@
     /* ---------- V16.38 · un événement pour chaque mois (attachés aux voitures : ils survivent aux nouvelles cartes) ---------- */
     /* mai 2027 · Pandora : à l'arrivée, un grand oiseau-dragon plonge en piqué au-dessus du vainqueur */
     /* + décor VIVANT (24/11/2026, comme en 3D) : une grappe de graines sacrées plane au-dessus du PREMIER, glisse vers le nouveau premier quand la tête change */
-    pandora(x) { const O = outilsEv(x); let fait = false, gp = null, pos = null;
+    pandora(x) { const O = outilsEv(x); let fait = false, gp = null, pos = null, PG = null;
       const graines = () => { const R = O.rp(); let h = ""; for (let j = 0; j < 6; j++) { const a = j / 6 * Math.PI * 2, u = Math.cos(a) * R * 1.5, v = Math.sin(a) * R * .7 - R * 2.4;
           h += '<g transform="translate(' + O.f(u) + " " + O.f(v) + ')"><g>' + (x.anime ? '<animateTransform attributeName="transform" type="translate" values="0 0;0 ' + O.f(-R * .45) + ';0 0" dur="' + (1.6 + j * .23).toFixed(2) + 's" repeatCount="indefinite"/>' : "") +
             '<circle r="' + O.f(R * .7) + '" fill="#E8C8FF" opacity=".28"/><path d="M' + O.f(-R * .32) + " 0A" + O.f(R * .32) + " " + O.f(R * .32) + " 0 0 1 " + O.f(R * .32) + ' 0Z" fill="#FFFFFF"/><path d="M' + O.f(-R * .2) + " 0v" + O.f(R * .45) + "M0 0v" + O.f(R * .55) + "M" + O.f(R * .2) + " 0v" + O.f(R * .45) + '" stroke="#F8DCFF" stroke-width="' + O.f(R * .07) + '"/></g></g>'; }
         return O.el('<g style="pointer-events:none">' + h + "</g>"); };
       const suivre = (c, en) => { const n = O.premier(c), p = n && O.voiture(n); if (!p) return; if (!gp) gp = graines();
         pos = pos && en ? [pos[0] + (p[0] - pos[0]) * .12, pos[1] + (p[1] - pos[1]) * .12] : p; gp.setAttribute("transform", "translate(" + O.f(pos[0]) + " " + O.f(pos[1]) + ")"); };
-      return { raz() { fait = false; }, maj(e, c, en) { try { suivre(c, en && x.anime); } catch (er) { } if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("pandora"); const n = O.premier(c), p = O.dedans(O.voiture(n)); if (!p) return;
+      return { raz() { fait = false; if (PG) PG.fin(); }, maj(e, c, en) {
+        try { if (O.calme(e, en)) { if (gp) gp.setAttribute("opacity", "0"); pos = null; (PG || (PG = O.passage({ el: () => { const g = graines(), w = O.el(""); g.setAttribute("transform", "translate(0 " + O.f(O.rp() * 2.4) + ")"); w.appendChild(g); return w; }, k: () => 1, long: O.rp() * 2.2, haut: O.rp() * 1.4, oriente: false, premier: 5000 }))).maj(c); }
+          else { if (PG) PG.fin(); if (gp) gp.setAttribute("opacity", "1"); suivre(c, en && x.anime); } } catch (er) { }   // v20.62 · course calme : les graines passent au loin
+        if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("pandora"); const n = O.premier(c), p = O.dedans(O.voiture(n)); if (!p) return;
         const g = O.el('<g><path d="M0 0L-70 -26L-40 -4L-90 10L-36 8L0 16L36 8L90 10L40 -4L70 -26Z" fill="#E8542A" stroke="#5A1A0A" stroke-width="2.5"/><path d="M-40 -4L-70 -26M40 -4L70 -26M-36 8L-90 10M36 8L90 10" stroke="#F2B33A" stroke-width="2"/><path d="M0 16L-8 40L0 34L8 40Z" fill="#C2401E"/><path d="M0 -6L-6 -22L0 -16L6 -22Z" fill="#F2B33A"/><circle cx="0" cy="2" r="3.5" fill="#3AE0FF"/></g>');
         const b = O.bulle(p[0], p[1] - 130, "Le grand oiseau t’a choisi, " + n + " !", 20);
         O.anim(1800, q => { const u = p[0] - 320 + q * 640, v = p[1] - 40 - Math.sin(q * Math.PI) * -120 - 150 + q * 0; g.setAttribute("transform", "translate(" + O.f(u) + " " + O.f(p[1] - 170 + Math.sin(q * Math.PI) * 120) + ") rotate(" + O.f(-8 + q * 16) + ") scale(" + O.f(1.2 + Math.sin(q * Math.PI) * .5) + ")"); g.setAttribute("opacity", O.f(q < .1 ? q * 10 : q > .85 ? (1 - q) * 6.6 : 1)); }, () => { g.remove(); setTimeout(() => b.remove(), 700); }); } }; },
     /* janvier 2027 · Ratatouille : à l'arrivée, le petit chef rat court jusqu'au vainqueur et lui pose sa toque */
     ratatouille(x) { const O = outilsEv(x); let fait = false, chef = null, sC = null;
-      // 24/11/2026 · décor vivant : pendant la course, le petit chef (toque, louche levée) galope sur la piste juste derrière la voiture de tête
+      // 24/11/2026 · décor vivant : le petit chef (toque, louche levée) ; v20.62 (course calme) : pendant la course, il passe en courant au loin (O.passage)
+      const PCH = O.passage({ el: () => { const g = O.el('<g><g transform="scale(1.5)">' + chef.innerHTML + "</g></g>"); return g; }, k: () => 1, long: 36, haut: 30, gauche: true, premier: 5000 });
       const poursuite = (e, c, en) => { const n = en && !fait && x.anime && e < .985 ? O.premier(c) : null;
+        if (n && c[n]) { if (chef) chef.setAttribute("opacity", "0"); sC = null; PCH.maj(c); return; }   // v20.62 · course calme : il passe en courant, au loin, il ne talonne plus le meneur
+        PCH.fin();
         if (!n || !c[n]) { if (chef) chef.setAttribute("opacity", "0"); sC = null; return; }
         if (!chef) chef = O.el('<g style="filter: drop-shadow(0 0 1.4px #FFF4DC)"><path d="M14 4C26 6 32 -2 30 -10" stroke="#E8A0AC" stroke-width="2.6" fill="none" stroke-linecap="round"/><ellipse cx="0" cy="2" rx="15" ry="9" fill="#A99CA6" stroke="#2E2428" stroke-width="1.6"/><circle cx="-13" cy="-5" r="7.5" fill="#A99CA6" stroke="#2E2428" stroke-width="1.6"/><circle cx="-10" cy="-12" r="4" fill="#F0A8B4" stroke="#2E2428" stroke-width="1.2"/><circle cx="-21" cy="-4" r="2" fill="#F07A92"/><circle cx="-15" cy="-7" r="1.4" fill="#1A1220"/><path d="M-19 -12V-17C-23 -18 -22 -24 -18 -23C-17 -27 -11 -27 -10 -24C-6 -25 -5 -19 -9 -18V-12Z" fill="#FFFFFF" stroke="#4A4A42" stroke-width="1.2"/><path d="M-4 0L-14 -22" stroke="#C8CED8" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="-15" cy="-24" rx="4.4" ry="2.6" fill="#C8CED8" stroke="#4A4A52" stroke-width="1"/></g>');
         const L = x.T.L, but = c[n].s - .014 * L; if (sC === null || Math.abs(but - sC) > .2 * L) sC = but; sC += (but - sC) * .25;
         const p = O.pt(sC), q = O.pt(sC - 4), dx = p[0] - q[0], dy = p[1] - q[1], an = Math.atan2(dy, dx) * 180 / Math.PI, sc = 1.5, h = Math.abs(Math.sin(performance.now() / 70)) * 5;
         chef.setAttribute("opacity", "1"); chef.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1] - h) + ") " + (dx >= 0 ? "rotate(" + O.f(an) + ") scale(" + (-sc) + " " + sc + ")" : "rotate(" + O.f(an - 180) + ") scale(" + sc + ")")); };
-      return { raz() { fait = false; if (chef) { chef.remove(); chef = null; } sC = null; }, maj(e, c, en) { poursuite(e, c, en); if (!en || fait || e < .985 || !x.anime) return; fait = true; if (chef) chef.setAttribute("opacity", "0"); O.son("ratatouille"); const n = O.premier(c), p = O.voiture(n); if (!p) return;
+      chef = O.el('<g style="filter: drop-shadow(0 0 1.4px #FFF4DC)"><path d="M14 4C26 6 32 -2 30 -10" stroke="#E8A0AC" stroke-width="2.6" fill="none" stroke-linecap="round"/><ellipse cx="0" cy="2" rx="15" ry="9" fill="#A99CA6" stroke="#2E2428" stroke-width="1.6"/><circle cx="-13" cy="-5" r="7.5" fill="#A99CA6" stroke="#2E2428" stroke-width="1.6"/><circle cx="-10" cy="-12" r="4" fill="#F0A8B4" stroke="#2E2428" stroke-width="1.2"/><circle cx="-21" cy="-4" r="2" fill="#F07A92"/><circle cx="-15" cy="-7" r="1.4" fill="#1A1220"/><path d="M-19 -12V-17C-23 -18 -22 -24 -18 -23C-17 -27 -11 -27 -10 -24C-6 -25 -5 -19 -9 -18V-12Z" fill="#FFFFFF" stroke="#4A4A42" stroke-width="1.2"/><path d="M-4 0L-14 -22" stroke="#C8CED8" stroke-width="2.2" stroke-linecap="round"/><ellipse cx="-15" cy="-24" rx="4.4" ry="2.6" fill="#C8CED8" stroke="#4A4A52" stroke-width="1"/></g>'); chef.setAttribute("opacity", "0");
+      return { raz() { fait = false; PCH.fin(); sC = null; }, maj(e, c, en) { poursuite(e, c, en); if (!en || fait || e < .985 || !x.anime) return; fait = true; if (chef) chef.setAttribute("opacity", "0"); O.son("ratatouille"); const n = O.premier(c), p = O.voiture(n); if (!p) return;
         // il arrive en courant par le côté d'où viennent les voitures (la piste déjà parcourue) et s'arrête juste à côté de la pastille
         const r = O.rp(), L = x.T.L, A = O.pt(c[n].s - .04 * L), V = O.vue(), sc = 1.8; let sd = A[0] >= p[0] ? 1 : -1;
         if (p[0] + sd * (r + 340) > V[2] || p[0] + sd * (r + 340) < V[0]) sd = -sd;
@@ -13100,7 +13653,8 @@
         tie.querySelector(".tie").setAttribute("transform", "translate(" + O.f(a[0]) + " " + O.f(a[1]) + ") rotate(" + O.f(d) + ") scale(" + O.f(k) + ")");
         const f = ((now - t0) / 700) % 1, vu = f < .45, u0 = Math.min(1, f / .45), u1 = Math.max(0, u0 - .3);
         tie.querySelectorAll("line").forEach(l => { l.setAttribute("opacity", vu ? ".95" : "0"); if (!vu) return; l.setAttribute("x1", O.f(a[0] + (cible[0] - a[0]) * u1)); l.setAttribute("y1", O.f(a[1] + (cible[1] - a[1]) * u1)); l.setAttribute("x2", O.f(a[0] + (cible[0] - a[0]) * u0)); l.setAttribute("y2", O.f(a[1] + (cible[1] - a[1]) * u0)); }); };
-      return { raz() { fait = false; ote(); }, maj(e, c, en) { if (en && x.anime && !fait && e < .985) chasse(c); else ote(); if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("etoiles"); const n = O.premier(c), p = O.voiture(n); if (!p) return; const col = (x.V[n] && x.V[n].couleur) || "#4C9AFF", r = O.rp();
+      const PT = O.passage({ el: () => O.el('<g transform="scale(' + O.f(O.rp() / 9 * 1.4) + ')"><path d="M-7 -14H7M-7 14H7" stroke="#2E333C" stroke-width="5" stroke-linecap="round"/><path d="M-6 -14H6M-6 14H6" stroke="#8A929C" stroke-width="1.4"/><path d="M0 -12V12" stroke="#5A606A" stroke-width="2.4"/><circle r="6" fill="#8A929C" stroke="#1B1D22" stroke-width="1.4"/><circle cx="2.4" r="2.6" fill="#1B1D22"/><circle cx="-6.5" r="1.8" fill="#FF6A3A"/></g>'), k: () => 1, long: O.rp() * 2.2, haut: O.rp() * 2.2, premier: 5000 });
+      return { raz() { fait = false; ote(); PT.fin(); }, maj(e, c, en) { if (en && x.anime && !fait && e < .985) { ote(); PT.maj(c); } else { ote(); PT.fin(); }   // v20.62 · course calme : il passe au loin, il ne talonne plus le premier et ne tire plus if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("etoiles"); const n = O.premier(c), p = O.voiture(n); if (!p) return; const col = (x.V[n] && x.V[n].couleur) || "#4C9AFF", r = O.rp();
         const V = O.vue(), dir = p[0] > (V[0] + V[2]) / 2 ? -1 : 1, R = 70;
         const pos = q => { const a = q * Math.PI * 2, s = Math.sin(q * Math.PI); return [p[0] + dir * (-170 + q * 340) + dir * Math.sin(a) * R * s, p[1] - 10 + (1 - Math.cos(a)) * R * s * (p[1] - V[1] < 2 * R + 30 ? 1 : -1)]; };
         const trace = O.el('<path fill="none" stroke="' + col + '" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" opacity=".25"/><path fill="none" stroke="' + col + '" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>');
@@ -13113,7 +13667,7 @@
     /* juillet · le ver surgit juste derrière la voiture du dernier */
     dunes(x) { const O = outilsEv(x), L = x.T.L; let fait = false, dern = null;
       return { raz() { fait = false; }, maj(e, c, en) { dern = c; if (!en || fait || e < .4 || !x.anime) return; fait = true; O.son("dunes"); const n = O.dernier(c); if (!O.voiture(n)) return;
-        const der = d => O.pt(dern[n].s - d * L);   // un point de la piste, à la distance d derrière le dernier
+        const der = d => O.pt(dern[n].s - (d + .03) * L);   // un point de la piste, à la distance d derrière le dernier (v20.62, course calme : 0,03 tour plus loin)
         // V16.45 : la bosse est sombre et crache de petits jets de sable : on la voit courir derrière Devlin
         const bosses = O.el([0, 1, 2, 3, 4, 5, 6].map(i => '<g><ellipse rx="' + (30 - i * 3) + '" ry="' + (13 - i) + '" fill="#6E3E1A" opacity=".8"/><path d="M' + (-26 + i * 3) + ' -2Q0 ' + (-14 + i) + " " + (26 - i * 3) + ' -2" stroke="#FFE6B8" stroke-width="3.4" fill="none" opacity=".9"/></g>').join(""));
         const jets = O.el([0, 1, 2, 3, 4, 5, 6, 7].map(i => '<circle r="' + (3 + i % 3) + '" fill="' + (i % 2 ? "#F4D49A" : "#E0A868") + '" stroke="#6E3E1A" stroke-width="1"/>').join(""));
@@ -13130,19 +13684,21 @@
           b.setAttribute("opacity", O.f(q < .7 ? 1 : Math.max(0, 1 - (q - .7) * 6))); }, () => { bosses.remove(); jets.remove(); gueule.remove(); b.remove(); }); } }; },
     /* août · DÉCOR VIVANT : la créature traque la DERNIÈRE voiture. Une liane rouge part de sa gueule et la suit partout (comme en 3D) ;
        quand ce dernier est dans le Monde à l'envers (sous la faille), la gueule s'embrase. Chaque voiture qui traverse la faille fait
-       jaillir un éclair. À mi-course, le monde bascule à l'envers un instant (et revient). */
+       jaillir un éclair. À mi-course, le monde bascule à l'envers un instant (et revient).
+       v20.62 · course calme : pendant la course, la liane attend l'arrivée, la traversée de la faille fait seulement rougeoyer la gueule, et le monde bascule à l'arrivée. */
     envers(x) { const O = outilsEv(x), H = x.lieux.demo, YF = 360; let fait = false, bas = {};
       const li = H ? O.el('<path fill="none" stroke="#1A0E14" stroke-width="13" stroke-linecap="round"/><path fill="none" stroke="#FF2B3D" stroke-width="5" stroke-linecap="round"/><path fill="none" stroke="#FFD0D6" stroke-width="1.6" stroke-linecap="round"/><circle r="10" fill="none" stroke="#FF2B3D" stroke-width="3"/>') : null;
       const gu = H ? O.el('<circle r="46" fill="#FF2B3D" opacity=".35"/><circle r="26" fill="#FF7A86" opacity=".6"/><circle r="11" fill="#FFF4F6" opacity=".9"/>') : null;
       if (li) { li.style.display = "none"; gu.setAttribute("transform", "translate(" + O.f(H[0]) + " " + O.f(H[1]) + ")"); gu.style.transition = "opacity .6s"; gu.style.opacity = "0"; gu.style.pointerEvents = li.style.pointerEvents = "none"; }
-      const chasser = (c, en) => { const n = O.dernier(c), p = O.voiture(n); if (!li || !p) return; const t = performance.now() / 1000, ec = Math.hypot(p[0] - H[0], p[1] - H[1]);
+      const chasser = (c, en, e) => { const n = O.dernier(c), p = O.voiture(n); if (!li || !p) return;
+        if (O.calme(e, en)) { li.style.display = "none"; Object.keys(c).forEach(m => { const q = O.voiture(m); if (!q) return; const b = q[1] > YF; if (bas[m] !== undefined && bas[m] !== b) { gu.style.opacity = "1"; clearTimeout(gu.__t); gu.__t = setTimeout(() => { gu.style.opacity = "0"; }, 700); } bas[m] = b; }); return; }   // v20.62 · course calme : la liane attend l'arrivée ; une voiture qui traverse la faille fait juste rougeoyer la gueule (plus d'éclair sur la voiture) const t = performance.now() / 1000, ec = Math.hypot(p[0] - H[0], p[1] - H[1]);
         const mx = (H[0] + p[0]) / 2 + Math.sin(t * 2.3) * ec * .12, my = Math.min(H[1], p[1]) - 50 + Math.cos(t * 1.7) * 26, d = "M" + O.f(H[0]) + " " + O.f(H[1]) + "Q" + O.f(mx) + " " + O.f(my) + " " + O.f(p[0]) + " " + O.f(p[1]);
         li.style.display = ""; li.querySelectorAll("path").forEach(e => e.setAttribute("d", d)); const cc = li.querySelector("circle"); cc.setAttribute("cx", O.f(p[0])); cc.setAttribute("cy", O.f(p[1])); cc.setAttribute("r", O.f(10 + 3 * Math.sin(t * 8)));
         gu.style.opacity = p[1] > YF ? "1" : "0";
         // une voiture traverse la faille : un éclair jaillit sur elle
         Object.keys(c).forEach(m => { const q = O.voiture(m); if (!q) return; const b = q[1] > YF; if (en && x.anime && bas[m] !== undefined && bas[m] !== b) { const z = O.el('<path d="M-6 -60L8 -34L-8 -18L10 6" fill="none" stroke="#FF2B3D" stroke-width="9" opacity=".6"/><path d="M-6 -60L8 -34L-8 -18L10 6" fill="none" stroke="#FFFFFF" stroke-width="3"/><circle r="16" fill="#FF7A86" opacity=".5"/>');
           z.setAttribute("transform", "translate(" + O.f(q[0]) + " " + O.f(q[1]) + ")"); z.style.pointerEvents = "none"; O.fondu(z, 700); } bas[m] = b; }); };
-      return { raz() { fait = false; bas = {}; x.svg.style.transform = ""; x.svg.style.filter = ""; }, maj(e, c, en) { chasser(c, en); if (!en || fait || e < .5 || !x.anime) return; fait = true; O.son("envers"); const sv = x.svg;
+      return { raz() { fait = false; bas = {}; x.svg.style.transform = ""; x.svg.style.filter = ""; }, maj(e, c, en) { chasser(c, en, e); if (!en || fait || e < .985 || !x.anime) return; fait = true; O.son("envers"); const sv = x.svg;   // v20.62 · course calme : le monde bascule à l'arrivée (plus au milieu de la course)
         sv.style.transition = "transform .5s ease-in-out, filter .5s"; sv.style.transform = "scaleY(-1)"; sv.style.filter = "hue-rotate(160deg) saturate(1.6) brightness(.8)";
         setTimeout(() => { sv.style.transform = ""; sv.style.filter = ""; setTimeout(() => { sv.style.transition = ""; const b = O.bulle(540, 360, "On revient de loin…", 26); setTimeout(() => b.remove(), 1600); }, 550); }, 1700); } }; },
     /* décembre · LE MULTIVERS SE BRISE (décor vivant, même mécanique que le décor 3D) : une planète fêlée plane au-dessus du LEADER
@@ -13161,11 +13717,13 @@
         O.anim(1900, q => { const z = 1 - Math.pow(1 - q, 3); o.setAttribute("r", O.f(10 + z * 150 * k)); o.setAttribute("opacity", O.f(1 - q)); bl.setAttribute("r", O.f((20 + z * 30) * k * (1 - q))); bl.setAttribute("opacity", O.f(1 - q));
           P.forEach((d, i) => { const e = ec[i]; d.setAttribute("transform", "translate(" + O.f(Math.cos(e.a) * e.v * z) + " " + O.f(Math.sin(e.a) * e.v * z) + ") rotate(" + O.f(e.rot * q) + ") scale(" + O.f(k * (1.4 - q * .6)) + ")"); d.setAttribute("opacity", O.f(1 - q * q)); });
           if (q > .65) b.setAttribute("opacity", O.f(Math.max(0, 1 - (q - .65) * 3))); }, () => { g.remove(); b.remove(); }); };
-      return { raz() { boum = false; p = null; op = 0; dE = 0; if (pl) pl.setAttribute("opacity", "0"); },
+      const PM = O.passage({ el: () => O.el('<g transform="scale(' + O.f(R() / 22) + ')"><circle r="30" fill="#FF8A3A" opacity=".2"/><circle r="22" fill="#6A3AB8" stroke="#1A0838" stroke-width="2"/><circle cx="-6" cy="-7" r="12" fill="#B48AFF" opacity=".55"/><path d="M-2 -2L-9 -14L-6 -22M-2 -2L14 -6L22 -18" fill="none" stroke="#FF8A1E" stroke-width="3"/><ellipse rx="34" ry="8" fill="none" stroke="#FFD27A" stroke-width="2" opacity=".7" transform="rotate(-18)"/></g>'), k: () => .9, long: R() * 1.6, haut: R() * 1.1, oriente: false, premier: 5000 });
+      return { raz() { boum = false; p = null; op = 0; dE = 0; PM.fin(); if (pl) pl.setAttribute("opacity", "0"); },
         maj(e, c, en) { if (!x.anime) return; if (!pl) creer();
           if (!en) { if (!boum && dE > .9) { dE = 0; exploser(O.premier(c)); return; } dE = 0; if (!boum) { op = Math.max(0, op - .08); pl.setAttribute("opacity", O.f(op)); } return; }
           dE = e;
           if (boum) return; const n = O.premier(c), v = O.voiture(n); if (!v) return; const k = pl.k, cible = [v[0], v[1] - 46 * k];
+          if (O.calme(e, en)) { op = 0; pl.setAttribute("opacity", "0"); p = null; PM.maj(c); return; } PM.fin();   // v20.62 · course calme : une petite planète passe au loin ; à l'arrivée elle explose au-dessus du vainqueur
           p = p ? [p[0] + (cible[0] - p[0]) * .14, p[1] + (cible[1] - p[1]) * .14] : cible; op = Math.min(1, op + .06);
           pl.setAttribute("opacity", O.f(op)); pl.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1] + Math.sin(performance.now() / 300) * 3 * k) + ") scale(" + O.f(k * (1 + e * .25)) + ")");
           [...pl.querySelectorAll(".f")].forEach((g, i) => g.setAttribute("opacity", O.f(Math.max(0, Math.min(1, (e - (.25 + i * .25)) / .1)))));
@@ -13176,12 +13734,14 @@
     chocolat(x) { const O = outilsEv(x); let fait = false, pos = null, t0 = performance.now();
       const suit = O.cache('<g><circle r="26" fill="#FFE07A" opacity=".3"/><g class="tk"><rect x="-15" y="-8.5" width="30" height="17" rx="2" fill="#F2C230" stroke="#7A5210" stroke-width="2"/><rect x="-11" y="-4.5" width="22" height="9" fill="none" stroke="#A8761A" stroke-width="1"/><path d="M-8 1.5H8" stroke="#E8423A" stroke-width="2.2" stroke-linecap="round"/></g>' +
         [0, 1, 2, 3].map(i => '<path class="et" d="M0 -5L1.4 -1.4L5 0L1.4 1.4L0 5L-1.4 1.4L-5 0L-1.4 -1.4Z" fill="#FFF6C8" transform="translate(' + [[-24, -14], [22, -16], [-20, 14], [24, 12]][i].join(" ") + ')"/>').join("") + "</g>"), et = suit.querySelectorAll(".et"), tk = suit.querySelector(".tk");
-      const planer = c => { const n = c && Object.keys(c).length ? O.premier(c) : null, p = n ? O.voiture(n) : null; if (!p || fait) { suit.setAttribute("opacity", "0"); pos = null; return; }
+      const PK = O.passage({ el: () => O.el('<g transform="scale(1.3)">' + suit.innerHTML + "</g>"), k: () => 1, long: 34, haut: 34, oriente: false, premier: 5000 });
+      const planer = (c, e, en) => { const n = c && Object.keys(c).length ? O.premier(c) : null, p = n ? O.voiture(n) : null; if (!p || fait) { suit.setAttribute("opacity", "0"); pos = null; PK.fin(); return; }
+        if (O.calme(e, en)) { suit.setAttribute("opacity", "0"); pos = null; PK.maj(c); return; } PK.fin();   // v20.62 · course calme : le ticket d'or passe au loin
         const r = O.rp(), cible = O.dedans([p[0], p[1] - r - 26], 30), t = (performance.now() - t0) / 1000, k = 1 - Math.exp(-Math.min(.25, Math.max(0, t - (pos ? pos[2] : t))) * 14); pos = pos ? [pos[0] + (cible[0] - pos[0]) * k, pos[1] + (cible[1] - pos[1]) * k, t] : [cible[0], cible[1], t];
         suit.setAttribute("opacity", "1"); suit.setAttribute("transform", "translate(" + O.f(pos[0]) + " " + O.f(pos[1] + Math.sin(t * 3) * 4) + ") scale(1.3)");
         tk.setAttribute("transform", "rotate(" + O.f(Math.sin(t * 2.2) * 14) + ") scale(" + O.f(Math.abs(Math.cos(t * 1.7)) * .7 + .3) + " 1)");
         et.forEach((g, i) => g.setAttribute("opacity", O.f(.5 + .5 * Math.sin(t * 5 + i * 1.6)))); };
-      return { raz() { fait = false; pos = null; }, maj(e, c, en) { planer(c); if (!en || fait || e < .985 || !x.anime) return; fait = true; suit.setAttribute("opacity", "0"); O.son("chocolat"); const n = O.premier(c), p = O.voiture(n); if (!p) return; const r = O.rp();
+      return { raz() { fait = false; pos = null; PK.fin(); }, maj(e, c, en) { planer(c, e, en); if (!en || fait || e < .985 || !x.anime) return; fait = true; suit.setAttribute("opacity", "0"); O.son("chocolat"); const n = O.premier(c), p = O.voiture(n); if (!p) return; const r = O.rp();
         const tk = '<rect x="-16" y="-9" width="32" height="18" rx="2" fill="#F2C230" stroke="#7A5210" stroke-width="2"/><rect x="-12" y="-5" width="24" height="10" fill="none" stroke="#A8761A" stroke-width="1"/>';
         const T = Array.from({ length: 8 }, (_, i) => ({ dx: (i / 7 - .5) * 260 + (Math.random() - .5) * 30, d: i % 4 * .08 + Math.random() * .08, r: Math.random() * 360, el: O.el("<g>" + tk + "</g>") }));
         const der = O.cache('<g><circle r="34" fill="#FFE07A" opacity=".35"/>' + tk + '<g class="bri">' + [0, 1, 2, 3, 4, 5, 6, 7].map(i => '<path d="M' + O.f(Math.cos(i * .785) * 26) + " " + O.f(Math.sin(i * .785) * 20) + "L" + O.f(Math.cos(i * .785) * 40) + " " + O.f(Math.sin(i * .785) * 32) + '" stroke="#FFF3C8" stroke-width="3" stroke-linecap="round"/>').join("") + "</g></g>");
@@ -13201,9 +13761,9 @@
         const g = O.cache('<g fill="#140A10"><g transform="translate(12 16)" fill-opacity=".25" style="filter: blur(6px)">' + main + '</g><g class="m" fill-opacity=".55">' + main + "</g></g>");
         let b = null, cible = null;
         O.anim(1700, q => { const pv = O.voiture(n);
-          if (q < .62 || !cible) cible = O.pt(dern[n].s - .04 * L);   // jusqu'à ce qu'elle se referme, la main vise la piste juste derrière la voiture
+          if (q < .62 || !cible) cible = O.pt(dern[n].s - .1 * L);   // jusqu'à ce qu'elle se referme, la main vise la piste derrière la voiture (v20.62, course calme : 0,1 tour derrière, au lieu de 0,04)
           const desc = Math.min(1, q / .5), ferme = q < .5 ? 0 : Math.min(1, (q - .5) / .14), monte = q > .7 ? (q - .7) / .3 : 0;
-          const s = 2.2 - desc * 1.1 + monte * .9, dy = 0,   // une ombre : elle « descend » en rétrécissant et en devenant nette (elle reste sur la piste, jamais hors de l'écran)
+          const s = 1.5 - desc * .7 + monte * .6, dy = 0,   // v20.62 : plus petite (ses doigts n'atteignent plus la voiture)   // une ombre : elle « descend » en rétrécissant et en devenant nette (elle reste sur la piste, jamais hors de l'écran)
             ang = Math.atan2(pv ? pv[1] - cible[1] : 0, pv ? pv[0] - cible[0] : 1) * 180 / Math.PI + 90;
           g.setAttribute("transform", "translate(" + O.f(cible[0]) + " " + O.f(cible[1] + dy) + ") rotate(" + O.f(ang) + ") scale(" + O.f(s) + ")");
           g.querySelectorAll(".dg").forEach(d => d.setAttribute("transform", "scale(1 " + O.f(1 - ferme * .62) + ")"));
@@ -13218,9 +13778,12 @@
         const g = O.el('<defs><radialGradient id="ev-ody"><stop offset="0" stop-color="#E8FFFA" stop-opacity=".8"/><stop offset="1" stop-color="#9BE8FF" stop-opacity="0"/></radialGradient></defs><circle class="lu" r="1" fill="url(#ev-ody)"/><path class="ec" fill="none" stroke="#9BE8FF" stroke-width="16" stroke-linejoin="round" stroke-linecap="round" opacity=".45"/><path class="ec" fill="none" stroke="#FFF7C0" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><g class="on"><ellipse rx="10" ry="5" fill="none" stroke="#E8FFFA" stroke-width="6"/><ellipse rx="10" ry="5" fill="none" stroke="#3AB8D8" stroke-width="3"/></g>');
         const b = O.bulle(POSE[0], POSE[1] + 95, "Poséidon gronde !", 24);
         const zig = (a, z, k) => { const pts = [a]; for (let i = 1; i < 7; i++) { const t = i / 7, nx = -(z[1] - a[1]), ny = z[0] - a[0], l = Math.hypot(nx, ny) || 1, o = (i % 2 ? 1 : -1) * (20 + (i * 37 % 17)) * (1 - t * .5); pts.push([a[0] + (z[0] - a[0]) * t + nx / l * o, a[1] + (z[1] - a[1]) * t + ny / l * o]); } pts.push(z); return "M" + pts.map(p => O.f(p[0]) + " " + O.f(p[1])).join("L"); };
-        O.anim(1800, q => { const p = O.voiture(n);
+        // v20.62 · course calme : la foudre frappe la mer à côté de la piste, devant le leader (du côté le plus loin des voitures), sans crépiter
+        const cibleMer = (() => { const s = c[n].s, L = x.T.L; let best = null; [1, -1].forEach(sd => [.05, .08].forEach(av => { const P = O.pt(s + av * L), Q = O.pt(s + av * L + 3), dx = Q[0] - P[0], dy = Q[1] - P[1], l = Math.hypot(dx, dy) || 1, z = O.dedans([P[0] - dy / l * 110 * sd, P[1] + dx / l * 110 * sd], 30);
+          const dm = Math.min(...Object.keys(c).map(m => { const v = O.voiture(m); return v ? Math.hypot(v[0] - z[0], v[1] - z[1]) : 1e9; })); if (!best || dm > best.d) best = { d: dm, z }; })); return best.z; })();
+        O.anim(1800, q => { const p = cibleMer;
           lueurT.firstChild.setAttribute("opacity", O.f(q < .2 ? q * 4 : Math.max(0, .8 - (q - .2) * 1.5))); lueurT.lastChild.setAttribute("opacity", O.f(q < .2 ? q * 5 : Math.max(0, 1 - (q - .2) * 3)));
-          const ecl = q > .18 && q < .42 ? (Math.floor(q * 40) % 3 ? 1 : .35) : 0;   // l'éclair suit la voiture et crépite (sans flash plein écran)
+          const ecl = q > .18 && q < .42 ? Math.sin((q - .18) / .24 * Math.PI) : 0;   // l'éclair apparaît puis s'éteint en douceur (plus de crépitement)
           g.querySelectorAll(".ec").forEach(t => { if (ecl && p) t.setAttribute("d", zig(TR, p)); t.style.opacity = ecl ? (t.getAttribute("stroke-width") === "16" ? .45 * ecl : ecl) : 0; });
           if (p) { const z = Math.max(0, (q - .2) / .8); const lu = g.querySelector(".lu"); lu.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1]) + ")"); lu.setAttribute("r", O.f(r * 4)); lu.setAttribute("opacity", O.f(q < .2 ? 0 : Math.max(0, 1 - z * 1.3)));
             const on = g.querySelector(".on"); on.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1] + r * .6) + ") scale(" + O.f(1 + z * 7) + ")"); on.setAttribute("opacity", O.f(q < .2 ? 0 : Math.max(0, 1 - z))); }
@@ -13238,7 +13801,7 @@
      ============================================================ */
   function modeMeteo(def, meteo) {
     const th = def && def.amb, f = meteo === "orage" ? 1.6 : 1;
-    if (meteo === "pluie" || meteo === "orage") return th === "noel" ? { m: "neige", f, eclairs: 0 } : th === "desert" ? { m: "sable", f, eclairs: meteo === "orage" ? 1 : 0 } : { m: "pluie", f, eclairs: meteo === "orage" ? 1 : 0 };
+    if (meteo === "pluie" || meteo === "orage") return th === "noel" ? { m: "neige", f, eclairs: 0 } : th === "desert" ? { m: "sable", f, eclairs: meteo === "orage" ? 1 : 0 } : { m: "pluie", f: 1, eclairs: meteo === "orage" ? 1 : 0 };   // v20.62 : l'orage = la même pluie fine (+ un éclair de temps en temps)
     if (meteo === "nuages" && th === "noel") return { m: "neige", f: .6, eclairs: 0 };
     if (meteo === "soleil") return { m: "soleil", f: 1, eclairs: 0 };
     return null;
@@ -13252,11 +13815,9 @@
     if (M.m === "pluie") {
       const fl = []; for (let i = 0; i < 9; i++) { const s = r() * T.L, p = T.a(s, (r() < .5 ? -1 : 1) * (DEMI + 4 + r() * 10)), a = Math.atan2(p.tz, p.tx) * 180 / PI;
         fl.push('<ellipse cx="' + p.x.toFixed(1) + '" cy="' + p.z.toFixed(1) + '" rx="' + (9 + r() * 10).toFixed(1) + '" ry="' + (3.5 + r() * 3).toFixed(1) + '" transform="rotate(' + a.toFixed(0) + " " + p.x.toFixed(1) + " " + p.z.toFixed(1) + ')" fill="rgba(140,180,230,.22)" stroke="rgba(225,238,255,.45)" stroke-width="1.2"/>'); }
-      g.innerHTML = '<rect x="-4000" y="-4000" width="9000" height="9000" fill="#0B1424" opacity="' + (M.eclairs ? .3 : .2) + '"/>' +
-        '<path d="' + d + '" fill="none" stroke="#06101E" stroke-width="' + (DEMI * 2) + '" stroke-linejoin="round" opacity=".34"/>' +
-        '<path d="' + d + '" fill="none" stroke="#D6E8FF" stroke-width="2.4" stroke-linejoin="round" stroke-dasharray="46 30 12 30" opacity=".3"/>' + fl.join("");
-    } else if (M.m === "neige") g.innerHTML = '<rect x="-4000" y="-4000" width="9000" height="9000" fill="#DCE8FF" opacity="' + (.07 * M.f).toFixed(2) + '"/>';
-    else if (M.m === "sable") g.innerHTML = '<rect x="-4000" y="-4000" width="9000" height="9000" fill="#B9773A" opacity="' + (.12 * M.f).toFixed(2) + '"/>';
+      // v20.62 (Théo) · plus de voile sombre sur la carte : seulement un léger reflet sur la piste mouillée et quelques flaques
+      g.innerHTML = '<path d="' + d + '" fill="none" stroke="#D6E8FF" stroke-width="2.4" stroke-linejoin="round" stroke-dasharray="46 30 12 30" opacity=".26"/>' + fl.join("");
+    }
     gAvant.parentNode.insertBefore(g, gAvant);
     if (!ANIM()) return { g, mode: M.m, stop() { g.remove(); }, redim() { }, reveiller() { } };
     // ---- couche animée ----
@@ -13300,7 +13861,7 @@
         x.strokeStyle = "rgba(220,235,255,.8)"; x.lineWidth = 1;
         for (let i = R.length - 1; i >= 0; i--) { const o = R[i]; o.t += dt; if (o.t > .6) { R.splice(i, 1); continue; } x.globalAlpha = .7 * (1 - o.t / .6); x.beginPath(); x.ellipse(o.x, o.y, 1 + o.t * 11, .5 + o.t * 6, 0, 0, TAU); x.stroke(); }
         // gouttes (en biais, un peu de vent)
-        x.globalAlpha = 1; x.strokeStyle = "rgba(205,225,255,.5)"; x.lineWidth = 1; x.beginPath();
+        x.globalAlpha = 1; x.strokeStyle = "rgba(215,230,255,.34)"; x.lineWidth = .9; x.beginPath();
         P.forEach(p => { p.y += (520 + 260 * p.v) * dt; p.x += 90 * dt; if (p.y > H + 14) { p.y = -14; p.x = r() * W; } if (p.x > W + 10) p.x -= W + 20; const l = 9 + 7 * p.l; x.moveTo(p.x, p.y); x.lineTo(p.x - l * .17, p.y - l); }); x.stroke();
       } else if (M.m === "neige") {
         x.fillStyle = "#fff"; const vent = 22 * (M.f - .6);
@@ -13308,16 +13869,14 @@
           x.globalAlpha = .55 + .4 * p.z; x.beginPath(); x.arc(p.x, p.y, .8 + 1.6 * p.l, 0, TAU); x.fill(); }); x.globalAlpha = 1;
       } else if (M.m === "sable") {
         const rafale = .5 + .5 * Math.sin(t * .7) * Math.sin(t * .31 + 1);
-        x.fillStyle = "rgba(176,112,52," + ((.12 + .12 * rafale) * M.f).toFixed(3) + ")"; x.fillRect(0, 0, W, H);
         // nuages de poussière qui traversent la carte
         for (let i = 0; i < 4; i++) { const cx = ((i * .29 + t * (.05 + .02 * i)) % 1.4 - .2) * W, cy = H * (.2 + .2 * i) + Math.sin(t * .4 + i) * 14, rr = Math.max(W, H) * (.22 + .06 * i), gg = x.createRadialGradient(cx, cy, 0, cx, cy, rr);
-          gg.addColorStop(0, "rgba(160,98,44," + ((.16 + .1 * rafale) * M.f).toFixed(3) + ")"); gg.addColorStop(1, "rgba(160,98,44,0)"); x.fillStyle = gg; x.fillRect(cx - rr, cy - rr, rr * 2, rr * 2); }
+          gg.addColorStop(0, "rgba(214,160,96," + ((.07 + .05 * rafale) * M.f).toFixed(3) + ")"); gg.addColorStop(1, "rgba(160,98,44,0)"); x.fillStyle = gg; x.fillRect(cx - rr, cy - rr, rr * 2, rr * 2); }
         x.strokeStyle = "rgba(120,74,30,.5)"; x.lineWidth = 1.2; x.lineCap = "round"; x.beginPath();
         P.forEach(p => { p.x += (180 + 200 * p.v) * (.7 + .6 * rafale) * dt; p.y += Math.sin(t * 2 + p.ph) * 12 * dt; if (p.x > W + 12) { p.x = -12; p.y = r() * H; } const l = 4 + 8 * p.l; x.moveTo(p.x, p.y); x.lineTo(p.x - l, p.y + l * .08); }); x.stroke();
       } else if (M.m === "soleil") {
         const sx = W * .1, sy = -H * .08, D = Math.hypot(W, H), b = .88 + .12 * Math.sin(t * .6), g0 = x.createRadialGradient(sx, sy, 0, sx, sy, D * .95);
         g0.addColorStop(0, "rgba(255,228,150," + (.6 * b).toFixed(3) + ")"); g0.addColorStop(.22, "rgba(255,205,115," + (.26 * b).toFixed(3) + ")"); g0.addColorStop(.6, "rgba(255,182,80," + (.08 * b).toFixed(3) + ")"); g0.addColorStop(1, "rgba(255,170,60,0)");
-        x.fillStyle = "rgba(255,168,60,.07)"; x.fillRect(0, 0, W, H);   // toute la carte un peu plus chaude
         x.globalCompositeOperation = "lighter"; x.fillStyle = g0; x.fillRect(0, 0, W, H);
         // rayons qui tournent doucement
         x.fillStyle = "rgba(255,226,160,.09)";
@@ -13332,9 +13891,11 @@
       }
       if (M.m !== "soleil") eclaboussures(m, dt);
       // ⚡ éclairs : la carte s'illumine (double éclat), un trait zigzague dans le ciel
-      if (M.eclairs) { prochain -= dt; if (prochain < 0) { flash = 0; prochain = 2.8 + r() * 5.5; const x0 = W * (.15 + r() * .7), l = [[x0, -4]]; let px = x0, py = -4; while (py < H * (.45 + r() * .35)) { py += 10 + r() * 16; px += (r() - .5) * 26; l.push([px, py]); } eclair = l; }
+      if (M.eclairs) { prochain -= dt; if (prochain < 0) { flash = 0; prochain = 2.8 + r() * 5.5; const x0 = W * (.15 + r() * .7), l = [[x0, -4]]; let px = x0, py = -4; while (py < H * (.22 + r() * .16)) { py += 10 + r() * 16; px += (r() - .5) * 26; l.push([px, py]); } eclair = l; }
         if (flash >= 0) { flash += dt; const f = flash < .07 ? .55 : flash < .13 ? .08 : flash < .2 ? .42 : Math.max(0, .42 * (1 - (flash - .2) / .45));
-          x.fillStyle = "rgba(232,240,255," + f.toFixed(3) + ")"; x.fillRect(0, 0, W, H);
+          // v20.62 : plus de flash plein écran : une lueur brève en haut, autour de l'éclair (le reste de la carte garde sa lumière)
+          const ex = eclair ? eclair[0][0] : W / 2, gl0 = x.createRadialGradient(ex, 0, 0, ex, 0, Math.max(W, H) * .45); gl0.addColorStop(0, "rgba(232,240,255," + (f * .55).toFixed(3) + ")"); gl0.addColorStop(1, "rgba(232,240,255,0)");
+          x.fillStyle = gl0; x.fillRect(0, 0, W, H * .6);
           if (eclair && flash < .26) { x.lineJoin = "round"; [[5, "rgba(190,210,255,.35)"], [1.6, "#FFFFFF"]].forEach(([lw, c]) => { x.strokeStyle = c; x.lineWidth = lw; x.beginPath(); eclair.forEach((q, i) => i ? x.lineTo(q[0], q[1]) : x.moveTo(q[0], q[1])); x.stroke(); }); }
           if (flash > .7) flash = -1; } }
       raf = requestAnimationFrame(image);
@@ -13407,6 +13968,7 @@
       // l'ordre d'affichage : le premier dessus
       Object.entries(c).sort((a, b) => b[1].rang - a[1].rang).forEach(([n]) => V[n] && gV.appendChild(V[n].g));
       if (EV) try { EV.maj(I.anim ? I.e : 1, c, !!(I.anim && I.anim.scen)); } catch (e) { }
+      if (gEv) try { garde2D(gEv, V, !!(I.anim && I.anim.scen && !I.suspendu) && I.e < .975 && ANIM()); } catch (e) { }   // règle commune « course calme »
       if (o.image) o.image(api);
     }
     function boucle(now) {
@@ -13452,6 +14014,27 @@
     svg.addEventListener("wheel", ev => { if (!ZM.on) return; ev.preventDefault(); zoomer(Math.exp(-ev.deltaY * .0015), ev.clientX, ev.clientY); }, { passive: false });
     svg.addEventListener("click", ev => { if (ZM.on && ZM.glisse) return; const r = boite.getBoundingClientRect(); let best = null, bd = 30; Object.keys(V).forEach(n => { const e = ecran(n); if (!e) return; const dd = Math.hypot(e.x + r.left - ev.clientX, e.y + 10 + r.top - ev.clientY); if (dd < bd) { bd = dd; best = n; } }); if (best && o.toucher) o.toucher(best); });
     const ro = window.ResizeObserver ? new ResizeObserver(() => { const r = boite.getBoundingClientRect(), g0 = taille.w; taille = { w: r.width, h: r.height }; majFond(); if (MET) MET.redim(r.width, r.height); if (o.grille && !I.anim && Math.abs(g0 - r.width) > 1) poser(); if (o.image) o.image(api); }) : null; if (ro) ro.observe(boite);
+    /* v20.62 · 🎥 tour de présentation en 2D (version simple) : la carte entière, puis un zoom doux d'un repère à l'autre, puis la grille, puis la carte entière.
+       « réduire les animations » : plans fixes et fondus au noir. */
+    let PR2 = null;
+    function presentation2D(op) {
+      finirPres2D(true); const R = reperesPresentation(o.circuit, T); if (!R.length) return 0;
+      const plein = [minx + w / 2, minz + h / 2, 1], K = [{ t: 0, v: plein }, { t: 1.2, v: plein }]; let t = 1.2;
+      R.slice(0, 4).forEach(([x, z]) => { t += 1.5; K.push({ t, v: [x, z, 1.8] }); t += 1.2; K.push({ t, v: [x + (T.cx - x) * .08, z + (T.cz - z) * .08, 1.95] }); });   // 4 repères au plus : la 2D reste simple (~14 s)
+      const g = T.a(-14, 0); t += 1.6; K.push({ t, v: [g.x, g.z, 2.4] }); t += 1.1; K.push({ t, v: [g.x, g.z, 2.5] }); t += 1.4; K.push({ t, v: [ZM.c[0], ZM.c[1], ZM.z] });
+      const fixe = !ANIM(), avant = { on: ZM.on, z: ZM.z, c: ZM.c.slice() };
+      PR2 = { K, D: t, t0: performance.now(), fin: op.fin, fixe, avant, horloge: horlogeDouce(t, 1.2), raf: 0 };
+      if (fixe) { PR2.fixes = [K[0]].concat(K.filter((k, j) => j >= 2 && j % 2 === 0 && j < K.length - 3), [K[K.length - 3]]).map(k => k.v); PR2.fondu = voileFondu(boite); }
+      const pas = () => { const P = PR2; if (!P) return; P.raf = 0; const now = performance.now(); let v;
+        if (P.fixe) { const i = Math.min(P.fixes.length - 1, Math.floor((now - P.t0) / 2400)), f = (now - P.t0) / 2400 - i; P.fondu.style.opacity = (i < P.fixes.length - 1 && f > .85) || (i > 0 && f < .15) ? "1" : "0"; v = P.fixes[i];
+          if (now - P.t0 >= P.fixes.length * 2400) { finirPres2D(false); return; } }
+        else { const tt = (now - P.t0) / 1000; if (tt >= P.D) { finirPres2D(false); return; } v = splineTemps(P.K, P.horloge(tt)); }
+        ZM.z = Math.max(1, v[2]); ZM.c = [v[0], v[1]]; appliquerVB(); P.raf = requestAnimationFrame(pas); };
+      PR2.raf = requestAnimationFrame(pas); return Math.round((fixe ? PR2.fixes.length * 2.4 : t) * 1000);
+    }
+    function finirPres2D(passe) { const P = PR2; if (!P) return; PR2 = null; if (P.raf) cancelAnimationFrame(P.raf); if (P.fondu) { P.fondu.style.opacity = "0"; setTimeout(() => P.fondu.remove(), 400); }
+      ZM.z = P.avant.z; ZM.c = P.avant.c; appliquerVB(); setTimeout(() => { if (P.fin) P.fin({ passe: !!passe }); }, 0); }
+    svg.addEventListener("pointerdown", () => { if (PR2) finirPres2D(true); }, true);
     const api = {
       type: "2d", T, zones: Z,
       equipes: () => Object.keys(V).map(n => ({ nom: n, livree: V[n].v.livree || null, casque: V[n].v.casqueModele || null, finition: V[n].v.finition || null, trainee: V[n].v.trainee || null, numero: V[n].v.numero || null, pierres: (V[n].v.pierres || []).filter(Boolean).length })),
@@ -13464,13 +14047,13 @@
       suspendu: () => !!(I.anim && I.suspendu),
       jouer(de, a, duree, fin) { if (!ANIM()) { api.placer(a); if (fin) fin(); return; } I.suspendu = null; I.pts = Object.assign({}, de); poser(); I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: performance.now(), duree: Math.min(duree || 2600, 3200), fin }; if (!raf) raf = requestAnimationFrame(boucle); },
       jouerScenario(scen, duree, fin) { if (EV && EV.raz) EV.raz(); if (!ANIM()) { api.placer(scen(1)); if (fin) fin(); return; } I.suspendu = null; I.e = 0; I.pts = scen(0); poser(); I.anim = { scen, de: scen(0), a: scen(1), t0: performance.now(), duree, fin }; if (!raf) raf = requestAnimationFrame(boucle); },
-      camera() { }, focus() { }, voitures() { }, survol(d, fin) { if (fin) fin(); }, arreterSurvol() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); if (MET) MET.reveiller(); if (o.image) o.image(api); }, reveiller() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); if (MET) MET.reveiller(); },   // V16.16 : la course reprend si la piste a été détachée
+      camera() { }, focus() { }, voitures() { }, presentation: op => presentation2D(op || {}), passerPresentation() { finirPres2D(true); }, presentationEnCours: () => !!PR2, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); if (MET) MET.reveiller(); if (o.image) o.image(api); }, reveiller() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); if (MET) MET.reveiller(); },   // V16.16 : la course reprend si la piste a été détachée
       /** v17.10 · zoom et déplacement de la carte (plein écran) : true pour l'activer, false pour l'arrêter et recentrer */
       /** v20.53 · onglet caché (true) : le décor animé (SMIL) s'arrête net, il repart au retour (false) ; la course se suspend côté appli */
       pause(b) { I.cache = !!b; try { if (b) svg.pauseAnimations(); else svg.unpauseAnimations(); } catch (e) { } if (!b) api.reveiller(); },
       cachee: () => !!I.cache,
       zoom2D(b) { ZM.on = !!b; svg.style.touchAction = b ? "none" : ""; svg.classList.toggle("zoomable", ZM.on); if (!b) recentrer(); },
-      detruire() { if (raf) cancelAnimationFrame(raf); if (ZM.raf) cancelAnimationFrame(ZM.raf); if (ro) ro.disconnect(); if (MET) MET.stop(); svg.remove(); rec.remove(); ["backgroundImage", "backgroundColor", "backgroundSize", "backgroundPosition", "backgroundRepeat"].forEach(k => boite.style[k] = ""); }
+      detruire() { if (PR2) { if (PR2.raf) cancelAnimationFrame(PR2.raf); if (PR2.fondu) PR2.fondu.remove(); PR2 = null; } if (raf) cancelAnimationFrame(raf); if (ZM.raf) cancelAnimationFrame(ZM.raf); if (ro) ro.disconnect(); if (MET) MET.stop(); svg.remove(); rec.remove(); ["backgroundImage", "backgroundColor", "backgroundSize", "backgroundPosition", "backgroundRepeat"].forEach(k => boite.style[k] = ""); }
     };
     majFond(); poser();
     return api;
@@ -13498,7 +14081,7 @@
       return '<path class="p2-gem" d="M' + x.toFixed(2) + " " + (y - 2.8).toFixed(2) + "L" + (x + 1.95).toFixed(2) + " " + y.toFixed(2) + "L" + x.toFixed(2) + " " + (y + 2.8).toFixed(2) + "L" + (x - 1.95).toFixed(2) + " " + y.toFixed(2) + 'Z" fill="' + PIERRES_COL[i] + '" stroke="#FFF6D8" stroke-width=".6"/>'; }).join("") + "</g>";
   }
   const LV_2D = { chrome: ["#DCE3EA", "#6E7884"], or: ["#E9B949", "#7A5300"], oranime: ["#F2C452", "#7A5300"], platine: ["#EEF3FA", "#8A94A0"], rubis: ["#B0002E", "#4A0012"], orrose: ["#E3A792", "#7A4A42"],
-    galaxie: ["#2A1458", "#B98CFF"], neon: ["#0D1017", null], arcenciel: [null, null], chocolat: ["#5A2D14", "#2A1205"], carte: ["#F6F2E8", "#15171B"] };
+    galaxie: ["#2A1458", "#B98CFF"], neon: ["#0D1017", null], arcenciel: [null, null], chocolat: ["#5A2D14", "#2A1205"], carte: ["#F6F2E8", "#15171B"], ver: ["#D9A35A", "#6B3A12"] };
   const marqueLivree = v => !!(v.ecurie && v.livree && LV_2D[v.livree]);
   /** pastille de la carte 2D : le disque reste à la couleur du pilote (repère du classement) ; la livrée fait l'anneau, la finition le liseré */
   function marque2D(v) {
@@ -13511,13 +14094,18 @@
       else h += '<circle r="9.3" fill="' + lv[0] + '" stroke="' + lv[1] + '" stroke-width=".8"/>';
       if (v.livree === "chocolat") h += [[-5, 7.6, 2.6], [1, 8.6, 3.4], [6, 7.2, 2.2]].map(([x, y, l]) => '<path d="M' + (x - 1.4) + " " + (y - 1) + "Q" + x + " " + (y + l) + " " + (x + 1.4) + " " + (y - 1) + 'Z" fill="#2A1205"/>').join("") + '<circle cx="-4" cy="-7.4" r=".9" fill="#F3C99B" opacity=".7"/>';
       if (v.livree === "carte") h += '<path d="M-8.6 -1.4c-1.2-1-1.8-1.6-1.8-2.3 0-.6.4-1 1-1 .4 0 .7.2.8.5.2-.3.5-.5.9-.5.6 0 1 .4 1 1 0 .7-.7 1.3-1.9 2.3z" fill="#D62839" transform="translate(1.6 4)"/><path d="M8.4 -3.4c-1.2 1-1.9 1.6-1.9 2.3 0 .6.4 1 1 1 .3 0 .6-.1.8-.4l-.4 1.3h1l-.4-1.3c.2.3.5.4.8.4.6 0 1-.4 1-1 0-.7-.7-1.3-1.9-2.3z" fill="#15171B" transform="translate(-.6 4.6)"/>';
+      if (v.livree === "ver") h += [-6.4, -2.2, 2.2, 6.4].map(x => '<path d="M' + x + ' -8.4Q' + (x + 1.6) + " 0 " + x + ' 8.4" stroke="#7A4A1A" stroke-width="1.1" fill="none" opacity=".75"/>').join("") + '<circle cx="5" cy="-5" r=".8" fill="#8FC8FF"/>';
       if (v.livree === "galaxie") h += [[-6, -5], [5, -6.5], [7, 4], [-3, 7.5]].map(([x, y]) => '<circle cx="' + x + '" cy="' + y + '" r=".7" fill="#fff"/>').join("");
       if (v.livree === "or" || v.livree === "oranime" || v.livree === "chrome" || v.livree === "platine") h += '<path d="M-6.5 -6.5A9.3 9.3 0 0 1 4 -8.4" stroke="#fff" stroke-width="1.2" fill="none" opacity=".8" stroke-linecap="round"/>';
     }
-    const FIN = { argent: "#E6EBF0", or: "#F7CF55", neon: c, diamant: "#C9F6FF", lauriers: "#E9C25A", etoilee: "#FFE596", soleil: "#FF9A2E" };
+    const FIN = { argent: "#E6EBF0", or: "#F7CF55", neon: c, diamant: "#C9F6FF", lauriers: "#E9C25A", etoilee: "#FFE596", soleil: "#FF9A2E", ailee: "#F7CF55", elfique: "#8FCB9A", biolum: "#5CF2E6", feuilledor: "#F5C842" };
+    if (f === "feuilledor") h += '<circle r="10.4" fill="none" stroke="#F5C842" stroke-width="1.6" stroke-dasharray="2.2 1.4 .8 1.8" style="filter:drop-shadow(0 0 2px #FFD84A)"/>' + [[-8.6, -6, 30], [7.8, -7, 110], [9.4, 4.6, 200], [-7.4, 7.6, 280], [0, -11.2, 0]].map(([x, y, a]) => '<path d="M' + (x - 1.6) + " " + y + "L" + (x - .2) + " " + (y - 1.5) + "L" + (x + 1.6) + " " + (y - .4) + "L" + (x + .6) + " " + (y + 1.4) + 'Z" fill="#FFE596" stroke="#9A6716" stroke-width=".25" transform="rotate(' + a + " " + x + " " + y + ')"/>').join("");
+    if (f === "ailee") h += [-1, 1].map(s => '<path d="M' + s * 7 + " -6C" + s * 12 + " -12 " + s * 16 + " -9 " + s * 16 + " -6C" + s * 13 + " -7 " + s * 10 + ' -6 ' + s * 7.6 + ' -3.6Z" fill="#FFFDF2" stroke="#B9A06A" stroke-width=".4"/>').join("");
+    if (f === "elfique") h += '<path d="M-10.6 -2C-12.6 1-12.6 5-10.4 8-8.6 5-8.6 1-10.6-2Z" fill="#4E9A5C" stroke="#EEF4F6" stroke-width=".6"/>';
+    if (f === "biolum") h += [0, 60, 120, 180, 240, 300].map(a => { const r = a * PI / 180; return '<circle cx="' + (Math.cos(r) * 10.4).toFixed(1) + '" cy="' + (Math.sin(r) * 10.4).toFixed(1) + '" r="1.2" fill="' + (a % 120 ? "#5CF2E6" : "#FF8AE0") + '" style="filter:drop-shadow(0 0 1.5px #5CF2E6)"/>'; }).join("");
     if (f === "soleil") h += [0, 45, 90, 135, 180, 225, 270, 315].map(a => { const r = a * PI / 180; return '<path d="M' + (Math.cos(r) * 10.2).toFixed(1) + " " + (Math.sin(r) * 10.2).toFixed(1) + "L" + (Math.cos(r) * 12.4).toFixed(1) + " " + (Math.sin(r) * 12.4).toFixed(1) + '" stroke="#FFB21E" stroke-width="1.3" stroke-linecap="round"/>'; }).join("");
     if (f === "lauriers") h += [-1, 1].map(s => [0, 1, 2].map(i => { const a = (150 - i * 32) * PI / 180, x = s * Math.cos(a) * 10.6, y = Math.sin(a) * 10.6 * -1 + 3; return '<ellipse cx="' + x.toFixed(1) + '" cy="' + (-y + 6).toFixed(1) + '" rx="1" ry="2.1" transform="rotate(' + (s * (60 - i * 30)) + " " + x.toFixed(1) + " " + (-y + 6).toFixed(1) + ')" fill="#E9C25A" stroke="#6B4B0C" stroke-width=".3"/>'; }).join("")).join("");
-    h += '<circle r="7" fill="' + c + '" stroke="' + (f ? FIN[f] : "#fff") + '" stroke-width="' + (f ? 2.1 : 1.8) + '"' + (f === "neon" ? ' style="filter:drop-shadow(0 0 2px ' + c + ')"' : f === "diamant" ? ' style="filter:drop-shadow(0 0 1.5px #C9F6FF)"' : "") + "/>";
+    h += '<circle r="7" fill="' + c + '" stroke="' + (f ? FIN[f] : "#fff") + '" stroke-width="' + (f ? 2.1 : 1.8) + '"' + (f === "neon" || f === "biolum" ? ' style="filter:drop-shadow(0 0 2px ' + (f === "biolum" ? "#5CF2E6" : c) + ')"' : f === "feuilledor" ? ' style="filter:drop-shadow(0 0 1.5px #F5C842)"' : f === "diamant" ? ' style="filter:drop-shadow(0 0 1.5px #C9F6FF)"' : "") + "/>";
     if (f === "etoilee") h += '<path d="M0 -10.6l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z" fill="#FFE596" stroke="#7A5300" stroke-width=".3"/>';
     if (f === "diamant") h += '<path d="M6 -6l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" fill="#fff"/>';
     return h + gemmes2D(v);
@@ -13525,7 +14113,9 @@
   /** traînée de la carte 2D : quelques traits qui suivent la voiture (Simple : rien, comme avant) */
   const TR_2D = { halo: [["c", 5, .35]], flammes: [["#FF6A1F", 5.2, .75], ["#FFE07A", 2, .95]], etincelles: [["#FFD27A", 2.4, .95, "0.1 4"]], comete: [["c", 6.5, .3], ["#FFFFFF", 1.6, .8]],
     supernova: [["#9B87FF", 7, .4], ["#FFFFFF", 2, .85]], turbo: [["#5AB8FF", 4, .6, "6 3"], ["#E6F6FF", 1.2, .9]], arcenciel: [["#FF5A5F", 4.2, .8], ["#FFB547", 4.2, .8], ["#3DDC97", 4.2, .8], ["#4C9AFF", 4.2, .8], ["#B46CF0", 4.2, .8]],
-    cables: [["#3A424C", 1.8, .9, null, -2.6], ["#3A424C", 1.8, .9, null, 2.6], ["#D9E0E8", .8, 1, null, -2.6], ["#D9E0E8", .8, 1, null, 2.6]] };
+    cables: [["#3A424C", 1.8, .9, null, -2.6], ["#3A424C", 1.8, .9, null, 2.6], ["#D9E0E8", .8, 1, null, -2.6], ["#D9E0E8", .8, 1, null, 2.6]],
+    sabre: [["#FF2A3A", 7, .3], ["#FF4A55", 3.2, .95], ["#FFFFFF", 1.2, 1]], glitch: [["#FF3BD4", 2.6, .85, "4 3", -2.4], ["#3BE8FF", 2.6, .85, "3 4", 2.4], ["#F7F24A", 1.3, .9, "2 6"]],
+    flocons: [["#BFE6FF", 5, .35], ["#FFFFFF", 3.2, .95, "0.1 5.5"]] };   // v20.61 · Sabre lumineux, Faille ; Flocons (souvenir du tour de chauffe)
   function traineeSvg2D(v, k, parent) {
     const S = v.ecurie && TR_2D[v.trainee]; if (!S) return null;
     return S.map(([col, w, op, dash, dec], i) => { const p = document.createElementNS("http://www.w3.org/2000/svg", "path"); p.setAttribute("fill", "none"); p.setAttribute("stroke", col === "c" ? v.couleur : col); p.setAttribute("stroke-width", (w * k).toFixed(2));
@@ -13534,9 +14124,14 @@
   }
   function majTrainee2D(v, p, k, enCourse) {
     const h = v.hist, d = h.length ? Math.hypot(h[0][0] - p.x, h[0][1] - p.z) : 99;
-    if (!enCourse || d > 40 * k) { h.length = 0; h.push([p.x, p.z, -p.tz, p.tx]); }
+    // v20.61 : on ne repart de zéro que sur un vrai saut (mise en grille, nouvelle course). Avant (> 40), à 30 images/s (mode léger, téléphone lent)
+    // la voiture parcourt plus de 40 unités par image en course 2D : la traînée était effacée à chaque image et ne se voyait jamais.
+    if (!enCourse || d > 240 * k) { h.length = 0; h.push([p.x, p.z, -p.tz, p.tx]); }
     else if (d > 2.2 * k) { h.unshift([p.x, p.z, -p.tz, p.tx]); if (h.length > 9) h.pop(); }
-    const pts = [[p.x, p.z, -p.tz, p.tx]].concat(h.slice(h.length && Math.hypot(h[0][0] - p.x, h[0][1] - p.z) < .01 ? 1 : 0));
+    // longueur bornée (~70 unités), quelle que soit la cadence : la traînée suit la voiture sans couper à travers le circuit
+    const pts = [[p.x, p.z, -p.tz, p.tx]], LMAX = 70 * k; let lg = 0;
+    for (const q of h.slice(h.length && Math.hypot(h[0][0] - p.x, h[0][1] - p.z) < .01 ? 1 : 0)) { const r = pts[pts.length - 1], s = Math.hypot(q[0] - r[0], q[1] - r[1]);
+      if (lg + s >= LMAX) { const f = s ? (LMAX - lg) / s : 0; pts.push([r[0] + (q[0] - r[0]) * f, r[1] + (q[1] - r[1]) * f, q[2], q[3]]); break; } lg += s; pts.push(q); }
     v.tr.forEach(t => {
       let dd = "";
       if (pts.length >= 2) {

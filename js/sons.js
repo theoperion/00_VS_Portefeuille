@@ -833,6 +833,18 @@ const SONS = (() => {
       vibrer(110); },
     ev(k) { try { if (EV[k]) EV[k](); } catch (e) { /* rien */ } },
     succes() { note(1046, .12, "sine", .12); note(1568, .25, "sine", .12, .1); vibrer(30); },
+    /** v20.61 · 🎄 calendrier de l'Avent : petits bruitages de Noël (grelots, porte, pop, raté, notes de la guirlande, fin de partie) ; rien si le son est coupé */
+    noel(k, i) { try { if (!audio()) return;
+      if (k === "grelots") { for (let q = 0; q < 7; q++) { note(2400 + (q % 3) * 260, .09, "triangle", .05, q * .055); note(3600 + (q % 2) * 300, .06, "sine", .03, q * .055 + .02); } }
+      else if (k === "porte") { souffle(.35, [900, 300], .12, 0, .02, "bandpass"); note([660, 990], .18, "sine", .08, .25); note(1320, .35, "sine", .07, .4); }
+      else if (k === "pop") note([700, 1300], .08, "sine", .1);
+      else if (k === "ok") { note(988, .1, "triangle", .09); note(1319, .18, "triangle", .09, .08); }
+      else if (k === "rate") note([300, 160], .22, "square", .06);
+      else if (k === "ton") note([523.25, 659.25, 783.99, 1046.5][i % 4], .3, "triangle", .11);
+      else if (k === "fin") [784, 988, 1175, 1568].forEach((f, q) => note(f, .22, "triangle", .08, q * .1));
+      else if (k === "feu") note(440, .14, "square", .09);
+      else if (k === "go") note(880, .3, "square", .11);
+    } catch (e) { /* rien */ } },
     /* lot 62 · « Journées folles » de Moi (tout synthétisé, sur un bus à part que « Passer » coupe net) */
     /** l'incendie : grondement grave, souffle des flammes, crépitements ; fort = un coup sourd au début */
     folleFeu(dur, fort) {

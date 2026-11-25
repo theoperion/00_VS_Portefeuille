@@ -46,16 +46,18 @@ function MJ_ETAT(moisAuj, etat, finis) {
 const FINI = (mois, g, reussi) => ({ mois, id: "essai", univers: MOIS_T[mois].univers, type: MOIS_T[mois].type, contenu: Object.assign({}, CONTENU, { ico: MOIS_T[mois].ico }), recompense: REC, gagnants: g,
   commun: { reussi: !!reussi, val: reussi ? 130 : 80, objectif: 120, texte: reussi ? "Objectif commun inventé réussi." : "Objectif commun inventé manqué." }, tableau: NOMS.map((n, i) => ({ nom: n, val: g.includes(n) ? 30 : 10 - i, txt: "unités inventées" })), texte: "Résultat inventé.", revele: { graine: "ab".repeat(32) } });
 const FINI_JANV = (g, reussi) => ({ mois: 202701, id: "essai", univers: "silverstone", type: "choix", contenu: CONTENU, recompense: REC, gagnants: g, commun: { reussi: !!reussi, val: 80, objectif: 120, texte: reussi ? "Objectif commun inventé réussi." : "Objectif commun inventé manqué." }, tableau: NOMS.map((n, i) => ({ nom: n, val: g.includes(n) ? 30 : 10 - i, txt: "unités inventées" })), texte: "Résultat inventé.", revele: { graine: "ab".repeat(32) } });
-/** ouvre l'appli : quand, session, jusqua, mj (fonction (corps) → réponse), adminOn, sombre, reduit, revVu (révélations déjà vues) */
+/** ouvre l'appli : quand, session, jusqua, mj (fonction (corps) → réponse), adminOn, sombre, reduit, revVu (révélations déjà vues),
+    piege (l'affichette du mois n'est pas marquée vue), stock (clés posées dans le téléphone avant l'ouverture) */
 async function page(b, o) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block", colorScheme: o.sombre ? "dark" : "light", reducedMotion: o.reduit ? "reduce" : "no-preference" }), p = await ctx.newPage(), err = [], req = [];
   p.on("pageerror", e => err.push(e.message)); await p.clock.setFixedTime(new Date(o.quand));
   await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}"); req.push(c.action === "mj" ? "mj:" + c.op : c.action);
     const rep = c.action === "mj" ? (o.mj ? o.mj(c) : { ok: true, ouvert: false }) : c.action === "tickets" ? { ok: true, ouvert: false } : c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : donnees(o.session, o.jusqua);
     r.fulfill({ contentType: "application/json", body: JSON.stringify(rep) }); });
-  await p.addInitScript(([adminOn, revVu]) => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.bullePortrait", "1");
+  // v20.62 : l'affichette du mois (piège) passe avant le mini-jeu ; les tests du mini-jeu la marquent vue, sauf o.piege (test tpiege.js)
+  await p.addInitScript(([adminOn, revVu, piege, st]) => { Object.keys(st).forEach(k => localStorage.setItem(k, st[k])); if (!piege) for (let m = 202701; m <= 202712; m++) localStorage.setItem("versus.piegeMois." + m, "1"); localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.bullePortrait", "1");
     localStorage.setItem("versus.saison1", "1"); localStorage.setItem("versus.gpVu.2027", "202712"); localStorage.setItem("versus.baVu.2027", "202712"); localStorage.setItem("versus.chauffe1", "1");
-    if (revVu) for (let m = 202701; m <= 202712; m++) { localStorage.setItem("versus.mjRev." + m, "1"); localStorage.setItem("versus.mjFin." + m, "1"); } if (adminOn) sessionStorage.setItem("versus.adminOn", "1"); }, [!!o.adminOn, !!o.revVu]);
+    if (revVu) for (let m = 202701; m <= 202712; m++) { localStorage.setItem("versus.mjRev." + m, "1"); localStorage.setItem("versus.mjFin." + m, "1"); } if (adminOn) sessionStorage.setItem("versus.adminOn", "1"); }, [!!o.adminOn, !!o.revVu, !!o.piege, o.stock || {}]);
   await p.goto("http://localhost:" + PORT + "/index.html"); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1500);
   return { ctx, p, err, req };
 }
@@ -65,4 +67,4 @@ const allerVitrine = p => p.evaluate(async () => { document.querySelectorAll(".r
 const deborde = sel => `[...document.querySelectorAll(${JSON.stringify(sel)})].filter(x => { const r = x.getBoundingClientRect(); return r.width && (r.right > innerWidth + 1 || r.left < -1) && !x.closest(".cbo-rayons") && !x.classList.contains("cbo-rayons"); }).map(x => x.className.baseVal !== undefined ? x.tagName : x.className).slice(0, 5)`;
 function compteur() { const ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); }; return { ko, ok }; }
 function fin(ko) { console.log(ko.length ? "\n" + ko.length + " NON" : "\nTout est OUI."); process.exit(ko.length ? 1 : 0); }
-module.exports = { chromium, DOSSIER, NOMS, CONTENU, REC, ETAT, MJ_ETAT, FINI_JANV, FINI, MOIS_T, EMP, page, allerCourse, allerVitrine, deborde, compteur, fin };
+module.exports = { chromium, DOSSIER, donnees, NOMS, CONTENU, REC, ETAT, MJ_ETAT, FINI_JANV, FINI, MOIS_T, EMP, page, allerCourse, allerVitrine, deborde, compteur, fin };

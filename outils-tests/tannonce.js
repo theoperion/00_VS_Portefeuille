@@ -18,7 +18,7 @@ const CACHES = [/archer elfe/i, /forêt endormie/i, /12 circuits sont dévoilés
 // règles à jouer en janvier : visibles dès le 20 décembre
 const JOUER = [/Défi du mois/, /Pronostic/i, /Rival/, /Atout du circuit/i, /pièges/i];
 // v20.58 : la promesse du 20/12 (sans rien dévoiler), jamais avant le 20/12, jamais dans l'annonce du 1/1
-const PROMESSE = [/Chaque univers cache une surprise/, /mini-jeu à jouer ensemble/, /révélé le 1er de son mois/, /Trophées en 4 vitrines \(Mondes, Succès, Gant, Légendes\)/, /course en direct au rythme du S&P 500/, /écurie et ta voiture personnalisée/];
+const PROMESSE = [/Chaque univers cache une surprise/, /mini-jeu à jouer ensemble/, /révélé le 1er de son mois/, /Trophées en 4 vitrines \(Mondes, Succès, Gant, Légendes\)/, /course en direct au rythme du S&P 500/, /de nouveaux objets à gagner pour ton écurie/];
 // v20.58 : la révélation du 1/1 cite les règles 2027 à jour
 const PREMIER = [/Le Côté obscur/, /points de place en double, et au moins 2/, /Juin[\s\S]{0,60}Bataille spatiale[\s\S]{0,20}🌑 Le Côté obscur : Le dernier du classement marque double \(2 points au moins\)/i, /Avr[\s\S]{0,60}🏹 L'œil de l'archer elfe : Battre le S&P 500 rapporte 2 points au lieu d'un/i, /Mai\s*🌿 Pandora\s*La forêt endormie : Carte 🚀 Turbo interdite/i,
   /Janv[\s\S]{0,60}🪱 Le Chevaucheur des sables/i, /Déc[\s\S]{0,60}🦸 Le Rassemblement des héros/i, /Couloirs mouvants : À moins de 0,2 point d'écart \(ex\. 3,1 % et 3,2 %\)/, /Le thé du Chapelier/, /Le chant des Sirènes/];

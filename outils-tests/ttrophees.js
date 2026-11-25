@@ -66,7 +66,7 @@ const course = async (p, vue) => p.evaluate(async vue => {
         : u === "djeddah" ? { gagne: nom === "Kévin", pourTous: ["Kévin"], meilleur: { nom: "Kévin", txt: "" }, progression: nom === "Clément" ? { p: 2, c: 3, txt: "2 / 3 sorts" } : null } : null;
       window.MINIJEUX_REV = 1; rendreTrophees(); await new Promise(r => setTimeout(r, 500));
       const cl = id => (document.querySelector('[data-monde="' + id + '"]') || { className: "" }).className;
-      return { dune: cl("m-silverstone"), chateau: cl("m-djeddah"), anneau: (document.querySelector('[data-monde="m-djeddah"] .cc-anneau') ? 1 : 0), objC: debloques("Clément").has("livree.or") && debloques("Clément").has("circuit.desert"), objT: debloques("Théo").has("livree.or"), objK: debloques("Kévin").has("livree.or"),
+      return { dune: cl("m-silverstone"), chateau: cl("m-djeddah"), anneau: (document.querySelector('[data-monde="m-djeddah"] .cc-anneau') ? 1 : 0), objC: debloques("Clément").has("livree.ver") && debloques("Clément").has("circuit.desert"), objT: debloques("Théo").has("livree.ver"), objK: debloques("Kévin").has("livree.ver"),
         lauriers: !!document.querySelector('[data-monde="m-silverstone"] .cc-laurier'), socle: !!document.querySelector('[data-monde="m-silverstone"] .cc-socle') };
     });
     ok(/exclusif/.test(mm.dune) && mm.lauriers && mm.socle && /autres/.test(mm.chateau) && mm.anneau && mm.objC && mm.objT && !mm.objK, "faux moteur : le meilleur du mois a la feuille d'or (lauriers, projecteur sur socle), chacun qui réussit gagne le trophée et ses objets, progression en anneau " + JSON.stringify(mm) + tag);
@@ -127,7 +127,7 @@ const course = async (p, vue) => p.evaluate(async vue => {
     const o = await p.evaluate(() => { const t = (q, s, i) => { const r = texteOrigineItem(q, s, i); return r.t + " | " + r.p; };
       return { commun: t("Nicolas", "klaxon", "fusees"), excl: t("Nicolas", "trainee", "halo"), monde: t("Clément", "plaque", "ratatouille"), gant: t("Clément", "livree", "chrome"), leg: t("Clément", "finition", "lauriers"), tk: t("Clément", "plaque", "ticketor"), r2028: t("Clément", "casque", "glace"),
         orphelins: Object.keys(ITEMS).flatMap(sl => Object.keys(ITEMS[sl]).filter(id => BASE_ECURIE[sl] !== id && !Object.keys(origineItem(sl, id)).length).map(id => sl + "." + id)),
-        rar: [rareteItem("klaxon", "fusees").lib, rareteItem("trainee", "halo").lib, rareteItem("livree", "or").lib, rareteItem("livree", "chrome").lib, rareteItem("finition", "lauriers").lib] }; });
+        rar: [rareteItem("klaxon", "fusees").lib, rareteItem("trainee", "halo").lib, rareteItem("livree", "ver").lib, rareteItem("livree", "chrome").lib, rareteItem("finition", "lauriers").lib] }; });
     ok(/🏅 Succès/.test(o.commun) && /Chacun qui réussit/.test(o.commun) && /Exclusif/.test(o.excl) && /Kévin/.test(o.excl) && /🗺️ Monde/.test(o.monde) && /Petit Chef/.test(o.monde) && /Gant/.test(o.gant) && /Légende/.test(o.leg) && /Légende/.test(o.tk) && /seul ticket/.test(o.tk) && /2028/.test(o.r2028) && !o.orphelins.length && o.rar.join() === "Succès,Exclusif,Monde,Gant,Légende",
       "Écurie · « d'où vient cet objet » : Mondes, Succès commun, Succès exclusif, Gant, Légendes, 2028 ; aucun objet orphelin " + JSON.stringify(o.orphelins) + tag);
     // 7. les pierres du Gant sur la voiture, en course 2D et 3D

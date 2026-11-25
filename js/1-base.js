@@ -27,7 +27,7 @@ const CLES = { api: "versus.api", cle: "versus.cle", theme: "versus.theme", cach
 /* En simulation (date simulée ou vue joueur de l'admin), ce qui est « vu » (révélation, annonces, paliers, clôture…), l'état des onglets
    et les choix privés de Moi vivent dans une mémoire de session : le vrai stockage reste intact, et on retrouve tout en revenant à l'admin. */
 const SIMULATION = (() => { try { return !!window.DATE_SIM || !!localStorage.getItem("versus.vueJoueur"); } catch (e) { return !!window.DATE_SIM; } })();
-const CLES_SIM = /^versus\.(accVu|etat|tuto1|revele|nouveaute\.|gpVu\.|chauffe1|chauffeFete|saison1|recapVu|rappelMasque|mesCartes|mesDuels|moi\.(?!api$|cle$))/;   // v16.83 : tous les choix privés de Moi, sauf l'adresse et la clé du fichier
+const CLES_SIM = /^versus\.(accVu|etat|tuto1|revele|nouveaute\.|piegeMois\.|gpVu\.|chauffe1|chauffeFete|saison1|ecurieTeaser|recapVu|rappelMasque|mesCartes|mesDuels|avent|moi\.(?!api$|cle$))/;   // v16.83 : tous les choix privés de Moi, sauf l'adresse et la clé du fichier
 const MEM_SIM = {};
 const stock = {
   get(k) { if (SIMULATION && k in MEM_SIM) return MEM_SIM[k]; try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -160,6 +160,8 @@ async function charger(frais) {
     ERREUR_SERVEUR = ""; DEMARRAGE = false; D = json; voilerMoisIncomplet(); SOURCE = "api"; EN_CHARGEMENT = false; stock.set(CLES.cache, JSON.stringify(json)); afficherTout();
     setTimeout(() => { try { annoncerExclusifs(); } catch (e) { /* rien */ } }, 1200);
     setTimeout(() => { try { bullePortrait(); } catch (e) { /* rien */ } }, 2500);   // V16.26
+    setTimeout(() => { try { teaserEcurie(); } catch (e) { /* rien */ } }, 1800);
+    setTimeout(() => { try { if (typeof chargerTresors === "function" && typeof TRESORS !== "undefined" && !TRESORS && tresorsOuverts()) chargerTresors().then(() => { if (chercheursNoel().length && ["classement", "fiche"].includes(vueActive())) rendreVue(vueActive()); }).catch(() => {}); } catch (e) { /* rien */ } }, 3200);   // v20.62 : 🎁 plaques Chercheur de Noël (liste publique des chercheurs)   // v20.61 : « Ton écurie ouvre ses portes » (une fois, à partir du 1/12/2026)
     setTimeout(() => revendiquerExclusifs().then(() => { if (vueActive() === "trophees" || vueActive() === "classement") rendreVue(vueActive()); }).catch(() => {}), 0);
   } catch (e) {
     if (DEMARRAGE && !(e && e.serveur)) { DEMARRAGE = false; setTimeout(() => charger(frais), 1500); return; }   // un seul nouvel essai avant d'afficher « Hors connexion »

@@ -817,6 +817,8 @@ function fermerFenetreOuverte() {
   { const f = document.querySelectorAll(".m-fete"), d = f[f.length - 1]; if (d) { const c = d.querySelector("[data-continuer]"); if (c) c.click(); else d.remove(); return true; } }   // v16.83 : la fête de palier de Moi
   // V16.16 : les fenêtres plein écran de la Course (bande-annonce, carte postale / règles, plein écran) passent avant le reste
   if (typeof BA_OUVERTE !== "undefined" && BA_OUVERTE) { BA_OUVERTE.fermer(false); return true; }
+  { const c = document.querySelector(".av-case") || document.querySelector(".av-ov");   // v20.62 : calendrier de l'Avent, la case d'abord, puis le calendrier
+    if (c) { const x = c.querySelector(".av-x, [data-av-fermer]"); if (x) x.click(); else c.remove(); return true; } }
   const dialogues = [...document.querySelectorAll(".regles")]; if (dialogues.length) { const d = dialogues[dialogues.length - 1], x = d.querySelector(".rg-x"); if (x) x.click(); else d.remove(); return true; }
   { const rv = [...document.querySelectorAll(".revel")], d = rv[rv.length - 1];   // v20.44 : cérémonies et fiches de badges (relecture joueur : le retour les ferme)
     if (d) { const x = d.querySelector('[data-cb-ok], [data-tk-ok], [data-mj-ok], [data-cc="ok"], .rg-x, [aria-label="Fermer"]'); if (x) x.click(); else d.remove(); return true; } }   // [data-mj-ok] : 🎲 cérémonie notée vue, puis la révélation du nouveau mois suit
@@ -867,7 +869,7 @@ document.addEventListener("keydown", ev => { const t = ev.target.closest && ev.t
 { const pb = document.getElementById("ouvrir-portrait"); if (pb) pb.hidden = !portraitDispo(); }
   { const tv = document.getElementById("moi-tester-versus"), te = document.getElementById("moi-versus-etat");   // v17.96 (Théo) : seulement pour un fichier qui envoie lui-même son relevé (après un transfert)
     const voir = !!(window.Moi && window.Moi.envoieSeul && window.Moi.envoieSeul()); if (tv) tv.parentElement.hidden = !voir; if (te) te.hidden = !voir; }   // V16.56 : Mon portrait à partir du samedi 21/11, 11 h
-  { const ce = document.querySelector('[data-accent-choix="ecurie"]'); if (ce) ce.style.display = saisonJouee() ? "" : "none"; }   // v17.5 : pas de couleur « Mon écurie » avant la Saison 1 (tour de chauffe = bases seulement)
+  { const ce = document.querySelector('[data-accent-choix="ecurie"]'); if (ce) ce.style.display = ecurieOuverte() ? "" : "none"; }   // v17.5 : pas de couleur « Mon écurie » avant la Saison 1 (tour de chauffe = bases seulement)
   if (section) { const s = document.getElementById(section); if (s) plierRegl(s, false); if (s) setTimeout(() => { s.scrollIntoView({ block: "start" }); const i = s.querySelector("input"); if (i && !i.value) i.focus(); }, 30); }
 }
 $("#btn-reglages").addEventListener("click", () => ouvrirReglages());

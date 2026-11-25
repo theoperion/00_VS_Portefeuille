@@ -107,7 +107,8 @@ const deborde = () => [...document.querySelectorAll("#v-trophees *")].filter(x =
       return { onglet: !!v.querySelector('[data-pod="defis"]'), att: /Voici ce qui t'attend/.test(t), vit: !!v.querySelector(".vit-tabs, #vit-succes, #vit-mondes, .gant"),
         detenteurs: v.querySelectorAll(".cc-s, .cc-m, .cour-q b, .gant-autres, .lg").length, cache: v.querySelectorAll(".sec-t.cache").length, univ: v.querySelectorAll(".univ:not(.cache)").length, ecurie: !!v.querySelector('[data-pod="ecurie"]') }; });
     await p.screenshot({ path: DOSSIER + "/apercu-15-12-2026.png", fullPage: true });
-    ok(!err.length && !a.onglet && !a.vit && !a.detenteurs && !a.ecurie && !/secret|succès|Gant de l'infini|titre|drapeau|légende/i.test(await p.evaluate(() => document.querySelector("#v-trophees").innerText)), QD.slice(0, 10) + " : le joueur n'a ni onglet Trophées ni Écurie, rien des vitrines ne fuit avant janvier (règle de Théo) " + JSON.stringify(a));
+    // v20.61 (Théo, 25/11) : l'Écurie est ouverte dès le 1er décembre 2026 (objets de départ seulement, voir tecurie-dec.js) ; les Trophées restent cachés
+    ok(!err.length && !a.onglet && !a.vit && !a.detenteurs && a.ecurie && !/secret|succès|Gant de l'infini|titre|drapeau|légende/i.test(await p.evaluate(() => document.querySelector("#v-trophees").innerText)), QD.slice(0, 10) + " : le joueur n'a pas d'onglet Trophées (mais l'Écurie, ouverte le 1/12), rien des vitrines ne fuit avant janvier (règle de Théo) " + JSON.stringify(a));
     await ctx.close();
   }
   await b.close();

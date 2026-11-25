@@ -1,7 +1,7 @@
 /* Test (v20.48) · L'Écurie en course : une seule voiture (le showroom = la F1 3D de la course), la personnalisation se voit en course 2D et 3D.
    Fausses données uniquement (serveur Google intercepté). Serveur local ouvert : python3 -m http.server 8771 &  puis  node outils-tests/tecurie.js
    Vérifie : showroom = même modèle que la course ; livrée / casque / finition / traînée / numéro choisis → sur la voiture en course 2D et 3D ;
-   joueur sans écurie = rendu d'avant ; tour de chauffe = rendu d'avant pour tous ; 0 erreur JS ; 390 px clair et sombre. Captures dans CAPTURES. */
+   joueur sans écurie = rendu d'avant ; avant le 1/12/2026 = rendu d'avant pour tous ; décembre 2026 = objets de départ seulement (v20.61) ; 0 erreur JS ; 390 px clair et sombre. Captures dans CAPTURES. */
 const { chromium } = require("playwright"), fs = require("fs"), path = require("path"), os = require("os");
 const PORT = process.env.PORT || 8771, URL = "http://localhost:" + PORT + "/index.html";
 const DOSSIER = process.env.CAPTURES || path.join(os.tmpdir(), "versus-captures", "ecurie");   // captures hors du dépôt (CAPTURES=… pour un autre dossier)
@@ -107,11 +107,19 @@ const course = async (p, vue) => p.evaluate(async vue => {
     ok(!err.length && !deb, "0 erreur JS, rien ne déborde à 390 px" + tag + " " + JSON.stringify(err.slice(0, 3)));
     await ctx.close();
   }
-  // 4. tour de chauffe (décembre 2026) : les voitures d'avant pour tout le monde, même avec une écurie enregistrée
-  { const { ctx, p, err } = await page(b, { quand: "2026-12-15T10:00:00", session: { role: "perso", nom: "Kévin" }, jusqua: 202612 });
+  // 4. tour de chauffe : avant le 1er décembre 2026, les voitures d'avant pour tout le monde, même avec une écurie enregistrée
+  { const { ctx, p, err } = await page(b, { quand: "2026-11-30T10:00:00", session: { role: "perso", nom: "Kévin" }, jusqua: 202612 });
     const c = await course(p, "2d"), e = c && c.eq ? c.eq : [];
     const m2 = await p.evaluate(() => [...document.querySelectorAll("#gp-piste .p2-car")].map(g => g.getAttribute("class") + (g.querySelector(".p2-casque") ? " casque" : "")));
-    ok(e.length === 5 && e.every(x => !x.casque && !x.numero && !x.finition) && m2.every(x => !/lv-|casque/.test(x)) && !err.length, "tour de chauffe : aucune écurie visible en course (rendu d'avant) " + JSON.stringify(m2));
+    ok(e.length === 5 && e.every(x => !x.casque && !x.numero && !x.finition) && m2.every(x => !/lv-|casque/.test(x)) && !err.length, "30/11/2026 : aucune écurie visible en course (rendu d'avant) " + JSON.stringify(m2));
+    await ctx.close(); }
+  // 5. v20.61 (Théo, 25/11) : à partir du 1er décembre 2026, l'écurie se voit en course, mais seulement avec les objets de DÉPART (les objets 2027 enregistrés retombent sur la série)
+  { const { ctx, p, err } = await page(b, { quand: "2026-12-15T10:00:00", session: { role: "perso", nom: "Kévin" }, jusqua: 202612 });
+    const c = await course(p, "2d"), e = c && c.eq ? c.eq : [];
+    const dep = await p.evaluate(() => ({ casque: DEPART_ECURIE.filter(g => g[0] === "casque").map(g => g[1]).concat(["uni"]) }));
+    const k = e.find(x => x.nom === "Kévin") || {};
+    ok(e.length === 5 && e.every(x => (!x.casque || dep.casque.includes(x.casque)) && (!x.livree || x.livree === "couleur") && (!x.finition || x.finition === "aucune") && (!x.trainee || x.trainee === "simple")) && k.numero === 44 && !err.length,
+      "décembre 2026 : l'écurie se voit en course, rien que des objets de départ (Kévin #44) " + JSON.stringify(e.map(x => [x.nom, x.livree, x.casque, x.finition, x.trainee, x.numero])));
     await ctx.close(); }
   await b.close();
   console.log(ko.length ? "\n" + ko.length + " NON" : "\nTout est OUI"); process.exit(ko.length ? 1 : 0);

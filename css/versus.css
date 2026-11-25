@@ -1777,7 +1777,6 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .gp-plus-m { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; display: grid; min-width: 210px; padding: 6px; border-radius: 14px; background: #10131A; color: #fff; border: 1px solid rgba(255,255,255,.14); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
 .gp-plus-m button { text-align: left; padding: 11px 12px; border: 0; border-radius: 10px; background: transparent; color: inherit; font: 600 14px/1.2 var(--f-text); cursor: pointer; }
 .gp-plus-m button:hover, .gp-plus-m button:focus-visible { background: rgba(255,255,255,.08); }
-/* v17.10 : « 🛸 Survol guidé » toujours visible (il passe tout seul en 📺 Visite) */
 /* 🚁 Hélico : les pastilles des pilotes pour choisir la voiture suivie */
 .gp-suivi { display: none; position: absolute; left: 8px; bottom: 8px; z-index: 3; gap: 6px; padding: 4px; border-radius: 999px; background: rgba(8,10,14,.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
 .gp-piste.vue-poursuite .gp-suivi { display: flex; }
@@ -1820,7 +1819,7 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 
 /* v17.13 : en plein écran, « Arrivée » et « Survol » écrits en toutes lettres (Théo) */
 @media (max-width: 560px) { .gpp-bar { left: calc(env(safe-area-inset-left, 0px) + 8px); flex-wrap: wrap; justify-content: flex-end; row-gap: 6px; } }
-/* 19/11 : en portrait, le sélecteur (avec 🛸 Survol) sur la 1re ligne, ▶ ⏭ ✕ ensemble sur la 2de */
+/* 19/11 : en portrait, le sélecteur sur la 1re ligne, ▶ ⏭ ✕ ensemble sur la 2de */
 @media (max-width: 560px) { .gpp-bar { row-gap: 3px; } .gpp-bar::after { content: ""; flex-basis: 100%; height: 0; order: 1; } .gpp-bar .gpp-b { order: 2; } }
 /* v17.35 · 🗝️ Aperçu admin du trésor, sur la page Course (exemple inventé) : un petit bandeau dans la piste, qui la suit en plein écran */
 .tap-band { position: absolute; z-index: 6; top: 6px; left: 6px; right: 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 5px; padding: 4px 5px 4px 8px; border-radius: 10px; background: rgba(255,224,138,.93); color: #2A1E05; font: 600 10.5px/1.2 var(--f-text); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
@@ -2583,3 +2582,183 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .nv-cal em { grid-row: span 2; font: 700 10.5px/1.6 var(--f-num); font-style: normal; letter-spacing: .06em; text-transform: uppercase; color: #C9BEFF; }
 .nv-cal span:first-of-type { font-weight: 700; color: #F4F5F8; }
 .nv-cal .spe b { color: #F7CF55; }
+
+/* v20.61 · objets des mondes redessinés à l'image de leur univers (tout dessiné par nous) */
+/* 🏜️ Peau des sables : le nom en sable, anneaux sombres */
+.lv-ver { -webkit-background-clip: text; background-clip: text; color: transparent !important; background-image: repeating-linear-gradient(90deg, #C9893F 0 .42em, #7A4A1A .42em .55em, #E2B26A .55em .62em); }
+:root[data-theme="dark"] .lv-ver { background-image: repeating-linear-gradient(90deg, #E8B06A 0 .42em, #A8692E .42em .55em, #F6DCAA .55em .62em); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .lv-ver { background-image: repeating-linear-gradient(90deg, #E8B06A 0 .42em, #A8692E .42em .55em, #F6DCAA .55em .62em); } }
+.voiture .vt-epice circle { animation: vtEpice 2.2s ease-in-out infinite alternate; } .voiture .vt-epice circle:nth-child(2n) { animation-delay: -1.1s; }
+@keyframes vtEpice { from { opacity: .25; } to { opacity: 1; } }
+/* 🌿 Forêt luminescente : nuit bleue, spores et feuilles qui s'allument */
+.av-pandora { background: radial-gradient(circle at 50% 110%, #1C6E8A, #0A2A4E 55%, #050C22 85%); box-shadow: inset 0 0 0 1.5px #2FD1C9, 0 0 7px rgba(92,242,230,.5); }
+.av-pandora::before { background: radial-gradient(circle at 16% 30%, #9AFFF6 0 1.3px, transparent 2.2px), radial-gradient(circle at 84% 24%, #FF8AE0 0 1.1px, transparent 2px), radial-gradient(circle at 88% 70%, #9AFFF6 0 1.2px, transparent 2px), radial-gradient(circle at 12% 74%, #B7FF6A 0 1px, transparent 1.8px), radial-gradient(circle at 50% 8%, #9AFFF6 0 1px, transparent 1.8px); animation: avBio 2.6s ease-in-out infinite alternate; }
+@keyframes avBio { from { opacity: .35; filter: blur(0); } to { opacity: 1; filter: drop-shadow(0 0 2px #5CF2E6); } }
+.casque .fin-bio { animation: finBio 2.4s ease-in-out infinite alternate; } .casque .fin-bio.b2 { animation-delay: -1.2s; }
+@keyframes finBio { from { opacity: .35; } to { opacity: 1; } }
+/* 💡 Guirlande d'ampoules : papier peint fleuri, la guirlande qui clignote en haut */
+.av-ampoules { background: radial-gradient(circle at 26% 70%, #B9A57A 0 1.6px, transparent 2.2px) 0 0 / 11px 11px, radial-gradient(circle at 70% 30%, #9FB089 0 1.4px, transparent 2px) 0 0 / 11px 11px, #EDE3C8; box-shadow: inset 0 0 0 1.5px #6E5A3A; }
+.av-ampoules::before { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M1 9C10 17 30 17 39 9' stroke='%23222' stroke-width='.8' fill='none'/%3E%3Cellipse cx='6' cy='14' rx='2' ry='2.8' fill='%23FF3B3B'/%3E%3Cellipse cx='14' cy='16.6' rx='2' ry='2.8' fill='%233BD16F'/%3E%3Cellipse cx='22' cy='17' rx='2' ry='2.8' fill='%233B8BFF'/%3E%3Cellipse cx='30' cy='15.6' rx='2' ry='2.8' fill='%23F7CF55'/%3E%3Cellipse cx='36.4' cy='12.6' rx='2' ry='2.8' fill='%23FF3B3B'/%3E%3C/svg%3E") center / 100% 100% no-repeat; filter: drop-shadow(0 0 2px #FFE08A); animation: avAmpoule 1.6s steps(2) infinite; }
+@keyframes avAmpoule { 50% { filter: brightness(.55); } }
+/* 🌀 Portails : un cercle d'étincelles orange qui tourne autour de la tête */
+.av-portails { background: radial-gradient(circle, #1A0F2E 52%, #2A0E06 70%); box-shadow: 0 0 8px rgba(255,138,31,.65); }
+.av-portails::before { inset: -2px; background: repeating-conic-gradient(#FFB347 0 6deg, transparent 6deg 14deg, #FF8A1F 14deg 18deg, transparent 18deg 30deg); -webkit-mask: radial-gradient(circle, transparent 60%, #000 62%, #000 72%, transparent 74%); mask: radial-gradient(circle, transparent 60%, #000 62%, #000 72%, transparent 74%); animation: avPortail 2.8s linear infinite; }
+@keyframes avPortail { to { transform: rotate(360deg); } }
+/* casques : runes de feu de l'anneau, crête qui ondule, éclats du multivers qui dérivent */
+.casque .cq-runes { animation: cqRunes 2.8s ease-in-out infinite; }
+@keyframes cqRunes { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+.casque .cq-eclats { animation: cqEclats 3s ease-in-out infinite alternate; }
+@keyframes cqEclats { to { transform: translate(-1.2px, -.8px); opacity: .7; } }
+.casque .cq-faille { animation: cqFaille 1.8s steps(2) infinite; } @keyframes cqFaille { 50% { opacity: .6; } }
+/* finitions : la balle ailée bat des ailes, la feuille d'or scintille */
+.casque .fin-ailee { animation: finAilee 1.6s ease-in-out infinite; transform-box: fill-box; }
+@keyframes finAilee { 50% { transform: translateY(-1.2px) scaleY(.92); } }
+.casque .fin-feuille { animation: finFeuille 3.6s ease-in-out infinite; } .casque .fin-feuille:nth-of-type(2n) { animation-delay: -1.8s; }
+@keyframes finFeuille { 0%, 100% { opacity: .75; } 50% { opacity: 1; filter: drop-shadow(0 0 1.2px #FFF3B8); } }
+/* traînées : sabre lumineux (vignette rouge, cœur blanc), faille (tirets décalés) */
+.fx-sabre { stroke: #FF3A48 !important; stroke-width: 5; opacity: .95; filter: drop-shadow(0 0 4px #FF2A3A); animation: fxSabre .18s steps(2) infinite; }
+@keyframes fxSabre { 50% { opacity: .8; } }
+.fx-glitch { stroke: #FF3BD4 !important; stroke-width: 6; opacity: .75; stroke-dasharray: 12 4 3 6; animation: fxGlitch .5s steps(3) infinite; }
+@keyframes fxGlitch { 33% { transform: translate(2px, -1px); stroke: #3BE8FF; } 66% { transform: translate(-2px, 1px); stroke: #F7F24A; } }
+.voiture .vt-sabre { animation: vtSabre .2s steps(2) infinite; } @keyframes vtSabre { 50% { opacity: .85; } }
+.voiture .vt-glitch rect { animation: vtGlitch .6s steps(2) infinite; } .voiture .vt-glitch .gl1 { animation-delay: -.2s; } .voiture .vt-glitch .gl2 { animation-delay: -.4s; }
+@keyframes vtGlitch { 50% { transform: translateX(-9px); opacity: .45; } }
+/* ⛵ plaque « Cheval de bois » : bois verni, filet bleu de la mer */
+.plaque.pl-cheval { color: #FFF3DE; background: linear-gradient(180deg, #9A6A30, #6B4218); border: 1px solid #3A220A; box-shadow: inset 0 0 0 1.5px #2A6FB0, 0 1px 2px rgba(0,0,0,.3); }
+/* 🎫 la cérémonie montre aussi la finition Feuille d'or */
+.tk-objs { display: flex; gap: 14px; align-items: center; justify-content: center; } .tk-fin { display: grid; justify-items: center; gap: 2px; } .tk-fin svg.casque { width: 46px; height: 46px; } .tk-fin small { font-size: 11px; color: #F7CF55; }
+@media (prefers-reduced-motion: reduce) { .av-pandora::before, .av-ampoules::before, .av-portails::before, .casque .cq-runes, .casque .cq-eclats, .casque .cq-faille, .casque .fin-ailee, .casque .fin-feuille, .casque .fin-bio, .fx-sabre, .fx-glitch, .voiture .vt-sabre, .voiture .vt-glitch rect, .voiture .vt-epice circle { animation: none !important; } }
+/* v20.61 · 🏎️ « Ton écurie ouvre ses portes » (une fois, à partir du 1/12/2026) : la porte du garage se lève sur la voiture */
+.ecu-rev { cursor: pointer; }
+.er-c { gap: 10px; }
+.er-garage { position: relative; height: 150px; border-radius: 14px; overflow: hidden; background: linear-gradient(180deg, #1B2130, #0B0E15 70%); border: 1px solid #2A303C; box-shadow: inset 0 -14px 24px rgba(0,0,0,.5); }
+.er-garage::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 34px); }
+.er-lum { position: absolute; left: 50%; top: -10px; width: 70%; height: 150%; transform: translateX(-50%); background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--accent) 55%, #FFF4D6) 0, transparent 62%); opacity: 0; animation: erLum 1.1s ease-out 1.1s forwards; }
+.er-sol { position: absolute; left: 0; right: 0; bottom: 0; height: 26px; background: linear-gradient(180deg, transparent, rgba(255,255,255,.06)); }
+.er-voit { position: absolute; left: 6%; right: 6%; bottom: 4px; transform: translateY(8px) scale(.94); opacity: .2; animation: erVoit .9s cubic-bezier(.2,.8,.3,1.1) 1.15s forwards; }
+.er-voit svg.voiture { width: 100%; height: auto; display: block; color: #F4F5F8; }
+.er-porte { position: absolute; inset: 0; z-index: 2; background: repeating-linear-gradient(180deg, #5E6672 0 13px, #3E454F 13px 15px, #737C88 15px 16px); box-shadow: inset 0 -6px 0 #2A2F36; animation: erPorte 1.3s cubic-bezier(.5,0,.2,1) .35s forwards; }
+.er-porte i { position: absolute; left: 50%; bottom: 10px; width: 46px; height: 6px; margin-left: -23px; border-radius: 3px; background: #2A2F36; box-shadow: inset 0 1px 0 #8A939E; }
+@keyframes erPorte { 0% { transform: translateY(0); } 12% { transform: translateY(3%); } 100% { transform: translateY(-104%); } }
+@keyframes erVoit { to { transform: none; opacity: 1; } }
+@keyframes erLum { to { opacity: .55; } }
+.er-l { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; text-align: left; font-size: 13.5px; line-height: 1.35; color: #E8EAF0; }
+.er-l li { padding: 7px 10px; border-radius: 10px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); }
+.er-l b { color: #fff; }
+.er-x { font-size: 11.5px; color: rgba(244,245,248,.6); }
+.ecu-rev .er-c > h3, .ecu-rev .er-l, .ecu-rev .btn-row, .ecu-rev .er-x { animation: mjMonte .5s ease-out both; animation-delay: 1.5s; }
+.ecu-rev .er-l { animation-delay: 1.7s; } .ecu-rev .btn-row, .ecu-rev .er-x { animation-delay: 1.9s; }
+.ecu-rev.reduit *, .ecu-rev.reduit .er-porte { animation: none !important; } .ecu-rev.reduit .er-porte { display: none; } .ecu-rev.reduit .er-voit { transform: none; opacity: 1; } .ecu-rev.reduit .er-lum { opacity: .55; }
+@media (prefers-reduced-motion: reduce) { .ecu-rev * { animation: none !important; } .ecu-rev .er-porte { display: none; } .ecu-rev .er-voit { transform: none; opacity: 1; } }
+.ecu-rev .rv-c .btn-row { grid-template-columns: 1fr; }
+/* ---------- v20.61 · 🎄 Calendrier de l'Avent (js/10-avent.js) : toujours une nuit d'hiver, lisible en clair comme en sombre ---------- */
+.av-entree .av-cal { position: relative; width: 30px; height: 30px; flex: none; }
+.av-entree .av-cal svg { width: 30px; height: 30px; display: block; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
+.av-entree .av-pas { position: absolute; top: -3px; right: -4px; width: 11px; height: 11px; border-radius: 50%; background: #FF3B4E; border: 2px solid var(--panel); animation: avPas 1.6s ease-in-out infinite; }
+/* pas de classe « rappel » : assurerRappel (js/4-grandprix.js) retire tout « .rappel » qui n'est pas le sien */
+.av-entree { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; width: 100%; max-width: 100%; min-width: 0; margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; cursor: pointer;
+  border: 1px solid color-mix(in srgb, #2EC46B 35%, var(--rule)); background: color-mix(in srgb, #1F7A4C 8%, var(--panel)); color: var(--ink); font: 500 13px/1.3 var(--f-text); }
+.av-entree:focus-visible { outline: 2px solid var(--accent); }
+.av-entree .rp-t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.av-entree .rp-t b { font: 700 14px/1.3 var(--f-text); }
+.av-entree .rp-f { color: var(--ink-3); font-size: 16px; }
+.av-entree.a-ouvrir { border-color: color-mix(in srgb, #2EC46B 55%, var(--rule)); background: linear-gradient(110deg, color-mix(in srgb, #C1121F 14%, var(--panel)), color-mix(in srgb, #1F7A4C 12%, var(--panel))); }
+@keyframes avPas { 50% { transform: scale(1.25); } }
+.av-ov, .av-case { position: fixed; inset: 0; z-index: 97; display: flex; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; background: radial-gradient(120% 80% at 50% 0%, #1B2C5C, #070B1C 70%); color: #F2F6FF; }
+.av-case { z-index: 98; background: rgba(4,7,18,.86); backdrop-filter: blur(5px); }
+.av-boite, .av-carte { position: relative; z-index: 1; margin: auto; width: 100%; max-width: 420px; }
+.av-h { text-align: center; margin: 6px 36px 14px; }
+.av-h b { display: block; font: italic 800 22px/1.1 var(--f-display); letter-spacing: .04em; text-transform: uppercase; color: #FFE596; text-shadow: 0 2px 10px rgba(247,207,85,.35); }
+.av-h small { display: block; margin-top: 6px; font: 500 12.5px/1.4 var(--f-text); color: #C9D6EA; }
+.av-x { all: unset; position: absolute; top: 0; right: 0; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,.12); color: #fff; font-size: 18px; cursor: pointer; z-index: 2; }
+.av-x:focus-visible { outline: 2px solid #FFE596; }
+.av-grille { overflow: hidden; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; padding: 12px; border-radius: 18px; background: linear-gradient(160deg, #7A1420, #4A0C14); box-shadow: inset 0 0 0 3px #C9A227, 0 12px 30px rgba(0,0,0,.45); }
+.av-c { all: unset; position: relative; aspect-ratio: 1 / 1.05; border-radius: 10px; cursor: pointer; perspective: 360px; background: #120A0C; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+.av-c:focus-visible { outline: 2px solid #FFE596; outline-offset: 2px; }
+.av-dedans { position: absolute; inset: 0; display: grid; place-items: center; font-size: 28px; border-radius: 10px; background: radial-gradient(circle at 50% 40%, #3A2A12, #120A0C 75%); }
+.av-porte { position: absolute; inset: 0; border-radius: 10px; display: grid; place-items: center; transform-origin: left center; transition: transform .6s cubic-bezier(.3,.7,.3,1); backface-visibility: hidden;
+  background: linear-gradient(145deg, #2E8B57, #155C36); box-shadow: inset 0 0 0 2px #C9A227, inset 0 0 0 4px rgba(0,0,0,.2); }
+.av-c:nth-child(3n+2) .av-porte { background: linear-gradient(145deg, #D7263D, #8E0E18); }
+.av-c:nth-child(3n) .av-porte { background: linear-gradient(145deg, #2F5FA8, #18346A); }
+.av-n { font: italic 800 26px/1 var(--f-display); color: #FFE596; text-shadow: 0 2px 4px rgba(0,0,0,.45); }
+.av-cad { position: absolute; bottom: 4px; right: 5px; font-size: 11px; opacity: .85; }
+.av-c.ferme { cursor: default; }
+.av-c.ferme .av-porte { filter: saturate(.45) brightness(.7); }
+.av-c.jour .av-porte { animation: avBrille 1.8s ease-in-out infinite; }
+.av-c.jour::after { content: ""; position: absolute; inset: -4px; border-radius: 13px; border: 2px solid #FFE596; pointer-events: none; animation: avPas 1.8s ease-in-out infinite; }
+@keyframes avBrille { 50% { box-shadow: inset 0 0 0 2px #FFE596, 0 0 16px rgba(255,229,150,.7); } }
+.av-c.vue .av-porte, .av-c.ouvre .av-porte { transform: rotateY(-108deg); }
+.av-c.vue .av-porte .av-n { opacity: 0; }
+.av-neige { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+.av-neige i { position: absolute; top: -10px; left: var(--x); width: var(--s); height: var(--s); border-radius: 50%; background: #fff; opacity: .8; animation: avTombe var(--t) linear var(--d) infinite; }
+@keyframes avTombe { to { transform: translate(24px, 105vh); } }
+.av-carte { padding: 18px 16px 14px; border-radius: 18px; background: linear-gradient(180deg, #16224A, #0D1430); box-shadow: inset 0 0 0 2px #C9A227, 0 16px 40px rgba(0,0,0,.5); text-align: center; }
+.av-k { display: block; font: 700 11.5px/1 var(--f-num); letter-spacing: .1em; text-transform: uppercase; color: #FFE596; margin: 4px 40px 8px; }
+.av-carte h3 { margin: 0 34px 12px; font: italic 800 21px/1.15 var(--f-display); letter-spacing: .03em; text-transform: uppercase; color: #fff; }
+.av-t { white-space: pre-line; font: 500 15px/1.5 var(--f-text); color: #E6EDF8; margin: 12px 4px; text-align: left; }
+.av-carte .btn-row { justify-content: center; margin-top: 10px; }
+.av-carte .btn.ghost, .avj-eff.btn.ghost { color: #fff; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.35); }
+.av-jeu { position: relative; }
+.avj { position: relative; width: 100%; max-width: 340px; margin: 0 auto; border-radius: 14px; overflow: hidden; box-shadow: 0 0 0 2px rgba(201,162,39,.6); }
+.avj-c { display: block; width: 100%; height: auto; touch-action: none; }
+.av-scene .avj-c { border-radius: 14px; }
+.avj-voile { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 18px; background: rgba(7,11,28,.78); text-align: center; }
+.avj-voile[hidden] { display: none; }
+.avj-voile b { font: italic 800 22px/1.15 var(--f-display); letter-spacing: .03em; color: #FFE596; text-transform: uppercase; }
+.avj-voile p { margin: 0; font: 500 14px/1.45 var(--f-text); color: #E6EDF8; }
+.avj-voile .avj-rec { color: #FFE596; font-weight: 700; min-height: 1em; }
+.avj-ico { font-size: 40px; }
+.avj-eff { margin-top: 10px; color: #fff; border-color: rgba(255,255,255,.35); }
+.av-rebours { margin: 8px auto 4px; }
+.av-rebours span { display: block; font: italic 800 64px/1 var(--f-display); color: #FFE596; text-shadow: 0 4px 18px rgba(247,207,85,.45); }
+.av-rebours small { font: 600 13px/1.3 var(--f-text); color: #C9D6EA; }
+.av-cadeau { display: grid; gap: 12px; margin: 6px 0; }
+.av-obj { display: grid; gap: 6px; justify-items: center; padding: 12px; border-radius: 14px; background: rgba(255,255,255,.07); }
+.av-obj small { font: 700 11px/1 var(--f-num); letter-spacing: .08em; text-transform: uppercase; color: #C9D6EA; }
+.av-obj .vg-trainee { width: 200px; height: 80px; }
+.plaque.pl-hiver26 { color: #fff; background: linear-gradient(120deg, #1E4E8C, #3A8FD0 45%, #9ED8FF 60%, #2F6DB5); border: 1px solid #CFEFFF; box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 0 6px rgba(158,216,255,.45); }
+.fx-flocons { stroke: #CFEFFF !important; stroke-width: 5; stroke-dasharray: .1 9; opacity: .95; filter: drop-shadow(0 0 1.5px #3A8FD0); animation: fxDefile 2.2s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .av-neige, .av-entree .av-pas, .av-c.jour .av-porte, .av-c.jour::after, .fx-flocons { animation: none !important; } .av-neige { display: none; } .av-porte { transition: none; } }
+.av-records:empty { display: none; }
+.av-records { margin: 10px 0 4px; padding: 12px; border-radius: 14px; background: rgba(255,255,255,.07); text-align: left; }
+.av-records h4 { margin: 0 0 8px; font: italic 800 16px/1.2 var(--f-display); letter-spacing: .04em; text-transform: uppercase; color: #FFE596; }
+.av-records ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.av-records li { display: flex; justify-content: space-between; gap: 8px; font: 500 13px/1.3 var(--f-text); color: #E6EDF8; }
+.av-records li span { min-width: 0; }
+.av-records li b { flex: none; color: #fff; text-align: right; }
+.av-roi { margin: 10px 0 0; font: 600 14px/1.4 var(--f-text); color: #fff; }
+.av-roi small { display: block; color: #C9D6EA; font-weight: 500; }
+/* v20.62 · plein écran : le ▶ porte son nom (« Course de démo » avant le 1/12, puis « Rejouer ») */
+.gpp-b.gpp-texte { width: auto; padding: 0 14px; border-radius: 999px; font-size: 13.5px; white-space: nowrap; background: var(--accent); border-color: rgba(255,255,255,.35); }
+.gpp-b[hidden] { display: none !important; }
+.er-ou { margin-top: -6px; font-size: 12px; color: rgba(244,245,248,.7); }
+/* v20.62 · 🎁 plaque « Chercheur de Noël » (trésor de décembre 2026) : émail rouge à filet vert et or ; la version du premier en or */
+.plaque.pl-chercheur { color: #FFF6EC; background: linear-gradient(180deg, #C8283A, #8E1424); border: 1px solid #5A0A14; box-shadow: inset 0 0 0 1.5px #2E8B57, inset 0 0 0 2.5px #F7CF55, 0 1px 2px rgba(0,0,0,.3); }
+.plaque.pl-chercheuror { color: #4A2C05; background: linear-gradient(110deg, #B7791F, #FFE596 30%, #F7CF55 50%, #FFF6CC 62%, #C98E22); border: 1px solid #7A4A0C; box-shadow: inset 0 0 0 1.5px #2E8B57, inset 0 1px 0 #FFF6CC, 0 0 6px rgba(247,207,85,.5); }
+/* v20.62 · le % de l'indice dans le bandeau du direct : en gras, vert si ça monte, rouge si ça baisse */
+.gp-st-info b[class^="ix-"] { font-weight: 800; } .gp-st-info .ix-up { color: #3DDC97; } .gp-st-info .ix-down { color: #FF6B6B; }
+.cn-rev .tk-obj .plaque { font-size: 17px; padding: 4px 12px; } .cn-rev .rv-c .btn-row { grid-template-columns: 1fr; } .cn-gain { font-size: 14px !important; color: #F4F5F8 !important; }
+/* v20.62 · 🎥 Tour de présentation : deux bandes de cinéma, le titre en haut, « Passer › » en bas ; un toucher n'importe où le saute */
+.gp-pres { position: absolute; inset: 0; z-index: 7; cursor: pointer; pointer-events: auto; animation: gp-pres-in .5s ease both; }
+.gp-pres::before, .gp-pres::after { content: ""; position: absolute; left: 0; right: 0; height: 7%; background: #000; pointer-events: none; }
+.gp-pres::before { top: 0; } .gp-pres::after { bottom: 0; }
+.gp-pres-t { position: absolute; z-index: 1; top: calc(7% + 8px); left: 50%; transform: translateX(-50%); max-width: calc(100% - 32px); margin: 0; padding: 5px 12px; border-radius: 999px; background: rgba(8,10,14,.62); color: #fff; font: 700 12.5px/1.25 var(--f-text); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); pointer-events: none; }
+.gp-pres-t small { margin-left: 6px; font-weight: 500; opacity: .8; }
+.gp-pres-x { position: absolute; z-index: 1; right: 10px; bottom: calc(7% + 10px); min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.4); background: rgba(8,10,14,.72); color: #fff; font: 700 14px/1 var(--f-text); cursor: pointer; }
+.gp-pres.fin { opacity: 0; transition: opacity .3s; }
+.gp-plein.v2 .gp-pres-x { right: calc(env(safe-area-inset-right, 0px) + 12px); bottom: calc(env(safe-area-inset-bottom, 0px) + 7% + 10px); }
+.gp-plein.v2 .gp-pres-t { top: calc(env(safe-area-inset-top, 0px) + 7% + 56px); }
+.gp-piste.en-pres :is(.gp-suivi, .gp-tags3) { visibility: hidden; }   /* pendant le tour : le décor seul */
+@keyframes gp-pres-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .gp-pres { animation: none; } }
+/* v20.62 · l'affichette du 1er du mois (piège ou règle spéciale) et le mois en cours en évidence dans les règles */
+.pg-aff .pg-lieu { margin: -4px 0 0; font-size: 14px; color: rgba(244,245,248,.75); }
+.pg-aff .pg-lieu b { color: #F4F5F8; }
+.tuto-c.pg-aff .pg-bref { font-size: 16px; font-weight: 700; color: #F4F5F8; line-height: 1.35; }
+.tuto-c.pg-aff .pg-txt { font-size: 13px; }
+.pg-tag { padding: 5px 10px; border-radius: 999px; font: 700 11px/1 var(--f-num); letter-spacing: .06em; text-transform: uppercase; color: #FFB27A; background: rgba(255,138,61,.12); border: 1px solid rgba(255,138,61,.4); }
+.pg-tag.spe { color: #F7CF55; background: rgba(247,207,85,.1); border-color: rgba(247,207,85,.4); }
+.rg-actuel { display: grid; gap: 4px; margin: 10px 0 4px; padding: 12px 14px; border-radius: 14px; background: color-mix(in srgb, var(--accent, #5b3fe0) 10%, var(--panel)); border: 2px solid var(--accent, #5b3fe0); }
+.rg-actuel small { font-size: 12px; color: var(--ink-2); } .rg-actuel b { font-size: 16px; color: var(--ink); } .rg-actuel span { font-size: 13.5px; line-height: 1.4; color: var(--ink); }
+.rg-actuel em { font: 700 10.5px/1 var(--f-num); font-style: normal; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink, var(--accent, #5b3fe0)); }
+.rg-tab > div.actuel { border: 2px solid var(--accent, #5b3fe0); background: color-mix(in srgb, var(--accent, #5b3fe0) 10%, var(--panel)); }
