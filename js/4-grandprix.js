@@ -1406,6 +1406,7 @@ function brancherGP0(v, y) {
   const c = championnat(y), kGP = et.k || (c.chauffe ? CHAUFFE_K : y * 100 + 1), ci = circuitDe(kGP), deux = pi.classList.contains("en2d"), qui = quiEcurie();
   const DM = GP_DEMO && demoPossible(et, courseDirect(etapes, i, kGP)) ? GP_DEMO : null;   // v20.52 : 🎬 course de démonstration (météo tirée au hasard)
   const amb = (equipDe(qui) || {}).circuit || "classique", met = DM ? DM.meteo.id : meteoMois(et.k || (!et.m ? kGP : null)).id, at = atoutsVus(kGP), vs = voituresGP(), vue = vueGP(ci);
+  if (window.SONS && SONS.meteo) SONS.meteo(met);   // v20.53 : la pluie et l'orage s'entendent (musique un peu plus sourde)
   const cle = [ci, met, amb, deux ? "2d" : "3d", JSON.stringify(vs), at ? at.atout.id : "", couleurAccent()].join("|");
   if (GP_INST && GP_INST.cle === cle) { scene.appendChild(GP_INST.boite); GP_INST.api.redim(); }
   else {
@@ -1438,7 +1439,7 @@ function brancherGP0(v, y) {
     if (DR) { const d = api.type === "3d" ? 4200 : 3000; GP_HORLOGE = { t0: performance.now(), pauses: 0, pause: 0, total: d, feux: 0, cle: null, son: false }; api.jouer(DR.dep, DR.pts, d, () => { majPauseGP(); if (window.SONS && SONS.repriseCourse) SONS.repriseCourse(); }, false); majPauseGP(); return; }   // v20.47 : le mois jusqu'à aujourd'hui, en accéléré, sans feux ni moteurs
     const f = feux !== false && i >= 1 && api.type === "3d", d = SC ? (api.type === "3d" ? 17000 : 12000) : api.type === "3d" ? 6400 : 3000, cleS = (Piste.TRACES[ci] || {}).peint;
     GP_HORLOGE = { t0: performance.now(), pauses: 0, pause: 0, total: d + (f ? 3200 : 0), feux: f ? 3200 : 0, cle: cleS, son: true };
-    commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0); if (window.SONS) SONS.course(d, f ? 3200 : 0, cleS);   // V16.43 : feux, moteurs ; v17.48 : + le thème du circuit (Noël)
+    commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0); if (window.SONS) SONS.course(d, f ? 3200 : 0, cleS);   // V16.43 : feux, moteurs ; v17.48 : + le thème du circuit (v20.53 : chaque circuit)
     if (SC) api.jouerScenario(SC.scen, d, finCourse, f); else api.jouer(mc.depart, mc.arrivee, d, finCourse, f); majPauseGP(); };
   const apresBA = () => { if (GP_INST && GP_INST.api === api && document.body.contains(GP_INST.boite)) jouer(false); };   // v16.27 : piste reconstruite entre-temps : on ne lance rien
   if (GP_REJOUER && i > 0 && !et.avenir) { GP_REJOUER = false; setTimeout(jouer, 150); }
@@ -1552,7 +1553,7 @@ function placerPlein(y) {
   P.o.querySelectorAll(".gpp-mois [data-gpe]").forEach(b => b.addEventListener("click", () => { GP_ETAPE = +b.dataset.gpe; GP_REJOUER = true; rendreTrophees(); }));
   const sel = P.o.querySelector('.gpp-mois [aria-pressed="true"]'); if (sel && !P.v2) sel.scrollIntoView({ inline: "center", block: "nearest" });
   if (P.v2) { majVueDOM(vueGP(pi.dataset.circuit)); P.survol = null; majSurvolPlein(true);
-    if (window.SONS && SONS.ambiance) SONS.ambiance((Piste.TRACES[pi.dataset.circuit] || {}).peint); }   // v17.59 : l'ambiance douce du circuit (s'il a un thème : Noël), autre circuit = rien
+    if (window.SONS && SONS.ambiance) SONS.ambiance((Piste.TRACES[pi.dataset.circuit] || {}).peint); }   // v17.59 : l'ambiance douce du circuit (v20.53 : chaque circuit a la sienne)
   GP_ETQ = null;
   if (GP_INST) { GP_INST.api.redim(); majTourPlein(GP_INST.api.courant(), true); }
 }
