@@ -610,6 +610,7 @@ function rendreSaisiePct(p) {
   const opts = p.rows.slice().reverse().map(r => { const e = etatReleve(p.nom, r[0]).etat; return '<option value="' + r[0] + '"' + (r[0] === R.k ? " selected" : "") + ">" + esc(moisLong(r[0])) + (e === "vide" ? " · à saisir" : e === "modif" ? " · modifiable" : " · figé") + "</option>"; }).join("");
   const champ = (id, lib, v) => '<div class="champ"><label for="' + id + '">' + lib + '</label><input id="' + id + '" type="text" inputmode="decimal" autocomplete="off" placeholder="—" value="' + esc(v) + '"' + (fige ? " disabled" : "") + "></div>";
   $("#corps-saisie").innerHTML = '<form class="form" id="form-releve" novalidate style="display:grid;gap:14px">' +
+    '<div class="chips" role="group" aria-label="Personne">' + D.personnes.filter(x => peutModifier(x.nom)).map(x => '<button class="chip" type="button" data-rp="' + esc(x.nom) + '" aria-pressed="' + (x.nom === R.nom) + '"><i style="background:' + couleur(x.nom) + '"></i>' + esc(x.nom) + "</button>").join("") + "</div>" +
     '<label class="sel"><span>Mois (valeurs au ' + finMois(R.k) + ')</span><select id="r-mois">' + opts + "</select></label>" +
     (fige ? '<div class="alerte">Relevé figé : il ne se modifie plus dans l\'appli.</div>' : st.etat === "modif" ? '<div class="alerte warn">Déjà ' + (st.j && st.j.action === "Import auto" ? "envoyé par ton fichier" : "saisi") + " : modifiable jusqu'au " + dateHeure(st.lim) + ".</div>" : "") +
     '<div class="alerte">🔒 Ton relevé part <b>en %</b> : les montants que tu tapes restent sur ce téléphone (rien n\'est gardé), seul le % du mois est envoyé. Le plus simple : ton fichier Moi l\'envoie tout seul le dernier jour ouvré vers 19 h.</div>' +
@@ -619,6 +620,7 @@ function rendreSaisiePct(p) {
     '<div class="recap" id="r-recap"></div><div id="r-alertes" style="display:grid;gap:6px"></div>' +
     (fige ? "" : '<button class="btn acc plein" type="submit" id="r-envoyer">Envoyer le % du mois</button>') + "</form>" + htmlRelevesMois();
   brancherRelevesMois($("#corps-saisie"));
+  document.querySelectorAll("[data-rp]").forEach(b => b.addEventListener("click", () => { R.nom = b.dataset.rp; R.p = null; R.tout = false; choisirMoisParDefaut(); rendreSaisie(); }));
   $("#r-mois").addEventListener("change", e => { R.k = +e.target.value; R.p = null; R.forcer = null; R.erreur = ""; rendreSaisie(); });
   [0, 1].forEach(e => ["d", "v", "c"].forEach((t, j) => { const el = $("#r-" + t + e); if (el) el.addEventListener("input", () => { R.p[3 * e + j] = el.value; R.forcer = null; R.erreur = ""; majSaisiePct(); }); }));
   $("#form-releve").addEventListener("submit", ev => { ev.preventDefault(); if (!fige) envoyerRelevePct(false); });

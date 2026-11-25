@@ -24,7 +24,7 @@ function serie(p, e) {
     // garde-fou : pas de rendement de portefeuille tant qu'aucune valeur de fin de mois n'est saisie
     const saisi = [1, 3, 5, 7].some(i => typeof (r[2] || [])[i] === "number");
     const rend = e === 0 && !saisi ? null : c[o + 3];
-    return { k: r[0], d: r[1], verse: c[o] || 0, val: val, gain: e === 0 && !saisi ? null : c[o + 2], r: rend, cum: c[o + 4] || 0, brut: r[2] };
+    return { k: r[0], d: r[1], verse: c[o] || 0, val: val, gain: e === 0 && !saisi ? null : c[o + 2], r: rend, cum: c[o + 4] || 0, brut: r[2], pct: r[4] === "pct" };   // pct : mois reçu en % (sans montants)
   });
 }
 
@@ -138,6 +138,7 @@ function stats(D, p, e, deb, fin, idx1, idx2) {
   const jours = (flux[flux.length - 1].t - flux[0].t) / 864e5;
   const tri = xirr(flux);
   res.mwr = tri === null ? null : Math.pow(1 + tri, jours / 365) - 1;   // toujours cumulé sur la période, comme le TWR à côté
+  if (mois.some(x => x.pct) || (base && base.pct)) res.mwr = null;   // v20.53 : mois reçu en % (aucun montant) : pas de MWR (« — »)
   return res;
 }
 

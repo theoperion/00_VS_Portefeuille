@@ -7760,7 +7760,7 @@ function adapterSimple(raw) {
   const total = { nom: "Portefeuille", type: "total", valeur: tot.valeur, gain: tot.pvLatente, gainPct: tot.pvLatentePct, twr: tot.twr, mwr: tot.mwr, vol: tot.vol, sharpe: tot.sharpe, m1: dernierR(0), ytd: st(0, debAn).twr, s1: null, m6: null, a1: null };
   return {
     simple: true, profil: "simple", _d: Dv, ok: true, genere: raw.genere, personne: qui,
-    majTexte: (fin ? "Bourse : relevé de " + MOIS_L[fin % 100 - 1] + " " + Math.floor(fin / 100) : "Bourse : pas encore de relevé") + (derSaisie ? " · épargne saisie le " + frDate(derSaisie) : ""),
+    majTexte: (enPct ? "⚠ Bourse non comptée ici (ton relevé du Versus est en %, sans montants) : ta bourse se suit dans ton fichier complet" : fin ? "Bourse : relevé de " + MOIS_L[fin % 100 - 1] + " " + Math.floor(fin / 100) : "Bourse : pas encore de relevé") + (derSaisie ? " · épargne saisie le " + frDate(derSaisie) : ""),
     anomalies: "", marches: "",
     rappel: !comptes.length ? "🔔 À mettre à jour : ajoute tes comptes d'épargne et leur valeur de départ (➕ › Mes comptes)" : vieux ? "🔔 À mettre à jour : tes soldes d'épargne (dernière saisie il y a plus d'un mois)" : derSaisie ? "✓ Soldes à jour (saisis le " + frDate(derSaisie) + ")." : "🔔 À mettre à jour : saisis le solde de tes comptes (➕ › Mouvement)",
     synthese: { valeur: tot.valeur || 0, apports: tot.verse || 0, gain: tot.pvLatente, gainPct: tot.pvLatentePct, latente: tot.pvLatente, latentePct: tot.pvLatentePct, mwr: tot.mwr, twr: tot.twr,

@@ -54,8 +54,8 @@ async function parcours(b, moi, session) {
     try { ouvrirBilan(2026); await w(500); scan("bilan 2026"); } catch (e) { vus.push("ouvrirBilan a planté " + e.message); }
     try { for (const n of D.personnes.map(x => x.nom)) { JNOM = n; ongletReleves("journal"); await w(150); scan("journal " + n); } } catch (e) { vus.push("journal a planté " + e.message); }
     let saisie = null;
-    try { ouvrirSaisie(); await w(400); document.querySelectorAll(".guide, [data-guide-fermer]").forEach(()=>{}); const chips = [...document.querySelectorAll("#corps-saisie [data-rp]")].map(b => b.dataset.rp);
-      saisie = { chips, peut: D.personnes.map(x => x.nom + "=" + peutModifier(x.nom)).join(" ") };
+    try { ouvrirSaisie(); await w(400); document.querySelectorAll(".guide, [data-guide-fermer]").forEach(()=>{}); const chips = [...document.querySelectorAll("#corps-saisie [data-rp]")].map(b => b.dataset.rp); const enPct = !!document.querySelector("#form-releve #r-d0");
+      saisie = { chips, enPct, peut: D.personnes.map(x => x.nom + "=" + peutModifier(x.nom)).join(" ") };
       const autre = chips.find(n => n !== moi); if (autre) { document.querySelector('#corps-saisie [data-rp="' + autre + '"]').click(); await w(300); saisie.autreForm = !!document.querySelector("#form-releve"); saisie.prerempli = [...document.querySelectorAll("#form-releve input")].map(i => i.value).filter(Boolean).slice(0, 4); saisie.vraiPrerempli = D.personnes.find(x=>x.nom===autre).rows.slice(-1)[0][2].slice(0,4); saisie.bouton = !!document.querySelector("#form-releve [type=submit]"); saisie.texte = document.querySelector("#corps-saisie").innerText.replace(/\n+/g," | ").slice(0,500); scan("saisie de " + autre); }
     } catch (e) { saisie = "plante " + e.message; }
     return { vus: [...new Set(vus)], saisie };
@@ -70,6 +70,7 @@ async function parcours(b, moi, session) {
     const autres = r.vus.filter(x => !x.startsWith("fiche " + moi + " ") && !x.startsWith("journal " + moi + " "));   // ses propres euros : normal
     ok(!autres.length, "vue de " + moi + " : aucun montant d'un autre pilote " + autres.slice(0, 5).join(" ; "));
     ok(r.saisie && Array.isArray(r.saisie.chips) && r.saisie.chips.join() === moi, "vue de " + moi + " : la saisie ne propose que " + moi + " " + JSON.stringify(r.saisie && r.saisie.chips));
+    ok(r.saisie && r.saisie.enPct === (moi !== "Théo"), "vue de " + moi + " : formulaire " + (moi !== "Théo" ? "en % (aucun montant envoyé)" : "en euros (Théo)"));   // v20.53
   }
   await b.close(); process.exit(ko.length ? 1 : 0);
 })();

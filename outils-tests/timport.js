@@ -175,4 +175,52 @@ const essai = f => { try { return { r: f() }; } catch (e) { return { err: e }; }
   ok(!x.err || x.err.code !== "cours", "B2 · fichier perso : PEA lisible, pas d'erreur de cours" + (x.err ? " (autre arrêt du faux classeur : " + x.err.message + ")" : ""));
   ok(!x.err && Math.abs(x.r.pct.pea.r - 0.2345) < 1e-4 && x.r.pct.pea.actif && !x.r.pct.av.actif, "V14 · fichier perso : son % du mois (+23,45 %) calculé par lui-même", x.err ? x.err.message : x.r.pct.pea);
 }
+/* ---------- V89 · relecture moi-code-donnees : objectifs, ancienne appli, saisie en %, corrections de Théo ---------- */
+{
+  const objectifs = () => feuille("Objectifs", [["Personne", "Objectif"], ["Théo", 1000000], ["Clément", 500000]]);
+  const V = versus([data("Théo", [[202610, [0, 1000, 0, 0, "", "", "", ""]], [202611, vide()]]), data("Clément", [[202610, [0, 2000, 0, 0, "", "", "", ""]], [202611, vide()]]), objectifs()], {});
+  V.props.CLE_ACCES = "admin-x"; V.props.CODES_PERSO = JSON.stringify({ "Clément": "CODE-C" });
+  V.run("vsNoterJournal_ = function (pe, k, a, par, av, ap) { (this.JRN = this.JRN || []).push({ ligne: this.JRN.length + 2, t: new Date(), personne: pe, cle: k, action: a, par: par, avant: av.slice(), apres: ap.slice(), statut: '', pct: null }); }; vsLignesJournal_ = function () { return (this.JRN || []).slice(); }; vsFeuilleJournal_ = function () { return { getRange: () => ({ getValue: () => 'x', setValue: () => ({ setFontWeight() {} }) }), appendRow: l => { (this.JRN = this.JRN || []).push({ ligne: this.JRN.length + 2, t: new Date(), personne: l[1], cle: l[2], action: l[3], par: l[4], avant: [], apres: [], statut: '', pct: JSON.parse(l[8]) }); } }; };");
+  V.ctx.SpreadsheetApp.flush = () => {};
+  V.ctx.ContentService = { createTextOutput: t => ({ setMimeType() { return this; }, getContent: () => t }), MimeType: { JSON: "json" } };
+  const envoi = c => JSON.parse(V.run("doPost")({ postData: { contents: JSON.stringify(c) } }).getContent());
+  let r = envoi({ cle: "CODE-C", action: "objectif", personne: "Clément", objectif: 600000 });
+  ok(!r.ok && /Objectifs|objectif/i.test(r.message) && V.actif.getSheetByName("Objectifs").d[2][1] === 500000, "V89 (a) · Clément envoie son objectif en euros : refusé, onglet Objectifs inchangé (rien n'est vidé)");
+  ok(JSON.stringify(V.run("vsLireObjectifs_")(V.actif, "Europe/Paris").map(o => o.personne)) === '["Théo"]', "V89 (a) · seule la ligne de Théo est relue dans Objectifs");
+  r = envoi({ cle: "CODE-C", action: "releve", personne: "Clément", mois: 202611, valeurs: [0, 2100, "", "", "", "", "", ""] });
+  ok(!r.ok && /mets l'appli à jour/.test(r.message) && V.actif.getSheetByName("Data Clément").d[7].slice(1, 9).every(v => v === ""), "V89 (b) · ancienne appli : relevé en euros de Clément refusé « mets l'appli à jour », Data intact");
+  const P = (r1) => ({ pea: { r: r1, actif: true, verse: 0, pv: null }, av: { r: null, actif: false, verse: 0, pv: null }, pf: { r: r1, actif: true, verse: 0, pv: null } });
+  r = envoi({ cle: "CODE-C", action: "relevePct", personne: "Clément", mois: 202611, pct: P(0.03) });
+  const lirePct = () => V.run("vsLirePct_")()["Clément"] || {};
+  ok(r.ok && lirePct()[202611].source === "saisie" && lirePct()[202611].pct.pea.r === 0.03, "V89 (c) · saisie à la main en % : enregistrée (étiquette « saisie »), rien dans Data", r.message);
+  r = envoi({ cle: "CODE-C", action: "relevePct", personne: "Clément", mois: 202611, pct: P(0.4) });
+  ok(!r.ok && r.erreur === "avertissement", "V89 (c) · +40 % sur le mois : avertissement (« enregistrer quand même »)");
+  r = envoi({ cle: "CODE-C", action: "importPct", personne: "Clément", mois: 202611, jour: "2026-11-30", pct: P(0.0312) });
+  ok(r.ok && lirePct()[202611].source === "fichier" && lirePct()[202611].pct.pea.r === 0.0312, "V89 (c) · le fichier envoie son % jour par jour : il passe devant la saisie à la main", lirePct()[202611]);
+  r = envoi({ cle: "CODE-C", action: "relevePct", personne: "Clément", mois: 202611, pct: P(0.05) });
+  ok(r.ok && r.ignore && lirePct()[202611].pct.pea.r === 0.0312, "V89 (c) · une saisie à la main ne remplace plus le % du fichier", r.message);
+  const jr = V.ctx.JRN.filter(x => x.personne === "Clément" && x.action === "Import auto").pop();
+  r = envoi({ cle: "CODE-C", action: "annuler", ligne: jr.ligne });
+  ok(r.ok && lirePct()[202611].source === "saisie" && lirePct()[202611].pct.pea.r === 0.03, "V89 (c) · annulation de l'import : retour à l'état d'avant AVEC son étiquette (« saisie »)", lirePct()[202611]);
+  V.ctx.Date.now = () => new Date(2026, 11, 20).getTime();
+  r = envoi({ cle: "CODE-C", action: "relevePct", personne: "Clément", mois: 202611, pct: P(0.02) });
+  ok(!r.ok && r.erreur === "fige", "V89 (c) · plus de 7 jours après la première saisie : figé", r.message);
+  V.ctx.Date.now = () => MAINTENANT.getTime();
+  // (d) Théo : % de Moi posé par l'import, puis correction à la main en euros, puis annulation
+  V.run("vsEcrirePct_")("Théo", 202611, "2026-11-30", P(0.011), "versus");
+  r = envoi({ cle: "admin-x", action: "releve", personne: "Théo", mois: 202611, valeurs: [0, 1050, "", "", "", "", "", ""] });
+  ok(r.ok && !(V.run("vsLirePct_")()["Théo"] || {})[202611] && V.actif.getSheetByName("Data Théo").d[7][2] === 1050, "V89 (d) · Théo corrige à la main : le % du mois devient celui de sa correction (plus celui de l'import)");
+  const js = V.ctx.JRN.filter(x => x.personne === "Théo" && x.action === "Saisie").pop();
+  V.run("vsFeuilleJournal_ = (f => () => { const o = f(); o.getRange = () => ({ getValue: () => 'x', setValue: () => ({ setFontWeight() {} }) }); return o; })(vsFeuilleJournal_)");
+  r = envoi({ cle: "admin-x", action: "annuler", ligne: js.ligne });
+  ok(r.ok && V.actif.getSheetByName("Data Théo").d[7].slice(1, 9).every(v => v === "" || v === null) && !(V.run("vsLirePct_")()["Théo"] || {})[202611], "V89 (d) · Théo annule sa saisie : le mois redevient VIDE (ni euros ni % d'import)", r.message);
+}
+/* ---------- V89 · premier millionnaire constaté sur un fichier lu par le Versus (qui n'envoie rien lui-même) ---------- */
+{
+  const fc = fichierPerso("Ouvert", 1100000, "À ouvrir", ""); fc.getSheetByName("Historique").d[1][1] = 1050000; fc.getSheetByName("Historique").d[1][5] = 1050000; fc.getSheetByName("Historique").d[1][6] = 1050000; fc.getSheetByName("Ordres").d[1][5] = 1050000;
+  const V = versus([data("Théo", [[202611, vide()]]), data("Clément", [[202610, vide()], [202611, vide()]])], { F_THEO: fichierPerso("Ouvert", 1000, "À ouvrir", ""), F_CLEMENT: fc });
+  V.run("vsImporterTous_")();
+  const pm = V.props.PREMIER_MILLION ? JSON.parse(V.props.PREMIER_MILLION) : null;
+  ok(pm && pm.nom === "Clément" && !/\d{4,}/.test(JSON.stringify(pm).replace(/\d{4}-\d\d-\d\d/, "")), "V89 · Clément (fichier lu, rien envoyé) : badge du premier million posé, aucun montant gardé", pm);
+}
 process.exit(ko.length ? 1 : 0);
