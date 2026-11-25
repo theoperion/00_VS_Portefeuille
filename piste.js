@@ -9451,12 +9451,15 @@
         const ok = P.filter(p => T.dist(p[0], p[1]) > DEMI + 20 && rails(p[0], p[1]) > 6); for (let i = 0; i < ok.length - 1; i++) if (Math.hypot(ok[i + 1][0] - ok[i][0], ok[i + 1][1] - ok[i][1]) < 60) sillons([ok[i], ok[i + 1]], 1.3, .3, .03);
         for (let i = 4; i < ok.length - 1; i += 5) pas([ok[i], ok[i + 1]].map(p => [p[0] + 4, p[1] + 3]), i); }
 
-      // ===== g) LES MONTAGNES ENNEIGÉES tout autour, les ÉTOILES, et L'AURORE BORÉALE qui ondule au nord =====
-      { const m = new Geo(), ROC = v("#5E6E9E"), ROC2 = v("#7A8AB8");
-        for (let L = 0; L < 2; L++) { const R = 1180 + L * 240, n = 44 - L * 10; for (let k = 0; k < n; k++) { const a0 = k / n * TAU, a1 = (k + 1.25) / n * TAU, am = (a0 + a1) / 2 + (rn() - .5) * .04, H = (90 + rn() * 150) * (1 + L * .6),
-          P = (a, rr, y) => [432 + Math.cos(a) * rr, y, 293 + Math.sin(a) * rr], b0 = P(a0, R, 0), b1 = P(a1, R, 0), bk = P(am, R + 160, 0), tp = P(am, R + 50, H), cut = (p, w) => [p[0] + (tp[0] - p[0]) * w, p[1] + (tp[1] - p[1]) * w, p[2] + (tp[2] - p[2]) * w], s = .55 + rn() * .15;
-          [[b0, b1, L ? ROC2 : ROC], [b1, bk, ROC2], [bk, b0, ROC]].forEach(([p, q, c]) => { const ctr = [(p[0] + q[0]) / 2 - 432, .5, (p[2] + q[2]) / 2 - 293], dir = [-ctr[0], .6 * Math.hypot(ctr[0], ctr[2]) / 600, -ctr[2]];
-            m.tri(p, q, tp, c, .05, dir); m.tri(cut(p, s), cut(q, s), tp, NEIGE, .25, dir); m.tri(cut(p, s), cut(q, s), cut([(p[0] + q[0]) / 2, 0, (p[2] + q[2]) / 2], s * .85), NEIGE, .25, dir); }); } }
+      // ===== g) le bord du monde qui se fond dans la nuit (v20.66 : plus de montagnes), les ÉTOILES, et L'AURORE BORÉALE qui ondule au nord =====
+      { const m = new Geo();
+        /* v20.66 (Théo) · plus de montagnes au loin : on naviguait mal en Visite. Les tirages au sort sont gardés (234) pour que les étoiles ne bougent pas.
+           À la place, le bord du sol se fond dans la nuit : un anneau plat (une centaine de triangles) qui passe de la neige éclairée à la couleur de la brume,
+           celle du ciel sous l'horizon : plus aucun « bord du monde ». */
+        for (let k = 0; k < 234; k++) rn();
+        { const R0 = 1100, R1 = (Math.max(T.rx, T.rz) * 3.2 + 600) * 1.5, n = 48, B = fois(A.brouillard, 1 / 1.25), S0 = A.sol, Pq = (a, rr) => [432 + Math.cos(a) * rr, .012, 293 + Math.sin(a) * rr];
+          for (let k = 0; k < n; k++) { const a0 = k / n * TAU, a1 = (k + 1) / n * TAU, P6 = [[Pq(a0, R0), S0, 0], [Pq(a1, R0), S0, 0], [Pq(a1, R1), B, 1], [Pq(a0, R0), S0, 0], [Pq(a1, R1), B, 1], [Pq(a0, R1), B, 1]];
+            P6.forEach(([p, c, e]) => so.d.push(p[0], p[1], p[2], 0, 1, 0, c[0], c[1], c[2], e)); } }
         for (let k = 0; k < 170; k++) { const az = rn() * TAU, el = .22 + rn() * 1.1, R = 1750, d = [Math.cos(az) * Math.cos(el), Math.sin(el), Math.sin(az) * Math.cos(el)], c = [432 + d[0] * R, d[1] * R, 293 + d[2] * R], s = 2.5 + rn() * (k % 9 ? 3 : 7),
           u = norme(croix(d, [0, 1, 0])), w = croix(u, d), col = k % 4 ? BLANC : v("#FFF1B8"), Q = (a, b) => [c[0] + u[0] * a + w[0] * b, c[1] + u[1] * a + w[1] * b, c[2] + u[2] * a + w[2] * b];
           m.quad(Q(-s, 0), Q(0, -s), Q(s, 0), Q(0, s), col, 1, d); }
@@ -12250,11 +12253,6 @@
       sol: { echelle: 80, haut: 40, creux: ["#4C7E36", .41], cretes: ["#C2D888", .47], roche: ["#8E8A78", .6], taches: ["#F2D86A", .41, .8], grain: .18 },
       ombres: { force: .59, col: "#183A22" }, nappes: { col: "#DDE6EA", l: [[1010, 120, 170, 7, .34], [1090, 400, 150, 6, .3], [900, -10, 120, 5, .26]] },
       horizon: { type: "montagnes", col: "#6E8CAC", haut: 170, cime: "#E8EEF6" } },
-    // décembre · l'Atelier du Père Noël : lumière froide bleutée, neige qui scintille, flaques chaudes sous les guirlandes, glaciers au loin
-    garage: { soleil: ["#CFE0FF", .3], brume: { col: "#BCD0F6", dens: .0019, haut: 30, halo: .3 }, ciel: "#9CB8FF", rebond: "#E8F0FF", rim: .25, etalonnage: [.14, .23],
-      sol: { echelle: 60, haut: 30, creux: ["#C2D4F2", .47], cretes: ["#FFFFFF", .54], roche: ["#9AAAC4", .54], taches: ["#DCE8FF", .41, .78], grain: .22 }, paillettes: 1,
-      ombres: { force: .49, col: "#2A3C80" }, flaques: { col: "#FFB45E", r: 10, force: .38, max: 70 },
-      horizon: { type: "glace", col: "#9CB6E2", haut: 190, cime: "#FFFFFF" } },
     // mars · le goûter des Merveilles : fin d'après-midi rose et dorée, brume de conte, prairie semée de fleurs roses, collines rondes
     olympe: { marque: { y: 90, ny: .8, vert: true }, soleil: ["#FFD4B0", .25], brume: { col: "#F6D6E6", dens: .0013, haut: 24, halo: .8 }, ciel: "#B4B0F0", rebond: "#E8C8A0", rim: .4, etalonnage: [.31, .23],
       rayons: { n: 8, long: 520, larg: [4, 26], force: .11, col: "#FFE2C8" },
@@ -12293,6 +12291,11 @@
       ou la délavaient (Odyssée : piste et mer grisées ; Chocolaterie : contraste divisé par 1,4). Gardés ici pour ne pas repartir de zéro :
       pour en reprendre un, le retoucher puis le déplacer dans WAOUH (captures avant / après, twaouh, ttresor-secret). */
   const WAOUH_BROUILLON = {
+    // décembre · l'Atelier du Père Noël (v20.66, Théo : « ça bug constamment » en Visite sur téléphone ; la fluidité d'abord, rendu de la v20.62) : lumière froide bleutée, neige qui scintille, flaques chaudes sous les guirlandes, glaciers au loin
+    garage: { soleil: ["#CFE0FF", .3], brume: { col: "#BCD0F6", dens: .0019, haut: 30, halo: .3 }, ciel: "#9CB8FF", rebond: "#E8F0FF", rim: .25, etalonnage: [.14, .23],
+      sol: { echelle: 60, haut: 30, creux: ["#C2D4F2", .47], cretes: ["#FFFFFF", .54], roche: ["#9AAAC4", .54], taches: ["#DCE8FF", .41, .78], grain: .22 }, paillettes: 1,
+      ombres: { force: .49, col: "#2A3C80" }, flaques: { col: "#FFB45E", r: 10, force: .38, max: 70 },
+      horizon: { type: "glace", col: "#9CB6E2", haut: 190, cime: "#FFFFFF" } },
     // août · le Monde à l'envers : nuit rouge d'orage, brume sang, lueurs rouges au sol sous les lampes, sol de cendre veiné de rouge, forêt morte à l'horizon
     envers: { brume: { col: "#5A1828", dens: .0022, haut: 30, halo: 0 }, ciel: "#3A2040", rebond: "#601020", rim: .5, etalonnage: [.14, .38],
       sol: { echelle: 50, haut: 25, creux: ["#26222C", .41], cretes: ["#4A3A44", .41], roche: ["#3A3036", .54], taches: ["#6A1A2A", .41, .8], grain: .3 },
@@ -13064,7 +13067,10 @@
     joy.addEventListener("pointerdown", ev => { ev.stopPropagation(); ev.preventDefault(); try { joy.setPointerCapture(ev.pointerId); } catch (e) { } poserJoy(ev); });
     joy.addEventListener("pointermove", ev => { if (I.joy) { ev.stopPropagation(); poserJoy(ev); } });
     joy.addEventListener("pointerup", lacherJoy); joy.addEventListener("pointercancel", lacherJoy); joy.addEventListener("lostpointercapture", lacherJoy);
-    function majJoy() { const voir = I.mode === "helico" && !I.pres && (I.zoom < ZOOM_EXPLO || !!I.joy); if (joy.hidden === voir) joy.hidden = !voir; }
+    function majJoy() { const voir = I.mode === "helico" && !I.pres && (I.zoom < ZOOM_EXPLO || !!I.joy); if (joy.hidden === voir) joy.hidden = !voir;
+      /* v20.66 (Théo : « difficile de manipuler la carte ») : de près, un doigt déplace la carte dans tous les sens ; avant, glisser vers le haut ou le bas
+         faisait défiler la page (touch-action pan-y) et le geste s'arrêtait net. Loin, la page défile toujours en glissant sur la carte. */
+      const ta = I.mode === "helico" && I.zoom < ZOOM_EXPLO ? "none" : "pan-y"; if (I.ta !== ta) { I.ta = ta; cv.style.touchAction = ta; } }
     function ecran(n) {
       const x = voitureDe(n); if (!x || !PV) return null; if (I.sansVoit || I.mode === "bord" && n === I.focus) return { vis: false }; const p = appliquer(PV, [x.x, x.y + 3.2, x.z, 1]); if (p[3] <= .5) return { vis: false };
       return { x: (p[0] / p[3] * .5 + .5) * I.cssW, y: (1 - (p[1] / p[3] * .5 + .5)) * I.cssH, vis: Math.abs(p[0] / p[3]) < 1.15 && Math.abs(p[1] / p[3]) < 1.2, d: p[3] };

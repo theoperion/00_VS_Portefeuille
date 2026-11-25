@@ -1,21 +1,21 @@
-/* Test (25/11/2026) · RECETTE WAOUH (brume, lumière propre, rayons, sols par zones, ombres de contact, décor lointain) sur 11 circuits ;
-   Envers, Odyssée, Chocolaterie et Multivers sont en brouillon (WAOUH_BROUILLON, non appliqué : rendu d'avant, mot pour mot).
+/* Test (25/11/2026) · RECETTE WAOUH (brume, lumière propre, rayons, sols par zones, ombres de contact, décor lointain) sur 10 circuits ;
+   l'Atelier de Noël (v20.66), Envers, Odyssée, Chocolaterie et Multivers sont en brouillon (WAOUH_BROUILLON, non appliqué : rendu d'avant, mot pour mot).
    Lancer depuis la racine, serveur local ouvert : python3 -m http.server 8771 &  puis  node outils-tests/twaouh.js   (PORT=… pour un autre port)
    Trésors : APP_SCRIPTS=/chemin/vers/app_scripts node outils-tests/twaouh.js  lit versus/Tresors.js (dépôt PRIVÉ) pour vérifier les cachettes ;
    sans APP_SCRIPTS, cette vérification est sautée (aucune position de cachette n'est écrite dans ce dépôt public, ni affichée par ce test).
-   Vérifie : 1. (sans navigateur) les 11 circuits ont leur ligne, chaque univers sa brume ; les brouillons aucune couche ajoutée ;
+   Vérifie : 1. (sans navigateur) les 10 circuits ont leur ligne, chaque univers sa brume ; les brouillons aucune couche ajoutée ;
    budgets : couches transparentes ≤ 30 000 triangles (≤ 16 000 en mode léger), décor lointain ≤ 1 200 triangles ; mode léger = moitié moins de rayons ;
    le décor lointain va jusqu'à l'horizon (plus aucun bord du monde) ; trésors : rien de neuf à moins de 15 m d'une cachette, ou effacé au rendu dès que
    le trésor est là (tresorEvite) ; 2. (navigateur) chaque circuit : recette allumée, 0 erreur JS ; pluie : rayons atténués, jamais éteints, même brume (météo légère v20.62) ; Dune : tempête et orage
    inchangés ; « réduire les animations » : la recette reste ; trésor du mois présent : la recette s'efface autour de lui. Fausses données uniquement. */
 const fs = require("fs"), path = require("path"), cp = require("child_process");
-const AVEC_N = ["silverstone", "djeddah", "abudhabi", "melbourne", "suzuka", "arene2028", "miami", "montreal", "bahrein", "interlagos", "monaco"];
+const AVEC_N = ["silverstone", "djeddah", "melbourne", "suzuka", "arene2028", "miami", "montreal", "bahrein", "interlagos", "monaco"];
 const PORT = process.env.PORT || 8771, ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); };
 const src = fs.readFileSync(path.join(__dirname, "..", "piste.js"), "utf8").replace("window.Piste = {", "window.__P = { echantillonner, zones, TRACES, construire, ambiance, WAOUH };\n  window.Piste = {");
 global.window = {}; eval(src);
 const { echantillonner, zones, TRACES, construire, ambiance, WAOUH } = window.__P;
 const scene = (id, leger) => { window.VERSUS_LEGER = leger; const def = TRACES[id], T = echantillonner(def); return { S: construire(def, T, ambiance(def, "soleil", ""), zones(T)), T }; };
-const AVEC = ["silverstone", "djeddah", "abudhabi", "melbourne", "suzuka", "arene2028", "miami", "montreal", "bahrein", "interlagos", "monaco"], ids = AVEC, recette = id => TRACES[id].waouh || WAOUH[TRACES[id].decor];
+const AVEC = ["silverstone", "djeddah", "melbourne", "suzuka", "arene2028", "miami", "montreal", "bahrein", "interlagos", "monaco"], ids = AVEC, recette = id => TRACES[id].waouh || WAOUH[TRACES[id].decor];
 // 1. une ligne par circuit, une ambiance par univers
 const sans = ids.filter(id => !recette(id));
 ok(!sans.length, AVEC.length + " circuits ont leur recette (Envers, Odyssée, Chocolaterie, Multivers : brouillons non appliqués) " + JSON.stringify(sans));
@@ -80,9 +80,9 @@ else {
   ok(!eteints.length, AV.length + " circuits : recette allumée (brume, sols, ombres ou voiles) " + JSON.stringify(eteints));
   const sansR = Object.keys(r.tous).filter(id => AV.indexOf(id) < 0 && r.tous[id]);
   ok(!sansR.length, "les " + (Object.keys(r.tous).length - AV.length) + " circuits en brouillon : aucune recette au rendu " + JSON.stringify(sansR));
-  ok(r.tous.djeddah.rayons && !r.tous.abudhabi.rayons, "rayons du soleil sur le Château (jour) ; pas sur l'Atelier (soir de fête)");
+  ok(r.tous.djeddah.rayons && !r.tous.abudhabi, "rayons du soleil sur le Château (jour) ; l'Atelier de Noël sans recette (v20.66 : en brouillon, la Visite d'abord fluide sur téléphone)");
   ok(r.pluieJour && r.pluieJour.rayons && r.pluieJour.force < r.tous.djeddah.force && r.pluieJour.brume && JSON.stringify(r.pluieJour.brumeCol) === JSON.stringify(r.tous.djeddah.brumeCol), "Château sous la pluie : rayons atténués (jamais éteints), même brume (la météo n'assombrit pas)");
-  const c = await essai(true, new Function("return (async () => {" + F + "return [monter('silverstone', 'soleil').waouh(), monter('abudhabi', 'soleil').waouh()]; })()"));
+  const c = await essai(true, new Function("return (async () => {" + F + "return [monter('silverstone', 'soleil').waouh(), monter('melbourne', 'soleil').waouh()]; })()"));
   ok(c.r.every(x => x && x.brume && x.sol), "« réduire les animations » : la recette reste (rayons fixes, paillettes fixes)");
   const e = await essai(false, new Function("return (async () => {" + F + "window.tresorDuCircuit = ci => ci === 'djeddah' ? { p: [0, 0, 0] } : null; const x = monter('djeddah', 'soleil'); " + attendre + " const a = x.waouh().evite;" +
     "window.tresorDuCircuit = () => null; const y = monter('djeddah', 'soleil'); " + attendre + " return [a, y.waouh().evite]; })()"));
