@@ -7,7 +7,7 @@
    → « Décollage » (+5 % en un mois) : Kévin doré (figé par le serveur), Nicolas et Clément argentés ; Nicolas a 4 pierres du Gant ;
      la Flamme reste à Kévin (série commencée en janvier, il garde à égalité) ; le Flair à Clément (trésors). */
 const { chromium } = require("playwright"), fs = require("fs");
-const DOSSIER = process.env.CAPTURES || "/tmp/claude-0/-home-user/6d9f1796-e607-5fc4-8119-363a157f01a8/scratchpad/badges";
+const DOSSIER = process.env.CAPTURES || require("path").join(require("os").tmpdir(), "versus-badges");
 try { fs.mkdirSync(DOSSIER, { recursive: true }); } catch (e) { /* déjà là */ }
 const NOMS = ["Théo", "Kévin", "Clément", "Devlin", "Nicolas"];
 const R = { 202701: [0.02, 0.06, 0.01, 0.005, -0.03], 202702: [0.01, 0, 0.055, -0.02, 0.07] };

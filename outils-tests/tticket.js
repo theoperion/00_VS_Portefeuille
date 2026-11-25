@@ -4,7 +4,7 @@
    Vérifie : avant octobre rien (sauf l'empreinte dans les règles dès le 1/1/2027) ; en octobre le bouton « déballer » marche une fois par jour ;
    réponse ticket → cérémonie + badge + plaque ; sans ticket → petit message ; aperçu admin seulement avec la double sécurité ; 0 erreur JS ; 390 px clair / sombre. */
 const { chromium } = require("playwright"), fs = require("fs");
-const DOSSIER = process.env.CAPTURES || "/tmp/claude-0/-home-user/6d9f1796-e607-5fc4-8119-363a157f01a8/scratchpad/nuit";
+const DOSSIER = process.env.CAPTURES || require("path").join(require("os").tmpdir(), "versus-ticket");
 try { fs.mkdirSync(DOSSIER, { recursive: true }); } catch (e) { /* déjà là */ }
 const NOMS = ["Théo", "Kévin", "Clément", "Devlin", "Nicolas"];
 const KS = [202701, 202702, 202703, 202704, 202705, 202706, 202707, 202708, 202709];

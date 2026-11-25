@@ -692,7 +692,10 @@ const LIVREES_CLAIRES = ["chrome", "or", "oranime", "platine", "orrose", "carte"
 function remplissage(u, motif, c) { return MOTIFS_PLEINS.includes(motif) ? "fill:url(#" + u + "m)" : "fill:" + c; }
 
 /* ---------- Casque : coque brillante, visière fumée (irisée pour les plus rares), décor selon le modèle ---------- */
-const COQUE = "M-15 5C-16-9-7-18 4-18C14-18 20-10 20 0V6C20 10 18 12 14 12H-9C-13 12-15 9-15 5Z";
+/* v20.48 (Théo : « le casque est mal foutu ») · un vrai casque de pilote, de profil vers la droite : coque ovale qui descend sur la nuque,
+   mentonnière avancée, grande visière avec son joint et son pivot, prises d'air sur le dessus, petit aileron arrière, bourrelet de nuque. */
+const COQUE = "M-14 9.4C-17.2 3.8-17.6-4.4-13.6-10.6C-9.6-16.8-2.6-19.8 4.8-19.4C13-18.9 19.4-13.6 21.2-5.8C21.9-2.8 22 .8 21.2 3.8L20.2 7.6C19.6 10 17.8 11.4 15.4 11.6L-10.6 11.8C-12.2 11.8-13.3 11-14 9.4Z";
+const VISIERE = "M3.4-8.8C9.8-11.6 16.9-11 21.4-6.3C21.9-3.9 21.9-1.4 21.5.7C15.2 2.1 8.8 1.9 4.3.3C2.5-2.6 2.3-6.3 3.4-8.8Z";
 function casqueForme(u, m, c, fin, lead) {
   const iri = ["holo", "couronne", "chrome", "etoile", "foudre", "glace", "galaxie"].includes(m), orv = m === "couronne" || m === "phenix" || m === "empereur";
   const defs = '<defs>' + defsMotif(u, m, c) + '<clipPath id="' + u + 'k"><path d="' + COQUE + '"/></clipPath>' +
@@ -726,15 +729,22 @@ function casqueForme(u, m, c, fin, lead) {
   const brille = ["chrome", "couronne", "empereur", "glace", "holo", "etoile", "foudre", "galaxie", "phenix"].includes(m) ? '<path class="cq-brille" d="M-34-30H-28L-40 16H-46Z" fill="#fff" opacity=".55"/>' : "";
   return defs + '<path d="' + COQUE + '" style="' + remplissage(u, m, c) + '"/>' +
     '<g clip-path="url(#' + u + 'k)">' + deco + '<path d="' + COQUE + '" fill="url(#' + u + 'h)"/>' + brille + "</g>" +
-    '<path d="M3-10C10-11.5 16.5-9 20.5-4.5" stroke="#0b0d11" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
-    '<path d="M4-8C10-9 17-7 20-3V3C15 5 9 5 5 3 2.5 1 2.6-6 4-8Z" fill="url(#' + u + 'v)"/>' +
-    '<path d="M6-6.6C11-7.2 16-5.6 19-3" stroke="#fff" stroke-opacity=".7" stroke-width="1.1" fill="none" stroke-linecap="round"/>' +
-    '<path d="M-6-15.4l3.2-.7M-.6-16.6l3.2-.2" stroke="#0b0d11" stroke-width="1.3" stroke-linecap="round" opacity=".55"/>' +
-    '<path d="M-13.5 9.6H16.5" stroke="#0b0d11" stroke-width="2.6" stroke-linecap="round"/>' +
-    '<path d="' + COQUE + '" fill="none" stroke="rgba(0,0,0,.5)" stroke-width=".8"/>' +
-    (m === "toque" ? '<g class="cq-toque"><path d="M-9.5-15.5V-19.5C-13-20.2-13.6-24.6-10.2-25.4-9.6-28.6-5.6-29.4-3.6-27.4-2-29.8 2.6-29.8 3.8-27.2 7.4-28.6 10.8-25.2 8.8-21.6 11-20.6 10.6-17.4 8.6-16.8V-15Z" fill="#FFFFFF" stroke="#B9B4A8" stroke-width=".8"/>' +
+    // aileron arrière (gurney), prises d'air du dessus, mentonnière et ses ouïes
+    '<path d="M-15.2-7-18.6-8.4-18-11.2-14.4-10.4Z" style="' + remplissage(u, m, c) + '"/><path d="M-15.2-7-18.6-8.4-18-11.2-14.4-10.4Z" fill="#000" opacity=".35"/><path d="M-18.6-8.4-18-11.2" stroke="#0b0d11" stroke-width=".9" stroke-linecap="round"/>' +
+    '<path d="M-7.4-15.6l3.8-1.8M-.8-18.2l4-.6" stroke="#0b0d11" stroke-width="1.7" stroke-linecap="round" opacity=".75"/><path d="M-7-14.9l3.2-1.5M-.6-17.5l3.4-.5" stroke="#fff" stroke-width=".5" stroke-linecap="round" opacity=".35"/>' +
+    '<path d="M13.4 6.2l.4-2.2M16 5.8l.4-2.2M18.6 5.2l.4-2" stroke="#0b0d11" stroke-width="1.1" stroke-linecap="round" opacity=".7"/>' +
+    // visière : joint sombre, verre (fumé, irisé ou doré), reflet, pivot
+    '<path d="' + VISIERE + '" fill="#0b0d11" stroke="#0b0d11" stroke-width="2.2" stroke-linejoin="round"/>' +
+    '<path d="' + VISIERE + '" fill="url(#' + u + 'v)"/>' +
+    '<path d="M6-7.4C11-9.2 16.4-8.6 19.6-5.4" stroke="#fff" stroke-opacity=".75" stroke-width="1.2" fill="none" stroke-linecap="round"/><path d="M8.6-1.4C12.4-.6 16.4-.6 20-1.4" stroke="#fff" stroke-opacity=".22" stroke-width=".8" fill="none" stroke-linecap="round"/>' +
+    '<circle cx="2.2" cy="-3.6" r="2" fill="#0b0d11"/><circle cx="2.2" cy="-3.6" r=".9" fill="#9AA3AE"/>' +
+    // bourrelet de nuque et contour
+    '<path d="M-12.6 10.4H17" stroke="#0b0d11" stroke-width="2.6" stroke-linecap="round"/>' +
+    '<path d="M-9-13.6C-5.4-16.8-.4-18.2 4.2-18" stroke="#fff" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".45"/>' +
+    '<path d="' + COQUE + '" fill="none" stroke="rgba(0,0,0,.55)" stroke-width=".8"/>' +
+    (m === "toque" ? '<g class="cq-toque" transform="translate(0 -1.6)"><path d="M-9.5-15.5V-19.5C-13-20.2-13.6-24.6-10.2-25.4-9.6-28.6-5.6-29.4-3.6-27.4-2-29.8 2.6-29.8 3.8-27.2 7.4-28.6 10.8-25.2 8.8-21.6 11-20.6 10.6-17.4 8.6-16.8V-15Z" fill="#FFFFFF" stroke="#B9B4A8" stroke-width=".8"/>' +
       '<path d="M-4.2-26.4C-4.6-23.6-4.4-21-3.8-18.6M1-27.6C.9-24.6 1-21.6 1.4-18.4M5.8-25.6C5.6-23.2 5.8-20.8 6.4-18.6" stroke="#C9C4B8" stroke-width=".7" fill="none"/><path d="M-9.5-17.6C-3-19.2 3-19.2 9-17.6V-15.2C3-16.6-3-16.6-9.5-15Z" fill="#EDEAE2" stroke="#B9B4A8" stroke-width=".6"/></g>' : "") +
-    (m === "couronne" ? '<path d="M-10-16.5-8.5-24-4-19.5 1-26 6-19.5 10.5-24 12-16.5Z" fill="url(#' + u + 'm)" stroke="#6B430C" stroke-width=".8"/><circle cx="1" cy="-26" r="1.6" fill="#FF4D6D"/><circle cx="-8.5" cy="-24" r="1.2" fill="#5AB8FF"/><circle cx="10.5" cy="-24" r="1.2" fill="#5AB8FF"/>' : "") +
+    (m === "couronne" ? '<g transform="translate(0 -1.8)"><path d="M-10-16.5-8.5-24-4-19.5 1-26 6-19.5 10.5-24 12-16.5Z" fill="url(#' + u + 'm)" stroke="#6B430C" stroke-width=".8"/><circle cx="1" cy="-26" r="1.6" fill="#FF4D6D"/><circle cx="-8.5" cy="-24" r="1.2" fill="#5AB8FF"/><circle cx="10.5" cy="-24" r="1.2" fill="#5AB8FF"/></g>' : "") +
     finitionCasque(u, fin, c, lead);
 }
 /* Finitions (liserés autour de la coque) et liseré or du leader, porté en plus de sa finition */
@@ -762,7 +772,9 @@ function finitionCasque(u, fin, c, lead) {
   return h;
 }
 /** Avatar public : le casque (avec sa finition) dans une pastille dont le fond se débloque en course */
-const CASQUE_CACHE = true;   // V16.26 : « Mon casque » masqué en attendant d'être redessiné (demande de Théo) : tout le monde affiche sa tête
+/* V16.26 : « Mon casque » était masqué en attendant d'être redessiné (demande de Théo). v20.48 : il est redessiné ; il revient avec l'Écurie,
+   donc pas avant la saison (tour de chauffe : tout le monde garde sa tête), sauf en aperçu admin. */
+function casqueCache() { try { return basesSeules(); } catch (e) { return true; } }
 /** V16.37 · l'accessoire mérité : le vainqueur de la dernière manche garde l'accessoire du circuit sur sa tête jusqu'à la manche suivante.
  *  Dès janvier (pas pendant la chauffe), et seulement quand on a déjà regardé la course (le résultat reste caché jusque-là). */
 let MERITE = null;
@@ -779,13 +791,13 @@ function accessoireMerite(nom) {
 }
 function avatar(nom, e) {
   let eq = e || equipDe(nom); if (!e) { const sk = accessoireMerite(nom); if (sk) eq = Object.assign({}, eq, { skin: sk }); }
-  const tete = CASQUE_CACHE || (eq.pilote || "tete") === "tete";
+  const tete = casqueCache() || (eq.pilote || "tete") === "tete";
   const lead = tete && !eq.vignette && saisonVisible() && leaderSaison() === nom;
   return '<span class="av av-' + (eq.fond || "couleur") + (tete ? " av-tete" : "") + (lead ? " av-lead" : "") + ((ereDorActive() || {}).nom === nom ? " av-or" : "") + '" style="--c:' + couleur(nom) + '">' + (tete ? svgTete(nom, eq, eq.vignette) : svgCasque(nom, eq)) + "</span>";
 }
 function svgCasque(nom, e) {
   const eq = e || equipDe(nom), u = "sv" + (++NSVG), c = couleur(nom), lead = !eq.vignette && saisonVisible() && leaderSaison() === nom;
-  return '<svg class="casque c-' + eq.casque + (lead ? " leader" : "") + '" viewBox="-17 -27 39 40" aria-hidden="true">' + casqueForme(u, eq.casque, c, eq.finition, lead) + "</svg>";
+  return '<svg class="casque c-' + eq.casque + (lead ? " leader" : "") + '" viewBox="' + (eq.casque === "toque" || eq.casque === "couronne" ? "-20.5 -33 44 46" : "-20.5 -26 44 40") + '" aria-hidden="true">' + casqueForme(u, eq.casque, c, eq.finition, lead) + "</svg>";
 }
 
 /* v20.46 · habillages dessinés par-dessus la peinture (dans la découpe de la caisse) */
@@ -1095,7 +1107,10 @@ function vignetteItem(slot, id, nom, e) {
   if (slot === "finition") return svgCasque(nom, { casque: e.casque, finition: id, vignette: true });
   if (slot === "fond") return avatar(nom, Object.assign({}, e, { fond: id, vignette: true }));
   if (slot === "circuit") return vignetteAmbiance(id);
-  if (slot === "livree") return svgVoiture({ nom, e: Object.assign({}, e, { livree: id, trainee: "" }) });
+  if (slot === "livree") {   // v20.48 : la photo de LA voiture (celle de la course) avec cette livrée ; sans WebGL, le dessin 2D
+    const ph = window.Piste && Piste.photo && typeof voitureEcurie === "function" ? Piste.photo(voitureEcurie(nom, Object.assign({}, e, { livree: id }))) : null;
+    return ph ? '<img class="vg-3d" alt="" src="' + ph + '">' : svgVoiture({ nom, e: Object.assign({}, e, { livree: id, trainee: "" }) });
+  }
   if (slot === "trainee") return '<svg class="vg-trainee" viewBox="0 0 200 80" aria-hidden="true"><path class="fx fx-' + id + '" d="M8 66C50 62 70 30 110 36S170 18 192 12" fill="none" style="stroke:' + couleur(nom) + '" stroke-linecap="round"/>' +
     '<path d="M8 66C50 62 70 30 110 36S170 18 192 12" fill="none" style="stroke:' + couleur(nom) + '" stroke-width="3.5" stroke-linecap="round"/><circle cx="192" cy="12" r="5" style="fill:' + couleur(nom) + '"/></svg>';
   if (slot === "klaxon") return '<span class="it-emo">' + ICONES_KLAXON[id] + "</span>";
@@ -1126,7 +1141,7 @@ function htmlEcurie() {
     '<div class="sr-h"><span class="sr-k">Mon écurie · ' + (estChauffe(saisonCourante()) ? "Tour de chauffe" : "Saison " + numeroSaison(saisonCourante())) + '</span><span class="sr-id">' + avatar(qui, Object.assign({}, e, { vignette: true })) + "<b" + attrLivree(qui, e) + ">" + esc(qui) + "</b></span>" +
     '<span class="sr-p"><span class="sr-barre"><i style="width:' + (total ? nb / total * 100 : 0).toFixed(0) + '%"></i></span>' + nb + " / " + total + " objets</span></div>" +
     '<div class="sr-3d" id="sr-3d">' + svgVoiture({ nom: qui, e, reflet: true, idle: true }) + "</div>" +
-    '<span class="sr-aide"></span><button class="sr-vue" type="button" id="sr-vue">' + (ETAT.sr3d === "1" ? "↔ 360° · Vue détaillée" : "🔄 Vue 360°") + '</button><button class="sr-klaxon" type="button" id="ecu-klaxon">📯 Klaxonner</button></div>';
+    '<span class="sr-aide">' + (window.Piste && Piste.supporte() ? "↔ Fais-la tourner du doigt" : "") + '</span><button class="sr-klaxon" type="button" id="ecu-klaxon">📯 Klaxonner</button></div>';   // v20.48 : la voiture de la course, en 3D (plus de bascule 2D / 360°)
   const onglets = '<div class="slot-tabs">' + [["pilote", "Pilote"]].concat(SLOTS, [["numero", "Numéro"], ["badges", "Badges"]]).map(([s, lib]) => '<button type="button" data-ecu-slot="' + s + '" aria-pressed="' + (s === slot) + '">' + lib +
     "<small>" + (s === "badges" ? (Array.isArray(e.badges) ? e.badges.length + " / 3" : "auto") : s === "numero" ? "#" + e.numero : s === "pilote" ? (e.pilote === "casque" ? "Casque" : "Tête") : esc(ITEMS[s][e[s]])) + "</small></button>").join("") + "</div>";
   let corps;
@@ -1146,7 +1161,7 @@ function htmlEcurie() {
   const grille = D.personnes.map(p => { const eq = p.nom === qui ? e : equipDe(p.nom); return '<button type="button" class="gr-l' + (ECU_VOIR === p.nom ? " on" : "") + '" data-voir="' + esc(p.nom) + '">' + avatar(p.nom, eq) + "<b" + attrLivree(p.nom, eq) + ">" + esc(p.nom) + "</b>" + (eq.plaque !== "aucune" ? '<span class="plaque">' + esc(ITEMS.plaque[eq.plaque]) + "</span>" : "") + '<span class="num">#' + eq.numero + " ›</span></button>"; }).join("");
   return showroom + onglets + corps +
     '<button class="btn acc plein" type="button" id="ecu-garder">Enregistrer mon écurie</button>' +
-    '<p class="info">Touche un objet pour l\'essayer, « ? » pour savoir d\'où il vient. Ta voiture roule dans la Course avec ta livrée et ta traînée ; ta tête ou ton casque s\'affichent partout à côté de ton nom.</p>' +
+    '<p class="info">Ta voiture de course porte ta livrée, ton casque, ta finition, ton numéro et ta traînée.</p>' +
     '<div><h3 class="s-h3">La grille <small>touche une écurie pour la voir</small></h3></div><div class="grille-dep">' + grille + "</div>" + htmlGarage(qui);
 }
 /** V16.3 · Écurie › Badges : jusqu'à 3 badges épinglés sur la ligne du Classement (ou choix automatique) */
@@ -1168,7 +1183,7 @@ function htmlGarage(qui) {
   const total = totalObjets(), nb = ouverts.size - Object.keys(BASE_ECURIE).length;
   const ex = exclusifsDe(n);
   return '<div class="garage" id="garage"><div class="showroom">' + '<div class="sr-num" aria-hidden="true">' + eq.numero + '</div><div class="sr-h"><span class="sr-k">Écurie de ' + esc(n) + '</span><span class="sr-id">' + avatar(n, Object.assign({}, eq, { vignette: true })) + "<b" + attrLivree(n, eq) + ">" + esc(n) + "</b></span>" +
-    '<span class="sr-p"><span class="sr-barre"><i style="width:' + (total ? nb / total * 100 : 0).toFixed(0) + '%"></i></span>' + nb + " / " + total + " objets</span></div>" + svgVoiture({ nom: n, e: eq, reflet: true, idle: true }) +
+    '<span class="sr-p"><span class="sr-barre"><i style="width:' + (total ? nb / total * 100 : 0).toFixed(0) + '%"></i></span>' + nb + " / " + total + " objets</span></div>" + '<div class="sr-3d" id="gar-3d">' + svgVoiture({ nom: n, e: eq, reflet: true, idle: true }) + "</div>" +
     '<button class="sr-klaxon" type="button" id="garage-klaxon">📯 Son klaxon</button></div>' +
     '<div class="gar-eq">' + SLOTS.map(([s, lib]) => '<span><small>' + lib + "</small>" + esc(ITEMS[s][eq[s]]) + "</span>").join("") + "</div>" +
     (ex.length ? '<div class="gar-ex">' + ex.sort((a, b) => b.niv - a.niv).map(x => '<span title="' + esc(x.nom) + '">' + x.ico + " " + esc(x.nom) + "</span>").join("") + "</div>" : "") +
@@ -1560,6 +1575,7 @@ function vitrineFiche(nom) {
 }
 /* Animations du showroom : la voiture démarre au klaxon, rebondit quand on change un objet */
 function demarrer(v) {
+  if (v && v.id === "garage" && V3D.gar && v.querySelector("canvas.v3d")) { V3D.gar.boost(); return; }
   if (V3D.inst && (v || document).querySelector(".showroom canvas.v3d")) { V3D.inst.boost(); return; }
   const car = (v || document).querySelector(".showroom .voiture"); if (!car || !ANIM) return;
   car.classList.remove("boost"); void car.getBoundingClientRect(); car.classList.add("boost", "roule");
@@ -1625,8 +1641,9 @@ function brancherSaison(v) {
   v.querySelectorAll("[data-voir]").forEach(b => b.addEventListener("click", () => { ECU_VOIR = ECU_VOIR === b.dataset.voir ? null : b.dataset.voir; rendreTrophees(); const g = document.getElementById("garage"); if (g) g.scrollIntoView({ behavior: "smooth", block: "start" }); }));
   const gf = v.querySelector("#garage-fermer"); if (gf) gf.addEventListener("click", () => { ECU_VOIR = null; rendreTrophees(); });
   const gk = v.querySelector("#garage-klaxon"); if (gk) gk.addEventListener("click", () => { const g = v.querySelector("#garage"); confettis(equipDe(ECU_VOIR).klaxon); demarrer(g); });
-  const s3 = v.querySelector("#sr-3d"); if (s3 && ECU && ETAT.sr3d === "1") { try { monter3D(s3, ECU.nom, ECU.e); } catch (e) { /* le dessin 2D reste affiché */ } }
-  const sv = v.querySelector("#sr-vue"); if (sv) sv.addEventListener("click", () => { ETAT.sr3d = ETAT.sr3d === "1" ? "0" : "1"; garder(); rendreTrophees(); });
+  // v20.48 · la même F1 3D que la course (piste.js) ; sans WebGL, le dessin 2D reste affiché
+  const s3 = v.querySelector("#sr-3d"); if (s3 && ECU) { try { monter3D(s3, ECU.nom, ECU.e); } catch (e) { /* le dessin 2D reste affiché */ } }
+  const g3 = v.querySelector("#gar-3d"); if (g3 && ECU_VOIR) { try { if (V3D.gar) V3D.gar.stop(); V3D.gar = monter3D(g3, ECU_VOIR, ECU_VOIR === ECU.nom ? ECU.e : equipDe(ECU_VOIR), true); } catch (e) { /* idem */ } }
   const kl = v.querySelector("#ecu-klaxon"); if (kl) kl.addEventListener("click", () => { confettis(ECU.e.klaxon); demarrer(v); });
   const g = v.querySelector("#ecu-garder"); if (g) g.addEventListener("click", garderEcurie);
   brancherPilote(v);

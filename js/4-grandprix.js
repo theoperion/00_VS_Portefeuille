@@ -189,7 +189,7 @@ const GPS = {
   djeddah: { gp: "Grand Prix du Château", ville: "Château aux sortilèges", drap: "🏰", fx: "sortileges", atout: "aspiration", piege: "pari", txt: "Les escaliers changent de place et les couloirs se referment derrière toi." },
   melbourne: { gp: "Grand Prix des Merveilles", ville: "Pays des merveilles", drap: "🎩", fx: "petales", atout: "pluie", piege: "turbo", txt: "On tombe dans un terrier, on boit une fiole, on rétrécit… et le Chapelier sert le thé à toute heure." },
   suzuka: { gp: "Grand Prix de l'Anneau", ville: "Terre de l'Anneau", drap: "💍", fx: "lucioles", atout: "pari", piege: "aspiration", txt: "De la Comté à la montagne de feu : un seul anneau, une seule ligne d'arrivée." },
-  miami: { gp: "Grand Prix de Pandora", ville: "Pandora", drap: "🌿", fx: "lucioles", atout: "turbo", piege: "pluie", txt: "Une forêt qui s'allume la nuit, l'Arbre des Âmes au centre et des oiseaux-dragons dans le ciel : on court au cœur de Pandora." },
+  miami: { gp: "Grand Prix de Pandora", ville: "Pandora", drap: "🌿", fx: "lucioles", atout: "turbo", piege: "pluie", txt: "Une jungle géante en plein jour, l'Arbre des Âmes au centre et des oiseaux-dragons dans le ciel bleu : on court au cœur de Pandora." },
   montreal: { gp: "Grand Prix des Étoiles", ville: "Bataille spatiale", drap: "🌌", fx: "neige", atout: "pari", piege: "turbo", txt: "Il y a bien longtemps, dans une galaxie lointaine… quatre pilotes ont rejoint l'escadrille." },
   silverstone: { gp: "Grand Prix de la Mer de dunes", ville: "Mer de dunes", drap: "🏜️", fx: "sable", atout: "aspiration", piege: "pari", txt: "Deux soleils, du sable à l'infini et, sous la piste, quelque chose d'immense qui bouge." },
   spa: { gp: "Grand Prix du Monde à l'envers", ville: "Monde à l'envers", drap: "🔦", fx: "brume", atout: "pluie", piege: "turbo", txt: "Les lumières clignotent, la forêt se retourne : quelque chose rôde de l'autre côté." },
@@ -367,6 +367,7 @@ function classementExemple() {
 function htmlGrandPrix(y) {
   const etapes = etapesGP(y), c = championnat(y);
   const i = GP_ETAPE !== null && GP_ETAPE < etapes.length ? GP_ETAPE : etapeParDefaut(etapes, y), et = etapes[i];
+  const nM = et.k ? et.k % 100 : i;   // le n° de manche affiché = le mois (en janvier, la manche 1 est la 1re étape : pas d'étape « Départ » avant elle)
   const qui = quiEcurie(), kGP = et.k || (c.chauffe ? CHAUFFE_K : y * 100 + 1), ci = circuitDe(kGP), G = GPS[ci], at = atoutsVus(kGP);
   const met = meteoMois(et.k || (!et.m ? kGP : null)), spe = et.k ? moisSpecial(y, et.k) : null, pgm = et.m && et.m.piege ? et.m.piege : null;
   const mc0 = !et.m ? mancheGP(etapes, i, kGP) : null, ordre = mc0 && mc0.grilleDe ? mc0.grille : Object.keys(et.pts).sort((a, b) => et.pts[b] - et.pts[a] || (c.tot[b] ? c.tot[b].v : 0) - (c.tot[a] ? c.tot[a].v : 0));   // v17.10 : sur la grille, l'ordre de départ (novembre pour la chauffe, tirage en janvier)
@@ -386,7 +387,7 @@ function htmlGrandPrix(y) {
     '<div class="gp-tags3">' + ordre.map(n => '<span class="gp-t3' + (n === qui ? " ici" : "") + '" data-gpt3="' + esc(n) + '" style="--c:' + couleur(n) + '" title="' + esc(n) + '">' + avatar(n) + '<i class="gp-rg"></i></span>').join("") + "</div>" +
     (v2 ? "" : '<div class="gp-pops"></div><div class="gp-com" aria-live="polite"></div>') + fxCircuit(G.fx) +
     (v2 ? stH :   // v20.47 (Théo) : aucun texte posé sur le dessin : tour, commentaires et bulles passent en sous-titres, dans un bandeau sous la course   // v17.6 : « Sur la grille » et la météo sont déjà dans le titre ; il ne reste que « Tour 1/2 » pendant la course
-    '<div class="gp-hud"><span class="gp-tour">' + (et.k && !et.avenir ? "Manche <b>" + i + "</b>" : "Sur la grille") + "</span><span>" + met.ico + " " + esc(met.nom) + "</span></div>") +
+    '<div class="gp-hud"><span class="gp-tour">' + (et.k && !et.avenir ? "Manche <b>" + nM + "</b>" : "Sur la grille") + "</span><span>" + met.ico + " " + esc(met.nom) + "</span></div>") +
     (v2 ? "" : '<div class="gp-btns">' +
     '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en vue hélico 3D" : "Revenir à la carte 2D") + '">' + (deux ? "🚁 Hélico 3D" : "🗺️ Carte 2D") + '</button><button class="gp-vue gp-son" type="button" data-son aria-label="Son">🔇</button>' + (deux ? "" : '<button class="gp-vue" type="button" id="gp-survol" aria-label="Visite guidée">🎬 Survol</button>') + '<button class="gp-vue" type="button" id="gp-ba" aria-label="Bande-annonce">' + icoOu("bandeannonce", "🎬") + '</button><button class="gp-vue" type="button" id="gp-fin" aria-label="Aller directement à la fin de la course">' + icoOu("arrivee", "⏭") + '</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">' + icoOu("pleinecran", "⛶") + '</button>' + "</div>") + suiviH +
     (v2 ? "" : spe ? '<div class="gp-spe">' + spe.ico + " " + esc(spe.nom) + "</div>" : pgm ? '<div class="gp-spe piege" data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " " + esc(pgm.nom) + "</div>" : "") + "</div>";
@@ -425,7 +426,7 @@ function htmlGrandPrix(y) {
     (c.chauffe && !et.m && Date.now() < SAISON.depart.getTime() ? '<p class="info gp-depart">🏁 Grille de départ : la performance de novembre. La course se joue avec le relevé de fin décembre.</p>' :
       !et.m && kGP === SAISON.premiere * 100 + 1 ? '<p class="info gp-depart">' + (mc0 && /^chauffe/.test(mc0.grilleDe || "") ? "🏁 Grille de départ : l'ordre du tour de chauffe de décembre" + (mc0.grilleDe === "chauffe-grille" ? " (sa grille, tant que son résultat n'est pas connu)" : "") + ", les absents de la chauffe derrière (par ordre alphabétique). Tout le monde part à 0 point." : '<span class="gp-de' + (stock.get("versus.deJanvier") ? "" : (stock.set("versus.deJanvier", "1"), " roule")) + '" aria-hidden="true">🎲</span> Grille tirée au sort : tout le monde part à 0 point.') + "</p>" : "");   // v17.5 (Théo) : sur la grille de la chauffe, du 21/11 au 31/12
   const titreAt = at ? '<div class="gp-atouts"><span class="at" data-bdg="' + esc("Atout de " + G.ville + " : " + at.atout.ico + " " + at.atout.nom + " y gagne +1 quand elle marque (sauf bouchon).") + '">' + at.atout.ico + " " + esc(at.atout.nom) + " +1</span></div>" : (indiceCircuit(kGP) ? htmlIndice(indiceCircuit(kGP)) : "");
-  return versStand + att + '<div class="gp-h"><div><span class="s-k">' + (c.chauffe ? "Tour de chauffe" + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : "") : et.avenir ? "Manche " + i + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : " · sur la grille") : et.k ? "Manche " + i : "Départ") + " · " + esc(moisLong(kGP)) + '</span><h3 class="gp-titre">' + G.drap + " " + esc(G.gp) + '</h3><p class="gp-met">' + esc(G.ville) + " · " + met.ico + " " + esc(met.txt) + (spe ? " " + spe.ico + " <b>" + esc(spe.nom) + "</b> : " + esc(spe.txt) : vuesV2(ci) && pgm ? ' <span data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " <b>" + esc(pgm.nom) + "</b></span>" : "") + '</p></div><div class="gp-hb"><button class="btn ghost gp-pause" type="button" id="gp-pause" aria-label="Mettre la course en pause" hidden>⏸\uFE0F Pause</button><button class="btn ghost gp-rejouer" type="button" id="gp-rejouer">↻ ' + (dir ? "Revoir" : "Rejouer") + "</button></div></div>" +
+  return versStand + att + '<div class="gp-h"><div><span class="s-k">' + (c.chauffe ? "Tour de chauffe" + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : "") : et.avenir ? "Manche " + nM + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : " · sur la grille") : et.k ? "Manche " + nM : "Départ") + " · " + esc(moisLong(kGP)) + '</span><h3 class="gp-titre">' + G.drap + " " + esc(G.gp) + '</h3><p class="gp-met">' + esc(G.ville) + " · " + met.ico + " " + esc(met.txt) + (spe ? " " + spe.ico + " <b>" + esc(spe.nom) + "</b> : " + esc(spe.txt) : vuesV2(ci) && pgm ? ' <span data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " <b>" + esc(pgm.nom) + "</b></span>" : "") + '</p></div><div class="gp-hb"><button class="btn ghost gp-pause" type="button" id="gp-pause" aria-label="Mettre la course en pause" hidden>⏸\uFE0F Pause</button><button class="btn ghost gp-rejouer" type="button" id="gp-rejouer">↻ ' + (dir ? "Revoir" : "Rejouer") + "</button></div></div>" +
     titreAt + piste + (v2 ? '<div class="gp-vues2">' + selVuesGP(vue, "") + menuV2 + '<button class="gp-plein-gros" type="button" id="gp-plein-gros"><span aria-hidden="true">⛶</span> Plein écran</button></div>' : "") + (v2 ? '<details class="gp-schema"><summary>📐 Comment avance la course ?</summary>' + svgSchemaCourse() + "</details>" : "") + chips + '<div class="gp-liste">' + lignes + "</div>" + (et.m ? '<button class="btn ghost gp-carte" type="button" id="gp-carte">📸 Carte postale · ' + esc(moisLong(et.k)) + "</button>" : "") + cal +
     '<p class="info">Chaque mois, une manche sur un nouveau circuit : départ dans l\'ordre du championnat, et le meilleur du mois boucle le tour.' + " Touche une icône pour le détail, une voiture pour la suivre." + (c.chauffe ? " 🔥 Rien ne compte pendant la chauffe." : "") + ' <a href="#" class="lien-regles" data-regles="gp">Règles</a></p>' +
     htmlDetailPoints(y);
@@ -778,7 +779,9 @@ const TRESOR_SVG = {
   droide: '<svg viewBox="-12 -14 24 28"><path d="M-6 -2A6 6 0 0 1 6 -2Z" fill="#D4DAE2" stroke="#3A4250" stroke-width=".9"/><rect x="-6" y="-2" width="12" height="11" rx="1.4" fill="#F4F6F8" stroke="#3A4250" stroke-width=".9"/><rect x="-3.6" y="1" width="7.2" height="2.4" fill="#2A5AD8"/><rect x="-3.6" y="5" width="3" height="2" fill="#2A5AD8"/><circle cx="1.4" cy="-4.4" r="1.2" fill="#1A1E28"/><circle cx="1.4" cy="-4.4" r=".5" fill="#FF4A4A"/><rect x="-9" y="0" width="2.6" height="11" rx=".8" fill="#E8ECEF" stroke="#3A4250" stroke-width=".8"/><rect x="6.4" y="0" width="2.6" height="11" rx=".8" fill="#E8ECEF" stroke="#3A4250" stroke-width=".8"/></svg>',
   graine: '<svg viewBox="-12 -12 24 26"><circle r="11" fill="#E8C8FF" opacity=".35"/><path d="M-7 1A7 7 0 0 1 7 1Q3.5 3 0 2Q-3.5 3 -7 1Z" fill="#FFFFFF" stroke="#B88AE8" stroke-width=".9"/><path d="M-4.5 2.4Q-6 7 -4 12M-1.5 2.6Q-2 8 -.5 13M1.5 2.6Q2 8 .5 13M4.5 2.4Q6 7 4 12" stroke="#F8DCFF" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M-3.6 -2.4Q-1 -5 2.4 -4" stroke="#FFFFFF" stroke-width="1.2" fill="none" opacity=".9"/></svg>',
   anneau: '<svg viewBox="-12 -12 24 24"><ellipse rx="8.6" ry="6" fill="none" stroke="#7A4A0E" stroke-width="4.6"/><ellipse rx="8.6" ry="6" fill="none" stroke="#F6C84A" stroke-width="3"/><path d="M-6.4 -3.6Q0 -6.8 6.4 -3.6" stroke="#FFF4C0" stroke-width="1.1" fill="none" stroke-linecap="round"/></svg>',
-  toque: '<svg viewBox="-12 -13 24 26"><path d="M-6.5 9V2C-11 1.4 -11.6 -5.2 -7 -5.8C-6.6 -10.6 -1.4 -11.4 0 -8.2C1.4 -11.4 6.6 -10.6 7 -5.8C11.6 -5.2 11 1.4 6.5 2V9Z" fill="#FFFFFF" stroke="#4A4A42" stroke-width="1"/><path d="M-6.5 5H6.5" stroke="#C9C9C0" stroke-width="1"/><path d="M-3 2V-3M0 2V-4M3 2V-3" stroke="#DADAD2" stroke-width=".8" stroke-linecap="round"/><rect x="-6.5" y="5" width="13" height="4" fill="#F2EFE6" stroke="#4A4A42" stroke-width="1"/></svg>'
+  toque: '<svg viewBox="-12 -13 24 26"><path d="M-6.5 9V2C-11 1.4 -11.6 -5.2 -7 -5.8C-6.6 -10.6 -1.4 -11.4 0 -8.2C1.4 -11.4 6.6 -10.6 7 -5.8C11.6 -5.2 11 1.4 6.5 2V9Z" fill="#FFFFFF" stroke="#4A4A42" stroke-width="1"/><path d="M-6.5 5H6.5" stroke="#C9C9C0" stroke-width="1"/><path d="M-3 2V-3M0 2V-4M3 2V-3" stroke="#DADAD2" stroke-width=".8" stroke-linecap="round"/><rect x="-6.5" y="5" width="13" height="4" fill="#F2EFE6" stroke="#4A4A42" stroke-width="1"/></svg>',
+  bonbon: '<svg viewBox="-12 -12 24 24"><circle r="11.5" fill="#FFE07A" opacity=".35"/><circle r="9" fill="#FF7EB6" stroke="#7A2A4A" stroke-width="1"/><path d="M-8.6 -2.6Q0 -6 8.6 -2.6" stroke="#FFD04A" stroke-width="2.6" fill="none"/><path d="M-9 1.4Q0 -1.6 9 1.4" stroke="#7EC8F0" stroke-width="2.6" fill="none"/><path d="M-7.6 5Q0 2.6 7.6 5" stroke="#B6E36A" stroke-width="2.4" fill="none"/><path d="M-6.8 -6Q0 -8.6 6.8 -6" stroke="#FF9A2A" stroke-width="2" fill="none"/><path d="M-4.6 -4.6A6 6 0 0 1 0 -6.8" stroke="#FFFFFF" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>',
+  cle: '<svg viewBox="-14 -14 28 28"><path d="M-12.5 -13Q-13 -3 -6.2 -5.6" fill="none" stroke="#4A2E18" stroke-width="1.4"/><g transform="rotate(45)"><circle cx="-6" r="4.4" fill="#C8A868" stroke="#4A3418" stroke-width="1"/><circle cx="-6" r="1.9" fill="#2A1E12"/><path d="M-7.8 -3.2A4 4 0 0 1 -3 -2.4" fill="none" stroke="#FFF0C0" stroke-width=".8"/><rect x="-1.8" y="-1.2" width="13" height="2.4" rx=".9" fill="#C8A868" stroke="#4A3418" stroke-width=".9"/><path d="M6.6 1.2V5.4H8.6V3.6H10.4V1.2Z" fill="#C8A868" stroke="#4A3418" stroke-width=".9"/></g></svg>'
 };
 /** pose (ou retire) le compteur, l'énigme du mois et l'objet dans la page Course ; sans rien recalculer d'autre */
 function poserTresorDOM(v) {
@@ -865,33 +868,53 @@ function coupeDonnees() { return TRESOR_APERCU && TRESOR_APERCU.coupeEx ? COUPE_
 /** une trouvaille rend son éclat tout de suite (sans attendre le prochain chargement) */
 function noterEclat(e, nom, rang) { const c = TRESORS && TRESORS.coupe; if (!c || !c.eclats) return; const x = c.eclats.find(z => z.circuit === e.circuit); if (!x || x.etat === "trouve") return;
   Object.assign(x, { etat: "trouve", rang: rang || (x.nb || 0) + 1, nb: (x.nb || 0) + 1, premier: x.premier || nom, matiere: e.matiere, couleur: e.couleur, texte: e.texte, symbole: e.symbole }); c.n = c.eclats.filter(z => z.etat === "trouve").length; }
-/** la Coupe en 12 éclats (3 rangées de 4 dans la vasque, ordre des mois) ; trouvé (par moi) = sa couleur, manqué = trou sombre, à venir = vide */
+/** v20.47 (Théo : « pas fan de plein de couleurs ») · la Coupe en OR MASSIF : 12 éclats de la même matière, sertis dans une coupe à anses.
+ *  Trouvé (par moi) = or poli (un seul reflet continu sur toute la coupe, avec son signe gravé) ; à venir = alvéole vide en creux, liseré pointillé et numéro du mois ;
+ *  manqué = verre fumé hachuré. La couleur propre de chaque éclat (donnée du serveur) n'est plus affichée. 12/12 : reflet qui passe sur la coupe. */
+let CB_N = 0;
 function svgCoupe(c, actif) {
-  const L = [[-60, -52], [-24, -52], [10, -52], [40, -52], [60, -52]], fissX = [[-60, -24, 10, 40, 60], [-54, -20, 6, 33, 54], [-47, -17, 9, 29, 47], [-38, -13, 4, 22, 38]], Y = [-52, -30, -8, 14];
-  const jit = [[0, 2, -2, 1, 0], [0, -3, 2, -2, 0], [0, 2, -1, 3, 0], [0, 0, 0, 0, 0]];
-  let g = "";
-  for (let r = 0; r < 3; r++) for (let q = 0; q < 4; q++) { const i = r * 4 + q, e = (c.eclats || [])[i] || { etat: "avenir" };
-    const p = [[fissX[r][q], Y[r] + jit[r][q]], [fissX[r][q + 1], Y[r] + jit[r][q + 1]], [fissX[r + 1][q + 1], Y[r + 1] + jit[r + 1][q + 1]], [fissX[r + 1][q], Y[r + 1] + jit[r + 1][q]]];
-    const d = "M" + p.map(z => z.join(" ")).join("L") + "Z", coul = e.etat === "trouve" ? e.couleur || "#999" : "transparent";
-    g += '<path class="cb-ec e-' + e.etat + (i === actif ? " actif" : "") + '" data-ec="' + i + '" d="' + d + '" fill="' + esc(coul) + '"/>'; }
-  return '<svg class="cb-svg" viewBox="-75 -60 150 126" aria-hidden="true"><path d="M-61 -53H61L41 17Q30 30 0 30Q-30 30 -41 17Z" class="cb-fond"/>' + g +
-    '<path d="M-10 30H10L7 52H-7Z" class="cb-pied"/><path d="M-30 52H30Q34 52 34 58V62H-34V58Q-34 52 -30 52Z" class="cb-pied"/><path d="M-64 -53H64" class="cb-bord"/></svg>';
+  const k = "cb" + (++CB_N), E = c.eclats || [], n = E.filter(e => e.etat === "trouve").length, f = v => Math.round(v * 10) / 10;
+  const Y = [-50, -27, -5, 16], hw = y => 58 * Math.sqrt(Math.max(0, 1 - Math.pow((y + 50) / 76, 2)));
+  const JX = [[0, 0, 0, 0, 0], [0, 3, -2, 2, 0], [0, -2, 3, -1, 0], [0, 2, -1, 3, 0]], JY = [[0, 0, 0, 0, 0], [0, 2, -2, 1, 0], [0, -2, 2, -2, 0], [0, 1, -1, 2, 0]];
+  const MX = [[0, -2, 2, -1, 0], [0, 2, -2, 2, 0], [0, -1, 2, -2, 0]], MY = [[0, 0, 0, 0], [-1.5, 1.5, -1, 1.5], [1.5, -1.5, 1.5, -1], [-1, 1.5, -1.5, 1]];
+  const P = (r, q) => [f(hw(Y[r]) * (q - 2) / 2 + JX[r][q]), Y[r] + JY[r][q]], A = (p) => "A58 76 0 0 1 " + p.join(" "), L = p => "L" + p.join(" "), m = (a, b, dx, dy) => [f((a[0] + b[0]) / 2 + dx), f((a[1] + b[1]) / 2 + dy)];
+  let g = "", t = "";
+  for (let r = 0; r < 3; r++) for (let q = 0; q < 4; q++) { const i = r * 4 + q, e = E[i] || { etat: "avenir" }, TL = P(r, q), TR = P(r, q + 1), BR = P(r + 1, q + 1), BL = P(r + 1, q);
+    const d = "M" + TL.join(" ") + (r ? L(m(TL, TR, 0, MY[r][q])) : "") + L(TR) + (q === 3 ? A(BR) : L(m(TR, BR, MX[r][q + 1], 0)) + L(BR)) + L(m(BR, BL, 0, MY[r + 1][q])) + L(BL) + (q === 0 ? A(TL) : L(m(BL, TL, MX[r][q], 0)) + "Z");
+    const fill = e.etat === "trouve" ? "url(#" + k + "o)" : e.etat === "manque" ? "url(#" + k + "h)" : "url(#" + k + "c)", cx = f((TL[0] + TR[0] + BR[0] + BL[0]) / 4), cy = f((TL[1] + TR[1] + BR[1] + BL[1]) / 4 + 3.7);
+    g += '<path class="cb-ec e-' + e.etat + (i === actif ? " actif" : "") + '" data-ec="' + i + '" d="' + d + '" fill="' + fill + '"/>';
+    if (e.etat === "avenir") t += '<text class="cb-num" x="' + cx + '" y="' + cy + '">' + (i + 1) + "</text>";
+    else if (e.etat === "trouve" && e.symbole) t += '<text class="cb-grav' + (i === actif ? " actif" : "") + '" x="' + cx + '" y="' + cy + '">' + esc(e.symbole) + "</text>"; }
+  const or = (id, a) => '<linearGradient id="' + k + id + '" gradientUnits="userSpaceOnUse" ' + a + '><stop offset="0" style="stop-color:var(--cb-or0)"/><stop offset=".32" style="stop-color:var(--cb-or1)"/><stop offset=".46" style="stop-color:var(--cb-or2)"/><stop offset=".62" style="stop-color:var(--cb-or1)"/><stop offset="1" style="stop-color:var(--cb-or0)"/></linearGradient>';
+  const bol = "M-58 -50A58 76 0 0 0 58 -50Z", reflet = n === 12 || actif >= 0;
+  return '<svg class="cb-svg' + (n === 12 ? " complet" : "") + '" viewBox="-80 -60 160 126" aria-hidden="true"><defs>' + or("o", 'x1="-62" y1="0" x2="62" y2="0"') +
+    '<linearGradient id="' + k + 'c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--cb-creux2)"/><stop offset=".5" style="stop-color:var(--cb-creux)"/></linearGradient>' +
+    '<pattern id="' + k + 'h" width="3.2" height="3.2" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3.2" height="3.2" style="fill:var(--cb-fume)"/><path d="M0 0V3.2" style="stroke:var(--cb-hach)" stroke-width=".7"/></pattern>' +
+    '<linearGradient id="' + k + 'v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".35" stop-color="#fff" stop-opacity="0"/><stop offset=".8" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient>' +
+    '<linearGradient id="' + k + 's" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>' +
+    '<clipPath id="' + k + 'b"><path d="' + bol + '"/></clipPath></defs>' +
+    '<g class="cb-metal" style="stroke:url(#' + k + 'o)"><path class="cb-anse" d="M-54 -41C-77 -45 -80 -5 -42 4"/><path class="cb-anse" d="M54 -41C77 -45 80 -5 42 4"/></g>' +
+    '<g fill="url(#' + k + 'o)"><path d="' + bol + '"/><path d="M-4.5 25H4.5L3 43H-3Z"/><ellipse cx="0" cy="31" rx="7.5" ry="3.4"/><path d="M-15 43H15Q20 43 22 50H-22Q-20 43 -15 43Z"/><rect x="-29" y="50" width="58" height="9" rx="1.6"/></g>' +
+    '<rect class="cb-plaque" x="-15" y="52.4" width="30" height="4.2" rx=".8"/>' + g + t +
+    '<path d="' + bol + '" fill="url(#' + k + 'v)" pointer-events="none"/>' + (reflet ? '<g clip-path="url(#' + k + 'b)" class="cb-reflets"><rect class="cb-reflet" x="-30" y="-60" width="22" height="100" fill="url(#' + k + 's)"/></g>' : "") +
+    '<rect x="-61.5" y="-53.5" width="123" height="4.6" rx="2.3" fill="url(#' + k + 'o)" class="cb-bord"/></svg>';
 }
 function ouvrirCoupe(c0) {
   const c = c0 || coupeDonnees(); if (!c) return;
   document.querySelectorAll(".coupe-b").forEach(x => x.remove());
   const nomGP = ci => (GPS[ci] ? GPS[ci].drap + " " + GPS[ci].gp : ci), signes = (c.eclats || []).filter(e => e.etat === "trouve" && e.symbole).map(e => e.symbole);
   const autres = e => e.nb ? (e.nb === 1 ? "1 pilote l'a trouvé" : e.nb + " pilotes l'ont trouvé") + (e.premier ? " (le 1er : " + esc(e.premier) + ")" : "") : "personne ne l'a encore trouvé";
-  const ligne = (e, i) => '<li class="cb-l e-' + e.etat + '" data-ec="' + i + '" style="--c:' + esc(e.couleur || "transparent") + '"><span class="cb-m">' + MOIS_COUPE[i] + "</span><div><b>" + esc(nomGP(e.circuit)) + "</b>" +
+  const ligne = (e, i) => '<li class="cb-l e-' + e.etat + '" data-ec="' + i + '"><span class="cb-m">' + MOIS_COUPE[i] + "</span><div><b>" + esc(nomGP(e.circuit)) + "</b>" +
     (e.etat === "avenir" ? "<small>À trouver en " + ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"][i] + " : trouve le trésor du mois pour gagner cet éclat" + (e.nb ? " · " + autres(e) : "") + ".</small>"
       : e.etat === "manque" ? "<small>Tu n'as pas trouvé le trésor de ce mois : cet éclat te manquera pour l'énigme. " + autres(e) + ".</small>"
       : "<small>Éclat de " + esc(e.matiere || "") + " · trouvé " + (e.rang === 1 ? "en premier 🥇" : e.rang ? "en " + e.rang + "e" : "") + (e.nb > 1 ? " · " + e.nb + " pilotes l'ont" : "") + "</small><p>" + esc(e.texte || "") + "</p>") +
     "</div>" + (e.etat === "trouve" && e.symbole ? '<span class="cb-s" title="Le signe gravé sur cet éclat">' + esc(e.symbole) + "</span>" : "") + "</li>";
   const o = document.createElement("div"); o.className = "regles coupe-b"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "La Coupe brisée");
-  o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>🏆 La Coupe brisée' + (c.exemple ? " · aperçu (exemple inventé)" : "") + '</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div>' +
-    '<div class="cb-haut">' + svgCoupe(c) + '<div><p class="cb-n"><b>' + (c.n || 0) + "</b> éclat" + ((c.n || 0) > 1 ? "s" : "") + " sur 12</p><p class=\"cb-pro\">" + esc(c.prologue || "") + "</p></div></div>" +
+  o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>🏆 La Coupe brisée' + (c.exemple ? " · aperçu (exemple inventé)" : "") + '</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div><div class="rg-corps">' +
+    '<div class="cb-haut">' + svgCoupe(c) + '<div><p class="cb-n"><b>' + (c.n || 0) + "</b> éclat" + ((c.n || 0) > 1 ? "s" : "") + " sur 12</p>" +
+    '<p class="cb-leg"><span><i class="l-t"></i>trouvé</span><span><i class="l-v"></i>à venir</span><span><i class="l-m"></i>manqué</span></p><p class="cb-pro">' + esc(c.prologue || "") + "</p></div></div>" +
     (signes.length ? '<div class="cb-signes"><span>Les signes gravés</span><b>' + signes.map(esc).join(" ") + "</b><small>Chaque éclat porte un signe. Réunis, ils désignent un endroit…</small></div>" : "") +
-    '<ol class="cb-liste">' + (c.eclats || []).map(ligne).join("") + "</ol></div>";
+    '<ol class="cb-liste">' + (c.eclats || []).map(ligne).join("") + "</ol></div></div>";
   document.body.appendChild(o); document.documentElement.classList.add("fige");
   const fermer = () => { o.remove(); if (!document.querySelector(".regles")) document.documentElement.classList.remove("fige"); };
   o.querySelector(".rg-x").addEventListener("click", fermer); o.addEventListener("click", ev => { if (ev.target === o) fermer(); });
@@ -904,7 +927,7 @@ function revelerEclat(e, rang) {
   const c = coupeDonnees(), i = c && c.eclats ? c.eclats.findIndex(z => z.circuit === e.circuit) : -1;
   if (rang === 1) { ceremonieEclat(e, c, i); return; }
   const o = document.createElement("div"); o.className = "regles coupe-b cb-rev"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Un éclat de la Coupe");
-  o.innerHTML = '<div class="rg-c" style="--c:' + esc(e.couleur || "#F5C542") + '"><span class="tuto-k">🏆 Un éclat de la Coupe</span>' + (c ? svgCoupe(c, i) : "") +
+  o.innerHTML = '<div class="rg-c"><span class="tuto-k">🏆 Un éclat de la Coupe</span>' + (c ? svgCoupe(c, i) : "") +
     "<h3>Éclat de " + esc(e.matiere || "") + "</h3><p>" + esc(e.texte || "") + "</p>" + (e.symbole ? '<p class="cb-s1">Un signe y est gravé : <b>' + esc(e.symbole) + "</b></p>" : "") +
     '<div class="btn-row">' + (c ? '<button class="btn" type="button" data-cb-voir>Voir la Coupe</button>' : "") + '<button class="btn ghost" type="button" data-cb-ok>Fermer</button></div></div>';
   document.body.appendChild(o);
@@ -918,7 +941,7 @@ function revelerEclat(e, rang) {
 function ceremonieEclat(e, c, i) {
   const moi = moiVrai() || "toi", G = GPS[e.circuit];
   const o = document.createElement("div"); o.className = "revel cb-or" + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Premier à trouver le trésor");
-  o.innerHTML = '<div class="rv-c cbo-c" style="--c:' + esc(e.couleur || "#F5C542") + '"><span class="cbo-rayons" aria-hidden="true"></span><span class="tuto-k">🥇 Premier à trouver le trésor</span>' +
+  o.innerHTML = '<div class="rv-c cbo-c"><span class="cbo-rayons" aria-hidden="true"></span><span class="tuto-k">🥇 Premier à trouver le trésor</span>' +
     (c ? '<div class="cbo-coupe">' + svgCoupe(c, i) + "</div>" : "") +
     "<h3>Éclat de " + esc(e.matiere || "") + "</h3>" + (G ? '<small class="cbo-u">' + G.drap + " " + esc(G.gp) + "</small>" : "") +
     '<p class="cbo-grave">Gravé à ton nom : <b>' + esc(moi) + "</b></p><p>" + esc(e.texte || "") + "</p>" + (e.symbole ? '<p class="cb-s1">Un signe y est gravé : <b>' + esc(e.symbole) + "</b></p>" : "") +
