@@ -333,6 +333,10 @@ function annoncesMJ() {
   const ecart = (a, b) => (Math.floor(a / 100) * 12 + a % 100) - (Math.floor(b / 100) * 12 + b % 100);   // en mois (décembre 2027 → janvier 2028 = 1)
   const r = (MJ.finis || []).slice().reverse().find(x => !stock.get("versus.mjFin." + x.mois) && ecart(mjMoisNum(), x.mois) <= 2);
   if (r) return ceremonieMJ(r, false, () => setTimeout(annoncesMJ, 400));
+  // v20.62 : les nouvelles règles puis l'affichette du mois (piège ou règle spéciale) passent avant la révélation du mini-jeu
+  if (typeof nouveautesAVoir === "function" && nouveautesAVoir().length && stock.get("versus.tuto1")) { if (++MJ_ATTENTE < 200) setTimeout(annoncesMJ, 3000); return; }
+  const P = typeof piegeDuMoisAVoir === "function" ? piegeDuMoisAVoir() : null;
+  if (P) return ouvrirPiegeDuMois(P, () => setTimeout(annoncesMJ, 400));
   const C = MJ.courant;
   if (C && !stock.get("versus.mjRev." + C.mois)) revelationMJ(C, false);
 }

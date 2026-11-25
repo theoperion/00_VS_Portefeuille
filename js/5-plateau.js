@@ -140,12 +140,19 @@ function htmlAnnonceVingt() {
 }
 /* v20.58 · la révélation du 1er janvier : les 12 circuits dévoilés, avec le piège ou le mois spécial de chacun,
    lus dans PIEGES et moisSpecial (donc toujours les règles à jour) ; la Finale reste cachée tant qu'elle n'est pas annoncée */
+/** v20.62 · le piège ou la règle spéciale du mois k (saison 2027 et après), lus dans PIEGES et moisSpecial : toujours les règles à jour.
+    La Finale n'y figure qu'une fois annoncée (le 20 novembre) ; avant, décembre garde le Rassemblement des héros. */
+function regleCircuit(k) {
+  if (!k || Math.floor(k / 100) < SAISON.premiere) return null;
+  const y = Math.floor(k / 100), g = GPS[circuitDe(k)], sp = moisSpecial(y, k, !regleVisible("finale")), pg = sp ? null : PIEGES[circuitDe(k)], r = sp || pg;
+  return g && r ? { k, g, r, spe: !!sp } : null;
+}
+/** une seule icône quand le piège a la même que le circuit (mai : 🌿) */
+function icoCircuit(c) { return c.r.ico === c.g.drap ? "" : c.r.ico + " "; }
 function htmlAnnonceCircuits(y) {
-  const sansFinale = !regleVisible("finale");
   const lignes = CAL_GP.map((id, i) => {
-    const k = y * 100 + i + 1, g = GPS[circuitDe(k)] || GPS[id], sp = moisSpecial(y, k, sansFinale), pg = sp ? null : PIEGES[circuitDe(k)], r = sp || pg;
-    if (!g || !r) return "";
-    return "<li><em>" + esc(moisCourt(k).replace(/ \d+$/, "")) + "</em><span>" + g.drap + " " + esc(g.ville) + "</span><span" + (sp ? ' class="spe"' : "") + ">" + (r.ico === g.drap ? "" : r.ico + " ") + "<b>" + esc(r.nom) + "</b> : " + esc(r.bref) + "</span></li>";
+    const c = regleCircuit(y * 100 + i + 1); if (!c) return "";
+    return "<li><em>" + esc(moisCourt(c.k).replace(/ \d+$/, "")) + "</em><span>" + c.g.drap + " " + esc(c.g.ville) + "</span><span" + (c.spe ? ' class="spe"' : "") + ">" + icoCircuit(c) + "<b>" + esc(c.r.nom) + "</b> : " + esc(c.r.bref) + "</span></li>";
   }).join("");
   return '<div class="nv-plus"><b>🗺️ Les 12 circuits sont dévoilés</b><p>Chaque mois, son piège ou sa règle spéciale :</p><ul class="nv-cal">' + lignes + "</ul></div>";
 }
@@ -153,15 +160,42 @@ function ouvrirNouveautes(l) {
   l.forEach(e => stock.set("versus.nouveaute." + e.id, "1"));
   const y = SAISON.premiere, vingt = (y - 1) * 10000 + 1220, premier = y * 10000 + 101, revele = saisonJouee();
   const lotVingt = l.some(e => annonceEtape(e) === vingt), lotPremier = revele && l.some(e => annonceEtape(e) === premier);
+  if (lotPremier) stock.set("versus.piegeMois." + (y * 100 + 1), "1");   // v20.62 : le 1/1, les 12 circuits valent l'affichette de janvier (pas de doublon)
   const nomE = e => revele && e.nomRevele || e.nom, resE = e => revele && e.resumeRevele || e.resume;   // v20.58 : dès le 1/1, l'éclipse devient le Côté obscur
   const o = document.createElement("div"); o.className = "tuto"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
   o.innerHTML = '<div class="tuto-c' + (l.length > 2 ? " multi" : "") + '"><span class="tuto-k">' + (l.length > 1 ? "Nouvelles règles" : "Nouvelle règle") + "</span>" + (lotVingt && !revele ? htmlAnnonceVingt() : "") + l.map(e => '<div class="tuto-i">' + e.ico + "</div><h3>" + esc(nomE(e)) + "</h3><p>" + esc(resE(e)) + "</p>").join("") +
     (lotPremier ? htmlAnnonceCircuits(y) : "") +
     '<div class="btn-row"><button class="btn ghost" type="button" data-nv="regles">Lire la règle</button><button class="btn acc" type="button" data-nv="ok">Compris 🏁</button></div></div>';
   document.body.appendChild(o);
-  o.addEventListener("click", ev => { if (ev.target === o) o.remove(); });
-  o.querySelector('[data-nv="ok"]').addEventListener("click", () => o.remove());
+  const fermer = () => { o.remove(); setTimeout(() => { if (typeof verifierRevelation === "function") verifierRevelation(); }, 400); };   // v20.62 : ensuite, l'affichette du mois
+  o.addEventListener("click", ev => { if (ev.target === o) fermer(); });
+  o.querySelector('[data-nv="ok"]').addEventListener("click", fermer);
   o.querySelector('[data-nv="regles"]').addEventListener("click", () => { o.remove(); ouvrirRegles(l[0].regle); });
+}
+/* v20.62 (Théo, 25/11) · l'affichette du 1er du mois : « 🗺️ Ce mois-ci sur [circuit] : [piège ou règle spéciale] », une fois par mois et par joueur,
+   à la première ouverture du mois (à partir du 1/1/2027). Ordre : cartes retournées / nouvelles règles, puis l'affichette, puis le mini-jeu du mois
+   (annoncesMJ, js/9-minijeux.js, l'attend). Le 1/1, la grande révélation des 12 circuits en tient lieu. */
+function piegeDuMoisAVoir() {
+  if (typeof D === "undefined" || !D || apercuSaison() || !saisonOuverte()) return null;
+  const d = new Date(), k = d.getFullYear() * 100 + d.getMonth() + 1;
+  if (stock.get("versus.piegeMois." + k) || !(regleVisible("pieges") || regleVisible("gpspeciaux"))) return null;
+  if (stock.get("versus.tuto1") && nouveautesAVoir().length) return null;   // les nouvelles règles d'abord
+  return regleCircuit(k);
+}
+function ouvrirPiegeDuMois(c, apres) {
+  if (!c || document.querySelector(".pg-aff")) return;
+  stock.set("versus.piegeMois." + c.k, "1");
+  const o = document.createElement("div"); o.className = "tuto"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Ce mois-ci");
+  o.innerHTML = '<div class="tuto-c pg-aff"><span class="tuto-k">🗺️ Ce mois-ci · ' + esc(moisLong(c.k)) + '</span><p class="pg-lieu">sur <b>' + (c.r.ico === c.g.drap ? "" : c.g.drap + " ") + esc(c.g.ville) + "</b></p>" +
+    '<div class="tuto-i">' + c.r.ico + "</div><h3>" + esc(c.r.nom) + '</h3><p class="pg-bref">' + esc(c.r.bref) + '.</p><p class="pg-txt">' + esc(c.r.txt) + "</p>" +
+    '<span class="pg-tag' + (c.spe ? " spe" : "") + '">' + (c.spe ? "📅 Règle spéciale du mois" : "🪤 Piège du mois") + "</span>" +
+    '<div class="btn-row"><button class="btn ghost" type="button" data-pg="regles">Les règles</button><button class="btn acc" type="button" data-pg="ok">Compris 🏁</button></div></div>';
+  document.body.appendChild(o);
+  const suite = apres || (() => { if (typeof annoncesMJ === "function") setTimeout(annoncesMJ, 400); });
+  const fermer = () => { o.remove(); suite(); };
+  o.addEventListener("click", ev => { if (ev.target === o) fermer(); });
+  o.querySelector('[data-pg="ok"]').addEventListener("click", fermer);
+  o.querySelector('[data-pg="regles"]').addEventListener("click", () => { o.remove(); ouvrirRegles(c.spe ? "speciaux" : "pieges"); suite(); });   // le mini-jeu attend que les règles soient fermées
 }
 function carteDef(id) { return CARTES.find(z => z.id === id) || CARTES_BONUS.find(z => z.id === id) || null; }
 const AMELIOS = {
@@ -729,6 +763,9 @@ function htmlRegles(tout, modeReserve) {
   const univ = tout || modeReserve || saisonJouee(), univJanv = univ || (janvierAnnonce() && !secret);
   const sommaire = [["essentiel", "L'essentiel"], ["champ", "Points"], ["cartes", "Cartes"]].concat(vB ? [["bonus", "Bonus"]] : [], vSp ? [["speciaux", "Mois spéciaux"]] : [], vu("pieges") ? [["pieges", "Pièges"]] : [], vP ? [["pioche", "Rattrapage"]] : [], vN ? [["niveaux", "Niveaux"]] : [], [["gp", base ? "La course" : "Course et trophées"]], bientot.length ? [["bientot", "🎁 Bientôt"]] : []);
   // schémas (HTML/CSS, lisibles en clair comme en sombre)
+  // v20.62 · le piège (ou la règle spéciale) du mois en cours, en évidence en haut des règles
+  const dNow = new Date(), kNow = dNow.getFullYear() * 100 + dNow.getMonth() + 1, cNow = univ && (vu("pieges") || vS) ? regleCircuit(kNow) : null;
+  const actuel = cNow ? '<div class="rg-actuel" id="rg-actuel"><small>🗺️ Ce mois-ci · ' + esc(moisLong(kNow)) + " · " + cNow.g.drap + " " + esc(cNow.g.ville) + "</small><b>" + icoCircuit(cNow) + esc(cNow.r.nom) + "</b><span>" + esc(cNow.r.txt) + "</span><em>" + (cNow.spe ? "📅 règle spéciale du mois" : "🪤 piège du mois") + "</em></div>" : "";
   const etapeSch = (ico, quand, quoi) => '<div class="rg-et"><i>' + ico + "</i><b>" + quand + "</b><small>" + quoi + "</small></div>";
   const schemaMois = '<div class="rg-sch rg-flux" aria-label="Un mois en trois temps">' + etapeSch("🃏", "du 20 au 1<sup>er</sup>", "je pose ma carte" + (vu("prono") ? " et mon pronostic" : "")) + '<span class="rg-fl">→</span>' +
     etapeSch("👀", "le 2", "tout est révélé") + '<span class="rg-fl">→</span>' + etapeSch("📊", "fin du mois", "relevé → points") + "</div>";
@@ -737,7 +774,7 @@ function htmlRegles(tout, modeReserve) {
   const chip = (t, c) => '<span class="rg-ch' + (c ? " " + c : "") + '">' + t + "</span>";
   const schemaCalcul = '<div class="rg-sch rg-calc" aria-label="Calcul d\'un mois">' + chip("Place") + "+" + chip("🎯") + "+" + chip("🃏 carte ≤ +" + PLAFOND_CARTE) + "+" + chip("✨ bonus") + "=" + chip("points du mois", "tot") + "</div>";
   const schemaCartes = '<div class="rg-sch rg-cartes">' + CARTES.map(c => '<div class="rg-ca"><i>' + c.ico + "</i><b>" + esc(c.nom) + "</b><small>" + esc(c.court) + "</small></div>").join("") + "</div>";
-  return (modeReserve ? "" : '<div class="rg-sommaire">' + sommaire.map(([id, l]) => '<button type="button" data-rg="' + id + '">' + l + "</button>").join("") + "</div>") +
+  return (modeReserve ? "" : '<div class="rg-sommaire">' + sommaire.map(([id, l]) => '<button type="button" data-rg="' + id + '">' + l + "</button>").join("") + "</div>" + actuel) +
     (modeReserve ? "" : s("essentiel", "⚡", "L'essentiel",
       "<p>Chaque mois, les pilotes sont classés sur la <b>performance de leur PEA et de leur assurance-vie</b> (versements neutralisés : seul le % compte ; les autres comptes restent privés). La saison va de janvier à décembre ; le plus de points gagne.</p>" + schemaMois +
       '<p class="rg-note">🔥 Décembre 2026 = tour de chauffe : tout marche, rien ne compte (cartes jusqu\'au 1er décembre).</p>')) +
@@ -761,7 +798,7 @@ function htmlRegles(tout, modeReserve) {
       (vF ? "<div><b>🏆 Finale</b><span>décembre : tout le monde</span><em>place ×2</em></div>" : "") +
       (vu("vote") ? "<div><b>🗳️ Vote</b><span>2 → 31 décembre : « le coup de la saison » (pas pour soi)</span><em>plaque</em></div>" : "") + "</div>")) +
     (vu("pieges") ? s("pieges", "🪤", "Les pièges des circuits", "<p>Les autres mois, le circuit a son <b>piège</b> : une petite règle qui ne vaut que ce mois-là. Il s'affiche dès le 20 du mois d'avant (Stand et Classement).</p>" +
-      '<div class="rg-tab">' + CAL_GP.filter((id, i) => PIEGES[id] && (univ || (univJanv && i === 0))).map(id => "<div><b>" + GPS[id].drap + " " + esc(GPS[id].ville) + "</b><span>" + PIEGES[id].ico + " <b>" + esc(PIEGES[id].nom) + "</b> : " + esc(PIEGES[id].txt) + "</span><em>" + esc(moisCourt(y * 100 + CAL_GP.indexOf(id) + 1).replace(/ \d+$/, "")) + "</em></div>").join("") + "</div>" +
+      '<div class="rg-tab">' + CAL_GP.filter((id, i) => PIEGES[id] && (univ || (univJanv && i === 0))).map(id => "<div" + (cNow && circuitDe(kNow) === id && !cNow.spe ? ' class="actuel"' : "") + "><b>" + GPS[id].drap + " " + esc(GPS[id].ville) + "</b><span>" + PIEGES[id].ico + " <b>" + esc(PIEGES[id].nom) + "</b> : " + esc(PIEGES[id].txt) + "</span><em>" + esc(moisCourt(y * 100 + CAL_GP.indexOf(id) + 1).replace(/ \d+$/, "")) + "</em></div>").join("") + "</div>" +
       (univ ? '<p class="rg-note">Le Côté obscur tombe en juin, sur la Bataille spatiale.</p>' : '<p class="rg-note">Janvier n\'a pas de piège : c\'est un mois spécial (le vainqueur du mois marque +2). Les autres circuits et leurs pièges se dévoilent plus tard.</p>')) : "") +
     (vP ? s("pioche", "🎴", "Le rattrapage",
       "<p>Dernier d'un mois ? Tu pioches <b>1 carte bonus</b>, jouable dès le mois suivant, une fois par saison :</p><ul>" + CARTES_BONUS.map(c => "<li>" + c.ico + " <b>" + esc(c.nom) + "</b> : " + esc(c.court || c.def) + "</li>").join("") + "</ul>") : "") +

@@ -686,7 +686,8 @@ function ouvrirRevelation(r) {
 function verifierRevelation() {
   if (document.querySelector(".tuto, .revel, .regles")) return;
   const r = revelationAVoir(); if (r) { ouvrirRevelation(r); return; }
-  const n = nouveautesAVoir(); if (n.length && stock.get("versus.tuto1")) ouvrirNouveautes(n);
+  const n = nouveautesAVoir(); if (n.length && stock.get("versus.tuto1")) { ouvrirNouveautes(n); return; }
+  const c = typeof piegeDuMoisAVoir === "function" ? piegeDuMoisAVoir() : null; if (c) ouvrirPiegeDuMois(c);   // v20.62 : l'affichette du mois, puis le mini-jeu
 }
 /* ---------- Stand : tout ce qu'on joue (cartes, duel, atelier) ---------- */
 function joursRestants(k) {

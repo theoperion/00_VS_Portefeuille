@@ -2751,3 +2751,14 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .gp-piste.en-pres :is(.gp-suivi, .gp-tags3) { visibility: hidden; }   /* pendant le tour : le décor seul */
 @keyframes gp-pres-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .gp-pres { animation: none; } }
+/* v20.62 · l'affichette du 1er du mois (piège ou règle spéciale) et le mois en cours en évidence dans les règles */
+.pg-aff .pg-lieu { margin: -4px 0 0; font-size: 14px; color: rgba(244,245,248,.75); }
+.pg-aff .pg-lieu b { color: #F4F5F8; }
+.tuto-c.pg-aff .pg-bref { font-size: 16px; font-weight: 700; color: #F4F5F8; line-height: 1.35; }
+.tuto-c.pg-aff .pg-txt { font-size: 13px; }
+.pg-tag { padding: 5px 10px; border-radius: 999px; font: 700 11px/1 var(--f-num); letter-spacing: .06em; text-transform: uppercase; color: #FFB27A; background: rgba(255,138,61,.12); border: 1px solid rgba(255,138,61,.4); }
+.pg-tag.spe { color: #F7CF55; background: rgba(247,207,85,.1); border-color: rgba(247,207,85,.4); }
+.rg-actuel { display: grid; gap: 4px; margin: 10px 0 4px; padding: 12px 14px; border-radius: 14px; background: color-mix(in srgb, var(--accent, #5b3fe0) 10%, var(--panel)); border: 2px solid var(--accent, #5b3fe0); }
+.rg-actuel small { font-size: 12px; color: var(--ink-2); } .rg-actuel b { font-size: 16px; color: var(--ink); } .rg-actuel span { font-size: 13.5px; line-height: 1.4; color: var(--ink); }
+.rg-actuel em { font: 700 10.5px/1 var(--f-num); font-style: normal; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink, var(--accent, #5b3fe0)); }
+.rg-tab > div.actuel { border: 2px solid var(--accent, #5b3fe0); background: color-mix(in srgb, var(--accent, #5b3fe0) 10%, var(--panel)); }
