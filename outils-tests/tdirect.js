@@ -49,8 +49,6 @@ async function ouvrir(b, quand, data, o) {
     localStorage.setItem("versus.gpVu.2027", String(vu)); localStorage.setItem("versus.gpVu.2026", "202612"); localStorage.setItem("versus.baVu.2027", "202712"); localStorage.setItem("versus.deJanvier", "1"); localStorage.setItem("versus.aideVisite", "1");
     localStorage.setItem("versus.feteChauffe", "202612"); }, [o.vu || 202712, o.d3 ? "0" : "1"]);
   await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1000);
-  // v20.62 : ici on teste la course elle-même : le 🎥 tour de présentation est considéré comme déjà vu dans cette ouverture (il a son test : tpresentation.js)
-  await p.evaluate(() => Object.keys(Piste.TRACES).forEach(c => GP_PRES_VUS.add(c)));
   await p.evaluate(async d3 => { document.querySelectorAll(".revel, .regles, .tuto, .bulle-portrait, .ba").forEach(x => x.remove()); ETAT.podium = "gp"; ETAT.gp2d = d3 ? "0" : "1"; GP_ETAPE = null; garder(); montrerVue("trophees"); rendreTrophees();
     await new Promise(r => setTimeout(r, 1500)); document.querySelectorAll(".revel, .ba, .ere-voile").forEach(x => x.remove()); }, !!o.d3);
   return { p, ctx, err, req };
