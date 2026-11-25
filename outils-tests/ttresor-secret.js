@@ -1,6 +1,6 @@
 /* Test anti-fuite (25/11/2026) · aucune cachette de trésor dans ce dépôt PUBLIC.
    Lancer depuis la racine : APP_SCRIPTS=/chemin/vers/app_scripts node outils-tests/ttresor-secret.js
-   Lit versus/Tresors.js dans le dépôt PRIVÉ (fichier, sinon git show origin/main), puis parcourt les fichiers suivis par Git ici
+   Lit versus/Tresors.js dans le dépôt PRIVÉ (git show origin/main, sinon le fichier), puis parcourt les fichiers suivis par Git ici
    (piste.js, js/, css/, docs/, outils-tests/, index.html…) et signale :
      1. une ligne qui contient la position d'une cachette (x et z, arrondis ou tels quels, sur la même ligne, sous n'importe quelle forme) ;
      2. une ligne qui parle de trésor ou de cachette ET nomme l'objet caché.
@@ -9,7 +9,7 @@
 const fs = require("fs"), path = require("path"), cp = require("child_process");
 const A = process.env.APP_SCRIPTS, racine = path.resolve(__dirname, "..");
 if (!A) { console.log("(APP_SCRIPTS non défini : vérification anti-fuite sautée)"); process.exit(0); }
-let t = ""; try { t = fs.readFileSync(path.join(A, "versus", "Tresors.js"), "utf8"); } catch (e) { t = cp.execSync("git -C " + JSON.stringify(A) + " show origin/main:versus/Tresors.js").toString(); }
+let t = ""; try { t = cp.execSync("git -C " + JSON.stringify(A) + " show origin/main:versus/Tresors.js", { stdio: ["ignore", "pipe", "ignore"] }).toString(); } catch (e) { t = fs.readFileSync(path.join(A, "versus", "Tresors.js"), "utf8"); }   // la version à jour du serveur d'abord (git fetch avant)
 const C = []; t.replace(/type:\s*'(\w+)',\s*p:\s*\[([^\]]+)\]/g, (m, ty, p) => { const v = p.split(",").map(s => s.trim()); C.push({ ty, x: v[0], z: v[2] }); return m; });
 if (C.length < 5) { console.log("NON : Tresors.js illisible (" + C.length + " cachettes trouvées)"); process.exit(1); }
 const sansAccent = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
