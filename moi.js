@@ -5675,7 +5675,11 @@ function analyser() {
     if ((F.type === "Achat" || F.type === "Vente") && (jour === 0 || jour === 6)) msg.push(["warn", "Le " + frDate(F.date) + " est un " + (jour === 0 ? "dimanche" : "samedi") + " : jour sans bourse. Prends la date d'exécution de ton avis."]);
     if ((F.type !== "Solde initial" && joursEntre(F.date, aujourdhuiISO()) > 31) || (ouv && F.date < ouv)) msg.push(["warn", ouv && F.date < ouv ? "Date avant l'ouverture de " + F.env + " (" + frDate(ouv) + ") : c'est bien la bonne ?" : "Ordre ancien : c'est bien la date d'exécution ?"]);
     if (!DATE_OBLIG.includes(F.type) && !F.dateChoisie && F.date === aujourdhuiISO() && new Date().getDate() <= 5)
-      msg.push(["info", "Exécuté le mois dernier ? Choisis la date de ton avis : le mois compte pour ton relevé du Versus."]);
+      msg.push(["info", "Exécuté le mois dernier ? Choisis la date de ton avis."]);
+    /* v20.53 (P1, Théo 25/11) : un versement daté AVANT le dernier relevé Versus mais saisi APRÈS n'est plus une fausse performance :
+       il compte dans le relevé suivant (ton fichier le prend le soir où il est saisi). On le dit, sans bloquer. */
+    const rel = dernierReleveVersus(), flux = ["Apport", "Retrait", "Solde initial"].includes(F.type) || (F.type === "Achat" && F.apport);
+    if (flux && rel && F.date <= rel) msg.push(["info", "Date avant ton dernier relevé Versus (" + frDate(rel) + ") : ce " + (F.type === "Retrait" ? "retrait" : "versement") + " sera compté dans ton prochain relevé, jamais comme une performance."]);
   }
   /* G7 · un 2e solde de départ sur le même compte */
   if (F.type === "Solde initial" && (r.journal || []).some(o => o.type === "Solde initial" && o.enveloppe === F.env))
@@ -5686,6 +5690,15 @@ function analyser() {
     msg.push(["conf", "Déjà enregistré le " + frDate(String(dbl.date).slice(0, 10)) + " : " + libType(dbl.type) + (dbl.actif ? " " + dbl.actif : "") + (discret ? "" : " de " + nf(0, 2).format(dbl.montant) + " €") + (dbl.envoi ? " (envoi en cours)" : "") + ". Doublon ?", "doublon"]); }
   if (bloque && !manque) manque = msg.some(x => x[0] === "err") ? "Corrige l'alerte ci-dessus" : "Complète le formulaire";
   return { bloque, msg, lignes, doutes, manque, champ };
+}
+/** Jour (aaaa-mm-jj) du dernier relevé Versus déjà parti : dernier jour ouvré d'un mois, à partir de 19 h */
+function dernierReleveVersus(maintenant) {
+  const n = maintenant || new Date(), iso = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  for (let i = 0; i < 3; i++) {
+    const y = n.getFullYear(), m = n.getMonth() + 1 - i, d = new Date(y, m, 0, 12); while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1);
+    if (new Date(d.getFullYear(), d.getMonth(), d.getDate(), 19) <= n) return iso(d);
+  }
+  return null;
 }
 /** La phrase de relecture : l'ordre dit en une phrase courte et naturelle, pour repérer une erreur d'un coup d'œil (v16.92) */
 function phraseOrdre(sansVers) {   // v17.78 (lot60) : sansVers = relecture d'un achat, le versement est dit sur sa propre ligne
@@ -7660,14 +7673,17 @@ function adapterSimple(raw) {
   const noms = (Dv && Dv.enveloppes) || ["Portefeuille", "PEA", "Assurance vie", "CTO", "Crypto"];
   const fin = Dv ? finGlobale(Dv, 0) : 0;
   const iR = Dv ? Math.max(0, Dv.marche.indices.findIndex(n => /S&P\s*500/i.test(n))) : 0;
-  const st = (e, deb) => p ? stats(Dv, p, e, deb || 0, fin, iR, null) : {};
+  /* v20.53 (P3) : un pilote dont le Versus ne reçoit plus que des % n'a plus ses euros de bourse dans le Versus :
+     on montre ses %, jamais une valeur « à l'échelle » qui ressemblerait à des euros (profil complet = ses vrais montants, dans son fichier) */
+  const enPct = !!(p && p.pct), sansEur = o => enPct ? Object.assign({}, o, { valeur: null, pvLatente: null, verse: null }) : o;
+  const st = (e, deb) => p ? sansEur(stats(Dv, p, e, deb || 0, fin, iR, null)) : {};
   const tot = st(0);
   const sTot = p ? serie(p, 0).filter(z => z.k <= fin && z.val > 0) : [];
   const dernierR = e => { const s = p ? serie(p, e).filter(z => z.k <= fin && typeof z.r === "number") : []; return s.length ? s[s.length - 1].r : null; };
   const debAn = fin ? (Math.floor(fin / 100) - 1) * 100 + 12 : 0;
   // bourse : une enveloppe par colonne du Versus
   const envs = [1, 2, 3, 4].map(e => {
-    const s = st(e); if (!(s.valeur > 0) && !(s.verse > 0)) return null;
+    const s = st(e); if (!(s.valeur > 0) && !(s.verse > 0) && !(enPct && serie(p, e).some(z => z.val > 0))) return null;
     const premier = p ? serie(p, e).find(z => z.val > 0) : null;
     return { nom: noms[e], type: "env", regime: e === 1 ? "PEA" : e === 2 ? "AV" : e === 3 ? "CTO" : "Crypto", valeur: s.valeur, gain: s.pvLatente, gainPct: s.pvLatentePct, latente: s.pvLatente,
       twr: s.twr, mwr: s.mwr, vol: s.vol, m1: dernierR(e), ytd: st(e, debAn).twr, s1: null, m6: null, a1: null, ouverture: premier ? premier.d : null };
@@ -7692,7 +7708,7 @@ function adapterSimple(raw) {
   const nomsEp = comptes.filter(c => soldes.some(s => s[1] === c.nom)).map(c => c.nom);
   const soldeA = (nom, iso) => { let v = null; soldes.forEach(s => { if (s[1] === nom && s[0] <= iso) v = s[2]; }); return v; };
   const premierSolde = soldes.length ? soldes[0][0] : null;
-  const bourseA = k => { let v = null; sTot.forEach(z => { if (z.k <= k) v = z.val; }); return v; };
+  const bourseA = k => { let v = null; if (!enPct) sTot.forEach(z => { if (z.k <= k) v = z.val; }); return v; };
   const moisParMois = ks.map(k => {
     const iso = finMoisIso(Math.floor(k / 100), k % 100);
     const ep = premierSolde && iso >= premierSolde.slice(0, 7) + "-01" ? nomsEp.reduce((a, n) => a + (soldeA(n, iso) || 0), 0) : null;
@@ -7710,11 +7726,11 @@ function adapterSimple(raw) {
   const rows = sTot.map((z, j) => {
     if (j > 0 && typeof z.r === "number") ip *= 1 + z.r;
     if (j > 0 && typeof mi[z.k] === "number") isp *= 1 + mi[z.k];
-    const ligne = [+String(z.d).replace(/-/g, ""), z.val, z.cum, ip, isp];
+    const ligne = [+String(z.d).replace(/-/g, ""), enPct ? null : z.val, enPct ? null : z.cum, ip, isp];
     parEnv.forEach(([e, m]) => {
       const q = m[z.k], v = q && q.val > 0 ? q.val : null;
       if (v === null) ipE[e] = null; else if (ipE[e] === null) ipE[e] = 100; else if (typeof q.r === "number") ipE[e] *= 1 + q.r;
-      ligne.push(ipE[e], v, v === null ? null : q.cum);
+      ligne.push(ipE[e], enPct ? null : v, v === null || enPct ? null : q.cum);
     });
     ligne.push(j > 0 && typeof mi[z.k] === "number" ? mi[z.k] : null);   // lot 46 : S&P 500 du mois (null = inconnu), pour le marqueur de Mois par mois
     return ligne;
@@ -7962,7 +7978,8 @@ window.Moi = {
   },
   saisir(partiel, onglet) { lireCache(); if (M && M.simple) ouvrirSoldes(); else ouvrirSaisieM(partiel, onglet); },
   retourSaisie,
-  envoieSeul() { lireCache(); return versusRelie(); },   // v17.96 : le fichier envoie-t-il lui-même son relevé au Versus ?
+  envoieSeul() { lireCache(); return versusRelie(); },
+  dernierReleveVersus,   // v20.53 (P1) : jour du dernier relevé Versus déjà parti (lu aussi par les tests)   // v17.96 : le fichier envoie-t-il lui-même son relevé au Versus ?
   rafraichir(frais) { if (configure()) { rendre(); charger(!!frais); } },
   testerVersus() {   // v17.93 (Théo) : fichier lu directement par le Versus (Théo) → on le dit clairement, avec le dernier relevé
     if (!configure()) return Promise.resolve({ ok: false, message: "Aucun fichier relié à cet appareil." });

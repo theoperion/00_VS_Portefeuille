@@ -343,9 +343,9 @@ function rendreFiche() {
         "</div>" : '<div class="vide">Pas de rendement sur cette période.</div>') +
       '<div class="f-plis">' +
       (env === 0 && envs.length > 1 ? pli("env", "Toutes enveloppes", "même période", '<div class="scroll-x"><table class="tab"><thead><tr><th>Enveloppe</th><th>TWR</th><th>Volatilité</th><th>Valeur</th><th>Plus-value</th><th>Poids</th></tr></thead><tbody>' +
-        envs.map(x => "<tr><td>" + esc(x.nom) + '</td><td class="' + sens(x.s.twr) + '">' + pct(x.s.twr) + "</td><td>" + (x.s.n ? volTxt(x.s) : "—") + "</td><td>" + eurDe(p.nom, x.s.valeur) + '</td><td class="' + sens(x.s.pvLatente) + '">' + eurDe(p.nom, x.s.pvLatente, 0, true) + "<br><small>" + pct(x.s.pvLatentePct) + "</small></td><td>" + pct(totalV ? x.s.valeur / totalV.valeur : null, 0, false) + "</td></tr>").join("") +
+        envs.map(x => "<tr><td>" + esc(x.nom) + '</td><td class="' + sens(x.s.twr) + '">' + pct(x.s.twr) + "</td><td>" + (x.s.n ? volTxt(x.s) : "—") + "</td><td>" + eurDe(p.nom, x.s.valeur) + '</td><td class="' + sens(x.s.pvLatente) + '">' + eurDe(p.nom, x.s.pvLatente, 0, true) + "<br><small>" + pct(x.s.pvLatentePct) + "</small></td><td>" + pct(totalV && !p.pct ? x.s.valeur / totalV.valeur : null, 0, false) + "</td></tr>").join("") +
         "</tbody></table></div>" +
-        '<div class="stack" role="img" aria-label="Répartition">' + envs.filter(x => x.nom !== "Portefeuille").map((x, j) => '<i title="' + esc(x.nom) + '" style="flex:' + x.s.valeur + ";background:color-mix(in srgb, " + couleur(p.nom) + " " + (100 - j * 22) + '%, var(--panel))"></i>').join("") + "</div>") : "") +
+        (p.pct ? "" : '<div class="stack" role="img" aria-label="Répartition">' + envs.filter(x => x.nom !== "Portefeuille").map((x, j) => '<i title="' + esc(x.nom) + '" style="flex:' + x.s.valeur + ";background:color-mix(in srgb, " + couleur(p.nom) + " " + (100 - j * 22) + '%, var(--panel))"></i>').join("") + "</div>")) : "") +
       pli("mois", "Mois par mois", esc(ENVELOPPES[env]), '<div class="scroll-x"><table class="grille"><thead><tr><th></th>' + MOIS.map(m => "<th>" + m + "</th>").join("") + "<th>Année</th></tr></thead><tbody>" +
         annees.map(y => { const st = stats(D, p, env, (y - 1) * 100 + 12, y * 100 + 12, null, null); return '<tr><td class="nom">' + y + "</td>" + MOIS.map((m, j) => { const x = sAll.find(z => z.k === y * 100 + j + 1); return x && typeof x.r === "number" ? '<td style="' + teinte(x.r, max) + '">' + pct(x.r) + "</td>" : '<td class="vide">·</td>'; }).join("") + '<td style="' + teinte(st.twr, max * 3) + '"><b>' + pct(st.twr) + "</b></td></tr>"; }).join("") +
       "</tbody></table></div>") +
@@ -508,6 +508,7 @@ function rendreSaisie() {
     document.querySelectorAll("[data-rp]").forEach(b => b.addEventListener("click", () => { R.nom = b.dataset.rp; choisirMoisParDefaut(); rendreSaisie(); }));
     return;
   }
+  if (p.pct || p.nom !== joueurAdmin()) return rendreSaisiePct(p);   // v20.53 (Théo, 25/11) : tout pilote sauf Théo saisit en % (ses montants ne quittent jamais son téléphone ni son fichier)
   const idx = p.rows.findIndex(x => x[0] === R.k);
   const prev = idx > 0 ? p.rows[idx - 1] : null;
   const util = utilisees(p);
@@ -532,7 +533,7 @@ function rendreSaisie() {
       '<div class="champ"><label for="r-v' + e + '">Versé ce mois (€)</label><input id="r-v' + e + '" type="text" inputmode="decimal" autocomplete="off" placeholder="0" value="' + esc(R.v[2 * e]) + '"' + (fige ? " disabled" : "") + "></div>" +
       '<div class="champ"><label for="r-c' + e + '">Valeur fin de mois (€)</label><input id="r-c' + e + '" type="text" inputmode="decimal" autocomplete="off" placeholder="—" value="' + esc(R.v[2 * e + 1]) + '"' + (fige ? " disabled" : "") + "></div></div></div>").join("") +
     (montrer[0] && montrer[1] ? "" : '<button class="lien" type="button" id="r-tout">Afficher les autres enveloppes</button>') +
-    '<p class="info">Versé : 0 si rien, négatif si retrait. Valeur : le total affiché par la banque en fin de mois, 0 si l\'enveloppe est vidée. Le rendement affiché compte le versement à moitié (arrivé en moyenne en milieu de mois).</p>' +
+    '<p class="info">Versé : 0 si rien, négatif si retrait. Valeur : le total affiché par la banque en fin de mois, 0 si l\'enveloppe est vidée. Le rendement affiché ici est une estimation (versement compté à moitié) : le % officiel du mois est celui de Moi, calculé jour par jour par ton fichier.</p>' +
     '<div class="recap" id="r-recap"></div><div id="r-alertes" style="display:grid;gap:6px"></div>' +
     (fige ? "" : '<button class="btn acc plein" type="submit" id="r-envoyer">' + (st.etat === "modif" ? "Enregistrer la modification" : "Enregistrer le relevé") + "</button>") + "</form>" + htmlRelevesMois();
   brancherRelevesMois($("#corps-saisie"));
@@ -592,6 +593,67 @@ async function envoyerReleve(forcer) {
   if (rep.erreur === "fige") { charger(true); }
   const p = D.personnes.find(x => x.nom === R.nom), i = p.rows.findIndex(x => x[0] === R.k);
   majSaisie(i > 0 ? p.rows[i - 1] : null);
+}
+/* v20.53 (Théo, 25/11) · RELEVÉ EN % : pour un pilote dont les montants sont privés, l'appli calcule le % du mois sur le téléphone
+   et n'envoie au Versus QUE des % (action relevePct) : les euros tapés ici ne partent nulle part et ne sont pas gardés.
+   Le plus simple reste l'envoi automatique de son fichier « Moi » (même % que Moi, jour par jour). */
+function pctSaisieDe(t) {
+  const env = [0, 1].map(e => { const d = lireNb(t[3 * e]), v = lireNb(t[3 * e + 1]), c = lireNb(t[3 * e + 2]); return { d, v: ok(v) ? v : 0, c, ill: [d, v, c].some(Number.isNaN) }; });
+  const un = x => !ok(x.c) ? { r: null, actif: false, verse: 0, pv: null } : { r: ok(x.d) && x.d > 0 && x.d + x.v / 2 > 0 ? (x.c - x.d - x.v) / (x.d + x.v / 2) : null, actif: x.c > 0.005, verse: x.v > 0.5 ? 1 : x.v < -0.5 ? -1 : 0, pv: null };
+  const pris = env.filter(x => ok(x.c)), D = pris.reduce((a, x) => a + (ok(x.d) ? x.d : 0), 0), V = pris.reduce((a, x) => a + x.v, 0), C = pris.reduce((a, x) => a + x.c, 0);
+  const pf = !pris.length ? { r: null, actif: false, verse: 0, pv: null } : { r: D > 0 && D + V / 2 > 0 && pris.every(x => ok(x.d)) ? (C - D - V) / (D + V / 2) : null, actif: C > 0.005, verse: V > 0.5 ? 1 : V < -0.5 ? -1 : 0, pv: null };
+  return { pct: { pea: un(env[0]), av: un(env[1]), pf }, ill: env.some(x => x.ill), neg: env.some(x => ok(x.c) && x.c < 0) };
+}
+function rendreSaisiePct(p) {
+  if (!R.p) R.p = Array(6).fill("");
+  const st = etatReleve(p.nom, R.k), fige = st.etat === "fige";
+  const opts = p.rows.slice().reverse().map(r => { const e = etatReleve(p.nom, r[0]).etat; return '<option value="' + r[0] + '"' + (r[0] === R.k ? " selected" : "") + ">" + esc(moisLong(r[0])) + (e === "vide" ? " · à saisir" : e === "modif" ? " · modifiable" : " · figé") + "</option>"; }).join("");
+  const champ = (id, lib, v) => '<div class="champ"><label for="' + id + '">' + lib + '</label><input id="' + id + '" type="text" inputmode="decimal" autocomplete="off" placeholder="—" value="' + esc(v) + '"' + (fige ? " disabled" : "") + "></div>";
+  $("#corps-saisie").innerHTML = '<form class="form" id="form-releve" novalidate style="display:grid;gap:14px">' +
+    '<label class="sel"><span>Mois (valeurs au ' + finMois(R.k) + ')</span><select id="r-mois">' + opts + "</select></label>" +
+    (fige ? '<div class="alerte">Relevé figé : il ne se modifie plus dans l\'appli.</div>' : st.etat === "modif" ? '<div class="alerte warn">Déjà ' + (st.j && st.j.action === "Import auto" ? "envoyé par ton fichier" : "saisi") + " : modifiable jusqu'au " + dateHeure(st.lim) + ".</div>" : "") +
+    '<div class="alerte">🔒 Ton relevé part <b>en %</b> : les montants que tu tapes restent sur ce téléphone (rien n\'est gardé), seul le % du mois est envoyé. Le plus simple : ton fichier Moi l\'envoie tout seul le dernier jour ouvré vers 19 h.</div>' +
+    ["PEA", "Assurance vie"].map((nom, e) => '<div class="env-saisie"><div class="h"><b>' + nom + '</b><span id="r-info-' + e + '"></span></div><div class="rang">' +
+      champ("r-d" + e, "Fin du mois dernier (€)", R.p[3 * e]) + champ("r-v" + e, "Versé ce mois (€)", R.p[3 * e + 1]) + champ("r-c" + e, "Fin de ce mois (€)", R.p[3 * e + 2]) + "</div></div>").join("") +
+    '<p class="info">Laisse vide une enveloppe que tu n\'as pas. Versé : 0 si rien, négatif si retrait. Ici le versement compte à moitié (arrivé en moyenne en milieu de mois) ; ton fichier, lui, le compte au jour près.</p>' +
+    '<div class="recap" id="r-recap"></div><div id="r-alertes" style="display:grid;gap:6px"></div>' +
+    (fige ? "" : '<button class="btn acc plein" type="submit" id="r-envoyer">Envoyer le % du mois</button>') + "</form>" + htmlRelevesMois();
+  brancherRelevesMois($("#corps-saisie"));
+  $("#r-mois").addEventListener("change", e => { R.k = +e.target.value; R.p = null; R.forcer = null; R.erreur = ""; rendreSaisie(); });
+  [0, 1].forEach(e => ["d", "v", "c"].forEach((t, j) => { const el = $("#r-" + t + e); if (el) el.addEventListener("input", () => { R.p[3 * e + j] = el.value; R.forcer = null; R.erreur = ""; majSaisiePct(); }); }));
+  $("#form-releve").addEventListener("submit", ev => { ev.preventDefault(); if (!fige) envoyerRelevePct(false); });
+  majSaisiePct();
+}
+function majSaisiePct() {
+  const x = pctSaisieDe(R.p), err = [], avert = [];
+  if (x.ill) err.push("Montant illisible."); if (x.neg) err.push("Une valeur de fin de mois ne peut pas être négative.");
+  [["PEA", "pea"], ["Assurance vie", "av"]].forEach(([nom, k], e) => {
+    const y = x.pct[k], info = $("#r-info-" + e); if (info) info.innerHTML = ok(y.r) ? 'mois <b class="' + sens(y.r) + '">' + pct(y.r) + "</b>" : "";
+    if (ok(y.r) && Math.abs(y.r) > .25) avert.push(nom + " : " + pct(y.r, 0) + " sur le mois, vérifie le versement et les valeurs.");
+  });
+  if (!x.pct.pea.actif && !x.pct.av.actif) err.push("Saisis au moins la fin de mois de ton PEA ou de ton assurance-vie.");
+  $("#r-recap").innerHTML = "<span>Portefeuille ce mois</span><b>" + (ok(x.pct.pf.r) ? '<span class="' + sens(x.pct.pf.r) + '">' + pct(x.pct.pf.r) + "</span>" : "—") + "</b>";
+  let al = err.map(t => '<div class="alerte err">' + esc(t) + "</div>").join("") + avert.map(t => '<div class="alerte warn">' + esc(t) + "</div>").join("");
+  if (R.erreur) al += '<div class="alerte err">' + esc(R.erreur) + "</div>";
+  if (R.forcer) al += '<div class="alerte warn">' + esc(R.forcer) + '<br><button class="btn" type="button" id="r-forcer">Envoyer quand même</button></div>';
+  $("#r-alertes").innerHTML = al;
+  if ($("#r-forcer")) $("#r-forcer").addEventListener("click", () => envoyerRelevePct(true));
+  const b = $("#r-envoyer"); if (b) { b.disabled = err.length > 0 || R.envoi; if (R.envoi) b.textContent = "Envoi…"; }
+}
+async function envoyerRelevePct(forcer) {
+  if (R.envoi) return;
+  if (simulation()) { toast(MSG_SIMULATION); return; }
+  if (SOURCE !== "api") { toast("Hors connexion : le relevé n'a pas été envoyé."); return; }
+  const x = pctSaisieDe(R.p);
+  R.envoi = true; R.erreur = ""; majSaisiePct();
+  let rep;
+  try { rep = await envoyerApi(apiUrl(), { cle: stock.get(CLES.cle), action: "relevePct", personne: R.nom, mois: R.k, pct: x.pct, forcer: !!forcer }); }   // aucun montant : seulement des %, des oui/non et des signes
+  catch (e) { rep = { ok: false, message: e.message }; }
+  R.envoi = false;
+  if (rep.ok) { R.p = null; if (window.SONS) SONS.succes(); toast(rep.message || "Relevé enregistré."); await charger(true); JNOM = R.nom; ongletReleves("journal"); return; }
+  if (rep.erreur === "cle" || rep.erreur === "bloque") { stock.del(CLES.cle); $("#saisie").hidden = true; ouvrirCle(rep.message); return; }
+  if (rep.erreur === "avertissement") R.forcer = rep.message; else R.erreur = rep.message || "Erreur inattendue.";
+  majSaisiePct();
 }
 let minuteur;
 /* Bandes qui défilent vers la droite (onglets, mois, tableaux…) : elles gardent leur position quand la vue se redessine,
