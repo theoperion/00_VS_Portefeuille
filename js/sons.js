@@ -307,14 +307,14 @@ const SONS = (() => {
     odyssee: { m: 4, H: "C Bb C F C Bb F C",   // l'Odyssée : lyre et aulos (mode mixolydien), la mer
       A: nt("7,1 10,.5 9,.5 7,1 4,1  5,1.5 2,.5 -2,2  0,.5 4,.5 7,.5 10,.5 12,1 10,1  9,2 5,2"),
       B: nt("16,1 14,.5 12,.5 10,1 12,1  14,2 10,2  12,1 9,.5 10,.5 9,1 5,1  7,2 4,1 0,1") },
-    chocolat: { m: 4, H: "C Am Dm G7 Cm Ab Fm G7",   // la Chocolaterie : orgue de foire sautillant, puis un détour « Halloween » en mineur
+    chocolat: { m: 4, H: "C Am Dm G7 Cm Ab Fm G7",   // la Chocolaterie : orgue de foire sautillant, puis un passage en mineur, plus mystérieux
       A: nt("7,.5 12,.5 11,.5 12,.5 16,1 12,1  9,.5 12,.5 16,.5 12,.5 9,2  14,.5 17,.5 16,.5 14,.5 12,.5 9,.5 5,1  7,.5 11,.5 14,.5 17,.5 19,2"),
       B: nt("12,.5 11,.5 10,.5 9,.5 8,1 7,1  8,.5 12,.5 15,.5 12,.5 8,2  17,.5 15,.5 12,.5 8,.5 5,1 8,1  7,1 11,1 14,1 -,1") },
     titans: { m: 4, H: "Cm Cm Ab Ab Fm Fm Db G",   // le Mur des titans : cuivres graves, chœur sombre, tambours
       A: nt("0,1.5 -1,.5 0,1 3,1  7,3 5,1  3,1.5 2,.5 0,1 -4,1  0,4"),
       B: nt("8,2 7,1 5,1  12,3 8,1  13,2 12,1 8,1  11,2 7,2") },
-    multivers: { m: 4, H: "C Ab Eb Bb C Ab Bb C",   // le Multivers : la Finale, synthé cosmique épique (le motif maison de la bande-annonce)
-      A: nt("0,.5 7,.5 12,.5 11,.25 12,.25 16,2  15,1 12,1 8,2  10,.5 7,.5 3,.5 7,.5 10,1 15,1  14,3 -,1"),
+    multivers: { m: 4, H: "C Ab Eb Bb C Ab Bb C",   // le Multivers : la Finale, synthé cosmique épique (air maison : ni montée do-sol-do, ni mi qui glisse en mi bémol)
+      A: nt("7,.5 4,.5 7,.5 12,.5 14,1.5 12,.5  15,1 12,1 8,2  10,.5 7,.5 3,.5 7,.5 10,1 15,1  14,3 -,1"),
       B: nt("12,.5 16,.5 19,1 16,.5 12,.5 7,1  8,1 12,1 15,2  14,1 17,1 14,.5 10,.5 5,1  12,4") }
   };
   /** v20.53 · la météo de la course s'entend : pluie et orage = la musique un peu plus sourde (un filtre doux sur le bus) */
@@ -538,8 +538,8 @@ const SONS = (() => {
       tex: [["cloche", -12, 6, .028, 48], ["glock", 24, 1, .025, 24, 12]] }),
     terrier: ambianceDe("terrier", { tempo: 120, gain: 0.145, lead: "boite", vL: .24, lead2: "celesta", vL2: .2, arp: "harpe", vA: .1, vif: "tictac",
       tex: [["tictac", 24, .1, .022, 3, 1], ["tasse", 0, .3, .03, 24, 10]] }),
-    anneau: ambianceDe("anneau", { tempo: 80, gain: 0.098, lead: "flute", vL: .2, dL: 12, lead2: "cor", vL2: .17, dL2: -12, arp: "harpe", vA: .11, vif: "harpe", tenue: ["cordes", .014],
-      tex: [["vent", 0, 6, .035, 16, 4]] }),
+    anneau: ambianceDe("anneau", { tempo: 80, gain: 0.098, lead: "flute", vL: .2, dL: 12, lead2: "cor", vL2: .17, dL2: -12, arp: "harpe", vA: .11, vif: "clochette", tenue: ["cordes", .014],
+      tex: [["vent", 0, 6, .035, 16, 4], ["clochette", 24, 1, .025, 16, 12]] }),
     pandora: ambianceDe("pandora", { tempo: 84, gain: 0.101, lead: "flute", vL: .22, lead2: "voix", vL2: .12, arp: "mailloche", vA: .13, vif: "ping", tenue: ["voix", .014, 12],
       tex: [["souffle", 0, 4, .035, 16], ["ping", 26, 1, .035, 8, 3]] }),
     etoiles: ambianceDe("etoiles", { tempo: 92, gain: 0.111, lead: "cor", vL: .18, lead2: "cordes", vL2: .07, arp: "glock", vA: .08, vif: "glock",
@@ -548,8 +548,8 @@ const SONS = (() => {
       tex: [["casserole", 0, .8, .028, 24, 23]] }),
     envers: ambianceDe("envers", { tempo: 84, gain: 0.15, lead: "synth", vL: .09, lead2: "nappe", vL2: .06, dL2: 12, arp: "arp", vA: .07, vif: "arp", tenue: ["nappe", .016],
       tex: [["aspire", 0, 2, .045, 32, 30], ["vent", 0, 6, .025, 16, 8]] }),
-    odyssee: ambianceDe("odyssee", { tempo: 72, gain: 0.145, lead: "harpe", vL: .22, lead2: "flute", vL2: .2, arp: "harpe", vA: .1, vif: "harpe",
-      tex: [["vague", 0, 6, .05, 8]] }),
+    odyssee: ambianceDe("odyssee", { tempo: 72, gain: 0.145, lead: "harpe", vL: .22, lead2: "flute", vL2: .2, arp: "harpe", vA: .1, vif: "clochette",
+      tex: [["vague", 0, 6, .05, 8], ["clochette", 19, 1, .025, 16, 6]] }),
     chocolat: ambianceDe("chocolat", { tempo: 100, gain: 0.15, lead: "boite", vL: .24, lead2: "orgue", vL2: .09, arp: "celesta", vA: .11, vif: "petille",
       tex: [["petille", 0, 3, .025, 16, 4]] }),
     titans: ambianceDe("titans", { tempo: 70, gain: 0.115, lead: "voix", vL: .12, lead2: "cor", vL2: .15, dL2: -12, arp: "cordes", vA: .05, vif: "tambour", tenue: ["voix", .016],
@@ -570,7 +570,8 @@ const SONS = (() => {
         H.forEach((c, k) => { const b = n + k * m; c.slice(1).forEach((st, j) => add(b + j, o.arp, st, 1, o.vA * (1 - j * .1))); if (m > 3) add(b + 3, o.arp, c[1] + 12, 1, o.vA * .55); });
         jouer(add, 2 * n, o.lead2, M, o.vL2, o.dL2); doux(2 * n);
         const n0 = M.find(x => x[0] !== null)[0];
-        add(3 * n + m, o.lead, n0 + (o.dL || 0), 2, o.vL * .5); H.slice(0, 2).forEach((c, k) => add(3 * n + 2 * m + k * m / 2, o.arp, c[3] + 12 * k, 2, o.vA * .4)); add(L - m, o.arp, H[0][1] + 12, m, o.vA * .3);   // la respiration ne laisse jamais plus de 3 s de silence add(3 * n + 3 * m - (m > 3 ? 1 : 0), o.lead2, (o.dL2 || 0) + 12 * (o.dL2 < 0 ? 1 : 0), 3, o.vL2 * .4);
+        add(3 * n + m, o.lead, n0 + (o.dL || 0), 2, o.vL * .5); for (let j = 0; j < R; j++) { const c = H[Math.floor(j / m) % H.length]; add(3 * n + j, o.arp, c[1 + j % 3] + 12, 1.5, o.vA * (j % m ? .6 : .85)); }   // un arpège doux, une note par temps : jamais plus de 3 s de silence
+        add(3 * n + 3 * m - (m > 3 ? 1 : 0), o.lead2, (o.dL2 || 0) + 12 * (o.dL2 < 0 ? 1 : 0), 3, o.vL2 * .4);   // la respiration ne laisse jamais plus de 3 s de silence
         (o.tex || []).forEach(([i, st, d, v, per, dec]) => { for (let t = dec || 0; t < L - .01; t += per) add(t, i, st, d, v); });
       } };
   }
