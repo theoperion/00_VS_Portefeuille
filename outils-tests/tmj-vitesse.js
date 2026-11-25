@@ -26,7 +26,8 @@ async function ouvrir(b, o) {
     await new Promise(x => setTimeout(x, o.delai ? o.delai(c) : DELAI));
     const rep = o.rep && o.rep(c) ? o.rep(c) : o.jusqua && c.action === "data" ? donneesJ(o.session, o.jusqua) : c.action === "mj" ? (c.op === "apercu" ? APERCU(c) : MJ_ETAT(202701, ETAT({ fait: false }))) : c.action === "tickets" ? { ok: true, ouvert: false } : c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : donnees(o.session);
     r.fulfill({ contentType: "application/json", body: JSON.stringify(rep) }).catch(() => {}); });
-  if (!o.ctx) await p.addInitScript(([adminOn, vue]) => { if (sessionStorage.getItem("init")) return; sessionStorage.setItem("init", "1");
+  if (!o.ctx) await p.addInitScript(([adminOn, vue]) => { if (sessionStorage.getItem("init")) return; sessionStorage.setItem("init", "1"); for (let m = 1; m <= 12; m++) localStorage.setItem("versus.piegeMois." + (202700 + m), "1");   // affichette du 1er du mois (tpiege) déjà vue
+   
     localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.bullePortrait", "1");
     localStorage.setItem("versus.saison1", "1"); localStorage.setItem("versus.gpVu.2027", "202712"); localStorage.setItem("versus.baVu.2027", "202712"); localStorage.setItem("versus.chauffe1", "1");
     for (let m = 202701; m <= 202712; m++) { localStorage.setItem("versus.mjRev." + m, "1"); localStorage.setItem("versus.mjFin." + m, "1"); }

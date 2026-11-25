@@ -32,7 +32,7 @@ async function page(b, o) {
     const rep = c.action === "tickets" ? (o.tickets || { ok: true, ouvert: false }) : c.action === "deballer" ? (o.deballer ? o.deballer() : { ok: false, erreur: "tot", message: "Pas encore." })
       : c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : donnees(o.session, o.jusqua);
     r.fulfill({ contentType: "application/json", body: JSON.stringify(rep) }); });
-  await p.addInitScript(([adminOn]) => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.bullePortrait", "1");
+  await p.addInitScript(([adminOn]) => { for (let m = 1; m <= 12; m++) localStorage.setItem("versus.piegeMois." + (202700 + m), "1");   localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.bullePortrait", "1");
     localStorage.setItem("versus.saison1", "1"); localStorage.setItem("versus.gpVu.2027", "202709"); localStorage.setItem("versus.baVu.2027", "202712"); if (adminOn) sessionStorage.setItem("versus.adminOn", "1"); }, [!!o.adminOn]);
   await p.goto("http://localhost:8771/index.html"); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1200);
   await p.evaluate(async () => { document.querySelectorAll(".revel, .regles, .tuto, .bulle-portrait, .ba").forEach(x => x.remove()); if (saisonVisible()) { ETAT.podium = "gp"; GP_ETAPE = null; garder(); } montrerVue("trophees"); rendreTrophees(); await new Promise(r => setTimeout(r, 1800)); document.querySelectorAll(".revel, .ba").forEach(x => x.remove()); });

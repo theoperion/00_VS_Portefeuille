@@ -229,7 +229,7 @@ function bandeauST(y, et, i, kGP, dir, met, mc0, demo) {
   else if (dir) { tour = '<i class="gp-live" aria-hidden="true"></i>Direct · Tour <b>1</b>/' + TOURS_GP;
     info = met.ico + " Jour " + dir.dv.j + "/" + dir.dv.N + " · " + (dir.dv.r === null ? "le peloton avance avec les jours" : texteIndice(dir.dv.r, "depuis le 1er", true)); }   // court (2 lignes au plus à 390 px), sans répéter la phrase du titre
   else if (!et.m) { tour = "Sur la grille"; info = "🚦 Départ le 1<sup>er</sup> " + esc(moisLong(kGP).replace(/ \d{4}$/, "")) + " : on avance avec les jours et le S&P 500."; }
-  else info = "🏁 Course courue · ↻ Revoir pour la revoir.";
+  else info = "🏁 Course courue · ↻ Revoir pour la regarder encore.";
   return '<div class="gp-st"><span class="gp-tour">' + tour + '</span><div class="gp-st-l"><div class="gp-com" aria-live="polite"></div><div class="gp-pops"></div><div class="gp-st-info">' + (/<sup>|<b /.test(info) ? info : esc(info)) + "</div></div></div>";
 }
 /** 📐 le schéma de la course (sous la piste et dans les règles) : 4 étapes dessinées, une phrase courte chacune */
@@ -1128,7 +1128,7 @@ function apCachette() {
     if (TRESOR_APERCU !== AP || AP.F.p) { AP.cherche = false; return; }
     const a = GP_INST && GP_INST.api, pi = document.getElementById("gp-piste");
     if (!a || a.type !== "3d" || !a.projeter || !pi || pi.classList.contains("en2d") || a.mode() !== "helico" || a.enCours() || (a.presentationEnCours && a.presentationEnCours())) { setTimeout(essai, 600); return; }
-    a.viser(null, .13, .55);
+    a.viser(null, .07, .55);   // v20.62 (trésors) : assez près pour tomber sous les 60 m
     setTimeout(() => {
       if (TRESOR_APERCU !== AP || AP.F.p) { AP.cherche = false; return; }
       if (!GP_INST || GP_INST.api !== a || a.mode() !== "helico") { setTimeout(essai, 400); return; }

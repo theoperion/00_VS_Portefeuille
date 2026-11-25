@@ -147,7 +147,7 @@ const horsDessin = p => p.evaluate(() => { const sc = document.querySelector("#g
     if (pz) { await clicPause(); await T.p.waitForTimeout(120); q1 = await etat(T.p); await T.p.waitForTimeout(1200); q2 = await etat(T.p);
       await clicPause(); await T.p.waitForTimeout(1200); q3 = await etat(T.p); }
     ok(!hp.recouvre && hp.stH >= 40, "plein écran : le bandeau de sous-titres est sous le dessin, il ne le recouvre pas " + JSON.stringify(hp));
-    ok(pz && JSON.stringify(q1.cur) === JSON.stringify(q2.cur) && (q3.max > q2.max + 0.01 || !q3.enCours), "plein écran 3D : ⏸ fige la course, ▶ la reprend");
+    ok(pz && JSON.stringify(q1.cur) === JSON.stringify(q2.cur) && (q3.max > q2.max + 0.01 || !q3.enCours), "plein écran 3D : ⏸ fige la course, ▶ la reprend " + JSON.stringify({ pz, q1: q1.max, q2: q2.max, q3: q3.max, en3: q3.enCours }));
     await T.p.click(".gpp-photo"); await T.p.waitForTimeout(500);
     const ph = await T.p.evaluate(() => ({ photo: document.querySelector(".gp-plein").classList.contains("photo"), barre: getComputedStyle(document.querySelector(".gpp-bar")).display, st: getComputedStyle(document.querySelector(".gp-plein .gp-st")).display, sc: Math.round(document.querySelector(".gp-plein .gp-scene").getBoundingClientRect().height), h: innerHeight }));
     await T.p.waitForTimeout(2700); await T.p.screenshot({ path: DOSSIER + "/photo-3d.png" });
