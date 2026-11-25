@@ -12713,6 +12713,19 @@
     function projeter(q) { if (!PV || !I.cam || !q) return null; const p = appliquer(PV, [q[0], q[1], q[2], 1]); if (p[3] <= .5) return { vis: false };
       const e = I.cam.e, d = Math.hypot(q[0] - e[0], q[1] - e[1], q[2] - e[2]);
       return { x: (p[0] / p[3] * .5 + .5) * I.cssW, y: (1 - (p[1] / p[3] * .5 + .5)) * I.cssH, vis: Math.abs(p[0] / p[3]) < 1 && Math.abs(p[1] / p[3]) < 1, d }; }
+    /** v20.62 · chasse au trésor : le décor cache-t-il ce point ? (segment caméra → point coupé par un triangle du décor fixe, à moins de 45 m du point).
+        Les triangles proches sont lus une fois par point ; ensuite quelques milliers de tests, et seulement quand la caméra a bougé. */
+    const MASQ = { k: null, t: null, e: null, r: false };
+    function masque(q) { if (!I.cam || !q) return false; const e = I.cam.e, k = q.join(",");
+      if (MASQ.k !== k) { const d = S.sol.f, R = 45, out = []; for (let i = 0; i < d.length; i += 30) { let ok = false; for (let j = 0; j < 30; j += 10) if (Math.abs(d[i + j] - q[0]) < R && Math.abs(d[i + j + 2] - q[2]) < R) { ok = true; break; } if (ok) out.push(i); } MASQ.k = k; MASQ.t = out; MASQ.e = null; }
+      if (MASQ.e && MASQ.e[0] === e[0] && MASQ.e[1] === e[1] && MASQ.e[2] === e[2]) return MASQ.r;
+      const d = S.sol.f, ox = e[0], oy = e[1], oz = e[2]; let dx = q[0] - ox, dy = q[1] - oy, dz = q[2] - oz; const L = Math.hypot(dx, dy, dz) || 1; dx /= L; dy /= L; dz /= L; let r = false;
+      for (const i of MASQ.t) { const ax = d[i], ay = d[i + 1], az = d[i + 2], e1x = d[i + 10] - ax, e1y = d[i + 11] - ay, e1z = d[i + 12] - az, e2x = d[i + 20] - ax, e2y = d[i + 21] - ay, e2z = d[i + 22] - az;
+        const px = dy * e2z - dz * e2y, py = dz * e2x - dx * e2z, pz = dx * e2y - dy * e2x, det = e1x * px + e1y * py + e1z * pz; if (det > -1e-9 && det < 1e-9) continue;
+        const iv = 1 / det, sx = ox - ax, sy = oy - ay, sz = oz - az, u = (sx * px + sy * py + sz * pz) * iv; if (u < 0 || u > 1) continue;
+        const qx = sy * e1z - sz * e1y, qy = sz * e1x - sx * e1z, qz = sx * e1y - sy * e1x, w = (dx * qx + dy * qy + dz * qz) * iv; if (w < 0 || u + w > 1) continue;
+        const h = (e2x * qx + e2y * qy + e2z * qz) * iv; if (h > 0 && h < L - .25) { r = true; break; } }
+      MASQ.e = e.slice(); MASQ.r = r; return r; }
     function toucher(cx, cy) { const r = cv.getBoundingClientRect(); let best = null, bd = 44; V.forEach(x => { const e = ecran(x.v.nom); if (!e || !e.vis) return; const d = Math.hypot(e.x + r.left - cx, e.y + r.top - cy); if (d < bd) { bd = d; best = x.v.nom; } }); return best; }
     function redim() {
       const r = boite.getBoundingClientRect(); I.cssW = Math.max(1, r.width); I.cssH = Math.max(1, r.height);
@@ -12761,7 +12774,7 @@
       /** V16.59 · visite guidée (hélico) : un survol de la piste en ~12 s ; un toucher l'arrête */
       survol(dur, fin) { if (I.mode !== "helico" || !ANIM()) { if (fin) fin(); return; } I.survol = { t0: performance.now(), dur: dur || 12000, s0: 0, o0: I.orbite, fin }; reveiller(); },
       arreterSurvol() { if (I.survol) { I.survol = null; I.pan = [0, 0]; I.zoom = 1; I.incl = .72; reveiller(); } },
-      ecran, ecranMonde, projeter, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim, reveiller, taille: () => ({ w: I.cssW, h: I.cssH }),
+      ecran, ecranMonde, projeter, masque, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim, reveiller, taille: () => ({ w: I.cssW, h: I.cssH }),
       /** v20.52 · la météo montrée (tests) et un éclair tout de suite (captures) */
       meteo: () => A.sable ? "sable" : A.pluie ? "pluie" : (def.amb === "noel" && A.neige && A.meteo !== "soleil" && A.meteo !== "beau") ? "neige" : A.dore ? "soleil" : null, particules: () => nbP,
       /** recette waouh en cours (tests) : null sans recette ; sinon ce qui est allumé */

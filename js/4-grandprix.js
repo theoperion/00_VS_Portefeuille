@@ -838,7 +838,7 @@ function etiquettesGP(api) {
 /* ---------- 🗝️ V16.61 · Chasse au trésor : un objet caché par circuit dans la Visite 3D (vue hélico).
    Les emplacements ne sont pas dans l'appli : le serveur ne les donne qu'à partir du 1er du mois du circuit (saison 2027),
    à tout le monde, admin compris. L'objet n'apparaît que de très près (zoom faible), superposé au décor ; un toucher le ramasse. ---------- */
-const TRESOR_DEBUT = 20261201, TRESOR_D = 92;   // distance (mètres du décor) en dessous de laquelle l'objet se montre (v16.64 : plus difficile, il faut zoomer au maximum et regarder au ras du sol)
+const TRESOR_DEBUT = 20261201, TRESOR_D = 60;   // distance (mètres du décor) en dessous de laquelle l'objet se montre (v16.64 : plus difficile, il faut zoomer au maximum et regarder au ras du sol ; v20.62 (Théo : « un pixel, le bon angle ») : 92 → 60 m)
 let TRESORS = null, TRESORS_T = 0, TRESOR_EL = null, TRESOR_APERCU = null;   // v17.35 : TRESOR_APERCU = aperçu admin en cours sur la page Course (exemple inventé, rien n'est envoyé)
 function tresorsOuverts() { return aujNum() >= TRESOR_DEBUT && SOURCE === "api" && !simulation(); }
 async function chargerTresors() {
@@ -909,13 +909,15 @@ function majTresor(api, pi) {
   const libre = api.type === "3d" && api.projeter && api.mode() === "helico" && !api.enCours() && !(api.survolEnCours && api.survolEnCours()) && !pi.classList.contains("en2d");
   T.en.classList.toggle("cache", (!libre && !(GP_PLEIN && pi.closest(".gp-plein"))) || (!!T.pris && !!T.b));   // v17.55 (Théo) : en plein écran, l'énigme et les indices restent affichés dans toutes les vues
   /* v17.35 : en hauteur (portrait), la caméra recule toute seule pour montrer le circuit ; on ramène la distance à celle d'un écran en largeur → même difficulté dans toutes les orientations */
-  const e = libre && !T.pris && T.t.p && api.zoom() <= .2 ? api.projeter(T.t.p) : null, d = e && e.vis ? e.d / (api.recul ? api.recul() : 1) : 1e9, al = d < TRESOR_D ? Math.min(.92, (TRESOR_D - d) / 16) : 0;
+  const e = libre && !T.pris && T.t.p && api.zoom() <= .2 ? api.projeter(T.t.p) : null, d = e && e.vis ? e.d / (api.recul ? api.recul() : 1) : 1e9;
+  /* v20.62 (Théo : « il faut le bon angle ») : si le décor est entre la caméra et l'objet, il reste invisible (avant, il se montrait à travers les murs) */
+  const al = d < TRESOR_D && !(api.masque && api.masque(T.t.p)) ? Math.min(.92, (TRESOR_D - d) / 12) : 0;
   if (T.j) { const c = libre && !T.pris && T.t.p && api.cible ? api.cible() : null; T.j.classList.toggle("cache", !c);
     if (c) { const n = palierChaud(Math.hypot(c.x - T.t.p[0], c.z - T.t.p[2]), c.r, al > 0); if (n !== T.jn) { T.jn = n; T.j.dataset.n = n; T.j.innerHTML = '<span class="gj-segs">' + [0, 1, 2, 3].map(k => "<i" + (k <= n ? ' class="on"' : "") + "></i>").join("") + "</span><b>" + JAUGE_TXT[n] + "</b>"; } }
     sonChaleur(c ? T.jn : -1); }   // v17.59 : les grelots de l'ambiance suivent le palier AFFICHÉ (rien de plus, rien avant)
   if (!T.b) return;
   if (!al) { if (T.vu) { T.b.style.opacity = "0"; T.b.style.pointerEvents = "none"; T.vu = false; } return; }
-  const s = Math.max(15, Math.min(26, 1500 / d));
+  const s = Math.max(9, Math.min(16, 640 / d));   // v20.62 : plus petit (9 à 16 px, avant 15 à 26) ; la zone de toucher reste large (::before)
   T.b.style.transform = "translate3d(" + e.x.toFixed(1) + "px," + e.y.toFixed(1) + "px,0) translate(-50%,-50%)";
   T.b.style.width = T.b.style.height = s.toFixed(0) + "px"; T.b.style.opacity = al.toFixed(2); T.b.style.pointerEvents = al > .5 ? "auto" : "none"; T.vu = true;
 }
@@ -1116,7 +1118,7 @@ function apPres() {
   const AP = TRESOR_APERCU, a = GP_INST && GP_INST.api, pi = document.getElementById("gp-piste");
   if (!AP || !a || a.type !== "3d" || !pi || pi.classList.contains("en2d") || a.mode() !== "helico") { toast("🎯 Passe d'abord en 📺 Visite."); return; }
   if (!AP.F.p) { toast("🎯 La cachette d'exemple se pose… réessaie dans une seconde."); return; }
-  a.viser([AP.F.p[0], AP.F.p[2]], .13, .55); a.reveiller();
+  a.viser([AP.F.p[0], AP.F.p[2]], .07, .55); a.reveiller();
 }
 /** cachette d'exemple : un point quelconque du sol, choisi une fois pour tomber à l'écran en vue rapprochée, puis on reprend de la hauteur (à l'admin de la retrouver, ou 🎯) */
 function apCachette() {
@@ -1125,12 +1127,13 @@ function apCachette() {
     if (TRESOR_APERCU !== AP || AP.F.p) { AP.cherche = false; return; }
     const a = GP_INST && GP_INST.api, pi = document.getElementById("gp-piste");
     if (!a || a.type !== "3d" || !a.projeter || !pi || pi.classList.contains("en2d") || a.mode() !== "helico" || a.enCours() || (a.survolEnCours && a.survolEnCours())) { setTimeout(essai, 600); return; }
-    a.viser(null, .13, .55);
+    a.viser(null, .07, .55);
     setTimeout(() => {
       if (TRESOR_APERCU !== AP || AP.F.p) { AP.cherche = false; return; }
       if (!GP_INST || GP_INST.api !== a || a.mode() !== "helico") { setTimeout(essai, 400); return; }
-      const { w, h } = a.taille(); let best = null;
-      for (let x = -600; x <= 600; x += 8) for (let z = -600; z <= 600; z += 8) { const e = a.projeter([x, 1, z]); if (!e || !e.vis || e.d / (a.recul ? a.recul() : 1) > 70) continue; const s = Math.hypot(e.x - w / 2, e.y - h * .55); if (!best || s < best.s) best = { s, p: [x, 1, z] }; }
+      const { w, h } = a.taille(), cand = [];
+      for (let x = -600; x <= 600; x += 8) for (let z = -600; z <= 600; z += 8) { const e = a.projeter([x, 1, z]); if (!e || !e.vis || e.d / (a.recul ? a.recul() : 1) > TRESOR_D - 12) continue; cand.push({ s: Math.hypot(e.x - w / 2, e.y - h * .55), p: [x, 1, z] }); }
+      cand.sort((u, v) => u.s - v.s); const best = cand.slice(0, 40).find(c => !(a.masque && a.masque(c.p))) || cand[0] || null;   // v20.62 : une cachette d'exemple que le décor ne cache pas
       if (!best) { setTimeout(essai, 400); return; }
       AP.F.p = best.p; AP.cherche = false; poserTresorDOM(document); a.viser(null, .3, .38);
     }, 700);
