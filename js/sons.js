@@ -137,7 +137,24 @@ const SONS = (() => {
     foudre: (c, o, t, f, d, v, N) => { bruitF(c, env(c, o, t, .002, .25, v), t, .25, 3500, .7, "highpass", N); bruitF(c, env(c, o, t + .05, .03, d, v * .9), t + .05, d, [900, 150], .8, "lowpass", N); },
     orgue: (c, o, t, f, d, v, N) => { const g = env(c, o, t, .01, Math.max(d, .15) * .9, v, .06); osc(c, g, t, f, "triangle", d, N); const h = c.createGain(); h.gain.value = .35; h.connect(g); osc(c, h, t, f * 2, "sine", d, N); },   // orgue de foire
     petille: (c, o, t, f, d, v, N) => { for (let k = 0, n = Math.round(d * 14); k < n; k++) { const tk = t + Math.random() * d; bruitF(c, env(c, o, tk, .001, .02, v * (.4 + Math.random() * .6)), tk, .025, 6000 + Math.random() * 3000, 3, "bandpass", N); } },
-    montee: (c, o, t, f, d, v, N) => bruitF(c, env(c, o, t, d * .9, d, v, d * .1), t, d, [300, 3500], 2, "bandpass", N)
+    montee: (c, o, t, f, d, v, N) => bruitF(c, env(c, o, t, d * .9, d, v, d * .1), t, d, [300, 3500], 2, "bandpass", N),
+    /* v20.53 · les instruments des musiques de course et des ambiances des 12 circuits 2027 */
+    voix: (c, o, t, f, d, v, N) => {   // une voix de chœur : 2 dents de scie désaccordées, filtrées sur les formants du « a », vibrato qui arrive doucement
+      const D = d + .35, g = env(c, o, t, Math.min(.3, d * .4), D, v, d * .6), m = c.createGain(); m.gain.value = 2.4;
+      [[750, 5], [1150, 6]].forEach(([fq, q]) => { const b = c.createBiquadFilter(); b.type = "bandpass"; b.frequency.value = fq; b.Q.value = q; m.connect(b); b.connect(g); });
+      const corps = c.createGain(); corps.gain.value = .12; corps.connect(passeBas(c, g, 650)); m.connect(corps);
+      const a = osc(c, m, t, f, "sawtooth", D, N), a2 = osc(c, m, t, f * 1.005, "sawtooth", D, N), l = c.createOscillator(), lg = c.createGain();
+      l.frequency.value = 5.3; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(f * .007, t + .5); l.connect(lg); lg.connect(a.frequency); lg.connect(a2.frequency); l.start(t); l.stop(t + D + .05); N.push(l);
+    },
+    cordes: (c, o, t, f, d, v, N) => { const D = d + .3, fl = passeBas(c, env(c, o, t, Math.min(.25, d * .5), D, v, d * .6), 1900); osc(c, fl, t, f, "sawtooth", D, N); osc(c, fl, t, f * 1.006, "sawtooth", D, N); },   // pupitre de cordes
+    nappe: (c, o, t, f, d, v, N) => { const D = d + .8, g = env(c, o, t, Math.min(.9, d * .5), D, v, d * .4), h = c.createGain(); h.gain.value = .3; h.connect(g);   // nappe cosmique, lente
+      osc(c, g, t, f, "triangle", D, N); osc(c, g, t, f * 1.008, "triangle", D, N); osc(c, h, t, f * 2.003, "sine", D, N); },
+    synth: (c, o, t, f, d, v, N) => {   // le synthé solo des années 80 (carré + scie, filtre, vibrato)
+      const D = d + .2, fl = passeBas(c, env(c, o, t, .04, D, v, d * .7), 1500), a = osc(c, fl, t, f, "square", D, N); osc(c, fl, t, f * 1.007, "sawtooth", D, N);
+      const l = c.createOscillator(), lg = c.createGain(); l.frequency.value = 5; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(f * .006, t + .4); l.connect(lg); lg.connect(a.frequency); l.start(t); l.stop(t + D + .05); N.push(l);
+    },
+    shaker: (c, o, t, f, d, v, N) => bruitF(c, env(c, o, t, .004, .06, v), t, .06, 7000, 1, "highpass", N),
+    caisse: (c, o, t, f, d, v, N) => { bruitF(c, env(c, o, t, .001, .2, v), t, .2, 2000, .7, "bandpass", N); const x = osc(c, env(c, o, t, .001, .12, v * .6), t, 240, "triangle", .12, N); x.frequency.exponentialRampToValueAtTime(190, t + .12); }   // caisse claire
   };
   /* le jingle « VER-SUS ! » : sol-do-mi, court-court-long. Seuls l'onde, l'octave, l'enveloppe et une couche de bruit changent selon l'univers */
   const JINGLE_NOTES = [392, 523.25, 659.25], JINGLE_RYTHME = [[0, .12], [.12, .12], [.24, .5]];
@@ -250,6 +267,61 @@ const SONS = (() => {
       tension: { sous: 2, puls: [["timbale", -12, .38, 2], ["tek", 0, .18, 1]], inst: ["celesta", "clavecin", "flute", "harpe", "mailloche", "accordeon", "glock", "orgue", "boite", "cuivre"], decal: [-12, -7, -5], v: .26, retard: 1, monte: [["montee", 2, .14]] },
       fin: [["timbale", 0, 1, .45, -12], ["cuivre", 0, 1.4, .15, -12], ["cuivre", 0, 1.4, .12, -5], ["glock", 0, 1.2, .13, 24], ["celesta", .08, 1.2, .12, 28]] }
   };
+  /* ==================== v20.53 · Les AIRS des 12 circuits 2027 (Théo : « fais la musique de chaque circuit en fonction du thème ») ====================
+     Toutes les mélodies sont COMPOSÉES ICI (aucune note tirée d'un film, d'une série ou d'un jeu). Chaque air sert deux fois :
+     la musique de la course (THEMES_COURSE, complète) et l'ambiance douce du plein écran (AMBIANCES, plus lente, sans basse ni batterie).
+     Écriture : nt("demi-tons,temps …") ; « - » = un silence ; H = un accord par mesure (table ACC) ; m = temps par mesure. Tout est en do (tonique do 5). */
+  const nt = s => s.trim().split(/\s+/).map(x => { const [a, b] = x.split(","); return [a === "-" ? null : +a, +b]; });
+  /* les accords : [basse (jamais sous sol 3, 196 Hz), 3 notes de l'accord entre do 4 et do 5] */
+  const ACC = { C: [-12, -12, -8, -5], Cm: [-12, -12, -9, -5], Csus: [-12, -12, -10, -5], Db: [-11, -11, -7, -4], Dm: [-10, -10, -7, -3], Eb: [-9, -9, -5, -2],
+    E: [-8, -8, -4, -1], E7: [-8, -10, -8, -4], F: [-7, -7, -3, 0], Fm: [-7, -7, -4, 0], G: [-17, -10, -5, -1], G7: [-17, -7, -5, -1], Gm: [-17, -10, -5, -2],
+    Ab: [-16, -12, -9, -4], Am: [-15, -12, -8, -3], A7: [-15, -11, -8, -5], Bb: [-14, -10, -7, -2] };
+  const accords = s => s.trim().split(/\s+/).map(a => ACC[a]);
+  /** joue une liste de notes à partir du temps t (dst = transposition) ; renvoie le temps de fin */
+  function jouer(add, t, i, L, v, dst, x) { L.forEach(([st, d]) => { if (st !== null) add(t, i, st + (dst || 0), d, v, x); t += d; }); return t; }
+  const AIRS = {
+    dunes: { m: 4, H: "C C Db C C Fm Db C",   // Dune : mode oriental (phrygien dominant), flûte puis voix
+      A: nt("7,1.5 8,.5 7,1 4,1  5,.5 4,.5 1,.5 4,.5 0,2  4,.5 5,.5 7,.5 8,.5 10,1 8,.5 7,.5  8,1 7,.75 5,.25 4,2"),
+      B: nt("12,2 13,1 12,1  10,1 8,1 7,2  8,1.5 7,.5 5,.5 4,.5 5,1  4,1 1,1 0,2") },
+    chateau: { m: 3, H: "C Am F G C E7 Am G7 F Fm C A7 Dm G7 C C",   // le Château : une valse
+      A: nt("7,2 12,1  11,1 9,1 4,1  5,1.5 9,.5 12,1  11,3  7,2 12,1  11,1 8,1 4,1  9,1.5 12,.5 16,1  14,3"),
+      B: nt("17,2 16,1  15,1 12,1 8,1  7,1.5 12,.5 16,1  13,1 9,1 7,1  14,2 17,1  11,1 14,1 7,1  12,3  -,3") },
+    terrier: { m: 3, H: "C Ab C Ab F Db G G7 C E Am F Db C G7 C",   // les Merveilles : boîte à musique fantasque, la gamme par tons qui « tombe dans le terrier »
+      A: nt("12,1 16,1 14,.5 12,.5  8,1.5 10,.5 12,1  7,1 12,1 16,.5 19,.5  20,2 15,1  17,1 16,.5 14,.5 12,1  13,1.5 10,.5 8,1  7,1 11,1 14,1  17,2 14,1"),
+      B: nt("12,.5 14,.5 16,.5 18,.5 20,.5 22,.5  23,1.5 20,.5 16,1  21,1 16,1 12,1  17,1.5 16,.5 12,1  13,1 17,1 20,1  19,2 16,1  14,1 17,1 11,1  12,3") },
+    anneau: { m: 4, H: "Cm Bb F Gm Cm Bb Ab G",   // l'Anneau : flûte irlandaise (mode dorien), puis cor et cordes épiques
+      A: nt("7,.5 5,.25 7,.25 10,.5 7,.5 3,1 5,.5 7,.5  10,.5 12,.5 14,.5 12,.5 10,1 5,1  9,.5 7,.5 5,.5 9,.5 12,1.5 10,.5  7,.5 5,.5 2,.5 5,.5 7,2"),
+      B: nt("0,1.5 3,.5 7,2  5,1 2,1 -2,2  3,1.5 5,.5 8,1 7,1  7,2 11,2") },
+    pandora: { m: 4, H: "C Am F G C Am F Csus",   // Pandora : gamme pentatonique, flûte et chœur aérien
+      A: nt("9,1 7,.5 4,.5 7,2  12,1 9,.5 7,.5 4,2  9,.5 12,.5 14,1 12,1 9,1  7,3 -,1"),
+      B: nt("16,1 14,.5 12,.5 14,2  12,1 9,1 7,2  9,.5 12,.5 9,.5 7,.5 4,1 2,1  2,2 0,2") },
+    etoiles: { m: 4, H: "C Am F G Ab Bb C C",   // les Étoiles : fanfare héroïque (cuivres), cadence lab-sib-do
+      A: nt("0,.75 0,.25 4,1 7,1.5 9,.5  7,2 5,1 4,1  2,.75 2,.25 5,1 9,1.5 7,.5  11,3 -,1"),
+      B: nt("12,.75 10,.25 8,1 15,2  14,.75 12,.25 10,1 17,2  16,1.5 14,.5 12,1 7,1  12,4") },
+    ratatouille: { m: 3, H: "Am Am E7 E7 E7 E7 Am Am Dm Dm Am Am E7 E7 Am Am",   // le Petit Chef : valse musette (accordéon)
+      A: nt("4,1 3,.5 4,.5 9,1  12,2 9,1  11,1 10,.5 11,.5 14,1  17,2 16,1  14,1 13,.5 14,.5 11,1  8,2 4,1  9,1 11,1 12,1  9,3"),
+      B: nt("2,1 1,.5 2,.5 5,1  9,2 5,1  4,1 3,.5 4,.5 9,1  12,2 9,1  11,1 8,.5 11,.5 14,1  17,1 16,1 14,1  12,1 11,.5 12,.5 16,1  9,3") },
+    envers: { m: 4, H: "Cm Ab Eb Bb Cm Ab Fm G",   // le Monde à l'envers : synthé rétro années 80, do mineur
+      A: nt("7,2 8,1 7,1  8,1.5 7,.5 3,2  10,2 7,1 3,1  5,3 2,1"),
+      B: nt("15,2 14,1 12,1  12,2 8,2  8,1.5 7,.5 5,1 8,1  7,2 11,2") },
+    odyssee: { m: 4, H: "C Bb C F C Bb F C",   // l'Odyssée : lyre et aulos (mode mixolydien), la mer
+      A: nt("7,1 10,.5 9,.5 7,1 4,1  5,1.5 2,.5 -2,2  0,.5 4,.5 7,.5 10,.5 12,1 10,1  9,2 5,2"),
+      B: nt("16,1 14,.5 12,.5 10,1 12,1  14,2 10,2  12,1 9,.5 10,.5 9,1 5,1  7,2 4,1 0,1") },
+    chocolat: { m: 4, H: "C Am Dm G7 Cm Ab Fm G7",   // la Chocolaterie : orgue de foire sautillant, puis un détour « Halloween » en mineur
+      A: nt("7,.5 12,.5 11,.5 12,.5 16,1 12,1  9,.5 12,.5 16,.5 12,.5 9,2  14,.5 17,.5 16,.5 14,.5 12,.5 9,.5 5,1  7,.5 11,.5 14,.5 17,.5 19,2"),
+      B: nt("12,.5 11,.5 10,.5 9,.5 8,1 7,1  8,.5 12,.5 15,.5 12,.5 8,2  17,.5 15,.5 12,.5 8,.5 5,1 8,1  7,1 11,1 14,1 -,1") },
+    titans: { m: 4, H: "Cm Cm Ab Ab Fm Fm Db G",   // le Mur des titans : cuivres graves, chœur sombre, tambours
+      A: nt("0,1.5 -1,.5 0,1 3,1  7,3 5,1  3,1.5 2,.5 0,1 -4,1  0,4"),
+      B: nt("8,2 7,1 5,1  12,3 8,1  13,2 12,1 8,1  11,2 7,2") },
+    multivers: { m: 4, H: "C Ab Eb Bb C Ab Bb C",   // le Multivers : la Finale, synthé cosmique épique (le motif maison de la bande-annonce)
+      A: nt("0,.5 7,.5 12,.5 11,.25 12,.25 16,2  15,1 12,1 8,2  10,.5 7,.5 3,.5 7,.5 10,1 15,1  14,3 -,1"),
+      B: nt("12,.5 16,.5 19,1 16,.5 12,.5 7,1  8,1 12,1 15,2  14,1 17,1 14,.5 10,.5 5,1  12,4") }
+  };
+  /** v20.53 · la météo de la course s'entend : pluie et orage = la musique un peu plus sourde (un filtre doux sur le bus) */
+  const METEO_SON = { pluie: 2600, orage: 1500 };
+  let meteoSon = null;
+  function filtreMeteo(c, dest) { const f = c.createBiquadFilter(); f.type = "lowpass"; f.Q.value = .5; f.frequency.value = METEO_SON[meteoSon] || 20000; f.connect(dest); return f; }
+
   /* ==================== v17.48 · Le thème de la COURSE (un par circuit, clé « peint ») ====================
      Joué en fond, volume bas, de « C'est parti » à l'arrivée (fondu avant le jingle et le klaxon), puis plus rien.
      Une recette = tempo, tonique, longueur de la boucle (en temps) et partition(add) qui pose une boucle : add(temps, instrument, demi-tons, durée en temps, volume).
@@ -275,18 +347,135 @@ const SONS = (() => {
         [[12, [7, 12, 16, 19, 24]], [28, [11, 14, 17, 19, 23]], [44, [7, 12, 16, 19, 24]]].forEach(([b, l]) => l.forEach((st, k) => add(b + 1 + k * .5, "glock", st, .5, .06)));
         // mesure 16 : une petite cascade de clochettes qui relance la boucle
         [12, 14, 16, 17, 19, 21, 23, 24].forEach((st, k) => add(62 + k * .25, "clochette", st, .25, .03 + k * .004));
+      } },
+    /* v20.53 · les 12 circuits 2027 : une boucle de 15 à 24 s par circuit (airs composés ici, voir AIRS) */
+    dunes: { tempo: 84, tonique: 523.25, longueur: 32, gain: 0.17,   // bourdon grave, oud pincé, darbouka (dum-tek), flûte puis voix, sable et vent
+      partition(add) { const A = AIRS.dunes;
+        add(0, "bourdon", -12, 33, .05);
+        jouer(add, 0, "flute", A.A, .3); jouer(add, 16, "voix", A.B, .2); jouer(add, 16, "flute", A.B, .06, 12);
+        accords(A.H).forEach((c, k) => { const b = k * 4;
+          jouer(add, b, "pizz", nt("-12,.5 -11,.5 -8,.5 -11,.5 -12,.5 -5,.5 -7,.5 -8,.5"), .09);
+          [[0, "dum", .3], [.5, "tek", .1], [1.5, "tek", .13], [2, "dum", .22], [3, "tek", .13], [3.5, "tek", .07]].forEach(([dt, i, v]) => add(b + dt, i, 0, .3, v));
+          if (k >= 4) { add(b, "tambour", 0, 1, .1); c.slice(1).forEach(st => add(b, "voix", st, 4, .022)); }
+          if (k % 4 === 0) add(b, "clochette", 24, 1, .035);
+        });
+        [0, 16].forEach(b => add(b, "sable", 0, 3, .05)); [8, 24].forEach(b => add(b, "vent", 0, 6, .05));
+      } },
+    chateau: { tempo: 176, tonique: 523.25, longueur: 48, gain: 0.302,   // valse : célesta, clavecin (basse et accords), glockenspiel magique, cloche du château
+      partition(add) { const A = AIRS.chateau;
+        jouer(add, 0, "celesta", A.A, .3); jouer(add, 24, "celesta", A.B, .3); jouer(add, 24, "glock", A.B, .05, 12);
+        accords(A.H).forEach((c, k) => { const b = k * 3; add(b, "clavecin", c[0], 1, .15); [1, 2].forEach(j => [c[2], c[3]].forEach(st => add(b + j, "clavecin", st, 1, .055))); });
+        [0, 24].forEach(b => add(b, "cloche", -12, 6, .04));
+        [0, 4, 7, 12, 16, 19, 24].forEach((st, k) => add(45.4 + k * .37, "clochette", st, .4, .03 + k * .004));   // la baguette magique relance la boucle
+      } },
+    terrier: { tempo: 168, tonique: 523.25, longueur: 48, gain: 0.232,   // boîte à musique, pizzicati, tic-tac du lapin, la tasse du goûter, la note qui tombe
+      partition(add) { const A = AIRS.terrier;
+        jouer(add, 0, "boite", A.A, .32); jouer(add, 24, "boite", A.B, .3); jouer(add, 24, "celesta", A.B, .06, -12);
+        accords(A.H).forEach((c, k) => { const b = k * 3; add(b, "pizz", c[0], 1, .18); [c[2], c[3]].forEach(st => add(b + 1, "pizz", st, 1, .05));
+          add(b + 1, "tictac", 24, .1, .045); add(b + 2, "tictac", 19, .1, .04); });
+        [9, 33].forEach(b => add(b + 1, "tasse", 0, .3, .05)); [22.5, 46.5].forEach(b => add(b, "chute", 24, 1.4, .07));
+      } },
+    anneau: { tempo: 100, tonique: 523.25, longueur: 32, gain: 0.186,   // flûte irlandaise et harpe, bodhran ; puis cor, cordes et timbales (l'épopée)
+      partition(add) { const A = AIRS.anneau;
+        jouer(add, 0, "flute", A.A, .22, 12); jouer(add, 16, "cor", A.B, .24, -12); jouer(add, 16, "flute", A.B, .07, 12);
+        accords(A.H).forEach((c, k) => { const b = k * 4;
+          if (k < 4) { [c[1], c[2], c[3], c[1] + 12, c[2] + 12, c[3], c[2], c[3]].forEach((st, j) => add(b + j * .5, "harpe", st, .5, j ? .07 : .1)); c.slice(1).forEach(st => add(b, "cordes", st, 4, .018)); }
+          else { c.slice(1).forEach(st => add(b, "cordes", st, 4, .045)); add(b, "timbale", c[0], 1, .2); add(b + 2, "tambour", 0, 1, .12); add(b, "harpe", c[1] + 12, 1, .08); }
+          [[0, .2], [.75, .07], [1, .12], [2, .17], [2.75, .07], [3, .12]].forEach(([dt, v]) => add(b + dt, "dum", 0, .3, v));
+        });
+        for (let k = 0; k < 8; k++) add(30 + k * .25, "timbale", -12, .25, .05 + k * .014);   // le roulement qui relance
+      } },
+    pandora: { tempo: 104, tonique: 523.25, longueur: 32, gain: 0.193,   // marimba en 3-3-2, percussions tribales, chœur aérien, flûte, lucioles (pings)
+      partition(add) { const A = AIRS.pandora;
+        jouer(add, 0, "flute", A.A, .28); jouer(add, 16, "flute", A.B, .28); jouer(add, 16, "voix", A.B, .05, -12);
+        accords(A.H).forEach((c, k) => { const b = k * 4;
+          [[0, c[1], .18], [.75, c[2], .12], [1.5, c[3], .13], [2.25, c[1] + 12, .11], [3, c[2] + 12, .12], [3.5, c[3], .1]].forEach(([dt, st, v]) => add(b + dt, "mailloche", st, .5, v));
+          c.slice(1).forEach(st => add(b, "voix", st + 12, 4, .022));
+          [[0, "tambour", .15], [1.5, "dum", .11], [2.5, "tambour", .1], [3, "dum", .1]].forEach(([dt, i, v]) => add(b + dt, i, 0, .4, v));
+          for (let j = 0; j < 8; j++) add(b + j * .5, "shaker", 0, .2, j % 2 ? .04 : .022);
+          if (k % 2) add(b + 2.5, "ping", 24 + (k % 4 === 1 ? 4 : 7), 1, .045);
+        });
+      } },
+    etoiles: { tempo: 116, tonique: 523.25, longueur: 32, gain: 0.216,   // fanfare héroïque : trompettes doublées au cor, cordes en ostinato, timbales et caisse claire
+      partition(add) { const A = AIRS.etoiles;
+        jouer(add, 0, "cuivre", A.A.concat(A.B), .15); jouer(add, 0, "cor", A.A.concat(A.B), .08, -12);
+        accords(A.H).forEach((c, k) => { const b = k * 4, r = c[0] + 12;
+          [r, r, r + 7, r, r, r + 7, r + 12, r + 7].forEach((st, j) => add(b + j * .5, "cordes", st, .45, j % 2 ? .03 : .045));
+          add(b, "timbale", c[0], 1, .22); add(b + 2, "timbale", c[0], 1, .14); add(b + 1, "caisse", 0, .2, .09); add(b + 3, "caisse", 0, .2, .09);
+          if (k === 3 || k === 7) { add(b + 3.33, "caisse", 0, .2, .06); add(b + 3.67, "caisse", 0, .2, .075); }
+          if (k === 4 || k === 5) c.slice(1).forEach(st => add(b, "cuivre", st, 3, .04));
+        });
+      } },
+    ratatouille: { tempo: 184, tonique: 523.25, longueur: 48, gain: 0.18,   // valse musette : accordéon, basse pincée, « pom-pom » d'accordéon, la casserole qui tinte
+      partition(add) { const A = AIRS.ratatouille;
+        jouer(add, 0, "accordeon", A.A.concat(A.B), .15); jouer(add, 24, "celesta", A.B, .05, 12);
+        accords(A.H).forEach((c, k) => { const b = k * 3; add(b, "pizz", c[0], 1, .2); [1, 2].forEach(j => [c[2], c[3]].forEach(st => add(b + j, "accordeon", st, .45, .035))); });
+        [23.5, 47].forEach(b => add(b, "casserole", 0, .8, .055)); add(10, "tasse", 0, .3, .04);
+      } },
+    envers: { tempo: 100, tonique: 523.25, longueur: 32, gain: 0.232,   // synthés des années 80 : basse en octaves, séquenceur, nappe, boîte à rythmes ; le son « aspiré » relance la boucle
+      partition(add) { const A = AIRS.envers;
+        jouer(add, 0, "synth", A.A.concat(A.B), .12);
+        accords(A.H).forEach((c, k) => { const b = k * 4;
+          for (let j = 0; j < 8; j++) { const t = b + j * .5; add(t, "arp", c[0] + (j % 2 ? 12 : 0), .5, .08, .35 + .3 * Math.sin(t / 32 * 6.283)); }
+          [c[3], c[1], c[2], c[1]].forEach((st, j) => [0, 1, 2, 3].forEach(q => add(b + q + j * .25, "arp", st + 12, .25, .028, .55)));
+          c.slice(1).forEach(st => add(b, "nappe", st, 4, .028));
+          add(b, "dum", 0, .3, .2); add(b + 2.5, "dum", 0, .3, .16); add(b + 1, "caisse", 0, .2, .1); add(b + 3, "caisse", 0, .2, .1);
+          for (let j = 0; j < 8; j++) add(b + j * .5, "shaker", 0, .2, j % 2 ? .028 : .016);
+        });
+        add(30, "aspire", 0, 2, .07);
+      } },
+    odyssee: { tempo: 88, tonique: 523.25, longueur: 32, gain: 0.204,   // lyre en arpèges, aulos (flûte), tambour sur cadre, les vagues de la mer Égée
+      partition(add) { const A = AIRS.odyssee;
+        jouer(add, 0, "flute", A.A, .27); jouer(add, 16, "flute", A.B, .27); jouer(add, 16, "harpe", A.B, .08, -12);
+        accords(A.H).forEach((c, k) => { const b = k * 4;
+          [c[1], c[2], c[3], c[1] + 12, c[3] + 12, c[3], c[2], c[3]].forEach((st, j) => add(b + j * .5, "harpe", st, .5, j ? .075 : .1));
+          add(b, "dum", 0, .3, .14); add(b + 1.5, "dum", 0, .3, .07); add(b + 2, "dum", 0, .3, .1); add(b + 3, "tek", 0, .2, .05);
+          if (k % 2 === 0) add(b, "vague", 0, 6, .06);
+        });
+      } },
+    chocolat: { tempo: 126, tonique: 523.25, longueur: 32, gain: 0.254,   // orgue de foire en « oum-pa », glockenspiel, bloc de bois, chocolat qui pétille
+      partition(add) { const A = AIRS.chocolat;
+        jouer(add, 0, "orgue", A.A.concat(A.B), .16); jouer(add, 0, "glock", A.A, .035, 12);
+        accords(A.H).forEach((c, k) => { const b = k * 4;
+          add(b, "orgue", c[0], .5, .13); add(b + 2, "orgue", c[0] + 7, .5, .11); [1, 3].forEach(j => [c[2], c[3]].forEach(st => add(b + j, "orgue", st, .4, .045)));
+          if (k >= 4) [.5, 1.5, 2.5, 3.5].forEach(j => add(b + j, "bloc", 0, .1, .05));
+        });
+        add(0, "petille", 0, 4, .04); add(16, "petille", 0, 4, .04);
+        [12, 16, 19, 24].forEach((st, k) => add(31 + k * .25, "boite", st, .25, .12));   // la petite cascade qui relance
+      } },
+    titans: { tempo: 84, tonique: 523.25, longueur: 32, gain: 0.237,   // tambours de guerre, chœur sombre, cuivres graves, cordes qui martèlent, le choc sourd du mur
+      partition(add) { const A = AIRS.titans;
+        jouer(add, 0, "cuivre", A.A, .17, -12); jouer(add, 16, "voix", A.B, .11); jouer(add, 16, "cor", A.B, .1, -12);
+        accords(A.H).forEach((c, k) => { const b = k * 4;
+          c.slice(1).forEach(st => add(b, "voix", st, 4, .03));
+          for (let j = 0; j < 8; j++) add(b + j * .5, "cordes", c[0] + (j === 3 || j === 7 ? 1 : 0) + 12, .4, j % 4 ? .028 : .045);
+          [[0, .3], [.75, .14], [1.5, .2], [2, .28], [3, .2], [3.5, .14]].forEach(([dt, v]) => add(b + dt, "tambour", 0, 1, v));
+          if (k % 2 === 0) add(b, "choc", 0, 1, .18);
+        });
+        add(28, "montee", 0, 4, .05); add(28, "timbale", -12, 1, .18); add(30, "timbale", -12, 1, .2);
+      } },
+    multivers: { tempo: 124, tonique: 523.25, longueur: 32, gain: 0.224,   // la Finale : arpèges de synthé qui s'ouvrent, nappe cosmique, cuivres, timbales, montée finale
+      partition(add) { const A = AIRS.multivers;
+        jouer(add, 0, "cuivre", A.A.concat(A.B), .15); jouer(add, 16, "cor", A.B, .07, -12);
+        accords(A.H).forEach((c, k) => { const b = k * 4;
+          for (let j = 0; j < 16; j++) { const t = b + j * .25; add(t, "arp", [c[1], c[2], c[3], c[1] + 12][j % 4] + 12, .25, .03, .65 - .5 * Math.sin(t / 32 * 3.1416)); }
+          c.slice(1).forEach(st => add(b, "nappe", st, 4, .028));
+          add(b, "timbale", c[0], 1, .2); if (k >= 4) add(b + 2, "timbale", c[0], 1, .14); add(b + 1, "caisse", 0, .2, .08); add(b + 3, "caisse", 0, .2, .08);
+          if (k % 4 === 0) add(b, "glock", c[3] + 24, 1, .05);
+        });
+        add(28, "montee", 0, 4, .045);
       } }
   };
   let theme = null, coursePlan = null;
   function partitionTheme(T) {
     if (T._evs) return T._evs; const E = [];
-    T.partition((t, i, st, d, v) => E.push({ t, i, f: T.tonique * Math.pow(2, (st || 0) / 12), d, v }));
+    T.partition((t, i, st, d, v, x) => E.push({ t, i, f: T.tonique * Math.pow(2, (st || 0) / 12), d, v, x }));   // v20.53 : x = réglage de l'instrument (filtre du synthé)
     return (T._evs = E.sort((a, b) => a.t - b.t));
   }
   function themeStop(f) {
     if (!theme) return; const M = theme; theme = null; clearInterval(M.iv);
     try { const t = M.c.currentTime; M.bus.gain.cancelScheduledValues(t); M.bus.gain.setValueAtTime(M.bus.gain.value, t); M.bus.gain.linearRampToValueAtTime(0, t + (f || .02)); } catch (e) { /* rien */ }
-    setTimeout(() => { M.N.forEach(x => { try { x.stop(); } catch (e) { } }); M.N = []; try { M.bus.disconnect(); } catch (e) { } }, (f || .02) * 1000 + 120);
+    setTimeout(() => { M.N.forEach(x => { try { x.stop(); } catch (e) { } }); M.N = []; try { M.bus.disconnect(); M.fm.disconnect(); } catch (e) { } }, (f || .02) * 1000 + 120);
   }
   /** pose le thème de la course sur (c, sortie) de t0 à t0 + duree (s), en commençant « depuis » secondes dans la boucle ; avance = posé au fil de l'eau */
   function poserTheme(T, c, out, t0, duree, depuis, N, avance) {
@@ -297,7 +486,7 @@ const SONS = (() => {
       for (;;) {
         if (i >= evs.length) { i = 0; M.k++; }
         const e = evs[i], tt = base + M.k * L + e.t * b; if (tt > jusqua || tt >= fin - .05) return tt < fin - .05;
-        try { INSTR[e.i](c, typeof out === "function" ? out(e) : out, tt, e.f, Math.min(e.d * b, fin - tt), e.v, N); } catch (er) { /* rien */ } i++;   // v17.59 : out peut choisir le bus selon l'instrument (ambiance)
+        try { INSTR[e.i](c, typeof out === "function" ? out(e) : out, tt, e.f, Math.min(e.d * b, fin - tt), e.v, N, e.x); } catch (er) { /* rien */ } i++;   // v17.59 : out peut choisir le bus selon l'instrument (ambiance)
       }
     };
     M.pose(avance == null ? fin : t0 + avance); return M;
@@ -305,10 +494,10 @@ const SONS = (() => {
   /** le thème d'un circuit pendant la course : duree en s ; renvoie true s'il joue */
   function themeCourse(cle, duree, depuis) {
     themeStop(.05); const T = THEMES_COURSE[cle], c = audio(); if (!T || !c || duree < .4) return false;
-    const bus = c.createGain(), t0 = c.currentTime + .03, fin = t0 + duree; bus.connect(maitre);
+    const bus = c.createGain(), t0 = c.currentTime + .03, fin = t0 + duree, fm = filtreMeteo(c, maitre); bus.connect(fm);   // v20.53 : la météo (pluie, orage) assourdit un peu
     bus.gain.setValueAtTime(0, t0); bus.gain.linearRampToValueAtTime(T.gain, t0 + (depuis ? .5 : .25));
     bus.gain.setValueAtTime(T.gain, Math.max(t0 + .5, fin - .5)); bus.gain.linearRampToValueAtTime(0, fin + .1);   // filet : il s'éteint seul à la fin prévue
-    const M = theme = { c, bus, N: [], cle };
+    const M = theme = { c, bus, fm, N: [], cle };
     const P = poserTheme(T, c, bus, t0, duree, depuis, M.N, 1.2);
     M.iv = setInterval(() => { if (theme !== M) return; if (!P.pose(c.currentTime + 1.2)) { clearInterval(M.iv); } }, 300);
     plus_tard((duree + .6) * 1000, () => { if (theme === M) themeStop(.05); });
@@ -317,7 +506,7 @@ const SONS = (() => {
   /* outil d'écoute (tests) : le thème rendu hors ligne, n secondes */
   function ecouteTheme(cle, n) { const T = THEMES_COURSE[cle]; return horsLigne(n, (c, m) => { const bus = c.createGain(); bus.gain.value = T.gain; bus.connect(m); poserTheme(T, c, bus, 0, n, 0, []); }); }
 
-  /* ==================== v17.59 · L'AMBIANCE du plein écran (seulement les circuits qui ont un thème, aujourd'hui l'Atelier du Père Noël) ====================
+  /* ==================== v17.59 · L'AMBIANCE du plein écran (v20.53 : les 13 circuits, Noël et les 12 de 2027) ====================
      Dès l'entrée en plein écran et hors course (Carte au repos, Visite, Hélico, Survol) : une version douce du thème, célesta + grelots seulement
      (ni pizzicati ni basse), plus lente et plus basse que le thème de la course. Pendant la course (▶) : le thème complet ; à l'arrivée, après le
      jingle et le klaxon, l'ambiance revient en fondu. 4 parties enchaînées sans coupure (anti-lassitude) : la mélodie · les accords seuls ·
@@ -341,8 +530,50 @@ const SONS = (() => {
         "C C C C F C G7 C".split(" ").forEach((a, m) => add(64 + m * 4, "celesta", H[a][1], 2, .06));
         // 4 · la respiration : deux longs frissons de grelots, deux notes isolées, puis presque rien
         add(96, "grelots", 0, 2, .05); add(100, "celesta", 7, 2, .08); add(104, "grelots", 0, 1.5, .04); add(108, "celesta", 12, 3, .055);
-      } }
+      } },
+    /* v20.53 · les 12 circuits 2027, même forme que Noël (voir ambianceDe) */
+    dunes: ambianceDe("dunes", { tempo: 64, gain: 0.096, lead: "flute", vL: .22, lead2: "voix", vL2: .14, arp: "pizz", vA: .11, vif: "clochette",
+      tex: [["bourdon", -12, 17, .03, 16], ["vent", 0, 6, .045, 16, 8], ["clochette", 24, 1, .03, 16]] }),
+    chateau: ambianceDe("chateau", { tempo: 132, gain: 0.154, lead: "celesta", vL: .22, lead2: "boite", vL2: .24, arp: "harpe", vA: .11, vif: "glock",
+      tex: [["cloche", -12, 6, .028, 48], ["glock", 24, 1, .025, 24, 12]] }),
+    terrier: ambianceDe("terrier", { tempo: 120, gain: 0.145, lead: "boite", vL: .24, lead2: "celesta", vL2: .2, arp: "harpe", vA: .1, vif: "tictac",
+      tex: [["tictac", 24, .1, .022, 3, 1], ["tasse", 0, .3, .03, 24, 10]] }),
+    anneau: ambianceDe("anneau", { tempo: 80, gain: 0.098, lead: "flute", vL: .2, dL: 12, lead2: "cor", vL2: .17, dL2: -12, arp: "harpe", vA: .11, vif: "harpe", tenue: ["cordes", .014],
+      tex: [["vent", 0, 6, .035, 16, 4]] }),
+    pandora: ambianceDe("pandora", { tempo: 84, gain: 0.101, lead: "flute", vL: .22, lead2: "voix", vL2: .12, arp: "mailloche", vA: .13, vif: "ping", tenue: ["voix", .014, 12],
+      tex: [["souffle", 0, 4, .035, 16], ["ping", 26, 1, .035, 8, 3]] }),
+    etoiles: ambianceDe("etoiles", { tempo: 92, gain: 0.111, lead: "cor", vL: .18, lead2: "cordes", vL2: .07, arp: "glock", vA: .08, vif: "glock",
+      tex: [["mecanique", 0, 2, .035, 32, 16]] }),
+    ratatouille: ambianceDe("ratatouille", { tempo: 132, gain: 0.129, lead: "accordeon", vL: .1, lead2: "celesta", vL2: .2, dL2: 12, arp: "pizz", vA: .12, vif: "casserole",
+      tex: [["casserole", 0, .8, .028, 24, 23]] }),
+    envers: ambianceDe("envers", { tempo: 84, gain: 0.15, lead: "synth", vL: .09, lead2: "nappe", vL2: .06, dL2: 12, arp: "arp", vA: .07, vif: "arp", tenue: ["nappe", .016],
+      tex: [["aspire", 0, 2, .045, 32, 30], ["vent", 0, 6, .025, 16, 8]] }),
+    odyssee: ambianceDe("odyssee", { tempo: 72, gain: 0.145, lead: "harpe", vL: .22, lead2: "flute", vL2: .2, arp: "harpe", vA: .1, vif: "harpe",
+      tex: [["vague", 0, 6, .05, 8]] }),
+    chocolat: ambianceDe("chocolat", { tempo: 100, gain: 0.15, lead: "boite", vL: .24, lead2: "orgue", vL2: .09, arp: "celesta", vA: .11, vif: "petille",
+      tex: [["petille", 0, 3, .025, 16, 4]] }),
+    titans: ambianceDe("titans", { tempo: 70, gain: 0.115, lead: "voix", vL: .12, lead2: "cor", vL2: .15, dL2: -12, arp: "cordes", vA: .05, vif: "tambour", tenue: ["voix", .016],
+      tex: [["vent", 0, 6, .035, 16], ["tambour", 0, 1, .04, 4]] }),
+    multivers: ambianceDe("multivers", { tempo: 96, gain: 0.131, lead: "glock", vL: .14, lead2: "cor", vL2: .15, dL2: -12, arp: "arp", vA: .06, vif: "glock", tenue: ["nappe", .018],
+      tex: [["souffle", 0, 4, .025, 16, 8]] })
   };
+  /** v20.53 · une ambiance du plein écran à partir de l'air du circuit, sur le modèle de Noël, en 4 parties enchaînées :
+   *  la mélodie (lead) + une note d'accord douce par mesure · les accords seuls, en arpège · la mélodie (lead2) · une respiration presque silencieuse.
+   *  Ni basse ni batterie ; o.tenue = [instrument, volume, transposition] : les accords tenus sous la mélodie ; o.tex = [instrument, demi-tons, durée, volume, tous les n temps, décalage] ;
+   *  o.vif = l'instrument que la chasse au trésor fait ressortir (bonus chaud-froid). */
+  function ambianceDe(cle, o) {
+    const A = AIRS[cle], H = accords(A.H), m = A.m, n = H.length * m, M = A.A.concat(A.B), R = 4 * m, L = 3 * n + R;
+    return { tempo: o.tempo, tonique: 523.25, gain: o.gain || .14, longueur: L, sections: [0, n, 2 * n, 3 * n], vif: o.vif,
+      partition(add) {
+        const doux = b0 => H.forEach((c, k) => { add(b0 + k * m, o.arp, c[2], Math.min(2, m), o.vA * .5); if (o.tenue) c.slice(1).forEach(st => add(b0 + k * m, o.tenue[0], st + (o.tenue[2] || 0), m, o.tenue[1])); });
+        jouer(add, 0, o.lead, M, o.vL, o.dL); doux(0);
+        H.forEach((c, k) => { const b = n + k * m; c.slice(1).forEach((st, j) => add(b + j, o.arp, st, 1, o.vA * (1 - j * .1))); if (m > 3) add(b + 3, o.arp, c[1] + 12, 1, o.vA * .55); });
+        jouer(add, 2 * n, o.lead2, M, o.vL2, o.dL2); doux(2 * n);
+        const n0 = M.find(x => x[0] !== null)[0];
+        add(3 * n + m, o.lead, n0 + (o.dL || 0), 2, o.vL * .5); H.slice(0, 2).forEach((c, k) => add(3 * n + 2 * m + k * m / 2, o.arp, c[3] + 12 * k, 2, o.vA * .4)); add(L - m, o.arp, H[0][1] + 12, m, o.vA * .3);   // la respiration ne laisse jamais plus de 3 s de silence add(3 * n + 3 * m - (m > 3 ? 1 : 0), o.lead2, (o.dL2 || 0) + 12 * (o.dL2 < 0 ? 1 : 0), 3, o.vL2 * .4);
+        (o.tex || []).forEach(([i, st, d, v, per, dec]) => { for (let t = dec || 0; t < L - .01; t += per) add(t, i, st, d, v); });
+      } };
+  }
   const AMB_CHALEUR = [1, 1.2, 1.4, 1.65];   // bonus chasse au trésor : les grelots un peu plus présents, au même palier que la jauge chaud-froid affichée (jamais plus fin, jamais avant)
   let amb = null;
   const AMB = { cle: null, calme: 180000, dernier: performance.now(), courseJusqua: 0, pos: {}, chaleur: -1, iv: null };
@@ -354,15 +585,15 @@ const SONS = (() => {
     try { const T = AMBIANCES[M.cle], L = T.longueur * 60 / T.tempo, ici = ((M.c.currentTime - M.t0) + M.depuis) % L, b = 60 / T.tempo;   // la partie suivante, pour la reprise
       AMB.pos[M.cle] = (T.sections.map(s => s * b).find(s => s > ici + .05) || 0) % L; } catch (e) { /* rien */ }
     try { const t = M.c.currentTime; M.bus.gain.cancelScheduledValues(t); M.bus.gain.setValueAtTime(M.bus.gain.value, t); M.bus.gain.linearRampToValueAtTime(0, t + (f || .05)); } catch (e) { /* rien */ }
-    setTimeout(() => { M.N.forEach(x => { try { x.stop(); } catch (e) { } }); M.N = []; try { M.bus.disconnect(); } catch (e) { } }, (f || .05) * 1000 + 150);
+    setTimeout(() => { M.N.forEach(x => { try { x.stop(); } catch (e) { } }); M.N = []; try { M.bus.disconnect(); M.fm.disconnect(); } catch (e) { } }, (f || .05) * 1000 + 150);
   }
   function ambDemarrer() {
     const T = AMBIANCES[AMB.cle], c = audio(); if (!T || !c) return;
     const bus = c.createGain(), busG = c.createGain(), t0 = c.currentTime + .05, depuis = AMB.pos[AMB.cle] || 0, monte = depuis ? 1.5 : 2.5;
-    bus.gain.setValueAtTime(0, t0); bus.gain.linearRampToValueAtTime(T.gain, t0 + monte); bus.connect(maitre);
+    bus.gain.setValueAtTime(0, t0); bus.gain.linearRampToValueAtTime(T.gain, t0 + monte); const fm = filtreMeteo(c, maitre); bus.connect(fm);
     busG.gain.value = AMB_CHALEUR[Math.max(0, AMB.chaleur)] || 1; busG.connect(bus);
-    const M = amb = { c, bus, busG, N: [], cle: AMB.cle, t0, depuis };
-    const P = poserTheme(T, c, e => e.i === "grelots" ? busG : bus, t0, Infinity, depuis, M.N, 1.2);
+    const M = amb = { c, bus, busG, fm, N: [], cle: AMB.cle, t0, depuis };
+    const P = poserTheme(T, c, e => e.i === (T.vif || "grelots") ? busG : bus, t0, Infinity, depuis, M.N, 1.2);
     M.iv = setInterval(() => { if (amb !== M) return; P.pose(c.currentTime + 1.2); if (M.N.length > 500) M.N.splice(0, M.N.length - 300); }, 300);   // les sons déjà joués sont oubliés : la liste reste bornée
   }
   /** démarre ou coupe l'ambiance selon l'état (appelée par la sentinelle, au toucher, et à chaque changement) */
@@ -554,6 +785,9 @@ const SONS = (() => {
     sacre,
     actif, vibreOK, arreter, vibrer, klaxon, musiqueBA, bloque, debloquer, MUSIQUES, JINGLE_TIMBRE, _ecoute: ecoute, _ecouteJingles: ecouteJingles, _ecouteTheme: ecouteTheme, THEMES_COURSE, themeJoue: () => !!theme, _partition: composer,
     /** v17.59 · l'ambiance douce du plein écran (circuits à thème) ; chaleur = bonus chasse au trésor (palier de la jauge affichée) */
+    /** v20.53 · la météo de la course (id de meteoMois : soleil, nuages, beau, pluie, orage) : pluie et orage assourdissent un peu la musique et l'ambiance */
+    meteo(id) { meteoSon = id || null; const fq = METEO_SON[meteoSon] || 20000; [theme, amb].forEach(M => { if (M && M.fm) try { M.fm.frequency.setTargetAtTime(fq, M.c.currentTime, .4); } catch (e) { /* rien */ } }); },
+    _meteo: () => meteoSon, AIRS, _instr: INSTR,
     ambiance, chaleur, AMBIANCES, ambianceJoue: () => !!amb, _ambN: () => amb ? amb.N.length : 0, _ambGrelots: () => amb ? amb.busG.gain.value : 0, _ecouteAmbiance: ecouteAmbiance, _amb: AMB,
     /** V16.75 · le jingle « VER-SUS ! » dans le timbre d'un univers : mode « motif » (3 notes enchaînées) ou « accord » (tenu ~1 s) */
     jingle(cle, mode) { const c = audio(); if (!c) return; try { jingleSur(c, maitre, c.currentTime + .02, cle, mode || "motif", []); } catch (e) { /* rien */ } },
