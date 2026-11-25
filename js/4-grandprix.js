@@ -164,7 +164,7 @@ function bandeauST(y, et, i, kGP, dir, met, mc0) {
   if (dir && dir.dv.fini) { tour = "🏁 Tour <b>1</b> fini"; info = "🏁 Mois fini : tour 2 dès que tous les relevés sont là."; }   // mois fini, pas encore clos : plus de « direct »
   else if (dir) { tour = '<i class="gp-live" aria-hidden="true"></i>Direct · Tour <b>1</b>/' + TOURS_GP;
     info = met.ico + " Jour " + dir.dv.j + "/" + dir.dv.N + " · " + (dir.dv.r === null ? "le peloton avance avec les jours" : (D.marche.indices[iRef()] || "S&P 500") + " " + pct(dir.dv.r) + " depuis le 1er"); }   // court (2 lignes au plus à 390 px), sans répéter la phrase du titre
-  else if (!et.m) { tour = "Sur la grille"; info = "🚦 Départ le 1<sup>er</sup> " + esc(moisLong(kGP).replace(/ \d{4}$/, "")) + " : le peloton avancera avec les jours du mois."; }
+  else if (!et.m) { tour = "Sur la grille"; info = "🚦 Départ le 1<sup>er</sup> " + esc(moisLong(kGP).replace(/ \d{4}$/, "")) + " : le peloton avancera avec les jours, plus vite si le S&P 500 monte, moins vite s'il baisse."; }
   else info = "🏁 Course courue · ↻ Rejouer pour la revoir.";
   return '<div class="gp-st"><span class="gp-tour">' + tour + '</span><div class="gp-st-l"><div class="gp-com" aria-live="polite"></div><div class="gp-pops"></div><div class="gp-st-info">' + (/<sup>/.test(info) ? info : esc(info)) + "</div></div></div>";
 }
