@@ -1223,7 +1223,7 @@ function injecterStyle() {
 .moi .m-afaire .af-r { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid color-mix(in srgb, var(--gold) 25%, transparent); }
 .moi .m-afaire .af-i { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; background: color-mix(in srgb, var(--gold) 18%, transparent); }
 .moi .m-afaire .af-t { flex: 1; min-width: 0; display: grid; gap: 1px; } .moi .m-afaire .af-t b { font-size: 14px; line-height: 1.25; } .moi .m-afaire .af-t small { font-size: 12px; color: var(--ink-2); }
-.moi .m-afaire .af-a { flex: none; display: grid; gap: 2px; justify-items: center; } .moi .m-afaire .af-a .lien { font-size: 12px; white-space: nowrap; }
+.moi .m-afaire .af-a { flex: none; display: grid; gap: 2px; justify-items: center; } .moi .m-afaire .af-a .lien { font-size: 12px; white-space: nowrap; } .moi .m-afaire .af-a [data-lx-sans] { white-space: normal; max-width: 96px; text-align: center; line-height: 1.2; }
 .moi .m-afaire .af-plus > summary { cursor: pointer; padding: 8px 0 4px; font-size: 13px; font-weight: 600; color: var(--ink-2); border-top: 1px solid color-mix(in srgb, var(--gold) 25%, transparent); }
 .moi .m-afaire .af-rep { margin: 4px 0 2px; font-size: 12px; color: var(--ink-3); }
 .moi .m-afaire.vide { display: flex; align-items: center; gap: 10px; margin: 10px 0 4px; padding: 9px 12px; border-radius: 14px; border: 1px solid var(--rule); background: var(--panel); font-size: 13.5px; color: var(--ink-2); }
@@ -3136,9 +3136,12 @@ function fenMoi(per) {
   const auj = +isoJour(new Date()).replace(/-/g, ""), n = c.v.length, direct = LIVEJ !== null && n && c.d[n - 1] < auj;
   const fin = direct ? dateNum(auj) : dateNum(c.d[n - 1]), num = d => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
   let i0 = -1;
-  if (per === "5j") i0 = n - 1 - (direct ? 4 : 5);
+  if (per === "5j") i0 = Math.max(0, n - 1 - (direct ? 4 : 5));
   else if (per === "tout") i0 = 0;
-  else { const d0 = debutPer(per, fin), c0 = num(d0); c.d.forEach((d, i) => { if (d <= c0) i0 = i; }); if (i0 >= 0 && (d0 - dateNum(c.d[i0])) / 864e5 > 6) i0 = -1; }
+  else { const d0 = debutPer(per, fin), c0 = num(d0); c.d.forEach((d, i) => { if (d <= c0) i0 = i; });
+    /* v20.65 (Clément) : historique à trous (photos mensuelles, puis quotidiennes) : pas de point ≤ 6 j avant le début →
+       la courbe part du PREMIER point à l'intérieur de la période (base 100 sur lui) au lieu de disparaître */
+    if (i0 < 0 || (d0 - dateNum(c.d[i0])) / 864e5 > 6) { i0 = c.d.findIndex(d => d > c0); if (i0 < 0) i0 = n - 1; } }
   if (i0 < 0) return null;
   let d = c.d.slice(i0), v = c.v.slice(i0);
   if (per === "1a" || per === "tout") { const sem = k => { const t = dateNum(k); t.setDate(t.getDate() + ((5 - t.getDay() + 7) % 7)); return isoJour(t); };
@@ -7638,7 +7641,28 @@ function faireRappel(k) {
 }
 function plusTard() { try { return JSON.parse(stock.get(cleStock("plusTard")) || "{}") || {}; } catch (e) { return {}; } }
 function rappelReporte(x) { const k = cleRappel(x.nom) || x.nom; return (plusTard()[k] || 0) > Date.now(); }
-function rappelDu(x) { return /À faire|mettre à jour|retard|⚠|✏/i.test(x.statut || "") && !rappelReporte(x); }
+function rappelDu(x) { return /À faire|mettre à jour|retard|⚠|✏/i.test(x.statut || "") && !rappelReporte(x) && !(LX_SANS.includes(cleRappel(x.nom)) && lxSans()); }
+/* v20.65 (Théo, pour Clément) · « Aucun versement ce mois-ci » sur le rappel du versement Linxea (PAS sur ceux d'Artema, toujours obligatoires) :
+   le rappel est rangé jusqu'au même jour le mois suivant (sa date habituelle). Gardé sur ce téléphone ({ depuis, jusqu }), rien n'est écrit dans le fichier.
+   Retour en arrière : « Annuler » juste après, « Remettre le rappel » dans À faire, et effacé tout seul dès qu'un versement Linxea est saisi ce mois-là. */
+const LX_SANS = ["linxea", "lxProg"];
+function lxSans(maintenant) {
+  let x = null; try { x = JSON.parse(stock.get(cleStock("lxSans")) || "null"); } catch (e) { x = null; }
+  if (!x || !/^\d{4}-\d\d-\d\d$/.test(x.jusqu || "") || !/^\d{4}-\d\d-\d\d$/.test(x.depuis || "")) return null;
+  const auj = isoJour(maintenant || new Date()), lx = envLinxea();
+  if (auj >= x.jusqu) return null;
+  if (lx && ((M && M.ref && M.ref.journal) || []).some(o => o.enveloppe === lx && o.type === "Apport" && String(o.date || "").slice(0, 7) >= x.depuis.slice(0, 7))) { stock.del(cleStock("lxSans")); return null; }   // un versement saisi ce mois-ci : le choix s'efface
+  return x;
+}
+/** range le rappel jusqu'au même jour le mois suivant (jour = celui de la date habituelle du rappel, sinon aujourd'hui) */
+function rangerLxSans(dateRappel, maintenant) {
+  const n = maintenant || new Date(), auj = isoJour(n), j = /^\d{4}-\d\d-(\d\d)/.exec(dateRappel || "") ? +dateRappel.slice(8, 10) : n.getDate();
+  const y = n.getFullYear() + (n.getMonth() === 11 ? 1 : 0), m = (n.getMonth() + 1) % 12 + 1;
+  const jusqu = y + "-" + String(m).padStart(2, "0") + "-" + String(Math.min(j, new Date(y, m, 0).getDate())).padStart(2, "0");
+  stock.set(cleStock("lxSans"), JSON.stringify({ depuis: auj, jusqu }));
+  return jusqu;
+}
+function remettreLxSans() { stock.del(cleStock("lxSans")); }
 /* v16.87 : l'ancien bandeau est remplacé par la boîte unique « À faire » (gardé pour compatibilité) */
 function htmlBandeauRappel(o) { return htmlAFaire(o === "artema" ? "artema" : undefined); }
 function brancherBandeauRappel(v) { brancherAFaire(v); }
@@ -7775,7 +7799,7 @@ function tachesAFaire(o) {
   // v16.99 (Théo) : les 5 ans du PEA / les 8 ans d'une assurance-vie, annoncés 3 mois avant (jusqu'à 30 j après), « Compris » les range
   annivsFiscaux().filter(a => !annivVus()[a.k] && !reporte(a.k)).forEach(a => l.push({ k: a.k, cles: [a.k], titre: a.titre, date: "", quand: a.quand, ico: "🎂", anniv: a }));
   { const fx = fraisLxDu(); if (fx && !reporte("fraisLx")) l.push({ k: "fraisLx", cles: ["fraisLx"], titre: "Frais de gestion Linxea à saisir", date: fx, quand: quand(fx), ico: "🧾" }); }
-  { const lp = lxProgDu(); if (lp && !reporte("lxProg")) l.push({ k: "lxProg", cles: ["lxProg"], titre: "Versement programmé Linxea", date: lp, quand: quand(lp), ico: "💸" }); }
+  { const lp = lxProgDu(); if (lp && !reporte("lxProg") && !lxSans()) l.push({ k: "lxProg", cles: ["lxProg"], titre: "Versement programmé Linxea", date: lp, quand: quand(lp), ico: "💸" }); }
   if (feAVerifier()) l.push({ k: "fondsEuros", cles: ["fondsEuros"], titre: "Fonds euros : ton taux estimé tient toujours ?", date: "", quand: "tous les 3 mois", fe: true });
   verifsPru().forEach(x => l.push({ k: x.id, cles: [x.id], titre: titreVerifPru(x), date: x.ordre.date, quand: "après ton achat du " + dateCourteIso(x.ordre.date) + " sur " + x.env, ico: "🧮", pru: x, verbe: "vérifier le PRU de " + x.code }));
   l.forEach((t, i) => { t.i = i; t.ico = t.ico || ICO_RAPPEL[t.k] || "◷"; t.verbe = t.verbe || (t.anniv ? "noter : " + t.titre.toLowerCase() : VERBES_RAPPEL[t.k] || "faire : " + t.titre.toLowerCase()); });
@@ -7791,17 +7815,27 @@ function prochainRappel() { return M && !M.simple ? rappelsFichier().filter(x =>
 function htmlAFaire(o) {
   if (!M) return "";
   const l = tachesAFaire(o), rep = o === "artema" ? [] : reportesAFaire();
+  const ls = o === "artema" ? null : lxSans(), remettre = ls ? '<p class="af-rep">Versement Linxea : aucun ce mois-ci, rappel rangé jusqu\'au ' + esc(dateCourteIso(ls.jusqu)) + '. <button class="lien" type="button" data-lx-remettre="1">Remettre le rappel</button></p>' : "";
   if (!l.length) {
+    if (remettre) return '<section class="m-afaire m-rappel" aria-label="À faire">' + remettre + "</section>";   // v20.65 : seule trace du rappel rangé, pour revenir en arrière
     return "";   // v17.3 (Théo) : rien à faire = rien d'affiché (ni « Rien à faire », ni prochain rappel, ni reportés)
   }
   const ligne = t => '<div class="af-r"><span class="af-i" aria-hidden="true">' + t.ico + '</span><span class="af-t"><b>' + esc(t.titre) + "</b><small>" + esc(t.quand) + "</small></span>" +
     (t.pru ? '<span class="af-a"><button class="mini-btn" type="button" data-pru-ok="' + esc(t.k) + '">✅ Conforme</button><button class="lien" type="button" data-pru-corr="' + esc(t.k) + '">✏️ Corriger</button></span></div>'
-      : '<span class="af-a"><button class="mini-btn" type="button" data-af-faire="' + esc(t.k) + '">Faire</button><button class="lien" type="button" data-af-tard="' + esc(t.cles.join(",")) + '">Plus tard</button></span></div>');
+      : '<span class="af-a"><button class="mini-btn" type="button" data-af-faire="' + esc(t.k) + '">Faire</button><button class="lien" type="button" data-af-tard="' + esc(t.cles.join(",")) + '">Plus tard</button>' +
+        (LX_SANS.includes(t.k) ? '<button class="lien" type="button" data-lx-sans="' + esc(t.date || "") + '">Aucun versement ce mois-ci</button>' : "") + "</span></div>");
   const vis = l.slice(0, 3), reste = l.slice(3);
   return '<section class="m-afaire m-rappel" aria-label="À faire"><div class="af-h"><b>À faire</b><span class="af-n">' + l.length + "</span>" + (o === "artema" ? "" : "<small>le plus ancien d'abord</small>") + "</div>" +
     vis.map(ligne).join("") +
     (reste.length ? '<details class="af-plus"><summary>Voir ' + (reste.length > 1 ? "les " + reste.length + " autres" : "l'autre") + "</summary>" + reste.map(ligne).join("") + "</details>" : "") +
-    (rep.length ? '<p class="af-rep">Reporté à demain : ' + rep.map(x => esc(nomCourtRappel(x))).join(", ") + ".</p>" : "") + "</section>";
+    (rep.length ? '<p class="af-rep">Reporté à demain : ' + rep.map(x => esc(nomCourtRappel(x))).join(", ") + ".</p>" : "") + remettre + "</section>";
+}
+/** un message avec « Annuler » (quelques secondes, comme les autres messages) */
+function toastAnnuler(t, annuler) {
+  toast(t); const el = document.getElementById("toast"); if (!el) return;
+  const b = document.createElement("button"); b.type = "button"; b.className = "lien tst-ann"; b.textContent = "Annuler"; b.style.marginLeft = "8px";
+  b.addEventListener("click", ev => { ev.stopPropagation(); el.hidden = true; annuler(); });
+  const x = el.querySelector(".tst-x"); el.insertBefore(b, x);
 }
 function annivVus() { try { return JSON.parse(stock.get(cleStock("annivVus")) || "{}"); } catch (e) { return {}; } }
 function annivsFiscaux() {
@@ -7831,6 +7865,11 @@ function brancherAFaire(v) {
     const pt = plusTard(); b.dataset.afTard.split(",").forEach(k => { pt[k] = Date.now() + 864e5; }); stock.set(cleStock("plusTard"), JSON.stringify(pt));
     toast("C'est noté : je te le rappelle demain."); signalerCloche(); rendre();
   }));
+  v.querySelectorAll("[data-lx-sans]").forEach(b => b.addEventListener("click", () => {
+    const jusqu = rangerLxSans(b.dataset.lxSans); signalerCloche(); rendre();
+    toastAnnuler("Rappel rangé jusqu'au " + dateCourteIso(jusqu) + ".", () => { remettreLxSans(); signalerCloche(); rendre(); toast("Rappel du versement Linxea remis."); });
+  }));
+  v.querySelectorAll("[data-lx-remettre]").forEach(b => b.addEventListener("click", () => { remettreLxSans(); signalerCloche(); rendre(); toast("Rappel du versement Linxea remis."); }));
   v.querySelectorAll("[data-bilan-faire]").forEach(b => b.addEventListener("click", () => faireTache(b.dataset.bilanFaire)));
   v.querySelectorAll("[data-pru-ok]").forEach(b => b.addEventListener("click", () => { oublierVerifPru(b.dataset.pruOk); toast("✅ PRU conforme : c'est noté."); rendre(); }));
   v.querySelectorAll("[data-pru-corr]").forEach(b => b.addEventListener("click", () => corrigerVerifPru(b.dataset.pruCorr)));
@@ -8438,6 +8477,7 @@ window.Moi = {
   envoieSeul() { lireCache(); return versusRelie(); },   // v17.96 : le fichier envoie-t-il lui-même son relevé au Versus ?
   dernierReleveVersus,   // v20.53 (P1) : jour du dernier relevé Versus déjà parti (lu aussi par les tests)
   _pru() { return { verifs: verifsPru(), cloche: notifications().items.map(x => x.txt), taches: tachesAFaire().filter(t => t.pru).length }; },   // (préparé) : pour les tests
+  _lxSans(d) { return lxSans(d ? new Date(d) : undefined); }, _rangerLxSans(dr, d) { return rangerLxSans(dr, d ? new Date(d) : undefined); },
   _lxProgDu(m, d) { const a = M; M = m; try { return lxProgDu(d); } finally { M = a; } },   // v20.54 : pour les tests (faux fichier)
   rafraichir(frais) { if (configure()) { rendre(); charger(!!frais); } },
   testerVersus() {   // v17.93 (Théo) : fichier lu directement par le Versus (Théo) → on le dit clairement, avec le dernier relevé
