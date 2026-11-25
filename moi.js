@@ -588,6 +588,11 @@ function injecterStyle() {
 .moi .nv-ln .nv-v { font: 600 12.5px/1.15 var(--f-num); font-variant-numeric: tabular-nums; }
 .moi .nv-ln .nv-cr, .moi .nv-li .nv-pru { font: 400 10.5px/1.15 var(--f-num); font-variant-numeric: tabular-nums; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 1; }
 .moi .nv-ln .nv-cr i, .moi .nv-li .nv-pru i { font-style: normal; opacity: .8; }
+.moi .nv-ln .nv-vo { font: 500 10.5px/1.15 var(--f-num); font-variant-numeric: tabular-nums; color: var(--ink-3); white-space: nowrap; }
+.moi .nv-tot .nv-n .nv-vo { grid-column: 1 / -1; font: 500 10.5px/1.15 var(--f-num); font-variant-numeric: tabular-nums; color: var(--ink-3); white-space: nowrap; }
+.moi .nv-vo i { font-style: normal; font-size: 9px; margin-right: 1px; }
+.moi .nv-vo.fort { color: var(--down); } .moi .nv-vo.agite { color: var(--gold); }
+.moi .nv-vo-aide { margin: 0; padding: 6px 12px 8px 15px; font-size: 11px; line-height: 1.35; color: var(--ink-3); background: var(--panel-2); }
 .moi .nv-li .nv-ch { align-self: center; font-size: 13px; }
 .moi .m-l.nv-li.especes .nv-ln b { font: 500 13px/1.2 var(--f-text); color: var(--ink-3); }
 .moi .nv-tot { padding: 7px 12px 9px 15px; background: var(--panel-2); border-top: 2px solid var(--ink) !important; row-gap: 7px; }
@@ -898,6 +903,19 @@ function injecterStyle() {
 .moi .sg-frise .x { grid-column: 1 / -1; font-size: 12px; line-height: 1.35; color: var(--ink-2); }
 .moi .sg-ventes { margin: 4px 0 2px; padding: 0 0 0 16px; display: grid; gap: 5px; font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
 .moi .sg-ventes b { color: var(--ink); font-weight: 600; }
+.moi .sg-bilan { display: grid; gap: 8px; padding-bottom: 10px; }
+.moi .bl-ind { display: grid; gap: 3px; padding: 9px 10px; border-radius: 8px; background: var(--panel-2); font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
+.moi .bl-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.moi .bl-h b { font: 700 13px/1.2 var(--f-text); color: var(--ink); } .moi .bl-h b small { font: 500 11px/1 var(--f-text); color: var(--ink-3); margin-left: 4px; }
+.moi .bl-h em { font-style: normal; font: 600 11.5px/1.2 var(--f-text); color: var(--ink); white-space: nowrap; }
+.moi .bl-d, .moi .bl-n { font-size: 11.5px; color: var(--ink-3); } .moi .bl-m small { color: var(--ink-3); }
+.moi .bl-ep { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.moi .bl-ep li { display: grid; gap: 2px; padding: 0 0 6px 9px; border-left: 3px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.moi .bl-ep li.bon { border-left-color: var(--up); } .moi .bl-ep li.mauvais { border-left-color: var(--down); } .moi .bl-ep li.cours { border-left-color: var(--gold); }
+.moi .bl-t { font-size: 12.5px; line-height: 1.35; color: var(--ink); } .moi .bl-s { font-size: 11px; line-height: 1.3; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.moi .bl-ep b.up, .moi .bl-m b.up { color: var(--up); } .moi .bl-ep b.down, .moi .bl-m b.down { color: var(--down); }
+.moi details.bl-plus > summary { cursor: pointer; font: 600 12px/1.2 var(--f-text); color: var(--accent-ink); padding: 4px 0; }
+.moi details.bl-plus > ol { margin-top: 6px; }
 .moi .sg-rien { min-width: 0; font: 600 11.5px/1.2 var(--f-text); color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .moi .sg-consigne { margin: 0; padding: 10px 12px 4px 14px; font: 700 15px/1.3 var(--f-text); color: var(--ink); }
 .moi .sg-consigne + .sig-msg { border-top: 0; padding-top: 2px; padding-left: 14px; }
@@ -2262,7 +2280,7 @@ function htmlEnveloppes(s, plat) {
     ? '<div class="m-l nv-li especes"' + (plat ? ' style="' + ce(gi) + '"' : "") + '><span class="nv-ln"><b>Espèces' + tag(g, gi) + '</b><span class="nv-v">' + eur(l.valeur) + "</span></span><span></span><span></span><span></span></div>"
     : '<div class="m-l nv-li" role="button" tabindex="0" aria-expanded="false" data-code="' + esc(l.code) + '" data-env="' + esc(g.env) + '" title="' + esc(l.nom || l.code) + '"' + (plat ? ' style="' + ce(gi) + '"' : "") + ">" +
       '<span class="nv-ln"><b>' + esc(l.code) + tag(g, gi) + (l.nom ? "<small>" + esc(l.nom) + "</small>" : "") + '</b><span class="nv-v">' + eur(l.valeur) + "</span>" +
-      (ok(l.cours) ? '<span class="nv-cr"><i>cours</i> ' + cours(l.cours) + "</span>" : "") + "</span>" +
+      (ok(l.cours) ? '<span class="nv-cr"><i>cours</i> ' + cours(l.cours) + "</span>" : "") + pastilleVol(volLigne(g.env, l.code)) + "</span>" +
       col(l.jour, l.pct, 2) + col(l.pv, l.pvPct, 1, pru(l)) + '<span class="nv-ch" aria-hidden="true">›</span></div>';
   const actifs = g => { const c = g.lignes.filter(l => !l.especes && l.code).sort((a, b) => (b.valeur || 0) - (a.valeur || 0)), n = 4;
     return c.length ? '<span class="nv-a">' + c.slice(0, n).map(l => "<span>" + esc(l.code) + "</span>").join("") + (c.length > n ? '<span class="plus">+' + (c.length - n) + "</span>" : "") + "</span>" : ""; };
@@ -2289,8 +2307,9 @@ function htmlEnveloppes(s, plat) {
   }
   const rep = gs.map((g, gi) => '<i style="' + ce(gi) + ";flex-grow:" + Math.max(0, (g.total || {}).valeur || 0).toFixed(0) + '" title="' + esc(g.env) + '"></i>').join("");
   return '<div class="m-envs' + (plat ? " plat" : "") + '">' + tete + corps +
-    '<div class="nv-tot nv-g"><span class="nv-n"><b>Portefeuille</b><span class="nv-v">' + eur(s.valeur) + "</span></span>" + col(s.jour, s.jourPct, 2) + col(s.latente, s.latentePct, 1) + "<span></span>" +
-    (gs.length > 1 ? '<span class="nv-rep" role="img" aria-label="Répartition par enveloppe">' + rep + "</span>" : "") + "</div></div>";
+    '<div class="nv-tot nv-g"><span class="nv-n"><b>Portefeuille</b><span class="nv-v">' + eur(s.valeur) + "</span>" + pastilleVol(volPortefeuille()) + "</span>" + col(s.jour, s.jourPct, 2) + col(s.latente, s.latentePct, 1) + "<span></span>" +
+    (gs.length > 1 ? '<span class="nv-rep" role="img" aria-label="Répartition par enveloppe">' + rep + "</span>" : "") + "</div>" +
+    (volPortefeuille() || gs.some(g => g.lignes.some(l => !l.especes && volLigne(g.env, l.code))) ? '<p class="nv-vo-aide">' + VOL_AIDE + (/\*<\/span>/.test(corps) || (volPortefeuille() && !volPortefeuille().an) ? " * moins d'un an de cours : depuis le premier." : "") + "</p>" : "") + "</div>";
 }
 function estOuverte(el) { return el.classList.contains("ouvert"); }
 function basculerEnv(el) {
@@ -2330,13 +2349,18 @@ function basculerLigne(el) {
   const l = lignesTenues().find(x => x.env === env && x.code === code) || {};
   const m = (lab, v) => "<div><span>" + lab + '</span><b class="' + sens(v) + '">' + pct(v) + "</b></div>";
   const e = (lab, v, sig) => "<div><span>" + lab + '</span><b class="' + (sig ? sens(v) : "") + '">' + (ok(v) ? eur(v, 2, sig) : "—") + "</b></div>";
+  const vo = volLigne(env, code), fv = vo && feuVol(vo.v);   // 25/11/2026 (Théo) : volatilité de la ligne
+  const voTxt = !vo ? "Volatilité : pas assez de cours pour la calculer." : "Volatilité " + (vo.an ? "sur 1 an" : "depuis le " + frDate(isoN(vo.deb)) + " (moins d'un an de cours)") + " : " + fv.m + ", " +
+    (vo.src === "marche" ? "estimée d'après le marché « " + esc(vo.nom) + " » (pas encore de cours de la ligne)." : "d'après " + F0.format(vo.n) + " séances du cours de " + esc(vo.ticker) + ".") +
+    " 🟢 moins de 15 % · 🟠 15 à 30 % · 🔴 plus de 30 %.";
   const d = document.createElement("div");
   d.className = "m-ligne-det";
   d.innerHTML = '<div class="mini">' + m("1 semaine", p.s1) + m("1 mois", p.m1) + m("6 mois", p.m6) + m("YTD", p.ytd) + m("1 an", p.a1) +
     "<div><span>Cours</span><b>" + cours(l.cours) + "</b></div><div><span>Poids</span><b>" + pct(l.poids, 1, false) + "</b></div>" +
+    "<div><span>Volatilité" + (vo && !vo.an ? "*" : " 1 an") + "</span><b>" + (vo ? fv.e + " " + (vo.src === "marche" ? "≈" : "") + pct(vo.v, 1, false) : "—") + "</b></div>" +
     "<div><span>Quantité × PRU</span><b>" + qte(l.qte) + " × " + cours(l.pru) + "</b></div>" + e("Plus-value", l.pv, true) +
     e("Coût de revient", pos.cout) + e("Plus-value réalisée", pos.pvr, true) + e("Frais payés", pos.frais) +
-    '<p style="grid-column:1/-1;margin:0;font-size:12px;color:var(--ink-2)">' + (p.ticker ? "Performance du cours (" + esc(p.ticker) + "), indépendante de tes dates d'achat." : "Pas de cotation Google Finance pour cette ligne : performances du cours indisponibles.") + "</p>" +
+    '<p style="grid-column:1/-1;margin:0;font-size:12px;color:var(--ink-2)">' + (p.ticker ? "Performance du cours (" + esc(p.ticker) + "), indépendante de tes dates d'achat." : "Pas de cotation Google Finance pour cette ligne : performances du cours indisponibles.") + " " + voTxt + "</p>" +
     '<p class="m-actions"><button class="mini-btn" type="button" data-ordre="Achat">Acheter</button><button class="mini-btn" type="button" data-ordre="Vente">Vendre</button><button class="mini-btn" type="button" data-alerte="1">Alerte de cours</button></p></div>';
   el.appendChild(d);
   d.querySelectorAll("[data-ordre]").forEach(b => b.addEventListener("click", ev => { ev.stopPropagation(); ouvrirSaisieM({ type: b.dataset.ordre, env: env, actif: code }); }));
@@ -3403,16 +3427,63 @@ function hausseAn(rows, k) {
   for (let i = 1; i < rows.length; i++) if (rows[i - 1][0] >= deb && rows[i - 1][k] > 0 && rows[i][k] > 0) { n++; if (rows[i][k] > rows[i - 1][k]) up++; }
   return n >= 20 ? up / n : null;
 }
+/* 25/11/2026 (Théo) · VOLATILITÉ de chaque ligne et du portefeuille : écart type des variations quotidiennes sur un an glissant,
+   ramené à l'année (× √252), comme « Volatilité 1 an » de Stats › Risque. Moins d'un an de cours : depuis le premier (on le dit).
+   Lignes : cours d'un an de la ligne (Volatilite.js du fichier, Yahoo Finance) ; à défaut, le marché équivalent suivi par le Versus (≈).
+   Seulement dans la propre appli du joueur : rien ne part vers le Versus. */
+function volPoints(pts) {   // pts : [{ d: aaaammjj, v: cours }] du plus ancien au plus récent
+  if (!pts || pts.length < 21) return null;
+  const fin = pts[pts.length - 1].d, borne = fin - 10000, P = pts.filter(p => p.d >= borne), r = [];
+  for (let i = 1; i < P.length; i++) { const q = P[i].v / P[i - 1].v; if (q > .5 && q < 2) r.push(q - 1); }   // ×2 ou ÷2 en un jour : découpage d'ETF, pas une variation
+  if (r.length < 20) return null;
+  const moy = r.reduce((a, x) => a + x, 0) / r.length, jours = (dateNum(fin) - dateNum(P[0].d)) / 864e5;
+  const parAn = jours > 0 && r.length * 365 / jours >= 320 ? 365 : 252;   // coté 7 j / 7 (crypto) : 365 variations par an ; bourse : 252 (comme Stats › Risque)
+  return { v: Math.sqrt(r.reduce((a, x) => a + (x - moy) * (x - moy), 0) / (r.length - 1)) * Math.sqrt(parAn), n: r.length, deb: P[0].d, an: pts[0].d <= borne, parAn };
+}
+/** repère : 🟢 calme < 15 % · 🟠 15-30 % · 🔴 > 30 % */
+function feuVol(v) { return v < .15 ? { e: "🟢", m: "calme", c: "calme" } : v <= .30 ? { e: "🟠", m: "agité", c: "agite" } : { e: "🔴", m: "très agité", c: "fort" }; }
+/* Lignes sans cours de la ligne : le marché équivalent du Versus (mêmes noms que les cases Marchés) */
+const VOL_PROXY = { LQQ: "Nasdaq ×2", QQQ3: "Nasdaq ×3", ANX: "Nasdaq-100", PUST: "Nasdaq-100", PANX: "Nasdaq-100", CNDX: "Nasdaq-100", EQQQ: "Nasdaq-100",
+  PSP5: "S&P 500", ESE: "S&P 500", PE500: "S&P 500", CSPX: "S&P 500", "500": "S&P 500", CW8: "MSCI Monde", EWLD: "MSCI Monde", DCAM: "MSCI Monde", WPEA: "MSCI Monde", WLD: "MSCI Monde", IWDA: "MSCI Monde",
+  PAEEM: "Émergents", AEEM: "Émergents", EIMI: "Émergents", EMPEA: "Émergents", GOLD: "Or", IGLN: "Or", BTC: "Bitcoin", ETH: "Ethereum", SEME: "Semi-conducteurs", SOXL: "Semis ×3", ETZ: "Stoxx 600", MEUD: "Stoxx 600" };
+function volLigne(env, code) {
+  try {
+    const p = (M.perfLignes || {})[env + "|" + code] || {}, t = String(p.ticker || "").toUpperCase(), x = M.vol && M.vol.t && t ? M.vol.t[t] : null;
+    if (x && ok(x.v)) return { v: x.v, n: x.n, deb: +String(x.deb || "").replace(/-/g, "") || null, an: x.an !== false, src: "cours", ticker: t };
+    const nom = VOL_PROXY[String(code || "").toUpperCase()];
+    if (nom && marchesMoi()) { const c = closMk(nom); if (!c.hebdo && c.d.length) { const r = volPoints(c.d.map((d, i) => ({ d, v: c.v[i] }))); if (r) return Object.assign(r, { src: "marche", nom }); } }
+  } catch (e) { /* pas de volatilité plutôt qu'un écran cassé */ }
+  return null;
+}
+/** portefeuille entier : la MÊME valeur que « Volatilité 1 an » de Stats › Risque (celle du fichier, sinon recalculée de la même façon) */
+function volPortefeuille() {
+  try {
+    const h = M.historique; if (M.simple || !h || !h.rows || h.rows.length < 2) return null;   // profil simple : relevés de fin de mois, pas de variations quotidiennes
+    const k = h.cols.indexOf("ip"); if (k < 0) return null;
+    const R = rowsS(null), v = choixRisque(null).moiVol; if (!ok(v)) return null;   // exactement le chiffre de Stats › Risque (même fonction)
+    const fin = R[R.length - 1][0], borne = fin - 10000, deb = (R.find(r => r[0] >= borne) || R[0])[0];
+    return { v, deb, an: R[0][0] <= borne, n: R.filter(r => r[0] >= borne).length - 1 };
+  } catch (e) { return null; }
+}
+function pastilleVol(x) { if (!x) return ""; const f = feuVol(x.v);
+  return '<span class="nv-vo ' + f.c + '" title="Volatilité ' + (x.an ? "1 an" : "depuis le " + frDate(isoN(x.deb))) + " : " + f.m + (x.src === "marche" ? " (≈ " + esc(x.nom) + ")" : "") + '"><i aria-hidden="true">' + f.e + "</i> vol. " + (x.src === "marche" ? "≈" : "") + pct(x.v, 0, false) + (x.an ? "" : "*") + "</span>"; }
+const VOL_AIDE = "Vol. = volatilité sur 1 an : à quel point le cours bouge d'un jour à l'autre, ramenée à l'année. 🟢 calme (moins de 15 %) · 🟠 15 à 30 % · 🔴 plus de 30 %.";
+/** Sharpe et volatilité du compte (cS, ou tout le portefeuille) et du S&P sur la même année : ceux de ton fichier quand il les donne ;
+ *  sinon les deux recalculés ici, de la même façon. UNE seule fonction : Stats › Risque et la pastille du total (volPortefeuille) lisent la même. */
+function choixRisque(cS) {
+  const h = M.historique, R = rowsS(cS), k = colsS(cS).i;
+  const envs = M.enveloppes || [], pf = cS ? cS.env : envs.find(e => e.type === "total") || {}, idx = envs.find(e => e.type === "indice" && /S&P/i.test(e.nom || "")) || {};
+  let moiSh = pf.sharpe, spSh = idx.sharpe, moiVol = pf.vol, spVol = idx.vol, calc = false;
+  if (k >= 0 && (!ok(spSh) || (cS && !(ok(moiSh) && ok(moiVol))))) { const a = risqueAn(R, k), b = risqueAn(R, h.cols.indexOf("isp")); if (a && b) { moiSh = a.sharpe; spSh = b.sharpe; moiVol = a.vol; spVol = b.vol; calc = true; } }
+  return { moiSh, spSh, moiVol, spVol, calc, pf };
+}
 function blocRisque() {
   const h = M.historique; if (!h || !h.rows || h.rows.length < 2) return "";
   const cS = compteS(), k = colsS(cS).i;
   if (k < 0) return cS ? acc("m-risque", "Risque", "au jour le jour", seulTout("Risque"), true) : "";
   const R = rowsS(cS); if (R.length < 2) return "";
   const B = baisses(R, k), dc = i => dateCourte(dateNum(R[i][0])) + "/" + String(R[i][0]).slice(2, 4);
-  const envs = M.enveloppes || [], pf = cS ? cS.env : envs.find(e => e.type === "total") || {}, idx = envs.find(e => e.type === "indice" && /S&P/i.test(e.nom || "")) || {};
-  /* Sharpe et volatilité du S&P sur la même année : ceux de ton fichier quand il les donne ; sinon les deux recalculés ici, de la même façon */
-  let moiSh = pf.sharpe, spSh = idx.sharpe, moiVol = pf.vol, spVol = idx.vol, calc = false;
-  if (!ok(spSh) || (cS && !(ok(moiSh) && ok(moiVol)))) { const a = risqueAn(R, k), b = risqueAn(R, h.cols.indexOf("isp")); if (a && b) { moiSh = a.sharpe; spSh = b.sharpe; moiVol = a.vol; spVol = b.vol; calc = true; } }
+  const { moiSh, spSh, moiVol, spVol, calc, pf } = choixRisque(cS);
   const hausse = cS && !ok(pf.hausse) ? hausseAn(R, k) : pf.hausse;
   const auHaut = B.actuel > -0.0005;
   const retour = B.iCreux < 0 ? null : B.iRetour >= 0 ? duree(R[B.iCreux][0], R[B.iRetour][0]) : null;
@@ -3628,6 +3699,43 @@ function apportSignal(g) {
   if (g.reduit) return 1;
   return g.arbitrage && g.arbitrage.optimal ? Number(g.arbitrage.optimal) : 2;
 }
+/* 25/11/2026 (Théo) · BILAN APRÈS COUP du signal levier : pour chaque « sors » passé d'un indicateur, ce qu'aurait donné passer sur le
+   Nasdaq-100 sans levier plutôt que rester en ×2, jusqu'au signal de retour. Calculé par SignalLevier (slBilan, champ « bilan »).
+   Simple indication : Théo n'est jamais obligé de suivre. Seulement des %, jamais un montant. */
+const BIL_NOMS = { T: ["Tendance", "vente totale", "le Nasdaq clôture nettement sous sa moyenne des 45 semaines (bande −5 %)"], V: ["Agitation", "×2 → ×1", "la volatilité dépasse le seuil de l'alarme"] };
+function blocBilanSignal(g) {
+  const b = g && g.bilan; if (!b || !b.ind || !Array.isArray(b.ep)) return "";
+  const court = s => s ? s.slice(8, 10) + "/" + s.slice(5, 7) + "/" + s.slice(2, 4) : "—";
+  const p = v => v === null || v === undefined ? "—" : pct(v / 100, 1);
+  const ligneEp = e => {
+    const [k, du, au, j, rester, sortir, mieux, evitee, drapeau] = e, nom = BIL_NOMS[k] ? BIL_NOMS[k][0].toLowerCase() : k, enCours = !au;
+    /* bon / mauvais : le drapeau du serveur, calculé sur la valeur exacte (le % affiché est arrondi) ; ancien script : le signe du % */
+    const bon = drapeau === 1 || drapeau === 0 ? drapeau === 1 : mieux > 0, peu = mieux !== null && Math.abs(mieux) < .05;
+    const val = bon ? "<b class=\"up\">" + p(Math.abs(mieux)) + "</b>" : "<b class=\"down\">" + p(-Math.abs(mieux)) + "</b>";
+    const verdict = mieux === null ? "calcul impossible"
+      : peu ? (bon ? (enCours ? "pour l'instant, sortir fait" : "sortir aurait fait") + " à peine mieux (moins de 0,1 %)" : (enCours ? "pour l'instant, rester est" : "rester était") + " à peine mieux (moins de 0,1 %)")
+      : enCours ? (bon ? "pour l'instant, sortir fait " + val + " de mieux" : "pour l'instant, rester est mieux (" + val + ")")
+      : bon ? "sortir aurait fait " + val + " de mieux" : "rester était mieux (" + val + ")";
+    return '<li class="' + (enCours ? "cours" : bon ? "bon" : "mauvais") + '"><span class="bl-t">' + (enCours ? "⏳" : "📉") + " Signal du " + esc(court(du)) + " (" + esc(nom) + ")" + (enCours ? ", en cours" : "") + " : " + verdict + "</span>" +
+      '<span class="bl-s">' + (enCours ? "depuis " + j + " j" : "jusqu'au retour du " + esc(court(au)) + " (" + j + " j)") + " · rester ×2 " + p(rester) + " · sortir ×1 " + p(sortir) + (evitee ? " · vente évitée par le creux" : "") + "</span></li>";
+  };
+  const carte = k => { const x = b.ind[k]; if (!x) return ""; const N = BIL_NOMS[k] || [k, "", ""];
+    const avis = !x.n ? "pas encore de signal fini" : x.moyen > 0 && x.bons * 2 >= x.n ? "👍 a plutôt aidé" : x.moyen < 0 && x.bons * 2 < x.n ? "👎 a plutôt coûté" : "🤷 mitigé";
+    return '<div class="bl-ind"><div class="bl-h"><b>' + N[0] + " <small>" + N[1] + "</small></b><em>" + avis + "</em></div>" +
+      '<span class="bl-d">Dit « sors » quand ' + N[2] + ".</span>" +
+      (x.n ? '<span class="bl-n">' + x.n + (x.n > 1 ? " signaux finis" : " signal fini") + " · ✅ " + x.bons + " bon" + (x.bons > 1 ? "s" : "") + " · ❌ " + x.mauvais + " mauvais</span>" +
+        '<span class="bl-m">En moyenne, ' + (x.moyen >= 0 ? "sortir a fait <b class=\"up\">" + p(x.moyen) + "</b> de mieux" : "rester a été mieux (<b class=\"down\">" + p(x.moyen) + "</b>)") + "." +
+        (x.bons && x.mauvais ? " <small>Quand il avait raison : " + p(x.gainBons) + " ; quand il avait tort : " + p(x.perteMauvais) + ".</small>" : "") + "</span>" : "") +
+      (x.enCours ? '<span class="bl-n">⏳ un signal en cours (compté quand il sera fini)</span>' : "") + "</div>"; };
+  const ep = b.ep, n = 6, tot = b.nEp || ep.length;
+  return '<details class="sg-rub" data-rub="bilan"><summary><span>Bilan après coup</span><b>depuis ' + esc(String(b.depuis || "").slice(0, 4)) + '</b></summary><div class="sg-bilan">' +
+    '<p class="sg-intro">Une <b>indication</b>, pas un ordre : chaque fois qu\'un voyant a dit « sors », on regarde après coup ce qu\'aurait donné <b>passer sur le Nasdaq-100 sans levier</b> plutôt que <b>rester en ×2</b>, jusqu\'au signal de retour. Tu n\'es jamais obligé de suivre.</p>' +
+    carte("T") + carte("V") +
+    (ep.length ? '<h4 class="sig-h">Les derniers signaux <small>du plus récent au plus ancien</small></h4><ol class="bl-ep">' + ep.slice(0, n).map(ligneEp).join("") + "</ol>" +
+      (ep.length > n ? '<details class="bl-plus"><summary>Voir les ' + (ep.length - n) + " autres</summary><ol class=\"bl-ep\">" + ep.slice(n).map(ligneEp).join("") + "</ol></details>" : "") : "") +
+    '<p class="sg-intro"><small>Calcul sur le Nasdaq-100 (en dollars), clôture du signal → clôture du retour (l\'ordre se passe en vrai à l\'ouverture suivante). Le ×2 est recalculé jour par jour : deux fois la variation, moins les frais du LQQ et le coût d\'emprunt' + (b.tauxFed ? " (taux de la Fed du jour)" : " (taux de secours : historique de la Fed indisponible)") + ". Calcul jusqu'à la séance du " + esc(court(b.dernier)) + ". Le bilan par voyant ne compte que les signaux finis" + (tot > ep.length ? " ; les " + ep.length + " plus récents sont listés sur " + tot : "") + ". Ce n\'est pas un conseil en investissement.</small></p>" +
+  "</div></details>";
+}
 function blocSignal() {
   const g = M.signal;
   if (!g || !g.position) return "";
@@ -3816,6 +3924,7 @@ function blocSignal() {
       "<li><b>Vente totale (tendance)</b> : si le Nasdaq <b>clôture</b> " + nS(BANDE) + "\u00a0% ou plus sous sa moyenne des " + EMAS + " semaines, on passe tout en cash. Rare (baisses longues). On rachète quand il repasse au-dessus de la moyenne." + (g.dernierCash && g.dernierCash.du ? " <small class=\"sg-cash\">Dernier passage en cash : " + (g.dernierCash.au ? "du " + esc(court(g.dernierCash.du)) + " au " + esc(court(g.dernierCash.au)) : "depuis le " + esc(court(g.dernierCash.du))) + ".</small>" : "") + "</li>" +
       "<li><b>En creux</b> : après une très forte baisse <b>sans</b> signe de récession ni de bulle, la règle achète le rebond (×1) ; la vente par la tendance est alors suspendue jusqu'à ce que le Nasdaq repasse au-dessus de sa moyenne (« vente évitée »).</li></ul>" +
     '<div data-aide><h4 class="sig-h"><span>Historique des bascules' + qm + '</span><small>journal · 8 derniers changements</small></h4>' + aide(EX.journal) + "</div>" + journal +
+    blocBilanSignal(g) +
     '<details class="sg-rub" data-rub="curieux"><summary><span>Pour les curieux</span><b>tous les indicateurs</b></summary><div class="m-liste">' + arb + levier + creux + "</div></details>" +
     '<div class="sig-pied">Calcul du ' + esc(g.majLe || "") + " · données " + esc(g.source || "") + " · EMA " + (g.emaSem || 45) + " sem. " + F0.format(g.ema) + " · seuil de vente " + F0.format(g.bandeSortie) + "</div>" +
   "</div>";
