@@ -1257,10 +1257,21 @@ function basculerPauseGP(forcer) {
     else if (SONS.repriseCourse) SONS.repriseCourse(); }
   majPauseGP();
 }
+/** v20.62 (Théo, 25/11) · plein écran : toujours un ▶ utile, avec son nom écrit. Avant le 1/12/2026 « ▶ Course de démo » (la 🎬 démo, rien ne compte),
+ *  ensuite « ▶ Rejouer » (la vraie course du mois choisi). ⏭ (aller à l'arrivée) ne se montre que pendant une course. */
+function majPlayPlein() {
+  const b = document.querySelector(".gpp-play"); if (!b) return;
+  const demo = !!document.getElementById("gp-demo"), lib = demo ? "Course de démo" : "Rejouer";
+  if (b.dataset.lib === lib) return; b.dataset.lib = lib;
+  b.textContent = "▶ " + lib; b.title = demo ? "Course de démonstration (rien ne compte)" : "Rejouer la course";
+  b.setAttribute("aria-label", demo ? "Lancer la course de démonstration (rien ne compte)" : "Rejouer la course");
+}
 function majPauseGP() {
   const api = GP_INST && GP_INST.api, en = !!(api && api.enCours && api.enCours()), p = en && enPauseGP(), v = en + "|" + p;
   document.querySelectorAll("#gp-pause, .gpp-pause").forEach(b => { if (b.dataset.v === v) return; b.hidden = !en; b.dataset.v = v; b.setAttribute("aria-pressed", String(p));
     b.setAttribute("aria-label", p ? "Reprendre la course" : "Mettre la course en pause"); b.textContent = p ? "▶ Reprendre" : "⏸\uFE0F Pause"; });
+  document.querySelectorAll(".gpp-fin").forEach(b => { b.hidden = !en; });   // v20.62 : ⏭ seulement pendant une course (sinon inutile)
+  document.querySelectorAll(".gpp-play").forEach(b => { b.hidden = en; });   // pendant la course : ⏸ / ⏭ ; à l'arrêt : ▶
 }
 /* ---------- v20.47 (Théo) · 📷 Mode photo : toute l'interface disparaît (boutons, sous-titres, bandeaux, têtes) pour admirer le décor ; un toucher (ou Échap, ou le retour) la ramène ---------- */
 function modePhotoGP(on, y) {
@@ -1507,7 +1518,7 @@ function pleinV2(o, y) {
   const P = GP_PLEIN; P.v2 = true; o.classList.add("v2");
   /* Théo, 19/11 : [Carte | Visite | Hélico | Survol] puis ▶ ⏭ ✕, ronds et en icônes seules */
   o.insertAdjacentHTML("beforeend", '<div class="gpp-bar">' + selVuesGP(vueGP(document.getElementById("gp-piste").dataset.circuit), "mini", true) +
-    '<button class="gpp-b gpp-son" type="button" data-son aria-label="Couper le son">🔊</button><button class="gpp-b gpp-pause" type="button" aria-label="Mettre la course en pause" hidden>⏸\uFE0F Pause</button><button class="gpp-b gpp-play" type="button" aria-label="Rejouer la course" title="Rejouer">↻</button><button class="gpp-b gpp-fin" type="button" aria-label="Aller à l\'arrivée" title="Aller à l\'arrivée">⏭</button><button class="gpp-b gpp-photo" type="button" aria-label="Mode photo : cacher toute l\'interface" title="Mode photo">📷</button><button class="gpp-b gpp-fermer" type="button" aria-label="Fermer le plein écran">✕</button></div>' +
+    '<button class="gpp-b gpp-son" type="button" data-son aria-label="Couper le son">🔊</button><button class="gpp-b gpp-pause" type="button" aria-label="Mettre la course en pause" hidden>⏸\uFE0F Pause</button><button class="gpp-b gpp-play gpp-texte" type="button" aria-label="Rejouer la course" title="Rejouer">▶ Rejouer</button><button class="gpp-b gpp-fin" type="button" aria-label="Aller à l\'arrivée" title="Aller à l\'arrivée" hidden>⏭</button><button class="gpp-b gpp-photo" type="button" aria-label="Mode photo : cacher toute l\'interface" title="Mode photo">📷</button><button class="gpp-b gpp-fermer" type="button" aria-label="Fermer le plein écran">✕</button></div>' +
     '<div class="gpp-tourne" hidden><b>📱↻</b> Tourne ton téléphone<br><small>pour voir le circuit en grand</small></div>');
   const stopSv = () => { try { if (GP_INST && GP_INST.api.arreterSurvol) GP_INST.api.arreterSurvol(); } catch (e) { } };
   o.querySelectorAll(".gpp-bar [data-gpv]").forEach(b => b.addEventListener("click", () => { stopSv(); choisirVueGP(b.dataset.gpv, y); majSurvolPlein(true); }));
@@ -1515,7 +1526,7 @@ function pleinV2(o, y) {
   if (sv) sv.addEventListener("click", () => { if (P.survol) { stopSv(); majSurvolPlein(true); return; } const x = document.getElementById("gp-survol"); if (x) x.click(); sv.setAttribute("aria-pressed", "true"); P.svDemande = performance.now(); });
   P.svTimer = setInterval(() => majSurvolPlein(), 250);   // le segment reste allumé pendant le survol
   o.querySelector(".gpp-play").addEventListener("click", () => { const rj = document.getElementById("gp-rejouer") || document.getElementById("gp-demo"); if (rj) rj.click(); });   // v20.52 : avant le 1er décembre, ↻ lance la 🎬 démo
-  if (document.getElementById("gp-demo")) { const b = o.querySelector(".gpp-play"); b.textContent = "🎬"; b.title = "Course de démonstration"; b.setAttribute("aria-label", "Course de démonstration (rien ne compte)"); }
+  majPlayPlein();
   o.querySelector(".gpp-pause").addEventListener("click", () => basculerPauseGP());   // v20.47
   o.querySelector(".gpp-photo").addEventListener("click", () => modePhotoGP(true, y));
   [["gpp-fin", "gp-fin"]].forEach(([c, id]) => { const b = o.querySelector("." + c); if (b) b.addEventListener("click", () => { const x = document.getElementById(id); if (x) x.click(); }); });   // v17.12 (Théo) : arrivée et survol aussi en plein écran
@@ -1549,7 +1560,7 @@ function placerPlein(y) {
     P.ancre = document.createElement("div"); P.ancre.className = "gp-ancre"; pi.parentNode.insertBefore(P.ancre, pi); corps.appendChild(pi);
   }
   const h = document.querySelector(".saison .gp-h"), t = h ? h.querySelector(".gp-titre") : null, k = h ? h.querySelector(".s-k") : null;
-  P.o.querySelector(".gpp-t").innerHTML = "<b>" + (t ? t.innerHTML : "") + "</b><small>" + (k ? k.innerHTML : "") + "</small>";
+  P.o.querySelector(".gpp-t").innerHTML = "<b>" + (t ? t.innerHTML : "") + "</b><small>" + (k ? k.innerHTML : "") + "</small>"; majPlayPlein();
   const ch = document.querySelector(".saison .gp-mois"); P.o.querySelector(".gpp-mois").innerHTML = ch ? ch.outerHTML : "";
   P.o.querySelectorAll(".gpp-mois [data-gpe]").forEach(b => b.addEventListener("click", () => { GP_ETAPE = +b.dataset.gpe; GP_REJOUER = true; rendreTrophees(); }));
   const sel = P.o.querySelector('.gpp-mois [aria-pressed="true"]'); if (sel && !P.v2) sel.scrollIntoView({ inline: "center", block: "nearest" });

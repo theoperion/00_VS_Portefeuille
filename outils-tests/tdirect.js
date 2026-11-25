@@ -131,6 +131,8 @@ const horsDessin = p => p.evaluate(() => { const sc = document.querySelector("#g
     await T.p.click("#gp-plein-gros"); await T.p.waitForTimeout(900);
     const hp = await T.p.evaluate(() => { const sc = document.querySelector(".gp-plein .gp-scene").getBoundingClientRect(), st = document.querySelector(".gp-plein .gp-st").getBoundingClientRect(); return { recouvre: st.top < sc.bottom - 1, stH: Math.round(st.height), scB: Math.round(sc.bottom), stT: Math.round(st.top) }; });
     await T.p.screenshot({ path: DOSSIER + "/plein-3d-sous-titres.png" });
+    // v20.62 : sur une machine lente, la course peut être finie à ce moment-là ; on la relance avec le ▶ du plein écran pour tester la pause
+    if (!(await T.p.isVisible(".gpp-pause"))) { await T.p.click(".gpp-play"); await T.p.waitForSelector(".gpp-pause:not([hidden])", { timeout: 9000 }).catch(() => {}); await T.p.waitForTimeout(1500); }
     const pz = await T.p.isVisible(".gpp-pause"); await T.p.click(".gpp-pause"); await T.p.waitForTimeout(120); const q1 = await etat(T.p); await T.p.waitForTimeout(1200); const q2 = await etat(T.p);
     await T.p.click(".gpp-pause"); await T.p.waitForTimeout(1200); const q3 = await etat(T.p);
     ok(!hp.recouvre && hp.stH >= 40, "plein écran : le bandeau de sous-titres est sous le dessin, il ne le recouvre pas " + JSON.stringify(hp));
@@ -260,10 +262,10 @@ const horsDessin = p => p.evaluate(() => { const sc = document.querySelector("#g
       ok(d3.type === "3d" && d3.en && d3.pause, "🎬 démo en 3D : la course roule, ⏸ visible (" + d3.met + ")");
       ok(d4.fini && !d4.cours && !d4.pause, "⏭ pendant la démo : arrivée tout de suite, ⏸ disparaît");
       await Z.p.click("#gp-plein-gros"); await Z.p.waitForTimeout(900);
-      const pl = await Z.p.evaluate(() => document.querySelector(".gpp-play").textContent); await Z.p.click(".gpp-play"); await Z.p.waitForTimeout(6000);
+      const pl = await Z.p.evaluate(() => document.querySelector(".gpp-play").textContent); await Z.p.click(".gpp-play"); await Z.p.waitForTimeout(2500);
       const d5 = await Z.p.evaluate(() => ({ en: GP_DEMO && GP_DEMO.enCours, pause: !document.querySelector(".gpp-pause").hidden, titre: document.querySelector(".gpp-t").textContent }));
       await Z.p.screenshot({ path: DOSSIER + "/demo-3d-plein.png" });
-      ok(pl === "🎬" && d5.en && d5.pause && /Démo/.test(d5.titre), "plein écran : 🎬 relance une démo, ⏸ visible, « Démo » dans le titre");
+      ok(pl === "▶ Course de démo" && d5.en && d5.pause && /Démo/.test(d5.titre), "plein écran : « ▶ Course de démo » relance une démo, ⏸ visible, « Démo » dans le titre (v20.62) " + JSON.stringify({ pl, d5 }));
     } else console.log("(3D indisponible : démo 3D sautée)");
     errs.push(...Z.err); await Z.ctx.close(); }
   { const Z = await ouvrir(b, "2026-11-25T12:00:00", donnees(202611), { vu: 0, d3: true, sombre: true });

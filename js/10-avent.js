@@ -1,6 +1,6 @@
 /* Versus · 🎄 Calendrier de l'Avent du tour de chauffe (v20.61, validé par Théo le 25/11/2026)
    Du 1er au 24 décembre 2026, une case par jour : on n'ouvre que la case du jour et celles des jours passés (date de l'appareil ;
-   l'appli n'a aucun garde-fou d'horloge ailleurs, donc date simple). Seize petits jeux de Noël (10 à 30 s, rejouables, score pour soi seul)
+   l'appli n'a aucun garde-fou d'horloge ailleurs, donc date simple). Dix-sept petits jeux de Noël (v20.62 : + « Les biscuits du Père Noël » en case 16) (10 à 30 s, rejouables, score pour soi seul)
    et huit surprises. AUCUN point, rien n'est envoyé au serveur : les cases ouvertes et les records vivent sur l'appareil (versus.avent*).
    Le 24 : un souvenir pour chaque pilote (plaque « Hiver 2026 » + traînée « Flocons »), à porter dès le 24/12/2026 (js/3-podium.js, souvenirOuvert).
    Règle du secret : aucune case ne parle de ce qui arrive (règles, circuits, nouveautés) ; le 20 dit seulement « l'annonce est arrivée ».
@@ -136,6 +136,22 @@ function avBonnet(c, x, y, s, col) {
   c.save(); c.translate(x, y); c.scale(s, s);
   c.fillStyle = col || "#C1121F"; c.beginPath(); c.moveTo(-30, 10); c.quadraticCurveTo(-26, -34, 6, -40); c.quadraticCurveTo(26, -38, 34, -22); c.quadraticCurveTo(18, -26, 22, 10); c.closePath(); c.fill();
   c.fillStyle = "#fff"; avRond(c, -34, 4, 60, 14, 7); c.fill(); c.beginPath(); c.arc(35, -22, 7, 0, 7); c.fill();
+  c.restore();
+}
+/** un biscuit de pain d'épice glacé : k = 0 bonhomme, 1 sapin ; s = échelle ; a = angle */
+function avBiscuit(c, x, y, s, k, a) {
+  c.save(); c.translate(x, y); c.rotate(a || 0); c.scale(s, s); c.lineJoin = "round";
+  c.beginPath();
+  if (k) { c.moveTo(0, -24); c.lineTo(12, -8); c.lineTo(6, -8); c.lineTo(17, 8); c.lineTo(9, 8); c.lineTo(20, 22); c.lineTo(-20, 22); c.lineTo(-9, 8); c.lineTo(-17, 8); c.lineTo(-6, -8); c.lineTo(-12, -8); c.closePath(); }
+  else { c.arc(0, -14, 9, 0, Math.PI * 2); c.moveTo(-8, -6); c.lineTo(8, -6); c.lineTo(20, 0); c.lineTo(17, 6); c.lineTo(9, 3); c.lineTo(12, 22); c.lineTo(3, 22); c.lineTo(0, 13); c.lineTo(-3, 22); c.lineTo(-12, 22); c.lineTo(-9, 3); c.lineTo(-17, 6); c.lineTo(-20, 0); c.closePath(); }
+  c.fillStyle = k ? "#B8783A" : "#C98A4B"; c.fill(); c.strokeStyle = "#7A4A1E"; c.lineWidth = 2; c.stroke();
+  c.strokeStyle = "#FFFFFF"; c.lineWidth = 2.2; c.lineCap = "round"; c.beginPath();
+  if (k) { c.moveTo(-8, -2); c.lineTo(6, -6); c.moveTo(-11, 13); c.lineTo(10, 9); }
+  else { c.moveTo(-14, 2); c.lineTo(-10, 0); c.moveTo(14, 2); c.lineTo(10, 0); c.moveTo(-6, 18); c.lineTo(-3, 16); c.moveTo(6, 18); c.lineTo(3, 16); }
+  c.stroke();
+  if (k) { c.fillStyle = "#E63946"; [[-4, 4], [7, 15], [-9, 17]].forEach(([u, v]) => { c.beginPath(); c.arc(u, v, 2.2, 0, Math.PI * 2); c.fill(); }); c.fillStyle = "#F4B400"; c.beginPath(); c.arc(0, -22, 3, 0, Math.PI * 2); c.fill(); }
+  else { c.fillStyle = "#2B1A0E"; c.beginPath(); c.arc(-3, -16, 1.4, 0, Math.PI * 2); c.arc(3, -16, 1.4, 0, Math.PI * 2); c.fill(); c.strokeStyle = "#fff"; c.lineWidth = 1.4; c.beginPath(); c.arc(0, -13, 3.5, .2, Math.PI - .2); c.stroke();
+    c.fillStyle = "#E63946"; c.beginPath(); c.arc(0, 0, 2, 0, Math.PI * 2); c.arc(0, 7, 2, 0, Math.PI * 2); c.fill(); }
   c.restore();
 }
 function avTexte(c, t, x, y, taille, col, align) { c.font = "800 " + taille + "px Saira, system-ui, sans-serif"; c.textAlign = align || "center"; c.textBaseline = "middle"; c.fillStyle = col || "#fff"; c.fillText(t, x, y); }
@@ -362,6 +378,27 @@ const JEUX_AVENT = {
     toucher(G, x, y, t) { const S = G.s; if (t !== "down" || S.ph !== "choix") return; const X = [70, 160, 250], slot = X.findIndex(px => Math.abs(px - x) < 44); if (slot < 0 || y < 170 || y > 300) return;
       S.choix = S.pos.indexOf(slot); S.bon = S.choix === S.cad; if (S.bon) { G.score = S.r + 1; G.son("ok"); } else G.son("rate"); S.ph = "rep"; S.tm = 0; } },
 
+  // v20.62 (Théo, 25/11) · 17e jeu, à la place de « Devine qui… » : trier les biscuits qui sortent du four (bonshommes à gauche, sapins à droite)
+  biscuits: { nom: "Les biscuits du Père Noël", ico: "🍪", duree: 25, unite: "biscuits", aide: "Un biscuit sort du four : touche à gauche pour un bonhomme, à droite pour un sapin. Vite, ils tombent de plus en plus vite ! Une erreur coûte 1 biscuit.",
+    init(G) { G.s.b = null; G.s.p = .4; G.s.flash = 0; G.s.ok = [0, 0]; },
+    maj(G, dt) { const S = G.s; S.flash = Math.max(0, S.flash - dt);
+      if (!S.b) { S.p -= dt; if (S.p <= 0) S.b = { x: 160, y: 92, k: Math.random() < .5 ? 0 : 1, c: null, a: (Math.random() - .5) * .5 }; return; }
+      const b = S.b;
+      if (b.c !== null) { b.x += ((b.c ? 250 : 70) - b.x) * Math.min(1, dt * 9); b.y += 420 * dt; b.a += dt * (b.c ? 4 : -4);
+        if (b.y >= 318) { if (b.k === b.c) { G.score++; S.ok[b.c]++; G.son("pop"); avEclats(G, b.x, 322, b.k ? "#2E8B57" : "#D9A066"); } else { G.score = Math.max(0, G.score - 1); S.flash = .35; G.son("rate"); } S.b = null; S.p = .12; } }
+      else { b.y += (95 + G.t * 7.5) * dt; b.a += dt * .6; if (b.y >= 318) { G.score = Math.max(0, G.score - 1); S.flash = .35; G.son("rate"); S.b = null; S.p = .2; } } },
+    dessin(G, c, dt) { const S = G.s; avFond(G, c);
+      // le four : briques, porte vitrée qui rougeoie
+      c.fillStyle = "#7A3B2A"; avRond(c, 100, 40, 120, 62, 10); c.fill(); c.fillStyle = "#5A2A1C"; for (let i = 0; i < 4; i++) c.fillRect(104, 48 + i * 13, 112, 2);
+      c.fillStyle = "#FF9A3A"; avRond(c, 124, 60, 72, 34, 6); c.fill(); c.fillStyle = "rgba(255,230,160,.6)"; avRond(c, 130, 64, 60, 12, 5); c.fill();
+      // les deux assiettes, et ce qu'on y pose
+      [[70, 0], [250, 1]].forEach(([x, k]) => { c.fillStyle = "rgba(255,255,255,.92)"; c.beginPath(); c.ellipse(x, 340, 58, 16, 0, 0, Math.PI * 2); c.fill(); c.strokeStyle = "#C9D6E6"; c.lineWidth = 2; c.beginPath(); c.ellipse(x, 340, 46, 11, 0, 0, Math.PI * 2); c.stroke();
+        avBiscuit(c, x - (k ? 26 : 40), 378, .5, k, 0); avTexte(c, k ? "sapins" : "bonshommes", x - (k ? 14 : 28), 380, 12, "#7A3B2A", "left"); for (let i = 0; i < Math.min(5, S.ok[k]); i++) avBiscuit(c, x - 24 + i * 12, 334 - i * 2, .45, k, (i - 2) * .2); });
+      c.setLineDash([5, 7]); c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = 2; c.beginPath(); c.moveTo(160, 120); c.lineTo(160, 390); c.stroke(); c.setLineDash([]);
+      if (S.b) avBiscuit(c, S.b.x, S.b.y, 1, S.b.k, S.b.a);
+      if (S.flash > 0) { c.fillStyle = "rgba(230,57,70," + (S.flash * .9).toFixed(2) + ")"; c.fillRect(0, 0, G.W, G.H); }
+      avMajEclats(G, c, dt); },
+    toucher(G, x, y, t) { if (t !== "down") return; const b = G.s.b; if (!b || b.c !== null) return; b.c = x < 160 ? 0 : 1; } },
   feux: { nom: "Le départ du traîneau", ico: "🚦", unite: "ms", bas: true, fmt: s => Math.round(s) + " ms", aide: "Cinq boules s'allument une à une. Dès qu'elles s'éteignent : touche ! Trois essais, ton meilleur temps compte. Pas de faux départ !",
     init(G) { G.s.es = []; avNouveauDepart(G); },
     maj(G, dt) { const S = G.s; S.tm += dt;
@@ -450,7 +487,7 @@ const CASES_AVENT = {
   10: { type: "jeu", jeu: "flocons" }, 11: { type: "jeu", jeu: "chaussettes" }, 12: { type: "jeu", jeu: "bonshommes" },
   13: { type: "compte", ico: "⏳", titre: "Le compte à rebours", texte: "Le 20 décembre, une annonce t'attend dans l'appli. Les lutins gardent l'enveloppe sous clé d'ici là : pas la peine de les chatouiller." },
   14: { type: "jeu", jeu: "guirlande" }, 15: { type: "jeu", jeu: "livraison" },
-  16: { type: "texte", ico: "🕵️", titre: "Devine qui…", texte: "Petit défi entre pilotes, sans rien à répondre :\n\n• Devine qui a ouvert cette case avant même son café.\n• Devine qui porte le pull de Noël le plus voyant du paddock.\n• Devine qui a déjà écrit sa lettre au Père Noël… avec un graphique dedans.\n\nGarde tes soupçons pour le repas de Noël !" },
+  16: { type: "jeu", jeu: "biscuits" },   // v20.62 (Théo) : un 17e vrai jeu à la place de « Devine qui… »
   17: { type: "jeu", jeu: "rennes" }, 18: { type: "jeu", jeu: "aurore" }, 19: { type: "jeu", jeu: "luge" },
   20: { type: "annonce", ico: "📣", titre: "L'annonce est arrivée !", texte: "Aujourd'hui, c'est le grand jour : l'annonce t'attend dans l'onglet Podium. Va la voir !" },
   21: { type: "jeu", jeu: "gobelets" },
@@ -525,6 +562,7 @@ function ouvrirCaseAvent(n, apres) {
   else if (c.type === "scene") inst = sceneTraineau(o.querySelector(".av-scene"));
   else if (c.type === "cadeau") { chargerAvent(true); try { if (typeof confettis === "function") confettis("confettis"); else sonAvent("fin"); } catch (e) { } }
   else sonAvent("grelots");
+  o.jeu = inst;   // v20.62 : l'état de la partie, lisible par les tests
   const fermer = () => { if (inst) inst.stop(); o.remove(); if (apres) apres(); poserAventEntree(); };
   o.addEventListener("click", e => { if (e.target === o) fermer(); });
   o.querySelector(".av-x").addEventListener("click", fermer); o.querySelector("[data-av-fermer]").addEventListener("click", fermer);

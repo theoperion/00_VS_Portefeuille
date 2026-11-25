@@ -2729,3 +2729,6 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .av-records li b { flex: none; color: #fff; text-align: right; }
 .av-roi { margin: 10px 0 0; font: 600 14px/1.4 var(--f-text); color: #fff; }
 .av-roi small { display: block; color: #C9D6EA; font-weight: 500; }
+/* v20.62 · plein écran : le ▶ porte son nom (« Course de démo » avant le 1/12, puis « Rejouer ») */
+.gpp-b.gpp-texte { width: auto; padding: 0 14px; border-radius: 999px; font-size: 13.5px; white-space: nowrap; background: var(--accent); border-color: rgba(255,255,255,.35); }
+.gpp-b[hidden] { display: none !important; }

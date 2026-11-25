@@ -32,7 +32,7 @@ async function page(b, o) {
   await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}");
     if (c.action === "avent") { const x = fauxAvent(o, c); return x ? r.fulfill({ contentType: "application/json", body: JSON.stringify(x) }) : r.abort(); }
     r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tickets" ? { ok: true, ouvert: false } : c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : donnees(o.session)) }); });
-  await p.addInitScript(f => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.bullePortrait", "1"); localStorage.setItem("versus.chauffe1", "1"); localStorage.setItem("versus.saison1", "1");
+  await p.addInitScript(f => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.bullePortrait", "1"); localStorage.setItem("versus.chauffe1", "1"); localStorage.setItem("versus.saison1", "1"); localStorage.setItem("versus.ecurieTeaser", "1");
     if (f.ouvertes) localStorage.setItem("versus.avent", JSON.stringify(f.ouvertes)); if (f.admin) sessionStorage.setItem("versus.adminOn", "1"); }, { ouvertes: o.ouvertes, admin: o.admin });
   await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1200);
   return { ctx, p, err, srv: o.srv, o };
@@ -114,6 +114,26 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
     const rec = await p.evaluate(() => recordsAvent());
     ok(typeof rec === "object", "records gardés sur l'appareil seulement " + JSON.stringify(rec));
     ok(!err.length, "24/12 · 0 erreur JS " + JSON.stringify(err));
+    await ctx.close(); }
+  // 3 bis · v20.62 (Théo) : case 16 = un 17e vrai jeu, « Les biscuits du Père Noël » : on trie vraiment (bonne moitié = +1), une erreur coûte 1
+  { const { ctx, p, err } = await page(b, { quand: "2026-12-16T09:00:00", session: JOUEUR });
+    await p.evaluate(() => { ouvrirAvent(); ouvrirCaseAvent(16); }); await p.waitForTimeout(200);
+    const nom = await p.evaluate(() => document.querySelector(".av-case").innerText);
+    await p.click(".av-case [data-avj='go']"); const box = await p.locator(".av-case canvas").boundingBox();
+    let bons = 0;
+    for (let i = 0; i < 40 && bons < 6; i++) {
+      const k = await p.evaluate(() => { const G = document.querySelector(".av-case").jeu.etat(), b = G.s.b; return b && b.c === null && b.y > 100 ? b.k : -1; });
+      if (k >= 0) { await p.mouse.click(box.x + box.width * (k ? .8 : .2), box.y + box.height * .6); bons++; await p.waitForTimeout(900); } else await p.waitForTimeout(120);
+    }
+    const s1 = await p.evaluate(() => document.querySelector(".av-case").jeu.etat().score);
+    for (let i = 0; i < 30; i++) { const k = await p.evaluate(() => { const b = document.querySelector(".av-case").jeu.etat().s.b; return b && b.c === null && b.y > 100 ? b.k : -1; });
+      if (k >= 0) { await p.mouse.click(box.x + box.width * (k ? .2 : .8), box.y + box.height * .6); await p.waitForTimeout(900); break; } await p.waitForTimeout(120); }
+    const s2 = await p.evaluate(() => document.querySelector(".av-case").jeu.etat().score);
+    await p.screenshot({ path: DOSSIER + "/jeu-biscuits.png" });
+    await p.click(".av-case [data-av-fermer]"); await p.waitForTimeout(100);
+    const ferme = await p.evaluate(() => !document.querySelector(".av-case"));
+    const n = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(), interdits = ["dune", "chateau", "anneau", "pandora", "etoile", "obscur", "envers", "odyssee", "chocolat", "titan", "multivers", "tresor", "coupe", "2027", "univers", "ecurie", "foret", "€"].filter(m => n(nom).includes(m));
+    ok(/biscuits du Père Noël/i.test(nom) && s1 >= 5 && s2 === s1 - 1 && ferme && !interdits.length && !err.length, "case 16 : « Les biscuits du Père Noël » se lance, chaque bon tri rapporte 1, une erreur coûte 1, se ferme, aucun mot interdit " + JSON.stringify({ s1, s2, interdits, err: err.slice(0, 2) }));
     await ctx.close(); }
   // 4 · une partie entière jusqu'au bout (jeu chronométré) : score, record, rejouer
   { const { ctx, p, err, srv } = await page(b, { quand: "2026-12-10T09:00:00", session: JOUEUR });

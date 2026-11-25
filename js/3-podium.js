@@ -1278,7 +1278,7 @@ function teaserEcurie(essai) {
     if (SOURCE !== "api" || !ecurieOuverte() || saisonJouee() || stock.get("versus.ecurieTeaser") || document.querySelector(".ecu-rev")) return;
     if (typeof podiumCache === "function" && podiumCache()) return;
     const qui = quiEcurie(); if (!qui || !D || !D.personnes.some(p => p.nom === qui)) return;
-    if (document.querySelector(".tuto, .regles, .ba, .revel, .voile:not([hidden])")) { if ((essai || 0) < 8) setTimeout(() => teaserEcurie((essai || 0) + 1), 4000); return; }
+    if (document.querySelector(".tuto, .regles, .ba, .revel, .voile:not([hidden]), .av-case, .av-ov")) { if ((essai || 0) < 8) setTimeout(() => teaserEcurie((essai || 0) + 1), 4000); return; }
     stock.set("versus.ecurieTeaser", "1");
     const e = Object.assign({}, equipDe(qui));
     const o = document.createElement("div"); o.className = "revel ecu-rev" + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Ton écurie ouvre ses portes");

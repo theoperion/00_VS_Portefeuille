@@ -103,6 +103,14 @@ async function page(b, o) {
     ok(/Écurie/.test(rg) && /1er décembre|1\s*er décembre/.test(rg) && !/Trophées|Succès|Gant de l'infini|Mondes/.test(rg), "règles de décembre : l'écurie ouverte depuis le 1er décembre, rien de 2027" + tag);
     await ctx.close();
   }
+  // 3 bis. le souvenir du calendrier de l'Avent (plaque « Hiver 2026 », traînée « Flocons ») : choisissable dans l'écurie de décembre à partir du 24/12, pas avant ; toujours rien de 2027
+  for (const [q, attendu] of [["2026-12-23T20:00:00", false], ["2026-12-24T09:00:00", true]]) {
+    const { ctx, p, err } = await page(b, { quand: q, session: { role: "perso", nom: "Nicolas" } });
+    await p.waitForTimeout(2500);
+    const r = await p.evaluate(() => { const ids = SLOTS.flatMap(([s]) => idsSlot(s).map(id => s + "." + id));
+      return { pl: ids.includes("plaque.hiver26"), tr: ids.includes("trainee.flocons"), autres: ids.filter(k => { const [s, id] = k.split("."); return !estDepart(s, id) && !GAINS_SOUVENIR.some(g => g.join(".") === k); }) }; });
+    ok(r.pl === attendu && r.tr === attendu && !r.autres.length && !err.length, q.slice(0, 10) + " : souvenir de l'Avent (Hiver 2026, Flocons) " + (attendu ? "choisissable" : "pas encore là") + ", aucun objet 2027 " + JSON.stringify(r));
+    await ctx.close(); }
   // 4. animations réduites : révélation sans animation, voiture visible tout de suite
   { const { ctx, p, err } = await page(b, { quand: "2026-12-05T08:00:00", reduit: true, session: { role: "perso", nom: "Nicolas" } });
     await p.waitForSelector(".ecu-rev", { timeout: 9000 }).catch(() => {});
