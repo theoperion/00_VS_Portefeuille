@@ -5,7 +5,10 @@
    Lancer depuis la racine du dépôt, serveur local ouvert : python3 -m http.server 8771 &  puis  node outils-tests/tpoints-fige.js
    (FIGER=1 node outils-tests/tpoints-fige.js : affiche l'empreinte du code actuel, pour la recopier ici). */
 const { chromium } = require("playwright"), crypto = require("crypto");
-const EMPREINTE = "d347f473dc42e5856f423f5e3d5b40502b64c0c27ec1538386031a22d3c6c0f4";   // empreinte de la saison inventée, calculée AVANT la refonte des badges
+// règles avril/juin changées le 25/11 par Théo (v20.52) : ancienne empreinte d347f473dc42e5856f423f5e3d5b40502b64c0c27ec1538386031a22d3c6c0f4 (refonte des badges).
+// Seuls écarts, tous expliqués par ces règles : avril (plus de cumul mars + avril : Théo 1er devant Kévin ; 🎯 à +2 pour Théo, Kévin, Devlin ; pronostics « qui gagne » de Kévin −1 et Devlin +1)
+// et juin (Côté obscur : Clément, dernier du championnat, finit dernier du mois → 2 points de place au lieu de 0, moins son Pari −1 = 1 au lieu de 0). Totaux : Théo 79→82, Kévin 120→118, Devlin 73→75, Clément 15→16, Nicolas 28.
+const EMPREINTE = "8fb6c423162e3d158b0ead9f4621d9d8b91939b5b8970e97b9af1761cbcd302c";
 const NOMS = ["Théo", "Kévin", "Clément", "Devlin", "Nicolas"];
 const IDX = ["S&P 500", "Nasdaq-100", "Or (non couvert)", "MSCI Monde", "Euro Stoxx 50", "Marchés émergents", "Semi-conducteurs"];
 // générateur fixe (aucun hasard d'une exécution à l'autre)
@@ -62,6 +65,6 @@ function donnees() {
   ok(res.complete && res.mois.length === 12 && res.classement.length === 5, "saison 2027 inventée complète : 12 mois, 5 pilotes classés");
   ok(res.mois.some(m => m.l.some(x => /^pari:/.test(x[5]))) && res.mois.some(m => m.l.some(x => x[6] !== "" && x[6] > 0)) && res.mois[11].l.some(x => x[9]), "la saison joue vraiment les cartes (Paris), les pronostics et le rival");
   ok(!res.mois.find(m => m.k === 202705).l.some(x => x[0] === "Devlin") && !res.mois.find(m => m.k === 202702).l.some(x => x[0] === "Nicolas") && res.mois.find(m => m.k === 202703).l.some(x => x[0] === "Nicolas"), "relevé de mai de Devlin rattrapé par le délai (mois joué sans lui) ; Nicolas entre en mars");
-  ok(EMPREINTE && emp === EMPREINTE, "points identiques au centime à l'empreinte d'avant la refonte (" + emp.slice(0, 16) + "…)");
+  ok(EMPREINTE && emp === EMPREINTE, "points identiques au centime à l'empreinte (règles du 25/11) (" + emp.slice(0, 16) + "…)");
   process.exit(ko.length ? 1 : 0);
 })();

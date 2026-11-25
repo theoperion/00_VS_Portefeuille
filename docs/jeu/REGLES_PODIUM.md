@@ -21,13 +21,13 @@ Chaque mois, les pilotes sont classés sur la **performance de leur portefeuille
 
 **Points du mois = place + 🎯 + carte (≤ +4) + bonus.** Ex æquo : mêmes points. Un mois ne descend jamais sous 0. Nouveau pilote : il entre en jeu à son premier mois complet (le mois d'ouverture ou du premier versement ne compte pas ; décision de Théo, 24/11/2026). Égalité au championnat : le plus de victoires, puis la meilleure performance cumulée.
 
-**Relevé en retard (décision de Théo, 24/11/2026) :** tant qu'il manque un relevé, les résultats du mois restent cachés pour tout le monde (suspense). **7 jours après le jour du relevé**, le mois se joue sans le retardataire : il ne marque rien ce mois-là, et il est recompté s'il saisit son relevé ensuite (sauf un exclusif déjà gagné, qui reste acquis). Aspiration : on vise le premier pilote présent devant soi. « Le huit » : cumul des deux mois seulement si chacun a joué le mois d'avant. Un mois d'absence **casse les séries** (victoires, mois sans finir dernier) mais ne compte **pas** comme une dernière place (Increvable).
+**Relevé en retard (décision de Théo, 24/11/2026) :** tant qu'il manque un relevé, les résultats du mois restent cachés pour tout le monde (suspense). **7 jours après le jour du relevé**, le mois se joue sans le retardataire : il ne marque rien ce mois-là, et il est recompté s'il saisit son relevé ensuite (sauf un exclusif déjà gagné, qui reste acquis). Aspiration : on vise le premier pilote présent devant soi. Un mois d'absence **casse les séries** (victoires, mois sans finir dernier) mais ne compte **pas** comme une dernière place (Increvable).
 
 ## 🃏 Les cartes (une par mois, au plus +4)
 
 | Carte | Effet |
 |---|---|
-| 🚀 Turbo | si tu bats le S&P 500, ton 🎯 vaut +3 |
+| 🚀 Turbo | si tu bats le S&P 500, ton 🎯 vaut +3 (+4 les mois où le 🎯 vaut 2 : avril et décembre) |
 | 🌀 Aspiration | +2 si tu bats le pilote juste devant toi au championnat (pas en janvier) |
 | 🌧️ Pneus pluie | un mois où le S&P 500 baisse : +2 si tu fais mieux que lui |
 | 🎲 Pari | désigne un rival : +2 devant lui, −1 derrière, 0 à égalité |
@@ -53,7 +53,7 @@ Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Re
 
 | Mois | Règle |
 |---|---|
-| 🌑 Le Côté obscur (juin, Bataille spatiale) | le dernier du championnat : points de place ×2 |
+| 🌑 Le Côté obscur (juin, Bataille spatiale) | le dernier du championnat avant juin : points de place ×2, et **au moins 2** (ex. 2e du mois : 4 × 2 = 8 ; 3e : 2 × 2 = 4 ; dernier du mois : 2 au lieu de 0). Égalité au championnat : le départage habituel (le moins de victoires, puis la moins bonne performance cumulée) désigne un seul dernier |
 | 🪱 Le Chevaucheur des sables (janvier, Mer de dunes) | le vainqueur du mois : +2 |
 | 🏆🦸 Finale et Rassemblement des héros (décembre, le Multivers) | points de place ×2 pour tout le monde, et le 🎯 vaut +2 |
 | 🗳️ Vote (2 → 31 déc.) | « le coup de la saison » (pas pour soi) : plaque pour le gagnant |
@@ -64,10 +64,10 @@ Les mois sans règle spéciale, le circuit a son **piège**, une petite règle q
 
 | Mois | Circuit | Piège | Effet |
 |---|---|---|---|
-| Févr. | 🏰 Château aux sortilèges | 🚪 Couloirs mouvants | à moins de 0,2 point du pilote juste devant toi, tu partages sa place (et ses points) |
+| Févr. | 🏰 Château aux sortilèges | 🚪 Couloirs mouvants | à moins de 0,2 point d'écart avec le pilote juste devant toi (ex. 3,1 % et 3,2 %), vous partagez la même place et les mêmes points |
 | Mars | 🎩 Pays des merveilles | 🫖 Le thé du Chapelier | pronostic « qui gagne » : +2 si juste, −1 si faux |
-| Avr. | 💍 Terre de l'Anneau | 🔁 Un aller et retour | les places se jouent sur deux mois cumulés (mars + avril) |
-| Mai | 🌿 Pandora | 🌿 Les graines sacrées | 🚀 Turbo interdit |
+| Avr. | 💍 Terre de l'Anneau | 🏹 L'œil de l'archer elfe | dans le mille : battre le S&P 500 rapporte 🎯 +2 au lieu de +1 (avec 🚀 Turbo : +4 au lieu de +3) |
+| Mai | 🌿 Pandora | 🌿 La forêt endormie | 🚀 Turbo interdit |
 | Juil. | 🐀 Paris, la nuit (le petit chef) | 🧐 Le critique gastronomique | le 🎯 ne compte que si tu bats le S&P 500 d'au moins 0,5 point |
 | Août | 🔦 Monde à l'envers | 🌫️ Brume | si le S&P 500 baisse, 🌧️ Pneus pluie vaut +3 au lieu de +2 |
 | Sept. | 🌊 L'Odyssée | 🧜 Le chant des Sirènes | 🎲 Pari interdit |
@@ -92,4 +92,4 @@ Dernier d'un mois → **1 carte bonus**, jouable dès le mois suivant, une fois 
 
 ---
 
-*V16 (17/11/2026) : circuits à thème et route des 4 mondes (noms et décors seulement, points inchangés). V15.5 (17/11/2026) : + pièges des circuits (8). V15 (16/11/2026) : dernier à 0 pt, Pneus pluie « résiste à la baisse », série = régularité, rival +3, pronostic « plus de +1 % », + défi du mois, pole position, trophée de la régularité. Retirés le 05/11/2026 : duels, DRS, carte Huile, Tir groupé, pièges des circuits.*
+*25/11/2026 (Théo) : Côté obscur avec 2 points de place au moins ; avril « L'œil de l'archer elfe » (🎯 +2) à la place d'« Un aller et retour » ; mai renommé « La forêt endormie » ; texte des Couloirs mouvants clarifié. V16 (17/11/2026) : circuits à thème et route des 4 mondes (noms et décors seulement, points inchangés). V15.5 (17/11/2026) : + pièges des circuits (8). V15 (16/11/2026) : dernier à 0 pt, Pneus pluie « résiste à la baisse », série = régularité, rival +3, pronostic « plus de +1 % », + défi du mois, pole position, trophée de la régularité. Retirés le 05/11/2026 : duels, DRS, carte Huile, Tir groupé, pièges des circuits.*

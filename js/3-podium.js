@@ -107,10 +107,8 @@ function championnat(y) {
     if (simu && (!v || !v.complet)) v = fauxVerdict(k);
     if (!v || !v.complet) { if (v) attente = v; return; }
     const PG = ch ? null : piegeMois(y, k), iR = indiceMois(k);   // V15.5 : piège du circuit
-    // « Le huit » : les places se jouent sur ce mois et le précédent cumulés ; sinon sur le mois seul
-    const huit = PG && PG.id === "huit" && prevL && v.du.every(x => prevL.some(z => z.nom === x.nom));   // v20.31 : cumul seulement si chacun a joué le mois d'avant (sinon tous sur le mois seul)
-    const rc = x => { if (huit) { const p = prevL.find(z => z.nom === x.nom); return (1 + x.r) * (1 + p.r) - 1; } return x.r; };
-    const du = v.du.map(x => Object.assign({}, x, { rc: rc(x) })).sort((a, b) => b.rc - a.rc), n = du.length;
+    // v20.52 (Théo, 25/11) : « Un aller et retour » (places sur deux mois cumulés) retiré ; les places se jouent toujours sur le mois seul
+    const du = v.du.map(x => Object.assign({}, x, { rc: x.r })).sort((a, b) => b.rc - a.rc), n = du.length;
     // places : ex æquo à 1e-9 près ; « Murs proches » : à moins de 0,2 point du pilote juste devant, on partage sa place
     const RG = []; du.forEach((x, i) => { RG[i] = i && du[i - 1].rc - x.rc < (PG && PG.id === "murs" ? 0.002 : 0) + 1e-9 ? RG[i - 1] : i + 1; });
     const rgMax = n ? Math.max(...RG) : 0;
@@ -118,10 +116,16 @@ function championnat(y) {
     const derniers = avant && Object.keys(avant).length >= 2 ? (mx => Object.keys(avant).filter(nm => avant[nm] === mx))(Math.max(...Object.values(avant))) : [];
     const seuil = PG && PG.id === "mirage" ? 0.005 : 0;   // « Mirage » : le 🎯 demande 0,5 point d'avance sur l'indice
     const l = du.map((x, i) => {
-      const rg = RG[i], bonus = iR !== null && x.r > iR + seuil + (seuil ? -1e-12 : 0) ? (spec && (spec.id === "monza" || spec.heros) ? 2 : 1) : 0;
+      // 🎯 : +1 ; +2 au Rassemblement des héros et sous « L'œil de l'archer elfe » (avril, v20.52) ; le Turbo y ajoute toujours +2 (donc +3, ou +4 ces mois-là)
+      const rg = RG[i], bonus = iR !== null && x.r > iR + seuil + (seuil ? -1e-12 : 0) ? (spec && (spec.id === "monza" || spec.heros) || PG && PG.id === "mille" ? 2 : 1) : 0;
       const dernier = n >= 3 && rg > 1 && rg === rgMax;
-      const mult = spec && (spec.id === "finale" || spec.id === "monaco" && derniers.includes(x.nom)) ? 2 : 1, base = PG && PG.id === "nuit" && dernier ? 2 : ptsRang(rg, n), vainq = spec && spec.id === "silverstone" && rg === 1 ? 2 : 0;
-      return { nom: x.nom, r: x.r, rg, base, mult, vainq, p: base * mult + bonus + vainq, bonus, dernier, ecart: rg === 1 && n > 1 ? x.rc - du[1].rc : null, niv: J[x.nom] ? J[x.nom].niv : 1, piege: PG ? PG.id : undefined };
+      // 🌑 Côté obscur (v20.52, Théo 25/11, option A) : le dernier du championnat avant juin marque ses points de place ×2, et au moins 2 (dernier du mois : 2 au lieu de 0)
+      const cote = !!(spec && spec.id === "monaco" && derniers.includes(x.nom));
+      const mult = spec && (spec.id === "finale" || cote) ? 2 : 1, base = PG && PG.id === "nuit" && dernier ? 2 : ptsRang(rg, n), vainq = spec && spec.id === "silverstone" && rg === 1 ? 2 : 0;
+      const plancher = cote && base * mult < 2 ? 2 - base * mult : 0;
+      const o = { nom: x.nom, r: x.r, rg, base, mult, vainq, p: base * mult + plancher + bonus + vainq, bonus, dernier, ecart: rg === 1 && n > 1 ? x.rc - du[1].rc : null, niv: J[x.nom] ? J[x.nom].niv : 1, piege: PG ? PG.id : undefined };
+      if (plancher) o.plancher = plancher;
+      return o;
     });
     // cartes révélées (main de base et pioche bonus), plafonnées à +4
     const atM = ch ? null : atoutsDe(k);
@@ -129,7 +133,7 @@ function championnat(y) {
       const c = carteDe(y, x.nom, k); if (!c || !c.c) return;
       const def = carteDef(c.c), j = J[x.nom]; if (!def || !j) return;
       if (def.bonus && (!regleActive("pioche", k) || !j.pioche.some(z => z.c === c.c && z.k < k))) { x.carte = { id: c.c, gain: 0, cible: c.cible || null, invalide: true }; return; }
-      if (PG && PG.id === "chaleur" && c.c === "turbo") { x.carte = { id: c.c, gain: 0, cible: null, invalide: true, piege: true }; return; }   // « Chaleur » : Turbo interdit
+      if (PG && PG.id === "chaleur" && c.c === "turbo") { x.carte = { id: c.c, gain: 0, cible: null, invalide: true, piege: true }; return; }   // « La forêt endormie » (ex-« Chaleur ») : Turbo interdit
       if (PG && PG.id === "sirenes" && c.c === "pari") { x.carte = { id: c.c, gain: 0, cible: null, invalide: true, piege: true }; return; }   // V16.55 « Chant des Sirènes » : Pari interdit   // « Chaleur » : Turbo interdit
       x._c = c; x._g = effetCarte(Object.assign({}, c, { revele: true }), x, l, avant, iR, { up: amelioAu(y, x.nom, k, j.niv), prev: prevL, cumAvant, piege: PG });
     });

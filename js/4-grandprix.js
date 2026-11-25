@@ -10,7 +10,7 @@
 const TOUR_GP = 25;
 const CARTES = [
   { id: "aspiration", ico: "🌀", nom: "Aspiration", def: "Si tu bats ce mois-ci le pilote juste devant toi au championnat : +2 pts. Inactive en janvier (pas encore de classement).", court: "+2 si tu bats celui de devant" },
-  { id: "turbo", ico: "🚀", nom: "Turbo", def: "Si tu bats l'indice ce mois-ci, ton bonus 🎯 vaut +3 au lieu de +1.", court: "bonus 🎯 à +3" },
+  { id: "turbo", ico: "🚀", nom: "Turbo", def: "Si tu bats l'indice ce mois-ci, ton bonus 🎯 vaut +3 au lieu de +1 (+4 les mois où le 🎯 vaut 2).", court: "bonus 🎯 à +3" },
   { id: "pluie", ico: "🌧️", nom: "Pneus pluie", def: "Un mois où l'indice baisse, si tu fais mieux que lui : +2 pts. La carte du portefeuille bien protégé.", court: "+2 si tu résistes à la baisse" },
   { id: "pari", ico: "🎲", nom: "Pari", def: "Désigne un rival : si tu finis devant lui ce mois-ci, +2 pts ; derrière lui, −1 ; égalité parfaite, 0. Il découvre ton défi à la révélation.", court: "+2 / −1 contre un rival", cible: true }
 ];
@@ -454,7 +454,7 @@ function htmlGrandPrix(y) {
   const lignes = ordre.map((n, r) => {
     const devant = r ? ordre[r - 1] : null, ecart = devant ? et.pts[devant] - et.pts[n] : 0, x = et.m ? et.m.l.find(z => z.nom === n) : null;
     const ca = et.k ? carteDe(y, n, et.k) : null, cdef = ca && ca.c ? carteDef(ca.c) : null;
-    const res = x && x.carte ? (x.carte.invalide ? (x.carte.piege ? " Interdite ce mois-ci (piège 🥵 Chaleur) : sans effet." : " Pas encore piochée à ce moment-là : sans effet.") : " Résultat : " + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + " pt" + (Math.abs(x.carte.gain) > 1 ? "s" : "") + (x.carte.circ ? ", dont +1 d'atout du circuit" : "") + (x.carte.bouchon ? ", sans le +1 d'atout : bouchon, plusieurs pilotes l'ont jouée" : "") + (x.carte.sab ? " · " + x.carte.cible + " " + x.carte.sab : "") + ".") : "";
+    const res = x && x.carte ? (x.carte.invalide ? (x.carte.piege ? " Interdite ce mois-ci (piège " + (et.m && et.m.piege ? et.m.piege.ico + " " + et.m.piege.nom : "du circuit") + ") : sans effet." : " Pas encore piochée à ce moment-là : sans effet.") : " Résultat : " + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + " pt" + (Math.abs(x.carte.gain) > 1 ? "s" : "") + (x.carte.circ ? ", dont +1 d'atout du circuit" : "") + (x.carte.bouchon ? ", sans le +1 d'atout : bouchon, plusieurs pilotes l'ont jouée" : "") + (x.carte.sab ? " · " + x.carte.cible + " " + x.carte.sab : "") + ".") : "";
     // lot53 (Conseil, règle « une ligne = 3 zones ») : place · tête + NOM › + 2 pastilles au plus · total ; le calcul du mois ne s'ouvre qu'en touchant la ligne
     const P = [], I = [], pas = (w, pr, h) => P.push({ w, pr, h });   // P = bonus qui comptent (triés), I = infos sans point (seulement dans le détail)
     if (ca && !x) { if (ca.cache && !cdef) P.push({ w: 0, pr: 0, h: '<span class="gp-x gp-xc cache" data-bdg="Carte posée face cachée : révélée le ' + jourLimite(et.k) + ' du mois.">🂠</span>' }); else if (cdef) P.push({ w: 0, pr: 0, h: '<span class="gp-x gp-xc" data-bdg="' + esc(cdef.ico + " " + cdef.nom + " : " + cdef.def) + '">' + cdef.ico + "</span>" }); }
@@ -468,7 +468,7 @@ function htmlGrandPrix(y) {
       if (x.prono) { const h = '<span class="gp-x' + (x.prono.pts < 0 ? " mal" : "") + '" data-bdg="🔮 Pronostic : ' + esc((x.prono.v || "—") + (x.prono.i ? ", S&P " + (x.prono.i === "h" ? "plus de +1 %" : "pas plus de +1 %") : "") + (x.prono.p !== null && x.prono.p !== undefined ? ", pole " + String(x.prono.p).replace(".", ",") + " %" + (x.prono.pole ? " (la plus proche)" : "") : "")) + " → " + (x.prono.pts < 0 ? "−" + -x.prono.pts : "+" + x.prono.pts) + '.">🔮' + (x.prono.pts < 0 ? "−" + -x.prono.pts : "+" + x.prono.pts) + "</span>"; if (x.prono.pts) pas(Math.abs(x.prono.pts), x.prono.pts > 0 ? 1.5 : 0, h); else I.push(h); }
       if (x.rival) pas(3, 4, '<span class="gp-x or" data-bdg="😈 Rival de la saison : devant ' + esc(x.rival) + ' au championnat, +3.">😈+3</span>');
       if (x.regul !== undefined) pas(3, 4, '<span class="gp-x or" data-bdg="🛡️ Trophée de la régularité : le moins souvent dernier de la saison, +3.">🛡️+3</span>');
-      if (x.mult > 1) { const h = '<span class="gp-x or" data-bdg="' + esc(et.m.spec ? et.m.spec.ico + " " + et.m.spec.nom + " : points de place doublés." : "Points doublés.") + '">×2</span>'; if (x.base) pas(x.base * (x.mult - 1), 3, h); else I.push(h); }
+      if (x.mult > 1) { const h = '<span class="gp-x or" data-bdg="' + esc((et.m.spec ? et.m.spec.ico + " " + et.m.spec.nom + " : points de place doublés" : "Points doublés") + (x.plancher ? ", 2 au moins." : ".")) + '">×2</span>'; if (x.base || x.plancher) pas(x.base * (x.mult - 1) + (x.plancher || 0), 3, h); else I.push(h); }   // v20.52 : plancher du Côté obscur
       (x.vise || []).forEach(z => I.push('<span class="gp-x" data-bdg="🎲 Pari de ' + esc(z.par) + " contre " + esc(n) + " : " + (z.gain > 0 ? esc(z.par) + " a fini devant, +2 pour lui." : z.gain < 0 ? esc(n) + " a tenu bon, " + esc(z.par) + " perd 1 point." : "égalité parfaite, 0.") + '">🎲' + (z.gain > 0 ? "" : "✓") + "</span>"));
       if (x.pioche && x.pioche.length && regleVisible("pioche") && !estChauffe(y)) I.push('<span class="gp-x" data-bdg="🎴 Carte' + (x.pioche.length > 1 ? "s" : "") + " piochée" + (x.pioche.length > 1 ? "s" : "") + " ce mois-ci" + (n === qui ? " : " + esc(x.pioche.map(c => carteDef(c).nom).join(", ")) : "") + '.">🎴</span>');
     }
@@ -1190,7 +1190,7 @@ document.addEventListener("click", ev => { const l = ev.target.closest && ev.tar
 document.addEventListener("keydown", ev => { if (ev.key !== "Enter" && ev.key !== " ") return; const l = ev.target.classList && ev.target.classList.contains("gp-l") && ev.target.dataset.gpDet ? ev.target : null; if (!l) return; ev.preventDefault(); basculerLigneGP(l); });
 /* ---------- V16.18 · Le décompte des points d'un pilote : « 4 place + 1 🎯 + 2 🎲 = 7 » ---------- */
 function decompte(x, spec) {
-  const l = [(x.mult > 1 ? x.base + "×2" : String(x.base)) + " de place"], add = (v, t) => { if (v) l.push((v > 0 ? "+ " : "− ") + Math.abs(v) + " " + t); };
+  const l = [(x.plancher ? x.base + "×2 → " + (x.base * x.mult + x.plancher) : x.mult > 1 ? x.base + "×2" : String(x.base)) + " de place"], add = (v, t) => { if (v) l.push((v > 0 ? "+ " : "− ") + Math.abs(v) + " " + t); };
   add(x.bonus, "🎯"); add(x.vainq, spec ? spec.ico : "★");
   if (x.carte && !x.carte.invalide && x.carte.gain) { const cd = carteDef(x.carte.id); add(x.carte.gain, cd ? cd.ico : "🃏"); }
   add(x.equipe, "🤝"); add(x.serie ? 1 : 0, "🔥"); add(x.prono && x.prono.pts, "🔮"); add(x.defi, "🏁"); add(x.rival ? 3 : 0, "😈"); add(x.regul !== undefined ? 3 : 0, "🛡️");
