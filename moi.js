@@ -5060,8 +5060,11 @@ async function textePdf(fichier) {
   try { doc.destroy(); } catch (e) {}
   return lignes.join("\n");
 }
-const NUM_AV = "(\\d{1,3}(?: \\d{3})+(?:,\\d+)?|\\d+(?:[.,]\\d+)?)";
-const chiffre = v => String(v || "").replace(/ /g, "").replace(".", ",");
+const NUM_AV = "(\\d{1,3}(?:\\.\\d{3})+,\\d+|\\d{1,3}(?:,\\d{3})+\\.\\d+|\\d{1,3}(?: \\d{3})+(?:,\\d+)?|\\d+(?:[.,]\\d+)?)";   // v20.53 : aussi « 1.234,56 » et « 1,234.56 »
+const chiffre = v => { const x = String(v || "").replace(/ /g, "");
+  if (/^\d{1,3}(?:\.\d{3})+,\d+$/.test(x)) return x.replace(/\./g, "");                       // 1.234,56 (point des milliers)
+  if (/^\d{1,3}(?:,\d{3})+\.\d+$/.test(x)) return x.replace(/,/g, "").replace(".", ",");     // 1,234.56 (à l'anglaise)
+  return x.replace(".", ","); };
 /** cohérence d'une ligne lue : quantité × cours ± frais = montant (au centime) */
 function ecartOp(op) {
   const q = lireNombre(op.qte), p = lireNombre(op.cours), fr = lireNombre(op.frais) || 0, m = lireNombre(op.montant);
@@ -5119,15 +5122,29 @@ function lireFortuneo(t) {
     const debLigne = t.lastIndexOf("\n", k.i) + 1, avant = t.slice(debLigne, k.i);
     const nom = (avant.includes(":") ? avant.slice(avant.lastIndexOf(":") + 1) : avant).replace(/^[^A-Za-z0-9]+/, "").replace(/\s+/g, " ").trim();
     const bloc = t.slice(k.fin, n + 1 < marques.length ? marques[n + 1].i : t.length);
-    const d = bloc.match(/\b(\d{2})[-\/.](\d{2})[-\/.](\d{4})\b/), h = bloc.match(/\b(\d{2}):(\d{2})(?::\d{2})?\b/);
+    /* v20.53 : la date qui suit « exécution / négociation / opération » d'abord (pas la date de règlement) */
+    const d = bloc.match(/(?:ex[ée]cut|n[ée]goci|op[ée]ration)[^\n\d]{0,40}(\d{2})[-\/.](\d{2})[-\/.](\d{4})/i) || bloc.match(/\b(\d{2})[-\/.](\d{2})[-\/.](\d{4})\b/), h = bloc.match(/\b(\d{2}):(\d{2})(?::\d{2})?\b/);
     const s = bloc.match(/\bSens\s*:?\s*(Achat|Vente)/i) || bloc.match(/\b(Achat|Vente)\s+(?:comptant|au comptant|SRD)/i);
     const op = { src: "fortuneo", nom: nom, isin: k.isin, date: d ? d[3] + "-" + d[2] + "-" + d[1] : "", heure: h ? h[1] + ":" + h[2] : "", type: s ? (/^a/i.test(s[1]) ? "Achat" : "Vente") : "",
       qte: champ(bloc, "Quantit[ée]s?"), cours: champ(bloc, "\\bCours(?:\\s+d'ex[ée]cution)?"), brut: champ(bloc, "Montant\\s+brut"),
       frais: champ(bloc, "(?:Courtage(?:\\s+et\\s+commissions?)?|Commissions?|Frais\\s+de\\s+courtage)"), montant: champ(bloc, "Montant\\s+net") };
+    /* v20.53 : taxe sur les transactions financières (TTF) ajoutée aux frais */
+    const ttf = champ(bloc, "(?:Taxe\\s+sur\\s+les\\s+transactions\\s+financi[èe]res|\\bTTF\\b)");
+    if (lireNombre(ttf) > 0) { op.frais = saisieNombre((lireNombre(op.frais) || 0) + lireNombre(ttf), 2); op.note = "Taxe sur les transactions financières (" + ttf + " €) ajoutée aux frais."; }
+    /* v20.53 : dividende / coupon → « Dividende / intérêts », montant NET (ce qui arrive en espèces) */
+    if (!op.type && /dividende|coupon|distribution|revenus?\s+de\s+titres/i.test(bloc + "\n" + t.slice(0, k.i))) {
+      const dp = bloc.match(/(?:paiement|d[ée]tachement|versement)[^\n\d]{0,30}(\d{2})[-\/.](\d{2})[-\/.](\d{4})/i);
+      if (dp) op.date = dp[3] + "-" + dp[2] + "-" + dp[1];
+      op.type = "Intérêts"; op.note = "Dividende" + (op.qte ? " de " + op.qte + " titres" : "") + " : montant net reçu" + (op.brut ? " (brut " + op.brut + " €)" : "") + ".";
+      op.qte = ""; op.cours = ""; op.frais = "";
+      return finirOp(op, ["date", "montant"]);
+    }
     return finirOp(op, ["date", "type", "qte", "cours", "frais", "montant"]);
   }).filter(o => o.type || o.qte || o.montant);
-  return { compte: compte, ops: ops };
+  return { compte: compte, ops: sansDoublons(ops) };
 }
+/** v20.53 : le même avis collé deux fois = une seule opération (même titre, date, heure, sens, quantité, montant) */
+function sansDoublons(ops) { const vus = new Set(); return ops.filter(o => { const k = [o.src, o.isin, o.nom, o.date, o.heure, o.type, o.qte, o.montant, o.liste ? 1 : 0].join("|"); if (vus.has(k)) return false; vus.add(k); return true; }); }
 /* Linxea Spirit 2 (Spirica) : « Confirmation de versement libre » (PDF) ou tableaux copiés du site (liste des opérations, « Détail du versement… »).
    Versement → Achat du support AVEC le versement (montant versé) ; frais de gestion → Frais en parts ; rachat → Vente du support puis Retrait. */
 function lireLinxea(t) {
@@ -5147,6 +5164,7 @@ function lireLinxea(t) {
       const sansDates = apres.replace(/\d{2}\/\d{2}\/\d{4}/g, " ").replace(new RegExp(NUM_AV + "\\s*[€%]", "g"), " ");
       const restes = sansDates.match(new RegExp("(?:^|\\s)" + NUM_AV + "(?=\\s|$)", "g")) || [];
       let nom = (apres.match(/^[\s\t]*([^\t\d€]*[A-Za-z][^\t€]*?)(?=\t|\s{2,}|\s\d)/) || [])[1] || "";
+      if (!nom.trim()) { const av0 = ligne.slice(0, ligne.indexOf(mi[1])).replace(/\t+/g, " ").trim(); if (/[A-Za-z]{3}/.test(av0) && !/\d{2}\/\d{2}\/\d{4}|€/.test(av0)) nom = av0; }   // v20.53 : tableau du site, nom AVANT l'ISIN
       if (!nom.trim()) {   // PDF : le nom du support est au-dessus (et parfois en dessous) de la ligne
         const av = (L[n - 1] || "").trim(), ap = (L[n + 1] || "").trim();
         nom = (/ISIN|Support/i.test(av) ? "" : av) + (ap && !/\d|€|Page/i.test(ap) ? " " + ap : "");
@@ -5157,7 +5175,11 @@ function lireLinxea(t) {
       const op = { src: "linxea", nom: nom.replace(/\s+/g, " ").trim(), isin: mi[1], date: isoFr(ds[ds.length - 1]), qte: parts, cours: vp, brut: brut, net: net };
       const fr = fraisCol || (lireNombre(brut) > 0 && lireNombre(net) > 0 && Math.abs(lireNombre(brut) - lireNombre(net)) >= .005 ? saisieNombre(lireNombre(brut) - lireNombre(net), 2) : "");
       const cle = nat2 + "|" + op.date;
-      if (nat2 === "frais") { op.type = "Frais en parts"; op.montant = net || brut; ops.push(finirOp(op, ["date", "qte", "montant"])); }
+      if (nat2 === "frais") {   // v20.53 : le montant des frais est celui qui vaut ≈ parts × valeur de part (l'autre nombre en € est la valeur de part)
+        op.type = "Frais en parts"; op.montant = net || brut; const q = lireNombre(parts);
+        if (q > 0 && e.length >= 2) { let best = null; e.forEach((m, i) => e.forEach((v, j) => { if (i === j) return; const d = Math.abs(lireNombre(m) - q * lireNombre(v)); if (!best || d < best.d) best = { d, m, v }; }));
+          if (best && best.d <= Math.max(.02, lireNombre(best.m) * .02)) { op.montant = best.m; op.cours = best.v; } }
+        ops.push(finirOp(op, ["date", "qte", "montant"])); }
       else if (nat2 === "rachat") { op.type = "Vente"; op.montant = brut; op.frais = fr; ops.push(finirOp(op, ["date", "qte", "cours", "montant"])); (blocs[cle] = blocs[cle] || []).push(op); }
       else if (nat2 === "versement") { op.type = "Achat"; op.montant = brut; op.frais = fr; const prem = !blocs[cle]; (blocs[cle] = blocs[cle] || []).push(op);
         op.apport = prem; op.montantApport = prem && total && lireNombre(total) - lireNombre(brut) > .005 ? total : ""; op.versDoc = true;
@@ -5186,7 +5208,13 @@ function lireLinxea(t) {
     ops.splice(i + 1, 0, finirOp({ src: "linxea", type: "Retrait", nom: "Retrait du rachat", isin: "", date: l[0].date, montant: saisieNombre(s, 2), note: "L'argent du rachat sort du contrat : vérifie le montant (net reçu après prélèvements sur le site)." }, ["date", "montant"])); });
   /* une ligne de liste déjà détaillée par un tableau collé (même nature, même date, même montant) : gardée une seule fois */
   const detail = ops.filter(o => !o.liste);
-  const garde = ops.filter(o => !o.liste || !detail.some(d => d.type === o.type && d.date === o.date));
+  /* v20.53 : la ligne de liste et le détail du même versement n'ont pas toujours la même date (date d'opération / date de valeur) :
+     même nature, à 5 jours près, et même montant total (somme des supports, ou montant du versement du document) = la même opération */
+  const jours = (a, b) => a && b ? Math.abs(new Date(a + "T12:00:00") - new Date(b + "T12:00:00")) / 864e5 : 99;
+  const memeOp = o => { const pres = detail.filter(d => d.type === o.type && jours(d.date, o.date) <= 5); if (!pres.length) return false; if (pres.some(d => d.date === o.date)) return true;
+    const m = lireNombre(o.montant), somme = pres.reduce((a, d) => a + (lireNombre(d.montant) || 0), 0);
+    return m > 0 && (Math.abs(somme - m) < .02 || pres.some(d => Math.abs((lireNombre(d.montantApport) || 0) - m) < .02) || Math.abs((lireNombre(total) || 0) - m) < .02); };
+  const garde = sansDoublons(ops.filter(o => !o.liste || !memeOp(o)));
   if (!garde.length) return { compte: "LINXEA", ops: lireLinxeaFiche(t, nature) };   // v20.30 : la fiche « Libellé : valeur » de l'appli/du site Linxea
   return { compte: "LINXEA", ops: garde };
 }
@@ -5580,11 +5608,12 @@ async function sauverRaccourcis(liste) {
 }
 /* v17.34 · ordres dont l'envoi est resté incertain (délai dépassé) : comptés pour le garde-fou des doublons tant que le fichier n'a pas été relu */
 let ordresIncertains = [];
+let ordresEnregistres = [];   // v20.53 : ordres enregistrés depuis l'ouverture de l'appli, gardés jusqu'au rechargement (doublon d'un avis réimporté avant que le fichier soit relu)
 function joursEntre(a, b) { return Math.abs(Math.round((new Date(String(a).slice(0, 10) + "T12:00:00") - new Date(String(b).slice(0, 10) + "T12:00:00")) / 864e5)); }
 /** garde-fou G3 : la même opération (type, compte, actif, montant à 1 centime près) dans les 3 jours, envois en cours ou incertains compris */
 function doublonOrdre(m) {
   if (!(m > 0) || !F.date) return null;
-  const l = (refData().journal || []).concat(ordresIncertains);
+  const l = (refData().journal || []).concat(ordresIncertains, ordresEnregistres);   // v20.53 : aussi ceux enregistrés depuis l'ouverture (avant que le fichier relu les renvoie)
   return l.find(o => o.type === F.type && o.enveloppe === F.env && (!AVEC_ACTIF.includes(F.type) || (o.actif || "") === (F.actif || "")) &&
     Math.abs((+o.montant || 0) - m) <= .01 && o.date && joursEntre(o.date, F.date) <= 3) || null;
 }
@@ -5809,7 +5838,7 @@ async function envoyerOrdre(forcer) {
   if (M && M.ref) M.ref.journal = enAttente.reverse().concat(M.ref.journal || []);
   const rep = await posterFichier({ action: "ordre", ordres: ordres, forcer: !!forcer });
   if (M && M.ref) M.ref.journal = (M.ref.journal || []).filter(o => !o.envoi);
-  if (rep.ok) { if (ordres.some(o => o.type === "Frais en parts" && /Linxea/i.test(o.enveloppe || ""))) stock.set(cleStock("fraisLx"), isoJour(new Date()));   // v17.77 : rappel des frais Linxea fait
+  if (rep.ok) { ordresEnregistres = ordresEnregistres.concat(enAttente.map(o => Object.assign({}, o, { envoi: false }))); if (ordres.some(o => o.type === "Frais en parts" && /Linxea/i.test(o.enveloppe || ""))) stock.set(cleStock("fraisLx"), isoJour(new Date()));   // v17.77 : rappel des frais Linxea fait
     delete brouillons[sauvegarde.type];
     if (window.SONS) SONS.succes(); toast(rep.message || "Ordre enregistré."); charger(true); suiteImport(sauvegarde); return; }
   if (rep.erreur === "cle") { cleRefusee(rep.message); toast("Clé refusée par ton fichier."); if (vueMoi()) rendre(); return; }
@@ -7994,8 +8023,8 @@ window.Moi = {
     url = String(url || "").trim();
     if (url) stock.set(K.api, url);
     if (k) stock.set(K.cle, k);
-    if (url || k) { couperLecture(); M = null; SRC = ""; erreur = ""; dernierAppel = 0; stock.del(K.cache); stock.del(K.cacheLe); stock.del(K.refus); }
+    if (url || k) { couperLecture(); ordresEnregistres = []; ordresIncertains = []; M = null; SRC = ""; erreur = ""; dernierAppel = 0; stock.del(K.cache); stock.del(K.cacheLe); stock.del(K.refus); }
   },
-  oublier() { couperLecture(); [K.api, K.cle, K.cache, K.cacheLe, K.refus].forEach(k => stock.del(k)); M = null; SRC = ""; erreur = ""; signalerCloche(); },
+  oublier() { couperLecture(); ordresEnregistres = []; ordresIncertains = []; [K.api, K.cle, K.cache, K.cacheLe, K.refus].forEach(k => stock.del(k)); M = null; SRC = ""; erreur = ""; signalerCloche(); },
 };
 })();
