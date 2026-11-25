@@ -23,7 +23,7 @@ const autres = Object.keys(TRACES).filter(id => AVEC.indexOf(id) < 0), avecCouch
 ok(!avecCouche.length, "les " + autres.length + " autres circuits : aucune recette, rendu d'avant " + JSON.stringify(avecCouche));
 const decors = [...new Set(ids.map(id => TRACES[id].decor))], brumes = decors.map(d => WAOUH[d] && WAOUH[d].brume && WAOUH[d].brume.col);
 ok(new Set(brumes).size === decors.length, "chaque univers a SA brume (" + decors.length + " couleurs différentes, pas la même partout)");
-ok(decors.every(d => WAOUH[d].horizon && WAOUH[d].sol), "chaque univers a son décor lointain et ses sols par zones");
+ok(decors.every(d => WAOUH[d].sol), "chaque univers a ses sols par zones (décor lointain coupé le 25/11 : trop lourd)");
 // 2. budgets, mode léger, horizon
 const R = {}, L = {};
 ids.forEach(id => { R[id] = scene(id, false); L[id] = scene(id, true); });
@@ -35,7 +35,7 @@ ids.forEach(id => {
   const T = R[id].T, ext = Math.max(T.rx, T.rz) * 3.2 + 600, d = r.sol.d; let rmax = 0;
   for (let i = 0; i < d.length; i += 10) { const q = Math.hypot(d[i] - T.cx, d[i + 2] - T.cz); if (q > rmax) rmax = q; }
   const H = W.horizon; W.horizon = null; const sh = scene(id, false).S.sol; W.horizon = H; const nh = (r.sol.d.length - sh.d.length) / 30;   // triangles du décor lointain seul
-  ok(nh <= 1200 && rmax > ext + 1500, id + " : décor lointain jusqu'à " + Math.round(rmax) + " m (" + nh + " triangles)");
+  ok(nh === 0, id + " : décor lointain coupé (25/11, trop lourd) : 0 triangle ajouté (" + nh + ")");
 });
 // 3. les trésors (dépôt privé, seulement si APP_SCRIPTS est défini)
 function tresors() {
