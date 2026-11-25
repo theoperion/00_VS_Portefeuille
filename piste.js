@@ -288,7 +288,8 @@
     if (th === "desert") h = Object.assign({}, HEURES.crepuscule, { horizon: "#FFA060", haut: "#3A2E7A", sCol: "#FFD8A4", sForce: 1.32, amb: .47, brume: .00026, nuit: 0, soleil: [-.74, .38, .46] });   // 25/11/2026 · plus contrasté : soleil rasant et fort, ombres pourpres profondes sur les faces d'avalanche   // v16.63 · Dune : couchant plus chaud, soleil un peu plus haut (sable lumineux, faces d'avalanche pourpres)
     if (th === "gouter") h = Object.assign({}, HEURES.jour, { haut: "#5E86CC", horizon: "#FFD8A8", soleil: [-.55, .5, .45], sCol: "#FFE6C0", sForce: 1, amb: .6, brume: .0004, nuit: 0 });   // goûter : fin d'après-midi douce, sans particules
     if (th === "anneau") h = Object.assign({}, HEURES.jour, { haut: "#3C5AA8", horizon: "#FFC08A", soleil: [-.55, .5, .55], sCol: "#FFE6BC", sForce: 1.05, amb: .58, brume: .0004, nuit: .3 });   // v20.46 · l'Anneau : fin d'après-midi dorée, horizon rougi par le Mordor (les lanternes et la lave ont leur halo)
-    let tempete = 0; if (th === "noel" && meteo !== "soleil" && meteo !== "beau") { tempete = meteo === "orage" ? 2 : meteo === "neige" || meteo === "pluie" ? 1 : .5; meteo = "soleil"; }   // V16.63 · Noël : la météo du mois devient de la neige, jamais de pluie grise
+    let tempete = 0; if (th === "noel" && meteo !== "soleil" && meteo !== "beau") { tempete = meteo === "orage" ? 2 : meteo === "neige" || meteo === "pluie" ? 1 : .5; meteo = "soleil-noel"; }   // V16.63 · Noël : la météo du mois devient de la neige, jamais de pluie grise
+    let sable = 0; if (th === "desert" && (meteo === "pluie" || meteo === "orage")) { sable = meteo === "orage" ? 2 : 1; meteo = "sable"; }   // v20.52 (Théo) · Dune : jamais de pluie, une tempête de sable
     const A = { haut: hex(h.haut), horizon: hex(h.horizon), soleil: norme(h.soleil), sCol: fois(hex(h.sCol), h.sForce), amb: h.amb, nuit: h.nuit, brume: h.brume,
       sol: hex(D.sol), bord: hex(D.bord), piste: hex(D.piste), murs: D.murs.map(hex), eau: D.eau ? hex(D.eau) : null, pluie: 0, neige: 0, eclairs: 0, mouille: 0, synth: 0, hiver: 0 };
     const gris = hex("#7D8794");
@@ -308,7 +309,9 @@
     if (th === "spores") { A.horizon = mel(A.horizon, hex("#B7C27A"), .6); A.haut = mel(A.haut, hex("#33402C"), .4); if (!A.pluie) { A.neige = 1; A.floc = [.85, .92, .6, .6]; A.flocV = 2; } }
     // novembre · Mur des titans : le soleil se couche sur la mer, au nord, derrière le Colosse (comme la carte)
     if (th === "cendres") { A.horizon = mel(A.horizon, hex("#E8904E"), .6); A.haut = mel(A.haut, hex("#3A2440"), .55); A.brume *= 1.15; A.soleil = norme([-.3, .26, -.9]); A.sCol = fois(hex("#FFC890"), 1.05); A.amb = .6; if (!A.pluie) { A.neige = 1; A.floc = [.62, .6, .58, .7]; A.flocV = 3; } }
-    if (th === "desert" && !A.pluie) { A.neige = 1; A.floc = [.95, .8, .55, .5]; A.flocV = 9; }
+    if (th === "desert" && !A.pluie && !sable) { A.neige = 1; A.floc = [.95, .8, .55, .5]; A.flocV = 9; }
+    if (sable) { A.neige = 1; A.sable = sable; A.floc = [.92, .7, .42, .8]; A.flocV = 5; A.vent = 22 + 14 * sable; A.densite = 1.3 + .4 * sable; A.eclairs = sable > 1 ? 1 : 0;
+      A.haut = mel(A.haut, hex("#9A5E32"), .55 + .15 * sable); A.horizon = mel(A.horizon, hex("#D8A060"), .65); A.sCol = fois(A.sCol, .75 - .1 * sable); A.brume *= 2 + sable; A.amb *= 1.05; }
     if (th === "magie") { A.haut = hex("#3A82D6"); A.horizon = hex("#D6ECFA"); A.sCol = hex("#FFF2DC"); A.soleil = norme([.42, .62, .62]); A.amb = .6; A.brume = .00032; if (!A.pluie) { A.neige = 1; A.floc = [1, .88, .5, .8]; A.flocV = 1.1; } }   // février · le Château de jour : ciel clair, soleil au sud-est sur la façade, poussière d'étoiles dorée
     if (th === "odyssee") { A.haut = hex("#3A6CC0"); A.horizon = hex("#FFD49A"); A.sCol = hex("#FFE6BE"); A.soleil = norme([.55, .42, .62]); A.amb = .58; A.brume = .00032; }   // l'aube d'Ithaque (sud-est), comme la carte peinte
     if (th === "chocolat") { A.haut = hex("#5A2A12"); A.horizon = hex("#FFE6B8"); A.sCol = hex("#E6CCA8"); A.soleil = norme([.25, .85, .45]); A.amb = .46; A.brume = .00014; }   // octobre · dans la salle : voûte de chocolat, lumière dorée de la verrière
@@ -324,6 +327,8 @@
     if (cosm === "neon") { A.horizon = mel(A.horizon, hex("#FF2E97"), .32); A.haut = mel(A.haut, hex("#2A0B5A"), .32); A.sCol = mel(A.sCol, hex("#FF77C8"), .35); if (!A.synth) A.murs = [A.murs[0], hex("#FF4FD8")]; }
     A.brouillard = mel(A.horizon, A.haut, .15);
     if (th === "multivers" && !A.pluie) A.brouillard = hex("#3A1C5A");
+    if (sable) A.brouillard = mel(hex("#C88C52"), A.haut, .2);
+    A.meteo = meteo;   // v20.52 : la météo réellement montrée (après Noël → neige, Dune → sable)
     if (th === "pandora" && !A.pluie) A.brouillard = hex("#CFE6C8");   // brume dorée-verte au loin   // sol violet, liseré orange à l'horizon
     return A;
   }
@@ -11896,8 +11901,8 @@
   const FS_FX = "precision mediump float;varying vec4 vC;void main(){gl_FragColor=vC;}";
   const VS_PT = "attribute vec3 aP;attribute vec4 aC;attribute float aS;uniform mat4 uPV;uniform float uH;varying vec4 vC;void main(){vC=aC;vec4 p=uPV*vec4(aP,1.);gl_Position=p;gl_PointSize=clamp(aS*uH/max(p.w,1.),1.,96.);}";
   const FS_PT = "precision mediump float;varying vec4 vC;void main(){vec2 q=gl_PointCoord-.5;float r=length(q)*2.;float a=smoothstep(1.,0.,r);gl_FragColor=vec4(vC.rgb,vC.a*a*a);}";
-  const VS_PLUIE = "attribute vec4 aS;uniform mat4 uPV;uniform vec3 uCam;uniform float uT;uniform float uV;uniform float uLong;uniform float uNeige;varying float vA;" +
-    "void main(){float B=90.;vec3 p=vec3(aS.x*B-B*.5,mod(aS.y*80.-uT*uV,80.)-25.,aS.z*B-B*.5);p.x+=sin(uT*.8+aS.y*30.)*uNeige*1.5;p+=uCam;p.x=uCam.x+mod(p.x-uCam.x+B*.5,B)-B*.5;p.y+=aS.w*uLong;p.x+=aS.w*uLong*.12;vA=1.-aS.w*.6;gl_Position=uPV*vec4(p,1.);gl_PointSize=uNeige>0.?3.:1.;}";
+  const VS_PLUIE = "attribute vec4 aS;uniform mat4 uPV;uniform vec3 uCam;uniform float uT;uniform float uV;uniform float uLong;uniform float uNeige;uniform float uVent;varying float vA;" +
+    "void main(){float B=90.;vec3 p=vec3(aS.x*B-B*.5,mod(aS.y*80.-uT*uV,80.)-25.,aS.z*B-B*.5);p.x+=sin(uT*.8+aS.y*30.)*uNeige*1.5+uT*uVent;p+=uCam;p.x=uCam.x+mod(p.x-uCam.x+B*.5,B)-B*.5;p.y+=aS.w*uLong;p.x+=aS.w*uLong*.12;vA=1.-aS.w*.6;gl_Position=uPV*vec4(p,1.);gl_PointSize=uNeige>0.?3.:1.;}";
   const FS_PLUIE = "precision mediump float;varying float vA;uniform vec4 uC;void main(){gl_FragColor=vec4(uC.rgb,uC.a*vA);}";
 
   function programme(gl, vs, fs) {
@@ -11952,17 +11957,17 @@
   /** V16.3 · position de chaque voiture : la distance suit les points sans jamais sauter ;
       chacun a son couloir (ordre de départ) : seul, il se rapproche de la trajectoire idéale, près d'un rival il s'écarte en douceur.
       Plus de téléportation de 11 m ni de changement de voie brutal quand quelqu'un double. */
-  function cibles(pts, tour, L, ordreDepart, grille) {
+  function cibles(pts, tour, L, ordreDepart, grille, g2) {
     const noms = Object.keys(pts).sort((a, b) => pts[b] - pts[a] || (ordreDepart ? ordreDepart.indexOf(a) - ordreDepart.indexOf(b) : 0));
     const ordre = ordreDepart && ordreDepart.length ? ordreDepart : noms, nb = Math.max(ordre.length, noms.length), pas = Math.min(3.6, 13 / Math.max(1, nb - 1));
-    const out = {};
+    const out = {}, egaux = grille && noms.every(n => Math.abs(pts[n] - pts[noms[0]]) < 1e-9);   // v20.52 : sur la grille (tout le monde à égalité), le rang affiché = la place sur la grille
     // V16.18 : le décalage de la grille s'efface en course (le vainqueur franchit vraiment la ligne) ; ex æquo = même rang
-    noms.forEach(n => { const k = Math.max(0, ordre.indexOf(n)), f = clamp(pts[n] / tour, 0, 1), dec = 4 + (grille && grille.indexOf(n) >= 0 ? grille.indexOf(n) * 9 : 0);
-      const gi = grille ? grille.indexOf(n) : -1;   // v17.10 : sur la grille, en quinconce comme en F1 (une voiture à gauche, la suivante à droite)
-      out[n] = { s: (pts[n] / tour) * L - dec * (1 - f), base: gi >= 0 ? (gi % 2 ? 1 : -1) * Math.min(2.6, pas * .75) : (k - (nb - 1) / 2) * pas, rang: 1 + noms.filter(m => pts[m] > pts[n] + 1e-9).length }; });
+    // v20.52 (Théo) · g2 = { pas, lat } : la carte 2D écarte la grille selon la taille de l'écran (pastilles lisibles, jamais l'une sur l'autre)
+    noms.forEach(n => { const k = Math.max(0, ordre.indexOf(n)), f = clamp(pts[n] / tour, 0, 1), gi = grille ? grille.indexOf(n) : -1, dec = 4 + (gi >= 0 ? gi * (g2 ? g2.pas : 9) : 0);   // v17.10 : sur la grille, en quinconce comme en F1 (une voiture à gauche, la suivante à droite)
+      out[n] = { s: (pts[n] / tour) * L - dec * (1 - f), base: gi >= 0 ? (gi % 2 ? 1 : -1) * (g2 ? g2.lat : Math.min(2.6, pas * .75)) : (k - (nb - 1) / 2) * pas, rang: egaux && gi >= 0 ? gi + 1 : 1 + noms.filter(m => pts[m] > pts[n] + 1e-9).length, g: g2 && gi >= 0 ? 1 - f : 0, gi }; });
     noms.forEach(n => { const a = out[n]; let p = 0;
       noms.forEach(m => { if (m === n) return; let d = Math.abs(out[m].s - a.s) % L; d = Math.min(d, L - d); p = Math.max(p, clamp(1 - (d - 6) / 22, 0, 1)); });
-      a.voie = a.base * (.3 + .7 * p * p * (3 - 2 * p)); });
+      a.voie = a.base * (.3 + .7 * p * p * (3 - 2 * p)); if (a.g) a.voie += (a.base - a.voie) * a.g; });
     return out;
   }
 
@@ -11979,11 +11984,18 @@
     const S = sceneDe([o.circuit, o.ambiance || "", A.nuit, Z.atoutCol, Z.piegeCol].join("|"), () => construire(def, T, A, Z));
     const B = { sol: tampon(gl, S.sol), solOv: tampon(gl, S.solOv), piste: tampon(gl, S.piste), pisteOv: tampon(gl, S.pisteOv), eau: S.eau ? tampon(gl, S.eau) : null };
     const RO = (S.rotors || []).map(x => Object.assign({ b: tampon(gl, x) }, x));
+    // v20.52 (Théo) · météo visible (course du Grand Prix seulement, o.effets) : grand soleil = lumière dorée chaude, brume de chaleur au loin, éclats sur les carrosseries ;
+    // pluie = gerbes d'eau derrière les voitures et reflets sur la piste mouillée ; Noël = gerbes de neige ; Dune = tempête de sable. Coupé si « réduire les animations ».
+    const ANI = ANIM(), FX = !!o.effets && ANI, LGR = leger();
+    if (o.effets && A.meteo === "soleil" && !A.nuit) { A.sCol = fois(mel(A.sCol, [1, .76, .42], .45), 1.18); A.horizon = mel(A.horizon, hex("#FFC982"), .5); A.haut = mel(A.haut, hex("#7FA6D6"), .15); A.brouillard = mel(A.brouillard, hex("#F0C68C"), .55); A.brume *= 1.6; A.amb *= 1.04; A.dore = 1; }
+    if (o.effets && A.pluie) { const k = A.eclairs ? .7 : .82; A.amb *= k; A.sCol = fois(A.sCol, k); A.brouillard = mel(A.brouillard, [.46, .5, .56], .4); A.brume *= 1.5;
+      if (!A.nuit) { A.haut = mel(A.haut, hex(A.eclairs ? "#262D3A" : "#5A6472"), .6); A.horizon = mel(A.horizon, hex(A.eclairs ? "#46505E" : "#9AA3AE"), .55); } }   // ciel plus gris, lumière plus basse
+    if (!ANI) A.eclairs = 0;
     const V = ecurieDes(o.voitures).map(v => ({ v, b: tampon(gl, voiture(v)), s: 0, voie: 0, rang: 0, rot: 0, hist: [], x: 0, y: 0, z: 0, cap: 0, vit: 0 }));
     // lumières (lampadaires, projecteurs) en sprites additifs
     const LUM = S.lum, bL = gl.createBuffer(); { const d = []; LUM.forEach(l => d.push(l[0], l[1], l[2], l[3], l[4], l[5], A.nuit ? .55 : 0, l[6] * 1.6)); gl.bindBuffer(gl.ARRAY_BUFFER, bL); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(d), gl.STATIC_DRAW); }
     // pluie / neige
-    const nbP = A.pluie ? Math.round(1600 * A.pluie) : A.neige ? 1400 : 0, bP = gl.createBuffer();
+    const nbP = ANI ? Math.round((A.pluie ? 1600 * A.pluie : A.neige ? 1400 * (A.densite || 1) : 0) * (LGR ? .55 : 1)) : 0, bP = gl.createBuffer();   // v20.52 : mode léger = un peu plus de la moitié des gouttes ; « réduire les animations » = aucune
     if (nbP) { const d = [], r = alea(42); for (let i = 0; i < nbP; i++) { const x = r(), y = r(), z = r(); d.push(x, y, z, 0); if (!A.neige) d.push(x, y, z, 1); } gl.bindBuffer(gl.ARRAY_BUFFER, bP); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(d), gl.STATIC_DRAW); }
     const bFX = gl.createBuffer(), bPT = gl.createBuffer();
     const DPR = Math.min(1.5, window.devicePixelRatio || 1);
@@ -12093,7 +12105,7 @@
         gl.uniform4f(U.uTint, on ? 1 : .25, on ? .15 : .25, on ? .12 : .28, on ? 1 : 0); gl.uniformMatrix4fv(U.uM, false, modele(p0.x + n0[0] * (i - 2) * 2.2, p0.y + 7.4, p0.z + n0[1] * (i - 2) * 2.2, 0, 0, 1)); lier(gl, PL, C.FEU); gl.drawArrays(gl.TRIANGLES, 0, C.FEU.n); }
         gl.uniform4f(U.uTint, 1, 1, 1, 0); }
       // voitures
-      gl.uniform1f(U.uSpec, .55);
+      gl.uniform1f(U.uSpec, A.dore ? .9 : .55);
       const KV = I.mode === "helico" ? 1.8 : 1;   // v16.35 · vue d'hélico : voitures grossies pour rester lisibles
       const VV = I.sansVoit ? [] : V;   // v17.6 · 📺 Visite : la carte seule, sans aucune voiture
       VV.forEach(x => {
@@ -12130,6 +12142,7 @@
       // halos de lumière, feux arrière sous la pluie, feu d'artifice
       const pts = [];
       if (A.nuit || A.pluie) VV.forEach(x => pts.push(x.x - x.tx * 4.1, x.y + .7, x.z - x.tz * 4.1, 1, .15, .1, A.pluie ? .9 : .5, 7));
+      if (FX) meteoVoitures(VV, t, pts, KV);
       I.artifice.forEach(p => pts.push(p.x, p.y, p.z, p.c[0], p.c[1], p.c[2], Math.max(0, p.v), 9));
       gl.useProgram(PP.p); gl.uniformMatrix4fv(PP.U.uPV, false, PV); gl.uniform1f(PP.U.uH, Hh * .9); gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
       [PP.A.aP, PP.A.aC, PP.A.aS].forEach(a => gl.enableVertexAttribArray(a));
@@ -12138,9 +12151,20 @@
       gl.disableVertexAttribArray(PP.A.aS);
       // pluie ou neige
       if (nbP) { gl.useProgram(PR.p); gl.uniformMatrix4fv(PR.U.uPV, false, PV); gl.uniform3fv(PR.U.uCam, I.cam.e); gl.uniform1f(PR.U.uT, t); gl.uniform1f(PR.U.uV, A.neige ? (A.flocV || 7) : 60);
-        gl.uniform1f(PR.U.uLong, A.neige ? 0 : 1.6); gl.uniform1f(PR.U.uNeige, A.neige ? 1 : 0); if (A.floc) gl.uniform4f(PR.U.uC, A.floc[0], A.floc[1], A.floc[2], A.floc[3]); else gl.uniform4f(PR.U.uC, .82, .88, .95, A.neige ? .85 : .32); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.uniform1f(PR.U.uLong, A.neige ? 0 : 1.6); gl.uniform1f(PR.U.uVent, A.vent || 0); gl.uniform1f(PR.U.uNeige, A.neige ? 1 : 0); if (A.floc) gl.uniform4f(PR.U.uC, A.floc[0], A.floc[1], A.floc[2], A.floc[3]); else gl.uniform4f(PR.U.uC, .82, .88, .95, A.neige ? .85 : .32); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         gl.bindBuffer(gl.ARRAY_BUFFER, bP); gl.enableVertexAttribArray(PR.A.aS); gl.vertexAttribPointer(PR.A.aS, 4, gl.FLOAT, false, 16, 0); gl.drawArrays(A.neige ? gl.POINTS : gl.LINES, 0, A.neige ? nbP : nbP * 2); gl.disableVertexAttribArray(PR.A.aS); }
       gl.depthMask(true); gl.disable(gl.BLEND);
+    }
+    /** v20.52 · gerbes (eau, neige, sable) derrière les voitures qui roulent, reflet coloré sur la piste mouillée, éclats de soleil : des points lumineux, recalculés à chaque image (aucun état) */
+    const GERBE = A.pluie ? [.86, .91, .98, .34] : A.sable ? [.93, .74, .48, .3] : (def.amb === "noel" || A.hiver) ? [1, 1, 1, .38] : null, NG = LGR ? 6 : 12;
+    function meteoVoitures(VV, t, pts, KV) {
+      VV.forEach((x, i) => {
+        const k = clamp(x.vit / 60, 0, 1), nx = -x.tz, nz = x.tx;
+        if (GERBE && k > .08) for (let j = 0; j < NG; j++) { const h = Math.sin(j * 12.9898 + i * 78.233) * 43758.5453, u = h - Math.floor(h), ph = ((t * 2.4 + j / NG + i * .37) % 1 + 1) % 1, back = (3 + ph * 8) * KV, lat = (u - .5) * 2.6 * KV;
+          pts.push(x.x - x.tx * back + nx * lat, x.y + (.3 + ph * (1 - ph) * 3.2) * KV, x.z - x.tz * back + nz * lat, GERBE[0], GERBE[1], GERBE[2], GERBE[3] * k * (1 - ph), (4 + ph * 10) * KV); }
+        if (A.mouille) { const c = x.rgb || (x.rgb = hex(x.v.couleur || "#ffffff")); pts.push(x.x - x.tx * 1.5 * KV, x.y + .08, x.z - x.tz * 1.5 * KV, c[0], c[1], c[2], .3, 12 * KV); }
+        if (A.dore) { const e = Math.pow(Math.max(0, Math.sin(t * 1.7 + i * 2.1)), 14); if (e > .04) pts.push(x.x + x.tx * .6 * KV, x.y + 1.4 * KV, x.z + x.tz * .6 * KV, 1, .95, .78, e, (3 + 9 * e) * KV); }
+      });
     }
     // ----- boucle -----
     let raf = 0;
@@ -12167,7 +12191,7 @@
       dessiner(t, dt);
       if (o.image) o.image(api);
       // cadence : 60 i/s en mouvement, 30 au repos, rien quand tout est calme
-      const bouge = (I.anim && !I.suspendu) || I.survol || I.tir || I.joy || I.enRoute || I.artifice.length || (I.inactif < 40 && (nbP || A.eclairs || (ANIM() && I.mode !== "bord")));
+      const bouge = (I.anim && !I.suspendu) || I.survol || I.tir || I.joy || I.enRoute || I.artifice.length || (I.inactif < 40 && (nbP || A.eclairs || A.dore && FX || (ANIM() && I.mode !== "bord")));
       I.inactif += dt; if (I.anim || I.tir || I.joy) I.inactif = 0; majJoy();
       if (I.actif && bouge && document.visibilityState !== "hidden") raf = requestAnimationFrame(image); else I.endormi = true;
     }
@@ -12281,6 +12305,9 @@
       survol(dur, fin) { if (I.mode !== "helico" || !ANIM()) { if (fin) fin(); return; } I.survol = { t0: performance.now(), dur: dur || 12000, s0: 0, o0: I.orbite, fin }; reveiller(); },
       arreterSurvol() { if (I.survol) { I.survol = null; I.pan = [0, 0]; I.zoom = 1; I.incl = .72; reveiller(); } },
       ecran, ecranMonde, projeter, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim, reveiller, taille: () => ({ w: I.cssW, h: I.cssH }),
+      /** v20.52 · la météo montrée (tests) et un éclair tout de suite (captures) */
+      meteo: () => A.sable ? "sable" : A.pluie ? "pluie" : (def.amb === "noel" && A.neige && A.meteo !== "soleil" && A.meteo !== "beau") ? "neige" : A.dore ? "soleil" : null, particules: () => nbP,
+      eclair() { if (A.eclairs) { I.flash = 1; I.prochainEclair = 4; reveiller(); } },
       /** zoom de la Visite 3D (1 = vue d'ensemble, 0,12 = au plus près) et mode de caméra */
       zoom: () => I.zoom, orbite: () => I.orbite, mode: () => I.mode, survolEnCours: () => !!I.survol, cible: () => ({ x: T.cx + I.pan[0], z: T.cz + I.pan[1], r: Math.max(T.rx, T.rz) }),   // v17.35 : point visé par la caméra (jauge chaud-froid)
       /** v17.35 · recul automatique de la Visite (1 en paysage ; > 1 sur un écran en hauteur, où la caméra se place plus loin pour tout montrer) : même formule que camVoulue */
@@ -12793,6 +12820,124 @@
           if (q > .7) b.setAttribute("opacity", O.f(Math.max(0, (1 - q) / .3))); }, () => { g.remove(); lueurT.remove(); b.remove(); }); } }; }
   };
 
+  /* ============================================================
+     v20.52 (Théo) · MÉTÉO VISIBLE sur la carte 2D (purement visuelle, aucun effet sur les points)
+     Même météo que le titre (S&P depuis le 1er) : pluie, orage, grand soleil ; beau temps = rien. Adaptée au circuit :
+     à Noël la pluie devient neige (l'orage, une tempête de neige), à Dune une tempête de sable.
+     - une couche SVG fixe sous les voitures (piste mouillée plus sombre et brillante, flaques) : jamais dans les fonds cuits ;
+     - une couche animée (canvas) par-dessus : gouttes, ronds dans les flaques, reflets qui glissent sur la piste, éclaboussures derrière
+       les voitures, éclairs qui illuminent la carte, flocons, grains de sable, lumière dorée et éclats de soleil sur les voitures.
+     Mode léger : moitié moins de particules, 30 images/s, définition 1. « Réduire les animations » : aucune particule (la piste mouillée reste).
+     ============================================================ */
+  function modeMeteo(def, meteo) {
+    const th = def && def.amb, f = meteo === "orage" ? 1.6 : 1;
+    if (meteo === "pluie" || meteo === "orage") return th === "noel" ? { m: "neige", f, eclairs: 0 } : th === "desert" ? { m: "sable", f, eclairs: meteo === "orage" ? 1 : 0 } : { m: "pluie", f, eclairs: meteo === "orage" ? 1 : 0 };
+    if (meteo === "nuages" && th === "noel") return { m: "neige", f: .6, eclairs: 0 };
+    if (meteo === "soleil") return { m: "soleil", f: 1, eclairs: 0 };
+    return null;
+  }
+  function meteo2D(boite, svg, gAvant, T, def, meteo, C) {
+    const M = modeMeteo(def, meteo); if (!M) return null;
+    const NS = "http://www.w3.org/2000/svg", r = alea(97), LG = leger();
+    // ---- couche fixe (sous les voitures) ----
+    const pts = []; for (let i = 0; i <= T.N; i += 2) { const k = i % T.N; pts.push(T.X[k].toFixed(1) + " " + T.Z[k].toFixed(1)); } const d = "M" + pts.join("L") + "Z";
+    const g = document.createElementNS(NS, "g"); g.setAttribute("class", "p2-met p2-met-" + M.m); g.setAttribute("pointer-events", "none");
+    if (M.m === "pluie") {
+      const fl = []; for (let i = 0; i < 9; i++) { const s = r() * T.L, p = T.a(s, (r() < .5 ? -1 : 1) * (DEMI + 4 + r() * 10)), a = Math.atan2(p.tz, p.tx) * 180 / PI;
+        fl.push('<ellipse cx="' + p.x.toFixed(1) + '" cy="' + p.z.toFixed(1) + '" rx="' + (9 + r() * 10).toFixed(1) + '" ry="' + (3.5 + r() * 3).toFixed(1) + '" transform="rotate(' + a.toFixed(0) + " " + p.x.toFixed(1) + " " + p.z.toFixed(1) + ')" fill="rgba(140,180,230,.22)" stroke="rgba(225,238,255,.45)" stroke-width="1.2"/>'); }
+      g.innerHTML = '<rect x="-4000" y="-4000" width="9000" height="9000" fill="#0B1424" opacity="' + (M.eclairs ? .3 : .2) + '"/>' +
+        '<path d="' + d + '" fill="none" stroke="#06101E" stroke-width="' + (DEMI * 2) + '" stroke-linejoin="round" opacity=".34"/>' +
+        '<path d="' + d + '" fill="none" stroke="#D6E8FF" stroke-width="2.4" stroke-linejoin="round" stroke-dasharray="46 30 12 30" opacity=".3"/>' + fl.join("");
+    } else if (M.m === "neige") g.innerHTML = '<rect x="-4000" y="-4000" width="9000" height="9000" fill="#DCE8FF" opacity="' + (.07 * M.f).toFixed(2) + '"/>';
+    else if (M.m === "sable") g.innerHTML = '<rect x="-4000" y="-4000" width="9000" height="9000" fill="#B9773A" opacity="' + (.12 * M.f).toFixed(2) + '"/>';
+    gAvant.parentNode.insertBefore(g, gAvant);
+    if (!ANIM()) return { g, mode: M.m, stop() { g.remove(); }, redim() { }, reveiller() { } };
+    // ---- couche animée ----
+    const cv = document.createElement("canvas"); cv.className = "p2-meteo"; cv.setAttribute("aria-hidden", "true");
+    cv.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1";
+    boite.appendChild(cv); const x = cv.getContext("2d");
+    const Q = LG ? .5 : 1, DPR = LG ? 1 : Math.min(1.5, window.devicePixelRatio || 1);
+    let W = 1, H = 1, raf = 0, dern = 0, t = 0, vis = true, fini = false, prochain = 1.5 + r() * 3, flash = -1, eclair = null;
+    const P = [], R = [], E = [], prev = {};
+    function redim(w, h) { if (!w || !h) { const b = boite.getBoundingClientRect(); w = b.width; h = b.height; } W = Math.max(1, w); H = Math.max(1, h); cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); x.setTransform(DPR, 0, 0, DPR, 0, 0); remplir(); }
+    function remplir() {
+      P.length = 0; const n = Math.round((M.m === "pluie" ? 120 : M.m === "neige" ? 95 : M.m === "sable" ? 130 : 0) * M.f * Q * Math.max(.6, Math.min(2.2, W * H / (390 * 260))));
+      for (let i = 0; i < n; i++) P.push({ x: r() * W, y: r() * H, v: .6 + r() * .4, l: .5 + r() * .5, ph: r() * TAU, z: r() });
+    }
+    // monde (unités de la carte) → pixels de la boîte, sans lire la mise en page (viewBox courant + taille connue)
+    const versPx = () => { const vb = C.vb(), s = Math.min(W / vb[2], H / vb[3]); return { s, ox: (W - vb[2] * s) / 2 - vb[0] * s, oy: (H - vb[3] * s) / 2 - vb[1] * s }; };
+    function eclaboussures(m, dt) {   // derrière chaque voiture qui roule : gerbe d'eau, de neige ou de poussière
+      const vs = C.voitures(), lim = LG ? 50 : 120;
+      vs.forEach(v => { const px = m.ox + v.x * m.s, py = m.oy + v.y * m.s, a = prev[v.nom]; prev[v.nom] = [px, py];
+        if (!a || !v.roule) return; const dx = px - a[0], dy = py - a[1], sp = Math.hypot(dx, dy) / Math.max(dt, .001); if (sp < 12 || sp > 2000) return;
+        const ux = dx / Math.hypot(dx, dy), uy = dy / Math.hypot(dx, dy), nb = Math.min(LG ? 2 : 4, 1 + sp / 120);
+        for (let k = 0; k < nb && E.length < lim; k++) { const c = (r() - .5) * 2, j = 6 + r() * 4;
+          E.push({ x: px - ux * j - uy * c * 3, y: py - uy * j + ux * c * 3, vx: -ux * (25 + r() * 35) - uy * c * 30, vy: -uy * (25 + r() * 35) + ux * c * 30, t: 0, d: .28 + r() * .22, s: .8 + r() * 1.3 }); } });
+      x.fillStyle = M.m === "sable" ? "rgba(225,175,110,.75)" : M.m === "neige" ? "rgba(255,255,255,.9)" : "rgba(214,232,255,.85)";
+      for (let i = E.length - 1; i >= 0; i--) { const e = E[i]; e.t += dt; if (e.t > e.d) { E.splice(i, 1); continue; } e.x += e.vx * dt; e.y += e.vy * dt; e.vx *= .9; e.vy *= .9;
+        x.globalAlpha = 1 - e.t / e.d; x.beginPath(); x.arc(e.x, e.y, e.s * (1 + e.t / e.d * (M.m === "pluie" ? 1 : 1.8)), 0, TAU); x.fill(); }
+      x.globalAlpha = 1;
+    }
+    function image(now) {
+      raf = 0; if (fini || !cv.isConnected) return; if (!vis || document.hidden) { dern = 0; return; }
+      const vite = C.enCourse() && !LG, pasMin = vite ? 15 : 31;
+      if (dern && now - dern < pasMin) { raf = requestAnimationFrame(image); return; }
+      const dt = Math.min(.06, dern ? (now - dern) / 1000 : .016); dern = now; t += dt;
+      x.clearRect(0, 0, W, H); const m = versPx();
+      if (M.m === "pluie") {
+        // reflets qui glissent sur la piste mouillée
+        x.lineCap = "round"; x.strokeStyle = "rgba(235,245,255,.55)"; x.lineWidth = 1.6;
+        for (let i = 0; i < 6; i++) { const s = (i / 6 + t * .035) * T.L, a = T.a(s, 0), px = m.ox + a.x * m.s, py = m.oy + a.z * m.s, l = 7; x.globalAlpha = .35 + .3 * Math.sin(t * 2 + i); x.beginPath(); x.moveTo(px - a.tx * l, py - a.tz * l); x.lineTo(px + a.tx * l, py + a.tz * l); x.stroke(); }
+        // ronds dans l'eau
+        if (R.length < (LG ? 8 : 16) * M.f && r() < dt * 26 * M.f * Q) R.push({ x: r() * W, y: r() * H, t: 0 });
+        x.strokeStyle = "rgba(220,235,255,.8)"; x.lineWidth = 1;
+        for (let i = R.length - 1; i >= 0; i--) { const o = R[i]; o.t += dt; if (o.t > .6) { R.splice(i, 1); continue; } x.globalAlpha = .7 * (1 - o.t / .6); x.beginPath(); x.ellipse(o.x, o.y, 1 + o.t * 11, .5 + o.t * 6, 0, 0, TAU); x.stroke(); }
+        // gouttes (en biais, un peu de vent)
+        x.globalAlpha = 1; x.strokeStyle = "rgba(205,225,255,.5)"; x.lineWidth = 1; x.beginPath();
+        P.forEach(p => { p.y += (520 + 260 * p.v) * dt; p.x += 90 * dt; if (p.y > H + 14) { p.y = -14; p.x = r() * W; } if (p.x > W + 10) p.x -= W + 20; const l = 9 + 7 * p.l; x.moveTo(p.x, p.y); x.lineTo(p.x - l * .17, p.y - l); }); x.stroke();
+      } else if (M.m === "neige") {
+        x.fillStyle = "#fff"; const vent = 22 * (M.f - .6);
+        P.forEach(p => { p.y += (24 + 30 * p.v) * M.f * dt; p.x += (Math.sin(t * .9 + p.ph) * 14 + vent) * dt; if (p.y > H + 4) { p.y = -4; p.x = r() * W; } if (p.x > W + 4) p.x = -4; if (p.x < -4) p.x = W + 4;
+          x.globalAlpha = .55 + .4 * p.z; x.beginPath(); x.arc(p.x, p.y, .8 + 1.6 * p.l, 0, TAU); x.fill(); }); x.globalAlpha = 1;
+      } else if (M.m === "sable") {
+        const rafale = .5 + .5 * Math.sin(t * .7) * Math.sin(t * .31 + 1);
+        x.fillStyle = "rgba(176,112,52," + ((.12 + .12 * rafale) * M.f).toFixed(3) + ")"; x.fillRect(0, 0, W, H);
+        // nuages de poussière qui traversent la carte
+        for (let i = 0; i < 4; i++) { const cx = ((i * .29 + t * (.05 + .02 * i)) % 1.4 - .2) * W, cy = H * (.2 + .2 * i) + Math.sin(t * .4 + i) * 14, rr = Math.max(W, H) * (.22 + .06 * i), gg = x.createRadialGradient(cx, cy, 0, cx, cy, rr);
+          gg.addColorStop(0, "rgba(160,98,44," + ((.16 + .1 * rafale) * M.f).toFixed(3) + ")"); gg.addColorStop(1, "rgba(160,98,44,0)"); x.fillStyle = gg; x.fillRect(cx - rr, cy - rr, rr * 2, rr * 2); }
+        x.strokeStyle = "rgba(120,74,30,.5)"; x.lineWidth = 1.2; x.lineCap = "round"; x.beginPath();
+        P.forEach(p => { p.x += (180 + 200 * p.v) * (.7 + .6 * rafale) * dt; p.y += Math.sin(t * 2 + p.ph) * 12 * dt; if (p.x > W + 12) { p.x = -12; p.y = r() * H; } const l = 4 + 8 * p.l; x.moveTo(p.x, p.y); x.lineTo(p.x - l, p.y + l * .08); }); x.stroke();
+      } else if (M.m === "soleil") {
+        const sx = W * .1, sy = -H * .08, D = Math.hypot(W, H), b = .88 + .12 * Math.sin(t * .6), g0 = x.createRadialGradient(sx, sy, 0, sx, sy, D * .95);
+        g0.addColorStop(0, "rgba(255,228,150," + (.6 * b).toFixed(3) + ")"); g0.addColorStop(.22, "rgba(255,205,115," + (.26 * b).toFixed(3) + ")"); g0.addColorStop(.6, "rgba(255,182,80," + (.08 * b).toFixed(3) + ")"); g0.addColorStop(1, "rgba(255,170,60,0)");
+        x.fillStyle = "rgba(255,168,60,.07)"; x.fillRect(0, 0, W, H);   // toute la carte un peu plus chaude
+        x.globalCompositeOperation = "lighter"; x.fillStyle = g0; x.fillRect(0, 0, W, H);
+        // rayons qui tournent doucement
+        x.fillStyle = "rgba(255,226,160,.09)";
+        for (let i = 0; i < 4; i++) { const a = .2 + i * .3 + Math.sin(t * .15 + i) * .06, l = D * 1.2, e = .03 + .015 * (i % 2); x.beginPath(); x.moveTo(sx, sy); x.lineTo(sx + Math.cos(a - e) * l, sy + Math.sin(a - e) * l); x.lineTo(sx + Math.cos(a + e) * l, sy + Math.sin(a + e) * l); x.fill(); }
+        // reflets de l'objectif, le long de la diagonale
+        [[.32, 13, .1], [.5, 6, .16], [.74, 22, .07], [.9, 9, .1]].forEach(([k, rr, al]) => { x.fillStyle = "rgba(255,232,175," + (al * b).toFixed(3) + ")"; x.beginPath(); x.arc(sx + (W * .62 - sx) * k * 1.4, sy + (H * .7 - sy) * k * 1.4, rr, 0, TAU); x.fill(); });
+        // éclats de soleil sur les carrosseries
+        x.strokeStyle = "#FFF6D8"; x.lineCap = "round";
+        C.voitures().forEach((v, i) => { const e = Math.pow(Math.max(0, Math.sin(t * 1.7 + i * 2.1)), 14); if (e < .03) return; const px = m.ox + v.x * m.s + 3, py = m.oy + v.y * m.s - 3, l = 3 + 6 * e;
+          x.globalAlpha = e; x.lineWidth = 1.4; x.beginPath(); x.moveTo(px - l, py); x.lineTo(px + l, py); x.moveTo(px, py - l); x.lineTo(px, py + l); x.stroke(); x.lineWidth = .8; x.beginPath(); x.moveTo(px - l * .5, py - l * .5); x.lineTo(px + l * .5, py + l * .5); x.moveTo(px + l * .5, py - l * .5); x.lineTo(px - l * .5, py + l * .5); x.stroke(); });
+        x.globalAlpha = 1; x.globalCompositeOperation = "source-over";
+      }
+      if (M.m !== "soleil") eclaboussures(m, dt);
+      // ⚡ éclairs : la carte s'illumine (double éclat), un trait zigzague dans le ciel
+      if (M.eclairs) { prochain -= dt; if (prochain < 0) { flash = 0; prochain = 2.8 + r() * 5.5; const x0 = W * (.15 + r() * .7), l = [[x0, -4]]; let px = x0, py = -4; while (py < H * (.45 + r() * .35)) { py += 10 + r() * 16; px += (r() - .5) * 26; l.push([px, py]); } eclair = l; }
+        if (flash >= 0) { flash += dt; const f = flash < .07 ? .55 : flash < .13 ? .08 : flash < .2 ? .42 : Math.max(0, .42 * (1 - (flash - .2) / .45));
+          x.fillStyle = "rgba(232,240,255," + f.toFixed(3) + ")"; x.fillRect(0, 0, W, H);
+          if (eclair && flash < .26) { x.lineJoin = "round"; [[5, "rgba(190,210,255,.35)"], [1.6, "#FFFFFF"]].forEach(([lw, c]) => { x.strokeStyle = c; x.lineWidth = lw; x.beginPath(); eclair.forEach((q, i) => i ? x.lineTo(q[0], q[1]) : x.moveTo(q[0], q[1])); x.stroke(); }); }
+          if (flash > .7) flash = -1; } }
+      raf = requestAnimationFrame(image);
+    }
+    const io = window.IntersectionObserver ? new IntersectionObserver(l => { vis = l[l.length - 1].isIntersecting; if (vis) reveiller(); }) : null; if (io) io.observe(boite);
+    const onVis = () => { if (!document.hidden) reveiller(); }; document.addEventListener("visibilitychange", onVis);
+    function reveiller() { if (!raf && !fini) raf = requestAnimationFrame(image); }
+    redim(); reveiller();
+    return { g, cv, mode: M.m, eclair() { prochain = 0; reveiller(); }, redim(w, h) { redim(w, h); reveiller(); }, reveiller, stop() { fini = true; if (raf) cancelAnimationFrame(raf); if (io) io.disconnect(); document.removeEventListener("visibilitychange", onVis); cv.remove(); g.remove(); } };
+  }
   function monter2D(boite, o) {
     const def = TRACES[o.circuit] || TRACES.melbourne, T = echantillonner(def), Z = zones(T), NS = "http://www.w3.org/2000/svg";
     const m = 34, minx = T.cx - T.rx - m, minz = T.cz - T.rz - m, w = T.rx * 2 + 2 * m, h = T.rz * 2 + 2 * m;
@@ -12830,12 +12975,18 @@
     ecurieDes(o.voitures).forEach(v => { const g = document.createElementNS(NS, "g"); g.setAttribute("class", "p2-car" + (v.moi ? " ici" : "") + (v.ecurie && v.livree && v.livree !== "couleur" ? " lv-" + v.livree : "")); g.innerHTML = '<g transform="scale(' + k.toFixed(2) + ')">' + (v.moi ? '<circle r="' + (marqueLivree(v) ? 12.5 : 10.5) + '" fill="none" stroke="' + v.couleur + '" stroke-width="1.6" opacity=".55"/>' : "") + marque2D(v) + '<text y="3" text-anchor="middle"></text>' + (v.casqueSvg ? '<g class="p2-casque" transform="translate(9.4 6.2) scale(.27)">' + v.casqueSvg + "</g>" : "") + "</g>"; gV.appendChild(g);
       const tr = traineeSvg2D(v, k, gTr); V[v.nom] = { g, t: g.querySelector("text"), x: 0, y: 0, couleur: v.couleur, tr, hist: [], v }; });
     const I = { pts: Object.assign({}, o.pts || {}), anim: null, ordre: (o.voitures || []).map(v => v.nom), e: 1 };
+    let VBc = [minx, minz, w, h], taille = { w: 1, h: 1 };   // viewBox courant (zoom du plein écran) et taille de la boîte : la météo place ses effets sans lire la mise en page
+    /** v20.52 (Théo) · sur la grille : écart entre deux voitures = 19 px à l'écran (pastilles des pilotes jamais l'une sur l'autre), quinconce marqué */
+    function grille2D() { if (!o.grille) return null; let W = taille.w, H = taille.h; if (W < 50) { const b = boite.getBoundingClientRect(); W = b.width; H = b.height; }
+      const sc = W >= 50 ? Math.min(W / w, H / h) : 0; return { pas: sc ? clamp(19 / sc, 9, 90) : 30, lat: 7 }; }
+    const MET = o.effets ? (() => { try { return meteo2D(boite, svg, gTr, T, def, o.meteo, { vb: () => VBc, enCourse: () => !!(I.anim && !I.suspendu), voitures: () => Object.keys(V).map(n => ({ nom: n, x: V[n].x, y: V[n].y, roule: !!I.anim && !I.suspendu })) }); } catch (e) { return null; } })() : null;
     const gEv = svg.querySelector(".p2-ev"), EVf = gEv && EVENEMENTS[def.peint];   // V16.35 : événements en course
     let EV = null; try { EV = EVf ? EVf({ svg, g: gEv, T, KU, V, lieux: (CP && CP.lieux) || {}, anime: ANIM() }) : null; } catch (e) { EV = null; }
     let raf = 0;
     function poser() {
-      const c = cibles(I.pts, o.tour || 25, T.L, I.ordre, o.grille);
+      const c = cibles(I.pts, o.tour || 25, T.L, I.ordre, o.grille, grille2D());
       Object.entries(c).forEach(([n, t]) => { const v = V[n]; if (!v) return; const p = T.a(t.s, t.voie * .8); v.x = p.x; v.y = p.z; v.g.setAttribute("transform", "translate(" + p.x.toFixed(1) + " " + p.z.toFixed(1) + ")"); v.t.textContent = t.rang;
+        v.gs = t.g > .5 && !I.anim ? (t.base < 0 ? -1 : 1) : 0; if (v.gs) { v.nx = -p.tz; v.nz = p.tx; }   // v20.52 : sur la grille, la pastille du pilote se pose de SON côté de la piste
         if (v.tr) majTrainee2D(v, p, k, !!I.anim); });
       // l'ordre d'affichage : le premier dessus
       Object.entries(c).sort((a, b) => b[1].rang - a[1].rang).forEach(([n]) => V[n] && gV.appendChild(V[n].g));
@@ -12848,7 +12999,12 @@
       I.e = e; if (a.scen) { I.pts = a.scen(e); if (EV && EV.permuter) try { EV.permuter(e, I.pts); } catch (er) { } } else Object.keys(a.a).forEach(n => I.pts[n] = (a.de[n] || 0) + ((a.a[n] || 0) - (a.de[n] || 0)) * k); poser();
       if (e < 1) raf = requestAnimationFrame(boucle); else { I.anim = null; if (a.fin) a.fin(); }
     }
-    function ecran(n) { const v = V[n]; if (!v) return null; const ctm = svg.getScreenCTM(), r = boite.getBoundingClientRect(); if (!ctm) return null; const p = svg.createSVGPoint(); p.x = v.x; p.y = v.y - 9 * k; const q = p.matrixTransform(ctm); return { x: q.x - r.left, y: q.y - r.top, vis: true }; }
+    function ecran(n) { const v = V[n]; if (!v) return null; const ctm = svg.getScreenCTM(), r = boite.getBoundingClientRect(); if (!ctm) return null; const p = svg.createSVGPoint(); p.x = v.x; p.y = v.y - (v.gs ? 0 : 9 * k); const q = p.matrixTransform(ctm);
+      if (v.gs) {   // v20.52 (Théo) · grille de départ en quinconce : une pastille d'un côté de la piste, la suivante de l'autre (la place manque au bord : 2e rang du côté libre)
+        const cx = q.x - r.left, cy = q.y - r.top, sc = Math.hypot(ctm.a, ctm.b) || 1, R0 = 8 * k * sc + 18, dedans = (a, b) => a > 16 && a < r.width - 16 && b > 20 && b < r.height - 20;
+        let d = v.gs, R = R0, X = cx + v.nx * d * R, Y = cy + v.nz * d * R; if (!dedans(X, Y)) { d = -d; R = R0 + 40; X = cx + v.nx * d * R; Y = cy + v.nz * d * R; }
+        return { x: X, y: Y, vis: true, centre: true }; }
+      return { x: q.x - r.left, y: q.y - r.top, vis: true }; }
     function ecranMonde(s, lat) { const ctm = svg.getScreenCTM(), r = boite.getBoundingClientRect(); if (!ctm) return null; const t = T.a(s, lat || 0), p = svg.createSVGPoint(); p.x = t.x; p.y = t.z; const q = p.matrixTransform(ctm); return { x: q.x - r.left, y: q.y - r.top, vis: true }; }
     /* v17.10 (Théo) · en plein écran, la carte 2D se zoome (pincer, molette, double-toucher) et se déplace (glisser), avec un bouton « Recentrer ».
        On change le viewBox du SVG : les voitures, les têtes et les bulles (placées par getScreenCTM) suivent sans rien recalculer d'autre. */
@@ -12858,7 +13014,7 @@
     const versMonde = (px, py) => { const { r, s } = echelle(); return [ZM.c[0] + (px - r.left - r.width / 2) / s, ZM.c[1] + (py - r.top - r.height / 2) / s]; };
     function appliquerVB() { ZM.raf = 0; const z = ZM.z = clamp(ZM.z, 1, 5), vw = w / z, vh = h / z;
       ZM.c = [clamp(ZM.c[0], minx + vw / 2, minx + w - vw / 2), clamp(ZM.c[1], minz + vh / 2, minz + h - vh / 2)];
-      svg.setAttribute("viewBox", (ZM.c[0] - vw / 2).toFixed(1) + " " + (ZM.c[1] - vh / 2).toFixed(1) + " " + vw.toFixed(1) + " " + vh.toFixed(1)); rec.hidden = z < 1.02; if (o.image) o.image(api); }
+      VBc = [ZM.c[0] - vw / 2, ZM.c[1] - vh / 2, vw, vh]; svg.setAttribute("viewBox", VBc[0].toFixed(1) + " " + VBc[1].toFixed(1) + " " + vw.toFixed(1) + " " + vh.toFixed(1)); rec.hidden = z < 1.02; if (o.image) o.image(api); }
     const majVB = () => { if (!ZM.raf) ZM.raf = requestAnimationFrame(appliquerVB); };
     /** zoome d'un facteur f en gardant le point (px, py) de l'écran sous le doigt */
     const zoomer = (f, px, py) => { const W0 = versMonde(px, py), { r } = echelle(), z = clamp(ZM.z * f, 1, 5), s = Math.min(r.width / w, r.height / h) * z;
@@ -12879,22 +13035,23 @@
     ["pointerup", "pointercancel"].forEach(t => svg.addEventListener(t, lacher));
     svg.addEventListener("wheel", ev => { if (!ZM.on) return; ev.preventDefault(); zoomer(Math.exp(-ev.deltaY * .0015), ev.clientX, ev.clientY); }, { passive: false });
     svg.addEventListener("click", ev => { if (ZM.on && ZM.glisse) return; const r = boite.getBoundingClientRect(); let best = null, bd = 30; Object.keys(V).forEach(n => { const e = ecran(n); if (!e) return; const dd = Math.hypot(e.x + r.left - ev.clientX, e.y + 10 + r.top - ev.clientY); if (dd < bd) { bd = dd; best = n; } }); if (best && o.toucher) o.toucher(best); });
-    let taille = { w: 1, h: 1 };
-    const ro = window.ResizeObserver ? new ResizeObserver(() => { const r = boite.getBoundingClientRect(); taille = { w: r.width, h: r.height }; if (o.image) o.image(api); }) : null; if (ro) ro.observe(boite);
+    const ro = window.ResizeObserver ? new ResizeObserver(() => { const r = boite.getBoundingClientRect(), g0 = taille.w; taille = { w: r.width, h: r.height }; if (MET) MET.redim(r.width, r.height); if (o.grille && !I.anim && Math.abs(g0 - r.width) > 1) poser(); if (o.image) o.image(api); }) : null; if (ro) ro.observe(boite);
     const api = {
       type: "2d", T, zones: Z,
       equipes: () => Object.keys(V).map(n => ({ nom: n, livree: V[n].v.livree || null, casque: V[n].v.casqueModele || null, finition: V[n].v.finition || null, trainee: V[n].v.trainee || null, numero: V[n].v.numero || null })),
       placer(pts) { I.anim = null; I.suspendu = null; I.pts = Object.assign({}, pts); poser(); },
       regler(x) { Object.assign(o, x); },
+      /** v20.52 · écart de la grille (unités de la piste) : la démo part exactement de là */
+      pasGrille: () => { const g = grille2D(); return g ? g.pas : 9; }, meteo: () => MET ? MET.mode : null, eclair() { if (MET && MET.eclair) MET.eclair(); },
       suspendre(b) { if (!I.anim) { I.suspendu = null; return; } if (b && !I.suspendu) { I.suspendu = performance.now(); if (raf) { cancelAnimationFrame(raf); raf = 0; } }
         else if (!b && I.suspendu) { I.anim.t0 += performance.now() - I.suspendu; I.suspendu = null; if (!raf) raf = requestAnimationFrame(boucle); } },
       suspendu: () => !!(I.anim && I.suspendu),
       jouer(de, a, duree, fin) { if (!ANIM()) { api.placer(a); if (fin) fin(); return; } I.suspendu = null; I.pts = Object.assign({}, de); poser(); I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: performance.now(), duree: Math.min(duree || 2600, 3200), fin }; if (!raf) raf = requestAnimationFrame(boucle); },
       jouerScenario(scen, duree, fin) { if (EV && EV.raz) EV.raz(); if (!ANIM()) { api.placer(scen(1)); if (fin) fin(); return; } I.suspendu = null; I.e = 0; I.pts = scen(0); poser(); I.anim = { scen, de: scen(0), a: scen(1), t0: performance.now(), duree, fin }; if (!raf) raf = requestAnimationFrame(boucle); },
-      camera() { }, focus() { }, voitures() { }, survol(d, fin) { if (fin) fin(); }, arreterSurvol() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); if (o.image) o.image(api); }, reveiller() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); },   // V16.16 : la course reprend si la piste a été détachée
+      camera() { }, focus() { }, voitures() { }, survol(d, fin) { if (fin) fin(); }, arreterSurvol() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); if (MET) MET.reveiller(); if (o.image) o.image(api); }, reveiller() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); if (MET) MET.reveiller(); },   // V16.16 : la course reprend si la piste a été détachée
       /** v17.10 · zoom et déplacement de la carte (plein écran) : true pour l'activer, false pour l'arrêter et recentrer */
       zoom2D(b) { ZM.on = !!b; svg.style.touchAction = b ? "none" : ""; svg.classList.toggle("zoomable", ZM.on); if (!b) recentrer(); },
-      detruire() { if (raf) cancelAnimationFrame(raf); if (ZM.raf) cancelAnimationFrame(ZM.raf); if (ro) ro.disconnect(); svg.remove(); rec.remove(); }
+      detruire() { if (raf) cancelAnimationFrame(raf); if (ZM.raf) cancelAnimationFrame(ZM.raf); if (ro) ro.disconnect(); if (MET) MET.stop(); svg.remove(); rec.remove(); }
     };
     poser();
     return api;
