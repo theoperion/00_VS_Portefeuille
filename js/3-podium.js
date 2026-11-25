@@ -309,7 +309,7 @@ const ITEMS = {
   livree: { couleur: "Couleur", chrome: "Chrome", or: "Or", neon: "Néon", arcenciel: "Prisme", oranime: "Or vivant", platine: "Platine", rubis: "Rubis", galaxie: "Galaxie", orrose: "Or rose", chocolat: "Chocolat fondant", carte: "Carte à jouer", ver: "Peau des sables", rayures: "Rayures", damier: "Damier", bicolore: "Bicolore", flammes: "Flammes" },
   trainee: { simple: "Simple", halo: "Halo", flammes: "Flammes", etincelles: "Étincelles", comete: "Comète", supernova: "Supernova", turbo: "Turbo", arcenciel: "Arc-en-ciel", cables: "Câbles d'acier", flocons: "Flocons", sabre: "Sabre lumineux", glitch: "Faille", pointilles: "Pointillés", double: "Double", ruban: "Ruban", fumee: "Fumée" },
   klaxon: { confettis: "Confettis", damier: "Damier", feu: "Feu d'artifice", parade: "Parade", billets: "Pluie de billets", fanfare: "Fanfare royale", cibles: "Dans le mille", fusees: "Décollage", trophees: "Pluie de trophées", ouvriers: "Fanfare des petits ouvriers", pouet: "Pouet", trompette: "Trompette", sifflet: "Sifflet" },
-  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon", cheval: "Cheval de bois", hiver26: "Hiver 2026", chercheur: "Chercheur de Noël", chercheuror: "Chercheur de Noël d'or", recrue: "Recrue 2026" }
+  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon", cheval: "Cheval de bois", hiver26: "Hiver 2026", hiverdore: "Hiver 2026 doré", chercheur: "Chercheur de Noël", chercheuror: "Chercheur de Noël d'or", recrue: "Recrue 2026" }
 };
 const BASE_ECURIE = { casque: "uni", circuit: "classique", fond: "couleur", finition: "aucune", livree: "couleur", trainee: "simple", klaxon: "confettis", plaque: "aucune" };
 /* v20.61 (Théo, 25/11) · objets de DÉPART en plus de la série : à tout le monde, dès l'ouverture de l'écurie (1/12/2026). Les objets génériques
@@ -337,6 +337,11 @@ function gagnantsTicket() { return TICKETS && Array.isArray(TICKETS.gagnants) ? 
 const TICKET_MOIS = { debut: new Date(2027, 9, 1), fin: new Date(2027, 10, 1), regles: new Date(2027, 0, 1) };
 /* 🎄 Souvenir du tour de chauffe (calendrier de l'Avent, case du 24 décembre 2026, js/10-avent.js) : offert à CHAQUE pilote, à porter dès le 24/12/2026 */
 const GAINS_SOUVENIR = [["plaque", "hiver26"], ["trainee", "flocons"]], SOUVENIR_DES = new Date(2026, 11, 24);
+/* 🏅 (Théo, 25/11) plaque « Hiver 2026 » DORÉE : en plus du souvenir, pour chaque pilote qui a ouvert les 24 cases du calendrier, chacune le jour même.
+   Compté par le SERVEUR (Avent.js : liste dores, dès le 24/12/2026, publique comme celle des chercheurs) : changer la date du téléphone n'y fait rien. */
+const GAIN_DORE = ["plaque", "hiverdore"];
+function estGainDore(slot, id) { return slot === GAIN_DORE[0] && id === GAIN_DORE[1]; }
+function aventDore(nom) { try { return !!nom && typeof aventDores === "function" && aventDores().includes(nom); } catch (e) { return false; } }
 /* v20.62 (Théo, 25/11) · 🎁 plaque « Chercheur de Noël » : pour chaque pilote qui trouve le trésor de décembre 2026 (l'Atelier du Père Noël, tour de chauffe) ;
    le PREMIER a la version dorée (exclusive). Aucun point, gardée pour toujours. Déduite de la liste PUBLIQUE des chercheurs du trésor
    (TRESORS.l[].chercheurs : nom et jour, dans l'ordre ; jamais où), comme la pastille des éclats : aucun changement serveur. L'aperçu admin ne donne rien. */
@@ -389,6 +394,7 @@ function debloques(nom) {
   }
   if (souvenirOuvert()) GAINS_SOUVENIR.forEach(g => o.add(g.join(".")));
   { const ch = chercheursNoel(), i = ch.findIndex(x => x.nom === nom); if (i >= 0) { o.add(GAIN_CHERCHEUR.join(".")); if (i === 0) o.add(GAIN_CHERCHEUR_OR.join(".")); } }   // 🎁 Chercheur de Noël   // 🎄 souvenir du tour de chauffe, pour tous (dès le 24/12/2026)
+  if (aventDore(nom)) o.add(GAIN_DORE.join("."));   // 🏅 Hiver 2026 doré : 24 cases sur 24, le jour même (liste du serveur)
   if (recrueChauffe(nom)) o.add(GAIN_RECRUE.join("."));   // 🔰 Recrue 2026 : a joué le tour de chauffe (dès le 1/1/2027)
   if (D.premierMillion && D.premierMillion.nom === nom) GAINS_MILLION.forEach(g => o.add(g.join(".")));
   succesDe(nom).forEach(x => o.add(x.gain.join(".")));                      // 🏅 l'objet commun : pour chacun qui réussit
@@ -415,6 +421,7 @@ function origineItem(slot, id) {
   if (estGainTicket(slot, id)) return { ticket: true, legende: true };
   if (estDepart(slot, id)) return { depart: true };
   if (estGainRecrue(slot, id)) return { souvenir: true, recrue: true };
+  if (estGainDore(slot, id)) return { souvenir: true, dore: true };
   if (GAINS_SOUVENIR.some(g => g[0] === slot && g[1] === id)) return { souvenir: true };
   if (estGainChercheur(slot, id)) return { souvenir: true, chercheur: true, exclusif: id === GAIN_CHERCHEUR_OR[1] ? { id: "chercheuror", nom: "premier chercheur de Noël", ico: "🥇" } : null };
   { const m = typeof mjOrigine === "function" && mjOrigine(slot, id); if (m) return m; }   // 🎲 plaque du meilleur d'un mini-jeu (js/9-minijeux.js) : exclusif doré
@@ -452,11 +459,11 @@ function plaqueDe(nom) {
   if (!saisonVisible()) return "";
   const p = equipDe(nom).plaque;
   if (p === "aucune") return "";
-  const o = origineItem("plaque", p), quoi = o.chercheur ? "trésor de l'Atelier du Père Noël" + (p === GAIN_CHERCHEUR_OR[1] ? " (le premier)" : "") : o.exclusif ? "succès doré « " + o.exclusif.nom + " » (le premier)" : o.succes ? "succès « " + o.succes.nom + " »" : o.monde ? "trophée du monde « " + nomMonde(o.monde) + " »" : o.gant ? "Gant de l'infini complet" : "";
+  const o = origineItem("plaque", p), quoi = o.dore ? "calendrier de l'Avent ouvert 24 jours sur 24" : o.chercheur ? "trésor de l'Atelier du Père Noël" + (p === GAIN_CHERCHEUR_OR[1] ? " (le premier)" : "") : o.exclusif ? "succès doré « " + o.exclusif.nom + " » (le premier)" : o.succes ? "succès « " + o.succes.nom + " »" : o.monde ? "trophée du monde « " + nomMonde(o.monde) + " »" : o.gant ? "Gant de l'infini complet" : "";
   return '<span class="plaque' + classePlaque(p) + '" data-bdg="' + esc("Plaque « " + ITEMS.plaque[p] + " » de " + nom + (quoi ? ", gagnée avec le " + quoi : o.ticket ? ", gagnée avec le 🎫 ticket d'or de la Chocolaterie" : o.mj ? ", gagnée comme 🥇 meilleur du mini-jeu de " + MOIS_L[o.mj % 100 - 1] : o.souvenir ? ", souvenir du tour de chauffe (décembre 2026)" : "") + ".") + '">' + iconePlaque(p) + esc(ITEMS.plaque[p]) + "</span> ";
 }
 /** v20.46 · plaques émaillées à part : Ratatouille (plaque de rue parisienne, bleue), Ticket d'or (feuille d'or), Carré d'as, et les plaques des mini-jeux ; les autres restent en métal */
-function classePlaque(id) { return ["ratatouille", "ticketor", "carredas", "epice", "voliere", "cheshire", "precieux", "eywa", "kyber", "toquedor", "joyce", "ithaque", "bataillon", "cheval", "hiver26", "chercheur", "chercheuror", "recrue"].includes(id) ? " pl-" + id : ""; }
+function classePlaque(id) { return ["ratatouille", "ticketor", "carredas", "epice", "voliere", "cheshire", "precieux", "eywa", "kyber", "toquedor", "joyce", "ithaque", "bataillon", "cheval", "hiver26", "hiverdore", "chercheur", "chercheuror", "recrue"].includes(id) ? " pl-" + id : ""; }
 /** leur petit dessin, à nous : un tian de légumes en rosace (Ratatouille), un ticket doré (Ticket d'or) */
 function iconePlaque(id) {
   if (id === "ratatouille") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#F4EBD6" stroke="#8A5A2B" stroke-width="1"/>' +
@@ -482,6 +489,9 @@ function iconePlaque(id) {
     '<circle cx="14" cy="12.6" r="1.5" fill="#15171B"/><circle cx="12.4" cy="14.6" r="1.5" fill="#15171B"/><circle cx="15.6" cy="14.6" r="1.5" fill="#15171B"/><path d="M14 14.4L13.4 17H14.6Z" fill="#15171B"/></svg>';
   if (id === "hiver26") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#1E4E8C" stroke="#CFEFFF" stroke-width="1"/><g stroke="#fff" stroke-width="1.3" stroke-linecap="round">' +
     [0, 60, 120].map(a => '<path d="M10 3.6V16.4M10 5.6 8.4 4.2M10 5.6 11.6 4.2M10 14.4 8.4 15.8M10 14.4 11.6 15.8" transform="rotate(' + a + ' 10 10)"/>').join("") + '</g><circle cx="10" cy="10" r="1.6" fill="#CFEFFF"/></svg>';
+  if (id === "hiverdore") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><defs><radialGradient id="pl-hd" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#FFF6CC"/><stop offset=".55" stop-color="#F7CF55"/><stop offset="1" stop-color="#B7791F"/></radialGradient></defs>' +   // 🏅 le flocon d'Hiver 2026, en or, sur médaille
+    '<circle cx="10" cy="10" r="9" fill="url(#pl-hd)" stroke="#7A4A0C" stroke-width="1"/><circle cx="10" cy="10" r="7.2" fill="none" stroke="#FFF6CC" stroke-width=".5" opacity=".8"/><g stroke="#1E4E8C" stroke-width="1.3" stroke-linecap="round">' +
+    [0, 60, 120].map(a => '<path d="M10 4.2V15.8M10 6 8.6 4.8M10 6 11.4 4.8M10 14 8.6 15.2M10 14 11.4 15.2" transform="rotate(' + a + ' 10 10)"/>').join("") + '</g><circle cx="10" cy="10" r="1.6" fill="#FFF6CC" stroke="#1E4E8C" stroke-width=".6"/><path d="M15.6 2.2l.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5Z" fill="#fff"/></svg>';
   if (id === "recrue") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.4 17 4V9.6C17 13.8 14 16.9 10 18.6 6 16.9 3 13.8 3 9.6V4Z" fill="#26313C" stroke="#9FE3C4" stroke-width="1"/>' +   // v20.70 · 🔰 Recrue 2026 : un écusson, deux chevrons de recrue
     '<path d="M6 9.4 10 6.6 14 9.4M6 12.8 10 10 14 12.8" fill="none" stroke="#9FE3C4" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="15.2" r=".9" fill="#E9EEF3"/></svg>';
   if (id === "ticketor") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M1 2H23V6A2 2 0 0 0 23 10V14H1V10A2 2 0 0 0 1 6Z" fill="#F7CF55" stroke="#7A4A0C" stroke-width="1"/><path d="M6 2.5V13.5" stroke="#7A4A0C" stroke-width=".7" stroke-dasharray="1.2 1"/><path d="M14 4.6L15 7 17.6 7.2 15.6 8.8 16.2 11.4 14 10 11.8 11.4 12.4 8.8 10.4 7.2 13 7Z" fill="#FFF6CC" stroke="#9A6716" stroke-width=".5"/></svg>';
@@ -773,6 +783,7 @@ function texteOrigineItem(qui, slot, id) {
   if (org.chercheur) { const ch = chercheursNoel(), i = ch.findIndex(x => x.nom === qui), j = i >= 0 ? ch[i].j : 0, jour = j ? (j % 100) + "/12" : "", or = id === GAIN_CHERCHEUR_OR[1];
     return { t: "🎁 Souvenir · trésor de l'Atelier du Père Noël" + (or ? " · 🥇" : ""), p: or ? (i === 0 ? "À toi : trouvé le trésor de l'Atelier du Père Noël" + (jour ? " le " + jour : "") + ", 🥇 le premier." : ch.length ? "Réservée au premier qui a trouvé le trésor de l'Atelier du Père Noël : " + ch[0].nom + "." : "Réservée au premier qui trouvera le trésor de l'Atelier du Père Noël (décembre 2026).")
       : i >= 0 ? "Trouvé le trésor de l'Atelier du Père Noël" + (jour ? " le " + jour : "") + (i === 0 ? " · 🥇 le premier" : "") + "." : "Pour chaque pilote qui trouve le trésor de l'Atelier du Père Noël (décembre 2026)." }; }
+  if (org.dore) return { t: "🏅 Souvenir · calendrier de l'Avent, 24 sur 24", p: ouvert ? "À toi : tu as ouvert les 24 cases du calendrier de l'Avent, chacune le jour même. Elle est à toi pour toujours, aucun point." : "Pour chaque pilote qui ouvre les 24 cases du calendrier de l'Avent (décembre 2026), chacune le jour même." };
   if (org.recrue) return { t: "🔰 Souvenir · Recrue 2026", p: ouvert ? "À toi : tu as joué le tour de chauffe de décembre 2026. Elle est à toi pour toujours, aucun point." : "Offerte à chaque pilote qui a joué le tour de chauffe de décembre 2026." };
   if (org.souvenir) return { t: "🎄 Souvenir du tour de chauffe", p: "Offert à chaque pilote du tour de chauffe : le cadeau de la case du 24 décembre 2026, dans le calendrier de l'Avent." };
   if (org.vote) return { t: "💎 Légende · 🗳️ Coup de la saison", p: "Gagné au vote de fin de saison : les autres pilotes t'élisent pour le coup de la saison." };
@@ -1379,7 +1390,7 @@ function objetCache(slot, id) { const o = origineItem(slot, id); return !!o.mill
 /** (la plaque Ticket d'or n'apparaît qu'à partir d'octobre 2027, ou chez son gagnant) */
 function idsSlot(slot) { const dec = ecurieDepart(), a = dec ? debloques(moiPilote() || "") : null;   // v20.61 : en décembre, seulement les objets de départ (et ce qu'on a déjà)
   const moi = moiPilote() || "", ch = slot === "plaque" ? debloques(moi) : null;   // 🎁 Chercheur de Noël, 🔰 Recrue 2026 : seulement si gagnées
-  return Object.keys(ITEMS[slot]).filter(id => (!dec || estDepart(slot, id) || a.has(slot + "." + id)) && (!ch || !(estGainChercheur(slot, id) || estGainRecrue(slot, id)) || ch.has(slot + "." + id)) && !objetReserve(slot, id) && (!estGainTicket(slot, id) || ticketVisible()) && (typeof mjObjetVisible !== "function" || mjObjetVisible(slot, id, moi))
+  return Object.keys(ITEMS[slot]).filter(id => (!dec || estDepart(slot, id) || a.has(slot + "." + id)) && (!ch || !(estGainChercheur(slot, id) || estGainRecrue(slot, id) || estGainDore(slot, id)) || ch.has(slot + "." + id)) && !objetReserve(slot, id) && (!estGainTicket(slot, id) || ticketVisible()) && (typeof mjObjetVisible !== "function" || mjObjetVisible(slot, id, moi))
     && !prisParAutre(slot, id, moi)); }
 /** v20.70 (Théo, 25/11) · un objet EXCLUSIF (1er seulement, Légende) déjà pris par un autre pilote disparaît des objets bloqués : on ne pourra plus jamais l'avoir */
 function prisParAutre(slot, id, moi) {
@@ -1784,7 +1795,7 @@ const OBJ_TEINTES = {
   carredas: ["#E8FFF0", "#1F7A4A", "#0B3A22"], diamant: ["#FFFFFF", "#C9F6FF", "#3A9AC0"], rubis: ["#FF9BB0", "#E0115F", "#43000F"], flammes: ["#FFE08A", "#FF6A1F", "#8A1A06"],
   phenix: ["#FFE08A", "#FF8A1F", "#6E0D12"], galaxie: ["#C9B6FF", "#5B2A9E", "#170A36"], soleil: ["#FFF3B0", "#FFB21E", "#9A4A00"], lauriers: ["#F3F9C8", "#8FB33A", "#3A5A10"],
   parade: ["#FFF1B0", "#E8B640", "#7A4A0C"], couronne: ["#FFF6CC", "#F7CF55", "#6B430C"], oranime: ["#FFF6CC", "#F7CF55", "#6B430C"], billets: ["#E8FFE0", "#4FAE5A", "#1B5528"],
-  chercheur: ["#FFD0D0", "#D62839", "#6E0D12"], chercheuror: ["#FFF6CC", "#F7CF55", "#7A4A0C"], ticketor: ["#FFF6CC", "#F7CF55", "#7A4A0C"], feuilledor: ["#FFFBE0", "#F7CF55", "#7A4A0C"],
+  chercheur: ["#FFD0D0", "#D62839", "#6E0D12"], chercheuror: ["#FFF6CC", "#F7CF55", "#7A4A0C"], hiverdore: ["#FFF6CC", "#F7CF55", "#7A4A0C"], ticketor: ["#FFF6CC", "#F7CF55", "#7A4A0C"], feuilledor: ["#FFFBE0", "#F7CF55", "#7A4A0C"],
   // v20.61 · objets redessinés à l'image de leur monde
   ver: ["#F6DCAA", "#D9A35A", "#6B3A12"], ailee: ["#FFFDF2", "#F7CF55", "#7A5300"], anneau: ["#FFF3B8", "#F7CF55", "#3A2A1A"], elfique: ["#DFF2E2", "#4E9A5C", "#1E3A26"],
   pandora: ["#9AFFF6", "#1C6E8A", "#071A3A"], biolum: ["#E6FFFC", "#5CF2E6", "#0B5A6E"], rebelle: ["#FFD2B0", "#F57A2E", "#7A2A06"], sabre: ["#FFF1F1", "#FF3A48", "#6E0A12"],
@@ -1819,7 +1830,7 @@ function svgObjet(slot, id, px) {
       `<circle cx="16" cy="44" r="6.5" fill="#15181E" stroke="#444B57" stroke-width="2"/><circle cx="48" cy="44" r="6.5" fill="#15181E" stroke="#444B57" stroke-width="2"/><circle cx="16" cy="44" r="2" fill="#8A94A2"/><circle cx="48" cy="44" r="2" fill="#8A94A2"/>` + reflet("M12 36H24L29 31H38", .5);
   } else if (slot === "plaque") {
     b = `<path d="M32 8L52 16V30C52 44 43 52 32 57C21 52 12 44 12 30V16Z" fill="url(#${k}l)" stroke="${dk}" stroke-width="1.6"/><path d="M32 13L47 19V30C47 41 40 47 32 51C24 47 17 41 17 30V19Z" fill="none" stroke="${hi}" stroke-width="1.2" opacity=".8"/>` +
-      (id === "cheval" ? `<path d="M22 40V30L26 25H29L31 21 33 25 35 27H42L44 31V40" fill="#B9813F" stroke="#5A3412" stroke-width="1.2" stroke-linejoin="round"/><path d="M22 34H44M28 30V40M34 30V40M40 30V40" stroke="#5A3412" stroke-width=".8"/><rect x="20" y="40" width="26" height="2.4" rx="1" fill="#7A4A1A"/><circle cx="24" cy="44" r="2" fill="#4A2C10"/><circle cx="42" cy="44" r="2" fill="#4A2C10"/>` :
+      (id === "hiverdore" ? `<circle cx="32" cy="33" r="13" fill="#1E4E8C" opacity=".9"/><g stroke="#FFF6CC" stroke-width="2.2" stroke-linecap="round">${[0, 60, 120].map(a => `<path d="M32 21V45M32 24.5 29.4 22.2M32 24.5 34.6 22.2M32 41.5 29.4 43.8M32 41.5 34.6 43.8" transform="rotate(${a} 32 33)"/>`).join("")}</g><circle cx="32" cy="33" r="2.6" fill="#F7CF55"/><path d="M45 14l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1Z" fill="#fff"/>` : id === "cheval" ? `<path d="M22 40V30L26 25H29L31 21 33 25 35 27H42L44 31V40" fill="#B9813F" stroke="#5A3412" stroke-width="1.2" stroke-linejoin="round"/><path d="M22 34H44M28 30V40M34 30V40M40 30V40" stroke="#5A3412" stroke-width=".8"/><rect x="20" y="40" width="26" height="2.4" rx="1" fill="#7A4A1A"/><circle cx="24" cy="44" r="2" fill="#4A2C10"/><circle cx="42" cy="44" r="2" fill="#4A2C10"/>` :
        id === "metronome" ? `<path d="M26 44L32 20L38 44Z" fill="${dk}" opacity=".7"/><path d="M32 40L38 24" stroke="#fff" stroke-width="2"/>` : id === "remontada" ? `<path d="M22 42L30 32L35 37L43 24M37 24H43V30" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` : `<path d="M32 20L42 25V32C42 39 37 43 32 45C27 43 22 39 22 32V25Z" fill="${hi}" opacity=".75"/>`) + reflet("M18 20L30 14", .6);
   } else if (slot === "fond") {
     b = `<rect x="8" y="10" width="48" height="44" rx="8" fill="${motif ? F : `url(#${k}l)`}" stroke="${dk}" stroke-width="1.4"/>` +

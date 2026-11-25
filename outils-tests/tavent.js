@@ -19,6 +19,7 @@ const JOUEUR = { role: "perso", nom: "Clément" }, ADMIN = { role: "admin" };
 function fauxAvent(o, c) {
   const S = o.srv; S.envois.push(c);
   if (o.horsLigne) return null;
+  if (c.action === "aventCase") { const j = +o.quand.slice(8, 10), ok = o.quand.slice(0, 7) === "2026-12" && c.jour === j; return { ok: true, accepte: ok, raison: ok ? undefined : "manquee", ouvert: true, mes: Object.assign({}, S.mes) }; }   // v20.71 : une case par jour
   if (c.op === "score" && o.refuse) return { ok: false, erreur: "saisie", message: "Score impossible." };   // v20.62 : le serveur refuse un score hors bornes
   if (c.op === "score") { if (S.deja.includes(c.jeu)) return { ok: false, erreur: "deja", message: "demain" }; S.deja.push(c.jeu); S.mes[c.jeu] = c.score; }
   const r = { ok: true, ouvert: true, mes: Object.assign({}, S.mes) };
@@ -31,7 +32,7 @@ async function page(b, o) {
   await p.clock.setFixedTime(new Date(o.quand));
   o.srv = o.srv || { envois: [], mes: { cadeaux: 77 }, deja: [] };
   await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}");
-    if (c.action === "avent") { const x = fauxAvent(o, c); return x ? r.fulfill({ contentType: "application/json", body: JSON.stringify(x) }) : r.abort(); }
+    if (c.action === "avent" || c.action === "aventCase") { const x = fauxAvent(o, c); return x ? r.fulfill({ contentType: "application/json", body: JSON.stringify(x) }) : r.abort(); }
     r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tickets" ? { ok: true, ouvert: false } : c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : donnees(o.session)) }); });
   await p.addInitScript(f => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.bullePortrait", "1"); localStorage.setItem("versus.chauffe1", "1"); localStorage.setItem("versus.saison1", "1"); localStorage.setItem("versus.ecurieTeaser", "1");
     if (f.ouvertes) localStorage.setItem("versus.avent", JSON.stringify(f.ouvertes)); if (f.admin) sessionStorage.setItem("versus.adminOn", "1"); }, { ouvertes: o.ouvertes, admin: o.admin });
@@ -79,10 +80,11 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
     await ctx.close();
   }
   // 3 · le 24 décembre : tout s'ouvre ; chaque jeu se lance, se joue, se ferme ; textes sans secret
-  { const { ctx, p, err } = await page(b, { quand: "2026-12-24T09:00:00", session: JOUEUR });
+  const TOUTES = Array.from({ length: 24 }, (_, i) => i + 1);   // v20.71 : une case ne se rouvre que si elle a été ouverte le jour même
+  { const { ctx, p, err } = await page(b, { quand: "2026-12-24T09:00:00", session: JOUEUR, ouvertes: TOUTES });
     const t = await p.evaluate(() => ({ tous: Array.from({ length: 24 }, (_, i) => caseOuvrable(i + 1)).every(Boolean), jeux: Object.keys(JEUX_AVENT), cases: Object.values(CASES_AVENT).filter(c => c.type === "jeu").map(c => c.jeu),
       textes: JSON.stringify(CASES_AVENT) + JSON.stringify(Object.values(JEUX_AVENT).map(j => [j.nom, j.aide, j.unite])) }));
-    ok(t.tous, "24/12 · les 24 cases sont ouvrables");
+    ok(t.tous, "24/12 · les 24 cases, toutes ouvertes le jour même, sont rejouables");
     ok(t.jeux.length >= 12 && new Set(t.cases).size === t.cases.length && t.jeux.every(j => t.cases.includes(j)), t.jeux.length + " jeux différents, chacun dans sa case " + JSON.stringify(t.cases));
     const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
     // mots écrits à l'envers (puis remis à l'endroit) : la liste ne doit pas ressembler aux identifiants des mini-jeux (contrôle tsecrets-mj)
@@ -168,7 +170,7 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
     await p.emulateMedia({ colorScheme: "dark" }); await p.screenshot({ path: DOSSIER + "/case-24-sombre.png" });
     ok(!err.length, "0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
   // 4 ter · v20.62 (relectures du 25/11) : faux départ, bornes, refus du serveur, file hors connexion, accords, textes sous la consigne, bouton retour, cases 20 et 24
-  { const o = { quand: "2026-12-24T09:00:00", session: JOUEUR }, { ctx, p, err } = await page(b, o);
+  { const o = { quand: "2026-12-24T09:00:00", session: JOUEUR, ouvertes: TOUTES }, { ctx, p, err } = await page(b, o);
     const etatJ = () => document.querySelector(".av-case").jeu.etat();
     // faux départ sous 100 ms (même règle que le serveur)
     const fd = await p.evaluate(async () => { ouvrirAvent(); ouvrirCaseAvent(23); document.querySelector(".av-case [data-avj='go']").click(); await new Promise(r => setTimeout(r, 100));
@@ -207,13 +209,13 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
   // 4 quater · simulation de date (admin, vue joueur) : aucun envoi, le vrai stockage reste intact
   { const o = { quand: "2026-11-26T10:00:00", session: ADMIN, admin: true };
     const { ctx, p, err } = await page(b, Object.assign(o, {}));
-    await p.evaluate(() => { localStorage.setItem("versus.aventRecords", '{"cadeaux":5}'); localStorage.setItem("versus.vueJoueur", "Clément"); localStorage.setItem("versus.dateSim", "2026-12-24"); });
+    await p.evaluate(() => { localStorage.setItem("versus.aventRecords", '{"cadeaux":5}'); localStorage.setItem("versus.vueJoueur", "Clément"); localStorage.setItem("versus.dateSim", "2026-12-24"); localStorage.setItem("versus.avent", "[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]"); });
     await p.reload(); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes); await p.waitForTimeout(1500);
     const n0 = o.srv.envois.length;
     const si = await p.evaluate(async () => { const sim = simulation(); ouvrirAvent(); ouvrirCaseAvent(2); document.querySelector(".av-case [data-avj='go']").click(); await new Promise(r => setTimeout(r, 100));
       const G = document.querySelector(".av-case").jeu.etat(); G.score = 60; G.finir(); mettreEnFileAvent("pile", 33); await envoyerFileAvent(); await new Promise(r => setTimeout(r, 800));
       return { sim, vrai: localStorage.getItem("versus.aventRecords"), file: localStorage.getItem("versus.aventFile") }; });
-    ok(si.sim && o.srv.envois.slice(n0).filter(c => c.op === "score").length === 0 && si.vrai === '{"cadeaux":5}' && !si.file, "simulation (date simulée + vue joueur) : zéro envoi, le vrai stockage reste intact " + JSON.stringify(si));
+    ok(si.sim && !o.srv.envois.some(c => c.action === "aventCase") && o.srv.envois.slice(n0).filter(c => c.op === "score").length === 0 && si.vrai === '{"cadeaux":5}' && !si.file, "simulation (date simulée + vue joueur) : zéro envoi, le vrai stockage reste intact " + JSON.stringify(si));
     ok(!err.length, "4 quater · 0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
   // 5 · aperçu admin : toutes les cases en novembre, rien de gardé ; refusé à un joueur
   { const { ctx, p, err, srv } = await page(b, { quand: "2026-11-26T10:00:00", session: ADMIN, admin: true });
