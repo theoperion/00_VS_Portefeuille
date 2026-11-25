@@ -27,7 +27,7 @@ const CLES = { api: "versus.api", cle: "versus.cle", theme: "versus.theme", cach
 /* En simulation (date simulée ou vue joueur de l'admin), ce qui est « vu » (révélation, annonces, paliers, clôture…), l'état des onglets
    et les choix privés de Moi vivent dans une mémoire de session : le vrai stockage reste intact, et on retrouve tout en revenant à l'admin. */
 const SIMULATION = (() => { try { return !!window.DATE_SIM || !!localStorage.getItem("versus.vueJoueur"); } catch (e) { return !!window.DATE_SIM; } })();
-const CLES_SIM = /^versus\.(etat|tuto1|revele|nouveaute\.|gpVu\.|chauffe1|chauffeFete|saison1|recapVu|rappelMasque|mesCartes|mesDuels|moi\.(?!api$|cle$))/;   // v16.83 : tous les choix privés de Moi, sauf l'adresse et la clé du fichier
+const CLES_SIM = /^versus\.(accVu|etat|tuto1|revele|nouveaute\.|gpVu\.|chauffe1|chauffeFete|saison1|recapVu|rappelMasque|mesCartes|mesDuels|moi\.(?!api$|cle$))/;   // v16.83 : tous les choix privés de Moi, sauf l'adresse et la clé du fichier
 const MEM_SIM = {};
 const stock = {
   get(k) { if (SIMULATION && k in MEM_SIM) return MEM_SIM[k]; try { return localStorage.getItem(k); } catch (e) { return null; } },

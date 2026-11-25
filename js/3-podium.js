@@ -1021,7 +1021,8 @@ function barreAdmin() {
   const fete = '<button type="button" class="ba-dec" data-bafete="1">🎅 Aperçu · le vainqueur de la chauffe (la mini-cérémonie que tout le monde verra une fois, 48 h après le dernier relevé de décembre ; exemple inventé tant que la manche n’est pas finie)</button>';   // v17.49
   const coupe = '<button type="button" class="ba-dec" data-bacoupe="1">🏆 Aperçu · La Coupe brisée (exemple inventé : le vrai contenu reste secret, même pour toi)</button>';   // v20.42
   const ticket = '<button type="button" class="ba-dec" data-baticket="1">🎫 Aperçu · le ticket d’or (une tablette d’exemple : chocolat, puis ticket et cérémonie ; rien n’est envoyé, le vrai tirage reste secret, même pour toi)</button>';   // v20.47
-  return '<div class="barre-admin"><div class="ba-h"><b>🛠️ Admin</b><div class="ba-seg">' + b("tout", "Tout afficher") + b("joueur", "Vue joueur") + b("reel", "Le réel") + "</div></div>" + plus + dec + fete + circ + tres + coupe + ticket + '<button type="button" class="ba-dec" data-bamj="1">🎲 Aperçu · les mini-jeux du mois (joués sur un faux tirage et des pilotes inventés : rien n’est enregistré, le vrai tirage reste secret, même pour toi)</button>' + "<small>" + desc + "</small></div>";
+  const acc = '<button type="button" class="ba-dec" data-baacc="1">🎭 Aperçu · les accessoires du mois (les 12 univers et le bonnet de Noël, sur vos têtes)</button>';   // v20.59
+  return '<div class="barre-admin"><div class="ba-h"><b>🛠️ Admin</b><div class="ba-seg">' + b("tout", "Tout afficher") + b("joueur", "Vue joueur") + b("reel", "Le réel") + "</div></div>" + plus + dec + fete + circ + tres + coupe + ticket + acc + '<button type="button" class="ba-dec" data-bamj="1">🎲 Aperçu · les mini-jeux du mois (joués sur un faux tirage et des pilotes inventés : rien n’est enregistré, le vrai tirage reste secret, même pour toi)</button>' + "<small>" + desc + "</small></div>";
 }
 function brancherBarreAdmin(v) {
   const reglerMode = m => {
@@ -1038,6 +1039,7 @@ function brancherBarreAdmin(v) {
   v.querySelectorAll("[data-bacoupe]").forEach(x => x.addEventListener("click", () => apercuCoupe()));
   v.querySelectorAll("[data-baticket]").forEach(x => x.addEventListener("click", () => apercuTicket()));
   v.querySelectorAll("[data-bamj]").forEach(x => x.addEventListener("click", () => apercuMJ(202701)));   // 🎲 mini-jeux (js/9-minijeux.js)
+  v.querySelectorAll("[data-baacc]").forEach(x => x.addEventListener("click", () => apercuAccessoires()));
   v.querySelectorAll("[data-badec]").forEach(x => x.addEventListener("click", () => { stock.set("versus.apercuSaison", "0"); stock.set("versus.vueJoueur", joueurAdmin()); stock.set("versus.dateSim", "2026-12-03"); ETAT.podium = "gp"; GP_ETAPE = null; garder(); location.reload(); }));
   v.querySelectorAll("[data-badate]").forEach(x => x.addEventListener("click", () => { if (x.dataset.badate) stock.set("versus.dateSim", x.dataset.badate); else stock.del("versus.dateSim"); location.reload(); }));
 }
