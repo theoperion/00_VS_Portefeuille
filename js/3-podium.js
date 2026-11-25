@@ -1039,6 +1039,7 @@ function brancherBarreAdmin(v) {
   v.querySelectorAll("[data-bacoupe]").forEach(x => x.addEventListener("click", () => apercuCoupe()));
   v.querySelectorAll("[data-baticket]").forEach(x => x.addEventListener("click", () => apercuTicket()));
   v.querySelectorAll("[data-bamj]").forEach(x => x.addEventListener("click", () => apercuMJ(202701)));   // 🎲 mini-jeux (js/9-minijeux.js)
+  if (v.querySelector("[data-bamj]") && typeof prechargerApercuMJAdmin === "function") prechargerApercuMJAdmin();   // vitesse (26/11) : l'aperçu de janvier est prêt avant d'être ouvert
   v.querySelectorAll("[data-baacc]").forEach(x => x.addEventListener("click", () => apercuAccessoires()));
   v.querySelectorAll("[data-badec]").forEach(x => x.addEventListener("click", () => { stock.set("versus.apercuSaison", "0"); stock.set("versus.vueJoueur", joueurAdmin()); stock.set("versus.dateSim", "2026-12-03"); ETAT.podium = "gp"; GP_ETAPE = null; garder(); location.reload(); }));
   v.querySelectorAll("[data-badate]").forEach(x => x.addEventListener("click", () => { if (x.dataset.badate) stock.set("versus.dateSim", x.dataset.badate); else stock.del("versus.dateSim"); location.reload(); }));
