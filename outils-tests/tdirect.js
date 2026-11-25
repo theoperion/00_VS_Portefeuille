@@ -48,6 +48,8 @@ async function ouvrir(b, quand, data, o) {
     localStorage.setItem("versus.gpVu.2027", String(vu)); localStorage.setItem("versus.gpVu.2026", "202612"); localStorage.setItem("versus.baVu.2027", "202712"); localStorage.setItem("versus.deJanvier", "1"); localStorage.setItem("versus.aideVisite", "1");
     localStorage.setItem("versus.feteChauffe", "202612"); }, [o.vu || 202712, o.d3 ? "0" : "1"]);
   await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1000);
+  // v20.62 : ici on teste la course elle-même : le 🎥 tour de présentation est considéré comme déjà vu dans cette ouverture (il a son test : tpresentation.js)
+  await p.evaluate(() => Object.keys(Piste.TRACES).forEach(c => GP_PRES_VUS.add(c)));
   await p.evaluate(async d3 => { document.querySelectorAll(".revel, .regles, .tuto, .bulle-portrait, .ba").forEach(x => x.remove()); ETAT.podium = "gp"; ETAT.gp2d = d3 ? "0" : "1"; GP_ETAPE = null; garder(); montrerVue("trophees"); rendreTrophees();
     await new Promise(r => setTimeout(r, 1500)); document.querySelectorAll(".revel, .ba, .ere-voile").forEach(x => x.remove()); }, !!o.d3);
   return { p, ctx, err, req };
@@ -139,8 +141,10 @@ const horsDessin = p => p.evaluate(() => { const sc = document.querySelector("#g
     // qu'elle roule vraiment (feux passés) avant de vérifier ⏸ ; si ⏸ manque pendant la course, le contrôle est NON (sans attente bloquée).
     await T.p.evaluate(() => document.querySelector(".gp-plein .gpp-play").click()); await T.p.waitForFunction(() => GP_INST && GP_INST.api.enCours() && GP_HORLOGE && tempsCourse(GP_HORLOGE) > GP_HORLOGE.feux + 300, null, { timeout: 15000 });
     const pz = await T.p.isVisible(".gpp-pause"); let q1 = {}, q2 = { cur: 1 }, q3 = {};
-    if (pz) { await T.p.click(".gpp-pause"); await T.p.waitForTimeout(120); q1 = await etat(T.p); await T.p.waitForTimeout(1200); q2 = await etat(T.p);
-      await T.p.click(".gpp-pause"); await T.p.waitForTimeout(1200); q3 = await etat(T.p); }
+    // v20.62 : clic direct (en 3D logicielle, une capture peut durer plus que la course : le clic « attendre que ce soit visible » restait bloqué 30 s)
+    const clicPause = () => T.p.evaluate(() => { const x = document.querySelector(".gpp-pause"); if (x && !x.hidden) x.click(); });
+    if (pz) { await clicPause(); await T.p.waitForTimeout(120); q1 = await etat(T.p); await T.p.waitForTimeout(1200); q2 = await etat(T.p);
+      await clicPause(); await T.p.waitForTimeout(1200); q3 = await etat(T.p); }
     ok(!hp.recouvre && hp.stH >= 40, "plein écran : le bandeau de sous-titres est sous le dessin, il ne le recouvre pas " + JSON.stringify(hp));
     ok(pz && JSON.stringify(q1.cur) === JSON.stringify(q2.cur) && (q3.max > q2.max + 0.01 || !q3.enCours), "plein écran 3D : ⏸ fige la course, ▶ la reprend");
     await T.p.click(".gpp-photo"); await T.p.waitForTimeout(500);

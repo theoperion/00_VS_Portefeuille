@@ -1777,7 +1777,6 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .gp-plus-m { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; display: grid; min-width: 210px; padding: 6px; border-radius: 14px; background: #10131A; color: #fff; border: 1px solid rgba(255,255,255,.14); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
 .gp-plus-m button { text-align: left; padding: 11px 12px; border: 0; border-radius: 10px; background: transparent; color: inherit; font: 600 14px/1.2 var(--f-text); cursor: pointer; }
 .gp-plus-m button:hover, .gp-plus-m button:focus-visible { background: rgba(255,255,255,.08); }
-/* v17.10 : « 🛸 Survol guidé » toujours visible (il passe tout seul en 📺 Visite) */
 /* 🚁 Hélico : les pastilles des pilotes pour choisir la voiture suivie */
 .gp-suivi { display: none; position: absolute; left: 8px; bottom: 8px; z-index: 3; gap: 6px; padding: 4px; border-radius: 999px; background: rgba(8,10,14,.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
 .gp-piste.vue-poursuite .gp-suivi { display: flex; }
@@ -1820,7 +1819,7 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 
 /* v17.13 : en plein écran, « Arrivée » et « Survol » écrits en toutes lettres (Théo) */
 @media (max-width: 560px) { .gpp-bar { left: calc(env(safe-area-inset-left, 0px) + 8px); flex-wrap: wrap; justify-content: flex-end; row-gap: 6px; } }
-/* 19/11 : en portrait, le sélecteur (avec 🛸 Survol) sur la 1re ligne, ▶ ⏭ ✕ ensemble sur la 2de */
+/* 19/11 : en portrait, le sélecteur sur la 1re ligne, ▶ ⏭ ✕ ensemble sur la 2de */
 @media (max-width: 560px) { .gpp-bar { row-gap: 3px; } .gpp-bar::after { content: ""; flex-basis: 100%; height: 0; order: 1; } .gpp-bar .gpp-b { order: 2; } }
 /* v17.35 · 🗝️ Aperçu admin du trésor, sur la page Course (exemple inventé) : un petit bandeau dans la piste, qui la suit en plein écran */
 .tap-band { position: absolute; z-index: 6; top: 6px; left: 6px; right: 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 5px; padding: 4px 5px 4px 8px; border-radius: 10px; background: rgba(255,224,138,.93); color: #2A1E05; font: 600 10.5px/1.2 var(--f-text); box-shadow: 0 2px 8px rgba(0,0,0,.3); }
@@ -2739,3 +2738,16 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 /* v20.62 · le % de l'indice dans le bandeau du direct : en gras, vert si ça monte, rouge si ça baisse */
 .gp-st-info b[class^="ix-"] { font-weight: 800; } .gp-st-info .ix-up { color: #3DDC97; } .gp-st-info .ix-down { color: #FF6B6B; }
 .cn-rev .tk-obj .plaque { font-size: 17px; padding: 4px 12px; } .cn-rev .rv-c .btn-row { grid-template-columns: 1fr; } .cn-gain { font-size: 14px !important; color: #F4F5F8 !important; }
+/* v20.62 · 🎥 Tour de présentation : deux bandes de cinéma, le titre en haut, « Passer › » en bas ; un toucher n'importe où le saute */
+.gp-pres { position: absolute; inset: 0; z-index: 7; cursor: pointer; pointer-events: auto; animation: gp-pres-in .5s ease both; }
+.gp-pres::before, .gp-pres::after { content: ""; position: absolute; left: 0; right: 0; height: 7%; background: #000; pointer-events: none; }
+.gp-pres::before { top: 0; } .gp-pres::after { bottom: 0; }
+.gp-pres-t { position: absolute; z-index: 1; top: calc(7% + 8px); left: 50%; transform: translateX(-50%); max-width: calc(100% - 32px); margin: 0; padding: 5px 12px; border-radius: 999px; background: rgba(8,10,14,.62); color: #fff; font: 700 12.5px/1.25 var(--f-text); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); pointer-events: none; }
+.gp-pres-t small { margin-left: 6px; font-weight: 500; opacity: .8; }
+.gp-pres-x { position: absolute; z-index: 1; right: 10px; bottom: calc(7% + 10px); min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.4); background: rgba(8,10,14,.72); color: #fff; font: 700 14px/1 var(--f-text); cursor: pointer; }
+.gp-pres.fin { opacity: 0; transition: opacity .3s; }
+.gp-plein.v2 .gp-pres-x { right: calc(env(safe-area-inset-right, 0px) + 12px); bottom: calc(env(safe-area-inset-bottom, 0px) + 7% + 10px); }
+.gp-plein.v2 .gp-pres-t { top: calc(env(safe-area-inset-top, 0px) + 7% + 56px); }
+.gp-piste.en-pres :is(.gp-suivi, .gp-tags3) { visibility: hidden; }   /* pendant le tour : le décor seul */
+@keyframes gp-pres-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .gp-pres { animation: none; } }

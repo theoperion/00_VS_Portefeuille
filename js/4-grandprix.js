@@ -314,10 +314,10 @@ function vuesV2(ci) { return true; }   // v17.33 (Théo) : les nouvelles vues et
 function vueGP(ci) { if (!vuesV2(ci)) return null; return ETAT.gp2d !== "0" || !piste3D() ? "2d" : ETAT.gpVue3 === "poursuite" ? "poursuite" : "visite"; }
 /** la voiture suivie en 🚁 Hélico : la sienne par défaut, sinon la 1re */
 function suiviGP() { const ok = n => n && D.personnes.some(p => p.nom === n); return ok(ETAT.gpSuivi) ? ETAT.gpSuivi : ok(moiPilote()) ? moiPilote() : D.personnes[0].nom; }
-function selVuesGP(vue, cls, survol) {
+function selVuesGP(vue, cls) {
   return '<div class="gp-sel ' + cls + '" role="group" aria-label="Choisir la vue">' + Object.entries(VUES_TXT).filter(([k]) => k === "2d" || piste3D()).map(([k, [ico, t]]) =>
     '<button type="button" data-gpv="' + k + '" aria-pressed="' + (k === vue) + '"><span aria-hidden="true">' + ico + "</span> " + t + "</button>").join("") +
-    (survol && piste3D() ? '<button type="button" data-gpv-survol aria-pressed="false" title="Survol guidé"><span aria-hidden="true">🛸</span> Survol</button>' : "") + "</div>";   // Théo, 19/11 : le survol est un segment du sélecteur en plein écran
+    "</div>";   // v20.62 : le segment « 🛸 Survol » est remplacé par le bouton 🎥 Tour de présentation
 }
 /** applique la vue 3D à la piste déjà montée (sans la reconstruire ni couper la course) */
 function appliquerVue3(api, vue) {
@@ -460,8 +460,8 @@ function htmlGrandPrix(y) {
   const v2 = vuesV2(ci), vue = vueGP(ci), suivi = v2 ? suiviGP() : null;   // v17.6
   const dir = courseDirect(etapes, i, kGP), demoOk = demoPossible(et, dir), demo = demoOk && GP_DEMO ? GP_DEMO : null, met = meteoVue(demo ? demo.meteo : met0, ci);   // v20.52 : 🎬 démo avant le 1er décembre ; pictogramme adapté au circuit
   const stH = v2 ? bandeauST(y, et, i, kGP, dir, met, mc0, demo) : "";   // v20.47 : course en direct + sous-titres sous le dessin
-  // v17.6 · la piste « V2 » ne garde AUCUN bouton sur l'image : vue, plein écran et « ⋯ » (bande-annonce, arrivée, survol) passent juste en dessous
-  const menuV2 = '<div class="gp-outils"><button class="gp-son-b" type="button" data-son aria-label="Couper le son">🔊</button>' + '<details class="gp-plus"><summary aria-label="Plus d\'options">⋯</summary><div class="gp-plus-m">' + (piste3D() ? '<button type="button" class="gp-survol-b" id="gp-survol">🛸 Survol guidé</button>' : "") +   // v17.10 : toujours utilisable (passe tout seul en 📺 Visite)
+  // v17.6 · la piste « V2 » ne garde AUCUN bouton sur l'image : vue, plein écran et « ⋯ » (bande-annonce, arrivée, tour de présentation) passent juste en dessous
+  const menuV2 = '<div class="gp-outils"><button class="gp-son-b" type="button" data-son aria-label="Couper le son">🔊</button>' + '<details class="gp-plus"><summary aria-label="Plus d\'options">⋯</summary><div class="gp-plus-m">' + '<button type="button" class="gp-tourp-b" id="gp-tourp">🎥 Tour de présentation</button>' +   // v20.62 : remplace « 🛸 Survol guidé » (2D comme 3D)
     '<button type="button" id="gp-ba">🎬 Bande-annonce</button><button type="button" id="gp-fin">⏭ Aller à l\'arrivée</button><button type="button" id="gp-photo">📷 Mode photo</button></div></details></div>';   // v17.48 : le petit 🔊/🔇 à côté de « ⋯ »
   const suiviH = v2 && !deux ? '<div class="gp-suivi" role="group" aria-label="Voiture suivie">' + ordre.map(n => '<button type="button" data-suivre="' + esc(n) + '" style="--c:' + couleur(n) + '" aria-pressed="' + (n === suivi) + '" aria-label="Suivre ' + esc(n) + '">' + avatarCourse(n) + "</button>").join("") + "</div>" : "";
   const fondCuit = (() => { try { const k = (Piste.TRACES[ci] || {}).peint, c = self.CARTES_CUITES; if (!k || !c || !c[k]) return ""; const u = "img/cartes/" + k + ".webp?v=" + c[k];
@@ -474,7 +474,7 @@ function htmlGrandPrix(y) {
     (v2 ? stH :   // v20.47 (Théo) : aucun texte posé sur le dessin : tour, commentaires et bulles passent en sous-titres, dans un bandeau sous la course   // v17.6 : « Sur la grille » et la météo sont déjà dans le titre ; il ne reste que « Tour 1/2 » pendant la course
     '<div class="gp-hud"><span class="gp-tour">' + (et.k && !et.avenir ? "Manche <b>" + nM + "</b>" : "Sur la grille") + "</span><span>" + met.ico + " " + esc(met.nom) + "</span></div>") +
     (v2 ? "" : '<div class="gp-btns">' +
-    '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en vue hélico 3D" : "Revenir à la carte 2D") + '">' + (deux ? "🚁 Hélico 3D" : "🗺️ Carte 2D") + '</button><button class="gp-vue gp-son" type="button" data-son aria-label="Son">🔇</button>' + (deux ? "" : '<button class="gp-vue" type="button" id="gp-survol" aria-label="Visite guidée">🎬 Survol</button>') + '<button class="gp-vue" type="button" id="gp-ba" aria-label="Bande-annonce">' + icoOu("bandeannonce", "🎬") + '</button><button class="gp-vue" type="button" id="gp-fin" aria-label="Aller directement à la fin de la course">' + icoOu("arrivee", "⏭") + '</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">' + icoOu("pleinecran", "⛶") + '</button>' + "</div>") + suiviH +
+    '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en vue hélico 3D" : "Revenir à la carte 2D") + '">' + (deux ? "🚁 Hélico 3D" : "🗺️ Carte 2D") + '</button><button class="gp-vue gp-son" type="button" data-son aria-label="Son">🔇</button>' + '<button class="gp-vue" type="button" id="gp-tourp" aria-label="Tour de présentation">🎥</button>' + '<button class="gp-vue" type="button" id="gp-ba" aria-label="Bande-annonce">' + icoOu("bandeannonce", "🎬") + '</button><button class="gp-vue" type="button" id="gp-fin" aria-label="Aller directement à la fin de la course">' + icoOu("arrivee", "⏭") + '</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">' + icoOu("pleinecran", "⛶") + '</button>' + "</div>") + suiviH +
     (v2 ? "" : spe ? '<div class="gp-spe">' + spe.ico + " " + esc(spe.nom) + "</div>" : pgm ? '<div class="gp-spe piege" data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " " + esc(pgm.nom) + "</div>" : "") + "</div>";
   const chips = '<div class="gp-mois">' + etapes.map((x, j) => '<button type="button" data-gpe="' + j + '" aria-pressed="' + (j === i) + '">' + (x.k ? GPS[circuitDe(x.k)].drap + " " + esc(moisCourt(x.k)) + (x.avenir ? " ⏳" : "") : "Départ") + "</button>").join("") + "</div>";
   const lignes = ordre.map((n, r) => {
@@ -903,10 +903,10 @@ function poserTresorDOM(v) {
   b.addEventListener("click", ev => { ev.stopPropagation(); trouverTresor(t, b); });
   if (ga) majTresor(ga, pi);
 }
-/** à chaque image : l'objet suit le décor, seulement en Visite 3D (hélico, hors course et survol), de très près et à l'écran */
+/** à chaque image : l'objet suit le décor, seulement en Visite 3D (hélico, hors course et hors tour de présentation), de très près et à l'écran */
 function majTresor(api, pi) {
   const T = TRESOR_EL; if (!T || T.pi !== pi) return;
-  const libre = api.type === "3d" && api.projeter && api.mode() === "helico" && !api.enCours() && !(api.survolEnCours && api.survolEnCours()) && !pi.classList.contains("en2d");
+  const libre = api.type === "3d" && api.projeter && api.mode() === "helico" && !api.enCours() && !(api.presentationEnCours && api.presentationEnCours()) && !pi.classList.contains("en2d");
   T.en.classList.toggle("cache", (!libre && !(GP_PLEIN && pi.closest(".gp-plein"))) || (!!T.pris && !!T.b));   // v17.55 (Théo) : en plein écran, l'énigme et les indices restent affichés dans toutes les vues
   /* v17.35 : en hauteur (portrait), la caméra recule toute seule pour montrer le circuit ; on ramène la distance à celle d'un écran en largeur → même difficulté dans toutes les orientations */
   const e = libre && !T.pris && T.t.p && api.zoom() <= .2 ? api.projeter(T.t.p) : null, d = e && e.vis ? e.d / (api.recul ? api.recul() : 1) : 1e9;
@@ -1126,8 +1126,8 @@ function apCachette() {
   const essai = () => {
     if (TRESOR_APERCU !== AP || AP.F.p) { AP.cherche = false; return; }
     const a = GP_INST && GP_INST.api, pi = document.getElementById("gp-piste");
-    if (!a || a.type !== "3d" || !a.projeter || !pi || pi.classList.contains("en2d") || a.mode() !== "helico" || a.enCours() || (a.survolEnCours && a.survolEnCours())) { setTimeout(essai, 600); return; }
-    a.viser(null, .07, .55);
+    if (!a || a.type !== "3d" || !a.projeter || !pi || pi.classList.contains("en2d") || a.mode() !== "helico" || a.enCours() || (a.presentationEnCours && a.presentationEnCours())) { setTimeout(essai, 600); return; }
+    a.viser(null, .13, .55);
     setTimeout(() => {
       if (TRESOR_APERCU !== AP || AP.F.p) { AP.cherche = false; return; }
       if (!GP_INST || GP_INST.api !== a || a.mode() !== "helico") { setTimeout(essai, 400); return; }
@@ -1418,6 +1418,41 @@ function bandeAnnonce(y, i, ensuite) {
   o.querySelector(".ba-passer").addEventListener("click", e => { e.stopPropagation(); fermer(true); });
   BA_OUVERTE = { fermer };
 }
+/* ---------- v20.62 (Théo) · 🎥 TOUR DE PRÉSENTATION : avant les feux, la caméra prend ~15-20 s pour savourer le décor (Piste.presentation),
+   puis descend sur la grille. Joué au 1er départ de chaque circuit dans une ouverture de l'appli ; jamais quand on rejoue (↻) ensuite, ni en
+   « réduire les animations », ni si le téléphone a déjà peiné. Un toucher ou « Passer › » saute aux feux. Le bouton 🎥 le rejoue à la demande
+   (il remplace l'ancien « Survol guidé ») et rend la main à la vue d'avant. ---------- */
+const GP_PRES_VUS = new Set();
+let GP_PRES = null, GP_PRES_RAME = false;   // GP_PRES = { api, ov, ensuite } ; GP_PRES_RAME : le tour a ramé une fois → plus de tour automatique
+function tourPresentation(api, ci, ensuite, force) {
+  const suite = () => { if (ensuite) ensuite(); };
+  if (!api || !api.presentation || (!force && (GP_PRES_VUS.has(ci) || reduit || GP_PRES_RAME))) { suite(); return false; }
+  if (GP_PRES) annulerPresentation();
+  const G = GPS[ci] || {}, ov = document.createElement("div"); ov.className = "gp-pres"; ov.setAttribute("role", "region"); ov.setAttribute("aria-label", "Tour de présentation");
+  ov.innerHTML = '<p class="gp-pres-t"><span aria-hidden="true">🎥</span> Tour de présentation<small>' + esc(G.ville || "") + '</small></p><button type="button" class="gp-pres-x" aria-label="Passer le tour de présentation">Passer ›</button>';
+  const P = GP_PRES = { api, ov, ensuite, fini: false };
+  const fin = info => { if (P.fini) return; P.fini = true; if (GP_PRES === P) GP_PRES = null; ov.classList.add("fin"); document.querySelectorAll("#gp-piste.en-pres").forEach(x => x.classList.remove("en-pres")); setTimeout(() => ov.remove(), 300); if (info && info.rame) GP_PRES_RAME = true; suite(); };
+  let d = 0; try { d = api.presentation({ fin, mode: force ? "vue" : "grille" }); } catch (e) { d = 0; }
+  if (!d) { GP_PRES = null; suite(); return false; }
+  P.duree = d; GP_PRES_VUS.add(ci);
+  ov.addEventListener("pointerdown", ev => { ev.stopPropagation(); }); ov.addEventListener("click", ev => { ev.stopPropagation(); passerPresentation(); });
+  placerOverlayPres(document);
+  return true;
+}
+/** le voile du tour se pose sur le dessin seulement (pas sur les sous-titres) ; têtes des pilotes cachées pendant le tour */
+function placerOverlayPres(racine) { const P = GP_PRES; if (!P) return; const sc = racine.querySelector("#gp-scene"), pi = racine.querySelector("#gp-piste");
+  (sc || pi || document.body).appendChild(P.ov); if (pi) pi.classList.add("en-pres"); }
+function passerPresentation() { const P = GP_PRES; if (P && P.api.passerPresentation) P.api.passerPresentation(); }
+/** la piste a été démontée (autre vue, autre mois) : le tour s'arrête sans lancer la course */
+function annulerPresentation() { const P = GP_PRES; if (!P) return; GP_PRES = null; P.fini = true; P.ov.remove(); document.querySelectorAll("#gp-piste.en-pres").forEach(x => x.classList.remove("en-pres")); }
+/** 🎥 le bouton : rejoue le tour à la demande (pas pendant une course) */
+function boutonPresentation() {
+  const api = GP_INST && GP_INST.api, pi = document.getElementById("gp-piste"); if (!api || !pi) return;
+  if (api.enCours()) { toast("Attends la fin de la course pour le tour de présentation."); return; }
+  if (GP_PRES) { passerPresentation(); return; }
+  document.querySelectorAll("details.gp-plus[open]").forEach(d => d.open = false);
+  if (!tourPresentation(api, pi.dataset.circuit, null, true)) toast("Pas de tour de présentation pour ce circuit.");
+}
 let GP_RELANCES = 0, GP_DIRECT_VU = "";   // audit B6 : relances automatiques du circuit 3D après une coupure du navigateur
 /* v20.53 (Théo : écran noir puis lag en arrivant sur le Podium) · en passant d'un onglet à l'autre, la page s'affiche D'ABORD avec la carte cuite
    déjà décodée posée au bon endroit, puis, à l'image suivante, le dessin animé (ou la 3D) est monté ou raccroché par-dessus, à l'identique */
@@ -1446,6 +1481,7 @@ function brancherGP0(v, y) {
   const cle = [ci, met, amb, deux ? "2d" : "3d", JSON.stringify(vs), at ? at.atout.id : "", couleurAccent()].join("|");
   if (GP_INST && GP_INST.cle === cle) { scene.appendChild(GP_INST.boite); GP_INST.api.redim(); }
   else {
+    annulerPresentation();   // v20.62 : la piste change : le tour en cours s'arrête (la course ne part pas en coulisses)
     if (GP_INST) { try { GP_INST.api.detruire(); } catch (e) { } GP_INST.boite.remove(); GP_INST = null; }
     const boite = document.createElement("div"); boite.className = "gp-rendu"; scene.appendChild(boite);
     const focus = vue === "poursuite" ? suiviGP() : ETAT.gpFocus && D.personnes.some(p => p.nom === ETAT.gpFocus) ? ETAT.gpFocus : (qui && D.personnes.some(p => p.nom === qui) ? qui : D.personnes[0].nom);
@@ -1471,32 +1507,31 @@ function brancherGP0(v, y) {
   const finCourse = () => { setTimeout(majPauseGP, 0); if (window.SONS && et.m) { const v1 = et.m.l.slice().sort((a, b) => a.rg - b.rg)[0]; if (v1) SONS.arrivee(saisonVisible() && !estChauffe(y) ? equipDe(v1.nom).klaxon : "fanfare", v1.nom === ETAT.moi, (Piste.TRACES[ci] || {}).peint); }   // V16.43 : la foule et le klaxon du vainqueur
     if (et.k && !et.avenir && et.k > +(stock.get(cleVu) || 0)) stock.set(cleVu, String(et.k)); bullesGP(y, i); commenter(y, i, -1);
     if (et.k === CHAUFFE_K && estChauffe(y)) setTimeout(() => ereApres(() => verifierFeteChauffe(true), "chauffeFete"), 3200); };   // v17.49 : course de chauffe regardée + manche définitive → le vainqueur à l'honneur
-  const jouer = feux => { if (vueGP(ci) === "visite" && api.type === "3d") choisirVueGP("poursuite", y);   // v17.6 : la Visite n'a pas de voitures : la course se regarde en 🚁 Hélico
+  const jouer = (feux, sansTour) => { if (vueGP(ci) === "visite" && api.type === "3d") choisirVueGP("poursuite", y);   // v17.6 : la Visite n'a pas de voitures : la course se regarde en 🚁 Hélico
+    if (!DR && !sansTour) { tourPresentation(api, ci, () => { if (GP_INST && GP_INST.api === api && !api.enCours()) jouer(feux, true); }); return; }   // v20.62 : 🎥 d'abord le tour de présentation (1re fois)
     if (DR) { const d = api.type === "3d" ? 4200 : 3000; GP_HORLOGE = { t0: performance.now(), pauses: 0, pause: 0, total: d, feux: 0, cle: null, son: false }; api.jouer(DR.dep, DR.pts, d, () => { majPauseGP(); if (window.SONS && SONS.repriseCourse) SONS.repriseCourse(); }, false); majPauseGP(); return; }   // v20.47 : le mois jusqu'à aujourd'hui, en accéléré, sans feux ni moteurs
     const f = feux !== false && i >= 1 && api.type === "3d", d = SC ? (api.type === "3d" ? 17000 : 12000) : api.type === "3d" ? 6400 : 3000, cleS = (Piste.TRACES[ci] || {}).peint;
     GP_HORLOGE = { t0: performance.now(), pauses: 0, pause: 0, total: d + (f ? 3200 : 0), feux: f ? 3200 : 0, cle: cleS, son: true };
     commenter(y, i, d + (f ? 3200 : 0), f ? 3200 : 0); if (window.SONS) SONS.course(d, f ? 3200 : 0, cleS);   // V16.43 : feux, moteurs ; v17.48 : + le thème du circuit (v20.53 : chaque circuit)
     if (SC) api.jouerScenario(SC.scen, d, finCourse, f); else api.jouer(mc.depart, mc.arrivee, d, finCourse, f); majPauseGP(); };
-  const apresBA = () => { if (GP_INST && GP_INST.api === api && document.body.contains(GP_INST.boite)) jouer(false); };   // v16.27 : piste reconstruite entre-temps : on ne lance rien
-  if (GP_REJOUER && i > 0 && !et.avenir) { GP_REJOUER = false; setTimeout(jouer, 150); }
-  else if (!et.avenir && et.k && et.k > vu && i > 0) { api.placer(pDep); if (!BA_OUVERTE) setTimeout(() => ereApres(() => { if (!BA_OUVERTE) bandeAnnonce(y, i, apresBA); }, "ba"), 300); }   // v16.93 : ereApres = après la scène du premier million
+  const apresBA = () => { if (GP_INST && GP_INST.api === api && document.body.contains(GP_INST.boite)) jouer(false, true); };   // v20.62 : la bande-annonce finit sur les feux : la course part tout de suite (le tour de présentation passe AVANT la bande-annonce)   // v16.27 : piste reconstruite entre-temps : on ne lance rien
+  const presVive = !!(GP_PRES && GP_PRES.api === api);   // v20.62 : page redessinée pendant le tour de présentation : il continue (rien ne se relance)
+  if (presVive) placerOverlayPres(v);
+  else if (GP_REJOUER && i > 0 && !et.avenir) { GP_REJOUER = false; setTimeout(jouer, 150); }
+  else if (!et.avenir && et.k && et.k > vu && i > 0) { api.placer(pDep); if (!BA_OUVERTE) setTimeout(() => ereApres(() => { if (!BA_OUVERTE && !GP_PRES) tourPresentation(api, ci, () => { if (!BA_OUVERTE && GP_INST && GP_INST.api === api) bandeAnnonce(y, i, apresBA); }); }, "ba"), 300); }   // v20.62 : 🎥 tour de présentation, puis la bande-annonce (qui finit sur les feux)   // v16.93 : ereApres = après la scène du premier million
   else { const kBA = et.k || 0, cleBA = "versus.baVu." + y, baDue = et.avenir && kBA && kBA > +(stock.get(cleBA) || 0), cleDir = DR ? kGP + "|" + DR.dv.j : "";
     if (DR && GP_DIRECT_VU !== cleDir && !api.enCours() && !(vueGP(ci) === "visite" && api.type === "3d")) { GP_DIRECT_VU = cleDir; api.placer(DR.dep);   // v20.47 : en arrivant, le peloton refait le mois jusqu'à aujourd'hui (une fois par jour et par visite)
       if (baDue) { stock.set(cleBA, String(kBA)); setTimeout(() => ereApres(() => bandeAnnonce(y, i, apresBA), "ba"), 400); } else setTimeout(() => { if (GP_INST && GP_INST.api === api && !api.enCours()) jouer(false); }, 450); }
     else { if (!api.enCours()) api.placer(pArr); if (baDue) { stock.set(cleBA, String(kBA)); setTimeout(() => ereApres(() => bandeAnnonce(y, i, null), "ba"), 400); } } }
   GP_REJOUER = false;
-  if (DM && DM.lance) { DM.lance = false; setTimeout(() => jouerDemo(y, api, mc, ci), 250); }   // v20.52 : 🎬 la démo part une fois la piste montée avec sa météo
+  if (DM && DM.lance) { DM.lance = false; setTimeout(() => { if (vueGP(ci) === "visite" && api.type === "3d") choisirVueGP("poursuite", y);
+    tourPresentation(api, ci, () => { if (GP_INST && GP_INST.api === api && GP_DEMO === DM) jouerDemo(y, api, mc, ci); }); }, 250); }   // v20.52 : 🎬 la démo part une fois la piste montée avec sa météo (v20.62 : après le tour de présentation, la 1re fois)   // v20.52 : 🎬 la démo part une fois la piste montée avec sa météo
   const dm = v.querySelector("#gp-demo"); if (dm) dm.addEventListener("click", lancerDemo);
-  const vu3 = v.querySelector("#gp-vue"); if (vu3) vu3.addEventListener("click", () => { const vers3d = pi.classList.contains("en2d"); ETAT.gp2d = vers3d ? "0" : "1"; garder(); rendreTrophees(); if (vers3d && !TRESOR_APERCU && !stock.get("versus.aideVisite")) { stock.set("versus.aideVisite", "1"); setTimeout(() => { toast("🧭 Visite 3D : glisse pour tourner, vers le haut ou le bas pour incliner, pince pour zoomer, deux doigts pour te déplacer. 🎬 Survol : la visite guidée."); try { if (GP_INST && GP_INST.api.type === "3d" && !GP_INST.api.enCours()) GP_INST.api.survol(12000); } catch (e) { } }, 900); } });
-  const sv = v.querySelector("#gp-survol"); if (sv) sv.addEventListener("click", () => { if (GP_INST && GP_INST.api.enCours()) { toast("Attends la fin de la course pour le survol."); return; }
-    const pl = sv.closest("details"); if (pl) pl.open = false;
-    // v17.10 : depuis la Carte 2D ou l'Hélico, on passe d'abord en 📺 Visite (la carte 3D seule), puis le survol part
-    const vueMaint = vueGP(ci) || vue;   // v17.41 : la vue ACTUELLE (elle a pu changer sans redessiner la page : Hélico → Survol ne marchait pas)
-    if (vueMaint && vueMaint !== "visite") { choisirVueGP("visite", y); setTimeout(() => { if (GP_INST && GP_INST.api.type === "3d" && !GP_INST.api.enCours()) GP_INST.api.survol(12000); }, 700); return; }
-    if (!GP_INST || GP_INST.api.type !== "3d") return; GP_INST.api.survol(12000); });   // V16.59 : visite guidée
+  const vu3 = v.querySelector("#gp-vue"); if (vu3) vu3.addEventListener("click", () => { const vers3d = pi.classList.contains("en2d"); ETAT.gp2d = vers3d ? "0" : "1"; garder(); rendreTrophees(); if (vers3d && !TRESOR_APERCU && !stock.get("versus.aideVisite")) { stock.set("versus.aideVisite", "1"); setTimeout(() => { toast("🧭 Visite 3D : glisse pour tourner, vers le haut ou le bas pour incliner, pince pour zoomer, deux doigts pour te déplacer. 🎥 Tour de présentation (menu ⋯) : la visite guidée du décor."); try { if (GP_INST && GP_INST.api.type === "3d" && !GP_INST.api.enCours() && !reduit) tourPresentation(GP_INST.api, ci, null, true); } catch (e) { } }, 900); } });
+  v.querySelectorAll("#gp-tourp").forEach(b => b.addEventListener("click", boutonPresentation));   // v20.62 : 🎥 tour de présentation (remplace « Survol guidé »)
   const cb = v.querySelector("#gp-cam-b"); if (cb) cb.addEventListener("click", () => { const l = ["tv", "helico", "bord"], n = l[(l.indexOf(camGP()) + 1) % l.length]; ETAT.gpCam = n; garder(); if (GP_INST) GP_INST.api.camera(n); majBoutonsGP(); });
-  const rj = v.querySelector("#gp-rejouer"); if (rj) rj.addEventListener("click", () => { if (i > 0 && !et.avenir || DR) jouer(); else toast(et.avenir ? "Cette manche se court ce mois-ci : la course se joue dès que tout le monde a saisi son relevé." : "Le départ n'a pas encore eu lieu : choisis un mois."); });
-  const fb = v.querySelector("#gp-fin"); if (fb) fb.addEventListener("click", () => { if (GP_DEMO && GP_DEMO.enCours && GP_INST && GP_INST.api === api && api.enCours()) { api.placer(GP_DEMO.scen(1)); if (window.SONS && SONS.repriseCourse) SONS.repriseCourse(); GP_DEMO.finir(); return; }   // v20.52 : ⏭ pendant la démo
+  const rj = v.querySelector("#gp-rejouer"); if (rj) rj.addEventListener("click", () => { if (GP_PRES) { passerPresentation(); return; } if (i > 0 && !et.avenir || DR) jouer(); else toast(et.avenir ? "Cette manche se court ce mois-ci : la course se joue dès que tout le monde a saisi son relevé." : "Le départ n'a pas encore eu lieu : choisis un mois."); });
+  const fb = v.querySelector("#gp-fin"); if (fb) fb.addEventListener("click", () => { if (GP_PRES) { passerPresentation(); return; } if (GP_DEMO && GP_DEMO.enCours && GP_INST && GP_INST.api === api && api.enCours()) { api.placer(GP_DEMO.scen(1)); if (window.SONS && SONS.repriseCourse) SONS.repriseCourse(); GP_DEMO.finir(); return; }   // v20.52 : ⏭ pendant la démo   // v20.62 : pendant le tour de présentation, ⏭ le saute
     if (api.enCours()) { api.placer(pArr); GP_HORLOGE = null; if (window.SONS && SONS.repriseCourse) SONS.repriseCourse(); if (DR) majPauseGP(); else finCourse(); } else toast(i > 0 && !et.avenir ? "La course est déjà arrivée : ↻ Rejouer pour la revoir." : "Pas encore de course pour ce mois-ci."); });
   const pl = v.querySelector("#gp-plein"); if (pl) pl.addEventListener("click", () => ouvrirPleinGP(y));
   const pz = v.querySelector("#gp-pause"); if (pz) pz.addEventListener("click", () => basculerPauseGP());   // v20.47
@@ -1541,15 +1576,12 @@ function ouvrirPleinGP(y) {
 /* v17.6 · plein écran « V2 » : rien que la piste, un petit sélecteur de vue, ▶ et ✕ ; vrai plein écran + paysage quand le téléphone le permet */
 function pleinV2(o, y) {
   const P = GP_PLEIN; P.v2 = true; o.classList.add("v2");
-  /* Théo, 19/11 : [Carte | Visite | Hélico | Survol] puis ▶ ⏭ ✕, ronds et en icônes seules */
-  o.insertAdjacentHTML("beforeend", '<div class="gpp-bar">' + selVuesGP(vueGP(document.getElementById("gp-piste").dataset.circuit), "mini", true) +
-    '<button class="gpp-b gpp-son" type="button" data-son aria-label="Couper le son">🔊</button><button class="gpp-b gpp-pause" type="button" aria-label="Mettre la course en pause" hidden>⏸\uFE0F Pause</button><button class="gpp-b gpp-play gpp-texte" type="button" aria-label="Revoir la course" title="Revoir">↻ Revoir</button><button class="gpp-b gpp-fin" type="button" aria-label="Aller à l\'arrivée" title="Aller à l\'arrivée" hidden>⏭</button><button class="gpp-b gpp-photo" type="button" aria-label="Mode photo : cacher toute l\'interface" title="Mode photo">📷</button><button class="gpp-b gpp-fermer" type="button" aria-label="Fermer le plein écran">✕</button></div>' +
+  /* Théo, 19/11 : [Carte | Visite | Hélico] puis ▶ ⏭ ✕, ronds et en icônes seules ; v20.62 : 🎥 tour de présentation à la place du segment « Survol » */
+  o.insertAdjacentHTML("beforeend", '<div class="gpp-bar">' + selVuesGP(vueGP(document.getElementById("gp-piste").dataset.circuit), "mini") +
+    '<button class="gpp-b gpp-son" type="button" data-son aria-label="Couper le son">🔊</button><button class="gpp-b gpp-tourp" type="button" aria-label="Tour de présentation" title="Tour de présentation">🎥</button><button class="gpp-b gpp-pause" type="button" aria-label="Mettre la course en pause" hidden>⏸\uFE0F Pause</button><button class="gpp-b gpp-play gpp-texte" type="button" aria-label="Revoir la course" title="Revoir">↻ Revoir</button><button class="gpp-b gpp-fin" type="button" aria-label="Aller à l\'arrivée" title="Aller à l\'arrivée" hidden>⏭</button><button class="gpp-b gpp-photo" type="button" aria-label="Mode photo : cacher toute l\'interface" title="Mode photo">📷</button><button class="gpp-b gpp-fermer" type="button" aria-label="Fermer le plein écran">✕</button></div>' +
     '<div class="gpp-tourne" hidden><b>📱↻</b> Tourne ton téléphone<br><small>pour voir le circuit en grand</small></div>');
-  const stopSv = () => { try { if (GP_INST && GP_INST.api.arreterSurvol) GP_INST.api.arreterSurvol(); } catch (e) { } };
-  o.querySelectorAll(".gpp-bar [data-gpv]").forEach(b => b.addEventListener("click", () => { stopSv(); choisirVueGP(b.dataset.gpv, y); majSurvolPlein(true); }));
-  const sv = o.querySelector(".gpp-bar [data-gpv-survol]");   // même action que « 🛸 Survol guidé » sous la piste (passe en 📺 Visite puis survole) ; re-toucher l'arrête
-  if (sv) sv.addEventListener("click", () => { if (P.survol) { stopSv(); majSurvolPlein(true); return; } const x = document.getElementById("gp-survol"); if (x) x.click(); sv.setAttribute("aria-pressed", "true"); P.svDemande = performance.now(); });
-  P.svTimer = setInterval(() => majSurvolPlein(), 250);   // le segment reste allumé pendant le survol
+  o.querySelectorAll(".gpp-bar [data-gpv]").forEach(b => b.addEventListener("click", () => { if (GP_PRES) passerPresentation(); choisirVueGP(b.dataset.gpv, y); }));
+  o.querySelector(".gpp-tourp").addEventListener("click", boutonPresentation);   // v20.62
   o.querySelector(".gpp-play").addEventListener("click", () => { const rj = document.getElementById("gp-rejouer") || document.getElementById("gp-demo"); if (rj) rj.click(); });   // v20.52 : avant le 1er décembre, ↻ lance la 🎬 démo
   majPlayPlein();
   o.querySelector(".gpp-pause").addEventListener("click", () => basculerPauseGP());   // v20.47
@@ -1566,15 +1598,6 @@ function pleinV2(o, y) {
     Promise.resolve(r).then(() => paysage(), () => { P.natif = false; return false; }).then(conseil); } catch (e) { P.natif = false; conseil(false); } }
   else conseil(false);   // iPhone : pas de plein écran natif → la couche fixe couvre l'écran, et on propose de tourner le téléphone
 }
-/** 19/11 · plein écran : le segment 🛸 Survol est allumé pendant le survol, la vue choisie sinon */
-function majSurvolPlein(force) {
-  const P = GP_PLEIN; if (!P || !P.v2) return; const sv = P.o.querySelector(".gpp-bar [data-gpv-survol]"); if (!sv) return;
-  const api = GP_INST && GP_INST.api, en = !!(api && api.survolEnCours && api.survolEnCours()), attente = P.svDemande && performance.now() - P.svDemande < 1500;
-  if (en) P.svDemande = 0;
-  const allume = en || !!attente; if (!force && allume === P.survol) return; P.survol = allume;
-  if (allume) { P.o.querySelectorAll(".gpp-bar [data-gpv]").forEach(b => b.setAttribute("aria-pressed", "false")); sv.setAttribute("aria-pressed", "true"); }
-  else { sv.setAttribute("aria-pressed", "false"); const pi = document.getElementById("gp-piste"); if (pi) majVueDOM(vueGP(pi.dataset.circuit)); }
-}
 function placerPlein(y) {
   const P = GP_PLEIN; if (!P) return;
   const pi = document.querySelector(".saison #gp-piste") || document.getElementById("gp-piste"); if (!pi) { fermerPleinGP(); return; }
@@ -1589,7 +1612,7 @@ function placerPlein(y) {
   const ch = document.querySelector(".saison .gp-mois"); P.o.querySelector(".gpp-mois").innerHTML = ch ? ch.outerHTML : "";
   P.o.querySelectorAll(".gpp-mois [data-gpe]").forEach(b => b.addEventListener("click", () => { GP_ETAPE = +b.dataset.gpe; GP_REJOUER = true; rendreTrophees(); }));
   const sel = P.o.querySelector('.gpp-mois [aria-pressed="true"]'); if (sel && !P.v2) sel.scrollIntoView({ inline: "center", block: "nearest" });
-  if (P.v2) { majVueDOM(vueGP(pi.dataset.circuit)); P.survol = null; majSurvolPlein(true);
+  if (P.v2) { majVueDOM(vueGP(pi.dataset.circuit));
     if (window.SONS && SONS.ambiance) SONS.ambiance((Piste.TRACES[pi.dataset.circuit] || {}).peint); }   // v17.59 : l'ambiance douce du circuit (v20.53 : chaque circuit a la sienne)
   GP_ETQ = null;
   if (GP_INST) { GP_INST.api.redim(); majTourPlein(GP_INST.api.courant(), true); }
@@ -1610,7 +1633,7 @@ function fermerPleinGP() {
   if (window.SONS && SONS.ambiance) SONS.ambiance(null);   // v17.59 : l'ambiance s'efface en fondu
   const pi = P.o.querySelector(".gp-piste");
   if (pi && P.ancre && P.ancre.isConnected) P.ancre.replaceWith(pi); else if (P.ancre) P.ancre.remove();
-  document.removeEventListener("keydown", P.esc); if (P.svTimer) clearInterval(P.svTimer);
+  document.removeEventListener("keydown", P.esc);
   if (P.v2) { document.removeEventListener("fullscreenchange", P.fsc); document.removeEventListener("webkitfullscreenchange", P.fsc); if (P.mq && P.mqf) try { P.mq.removeEventListener("change", P.mqf); } catch (e) { }
     try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) { }
     try { const fe = document.fullscreenElement || document.webkitFullscreenElement; if (fe) (document.exitFullscreen || document.webkitExitFullscreen).call(document).catch(() => { }); } catch (e) { } }

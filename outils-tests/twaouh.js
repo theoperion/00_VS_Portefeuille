@@ -2,7 +2,7 @@
    Lancer depuis la racine, serveur local ouvert : python3 -m http.server 8771 &  puis  node outils-tests/twaouh.js   (PORT=… pour un autre port)
    Vérifie : 1. (sans navigateur) rien de la recette (voiles, ombres, rayons) à moins de 15 m de la cachette du trésor de janvier ; les autres circuits
    n'ont aucune couche transparente ; mode léger = moitié moins de rayons ; 2. (navigateur) Dune : recette allumée (brume, sols, rayons) ;
-   tempête de sable et orage : pas de rayons, la tempête reste visible ; « réduire les animations » : recette toujours là ; les 14 autres circuits : aucune recette ;
+   tempête de sable et orage : rayons atténués (jamais éteints), même lumière, la tempête reste visible ; grand soleil : rayons un peu plus forts ; « réduire les animations » : recette toujours là ; les 14 autres circuits : aucune recette ;
    0 erreur JS. Fausses données uniquement (aucune donnée de joueur). */
 const fs = require("fs"), path = require("path");
 const PORT = process.env.PORT || 8771, ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); };
@@ -31,13 +31,15 @@ ok(!avecCouche.length, "les " + autres.length + " autres circuits : aucune couch
   const monter = (circuit, meteo, ambiance) => { const b = document.getElementById("b"); if (window.__a) window.__a.detruire(); b.innerHTML = "";
     return window.__a = Piste.monter(b, { circuit, meteo, ambiance, camera: "helico", effets: true, voitures: [{ nom: "A", couleur: "#4C9AFF" }], pts: { A: 1 } }); };
   const F = "const monter = " + monter.toString() + ";";
-  const a = await essai(false, new Function("return (async () => {" + F + "const o = {}; o.soleil = monter('silverstone', 'soleil').waouh(); await new Promise(r => setTimeout(r, 600));" +
+  const a = await essai(false, new Function("return (async () => {" + F + "const o = {}; o.soleil = monter('silverstone', 'soleil').waouh(); o.beau = monter('silverstone', 'beau').waouh(); await new Promise(r => setTimeout(r, 600));" +
     "o.orage = monter('silverstone', 'orage'); o.orageW = o.orage.waouh(); o.orageM = o.orage.meteo(); o.pluie = monter('silverstone', 'pluie').waouh(); o.nuit = monter('silverstone', 'soleil', 'monaco').waouh();" +
     "o.autres = Object.keys(Piste.TRACES).filter(id => id !== 'silverstone').map(id => [id, monter(id, 'soleil').waouh()]).filter(x => x[1]).map(x => x[0]); o.orage = null; return o; })()"));
   const r = a.r;
   ok(r.soleil && r.soleil.brume && r.soleil.sol && r.soleil.rayons && r.soleil.voile, "Dune au soleil : brume, sols par zones, rayons du soleil et voiles allumés " + JSON.stringify(r.soleil));
-  ok(r.orageW && !r.orageW.rayons && r.orageW.brume && r.orageM === "sable", "Dune sous l'orage : tempête de sable toujours visible (" + r.orageM + "), brume épaissie, pas de rayons");
-  ok(r.pluie && !r.pluie.rayons, "Dune « pluie » (tempête de sable) : pas de rayons");
+  // v20.62 (Théo : météo « très accessoire ») : la météo ne change plus la lumière ; les rayons sont atténués (jamais éteints), un peu plus forts au grand soleil
+  ok(r.orageW && r.orageW.rayons && r.orageW.brume && r.orageM === "sable" && JSON.stringify(r.orageW.brumeCol) === JSON.stringify(r.beau.brumeCol), "Dune sous l'orage : tempête de sable toujours visible (" + r.orageM + "), même brume qu'au beau temps, rayons atténués mais présents (" + (r.orageW && r.orageW.force.toFixed(3)) + ")");
+  ok(r.pluie && r.pluie.rayons && r.pluie.force < r.beau.force && r.pluie.force > 0, "Dune « pluie » (tempête de sable) : rayons atténués (" + (r.pluie && r.pluie.force.toFixed(3)) + " < " + r.beau.force.toFixed(3) + "), jamais éteints");
+  ok(r.soleil.force > r.beau.force, "grand soleil : rayons un peu plus présents (" + r.soleil.force.toFixed(3) + " > " + r.beau.force.toFixed(3) + ")");
   ok(r.nuit && !r.nuit.rayons, "Dune avec le filtre de nuit du joueur : pas de rayons");
   ok(!r.autres.length, "les 14 autres circuits : aucune recette (rendu d'avant) " + JSON.stringify(r.autres));
   const c = await essai(true, new Function("return (async () => {" + F + "return monter('silverstone', 'soleil').waouh(); })()"));
