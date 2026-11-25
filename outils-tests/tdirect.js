@@ -5,7 +5,10 @@
    Vérifie : au 10 du mois, tour 1, ordre de la grille (classement d'avant le mois), plus loin si le S&P monte que s'il baisse, jamais de recul
    d'un jour à l'autre, ligne d'arrivée le dernier jour ; janvier 2027 = ordre du tour de chauffe, l'absent (Nicolas) derrière ; décembre (chauffe)
    = ordre de novembre ; après clôture, course complète en 2 tours ; pause / reprise (2D, 3D, plein écran) ; commentaires, bulles et tour
-   dans le bandeau sous le dessin (jamais dessus) ; mode photo ; schéma ; 0 erreur JS ; captures 390 px clair et sombre. */
+   dans le bandeau sous le dessin (jamais dessus) ; mode photo ; schéma ; 0 erreur JS ; captures 390 px clair et sombre.
+   v20.52 (Théo) : grille 2D alignée en quinconce (pastilles sans chevauchement, ordre de la grille) ; 🎬 course de démonstration seulement
+   avant le 1er décembre (aucune requête d'écriture, aucun %, « manche vue » intacte, pause visible, dépassements, 2D, 3D et plein écran) ;
+   météo visible pluie / orage / soleil / neige à Noël, en 2D et en 3D, sans erreur ; « réduire les animations » coupe les particules. */
 const { chromium } = require("playwright"), fs = require("fs"), path = require("path"), os = require("os");
 const PORT = process.env.PORT || 8771, URL = "http://localhost:" + PORT + "/index.html";
 const DOSSIER = process.env.CAPTURES || path.join(os.tmpdir(), "versus-captures", "direct");   // captures hors du dépôt (CAPTURES=… pour un autre dossier)
@@ -39,7 +42,7 @@ async function ouvrir(b, quand, data, o) {
   o = o || {};
   const ctx = await b.newContext({ viewport: o.vp || { width: 390, height: 844 }, serviceWorkers: "block", colorScheme: o.sombre ? "dark" : "light" }), p = await ctx.newPage(), err = [];
   p.on("pageerror", e => err.push(e.message)); await p.clock.setFixedTime(new Date(quand));
-  await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}");
+  const req = []; await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}"); req.push(c.action || (/action=(\w+)/.exec(r.request().url()) || [])[1] || "?");
     r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : c.action === "tickets" ? { ok: true, ouvert: false } : data) }); });
   await p.addInitScript(([vu, d2]) => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.bullePortrait", "1"); localStorage.setItem("versus.saison1", "1");
     localStorage.setItem("versus.gpVu.2027", String(vu)); localStorage.setItem("versus.gpVu.2026", "202612"); localStorage.setItem("versus.baVu.2027", "202712"); localStorage.setItem("versus.deJanvier", "1"); localStorage.setItem("versus.aideVisite", "1");
@@ -47,7 +50,7 @@ async function ouvrir(b, quand, data, o) {
   await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1000);
   await p.evaluate(async d3 => { document.querySelectorAll(".revel, .regles, .tuto, .bulle-portrait, .ba").forEach(x => x.remove()); ETAT.podium = "gp"; ETAT.gp2d = d3 ? "0" : "1"; GP_ETAPE = null; garder(); montrerVue("trophees"); rendreTrophees();
     await new Promise(r => setTimeout(r, 1500)); document.querySelectorAll(".revel, .ba, .ere-voile").forEach(x => x.remove()); }, !!o.d3);
-  return { p, ctx, err };
+  return { p, ctx, err, req };
 }
 const etat = p => p.evaluate(() => { const ys = saisonCourante(), y = ys || 2027, et = etapesGP(y), i = GP_ETAPE !== null ? GP_ETAPE : etapeParDefaut(et, y), c = championnat(y), kGP = et[i].k || (c.chauffe ? CHAUFFE_K : y * 100 + 1);
   const dir = courseDirect(et, i, kGP), cur = GP_INST ? GP_INST.api.courant() : {}, ordre = Object.keys(cur).sort((a, b) => cur[b] - cur[a]);
@@ -214,6 +217,82 @@ const horsDessin = p => p.evaluate(() => { const sc = document.querySelector("#g
   await V3.close();
   if (a3v) ok(!e3d.length && res3.every(x => /:3d$/.test(x)) && res3.length === 18, "6 nouveaux circuits en 3D (Visite + Hélico, 0/1/5 voitures) : 0 erreur " + JSON.stringify(e3d.slice(0, 3)) + " " + res3.filter(x => !/:3d$/.test(x)).join(" "));
   else console.log("(3D indisponible : boucle des 6 circuits sautée)");
+  // 12. v20.52 · avant le 1er décembre : grille 2D alignée, 🎬 course de démonstration (2D, 3D, plein écran), puis plus de démo dès le 1er
+  const tags = p => p.evaluate(() => { const l = [...document.querySelectorAll("#gp-piste [data-gpt3]")].map(e => { const r = e.getBoundingClientRect(); return { n: e.dataset.gpt3, x: r.left, y: r.top, w: r.width, h: r.height, rg: e.querySelector(".gp-rg").textContent, op: getComputedStyle(e).opacity }; });
+    const cars = [...document.querySelectorAll("#gp-piste .p2-car")].map((e, k) => { const r = e.getBoundingClientRect(); return { n: D.personnes[k].nom, x: r.left + r.width / 2, y: r.top + r.height / 2 }; }); return { l, cars, grille: GP_GRILLE }; });
+  const chevauche = l => { const pb = []; l.forEach((a, i) => l.slice(i + 1).forEach(b => { const ix = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x), iy = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y); if (ix > 1 && iy > 1) pb.push(a.n + "/" + b.n); })); return pb; };
+  for (const sombre of [false, true]) {
+    const Z = await ouvrir(b, "2026-11-25T12:00:00", donnees(202611), { vu: 0, sombre }); await Z.p.waitForTimeout(800);
+    const g = await tags(Z.p), pb = chevauche(g.l), ordreRg = g.grille ? g.grille.map(n => (g.l.find(t => t.n === n) || {}).rg).join("") : "";
+    const cg = g.grille ? g.grille.map(n => g.cars.find(c => c.n === n)) : [], ecartMin = Math.min(...cg.slice(1).map((c, k) => Math.hypot(c.x - cg[k].x, c.y - cg[k].y)));
+    const bt = await Z.p.evaluate(() => ({ demo: !!document.getElementById("gp-demo"), rejouer: !!document.getElementById("gp-rejouer"), pause: !document.getElementById("gp-pause").hidden }));
+    await Z.p.evaluate(() => { const e = document.getElementById("gp-piste"); scrollBy(0, e.getBoundingClientRect().top - 150); }); await Z.p.waitForTimeout(300);
+    await Z.p.screenshot({ path: DOSSIER + "/grille-2d-" + (sombre ? "sombre" : "clair") + ".png" });
+    ok(g.l.length === 5 && g.l.every(t => t.op !== "0") && !pb.length, "grille 2D (" + (sombre ? "sombre" : "clair") + ") : les 5 pastilles visibles, aucune ne recouvre une autre " + JSON.stringify(pb));
+    ok(ordreRg === "12345" && ecartMin >= 15, "grille 2D : rangs des pastilles = ordre de la grille (" + ordreRg + "), voitures écartées d'au moins 15 px (" + Math.round(ecartMin) + " px)");
+    ok(bt.demo && !bt.rejouer && !bt.pause, "avant le 1er décembre : « 🎬 Course de démonstration » à la place de « ↻ Rejouer », pas de ⏸ à l'arrêt");
+    // la démo en 2D
+    const avantVu = await Z.p.evaluate(() => localStorage.getItem("versus.gpVu.2026")), n0 = Z.req.length;
+    await Z.p.click("#gp-demo"); await Z.p.waitForTimeout(3500);
+    const d1 = await Z.p.evaluate(() => ({ en: !!(GP_DEMO && GP_DEMO.enCours), cours: GP_INST.api.enCours(), pause: !document.getElementById("gp-pause").hidden, titre: document.querySelector(".gp-h .s-k").textContent, st: document.querySelector("#gp-piste .gp-st").textContent, met: GP_DEMO.meteo.id, vue: GP_INST.api.meteo(), ordre: Object.entries(GP_INST.api.courant()).sort((a, b) => b[1] - a[1]).map(x => x[0]) }));
+    const txt = await Z.p.evaluate(() => document.querySelector("#vue-trophees, main, body").innerText);
+    await Z.p.evaluate(() => { const e = document.getElementById("gp-piste"); scrollBy(0, e.getBoundingClientRect().top - 150); }); await Z.p.waitForTimeout(200);
+    await Z.p.screenshot({ path: DOSSIER + "/demo-2d-" + (sombre ? "sombre" : "clair") + ".png" });
+    await Z.p.waitForFunction(() => GP_DEMO && GP_DEMO.fini, null, { timeout: 20000 }); await Z.p.waitForTimeout(300);
+    const d2 = await Z.p.evaluate(() => ({ pause: !document.getElementById("gp-pause").hidden, com: document.querySelector("#gp-piste .gp-com").textContent, ordre: Object.entries(GP_INST.api.courant()).sort((a, b) => b[1] - a[1]).map(x => x[0]), max: Math.max(...Object.values(GP_INST.api.courant())), grille: mancheGP(etapesGP(2026), 0, 202612).grille }));
+    const ecr = Z.req.slice(n0).filter(a => a !== "?" && !/^(lire|donnees|etat|tresors|tickets|jeu)$/.test(a)), apresVu = await Z.p.evaluate(() => localStorage.getItem("versus.gpVu.2026"));
+    ok(d1.en && d1.cours && d1.pause && /Démo · rien ne compte/.test(d1.titre) && /Démo/.test(d1.st), "🎬 démo (2D) : la course roule, ⏸ visible, « Démo · rien ne compte » dans le titre et les sous-titres (" + d1.met + ")");
+    ok(!/\d+[,.]?\d*\s?%/.test(txt), "démo : aucun % affiché sur la page");
+    ok(!ecr.length && avantVu === apresVu, "démo : aucune requête d'écriture au serveur " + JSON.stringify(Z.req.slice(n0)) + ", « manche vue » inchangée (" + avantVu + ")");
+    ok(!d2.pause && d2.max >= 2 && /gagne la course de démo/.test(d2.com) && d2.ordre.join() !== d2.grille.join(), "démo : 2 tours, arrivée, dépassements (" + d2.grille.join(">") + " → " + d2.ordre.join(">") + "), ⏸ disparu à l'arrivée");
+    errs.push(...Z.err); await Z.ctx.close();
+  }
+  // démo en 3D (hélico) puis en plein écran ; ⏭ arrête la démo
+  { const Z = await ouvrir(b, "2026-11-25T12:00:00", donnees(202611), { vu: 0, d3: true });
+    if (await Z.p.evaluate(() => piste3D())) {
+      await Z.p.evaluate(() => choisirVueGP("poursuite", 2026)); await Z.p.waitForTimeout(900);
+      await Z.p.click("#gp-demo"); await Z.p.waitForTimeout(6500);
+      const d3 = await Z.p.evaluate(() => ({ type: GP_INST.api.type, en: GP_DEMO.enCours, pause: !document.getElementById("gp-pause").hidden, met: GP_INST.api.meteo() }));
+      await Z.p.evaluate(() => { const e = document.getElementById("gp-piste"); scrollBy(0, e.getBoundingClientRect().top - 150); }); await Z.p.waitForTimeout(200);
+      await Z.p.screenshot({ path: DOSSIER + "/demo-3d-clair.png" });
+      await Z.p.evaluate(() => document.getElementById("gp-fin").click()); await Z.p.waitForTimeout(400);
+      const d4 = await Z.p.evaluate(() => ({ fini: GP_DEMO.fini, cours: GP_INST.api.enCours(), pause: !document.getElementById("gp-pause").hidden }));
+      ok(d3.type === "3d" && d3.en && d3.pause, "🎬 démo en 3D : la course roule, ⏸ visible (" + d3.met + ")");
+      ok(d4.fini && !d4.cours && !d4.pause, "⏭ pendant la démo : arrivée tout de suite, ⏸ disparaît");
+      await Z.p.click("#gp-plein-gros"); await Z.p.waitForTimeout(900);
+      const pl = await Z.p.evaluate(() => document.querySelector(".gpp-play").textContent); await Z.p.click(".gpp-play"); await Z.p.waitForTimeout(6000);
+      const d5 = await Z.p.evaluate(() => ({ en: GP_DEMO && GP_DEMO.enCours, pause: !document.querySelector(".gpp-pause").hidden, titre: document.querySelector(".gpp-t").textContent }));
+      await Z.p.screenshot({ path: DOSSIER + "/demo-3d-plein.png" });
+      ok(pl === "🎬" && d5.en && d5.pause && /Démo/.test(d5.titre), "plein écran : 🎬 relance une démo, ⏸ visible, « Démo » dans le titre");
+    } else console.log("(3D indisponible : démo 3D sautée)");
+    errs.push(...Z.err); await Z.ctx.close(); }
+  { const Z = await ouvrir(b, "2026-11-25T12:00:00", donnees(202611), { vu: 0, d3: true, sombre: true });
+    if (await Z.p.evaluate(() => piste3D())) { await Z.p.evaluate(() => choisirVueGP("poursuite", 2026)); await Z.p.waitForTimeout(900); await Z.p.click("#gp-demo"); await Z.p.waitForTimeout(6500);
+      await Z.p.evaluate(() => { const e = document.getElementById("gp-piste"); scrollBy(0, e.getBoundingClientRect().top - 150); }); await Z.p.waitForTimeout(200); await Z.p.screenshot({ path: DOSSIER + "/demo-3d-sombre.png" }); }
+    errs.push(...Z.err); await Z.ctx.close(); }
+  for (const [q, att] of [["2026-11-30T23:30:00", true], ["2026-12-01T08:00:00", false], ["2026-12-10T12:00:00", false]]) {
+    const Z = await ouvrir(b, q, donnees(202611, { kSP: 202612, sp: up }), { vu: 0 }); await Z.p.waitForTimeout(600);
+    const r = await Z.p.evaluate(() => ({ demo: !!document.getElementById("gp-demo"), rj: !!document.getElementById("gp-rejouer") }));
+    ok(r.demo === att && r.rj === !att, q.slice(0, 16) + " : bouton démo " + (att ? "présent" : "absent, ↻ Revoir à la place") + " " + JSON.stringify(r)); errs.push(...Z.err); await Z.ctx.close(); }
+  // 13. météo visible : pluie, orage, soleil (février, le Château) et neige à Noël, en 2D et en 3D
+  const METEOS = [["soleil", "2027-02-10T12:00:00", 202701, 202702, .002], ["pluie", "2027-02-10T12:00:00", 202701, 202702, -.001], ["orage", "2027-02-10T12:00:00", 202701, 202702, -.004], ["neige", "2026-12-10T12:00:00", 202611, 202612, -.004]];
+  for (const [nom, q, j, kS, pente] of METEOS) for (const [d3, sombre] of [[false, false], [false, true], [true, false], [true, true]]) {
+    const Z = await ouvrir(b, q, donnees(j, { kSP: kS, sp: d => pente * d }), { vu: j === 202611 ? 0 : j, d3, sombre }); await Z.p.waitForTimeout(400);
+    if (d3 && !(await Z.p.evaluate(() => piste3D()))) { await Z.ctx.close(); continue; }
+    if (d3) { await Z.p.evaluate(y => choisirVueGP("poursuite", y), +q.slice(0, 4)); await Z.p.waitForTimeout(400); await Z.p.evaluate(() => document.getElementById("gp-rejouer").click()); await Z.p.waitForTimeout(2600); }
+    else await Z.p.waitForTimeout(1800);
+    if (nom === "orage") { await Z.p.evaluate(() => GP_INST.api.eclair()); await Z.p.waitForTimeout(d3 ? 30 : 40); }
+    const m = await Z.p.evaluate(() => ({ titre: meteoMois(new Date().getFullYear() * 100 + new Date().getMonth() + 1).id, vue: GP_INST.api.meteo(), type: GP_INST.api.type, ico: document.querySelector(".gp-met").textContent }));
+    await Z.p.evaluate(() => { const e = document.getElementById("gp-piste"); scrollBy(0, e.getBoundingClientRect().top - 150); }); await Z.p.waitForTimeout(120);
+    await Z.p.screenshot({ path: DOSSIER + "/meteo-" + nom + "-" + (d3 ? "3d" : "2d") + "-" + (sombre ? "sombre" : "clair") + ".png" });
+    const attendu = nom === "neige" ? "neige" : nom === "orage" ? "pluie" : nom;
+    ok(m.vue === attendu && m.type === (d3 ? "3d" : "2d") && Z.err.length === 0, "météo " + nom + " (" + m.titre + ") en " + m.type + (sombre ? " sombre" : " clair") + " : rendue sur la piste (" + m.vue + "), pictogramme « " + m.ico.split("·")[1].trim().slice(0, 3) + " », 0 erreur");
+    errs.push(...Z.err); await Z.ctx.close(); }
+  // « réduire les animations » : aucune particule ni couche animée, la course se place directement
+  { const Z = await ouvrir(b, "2027-02-10T12:00:00", donnees(202701, { kSP: 202702, sp: d => -.004 * d }), { vu: 202701 }); await Z.p.emulateMedia({ reducedMotion: "reduce" });
+    await Z.p.evaluate(() => { if (GP_INST) { GP_INST.api.detruire(); GP_INST.boite.remove(); GP_INST = null; } rendreTrophees(); }); await Z.p.waitForTimeout(800);
+    const r = await Z.p.evaluate(() => ({ cv: !!document.querySelector("#gp-piste canvas.p2-meteo"), met: GP_INST.api.meteo() })); errs.push(...Z.err); await Z.ctx.close();
+    ok(!r.cv && r.met === "pluie", "réduire les animations : pas de couche animée (piste mouillée seulement) " + JSON.stringify(r)); }
   ok(!errs.length, "0 erreur JS " + JSON.stringify(errs.slice(0, 5)));
   await b.close(); console.log("Captures : " + DOSSIER); process.exit(ko.length ? 1 : 0);
 })();

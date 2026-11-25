@@ -2291,3 +2291,7 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .gp-piste.v2 .gp-st .gp-pop .av { width: 18px; height: 18px; flex: none; }
 .gp-piste.v2 .gp-st .gp-pop small, .gp-piste.v2 .gp-st .gp-pop b small { display: none; }
 .gp-piste.v2 .gp-st .gp-pop .gp-pop-u { display: none; } .gp-pop-u { font-style: normal; }
+/* v20.52 (Théo) · grille 2D en quinconce : la pastille est posée à côté de sa voiture (sans pointe) ; 🎬 course de démonstration ; météo animée de la carte 2D */
+.gp-t3.grille::after { display: none; }
+.gp-demo { padding: 7px 12px; font-size: 12.5px; line-height: 1.15; text-align: center; }
+.gp-rendu > canvas.p2-meteo { cursor: default; }
