@@ -2366,6 +2366,7 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .mo-encours b { color: #5BE3A8; }
 .mj-cer-tab { margin: 0; padding-left: 22px; text-align: left; display: grid; gap: 3px; font-size: 13px; } .mj-cer-tab li { display: flex; justify-content: space-between; gap: 8px; } .mj-cer-tab li.or b { color: #F7CF55; } .mj-cer-tab small { opacity: .8; }
 .mj-rev.reduit *, .mj-cer.reduit * { animation: none !important; }
+.mj-rev, .mj-cer { z-index: 99; }   /* v20.72 · au-dessus du panneau d'aperçu admin (.regles, 97) */
 @media (prefers-reduced-motion: reduce) { .mj-carte *, .mj-rev *, .mj-cer *, .mj-aller { animation: none !important; } }
 /* vitrine */
 .sec-t.sec-2028 { cursor: default; opacity: .55; filter: grayscale(1); }
