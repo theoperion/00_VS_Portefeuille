@@ -2732,3 +2732,10 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 /* v20.62 · plein écran : le ▶ porte son nom (« Course de démo » avant le 1/12, puis « Rejouer ») */
 .gpp-b.gpp-texte { width: auto; padding: 0 14px; border-radius: 999px; font-size: 13.5px; white-space: nowrap; background: var(--accent); border-color: rgba(255,255,255,.35); }
 .gpp-b[hidden] { display: none !important; }
+.er-ou { margin-top: -6px; font-size: 12px; color: rgba(244,245,248,.7); }
+/* v20.62 · 🎁 plaque « Chercheur de Noël » (trésor de décembre 2026) : émail rouge à filet vert et or ; la version du premier en or */
+.plaque.pl-chercheur { color: #FFF6EC; background: linear-gradient(180deg, #C8283A, #8E1424); border: 1px solid #5A0A14; box-shadow: inset 0 0 0 1.5px #2E8B57, inset 0 0 0 2.5px #F7CF55, 0 1px 2px rgba(0,0,0,.3); }
+.plaque.pl-chercheuror { color: #4A2C05; background: linear-gradient(110deg, #B7791F, #FFE596 30%, #F7CF55 50%, #FFF6CC 62%, #C98E22); border: 1px solid #7A4A0C; box-shadow: inset 0 0 0 1.5px #2E8B57, inset 0 1px 0 #FFF6CC, 0 0 6px rgba(247,207,85,.5); }
+/* v20.62 · le % de l'indice dans le bandeau du direct : en gras, vert si ça monte, rouge si ça baisse */
+.gp-st-info b[class^="ix-"] { font-weight: 800; } .gp-st-info .ix-up { color: #3DDC97; } .gp-st-info .ix-down { color: #FF6B6B; }
+.cn-rev .tk-obj .plaque { font-size: 17px; padding: 4px 12px; } .cn-rev .rv-c .btn-row { grid-template-columns: 1fr; } .cn-gain { font-size: 14px !important; color: #F4F5F8 !important; }

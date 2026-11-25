@@ -101,7 +101,7 @@ function meteoMois(k) {
   const dv = k ? directGP(k) : null; if (dv && dv.j >= 1 && !dv.fini) return meteoDirect(dv.r);   // v20.47 : mois en cours = le S&P depuis le 1er
   const r = k ? indiceMois(k) : null;
   if (r === null) return { id: "beau", ico: "🌤️", nom: "Beau temps", txt: "Départ sous un ciel dégagé." };
-  const idx = D.marche.indices[iRef()], t = idx + " " + pct(r);
+  const t = texteIndice(r, "sur le mois");
   if (r >= 0.03) return { id: "soleil", ico: "☀️", nom: "Grand soleil", txt: t + " : piste sèche, ça roule fort." };
   if (r >= 0) return { id: "nuages", ico: "⛅", nom: "Nuageux", txt: t + " : temps couvert, course tactique." };
   if (r > -0.03) return { id: "pluie", ico: "🌧️", nom: "Pluie", txt: t + " : piste glissante, les pneus pluie paient pour qui résiste." };
@@ -142,8 +142,15 @@ function directGP(k) {
     f = Math.max(f, d >= N ? 1 : clampN(d / N + DIRECT_AMPL * m * Math.sin(Math.PI * d / N), 0, .97)); }
   const v = { j, N, f, r, fini: j > N }; MEMO_DIRECT = { d: D, cle, v }; return v;
 }
+/** v20.62 (Théo) · « S&P 500 : +0,4 % depuis le 1er » : les deux-points séparent le nom de l'indice et le chiffre (avant, « S&P 500 0,0 % » se confondait) ;
+ *  html = le % en gras, vert / rouge selon le signe (bandeau du direct). */
+function texteIndice(r, suite, html) {
+  const idx = D.marche.indices[iRef()] || "S&P 500", p = pct(r);
+  if (!html) return idx + "\u00a0: " + p + (suite ? " " + suite : "");
+  return esc(idx) + '\u00a0: <b class="ix-' + (r > 0.0005 ? "up" : r < -0.0005 ? "down" : "nul") + '">' + esc(p) + "</b>" + (suite ? " " + esc(suite) : "");
+}
 function meteoDirect(r) {
-  const idx = D.marche.indices[iRef()] || "S&P 500", t = idx + " " + pct(r) + " depuis le 1er";
+  const t = texteIndice(r, "depuis le 1er");
   if (r === null) return { id: "beau", ico: "🌤️", nom: "Beau temps", txt: "Le peloton avance avec les jours du mois." };
   if (r >= 0.015) return { id: "soleil", ico: "☀️", nom: "Grand soleil", txt: t + " : le peloton prend de l'avance." };
   if (r >= 0) return { id: "beau", ico: "🌤️", nom: "Beau temps", txt: t + " : le peloton roule un peu devant." };
@@ -220,10 +227,10 @@ function bandeauST(y, et, i, kGP, dir, met, mc0, demo) {
   if (demo) { tour = "🎬 Démo"; info = "🎬 Démo · rien ne compte : performances tirées au hasard, météo aussi (" + met.ico + " " + met.nom + ")."; }
   else if (dir && dir.dv.fini) { tour = "🏁 Tour <b>1</b> fini"; info = "🏁 Mois fini : tour 2 dès que tous les relevés sont là."; }   // mois fini, pas encore clos : plus de « direct »
   else if (dir) { tour = '<i class="gp-live" aria-hidden="true"></i>Direct · Tour <b>1</b>/' + TOURS_GP;
-    info = met.ico + " Jour " + dir.dv.j + "/" + dir.dv.N + " · " + (dir.dv.r === null ? "le peloton avance avec les jours" : (D.marche.indices[iRef()] || "S&P 500") + " " + pct(dir.dv.r) + " depuis le 1er"); }   // court (2 lignes au plus à 390 px), sans répéter la phrase du titre
+    info = met.ico + " Jour " + dir.dv.j + "/" + dir.dv.N + " · " + (dir.dv.r === null ? "le peloton avance avec les jours" : texteIndice(dir.dv.r, "depuis le 1er", true)); }   // court (2 lignes au plus à 390 px), sans répéter la phrase du titre
   else if (!et.m) { tour = "Sur la grille"; info = "🚦 Départ le 1<sup>er</sup> " + esc(moisLong(kGP).replace(/ \d{4}$/, "")) + " : on avance avec les jours et le S&P 500."; }
-  else info = "🏁 Course courue · ↻ Rejouer pour la revoir.";
-  return '<div class="gp-st"><span class="gp-tour">' + tour + '</span><div class="gp-st-l"><div class="gp-com" aria-live="polite"></div><div class="gp-pops"></div><div class="gp-st-info">' + (/<sup>/.test(info) ? info : esc(info)) + "</div></div></div>";
+  else info = "🏁 Course courue · ↻ Revoir pour la revoir.";
+  return '<div class="gp-st"><span class="gp-tour">' + tour + '</span><div class="gp-st-l"><div class="gp-com" aria-live="polite"></div><div class="gp-pops"></div><div class="gp-st-info">' + (/<sup>|<b /.test(info) ? info : esc(info)) + "</div></div></div>";
 }
 /** 📐 le schéma de la course (sous la piste et dans les règles) : 4 étapes dessinées, une phrase courte chacune */
 function svgSchemaCourse() {
@@ -504,7 +511,7 @@ function htmlGrandPrix(y) {
     (c.chauffe && !et.m && Date.now() < SAISON.depart.getTime() ? '<p class="info gp-depart">🏁 Grille de départ : la performance de novembre. La course se joue avec le relevé de fin décembre.</p>' :
       !et.m && kGP === SAISON.premiere * 100 + 1 ? '<p class="info gp-depart">' + (mc0 && /^chauffe/.test(mc0.grilleDe || "") ? "🏁 Grille de départ : l'ordre du tour de chauffe de décembre" + (mc0.grilleDe === "chauffe-grille" ? " (sa grille, tant que son résultat n'est pas connu)" : "") + ", les absents de la chauffe derrière (par ordre alphabétique). Tout le monde part à 0 point." : '<span class="gp-de' + (stock.get("versus.deJanvier") ? "" : (stock.set("versus.deJanvier", "1"), " roule")) + '" aria-hidden="true">🎲</span> Grille tirée au sort : tout le monde part à 0 point.') + "</p>" : "");   // v17.5 (Théo) : sur la grille de la chauffe, du 21/11 au 31/12
   const titreAt = at ? '<div class="gp-atouts"><span class="at" data-bdg="' + esc("Atout de " + G.ville + " : " + at.atout.ico + " " + at.atout.nom + " y gagne +1 quand elle marque (sauf bouchon).") + '">' + at.atout.ico + " " + esc(at.atout.nom) + " +1</span></div>" : (indiceCircuit(kGP) ? htmlIndice(indiceCircuit(kGP)) : "");
-  return versStand + att + '<div class="gp-h"><div><span class="s-k">' + (demo ? "🎬 Démo · rien ne compte" : c.chauffe ? "Tour de chauffe" + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : "") : et.avenir ? "Manche " + nM + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : " · sur la grille") : et.k ? "Manche " + nM : "Départ") + " · " + esc(moisLong(kGP)) + '</span><h3 class="gp-titre">' + G.drap + " " + esc(G.gp) + '</h3><p class="gp-met">' + esc(G.ville) + " · " + met.ico + " " + esc(met.txt) + (spe ? " " + spe.ico + " <b>" + esc(spe.nom) + "</b> : " + esc(spe.txt) : vuesV2(ci) && pgm ? ' <span data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " <b>" + esc(pgm.nom) + "</b></span>" : "") + '</p></div><div class="gp-hb"><button class="btn ghost gp-pause" type="button" id="gp-pause" aria-label="Mettre la course en pause" hidden>⏸\uFE0F Pause</button>' + (demoOk ? '<button class="btn ghost gp-rejouer gp-demo" type="button" id="gp-demo" aria-label="Course de démonstration : une course pour de faux, rien ne compte">🎬 Course de<br>démonstration</button>' : '<button class="btn ghost gp-rejouer" type="button" id="gp-rejouer">↻ ' + (dir ? "Revoir" : "Rejouer") + "</button>") + "</div></div>" +
+  return versStand + att + '<div class="gp-h"><div><span class="s-k">' + (demo ? "🎬 Démo · rien ne compte" : c.chauffe ? "Tour de chauffe" + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : "") : et.avenir ? "Manche " + nM + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : " · sur la grille") : et.k ? "Manche " + nM : "Départ") + " · " + esc(moisLong(kGP)) + '</span><h3 class="gp-titre">' + G.drap + " " + esc(G.gp) + '</h3><p class="gp-met">' + esc(G.ville) + " · " + met.ico + " " + esc(met.txt) + (spe ? " " + spe.ico + " <b>" + esc(spe.nom) + "</b> : " + esc(spe.txt) : vuesV2(ci) && pgm ? ' <span data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " <b>" + esc(pgm.nom) + "</b></span>" : "") + '</p></div><div class="gp-hb"><button class="btn ghost gp-pause" type="button" id="gp-pause" aria-label="Mettre la course en pause" hidden>⏸\uFE0F Pause</button>' + (demoOk ? '<button class="btn ghost gp-rejouer gp-demo" type="button" id="gp-demo" aria-label="Course de démonstration : une course pour de faux, rien ne compte">🎬 Course de<br>démonstration</button>' : '<button class="btn ghost gp-rejouer" type="button" id="gp-rejouer">↻ Revoir</button>') + "</div></div>" +
     titreAt + piste + (v2 ? '<div class="gp-vues2">' + selVuesGP(vue, "") + menuV2 + '<button class="gp-plein-gros" type="button" id="gp-plein-gros"><span aria-hidden="true">⛶</span> Plein écran</button></div>' : "") + (v2 ? '<details class="gp-schema"><summary>📐 Comment avance la course ?</summary>' + svgSchemaCourse() + "</details>" : "") + chips + '<div class="gp-liste">' + lignes + "</div>" + (et.m ? '<button class="btn ghost gp-carte" type="button" id="gp-carte">📸 Carte postale · ' + esc(moisLong(et.k)) + "</button>" : "") + cal +
     '<p class="info">Chaque mois, une manche sur un nouveau circuit : départ dans l\'ordre du championnat, et le meilleur du mois boucle le tour.' + " Touche une icône pour le détail, une voiture pour la suivre." + (c.chauffe ? " 🔥 Rien ne compte pendant la chauffe." : "") + ' <a href="#" class="lien-regles" data-regles="gp">Règles</a></p>' +
     htmlDetailPoints(y);
@@ -931,6 +938,7 @@ async function trouverTresor(t, b) {
     if (!rep.deja) { const l = TRESORS.l.find(x => x.circuit === t.circuit), n = moiVrai(); if (l && !(l.chercheurs || []).some(x => x.nom === n)) { const d = new Date(); (l.chercheurs = l.chercheurs || []).push({ nom: n, j: d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate() }); } }
     toast(rep.deja ? "🗝️ Déjà trouvé !" : "🗝️ Trouvé" + (rep.rang === 1 ? " en premier ! 🥇" : rep.rang ? " (" + rep.rang + "e)" : " !") + " " + TRESORS.total + " trésor" + (TRESORS.total > 1 ? "s" : "") + " dans ta besace.");
     if (rep.eclat && !rep.deja) { noterEclat(rep.eclat, moiVrai(), rep.rang); setTimeout(() => revelerEclat(rep.eclat, rep.rang), reduit ? 300 : 1300); }   // refonte des badges : 1er trouveur = cérémonie dorée   // v20.42 : l'éclat de la Coupe rendu par ce trésor
+    if (!rep.deja && !TRESOR_APERCU && typeof TRESOR_NOEL !== "undefined" && t.circuit === TRESOR_NOEL) setTimeout(() => ceremonieChercheurNoel(rep.rang), reduit ? 300 : 1300);   // v20.62 : 🎁 plaque Chercheur de Noël
     setTimeout(() => poserTresorDOM(document), reduit ? 0 : 900); }
   else { T.pris = false; b.classList.remove("pris"); toast((rep && rep.message) || "Trouvaille non enregistrée : réessaie."); }
 }
@@ -1018,6 +1026,20 @@ function revelerEclat(e, rang) {
 }
 /** Refonte des badges (Théo, 24/11) · le PREMIER à trouver le trésor du mois : grande révélation dorée (comme un secret doré), son nom gravé ;
  *  la trouvaille compte aussi pour le titre du Flair (3 points au 1er). Animations réduites : tout s'affiche d'un coup, sans mouvement. */
+/** v20.62 (Théo) · trésor de décembre 2026 trouvé : la plaque « Chercheur de Noël » (dorée pour le premier). Une ligne, une plaque, rien sur la cachette. */
+function ceremonieChercheurNoel(rang) {
+  const moi = moiVrai() || "", or = rang === 1, id = or ? "chercheuror" : "chercheur";
+  const o = document.createElement("div"); o.className = "revel cb-or cn-rev" + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Chercheur de Noël");
+  o.innerHTML = '<div class="rv-c cbo-c"><span class="cbo-rayons" aria-hidden="true"></span><span class="tuto-k">🎅 Trésor de l\'Atelier du Père Noël</span><h3>Trouvé' + (or ? " en premier ! 🥇" : " !") + "</h3>" +
+    '<p class="cn-gain">🎁 Tu gagnes la plaque <b>Chercheur de Noël</b>' + (or ? ", dans sa version dorée : tu es le premier !" : ".") + "</p>" +
+    '<div class="tk-obj">' + (typeof vignetteItem === "function" ? vignetteItem("plaque", id, moi, {}) : "") + "</div>" +
+    '<p class="cbo-flair">Elle est à toi pour toujours, dans ton écurie · aucun point</p><div class="btn-row"><button class="btn ghost" type="button" data-cb-ok>Génial !</button></div></div>';
+  document.body.appendChild(o);
+  const t0 = Date.now(), fermer = () => { o.remove(); try { rendreVue(vueActive()); } catch (er) { } };
+  o.addEventListener("click", ev => { if (ev.target === o && Date.now() - t0 > 1500) fermer(); });
+  o.querySelector("[data-cb-ok]").addEventListener("click", fermer);
+  try { confettis("trophees"); } catch (er) { /* sans fête */ }
+}
 function ceremonieEclat(e, c, i) {
   const moi = moiVrai() || "toi", G = GPS[e.circuit];
   const o = document.createElement("div"); o.className = "revel cb-or" + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Premier à trouver le trésor");
@@ -1258,13 +1280,13 @@ function basculerPauseGP(forcer) {
   majPauseGP();
 }
 /** v20.62 (Théo, 25/11) · plein écran : toujours un ▶ utile, avec son nom écrit. Avant le 1/12/2026 « ▶ Course de démo » (la 🎬 démo, rien ne compte),
- *  ensuite « ▶ Rejouer » (la vraie course du mois choisi). ⏭ (aller à l'arrivée) ne se montre que pendant une course. */
+ *  ensuite « ↻ Revoir » (la vraie course du mois choisi ; un seul mot partout, relecture du 25/11). ⏭ (aller à l'arrivée) ne se montre que pendant une course. */
 function majPlayPlein() {
   const b = document.querySelector(".gpp-play"); if (!b) return;
-  const demo = !!document.getElementById("gp-demo"), lib = demo ? "Course de démo" : "Rejouer";
+  const demo = !!document.getElementById("gp-demo"), lib = demo ? "▶ Course de démo" : "↻ Revoir";
   if (b.dataset.lib === lib) return; b.dataset.lib = lib;
-  b.textContent = "▶ " + lib; b.title = demo ? "Course de démonstration (rien ne compte)" : "Rejouer la course";
-  b.setAttribute("aria-label", demo ? "Lancer la course de démonstration (rien ne compte)" : "Rejouer la course");
+  b.textContent = lib; b.title = demo ? "Course de démonstration (rien ne compte)" : "Revoir la course";
+  b.setAttribute("aria-label", demo ? "Lancer la course de démonstration (rien ne compte)" : "Revoir la course");
 }
 function majPauseGP() {
   const api = GP_INST && GP_INST.api, en = !!(api && api.enCours && api.enCours()), p = en && enPauseGP(), v = en + "|" + p;
@@ -1503,7 +1525,7 @@ function majBoutonsGP() { document.querySelectorAll("#gp-cam-b").forEach(b => b.
 function ouvrirPleinGP(y) {
   if (GP_PLEIN) return;
   const o = document.createElement("div"); o.className = "gp-plein"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Circuit en plein écran");
-  o.innerHTML = '<div class="gpp-corps"></div><div class="gpp-h"><div class="gpp-t"></div><button class="gpp-x gpp-rj" type="button" aria-label="Rejouer la course">↻ Rejouer</button><button class="gpp-x" type="button" aria-label="Fermer le plein écran">✕</button></div><div class="gpp-tour"></div><div class="gpp-mois"></div>';
+  o.innerHTML = '<div class="gpp-corps"></div><div class="gpp-h"><div class="gpp-t"></div><button class="gpp-x gpp-rj" type="button" aria-label="Revoir la course">↻ Revoir</button><button class="gpp-x" type="button" aria-label="Fermer le plein écran">✕</button></div><div class="gpp-tour"></div><div class="gpp-mois"></div>';
   document.body.appendChild(o); document.documentElement.classList.add("fige");
   GP_PLEIN = { o, y, ancre: null, maj: 0 };
   o.querySelector('.gpp-x:not(.gpp-rj)').addEventListener("click", fermerPleinGP);
@@ -1518,7 +1540,7 @@ function pleinV2(o, y) {
   const P = GP_PLEIN; P.v2 = true; o.classList.add("v2");
   /* Théo, 19/11 : [Carte | Visite | Hélico | Survol] puis ▶ ⏭ ✕, ronds et en icônes seules */
   o.insertAdjacentHTML("beforeend", '<div class="gpp-bar">' + selVuesGP(vueGP(document.getElementById("gp-piste").dataset.circuit), "mini", true) +
-    '<button class="gpp-b gpp-son" type="button" data-son aria-label="Couper le son">🔊</button><button class="gpp-b gpp-pause" type="button" aria-label="Mettre la course en pause" hidden>⏸\uFE0F Pause</button><button class="gpp-b gpp-play gpp-texte" type="button" aria-label="Rejouer la course" title="Rejouer">▶ Rejouer</button><button class="gpp-b gpp-fin" type="button" aria-label="Aller à l\'arrivée" title="Aller à l\'arrivée" hidden>⏭</button><button class="gpp-b gpp-photo" type="button" aria-label="Mode photo : cacher toute l\'interface" title="Mode photo">📷</button><button class="gpp-b gpp-fermer" type="button" aria-label="Fermer le plein écran">✕</button></div>' +
+    '<button class="gpp-b gpp-son" type="button" data-son aria-label="Couper le son">🔊</button><button class="gpp-b gpp-pause" type="button" aria-label="Mettre la course en pause" hidden>⏸\uFE0F Pause</button><button class="gpp-b gpp-play gpp-texte" type="button" aria-label="Revoir la course" title="Revoir">↻ Revoir</button><button class="gpp-b gpp-fin" type="button" aria-label="Aller à l\'arrivée" title="Aller à l\'arrivée" hidden>⏭</button><button class="gpp-b gpp-photo" type="button" aria-label="Mode photo : cacher toute l\'interface" title="Mode photo">📷</button><button class="gpp-b gpp-fermer" type="button" aria-label="Fermer le plein écran">✕</button></div>' +
     '<div class="gpp-tourne" hidden><b>📱↻</b> Tourne ton téléphone<br><small>pour voir le circuit en grand</small></div>');
   const stopSv = () => { try { if (GP_INST && GP_INST.api.arreterSurvol) GP_INST.api.arreterSurvol(); } catch (e) { } };
   o.querySelectorAll(".gpp-bar [data-gpv]").forEach(b => b.addEventListener("click", () => { stopSv(); choisirVueGP(b.dataset.gpv, y); majSurvolPlein(true); }));

@@ -1,4 +1,4 @@
-/* Test (v20.62) · plein écran de la course : toujours un ▶ utile (Théo, 25/11). Avant le 1/12/2026 « ▶ Course de démo » (lance la démo), ensuite « ▶ Rejouer » ;
+/* Test (v20.62) · plein écran de la course : toujours un ▶ utile (Théo, 25/11). Avant le 1/12/2026 « ▶ Course de démo » (lance la démo), ensuite « ↻ Revoir » ;
    ⏭ seulement pendant une course. 390 px. Fausses données (serveur intercepté) ; node outils-tests/tplein.js (PORT=…). */
 const { chromium } = require("playwright"), fs = require("fs"), path = require("path"), os = require("os");
 const PORT = process.env.PORT || 8771, URL = "http://localhost:" + PORT + "/index.html";
@@ -42,10 +42,10 @@ async function page(b, o) {
     const l1 = await boutons(p);
     await p.screenshot({ path: (process.env.CAPTURES || "/tmp") + "/plein-" + q.slice(0, 10) + (sombre ? "-sombre" : "") + ".png" });
     if (q < "2026-12") ok(l1.includes("▶ Course de démo") && !l1.includes("⏭") && !av.deb, "avant le 1/12 : en plein écran, « ▶ Course de démo » (pas de ⏭ inutile), lisible à 390 px" + tag + " " + JSON.stringify(l1));
-    else ok(l1.includes("▶ Rejouer") && !l1.includes("⏭") && !l1.some(x => /démo/.test(x)) && !av.deb, "après le 1/12 : « ▶ Rejouer » (la vraie course), plus de démo" + tag + " " + JSON.stringify(l1));
+    else ok(l1.includes("↻ Revoir") && !l1.includes("⏭") && !l1.some(x => /démo/.test(x)) && !av.deb, "après le 1/12 : « ↻ Revoir » (la vraie course), plus de démo" + tag + " " + JSON.stringify(l1));
     await p.evaluate(() => document.querySelector(".gpp-play").click()); await p.waitForTimeout(1500);
     const l2 = await boutons(p), demo = await p.evaluate(() => !!(GP_DEMO && (GP_DEMO.enCours || GP_DEMO.lance || GP_DEMO.fini)));
-    ok(l2.some(x => /Pause/.test(x)) && l2.includes("⏭") && !l2.some(x => /^▶ (Rejouer|Course)/.test(x)) && (q < "2026-12" ? demo : !demo) && !err.length, "▶ lance " + (q < "2026-12" ? "la démo" : "la course") + " : ⏸ et ⏭ pendant la course" + tag + " " + JSON.stringify(l2) + " " + JSON.stringify(err.slice(0, 2)));
+    ok(l2.some(x => /Pause/.test(x)) && l2.includes("⏭") && !l2.some(x => /^(↻ Revoir|▶ Course)/.test(x)) && (q < "2026-12" ? demo : !demo) && !err.length, "▶ lance " + (q < "2026-12" ? "la démo" : "la course") + " : ⏸ et ⏭ pendant la course" + tag + " " + JSON.stringify(l2) + " " + JSON.stringify(err.slice(0, 2)));
     await ctx.close(); }
   await b.close();
   console.log(ko.length ? "\n" + ko.length + " NON" : "\nTout est OUI"); process.exit(ko.length ? 1 : 0);

@@ -19,6 +19,7 @@ const JOUEUR = { role: "perso", nom: "Clément" }, ADMIN = { role: "admin" };
 function fauxAvent(o, c) {
   const S = o.srv; S.envois.push(c);
   if (o.horsLigne) return null;
+  if (c.op === "score" && o.refuse) return { ok: false, erreur: "saisie", message: "Score impossible." };   // v20.62 : le serveur refuse un score hors bornes
   if (c.op === "score") { if (S.deja.includes(c.jeu)) return { ok: false, erreur: "deja", message: "demain" }; S.deja.push(c.jeu); S.mes[c.jeu] = c.score; }
   const r = { ok: true, ouvert: true, mes: Object.assign({}, S.mes) };
   if (o.quand >= "2026-12-24") { r.records = [{ jeu: "cadeaux", nom: "Kévin", score: 42, ex: [] }, { jeu: "memory", nom: "Devlin", score: 18.2, ex: ["Théo"] }, { jeu: "feux", nom: "Clément", score: 231, ex: [] }]; r.roi = [{ nom: "Kévin", places: 9, jeux: 3 }, { nom: "Clément", places: 11, jeux: 3 }]; }
@@ -84,7 +85,8 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
     ok(t.tous, "24/12 · les 24 cases sont ouvrables");
     ok(t.jeux.length >= 12 && new Set(t.cases).size === t.cases.length && t.jeux.every(j => t.cases.includes(j)), t.jeux.length + " jeux différents, chacun dans sa case " + JSON.stringify(t.cases));
     const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-    const INTERDITS = ["dune", "chateau", "alice", "gouter", "anneau", "pandora", "etoile", "obscur", "ratatouille", "petit chef", "envers", "odyssee", "chocolat", "titan", "multivers", "merveille", "mini-jeu", "mini jeu", "minijeu", "tresor", "coupe", "eclat", "ticket", "tablette", "regle", "2027", "univers", "saison 1", "archer", "foret", "circuits", "nouveaute", "ecurie", "€", "euro"];
+    // mots écrits à l'envers (puis remis à l'endroit) : la liste ne doit pas ressembler aux identifiants des mini-jeux (contrôle tsecrets-mj)
+    const INTERDITS = "enud|uaetahc|ecila|retuog|uaenna|arodnap|eliote|rucsbo|elliuotatar|fehc titep|srevne|eessydo|talocohc|natit|srevitlum|ellievrem|uej-inim|uej inim|uejinim|rosert|epuoc|talce|tekcit|ettelbat|elger|7202|srevinu|1 nosias|rehcra|terof|stiucric|etuaevuon|eiruce|€|orue".split("|").map(w => [...w].reverse().join(""));
     const trouves = INTERDITS.filter(m => norm(t.textes).includes(m));
     ok(!trouves.length, "aucun mot de ce qui arrive (univers, circuits, mini-jeux, trésors, Coupe, règles, écurie) ni montant dans les 24 cases " + JSON.stringify(trouves));
     await p.evaluate(() => ouvrirAvent()); await p.waitForTimeout(300);
@@ -132,7 +134,7 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
     await p.screenshot({ path: DOSSIER + "/jeu-biscuits.png" });
     await p.click(".av-case [data-av-fermer]"); await p.waitForTimeout(100);
     const ferme = await p.evaluate(() => !document.querySelector(".av-case"));
-    const n = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(), interdits = ["dune", "chateau", "anneau", "pandora", "etoile", "obscur", "envers", "odyssee", "chocolat", "titan", "multivers", "tresor", "coupe", "2027", "univers", "ecurie", "foret", "€"].filter(m => n(nom).includes(m));
+    const n = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(), interdits = "enud|uaetahc|uaenna|arodnap|eliote|rucsbo|srevne|eessydo|talocohc|natit|srevitlum|rosert|epuoc|7202|srevinu|eiruce|terof|€".split("|").map(w => [...w].reverse().join("")).filter(m => n(nom).includes(m));
     ok(/biscuits du Père Noël/i.test(nom) && s1 >= 5 && s2 === s1 - 1 && ferme && !interdits.length && !err.length, "case 16 : « Les biscuits du Père Noël » se lance, chaque bon tri rapporte 1, une erreur coûte 1, se ferme, aucun mot interdit " + JSON.stringify({ s1, s2, interdits, err: err.slice(0, 2) }));
     await ctx.close(); }
   // 4 · une partie entière jusqu'au bout (jeu chronométré) : score, record, rejouer
@@ -165,6 +167,54 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
     await p.screenshot({ path: DOSSIER + "/case-24-records.png" });
     await p.emulateMedia({ colorScheme: "dark" }); await p.screenshot({ path: DOSSIER + "/case-24-sombre.png" });
     ok(!err.length, "0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
+  // 4 ter · v20.62 (relectures du 25/11) : faux départ, bornes, refus du serveur, file hors connexion, accords, textes sous la consigne, bouton retour, cases 20 et 24
+  { const o = { quand: "2026-12-24T09:00:00", session: JOUEUR }, { ctx, p, err } = await page(b, o);
+    const etatJ = () => document.querySelector(".av-case").jeu.etat();
+    // faux départ sous 100 ms (même règle que le serveur)
+    const fd = await p.evaluate(async () => { ouvrirAvent(); ouvrirCaseAvent(23); document.querySelector(".av-case [data-avj='go']").click(); await new Promise(r => setTimeout(r, 100));
+      const G = document.querySelector(".av-case").jeu.etat(); G.s.ph = "go"; G.s.t0 = performance.now(); JEUX_AVENT.feux.toucher(G, 100, 100, "down"); return { es: G.s.es.length, txt: G.s.txt }; });
+    ok(fd.es === 0 && /Faux départ/.test(fd.txt), "« Le départ du traîneau » : toucher en moins de 100 ms = faux départ, rien n'est compté " + JSON.stringify(fd));
+    // bornes : un score impossible n'est ni gardé ni mis en file
+    const bo = await p.evaluate(async () => { document.querySelectorAll(".av-case [data-av-fermer]").forEach(x => x.click()); ouvrirCaseAvent(2); document.querySelector(".av-case [data-avj='go']").click(); await new Promise(r => setTimeout(r, 100));
+      const G = document.querySelector(".av-case").jeu.etat(); G.score = 500; G.finir(); await new Promise(r => setTimeout(r, 200));
+      return { rec: recordsAvent().cadeaux, file: fileAvent().cadeaux || null, v: document.querySelector(".avj-voile").innerText, bornes: [scoreValide("cadeaux", 120), scoreValide("cadeaux", 121), scoreValide("feux", 99), scoreValide("memory", 3)] }; });
+    ok(bo.rec !== 500 && !bo.file && /hors des limites/.test(bo.v) && bo.bornes.join() === "true,false,false,false", "bornes de l'appli = celles du serveur : 500 cadeaux ni gardé ni envoyé " + JSON.stringify(bo));
+    // le serveur refuse un record : il n'est pas gardé comme record local et ne bloque pas les suivants
+    o.refuse = true;
+    const rf = await p.evaluate(async () => { const R = recordsAvent(); R.pile = 300; stock.set("versus.aventRecords", JSON.stringify(R)); mettreEnFileAvent("pile", 300); await new Promise(r => setTimeout(r, 900)); return { rec: recordsAvent().pile, file: fileAvent().pile || null }; });
+    o.refuse = false;
+    const rf2 = await p.evaluate(async () => { mettreEnFileAvent("pile", 40); await new Promise(r => setTimeout(r, 900)); return { file: fileAvent().pile || null }; });
+    ok(rf.rec === undefined && !rf.file && !rf2.file && o.srv.envois.some(c => c.jeu === "pile" && c.score === 40), "record refusé par le serveur : oublié sur l'appareil, le suivant (40) part normalement " + JSON.stringify([rf, rf2]));
+    // hors connexion (données du cache) : le record se met quand même en file, et part dès que la connexion revient
+    const n0 = o.srv.envois.length;
+    const hc = await p.evaluate(async () => { SOURCE = "cache"; mettreEnFileAvent("boules", 12); await new Promise(r => setTimeout(r, 500)); const f = fileAvent().boules || null; SOURCE = "api"; await envoyerFileAvent(); return { f, apres: fileAvent().boules || null }; });
+    ok(hc.f && hc.f.s === 12 && !hc.apres && o.srv.envois.slice(n0).some(c => c.jeu === "boules"), "record fait hors connexion : mis en file, envoyé au retour du réseau " + JSON.stringify(hc));
+    // accords et textes muets sous la consigne
+    const fm = await p.evaluate(() => [avFmt(JEUX_AVENT.cadeaux, 1), avFmt(JEUX_AVENT.cadeaux, 3), avFmt(JEUX_AVENT.renne, 1), avFmt(JEUX_AVENT.rennes, 1), avFmt(JEUX_AVENT.luge, 1)]);
+    ok(fm.join("|") === "1 cadeau|3 cadeaux|1 trouvé|1 sur 5|1 m", "accords : « 1 cadeau », « 3 cadeaux », « 1 trouvé » " + JSON.stringify(fm));
+    const mu = await p.evaluate(async () => { document.querySelectorAll(".av-case [data-av-fermer]").forEach(x => x.click()); let n = 0; const ft = CanvasRenderingContext2D.prototype.fillText; CanvasRenderingContext2D.prototype.fillText = function () { n++; return ft.apply(this, arguments); };
+      ouvrirCaseAvent(23); await new Promise(r => setTimeout(r, 500)); const avant = n; document.querySelector(".av-case [data-avj='go']").click(); await new Promise(r => setTimeout(r, 500)); CanvasRenderingContext2D.prototype.fillText = ft; return { avant, apres: n - avant }; });
+    ok(mu.avant === 0 && mu.apres > 0, "les textes du jeu ne se dessinent pas sous la consigne avant « Jouer » " + JSON.stringify(mu));
+    // bouton retour du téléphone : la case d'abord, puis le calendrier
+    const rt = await p.evaluate(() => { const a = fermerFenetreOuverte(), c1 = !!document.querySelector(".av-case"), o1 = !!document.querySelector(".av-ov"); const b2 = fermerFenetreOuverte(); return { a, c1, o1, b2, o2: !!document.querySelector(".av-ov") }; });
+    ok(rt.a && !rt.c1 && rt.o1 && rt.b2 && !rt.o2, "bouton retour : ferme d'abord la case, puis le calendrier " + JSON.stringify(rt));
+    // case 20 : rouvre l'annonce ; case 24 : « Aller à mon écurie », la règle du roi
+    const c20 = await p.evaluate(async () => { ouvrirAvent(); ouvrirCaseAvent(20); const b = document.querySelector("[data-av-podium]"), t = b && b.textContent; b.click(); await new Promise(r => setTimeout(r, 400)); const tu = document.querySelector(".tuto"); const r = { t, tuto: !!tu, txt: tu ? tu.innerText.slice(0, 80) : "" }; if (tu) tu.remove(); return r; });
+    ok(c20.tuto && /annonce/i.test(c20.t), "case 20 : le bouton rouvre directement l'annonce du 20 " + JSON.stringify(c20));
+    const c24 = await p.evaluate(async () => { ouvrirAvent(); ouvrirCaseAvent(24); await new Promise(r => setTimeout(r, 1200)); const t = document.querySelector(".av-case").innerText, b = document.querySelector("[data-av-ecurie]"); b.click(); await new Promise(r => setTimeout(r, 500)); return { roi: /le plus souvent devant, tous jeux confondus/.test(t), bouton: /Aller à mon écurie/.test(t), podium: ETAT.podium, case: !!document.querySelector(".av-case") }; });
+    ok(c24.roi && c24.bouton && c24.podium === "ecurie" && !c24.case, "case 24 : « 🏎️ Aller à mon écurie » y mène ; le roi = celui qui finit le plus souvent devant, tous jeux confondus " + JSON.stringify(c24));
+    ok(!err.length, "4 ter · 0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
+  // 4 quater · simulation de date (admin, vue joueur) : aucun envoi, le vrai stockage reste intact
+  { const o = { quand: "2026-11-26T10:00:00", session: ADMIN, admin: true };
+    const { ctx, p, err } = await page(b, Object.assign(o, {}));
+    await p.evaluate(() => { localStorage.setItem("versus.aventRecords", '{"cadeaux":5}'); localStorage.setItem("versus.vueJoueur", "Clément"); localStorage.setItem("versus.dateSim", "2026-12-24"); });
+    await p.reload(); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes); await p.waitForTimeout(1500);
+    const n0 = o.srv.envois.length;
+    const si = await p.evaluate(async () => { const sim = simulation(); ouvrirAvent(); ouvrirCaseAvent(2); document.querySelector(".av-case [data-avj='go']").click(); await new Promise(r => setTimeout(r, 100));
+      const G = document.querySelector(".av-case").jeu.etat(); G.score = 60; G.finir(); mettreEnFileAvent("pile", 33); await envoyerFileAvent(); await new Promise(r => setTimeout(r, 800));
+      return { sim, vrai: localStorage.getItem("versus.aventRecords"), file: localStorage.getItem("versus.aventFile") }; });
+    ok(si.sim && o.srv.envois.slice(n0).filter(c => c.op === "score").length === 0 && si.vrai === '{"cadeaux":5}' && !si.file, "simulation (date simulée + vue joueur) : zéro envoi, le vrai stockage reste intact " + JSON.stringify(si));
+    ok(!err.length, "4 quater · 0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
   // 5 · aperçu admin : toutes les cases en novembre, rien de gardé ; refusé à un joueur
   { const { ctx, p, err, srv } = await page(b, { quand: "2026-11-26T10:00:00", session: ADMIN, admin: true });
     const a = await p.evaluate(() => { apercuAvent(); const o = { ov: !!document.querySelector(".av-ov"), ferme: document.querySelectorAll(".av-c.ferme").length }; ouvrirCaseAvent(17); o.c = !!document.querySelector(".av-case"); o.vu = aventOuvertes().length; o.entree = !!document.querySelector(".av-entree"); return o; });

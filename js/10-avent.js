@@ -1,7 +1,7 @@
 /* Versus · 🎄 Calendrier de l'Avent du tour de chauffe (v20.61, validé par Théo le 25/11/2026)
    Du 1er au 24 décembre 2026, une case par jour : on n'ouvre que la case du jour et celles des jours passés (date de l'appareil ;
    l'appli n'a aucun garde-fou d'horloge ailleurs, donc date simple). Dix-sept petits jeux de Noël (v20.62 : + « Les biscuits du Père Noël » en case 16) (10 à 30 s, rejouables, score pour soi seul)
-   et huit surprises. AUCUN point, rien n'est envoyé au serveur : les cases ouvertes et les records vivent sur l'appareil (versus.avent*).
+   et sept surprises. AUCUN point. Les cases ouvertes et les records vivent sur l'appareil (versus.avent*) ; chaque nouveau record part aussi au serveur (ci-dessous).
    Le 24 : un souvenir pour chaque pilote (plaque « Hiver 2026 » + traînée « Flocons »), à porter dès le 24/12/2026 (js/3-podium.js, souvenirOuvert).
    Règle du secret : aucune case ne parle de ce qui arrive (règles, circuits, nouveautés) ; le 20 dit seulement « l'annonce est arrivée ».
    Entrée : une carte en haut du Classement, en décembre 2026 seulement (pastille tant que la case du jour n'est pas ouverte).
@@ -154,7 +154,15 @@ function avBiscuit(c, x, y, s, k, a) {
     c.fillStyle = "#E63946"; c.beginPath(); c.arc(0, 0, 2, 0, Math.PI * 2); c.arc(0, 7, 2, 0, Math.PI * 2); c.fill(); }
   c.restore();
 }
-function avTexte(c, t, x, y, taille, col, align) { c.font = "800 " + taille + "px Saira, system-ui, sans-serif"; c.textAlign = align || "center"; c.textBaseline = "middle"; c.fillStyle = col || "#fff"; c.fillText(t, x, y); }
+/** v20.62 · bornes des scores, les MÊMES que le serveur (app_scripts/versus/Avent.js, VS_AVENT_JEUX) : un score hors bornes n'est ni gardé ni envoyé */
+const AV_BORNES = { cadeaux: [0, 120], renne: [0, 80], pile: [0, 400], boules: [0, 90], memory: [4, 900], cheminees: [0, 600], flocons: [0, 250], chaussettes: [0, 60],
+  bonshommes: [2.5, 30], guirlande: [0, 200], livraison: [0, 60], biscuits: [0, 60], rennes: [0, 5], luge: [0, 200000], gobelets: [0, 200], feux: [100, 5000] };
+function scoreValide(id, v) { const b = AV_BORNES[id]; return typeof v === "number" && isFinite(v) && (!b || (v >= b[0] && v <= b[1])); }
+/** « 1 cadeau », « 3 cadeaux » : l'unité s'accorde (rien à faire pour s, ms, m, « sur 5 ») */
+function avFmt(J, v) { if (J.fmt) return J.fmt(v); const n = Math.round(v), u = J.unite;
+  return n + " " + (Math.abs(n) < 2 && /[a-zé]{3,}s$|aux$/.test(u) && !/ /.test(u) ? u.replace(/aux$/, "au").replace(/s$/, "") : u); }
+let AV_MUET = false;   // v20.62 : avant le début de la partie (consigne affichée), les textes du jeu ne se dessinent pas sous la consigne
+function avTexte(c, t, x, y, taille, col, align) { if (AV_MUET) return; c.font = "800 " + taille + "px Saira, system-ui, sans-serif"; c.textAlign = align || "center"; c.textBaseline = "middle"; c.fillStyle = col || "#fff"; c.fillText(t, x, y); }
 function avEclats(G, x, y, col) { if (reduit) return; (G.s.ecl = G.s.ecl || []).push(...Array.from({ length: 10 }, (_, i) => ({ x, y, vx: Math.cos(i * .63) * (40 + Math.random() * 60), vy: Math.sin(i * .63) * (40 + Math.random() * 60) - 30, v: .6, col }))); }
 function avMajEclats(G, c, dt) { const l = G.s.ecl; if (!l) return; for (let i = l.length - 1; i >= 0; i--) { const p = l[i]; p.v -= dt; if (p.v <= 0) { l.splice(i, 1); continue; } p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 120 * dt; c.globalAlpha = Math.min(1, p.v * 2); c.fillStyle = p.col || "#FFE596"; c.beginPath(); c.arc(p.x, p.y, 2.4, 0, 7); c.fill(); } c.globalAlpha = 1; }
 const avMelange = l => { for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [l[i], l[j]] = [l[j], l[i]]; } return l; };
@@ -272,7 +280,7 @@ const JEUX_AVENT = {
       if (a.c === b.c && a.m === b.m) { a.ok = b.ok = true; G.score++; G.son("ok"); } else { G.t += 1; S.sh = .35; S.err = [S.sel, i]; G.son("rate"); }
       S.sel = null; } },
 
-  bonshommes: { nom: "La course des bonshommes de neige", ico: "⛄", unite: "s", bas: true, fmt: s => s.toFixed(1).replace(".", ",") + " s", aide: "Tape l'écran le plus vite possible pour faire avancer ton bonhomme (en bas, à ta couleur) jusqu'au drapeau, devant les lutins.",
+  bonshommes: { nom: "La course des bonshommes de neige", ico: "⛄", unite: "s", bas: true, chrono: true, fmt: s => s.toFixed(1).replace(".", ",") + " s", aide: "Tape l'écran le plus vite possible pour faire avancer ton bonhomme (en bas, à ta couleur) jusqu'au drapeau, devant les lutins.",
     init(G) { G.s.b = [0, 1, 2].map(() => ({ d: 0, v: 44 + Math.random() * 14 })); G.s.d = 0; G.s.arr = 0; },
     maj(G, dt) { const S = G.s; S.b.forEach(b => { if (b.d < 250) { b.d += b.v * dt * (.8 + Math.random() * .4); if (b.d >= 250) S.arr++; } }); if (G.t > 30) { G.score = 30; G.msg = "Les lutins t'attendent encore à l'arrivée !"; G.finir(); } },
     dessin(G, c) { const S = G.s; avFond(G, c, false); c.fillStyle = "#EAF4FF"; c.fillRect(0, 100, G.W, G.H - 100); avNeige(G, c);
@@ -410,7 +418,9 @@ const JEUX_AVENT = {
       if (S.es.length) avTexte(c, S.es.map(v => Math.round(v) + " ms").join(" · "), 160, 320, 14, "#FFE596"); },
     toucher(G, x, y, t) { const S = G.s; if (t !== "down") return;
       if (S.ph === "feux") { S.txt = "Faux départ ! On recommence."; G.son("rate"); S.ph = "pause"; S.tm = 0; }
-      else if (S.ph === "go") { const rt = performance.now() - S.t0; S.es.push(rt); S.txt = Math.round(rt) + " ms !"; G.son("go"); S.ph = "pause"; S.tm = 0; } } }
+      else if (S.ph === "go") { const rt = performance.now() - S.t0;
+        if (rt < 100) { S.txt = "Faux départ ! (trop tôt pour être humain)"; G.son("rate"); S.ph = "pause"; S.tm = 0; return; }   // v20.62 : sous 100 ms = faux départ, comme au serveur
+        S.es.push(rt); S.txt = Math.round(rt) + " ms !"; G.son("go"); S.ph = "pause"; S.tm = 0; } } }
 };
 function avNouvelleGrille(G) { const S = G.s, n = S.n; S.d = Math.floor(Math.random() * n * n); S.v = [{ nezBrun: true }, { sansBois: true }, { clair: true }, { sens: true }][Math.floor(Math.random() * 4)]; }
 function avNouvellesChaussettes(G) { const S = G.s, d = avMelange([[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 1], [0, 2], [2, 4], [1, 5], [3, 3]]).slice(0, 6);
@@ -433,7 +443,7 @@ function jeuAvent(zone, id) {
   const cv = zone.querySelector("canvas"), ctx = cv.getContext("2d"), voile = zone.querySelector(".avj-voile");
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   let G = null, raf = 0, last = 0, vivant = true, appui = false;
-  const fmt = v => J.fmt ? J.fmt(v) : Math.round(v) + " " + J.unite;
+  const fmt = v => avFmt(J, v);
   const majRecord = () => { const r = recordsAvent()[id]; voile.querySelector(".avj-rec").textContent = !J.libre && r !== undefined ? "🏅 Ton record : " + fmt(r) : ""; };
   function nouveau(enJeu) {
     G = { W, H, t: 0, horloge: G ? G.horloge : 0, score: 0, fin: false, enJeu, s: {}, msg: "", couleur: (() => { try { return couleur(moiVrai()); } catch (e) { return "#4C9AFF"; } })(),
@@ -442,7 +452,8 @@ function jeuAvent(zone, id) {
   }
   function terminer() {
     if (!G || G.fin) return; G.fin = true; G.enJeu = false;
-    const R = recordsAvent(), av = R[id], mieux = av === undefined || (J.bas ? G.score < av : G.score > av);
+    const R = recordsAvent(), av = R[id], valide = J.libre || scoreValide(id, G.score), mieux = valide && (av === undefined || (J.bas ? G.score < av : G.score > av));
+    if (!valide) G.msg = "Score hors des limites du jeu : il ne compte pas.";
     if (mieux && !aventApercu()) { R[id] = J.bas ? Math.round(G.score * 10) / 10 : G.score; stock.set("versus.aventRecords", JSON.stringify(R)); mettreEnFileAvent(id, R[id]); }
     sonAvent("fin");
     voile.innerHTML = '<span class="avj-ico" aria-hidden="true">' + (mieux ? "🏅" : J.ico) + "</span><b>" + esc(fmt(G.score)) + "</b>" + (G.msg ? "<p>" + esc(G.msg) + "</p>" : "") +
@@ -457,7 +468,7 @@ function jeuAvent(zone, id) {
     try {
       G.horloge += dt;
       if (G.enJeu && !G.fin) { G.t += dt; if (J.duree && G.t >= J.duree) { G.t = J.duree; terminer(); } else J.maj(G, dt); }
-      ctx.clearRect(0, 0, W, H); J.dessin(G, ctx, dt);
+      ctx.clearRect(0, 0, W, H); AV_MUET = !G.enJeu; try { J.dessin(G, ctx, dt); } finally { AV_MUET = false; }
       if (G.enJeu && !J.libre) {   // le tableau de bord : score (ou chrono) à gauche, temps restant en barre
         ctx.fillStyle = "rgba(0,0,0,.45)"; avRond(ctx, 8, 8, 128, 28, 14); ctx.fill();
         avTexte(ctx, J.chrono ? fmt(G.t) : fmt(G.score), 20, 22, 15, "#fff", "left");
@@ -553,8 +564,8 @@ function ouvrirCaseAvent(n, apres) {
   if (c.type === "jeu") corps = '<div class="av-jeu"></div>';
   else if (c.type === "scene") corps = '<div class="av-jeu av-scene"></div><p class="av-t">' + esc(c.texte) + "</p>";
   else if (c.type === "compte") { const r = joursAvantAnnonce(); corps = '<div class="av-rebours"><span>' + (r > 0 ? "J-" + r : "🎉") + "</span><small>" + (r > 1 ? "avant l'annonce du 20 décembre" : r === 1 ? "demain, l'annonce !" : "l'annonce est arrivée") + '</small></div><p class="av-t">' + esc(c.texte) + "</p>"; }
-  else if (c.type === "cadeau") corps = htmlCadeauAvent() + '<p class="av-t">' + esc(c.texte) + '</p><div class="av-records">' + htmlRecordsAvent() + "</div>";
-  else corps = '<p class="av-t">' + esc(c.texte) + "</p>" + (c.type === "annonce" ? '<button class="btn acc" type="button" data-av-podium>📣 Aller au Podium</button>' : "");
+  else if (c.type === "cadeau") corps = htmlCadeauAvent() + '<p class="av-t">' + esc(c.texte) + '</p><button class="btn acc" type="button" data-av-ecurie>🏎️ Aller à mon écurie</button><div class="av-records">' + htmlRecordsAvent() + "</div>";
+  else corps = '<p class="av-t">' + esc(c.texte) + "</p>" + (c.type === "annonce" ? '<button class="btn acc" type="button" data-av-podium>📣 Revoir l\'annonce</button>' : "");
   o.innerHTML = neigeAvent(24) + '<div class="av-carte"><button class="av-x" type="button" aria-label="Fermer">✕</button><span class="av-k">🎄 Case du ' + n + " décembre</span><h3>" + (c.type === "jeu" ? "" : '<span aria-hidden="true">' + c.ico + "</span> ") + esc(titreCase(n)) + "</h3>" + corps +
     '<div class="btn-row"><button class="btn ghost" type="button" data-av-fermer>Fermer</button></div></div>';
   document.body.appendChild(o);
@@ -566,7 +577,10 @@ function ouvrirCaseAvent(n, apres) {
   const fermer = () => { if (inst) inst.stop(); o.remove(); if (apres) apres(); poserAventEntree(); };
   o.addEventListener("click", e => { if (e.target === o) fermer(); });
   o.querySelector(".av-x").addEventListener("click", fermer); o.querySelector("[data-av-fermer]").addEventListener("click", fermer);
-  const pd = o.querySelector("[data-av-podium]"); if (pd) pd.addEventListener("click", () => { fermer(); document.querySelectorAll(".av-ov").forEach(x => x.remove()); AVENT_APERCU = false; try { allerA("trophees"); } catch (e) { } });
+  const pd = o.querySelector("[data-av-podium]"); if (pd) pd.addEventListener("click", () => { fermer(); document.querySelectorAll(".av-ov").forEach(x => x.remove()); AVENT_APERCU = false;   // v20.62 : rouvre l'annonce du 20 elle-même
+    try { const l = etapesJeu().filter(e => annonceEtape(e) === 20261220 && regleVisible(e.id)); if (l.length) ouvrirNouveautes(l); else allerA("trophees"); } catch (e) { } });
+  const ec = o.querySelector("[data-av-ecurie]"); if (ec) ec.addEventListener("click", () => { fermer(); document.querySelectorAll(".av-ov").forEach(x => x.remove()); AVENT_APERCU = false;
+    try { ETAT.podium = "ecurie"; ECU_SLOT = "plaque"; garder(); allerA("trophees"); rendreTrophees(); } catch (e) { } });
   return o;
 }
 function joursAvantAnnonce() { const d = new Date(); if (d.getFullYear() !== 2026 || d.getMonth() !== 11) return aventApercu() ? AVENT.annonce - 13 : 0; return Math.max(0, AVENT.annonce - d.getDate()); }
@@ -596,12 +610,14 @@ function htmlCadeauAvent() {
 }
 /* ---------- Records de Noël partagés (serveur Versus · Avent.js) : jamais bloquant, jamais en simulation ni en aperçu ---------- */
 let AVENT_SRV = null, AVENT_SRV_T = 0, AVENT_ENVOI = false;
+/** v20.62 · un record se met en file pendant le calendrier, sauf en simulation de date ou en aperçu admin (même hors connexion) */
+function aventFile() { try { return !simulation() && !aventApercu() && aventPeriode(); } catch (e) { return false; } }
 function aventEnLigne() { try { return SOURCE === "api" && !simulation() && !aventApercu() && aventPeriode(); } catch (e) { return false; } }
 function fileAvent() { try { const o = JSON.parse(stock.get("versus.aventFile") || "{}"); return o && typeof o === "object" && !Array.isArray(o) ? o : {}; } catch (e) { return {}; } }
 function jourAvNum() { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
 /** un record à envoyer : gardé en file (le meilleur seulement), puis envoyé dès que possible */
 function mettreEnFileAvent(id, score) {
-  const J = JEUX_AVENT[id]; if (!J || J.libre || !aventEnLigne()) return;
+  const J = JEUX_AVENT[id]; if (!J || J.libre || !scoreValide(id, score) || !aventFile()) return;   // v20.62 : en file même hors connexion ; la connexion se teste à l'envoi
   const f = fileAvent(), d = f[id]; if (d && !(J.bas ? score < d.s : score > d.s)) return;
   f[id] = { s: score, deja: d ? d.deja : 0 }; stock.set("versus.aventFile", JSON.stringify(f)); envoyerFileAvent();
 }
@@ -614,7 +630,8 @@ async function envoyerFileAvent() {
       const rep = await posterAdmin({ action: "avent", op: "score", jeu, score: x.s });
       const f = fileAvent(), y = f[jeu];
       if (rep && rep.ok) { if (y && y.s === x.s) delete f[jeu]; recevoirAvent(rep); }
-      else if (rep && ["saisie", "fini", "tot", "refus"].includes(rep.erreur)) { if (y && y.s === x.s) delete f[jeu]; }
+      else if (rep && ["saisie", "fini", "tot", "refus"].includes(rep.erreur)) { if (y && y.s === x.s) delete f[jeu];
+        if (rep.erreur === "saisie") { const R = recordsAvent(); if (R[jeu] === x.s) { delete R[jeu]; stock.set("versus.aventRecords", JSON.stringify(R)); } } }   // v20.62 : un score refusé ne reste pas comme record (il bloquerait les suivants)
       else if (rep && rep.erreur === "deja") { if (y) y.deja = jourAvNum(); }
       else break;   // pas de réseau ou serveur occupé : on garde tout pour plus tard
       stock.set("versus.aventFile", JSON.stringify(f));
@@ -638,9 +655,9 @@ async function chargerAvent(force) {
 /** case 24 : « 🎁 Les cadeaux du traîneau : Clément 42 » pour chaque jeu, et le roi des jeux de Noël (pour rire, aucun point) */
 function htmlRecordsAvent() {
   const S = AVENT_SRV; if (!S || !Array.isArray(S.records) || !S.records.length) return "";
-  const L = S.records.filter(r => JEUX_AVENT[r.jeu]).map(r => { const J = JEUX_AVENT[r.jeu], f = J.fmt ? J.fmt(Number(r.score)) : Math.round(r.score) + " " + J.unite;
+  const L = S.records.filter(r => JEUX_AVENT[r.jeu]).map(r => { const J = JEUX_AVENT[r.jeu], f = avFmt(J, Number(r.score));
     return "<li><span>" + J.ico + " " + esc(J.nom) + "</span><b>" + esc([r.nom].concat(r.ex || []).join(" et ")) + " · " + esc(f) + "</b></li>"; }).join("");
-  const roi = Array.isArray(S.roi) && S.roi.length ? '<p class="av-roi">🎅 Le roi des jeux de Noël : <b>' + esc(S.roi[0].nom) + "</b>" + (S.roi.length > 1 ? "<small>puis " + S.roi.slice(1, 5).map(x => esc(x.nom)).join(", ") + " · au cumul des places, pour rire</small>" : "") + "</p>" : "";
+  const roi = Array.isArray(S.roi) && S.roi.length ? '<p class="av-roi">🎅 Le roi des jeux de Noël : <b>' + esc(S.roi[0].nom) + "</b>" + (S.roi.length > 1 ? "<small>puis " + S.roi.slice(1, 5).map(x => esc(x.nom)).join(", ") + "</small>" : "") + '<small class="av-roi-r">Le roi des jeux de Noël, c\'est celui qui finit le plus souvent devant, tous jeux confondus (pour rire, aucun point).</small></p>' : "";
   return '<h4>🏆 Les records de Noël de la bande</h4><ul>' + L + "</ul>" + roi;
 }
 /** 🎄 aperçu admin (double sécurité) : toutes les cases ouvrables, rien n'est gardé */

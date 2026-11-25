@@ -68,6 +68,9 @@ const horsDessin = p => p.evaluate(() => { const sc = document.querySelector("#g
   const eA = await etat(A.p), hA = await horsDessin(A.p), txtA = await A.p.evaluate(() => { document.querySelectorAll("details").forEach(d => d.open = true); return document.body.innerText; });
   await A.p.screenshot({ path: DOSSIER + "/direct-2d-hausse.png", fullPage: false });
   await A.p.evaluate(() => { const s = document.querySelector(".gp-schema"); if (s) { s.open = true; s.scrollIntoView({ block: "center" }); } }); await A.p.waitForTimeout(300); await A.p.screenshot({ path: DOSSIER + "/schema-clair.png" });
+  // v20.62 (Théo) : « S&P 500 : +3,5 % depuis le 1er », le nom de l'indice et le chiffre séparés, le % en gras (vert si ça monte)
+  const ixA = await A.p.evaluate(() => { const i = document.querySelector(".gp-st-info"), b = i && i.querySelector("b.ix-up"); return { t: i ? i.textContent : "", b: !!b, col: b ? getComputedStyle(b).color : "" }; });
+  ok(/S&P 500\u00a0: \+[\d,]+\u00a0?%/.test(ixA.t.replace(/ %/, "\u00a0%")) && ixA.b && !/S&P 500 \d/.test(ixA.t), "bandeau du direct : « S&P 500 : +x % depuis le 1er », le % en gras et en vert " + JSON.stringify(ixA));
   const grilleA = await A.p.evaluate(() => mancheGP(etapesGP(2027), etapesGP(2027).length - 1, 202702).grille), classJanv = await A.p.evaluate(() => { const c = championnat(2027), m = c.mois.find(x => x.k === 202701); return Object.keys(m.cumul).sort((a, b) => m.cumul[b] - m.cumul[a]); });
   errs.push(...A.err); await A.ctx.close();
   const B = await ouvrir(b, "2027-02-10T12:00:00", donnees(202701, { sig: true, kSP: 202702, sp: down }), { vu: 202701 }); await B.p.waitForTimeout(4200);

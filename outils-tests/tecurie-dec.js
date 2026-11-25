@@ -111,6 +111,26 @@ async function page(b, o) {
       return { pl: ids.includes("plaque.hiver26"), tr: ids.includes("trainee.flocons"), autres: ids.filter(k => { const [s, id] = k.split("."); return !estDepart(s, id) && !GAINS_SOUVENIR.some(g => g.join(".") === k); }) }; });
     ok(r.pl === attendu && r.tr === attendu && !r.autres.length && !err.length, q.slice(0, 10) + " : souvenir de l'Avent (Hiver 2026, Flocons) " + (attendu ? "choisissable" : "pas encore là") + ", aucun objet 2027 " + JSON.stringify(r));
     await ctx.close(); }
+  // 3 ter. v20.62 (Théo) : plaque « Chercheur de Noël » déduite de la liste publique des chercheurs du trésor de décembre (Kévin 1er, Clément 2e, Nicolas rien)
+  for (const [qui, att] of [["Kévin", "or"], ["Clément", "normale"], ["Nicolas", "rien"]]) {
+    const { ctx, p, err } = await page(b, { quand: "2026-12-15T10:00:00", session: { role: "perso", nom: qui } });
+    await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}");
+      if (c.action === "tresors") return r.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, tresors: [{ circuit: "abudhabi", saison: 2026, mois: 12, chercheurs: [{ nom: "Kévin", j: 20261205 }, { nom: "Clément", j: 20261207 }] }], trouves: [], total: 0 }) });
+      r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "ecurie" || c.action === "avent" || c.action === "tickets" ? { ok: true } : donnees({ role: "perso", nom: qui })) }); });
+    await p.reload(); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes); await p.waitForTimeout(800);
+    const r = await p.evaluate(async () => { TRESORS = null; TRESORS_T = 0; await chargerTresors(); const m = moiVrai(), d = debloques(m), ids = idsSlot("plaque");
+      const q = texteOrigineItem(m, "plaque", "chercheur"), qo = texteOrigineItem(m, "plaque", "chercheuror");
+      TRESOR_APERCU = { sauve: {} }; const ap = debloques(m).has("plaque.chercheur"); TRESOR_APERCU = null;
+      return { n: d.has("plaque.chercheur"), o: d.has("plaque.chercheuror"), vis: ids.filter(i => /chercheur/.test(i)), q: q.p, qo: qo.p, ap, rar: rareteItem("plaque", "chercheuror").lib }; });
+    const bon = att === "or" ? r.n && r.o && r.vis.length === 2 && /le 5\/12/.test(r.q) && /premier/.test(r.qo) && r.rar === "Exclusif" : att === "normale" ? r.n && !r.o && r.vis.join() === "chercheur" && /le 7\/12/.test(r.q) : !r.n && !r.o && !r.vis.length;
+    ok(bon && !r.ap && !err.length && !/cach|où|sous|derrière/i.test(r.q + r.qo), "Chercheur de Noël · " + qui + " : " + (att === "or" ? "1er → plaque dorée et normale" : att === "normale" ? "2e → plaque normale" : "pas trouvé → aucune plaque") + " ; l'aperçu admin ne donne rien ; rien sur la cachette " + JSON.stringify(r));
+    if (att === "or") { await p.evaluate(async () => { document.querySelectorAll(".ecu-rev,.revel").forEach(x => x.remove()); ETAT.podium = "ecurie"; ECU_SLOT = "plaque"; garder(); allerA("trophees"); rendreTrophees(); await new Promise(r => setTimeout(r, 900)); ceremonieChercheurNoel(1); await new Promise(r => setTimeout(r, 600)); });
+      const t = await p.evaluate(() => (document.querySelector(".cn-rev") || {}).innerText || "");
+      ok(/Tu gagnes la plaque Chercheur de Noël/.test(t) && /premier/.test(t), "cérémonie de décembre : « 🎁 Tu gagnes la plaque Chercheur de Noël » (dorée pour le premier)");
+      await p.screenshot({ path: DOSSIER + "/chercheur-noel-ceremonie.png" });
+      await p.evaluate(() => document.querySelectorAll(".cn-rev, .revel, .ecu-rev").forEach(x => x.remove())); await p.waitForTimeout(900);
+      await p.locator(".items").first().screenshot({ path: DOSSIER + "/chercheur-noel-ecurie.png" }); }
+    await ctx.close(); }
   // 4. animations réduites : révélation sans animation, voiture visible tout de suite
   { const { ctx, p, err } = await page(b, { quand: "2026-12-05T08:00:00", reduit: true, session: { role: "perso", nom: "Nicolas" } });
     await p.waitForSelector(".ecu-rev", { timeout: 9000 }).catch(() => {});

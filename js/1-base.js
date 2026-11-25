@@ -160,7 +160,8 @@ async function charger(frais) {
     ERREUR_SERVEUR = ""; DEMARRAGE = false; D = json; voilerMoisIncomplet(); SOURCE = "api"; EN_CHARGEMENT = false; stock.set(CLES.cache, JSON.stringify(json)); afficherTout();
     setTimeout(() => { try { annoncerExclusifs(); } catch (e) { /* rien */ } }, 1200);
     setTimeout(() => { try { bullePortrait(); } catch (e) { /* rien */ } }, 2500);   // V16.26
-    setTimeout(() => { try { teaserEcurie(); } catch (e) { /* rien */ } }, 1800);   // v20.61 : « Ton écurie ouvre ses portes » (une fois, à partir du 1/12/2026)
+    setTimeout(() => { try { teaserEcurie(); } catch (e) { /* rien */ } }, 1800);
+    setTimeout(() => { try { if (typeof chargerTresors === "function" && typeof TRESORS !== "undefined" && !TRESORS && tresorsOuverts()) chargerTresors().then(() => { if (chercheursNoel().length && ["classement", "fiche"].includes(vueActive())) rendreVue(vueActive()); }).catch(() => {}); } catch (e) { /* rien */ } }, 3200);   // v20.62 : 🎁 plaques Chercheur de Noël (liste publique des chercheurs)   // v20.61 : « Ton écurie ouvre ses portes » (une fois, à partir du 1/12/2026)
     setTimeout(() => revendiquerExclusifs().then(() => { if (vueActive() === "trophees" || vueActive() === "classement") rendreVue(vueActive()); }).catch(() => {}), 0);
   } catch (e) {
     if (DEMARRAGE && !(e && e.serveur)) { DEMARRAGE = false; setTimeout(() => charger(frais), 1500); return; }   // un seul nouvel essai avant d'afficher « Hors connexion »

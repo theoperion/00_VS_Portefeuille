@@ -309,7 +309,7 @@ const ITEMS = {
   livree: { couleur: "Couleur", chrome: "Chrome", or: "Or", neon: "Néon", arcenciel: "Prisme", oranime: "Or vivant", platine: "Platine", rubis: "Rubis", galaxie: "Galaxie", orrose: "Or rose", chocolat: "Chocolat fondant", carte: "Carte à jouer", ver: "Peau des sables" },
   trainee: { simple: "Simple", halo: "Halo", flammes: "Flammes", etincelles: "Étincelles", comete: "Comète", supernova: "Supernova", turbo: "Turbo", arcenciel: "Arc-en-ciel", cables: "Câbles d'acier", flocons: "Flocons", sabre: "Sabre lumineux", glitch: "Faille" },
   klaxon: { confettis: "Confettis", damier: "Damier", feu: "Feu d'artifice", parade: "Parade", billets: "Pluie de billets", fanfare: "Fanfare royale", cibles: "Dans le mille", fusees: "Décollage", trophees: "Pluie de trophées", ouvriers: "Fanfare des petits ouvriers" },
-  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon", cheval: "Cheval de bois", hiver26: "Hiver 2026" }
+  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon", cheval: "Cheval de bois", hiver26: "Hiver 2026", chercheur: "Chercheur de Noël", chercheuror: "Chercheur de Noël d'or" }
 };
 const BASE_ECURIE = { casque: "uni", circuit: "classique", fond: "couleur", finition: "aucune", livree: "couleur", trainee: "simple", klaxon: "confettis", plaque: "aucune" };
 /* v20.61 (Théo, 25/11) · objets de DÉPART en plus de la série : à tout le monde, dès l'ouverture de l'écurie (1/12/2026). Les objets génériques
@@ -332,6 +332,16 @@ function gagnantsTicket() { return TICKETS && Array.isArray(TICKETS.gagnants) ? 
 const TICKET_MOIS = { debut: new Date(2027, 9, 1), fin: new Date(2027, 10, 1), regles: new Date(2027, 0, 1) };
 /* 🎄 Souvenir du tour de chauffe (calendrier de l'Avent, case du 24 décembre 2026, js/10-avent.js) : offert à CHAQUE pilote, à porter dès le 24/12/2026 */
 const GAINS_SOUVENIR = [["plaque", "hiver26"], ["trainee", "flocons"]], SOUVENIR_DES = new Date(2026, 11, 24);
+/* v20.62 (Théo, 25/11) · 🎁 plaque « Chercheur de Noël » : pour chaque pilote qui trouve le trésor de décembre 2026 (l'Atelier du Père Noël, tour de chauffe) ;
+   le PREMIER a la version dorée (exclusive). Aucun point, gardée pour toujours. Déduite de la liste PUBLIQUE des chercheurs du trésor
+   (TRESORS.l[].chercheurs : nom et jour, dans l'ordre ; jamais où), comme la pastille des éclats : aucun changement serveur. L'aperçu admin ne donne rien. */
+const GAIN_CHERCHEUR = ["plaque", "chercheur"], GAIN_CHERCHEUR_OR = ["plaque", "chercheuror"], TRESOR_NOEL = "abudhabi";
+function chercheursNoel() {
+  try { if (typeof TRESOR_APERCU !== "undefined" && TRESOR_APERCU) return [];
+    const T = typeof TRESORS !== "undefined" && TRESORS && TRESORS.l, t = T && T.find(x => x.circuit === TRESOR_NOEL && (!x.saison || x.saison === SAISON.premiere - 1));
+    return t && Array.isArray(t.chercheurs) ? t.chercheurs.filter(x => x && x.nom) : []; } catch (e) { return []; }
+}
+function estGainChercheur(slot, id) { return slot === "plaque" && (id === GAIN_CHERCHEUR[1] || id === GAIN_CHERCHEUR_OR[1]); }
 function souvenirOuvert() { return Date.now() >= SOUVENIR_DES.getTime() || saisonJouee(); }
 function ticketVisible() { return Date.now() >= TICKET_MOIS.debut.getTime() || gagnantsTicket().some(g => g.nom === moiPilote()); }
 function debloques(nom) {
@@ -342,7 +352,8 @@ function debloques(nom) {
     TROPHEES_MONDES.forEach(t => { if (TM[t.id] && TM[t.id][nom] && TM[t.id][nom].ok) t.gain.forEach(g => o.add(g.join("."))); });
     if (anneesSaison().some(y => (etatGant(y)[nom] || { n: 0 }).n === 6)) GANT.gain.forEach(g => o.add(g.join(".")));
   }
-  if (souvenirOuvert()) GAINS_SOUVENIR.forEach(g => o.add(g.join(".")));   // 🎄 souvenir du tour de chauffe, pour tous (dès le 24/12/2026)
+  if (souvenirOuvert()) GAINS_SOUVENIR.forEach(g => o.add(g.join(".")));
+  { const ch = chercheursNoel(), i = ch.findIndex(x => x.nom === nom); if (i >= 0) { o.add(GAIN_CHERCHEUR.join(".")); if (i === 0) o.add(GAIN_CHERCHEUR_OR.join(".")); } }   // 🎁 Chercheur de Noël   // 🎄 souvenir du tour de chauffe, pour tous (dès le 24/12/2026)
   if (D.premierMillion && D.premierMillion.nom === nom) GAINS_MILLION.forEach(g => o.add(g.join(".")));
   succesDe(nom).forEach(x => o.add(x.gain.join(".")));                      // 🏅 l'objet commun : pour chacun qui réussit
   exclusifsDe(nom).forEach(x => gainsSecret(x).forEach(g => o.add(g.join("."))));   // 🥇 + l'exclusif : pour le premier
@@ -368,6 +379,7 @@ function origineItem(slot, id) {
   if (estGainTicket(slot, id)) return { ticket: true, legende: true };
   if (estDepart(slot, id)) return { depart: true };
   if (GAINS_SOUVENIR.some(g => g[0] === slot && g[1] === id)) return { souvenir: true };
+  if (estGainChercheur(slot, id)) return { souvenir: true, chercheur: true, exclusif: id === GAIN_CHERCHEUR_OR[1] ? { id: "chercheuror", nom: "premier chercheur de Noël", ico: "🥇" } : null };
   { const m = typeof mjOrigine === "function" && mjOrigine(slot, id); if (m) return m; }   // 🎲 plaque du meilleur d'un mini-jeu (js/9-minijeux.js) : exclusif doré
   const a = (g => !!g && g[0] === slot && g[1] === id);
   const sc = SUCCES.find(x => a(x.gain) || a(x.bonus)); if (sc) return { succes: sc, exclusif: a(sc.bonus) ? sc : null };
@@ -403,11 +415,11 @@ function plaqueDe(nom) {
   if (!saisonVisible()) return "";
   const p = equipDe(nom).plaque;
   if (p === "aucune") return "";
-  const o = origineItem("plaque", p), quoi = o.exclusif ? "succès doré « " + o.exclusif.nom + " » (le premier)" : o.succes ? "succès « " + o.succes.nom + " »" : o.monde ? "trophée du monde « " + nomMonde(o.monde) + " »" : o.gant ? "Gant de l'infini complet" : "";
+  const o = origineItem("plaque", p), quoi = o.chercheur ? "trésor de l'Atelier du Père Noël" + (p === GAIN_CHERCHEUR_OR[1] ? " (le premier)" : "") : o.exclusif ? "succès doré « " + o.exclusif.nom + " » (le premier)" : o.succes ? "succès « " + o.succes.nom + " »" : o.monde ? "trophée du monde « " + nomMonde(o.monde) + " »" : o.gant ? "Gant de l'infini complet" : "";
   return '<span class="plaque' + classePlaque(p) + '" data-bdg="' + esc("Plaque « " + ITEMS.plaque[p] + " » de " + nom + (quoi ? ", gagnée avec le " + quoi : o.ticket ? ", gagnée avec le 🎫 ticket d'or de la Chocolaterie" : o.mj ? ", gagnée comme 🥇 meilleur du mini-jeu de " + MOIS_L[o.mj % 100 - 1] : o.souvenir ? ", souvenir du tour de chauffe (décembre 2026)" : "") + ".") + '">' + iconePlaque(p) + esc(ITEMS.plaque[p]) + "</span> ";
 }
 /** v20.46 · plaques émaillées à part : Ratatouille (plaque de rue parisienne, bleue), Ticket d'or (feuille d'or), Carré d'as, et les plaques des mini-jeux ; les autres restent en métal */
-function classePlaque(id) { return ["ratatouille", "ticketor", "carredas", "epice", "voliere", "cheshire", "precieux", "eywa", "kyber", "toquedor", "joyce", "ithaque", "bataillon", "cheval", "hiver26"].includes(id) ? " pl-" + id : ""; }
+function classePlaque(id) { return ["ratatouille", "ticketor", "carredas", "epice", "voliere", "cheshire", "precieux", "eywa", "kyber", "toquedor", "joyce", "ithaque", "bataillon", "cheval", "hiver26", "chercheur", "chercheuror"].includes(id) ? " pl-" + id : ""; }
 /** leur petit dessin, à nous : un tian de légumes en rosace (Ratatouille), un ticket doré (Ticket d'or) */
 function iconePlaque(id) {
   if (id === "ratatouille") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#F4EBD6" stroke="#8A5A2B" stroke-width="1"/>' +
@@ -423,6 +435,9 @@ function iconePlaque(id) {
   if (id === "joyce") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M1 4Q12 10 23 4" fill="none" stroke="#222" stroke-width=".7"/>' + [[4, "#FF3B3B"], [9, "#3BD16F"], [15, "#3B8BFF"], [20, "#F7CF55"]].map(([x, c]) => '<circle cx="' + x + '" cy="' + (6 + Math.sin(x / 23 * Math.PI) * 2) + '" r="2.2" fill="' + c + '"/>').join("") + '</svg>';   // 🎲 plaque du mini-jeu d'août
   if (id === "ithaque") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M3 11H21L18 15H6Z" fill="#7A4A22"/><path d="M12 11V1" stroke="#5A3A1A"/><path d="M13 2Q21 6 13 10Z" fill="#F4EBD6"/></svg>';   // 🎲 plaque du mini-jeu de septembre
   if (id === "bataillon") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M12 8Q6 1 1 4 4 8 12 9Z" fill="#FFFFFF" stroke="#2A4A8A" stroke-width=".6"/><path d="M12 8Q18 1 23 4 20 8 12 9Z" fill="#2A4A8A" stroke="#FFFFFF" stroke-width=".6"/></svg>';   // 🎲 plaque du mini-jeu de novembre
+  if (id === "chercheur" || id === "chercheuror") { const o = id === "chercheuror";   // 🎁 un cadeau sous une loupe (rien de la cachette)
+    return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><rect x="2" y="6" width="10" height="8" rx="1" fill="' + (o ? "#FFF6CC" : "#D62839") + '" stroke="' + (o ? "#7A4A0C" : "#7A0E1C") + '" stroke-width=".7"/><path d="M7 6V14M2 9.5H12" stroke="' + (o ? "#C98E22" : "#F7CF55") + '" stroke-width="1.3"/>' +
+      '<path d="M7 6C5 3 3.4 4.2 4.6 5.6M7 6C9 3 10.6 4.2 9.4 5.6" fill="none" stroke="' + (o ? "#C98E22" : "#F7CF55") + '" stroke-width="1"/><circle cx="16.5" cy="7" r="4.2" fill="rgba(200,235,255,.45)" stroke="' + (o ? "#7A4A0C" : "#2B3A4A") + '" stroke-width="1.4"/><path d="M19.4 10L22.6 13.4" stroke="' + (o ? "#7A4A0C" : "#2B3A4A") + '" stroke-width="2" stroke-linecap="round"/><circle cx="15.4" cy="5.8" r="1" fill="#fff" opacity=".8"/></svg>'; }
   if (id === "cheval") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M5 12V7L7 4H9L10 2 11.5 4 13 5H18L20 7V12" fill="#B9813F" stroke="#5A3412" stroke-width=".8" stroke-linejoin="round"/><path d="M9.5 4C8 3 7 3.6 6.6 4.6" stroke="#5A3412" stroke-width=".6" fill="none"/><circle cx="8.4" cy="5.2" r=".5" fill="#2A1A08"/><path d="M5 9H20M9 7V12M13 7V12M17 7V12" stroke="#5A3412" stroke-width=".5"/><rect x="3" y="12" width="19" height="1.6" rx=".6" fill="#7A4A1A"/><circle cx="6" cy="14.4" r="1.4" fill="#4A2C10"/><circle cx="19" cy="14.4" r="1.4" fill="#4A2C10"/></svg>';   // v20.61 · ⛵ Odyssée : le cheval de bois sur ses roues
   if (id === "carredas") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="1" width="18" height="18" rx="3" fill="#FBF8F0" stroke="#C9A227" stroke-width="1"/>' +   // v2 · 🧠 Stratège : les 4 couleurs
     '<path d="M6 3.6L8.2 6.4 6 9.2 3.8 6.4Z" fill="#D62839"/><path d="M14 8.6C11.6 6.8 10.6 6 10.6 4.9 10.6 4 11.3 3.4 12.1 3.4 12.8 3.4 13.5 3.8 14 4.4 14.5 3.8 15.2 3.4 15.9 3.4 16.7 3.4 17.4 4 17.4 4.9 17.4 6 16.4 6.8 14 8.6Z" fill="#D62839"/>' +
@@ -715,6 +730,9 @@ function texteOrigineItem(qui, slot, id) {
   if (org.ticket) { const g = gagnantsTicket(); return { t: "💎 Légende · 🎫 Ticket d'or", p: g.some(x => x.nom === qui) ? "À toi : tu as trouvé LE ticket d'or dans ta tablette." : "Un seul ticket d'or pour toute la saison, caché dans une tablette de la 🍫 Chocolaterie." + (g.length ? " Trouvé par " + g[0].nom + "." : "") }; }
   if (org.mj) { const g = typeof gagnantsMJ === "function" ? gagnantsMJ(org.mj) : [], mois = MOIS_L[org.mj % 100 - 1];
     return { t: "🥇 Exclusif · 🗺️ mini-jeu de " + mois, p: g.includes(qui) ? "À toi : tu as été le meilleur du mini-jeu de " + mois + " (surnom du mois et plaque dorée)." : g.length ? "Gagné par " + g.join(" et ") + ", meilleur" + (g.length > 1 ? "s" : "") + " du mini-jeu de " + mois + "." : "Réservé au meilleur du mini-jeu de " + mois + " (page Course), avec son surnom du mois. Aucun point au championnat." }; }
+  if (org.chercheur) { const ch = chercheursNoel(), i = ch.findIndex(x => x.nom === qui), j = i >= 0 ? ch[i].j : 0, jour = j ? (j % 100) + "/12" : "", or = id === GAIN_CHERCHEUR_OR[1];
+    return { t: "🎁 Souvenir · trésor de l'Atelier du Père Noël" + (or ? " · 🥇" : ""), p: or ? (i === 0 ? "À toi : trouvé le trésor de l'Atelier du Père Noël" + (jour ? " le " + jour : "") + ", 🥇 le premier." : ch.length ? "Réservée au premier qui a trouvé le trésor de l'Atelier du Père Noël : " + ch[0].nom + "." : "Réservée au premier qui trouvera le trésor de l'Atelier du Père Noël (décembre 2026).")
+      : i >= 0 ? "Trouvé le trésor de l'Atelier du Père Noël" + (jour ? " le " + jour : "") + (i === 0 ? " · 🥇 le premier" : "") + "." : "Pour chaque pilote qui trouve le trésor de l'Atelier du Père Noël (décembre 2026)." }; }
   if (org.souvenir) return { t: "🎄 Souvenir du tour de chauffe", p: "Offert à chaque pilote du tour de chauffe : le cadeau de la case du 24 décembre 2026, dans le calendrier de l'Avent." };
   if (org.vote) return { t: "💎 Légende · 🗳️ Coup de la saison", p: "Gagné au vote de fin de saison : les autres pilotes t'élisent pour le coup de la saison." };
   if (org.champion) { const d = detenteur(CHAMPION_EX.id); return { t: "💎 Légende · 🌿 Premier champion", p: d ? (d.noms.includes(qui) ? "À toi : tu as remporté la première saison." : "Réservé à " + d.nom + ", premier champion.") : "Réservé au vainqueur de la première saison complète." }; }
@@ -1236,6 +1254,7 @@ function rareteItem(slot, id) {
   if (estDepart(slot, id)) return { cls: "r-serie", lib: BASE_ECURIE[slot] === id ? "Série" : "Départ" };
   const o = origineItem(slot, id);
   if (o.legende) return { cls: "r-unique" + (o.ticket ? " r-excl" : ""), lib: "Légende" };
+  if (o.chercheur) return o.exclusif ? { cls: "r-unique r-excl", lib: "Exclusif" } : { cls: "r-argent", lib: "Souvenir" };
   if (o.exclusif || o.mj) return { cls: "r-unique r-excl", lib: "Exclusif" };
   if (o.gant) return { cls: "r-legende", lib: "Gant" };
   if (o.succes) return { cls: "r-argent", lib: "Succès" };
@@ -1271,7 +1290,8 @@ function objetCache(slot, id) { const o = origineItem(slot, id); return !!o.mill
 /** Objets visibles dans l'écurie : tout sauf la réserve 2028 */
 /** (la plaque Ticket d'or n'apparaît qu'à partir d'octobre 2027, ou chez son gagnant) */
 function idsSlot(slot) { const dec = ecurieDepart(), a = dec ? debloques(moiPilote() || "") : null;   // v20.61 : en décembre, seulement les objets de départ (et ce qu'on a déjà)
-  return Object.keys(ITEMS[slot]).filter(id => (!dec || estDepart(slot, id) || a.has(slot + "." + id)) && !objetReserve(slot, id) && (!estGainTicket(slot, id) || ticketVisible()) && (typeof mjObjetVisible !== "function" || mjObjetVisible(slot, id, moiPilote()))); }
+  const ch = estGainChercheur(slot, "chercheur") ? debloques(moiPilote() || "") : null;   // 🎁 Chercheur de Noël : seulement si gagnée
+  return Object.keys(ITEMS[slot]).filter(id => (!dec || estDepart(slot, id) || a.has(slot + "." + id)) && (!ch || !estGainChercheur(slot, id) || ch.has(slot + "." + id)) && !objetReserve(slot, id) && (!estGainTicket(slot, id) || ticketVisible()) && (typeof mjObjetVisible !== "function" || mjObjetVisible(slot, id, moiPilote()))); }
 /* ---------- v20.61 · 🏎️ « Ton écurie ouvre ses portes » : une seule fois, au premier passage à partir du 1er décembre 2026 ----------
    La porte du garage se lève sur la voiture du pilote ; un toucher ferme. Rien de 2027 : seulement ce qu'on peut faire en décembre. */
 function teaserEcurie(essai) {
@@ -1285,7 +1305,7 @@ function teaserEcurie(essai) {
     const o = document.createElement("div"); o.className = "revel ecu-rev" + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Ton écurie ouvre ses portes");
     o.innerHTML = '<div class="rv-c er-c"><span class="tuto-k">🔥 Tour de chauffe · décembre</span>' +
       '<div class="er-garage" aria-hidden="true"><span class="er-lum"></span><div class="er-voit">' + svgVoiture({ nom: qui, e, reflet: true, idle: true, label: "" }) + '</div><span class="er-porte"><i></i></span><span class="er-sol"></span></div>' +
-      "<h3>🏎️ Ton écurie ouvre ses portes</h3>" +
+      "<h3>🏎️ Ton écurie ouvre ses portes</h3><small class=\"er-ou\">(Podium › 🏎️ Écurie)</small>" +
       '<ul class="er-l"><li>🪖 Personnalise ton <b>casque</b>, ta <b>livrée</b>, ta <b>traînée</b> et ton <b>numéro</b>.</li><li>🏁 Ta voiture les porte en course, sous les yeux de tous.</li><li>🎁 Pour l\'instant, les objets de départ. <b>De nouveaux objets se gagneront tout au long de 2027.</b></li></ul>' +
       '<div class="btn-row"><button class="btn acc" type="button" data-er-go>Ouvrir mon écurie</button></div><small class="er-x">Touche n\'importe où pour fermer</small></div>';
     document.body.appendChild(o);
@@ -1601,7 +1621,7 @@ const OBJ_TEINTES = {
   carredas: ["#E8FFF0", "#1F7A4A", "#0B3A22"], diamant: ["#FFFFFF", "#C9F6FF", "#3A9AC0"], rubis: ["#FF9BB0", "#E0115F", "#43000F"], flammes: ["#FFE08A", "#FF6A1F", "#8A1A06"],
   phenix: ["#FFE08A", "#FF8A1F", "#6E0D12"], galaxie: ["#C9B6FF", "#5B2A9E", "#170A36"], soleil: ["#FFF3B0", "#FFB21E", "#9A4A00"], lauriers: ["#F3F9C8", "#8FB33A", "#3A5A10"],
   parade: ["#FFF1B0", "#E8B640", "#7A4A0C"], couronne: ["#FFF6CC", "#F7CF55", "#6B430C"], oranime: ["#FFF6CC", "#F7CF55", "#6B430C"], billets: ["#E8FFE0", "#4FAE5A", "#1B5528"],
-  ticketor: ["#FFF6CC", "#F7CF55", "#7A4A0C"], feuilledor: ["#FFFBE0", "#F7CF55", "#7A4A0C"],
+  chercheur: ["#FFD0D0", "#D62839", "#6E0D12"], chercheuror: ["#FFF6CC", "#F7CF55", "#7A4A0C"], ticketor: ["#FFF6CC", "#F7CF55", "#7A4A0C"], feuilledor: ["#FFFBE0", "#F7CF55", "#7A4A0C"],
   // v20.61 · objets redessinés à l'image de leur monde
   ver: ["#F6DCAA", "#D9A35A", "#6B3A12"], ailee: ["#FFFDF2", "#F7CF55", "#7A5300"], anneau: ["#FFF3B8", "#F7CF55", "#3A2A1A"], elfique: ["#DFF2E2", "#4E9A5C", "#1E3A26"],
   pandora: ["#9AFFF6", "#1C6E8A", "#071A3A"], biolum: ["#E6FFFC", "#5CF2E6", "#0B5A6E"], rebelle: ["#FFD2B0", "#F57A2E", "#7A2A06"], sabre: ["#FFF1F1", "#FF3A48", "#6E0A12"],

@@ -136,7 +136,7 @@ function nouveautesAVoir() {
 function htmlAnnonceVingt() {
   return '<div class="nv-plus"><b>🎁 Et ce n\'est que le début…</b>' +
     "<p>🎮 <b>Chaque univers cache une surprise</b> : un mini-jeu à jouer ensemble, révélé le 1<sup>er</sup> de son mois.</p>" +
-    "<p>✨ <b>Dès janvier</b> : 🏆 les Trophées en 4 vitrines (Mondes, Succès, Gant, Légendes), 🏎️ la course en direct au rythme du S&amp;P 500, 🛠️ ton écurie et ta voiture personnalisée.</p></div>";
+    "<p>✨ <b>Dès janvier</b> : 🏆 les Trophées en 4 vitrines (Mondes, Succès, Gant, Légendes), 🏎️ la course en direct au rythme du S&amp;P 500, 🛠️ de nouveaux objets à gagner pour ton écurie.</p></div>";
 }
 /* v20.58 · la révélation du 1er janvier : les 12 circuits dévoilés, avec le piège ou le mois spécial de chacun,
    lus dans PIEGES et moisSpecial (donc toujours les règles à jour) ; la Finale reste cachée tant qu'elle n'est pas annoncée */
