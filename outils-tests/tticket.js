@@ -23,7 +23,7 @@ function donnees(session, jusqua) {
     liaison: { active: true, personnes: [] }, lignes: {}, premierMillion: null, session, monRappel: null, rappelsReleve: {}, mesCartes: {}, mesDuels: {}, mesPronos: {}, monRival: {}, monVote: {} };
 }
 const EMP = "9f3c2a71" + "0".repeat(48) + "c0ffee42";   // empreinte INVENTÉE pour le test
-const ETAT_T = (o) => Object.assign({ ok: true, ouvert: true, empreinte: EMP, mois: 202710, n: 5, enCours: false, fini: false, aujourdhui: 0, dejaAujourdhui: false, mesTablettes: 0, monTicket: null, gagnants: [{ nom: "Clément", n: 1 }], restants: 4, revele: null }, o);
+const ETAT_T = (o) => Object.assign({ ok: true, ouvert: true, empreinte: EMP, depuis: 20270101, mois: 202710, n: 1, enCours: false, fini: false, aujourdhui: 0, dejaAujourdhui: false, mesTablettes: 0, monTicket: null, gagnants: [], restants: 1, carres: null, revele: null }, o);   // V88 : un seul ticket
 /** ouvre l'appli : quand, session, jusqua (dernier relevé), tickets (réponse de l'action tickets ou null = pas encore), deballer (fonction) */
 async function page(b, o) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block", colorScheme: o.sombre ? "dark" : "light", reducedMotion: o.reduit ? "reduce" : "no-preference" }), p = await ctx.newPage(), err = [], req = [];
@@ -63,12 +63,12 @@ const deborde = () => [...document.querySelectorAll(".gp-tablette *, .tk-or *, .
     const o = { quand: "2027-10-12T10:00:00", sombre, session: { role: "perso", nom: "Kévin" }, jusqua: 202709, tickets: ETAT_T({ enCours: true, aujourdhui: 20271012 }), deballer: () => (n++ ? { ok: false, erreur: "deja", message: "Tu as déjà déballé ta tablette aujourd'hui. Reviens demain !" } : { ok: true, ticket: null, monTicket: null, gagnants: [{ nom: "Clément", n: 1 }], restants: 4 }) };
     const { ctx, p, err, req } = await page(b, o);
     const av = await p.evaluate(() => ({ ci: document.querySelector("#gp-piste").dataset.circuit, tab: !!document.querySelector(".gp-tablette [data-deballer]"), txt: (document.querySelector(".gp-tablette") || {}).innerText || "" }));
-    ok(av.ci === "singapour" && av.tab && /4 tickets d'or encore cachés/.test(av.txt), "12/10/2027 : sur la page Course de la Chocolaterie, la tablette du jour et son bouton" + tag);
+    ok(av.ci === "singapour" && av.tab && /Le seul ticket d'or de l'année est encore caché/.test(av.txt), "12/10/2027 : sur la page Course de la Chocolaterie, la tablette du jour et son bouton" + tag);
     await p.locator(".gp-tablette").screenshot({ path: DOSSIER + "/tablette-fermee" + (sombre ? "-sombre" : "") + ".png" });
     await p.click(".gp-tablette [data-deballer]"); await p.waitForTimeout(1100);
     await p.locator(".gp-tablette").screenshot({ path: DOSSIER + "/tablette-chocolat" + (sombre ? "-sombre" : "") + ".png" });
     const ap = await p.evaluate(() => ({ mot: document.querySelector(".gp-tablette .tb-mot").textContent, b: !!document.querySelector(".gp-tablette [data-deballer]"), cer: !!document.querySelector(".tk-or"), MOTS: MOTS_TABLETTE }));
-    ok(ap.MOTS.includes(ap.mot) && !ap.b && !ap.cer && !/€|\d+ ?(euros?)/.test(ap.mot), "sans ticket : un petit message (« " + ap.mot + " »), pas de cérémonie, plus de bouton" + tag);
+    ok(ap.MOTS.includes(ap.mot.replace(/^✨ Un carré doré ! /, "")) && !ap.b && !ap.cer && !/€|\d+ ?(euros?)/.test(ap.mot), "sans ticket : un petit message (« " + ap.mot + " »), pas de cérémonie, plus de bouton" + tag);
     await p.waitForTimeout(2800);
     const ap2 = await p.evaluate(() => ({ b: !!document.querySelector(".gp-tablette [data-deballer]"), f: !!document.querySelector(".gp-tablette .tb-fait") }));
     const deb = await p.evaluate(`(${deborde})()`);
@@ -81,19 +81,20 @@ const deborde = () => [...document.querySelectorAll(".gp-tablette *, .tk-or *, .
   // 4. octobre 2027, avec ticket : cérémonie + badge + plaque + vitrine (clair, sombre, animations réduites)
   for (const [sombre, reduit] of [[false, false], [true, false], [false, true]]) {
     const tag = (sombre ? " (sombre)" : " (clair)") + (reduit ? " (animations réduites)" : "");
-    const G = [{ nom: "Clément", n: 1 }, { nom: "Nicolas", n: 2 }];
-    const { ctx, p, err } = await page(b, { quand: "2027-10-14T10:00:00", sombre, reduit, session: { role: "perso", nom: "Nicolas" }, jusqua: 202709, tickets: ETAT_T({ enCours: true }), deballer: () => ({ ok: true, ticket: 2, monTicket: 2, gagnants: G, restants: 3 }) });
+    const G = [{ nom: "Nicolas", n: 1 }];
+    const { ctx, p, err } = await page(b, { quand: "2027-10-14T10:00:00", sombre, reduit, session: { role: "perso", nom: "Nicolas" }, jusqua: 202709, tickets: ETAT_T({ enCours: true }), deballer: () => ({ ok: true, ticket: 1, monTicket: 1, gagnants: G, restants: 0, carres: { moi: 0, total: 3, objectif: 20, reussi: false } }) });
     await p.click(".gp-tablette [data-deballer]"); await p.waitForTimeout(reduit ? 600 : 1000);
     if (!reduit) await p.locator(".gp-tablette").screenshot({ path: DOSSIER + "/tablette-ticket" + (sombre ? "-sombre" : "") + ".png" });
     await p.waitForTimeout(reduit ? 400 : 2700);
     const c = await p.evaluate(() => { const o = document.querySelector(".tk-or"); return o ? { t: o.textContent, plaque: !!o.querySelector(".plaque.pl-ticketor"), reduit: o.classList.contains("reduit") } : null; });
     await p.screenshot({ path: DOSSIER + "/ceremonie-ticket" + (sombre ? "-sombre" : "") + (reduit ? "-reduit" : "") + ".png" });
     const deb = await p.evaluate(`(${deborde})()`);
-    ok(c && /Ticket d'or n° 2 \/ 5/i.test(c.t) && /Nicolas/.test(c.t) && c.plaque && /Aucun point/.test(c.t) && c.reduit === reduit && !/€/.test(c.t), "ticket gagné : cérémonie plein écran (ascenseur de verre, ticket n° 2, son nom, la plaque « Ticket d'or », aucun point)" + tag);
+    ok(c && /Le ticket d'or 2027/i.test(c.t) && /Nicolas/.test(c.t) && c.plaque && /Aucun point/.test(c.t) && c.reduit === reduit && !/€/.test(c.t), "ticket gagné : cérémonie plein écran (ascenseur de verre, le ticket d'or 2027, son nom, la plaque « Ticket d'or », aucun point)" + tag);
     const v = await p.evaluate(async () => { document.querySelector(".tk-or [data-tk-vit]").click(); await new Promise(r => setTimeout(r, 900));
-      const s = document.querySelector("#vit-tickets"); return { s: s ? s.innerText : "", pris: s ? [...s.querySelectorAll(".tk-s.pris b")].map(x => x.textContent) : [], moi: !!(s && s.querySelector(".tk-s.a-moi")),
+      const s = document.querySelector("#vit-tickets"); return { s: s ? s.innerText : "", pris: s ? [...s.querySelectorAll(".lg-nom")].map(x => x.textContent) : [], cinq: !!(s && /5 places|n° [1-5]/.test(s.innerText)), onglet: VIT_ONGLET,
         badge: badgesPossedes("Nicolas").some(x => x.id === "ticket"), plaque: debloques("Nicolas").has("plaque.ticketor"), ecurie: idsSlot("plaque").includes("ticketor"), autre: debloques("Kévin").has("plaque.ticketor") }; });
-    ok(v.pris.join(",") === "Clément,Nicolas" && v.moi && v.badge && v.plaque && v.ecurie && !v.autre, "vitrine « Mes trophées » : section 🎫 (5 places, noms des gagnants), badge 🎫, plaque débloquée pour lui seul " + JSON.stringify(v) + tag);
+    // Trophées v2 (Théo, 25/11) : UN SEUL ticket d'or dans l'année (règle refaite au serveur à part) → la Légende n'a qu'une place (le premier gagnant reçu)
+    ok(v.onglet === "legendes" && v.pris.join(",") === "Nicolas" && !v.cinq && v.badge && v.plaque && v.ecurie && !v.autre, "« Voir ma vitrine » ouvre 💎 Légendes : le Ticket d'or, une seule place (plus « 5 places »), badge 🎫, plaque débloquée pour lui seul " + JSON.stringify(v) + tag);
     if (!reduit) await p.locator("#vit-tickets").screenshot({ path: DOSSIER + "/vitrine-tickets" + (sombre ? "-sombre" : "") + ".png" });
     ok(!err.length && !deb.length, "0 erreur JS, rien ne déborde à 390 px " + JSON.stringify([err, deb]) + tag);
     await ctx.close(); }

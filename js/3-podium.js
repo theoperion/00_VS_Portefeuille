@@ -303,12 +303,12 @@ const ITEMS = {
   livree: { couleur: "Couleur", chrome: "Chrome", or: "Or", neon: "Néon", arcenciel: "Prisme", oranime: "Or vivant", platine: "Platine", rubis: "Rubis", galaxie: "Galaxie", orrose: "Or rose", chocolat: "Chocolat fondant", carte: "Carte à jouer" },
   trainee: { simple: "Simple", halo: "Halo", flammes: "Flammes", etincelles: "Étincelles", comete: "Comète", supernova: "Supernova", turbo: "Turbo", arcenciel: "Arc-en-ciel", cables: "Câbles d'acier" },
   klaxon: { confettis: "Confettis", damier: "Damier", feu: "Feu d'artifice", parade: "Parade", billets: "Pluie de billets", fanfare: "Fanfare royale", cibles: "Dans le mille", fusees: "Décollage", trophees: "Pluie de trophées", ouvriers: "Fanfare des petits ouvriers" },
-  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or" }
+  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon" }
 };
 const BASE_ECURIE = { casque: "uni", circuit: "classique", fond: "couleur", finition: "aucune", livree: "couleur", trainee: "simple", klaxon: "confettis", plaque: "aucune" };
 const SLOTS = [["casque", "Casque"], ["finition", "Finition"], ["fond", "Avatar"], ["livree", "Livrée"], ["trainee", "Traînée"], ["klaxon", "Klaxon"], ["plaque", "Plaque"], ["circuit", "Filtre de course"]];
 const GAINS_MILLION = [["casque", "couronne"], ["livree", "oranime"], ["klaxon", "billets"]];
-/* 🎫 Ticket d'or (Chocolaterie, octobre 2027) : la plaque exclusive des 5 gagnants (tirage du serveur, TicketsOr.js) */
+/* 🎫 Ticket d'or (Chocolaterie, octobre 2027) : la plaque exclusive du gagnant (un seul ticket dans l'année, tirage du serveur, TicketsOr.js) */
 const GAIN_TICKET = ["plaque", "ticketor"];
 /** État des tickets d'or reçu du serveur (action « tickets », js/4-grandprix.js) : { empreinte, gagnants: [{ nom, j, n }], … } ou null */
 let TICKETS = null;
@@ -318,19 +318,22 @@ const TICKET_MOIS = { debut: new Date(2027, 9, 1), fin: new Date(2027, 10, 1), r
 function ticketVisible() { return Date.now() >= TICKET_MOIS.debut.getTime() || gagnantsTicket().some(g => g.nom === moiPilote()); }
 function debloques(nom) {
   const o = new Set(Object.entries(BASE_ECURIE).map(([s, v]) => s + "." + v));
-  // refonte des badges (Théo, 24/11) : plus de défis ; les objets viennent des trophées des mondes, du Gant complet et des secrets dorés
+  // Trophées v2 (Théo, 25/11) : les objets viennent des 🗺️ Mondes (mini-jeu réussi), des 🏅 Succès (commun pour chacun, exclusif pour le 1er), du 🧤 Gant complet et des 💎 Légendes
   if (saisonJouee()) {
     const TM = etatTropheesMondes();
     TROPHEES_MONDES.forEach(t => { if (TM[t.id] && TM[t.id][nom] && TM[t.id][nom].ok) t.gain.forEach(g => o.add(g.join("."))); });
     if (anneesSaison().some(y => (etatGant(y)[nom] || { n: 0 }).n === 6)) GANT.gain.forEach(g => o.add(g.join(".")));
   }
   if (D.premierMillion && D.premierMillion.nom === nom) GAINS_MILLION.forEach(g => o.add(g.join(".")));
-  exclusifsDe(nom).forEach(x => gainsSecret(x).forEach(g => o.add(g.join("."))));
+  succesDe(nom).forEach(x => o.add(x.gain.join(".")));                      // 🏅 l'objet commun : pour chacun qui réussit
+  exclusifsDe(nom).forEach(x => gainsSecret(x).forEach(g => o.add(g.join("."))));   // 🥇 + l'exclusif : pour le premier
+  if (possede(CHAMPION_EX.id, nom)) gainsSecret(CHAMPION_EX).forEach(g => o.add(g.join(".")));   // 💎 Légende : le premier champion
   if (Object.values(D.votes || {}).some(v => (v.gagnants || []).includes(nom))) o.add("plaque.coupsaison");
-  if (gagnantsTicket().some(g => g.nom === nom)) o.add(GAIN_TICKET.join("."));   // 🎫 Ticket d'or   // V13.9 : gagnant d'un vote de fin de saison
+  if (gagnantsTicket().some(g => g.nom === nom)) o.add(GAIN_TICKET.join("."));
+  if (typeof mjDebloques === "function") mjDebloques(nom).forEach(k => o.add(k));   // 🎲 mini-jeux du mois   // 🎫 Ticket d'or   // V13.9 : gagnant d'un vote de fin de saison
   return o;
 }
-/** Objets d'un secret doré : l'exclusif, plus l'objet redistribué (bonus) */
+/** Objets du PREMIER à réussir un succès : l'objet commun + l'exclusif (bonus) */
 function gainsSecret(x) { return [x.gain].concat(x.bonus ? [x.bonus] : []); }
 /** « Casque « Foudre » + Avatar « Néon » » */
 function libGains(l) { return l.map(([s, id]) => (SLOTS.find(z => z[0] === s) || [, "Objet"])[1] + " « " + ITEMS[s][id] + " »").join(" + "); }
@@ -339,15 +342,18 @@ function univers(cle) { const g = typeof GPS !== "undefined" && GPS[cle]; return
 /** L'univers se montre une fois la saison lancée (avant le 1er janvier, les 12 univers restent secrets) */
 function universVisible() { return saisonJouee(); }
 function htmlUnivers(cle, court) { const u = univers(cle); if (!u) return ""; return universVisible() ? '<span class="univ">' + u.drap + (court ? "" : " " + esc(u.nom)) + "</span>" : '<span class="univ cache">🔒' + (court ? "" : " univers secret") + "</span>"; }
-/** D'où vient un objet : { exclusif (secret doré), monde (trophée), gant, million, vote, reserve (2028) } */
+/** D'où vient un objet (Trophées v2) : { monde (🗺️ trophée du mini-jeu), succes + exclusif (🏅 commun pour chacun / 🥇 exclusif du 1er), gant,
+ *  million / champion / vote / ticket (💎 Légendes), reserve (2028) } */
 function origineItem(slot, id) {
-  if (slot === "plaque" && id === "coupsaison") return { vote: true };
-  if (slot === GAIN_TICKET[0] && id === GAIN_TICKET[1]) return { ticket: true };
-  const a = (g => g[0] === slot && g[1] === id);
-  const ex = SECRETS_SAISON.find(x => gainsSecret(x).some(a)); if (ex) return { exclusif: ex, bonus: !!(ex.bonus && a(ex.bonus)) };
+  if (slot === "plaque" && id === "coupsaison") return { vote: true, legende: true };
+  if (slot === GAIN_TICKET[0] && id === GAIN_TICKET[1]) return { ticket: true, legende: true };
+  { const m = typeof mjOrigine === "function" && mjOrigine(slot, id); if (m) return m; }   // 🎲 plaque du meilleur d'un mini-jeu (js/9-minijeux.js) : exclusif doré
+  const a = (g => !!g && g[0] === slot && g[1] === id);
+  const sc = SUCCES.find(x => a(x.gain) || a(x.bonus)); if (sc) return { succes: sc, exclusif: a(sc.bonus) ? sc : null };
   const t = TROPHEES_MONDES.find(z => z.gain.some(a)); if (t) return { monde: t };
   if (GANT.gain.some(a)) return { gant: true };
-  if (GAINS_MILLION.some(a)) return { million: true };
+  if (GAINS_MILLION.some(a)) return { million: true, legende: true };
+  if (gainsSecret(CHAMPION_EX).some(a)) return { champion: true, legende: true };
   const r = RESERVE_2028.find(x => a(x.gain)); if (r) return { reserve: r };
   return {};
 }
@@ -375,16 +381,30 @@ function plaqueDe(nom) {
   if (!saisonVisible()) return "";
   const p = equipDe(nom).plaque;
   if (p === "aucune") return "";
-  const o = origineItem("plaque", p), quoi = o.exclusif ? "secret doré « " + o.exclusif.nom + " »" : o.monde ? "trophée « " + o.monde.nom + " » : " + o.monde.def : o.gant ? "Gant de l'infini complet" : "";
-  return '<span class="plaque' + classePlaque(p) + '" data-bdg="' + esc("Plaque « " + ITEMS.plaque[p] + " » de " + nom + (quoi ? ", gagnée avec le " + quoi : o.ticket ? ", gagnée avec un 🎫 ticket d'or de la Chocolaterie" : "") + ".") + '">' + iconePlaque(p) + esc(ITEMS.plaque[p]) + "</span> ";
+  const o = origineItem("plaque", p), quoi = o.exclusif ? "succès doré « " + o.exclusif.nom + " » (le premier)" : o.succes ? "succès « " + o.succes.nom + " »" : o.monde ? "trophée du monde « " + nomMonde(o.monde) + " »" : o.gant ? "Gant de l'infini complet" : "";
+  return '<span class="plaque' + classePlaque(p) + '" data-bdg="' + esc("Plaque « " + ITEMS.plaque[p] + " » de " + nom + (quoi ? ", gagnée avec le " + quoi : o.ticket ? ", gagnée avec le 🎫 ticket d'or de la Chocolaterie" : o.mj ? ", gagnée comme 🥇 meilleur du mini-jeu de " + MOIS_L[o.mj % 100 - 1] : "") + ".") + '">' + iconePlaque(p) + esc(ITEMS.plaque[p]) + "</span> ";
 }
-/** v20.46 · plaques émaillées à part : Ratatouille (plaque de rue parisienne, bleue) et Ticket d'or (feuille d'or) ; les autres restent en métal */
-function classePlaque(id) { return id === "ratatouille" || id === "ticketor" ? " pl-" + id : ""; }
+/** v20.46 · plaques émaillées à part : Ratatouille (plaque de rue parisienne, bleue), Ticket d'or (feuille d'or), Carré d'as, et les plaques des mini-jeux ; les autres restent en métal */
+function classePlaque(id) { return ["ratatouille", "ticketor", "carredas", "epice", "voliere", "cheshire", "precieux", "eywa", "kyber", "toquedor", "joyce", "ithaque", "bataillon"].includes(id) ? " pl-" + id : ""; }
 /** leur petit dessin, à nous : un tian de légumes en rosace (Ratatouille), un ticket doré (Ticket d'or) */
 function iconePlaque(id) {
   if (id === "ratatouille") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#F4EBD6" stroke="#8A5A2B" stroke-width="1"/>' +
     [0, 1, 2, 3, 4, 5, 6, 7].map(i => { const a = i * Math.PI / 4, x = (10 + 5 * Math.cos(a)).toFixed(1), y = (10 + 5 * Math.sin(a)).toFixed(1); return '<circle cx="' + x + '" cy="' + y + '" r="3.1" fill="' + ["#D62839", "#F2B705", "#3F8F3A"][i % 3] + '" stroke="#fff" stroke-width=".5"/>'; }).join("") +
     '<circle cx="10" cy="10" r="2.6" fill="#3F8F3A" stroke="#fff" stroke-width=".5"/></svg>';
+  if (id === "epice") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M0 12Q6 8 12 11T24 10V16H0Z" fill="#C97A34"/><path d="M2 7Q6 3 10 7Q6 10 2 7Z" fill="#fff" stroke="#5B3418" stroke-width=".7"/><circle cx="6" cy="7" r="1.9" fill="#2F7BFF"/><circle cx="6" cy="7" r=".8" fill="#0B2A66"/><path d="M14 7Q18 3 22 7Q18 10 14 7Z" fill="#fff" stroke="#5B3418" stroke-width=".7"/><circle cx="18" cy="7" r="1.9" fill="#2F7BFF"/><circle cx="18" cy="7" r=".8" fill="#0B2A66"/></svg>';   // 🎲 plaque du mini-jeu de janvier (deux yeux bleus sur le sable)
+  if (id === "voliere") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><ellipse cx="9" cy="9" rx="5" ry="6" fill="#C9B79C" stroke="#4A3A24" stroke-width=".7"/><circle cx="7.3" cy="7" r="1.6" fill="#FFF7DA"/><circle cx="10.7" cy="7" r="1.6" fill="#FFF7DA"/><circle cx="7.3" cy="7" r=".6"/><circle cx="10.7" cy="7" r=".6"/><rect x="15" y="5" width="8" height="6" rx="1" fill="#F7EFD8" stroke="#8A6A3A" stroke-width=".6"/><path d="M15 5L19 8.5 23 5" fill="none" stroke="#8A6A3A" stroke-width=".6"/></svg>';   // 🎲 plaque du mini-jeu de février
+  if (id === "cheshire") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M2 5Q12 17 22 5Q12 11 2 5Z" fill="#F3E9FF" stroke="#7B3FB8" stroke-width=".9"/><circle cx="7" cy="2.6" r="1.4" fill="#C9F24E"/><circle cx="17" cy="2.6" r="1.4" fill="#C9F24E"/></svg>';   // 🎲 plaque du mini-jeu de mars
+  if (id === "precieux") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><ellipse cx="12" cy="8" rx="8" ry="5.5" fill="none" stroke="#F7CF55" stroke-width="2.4"/><ellipse cx="12" cy="8" rx="8" ry="5.5" fill="none" stroke="#FF7A2B" stroke-width=".6" stroke-dasharray="1.5 1.5"/></svg>';   // 🎲 plaque du mini-jeu d'avril
+  if (id === "eywa") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M12 15V6M12 8Q6 2 3 5M12 8Q18 2 21 5" fill="none" stroke="#B7FFF2" stroke-width="1.2"/><circle cx="12" cy="5" r="3.2" fill="#7CF7FF" opacity=".7"/><circle cx="5" cy="6" r="1.4" fill="#7CF7FF"/><circle cx="19" cy="6" r="1.4" fill="#7CF7FF"/></svg>';   // 🎲 plaque du mini-jeu de mai
+  if (id === "kyber") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M12 1L17 8 12 15 7 8Z" fill="#7FD3FF" stroke="#1A5A8A" stroke-width=".8"/><path d="M12 1V15M7 8H17" stroke="#FFFFFF" stroke-width=".5" opacity=".8"/></svg>';   // 🎲 plaque du mini-jeu de juin
+  if (id === "toquedor") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M7 14V9Q3 8 4 5 5 2 8 3 9 0 12 1 15 0 16 3 19 2 20 5 21 8 17 9V14Z" fill="#FFF6CC" stroke="#9A6716" stroke-width=".8"/><path d="M7 12H17" stroke="#C98E22" stroke-width="1.2"/></svg>';   // 🎲 plaque du mini-jeu de juillet
+  if (id === "joyce") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M1 4Q12 10 23 4" fill="none" stroke="#222" stroke-width=".7"/>' + [[4, "#FF3B3B"], [9, "#3BD16F"], [15, "#3B8BFF"], [20, "#F7CF55"]].map(([x, c]) => '<circle cx="' + x + '" cy="' + (6 + Math.sin(x / 23 * Math.PI) * 2) + '" r="2.2" fill="' + c + '"/>').join("") + '</svg>';   // 🎲 plaque du mini-jeu d'août
+  if (id === "ithaque") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M3 11H21L18 15H6Z" fill="#7A4A22"/><path d="M12 11V1" stroke="#5A3A1A"/><path d="M13 2Q21 6 13 10Z" fill="#F4EBD6"/></svg>';   // 🎲 plaque du mini-jeu de septembre
+  if (id === "bataillon") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M12 8Q6 1 1 4 4 8 12 9Z" fill="#FFFFFF" stroke="#2A4A8A" stroke-width=".6"/><path d="M12 8Q18 1 23 4 20 8 12 9Z" fill="#2A4A8A" stroke="#FFFFFF" stroke-width=".6"/></svg>';   // 🎲 plaque du mini-jeu de novembre
+  if (id === "carredas") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="1" width="18" height="18" rx="3" fill="#FBF8F0" stroke="#C9A227" stroke-width="1"/>' +   // v2 · 🧠 Stratège : les 4 couleurs
+    '<path d="M6 3.6L8.2 6.4 6 9.2 3.8 6.4Z" fill="#D62839"/><path d="M14 8.6C11.6 6.8 10.6 6 10.6 4.9 10.6 4 11.3 3.4 12.1 3.4 12.8 3.4 13.5 3.8 14 4.4 14.5 3.8 15.2 3.4 15.9 3.4 16.7 3.4 17.4 4 17.4 4.9 17.4 6 16.4 6.8 14 8.6Z" fill="#D62839"/>' +
+    '<path d="M6 11C3.8 12.8 2.8 13.6 2.8 14.7 2.8 15.6 3.5 16.2 4.3 16.2 4.8 16.2 5.3 15.9 5.6 15.5L5.2 17H6.8L6.4 15.5C6.7 15.9 7.2 16.2 7.7 16.2 8.5 16.2 9.2 15.6 9.2 14.7 9.2 13.6 8.2 12.8 6 11Z" fill="#15171B"/>' +
+    '<circle cx="14" cy="12.6" r="1.5" fill="#15171B"/><circle cx="12.4" cy="14.6" r="1.5" fill="#15171B"/><circle cx="15.6" cy="14.6" r="1.5" fill="#15171B"/><path d="M14 14.4L13.4 17H14.6Z" fill="#15171B"/></svg>';
   if (id === "ticketor") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M1 2H23V6A2 2 0 0 0 23 10V14H1V10A2 2 0 0 0 1 6Z" fill="#F7CF55" stroke="#7A4A0C" stroke-width="1"/><path d="M6 2.5V13.5" stroke="#7A4A0C" stroke-width=".7" stroke-dasharray="1.2 1"/><path d="M14 4.6L15 7 17.6 7.2 15.6 8.8 16.2 11.4 14 10 11.8 11.4 12.4 8.8 10.4 7.2 13 7Z" fill="#FFF6CC" stroke="#9A6716" stroke-width=".5"/></svg>';
   return "";
 }
@@ -394,44 +414,52 @@ function iconePlaque(id) {
    dès qu'il est décroché : même si un relevé change ensuite, l'objet reste à son premier propriétaire.
    À égalité dans le même mois : la meilleure valeur du critère l'emporte. */
 const NIV_EX = ["", "Facile", "Intermédiaire", "Difficile", "Légendaire"], MED_EX = ["", "🥉", "🥈", "🥇", "💎"];
-/* Refonte des badges (Théo, 24/11) : 12 de ces exploits deviennent les SECRETS de la saison (caché tant que personne ne l'a ; le 1er = version
-   dorée + objet exclusif + cérémonie ; du 2e au 5e = version argentée simple). Les 11 autres (saison: 2028) restent dans le code pour 2028 :
-   ni affichés ni comptés (le serveur continue de les calculer et de les figer, sans effet). univers = circuit de la saison auquel le secret
-   est rattaché ; bonus = objet d'écurie en plus (récompenses des anciens défis redistribuées) ; indice = la phrase floue du secret caché. */
+/* Trophées v2 (Théo, 25/11) : 12 de ces exploits deviennent les SUCCÈS de la saison, VISIBLES (objectif écrit, plus de secret muet) et sans lien avec les univers.
+   Chacun qui réussit gagne le badge + l'objet commun (gain) ; le PREMIER gagne en plus l'objet exclusif (bonus), la version dorée et la cérémonie.
+   palier = difficulté réelle (1 bronze, 2 argent, 3 or, 4 légendaire) : le dessin de la case monte avec (matière, cadre, ornement, éclat).
+   « Premier champion » (legende: true) passe dans les Légendes. Les 11 autres (saison: 2028) restent dans le code pour 2028 : ni affichés ni comptés
+   (le serveur continue de les calculer et de les figer, sans effet). niv = l'ancien niveau, gardé pour les cartes de collection. */
 const EXCLUSIFS = [
-  // Facile : de quoi lancer la course dès les premiers mois
-  { id: "premiersang", niv: 1, ico: "⚔️", nom: "Premier sang", def: "gagner un mois de championnat", gain: ["plaque", "premiersang"], univers: "silverstone", bonus: ["klaxon", "damier"], indice: "Une première fois qu'on n'oublie jamais…" },
+  { id: "premiersang", niv: 1, palier: 1, ico: "⚔️", nom: "Premier sang", def: "gagner un mois de championnat", gain: ["plaque", "premiersang"], bonus: ["klaxon", "damier"] },
   { id: "cible", niv: 1, ico: "🎯", nom: "Dans le mille", def: "battre l'indice sur un mois (premier bonus 🎯)", gain: ["klaxon", "cibles"], saison: 2028 },
-  { id: "decollage", niv: 1, ico: "🚀", nom: "Décollage", def: "faire +5 % sur un seul mois", gain: ["klaxon", "fusees"], univers: "miami", bonus: ["trainee", "halo"], indice: "Quitter le sol, d'un seul coup…" },
+  { id: "decollage", niv: 1, palier: 2, ico: "🚀", nom: "Décollage", def: "faire +5 % sur un seul mois", gain: ["klaxon", "fusees"], bonus: ["trainee", "halo"] },
   { id: "fidele", niv: 1, ico: "🤝", nom: "Fidèle au poste", def: "verser 3 mois d'affilée", gain: ["plaque", "fidele"], saison: 2028 },
   { id: "vingt", niv: 1, ico: "🔢", nom: "Pointeur", def: "atteindre 12 points de championnat", gain: ["plaque", "vingt"], saison: 2028 },
-  { id: "remontee", niv: 1, ico: "⏩", nom: "Coup de turbo", def: "gagner 2 places au championnat d'un mois à l'autre", gain: ["trainee", "turbo"], univers: "melbourne", bonus: ["casque", "tortue"], indice: "Rétrécir, puis grandir d'un coup…" },
-  // Intermédiaire
-  { id: "hattrick", niv: 2, ico: "⚡", nom: "Hat-trick", def: "gagner 3 mois d'affilée", gain: ["casque", "foudre"], univers: "spa", bonus: ["fond", "neon"], indice: "Trois fois de suite, comme l'éclair…" },
-  { id: "massue", niv: 2, ico: "💥", nom: "Coup de massue", def: "battre l'indice de 5 points ou plus sur un seul mois", gain: ["trainee", "supernova"], univers: "monza", bonus: ["livree", "arcenciel"], indice: "Un seul coup, très fort, contre le marché…" },
-  { id: "cinqetoiles", niv: 2, ico: "🌟", nom: "Cinq étoiles", def: "cumuler 5 bonus 🎯", gain: ["finition", "etoilee"], univers: "bahrein", bonus: ["plaque", "ratatouille"], indice: "Comme au guide des grands restaurants…" },
-  { id: "mur10", niv: 2, ico: "💠", nom: "Le mur des 10 %", def: "atteindre +10 % cumulés depuis le départ de la saison 1", gain: ["livree", "platine"], univers: "interlagos", bonus: ["plaque", "contre"], indice: "Un premier mur à franchir…" },
+  { id: "remontee", niv: 1, palier: 1, ico: "⏩", nom: "Coup de turbo", def: "gagner 2 places au championnat d'un mois à l'autre", gain: ["trainee", "turbo"], bonus: ["casque", "tortue"] },
+  { id: "hattrick", niv: 2, palier: 3, ico: "⚡", nom: "Hat-trick", def: "gagner 3 mois d'affilée", gain: ["casque", "foudre"], bonus: ["fond", "neon"] },
+  { id: "massue", niv: 2, palier: 3, ico: "💥", nom: "Coup de massue", def: "faire au moins 5 % de mieux que l'indice sur un mois", gain: ["trainee", "supernova"], bonus: ["livree", "arcenciel"] },
+  // v2 : l'exclusif de « Cinq étoiles » = le klaxon « Dans le mille » (🎯, pris à la réserve 2028) ; la plaque Ratatouille rejoint le monde du Petit Chef
+  { id: "cinqetoiles", niv: 2, palier: 2, ico: "🌟", nom: "Cinq étoiles", def: "cumuler 5 bonus 🎯", gain: ["finition", "etoilee"], bonus: ["klaxon", "cibles"] },
+  { id: "mur10", niv: 2, palier: 2, ico: "💠", nom: "Le mur des 10 %", def: "atteindre +10 % cumulés depuis le départ de la saison 1", gain: ["livree", "platine"], bonus: ["plaque", "contre"] },
+  // v2 (Théo, 25/11) : 🧠 Stratège, calculé ici ET au serveur (PodiumCommun.js, extrait de ce fichier) ; commun = plaque « Carré d'as » (nouvelle), exclusif = finition « Diamant » (prise à la réserve 2028)
+  { id: "stratege", niv: 2, palier: 2, ico: "🧠", nom: "Stratège", def: "marquer des points avec chacune des 4 cartes de base (Aspiration, Turbo, Pneus pluie, Pari) dans la même saison", gain: ["plaque", "carredas"], bonus: ["finition", "diamant"] },
   { id: "cinquante", niv: 2, ico: "🏆", nom: "Trentenaire", def: "atteindre 30 points de championnat, toutes saisons confondues", gain: ["klaxon", "trophees"], saison: 2028 },
   { id: "inarretable", niv: 2, ico: "💎", nom: "Inarrêtable", def: "verser 12 mois d'affilée (relevés du Versus)", gain: ["finition", "diamant"], saison: 2028 },
-  // Difficile
-  { id: "fusee", niv: 3, ico: "❤️‍🔥", nom: "Mois de feu", def: "faire +10 % sur un seul mois", gain: ["livree", "rubis"], univers: "suzuka", bonus: ["trainee", "flammes"], indice: "Un mois brûlant, comme la montagne…" },
+  { id: "fusee", niv: 3, palier: 4, ico: "❤️‍🔥", nom: "Mois de feu", def: "faire +10 % sur un seul mois", gain: ["livree", "rubis"], bonus: ["trainee", "flammes"] },
   { id: "semestre", niv: 3, ico: "🧊", nom: "Sang-glacé", def: "battre l'indice 6 mois d'affilée", gain: ["casque", "glace"], saison: 2028 },
-  { id: "phenix", niv: 3, ico: "🔥", nom: "Phénix", def: "battre son record de cumul après une chute de 10 %", gain: ["casque", "phenix"], univers: "djeddah", bonus: ["fond", "flammes"], indice: "Tomber bien bas, puis renaître plus haut…" },
-  { id: "grandchelem", niv: 4, ico: "🌌", nom: "Grand chelem", def: "gagner 5 mois dans une même saison", gain: ["casque", "galaxie"], univers: "montreal", bonus: ["fond", "galaxie"], indice: "Une main pleine de victoires…" },
-  { id: "maillot", niv: 3, ico: "☀️", nom: "Maillot jaune", def: "passer 6 mois en tête du championnat, au total", gain: ["finition", "soleil"], univers: "singapour", bonus: ["fond", "or"], indice: "Longtemps devant tout le monde, doré comme un ticket…" },
+  { id: "phenix", niv: 3, palier: 4, ico: "🔥", nom: "Phénix", def: "repasser au-dessus de son meilleur niveau après une chute de 10 %", gain: ["casque", "phenix"], bonus: ["fond", "flammes"] },
+  { id: "grandchelem", niv: 4, palier: 3, ico: "🌌", nom: "Grand chelem", def: "gagner 5 mois dans une même saison", gain: ["casque", "galaxie"], bonus: ["fond", "galaxie"] },
+  { id: "maillot", niv: 3, palier: 3, ico: "☀️", nom: "Maillot jaune", def: "passer 6 mois en tête du championnat, au total", gain: ["finition", "soleil"], bonus: ["fond", "or"] },
   { id: "centurion", niv: 3, ico: "🎺", nom: "Soixante", def: "atteindre 60 points de championnat, toutes saisons confondues", gain: ["klaxon", "fanfare"], saison: 2028 },
-  // Légendaire
-  { id: "champion", niv: 4, ico: "🌿", nom: "Premier champion", def: "remporter une saison complète", gain: ["finition", "lauriers"], univers: "lasvegas", bonus: ["klaxon", "parade"], indice: "Le plus grand de tous, à la toute fin…" },
+  // Légende : le premier champion (le serveur le fige comme avant)
+  { id: "champion", niv: 4, legende: true, ico: "🌿", nom: "Premier champion", def: "remporter une saison complète", gain: ["finition", "lauriers"], bonus: ["klaxon", "parade"] },
   { id: "mur25", niv: 4, ico: "🪐", nom: "Le mur des 25 %", def: "atteindre +25 % cumulés depuis le départ de la saison 1", gain: ["livree", "galaxie"], saison: 2028 },
   { id: "marathon", niv: 4, ico: "🌈", nom: "Marathonien", def: "verser 24 mois d'affilée", gain: ["trainee", "arcenciel"], saison: 2028 },
   { id: "mur50", niv: 4, ico: "🌹", nom: "Le mur des 50 %", def: "atteindre +50 % cumulés depuis le départ de la saison 1", gain: ["livree", "orrose"], saison: 2028 },
   { id: "doublechampion", niv: 4, ico: "🦅", nom: "Empereur", def: "remporter 2 saisons", gain: ["casque", "empereur"], saison: 2028 }
 ];
-/** Les 12 secrets de la saison (dans l'ordre d'affichage : du plus facile au légendaire) et la réserve pour 2028 */
-const SECRETS_SAISON = EXCLUSIFS.filter(x => !x.saison).sort((a, b) => a.niv - b.niv);
+/** Les paliers de difficulté des succès (Théo, 25/11 : un succès simple ne doit pas ressembler à un difficile) */
+const PALIERS = [null,
+  { id: "bronze", nom: "Bronze", ico: "🥉", txt: "à la portée de tous" },
+  { id: "argent", nom: "Argent", ico: "🥈", txt: "demande de la régularité" },
+  { id: "or", nom: "Or", ico: "🥇", txt: "difficile" },
+  { id: "legende", nom: "Légendaire", ico: "💎", txt: "très rare" }];
+/** Les 12 succès de la saison (du plus simple au légendaire), le Premier champion (Légendes) et la réserve pour 2028 */
+const SUCCES = EXCLUSIFS.filter(x => !x.saison && !x.legende).sort((a, b) => a.palier - b.palier);
+const CHAMPION_EX = EXCLUSIFS.find(x => x.id === "champion");
 const RESERVE_2028 = EXCLUSIFS.filter(x => x.saison === 2028);
-/** Objets d'écurie gardés pour 2028 (plus gagnables cette saison : retirés de l'écurie) */
-function objetReserve(slot, id) { return RESERVE_2028.some(x => x.gain[0] === slot && x.gain[1] === id); }
+/** Objets d'écurie gardés pour 2028 (plus gagnables cette saison : retirés de l'écurie), sauf ceux repris par un succès 2027 */
+function objetReserve(slot, id) { const a = g => g && g[0] === slot && g[1] === id; return RESERVE_2028.some(x => a(x.gain)) && !SUCCES.some(x => a(x.gain) || a(x.bonus)); }
 let MEMO_EXCL = { d: null, cle: "", v: null };
 /** Pour chaque exclusif : { nom, k, score } du premier (calcul), ou null */
 function premiersExclusifs() {
@@ -443,8 +471,9 @@ function premiersExclusifs() {
   if (ys.length) {
     const st = {}, titres = {};
     ys.forEach(y => { const cu = {}; championnat(y).mois.forEach(m => m.l.forEach(x => { cu[x.nom] = (cu[x.nom] || 1) * (1 + x.r); (rMois[x.nom] = rMois[x.nom] || {})[m.k] = x.r; (cumMois[x.nom] = cumMois[x.nom] || {})[m.k] = cu[x.nom]; })); });
+    const BASE4 = CARTES.map(z => z.id);   // v2 · 🧠 Stratège : les 4 cartes de base (Aspiration, Turbo, Pneus pluie, Pari)
     ys.forEach(y => {
-      const c = championnat(y), wins = {};
+      const c = championnat(y), wins = {}, jeu = {};   // jeu : cartes de base qui ont marqué dans CETTE saison
       let precPlaces = null;
       c.mois.forEach(m => {
         Object.keys(st).forEach(n => { if (!m.l.some(z => z.nom === n)) { st[n].run = 0; st[n].bat = 0; } });   // v20.44 (arbitre) : un mois d'absence casse les séries (REGLES_PODIUM)
@@ -465,6 +494,7 @@ function premiersExclusifs() {
           if (s.prod > s.pic + 1e-12) { if (s.creux) note("phenix", x.nom, m.k, s.prod); s.pic = s.prod; s.creux = false; } else if (s.prod <= s.pic * 0.9) s.creux = true;
           if (m.places[x.nom] === 1) { s.tete++; if (s.tete >= 6) note("maillot", x.nom, m.k, s.pts); }
           if (precPlaces && precPlaces[x.nom] && precPlaces[x.nom] - m.places[x.nom] >= 2) note("remontee", x.nom, m.k, precPlaces[x.nom] - m.places[x.nom]);
+          if (x.carte && x.carte.gain > 0 && BASE4.includes(x.carte.id)) { const j = jeu[x.nom] = jeu[x.nom] || []; if (!j.includes(x.carte.id)) j.push(x.carte.id); if (j.length === BASE4.length) note("stratege", x.nom, m.k, x.r); }
         });
         precPlaces = m.places;
       });
@@ -504,18 +534,21 @@ function detenteur(id) {
   return p ? { noms: p.noms || [p.nom], nom: (p.noms || [p.nom]).join(" et "), k: p.k, fige: false } : null;
 }
 function possede(id, nom) { const d = detenteur(id); return !!(d && d.noms.includes(nom)); }
-/** Les secrets DORÉS d'un pilote (le premier à les réussir) ; la réserve 2028 ne compte pas */
-function exclusifsDe(nom) { return SECRETS_SAISON.filter(x => possede(x.id, nom)); }
-/** Refonte des badges · un secret : { or: détenteur doré (figé par le serveur ou calculé), argent: [{ nom, k, score }] du 2e au 5e, tous: candidats dans l'ordre }.
- *  Les versions argentées se calculent ici, avec les mêmes données et le même ordre que premiersExclusifs (rien ne change côté serveur). */
-function rangsSecret(id) {
+/** Les succès DORÉS d'un pilote (le premier à les réussir) ; la réserve 2028 et le Premier champion (Légende) n'en font pas partie */
+function exclusifsDe(nom) { return SUCCES.filter(x => possede(x.id, nom)); }
+/** Trophées v2 · un succès : { or: le premier (figé par le serveur ou calculé), autres: [{ nom, k, score }] ceux qui l'ont réussi ensuite, tous: candidats dans l'ordre }.
+ *  Même calcul que premiersExclusifs (rien ne change côté serveur) ; tout le monde peut le réussir, sans limite de places. */
+function rangsSucces(id) {
   const or = detenteur(id), p = premiersExclusifs()[id], tous = (p && p.tous) || [];
-  if (!or) return { or: null, argent: [], tous };
-  const argent = tous.filter(o => !or.noms.includes(o.nom)).slice(0, Math.max(0, 5 - or.noms.length));
-  return { or, argent, tous };
+  if (!or) return { or: null, autres: [], tous };
+  return { or, autres: tous.filter(o => !or.noms.includes(o.nom)), tous };
 }
-function secretArgent(id, nom) { return rangsSecret(id).argent.some(o => o.nom === nom); }
-function secretsArgentDe(nom) { return SECRETS_SAISON.filter(x => secretArgent(x.id, nom)); }
+/** A-t-il réussi ce succès (premier ou non) ? */
+function reussi(id, nom) { return possede(id, nom) || rangsSucces(id).autres.some(o => o.nom === nom); }
+/** Les succès réussis par un pilote (premier ou non) */
+function succesDe(nom) { return SUCCES.filter(x => reussi(x.id, nom)); }
+/** … et ceux qu'il a réussis APRÈS le premier (badge du palier, objet commun) */
+function succesSuivantDe(nom) { return SUCCES.filter(x => !possede(x.id, nom) && reussi(x.id, nom)); }
 /** Ce qui s'est passé (en % ou en points, jamais un montant) : « +11,2 % sur le mois » */
 function histoireSecret(id, o) {
   if (!o || o.score === undefined || o.score === null || !isFinite(o.score)) return "";
@@ -523,7 +556,7 @@ function histoireSecret(id, o) {
   return ({
     premiersang: () => "première victoire, " + p(s) + " sur le mois", decollage: () => p(s) + " sur le mois", fusee: () => p(s) + " sur le mois",
     remontee: () => "+" + s + " places au championnat en un mois", hattrick: () => "3e victoire d'affilée, " + p(s) + " sur le mois",
-    massue: () => pts(s) + " devant le " + idx + " sur le mois", cinqetoiles: () => s + "e mois devant le " + idx,
+    massue: () => pts(s) + " devant le " + idx + " sur le mois", cinqetoiles: () => s + "e mois devant le " + idx, stratege: () => "4e carte de base qui marque, " + p(s) + " sur le mois",
     mur10: () => p(s - 1) + " cumulés depuis le départ", phenix: () => "record de cumul battu après la chute : " + p(s - 1) + " cumulés",
     maillot: () => "6e mois en tête du championnat (" + Math.round(s) + " points)", grandchelem: () => "5e victoire de la saison, " + p(s) + " sur le mois",
     champion: () => "champion de la saison avec " + Math.round(s) + " points"
@@ -538,16 +571,16 @@ function annoncerExclusifs() {
   if (!D || !D.exclusifs || simulation() || apercuSaison() || basesSeules()) return;
   const moi = moiVrai(); if (!moi) return;
   let vus = []; try { vus = JSON.parse(stock.get("versus.exclVus") || "[]"); } catch (e) { vus = []; }
-  const nouveaux = SECRETS_SAISON.filter(x => { const f = D.exclusifs[x.id]; return f && (f.noms || [f.nom]).includes(moi) && !vus.includes(x.id); });   // refonte : seulement les 12 secrets de la saison (la réserve 2028 ne se fête pas)
-  if (!vus.length && !stock.get("versus.exclVus")) { stock.set("versus.exclVus", JSON.stringify(SECRETS_SAISON.filter(x => possede(x.id, moi)).map(x => x.id))); return; }   // premier passage : rien à fêter
+  const nouveaux = SUCCES.filter(x => { const f = D.exclusifs[x.id]; return f && (f.noms || [f.nom]).includes(moi) && !vus.includes(x.id); });   // v2 : seulement les 12 succès de la saison (la réserve 2028 ne se fête pas)
+  if (!vus.length && !stock.get("versus.exclVus")) { stock.set("versus.exclVus", JSON.stringify(SUCCES.filter(x => possede(x.id, moi)).map(x => x.id))); return; }   // premier passage : rien à fêter
   if (!nouveaux.length) return;
   stock.set("versus.exclVus", JSON.stringify(vus.concat(nouveaux.map(x => x.id))));
   // V15.9 : une vraie annonce (et plus un simple message de 4 s) : c'est un objet unique, gagné en premier
   const o = document.createElement("div"); o.className = "revel excl-an"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
-  // refonte des badges : la cérémonie du secret DORÉ (le premier), avec son histoire et son univers
-  o.innerHTML = '<div class="rv-c"><span class="tuto-k">🥇 Secret doré · le premier</span>' + nouveaux.map((x, i) => { const r = rangsSecret(x.id), moiO = r.tous.find(z => z.nom === moi), u = univers(x.univers);
-    return '<div class="ea-l" style="--i:' + i + '"><div class="cc-flip ea-carte"><div class="cc-in"><div class="cc-dos"><span>' + mondeDeNiv(x.niv).ico + '</span></div><div class="cc-face">' + htmlCarteColl(x.id, "g", [moi]) + '</div></div></div><b>' + esc(x.ico + " " + x.nom) + '</b><small class="ea-mo">' + esc((u ? u.drap + " " + u.nom + " · " : "") + "gravé à ton nom : " + moi) + "</small>" +
-      (moiO ? '<small class="ea-hist">' + esc(ligneHistoire(x, moiO)) + "</small>" : "") + "<small>Tu es le premier : " + esc(libGains(gainsSecret(x))) + ", que personne d'autre n'aura. Les suivants n'auront que la version argentée.</small></div>"; }).join("") +
+  // Trophées v2 : la cérémonie du succès DORÉ (le premier) : la médaille de son palier, couronnée, avec son histoire
+  o.innerHTML = '<div class="rv-c"><span class="tuto-k">🥇 Succès doré · le premier</span>' + nouveaux.map((x, i) => { const r = rangsSucces(x.id), moiO = r.tous.find(z => z.nom === moi), P = PALIERS[x.palier];
+    return '<div class="ea-l" style="--i:' + i + '"><div class="sc-grand ea-med p-' + P.id + '">' + svgMedaille(x.palier, true) + '<span class="cc-emo">' + x.ico + '</span></div><b>' + esc(x.ico + " " + x.nom) + '</b><small class="ea-mo">' + esc(P.ico + " " + P.nom + " · gravé à ton nom : " + moi) + "</small>" +
+      (moiO ? '<small class="ea-hist">' + esc(ligneHistoire(x, moiO)) + "</small>" : "") + "<small>Tu es le premier : " + esc(libGains([x.gain])) + (x.bonus ? " + l'exclusif " + esc(libGains([x.bonus])) + ", que personne d'autre n'aura" : "") + ". Les suivants gagnent le badge et " + esc(libGains([x.gain])) + ".</small></div>"; }).join("") +
     '<div class="btn-row"><button class="btn acc" type="button" data-ea="ecurie">🏎️ Mon écurie</button><button class="btn ghost" type="button" data-ea="ok">Génial !</button></div></div>';
   document.body.appendChild(o); confettis("damier");
   const t0 = Date.now(), fermer = () => o.remove();
@@ -593,10 +626,12 @@ function badgesPossedes(nom) {
   // les titres qu'il détient en ce moment (on se les vole chaque mois)
   const C = etatTitres(anneesSaison().slice(-1)[0]);
   TITRES.forEach(c => { const o = C[c.id]; if (o && o.nom === nom) l.push({ id: "t-" + c.id, ico: c.ico, nom: c.nom, niv: 4, html: '<span class="bdg ex titre t-' + c.id + '" data-bdg="' + esc(c.ico + " " + c.nom + " : titre détenu par " + nom + " depuis " + moisLong(o.depuis) + " (" + c.court + "). Il se vole chaque mois.") + '">' + c.ico + "</span>" }); });
-  { const tk = gagnantsTicket().find(g => g.nom === nom); if (tk) l.push({ id: "ticket", ico: "🎫", nom: "Ticket d'or", niv: 4, html: '<span class="bdg ex n4 ticket" data-bdg="' + esc("🎫 Ticket d'or n° " + tk.n + " : " + nom + " l'a trouvé dans sa tablette de la Chocolaterie (5 par saison, un par pilote).") + '">🎫</span>' }); }
+  { const tk = gagnantsTicket().find(g => g.nom === nom); if (tk) l.push({ id: "ticket", ico: "🎫", nom: "Ticket d'or", niv: 4, html: '<span class="bdg ex n4 ticket" data-bdg="' + esc("🎫 Ticket d'or : " + nom + " l'a trouvé dans sa tablette de la Chocolaterie (un seul dans toute l'année).") + '">🎫</span>' }); }
   if (anneesSaison().some(y => (etatGant(y)[nom] || { n: 0 }).n === 6)) l.push({ id: "gant", ico: "🧤", nom: "Gant de l'infini", niv: 4, html: '<span class="bdg ex n4" data-bdg="' + esc("🧤 Gant de l'infini : " + nom + " a allumé les 6 pierres dans une saison.") + '">🧤</span>' });
-  exclusifsDe(nom).sort((a, b) => b.niv - a.niv).forEach(x => l.push({ id: x.id, ico: x.ico, nom: x.nom, niv: x.niv, html: '<span class="bdg ex n' + x.niv + ' or" data-bdg="' + esc("🥇 " + x.ico + " " + x.nom + " · secret doré : " + nom + " a été le premier à " + x.def.replace("l'indice", "le " + idx) + ". Il garde " + libGains(gainsSecret(x)) + ", en un seul exemplaire.") + '">' + x.ico + "</span>" }));
-  secretsArgentDe(nom).sort((a, b) => b.niv - a.niv).forEach(x => l.push({ id: "a-" + x.id, ico: x.ico, nom: x.nom + " (argent)", niv: 0, html: '<span class="bdg ex arg" data-bdg="' + esc("🥈 " + x.ico + " " + x.nom + " · secret argenté : " + nom + " l'a réussi aussi (" + x.def.replace("l'indice", "le " + idx) + "), après le premier.") + '">' + x.ico + "</span>" }));
+  if (possede(CHAMPION_EX.id, nom)) l.push({ id: CHAMPION_EX.id, ico: CHAMPION_EX.ico, nom: CHAMPION_EX.nom, niv: 4, html: '<span class="bdg ex n4 or" data-bdg="' + esc("💎 🌿 Premier champion · Légende : " + nom + " a remporté la première saison. Il garde " + libGains(gainsSecret(CHAMPION_EX)) + ", en un seul exemplaire.") + '">' + CHAMPION_EX.ico + "</span>" });
+  // Trophées v2 : succès DORÉS (le premier) puis succès réussis ensuite (badge à la couleur du palier)
+  exclusifsDe(nom).sort((a, b) => b.palier - a.palier).forEach(x => l.push({ id: x.id, ico: x.ico, nom: x.nom, niv: x.palier, html: '<span class="bdg ex n' + x.palier + ' or" data-bdg="' + esc("🥇 " + x.ico + " " + x.nom + " · succès doré : " + nom + " a été le premier à " + x.def.replace("l'indice", "le " + idx) + ". Il garde l'exclusif " + libGains([x.bonus]) + ", en un seul exemplaire.") + '">' + x.ico + "</span>" }));
+  succesSuivantDe(nom).sort((a, b) => b.palier - a.palier).forEach(x => l.push({ id: "a-" + x.id, ico: x.ico, nom: x.nom, niv: 0, html: '<span class="bdg ex sc-b p-' + PALIERS[x.palier].id + '" data-bdg="' + esc(PALIERS[x.palier].ico + " " + x.ico + " " + x.nom + " · succès " + PALIERS[x.palier].nom.toLowerCase() + " : " + nom + " l'a réussi (" + x.def.replace("l'indice", "le " + idx) + ").") + '">' + x.ico + "</span>" }));
   return l;
 }
 /** Les badges affichés : ceux épinglés dans l'Écurie (3 au plus), sinon les 3 plus prestigieux */
@@ -634,27 +669,31 @@ function palmaresVitrine(nom) {
   return '<div class="vt-palm">' + case_(titres, titres > 1 ? "titres" : "titre") + case_(manches, manches > 1 ? "manches gagnées" : "manche gagnée") + case_(tete, "mois en tête") + "</div>" +
     (tous.length ? '<div class="vt-etagere" aria-label="Badges de ' + esc(nom) + '">' + tous.slice(0, 8).map(b => '<span class="vt-niche">' + b.html.replace('class="bdg', 'class="bdg vt-b') + "</span>").join("") + (tous.length > 8 ? '<span class="vt-niche plus">+' + (tous.length - 8) + "</span>" : "") + "</div>" : "");
 }
-/** Le « ? » d'un objet de l'écurie : d'où il vient, qui l'a, ce qu'il reste à faire */
+/** Le « ? » d'un objet de l'écurie : d'où il vient (Trophées v2 : 🗺️ Mondes, 🏅 Succès commun, 🥇 Succès exclusif, 🧤 Gant, 💎 Légendes, 2028), qui l'a, ce qu'il reste à faire */
 function texteOrigineItem(qui, slot, id) {
-  const ouvert = debloques(qui).has(slot + "." + id), org = origineItem(slot, id);
-  if (BASE_ECURIE[slot] === id) return { t: "De série", p: "Fourni à tout le monde dès le départ." };
-  if (org.exclusif) {
-    const x = org.exclusif, r = rangsSecret(x.id), d = r.or, u = univers(x.univers), ou = universVisible() && u ? " " + u.drap + " " + u.nom : "";
-    if (!d) return { t: "🔍 Secret caché" + ou, p: "Un secret débloque cet objet. Personne ne l'a encore trouvé : le premier qui le réussit le garde pour lui seul. Indice : « " + x.indice + " »" };
-    const quoi = "le premier à " + x.def.replace("l'indice", "le " + D.marche.indices[iRef()]);
-    if (d.noms.includes(qui)) return { t: "🥇 Secret doré · " + x.nom + ou, p: (d.noms.length > 1 ? "À toi, avec " + d.noms.filter(n => n !== qui).join(" et ") + " (le même mois)" : "À toi seul") + " : tu as été " + quoi + " (" + moisLong(d.k) + ")." };
-    return { t: "🥇 Secret doré · " + x.nom + ou, p: d.nom + " l'" + (d.noms.length > 1 ? "ont" : "a") + " décroché en " + moisLong(d.k) + " : " + quoi + ". Plus personne ne pourra avoir cet objet" + (secretArgent(x.id, qui) ? " (toi, tu as la version argentée du badge)." : " ; les suivants gagnent la version argentée du badge.") };
+  const ouvert = debloques(qui).has(slot + "." + id), org = origineItem(slot, id), idx = D.marche.indices[iRef()];
+  if (BASE_ECURIE[slot] === id) return { t: "🏁 De série", p: "Fourni à tout le monde dès le départ." };
+  if (org.succes) {
+    const x = org.succes, r = rangsSucces(x.id), d = r.or, P = PALIERS[x.palier], obj = x.def.replace("l'indice", "le " + idx), moiOk = reussi(x.id, qui);
+    if (!org.exclusif) return { t: "🏅 Succès · " + x.ico + " " + x.nom + " (" + P.ico + " " + P.nom + ")", p: (moiOk ? "À toi : tu as réussi à " : "Pour l'avoir : ") + obj + ". Chacun qui réussit le gagne." + (d ? " Déjà réussi par " + d.noms.concat(r.autres.map(o => o.nom)).join(", ") + "." : "") };
+    if (!d) return { t: "🥇 Exclusif du succès · " + x.ico + " " + x.nom, p: "Seul le PREMIER à " + obj + " gagnera cet objet, en un seul exemplaire. Personne ne l'a encore réussi." };
+    if (d.noms.includes(qui)) return { t: "🥇 Exclusif du succès · " + x.ico + " " + x.nom, p: (d.noms.length > 1 ? "À toi, avec " + d.noms.filter(n => n !== qui).join(" et ") + " (le même mois)" : "À toi seul") + " : tu as été le premier à " + obj + " (" + moisLong(d.k) + ")." };
+    return { t: "🥇 Exclusif du succès · " + x.ico + " " + x.nom, p: d.nom + " l'" + (d.noms.length > 1 ? "ont" : "a") + " décroché en premier en " + moisLong(d.k) + " : plus personne ne pourra avoir cet objet" + (moiOk ? " (toi, tu as le badge et l'objet commun du succès)." : " ; les suivants gagnent le badge et l'objet commun du succès.") };
   }
   if (org.monde) {
-    const t = org.monde, o = (etatTropheesMondes()[t.id] || {})[qui] || { ok: false, p: 0, c: 1 }, u = univers(t.univers), ou = universVisible() && u ? " · " + u.drap + " " + u.nom : "";
-    return ouvert ? { t: "🏆 Trophée « " + t.nom + " »" + ou, p: "Gagné en réussissant : " + t.def + "." }
-      : { t: "🏆 Trophée « " + t.nom + " »" + ou, p: "Pour l'ouvrir : " + t.def + ". Tout le monde peut l'avoir.", prog: o.c ? o.p / o.c : 0, pt: o.p ? o.p + " / " + o.c + uniteTM(t) : "" };
+    const t = org.monde, o = (etatTropheesMondes()[t.id] || {})[qui] || { ok: false, p: 0, c: 1 }, mois = MOIS_L[t.mois - 1];
+    return ouvert ? { t: "🗺️ Monde · " + icoMonde(t) + " " + nomMonde(t), p: "Gagné avec le trophée du monde : l'objectif commun du mini-jeu de " + mois + " a été réussi." }
+      : { t: "🗺️ Monde · " + icoMonde(t) + " " + nomMonde(t), p: "Réussissez ensemble l'objectif commun du mini-jeu de " + mois + " : chacun gagne alors le trophée et cet objet.", prog: o.c ? o.p / o.c : 0, pt: o.txt || "" };
   }
   if (org.gant) { const y = anneesSaison().slice(-1)[0], n = y ? (etatGant(y)[qui] || { n: 0 }).n : 0;
-    return ouvert ? { t: "🧤 Gant de l'infini", p: "Gagné en allumant les 6 pierres du Gant dans une saison." } : { t: "🧤 Gant de l'infini", p: "Allume les 6 pierres du Gant dans la saison (onglet Trophées).", prog: n / 6, pt: n + " / 6 pierres" }; }
-  if (org.ticket) { const g = gagnantsTicket(); return { t: "🎫 Ticket d'or · 🍫 Chocolaterie", p: g.some(x => x.nom === qui) ? "À toi : tu as trouvé un ticket d'or dans ta tablette." : "Caché dans une tablette de la Chocolaterie : 5 tickets d'or pour toute la saison, un seul par pilote." + (g.length ? " Déjà trouvés : " + g.map(x => x.nom).join(", ") + "." : "") }; }
-  if (org.vote) return { t: "Unique · Coup de la saison", p: "Gagné au 🗳️ vote de fin de saison : les autres pilotes t'ont élu pour le coup de la saison." };
-  if (org.million) return { t: "Unique · Premier millionnaire", p: D.premierMillion ? (D.premierMillion.nom === qui ? "À toi : premier millionnaire du groupe." : "Réservé à " + D.premierMillion.nom + ", premier millionnaire du groupe.") : "Réservé au premier du groupe qui atteindra 1 000 000 €." };
+    return ouvert ? { t: "🧤 Gant de l'infini", p: "Gagné en allumant les 6 pierres du Gant dans une saison." } : { t: "🧤 Gant de l'infini", p: "Allume les 6 pierres du Gant dans la saison (Trophées › 🧤 Gant).", prog: n / 6, pt: n + " / 6 pierres" }; }
+  if (org.ticket) { const g = gagnantsTicket(); return { t: "💎 Légende · 🎫 Ticket d'or", p: g.some(x => x.nom === qui) ? "À toi : tu as trouvé LE ticket d'or dans ta tablette." : "Un seul ticket d'or pour toute la saison, caché dans une tablette de la 🍫 Chocolaterie." + (g.length ? " Trouvé par " + g[0].nom + "." : "") }; }
+  if (org.mj) { const g = typeof gagnantsMJ === "function" ? gagnantsMJ(org.mj) : [], mois = MOIS_L[org.mj % 100 - 1];
+    return { t: "🥇 Exclusif · 🗺️ mini-jeu de " + mois, p: g.includes(qui) ? "À toi : tu as été le meilleur du mini-jeu de " + mois + " (surnom du mois et plaque dorée)." : g.length ? "Gagné par " + g.join(" et ") + ", meilleur" + (g.length > 1 ? "s" : "") + " du mini-jeu de " + mois + "." : "Réservé au meilleur du mini-jeu de " + mois + " (page Course), avec son surnom du mois. Aucun point au championnat." }; }
+  if (org.vote) return { t: "💎 Légende · 🗳️ Coup de la saison", p: "Gagné au vote de fin de saison : les autres pilotes t'élisent pour le coup de la saison." };
+  if (org.champion) { const d = detenteur(CHAMPION_EX.id); return { t: "💎 Légende · 🌿 Premier champion", p: d ? (d.noms.includes(qui) ? "À toi : tu as remporté la première saison." : "Réservé à " + d.nom + ", premier champion.") : "Réservé au vainqueur de la première saison complète." }; }
+  if (org.million) return { t: "💎 Légende · 👑 Premier millionnaire", p: D.premierMillion ? (D.premierMillion.nom === qui ? "À toi : premier millionnaire du groupe." : "Réservé à " + D.premierMillion.nom + ", premier millionnaire du groupe.") : "Réservé au premier du groupe qui atteindra 1 000 000 €." };
+  if (org.reserve) return { t: "🔒 Saison 2028", p: "Cet objet se gagnera à partir de la saison 2." };
   return { t: ITEMS[slot][id], p: ouvert ? "Déjà à toi." : "Pas encore débloqué." };
 }
 
@@ -982,7 +1021,7 @@ function barreAdmin() {
   const fete = '<button type="button" class="ba-dec" data-bafete="1">🎅 Aperçu · le vainqueur de la chauffe (la mini-cérémonie que tout le monde verra une fois, 48 h après le dernier relevé de décembre ; exemple inventé tant que la manche n’est pas finie)</button>';   // v17.49
   const coupe = '<button type="button" class="ba-dec" data-bacoupe="1">🏆 Aperçu · La Coupe brisée (exemple inventé : le vrai contenu reste secret, même pour toi)</button>';   // v20.42
   const ticket = '<button type="button" class="ba-dec" data-baticket="1">🎫 Aperçu · le ticket d’or (une tablette d’exemple : chocolat, puis ticket et cérémonie ; rien n’est envoyé, le vrai tirage reste secret, même pour toi)</button>';   // v20.47
-  return '<div class="barre-admin"><div class="ba-h"><b>🛠️ Admin</b><div class="ba-seg">' + b("tout", "Tout afficher") + b("joueur", "Vue joueur") + b("reel", "Le réel") + "</div></div>" + plus + dec + fete + circ + tres + coupe + ticket + "<small>" + desc + "</small></div>";
+  return '<div class="barre-admin"><div class="ba-h"><b>🛠️ Admin</b><div class="ba-seg">' + b("tout", "Tout afficher") + b("joueur", "Vue joueur") + b("reel", "Le réel") + "</div></div>" + plus + dec + fete + circ + tres + coupe + ticket + '<button type="button" class="ba-dec" data-bamj="1">🎲 Aperçu · les mini-jeux du mois (joués sur un faux tirage et des pilotes inventés : rien n’est enregistré, le vrai tirage reste secret, même pour toi)</button>' + "<small>" + desc + "</small></div>";
 }
 function brancherBarreAdmin(v) {
   const reglerMode = m => {
@@ -998,6 +1037,7 @@ function brancherBarreAdmin(v) {
   v.querySelectorAll("[data-batres]").forEach(x => x.addEventListener("click", () => ouvrirApercuTresor()));
   v.querySelectorAll("[data-bacoupe]").forEach(x => x.addEventListener("click", () => apercuCoupe()));
   v.querySelectorAll("[data-baticket]").forEach(x => x.addEventListener("click", () => apercuTicket()));
+  v.querySelectorAll("[data-bamj]").forEach(x => x.addEventListener("click", () => apercuMJ(202701)));   // 🎲 mini-jeux (js/9-minijeux.js)
   v.querySelectorAll("[data-badec]").forEach(x => x.addEventListener("click", () => { stock.set("versus.apercuSaison", "0"); stock.set("versus.vueJoueur", joueurAdmin()); stock.set("versus.dateSim", "2026-12-03"); ETAT.podium = "gp"; GP_ETAPE = null; garder(); location.reload(); }));
   v.querySelectorAll("[data-badate]").forEach(x => x.addEventListener("click", () => { if (x.dataset.badate) stock.set("versus.dateSim", x.dataset.badate); else stock.del("versus.dateSim"); location.reload(); }));
 }
@@ -1095,15 +1135,15 @@ function bullePortrait(essai) {
 }
 let ECU_SLOT = "pilote";
 const ICONES_KLAXON = { confettis: "🎊", damier: "🏁", feu: "🎆", parade: "🎺", billets: "💸", fanfare: "📯", cibles: "🎯", fusees: "🚀", trophees: "🏆", ouvriers: "🍬" };
-/** Rareté d'un objet : série (de base), trophée (argent), Gant (légendaire), secret doré (exclusif), unique (premier millionnaire) */
+/** Rareté d'un objet (Trophées v2) : série, monde, succès (pour chacun), exclusif du 1er, Gant, Légende (un seul au monde) */
 function rareteItem(slot, id) {
   if (BASE_ECURIE[slot] === id) return { cls: "r-serie", lib: "Série" };
   const o = origineItem(slot, id);
-  if (o.million) return { cls: "r-unique", lib: "Unique" };
-  if (o.ticket) return { cls: "r-unique r-excl", lib: "Ticket d'or" };
-  if (o.exclusif) return { cls: "r-unique r-excl", lib: "Secret doré" };
+  if (o.legende) return { cls: "r-unique" + (o.ticket ? " r-excl" : ""), lib: "Légende" };
+  if (o.exclusif || o.mj) return { cls: "r-unique r-excl", lib: "Exclusif" };
   if (o.gant) return { cls: "r-legende", lib: "Gant" };
-  if (o.monde) return { cls: "r-argent", lib: "Trophée" };
+  if (o.succes) return { cls: "r-argent", lib: "Succès" };
+  if (o.monde) return { cls: "r-argent", lib: "Monde" };
   return { cls: "r-serie", lib: "" };
 }
 function vignetteItem(slot, id, nom, e) {
@@ -1129,10 +1169,10 @@ function htmlDetailItem(qui) {
     (o.prog !== undefined && !ouvert ? '<span class="jauge"><i style="width:' + Math.round(Math.max(0, Math.min(1, o.prog)) * 100) + '%"></i></span>' + (o.pt ? "<small>" + esc(o.pt) + "</small>" : "") : "") + "</div>";
 }
 /** Objet encore mystérieux : celui d'un secret que personne n'a trouvé, ou du premier millionnaire */
-function objetCache(slot, id) { const o = origineItem(slot, id); return !!o.million || (!!o.ticket && !gagnantsTicket().length) || !!(o.exclusif && !detenteur(o.exclusif.id)); }
+function objetCache(slot, id) { const o = origineItem(slot, id); return !!o.million || (!!o.ticket && !gagnantsTicket().length); }   // v2 : les succès sont visibles, leurs objets aussi
 /** Objets visibles dans l'écurie : tout sauf la réserve 2028 */
 /** (la plaque Ticket d'or n'apparaît qu'à partir d'octobre 2027, ou chez son gagnant) */
-function idsSlot(slot) { return Object.keys(ITEMS[slot]).filter(id => !objetReserve(slot, id) && (slot !== GAIN_TICKET[0] || id !== GAIN_TICKET[1] || ticketVisible())); }
+function idsSlot(slot) { return Object.keys(ITEMS[slot]).filter(id => !objetReserve(slot, id) && (slot !== GAIN_TICKET[0] || id !== GAIN_TICKET[1] || ticketVisible()) && (typeof mjObjetVisible !== "function" || mjObjetVisible(slot, id, moiPilote()))); }
 function totalObjets() { return SLOTS.reduce((a, [s]) => a + idsSlot(s).length, 0) - Object.keys(BASE_ECURIE).length; }
 function htmlEcurie() {
   const qui = quiEcurie();
@@ -1154,11 +1194,11 @@ function htmlEcurie() {
   else if (slot === "numero") corps = '<div class="num-bloc"><input id="ecu-num" class="champ-num" inputmode="numeric" maxlength="2" value="' + e.numero + '" aria-label="Numéro de course (1 à 99)"><p class="info">Ton numéro de course, de 1 à 99 : sur le ponton de ta voiture et dans la grille.</p></div>';
   else corps = '<div class="items">' + idsSlot(slot).map(id => {
     const ouvert = ouverts.has(slot + "." + id), org = origineItem(slot, id), r = rareteItem(slot, id), cache = !ouvert && objetCache(slot, id), porte = e[slot] === id;
-    const sous = ouvert ? r.lib : org.million ? "👑 Premier millionnaire" : org.monde ? org.monde.ico + " " + org.monde.nom : org.gant ? "🧤 Gant de l'infini" : "";
+    const sous = ouvert ? r.lib : org.million ? "👑 Premier millionnaire" : org.champion ? "🌿 Premier champion" : org.monde ? icoMonde(org.monde) + " " + nomMonde(org.monde) : org.succes ? "🏅 " + org.succes.nom : org.gant ? "🧤 Gant de l'infini" : "";
     const ex = org.exclusif ? detenteur(org.exclusif.id) : null;
-    const sous2 = !ouvert && org.exclusif ? (ex ? "🔒 À " + ex.nom : "🔍 Secret caché") : sous;
+    const sous2 = !ouvert && org.exclusif ? (ex ? "🔒 À " + ex.nom : "🥇 1er · " + org.exclusif.nom) : sous;
     return '<div class="it-w' + (ECU_Q === slot + "." + id ? " q-on" : "") + '"><button type="button" class="it ' + r.cls + (porte ? " on" : "") + (ouvert ? "" : " verrou") + '" data-slot="' + slot + '" data-item="' + id + '">' +
-      '<span class="it-v">' + (cache ? '<span class="it-emo">?</span>' : vignetteItem(slot, id, qui, e)) + (ouvert ? "" : '<span class="it-lock">' + (org.million ? "👑" : org.exclusif ? (ex ? org.exclusif.ico : "🔍") : "🔒") + "</span>") + (porte ? '<span class="it-on">Équipé</span>' : "") + "</span>" +
+      '<span class="it-v">' + (cache ? '<span class="it-emo">?</span>' : vignetteItem(slot, id, qui, e)) + (ouvert ? "" : '<span class="it-lock">' + (org.million ? "👑" : org.exclusif ? (ex ? org.exclusif.ico : "🥇") : "🔒") + "</span>") + (porte ? '<span class="it-on">Équipé</span>' : "") + "</span>" +
       '<span class="it-n">' + (cache ? "???" : esc(ITEMS[slot][id])) + '</span><span class="it-r">' + esc(sous2) + "</span></button>" +
       '<button type="button" class="it-q" data-itq="' + slot + "." + id + '" aria-label="D\'où vient ' + esc(cache ? "cet objet" : ITEMS[slot][id]) + ' ?">?</button></div>';
   }).join("") + '</div><div class="it-d" id="it-d" aria-live="polite">' + htmlDetailItem(qui) + "</div>";
@@ -1190,7 +1230,7 @@ function htmlGarage(qui) {
     '<span class="sr-p"><span class="sr-barre"><i style="width:' + (total ? nb / total * 100 : 0).toFixed(0) + '%"></i></span>' + nb + " / " + total + " objets</span></div>" + '<div class="sr-3d" id="gar-3d">' + svgVoiture({ nom: n, e: eq, reflet: true, idle: true }) + "</div>" +
     '<button class="sr-klaxon" type="button" id="garage-klaxon">📯 Son klaxon</button></div>' +
     '<div class="gar-eq">' + SLOTS.map(([s, lib]) => '<span><small>' + lib + "</small>" + esc(ITEMS[s][eq[s]]) + "</span>").join("") + "</div>" +
-    (ex.length ? '<div class="gar-ex">' + ex.sort((a, b) => b.niv - a.niv).map(x => '<span title="' + esc(x.nom) + '">' + x.ico + " " + esc(x.nom) + "</span>").join("") + "</div>" : "") +
+    (ex.length ? '<div class="gar-ex">' + ex.sort((a, b) => b.palier - a.palier).map(x => '<span title="' + esc(x.nom) + '">' + x.ico + " " + esc(x.nom) + "</span>").join("") + "</div>" : "") +
     '<button class="lien" type="button" id="garage-fermer">Fermer</button></div>';
 }
 /* ================= V16 · La route des 4 mondes : cartes de collection, badges, vitrine =================
@@ -1265,32 +1305,58 @@ const DECORS = {
   sombres: '<path d="M0 100 V74 Q20 66 34 76 Q48 64 62 74 Q80 62 100 72 V100 Z" fill="#0005"/><path d="M14 74 V54 M14 58 L8 52 M14 62 L20 56 M86 72 V50 M86 56 L80 50 M86 60 L92 54" stroke="#0006" stroke-width="2"/><circle cx="24" cy="22" r="8" fill="#ffffff22"/>',
   dieux: '<path d="M0 100 V76 Q24 64 48 76 Q70 86 100 70 V100 Z" fill="#0004"/><path d="M0 100 V86 Q30 76 60 88 Q80 94 100 84 V100 Z" fill="#0005"/><circle cx="72" cy="26" r="11" fill="#fff4"/>'
 };
-/* Les 12 trophées des mondes (refonte des badges, Théo 24/11 : « Mes trophées », tout le monde peut tout avoir, aucun point).
-   univers = le circuit de la saison auquel il est rattaché (un trophée par univers) ; gain = objets d'écurie (les récompenses des anciens défis, redistribuées) */
+/* 🗺️ Les 12 MONDES (Trophées v2, Théo 25/11) : un trophée par univers = le mini-jeu du mois (moteur : js/9-minijeux.js, construit à part).
+   Tout le monde peut l'avoir ; le meilleur du mois a la feuille d'or (sans objet en plus). gain = objets d'écurie de l'univers (carte de référence du 25/11).
+   Aucune règle de mini-jeu ici (dépôt public) : l'état de chaque monde ne se lit que par etatMondeMiniJeu(). */
 const TROPHEES_MONDES = [
-  { id: "m-pousse", monde: "royaume", ico: "🌱", nom: "La Première pousse", def: "verser au moins une fois dans la saison", univers: "suzuka", gain: [["finition", "or"], ["klaxon", "feu"], ["casque", "damier"]] },
-  { id: "m-voeu", monde: "royaume", ico: "🔮", nom: "Le Vœu exaucé", def: "trouver le vainqueur du mois dans ton pronostic", univers: "djeddah", gain: [["trainee", "etincelles"], ["casque", "eclair"], ["finition", "argent"]] },
-  { id: "m-carte", monde: "royaume", ico: "🃏", nom: "La Carte enchantée", def: "marquer des points avec une carte", univers: "melbourne", gain: [["livree", "carte"], ["fond", "chat"]] },
-  { id: "m-horsreseau", monde: "neon", ico: "📡", nom: "Hors réseau", def: "3 mois positifs d'affilée", univers: "lasvegas", gain: [["plaque", "bouclier"], ["plaque", "metronome"], ["casque", "etoile"]] },
-  { id: "m-hacker", monde: "neon", ico: "🅿️", nom: "Le Hacker", def: "gagner une pole position", univers: "montreal", gain: [["casque", "chrome"], ["circuit", "neige"], ["casque", "carbone"]] },
-  { id: "m-neonvert", monde: "neon", ico: "💚", nom: "Néon vert", def: "6 mois positifs dans la saison", univers: "miami", gain: [["fond", "aurore"], ["finition", "neon"]] },
-  { id: "m-survivant", monde: "sombres", ico: "🌧️", nom: "Survivant", def: "finir positif un mois où l'indice baisse", univers: "interlagos", gain: [["casque", "eclaireur"], ["trainee", "cables"]] },
-  { id: "m-twist", monde: "sombres", ico: "🌀", nom: "Le Twist final", def: "monter sur le podium du mois juste après avoir été dernier", univers: "spa", gain: [["circuit", "neon"], ["livree", "neon"], ["fond", "carbone"]] },
-  { id: "m-nuitblanche", monde: "sombres", ico: "🏁", nom: "Nuit blanche", def: "réussir 3 défis du mois", univers: "singapour", gain: [["livree", "chocolat"], ["klaxon", "ouvriers"]] },
-  { id: "m-faveur", monde: "dieux", ico: "⚡", nom: "La Faveur des dieux", def: "marquer 12 points en un seul mois", univers: "monza", gain: [["casque", "holo"], ["trainee", "comete"], ["fond", "damier"]] },
-  { id: "m-epice", monde: "dieux", ico: "🏜️", nom: "Le Maître de l'épice", def: "atteindre +15 % cumulés dans la saison", univers: "silverstone", gain: [["circuit", "desert"], ["livree", "or"]] },
-  { id: "m-pantheon", monde: "dieux", ico: "🏛️", nom: "Le Panthéon", def: "les 3 pronostics justes le même mois (vainqueur, +1 %, pole)", univers: "bahrein", gain: [["circuit", "monaco"], ["casque", "toque"]] }
+  { id: "m-silverstone", univers: "silverstone", mois: 1, gain: [["livree", "or"], ["circuit", "desert"]] },
+  { id: "m-djeddah", univers: "djeddah", mois: 2, gain: [["casque", "eclair"], ["trainee", "etincelles"], ["finition", "argent"]] },
+  { id: "m-melbourne", univers: "melbourne", mois: 3, gain: [["livree", "carte"], ["fond", "chat"]] },
+  { id: "m-suzuka", univers: "suzuka", mois: 4, gain: [["finition", "or"], ["casque", "damier"], ["klaxon", "feu"]] },
+  { id: "m-miami", univers: "miami", mois: 5, gain: [["fond", "aurore"], ["finition", "neon"]] },
+  { id: "m-montreal", univers: "montreal", mois: 6, gain: [["casque", "chrome"], ["casque", "carbone"], ["circuit", "neige"]] },
+  { id: "m-bahrein", univers: "bahrein", mois: 7, gain: [["casque", "toque"], ["plaque", "ratatouille"], ["circuit", "monaco"]] },
+  { id: "m-spa", univers: "spa", mois: 8, gain: [["livree", "neon"], ["circuit", "neon"], ["fond", "carbone"]] },
+  { id: "m-lasvegas", univers: "lasvegas", mois: 9, gain: [["casque", "etoile"], ["plaque", "bouclier"], ["plaque", "metronome"]] },
+  { id: "m-singapour", univers: "singapour", mois: 10, gain: [["livree", "chocolat"], ["klaxon", "ouvriers"]] },
+  { id: "m-interlagos", univers: "interlagos", mois: 11, gain: [["casque", "eclaireur"], ["trainee", "cables"]] },
+  { id: "m-monza", univers: "monza", mois: 12, gain: [["casque", "holo"], ["trainee", "comete"], ["fond", "damier"]] }
 ];
-/* 🧤 Le Gant de l'infini : grand objet de la saison, 6 pierres qui s'allument dans la saison en cours (calculées sur le championnat) */
-const GANT = { univers: "monza", gain: [["livree", "chrome"], ["plaque", "remontada"]] };
-const PIERRES = [
-  { id: "victoire", c: "#9B5CFF", nom: "Pierre de la victoire", def: "gagner un mois" },
-  { id: "indice", c: "#3D8BFF", nom: "Pierre de l'indice", def: "3 mois devant l'indice dans la saison" },
-  { id: "carte", c: "#FF3B4E", nom: "Pierre de la carte", def: "marquer des points avec une carte" },
-  { id: "pari", c: "#FFD23D", nom: "Pierre de l'audace", def: "gagner un 🎲 Pari contre le leader du championnat (celui en tête au départ du mois, donc dès février)" },
-  { id: "tenace", c: "#2FD16A", nom: "Pierre de la ténacité", def: "3 mois d'affilée sans finir dernier" },
-  { id: "retour", c: "#FF8A2B", nom: "Pierre du retour", def: "finir dernier un mois, puis gagner un mois plus tard" }
-];
+/** Nom court du monde (« Mer de dunes », « Petit Chef »…) et son drapeau */
+function nomMonde(t) { const u = univers(t.univers); return u ? u.nom : t.univers; }
+function icoMonde(t) { const u = univers(t.univers); return u ? u.drap : "🗺️"; }
+/** ÉTAT D'UN MONDE, lu par UNE seule fonction d'adaptation : le pont vers le moteur des mini-jeux (js/9-minijeux.js, etatMiniJeu).
+ *  etatMiniJeu(univers, nom) renvoie (ou null tant que rien n'est chargé) :
+ *    { gagne: bool (l'OBJECTIF COMMUN est réussi : CE pilote a le trophée du monde et ses objets d'univers),
+ *      pourTous: [noms] (les pilotes qui ont le trophée du monde : tout le groupe quand l'objectif commun est réussi),
+ *      meilleur: { nom, txt } | null (le ou les meilleurs du mois : titre + objet exclusif doré ; jamais un montant),
+ *      progression: { p, c, txt } | null (l'objectif commun : p sur c, texte court),
+ *      etat: "a-venir" | "en-cours" | "fini", trophee: { ico, nom } | null, titre, objet: [emplacement, id] | null }
+ *  Ici on ajoute aVenir (mini-jeu pas encore dévoilé) et meilleurs (la liste des noms). Rien n'est inventé : sans moteur, personne n'a rien. */
+function etatMondeMiniJeu(univers, nom) {
+  const vide = { aVenir: true, etat: "a-venir", gagne: false, pourTous: [], meilleur: null, meilleurs: [], progression: null, trophee: null, titre: null, objet: null };
+  if (typeof etatMiniJeu !== "function") return vide;
+  try {
+    const e = etatMiniJeu(univers, nom); if (!e) return vide;
+    const best = e.meilleur && e.meilleur.nom ? e.meilleur : null, etat = e.etat || "en-cours";
+    return { aVenir: etat === "a-venir", etat, gagne: !!e.gagne, pourTous: Array.isArray(e.pourTous) ? e.pourTous.slice() : [], meilleur: best,
+      meilleurs: best ? (Array.isArray(e.meilleurs) && e.meilleurs.length ? e.meilleurs.slice() : best.nom.split(" et ")) : [],
+      progression: e.progression || null, trophee: e.trophee || null, titre: e.titre || null, objet: Array.isArray(e.objet) ? e.objet : null };
+  } catch (er) { return vide; }
+}
+let MEMO_TM = { d: null, rev: null, v: null };
+/** { id: { nom: { ok, p, c, txt, aVenir, meilleur, pourTous } } } pour tous les pilotes (lu par l'Écurie, la fiche et les cases).
+ *  Le moteur des mini-jeux peut changer window.MINIJEUX_REV pour forcer un nouveau calcul. */
+function etatTropheesMondes() {
+  const rev = window.MINIJEUX_REV || 0;
+  if (MEMO_TM.d === D && MEMO_TM.rev === rev && MEMO_TM.v) return MEMO_TM.v;
+  const noms = D.personnes.map(p => p.nom), out = {};
+  TROPHEES_MONDES.forEach(t => { out[t.id] = {}; noms.forEach(n => {
+    const e = saisonJouee() ? etatMondeMiniJeu(t.univers, n) : etatMondeMiniJeu("", ""), pr = e.progression;
+    out[t.id][n] = { ok: !!e.gagne, p: pr && pr.c ? pr.p : 0, c: pr && pr.c ? pr.c : 1, txt: pr ? pr.txt || "" : "", aVenir: e.aVenir || !saisonJouee(), etat: e.etat, meilleur: e.meilleur, meilleurs: e.meilleurs, pourTous: e.pourTous, trophee: e.trophee, titre: e.titre, objet: e.objet }; }); });
+  MEMO_TM = { d: D, rev, v: out };
+  return out;
+}
 let MEMO_GANT = { d: null, m: {} };
 /** Le Gant de chaque pilote pour la saison y : { nom: { p: [mois où chaque pierre s'est allumée, 0 sinon], n } } */
 function etatGant(y) {
@@ -1382,36 +1448,6 @@ function flairSaison(y) {
   });
   return f ? Object.assign(f, { txt: f.val + " points de chercheur" }) : null;
 }
-let MEMO_TM = { d: null, v: null };
-function etatTropheesMondes() {
-  if (MEMO_TM.d === D && MEMO_TM.v) return MEMO_TM.v;
-  const noms = D.personnes.map(p => p.nom), out = {}; TROPHEES_MONDES.forEach(t => { out[t.id] = {}; noms.forEach(n => out[t.id][n] = { ok: false, p: 0, c: 1 }); });
-  const monte = (id, n, v, c) => { const o = out[id][n]; if (!o) return; o.c = c; o.p = Math.max(o.p, Math.min(v, c)); if (v >= c) o.ok = true; };
-  anneesSaison().forEach(y => {
-    const ch = championnat(y), R = {}; noms.forEach(n => R[n] = { pos: 0, posRun: 0, defis: 0, cum: 1, dern: false });
-    ch.mois.forEach(m => {
-      const gagnants = m.l.filter(z => z.rg === 1).map(z => z.nom);   // v20.44 (arbitre) : victoire partagée comprise
-      noms.forEach(n => { if (!m.l.some(z => z.nom === n)) R[n].posRun = 0; });   // un mois d'absence casse la série
-      m.l.forEach(x => {
-        const r = R[x.nom]; if (!r) return;
-        if (x.carte && x.carte.gain > 0) monte("m-carte", x.nom, 1, 1);
-        if (x.prono && x.prono.v && gagnants.includes(x.prono.v)) monte("m-voeu", x.nom, 1, 1);
-        if (x.prono && x.prono.pole) monte("m-hacker", x.nom, 1, 1);
-        if (x.prono && gagnants.includes(x.prono.v) && x.prono.pole && x.prono.i && m.iR !== null && (x.prono.i === "h") === (m.iR > 0.01)) monte("m-pantheon", x.nom, 1, 1);
-        r.posRun = x.r > 0 ? r.posRun + 1 : 0; monte("m-horsreseau", x.nom, r.posRun, 3);
-        if (x.r > 0) r.pos++; monte("m-neonvert", x.nom, r.pos, 6);
-        if (m.iR !== null && m.iR < 0 && x.r > 0) monte("m-survivant", x.nom, 1, 1);
-        if (r.dern && x.rg <= 3) monte("m-twist", x.nom, 1, 1); r.dern = !!x.dernier;
-        if (x.defi) r.defis++; monte("m-nuitblanche", x.nom, r.defis, 3);
-        monte("m-faveur", x.nom, x.p, 12);
-        r.cum *= 1 + x.r; monte("m-epice", x.nom, Math.max(0, Math.floor((r.cum - 1) * 100 + 1e-9)), 15);   // v20.44 : 14,5 % ne suffit pas
-      });
-    });
-    D.personnes.forEach(p => { if (serie(p, 0).some(z => z.k > ch.deb && z.k <= ch.f && z.val && (z.verse || 0) > 0)) monte("m-pousse", p.nom, 1, 1); });
-  });
-  MEMO_TM = { d: D, v: out };
-  return out;
-}
 /* Une carte de collection (HTML + SVG) ; taille « m » (route), « g » (grande, ouverte) */
 function htmlCarteColl(id, taille, detenteurs) {
   const ex = id === "million" ? { niv: 4, nom: "Premier millionnaire" } : EXCLUSIFS.find(x => x.id === id), cc = CARTES_COLL[id], mo = mondeDeNiv(ex.niv);
@@ -1426,113 +1462,376 @@ function htmlCarteColl(id, taille, detenteurs) {
     '<div class="cc-t"><b>' + esc(cc.t) + "</b>" + (taille === "g" ? "<small>" + esc(ex.nom) + "</small>" : "") + "</div>" +
     (prise ? '<span class="cc-qui" style="--c:' + couleur(detenteurs[0]) + '">' + esc(detenteurs[0].slice(0, 1)) + "</span>" : "") + "</div>";
 }
-/* ================= Refonte des badges (Théo, 24/11) : l'onglet Trophées = 3 vitrines =================
-   🏆 Mes trophées (ce que je construis : le Gant + 12 trophées, tout le monde peut tout avoir) · 🔍 Les secrets (ce que je découvre :
-   12 secrets cachés, doré pour le 1er, argenté du 2e au 5e) · ⚔️ Les titres (ce que je défends : 3 badges qu'on se vole chaque mois).
-   Avant le 1er janvier (tour de chauffe) : « voici ce qui t'attend », sans détenteurs et sans univers. Aucun montant : des %, des points, des mois. */
-/** Le Gant dessiné : 5 doigts + le dos de la main, une pierre par emplacement (allumée = sa couleur) */
-function svgGant(p) {
-  const pos = [[22, 30], [38, 20], [54, 18], [70, 24], [83, 52], [48, 62]];
-  return '<svg class="gant-svg" viewBox="0 0 100 110" aria-hidden="true"><defs><linearGradient id="gantOr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBE08A"/><stop offset=".55" stop-color="#D9A431"/><stop offset="1" stop-color="#8E5F12"/></linearGradient></defs>' +
-    '<path class="gant-m" d="M16 40Q14 22 22 20Q29 19 30 34V30Q30 10 38 10Q46 10 46 28V26Q46 7 54 7Q62 7 62 26V30Q63 14 70 14Q78 15 78 32V58Q82 44 89 45Q96 48 92 60L82 84Q76 98 60 100H40Q24 98 20 82Z" fill="url(#gantOr)" stroke="#6B4508" stroke-width="2"/>' +
-    '<path d="M24 96H76V106H24Z" fill="url(#gantOr)" stroke="#6B4508" stroke-width="2"/>' +
-    pos.map(([x, y], i) => '<circle cx="' + x + '" cy="' + y + '" r="' + (i === 5 ? 8 : 5.5) + '" class="pierre' + (p[i] ? " on" : "") + '" style="--pc:' + PIERRES[i].c + '"/>').join("") + "</svg>";
+/* Petits dessins des objets à gagner, pour les cases des Trophées (dessins du directeur artistique, v2) : svgObjet(slot, id, taille) */
+let OBJ_UID = 0;
+const OBJ_TEINTES = {
+  or: ["#FFF1B0", "#E8B640", "#8A5A0C"], argent: ["#FFFFFF", "#C9D1DA", "#5E6874"], chrome: ["#FFFFFF", "#AEB8C4", "#3E4752"],
+  neon: ["#C8FFF9", "#2EF2E0", "#0B6F8A"], carbone: ["#6A707A", "#2A2E35", "#0D0F12"], damier: ["#FFFFFF", "#9AA3AE", "#111418"],
+  eclair: ["#FFF6A8", "#FFD23D", "#A66A00"], etoile: ["#E2D6FF", "#8C6BFF", "#2B1A6E"], eclaireur: ["#FFE3BF", "#FF8A2B", "#7A3300"],
+  holo: ["#FFD6F5", "#8FE3FF", "#7A5CFF"], toque: ["#FFFFFF", "#ECEFF3", "#9AA3AE"], chocolat: ["#C88A5A", "#6B3A1E", "#2C1408"],
+  carte: ["#FFFFFF", "#F2F2F2", "#C21F3A"], feu: ["#FFE08A", "#FF6A2B", "#A01A0A"], ouvriers: ["#FFE08A", "#FFB020", "#3A3A3A"],
+  etincelles: ["#FFFFFF", "#FFE27A", "#FF8A2B"], cables: ["#C8D2DC", "#6E7C8A", "#22303C"], comete: ["#E6F4FF", "#7FC4FF", "#3A3AA8"],
+  aurore: ["#B8FFE0", "#2FD1A0", "#3A2A8F"], chat: ["#FFE0B8", "#F2A65A", "#5A3010"], neige: ["#FFFFFF", "#DDEBF7", "#7A9CC0"],
+  desert: ["#FFE2A8", "#E3A456", "#8A4A18"], monaco: ["#FFFFFF", "#E8384F", "#7A0E1C"], bouclier: ["#E1ECFF", "#4C8DFF", "#173E8A"],
+  metronome: ["#FFF1B0", "#C99A3A", "#5A3A0C"], remontada: ["#FFE3BF", "#FF7A2B", "#7A2A00"],
+  // Trophées v2 : objets des succès et des légendes
+  premiersang: ["#FFD0D0", "#D62839", "#6E0D12"], fusees: ["#E6F4FF", "#5AB8FF", "#1A3A8A"], halo: ["#FFFFFF", "#CFE3FF", "#6E8FB5"], turbo: ["#E6F6FF", "#5AB8FF", "#1A4A8A"],
+  tortue: ["#BDF5C8", "#3FAE5A", "#1B5528"], foudre: ["#FFF6A8", "#3A4A7A", "#0B1020"], supernova: ["#FFFFFF", "#9B87FF", "#3A1A8A"], arcenciel: ["#FFD6F5", "#8FE3FF", "#7A5CFF"],
+  etoilee: ["#FFF6CC", "#FFE596", "#9A6716"], cibles: ["#FFFFFF", "#E5484D", "#7A0E1C"], platine: ["#FFFFFF", "#DDE5EF", "#7D8898"], contre: ["#FFE3BF", "#E8833A", "#6B2A00"],
+  carredas: ["#E8FFF0", "#1F7A4A", "#0B3A22"], diamant: ["#FFFFFF", "#C9F6FF", "#3A9AC0"], rubis: ["#FF9BB0", "#E0115F", "#43000F"], flammes: ["#FFE08A", "#FF6A1F", "#8A1A06"],
+  phenix: ["#FFE08A", "#FF8A1F", "#6E0D12"], galaxie: ["#C9B6FF", "#5B2A9E", "#170A36"], soleil: ["#FFF3B0", "#FFB21E", "#9A4A00"], lauriers: ["#F3F9C8", "#8FB33A", "#3A5A10"],
+  parade: ["#FFF1B0", "#E8B640", "#7A4A0C"], couronne: ["#FFF6CC", "#F7CF55", "#6B430C"], oranime: ["#FFF6CC", "#F7CF55", "#6B430C"], billets: ["#E8FFE0", "#4FAE5A", "#1B5528"],
+  ticketor: ["#FFF6CC", "#F7CF55", "#7A4A0C"], coupsaison: ["#E1ECFF", "#7A5CFF", "#2B1A6E"], ratatouille: ["#DCE8FF", "#2A5DB0", "#12305A"]
+};
+function svgObjet(slot, id, px) {
+  const k = "ob" + (++OBJ_UID), T = OBJ_TEINTES[id] || OBJ_TEINTES.or, [hi, md, dk] = T, sz = px || 64;
+  const g = `<linearGradient id="${k}l" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${hi}"/><stop offset=".5" stop-color="${md}"/><stop offset="1" stop-color="${dk}"/></linearGradient>` +
+    `<radialGradient id="${k}r" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="${hi}"/><stop offset=".55" stop-color="${md}"/><stop offset="1" stop-color="${dk}"/></radialGradient>`;
+  const motif = id === "damier" ? `<pattern id="${k}p" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#F4F6F8"/><rect width="3" height="3" fill="#111418"/><rect x="3" y="3" width="3" height="3" fill="#111418"/></pattern>`
+    : id === "carbone" ? `<pattern id="${k}p" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" fill="#1C1F24"/><path d="M0 0L4 4" stroke="#3A3F48" stroke-width="1.4"/></pattern>`
+    : id === "holo" || id === "arcenciel" ? `<linearGradient id="${k}p" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#FF9BE6"/><stop offset=".33" stop-color="#8FE3FF"/><stop offset=".66" stop-color="#B6FF9B"/><stop offset="1" stop-color="#B49BFF"/></linearGradient>` : "";
+  const F = motif ? `url(#${k}p)` : `url(#${k}l)`;
+  let b = "";
+  const reflet = (d, o = .55) => `<path d="${d}" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="${o}"/>`;
+  if (slot === "casque" && id === "toque") {
+    b = `<path d="M18 40C10 38 9 26 18 24C18 14 30 12 33 18C37 11 49 14 47 24C56 25 55 38 46 40Z" fill="url(#${k}r)" stroke="#9AA3AE" stroke-width="1.4"/><rect x="18" y="38" width="28" height="12" rx="2" fill="#F4F6F8" stroke="#9AA3AE" stroke-width="1.4"/><path d="M24 40V48M32 40V48M40 40V48" stroke="#C9D1DA" stroke-width="1.2"/>` + reflet("M20 26C22 22 26 20 29 21");
+  } else if (slot === "casque") {
+    b = `<path d="M10 40C10 22 22 12 36 12C50 12 56 24 56 36L56 44C56 48 53 50 49 50H18C13 50 10 46 10 40Z" fill="${F}" stroke="${dk}" stroke-width="1.6"/>` +
+      `<path d="M30 26H54C56 26 56 36 54 38H34C30 38 28 34 28 31C28 28 28 26 30 26Z" fill="#141821" stroke="${dk}" stroke-width="1.2"/><path d="M34 29H51" stroke="#8FB7FF" stroke-width="2" stroke-linecap="round" opacity=".7"/>` +
+      (id === "eclair" ? `<path d="M18 22L24 32L19 33L25 44L15 31L20 30Z" fill="#fff" opacity=".9"/>` : id === "etoile" ? `<path d="M20 30l2 5 5 .4-4 3 1.4 5-4.4-3-4.4 3 1.4-5-4-3 5-.4z" fill="#fff" opacity=".9"/>` : id === "eclaireur" ? `<circle cx="22" cy="20" r="4" fill="#FFF6C8" stroke="${dk}"/>` : "") +
+      reflet("M16 30C17 22 23 16 31 15") + `<path d="M12 46H54" stroke="${dk}" stroke-width="1" opacity=".5"/>`;
+  } else if (slot === "livree") {
+    b = `<path d="M4 40L10 34H22L28 28H40L46 34H58L60 40L58 44H6Z" fill="${F}" stroke="${dk}" stroke-width="1.5" stroke-linejoin="round"/>` +
+      `<path d="M30 30H38L42 34H27Z" fill="#141821"/><rect x="2" y="30" width="6" height="12" rx="1" fill="${dk}"/><rect x="56" y="36" width="7" height="6" rx="1" fill="${dk}"/>` +
+      (id === "carte" ? `<path d="M15 39c0-2 2-3 3-1.5 1-1.5 3-.5 3 1.5 0 2-3 3.5-3 3.5s-3-1.5-3-3.5z" fill="#C21F3A"/>` : "") +
+      `<circle cx="16" cy="44" r="6.5" fill="#15181E" stroke="#444B57" stroke-width="2"/><circle cx="48" cy="44" r="6.5" fill="#15181E" stroke="#444B57" stroke-width="2"/><circle cx="16" cy="44" r="2" fill="#8A94A2"/><circle cx="48" cy="44" r="2" fill="#8A94A2"/>` + reflet("M12 36H24L29 31H38", .5);
+  } else if (slot === "plaque") {
+    b = `<path d="M32 8L52 16V30C52 44 43 52 32 57C21 52 12 44 12 30V16Z" fill="url(#${k}l)" stroke="${dk}" stroke-width="1.6"/><path d="M32 13L47 19V30C47 41 40 47 32 51C24 47 17 41 17 30V19Z" fill="none" stroke="${hi}" stroke-width="1.2" opacity=".8"/>` +
+      (id === "metronome" ? `<path d="M26 44L32 20L38 44Z" fill="${dk}" opacity=".7"/><path d="M32 40L38 24" stroke="#fff" stroke-width="2"/>` : id === "remontada" ? `<path d="M22 42L30 32L35 37L43 24M37 24H43V30" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` : `<path d="M32 20L42 25V32C42 39 37 43 32 45C27 43 22 39 22 32V25Z" fill="${hi}" opacity=".75"/>`) + reflet("M18 20L30 14", .6);
+  } else if (slot === "fond") {
+    b = `<rect x="8" y="10" width="48" height="44" rx="8" fill="${motif ? F : `url(#${k}l)`}" stroke="${dk}" stroke-width="1.4"/>` +
+      (id === "aurore" ? `<path d="M8 34C20 22 30 40 56 26V46C40 52 24 40 8 50Z" fill="#B8FFE0" opacity=".45"/><path d="M8 28C22 16 34 34 56 20" stroke="#fff" stroke-width="2" fill="none" opacity=".6"/><circle cx="44" cy="18" r="1.2" fill="#fff"/><circle cx="20" cy="16" r="1" fill="#fff"/>`
+       : id === "chat" ? `<path d="M22 46V34L26 28L29 34H35L38 28L42 34V46Z" fill="#3A220C"/><circle cx="28.5" cy="38" r="1.4" fill="#FFD23D"/><circle cx="35.5" cy="38" r="1.4" fill="#FFD23D"/>` : "");
+  } else if (slot === "finition") {
+    b = `<circle cx="32" cy="34" r="20" fill="url(#${k}r)" stroke="${dk}" stroke-width="1.4"/><ellipse cx="25" cy="25" rx="7" ry="4" fill="#fff" opacity=".75" transform="rotate(-30 25 25)"/><path d="M48 12l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" fill="${hi}"/><path d="M14 46l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1z" fill="${hi}"/>`;
+  } else if (slot === "trainee") {
+    b = `<path d="M6 44C20 40 34 30 46 22" stroke="${md}" stroke-width="10" stroke-linecap="round" opacity=".3" fill="none"/><path d="M10 42C22 38 34 30 46 22" stroke="url(#${k}l)" stroke-width="5" stroke-linecap="round" fill="none"/><circle cx="48" cy="21" r="7" fill="url(#${k}r)"/>` +
+      (id === "cables" ? `<path d="M8 50C20 46 30 36 44 28M12 34C22 32 32 26 42 18" stroke="${dk}" stroke-width="1.6" fill="none"/>` : `<g fill="${hi}"><circle cx="18" cy="48" r="1.6"/><circle cx="28" cy="44" r="1.2"/><circle cx="24" cy="32" r="1.4"/><circle cx="36" cy="40" r="1"/></g>`);
+  } else if (slot === "klaxon") {
+    b = `<path d="M12 28H20L40 16V48L20 36H12Z" fill="url(#${k}l)" stroke="${dk}" stroke-width="1.5" stroke-linejoin="round"/><rect x="8" y="27" width="6" height="10" rx="2" fill="${dk}"/>` +
+      `<path d="M46 24C50 28 50 36 46 40M50 18C57 25 57 39 50 46" stroke="${md}" stroke-width="2.4" fill="none" stroke-linecap="round"/>` + reflet("M22 30L37 21", .6);
+  } else if (slot === "circuit") {
+    b = `<path d="M14 40C8 30 14 16 26 18C34 19 34 28 42 26C52 23 58 32 52 42C47 50 22 52 14 40Z" fill="none" stroke="${dk}" stroke-width="8" stroke-linejoin="round"/><path d="M14 40C8 30 14 16 26 18C34 19 34 28 42 26C52 23 58 32 52 42C47 50 22 52 14 40Z" fill="none" stroke="${md}" stroke-width="5"/>` +
+      `<path d="M14 40C8 30 14 16 26 18C34 19 34 28 42 26C52 23 58 32 52 42C47 50 22 52 14 40Z" fill="none" stroke="${hi}" stroke-width="1" stroke-dasharray="3 3"/><path d="M30 46V54" stroke="#111" stroke-width="3"/><path d="M30 46V54" stroke="#fff" stroke-width="3" stroke-dasharray="1.5 1.5"/>`;
+  }
+  return `<svg class="obj" viewBox="0 0 64 64" width="${sz}" height="${sz}" aria-hidden="true"><defs>${g}${motif}</defs><ellipse cx="32" cy="58" rx="18" ry="2.6" fill="#000" opacity=".18"/>${b}</svg>`;
+}
+/* ================= Trophées v2 (Théo, 25/11) : l'onglet Trophées en 4 sous-onglets =================
+   🗺️ Mondes (12 cartes à collectionner, une par mini-jeu du mois) · 🏅 Succès (12 objectifs VISIBLES, dessin selon la difficulté)
+   · 🧤 Gant (cristal cosmique, 6 pierres) · 💎 Légendes (un seul gagnant au monde). À part, sans objet : ⚔️ Titres et 🏆 Coupe brisée.
+   Avant le 1er janvier 2027 l'onglet n'existe pas pour les joueurs (ongletPodium) ; l'aperçu admin le montre sans détenteurs. Aucun montant. */
+let VIT_ONGLET = "mondes";
+const VIT_ONGLETS = [["mondes", "🗺️", "Mondes"], ["succes", "🏅", "Succès"], ["gant", "🧤", "Gant"], ["legendes", "💎", "Légendes"]];
+/** Couleurs et petit décor de chaque univers (fond des cartes des Mondes) : dessinés par nous, aucune image officielle */
+const PAL_UNIV = {
+  silverstone: ["#7A3A12", "#E8B86A", "#FFE2A8"], djeddah: ["#141B33", "#4E5C9A", "#C9D4FF"], melbourne: ["#3B1A5A", "#E77FB8", "#FFD6F5"],
+  suzuka: ["#2A1407", "#B5531A", "#FFC08A"], miami: ["#06302E", "#22B58C", "#B8FFE0"], montreal: ["#05060F", "#262A66", "#B9C6FF"],
+  bahrein: ["#16213D", "#D9913C", "#FFE2B8"], spa: ["#0B0F14", "#7A1C1C", "#FF8A8A"], lasvegas: ["#082640", "#3A8AC0", "#CDEBFF"],
+  singapour: ["#2E1407", "#9A5A2F", "#F3C99B"], interlagos: ["#22201E", "#857463", "#EDE2D4"], monza: ["#180838", "#7A3AFF", "#E0CCFF"]
+};
+function decorUnivers(cle) {
+  const R = n => Array.from({ length: n }, (_, i) => i);
+  switch (cle) {
+    case "silverstone": return '<circle cx="74" cy="22" r="9" fill="#FFF1C8" opacity=".75"/><circle cx="86" cy="30" r="5" fill="#FFE2A8" opacity=".6"/><path d="M0 72Q22 58 46 68T100 62V100H0Z" fill="#C98A45" opacity=".7"/><path d="M0 84Q30 72 62 82T100 78V100H0Z" fill="#8A4A18" opacity=".8"/><path d="M8 90Q30 84 52 92" stroke="#5A2A08" stroke-width="1.4" fill="none" opacity=".6"/>';
+    case "djeddah": return '<circle cx="78" cy="20" r="8" fill="#F4F1DC" opacity=".8"/><circle cx="82" cy="18" r="7" fill="#141B33" opacity=".9"/><path d="M0 100V70H8V58L12 52 16 58V70H26V48L31 40 36 48V70H46V62H54V70H66V44L72 34 78 44V70H88V60L92 55 96 60V70H100V100Z" fill="#0B1022" opacity=".85"/><g fill="#FFD27A">' + [[33, 56], [74, 52], [14, 62], [92, 64]].map(([x, y]) => '<rect x="' + x + '" y="' + y + '" width="2" height="3"/>').join("") + "</g>";
+    case "melbourne": return '<g opacity=".5">' + R(6).map(i => '<path d="M' + (i * 20 - 10) + ' 100L50 62L' + (i * 20 + 10) + ' 100Z" fill="' + (i % 2 ? "#fff" : "#2A1040") + '"/>').join("") + '</g><g fill="#FFD6F5" opacity=".55"><path d="M16 22c-3-2.4-4.4-3.6-4.4-5.2 0-1.2 1-2.1 2.1-2.1 1 0 1.7.6 2.3 1.3.5-.7 1.3-1.3 2.3-1.3 1.2 0 2.1.9 2.1 2.1 0 1.6-1.4 2.8-4.4 5.2z"/><path d="M84 34l3.4 4.2-3.4 4.2-3.4-4.2z"/></g>';
+    case "suzuka": return '<path d="M0 100V78L30 56 44 64 62 30 70 38 78 34 100 70V100Z" fill="#1E0E05" opacity=".85"/><path d="M62 30L66 18 70 30Z" fill="#FF6A1F" opacity=".8"/><circle cx="66" cy="16" r="9" fill="#FF8A2B" opacity=".25"/><circle cx="22" cy="26" r="10" fill="none" stroke="#FFD27A" stroke-width="1.6" opacity=".55"/>';
+    case "miami": return '<path d="M10 40Q22 30 34 40Q28 52 22 52Q16 52 10 40Z" fill="#0B4A40" opacity=".8"/><path d="M60 26Q76 18 90 28Q82 42 74 42Q66 42 60 26Z" fill="#0B4A40" opacity=".8"/><path d="M22 52V80M74 42V76" stroke="#0B4A40" stroke-width="1.2" opacity=".6"/><path d="M0 86Q30 74 60 84T100 80V100H0Z" fill="#04211F"/><g fill="#7CFFE0">' + [[18, 70], [40, 78], [64, 66], [86, 72], [50, 58], [30, 88]].map(([x, y]) => '<circle cx="' + x + '" cy="' + y + '" r="1"/>').join("") + "</g>";
+    case "montreal": return '<g fill="#fff">' + [[8, 12], [22, 30], [40, 8], [58, 20], [76, 10], [90, 36], [14, 50], [84, 60], [48, 44], [30, 66]].map(([x, y], i) => '<circle cx="' + x + '" cy="' + y + '" r="' + (i % 3 ? .6 : 1) + '" opacity=".8"/>').join("") + '</g><circle cx="80" cy="82" r="22" fill="#3A3F8A" opacity=".6"/><path d="M58 80Q80 72 102 80" stroke="#B9C6FF" stroke-width=".8" fill="none" opacity=".5"/>';
+    case "bahrein": return '<path d="M0 100V74L10 70V62H18L22 58 26 62H34V72L44 68 52 72V60H60V72H70L76 66 82 72H92V64H100V100Z" fill="#0A1226" opacity=".9"/><path d="M78 72L84 24 90 72Z M80 48H88" stroke="#0A1226" stroke-width="2" fill="none" opacity=".9"/><g fill="#FFD27A">' + [[14, 76], [30, 78], [56, 74], [94, 76]].map(([x, y]) => '<rect x="' + x + '" y="' + y + '" width="2" height="2.6"/>').join("") + '</g><circle cx="22" cy="20" r="6" fill="#FFF1C8" opacity=".6"/>';
+    case "spa": return '<path d="M0 0H100V34Q70 24 50 34T0 30Z" fill="#3A0A0A" opacity=".7"/><g fill="#050709" opacity=".9">' + [10, 30, 52, 74, 92].map(x => '<path d="M' + x + ' 0V22L' + (x - 6) + ' 32H' + (x + 6) + 'L' + x + ' 22"/>').join("") + '</g><g fill="#FFB0B0" opacity=".5">' + [[20, 50], [44, 60], [70, 46], [84, 70], [34, 80]].map(([x, y]) => '<circle cx="' + x + '" cy="' + y + '" r=".9"/>').join("") + "</g>";
+    case "lasvegas": return '<path d="M0 74Q12 68 24 74T48 74T72 74T100 72V100H0Z" fill="#0A3A6A" opacity=".85"/><path d="M0 84Q14 78 28 84T56 84T84 84T100 82V100H0Z" fill="#06223F"/><path d="M60 70V40L76 66Z" fill="#F4F1DC" opacity=".75"/><path d="M58 70H80L76 76H62Z" fill="#5A3A1A"/><circle cx="20" cy="22" r="7" fill="#FFF1C8" opacity=".55"/>';
+    case "singapour": return '<path d="M0 78Q20 70 40 78T80 76T100 74V100H0Z" fill="#4A230F"/><path d="M0 86Q24 80 50 88T100 84" stroke="#B9733F" stroke-width="1.4" fill="none" opacity=".6"/><g><path d="M18 74V40" stroke="#F4EEE6" stroke-width="1.4"/><circle cx="18" cy="36" r="7" fill="#E5484D"/><path d="M14 33Q18 30 22 34" stroke="#fff" stroke-width="1.2" fill="none"/><path d="M82 72V46" stroke="#F4EEE6" stroke-width="1.4"/><circle cx="82" cy="42" r="6" fill="#4C9AFF"/></g>';
+    case "interlagos": return '<path d="M0 100V34H6V28H14V34H24V28H32V34H42V28H50V34H60V28H68V34H78V28H86V34H94V28H100V100Z" fill="#3A3530" opacity=".9"/><g stroke="#1E1B18" stroke-width=".8" opacity=".7">' + [44, 56, 68, 80, 92].map(y => '<path d="M0 ' + y + 'H100"/>').join("") + R(9).map(i => '<path d="M' + (i * 12 + (i % 2) * 6) + ' 34V100"/>').join("") + "</g>";
+    case "monza": return R(4).map(i => '<circle cx="50" cy="46" r="' + (12 + i * 10) + '" fill="none" stroke="' + ["#E0CCFF", "#FF6BD5", "#5AB8FF", "#FFD23D"][i] + '" stroke-width="1" opacity="' + (.6 - i * .1) + '"/>').join("") + '<circle cx="50" cy="46" r="10" fill="#E0CCFF" opacity=".25"/>';
+    default: return "";
+  }
+}
+/** Une médaille de succès, dessinée selon son PALIER (matière, cadre, ornement et éclat qui montent) ; premier = feuille d'or et lauriers */
+let MED_UID = 0;
+function svgMedaille(palier, premier) {
+  const k = "md" + (++MED_UID), P = (PALIERS[palier] || PALIERS[1]).id;
+  const T = { bronze: ["#F3C49A", "#B8733D", "#5E3214"], argent: ["#FFFFFF", "#C9D1DA", "#5E6874"], or: ["#FFF6C8", "#E8B640", "#7A4A0C"], legende: ["#F4E8FF", "#9B6BFF", "#24104F"] }[P];
+  const rubanC = { bronze: ["#7A4A2A", "#A86A3A"], argent: ["#2F4A7A", "#5A7AB5"], or: ["#B0182E", "#E5484D"], legende: ["#3A1A8A", "#7A4AFF"] }[P];
+  let s = '<svg class="sc-med" viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="' + k + 'd" cx=".38" cy=".32" r=".8"><stop offset="0" stop-color="' + T[0] + '"/><stop offset=".55" stop-color="' + T[1] + '"/><stop offset="1" stop-color="' + T[2] + '"/></radialGradient>' +
+    '<linearGradient id="' + k + 'r" x1="0" x2="1"><stop offset="0" stop-color="' + rubanC[0] + '"/><stop offset=".5" stop-color="' + rubanC[1] + '"/><stop offset="1" stop-color="' + rubanC[0] + '"/></linearGradient>' +
+    (P === "legende" ? '<linearGradient id="' + k + 'p" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF9BE6"/><stop offset=".3" stop-color="#8FE3FF"/><stop offset=".6" stop-color="#B6FF9B"/><stop offset="1" stop-color="#FFE27A"/></linearGradient>' : "") + "</defs>";
+  // éclat derrière la médaille : rien (bronze), halo (argent), rayons (or), rayons + nébuleuse (légendaire)
+  if (P === "argent") s += '<circle cx="50" cy="56" r="40" fill="#fff" opacity=".14"/>';
+  if (P === "or" || P === "legende") s += '<g class="sc-rayons" opacity="' + (P === "or" ? .35 : .5) + '">' + Array.from({ length: 16 }, (_, i) => { const a = i * Math.PI / 8; return '<path d="M50 56L' + (50 + Math.cos(a - .09) * 52).toFixed(1) + " " + (56 + Math.sin(a - .09) * 52).toFixed(1) + "L" + (50 + Math.cos(a + .09) * 52).toFixed(1) + " " + (56 + Math.sin(a + .09) * 52).toFixed(1) + 'Z" fill="' + (P === "or" ? "#FFE596" : i % 2 ? "#8FE3FF" : "#FF9BE6") + '"/>'; }).join("") + "</g>";
+  // ruban
+  s += P === "bronze" ? '<path d="M38 4H50L56 34H44Z" fill="url(#' + k + 'r)"/><path d="M62 4H50L44 34H56Z" fill="' + rubanC[0] + '"/>'
+    : '<path d="M34 2H50L58 36H42Z" fill="url(#' + k + 'r)"/><path d="M66 2H50L42 36H58Z" fill="' + rubanC[0] + '"/>' + (P !== "argent" ? '<path d="M47 2H53L52 30H48Z" fill="' + (P === "or" ? "#FFE596" : "url(#" + k + "p)") + '" opacity=".9"/>' : '<path d="M48 2H52V30H48Z" fill="#fff" opacity=".6"/>');
+  // lauriers (or, légendaire, et le PREMIER de tout palier)
+  if (P === "or" || P === "legende" || premier) s += '<g fill="' + (premier || P === "or" ? "#E2B13C" : "#B49BFF") + '" stroke="' + (premier || P === "or" ? "#7A4A0C" : "#3A1A8A") + '" stroke-width=".6">' +
+    [0, 1, 2, 3, 4].map(i => { const y = 84 - i * 8, x1 = 22 - i * 1.6 + (i > 2 ? (i - 2) * 2 : 0), x2 = 100 - x1; return '<ellipse cx="' + x1.toFixed(1) + '" cy="' + y + '" rx="6" ry="2.6" transform="rotate(' + (-50 - i * 10) + " " + x1.toFixed(1) + " " + y + ')"/><ellipse cx="' + x2.toFixed(1) + '" cy="' + y + '" rx="6" ry="2.6" transform="rotate(' + (50 + i * 10) + " " + x2.toFixed(1) + " " + y + ')"/>'; }).join("") + "</g>";
+  // le disque, selon la matière
+  if (P === "legende") {
+    const hx = Array.from({ length: 6 }, (_, i) => { const a = i * Math.PI / 3 - Math.PI / 2; return (50 + Math.cos(a) * 31).toFixed(1) + "," + (58 + Math.sin(a) * 31).toFixed(1); }).join(" ");
+    const hx2 = Array.from({ length: 6 }, (_, i) => { const a = i * Math.PI / 3 - Math.PI / 2; return (50 + Math.cos(a) * 25).toFixed(1) + "," + (58 + Math.sin(a) * 25).toFixed(1); }).join(" ");
+    s += '<polygon points="' + hx + '" fill="url(#' + k + 'p)" stroke="#fff" stroke-width="1.2"/><polygon points="' + hx2 + '" fill="url(#' + k + 'd)"/>' +
+      Array.from({ length: 6 }, (_, i) => { const a = i * Math.PI / 3 - Math.PI / 2; return '<path d="M50 58L' + (50 + Math.cos(a) * 25).toFixed(1) + " " + (58 + Math.sin(a) * 25).toFixed(1) + '" stroke="#fff" stroke-width=".5" opacity=".35"/>'; }).join("") +
+      '<g class="sc-etin" fill="#fff"><path d="M84 22l1.4 3.6 3.6 1.4-3.6 1.4-1.4 3.6-1.4-3.6-3.6-1.4 3.6-1.4z"/><path d="M14 30l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1z"/><path d="M86 84l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></g>';
+  } else {
+    const rr = P === "bronze" ? 26 : 29;
+    if (P === "or") s += '<polygon points="' + Array.from({ length: 24 }, (_, i) => { const a = i * Math.PI / 12, r = i % 2 ? 30 : 35; return (50 + Math.cos(a) * r).toFixed(1) + "," + (58 + Math.sin(a) * r).toFixed(1); }).join(" ") + '" fill="url(#' + k + 'd)" stroke="#7A4A0C" stroke-width=".8"/>';
+    s += '<circle cx="50" cy="58" r="' + rr + '" fill="url(#' + k + 'd)" stroke="' + T[2] + '" stroke-width="' + (P === "bronze" ? 1.4 : 1) + '"/>' +
+      '<circle cx="50" cy="58" r="' + (rr - 5) + '" fill="none" stroke="' + T[0] + '" stroke-width="' + (P === "bronze" ? .8 : 1.2) + '" opacity=".7"/>';
+    if (P === "argent") s += Array.from({ length: 20 }, (_, i) => { const a = i * Math.PI / 10; return '<circle cx="' + (50 + Math.cos(a) * (rr - 2.5)).toFixed(1) + '" cy="' + (58 + Math.sin(a) * (rr - 2.5)).toFixed(1) + '" r=".9" fill="#fff" opacity=".85"/>'; }).join("") +
+      '<path d="M14 54l1.2 3 3 1.2-3 1.2-1.2 3-1.2-3-3-1.2 3-1.2z M86 54l1.2 3 3 1.2-3 1.2-1.2 3-1.2-3-3-1.2 3-1.2z" fill="#E6EBF0"/>';
+    s += '<path d="M' + (50 - rr * .62).toFixed(1) + " " + (58 - rr * .5).toFixed(1) + "A" + rr + " " + rr + " 0 0 1 " + (50 + rr * .2).toFixed(1) + " " + (58 - rr * .96).toFixed(1) + '" stroke="#fff" stroke-width="2.2" fill="none" opacity="' + (P === "bronze" ? .25 : .55) + '" stroke-linecap="round"/>';
+  }
+  if (premier) s += '<path class="sc-couronne" d="M36 26L33 13 42 19 50 9 58 19 67 13 64 26Z" fill="#F5C542" stroke="#8C5A10" stroke-width="1" stroke-linejoin="round"/><circle cx="50" cy="20" r="1.8" fill="#E5484D"/>';
+  return s + "</svg>";
+}
+/** Gant de l'infini · direction C du directeur artistique : gant de cristal cosmique serti d'or.
+ *  svgGant(n, pierres) : n pierres allumées (0 à 6) ; pierres = 6 valeurs dans l'ordre de PIERRES (victoire = cœur du dos, indice, carte, audace, ténacité = base des 4 doigts, retour = pouce).
+ *  0 pierre : cristal givré, gris ; chaque pierre éclaircit le cristal, le remplit d'étoiles et allume sa veine ; complet : nébuleuse, six lumières en orbite, cœur en étoile. */
+const GANT_COULEURS = ["#9B5CFF", "#3D8BFF", "#FF3B4E", "#FFD23D", "#2FD16A", "#FF8A2B"];
+let GANT_UID = 0;
+function svgGant(n, allumees) {
+  const on = (allumees || []).map(Boolean), k = "gC" + (++GANT_UID), N = Math.max(0, Math.min(6, n | 0));
+  const hx = h => (h.length === 4 ? "#" + h[1] + h[1] + h[2] + h[2] + h[3] + h[3] : h).match(/\w\w/g).map(v => parseInt(v, 16));
+  const mix = (a, b, t) => "#" + hx(a).map((v, i) => Math.round(v + (hx(b)[i] - v) * t).toString(16).padStart(2, "0")).join("");
+  const t = Math.sqrt(N / 6), f = v => +v.toFixed(1);
+  const X = { hi: mix("#9599A8", "#A493FF", t), md: mix("#575C6B", "#3A2A92", t), dk: mix("#262932", "#110A36", t), ed: mix("#262932", "#07041A", t) };
+  const G = { hi: mix("#BDB59E", "#FFF3BE", t), md: mix("#8A8068", "#E2AE3A", t), dk: mix("#4E4738", "#7A4C0B", t) };
+  const lum = (ax, ay, bx, by) => { const a = Math.atan2(by - ay, bx - ax) - Math.PI / 2; return .5 + .5 * Math.cos(a - (-2.4)); };
+  const facette = (pts, l) => `<polygon points="${pts.map(p => f(p[0]) + "," + f(p[1])).join(" ")}" fill="${mix(X.dk, X.hi, Math.max(0, Math.min(1, l)) * .85)}"/>`;
+  const DF = [];
+  DF.push(`<linearGradient id="${k}o" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${G.hi}"/><stop offset=".5" stop-color="${G.md}"/><stop offset="1" stop-color="${G.dk}"/></linearGradient>`);
+  DF.push(`<radialGradient id="${k}b" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="${G.hi}"/><stop offset=".5" stop-color="${G.md}"/><stop offset="1" stop-color="${G.dk}"/></radialGradient>`);
+  DF.push(`<linearGradient id="${k}s" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>`);
+  DF.push(`<radialGradient id="${k}e" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#4A4E5A"/><stop offset=".6" stop-color="#22252D"/><stop offset="1" stop-color="#0E0F13"/></radialGradient>`);
+  GANT_COULEURS.forEach((c, i) => DF.push(`<radialGradient id="${k}h${i}"><stop offset="0" stop-color="${c}" stop-opacity=".9"/><stop offset=".4" stop-color="${c}" stop-opacity=".35"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`));
+  const clip = [];
+  const pierre = (cx, cy, r, i) => {   // pierre taillée en losange, griffes d'or
+    const c = GANT_COULEURS[i]; let s = "";
+    if (on[i]) s += `<circle class="gC-pulse" cx="${cx}" cy="${cy}" r="${f(r * 3.2)}" fill="url(#${k}h${i})"/>`;
+    const P = [[cx, cy - r * 1.35], [cx + r, cy], [cx, cy + r * 1.35], [cx - r, cy]], Q = P.map(p => [cx + (p[0] - cx) * 1.28, cy + (p[1] - cy) * 1.22]);
+    s += `<polygon points="${Q.map(p => f(p[0]) + "," + f(p[1])).join(" ")}" fill="url(#${k}o)" stroke="${G.dk}" stroke-width=".7"/>`;
+    if (!on[i]) s += `<polygon points="${P.map(p => f(p[0]) + "," + f(p[1])).join(" ")}" fill="url(#${k}e)"/><polygon points="${P.map(p => f(p[0]) + "," + f(p[1])).join(" ")}" fill="${c}" opacity=".16"/>`;
+    else {
+      const tri = (a, b, cl) => `<polygon points="${f(a[0])},${f(a[1])} ${f(b[0])},${f(b[1])} ${cx},${cy}" fill="${cl}"/>`;
+      s += tri(P[0], P[1], mix(c, "#fff", .35)) + tri(P[1], P[2], c) + tri(P[2], P[3], mix(c, "#000", i === 3 ? .25 : .45)) + tri(P[3], P[0], mix(c, "#fff", .6));
+      s += `<polygon points="${f(cx)},${f(cy - r * .5)} ${f(cx + r * .38)},${f(cy)} ${f(cx)},${f(cy + r * .5)} ${f(cx - r * .38)},${f(cy)}" fill="${mix(c, "#fff", .7)}" opacity=".7"/>`;
+    }
+    s += `<path d="M${f(P[3][0] + r * .25)} ${f(cy - r * .35)}L${f(cx - r * .05)} ${f(P[0][1] + r * .35)}" stroke="#fff" stroke-width="${f(r * .18)}" stroke-linecap="round" opacity="${on[i] ? .9 : .3}"/>`;
+    return s;
+  };
+  const doigts = [{ x: 65, y: 104, a: -8, L: 80, w: 22, p: 1 }, { x: 90.5, y: 99, a: -2, L: 92, w: 23, p: 2 }, { x: 116, y: 100, a: 4.5, L: 84, w: 22, p: 3 }, { x: 140, y: 108, a: 12, L: 64, w: 19, p: 4 }, { x: 60, y: 166, a: -56, L: 66, w: 24, p: 5 }];
+  const doigt = d => {   // doigts facettés : deux pans, arête et capuchon d'or
+    const L = d.L, h = d.w / 2, tr = `translate(${d.x} ${d.y}) rotate(${d.a})`;
+    const out = `M${-h} 10L${f(-h * .9)} ${f(-L * .7)}L${f(-h * .45)} ${f(-L)}L${f(h * .45)} ${f(-L)}L${f(h * .9)} ${f(-L * .7)}L${h} 10Z`;
+    clip.push(`<path transform="${tr}" d="${out}"/>`);
+    let s = `<g transform="${tr}">`;
+    s += `<polygon points="${-h},10 ${f(-h * .9)},${f(-L * .7)} ${f(-h * .1)},${f(-L * .72)} 0,10" fill="${mix(X.dk, X.hi, .7)}"/>`;
+    s += `<polygon points="0,10 ${f(-h * .1)},${f(-L * .72)} ${f(h * .9)},${f(-L * .7)} ${h},10" fill="${mix(X.dk, X.hi, .3)}"/>`;
+    s += `<polygon points="${f(-h * .9)},${f(-L * .7)} ${f(-h * .45)},${f(-L)} ${f(h * .45)},${f(-L)} ${f(-h * .1)},${f(-L * .72)}" fill="${mix(X.dk, X.hi, .95)}"/>`;
+    s += `<polygon points="${f(-h * .1)},${f(-L * .72)} ${f(h * .45)},${f(-L)} ${f(h * .9)},${f(-L * .7)}" fill="${mix(X.dk, X.hi, .5)}"/>`;
+    [-.36, -.62].forEach(q => s += `<path d="M${f(-h * .97)} ${f(L * q)}L${f(-h * .1)} ${f(L * q - 2)}L${f(h * .97)} ${f(L * q)}" stroke="url(#${k}o)" stroke-width="1.6" fill="none"/>`);
+    s += `<path d="${out}" fill="url(#${k}s)"/><path d="${out}" fill="none" stroke="${G.md}" stroke-width="1"/>`;
+    s += `<path d="M${f(-h * .45)} ${f(-L)}L${f(h * .45)} ${f(-L)}L${f(h * .9)} ${f(-L * .7)}L${f(-h * .1)} ${f(-L * .72)}L${f(-h * .9)} ${f(-L * .7)}Z" fill="none" stroke="${G.hi}" stroke-width=".7" opacity=".9"/></g>`;
+    const A = d.a * Math.PI / 180, yl = d.p === 5 ? -L * .34 : -L * .14; d.px = f(d.x - Math.sin(A) * yl); d.py = f(d.y + Math.cos(A) * yl);
+    return s;
+  };
+  const O = [100, 150];
+  const bord = [[46, 112], [56, 98], [78, 95], [100, 93], [122, 93], [144, 96], [155, 108], [152, 140], [149, 172], [136, 196], [100, 200], [64, 196], [52, 172], [48, 140]];
+  clip.push(`<polygon points="${bord.map(p => p.join(",")).join(" ")}"/>`);
+  let corps = "";
+  bord.forEach((p, i) => { const q = bord[(i + 1) % bord.length]; corps += facette([p, q, O], lum(p[0], p[1], q[0], q[1]) * .9 + .05); });
+  const anneau = bord.map(p => [O[0] + (p[0] - O[0]) * .55, O[1] + (p[1] - O[1]) * .55]);
+  anneau.forEach((p, i) => { const q = anneau[(i + 1) % anneau.length]; corps += facette([p, q, O], lum(q[0], q[1], p[0], p[1]) * .7 + .15); });
+  corps += `<path d="${bord.map(p => `M${p[0]} ${p[1]}L${O[0]} ${O[1]}`).join("") + "M" + anneau.map(p => f(p[0]) + " " + f(p[1])).join("L") + "Z"}" stroke="${X.hi}" stroke-width=".5" fill="none" opacity=".45"/>`;
+  const man = "M60 192L140 192L156 246L44 246Z";   // manchette : bague de cristal, rebords d'or, petite gemme
+  clip.push(`<path d="${man}"/>`);
+  let mc = "";
+  const cols = [44, 58, 76, 100, 124, 142, 156], colsH = [60, 68, 82, 100, 118, 132, 140];
+  for (let i = 0; i < 6; i++) mc += facette([[colsH[i], 196], [colsH[i + 1], 196], [cols[i + 1], 244], [cols[i], 244]], .9 - Math.abs(i - 1.6) * .17);
+  mc += `<path d="${cols.map((x, i) => `M${colsH[i]} 196L${x} 244`).join("")}" stroke="${X.hi}" stroke-width=".5" opacity=".5"/><path d="${man}" fill="url(#${k}s)"/>`;
+  mc += `<path d="M54 186H146L144 197H56Z" fill="url(#${k}o)" stroke="${G.dk}" stroke-width=".8"/><path d="M40 243H160L163 252H37Z" fill="url(#${k}o)" stroke="${G.dk}" stroke-width=".8"/>`;
+  mc += `<path d="M56 191.5H144M39 247.5H161" stroke="${G.dk}" stroke-width=".6" stroke-dasharray="1 2.4" opacity=".7"/>`;
+  mc += `<path d="M100 204L108 218L100 232L92 218Z" fill="url(#${k}o)" stroke="${G.dk}" stroke-width=".7"/><path d="M100 209L104 218L100 227L96 218Z" fill="${X.ed}"/><path d="M100 209L104 218L100 227L96 218Z" fill="none" stroke="${G.hi}" stroke-width=".5"/>`;
+  const D2 = doigts.map(doigt);
+  let s = `<svg class="gant-svg gant-C" viewBox="-22 -24 244 296" aria-hidden="true"><defs>${DF.join("")}<clipPath id="${k}k">${clip.join("")}</clipPath></defs>`;
+  if (N > 0) { const pos = [[100, 60], [40, 110], [160, 110], [40, 200], [160, 200], [100, 250]];   // nébuleuse : un nuage par pierre allumée
+    GANT_COULEURS.forEach((c, i) => { if (on[i]) s += `<circle cx="${pos[i][0]}" cy="${pos[i][1]}" r="${f(44 + N * 3)}" fill="url(#${k}h${i})" opacity="${f(.25 + .25 * N / 6)}"/>`; }); }
+  s += `<ellipse cx="100" cy="262" rx="64" ry="5" fill="#000" opacity=".22"/>`;
+  s += D2[4] + D2.slice(0, 4).join("") + corps + mc;
+  { let z = 424242, st = ""; const rnd = () => (z = (z * 16807) % 2147483647) / 2147483647, nb = 10 + N * 12;   // ciel intérieur : étoiles dans le cristal
+    for (let i = 0; i < 82; i++) { const x = f(42 + rnd() * 116), y = f(10 + rnd() * 240), r = f(.35 + rnd() * .8); if (i < nb) st += `<circle cx="${x}" cy="${y}" r="${r}"${i % 7 === 0 && N === 6 ? ` class="gC-tw" style="animation-delay:${(i % 5) * .5}s"` : ""}/>`; }
+    s += `<g clip-path="url(#${k}k)"><g fill="#fff" opacity="${f(.25 + .6 * t)}">${st}</g>` + (N < 3 ? `<rect x="20" y="-10" width="160" height="280" fill="#D9DCE4" opacity="${[.12, .07, .03][N]}"/>` : "") + "</g>"; }
+  doigts.forEach(d => {   // veines : de chaque pierre vers le cœur
+    const i = d.p, x = d.px, y = d.py, mx = f((x + O[0]) / 2 + (O[1] - y) * .12), my = f((y + O[1]) / 2 + (x - O[0]) * .05), v = `M${x} ${y}Q${mx} ${my} ${O[0]} ${O[1]}`;
+    s += on[i] ? `<path d="${v}" stroke="${GANT_COULEURS[i]}" stroke-width="4.5" opacity=".35" fill="none" stroke-linecap="round"/><path d="${v}" stroke="${mix(GANT_COULEURS[i], "#fff", .45)}" stroke-width="1.6" fill="none" stroke-linecap="round"/><path class="gC-flux" d="${v}" stroke="#fff" stroke-width="1.3" stroke-dasharray="2 6" fill="none" stroke-linecap="round"/>`
+      : `<path d="${v}" stroke="${X.ed}" stroke-width="1.3" fill="none" opacity=".7"/><path d="${v}" stroke="${X.hi}" stroke-width=".5" fill="none" opacity=".5" transform="translate(.6 .6)"/>`;
+  });
+  let ros = "";   // cœur : rosace d'or à 8 pointes + pierre de la victoire
+  for (let i = 0; i < 8; i++) { const A = i * Math.PI / 4, B = A + Math.PI / 8, C2 = A - Math.PI / 8;
+    ros += `<polygon points="${f(O[0] + Math.cos(A) * 24)},${f(O[1] + Math.sin(A) * 24)} ${f(O[0] + Math.cos(B) * 12)},${f(O[1] + Math.sin(B) * 12)} ${f(O[0] + Math.cos(C2) * 12)},${f(O[1] + Math.sin(C2) * 12)}" fill="url(#${k}o)" stroke="${G.dk}" stroke-width=".6"/>`; }
+  if (N === 6) s += `<path class="gC-pulse" d="M100 108L104.5 145.5L142 150L104.5 154.5L100 192L95.5 154.5L58 150L95.5 145.5Z" fill="#FFF6D0"/><circle class="gC-pulse" cx="100" cy="150" r="30" fill="url(#${k}h0)"/>`;
+  s += ros + `<circle cx="${O[0]}" cy="${O[1]}" r="13" fill="url(#${k}b)" stroke="${G.dk}" stroke-width=".8"/>` + pierre(O[0], O[1], 8.5, 0);
+  doigts.forEach(d => s += pierre(d.px, d.py, d.p === 5 ? 5.6 : 5.4, d.p));
+  if (N === 6) { let o = ""; GANT_COULEURS.forEach((c, i) => { const A = (i * 60 - 90) * Math.PI / 180, x = f(O[0] + Math.cos(A) * 112), y = f(O[1] + Math.sin(A) * 112);
+      o += `<circle cx="${x}" cy="${y}" r="7" fill="url(#${k}h${i})"/><circle cx="${x}" cy="${y}" r="2.4" fill="${mix(c, "#fff", .6)}"/>`; });
+    s = s.replace(`<ellipse cx="100" cy="262"`, `<g class="gC-orbite"><circle cx="${O[0]}" cy="${O[1]}" r="112" fill="none" stroke="#fff" stroke-width=".5" opacity=".3" stroke-dasharray="1 4"/>${o}</g><ellipse cx="100" cy="262"`); }
+  return s + "</svg>";
 }
 /** Vignette d'un pilote : pastille de sa couleur + nom */
 function nomPilote(n) { return '<span class="nmp" style="--c:' + couleur(n) + '"><i></i>' + esc(n) + "</span>"; }
+const pastillesPilotes = noms => '<span class="cc-pts">' + noms.map(n => '<i style="--c:' + couleur(n) + '" title="' + esc(n) + '"></i>').join("") + "</span>";
+function anneauProg(p, c) { const r = 10, L = 2 * Math.PI * r; return '<svg class="cc-anneau" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="' + r + '" fill="none" stroke="var(--rule)" stroke-width="3.2"/><circle cx="13" cy="13" r="' + r + '" fill="none" stroke="' + c + '" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="' + (L * Math.max(0, Math.min(1, p))).toFixed(1) + " " + L.toFixed(1) + '" transform="rotate(-90 13 13)"/></svg>'; }
+/** Les lauriers d'or (meilleur du mois, premier à réussir) */
+const LAURIERS = '<svg class="cc-laurier" viewBox="0 0 96 40" aria-hidden="true"><g fill="#E2B13C" stroke="#8C5A10" stroke-width=".6">' + [0, 1, 2, 3, 4].map(i => '<ellipse cx="' + (18 - i * 2) + '" cy="' + (34 - i * 6) + '" rx="5" ry="2.4" transform="rotate(' + (-40 - i * 10) + " " + (18 - i * 2) + " " + (34 - i * 6) + ')"/><ellipse cx="' + (78 + i * 2) + '" cy="' + (34 - i * 6) + '" rx="5" ry="2.4" transform="rotate(' + (40 + i * 10) + " " + (78 + i * 2) + " " + (34 - i * 6) + ')"/>').join("") + "</g></svg>";
+const COURONNE_CC = '<svg class="cc-couronne" viewBox="0 0 34 20" aria-hidden="true"><path d="M3 18L1 5L10 11L17 1L24 11L33 5L31 18Z" fill="#F5C542" stroke="#8C5A10" stroke-width="1.2" stroke-linejoin="round"/><circle cx="17" cy="12" r="2.2" fill="#FF3B4E"/><circle cx="9" cy="14" r="1.5" fill="#3D8BFF"/><circle cx="25" cy="14" r="1.5" fill="#2FD16A"/></svg>';
+
+/* ---------- 🗺️ Les Mondes : cartes à collectionner (direction B du DA) ; le meilleur du mois = feuille d'or, lauriers et projecteur sur socle (idée des cases A) ---------- */
+function htmlCaseMonde(t, apercu, noms, moi) {
+  const TM = apercu ? null : etatTropheesMondes(), o = TM && moi ? TM[t.id][moi] : null, qui = TM ? noms.filter(n => TM[t.id][n] && TM[t.id][n].ok) : [];
+  const best = o && o.meilleur ? o.meilleur : (TM ? (noms.map(n => TM[t.id][n].meilleur).find(Boolean) || null) : null), aVenir = !o || o.aVenir;
+  const bests = o && o.meilleurs && o.meilleurs.length ? o.meilleurs : (TM ? (noms.map(n => TM[t.id][n].meilleurs).find(l => l && l.length) || []) : []), titre = o && o.titre;
+  const st = bests.includes(moi) ? "exclusif" : o && o.ok ? "moi" : qui.length ? "autres" : "a-gagner";
+  const P = PAL_UNIV[t.univers] || ["#333", "#777", "#ddd"], [s0, i0] = t.gain[0], mois = MOIS_L[t.mois - 1];
+  // relecture jeu-joueur (25/11) : un mois fini raté le dit (« ✗ Manqué (80 / 120) »), le mois en cours aussi (« ⏳ En cours · 37 / 120 »)
+  const pc = o && o.c > 1 ? o.p + " / " + o.c : o && o.txt ? o.txt : "";
+  const pied = st === "a-gagner" ? (aVenir ? "<span>🎁 " + t.gain.length + " objets à gagner</span>" + '<span class="cc-lock" aria-label="pas encore ouvert">🔒</span>'
+      : o && o.etat === "fini" ? '<span class="cc-rate">✗ Manqué' + (pc ? " (" + esc(pc) + ")" : "") + "</span>"
+      : anneauProg(o && o.c ? o.p / o.c : 0, P[2]) + "<span>⏳ En cours" + (pc ? " · " + esc(pc) : "") + "</span>")
+    : st === "exclusif" ? "<span>🌟 <b>" + esc(titre || "Meilleur du mois") + "</b></span>" + pastillesPilotes(qui)
+    : st === "moi" ? "<span><b>✓ Gagné</b>" + (best ? " · 🌟 " + esc(best.nom) : "") + "</span>" + pastillesPilotes(qui)
+    : (o && o.c > 1 && o.p ? anneauProg(o.p / o.c, P[2]) + "<span>" + esc(o.txt || o.p + " / " + o.c) + "</span>" : "<span>Déjà à " + esc(qui.join(", ")) + "</span>") + pastillesPilotes(qui);
+  return '<button type="button" class="cc cc-m ' + st + (aVenir ? " a-venir" : "") + '" data-monde="' + t.id + '" style="--ma:' + P[0] + ";--mb:" + P[1] + ";--macc:" + P[2] + ";--ma-r:" + P[0] + ";--mb-r:" + P[1] + '">' +
+    '<span class="cc-in"><span class="cc-art"><svg class="cc-deco" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' + decorUnivers(t.univers) + "</svg>" +
+    (st === "exclusif" ? '<span class="cc-projo" aria-hidden="true"></span><span class="cc-socle" aria-hidden="true"></span>' : '<span class="cc-halo" aria-hidden="true"></span>') +
+    '<span class="cc-ecu">' + icoMonde(t) + '</span><span class="cc-mois">' + esc(MOIS[t.mois - 1]) + '</span><span class="cc-petits">' + t.gain.slice(1).map(([s, i]) => svgObjet(s, i, 20)).join("") + "</span>" + svgObjet(s0, i0, 70) +
+    (st === "exclusif" ? LAURIERS : "") + "</span>" +
+    '<span class="cc-ruban">' + esc(nomMonde(t)) + '</span><span class="cc-txt"><small>' + (o && o.trophee && !aVenir ? esc(o.trophee.ico + " " + o.trophee.nom) + " · objectif commun" : "Objectif commun du mini-jeu de " + esc(mois)) + '</small><span class="cc-pied">' + pied + "</span></span></span>" +
+    (st === "moi" ? '<span class="cc-coche">✓</span>' : "") + (st === "exclusif" ? COURONNE_CC : "") + "</button>";
+}
+function htmlMondes(apercu, noms, moi) {
+  const TM = apercu ? null : etatTropheesMondes(), mes = TM && moi ? TROPHEES_MONDES.filter(t => TM[t.id][moi] && TM[t.id][moi].ok).length : 0;
+  return '<section class="vit" id="vit-mondes"><h3 class="vit-h">🗺️ Les 12 mondes <small>un trophée par mini-jeu du mois · tout le monde peut tout avoir' + (TM && moi ? " · " + mes + " / 12 à toi" : "") + "</small></h3>" +
+    '<p class="info">Chaque mois, réussissez <b>ensemble</b> l\'objectif commun du mini-jeu de l\'univers : chacun gagne son trophée et ses objets d\'écurie. Le <b>meilleur du mois</b> gagne en plus son <b>surnom du mois</b> et un <b>objet exclusif doré</b> 🌟.</p>' +
+    '<div class="cc-grille">' + TROPHEES_MONDES.map(t => htmlCaseMonde(t, apercu, noms, moi)).join("") + "</div></section>";
+}
+
+/* ---------- 🏅 Les Succès : 12 objectifs visibles ; le dessin monte avec la difficulté (bronze, argent, or, légendaire) ---------- */
+function htmlCaseSucces(x, r, moi) {
+  const P = PALIERS[x.palier], premier = r.or && r.or.noms.includes(moi), aMoi = premier || r.autres.some(o => o.nom === moi), qui = r.or ? r.or.noms.concat(r.autres.map(o => o.nom)) : [];
+  const st = premier ? "premier" : aMoi ? "moi" : qui.length ? "autres" : "a-faire";
+  const pied = st === "a-faire" ? "<span>Personne pour l'instant</span>"
+    : "<span>🥇 <b>" + esc(r.or.nom) + "</b>" + (st === "premier" ? " · toi !" : st === "moi" ? " · ✓ toi aussi" : "") + "</span>" + pastillesPilotes(qui);
+  return '<button type="button" class="cc cc-s p-' + P.id + " " + st + '" data-succes="' + x.id + '">' +
+    '<span class="cc-in"><span class="cc-art"><span class="cc-palier">' + P.ico + " " + esc(P.nom) + "</span>" +
+    '<span class="cc-petits">' + svgObjet(x.gain[0], x.gain[1], 20) + (x.bonus ? '<span class="cc-excl" title="exclusif du premier">' + svgObjet(x.bonus[0], x.bonus[1], 20) + "</span>" : "") + "</span>" +
+    '<span class="cc-medw">' + svgMedaille(x.palier, st === "premier") + '<span class="cc-emo" aria-hidden="true">' + x.ico + "</span></span></span>" +
+    '<span class="cc-ruban">' + esc(x.nom) + '</span><span class="cc-txt"><small>' + esc(x.def.replace("l'indice", "le " + D.marche.indices[iRef()]).replace(/^./, c => c.toUpperCase())) + '</small><span class="cc-pied">' + pied + "</span></span></span>" +
+    (st === "moi" ? '<span class="cc-coche">✓</span>' : "") + (st === "premier" ? COURONNE_CC : "") + "</button>";
+}
+function htmlSucces(apercu, noms, moi) {
+  const R = {}; SUCCES.forEach(x => { R[x.id] = apercu ? { or: null, autres: [], tous: [] } : rangsSucces(x.id); });
+  const nb = n => ({ or: SUCCES.filter(x => R[x.id].or && R[x.id].or.noms.includes(n)).length, tous: SUCCES.filter(x => (R[x.id].or && R[x.id].or.noms.includes(n)) || R[x.id].autres.some(o => o.nom === n)).length });
+  const tab = apercu ? "" : '<div class="ex-tab">' + noms.slice().sort((a, b) => nb(b).tous - nb(a).tous || nb(b).or - nb(a).or).map(n => { const c = nb(n); return '<span style="--c:' + couleur(n) + '">' + esc(n) + " <b>" + c.tous + "</b> réussi" + (c.tous > 1 ? "s" : "") + " · <b>" + c.or + "</b> en premier</span>"; }).join("") + "</div>";
+  let h = "";
+  [1, 2, 3, 4].forEach(p => { const l = SUCCES.filter(x => x.palier === p); if (!l.length) return;
+    h += '<h4 class="vit-h4 pal-h p-' + PALIERS[p].id + '">' + PALIERS[p].ico + " " + esc(PALIERS[p].nom) + " <small>" + esc(PALIERS[p].txt) + '</small></h4><div class="cc-grille">' + l.map(x => htmlCaseSucces(x, R[x.id], moi)).join("") + "</div>"; });
+  return '<section class="vit" id="vit-succes"><h3 class="vit-h">🏅 Les succès <small>12 objectifs de course et de bourse · ' + (apercu ? "à réussir dès janvier" : (moi ? nb(moi).tous + " / 12 à toi" : "")) + "</small></h3>" +
+    '<p class="info">Chacun qui réussit gagne le <b>badge</b> et l\'<b>objet</b> du succès. Le <b>premier</b> gagne en plus la version <b>dorée</b>, son nom gravé et un <b>objet exclusif</b> que personne d\'autre n\'aura.</p>' + tab + h +
+    '<div class="cc-grille"><div class="cc cc-2028" aria-label="Succès 2028"><span class="cc-in"><span class="cc-art"><span class="cc-emo">❔</span></span><span class="cc-ruban">??? 2028</span><span class="cc-txt"><small>De nouveaux succès arrivent avec la saison 2.</small></span></span></div></div></section>';
+}
+
+/* ---------- 🧤 Le Gant de l'infini (direction C : cristal cosmique) ---------- */
+const GANT = { gain: [["livree", "chrome"], ["plaque", "remontada"]] };
+const PIERRES = [
+  { id: "victoire", c: "#9B5CFF", nom: "Pierre de la victoire", def: "gagner un mois" },
+  { id: "indice", c: "#3D8BFF", nom: "Pierre de l'indice", def: "3 mois devant l'indice dans la saison" },
+  { id: "carte", c: "#FF3B4E", nom: "Pierre de la carte", def: "marquer des points avec une carte" },
+  { id: "pari", c: "#FFD23D", nom: "Pierre de l'audace", def: "gagner un 🎲 Pari contre le leader du championnat (celui en tête au départ du mois, donc dès février)" },
+  { id: "tenace", c: "#2FD16A", nom: "Pierre de la ténacité", def: "3 mois d'affilée sans finir dernier" },
+  { id: "retour", c: "#FF8A2B", nom: "Pierre du retour", def: "finir dernier un mois, puis gagner un mois plus tard" }
+];
 function htmlGant(apercu, noms, moi, y) {
   const G = apercu ? {} : etatGant(y), g = (moi && G[moi]) || { p: [0, 0, 0, 0, 0, 0], n: 0 }, idx = D.marche.indices[iRef()];
-  return '<div class="gant' + (g.n === 6 ? " complet" : "") + '"><div class="gant-h">' + svgGant(g.p) + '<div class="gant-t"><b>🧤 Le Gant de l\'infini</b><small>Le grand objet de la saison : allume ses 6 pierres d\'ici la fin de la saison (décembre compris).</small>' +
-    '<span class="gant-n"><b>' + g.n + "</b> / 6 pierres" + (g.n === 6 ? " · complet !" : "") + "</span></div></div>" +
+  return '<section class="vit" id="vit-gant"><h3 class="vit-h">🧤 Le Gant de l\'infini <small>le grand objectif de la saison · tout le monde peut le compléter</small></h3>' +
+    '<div class="gant' + (g.n === 6 ? " complet" : "") + '"><div class="gant-h">' + svgGant(g.n, g.p) + '<div class="gant-t"><span class="gant-n"><b>' + g.n + "</b> / 6 pierres" + (g.n === 6 ? " · complet !" : "") + "</span>" +
+    "<small>Allume ses 6 pierres d'ici la fin de la saison (décembre compris). Chaque pierre allumée brille aussi sur ta voiture en course.</small></div></div>" +
     '<ol class="pierres">' + PIERRES.map((pi, i) => '<li class="' + (g.p[i] ? "on" : "") + '" style="--pc:' + pi.c + '"><i aria-hidden="true"></i><span><b>' + esc(pi.nom) + "</b><small>" + esc(pi.def.replace("l'indice", "le " + idx)) + (g.p[i] ? " · ✓ " + esc(moisLong(g.p[i])) : "") + "</small></span></li>").join("") + "</ol>" +
     (apercu ? "" : '<div class="gant-autres"><small>Les autres pilotes (combien de pierres) :</small>' + noms.filter(n => n !== moi).map(n => '<span class="nmp" style="--c:' + couleur(n) + '"><i></i>' + esc(n) + " <b>" + ((G[n] || { n: 0 }).n) + "</b>/6</span>").join("") + "</div>") +
-    '<p class="gant-r">Gant complet : ' + esc(libGains(GANT.gain)) + " (se gagne en " + htmlUnivers(GANT.univers) + ")</p></div>";
+    '<p class="gant-r">🎁 Gant complet : ' + esc(libGains(GANT.gain)) + ".</p></div></section>";
 }
-/** unité des compteurs d'avancement (« 2/6 mois », « 3/15 % »…) : relecture joueur v20.44 */
-function uniteTM(t) { return ({ "m-horsreseau": " mois", "m-neonvert": " mois", "m-nuitblanche": " défis", "m-faveur": " pts", "m-epice": " %" })[t && t.id] || ""; }
-/** Les 12 trophées, dans l'ordre du calendrier de leurs univers */
-function htmlTropheesMondes(apercu, noms, moi) {
-  const TM = apercu ? null : etatTropheesMondes(), l = TROPHEES_MONDES.slice().sort((a, b) => CAL_GP.indexOf(a.univers) - CAL_GP.indexOf(b.univers));
-  const mes = TM && moi ? TROPHEES_MONDES.filter(t => TM[t.id][moi] && TM[t.id][moi].ok).length : 0;
-  return '<h4 class="vit-h4">Les 12 trophées <small>' + (apercu ? "un par univers" : (moi ? "à toi : " + mes + " / 12" : "")) + "</small></h4>" + (apercu ? "" : '<p class="info tm-leg">Les ● sous chaque trophée : un par pilote, en couleur s\'il l\'a.</p>') +
-    '<div class="tm-grille">' + l.map(t => {
-      const o = TM && moi ? TM[t.id][moi] : null, qui = TM ? noms.filter(n => TM[t.id][n] && TM[t.id][n].ok) : [];
-      return '<button type="button" class="tm' + (o && o.ok ? " a-moi" : "") + '" data-badge="' + t.id + '" data-bt="monde"><span class="tm-i">' + t.ico + '</span><span class="tm-t"><b>' + esc(t.nom) + "</b>" + htmlUnivers(t.univers) + "</span>" +
-        (TM ? '<span class="tm-e">' + (o && o.ok ? "✓" : o && o.p ? o.p + "/" + o.c + uniteTM(t) : "") + '</span><span class="rt-dots">' + noms.map(n => '<i title="' + esc(n) + '"' + (qui.includes(n) ? ' class="on" style="background:' + couleur(n) + '"' : "") + "></i>").join("") + "</span>" : "") + "</button>";
-    }).join("") + "</div>";
-}
-function htmlSecrets(apercu, noms, moi) {
-  const R = {}; SECRETS_SAISON.forEach(x => { R[x.id] = apercu ? { or: null, argent: [] } : rangsSecret(x.id); });
-  const nb = n => ({ or: SECRETS_SAISON.filter(x => R[x.id].or && R[x.id].or.noms.includes(n)).length, arg: SECRETS_SAISON.filter(x => R[x.id].argent.some(o => o.nom === n)).length });
-  const tab = apercu ? "" : '<div class="ex-tab">' + noms.slice().sort((a, b) => nb(b).or - nb(a).or || nb(b).arg - nb(a).arg).map(n => { const c = nb(n); return '<span style="--c:' + couleur(n) + '">' + esc(n) + " <b>" + c.or + "</b>🥇 <b>" + c.arg + "</b>🥈</span>"; }).join("") + "</div>";
-  const trouves = SECRETS_SAISON.filter(x => R[x.id].or).length;
-  return '<section class="vit" id="vit-secrets"><h3 class="vit-h">🔍 Les secrets <small>ce que je découvre · ' + (apercu ? "12 à trouver" : trouves + " / 12 découverts") + "</small></h3>" +
-    '<p class="info">Chaque secret reste caché tant que personne ne l\'a réussi. Le <b>premier</b> gagne la version <b>dorée</b>, son nom gravé et un objet d\'écurie que personne d\'autre n\'aura ; du 2e au 5e, la version <b>argentée</b>. Chaque secret garde son histoire.</p>' + tab +
-    '<div class="sec-grille">' + SECRETS_SAISON.map(x => {
-      const r = R[x.id];
-      if (!r.or) return '<button type="button" class="sec-t cache" data-secret="' + x.id + '"><span class="sec-i sil" aria-hidden="true">🔍</span><b>Secret ' + esc(NIV_EX[x.niv].toLowerCase()) + '</b><small class="flou">' + esc(x.indice) + "</small></button>";
-      const mOr = r.or.noms.includes(moi), mArg = r.argent.some(o => o.nom === moi);
-      return '<button type="button" class="sec-t ouvert' + (mOr ? " a-moi m-or" : mArg ? " a-moi m-arg" : "") + '" data-secret="' + x.id + '"><span class="sec-i">' + x.ico + "</span><b>" + esc(x.nom) + "</b>" + htmlUnivers(x.univers) +
-        '<span class="sec-q"><span class="q-or">🥇 ' + r.or.noms.map(nomPilote).join(" ") + "</span>" + (r.argent.length ? '<span class="q-arg">🥈 ' + r.argent.map(o => esc(o.nom)).join(", ") + "</span>" : "") + "</span></button>";
-    }).join("") + "</div></section>";
+
+/* ---------- 💎 Les Légendes : un seul gagnant au monde ---------- */
+function htmlLegendes(apercu, noms, moi) {
+  const pm = apercu ? null : D.premierMillion, ch = apercu ? null : detenteur(CHAMPION_EX.id), tk = apercu ? [] : gagnantsTicket().slice(0, 1);
+  const votes = apercu ? [] : [...new Set(Object.values(D.votes || {}).flatMap(v => v.gagnants || []))];
+  const champions = apercu ? [] : anneesSaison().map(y => { const c = championnat(y); return c.complete && c.classement[0] ? { y, nom: c.classement[0] } : null; }).filter(Boolean);
+  const carte = (id, ico, nom, cond, gains, qui, quand, extra) => '<div class="lg lg-' + id + (qui ? " prise" : "") + (qui && qui === moi ? " a-moi" : "") + '"' + (id === "ticket" ? ' id="vit-tickets"' : "") + ">" +
+    '<span class="lg-i" aria-hidden="true">' + ico + '</span><div class="lg-t"><b>' + esc(nom) + "</b><small>" + esc(cond) + '</small><span class="lg-o">🎁 ' + esc(libGains(gains)) + "</span>" + (extra || "") + "</div>" +
+    '<div class="lg-q">' + (qui ? '<span class="lg-nom" style="--c:' + couleur(qui) + '">' + esc(qui) + "</span><small>" + esc(quand || "pour toujours") + "</small>" : "<small>Un seul gagnant</small>") + "</div></div>";
+  return '<section class="vit" id="vit-legendes"><h3 class="vit-h">💎 Les Légendes <small>un seul gagnant au monde, pour toujours</small></h3>' +
+    '<p class="info">Des objets uniques : une fois gagnés, plus personne ne pourra les avoir.</p><div class="lg-l">' +
+    carte("million", "👑", "Premier millionnaire", "le premier du groupe à atteindre 1\u00a0000\u00a0000\u00a0€ de patrimoine financier", GAINS_MILLION, pm ? pm.nom : null, pm ? "pour toujours" : "") +
+    carte("champion", "🌿", "Premier champion", "remporter la première saison complète", gainsSecret(CHAMPION_EX), ch ? ch.nom : null, ch ? moisLong(ch.k) : "",
+      champions.length ? '<span class="lg-x">🏆 ' + champions.map(c => "Saison " + numeroSaison(c.y) + " : " + esc(c.nom)).join(" · ") + "</span>" : "") +
+    carte("vote", "🗳️", "Coup de la saison", "élu par les autres pilotes au vote de décembre", [["plaque", "coupsaison"]], votes.length ? votes.join(" et ") : null, "") +
+    carte("ticket", "🎫", "Ticket d'or", "un seul ticket d'or caché dans les tablettes de la 🍫 Chocolaterie (octobre)", [GAIN_TICKET], tk.length ? tk[0].nom : null, tk.length && tk[0].j ? "trouvé dans sa tablette" : "") +
+    "</div></section>";
 }
 function htmlTitres(apercu, y) {
   const C = apercu ? {} : etatTitres(y), moi = moiPilote();
-  return '<section class="vit" id="vit-titres"><h3 class="vit-h">⚔️ Les titres <small>ce que je défends · ils se volent</small></h3>' +
-    '<p class="info">Recalculés à chaque mois joué. Ils ne rapportent aucun point : seulement l\'honneur de les tenir, jusqu\'à ce qu\'un autre te les prenne.</p><div class="cour-l">' +
+  return '<section class="vit" id="vit-titres"><h3 class="vit-h">⚔️ Les titres <small>à part · sans objet · ils se volent</small></h3>' +
+    '<p class="info">Recalculés à chaque mois joué. Ils ne rapportent aucun point ni objet : seulement l\'honneur de les tenir, jusqu\'à ce qu\'un autre te les prenne.</p><div class="cour-l">' +
     TITRES.map(c => {
       const o = C[c.id], vide = apercu ? "À prendre dès janvier" : c.id === "flair" && !o ? (typeof TRESORS !== "undefined" && TRESORS && TRESORS.l && TRESORS.l.length ? "Personne pour l'instant" : "Non attribuée : pas encore de trésor") : "Personne pour l'instant";
       return '<div class="cour' + (o && o.nom === moi ? " a-moi" : "") + (o ? "" : " libre") + '" data-cour="' + c.id + '" style="--c:' + (o ? couleur(o.nom) : "var(--rule)") + ";--tc:" + c.c + '"><span class="cour-i" aria-hidden="true">' + emblemeTitre(c.id) + '</span><div class="cour-t"><b>' + esc(c.nom) + "</b><small>" + esc(c.def) + "</small></div>" +
         '<div class="cour-q">' + (o ? '<b>' + esc(o.nom) + "</b><small>depuis " + esc(moisLong(o.depuis)) + "</small><small>" + esc(o.txt) + "</small>" : "<small>" + esc(vide) + "</small>") + "</div></div>";
     }).join("") + "</div></section>";
 }
-/** 🎫 Les tickets d'or (section à part de « Mes trophées ») : à partir d'octobre 2027 (ou dès qu'un ticket est trouvé), 5 places, le nom des gagnants */
-function htmlTickets(moi) {
-  const g = gagnantsTicket(); if (!ticketVisible() && !g.length) return "";
-  const fini = Date.now() >= TICKET_MOIS.fin.getTime();
-  return '<div class="vit-tk" id="vit-tickets"><h4>🎫 Les tickets d\'or <small>🍫 Chocolaterie · 5 pour toute la saison, un par pilote</small></h4><div class="tk-l">' +
-    [1, 2, 3, 4, 5].map(n => { const x = g.find(z => z.n === n);
-      return '<div class="tk-s' + (x ? " pris" : "") + (x && x.nom === moi ? " a-moi" : "") + '"><span class="tk-n">n° ' + n + "</span>" + (x ? "<b>" + esc(x.nom) + "</b>" : "<small>" + (fini ? "resté dans sa tablette" : "à trouver") + "</small>") + "</div>"; }).join("") + "</div></div>";
-}
-/** L'onglet Trophées */
+/** L'onglet Trophées : 4 sous-onglets + « à part » (titres, Coupe brisée) */
 function htmlVitrines() {
   const apercu = !saisonJouee(), noms = D.personnes.map(p => p.nom), moi = moiPilote(), y = anneesSaison().slice(-1)[0];
-  return (apercu ? '<div class="chauffe-b">🔥 <span>Tour de chauffe : les trophées, les secrets et les titres démarrent le 1<sup>er</sup> janvier 2027. Voici ce qui t\'attend.</span></div>' : "") +
+  const o = VIT_ONGLETS.some(z => z[0] === VIT_ONGLET) || VIT_ONGLET === "titres" ? VIT_ONGLET : "mondes";
+  const corps = o === "succes" ? htmlSucces(apercu, noms, moi) : o === "gant" ? htmlGant(apercu, noms, moi, y) : o === "legendes" ? htmlLegendes(apercu, noms, moi) : o === "titres" ? htmlTitres(apercu, y) : htmlMondes(apercu, noms, moi);
+  return (apercu ? '<div class="chauffe-b">🔥 <span>Aperçu : les trophées démarrent le 1<sup>er</sup> janvier 2027. Voici ce qui t\'attend.</span></div>' : "") +
     (D.premierMillion ? bandeauMillion() : "") +   /* v17.31 (Théo) : le bandeau « Premier millionnaire » n'apparaît qu'une fois le badge gagné, puis pour toujours */
-    '<nav class="vit-nav" aria-label="Les 3 vitrines"><a href="#vit-trophees">🏆 Mes trophées</a><a href="#vit-secrets">🔍 Secrets</a><a href="#vit-titres">⚔️ Titres</a></nav>' +
-    '<section class="vit" id="vit-trophees"><h3 class="vit-h">🏆 Mes trophées <small>ce que je construis · tout le monde peut tout avoir</small></h3>' + htmlGant(apercu, noms, moi, y) + htmlTropheesMondes(apercu, noms, moi) + (apercu ? "" : htmlTickets(moi)) + "</section>" +
-    htmlSecrets(apercu, noms, moi) + htmlTitres(apercu, y);
+    '<nav class="vit-tabs" role="tablist" aria-label="Trophées">' + VIT_ONGLETS.map(([id, ico, lib]) => '<button type="button" role="tab" data-vit="' + id + '" aria-selected="' + (o === id) + '"><span aria-hidden="true">' + ico + "</span>" + lib + "</button>").join("") + "</nav>" +
+    '<div class="vit-apart"><small>À part, sans objet :</small><button type="button" data-vit="titres" aria-pressed="' + (o === "titres") + '">⚔️ Titres</button><button type="button" data-vit-coupe>🏆 Coupe brisée</button></div>' + corps;
 }
-/** Ouvrir un secret : caché (silhouette + indice) ou découvert (carte dorée, son histoire, les argentés) */
-function ouvrirSecret(id) {
+/** Ouvrir un succès : sa médaille (selon son palier), l'objectif, les objets, qui l'a réussi (le premier doré, puis les autres) */
+function ouvrirSucces(id) {
   if (id === "million") return ouvrirCarteMillion();
-  const x = SECRETS_SAISON.find(z => z.id === id); if (!x) return;
-  const apercu = !saisonJouee(), r = apercu ? { or: null, argent: [], tous: [] } : rangsSecret(id), moi = moiPilote(), mo = mondeDeNiv(x.niv), cc = CARTES_COLL[id], idx = D.marche.indices[iRef()];
-  const ov = document.createElement("div"); ov.className = "revel cc-ov sec-ov"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
-  const tete = '<span class="tuto-k">🔍 Secret ' + esc(NIV_EX[x.niv].toLowerCase()) + (universVisible() && univers(x.univers) ? " · " + univers(x.univers).drap + " " + esc(univers(x.univers).nom) : "") + "</span>";
-  if (!r.or) ov.innerHTML = '<div class="rv-c cc-c" style="--mc:' + mo.c + '">' + tete + '<div class="bd-med sil" style="--mc:' + mo.c + '">🔍</div><h3>Secret caché</h3>' +
-    '<p class="cc-a">Indice : « ' + esc(x.indice) + " »</p><p class=\"cc-cond\">Personne ne l'a encore réussi. Le premier gagnera la version dorée, son nom gravé et un objet d'écurie que personne d'autre n'aura. Les suivants (jusqu'au 5e) auront la version argentée.</p>" +
+  const x = SUCCES.find(z => z.id === id); if (!x) return;
+  const apercu = !saisonJouee(), r = apercu ? { or: null, autres: [], tous: [] } : rangsSucces(id), moi = moiPilote(), P = PALIERS[x.palier], cc = CARTES_COLL[id] || {}, idx = D.marche.indices[iRef()];
+  const premier = !!(r.or && r.or.noms.includes(moi));
+  const ov = document.createElement("div"); ov.className = "revel cc-ov sec-ov sc-ov"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
+  const hist = (o, med) => '<li class="h-' + med + '" style="--c:' + couleur(o.nom) + '"><span>' + (med === "or" ? "🥇" : "🏅") + "</span><div><b>" + esc(o.nom) + (med === "or" ? ' <em class="h-1er">1<sup>er</sup></em>' : "") + "</b><small>" + esc(moisLong(o.k) + (histoireSecret(id, o) ? " · " + histoireSecret(id, o) : "")) + "</small></div></li>";
+  const ors = r.or ? r.or.noms.map(n => r.tous.find(o => o.nom === n) || { nom: n, k: r.or.k }) : [];
+  ov.innerHTML = '<div class="rv-c cc-c sc-c p-' + P.id + '"><span class="tuto-k">🏅 Succès · ' + P.ico + " " + esc(P.nom) + "</span>" +
+    '<div class="sc-grand p-' + P.id + '">' + svgMedaille(x.palier, premier) + '<span class="cc-emo">' + x.ico + "</span></div>" +
+    "<h3>" + esc(x.nom) + '</h3><p class="cc-cond"><b>Objectif :</b> ' + esc(x.def.replace("l'indice", "le " + idx)) + ".</p>" +
+    '<ul class="sc-gains"><li>🎁 <b>Pour chacun qui réussit :</b> ' + esc(libGains([x.gain])) + "</li>" + (x.bonus ? "<li>🥇 <b>En plus, au premier seulement :</b> " + esc(libGains([x.bonus])) + " (exclusif), la version dorée et son nom gravé</li>" : "") + "</ul>" +
+    (r.or ? '<p class="sec-histoire">📜 ' + esc(ligneHistoire(x, ors[0])) + '</p><ol class="sec-rangs">' + ors.map(o => hist(o, "or")).join("") + r.autres.map(o => hist(o, "arg")).join("") + "</ol>"
+      : '<p class="cc-cond">' + (apercu ? "Il se joue dès janvier." : "Personne ne l'a encore réussi : le premier gagnera la version dorée et l'objet exclusif.") + "</p>") +
+    (premier && cc.s ? '<p class="cc-s">📜 <i>' + esc(cc.s) + "</i></p>" : "") +
     '<div class="btn-row"><button class="btn acc" type="button" data-cc="ok">Fermer</button></div></div>';
-  else {
-    const oOr = r.tous.find(o => r.or.noms.includes(o.nom) && o.k === r.or.k) || { nom: r.or.noms[0], k: r.or.k };
-    const hist = (o, med) => '<li class="h-' + med + '" style="--c:' + couleur(o.nom) + '"><span>' + (med === "or" ? "🥇" : "🥈") + "</span><div><b>" + esc(o.nom) + "</b><small>" + esc(moisLong(o.k) + (histoireSecret(id, o) ? " · " + histoireSecret(id, o) : "")) + "</small></div></li>";
-    const ors = r.or.noms.map(n => r.tous.find(o => o.nom === n) || { nom: n, k: r.or.k });
-    ov.innerHTML = '<div class="rv-c cc-c" style="--mc:' + mo.c + '">' + tete +
-      '<div class="cc-flip"><div class="cc-in"><div class="cc-dos"><span>' + mo.ico + '</span></div><div class="cc-face">' + htmlCarteColl(id, "g", r.or.noms) + "</div></div></div>" +
-      "<h3>" + esc(x.ico + " " + x.nom) + '</h3><p class="cc-a">« ' + esc(cc.a) + " »</p>" +
-      '<p class="cc-cond"><b>Le secret :</b> ' + esc(x.def.replace("l'indice", "le " + idx)) + ". <b>Au premier :</b> " + esc(libGains(gainsSecret(x))) + ".</p>" +
-      '<p class="sec-histoire">📜 ' + esc(ligneHistoire(x, oOr)) + "</p>" +
-      '<ol class="sec-rangs">' + ors.map(o => hist(o, "or")).join("") + r.argent.map(o => hist(o, "arg")).join("") + "</ol>" +
-      (r.or.noms.includes(moi) ? '<p class="cc-s">📜 <i>' + esc(cc.s) + "</i></p>" : '<p class="cc-s verrou">🔒 Un fragment d\'histoire est caché au dos : seul le premier peut le lire.</p>') +
-      '<div class="btn-row"><button class="btn acc" type="button" data-cc="ok">Fermer</button></div></div>';
-  }
   document.body.appendChild(ov);
   const t0 = Date.now(), fermer = () => ov.remove();
   ov.addEventListener("click", e => { if (e.target === ov && Date.now() - t0 > 600) fermer(); });
   ov.querySelector('[data-cc="ok"]').addEventListener("click", fermer);
 }
-/** La vitrine d'un pilote (fiche du Classement) : les cartes de ses secrets dorés ouvrent le secret */
-function ouvrirCarteColl(id) { ouvrirSecret(id); }
+/** (ancien nom) */
+function ouvrirSecret(id) { return ouvrirSucces(id); }
+function ouvrirCarteColl(id) { ouvrirSucces(id); }
 function ouvrirCarteMillion() {
   const pm = D.premierMillion, cc = CARTES_COLL.million, mo = mondeDeNiv(4), o = pm ? [pm.nom] : [];
   const ov = document.createElement("div"); ov.className = "revel cc-ov"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
@@ -1543,38 +1842,52 @@ function ouvrirCarteMillion() {
   ov.addEventListener("click", e => { if (e.target === ov) ov.remove(); });
   ov.querySelector('[data-cc="ok"]').addEventListener("click", () => ov.remove());
 }
-/** Un trophée des mondes : sa condition, son univers, ses objets, où en est chacun */
-function ouvrirBadge(id) {
+/** Un monde : sa carte en grand, le mini-jeu du mois, ses objets, qui l'a */
+function ouvrirMonde(id) {
   const t = TROPHEES_MONDES.find(x => x.id === id); if (!t) return;
-  const noms = D.personnes.map(p => p.nom), apercu = !saisonJouee(), T = apercu ? null : etatTropheesMondes(), mo = MONDES.find(m => m.id === t.monde), u = univers(t.univers);
-  const prog = T ? noms.map(n => { const o = T[id][n]; return '<div class="pl-bar"><span style="color:' + couleur(n) + '">' + esc(n) + '</span><span class="pl-j"><i style="width:' + Math.round((o.ok ? 1 : o.p / (o.c || 1)) * 100) + "%;background:" + couleur(n) + '"></i></span><small>' + (o.ok ? "✓ obtenu" : o.p + " / " + o.c) + "</small></div>"; }).join("") : "";
-  const ov = document.createElement("div"); ov.className = "revel cc-ov"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
-  ov.innerHTML = '<div class="rv-c cc-c" style="--mc:' + mo.c + '"><span class="tuto-k">🏆 Trophée' + (universVisible() && u ? " · " + u.drap + " " + esc(u.nom) : "") + "</span>" +
-    '<div class="bd-med" style="--mc:' + mo.c + '">' + t.ico + "</div><h3>" + esc(t.nom) + '</h3><p class="cc-cond">' + esc(t.def.charAt(0).toUpperCase() + t.def.slice(1).replace("l'indice", "le " + D.marche.indices[iRef()])) + ". Tout le monde peut l'avoir. Il débloque " + esc(libGains(t.gain)) + " pour ton écurie.</p>" + prog +
-    '<div class="btn-row"><button class="btn acc" type="button" data-cc="ok">Fermer</button></div></div>';
+  const noms = D.personnes.map(p => p.nom), apercu = !saisonJouee(), moi = moiPilote(), T = apercu ? null : etatTropheesMondes(), u = univers(t.univers);
+  const qui = T ? noms.filter(n => T[t.id][n].ok) : [], best = T ? noms.map(n => T[t.id][n].meilleur).find(Boolean) : null, aVenir = !T || T[t.id][noms[0]].aVenir;
+  const e0 = T ? T[t.id][moi] || T[t.id][noms[0]] : {}, ex = e0.objet && ITEMS[e0.objet[0]] && ITEMS[e0.objet[0]][e0.objet[1]] ? e0.objet : null;
+  const jouer = !aVenir && e0.etat === "en-cours" && typeof allerCarteMJ === "function";   // 🎲 le monde du mois : on va jouer (page Course, sur la carte)
+  const ov = document.createElement("div"); ov.className = "revel cc-ov mo-ov"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
+  ov.innerHTML = '<div class="rv-c cc-c mo-c"><span class="tuto-k">🗺️ Monde de ' + esc(MOIS_L[t.mois - 1]) + (u ? " · " + u.drap + " " + esc(u.nom) : "") + "</span>" +
+    '<div class="mo-carte">' + htmlCaseMonde(t, apercu, noms, moi) + "</div>" +
+    '<p class="cc-cond">' + (e0.trophee && !aVenir ? "Trophée " + esc(e0.trophee.ico + " « " + e0.trophee.nom + " »") + " : r" : "R") + "éussissez <b>ensemble</b> l'objectif commun du <b>mini-jeu</b> de " + esc(MOIS_L[t.mois - 1]) + " : le trophée est alors à chacun.</p>" +
+    '<ul class="sc-gains"><li>🎁 <b>Objets du monde, pour chacun :</b> ' + esc(libGains(t.gain)) + "</li><li>🌟 <b>Le meilleur du mois</b> : " + (e0.titre && !aVenir ? "le surnom du mois « " + esc(e0.titre) + " »" : "son surnom du mois") + (ex ? " et l'exclusif doré " + esc(libGains([ex])) : " et la feuille d'or sur sa carte") + ".</li></ul>" +
+    (!aVenir && e0.etat === "en-cours" ? '<p class="cc-cond mo-encours">🤝 <b>Objectif commun : ' + esc(e0.c > 1 ? e0.p + " / " + e0.c : e0.txt || "en cours") + "</b>, jusqu'au " + new Date(new Date().getFullYear(), t.mois, 0).getDate() + " " + esc(MOIS_L[t.mois - 1]) + ".</p>" : "") +
+    (aVenir ? '<p class="cc-cond">🔒 Le mini-jeu se dévoile en ' + esc(MOIS_L[t.mois - 1]) + ".</p>"
+      : '<p class="cc-cond">' + (qui.length ? "✓ Déjà réussi par " + esc(qui.join(", ")) : "Personne ne l'a encore réussi") + (best ? " · 🌟 meilleur du mois : " + esc(best.nom) + (best.txt ? " (« " + esc(best.txt) + " »)" : "") : "") + ".</p>") +
+    '<div class="btn-row">' + (jouer ? '<button class="btn acc" type="button" data-mo-jouer>🎲 Jouer aujourd\'hui</button>' : "") + '<button class="btn ' + (jouer ? "ghost" : "acc") + '" type="button" data-cc="ok">Fermer</button></div></div>';
   document.body.appendChild(ov);
   ov.addEventListener("click", e => { if (e.target === ov) ov.remove(); });
   ov.querySelector('[data-cc="ok"]').addEventListener("click", () => ov.remove());
+  const j = ov.querySelector("[data-mo-jouer]"); if (j) j.addEventListener("click", () => { ov.remove(); allerCarteMJ(); });
 }
+function ouvrirBadge(id) { return ouvrirMonde(id); }
 function brancherVitrines(v) {
-  v.querySelectorAll("[data-secret]").forEach(b => b.addEventListener("click", () => ouvrirSecret(b.dataset.secret)));
-  v.querySelectorAll("[data-badge]").forEach(b => b.addEventListener("click", () => ouvrirBadge(b.dataset.badge)));
-  v.querySelectorAll(".vit-nav a").forEach(a => a.addEventListener("click", ev => { ev.preventDefault(); const c = v.querySelector(a.getAttribute("href")); if (c) c.scrollIntoView({ block: "start", behavior: reduit ? "auto" : "smooth" }); }));
+  v.querySelectorAll("[data-vit]").forEach(b => b.addEventListener("click", () => { VIT_ONGLET = b.dataset.vit; rendreTrophees(); const n = document.querySelector(".vit-tabs"); if (n && n.getBoundingClientRect().top < 0) n.scrollIntoView({ block: "start", behavior: reduit ? "auto" : "smooth" }); }));
+  v.querySelectorAll("[data-vit-coupe]").forEach(b => b.addEventListener("click", () => {
+    if (typeof ouvrirCoupe !== "function") return;
+    if (typeof coupeDonnees === "function" && coupeDonnees()) return ouvrirCoupe();
+    if (typeof chargerTresors === "function") chargerTresors().then(() => { if (typeof coupeDonnees === "function" && coupeDonnees()) ouvrirCoupe(); else toast("🏆 La Coupe brisée se reconstitue avec les trésors des circuits : rien à montrer pour l'instant."); }).catch(() => toast("Coupe indisponible pour l'instant."));
+  }));
+  v.querySelectorAll("[data-succes]").forEach(b => b.addEventListener("click", () => ouvrirSucces(b.dataset.succes)));
+  v.querySelectorAll("[data-monde]").forEach(b => b.addEventListener("click", () => ouvrirMonde(b.dataset.monde)));
   // le Flair a besoin des trésors (qui a trouvé quoi) : on les charge, puis on redessine une fois
-  if (saisonJouee() && typeof chargerTresors === "function" && typeof TRESORS !== "undefined" && !TRESORS) chargerTresors().then(() => { if (TRESORS && vueActive() === "trophees" && ongletPodium() === "defis") rendreTrophees(); }).catch(() => {});
-  // v20.47 · 🎫 les tickets d'or (badges, vitrine, plaque) : chargés à partir d'octobre 2027, puis on redessine une fois
+  if (saisonJouee() && VIT_ONGLET === "titres" && typeof chargerTresors === "function" && typeof TRESORS !== "undefined" && !TRESORS) chargerTresors().then(() => { if (TRESORS && vueActive() === "trophees" && ongletPodium() === "defis") rendreTrophees(); }).catch(() => {});
+  // v20.47 · 🎫 le ticket d'or (badges, Légendes, plaque) : chargé à partir d'octobre 2027, puis on redessine une fois
   if (saisonJouee() && typeof chargerTickets === "function" && !TICKETS && Date.now() >= TICKET_MOIS.debut.getTime()) chargerTickets().then(() => { if (TICKETS && vueActive() === "trophees" && ongletPodium() !== "gp") rendreTrophees(); }).catch(() => {});
 }
-/* La vitrine d'un pilote (fiche du Classement) : ses secrets dorés (cartes), ses argentés, ses trophées, son Gant, ses titres */
+/* La vitrine d'un pilote (fiche du Classement) : ses succès (dorés en premier), ses mondes, son Gant, ses titres */
 function vitrineFiche(nom) {
   if (typeof saisonJouee !== "function" || !saisonJouee()) return "";   // v17.5 : pas de vitrine pendant le tour de chauffe (date, pas onglet)
-  const pm = D.premierMillion, cartes = exclusifsDe(nom).map(x => x.id).concat(pm && pm.nom === nom ? ["million"] : []), arg = secretsArgentDe(nom);
+  const pm = D.premierMillion, ors = exclusifsDe(nom), suiv = succesSuivantDe(nom);
   const TM = etatTropheesMondes(), nT = TROPHEES_MONDES.filter(t => TM[t.id][nom] && TM[t.id][nom].ok).length, y = anneesSaison().slice(-1)[0], g = (etatGant(y)[nom] || { n: 0 }).n, C = etatTitres(y);
-  const puces = ['<span style="--mc:#B9C3CE">🏆 ' + nT + " / 12 trophées</span>", '<span style="--mc:#D9A431">🧤 ' + g + " / 6 pierres</span>"]
-    .concat(TITRES.filter(c => C[c.id] && C[c.id].nom === nom).map(c => '<span style="--mc:' + c.c + '">' + c.ico + " " + esc(c.nom) + "</span>"))
-    .concat(arg.map(x => '<span style="--mc:#B9C3CE">🥈 ' + x.ico + " " + esc(x.nom) + "</span>"));
-  return '<div class="vitrine">' + (plaqueDe(nom) ? '<div class="vt-plaque">' + plaqueDe(nom).replace('class="plaque"', 'class="plaque grande"') + "</div>" : "") + '<div class="vt-h"><b>🗄️ La vitrine de ' + esc(nom) + "</b><small>" + cartes.length + " secret" + (cartes.length > 1 ? "s" : "") + " doré" + (cartes.length > 1 ? "s" : "") + " · " + arg.length + " argenté" + (arg.length > 1 ? "s" : "") + "</small></div>" + palmaresVitrine(nom) +
-    (cartes.length ? '<div class="vt-cartes">' + cartes.map(id => '<button type="button" data-carte-coll="' + id + '">' + htmlCarteColl(id, "m", [nom]) + "</button>").join("") + "</div>" : '<p class="info">Pas encore de secret doré : le premier qui réussit un secret grave son nom dessus.</p>') +
+  const puces = ['<span style="--mc:#B9C3CE">🗺️ ' + nT + " / 12 mondes</span>", '<span style="--mc:#9B6BFF">🧤 ' + g + " / 6 pierres</span>"]
+    .concat(TITRES.filter(c => C[c.id] && C[c.id].nom === nom).map(c => '<span style="--mc:' + c.c + '">' + c.ico + " " + esc(c.nom) + "</span>"));
+  const med = (x, premier) => '<button type="button" class="vt-med p-' + PALIERS[x.palier].id + '" data-carte-coll="' + x.id + '" title="' + esc(x.nom) + '">' + svgMedaille(x.palier, premier) + '<span class="cc-emo">' + x.ico + "</span></button>";
+  return '<div class="vitrine">' + (plaqueDe(nom) ? '<div class="vt-plaque">' + plaqueDe(nom).replace('class="plaque', 'class="plaque grande') + "</div>" : "") + '<div class="vt-h"><b>🗄️ La vitrine de ' + esc(nom) + "</b><small>" + (ors.length + suiv.length) + " succès sur 12 · " + ors.length + " en premier 🥇</small></div>" + palmaresVitrine(nom) +
+    (ors.length + suiv.length || pm && pm.nom === nom ? '<div class="vt-meds">' + (pm && pm.nom === nom ? '<button type="button" class="vt-med p-legende" data-carte-coll="million" title="Premier millionnaire"><span class="cc-emo">👑</span></button>' : "") + ors.map(x => med(x, true)).join("") + suiv.map(x => med(x, false)).join("") + "</div>" : '<p class="info">Pas encore de succès : le premier qui en réussit un grave son nom dessus.</p>') +
     '<div class="vt-badges">' + puces.join("") + "</div></div>";
 }
 /* Animations du showroom : la voiture démarre au klaxon, rebondit quand on change un objet */
@@ -1618,6 +1931,7 @@ function brancherSaison(v) {
   v.querySelectorAll("[data-saison]").forEach(b => b.addEventListener("click", () => { choisirSaison(+b.dataset.saison); rendreTrophees(); }));
   const y = saisonCourante();
   const o = ongletPodium();
+  if (typeof majPastilleMJ === "function") majPastilleMJ();   // 🎲 pastille du mini-jeu du jour (js/9-minijeux.js)
   if (o === "defis") brancherVitrines(v);
   if (o === "gp") { brancherGP(v, y); const dp = v.querySelector("#pts-det"); dessinerChampionnat(y); if (dp) dp.addEventListener("toggle", () => { ETAT.ptsOuvert = dp.open ? "1" : "0"; garder(); }); }
   if (o === "stand") brancherStand(v, y);

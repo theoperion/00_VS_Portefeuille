@@ -31,6 +31,14 @@ if (window.Piste) Piste.ecurie = nom => {
   return r;
 };
 
+/* Trophées v2 · les pierres allumées du Gant de l'infini se voient sur la voiture en course (2D : petites gemmes sous la pastille ; 3D : serties sur les pontons).
+   Rien pendant le tour de chauffe ni avant janvier (basesSeules), rien pour qui n'en a allumé aucune. */
+if (window.Piste) Piste.pierres = nom => {
+  if (typeof D === "undefined" || !D || !D.personnes || basesSeules() || !saisonJouee() || !D.personnes.some(p => p.nom === nom)) return null;
+  const y = anneesSaison().slice(-1)[0], g = y ? etatGant(y)[nom] : null;
+  return g && g.n ? g.p.map(Boolean) : null;
+};
+
 /* ---------- Vue Podium ---------- */
 function rendreTrophees() {
   const v = $("#v-trophees");

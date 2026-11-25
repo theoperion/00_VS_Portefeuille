@@ -11853,6 +11853,14 @@
       const pente = norme([1, -.14, 0]), nN = norme([.14, 1, 0]);
       decal(g, [2.6, .79, 0], [0, 0, 1], pente, nN, chiffres(v.numero, .46), claire ? fonceN : blanc, claire ? 0 : .15);
     }
+    // ---- Trophées v2 : les pierres du Gant de l'infini allumées, serties sur le flanc des pontons (derrière le numéro), qui brillent
+    if (v.pierres && v.pierres.some(Boolean)) {
+      const PC = ["#9B5CFF", "#3D8BFF", "#FF3B4E", "#FFD23D", "#2FD16A", "#FF8A2B"], or = hex("#E2B13C");
+      [1, -1].forEach(s => { const U = [s, 0, 0], Vy = [0, 1, 0], N = [0, 0, s]; let j = 0;
+        v.pierres.forEach((on, i) => { if (!on) return; const x = -.4 - j * .2, z = (1.37 + (x + .4) * .2 + .05) * s; j++;
+          decal(g, [x, .6, z], U, Vy, N, [[[-.1, 0], [0, .14], [.1, 0], [0, -.14]]], or, .3);
+          decal(g, [x, .6, z + s * .006], U, Vy, N, [[[-.075, 0], [0, .11], [.075, 0], [0, -.11]]], hex(PC[i]), 1); }); });
+    }
     if (v.roues) ROUES.forEach(([wx, wz, r, l], i) => [1, -1].forEach(s => g.poser(roue(r, l, s), wx, r, s * wz, 0, 1)));
     return g;
   }
@@ -12272,7 +12280,7 @@
     const api = {
       type: "3d", T, zones: Z,
       /** v20.48 · ce que porte chaque voiture (tests, étiquettes) : livrée, casque, finition, traînée, numéro, taille du modèle */
-      equipes: () => V.map(x => ({ nom: x.v.nom, livree: x.v.livree || null, casque: x.v.casqueModele || null, finition: x.v.finition || null, trainee: x.v.trainee || null, numero: x.v.numero || null, n: x.b.n })),
+      equipes: () => V.map(x => ({ nom: x.v.nom, livree: x.v.livree || null, casque: x.v.casqueModele || null, finition: x.v.finition || null, trainee: x.v.trainee || null, numero: x.v.numero || null, pierres: (x.v.pierres || []).filter(Boolean).length, n: x.b.n })),
       stats: () => ({ sol: B.sol.n, piste: B.piste.n, ov: B.solOv.n + B.pisteOv.n, eau: B.eau ? B.eau.n : 0, lum: LUM.length, tConstr: I.tConstr }),
       placer(pts) { I.anim = null; I.suspendu = null; I.pts = Object.assign({}, pts); placer(true); I.feuxDepart = -1; reveiller(); },
       regler(x) { Object.assign(o, x); },
@@ -13049,7 +13057,7 @@
     const ro = window.ResizeObserver ? new ResizeObserver(() => { const r = boite.getBoundingClientRect(), g0 = taille.w; taille = { w: r.width, h: r.height }; majFond(); if (MET) MET.redim(r.width, r.height); if (o.grille && !I.anim && Math.abs(g0 - r.width) > 1) poser(); if (o.image) o.image(api); }) : null; if (ro) ro.observe(boite);
     const api = {
       type: "2d", T, zones: Z,
-      equipes: () => Object.keys(V).map(n => ({ nom: n, livree: V[n].v.livree || null, casque: V[n].v.casqueModele || null, finition: V[n].v.finition || null, trainee: V[n].v.trainee || null, numero: V[n].v.numero || null })),
+      equipes: () => Object.keys(V).map(n => ({ nom: n, livree: V[n].v.livree || null, casque: V[n].v.casqueModele || null, finition: V[n].v.finition || null, trainee: V[n].v.trainee || null, numero: V[n].v.numero || null, pierres: (V[n].v.pierres || []).filter(Boolean).length })),
       placer(pts) { I.anim = null; I.suspendu = null; I.pts = Object.assign({}, pts); poser(); },
       regler(x) { Object.assign(o, x); },
       /** v20.52 · écart de la grille (unités de la piste) : la démo part exactement de là */
@@ -13077,14 +13085,27 @@
      (null = pas encore d'écurie, ou saison pas visible : rendu d'avant, à l'identique).
      ============================================================ */
   function ecurieDes(vs) {
-    return (vs || []).map(v => { let e = null; try { e = window.Piste && typeof window.Piste.ecurie === "function" ? window.Piste.ecurie(v.nom) : null; } catch (er) { e = null; } return e ? Object.assign({}, v, e, { ecurie: true }) : v; });
+    return (vs || []).map(v => { let e = null, pr = null; try { e = window.Piste && typeof window.Piste.ecurie === "function" ? window.Piste.ecurie(v.nom) : null; } catch (er) { e = null; }
+      // Trophées v2 · les pierres du Gant de l'infini allumées par ce pilote (l'appli donne Piste.pierres(nom) → 6 booléens, ou null : rien avant janvier)
+      try { pr = window.Piste && typeof window.Piste.pierres === "function" ? window.Piste.pierres(v.nom) : null; } catch (er) { pr = null; }
+      const w = e ? Object.assign({}, v, e, { ecurie: true }) : v;
+      return pr && pr.some(Boolean) ? Object.assign({}, w, { pierres: pr.slice(0, 6) }) : w; });
+  }
+  /** Couleurs des 6 pierres du Gant (dans l'ordre : victoire, indice, carte, audace, ténacité, retour) */
+  const PIERRES_COL = ["#9B5CFF", "#3D8BFF", "#FF3B4E", "#FFD23D", "#2FD16A", "#FF8A2B"];
+  /** pastille 2D : un petit arc de gemmes sous le disque, une par pierre allumée (losanges, liseré clair) */
+  function gemmes2D(v) {
+    const l = (v.pierres || []).map((on, i) => on ? i : -1).filter(i => i >= 0); if (!l.length) return "";
+    const n = l.length, pas = 24;
+    return '<g class="p2-gemmes">' + l.map((i, j) => { const a = (90 + (j - (n - 1) / 2) * pas) * PI / 180, x = Math.cos(a) * 13.2, y = Math.sin(a) * 13.2;
+      return '<path class="p2-gem" d="M' + x.toFixed(2) + " " + (y - 2.8).toFixed(2) + "L" + (x + 1.95).toFixed(2) + " " + y.toFixed(2) + "L" + x.toFixed(2) + " " + (y + 2.8).toFixed(2) + "L" + (x - 1.95).toFixed(2) + " " + y.toFixed(2) + 'Z" fill="' + PIERRES_COL[i] + '" stroke="#FFF6D8" stroke-width=".6"/>'; }).join("") + "</g>";
   }
   const LV_2D = { chrome: ["#DCE3EA", "#6E7884"], or: ["#E9B949", "#7A5300"], oranime: ["#F2C452", "#7A5300"], platine: ["#EEF3FA", "#8A94A0"], rubis: ["#B0002E", "#4A0012"], orrose: ["#E3A792", "#7A4A42"],
     galaxie: ["#2A1458", "#B98CFF"], neon: ["#0D1017", null], arcenciel: [null, null], chocolat: ["#5A2D14", "#2A1205"], carte: ["#F6F2E8", "#15171B"] };
   const marqueLivree = v => !!(v.ecurie && v.livree && LV_2D[v.livree]);
   /** pastille de la carte 2D : le disque reste à la couleur du pilote (repère du classement) ; la livrée fait l'anneau, la finition le liseré */
   function marque2D(v) {
-    if (!v.ecurie) return '<circle r="7" fill="' + v.couleur + '" stroke="#fff" stroke-width="1.8"/>';   // pas d'écurie : la pastille d'avant
+    if (!v.ecurie) return '<circle r="7" fill="' + v.couleur + '" stroke="#fff" stroke-width="1.8"/>' + gemmes2D(v);   // pas d'écurie : la pastille d'avant (+ les pierres du Gant)
     const c = v.couleur, lv = LV_2D[v.livree], f = v.finition && v.finition !== "aucune" ? v.finition : null;
     let h = "";
     if (lv) {
@@ -13102,7 +13123,7 @@
     h += '<circle r="7" fill="' + c + '" stroke="' + (f ? FIN[f] : "#fff") + '" stroke-width="' + (f ? 2.1 : 1.8) + '"' + (f === "neon" ? ' style="filter:drop-shadow(0 0 2px ' + c + ')"' : f === "diamant" ? ' style="filter:drop-shadow(0 0 1.5px #C9F6FF)"' : "") + "/>";
     if (f === "etoilee") h += '<path d="M0 -10.6l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z" fill="#FFE596" stroke="#7A5300" stroke-width=".3"/>';
     if (f === "diamant") h += '<path d="M6 -6l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" fill="#fff"/>';
-    return h;
+    return h + gemmes2D(v);
   }
   /** traînée de la carte 2D : quelques traits qui suivent la voiture (Simple : rien, comme avant) */
   const TR_2D = { halo: [["c", 5, .35]], flammes: [["#FF6A1F", 5.2, .75], ["#FFE07A", 2, .95]], etincelles: [["#FFD27A", 2.4, .95, "0.1 4"]], comete: [["c", 6.5, .3], ["#FFFFFF", 1.6, .8]],
