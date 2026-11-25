@@ -925,6 +925,9 @@ function injecterStyle() {
 .moi details.bl-plus > ol { margin-top: 6px; }
 .moi .sg-rien { min-width: 0; font: 600 11.5px/1.2 var(--f-text); color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .moi .sg-consigne { margin: 0; padding: 10px 12px 4px 14px; font: 700 15px/1.3 var(--f-text); color: var(--ink); }
+.moi .sg-consigne.cash { font-size: 17px; color: var(--down); } .moi .sg-consigne.creux { color: var(--accent-ink); }
+.moi .sig > .sig-msg.sg-pq { margin: 6px 8px 0; padding: 0 4px; border: 0; font-size: 13px; line-height: 1.45; }
+.moi .sig > .sig-msg.sg-secu { padding: 7px 10px; border-radius: 8px; background: var(--down-bg); color: var(--ink); }
 .moi .sg-consigne + .sig-msg { border-top: 0; padding-top: 2px; padding-left: 14px; }
 .moi .sig > .sig-msg.ordre, .moi .sig > .sig-msg.alerte { margin: 4px 8px 0; padding: 8px 10px; border: 0; border-radius: 8px; } .moi .sig > .sig-msg.ordre + .sg-bloc, .moi .sig > .sig-msg.alerte + .sg-bloc { margin-top: 8px; }
 .moi .sg-perim { margin: 0; padding: 7px 12px 9px 14px; border-top: 1px solid var(--rule); font-size: 11.5px; line-height: 1.35; color: var(--ink-3); }
@@ -3778,6 +3781,7 @@ function blocSignal() {
   if (!g || !g.position) return "";
   const NNBSP = NB;
   const cls = !g.expose ? "hors" : g.reduit ? "x1" : g.creux ? "creux" : "x2";
+  const sansCreux = g.creuxActif === false;   // 25/11/2026 : si un jour la règle tourne sans « creux », tout ce qui en parle se cache
   const court = s => s ? s.slice(8, 10) + "/" + s.slice(5, 7) + "/" + s.slice(2, 4) : "—";
   const p = v => v === null || v === undefined ? "—" : pct(v / 100);
   const p1 = v => v === null || v === undefined ? "—" : F1.format(v) + NNBSP + "%";
@@ -3823,7 +3827,7 @@ function blocSignal() {
       (xa.ecart32 !== undefined ? auj((xa.ecart32 > 0 ? "le ×3 rapporte " : "le ×3 coûte ") + n1(Math.abs(xa.ecart32)) + " pt/an " + (xa.ecart32 > 0 ? "de plus" : "de moins") + " que le ×2" + (xa.sigmaMax3 !== undefined && xa.sigmaMax3 >= 0 && xa.sigmaMax3 < 100 ? " · seuil de volatilité " + n1(xa.sigmaMax3) + " % (σ actuelle " + n1(xa.sigma) + " %)" : "")) : ""),
     museuil: "Croissance annuelle minimale du Nasdaq pour que le ×3 batte le ×2. Brut = sans impôt ; net = en comptant l'impôt du CTO (" + nS(TCTO) + " %) à chaque vente et celui du PEA (" + nS(TPEA) + " %) à la sortie. ✓ si la pente des " + PENTE + " dernières années dépasse le seuil net. L'écart entre brut et net, c'est ce que coûte la fiscalité du CTO." +
       (xa.muReqBrut !== undefined ? auj("seuil " + n1(xa.muReqBrut) + " % brut / " + (xa.muReqNet === null ? "n/d" : n1(xa.muReqNet) + " %") + " net, pente actuelle " + n1(xa.pente) + " %") : ""),
-    vol20: "Même volatilité que la case du haut. Au-dessus de " + nS(VH) + " % : passage en ×1 au PEA (LQQ → Nasdaq ×1)" + (g.positionCTO ? " et au CTO (QQQ3 → Nasdaq ×1)" : "") + ". Retour au levier sous " + nS(VB) + " %. Une position prise sur un creux n'est pas concernée, pour ne pas vendre au pire moment." +
+    vol20: "Même volatilité que la case du haut. Au-dessus de " + nS(VH) + " % : passage en ×1 au PEA (LQQ → Nasdaq ×1)" + (g.positionCTO ? " et au CTO (QQQ3 → Nasdaq ×1)" : "") + ". Retour au levier sous " + nS(VB) + " %." + (sansCreux ? "" : " Une position prise sur un creux n'est pas concernée, pour ne pas vendre au pire moment.") +
       (g.vol20 !== null && g.vol20 !== undefined ? auj(n1(g.vol20) + " %, levier " + levierAuj + (g.reduit ? (g.reduitDepuis ? " (alarme du " + frDate(g.reduitDepuis).slice(0, 5) + " encore allumée" + (g.creux ? " : le creux n'empêche que les nouvelles alarmes" : "") + ")" : "") + " · retour au levier sous " + nS(VB) + " %" : g.expose && !g.creux ? " · ×1 si elle dépasse " + nS(VH) + " %" : "")) : ""),
     omen: "Le Pine utilise une deuxième alarme, le Hindenburg Omen, qui détecte une bourse de New York fragile (beaucoup de plus hauts et de plus bas en même temps). Ses données ne sont pas disponibles gratuitement, donc elle n'est pas suivie ici. Tu passeras un peu moins souvent en ×1 que le Pine.",
     creux: "Règle d'entrée anticipée, utile seulement hors marché après une forte baisse. PRÊT = toutes les sécurités sont au vert, il n'attend qu'une baisse assez large. BLOQUÉ = une sécurité est au rouge (la raison est indiquée). DÉSARMÉ = déjà utilisée pendant cet épisode. EN CREUX = la position a été prise (ou gardée) ainsi : plus aucune vente tant que le Nasdaq n'est pas repassé au-dessus de son EMA 45 semaines ; ensuite la règle normale reprend (vente sous la bande −5 %). Le ×1 ne se revend que pour revenir au ×2, quand la volatilité repasse sous 25 %. En position normale, la règle ne sert pas." +
@@ -3838,7 +3842,7 @@ function blocSignal() {
       (xj.prime !== null && xj.prime !== undefined ? auj(n2(xj.prime) + (xj.okPrime ? ", sous le seuil" : ", au-dessus du seuil : creux refusé")) : ""),
     arme: "L'entrée sur creux ne sert qu'une fois par épisode de baisse. Elle se réarme quand la tendance redevient acheteuse." +
       (xj.arme !== undefined ? auj(xj.arme ? "armée" : "désarmée, en attente du prochain signal d'achat") : ""),
-    journal: "ACHAT / VENTE : signal de tendance (EMA " + EMAS + " semaines). ×1 / ×2 : alarme de volatilité (au CTO, ×2 veut dire retour au QQQ3 ×3). CREUX : entrée anticipée. RELAIS : la tendance reprend une position creux, rien à acheter. VENTE ÉVITÉE : vente et creux le même jour, position gardée. REFUS : un creux bloqué par une sécurité." +
+    journal: "ACHAT / VENTE : signal de tendance (EMA " + EMAS + " semaines). ×1 / ×2 : alarme de volatilité (au CTO, ×2 veut dire retour au QQQ3 ×3)." + (sansCreux ? "" : " CREUX : entrée anticipée. RELAIS : la tendance reprend une position creux, rien à acheter. VENTE ÉVITÉE : vente et creux le même jour, position gardée. REFUS : un creux bloqué par une sécurité.") +
       (g.signaux && g.signaux.length ? auj("dernier signal " + esc(g.signaux[0].type) + " le " + frDate(g.signaux[0].date)) : "")
   };
   /* lot 66 (Conseil design, Théo : « je ne comprends pas à quoi servent les indicateurs ») : PRÉSENTATION seulement, mêmes données et mêmes calculs.
@@ -3859,7 +3863,24 @@ function blocSignal() {
     (jg ? '<span class="c" style="grid-column:1/-1">' + jg + "</span>" : "") + (pt ? '<span class="c" style="grid-column:1/-1">' + phrase(pt) + "</span>" : "") +
     (c ? '<span class="c" style="grid-column:1/-1">' + c + "</span>" : "") + (ex ? '<span class="c aide-l" style="grid-column:1/-1">' + aide(ex) + "</span>" : "") + "</div>";
   let msg = "";
-  if (g.transition) msg = '<p class="sig-msg ordre">⏵ PEA : ' + esc(g.ordre) + "</p>" + (g.positionCTO && g.ordreCTO && g.ordreCTO !== "Aucun" ? '<p class="sig-msg ordre">⏵ CTO : ' + esc(g.ordreCTO) + "</p>" : "");
+  /* 25/11/2026 (Théo) : plus jamais « Rien à faire » quand la tendance dit cash.
+     a) Exception creux (la tendance dit de vendre, le creux garde) : pourquoi on garde, l'option « sécurité », quand ça s'arrête.
+     b) Hors marché : « 💶 PASSE EN CASH » les 14 premiers jours (quoi vendre, pourquoi), puis « 💶 RESTE EN CASH ». */
+  const enCash = !g.expose, cashRecent = enCash && (g.transition || (g.joursDepuis !== null && g.joursDepuis !== undefined && g.joursDepuis <= 14));
+  const enCreux = g.expose && g.creux && !sansCreux;
+  const aRemonter = ok_(g.distance) && g.distance < 0 ? " (encore environ +" + F1.format(Math.abs(g.distance) / (1 - Math.abs(g.distance) / 100)) + NNBSP + "%)" : "";
+  const pq = (t, cl) => '<p class="sig-msg sg-pq' + (cl || "") + '">' + t + "</p>";
+  if (enCreux) {
+    const jx = g.jauges || {};
+    msg = pq("<b>Pourquoi on garde</b> : " + (ok_(g.distance) && g.distance < 0 ? "le Nasdaq est " + F1.format(Math.abs(g.distance)) + NNBSP + "% sous sa moyenne des " + EMAS + " semaines, la tendance dit de vendre ; mais la baisse" : "la baisse") +
+        " est large" + (ok_(jx.ecartSMA) ? " (" + F1.format(Math.abs(jx.ecartSMA)) + NNBSP + "% sous sa moyenne des " + (jx.smaLen || 150) + " séances)" : "") + ", sans bulle ni signe de récession. Depuis 1997, vendre dans ce cas a le plus souvent obligé à racheter plus cher.") +
+      pq("<b>Si tu préfères la sécurité</b> : vendre le LQQ et le Nasdaq-100 ×1 au PEA (cash)" + (g.positionCTO ? ", le QQQ3 et le ×1 au CTO → or" : "") + ".", " sg-secu") +
+      pq("<b>Fin de l'exception</b> : quand le Nasdaq repasse au-dessus de sa moyenne des " + EMAS + " semaines" + aRemonter + ". La règle normale reprend ensuite.");
+  } else if (enCash && cashRecent) msg = '<p class="sig-msg ordre">⏵ PEA : vends tout ton levier Nasdaq (LQQ ×2 et Nasdaq-100 ×1) et laisse l\'argent en cash dans le PEA.</p>' +
+    (g.positionCTO ? '<p class="sig-msg ordre">⏵ CTO : vends le QQQ3 et le Nasdaq-100 ×1, achète de l\'or.</p>' : "") +
+    pq("<b>Pourquoi</b> : le Nasdaq a clôturé à plus de " + nS(BANDE) + NNBSP + "% sous sa moyenne des " + EMAS + " semaines" + (g.depuis ? " le " + esc(court(g.depuis).slice(0, 5)) : "") + (ok_(g.distance) && g.distance < 0 ? " (aujourd'hui " + F1.format(Math.abs(g.distance)) + NNBSP + "% sous)" : "") + ", et l'exception creux ne s'applique pas. La règle attend en cash ; elle rachètera quand le Nasdaq repassera au-dessus de sa moyenne. Si c'est déjà fait, rien d'autre à faire. Tu restes libre de suivre ou non.");
+  else if (enCash) msg = pq("La règle est en cash depuis le " + esc(court(g.depuis)) + " : elle rachètera quand le Nasdaq repassera au-dessus de sa moyenne des " + EMAS + " semaines" + aRemonter + ". S'il te reste du LQQ ou du Nasdaq-100 ×1 au PEA, la règle dit de les vendre.");
+  else if (g.transition) msg = '<p class="sig-msg ordre">⏵ PEA : ' + esc(g.ordre) + "</p>" + (g.positionCTO && g.ordreCTO && g.ordreCTO !== "Aucun" ? '<p class="sig-msg ordre">⏵ CTO : ' + esc(g.ordreCTO) + "</p>" : "");
   else if (g.provisoire && g.provisoire.changement) msg = '<p class="sig-msg alerte">Séance US en cours : ' + esc(g.provisoire.position) + " si la clôture reste à ce niveau (provisoire)</p>";
   else if (g.zoneTendance) msg = '<p class="sig-msg alerte">Zone d\'alerte : le Nasdaq est à ' + F1.format(Math.abs(g.distance)) + NNBSP + "% du seuil " + (g.expose ? "de vente" : "d'achat") + "</p>";
   else if (g.zoneVol) msg = '<p class="sig-msg alerte">Zone d\'alerte : volatilité proche de ' + g.volHaut + NNBSP + "%, passage en ×1 possible</p>";
@@ -3930,7 +3951,7 @@ function blocSignal() {
 
   const levier = '<h4 class="sig-h">Levier <small>PEA ×2 / CTO ×3 ↔ ×1</small></h4>' +
     '<p class="sg-intro">Un ETF ×2 (LQQ) fait deux fois les mouvements du Nasdaq, à la hausse comme à la baisse. Quand le marché s\'agite trop, ces allers-retours le grignotent : l\'alarme repasse alors en ×1.</p>' +
-    ligne("Volatilité 20 séances", vol + " " + coche(g.vol20 === null ? null : g.vol20 < g.volHaut), "passe en ×1 au-dessus de " + g.volHaut + " %, revient sous " + (g.volBas || 25) + " % · position creux exemptée", "", EX.vol20) +
+    ligne("Volatilité 20 séances", vol + " " + coche(g.vol20 === null ? null : g.vol20 < g.volHaut), "passe en ×1 au-dessus de " + g.volHaut + " %, revient sous " + (g.volBas || 25) + " %" + (sansCreux ? "" : " · position creux exemptée"), "", EX.vol20) +
     ligne("Alarme Omen", "non suivie", "données NYSE introuvables gratuitement : seule la volatilité pilote le ×1", "", EX.omen);
 
   /* les 3 indicateurs clés, en clair */
@@ -3959,18 +3980,20 @@ function blocSignal() {
     '<h4 class="sig-h">Quand la règle vend</h4><ul class="sg-ventes">' +
       "<li><b>×2 → ×1 (alarme)</b> : le marché secoue fort (agitation &gt; " + VH + "\u00a0%) : on enlève le levier mais on reste investi. Fréquent, réagit en quelques jours.</li>" +
       "<li><b>Vente totale (tendance)</b> : si le Nasdaq <b>clôture</b> " + nS(BANDE) + "\u00a0% ou plus sous sa moyenne des " + EMAS + " semaines, on passe tout en cash. Rare (baisses longues). On rachète quand il repasse au-dessus de la moyenne." + (g.dernierCash && g.dernierCash.du ? " <small class=\"sg-cash\">Dernier passage en cash : " + (g.dernierCash.au ? "du " + esc(court(g.dernierCash.du)) + " au " + esc(court(g.dernierCash.au)) : "depuis le " + esc(court(g.dernierCash.du))) + ".</small>" : "") + "</li>" +
-      "<li><b>En creux</b> : après une très forte baisse <b>sans</b> signe de récession ni de bulle, la règle achète le rebond (×1) ; la vente par la tendance est alors suspendue jusqu'à ce que le Nasdaq repasse au-dessus de sa moyenne (« vente évitée »).</li></ul>" +
+      (sansCreux ? "<li><b>Pas d'exception</b> : sous la moyenne −" + nS(BANDE) + "\u00a0%, c'est le cash, même après une très forte baisse.</li></ul>"
+        : "<li><b>Exception « creux »</b> : après une très forte baisse (au moins " + nS(ECART) + "\u00a0% sous la moyenne des " + SMA + " séances) <b>sans</b> bulle ni signe de récession, la règle ne vend pas (« vente évitée ») ou rachète en avance, et garde jusqu'à ce que le Nasdaq repasse au-dessus de sa moyenne des " + EMAS + " semaines. Le prix : si la baisse continue, on la subit." +
+          " <small class=\"sg-cash\">Test sur l'historique (Nasdaq-100, 1997-2026) : environ +4,5 points par an par rapport à la même règle sans exception, pour une pire baisse comparable ; sans elle, 20 des 24 passages en cash ont été rachetés plus cher. Le passé ne garantit pas l'avenir.</small></li></ul>") +
     '<div data-aide><h4 class="sig-h"><span>Historique des bascules' + qm + '</span><small>journal · 8 derniers changements</small></h4>' + aide(EX.journal) + "</div>" + journal +
     blocBilanSignal(g) +
-    '<details class="sg-rub" data-rub="curieux"><summary><span>Pour les curieux</span><b>tous les indicateurs</b></summary><div class="m-liste">' + arb + levier + creux + "</div></details>" +
+    '<details class="sg-rub" data-rub="curieux"><summary><span>Pour les curieux</span><b>tous les indicateurs</b></summary><div class="m-liste">' + arb + levier + (sansCreux ? "" : creux) + "</div></details>" +
     '<div class="sig-pied">Calcul du ' + esc(g.majLe || "") + " · données " + esc(g.source || "") + " · EMA " + (g.emaSem || 45) + " sem. " + F0.format(g.ema) + " · seuil de vente " + F0.format(g.bandeSortie) + "</div>" +
   "</div>";
 
   /* vue courte : UNE consigne, puis deux règles en deux blocs : ce que tu détiens (position) / où va l'argent nouveau (apport) */
   /* lot 67 (Théo) : en creux, dire clairement pourquoi on ne vend pas malgré une distance négative */
   const creuxTxt = g.distance !== null && g.distance !== undefined && g.distance < 0
-    ? " Le Nasdaq est " + F1.format(Math.abs(g.distance)) + "\u00a0% sous sa moyenne, mais tu es en creux : la règle garde la position jusqu'au retour au-dessus de la moyenne."
-    : " Position prise sur un creux : aucune vente tant que le Nasdaq n'est pas revenu au-dessus de sa tendance de fond.";
+    ? " Exception creux : la tendance dit de vendre (Nasdaq " + F1.format(Math.abs(g.distance)) + "\u00a0% sous sa moyenne), la règle garde jusqu'au retour au-dessus de la moyenne des " + EMAS + " semaines."
+    : " Position prise sur un creux : aucune vente tant que le Nasdaq n'est pas revenu au-dessus de sa moyenne des " + EMAS + " semaines.";
   const posPEA = !g.expose ? "reste en cash : le Nasdaq est sous sa tendance de fond."
     : g.reduit ? (g.vol20 !== null && g.vol20 !== undefined && g.vol20 < g.volHaut
         ? "garde le Nasdaq-100 ×1 : l'alarme reste allumée tant que l'agitation n'est pas redescendue sous " + g.volBas + " % (aujourd'hui " + vol + ")"   // lot 67 : entre-deux (hystérésis), pas « trop agité »
@@ -3985,14 +4008,14 @@ function blocSignal() {
     : "même levier que ta position" + avA + ".";
   const ligneP = (lab, ex, pastilles, ph, cl) => '<div class="sg-pl' + (cl || "") + '" role="button" tabindex="0" aria-expanded="false"' + (ex ? " data-aide" : "") + '><span class="sig-lab">' + lab + (ex ? qm : "") + "</span>" +
     '<span class="sg-pp">' + pastilles + '</span><span class="sg-pi" aria-hidden="true">ⓘ</span><span class="sg-ph" hidden>' + ph + "</span>" + (ex ? aide(ex) : "") + "</div>";
-  const consigne = g.transition ? "À faire à la prochaine ouverture de la bourse :" : g.provisoire && g.provisoire.changement ? "À faire : rien pour l'instant, la séance américaine n'est pas finie." : "À faire : rien. Garde ce que tu as.";
+  const consigne = enCreux ? "⚠️ Tendance : CASH · le creux dit GARDER" : enCash ? (cashRecent ? "💶 PASSE EN CASH" : "💶 RESTE EN CASH") : g.transition ? "À faire à la prochaine ouverture de la bourse :" : g.provisoire && g.provisoire.changement ? "À faire : rien pour l'instant, la séance américaine n'est pas finie." : "À faire : rien. Garde ce que tu as.";
   const rien = !msg;   // ni ordre, ni alerte, ni séance provisoire qui changerait la position
   return '<div class="sig ' + cls + (rien ? " rien" : "") + '">' +
     '<button type="button" class="sig-tete" aria-expanded="' + signalOuvert + '">' +
       '<span class="sig-lab">' + (g.positionCTO ? "Levier · PEA + CTO" : "Signal levier · PEA") + "</span>" +
       (rien ? '<span class="sg-rien" title="Aucun ordre · séance du ' + esc(court(g.date)) + '">✓ Rien à faire · ' + esc(court(g.date).slice(0, 5)) + "</span>" : "") + '<span class="sig-voir">' + (signalOuvert ? "Masquer" : "Comprendre") + '</span><span class="chev" aria-hidden="true">›</span>' +
     "</button>" +
-    (rien ? "" : '<p class="sg-consigne' + (g.transition ? " ordre" : "") + '">' + consigne + "</p>" + msg) +
+    (rien ? "" : '<p class="sg-consigne' + (g.transition || cashRecent ? " ordre" : "") + (enCash ? " cash" : enCreux ? " creux" : "") + '">' + consigne + "</p>" + msg) +
     /* lot 66 b (Théo) : vue repliée = consigne + 3 lignes à pastilles ; la phrase d'une ligne s'ouvre en la touchant (une seule à la fois) */
     '<div class="sg-bloc sg-lignes">' +
       ligneP("PEA", "", '<span class="sig-pos">' + esc(g.position) + "</span>", "<b>Ta position</b> (ce que tu détiens) : " + posPEA) +
