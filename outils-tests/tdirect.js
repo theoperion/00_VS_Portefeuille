@@ -1,14 +1,14 @@
-/* Test v20.48 · La course EN DIRECT pendant le mois (Théo) + textes hors du dessin + ⏸ pause / ▶ reprise + 📷 mode photo + 📐 schéma.
-   Lancer depuis la racine, serveur local ouvert : python3 -m http.server 8771 &  puis  node outils-tests/tdirect.js   (PORT=… pour un autre port)
+/* Test v20.47 · La course EN DIRECT pendant le mois (Théo) + textes hors du dessin + ⏸ pause / ▶ reprise + 📷 mode photo + 📐 schéma + 6 nouveaux circuits 3D + ambiance après pause.
+   Lancer depuis la racine, serveur local ouvert : python3 -m http.server 8771 &  puis  node outils-tests/tdirect.js   (PORT=… pour un autre port, CAPTURES=… pour le dossier des captures)
    Aucune vraie donnée : le serveur Google est intercepté (chiffres inventés). Les % de février de 3 pilotes sont des valeurs « signature »
    (7,31 %, 6,42 %, 5,53 %) : le mois est incomplet (Devlin manque), on vérifie qu'elles ne se voient nulle part et ne changent rien à la course.
    Vérifie : au 10 du mois, tour 1, ordre de la grille (classement d'avant le mois), plus loin si le S&P monte que s'il baisse, jamais de recul
    d'un jour à l'autre, ligne d'arrivée le dernier jour ; janvier 2027 = ordre du tour de chauffe, l'absent (Nicolas) derrière ; décembre (chauffe)
    = ordre de novembre ; après clôture, course complète en 2 tours ; pause / reprise (2D, 3D, plein écran) ; commentaires, bulles et tour
    dans le bandeau sous le dessin (jamais dessus) ; mode photo ; schéma ; 0 erreur JS ; captures 390 px clair et sombre. */
-const { chromium } = require("playwright"), fs = require("fs");
+const { chromium } = require("playwright"), fs = require("fs"), path = require("path"), os = require("os");
 const PORT = process.env.PORT || 8771, URL = "http://localhost:" + PORT + "/index.html";
-const DOSSIER = process.env.CAPTURES || "/tmp/claude-0/-home-user/6d9f1796-e607-5fc4-8119-363a157f01a8/scratchpad/course";
+const DOSSIER = process.env.CAPTURES || path.join(os.tmpdir(), "versus-captures", "direct");   // captures hors du dépôt (CAPTURES=… pour un autre dossier)
 try { fs.mkdirSync(DOSSIER, { recursive: true }); } catch (e) { /* déjà là */ }
 const NOMS = ["Théo", "Kévin", "Clément", "Devlin", "Nicolas"];
 const ligne = (k, val, r) => [k, String(k).slice(0, 4) + "-" + String(k).slice(4) + "-28", [0, val, 0, 0, null, null, null, null], [0, val, 0, r, 0].concat(Array(20).fill(0))];
@@ -159,6 +159,61 @@ const horsDessin = p => p.evaluate(() => { const sc = document.querySelector("#g
   ok(sch === 4 && rg === 4, "schéma dessiné (4 étapes en SVG) sous la course et dans les règles (" + sch + ", " + rg + ")");
   ok(larg, "390 px : pas de défilement horizontal");
   errs.push(...G.err); await G.ctx.close();
+  // 8. S&P absent : le peloton avance avec les jours seulement (avance = jour / nombre de jours)
+  const S0 = await ouvrir(b, "2027-02-10T12:00:00", donnees(202701), { vu: 202701 }); await S0.p.waitForTimeout(3800);
+  const s0 = await S0.p.evaluate(() => { const v = directGP(202702), i = document.querySelector("#gp-piste .gp-st-info"); return { f: v.f, r: v.r, j: v.j, N: v.N, info: i ? i.textContent : "" }; });
+  errs.push(...S0.err); await S0.ctx.close();
+  ok(s0.r === null && Math.abs(s0.f - 10 / 28) < 1e-9, "S&P absent : avance = jour/nb jours (" + s0.f.toFixed(4) + " = 10/28), sous-titre « " + s0.info + " »");
+  // 9. ⏸ puis ⏭ en direct : le bouton pause disparaît ; l'ambiance n'est jamais retenue par le direct (sans son)
+  const P0 = await ouvrir(b, "2027-02-10T12:00:00", donnees(202701, { kSP: 202702, sp: up }), { vu: 202701 });
+  await P0.p.waitForFunction(() => GP_INST && !GP_INST.api.enCours(), null, { timeout: 8000 });
+  await P0.p.click("#gp-rejouer"); await P0.p.waitForTimeout(400);
+  const pd1 = await P0.p.evaluate(() => ({ vis: !document.getElementById("gp-pause").hidden, dir: !!courseDirect(etapesGP(2027), etapesGP(2027).length - 1, 202702) }));
+  await P0.p.click("#gp-pause"); await P0.p.waitForTimeout(150);
+  const pd2 = await P0.p.evaluate(() => ({ p: enPauseGP(), amb: SONS.ambianceRetenue(), txt: document.getElementById("gp-pause").textContent }));
+  await P0.p.click("#gp-pause"); await P0.p.waitForTimeout(150);
+  const pd3 = await P0.p.evaluate(() => ({ p: enPauseGP(), amb: SONS.ambianceRetenue(), txt: document.getElementById("gp-pause").textContent }));
+  await P0.p.click("#gp-pause"); await P0.p.waitForTimeout(150);
+  await P0.p.evaluate(() => document.getElementById("gp-fin").click()); await P0.p.waitForTimeout(300);
+  const pd4 = await P0.p.evaluate(() => ({ vis: !document.getElementById("gp-pause").hidden, en: GP_INST.api.enCours(), amb: SONS.ambianceRetenue() }));
+  errs.push(...P0.err); await P0.ctx.close();
+  ok(pd1.vis && pd1.dir && pd2.p && /Reprendre/.test(pd2.txt) && /^⏸️ Pause$/.test(pd3.txt), "direct : ⏸ fige, « ▶ Reprendre », puis « ⏸️ Pause » (avec U+FE0F) " + JSON.stringify([pd2.txt, pd3.txt]));
+  ok(!pd4.vis && !pd4.en, "direct : ⏸ puis ⏭ arrivée : la course s'arrête et le bouton pause disparaît");
+  ok(!pd2.amb && !pd3.amb && !pd4.amb, "direct (sans son) : l'ambiance n'est jamais retenue, ni en pause, ni à la reprise, ni après ⏭");
+  // 10. course avec son (manche close) : ⏸ retient l'ambiance, ▶ la libère à la fin de la course ; ⏸ puis ⏭ la libère aussi
+  const Q = await ouvrir(b, "2027-02-10T12:00:00", donnees(202701, { kSP: 202702, sp: up }), { vu: 202701 });
+  await Q.p.evaluate(() => { GP_ETAPE = 1; rendreTrophees(); }); await Q.p.waitForTimeout(600);
+  await Q.p.click("#gp-rejouer"); await Q.p.waitForTimeout(1200);
+  await Q.p.click("#gp-pause"); await Q.p.waitForTimeout(150); const qa = await Q.p.evaluate(() => SONS.ambianceRetenue());
+  await Q.p.click("#gp-pause"); await Q.p.waitForFunction(() => !GP_INST.api.enCours(), null, { timeout: 20000 }); await Q.p.waitForTimeout(3500);
+  const qb = await Q.p.evaluate(() => SONS.ambianceRetenue());
+  await Q.p.click("#gp-rejouer"); await Q.p.waitForTimeout(1200); await Q.p.click("#gp-pause"); await Q.p.waitForTimeout(150);
+  await Q.p.evaluate(() => document.getElementById("gp-fin").click()); await Q.p.waitForTimeout(3500);
+  const qc = await Q.p.evaluate(() => ({ amb: SONS.ambianceRetenue(), vis: !document.getElementById("gp-pause").hidden }));
+  errs.push(...Q.err); await Q.ctx.close();
+  ok(qa && !qb, "course avec son : ⏸ retient l'ambiance, ▶ puis arrivée : elle n'est plus retenue (" + qa + " → " + qb + ")");
+  ok(!qc.amb && !qc.vis, "course avec son : ⏸ puis ⏭ : l'ambiance n'est plus retenue, le bouton pause a disparu");
+  // 11. les 6 nouveaux circuits en 3D : Visite et Hélico, avec 0, 1 et 5 voitures → 0 erreur
+  const V3 = await b.newContext({ viewport: { width: 390, height: 300 }, serviceWorkers: "block" }), pv = await V3.newPage(), e3d = [];
+  pv.on("pageerror", e => e3d.push(e.message)); pv.on("console", m => { if (m.type() === "error" || (m.type() === "warning" && /Piste/.test(m.text()))) e3d.push(m.text()); });
+  await pv.goto(URL.replace("index.html", "version.js"));
+  await pv.setContent('<html><body style="margin:0;background:#000"><div id="b" style="width:390px;height:300px;position:relative"></div><script src="' + URL.replace("index.html", "") + 'piste.js"></script></body></html>');
+  await pv.waitForFunction(() => window.Piste);
+  const a3v = await pv.evaluate(() => Piste.supporte()), C6 = ["suzuka", "melbourne", "montreal", "bahrein", "spa", "lasvegas"], res3 = [];
+  if (a3v) for (const ci of C6) for (const n of [0, 1, 5]) {
+    const r = await pv.evaluate(([ci, n]) => { const bx = document.getElementById("b"); if (window.__a && window.__a.detruire) window.__a.detruire(); bx.innerHTML = "";
+      const NV = ["A", "B", "C", "D", "E"].slice(0, n), CL = ["#E5484D", "#3E8BFF", "#F2B33D", "#3DDC97", "#B4E33D"], de = {}, a = {};
+      NV.forEach((x, k) => { de[x] = -k * .04; a[x] = .5 - k * .04; });
+      const api = window.__a = Piste.monter(bx, { circuit: ci, meteo: "soleil", camera: "helico", tour: 1, voitures: NV.map((x, k) => ({ nom: x, couleur: CL[k] })), pts: de });
+      api.camera("helico"); if (api.voitures) api.voitures(false); return api.type; }, [ci, n]);
+    await pv.waitForTimeout(500);
+    await pv.evaluate(n => { const api = window.__a; api.camera("poursuite"); if (api.voitures) api.voitures(true); if (n) { api.focus("A"); const de = {}, a = {}; ["A", "B", "C", "D", "E"].slice(0, n).forEach((x, k) => { de[x] = -k * .04; a[x] = .5 - k * .04; }); api.jouer(de, a, 900, null, false); } }, n);
+    await pv.waitForTimeout(1100); res3.push(ci + "/" + n + ":" + r);
+  }
+  if (a3v) await pv.screenshot({ path: DOSSIER + "/3d-lasvegas-5.png" });
+  await V3.close();
+  if (a3v) ok(!e3d.length && res3.every(x => /:3d$/.test(x)) && res3.length === 18, "6 nouveaux circuits en 3D (Visite + Hélico, 0/1/5 voitures) : 0 erreur " + JSON.stringify(e3d.slice(0, 3)) + " " + res3.filter(x => !/:3d$/.test(x)).join(" "));
+  else console.log("(3D indisponible : boucle des 6 circuits sautée)");
   ok(!errs.length, "0 erreur JS " + JSON.stringify(errs.slice(0, 5)));
   await b.close(); console.log("Captures : " + DOSSIER); process.exit(ko.length ? 1 : 0);
 })();

@@ -2192,7 +2192,7 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .bdg.ex.ticket { border-color: #C98E22; background: linear-gradient(120deg, rgba(247,207,85,.35), rgba(255,246,204,.5)); }
 .tk-emp { font-size: 10.5px; word-break: break-all; }
 
-/* ---------- v20.48 (Théo) · aucun texte posé sur le dessin : un bandeau de sous-titres SOUS la course (2D, 3D, plein écran) ---------- */
+/* ---------- v20.47 (Théo) · aucun texte posé sur le dessin : un bandeau de sous-titres SOUS la course (2D, 3D, plein écran) ---------- */
 .gp-piste.v2 { --st: 52px; padding-bottom: var(--st); }
 .gp-piste.v2 .gp-st { position: absolute; left: 0; right: 0; bottom: 0; height: var(--st); z-index: 5; box-sizing: border-box; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 0 12px; background: #07090D; border-top: 1px solid rgba(255,255,255,.08); color: #fff; pointer-events: none; }
 .gp-piste.v2 .gp-st .gp-tour { padding: 4px 9px; border-radius: 999px; background: rgba(255,255,255,.1); font: 700 11.5px/1.2 var(--f-text); white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
@@ -2254,6 +2254,8 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .gp-schema-l .sc-p { font: 600 10px/1 var(--f-text); fill: var(--ink); fill-opacity: .75; }
 .gp-schema-l .sc-sep { stroke: var(--ink); stroke-opacity: .15; stroke-width: 1; }
 .rg-schema .gp-schema-l { padding: 0; margin: 8px 0; }
+.gp-schema-p { margin: 0 10px 12px; padding: 8px 10px; border-radius: 10px; background: var(--bg); border: 1px solid var(--rule); font: 600 12.5px/1.35 var(--f-text); color: var(--ink); }
+.rg-schema .gp-schema-p { margin: 0 0 8px; }
 .gp-h .gp-hb { flex-direction: column; align-items: stretch; }
 .gp-piste.v2 .gp-st .gp-tour:empty { display: none; }
 .gp-piste.v2 .gp-st .gp-pop { align-items: center; gap: 4px; padding: 2px 7px 2px 2px; border-radius: 999px; }
