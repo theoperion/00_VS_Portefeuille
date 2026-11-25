@@ -1,4 +1,4 @@
-/* Test v20.53 · « 📋 Comparer avec mon relevé » : une FAUSSE évaluation de portefeuille Fortuneo (tout inventé) lue par les VRAIES
+/* Test v20.54 · « 📋 Comparer avec mon relevé » : une FAUSSE évaluation de portefeuille Fortuneo (tout inventé) lue par les VRAIES
    fonctions de moi.js (lireEvaluation, comparerEvaluation), contre un faux fichier « Moi ». Vérifie : lecture des lignes par ISIN
    (milliers avec espace, quantité × cours ≈ valorisation), ✓ / ⚠ quantité (0,0001), PRU (centime), versé, ordres passés après la date
    du relevé retirés, ligne de l'appli absente du relevé, et la saisie proposée par « Corriger ». Rien n'est envoyé : aucune fonction réseau.

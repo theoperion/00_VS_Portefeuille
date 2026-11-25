@@ -1,4 +1,4 @@
-/* Test v20.53 · import des avis (Fortuneo, Linxea Spirit 2) : FAUX avis (tout inventé) passés dans les VRAIES fonctions de moi.js.
+/* Test v20.54 · import des avis (Fortuneo, Linxea Spirit 2) : FAUX avis (tout inventé) passés dans les VRAIES fonctions de moi.js.
    Dividendes, date d'exécution, TTF, milliers « 1.234,56 » / « 1,234.56 », même avis collé deux fois, Linxea : nom avant l'ISIN,
    frais de gestion (montant ≈ parts × valeur de part), liste + détail du même versement. Lancer : node outils-tests/timport-avis.js */
 /* Charge les fonctions d'import de moi.js (lecture seule) dans un bac à sable Node. Aucune donnée réelle. */
@@ -132,7 +132,7 @@ r = lire(F1 + "\n\n" + F1);
 ok(r.ops.length === 1, "F11 · même avis collé deux fois dans le même texte : 1 seule opération", r.ops.length);
 
 
-/* v20.53 · milliers à l'anglaise « 1,234.56 » */
+/* v20.54 · milliers à l'anglaise « 1,234.56 » */
 r = lire(F1.replace("14 816,80", "14,816.80").replace("14 814,81", "14,814.81")); o = op0(r);
 ok(o.montant === "14816,80" || o.montant === "14816,8", "F12 · « 14,816.80 » (virgule des milliers) lu 14 816,80", o.montant);
 

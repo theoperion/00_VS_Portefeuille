@@ -1,4 +1,4 @@
-/* Test v20.53 · écran « 📋 Comparer avec mon relevé » (Moi › + › Importer un avis) : faux fichier Moi, fausse évaluation, serveur intercepté.
+/* Test v20.54 · écran « 📋 Comparer avec mon relevé » (Moi › + › Importer un avis) : faux fichier Moi, fausse évaluation, serveur intercepté.
    0 erreur JS, ✓/⚠ affichés, « Corriger » ouvre la saisie pré-remplie, aucun envoi au fichier pendant la comparaison, lisible à 390 px clair/sombre.
    Lancer depuis la racine, serveur local ouvert : python3 -m http.server 8771 &  puis  node outils-tests/tcomparer-ecran.js  (CAPTURES=dossier : captures) */
 const { chromium } = require("playwright");
