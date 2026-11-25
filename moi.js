@@ -6069,6 +6069,7 @@ function cleRappel(n) {
   if (/^Intérêts annuels/.test(n)) return "interets";
   if (/appartement/i.test(n)) return "appart";
   if (/^Versement Quintessa/.test(n)) return "versement";
+  if (/^Versement programm[ée] Linxea/i.test(n)) return "lxProg";   // v20.54 : réglable dans le fichier (Paramètres › rappels), comme celui de Clément
   if (/^Versement Linxea/.test(n)) return "linxea";   // v17.23 : Clément, rappel séparé du relevé Artema
   if (/Calendrier/.test(n)) return "calendrier";
   return "";
@@ -7443,6 +7444,7 @@ function partielRappel(k) {
 }
 function faireRappel(k) {
   if ((k === "artemaActuel" || k === "releve" || k === "point") && aArtema()) { ouvrirPointArtema(k); return; }   // v16.87 : le Point Artema (valeur + niveau)
+  if (k === "lxProg") { ouvrirCollerLinxea(); return; }   // v20.54 : « Faire » ouvre directement « Coller le texte » de l'import
   const pr = partielRappel(k);
   if (pr) { ouvrirSaisieM(pr); return; }
   reglageOuvert = k; delete reglageMsg[k]; ouvrirSaisieM(null, "maj");
@@ -7459,8 +7461,8 @@ function brancherBandeauRappel(v) { brancherAFaire(v); }
    - ouvrirPointArtema : valeur de la ligne (€, relevé) ET niveau de l'indice (pts) en une fois, par les actions existantes « ordre » et « artema ». */
 const VERBES_RAPPEL = { fraisLx: "saisir les frais de gestion Linxea", point: "faire le point Artema", releve: "saisir ton relevé Artema", artemaActuel: "saisir l'indice Artema", artemaInitial: "saisir le niveau de départ d'Artema",
   taux: "mettre à jour les taux des livrets", fondsEuros: "vérifier le taux du fonds euros", interets: "saisir les intérêts des livrets", appart: "revoir la valeur de l'appartement",
-  calendrier: "compléter les jours fériés des bourses", versement: "saisir ton versement Quintessa", linxea: "saisir ton versement Linxea", soldes: "mettre à jour tes soldes" };
-const ICO_RAPPEL = { point: "🎯", releve: "🧾", artemaActuel: "🎯", artemaInitial: "📌", taux: "🏦", fondsEuros: "💶", interets: "🏦", appart: "🏠", calendrier: "📅", versement: "💸", linxea: "💸", soldes: "🏦" };
+  calendrier: "compléter les jours fériés des bourses", versement: "saisir ton versement Quintessa", linxea: "saisir ton versement Linxea", soldes: "mettre à jour tes soldes", lxProg: "coller ton versement programmé Linxea" };
+const ICO_RAPPEL = { lxProg: "💸", point: "🎯", releve: "🧾", artemaActuel: "🎯", artemaInitial: "📌", taux: "🏦", fondsEuros: "💶", interets: "🏦", appart: "🏠", calendrier: "📅", versement: "💸", linxea: "💸", soldes: "🏦" };
 const POINT_ART = ["releve", "artemaActuel"];
 function reporte(k) { return (plusTard()[k] || 0) > Date.now(); }
 /** les tâches dues, la plus ancienne d'abord ; o = "artema" : seulement celles d'Artema */
@@ -7475,6 +7477,26 @@ function fraisLxDu() {
   const faits = ((M && M.ref && M.ref.journal) || []).filter(o => o.type === "Frais en parts" && o.enveloppe === lx).map(o => String(o.date || "").slice(0, 10));
   const local = stock.get(cleStock("fraisLx")) || ""; if (local) faits.push(local);
   return faits.some(d => d >= due.slice(0, 8) + "01") ? null : due;
+}
+/* v20.54 (Théo, 25/11) · rappel mensuel « Versement programmé Linxea » : le jour du mois vient d'une ligne « Versement programmé Linxea »
+   des rappels du fichier (réglable là, comme le rappel de Clément) ; sans elle, du dernier versement Linxea saisi (un versement programmé
+   tombe le même jour chaque mois). Dû à partir de ce jour tant qu'aucun versement Linxea n'est saisi depuis (5 jours de marge) ;
+   s'éteint seul si aucun versement Linxea depuis plus de 2 mois (plus de versement programmé). */
+function lxProgDu(maintenant) {
+  const lx = envLinxea(); if (!lx || (M && M.simple)) return null;
+  if (rappelsFichier().some(x => ["lxProg", "linxea"].includes(cleRappel(x.nom)))) return null;   // le fichier a déjà son rappel (réglable)
+  const v = ((M && M.ref && M.ref.journal) || []).filter(o => o.enveloppe === lx && o.type === "Apport").map(o => String(o.date || "").slice(0, 10)).filter(d => /^\d{4}-\d\d-\d\d$/.test(d)).sort();
+  const der = v[v.length - 1]; if (!der) return null;
+  const n = maintenant || new Date(), auj = isoJour(n), jour = +der.slice(8, 10), y = n.getFullYear(), m = n.getMonth() + 1;
+  const due = y + "-" + String(m).padStart(2, "0") + "-" + String(Math.min(jour, new Date(y, m, 0).getDate())).padStart(2, "0");
+  if (due > auj || joursEntre(der, auj) > 62) return null;
+  const marge = isoJour(new Date(new Date(due + "T12:00:00").getTime() - 5 * 864e5));
+  return v.some(d => d >= marge) ? null : due;
+}
+function ouvrirCollerLinxea() {
+  ouvrirSaisieM({ type: "Achat", env: envLinxea() });
+  IMP = { panneau: true, coller: true }; etape = 1; rendreFormulaire();
+  setTimeout(() => { const t = $f("f-imp-txt"); if (t) t.focus(); }, 60);
 }
 function tachesAFaire(o) {
   const l = []; if (!M) return l;
@@ -7492,6 +7514,7 @@ function tachesAFaire(o) {
   // v16.99 (Théo) : les 5 ans du PEA / les 8 ans d'une assurance-vie, annoncés 3 mois avant (jusqu'à 30 j après), « Compris » les range
   annivsFiscaux().filter(a => !annivVus()[a.k] && !reporte(a.k)).forEach(a => l.push({ k: a.k, cles: [a.k], titre: a.titre, date: "", quand: a.quand, ico: "🎂", anniv: a }));
   { const fx = fraisLxDu(); if (fx && !reporte("fraisLx")) l.push({ k: "fraisLx", cles: ["fraisLx"], titre: "Frais de gestion Linxea à saisir", date: fx, quand: quand(fx), ico: "🧾" }); }
+  { const lp = lxProgDu(); if (lp && !reporte("lxProg")) l.push({ k: "lxProg", cles: ["lxProg"], titre: "Versement programmé Linxea", date: lp, quand: quand(lp), ico: "💸" }); }
   if (feAVerifier()) l.push({ k: "fondsEuros", cles: ["fondsEuros"], titre: "Fonds euros : ton taux estimé tient toujours ?", date: "", quand: "tous les 3 mois", fe: true });
   l.forEach((t, i) => { t.i = i; t.ico = t.ico || ICO_RAPPEL[t.k] || "◷"; t.verbe = t.anniv ? "noter : " + t.titre.toLowerCase() : VERBES_RAPPEL[t.k] || "faire : " + t.titre.toLowerCase(); });
   l.sort((a, b) => (a.date || "9") < (b.date || "9") ? -1 : (a.date || "9") > (b.date || "9") ? 1 : a.i - b.i);
@@ -8145,8 +8168,9 @@ window.Moi = {
   },
   saisir(partiel, onglet) { lireCache(); if (M && M.simple) ouvrirSoldes(); else ouvrirSaisieM(partiel, onglet); },
   retourSaisie,
-  envoieSeul() { lireCache(); return versusRelie(); },
-  dernierReleveVersus,   // v20.53 (P1) : jour du dernier relevé Versus déjà parti (lu aussi par les tests)   // v17.96 : le fichier envoie-t-il lui-même son relevé au Versus ?
+  envoieSeul() { lireCache(); return versusRelie(); },   // v17.96 : le fichier envoie-t-il lui-même son relevé au Versus ?
+  dernierReleveVersus,   // v20.53 (P1) : jour du dernier relevé Versus déjà parti (lu aussi par les tests)
+  _lxProgDu(m, d) { const a = M; M = m; try { return lxProgDu(d); } finally { M = a; } },   // v20.54 : pour les tests (faux fichier)
   rafraichir(frais) { if (configure()) { rendre(); charger(!!frais); } },
   testerVersus() {   // v17.93 (Théo) : fichier lu directement par le Versus (Théo) → on le dit clairement, avec le dernier relevé
     if (!configure()) return Promise.resolve({ ok: false, message: "Aucun fichier relié à cet appareil." });
