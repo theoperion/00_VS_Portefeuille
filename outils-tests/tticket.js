@@ -1,4 +1,4 @@
-/* Test (v20.47) · 🎫 Le ticket d'or (Chocolaterie, octobre 2027) : la tablette du jour, la cérémonie, la vitrine, la plaque, l'aperçu admin.
+/* Test (v20.47) · 🎫 Le ticket d'or (Chocolaterie, octobre 2027) : la tablette du jour, la cérémonie, la vitrine, la plaque et la finition « Feuille d'or » (v20.61), l'aperçu admin.
    Fausses données uniquement (serveur Google intercepté : actions data, tickets, deballer, tresors) ; le vrai tirage est côté serveur (app_scripts/versus/TicketsOr.js).
    Serveur local ouvert : python3 -m http.server 8771 &  puis  node outils-tests/tticket.js
    Vérifie : avant octobre rien (sauf l'empreinte dans les règles dès le 1/1/2027) ; en octobre le bouton « déballer » marche une fois par jour ;
@@ -53,7 +53,7 @@ const deborde = () => [...document.querySelectorAll(".gp-tablette *, .tk-or *, .
     const t = await regles(p);
     const a = await p.evaluate(async () => { const tab = !!document.querySelector(".gp-tablette"), ci = (document.querySelector("#gp-piste") || {}).dataset;
       ETAT.podium = "defis"; garder(); rendreTrophees(); await new Promise(r => setTimeout(r, 600)); const vit = !!document.querySelector("#vit-tickets");
-      return { tab, vit, plaque: idsSlot("plaque").includes("ticketor"), badge: badgesPossedes("Kévin").some(x => x.id === "ticket"), ci: ci && ci.circuit }; });
+      return { tab, vit, plaque: idsSlot("plaque").includes("ticketor") || idsSlot("finition").includes("feuilledor"), badge: badgesPossedes("Kévin").some(x => x.id === "ticket"), ci: ci && ci.circuit }; });
     ok(!err.length && /Ticket d'or/.test(t) && t.includes(EMP) && /dévoilé le 1er novembre 2027/.test(t.replace(/\s+/g, " ")), quand.slice(0, 10) + " : les règles montrent la mécanique et l'empreinte du tirage");
     ok(!a.tab && !a.vit && !a.plaque && !a.badge && !req.includes("deballer"), quand.slice(0, 10) + " : ni tablette, ni vitrine des tickets, ni plaque dans l'Écurie " + JSON.stringify(a));
     await ctx.close(); }
@@ -86,13 +86,13 @@ const deborde = () => [...document.querySelectorAll(".gp-tablette *, .tk-or *, .
     await p.click(".gp-tablette [data-deballer]"); await p.waitForTimeout(reduit ? 600 : 1000);
     if (!reduit) await p.locator(".gp-tablette").screenshot({ path: DOSSIER + "/tablette-ticket" + (sombre ? "-sombre" : "") + ".png" });
     await p.waitForTimeout(reduit ? 400 : 2700);
-    const c = await p.evaluate(() => { const o = document.querySelector(".tk-or"); return o ? { t: o.textContent, plaque: !!o.querySelector(".plaque.pl-ticketor"), reduit: o.classList.contains("reduit") } : null; });
+    const c = await p.evaluate(() => { const o = document.querySelector(".tk-or"); return o ? { t: o.textContent, plaque: !!o.querySelector(".plaque.pl-ticketor") && !!o.querySelector(".tk-fin svg.casque") && /Feuille d'or/.test(o.textContent), reduit: o.classList.contains("reduit") } : null; });
     await p.screenshot({ path: DOSSIER + "/ceremonie-ticket" + (sombre ? "-sombre" : "") + (reduit ? "-reduit" : "") + ".png" });
     const deb = await p.evaluate(`(${deborde})()`);
     ok(c && /Le ticket d'or 2027/i.test(c.t) && /Nicolas/.test(c.t) && c.plaque && /Aucun point/.test(c.t) && c.reduit === reduit && !/€/.test(c.t), "ticket gagné : cérémonie plein écran (ascenseur de verre, le ticket d'or 2027, son nom, la plaque « Ticket d'or », aucun point)" + tag);
     const v = await p.evaluate(async () => { document.querySelector(".tk-or [data-tk-vit]").click(); await new Promise(r => setTimeout(r, 900));
       const s = document.querySelector("#vit-tickets"); return { s: s ? s.innerText : "", pris: s ? [...s.querySelectorAll(".lg-nom")].map(x => x.textContent) : [], cinq: !!(s && /5 places|n° [1-5]/.test(s.innerText)), onglet: VIT_ONGLET,
-        badge: badgesPossedes("Nicolas").some(x => x.id === "ticket"), plaque: debloques("Nicolas").has("plaque.ticketor"), ecurie: idsSlot("plaque").includes("ticketor"), autre: debloques("Kévin").has("plaque.ticketor") }; });
+        badge: badgesPossedes("Nicolas").some(x => x.id === "ticket"), plaque: debloques("Nicolas").has("plaque.ticketor") && debloques("Nicolas").has("finition.feuilledor") && !!origineItem("finition", "feuilledor").ticket && rareteItem("finition", "feuilledor").lib === "Légende", ecurie: idsSlot("plaque").includes("ticketor") && idsSlot("finition").includes("feuilledor"), autre: debloques("Kévin").has("plaque.ticketor") || debloques("Kévin").has("finition.feuilledor") }; });
     // Trophées v2 (Théo, 25/11) : UN SEUL ticket d'or dans l'année (règle refaite au serveur à part) → la Légende n'a qu'une place (le premier gagnant reçu)
     ok(v.onglet === "legendes" && v.pris.join(",") === "Nicolas" && !v.cinq && v.badge && v.plaque && v.ecurie && !v.autre, "« Voir ma vitrine » ouvre 💎 Légendes : le Ticket d'or, une seule place (plus « 5 places »), badge 🎫, plaque débloquée pour lui seul " + JSON.stringify(v) + tag);
     if (!reduit) await p.locator("#vit-tickets").screenshot({ path: DOSSIER + "/vitrine-tickets" + (sombre ? "-sombre" : "") + ".png" });

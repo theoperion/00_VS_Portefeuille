@@ -24,6 +24,12 @@ function saisonJouee() { return saisonOuverte() || apercuSaison(); }
 function janvierAnnonce() { return Date.now() >= new Date(SAISON.premiere - 1, 11, 20).getTime(); }
 /** V16.22 · pendant le tour de chauffe : seulement les bases (course + cartes) ; écurie, badges, trophées et objets attendent janvier (demande de Théo) */
 function basesSeules() { try { return !apercuSaison() && (!saisonOuverte() || estChauffe(saisonCourante())); } catch (e) { return false; } }
+/** v20.61 (Théo, 25/11) · l'Écurie ouvre le 1er décembre 2026, pendant le tour de chauffe (avant : en janvier, règle v20.44).
+ *  En décembre : seulement les objets de DÉPART (rien de 2027 : ni monde, ni succès, ni univers) ; l'onglet Trophées reste caché jusqu'au 1er janvier. */
+const ECURIE_OUVRE = new Date(SAISON.premiere - 1, 11, 1);
+function ecurieOuverte() { return saisonJouee() || Date.now() >= ECURIE_OUVRE.getTime(); }
+/** décembre 2026 : l'écurie est ouverte, mais seulement avec les objets de départ */
+function ecurieDepart() { return ecurieOuverte() && basesSeules(); }
 /** v17.5 · onglet « Saison 1 » ouvert avant le 1er janvier (du 20 au 31 décembre) : seulement le Stand */
 function standSeul(y) { return !saisonJouee() && y >= SAISON.premiere; }
 /** Saisons qu'on peut ouvrir dans le Podium : le tour de chauffe (dès le 21 novembre), puis la Saison 1 (à partir du 20 décembre, Stand seul jusqu'au 1er janvier) */
@@ -296,20 +302,29 @@ function etatDefis(nom) {
 
 /* ---------- Écurie : ce qui se débloque, ce qui est équipé ---------- */
 const ITEMS = {
-  casque: { uni: "Uni", carbone: "Carbone", eclair: "Éclair", damier: "Damier", tortue: "Tortue", chrome: "Chrome", etoile: "Étoile", holo: "Holo", couronne: "Couronne", foudre: "Foudre", phenix: "Phénix", glace: "Glace", galaxie: "Galaxie", empereur: "Empereur", eclaireur: "Éclaireur", toque: "Toque de chef" },
+  casque: { uni: "Uni", carbone: "Carbone", eclair: "Éclair", damier: "Damier", tortue: "Tortue", chrome: "Chrome", etoile: "Étoile", holo: "Holo", couronne: "Couronne", foudre: "Foudre", phenix: "Phénix", glace: "Glace", galaxie: "Galaxie", empereur: "Empereur", eclaireur: "Éclaireur", toque: "Toque de chef", anneau: "Anneau gravé", rebelle: "Pilote rebelle", hoplite: "Casque d'Ulysse", fracture: "Éclats du multivers" },
   circuit: { classique: "Jour de course", monaco: "Nocturne", desert: "Heure dorée", neige: "Hiver", neon: "Synthwave" },
-  fond: { couleur: "Couleur", carbone: "Carbone", aurore: "Aurore", flammes: "Flammes", neon: "Néon", damier: "Damier", or: "Or", galaxie: "Galaxie", chat: "Chat qui sourit" },
-  finition: { aucune: "Aucune", argent: "Liseré argent", or: "Liseré or", neon: "Liseré néon", diamant: "Diamant", lauriers: "Lauriers", etoilee: "Étoilée", soleil: "Soleil" },
-  livree: { couleur: "Couleur", chrome: "Chrome", or: "Or", neon: "Néon", arcenciel: "Prisme", oranime: "Or vivant", platine: "Platine", rubis: "Rubis", galaxie: "Galaxie", orrose: "Or rose", chocolat: "Chocolat fondant", carte: "Carte à jouer" },
-  trainee: { simple: "Simple", halo: "Halo", flammes: "Flammes", etincelles: "Étincelles", comete: "Comète", supernova: "Supernova", turbo: "Turbo", arcenciel: "Arc-en-ciel", cables: "Câbles d'acier" },
+  fond: { couleur: "Couleur", carbone: "Carbone", aurore: "Aurore", flammes: "Flammes", neon: "Néon", damier: "Damier", or: "Or", galaxie: "Galaxie", chat: "Chat qui sourit", pandora: "Forêt luminescente", ampoules: "Guirlande d'ampoules", portails: "Portails" },
+  finition: { aucune: "Aucune", argent: "Liseré argent", or: "Liseré or", neon: "Liseré néon", diamant: "Diamant", lauriers: "Lauriers", etoilee: "Étoilée", soleil: "Soleil", ailee: "Balle ailée", elfique: "Cape elfique", biolum: "Bioluminescence", feuilledor: "Feuille d'or" },
+  livree: { couleur: "Couleur", chrome: "Chrome", or: "Or", neon: "Néon", arcenciel: "Prisme", oranime: "Or vivant", platine: "Platine", rubis: "Rubis", galaxie: "Galaxie", orrose: "Or rose", chocolat: "Chocolat fondant", carte: "Carte à jouer", ver: "Peau des sables" },
+  trainee: { simple: "Simple", halo: "Halo", flammes: "Flammes", etincelles: "Étincelles", comete: "Comète", supernova: "Supernova", turbo: "Turbo", arcenciel: "Arc-en-ciel", cables: "Câbles d'acier", sabre: "Sabre lumineux", glitch: "Faille" },
   klaxon: { confettis: "Confettis", damier: "Damier", feu: "Feu d'artifice", parade: "Parade", billets: "Pluie de billets", fanfare: "Fanfare royale", cibles: "Dans le mille", fusees: "Décollage", trophees: "Pluie de trophées", ouvriers: "Fanfare des petits ouvriers" },
-  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon" }
+  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon", cheval: "Cheval de bois" }
 };
 const BASE_ECURIE = { casque: "uni", circuit: "classique", fond: "couleur", finition: "aucune", livree: "couleur", trainee: "simple", klaxon: "confettis", plaque: "aucune" };
+/* v20.61 (Théo, 25/11) · objets de DÉPART en plus de la série : à tout le monde, dès l'ouverture de l'écurie (1/12/2026). Les objets génériques
+   retirés des mondes (redessinés à l'image de leur univers) vont ici (le Versus = la course : damier, carbone) ou dans la réserve 2028 (OBJETS_RESERVE). */
+const DEPART_ECURIE = [["casque", "carbone"], ["casque", "damier"], ["fond", "carbone"], ["fond", "damier"]];
+function estDepart(slot, id) { return BASE_ECURIE[slot] === id || DEPART_ECURIE.some(g => g[0] === slot && g[1] === id); }
+const OBJETS_RESERVE = [["livree", "or"], ["casque", "chrome"], ["casque", "holo"], ["casque", "etoile"], ["finition", "argent"], ["finition", "or"], ["finition", "neon"], ["fond", "aurore"], ["trainee", "comete"], ["plaque", "metronome"], ["circuit", "neige"]];
 const SLOTS = [["casque", "Casque"], ["finition", "Finition"], ["fond", "Avatar"], ["livree", "Livrée"], ["trainee", "Traînée"], ["klaxon", "Klaxon"], ["plaque", "Plaque"], ["circuit", "Filtre de course"]];
 const GAINS_MILLION = [["casque", "couronne"], ["livree", "oranime"], ["klaxon", "billets"]];
 /* 🎫 Ticket d'or (Chocolaterie, octobre 2027) : la plaque exclusive du gagnant (un seul ticket dans l'année, tirage du serveur, TicketsOr.js) */
 const GAIN_TICKET = ["plaque", "ticketor"];
+/* 🎫 + la finition « Feuille d'or » (Théo, 25/11) : exclusive, Légende, portée en course (casque, halo, flancs) */
+const GAIN_TICKET_FIN = ["finition", "feuilledor"];
+const GAINS_TICKET = [GAIN_TICKET, GAIN_TICKET_FIN];
+function estGainTicket(slot, id) { return GAINS_TICKET.some(g => g[0] === slot && g[1] === id); }
 /** État des tickets d'or reçu du serveur (action « tickets », js/4-grandprix.js) : { empreinte, gagnants: [{ nom, j, n }], … } ou null */
 let TICKETS = null;
 function gagnantsTicket() { return TICKETS && Array.isArray(TICKETS.gagnants) ? TICKETS.gagnants : []; }
@@ -317,7 +332,7 @@ function gagnantsTicket() { return TICKETS && Array.isArray(TICKETS.gagnants) ? 
 const TICKET_MOIS = { debut: new Date(2027, 9, 1), fin: new Date(2027, 10, 1), regles: new Date(2027, 0, 1) };
 function ticketVisible() { return Date.now() >= TICKET_MOIS.debut.getTime() || gagnantsTicket().some(g => g.nom === moiPilote()); }
 function debloques(nom) {
-  const o = new Set(Object.entries(BASE_ECURIE).map(([s, v]) => s + "." + v));
+  const o = new Set(Object.entries(BASE_ECURIE).map(([s, v]) => s + "." + v).concat(DEPART_ECURIE.map(g => g.join("."))));
   // Trophées v2 (Théo, 25/11) : les objets viennent des 🗺️ Mondes (mini-jeu réussi), des 🏅 Succès (commun pour chacun, exclusif pour le 1er), du 🧤 Gant complet et des 💎 Légendes
   if (saisonJouee()) {
     const TM = etatTropheesMondes();
@@ -329,7 +344,7 @@ function debloques(nom) {
   exclusifsDe(nom).forEach(x => gainsSecret(x).forEach(g => o.add(g.join("."))));   // 🥇 + l'exclusif : pour le premier
   if (possede(CHAMPION_EX.id, nom)) gainsSecret(CHAMPION_EX).forEach(g => o.add(g.join(".")));   // 💎 Légende : le premier champion
   if (Object.values(D.votes || {}).some(v => (v.gagnants || []).includes(nom))) o.add("plaque.coupsaison");
-  if (gagnantsTicket().some(g => g.nom === nom)) o.add(GAIN_TICKET.join("."));
+  if (gagnantsTicket().some(g => g.nom === nom)) GAINS_TICKET.forEach(g => o.add(g.join(".")));
   if (typeof mjDebloques === "function") mjDebloques(nom).forEach(k => o.add(k));   // 🎲 mini-jeux du mois   // 🎫 Ticket d'or   // V13.9 : gagnant d'un vote de fin de saison
   return o;
 }
@@ -346,7 +361,8 @@ function htmlUnivers(cle, court) { const u = univers(cle); if (!u) return ""; re
  *  million / champion / vote / ticket (💎 Légendes), reserve (2028) } */
 function origineItem(slot, id) {
   if (slot === "plaque" && id === "coupsaison") return { vote: true, legende: true };
-  if (slot === GAIN_TICKET[0] && id === GAIN_TICKET[1]) return { ticket: true, legende: true };
+  if (estGainTicket(slot, id)) return { ticket: true, legende: true };
+  if (estDepart(slot, id)) return { depart: true };
   { const m = typeof mjOrigine === "function" && mjOrigine(slot, id); if (m) return m; }   // 🎲 plaque du meilleur d'un mini-jeu (js/9-minijeux.js) : exclusif doré
   const a = (g => !!g && g[0] === slot && g[1] === id);
   const sc = SUCCES.find(x => a(x.gain) || a(x.bonus)); if (sc) return { succes: sc, exclusif: a(sc.bonus) ? sc : null };
@@ -355,6 +371,7 @@ function origineItem(slot, id) {
   if (GAINS_MILLION.some(a)) return { million: true, legende: true };
   if (gainsSecret(CHAMPION_EX).some(a)) return { champion: true, legende: true };
   const r = RESERVE_2028.find(x => a(x.gain)); if (r) return { reserve: r };
+  if (OBJETS_RESERVE.some(a)) return { reserve: true };
   return {};
 }
 function numeroParDefaut(nom) { const i = D.personnes.findIndex(p => p.nom === nom); return ((i < 0 ? 0 : i) + 1) * 11 % 100 || 7; }
@@ -385,7 +402,7 @@ function plaqueDe(nom) {
   return '<span class="plaque' + classePlaque(p) + '" data-bdg="' + esc("Plaque « " + ITEMS.plaque[p] + " » de " + nom + (quoi ? ", gagnée avec le " + quoi : o.ticket ? ", gagnée avec le 🎫 ticket d'or de la Chocolaterie" : o.mj ? ", gagnée comme 🥇 meilleur du mini-jeu de " + MOIS_L[o.mj % 100 - 1] : "") + ".") + '">' + iconePlaque(p) + esc(ITEMS.plaque[p]) + "</span> ";
 }
 /** v20.46 · plaques émaillées à part : Ratatouille (plaque de rue parisienne, bleue), Ticket d'or (feuille d'or), Carré d'as, et les plaques des mini-jeux ; les autres restent en métal */
-function classePlaque(id) { return ["ratatouille", "ticketor", "carredas", "epice", "voliere", "cheshire", "precieux", "eywa", "kyber", "toquedor", "joyce", "ithaque", "bataillon"].includes(id) ? " pl-" + id : ""; }
+function classePlaque(id) { return ["ratatouille", "ticketor", "carredas", "epice", "voliere", "cheshire", "precieux", "eywa", "kyber", "toquedor", "joyce", "ithaque", "bataillon", "cheval"].includes(id) ? " pl-" + id : ""; }
 /** leur petit dessin, à nous : un tian de légumes en rosace (Ratatouille), un ticket doré (Ticket d'or) */
 function iconePlaque(id) {
   if (id === "ratatouille") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#F4EBD6" stroke="#8A5A2B" stroke-width="1"/>' +
@@ -401,6 +418,7 @@ function iconePlaque(id) {
   if (id === "joyce") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M1 4Q12 10 23 4" fill="none" stroke="#222" stroke-width=".7"/>' + [[4, "#FF3B3B"], [9, "#3BD16F"], [15, "#3B8BFF"], [20, "#F7CF55"]].map(([x, c]) => '<circle cx="' + x + '" cy="' + (6 + Math.sin(x / 23 * Math.PI) * 2) + '" r="2.2" fill="' + c + '"/>').join("") + '</svg>';   // 🎲 plaque du mini-jeu d'août
   if (id === "ithaque") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M3 11H21L18 15H6Z" fill="#7A4A22"/><path d="M12 11V1" stroke="#5A3A1A"/><path d="M13 2Q21 6 13 10Z" fill="#F4EBD6"/></svg>';   // 🎲 plaque du mini-jeu de septembre
   if (id === "bataillon") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M12 8Q6 1 1 4 4 8 12 9Z" fill="#FFFFFF" stroke="#2A4A8A" stroke-width=".6"/><path d="M12 8Q18 1 23 4 20 8 12 9Z" fill="#2A4A8A" stroke="#FFFFFF" stroke-width=".6"/></svg>';   // 🎲 plaque du mini-jeu de novembre
+  if (id === "cheval") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M5 12V7L7 4H9L10 2 11.5 4 13 5H18L20 7V12" fill="#B9813F" stroke="#5A3412" stroke-width=".8" stroke-linejoin="round"/><path d="M9.5 4C8 3 7 3.6 6.6 4.6" stroke="#5A3412" stroke-width=".6" fill="none"/><circle cx="8.4" cy="5.2" r=".5" fill="#2A1A08"/><path d="M5 9H20M9 7V12M13 7V12M17 7V12" stroke="#5A3412" stroke-width=".5"/><rect x="3" y="12" width="19" height="1.6" rx=".6" fill="#7A4A1A"/><circle cx="6" cy="14.4" r="1.4" fill="#4A2C10"/><circle cx="19" cy="14.4" r="1.4" fill="#4A2C10"/></svg>';   // v20.61 · ⛵ Odyssée : le cheval de bois sur ses roues
   if (id === "carredas") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="1" width="18" height="18" rx="3" fill="#FBF8F0" stroke="#C9A227" stroke-width="1"/>' +   // v2 · 🧠 Stratège : les 4 couleurs
     '<path d="M6 3.6L8.2 6.4 6 9.2 3.8 6.4Z" fill="#D62839"/><path d="M14 8.6C11.6 6.8 10.6 6 10.6 4.9 10.6 4 11.3 3.4 12.1 3.4 12.8 3.4 13.5 3.8 14 4.4 14.5 3.8 15.2 3.4 15.9 3.4 16.7 3.4 17.4 4 17.4 4.9 17.4 6 16.4 6.8 14 8.6Z" fill="#D62839"/>' +
     '<path d="M6 11C3.8 12.8 2.8 13.6 2.8 14.7 2.8 15.6 3.5 16.2 4.3 16.2 4.8 16.2 5.3 15.9 5.6 15.5L5.2 17H6.8L6.4 15.5C6.7 15.9 7.2 16.2 7.7 16.2 8.5 16.2 9.2 15.6 9.2 14.7 9.2 13.6 8.2 12.8 6 11Z" fill="#15171B"/>' +
@@ -459,7 +477,7 @@ const SUCCES = EXCLUSIFS.filter(x => !x.saison && !x.legende).sort((a, b) => a.p
 const CHAMPION_EX = EXCLUSIFS.find(x => x.id === "champion");
 const RESERVE_2028 = EXCLUSIFS.filter(x => x.saison === 2028);
 /** Objets d'écurie gardés pour 2028 (plus gagnables cette saison : retirés de l'écurie), sauf ceux repris par un succès 2027 */
-function objetReserve(slot, id) { const a = g => g && g[0] === slot && g[1] === id; return RESERVE_2028.some(x => a(x.gain)) && !SUCCES.some(x => a(x.gain) || a(x.bonus)); }
+function objetReserve(slot, id) { const a = g => g && g[0] === slot && g[1] === id; return (RESERVE_2028.some(x => a(x.gain)) || OBJETS_RESERVE.some(a)) && !SUCCES.some(x => a(x.gain) || a(x.bonus)) && !TROPHEES_MONDES.some(t => t.gain.some(a)) && !GANT.gain.some(a) && !GAINS_MILLION.some(a); }
 let MEMO_EXCL = { d: null, cle: "", v: null };
 /** Pour chaque exclusif : { nom, k, score } du premier (calcul), ou null */
 function premiersExclusifs() {
@@ -672,7 +690,7 @@ function palmaresVitrine(nom) {
 /** Le « ? » d'un objet de l'écurie : d'où il vient (Trophées v2 : 🗺️ Mondes, 🏅 Succès commun, 🥇 Succès exclusif, 🧤 Gant, 💎 Légendes, 2028), qui l'a, ce qu'il reste à faire */
 function texteOrigineItem(qui, slot, id) {
   const ouvert = debloques(qui).has(slot + "." + id), org = origineItem(slot, id), idx = D.marche.indices[iRef()];
-  if (BASE_ECURIE[slot] === id) return { t: "🏁 De série", p: "Fourni à tout le monde dès le départ." };
+  if (estDepart(slot, id)) return { t: "🏁 " + (BASE_ECURIE[slot] === id ? "De série" : "Objet de départ"), p: "Fourni à tout le monde dès le départ." };
   if (org.succes) {
     const x = org.succes, r = rangsSucces(x.id), d = r.or, P = PALIERS[x.palier], obj = x.def.replace("l'indice", "le " + idx), moiOk = reussi(x.id, qui);
     if (!org.exclusif) return { t: "🏅 Succès · " + x.ico + " " + x.nom + " (" + P.ico + " " + P.nom + ")", p: (moiOk ? "À toi : tu as réussi à " : "Pour l'avoir : ") + obj + ". Chacun qui réussit le gagne." + (d ? " Déjà réussi par " + d.noms.concat(r.autres.map(o => o.nom)).join(", ") + "." : "") };
@@ -724,12 +742,20 @@ function defsMotif(u, motif, c) {
   if (motif === "carte") return '<pattern id="' + u + 'm" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="#FBF8F0"/>' +
     '<path d="M6 9.6C3.2 7.4 2 6.3 2 4.9 2 3.8 2.9 3 3.9 3 4.8 3 5.5 3.5 6 4.2 6.5 3.5 7.2 3 8.1 3 9.1 3 10 3.8 10 4.9 10 6.3 8.8 7.4 6 9.6Z" fill="#D62839"/>' +
     '<path d="M18 14.6C20.6 16.6 21.8 17.6 21.8 19 21.8 20.1 21 20.8 20 20.8 19.4 20.8 18.8 20.5 18.5 20L19 22H17L17.5 20C17.2 20.5 16.6 20.8 16 20.8 15 20.8 14.2 20.1 14.2 19 14.2 17.6 15.4 16.6 18 14.6Z" fill="#15171B"/></pattern>';
+  // v20.61 · objets redessinés à l'image de leur monde : Peau des sables (Dune), Pilote rebelle (Étoiles), Casque d'Ulysse (Odyssée), Éclats du multivers
+  if (motif === "ver") return '<pattern id="' + u + 'm" width="26" height="40" patternUnits="userSpaceOnUse"><rect width="26" height="40" fill="#D9A35A"/><rect width="26" height="40" fill="#F2C98A" opacity=".35" y="-20" transform="skewX(-8)"/>' +
+    '<path d="M2 -2C6 12 6 28 2 42" stroke="#8A5524" stroke-width="5" fill="none" opacity=".7"/><path d="M7.5 -2C11 12 11 28 7.5 42" stroke="#F6DCAA" stroke-width="1.3" fill="none" opacity=".8"/>' +
+    '<circle cx="17" cy="9" r=".9" fill="#7FB8FF" opacity=".75"/><circle cx="21" cy="27" r=".6" fill="#B8DAFF" opacity=".8"/><circle cx="14" cy="33" r=".5" fill="#7FB8FF" opacity=".6"/></pattern>';
+  if (motif === "anneau") return lg([[0, "#5A4E44"], [.3, "#2E2722"], [.7, "#1A1512"], [1, "#0B0907"]]) + "</linearGradient>";
+  if (motif === "rebelle") return lg([[0, "#FFB27A"], [.3, "#F57A2E"], [.65, "#E0601C"], [1, "#9A3A0A"]]) + "</linearGradient>";
+  if (motif === "hoplite") return lg([[0, "#F8DA98"], [.22, "#D39A48"], [.5, "#8A5320"], [.66, "#E6B064"], [1, "#5A3412"]]) + "</linearGradient>";
+  if (motif === "fracture") return lg([[0, "#3A2F5C"], [.45, "#171230"], [1, "#07060F"]]) + "</linearGradient>";
   if (motif === "holo" || motif === "arcenciel") return '<linearGradient id="' + u + 'm" x1="0" y1="0" x2="1" y2=".35" spreadMethod="reflect">' +
     [["#FF6B9A", 0], ["#FFC15E", .2], ["#E9F27A", .38], ["#5CF0B5", .55], ["#5AB8FF", .72], ["#B98CFF", .88], ["#FF6B9A", 1]].map(([col, o]) => '<stop offset="' + o + '" stop-color="' + col + '"/>').join("") +
     (ANIM ? '<animateTransform attributeName="gradientTransform" type="translate" values="0 0;1 0" dur="5s" repeatCount="indefinite"/>' : "") + "</linearGradient>";
   return "";
 }
-const MOTIFS_PLEINS = ["carbone", "damier", "tortue", "chrome", "or", "couronne", "oranime", "holo", "arcenciel", "foudre", "phenix", "platine", "glace", "rubis", "orrose", "empereur", "galaxie", "eclaireur", "toque", "chocolat", "carte"];
+const MOTIFS_PLEINS = ["carbone", "damier", "tortue", "chrome", "or", "couronne", "oranime", "holo", "arcenciel", "foudre", "phenix", "platine", "glace", "rubis", "orrose", "empereur", "galaxie", "eclaireur", "toque", "chocolat", "carte", "ver", "anneau", "rebelle", "hoplite", "fracture"];
 /** livrées claires : numéro et inscriptions en noir */
 const LIVREES_CLAIRES = ["chrome", "or", "oranime", "platine", "orrose", "carte"];
 function remplissage(u, motif, c) { return MOTIFS_PLEINS.includes(motif) ? "fill:url(#" + u + "m)" : "fill:" + c; }
@@ -740,7 +766,7 @@ function remplissage(u, motif, c) { return MOTIFS_PLEINS.includes(motif) ? "fill
 const COQUE = "M-14 9.4C-17.2 3.8-17.6-4.4-13.6-10.6C-9.6-16.8-2.6-19.8 4.8-19.4C13-18.9 19.4-13.6 21.2-5.8C21.9-2.8 22 .8 21.2 3.8L20.2 7.6C19.6 10 17.8 11.4 15.4 11.6L-10.6 11.8C-12.2 11.8-13.3 11-14 9.4Z";
 const VISIERE = "M3.4-8.8C9.8-11.6 16.9-11 21.4-6.3C21.9-3.9 21.9-1.4 21.5.7C15.2 2.1 8.8 1.9 4.3.3C2.5-2.6 2.3-6.3 3.4-8.8Z";
 function casqueForme(u, m, c, fin, lead) {
-  const iri = ["holo", "couronne", "chrome", "etoile", "foudre", "glace", "galaxie"].includes(m), orv = m === "couronne" || m === "phenix" || m === "empereur";
+  const iri = ["holo", "couronne", "chrome", "etoile", "foudre", "glace", "galaxie", "fracture"].includes(m), orv = m === "couronne" || m === "phenix" || m === "empereur" || m === "anneau" || m === "hoplite";
   const defs = '<defs>' + defsMotif(u, m, c) + '<clipPath id="' + u + 'k"><path d="' + COQUE + '"/></clipPath>' +
     '<radialGradient id="' + u + 'h" cx=".32" cy=".16" r=".85"><stop offset="0" stop-color="#fff" stop-opacity=".8"/><stop offset=".28" stop-color="#fff" stop-opacity=".16"/><stop offset=".62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient>' +
     '<linearGradient id="' + u + 'v" x1="0" y1="0" x2="1" y2="1">' + (orv ? '<stop offset="0" stop-color="#FFE596"/><stop offset=".5" stop-color="#7A4A0C"/><stop offset="1" stop-color="#F7CF55"/>'
@@ -767,9 +793,22 @@ function casqueForme(u, m, c, fin, lead) {
       '<path d="M.3 4.6C1.4 2.6 3.8 1.2 4 -2.2 2.8-.8 1.6-.6 1.2-1.6 2.2-2 2.6-3 2.6-3.8 1.4-2.4.6-2.2.3-1.6Z" fill="#2F6FD6" stroke="#173B78" stroke-width=".35"/></g>',
     // v20.46 · la Toque : coque blanche, foulard tricolore (Paris), la toque plissée est posée au-dessus (après la visière)
     toque: '<path d="M-17 3.6C-6-2.4 7-6.4 23-7.4" stroke="#1F4FA8" stroke-width="1.5" fill="none"/><path d="M-17 5.4C-6-.6 7-4.6 23-5.6" stroke="#FFFFFF" stroke-width="1.5" fill="none"/><path d="M-17 7.2C-6 1.2 7-2.8 23-3.8" stroke="#D62839" stroke-width="1.5" fill="none"/>',
+    // v20.61 · 💍 l'Anneau gravé : un anneau d'or qui fait le tour de la coque, et son inscription de feu (des signes à nous, qui rougeoient)
+    anneau: '<path d="M-17 2C-6-4 7-8 23-9" stroke="#5A3606" stroke-width="5.2" fill="none"/><path d="M-17 2C-6-4 7-8 23-9" stroke="#F7CF55" stroke-width="3.8" fill="none"/><path d="M-17 1C-6-5 7-9 23-10" stroke="#FFF3B8" stroke-width=".6" fill="none" opacity=".8"/>' +
+      '<path class="cq-runes" d="M-16 2.4C-5-3.6 8-7.6 23-8.6" stroke="#FF5A1A" stroke-width="1.1" fill="none" stroke-dasharray="1.8 .6 .5 .7 1.2 .9 .4 .6" style="filter:drop-shadow(0 0 1.2px #FF9A3A)"/>',
+    // 🌌 Pilote rebelle : coque orange, deux bandes blanches, l'écusson rond (oiseau stylisé, dessiné par nous)
+    rebelle: '<path d="M-17-1.6C-6-7.6 7-11.6 23-12.6" stroke="#FFFFFF" stroke-width="2.4" fill="none"/><path d="M-17 4.4C-6-1.6 7-5.6 23-6.6" stroke="#FFFFFF" stroke-width="2.4" fill="none"/><path d="M-17 1.4C-6-4.6 7-8.6 23-9.6" stroke="#B8321A" stroke-width="1.2" fill="none"/>' +
+      '<path d="M-15 8.5H6M-15 10H4" stroke="#FFFFFF" stroke-width=".7" stroke-dasharray="1.4 1" opacity=".8"/>' +
+      '<g transform="translate(-7.5 -8.4)"><circle r="3.9" fill="#FFFFFF" stroke="#7A260C" stroke-width=".6"/><path d="M-3-1.4C-2-.2-1 .6 0 2.2 1 .6 2-.2 3-1.4 1.6-.9.8-.9 0 .2-.8-.9-1.6-.9-3-1.4Z" fill="#C8321E"/><path d="M0-.4-.7-2.2 0-2.9.7-2.2Z" fill="#C8321E"/></g>',
+    // ⛵ Casque d'Ulysse : bronze martelé, nasal et couvre-joue gravés, frise grecque ; la crête de crin rouge est posée au-dessus (après la visière)
+    hoplite: '<path d="M2.6-12.4C.4-6.4.4-.4 3.6 6.4M5.6 6.6C7.6 8.2 10.6 9 14 8.8" stroke="#4A2A0C" stroke-width="1.1" fill="none" opacity=".75"/>',
+    // 🌀 Éclats du multivers : la coque se fend, chaque éclat garde un autre univers (magenta, cyan) ; des fragments s'en détachent
+    fracture: '<path d="M-6-4 0-12 6-10 3-2Z" fill="#3BE8FF" opacity=".28"/><path d="M-8 3 0 6-2 11-11 9Z" fill="#FF3BD4" opacity=".3"/><path d="M-15-6-6-4-8 3-15 2Z" fill="#F7F24A" opacity=".14"/>' +
+      '<g fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="cq-faille" d="M-15-8-6-4-8 3 0 6 6 2 13 7M-6-4 0-12 6-10M0 6-2 11M-8 3-15 2" stroke="#FF3BD4" stroke-width="1.2" style="filter:drop-shadow(0 0 1.3px #FF3BD4)"/>' +
+      '<path d="M-14.3-8.7-5.3-4.7-7.3 2.3.7 5.3 6.7 1.3 13.7 6.3" stroke="#3BE8FF" stroke-width=".7" opacity=".95"/></g>',
     empereur: '<path d="M-17 1C-6-5 7-9 23-10" stroke="#F7CF55" stroke-width="3" fill="none"/><path d="M-17 4.4C-6-1.6 7-5.6 23-6.6" stroke="#F7CF55" stroke-width=".9" fill="none" opacity=".8"/><path d="M-6-14-4.6-10.6-1-10.4-3.8-8.2-2.8-4.8-6-6.8-9.2-4.8-8.2-8.2-11-10.4-7.4-10.6Z" fill="#FFE596" stroke="#7A5300" stroke-width=".5"/>'
   }[m] || "";
-  const brille = ["chrome", "couronne", "empereur", "glace", "holo", "etoile", "foudre", "galaxie", "phenix"].includes(m) ? '<path class="cq-brille" d="M-34-30H-28L-40 16H-46Z" fill="#fff" opacity=".55"/>' : "";
+  const brille = ["chrome", "couronne", "empereur", "glace", "holo", "etoile", "foudre", "galaxie", "phenix", "anneau", "rebelle", "hoplite"].includes(m) ? '<path class="cq-brille" d="M-34-30H-28L-40 16H-46Z" fill="#fff" opacity=".55"/>' : "";
   return defs + '<path d="' + COQUE + '" style="' + remplissage(u, m, c) + '"/>' +
     '<g clip-path="url(#' + u + 'k)">' + deco + '<path d="' + COQUE + '" fill="url(#' + u + 'h)"/>' + brille + "</g>" +
     // aileron arrière (gurney), prises d'air du dessus, mentonnière et ses ouïes
@@ -787,6 +826,10 @@ function casqueForme(u, m, c, fin, lead) {
     '<path d="' + COQUE + '" fill="none" stroke="rgba(0,0,0,.55)" stroke-width=".8"/>' +
     (m === "toque" ? '<g class="cq-toque" transform="translate(0 -1.6)"><path d="M-9.5-15.5V-19.5C-13-20.2-13.6-24.6-10.2-25.4-9.6-28.6-5.6-29.4-3.6-27.4-2-29.8 2.6-29.8 3.8-27.2 7.4-28.6 10.8-25.2 8.8-21.6 11-20.6 10.6-17.4 8.6-16.8V-15Z" fill="#FFFFFF" stroke="#B9B4A8" stroke-width=".8"/>' +
       '<path d="M-4.2-26.4C-4.6-23.6-4.4-21-3.8-18.6M1-27.6C.9-24.6 1-21.6 1.4-18.4M5.8-25.6C5.6-23.2 5.8-20.8 6.4-18.6" stroke="#C9C4B8" stroke-width=".7" fill="none"/><path d="M-9.5-17.6C-3-19.2 3-19.2 9-17.6V-15.2C3-16.6-3-16.6-9.5-15Z" fill="#EDEAE2" stroke="#B9B4A8" stroke-width=".6"/></g>' : "") +
+    (m === "hoplite" ? '<g class="cq-crete"><path d="M-16.5-6.5C-18.5-19-7.5-30.5 5-30C12.5-29.6 17.6-26.4 19.2-20.6C14.4-23.6 8.6-24.6 2.6-23.8C-5.4-22.8-11.6-17-13-7.6Z" fill="#C8281E" stroke="#5E0B08" stroke-width=".8"/>' +
+      '<path d="M-14-10C-14-18-8-24-2-26M-10-11C-9-17-4-21 2-22.6M-6-21.8C-1-25.6 6-27 12-25.4M0-28.6C6-29 12-27.6 16-24" stroke="#7A120E" stroke-width=".7" fill="none" opacity=".8"/><path d="M-12-14C-10-21-3-27 5-28" stroke="#FF7A5A" stroke-width=".8" fill="none" opacity=".7"/>' +
+      '<path d="M-13.6-7.8C-11.6-15-6-20 1-21.4" stroke="#8A5320" stroke-width="1.6" fill="none"/></g>' : "") +
+    (m === "fracture" ? '<g class="cq-eclats"><path d="M-19.6-12.4-16.4-16.2-15.6-11Z" fill="#3BE8FF" stroke="#E6FBFF" stroke-width=".3"/><path d="M-20.2-5-17.4-7.4-17.6-2.8Z" fill="#FF3BD4" stroke="#FFE6FA" stroke-width=".3"/><path d="M-20.4 3.6-17.6 2.2-18.8 6Z" fill="#F7F24A" opacity=".9"/></g>' : "") +
     (m === "couronne" ? '<g transform="translate(0 -1.8)"><path d="M-10-16.5-8.5-24-4-19.5 1-26 6-19.5 10.5-24 12-16.5Z" fill="url(#' + u + 'm)" stroke="#6B430C" stroke-width=".8"/><circle cx="1" cy="-26" r="1.6" fill="#FF4D6D"/><circle cx="-8.5" cy="-24" r="1.2" fill="#5AB8FF"/><circle cx="10.5" cy="-24" r="1.2" fill="#5AB8FF"/></g>' : "") +
     finitionCasque(u, fin, c, lead);
 }
@@ -807,6 +850,21 @@ function finitionCasque(u, fin, c, lead) {
     [[-14, -6], [-6, -17], [6, -17], [16, -9], [19, 5]].map(([x, y]) => '<path d="M' + x + " " + (y - 2.6) + "L" + (x + .8) + " " + (y - .8) + "L" + (x + 2.6) + " " + (y - .6) + "L" + (x + 1.2) + " " + (y + .7) + "L" + (x + 1.6) + " " + (y + 2.6) + "L" + x + " " + (y + 1.5) + "L" + (x - 1.6) + " " + (y + 2.6) + "L" + (x - 1.2) + " " + (y + .7) + "L" + (x - 2.6) + " " + (y - .6) + "L" + (x - .8) + " " + (y - .8) + 'Z" fill="#FFE596" stroke="#7A5300" stroke-width=".35"/>').join("");
   else if (fin === "soleil") h += '<g class="fin-soleil">' + [-150, -125, -100, -75, -50, -25, 0].map(a => { const r = a * Math.PI / 180, cx = 2.5, cy = -2; return '<path d="M' + (cx + 19 * Math.cos(r)).toFixed(1) + " " + (cy + 19 * Math.sin(r)).toFixed(1) + "L" + (cx + 24 * Math.cos(r)).toFixed(1) + " " + (cy + 24 * Math.sin(r)).toFixed(1) + '" stroke="#FFB21E" stroke-width="1.6" stroke-linecap="round"/>'; }).join("") + "</g>" +
     '<path d="' + COQUE + '" fill="none" stroke="#FF8A1F" stroke-width="2.4" style="filter:drop-shadow(0 0 2px #FFB21E)"/>' + lis("#FFE596", 1);
+  // v20.61 · finitions des mondes : Balle ailée (Château), Cape elfique (Anneau), Bioluminescence (Pandora), Feuille d'or (🎫 Ticket d'or)
+  else if (fin === "ailee") h += lis("#7A5300", 2) + lis("#F7CF55", 1) +
+    '<g transform="translate(-9 -21.6)"><g class="fin-ailee"><path d="M-1-.2C-4.4-4.6-8.6-4-10-1-7.4-2-4.6-1.4-1 .8Z" fill="#FFFDF2" stroke="#B9A06A" stroke-width=".4"/><path d="M-2.2-1.4C-4.6-3.2-6.6-3-7.6-2" stroke="#D9C9A0" stroke-width=".3" fill="none"/>' +
+    '<path d="M1-.2C4.4-4.6 8.6-4 10-1 7.4-2 4.6-1.4 1 .8Z" fill="#FFFDF2" stroke="#B9A06A" stroke-width=".4"/><circle r="2.3" fill="#F7CF55" stroke="#7A5300" stroke-width=".45"/><path d="M-1.6-.4C-.6.6.6.6 1.6-.4" stroke="#9A6716" stroke-width=".35" fill="none"/><circle cx="-.7" cy="-.8" r=".7" fill="#fff"/></g></g>';
+  else if (fin === "elfique") h += '<path d="M-12.6 8.2C-16.6 9.6-19.2 11.6-20.4 13.8-15.6 13.4-11.4 12.8-7.6 11.8Z" fill="#3E7D4A" stroke="#1E3A26" stroke-width=".45"/><path d="M-13 10.4C-15.4 11.4-17.2 12.4-18.4 13.4" stroke="#8FC79A" stroke-width=".4" fill="none"/>' +
+    lis("#1E3A26", 2.6) + lis("#CFE8D2", 1.1) +
+    '<g transform="translate(-10.6 6.4) rotate(-28)"><path d="M0-4.4C2.8-2.2 2.8 2.2 0 4.4-2.8 2.2-2.8-2.2 0-4.4Z" fill="#4E9A5C" stroke="#EEF4F6" stroke-width=".7"/><path d="M0-3.6V3.8M0-1.4 1.3-2.4M0 .6 1.3-.4M0-1.4-1.3-2.4M0 .6-1.3-.4" stroke="#EEF4F6" stroke-width=".35"/></g>';
+  else if (fin === "biolum") h += '<path class="fin-bio" d="' + COQUE + '" fill="none" stroke="#5CF2E6" stroke-width="1.7" stroke-dasharray=".1 2.4" stroke-linecap="round" style="filter:drop-shadow(0 0 1.6px #5CF2E6)"/>' +
+    '<path class="fin-bio b2" d="' + COQUE + '" fill="none" stroke="#FF8AE0" stroke-width="1.2" stroke-dasharray=".1 5" stroke-dashoffset="1.2" stroke-linecap="round" style="filter:drop-shadow(0 0 1.2px #FF8AE0)"/>' +
+    [[-11, -9, .9], [-4, -14, .7], [-13, 0, .8], [-6, 6, .7], [9, 6.5, .8], [-1, -4, .6]].map(([x, y, r]) => '<circle class="fin-bio" cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#9AFFF6" style="filter:drop-shadow(0 0 1px #5CF2E6)"/>').join("");
+  else if (fin === "feuilledor") h += '<defs><linearGradient id="' + u + 'fo" x1="-20" y1="-10" x2="22" y2="10" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#8A5A0C"/><stop offset=".4" stop-color="#F7CF55"/><stop offset=".5" stop-color="#FFFBE0"/><stop offset=".6" stop-color="#F7CF55"/><stop offset="1" stop-color="#8A5A0C"/>' +
+      (ANIM ? '<animateTransform attributeName="gradientTransform" type="translate" values="-34 0;34 0;34 0" keyTimes="0;.6;1" dur="3.6s" repeatCount="indefinite"/>' : "") + "</linearGradient></defs>" +
+    lis("#4A2C05", 3) + '<path d="' + COQUE + '" fill="none" stroke="url(#' + u + 'fo)" stroke-width="1.8"/>' +
+    [[-12, -11, 2.2, 10], [-5, -15.6, 1.8, 40], [0, -17.4, 1.3, 75], [-14, -2, 2, 120], [-7.4, 3.6, 2.4, 160], [-1, 7.6, 1.6, 205], [8.4, 7.4, 1.9, 250], [-9.6, -5.6, 1.2, 300]].map(([x, y, r, a]) =>
+      '<path class="fin-feuille" d="M' + (x - r) + " " + (y - r * .4) + "L" + (x - r * .1) + " " + (y - r) + "L" + (x + r * .9) + " " + (y - r * .5) + "L" + (x + r * .7) + " " + (y + r * .6) + "L" + (x - r * .3) + " " + (y + r * .8) + 'Z" fill="#F7CF55" stroke="#FFF6CC" stroke-width=".35" transform="rotate(' + a + " " + x + " " + y + ')"/>').join("");
   else if (fin === "lauriers") {
     const feuilles = (sens) => [0, 1, 2, 3, 4].map(i => { const t = i / 4, x = sens < 0 ? -13 - 3 * Math.sin(t * 2.4) : 18 + 3 * Math.sin(t * 2.4), y = 12 - t * 20, a = sens < 0 ? -30 - t * 40 : 30 + t * 40;
       return '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="1.5" ry="3.3" transform="rotate(' + a.toFixed(0) + " " + x.toFixed(1) + " " + y.toFixed(1) + ')" fill="#E9C25A" stroke="#6B4B0C" stroke-width=".45"/>'; }).join("");
@@ -817,7 +875,7 @@ function finitionCasque(u, fin, c, lead) {
 /** Avatar public : le casque (avec sa finition) dans une pastille dont le fond se débloque en course */
 /* V16.26 : « Mon casque » était masqué en attendant d'être redessiné (demande de Théo). v20.48 : il est redessiné ; il revient avec l'Écurie,
    donc pas avant la saison (tour de chauffe : tout le monde garde sa tête), sauf en aperçu admin. */
-function casqueCache() { try { return basesSeules(); } catch (e) { return true; } }
+function casqueCache() { try { return !ecurieOuverte(); } catch (e) { return true; } }   // v20.61 : le casque en avatar dès l'ouverture de l'écurie (1/12)
 /** V16.37 · l'accessoire mérité : le vainqueur de la dernière manche garde l'accessoire du circuit sur sa tête jusqu'à la manche suivante.
  *  Dès janvier (pas pendant la chauffe), et seulement quand on a déjà regardé la course (le résultat reste caché jusque-là). */
 let MERITE = null;
@@ -838,9 +896,16 @@ function avatar(nom, e) {
   const lead = tete && !eq.vignette && saisonVisible() && leaderSaison() === nom;
   return '<span class="av av-' + (eq.fond || "couleur") + (tete ? " av-tete" : "") + (lead ? " av-lead" : "") + ((ereDorActive() || {}).nom === nom ? " av-or" : "") + '" style="--c:' + couleur(nom) + '">' + (tete ? svgTete(nom, eq, eq.vignette) : svgCasque(nom, eq)) + "</span>";
 }
+/** v20.61 (règle de Théo, 25/11) · EN COURSE (portraits et pastilles 2D/3D, grille, liste de la page Course, verdict de la course) chacun garde TOUJOURS son visage
+ *  (portrait importé ou tête dessinée, avec l'accessoire du mois s'il en a un), sur le fond par défaut, pour qu'on sache qui est qui ; jamais le casque ni l'avatar
+ *  choisis dans l'écurie (ceux-là s'affichent partout ailleurs). La voiture, elle, reste personnalisée. extra = réglages en plus (skin, vignette…). */
+function avatarCourse(nom, extra) {
+  let sk = null; try { sk = accessoireMerite(nom); } catch (er) { sk = null; }
+  return avatar(nom, Object.assign({}, equipDe(nom), sk ? { skin: sk } : {}, extra || {}, { pilote: "tete", fond: "couleur" }));
+}
 function svgCasque(nom, e) {
   const eq = e || equipDe(nom), u = "sv" + (++NSVG), c = couleur(nom), lead = !eq.vignette && saisonVisible() && leaderSaison() === nom;
-  return '<svg class="casque c-' + eq.casque + (lead ? " leader" : "") + '" viewBox="' + (eq.casque === "toque" || eq.casque === "couronne" ? "-20.5 -33 44 46" : "-20.5 -26 44 40") + '" aria-hidden="true">' + casqueForme(u, eq.casque, c, eq.finition, lead) + "</svg>";
+  return '<svg class="casque c-' + eq.casque + (lead ? " leader" : "") + '" viewBox="' + (eq.casque === "toque" || eq.casque === "couronne" || eq.casque === "hoplite" ? "-20.5 -33 44 46" : "-20.5 -26 44 40") + '" aria-hidden="true">' + casqueForme(u, eq.casque, c, eq.finition, lead) + "</svg>";
 }
 
 /* v20.46 · habillages dessinés par-dessus la peinture (dans la découpe de la caisse) */
@@ -851,6 +916,12 @@ function habillageChocolat() {
   return '<path d="M40 40H470V' + haut(470) + g.slice().reverse().map(([x, h]) => "L" + (x + 7) + " " + haut(x + 7) + "C" + (x + 6) + " " + (+haut(x) + h * .6).toFixed(1) + " " + (x + 5) + " " + (+haut(x) + h).toFixed(1) + " " + x + " " + (+haut(x) + h).toFixed(1) + "S" + (x - 6) + " " + (+haut(x) + h * .6).toFixed(1) + " " + (x - 7) + " " + haut(x - 7)).join("") + 'L40 ' + haut(40) + 'Z" fill="#2A1205" opacity=".62"/>' +
     g.map(([x, h]) => '<ellipse cx="' + (x - 2) + '" cy="' + (+haut(x) + h - 3).toFixed(1) + '" rx="1.2" ry="1.8" fill="#F3C99B" opacity=".6"/>').join("") +
     '<path d="M130 62C190 52 260 56 330 68" stroke="#F3C99B" stroke-width="2" fill="none" opacity=".35" stroke-linecap="round"/>';
+}
+/** v20.61 · Peau des sables (Dune) : les anneaux du ver géant sur la caisse, une bouche en rosace de dents sur le museau, la poussière d'épice bleue qui scintille */
+function habillageVer() {
+  return '<g opacity=".9">' + [[372, 9], [398, 7.5], [420, 6]].map(([x, r]) => '<circle cx="' + x + '" cy="108" r="' + r + '" fill="none" stroke="#5A3412" stroke-width="1.4" opacity=".55"/>').join("") + "</g>" +
+    '<g fill="#F6DCAA" opacity=".85">' + [0, 1, 2, 3, 4, 5, 6, 7].map(i => { const a = i * Math.PI / 4, x = 446 + 5.2 * Math.cos(a), y = 113 + 5.2 * Math.sin(a); return '<path d="M' + (446 + 2 * Math.cos(a)).toFixed(1) + " " + (113 + 2 * Math.sin(a)).toFixed(1) + "L" + x.toFixed(1) + " " + y.toFixed(1) + '" stroke="#F6DCAA" stroke-width="1.3"/>'; }).join("") + "</g>" +
+    '<g class="vt-epice" fill="#8FC8FF">' + [[150, 66], [196, 92], [240, 58], [288, 104], [330, 76], [120, 100], [262, 88]].map(([x, y], i) => '<circle cx="' + x + '" cy="' + y + '" r="' + (1.1 + (i % 3) * .35) + '"/>').join("") + "</g>";
 }
 /** Carte à jouer : un grand as de cœur sur le ponton, et l'index « A♥ » dans le coin */
 function habillageCarte() {
@@ -864,7 +935,7 @@ function svgVoiture(o) {
   const haut = avecDrapeau ? 92 : 10, sol = haut + 150, H = sol + (o.reflet ? 46 : 10);
   const neon = lv === "neon";
   const peinture = neon ? "fill:#0a0c11" : remplissage(u, lv === "couleur" ? "" : lv, c);
-  const filet = neon ? c : lv === "or" || lv === "oranime" ? "#3B2405" : lv === "chrome" || lv === "platine" || lv === "orrose" ? "#11151B" : lv === "rubis" ? "#FFD1DC" : lv === "galaxie" ? "#FFB8F0" : lv === "chocolat" ? "#E8B07A" : lv === "carte" ? "#D62839" : "#ffffff";
+  const filet = neon ? c : lv === "or" || lv === "oranime" ? "#3B2405" : lv === "chrome" || lv === "platine" || lv === "orrose" ? "#11151B" : lv === "rubis" ? "#FFD1DC" : lv === "galaxie" ? "#FFB8F0" : lv === "chocolat" ? "#E8B07A" : lv === "carte" ? "#D62839" : lv === "ver" ? "#F6DCAA" : "#ffffff";
   const CORPS = "M36 112L40 98C70 94 110 88 140 82C156 76 178 56 196 48L210 48C213 58 215 72 216 86L262 86C276 88 300 92 330 96L420 104C440 106 452 110 458 114L456 119C420 121 380 121 330 122L120 124L40 124Z";
   const PONTON = "M118 123C124 106 148 97 184 95L298 94C305 94 309 98 309 104V122Z";
   const traineeFx = {
@@ -882,6 +953,11 @@ function svgVoiture(o) {
       '<path d="' + d + '" fill="none" stroke="#3B424B" stroke-width="3.4" stroke-linecap="round"/><path d="' + d + '" fill="none" stroke="#E3E8EE" stroke-width="1.5" stroke-dasharray="2.4 1.6" stroke-linecap="round"/>' +
       '<g transform="translate(' + x + " " + y + ')" fill="#AEB7C2" stroke="#3B424B" stroke-width=".9"><path d="M0 0L-7-2-3 2-6 8 0 4 6 8 3 2 7-2Z"/></g>').join("") +
       '<g class="vt-gaz" fill="#E6EAEF" stroke="#7D8794" stroke-width=".8" opacity=".9"><circle cx="112" cy="80" r="8"/><circle cx="96" cy="74" r="6.5"/><circle cx="82" cy="80" r="5"/><circle cx="70" cy="74" r="3.6"/><circle cx="60" cy="78" r="2.4"/></g></g>',
+    // v20.61 · 🌌 Sabre lumineux (rouge, côté obscur) : la lame court le long de l'aileron arrière, sa poignée au bout ; une traînée rouge derrière
+    sabre: '<g class="vt-sabre"><path d="M30 60C0 64-30 70-60 80M30 74C0 78-24 86-50 96" stroke="#FF3A48" stroke-width="2.4" fill="none" opacity=".45" stroke-linecap="round"/></g>',
+    // 🌀 Faille : la voiture laisse derrière elle des copies décalées d'autres univers (magenta, cyan, jaune), en blocs qui sautent
+    glitch: '<g class="vt-glitch">' + [[-14, 62, 50, 6, "#FF3BD4"], [6, 74, 40, 4, "#3BE8FF"], [-30, 86, 70, 7, "#FF3BD4"], [14, 97, 34, 4, "#F7F24A"], [-10, 106, 60, 6, "#3BE8FF"], [26, 68, 16, 3, "#FFFFFF"], [-40, 116, 56, 4, "#FF3BD4"], [40, 52, 14, 3, "#3BE8FF"]].map(([x, y, w, h, c], i) =>
+      '<rect class="gl' + (i % 3) + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="' + c + '" opacity=".8"/>').join("") + "</g>",
     comete: '<defs><linearGradient id="' + u + 'q" x1="1" x2="0"><stop offset="0" style="stop-color:' + c + '"/><stop offset="1" style="stop-color:' + c + '" stop-opacity="0"/></linearGradient></defs><path d="M140 78L-60 100 140 122Z" fill="url(#' + u + 'q)" opacity=".8"/>'
   }[e.trainee] || "";
   const roue = (x, y, r) => '<g transform="translate(' + x + " " + y + ')"><circle r="' + r + '" fill="url(#' + u + 'pn)"/><circle r="' + (r - 1.5) + '" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="1"/>' +
@@ -928,7 +1004,7 @@ function svgVoiture(o) {
       '<rect x="0" y="113" width="480" height="20" fill="url(#' + u + 'cb)" opacity=".92"/>' +
       '<path d="M0 113H480" stroke="' + filet + '" stroke-width="1.6" opacity=".9"/>' +
       '<rect x="0" y="40" width="480" height="92" fill="url(#' + u + 'sh)"/>' +
-      (lv === "chocolat" ? habillageChocolat() : lv === "carte" ? habillageCarte() : "") +
+      (lv === "chocolat" ? habillageChocolat() : lv === "carte" ? habillageCarte() : lv === "ver" ? habillageVer() : "") +
       (["oranime", "chrome", "or", "platine", "rubis", "orrose", "chocolat"].includes(lv) ? '<rect class="vt-brille" x="-90" y="40" width="70" height="92" fill="url(#' + u + 'br)" transform="skewX(-20)" opacity="' + (lv === "oranime" ? ".9" : ".35") + '"/>' : "") +
     "</g>" +
     (neon ? '<path d="' + CORPS + '" fill="none" style="stroke:' + c + ';filter:drop-shadow(0 0 4px ' + c + ') drop-shadow(0 0 9px ' + c + ')" stroke-width="2"/>' : "") +
@@ -946,6 +1022,10 @@ function svgVoiture(o) {
     '<g transform="translate(236 75) scale(1.08)">' + casqueForme(u + "c", e.casque, c, e.finition) + "</g>" +
     '<path d="M214 87C230 83 250 83 264 87" stroke="#0b0d11" stroke-width="3.2" fill="none" stroke-linecap="round"/>' +
     '<path d="M212 74C224 57 252 56 268 86" fill="none" stroke="url(#' + u + 'ti)" stroke-width="4.6" stroke-linecap="round"/>' +
+    (e.trainee === "sabre" ? '<g class="vt-sabre"><path d="M178 44L14 34" stroke="#FF2A3A" stroke-width="13" stroke-linecap="round" opacity=".25" style="filter:blur(3px)"/><path d="M178 44L16 34" stroke="#FF3A48" stroke-width="4.6" stroke-linecap="round"/><path d="M178 44L18 34.2" stroke="#FFF1F1" stroke-width="1.7" stroke-linecap="round"/>' +
+      '<g transform="rotate(3.5 190 45)"><rect x="176" y="41" width="22" height="8" rx="2" fill="#2B2F36" stroke="#AEB7C2" stroke-width="1"/><path d="M181 41v8M186 41v8M191 41v8" stroke="#AEB7C2" stroke-width=".9"/><rect x="196" y="42.5" width="3" height="5" fill="#C8321E"/></g></g>' : "") +
+    (e.finition === "feuilledor" ? '<g class="vt-feuilles">' + [[120, 104, 20], [150, 90, 70], [176, 100, 130], [214, 96, 200], [256, 104, 250], [300, 100, 300], [340, 108, 40], [380, 110, 160], [96, 108, 110], [60, 46, 80]].map(([x, y, a]) =>
+      '<path d="M' + (x - 3) + " " + y + "L" + (x - .4) + " " + (y - 2.6) + "L" + (x + 3) + " " + (y - .8) + "L" + (x + 1.2) + " " + (y + 2.4) + 'Z" fill="#F7CF55" stroke="#FFF6CC" stroke-width=".5" transform="rotate(' + a + " " + x + " " + y + ')"/>').join("") + "</g>" : "") +
     // aileron avant
     '<path d="M420 104L420 128" stroke="#0b0d11" stroke-width="2.4"/>' +
     '<path d="M376 132C400 128 430 128 466 132L466 136C430 134 400 134 376 138Z" fill="url(#' + u + 'cb)"/>' +
@@ -1052,13 +1132,13 @@ function blocSaison() {
     (ys.length > 1 ? '<div class="s-ys">' + ys.map(a => '<button type="button" class="chip-s' + (a === y ? " on" : "") + '" data-saison="' + a + '">' + (estChauffe(a) ? "🔥 Chauffe" : "Saison " + numeroSaison(a)) + "</button>").join("") + "</div>" : "") +
     (ch ? '<div class="chauffe-b">🔥 <span><b>Tour de chauffe</b> : les règles de base, et rien ne compte. Le championnat démarre le 1<sup>er</sup> janvier. <a href="#" class="lien-regles" data-regles="essentiel">En savoir plus</a></span></div>' : "") +
     (standSeul(y) ? '<div class="chauffe-b">🏁 <span><b>Saison 1</b> : le championnat démarre le 1<sup>er</sup> janvier. D\'ici le 1<sup>er</sup> janvier, dans le Stand : pose ta carte, fais ton pronostic (avec ta pole) et choisis ton rival.</span></div>' : "") +
-    '<div class="pod-tabs" role="group" aria-label="Saison">' + (standSeul(y) ? "" : b("gp", "<span>" + icoOu("course", "🏁") + "</span>Course")) + b("stand", "<span>" + icoOu("stand", "🃏") + "</span>Stand" + compteCartesTab(y) + (rappelCartes() ? '<i class="pastille" aria-label="à faire"></i>' : "")) + (basesSeules() ? "" : b("ecurie", "<span>" + icoOu("ecurie", "🏎️") + "</span>Écurie") + b("defis", "<span>" + icoOu("trophees", "🏆") + "</span>Trophées")) + "</div>" +
+    '<div class="pod-tabs" role="group" aria-label="Saison">' + (standSeul(y) ? "" : b("gp", "<span>" + icoOu("course", "🏁") + "</span>Course")) + b("stand", "<span>" + icoOu("stand", "🃏") + "</span>Stand" + compteCartesTab(y) + (rappelCartes() ? '<i class="pastille" aria-label="à faire"></i>' : "")) + (ecurieOuverte() ? b("ecurie", "<span>" + icoOu("ecurie", "🏎️") + "</span>Écurie") : "") + (basesSeules() ? "" : b("defis", "<span>" + icoOu("trophees", "🏆") + "</span>Trophées")) + "</div>" +
     '<div class="s-corps">' + (o === "ecurie" ? htmlEcurie() : o === "defis" ? htmlVitrines() : o === "stand" ? htmlStand(y) : htmlGrandPrix(y)) + "</div>" +
     (false && adminActif() && !window.APERCUS_FINIS ? '<button class="reserve-b" type="button" id="reserve-ouvrir">🧪 <span><b>Règles et idées en réserve</b><small>admin · ce qui est en jeu, ce qui dort, les réglages</small></span> ›</button>' : "") + "</section>";
 }
 /** Onglet du Podium : l'ancien « Championnat » est maintenant dans le Grand Prix */
 function ongletPodium() {   // v20.44 (règle de Théo) : pendant la chauffe et le Stand de fin décembre, PAS d'onglet Trophées pour les joueurs (révélations du 20/12 et du 1/1) ; l'admin voit tout en « Tout afficher »
-  if (standSeul(saisonCourante())) return "stand"; return (basesSeules() ? ["gp", "stand"] : ["gp", "stand", "ecurie", "defis"]).includes(ETAT.podium) ? ETAT.podium : "gp";
+  if (standSeul(saisonCourante())) return ETAT.podium === "ecurie" && ecurieOuverte() ? "ecurie" : "stand"; return (basesSeules() ? (ecurieOuverte() ? ["gp", "stand", "ecurie"] : ["gp", "stand"]) : ["gp", "stand", "ecurie", "defis"]).includes(ETAT.podium) ? ETAT.podium : "gp";   // v20.61 : l'Écurie dès le 1/12
 }
 /** Détail des points (l'ancien onglet Championnat), replié sous la course */
 function htmlDetailPoints(y) {
@@ -1139,7 +1219,7 @@ let ECU_SLOT = "pilote";
 const ICONES_KLAXON = { confettis: "🎊", damier: "🏁", feu: "🎆", parade: "🎺", billets: "💸", fanfare: "📯", cibles: "🎯", fusees: "🚀", trophees: "🏆", ouvriers: "🍬" };
 /** Rareté d'un objet (Trophées v2) : série, monde, succès (pour chacun), exclusif du 1er, Gant, Légende (un seul au monde) */
 function rareteItem(slot, id) {
-  if (BASE_ECURIE[slot] === id) return { cls: "r-serie", lib: "Série" };
+  if (estDepart(slot, id)) return { cls: "r-serie", lib: BASE_ECURIE[slot] === id ? "Série" : "Départ" };
   const o = origineItem(slot, id);
   if (o.legende) return { cls: "r-unique" + (o.ticket ? " r-excl" : ""), lib: "Légende" };
   if (o.exclusif || o.mj) return { cls: "r-unique r-excl", lib: "Exclusif" };
@@ -1174,21 +1254,43 @@ function htmlDetailItem(qui) {
 function objetCache(slot, id) { const o = origineItem(slot, id); return !!o.million || (!!o.ticket && !gagnantsTicket().length); }   // v2 : les succès sont visibles, leurs objets aussi
 /** Objets visibles dans l'écurie : tout sauf la réserve 2028 */
 /** (la plaque Ticket d'or n'apparaît qu'à partir d'octobre 2027, ou chez son gagnant) */
-function idsSlot(slot) { return Object.keys(ITEMS[slot]).filter(id => !objetReserve(slot, id) && (slot !== GAIN_TICKET[0] || id !== GAIN_TICKET[1] || ticketVisible()) && (typeof mjObjetVisible !== "function" || mjObjetVisible(slot, id, moiPilote()))); }
+function idsSlot(slot) { const dec = ecurieDepart(), a = dec ? debloques(moiPilote() || "") : null;   // v20.61 : en décembre, seulement les objets de départ (et ce qu'on a déjà)
+  return Object.keys(ITEMS[slot]).filter(id => (!dec || estDepart(slot, id) || a.has(slot + "." + id)) && !objetReserve(slot, id) && (!estGainTicket(slot, id) || ticketVisible()) && (typeof mjObjetVisible !== "function" || mjObjetVisible(slot, id, moiPilote()))); }
+/* ---------- v20.61 · 🏎️ « Ton écurie ouvre ses portes » : une seule fois, au premier passage à partir du 1er décembre 2026 ----------
+   La porte du garage se lève sur la voiture du pilote ; un toucher ferme. Rien de 2027 : seulement ce qu'on peut faire en décembre. */
+function teaserEcurie(essai) {
+  try {
+    if (SOURCE !== "api" || !ecurieOuverte() || saisonJouee() || stock.get("versus.ecurieTeaser") || document.querySelector(".ecu-rev")) return;
+    if (typeof podiumCache === "function" && podiumCache()) return;
+    const qui = quiEcurie(); if (!qui || !D || !D.personnes.some(p => p.nom === qui)) return;
+    if (document.querySelector(".tuto, .regles, .ba, .revel, .voile:not([hidden])")) { if ((essai || 0) < 8) setTimeout(() => teaserEcurie((essai || 0) + 1), 4000); return; }
+    stock.set("versus.ecurieTeaser", "1");
+    const e = Object.assign({}, equipDe(qui));
+    const o = document.createElement("div"); o.className = "revel ecu-rev" + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Ton écurie ouvre ses portes");
+    o.innerHTML = '<div class="rv-c er-c"><span class="tuto-k">🔥 Tour de chauffe · décembre</span>' +
+      '<div class="er-garage" aria-hidden="true"><span class="er-lum"></span><div class="er-voit">' + svgVoiture({ nom: qui, e, reflet: true, idle: true, label: "" }) + '</div><span class="er-porte"><i></i></span><span class="er-sol"></span></div>' +
+      "<h3>🏎️ Ton écurie ouvre ses portes</h3>" +
+      '<ul class="er-l"><li>🪖 Personnalise ton <b>casque</b>, ta <b>livrée</b>, ta <b>traînée</b> et ton <b>numéro</b>.</li><li>🏁 Ta voiture les porte en course, sous les yeux de tous.</li><li>🎁 Pour l\'instant, les objets de départ. <b>De nouveaux objets se gagneront tout au long de 2027.</b></li></ul>' +
+      '<div class="btn-row"><button class="btn acc" type="button" data-er-go>Ouvrir mon écurie</button></div><small class="er-x">Touche n\'importe où pour fermer</small></div>';
+    document.body.appendChild(o);
+    const fermer = () => { o.remove(); };
+    o.addEventListener("click", ev => { if (ev.target.closest("[data-er-go]")) { fermer(); ETAT.podium = "ecurie"; ECU_SLOT = "casque"; garder(); try { allerA("trophees"); rendreTrophees(); } catch (er) { } return; } fermer(); });
+  } catch (e) { }
+}
 function totalObjets() { return SLOTS.reduce((a, [s]) => a + idsSlot(s).length, 0) - Object.keys(BASE_ECURIE).length; }
 function htmlEcurie() {
   const qui = quiEcurie();
   if (!D.personnes.some(p => p.nom === qui)) return '<div class="vide">Choisis ton nom dans les réglages pour monter ton écurie.</div>';
   if (!ECU || ECU.nom !== qui) ECU = { nom: qui, e: equipDe(qui) };
   const ouverts = debloques(qui), e = ECU.e;
-  const slot = ECU_SLOT === "numero" || ECU_SLOT === "pilote" || ECU_SLOT === "badges" || SLOTS.some(s => s[0] === ECU_SLOT) ? ECU_SLOT : "pilote";
+  const slot = ECU_SLOT === "numero" || ECU_SLOT === "pilote" || (ECU_SLOT === "badges" && !ecurieDepart()) || SLOTS.some(s => s[0] === ECU_SLOT) ? ECU_SLOT : "pilote";
   const total = totalObjets(), nb = ouverts.size - Object.keys(BASE_ECURIE).length;
   const showroom = '<div class="showroom"><div class="sr-num" aria-hidden="true">' + e.numero + '</div>' +
     '<div class="sr-h"><span class="sr-k">Mon écurie · ' + (estChauffe(saisonCourante()) ? "Tour de chauffe" : "Saison " + numeroSaison(saisonCourante())) + '</span><span class="sr-id">' + avatar(qui, Object.assign({}, e, { vignette: true })) + "<b" + attrLivree(qui, e) + ">" + esc(qui) + "</b></span>" +
     '<span class="sr-p"><span class="sr-barre"><i style="width:' + (total ? nb / total * 100 : 0).toFixed(0) + '%"></i></span>' + nb + " / " + total + " objets</span></div>" +
     '<div class="sr-3d" id="sr-3d">' + svgVoiture({ nom: qui, e, reflet: true, idle: true }) + "</div>" +
     '<span class="sr-aide">' + (window.Piste && Piste.supporte() ? "↔ Fais-la tourner du doigt" : "") + '</span><button class="sr-klaxon" type="button" id="ecu-klaxon">📯 Klaxonner</button></div>';   // v20.48 : la voiture de la course, en 3D (plus de bascule 2D / 360°)
-  const onglets = '<div class="slot-tabs">' + [["pilote", "Pilote"]].concat(SLOTS, [["numero", "Numéro"], ["badges", "Badges"]]).map(([s, lib]) => '<button type="button" data-ecu-slot="' + s + '" aria-pressed="' + (s === slot) + '">' + lib +
+  const onglets = '<div class="slot-tabs">' + [["pilote", "Pilote"]].concat(SLOTS, [["numero", "Numéro"]], ecurieDepart() ? [] : [["badges", "Badges"]]).map(([s, lib]) => '<button type="button" data-ecu-slot="' + s + '" aria-pressed="' + (s === slot) + '">' + lib +
     "<small>" + (s === "badges" ? (Array.isArray(e.badges) ? e.badges.length + " / 3" : "auto") : s === "numero" ? "#" + e.numero : s === "pilote" ? (e.pilote === "casque" ? "Casque" : "Tête") : esc(ITEMS[s][e[s]])) + "</small></button>").join("") + "</div>";
   let corps;
   if (slot === "pilote") corps = htmlPilote(qui, e);
@@ -1207,7 +1309,7 @@ function htmlEcurie() {
   const grille = D.personnes.map(p => { const eq = p.nom === qui ? e : equipDe(p.nom); return '<button type="button" class="gr-l' + (ECU_VOIR === p.nom ? " on" : "") + '" data-voir="' + esc(p.nom) + '">' + avatar(p.nom, eq) + "<b" + attrLivree(p.nom, eq) + ">" + esc(p.nom) + "</b>" + (eq.plaque !== "aucune" ? '<span class="plaque">' + esc(ITEMS.plaque[eq.plaque]) + "</span>" : "") + '<span class="num">#' + eq.numero + " ›</span></button>"; }).join("");
   return showroom + onglets + corps +
     '<button class="btn acc plein" type="button" id="ecu-garder">Enregistrer mon écurie</button>' +
-    '<p class="info">Ta voiture de course porte ta livrée, ton casque, ta finition, ton numéro et ta traînée.</p>' +
+    '<p class="info">Ta voiture de course porte ta livrée, ton casque, ta finition, ton numéro et ta traînée. En course, on garde ton visage pour qu\'on te reconnaisse.' + (ecurieDepart() ? " En décembre, les objets de départ ; de nouveaux objets se gagneront tout au long de 2027." : "") + "</p>" +
     '<div><h3 class="s-h3">La grille <small>touche une écurie pour la voir</small></h3></div><div class="grille-dep">' + grille + "</div>" + htmlGarage(qui);
 }
 /** V16.3 · Écurie › Badges : jusqu'à 3 badges épinglés sur la ligne du Classement (ou choix automatique) */
@@ -1311,18 +1413,18 @@ const DECORS = {
    Tout le monde peut l'avoir ; le meilleur du mois a la feuille d'or (sans objet en plus). gain = objets d'écurie de l'univers (carte de référence du 25/11).
    Aucune règle de mini-jeu ici (dépôt public) : l'état de chaque monde ne se lit que par etatMondeMiniJeu(). */
 const TROPHEES_MONDES = [
-  { id: "m-silverstone", univers: "silverstone", mois: 1, gain: [["livree", "or"], ["circuit", "desert"]] },
-  { id: "m-djeddah", univers: "djeddah", mois: 2, gain: [["casque", "eclair"], ["trainee", "etincelles"], ["finition", "argent"]] },
+  { id: "m-silverstone", univers: "silverstone", mois: 1, gain: [["livree", "ver"], ["circuit", "desert"]] },
+  { id: "m-djeddah", univers: "djeddah", mois: 2, gain: [["casque", "eclair"], ["trainee", "etincelles"], ["finition", "ailee"]] },
   { id: "m-melbourne", univers: "melbourne", mois: 3, gain: [["livree", "carte"], ["fond", "chat"]] },
-  { id: "m-suzuka", univers: "suzuka", mois: 4, gain: [["finition", "or"], ["casque", "damier"], ["klaxon", "feu"]] },
-  { id: "m-miami", univers: "miami", mois: 5, gain: [["fond", "aurore"], ["finition", "neon"]] },
-  { id: "m-montreal", univers: "montreal", mois: 6, gain: [["casque", "chrome"], ["casque", "carbone"], ["circuit", "neige"]] },
+  { id: "m-suzuka", univers: "suzuka", mois: 4, gain: [["casque", "anneau"], ["finition", "elfique"], ["klaxon", "feu"]] },
+  { id: "m-miami", univers: "miami", mois: 5, gain: [["fond", "pandora"], ["finition", "biolum"]] },
+  { id: "m-montreal", univers: "montreal", mois: 6, gain: [["casque", "rebelle"], ["trainee", "sabre"]] },
   { id: "m-bahrein", univers: "bahrein", mois: 7, gain: [["casque", "toque"], ["plaque", "ratatouille"], ["circuit", "monaco"]] },
-  { id: "m-spa", univers: "spa", mois: 8, gain: [["livree", "neon"], ["circuit", "neon"], ["fond", "carbone"]] },
-  { id: "m-lasvegas", univers: "lasvegas", mois: 9, gain: [["casque", "etoile"], ["plaque", "bouclier"], ["plaque", "metronome"]] },
+  { id: "m-spa", univers: "spa", mois: 8, gain: [["fond", "ampoules"], ["livree", "neon"], ["circuit", "neon"]] },
+  { id: "m-lasvegas", univers: "lasvegas", mois: 9, gain: [["casque", "hoplite"], ["plaque", "cheval"], ["plaque", "bouclier"]] },
   { id: "m-singapour", univers: "singapour", mois: 10, gain: [["livree", "chocolat"], ["klaxon", "ouvriers"]] },
   { id: "m-interlagos", univers: "interlagos", mois: 11, gain: [["casque", "eclaireur"], ["trainee", "cables"]] },
-  { id: "m-monza", univers: "monza", mois: 12, gain: [["casque", "holo"], ["trainee", "comete"], ["fond", "damier"]] }
+  { id: "m-monza", univers: "monza", mois: 12, gain: [["casque", "fracture"], ["trainee", "glitch"], ["fond", "portails"]] }
 ];
 /** Nom court du monde (« Mer de dunes », « Petit Chef »…) et son drapeau */
 function nomMonde(t) { const u = univers(t.univers); return u ? u.nom : t.univers; }
@@ -1483,7 +1585,12 @@ const OBJ_TEINTES = {
   carredas: ["#E8FFF0", "#1F7A4A", "#0B3A22"], diamant: ["#FFFFFF", "#C9F6FF", "#3A9AC0"], rubis: ["#FF9BB0", "#E0115F", "#43000F"], flammes: ["#FFE08A", "#FF6A1F", "#8A1A06"],
   phenix: ["#FFE08A", "#FF8A1F", "#6E0D12"], galaxie: ["#C9B6FF", "#5B2A9E", "#170A36"], soleil: ["#FFF3B0", "#FFB21E", "#9A4A00"], lauriers: ["#F3F9C8", "#8FB33A", "#3A5A10"],
   parade: ["#FFF1B0", "#E8B640", "#7A4A0C"], couronne: ["#FFF6CC", "#F7CF55", "#6B430C"], oranime: ["#FFF6CC", "#F7CF55", "#6B430C"], billets: ["#E8FFE0", "#4FAE5A", "#1B5528"],
-  ticketor: ["#FFF6CC", "#F7CF55", "#7A4A0C"], coupsaison: ["#E1ECFF", "#7A5CFF", "#2B1A6E"], ratatouille: ["#DCE8FF", "#2A5DB0", "#12305A"]
+  ticketor: ["#FFF6CC", "#F7CF55", "#7A4A0C"], feuilledor: ["#FFFBE0", "#F7CF55", "#7A4A0C"],
+  // v20.61 · objets redessinés à l'image de leur monde
+  ver: ["#F6DCAA", "#D9A35A", "#6B3A12"], ailee: ["#FFFDF2", "#F7CF55", "#7A5300"], anneau: ["#FFF3B8", "#F7CF55", "#3A2A1A"], elfique: ["#DFF2E2", "#4E9A5C", "#1E3A26"],
+  pandora: ["#9AFFF6", "#1C6E8A", "#071A3A"], biolum: ["#E6FFFC", "#5CF2E6", "#0B5A6E"], rebelle: ["#FFD2B0", "#F57A2E", "#7A2A06"], sabre: ["#FFF1F1", "#FF3A48", "#6E0A12"],
+  ampoules: ["#F4EBD6", "#B9A57A", "#4A3A24"], hoplite: ["#F8DA98", "#C98E3E", "#5A3412"], cheval: ["#E8C08A", "#B9813F", "#5A3412"],
+  fracture: ["#FFC6F4", "#3A2F5C", "#07060F"], glitch: ["#FFFFFF", "#FF3BD4", "#3BE8FF"], portails: ["#FFE08A", "#FF8A1F", "#2A0E06"], coupsaison: ["#E1ECFF", "#7A5CFF", "#2B1A6E"], ratatouille: ["#DCE8FF", "#2A5DB0", "#12305A"]
 };
 function svgObjet(slot, id, px) {
   const k = "ob" + (++OBJ_UID), T = OBJ_TEINTES[id] || OBJ_TEINTES.or, [hi, md, dk] = T, sz = px || 64;
@@ -1500,25 +1607,39 @@ function svgObjet(slot, id, px) {
   } else if (slot === "casque") {
     b = `<path d="M10 40C10 22 22 12 36 12C50 12 56 24 56 36L56 44C56 48 53 50 49 50H18C13 50 10 46 10 40Z" fill="${F}" stroke="${dk}" stroke-width="1.6"/>` +
       `<path d="M30 26H54C56 26 56 36 54 38H34C30 38 28 34 28 31C28 28 28 26 30 26Z" fill="#141821" stroke="${dk}" stroke-width="1.2"/><path d="M34 29H51" stroke="#8FB7FF" stroke-width="2" stroke-linecap="round" opacity=".7"/>` +
-      (id === "eclair" ? `<path d="M18 22L24 32L19 33L25 44L15 31L20 30Z" fill="#fff" opacity=".9"/>` : id === "etoile" ? `<path d="M20 30l2 5 5 .4-4 3 1.4 5-4.4-3-4.4 3 1.4-5-4-3 5-.4z" fill="#fff" opacity=".9"/>` : id === "eclaireur" ? `<circle cx="22" cy="20" r="4" fill="#FFF6C8" stroke="${dk}"/>` : "") +
+      (id === "anneau" ? `<path d="M10 36C24 30 40 28 56 28" stroke="#5A3606" stroke-width="6" fill="none"/><path d="M10 36C24 30 40 28 56 28" stroke="#F7CF55" stroke-width="4.2" fill="none"/><path d="M12 36C24 31 40 29 54 29" stroke="#FF5A1A" stroke-width="1.2" fill="none" stroke-dasharray="2.4 .8 .7 1 1.6 1"/>`
+       : id === "rebelle" ? `<path d="M10 32C24 26 40 22 56 22M10 40C24 34 40 30 56 30" stroke="#fff" stroke-width="2.6" fill="none"/><circle cx="20" cy="22" r="5" fill="#fff" stroke="#7A260C"/><path d="M16.2 20.4C17.4 22 18.6 23 20 25.2 21.4 23 22.6 22 23.8 20.4 22 21 21 21 20 22.4 19 21 18 21 16.2 20.4Z" fill="#C8321E"/>`
+       : id === "hoplite" ? `<path d="M12 22C12 6 30 0 44 6C50 9 52 12 52 16C44 10 34 10 26 14C20 17 16 21 15 26Z" fill="#C8281E" stroke="#5E0B08" stroke-width="1"/><path d="M18 18C22 10 32 6 42 7" stroke="#FF7A5A" stroke-width="1.2" fill="none"/><path d="M32 26C30 34 31 42 34 48" stroke="${dk}" stroke-width="1.4" fill="none"/>`
+       : id === "fracture" ? `<path d="M14 30 24 34 22 42 32 44 40 38M24 34 30 24 38 26" stroke="#FF3BD4" stroke-width="1.6" fill="none" style="filter:drop-shadow(0 0 1.5px #FF3BD4)"/><path d="M15 31 25 35 23 43 33 45" stroke="#3BE8FF" stroke-width="1" fill="none"/><path d="M6 22 10 18 11 24Z" fill="#3BE8FF"/><path d="M4 32 8 29 8 35Z" fill="#FF3BD4"/>`
+       : id === "eclair" ? `<path d="M18 22L24 32L19 33L25 44L15 31L20 30Z" fill="#fff" opacity=".9"/>` : id === "etoile" ? `<path d="M20 30l2 5 5 .4-4 3 1.4 5-4.4-3-4.4 3 1.4-5-4-3 5-.4z" fill="#fff" opacity=".9"/>` : id === "eclaireur" ? `<circle cx="22" cy="20" r="4" fill="#FFF6C8" stroke="${dk}"/>` : "") +
       reflet("M16 30C17 22 23 16 31 15") + `<path d="M12 46H54" stroke="${dk}" stroke-width="1" opacity=".5"/>`;
   } else if (slot === "livree") {
     b = `<path d="M4 40L10 34H22L28 28H40L46 34H58L60 40L58 44H6Z" fill="${F}" stroke="${dk}" stroke-width="1.5" stroke-linejoin="round"/>` +
       `<path d="M30 30H38L42 34H27Z" fill="#141821"/><rect x="2" y="30" width="6" height="12" rx="1" fill="${dk}"/><rect x="56" y="36" width="7" height="6" rx="1" fill="${dk}"/>` +
-      (id === "carte" ? `<path d="M15 39c0-2 2-3 3-1.5 1-1.5 3-.5 3 1.5 0 2-3 3.5-3 3.5s-3-1.5-3-3.5z" fill="#C21F3A"/>` : "") +
+      (id === "carte" ? `<path d="M15 39c0-2 2-3 3-1.5 1-1.5 3-.5 3 1.5 0 2-3 3.5-3 3.5s-3-1.5-3-3.5z" fill="#C21F3A"/>` : id === "ver" ? `<path d="M16 34C17 37 17 40 16 43M24 33C25 36 25 40 24 43M44 34C45 37 45 40 44 43M52 36C53 38 53 40 52 43" stroke="${dk}" stroke-width="1.8" fill="none" opacity=".7"/><circle cx="34" cy="38" r="1" fill="#7FB8FF"/><circle cx="40" cy="36" r=".8" fill="#7FB8FF"/>` : "") +
       `<circle cx="16" cy="44" r="6.5" fill="#15181E" stroke="#444B57" stroke-width="2"/><circle cx="48" cy="44" r="6.5" fill="#15181E" stroke="#444B57" stroke-width="2"/><circle cx="16" cy="44" r="2" fill="#8A94A2"/><circle cx="48" cy="44" r="2" fill="#8A94A2"/>` + reflet("M12 36H24L29 31H38", .5);
   } else if (slot === "plaque") {
     b = `<path d="M32 8L52 16V30C52 44 43 52 32 57C21 52 12 44 12 30V16Z" fill="url(#${k}l)" stroke="${dk}" stroke-width="1.6"/><path d="M32 13L47 19V30C47 41 40 47 32 51C24 47 17 41 17 30V19Z" fill="none" stroke="${hi}" stroke-width="1.2" opacity=".8"/>` +
-      (id === "metronome" ? `<path d="M26 44L32 20L38 44Z" fill="${dk}" opacity=".7"/><path d="M32 40L38 24" stroke="#fff" stroke-width="2"/>` : id === "remontada" ? `<path d="M22 42L30 32L35 37L43 24M37 24H43V30" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` : `<path d="M32 20L42 25V32C42 39 37 43 32 45C27 43 22 39 22 32V25Z" fill="${hi}" opacity=".75"/>`) + reflet("M18 20L30 14", .6);
+      (id === "cheval" ? `<path d="M22 40V30L26 25H29L31 21 33 25 35 27H42L44 31V40" fill="#B9813F" stroke="#5A3412" stroke-width="1.2" stroke-linejoin="round"/><path d="M22 34H44M28 30V40M34 30V40M40 30V40" stroke="#5A3412" stroke-width=".8"/><rect x="20" y="40" width="26" height="2.4" rx="1" fill="#7A4A1A"/><circle cx="24" cy="44" r="2" fill="#4A2C10"/><circle cx="42" cy="44" r="2" fill="#4A2C10"/>` :
+       id === "metronome" ? `<path d="M26 44L32 20L38 44Z" fill="${dk}" opacity=".7"/><path d="M32 40L38 24" stroke="#fff" stroke-width="2"/>` : id === "remontada" ? `<path d="M22 42L30 32L35 37L43 24M37 24H43V30" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` : `<path d="M32 20L42 25V32C42 39 37 43 32 45C27 43 22 39 22 32V25Z" fill="${hi}" opacity=".75"/>`) + reflet("M18 20L30 14", .6);
   } else if (slot === "fond") {
     b = `<rect x="8" y="10" width="48" height="44" rx="8" fill="${motif ? F : `url(#${k}l)`}" stroke="${dk}" stroke-width="1.4"/>` +
       (id === "aurore" ? `<path d="M8 34C20 22 30 40 56 26V46C40 52 24 40 8 50Z" fill="#B8FFE0" opacity=".45"/><path d="M8 28C22 16 34 34 56 20" stroke="#fff" stroke-width="2" fill="none" opacity=".6"/><circle cx="44" cy="18" r="1.2" fill="#fff"/><circle cx="20" cy="16" r="1" fill="#fff"/>`
-       : id === "chat" ? `<path d="M22 46V34L26 28L29 34H35L38 28L42 34V46Z" fill="#3A220C"/><circle cx="28.5" cy="38" r="1.4" fill="#FFD23D"/><circle cx="35.5" cy="38" r="1.4" fill="#FFD23D"/>` : "");
+       : id === "chat" ? `<path d="M22 46V34L26 28L29 34H35L38 28L42 34V46Z" fill="#3A220C"/><circle cx="28.5" cy="38" r="1.4" fill="#FFD23D"/><circle cx="35.5" cy="38" r="1.4" fill="#FFD23D"/>`
+       : id === "pandora" ? `<path d="M14 54C16 40 12 30 18 20M22 54C22 44 26 36 24 26M44 54C42 42 48 34 46 22M50 54C52 46 50 38 54 30" stroke="#1A9A9A" stroke-width="1.6" fill="none" opacity=".8"/>` + [[18, 20, 2.2, "#7CF7FF"], [24, 26, 1.6, "#FF8AE0"], [46, 22, 2, "#7CF7FF"], [54, 30, 1.5, "#B7FF6A"], [32, 36, 1.2, "#7CF7FF"], [38, 46, 1.4, "#FF8AE0"], [28, 48, 1, "#B7FF6A"]].map(([x, y, r, c]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" style="filter:drop-shadow(0 0 2px ${c})"/>`).join("")
+       : id === "ampoules" ? `<g fill="#C9B98E" opacity=".7"><circle cx="18" cy="20" r="2"/><circle cx="40" cy="24" r="2"/><circle cx="28" cy="42" r="2"/><circle cx="50" cy="44" r="2"/></g><path d="M8 22C20 32 32 18 44 28S54 26 56 24" stroke="#2A2A2A" stroke-width="1" fill="none"/>` + [[14, 26, "#FF3B3B"], [22, 28, "#3BD16F"], [30, 25, "#3B8BFF"], [38, 26, "#F7CF55"], [46, 28, "#FF3B3B"], [53, 25, "#3BD16F"]].map(([x, y, c]) => `<ellipse cx="${x}" cy="${y + 3}" rx="2.2" ry="3" fill="${c}" style="filter:drop-shadow(0 0 2px ${c})"/>`).join("")
+       : id === "portails" ? `<circle cx="32" cy="32" r="15" fill="#120A20"/><circle cx="32" cy="32" r="15" fill="none" stroke="#FF8A1F" stroke-width="3.4" stroke-dasharray="2 1.4" style="filter:drop-shadow(0 0 2.5px #FFB347)"/><circle cx="32" cy="32" r="11" fill="none" stroke="#FFD27A" stroke-width="1" stroke-dasharray="1 2.4"/>` : "");
   } else if (slot === "finition") {
-    b = `<circle cx="32" cy="34" r="20" fill="url(#${k}r)" stroke="${dk}" stroke-width="1.4"/><ellipse cx="25" cy="25" rx="7" ry="4" fill="#fff" opacity=".75" transform="rotate(-30 25 25)"/><path d="M48 12l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" fill="${hi}"/><path d="M14 46l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1z" fill="${hi}"/>`;
+    b = `<circle cx="32" cy="34" r="20" fill="url(#${k}r)" stroke="${dk}" stroke-width="1.4"/><ellipse cx="25" cy="25" rx="7" ry="4" fill="#fff" opacity=".75" transform="rotate(-30 25 25)"/><path d="M48 12l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" fill="${hi}"/><path d="M14 46l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1z" fill="${hi}"/>` +
+      (id === "feuilledor" ? [[22, 36, 4, 20], [36, 42, 3.4, 70], [40, 28, 3, 130], [28, 46, 2.6, 200]].map(([x, y, r, a]) => `<path d="M${x - r} ${y}L${x} ${y - r}L${x + r} ${y - r * .3}L${x + r * .4} ${y + r * .8}Z" fill="#FFF3B8" stroke="#9A6716" stroke-width=".6" transform="rotate(${a} ${x} ${y})"/>`).join("")
+       : id === "ailee" ? `<path d="M30 30C22 20 12 22 8 28C16 26 22 28 28 34Z" fill="#fff" stroke="#B9A06A"/><path d="M34 30C42 20 52 22 56 28C48 26 42 28 36 34Z" fill="#fff" stroke="#B9A06A"/>`
+       : id === "elfique" ? `<path d="M32 22C40 28 40 40 32 46C24 40 24 28 32 22Z" fill="#4E9A5C" stroke="#EEF4F6" stroke-width="1.4"/><path d="M32 25V44" stroke="#EEF4F6"/>`
+       : id === "biolum" ? `<g fill="#E6FFFC">${[[22, 30], [40, 26], [44, 42], [26, 44], [34, 36]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.6" style="filter:drop-shadow(0 0 2px #5CF2E6)"/>`).join("")}</g>` : "");
   } else if (slot === "trainee") {
     b = `<path d="M6 44C20 40 34 30 46 22" stroke="${md}" stroke-width="10" stroke-linecap="round" opacity=".3" fill="none"/><path d="M10 42C22 38 34 30 46 22" stroke="url(#${k}l)" stroke-width="5" stroke-linecap="round" fill="none"/><circle cx="48" cy="21" r="7" fill="url(#${k}r)"/>` +
-      (id === "cables" ? `<path d="M8 50C20 46 30 36 44 28M12 34C22 32 32 26 42 18" stroke="${dk}" stroke-width="1.6" fill="none"/>` : `<g fill="${hi}"><circle cx="18" cy="48" r="1.6"/><circle cx="28" cy="44" r="1.2"/><circle cx="24" cy="32" r="1.4"/><circle cx="36" cy="40" r="1"/></g>`);
+      (id === "cables" ? `<path d="M8 50C20 46 30 36 44 28M12 34C22 32 32 26 42 18" stroke="${dk}" stroke-width="1.6" fill="none"/>` :
+       id === "sabre" ? `<path d="M10 46L46 22" stroke="#FFF1F1" stroke-width="2" stroke-linecap="round"/><rect x="44" y="14" width="6" height="14" rx="1.5" fill="#2B2F36" stroke="#AEB7C2" transform="rotate(56 47 21)"/>` :
+       id === "glitch" ? `<g><rect x="8" y="40" width="20" height="4" fill="#3BE8FF"/><rect x="14" y="32" width="18" height="3" fill="#F7F24A"/><rect x="20" y="46" width="14" height="3" fill="#FF3BD4"/></g>` : `<g fill="${hi}"><circle cx="18" cy="48" r="1.6"/><circle cx="28" cy="44" r="1.2"/><circle cx="24" cy="32" r="1.4"/><circle cx="36" cy="40" r="1"/></g>`);
   } else if (slot === "klaxon") {
     b = `<path d="M12 28H20L40 16V48L20 36H12Z" fill="url(#${k}l)" stroke="${dk}" stroke-width="1.5" stroke-linejoin="round"/><rect x="8" y="27" width="6" height="10" rx="2" fill="${dk}"/>` +
       `<path d="M46 24C50 28 50 36 46 40M50 18C57 25 57 39 50 46" stroke="${md}" stroke-width="2.4" fill="none" stroke-linecap="round"/>` + reflet("M22 30L37 21", .6);
@@ -1786,7 +1907,7 @@ function htmlLegendes(apercu, noms, moi) {
     carte("champion", "🌿", "Premier champion", "remporter la première saison complète", gainsSecret(CHAMPION_EX), ch ? ch.nom : null, ch ? moisLong(ch.k) : "",
       champions.length ? '<span class="lg-x">🏆 ' + champions.map(c => "Saison " + numeroSaison(c.y) + " : " + esc(c.nom)).join(" · ") + "</span>" : "") +
     carte("vote", "🗳️", "Coup de la saison", "élu par les autres pilotes au vote de décembre", [["plaque", "coupsaison"]], votes.length ? votes.join(" et ") : null, "") +
-    carte("ticket", "🎫", "Ticket d'or", "un seul ticket d'or caché dans les tablettes de la 🍫 Chocolaterie (octobre)", [GAIN_TICKET], tk.length ? tk[0].nom : null, tk.length && tk[0].j ? "trouvé dans sa tablette" : "") +
+    carte("ticket", "🎫", "Ticket d'or", "un seul ticket d'or caché dans les tablettes de la 🍫 Chocolaterie (octobre)", GAINS_TICKET, tk.length ? tk[0].nom : null, tk.length && tk[0].j ? "trouvé dans sa tablette" : "") +
     "</div></section>";
 }
 function htmlTitres(apercu, y) {
@@ -1880,12 +2001,21 @@ function brancherVitrines(v) {
   // v20.47 · 🎫 le ticket d'or (badges, Légendes, plaque) : chargé à partir d'octobre 2027, puis on redessine une fois
   if (saisonJouee() && typeof chargerTickets === "function" && !TICKETS && Date.now() >= TICKET_MOIS.debut.getTime()) chargerTickets().then(() => { if (TICKETS && vueActive() === "trophees" && ongletPodium() !== "gp") rendreTrophees(); }).catch(() => {});
 }
+/** v20.61 · 🏆 nombre d'éclats de la Coupe brisée trouvés par un pilote : un éclat = le trésor d'un circuit de la saison trouvé par lui
+ *  (classement public des chercheurs, TRESORS.l[].chercheurs : qui et quand, jamais où ni quoi). null tant que les trésors ne sont pas chargés. */
+function eclatsDe(nom) {
+  const T = typeof TRESORS !== "undefined" && TRESORS && TRESORS.l; if (!T || (typeof TRESOR_APERCU !== "undefined" && TRESOR_APERCU)) return null;
+  return T.filter(t => CAL_GP.includes(t.circuit) && (!t.saison || t.saison >= SAISON.premiere) && (t.chercheurs || []).some(x => x.nom === nom)).length;
+}
 /* La vitrine d'un pilote (fiche du Classement) : ses succès (dorés en premier), ses mondes, son Gant, ses titres */
 function vitrineFiche(nom) {
   if (typeof saisonJouee !== "function" || !saisonJouee()) return "";   // v17.5 : pas de vitrine pendant le tour de chauffe (date, pas onglet)
   const pm = D.premierMillion, ors = exclusifsDe(nom), suiv = succesSuivantDe(nom);
   const TM = etatTropheesMondes(), nT = TROPHEES_MONDES.filter(t => TM[t.id][nom] && TM[t.id][nom].ok).length, y = anneesSaison().slice(-1)[0], g = (etatGant(y)[nom] || { n: 0 }).n, C = etatTitres(y);
+  const ne = eclatsDe(nom);   // v20.61 · 🏆 combien d'éclats de la Coupe brisée ce pilote a trouvés (un nombre, jamais leur contenu)
+  if (ne === null && typeof chargerTresors === "function") chargerTresors().then(() => { if (eclatsDe(nom) !== null && vueActive() === "fiche") rendreVue("fiche"); }).catch(() => {});
   const puces = ['<span style="--mc:#B9C3CE">🗺️ ' + nT + " / 12 mondes</span>", '<span style="--mc:#9B6BFF">🧤 ' + g + " / 6 pierres</span>"]
+    .concat(ne === null ? [] : ['<span class="vt-eclats" style="--mc:#E8B640" title="Éclats de la Coupe brisée trouvés par ' + esc(nom) + '">🏆 ' + ne + " / 12 éclats</span>"])
     .concat(TITRES.filter(c => C[c.id] && C[c.id].nom === nom).map(c => '<span style="--mc:' + c.c + '">' + c.ico + " " + esc(c.nom) + "</span>"));
   const med = (x, premier) => '<button type="button" class="vt-med p-' + PALIERS[x.palier].id + '" data-carte-coll="' + x.id + '" title="' + esc(x.nom) + '">' + svgMedaille(x.palier, premier) + '<span class="cc-emo">' + x.ico + "</span></button>";
   return '<div class="vitrine">' + (plaqueDe(nom) ? '<div class="vt-plaque">' + plaqueDe(nom).replace('class="plaque', 'class="plaque grande') + "</div>" : "") + '<div class="vt-h"><b>🗄️ La vitrine de ' + esc(nom) + "</b><small>" + (ors.length + suiv.length) + " succès sur 12 · " + ors.length + " en premier 🥇</small></div>" + palmaresVitrine(nom) +

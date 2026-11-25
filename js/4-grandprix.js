@@ -293,7 +293,7 @@ function htmlIndice(ind, petit) {
 }
 function couleurCasque(nom, e) {
   const c = couleur(nom);
-  return { uni: c, carbone: "#2d333d", eclair: c, damier: "#f5f5f2", tortue: "#2F8A45", chrome: "#d4dae1", etoile: "#F7CF55", holo: "#B98CFF", couronne: "#F7CF55", foudre: "#0B1020", phenix: "#FF8A1F", glace: "#BFEFFC", galaxie: "#5B2A9E", empereur: "#6B2FB3", eclaireur: "#2F6B3B", toque: "#FAFAF6" }[e && e.casque] || c;
+  return { uni: c, carbone: "#2d333d", eclair: c, damier: "#f5f5f2", tortue: "#2F8A45", chrome: "#d4dae1", etoile: "#F7CF55", holo: "#B98CFF", couronne: "#F7CF55", foudre: "#0B1020", phenix: "#FF8A1F", glace: "#BFEFFC", galaxie: "#5B2A9E", empereur: "#6B2FB3", eclaireur: "#2F6B3B", toque: "#FAFAF6", anneau: "#2A2420", rebelle: "#F57A2E", hoplite: "#C08A3E", fracture: "#1A1530" }[e && e.casque] || c;
 }
 const CAMS = { tv: "🎥 TV", helico: "🚁 Hélico", bord: "👁️ Embarquée" };
 function camGP() { return "helico"; }   // V16.58 (Théo) : la course se regarde en 2D ou en hélico ; la vue TV et l'embarquée sont retirées
@@ -456,13 +456,13 @@ function htmlGrandPrix(y) {
   // v17.6 · la piste « V2 » ne garde AUCUN bouton sur l'image : vue, plein écran et « ⋯ » (bande-annonce, arrivée, survol) passent juste en dessous
   const menuV2 = '<div class="gp-outils"><button class="gp-son-b" type="button" data-son aria-label="Couper le son">🔊</button>' + '<details class="gp-plus"><summary aria-label="Plus d\'options">⋯</summary><div class="gp-plus-m">' + (piste3D() ? '<button type="button" class="gp-survol-b" id="gp-survol">🛸 Survol guidé</button>' : "") +   // v17.10 : toujours utilisable (passe tout seul en 📺 Visite)
     '<button type="button" id="gp-ba">🎬 Bande-annonce</button><button type="button" id="gp-fin">⏭ Aller à l\'arrivée</button><button type="button" id="gp-photo">📷 Mode photo</button></div></details></div>';   // v17.48 : le petit 🔊/🔇 à côté de « ⋯ »
-  const suiviH = v2 && !deux ? '<div class="gp-suivi" role="group" aria-label="Voiture suivie">' + ordre.map(n => '<button type="button" data-suivre="' + esc(n) + '" style="--c:' + couleur(n) + '" aria-pressed="' + (n === suivi) + '" aria-label="Suivre ' + esc(n) + '">' + avatar(n) + "</button>").join("") + "</div>" : "";
+  const suiviH = v2 && !deux ? '<div class="gp-suivi" role="group" aria-label="Voiture suivie">' + ordre.map(n => '<button type="button" data-suivre="' + esc(n) + '" style="--c:' + couleur(n) + '" aria-pressed="' + (n === suivi) + '" aria-label="Suivre ' + esc(n) + '">' + avatarCourse(n) + "</button>").join("") + "</div>" : "";
   const fondCuit = (() => { try { const k = (Piste.TRACES[ci] || {}).peint, c = self.CARTES_CUITES; if (!k || !c || !c[k]) return ""; const u = "img/cartes/" + k + ".webp?v=" + c[k];
     if (!(PRECHARGE_CARTES[u])) { const im = new Image(); im.src = u; try { im.decode().catch(() => { }); } catch (e) { } PRECHARGE_CARTES[u] = im; }   // v17.32 : image gardée décodée en mémoire
     return u; } catch (e) { return ""; } })();
   const piste = '<div class="gp-piste' + (deux ? " en2d" : "") + (v2 ? " v2 vue-" + vue : "") + '" id="gp-piste" data-circuit="' + ci + '"><div class="gp-scene" id="gp-scene"' + (deux && fondCuit ? ' style="background:#0B0D12 url(\'' + fondCuit + '\') center/cover no-repeat"' : "") + '></div>' +   // v17.32 (Théo) : plus de flash noir en revenant à la carte 2D
     (v2 ? "" : '<div class="gp-zones">' + (at ? '<span class="gp-zone at" data-zone="atout">' + at.atout.ico + ' <b>+1</b></span>' : "") + "</div>") +   // v20.47 : plus d'étiquette d'atout posée sur le dessin (l'atout est écrit sous le titre)
-    '<div class="gp-tags3">' + ordre.map(n => '<span class="gp-t3' + (n === qui ? " ici" : "") + '" data-gpt3="' + esc(n) + '" style="--c:' + couleur(n) + '" title="' + esc(n) + '">' + avatar(n) + '<i class="gp-rg"></i></span>').join("") + "</div>" +
+    '<div class="gp-tags3">' + ordre.map(n => '<span class="gp-t3' + (n === qui ? " ici" : "") + '" data-gpt3="' + esc(n) + '" style="--c:' + couleur(n) + '" title="' + esc(n) + '">' + avatarCourse(n) + '<i class="gp-rg"></i></span>').join("") + "</div>" +
     (v2 ? "" : '<div class="gp-pops"></div><div class="gp-com" aria-live="polite"></div>') + fxCircuit(G.fx) +
     (v2 ? stH :   // v20.47 (Théo) : aucun texte posé sur le dessin : tour, commentaires et bulles passent en sous-titres, dans un bandeau sous la course   // v17.6 : « Sur la grille » et la météo sont déjà dans le titre ; il ne reste que « Tour 1/2 » pendant la course
     '<div class="gp-hud"><span class="gp-tour">' + (et.k && !et.avenir ? "Manche <b>" + nM + "</b>" : "Sur la grille") + "</span><span>" + met.ico + " " + esc(met.nom) + "</span></div>") +
@@ -495,7 +495,7 @@ function htmlGrandPrix(y) {
     const reste = P.length > 2, extra = P.slice(0, 2).map(z => z.h).join("") + (reste ? '<span class="gp-x plus" aria-hidden="true">…</span>' : "");
     const det = x ? '<div class="gp-det"><small class="gp-dec">' + esc(decompte(x, et.m.spec)) + "</small>" + (P.length > 2 || I.length ? '<span class="gp-det-x">' + P.slice(2).map(z => z.h).join("") + I.join("") + "</span>" : "") + "</div>" : "";
     const jn = (c.jeu || {})[n], niv = x ? x.niv + (x.monte || 0) : jn && !et.m ? 1 : (jn ? jn.niv : 1), cle = n + "|" + et.k, ouv = x && GP_OUVERTS.has(cle), top = x && x.rg === 1;
-    return '<div class="gp-l' + (n === qui ? " ici" : "") + (x ? " dep" : "") + (ouv ? " ouvert" : "") + '"' + (x ? ' data-gp-det="' + esc(cle) + '" tabindex="0" aria-expanded="' + !!ouv + '" aria-label="' + esc(n + " : " + (x.p > 0 ? "+" : "") + x.p + " pt" + (Math.abs(x.p) > 1 ? "s" : "") + " ce mois-ci" + (top ? ", meilleur du mois" : "") + ". Toucher pour le détail.") + '"' : "") + '><span class="rk">' + (r + 1) + "</span>" + avatar(n) + '<div class="nm"><b><span' + (attrLivree(n) ? attrLivree(n).replace(' class="', ' class="gp-nom ') : ' class="gp-nom"') + (saisonJouee() ? ' data-gp-fiche="' + esc(n) + '" role="button" tabindex="0" aria-label="Fiche et vitrine de ' + esc(n) + '"' : "") + ">" + esc(n) + (saisonJouee() ? '<i class="gp-vers-fiche" aria-hidden="true">›</i>' : "") + "</span>" + (regleVisible("niveaux") ? '<span class="gp-niv" data-bdg="Niveau d\'écurie ' + niv + ' : chaque niveau gagné donne une carte bonus.">N' + niv + "</span>" : "") + extra + "</b>" +
+    return '<div class="gp-l' + (n === qui ? " ici" : "") + (x ? " dep" : "") + (ouv ? " ouvert" : "") + '"' + (x ? ' data-gp-det="' + esc(cle) + '" tabindex="0" aria-expanded="' + !!ouv + '" aria-label="' + esc(n + " : " + (x.p > 0 ? "+" : "") + x.p + " pt" + (Math.abs(x.p) > 1 ? "s" : "") + " ce mois-ci" + (top ? ", meilleur du mois" : "") + ". Toucher pour le détail.") + '"' : "") + '><span class="rk">' + (r + 1) + "</span>" + avatarCourse(n) + '<div class="nm"><b><span' + (attrLivree(n) ? attrLivree(n).replace(' class="', ' class="gp-nom ') : ' class="gp-nom"') + (saisonJouee() ? ' data-gp-fiche="' + esc(n) + '" role="button" tabindex="0" aria-label="Fiche et vitrine de ' + esc(n) + '"' : "") + ">" + esc(n) + (saisonJouee() ? '<i class="gp-vers-fiche" aria-hidden="true">›</i>' : "") + "</span>" + (regleVisible("niveaux") ? '<span class="gp-niv" data-bdg="Niveau d\'écurie ' + niv + ' : chaque niveau gagné donne une carte bonus.">N' + niv + "</span>" : "") + extra + "</b>" +
       det + "</div>" + '<span class="pt"><b>' + et.pts[n] + "</b><small" + (top ? ' class="top"' : "") + ">" + (x ? (x.p > 0 ? "+" : "") + x.p : "pts") + "</small></span></div>";
   }).join("");
   const cal = htmlCalendrierGP(y, kGP);
@@ -1123,7 +1123,7 @@ function bullesGP(y, i) {
     const extra = [];
     if (x.carte && !x.carte.invalide && x.carte.gain) { const cd = carteDef(x.carte.id); extra.push((cd ? cd.ico : "🃏") + (x.carte.gain > 0 ? "+" : "") + x.carte.gain); }
     if (x.bonus) extra.push("🎯+" + x.bonus); if (x.mult > 1) extra.push("×2"); if (x.vainq) extra.push("🇬🇧+2"); if (x.equipe) extra.push("🤝+1"); if (x.serie) extra.push("🔥+1"); if (x.defi) extra.push("🏁+1"); if (x.prono && x.prono.pts) extra.push("🔮+" + x.prono.pts); if (x.rival) extra.push("😈+3"); if (x.regul !== undefined) extra.push("🛡️+3");
-    box.insertAdjacentHTML("beforeend", '<span class="gp-pop" data-pop="' + esc(x.nom) + '" style="--c:' + couleur(x.nom) + '" title="' + esc(x.nom) + '" aria-label="' + esc(x.nom + " " + (x.p >= 0 ? "+" : "") + x.p + " points") + '">' + avatar(x.nom) + "<b>" + (x.p >= 0 ? "+" : "") + x.p + '<i class="gp-pop-u"> pt' + (Math.abs(x.p) > 1 ? "s" : "") + "</i></b>" + (extra.length ? "<small>" + esc(extra.join(" ")) + "</small>" : "") + "</span>");
+    box.insertAdjacentHTML("beforeend", '<span class="gp-pop" data-pop="' + esc(x.nom) + '" style="--c:' + couleur(x.nom) + '" title="' + esc(x.nom) + '" aria-label="' + esc(x.nom + " " + (x.p >= 0 ? "+" : "") + x.p + " points") + '">' + avatarCourse(x.nom) + "<b>" + (x.p >= 0 ? "+" : "") + x.p + '<i class="gp-pop-u"> pt' + (Math.abs(x.p) > 1 ? "s" : "") + "</i></b>" + (extra.length ? "<small>" + esc(extra.join(" ")) + "</small>" : "") + "</span>");
   });
   if (GP_ETQ) GP_ETQ.sale = true;
   if (GP_INST) { GP_INST.api.reveiller(); etiquettesGP(GP_INST.api); }
@@ -1414,7 +1414,7 @@ function brancherGP0(v, y) {
     const boite = document.createElement("div"); boite.className = "gp-rendu"; scene.appendChild(boite);
     const focus = vue === "poursuite" ? suiviGP() : ETAT.gpFocus && D.personnes.some(p => p.nom === ETAT.gpFocus) ? ETAT.gpFocus : (qui && D.personnes.some(p => p.nom === qui) ? qui : D.personnes[0].nom);
     const api = Piste.monter(boite, { circuit: ci, meteo: met, effets: true, ambiance: amb, mode: deux ? "2d" : "3d", camera: vue === "poursuite" ? "poursuite" : camGP(), sansVoitures: vue === "visite", tour: TOUR_GP, voitures: vs, pts: et.pts, focus,
-      atoutCol: at ? "#3DDC97" : null, piegeCol: null, accent: couleurAccent(), titre: GPS[ci].gp + ", " + GPS[ci].ville, portrait: n => avatar(n),   // v20.59 (relecture jeu-joueur) : la même tête que partout (accessoire du mois en cours, ou accessoire mérité), plus un 2e costume du même univers
+      atoutCol: at ? "#3DDC97" : null, piegeCol: null, accent: couleurAccent(), titre: GPS[ci].gp + ", " + GPS[ci].ville, portrait: n => avatarCourse(n),   // v20.59 (relecture jeu-joueur) + v20.61 (Théo : en course, toujours le visage, jamais le casque de l'écurie) : la même tête que partout (accessoire du mois en cours, ou accessoire mérité), plus un 2e costume du même univers
       image: etiquettesGP, toucher: n => { if (vueGP(ci) === "poursuite") { suivreGP(n); return; } ETAT.gpFocus = n; garder(); if (GP_INST) GP_INST.api.focus(n); toast("👀 " + n + " est mis en avant."); },
       perdu: () => { if (GP_INST && GP_INST.boite === boite) GP_INST = null;   // audit B6 : circuit coupé par le navigateur → on le relance (2 fois au plus)
         if (GP_RELANCES < 2 && typeof rendreTrophees === "function") { GP_RELANCES++; setTimeout(() => { if (boite.isConnected && !document.hidden) rendreTrophees(); }, 400); } } });
@@ -1562,7 +1562,7 @@ function majTourPlein(cur, force) {
   const P = GP_PLEIN; if (!P) return; const now = performance.now(); if (!force && now - P.maj < 150) return; P.maj = now;
   const qui = quiEcurie(), ordre = Object.keys(cur).sort((a, b) => cur[b] - cur[a]), t = cur[ordre[0]] || 0, box = P.o.querySelector(".gpp-tour");
   if (force || !P.lignes || P.lignes.cle !== ordre.slice().sort().join("|")) {
-    box.innerHTML = Object.keys(cur).map(n => '<div class="r' + (n === qui ? " ici" : "") + '" data-tr="' + esc(n) + '" style="--c:' + couleur(n) + '"><span class="rk"></span>' + avatar(n) + '<span class="n">' + esc(n) + '</span><span class="p"><b></b><small></small></span></div>').join("");
+    box.innerHTML = Object.keys(cur).map(n => '<div class="r' + (n === qui ? " ici" : "") + '" data-tr="' + esc(n) + '" style="--c:' + couleur(n) + '"><span class="rk"></span>' + avatarCourse(n) + '<span class="n">' + esc(n) + '</span><span class="p"><b></b><small></small></span></div>').join("");
     P.lignes = { cle: ordre.slice().sort().join("|"), m: {} }; box.querySelectorAll("[data-tr]").forEach(e => P.lignes.m[e.dataset.tr] = { e, rk: e.querySelector(".rk"), b: e.querySelector(".p b"), s: e.querySelector(".p small"), v: "" });
   }
   const pt = n => GP_SCEN ? Math.round((GP_SCEN.gains[n] || 0) * clampN(cur[n] / TOURS_GP, 0, 1)) : Math.round(cur[n]), pT = GP_SCEN ? Math.max(...ordre.map(pt)) : Math.round(t);   // v16.28
@@ -1605,7 +1605,7 @@ function ouvrirCircuits2027(ci0) {
     const boite = document.createElement("div"); boite.className = "cg-rendu"; scene.appendChild(boite);
     const vs = voituresGP(), pts = Object.fromEntries(D.personnes.map(p => [p.nom, 0]));
     api = Piste.monter(boite, { circuit: ci, meteo: "soleil", mode: vue === "2d" ? "2d" : "3d", camera: "helico", tour: 0, voitures: vs, pts, focus: vs[0] && vs[0].nom, accent: couleurAccent(),
-      titre: (G.gp || ci), portrait: n => { const pk = (Piste.TRACES[ci] || {}).peint, k = ci === "abudhabi" ? "noel" : ACCESSOIRES_TETE[pk] ? pk : undefined; return avatar(n, Object.assign({}, equipDe(n), k ? { acc: k } : {})); } });   // v20.59 : aperçu admin = l'accessoire du mois de ce circuit
+      titre: (G.gp || ci), portrait: n => { const pk = (Piste.TRACES[ci] || {}).peint, k = ci === "abudhabi" ? "noel" : ACCESSOIRES_TETE[pk] ? pk : undefined; return avatar(n, Object.assign({}, equipDe(n), k ? { acc: k } : {}, { pilote: "tete", fond: "couleur" })); } });   // v20.59 : aperçu admin (v20.61 : le visage, jamais le casque) = l'accessoire du mois de ce circuit
     if (vue === "visite" && api && api.viser) setTimeout(() => { try { api.viser(null, .3, .38); } catch (e) { } }, 300);
   };
   o.querySelectorAll("[data-cg]").forEach(b => b.addEventListener("click", () => { ci = b.dataset.cg; monter(); }));
@@ -1649,13 +1649,13 @@ function feteChauffe(podium, apercu, rang) {
   if (FETE_CH.ouverte || !podium || !podium.length) return;
   const rg = n => rang && rang[n] ? rang[n] : podium.indexOf(n) + 1;   // v17.53 (Théo) : ex æquo en tête = tous à l'honneur
   const vs = podium.filter(n => rg(n) === 1); if (!vs.length) vs.push(podium[0]);
-  const v = vs.map(n => n).join(" & "), moi = moiPilote(), bravo = vs.includes(moi), duo = vs.length > 1, G = GPS.abudhabi || {}, tete = n => avatar(n, Object.assign({}, equipDe(n), { vignette: true }));
+  const v = vs.map(n => n).join(" & "), moi = moiPilote(), bravo = vs.includes(moi), duo = vs.length > 1, G = GPS.abudhabi || {}, tete = n => avatarCourse(n, { vignette: true });
   const o = document.createElement("div"); o.className = "fc-voile" + (ANIM ? "" : " fixe"); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
   o.setAttribute("aria-label", bravo ? (duo ? "Bravo, tu partages la victoire du tour de chauffe" : "Bravo, tu remportes le tour de chauffe") : v + (duo ? " remportent ex æquo le tour de chauffe" : " remporte le tour de chauffe"));
   const marche = (n, r) => n ? (r = Math.min(3, rg(n)), '<div class="fc-m fc-m' + r + (n === moi ? " moi" : "") + '" style="--c:' + couleur(n) + '">' + tete(n) + "<b>" + esc(n) + "</b>" + (n === moi && !bravo ? "<small>toi</small>" : "") + '<i class="fc-socle">' + r + "</i></div>") : "";
   o.innerHTML = '<canvas class="fc-neige" aria-hidden="true"></canvas><div class="fc-c">' + (apercu ? '<span class="fc-apercu">Aperçu admin · exemple inventé</span>' : "") +
     '<span class="fc-k">' + esc((G.drap || "🎅") + " " + (G.gp || "L'Atelier du Père Noël")) + "</span>" +
-    '<div class="fc-herosx' + (duo ? " duo" : "") + '">' + vs.map(n => '<div class="fc-heros" style="--c:' + couleur(n) + '"><i class="fc-halo"></i>' + avatar(n, Object.assign({}, equipDe(n), { vignette: true, skin: "noel" })) + "</div>") /* v18.3 : bonnet dessiné sur la tête */.join("") + "</div>" +
+    '<div class="fc-herosx' + (duo ? " duo" : "") + '">' + vs.map(n => '<div class="fc-heros" style="--c:' + couleur(n) + '"><i class="fc-halo"></i>' + avatarCourse(n, { vignette: true, skin: "noel" }) + "</div>") /* v18.3 : bonnet dessiné sur la tête */.join("") + "</div>" +
     (bravo ? '<h3 class="fc-t">Bravo&nbsp;!</h3><p class="fc-s">' + (duo ? "Tu partages la victoire du tour de chauffe" : "Tu remportes le tour de chauffe") + "</p>"
       : '<h3 class="fc-t">' + esc(v) + '</h3><p class="fc-s">' + (duo ? "Vainqueurs ex æquo du tour de chauffe" : "Vainqueur du tour de chauffe") + "</p>") +
     '<div class="fc-podium">' + marche(podium[1], 2) + marche(podium[0], 1) + marche(podium[2], 3) + "</div>" +
@@ -1727,7 +1727,7 @@ function htmlTablette(T, apercu) {
     '<div class="tb-boite">' + svgTablette("tb" + (++NTAB)) + "</div>" +
     '<p class="tb-mot" aria-live="polite">' + (fait ? esc((T.dernier && T.dernier.mot) || "Tablette déballée aujourd'hui. Reviens demain !") : "Une tablette par jour, du 1er au 31 octobre. Déballe la tienne : le seul ticket d'or de l'année est peut-être dedans aujourd'hui.") + "</p>" +
     (fait ? '<p class="tb-fait">✅ Déballée aujourd\'hui · la prochaine demain</p>' : '<button class="btn acc tb-b" type="button" data-deballer>🍫 Déballer ma tablette</button>') +
-    (mien ? '<p class="tb-mien">🎫 Tu as LE ticket d\'or : la plaque « Ticket d\'or » t\'attend dans l\'Écurie.</p>' : "") +
+    (mien ? '<p class="tb-mien">🎫 Tu as LE ticket d\'or : la plaque « Ticket d\'or » et la finition « Feuille d\'or » t\'attendent dans l\'Écurie.</p>' : "") +
     (k ? '<p class="tb-g-l tb-dores">✨ Carrés dorés du groupe : <b>' + k.total + " / " + k.objectif + "</b>" + (k.reussi ? " · objectif commun réussi !" : "") + (k.moi ? " (dont " + k.moi + " à toi)" : "") + "</p>" : "") + "</div>";
 }
 /** l'état du ticket en une ligne (V88 : un seul) */
@@ -1780,8 +1780,8 @@ function ceremonieTicket(n, exemple) {
     '<path d="M22 46L25 53 32 54 27 59 28 66 22 62 16 66 17 59 12 54 19 53Z" fill="#FFF6CC" stroke="#6B430C" stroke-width="1"/></svg></div></div></div>' +
     "<h3>Un ticket d'or !</h3><p class=\"cbo-grave\">Trouvé dans la tablette de <b>" + esc(moi) + "</b></p>" +
     "<p>Un seul ticket dans toute l'année, et il était dans ta tablette : il est à toi pour toujours. Il brille dans tes Trophées, parmi les 💎 Légendes.</p>" +
-    '<div class="tk-obj"><span>Objet d\'écurie exclusif</span>' + (typeof vignetteItem === "function" ? vignetteItem("plaque", "ticketor", moiVrai() || "", e) : "") + "</div>" +
-    '<p class="cbo-flair">Aucun point au championnat : seulement la gloire (et la plaque).</p>' +
+    '<div class="tk-obj"><span>Objets d\'écurie exclusifs</span><div class="tk-objs">' + (typeof vignetteItem === "function" ? vignetteItem("plaque", "ticketor", moiVrai() || "", e) + '<span class="tk-fin">' + vignetteItem("finition", "feuilledor", moiVrai() || "", e) + "<small>Finition « Feuille d'or »</small></span>" : "") + "</div></div>" +
+    '<p class="cbo-flair">Aucun point au championnat : seulement la gloire (la plaque, et ta voiture à la feuille d\'or en course).</p>' +
     '<div class="btn-row">' + (exemple ? "" : '<button class="btn acc" type="button" data-tk-vit>Voir ma Légende</button>') + '<button class="btn ghost" type="button" data-tk-ok>Génial !</button></div></div>';
   document.body.appendChild(o);
   const t0 = Date.now(), fermer = () => o.remove();
@@ -1811,6 +1811,6 @@ function regleTicket() {
   if (Date.now() < TICKET_MOIS.regles.getTime()) return "";
   const T = TICKETS, emp = T && T.empreinte ? '<code class="tk-emp">' + esc(T.empreinte) + "</code>" : '<span class="tk-emp attente">(empreinte en chargement…)</span>';
   const rev = T && T.revele ? " Tirage dévoilé : le ticket est apparu le " + (T.revele.jour % 100) + " octobre chez " + esc((T.revele.porteurs || []).join(", puis ")) + " (graine <code class=\"tk-emp\">" + esc(T.revele.graine) + "</code>)." : " Le tirage sera dévoilé le 1<sup>er</sup> novembre 2027 : chacun pourra vérifier que personne n'y a touché.";
-  return '<li id="rg-ticket"><b>🎫 Ticket d\'or</b> (🍫 Chocolaterie, octobre 2027) : chaque jour du mois, déballe ta tablette sur la page Course. Un seul ticket d\'or dans toute l\'année : un jour secret, il est dans la tablette d\'un pilote tiré au sort ; s\'il ne déballe pas ce jour-là, le ticket passe le lendemain chez un autre (tirage tenu secret : personne ne le connaît, l\'heure ne compte pas). Ensemble, trouvez assez de carrés dorés pour le trophée de la Chocolaterie. Aucun point : une cérémonie, le badge 🎫 et la plaque « Ticket d\'or ». ' +
+  return '<li id="rg-ticket"><b>🎫 Ticket d\'or</b> (🍫 Chocolaterie, octobre 2027) : chaque jour du mois, déballe ta tablette sur la page Course. Un seul ticket d\'or dans toute l\'année : un jour secret, il est dans la tablette d\'un pilote tiré au sort ; s\'il ne déballe pas ce jour-là, le ticket passe le lendemain chez un autre (tirage tenu secret : personne ne le connaît, l\'heure ne compte pas). Ensemble, trouvez assez de carrés dorés pour le trophée de la Chocolaterie. Aucun point : une cérémonie, le badge 🎫, la plaque « Ticket d\'or » et la finition « Feuille d\'or » (ta voiture dorée à la feuille, en course). ' +
     "Empreinte du tirage : " + emp + (T && T.depuis ? " (publiée le " + (T.depuis % 100) + "/" + (Math.floor(T.depuis / 100) % 100) + "/" + Math.floor(T.depuis / 10000) + ")" : "") + "." + rev + "</li>";
 }

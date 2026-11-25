@@ -11682,11 +11682,13 @@
      La couleur du pilote reste toujours lisible (bande centrale, aileron de requin, caméra T, volet avant et dérives arrière). */
   const LV_METAL = { chrome: "#C9D2DC", or: "#E8C15A", oranime: "#F2C94C", platine: "#E5E8EC", orrose: "#F2B8A6", rubis: "#B0122E", galaxie: "#2B1B5A" };
   const LV_CLAIRES = ["chrome", "or", "oranime", "platine", "orrose", "carte"];
-  const FIN_COL = { argent: ["#E6EBF0", 0], or: ["#F2C14E", .1], neon: [null, 1], diamant: ["#C9F6FF", .35], lauriers: ["#E9C25A", .1], etoilee: ["#FFE596", .25], soleil: ["#FF9A2E", .45] };
+  const FIN_COL = { argent: ["#E6EBF0", 0], or: ["#F2C14E", .1], neon: [null, 1], diamant: ["#C9F6FF", .35], lauriers: ["#E9C25A", .1], etoilee: ["#FFE596", .25], soleil: ["#FF9A2E", .45],
+    ailee: ["#F2C14E", .3], elfique: ["#8FCB9A", .15], biolum: ["#5CF2E6", 1], feuilledor: ["#F5C842", .45] };   // v20.61 · finitions des mondes + Feuille d'or (ticket d'or)
   /** casques : [couleur de la bande, lumineux de la bande, visière ("iri" irisée, "or", sinon fumée), forme spéciale] */
   const CQ_DEF = { uni: ["#FFFFFF", 0], carbone: [null, 0], eclair: ["#FFD84A", .35], damier: ["#15171B", 0, 0, "damier"], tortue: ["#1D5A2C", 0], chrome: ["#2B3038", 0, "iri"], etoile: ["#FFFFFF", .2, "iri", "etoile"],
     holo: ["#7FE8FF", .8, "iri"], couronne: ["#7A4A0C", 0, "or", "couronne"], foudre: ["#5CE1FF", 1, "iri"], phenix: ["#FFF1B0", .7, "or", "flamme"], glace: ["#FFFFFF", .4, "iri"], galaxie: ["#FFB8F0", .6, "iri", "etoile"],
-    empereur: ["#F7CF55", .2, "or", "couronne"], eclaireur: ["#6B4423", 0, 0, "insigne"], toque: [null, 0, 0, "toque"] };
+    empereur: ["#F7CF55", .2, "or", "couronne"], eclaireur: ["#6B4423", 0, 0, "insigne"], toque: [null, 0, 0, "toque"],
+    anneau: ["#F7CF55", .3, "or", "anneau"], rebelle: ["#FFFFFF", 0, 0, "rebelle"], hoplite: ["#5A3412", 0, "or", "crete"], fracture: ["#FF3BD4", 1, "iri", "eclats"] };   // v20.61 · casques des mondes
   /** décalcomanie plate : polygones convexes en (u, v), posés en O sur le plan (U, V), tournés vers N */
   function decal(g, O, U, Vv, N, polys, col, em) {
     polys.forEach(P => { const q = P.map(([u, w]) => [O[0] + U[0] * u + Vv[0] * w, O[1] + U[1] * u + Vv[1] * w, O[2] + U[2] * u + Vv[2] * w]);
@@ -11734,20 +11736,30 @@
     if (f === "toque") { const bl = hex("#FAFAF6"); g.cylindre(X0, Y0 + .22, 0, .2, .26, 10, bl, .05); g.boule(X0 - .06, Y0 + .56, 0, .19, bl, .05, .8, true); g.boule(X0 + .09, Y0 + .53, .07, .13, bl, .05, .9); g.boule(X0 + .07, Y0 + .53, -.08, .13, bl, .05, .9); }
     if (f === "insigne") [-1, 1].forEach(s => { decal(g, [X0 - .06, Y0 + .1, s * .278], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [rond(0, 0, .075, 10)], hex("#F4EBD6"));
       decal(g, [X0 - .06, Y0 + .1, s * .282], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [[[-.005, -.05], [-.06, .03], [-.03, .055], [-.005, .02]]], hex("#FFFFFF")); decal(g, [X0 - .06, Y0 + .1, s * .282], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [[[.005, -.05], [.06, .03], [.03, .055], [.005, .02]]], hex("#2F6FD6")); });
+    // v20.61 · Anneau gravé : l'inscription de feu sur la bande d'or ; Pilote rebelle : l'écusson ; Casque d'Ulysse : la crête de crin ; Éclats du multivers : les fêlures lumineuses
+    if (f === "anneau") [-1, 1].forEach(s => { for (let k = 0; k < 7; k++) { const u0 = -.2 + k * .055, w = k % 3 === 1 ? .018 : .03;
+      decal(g, [X0 + u0 * s, Y0 + .145 + k * .006, s * .286], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [[[0, -.009], [w, -.009], [w, .009], [0, .009]]], hex("#FF5A1A"), 1); } });
+    if (f === "rebelle") [-1, 1].forEach(s => { decal(g, [X0 - .08, Y0 + .1, s * .279], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [rond(0, 0, .08, 12)], hex("#FFFFFF"));
+      decal(g, [X0 - .08, Y0 + .1, s * .284], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [[[0, .055], [.02, -.005], [.055, -.03], [0, -.015], [-.055, -.03], [-.02, -.005]]], hex("#C8321E")); });
+    if (f === "crete") { const rouge = hex("#C8281E"), fonce = hex("#7A120E");
+      for (let k = 0; k < 9; k++) { const t = k / 8, x = X0 - .3 + t * .5, y = Y0 + .2 + Math.sin(t * PI) * .14; g.boite(x, y, 0, .075, .2 - Math.abs(t - .45) * .12, .05, k % 2 ? fonce : rouge, .05); } }
+    if (f === "eclats") [-1, 1].forEach(s => { const P = [[[-.2, .05], [-.06, .02], [-.09, -.06]], [[-.06, .02], [.02, .1], [.06, .04]], [[-.09, -.06], [.02, -.1], [-.04, -.03]]];
+      P.forEach((t, i) => decal(g, [X0 - .02, Y0 + .08, s * (.28 + i * .002)], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [t], hex(["#FF3BD4", "#3BE8FF", "#F7F24A"][i]), 1)); });
     if (f === "etoile") [-1, 1].forEach(s => decal(g, [X0 - .1, Y0 + .14, s * .272], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], etoile5(.08), hex("#FFD84A"), .4));
     if (f === "flamme") [-1, 1].forEach(s => decal(g, [X0 - .12, Y0 + .05, s * .275], [s * 1, 0, 0], [0, 1, 0], [0, 0, s], [[[-.14, -.06], [.1, -.04], [.02, .02], [.16, .1], [-.02, .05]]], hex("#FFE07A"), .8));
   }
   function voiture(v) {
     const g = new Geo(), c = hex(v.couleur || "#4C9AFF"), lv = v.livree || "couleur";
     const metal = LV_METAL[lv];
-    const neon = lv === "neon", choco = lv === "chocolat", carte = lv === "carte", prisme = lv === "arcenciel";
-    const corps = neon ? hex("#0B0D12") : metal ? hex(metal) : choco ? hex("#6B3A1E") : carte ? hex("#F4F0E6") : c, em = neon ? 1 : 0;
+    const neon = lv === "neon", choco = lv === "chocolat", carte = lv === "carte", prisme = lv === "arcenciel", ver = lv === "ver";
+    const corps = neon ? hex("#0B0D12") : metal ? hex(metal) : choco ? hex("#6B3A1E") : carte ? hex("#F4F0E6") : ver ? hex("#D9A35A") : c, em = neon ? 1 : 0;
     // accent : la couleur du pilote sur les livrées métal / néon / spéciales, sinon un blanc cassé teinté
-    const perso = !!(neon || metal || choco || carte || prisme), accent = perso ? c : mel(c, [1, 1, 1], .82), emA = neon ? 1 : 0;
+    const perso = !!(neon || metal || choco || carte || prisme || ver), accent = perso ? c : mel(c, [1, 1, 1], .82), emA = neon ? 1 : 0;
     const carbone = hex("#16191F"), carbone2 = hex("#23272F"), cockpit = hex("#0C0E12"), titane = hex("#2C3038");
     const fonce = mel(corps, [0, 0, 0], .35), nappeChoco = hex("#2E1407");
     /** peinture à l'abscisse x (Prisme : un dégradé arc-en-ciel du museau à l'aileron) */
-    const peint = x => prisme ? hex(hsl(((x + 4) / 9.2) * 300, .78, .56)) : corps;
+    const anneauVer = [hex("#E3B46E"), hex("#A8692E")];   // v20.61 · Peau des sables : les anneaux du ver, une section claire, une sombre
+    const peint = x => prisme ? hex(hsl(((x + 4) / 9.2) * 300, .78, .56)) : ver ? anneauVer[Math.floor((x + 4) * 1.15) % 2] : corps;
     /** Chocolat fondant : le dessus est nappé de chocolat noir qui coule en gouttes sur les flancs (une section sur deux) */
     const nappage = (i, j, haut, bord) => choco && (haut.includes(j) || (bord.includes(j) && i % 2 === 0));
     // ---- monocoque, du diffuseur au museau : [x, demi-largeur, bas, haut, resserrement du haut]
@@ -11833,6 +11845,15 @@
     g.bloc([[-3.0, .15, -.9], [-3.9, .24, -.86], [-3.9, .24, .86], [-3.0, .15, .9], [-3.0, .2, -.9], [-3.9, .4, -.86], [-3.9, .4, .86], [-3.0, .2, .9]], carbone2, 0);
     tube(g, [[-3.45, .82, 0], [-3.78, .84, 0]], .07, hex("#8A8F96"), 0, 6);
     g.boite(-3.66, .5, 0, .08, .2, .26, hex("#FF2A2A"), 1);
+    // ---- v20.61 · Balle ailée : une petite balle d'or aux ailes blanches au-dessus du halo ; Cape elfique : la cape verte posée derrière le pilote
+    if (v.finition === "ailee") { g.boule(.1, 1.78, 0, .07, hex("#F2C14E"), .4); const bl = hex("#FFFDF2");
+      [-1, 1].forEach(s => { g.tri([.1, 1.79, s * .05], [.16, 1.9, s * .24], [.02, 1.84, s * .2], bl, .2, [0, 1, 0]); g.tri([.1, 1.79, s * .05], [.02, 1.84, s * .2], [.16, 1.9, s * .24], bl, .2, [0, -1, 0]); }); }
+    if (v.finition === "elfique") { const vert = hex("#3E7D4A"), vert2 = hex("#2A5A34");
+      [[0, 1, 0], [0, -1, 0]].forEach(n => g.quad([-.32, 1.36, -.2], [-.32, 1.36, .2], [-1.25, 1.12, .42], [-1.25, 1.12, -.42], n[1] > 0 ? vert : vert2, 0, n));
+      g.boule(-.34, 1.37, 0, .045, hex("#9FE0AA"), .3); }
+    // v20.61 · 🌌 Sabre lumineux : la lame rouge posée sur l'aileron de requin, poignée derrière le pilote (la traînée rouge suit en course)
+    if (v.trainee === "sabre") { tube(g, [[-1.25, 1.56, 0], [-3.75, 1.5, 0]], .05, hex("#FF2A3A"), 1, 6); tube(g, [[-1.2, 1.57, 0], [-3.7, 1.51, 0]], .022, hex("#FFF1F1"), 1, 5);
+      tube(g, [[-.95, 1.57, 0], [-1.25, 1.56, 0]], .06, hex("#2B2F36"), 0, 6); }
     // ---- finition : liseré le long de la monocoque (argent, or, néon…)
     if (colFin) [0, 5].forEach(j => { for (let i = 1; i < RM.length - 2; i++) { const a = RM[i][j], b = RM[i + 1][j], s = Math.sign(a[2]) || 1, o = .014;
       g.quad([a[0], a[1] - .02, a[2] + s * o], [b[0], b[1] - .02, b[2] + s * o], [b[0], b[1] + .02, b[2] + s * o], [a[0], a[1] + .02, a[2] + s * o], colFin, emFin, [0, 0, s]); } });
@@ -11841,6 +11862,10 @@
     [1, -1].forEach(s => {
       const N = [0, 0, s], U = [s, 0, 0], Vy = [0, 1, 0];
       if (carte) { decal(g, [-2.25, .72, s * .505], U, Vy, N, coeur(.2), hex("#D62839")); decal(g, [-1.55, .46, s * 1.2], U, Vy, N, pique(.15), hex("#15171B")); decal(g, [1.9, .6, s * .42], U, Vy, N, coeur(.11), hex("#D62839")); }
+      if (ver || v.finition === "biolum" || v.finition === "feuilledor") { const r = alea(hashTxt((v.nom || "") + s + "v")), fd = v.finition === "feuilledor", bio = v.finition === "biolum";   // v20.61 : épice bleue, spores luminescentes, feuilles d'or
+        for (let k = 0; k < (fd ? 24 : 10); k++) { const x = -2.6 + r() * 4.6, y = .36 + r() * .4, z = x > -1.2 && x < 1 ? 1.39 : x > -2.4 ? (x < -1.2 ? 1.12 : .5) : .45, t = (fd ? .085 : .025) * (.6 + r() * .8), a = r() * 3;
+          const forme = fd ? [[[-t, -t * .4], [-t * .1, -t], [t * .9, -t * .5], [t * .7, t * .6], [-t * .3, t * .8]].map(([p, q]) => [p * Math.cos(a) - q * Math.sin(a), p * Math.sin(a) + q * Math.cos(a)])] : [[[-t, 0], [0, t], [t, 0], [0, -t]]];
+          decal(g, [x, y, s * (z + .004)], U, Vy, N, forme, fd ? hex(k % 3 ? "#F5C842" : "#FFF3B8") : bio ? hex(k % 3 ? "#5CF2E6" : "#FF8AE0") : hex("#7FB8FF"), fd ? .45 : 1); } }
       if (lv === "galaxie" || lv === "neon") { const r = alea(hashTxt((v.nom || "") + s)); for (let k = 0; k < 9; k++) { const x = -2.6 + r() * 4.6, y = .4 + r() * .35, z = x > -1.2 && x < 1 ? 1.39 : x > -2.4 ? (x < -1.2 ? 1.12 : .5) : .45;
         decal(g, [x, y, s * z], U, Vy, N, [[[-.025, 0], [0, .025], [.025, 0], [0, -.025]]], lv === "neon" ? c : hex("#FFFFFF"), 1); } }
     });
@@ -12395,13 +12420,14 @@
         [[A1, fa], [A2, fa], [B1, fb], [A2, fa], [B2, fb], [B1, fb]].forEach(([p, f]) => out.push(p[0], p[1], p[2], col[0], col[1], col[2], .7 * f)); } });
       return;
     }
-    const pal = { flammes: [[1, .45, .1], [1, .85, .25]], turbo: [[.35, .72, 1], [.8, .95, 1]], arcenciel: null, comete: [c, mel(c, [1, 1, 1], .6)], supernova: [[.62, .52, 1], [1, 1, 1]], etincelles: [[1, .85, .3], [1, 1, .7]], halo: [c, c], simple: [[1, 1, 1], [1, 1, 1]] }[t] || [c, c];
-    const larg = t === "simple" ? .25 : t === "comete" || t === "supernova" ? 1 : .7, alpha = t === "simple" ? .15 : .38;
+    const pal = { sabre: [[1, .16, .22], [1, .86, .86]], glitch: [[1, .23, .83], [.23, .91, 1]], flammes: [[1, .45, .1], [1, .85, .25]], turbo: [[.35, .72, 1], [.8, .95, 1]], arcenciel: null, comete: [c, mel(c, [1, 1, 1], .6)], supernova: [[.62, .52, 1], [1, 1, 1]], etincelles: [[1, .85, .3], [1, 1, .7]], halo: [c, c], simple: [[1, 1, 1], [1, 1, 1]] }[t] || [c, c];
+    const larg = t === "simple" ? .25 : t === "comete" || t === "supernova" ? 1 : t === "sabre" ? .32 : .7, alpha = t === "simple" ? .15 : t === "sabre" ? .7 : .38;
     const arc = [[1, .35, .37], [1, .71, .28], [.24, .86, .59], [.3, .6, 1], [.71, .48, 1]];
     for (let i = 0; i < h.length - 1; i++) {
       const a = h[i], b = h[i + 1], fa = 1 - i / h.length, fb = 1 - (i + 1) / h.length, wa = larg * (.3 + fa * .7), wb = larg * (.3 + fb * .7);
-      const col = t === "arcenciel" ? arc[i % 5] : mel(pal[0], pal[1], i % 2 ? .3 : 0);
-      const P = (p, w, s) => [p[0] + p[3] * w * s, p[1], p[2] + p[4] * w * s];
+      const col = t === "arcenciel" ? arc[i % 5] : t === "glitch" ? pal[i % 2] : mel(pal[0], pal[1], i % 2 ? .3 : 0);
+      const dj = t === "glitch" ? (i % 3 - 1) * .45 : 0;   // la Faille : chaque morceau décalé de côté
+      const P = (p, w, s) => [p[0] + p[3] * (w * s + dj), p[1], p[2] + p[4] * (w * s + dj)];
       const A1 = P(a, wa, 1), A2 = P(a, wa, -1), B1 = P(b, wb, 1), B2 = P(b, wb, -1);
       [[A1, fa], [A2, fa], [B1, fb], [A2, fa], [B2, fb], [B1, fb]].forEach(([p, f]) => out.push(p[0], p[1], p[2], col[0], col[1], col[2], alpha * f));
     }
@@ -13101,7 +13127,7 @@
       return '<path class="p2-gem" d="M' + x.toFixed(2) + " " + (y - 2.8).toFixed(2) + "L" + (x + 1.95).toFixed(2) + " " + y.toFixed(2) + "L" + x.toFixed(2) + " " + (y + 2.8).toFixed(2) + "L" + (x - 1.95).toFixed(2) + " " + y.toFixed(2) + 'Z" fill="' + PIERRES_COL[i] + '" stroke="#FFF6D8" stroke-width=".6"/>'; }).join("") + "</g>";
   }
   const LV_2D = { chrome: ["#DCE3EA", "#6E7884"], or: ["#E9B949", "#7A5300"], oranime: ["#F2C452", "#7A5300"], platine: ["#EEF3FA", "#8A94A0"], rubis: ["#B0002E", "#4A0012"], orrose: ["#E3A792", "#7A4A42"],
-    galaxie: ["#2A1458", "#B98CFF"], neon: ["#0D1017", null], arcenciel: [null, null], chocolat: ["#5A2D14", "#2A1205"], carte: ["#F6F2E8", "#15171B"] };
+    galaxie: ["#2A1458", "#B98CFF"], neon: ["#0D1017", null], arcenciel: [null, null], chocolat: ["#5A2D14", "#2A1205"], carte: ["#F6F2E8", "#15171B"], ver: ["#D9A35A", "#6B3A12"] };
   const marqueLivree = v => !!(v.ecurie && v.livree && LV_2D[v.livree]);
   /** pastille de la carte 2D : le disque reste à la couleur du pilote (repère du classement) ; la livrée fait l'anneau, la finition le liseré */
   function marque2D(v) {
@@ -13114,13 +13140,18 @@
       else h += '<circle r="9.3" fill="' + lv[0] + '" stroke="' + lv[1] + '" stroke-width=".8"/>';
       if (v.livree === "chocolat") h += [[-5, 7.6, 2.6], [1, 8.6, 3.4], [6, 7.2, 2.2]].map(([x, y, l]) => '<path d="M' + (x - 1.4) + " " + (y - 1) + "Q" + x + " " + (y + l) + " " + (x + 1.4) + " " + (y - 1) + 'Z" fill="#2A1205"/>').join("") + '<circle cx="-4" cy="-7.4" r=".9" fill="#F3C99B" opacity=".7"/>';
       if (v.livree === "carte") h += '<path d="M-8.6 -1.4c-1.2-1-1.8-1.6-1.8-2.3 0-.6.4-1 1-1 .4 0 .7.2.8.5.2-.3.5-.5.9-.5.6 0 1 .4 1 1 0 .7-.7 1.3-1.9 2.3z" fill="#D62839" transform="translate(1.6 4)"/><path d="M8.4 -3.4c-1.2 1-1.9 1.6-1.9 2.3 0 .6.4 1 1 1 .3 0 .6-.1.8-.4l-.4 1.3h1l-.4-1.3c.2.3.5.4.8.4.6 0 1-.4 1-1 0-.7-.7-1.3-1.9-2.3z" fill="#15171B" transform="translate(-.6 4.6)"/>';
+      if (v.livree === "ver") h += [-6.4, -2.2, 2.2, 6.4].map(x => '<path d="M' + x + ' -8.4Q' + (x + 1.6) + " 0 " + x + ' 8.4" stroke="#7A4A1A" stroke-width="1.1" fill="none" opacity=".75"/>').join("") + '<circle cx="5" cy="-5" r=".8" fill="#8FC8FF"/>';
       if (v.livree === "galaxie") h += [[-6, -5], [5, -6.5], [7, 4], [-3, 7.5]].map(([x, y]) => '<circle cx="' + x + '" cy="' + y + '" r=".7" fill="#fff"/>').join("");
       if (v.livree === "or" || v.livree === "oranime" || v.livree === "chrome" || v.livree === "platine") h += '<path d="M-6.5 -6.5A9.3 9.3 0 0 1 4 -8.4" stroke="#fff" stroke-width="1.2" fill="none" opacity=".8" stroke-linecap="round"/>';
     }
-    const FIN = { argent: "#E6EBF0", or: "#F7CF55", neon: c, diamant: "#C9F6FF", lauriers: "#E9C25A", etoilee: "#FFE596", soleil: "#FF9A2E" };
+    const FIN = { argent: "#E6EBF0", or: "#F7CF55", neon: c, diamant: "#C9F6FF", lauriers: "#E9C25A", etoilee: "#FFE596", soleil: "#FF9A2E", ailee: "#F7CF55", elfique: "#8FCB9A", biolum: "#5CF2E6", feuilledor: "#F5C842" };
+    if (f === "feuilledor") h += '<circle r="10.4" fill="none" stroke="#F5C842" stroke-width="1.6" stroke-dasharray="2.2 1.4 .8 1.8" style="filter:drop-shadow(0 0 2px #FFD84A)"/>' + [[-8.6, -6, 30], [7.8, -7, 110], [9.4, 4.6, 200], [-7.4, 7.6, 280], [0, -11.2, 0]].map(([x, y, a]) => '<path d="M' + (x - 1.6) + " " + y + "L" + (x - .2) + " " + (y - 1.5) + "L" + (x + 1.6) + " " + (y - .4) + "L" + (x + .6) + " " + (y + 1.4) + 'Z" fill="#FFE596" stroke="#9A6716" stroke-width=".25" transform="rotate(' + a + " " + x + " " + y + ')"/>').join("");
+    if (f === "ailee") h += [-1, 1].map(s => '<path d="M' + s * 7 + " -6C" + s * 12 + " -12 " + s * 16 + " -9 " + s * 16 + " -6C" + s * 13 + " -7 " + s * 10 + ' -6 ' + s * 7.6 + ' -3.6Z" fill="#FFFDF2" stroke="#B9A06A" stroke-width=".4"/>').join("");
+    if (f === "elfique") h += '<path d="M-10.6 -2C-12.6 1-12.6 5-10.4 8-8.6 5-8.6 1-10.6-2Z" fill="#4E9A5C" stroke="#EEF4F6" stroke-width=".6"/>';
+    if (f === "biolum") h += [0, 60, 120, 180, 240, 300].map(a => { const r = a * PI / 180; return '<circle cx="' + (Math.cos(r) * 10.4).toFixed(1) + '" cy="' + (Math.sin(r) * 10.4).toFixed(1) + '" r="1.2" fill="' + (a % 120 ? "#5CF2E6" : "#FF8AE0") + '" style="filter:drop-shadow(0 0 1.5px #5CF2E6)"/>'; }).join("");
     if (f === "soleil") h += [0, 45, 90, 135, 180, 225, 270, 315].map(a => { const r = a * PI / 180; return '<path d="M' + (Math.cos(r) * 10.2).toFixed(1) + " " + (Math.sin(r) * 10.2).toFixed(1) + "L" + (Math.cos(r) * 12.4).toFixed(1) + " " + (Math.sin(r) * 12.4).toFixed(1) + '" stroke="#FFB21E" stroke-width="1.3" stroke-linecap="round"/>'; }).join("");
     if (f === "lauriers") h += [-1, 1].map(s => [0, 1, 2].map(i => { const a = (150 - i * 32) * PI / 180, x = s * Math.cos(a) * 10.6, y = Math.sin(a) * 10.6 * -1 + 3; return '<ellipse cx="' + x.toFixed(1) + '" cy="' + (-y + 6).toFixed(1) + '" rx="1" ry="2.1" transform="rotate(' + (s * (60 - i * 30)) + " " + x.toFixed(1) + " " + (-y + 6).toFixed(1) + ')" fill="#E9C25A" stroke="#6B4B0C" stroke-width=".3"/>'; }).join("")).join("");
-    h += '<circle r="7" fill="' + c + '" stroke="' + (f ? FIN[f] : "#fff") + '" stroke-width="' + (f ? 2.1 : 1.8) + '"' + (f === "neon" ? ' style="filter:drop-shadow(0 0 2px ' + c + ')"' : f === "diamant" ? ' style="filter:drop-shadow(0 0 1.5px #C9F6FF)"' : "") + "/>";
+    h += '<circle r="7" fill="' + c + '" stroke="' + (f ? FIN[f] : "#fff") + '" stroke-width="' + (f ? 2.1 : 1.8) + '"' + (f === "neon" || f === "biolum" ? ' style="filter:drop-shadow(0 0 2px ' + (f === "biolum" ? "#5CF2E6" : c) + ')"' : f === "feuilledor" ? ' style="filter:drop-shadow(0 0 1.5px #F5C842)"' : f === "diamant" ? ' style="filter:drop-shadow(0 0 1.5px #C9F6FF)"' : "") + "/>";
     if (f === "etoilee") h += '<path d="M0 -10.6l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z" fill="#FFE596" stroke="#7A5300" stroke-width=".3"/>';
     if (f === "diamant") h += '<path d="M6 -6l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" fill="#fff"/>';
     return h + gemmes2D(v);
@@ -13128,7 +13159,8 @@
   /** traînée de la carte 2D : quelques traits qui suivent la voiture (Simple : rien, comme avant) */
   const TR_2D = { halo: [["c", 5, .35]], flammes: [["#FF6A1F", 5.2, .75], ["#FFE07A", 2, .95]], etincelles: [["#FFD27A", 2.4, .95, "0.1 4"]], comete: [["c", 6.5, .3], ["#FFFFFF", 1.6, .8]],
     supernova: [["#9B87FF", 7, .4], ["#FFFFFF", 2, .85]], turbo: [["#5AB8FF", 4, .6, "6 3"], ["#E6F6FF", 1.2, .9]], arcenciel: [["#FF5A5F", 4.2, .8], ["#FFB547", 4.2, .8], ["#3DDC97", 4.2, .8], ["#4C9AFF", 4.2, .8], ["#B46CF0", 4.2, .8]],
-    cables: [["#3A424C", 1.8, .9, null, -2.6], ["#3A424C", 1.8, .9, null, 2.6], ["#D9E0E8", .8, 1, null, -2.6], ["#D9E0E8", .8, 1, null, 2.6]] };
+    cables: [["#3A424C", 1.8, .9, null, -2.6], ["#3A424C", 1.8, .9, null, 2.6], ["#D9E0E8", .8, 1, null, -2.6], ["#D9E0E8", .8, 1, null, 2.6]],
+    sabre: [["#FF2A3A", 7, .3], ["#FF4A55", 3.2, .95], ["#FFFFFF", 1.2, 1]], glitch: [["#FF3BD4", 2.6, .85, "4 3", -2.4], ["#3BE8FF", 2.6, .85, "3 4", 2.4], ["#F7F24A", 1.3, .9, "2 6"]] };   // v20.61 · Sabre lumineux, Faille
   function traineeSvg2D(v, k, parent) {
     const S = v.ecurie && TR_2D[v.trainee]; if (!S) return null;
     return S.map(([col, w, op, dash, dec], i) => { const p = document.createElementNS("http://www.w3.org/2000/svg", "path"); p.setAttribute("fill", "none"); p.setAttribute("stroke", col === "c" ? v.couleur : col); p.setAttribute("stroke-width", (w * k).toFixed(2));
@@ -13137,9 +13169,14 @@
   }
   function majTrainee2D(v, p, k, enCourse) {
     const h = v.hist, d = h.length ? Math.hypot(h[0][0] - p.x, h[0][1] - p.z) : 99;
-    if (!enCourse || d > 40 * k) { h.length = 0; h.push([p.x, p.z, -p.tz, p.tx]); }
+    // v20.61 : on ne repart de zéro que sur un vrai saut (mise en grille, nouvelle course). Avant (> 40), à 30 images/s (mode léger, téléphone lent)
+    // la voiture parcourt plus de 40 unités par image en course 2D : la traînée était effacée à chaque image et ne se voyait jamais.
+    if (!enCourse || d > 240 * k) { h.length = 0; h.push([p.x, p.z, -p.tz, p.tx]); }
     else if (d > 2.2 * k) { h.unshift([p.x, p.z, -p.tz, p.tx]); if (h.length > 9) h.pop(); }
-    const pts = [[p.x, p.z, -p.tz, p.tx]].concat(h.slice(h.length && Math.hypot(h[0][0] - p.x, h[0][1] - p.z) < .01 ? 1 : 0));
+    // longueur bornée (~70 unités), quelle que soit la cadence : la traînée suit la voiture sans couper à travers le circuit
+    const pts = [[p.x, p.z, -p.tz, p.tx]], LMAX = 70 * k; let lg = 0;
+    for (const q of h.slice(h.length && Math.hypot(h[0][0] - p.x, h[0][1] - p.z) < .01 ? 1 : 0)) { const r = pts[pts.length - 1], s = Math.hypot(q[0] - r[0], q[1] - r[1]);
+      if (lg + s >= LMAX) { const f = s ? (LMAX - lg) / s : 0; pts.push([r[0] + (q[0] - r[0]) * f, r[1] + (q[1] - r[1]) * f, q[2], q[3]]); break; } lg += s; pts.push(q); }
     v.tr.forEach(t => {
       let dd = "";
       if (pts.length >= 2) {

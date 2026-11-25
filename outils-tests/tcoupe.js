@@ -50,6 +50,20 @@ async function page(b, s, quand, sombre, admin) {
     ok(t && !/Flair|titre/i.test(t), "15/12/2026 : la cérémonie du premier trouveur ne parle pas encore du Flair"); await ctx.close(); }
   { const { ctx, p } = await page(b, { role: "perso", nom: "Clément" }, "2026-12-20T10:00:00", false, true);
     const j = await p.evaluate(() => { apercuCoupe(); return !!document.querySelector(".coupe-b"); }); ok(!j, "joueur : l'aperçu admin ne s'ouvre pas"); await ctx.close(); }
+  // v20.61 · la fiche d'un pilote : « 🏆 x / 12 éclats » (un nombre, compté sur le classement public des chercheurs ; ni texte ni signe)
+  for (const sombre of [false, true]) { const { ctx, p, err } = await page(b, { role: "perso", nom: "Théo" }, "2027-04-03T10:00:00", sombre, false);
+    const f = await p.evaluate(async () => {
+      const lire = async nom => { ETAT.fiche = nom; garder(); allerA("fiche"); await new Promise(r => setTimeout(r, 400)); const v = document.querySelector(".vitrine"); return v ? v.innerText : ""; };
+      TRESORS = { l: [{ circuit: "silverstone", saison: 2027, chercheurs: [{ nom: "Kévin", j: 20270104 }, { nom: "Théo", j: 20270109 }] }, { circuit: "djeddah", saison: 2027, chercheurs: [{ nom: "Kévin", j: 20270203 }] },
+        { circuit: "melbourne", saison: 2027, chercheurs: [{ nom: "Clément", j: 20270302 }] }, { circuit: "abudhabi", saison: 2026, chercheurs: [{ nom: "Kévin", j: 20261205 }] }], trouves: ["silverstone"], total: 1, coupe: COUPE_EX };
+      const k = await lire("Kévin"), d = await lire("Devlin"), html = document.querySelector(".vitrine").outerHTML;
+      return { k, d, html };
+    });
+    const ki = (f.k.match(/🏆 (\d+) \/ 12 éclats/) || [])[1], di = (f.d.match(/🏆 (\d+) \/ 12 éclats/) || [])[1];
+    ok(ki === "2" && di === "0" && !/MATIERE|TEXTE|PROLOGUE|◇|○|★|◆/.test(f.k + f.html) && !err.length, "fiche d'un pilote : « 🏆 2 / 12 éclats » pour Kévin (le trésor de décembre ne compte pas), 0 pour Devlin, rien de secret" + (sombre ? " (sombre)" : " (clair)") + " " + JSON.stringify([ki, di]));
+    await p.evaluate(() => { document.querySelectorAll(".revel, .regles, .tuto, .bulle-portrait").forEach(x => x.remove()); document.querySelector(".vitrine").scrollIntoView({ block: "center" }); });
+    await p.screenshot({ path: (process.env.CAPTURES || "/tmp") + "/fiche-eclats-" + (sombre ? "sombre" : "clair") + ".png" });
+    await ctx.close(); }
   await b.close();
   const src = ["js/4-grandprix.js", "js/3-podium.js"].map(f => fs.readFileSync(f, "utf8")).join("");
   ok(!/mithril|sève lumineuse|vitrail de lune|porcelaine de théière|sable doré|cristal rouge/i.test(src), "aucun texte secret de la Coupe dans le dépôt public");

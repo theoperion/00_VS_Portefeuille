@@ -867,7 +867,7 @@ document.addEventListener("keydown", ev => { const t = ev.target.closest && ev.t
 { const pb = document.getElementById("ouvrir-portrait"); if (pb) pb.hidden = !portraitDispo(); }
   { const tv = document.getElementById("moi-tester-versus"), te = document.getElementById("moi-versus-etat");   // v17.96 (Théo) : seulement pour un fichier qui envoie lui-même son relevé (après un transfert)
     const voir = !!(window.Moi && window.Moi.envoieSeul && window.Moi.envoieSeul()); if (tv) tv.parentElement.hidden = !voir; if (te) te.hidden = !voir; }   // V16.56 : Mon portrait à partir du samedi 21/11, 11 h
-  { const ce = document.querySelector('[data-accent-choix="ecurie"]'); if (ce) ce.style.display = saisonJouee() ? "" : "none"; }   // v17.5 : pas de couleur « Mon écurie » avant la Saison 1 (tour de chauffe = bases seulement)
+  { const ce = document.querySelector('[data-accent-choix="ecurie"]'); if (ce) ce.style.display = ecurieOuverte() ? "" : "none"; }   // v17.5 : pas de couleur « Mon écurie » avant la Saison 1 (tour de chauffe = bases seulement)
   if (section) { const s = document.getElementById(section); if (s) plierRegl(s, false); if (s) setTimeout(() => { s.scrollIntoView({ block: "start" }); const i = s.querySelector("input"); if (i && !i.value) i.focus(); }, 30); }
 }
 $("#btn-reglages").addEventListener("click", () => ouvrirReglages());

@@ -24,7 +24,7 @@ function monter3D(box, nom, e, garage) {
 /* v20.48 · en course, chaque voiture porte l'écurie de son pilote (piste.js lit Piste.ecurie).
    Rien avant que la saison soit visible (le tour de chauffe garde les voitures d'avant), ni pour qui n'a encore rien enregistré dans son écurie. */
 if (window.Piste) Piste.ecurie = nom => {
-  if (typeof D === "undefined" || !D || !D.personnes || !saisonVisible() || basesSeules() || !D.personnes.some(p => p.nom === nom)) return null;
+  if (typeof D === "undefined" || !D || !D.personnes || !saisonVisible() || !ecurieOuverte() || !D.personnes.some(p => p.nom === nom)) return null;   // v20.61 : dès l'ouverture de l'écurie (1/12)
   const brut = ((D.ecurie || {})[nom] || {}).equip; if (!brut || !Object.keys(brut).length) return null;
   const e = equipDe(nom), r = voitureEcurie(nom, e);
   r.casqueSvg = casqueForme("pc" + (++NSVG), e.casque, couleur(nom), e.finition);
