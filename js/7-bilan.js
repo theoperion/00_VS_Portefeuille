@@ -678,6 +678,9 @@ function montrerVue(v) {
   VUE_AFFICHEE = v;
   if (v !== "trophees" && typeof TRESOR_APERCU !== "undefined" && TRESOR_APERCU) quitterApercuTresor(false);   // v17.35 : changer d'onglet arrête l'aperçu du trésor
   document.querySelectorAll(".view").forEach(s => { s.hidden = s.dataset.vue !== v; });
+  if (v !== "trophees" && typeof V3D !== "undefined") {   // v20.48 · on quitte le Podium : le showroom 3D s'arrête (il repart au retour, quand l'Écurie se redessine)
+    try { if (V3D.inst) { V3D.yaw = V3D.inst.yaw(); V3D.inst.stop(); V3D.inst = null; } if (V3D.gar) { V3D.gar.stop(); V3D.gar = null; } } catch (e) { /* rien à arrêter */ }
+  }
   document.body.classList.toggle("vue-moi", v === "moi");
   document.querySelectorAll(".onglet").forEach(t => t.setAttribute("aria-current", t.dataset.vue === v || (v === "fiche" && t.dataset.vue === "classement") ? "page" : "false"));
   stock.set(CLES.vue, v);
