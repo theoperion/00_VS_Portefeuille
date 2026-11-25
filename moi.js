@@ -999,6 +999,10 @@ function injecterStyle() {
 .moi .m-rv.fort { border-style: solid; border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--panel)); color: var(--ink); padding: 11px 12px; }
 .moi .m-rv-etat { margin-top: 14px; padding: 10px 12px; border-radius: 10px; background: var(--panel); border: 1px solid var(--rule); font-size: 13px; color: var(--ink-2); display: grid; gap: 6px; }
 .moi .m-rv-etat p { margin: 0; } .moi .m-rv-corr { justify-self: start; font-size: 12.5px; }
+.moi .m-pru { margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--panel); border: 1px solid var(--rule); font-size: 13.5px; line-height: 1.4; overflow-wrap: anywhere; }
+.moi .m-pru small { color: var(--ink-3); font-size: 12px; }
+.moi .jr.cible { background: color-mix(in srgb, var(--mc, #c80) 14%, transparent); border-radius: 8px; padding-left: 6px; padding-right: 6px; }
+.moi .m-jplus { display: block; margin: 12px auto 0; font-size: 13.5px; color: var(--ink-2); text-align: center; min-height: 44px; }
 .moi .jmois { margin: 14px 0 0; font: italic 800 12px/1 var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
 .moi .jmois:first-child { margin-top: 4px; }
 .moi .jr .ja { flex-wrap: wrap; }
@@ -1375,6 +1379,7 @@ function adopterNouvelleAdresse() {
     const Dv = dVersus(), na = Dv && Dv.moiAdresse;
     if (!na || !configure() || (typeof simulationM === "function" && simulationM())) return false;
     if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(na) || adresse() === na) return false;
+    suivreAdresseVerifsPru(adresse(), na);
     stock.set(K.api, na); stock.del(K.cache); stock.del(K.cacheLe); stock.del(K.refus); RAW = null; M = null; generation++;
     return true;
   } catch (e) { return false; }
@@ -4883,7 +4888,7 @@ function fermerSaisieM(garder) {
   const s = $f("m-saisie");
   /* v17.78 (lot60) : ✕, Échap ou retour = ce qui est tapé reste gardé pendant la visite (jamais après un envoi : envoyerOrdre ferme sans garder) */
   if (garder === true && s && !s.hidden && F && paneCourant === "ordre" && etape > 1 && entame()) brouillons[F.type] = { F: Object.assign({}, F), IMP: IMP };
-  if (s) s.hidden = true; confirmeSuppr = null; gererRaccourcis = false;
+  if (s) s.hidden = true; confirmeSuppr = null; gererRaccourcis = false; cibleJournal = null;
 }
 function paneSaisie(o) {
   paneCourant = o;
@@ -5758,7 +5763,7 @@ function rendreFormulaire() {
   else { const ma = lireNombre(F.montantApport), m = lireNombre(F.montant), im = F.imp || {};
     const vers = F.type !== "Achat" ? "" : '<p class="m-vers-l">' + (F.apport ? "💶 + versement de " + euros(ma > 0 ? ma : m > 0 ? m : 0) : "💶 Sans versement : " + (im.versDoc ? "déjà enregistré avec le 1er support du document" : im.bascule ? "payé par la vente du même avis" : "payé par les espèces du compte")) + "</p>" + (F.imp && (im.versDoc ? F.apport : !(im.bascule && !F.apport)) ? '<span class="aide lie m-garde">' + esc(gardeImport()) + "</span>" : "");
     corps = (IMP && IMP.ops && F.imp && IMP.ops.length > 1 ? '<p class="m-imp-n petit">📄 Opération ' + (F.imp.i + 1) + "/" + IMP.ops.length + " de l'avis</p>" : F.imp ? '<p class="m-imp-n petit">📄 Lu dans ton avis : relis, puis enregistre.</p>' : "") +
-      '<div class="m-relire"><p class="phrase-ordre" id="m-phrase"></p>' + champPrix + vers +
+      '<div class="m-relire"><p class="phrase-ordre" id="m-phrase"></p>' + champPrix + vers + '<p class="m-pru" id="m-pru" hidden></p>' +
       '<div class="m-relire-a"><button class="lien" type="button" data-etape="2">Modifier les chiffres</button>' + (F.type === "Achat" ? '<button class="lien" type="button" data-etape="3">Modifier le versement</button>' : "") + "</div></div>" +
       '<div class="recap" id="m-recap"></div>'; }
   $f("m-pane-ordre").innerHTML =
@@ -6050,6 +6055,7 @@ function majRecap() {
   /* chaque étape ne montre que ses alertes : les chiffres (2), le versement et les espèces (3), tout à la relecture */
   if (etape === 3) { a.msg = a.msg.filter(m => m[2] === "especes" || m[3] === "f-mapport"); a.doutes = (a.doutes || []).filter(([k]) => k === "montantApport"); }
   if ($f("m-phrase")) { const ph = phraseOrdre(etape === 4 && F.type === "Achat"); $f("m-phrase").innerHTML = ph; $f("m-phrase").hidden = !ph; }
+  if ($f("m-pru")) { const h = htmlPruApres(); $f("m-pru").innerHTML = h; $f("m-pru").hidden = !h; }   // (préparé) : le PRU après cet achat, avant d'enregistrer
   if ($f("m-recap")) { $f("m-recap").innerHTML = a.lignes.map(l => "<div><span>" + l[0] + "</span><b>" + l[1] + "</b></div>").join(""); $f("m-recap").hidden = !a.lignes.length; }
   const A = aidesCalcul();
   [["f-montant-calc", "montant"], ["f-qte-calc", "qte"], ["f-frais-calc", "frais"]].forEach(([id, k]) => { const el = $f(id); if (el) { el.textContent = A[k]; el.hidden = !A[k]; } });
@@ -6112,7 +6118,7 @@ async function envoyerOrdre(forcer) {
   }));
   stock.set("versus.moi.derniereEnv", F.env);
   { const m = envsParType(); m[F.type] = F.env; stock.set("versus.moi.envType", JSON.stringify(m)); }   // v16.97 : le compte de ce type, proposé la prochaine fois
-  const sauvegarde = Object.assign({}, F);
+  const sauvegarde = Object.assign({}, F), vPru = pruApres();   // (préparé) : calculé AVANT l'envoi (le fichier relu contiendra déjà l'achat)
   fermerSaisieM();
   toast("Enregistrement de l'ordre…");
   const enAttente = ordres.map(o => Object.assign({ app: false, envoi: true, ligne: 0 }, o, { quantite: o.quantite === undefined ? null : o.quantite }));
@@ -6121,6 +6127,7 @@ async function envoyerOrdre(forcer) {
   if (M && M.ref) M.ref.journal = (M.ref.journal || []).filter(o => !o.envoi);
   if (rep.ok) { ordresEnregistres = ordresEnregistres.concat(enAttente.map(o => Object.assign({}, o, { envoi: false }))); if (ordres.some(o => o.type === "Frais en parts" && /Linxea/i.test(o.enveloppe || ""))) stock.set(cleStock("fraisLx"), isoJour(new Date()));   // v17.77 : rappel des frais Linxea fait
     delete brouillons[sauvegarde.type];
+    if (vPru) { memoriserVerifPru(vPru, ordres[ordres.length - 1]); signalerCloche(); }
     if (window.SONS) SONS.succes(); toast(rep.message || "Ordre enregistré."); charger(true); suiteImport(sauvegarde); return; }
   if (rep.erreur === "cle") { cleRefusee(rep.message); toast("Clé refusée par ton fichier."); if (vueMoi()) rendre(); return; }
   if (rep.erreur === "incertain") { ordresIncertains = ordresIncertains.concat(enAttente.map(o => Object.assign({}, o, { envoi: true }))); toast("L'ordre a peut-être été enregistré : vérifie l'Historique avant de renvoyer."); charger(true); return; }   // v16.83 : jamais rouvert rempli (doublon)
@@ -6136,8 +6143,34 @@ function versementJumeau(j, i) {
   return j.findIndex((x, k) => k !== i && !x.envoi && x.app && x.type === "Apport" && x.date === o.date && x.enveloppe === o.enveloppe);
 }
 let confirmeRV = false;
+/* (préparé, Théo 25/11) · « Voir plus anciens » : pages d'ordres plus anciens demandées au fichier (action « journal », serveur du 25/11).
+   Rangées à côté des données reçues (WeakMap) : jamais mélangées à ref.journal (doublons, rappels…), jamais gardées en cache,
+   oubliées dès que le fichier est relu (les numéros de ligne ont pu bouger). Un fichier pas encore mis à jour n'envoie pas
+   « journalSuite » : pas de bouton, rien ne change. */
+const anciensJ = new WeakMap();
+function journalAnciens() {
+  const r = M && M.ref; if (!r) return { lignes: [], suite: 0 };
+  if (!anciensJ.has(r)) anciensJ.set(r, { lignes: [], suite: typeof r.journalSuite === "number" ? r.journalSuite : 0, charge: false, msg: "" });
+  return anciensJ.get(r);
+}
+/** le journal affiché : celui du fichier + les pages plus anciennes déjà demandées (sans doublon de ligne), du plus récent au plus ancien */
+function journalAffiche() {
+  const base = refData().journal || [], A = journalAnciens();
+  if (!A.lignes.length) return base;
+  const vues = new Set(base.filter(o => !o.envoi && o.ligne).map(o => o.ligne));
+  return base.concat(A.lignes.filter(o => !vues.has(o.ligne))).sort((a, b) => !!b.envoi - !!a.envoi || String(b.date).localeCompare(String(a.date)) || (b.ligne || 0) - (a.ligne || 0));
+}
+async function voirPlusAnciens() {
+  const r = M && M.ref, A = journalAnciens(); if (!r || A.charge || !(A.suite > 0)) return;
+  A.charge = true; A.msg = ""; rendreJournal();
+  const rep = await posterFichier({ action: "journal", avant: A.suite });
+  A.charge = false;
+  if (rep.ok && Array.isArray(rep.journal)) { A.lignes = A.lignes.concat(rep.journal.filter(o => o && /^\d{4}-\d\d-\d\d/.test(String(o.date || "")))); A.suite = typeof rep.suite === "number" ? rep.suite : 0; }
+  else A.msg = rep.message || "Les ordres plus anciens n'ont pas pu être lus.";
+  if (M && M.ref === r && paneCourant === "journal" && !$f("m-saisie").hidden) rendreJournal();
+}
 function rendreJournal() {
-  const j = refData().journal || [];
+  const j = journalAffiche(), A = journalAnciens();
   const auj = aujourdhuiISO();
   const z = $f("m-pane-journal");
   /* v17.34 (Conseil) : fichier relié au Versus = relevé envoyé tout seul ; la saisie à la main reste possible, avec un avertissement */
@@ -6147,12 +6180,13 @@ function rendreJournal() {
   if (!j.length) { z.innerHTML = '<div class="vide">Aucune opération pour l\'instant.</div>' + ligneRV; brancherRV(z); return; }
   const net = o => (+o.montant || 0) + (+o.frais || 0) * typeInfo(o.type).tresorerie;
   let mois = "", rang = 0;
+  const ic = cibleJournal ? j.findIndex(o => !o.envoi && memeOrdre(o, cibleJournal)) : -1;   // (préparé) : ✏️ Corriger un PRU → cet ordre
   const lignes = j.map((o, i) => {
     const m = String(o.date).slice(0, 7), tete = m !== mois ? '<h5 class="jmois">' + esc(libMois(m, true)) + "</h5>" : ""; mois = m;
     const refaire = !o.envoi && (o.app || rang < 5); if (!o.envoi) rang++;
     const pu = (o.type === "Achat" || o.type === "Vente") && o.quantite > 0 && o.montant > 0 ? " · " + cours(net(o) / o.quantite) + "/part" : "";
     const jum = confirmeSuppr === i ? versementJumeau(j, i) : -1;
-    return tete + '<div class="jr' + (o.envoi ? " envoi" : "") + '"><div class="jd">' + o.date.slice(8, 10) + "/" + o.date.slice(5, 7) + "<small>" + o.date.slice(0, 4) + "</small></div>" +
+    return tete + '<div class="jr' + (o.envoi ? " envoi" : "") + (i === ic ? ' cible" id="j-cible' : "") + '"><div class="jd">' + o.date.slice(8, 10) + "/" + o.date.slice(5, 7) + "<small>" + o.date.slice(0, 4) + "</small></div>" +
       '<div class="jm"><b>' + esc(libType(o.type)) + (o.actif ? " " + esc(o.actif) : "") + (o.envoi ? '<span class="tag app">envoi…</span>' : "") + (o.date > auj ? '<span class="tag prog">programmé</span>' : "") + (o.app ? '<span class="tag app">saisi ici</span>' : "") + "</b>" +
       "<span>" + esc(o.enveloppe) + (o.quantite !== null && o.quantite !== undefined ? " · " + qteBrute(o.quantite) + " part" + (o.quantite > 1 ? "s" : "") : "") + pu + (o.frais ? " · frais " + eur(o.frais, 2) : "") + "</span></div>" +
       '<div class="jv">' + eur(o.montant, 2) + "</div>" +
@@ -6161,8 +6195,17 @@ function rendreJournal() {
         : jum >= 0 ? '<span class="jconf">Le versement de ' + eur(j[jum].montant, 2) + ' lié reste enregistré.</span><button class="lien danger" type="button" data-suppr="' + i + '">Supprimer l\'achat seul</button><button class="lien danger" type="button" data-suppr2="' + i + '" data-jum="' + jum + '">Supprimer aussi le versement</button>'
         : '<button class="lien danger" type="button" data-suppr="' + i + '">Confirmer la suppression</button>') + "</div>") + "</div>";
   }).join("");
-  z.innerHTML = '<p class="info aide">Supprimable 7 jours si saisi ici · Refaire = même opération, date du jour.</p><div class="m-jo">' + lignes + "</div>" + ligneRV;
+  const plus = A.charge ? '<p class="m-jplus">Lecture des ordres plus anciens…</p>'
+    : (A.msg ? '<p class="alerte warn" role="alert">' + esc(A.msg) + "</p>" : "") + (A.suite > 0 ? '<button class="lien m-jplus" type="button" id="j-plus">Voir plus anciens</button>' : "");
+  const cib = !cibleJournal ? "" : '<p class="alerte warn m-jcible">✏️ ' + (ic >= 0 ? "Ton achat " + esc(cibleJournal.actif || "") + " du " + esc(dateCourteIso(cibleJournal.date)) + " est surligné ci-dessous. S'il est faux : « Supprimer », puis ressaisis-le avec les chiffres de ton avis."
+    : "Ton achat du " + esc(dateCourteIso(cibleJournal.date)) + " n'est pas dans cette liste" + (A.suite > 0 ? " : touche « Voir plus anciens » en bas." : " : corrige-le dans l'onglet Ordres de ton fichier.")) + "</p>";
+  z.innerHTML = cib + '<p class="info aide">Supprimable 7 jours si saisi ici · Refaire = même opération, date du jour.</p><div class="m-jo">' + lignes + "</div>" + plus + ligneRV;
+  if (ic >= 0 && !rendreJournal.vu) { rendreJournal.vu = true; setTimeout(() => { const c = z.querySelector("#j-cible"); if (c && c.scrollIntoView) c.scrollIntoView({ block: "center" }); rendreJournal.vu = false; }, 60); }
   brancherRV(z);
+  if (z.querySelector("#j-plus")) z.querySelector("#j-plus").addEventListener("click", voirPlusAnciens);
+  /* retire un ordre de l'affichage (données du fichier ET pages anciennes) ; renvoie de quoi le remettre si le fichier refuse */
+  const retirer = (...os) => { const r = M.ref, avant = [r.journal, A.lignes], lg = os.map(o => o.ligne).filter(Boolean), part = x => os.includes(x) || (!x.envoi && lg.includes(x.ligne));   // même ligne vue dans une page ancienne : retirée aussi
+    r.journal = (r.journal || []).filter(x => !part(x)); A.lignes = A.lignes.filter(x => !part(x)); return () => { [r.journal, A.lignes] = avant; }; };
   z.querySelectorAll("[data-refaire]").forEach(b => b.addEventListener("click", () => {
     const o = j[+b.dataset.refaire];
     /* v17.34 : un achat refait arrive SANS le versement (celui d'origine est une ligne à part du journal) */
@@ -6174,21 +6217,22 @@ function rendreJournal() {
     if (confirmeSuppr !== i) { confirmeSuppr = i; rendreJournal(); return; }
     confirmeSuppr = null;
     const o = j[i];
-    M.ref.journal = j.filter((x, k) => k !== i);
+    const remettre = retirer(o);
     rendreJournal();
     toast("Suppression en cours…");
     const rep = await supprimer(o);
-    if (rep.ok) { toast(rep.message || "Ordre supprimé."); charger(true); }
-    else { M.ref.journal = j; if (!$f("m-saisie").hidden) rendreJournal(); }
+    if (rep.ok) { toast(rep.message || "Ordre supprimé."); oublierVerifPru(null, o); charger(true); }
+    else { remettre(); if (!$f("m-saisie").hidden) rendreJournal(); }
   }));
   /* l'achat puis son versement : l'un APRÈS l'autre, le second seulement si le premier a réussi */
   z.querySelectorAll("[data-suppr2]").forEach(b => b.addEventListener("click", async () => {
     const i = +b.dataset.suppr2, k = +b.dataset.jum, o = j[i], v = j[k];
     confirmeSuppr = null;
-    M.ref.journal = j.filter((x, n) => n !== i && n !== k); rendreJournal();
+    const remettre = retirer(o, v); rendreJournal();
     toast("Suppression en cours…");
     const r1 = await supprimer(o, "Achat");
-    if (!r1.ok) { M.ref.journal = j; if (!$f("m-saisie").hidden) rendreJournal(); return; }
+    if (!r1.ok) { remettre(); if (!$f("m-saisie").hidden) rendreJournal(); return; }
+    oublierVerifPru(null, o);
     const r2 = await supprimer(v, "Achat supprimé, mais pas le versement");
     if (r2.ok) toast("Achat et versement supprimés.");
     charger(true);
@@ -7641,6 +7685,80 @@ function ouvrirCollerLinxea() {
   IMP = { panneau: true, coller: true }; etape = 1; rendreFormulaire();
   setTimeout(() => { const t = $f("f-imp-txt"); if (t) t.focus(); }, 60);
 }
+/* ---- (préparé, Théo 25/11) · « Vérifie ton prix de revient » ----
+   1. AVANT d'enregistrer un achat (étape « Relire ») : le PRU de la ligne que l'appli calcule avec cet achat (prix moyen pondéré,
+      frais compris), et l'écart avec le PRU actuel de ton fichier ; à comparer avec celui de ton compte en ligne.
+   2. APRÈS l'enregistrement : un rappel « À faire » (et la cloche) « Vérifie le PRU de X sur ton compte en ligne : l'appli trouve Y € »,
+      ✅ Conforme (rangé) ou ✏️ Corriger (ouvre l'Historique sur cet ordre). Gardé sur ce téléphone seulement (rien n'est envoyé),
+      30 jours au plus, retiré seul si l'ordre est supprimé depuis l'appli. Mode discret : aucun prix affiché. */
+function pruApres() {
+  if (!F || F.type !== "Achat" || !F.actif || !F.env) return null;
+  const q = lireNombre(F.qte), m = lireNombre(F.montant);
+  if (!(q > 0 && m > 0) || millierDouteux(F.montant)) return null;
+  const d = (refData().detenu || []).find(x => x.env === F.env && x.code === F.actif), q0 = d && d.qte > 1e-9 ? d.qte : 0;
+  const p0 = q0 && typeof d.pru === "number" && d.pru > 0 ? d.pru : null;
+  if (q0 && p0 === null) return null;   // ligne détenue mais PRU inconnu du fichier : pas de calcul inventé
+  const v = { env: F.env, code: F.actif, avant: p0, apres: null, date: F.date, pourquoi: "" };
+  /* relecture moi-patrimoine (25/11) : pas de chiffre quand le calcul depuis la ligne d'aujourd'hui serait faux */
+  const j = journalAffiche().filter(o => !o.envoi), meme = o => o.enveloppe === F.env && o.actif === F.actif;
+  // (1) un ordre de cette ligne déjà enregistré depuis l'ouverture mais pas encore relu dans le fichier (2e achat d'un même avis, 2e saisie…)
+  if (ordresEnregistres.some(o => meme(o) && !j.some(x => memeOrdre(x, o)))) { v.pourquoi = "relecture"; return v; }
+  // (2) achat daté avant une vente ou des frais en parts de cette ligne (le PRU moyen dépend alors de l'ordre des opérations), ou journal trop court pour le savoir
+  const A = journalAnciens(), r = refData(), nouveau = typeof r.journalSuite === "number";
+  // les lignes « à la suite » (30 dernières + pages plus anciennes) : pas les ordres de l'appli ajoutés hors de cette suite
+  const dates = j.filter(o => !nouveau || !o.ligne || o.ligne >= r.journalSuite || A.lignes.includes(o)).map(o => String(o.date || "").slice(0, 10)).filter(Boolean).sort();
+  const complet = nouveau ? A.suite === 0 : (r.journal || []).length < 30;
+  if (F.date && F.date < (dates[0] || "") && !complet) { v.pourquoi = "fichier"; return v; }
+  if (F.date && j.concat(ordresEnregistres).some(o => meme(o) && String(o.date).slice(0, 10) > F.date && o.type !== "Achat" && typeInfo(o.type).quantite)) { v.pourquoi = "fichier"; return v; }
+  const c0 = q0 ? (typeof d.cout === "number" && d.cout > 0 ? d.cout : q0 * p0) : 0;   // le coût de revient du fichier (le PRU affiché est arrondi)
+  v.apres = (c0 + m) / (q0 + q);
+  return v;
+}
+/** le PRU de la ligne dans le fichier relu APRÈS l'enregistrement de cet ordre (null tant que le fichier n'a pas été relu) */
+function pruFichierApres(x) {
+  const g = M && Date.parse(M.genere || ""), d = ((M && M.ref && M.ref.detenu) || []).find(y => y.env === x.env && y.code === x.code);
+  return g && g >= x.t - 60000 && d && typeof d.pru === "number" && d.pru > 0 ? d.pru : null;
+}
+function htmlPruApres() {
+  const v = pruApres(); if (!v) return "";
+  const discret = ETAT.discret === "oui", c = x => discret ? "•••" + NB + "€" : nbCours(x), ec = v.avant === null ? 0 : v.apres - v.avant;
+  if (v.apres === null) return "🧮 <b>PRU de " + esc(v.code) + " : " + (v.pourquoi === "relecture" ? "sera recalculé après relecture de ton fichier" : "recalculé par ton fichier") + "</b>" +
+    (v.pourquoi === "fichier" ? "<br><small>Achat daté avant une vente ou des frais de cette ligne : le calcul se fait dans l'ordre des dates.</small>" : "<br><small>Un autre ordre de cette ligne vient d'être enregistré.</small>") +
+    "<br><small>Une fois l'ordre passé, compare avec le PRU affiché sur ton compte en ligne : je te le rappellerai.</small>";
+  return "🧮 <b>PRU de " + esc(v.code) + " après cet achat : " + c(v.apres) + "</b> (frais compris)" +
+    (v.avant === null ? " · nouvelle ligne" : "<br><small>Aujourd'hui dans ton fichier : " + c(v.avant) + (discret ? "" : " (" + (ec >= 0 ? "+" : "−") + nf(2, 4).format(Math.abs(ec)) + NB + "€)") + "</small>") +
+    "<br><small>Une fois l'ordre passé, compare avec le PRU affiché sur ton compte en ligne : je te le rappellerai.</small>";
+}
+/* relecture moi-code-donnees (25/11) : chaque rappel porte l'adresse du FICHIER qui l'a produit (src) ; il n'est montré que pour ce fichier,
+   et toutes les listes sont effacées par « Oublier » et au branchement d'un autre fichier (jamais une date ou un montant d'un autre joueur) */
+function verifsPru() {
+  let l = []; try { l = JSON.parse(stock.get(cleStock("verifPru")) || "[]") || []; } catch (e) { l = []; }
+  const lim = Date.now() - 30 * 864e5, src = adresse(); return Array.isArray(l) ? l.filter(x => x && x.id && x.t > lim && src && x.src === src) : [];
+}
+function clesVerifsPru() { const out = []; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^versus\.moi\.verifPru\./.test(k || "")) out.push(k); } } catch (e) {} return out; }
+function effacerVerifsPru() { clesVerifsPru().forEach(k => stock.del(k)); }
+/** le même fichier change d'adresse (adresse officielle) : ses rappels le suivent */
+function suivreAdresseVerifsPru(avant, apres) {
+  clesVerifsPru().forEach(k => { try { const l = JSON.parse(stock.get(k) || "[]"); if (Array.isArray(l)) stock.set(k, JSON.stringify(l.map(x => x && x.src === avant ? Object.assign({}, x, { src: apres }) : x))); } catch (e) { stock.del(k); } });
+}
+function garderVerifsPru(l) { try { stock.set(cleStock("verifPru"), JSON.stringify(l.slice(-12))); } catch (e) {} }
+function memoriserVerifPru(v, o) {
+  if (!v || !o) return;
+  const id = "pru" + Date.now().toString(36), l = verifsPru().filter(x => !(x.env === v.env && x.code === v.code));   // une seule vérification par ligne : la plus récente
+  l.push({ id, src: adresse(), env: v.env, code: v.code, pru: v.apres === null ? null : +v.apres.toFixed(6), t: Date.now(), ordre: { date: o.date, enveloppe: o.enveloppe, type: o.type, actif: o.actif, quantite: o.quantite, montant: o.montant } });
+  garderVerifsPru(l);
+}
+function memeOrdre(a, b) { return !!a && !!b && a.date === b.date && a.enveloppe === b.enveloppe && a.type === b.type && (a.actif || "") === (b.actif || "") && Math.abs((+a.montant || 0) - (+b.montant || 0)) < .005 && Math.abs((+a.quantite || 0) - (+b.quantite || 0)) < 1e-6; }
+function oublierVerifPru(id, ordre) { garderVerifsPru(verifsPru().filter(x => x.id !== id && !(ordre && memeOrdre(x.ordre, ordre)))); signalerCloche(); }
+function titreVerifPru(x) {
+  const p = x.pru !== null && x.pru !== undefined ? x.pru : pruFichierApres(x);   // pas de chiffre calculé : celui du fichier relu
+  return "Vérifie le PRU de " + x.code + " sur ton compte en ligne" + (p === null ? " (ton fichier le recalcule)" : " : l'appli trouve " + (ETAT.discret === "oui" ? "•••" + NB + "€" : nbCours(p)));
+}
+let cibleJournal = null;   // l'ordre à montrer dans l'Historique (✏️ Corriger)
+function corrigerVerifPru(id) {
+  const x = verifsPru().find(v => v.id === id); if (!x) return;
+  cibleJournal = x.ordre; ouvrirSaisieM(null, "journal");
+}
 function tachesAFaire(o) {
   const l = []; if (!M) return l;
   const quand = iso => { if (!iso || !/^\d{4}-\d\d-\d\d/.test(iso)) return "à faire"; const j = Math.round((new Date(isoJour(new Date()) + "T12:00:00") - new Date(iso.slice(0, 10) + "T12:00:00")) / 864e5);
@@ -7659,7 +7777,8 @@ function tachesAFaire(o) {
   { const fx = fraisLxDu(); if (fx && !reporte("fraisLx")) l.push({ k: "fraisLx", cles: ["fraisLx"], titre: "Frais de gestion Linxea à saisir", date: fx, quand: quand(fx), ico: "🧾" }); }
   { const lp = lxProgDu(); if (lp && !reporte("lxProg")) l.push({ k: "lxProg", cles: ["lxProg"], titre: "Versement programmé Linxea", date: lp, quand: quand(lp), ico: "💸" }); }
   if (feAVerifier()) l.push({ k: "fondsEuros", cles: ["fondsEuros"], titre: "Fonds euros : ton taux estimé tient toujours ?", date: "", quand: "tous les 3 mois", fe: true });
-  l.forEach((t, i) => { t.i = i; t.ico = t.ico || ICO_RAPPEL[t.k] || "◷"; t.verbe = t.anniv ? "noter : " + t.titre.toLowerCase() : VERBES_RAPPEL[t.k] || "faire : " + t.titre.toLowerCase(); });
+  verifsPru().forEach(x => l.push({ k: x.id, cles: [x.id], titre: titreVerifPru(x), date: x.ordre.date, quand: "après ton achat du " + dateCourteIso(x.ordre.date) + " sur " + x.env, ico: "🧮", pru: x, verbe: "vérifier le PRU de " + x.code }));
+  l.forEach((t, i) => { t.i = i; t.ico = t.ico || ICO_RAPPEL[t.k] || "◷"; t.verbe = t.verbe || (t.anniv ? "noter : " + t.titre.toLowerCase() : VERBES_RAPPEL[t.k] || "faire : " + t.titre.toLowerCase()); });
   l.sort((a, b) => (a.date || "9") < (b.date || "9") ? -1 : (a.date || "9") > (b.date || "9") ? 1 : a.i - b.i);
   return o === "artema" ? l.filter(t => t.cles.every(k => /^(artema|releve)/.test(k))) : l;
 }
@@ -7676,7 +7795,8 @@ function htmlAFaire(o) {
     return "";   // v17.3 (Théo) : rien à faire = rien d'affiché (ni « Rien à faire », ni prochain rappel, ni reportés)
   }
   const ligne = t => '<div class="af-r"><span class="af-i" aria-hidden="true">' + t.ico + '</span><span class="af-t"><b>' + esc(t.titre) + "</b><small>" + esc(t.quand) + "</small></span>" +
-    '<span class="af-a"><button class="mini-btn" type="button" data-af-faire="' + esc(t.k) + '">Faire</button><button class="lien" type="button" data-af-tard="' + esc(t.cles.join(",")) + '">Plus tard</button></span></div>';
+    (t.pru ? '<span class="af-a"><button class="mini-btn" type="button" data-pru-ok="' + esc(t.k) + '">✅ Conforme</button><button class="lien" type="button" data-pru-corr="' + esc(t.k) + '">✏️ Corriger</button></span></div>'
+      : '<span class="af-a"><button class="mini-btn" type="button" data-af-faire="' + esc(t.k) + '">Faire</button><button class="lien" type="button" data-af-tard="' + esc(t.cles.join(",")) + '">Plus tard</button></span></div>');
   const vis = l.slice(0, 3), reste = l.slice(3);
   return '<section class="m-afaire m-rappel" aria-label="À faire"><div class="af-h"><b>À faire</b><span class="af-n">' + l.length + "</span>" + (o === "artema" ? "" : "<small>le plus ancien d'abord</small>") + "</div>" +
     vis.map(ligne).join("") +
@@ -7702,6 +7822,7 @@ function faireTache(k) {
     if (a) toast("🎂 " + a.info); signalerCloche(); rendre(); return; }
   if (k === "soldes") { if (window.Moi) window.Moi.saisir(); return; }
   if (k === "point") { ouvrirPointArtema("point"); return; }
+  if (/^pru/.test(k)) { corrigerVerifPru(k); return; }   // (préparé) : « 👉 vérifier le PRU » de la phrase-bilan ouvre l'ordre dans l'Historique
   faireRappel(k);
 }
 function brancherAFaire(v) {
@@ -7711,6 +7832,8 @@ function brancherAFaire(v) {
     toast("C'est noté : je te le rappelle demain."); signalerCloche(); rendre();
   }));
   v.querySelectorAll("[data-bilan-faire]").forEach(b => b.addEventListener("click", () => faireTache(b.dataset.bilanFaire)));
+  v.querySelectorAll("[data-pru-ok]").forEach(b => b.addEventListener("click", () => { oublierVerifPru(b.dataset.pruOk); toast("✅ PRU conforme : c'est noté."); rendre(); }));
+  v.querySelectorAll("[data-pru-corr]").forEach(b => b.addEventListener("click", () => corrigerVerifPru(b.dataset.pruCorr)));
 }
 /** la phrase-bilan : total · variation depuis la fin du mois dernier (sinon le jour) · LA chose à faire. Rien en € en mode discret, jamais de rouge */
 function phraseBilan() {
@@ -7877,6 +8000,7 @@ function notifications() {
   const d = dateRappel(M.rappel);
   const aFaire = /À mettre à jour/.test(M.rappel || "") || (d && d - Date.now() < 2 * 864e5);
   if (feAVerifier()) items.push({ t: "orange", txt: "Fonds euros : taux estimé à vérifier" });
+  if (!M.simple) verifsPru().forEach(x => items.push({ t: "orange", txt: "🧮 " + titreVerifPru(x) }));   // (préparé)
   rappelsFichier().filter(rappelDu).forEach(r => items.push({ t: "orange", txt: r.nom + " : " + String(r.statut).replace(/^[^\wÀ-ÿ]+/u, "") + (r.prochaine ? " (prévu le " + frDate(String(r.prochaine).slice(0, 10)) + ")" : "") }));
   if (aFaire && !rappelsFichier().length && !items.some(x => x.t === "orange")) items.push({ t: "orange", txt: M.rappel });
   const niveau = items.some(x => x.t === "rouge") ? "rouge" : items.some(x => x.t === "orange") ? "orange" : "";
@@ -8313,6 +8437,7 @@ window.Moi = {
   retourSaisie,
   envoieSeul() { lireCache(); return versusRelie(); },   // v17.96 : le fichier envoie-t-il lui-même son relevé au Versus ?
   dernierReleveVersus,   // v20.53 (P1) : jour du dernier relevé Versus déjà parti (lu aussi par les tests)
+  _pru() { return { verifs: verifsPru(), cloche: notifications().items.map(x => x.txt), taches: tachesAFaire().filter(t => t.pru).length }; },   // (préparé) : pour les tests
   _lxProgDu(m, d) { const a = M; M = m; try { return lxProgDu(d); } finally { M = a; } },   // v20.54 : pour les tests (faux fichier)
   rafraichir(frais) { if (configure()) { rendre(); charger(!!frais); } },
   testerVersus() {   // v17.93 (Théo) : fichier lu directement par le Versus (Théo) → on le dit clairement, avec le dernier relevé
@@ -8326,10 +8451,11 @@ window.Moi = {
   },
   connecter(url, k) {
     url = String(url || "").trim();
+    if (url && url !== adresse()) effacerVerifsPru();   // un autre fichier : aucun rappel PRU de l'ancien
     if (url) stock.set(K.api, url);
     if (k) stock.set(K.cle, k);
     if (url || k) { couperLecture(); ordresEnregistres = []; ordresIncertains = []; M = null; SRC = ""; erreur = ""; dernierAppel = 0; stock.del(K.cache); stock.del(K.cacheLe); stock.del(K.refus); }
   },
-  oublier() { couperLecture(); ordresEnregistres = []; ordresIncertains = []; [K.api, K.cle, K.cache, K.cacheLe, K.refus].forEach(k => stock.del(k)); M = null; SRC = ""; erreur = ""; signalerCloche(); },
+  oublier() { couperLecture(); ordresEnregistres = []; ordresIncertains = []; effacerVerifsPru(); [K.api, K.cle, K.cache, K.cacheLe, K.refus].forEach(k => stock.del(k)); M = null; SRC = ""; erreur = ""; signalerCloche(); },
 };
 })();
