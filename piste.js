@@ -12004,7 +12004,7 @@
   const etoile5 = r => { const P = [[0, 0]]; for (let i = 0; i <= 10; i++) { const a = PI / 2 + i / 10 * TAU, k = i % 2 ? r * .45 : r; P.push([Math.cos(a) * k, Math.sin(a) * k]); } return P.slice(1).map((p, i, A) => i < A.length - 1 ? [[0, 0], p, A[i + 1]] : null).filter(Boolean); };
   /** casque du pilote (v20.48) : coque ovale, mentonnière, visière, bande, aileron arrière ; les casques spéciaux gardent leur signe (toque, couronne, insigne, étoile…) */
   function casque3D(g, v, accent) {
-    const m = v.casqueModele || "", D0 = CQ_DEF[m] || [], base = hex(v.casque || v.couleur || "#ffffff"), c = hex(v.couleur || "#4C9AFF");
+    const m = v.casqueModele || "", D0 = CQ_DEF[m] || [], base = hex(v.casque || v.couleur || "#ffffff"), c = hex(v.couleur || "#4C9AFF"), TC = v.teintes && v.teintes.casque;   // v20.70 · 🎨
     const bande = D0[0] ? hex(D0[0]) : m === "carbone" ? c : m ? accent : null, emB = D0[1] || 0;
     const vis = D0[2] === "iri" ? [hex("#6A4BFF"), .35] : D0[2] === "or" ? [hex("#E9B949"), .2] : [hex("#14171D"), 0];
     const nl = 14, X0 = -.08, Y0 = 1.12, rows = [0, .32, .62, .9, 1.18, 1.45, 1.66];
@@ -12015,8 +12015,8 @@
     const cq = (i, j) => { const lo = (j + .5) / nl * TAU, cf = Math.cos(lo);
       if ((i === 3 || i === 4) && cf > .42) return vis[0];                               // visière
       if (D0[3] === "damier" && i <= 2) return (i + j) % 2 ? hex("#15171B") : base;
-      if (D0[3] === "raye" && (i <= 2 || cf < -.2) && i <= 4 && Math.abs(Math.sin(lo)) < .24) return hex("#FFFFFF");   // v20.68 · Rayé : la bande blanche du front à la nuque
-      if (D0[3] === "bicolore" && i >= 3 && i <= 4) return hex("#F4F6F8");                                      // v20.68 · Bicolore : le bas du casque blanc
+      if (D0[3] === "raye" && (i <= 2 || cf < -.2) && i <= 4 && Math.abs(Math.sin(lo)) < .24) return hex(TC || "#FFFFFF");   // v20.68 · Rayé : la bande blanche du front à la nuque
+      if (D0[3] === "bicolore" && i >= 3 && i <= 4) return hex(TC || "#F4F6F8");                                      // v20.68 · Bicolore : le bas du casque blanc
       if (m === "toque" && i >= 3 && i <= 5 && cf <= .42) return [hex("#1F4FA8"), hex("#FFFFFF"), hex("#D62839")][i - 3];   // foulard tricolore
       if (bande && i === 2 && cf < .9) return bande;                                     // bande (liseré) autour de la coque
       if (m && i === 5) return mel(base, [0, 0, 0], .45);                                // col sombre
@@ -12050,7 +12050,7 @@
     const g = new Geo(), c = hex(v.couleur || "#4C9AFF"), lv = v.livree || "couleur";
     const metal = LV_METAL[lv];
     const neon = lv === "neon", choco = lv === "chocolat", carte = lv === "carte", prisme = lv === "arcenciel", ver = lv === "ver";
-    const bico = lv === "bicolore", ray = lv === "rayures", mat = v.finition === "mat";   // v20.68 · livrées et finition de départ
+    const bico = lv === "bicolore", ray = lv === "rayures", mat = v.finition === "mat", TL = hex((v.teintes && v.teintes.livree) || "#FFFFFF");   // v20.70 · 🎨 couleur des Rayures   // v20.68 · livrées et finition de départ
     const corps0 = neon ? hex("#0B0D12") : metal ? hex(metal) : choco ? hex("#6B3A1E") : carte ? hex("#F4F0E6") : ver ? hex("#D9A35A") : c, em = neon ? 1 : 0;
     const corps = mat ? mel(corps0, [.3, .32, .35], .3) : corps0;   // Mat : la peinture adoucie, moins vive
     // accent : la couleur du pilote sur les livrées métal / néon / spéciales, sinon un blanc cassé teinté
@@ -12069,7 +12069,7 @@
     const nM = 10, RM = M.map(s => section(s[0], 0, s[1], s[2], s[3], s[4], nM));
     // faces du haut (j = 2 et 3 autour du sommet) entre le cockpit : creux sombre
     nappe(g, RM, (i, j) => (i === 4 && j === 2) ? cockpit : (j >= 6 && j <= 8) ? mel(peint(M[i][0]), [0, 0, 0], .35) : nappage(i, j, [1, 2, 3], [0, 4]) ? nappeChoco
-      : ray && i !== 4 && (j === 1 || j === 3) ? hex("#FFFFFF") : peint(M[i][0]), 0);   // v20.68 · Rayures : deux bandes blanches de part et d'autre du dessus
+      : ray && i !== 4 && (j === 1 || j === 3) ? TL : peint(M[i][0]), 0);   // v20.68 · Rayures : deux bandes blanches de part et d'autre du dessus
     bouchon(g, RM[0], carbone, 0, [-1, 0, 0]); bouchon(g, RM[RM.length - 1], peint(4.6), 0, [1, 0, 0]);
     // ---- bande centrale à la couleur d'accent, du museau jusqu'au cockpit et sur le capot moteur
     const bande = (pts, l) => { for (let i = 0; i < pts.length - 1; i++) { const a = pts[i], b = pts[i + 1]; g.quad([a[0], a[1], -l * a[2]], [b[0], b[1], -l * b[2]], [b[0], b[1], l * b[2]], [a[0], a[1], l * a[2]], accent, emA, [0, 1, 0]); } };
@@ -12103,7 +12103,7 @@
     // ---- cockpit : rebord, casque, halo, rétroviseurs
     casque3D(g, v, accent);
     // halo : arceau de titane au-dessus du casque, pilier central jusqu'au museau (la finition le colore : or, argent, néon…)
-    const FC = FIN_COL[v.finition], colFin = FC ? (FC[0] ? hex(FC[0]) : c) : null, emFin = FC ? FC[1] : 0;
+    const FC = FIN_COL[v.finition], TF = v.teintes && v.teintes.finition, colFin = FC ? (TF ? hex(TF) : FC[0] ? hex(FC[0]) : c) : null, emFin = FC ? FC[1] : 0;   // v20.70 · 🎨 liseré à la couleur choisie
     const H = [[-.5, 1.04, .5], [-.42, 1.3, .48], [-.18, 1.47, .44], [.18, 1.53, .34], [.5, 1.5, .17], [.66, 1.47, 0]];
     tube(g, H.concat(H.slice(0, -1).reverse().map(p => [p[0], p[1], -p[2]])), .06, colFin || titane, emFin, 4);
     tube(g, [[.66, 1.47, 0], [.82, 1.3, 0], [.95, 1.0, 0]], .065, colFin || titane, emFin, 4);
@@ -12186,7 +12186,7 @@
           if (j < n - i - 1) g.tri(pt((i + 1) / n, j / n), pt((i + 1) / n, (j + 1) / n), pt(i / n, (j + 1) / n), col, e || 0, [0, 0, s]); } } };
       const rect = (x0, x1, y0, y1) => [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
       [1, -1].forEach(s => {
-        if (ray) { flanc(s, rect(-1.36, 1.02, .6, .67), hex("#FFFFFF")); flanc(s, rect(-1.3, 1.02, .52, .545), hex("#FFFFFF")); }
+        if (ray) { flanc(s, rect(-1.36, 1.02, .6, .67), TL); flanc(s, rect(-1.3, 1.02, .52, .545), TL); }
         if (lv === "damier") for (let i = 0; i < 11; i++) for (let r = 0; r < 2; r++) { const x0 = -1.25 + i * .2, y0 = .44 + r * .12;
           flanc(s, rect(x0, x0 + .2, y0, y0 + .12), hex((i + r) % 2 ? "#15171B" : "#F5F5F2")); }
         if (lv === "flammes") { const or = hex("#FF6A1A"), jaune = hex("#FFD23F"), blanc = hex("#FFF3C4");
@@ -13990,7 +13990,7 @@
       else if (v.livree === "neon") h += '<circle r="9.3" fill="#0D1017" stroke="' + c + '" stroke-width="1.6" style="filter:drop-shadow(0 0 2px ' + c + ')"/>';
       else h += '<circle r="9.3" fill="' + (lv[0] || c) + '" stroke="' + lv[1] + '" stroke-width=".8"/>';
       // v20.68 · livrées de départ sur l'anneau : deux bandes blanches, cases noires, moitié anthracite, langues de feu
-      if (v.livree === "rayures") h += '<path d="M-3.2 -9V9M3.2 -9V9" stroke="#fff" stroke-width="1.8"/>';
+      if (v.livree === "rayures") h += '<path d="M-3.2 -9V9M3.2 -9V9" stroke="' + ((v.teintes && v.teintes.livree) || "#fff") + '" stroke-width="1.8"/>';   // v20.70 · 🎨
       if (v.livree === "damier") h += [0, 1, 2, 3, 4, 5, 6, 7].map(i => '<path d="M0 0L' + (Math.cos(i * PI / 4) * 9.3).toFixed(2) + " " + (Math.sin(i * PI / 4) * 9.3).toFixed(2) + "A9.3 9.3 0 0 1 " + (Math.cos((i + .5) * PI / 4) * 9.3).toFixed(2) + " " + (Math.sin((i + .5) * PI / 4) * 9.3).toFixed(2) + 'Z" fill="#101215"/>').join("");
       if (v.livree === "bicolore") h += '<path d="M0 -9.3A9.3 9.3 0 0 0 0 9.3Z" fill="#1E232B"/><path d="M0 -9.3V9.3" stroke="#fff" stroke-width="1"/>';
       if (v.livree === "flammes") h += [[-6, -6.4], [0, -9.6], [6, -6.4]].map(([x, y]) => '<path d="M' + (x - 2.6) + " " + (y + 3.4) + "Q" + x + " " + (y - 2.4) + " " + (x + 2.6) + " " + (y + 3.4) + 'Z" fill="#FFD23F"/>').join("");
@@ -14009,6 +14009,7 @@
     if (f === "biolum") h += [0, 60, 120, 180, 240, 300].map(a => { const r = a * PI / 180; return '<circle cx="' + (Math.cos(r) * 10.4).toFixed(1) + '" cy="' + (Math.sin(r) * 10.4).toFixed(1) + '" r="1.2" fill="' + (a % 120 ? "#5CF2E6" : "#FF8AE0") + '" style="filter:drop-shadow(0 0 1.5px #5CF2E6)"/>'; }).join("");
     if (f === "soleil") h += [0, 45, 90, 135, 180, 225, 270, 315].map(a => { const r = a * PI / 180; return '<path d="M' + (Math.cos(r) * 10.2).toFixed(1) + " " + (Math.sin(r) * 10.2).toFixed(1) + "L" + (Math.cos(r) * 12.4).toFixed(1) + " " + (Math.sin(r) * 12.4).toFixed(1) + '" stroke="#FFB21E" stroke-width="1.3" stroke-linecap="round"/>'; }).join("");
     if (f === "lauriers") h += [-1, 1].map(s => [0, 1, 2].map(i => { const a = (150 - i * 32) * PI / 180, x = s * Math.cos(a) * 10.6, y = Math.sin(a) * 10.6 * -1 + 3; return '<ellipse cx="' + x.toFixed(1) + '" cy="' + (-y + 6).toFixed(1) + '" rx="1" ry="2.1" transform="rotate(' + (s * (60 - i * 30)) + " " + x.toFixed(1) + " " + (-y + 6).toFixed(1) + ')" fill="#E9C25A" stroke="#6B4B0C" stroke-width=".3"/>'; }).join("")).join("");
+    if (f && v.teintes && v.teintes.finition) FIN[f] = v.teintes.finition;   // v20.70 · 🎨 liseré à la couleur choisie
     h += '<circle r="7" fill="' + c + '" stroke="' + (f ? FIN[f] : "#fff") + '" stroke-width="' + (f ? 2.1 : 1.8) + '"' + (f === "neon" || f === "biolum" ? ' style="filter:drop-shadow(0 0 2px ' + (f === "biolum" ? "#5CF2E6" : c) + ')"' : f === "feuilledor" ? ' style="filter:drop-shadow(0 0 1.5px #F5C842)"' : f === "diamant" ? ' style="filter:drop-shadow(0 0 1.5px #C9F6FF)"' : "") + "/>";
     if (f === "etoilee") h += '<path d="M0 -10.6l.9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2-1.5-1.4 2-.3z" fill="#FFE596" stroke="#7A5300" stroke-width=".3"/>';
     if (f === "diamant") h += '<path d="M6 -6l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" fill="#fff"/>';

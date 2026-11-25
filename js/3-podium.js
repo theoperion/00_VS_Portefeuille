@@ -309,7 +309,7 @@ const ITEMS = {
   livree: { couleur: "Couleur", chrome: "Chrome", or: "Or", neon: "Néon", arcenciel: "Prisme", oranime: "Or vivant", platine: "Platine", rubis: "Rubis", galaxie: "Galaxie", orrose: "Or rose", chocolat: "Chocolat fondant", carte: "Carte à jouer", ver: "Peau des sables", rayures: "Rayures", damier: "Damier", bicolore: "Bicolore", flammes: "Flammes" },
   trainee: { simple: "Simple", halo: "Halo", flammes: "Flammes", etincelles: "Étincelles", comete: "Comète", supernova: "Supernova", turbo: "Turbo", arcenciel: "Arc-en-ciel", cables: "Câbles d'acier", flocons: "Flocons", sabre: "Sabre lumineux", glitch: "Faille", pointilles: "Pointillés", double: "Double", ruban: "Ruban", fumee: "Fumée" },
   klaxon: { confettis: "Confettis", damier: "Damier", feu: "Feu d'artifice", parade: "Parade", billets: "Pluie de billets", fanfare: "Fanfare royale", cibles: "Dans le mille", fusees: "Décollage", trophees: "Pluie de trophées", ouvriers: "Fanfare des petits ouvriers", pouet: "Pouet", trompette: "Trompette", sifflet: "Sifflet" },
-  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon", cheval: "Cheval de bois", hiver26: "Hiver 2026", chercheur: "Chercheur de Noël", chercheuror: "Chercheur de Noël d'or" }
+  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon", cheval: "Cheval de bois", hiver26: "Hiver 2026", chercheur: "Chercheur de Noël", chercheuror: "Chercheur de Noël d'or", recrue: "Recrue 2026" }
 };
 const BASE_ECURIE = { casque: "uni", circuit: "classique", fond: "couleur", finition: "aucune", livree: "couleur", trainee: "simple", klaxon: "confettis", plaque: "aucune" };
 /* v20.61 (Théo, 25/11) · objets de DÉPART en plus de la série : à tout le monde, dès l'ouverture de l'écurie (1/12/2026). Les objets génériques
@@ -347,6 +347,36 @@ function chercheursNoel() {
     return t && Array.isArray(t.chercheurs) ? t.chercheurs.filter(x => x && x.nom) : []; } catch (e) { return []; }
 }
 function estGainChercheur(slot, id) { return slot === "plaque" && (id === GAIN_CHERCHEUR[1] || id === GAIN_CHERCHEUR_OR[1]); }
+/* v20.70 (Théo, 25/11) · 🔰 plaque « Recrue 2026 » : à chaque pilote qui a JOUÉ le tour de chauffe, à partir du 1/1/2027 et pour toujours (rien à faire, aucun point).
+   « A joué » = son mois de décembre 2026 compte au tour de chauffe : un relevé de décembre 2026 avec un rendement, et déjà une valeur à un relevé d'avant
+   (exactement la règle d'entrée au classement de la chauffe, rJeu). Lu sur la copie brute (D_BRUT) : pas besoin d'attendre que tout le monde ait saisi. */
+const GAIN_RECRUE = ["plaque", "recrue"], RECRUE_DES = new Date(SAISON.premiere, 0, 1);
+function estGainRecrue(slot, id) { return slot === GAIN_RECRUE[0] && id === GAIN_RECRUE[1]; }
+function recrueChauffe(nom) {
+  if (Date.now() < RECRUE_DES.getTime() || !nom) return false;
+  try { const B = typeof D_BRUT !== "undefined" && D_BRUT && D_BRUT.personnes && D_BRUT.personnes.some(x => x.nom === nom) ? D_BRUT : D, p = B.personnes.find(x => x.nom === nom); if (!p) return false;
+    const s = serie(p, 0); return s.some(z => z.k === CHAUFFE_K && typeof z.r === "number") && s.some(z => z.k < CHAUFFE_K && z.val > 0); } catch (e) { return false; }
+}
+/* v20.70 (Théo, 25/11) · 🎨 couleur au choix des objets à motif neutres : Rayures (livrée), Rayé et Bicolore (casque), Liseré blanc / noir (finition).
+   Le serveur (V91) n'accepte qu'un identifiant de 2 à 16 lettres par emplacement : la couleur s'écrit DANS l'identifiant (« rayuresor », « lisblancpilote ») ;
+   l'appli la relit (lireTeinte) et range la couleur à part dans e.teintes[emplacement]. La couleur par défaut ne s'écrit pas (« rayures » = rayures blanches).
+   Liseré : pas d'or (le Liseré or se gagne, et c'est le maillot jaune du leader) ; « blanc » et « noir » sont les objets Liseré blanc / noir eux-mêmes. */
+const TEINTES = { blanc: ["Blanc", "#FFFFFF"], noir: ["Noir", "#11151B"], or: ["Or", "#E9B949"], pilote: ["Ta couleur", null] };
+const TEINTABLES = { "livree.rayures": ["blanc", "noir", "or"], "casque.raye": ["blanc", "noir", "or"], "casque.bicolore": ["blanc", "noir", "or"], "finition.lisblanc": ["blanc", "noir", "pilote"], "finition.lisnoir": ["blanc", "noir", "pilote"] };
+function teintesDe(slot, id) { return TEINTABLES[slot + "." + id] || null; }
+function teinteDefaut(slot, id) { return slot === "finition" && id === "lisnoir" ? "noir" : "blanc"; }
+/** « rayuresor » → ["rayures", "or"] ; un identifiant connu → [id, null] */
+function lireTeinte(slot, v) {
+  v = String(v || ""); if (!v || (ITEMS[slot] && ITEMS[slot][v])) return [v, null];
+  for (const k of Object.keys(TEINTABLES)) { const [s, id] = k.split("."), t = v.slice(id.length);
+    if (s === slot && v.indexOf(id) === 0 && TEINTABLES[k].includes(t) && t !== teinteDefaut(s, id)) return [id, t]; }
+  return [v, null];
+}
+function ecrireTeinte(slot, id, t) { const l = teintesDe(slot, id); return t && l && l.includes(t) && t !== teinteDefaut(slot, id) ? id + t : id; }
+/** la teinte choisie pour l'objet porté à cet emplacement (null = sa couleur d'origine) */
+function teinteDe(slot, e) { const t = e && e.teintes && e.teintes[slot], l = e && teintesDe(slot, e[slot]); return t && l && l.includes(t) && t !== teinteDefaut(slot, e[slot]) ? t : null; }
+function hexTeinte(nom, slot, e) { const t = teinteDe(slot, e); if (!t) return null; try { return t === "pilote" ? couleurReelle(couleur(nom)) : TEINTES[t][1]; } catch (er) { return null; } }
+function teintesHex(nom, e) { const o = {}; ["livree", "casque", "finition"].forEach(s => { const h = hexTeinte(nom, s, e); if (h) o[s] = h; }); return o; }
 function souvenirOuvert() { return Date.now() >= SOUVENIR_DES.getTime() || saisonJouee(); }
 function ticketVisible() { return Date.now() >= TICKET_MOIS.debut.getTime() || gagnantsTicket().some(g => g.nom === moiPilote()); }
 function debloques(nom) {
@@ -359,6 +389,7 @@ function debloques(nom) {
   }
   if (souvenirOuvert()) GAINS_SOUVENIR.forEach(g => o.add(g.join(".")));
   { const ch = chercheursNoel(), i = ch.findIndex(x => x.nom === nom); if (i >= 0) { o.add(GAIN_CHERCHEUR.join(".")); if (i === 0) o.add(GAIN_CHERCHEUR_OR.join(".")); } }   // 🎁 Chercheur de Noël   // 🎄 souvenir du tour de chauffe, pour tous (dès le 24/12/2026)
+  if (recrueChauffe(nom)) o.add(GAIN_RECRUE.join("."));   // 🔰 Recrue 2026 : a joué le tour de chauffe (dès le 1/1/2027)
   if (D.premierMillion && D.premierMillion.nom === nom) GAINS_MILLION.forEach(g => o.add(g.join(".")));
   succesDe(nom).forEach(x => o.add(x.gain.join(".")));                      // 🏅 l'objet commun : pour chacun qui réussit
   exclusifsDe(nom).forEach(x => gainsSecret(x).forEach(g => o.add(g.join("."))));   // 🥇 + l'exclusif : pour le premier
@@ -383,6 +414,7 @@ function origineItem(slot, id) {
   if (slot === "plaque" && id === "coupsaison") return { vote: true, legende: true };
   if (estGainTicket(slot, id)) return { ticket: true, legende: true };
   if (estDepart(slot, id)) return { depart: true };
+  if (estGainRecrue(slot, id)) return { souvenir: true, recrue: true };
   if (GAINS_SOUVENIR.some(g => g[0] === slot && g[1] === id)) return { souvenir: true };
   if (estGainChercheur(slot, id)) return { souvenir: true, chercheur: true, exclusif: id === GAIN_CHERCHEUR_OR[1] ? { id: "chercheuror", nom: "premier chercheur de Noël", ico: "🥇" } : null };
   { const m = typeof mjOrigine === "function" && mjOrigine(slot, id); if (m) return m; }   // 🎲 plaque du meilleur d'un mini-jeu (js/9-minijeux.js) : exclusif doré
@@ -400,7 +432,7 @@ function numeroParDefaut(nom) { const i = D.personnes.findIndex(p => p.nom === n
 /** Équipement affiché : un objet qui n'est pas (ou plus) débloqué retombe sur l'objet de base */
 function equipDe(nom) {
   const brut = ((D.ecurie || {})[nom] || {}).equip || {}, ouverts = debloques(nom), e = {};
-  SLOTS.forEach(([s]) => e[s] = brut[s] && ouverts.has(s + "." + brut[s]) ? brut[s] : BASE_ECURIE[s]);
+  SLOTS.forEach(([s]) => { const [b, t] = lireTeinte(s, brut[s]); e[s] = b && ouverts.has(s + "." + b) ? b : BASE_ECURIE[s]; if (t && e[s] === b) (e.teintes = e.teintes || {})[s] = t; });   // v20.70 : 🎨 « rayuresor » → rayures + or
   const n = parseInt(brut.numero, 10); e.numero = n >= 1 && n <= 99 ? n : numeroParDefaut(nom);
   e.pilote = brut.pilote === "casque" ? "casque" : "tete";
   e.tete = teteValide(brut.tete) ? brut.tete : presetTete(nom);
@@ -424,7 +456,7 @@ function plaqueDe(nom) {
   return '<span class="plaque' + classePlaque(p) + '" data-bdg="' + esc("Plaque « " + ITEMS.plaque[p] + " » de " + nom + (quoi ? ", gagnée avec le " + quoi : o.ticket ? ", gagnée avec le 🎫 ticket d'or de la Chocolaterie" : o.mj ? ", gagnée comme 🥇 meilleur du mini-jeu de " + MOIS_L[o.mj % 100 - 1] : o.souvenir ? ", souvenir du tour de chauffe (décembre 2026)" : "") + ".") + '">' + iconePlaque(p) + esc(ITEMS.plaque[p]) + "</span> ";
 }
 /** v20.46 · plaques émaillées à part : Ratatouille (plaque de rue parisienne, bleue), Ticket d'or (feuille d'or), Carré d'as, et les plaques des mini-jeux ; les autres restent en métal */
-function classePlaque(id) { return ["ratatouille", "ticketor", "carredas", "epice", "voliere", "cheshire", "precieux", "eywa", "kyber", "toquedor", "joyce", "ithaque", "bataillon", "cheval", "hiver26", "chercheur", "chercheuror"].includes(id) ? " pl-" + id : ""; }
+function classePlaque(id) { return ["ratatouille", "ticketor", "carredas", "epice", "voliere", "cheshire", "precieux", "eywa", "kyber", "toquedor", "joyce", "ithaque", "bataillon", "cheval", "hiver26", "chercheur", "chercheuror", "recrue"].includes(id) ? " pl-" + id : ""; }
 /** leur petit dessin, à nous : un tian de légumes en rosace (Ratatouille), un ticket doré (Ticket d'or) */
 function iconePlaque(id) {
   if (id === "ratatouille") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#F4EBD6" stroke="#8A5A2B" stroke-width="1"/>' +
@@ -450,6 +482,8 @@ function iconePlaque(id) {
     '<circle cx="14" cy="12.6" r="1.5" fill="#15171B"/><circle cx="12.4" cy="14.6" r="1.5" fill="#15171B"/><circle cx="15.6" cy="14.6" r="1.5" fill="#15171B"/><path d="M14 14.4L13.4 17H14.6Z" fill="#15171B"/></svg>';
   if (id === "hiver26") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#1E4E8C" stroke="#CFEFFF" stroke-width="1"/><g stroke="#fff" stroke-width="1.3" stroke-linecap="round">' +
     [0, 60, 120].map(a => '<path d="M10 3.6V16.4M10 5.6 8.4 4.2M10 5.6 11.6 4.2M10 14.4 8.4 15.8M10 14.4 11.6 15.8" transform="rotate(' + a + ' 10 10)"/>').join("") + '</g><circle cx="10" cy="10" r="1.6" fill="#CFEFFF"/></svg>';
+  if (id === "recrue") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.4 17 4V9.6C17 13.8 14 16.9 10 18.6 6 16.9 3 13.8 3 9.6V4Z" fill="#26313C" stroke="#9FE3C4" stroke-width="1"/>' +   // v20.70 · 🔰 Recrue 2026 : un écusson, deux chevrons de recrue
+    '<path d="M6 9.4 10 6.6 14 9.4M6 12.8 10 10 14 12.8" fill="none" stroke="#9FE3C4" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="15.2" r=".9" fill="#E9EEF3"/></svg>';
   if (id === "ticketor") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M1 2H23V6A2 2 0 0 0 23 10V14H1V10A2 2 0 0 0 1 6Z" fill="#F7CF55" stroke="#7A4A0C" stroke-width="1"/><path d="M6 2.5V13.5" stroke="#7A4A0C" stroke-width=".7" stroke-dasharray="1.2 1"/><path d="M14 4.6L15 7 17.6 7.2 15.6 8.8 16.2 11.4 14 10 11.8 11.4 12.4 8.8 10.4 7.2 13 7Z" fill="#FFF6CC" stroke="#9A6716" stroke-width=".5"/></svg>';
   return "";
 }
@@ -626,12 +660,13 @@ function annoncerExclusifs() {
   o.innerHTML = '<div class="rv-c"><span class="tuto-k">🥇 Succès doré · le premier</span>' + nouveaux.map((x, i) => { const r = rangsSucces(x.id), moiO = r.tous.find(z => z.nom === moi), P = PALIERS[x.palier];
     return '<div class="ea-l" style="--i:' + i + '"><div class="sc-grand ea-med p-' + P.id + '">' + svgMedaille(x.palier, true) + '<span class="cc-emo">' + x.ico + '</span></div><b>' + esc(x.ico + " " + x.nom) + '</b><small class="ea-mo">' + esc(P.ico + " " + P.nom + " · gravé à ton nom : " + moi) + "</small>" +
       (moiO ? '<small class="ea-hist">' + esc(ligneHistoire(x, moiO)) + "</small>" : "") + "<small>Tu es le premier : " + esc(libGains([x.gain])) + (x.bonus ? " + l'exclusif " + esc(libGains([x.bonus])) + ", que personne d'autre n'aura" : "") + ". Les suivants gagnent le badge et " + esc(libGains([x.gain])) + ".</small></div>"; }).join("") +
-    '<div class="btn-row"><button class="btn acc" type="button" data-ea="ecurie">🏎️ Mon écurie</button><button class="btn ghost" type="button" data-ea="ok">Génial !</button></div></div>';
+    '<div class="btn-row">' + (btnEquiper(...(nouveaux[0].bonus || nouveaux[0].gain)) || '<button class="btn acc" type="button" data-ea="ecurie">🏎️ Mon écurie</button>') + '<button class="btn ghost" type="button" data-ea="ok">Génial !</button></div></div>';   // v20.70 : « Équiper maintenant » l'exclusif
   document.body.appendChild(o); confettis("damier");
   const t0 = Date.now(), fermer = () => o.remove();
   o.addEventListener("click", e => { if (e.target === o && Date.now() - t0 > 2000) fermer(); });
   o.querySelector('[data-ea="ok"]').addEventListener("click", fermer);
-  o.querySelector('[data-ea="ecurie"]').addEventListener("click", () => { fermer(); ETAT.podium = "ecurie"; garder(); if (vueActive() === "trophees") rendreTrophees(); else allerA("trophees"); });
+  brancherEquiper(o, fermer);
+  const ee = o.querySelector('[data-ea="ecurie"]'); if (ee) ee.addEventListener("click", () => { fermer(); ETAT.podium = "ecurie"; garder(); if (vueActive() === "trophees") rendreTrophees(); else allerA("trophees"); });
 }
 async function revendiquerExclusifs() {
   return;   // V22 : c'est le serveur qui calcule et fige les exclusifs (anti-triche) ; l'appli ne revendique plus rien
@@ -738,6 +773,7 @@ function texteOrigineItem(qui, slot, id) {
   if (org.chercheur) { const ch = chercheursNoel(), i = ch.findIndex(x => x.nom === qui), j = i >= 0 ? ch[i].j : 0, jour = j ? (j % 100) + "/12" : "", or = id === GAIN_CHERCHEUR_OR[1];
     return { t: "🎁 Souvenir · trésor de l'Atelier du Père Noël" + (or ? " · 🥇" : ""), p: or ? (i === 0 ? "À toi : trouvé le trésor de l'Atelier du Père Noël" + (jour ? " le " + jour : "") + ", 🥇 le premier." : ch.length ? "Réservée au premier qui a trouvé le trésor de l'Atelier du Père Noël : " + ch[0].nom + "." : "Réservée au premier qui trouvera le trésor de l'Atelier du Père Noël (décembre 2026).")
       : i >= 0 ? "Trouvé le trésor de l'Atelier du Père Noël" + (jour ? " le " + jour : "") + (i === 0 ? " · 🥇 le premier" : "") + "." : "Pour chaque pilote qui trouve le trésor de l'Atelier du Père Noël (décembre 2026)." }; }
+  if (org.recrue) return { t: "🔰 Souvenir · Recrue 2026", p: ouvert ? "À toi : tu as joué le tour de chauffe de décembre 2026. Elle est à toi pour toujours, aucun point." : "Offerte à chaque pilote qui a joué le tour de chauffe de décembre 2026." };
   if (org.souvenir) return { t: "🎄 Souvenir du tour de chauffe", p: "Offert à chaque pilote du tour de chauffe : le cadeau de la case du 24 décembre 2026, dans le calendrier de l'Avent." };
   if (org.vote) return { t: "💎 Légende · 🗳️ Coup de la saison", p: "Gagné au vote de fin de saison : les autres pilotes t'élisent pour le coup de la saison." };
   if (org.champion) { const d = detenteur(CHAMPION_EX.id); return { t: "💎 Légende · 🌿 Premier champion", p: d ? (d.noms.includes(qui) ? "À toi : tu as remporté la première saison." : "Réservé à " + d.nom + ", premier champion.") : "Réservé au vainqueur de la première saison complète." }; }
@@ -796,14 +832,14 @@ function remplissage(u, motif, c) { return MOTIFS_PLEINS.includes(motif) ? "fill
    mentonnière avancée, grande visière avec son joint et son pivot, prises d'air sur le dessus, petit aileron arrière, bourrelet de nuque. */
 const COQUE = "M-14 9.4C-17.2 3.8-17.6-4.4-13.6-10.6C-9.6-16.8-2.6-19.8 4.8-19.4C13-18.9 19.4-13.6 21.2-5.8C21.9-2.8 22 .8 21.2 3.8L20.2 7.6C19.6 10 17.8 11.4 15.4 11.6L-10.6 11.8C-12.2 11.8-13.3 11-14 9.4Z";
 const VISIERE = "M3.4-8.8C9.8-11.6 16.9-11 21.4-6.3C21.9-3.9 21.9-1.4 21.5.7C15.2 2.1 8.8 1.9 4.3.3C2.5-2.6 2.3-6.3 3.4-8.8Z";
-function casqueForme(u, m, c, fin, lead) {
+function casqueForme(u, m, c, fin, lead, tn) {   // tn (v20.70) = { casque, finition } : couleurs choisies (🎨), sinon celles d'origine
   const iri = ["holo", "couronne", "chrome", "etoile", "foudre", "glace", "galaxie", "fracture"].includes(m), orv = m === "couronne" || m === "phenix" || m === "empereur" || m === "anneau" || m === "hoplite";
   const defs = '<defs>' + defsMotif(u, m, c) + '<clipPath id="' + u + 'k"><path d="' + COQUE + '"/></clipPath>' +
     '<radialGradient id="' + u + 'h" cx=".32" cy=".16" r=".85"><stop offset="0" stop-color="#fff" stop-opacity=".8"/><stop offset=".28" stop-color="#fff" stop-opacity=".16"/><stop offset=".62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient>' +
     '<linearGradient id="' + u + 'v" x1="0" y1="0" x2="1" y2="1">' + (orv ? '<stop offset="0" stop-color="#FFE596"/><stop offset=".5" stop-color="#7A4A0C"/><stop offset="1" stop-color="#F7CF55"/>'
       : iri ? '<stop offset="0" stop-color="#7FE8FF"/><stop offset=".45" stop-color="#6A4BFF"/><stop offset=".75" stop-color="#FF6BB5"/><stop offset="1" stop-color="#FFC15E"/>'
       : '<stop offset="0" stop-color="#4a5466"/><stop offset=".45" stop-color="#090b0f"/><stop offset="1" stop-color="#232a38"/>') + "</linearGradient></defs>";
-  const deco = {
+  let deco = {
     uni: '<path d="M-17 1C-6-5 7-9 23-10" stroke="#fff" stroke-width="3.4" fill="none"/><path d="M-17 5C-6-1 7-5 23-6" stroke="#11151B" stroke-width="1.2" fill="none" opacity=".55"/>',
     carbone: '<path d="M-17 2C-6-4 7-8 23-9" style="stroke:' + c + '" stroke-width="2.6" fill="none"/>',
     eclair: '<path d="M-10-17-15 0-7-2-12 12 4-6-4-5 2-17Z" fill="#FFD84A" stroke="#7A5300" stroke-width=".9"/>',
@@ -844,6 +880,7 @@ function casqueForme(u, m, c, fin, lead) {
     pois: [[-11.5, -8.5, 2.3], [-4.6, -13.6, 1.9], [-13.4, 1.6, 2], [-5.4, -3.2, 2.5], [1.2, 6.4, 1.8], [-7.8, 7.4, 1.6], [9.4, 7.6, 1.5], [1.6, -15.8, 1.3], [-15.6, -4.2, 1.2]].map(([x, y, r]) => '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#FFFFFF" stroke="#11151B" stroke-width=".35" stroke-opacity=".35"/>').join(""),
     empereur: '<path d="M-17 1C-6-5 7-9 23-10" stroke="#F7CF55" stroke-width="3" fill="none"/><path d="M-17 4.4C-6-1.6 7-5.6 23-6.6" stroke="#F7CF55" stroke-width=".9" fill="none" opacity=".8"/><path d="M-6-14-4.6-10.6-1-10.4-3.8-8.2-2.8-4.8-6-6.8-9.2-4.8-8.2-8.2-11-10.4-7.4-10.6Z" fill="#FFE596" stroke="#7A5300" stroke-width=".5"/>'
   }[m] || "";
+  if (tn && tn.casque && (m === "raye" || m === "bicolore")) { deco = deco.replace(m === "raye" ? /#FFFFFF/g : /#F4F6F8/g, tn.casque); if (m === "bicolore" && tn.casque === TEINTES.noir[1]) deco = deco.replace(/stroke="#11151B"/g, 'stroke="#9AA3AE"'); }   // v20.70 · 🎨
   const brille = ["chrome", "couronne", "empereur", "glace", "holo", "etoile", "foudre", "galaxie", "phenix", "anneau", "rebelle", "hoplite"].includes(m) ? '<path class="cq-brille" d="M-34-30H-28L-40 16H-46Z" fill="#fff" opacity=".55"/>' : "";
   return defs + '<path d="' + COQUE + '" style="' + remplissage(u, m, c) + '"/>' +
     '<g clip-path="url(#' + u + 'k)">' + deco + '<path d="' + COQUE + '" fill="url(#' + u + 'h)"/>' + brille + "</g>" +
@@ -867,10 +904,10 @@ function casqueForme(u, m, c, fin, lead) {
       '<path d="M-13.6-7.8C-11.6-15-6-20 1-21.4" stroke="#8A5320" stroke-width="1.6" fill="none"/></g>' : "") +
     (m === "fracture" ? '<g class="cq-eclats"><path d="M-19.6-12.4-16.4-16.2-15.6-11Z" fill="#3BE8FF" stroke="#E6FBFF" stroke-width=".3"/><path d="M-20.2-5-17.4-7.4-17.6-2.8Z" fill="#FF3BD4" stroke="#FFE6FA" stroke-width=".3"/><path d="M-20.4 3.6-17.6 2.2-18.8 6Z" fill="#F7F24A" opacity=".9"/></g>' : "") +
     (m === "couronne" ? '<g transform="translate(0 -1.8)"><path d="M-10-16.5-8.5-24-4-19.5 1-26 6-19.5 10.5-24 12-16.5Z" fill="url(#' + u + 'm)" stroke="#6B430C" stroke-width=".8"/><circle cx="1" cy="-26" r="1.6" fill="#FF4D6D"/><circle cx="-8.5" cy="-24" r="1.2" fill="#5AB8FF"/><circle cx="10.5" cy="-24" r="1.2" fill="#5AB8FF"/></g>' : "") +
-    finitionCasque(u, fin, c, lead);
+    finitionCasque(u, fin, c, lead, tn && tn.finition);
 }
 /* Finitions (liserés autour de la coque) et liseré or du leader, porté en plus de sa finition */
-function finitionCasque(u, fin, c, lead) {
+function finitionCasque(u, fin, c, lead, tf) {
   let h = "";
   if (lead) h += '<defs><linearGradient id="' + u + 'lg" x1="-20" y1="0" x2="20" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#9A6716"/><stop offset=".42" stop-color="#F7CF55"/><stop offset=".5" stop-color="#FFFBE6"/><stop offset=".58" stop-color="#F7CF55"/><stop offset="1" stop-color="#9A6716"/>' +
     '<animateTransform attributeName="gradientTransform" type="translate" values="-30 0;30 0;30 0" keyTimes="0;.55;1" dur="2.8s" repeatCount="indefinite"/></linearGradient></defs>' +
@@ -902,8 +939,8 @@ function finitionCasque(u, fin, c, lead) {
     [[-12, -11, 2.2, 10], [-5, -15.6, 1.8, 40], [0, -17.4, 1.3, 75], [-14, -2, 2, 120], [-7.4, 3.6, 2.4, 160], [-1, 7.6, 1.6, 205], [8.4, 7.4, 1.9, 250], [-9.6, -5.6, 1.2, 300]].map(([x, y, r, a]) =>
       '<path class="fin-feuille" d="M' + (x - r) + " " + (y - r * .4) + "L" + (x - r * .1) + " " + (y - r) + "L" + (x + r * .9) + " " + (y - r * .5) + "L" + (x + r * .7) + " " + (y + r * .6) + "L" + (x - r * .3) + " " + (y + r * .8) + 'Z" fill="#F7CF55" stroke="#FFF6CC" stroke-width=".35" transform="rotate(' + a + " " + x + " " + y + ')"/>').join("");
   // v20.68 · finitions de départ (neutres) : Liseré blanc, Liseré noir, Mat (coque adoucie, sans reflet), Brillant (vernis : grands reflets et une étincelle)
-  else if (fin === "lisblanc") h += lis("#2A2F38", 2.7) + lis("#FFFFFF", 1.4);
-  else if (fin === "lisnoir") h += lis("#FFFFFF", 2.7, ' opacity=".55"') + lis("#0B0D11", 1.6);
+  else if (fin === "lisblanc") h += lis("#2A2F38", 2.7) + lis(tf || "#FFFFFF", 1.4);   // v20.70 · 🎨 tf : la couleur choisie
+  else if (fin === "lisnoir") h += lis("#FFFFFF", 2.7, ' opacity=".55"') + lis(tf || "#0B0D11", 1.6);
   else if (fin === "mat") h += '<path d="' + COQUE + VISIERE + '" fill-rule="evenodd" fill="#3A3F48" opacity=".34"/><path d="M-9-13.6C-5.4-16.8-.4-18.2 4.2-18" stroke="#3A3F48" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".55"/>' + lis("#3A3F48", 1.1);
   else if (fin === "brillant") h += '<g clip-path="url(#' + u + 'k)"><path d="M-15.4-2.4C-14.6-10.4-8.6-16.4-.6-17.6" stroke="#FFFFFF" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".85"/><path d="M-13.4 3.6C-13.4.6-12.6-2-11.2-4.2" stroke="#FFFFFF" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".7"/>' +
     '<path class="cq-brille" d="M-30-26H-24L-36 18H-42Z" fill="#fff" opacity=".42"/></g>' + lis("#FFFFFF", .7, ' opacity=".7"') +
@@ -948,7 +985,7 @@ function avatarCourse(nom, extra) {
 }
 function svgCasque(nom, e) {
   const eq = e || equipDe(nom), u = "sv" + (++NSVG), c = couleur(nom), lead = !eq.vignette && saisonVisible() && leaderSaison() === nom;
-  return '<svg class="casque c-' + eq.casque + (lead ? " leader" : "") + '" viewBox="' + (eq.casque === "toque" || eq.casque === "couronne" || eq.casque === "hoplite" ? "-20.5 -33 44 46" : "-20.5 -26 44 40") + '" aria-hidden="true">' + casqueForme(u, eq.casque, c, eq.finition, lead) + "</svg>";
+  return '<svg class="casque c-' + eq.casque + (lead ? " leader" : "") + '" viewBox="' + (eq.casque === "toque" || eq.casque === "couronne" || eq.casque === "hoplite" ? "-20.5 -33 44 46" : "-20.5 -26 44 40") + '" aria-hidden="true">' + casqueForme(u, eq.casque, c, eq.finition, lead, teintesHex(nom, eq)) + "</svg>";
 }
 
 /* v20.46 · habillages dessinés par-dessus la peinture (dans la découpe de la caisse) */
@@ -968,8 +1005,8 @@ function habillageVer() {
 }
 /** v20.68 · livrées de départ (neutres), par-dessus la couleur du pilote : Rayures (deux bandes de course), Damier (bande à damier le long du flanc),
  *  Bicolore (arrière anthracite, coupe en biais), Flammes (langues de feu qui partent du museau) */
-function habillageDepart(lv, u) {
-  if (lv === "rayures") return '<path d="M0 93.6H480" stroke="#FFFFFF" stroke-width="6"/><path d="M0 100.4H480" stroke="#FFFFFF" stroke-width="2.2"/><path d="M0 90.4H480M0 96.8H480" stroke="#11151B" stroke-width=".7" opacity=".3"/>';
+function habillageDepart(lv, u, t) {   // t (v20.70) : couleur choisie des Rayures (🎨)
+  if (lv === "rayures") return '<path d="M0 93.6H480" stroke="' + (t || "#FFFFFF") + '" stroke-width="6"/><path d="M0 100.4H480" stroke="' + (t || "#FFFFFF") + '" stroke-width="2.2"/><path d="M0 90.4H480M0 96.8H480" stroke="#11151B" stroke-width=".7" opacity=".3"/>';
   if (lv === "damier") return '<defs><pattern id="' + u + 'dq" width="10" height="10" patternUnits="userSpaceOnUse" y="89"><rect width="10" height="10" fill="#F5F5F2"/><rect width="5" height="5" fill="#101215"/><rect x="5" y="5" width="5" height="5" fill="#101215"/></pattern></defs>' +
     '<rect x="0" y="89" width="480" height="10" fill="url(#' + u + 'dq)"/><path d="M0 88.5H480M0 99.5H480" stroke="#101215" stroke-width="1"/>';
   if (lv === "bicolore") return '<path d="M0 30H232L206 140H0Z" fill="#1E232B"/><path d="M232 30L206 140" stroke="#FFFFFF" stroke-width="2.2"/><path d="M226 30L200 140" stroke="#FFFFFF" stroke-width=".8" opacity=".55"/>';
@@ -1066,7 +1103,7 @@ function svgVoiture(o) {
       '<rect x="0" y="113" width="480" height="20" fill="url(#' + u + 'cb)" opacity=".92"/>' +
       '<path d="M0 113H480" stroke="' + filet + '" stroke-width="1.6" opacity=".9"/>' +
       '<rect x="0" y="40" width="480" height="92" fill="url(#' + u + 'sh)"/>' +
-      (lv === "chocolat" ? habillageChocolat() : lv === "carte" ? habillageCarte() : lv === "ver" ? habillageVer() : habillageDepart(lv, u)) +
+      (lv === "chocolat" ? habillageChocolat() : lv === "carte" ? habillageCarte() : lv === "ver" ? habillageVer() : habillageDepart(lv, u, hexTeinte(o.nom, "livree", e))) +
       (e.finition === "mat" ? '<rect x="0" y="40" width="480" height="92" fill="#2A2E35" opacity=".22"/>' : "") +   // v20.68 · finition Mat : la caisse adoucie
       (["oranime", "chrome", "or", "platine", "rubis", "orrose", "chocolat"].includes(lv) || e.finition === "brillant" ? '<rect class="vt-brille" x="-90" y="40" width="70" height="92" fill="url(#' + u + 'br)" transform="skewX(-20)" opacity="' + (lv === "oranime" ? ".9" : e.finition === "brillant" ? ".6" : ".35") + '"/>' : "") +
     "</g>" +
@@ -1082,7 +1119,7 @@ function svgVoiture(o) {
     '<text x="250" y="117" text-anchor="middle" style="font:italic 800 21px var(--f-display);fill:' + (LIVREES_CLAIRES.includes(lv) ? "#11151B" : "#fff") + ';stroke:rgba(0,0,0,.35);stroke-width:.6;paint-order:stroke">' + e.numero + "</text>" +
     '<text x="160" y="108" text-anchor="middle" style="font:italic 800 8px var(--f-display);letter-spacing:.2em;fill:' + (LIVREES_CLAIRES.includes(lv) ? "#11151B" : "#fff") + '" opacity=".75">VERSUS</text>' +
     // pilote, rebord du cockpit, halo
-    '<g transform="translate(236 75) scale(1.08)">' + casqueForme(u + "c", e.casque, c, e.finition) + "</g>" +
+    '<g transform="translate(236 75) scale(1.08)">' + casqueForme(u + "c", e.casque, c, e.finition, false, teintesHex(o.nom, e)) + "</g>" +
     '<path d="M214 87C230 83 250 83 264 87" stroke="#0b0d11" stroke-width="3.2" fill="none" stroke-linecap="round"/>' +
     '<path d="M212 74C224 57 252 56 268 86" fill="none" stroke="url(#' + u + 'ti)" stroke-width="4.6" stroke-linecap="round"/>' +
     (e.trainee === "sabre" ? '<g class="vt-sabre"><path d="M178 44L14 34" stroke="#FF2A3A" stroke-width="13" stroke-linecap="round" opacity=".25" style="filter:blur(3px)"/><path d="M178 44L16 34" stroke="#FF3A48" stroke-width="4.6" stroke-linecap="round"/><path d="M178 44L18 34.2" stroke="#FFF1F1" stroke-width="1.7" stroke-linecap="round"/>' +
@@ -1198,7 +1235,7 @@ function blocSaison() {
     (ys.length > 1 ? '<div class="s-ys">' + ys.map(a => '<button type="button" class="chip-s' + (a === y ? " on" : "") + '" data-saison="' + a + '">' + (estChauffe(a) ? "🔥 Chauffe" : "Saison " + numeroSaison(a)) + "</button>").join("") + "</div>" : "") +
     (ch ? '<div class="chauffe-b">🔥 <span><b>Tour de chauffe</b> : les règles de base, et rien ne compte. Le championnat démarre le 1<sup>er</sup> janvier. <a href="#" class="lien-regles" data-regles="essentiel">En savoir plus</a></span></div>' : "") +
     (standSeul(y) ? '<div class="chauffe-b">🏁 <span><b>Saison 1</b> : le championnat démarre le 1<sup>er</sup> janvier. D\'ici le 1<sup>er</sup> janvier, dans le Stand : pose ta carte, fais ton pronostic (avec ta pole) et choisis ton rival.</span></div>' : "") +
-    '<div class="pod-tabs" role="group" aria-label="Saison">' + (standSeul(y) ? "" : b("gp", "<span>" + icoOu("course", "🏁") + "</span>Course")) + b("stand", "<span>" + icoOu("stand", "🃏") + "</span>Stand" + compteCartesTab(y) + (rappelCartes() ? '<i class="pastille" aria-label="à faire"></i>' : "")) + (ecurieOuverte() ? b("ecurie", "<span>" + icoOu("ecurie", "🏎️") + "</span>Écurie") : "") + (basesSeules() ? "" : b("defis", "<span>" + icoOu("trophees", "🏆") + "</span>Trophées")) + "</div>" +
+    '<div class="pod-tabs" role="group" aria-label="Saison">' + (standSeul(y) ? "" : b("gp", "<span>" + icoOu("course", "🏁") + "</span>Course")) + b("stand", "<span>" + icoOu("stand", "🃏") + "</span>Stand" + compteCartesTab(y) + (rappelCartes() ? '<i class="pastille" aria-label="à faire"></i>' : "")) + (ecurieOuverte() ? b("ecurie", "<span>" + icoOu("ecurie", "🏎️") + "</span>Écurie" + (o !== "ecurie" && nouveauxEcurie(quiEcurie()).length ? '<i class="pastille ecu-nb" aria-label="' + nouveauxEcurie(quiEcurie()).length + ' nouvel objet">' + nouveauxEcurie(quiEcurie()).length + "</i>" : "")) : "") + (basesSeules() ? "" : b("defis", "<span>" + icoOu("trophees", "🏆") + "</span>Trophées")) + "</div>" +
     '<div class="s-corps">' + (o === "ecurie" ? htmlEcurie() : o === "defis" ? htmlVitrines() : o === "stand" ? htmlStand(y) : htmlGrandPrix(y)) + "</div>" +
     (false && adminActif() && !window.APERCUS_FINIS ? '<button class="reserve-b" type="button" id="reserve-ouvrir">🧪 <span><b>Règles et idées en réserve</b><small>admin · ce qui est en jeu, ce qui dort, les réglages</small></span> ›</button>' : "") + "</section>";
 }
@@ -1304,6 +1341,7 @@ function rareteItem(slot, id) {
   if (estDepart(slot, id)) return { cls: "r-serie", lib: BASE_ECURIE[slot] === id ? "Série" : "Départ" };
   const o = origineItem(slot, id);
   if (o.legende) return { cls: "r-unique" + (o.ticket ? " r-excl" : ""), lib: "Légende" };
+  if (o.recrue) return { cls: "r-argent", lib: "Souvenir" };
   if (o.chercheur) return o.exclusif ? { cls: "r-unique r-excl", lib: "Exclusif" } : { cls: "r-argent", lib: "Souvenir" };
   if (o.exclusif || o.mj) return { cls: "r-unique r-excl", lib: "Exclusif" };
   if (o.gant) return { cls: "r-legende", lib: "Gant" };
@@ -1312,8 +1350,8 @@ function rareteItem(slot, id) {
   return { cls: "r-serie", lib: "" };
 }
 function vignetteItem(slot, id, nom, e) {
-  if (slot === "casque") return svgCasque(nom, { casque: id, finition: e.finition, vignette: true });
-  if (slot === "finition") return svgCasque(nom, { casque: e.casque, finition: id, vignette: true });
+  if (slot === "casque") return svgCasque(nom, { casque: id, finition: e.finition, teintes: e.teintes, vignette: true });   // v20.70 : avec les couleurs choisies 🎨
+  if (slot === "finition") return svgCasque(nom, { casque: e.casque, finition: id, teintes: e.teintes, vignette: true });
   if (slot === "fond") return avatar(nom, Object.assign({}, e, { fond: id, vignette: true }));
   if (slot === "circuit") return vignetteAmbiance(id);
   if (slot === "livree") {   // v20.48 : la photo de LA voiture (celle de la course) avec cette livrée ; sans WebGL, le dessin 2D
@@ -1332,7 +1370,7 @@ function htmlDetailItem(qui) {
   if (!ECU_Q) return '<p class="info" style="margin:0">Touche un objet pour l\'essayer, ou « ? » pour savoir d\'où il vient.</p>';
   const [slot, id] = ECU_Q.split("."); if (!ITEMS[slot] || !ITEMS[slot][id]) return "";
   const o = texteOrigineItem(qui, slot, id), ouvert = debloques(qui).has(ECU_Q), cache = !ouvert && objetCache(slot, id);
-  return '<div class="itd-l"><b>' + esc(cache ? "???" : ITEMS[slot][id]) + " <small>" + esc(SLOTS.find(x => x[0] === slot)[1]) + "</small></b><span class=\"itd-t\">" + esc(o.t) + "</span><p>" + esc(o.p) + "</p>" +
+  return '<div class="itd-l">' + (ouvert ? "" : '<span class="itd-k">🔒 Comment l\'obtenir</span>') + "<b>" + esc(cache ? "???" : ITEMS[slot][id]) + " <small>" + esc(SLOTS.find(x => x[0] === slot)[1]) + "</small></b><span class=\"itd-t\">" + esc(o.t) + "</span><p>" + esc(o.p) + "</p>" +
     (o.prog !== undefined && !ouvert ? '<span class="jauge"><i style="width:' + Math.round(Math.max(0, Math.min(1, o.prog)) * 100) + '%"></i></span>' + (o.pt ? "<small>" + esc(o.pt) + "</small>" : "") : "") + "</div>";
 }
 /** Objet encore mystérieux : celui d'un secret que personne n'a trouvé, ou du premier millionnaire */
@@ -1340,8 +1378,67 @@ function objetCache(slot, id) { const o = origineItem(slot, id); return !!o.mill
 /** Objets visibles dans l'écurie : tout sauf la réserve 2028 */
 /** (la plaque Ticket d'or n'apparaît qu'à partir d'octobre 2027, ou chez son gagnant) */
 function idsSlot(slot) { const dec = ecurieDepart(), a = dec ? debloques(moiPilote() || "") : null;   // v20.61 : en décembre, seulement les objets de départ (et ce qu'on a déjà)
-  const ch = estGainChercheur(slot, "chercheur") ? debloques(moiPilote() || "") : null;   // 🎁 Chercheur de Noël : seulement si gagnée
-  return Object.keys(ITEMS[slot]).filter(id => (!dec || estDepart(slot, id) || a.has(slot + "." + id)) && (!ch || !estGainChercheur(slot, id) || ch.has(slot + "." + id)) && !objetReserve(slot, id) && (!estGainTicket(slot, id) || ticketVisible()) && (typeof mjObjetVisible !== "function" || mjObjetVisible(slot, id, moiPilote()))); }
+  const moi = moiPilote() || "", ch = slot === "plaque" ? debloques(moi) : null;   // 🎁 Chercheur de Noël, 🔰 Recrue 2026 : seulement si gagnées
+  return Object.keys(ITEMS[slot]).filter(id => (!dec || estDepart(slot, id) || a.has(slot + "." + id)) && (!ch || !(estGainChercheur(slot, id) || estGainRecrue(slot, id)) || ch.has(slot + "." + id)) && !objetReserve(slot, id) && (!estGainTicket(slot, id) || ticketVisible()) && (typeof mjObjetVisible !== "function" || mjObjetVisible(slot, id, moi))
+    && !prisParAutre(slot, id, moi)); }
+/** v20.70 (Théo, 25/11) · un objet EXCLUSIF (1er seulement, Légende) déjà pris par un autre pilote disparaît des objets bloqués : on ne pourra plus jamais l'avoir */
+function prisParAutre(slot, id, moi) {
+  try { const k = slot + "." + id; if (!moi || debloques(moi).has(k)) return false;
+    const o = origineItem(slot, id), autres = D.personnes.map(p => p.nom).filter(n => n !== moi);
+    if (!(o.exclusif || o.legende || o.mj)) return false;
+    if (o.vote) return false;   // le Coup de la saison se rejoue à chaque fin de saison
+    return autres.some(n => debloques(n).has(k)); } catch (e) { return false; }
+}
+/* ---------- v20.70 (Théo, 25/11) · ✨ objets gagnés mis en avant ----------
+   Dans chaque emplacement : nouveaux gagnés pas encore vus (pastille « ✨ Nouveau ») → gagnés (Légendes et exclusifs d'abord) → départ → bloqués 🔒.
+   « Vu » = l'emplacement a été ouvert dans l'écurie (mémoire de l'appareil, versus.ecuVus, par pilote ; en simulation, en mémoire seulement). */
+function gagnesDe(nom) { return [...debloques(nom)].filter(k => { const [s, id] = k.split("."); return ITEMS[s] && ITEMS[s][id] && !estDepart(s, id); }); }
+function vusEcurieTout() { try { const o = JSON.parse(stock.get("versus.ecuVus") || "{}"); return o && typeof o === "object" && !Array.isArray(o) ? o : {}; } catch (e) { return {}; } }
+function marquerVus(nom, l) { if (!nom || !l.length || apercuSaison()) return; const o = vusEcurieTout(), v = new Set(Array.isArray(o[nom]) ? o[nom] : []); l.forEach(k => v.add(k)); o[nom] = [...v]; stock.set("versus.ecuVus", JSON.stringify(o)); }
+/** objets gagnés pas encore vus (d'un emplacement, ou de toute l'écurie) */
+function nouveauxEcurie(nom, slot) {
+  try { if (!nom || !ecurieOuverte() || apercuSaison() || !D.personnes.some(p => p.nom === nom)) return [];
+    const vus = new Set((vusEcurieTout()[nom]) || []), vis = {};
+    return gagnesDe(nom).filter(k => { const [s, id] = k.split("."); if (vus.has(k) || (slot && s !== slot) || !SLOTS.some(z => z[0] === s)) return false; vis[s] = vis[s] || idsSlot(s); return vis[s].includes(id); }); } catch (e) { return []; }
+}
+let ECU_NOUV = null;   // { nom, slot, l } : les « ✨ Nouveau » de l'emplacement ouvert (restent affichés tant qu'on y reste)
+function rangGagne(slot, id) { const o = origineItem(slot, id); return o.legende ? 0 : o.exclusif || o.mj ? 1 : o.gant ? 2 : 3; }
+function ordreItems(qui, slot, ids) {
+  const ouv = debloques(qui), nv = ECU_NOUV && ECU_NOUV.nom === qui && ECU_NOUV.slot === slot ? ECU_NOUV.l : [];
+  const rang = id => { const k = slot + "." + id; if (!ouv.has(k)) return 90; if (nv.includes(k)) return rangGagne(slot, id) / 10; if (estDepart(slot, id)) return BASE_ECURIE[slot] === id ? 50 : 51; return 10 + rangGagne(slot, id); };
+  return ids.map((id, i) => [id, rang(id), i]).sort((a, b) => a[1] - b[1] || a[2] - b[2]).map(x => x[0]);
+}
+/* ---------- v20.70 · 🏎️ « Équiper maintenant » : depuis une cérémonie, l'écurie s'ouvre sur l'emplacement, l'objet déjà essayé (Enregistrer pour le garder) ---------- */
+function btnEquiper(slot, id, cls) {
+  try { const qui = quiEcurie(); if (!qui || !ecurieOuverte() || !ITEMS[slot] || !ITEMS[slot][id] || !D.personnes.some(p => p.nom === qui)) return ""; } catch (e) { return ""; }
+  return '<button class="btn ' + (cls || "acc") + '" type="button" data-equiper="' + slot + "." + id + '">🏎️ Équiper maintenant</button>';
+}
+function equiperMaintenant(slot, id) {
+  const qui = quiEcurie(); if (!qui || !ITEMS[slot] || !ITEMS[slot][id]) return;
+  try { document.querySelectorAll(".av-ov").forEach(x => x.remove()); if (typeof AVENT_APERCU !== "undefined") AVENT_APERCU = false; } catch (e) { }
+  ECU = { nom: qui, e: equipDe(qui) }; ECU.e[slot] = id; if (ECU.e.teintes) delete ECU.e.teintes[slot];
+  ECU_SLOT = slot; ECU_Q = slot + "." + id; ECU_VOIR = null; ETAT.podium = "ecurie"; garder();
+  try { if (vueActive() !== "trophees") allerA("trophees"); } catch (e) { }
+  rendreTrophees();
+  setTimeout(() => { const b = document.querySelector('.it[data-slot="' + slot + '"][data-item="' + id + '"]'); if (b && b.scrollIntoView) b.scrollIntoView({ block: "center", behavior: reduit ? "auto" : "smooth" }); }, 250);
+  toast("🏎️ Essayé sur ta voiture : « Enregistrer mon écurie » pour le garder.");
+}
+/** branche le bouton d'une cérémonie : on ferme (avec ce que la cérémonie fait en fermant), puis on équipe */
+function brancherEquiper(o, fermer) {
+  o.querySelectorAll("[data-equiper]").forEach(b => { b.dataset.branche = "1"; b.addEventListener("click", ev => { ev.stopPropagation(); const [s, id] = b.dataset.equiper.split("."); try { if (fermer) fermer(); } catch (e) { } equiperMaintenant(s, id); }); });
+}
+// les autres boutons (vitrines : Gant, monde, succès) : ferment leur fenêtre s'il y en a une, puis équipent
+document.addEventListener("click", ev => { const b = ev.target.closest && ev.target.closest("[data-equiper]"); if (!b || b.dataset.branche) return;
+  const ov = b.closest(".revel, .av-case"); if (ov) ov.remove(); const [s, id] = b.dataset.equiper.split("."); equiperMaintenant(s, id); });
+/* ---------- v20.70 · 🎲 « Au hasard » : une tenue complète tirée parmi les objets du pilote (aperçu seulement ; Enregistrer valide, « Ma tenue » revient en arrière) ---------- */
+const SLOTS_HASARD = ["casque", "finition", "fond", "livree", "trainee", "klaxon"];
+function tenueAuHasard(qui, e, alea) {
+  const r = alea || Math.random, ouv = debloques(qui), n = Object.assign({}, e, { teintes: {} });
+  SLOTS_HASARD.forEach(s => { const l = idsSlot(s).filter(id => ouv.has(s + "." + id)); if (l.length) n[s] = l[Math.floor(r() * l.length) % l.length];
+    const t = teintesDe(s, n[s]); if (t) { const c = t[Math.floor(r() * t.length) % t.length]; if (s === "finition" && (c === "blanc" || c === "noir")) n.finition = "lis" + c; else if (c !== teinteDefaut(s, n[s])) n.teintes[s] = c; } });
+  if (!Object.keys(n.teintes).length) delete n.teintes;
+  return n;
+}
 /* ---------- v20.61 · 🏎️ « Ton écurie ouvre ses portes » : une seule fois, au premier passage à partir du 1er décembre 2026 ----------
    La porte du garage se lève sur la voiture du pilote ; un toucher ferme. Rien de 2027 : seulement ce qu'on peut faire en décembre. */
 function teaserEcurie(essai) {
@@ -1370,6 +1467,8 @@ function htmlEcurie() {
   if (!ECU || ECU.nom !== qui) ECU = { nom: qui, e: equipDe(qui) };
   const ouverts = debloques(qui), e = ECU.e;
   const slot = ECU_SLOT === "numero" || ECU_SLOT === "pilote" || (ECU_SLOT === "badges" && !ecurieDepart()) || SLOTS.some(s => s[0] === ECU_SLOT) ? ECU_SLOT : "pilote";
+  // v20.70 · ✨ les nouveaux de l'emplacement ouvert : montrés (en tête, pastille) puis notés comme vus ; ils gardent leur pastille tant qu'on reste sur l'emplacement
+  if (!ECU_NOUV || ECU_NOUV.nom !== qui || ECU_NOUV.slot !== slot) { ECU_NOUV = { nom: qui, slot, l: SLOTS.some(z => z[0] === slot) ? nouveauxEcurie(qui, slot) : [] }; marquerVus(qui, ECU_NOUV.l); }
   const total = totalObjets(), nb = ouverts.size - Object.keys(BASE_ECURIE).length;
   const showroom = '<div class="showroom"><div class="sr-num" aria-hidden="true">' + e.numero + '</div>' +
     '<div class="sr-h"><span class="sr-k">Mon écurie · ' + (estChauffe(saisonCourante()) ? "Tour de chauffe" : "Saison " + numeroSaison(saisonCourante())) + '</span><span class="sr-id">' + avatar(qui, Object.assign({}, e, { vignette: true })) + "<b" + attrLivree(qui, e) + ">" + esc(qui) + "</b></span>" +
@@ -1377,27 +1476,39 @@ function htmlEcurie() {
     '<div class="sr-3d" id="sr-3d">' + svgVoiture({ nom: qui, e, reflet: true, idle: true }) + "</div>" +
     '<span class="sr-aide">' + (window.Piste && Piste.supporte() ? "↔ Fais-la tourner du doigt" : "") + '</span><button class="sr-klaxon" type="button" id="ecu-klaxon">📯 Klaxonner</button></div>';   // v20.48 : la voiture de la course, en 3D (plus de bascule 2D / 360°)
   const onglets = '<div class="slot-tabs">' + [["pilote", "Pilote"]].concat(SLOTS, [["numero", "Numéro"]], ecurieDepart() ? [] : [["badges", "Badges"]]).map(([s, lib]) => '<button type="button" data-ecu-slot="' + s + '" aria-pressed="' + (s === slot) + '">' + lib +
+    (s !== slot && SLOTS.some(z => z[0] === s) && nouveauxEcurie(qui, s).length ? '<i class="ecu-pt" aria-label="' + nouveauxEcurie(qui, s).length + ' nouveau(x)">' + nouveauxEcurie(qui, s).length + "</i>" : "") +
     "<small>" + (s === "badges" ? (Array.isArray(e.badges) ? e.badges.length + " / 3" : "auto") : s === "numero" ? "#" + e.numero : s === "pilote" ? (e.pilote === "casque" ? "Casque" : "Tête") : esc(ITEMS[s][e[s]])) + "</small></button>").join("") + "</div>";
   let corps;
   if (slot === "pilote") corps = htmlPilote(qui, e);
   else if (slot === "badges") corps = htmlChoixBadges(qui, e);
   else if (slot === "numero") corps = '<div class="num-bloc"><input id="ecu-num" class="champ-num" inputmode="numeric" maxlength="2" value="' + e.numero + '" aria-label="Numéro de course (1 à 99)"><p class="info">Ton numéro de course, de 1 à 99 : sur le ponton de ta voiture et dans la grille.</p></div>';
-  else corps = '<div class="items">' + idsSlot(slot).map(id => {
-    const ouvert = ouverts.has(slot + "." + id), org = origineItem(slot, id), r = rareteItem(slot, id), cache = !ouvert && objetCache(slot, id), porte = e[slot] === id;
+  else corps = '<div class="items">' + ordreItems(qui, slot, idsSlot(slot)).map(id => {
+    const nouv = ECU_NOUV.l.includes(slot + "." + id), ouvert = ouverts.has(slot + "." + id), org = origineItem(slot, id), r = rareteItem(slot, id), cache = !ouvert && objetCache(slot, id), porte = e[slot] === id;
     const sous = ouvert ? r.lib : org.million ? "👑 Premier millionnaire" : org.champion ? "🌿 Premier champion" : org.monde ? icoMonde(org.monde) + " " + nomMonde(org.monde) : org.succes ? "🏅 " + org.succes.nom : org.gant ? "🧤 Gant de l'infini" : "";
     const ex = org.exclusif ? detenteur(org.exclusif.id) : null;
     const sous2 = !ouvert && org.exclusif ? (ex ? "🔒 À " + ex.nom : "🥇 1er · " + org.exclusif.nom) : sous;
-    return '<div class="it-w' + (ECU_Q === slot + "." + id ? " q-on" : "") + '"><button type="button" class="it ' + r.cls + (porte ? " on" : "") + (ouvert ? "" : " verrou") + '" data-slot="' + slot + '" data-item="' + id + '">' +
-      '<span class="it-v">' + (cache ? '<span class="it-emo">?</span>' : vignetteItem(slot, id, qui, e)) + (ouvert ? "" : '<span class="it-lock">' + (org.million ? "👑" : org.exclusif ? (ex ? org.exclusif.ico : "🥇") : "🔒") + "</span>") + (porte ? '<span class="it-on">Équipé</span>' : "") + "</span>" +
+    return '<div class="it-w' + (ECU_Q === slot + "." + id ? " q-on" : "") + (ouvert ? "" : " it-bloque") + '"><button type="button" class="it ' + r.cls + (porte ? " on" : "") + (ouvert ? "" : " verrou") + '" data-slot="' + slot + '" data-item="' + id + '">' +
+      '<span class="it-v">' + (cache ? '<span class="it-emo">?</span>' : vignetteItem(slot, id, qui, e)) + (ouvert ? "" : '<span class="it-lock">' + (org.million ? "👑" : org.exclusif ? (ex ? org.exclusif.ico : "🥇") : "🔒") + "</span>") + (porte ? '<span class="it-on">Équipé</span>' : "") + "</span>" + (nouv ? '<span class="it-nv">✨ Nouveau</span>' : "") +
       '<span class="it-n">' + (cache ? "???" : esc(ITEMS[slot][id])) + '</span><span class="it-r">' + esc(sous2) + "</span></button>" +
-      '<button type="button" class="it-q" data-itq="' + slot + "." + id + '" aria-label="D\'où vient ' + esc(cache ? "cet objet" : ITEMS[slot][id]) + ' ?">?</button></div>';
+      '<button type="button" class="it-q" data-itq="' + slot + "." + id + '" aria-label="D\'où vient ' + esc(cache ? "cet objet" : ITEMS[slot][id]) + ' ?">?</button></div>' +
+      (porte ? htmlTeintes(qui, slot, e) : "");
   }).join("") + '</div><div class="it-d" id="it-d" aria-live="polite">' + htmlDetailItem(qui) + "</div>";
   const grille = D.personnes.map(p => { const eq = p.nom === qui ? e : equipDe(p.nom); return '<button type="button" class="gr-l' + (ECU_VOIR === p.nom ? " on" : "") + '" data-voir="' + esc(p.nom) + '">' + avatar(p.nom, eq) + "<b" + attrLivree(p.nom, eq) + ">" + esc(p.nom) + "</b>" + (eq.plaque !== "aucune" ? '<span class="plaque">' + esc(ITEMS.plaque[eq.plaque]) + "</span>" : "") + '<span class="num">#' + eq.numero + " ›</span></button>"; }).join("");
-  return showroom + onglets + corps +
+  const modifie = JSON.stringify(normTenue(e)) !== JSON.stringify(normTenue(equipDe(qui)));
+  return showroom + '<div class="ecu-hasard"><button class="btn ghost" type="button" id="ecu-hasard">🎲 Au hasard</button>' + (modifie ? '<button class="btn ghost" type="button" id="ecu-retour">↩️ Ma tenue enregistrée</button>' : "") + "</div>" + onglets + corps +
     '<button class="btn acc plein" type="button" id="ecu-garder">Enregistrer mon écurie</button>' +
     '<p class="info">Ta voiture de course porte ta livrée, ton casque, ta finition, ton numéro et ta traînée. En course, on garde ton visage pour qu\'on te reconnaisse.' + (ecurieDepart() ? " En décembre, les objets de départ ; de nouveaux objets se gagneront tout au long de 2027." : "") + "</p>" +
     '<div><h3 class="s-h3">La grille <small>touche une écurie pour la voir</small></h3></div><div class="grille-dep">' + grille + "</div>" + htmlGarage(qui);
 }
+/** v20.70 · 🎨 sous l'objet porté (s'il a un motif neutre) : 3 couleurs au choix */
+function htmlTeintes(qui, slot, e) {
+  const l = teintesDe(slot, e[slot]); if (!l) return "";
+  const cur = slot === "finition" && !teinteDe(slot, e) ? teinteDefaut(slot, e[slot]) : teinteDe(slot, e) || teinteDefaut(slot, e[slot]);
+  return '<div class="teintes" role="group" aria-label="Couleur de « ' + esc(ITEMS[slot][e[slot]]) + ' »"><span>🎨 Couleur</span>' + l.map(t => '<button type="button" data-teinte="' + t + '" aria-pressed="' + (t === cur) + '" title="' + esc(TEINTES[t][0]) + '">' +
+    '<i style="background:' + (t === "pilote" ? couleur(qui) : TEINTES[t][1]) + '"></i>' + esc(TEINTES[t][0]) + "</button>").join("") + "</div>";
+}
+/** la tenue comparable (pour savoir si l'aperçu diffère de ce qui est enregistré) */
+function normTenue(e) { const o = {}; SLOTS.forEach(([s]) => o[s] = ecrireTeinte(s, e[s], (e.teintes || {})[s])); return o; }
 /** V16.3 · Écurie › Badges : jusqu'à 3 badges épinglés sur la ligne du Classement (ou choix automatique) */
 function htmlChoixBadges(qui, e) {
   const tous = badgesPossedes(qui), auto = !Array.isArray(e.badges), vus = badgesAffiches(qui, e).map(b => b.id);
@@ -1976,7 +2087,7 @@ function htmlGant(apercu, noms, moi, y) {
     "<small>Allume ses 6 pierres d'ici la fin de la saison (décembre compris). Chaque pierre allumée brille aussi sur ta voiture en course.</small></div></div>" +
     '<ol class="pierres">' + PIERRES.map((pi, i) => '<li class="' + (g.p[i] ? "on" : "") + '" style="--pc:' + pi.c + '"><i aria-hidden="true"></i><span><b>' + esc(pi.nom) + "</b><small>" + esc(pi.def.replace("l'indice", "le " + idx)) + (g.p[i] ? " · ✓ " + esc(moisLong(g.p[i])) : "") + "</small></span></li>").join("") + "</ol>" +
     (apercu ? "" : '<div class="gant-autres"><small>Les autres pilotes (combien de pierres) :</small>' + noms.filter(n => n !== moi).map(n => '<span class="nmp" style="--c:' + couleur(n) + '"><i></i>' + esc(n) + " <b>" + ((G[n] || { n: 0 }).n) + "</b>/6</span>").join("") + "</div>") +
-    '<p class="gant-r">🎁 Gant complet : ' + esc(libGains(GANT.gain)) + ".</p></div></section>";
+    '<p class="gant-r">🎁 Gant complet : ' + esc(libGains(GANT.gain)) + ".</p>" + (!apercu && g.n === 6 ? '<div class="btn-row">' + btnEquiper(...GANT.gain[0]) + "</div>" : "") + "</div></section>";
 }
 
 /* ---------- 💎 Les Légendes : un seul gagnant au monde ---------- */
@@ -2032,7 +2143,7 @@ function ouvrirSucces(id) {
     (r.or ? '<p class="sec-histoire">📜 ' + esc(ligneHistoire(x, ors[0])) + '</p><ol class="sec-rangs">' + ors.map(o => hist(o, "or")).join("") + r.autres.map(o => hist(o, "arg")).join("") + "</ol>"
       : '<p class="cc-cond">' + (apercu ? "Il se joue dès janvier." : "Personne ne l'a encore réussi : le premier gagnera la version dorée et l'objet exclusif.") + "</p>") +
     (premier && cc.s ? '<p class="cc-s">📜 <i>' + esc(cc.s) + "</i></p>" : "") +
-    '<div class="btn-row"><button class="btn acc" type="button" data-cc="ok">Fermer</button></div></div>';
+    '<div class="btn-row">' + (!apercu && reussi(id, moi) ? btnEquiper(...(premier && x.bonus ? x.bonus : x.gain)) : "") + '<button class="btn ' + (!apercu && reussi(id, moi) && btnEquiper(...x.gain) ? "ghost" : "acc") + '" type="button" data-cc="ok">Fermer</button></div></div>';
   document.body.appendChild(ov);
   const t0 = Date.now(), fermer = () => ov.remove();
   ov.addEventListener("click", e => { if (e.target === ov && Date.now() - t0 > 600) fermer(); });
@@ -2066,7 +2177,7 @@ function ouvrirMonde(id) {
     (!aVenir && e0.etat === "en-cours" ? '<p class="cc-cond mo-encours">🤝 <b>Objectif commun : ' + esc(e0.c > 1 ? e0.p + " / " + e0.c : e0.txt || "en cours") + "</b>, jusqu'au " + new Date(new Date().getFullYear(), t.mois, 0).getDate() + " " + esc(MOIS_L[t.mois - 1]) + ".</p>" : "") +
     (aVenir ? '<p class="cc-cond">🔒 Le mini-jeu se dévoile en ' + esc(MOIS_L[t.mois - 1]) + ".</p>"
       : '<p class="cc-cond">' + (qui.length ? "✓ Déjà réussi par " + esc(qui.join(", ")) : "Personne ne l'a encore réussi") + (best ? " · 🌟 meilleur du mois : " + esc(best.nom) + (best.txt ? " (« " + esc(best.txt) + " »)" : "") : "") + ".</p>") +
-    '<div class="btn-row">' + (jouer ? '<button class="btn acc" type="button" data-mo-jouer>🎲 Jouer aujourd\'hui</button>' : "") + '<button class="btn ' + (jouer ? "ghost" : "acc") + '" type="button" data-cc="ok">Fermer</button></div></div>';
+    '<div class="btn-row">' + (jouer ? '<button class="btn acc" type="button" data-mo-jouer>🎲 Jouer aujourd\'hui</button>' : "") + (!aVenir && qui.includes(moi) ? btnEquiper(...t.gain[0], jouer ? "ghost" : "acc") : "") + '<button class="btn ' + (jouer ? "ghost" : "acc") + '" type="button" data-cc="ok">Fermer</button></div></div>';
   document.body.appendChild(ov);
   ov.addEventListener("click", e => { if (e.target === ov) ov.remove(); });
   ov.querySelector('[data-cc="ok"]').addEventListener("click", () => ov.remove());
@@ -2125,6 +2236,7 @@ function popVoiture() {
 async function garderEcurie() {
   const qui = ECU.nom, equip = Object.assign({}, ECU.e), avant = D.ecurie, brut = ((avant || {})[qui] || {}).equip || {};
   delete equip.vignette;
+  if (equip.teintes) { Object.keys(equip.teintes).forEach(s => { if (equip[s]) equip[s] = ecrireTeinte(s, equip[s], equip.teintes[s]); }); delete equip.teintes; }   // v20.70 · 🎨 « rayures » + or → « rayuresor » (serveur V91 : 2 à 16 lettres)
   let envoi = Object.assign({}, equip);
   if (brut.aura && envoi.aura === undefined) envoi.aura = brut.aura;
   // en aperçu admin, les améliorations restent sur l'appareil : on renvoie au serveur ses vraies valeurs, intactes
@@ -2145,7 +2257,7 @@ async function garderEcurie() {
 }
 function brancherSaison(v) {
   const rs = v.querySelector("#reserve-ouvrir"); if (rs) rs.addEventListener("click", ouvrirReserve);
-  v.querySelectorAll("[data-pod]").forEach(b => b.addEventListener("click", () => { ETAT.podium = b.dataset.pod; if (b.dataset.pod === "stand") { const r = rappelCartes(); if (r && !kOuvertPour(saisonCourante())) choisirSaison(r.y); } garder(); rendreTrophees(); }));
+  v.querySelectorAll("[data-pod]").forEach(b => b.addEventListener("click", () => { ETAT.podium = b.dataset.pod; ECU_NOUV = null; if (b.dataset.pod === "stand") { const r = rappelCartes(); if (r && !kOuvertPour(saisonCourante())) choisirSaison(r.y); } garder(); rendreTrophees(); }));
   v.querySelectorAll("[data-saison]").forEach(b => b.addEventListener("click", () => { choisirSaison(+b.dataset.saison); rendreTrophees(); }));
   const y = saisonCourante();
   const o = ongletPodium();
@@ -2182,6 +2294,14 @@ function brancherSaison(v) {
   const g3 = v.querySelector("#gar-3d"); if (g3 && ECU_VOIR) { try { if (V3D.gar) V3D.gar.stop(); V3D.gar = monter3D(g3, ECU_VOIR, ECU_VOIR === ECU.nom ? ECU.e : equipDe(ECU_VOIR), true); } catch (e) { /* idem */ } }
   const kl = v.querySelector("#ecu-klaxon"); if (kl) kl.addEventListener("click", () => { confettis(ECU.e.klaxon); demarrer(v); });
   const g = v.querySelector("#ecu-garder"); if (g) g.addEventListener("click", garderEcurie);
+  v.querySelectorAll("[data-teinte]").forEach(b => b.addEventListener("click", () => {   // v20.70 · 🎨
+    const s = ECU_SLOT, t = b.dataset.teinte; if (!ECU || !teintesDe(s, ECU.e[s])) return;
+    const T = Object.assign({}, ECU.e.teintes || {});
+    if (s === "finition" && (t === "blanc" || t === "noir")) { ECU.e.finition = "lis" + t; delete T.finition; }
+    else if (t === teinteDefaut(s, ECU.e[s])) delete T[s]; else T[s] = t;
+    ECU.e.teintes = T; rendreTrophees(); popVoiture(); }));
+  const hz = v.querySelector("#ecu-hasard"); if (hz) hz.addEventListener("click", () => { if (!ECU) return; ECU.e = tenueAuHasard(ECU.nom, ECU.e); ECU_Q = null; rendreTrophees(); popVoiture(); demarrer(v); });
+  const rt = v.querySelector("#ecu-retour"); if (rt) rt.addEventListener("click", () => { ECU = null; ECU_Q = null; rendreTrophees(); toast("↩️ Ta tenue enregistrée est revenue."); });
   brancherPilote(v);
   v.querySelectorAll("[data-regles]").forEach(a => a.addEventListener("click", ev => { ev.preventDefault(); ouvrirRegles(a.dataset.regles); }));
   const rb = v.querySelector("#regles-ouvrir"); if (rb) rb.addEventListener("click", () => ouvrirRegles());

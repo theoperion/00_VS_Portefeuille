@@ -361,6 +361,7 @@ function revelationMJ(C, relire, exemple) {
   if (!relire && window.SONS && SONS.jingle) setTimeout(() => { try { SONS.jingle("defaut", "accord"); } catch (e) { /* sans son */ } }, reduit ? 0 : 700);
 }
 /** la cérémonie de fin du mois : le décor du monde, les gagnants, le titre, l'objet ; aucun point */
+let MJ_EQ = "";
 function ceremonieMJ(r, exemple, apres) {
   const K = r.contenu || {}, R = r.recompense || {}, moi = exemple ? "Toi (aperçu)" : moiVrai(), d = MJ_DECORS[r.univers], g = r.gagnants || [];
   const o = document.createElement("div"); o.className = "revel mj-cer" + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Fin du mini-jeu");
@@ -374,10 +375,11 @@ function ceremonieMJ(r, exemple, apres) {
     (r.tableau && r.tableau.length ? '<ol class="mj-cer-tab">' + r.tableau.slice(0, 5).map(t => '<li class="' + (g.includes(t.nom) ? "or" : "") + '"><b>' + esc(t.nom) + "</b><small>" + esc(t.txt || String(t.val)) + "</small></li>").join("") + "</ol>" : "") +
     (R.objet && g.length && typeof vignetteItem === "function" && ITEMS[R.objet[0]] && ITEMS[R.objet[0]][R.objet[1]] ? '<div class="tk-obj"><span>Objet d\'écurie gagné</span>' + vignetteItem(R.objet[0], R.objet[1], exemple ? "" : g[0], e) + "</div>" : "") +
     '<p class="cbo-flair">Aucun point au championnat : seulement la gloire.</p>' +
-    '<div class="btn-row">' + (exemple ? "" : '<button class="btn acc" type="button" data-mj-vit>Voir le trophée</button>') + '<button class="btn ghost" type="button" data-mj-ok>Génial !</button></div></div>';
+    '<div class="btn-row">' + (MJ_EQ = (exemple || typeof btnEquiper !== "function" ? "" : R.objet && g.includes(moi) ? btnEquiper(R.objet[0], R.objet[1]) : r.commun && r.commun.reussi && typeof TROPHEES_MONDES !== "undefined" && (TROPHEES_MONDES.find(t => t.univers === r.univers) || {}).gain ? btnEquiper(...TROPHEES_MONDES.find(t => t.univers === r.univers).gain[0]) : "")) + (exemple ? "" : '<button class="btn ' + (MJ_EQ ? "ghost" : "acc") + '" type="button" data-mj-vit>Voir le trophée</button>') +   // v20.70 · 🏎️ Équiper maintenant '<button class="btn ghost" type="button" data-mj-ok>Génial !</button></div></div>';
   document.body.appendChild(o);
   const fermer = () => { if (!exemple) stock.set("versus.mjFin." + r.mois, "1"); o.remove(); if (apres) apres(); };
   o.querySelector("[data-mj-ok]").addEventListener("click", fermer);
+  if (typeof brancherEquiper === "function") brancherEquiper(o, fermer);
   const v = o.querySelector("[data-mj-vit]"); if (v) v.addEventListener("click", () => { fermer(); ETAT.podium = "defis"; if (typeof VIT_ONGLET !== "undefined") VIT_ONGLET = "mondes"; garder(); if (vueActive() !== "trophees") allerA("trophees"); rendreTrophees(); setTimeout(() => { const s = document.querySelector('#vit-mondes [data-monde="m-' + r.univers + '"]') || document.querySelector("#vit-mondes"); if (s) s.scrollIntoView({ block: "center" }); }, 300); });
   if (g.includes(moi) || (r.commun && r.commun.reussi)) setTimeout(() => { try { confettis("confettis"); } catch (er) { /* sans fête */ } }, reduit ? 0 : 900);
 }

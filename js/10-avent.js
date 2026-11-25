@@ -564,7 +564,7 @@ function ouvrirCaseAvent(n, apres) {
   if (c.type === "jeu") corps = '<div class="av-jeu"></div>';
   else if (c.type === "scene") corps = '<div class="av-jeu av-scene"></div><p class="av-t">' + esc(c.texte) + "</p>";
   else if (c.type === "compte") { const r = joursAvantAnnonce(); corps = '<div class="av-rebours"><span>' + (r > 0 ? "J-" + r : "🎉") + "</span><small>" + (r > 1 ? "avant l'annonce du 20 décembre" : r === 1 ? "demain, l'annonce !" : "l'annonce est arrivée") + '</small></div><p class="av-t">' + esc(c.texte) + "</p>"; }
-  else if (c.type === "cadeau") corps = htmlCadeauAvent() + '<p class="av-t">' + esc(c.texte) + '</p><button class="btn acc" type="button" data-av-ecurie>🏎️ Aller à mon écurie</button><div class="av-records">' + htmlRecordsAvent() + "</div>";
+  else if (c.type === "cadeau") corps = htmlCadeauAvent() + '<p class="av-t">' + esc(c.texte) + '</p><button class="btn acc" type="button" data-av-ecurie>🏎️ Équiper maintenant</button><div class="av-records">' + htmlRecordsAvent() + "</div>";
   else corps = '<p class="av-t">' + esc(c.texte) + "</p>" + (c.type === "annonce" ? '<button class="btn acc" type="button" data-av-podium>📣 Revoir l\'annonce</button>' : "");
   o.innerHTML = neigeAvent(24) + '<div class="av-carte"><button class="av-x" type="button" aria-label="Fermer">✕</button><span class="av-k">🎄 Case du ' + n + " décembre</span><h3>" + (c.type === "jeu" ? "" : '<span aria-hidden="true">' + c.ico + "</span> ") + esc(titreCase(n)) + "</h3>" + corps +
     '<div class="btn-row"><button class="btn ghost" type="button" data-av-fermer>Fermer</button></div></div>';
@@ -580,7 +580,7 @@ function ouvrirCaseAvent(n, apres) {
   const pd = o.querySelector("[data-av-podium]"); if (pd) pd.addEventListener("click", () => { fermer(); document.querySelectorAll(".av-ov").forEach(x => x.remove()); AVENT_APERCU = false;   // v20.62 : rouvre l'annonce du 20 elle-même
     try { const l = etapesJeu().filter(e => annonceEtape(e) === 20261220 && regleVisible(e.id)); if (l.length) ouvrirNouveautes(l); else allerA("trophees"); } catch (e) { } });
   const ec = o.querySelector("[data-av-ecurie]"); if (ec) ec.addEventListener("click", () => { fermer(); document.querySelectorAll(".av-ov").forEach(x => x.remove()); AVENT_APERCU = false;
-    try { ETAT.podium = "ecurie"; ECU_SLOT = "plaque"; garder(); allerA("trophees"); rendreTrophees(); } catch (e) { } });
+    try { if (typeof equiperMaintenant === "function") equiperMaintenant("plaque", "hiver26"); else { ETAT.podium = "ecurie"; ECU_SLOT = "plaque"; garder(); allerA("trophees"); rendreTrophees(); } } catch (e) { } });   // v20.70 · la plaque Hiver 2026 déjà essayée
   return o;
 }
 function joursAvantAnnonce() { const d = new Date(); if (d.getFullYear() !== 2026 || d.getMonth() !== 11) return aventApercu() ? AVENT.annonce - 13 : 0; return Math.max(0, AVENT.annonce - d.getDate()); }
