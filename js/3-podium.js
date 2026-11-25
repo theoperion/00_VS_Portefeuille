@@ -302,19 +302,24 @@ function etatDefis(nom) {
 
 /* ---------- Écurie : ce qui se débloque, ce qui est équipé ---------- */
 const ITEMS = {
-  casque: { uni: "Uni", carbone: "Carbone", eclair: "Éclair", damier: "Damier", tortue: "Tortue", chrome: "Chrome", etoile: "Étoile", holo: "Holo", couronne: "Couronne", foudre: "Foudre", phenix: "Phénix", glace: "Glace", galaxie: "Galaxie", empereur: "Empereur", eclaireur: "Éclaireur", toque: "Toque de chef", anneau: "Anneau gravé", rebelle: "Pilote rebelle", hoplite: "Casque d'Ulysse", fracture: "Éclats du multivers" },
+  casque: { uni: "Uni", carbone: "Carbone", eclair: "Éclair", damier: "Damier", tortue: "Tortue", chrome: "Chrome", etoile: "Étoile", holo: "Holo", couronne: "Couronne", foudre: "Foudre", phenix: "Phénix", glace: "Glace", galaxie: "Galaxie", empereur: "Empereur", eclaireur: "Éclaireur", toque: "Toque de chef", anneau: "Anneau gravé", rebelle: "Pilote rebelle", hoplite: "Casque d'Ulysse", fracture: "Éclats du multivers", raye: "Rayé", bicolore: "Bicolore", pois: "Pois" },
   circuit: { classique: "Jour de course", monaco: "Nocturne", desert: "Heure dorée", neige: "Hiver", neon: "Synthwave" },
-  fond: { couleur: "Couleur", carbone: "Carbone", aurore: "Aurore", flammes: "Flammes", neon: "Néon", damier: "Damier", or: "Or", galaxie: "Galaxie", chat: "Chat qui sourit", pandora: "Forêt luminescente", ampoules: "Guirlande d'ampoules", portails: "Portails" },
-  finition: { aucune: "Aucune", argent: "Liseré argent", or: "Liseré or", neon: "Liseré néon", diamant: "Diamant", lauriers: "Lauriers", etoilee: "Étoilée", soleil: "Soleil", ailee: "Balle ailée", elfique: "Cape elfique", biolum: "Bioluminescence", feuilledor: "Feuille d'or" },
-  livree: { couleur: "Couleur", chrome: "Chrome", or: "Or", neon: "Néon", arcenciel: "Prisme", oranime: "Or vivant", platine: "Platine", rubis: "Rubis", galaxie: "Galaxie", orrose: "Or rose", chocolat: "Chocolat fondant", carte: "Carte à jouer", ver: "Peau des sables" },
-  trainee: { simple: "Simple", halo: "Halo", flammes: "Flammes", etincelles: "Étincelles", comete: "Comète", supernova: "Supernova", turbo: "Turbo", arcenciel: "Arc-en-ciel", cables: "Câbles d'acier", flocons: "Flocons", sabre: "Sabre lumineux", glitch: "Faille" },
-  klaxon: { confettis: "Confettis", damier: "Damier", feu: "Feu d'artifice", parade: "Parade", billets: "Pluie de billets", fanfare: "Fanfare royale", cibles: "Dans le mille", fusees: "Décollage", trophees: "Pluie de trophées", ouvriers: "Fanfare des petits ouvriers" },
+  fond: { couleur: "Couleur", carbone: "Carbone", aurore: "Aurore", flammes: "Flammes", neon: "Néon", damier: "Damier", or: "Or", galaxie: "Galaxie", chat: "Chat qui sourit", pandora: "Forêt luminescente", ampoules: "Guirlande d'ampoules", portails: "Portails", degrade: "Dégradé", rayures: "Rayures", etoile: "Étoilé" },
+  finition: { aucune: "Aucune", argent: "Liseré argent", or: "Liseré or", neon: "Liseré néon", diamant: "Diamant", lauriers: "Lauriers", etoilee: "Étoilée", soleil: "Soleil", ailee: "Balle ailée", elfique: "Cape elfique", biolum: "Bioluminescence", feuilledor: "Feuille d'or", lisblanc: "Liseré blanc", lisnoir: "Liseré noir", mat: "Mat", brillant: "Brillant" },
+  livree: { couleur: "Couleur", chrome: "Chrome", or: "Or", neon: "Néon", arcenciel: "Prisme", oranime: "Or vivant", platine: "Platine", rubis: "Rubis", galaxie: "Galaxie", orrose: "Or rose", chocolat: "Chocolat fondant", carte: "Carte à jouer", ver: "Peau des sables", rayures: "Rayures", damier: "Damier", bicolore: "Bicolore", flammes: "Flammes" },
+  trainee: { simple: "Simple", halo: "Halo", flammes: "Flammes", etincelles: "Étincelles", comete: "Comète", supernova: "Supernova", turbo: "Turbo", arcenciel: "Arc-en-ciel", cables: "Câbles d'acier", flocons: "Flocons", sabre: "Sabre lumineux", glitch: "Faille", pointilles: "Pointillés", double: "Double", ruban: "Ruban", fumee: "Fumée" },
+  klaxon: { confettis: "Confettis", damier: "Damier", feu: "Feu d'artifice", parade: "Parade", billets: "Pluie de billets", fanfare: "Fanfare royale", cibles: "Dans le mille", fusees: "Décollage", trophees: "Pluie de trophées", ouvriers: "Fanfare des petits ouvriers", pouet: "Pouet", trompette: "Trompette", sifflet: "Sifflet" },
   plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon", cheval: "Cheval de bois", hiver26: "Hiver 2026", chercheur: "Chercheur de Noël", chercheuror: "Chercheur de Noël d'or" }
 };
 const BASE_ECURIE = { casque: "uni", circuit: "classique", fond: "couleur", finition: "aucune", livree: "couleur", trainee: "simple", klaxon: "confettis", plaque: "aucune" };
 /* v20.61 (Théo, 25/11) · objets de DÉPART en plus de la série : à tout le monde, dès l'ouverture de l'écurie (1/12/2026). Les objets génériques
    retirés des mondes (redessinés à l'image de leur univers) vont ici (le Versus = la course : damier, carbone) ou dans la réserve 2028 (OBJETS_RESERVE). */
-const DEPART_ECURIE = [["casque", "carbone"], ["casque", "damier"], ["fond", "carbone"], ["fond", "damier"]];
+/* v20.68 (Théo, 25/11) · l'écurie de décembre était trop vide : 3 à 4 objets de départ NEUTRES de plus par emplacement (rien à voir avec 2027),
+   à tout le monde dès le 1/12/2026 et pour toujours. Pas de plaque (une plaque se gagne) ni de filtre de course (à revoir plus tard). */
+const DEPART_ECURIE = [["casque", "carbone"], ["casque", "damier"], ["fond", "carbone"], ["fond", "damier"],
+  ["casque", "raye"], ["casque", "bicolore"], ["casque", "pois"], ["finition", "lisblanc"], ["finition", "lisnoir"], ["finition", "mat"], ["finition", "brillant"],
+  ["fond", "degrade"], ["fond", "rayures"], ["fond", "etoile"], ["livree", "rayures"], ["livree", "damier"], ["livree", "bicolore"], ["livree", "flammes"],
+  ["trainee", "pointilles"], ["trainee", "double"], ["trainee", "ruban"], ["trainee", "fumee"], ["klaxon", "pouet"], ["klaxon", "trompette"], ["klaxon", "sifflet"]];
 function estDepart(slot, id) { return BASE_ECURIE[slot] === id || DEPART_ECURIE.some(g => g[0] === slot && g[1] === id); }
 const OBJETS_RESERVE = [["livree", "or"], ["casque", "chrome"], ["casque", "holo"], ["casque", "etoile"], ["finition", "argent"], ["finition", "or"], ["finition", "neon"], ["fond", "aurore"], ["trainee", "comete"], ["plaque", "metronome"], ["circuit", "neige"]];
 const SLOTS = [["casque", "Casque"], ["finition", "Finition"], ["fond", "Avatar"], ["livree", "Livrée"], ["trainee", "Traînée"], ["klaxon", "Klaxon"], ["plaque", "Plaque"], ["circuit", "Filtre de course"]];
@@ -832,6 +837,11 @@ function casqueForme(u, m, c, fin, lead) {
     fracture: '<path d="M-6-4 0-12 6-10 3-2Z" fill="#3BE8FF" opacity=".28"/><path d="M-8 3 0 6-2 11-11 9Z" fill="#FF3BD4" opacity=".3"/><path d="M-15-6-6-4-8 3-15 2Z" fill="#F7F24A" opacity=".14"/>' +
       '<g fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="cq-faille" d="M-15-8-6-4-8 3 0 6 6 2 13 7M-6-4 0-12 6-10M0 6-2 11M-8 3-15 2" stroke="#FF3BD4" stroke-width="1.2" style="filter:drop-shadow(0 0 1.3px #FF3BD4)"/>' +
       '<path d="M-14.3-8.7-5.3-4.7-7.3 2.3.7 5.3 6.7 1.3 13.7 6.3" stroke="#3BE8FF" stroke-width=".7" opacity=".95"/></g>',
+    // v20.68 · casques de départ (neutres) : Rayé (deux bandes de course sur le dessus), Bicolore (bas blanc, filet sombre), Pois (pois blancs)
+    raye: '<path d="M-17.4-7.6C-11.4-15.4-2.6-19.2 5-19C12.2-18.6 17.8-15 20.6-9.4" stroke="#FFFFFF" stroke-width="3.4" fill="none"/><path d="M-16.2-3.4C-10.2-10.6-2.2-14.2 5-14C11.4-13.7 16.2-10.8 19.2-6.4" stroke="#FFFFFF" stroke-width="1.5" fill="none"/>' +
+      '<path d="M-17.4-5.6C-11.4-13.2-2.6-16.8 5-16.6C12-16.2 17.4-12.8 20.2-7.6" stroke="#11151B" stroke-width=".6" fill="none" opacity=".35"/>',
+    bicolore: '<path d="M-21 2.6C-8-4.2 6-7.4 25-8.2V14H-21Z" fill="#F4F6F8"/><path d="M-21 2.6C-8-4.2 6-7.4 25-8.2" stroke="#11151B" stroke-width="1.3" fill="none"/><path d="M-21 4.4C-8-2.4 6-5.6 25-6.4" stroke="#11151B" stroke-width=".5" fill="none" opacity=".35"/>',
+    pois: [[-11.5, -8.5, 2.3], [-4.6, -13.6, 1.9], [-13.4, 1.6, 2], [-5.4, -3.2, 2.5], [1.2, 6.4, 1.8], [-7.8, 7.4, 1.6], [9.4, 7.6, 1.5], [1.6, -15.8, 1.3], [-15.6, -4.2, 1.2]].map(([x, y, r]) => '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#FFFFFF" stroke="#11151B" stroke-width=".35" stroke-opacity=".35"/>').join(""),
     empereur: '<path d="M-17 1C-6-5 7-9 23-10" stroke="#F7CF55" stroke-width="3" fill="none"/><path d="M-17 4.4C-6-1.6 7-5.6 23-6.6" stroke="#F7CF55" stroke-width=".9" fill="none" opacity=".8"/><path d="M-6-14-4.6-10.6-1-10.4-3.8-8.2-2.8-4.8-6-6.8-9.2-4.8-8.2-8.2-11-10.4-7.4-10.6Z" fill="#FFE596" stroke="#7A5300" stroke-width=".5"/>'
   }[m] || "";
   const brille = ["chrome", "couronne", "empereur", "glace", "holo", "etoile", "foudre", "galaxie", "phenix", "anneau", "rebelle", "hoplite"].includes(m) ? '<path class="cq-brille" d="M-34-30H-28L-40 16H-46Z" fill="#fff" opacity=".55"/>' : "";
@@ -891,6 +901,13 @@ function finitionCasque(u, fin, c, lead) {
     lis("#4A2C05", 3) + '<path d="' + COQUE + '" fill="none" stroke="url(#' + u + 'fo)" stroke-width="1.8"/>' +
     [[-12, -11, 2.2, 10], [-5, -15.6, 1.8, 40], [0, -17.4, 1.3, 75], [-14, -2, 2, 120], [-7.4, 3.6, 2.4, 160], [-1, 7.6, 1.6, 205], [8.4, 7.4, 1.9, 250], [-9.6, -5.6, 1.2, 300]].map(([x, y, r, a]) =>
       '<path class="fin-feuille" d="M' + (x - r) + " " + (y - r * .4) + "L" + (x - r * .1) + " " + (y - r) + "L" + (x + r * .9) + " " + (y - r * .5) + "L" + (x + r * .7) + " " + (y + r * .6) + "L" + (x - r * .3) + " " + (y + r * .8) + 'Z" fill="#F7CF55" stroke="#FFF6CC" stroke-width=".35" transform="rotate(' + a + " " + x + " " + y + ')"/>').join("");
+  // v20.68 · finitions de départ (neutres) : Liseré blanc, Liseré noir, Mat (coque adoucie, sans reflet), Brillant (vernis : grands reflets et une étincelle)
+  else if (fin === "lisblanc") h += lis("#2A2F38", 2.7) + lis("#FFFFFF", 1.4);
+  else if (fin === "lisnoir") h += lis("#FFFFFF", 2.7, ' opacity=".55"') + lis("#0B0D11", 1.6);
+  else if (fin === "mat") h += '<path d="' + COQUE + VISIERE + '" fill-rule="evenodd" fill="#3A3F48" opacity=".34"/><path d="M-9-13.6C-5.4-16.8-.4-18.2 4.2-18" stroke="#3A3F48" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".55"/>' + lis("#3A3F48", 1.1);
+  else if (fin === "brillant") h += '<g clip-path="url(#' + u + 'k)"><path d="M-15.4-2.4C-14.6-10.4-8.6-16.4-.6-17.6" stroke="#FFFFFF" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".85"/><path d="M-13.4 3.6C-13.4.6-12.6-2-11.2-4.2" stroke="#FFFFFF" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".7"/>' +
+    '<path class="cq-brille" d="M-30-26H-24L-36 18H-42Z" fill="#fff" opacity=".42"/></g>' + lis("#FFFFFF", .7, ' opacity=".7"') +
+    '<path class="fin-eclat" d="M-6.5-20.2L-5.8-18.2-3.8-17.5-5.8-16.8-6.5-14.8-7.2-16.8-9.2-17.5-7.2-18.2Z" fill="#FFFFFF"/>';
   else if (fin === "lauriers") {
     const feuilles = (sens) => [0, 1, 2, 3, 4].map(i => { const t = i / 4, x = sens < 0 ? -13 - 3 * Math.sin(t * 2.4) : 18 + 3 * Math.sin(t * 2.4), y = 12 - t * 20, a = sens < 0 ? -30 - t * 40 : 30 + t * 40;
       return '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="1.5" ry="3.3" transform="rotate(' + a.toFixed(0) + " " + x.toFixed(1) + " " + y.toFixed(1) + ')" fill="#E9C25A" stroke="#6B4B0C" stroke-width=".45"/>'; }).join("");
@@ -949,6 +966,17 @@ function habillageVer() {
     '<g fill="#F6DCAA" opacity=".85">' + [0, 1, 2, 3, 4, 5, 6, 7].map(i => { const a = i * Math.PI / 4, x = 446 + 5.2 * Math.cos(a), y = 113 + 5.2 * Math.sin(a); return '<path d="M' + (446 + 2 * Math.cos(a)).toFixed(1) + " " + (113 + 2 * Math.sin(a)).toFixed(1) + "L" + x.toFixed(1) + " " + y.toFixed(1) + '" stroke="#F6DCAA" stroke-width="1.3"/>'; }).join("") + "</g>" +
     '<g class="vt-epice" fill="#8FC8FF">' + [[150, 66], [196, 92], [240, 58], [288, 104], [330, 76], [120, 100], [262, 88]].map(([x, y], i) => '<circle cx="' + x + '" cy="' + y + '" r="' + (1.1 + (i % 3) * .35) + '"/>').join("") + "</g>";
 }
+/** v20.68 · livrées de départ (neutres), par-dessus la couleur du pilote : Rayures (deux bandes de course), Damier (bande à damier le long du flanc),
+ *  Bicolore (arrière anthracite, coupe en biais), Flammes (langues de feu qui partent du museau) */
+function habillageDepart(lv, u) {
+  if (lv === "rayures") return '<path d="M0 93.6H480" stroke="#FFFFFF" stroke-width="6"/><path d="M0 100.4H480" stroke="#FFFFFF" stroke-width="2.2"/><path d="M0 90.4H480M0 96.8H480" stroke="#11151B" stroke-width=".7" opacity=".3"/>';
+  if (lv === "damier") return '<defs><pattern id="' + u + 'dq" width="10" height="10" patternUnits="userSpaceOnUse" y="89"><rect width="10" height="10" fill="#F5F5F2"/><rect width="5" height="5" fill="#101215"/><rect x="5" y="5" width="5" height="5" fill="#101215"/></pattern></defs>' +
+    '<rect x="0" y="89" width="480" height="10" fill="url(#' + u + 'dq)"/><path d="M0 88.5H480M0 99.5H480" stroke="#101215" stroke-width="1"/>';
+  if (lv === "bicolore") return '<path d="M0 30H232L206 140H0Z" fill="#1E232B"/><path d="M232 30L206 140" stroke="#FFFFFF" stroke-width="2.2"/><path d="M226 30L200 140" stroke="#FFFFFF" stroke-width=".8" opacity=".55"/>';
+  if (lv === "flammes") return '<g transform="translate(470 110) scale(1.9 1.5) translate(-470 -110)">' + '<path d="M470 97C432 97 402 99 372 102.6C392 103.6 404 105.4 410 106.6C378 107.8 348 110 316 113C348 114 372 115 388 116.2C368 117.4 352 119.4 334 122.4L470 124Z" fill="#FF6A1A" stroke="#8A1A05" stroke-width=".5" stroke-linejoin="round"/>' +
+    '<path d="M470 103.6C442 103.6 420 104.6 402 106.8C413 107.8 419 108.8 423 110C404 111 388 112.2 370 114C390 115 403 116 411 117.2L470 120Z" fill="#FFD23F"/><path d="M470 107.6C452 107.6 438 108.4 428 109.8C440 110.8 448 111.8 452 113L470 114.6Z" fill="#FFF6CC" opacity=".85"/></g>';
+  return "";
+}
 /** Carte à jouer : un grand as de cœur sur le ponton, et l'index « A♥ » dans le coin */
 function habillageCarte() {
   return '<path d="M226 118C210 106 202 99 202 91 202 85 206.5 81 212 81 216 81 219.5 83.5 222 87 224.5 83.5 228 81 232 81 237.5 81 242 85 242 91 242 99 234 106 218 118Z" fill="#D62839" opacity=".92"/>' +
@@ -960,7 +988,7 @@ function svgVoiture(o) {
   const u = "sv" + (++NSVG), c = couleur(o.nom), e = o.e, lv = e.livree, avecDrapeau = o.drapeau !== undefined && o.drapeau !== null;
   const haut = avecDrapeau ? 92 : 10, sol = haut + 150, H = sol + (o.reflet ? 46 : 10);
   const neon = lv === "neon";
-  const peinture = neon ? "fill:#0a0c11" : remplissage(u, lv === "couleur" ? "" : lv, c);
+  const peinture = neon ? "fill:#0a0c11" : remplissage(u, lv === "couleur" || lv === "damier" ? "" : lv, c);   // v20.68 : la livrée Damier = une bande, pas toute la caisse
   const filet = neon ? c : lv === "or" || lv === "oranime" ? "#3B2405" : lv === "chrome" || lv === "platine" || lv === "orrose" ? "#11151B" : lv === "rubis" ? "#FFD1DC" : lv === "galaxie" ? "#FFB8F0" : lv === "chocolat" ? "#E8B07A" : lv === "carte" ? "#D62839" : lv === "ver" ? "#F6DCAA" : "#ffffff";
   const CORPS = "M36 112L40 98C70 94 110 88 140 82C156 76 178 56 196 48L210 48C213 58 215 72 216 86L262 86C276 88 300 92 330 96L420 104C440 106 452 110 458 114L456 119C420 121 380 121 330 122L120 124L40 124Z";
   const PONTON = "M118 123C124 106 148 97 184 95L298 94C305 94 309 98 309 104V122Z";
@@ -987,6 +1015,11 @@ function svgVoiture(o) {
     // v20.61 · Flocons (souvenir du tour de chauffe) : une poudreuse de flocons dessinés derrière la voiture
     flocons: '<g class="vt-flocons" stroke="#DDF2FF" stroke-width="1.6" stroke-linecap="round">' + [[28, 86, 7], [6, 102, 9], [-18, 84, 6], [14, 118, 5], [-34, 108, 7], [-50, 90, 4], [40, 108, 4]].map(([x, y, r]) =>
       '<g transform="translate(' + x + " " + y + ')">' + [0, 60, 120].map(a => '<path d="M0 ' + -r + "V" + r + '" transform="rotate(' + a + ')"/>').join("") + "</g>").join("") + '<path d="M120 100C70 98 20 92 -60 100" stroke="#BFE6FF" stroke-width="10" opacity=".25"/></g>',
+    // v20.68 · traînées de départ (neutres) : Pointillés, Double (deux filets parallèles), Ruban (bande qui ondule), Fumée (bouffées de pneus)
+    pointilles: '<g class="vt-lignes" style="fill:' + c + '">' + [[30, 90, 3.6], [12, 90, 3.1], [-6, 90, 2.6], [-24, 90, 2.1], [-42, 90, 1.6], [26, 110, 3.6], [8, 110, 3.1], [-10, 110, 2.6], [-28, 110, 2.1], [-46, 110, 1.6]].map(([x, y, r]) => '<circle cx="' + x + '" cy="' + y + '" r="' + r + '"/>').join("") + "</g>",
+    double: '<g class="vt-lignes" style="stroke:' + c + '" stroke-width="3.2" stroke-linecap="round" opacity=".8"><path d="M34 92H-58M34 108H-58"/></g><path d="M34 92H-30M34 108H-30" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity=".55"/>',
+    ruban: '<path d="M40 100C14 86-8 114-34 100S-62 88-74 96" style="stroke:' + c + '" stroke-width="10" fill="none" stroke-linecap="round" opacity=".6"/><path d="M40 100C14 86-8 114-34 100S-62 88-74 96" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".7"/>',
+    fumee: '<g class="vt-gaz" fill="#C4CAD2" stroke="#8A939E" stroke-width=".8">' + [[22, 112, 9, .75], [2, 106, 12, .6], [-24, 112, 14, .45], [-52, 102, 13, .32], [-74, 110, 10, .2]].map(([x, y, r, o]) => '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" opacity="' + o + '"/>').join("") + "</g>",
     comete: '<defs><linearGradient id="' + u + 'q" x1="1" x2="0"><stop offset="0" style="stop-color:' + c + '"/><stop offset="1" style="stop-color:' + c + '" stop-opacity="0"/></linearGradient></defs><path d="M140 78L-60 100 140 122Z" fill="url(#' + u + 'q)" opacity=".8"/>'
   }[e.trainee] || "";
   const roue = (x, y, r) => '<g transform="translate(' + x + " " + y + ')"><circle r="' + r + '" fill="url(#' + u + 'pn)"/><circle r="' + (r - 1.5) + '" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="1"/>' +
@@ -1033,8 +1066,9 @@ function svgVoiture(o) {
       '<rect x="0" y="113" width="480" height="20" fill="url(#' + u + 'cb)" opacity=".92"/>' +
       '<path d="M0 113H480" stroke="' + filet + '" stroke-width="1.6" opacity=".9"/>' +
       '<rect x="0" y="40" width="480" height="92" fill="url(#' + u + 'sh)"/>' +
-      (lv === "chocolat" ? habillageChocolat() : lv === "carte" ? habillageCarte() : lv === "ver" ? habillageVer() : "") +
-      (["oranime", "chrome", "or", "platine", "rubis", "orrose", "chocolat"].includes(lv) ? '<rect class="vt-brille" x="-90" y="40" width="70" height="92" fill="url(#' + u + 'br)" transform="skewX(-20)" opacity="' + (lv === "oranime" ? ".9" : ".35") + '"/>' : "") +
+      (lv === "chocolat" ? habillageChocolat() : lv === "carte" ? habillageCarte() : lv === "ver" ? habillageVer() : habillageDepart(lv, u)) +
+      (e.finition === "mat" ? '<rect x="0" y="40" width="480" height="92" fill="#2A2E35" opacity=".22"/>' : "") +   // v20.68 · finition Mat : la caisse adoucie
+      (["oranime", "chrome", "or", "platine", "rubis", "orrose", "chocolat"].includes(lv) || e.finition === "brillant" ? '<rect class="vt-brille" x="-90" y="40" width="70" height="92" fill="url(#' + u + 'br)" transform="skewX(-20)" opacity="' + (lv === "oranime" ? ".9" : e.finition === "brillant" ? ".6" : ".35") + '"/>' : "") +
     "</g>" +
     (neon ? '<path d="' + CORPS + '" fill="none" style="stroke:' + c + ';filter:drop-shadow(0 0 4px ' + c + ') drop-shadow(0 0 9px ' + c + ')" stroke-width="2"/>' : "") +
     // entrée d'air du ponton, reflets
@@ -1248,7 +1282,23 @@ function bullePortrait(essai) {
   } catch (e) { }
 }
 let ECU_SLOT = "pilote";
-const ICONES_KLAXON = { confettis: "🎊", damier: "🏁", feu: "🎆", parade: "🎺", billets: "💸", fanfare: "📯", cibles: "🎯", fusees: "🚀", trophees: "🏆", ouvriers: "🍬" };
+/* v20.68 · klaxons de départ (neutres), dessinés par nous : Pouet (trompe à poire), Trompette, Sifflet */
+const KLAXONS_DESSINES = (() => {
+  const svg = (x, nom) => '<svg class="kl-svg" viewBox="0 0 32 32" width="1.25em" height="1.25em" role="img" aria-label="' + nom + '">' + x + "</svg>";
+  const laiton = (k) => '<defs><linearGradient id="kl' + k + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF1B0"/><stop offset=".45" stop-color="#E8B640"/><stop offset="1" stop-color="#8A5A0C"/></linearGradient></defs>';
+  return {
+    pouet: svg(laiton("p") + '<path d="M12.6 14.6H19L29.2 8.6V23.4L19 17.4H12.6Z" fill="url(#klp)" stroke="#6B430C" stroke-width=".9" stroke-linejoin="round"/><ellipse cx="29" cy="16" rx="1.3" ry="7.2" fill="#6B430C" opacity=".55"/>' +
+      '<ellipse cx="7.4" cy="16" rx="6.2" ry="7" fill="#D62839" stroke="#6E0D12" stroke-width=".9"/><ellipse cx="5.6" cy="12.8" rx="2" ry="1.3" fill="#fff" opacity=".55"/><rect x="12" y="13.8" width="2.4" height="4.4" rx=".6" fill="#2A2E35"/>', "Pouet"),
+    trompette: svg(laiton("t") + '<path d="M4 14.4H20.4L29.4 8.4V23.6L20.4 17.6H4Z" fill="url(#klt)" stroke="#6B430C" stroke-width=".9" stroke-linejoin="round"/><ellipse cx="29.2" cy="16" rx="1.2" ry="7.4" fill="#6B430C" opacity=".55"/>' +
+      '<path d="M6 17.6C6 22.4 18 22.4 18 17.6" fill="none" stroke="#C98E22" stroke-width="1.8"/>' + [9, 12, 15].map(x => '<rect x="' + (x - 1) + '" y="9" width="2" height="5.4" rx=".5" fill="#C98E22" stroke="#6B430C" stroke-width=".5"/><rect x="' + (x - 1.4) + '" y="8" width="2.8" height="1.4" rx=".6" fill="#FFF1B0" stroke="#6B430C" stroke-width=".4"/>').join("") +
+      '<rect x="1.4" y="14.8" width="3" height="2.4" rx=".8" fill="#AEB7C2" stroke="#4B525C" stroke-width=".5"/>', "Trompette"),
+    sifflet: svg('<defs><linearGradient id="kls" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".5" stop-color="#C9D1DA"/><stop offset="1" stop-color="#5E6874"/></linearGradient></defs>' +
+      '<path d="M3 11.6H17.6C23 11.6 27.4 15.4 27.4 20.4S23.4 28.6 18.4 28.6 10.2 25.2 10.2 20.6V16.6H3Z" fill="url(#kls)" stroke="#3E4752" stroke-width=".9" stroke-linejoin="round"/>' +
+      '<rect x="12.6" y="11.6" width="4.4" height="2.4" fill="#2A2E35"/><circle cx="18.6" cy="20.6" r="3.2" fill="#E5484D" stroke="#7A0E1C" stroke-width=".6"/><path d="M5 13.4H13" stroke="#fff" stroke-width="1" stroke-linecap="round" opacity=".8"/>' +
+      '<circle cx="26.4" cy="8.4" r="3" fill="none" stroke="#3E4752" stroke-width="1.4"/><path d="M14 6.6C15.6 5 17.6 5 19 6.4M12.6 4.2C15.2 1.6 18.4 1.6 20.8 4" stroke="#4C9AFF" stroke-width="1.2" fill="none" stroke-linecap="round"/>', "Sifflet")
+  };
+})();
+const ICONES_KLAXON = { confettis: "🎊", damier: "🏁", feu: "🎆", parade: "🎺", billets: "💸", fanfare: "📯", cibles: "🎯", fusees: "🚀", trophees: "🏆", ouvriers: "🍬", pouet: "📯", trompette: "🎺", sifflet: "📣" };
 /** Rareté d'un objet (Trophées v2) : série, monde, succès (pour chacun), exclusif du 1er, Gant, Légende (un seul au monde) */
 function rareteItem(slot, id) {
   if (estDepart(slot, id)) return { cls: "r-serie", lib: BASE_ECURIE[slot] === id ? "Série" : "Départ" };
@@ -1274,7 +1324,7 @@ function vignetteItem(slot, id, nom, e) {
     '<path d="M8 66C50 62 70 30 110 36S170 18 192 12" fill="none" style="stroke:' + couleur(nom) + '" stroke-width="3.5" stroke-linecap="round"/><circle cx="192" cy="12" r="5" style="fill:' + couleur(nom) + '"/>' +
     (id === "flocons" ? '<g class="vg-flocons" stroke="#CFEFFF" stroke-width="1.6" stroke-linecap="round" style="filter:drop-shadow(0 0 1.5px #3A8FD0)">' + [[30, 52, 6], [62, 40, 4.5], [92, 54, 7], [124, 26, 5], [150, 44, 4], [172, 16, 5.5], [48, 70, 3.5]].map(([x, y, r]) =>
       '<g transform="translate(' + x + " " + y + ')">' + [0, 60, 120].map(a => '<path d="M0 ' + -r + "V" + r + '" transform="rotate(' + a + ')"/>').join("") + "</g>").join("") + "</g>" : "") + "</svg>";
-  if (slot === "klaxon") return '<span class="it-emo">' + ICONES_KLAXON[id] + "</span>";
+  if (slot === "klaxon") return '<span class="it-emo">' + (KLAXONS_DESSINES[id] || ICONES_KLAXON[id]) + "</span>";
   return id === "aucune" ? '<span class="it-emo vide">—</span>' : '<span class="plaque grande' + classePlaque(id) + '">' + iconePlaque(id) + esc(ITEMS.plaque[id]) + "</span>";
 }
 let ECU_Q = null;   // objet dont on lit le « ? »

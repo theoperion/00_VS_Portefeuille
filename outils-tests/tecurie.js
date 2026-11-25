@@ -121,6 +121,25 @@ const course = async (p, vue) => p.evaluate(async vue => {
     ok(e.length === 5 && e.every(x => (!x.casque || dep.casque.includes(x.casque)) && (!x.livree || x.livree === "couleur") && (!x.finition || x.finition === "aucune") && (!x.trainee || x.trainee === "simple")) && k.numero === 44 && !err.length,
       "décembre 2026 : l'écurie se voit en course, rien que des objets de départ (Kévin #44) " + JSON.stringify(e.map(x => [x.nom, x.livree, x.casque, x.finition, x.trainee, x.numero])));
     await ctx.close(); }
+  // 5 bis. v20.68 (Théo) : les objets de DÉPART ajoutés pour décembre se voient en course, en 2D (pastille, traînée) et en 3D
+  { const { ctx, p, err } = await page(b, { quand: "2026-12-15T10:00:00", session: { role: "perso", nom: "Kévin" }, jusqua: 202612 });
+    await p.evaluate(() => { D.ecurie = { "Théo": { equip: { livree: "flammes", casque: "raye", finition: "brillant", trainee: "fumee", numero: 7 } }, "Kévin": { equip: { livree: "damier", casque: "pois", finition: "lisblanc", trainee: "double", numero: 44 } },
+      "Clément": { equip: { livree: "bicolore", casque: "bicolore", finition: "mat", trainee: "ruban", numero: 3 } }, "Devlin": { equip: { livree: "rayures", casque: "carbone", finition: "lisnoir", trainee: "pointilles", numero: 16 } } }; });
+    const c2 = await course(p, "2d");
+    const m2 = await p.evaluate(() => [...document.querySelectorAll("#gp-piste .p2-car")].map(g => g.getAttribute("class")));
+    await p.evaluate(() => { const a = GP_INST.api, n = D.personnes.map(x => x.nom), de = {}, fin = {}; n.forEach((x, i) => { de[x] = 2 + i; fin[x] = 22 + i * 1.5; }); a.jouer(de, fin, 3200); });
+    await p.waitForTimeout(350);
+    const tr = await p.evaluate(() => [...document.querySelectorAll("#gp-piste .p2-tr")].filter(x => (x.getAttribute("d") || "").length > 10).map(x => x.getAttribute("class")).join(" "));
+    await p.locator("#gp-piste").screenshot({ path: DOSSIER + "/course-2d-depart.png" });
+    ok(c2 && ["flammes", "damier", "bicolore", "rayures"].every(l => m2.some(x => new RegExp("lv-" + l).test(x))) && ["fumee", "double", "ruban", "pointilles"].every(t => new RegExp("p2-tr-" + t).test(tr)),
+      "décembre 2026 : livrées et traînées de départ visibles en course 2D " + JSON.stringify({ m2, tr }));
+    const c3 = await course(p, "3d"), e3 = c3 && c3.eq ? Object.fromEntries(c3.eq.map(x => [x.nom, x])) : {};
+    await p.evaluate(() => { const a = GP_INST.api, n = D.personnes.map(x => x.nom), de = {}, fin = {}; n.forEach((x, i) => { de[x] = 2 + i; fin[x] = 22 + i * 1.5; }); a.jouer(de, fin, 9000); });
+    await p.waitForTimeout(2600);
+    await p.locator("#gp-piste").screenshot({ path: DOSSIER + "/course-3d-depart.png" });
+    ok(c3 && c3.type === "3d" && e3["Théo"] && e3["Théo"].livree === "flammes" && e3["Kévin"].livree === "damier" && e3["Clément"].finition === "mat" && e3["Devlin"].trainee === "pointilles" && !err.length,
+      "décembre 2026 : la F1 3D de course porte les objets de départ, 0 erreur JS " + JSON.stringify(err.slice(0, 3)));
+    await ctx.close(); }
   await b.close();
   console.log(ko.length ? "\n" + ko.length + " NON" : "\nTout est OUI"); process.exit(ko.length ? 1 : 0);
 })();

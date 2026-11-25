@@ -700,11 +700,14 @@ const SONS = (() => {
   const MEL = {
     confettis: [[523, .12], [659, .12], [784, .24]], damier: [[392, .15], [392, .15], [523, .35]], feu: [[784, .1], [988, .1], [1175, .3]],
     parade: [[392, .14], [523, .14], [659, .14], [784, .4]], billets: [[1319, .08], [1568, .08], [2093, .25]], fanfare: [[523, .16], [523, .1], [523, .1], [698, .45]],
-    lingots: [[1319, .08], [1568, .08], [2093, .12], [2637, .3]], cibles: [[880, .1], [1760, .25]], fusees: [[[300, 1800], .5]]
+    lingots: [[1319, .08], [1568, .08], [2093, .12], [2637, .3]], cibles: [[880, .1], [1760, .25]], fusees: [[[300, 1800], .5]], trompette: [[523, .09], [523, .09], [523, .09], [784, .42]]
   };
   function klaxon(style) {
     const c = audio(); if (!c) return;
     if (style === "ouvriers") return fanfareOuvriers();
+    // v20.68 · klaxons de départ : Pouet (trompe à poire, deux « pouet » qui glissent), Sifflet (deux coups de sifflet trillés), Trompette (« ta-ta-ta-taaa » de départ)
+    if (style === "pouet") { note([360, 300], .16, "sawtooth", .12); note([180, 150], .16, "square", .07); note([470, 400], .3, "sawtooth", .12, .22); note([235, 200], .3, "square", .07, .22); return; }
+    if (style === "sifflet") { [0, .24].forEach(t => { for (let k = 0; k < 6; k++) note(k % 2 ? 2650 : 2500, .03, "sine", .12, t + k * .03); }); note([2600, 2900], .45, "sine", .12, .52); return; }
     const m = MEL[style] || MEL.confettis; let dt = 0;
     m.forEach(([f, d]) => { note(f, d + .1, "square", .12, dt); note(Array.isArray(f) ? f : f * 1.5, d + .1, "triangle", .1, dt); dt += d; });
   }

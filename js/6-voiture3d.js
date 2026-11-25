@@ -126,7 +126,7 @@ function confettis(style) {
   c.style.cssText = "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:99";
   document.body.appendChild(c); x.scale(dpr, dpr);
   const pal = ["--p0", "--p1", "--p2", "--p3", "--gold"].map(css);
-  const emo = { parade: ["🏁", "🎺", "🎉", "🏆", "🥁"], billets: ["💶", "💸", "💶", "💰"], lingots: ["🪙", "💰", "🥇", "🪙"], fanfare: ["📯", "🎺", "✨", "🏆", "🎺"], cibles: ["🎯", "🏹", "🎯", "✨"], trophees: ["🏆", "🥇", "🏆", "🎖️"], etoiles: ["⭐", "✨", "🌟", "💫"], fusees: ["🚀", "🌙", "⭐", "🪐"] }[style] || (Array.isArray(style) ? style : null);   // V15.4 : une liste d'emoji = pluie de ces emoji
+  const emo = { parade: ["🏁", "🎺", "🎉", "🏆", "🥁"], billets: ["💶", "💸", "💶", "💰"], lingots: ["🪙", "💰", "🥇", "🪙"], fanfare: ["📯", "🎺", "✨", "🏆", "🎺"], cibles: ["🎯", "🏹", "🎯", "✨"], trophees: ["🏆", "🥇", "🏆", "🎖️"], etoiles: ["⭐", "✨", "🌟", "💫"], fusees: ["🚀", "🌙", "⭐", "🪐"], pouet: ["🎵", "💨", "🎶", "🎵"], trompette: ["🎺", "🎵", "🎶", "✨"], sifflet: ["🎵", "💨", "✨", "🎶"] }[style] || (Array.isArray(style) ? style : null);   // V15.4 : une liste d'emoji = pluie de ces emoji
   const hasard = l => l[Math.floor(Math.random() * l.length)];
   let ps;
   if (emo) ps = Array.from({ length: 46 }, () => ({ x: Math.random() * W, y: -20 - Math.random() * H * .6, vx: (Math.random() - .5) * 1.5, vy: 2 + Math.random() * 3, r: (Math.random() - .5) * .8, vr: (Math.random() - .5) * .06, e: hasard(emo), g: .04 }));

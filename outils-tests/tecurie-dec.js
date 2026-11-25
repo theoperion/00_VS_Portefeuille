@@ -76,6 +76,30 @@ async function page(b, o) {
     });
     ok(ec.vus.length >= 10 && !ec.fuites.length, "décembre : seulement les objets de départ dans l'Écurie, rien de 2027 (" + ec.vus.length + " objets : " + ec.vus.join(", ") + ") " + JSON.stringify(ec.fuites) + tag);
     ok(!ec.badges && /départ|série/i.test(ec.q), "décembre : pas d'onglet Badges ; le « ? » d'un objet de départ le dit " + JSON.stringify(ec.q) + tag);
+    // v20.68 (Théo) : l'écurie de décembre n'est plus vide : au moins 4 choix par emplacement (sauf plaque et filtre), tous « départ », aucun lié à 2027,
+    // chacun DESSINÉ (vignette, casque SVG, voiture 2D, F1 3D, pastille et traînée de la course) et différent de l'objet de série
+    const dep = await p.evaluate(async () => {
+      const r = { court: [], pas2027: [], nonDessine: [], q: [] }, nom = "Kévin", e0 = equipDe(nom);
+      ["casque", "finition", "fond", "livree", "trainee", "klaxon"].forEach(s => { const l = idsSlot(s); if (l.length < 4) r.court.push(s + ":" + l.length); });
+      const gains = [].concat(...SUCCES.map(x => [x.gain, x.bonus]), ...TROPHEES_MONDES.map(t => t.gain), GANT.gain, GAINS_MILLION, GAINS_TICKET, GAINS_SOUVENIR, gainsSecret(CHAMPION_EX)).filter(Boolean).map(g => g.join("."));
+      const nouveaux = DEPART_ECURIE.slice(4);
+      nouveaux.forEach(([s, id]) => { const o = origineItem(s, id); if (!o.depart || gains.includes(s + "." + id) || objetReserve(s, id) || (typeof MJ_OBJETS !== "undefined" && MJ_OBJETS[s + "." + id])) r.pas2027.push(s + "." + id);
+        if (!/départ/i.test(texteOrigineItem(nom, s, id).t)) r.q.push(s + "." + id); });
+      const base = s => BASE_ECURIE[s];
+      const ph = e => Piste.photo(voitureEcurie(nom, e)), v2 = e => svgVoiture({ nom, e: Object.assign({}, e, { numero: 7 }) }).replace(/sv\d+/g, "");
+      const vg = (s, id) => vignetteItem(s, id, nom, e0).replace(/sv\d+|kl[pts]\b/g, "");
+      const vb = e => { const m = {}; ["casque", "finition", "livree", "trainee"].forEach(s => m[s] = e[s]); return m; };
+      for (const [s, id] of nouveaux) {
+        const e = Object.assign({}, e0, { [s]: id }), eB = Object.assign({}, e0, { [s]: base(s) }), manque = [];
+        if (!vg(s, id) || vg(s, id) === vg(s, base(s))) manque.push("vignette");
+        if (["casque", "finition", "livree", "trainee"].includes(s) && v2(e) === v2(eB)) manque.push("voiture 2D");
+        if (["casque", "finition", "livree"].includes(s) && ph(e) === ph(eB)) manque.push("F1 3D");
+        if (s === "klaxon" && !/<svg/.test(vg(s, id))) manque.push("dessin");
+        if (manque.length) r.nonDessine.push(s + "." + id + " (" + manque.join(", ") + ")");
+      }
+      return r;
+    });
+    ok(!dep.court.length && !dep.pas2027.length && !dep.nonDessine.length && !dep.q.length, "décembre : au moins 4 choix par emplacement, tous « départ », rien de 2027, chaque nouvel objet dessiné (vignette, voiture 2D, F1 3D) et « ? » = départ " + JSON.stringify(dep) + tag);
     // Kévin a enregistré des objets 2027 : ils retombent sur la série partout (écurie, course)
     const kv = await p.evaluate(() => { const e = equipDe("Kévin"), pe = Piste.ecurie("Kévin"); return { e: [e.livree, e.casque, e.finition, e.trainee, e.numero], pe: pe && [pe.livree, pe.casqueModele, pe.finition, pe.trainee, pe.numero] }; });
     ok(JSON.stringify(kv.e) === JSON.stringify(["couleur", "uni", "aucune", "simple", 44]) && kv.pe && kv.pe[1] === "uni" && kv.pe[4] === 44, "un objet de 2027 déjà enregistré retombe sur la série (écurie et course), le numéro reste " + JSON.stringify(kv) + tag);
