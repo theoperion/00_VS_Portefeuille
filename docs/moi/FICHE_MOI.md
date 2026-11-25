@@ -11,6 +11,16 @@ L'onglet **Moi** : le suivi **privé** du portefeuille de chacun (lignes de bour
 - Pas d'export vers l'agenda (« pollution visuelle ») ; « Mes échéances » dans la cloche ; boîte unique « À faire (N) ».
 - Ce n'est **jamais** un conseil en investissement.
 
+## Relevé du Versus en % (25/11/2026, Versus V89, fichiers V14, appli v20.53)
+- Chaque fichier calcule lui-même le % du mois (indice jour par jour de son Historique, le même que Moi) et n'envoie au Versus que des % et des oui/non (action `importPct`) : PEA, assurance-vie, les deux ensemble, versement oui/non, % de gain sur le versé, millionnaire oui/non. **Aucun euro** des autres pilotes n'entre plus dans le Sheet Versus (onglet masqué « Relevés % », jamais Data). Théo garde ses euros dans Data Théo.
+- Un versement saisi après le relevé compte dans le relevé suivant (plus de fausse performance). Saisie à la main d'un autre pilote : en % (montants tapés sur le téléphone, jamais envoyés) ; le % du fichier passe devant.
+- Contrôle : `vsControleMoi` (Versus) signale tout euro d'un autre pilote dans Data à partir de novembre 2026. Restent à décider par Théo : les anciens euros des autres (Data, Journal app, Objectifs) ; rien n'est vidé.
+- Le calcul est le même code dans `commun/LiaisonVersus.js` et `versus/RelevesPct.js` (recopié et vérifié par `node outils/portefeuilles.js`).
+
+## Import des avis : supports propres à un joueur (v20.54)
+- `ISIN_CONNUS` (moi.js) ne contient que des ETF courants et les supports de Théo (dépôt public).
+- Les supports d'un autre joueur : l'ISIN noté dans la colonne « ISIN » de **son** onglet Paramètres › Mes actifs part vers **son** appli seulement (lecture du référentiel) ; l'import reconnaît alors l'actif tout seul. Pour voir ce qui manque, le joueur (ou Théo, avec son accord, pour une opération technique) lance `listerMesIsin` depuis l'éditeur Apps Script de son fichier : la liste « sans ISIN » dit quelles lignes compléter. Rien n'est écrit dans le dépôt.
+
 ## Artema (Théo et Clément)
 - Écran à part (`PREF.onglet = "artema"`, `htmlArtema`/`etatArtema`, constantes `ARTEMA` dans `moi.js`), visible seulement si le support existe ; chacun ses chiffres.
 - Règles (DIC Natixis + fiche BPCE Vie) : photo de départ = moyenne des 2-3-4 déc. 2026 ; rendez-vous ~7 déc. 2029→2033 (si indice ≥ départ : arrêt, capital + 28,5 % + 9,5 pts/an) ; fin 1er déc. 2034 (≥ départ + 76 % ; entre −40 % et 0 : capital ; sous 60 % : perte = baisse) ; frais du contrat 0,80 %/an.
