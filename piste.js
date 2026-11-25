@@ -9289,7 +9289,7 @@
         const C4 = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]].map(([a, b], k) => { const [x, z] = XZ(U0 + a * PU, W0 + b * PW); return [x, h[k], z]; });
         const n = norme(croix(sous(C4[2], C4[0]), sous(C4[1], C4[3]))), nn = n[1] < 0 ? fois(n, -1) : n, l2 = point(nn, sl), raide = 1 - nn[1];
         const col = l2 > .5 ? mel(MI, CLAIR, clamp((l2 - .5) * 2.6, 0, 1)) : l2 > .25 ? mel(FONCE, MI, (l2 - .25) * 4) : mel(POURPRE, FONCE, clamp(l2 * 4, 0, 1));
-        g.quad(C4[0], C4[1], C4[2], C4[3], mel(col, POURPRE, clamp(raide * 1.4 - .3, 0, .45)), 0, [0, 1, 0]); }
+        g.quad(C4[0], C4[1], C4[2], C4[3], mel(col, POURPRE, clamp(raide * 1.4 - .3, 0, .45)), SOL, [0, 1, 0]); }   // SOL : crêtes, creux, roche et épice de la recette waouh
       sol.poser(g, 0, 0, 0, 0, 1); }
 
     // ================= 1. LA MER DE DUNES : grands croissants sculptés par le vent d'ouest =================
@@ -9310,9 +9310,14 @@
       rows.forEach((R, i) => { rows[i] = R.pts(R.k).map(p => [p[0], hS(p[0], p[1]) + (p[2] > .01 ? p[2] : -.25), p[1]]); });   // posées sur le relief
       const tons = [SABLE, SABLE2, SABLE3, AVAL, AVAL2], var_ = .9 + r() * .14;
       for (let i = 0; i < n; i++) for (let b = 0; b < 5; b++) { const a = rows[i][b], bb = rows[i + 1][b], cc = rows[i + 1][b + 1], d = rows[i][b + 1];
-        if (a[1] < 0 && bb[1] < 0 && cc[1] < 0 && d[1] < 0) continue; duneG.quad(a, bb, cc, d, fois(tons[b], var_), 0, [0, 1, 0]); }
+        if (a[1] < 0 && bb[1] < 0 && cc[1] < 0 && d[1] < 0) continue; duneG.quad(a, bb, cc, d, fois(tons[b], var_), SOL, [0, 1, 0]); }
       for (let i = 0; i < n; i++) { const a = rows[i][3], b = rows[i + 1][3], a2 = rows[i][2], b2 = rows[i + 1][2]; if (a[1] < .5 && b[1] < .5) continue;
         const m = (p, q) => mel(p, q, .16); duneO.quad(m(a, a2), m(b, b2), b, a, CRETE, .35, [0, 1, 0]); }
+      // recette waouh : le vent d'ouest arrache des voiles de sable aux plus hautes crêtes (transparents, ils s'effacent sous le vent ; jamais près du trésor)
+      if (ctx.voile && H > 20) for (let i = 3; i < n - 3; i += 3) { const a = rows[i][3], b = rows[i + 1][3]; if (a[1] < 12 || Math.hypot(a[0] - 436, a[2] - 475) < 90) continue;
+        const hz = Math.sin(i * 12.99 + a[0] * .37) * 437.5, Lp = 40 + (hz - Math.floor(hz)) * 50, col = [1, .86, .64], P = (p, k) => [p[0] + Lp * k, p[1] + 1 + k * (8 + Lp * .08) - k * k * 4, p[2] + Lp * k * .18];
+        for (let k = 0; k < 4; k++) { const k0 = k / 4, k1 = (k + 1) / 4, al = q => [col[0], col[1], col[2], .2 * Math.pow(1 - q, 1.6)];
+          ctx.voile.quad(P(a, k0), P(b, k0), P(b, k1), P(a, k1), al(k0), al(k0), al(k1), al(k1)); } }
     };
     [[250, -260, 320, 40, -.15, 70], [600, -250, 300, 44, .1, 70], [-260, 120, 300, 46, -.2, 60], [-280, 420, 300, 42, .1, 60], [-180, -160, 260, 40, 0, 60],
      [930, 600, 300, 40, .15, 70], [760, 700, 320, 30, -.1, 70], [330, 720, 340, 26, .1, 70], [40, 700, 280, 26, -.2, 60], [-180, 700, 300, 26, 0, 60],
@@ -9811,6 +9816,12 @@
           const dx = x.p[0] - av[0], dz = x.p[2] - av[2]; if (Math.hypot(dx, dz) > .02) { const cc = Math.atan2(-dz, dx); x.cp = x.cp === undefined ? cc : x.cp + Math.atan2(Math.sin(cc - x.cp), Math.cos(cc - x.cp)) * Math.min(1, dt * 3); }
           return modele(x.p[0], x.p[1], x.p[2], x.cp || 0, Math.sin(t * 1.7) * .05, 1); } } }); } }
     // le désert est plein : on interdit les petits décors génériques (pyramides, rochers posés au hasard)
+    // ================= 26. RECETTE WAOUH : ombres de contact sous les grandes scènes (elles « pèsent » sur le sable), décalées à l'opposé du soleil couchant =================
+    // [x, z, demi-longueur, demi-largeur, cap, force] ; jamais à moins de 15 m de la cachette du trésor de janvier (436, 475 : mâchoire du squelette)
+    if (ctx.voile) { const sl = norme(A.soleil || [-.7, .3, .5]), TRES = [436, 475];
+      [[500, 212, 36, 36, 0, .5], [QUEUE[0], QUEUE[1], 42, 22, 0, .4], [CIT[0], CIT[1], 84, 66, -.25, .55], [PAL[0], PAL[1], 78, 56, .15, .45], [ARCHE[0], ARCHE[1], 46, 30, 0, .35], [EPAVE[0], EPAVE[1], 70, 34, .35, .4], [RECOLTE[0], RECOLTE[1], 40, 30, .4, .45]].forEach(([x, z, rx, rz, cap, f]) => {
+        const ox = x - sl[0] * rx * .22, oz = z - sl[2] * rz * .22; if (Math.hypot(ox - TRES[0], oz - TRES[1]) < Math.max(rx, rz) + 15) return;
+        ctx.voile.ombre(ox, hS(ox, oz) + .3, oz, rx, rz, f, cap, [.16, .04, .12]); }); }
     for (let x = -360; x <= 1220; x += 70) for (let z = -360; z <= 940; z += 70) occupe.push([x, z, 52]);
     return occupe;
   }
@@ -11503,17 +11514,17 @@
 
   /* ---------- Construction de la scène statique ---------- */
   function construire(def, T, A, Z) {
-    const sol = new Geo(), piste = new Geo(), eau = new Geo(), lum = [];
+    const sol = new Geo(), piste = new Geo(), eau = new Geo(), lum = [], voile = new Voile(), lueur = new Voile(), rayons = new Voile();   // recette waouh : couches transparentes
     const teinte = teinteur(A), r = alea(hashTxt(def.decor + def.pts.length)), D = DECORS[def.decor] || DECORS.parc, N = T.N, rue = !!def.rue;
     const tint = c => teinte ? teinte(c) : c;
     // sol : un grand plan, puis des taches de couleur pour la matière
     const ext = Math.max(T.rx, T.rz) * 3.2 + 600, cx = T.cx, cz = T.cz;
-    sol.quad([cx - ext, 0, cz - ext], [cx + ext, 0, cz - ext], [cx + ext, 0, cz + ext], [cx - ext, 0, cz + ext], A.sol, 0, [0, 1, 0]);
+    sol.quad([cx - ext, 0, cz - ext], [cx + ext, 0, cz - ext], [cx + ext, 0, cz + ext], [cx - ext, 0, cz + ext], A.sol, SOL, [0, 1, 0]);   // SOL : zones de la recette waouh (sinon inchangé)
     const so = sol.ov();
     for (let i = 0; i < 110; i++) { const x = cx + (r() - .5) * (T.rx * 2 + 500), z = cz + (r() - .5) * (T.rz * 2 + 500), s = 8 + r() * 26, a = r() * TAU, c = mel(A.sol, r() > .5 ? [1, 1, .9] : [0, 0, 0], .05 + r() * .06);
       if (T.dist(x, z) < DEMI + s) continue;
       const P = [0, 1, 2, 3, 4].map(k => [x + Math.cos(a + k * 1.26) * s * (.6 + r() * .4), .02, z + Math.sin(a + k * 1.26) * s * (.6 + r() * .4)]);
-      for (let k = 1; k < 4; k++) so.tri(P[0], P[k], P[k + 1], c, 0, [0, 1, 0]); }
+      for (let k = 1; k < 4; k++) so.tri(P[0], P[k], P[k + 1], c, SOL, [0, 1, 0]); }
     if (A.synth) for (let i = -40; i <= 40; i++) { const o = i * 30; so.quad([cx + o - .3, .05, cz - ext], [cx + o + .3, .05, cz - ext], [cx + o + .3, .05, cz + ext], [cx + o - .3, .05, cz + ext], hex("#B03AFF"), 1, [0, 1, 0]); so.quad([cx - ext, .05, cz + o - .3], [cx + ext, .05, cz + o - .3], [cx + ext, .05, cz + o + .3], [cx - ext, .05, cz + o + .3], hex("#B03AFF"), 1, [0, 1, 0]); }
     // eau
     (def.eau || []).forEach(poly => { const P = poly.map(p => [p[0] * ECH, .25, p[1] * ECH]); for (let k = 1; k < P.length - 1; k++) eau.tri(P[0], P[k], P[k + 1], A.eau || hex("#2F6E9A"), A.nuit ? .1 : .05, [0, 1, 0]); });
@@ -11529,7 +11540,7 @@
     const vib = i => Math.abs(E[i].k) > .016;
     for (let i = 0; i < N; i++) {
       const a = E[i], b = E[(i + 1) % N], up = [0, 1, 0];
-      piste.quad(P(a, DEMI), P(b, DEMI), P(b, -DEMI), P(a, -DEMI), Math.floor(i / 6) % 2 ? asph : asph2, nuitPiste, up);
+      piste.quad(P(a, DEMI), P(b, DEMI), P(b, -DEMI), P(a, -DEMI), Math.floor(i / 6) % 2 ? asph : asph2, D.terre && !nuitPiste ? SOL_PISTE : nuitPiste, up);   // terre : grain de la recette waouh
       // lignes blanches de bord
       if (D.terre) { const orn = mel(asph, [0, 0, 0], .28); [-2.6, 2.6].forEach(o => mk.quad(P(a, o - .45, .02), P(b, o - .45, .02), P(b, o + .45, .02), P(a, o + .45, .02), orn, 0, up)); }
       else {
@@ -11589,7 +11600,7 @@
     // les monuments d'abord : les autres décors s'écartent de la place qu'ils occupent
     const occupe = []; (def.reperes || []).forEach(R => { const o = repere(sol, R, T, A, teinte, [[ps.x, ps.z, 70], [pt2.x, pt2.z, 75]], lum); if (o) occupe.push(...o); });
     const rotors = [];
-    if (def.peint && PEINTS[def.peint] && PEINTS[def.peint].deco) occupe.push(...PEINTS[def.peint].deco({ T, A, sol, eau, lum, rotors, pistePose: (g, x, z, cap) => sol.poser(g, x, 0, z, cap, 1) }));
+    if (def.peint && PEINTS[def.peint] && PEINTS[def.peint].deco) occupe.push(...PEINTS[def.peint].deco({ T, A, sol, eau, lum, rotors, voile, lueur, pistePose: (g, x, z, cap) => sol.poser(g, x, 0, z, cap, 1) }));
     const pris = (x, z) => occupe.some(o => Math.hypot(x - o[0], z - o[1]) < o[2]);
     // plateau de jeu : de grandes cases sur tout le sol
     if (def.damier) for (let a = -40; a <= 40; a++) for (let b = -40; b <= 40; b++) { if ((a + b) % 2) continue; const x = cx + a * 26, z = cz + b * 26; if (Math.abs(x - cx) > ext * .7 || Math.abs(z - cz) > ext * .7 || T.dist(x + 13, z + 13) < DEMI + 26) continue;
@@ -11626,7 +11637,9 @@
       const pp = P(e, o), g = objet("lampadaire", r, A); sol.poser(g, pp[0], pp[1] - .1, pp[2], Math.atan2(e.nz * -sd, e.nx * -sd) * -1 + 0, 1);
       if (A.nuit) lum.push([pp[0] - e.nx * sd * 1.2, pp[1] + 8.8, pp[2] - e.nz * sd * 1.2, 1, .9, .7, 13]);
     }
-    return { sol, piste, eau, lum, stands: ps, portique: p0, rotors };
+    // recette waouh : les rayons du soleil (voir WAOUH)
+    const W = def.waouh || WAOUH[def.decor]; if (W && W.rayons) { const R = Object.assign({}, W.rayons); if (leger()) R.n = Math.ceil((R.n || 10) / 2); rayonsSoleil(rayons, T, A, R); }
+    return { sol, piste, eau, lum, stands: ps, portique: p0, rotors, voile, lueur, rayons };
   }
 
   /* ---------- Voiture (v16.35) : une vraie petite monoplace aux couleurs du pilote ----------
@@ -11889,25 +11902,150 @@
     return g;
   }
 
+  /* ---------- RECETTE WAOUH (25/11/2026, d'abord sur Dune) ----------
+     Ce qui manquait aux décors vus de haut : de grands aplats de sol tous pareils et aucune lumière d'ambiance. Tout tient ici, en un seul endroit,
+     et ne s'allume QUE pour les décors qui ont une ligne dans WAOUH : les autres circuits gardent mot pour mot le shader d'avant (fsScene(false), fsCiel(false)) ;
+     les programmes « waouh » ne sont compilés qu'au premier circuit qui en a besoin. Si le téléphone peine malgré la baisse de résolution, sols par zones
+     et rayons s'éteignent tout seuls (I.allege) ; brume et lumière restent.
+     POUR L'APPLIQUER À UN AUTRE CIRCUIT (3 étapes) :
+       1. ajouter une ligne WAOUH[clé du décor] (def.decor : « titans », « lucioles »…) ; un décor partagé par deux circuits (« solstice » : suzuka et arene2028)
+          prend la même recette, sinon mettre waouh: {…} directement dans TRACES[circuit] ;
+       2. dans son décor sur mesure, marquer ses grands sols avec SOL (couleur lumineuse -1, ou marquerSol(g)) : le grand plan de sol et ses taches le sont déjà ;
+       3. ajouter ses ombres de contact (ctx.voile.ombre) et, s'il a un trésor, sa cachette dans rayons.evite ; puis captures avant / après et outils-tests/twaouh.js.
+     Les blocs (tous facultatifs) :
+       brume   : { col, dens, haut, halo }   brume de profondeur qui reste au ras du sol (dens = épaisseur au sol par mètre, haut = hauteur en m où elle
+                                            a perdu 63 %, halo = lueur du soleil à travers la brume quand on regarde vers lui). Le ciel prend la même couleur à l'horizon.
+       ciel, rebond : "#rrggbb"             lumière d'ambiance colorée : ce que reçoivent les faces tournées vers le ciel / vers le sol (ombres teintées).
+       rim     : 0 à 1                      contre-jour : les silhouettes tournées vers le soleil gagnent un liseré doré.
+       etalonnage : [saturation, contraste] étalonnage « cinéma » des objets (avant la brume, qui reste douce) ; ex. [.2, .25].
+       rayons  : { n, long, larg:[haut, bas], force, col, evite:[[x, z, r]] }   rayons de soleil : des voiles de lumière additifs qui descendent du soleil
+                                            sur la piste (mode léger : moitié moins ; coupés de nuit, sous la pluie ou dans la tempête ; « réduire les animations » = fixes).
+       sol     : { echelle, haut, creux:[col, force], cretes:[col, force], roche:[col, force], taches:[col, force, seuil], grain, rides:[par m, force, angle] }
+                                            sols variés par ZONES, calculés au pixel (bruit procédural, transitions douces) : creux ombrés (bas et taches du bruit),
+                                            crêtes claires (en hauteur, faces peu pentues), roche (pentes raides), taches étirées (épice, fleurs, mousse…), grain fin,
+                                            rides (ondes du vent, sable ou eau : seulement de près, pas de moirage au loin).
+                                            Ne touche que les surfaces marquées « sol » (couleur lumineuse -1 : SOL, voir construire et marquerSol).
+     Le décor sur mesure reçoit aussi dans ctx : voile (objets transparents, ombres de contact : voile.ombre(x, y, z, rx, rz, force, cap)) et lueur (objets
+     additifs : halos, vitraux, braises). Ils sont dessinés après la scène, sans écrire la profondeur, et s'effacent dans la brume.
+     Le trésor du mois (versus/Tresors.js, côté serveur) : mettre sa cachette dans rayons.evite et ne rien poser à moins de 15 m.
+     Pistes pour la suite (non branchées, à valider avec Théo) : titans (cendres) brume grise-orangée épaisse, rayons à travers la fumée, sol cendre/roche ;
+     lucioles (Pandora) brume verte basse, rayons entre les arbres, sol mousse/fougère/terre ; egee (Odyssée) brume marine, rides sur le sable, sol sable/galets ;
+     chateau (magie) brume bleutée légère, sol herbe/pavés/fleurs ; solstice (anneau) brume dorée, sol prairie/chemins. */
+  const SOL = -1, SOL_PISTE = -2;   // SOL_PISTE : une piste de terre ne prend que le grain et les rides (pas les zones)
+  // SOL : « couleur lumineuse » des surfaces de sol : le shader y peint les zones de la recette (sans recette : rendu identique, e = max(-1, 0) = 0)
+  const WAOUH = {
+    // janvier · Dune : brume de sable chaude au loin, soleil couchant à travers la poussière, ombres violettes, sable vivant (crêtes, creux, roche, épice)
+    dunes: { brume: { col: "#F2A35C", dens: .0026, haut: 20, halo: 1.1 }, ciel: "#8068B0", rebond: "#E58A4E", rim: .5, etalonnage: [.3, .4],
+      rayons: { n: 12, long: 620, larg: [4, 34], force: .16, col: "#FFC67E", evite: [[436, 475, 15]] },   // trésor de janvier (krys dans la mâchoire du squelette)
+      sol: { echelle: 75, haut: 34, creux: ["#8E4E54", .5], cretes: ["#FFE4B0", .55], roche: ["#7E3E2C", .6], taches: ["#D9692A", .45, .8], grain: .24, rides: [.45, .09, .35] } }
+  };
+  /** marque une géométrie (ou ses sommets à partir de i0) comme du sol : le shader y peindra les zones de la recette */
+  function marquerSol(g, i0) { for (let i = (i0 || 0) + 9; i < g.d.length; i += 10) g.d[i] = SOL; }
+  /** objets transparents ou additifs du décor : position + couleur rgba par sommet (7 nombres, comme les effets des voitures) */
+  class Voile {
+    constructor() { this.d = []; }
+    get n() { return this.d.length / 7; }
+    tri(a, b, c, ca, cb, cc) { [[a, ca], [b, cb || ca], [c, cc || ca]].forEach(([p, k]) => this.d.push(p[0], p[1], p[2], k[0], k[1], k[2], k[3])); }
+    quad(a, b, c, d, ca, cb, cc, cd) { this.tri(a, b, c, ca, cb, cc); this.tri(a, c, d, ca, cc, cd || ca); }
+    /** ombre de contact douce sous un grand objet : cœur sombre, bord qui s'efface (ellipse rx × rz, tournée de cap) */
+    ombre(x, y, z, rx, rz, force, cap, col) {
+      const c = Math.cos(cap || 0), s = Math.sin(cap || 0), k = col || [.1, .03, .08], P = (a, r) => { const u = Math.cos(a) * rx * r, w = Math.sin(a) * rz * r; return [x + u * c + w * s, y, z - u * s + w * c]; };
+      const C0 = [k[0], k[1], k[2], force], C1 = [k[0], k[1], k[2], force * .7], C2 = [k[0], k[1], k[2], 0];
+      for (let j = 0; j < 20; j++) { const a0 = j / 20 * TAU, a1 = (j + 1) / 20 * TAU; this.tri([x, y, z], P(a0, .55), P(a1, .55), C0, C1, C1); this.quad(P(a0, .55), P(a0, 1), P(a1, 1), P(a1, .55), C1, C2, C2, C1); }
+    }
+  }
+  /** rayons de soleil : voiles additifs en croix, du ciel (côté soleil) jusqu'au sol ; brillants en haut, effacés au sol et sur les bords */
+  function rayonsSoleil(g, T, A, R) {
+    const s = norme(A.soleil), r = alea(4242), col = R.col ? hex(R.col) : mel(A.sCol, [1, 1, 1], .2), n = R.n || 10, Lg = R.long || 500, w0 = (R.larg || [4, 30])[0], w1 = (R.larg || [4, 30])[1];
+    const p1 = norme(croix(s, [0, 1, 0])), p2 = norme(croix(s, p1)), loin = (Q, H) => (R.evite || []).every(([x, z, rr]) => {   // distance au segment Q → H (en plan) > rayon gardé + largeur
+      const dx = H[0] - Q[0], dz = H[2] - Q[2], t = clamp(((x - Q[0]) * dx + (z - Q[2]) * dz) / (dx * dx + dz * dz || 1), 0, 1); return Math.hypot(x - Q[0] - dx * t, z - Q[2] - dz * t) > rr + w1; });
+    for (let i = 0, essais = 0; i < n && essais < n * 20; essais++) {
+      const a = r() * TAU, d = Math.sqrt(r()), Q = [T.cx + Math.cos(a) * d * T.rx * 1.15, 0, T.cz + Math.sin(a) * d * T.rz * 1.15], L = Lg * (.75 + r() * .5), H = [Q[0] + s[0] * L, Q[1] + s[1] * L, Q[2] + s[2] * L];
+      if (!loin(Q, H)) continue; i++;
+      const f = .55 + r() * .45, larg = .7 + r() * .6;
+      [p1, p2].forEach(p => { for (let k = 0; k < 6; k++) {
+        const t0 = k / 6, t1 = (k + 1) / 6, al = t => f * Math.pow(Math.sin(PI * Math.min(1, t * 1.15)), .8) * (1 - .55 * t), w = t => (w0 + (w1 - w0) * t) * larg;
+        const P = (t, o) => [H[0] + (Q[0] - H[0]) * t + p[0] * o, H[1] + (Q[1] - H[1]) * t + p[1] * o, H[2] + (Q[2] - H[2]) * t + p[2] * o];
+        const c = t => [col[0], col[1], col[2], al(t)], z = [col[0], col[1], col[2], 0];
+        g.quad(P(t0, -w(t0)), P(t1, -w(t1)), P(t1, 0), P(t0, 0), z, z, c(t1), c(t0)); g.quad(P(t0, 0), P(t1, 0), P(t1, w(t1)), P(t0, w(t0)), c(t0), c(t1), z, z); } });
+    }
+  }
+  /** réglages de la recette pour cette course : météo (tempête, pluie, nuit) et mode léger ; null = pas de recette (rendu d'avant) */
+  function recetteWaouh(def, A, LGR) {
+    const W = def.waouh || WAOUH[def.decor]; if (!W) return null;
+    const nuit = A.nuit > .5, gris = !!(A.pluie || A.sable), R = { W };
+    if (W.brume) { const b = W.brume; R.brume = [...(A.sable ? mel(hex(b.col), A.brouillard, .6) : A.pluie ? mel(hex(b.col), A.brouillard, .7) : hex(b.col)), b.dens * (A.sable ? 2.2 + A.sable : gris ? 1.6 : 1)];
+      R.brumeK = 1 / (b.haut || 30); R.halo = (b.halo || 0) * (gris ? .25 : nuit ? .3 : 1); }
+    if (W.ciel) R.ciel = mel(hex(W.ciel), A.haut, gris ? .6 : .15); if (W.rebond) R.rebond = mel(hex(W.rebond), A.sol, gris ? .6 : .1);
+    R.rim = (W.rim || 0) * (gris ? .2 : nuit ? .4 : 1);
+    if (W.etalonnage) R.grade = [W.etalonnage[0] * (gris ? .3 : 1), W.etalonnage[1] * (gris ? .5 : 1)];
+    R.rayons = W.rayons && !nuit && !gris ? W.rayons.force * (LGR ? .85 : 1) : 0;
+    if (W.sol) { const s = W.sol, z = x => x ? [...hex(x[0]), x[1]] : [0, 0, 0, 0]; const ri = s.rides || [0, 0, 0];
+      R.sol = { A: z(s.creux), B: z(s.cretes), C: z(s.roche), D: z(s.taches), P: [s.echelle || 70, s.haut || 30, s.taches ? s.taches[2] : 2, s.grain || 0], R: [ri[0], LGR ? 0 : ri[1], Math.cos(ri[2]), Math.sin(ri[2])] }; }   // mode léger : pas de rides
+    return R;
+  }
+  /** GLSL partagé : brume de profondeur au ras du sol (intégrale exacte d'une densité qui décroît avec la hauteur, sans débordement en mediump) */
+  const GL_BRUME = "uniform vec4 uBrH;uniform float uBrK;" +
+    "float brumeH(vec3 w,vec3 c){if(uBrH.a<=0.)return 0.;float k=max(uBrK,1e-4),yc=max(c.y,0.),yp=max(w.y,0.),dy=yp-yc;" +
+    "float m=abs(dy)>.5?(exp(-k*yc)-exp(-k*yp))/(k*dy):exp(-k*yp);return clamp(1.-exp(-uBrH.a*length(w-c)*m),0.,1.);}";
+  /** GLSL : sols par zones. Le bruit vient d'une petite texture calculée une fois (texBruit) : 2 lectures par pixel, bien moins cher qu'un bruit calculé
+      (r = grandes taches, g = taches étirées par le vent, b = grain fin, a = déformation des rides) ; les mipmaps évitent le scintillement au loin. */
+  const GL_SOL = "uniform vec4 uSolA;uniform vec4 uSolB;uniform vec4 uSolC;uniform vec4 uSolD;uniform vec4 uSolP;uniform vec4 uSolR;uniform sampler2D uBruit;" +
+    "vec3 sol(vec3 c,vec3 w,vec3 n,float z){vec4 N=texture2D(uBruit,w.xz/(uSolP.x*6.));float g=N.r,pe=clamp((1.-n.y)*2.6,0.,1.),dc=length(w-uCam);" +
+    "if(z>0.){float h=clamp(w.y/uSolP.y,0.,1.);" +
+    "c=mix(c,uSolA.rgb,uSolA.a*(1.-smoothstep(.04,.5,h))*smoothstep(.38,.72,g));" +
+    "c=mix(c,uSolB.rgb,uSolB.a*smoothstep(.42,.95,h+(g-.5)*.4)*(1.-pe));" +
+    "c=mix(c,uSolC.rgb,uSolC.a*smoothstep(.45,.8,pe+(g-.5)*.7));" +
+    "c=mix(c,uSolD.rgb,uSolD.a*smoothstep(uSolP.z,uSolP.z+.1,N.g)*(1.-pe));}" +
+    "float f=texture2D(uBruit,w.xz*.0061).b;" +
+    "if(uSolR.y>0.&&dc<240.)c*=1.+uSolR.y*sin(dot(w.xz,uSolR.zw)*uSolR.x*6.2832+N.a*30.)*(1.-pe)*(.55+.45*z)*(1.-smoothstep(50.,240.,dc));" +
+    "return c*(1.-uSolP.w*.5+uSolP.w*f);}";
+  /** texture de bruit répétable 128 × 128 (valeur lissée, plusieurs octaves), calculée une fois par contexte WebGL */
+  function texBruit(gl) {
+    const N = 128, D = new Uint8Array(N * N * 4), r = alea(9157);
+    const grille = P => { const G = []; for (let i = 0; i < P * P; i++) G.push(r()); return G; };
+    const vn = (G, P, Q, x, y) => { const X = x * P / N, Y = y * Q / N, i = Math.floor(X), j = Math.floor(Y), fx = X - i, fy = Y - j, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy), at = (a, b) => G[((b % Q) * P) + (a % P)];
+      return lisse(lisse(at(i, j), at(i + 1, j), sx), lisse(at(i, j + 1), at(i + 1, j + 1), sx), sy); };
+    const oct = L => { const Gs = L.map(([P, Q]) => grille(Math.max(P, Q))); return (x, y) => L.reduce((s, [P, Q, k], o) => s + k * vn(Gs[o], P, Q, x, y), 0); };   // grille carrée assez grande pour P × Q
+    const R = oct([[4, 4, .55], [8, 8, .3], [16, 16, .15]]), Gc = oct([[2, 6, .7], [4, 12, .3]]), B = oct([[16, 16, .45], [32, 32, .35], [64, 64, .2]]), Aa = oct([[8, 8, .6], [16, 16, .4]]);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const k = (y * N + x) * 4; D[k] = R(x, y) * 255; D[k + 1] = Gc(x, y) * 255; D[k + 2] = B(x, y) * 255; D[k + 3] = Aa(x, y) * 255; }
+    const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, N, N, 0, gl.RGBA, gl.UNSIGNED_BYTE, D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.generateMipmap(gl.TEXTURE_2D);
+    return t;
+  }
+
   /* ---------- WebGL ---------- */
   const VS = "attribute vec3 aP;attribute vec3 aN;attribute vec4 aC;uniform mat4 uPV;uniform mat4 uM;varying vec3 vN;varying vec4 vC;varying vec3 vW;void main(){vec4 w=uM*vec4(aP,1.);vW=w.xyz;vN=(uM*vec4(aN,0.)).xyz;vC=aC;gl_Position=uPV*w;}";
-  const FS = "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nvarying vec3 vN;varying vec4 vC;varying vec3 vW;uniform vec3 uSun;uniform vec3 uSunC;uniform vec3 uSky;uniform vec3 uGnd;uniform float uAmb;uniform vec3 uFog;uniform float uDens;uniform vec3 uCam;uniform float uSpec;uniform float uFlash;uniform vec4 uTint;uniform float uT;uniform float uEau;" +
+  /** shader de la scène : w = variante « recette waouh » (sols par zones, brume au ras du sol, contre-jour, étalonnage). Sans w : exactement le shader d'avant,
+      pour que les autres circuits ne paient rien (le programme waouh n'est compilé que s'il sert, voir programmeWaouh). */
+  const fsScene = w => "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nvarying vec3 vN;varying vec4 vC;varying vec3 vW;uniform vec3 uSun;uniform vec3 uSunC;uniform vec3 uSky;uniform vec3 uGnd;uniform float uAmb;uniform vec3 uFog;uniform float uDens;uniform vec3 uCam;uniform float uSpec;uniform float uFlash;uniform vec4 uTint;uniform float uT;uniform float uEau;" +
+    (w ? "uniform float uRim;uniform float uHalo;uniform vec2 uGrade;" + GL_BRUME + GL_SOL : "") +
     "void main(){vec3 n=normalize(vN);if(uEau>0.){n=normalize(n+vec3(sin(vW.x*.15+uT*1.3)*.06,0.,cos(vW.z*.13+uT*1.1)*.06));}" +
-    "float d=dot(n,uSun);float dif=max(d,0.)*.85+abs(d)*.15;vec3 hemi=mix(uGnd,uSky,n.y*.5+.5);vec3 base=vC.rgb*uTint.rgb;" +
+    "float d=dot(n,uSun);float dif=max(d,0.)*.85+abs(d)*.15;vec3 hemi=mix(uGnd,uSky,n.y*.5+.5);vec3 base=vC.rgb*uTint.rgb;" + (w ? "if(vC.a<-.5&&uSolP.x>0.)base=sol(base,vW,n,vC.a<-1.5?0.:1.);" : "") +
     "vec3 col=base*(hemi*uAmb+uSunC*dif);vec3 v=normalize(uCam-vW);vec3 h=normalize(uSun+v);col+=pow(max(dot(n,h),0.),48.)*uSpec*uSunC*.9;" +
+    (w ? "float rf=1.-max(dot(n,v),0.),rs=max(dot(-v,uSun),0.);col+=uSunC*base*uRim*2.*rf*rf*rf*rs*rs*(1.-.7*abs(n.y));" : "") +
     "if(uSpec>0.){float f=pow(1.-max(dot(n,v),0.),3.);col=mix(col,uSky*.9,f*uSpec*.5);}" +
     "float e=max(vC.a,uTint.a);col=mix(col,base*1.25,e);col+=uFlash*base*.5;" +
-    "float dist=length(vW-uCam);float fo=1.-exp(-dist*uDens);gl_FragColor=vec4(mix(col,uFog,clamp(fo,0.,1.)),1.);}";
+    (w ? "float l=dot(col,vec3(.299,.587,.114));col=max(mix(vec3(l),col,1.+uGrade.x),0.);col=mix(col,col*col*(3.-2.*col),uGrade.y);" : "") +
+    (w ? "float dist=length(vW-uCam);float fo=1.-exp(-dist*uDens);col=mix(col,uFog,clamp(fo,0.,1.));col=mix(col,uBrH.rgb+uSunC*uHalo*pow(max(dot(-v,uSun),0.),5.),brumeH(vW,uCam));gl_FragColor=vec4(col,1.);}"
+      : "float dist=length(vW-uCam);float fo=1.-exp(-dist*uDens);gl_FragColor=vec4(mix(col,uFog,clamp(fo,0.,1.)),1.);}");
+  const FS = fsScene(false);
   const VS_CIEL = "attribute vec3 aP;uniform mat4 uPV;uniform vec3 uCam;varying vec3 vD;void main(){vD=aP;gl_Position=uPV*vec4(uCam+aP*1500.,1.);gl_Position.z=gl_Position.w*.9999;}";
-  const FS_CIEL = "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nvarying vec3 vD;uniform vec3 uHaut;uniform vec3 uHor;uniform vec3 uFog;uniform vec3 uSun;uniform vec3 uSunC;uniform float uNuit;uniform float uSynth;uniform float uFlash;" +
+  const fsCiel = w => "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nvarying vec3 vD;uniform vec3 uHaut;uniform vec3 uHor;uniform vec3 uFog;uniform vec3 uSun;uniform vec3 uSunC;uniform float uNuit;uniform float uSynth;uniform float uFlash;" + (w ? "uniform vec4 uBrH;uniform float uHalo;" : "") +
     "float hs(vec3 p){return fract(sin(dot(p,vec3(12.9898,78.233,37.719)))*43758.5453);}" +
     "void main(){vec3 d=normalize(vD);float t=d.y;vec3 c=mix(uHor,uHaut,smoothstep(0.,mix(.55,.16,uSynth),t));if(t<0.)c=mix(uHor,uFog,smoothstep(0.,-.08,t));" +
-    "float s=max(dot(d,uSun),0.);c+=uSunC*(pow(s,800.)*3.+pow(s,12.)*.25)*(1.-uSynth);" +
+    "float s=max(dot(d,uSun),0.);" + (w ? "c=mix(c,uBrH.rgb+uSunC*uHalo*pow(s,5.),(1.-smoothstep(-.03,.22,t))*(uBrH.a>0.?.92:0.));c+=uSunC*uHalo*pow(s,3.)*.14;" : "") + "c+=uSunC*(pow(s,800.)*3.+pow(s,12.)*.25)*(1.-uSynth);" +
     "if(uSynth>0.){float r=acos(clamp(s,-1.,1.));if(r<.32&&t>-.01){float bande=step(.5,fract(t*38.));vec3 sc=mix(vec3(1.,.85,.3),vec3(1.,.2,.6),clamp(1.-(t+.02)/.3,0.,1.));c=mix(c,sc,t>.12||bande>.5?1.:0.);}}" +
     "if(uNuit>0.&&t>0.){vec3 q=floor(d*420.);float st=step(.9975,hs(q));c+=vec3(st)*uNuit*smoothstep(0.,.3,t)*.9;}" +
     "c+=uFlash*.6;gl_FragColor=vec4(c,1.);}";
+  const FS_CIEL = fsCiel(false);
   const VS_FX = "attribute vec3 aP;attribute vec4 aC;uniform mat4 uPV;varying vec4 vC;void main(){vC=aC;gl_Position=uPV*vec4(aP,1.);}";
   const FS_FX = "precision mediump float;varying vec4 vC;void main(){gl_FragColor=vC;}";
+  /** recette waouh : objets transparents et additifs du décor (voile, lueur, rayons), qui s'effacent dans la brume ; uK = force de la couche */
+  const VS_VOILE = "attribute vec3 aP;attribute vec4 aC;uniform mat4 uPV;uniform vec3 uCam;uniform float uDens;uniform float uK;varying vec4 vC;" + GL_BRUME +   // brume calculée par sommet : presque rien à faire par pixel
+    "void main(){float f=clamp(1.-exp(-length(aP-uCam)*uDens),0.,1.);vC=vec4(aC.rgb,aC.a*uK*(1.-f)*(1.-.85*brumeH(aP,uCam)));gl_Position=uPV*vec4(aP,1.);}";
+  const FS_VOILE = "precision mediump float;varying vec4 vC;void main(){gl_FragColor=vC;}";
   const VS_PT = "attribute vec3 aP;attribute vec4 aC;attribute float aS;uniform mat4 uPV;uniform float uH;varying vec4 vC;void main(){vC=aC;vec4 p=uPV*vec4(aP,1.);gl_Position=p;gl_PointSize=clamp(aS*uH/max(p.w,1.),1.,96.);}";
   const FS_PT = "precision mediump float;varying vec4 vC;void main(){vec2 q=gl_PointCoord-.5;float r=length(q)*2.;float a=smoothstep(1.,0.,r);gl_FragColor=vec4(vC.rgb,vC.a*a*a);}";
   const VS_PLUIE = "attribute vec4 aS;uniform mat4 uPV;uniform vec3 uCam;uniform float uT;uniform float uV;uniform float uLong;uniform float uNeige;uniform float uVent;varying float vA;" +
@@ -11935,7 +12073,7 @@
     if (!gl) throw new Error("webgl");
     const ciel = new Geo(); ciel.boule(0, 0, 0, 1, [1, 1, 1], 0, 1, true);
     const feu = new Geo(); feu.boule(0, 0, 0, .7, [1, 1, 1]);
-    return { cv, gl, PL: programme(gl, VS, FS), PC: programme(gl, VS_CIEL, FS_CIEL), PF: programme(gl, VS_FX, FS_FX), PP: programme(gl, VS_PT, FS_PT), PR: programme(gl, VS_PLUIE, FS_PLUIE),
+    return { cv, gl, PL: programme(gl, VS, FS), PC: programme(gl, VS_CIEL, FS_CIEL), PF: programme(gl, VS_FX, FS_FX), PP: programme(gl, VS_PT, FS_PT), PR: programme(gl, VS_PLUIE, FS_PLUIE), PW: programme(gl, VS_VOILE, FS_VOILE),
       BC: tampon(gl, ciel), FEU: tampon(gl, feu), roues: ROUES.map(([x, z, r, l]) => [tampon(gl, roue(r, l, 1)), tampon(gl, roue(r, l, -1))]) };
   }
   /* Scènes déjà construites, gardées en mémoire : revenir sur un mois ne recalcule rien */
@@ -11943,7 +12081,8 @@
   function sceneDe(cle, fab) {
     if (SCENES.has(cle)) { const v = SCENES.get(cle); SCENES.delete(cle); SCENES.set(cle, v); return v; }
     const S = fab(), fige = g => ({ f: new Float32Array(g.d) });
-    const v = { sol: fige(S.sol), solOv: fige(S.sol.ov()), piste: fige(S.piste), pisteOv: fige(S.piste.ov()), eau: S.eau.n ? fige(S.eau) : null, lum: S.lum, portique: S.portique, rotors: (S.rotors || []).map(o => ({ f: new Float32Array(o.g.d), x: o.x, y: o.y, z: o.z, cap: o.cap, v: o.v, a: o.a })) };
+    const v = { sol: fige(S.sol), solOv: fige(S.sol.ov()), piste: fige(S.piste), pisteOv: fige(S.piste.ov()), eau: S.eau.n ? fige(S.eau) : null, lum: S.lum, portique: S.portique, rotors: (S.rotors || []).map(o => ({ f: new Float32Array(o.g.d), x: o.x, y: o.y, z: o.z, cap: o.cap, v: o.v, a: o.a })),
+      voiles: [S.voile, S.lueur, S.rayons].map(g => g && g.d.length ? new Float32Array(g.d) : null) };
     SCENES.set(cle, v); while (SCENES.size > 2) SCENES.delete(SCENES.keys().next().value);
     return v;
   }
@@ -11984,7 +12123,7 @@
      Instance 3D
      ============================================================ */
   function monter3D(boite, o) {
-    const C = contexte(), cv = C.cv, gl = C.gl, PL = C.PL, PC = C.PC, PF = C.PF, PP = C.PP, PR = C.PR, BC = C.BC, roues = C.roues;
+    const C = contexte(), cv = C.cv, gl = C.gl, PF = C.PF, PP = C.PP, PR = C.PR, PW = C.PW, BC = C.BC, roues = C.roues;
     cv.setAttribute("role", "img"); cv.setAttribute("aria-label", o.titre || "Circuit"); cv.width = 2; cv.height = 2;
     boite.appendChild(cv);
     const def = TRACES[o.circuit] || TRACES.melbourne, T = echantillonner(def), A = ambiance(def, o.meteo, o.ambiance), Z = zones(T);
@@ -12000,6 +12139,17 @@
     if (o.effets && A.pluie) { const k = A.eclairs ? .7 : .82; A.amb *= k; A.sCol = fois(A.sCol, k); A.brouillard = mel(A.brouillard, [.46, .5, .56], .4); A.brume *= 1.5;
       if (!A.nuit) { A.haut = mel(A.haut, hex(A.eclairs ? "#262D3A" : "#5A6472"), .6); A.horizon = mel(A.horizon, hex(A.eclairs ? "#46505E" : "#9AA3AE"), .55); } }   // ciel plus gris, lumière plus basse
     if (!ANI) A.eclairs = 0;
+    const RW = recetteWaouh(def, A, LGR);   // recette waouh (null : rendu d'avant)
+    // les programmes « waouh » ne sont compilés qu'au premier circuit qui a une recette (puis gardés avec le contexte)
+    const PL = RW ? C.PLW || (C.PLW = programme(gl, VS, fsScene(true))) : C.PL, PC = RW ? C.PCW || (C.PCW = programme(gl, VS_CIEL, fsCiel(true))) : C.PC;
+    /** uniformes de la recette pour la scène éclairée (sans recette : tout à 0, rendu d'avant) */
+    function uniformesWaouh(gl, U) {
+      gl.uniform1f(U.uRim, RW ? RW.rim : 0); gl.uniform1f(U.uHalo, RW && RW.halo || 0); gl.uniform2fv(U.uGrade, RW && RW.grade || [0, 0]);
+      if (RW && RW.brume) { gl.uniform4fv(U.uBrH, RW.brume); gl.uniform1f(U.uBrK, RW.brumeK); } else gl.uniform4f(U.uBrH, 0, 0, 0, 0);
+      const Sl = RW && !I.allege && RW.sol; gl.uniform4fv(U.uSolP, Sl ? Sl.P : [0, 0, 0, 0]);
+      if (Sl) { gl.uniform4fv(U.uSolA, Sl.A); gl.uniform4fv(U.uSolB, Sl.B); gl.uniform4fv(U.uSolC, Sl.C); gl.uniform4fv(U.uSolD, Sl.D); gl.uniform4fv(U.uSolR, Sl.R); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, C.bruit || (C.bruit = texBruit(gl))); gl.uniform1i(U.uBruit, 0); }
+    }
+    const BV = (S.voiles || []).map(f => { if (!f) return null; const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, f, gl.STATIC_DRAW); return { b, n: f.length / 7 }; });
     const V = ecurieDes(o.voitures).map(v => ({ v, b: tampon(gl, voiture(v)), s: 0, voie: 0, rang: 0, rot: 0, hist: [], x: 0, y: 0, z: 0, cap: 0, vit: 0 }));
     // lumières (lampadaires, projecteurs) en sprites additifs
     const LUM = S.lum, bL = gl.createBuffer(); { const d = []; LUM.forEach(l => d.push(l[0], l[1], l[2], l[3], l[4], l[5], A.nuit ? .55 : 0, l[6] * 1.6)); gl.bindBuffer(gl.ARRAY_BUFFER, bL); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(d), gl.STATIC_DRAW); }
@@ -12093,11 +12243,13 @@
       gl.useProgram(PC.p); gl.depthMask(false);
       gl.uniformMatrix4fv(PC.U.uPV, false, PV); gl.uniform3fv(PC.U.uCam, I.cam.e); gl.uniform3fv(PC.U.uHaut, A.haut); gl.uniform3fv(PC.U.uHor, A.horizon); gl.uniform3fv(PC.U.uFog, A.brouillard);
       gl.uniform3fv(PC.U.uSun, A.soleil); gl.uniform3fv(PC.U.uSunC, A.sCol); gl.uniform1f(PC.U.uNuit, A.nuit); gl.uniform1f(PC.U.uSynth, A.synth); gl.uniform1f(PC.U.uFlash, fl);
+      if (RW) { gl.uniform4fv(PC.U.uBrH, RW.brume || [0, 0, 0, 0]); gl.uniform1f(PC.U.uHalo, RW.halo || 0); }
       gl.bindBuffer(gl.ARRAY_BUFFER, BC.b); gl.enableVertexAttribArray(PC.A.aP); gl.vertexAttribPointer(PC.A.aP, 3, gl.FLOAT, false, 40, 0); gl.drawArrays(gl.TRIANGLES, 0, BC.n);
       gl.depthMask(true);
       // scène éclairée
       gl.useProgram(PL.p); [PL.A.aP, PL.A.aN, PL.A.aC].forEach(a => gl.enableVertexAttribArray(a));
-      const U = PL.U; gl.uniformMatrix4fv(U.uPV, false, PV); gl.uniform3fv(U.uSun, A.soleil); gl.uniform3fv(U.uSunC, A.sCol); gl.uniform3fv(U.uSky, mel(A.haut, A.horizon, .5)); gl.uniform3fv(U.uGnd, mel(A.sol, [0, 0, 0], .4));
+      const U = PL.U; gl.uniformMatrix4fv(U.uPV, false, PV); gl.uniform3fv(U.uSun, A.soleil); gl.uniform3fv(U.uSunC, A.sCol); gl.uniform3fv(U.uSky, RW && RW.ciel || mel(A.haut, A.horizon, .5)); gl.uniform3fv(U.uGnd, RW && RW.rebond ? mel(RW.rebond, [0, 0, 0], .25) : mel(A.sol, [0, 0, 0], .4));
+      if (RW) uniformesWaouh(gl, U);
       gl.uniform1f(U.uAmb, A.amb + fl * .4); gl.uniform3fv(U.uFog, A.brouillard); gl.uniform1f(U.uDens, A.brume); gl.uniform3fv(U.uCam, I.cam.e); gl.uniform1f(U.uFlash, fl); gl.uniform1f(U.uT, t); gl.uniform4f(U.uTint, 1, 1, 1, 0);
       const ident = modele(0, 0, 0, 0, 0, 1);
       gl.uniformMatrix4fv(U.uM, false, ident); gl.uniform1f(U.uEau, 0);
@@ -12129,6 +12281,14 @@
       gl.uniform4f(U.uTint, 1, 1, 1, 0); let CV = null; RO.forEach(x => { const M = x.a && x.a.vivant ? x.a.vivant(x, t, CV || (CV = contexteVivant(I, VV))) : matRotor(x, t); if (!M) return; gl.uniformMatrix4fv(U.uM, false, M); lier(gl, PL, x.b); gl.drawArrays(gl.TRIANGLES, 0, x.b.n); });
       gl.uniform1f(U.uSpec, 0);
       [PL.A.aN].forEach(a => gl.disableVertexAttribArray(a));
+      // recette waouh : voile (ombres de contact, objets transparents), puis lueurs et rayons du soleil (additifs, qui respirent doucement)
+      if (BV.some(Boolean)) { gl.useProgram(PW.p); gl.uniformMatrix4fv(PW.U.uPV, false, PV); gl.uniform3fv(PW.U.uCam, I.cam.e); gl.uniform1f(PW.U.uDens, A.brume);
+        if (RW && RW.brume) { gl.uniform4fv(PW.U.uBrH, RW.brume); gl.uniform1f(PW.U.uBrK, RW.brumeK); } else gl.uniform4f(PW.U.uBrH, 0, 0, 0, 0);
+        gl.enableVertexAttribArray(PW.A.aP); gl.enableVertexAttribArray(PW.A.aC); gl.enable(gl.BLEND); gl.depthMask(false);
+        [[0, false, 1], [1, true, 1], [2, true, RW && !I.allege ? RW.rayons * (ANI ? .84 + .16 * Math.sin(t * .45) : 1) : 0]].forEach(([k, add, f]) => { const c = BV[k]; if (!c || f <= 0) return;
+          if (k === 0) { gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-3, -6); } gl.blendFunc(gl.SRC_ALPHA, add ? gl.ONE : gl.ONE_MINUS_SRC_ALPHA); gl.uniform1f(PW.U.uK, f);
+          gl.bindBuffer(gl.ARRAY_BUFFER, c.b); gl.vertexAttribPointer(PW.A.aP, 3, gl.FLOAT, false, 28, 0); gl.vertexAttribPointer(PW.A.aC, 4, gl.FLOAT, false, 28, 12); gl.drawArrays(gl.TRIANGLES, 0, c.n);
+          if (k === 0) gl.disable(gl.POLYGON_OFFSET_FILL); }); }
       // effets transparents : ombres, traînées
       gl.enable(gl.BLEND); gl.depthMask(false); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-3, -6);
       const fx = [], add = [];
@@ -12183,7 +12343,9 @@
       const calme = !I.anim && !I.tir && !I.enRoute && !I.artifice.length;
       if (calme && I.dernier && now - I.dernier < 31) { if (I.actif) raf = requestAnimationFrame(image); return; }
       const t = (now - I.t0) / 1000, dt = Math.min(.05, I.dernier ? (now - I.dernier) / 1000 : .016);
-      if (!calme && I.dernier) { I.ft = I.ft * .92 + (now - I.dernier) * .08; if (I.ft > 26 && I.q > 1) { if (++I.lents > 40) { I.q = Math.max(1, I.q - .25); I.lents = 0; I.ft = 16; redim(); } } else I.lents = 0; }
+      if (!calme && I.dernier) { I.ft = I.ft * .92 + (now - I.dernier) * .08; if (I.ft > 26 && I.q > 1) { if (++I.lents > 40) { I.q = Math.max(1, I.q - .25); I.lents = 0; I.ft = 16; redim(); } }
+        else if (RW && !I.allege && I.ft > 30) { if (++I.lents > 60) { I.allege = true; I.lents = 0; I.ft = 16; } }   // recette waouh : si le téléphone peine encore, sols par zones et rayons s'éteignent (brume et lumière restent)
+        else I.lents = 0; }
       I.dernier = now;
       // animation des points
       if (I.anim && I.suspendu) V.forEach(x => { x.vit = lisse(x.vit, 0, .1); });   // ⏸ course en pause : les voitures restent où elles sont
@@ -12317,6 +12479,8 @@
       ecran, ecranMonde, projeter, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim, reveiller, taille: () => ({ w: I.cssW, h: I.cssH }),
       /** v20.52 · la météo montrée (tests) et un éclair tout de suite (captures) */
       meteo: () => A.sable ? "sable" : A.pluie ? "pluie" : (def.amb === "noel" && A.neige && A.meteo !== "soleil" && A.meteo !== "beau") ? "neige" : A.dore ? "soleil" : null, particules: () => nbP,
+      /** recette waouh en cours (tests) : null sans recette ; sinon ce qui est allumé */
+      waouh: () => RW ? { brume: !!RW.brume, sol: !!(RW.sol && !I.allege), rayons: !I.allege && RW.rayons > 0 && !!(BV[2]), voile: !!BV[0], allege: !!I.allege } : null,
       eclair() { if (A.eclairs) { I.flash = 1; I.prochainEclair = 4; reveiller(); } },
       /** zoom de la Visite 3D (1 = vue d'ensemble, 0,12 = au plus près) et mode de caméra */
       zoom: () => I.zoom, orbite: () => I.orbite, mode: () => I.mode, survolEnCours: () => !!I.survol, cible: () => ({ x: T.cx + I.pan[0], z: T.cz + I.pan[1], r: Math.max(T.rx, T.rz) }),   // v17.35 : point visé par la caméra (jauge chaud-froid)
@@ -12328,7 +12492,7 @@
       detruire() {
         I.detruit = true; I.actif = false; if (raf) cancelAnimationFrame(raf); if (ro) ro.disconnect(); document.removeEventListener("visibilitychange", vis);
         ecoutes.forEach(([t, f, op]) => cv.removeEventListener(t, f, op)); joy.remove();
-        [B.sol, B.solOv, B.piste, B.pisteOv, B.eau].concat(V.map(x => x.b), RO.map(x => x.b)).forEach(t => { if (t) gl.deleteBuffer(t.b); });   // v16.27 : les objets qui tournent (moulin…) sont aussi libérés [bL, bP, bFX, bPT].forEach(b => gl.deleteBuffer(b));
+        [B.sol, B.solOv, B.piste, B.pisteOv, B.eau].concat(V.map(x => x.b), RO.map(x => x.b), BV).forEach(t => { if (t) gl.deleteBuffer(t.b); });   // v16.27 : les objets qui tournent (moulin…) sont aussi libérés [bL, bP, bFX, bPT].forEach(b => gl.deleteBuffer(b));
         cv.remove(); if (!gl.isContextLost()) RESERVE.push(C);   // le contexte servira au prochain circuit
       }
     };
