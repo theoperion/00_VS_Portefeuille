@@ -1998,10 +1998,14 @@ function closEv(nom) {
   const j = (m.jour || []).find(x => x.nom === nom), mh = j && typeof j.pct === "number" && /^(\d{2})\/(\d{2})/.exec(j.heure || "");
   /* lot 62 d (Théo, 21/11) : la variation du Versus (`jour`, datée par son heure) fait foi pour SA séance : la clôture Google du jour peut manquer
      (pas encore là le lendemain matin) ou être une valeur de la journée (cours en séance). On remplace (ou on ajoute) cette séance. */
-  if (mh && out.length) { const a = new Date(), y = +mh[2] > a.getMonth() + 1 ? a.getFullYear() - 1 : a.getFullYear(), dj = y + "-" + mh[2] + "-" + mh[1];
-    if (dj <= isoJour(a)) { const k = out.findIndex(x => x.d >= dj), av = (k < 0 ? out : out.slice(0, k)).pop();
+  /* v20.61 (bug de Théo, 25/11 : « Krach −3,1 % » pour un jour à −1,09 %) : `av` est lu SANS retirer la clôture d'avant (l'ancien .pop() l'enlevait :
+     la séance du jour était alors comparée à l'avant-veille, deux séances cumulées) ; une ligne Google datée d'aujourd'hui que le Versus ne confirme
+     pas (cours en séance, pas une clôture) est ignorée : la séance du jour = exactement la variation affichée dans Marchés, ou rien. */
+  const a = new Date(), auj = isoJour(a); let dj = null;
+  if (mh && out.length) { const y = +mh[2] > a.getMonth() + 1 ? a.getFullYear() - 1 : a.getFullYear(); dj = y + "-" + mh[2] + "-" + mh[1];
+    if (dj <= auj) { const k = out.findIndex(x => x.d >= dj), av = k < 0 ? out[out.length - 1] : out[k - 1];
       if (av) { const x = { d: dj, v: av.v * (1 + j.pct), versus: true }; if (k < 0) out.push(x); else if (out[k].d === dj) out[k] = x; } } }
-  return out;
+  return dj === auj ? out : out.filter(x => x.d !== auj);
 }
 function varsEv(c, gapMax) { const out = []; for (let i = 1; i < c.length; i++) if ((new Date(c[i].d + "T12:00:00") - new Date(c[i - 1].d + "T12:00:00")) / 864e5 <= gapMax) out.push({ d: c[i].d, p: c[i].v / c[i - 1].v - 1, v: c[i].v }); return out; }
 /** tickers des lignes tenues (Perf lignes) */
@@ -2086,19 +2090,25 @@ function evNaissants() {
 let MEMO_EV = { m: null, j: "", l: null };
 function evenementsListe() {
   if (!M || M.simple) return [];
-  const auj = isoJour(new Date()); if (MEMO_EV.m === M && MEMO_EV.j === auj && MEMO_EV.l) return MEMO_EV.l.map(x => Object.assign({}, x));
+  const auj = isoJour(new Date()), mk = marchesMoi(); if (MEMO_EV.m === M && MEMO_EV.mk === mk && MEMO_EV.j === auj && MEMO_EV.l) return MEMO_EV.l.map(x => Object.assign({}, x));   // v20.61 : recalcul aussi quand les marchés du Versus changent
   let nes = []; try { nes = JSON.parse(stock.get(cleStock("evNes")) || "[]"); } catch (e) { nes = []; } if (!Array.isArray(nes)) nes = [];
   let change = false;
   evNaissants().forEach(x => { x.cle = x.folle ? cleFolle(x) : x.k + ":" + x.d; const y = { k: x.k, d: x.d, p: x.p, e: x.e, v: x.v, avant: x.avant, dAvant: x.dAvant, de: x.de, places: x.places, lib: x.lib, sens: x.sens, niv: x.niv, fort: x.fort, folle: x.folle, creux: x.creux, pire: x.pire, an: x.an, vol: x.vol, perso: x.perso };
     const i = nes.findIndex(z => z.k === x.k && z.d === x.d);
     if (i < 0) { nes.push(y); change = true; } else if (JSON.stringify(nes[i]) !== JSON.stringify(Object.assign({}, nes[i], y, { niv: Math.max(nes[i].niv || 0, y.niv || 0) || undefined }))) { nes[i] = Object.assign({}, nes[i], y, { niv: Math.max(nes[i].niv || 0, y.niv || 0) || undefined }); if (nes[i].folle) nes[i].fort = nes[i].niv === 3; change = true; } });   // même séance revue (en direct) : chiffre mis à jour, palier jamais baissé
+  /* v20.61 : un événement de marché gardé sur l'appareil est revu à chaque ouverture tant que sa séance est dans les données : chiffre à jour
+     (clôture Google ou variation du Versus), et retiré si la séance ne remplit plus la condition (krach né en direct à −3,4 %, séance finie à −2,5 %). */
+  [["krach", "S&P 500"], ["crypto", "Bitcoin"], ["sommet", "S&P 500"]].forEach(([k, nom]) => { if (!nes.some(z => z.k === k) || (k === "crypto" && !aDuBitcoin())) return;
+    let c, l; try { c = closEv(nom).map(z => z.d); l = evDe(k); } catch (e) { return; } if (!c.length) return;
+    nes = nes.filter(z => { if (z.k !== k || !c.includes(z.d)) return true; const y = l.find(w => w.d === z.d);
+      if (!y) { change = true; return false; } ["p", "v", "avant", "dAvant"].forEach(f => { if (y[f] !== undefined && z[f] !== y[f]) { z[f] = y[f]; change = true; } }); return true; }); });
   const lim = limEv(); nes = nes.filter(x => x.d >= isoJour(new Date(Date.now() - 400 * 864e5)));
   if (change) stock.set(cleStock("evNes"), JSON.stringify(nes.slice(-60)));
   const parK = {}; nes.filter(x => x.d <= auj && (x.k === "relache" ? x.d === auj : x.d >= lim)).forEach(x => { if (!parK[x.k] || parK[x.k].d < x.d) parK[x.k] = x; });   // un par genre : le plus récent
   const cand = Object.values(parK).map(x => Object.assign({}, x));
   cand.sort((a, b) => EV_PRIO.indexOf(a.k) - EV_PRIO.indexOf(b.k) || (a.d < b.d ? 1 : -1));
   cand.forEach(x => { x.cle = x.folle ? cleFolle(x) : x.k + ":" + x.d; });
-  MEMO_EV = { m: M, j: auj, l: cand };
+  MEMO_EV = { m: M, mk, j: auj, l: cand };
   return cand.map(x => Object.assign({}, x));
 }
 /** lot 62 c (Théo) : ✕ = masquer (pas supprimer) : l'événement reste dans Vestiaire › Ambiances, où « Oui » le remet, jusqu'à la fin de sa fenêtre */
