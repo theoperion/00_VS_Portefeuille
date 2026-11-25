@@ -39,6 +39,7 @@ const reduit = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)
 let D = null, SOURCE = "";   // "" = rien de chargé, "api" ou "cache" (audit E3 : plus de mode démo)
 const ETAT = Object.assign({ env: 0, per: "ytd", i1: 0, i2: 1, moi: "Théo", fiche: null, bandeau: "fige", discret: "non", ouverture: "dernier" }, (() => { try { return JSON.parse(stock.get(CLES.etat) || "{}"); } catch (e) { return {}; } })());
 if (!(ETAT.env >= 0 && ETAT.env <= 2)) ETAT.env = 0;   // v17.29 : CTO et crypto ne sont plus dans le Versus
+ETAT.gp2d = "1";   // Théo, 25/11 : la course s'ouvre toujours sur la 🗺️ Carte 2D ; le choix 3D n'est gardé que pendant la visite de l'appli
 function garder() { stock.set(CLES.etat, JSON.stringify(ETAT)); }
 
 /* ---------- Format ---------- */

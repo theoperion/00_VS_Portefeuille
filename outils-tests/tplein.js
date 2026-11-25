@@ -44,7 +44,7 @@ async function page(b, o) {
     if (q < "2026-12") ok(l1.includes("▶ Course de démo") && !l1.includes("⏭") && !av.deb, "avant le 1/12 : en plein écran, « ▶ Course de démo » (pas de ⏭ inutile), lisible à 390 px" + tag + " " + JSON.stringify(l1));
     else ok(l1.includes("↻ Revoir") && !l1.includes("⏭") && !l1.some(x => /démo/.test(x)) && !av.deb, "après le 1/12 : « ↻ Revoir » (la vraie course), plus de démo" + tag + " " + JSON.stringify(l1));
     await p.evaluate(() => document.querySelector(".gpp-play").click());
-    // v20.63 : le 🎥 tour de présentation peut passer avant les feux ; on attend que la course roule vraiment
+    // on attend que la course roule vraiment (3D logicielle lente)
     await p.waitForFunction(() => GP_INST && GP_INST.api.enCours() && !document.querySelector(".gpp-pause").hidden, null, { timeout: 30000 }).catch(() => {}); await p.waitForTimeout(300);
     const l2 = await boutons(p), demo = await p.evaluate(() => !!(GP_DEMO && (GP_DEMO.enCours || GP_DEMO.lance || GP_DEMO.fini)));
     ok(l2.some(x => /Pause/.test(x)) && l2.includes("⏭") && !l2.some(x => /^(↻ Revoir|▶ Course)/.test(x)) && (q < "2026-12" ? demo : !demo) && !err.length, "▶ lance " + (q < "2026-12" ? "la démo" : "la course") + " : ⏸ et ⏭ pendant la course" + tag + " " + JSON.stringify(l2) + " " + JSON.stringify(err.slice(0, 2)));
