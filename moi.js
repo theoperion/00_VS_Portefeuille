@@ -5154,19 +5154,24 @@ function lireFortuneo(t) {
     const ttf = champ(bloc, "(?:Taxe\\s+sur\\s+les\\s+transactions\\s+financi[èe]res|\\bTTF\\b)");
     if (lireNombre(ttf) > 0) { op.frais = saisieNombre((lireNombre(op.frais) || 0) + lireNombre(ttf), 2); op.note = "Taxe sur les transactions financières (" + ttf + " €) ajoutée aux frais."; }
     /* v20.54 : dividende / coupon → « Dividende / intérêts », montant NET (ce qui arrive en espèces) */
-    if (!op.type && /dividende|coupon|distribution|revenus?\s+de\s+titres/i.test(bloc + "\n" + t.slice(0, k.i))) {
+    if (!op.type && /dividende|coupon|distribution|revenus?\s+de\s+titres/i.test(bloc + "\n" + (n ? t.slice(debLigne, k.i) : t.slice(0, k.i)))) {   // le texte de CETTE opération (l'en-tête de l'avis pour la 1re)
       const dp = bloc.match(/(?:paiement|d[ée]tachement|versement)[^\n\d]{0,30}(\d{2})[-\/.](\d{2})[-\/.](\d{4})/i);
       if (dp) op.date = dp[3] + "-" + dp[2] + "-" + dp[1];
       op.type = "Intérêts"; op.note = "Dividende" + (op.qte ? " de " + op.qte + " titres" : "") + " : montant net reçu" + (op.brut ? " (brut " + op.brut + " €)" : "") + ".";
-      op.qte = ""; op.cours = ""; op.frais = "";
+      op.qte = ""; op.cours = ""; op.frais = ""; op.texte = t.slice(debLigne, k.fin) + bloc;
       return finirOp(op, ["date", "montant"]);
     }
+    op.texte = t.slice(debLigne, k.fin) + bloc;   // texte complet de l'opération (référence comprise) : sert seulement à repérer le même avis collé deux fois
     return finirOp(op, ["date", "type", "qte", "cours", "frais", "montant"]);
   }).filter(o => o.type || o.qte || o.montant);
   return { compte: compte, ops: sansDoublons(ops) };
 }
 /** v20.54 : le même avis collé deux fois = une seule opération (même titre, date, heure, sens, quantité, montant) */
-function sansDoublons(ops) { const vus = new Set(); return ops.filter(o => { const k = [o.src, o.isin, o.nom, o.date, o.heure, o.type, o.qte, o.montant, o.liste ? 1 : 0].join("|"); if (vus.has(k)) return false; vus.add(k); return true; }); }
+function sansDoublons(ops) {   // v20.54 : SEULEMENT si le texte complet est identique (même référence) ; deux vrais avis pareils restent deux opérations
+  // le texte de l'opération jusqu'à « Montant net » (inclus), plus sa référence si l'avis en donne une : rien de ce qui suit (l'avis suivant) ne compte
+  const cle = o => { const c = (o.texte.match(/^[\s\S]*?Montant\s+net[^\n]*/i) || [o.texte])[0], r = (o.texte.match(/R[ée]f[ée]rence[^\n]*/i) || [""])[0]; return o.src + "|" + (c + "|" + r).replace(/\s+/g, " ").trim(); };
+  const vus = new Map(); return ops.filter(o => { if (!o.texte) return true; const k = cle(o), d = vus.get(k);
+    if (d) { d.note = [d.note, "Cet avis était collé deux fois : gardé une fois."].filter(Boolean).join(" "); return false; } vus.set(k, o); return true; }); }
 /* Linxea Spirit 2 (Spirica) : « Confirmation de versement libre » (PDF) ou tableaux copiés du site (liste des opérations, « Détail du versement… »).
    Versement → Achat du support AVEC le versement (montant versé) ; frais de gestion → Frais en parts ; rachat → Vente du support puis Retrait. */
 function lireLinxea(t) {
@@ -5194,7 +5199,7 @@ function lireLinxea(t) {
       const e = euros(apres), nat2 = teteNature || nature(t) || "versement";
       const brut = e[0] || "", net = e.length >= 4 ? e[2] : e[1] || "", vp = e.length >= 4 ? e[3] : e[2] || "", fraisCol = e.length >= 4 ? e[1] : "";
       const parts = restes.length ? chiffre(restes[restes.length - 1].trim()) : "";
-      const op = { src: "linxea", nom: nom.replace(/\s+/g, " ").trim(), isin: mi[1], date: isoFr(ds[ds.length - 1]), qte: parts, cours: vp, brut: brut, net: net };
+      const op = { src: "linxea", texte: ligne, nom: nom.replace(/\s+/g, " ").trim(), isin: mi[1], date: isoFr(ds[ds.length - 1]), qte: parts, cours: vp, brut: brut, net: net };
       const fr = fraisCol || (lireNombre(brut) > 0 && lireNombre(net) > 0 && Math.abs(lireNombre(brut) - lireNombre(net)) >= .005 ? saisieNombre(lireNombre(brut) - lireNombre(net), 2) : "");
       const cle = nat2 + "|" + op.date;
       if (nat2 === "frais") {   // v20.54 : le montant des frais est celui qui vaut ≈ parts × valeur de part (l'autre nombre en € est la valeur de part)
@@ -5291,8 +5296,8 @@ function levierNom(t) { return /\b3X\b|X3\b|\b3 ?X/i.test(t) ? 3 : /\b2X\b|X2\b|
 function actifDeAvis(op) {
   const actifs = refData().actifs || [], existe = c => actifs.some(a => a.code === c);
   if (!op.isin && op.src === "linxea") return { code: "", sur: false, raison: "" };   // ligne de liste Linxea : pas de support
-  const memo = memoIsin()[cleOp(op)]; if (memo && existe(memo)) return { code: memo, sur: true, raison: "isin" };
-  const sien = op.isin && actifs.find(a => String(a.isin || "").toUpperCase() === op.isin); if (sien) return { code: sien.code, sur: true, raison: "isin" };   // v20.54 : l'ISIN noté dans SON fichier (Mes actifs)
+  const sien = op.isin && actifs.find(a => String(a.isin || "").toUpperCase() === op.isin); if (sien) return { code: sien.code, sur: true, raison: "isin" };   // v20.54 : SON fichier d'abord (comme codeDeIsin)
+  const memo = memoIsin()[cleOp(op)]; if (memo && existe(memo)) return { code: memo, sur: true, raison: "isin" };   // v20.54 : l'ISIN noté dans SON fichier (Mes actifs)
   const connu = ISIN_CONNUS[op.isin]; if (connu && existe(connu[0])) return { code: connu[0], sur: true, raison: "isin" };
   const mo = motsActif(op.nom), lev = levierNom(op.nom);
   const notes = actifs.map(a => {
@@ -5391,7 +5396,6 @@ function brancherImport() {
 /* ---- v20.54 (Théo, 25/11) · « 📋 Comparer avec mon relevé » : l'évaluation de portefeuille Fortuneo (PDF ou texte collé), lue DANS le téléphone,
    comparée ligne par ligne (par ISIN) à ce que dit l'appli : quantité (à 0,0001 près), PRU (au centime) et versé du compte.
    ✓ / ⚠ avec l'écart, et « Corriger » ouvre la bonne saisie, pré-remplie, que l'utilisateur relit. Rien n'est modifié seul, rien n'est gardé, rien n'est envoyé. ---- */
-const nbFr = x => { const v = String(x || "").replace(/[\s  ]/g, "").replace(",", "."); return v === "" || isNaN(+v) ? NaN : +v; };
 /** l'évaluation (texte) : { compte, date (aaaa-mm-jj), versements, total, lignes: [{ isin, nom, qte, cours, valo, pru }] } */
 function lireEvaluation(brut) {
   const t = String(brut || "").replace(/[    ]/g, " ").replace(/\r/g, ""), L = t.split("\n"), lignes = [];
@@ -5400,20 +5404,21 @@ function lireEvaluation(brut) {
     const m = l.match(/(?:^|\s)([A-Z]{2}[A-Z0-9]{9}\d)\s+(.+?)\s+(\d{2})\/(\d{2})\/(\d{2,4})\s+(.+?)\s*$/); if (!m) return;
     const av = m[2].trim().split(/\s+/), ap = m[6].trim().split(/\s+/);
     // après la date : valorisation, poids (%), PRU, plus-value ; la valorisation peut contenir des espaces (« 12 345,67 ») : elle est rebâtie depuis la fin
-    const pv = ap.pop(), pru = ap.pop(), poids = ap.pop(), valo = nbFr(ap.join(" "));
+    const pv = ap.pop(), pru = ap.pop(), poids = ap.pop(), valo = lireNombre(ap.join(" "));
     // avant la date : quantité et cours, chacun peut contenir des espaces ; on garde la coupure qui donne quantité × cours ≈ valorisation
     let best = null;
-    for (let k = 1; k < av.length; k++) { const q = nbFr(av.slice(0, k).join(" ")), c = nbFr(av.slice(k).join(" "));
+    for (let k = 1; k < av.length; k++) { const q = lireNombre(av.slice(0, k).join(" ")), c = lireNombre(av.slice(k).join(" "));
       if (!(q > 0 && c > 0) || !NB.test(av.slice(0, k).join(" ")) || !NB.test(av.slice(k).join(" "))) continue;
       const e = isFinite(valo) && valo > 0 ? Math.abs(q * c - valo) / valo : k === av.length - 1 ? 0 : 1; if (!best || e < best.e) best = { e, q, c }; }
-    if (!best || !(nbFr(pru) > 0)) return;
+    if (!best || !(lireNombre(pru) > 0)) return;
     let nom = ""; for (let j = n - 1; j >= Math.max(0, n - 3) && !nom; j--) { const x = (L[j] || "").trim(); if (x && !/[A-Z]{2}[A-Z0-9]{9}\d|\d{2}\/\d{2}\/\d{2}|Valeur|Code|cours|Autres|^¾/i.test(x)) nom = x; }
     const an = m[5].length === 2 ? "20" + m[5] : m[5];
-    lignes.push({ isin: m[1], nom: nom, qte: best.q, cours: best.c, valo: valo, pru: nbFr(pru), date: an + "-" + m[4] + "-" + m[3], douteux: best.e > .02 });
+    lignes.push({ isin: m[1], nom: nom, qte: best.q, cours: best.c, valo: valo, pru: lireNombre(pru), date: an + "-" + m[4] + "-" + m[3], douteux: best.e > .02 });
   });
   const vers = t.match(/Cumul de vos versements[^\d\n]*(\d{1,3}(?: \d{3})*,\d{2})/i), tot = t.match(/Total portefeuille au[^\d\n]*\d{1,2}\s+\S+\s+\d{4}\s+(\d{1,3}(?: \d{3})*,\d{2})/i);
-  const mc = t.match(/\b(PEA[\s-]*PME|PEA|COMPTE[\s-]*TITRES|CTO)\b/i), compte = !mc ? "" : /PME/i.test(mc[1]) ? "PEA-PME" : /PEA/i.test(mc[1]) ? "PEA" : "CTO";
-  return { compte: compte || "PEA", date: lignes.length ? lignes[0].date : "", versements: vers ? nbFr(vers[1]) : null, total: tot ? nbFr(tot[1]) : null, lignes: lignes };
+  // v20.54 : le compte seulement d'après « COMPTE PEA / COMPTE TITRES… » (jamais le mot « PEA » du nom d'un ETF)
+  const mc = t.match(/COMPTE\s+(PEA[\s-]*PME|PEA|TITRES|ORDINAIRE|CTO)\b/i), compte = !mc ? "" : /PME/i.test(mc[1]) ? "PEA-PME" : /PEA/i.test(mc[1]) ? "PEA" : "CTO";
+  return { compte: compte, date: lignes.length ? lignes[0].date : "", versements: vers ? lireNombre(vers[1]) : null, total: tot ? lireNombre(tot[1]) : null, lignes: lignes };
 }
 /** le code de l'actif de l'appli pour un ISIN (son fichier d'abord, puis ce que l'appareil a retenu, puis les ETF connus) */
 function codeDeIsin(isin) {
@@ -5457,7 +5462,9 @@ function htmlComparer() {
   const C = IMP.cmp, discret = ETAT.discret === "oui";
   let h = '<div class="m-imp ouvert m-cmp"><b class="m-imp-t">📋 Comparer avec mon relevé</b>' +
     '<p class="aide">Ton « évaluation de portefeuille » Fortuneo (PDF ou texte copié) est lue dans ton téléphone : rien n\'est envoyé, rien n\'est gardé, rien n\'est modifié tout seul.</p>';
-  if (!C.res) h += '<div class="m-imp-a"><label class="btn" for="f-cmp-pdf">' + (C.lecture ? "Lecture…" : "Choisir le PDF") + '</label><input id="f-cmp-pdf" type="file" accept="application/pdf" hidden>' +
+  if (C.choisir) h += '<label class="sel"><span>Compte du relevé</span><select id="f-cmp-env"><option value="">Choisis…</option>' +
+    envsOuverts().filter(e => e.perimetre === "Portefeuille").map(e => '<option value="' + esc(e.nom) + '">' + esc(e.nom) + "</option>").join("") + "</select></label>";
+  else if (!C.res) h += '<div class="m-imp-a"><label class="btn" for="f-cmp-pdf">' + (C.lecture ? "Lecture…" : "Choisir le PDF") + '</label><input id="f-cmp-pdf" type="file" accept="application/pdf" hidden>' +
     '<button class="btn ghost" type="button" id="f-cmp-coller" aria-expanded="' + !!C.coller + '">Coller le texte</button></div>' +
     (C.coller ? '<textarea id="f-cmp-txt" rows="5" aria-label="Texte de l\'évaluation" placeholder="Ouvre l\'évaluation, « Tout sélectionner », « Copier », puis colle ici.">' + esc(C.texte || "") + '</textarea><button class="btn" type="button" id="f-cmp-lire">Comparer</button>' : "");
   else {
@@ -5472,9 +5479,9 @@ function htmlComparer() {
 function lancerComparaison(txt) {
   const C = IMP.cmp, ev = lireEvaluation(txt);
   if (!ev.lignes.length) { C.msg = "Aucune ligne trouvée : est-ce bien ton « évaluation de portefeuille » Fortuneo ? Tu peux aussi coller son texte."; C.coller = true; rendreFormulaire(); return; }
-  const env = envDeAvis(ev.compte).nom || (F && F.env) || "";
-  if (!env) { C.msg = "Compte du relevé (" + ev.compte + ") introuvable dans ton fichier."; rendreFormulaire(); return; }
-  Object.assign(C, { ev: ev, env: env, res: comparerEvaluation(ev, env), texte: "", msg: "" });   // le texte du relevé n'est pas gardé
+  const ea = ev.compte ? envDeAvis(ev.compte) : { nom: "", sur: false };
+  if (!ea.nom || !ea.sur) { Object.assign(C, { ev: ev, env: "", res: null, choisir: true, texte: "", msg: "Compte introuvable" + (ev.compte ? " (" + ev.compte + ")" : "") + " : choisis-le." }); rendreFormulaire(); return; }   // v20.54 : jamais un compte pris au hasard
+  Object.assign(C, { ev: ev, env: ea.nom, res: comparerEvaluation(ev, ea.nom), choisir: false, texte: "", msg: "" });   // le texte du relevé n'est pas gardé
   rendreFormulaire();
 }
 function brancherComparer(z) {
@@ -5484,6 +5491,7 @@ function brancherComparer(z) {
   if ($f("f-cmp-coller")) $f("f-cmp-coller").addEventListener("click", () => { C.coller = !C.coller; C.msg = ""; rendreFormulaire(); });
   if ($f("f-cmp-txt")) $f("f-cmp-txt").addEventListener("input", e => { C.texte = e.target.value; });
   if ($f("f-cmp-lire")) $f("f-cmp-lire").addEventListener("click", () => lancerComparaison(C.texte));
+  if ($f("f-cmp-env")) $f("f-cmp-env").addEventListener("change", e => { const v = e.target.value; if (!v || !C.ev) return; Object.assign(C, { env: v, res: comparerEvaluation(C.ev, v), choisir: false, msg: "" }); rendreFormulaire(); });
   if ($f("f-cmp-autre")) $f("f-cmp-autre").addEventListener("click", () => { IMP.cmp = {}; rendreFormulaire(); });
   if ($f("f-cmp-pdf")) $f("f-cmp-pdf").addEventListener("change", async e => {
     const fi = e.target.files && e.target.files[0]; if (!fi || C.lecture) return;

@@ -136,6 +136,24 @@ ok(r.ops.length === 1, "F11 · même avis collé deux fois dans le même texte :
 r = lire(F1.replace("14 816,80", "14,816.80").replace("14 814,81", "14,814.81")); o = op0(r);
 ok(o.montant === "14816,80" || o.montant === "14816,8", "F12 · « 14,816.80 » (virgule des milliers) lu 14 816,80", o.montant);
 
+
+/* v20.54 (relecture) · deux VRAIS avis différents, même minute et même montant, références différentes : gardés tous les deux */
+{ const A = F1.replace("COMPTE PEA N° 00000000", "COMPTE PEA N° 00000000\nRéférence : AAA111"), B = F1.replace("COMPTE PEA N° 00000000", "COMPTE PEA N° 00000000\nRéférence : BBB222");
+  const ref = t => t.replace("Désignation", "Référence de l'ordre : " + (t === A ? "AAA111" : "BBB222") + "\nDésignation");
+  r = lire(ref(A) + "\n\n" + ref(B));
+  ok(r.ops.length === 2, "F13 · deux avis distincts (références différentes, même minute, même montant) : 2 opérations, aucune perdue", r.ops.length);
+  r = lire(F1 + "\n\n" + F1);
+  ok(r.ops.length === 1 && /collé deux fois/.test(r.ops[0].note || ""), "F13 · le MÊME avis collé deux fois : 1 opération, et c'est dit", r.ops.map(x => x.note)); }
+/* v20.54 (relecture) · « dividende » dans l'opération d'avant ne transforme pas la suivante en dividende */
+{ const T = "COMPTE TITRES N° 0\nDésignation : TOTALENERGIES (FR0000120271)\nDate de paiement : 02/11/2026\nDividende brut unitaire : 0,79 EUR\nMontant net : 6,54 EUR\nDésignation : AUTRE TITRE (FR0000131104)\nQuantité : 5\nMontant net : 50,00 EUR";
+  r = lire(T);
+  ok(r.ops.length === 2 && r.ops[0].type === "Intérêts" && r.ops[1].type === "", "F14 · dividende seulement pour SA ligne : la suivante n'est pas un faux dividende", r.ops.map(x => x.type)); }
+/* v20.54 (relecture) · l'ISIN noté dans SON fichier : actif reconnu et marqué sûr (même absent de la liste de l'appli) */
+X.setM({ ref: { enveloppes: [], types: [], actifs: [{ code: "MONETF", nom: "Mon ETF à moi", isin: "LU0000000006" }], cours: {}, detenu: [], journal: [], raccourcis: [] } });
+{ const a = JSON.parse(JSON.stringify(X.actifDeAvis({ src: "fortuneo", isin: "LU0000000006", nom: "NOM SANS RAPPORT" })));
+  ok(a.code === "MONETF" && a.sur === true, "F15 · ISIN absent de la liste de l'appli mais présent dans le fichier : actif proposé et sûr", a); }
+X.setM(null);
+
 /* ---------- LINXEA SPIRIT 2 ---------- */
 /* L1 · tableau « Détail du versement » copié du site (tabulations) */
 const L1 = `Détail du versement libre du 13/11/2026

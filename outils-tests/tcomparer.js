@@ -16,7 +16,7 @@ vm.runInContext([
   SRC.match(/^function frDate\(.*$/m)[0], SRC.match(/^function saisieNombre\(.*$/m)[0], SRC.match(/^function qteBrute\(.*$/m)[0],
   "function refData() { return (M && M.ref) || { enveloppes: [], types: [], actifs: [], cours: {}, detenu: [], journal: [], raccourcis: [] }; }",
   "function typeInfo(nom) { return refData().types.find(t => t.nom === nom) || { tresorerie: 0, quantite: 0, flux: 0 }; }",
-  bloc("const ISIN_CONNUS", "let IMP = null;"), bloc("function envsOuverts(", "function cleOp("), bloc("const nbFr =", "function htmlComparer("),
+  bloc("const ISIN_CONNUS", "let IMP = null;"), bloc("function envsOuverts(", "function cleOp("), bloc("function lireNombre(", "/* v16.83"), bloc("function lireEvaluation(", "function htmlComparer("),
   "this.lireEvaluation = lireEvaluation; this.comparer = comparerEvaluation; this.setM = x => { M = x; };"
 ].join("\n"), ctx);
 
@@ -66,12 +66,13 @@ const p2 = r2.find(x => x.code === "DCAM" && x.quoi === "pru"), v2 = r2.find(x =
 ok(!p2.ok && p2.corriger && p2.corriger.journal, "PRU 5,02 € dans l'appli contre 5,0000 € : ⚠ (2 centimes), « Corriger » ouvre l'Historique des ordres", p2);
 ok(r2.find(x => x.code === "LQQ" && x.quoi === "pru").ok && r2.find(x => x.code === "LQQ" && x.quoi === "qte").ok, "LQQ juste (40 parts, PRU 100,1234) : ✓ ✓");
 ok(!v2.ok && v2.corriger.type === "Retrait" && v2.corriger.montant === "50", "Versé : appli 10 050 € contre 10 000 € → ⚠, « Corriger » propose un retrait de 50 € à relire", v2.corriger);
+ok(ctx.lireEvaluation(EVAL.replace(/COMPTE PEA/, "COMPTE")).compte === "", "Compte absent du relevé : laissé vide (l'écran demande « Compte introuvable, choisis-le », jamais un compte au hasard)");
 ok(ctx.lireEvaluation("Bonjour, rien à voir 12,00 €").lignes.length === 0, "Texte sans rapport : aucune ligne (message « est-ce bien ton évaluation ? »)");
 
 /* ---------- facultatif : un VRAI relevé, en local seulement (rien n'est affiché sauf oui/non et des nombres de lignes) ---------- */
 if (process.env.RELEVE) {
   const vrai = ctx.lireEvaluation(fs.readFileSync(process.env.RELEVE, "utf8"));
-  ok(vrai.lignes.length > 0 && vrai.lignes.every(l => l.qte > 0 && l.pru > 0 && !l.douteux) && vrai.versements !== null, "Vrai relevé (local) : " + vrai.lignes.length + " lignes lues, quantité × cours = valorisation, versé lu");
+  ok(vrai.compte !== "" && vrai.lignes.length > 0 && vrai.lignes.every(l => l.qte > 0 && l.pru > 0 && !l.douteux) && vrai.versements !== null, "Vrai relevé (local) : compte reconnu, " + vrai.lignes.length + " lignes lues, quantité × cours = valorisation, versé lu");
 }
 console.log(ko.length ? "\n✗ " + ko.length + " NON" : "\n✓ Tout est OUI");
 process.exit(ko.length ? 1 : 0);

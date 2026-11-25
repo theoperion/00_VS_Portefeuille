@@ -38,6 +38,13 @@ const versus = { ok: true, genere: "2026-11-24T10:00:00", majTexte: "", envelopp
     ok(!(await p.$("#f-cmp-txt")), theme + " · le texte collé n'est plus à l'écran (rien n'est gardé)");
     const larg = await p.evaluate(() => document.documentElement.scrollWidth); ok(larg <= 390, theme + " · lisible à 390 px", larg);
     if (process.env.CAPTURES) await p.screenshot({ path: process.env.CAPTURES + "/comparer-" + theme + ".png" });
+    if (theme === "light") {   // v20.54 : compte du relevé introuvable → on le demande (jamais un compte pris au hasard)
+      await p.click("#f-cmp-autre"); await p.waitForTimeout(150); await p.click("#f-cmp-coller"); await p.fill("#f-cmp-txt", EVAL.replace("COMPTE PEA", "COMPTE")); await p.click("#f-cmp-lire"); await p.waitForTimeout(200);
+      const t2 = await p.evaluate(() => document.querySelector(".m-cmp").innerText);
+      ok(/Compte introuvable/.test(t2) && !!(await p.$("#f-cmp-env")) && !/✓/.test(t2), "Compte du relevé introuvable : « choisis-le », aucune comparaison sur un compte au hasard", t2.slice(0, 160));
+      await p.selectOption("#f-cmp-env", "PEA Test"); await p.waitForTimeout(200);
+      ok(/PEA Test/.test(await p.evaluate(() => document.querySelector(".m-cmp").innerText)), "Compte choisi : la comparaison se fait sur lui");
+    }
     await p.click("[data-cmp-corr]"); await p.waitForTimeout(400);
     const f = await p.evaluate(() => ({ cmp: !!document.querySelector(".m-cmp"), qte: (document.querySelector("#f-qte") || {}).value }));
     ok(!f.cmp && f.qte === "1", theme + " · « Corriger » : la saisie s'ouvre avec 1 part (à relire)", f);
