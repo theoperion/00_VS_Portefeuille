@@ -9090,7 +9090,7 @@
         sapin(g, BX - 5, 0, BZ - 13, .8, 6, true); sapin(g, BX + 6, 0, BZ + 12, .9, 6, true);
         sol.poser(g, 0, 0, 0, 0, 1); lum.push([BX + 1.6, H0 - 1.5, BZ + W + 1.6, 1, .82, .45, 16]); lum.push([BX + 1.6, H0 - 1.5, BZ - W - 1.6, 1, .82, .45, 16]); } }
 
-    // ================= 9. LE TRAÎNEAU du Père Noël (silhouette stylisée, sans visage) — DÉCOR VIVANT : il suit le premier et le couvre de cadeaux =================
+    // ================= 9. LE TRAÎNEAU du Père Noël (silhouette stylisée, sans visage) — DÉCOR VIVANT : passages discrets au large en course, tour d'honneur et cadeaux à l'arrivée =================
     { const t = new Geo(); t.boite(0, 0, 0, 5, 1.6, 2.8, ROUGE, .2); t.boite(-2, 1.4, 0, 1.6, 2, 2.8, ROUGE, .2); t.boite(2.6, .6, 0, .6, 1.4, 2.8, ROUGE, .2); [-1.3, 1.3].forEach(z => { t.boite(0, -.7, z, 6.4, .25, .25, OR, .5); t.boite(3.3, -.3, z, .3, .9, .25, OR, .5); });
       t.boite(.6, 1.6, 0, 2.6, 1.8, 2.4, v("#8A5A2A"), .1); t.boite(.6, 2.6, 0, 1.2, 1.2, 1.2, BANDE[0], .2); t.boite(1.4, 2.4, .5, 1, 1, 1, BANDE[2], .2);
       t.cylindre(-1.4, 1.6, 0, 1.1, 2.4, 8, ROUGE, .15, .8); t.cylindre(-1.4, 1.6, 0, 1.15, .4, 8, BLANC, .2); t.boule(-1.4, 4.6, 0, .75, v("#F2D3B8")); t.boule(-1.1, 4.2, 0, .8, BLANC, .2, .9);
@@ -9105,12 +9105,16 @@
         t.boule(x + 2.05, 2.45, 0, .42, v("#FF1A1A"), 1, 1, true); t.boite(x - 1.3, 1.9, 0, .5, .25, 1, OR, .6); branche(t, [12.6, 1.6, 0], [x - 1.2, 1.7, 0], .07, .07, OR, .5); }
       /* ===== DÉCOR VIVANT (v20.48 · crochet unique a.vivant, voir contexteVivant) =====
          Au repos (📺 Visite, aucune voiture) : le traîneau fait le tour du ciel au-dessus du village.
-         En course : il survole le PREMIER (et change de voiture dès que la tête change) et lui lâche un cadeau toutes les 1,4 s :
-         le paquet tombe en tournoyant, rebondit deux fois sur le BAS-CÔTÉ (entre la piste et le muret, jamais sur la piste), puis fond dans la neige.
+         En course (v20.58, Théo : « trop agressif, il gâche le suivi de la course ») : il ne suit plus le premier et ne lâche plus de cadeaux.
+         Juste un passage discret de temps en temps (le 1er après 7 s, quand la caméra est derrière la voiture, puis toutes les 16 s ; 5 s de vol), petit (taille 1,4 au lieu de 2,4) et LOIN :
+         · caméra qui suit une voiture (🚁 poursuite) : il traverse le ciel 190 m devant elle, à 24 m de haut : à l'écran il glisse au-dessus de l'horizon,
+           bien au-dessus des voitures, de leurs étiquettes et de la barre des pilotes ;
+         · vue d'ensemble : sur un grand arc autour du circuit, en dehors de son rectangle (jamais au-dessus de la piste ni d'une voiture), devant le premier.
+         Il grandit puis rapetisse en douceur (ni apparition brusque, ni flash), traînée réduite à 6 petites étincelles qui s'amenuisent. Entre deux passages, il n'est pas là.
          À l'arrivée (et tant que le classement est affiché) : tour d'honneur au-dessus du vainqueur, pluie de flocons et de cadeaux autour de lui.
          Rien ne touche aux voitures : c'est le décor qui réagit. État partagé (TR) : le traîneau calcule, les cadeaux et les étincelles le lisent (même image). */
       const g = new Geo(); g.poser(t, -5, 0, 0, 0, 1);
-      const TR = { p: null, cp: 0, k: 4.2, tp: undefined, hist: [], tH: 0, tDrop: 0, nDrop: 0, cad: [], fin: false, gagnant: null }, NCAD = 10, rd = alea(1224);
+      const TR = { p: null, cp: 0, k: 4.2, nPas: 0, tp: undefined, hist: [], tH: 0, tDrop: 0, nDrop: 0, cad: [], fin: false, gagnant: null }, NCAD = 10, rd = alea(1224);
       // un cadeau part du sac et vise le bas-côté (entre le bord de la piste et le muret de neige, à DEMI + 11)
       const lacher = (t0, de, s, sd, arrivee) => { const lat = sd * (DEMI + 3 + rd() * 4.5), q = T.a(s + (rd() - .5) * (arrivee ? 26 : 6), lat), j = TR.nDrop++ % NCAD;
         TR.cad[j] = { t0, a: de.slice(), b: [q.x, q.y || 0, q.z], cap: rd() * TAU, dv: [q.tx, q.tz] }; };
@@ -9120,14 +9124,37 @@
         if (fin && TR.gagnant !== L.nom) { TR.gagnant = L.nom; TR.tFin = t; } if (!fin) TR.gagnant = null; TR.fin = fin; TR.L = L;
         if (!L) { const a = t * .085; cible = [T.cx + Math.cos(a) * T.rx * .85, 70 + Math.sin(t * .5) * 5, T.cz - Math.sin(a) * T.rz * .85]; vite = 1.4; kv = 4.2; }
         else if (fin) { const a = t * .95; cible = [L.x + Math.cos(a) * 24, L.y + 22 + Math.sin(t * 1.7) * 1.5, L.z - Math.sin(a) * 24]; vite = 3; kv = 2.4; }
-        else { const ax = Math.cos(L.cap), az = -Math.sin(L.cap); cible = [L.x + ax * 9 + Math.sin(t * .9) * 3, L.y + 19 + Math.sin(t * 1.6) * 1.2, L.z + az * 9 + Math.cos(t * .9) * 3]; vite = 3.2; kv = 2.4; }
+        else {   // v20.58 · en course : un passage discret de temps en temps, au large (voir plus haut)
+          if (TR.tProch == null) TR.tProch = t + 7; TR.course = true;
+          const F = C.suivie && C.suivie();   // la voiture que suit la caméra (🚁 poursuite, vue de bord), sinon null (vue d'ensemble)
+          if (!TR.pas && t >= TR.tProch) {
+            if (F) TR.pas = { t0: t, sd: TR.nPas++ % 2 ? -1 : 1, hc: F.cap };   // caméra qui suit une voiture : il traverse le ciel loin devant elle
+            else {   // vue d'ensemble : sur un grand arc AU LARGE, le point le plus devant le premier, qu'il longe sur ±0,2 rad
+              // (l'ellipse de demi-axes 1,42 × ceux du rectangle de la piste, + 20 m, entoure tout le rectangle : jamais au-dessus de la piste ni d'une voiture)
+              const rx = T.rx * 1.42 + 20, rz = T.rz * 1.42 + 20, hx = Math.cos(L.cap), hz = -Math.sin(L.cap); let th = 0, best = -9;
+              for (let i = 0; i < 72; i++) { const a = i / 72 * TAU, dx = T.cx + Math.cos(a) * rx - L.x, dz = T.cz - Math.sin(a) * rz - L.z, d = (dx * hx + dz * hz) / (Math.hypot(dx, dz) || 1); if (d > best) { best = d; th = a; } }
+              const sd = -Math.sin(th) * rx * hx - Math.cos(th) * rz * hz < 0 ? -1 : 1; TR.pas = { t0: t, a: th - sd * .2, sd, rx, rz }; }
+            TR.hist.length = 0; }
+          const P = TR.pas, u = P ? (t - P.t0) / 5 : 1;
+          if (!P || u >= 1 || u < 0 || (P.hc !== undefined && !F)) { if (P) { TR.pas = null; TR.tProch = t + 16; } TR.p = null; TR.k = 0; TR.hist.length = 0; TR.cad.length = 0; return null; }
+          const ap = clamp(Math.min(u, 1 - u) / .14, 0, 1); let pos;
+          if (P.hc !== undefined) {   // 190 m devant la voiture suivie, 24 m de haut : à l'écran, dans le ciel au-dessus de l'horizon, bien au-dessus des voitures et de leurs étiquettes ;
+            // il glisse de gauche à droite (ou l'inverse) ; le cap suivi est lissé (pas d'à-coup dans les virages)
+            P.hc += Math.atan2(Math.sin(F.cap - P.hc), Math.cos(F.cap - P.hc)) * Math.min(1, dt * 1.2);
+            const hx = Math.cos(P.hc), hz = -Math.sin(P.hc), lx = -hz, lz = hx, lat = P.sd * (-110 + 220 * u);
+            pos = [F.x + hx * 190 + lx * lat, (F.y || 0) + 24 + Math.sin(u * PI) * 3, F.z + hz * 190 + lz * lat]; TR.cp = Math.atan2(-P.sd * lz, P.sd * lx); }
+          else { const th = P.a + P.sd * u * .4; pos = [T.cx + Math.cos(th) * P.rx, 22 + Math.sin(u * PI) * 3, T.cz - Math.sin(th) * P.rz]; TR.cp = Math.atan2(Math.cos(th) * P.rz * P.sd, -Math.sin(th) * P.rx * P.sd); }
+          TR.p = pos; TR.k = 1.4 * ap * ap * (3 - 2 * ap);
+          if (t - TR.tH > .09) { TR.tH = t; TR.hist.unshift([pos[0] - Math.cos(TR.cp) * 3.5 * TR.k, pos[1] + .8 * TR.k, pos[2] + Math.sin(TR.cp) * 3.5 * TR.k]); if (TR.hist.length > 30) TR.hist.pop(); }
+          return TR.k < .02 ? null : modele(pos[0], pos[1], pos[2], TR.cp, Math.sin(t * 2.1) * .03, TR.k); }
+        TR.course = false; TR.tProch = null; TR.pas = null;
         if (!TR.p) TR.p = cible.slice(); const av = TR.p.slice(), kk = 1 - Math.exp(-dt * vite); TR.p = TR.p.map((u, i) => u + (cible[i] - u) * kk);
         const dx = TR.p[0] - av[0], dz = TR.p[2] - av[2]; if (Math.hypot(dx, dz) > .01) { const c = Math.atan2(-dz, dx); TR.cp += Math.atan2(Math.sin(c - TR.cp), Math.cos(c - TR.cp)) * Math.min(1, dt * 5); }
         TR.k += (kv - TR.k) * Math.min(1, dt * 1.5);   // (pas lisse() : ici ce nom désigne la sphère)
         // la traînée d'étincelles : les positions passées du traîneau
         if (t - TR.tH > .07) { TR.tH = t; TR.hist.unshift([TR.p[0] - Math.cos(TR.cp) * 3.5 * TR.k, TR.p[1] + .8 * TR.k, TR.p[2] + Math.sin(TR.cp) * 3.5 * TR.k]); if (TR.hist.length > 30) TR.hist.pop(); }
         // les cadeaux : un toutes les 1,4 s pendant la course ; à l'arrivée une averse (toutes les 0,45 s pendant 6 s), puis un de temps en temps
-        const per = !L ? 0 : fin ? (t - TR.tFin < 6 ? .45 : 1.6) : 1.4;
+        const per = !L ? 0 : t - TR.tFin < 6 ? .45 : 1.6;   // (ici L est forcément à l'arrivée : la course est traitée plus haut)
         if (per && t - TR.tDrop > per) { TR.tDrop = t; lacher(t, [TR.p[0], TR.p[1] + .5 * TR.k, TR.p[2]], fin ? L.s : L.s + 8, TR.nDrop % 2 ? 1 : -1, fin); }
         if (!per) TR.cad.length = 0;
         return modele(TR.p[0], TR.p[1], TR.p[2], TR.cp, Math.sin(t * 2.1) * .05, TR.k); } } });
@@ -9141,9 +9168,9 @@
           const v2 = u - TF; let y = 0, o = v2; for (const [du, h] of [[.42, 2.4], [.3, .9], [.18, .3]]) { if (o < du) { const w = o / du; y = h * 4 * w * (1 - w); break; } o -= du; }
           const gl = Math.min(v2, .9) * 2.2, fond = clamp((u - 5.4) / .8, 0, 1);
           return modele(d.b[0] + d.dv[0] * gl, d.b[1] + y - fond * s * .9, d.b[2] + d.dv[1] * gl, d.cap + 5 * TF + Math.min(v2, .9) * 2, 0, 1); } } }); }
-      // la traînée : 16 étincelles d'or et de neige qui suivent le traîneau
+      // la traînée : 16 étincelles d'or et de neige qui suivent le traîneau ; v20.58 : en course, 6 seulement, petites, qui s'amenuisent
       for (let k = 1; k <= 16; k++) { const e = new Geo(), sz = 1.6 - k * .07; e.boite(0, -sz / 2, 0, sz, sz, sz, k % 3 ? JAUNE : BLANC, 1, PI / 4); e.boite(0, -sz * .35, 0, sz * .7, sz * .7, sz * 1.5, k % 3 ? JAUNE : BLANC, 1, PI / 4);
-        rotors.push({ g: e, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant(x, t) { const h = TR.hist[k + 1]; if (!h) return null; const kk = TR.k / 4.2 * 2.6 + .4; return modele(h[0], h[1] + Math.sin(t * 3 + k) * .3 * kk, h[2], t * 2 + k, 0, kk); } } }); }
+        rotors.push({ g: e, x: 0, y: 0, z: 0, cap: 0, v: 0, a: { vivant(x, t) { const h = TR.hist[k + 1]; if (!h) return null; if (TR.course && k > 6) return null; const kk = TR.course ? TR.k * .45 * (1 - k / 7) : TR.k / 4.2 * 2.6 + .4; return modele(h[0], h[1] + Math.sin(t * 3 + k) * .3 * kk, h[2], t * 2 + k, 0, kk); } } }); }
       // à l'arrivée : la pluie de flocons et de confettis aux 5 couleurs sur le vainqueur (3 nappes décalées qui descendent)
       { const pl = new Geo(), rp = alea(2412); for (let k = 0; k < 70; k++) { const a = rp() * TAU, d = 3 + rp() * 20, y = rp() * 12, c = k % 4 ? BLANC : BANDE[k % 5], s = k % 4 ? .5 + rp() * .4 : .7;
           if (k % 4) { pl.boite(Math.cos(a) * d, y, Math.sin(a) * d, s, s, s * .3, c, 1, a); pl.boite(Math.cos(a) * d, y + s * .1, Math.sin(a) * d, s * .3, s * .8, s, c, 1, a); } else pl.boite(Math.cos(a) * d, y, Math.sin(a) * d, s, .1, s * .5, c, .8, a); }
@@ -12787,12 +12814,13 @@
      Un rotor (ctx.rotors.push dans un decorXxx) qui porte a.vivant = (x, t, C) => matrice | null est replacé à chaque image d'après la course,
      au lieu de suivre matRotor. x = ce rotor (on peut y garder un état d'une image à l'autre : x.p, x.cap…), t = temps en secondes,
      C = { V: voitures affichées [{ nom, x, y, z, cap, s, rang }], enCourse (un scénario de course se joue), e (avancement 0 → 1 ; 1 hors course),
-     premier(), dernier() } (e reste figé pendant la pause ⏸). Rendu : une matrice, ou null pour cacher l'objet à cette image ; pour garder
+     premier(), dernier(), suivie() (la voiture que suit la caméra en poursuite ou vue de bord, sinon null) } (e reste figé pendant la pause ⏸). Rendu : une matrice, ou null pour cacher l'objet à cette image ; pour garder
      l'animation ordinaire, rendre matRotor(x, t) (on peut d'abord déplacer x.x, x.y, x.z, x.cap). Aide : vivantVise(). Sans voiture (📺 Visite), V est vide : le décor reprend sa vie « au repos ». C n'est calculé qu'une fois par image,
      et seulement si un rotor vivant existe. Ne jamais modifier les voitures : c'est le décor qui réagit, jamais le résultat. */
   function contexteVivant(I, VV) {
     const a = I.anim, e = a ? clamp(((I.suspendu || performance.now()) - a.t0) / a.duree, 0, 1) : 1, L = VV.map(x => ({ nom: x.v.nom, x: x.x, y: x.y, z: x.z, cap: x.cap, s: x.s, rang: x.rang || 99 }));
-    return { V: L, enCourse: !!(a && a.scen), e, premier: () => L.slice().sort((p, q) => p.rang - q.rang)[0], dernier: () => L.slice().sort((p, q) => q.rang - p.rang || p.s - q.s)[0] };
+    return { V: L, enCourse: !!(a && a.scen), e, premier: () => L.slice().sort((p, q) => p.rang - q.rang)[0], dernier: () => L.slice().sort((p, q) => q.rang - p.rang || p.s - q.s)[0],
+      suivie: () => (I.mode === "poursuite" || I.mode === "bord") && L.find(x => x.nom === I.focus) || null };   // v20.58 : la voiture que suit la caméra (🚁 poursuite, vue de bord), sinon null
   }
   /** aide du crochet vivant (Anneau, 24/11) : a.vivant = vivantVise("premier" | "dernier", atteint?) → l'objet se tourne en douceur (autour de la
       verticale) vers cette voiture ; atteint = L (longueur de l'objet selon son +x local) → il s'allonge pour finir juste sur elle (faisceau, rayon…).
@@ -12903,7 +12931,7 @@
         maj(e, c, enCourse) { if (!eteint) viser(O.dernier(c)); if (enCourse && !fait && e >= .985 && x.anime) anneau(O.premier(c)); }
       };
     },
-    /* décembre · la bâche dorée s'envole et retombe sur la voiture du vainqueur, puis se lève : révélation ; pendant la course, le traîneau du Père Noël suit le premier (v20.48) */
+    /* décembre · la bâche dorée s'envole et retombe sur la voiture du vainqueur, puis se lève : révélation ; pendant la course, le traîneau du Père Noël passe de temps en temps, petit et à l'écart (v20.58) */
     garage(x) {
       const O = outilsEv(x); let fait = false;
       // V16.45 : la vraie bâche peinte (peindreGarage5) : une monoplace bâchée, avant vers la droite, sol à y = 0, centre (466, 552), échelle .95
@@ -12935,18 +12963,21 @@
             auto.setAttribute("opacity", O.f(Math.min(1, q * 3))); eclat.setAttribute("opacity", O.f(1 - q)); eclat.setAttribute("transform", "translate(" + O.f(MX + 40) + " " + O.f(MY - 60) + ") scale(" + O.f(.6 + q * .6) + ")");
             const p = O.voiture(n); if (p) { anneau.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1]) + ")"); anneau.firstChild.setAttribute("r", O.f(O.rp() * (1.2 + (q * 3 % 1) * 1.2))); anneau.firstChild.setAttribute("opacity", O.f(1 - (q * 3 % 1))); } },
             () => { bache.remove(); eclat.remove(); anneau.remove(); setTimeout(() => { O.fondu(b2, 300); O.fondu(auto, 700); }, 1500); }); }); };
-      /* v20.48 · DÉCOR VIVANT : pendant la course, le traîneau du Père Noël (TRN2D) survole le PREMIER, change de voiture quand la tête change
-         et lui lâche un cadeau toutes les 1,4 s : le paquet tombe et rebondit sur le BAS-CÔTÉ, jamais sur la piste. À l'arrivée : tour d'honneur
-         au-dessus du vainqueur, pluie de flocons et de cadeaux, puis il s'envole. Le traîneau qui traverse la halle au repos (.g6-trn) se cache pendant ce temps. */
+      /* v20.48 · DÉCOR VIVANT du traîneau du Père Noël (TRN2D). À l'arrivée : tour d'honneur au-dessus du vainqueur, pluie de flocons et de cadeaux,
+         puis il s'envole. Le traîneau qui traverse la halle au repos (.g6-trn) se cache pendant la course.
+         v20.58 (Théo : « trop agressif, il gâche le suivi de la course ») : PENDANT la course, il ne suit plus le premier et ne lâche plus de cadeaux.
+         Juste un petit passage discret de temps en temps (le 1er après 4 s, puis toutes les 16 s ; 4,5 s de vol), en ligne droite d'un bord à l'autre,
+         petit (≈ 3 pastilles de long) et un peu transparent, dans la bande horizontale la plus haute où il n'y a AUCUNE voiture au départ (pastille, numéro, portrait) ;
+         si une voiture s'approche de lui pendant le vol, il s'efface en douceur (il ne passe jamais par-dessus). Pas de place libre : il attend. Ni flash, ni à-coup. */
       const B5 = ["#4C9AFF", "#2BB6A3", "#FF6FA8", "#F2994A", "#C6E03A"];
-      let tr = null, trP = null, trD = 1, tPrec = 0, tDrop = 0, nDrop = 0, fini = false, vol = [];
+      let tr = null, trP = null, nDrop = 0, fini = false, vol = [];
       const amb = on => x.svg.querySelectorAll(".g6-trn").forEach(n => n.style.display = on ? "" : "none");
       const kTr = () => O.rp() * .038;
       // au-dessus de la voiture s'il y a la place, sinon dessous ; jamais coupé par le bord de l'écran
       const auDessus = (p, h, mx) => { const V = O.vue(); let y = p[1] - h; if (y - 50 * kTr() < V[1]) y = p[1] + h; return [Math.max(V[0] + mx, Math.min(V[2] - mx, p[0])), Math.max(V[1] + 50 * kTr(), Math.min(V[3] - 30 * kTr(), y))]; };
       const poserTr = (p, d, k) => tr.setAttribute("transform", "translate(" + O.f(p[0]) + " " + O.f(p[1]) + ") scale(" + O.f(d * k) + " " + O.f(k) + ")");
       const creerTr = () => { if (tr) return; amb(false); tr = O.el('<g style="filter: drop-shadow(0 3px 3px rgba(0,0,0,.35))">' + TRN2D(true) + "</g>"); trP = null; };
-      const oter = () => { if (tr) tr.remove(); tr = null; trP = null; vol.forEach(g => g.remove()); vol = []; amb(true); };
+      const oter = () => { if (tr) tr.remove(); tr = null; trP = null; vol.forEach(g => g.remove()); vol = []; finPa(); enC = false; tProch = 0; amb(true); };
       // un point du bas-côté, à côté de l'abscisse s (unités de la carte) : au-delà de la bordure sucre d'orge de la piste
       const basCote = (s, sd) => { const P = O.pt(s), Q = O.pt(s + 3), dx = Q[0] - P[0], dy = Q[1] - P[1], l = Math.hypot(dx, dy) || 1; return [P[0] - dy / l * 38 * sd, P[1] + dx / l * 38 * sd]; };
       const lacher = (de, vers, k) => { const col = B5[nDrop++ % 5], g = O.el('<g><g transform="scale(' + O.f(k) + ')"><rect x="-7" y="-13" width="14" height="13" rx="1.6" fill="' + col + '" stroke="#2A0A0C" stroke-width="1.4"/><path d="M0 -13V0M-7 -7H7" stroke="#F2C64A" stroke-width="2.6"/><path d="M0 -13q-6 -7 -7 -1zM0 -13q6 -7 7 -1z" fill="#F2C64A" stroke="#7A4E12" stroke-width=".8"/></g></g>');
@@ -12955,11 +12986,23 @@
           if (q < tF) { const w = q / tF; u = de[0] + (vers[0] - de[0]) * w; v = de[1] + (vers[1] - de[1]) * w * w; a = rot * w * 4; }
           else { const w = (q - tF) / (1 - tF); u = vers[0]; let h = 0; if (w < .12) h = Math.sin(w / .12 * Math.PI) * 18 * k; else if (w < .2) h = Math.sin((w - .12) / .08 * Math.PI) * 7 * k; v = vers[1] - h; a = rot * 4 * (1 - Math.min(1, w * 5)); op = w > .8 ? (1 - w) / .2 : 1; }
           g.setAttribute("transform", "translate(" + O.f(u) + " " + O.f(v) + ") rotate(" + O.f(a) + ")"); g.setAttribute("opacity", O.f(op)); }, () => { g.remove(); vol = vol.filter(z => z !== g); }); };
-      const suivre = (c) => { const n = O.premier(c), p = O.voiture(n); if (!p) return; creerTr(); const now = performance.now(), dt = tPrec ? Math.min(100, now - tPrec) : 16, k = kTr(); tPrec = now;
-        const q = auDessus(p, 100 * k, 140 * k), cible = [q[0] + 20 * k, q[1] + Math.sin(now / 260) * 6 * k]; if (!trP) trP = cible.slice();
-        const w = 1 - Math.exp(-dt / 200), av = trP[0]; trP = [trP[0] + (cible[0] - trP[0]) * w, trP[1] + (cible[1] - trP[1]) * w];
-        if (Math.abs(trP[0] - av) > .25) trD = trP[0] > av ? 1 : -1; poserTr(trP, trD, k);
-        if (now - tDrop > 1400) { tDrop = now; lacher([trP[0] - 55 * k * trD, trP[1] - 10 * k], basCote(c[n].s + .006 * x.T.L, nDrop % 2 ? 1 : -1), k * 1.15); } };
+      // v20.58 · le passage discret pendant la course (voir plus haut) : pa = le petit traîneau, paY = la hauteur de sa bande, paOp = son opacité (lissée)
+      let pa = null, paT0 = 0, paY = 0, paD = 1, paOp = 0, paTp = 0, tProch = 0, nPa = 0, enC = false;
+      const PA_DUR = 4500, PA_ENTRE = 16000, PA_OP = .8, kPa = () => O.rp() * .021;
+      // aucune voiture dans la bande de hauteur 2h autour de y (et, si u est donné, à moins de w de l'abscisse u : la place autour du traîneau)
+      const bandeLibre = (c, y, h, u, w) => Object.keys(c).every(n => { const p = O.voiture(n); return !p || Math.abs(p[1] - y) > h || (u !== undefined && Math.abs(p[0] - u) > w); });
+      const finPa = () => { if (pa) pa.remove(); pa = null; };
+      const passage = (c) => { const now = performance.now(), k = kPa(), V = O.vue(), H = 40 * k + O.rp() * 3.6;   // demi-hauteur gardée libre : le traîneau + une pastille, son numéro et son portrait
+        if (!tProch) tProch = now + 4000;
+        if (!pa) { if (now < tProch) return; let y = null;
+          for (let yy = V[1] + 46 * k + 8; yy < V[3] - 34 * k; yy += 10 * k) if (bandeLibre(c, yy, H)) { y = yy; break; }
+          if (y === null) { tProch = now + 1500; return; }
+          paY = y; paD = nPa++ % 2 ? -1 : 1; paT0 = paTp = now; paOp = 0; pa = O.el('<g style="pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,.22))">' + TRN2D(true) + "</g>"); pa.setAttribute("opacity", "0"); }
+        const q = (now - paT0) / PA_DUR, dt = Math.min(100, now - paTp), x0 = V[0] - 150 * k, x1 = V[2] + 150 * k, u = paD > 0 ? x0 + (x1 - x0) * q : x1 - (x1 - x0) * q;
+        const libre = bandeLibre(c, paY, H, u, 150 * k + O.rp() * 7); paTp = now;
+        const voulu = libre && q < 1 ? PA_OP * Math.max(0, Math.min(1, q / .15, (1 - q) / .15)) : 0; paOp += (voulu - paOp) * (1 - Math.exp(-dt / (libre ? 160 : 50)));   // une voiture approche : il s'efface vite (mais sans clignoter)
+        if (q >= 1 || (!libre && paOp < .15)) { finPa(); tProch = now + PA_ENTRE; return; }
+        pa.setAttribute("transform", "translate(" + O.f(u) + " " + O.f(paY + Math.sin(now / 420) * 2.5 * k) + ") scale(" + O.f(paD * k) + " " + O.f(k) + ")"); pa.setAttribute("opacity", O.f(paOp)); };
       // l'arrivée : trois tours d'honneur au-dessus du vainqueur, la pluie de flocons et de cadeaux, puis le traîneau s'envole
       const honneur = (n, s) => { const p = O.voiture(n); if (!p) return; creerTr(); fini = true; const k = kTr(), c0 = auDessus(p, 125 * k, 205 * k), de = trP ? trP.slice() : [c0[0] - 300, c0[1] - 200];
         const pluie = O.el("<g>" + Array.from({ length: 34 }, (_, i) => i % 6 ? '<circle r="' + O.f((2 + (i % 3)) * k * 1.6) + '" fill="#FFFFFF" opacity=".95"/>' : '<rect x="-4" y="-2" width="8" height="4" fill="' + B5[i % 5] + '"/>').join("") + "</g>"), fl = [...pluie.firstChild.children];
@@ -12973,8 +13016,9 @@
           poserTr(pt, d, k * (q > .82 ? 1 - (q - .82) * 2 : 1)); trP = pt;
           if (q > .1 && q < .82 && q - dern > .09) { dern = q; const sd = Math.random() < .5 ? 1 : -1; lacher([pt[0], pt[1] + 10 * k], basCote(s + (Math.random() - .5) * .04 * x.T.L, sd), k * 1.15); } },
           () => oter()); };
-      const majTr = (e, c, en) => { if (!x.anime) return; if (en && e < .985 && !fini) { suivre(c); return; } if (en && e >= .985 && !fini) { const n = O.premier(c); honneur(n, c[n].s); return; } if (!en && !fini && tr) oter(); };
-      return { raz() { fait = false; fini = false; tDrop = 0; oter(); }, maj(e, c, enCourse) { try { majTr(e, c, enCourse); } catch (er) { } if (enCourse && !fait && e >= .985 && x.anime) reveler(O.premier(c)); } };
+      const majTr = (e, c, en) => { if (!x.anime) return; if (en && e < .985 && !fini) { if (!enC) { enC = true; amb(false); } passage(c); return; }
+        if (en && e >= .985 && !fini) { finPa(); const n = O.premier(c); honneur(n, c[n].s); return; } if (!en && !fini && (tr || pa || enC)) oter(); };
+      return { raz() { fait = false; fini = false; oter(); }, maj(e, c, enCourse) { try { majTr(e, c, enCourse); } catch (er) { } if (enCourse && !fait && e >= .985 && x.anime) reveler(O.premier(c)); } };
     },
     /* février · au 2e tour, un escalier pivote en travers de la piste… et s'écarte de justesse devant le leader
        + décor VIVANT (25/11/2026, comme en 3D) : la petite balle d'entraînement ailée (argentée, bleutée) volette au-dessus du PREMIER et file vers le nouveau premier quand la tête change */
