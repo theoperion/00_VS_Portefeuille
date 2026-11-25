@@ -256,6 +256,7 @@ function afficherTout() {
     st.textContent = (SOURCE === "cache" && !EN_CHARGEMENT ? "📴 Hors ligne\n" : court ? "Relevé Versus\n" : "") + (court || (SOURCE === "cache" && !EN_CHARGEMENT ? "" : "Pas encore de\nrelevé Versus")); st.classList.toggle("hors", SOURCE === "cache" && !EN_CHARGEMENT); st.hidden = !(SOURCE === "cache" && !EN_CHARGEMENT); /* v17.12 (Théo) : plus de pastille « Relevé Versus · mois » ; seulement « 📴 Hors ligne » en cas de souci */ st.setAttribute("aria-label", court ? "Relevé Versus · " + court : "Pas encore de relevé Versus"); st.title = D.majTexte || ""; st.classList.add("pastille-releve"); }
   rendreTicker();
   rendreVue(vueActive());
+  if (typeof prechargerCartesGP === "function") (window.requestIdleCallback || (f => setTimeout(f, 700)))(prechargerCartesGP, { timeout: 2500 });   // v20.53 : la carte du Podium prête avant qu'on y aille (seulement les circuits visibles)
   majRappels();
   if (typeof rappelReleveJoueur === "function") rappelReleveJoueur();   // v20.29 : relevé manquant rappelé par Théo
   if (SOURCE === "api") setTimeout(() => { if (typeof ereApres === "function") ereApres(verifierRevelation, "revel"); else verifierRevelation(); }, 900);   // v16.93 : la scène du premier million passe avant

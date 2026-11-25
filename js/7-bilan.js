@@ -743,8 +743,8 @@ let VUE_AFFICHEE = null;
    Au moindre doute, l'onglet est redessiné comme avant. Le Podium n'est gardé que sur la page Course (l'Écurie relance son showroom 3D en se redessinant). */
 let GEN_VUES = 0;
 const VUES_FAITES = {};
-const sigVue = () => ({ D, gen: GEN_VUES, etat: JSON.stringify(ETAT), t: Math.floor(Date.now() / 6e5), j: new Date().toDateString() });
-const memeSig = (a, b) => !!a && a.D === b.D && a.gen === b.gen && a.etat === b.etat && a.t === b.t && a.j === b.j;
+const sigVue = () => ({ D, src: SOURCE + "|" + (typeof EN_CHARGEMENT !== "undefined" && EN_CHARGEMENT), gen: GEN_VUES, etat: JSON.stringify(ETAT), t: Math.floor(Date.now() / 6e5), j: new Date().toDateString() });   // src : passer hors connexion (ou revenir) redessine
+const memeSig = (a, b) => !!a && a.D === b.D && a.src === b.src && a.gen === b.gen && a.etat === b.etat && a.t === b.t && a.j === b.j;
 ["click", "change", "input", "submit", "keydown"].forEach(t => document.addEventListener(t, e => { if (t === "click" && e.target.closest && e.target.closest(".onglet")) return; GEN_VUES++; }, true));
 { const s0 = stock.set, d0 = stock.del; stock.set = (k, x) => { if (k !== CLES.vue) GEN_VUES++; return s0.call(stock, k, x); }; stock.del = k => { GEN_VUES++; return d0.call(stock, k); }; }
 if (window.fetch) { const f0 = window.fetch; window.fetch = function () { const r = f0.apply(this, arguments); r.then(() => { GEN_VUES++; }, () => { GEN_VUES++; }); return r; }; }

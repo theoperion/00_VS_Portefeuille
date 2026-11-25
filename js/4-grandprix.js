@@ -323,14 +323,23 @@ function majVueDOM(vue) {
   const s = suiviGP(); document.querySelectorAll("[data-suivre]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.suivre === s)));
 }
 const PRECHARGE_CARTES = {};   // v17.32
-/** v20.53 (Théo : écran noir en arrivant sur le Podium) · dès l'ouverture de l'appli, quand le téléphone ne fait rien, la carte cuite
-    du mois (et celles d'avant, d'après et du tour de chauffe) est téléchargée et décodée : le Podium l'affiche ensuite instantanément */
+/** v20.53 (Théo : écran noir en arrivant sur le Podium) · les cartes que CE joueur peut voir aujourd'hui (jamais un univers pas encore révélé) :
+    avant le 1er janvier 2027, la seule carte du tour de chauffe ; ensuite le mois commencé et le précédent. Aperçu admin : rien d'avance (à la demande). */
+function cartesVisiblesGP() {
+  try { if (!D || !window.Piste || !self.CARTES_CUITES || !saisonVisible() || apercuSaison()) return [];
+    const d = new Date(), k = d.getFullYear() * 100 + d.getMonth() + 1, l = k < SAISON.premiere * 100 + 1 ? [CHAUFFE_K] : [k, k % 100 === 1 ? CHAUFFE_K : k - 1];
+    return [...new Set(l.map(m => { const c = (Piste.TRACES[circuitDe(m)] || {}).peint, v = c && self.CARTES_CUITES[c]; return v ? circuitDe(m) + "|img/cartes/" + c + ".webp?v=" + v : null; }).filter(Boolean))].map(x => x.split("|"));
+  } catch (e) { return []; }
+}
+const ECONOMIE_DONNEES = () => { try { return !!(navigator.connection && navigator.connection.saveData); } catch (e) { return false; } };
+/** dès que les données sont là, quand le téléphone ne fait rien : ces cartes sont téléchargées et décodées (le Podium les affiche ensuite instantanément),
+    leur décor animé est préparé, et le hors connexion les garde. Mode « économie de données » du téléphone : rien d'avance (elles se gardent au 1er affichage). */
 function prechargerCartesGP() {
-  try { if (!window.Piste || !self.CARTES_CUITES) return; const d = new Date(), k = d.getFullYear() * 100 + d.getMonth() + 1, moins = k % 100 === 1 ? k - 89 : k - 1, plus = k % 100 === 12 ? k + 89 : k + 1;
-    [k, plus, moins, CHAUFFE_K].forEach(m => { const c = (Piste.TRACES[circuitDe(m)] || {}).peint, v = c && self.CARTES_CUITES[c]; if (!v) return; const u = "img/cartes/" + c + ".webp?v=" + v; if (PRECHARGE_CARTES[u]) return;
-      const im = new Image(); im.decoding = "async"; im.src = u; try { im.decode().catch(() => { }); } catch (e) { } PRECHARGE_CARTES[u] = im; });
-    // puis, un peu plus tard et toujours sans gêner, le décor animé de la carte du mois et de celle d'après
-    const ric = window.requestIdleCallback || (fn => setTimeout(fn, 400)); [...new Set([circuitDe(k), circuitDe(plus)])].forEach((ci, j) => setTimeout(() => ric(() => { if (Piste.prechauffer) Piste.prechauffer(ci); }, { timeout: 4000 }), 1500 + j * 1500));
+  try { if (ECONOMIE_DONNEES()) return; const l = cartesVisiblesGP(); if (!l.length) return;
+    l.forEach(([, u]) => { if (PRECHARGE_CARTES[u]) return; const im = new Image(); im.decoding = "async"; im.src = u; try { im.decode().catch(() => { }); } catch (e) { } PRECHARGE_CARTES[u] = im; });
+    const ric = window.requestIdleCallback || (fn => setTimeout(fn, 400));
+    l.forEach(([ci], j) => setTimeout(() => ric(() => { if (Piste.prechauffer) Piste.prechauffer(ci); }, { timeout: 4000 }), 1500 + j * 1500));
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage({ cartes: l.map(([, u]) => u) });
   } catch (e) { /* rien à précharger */ }
 }
 function choisirVueGP(v, y) {
@@ -1385,7 +1394,9 @@ function fondImmediatGP(v) {
 function brancherGP(v, y) {
   fondImmediatGP(v);
   if (GP_DIFFERER) { GP_DIFFERER = false; const pi = v.querySelector("#gp-piste");
-    requestAnimationFrame(() => requestAnimationFrame(() => { if (pi && pi.isConnected && v.querySelector("#gp-piste") === pi) { brancherGP0(v, y); if (VUE_AFFICHEE === "trophees") reveillerGP(); } })); return; }   // à l'image d'après : la 1re est déjà peinte
+    requestAnimationFrame(() => requestAnimationFrame(() => { if (!(pi && pi.isConnected && v.querySelector("#gp-piste") === pi)) return;
+      if (VUE_AFFICHEE !== "trophees") { delete VUES_FAITES.trophees; return; }   // Podium déjà quitté : rien ne démarre en coulisses ; il sera redessiné au retour
+      brancherGP0(v, y); reveillerGP(); })); return; }   // à l'image d'après : la 1re est déjà peinte
   brancherGP0(v, y);
 }
 function brancherGP0(v, y) {

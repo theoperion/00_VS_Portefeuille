@@ -10,7 +10,10 @@
    2. le passage d'un onglet à l'autre (Classement, Mois, Podium ; 5 tours) : du toucher à l'image affichée ; onglet redessiné ou gardé ;
    3. au retour, la même piste est gardée (pas reconstruite) ; onglet caché = décor animé en pause, qui repart au retour ;
    4. la 3D ne se lance pas sur la Carte 2D (aucun contexte WebGL ouvert) ; 5. la course de démo part toujours ;
-   6. le hors connexion garde piste.js, cartes.js et la carte cuite du mois (2e affichage instantané) ; 0 erreur JS.
+   6. le hors connexion garde piste.js, cartes.js et la carte cuite du mois (2e affichage instantané) ; 0 erreur JS ;
+   7. SECRET : un simple joueur ne télécharge ni ne garde d'avance que la carte du circuit qu'il peut voir ce jour-là (25/11, 3/12, 20/12, 31/12),
+      rien en mode « économie de données » ; 8. un onglet gardé n'est jamais périmé (nouvelles données, minuit, état changé, hors connexion,
+      Podium quitté aussitôt).
    Seuils : onglet < 100 ms (médiane ; Podium < 200 ms : sa carte animée doit être repeinte) ; carte visible < 300 ms au retour, < 450 ms à la toute 1re visite (la page entière se construit) ; jamais de noir.
    MESURE=1 : affiche seulement les chiffres (pour comparer avec une version précédente). */
 const { chromium } = require("playwright");
@@ -96,11 +99,56 @@ const med = l => { const s = l.slice().sort((a, b) => a - b); return s.length ? 
   const ctx2 = await b.newContext({ viewport: { width: 390, height: 844 } }), p2 = await ctx2.newPage();
   await p2.route(/fonts\.(googleapis|gstatic)\.com/, r => r.fulfill({ contentType: "text/css", body: "" }));
   await p2.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(data) }));
-  await p2.goto(URL); await p2.evaluate(() => navigator.serviceWorker.ready).catch(() => null); await p2.waitForTimeout(2500);
+  await p2.addInitScript(() => { ["versus.tuto1", "versus.bullePortrait", "versus.saison1", "versus.chauffe1", "versus.aideVisite", "versus.deJanvier"].forEach(k => localStorage.setItem(k, "1")); localStorage.setItem("versus.cle", "x"); });
+  await p2.clock.setFixedTime(new Date("2026-11-25T12:00:00"));
+  for (let k = 0; k < 2; k++) { await p2.goto(URL); await p2.evaluate(() => navigator.serviceWorker.ready).catch(() => null); await p2.waitForTimeout(3000); }   // 2e ouverture : l'appli passe par le service worker
   const sw = await p2.evaluate(async () => { const n = (await caches.keys()).filter(k => k.startsWith("versus-")); if (!n.length) return { ok: false }; const ks = [];
     for (const c of n) (await (await caches.open(c)).keys()).forEach(r => ks.push(new URL(r.url).pathname + new URL(r.url).search));
     const u = "img/cartes/garage.webp?v=" + self.CARTES_CUITES.garage; return { ok: true, piste: ks.some(k => k.endsWith("/piste.js")), cartesJs: ks.some(k => k.endsWith("/img/cartes/cartes.js")), carte: ks.some(k => k.endsWith(u)), cartes: ks.filter(k => k.includes(".webp")).length }; });
-  await ctx2.close(); await b.close();
+  await ctx2.close();
+  // 6. SECRET : un simple joueur (Kévin) ne télécharge d'avance QUE la carte du circuit qu'il peut voir ce jour-là (service worker autorisé, 2 ouvertures)
+  const SECRET = [];
+  for (const [date, attendu] of [["2026-11-25T12:00:00", ["garage"]], ["2026-12-03T12:00:00", ["garage"]], ["2026-12-20T12:00:00", ["garage"]], ["2026-12-31T12:00:00", ["garage"]], ["2026-12-03T12:00:00", [], true]]) {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 } }), q = await ctx.newPage(), vu = new Set(), e3 = [], eco = date && attendu.length === 0;
+    ctx.on("request", r => { const m = /cartes\/([\w-]+)\.webp/.exec(r.url()); if (m) vu.add(m[1]); }); q.on("pageerror", e => e3.push(e.message));
+    await q.clock.setFixedTime(new Date(date));
+    await q.route(/fonts\.(googleapis|gstatic)\.com/, r => r.fulfill({ contentType: "text/css", body: "" }));
+    const dK = JSON.parse(JSON.stringify(data)); dK.session = { role: "perso", nom: "Kévin" };
+    await q.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}"); r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : c.action === "tickets" ? { ok: true, ouvert: false } : dK) }); });
+    await q.addInitScript(eco => { ["versus.tuto1", "versus.bullePortrait", "versus.saison1", "versus.chauffe1", "versus.aideVisite", "versus.deJanvier"].forEach(k => localStorage.setItem(k, "1")); localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.vue", "classement");
+      if (eco) Object.defineProperty(navigator, "connection", { value: { saveData: true }, configurable: true }); }, eco);
+    for (let k = 0; k < 2; k++) { await q.goto(URL + "#classement"); await q.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 20000 }); await q.evaluate(() => navigator.serviceWorker && navigator.serviceWorker.ready).catch(() => null); await q.waitForTimeout(4000); }
+    const garde = await q.evaluate(async () => { const o = []; for (const k of await caches.keys()) (await (await caches.open(k)).keys()).forEach(r => { const m = /cartes\/([\w-]+)\.webp/.exec(r.url); if (m) o.push(m[1]); }); return o; }).catch(() => []);
+    const tout = [...new Set([...vu, ...garde])].sort();
+    SECRET.push({ ok: JSON.stringify(tout) === JSON.stringify(attendu.slice().sort()) && !e3.length, t: date.slice(0, 10) + (eco ? " (économie de données)" : "") + " : " + (tout.length ? tout.join(", ") : "aucune") + (e3.length ? " · erreurs " + e3.join(" / ") : "") });
+    await ctx.close();
+  }
+  // 7. onglet gardé, mais jamais périmé : nouvelles données du serveur, minuit, mode discret, hors connexion, Podium quitté aussitôt
+  const PERIME = []; {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block" }), q = await ctx.newPage(), e4 = [];
+    q.on("pageerror", e => e4.push(e.message)); await q.clock.setFixedTime(new Date("2026-11-30T23:58:00")); let DATA = JSON.parse(JSON.stringify(data));
+    await q.route(/fonts\.(googleapis|gstatic)\.com/, r => r.fulfill({ contentType: "text/css", body: "" }));
+    await q.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}"); r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : c.action === "tickets" ? { ok: true, ouvert: false } : DATA) }); });
+    await q.addInitScript(() => { ["versus.tuto1", "versus.bullePortrait", "versus.saison1", "versus.chauffe1", "versus.aideVisite", "versus.deJanvier"].forEach(k => localStorage.setItem(k, "1")); localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.vue", "classement"); });
+    await q.goto(URL + "#classement"); await q.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 20000 }); await q.waitForTimeout(2500);
+    await q.evaluate(() => { document.querySelectorAll(".revel, .regles, .tuto, .bulle-portrait, .ba, .ere-voile").forEach(x => x.remove()); ETAT.podium = "gp"; garder(); window.__R = []; const f = rendreVue; rendreVue = function (v) { window.__R.push(v); return f.apply(this, arguments); }; });
+    const tab = async v => { await q.evaluate(v => { window.__R = []; document.querySelector('.onglet[data-vue="' + v + '"]').click(); }, v); await q.waitForTimeout(600); return q.evaluate(() => window.__R.slice()); };
+    const P = (c, t) => PERIME.push({ ok: c, t });
+    await tab("mois"); await tab("classement"); await tab("mois"); let r = await tab("classement"); P(!r.length, "témoin : retour sans aucun changement → onglet gardé");
+    await tab("mois"); DATA = JSON.parse(JSON.stringify(DATA)); DATA.genere = "2026-11-30T23:59:00"; DATA.personnes[1].rows[2][3][3] = 0.2; await q.evaluate(() => charger(true)); await q.waitForTimeout(1500);
+    r = await tab("classement"); P(r.includes("classement"), "nouvelles données du serveur → redessiné");
+    await tab("trophees"); await tab("mois"); await q.clock.setFixedTime(new Date("2026-12-01T00:00:30"));
+    r = await tab("classement"); P(r.includes("classement"), "minuit passé → Classement redessiné"); r = await tab("trophees"); P(r.includes("trophees"), "minuit passé → Podium redessiné");
+    await tab("mois"); await tab("classement"); await tab("mois"); await q.evaluate(() => { ETAT.discret = "oui"; }); r = await tab("classement"); P(r.includes("classement"), "état changé sans toucher (mode discret) → redessiné");
+    await tab("mois"); await tab("classement"); await tab("mois"); await q.evaluate(() => window.dispatchEvent(new Event("offline"))); await q.waitForTimeout(300);
+    r = await tab("classement"); P(r.includes("classement"), "passage hors connexion → redessiné");
+    await q.evaluate(() => { document.querySelector('.onglet[data-vue="trophees"]').click(); document.querySelector('.onglet[data-vue="classement"]').click(); }); await q.waitForTimeout(1500);
+    const st = await q.evaluate(() => ({ roule: !!(GP_INST && GP_INST.api.enCours() && !(GP_INST.api.cachee && GP_INST.api.cachee())), ba: !!document.querySelector(".ba") }));
+    r = await tab("trophees"); P(!st.roule && !st.ba && r.includes("trophees") && await q.evaluate(() => !!(GP_INST && document.querySelector("#gp-scene .gp-rendu"))), "Podium touché puis quitté aussitôt : rien ne démarre en coulisses, il se redessine avec sa piste au retour");
+    P(!e4.length, "0 erreur JS (onglets gardés) " + JSON.stringify(e4.slice(0, 2)));
+    await ctx.close();
+  }
+  await b.close();
   console.log("Téléphone simulé : processeur ralenti ×" + CPU + ", 390 px, mode léger");
   const v1 = med(P1.map(x => x.visible)), v2 = med(P2.map(x => x.visible));
   ok(v1 < 450 && !P1.some(x => x.noir), "1re visite du Podium : carte de Noël visible en " + f(v1) + " ms (médiane de " + P1.map(x => f(x.visible)).join(", ") + " ; seuil 450) · " + (P1.some(x => x.noir) ? "NOIR VU (" + P1.map(x => x.detail).join(" | ") + ")" : "jamais de noir") + " · toucher traité en " + f(med(P1.map(x => x.sync))) + " ms");
@@ -112,6 +160,8 @@ const med = l => { const s = l.slice().sort((a, b) => a - b); return s.length ? 
   ok(susp && inst2.reveille, "onglet caché : le décor animé de la carte est en pause, il repart au retour");
   ok(demo.bouton && demo.roule, "la course de démo part toujours après les allers-retours");
   ok(sw.ok && sw.piste && sw.cartesJs && sw.carte, "hors connexion : piste.js, cartes.js et la carte cuite de Noël sont gardées " + JSON.stringify(sw));
+  SECRET.forEach(x => ok(x.ok, "secret : cartes téléchargées ou gardées d'avance par un simple joueur le " + x.t));
+  PERIME.forEach(x => ok(x.ok, "jamais périmé : " + x.t));
   ok(!errs.length, "0 erreur JS " + JSON.stringify(errs.slice(0, 3)));
   if (!MESURE) console.log(ko.length ? "\n" + ko.length + " NON" : "\nTout est OUI"); process.exit(MESURE || !ko.length ? 0 : 1);
 })();
