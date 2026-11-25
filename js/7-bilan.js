@@ -680,7 +680,8 @@ function restaurerDefil(vue) {
 }
 (function () {
   const m = document.querySelector("main"); if (!m || !window.MutationObserver) return;
-  new MutationObserver(l => { const vues = new Set(); l.forEach(x => { const v = x.target.closest && x.target.closest("[data-vue]"); if (v) vues.add(v); }); vues.forEach(v => { restaurerDefil(v); if (typeof assurerRappel === "function") assurerRappel(v); }); })
+  new MutationObserver(l => { const vues = new Set(); l.forEach(x => { if (x.target.closest && x.target.closest("svg, .gp-scene")) return;   // v20.53 : les dessins qui bougent (carte, course) ne relancent plus ces lectures de mise en page
+    const v = x.target.closest && x.target.closest("[data-vue]"); if (v) vues.add(v); }); vues.forEach(v => { restaurerDefil(v); if (typeof assurerRappel === "function") assurerRappel(v); }); })
     .observe(m, { childList: true, subtree: true });
 })();
 function toast(t) {   // v16.29 : une croix pour fermer tout de suite (il se ferme toujours tout seul après quelques secondes)
@@ -736,6 +737,38 @@ $("#notifs").addEventListener("click", e => { if (e.target.id === "notifs") $("#
 function moiConnecte() { return !!(stock.get("versus.moi.api") && stock.get("versus.moi.cle")); }
 function prechaufferMoi() { if (moiConnecte()) chargerModuleMoi(() => window.Moi.prechauffer()); }
 let VUE_AFFICHEE = null;
+/* v20.53 (Théo : « petits lags quand je passe d'un onglet à l'autre ») · VUES GARDÉES
+   Un onglet déjà dessiné n'est plus refait quand on y revient si RIEN n'a pu le changer entre-temps : mêmes données (D), même état (ETAT),
+   aucun toucher ni saisie dans l'appli, aucune écriture dans la mémoire du téléphone, aucune réponse du serveur, même jour, moins de 10 minutes.
+   Au moindre doute, l'onglet est redessiné comme avant. Le Podium n'est gardé que sur la page Course (l'Écurie relance son showroom 3D en se redessinant). */
+let GEN_VUES = 0;
+const VUES_FAITES = {};
+const sigVue = () => ({ D, src: SOURCE + "|" + (typeof EN_CHARGEMENT !== "undefined" && EN_CHARGEMENT), gen: GEN_VUES, etat: JSON.stringify(ETAT), t: Math.floor(Date.now() / 6e5), j: new Date().toDateString() });   // src : passer hors connexion (ou revenir) redessine
+const memeSig = (a, b) => !!a && a.D === b.D && a.src === b.src && a.gen === b.gen && a.etat === b.etat && a.t === b.t && a.j === b.j;
+["click", "change", "input", "submit", "keydown"].forEach(t => document.addEventListener(t, e => { if (t === "click" && e.target.closest && e.target.closest(".onglet")) return; GEN_VUES++; }, true));
+{ const s0 = stock.set, d0 = stock.del; stock.set = (k, x) => { if (k !== CLES.vue) GEN_VUES++; return s0.call(stock, k, x); }; stock.del = k => { GEN_VUES++; return d0.call(stock, k); }; }
+if (window.fetch) { const f0 = window.fetch; window.fetch = function () { const r = f0.apply(this, arguments); r.then(() => { GEN_VUES++; }, () => { GEN_VUES++; }); return r; }; }
+// chaque dessin d'un onglet (d'où qu'il vienne : onglet, bouton, réponse du serveur) note ce qu'il a vu
+[["classement", "rendreClassement"], ["mois", "rendreMois"], ["fiche", "rendreFiche"], ["trophees", "rendreTrophees"]].forEach(([v, n]) => { const f0 = window[n]; if (typeof f0 !== "function") return;
+  window[n] = function () { const r = f0.apply(this, arguments); VUES_FAITES[v] = sigVue(); return r; }; });
+function vueGardee(v) {
+  if (v === "moi" || !D) return false;
+  if (v === "trophees" && (typeof ongletPodium !== "function" || ongletPodium() !== "gp" || (typeof TRESOR_APERCU !== "undefined" && TRESOR_APERCU))) return false;
+  const el = document.querySelector('.view[data-vue="' + v + '"]'); return !!(el && el.firstElementChild) && memeSig(VUES_FAITES[v], sigVue());
+}
+/* le circuit du Podium s'endort quand on quitte l'onglet (course mise en pause, décor animé arrêté) et repart au retour, là où il en était */
+let GP_PAUSE_ONGLET = false;
+function endormirGP() {
+  try { if (typeof GP_INST === "undefined" || !GP_INST || GP_PLEIN) return; const a = GP_INST.api;
+    if (a.enCours && a.enCours() && a.suspendu && !a.suspendu()) { basculerPauseGP(true); GP_PAUSE_ONGLET = true; }
+    if (a.pause) a.pause(true); } catch (e) { /* rien à endormir */ }
+}
+function reveillerGP() {
+  try { if (typeof GP_INST === "undefined" || !GP_INST) return; const a = GP_INST.api;
+    // le décor animé repart juste APRÈS la première image (elle s'affiche sans attendre ses animations)
+    if (a.pause && !(a.type === "3d" && typeof BA_OUVERTE !== "undefined" && BA_OUVERTE)) requestAnimationFrame(() => setTimeout(() => { if (VUE_AFFICHEE === "trophees" && GP_INST && GP_INST.api === a) a.pause(false); }, 0));
+    if (GP_PAUSE_ONGLET) { GP_PAUSE_ONGLET = false; basculerPauseGP(false); } } catch (e) { /* rien à réveiller */ }
+}
 function montrerVue(v) {
   if (!VUES.includes(v)) v = "classement";
   if (v === "classement" && VUE_AFFICHEE !== null && VUE_AFFICHEE !== "classement") ANIM_CL = true;   // on (re)vient sur l'onglet : les animations se rejouent
@@ -745,10 +778,16 @@ function montrerVue(v) {
   if (v !== "trophees" && typeof V3D !== "undefined") {   // v20.48 · on quitte le Podium : le showroom 3D s'arrête (il repart au retour, quand l'Écurie se redessine)
     try { if (V3D.inst) { V3D.yaw = V3D.inst.yaw(); V3D.inst.stop(); V3D.inst = null; } if (V3D.gar) { V3D.gar.stop(); V3D.gar = null; } } catch (e) { /* rien à arrêter */ }
   }
+  if (v !== "trophees") endormirGP();   // v20.53
   document.body.classList.toggle("vue-moi", v === "moi");
   document.querySelectorAll(".onglet").forEach(t => t.setAttribute("aria-current", t.dataset.vue === v || (v === "fiche" && t.dataset.vue === "classement") ? "page" : "false"));
   stock.set(CLES.vue, v);
-  if (D || v === "moi") rendreVue(v);
+  if (vueGardee(v)) {   // v20.53 : rien n'a changé, l'onglet s'affiche tel quel (seules les animations d'arrivée du Classement se rejouent)
+    const el = document.querySelector('.view[data-vue="' + v + '"]');
+    if (v === "classement" && ANIM_CL) { ANIM_CL = false; const t = el.querySelector(".tour"); if (t && ANIM) { t.classList.remove("entree"); void t.offsetWidth; t.classList.add("entree"); } }   // le navigateur doit voir la classe partir puis revenir pour rejouer
+    requestAnimationFrame(() => { try { restaurerDefil(el); } catch (e) { } });
+  } else if (D || v === "moi") { if (v === "trophees") GP_DIFFERER = true; try { rendreVue(v); } finally { GP_DIFFERER = false; } }
+  if (v === "trophees") reveillerGP();
   window.scrollTo(0, 0);
 }
 /* Onglets : on remplace l'adresse au lieu d'empiler l'historique (V15.2) ; le bouton retour du téléphone est géré plus bas */

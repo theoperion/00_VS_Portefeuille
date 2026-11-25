@@ -297,7 +297,7 @@ function couleurCasque(nom, e) {
 }
 const CAMS = { tv: "🎥 TV", helico: "🚁 Hélico", bord: "👁️ Embarquée" };
 function camGP() { return "helico"; }   // V16.58 (Théo) : la course se regarde en 2D ou en hélico ; la vue TV et l'embarquée sont retirées
-function piste3D() { return !!(window.Piste && Piste.supporte()); }
+function piste3D() { return !!(window.Piste && (Piste.supporteVite || Piste.supporte)()); }   // v20.53 : sans ouvrir de contexte 3D (le vrai test se fait en montant la 3D, qui retombe sur la 2D au besoin)
 /* v17.6 · NOUVELLES VUES (Théo) : 🗺️ Carte 2D · 📺 Visite (la carte 3D seule, caméra libre, pour chercher le trésor) · 🚁 Hélico (poursuite d'une voiture)
    + gros bouton « ⛶ Plein écran » (vrai plein écran, paysage). D'abord sur le circuit de Noël seulement : on ajoute les autres ici quand ils sont prêts. */
 const VUES_V2 = ["abudhabi"];
@@ -323,6 +323,25 @@ function majVueDOM(vue) {
   const s = suiviGP(); document.querySelectorAll("[data-suivre]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.suivre === s)));
 }
 const PRECHARGE_CARTES = {};   // v17.32
+/** v20.53 (Théo : écran noir en arrivant sur le Podium) · les cartes que CE joueur peut voir aujourd'hui (jamais un univers pas encore révélé) :
+    avant le 1er janvier 2027, la seule carte du tour de chauffe ; ensuite le mois commencé et le précédent. Aperçu admin : rien d'avance (à la demande). */
+function cartesVisiblesGP() {
+  try { if (!D || !window.Piste || !self.CARTES_CUITES || !saisonVisible() || apercuSaison()) return [];
+    const d = new Date(), k = d.getFullYear() * 100 + d.getMonth() + 1, l = k < SAISON.premiere * 100 + 1 ? [CHAUFFE_K] : [k, k % 100 === 1 ? CHAUFFE_K : k - 1];
+    return [...new Set(l.map(m => { const c = (Piste.TRACES[circuitDe(m)] || {}).peint, v = c && self.CARTES_CUITES[c]; return v ? circuitDe(m) + "|img/cartes/" + c + ".webp?v=" + v : null; }).filter(Boolean))].map(x => x.split("|"));
+  } catch (e) { return []; }
+}
+const ECONOMIE_DONNEES = () => { try { return !!(navigator.connection && navigator.connection.saveData); } catch (e) { return false; } };
+/** dès que les données sont là, quand le téléphone ne fait rien : ces cartes sont téléchargées et décodées (le Podium les affiche ensuite instantanément),
+    leur décor animé est préparé, et le hors connexion les garde. Mode « économie de données » du téléphone : rien d'avance (elles se gardent au 1er affichage). */
+function prechargerCartesGP() {
+  try { if (ECONOMIE_DONNEES()) return; const l = cartesVisiblesGP(); if (!l.length) return;
+    l.forEach(([, u]) => { if (PRECHARGE_CARTES[u]) return; const im = new Image(); im.decoding = "async"; im.src = u; try { im.decode().catch(() => { }); } catch (e) { } PRECHARGE_CARTES[u] = im; });
+    const ric = window.requestIdleCallback || (fn => setTimeout(fn, 400));
+    l.forEach(([ci], j) => setTimeout(() => ric(() => { if (Piste.prechauffer) Piste.prechauffer(ci); }, { timeout: 4000 }), 1500 + j * 1500));
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.controller.postMessage({ cartes: l.map(([, u]) => u) });
+  } catch (e) { /* rien à précharger */ }
+}
 function choisirVueGP(v, y) {
   const pi = document.getElementById("gp-piste"), de3d = pi && !pi.classList.contains("en2d") && GP_INST && GP_INST.api.type === "3d";
   ETAT.gp2d = v === "2d" ? "1" : "0"; if (v !== "2d") ETAT.gpVue3 = v; garder();
@@ -1364,7 +1383,23 @@ function bandeAnnonce(y, i, ensuite) {
   BA_OUVERTE = { fermer };
 }
 let GP_RELANCES = 0, GP_DIRECT_VU = "";   // audit B6 : relances automatiques du circuit 3D après une coupure du navigateur
+/* v20.53 (Théo : écran noir puis lag en arrivant sur le Podium) · en passant d'un onglet à l'autre, la page s'affiche D'ABORD avec la carte cuite
+   déjà décodée posée au bon endroit, puis, à l'image suivante, le dessin animé (ou la 3D) est monté ou raccroché par-dessus, à l'identique */
+let GP_DIFFERER = false;
+function fondImmediatGP(v) {
+  try { const pi = v.querySelector("#gp-piste"), sc = v.querySelector("#gp-scene"); if (!pi || !sc || !pi.classList.contains("en2d") || !window.Piste || !Piste.fond2D) return;
+    const f = Piste.fond2D(pi.dataset.circuit, sc.clientWidth, sc.clientHeight); if (!f) return;
+    sc.style.backgroundColor = f.couleur; sc.style.backgroundImage = f.image; sc.style.backgroundSize = f.taille; sc.style.backgroundPosition = f.position; sc.style.backgroundRepeat = "no-repeat"; } catch (e) { /* le fond « cover » reste */ }
+}
 function brancherGP(v, y) {
+  fondImmediatGP(v);
+  if (GP_DIFFERER) { GP_DIFFERER = false; const pi = v.querySelector("#gp-piste");
+    requestAnimationFrame(() => requestAnimationFrame(() => { if (!(pi && pi.isConnected && v.querySelector("#gp-piste") === pi)) return;
+      if (VUE_AFFICHEE !== "trophees") { delete VUES_FAITES.trophees; return; }   // Podium déjà quitté : rien ne démarre en coulisses ; il sera redessiné au retour
+      brancherGP0(v, y); reveillerGP(); })); return; }   // à l'image d'après : la 1re est déjà peinte
+  brancherGP0(v, y);
+}
+function brancherGP0(v, y) {
   const etapes = etapesGP(y), i = GP_ETAPE !== null && GP_ETAPE < etapes.length ? GP_ETAPE : etapeParDefaut(etapes, y), et = etapes[i];
   const pi = v.querySelector("#gp-piste"), scene = v.querySelector("#gp-scene"); if (!pi || !scene) return;
   if (!window.Piste) { scene.innerHTML = '<p class="gp-nopiste">Circuit indisponible : recharge l\'appli.</p>'; return; }
