@@ -5,29 +5,60 @@
    L'appli ne garde que : le moteur (chargement, carte du jour, pastille, révélation, cérémonie ; l'onglet Trophées › Mondes lit etatMiniJeu),
    des « peintres » d'écran par type de jeu (MJ_PEINTRES) et des décors dessinés par univers (MJ_DECORS), sans mots.
    Le ticket d'or d'octobre (js/4-grandprix.js) reste à part : etatMiniJeu("singapour") lit seulement ses gagnants et ses carrés dorés. */
-let MJ = null, MJ_T = 0, MJ_N = 0;
+let MJ = null, MJ_T = 0, MJ_N = 0, MJ_EN_COURS = null, MJ_GESTE_T = 0, MJ_CARTE = null;   // MJ_GESTE_T : heure du dernier geste réussi ; MJ_CARTE : la carte posée (même détachée par un redessin)
 const MJ_DEBUT = new Date(2027, 0, 1);
 const MJ_MOIS_NOMS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
 /** objets d'écurie gagnés par un mini-jeu : « emplacement.id » → mois (aaaamm) ; l'objet reste caché tant que son mois n'a pas commencé */
 const MJ_OBJETS = { "plaque.epice": 202701, "plaque.voliere": 202702, "plaque.cheshire": 202703, "plaque.precieux": 202704, "plaque.eywa": 202705, "plaque.kyber": 202706, "plaque.toquedor": 202707, "plaque.joyce": 202708, "plaque.ithaque": 202709, "plaque.bataillon": 202711 };
 
-function mjOuvert() { return Date.now() >= MJ_DEBUT.getTime() && typeof SOURCE !== "undefined" && SOURCE === "api" && !simulation(); }
+/* vitesse (26/11) : la demande part dès l'ouverture de l'appli (copie du classement à l'écran), en même temps que le classement, sans attendre sa réponse */
+function mjOuvert() { return Date.now() >= MJ_DEBUT.getTime() && typeof SOURCE !== "undefined" && (SOURCE === "api" || SOURCE === "cache") && typeof D !== "undefined" && !!D && !simulation(); }
 function mjMoisNum() { const d = new Date(); return d.getFullYear() * 100 + d.getMonth() + 1; }
-async function chargerMJ(force) {
-  if (!mjOuvert() || (!force && Date.now() - MJ_T < 60000)) return;
-  MJ_T = Date.now();
-  const rep = await posterAdmin({ action: "mj", op: "etat" });
-  if (!rep || !rep.ok || !rep.ouvert) return;
-  MJ = rep; mjChange();
-  poserMJDOM(); majPastilleMJ();
-  if (vueActive() === "trophees" && ongletPodium() === "defis" && typeof rendreTrophees === "function") rendreTrophees();
-  setTimeout(annoncesMJ, 1200);
+/* vitesse (26/11) : le dernier état reçu AUJOURD'HUI est gardé sur ce téléphone (le sien seulement, jamais en simulation) et s'affiche tout de suite ;
+   la réponse du serveur arrive par-dessus. Un état d'un autre jour ou d'un autre pilote n'est jamais montré. */
+const MJ_MEMOIRE = "versus.mjEtat";
+function mjAujJ() { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
+function lireMemoireMJ() {
+  try { const c = JSON.parse(stock.get(MJ_MEMOIRE) || "null"), moi = moiVrai();
+    return c && c.rep && c.rep.ouvert && moi && c.nom === moi && c.rep.aujourdhui === mjAujJ() ? c.rep : null; } catch (e) { return null; }
 }
-/* au démarrage (dès que les données sont là), et au retour dans l'appli (un autre jour, peut-être) */
-(function demarrerMJ() {
-  let n = 0; const t = setInterval(() => { if (++n > 120) clearInterval(t); if (typeof D !== "undefined" && D && D.personnes) { clearInterval(t); chargerMJ(); } }, 1000);
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && MJ && Date.now() - MJ_T > 10 * 60000) chargerMJ(true); });
-})();
+function garderMemoireMJ() { try { if (MJ && !simulation() && moiVrai()) stock.set(MJ_MEMOIRE, JSON.stringify({ nom: moiVrai(), rep: MJ })); } catch (e) { /* stockage plein ou indisponible */ } }
+async function chargerMJ(force) {
+  if (!mjOuvert()) return;
+  if (!MJ) { const m = lireMemoireMJ(); if (m) appliquerMJ(m, false); }
+  if (MJ_EN_COURS) return MJ_EN_COURS;   // une seule demande à la fois
+  if (!force && Date.now() - MJ_T < 60000) return;
+  MJ_T = Date.now();
+  MJ_EN_COURS = (async () => {
+    const parti = Date.now(), rep = await posterAdmin({ action: "mj", op: "etat" });
+    if (!rep || !rep.ok) { MJ_T = Date.now() - 50000; return; }   // pas de réponse : on réessaie dans 10 s au plus tôt
+    if (!rep.ouvert) return;
+    if (parti <= MJ_GESTE_T) return;   // relecture jeu-code-donnees : réponse partie AVANT le dernier geste réussi, elle ne sait pas qu'il a eu lieu
+    appliquerMJ(rep, true);
+  })();
+  try { await MJ_EN_COURS; } finally { MJ_EN_COURS = null; }
+}
+/** pose un état (frais = venu du serveur) ; ne redessine que ce qui a changé, et jamais une carte en train d'être jouée */
+function mjOccupee(el) { return !!(el && (el.dataset.envoi === "1" || el.querySelector('[aria-pressed="true"]'))); }   // un geste part, ou un formulaire est à moitié rempli
+function appliquerMJ(rep, frais) {
+  const ancien = MJ, a = ancien && ancien.courant, n = rep.courant, el = document.querySelector(".mj-carte:not(.mj-ap)");
+  // jamais de retour en arrière le même jour : un geste déjà fait ne redevient pas « à jouer » (réponse en retard, mémoire d'un autre onglet…)
+  if (a && n && a.mois === n.mois && a.etat && n.etat && a.etat.jour === n.etat.jour && a.etat.fait && !n.etat.fait) rep.courant = a;
+  const change = !ancien || JSON.stringify(ancien) !== JSON.stringify(rep);
+  const occupe = mjOccupee(el);
+  const nn = rep.courant, memeJour = !!(a && nn && a.mois === nn.mois && a.etat && nn.etat && a.etat.jour === nn.etat.jour && !!a.etat.fait === !!nn.etat.fait);   // déjà joué ailleurs, ou un autre jour : on redessine toujours
+  const garde = memeJour && (occupe || JSON.stringify(a) === JSON.stringify(nn));
+  if (garde) rep.courant = a;   // la carte à l'écran garde son état (et ses boutons branchés)
+  MJ = rep;
+  if (frais) garderMemoireMJ();
+  if (change) {
+    mjChange();
+    if (!(garde && el)) poserMJDOM();
+    majPastilleMJ();
+    if (vueActive() === "trophees" && ongletPodium() === "defis" && typeof rendreTrophees === "function") rendreTrophees();
+  }
+  if (frais) setTimeout(annoncesMJ, 1200);
+}
 
 /* ---------- la pastille : le geste du jour n'est pas fait ---------- */
 function mjAFaire() { return !!(MJ && MJ.courant && MJ.courant.etat && !MJ.courant.etat.fait); }
@@ -59,18 +90,23 @@ function allerCarteMJ() {
 
 /* ---------- la carte « mini-jeu du mois » (page Course, sous la piste du circuit du mois) ---------- */
 function poserMJDOM() {
-  document.querySelectorAll(".mj-carte:not(.mj-ap)").forEach(e => e.remove());
-  const pi = document.querySelector("#gp-piste"), C = MJ && MJ.courant;
-  if (!pi || !C || pi.dataset.circuit !== C.univers || mjMoisNum() !== C.mois) return;
+  const pi = document.querySelector("#gp-piste"), C = MJ && MJ.courant, vieux = MJ_CARTE;
+  // relecture jeu-code-donnees : la page Course se redessine (classement arrivé…) pendant qu'on coche ou qu'un geste part : la même carte est
+  // simplement replacée, jamais refaite (sinon la saisie à moitié faite serait perdue)
+  const garder = !!(vieux && C && mjOccupee(vieux) && vieux.__mj && vieux.__mj.C === C && vieux.__mj.mois === C.mois && vieux.__mj.jour === (C.etat || {}).jour && vieux.__mj.fait === !!(C.etat || {}).fait);
+  document.querySelectorAll(".mj-carte:not(.mj-ap)").forEach(e => { if (!(garder && e === vieux)) e.remove(); });
+  if (!pi || !C || pi.dataset.circuit !== C.univers || mjMoisNum() !== C.mois) { if (garder) vieux.remove(); return; }
   const P = MJ_PEINTRES[C.type]; if (!P) return;
   // sous la barre d'outils de la piste (Carte / Visite / Hélico / son / ⋯ / Plein écran), jamais entre la piste et ses boutons (relecture jeu-joueur, 25/11)
   const ancre = document.querySelector(".gp-vues2") || document.querySelector(".gp-ancre") || pi;
+  if (garder) { if (ancre.nextElementSibling !== vieux) ancre.after(vieux); return; }
   ancre.insertAdjacentHTML("afterend", P.carte(C, C.etat, {}));
   brancherCarteMJ(ancre.nextElementSibling, C, null);
 }
 /** branche les boutons d'une carte ; ap = aperçu admin (null pour le vrai jeu) */
 function brancherCarteMJ(el, C, ap) {
   if (!el) return;
+  if (!ap) { el.__mj = { C, mois: C.mois, jour: (C.etat || {}).jour, fait: !!(C.etat || {}).fait }; MJ_CARTE = el; }
   const P = MJ_PEINTRES[C.type]; if (P && P.brancher) P.brancher(el, C, ap);
   const r = el.querySelector("[data-mj-regle]"); if (r) r.addEventListener("click", () => revelationMJ(C, true));
 }
@@ -87,9 +123,10 @@ async function jouerMJ(el, C, g, ap, bouton) {
     if (rep && rep.erreur === "deja" && !ap) chargerMJ(true);
     return rep;
   }
+  if (!ap) MJ_GESTE_T = Date.now();
   C.etat = rep.etat; if (!ap) mjChange(); repeindreCarteMJ(el, C, ap, rep.message);
   if (window.SONS) try { SONS.klaxon("confettis"); } catch (e) { /* sans son */ }
-  if (!ap) { majPastilleMJ(); poserCacheMJ(); }
+  if (!ap) { majPastilleMJ(); poserCacheMJ(); garderMemoireMJ(); }
   return rep;
 }
 function repeindreCarteMJ(el, C, ap, message) {
@@ -164,7 +201,7 @@ function poserCacheMJ() {
     const rep = await posterAdmin({ action: "mj", op: "geste", mois: C.mois, geste: { attraper: 1, onglet: ch.onglet } });
     setTimeout(() => s.remove(), reduit ? 0 : 900);
     if (!rep || !rep.ok) { toast(rep && rep.message ? rep.message : "Le serveur ne répond pas : réessaie."); if (rep && rep.erreur !== "reseau") chargerMJ(true); return; }
-    C.etat = rep.etat; mjChange(); toast(rep.message); majPastilleMJ(); poserMJDOM();
+    MJ_GESTE_T = Date.now(); C.etat = rep.etat; mjChange(); garderMemoireMJ(); toast(rep.message); majPastilleMJ(); poserMJDOM();
     if (window.SONS) try { SONS.klaxon("confettis"); } catch (e) { /* sans son */ } });
 }
 // toutes les 1,2 s : l'objet caché de la chasse, et la pastille (que d'autres parties de l'appli peuvent redessiner)
@@ -389,35 +426,70 @@ function regleMJ() {
 }
 
 /* ---------- 🎲 aperçu admin (double sécurité apercuAutorise) : le mini-jeu joué sur des données INVENTÉES par le serveur ----------
-   Le serveur rejoue la vraie logique avec une graine d'aperçu (jamais la vraie) et des pilotes inventés ; rien n'est écrit. */
+   Le serveur rejoue la vraie logique avec une graine d'aperçu (jamais la vraie) et des pilotes inventés ; rien n'est écrit.
+   Vitesse (26/11) : une même demande (mois, jour, faux tirage, mes gestes) donne toujours la même réponse : elle est gardée pendant la visite,
+   et la suite probable (jour suivant, les autres mois) est demandée d'avance, deux à la fois au plus. */
+const MJ_AP = { sel: Math.floor(Math.random() * 1e9), memo: new Map(), file: [], actif: 0 };
+function demanderApercuMJ(q) {
+  const corps = { action: "mj", op: "apercu", mois: q.mois, jour: q.jour, sel: MJ_AP.sel, gestes: (q.gestes || []).slice() }, k = JSON.stringify(corps);
+  if (!MJ_AP.memo.has(k)) MJ_AP.memo.set(k, posterAdmin(corps).then(r => { if (!r || !r.ok) MJ_AP.memo.delete(k); return r; }));
+  return MJ_AP.memo.get(k);
+}
+/** demandes d'avance, deux au plus en même temps ; les plus urgentes passent devant */
+function prechargerApercuMJ(liste, devant) {
+  if (!apercuAutorise()) return;
+  const cles = liste.map(q => JSON.stringify(q)), reste = MJ_AP.file.filter(x => !cles.includes(JSON.stringify(x)));
+  MJ_AP.file = devant ? liste.concat(reste) : reste.concat(liste);
+  const suivant = () => { const q = MJ_AP.file.shift(); if (!q) { MJ_AP.actif--; return; } demanderApercuMJ(q).then(suivant, suivant); };
+  while (MJ_AP.actif < 2 && MJ_AP.file.length) { MJ_AP.actif++; suivant(); }   // deux demandes d'avance au plus en même temps
+}
+/** appelée quand la barre admin s'affiche : l'aperçu de janvier est prêt avant même d'être ouvert */
+function prechargerApercuMJAdmin() { if (MJ_AP.pre || !apercuAutorise()) return; MJ_AP.pre = 1; setTimeout(() => prechargerApercuMJ([{ mois: 202701, jour: 1 }]), 2500); }
 async function apercuMJ(mois) {
   if (!apercuAutorise()) return;
   mois = mois || 202701;
-  const A = { mois, jour: 1, sel: Math.floor(Math.random() * 1e9), gestes: [] };
+  const A = { mois, jour: 1, gestes: [] };
+  let tour = 0;
   const o = document.createElement("div"); o.className = "regles mj-apercu"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Aperçu des mini-jeux");
   document.body.appendChild(o);
-  const demander = extra => posterAdmin(Object.assign({ action: "mj", op: "apercu", mois: A.mois, jour: A.jour, sel: A.sel, gestes: A.gestes }, extra || {}));
+  const demander = extra => extra ? posterAdmin(Object.assign({ action: "mj", op: "apercu", mois: A.mois, jour: A.jour, sel: MJ_AP.sel, gestes: A.gestes }, extra)) : demanderApercuMJ(A);
+  const tete = attente => '<div class="rg-h"><b>🎲 Aperçu · mini-jeux' + (attente ? ' <small class="mj-ap-attente" aria-live="polite">⏳ chargement…</small>' : "") + '</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div>';
   const rendre = async () => {
-    o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>🎲 Aperçu · mini-jeux</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div><p class="info">Chargement…</p></div>';
-    o.querySelector(".rg-x").addEventListener("click", () => o.remove());
+    const t = ++tour, deja = o.querySelector(".mj-ap-carte");
+    // le contenu déjà là reste affiché pendant le chargement (seul un petit « chargement… » s'ajoute) : plus d'écran vide à chaque jour
+    if (deja) { const h = o.querySelector(".rg-h"); if (h && !h.querySelector(".mj-ap-attente")) h.querySelector("b").insertAdjacentHTML("beforeend", ' <small class="mj-ap-attente" aria-live="polite">⏳ chargement…</small>');
+      o.querySelectorAll(".mj-ap-carte button, .mj-ap-b button").forEach(b => { b.disabled = true; }); }   // l'ancienne carte ne se joue plus pendant ce temps
+    else { o.innerHTML = '<div class="rg-c">' + tete(true) + '<p class="info">Chargement…</p></div>'; o.querySelector(".rg-x").addEventListener("click", () => o.remove()); }
     const rep = await demander();
+    if (t !== tour || !o.isConnected) return;   // un autre jour ou un autre mois a été demandé entre-temps
     const mois12 = '<div class="mj-ap-m">' + MJ_MOIS_NOMS.map((n, i) => '<button type="button" data-mj-m="' + (202701 + i) + '" aria-pressed="' + (A.mois === 202701 + i) + '">' + n + "</button>").join("") + "</div>";
     const corps = !rep || !rep.ok ? '<p class="info">' + esc(rep && rep.message ? rep.message : "Le serveur ne répond pas.") + "</p>"
       : '<p class="info">Exemple inventé : le serveur rejoue la vraie règle avec un faux tirage et 3 pilotes inventés. Rien n\'est enregistré, le vrai tirage reste secret, même pour toi.</p>' +
         '<div class="mj-ap-carte"></div><div class="btn-row mj-ap-b"><button class="btn ghost" type="button" data-mj-rev>✨ La révélation</button>' + (A.jour < rep.fin ? '<button class="btn ghost" type="button" data-mj-j>☀️ Jour suivant (' + (A.jour + 1) + ")</button>" : "") + '<button class="btn ghost" type="button" data-mj-fin>🏁 La cérémonie de fin</button></div>';
-    o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>🎲 Aperçu · mini-jeux</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div>' + mois12 + corps + "</div>";
+    o.innerHTML = '<div class="rg-c">' + tete(false) + mois12 + corps + "</div>";
     o.querySelector(".rg-x").addEventListener("click", () => o.remove());
     o.querySelectorAll("[data-mj-m]").forEach(b => b.addEventListener("click", () => { A.mois = +b.dataset.mjM; A.jour = 1; A.gestes = []; rendre(); }));
     if (!rep || !rep.ok) return;
     const C = { mois: rep.mois, univers: rep.univers, type: rep.type, contenu: rep.contenu, recompense: rep.recompense, etat: rep.etat };
     const P = MJ_PEINTRES[C.type], zone = o.querySelector(".mj-ap-carte");
     if (P) { zone.innerHTML = P.carte(C, C.etat, { ap: true }); }
-    const ap = { geste: async g => { const r = await demander({ geste: g }); if (r && r.ok) A.gestes.push({ jour: A.jour, g: r.g || g }); return r; } };
+    const lendemain = () => A.jour < rep.fin ? [{ mois: A.mois, jour: A.jour + 1, gestes: A.gestes.slice() }] : [];
+    const ap = { geste: async g => { const r = await demander({ geste: g }); if (r && r.ok) { A.gestes.push({ jour: A.jour, g: r.g || g }); prechargerApercuMJ(lendemain(), true); } return r; } };
     brancherCarteMJ(zone.firstElementChild, C, ap);
     o.querySelector("[data-mj-rev]").addEventListener("click", () => revelationMJ(C, false, true));
     const j = o.querySelector("[data-mj-j]"); if (j) j.addEventListener("click", () => { A.jour++; rendre(); });
-    o.querySelector("[data-mj-fin]").addEventListener("click", async () => { const r = await posterAdmin({ action: "mj", op: "apercu", mois: A.mois, jour: 99, sel: A.sel, gestes: A.gestes });
+    o.querySelector("[data-mj-fin]").addEventListener("click", async () => { const r = await demanderApercuMJ({ mois: A.mois, jour: 99, gestes: A.gestes.slice() });
       if (r && r.ok && r.resultat) ceremonieMJ(Object.assign({ mois: r.mois, univers: r.univers, contenu: r.contenu, recompense: r.recompense }, r.resultat), true); else toast(r && r.message ? r.message : "Le serveur ne répond pas."); });
+    // d'avance : le jour suivant d'abord, puis le 1er jour des autres mois construits (une demande à la fois)
+    prechargerApercuMJ(lendemain(), true);
+    prechargerApercuMJ(MJ_MOIS_NOMS.map((n, i) => 202701 + i).filter(m => m !== 202710 && m !== A.mois).map(m => ({ mois: m, jour: 1, gestes: [] })), false);
   };
   rendre();
 }
+
+/* au démarrage (en fin de fichier : les peintres et les décors doivent déjà exister) : tout de suite si une copie du classement est là, sinon dès que le classement arrive ; et au retour dans l'appli (un autre jour, peut-être) */
+(function demarrerMJ() {
+  const go = () => { if (typeof D !== "undefined" && D && D.personnes && mjOuvert()) { chargerMJ(); return true; } return false; };
+  if (!go()) { let n = 0; const t = setInterval(() => { if (go() || ++n > 400) clearInterval(t); }, 300); }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && MJ && Date.now() - MJ_T > 10 * 60000) chargerMJ(true); });
+})();

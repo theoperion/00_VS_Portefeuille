@@ -65,4 +65,4 @@ const allerVitrine = p => p.evaluate(async () => { document.querySelectorAll(".r
 const deborde = sel => `[...document.querySelectorAll(${JSON.stringify(sel)})].filter(x => { const r = x.getBoundingClientRect(); return r.width && (r.right > innerWidth + 1 || r.left < -1) && !x.closest(".cbo-rayons") && !x.classList.contains("cbo-rayons"); }).map(x => x.className.baseVal !== undefined ? x.tagName : x.className).slice(0, 5)`;
 function compteur() { const ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); }; return { ko, ok }; }
 function fin(ko) { console.log(ko.length ? "\n" + ko.length + " NON" : "\nTout est OUI."); process.exit(ko.length ? 1 : 0); }
-module.exports = { chromium, DOSSIER, NOMS, CONTENU, REC, ETAT, MJ_ETAT, FINI_JANV, FINI, MOIS_T, EMP, page, allerCourse, allerVitrine, deborde, compteur, fin };
+module.exports = { chromium, DOSSIER, donnees, NOMS, CONTENU, REC, ETAT, MJ_ETAT, FINI_JANV, FINI, MOIS_T, EMP, page, allerCourse, allerVitrine, deborde, compteur, fin };
