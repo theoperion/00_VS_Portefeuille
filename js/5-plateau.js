@@ -440,9 +440,151 @@ const SKINS_TETE = {
   // décembre 2027 · L'Odyssée : casque grec de bronze à crête rouge
   odyssee: () => ({ cache: true, dessus: '<path d="M10.8 18C10.4 9.2 14.6 5 20 5S29.6 9.2 29.2 18L27.4 23.4C26.8 19 26.6 15.6 25.6 13.6C23.6 12.6 16.4 12.6 14.4 13.6C13.4 15.6 13.2 19 12.6 23.4Z" fill="#B98A3E"/><path d="M14.4 13.6C16.4 12.6 23.6 12.6 25.6 13.6" stroke="#7A5A22" stroke-width=".7" fill="none"/><path d="M19.2 13.2H20.8V19.6H19.2Z" fill="#B98A3E"/><path d="M10.6 9.4C11.6 1.6 28.4 1.6 29.4 9.4 27 5.8 13 5.8 10.6 9.4Z" fill="#D2402F"/><path d="M12.6 6.2C15.6 3.6 24.4 3.6 27.4 6.2M14.6 4.6V7M17.4 3.8V6.2M20 3.6V6M22.6 3.8V6.2M25.4 4.6V7" stroke="#8E2A20" stroke-width=".45" fill="none"/><path d="M13 9.6C16 8.4 24 8.4 27 9.6" stroke="#E4C06A" stroke-width=".8" fill="none"/>' })
 };
+/** v20.59 (Théo, 25/11) · ACCESSOIRE DU MOIS : la tête dessinée de chaque pilote porte un petit accessoire de l'univers du circuit du mois en cours
+ *  (classement, course 2D/3D, écurie…). Il suit la tête, ne cache jamais le visage et reste lisible dans une pastille de 24 px.
+ *  Secret : chacun n'apparaît qu'à partir du 1er de son mois ; décembre 2026 (chauffe) = le bonnet de Noël ; avant, rien.
+ *  Un costume de carte (SKINS_TETE : carte 2D du circuit, accessoire mérité du dernier vainqueur) passe devant.
+ *  Chaque entrée (c = couleur du pilote, ch = cheveux, u = identifiant unique) renvoie { fond? (derrière le corps), cache? (masque la frange), dessus }. */
+const MOIS_ACCESSOIRE = ["dunes", "chateau", "terrier", "anneau", "pandora", "etoiles", "ratatouille", "envers", "odyssee", "chocolat", "titans", "multivers"];   // = Piste.TRACES[CAL_GP[mois]].peint (contrôlé par tavatars.js)
+const ACCESSOIRES_TETE = {
+  noel: () => SKINS_TETE.noel(),
+  // janvier · Dune : chèche couleur sable (pan qui tombe sur l'épaule, tour de cou) et lunettes de sable relevées, verres bleu épice
+  dunes: () => ({ cache: true, fond: '<path d="M11 12.4C8.4 16.4 8 22.6 9.4 29.4C10.4 32.4 13.4 33 14.4 31C12.6 25.8 12.4 19.4 13.6 13.6Z" fill="#E6D0A2" stroke="#B48A52" stroke-width=".45"/><path d="M10 18.2C9.7 22 10 25.8 11.2 29.6" stroke="#B5652E" stroke-width=".9" fill="none"/><path d="M11.6 15.4C11.2 19.6 11.5 24.6 12.6 30.4" stroke="#C6A46C" stroke-width=".5" fill="none"/>',
+    dessus: '<path d="M10.6 15.6C9.8 7.6 14.2 3 20 3S30.2 7.6 29.4 15.6C28.4 12.8 27 11.6 25.2 11.3C21.8 12 18.2 12 14.8 11.3C13 11.6 11.6 12.8 10.6 15.6Z" fill="#EEDCB2" stroke="#B48A52" stroke-width=".45"/>' +
+      '<path d="M11.6 9.6C15.2 5.8 24.4 4.8 28.6 7.8M13.4 6C17 3.6 23.4 3.4 26.4 5.4" stroke="#C49A5E" stroke-width=".7" fill="none" stroke-linecap="round"/>' +
+      '<path d="M10.8 13.6C14.4 10.2 25.6 10.2 29.2 13.6L29.3 14.9C25.6 11.8 14.4 11.8 10.7 14.9Z" fill="#B5652E"/>' +
+      '<path d="M14.4 26.4C17 28.4 23 28.4 25.6 26.4L26.8 29.4C23.6 31.8 16.4 31.8 13.2 29.4Z" fill="#E6D0A2" stroke="#B48A52" stroke-width=".4"/><path d="M13.9 27.9C17 30.1 23 30.1 26.1 27.9" stroke="#B5652E" stroke-width=".8" fill="none"/>' +
+      '<path d="M10.6 10.2C14 8.2 26 8.2 29.4 10.2" stroke="#4E3A28" stroke-width="1.3" fill="none"/>' +
+      '<circle cx="16.3" cy="8.8" r="2.6" fill="#2F9BFF" stroke="#8A6A3A" stroke-width="1"/><circle cx="23.7" cy="8.8" r="2.6" fill="#2F9BFF" stroke="#8A6A3A" stroke-width="1"/>' +
+      '<path d="M18.9 8.8H21.1" stroke="#8A6A3A" stroke-width="1"/><circle cx="15.5" cy="8" r=".8" fill="#fff" opacity=".75"/><circle cx="22.9" cy="8" r=".8" fill="#fff" opacity=".75"/>' }),
+  // février · Château : écharpe de maison rayée (bordeaux et or), un pan qui tombe sur la poitrine
+  chateau: () => ({ dessus: '<path d="M21.6 29.6L27.4 29L28.8 40.4L22.6 41Z" fill="#7A1F2B" stroke="#4A0F18" stroke-width=".4"/>' +
+      [31.6, 34.6, 37.6].map(y => '<path d="M' + (21.8 + (y - 29.6) * .1).toFixed(2) + " " + y + "L" + (27.6 + (y - 29.6) * .12).toFixed(2) + " " + (y - .4) + "L" + (27.8 + (y + 1.4 - 29.6) * .12).toFixed(2) + " " + (y + 1) + "L" + (21.9 + (y + 1.4 - 29.6) * .1).toFixed(2) + " " + (y + 1.4) + 'Z" fill="#E2B33C"/>').join("") +
+      '<path d="M12.4 24.6C15.8 27.6 24.2 27.6 27.6 24.6L29.2 30C24.8 34 15.2 34 10.8 30Z" fill="#7A1F2B" stroke="#4A0F18" stroke-width=".4"/>' +
+      '<path d="M11.8 26.6C15.6 30.2 24.4 30.2 28.2 26.6M11.2 28.6C15.4 32.4 24.6 32.4 28.8 28.6" stroke="#E2B33C" stroke-width="1.2" fill="none"/>' +
+      '<path d="M20.8 29.6C22 28.4 26 28.2 27.4 29.6 26.8 32.4 22 32.6 20.8 29.6Z" fill="#8E2533" stroke="#4A0F18" stroke-width=".35"/>' }),
+  // mars · Merveilles : haut-de-forme du Chapelier, penché, ruban rouge et sa carte « 10/6 »
+  terrier: () => ({ dessus: '<g transform="rotate(-9 20 8)"><path d="M14 8.2L13 .6C16.6 -.2 23.4 -.2 27 .6L26 8.2Z" fill="#46684F"/><path d="M14.8 1.2L15.5 7.6" stroke="#fff" stroke-width=".6" opacity=".22"/>' +
+      '<path d="M13.6 5H26.4L26.2 7.4H13.8Z" fill="#C8455C"/><ellipse cx="20" cy="8.5" rx="10.8" ry="2" fill="#33503D"/>' +
+      '<rect x="22.6" y="1.4" width="3.6" height="4.4" rx=".4" fill="#F7F1E0" stroke="#B9A98A" stroke-width=".25" transform="rotate(12 24.4 3.6)"/><text x="24.4" y="4.2" font-size="1.7" font-family="Georgia,serif" text-anchor="middle" fill="#7A2E2E" transform="rotate(12 24.4 3.6)">10/6</text></g>' }),
+  // avril · Anneau : cape elfique verte, broche feuille, fin diadème d'argent
+  anneau: () => ({ fond: '<path d="M4 41C4.6 33.6 7.4 29.8 11.6 28.8H28.4C32.6 29.8 35.4 33.6 36 41Z" fill="#3A5636"/>',
+    dessus: '<path d="M4.8 41C5.8 33.6 9.4 29.8 14.6 29L16 31C12.8 32.6 10.6 36 10 41ZM35.2 41C34.2 33.6 30.6 29.8 25.4 29L24 31C27.2 32.6 29.4 36 30 41Z" fill="#4A6B43"/>' +
+      '<path d="M17.6 31.6C18.2 29.2 21.6 28.6 22.8 29.6C22.4 32 19.4 33 17.6 31.6Z" fill="#9BD07A" stroke="#E6EAEC" stroke-width=".55"/><path d="M18.2 31.4L22.2 29.8" stroke="#5E8F44" stroke-width=".35"/>' +
+      '<path d="M11.4 12.6C14.6 10.2 25.4 10.2 28.6 12.6" stroke="#5E666D" stroke-width="1.9" fill="none"/><path d="M11.4 12.6C14.6 10.2 25.4 10.2 28.6 12.6" stroke="#EEF1F3" stroke-width="1.1" fill="none"/>' +
+      '<path d="M20 6.6C23.2 8.4 23.4 12.2 20 14.6C16.6 12.2 16.8 8.4 20 6.6Z" fill="#8FCB6A" stroke="#F2F4F5" stroke-width=".7"/><path d="M20 7.6V13.8M20 10.2L21.6 9.2M20 11.8L18.4 10.8" stroke="#4E7F36" stroke-width=".45" fill="none"/>' }),
+  // mai · Pandora : natte perlée (plume au bout) et points bleus lumineux sur les pommettes
+  pandora: (c, ch) => ({ dessus: [12.6, 15.2, 17.8, 20.4, 23, 25.6, 28.2].map((y, i) => '<ellipse cx="' + (29.2 + i * .34).toFixed(2) + '" cy="' + y + '" rx="1.9" ry="1.85" fill="' + ch + '" stroke="#0B3D4A" stroke-width=".55" transform="rotate(' + (i % 2 ? 28 : -28) + " " + (29.2 + i * .34).toFixed(2) + " " + y + ')"/>').join("") +
+      '<path d="M29.4 12.6C29.8 18 30.6 24 31.4 28.6" stroke="#3FD8F0" stroke-width=".45" fill="none" opacity=".9"/>' + [[29.8, 16.6], [30.5, 22.4], [31.6, 29.8]].map(([x, y]) => '<circle cx="' + x + '" cy="' + y + '" r="1.35" fill="#3FD8F0" stroke="#0B3D4A" stroke-width=".45"/>').join("") +
+      '<path d="M31.6 30.6C32.8 32.6 32.6 35 31.2 36.4C30.4 34.6 30.4 32.4 31.6 30.6Z" fill="#E8643A"/>' +
+      [[13, 14.4, .55], [12.9, 15.9, .65], [13.1, 19.6, .65], [13.7, 21, .5], [27, 14.4, .55], [27.1, 15.9, .65], [26.9, 19.6, .65], [26.3, 21, .5]].map(([x, y, r]) => '<circle cx="' + x + '" cy="' + y + '" r="' + (r * 2.2).toFixed(2) + '" fill="#6CE6FF" opacity=".28"/><circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="#7FF0FF"/>').join("") +
+      '<path d="M19.1 15.2L20 16 20.9 15.2" stroke="#7FF0FF" stroke-width=".6" fill="none" stroke-linecap="round"/>' }),
+  // juin · Étoiles : casque blanc de pilote de chasseur (visière relevée, bandes à sa couleur) et col de combinaison orange
+  etoiles: c => ({ cache: true, dessus: '<path d="M10.4 19.6C9.6 9.4 14 4 20 4S30.4 9.4 29.6 19.6L27.8 19.8C27.8 13.6 25 10.8 20 10.8S12.2 13.6 12.2 19.8Z" fill="#F1F2F0" stroke="#B9BEC3" stroke-width=".5"/>' +
+      '<path d="M12.6 9C15 6.4 25 6.4 27.4 9L27 10.4C24.6 8.4 15.4 8.4 13 10.4Z" fill="' + c + '"/><path d="M19.1 4.1H20.9V8H19.1Z" fill="' + c + '"/>' +
+      '<path d="M12.6 10.6C15.6 9.2 24.4 9.2 27.4 10.6L27 12.6C24.2 11.6 15.8 11.6 13 12.6Z" fill="#E9A23B" stroke="#9A6418" stroke-width=".4"/><path d="M14.4 10.8C16 10.4 17.6 10.3 19 10.3" stroke="#fff" stroke-width=".5" opacity=".7"/>' +
+      '<circle cx="11.2" cy="17.4" r="2" fill="#C9CED3" stroke="#8E959C" stroke-width=".4"/><circle cx="28.8" cy="17.4" r="2" fill="#C9CED3" stroke="#8E959C" stroke-width=".4"/><circle cx="28.8" cy="17.4" r=".7" fill="' + c + '"/><circle cx="11.2" cy="17.4" r=".7" fill="' + c + '"/>' +
+      '<path d="M11.8 19.4C12.8 23.4 15.6 26 18 26.8M28.2 19.4C27.2 23.4 24.4 26 22 26.8" stroke="#6B7177" stroke-width=".55" fill="none"/>' +
+      '<path d="M15.2 28.4C17.2 30.6 22.8 30.6 24.8 28.4L25.6 31C22.8 33.2 17.2 33.2 14.4 31Z" fill="#E2762E"/><path d="M20 30.6V33" stroke="#B4561B" stroke-width=".5"/>' }),
+  // juillet · Petit Chef : la toque plissée… et un petit rat gris qui pointe le museau
+  ratatouille: () => ({ dessus: '<path d="M12.8 11.2V7.2C9.8 6.6 9.6 2.6 12.6 2C13.4 -.6 17 -.8 18.6 .8C20 -1 24 -.8 25 1.2C28.6 .6 30.4 4.8 27.2 7.2V11.2Z" fill="#FBFBF7" stroke="#BDBDB5" stroke-width=".6"/>' +
+      '<path d="M12.8 8.6H27.2V11.4H12.8Z" fill="#ECECE5" stroke="#BDBDB5" stroke-width=".4"/><path d="M16.2 3.4C16.6 5.4 16.8 7 16.6 8.6M20 2.4C20.2 4.8 20.2 6.8 20 8.6M23.8 3.4C23.4 5.4 23.2 7 23.4 8.6" stroke="#D4D4CC" stroke-width=".6" fill="none"/>' +
+      '<path d="M26.8 6.6C29.6 6.6 31.2 8 31.4 10.2" stroke="#C99A9A" stroke-width=".55" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="25.4" cy="2.2" r="1.25" fill="#9A9AA3"/><circle cx="25.4" cy="2.2" r=".65" fill="#F2B8C0"/><circle cx="28.4" cy="2.6" r="1.25" fill="#9A9AA3"/><circle cx="28.4" cy="2.6" r=".65" fill="#F2B8C0"/>' +
+      '<ellipse cx="27" cy="4.4" rx="2.3" ry="1.8" fill="#A9A9B1"/><path d="M27 6.2C27.4 6.4 28 6.4 28.4 6" stroke="#6E6E78" stroke-width=".3" fill="none"/><circle cx="27.1" cy="5.6" r=".45" fill="#E88A9A"/>' +
+      '<circle cx="26.2" cy="4.2" r=".35" fill="#1d1d1f"/><circle cx="27.9" cy="4.2" r=".35" fill="#1d1d1f"/>' }),
+  // août · Monde à l'envers : bandeau éponge des années 80 et talkie-walkie à la poitrine
+  envers: () => ({ dessus: '<path d="M10.8 11.4C14.4 8.2 25.6 8.2 29.2 11.4L29.2 14.6C25.6 11.6 14.4 11.6 10.8 14.6Z" fill="#F7F4EC" stroke="#3A2A24" stroke-width=".5"/>' +
+      '<path d="M10.9 12.4C14.5 9.3 25.5 9.3 29.1 12.4" stroke="#D8343A" stroke-width="1.1" fill="none"/><path d="M10.9 13.7C14.5 10.6 25.5 10.6 29.1 13.7" stroke="#2E5BB8" stroke-width=".95" fill="none"/>' +
+      '<path d="M29 30.4L30.4 24.6" stroke="#1B1C20" stroke-width="1.1" stroke-linecap="round"/><circle cx="30.4" cy="24.4" r=".8" fill="#1B1C20"/>' +
+      '<rect x="24.8" y="30" width="5.6" height="8.8" rx=".9" fill="#2A2C31" stroke="#0A0A0C" stroke-width=".4"/><path d="M25.8 34H29.4M25.8 35.4H29.4M25.8 36.8H29.4" stroke="#7A7E86" stroke-width=".5"/>' +
+      '<rect x="25.6" y="30.8" width="4" height="2.1" rx=".4" fill="#9DD87A"/><circle cx="29.6" cy="38" r=".5" fill="#FF8A3A"/>' }),
+  // septembre · Odyssée : couronne de laurier dorée
+  odyssee: () => ({ dessus: (() => {
+    const cy = 14.8, rx = 9.4, ry = 9.4, f = (x, y, a, c) => '<ellipse cx="' + x.toFixed(2) + '" cy="' + y.toFixed(2) + '" rx=".9" ry="2.1" fill="' + c + '" stroke="#6E4C0C" stroke-width=".35" transform="rotate(' + a.toFixed(0) + " " + x.toFixed(2) + " " + y.toFixed(2) + ')"/>';
+    let s = '<path d="M' + (20 - rx * Math.sin(1.45)).toFixed(2) + " " + (cy - ry * Math.cos(1.45)).toFixed(2) + "A" + rx + " " + ry + " 0 0 1 " + (20 + rx * Math.sin(1.45)).toFixed(2) + " " + (cy - ry * Math.cos(1.45)).toFixed(2) + '" stroke="#8A6414" stroke-width=".8" fill="none"/>';
+    for (const sens of [-1, 1]) for (let i = 0; i < 5; i++) {
+      const t = 1.4 - i * .27, x = 20 + sens * rx * Math.sin(t), y = cy - ry * Math.cos(t), nx = sens * Math.sin(t), ny = -Math.cos(t);   // normale vers l'extérieur
+      const a = Math.atan2(ny, nx) * 57.3;   // feuille couchée le long de la branche
+      s += f(x + nx * 1.1, y + ny * 1.1, a + sens * 30, "#E2BE4E") + f(x - nx * 1.1, y - ny * 1.1, a - sens * 30, "#C79A2E");
+    }
+    return s + '<circle cx="20" cy="' + (cy - ry + .2) + '" r="1.05" fill="#F5D76E" stroke="#6E4C0C" stroke-width=".35"/>';
+  })() }),
+  // octobre · Chocolaterie : grand haut-de-forme violet, ruban doré et sucette en spirale
+  chocolat: () => ({ dessus: '<g transform="rotate(7 20 8)"><path d="M14.2 8.3V-.4H25.8V8.3Z" fill="#5B2A86"/><path d="M15 .2V7.6" stroke="#fff" stroke-width=".6" opacity=".22"/>' +
+      '<path d="M14.2 5H25.8V7.3H14.2Z" fill="#E3A83A"/><ellipse cx="20" cy="8.6" rx="10.8" ry="2" fill="#44206A"/>' +
+      '<path d="M24.6 6.2L26.6 1.6" stroke="#F4EDE0" stroke-width=".55"/><circle cx="26.8" cy="1.4" r="1.7" fill="#FF6FA8"/><path d="M26.8 1.4m-.9 0a.9 .9 0 1 1 .9 .9a.5 .5 0 1 1 -.4 -.5" stroke="#fff" stroke-width=".4" fill="none"/></g>' }),
+  // novembre · Titans : cape verte du bataillon (capuche baissée), sangles et insigne aux deux ailes
+  titans: () => ({ fond: '<path d="M4 41C4.6 33.4 7.4 29.6 11.6 28.6H28.4C32.6 29.6 35.4 33.4 36 41Z" fill="#2A5534"/><path d="M12.4 27.6C14.6 25.2 25.4 25.2 27.6 27.6L28.8 30.2H11.2Z" fill="#24492D"/>',
+    dessus: '<path d="M10.6 33.4H29.4M11.2 36.6H28.8" stroke="#3A2A1C" stroke-width=".8"/>' +
+      '<path d="M4.6 41C5.4 33.4 8.8 29.6 13.6 28.8L14.6 30.8C11.6 32.2 9.8 36 9.4 41ZM35.4 41C34.6 33.4 31.2 29.6 26.4 28.8L25.4 30.8C28.4 32.2 30.2 36 30.6 41Z" fill="#2F5D3A"/>' +
+      '<path d="M18.4 30.8C19.4 29.6 20.6 29.6 21.6 30.8 20.6 31.8 19.4 31.8 18.4 30.8Z" fill="#C9CED3" stroke="#6B7177" stroke-width=".3"/>' +
+      '<path d="M21.6 35.4C22.6 33.6 24.4 33.6 24.8 35.6 23.8 36.8 22.4 36.8 21.6 35.4Z" fill="#fff" stroke="#3A2A1C" stroke-width=".25"/><path d="M24.6 35.6C25.2 33.6 27 33.6 27.8 35.2 27 36.6 25.4 36.8 24.6 35.6Z" fill="#3C6DD8" stroke="#1F3A80" stroke-width=".25"/>' }),
+  // décembre · Multivers : un éclat cosmique qui flotte au-dessus de la tête, des étincelles et un anneau de portail
+  multivers: (c, ch, u) => ({ dessus: '<defs><linearGradient id="' + u + 'mv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".35" stop-color="#C79BFF"/><stop offset="1" stop-color="#3FD0F0"/></linearGradient></defs>' +
+      '<ellipse cx="20" cy="7.4" rx="10.4" ry="2.3" fill="none" stroke="#FFB547" stroke-width=".75" stroke-dasharray="1.4 .9" opacity=".95"/>' +
+      '<circle cx="29" cy="6.6" r="5.8" fill="#B57BFF" opacity=".32"/><path d="M29 .6L32.8 6.2 29.8 12.8 25.6 7Z" fill="url(#' + u + 'mv)" stroke="#2A0F5C" stroke-width=".85" stroke-linejoin="round"/><path d="M29 .6L29.8 12.8M25.6 7L32.8 6.2" stroke="#fff" stroke-width=".4" opacity=".65"/>' +
+      [[23.6, 2.4, 1.1], [33.2, 9, .9], [12.6, 4.2, .8]].map(([x, y, r]) => '<path d="M' + x + " " + (y - r * 1.8) + "L" + (x + r * .35) + " " + (y - r * .35) + "L" + (x + r * 1.8) + " " + y + "L" + (x + r * .35) + " " + (y + r * .35) + "L" + x + " " + (y + r * 1.8) + "L" + (x - r * .35) + " " + (y + r * .35) + "L" + (x - r * 1.8) + " " + y + "L" + (x - r * .35) + " " + (y - r * .35) + 'Z" fill="#FFF3C4"/>').join("") })
+};
+/** Clé de l'accessoire du mois (null = aucun) : bonnet de Noël en décembre 2026, puis celui du circuit du mois, jamais avant le 1er du mois.
+ *  Aperçu admin (double sécurité) : « versus.apercuAcc » en mémoire de session, seulement si apercuAutorise(). */
+function accessoireDuMois(quand) {
+  try { if (!quand && apercuAutorise() && !simulation() && !window.APERCUS_FINIS) { const a = sessionStorage.getItem("versus.apercuAcc"); if (a && ACCESSOIRES_TETE[a]) return a; } } catch (e) { /* stockage indisponible */ }
+  const d = quand ? new Date(quand) : new Date(), k = d.getFullYear() * 100 + d.getMonth() + 1;
+  if (k < 202612) return null;
+  return k === 202612 ? "noel" : MOIS_ACCESSOIRE[d.getMonth()];
+}
+/** v20.60 · ADMIN : la planche des accessoires (12 univers + bonnet) sur les têtes de tous, et « porter partout » le temps de la session */
+function apercuAccessoires() {
+  if (!apercuAutorise()) return;   // double sécurité (en plus du bouton réservé à l'admin)
+  const MOIS_C = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+  const lignes = [["noel", "Chauffe · déc. 26", "🎅"]].concat(MOIS_ACCESSOIRE.map((k, i) => { const g = GPS[CAL_GP[i]] || {}; return [k, MOIS_C[i] + " 27 · " + (g.ville || k), g.drap || ""]; }));
+  let porte = ""; try { porte = sessionStorage.getItem("versus.apercuAcc") || ""; } catch (e) { /* indisponible */ }
+  const gens = (D.personnes || []).map(p => p.nom);
+  const o = document.createElement("div"); o.className = "regles circ-gal acc-gal"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Accessoires du mois");
+  o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>🎭 Accessoires du mois · aperçu admin</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div>' +
+    '<p class="info">Chaque mois, les têtes portent l\'accessoire de l\'univers du circuit, à partir du 1er du mois (avant le 1/1, seulement le bonnet de Noël). Le leader du championnat (et les co-leaders à égalité) le porte en or, à partir de janvier. « Porter » : seulement chez toi, le temps de la session.</p><div class="acc-pl">' +
+    lignes.map(([k, lib, ico]) => '<div class="acc-l" data-acc-l="' + k + '"><div class="acc-t"><b>' + ico + " " + esc(lib) + '</b><button type="button" class="chip" data-acc-porte="' + k + '" aria-pressed="' + (porte === k) + '">' + (porte === k ? "✓ Porté" : "Porter") + "</button></div>" +
+      '<div class="acc-h">' + gens.map(n => avatar(n, Object.assign({}, equipDe(n), { pilote: "tete", acc: k, vignette: true }))).join("") + '<span class="acc-mini">' + avatar(gens[0], Object.assign({}, equipDe(gens[0]), { pilote: "tete", acc: k, vignette: true })) + "</span>" + '<span class="acc-dore" title="Version dorée du leader">' + avatar(gens[0], Object.assign({}, equipDe(gens[0]), { pilote: "tete", acc: k, dore: k !== "noel", vignette: true })) + "<small>" + (k === "noel" ? "pas de doré" : "leader") + "</small></span></div></div>").join("") +
+    '</div><div class="cg-vues"><button type="button" class="chip" data-acc-porte="" aria-pressed="' + !porte + '">Revenir au mois réel</button></div></div>';
+  document.body.appendChild(o);
+  const fermer = () => o.remove();
+  o.querySelector(".rg-x").addEventListener("click", fermer); o.addEventListener("click", ev => { if (ev.target === o) fermer(); });
+  o.querySelectorAll("[data-acc-porte]").forEach(b => b.addEventListener("click", () => { try { if (b.dataset.accPorte) sessionStorage.setItem("versus.apercuAcc", b.dataset.accPorte); else sessionStorage.removeItem("versus.apercuAcc"); } catch (e) { /* indisponible */ } location.reload(); }));
+}
+/** v20.60 (Théo) · ACCESSOIRE DORÉ du leader : en saison seulement (jamais pendant le tour de chauffe), en tête du classement de la saison ;
+ *  à égalité de points, tous les co-leaders. Même règle que la couronne d'or du classement (rien du mois incomplet ne compte). */
+let MEMO_LEADERS = null;
+function leadersSaison() {
+  try {
+    if (!saisonJouee() || basesSeules()) return [];
+    const ys = anneesSaison(); if (!ys.length) return [];
+    const y = ys[ys.length - 1]; if (estChauffe(y)) return [];
+    if (MEMO_LEADERS && MEMO_LEADERS.d === D && MEMO_LEADERS.y === y) return MEMO_LEADERS.l;
+    const c = championnat(y), t = c.classement[0], l = c.mois.length && t ? c.classement.filter(n => c.tot[n].pts === c.tot[t].pts) : [];
+    MEMO_LEADERS = { d: D, y, l }; return l;
+  } catch (e) { return []; }
+}
+/** v20.59 (Théo) · SCINTILLEMENT : la première fois qu'on voit l'accessoire d'un nouveau mois, toutes les têtes affichées pendant quelques secondes
+ *  scintillent une fois (rien si « réduire les animations »). Mémorisé sur l'appareil (« versus.accVu », une fois par mois). */
+let ACC_NEUF = null;
+function accessoireNeuf(cle) {
+  if (!cle || reduit) return false;
+  const k = cle + "." + (new Date().getFullYear() * 100 + new Date().getMonth() + 1);
+  if (!ACC_NEUF || ACC_NEUF.k !== k) {
+    let vu = null; try { vu = stock.get("versus.accVu"); } catch (e) { /* indisponible */ }
+    ACC_NEUF = { k, fin: vu === k ? 0 : Date.now() + 6000 };
+    try { stock.set("versus.accVu", k); } catch (e) { /* indisponible */ }
+  }
+  return Date.now() < ACC_NEUF.fin;
+}
+const ECLAT_ACC = (x, y, r, cl) => '<path class="' + cl + '" d="M' + x + " " + (y - r * 1.9) + "L" + (x + r * .32) + " " + (y - r * .32) + "L" + (x + r * 1.9) + " " + y + "L" + (x + r * .32) + " " + (y + r * .32) + "L" + x + " " + (y + r * 1.9) + "L" + (x - r * .32) + " " + (y + r * .32) + "L" + (x - r * 1.9) + " " + y + "L" + (x - r * .32) + " " + (y - r * .32) + 'Z" fill="#FFF6CC" stroke="#B07A12" stroke-width=".3"/>';
 function svgTete(nom, eq, statique) {
   const t = decodeTete(eq.tete || presetTete(nom)), u = "tt" + (++NSVG);
   const SK = eq.skin && SKINS_TETE[eq.skin] ? SKINS_TETE[eq.skin](couleur(nom)) : null;   // V16.35 : accessoire du thème (cartes 2D)
+  const kAc = SK ? null : eq.acc !== undefined ? eq.acc : accessoireDuMois(), AC = kAc && ACCESSOIRES_TETE[kAc] ? ACCESSOIRES_TETE[kAc](couleur(nom), TETE.cheveux[t.cheveux], u) : null;   // v20.59 : accessoire du mois
+  const dore = !!AC && (eq.dore !== undefined ? !!eq.dore : eq.acc === undefined && leadersSaison().includes(nom)), neuf = !!AC && eq.acc === undefined && !statique && accessoireNeuf(kAc);   // v20.59 : doré du leader, scintillement du nouveau mois
+  const acF = dore ? ' filter="url(#' + u + 'or)"' : "", defOr = dore ? '<filter id="' + u + 'or" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="table" tableValues=".36 .78 .97 1"/><feFuncG type="table" tableValues=".2 .52 .8 .97"/><feFuncB type="table" tableValues=".03 .1 .3 .72"/></feComponentTransfer></filter>' : "";
   const peau = TETE.peau[t.peau], ch = TETE.cheveux[t.cheveux], bc = TETE.cheveux[t.barbeC], ten = t.style === 5 ? couleur(nom) : TETE.tenues[t.couleur], des = TETE.tenues[t.dessous];
   const lead = !statique && saisonVisible() && leaderSaison() === nom, expr = lead ? 1 : t.expr, retard = -((hashTxt(nom) % 37) / 10).toFixed(1);
   const sombre = "rgba(0,0,0,.22)", T = "M3 41C4 32 11 28.5 20 28.5S36 32 37 41Z";
@@ -516,8 +658,8 @@ function svgTete(nom, eq, statique) {
     '<path d="M12 14.2C11.6 8.4 15 6 20 6S28.4 8.4 28 14.2C27.4 11.2 25.6 9.6 20 9.4S12.6 11.2 12 14.2Z" fill="' + ch + '"/><path d="M14.6 8.6C17 7.4 23 7.4 25.4 8.6M15.4 7.4C17.6 6.6 22.4 6.6 24.6 7.4" stroke="#fff" stroke-width=".4" opacity=".18" fill="none"/>' +
       '<circle cx="' + (oreX + .1) + '" cy="19.2" r=".45" fill="#E8EBEF"/>'
   ][t.coupe] || "";
-  return '<svg class="tete' + (statique ? " fixe" : "") + (lead ? " lead" : "") + '" viewBox="0 0 40 40" style="--d:' + retard + 's" aria-hidden="true"><defs><clipPath id="' + u + 'c"><circle cx="20" cy="20" r="20"/></clipPath></defs><g clip-path="url(#' + u + 'c)">' +
-    '<g class="t-tete">' + (SK && SK.derriere != null ? SK.derriere : derriere) + (SK && SK.corps || corps) +
+  return '<svg class="tete' + (statique ? " fixe" : "") + (lead ? " lead" : "") + '" viewBox="0 0 40 40" style="--d:' + retard + 's" aria-hidden="true"><defs><clipPath id="' + u + 'c"><circle cx="20" cy="20" r="20"/></clipPath>' + defOr + '</defs><g clip-path="url(#' + u + 'c)">' +
+    '<g class="t-tete' + (kAc && AC ? " t-acc-" + kAc : "") + (dore ? " t-acc-or" : "") + (neuf ? " t-acc-neuf" : "") + '">' + (SK && SK.derriere != null ? SK.derriere : derriere) + (AC && AC.fond ? "<g" + acF + ">" + AC.fond + "</g>" : "") + (SK && SK.corps || corps) +
     '<path d="M16.6 22.5H23.4V29C22 30.6 18 30.6 16.6 29Z" fill="' + peau + '"/><path d="M16.6 24.6C18.6 26 21.4 26 23.4 24.6V26.4C21.4 27.6 18.6 27.6 16.6 26.4Z" fill="rgba(0,0,0,.12)"/>' +
     '<ellipse cx="' + oreX + '" cy="17.6" rx="1.6" ry="2.3" fill="' + peau + '"/><ellipse cx="' + (40 - oreX) + '" cy="17.6" rx="1.6" ry="2.3" fill="' + peau + '"/>' +
     '<path d="' + VIS + '" fill="' + peau + '"/>' +
@@ -526,7 +668,8 @@ function svgTete(nom, eq, statique) {
     '<path d="M20 17.6C19.4 19.4 19.2 20 20.4 20.2" stroke="rgba(0,0,0,.28)" stroke-width=".7" fill="none" stroke-linecap="round"/>' +
     '<g class="t-yeux"><circle cx="16.6" cy="16.9" r="1" fill="#1d1d1f"/><circle cx="23.4" cy="16.9" r="1" fill="#1d1d1f"/><circle cx="16.9" cy="16.6" r=".32" fill="#fff"/><circle cx="23.7" cy="16.6" r=".32" fill="#fff"/></g>' +
     '<path d="M14.9 14.5C15.9 13.8 17.4 13.8 18.3 14.3M21.7 14.3C22.6 13.8 24.1 13.8 25.1 14.5" stroke="' + ch + '" stroke-width=".95" fill="none" stroke-linecap="round"/>' +
-    lun + (SK && SK.cache ? "" : devant) + (SK ? SK.dessus || "" : "") + "</g></g></svg>";
+    lun + (SK && SK.cache || AC && AC.cache ? "" : devant) + (SK ? SK.dessus || "" : "") + (AC ? "<g" + acF + ">" + (AC.dessus || "") + "</g>" : "") + (dore ? ECLAT_ACC(31.6, 4.2, 1.25, "acc-or-eclat") + ECLAT_ACC(8.4, 9.2, .8, "acc-or-eclat e2") : "") +
+    (neuf ? ECLAT_ACC(30, 5, 1.6, "acc-scint") + ECLAT_ACC(10, 7.5, 1.1, "acc-scint e2") : "") + "</g></g></svg>";
 }
 
 /* ---------- Atelier : niveau d'écurie et améliorations ---------- */
@@ -559,12 +702,12 @@ function htmlPilote(qui, e) {
   const ligne = (cle, lib, opts, swatch, note) => '<div class="tp-l"><span class="tp-k">' + lib + '</span><div class="tp-o">' + opts.map((o, i) =>
     '<button type="button" class="tp-b' + (swatch ? " sw" : "") + '" data-tp="' + cle + '" data-v="' + i + '" aria-pressed="' + (t[cle] === i) + '"' + (swatch ? ' style="--sw:' + o + '" aria-label="' + lib + " " + (i + 1) + '"' : "") + ">" + (swatch ? "" : esc(o)) + "</button>").join("") + "</div>" + (note ? '<small class="tp-note">' + note + "</small>" : "") + "</div>";
   return '<div class="tp" id="tp"><div class="seg tp-mode" role="group" aria-label="Pilote"><button type="button" data-pmode="tete" aria-pressed="' + (mode === "tete") + '">🙂 Ma tête</button><button type="button" data-pmode="casque" aria-pressed="' + (mode === "casque") + '">🪖 Mon casque</button></div>' +
-    '<div class="tp-apercu"><span class="tp-grand">' + avatar(qui, Object.assign({}, e, { pilote: "tete" })) + '<em>Tête</em></span><span class="tp-grand">' + avatar(qui, Object.assign({}, e, { pilote: "casque" })) + "<em>Casque</em></span></div>" +
+    '<div class="tp-apercu"><span class="tp-grand">' + avatar(qui, Object.assign({}, e, { pilote: "tete", acc: "" })) + '<em>Tête</em></span><span class="tp-grand">' + avatar(qui, Object.assign({}, e, { pilote: "casque" })) + "<em>Casque</em></span></div>" +
     '<p class="info" style="margin:0">' + (mode === "tete" ? "Ta tête s'affiche partout à côté de ton nom. Au volant, tu gardes ton casque." : "Ton casque s'affiche partout à côté de ton nom. Tu peux repasser à ta tête quand tu veux.") + "</p>" +
     '<div class="tp-l"><span class="tp-k">Mes têtes</span><div class="tp-o tp-slots"><button type="button" class="tp-b tp-def" id="tp-reset">↺ Par défaut</button>' +
-      [0, 1, 2, 3].map(i => { const tt = (e.tetes || [])[i]; return tt ? '<span class="tp-slot"><button type="button" class="tp-mini" data-slot-mettre="' + i + '" aria-label="Mettre la tête ' + (i + 1) + '">' + avatar(qui, Object.assign({}, e, { tete: tt, pilote: "tete", vignette: true })) + '</button><button type="button" class="tp-sv" data-slot-garder="' + i + '" aria-label="Remplacer par la tête actuelle">💾</button></span>'
+      [0, 1, 2, 3].map(i => { const tt = (e.tetes || [])[i]; return tt ? '<span class="tp-slot"><button type="button" class="tp-mini" data-slot-mettre="' + i + '" aria-label="Mettre la tête ' + (i + 1) + '">' + avatar(qui, Object.assign({}, e, { tete: tt, pilote: "tete", vignette: true, acc: "" })) + '</button><button type="button" class="tp-sv" data-slot-garder="' + i + '" aria-label="Remplacer par la tête actuelle">💾</button></span>'
         : '<button type="button" class="tp-slot vide" data-slot-garder="' + i + '" aria-label="Enregistrer la tête actuelle">＋<small>garder</small></button>'; }).join("") + "</div></div>" +
-    (portraitsDe(qui) && portraitsDe(qui).length > 1 ? '<div class="tp-l"><span class="tp-k">Mes portraits</span><div class="tp-o">' + portraitsDe(qui).map(([lib, v]) => '<button type="button" class="tp-b tp-por" data-portrait="' + v + '" aria-pressed="' + (e.tete === v) + '">' + avatar(qui, Object.assign({}, e, { pilote: "tete", tete: v, vignette: true })) + esc(lib) + "</button>").join("") + "</div></div>" : "") +
+    (portraitsDe(qui) && portraitsDe(qui).length > 1 ? '<div class="tp-l"><span class="tp-k">Mes portraits</span><div class="tp-o">' + portraitsDe(qui).map(([lib, v]) => '<button type="button" class="tp-b tp-por" data-portrait="' + v + '" aria-pressed="' + (e.tete === v) + '">' + avatar(qui, Object.assign({}, e, { pilote: "tete", tete: v, vignette: true, acc: "" })) + esc(lib) + "</button>").join("") + "</div></div>" : "") +
     ligne("peau", "Peau", TETE.peau, true) + ligne("forme", "Visage", TETE.formes) + ligne("coupe", "Coupe", TETE.coupes) + ligne("cheveux", "Cheveux", TETE.cheveux, true) + ligne("barbe", "Barbe", TETE.barbes) +
     (t.barbe ? ligne("barbeC", "Couleur de barbe", TETE.cheveux, true) : "") +
     ligne("lunettes", "Lunettes", TETE.lunettes) + ligne("style", "Tenue", TETE.styles) +

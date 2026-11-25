@@ -1414,7 +1414,7 @@ function brancherGP0(v, y) {
     const boite = document.createElement("div"); boite.className = "gp-rendu"; scene.appendChild(boite);
     const focus = vue === "poursuite" ? suiviGP() : ETAT.gpFocus && D.personnes.some(p => p.nom === ETAT.gpFocus) ? ETAT.gpFocus : (qui && D.personnes.some(p => p.nom === qui) ? qui : D.personnes[0].nom);
     const api = Piste.monter(boite, { circuit: ci, meteo: met, effets: true, ambiance: amb, mode: deux ? "2d" : "3d", camera: vue === "poursuite" ? "poursuite" : camGP(), sansVoitures: vue === "visite", tour: TOUR_GP, voitures: vs, pts: et.pts, focus,
-      atoutCol: at ? "#3DDC97" : null, piegeCol: null, accent: couleurAccent(), titre: GPS[ci].gp + ", " + GPS[ci].ville, portrait: n => avatar(n, Object.assign({}, equipDe(n), { skin: (Piste.TRACES[ci] || {}).peint })),   // V16.35 : sa tête + l'accessoire du thème
+      atoutCol: at ? "#3DDC97" : null, piegeCol: null, accent: couleurAccent(), titre: GPS[ci].gp + ", " + GPS[ci].ville, portrait: n => avatar(n),   // v20.59 (relecture jeu-joueur) : la même tête que partout (accessoire du mois en cours, ou accessoire mérité), plus un 2e costume du même univers
       image: etiquettesGP, toucher: n => { if (vueGP(ci) === "poursuite") { suivreGP(n); return; } ETAT.gpFocus = n; garder(); if (GP_INST) GP_INST.api.focus(n); toast("👀 " + n + " est mis en avant."); },
       perdu: () => { if (GP_INST && GP_INST.boite === boite) GP_INST = null;   // audit B6 : circuit coupé par le navigateur → on le relance (2 fois au plus)
         if (GP_RELANCES < 2 && typeof rendreTrophees === "function") { GP_RELANCES++; setTimeout(() => { if (boite.isConnected && !document.hidden) rendreTrophees(); }, 400); } } });
@@ -1605,7 +1605,7 @@ function ouvrirCircuits2027(ci0) {
     const boite = document.createElement("div"); boite.className = "cg-rendu"; scene.appendChild(boite);
     const vs = voituresGP(), pts = Object.fromEntries(D.personnes.map(p => [p.nom, 0]));
     api = Piste.monter(boite, { circuit: ci, meteo: "soleil", mode: vue === "2d" ? "2d" : "3d", camera: "helico", tour: 0, voitures: vs, pts, focus: vs[0] && vs[0].nom, accent: couleurAccent(),
-      titre: (G.gp || ci), portrait: n => avatar(n, Object.assign({}, equipDe(n), { skin: (Piste.TRACES[ci] || {}).peint })) });
+      titre: (G.gp || ci), portrait: n => { const pk = (Piste.TRACES[ci] || {}).peint, k = ci === "abudhabi" ? "noel" : ACCESSOIRES_TETE[pk] ? pk : undefined; return avatar(n, Object.assign({}, equipDe(n), k ? { acc: k } : {})); } });   // v20.59 : aperçu admin = l'accessoire du mois de ce circuit
     if (vue === "visite" && api && api.viser) setTimeout(() => { try { api.viser(null, .3, .38); } catch (e) { } }, 300);
   };
   o.querySelectorAll("[data-cg]").forEach(b => b.addEventListener("click", () => { ci = b.dataset.cg; monter(); }));

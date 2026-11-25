@@ -1660,6 +1660,23 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .circ-gal .rg-c { width: min(100%, 760px); }
 .cg-chips, .cg-vues { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 4px 0; } .cg-chips::-webkit-scrollbar { display: none; }
 .cg-chips .chip, .cg-vues .chip { flex: none; }
+/* v20.60 · planche admin des accessoires du mois */
+.acc-pl { display: grid; gap: 8px; margin: 8px 16px; max-height: 62vh; overflow-y: auto; }
+.acc-gal .info { margin: 6px 16px; } .acc-gal .cg-vues { padding: 4px 16px 12px; }
+.acc-l { border: 1px solid var(--rule); border-radius: 12px; padding: 8px 10px; background: var(--panel); }
+.acc-t { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
+.acc-h { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+/* v20.60 · accessoire doré du leader (petit éclat qui scintille) et scintillement du nouveau mois (une fois) */
+.tete .acc-or-eclat, .tete .acc-scint { transform-box: fill-box; transform-origin: center; }
+.tete .acc-or-eclat { animation: accOr 3.2s ease-in-out infinite; } .tete .acc-or-eclat.e2 { animation-delay: 1.6s; }
+.tete .acc-scint { opacity: 0; animation: accScint 1.3s ease-out .35s 2 both; } .tete .acc-scint.e2 { animation-delay: .75s; }
+.tete .t-acc-neuf { animation: tBob 3.8s ease-in-out infinite, accBrille 1.4s ease-out .3s 1; animation-delay: var(--d, 0s), .3s; }
+@keyframes accOr { 0%, 100% { opacity: .35; transform: scale(.6); } 50% { opacity: 1; transform: scale(1.1) rotate(45deg); } }
+@keyframes accScint { 0% { opacity: 0; transform: scale(.2); } 40% { opacity: 1; transform: scale(1.15) rotate(45deg); } 100% { opacity: 0; transform: scale(.3) rotate(90deg); } }
+@keyframes accBrille { 0%, 100% { filter: none; } 35% { filter: brightness(1.25) drop-shadow(0 0 1.5px #FFF3B0); } }
+.tete.fixe .acc-or-eclat { animation: none; opacity: .95; }
+@media (prefers-reduced-motion: reduce) { .tete .acc-or-eclat { animation: none; opacity: .95; } .tete .acc-scint { display: none; } .tete .t-acc-neuf { animation: none; } }
+.acc-h .av { width: 46px; height: 46px; } .acc-dore { display: inline-flex; flex-direction: column; align-items: center; margin-left: 6px; } .acc-dore small { font-size: 10px; color: var(--ink-3); } .acc-mini .av { width: 24px; height: 24px; }
 .cg-t { margin: 6px 0 2px; font-size: 14px; }
 .cg-scene { position: relative; width: 100%; aspect-ratio: 3 / 2; border-radius: 12px; overflow: hidden; background: #0B0E14; }
 .cg-rendu { position: absolute; inset: 0; }
