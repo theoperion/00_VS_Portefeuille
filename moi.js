@@ -1019,6 +1019,9 @@ function injecterStyle() {
 #m-saisie.m-voile-plein { align-items: stretch; }
 .feuille.m-plein { height: 100vh; height: 100dvh; max-height: none; min-height: 0; border-radius: 0; display: flex; flex-direction: column; gap: 14px; padding-top: max(8px, env(safe-area-inset-top, 0px)); overscroll-behavior: contain; }
 .feuille.m-plein > h3 { position: sticky; top: calc(-1 * max(8px, env(safe-area-inset-top, 0px))); z-index: 3; margin: 0 -4px; padding: 8px 4px; background: var(--bg); }
+/* v20.66 (bug de Clément) : rien ne rétrécit dans la feuille plein écran ; la barre Mouvement/Historique (.seg, overflow: hidden) était
+   écrasée à 2 px dès que l'étape « Quoi ? » dépassait la hauteur de l'écran (gros texte du téléphone, carte des relevés…) : la feuille défile à la place */
+.feuille.m-plein > * { flex-shrink: 0; }
 .feuille.m-plein > #m-pane-ordre:not([hidden]) { flex: 1 0 auto; display: flex; flex-direction: column; }
 .feuille.m-plein #m-form-ordre { flex: 1 0 auto; display: flex; flex-direction: column; gap: 14px; }
 .feuille.m-plein #m-form-ordre > .m-pied { margin-top: auto; }
