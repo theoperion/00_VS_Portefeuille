@@ -575,6 +575,12 @@ const SONS = (() => {
     course(duree, avant, cle) { AMB.courseJusqua = performance.now() + (avant || 0) + duree + 3000; ambStop(.4);   // v17.59 : l'ambiance s'efface avant les feux (filet : elle revient au plus tard 3 s après l'arrivée prévue)
       arreter(); coursePlan = cle && THEMES_COURSE[cle] ? { cle, debut: performance.now() + (avant || 0), duree } : null;
       if (!actif() && !vibreOK()) return; API.depart(avant || 0); plus_tard(avant || 0, () => { moteurs(duree / 1000); if (coursePlan) themeCourse(cle, duree / 1000 + .3, 0); }); },
+    /** ⏸ course en pause : moteurs, thème et bips programmés se taisent (▶ reprendre relance course() pour le temps restant, sans feux) */
+    pauseCourse() { arreter(); coursePlan = null; AMB.courseJusqua = performance.now() + 600000; },
+    /** ▶ reprise d'une course sans son (le direct), ⏭ arrivée, ou fin : l'ambiance n'est plus retenue par la pause */
+    repriseCourse() { AMB.courseJusqua = 0; if (AMB.iv) ambVerifier(); },
+    /** l'ambiance est-elle retenue par une course (ou sa pause) en ce moment ? (lecture seule, pour les tests) */
+    ambianceRetenue() { return performance.now() < AMB.courseJusqua; },
     /** l'arrivée : la foule, le klaxon du vainqueur ; une vibration de victoire si c'est toi */
     arrivee(styleKlaxon, cEstMoi, cle) {
       const th = !!theme; coursePlan = null; themeStop(.45);

@@ -2191,3 +2191,74 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .tk-s.a-moi { outline: 2px solid var(--ink); outline-offset: 2px; }
 .bdg.ex.ticket { border-color: #C98E22; background: linear-gradient(120deg, rgba(247,207,85,.35), rgba(255,246,204,.5)); }
 .tk-emp { font-size: 10.5px; word-break: break-all; }
+
+/* ---------- v20.47 (Théo) · aucun texte posé sur le dessin : un bandeau de sous-titres SOUS la course (2D, 3D, plein écran) ---------- */
+.gp-piste.v2 { --st: 52px; padding-bottom: var(--st); }
+.gp-piste.v2 .gp-st { position: absolute; left: 0; right: 0; bottom: 0; height: var(--st); z-index: 5; box-sizing: border-box; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 0 12px; background: #07090D; border-top: 1px solid rgba(255,255,255,.08); color: #fff; pointer-events: none; }
+.gp-piste.v2 .gp-st .gp-tour { padding: 4px 9px; border-radius: 999px; background: rgba(255,255,255,.1); font: 700 11.5px/1.2 var(--f-text); white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
+.gp-piste.v2 .gp-st .gp-tour b { font: 800 13px/1 var(--f-num); }
+.gp-live { width: 8px; height: 8px; border-radius: 50%; background: #FF3B3B; box-shadow: 0 0 0 0 rgba(255,59,59,.6); animation: gp-live 1.6s ease-out infinite; }
+@keyframes gp-live { 70% { box-shadow: 0 0 0 7px rgba(255,59,59,0); } 100% { box-shadow: 0 0 0 0 rgba(255,59,59,0); } }
+@media (prefers-reduced-motion: reduce) { .gp-live { animation: none; } }
+.gp-st-l { min-width: 0; display: grid; gap: 3px; }
+.gp-piste.v2 .gp-st .gp-com { position: static; inset: auto; display: block; z-index: auto; }
+.gp-piste.v2 .gp-st .gp-com:empty, .gp-piste.v2 .gp-st .gp-pops:empty { display: none; }
+.gp-piste.v2 .gp-st :is(.gp-com-t, .gp-st-info) { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: none; padding: 0; border-radius: 0; background: none; box-shadow: none; text-align: left; color: #fff; font: 600 13.5px/1.3 "Saira", system-ui, sans-serif; text-shadow: 0 1px 2px rgba(0,0,0,.8); }
+.gp-piste.v2 .gp-st .gp-st-info { color: rgba(255,255,255,.78); font-weight: 500; font-size: 12.5px; }
+.gp-piste.v2 .gp-st .gp-com:not(:empty) ~ .gp-st-info, .gp-piste.v2 .gp-st .gp-pops:not(:empty) ~ .gp-st-info { display: none; }
+.gp-piste.v2 .gp-st .gp-com:not(:empty) ~ .gp-pops { display: none; }   /* 2 lignes au plus : la bulle des points attend que le commentaire se taise… */
+.gp-piste.v2 .gp-st .gp-pops { position: static; inset: auto; display: flex; gap: 6px; overflow: hidden; z-index: auto; }
+.gp-piste.v2 .gp-st .gp-pop { position: static; transform: none !important; flex-direction: row; gap: 5px; padding: 3px 8px; font-size: 12px; animation: gpPop 5s ease forwards; }
+.gp-piste.v2 .gp-st .gp-pop small { font-size: 10.5px; }
+/* … et le commentaire de l'arrivée laisse la place aux points : il passe sur une ligne */
+.gp-piste.v2 .gp-st .gp-com:not(:empty) + .gp-pops:not(:empty) { display: flex; }
+.gp-piste.v2 .gp-st .gp-com:not(:empty):has(+ .gp-pops:not(:empty)) .gp-com-t { -webkit-line-clamp: 1; }
+/* les éléments posés en bas de la piste remontent au-dessus du bandeau */
+.gp-piste.v2 :is(.gp-suivi, .gp-enigme, .gp-tresor-appel) { bottom: calc(var(--st) + 8px); }
+.gp-piste.v2 .gp-jauge { bottom: calc(var(--st) + 42px); }
+.gp-plein .gp-piste.v2 { padding-bottom: 0; }
+.gp-plein .gp-piste.v2 .gp-scene { bottom: calc(var(--st) + env(safe-area-inset-bottom, 0px)); height: auto; }
+.gp-plein .gp-piste.v2 .gp-st { height: calc(var(--st) + env(safe-area-inset-bottom, 0px)); padding: 0 calc(env(safe-area-inset-right, 0px) + 14px) env(safe-area-inset-bottom, 0px) calc(env(safe-area-inset-left, 0px) + 14px); background: rgba(5,7,11,.94); }
+.gp-plein .gp-piste.v2 .gp-st :is(.gp-com-t, .gp-st-info) { font-size: 15px; }
+.gp-plein.v2 .gp-piste.v2 :is(.gp-suivi, .gp-jauge) { bottom: calc(var(--st) + env(safe-area-inset-bottom, 0px) + 10px); }
+.gp-plein.v2 .gp-piste.v2 .gp-enigme { bottom: calc(var(--st) + env(safe-area-inset-bottom, 0px) + 10px); }
+/* ⏸ / ▶ : pause et reprise de la course */
+.gp-hb { display: flex; gap: 6px; flex: none; align-items: center; }
+.gp-pause { flex: none; padding: 9px 12px; font-size: 13px; }
+.gpp-b.gpp-pause { width: auto; padding: 0 13px; border-radius: 999px; font-size: 13.5px; white-space: nowrap; }
+.gpp-b.gpp-pause[aria-pressed="true"] { background: #fff; color: #0B0D12; }
+/* 📷 mode photo : toute l'interface s'efface, le décor vivant seul */
+.gp-plein.photo :is(.gpp-bar, .gp-st, .gp-tags3, .gp-suivi, .gp-enigme, .gp-jauge, .gp-tresor-appel, .gp-tresor, .p3-joy, .p2-recentre, .gpp-tourne, .gp-tablette, .gp-zones, .gp-pops) { display: none !important; }
+.gp-plein.photo .gp-piste.v2 { --st: 0px; }
+.gp-plein.photo .gp-piste.v2 .gp-scene { bottom: 0; }
+.gpp-photo-aide { position: absolute; z-index: 7; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 14px); transform: translateX(-50%); padding: 8px 14px; border-radius: 999px; background: rgba(8,10,14,.7); color: #fff; font: 600 13px/1.2 var(--f-text); pointer-events: none; animation: gpPop 2.6s ease forwards; white-space: nowrap; }
+/* 📐 le schéma de la course (sous la piste et dans les règles) */
+.gp-schema { margin: 8px 0 6px; border: 1px solid var(--rule); border-radius: 14px; background: var(--panel-2); }
+.gp-schema > summary { cursor: pointer; padding: 11px 14px; font: 700 14px/1.2 var(--f-text); list-style: none; }
+.gp-schema > summary::-webkit-details-marker { display: none; }
+.gp-schema > summary::after { content: "›"; float: right; transition: transform .2s; } .gp-schema[open] > summary::after { transform: rotate(90deg); }
+.gp-schema-l { list-style: none; margin: 0; padding: 0 10px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; counter-reset: none; }
+.gp-schema-l li { position: relative; display: grid; gap: 4px; align-content: start; padding: 8px 8px 9px; border-radius: 12px; background: var(--bg); border: 1px solid var(--rule); }
+.gp-schema-l li svg { width: 100%; height: auto; display: block; }
+.gp-schema-l li p { margin: 0; font: 500 12.5px/1.3 var(--f-text); color: var(--ink); }
+.gp-schema-l .sc-k { position: absolute; left: 6px; top: 6px; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: var(--bg); font: 800 11px/18px var(--f-num); text-align: center; }
+.gp-schema-l .sc-route { stroke: var(--ink); stroke-opacity: .22; stroke-width: 18; stroke-linecap: round; fill: none; }
+.gp-schema-l .sc-ligne rect { fill: var(--ink); opacity: .75; }
+.gp-schema-l .sc-n { font: 800 9px/1 var(--f-num); fill: #fff; }
+.gp-schema-l .sc-t { font-size: 15px; }
+.gp-schema-l .sc-cal { fill: var(--accent); fill-opacity: .18; stroke: var(--accent); stroke-width: 1.5; }
+.gp-schema-l .sc-tc { font: 800 12px/1 var(--f-num); fill: var(--ink); }
+.gp-schema-l .sc-fl { stroke: var(--ink); stroke-opacity: .6; stroke-width: 2; fill: none; }
+.gp-schema-l .sc-fm { fill: var(--ink); fill-opacity: .6; }
+.gp-schema-l .sc-up { font: 800 12px/1 var(--f-num); fill: #2FB57A; } .gp-schema-l .sc-down { font: 800 12px/1 var(--f-num); fill: #E5484D; }
+.gp-schema-l .sc-p { font: 600 10px/1 var(--f-text); fill: var(--ink); fill-opacity: .75; }
+.gp-schema-l .sc-sep { stroke: var(--ink); stroke-opacity: .15; stroke-width: 1; }
+.rg-schema .gp-schema-l { padding: 0; margin: 8px 0; }
+.gp-schema-p { margin: 0 10px 12px; padding: 8px 10px; border-radius: 10px; background: var(--bg); border: 1px solid var(--rule); font: 600 12.5px/1.35 var(--f-text); color: var(--ink); }
+.rg-schema .gp-schema-p { margin: 0 0 8px; }
+.gp-h .gp-hb { flex-direction: column; align-items: stretch; }
+.gp-piste.v2 .gp-st .gp-tour:empty { display: none; }
+.gp-piste.v2 .gp-st .gp-pop { align-items: center; gap: 4px; padding: 2px 7px 2px 2px; border-radius: 999px; }
+.gp-piste.v2 .gp-st .gp-pop .av { width: 18px; height: 18px; flex: none; }
+.gp-piste.v2 .gp-st .gp-pop small, .gp-piste.v2 .gp-st .gp-pop b small { display: none; }
+.gp-piste.v2 .gp-st .gp-pop .gp-pop-u { display: none; } .gp-pop-u { font-style: normal; }

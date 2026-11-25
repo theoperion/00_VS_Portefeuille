@@ -1,2 +1,2 @@
 /* GÉNÉRÉ par outils-tests/cuire-cartes.js : fonds peints cuits en WebP (clé → empreinte du dessin). */
-self.CARTES_CUITES = {"garage":"12sd01h","ratatouille":"1ib263l","chateau":"1xju2r0","terrier":"1vujee2","anneau":"cuiy5r","pandora":"1r6d2xc","arene":"u0nda6","etoiles":"1o4y0i0","dunes":"iq2b3e","envers":"1090jwu","multivers":"jcmec1","chocolat":"43cshe","titans":"bno6ls","odyssee":"1elk812","plateau":"1gvl1os"};
+self.CARTES_CUITES = {"garage":"12sd01h","ratatouille":"1ib263l","chateau":"1xju2r0","terrier":"uq45ez","anneau":"cuiy5r","pandora":"1r6d2xc","arene":"u0nda6","etoiles":"1o4y0i0","dunes":"iq2b3e","envers":"1090jwu","multivers":"jcmec1","chocolat":"43cshe","titans":"bno6ls","odyssee":"1elk812","plateau":"1gvl1os"};

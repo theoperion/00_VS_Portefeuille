@@ -83,6 +83,7 @@ Dernier d'un mois → **1 carte bonus**, jouable dès le mois suivant, une fois 
 ## 🏎️ Course, écurie et trophées
 
 - **Course** : une manche par mois sur un circuit à thème, départ dans l'ordre du championnat, le meilleur du mois boucle le tour (dès le 1er du mois, les voitures attendent sur la grille du nouveau circuit) (4 mondes : Royaume enchanté, Ville néon, Terres sombres, Dieux et l'Épice), avec son décor animé ; la météo suit le S&P 500.
+- **Course en direct** (v20.47) : pendant le mois, seulement le tour 1 : le peloton part dans l'ordre de la grille (janvier 2027 : l'ordre du tour de chauffe, les absents de la chauffe derrière, par ordre alphabétique), à écart fixe, et avance avec les jours du mois (ligne d'arrivée le dernier jour), un peu en avance si le S&P 500 monte depuis le 1er (soleil), un peu en retard s'il baisse (pluie), jamais de recul. À la clôture, la course complète (tour 2 dans l'ordre des points du mois). Aucun point n'en dépend.
 - **La route des 4 mondes** : chaque exclusif est une **carte de collection** unique (texte d'ambiance, fragment d'histoire réservé à son détenteur) ; les défis et 12 trophées de monde sont des **badges** pour tous ; chacun a sa **vitrine** sur sa fiche.
 - **Écurie** : purement cosmétique, débloquée par les défis et les exclusifs.
 - **Trophées** : défis 🥉🥈🥇💎 acquis pour toujours ; **exclusifs** 💎 pour le premier qui réussit (même mois : chacun) ; **👑 premier millionnaire** (patrimoine financier, montant jamais montré). Le serveur refait tous les calculs (anti-triche).
