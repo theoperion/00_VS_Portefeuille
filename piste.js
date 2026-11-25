@@ -12243,7 +12243,7 @@
       rayons: { n: 12, long: 620, larg: [4, 34], force: .16, col: "#FFC67E" },
       sol: { echelle: 75, haut: 34, creux: ["#8E4E54", .5], cretes: ["#FFE4B0", .55], roche: ["#7E3E2C", .6], taches: ["#D9692A", .45, .8], grain: .24, rides: [.45, .09, .35] },
       horizon: { type: "dunes", col: "#D8925A", haut: 80 } },   // ses ombres de contact sont posées à la main dans decorDunes
-    // 25/11/2026 · la recette étendue au Château et à l'Atelier du Père Noël, chacun avec SA lumière (les ombres de contact et les sols par zones sont calculés tout seuls : ombresAuto, marquerSolsAuto)
+    // 25/11/2026 · la recette étendue à 10 autres circuits (Envers, Odyssée, Chocolaterie, Multivers : en brouillon, voir WAOUH_BROUILLON), chacun avec SA lumière (les ombres de contact et les sols par zones sont calculés tout seuls : ombresAuto, marquerSolsAuto)
     // février · le Château, de jour : soleil d'après-midi doré sur le lac, voile de brume sur la forêt interdite, prairie piquée de boutons d'or, montagnes d'Écosse au loin
     chateau: { marque: { y: 90, ny: .8, vert: true }, soleil: ["#FFD08A", .35], brume: { col: "#F2E4C6", dens: .0018, haut: 26, halo: .9 }, ciel: "#A8CCF2", rebond: "#B4C88A", rim: .35, etalonnage: [.21, .27],
       rayons: { n: 9, long: 560, larg: [4, 28], force: .12, col: "#FFE0A0" },
@@ -12254,10 +12254,66 @@
     garage: { soleil: ["#CFE0FF", .3], brume: { col: "#BCD0F6", dens: .0019, haut: 30, halo: .3 }, ciel: "#9CB8FF", rebond: "#E8F0FF", rim: .25, etalonnage: [.14, .23],
       sol: { echelle: 60, haut: 30, creux: ["#C2D4F2", .47], cretes: ["#FFFFFF", .54], roche: ["#9AAAC4", .54], taches: ["#DCE8FF", .41, .78], grain: .22 }, paillettes: 1,
       ombres: { force: .49, col: "#2A3C80" }, flaques: { col: "#FFB45E", r: 10, force: .38, max: 70 },
-      horizon: { type: "glace", col: "#9CB6E2", haut: 190, cime: "#FFFFFF" } }
-    // (25/11/2026, Théo : on s'arrête là pour l'instant) les 12 autres circuits n'ont PAS de ligne : ils gardent exactement leur rendu d'avant.
-    // Pour en ajouter un : sa ligne ici (brume, soleil, sol, ombres, horizon…), puis captures avant / après et outils-tests/twaouh.js (liste AVEC).
+      horizon: { type: "glace", col: "#9CB6E2", haut: 190, cime: "#FFFFFF" } },
+    // mars · le goûter des Merveilles : fin d'après-midi rose et dorée, brume de conte, prairie semée de fleurs roses, collines rondes
+    olympe: { marque: { y: 90, ny: .8, vert: true }, soleil: ["#FFD4B0", .25], brume: { col: "#F6D6E6", dens: .0013, haut: 24, halo: .8 }, ciel: "#B4B0F0", rebond: "#E8C8A0", rim: .4, etalonnage: [.31, .23],
+      rayons: { n: 8, long: 520, larg: [4, 26], force: .11, col: "#FFE2C8" },
+      sol: { echelle: 55, haut: 30, creux: ["#6A9A50", .41], cretes: ["#D8E890", .41], roche: ["#A09080", .54], taches: ["#F0A0C8", .43, .8], grain: .15 },
+      ombres: { force: .53, col: "#3A2050" }, horizon: { type: "collines", col: "#8AB47A", haut: 120 } },
+    // avril (et l'Arène de 2028) · l'Anneau : après-midi doré de la Comté, poussière de blé, montagnes bleues et Mordor rougeoyant au loin
+    solstice: { marque: { y: 90, ny: .8, vert: true }, soleil: ["#FFC878", .3], brume: { col: "#F0D0A0", dens: .0021, haut: 22, halo: 1 }, ciel: "#90A8D8", rebond: "#C8B070", rim: .45, etalonnage: [.28, .3],
+      rayons: { n: 10, long: 600, larg: [4, 30], force: .15, col: "#FFD490" },
+      sol: { echelle: 70, haut: 30, creux: ["#5E8A3E", .41], cretes: ["#C8D27A", .47], roche: ["#8A8070", .6], taches: ["#E8C860", .41, .79], grain: .2 },
+      ombres: { force: .56, col: "#2A2A14" }, horizon: { type: "montagnes", col: "#6A7A90", haut: 160, cime: "#C8B8B0" } },
+    // mai · Pandora en plein jour : air turquoise, brume verte basse, rayons entre les arbres, mousse qui luit, montagnes flottantes
+    lucioles: { marque: { y: 90, ny: .8, vert: true }, soleil: ["#E8FFE0", .2], brume: { col: "#B8F0D8", dens: .0026, haut: 18, halo: .8 }, ciel: "#80D0F0", rebond: "#60C890", rim: .5, etalonnage: [.39, .23],
+      rayons: { n: 12, long: 560, larg: [3, 24], force: .16, col: "#D8FFD0" },
+      sol: { echelle: 60, haut: 30, creux: ["#2E6A48", .47], cretes: ["#8AD078", .41], roche: ["#5A6A60", .54], taches: ["#40E0D0", .41, .8], grain: .2 },
+      ombres: { force: .53, col: "#0A2A30" }, horizon: { type: "pics", col: "#5A9A9A", haut: 240, cime: "#8ED0A8" } },
+    // juin · les Étoiles : nuit froide d'acier, brume bleue de réacteur, contre-jour bleuté, flaques de lumière froide sous les projecteurs, la surface de la station jusqu'à l'horizon
+    station: { brume: { col: "#2A3A62", dens: .0014, haut: 40, halo: 0 }, ciel: "#4060A0", rebond: "#203050", rim: .5, etalonnage: [.21, .3],
+      sol: { echelle: 40, haut: 20, creux: ["#1C212C", .41], cretes: ["#3A4252", .41], roche: ["#2A2E38", .41], taches: ["#3050A0", .34, .82], grain: .3 },
+      ombres: { force: .53, col: "#000008" }, flaques: { col: "#7AB4FF", r: 9, force: .3, max: 80 }, horizon: { type: "ville", col: "#2C3448", haut: 90 } },
+    // juillet · le Petit Chef : nuit de Paris dorée, poussière de farine dans les rayons, flaques chaudes sous les lampes, toits de Paris au loin
+    petitchef: { soleil: ["#FFD8A0", .2], brume: { col: "#C08860", dens: .0019, haut: 26, halo: .5 }, ciel: "#3A4A90", rebond: "#A06040", rim: .45, etalonnage: [.28, .23],
+      rayons: { n: 6, long: 420, larg: [3, 18], force: .1, col: "#FFD8A0", nuit: true },
+      sol: { echelle: 50, haut: 25, creux: ["#34323E", .27], taches: ["#6A5A40", .30, .8], grain: .22 },
+      ombres: { force: .53, col: "#100810" }, flaques: { col: "#FFC070", r: 8, force: .28, max: 60 }, horizon: { type: "ville", col: "#2C2C4A", haut: 70 } },
+    // novembre · le Mur des titans : couchant à travers les cendres, rayons dans la fumée, sol de cendre, les Murs à l'horizon
+    titans: { soleil: ["#FFB070", .25], brume: { col: "#C8907A", dens: .003, haut: 26, halo: 1.1 }, ciel: "#806070", rebond: "#A06048", rim: .55, etalonnage: [.21, .45],
+      rayons: { n: 10, long: 620, larg: [5, 36], force: .16, col: "#FFB880" },
+      sol: { echelle: 70, haut: 30, creux: ["#4A3A40", .41], cretes: ["#A08878", .41], roche: ["#5A4440", .6], taches: ["#8A8078", .47, .76], grain: .3 },
+      ombres: { force: .56, col: "#1A0808" }, horizon: { type: "mur", col: "#6A5A58", haut: 150 } },
+    // le plateau de jeu (Monaco, hors saison) : nuit de salle de jeux, flaques chaudes sous les lampes
+    plateau: { brume: { col: "#3A3060", dens: .0013, haut: 30, halo: 0 }, ciel: "#5060A0", rebond: "#604830", rim: .4, etalonnage: [.21, .23],
+      sol: { echelle: 50, haut: 25, taches: ["#D8C8A0", .27, .8], grain: .15 },
+      ombres: { force: .53, col: "#100818" }, flaques: { col: "#FFD080", r: 7, force: .25, max: 40 }, horizon: { type: "ville", col: "#3A3452", haut: 60 } }
   };
+  /** BROUILLONS (25/11/2026) : réglages commencés mais NON appliqués (à finir) : au premier essai, ils assombrissaient la course (Envers, Multivers)
+      ou la délavaient (Odyssée : piste et mer grisées ; Chocolaterie : contraste divisé par 1,4). Gardés ici pour ne pas repartir de zéro :
+      pour en reprendre un, le retoucher puis le déplacer dans WAOUH (captures avant / après, twaouh, ttresor-secret). */
+  const WAOUH_BROUILLON = {
+    // août · le Monde à l'envers : nuit rouge d'orage, brume sang, lueurs rouges au sol sous les lampes, sol de cendre veiné de rouge, forêt morte à l'horizon
+    envers: { brume: { col: "#5A1828", dens: .0022, haut: 30, halo: 0 }, ciel: "#3A2040", rebond: "#601020", rim: .5, etalonnage: [.14, .38],
+      sol: { echelle: 50, haut: 25, creux: ["#26222C", .41], cretes: ["#4A3A44", .41], roche: ["#3A3036", .54], taches: ["#6A1A2A", .41, .8], grain: .3 },
+      ombres: { force: .53, col: "#0A0008" }, flaques: { col: "#FF4040", r: 9, force: .3, max: 80 }, horizon: { type: "foret", col: "#2A1A26", haut: 70 } },
+    // septembre · l'Odyssée : aube marine, brume de mer, vagues qui ondulent, îles bleutées au large
+    egee: { soleil: ["#FFD8A8", .25], brume: { col: "#DCE6EC", dens: .0012, haut: 20, halo: 1 }, ciel: "#88B0E8", rebond: "#60A8C0", rim: .45, etalonnage: [.28, .3],
+      rayons: { n: 9, long: 560, larg: [4, 28], force: .12, col: "#FFE4B8" },
+      sol: { echelle: 50, haut: 20, creux: ["#1A6A88", .41], cretes: ["#4AA0B8", .41], roche: ["#8A8070", .41], taches: ["#2A90A8", .41, .78], grain: .15, rides: [.3, .06, .8] },
+      ombres: { force: .44, col: "#0A2A40" }, horizon: { type: "iles", col: "#7A9AAE", haut: 110 } },
+    // octobre · la Chocolaterie : lumière dorée de la verrière en rayons, air sucré, pelouse de sucre semée de bonbons roses, collines de chocolat
+    chocolaterie: { marque: { y: 90, ny: .8, vert: true }, soleil: ["#FFE0B0", .25], brume: { col: "#F0D8C0", dens: .0018, haut: 30, halo: .6 }, ciel: "#E8C8A0", rebond: "#C08860", rim: .35, etalonnage: [.31, .23],
+      rayons: { n: 10, long: 520, larg: [4, 26], force: .15, col: "#FFE8C0" },
+      sol: { echelle: 50, haut: 25, creux: ["#7CC060", .41], cretes: ["#C8F0A0", .41], roche: ["#8A5A3A", .54], taches: ["#FF9AC8", .41, .8], grain: .15 },
+      ombres: { force: .49, col: "#3A1808" }, horizon: { type: "collines", col: "#7A4A2A", haut: 130 } },
+    // décembre 2027 · le Multivers : nuit violette, rais de lumière orange des portails, flaques orangées sous les lumières, ruines de villes à l'horizon
+    multivers: { brume: { col: "#5A2A7A", dens: .0019, haut: 30, halo: .4 }, ciel: "#6A4AC0", rebond: "#C86030", rim: .55, etalonnage: [.35, .3],
+      rayons: { n: 8, long: 500, larg: [3, 22], force: .12, col: "#FF9A50", nuit: true },
+      sol: { echelle: 50, haut: 25, creux: ["#2A1A4A", .34], taches: ["#FF7A2A", .27, .84], grain: .25 },
+      ombres: { force: .53, col: "#0A0418" }, flaques: { col: "#FF9A4A", r: 9, force: .28, max: 60 }, horizon: { type: "ville", col: "#3A2852", haut: 100 } }
+  };
+  void WAOUH_BROUILLON;
   /* Habillage automatique (25/11/2026), appelé une fois par construire pour chaque décor qui a une ligne WAOUH :
        ombres   : { force, col, min, plein }  ombres de contact calculées d'après le décor lui-même (ombresAuto) ; jamais sur la piste
        nappes   : { col, l: [[x, z, rayon, hauteur, force]] }  nappes de brume posées au ras du sol (forêt, marais…)
