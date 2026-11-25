@@ -2750,3 +2750,21 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .rg-actuel small { font-size: 12px; color: var(--ink-2); } .rg-actuel b { font-size: 16px; color: var(--ink); } .rg-actuel span { font-size: 13.5px; line-height: 1.4; color: var(--ink); }
 .rg-actuel em { font: 700 10.5px/1 var(--f-num); font-style: normal; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink, var(--accent, #5b3fe0)); }
 .rg-tab > div.actuel { border: 2px solid var(--accent, #5b3fe0); background: color-mix(in srgb, var(--accent, #5b3fe0) 10%, var(--panel)); }
+
+/* v20.68 · objets de DÉPART de l'écurie (neutres, à tout le monde dès le 1/12/2026) */
+/* avatars : Dégradé, Rayures, Étoilé (à la couleur du pilote) */
+.av-degrade { background: linear-gradient(160deg, color-mix(in srgb, var(--c) 35%, #fff), var(--c) 50%, color-mix(in srgb, var(--c) 50%, #0d1016)); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 60%, #0d1016); }
+.av-rayures { background: repeating-linear-gradient(135deg, var(--c) 0 5px, color-mix(in srgb, var(--c) 30%, #fff) 5px 8px); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 55%, #0d1016); }
+.av-etoile { background: radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--c) 55%, #121a33), #0b1024 78%); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 70%, #fff); }
+.av-etoile::before { background: radial-gradient(circle at 20% 34%, #fff 0 1px, transparent 1.6px), radial-gradient(circle at 78% 24%, #fff 0 1.2px, transparent 1.8px), radial-gradient(circle at 70% 72%, #fff 0 .9px, transparent 1.4px), radial-gradient(circle at 28% 76%, #fff 0 1.1px, transparent 1.7px), radial-gradient(circle at 52% 12%, #fff 0 .8px, transparent 1.3px), radial-gradient(circle at 88% 52%, #fff 0 .7px, transparent 1.2px), radial-gradient(circle at 10% 58%, #fff 0 1px, transparent 1.5px), radial-gradient(circle at 46% 90%, #FFE9A8 0 1px, transparent 1.6px), radial-gradient(circle at 86% 82%, #fff 0 .9px, transparent 1.4px), radial-gradient(circle at 34% 18%, #FFE9A8 0 .9px, transparent 1.4px); }
+/* traînées (courbe du classement et vignettes) : Pointillés, Double, Ruban, Fumée */
+.fx-pointilles { stroke-width: 5.5; stroke-dasharray: .1 8; opacity: .85; }
+.fx-double { stroke-width: 2; opacity: .75; transform: translateY(-4.5px); }
+.fx-ruban { stroke-width: 9; opacity: .45; stroke-dasharray: 18 5; stroke-linecap: butt !important; animation: fxDefile 1.4s linear infinite; }
+.fx-fumee { stroke: #A9B1BB !important; stroke-width: 12; opacity: .32; filter: blur(3px); }
+/* noms des pilotes selon la livrée */
+.lv-rayures, .lv-damier, .lv-flammes { color: var(--c) !important; }
+.lv-rayures { text-decoration: underline double; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.lv-damier { background: repeating-linear-gradient(90deg, #101215 0 4px, #F5F5F2 4px 8px) 0 100% / 100% 2.5px no-repeat; padding-bottom: 2px; }
+.lv-flammes { text-shadow: 0 0 6px rgba(255, 106, 26, .65); }
+.lv-bicolore { -webkit-background-clip: text; background-clip: text; color: transparent !important; background-image: linear-gradient(100deg, var(--c) 55%, var(--ink) 55%); }
