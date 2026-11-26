@@ -613,6 +613,7 @@ function podiumCache() { return Date.now() < CHAUFFE_OUVRE && !apercuSaison(); }
 /** Bandeaux de toutes les vues + pastille sur l'onglet Podium */
 function majRappels() {
   VUES_RAPPEL.forEach(id => assurerRappel(document.getElementById(id)));
+  if (typeof majBandeauReleve === "function") majBandeauReleve();   // 📋 ton relevé du mois, corrigeable (js/7-bilan.js)
   { const vt = document.getElementById("v-trophees"); if (vt) setTimeout(() => assurerRappelPortrait(vt), 0); }   // v20.2 : aussi dans le Podium
   const t = document.querySelector('.onglet[data-vue="trophees"]'); if (!t) return;
   let p = t.querySelector(".pastille-nav"); const r = rappelCartes();

@@ -3054,3 +3054,15 @@ body:has(.av-ov) .toast, body:has(.av-case) .toast { z-index: 99; }
 .bdg-c.bdg-bloque { opacity: .72; border-style: dashed; }
 .bdg-c .bdg-lk { font-style: normal; font-size: 12px; margin-left: 2px; }
 .sr-aide em { position: absolute; left: 0; right: 0; bottom: 46px; font-style: normal; text-align: center; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+/* Bandeau « 📋 Ton relevé de … » (js/7-bilan.js, assurerBandeauReleve) : son % du mois, corrigeable jusqu'à la date limite ; dans le flux, rien ne se recouvre */
+.bd-releve { position: relative; display: flex; align-items: flex-start; gap: 10px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; margin: 0 0 12px; padding: 10px 40px 10px 12px; border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--rule)); background: color-mix(in srgb, var(--accent) 8%, var(--panel)); color: var(--ink); font: 500 13px/1.35 var(--f-text); animation: bdrIn .35s ease-out both; }
+.bd-releve .bdr-i { font-size: 20px; line-height: 1.2; flex: none; }
+.bd-releve .bdr-t { flex: 1; min-width: 0; display: grid; gap: 3px; justify-items: start; }
+.bd-releve .bdr-l1 { font-weight: 600; overflow-wrap: anywhere; } .bd-releve .bdr-l1 b { white-space: nowrap; } .bd-releve .bdr-env { font-weight: 500; color: var(--ink-2); }
+.bd-releve small { font-size: 12px; color: var(--ink-2); }
+.bd-releve .bdr-go { margin-top: 4px; padding: 6px 12px; font-size: 13px; min-height: 34px; }
+.bd-releve .bdr-x { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: transparent; color: var(--ink-3); font-size: 15px; cursor: pointer; }
+.bd-releve .bdr-x:hover, .bd-releve .bdr-x:focus-visible { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); }
+@keyframes bdrIn { from { opacity: 0; transform: translateY(-4px); } }
+.bd-releve.reduit { animation: none; } @media (prefers-reduced-motion: reduce) { .bd-releve { animation: none; } }
