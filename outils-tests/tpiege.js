@@ -9,7 +9,7 @@ const JOUEUR = { role: "perso", nom: "Clément" };
 // suit chaque fenêtre ouverte (affichette, nouvelles règles, mini-jeu) et le nombre maximum ouvertes en même temps
 const SUIVI = () => { window.FEN = []; window.FEN_MAX = 0; const scan = () => {
   const f = [...document.querySelectorAll(".tuto, .revel")]; window.FEN_MAX = Math.max(window.FEN_MAX, f.length);
-  f.forEach(x => { if (!x.dataset.suivi) { x.dataset.suivi = "1"; window.FEN.push(x.querySelector(".pg-aff") ? "piege" : x.classList.contains("mj-rev") ? "mj" : /12 circuits sont dévoilés/.test(x.innerText) ? "nouveautes+circuits" : x.querySelector(".tuto-c") ? "tuto:" + x.innerText.slice(0, 30) : "autre"); } });
+  f.forEach(x => { if (!x.dataset.suivi) { x.dataset.suivi = "1"; window.FEN.push(x.querySelector(".pg-aff") ? "piege" : x.classList.contains("mj-rev") ? "mj" : x.querySelector('[data-nvs-carte="circuits"]') ? "nouveautes+circuits" : x.querySelector(".tuto-c") ? "tuto:" + x.innerText.slice(0, 30) : "autre"); } });
 }; scan(); new MutationObserver(scan).observe(document.documentElement, { childList: true, subtree: true }); };
 const fen = p => p.evaluate(() => ({ l: window.FEN || [], max: window.FEN_MAX || 0, txt: (document.querySelector(".pg-aff") || {}).textContent || "" }));
 async function ouvrir(b, quand, mois, jusqua, o) {
@@ -27,7 +27,7 @@ const fermer = async (p, sel) => { await p.click(sel); await p.waitForTimeout(45
   // 2. le 1/1 : la grande révélation (12 circuits) puis le mini-jeu ; pas d'affichette de janvier en double
   { const { ctx, p, err } = await ouvrir(b, "2027-01-01T10:00:00", 202701, 202612, { stock: {} });
     const a = await fen(p); ok(a.l[0] === "nouveautes+circuits", "1/1 : d'abord les nouvelles règles avec les 12 circuits " + JSON.stringify(a.l));
-    await fermer(p, '[data-nv="ok"]');
+    await fermer(p, '[data-nv="passer"]');
     const f = await fen(p); ok(!err.length && !f.l.includes("piege") && f.l[f.l.length - 1] === "mj" && f.max === 1, "1/1 : puis le mini-jeu, sans affichette de janvier en double, une seule fenêtre à la fois " + JSON.stringify([f, err]));
     await ctx.close(); }
   // 3. les 1/2, 1/5, 1/6, 1/12 : l'affichette, puis le mini-jeu ; une seule fois

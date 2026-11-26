@@ -866,6 +866,7 @@ function fermerFenetreOuverte() {
   { const c = document.querySelector(".av-case") || document.querySelector(".av-ov");   // v20.62 : calendrier de l'Avent, la case d'abord, puis le calendrier
     if (c) { const x = c.querySelector(".av-x, [data-av-fermer]"); if (x) x.click(); else c.remove(); return true; } }
   { const a = document.querySelector(".af3d"); if (a) { a.remove(); return true; } }   // v20.80 : l'affichette des décors 3D
+  { const nv = document.querySelector(".nvs"); if (nv) { if (nv.fermer) nv.fermer(); else nv.remove(); return true; } }   // v20.96 : les nouvelles règles en cartes
   const dialogues = [...document.querySelectorAll(".regles")]; if (dialogues.length) { const d = dialogues[dialogues.length - 1], x = d.querySelector(".rg-x"); if (x) x.click(); else d.remove(); return true; }
   { const rv = [...document.querySelectorAll(".revel")], d = rv[rv.length - 1];   // v20.44 : cérémonies et fiches de badges (relecture joueur : le retour les ferme)
     if (d) { const x = d.querySelector('[data-cb-ok], [data-tk-ok], [data-mj-ok], [data-cc="ok"], .rg-x, [aria-label="Fermer"]'); if (x) x.click(); else d.remove(); return true; } }   // [data-mj-ok] : 🎲 cérémonie notée vue, puis la révélation du nouveau mois suit
