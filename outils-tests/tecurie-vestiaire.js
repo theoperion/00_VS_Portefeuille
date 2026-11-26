@@ -203,14 +203,14 @@ const deborde = p => p.evaluate(() => document.documentElement.scrollWidth > inn
       ok(r1.rap && /pas enregistré ton écurie/i.test(r1.txt) && r1.vue === "trophees" && !r2.rap && r2.vue === "trophees" && r2.porte === cq1 && r3.pod === "stand" && !r3.rap && r3.porte !== cq1 &&
         envois.length === av + 1 && r4.vue === "classement" && r4.porte === cq2 && !r5.rap && r5.vue === "mois",
         "quitter l'écurie sans enregistrer : rappel (à côté = on reste ; Annuler = tenue d'avant puis on part ; Enregistrer = envoyé puis on part) ; rien quand tout est enregistré " + JSON.stringify({ r1: r1.rap, cq1, cq2, r2, r3, r4, r5 }) + tag);
-      // essai → 📂 Fiche d'un autre → rappel → Enregistrer : envoyé ET la fiche s'ouvre
+      // essai → 🏆 Vitrine d'un autre → rappel → Enregistrer : envoyé ET la fiche s'ouvre
       await p.evaluate(async () => { allerA("trophees"); ETAT.podium = "ecurie"; ECU = null; rendreTrophees(); await new Promise(r => setTimeout(r, 300)); });
       await ouvrirCat(p, "casque");
       const cq3 = await autreCasque(); await p.evaluate(async id => { document.querySelector('[data-slot="casque"][data-item="' + id + '"]').click(); await new Promise(r => setTimeout(r, 300)); }, cq3);
       const av2 = envois.length; await p.evaluate(() => document.querySelector('.grille-dep [data-gp-fiche="Clément"]').click()); await p.waitForTimeout(300);
       const f0 = await p.evaluate(() => !!document.querySelector(".ecu-rappel")); await p.click('.ecu-rappel [data-rap="oui"]'); await p.waitForTimeout(800);
       const f1 = await p.evaluate(() => ({ vue: vueActive(), fiche: ETAT.fiche, porte: equipDe("Kévin").casque }));
-      ok(f0 && envois.length === av2 + 1 && f1.vue === "fiche" && f1.fiche === "Clément" && f1.porte === cq3, "essai puis 📂 Fiche de Clément : rappel → Enregistrer = envoyé, et la fiche de Clément s'ouvre " + JSON.stringify({ f0, f1, cq3 }) + tag);
+      ok(f0 && envois.length === av2 + 1 && f1.vue === "fiche" && f1.fiche === "Clément" && f1.porte === cq3, "essai puis 🏆 Vitrine de Clément : rappel → Enregistrer = envoyé, et la fiche de Clément s'ouvre " + JSON.stringify({ f0, f1, cq3 }) + tag);
       // garage d'un autre pilote : en lecture seule
       await ouvrirEcurie(p);
       const gar = await p.evaluate(async () => { document.querySelector('.grille-dep [data-voir="Clément"]').click(); await new Promise(r => setTimeout(r, 500)); const g = document.querySelector("#garage");

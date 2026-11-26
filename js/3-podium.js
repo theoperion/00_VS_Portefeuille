@@ -819,7 +819,7 @@ function badgesLigne(nom, e) {
   if (basesSeules() || !saisonJouee()) return "";
   const tous = badgesPossedes(nom); if (!tous.length) return "";
   const vus = badgesAffiches(nom, e), autres = tous.filter(b => !vus.some(x => x.id === b.id));
-  return '<span class="bdgs">' + vus.map(b => b.html).join("") + (autres.length ? '<span class="bdg bdg-plus" data-bdg="' + esc(nom + " a aussi : " + autres.map(b => b.ico + " " + b.nom).join(", ") + ". Tout est dans sa vitrine (touche sa ligne, puis sa fiche). Chacun choisit ses 3 badges dans Podium › Écurie › Badges.") + '">+' + autres.length + "</span>" : "") + "</span>";
+  return '<span class="bdgs">' + vus.map(b => b.html).join("") + (autres.length ? '<span class="bdg bdg-plus" data-bdg="' + esc(nom + " a aussi : " + autres.map(b => b.ico + " " + b.nom).join(", ") + ". Tout est dans sa vitrine (touche son nom). Chacun choisit ses 3 badges dans Podium › Écurie › Badges.") + '">+' + autres.length + "</span>" : "") + "</span>";
 }
 /** lot47 · la vitrine de la fiche commence par un palmarès en 3 chiffres (saison seulement, comme toute la vitrine)
  *  v20.83 (Théo, 26/11) : chaque chiffre s'explique au toucher (ce qu'il compte) ; l'ancienne « étagère » d'icônes faisait doublon
@@ -844,9 +844,13 @@ function fermerBulleVitrine() {
   if (!t || !el || el.hidden || (el.querySelector(".tst-t") || {}).textContent !== t) return false;
   el.hidden = true; return true;
 }
-document.addEventListener("click", ev => { if (BULLE_VT && !(ev.target.closest && ev.target.closest(".vitrine [data-bdg], #toast"))) fermerBulleVitrine(); }, true);
+document.addEventListener("click", ev => { if (BULLE_VT && !(ev.target.closest && ev.target.closest(".vitrine [data-bdg], .f-tete [data-bdg], #toast"))) fermerBulleVitrine(); }, true);
 /** Branche la vitrine d'une fiche : chaque élément s'explique au toucher (bulle), les médailles ouvrent leur fiche de succès */
 function brancherVitrine(v, nom) {
+  const tt = v && v.querySelector(".f-tete");   // Théo, 26/11 : l'en-tête (plaque, badges épinglés) s'explique pareil
+  if (tt) tt.querySelectorAll("[data-bdg]").forEach(b => { b.style.cursor = "help"; if (b.tagName !== "BUTTON") { b.setAttribute("role", "button"); b.tabIndex = 0; }
+    const go = ev => { ev.stopPropagation(); bulleVitrine(b.dataset.bdg); };
+    b.addEventListener("click", go); b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(e); } }); });
   const vt = v && v.querySelector(".vitrine"); if (!vt) return;
   vt.querySelectorAll(".vt-badges > span:not([data-bdg])").forEach(p => {   // une puce ajoutée plus tard sans explication : au moins ce qu'elle est
     p.dataset.bdg = p.textContent.trim() + (p.title ? " : " + p.title : "") + (p.classList.contains("vt-garde") ? ". Titre tenu à la fin de la saison : gardé pour toujours, il ne se vole plus." : ".");
@@ -1381,7 +1385,7 @@ function htmlDetailPoints(y, annonces) {   // Théo, 26/11 : la courbe d'abord, 
   const tab = '<div class="scroll-x"><table class="tab ch-t"><thead><tr><th>Mois</th>' + noms.map(n => '<th><i style="background:' + couleur(n) + '"></i>' + esc(n) + "</th>").join("") + "</tr></thead><tbody>" +
     c.mois.slice().reverse().map(m => "<tr><td>" + GPS[circuitDe(m.k)].drap + " " + esc(moisCourt(m.k)) + (m.spec ? " " + m.spec.ico : "") + "</td>" + noms.map(n => { const x = m.l.find(z => z.nom === n); return x ? '<td class="' + (x.rg === 1 ? "r1" : "") + '">' + x.p + (x.bonus ? "<sup>🎯</sup>" : "") + "</td>" : '<td class="muted">·</td>'; }).join("") + "</tr>").join("") +
     "</tbody></table></div>";
-  const bilan = noms.map(n => { const t = c.tot[n]; return '<li><b class="pts-nom" data-gp-fiche="' + esc(n) + '" role="button" tabindex="0" aria-label="Fiche de ' + esc(n) + '">' + esc(n) + ' <i class="gp-vers-fiche" aria-hidden="true">›</i></b> : ' + t.pts + " pts · " + t.v + " victoire" + (t.v > 1 ? "s" : "") + " · " + t.pod + " podium" + (t.pod > 1 ? "s" : "") + " · " + t.bonus + " 🎯</li>"; }).join("");
+  const bilan = noms.map(n => { const t = c.tot[n]; return '<li><b class="pts-nom" data-gp-fiche="' + esc(n) + '" role="button" tabindex="0" aria-label="Vitrine de ' + esc(n) + '">' + esc(n) + ' <i class="gp-vers-fiche" aria-hidden="true">›</i></b> : ' + t.pts + " pts · " + t.v + " victoire" + (t.v > 1 ? "s" : "") + " · " + t.pod + " podium" + (t.pod > 1 ? "s" : "") + " · " + t.bonus + " 🎯</li>"; }).join("");
   return (c.mois.length ? '<div class="pts-courbe">' + boiteGraphe("g-champ", noms.map(n => ({ nom: n, c: couleur(n) }))) + "</div>" : "") +
     (c.complete ? '<div class="bref">🏆 <b>' + (c.chauffe ? premiersChauffe(c).map(esc).join("</b> & <b>") : esc(c.classement[0])) + "</b> " + (c.chauffe ? (premiersChauffe(c).length > 1 ? "remportent ex æquo le tour de chauffe." : "remporte le tour de chauffe.") : "est champion de la saison " + numeroSaison(y) + ".") + "</div>" : "") + annonces +   // v17.66 (Théo) : la courbe du championnat reste toujours visible
     '<details class="pts-det" id="pts-det"' + (ETAT.ptsOuvert === "1" ? " open" : "") + '><summary>📊 Détail des points <small>bilan, mois par mois, barème</small></summary>' +
@@ -1655,11 +1659,11 @@ function htmlEcurie() {
   return showroom + htmlCollantEcu(qui, e) + htmlHasardEcu(qui, e) + etageres +
     '<button class="btn acc plein" type="button" id="ecu-garder">Enregistrer mon écurie</button>' +
     '<p class="info">Ta voiture de course porte ta livrée, ton casque, ta finition, ton numéro et ta traînée. En course, on garde ton visage pour qu\'on te reconnaisse.' + (ecurieDepart() ? " Jusqu'au 31 décembre, les objets de départ ; de nouveaux objets se gagneront tout au long de 2027." : "") + "</p>" +
-    '<div><h3 class="s-h3">La grille <small>touche une écurie pour la voir, 📂 pour la fiche</small></h3></div><div class="grille-dep">' + htmlGrilleEcu(qui, e) + "</div>" + htmlGarage(qui);
+    '<div><h3 class="s-h3">La grille <small>touche une écurie pour la voir, 🏆 pour sa vitrine</small></h3></div><div class="grille-dep">' + htmlGrilleEcu(qui, e) + "</div>" + htmlGarage(qui);
 }
 function htmlGrilleEcu(qui, e) {
   return D.personnes.map(p => { const eq = p.nom === qui ? e : equipDe(p.nom); return '<div class="gr-w' + (ECU_VOIR === p.nom ? " on" : "") + '"><button type="button" class="gr-l' + (ECU_VOIR === p.nom ? " on" : "") + '" data-voir="' + esc(p.nom) + '" aria-label="Voir l\'écurie de ' + esc(p.nom) + '">' + avatar(p.nom, eq) + "<b" + attrLivree(p.nom, eq) + ">" + esc(p.nom) + "</b>" + (eq.plaque !== "aucune" ? '<span class="plaque">' + esc(ITEMS.plaque[eq.plaque]) + "</span>" : "") + '<span class="num">#' + eq.numero + " ›</span></button>" +
-    '<button type="button" class="gr-f" data-gp-fiche="' + esc(p.nom) + '" aria-label="Fiche de ' + esc(p.nom) + '"><span aria-hidden="true">📂</span><small>Fiche</small></button></div>'; }).join("");   // v20.71 (Théo) : la ligne = son écurie, 📂 = sa fiche
+    '<button type="button" class="gr-f" data-gp-fiche="' + esc(p.nom) + '" aria-label="Vitrine de ' + esc(p.nom) + '"><span aria-hidden="true">🏆</span><small>Vitrine</small></button></div>'; }).join("");   // v20.71 (Théo) : la ligne = son écurie, 📂 = sa fiche
 }
 /* ---------- v20.84 (Théo) · 💾 « Enregistrer » en haut : dans l'en-tête de la voiture, allumé (pastille « modifié ») dès qu'un changement attend ;
    un bandeau collant discret le garde sous la main en défilant ; un rappel si on quitte l'écurie sans enregistrer ---------- */
@@ -1997,8 +2001,47 @@ function htmlGarage(qui) {
     btnVueEcu() + '<button class="sr-klaxon" type="button" id="garage-klaxon">📯 Son klaxon</button></div>' +
     '<div class="gar-eq">' + SLOTS.map(([s, lib]) => '<span><small>' + lib + "</small>" + esc(ITEMS[s][eq[s]]) + "</span>").join("") + "</div>" +
     (ex.length ? '<div class="gar-ex">' + ex.sort((a, b) => b.palier - a.palier).map(x => '<span title="' + esc(x.nom) + '">' + x.ico + " " + esc(x.nom) + "</span>").join("") + "</div>" : "") +
-    '<button class="btn acc gar-fiche" type="button" data-gp-fiche="' + esc(n) + '">📂 Fiche de ' + esc(n) + " <small>" + (saisonJouee() ? "vitrine, portefeuille, historique" : "portefeuille, historique mois par mois") + "</small> ›</button>" +   // v20.71
+    '<button class="btn acc gar-fiche" type="button" data-gp-fiche="' + esc(n) + '">🏆 Vitrine de ' + esc(n) + " <small>" + (saisonJouee() ? "sa F1, ses trophées, ses chiffres" : "sa F1, ses chiffres") + "</small> ›</button>" +   // v20.71
     '<button class="lien" type="button" id="garage-fermer">Fermer</button></div>';
+}
+/* ---------- Théo, 26/11 · la vitrine d'un pilote (vue « fiche ») : en-tête, trophées, SA F1, puis « Ses chiffres » repliés ----------
+   La F1 = celle de son écurie, telle qu'il l'a ENREGISTRÉE (equipDe : un objet pas encore gagné, de 2027 avant le 1/1 par exemple, retombe sur l'objet de série).
+   Une seule voiture 3D à l'écran (V3D.fiche) : changer de pilote la remplace, quitter la vitrine l'arrête. Toujours en 3D à l'ouverture ;
+   « ✏️ 2D » vaut pour la vitrine ouverte seulement (FICHE_2D, remis à zéro à la prochaine ouverture et au changement de pilote).
+   Sans 3D sur l'appareil, ou en mode léger : le dessin 2D, sans bouton. */
+let FICHE_2D = false;
+function fiche3DPossible() { try { return !!(window.Piste && Piste.vitrine && Piste.qualite && Piste.qualite.niveau() !== "leger" && Piste.supporte()); } catch (e) { return false; } }
+function arreterVoitureFiche() { try { if (V3D.fiche) V3D.fiche.stop(); } catch (e) { /* déjà arrêtée */ } V3D.fiche = null; }
+/** l'en-tête : avatar, nom, numéro, plaque, badges épinglés (bulles au toucher, comme la vitrine) */
+function enteteFiche(nom) {
+  const eq = equipDe(nom), pla = plaqueDe(nom), bd = badgesAffiches(nom);
+  return '<div class="f-tete" style="--c:' + couleur(nom) + '">' + avatar(nom) + '<div class="f-tete-t"><b class="f-tete-n"><span' + attrLivree(nom) + ">" + esc(nom) + '</span><span class="f-tete-num">#' + eq.numero + "</span></b>" +
+    (pla ? '<div class="vt-plaque">' + pla.replace('class="plaque', 'class="plaque grande').replace(/data-bdg="[^"]*"/, 'role="button" tabindex="0" data-bdg="' + esc(textePlaqueVitrine(nom, eq.plaque, pla)) + '"') + "</div>" : "") +
+    (bd.length ? '<div class="f-tete-b">' + bd.map(b => b.html).join("") + "</div>" : "") + "</div></div>";
+}
+/** la F1 du pilote : 2D tout de suite (dessin de l'Écurie), la 3D se monte ensuite par-dessus (monterVoitureFiche) */
+function htmlVoitureFiche(nom) {
+  if (!D.personnes.some(p => p.nom === nom)) return "";
+  const brut = ((D.ecurie || {})[nom] || {}).equip, perso = ecurieOuverte() && !!brut && Object.keys(brut).length > 0, soi = nom === moiPilote(), td = fiche3DPossible();
+  const eq = equipDe(nom), en3D = td && !FICHE_2D;
+  return '<section class="f-voit" aria-label="' + esc((soi ? "Ta" : "Sa") + " F1") + '"><div class="vt-st"><b>🏎️ ' + (soi ? "Ta" : "Sa") + " F1</b><small>" + (perso ? (soi ? "ton écurie enregistrée" : "son écurie enregistrée") : "voiture de série") + (en3D ? " · fais-la tourner du doigt" : "") + "</small></div>" +
+    '<div class="showroom f-voit-sr"><div class="sr-num" aria-hidden="true">' + eq.numero + '</div><div class="sr-3d" id="fiche-3d">' + svgVoiture({ nom, e: eq, reflet: true, idle: true }) + "</div>" +
+    (td ? '<button class="sr-klaxon sr-vue" type="button" data-fiche-vue aria-label="' + (en3D ? "Voir la voiture en 2D" : "Voir la voiture en 3D") + '">' + (en3D ? "✏️ 2D" : "🧊 3D") + "</button>" : "") +
+    (!perso ? '<span class="f-voit-serie">Pas encore personnalisée</span>' : "") + "</div>" +
+    (ecurieOuverte() ? '<button class="lien f-voit-gar" type="button" data-fiche-garage="' + esc(nom) + '">' + (soi ? "Voir mon garage ›" : "Voir son garage ›") + "</button>" : "") + "</section>";
+}
+/** monte (ou remplace) LA voiture 3D de la vitrine ; rien si la vitrine est cachée, en 2D ou sans 3D */
+function monterVoitureFiche(v, nom) {
+  arreterVoitureFiche();
+  const box = v && v.querySelector("#fiche-3d"); if (!box || v.hidden || FICHE_2D || !fiche3DPossible()) return;
+  try { V3D.fiche = monter3D(box, nom, equipDe(nom), true); } catch (e) { V3D.fiche = null; /* le dessin 2D reste affiché */ }
+}
+function brancherVoitureFiche(v, nom) {
+  const b = v.querySelector("[data-fiche-vue]"); if (b) b.addEventListener("click", () => { FICHE_2D = !FICHE_2D; if (FICHE_2D) arreterVoitureFiche(); rendreFiche(); });
+  const g = v.querySelector("[data-fiche-garage]"); if (g) g.addEventListener("click", () => { const n = g.dataset.ficheGarage;
+    ECU_VOIR = n === moiPilote() ? null : n; ECU_NOUV = null; ETAT.podium = "ecurie"; garder(); allerA("trophees");
+    setTimeout(() => { const el = document.getElementById(ECU_VOIR ? "garage" : "sr-3d"); if (el) el.scrollIntoView({ block: "start", behavior: reduit ? "auto" : "smooth" }); }, 250); });
+  monterVoitureFiche(v, nom);
 }
 /* ================= V16 · La route des 4 mondes : cartes de collection, badges, vitrine =================
    Mondes ORIGINAUX inspirés de nos univers préférés (aucun nom, personnage, logo ni visuel officiel).
@@ -2714,8 +2757,7 @@ function vitrineFiche(nom) {
     (etoilesNoel(nom) ? spe("etoiles", "⭐", "⭐ Étoiles de Noël : ×" + etoilesNoel(nom) + " jeu" + (etoilesNoel(nom) > 1 ? "x" : "") + " gagné" + (etoilesNoel(nom) > 1 ? "s" : "") + " au calendrier de l'Avent 2026 (1re place finale au classement du jeu, figé le 24 décembre à 23 h 59).").replace('<span class="cc-emo">⭐</span>', '<span class="cc-emo">⭐</span><small class="vt-n">×' + etoilesNoel(nom) + "</small>") : "") +
     (a("ticket") ? spe("ticket", "🎫", "💎 🎫 Ticket d'or · Légende : " + (soi ? "tu as" : nom + " a") + " trouvé LE ticket d'or dans sa tablette de la 🍫 Chocolaterie. Un seul dans toute la saison : plus personne ne pourra l'avoir.") : "");
   const nB = ors.length + suiv.length + (pm && pm.nom === nom ? 1 : 0) + (autres ? autres.split("vt-spe").length - 1 : 0);
-  const pla = plaqueDe(nom), pid = pla && equipDe(nom).plaque;
-  return '<div class="vitrine">' + (pla ? '<div class="vt-plaque">' + pla.replace('class="plaque', 'class="plaque grande').replace(/data-bdg="[^"]*"/, 'role="button" tabindex="0" data-bdg="' + esc(textePlaqueVitrine(nom, pid, pla)) + '"') + "</div>" : "") +
+  return '<div class="vitrine">' +   // Théo, 26/11 : la plaque est montée dans l'en-tête de la vitrine (enteteFiche)
     '<div class="vt-h"><b>🗄️ La vitrine de ' + Nom + "</b><small>" + (ors.length + suiv.length) + " succès sur 12 · " + ors.length + " en premier 🥇</small></div>" + palmaresVitrine(nom) +
     '<div class="vt-st"><b>🎖️ ' + (soi ? "Tes" : "Ses") + " badges</b><small>" + (nB ? "touche-en un : comment " + (soi ? "tu l'as eu" : "il l'a eu") + (ep.size ? " · 📌 = affiché au Classement" : "") : "") + "</small></div>" +
     (nB ? '<div class="vt-meds">' + (pm && pm.nom === nom ? '<button type="button" class="vt-med p-legende" data-carte-coll="million" title="Premier millionnaire" aria-label="Premier millionnaire : toucher pour voir comment"><span class="cc-emo">👑</span></button>' : "") + autres + ors.map(x => med(x, true)).join("") + suiv.map(x => med(x, false)).join("") + "</div>" : '<p class="info">Pas encore de badge : chaque succès réussi (Trophées › 🏅 Succès) en donne un, et le premier qui le réussit grave son nom dessus.</p>') +

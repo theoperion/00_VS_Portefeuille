@@ -186,7 +186,7 @@ const MJ_PEINTRES = {
     brancher(el, C, ap) { const b = el.querySelector("[data-mj-ap]"); if (b && C.etat.chasse) b.addEventListener("click", () => jouerMJ(el, C, { attraper: 1, onglet: C.etat.chasse.onglet }, ap, b)); }
   }
 };
-const MJ_ONGLETS = { classement: "Classement", mois: "Mois", fiche: "Fiche", trophees: "Podium" };
+const MJ_ONGLETS = { classement: "Classement", mois: "Mois", fiche: "Vitrine", trophees: "Podium" };
 /* ---------- la chasse : l'objet caché (dessin et texte envoyés par le serveur) posé dans l'onglet tiré pour moi, tant qu'il n'est pas attrapé ---------- */
 function poserCacheMJ() {
   const C = MJ && MJ.courant, ch = C && C.type === "chasse" && C.etat && !C.etat.fait && C.etat.chasse, ici = ch && !!document.querySelector('section.view[data-vue="' + ch.onglet + '"]:not([hidden])') && !document.querySelector(".revel, .regles, .tuto");

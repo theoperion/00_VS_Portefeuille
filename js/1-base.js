@@ -623,7 +623,7 @@ function rendreClassement() {
     (typeof plaqueMillion === "function" ? plaqueMillion() : "") + filtres(true) +
     '<div class="periode" title="Performance (TWR), versements neutralisés' + (deb && st.some(s => s.n < nMois) ? " ; chaque courbe démarre au premier relevé de la personne" : "") + '">' + esc(textePeriode(deb, fin, nMois)) + " · TWR, versements neutralisés</div>" +
     '<div class="tour' + (animer ? " entree" : "") + '"><div class="tour-h"><span>Pos.</span><span>Portefeuille</span><span>TWR<span class="h-long"> · écart</span></span></div>' + tour + "</div>" +
-    '<p class="tour-aide">👆 Touche un pilote pour ouvrir sa fiche' + (saisonJouee() ? " (vitrine, historique)" : " (historique mois par mois)") + ".</p>" +
+    '<p class="tour-aide">👆 Touche un pilote pour ouvrir sa vitrine' + (saisonJouee() ? " (sa F1, ses trophées, ses chiffres)" : " (sa F1, ses chiffres)") + ".</p>" +
     (saisonJouee() ? '<p class="leg-bdg"><b>Sur les lignes</b> tête cerclée d\'or = en tête du championnat · 🏆 champion de saison · ⚡💥… exclusifs (un seul exemplaire) · « +N » = les autres, dans la vitrine. <span>Touche un badge pour savoir ce qu\'il veut dire.</span></p>' : "") +
     "<div>" + '<h2 class="sec">La course <small>performance cumulée</small></h2></div>' +
     boiteGraphe("g-course", series.map(s => ({ nom: s.nom, c: s.c, dash: s.dash }))) +
@@ -668,7 +668,7 @@ function rendreClassement() {
       const c = (l, val, cls) => "<div><span>" + l + '</span><b class="' + (cls || "") + '">' + val + "</b></div>";
       const d = document.createElement("div"); d.className = "detail";
       const lead = typeof saisonJouee === "function" && saisonJouee() && typeof leaderSaison === "function" && leaderSaison() === s.nom;
-      d.innerHTML = '<button class="btn acc fiche-go" type="button">📂 Fiche de ' + esc(s.nom) + " <small>" + (typeof saisonJouee === "function" && saisonJouee() ? "vitrine, portefeuille, historique" : "portefeuille, historique mois par mois") + "</small> ›</button>" +
+      d.innerHTML = '<button class="btn acc fiche-go" type="button">🏆 Vitrine de ' + esc(s.nom) + " <small>" + (typeof saisonJouee === "function" && saisonJouee() ? "sa F1, ses trophées, ses chiffres" : "sa F1, ses chiffres") + "</small> ›</button>" +
         (lead ? '<p class="det-lead">🟡 En tête du championnat de la saison : sa tête est cerclée d\'or jusqu\'à ce qu\'un autre le dépasse.</p>' : "") +
         '<div class="mini">' + c("Écart vs " + esc(D.marche.indices[i1]), pts(s.i1 ? s.twr - s.i1.twr : null), sens(s.i1 ? s.twr - s.i1.twr : null)) + c("Volatilité", volTxt(s)) + c("Sharpe", sharpeTxt(s)) + c("Pire baisse", pct(s.baisseMax), sens(s.baisseMax)) +
         c("Meilleur (" + moisCourt(s.meilleur.k) + ")", pct(s.meilleur.r), sens(s.meilleur.r)) + c("Pire (" + moisCourt(s.pire.k) + ")", pct(s.pire.r), sens(s.pire.r)) + c("MWR", pct(s.mwr), sens(s.mwr)) +

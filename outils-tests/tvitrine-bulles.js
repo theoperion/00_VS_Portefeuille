@@ -38,7 +38,7 @@ async function page(b, quand, moi, sombre, chauffe) {
   await p.evaluate(() => document.querySelectorAll(".revel, .regles, .tuto, .bulle-portrait, .ba, .av-ov").forEach(x => x.remove()));
   return { ctx, p, err };
 }
-/** dans la page : ouvre la fiche de « nom », touche chaque élément de la vitrine et lit ce qui s'ouvre */
+/** dans la page : ouvre la fiche de « nom », touche chaque élément de la vitrine et lit ce qui s'ouvre (Théo, 26/11 : la plaque est montée dans l'en-tête, .f-tete) */
 const PARCOURS = async ({ nom }) => {
   const w = (t = 250) => new Promise(r => setTimeout(r, t)), toastTxt = () => { const t = document.querySelector("#toast"); return t && !t.hidden ? t.querySelector(".tst-t").textContent : null; };
   const ouvrir = async () => { document.querySelectorAll(".revel").forEach(x => x.remove()); ETAT.fiche = nom; garder(); allerA("fiche"); await w(500); document.querySelectorAll(".revel, .regles, .tuto, .ba").forEach(x => x.remove()); };
@@ -47,7 +47,7 @@ const PARCOURS = async ({ nom }) => {
   const out = { vitrine: true, txt: v.innerText, html: v.outerHTML, plaque: null, chif: [], puces: [], meds: [], spe: [], etagere: !!v.querySelector(".vt-etagere"), titres: [...v.querySelectorAll(".vt-st b")].map(b => b.textContent), pins: v.querySelectorAll(".vt-pin").length };
   const retour = async () => { if (history.state && history.state.vs === "garde") history.back(); else dispatchEvent(new PopStateEvent("popstate", { state: null })); await w(350); };   // le vrai bouton retour du téléphone
   const touche = async el => { el.scrollIntoView({ block: "center" }); el.click(); await w(200); return toastTxt(); };
-  const pl = v.querySelector(".vt-plaque [data-bdg]"); if (pl) out.plaque = { lib: pl.textContent.trim(), b: await touche(pl) };
+  const pl = document.querySelector("#v-fiche .f-tete .vt-plaque [data-bdg]"); if (pl) out.plaque = { lib: pl.textContent.trim(), b: await touche(pl) };
   for (const c of v.querySelectorAll(".vt-chif")) out.chif.push({ lib: c.innerText.replace(/\s+/g, " "), b: await touche(c) });
   for (const c of v.querySelectorAll(".vt-badges > span")) out.puces.push({ lib: c.textContent.trim(), b: await touche(c) });
   for (const c of v.querySelectorAll(".vt-meds .vt-spe")) out.spe.push({ b: await touche(c) });
@@ -68,7 +68,7 @@ const PARCOURS = async ({ nom }) => {
   }
   await ouvrir();
   // rien ne se recouvre : les éléments touchables de la vitrine, deux à deux ; rien ne déborde à 390 px
-  const els = [...document.querySelectorAll("#v-fiche .vitrine .vt-chif, #v-fiche .vitrine .vt-med, #v-fiche .vitrine .vt-badges > span, #v-fiche .vitrine .vt-plaque [data-bdg], #v-fiche .vitrine .vt-st")].map(e => e.getBoundingClientRect());
+  const els = [...document.querySelectorAll("#v-fiche .vitrine .vt-chif, #v-fiche .vitrine .vt-med, #v-fiche .vitrine .vt-badges > span, #v-fiche .f-tete .vt-plaque [data-bdg], #v-fiche .vitrine .vt-st")].map(e => e.getBoundingClientRect());
   out.recouvre = 0; for (let i = 0; i < els.length; i++) for (let j = i + 1; j < els.length; j++) { const a = els[i], c = els[j]; if (Math.min(a.right, c.right) - Math.max(a.left, c.left) > 2 && Math.min(a.bottom, c.bottom) - Math.max(a.top, c.top) > 2) out.recouvre++; }
   out.deborde = [...document.querySelectorAll("#v-fiche .vitrine *")].filter(x => { const r = x.getBoundingClientRect(); return r.width && (r.right > innerWidth + 1 || r.left < -1); }).length + (document.documentElement.scrollWidth > 390 ? 1 : 0);
   return out;
