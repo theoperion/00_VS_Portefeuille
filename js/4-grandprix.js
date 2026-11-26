@@ -918,19 +918,25 @@ function ouvrirClassementTresor(ci) {
   const G = GPS[ci], o = document.createElement("div"); o.className = "regles tc-b"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Classement du trésor");
   o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>🗝️ Trésor de ' + esc(MOIS_L[t.mois - 1] || "") + (G ? " · " + G.drap + " " + esc(G.gp) : "") + '</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div><div class="rg-corps">' +
     classementTresorHTML(t) + '<button class="btn ghost tc-aide" type="button">❔ Comment ça marche</button></div></div>';
-  document.body.appendChild(o);
+  hoteFenetre().appendChild(o);   // v20.96 : en plein écran, la fenêtre s'ouvre DANS le plein écran (sinon elle restait invisible derrière)
   const fermer = () => o.remove();
   o.querySelector(".rg-x").addEventListener("click", fermer); o.addEventListener("click", ev => { if (ev.target === o) fermer(); });
   o.addEventListener("keydown", ev => { if (ev.key === "Escape") fermer(); });
-  o.querySelector(".tc-aide").addEventListener("click", () => { fermer(); ouvrirAideTresor(); });
+  o.querySelector(".tc-aide").addEventListener("click", () => { fermer(); aideTresor(); });
   o.querySelector(".rg-x").focus();
+}
+/** v20.96 (Théo) · « ❔ Comment ça marche » : la tuile « Le trésor » des règles (js/11-regles.js), ouverte dans le plein écran s'il y en a un ;
+ *  si la tuile n'existe pas encore (avant le 1er décembre 2026, aperçu admin), la règle en images dans sa propre fenêtre */
+function aideTresor() {
+  if (typeof ouvrirRegles === "function" && regleTresor()) { ouvrirRegles("tresor"); if (document.querySelector('.regles #rgt-tresor:not([hidden])')) return; document.querySelectorAll(".regles.rgt").forEach(x => x.remove()); document.documentElement.classList.remove("fige"); }
+  ouvrirAideTresor();
 }
 /** l'aide de l'encadré : les mêmes règles visuelles que dans 📖 Règles */
 function ouvrirAideTresor() {
   document.querySelectorAll(".tc-b").forEach(x => x.remove());
   const o = document.createElement("div"); o.className = "regles tc-b"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "La chasse au trésor");
   o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>🗝️ La chasse au trésor</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div><div class="rg-corps">' + htmlRegleTresor() + "</div></div>";
-  document.body.appendChild(o);
+  hoteFenetre().appendChild(o);
   const fermer = () => o.remove();
   o.querySelector(".rg-x").addEventListener("click", fermer); o.addEventListener("click", ev => { if (ev.target === o) fermer(); });
   o.addEventListener("keydown", ev => { if (ev.key === "Escape") fermer(); });
@@ -975,8 +981,8 @@ function majChronoTresor() {
 /** « 🔍 Je lance ma recherche » : un 1er toucher arme, un 2e dans les 4 s lance (la reprise, elle, part au 1er toucher) */
 function armerLancement(bt, t, pi) {
   if (t.lance) { lancerRecherche(t, bt, pi); return; }
-  if (bt.dataset.arme !== "1") { bt.dataset.arme = "1"; bt.classList.add("arme"); bt.innerHTML = "▶ Sûr ? Touche encore : le chrono part";
-    clearTimeout(bt._t); bt._t = setTimeout(() => { if (!bt.isConnected) return; bt.dataset.arme = ""; bt.classList.remove("arme"); bt.innerHTML = "🔍 Je lance ma recherche"; }, 4000); return; }
+  if (bt.dataset.arme !== "1") { bt.dataset.arme = "1"; bt.classList.add("arme"); bt.innerHTML = "▶ Sûr ? Touche encore";
+    clearTimeout(bt._t); bt._t = setTimeout(() => { if (!bt.isConnected) return; bt.dataset.arme = ""; bt.classList.remove("arme"); bt.innerHTML = "🔍 Lancer"; }, 4000); return; }
   clearTimeout(bt._t); lancerRecherche(t, bt, pi);
 }
 /** la caméra repart de la vue d'ensemble du circuit (comme au départ) : le trajet jusqu'à la cachette est toujours chronométré */
@@ -995,7 +1001,7 @@ async function lancerRecherche(t, bt, pi) {
     if (pi && pi.classList.contains("en2d")) { SANS_AIDE_VUE = true; try { if (pi.classList.contains("v2")) choisirVueGP("visite"); else { const bv = document.getElementById("gp-vue"); if (bv) bv.click(); } } finally { SANS_AIDE_VUE = false; } }
     return; }
   if (rep && rep.ok && rep.trouve) { TRESORS = null; TRESORS_T = 0; chargerTresors(); return; }
-  if (bt) { bt.disabled = false; bt.dataset.arme = ""; bt.innerHTML = lib.indexOf("Sûr") >= 0 ? "🔍 Je lance ma recherche" : lib; }
+  if (bt) { bt.disabled = false; bt.dataset.arme = ""; bt.innerHTML = lib.indexOf("Sûr") >= 0 ? "🔍 Lancer" : lib; }
   toast((rep && rep.message) || "Départ non enregistré : réessaie.");
 }
 /** « ⏸️ Mettre en pause » : le serveur ferme la période active ; l'appli OUBLIE la cachette (l'objet n'existe plus) */
@@ -1006,7 +1012,7 @@ async function arreterRecherche(t, bt) {
     if (!TRESOR_APERCU && t.enigmeCachee !== undefined) Object.assign(t, { enigme: "", indice2: null, enigmeCachee: true });   // v20.86 : en pause, l'énigme et l'indice disparaissent aussi
     if (TRESORS && typeof rep.maintenant === "number") TRESORS.decal = rep.maintenant - Date.now();
     toast("⏸️ Recherche en pause à " + dureeChrono(t.cumul) + ". Reprends quand tu veux : tu repartiras du départ du circuit."); poserTresorDOM(document); return; }
-  if (bt) { bt.disabled = false; bt.innerHTML = "⏸️ Mettre en pause"; }
+  if (bt) { bt.disabled = false; bt.innerHTML = "⏸️ Pause"; }
   toast((rep && rep.message) || "Pause non enregistrée : réessaie.");
 }
 /** v20.74 · pause automatique quand on quitte l'appli (onglet caché, page fermée) : « arrêt » envoyé en keepalive ; au retour, on relit le serveur.
@@ -1097,6 +1103,9 @@ const TRESOR_SVG = {
   bonbon: '<svg viewBox="-12 -12 24 24"><circle r="11.5" fill="#FFE07A" opacity=".35"/><circle r="9" fill="#FF7EB6" stroke="#7A2A4A" stroke-width="1"/><path d="M-8.6 -2.6Q0 -6 8.6 -2.6" stroke="#FFD04A" stroke-width="2.6" fill="none"/><path d="M-9 1.4Q0 -1.6 9 1.4" stroke="#7EC8F0" stroke-width="2.6" fill="none"/><path d="M-7.6 5Q0 2.6 7.6 5" stroke="#B6E36A" stroke-width="2.4" fill="none"/><path d="M-6.8 -6Q0 -8.6 6.8 -6" stroke="#FF9A2A" stroke-width="2" fill="none"/><path d="M-4.6 -4.6A6 6 0 0 1 0 -6.8" stroke="#FFFFFF" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>',
   cle: '<svg viewBox="-14 -14 28 28"><path d="M-12.5 -13Q-13 -3 -6.2 -5.6" fill="none" stroke="#4A2E18" stroke-width="1.4"/><g transform="rotate(45)"><circle cx="-6" r="4.4" fill="#C8A868" stroke="#4A3418" stroke-width="1"/><circle cx="-6" r="1.9" fill="#2A1E12"/><path d="M-7.8 -3.2A4 4 0 0 1 -3 -2.4" fill="none" stroke="#FFF0C0" stroke-width=".8"/><rect x="-1.8" y="-1.2" width="13" height="2.4" rx=".9" fill="#C8A868" stroke="#4A3418" stroke-width=".9"/><path d="M6.6 1.2V5.4H8.6V3.6H10.4V1.2Z" fill="#C8A868" stroke="#4A3418" stroke-width=".9"/></g></svg>'
 };
+/** v20.96 · le petit chevron de l'encadré (▾ replié, ▴ déplié) ; un toucher sur l'encadré le déplie ou le replie */
+const PLIE_TRESOR = '<span class="gp-plie" aria-hidden="true"></span>';
+function plierTresor(en) { const o = en.classList.toggle("ouverte"); en.setAttribute("aria-expanded", String(o)); if (o) en.scrollTop = 0; }
 /** pose (ou retire) le compteur, l'énigme du mois et l'objet dans la page Course ; sans rien recalculer d'autre */
 function poserTresorDOM(v) {
   const pi = (v || document).querySelector ? (v || document).querySelector("#gp-piste") : null; if (!pi) return;
@@ -1115,11 +1124,11 @@ function poserTresorDOM(v) {
   if (!t) {   // déjà trouvé : plus d'objet, mais l'énigme résolue et le classement des chercheurs restent consultables
     const l0 = tc.chercheurs || [], rg0 = l0.findIndex(x => x.nom === (moiVrai() || "")) + 1, moiX = rg0 ? l0[rg0 - 1] : null;   // v20.84 : mon temps et ma place, tout de suite
     const resume = moiX && typeof moiX.s === "number" ? "Trouvé en " + dureeChrono(moiX.s) + (palierDe(tc, moiX) ? " · " + PALIERS_TXT[palierDe(tc, moiX)] : "") + " · " + (rg0 === 2 || rg0 === 3 ? MED_ICO[rg0 - 1] + " " : "") + rangRapide(rg0) + (tc.chrono && !tc.final ? " pour l'instant" : "") : "Trésor trouvé !";
-    pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme trouvee">✅ <i>' + resume + '</i><div class="gp-chercheurs">' + (tc.enigme && !tc.enigmeCachee && tc.chrono ? '<p class="tc-souv">🗝️ <i>' + esc(tc.enigme) + "</i></p>" : "") + classementTresorHTML(tc) + '<button class="tc-aide" type="button">❔ Comment ça marche</button></div></div>' +
+    pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme trouvee" aria-expanded="false">✅ <i>' + resume + "</i>" + PLIE_TRESOR + '<div class="gp-chercheurs">' + (tc.enigme && !tc.enigmeCachee && tc.chrono ? '<p class="tc-souv">🗝️ <i>' + esc(tc.enigme) + "</i></p>" : "") + classementTresorHTML(tc) + '<button class="tc-aide" type="button">❔ Comment ça marche</button></div></div>' +
       '<button class="gp-tresor-appel trouve" type="button">✅ ' + esc(resume) + " · <b>⏱️ Classement du trésor</b><small>" + (tc.final ? "Résultat définitif." : (l0.length) + " sur " + nbPilotesTresor(tc) + " ont trouvé · en direct") + "</small></button>");
     const en0 = pi.querySelector(".gp-enigme"); pi.classList.add("avec-enigme"); TRESOR_EL = { pi, b: null, en: en0, t: tc, vu: false, pris: true };
-    en0.addEventListener("click", () => en0.classList.toggle("ouverte")); if (ga) majTresor(ga, pi);
-    en0.querySelector(".tc-aide").addEventListener("click", ev => { ev.stopPropagation(); ouvrirAideTresor(); });
+    en0.addEventListener("click", () => plierTresor(en0)); if (ga) majTresor(ga, pi);
+    en0.querySelector(".tc-aide").addEventListener("click", ev => { ev.stopPropagation(); aideTresor(); });
     pi.querySelector(".gp-tresor-appel.trouve").addEventListener("click", ev => { ev.stopPropagation(); ouvrirClassementTresor(tc.circuit); });
     if (!AP) directTresor(); return;
   }
@@ -1135,19 +1144,21 @@ function poserTresorDOM(v) {
   pi.querySelector(".gp-tresor-appel").addEventListener("click", ev => { ev.stopPropagation(); if (!AP) stock.set("versus.tresorAide", "1"); /* aperçu : rien de gardé */ if (pi.classList.contains("v2")) { choisirVueGP("visite"); return; } const bv = document.getElementById("gp-vue"); if (bv && pi.classList.contains("en2d")) bv.click(); });
   /* v20.74 : en tête de l'encadré, le bouton « 🔍 Je lance ma recherche » (avant) ou le chrono qui tourne (pendant) */
   const estNoel = typeof TRESOR_NOEL !== "undefined" && t.circuit === TRESOR_NOEL;
-  const lance = !t.chrono ? "" : parti ? '<span class="gp-lance on">⏱️ <b class="gp-chr">' + dureeChrono(chronoDe(t)) + '</b><button class="gp-arret" type="button">⏸️ Mettre en pause</button><small>le 1er du classement gagne · définitif ' + quandDecide(t) + "</small></span>"
-    : t.lance ? '<span class="gp-lance pause">⏸️ <b>' + dureeChrono(chronoDe(t)) + '</b><button class="gp-lancer" type="button">▶️ Reprendre</button><small>En pause : l\'énigme, l\'indice et l\'objet ont disparu. À chaque reprise, ils reviennent et tu repars du départ du circuit.</small></span>'
-    : '<span class="gp-lance"><button class="gp-lancer" type="button">🔍 Je lance ma recherche</button><small>L\'énigme apparaît au lancement : le chrono compte le temps de la comprendre et de trouver. Pause possible (tout disparaît, et tu repars du départ). ' + (estNoel ? "Le 1er du classement gagne la plaque dorée Chercheur de Noël." : "Ton éclat selon ta place : or, argent, bronze, fer, pierre.") + " Définitif " + quandDecide(t) + "." + "</small></span>";
-  pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme" title="Énigme du mois : un objet est caché dans le décor de ce circuit. Lance ta recherche, puis approche-toi en Visite 3D. Touche pour lire la suite.">' + lance + (ind && !cache ? "💡" : "🗝️") + ' <i>' + (cache ? "Un trésor est caché sur ce circuit. Prêt ?" : esc(t.enigme)) + "</i>" + (cache ? "" : ind) + (cf ? '<b class="gp-indice gp-chaud-l">🌡️ Personne n\'a trouvé : la jauge chaud-froid est allumée.</b>' : "") + '<div class="gp-chercheurs">' + classementTresorHTML(t) + '<button class="tc-aide" type="button">❔ Comment ça marche</button></div></div>' +
+  /* v20.96 (Théo) · replié par défaut : une pastille « 🗝️ Trésor · 🔍 Lancer » (ou le chrono, ou la pause) ; un toucher déplie l'explication courte, le classement et « ❔ Comment ça marche ».
+     Pendant la recherche, l'énigme et les indices restent affichés (repliés compris). Le long texte des règles est dans « Comment ça marche ». */
+  const lance = !t.chrono ? "" : parti ? '<span class="gp-lance on">⏱️ <b class="gp-chr">' + dureeChrono(chronoDe(t)) + '</b><button class="gp-arret" type="button" aria-label="Mettre en pause">⏸️ Pause</button>' + PLIE_TRESOR + "<small>Le 1er du classement gagne · définitif " + quandDecide(t) + "</small></span>"
+    : t.lance ? '<span class="gp-lance pause">⏸️ <b>' + dureeChrono(chronoDe(t)) + '</b><button class="gp-lancer" type="button">▶️ Reprendre</button>' + PLIE_TRESOR + "<small>En pause : l'énigme, l'indice et l'objet ont disparu. À chaque reprise, ils reviennent et tu repars du départ du circuit.</small></span>"
+    : '<span class="gp-lance"><b class="gp-tag">🗝️ Trésor</b><button class="gp-lancer" type="button" aria-label="Je lance ma recherche">🔍 Lancer</button>' + PLIE_TRESOR + "<small>Le chrono part au lancement, avec l'énigme" + (estNoel ? " · le 1er du classement gagne la plaque dorée Chercheur de Noël" : "") + ".</small></span>";
+  pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme ' + (parti ? "actif" : "repos") + '" aria-expanded="false" title="Chasse au trésor : touche pour déplier ou replier">' + lance + '<span class="gp-txt">' + (ind && !cache ? "💡" : "🗝️") + ' <i>' + (cache ? "Un trésor est caché sur ce circuit. Prêt ?" : esc(t.enigme)) + "</i></span>" + (cache ? "" : ind) + (cf ? '<b class="gp-indice gp-chaud-l">🌡️ Personne n\'a trouvé : la jauge chaud-froid est allumée.</b>' : "") + '<div class="gp-chercheurs">' + classementTresorHTML(t) + '<button class="tc-aide" type="button">❔ Comment ça marche</button></div></div>' +
     (cf ? '<div class="gp-jauge cache" role="status" aria-live="polite"></div>' : "") +
     (parti ? '<button class="gp-tresor t-' + esc(t.type) + '" type="button" aria-label="Un objet du film : touche-le !" tabindex="-1">' + (TRESOR_SVG[t.type] || TRESOR_SVG.gemme) + "</button>" : ""));   // avant le départ : l'objet n'existe pas
   pi.classList.add("avec-enigme");   // v20.74 : joystick en haut à droite (repli des navigateurs sans :has)
   const b = pi.querySelector(".gp-tresor"), en = pi.querySelector(".gp-enigme"), bl = en.querySelector(".gp-lancer");
   TRESOR_EL = { pi, b, en, t, vu: false, j: pi.querySelector(".gp-jauge") };
-  en.addEventListener("click", () => en.classList.toggle("ouverte"));
+  en.addEventListener("click", () => plierTresor(en));
   if (bl) bl.addEventListener("click", ev => { ev.stopPropagation(); armerLancement(bl, t, pi); });
   const ba = en.querySelector(".gp-arret"); if (ba) ba.addEventListener("click", ev => { ev.stopPropagation(); arreterRecherche(t, ba); });
-  const aide = en.querySelector(".tc-aide"); if (aide) aide.addEventListener("click", ev => { ev.stopPropagation(); ouvrirAideTresor(); });
+  const aide = en.querySelector(".tc-aide"); if (aide) aide.addEventListener("click", ev => { ev.stopPropagation(); aideTresor(); });
   if (t.chrono && !AP) directTresor();
   if (t.chrono && parti && !TRESOR_TIC) TRESOR_TIC = setInterval(majChronoTresor, 1000);
   if (b) b.addEventListener("click", ev => { ev.stopPropagation(); trouverTresor(t, b); });
@@ -1373,9 +1384,11 @@ function quitterApercuTresor(vue) {
 /** le petit bandeau de l'aperçu, posé dans la piste (il la suit en plein écran) */
 function apBandeau(pi) {
   const AP = TRESOR_APERCU, pr = (k, v) => ' aria-pressed="' + v + '"';
-  pi.insertAdjacentHTML("beforeend", '<div class="tap-band" role="group" aria-label="Aperçu admin du trésor"><b>👁️ Aperçu · exemple inventé · rien n\'est envoyé</b><button type="button" class="tap-x" data-tapx>✕ Quitter</button><i class="tap-br"></i>' +
+  /* v20.96 (Théo) · une seule ligne, repliée par défaut (« 👁️ Aperçu · exemple ▸ » et ✕) : elle ne couvre jamais le bouton de lancement */
+  pi.insertAdjacentHTML("beforeend", '<div class="tap-band' + (AP.bande ? " ouverte" : "") + '" role="group" aria-label="Aperçu admin du trésor (exemple inventé, rien n\'est envoyé)">' +
+    '<button type="button" class="tap-plie" data-tapplie aria-expanded="' + !!AP.bande + '" title="Aperçu admin · exemple inventé · rien n\'est envoyé">' + (AP.bande ? "👁️ ◂" : "👁️ Aperçu · exemple ▸") + '</button><span class="tap-outils">' +
     '<span class="tap-seg"><button type="button" data-tapi="0"' + pr(0, AP.etape === 0) + '>Avant 11</button><button type="button" data-tapi="1"' + pr(0, AP.etape === 1) + ' title="2e indice tombé">Après 11</button><button type="button" data-tapi="2"' + pr(0, AP.etape === 2) + ' title="Jauge chaud-froid (tant que personne n\'a trouvé)">Après 21 🌡️</button></span>' +
-    '<button type="button" data-tapc' + pr(0, AP.avecCh) + ' title="Chercheurs d\'exemple">👥</button><button type="button" data-tapa="pres" title="Me placer près de la cachette">🎯</button><button type="button" data-tapa="rejouer" title="Remettre l\'objet">↺</button></div>');
+    '<button type="button" data-tapc' + pr(0, AP.avecCh) + ' title="Chercheurs d\'exemple">👥</button><button type="button" data-tapa="pres" title="Me placer près de la cachette">🎯</button><button type="button" data-tapa="rejouer" title="Remettre l\'objet">↺</button></span><button type="button" class="tap-x" data-tapx title="Quitter l\'aperçu" aria-label="Quitter l\'aperçu">✕</button></div>');
   const b = pi.querySelector(".tap-band"), redo = () => { apDonnees(); poserTresorDOM(document); };
   b.addEventListener("pointerdown", ev => ev.stopPropagation());
   b.querySelectorAll("[data-tapi]").forEach(x => x.addEventListener("click", ev => { ev.stopPropagation(); AP.etape = +x.dataset.tapi; redo(); }));
@@ -1383,6 +1396,7 @@ function apBandeau(pi) {
   b.querySelector('[data-tapa="pres"]').addEventListener("click", ev => { ev.stopPropagation(); apPres(); });
   b.querySelector('[data-tapa="rejouer"]').addEventListener("click", ev => { ev.stopPropagation(); AP.trouves = []; Object.assign(AP, { actif: false, lance: false, cumul: 0, depuis: null }); redo(); apPres(); toast("↺ Objet remis en place, chrono remis à zéro (aperçu)."); });
   b.querySelector("[data-tapx]").addEventListener("click", ev => { ev.stopPropagation(); quitterApercuTresor(true); });
+  b.querySelector("[data-tapplie]").addEventListener("click", ev => { ev.stopPropagation(); AP.bande = !AP.bande; b.classList.toggle("ouverte", AP.bande); ev.currentTarget.setAttribute("aria-expanded", String(AP.bande)); ev.currentTarget.textContent = AP.bande ? "👁️ ◂" : "👁️ Aperçu · exemple ▸"; });
 }
 function apPres() {
   const AP = TRESOR_APERCU, a = GP_INST && GP_INST.api, pi = document.getElementById("gp-piste");
@@ -1885,7 +1899,8 @@ function fermerPleinGP() {
   if (P.v2) { document.removeEventListener("fullscreenchange", P.fsc); document.removeEventListener("webkitfullscreenchange", P.fsc); if (P.mq && P.mqf) try { P.mq.removeEventListener("change", P.mqf); } catch (e) { }
     try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) { }
     try { const fe = document.fullscreenElement || document.webkitFullscreenElement; if (fe) (document.exitFullscreen || document.webkitExitFullscreen).call(document).catch(() => { }); } catch (e) { } }
-  P.o.remove(); document.documentElement.classList.remove("fige"); GP_ETQ = null;
+  const fen = [...P.o.querySelectorAll(":scope > .regles, :scope > .revel")]; fen.forEach(x => document.body.appendChild(x));   // v20.96 : une fenêtre ouverte en plein écran (règles, classement) reste ouverte dans la page
+  P.o.remove(); document.documentElement.classList.toggle("fige", fen.some(x => x.classList.contains("rgt"))); GP_ETQ = null;
   if (GP_INST && GP_INST.api.zoom2D) GP_INST.api.zoom2D(false);
   if (GP_INST) GP_INST.api.redim();
 }

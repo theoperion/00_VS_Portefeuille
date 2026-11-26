@@ -169,7 +169,7 @@ function ouvrirRegles(section, tout, ancre) {
     (tout ? '<p class="rg-admin">👀 Vue admin : toutes les règles, y compris celles que les autres ne voient pas encore.</p>' : "") +
     '<div class="rgt-som"><p class="rgt-k">Touche une tuile : l\'essentiel en quelques lignes, et tout le détail si tu veux.</p><div class="rgt-g">' + hero + ordre.slice(1).map(tuile).join("") + "</div></div>" +
     ordre.map(fiche).join("") + "</div></div>";
-  document.body.appendChild(o); document.documentElement.classList.add("fige");
+  hoteFenetre().appendChild(o); document.documentElement.classList.add("fige");   // v20.96 : en plein écran (course), la fenêtre s'ouvre DANS le plein écran
   const corps = o.querySelector(".rg-corps"), som = o.querySelector(".rgt-som"), retour = o.querySelector(".rg-retour");
   let courant = "", ySom = 0, direct = !!(id && F[id]);   // ouverte directement sur une fiche (un « ? », un lien) : le retour du téléphone ferme tout de suite
   const majRetour = () => retour.classList.toggle("rg-x", !direct);   // fermerFenetreOuverte touche le premier « .rg-x » : « ‹ » en navigation, « ✕ » en accès direct

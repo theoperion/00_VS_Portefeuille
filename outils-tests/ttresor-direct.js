@@ -63,10 +63,10 @@ const sansPos = req => req.every(c => !("p" in c) && !JSON.stringify(c).includes
     await p.evaluate(() => { document.querySelectorAll("#toast, .toast").forEach(x => x.style.display = "none"); document.getElementById("gp-piste").scrollIntoView({ block: "center" }); }); await p.waitForTimeout(200); await p.screenshot({ path: CAP + "/direct-1-cherche-" + tag + ".png" });
     // l'aide de l'encadré
     await p.evaluate(() => document.querySelector(".gp-piste .tc-aide").click()); await p.waitForTimeout(300);
-    const aide = await p.evaluate(() => { const o = document.querySelector(".tc-b"); const t = o ? o.innerText : ""; return t; });
+    const aide = await p.evaluate(() => { const o = document.querySelector(".regles #rgt-tresor:not([hidden])") || document.querySelector(".tc-b"); const t = o ? o.textContent : ""; return t; });   // v20.96 : la tuile « Le trésor » des règles
     ok(/Je lance ma recherche/.test(aide) && /entraînement/.test(aide) && /ne compte pas encore pour 2027/.test(aide) && !/éclat|flair/i.test(aide), "❔ aide de l'encadré : les règles en images (décembre : « entraînement · ne compte pas encore pour 2027 », sans éclat ni Flair)");
     await p.screenshot({ path: CAP + "/direct-2-aide-decembre-" + tag + ".png" });
-    await p.evaluate(() => document.querySelectorAll(".tc-b").forEach(x => x.remove()));
+    await p.evaluate(() => { document.querySelectorAll(".tc-b, .regles").forEach(x => x.remove()); document.documentElement.classList.remove("fige"); });
     // départ, puis un 4e pilote trouve pendant la recherche : la liste se met à jour, la recherche continue
     await p.evaluate(() => { const bt = document.querySelector(".gp-piste .gp-lancer"); bt.click(); bt.click(); }); await p.waitForFunction(() => !!document.querySelector(".gp-piste .gp-arret"), null, { timeout: 10000 }).catch(() => {});
     const obj0 = await p.evaluate(() => { const o = document.querySelector(".gp-piste .gp-tresor"); if (o) o.dataset.marque = "1"; return !!o; });
