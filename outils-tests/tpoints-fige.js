@@ -8,7 +8,10 @@ const { chromium } = require("playwright"), crypto = require("crypto");
 // règles avril/juin changées le 25/11 par Théo (v20.52) : ancienne empreinte d347f473dc42e5856f423f5e3d5b40502b64c0c27ec1538386031a22d3c6c0f4 (refonte des badges).
 // Seuls écarts, tous expliqués par ces règles : avril (plus de cumul mars + avril : Théo 1er devant Kévin ; 🎯 à +2 pour Théo, Kévin, Devlin ; pronostics « qui gagne » de Kévin −1 et Devlin +1)
 // et juin (Côté obscur : Clément, dernier du championnat, finit dernier du mois → 2 points de place au lieu de 0, moins son Pari −1 = 1 au lieu de 0). Totaux : Théo 79→82, Kévin 120→118, Devlin 73→75, Clément 15→16, Nicolas 28.
-const EMPREINTE = "8fb6c423162e3d158b0ead9f4621d9d8b91939b5b8970e97b9af1761cbcd302c";
+// atout du circuit supprimé le 26/11 par Théo : ancienne empreinte 8fb6c423162e3d158b0ead9f4621d9d8b91939b5b8970e97b9af1761cbcd302c (règles du 25/11).
+// Seuls écarts, les deux +1 d'atout qui disparaissent (aucun bouchon dans cette saison) : septembre (Odyssée, atout Turbo) Devlin Turbo +3→+2, mois 10→9 ;
+// octobre (Chocolaterie, atout Pari) Kévin Pari +3→+2, mois 12→11. Places, 🎯, bonus, victoires et classement inchangés. Totaux : Kévin 118→117, Devlin 75→74, Théo 82, Nicolas 28, Clément 16.
+const EMPREINTE = "40fb08095898ec12fc5b46d417daf059f5f23915ec4ee3d7b62f095555984ea2";
 const NOMS = ["Théo", "Kévin", "Clément", "Devlin", "Nicolas"];
 const IDX = ["S&P 500", "Nasdaq-100", "Or (non couvert)", "MSCI Monde", "Euro Stoxx 50", "Marchés émergents", "Semi-conducteurs"];
 // générateur fixe (aucun hasard d'une exécution à l'autre)
@@ -51,7 +54,7 @@ function donnees() {
     if (c.action === "tresors") return r.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, tresors: [], trouves: [], total: 0 }) });
     r.fulfill({ contentType: "application/json", body: JSON.stringify(donnees()) }); });
   await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); });
-  await p.goto("http://localhost:8771/index.html");
+  await p.goto("http://localhost:" + (process.env.PORT || 8771) + "/index.html");
   await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1200);
   const res = await p.evaluate(() => { MEMO_SAISON = { d: null, m: {} }; const c = championnat(2027);
     return { complete: c.complete, classement: c.classement, tot: Object.fromEntries(Object.entries(c.tot).map(([n, t]) => [n, { pts: t.pts, v: t.v, pod: t.pod, bonus: t.bonus, n: t.n }])),
@@ -65,6 +68,6 @@ function donnees() {
   ok(res.complete && res.mois.length === 12 && res.classement.length === 5, "saison 2027 inventée complète : 12 mois, 5 pilotes classés");
   ok(res.mois.some(m => m.l.some(x => /^pari:/.test(x[5]))) && res.mois.some(m => m.l.some(x => x[6] !== "" && x[6] > 0)) && res.mois[11].l.some(x => x[9]), "la saison joue vraiment les cartes (Paris), les pronostics et le rival");
   ok(!res.mois.find(m => m.k === 202705).l.some(x => x[0] === "Devlin") && !res.mois.find(m => m.k === 202702).l.some(x => x[0] === "Nicolas") && res.mois.find(m => m.k === 202703).l.some(x => x[0] === "Nicolas"), "relevé de mai de Devlin rattrapé par le délai (mois joué sans lui) ; Nicolas entre en mars");
-  ok(EMPREINTE && emp === EMPREINTE, "points identiques au centime à l'empreinte (règles du 25/11) (" + emp.slice(0, 16) + "…)");
+  ok(EMPREINTE && emp === EMPREINTE, "points identiques au centime à l'empreinte (règles du 26/11, sans atout du circuit) (" + emp.slice(0, 16) + "…)");
   process.exit(ko.length ? 1 : 0);
 })();

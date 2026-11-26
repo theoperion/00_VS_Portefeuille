@@ -16,14 +16,14 @@ function fausses(etapes, cinq) {   // relevés inventés de janvier à novembre 
 // mots des règles annoncées le 1er janvier : jamais avant
 const CACHES = [/archer elfe/i, /forêt endormie/i, /12 circuits sont dévoilés/i, /rattrapage/i, /éclipse/i, /côté obscur/i, /bonus d'équipe/i, /🤝/, /La série/i, /🔥 Série/, /Finale/, /Rassemblement des héros/i, /Les niveaux/i, /🎴/];
 // règles à jouer en janvier : visibles dès le 20 décembre
-const JOUER = [/Défi du mois/, /Pronostic/i, /Rival/, /Atout du circuit/i, /pièges/i];
+const JOUER = [/Défi du mois/, /Pronostic/i, /Rival/, /pièges/i];
 // v20.58 : la promesse du 20/12 (sans rien dévoiler), jamais avant le 20/12, jamais dans l'annonce du 1/1
 const PROMESSE = [/Chaque univers cache une surprise/, /mini-jeu à jouer ensemble/, /révélé le 1er de son mois/, /Trophées en 4 vitrines \(Mondes, Succès, Gant, Légendes\)/, /course en direct au rythme du S&P 500/, /de nouveaux objets à gagner pour ton écurie/];
 // v20.58 : la révélation du 1/1 cite les règles 2027 à jour
 const PREMIER = [/Le Côté obscur/, /points de place en double, et au moins 2/, /Juin[\s\S]{0,60}Bataille spatiale[\s\S]{0,20}🌑 Le Côté obscur : Le dernier du classement marque double \(2 points au moins\)/i, /Avr[\s\S]{0,60}🏹 L'œil de l'archer elfe : Battre le S&P 500 rapporte 2 points au lieu d'un/i, /Mai\s*🌿 Pandora\s*La forêt endormie : Carte 🚀 Turbo interdite/i,
   /Janv[\s\S]{0,60}🪱 Le Chevaucheur des sables/i, /Déc[\s\S]{0,60}🦸 Le Rassemblement des héros/i, /Couloirs mouvants : À moins de 0,2 point d'écart \(ex\. 3,1 % et 3,2 %\)/, /Le thé du Chapelier/, /Le chant des Sirènes/];
 // textes faux ou périmés : jamais, à aucune date
-const PERIMES = [/aller et retour/i, /graines sacrées/i, /Chaleur/];
+const PERIMES = [/aller et retour/i, /graines sacrées/i, /Chaleur/, /atout du circuit|atouts? des circuits|bouchon/i];   // atout du circuit supprimé le 26/11 (Théo)
 // v20.59 : « Le Podium en bref » ne cite une règle 2027 qu'une fois révélée
 const TUTO_AVANT_20 = /défi|pronostic|pole|rival|chevaucheur/i, TUTO_AVANT_1 = /côté obscur|série|rassemblement/i, TUTO_JAMAIS_JANV = /finale|régularité/i;
 const ADMIN = [/admin/i, /Aperçu/, /Prochainement/, /Circuits 2027/, /Voir décembre/, /Tout afficher/];
@@ -34,8 +34,8 @@ const CAS = [
   { d: "2027-01-01T10:00:00", jouer: true, caches: false },
   { d: "2027-01-02T10:00:00", jouer: true, caches: false, cinq: true },   // 5 pilotes : barème 6 · 4 · 2 · 1 · 0
   // dates réglées à janvier par l'admin (ou ramenées à janvier par le serveur) : toujours annoncées le 1/1 seulement
-  { d: "2026-12-20T09:00:00", jouer: true, caches: true, neuf: true, etapes: { pioche: 202701, monaco: 202701, circuits: 202701, equipe: 202701, serie: 202701 } },
-  { d: "2026-12-31T22:00:00", jouer: true, caches: true, etapes: { pioche: 202701, monaco: 202701, circuits: 202701, equipe: 202701, serie: 202701 } }
+  { d: "2026-12-20T09:00:00", jouer: true, caches: true, neuf: true, etapes: { pioche: 202701, monaco: 202701, equipe: 202701, serie: 202701 } },
+  { d: "2026-12-31T22:00:00", jouer: true, caches: true, etapes: { pioche: 202701, monaco: 202701, equipe: 202701, serie: 202701 } }
 ];
 (async () => {
   const b = await chromium.launch(); let nok = 0;
