@@ -354,9 +354,9 @@ function choisirVueGP(v, y) {
   ETAT.gp2d = v === "2d" ? "1" : "0"; if (v !== "2d") ETAT.gpVue3 = v; garder();
   if (v !== "2d" && de3d) { appliquerVue3(GP_INST.api, v); majVueDOM(v); GP_ETQ = null; etiquettesGP(GP_INST.api); }   // 3D → 3D : même piste, la caméra change en douceur
   else rendreTrophees();
-  if (v === "2d" || TRESOR_APERCU) return;   // v17.35 : pendant l'aperçu du trésor, rien de gardé
+  if (v === "2d" || TRESOR_APERCU || SANS_AIDE_VUE) return;   // v17.35 : pendant l'aperçu du trésor, rien de gardé ; v20.74 : ni au départ d'une recherche (la bulle cachait les boutons)
   const cle = "versus.aideVue." + v; if (stock.get(cle)) return; stock.set(cle, "1");
-  setTimeout(() => toast(v === "visite" ? "📺 Visite : glisse pour tourner, pince pour zoomer. De près, glisse pour te déplacer, ou utilise le joystick en bas. Les voitures sont au garage : à toi le décor !" : "🚁 Hélico : la caméra suit ta voiture. Touche une pastille pour suivre un autre pilote."), 600);
+  setTimeout(() => toast(v === "visite" ? "📺 Visite : glisse pour tourner, pince pour zoomer. De près, glisse pour te déplacer, ou utilise le joystick (en bas ; en haut à droite pendant une chasse au trésor). Les voitures sont au garage : à toi le décor !" : "🚁 Hélico : la caméra suit ta voiture. Touche une pastille pour suivre un autre pilote."), 600);
 }
 function suivreGP(n) { ETAT.gpSuivi = n; garder(); if (GP_INST && GP_INST.api.type === "3d") GP_INST.api.focus(n); const pi = document.getElementById("gp-piste"); majVueDOM(pi ? vueGP(pi.dataset.circuit) : null); }
 function couleurAccent() { try { return getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#9B87FF"; } catch (e) { return "#9B87FF"; } }
@@ -844,17 +844,129 @@ let TRESORS = null, TRESORS_T = 0, TRESOR_EL = null, TRESOR_APERCU = null;   // 
 function tresorsOuverts() { return aujNum() >= TRESOR_DEBUT && SOURCE === "api" && !simulation(); }
 async function chargerTresors() {
   if (TRESOR_APERCU || TRESORS || !tresorsOuverts() || Date.now() - TRESORS_T < 60000) return; TRESORS_T = Date.now();
-  const rep = await posterAdmin({ action: "tresors" });
+  const rep = await posterAdmin({ action: "tresors", chrono: 1 });   // v20.74 : « chrono » = cette appli sait lancer la recherche chronométrée (serveur V92)
   if (!rep || !rep.ok) return;
-  if (TRESOR_APERCU) { TRESOR_APERCU.sauve.T = { l: rep.tresors || [], trouves: rep.trouves || [], total: rep.total || 0, coupe: rep.coupe || null }; return; }   // réponse arrivée pendant l'aperçu : remise à la fermeture
-  TRESORS = { l: rep.tresors || [], trouves: rep.trouves || [], total: rep.total || 0, coupe: rep.coupe || null }; poserTresorDOM(document);
+  const T = { l: rep.tresors || [], trouves: rep.trouves || [], total: rep.total || 0, coupe: rep.coupe || null, decal: typeof rep.maintenant === "number" ? rep.maintenant - Date.now() : 0 };
+  if (TRESOR_APERCU) { TRESOR_APERCU.sauve.T = T; return; }   // réponse arrivée pendant l'aperçu : remise à la fermeture
+  TRESORS = T; poserTresorDOM(document); setTimeout(annoncerVainqueurTresor, 600);   // v20.74 : le vainqueur définitif du mois fini
+}
+/* ---------- ⏱️ v20.74 (Théo, 25/11) · Chasse au trésor CHRONOMÉTRÉE : le plus rapide gagne, plus le premier connecté (serveur V92).
+   L'énigme se lit dès le 1er, sans chrono. « 🔍 Je lance ma recherche » ouvre une période ACTIVE (le SERVEUR note l'heure) ; « ⏸️ Mettre en pause »
+   (« ⏸️ Mettre en pause ») la ferme, « ▶️ Reprendre » en ouvre une autre : temps compté = somme des périodes actives (calculé par le serveur ; l'appli ne fait qu'afficher).
+   Anti-triche : la position n'arrive QUE pendant une période active et l'appli l'oublie à la pause (l'objet n'existe plus, le serveur refuse la trouvaille) ;
+   à chaque départ ou reprise, la caméra repart de la vue d'ensemble du circuit (le trajet jusqu'à la cachette est toujours chronométré).
+   Classement provisoire pendant le mois ; l'éclat doré, le Flair et la plaque dorée sont attribués le 1er du mois suivant à 0 h (« final », serveur).
+   Un serveur d'avant la V92 (pas de « chrono » dans le trésor) : l'ancien fonctionnement, sans bouton. ---------- */
+/** durée lisible : « 34 s », « 12 min 34 s », « 2 h 05 min », « 3 j 4 h » */
+function dureeChrono(s) {
+  s = Math.max(0, Math.round(+s || 0)); if (s < 60) return s + " s";
+  const m = Math.floor(s / 60); if (m < 60) return m + " min " + String(s % 60).padStart(2, "0") + " s";
+  const h = Math.floor(m / 60); return h < 24 ? h + " h " + String(m % 60).padStart(2, "0") + " min" : Math.floor(h / 24) + " j " + (h % 24) + " h";
+}
+/** « 🥇 le plus rapide » ou « 2e plus rapide » */
+function rangRapide(r) { return r === 1 ? "🥇 le plus rapide" : r ? r + "e plus rapide" : ""; }
+/** v20.74 (Théo) · l'éclat selon le classement au temps : 1er or, 2e argent, 3e bronze, les suivants normal */
+const ECLATS_MEDAILLE = { or: "🥇 éclat or", argent: "🥈 éclat argent", bronze: "🥉 éclat bronze" };
+function medailleDe(r) { return ["or", "argent", "bronze"][r - 1] || null; }
+function texteMedaille(m) { return ECLATS_MEDAILLE[m] || "éclat normal"; }
+/** l'objet existe-t-il ? (pendant une période active ; toujours avec un serveur d'avant le chrono) */
+function rechercheActive(t) { return !!t && (!t.chrono || !!t.actif); }
+/** l'or (éclat doré, Flair, plaque dorée) est-il attribué pour ce trésor ? (chrono : seulement une fois le mois fini) */
+function tresorFinal(t) { return !!t && (!t.chrono || !!t.final); }
+/** secondes de recherche comptées (périodes closes + période en cours), à l'heure du serveur */
+function chronoDe(t) { return !t ? 0 : (+t.cumul || 0) + (t.actif && t.depuis ? Math.max(0, (Date.now() + ((TRESORS && TRESORS.decal) || 0) - t.depuis) / 1000) : 0); }
+let TRESOR_TIC = 0, SANS_AIDE_VUE = false;
+function majChronoTresor() {
+  const T = TRESOR_EL, els = document.querySelectorAll(".gp-piste .gp-chr");
+  if (!T || !T.t || !T.t.actif || T.pris || !els.length) { clearInterval(TRESOR_TIC); TRESOR_TIC = 0; return; }
+  const txt = dureeChrono(chronoDe(T.t)); els.forEach(e => { if (e.textContent !== txt) e.textContent = txt; });
+}
+/** « 🔍 Je lance ma recherche » : un 1er toucher arme, un 2e dans les 4 s lance (la reprise, elle, part au 1er toucher) */
+function armerLancement(bt, t, pi) {
+  if (t.lance) { lancerRecherche(t, bt, pi); return; }
+  if (bt.dataset.arme !== "1") { bt.dataset.arme = "1"; bt.classList.add("arme"); bt.innerHTML = "▶ Sûr ? Touche encore : le chrono part";
+    clearTimeout(bt._t); bt._t = setTimeout(() => { if (!bt.isConnected) return; bt.dataset.arme = ""; bt.classList.remove("arme"); bt.innerHTML = "🔍 Je lance ma recherche"; }, 4000); return; }
+  clearTimeout(bt._t); lancerRecherche(t, bt, pi);
+}
+/** la caméra repart de la vue d'ensemble du circuit (comme au départ) : le trajet jusqu'à la cachette est toujours chronométré */
+function cameraAuDepart() { try { const a = GP_INST && GP_INST.api; if (a && a.type === "3d" && a.camera && a.mode && a.mode() === "helico") a.camera("helico"); } catch (e) { /* sans 3D */ } }
+async function lancerRecherche(t, bt, pi) {
+  const lib = bt ? bt.innerHTML : ""; if (bt) { bt.disabled = true; bt.innerHTML = "⏱️ Départ…"; }
+  const rep = TRESOR_APERCU ? TRESOR_APERCU.lancer(t) : await posterAdmin({ action: "tresorDepart", circuit: t.circuit });   // aperçu : départ inventé, rien ne part au serveur
+  if (rep && rep.ok && rep.actif) {
+    const reprise = !!t.lance;
+    Object.assign(t, { lance: true, actif: true, depuis: rep.depuis, cumul: +rep.cumul || 0 }); if (rep.p) t.p = rep.p; if (TRESORS && typeof rep.maintenant === "number") TRESORS.decal = rep.maintenant - Date.now();
+    if (window.SONS) { try { SONS.vibrer([30, 40, 30]); } catch (e) { /* sans vibreur */ } }
+    toast(rep.deja ? "⏱️ Ta recherche est déjà lancée : le chrono tourne." : reprise ? "▶️ Reprise : le chrono repart, et toi aussi, du départ du circuit." : "⏱️ C'est parti ! Le chrono tourne : trouve l'objet en Visite 3D.");
+    cameraAuDepart(); poserTresorDOM(document);
+    if (pi && pi.classList.contains("en2d")) { SANS_AIDE_VUE = true; try { if (pi.classList.contains("v2")) choisirVueGP("visite"); else { const bv = document.getElementById("gp-vue"); if (bv) bv.click(); } } finally { SANS_AIDE_VUE = false; } }
+    return; }
+  if (rep && rep.ok && rep.trouve) { TRESORS = null; TRESORS_T = 0; chargerTresors(); return; }
+  if (bt) { bt.disabled = false; bt.dataset.arme = ""; bt.innerHTML = lib.indexOf("Sûr") >= 0 ? "🔍 Je lance ma recherche" : lib; }
+  toast((rep && rep.message) || "Départ non enregistré : réessaie.");
+}
+/** « ⏸️ Mettre en pause » : le serveur ferme la période active ; l'appli OUBLIE la cachette (l'objet n'existe plus) */
+async function arreterRecherche(t, bt) {
+  if (bt) { bt.disabled = true; bt.innerHTML = "⏸️ Pause…"; }
+  const rep = TRESOR_APERCU ? TRESOR_APERCU.arreter(t) : await posterAdmin({ action: "tresorArret", circuit: t.circuit });
+  if (rep && rep.ok) { Object.assign(t, { actif: false, depuis: null, cumul: +rep.cumul || chronoDe(t) }); delete t.p; if (TRESORS && typeof rep.maintenant === "number") TRESORS.decal = rep.maintenant - Date.now();
+    toast("⏸️ Recherche en pause à " + dureeChrono(t.cumul) + ". Reprends quand tu veux : tu repartiras du départ du circuit."); poserTresorDOM(document); return; }
+  if (bt) { bt.disabled = false; bt.innerHTML = "⏸️ Mettre en pause"; }
+  toast((rep && rep.message) || "Pause non enregistrée : réessaie.");
+}
+/** v20.74 · pause automatique quand on quitte l'appli (onglet caché, page fermée) : « arrêt » envoyé en keepalive ; au retour, on relit le serveur.
+ *  Si l'arrêt n'a pas pu partir (pas de réseau), le serveur n'a rien reçu : le temps continue (dit dans la règle). */
+let TRESOR_QUITTE = false;
+function pauseAuto() {
+  if (TRESOR_APERCU || !TRESORS || typeof apiUrl !== "function") return;
+  TRESORS.l.filter(t => t.chrono && t.actif).forEach(t => {
+    try { fetch(apiUrl(), { method: "POST", keepalive: true, body: JSON.stringify({ cle: stock.get(CLES.cle), action: "tresorArret", circuit: t.circuit }) }).catch(() => {}); TRESOR_QUITTE = true; } catch (e) { /* tant pis : le temps continue */ }
+  });
+}
+function retourAppli() { if (!TRESOR_QUITTE || TRESOR_APERCU) return; TRESOR_QUITTE = false; TRESORS = null; TRESORS_T = 0; try { chargerTresors(); } catch (e) { /* hors connexion */ } }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") pauseAuto(); else retourAppli(); });
+window.addEventListener("pagehide", pauseAuto);
+/** le 1er du mois suivant : l'annonce du vainqueur définitif du trésor du mois fini (une fois par appareil) */
+function annoncerVainqueurTresor() {
+  if (!TRESORS || TRESOR_APERCU || typeof aujNum !== "function") return;
+  const kPrec = (k => k % 100 === 1 ? k - 89 : k - 1)(Math.floor(aujNum() / 100));
+  const t = TRESORS.l.find(x => x.chrono && x.final && x.vainqueur && x.saison * 100 + x.mois === kPrec); if (!t) return;
+  const cle = "versus.tresorVainqueur." + t.circuit; if (stock.get(cle)) return;
+  if ([...document.querySelectorAll(".revel, .regles, .tuto, [aria-modal=true]")].some(x => x.getClientRects().length)) { setTimeout(annoncerVainqueurTresor, 2500); return; }   // v20.74 : une fenêtre à la fois (on attend qu'elle se ferme)
+  stock.set(cle, "1");
+  const kT = t.saison * 100 + t.mois, dansMois = (t.chercheurs || []).filter(x => !x.j || Math.floor(x.j / 100) <= kT), rgMoi = dansMois.findIndex(x => x.nom === (moiVrai() || "")) + 1;
+  const v = t.vainqueur, moi = moiVrai() || "", noel = typeof TRESOR_NOEL !== "undefined" && t.circuit === TRESOR_NOEL, mois = MOIS_L ? MOIS_L[t.mois - 1] : "";
+  const o = document.createElement("div"); o.className = "revel cb-or tv-rev" + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Le plus rapide du trésor");
+  o.innerHTML = '<div class="rv-c cbo-c"><span class="cbo-rayons" aria-hidden="true"></span><span class="tuto-k">🏆 Trésor de ' + esc(mois) + " · résultat définitif</span>" +
+    "<h3>" + (noel ? "🎁 Plaque dorée Chercheur de Noël" : "🏆 Éclat doré de " + esc(mois)) + '</h3><p class="cbo-grave"><b>' + esc(v.nom) + "</b>" + (typeof v.s === "number" ? " en " + dureeChrono(v.s) : "") + "</p>" +
+    '<p class="cbo-flair">' + (v.nom === moi ? "C'est toi, le plus rapide ! " + (noel ? "La plaque dorée est à toi pour toujours." : "Ton éclat devient or · 🔍 +3 au Flair.") : (rgMoi === 2 || rgMoi === 3) && !noel ? "Ton éclat : " + texteMedaille(medailleDe(rgMoi)) + " · 🔍 +" + (4 - rgMoi) + " au Flair." : "Le plus petit temps du mois l'emporte. Rendez-vous au prochain trésor !") + "</p>" +
+    '<div class="btn-row">' + (noel && v.nom === moi && typeof btnEquiper === "function" ? btnEquiper("plaque", "chercheuror") : "") + '<button class="btn ghost" type="button" data-cb-ok>Génial !</button></div></div>';
+  document.body.appendChild(o);
+  const t0 = Date.now(), fermer = () => { o.remove(); try { rendreVue(vueActive()); } catch (er) { } };
+  o.addEventListener("click", ev => { if (ev.target === o && Date.now() - t0 > 1500) fermer(); });
+  o.querySelector("[data-cb-ok]").addEventListener("click", fermer);
+  if (typeof brancherEquiper === "function") brancherEquiper(o, () => o.remove());
+  if (v.nom === moi) try { confettis("trophees"); } catch (er) { /* sans fête */ }
+}
+/** v20.74 · la règle, en une ligne (Règles, section Course) */
+function regleTresor() {
+  if (!(typeof aujNum === "function" && aujNum() >= TRESOR_DEBUT)) return "";
+  const saison = typeof saisonJouee === "function" && saisonJouee();   // décembre 2026 (tour de chauffe) : rien de 2027 (ni éclats, ni Flair)
+  return '<li id="rg-tresor"><b>🗝️ Chasse au trésor</b> : chaque mois, une énigme (lisible dès le 1<sup>er</sup>, sans chrono) et un objet caché dans le décor de la Visite 3D. ' +
+    "Touche <b>🔍 Je lance ma recherche</b> quand tu es prêt : le chrono part et l'objet n'existe qu'à ce moment-là. <b>⏸️ Mettre en pause</b> possible : le chrono s'arrête, mais l'objet disparaît ; " +
+    "<b>à chaque reprise, tu repars du départ</b> (vue d'ensemble du circuit). Temps compté = la somme de tes périodes de recherche. " +
+    "Si tu quittes l'appli, ta recherche se met en pause toute seule (si le réseau le permet ; sinon, le temps continue). " +
+    (saison ? "<b>Le plus rapide gagne</b> : classement au temps, provisoire pendant le mois, définitif à la fin du mois (minuit, le soir du dernier jour ; à égalité, le premier arrivé). Chaque trouveur reçoit son éclat tout de suite : 🥇 or au 1<sup>er</sup>, 🥈 argent au 2<sup>e</sup>, 🥉 bronze au 3<sup>e</sup>, normal ensuite. Les trois plus rapides marquent 3, 2 et 1 points pour le titre de saison 🔍 Flair. "
+      : "En décembre, <b>le plus rapide gagne la plaque dorée Chercheur de Noël</b> (classement au temps, résultat le 31 décembre à minuit ; à égalité, le premier arrivé). ") +
+    "2<sup>e</sup> indice le 11 et jauge chaud-froid le 21 (visible pendant ta recherche), si personne n'a trouvé.</li>";
 }
 function tresorDuCircuit(ci) { if (!TRESORS) return null; const t = TRESORS.l.find(x => x.circuit === ci); return t && TRESORS.trouves.indexOf(ci) < 0 ? t : null; }
 /** v16.66 · classement des chercheurs du circuit (qui et quel jour, jamais où) */
 function chercheursTxt(t) {
-  const l = (t && t.chercheurs) || []; if (!l.length) return "Personne ne l'a encore trouvé.";
+  const l = (t && t.chercheurs) || []; if (!l.length) return "Personne ne l'a encore trouvé." + (t && t.chrono ? " Le plus rapide gagne." : "");
   const j = x => x.j ? " (" + (x.j % 100) + " " + MOIS[Math.floor(x.j / 100) % 100 - 1] + ")" : "";
-  return "Trouvé par : " + l.map((x, k) => (k ? "" : "🥇 ") + (k ? (k + 1) + ". " : "") + esc(x.nom) + j(x)).join(" · ");
+  const chrono = l.some(x => typeof x.s === "number");   // v20.74 : classement par temps (serveur V92)
+  return (chrono ? "Les plus rapides : " : "Trouvé par : ") + l.map((x, k) => (k ? "" : "🥇 ") + (k ? (k + 1) + ". " : "") + esc(x.nom) + (typeof x.s === "number" ? " ⏱️ " + dureeChrono(x.s) : j(x))).join(" · ");
 }
 const TRESOR_SVG = {
   talkie: '<svg viewBox="-12 -16 24 32"><rect x="2.6" y="-15" width="2" height="11" rx="1" fill="#2A2A2E" stroke="#111" stroke-width=".6"/><rect x="-6.5" y="-6" width="13" height="20" rx="2.4" fill="#26262C" stroke="#0A0A0C" stroke-width="1"/><rect x="-4.5" y="-3.6" width="9" height="5" rx="1" fill="#9AD8A8" stroke="#0A0A0C" stroke-width=".6"/><circle cx="-3.2" cy="-4.8" r="1" fill="#FF3030"/>' + [4, 6.4, 8.8, 11.2].map(y => '<path d="M-4 ' + y + 'H4" stroke="#55555C" stroke-width="1.2" stroke-linecap="round"/>').join("") + '</svg>',
@@ -876,7 +988,7 @@ function poserTresorDOM(v) {
   const pi = (v || document).querySelector ? (v || document).querySelector("#gp-piste") : null; if (!pi) return;
   if (TRESOR_APERCU && pi.dataset.circuit !== TRESOR_APERCU.ci) quitterApercuTresor(false);   // v17.35 : autre circuit affiché → l'aperçu s'arrête, l'état réel revient
   const AP = TRESOR_APERCU;
-  pi.querySelectorAll(".gp-tresor, .gp-enigme, .gp-tresor-appel, .gp-jauge, .tap-band").forEach(e => e.remove()); TRESOR_EL = null; sonChaleur(-1);
+  pi.querySelectorAll(".gp-tresor, .gp-enigme, .gp-tresor-appel, .gp-jauge, .tap-band").forEach(e => e.remove()); pi.classList.remove("avec-enigme"); TRESOR_EL = null; sonChaleur(-1); majChronoTresor();
   if (AP) { apBandeau(pi); apCachette(); }
   const met = document.querySelector(".gp-h .gp-met"), cpt = met && met.querySelector(".gp-tresors"), ga = GP_INST && GP_INST.api;
   if (!TRESORS || !(AP || tresorsOuverts())) { if (cpt) cpt.remove(); return; }
@@ -885,23 +997,34 @@ function poserTresorDOM(v) {
   if (met) { if (cpt) cpt.textContent = txt2; else met.insertAdjacentHTML("beforeend", ' <span class="gp-tresors"' + (cp ? ' role="button" tabindex="0" title="Ouvrir la Coupe brisée"' : "") + ">" + txt2 + "</span>");
     const c2 = met.querySelector(".gp-tresors"); if (c2 && cp && !c2.dataset.coupe) { c2.dataset.coupe = "1"; c2.classList.add("lien-coupe"); c2.addEventListener("click", ev => { ev.stopPropagation(); ouvrirCoupe(); }); c2.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); ouvrirCoupe(); } }); } }
   const tc = TRESORS.l.find(x => x.circuit === pi.dataset.circuit); if (!tc) return;
-  const t = tresorDuCircuit(pi.dataset.circuit), ind = tc.indice2 ? '<b class="gp-indice">💡 ' + esc(tc.indice2) + "</b>" : "", cf = !!(t && tc.chaudFroid);   // v17.35 : jauge chaud-froid (serveur V62 : à partir du 21, tant que personne n'a trouvé)
+  const t = tresorDuCircuit(pi.dataset.circuit), parti = rechercheActive(t), ind = tc.indice2 ? '<b class="gp-indice">💡 ' + esc(tc.indice2) + "</b>" : "", cf = !!(t && tc.chaudFroid && parti);   // v20.74 : jauge et objet seulement pendant sa recherche   // v17.35 : jauge chaud-froid (serveur V62 : à partir du 21, tant que personne n'a trouvé)
   if (!t) {   // déjà trouvé : plus d'objet, mais l'énigme résolue et le classement des chercheurs restent consultables
     pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme trouvee">✅ <i>Trésor trouvé !</i><span class="gp-chercheurs">' + chercheursTxt(tc) + "</span></div>");
-    const en0 = pi.querySelector(".gp-enigme"); TRESOR_EL = { pi, b: null, en: en0, t: tc, vu: false, pris: true };
+    const en0 = pi.querySelector(".gp-enigme"); pi.classList.add("avec-enigme"); TRESOR_EL = { pi, b: null, en: en0, t: tc, vu: false, pris: true };
     en0.addEventListener("click", () => en0.classList.toggle("ouverte")); if (ga) majTresor(ga, pi); return;
   }
   /* v16.67 · rappel en carte 2D (vue par défaut) : un trésor attend sur ce circuit → un toucher ouvre la Visite 3D (validé par le Conseil) */
   const premiere = !stock.get("versus.tresorAide");
-  pi.insertAdjacentHTML("beforeend", '<button class="gp-tresor-appel" type="button">' + (cf ? "🌡️ Jauge chaud-froid allumée · " : ind ? "💡 2e indice tombé · " : "🗝️ Un trésor se cache ici · ") + "<b>Chercher en 3D</b>" + (premiere ? "<small>Zoome au maximum, au ras du sol.</small>" : "") + "</button>");
+  const chr = t.chrono && parti ? '⏱️ <span class="gp-chr">' + dureeChrono(chronoDe(t)) + "</span> · " : t.chrono && t.lance ? "⏸️ En pause à " + dureeChrono(chronoDe(t)) + " · " : "";   // v20.74 : le chrono tourne (ou en pause)
+  pi.insertAdjacentHTML("beforeend", '<button class="gp-tresor-appel" type="button">' + chr + (cf ? "🌡️ Jauge chaud-froid allumée · " : ind ? "💡 2e indice tombé · " : chr ? "" : "🗝️ Un trésor se cache ici · ") + "<b>" + (parti ? "Chercher en 3D" : t.lance ? "Reprendre en 3D" : "Lire l'énigme en 3D") + "</b>" +
+    (!parti ? "<small>" + (t.lance ? "À chaque reprise (▶️), tu repars du départ du circuit." : "Le chrono ne part que quand tu touches 🔍 Je lance ma recherche.") + "</small>" : premiere ? "<small>Zoome au maximum, au ras du sol.</small>" : "") + "</button>");
   pi.querySelector(".gp-tresor-appel").addEventListener("click", ev => { ev.stopPropagation(); if (!AP) stock.set("versus.tresorAide", "1"); /* aperçu : rien de gardé */ if (pi.classList.contains("v2")) { choisirVueGP("visite"); return; } const bv = document.getElementById("gp-vue"); if (bv && pi.classList.contains("en2d")) bv.click(); });
-  pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme" title="Énigme du mois : un objet est caché dans le décor de ce circuit. Approche-toi en Visite 3D. Touche pour lire la suite.">' + (ind ? "💡" : "🗝️") + ' <i>' + esc(t.enigme) + "</i>" + ind + (cf ? '<b class="gp-indice gp-chaud-l">🌡️ Personne n\'a trouvé : la jauge chaud-froid est allumée.</b>' : "") + '<span class="gp-chercheurs">' + chercheursTxt(t) + "</span></div>" +
+  /* v20.74 : en tête de l'encadré, le bouton « 🔍 Je lance ma recherche » (avant) ou le chrono qui tourne (pendant) */
+  const estNoel = typeof TRESOR_NOEL !== "undefined" && t.circuit === TRESOR_NOEL;
+  const lance = !t.chrono ? "" : parti ? '<span class="gp-lance on">⏱️ <b class="gp-chr">' + dureeChrono(chronoDe(t)) + '</b><button class="gp-arret" type="button">⏸️ Mettre en pause</button><small>le plus rapide gagne · résultat à la fin du mois</small></span>'
+    : t.lance ? '<span class="gp-lance pause">⏸️ <b>' + dureeChrono(chronoDe(t)) + '</b><button class="gp-lancer" type="button">▶️ Reprendre</button><small>En pause : l\'objet a disparu. À chaque reprise, tu repars du départ du circuit.</small></span>'
+    : '<span class="gp-lance"><button class="gp-lancer" type="button">🔍 Je lance ma recherche</button><small>Prends le temps de lire : le chrono ne part qu\'au toucher. Pause possible (l\'objet disparaît, et tu repars du départ). ' + (estNoel ? "Le plus rapide gagne la plaque dorée Chercheur de Noël ; résultat le 31 décembre à minuit." : "Les 3 plus rapides gagnent un éclat or, argent, bronze ; résultat à la fin du mois, à minuit.") + "</small></span>";
+  pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme" title="Énigme du mois : un objet est caché dans le décor de ce circuit. Lance ta recherche, puis approche-toi en Visite 3D. Touche pour lire la suite.">' + lance + (ind ? "💡" : "🗝️") + ' <i>' + esc(t.enigme) + "</i>" + ind + (cf ? '<b class="gp-indice gp-chaud-l">🌡️ Personne n\'a trouvé : la jauge chaud-froid est allumée.</b>' : "") + '<span class="gp-chercheurs">' + chercheursTxt(t) + "</span></div>" +
     (cf ? '<div class="gp-jauge cache" role="status" aria-live="polite"></div>' : "") +
-    '<button class="gp-tresor t-' + esc(t.type) + '" type="button" aria-label="Un objet du film : touche-le !" tabindex="-1">' + (TRESOR_SVG[t.type] || TRESOR_SVG.gemme) + "</button>");
-  const b = pi.querySelector(".gp-tresor"), en = pi.querySelector(".gp-enigme");
+    (parti ? '<button class="gp-tresor t-' + esc(t.type) + '" type="button" aria-label="Un objet du film : touche-le !" tabindex="-1">' + (TRESOR_SVG[t.type] || TRESOR_SVG.gemme) + "</button>" : ""));   // avant le départ : l'objet n'existe pas
+  pi.classList.add("avec-enigme");   // v20.74 : joystick en haut à droite (repli des navigateurs sans :has)
+  const b = pi.querySelector(".gp-tresor"), en = pi.querySelector(".gp-enigme"), bl = en.querySelector(".gp-lancer");
   TRESOR_EL = { pi, b, en, t, vu: false, j: pi.querySelector(".gp-jauge") };
   en.addEventListener("click", () => en.classList.toggle("ouverte"));
-  b.addEventListener("click", ev => { ev.stopPropagation(); trouverTresor(t, b); });
+  if (bl) bl.addEventListener("click", ev => { ev.stopPropagation(); armerLancement(bl, t, pi); });
+  const ba = en.querySelector(".gp-arret"); if (ba) ba.addEventListener("click", ev => { ev.stopPropagation(); arreterRecherche(t, ba); });
+  if (t.chrono && parti && !TRESOR_TIC) TRESOR_TIC = setInterval(majChronoTresor, 1000);
+  if (b) b.addEventListener("click", ev => { ev.stopPropagation(); trouverTresor(t, b); });
   if (ga) majTresor(ga, pi);
 }
 /** à chaque image : l'objet suit le décor, seulement en Visite 3D (hélico, hors course et survol), de très près et à l'écran */
@@ -936,12 +1059,15 @@ async function trouverTresor(t, b) {
   if (!reduit) { const fx = document.createElement("div"); fx.className = "gp-tresor-fx"; fx.style.left = x + "px"; fx.style.top = y + "px";
     fx.innerHTML = Array.from({ length: 14 }, (_, k) => '<i style="--a:' + (k / 14 * 360).toFixed(0) + "deg;--d:" + (26 + (k % 3) * 12) + 'px"></i>').join(""); T.pi.appendChild(fx); setTimeout(() => fx.remove(), 1300); }
   if (window.SONS) { SONS.succes(); setTimeout(() => SONS.klaxon("billets"), 250); SONS.vibrer([40, 50, 120]); }
-  const rep = TRESOR_APERCU ? TRESOR_APERCU.trouver(t) : await posterAdmin({ action: "tresorTrouve", circuit: t.circuit });   // aperçu : réponse inventée, rien ne part au serveur
+  const rep = TRESOR_APERCU ? TRESOR_APERCU.trouver(t) : await posterAdmin({ action: "tresorTrouve", circuit: t.circuit, jeton: t.depuis || null });   // v20.74 : le jeton de la période en cours (un onglet périmé est refusé)   // aperçu : réponse inventée, rien ne part au serveur
   if (rep && rep.ok) { TRESORS.trouves = rep.trouves || TRESORS.trouves.concat([t.circuit]); TRESORS.total = rep.total || TRESORS.trouves.length;
-    if (!rep.deja) { const l = TRESORS.l.find(x => x.circuit === t.circuit), n = moiVrai(); if (l && !(l.chercheurs || []).some(x => x.nom === n)) { const d = new Date(); (l.chercheurs = l.chercheurs || []).push({ nom: n, j: d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate() }); } }
-    toast(rep.deja ? "🗝️ Déjà trouvé !" : "🗝️ Trouvé" + (rep.rang === 1 ? " en premier ! 🥇" : rep.rang ? " (" + rep.rang + "e)" : " !") + " " + TRESORS.total + " trésor" + (TRESORS.total > 1 ? "s" : "") + " dans ta besace.");
-    if (rep.eclat && !rep.deja) { noterEclat(rep.eclat, moiVrai(), rep.rang); setTimeout(() => revelerEclat(rep.eclat, rep.rang), reduit ? 300 : 1300); }   // refonte des badges : 1er trouveur = cérémonie dorée   // v20.42 : l'éclat de la Coupe rendu par ce trésor
-    if (!rep.deja && !TRESOR_APERCU && typeof TRESOR_NOEL !== "undefined" && t.circuit === TRESOR_NOEL) setTimeout(() => ceremonieChercheurNoel(rep.rang), reduit ? 300 : 1300);   // v20.62 : 🎁 plaque Chercheur de Noël
+    if (!rep.deja) { const l = TRESORS.l.find(x => x.circuit === t.circuit), n = moiVrai();
+      if (l && Array.isArray(rep.chercheurs)) l.chercheurs = rep.chercheurs;   // v20.74 : le classement par temps, recalculé par le serveur
+      else if (l && !(l.chercheurs || []).some(x => x.nom === n)) { const d = new Date(); (l.chercheurs = l.chercheurs || []).push({ nom: n, j: d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate() }); } }
+    const tps = typeof rep.temps === "number" ? rep.temps : null;
+    toast(rep.deja ? "🗝️ Déjà trouvé !" : (tps !== null ? "🗝️ Trouvé en " + dureeChrono(tps) + " · " + (rep.rang === 1 ? "🥇 le plus rapide pour l'instant" : rangRapide(rep.rang)) + " !" : "🗝️ Trouvé" + (rep.rang === 1 ? " en premier ! 🥇" : rep.rang ? " (" + rep.rang + "e)" : " !")) + " " + TRESORS.total + " trésor" + (TRESORS.total > 1 ? "s" : "") + " dans ta besace.");
+    if (rep.eclat && !rep.deja) { noterEclat(rep.eclat, moiVrai(), rep.rang, tps); setTimeout(() => revelerEclat(rep.eclat, rep.rang, tps), reduit ? 300 : 1300); }   // v20.74 : avec un temps, l'éclat normal tout de suite (le doré se joue à la fin du mois)   // refonte des badges : le plus rapide = cérémonie dorée   // v20.42 : l'éclat de la Coupe rendu par ce trésor
+    if (!rep.deja && !TRESOR_APERCU && typeof TRESOR_NOEL !== "undefined" && t.circuit === TRESOR_NOEL) setTimeout(() => ceremonieChercheurNoel(rep.rang, tps), reduit ? 300 : 1300);   // v20.62 : 🎁 plaque Chercheur de Noël
     setTimeout(() => poserTresorDOM(document), reduit ? 0 : 900); }
   else { T.pris = false; b.classList.remove("pris"); toast((rep && rep.message) || "Trouvaille non enregistrée : réessaie."); }
 }
@@ -957,8 +1083,8 @@ const COUPE_EX = { exemple: true, prologue: "Prologue d'exemple : la vraie histo
       : i === 3 ? { circuit: c, mois: 4, etat: "manque", nb: 2, premier: "Pilote B" } : { circuit: c, mois: i + 1, etat: "avenir", nb: i === 5 ? 1 : 0, premier: i === 5 ? "Pilote C" : null }) };
 function coupeDonnees() { return TRESOR_APERCU && TRESOR_APERCU.coupeEx ? COUPE_EX : TRESORS && TRESORS.coupe || null; }
 /** une trouvaille rend son éclat tout de suite (sans attendre le prochain chargement) */
-function noterEclat(e, nom, rang) { const c = TRESORS && TRESORS.coupe; if (!c || !c.eclats) return; const x = c.eclats.find(z => z.circuit === e.circuit); if (!x || x.etat === "trouve") return;
-  Object.assign(x, { etat: "trouve", rang: rang || (x.nb || 0) + 1, nb: (x.nb || 0) + 1, premier: x.premier || nom, matiere: e.matiere, couleur: e.couleur, texte: e.texte, symbole: e.symbole }); c.n = c.eclats.filter(z => z.etat === "trouve").length; }
+function noterEclat(e, nom, rang, tps) { const c = TRESORS && TRESORS.coupe; if (!c || !c.eclats) return; const x = c.eclats.find(z => z.circuit === e.circuit); if (!x || x.etat === "trouve") return;
+  Object.assign(x, { etat: "trouve", rang: rang || (x.nb || 0) + 1, nb: (x.nb || 0) + 1, premier: rang === 1 ? nom : x.premier || nom, matiere: e.matiere, couleur: e.couleur, texte: e.texte, symbole: e.symbole }); if (typeof tps === "number") { x.s = tps; x.medaille = medailleDe(x.rang); x.final = false; } c.n = c.eclats.filter(z => z.etat === "trouve").length; }
 /** v20.47 (Théo : « pas fan de plein de couleurs ») · la Coupe en OR MASSIF : 12 éclats de la même matière, sertis dans une coupe à anses.
  *  Trouvé (par moi) = or poli (un seul reflet continu sur toute la coupe, avec son signe gravé) ; à venir = alvéole vide en creux, liseré pointillé et numéro du mois ;
  *  manqué = verre fumé hachuré. La couleur propre de chaque éclat (donnée du serveur) n'est plus affichée. 12/12 : reflet qui passe sur la coupe. */
@@ -973,7 +1099,8 @@ function svgCoupe(c, actif) {
   for (let r = 0; r < 3; r++) for (let q = 0; q < 4; q++) { const i = r * 4 + q, e = E[i] || { etat: "avenir" }, TL = P(r, q), TR = P(r, q + 1), BR = P(r + 1, q + 1), BL = P(r + 1, q);
     const d = "M" + TL.join(" ") + (r ? L(m(TL, TR, 0, MY[r][q])) : "") + L(TR) + (q === 3 ? A(BR) : L(m(TR, BR, MX[r][q + 1], 0)) + L(BR)) + L(m(BR, BL, 0, MY[r + 1][q])) + L(BL) + (q === 0 ? A(TL) : L(m(BL, TL, MX[r][q], 0)) + "Z");
     const fill = e.etat === "trouve" ? "url(#" + k + "o)" : e.etat === "manque" ? "url(#" + k + "h)" : "url(#" + k + "c)", cx = f((TL[0] + TR[0] + BR[0] + BL[0]) / 4), cy = f((TL[1] + TR[1] + BR[1] + BL[1]) / 4 + 3.7);
-    g += '<path class="cb-ec e-' + e.etat + (i === actif ? " actif" : "") + '" data-ec="' + i + '" d="' + d + '" fill="' + fill + '"/>';
+    const md = e.etat === "trouve" && typeof e.s === "number" ? (e.medaille !== undefined ? e.medaille : medailleDe(e.rang)) : null;   // v20.74 : liseré or / argent / bronze
+    g += '<path class="cb-ec e-' + e.etat + (md ? " m-" + md : "") + (i === actif ? " actif" : "") + '" data-ec="' + i + '" d="' + d + '" fill="' + fill + '"/>';
     if (e.etat === "avenir") t += '<text class="cb-num" x="' + cx + '" y="' + cy + '">' + (i + 1) + "</text>";
     else if (e.etat === "trouve" && e.symbole) t += '<text class="cb-grav' + (i === actif ? " actif" : "") + '" x="' + cx + '" y="' + cy + '">' + esc(e.symbole) + "</text>"; }
   const or = (id, a) => '<linearGradient id="' + k + id + '" gradientUnits="userSpaceOnUse" ' + a + '><stop offset="0" style="stop-color:var(--cb-or0)"/><stop offset=".32" style="stop-color:var(--cb-or1)"/><stop offset=".46" style="stop-color:var(--cb-or2)"/><stop offset=".62" style="stop-color:var(--cb-or1)"/><stop offset="1" style="stop-color:var(--cb-or0)"/></linearGradient>';
@@ -994,11 +1121,11 @@ function ouvrirCoupe(c0) {
   const c = c0 || coupeDonnees(); if (!c) return;
   document.querySelectorAll(".coupe-b").forEach(x => x.remove());
   const nomGP = ci => (GPS[ci] ? GPS[ci].drap + " " + GPS[ci].gp : ci), signes = (c.eclats || []).filter(e => e.etat === "trouve" && e.symbole).map(e => e.symbole);
-  const autres = e => e.nb ? (e.nb === 1 ? "1 pilote l'a trouvé" : e.nb + " pilotes l'ont trouvé") + (e.premier ? " (le 1er : " + esc(e.premier) + ")" : "") : "personne ne l'a encore trouvé";
+  const autres = e => e.nb ? (e.nb === 1 ? "1 pilote l'a trouvé" : e.nb + " pilotes l'ont trouvé") + (e.premier ? " (le plus rapide" + (e.final === false ? " pour l'instant" : "") + " : " + esc(e.premier) + ")" : "") : "personne ne l'a encore trouvé";
   const ligne = (e, i) => '<li class="cb-l e-' + e.etat + '" data-ec="' + i + '"><span class="cb-m">' + MOIS_COUPE[i] + "</span><div><b>" + esc(nomGP(e.circuit)) + "</b>" +
     (e.etat === "avenir" ? "<small>À trouver en " + ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"][i] + " : trouve le trésor du mois pour gagner cet éclat" + (e.nb ? " · " + autres(e) : "") + ".</small>"
       : e.etat === "manque" ? "<small>Tu n'as pas trouvé le trésor de ce mois : cet éclat te manquera pour l'énigme. " + autres(e) + ".</small>"
-      : "<small>Éclat de " + esc(e.matiere || "") + " · trouvé " + (e.rang === 1 ? "en premier 🥇" : e.rang ? "en " + e.rang + "e" : "") + (e.nb > 1 ? " · " + e.nb + " pilotes l'ont" : "") + "</small><p>" + esc(e.texte || "") + "</p>") +
+      : "<small>Éclat de " + esc(e.matiere || "") + " · trouvé " + (typeof e.s === "number" ? "en " + dureeChrono(e.s) + (e.rang ? " · " + rangRapide(e.rang) + " · " + texteMedaille(e.medaille !== undefined ? e.medaille : medailleDe(e.rang)) + (e.final === false ? " pour l'instant" : "") : "") : e.rang === 1 ? "en premier 🥇" : e.rang ? "en " + e.rang + "e" : "") + (e.nb > 1 ? " · " + e.nb + " pilotes l'ont" : "") + "</small><p>" + esc(e.texte || "") + "</p>") +
     "</div>" + (e.etat === "trouve" && e.symbole ? '<span class="cb-s" title="Le signe gravé sur cet éclat">' + esc(e.symbole) + "</span>" : "") + "</li>";
   const o = document.createElement("div"); o.className = "regles coupe-b"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "La Coupe brisée");
   o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>🏆 La Coupe brisée' + (c.exemple ? " · aperçu (exemple inventé)" : "") + '</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div><div class="rg-corps">' +
@@ -1014,12 +1141,12 @@ function ouvrirCoupe(c0) {
   o.querySelector(".rg-x").focus();
 }
 /** la révélation d'un éclat, juste après une trouvaille ; rang 1 (le premier à trouver le trésor) : cérémonie dorée plein écran */
-function revelerEclat(e, rang) {
+function revelerEclat(e, rang, tps) {
   const c = coupeDonnees(), i = c && c.eclats ? c.eclats.findIndex(z => z.circuit === e.circuit) : -1;
-  if (rang === 1) { ceremonieEclat(e, c, i); return; }
+  if (rang === 1 && typeof tps !== "number") { ceremonieEclat(e, c, i); return; }   // v20.74 : chronométré, l'or n'est attribué qu'à la fin du mois
   const o = document.createElement("div"); o.className = "regles coupe-b cb-rev"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Un éclat de la Coupe");
   o.innerHTML = '<div class="rg-c"><span class="tuto-k">🏆 Un éclat de la Coupe</span>' + (c ? svgCoupe(c, i) : "") +
-    "<h3>Éclat de " + esc(e.matiere || "") + "</h3><p>" + esc(e.texte || "") + "</p>" + (e.symbole ? '<p class="cb-s1">Un signe y est gravé : <b>' + esc(e.symbole) + "</b></p>" : "") +
+    "<h3>Éclat de " + esc(e.matiere || "") + "</h3>" + (typeof tps === "number" ? '<p class="cb-tps">⏱️ Trouvé en <b>' + dureeChrono(tps) + "</b>" + (rang ? " · " + rangRapide(rang) + " pour l'instant" : "") + '<small class="cb-med">' + texteMedaille(medailleDe(rang)) + " pour l'instant · 1<sup>er</sup> or, 2<sup>e</sup> argent, 3<sup>e</sup> bronze : classement définitif à la fin du mois (minuit, le soir du dernier jour).</small></p>" : "") + "<p>" + esc(e.texte || "") + "</p>" + (e.symbole ? '<p class="cb-s1">Un signe y est gravé : <b>' + esc(e.symbole) + "</b></p>" : "") +
     '<div class="btn-row">' + (c ? '<button class="btn" type="button" data-cb-voir>Voir la Coupe</button>' : "") + '<button class="btn ghost" type="button" data-cb-ok>Fermer</button></div></div>';
   document.body.appendChild(o);
   const fermer = () => o.remove();
@@ -1027,14 +1154,15 @@ function revelerEclat(e, rang) {
   const v = o.querySelector("[data-cb-voir]"); if (v) v.addEventListener("click", () => { fermer(); ouvrirCoupe(); });
   if (window.SONS && SONS.jingle) try { SONS.jingle("garage", "motif"); } catch (er) { /* sans son */ }
 }
-/** Refonte des badges (Théo, 24/11) · le PREMIER à trouver le trésor du mois : grande révélation dorée (comme un secret doré), son nom gravé ;
- *  la trouvaille compte aussi pour le titre du Flair (3 points au 1er). Animations réduites : tout s'affiche d'un coup, sans mouvement. */
+/** Refonte des badges (Théo, 24/11) · le PLUS RAPIDE (v20.74 ; avant : le premier) à trouver le trésor du mois : grande révélation dorée, son nom gravé ;
+ *  la trouvaille compte aussi pour le titre du Flair (3 points au plus rapide). Animations réduites : tout s'affiche d'un coup, sans mouvement. */
 /** v20.62 (Théo) · trésor de décembre 2026 trouvé : la plaque « Chercheur de Noël » (dorée pour le premier). Une ligne, une plaque, rien sur la cachette. */
-function ceremonieChercheurNoel(rang) {
-  const moi = moiVrai() || "", or = rang === 1, id = or ? "chercheuror" : "chercheur";
+function ceremonieChercheurNoel(rang, tps) {
+  const chrono = typeof tps === "number", moi = moiVrai() || "", or = rang === 1, id = or && !chrono ? "chercheuror" : "chercheur";   // v20.74 : la version dorée va au PLUS RAPIDE, attribuée le 31/12 à minuit
   const o = document.createElement("div"); o.className = "revel cb-or cn-rev" + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Chercheur de Noël");
-  o.innerHTML = '<div class="rv-c cbo-c"><span class="cbo-rayons" aria-hidden="true"></span><span class="tuto-k">🎅 Trésor de l\'Atelier du Père Noël</span><h3>Trouvé' + (or ? " en premier ! 🥇" : " !") + "</h3>" +
-    '<p class="cn-gain">🎁 Tu gagnes la plaque <b>Chercheur de Noël</b>' + (or ? ", dans sa version dorée : tu es le premier !" : ".") + "</p>" +
+  o.innerHTML = '<div class="rv-c cbo-c"><span class="cbo-rayons" aria-hidden="true"></span><span class="tuto-k">🎅 Trésor de l\'Atelier du Père Noël</span>' +
+    (chrono ? "<h3>Trouvé en " + dureeChrono(tps) + '</h3><p class="cn-rang">' + (or ? "🥇 le plus rapide pour l'instant" : rangRapide(rang)) + "</p>" : "<h3>Trouvé" + (or ? " en premier ! 🥇" : " !") + "</h3>") +
+    '<p class="cn-gain">🎁 Tu gagnes la plaque <b>Chercheur de Noël</b>' + (chrono ? ". La version dorée ira au plus petit temps du mois : attribuée le 31 décembre à minuit." : or ? ", dans sa version dorée : tu es le premier !" : ".") + "</p>" +
     '<div class="tk-obj">' + (typeof vignetteItem === "function" ? vignetteItem("plaque", id, moi, {}) : "") + "</div>" +
     '<p class="cbo-flair">Elle est à toi pour toujours, dans ton écurie · aucun point</p><div class="btn-row">' + (typeof btnEquiper === "function" ? btnEquiper("plaque", id) : "") + '<button class="btn ghost" type="button" data-cb-ok>Génial !</button></div></div>';   // v20.70 · 🏎️
   document.body.appendChild(o);
@@ -1044,12 +1172,13 @@ function ceremonieChercheurNoel(rang) {
   if (typeof brancherEquiper === "function") brancherEquiper(o, () => o.remove());
   try { confettis("trophees"); } catch (er) { /* sans fête */ }
 }
-function ceremonieEclat(e, c, i) {
-  const moi = moiVrai() || "toi", G = GPS[e.circuit];
-  const o = document.createElement("div"); o.className = "revel cb-or" + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Premier à trouver le trésor");
-  o.innerHTML = '<div class="rv-c cbo-c"><span class="cbo-rayons" aria-hidden="true"></span><span class="tuto-k">🥇 Premier à trouver le trésor</span>' +
+function ceremonieEclat(e, c, i, tps) {
+  const moi = moiVrai() || "toi", G = GPS[e.circuit], chrono = typeof tps === "number";
+  const o = document.createElement("div"); o.className = "revel cb-or" + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", chrono ? "Le plus rapide à trouver le trésor" : "Premier à trouver le trésor");
+  o.innerHTML = '<div class="rv-c cbo-c"><span class="cbo-rayons" aria-hidden="true"></span><span class="tuto-k">' + (chrono ? "🥇 Le plus rapide (pour l\'instant)" : "🥇 Premier à trouver le trésor") + "</span>" +
     (c ? '<div class="cbo-coupe">' + svgCoupe(c, i) + "</div>" : "") +
     "<h3>Éclat de " + esc(e.matiere || "") + "</h3>" + (G ? '<small class="cbo-u">' + G.drap + " " + esc(G.gp) + "</small>" : "") +
+    (chrono ? '<p class="cb-tps">⏱️ Trouvé en <b>' + dureeChrono(tps) + "</b> · 🥇 le plus rapide pour l'instant<small>La place dorée revient au plus rapide : elle peut changer de main jusqu'à la fin du mois.</small></p>" : "") +
     '<p class="cbo-grave">Gravé à ton nom : <b>' + esc(moi) + "</b></p><p>" + esc(e.texte || "") + "</p>" + (e.symbole ? '<p class="cb-s1">Un signe y est gravé : <b>' + esc(e.symbole) + "</b></p>" : "") +
     (typeof saisonJouee === "function" && saisonJouee() ? '<p class="cbo-flair">🔍 +3 au score de chercheur (titre du Flair) · aucun point au championnat</p>' : "") +
     '<div class="btn-row">' + (c ? '<button class="btn acc" type="button" data-cb-voir>Voir la Coupe</button>' : "") + '<button class="btn ghost" type="button" data-cb-ok>Génial !</button></div></div>';
@@ -1069,7 +1198,7 @@ function apercuCoupe() { if (!apercuAutorise()) return; ouvrirCoupe(COUPE_EX); }
     rien n'est gardé : « ✕ Quitter » (ou changer d'onglet ou de circuit) remet l'état réel. */
 /* v20.45 (Théo) : l'exemple dit vrai sur SA cachette (posée au hasard au ras du sol, près du milieu de l'écran) ; les vraies énigmes, elles, décrivent le décor exact autour de chaque trésor */
 const TAP_EX = { type: "gemme", enigme: "Énigme d'exemple : une petite gemme orange a roulé hors de la piste. Elle attend au ras du sol, pas loin du centre de la carte, là où personne ne regarde.",
-  ind: "Indice d'exemple : descends tout près du sol et zoome au maximum : elle n'apparaît que de très près.", ch: [{ nom: "Pilote A", j: 20271104 }, { nom: "Pilote B", j: 20271109 }] };
+  ind: "Indice d'exemple : descends tout près du sol et zoome au maximum : elle n'apparaît que de très près.", ch: [{ nom: "Pilote A", j: 20271104, s: 754 }, { nom: "Pilote B", j: 20271109, s: 1931 }] };   // v20.74 : temps d'exemple (12 min 34 s, 32 min 11 s)
 function ouvrirApercuTresor() {
   if (!apercuAutorise()) return;   // v20.40 : double sécurité
   if (TRESOR_APERCU) { quitterApercuTresor(true); return; }
@@ -1080,7 +1209,12 @@ function ouvrirApercuTresor() {
   const ci = pi.dataset.circuit;
   TRESOR_APERCU = { ci, F: { circuit: ci, type: TAP_EX.type, p: null, enigme: TAP_EX.enigme }, etape: 0, avecCh: false, trouves: [],
     sauve: { T: TRESORS, Tt: TRESORS_T, gp2d: ETAT.gp2d, gpVue3: ETAT.gpVue3 },
-    trouver(t) { const deja = this.trouves.indexOf(t.circuit) >= 0; if (!deja) this.trouves.push(t.circuit); return { ok: true, deja, trouves: this.trouves.slice(), total: this.trouves.length, rang: (this.avecCh ? TAP_EX.ch.length : 0) + 1, eclat: deja ? null : Object.assign({ circuit: t.circuit }, ECLAT_EX) }; } };
+    actif: false, lance: false, cumul: 0, depuis: null, pEx: null,   // v20.74 : chrono inventé (la cachette d'exemple pEx ne sert que pendant une période active)
+    lancer() { if (!this.actif) { this.actif = true; this.lance = true; this.depuis = Date.now(); } apDonnees(); return { ok: true, actif: true, depuis: this.depuis, cumul: this.cumul, maintenant: Date.now(), p: this.pEx }; },
+    arreter() { if (this.actif) { this.cumul += (Date.now() - this.depuis) / 1000; this.actif = false; this.depuis = null; } apDonnees(); return { ok: true, actif: false, cumul: this.cumul, maintenant: Date.now() }; },
+    trouver(t) { if (!this.actif) return { ok: false, message: "En pause : reprends ta recherche (aperçu)." }; const deja = this.trouves.indexOf(t.circuit) >= 0; if (!deja) this.trouves.push(t.circuit); const s = Math.max(1, Math.round(this.cumul + (Date.now() - this.depuis) / 1000)), ch = this.avecCh ? TAP_EX.ch : [];
+      const l = ch.concat([{ nom: moiVrai() || "Toi", j: 20271120, s }]).sort((a, b) => a.s - b.s), rang = l.findIndex(x => x.s === s && !TAP_EX.ch.includes(x)) + 1;
+      return { ok: true, deja, trouves: this.trouves.slice(), total: this.trouves.length, rang, temps: s, chercheurs: l, eclat: deja ? null : Object.assign({ circuit: t.circuit }, ECLAT_EX) }; } };
   apDonnees();
   if (vuesV2(ci)) choisirVueGP("visite"); else if (piste3D()) { ETAT.gp2d = "0"; garder(); rendreTrophees(); }   // autres circuits : la vue 3D libre (hélico) tient lieu de Visite
   poserTresorDOM(document);
@@ -1089,6 +1223,8 @@ function ouvrirApercuTresor() {
 /** les données d'exemple, telles que le serveur les donnerait */
 function apDonnees() {
   const AP = TRESOR_APERCU; if (!AP) return; const F = AP.F;
+  F.chrono = true; F.lance = AP.lance; F.actif = AP.actif; F.depuis = AP.depuis; F.cumul = AP.cumul; F.final = false;   // v20.74 : l'objet n'existe que pendant une période active
+  if (AP.actif) F.p = AP.pEx; else delete F.p;
   F.indice2 = AP.etape >= 1 ? TAP_EX.ind : undefined; F.chaudFroid = AP.etape === 2 && !AP.avecCh && !AP.trouves.length; F.jChaud = F.chaudFroid ? 20271121 : undefined; F.chercheurs = AP.avecCh ? TAP_EX.ch.map(x => Object.assign({}, x)) : [];
   TRESORS = { l: [F], trouves: AP.trouves.slice(), total: AP.trouves.length };
 }
@@ -1113,31 +1249,32 @@ function apBandeau(pi) {
   b.querySelectorAll("[data-tapi]").forEach(x => x.addEventListener("click", ev => { ev.stopPropagation(); AP.etape = +x.dataset.tapi; redo(); }));
   b.querySelector("[data-tapc]").addEventListener("click", ev => { ev.stopPropagation(); AP.avecCh = !AP.avecCh; redo(); });
   b.querySelector('[data-tapa="pres"]').addEventListener("click", ev => { ev.stopPropagation(); apPres(); });
-  b.querySelector('[data-tapa="rejouer"]').addEventListener("click", ev => { ev.stopPropagation(); AP.trouves = []; redo(); apPres(); toast("↺ Objet remis en place (aperçu)."); });
+  b.querySelector('[data-tapa="rejouer"]').addEventListener("click", ev => { ev.stopPropagation(); AP.trouves = []; Object.assign(AP, { actif: false, lance: false, cumul: 0, depuis: null }); redo(); apPres(); toast("↺ Objet remis en place, chrono remis à zéro (aperçu)."); });
   b.querySelector("[data-tapx]").addEventListener("click", ev => { ev.stopPropagation(); quitterApercuTresor(true); });
 }
 function apPres() {
   const AP = TRESOR_APERCU, a = GP_INST && GP_INST.api, pi = document.getElementById("gp-piste");
   if (!AP || !a || a.type !== "3d" || !pi || pi.classList.contains("en2d") || a.mode() !== "helico") { toast("🎯 Passe d'abord en 📺 Visite."); return; }
-  if (!AP.F.p) { toast("🎯 La cachette d'exemple se pose… réessaie dans une seconde."); return; }
-  a.viser([AP.F.p[0], AP.F.p[2]], .07, .55); a.reveiller();
+  if (!AP.pEx) { toast("🎯 La cachette d'exemple se pose… réessaie dans une seconde."); return; }
+  if (!AP.actif) toast("🎯 L'objet n'apparaîtra que pendant ta recherche (🔍 / ▶️).");
+  a.viser([AP.pEx[0], AP.pEx[2]], .07, .55); a.reveiller();
 }
 /** cachette d'exemple : un point quelconque du sol, choisi une fois pour tomber à l'écran en vue rapprochée, puis on reprend de la hauteur (à l'admin de la retrouver, ou 🎯) */
 function apCachette() {
-  const AP = TRESOR_APERCU; if (!AP || AP.F.p || AP.cherche) return; AP.cherche = true;
+  const AP = TRESOR_APERCU; if (!AP || AP.pEx || AP.cherche) return; AP.cherche = true;
   const essai = () => {
-    if (TRESOR_APERCU !== AP || AP.F.p) { AP.cherche = false; return; }
+    if (TRESOR_APERCU !== AP || AP.pEx) { AP.cherche = false; return; }
     const a = GP_INST && GP_INST.api, pi = document.getElementById("gp-piste");
     if (!a || a.type !== "3d" || !a.projeter || !pi || pi.classList.contains("en2d") || a.mode() !== "helico" || a.enCours() || (a.survolEnCours && a.survolEnCours())) { setTimeout(essai, 600); return; }
     a.viser(null, .07, .55);   // v20.62 (trésors) : assez près pour tomber sous les 60 m
     setTimeout(() => {
-      if (TRESOR_APERCU !== AP || AP.F.p) { AP.cherche = false; return; }
+      if (TRESOR_APERCU !== AP || AP.pEx) { AP.cherche = false; return; }
       if (!GP_INST || GP_INST.api !== a || a.mode() !== "helico") { setTimeout(essai, 400); return; }
       const { w, h } = a.taille(), cand = [];
       for (let x = -600; x <= 600; x += 8) for (let z = -600; z <= 600; z += 8) { const e = a.projeter([x, 1, z]); if (!e || !e.vis || e.d / (a.recul ? a.recul() : 1) > TRESOR_D - 12) continue; cand.push({ s: Math.hypot(e.x - w / 2, e.y - h * .55), p: [x, 1, z] }); }
       cand.sort((u, v) => u.s - v.s); const best = cand.slice(0, 40).find(c => !(a.masque && a.masque(c.p))) || cand[0] || null;   // v20.62 : une cachette d'exemple que le décor ne cache pas
       if (!best) { setTimeout(essai, 400); return; }
-      AP.F.p = best.p; AP.cherche = false; poserTresorDOM(document); a.viser(null, .3, .38);
+      AP.pEx = best.p; AP.cherche = false; apDonnees(); poserTresorDOM(document); a.viser(null, .3, .38);
     }, 700);
   };
   setTimeout(essai, 300);
