@@ -521,6 +521,9 @@ function attrLivree(nom, e) {
   const l = (e || equipDe(nom)).livree;
   return l === "couleur" ? "" : ' class="lv lv-' + l + '" style="--c:' + couleur(nom) + '"';
 }
+/** v21.11 · la livrée posée sur le NOM SEUL (un <span> qui l'entoure), jamais sur la boîte qui contient aussi la couronne, « (moi) » ou les badges :
+ *  le Bicolore se coupe ainsi toujours au même endroit du nom, quelle que soit la largeur de la ligne ou le téléphone */
+function nomLivree(nom, e) { const a = attrLivree(nom, e); return a ? "<span" + a + ">" + esc(nom) + "</span>" : esc(nom); }
 function plaqueDe(nom) {
   if (!saisonVisible()) return "";
   const p = equipDe(nom).plaque;
@@ -1101,9 +1104,10 @@ function avatar(nom, e) {
   const lead = tete && !eq.vignette && saisonVisible() && leaderSaison() === nom;
   return '<span class="av av-' + (eq.fond || "couleur") + (tete ? " av-tete" : "") + (lead ? " av-lead" : "") + ((ereDorActive() || {}).nom === nom ? " av-or" : "") + '" style="--c:' + couleur(nom) + '">' + (tete ? svgTete(nom, eq, eq.vignette) : svgCasque(nom, eq)) + "</span>";
 }
-/** v20.61 (règle de Théo, 25/11) · EN COURSE (portraits et pastilles 2D/3D, grille, liste de la page Course, verdict de la course) chacun garde TOUJOURS son visage
- *  (portrait importé ou tête dessinée, avec l'accessoire du mois s'il en a un), sur le fond par défaut, pour qu'on sache qui est qui ; jamais le casque ni l'avatar
- *  choisis dans l'écurie (ceux-là s'affichent partout ailleurs). La voiture, elle, reste personnalisée. extra = réglages en plus (skin, vignette…). */
+/** v20.61 (règle de Théo, 25/11) · EN COURSE (portraits et pastilles de la carte 2D/3D, voiture suivie, bulles et classement en plein écran, verdict de la course)
+ *  chacun garde TOUJOURS son visage (portrait importé ou tête dessinée, avec l'accessoire du mois s'il en a un), sur le fond par défaut, pour qu'on sache qui est qui ;
+ *  jamais le casque ni l'avatar choisis dans l'écurie. v21.11 (Théo, 26/11) : le profil de l'écurie s'affiche partout ailleurs, y compris dans la liste
+ *  « Classement » sous la course (comme au classement de l'accueil, avec avatar()). La voiture, elle, reste personnalisée. extra = réglages en plus (skin, vignette…). */
 function avatarCourse(nom, extra) {
   let sk = null; try { sk = accessoireMerite(nom); } catch (er) { sk = null; }
   return avatar(nom, Object.assign({}, equipDe(nom), sk ? { skin: sk } : {}, extra || {}, { pilote: "tete", fond: "couleur" }));
@@ -1655,14 +1659,21 @@ function htmlEcurie() {
     '<div class="sr-3d" id="sr-3d">' + svgVoiture({ nom: qui, e, reflet: true, idle: true }) + "</div>" +
     '<span class="sr-aide" aria-hidden="true">' + (window.Piste && Piste.supporte() && !ecuVue2D() ? "<em>↔ Tourne-la · 🤏 zoome</em>" : "") + "</span>" + btnVueEcu() + '<button class="sr-klaxon sr-hasard" type="button" id="ecu-hasard">🎲 Au hasard</button><button class="sr-klaxon" type="button" id="ecu-klaxon">📯 Klaxonner</button></div>';   // v20.48 : la voiture de la course, en 3D
   const etageres = htmlCatsEcu(qui, e, ouverts) + '<div class="etageres ecu-v">' + (r ? htmlEtagere(qui, r[0], r[1], e, ouverts) : "") + "</div>" +
-    '<p class="eta-aide">Touche un objet pour l\'essayer sur ta F1, ou « ? » pour savoir d\'où il vient.</p>';
+    '<p class="eta-aide">Touche un objet pour l\'essayer sur ta F1, ou « ? » pour savoir d\'où il vient.</p>' + aideVuEcu();
   return showroom + htmlCollantEcu(qui, e) + htmlHasardEcu(qui, e) + etageres +
     '<button class="btn acc plein" type="button" id="ecu-garder">Enregistrer mon écurie</button>' +
     '<p class="info">Ta voiture de course porte ta livrée, ton casque, ta finition, ton numéro et ta traînée. En course, on garde ton visage pour qu\'on te reconnaisse.' + (ecurieDepart() ? " Jusqu'au 31 décembre, les objets de départ ; de nouveaux objets se gagneront tout au long de 2027." : "") + "</p>" +
     '<div><h3 class="s-h3">La grille <small>touche une écurie pour la voir, 🏆 pour sa vitrine</small></h3></div><div class="grille-dep">' + htmlGrilleEcu(qui, e) + "</div>" + htmlGarage(qui);
 }
+/** v21.11 · une ligne discrète : ce que les autres voient de mon écurie au classement (et au Podium).
+ *  Secret des accessoires (5-plateau.js, accessoireDuMois) : le bonnet de Noël n'est nommé qu'à partir du 1er décembre 2026 ; avant, on reste vague. */
+function aideVuEcu() {
+  let acc = null; try { acc = accessoireDuMois(); } catch (er) { acc = null; }
+  return '<p class="eta-aide ecu-vu">👀 Ce que les autres voient au classement : ton avatar, ta livrée sur ton nom, et ton casque si tu choisis « 🪖 Mon casque » dans Pilote.' +
+    (acc === "noel" ? " En décembre, ta tête porte le bonnet de Noël." : acc ? " Ta tête porte aussi l'accessoire du mois." : " L'accessoire du mois arrive le 1er décembre.") + "</p>";
+}
 function htmlGrilleEcu(qui, e) {
-  return D.personnes.map(p => { const eq = p.nom === qui ? e : equipDe(p.nom); return '<div class="gr-w' + (ECU_VOIR === p.nom ? " on" : "") + '"><button type="button" class="gr-l' + (ECU_VOIR === p.nom ? " on" : "") + '" data-voir="' + esc(p.nom) + '" aria-label="Voir l\'écurie de ' + esc(p.nom) + '">' + avatar(p.nom, eq) + "<b" + attrLivree(p.nom, eq) + ">" + esc(p.nom) + "</b>" + (eq.plaque !== "aucune" ? '<span class="plaque">' + esc(ITEMS.plaque[eq.plaque]) + "</span>" : "") + '<span class="num">#' + eq.numero + " ›</span></button>" +
+  return D.personnes.map(p => { const eq = p.nom === qui ? e : equipDe(p.nom); return '<div class="gr-w' + (ECU_VOIR === p.nom ? " on" : "") + '"><button type="button" class="gr-l' + (ECU_VOIR === p.nom ? " on" : "") + '" data-voir="' + esc(p.nom) + '" aria-label="Voir l\'écurie de ' + esc(p.nom) + '">' + avatar(p.nom, eq) + "<b>" + nomLivree(p.nom, eq) + "</b>" + (eq.plaque !== "aucune" ? '<span class="plaque">' + esc(ITEMS.plaque[eq.plaque]) + "</span>" : "") + '<span class="num">#' + eq.numero + " ›</span></button>" +
     '<button type="button" class="gr-f" data-gp-fiche="' + esc(p.nom) + '" aria-label="Vitrine de ' + esc(p.nom) + '"><span aria-hidden="true">🏆</span><small>Vitrine</small></button></div>'; }).join("");   // v20.71 (Théo) : la ligne = son écurie, 📂 = sa fiche
 }
 /* ---------- v20.84 (Théo) · 💾 « Enregistrer » en haut : dans l'en-tête de la voiture, allumé (pastille « modifié ») dès qu'un changement attend ;
@@ -1755,7 +1766,7 @@ function choisirCatEcu(s) { if (ECU_SLOT !== s) ECU_PED = false; ECU_SLOT = s; t
 function htmlTeteEcu(qui, e, ouverts) {
   const total = totalObjets(), nb = ouverts.size - Object.keys(BASE_ECURIE).length;
   return '<span class="sr-id">' + avatar(qui, Object.assign({}, e, { vignette: true })) + "</span>" +
-    '<span class="sr-nm"><b' + attrLivree(qui, e) + ">" + esc(qui) + '</b><span class="sr-k">#' + e.numero + " · " + (estChauffe(saisonCourante()) ? "Tour de chauffe" : "Saison " + numeroSaison(saisonCourante())) + "</span></span>" +
+    '<span class="sr-nm"><b>' + nomLivree(qui, e) + '</b><span class="sr-k">#' + e.numero + " · " + (estChauffe(saisonCourante()) ? "Tour de chauffe" : "Saison " + numeroSaison(saisonCourante())) + "</span></span>" +
     '<span class="sr-p" aria-label="' + nb + " objets sur " + total + '"><b>' + nb + "</b> / " + total + "<small>objets</small></span>";
 }
 /** les pastilles des catégories : émoji, nom, compteur ; la choisie en blanc ; ✨ sur celles qui ont des nouveautés */
@@ -1996,7 +2007,7 @@ function htmlGarage(qui) {
   const eq = n === qui && ECU ? ECU.e : equipDe(n), ouverts = debloques(n);
   const total = totalObjets(), nb = ouverts.size - Object.keys(BASE_ECURIE).length;
   const ex = exclusifsDe(n);
-  return '<div class="garage" id="garage"><div class="showroom">' + '<div class="sr-num" aria-hidden="true">' + eq.numero + '</div><div class="sr-h"><span class="sr-k">Écurie de ' + esc(n) + '</span><span class="sr-id">' + avatar(n, Object.assign({}, eq, { vignette: true })) + "<b" + attrLivree(n, eq) + ">" + esc(n) + "</b></span>" +
+  return '<div class="garage" id="garage"><div class="showroom">' + '<div class="sr-num" aria-hidden="true">' + eq.numero + '</div><div class="sr-h"><span class="sr-k">Écurie de ' + esc(n) + '</span><span class="sr-id">' + avatar(n, Object.assign({}, eq, { vignette: true })) + "<b>" + nomLivree(n, eq) + "</b></span>" +
     '<span class="sr-p"><span class="sr-barre"><i style="width:' + (total ? nb / total * 100 : 0).toFixed(0) + '%"></i></span>' + nb + " / " + total + " objets</span></div>" + '<div class="sr-3d" id="gar-3d">' + svgVoiture({ nom: n, e: eq, reflet: true, idle: true }) + "</div>" +
     btnVueEcu() + '<button class="sr-klaxon" type="button" id="garage-klaxon">📯 Son klaxon</button></div>' +
     '<div class="gar-eq">' + SLOTS.map(([s, lib]) => '<span><small>' + lib + "</small>" + esc(ITEMS[s][eq[s]]) + "</span>").join("") + "</div>" +

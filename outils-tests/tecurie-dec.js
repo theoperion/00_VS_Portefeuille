@@ -173,15 +173,16 @@ async function page(b, o) {
     // v20.61 (règle de Théo) : EN COURSE chacun garde son visage (jamais le casque ni l'avatar de l'écurie) ; partout ailleurs, ce qu'il a choisi
     const vis = await p.evaluate(async () => {
       ETAT.podium = "gp"; GP_ETAPE = null; garder(); allerA("trophees"); rendreTrophees(); await new Promise(r => setTimeout(r, 2500));
-      const c = document.querySelector("#v-trophees .s-corps"), course = { casque: c.querySelectorAll(".av svg.casque").length, damier: c.querySelectorAll(".av-damier").length, tetes: c.querySelectorAll(".av.av-tete").length };
+      const c = document.querySelector("#v-trophees .s-corps"), hors = sel => [...c.querySelectorAll(sel)].filter(x => !x.closest(".gp-liste")).length, course = { casque: hors(".av svg.casque"), damier: hors(".av-damier"), tetes: hors(".av.av-tete") };
+      const liste = { casque: c.querySelectorAll(".gp-liste .av svg.casque").length, damier: c.querySelectorAll(".gp-liste .av-damier").length };   // v21.11 (Théo) : la liste « Classement » sous la course montre le profil de l'écurie
       const pr = document.querySelector("#gp-piste"), piste = pr ? { casque: pr.querySelectorAll(".av svg.casque").length, damier: pr.querySelectorAll(".av-damier").length } : null;
       allerA("classement"); await new Promise(r => setTimeout(r, 600)); const k = document.querySelector("#v-classement") || document.body;
       const classement = { casque: k.querySelectorAll(".av svg.casque").length, damier: k.querySelectorAll(".av-damier").length };
       allerA("trophees"); ETAT.podium = "ecurie"; garder(); rendreTrophees(); await new Promise(r => setTimeout(r, 300));
-      return { course, piste, classement, aide: /En course, on garde ton visage/.test(document.querySelector("#v-trophees").innerText) };
+      return { course, piste, liste, classement, aide: /En course, on garde ton visage/.test(document.querySelector("#v-trophees").innerText) };
     });
-    ok(vis.course.tetes >= 5 && !vis.course.casque && !vis.course.damier && (!vis.piste || (!vis.piste.casque && !vis.piste.damier)) && vis.classement.casque >= 1 && vis.classement.damier >= 1 && vis.aide,
-      "en course, Clément garde son visage (ni casque ni avatar Damier) ; au Classement, son casque et son avatar Damier ; l'aide de l'écurie le dit " + JSON.stringify(vis) + tag);
+    ok(vis.course.tetes >= 5 && !vis.course.casque && !vis.course.damier && (!vis.piste || (!vis.piste.casque && !vis.piste.damier)) && vis.classement.casque >= 1 && vis.classement.damier >= 1 && vis.liste.casque >= 1 && vis.liste.damier >= 1 && vis.aide,
+      "en course, Clément garde son visage (ni casque ni avatar Damier) ; au Classement et dans la liste du Podium, son casque et son avatar Damier ; l'aide de l'écurie le dit " + JSON.stringify(vis) + tag);
     // les règles de décembre parlent de l'écurie, sans rien de 2027
     const rg = await p.evaluate(async () => { ouvrirRegles(); await new Promise(r => setTimeout(r, 300)); document.querySelectorAll(".regles .rgt-f").forEach(f => { f.hidden = false; }); document.querySelectorAll(".regles details").forEach(d => { d.open = true; }); const o = document.querySelector(".regles"), t = o ? o.innerText : ""; if (o) o.remove(); return t; });
     ok(/Écurie/.test(rg) && /26 novembre/.test(rg) && !/Trophées|Succès|Gant de l'infini|Mondes/.test(rg), "règles de décembre : l'écurie ouverte depuis le 26 novembre, rien de 2027" + tag);
