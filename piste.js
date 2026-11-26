@@ -14013,7 +14013,7 @@
     boite.innerHTML = ""; boite.appendChild(cv);
     const geo = voiture(v);
     let B = tampon(gl, geo);
-    const st = { yaw: o.yaw !== undefined ? o.yaw : 2.5, drag: null, pause: 0, boost: 0, depl: 0, rot: 0, t: 0, fini: false, vu: false };
+    const st = { yaw: o.yaw !== undefined ? o.yaw : 2.5, drag: null, pause: 0, boost: 0, depl: 0, rot: 0, t: 0, fini: false, vu: false, zoom: 1, zv: 1 };   // v20.84 · zoom (1 = normal ; plus petit = plus près)
     const anime = ANIM(), c = hex(v.couleur || "#4C9AFF");
     const inst = {
       cv,
@@ -14022,9 +14022,10 @@
         if (!st.drag && now > st.pause && anime) st.yaw += .32 * dt;
         st.depl = 0; if (st.boost) { const q = (now - st.boost) / 1400; if (q >= 1) st.boost = 0; else { st.depl = Math.sin(q * PI) * (q < .15 ? -.6 * q / .15 : 2.4); st.rot += dt * 40; } }
         if (anime) st.rot += dt * 1.6;
+        st.zv += (st.zoom - st.zv) * Math.min(1, dt * 12); if (Math.abs(st.zoom - st.zv) < .002) st.zv = st.zoom;
         const w = cv.width, h = cv.height; if (C.cv.width !== w || C.cv.height !== h) { C.cv.width = w; C.cv.height = h; }
         gl.viewport(0, 0, w, h); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        const asp = w / h, dist = 13.2 / Math.min(1.25, Math.max(.7, asp / 1.75)) * (o.zoom || 1), pitch = o.pitch || .34, cy = Math.cos(st.yaw), sy = Math.sin(st.yaw);
+        const asp = w / h, dist = 13.2 / Math.min(1.25, Math.max(.7, asp / 1.75)) * (o.zoom || 1) * st.zv, pitch = o.pitch || .34, cy = Math.cos(st.yaw), sy = Math.sin(st.yaw);
         const e = [cy * Math.cos(pitch) * dist, Math.sin(pitch) * dist + .6, sy * Math.cos(pitch) * dist], cible = [.2, .7, 0];
         const PV = mul(persp(.52, asp, .5, 80), regard(e, cible));
         gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.disable(gl.CULL_FACE); gl.disable(gl.BLEND);
@@ -14057,18 +14058,30 @@
         gl.disableVertexAttribArray(PL.A.aN);
         x2.clearRect(0, 0, w, h); x2.drawImage(C.cv, 0, 0);
         st.vu = true;
-        return anime || !!st.drag || !!st.boost;
+        return anime || !!st.drag || !!st.boost || st.zv !== st.zoom;
       },
       fin() { st.fini = true; VIT.inst.delete(inst); try { gl.deleteBuffer(B.b); } catch (e) { /* déjà libéré */ } }
     };
-    cv.addEventListener("pointerdown", ev => { st.drag = { x: ev.clientX, yaw: st.yaw }; try { cv.setPointerCapture(ev.pointerId); } catch (e) { /* rien */ } relancer(); });
-    cv.addEventListener("pointermove", ev => { if (st.drag) { st.yaw = st.drag.yaw - (ev.clientX - st.drag.x) * .012; relancer(); } });
-    const lacher = () => { st.drag = null; st.pause = performance.now() + 2500; }; cv.addEventListener("pointerup", lacher); cv.addEventListener("pointercancel", lacher);
+    // v20.84 (Théo) · zoom : pincer à deux doigts, molette, double toucher (zoome / revient) ; un doigt fait toujours tourner ; glisser vertical = la page défile (touch-action pan-y)
+    const ZMIN = .55, ZMAX = 1.3, doigts = new Map(), borne = z => Math.max(ZMIN, Math.min(ZMAX, z)), ecart = () => { const [a, b] = [...doigts.values()]; return Math.hypot(a.x - b.x, a.y - b.y) || 1; };
+    let pince = null, tap = 0;
+    cv.addEventListener("pointerdown", ev => { doigts.set(ev.pointerId, { x: ev.clientX, y: ev.clientY, x0: ev.clientX, y0: ev.clientY, t: performance.now() });
+      if (doigts.size === 2) { st.drag = null; pince = { d: ecart(), z: st.zoom }; } else if (doigts.size === 1) st.drag = { x: ev.clientX, yaw: st.yaw };
+      try { cv.setPointerCapture(ev.pointerId); } catch (e) { /* rien */ } relancer(); });
+    cv.addEventListener("pointermove", ev => { const d = doigts.get(ev.pointerId); if (d) { d.x = ev.clientX; d.y = ev.clientY; }
+      if (pince && doigts.size >= 2) { st.zoom = st.zv = borne(pince.z * pince.d / ecart()); st.pause = performance.now() + 2500; relancer(); }
+      else if (st.drag) { st.yaw = st.drag.yaw - (ev.clientX - st.drag.x) * .012; relancer(); } });
+    const lacher = ev => { const d = doigts.get(ev.pointerId); doigts.delete(ev.pointerId);
+      if (doigts.size < 2) pince = null; if (!doigts.size) { st.drag = null; st.pause = performance.now() + 2500; }
+      if (ev.type === "pointerup" && d && !pince && performance.now() - d.t < 300 && Math.hypot(d.x - d.x0, d.y - d.y0) < 12) {   // un toucher bref
+        const n = performance.now(); if (n - tap < 320) { tap = 0; st.zoom = st.zoom < .95 ? 1 : .62; st.pause = n + 2500; relancer(); } else tap = n; } };
+    cv.addEventListener("pointerup", lacher); cv.addEventListener("pointercancel", lacher);
+    cv.addEventListener("wheel", ev => { ev.preventDefault(); st.zoom = borne(st.zoom * Math.exp(ev.deltaY * .0015)); st.pause = performance.now() + 2500; relancer(); }, { passive: false });
     const relancer = () => { if (!VIT.raf) VIT.raf = requestAnimationFrame(vitrineImage); };
     if (o.statique) { inst.dessiner(performance.now()); return { canvas: cv, stop: () => { try { gl.deleteBuffer(B.b); } catch (e) { /* rien */ } } }; }
     VIT.inst.add(inst);
     inst.dessiner(performance.now()); relancer();
-    return { type: "3d", canvas: cv, n: B.n, equipe: () => ({ nom: v.nom, livree: v.livree || null, casque: v.casqueModele || null, finition: v.finition || null, numero: v.numero || null, n: B.n }), stop: () => inst.fin(), boost: () => { st.boost = performance.now(); relancer(); }, yaw: () => st.yaw, vu: () => st.vu };
+    return { type: "3d", canvas: cv, n: B.n, equipe: () => ({ nom: v.nom, livree: v.livree || null, casque: v.casqueModele || null, finition: v.finition || null, numero: v.numero || null, n: B.n }), stop: () => inst.fin(), boost: () => { st.boost = performance.now(); relancer(); }, yaw: () => st.yaw, vu: () => st.vu, zoom: () => st.zoom };
   }
 
   window.Piste = {

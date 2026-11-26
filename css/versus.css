@@ -3025,17 +3025,32 @@ body:has(.av-ov) .toast, body:has(.av-case) .toast { z-index: 99; }
 .it-w.eta-cible .it { animation: etaCible 1.3s ease-in-out 2; box-shadow: 0 0 0 3px var(--accent), 0 0 18px color-mix(in srgb, var(--accent) 55%, transparent); }
 @keyframes etaCible { 50% { transform: scale(1.05); } }
 @media (prefers-reduced-motion: reduce) { .it-w.eta-cible .it { animation: none; } }
-.ecu-voir { position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; padding: 10px 16px; border-radius: 999px; border: 0; background: var(--ink); color: var(--bg); font: 700 13.5px/1 var(--f-text); box-shadow: 0 6px 20px rgba(0,0,0,.3); cursor: pointer; }
 /* léger sur téléphone : les vignettes ne s'animent que sur les lignes à l'écran, jamais sur les objets à gagner 🔒 */
 .eta:not(.eta-vue) .it::before, .eta:not(.eta-vue) .it *, .eta:not(.eta-vue) .it *::before, .eta:not(.eta-vue) .it *::after,
 .eta .it.verrou::before, .eta .it.verrou *, .eta .it.verrou *::before, .eta .it.verrou *::after { animation-play-state: paused !important; }
 /* v20.84 (Théo) · 💾 « Enregistrer » en haut de la carte de la voiture, allumé dès qu'un changement attend ; bandeau collant en défilant ; rappel en quittant */
 .sr-garder { position: absolute; top: 12px; right: 10px; z-index: 2; display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(238,240,243,.62); font: 700 12.5px/1 var(--f-text); cursor: pointer; }
 .sr-garder.modifie { background: var(--accent); border-color: transparent; color: #fff; box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 55%, transparent); }
-.sr-modif { position: absolute; top: -7px; right: -4px; font: 800 8.5px/1 var(--f-text); font-style: normal; letter-spacing: .04em; text-transform: uppercase; padding: 3px 5px; border-radius: 999px; background: #FFE596; color: #3A2600; box-shadow: 0 0 0 1.5px #1A1F27; }
+.sr-modif { position: absolute; top: -8px; right: -4px; font: 800 10px/1 var(--f-text); font-style: normal; letter-spacing: .04em; text-transform: uppercase; padding: 3px 5px; border-radius: 999px; background: #FFE596; color: #3A2600; box-shadow: 0 0 0 1.5px #1A1F27; }
 .showroom .sr-k { padding-right: 128px; line-height: 1.25; }
 .ecu-collant { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 62px); z-index: 15; height: 0; }
 .ecu-collant-b { position: absolute; left: 0; right: 0; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 6px 6px 12px; border-radius: 14px; background: var(--panel); border: 1px solid var(--rule); box-shadow: 0 6px 18px rgba(0,0,0,.18); font: 600 12.5px/1.2 var(--f-text); color: var(--ink-2);
   opacity: 0; transform: translateY(-6px); pointer-events: none; visibility: hidden; transition: opacity .2s, transform .2s, visibility .2s; }
 .ecu-collant-b.modifie.loin { opacity: 1; transform: none; pointer-events: auto; visibility: visible; }
 .ecu-collant-b .btn { flex: none; min-height: 36px; padding: 6px 14px; }
+/* v20.84 (relecture) · 🎲 dans la carte de la voiture, au centre de la rangée 2D / Klaxonner ; « ↩️ Annuler les changements » dessous seulement s'il y a des changements */
+.sr-klaxon.sr-hasard { right: auto; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+.ecu-hasard:empty { display: none; }
+.ecu-collant-b span { min-width: 0; flex: 1 1 auto; }
+.ecu-collant-b .btn.ghost { padding: 6px 10px; }
+/* v20.84 (Théo) · la bulle d'explication juste sous l'objet touché (« ? », 🔒, badge), à l'aplomb, jamais hors de l'écran */
+.eta { position: relative; }
+.eta-bulle { position: absolute; z-index: 6; margin: 0; padding: 10px 34px 12px 12px; border-radius: 14px; background: var(--panel); border: 1px solid var(--rule); box-shadow: 0 10px 28px rgba(0,0,0,.28); }
+.eta-fl { position: absolute; top: -7px; left: calc(var(--fl, 50%) - 7px); width: 12px; height: 12px; background: var(--panel); border-left: 1px solid var(--rule); border-top: 1px solid var(--rule); transform: rotate(45deg); }
+.eta-bx { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--rule); background: var(--panel-2); color: var(--ink-2); font: 700 13px/1 var(--f-text); cursor: pointer; }
+.eta-bulle .itd-l p { margin: 2px 0 0; font-size: 13px; line-height: 1.4; }
+.eta-bulle .itd-l .btn { margin-top: 8px; justify-self: start; min-height: 36px; padding: 6px 14px; }
+.bdg-c.q-on { box-shadow: 0 0 0 2px var(--ink-3); }
+.bdg-c.bdg-bloque { opacity: .72; border-style: dashed; }
+.bdg-c .bdg-lk { font-style: normal; font-size: 12px; margin-left: 2px; }
+.sr-aide em { position: absolute; left: 0; right: 0; bottom: 46px; font-style: normal; text-align: center; pointer-events: none; text-shadow: 0 1px 3px rgba(0,0,0,.6); }

@@ -1539,7 +1539,7 @@ function teaserEcurie(essai) {
       '<div class="btn-row"><button class="btn acc" type="button" data-er-go>Ouvrir mon écurie</button></div><small class="er-x">Touche n\'importe où pour fermer</small></div>';
     document.body.appendChild(o);
     const fermer = () => { o.remove(); };
-    o.addEventListener("click", ev => { if (ev.target.closest("[data-er-go]")) { fermer(); ETAT.podium = "ecurie"; ECU_SLOT = "casque"; garder(); try { allerA("trophees"); rendreTrophees(); } catch (er) { } return; } fermer(); });
+    o.addEventListener("click", ev => { if (ev.target.closest("[data-er-go]")) { fermer(); ETAT.podium = "ecurie"; ECU_SLOT = "casque"; garder(); try { allerA("trophees"); rendreTrophees(); setTimeout(() => { const r = document.querySelector('#v-trophees .eta[data-ecu-slot="casque"]'); if (r) r.scrollIntoView({ block: "center", behavior: reduit ? "auto" : "smooth" }); }, 250); } catch (er) { } return; } fermer(); });   // v20.84 : la porte ouvre l'écurie défilée jusqu'à la ligne Casque
   } catch (e) { }
 }
 /* v20.80 (Théo, 26/11) · l'affichette « 🎨 Nouveau : choisis l'affichage des décors 3D » (réglage de piste.js, bloc QUALITÉ 3D ; Réglages › Affichage › Décors 3D).
@@ -1590,8 +1590,8 @@ function htmlEcurie() {
     '<div class="sr-h"><span class="sr-k">Mon écurie · ' + (estChauffe(saisonCourante()) ? "Tour de chauffe" : "Saison " + numeroSaison(saisonCourante())) + '</span><span class="sr-id">' + avatar(qui, Object.assign({}, e, { vignette: true })) + "<b" + attrLivree(qui, e) + ">" + esc(qui) + "</b></span>" +
     '<span class="sr-p"><span class="sr-barre"><i style="width:' + (total ? nb / total * 100 : 0).toFixed(0) + '%"></i></span>' + nb + " / " + total + " objets</span></div>" + btnGarderHaut(qui, e) +
     '<div class="sr-3d" id="sr-3d">' + svgVoiture({ nom: qui, e, reflet: true, idle: true }) + "</div>" +
-    '<span class="sr-aide">' + (window.Piste && Piste.supporte() && !ecuVue2D() ? "↔ Tourne-la du doigt" : "") + '</span>' + btnVueEcu() + '<button class="sr-klaxon" type="button" id="ecu-klaxon">📯 Klaxonner</button></div>';   // v20.48 : la voiture de la course, en 3D (plus de bascule 2D / 360°)
-  const etageres = '<p class="eta-aide">Touche un objet pour l\'essayer sur ta voiture, « ? » pour savoir d\'où il vient. Fais défiler chaque rangée du doigt.</p><div class="etageres">' +
+    '<span class="sr-aide" aria-hidden="true">' + (window.Piste && Piste.supporte() && !ecuVue2D() ? "<em>↔ Tourne-la · 🤏 zoome</em>" : "") + "</span>" + btnVueEcu() + '<button class="sr-klaxon sr-hasard" type="button" id="ecu-hasard">🎲 Au hasard</button><button class="sr-klaxon" type="button" id="ecu-klaxon">📯 Klaxonner</button></div>';   // v20.48 : la voiture de la course, en 3D ; v20.84 : 🎲 dans la carte (la 1re étagère se voit dès l'arrivée), l'aide « tourne-la » dans l'étiquette de la voiture
+  const etageres = '<p class="eta-aide">Touche un objet pour l\'essayer, « ? » : d\'où il vient.</p><div class="etageres">' +
     rangsEcurie().map(([s, lib]) => htmlEtagere(qui, s, lib, e, ouverts)).join("") + "</div>";
   return showroom + htmlCollantEcu(qui, e) + htmlHasardEcu(qui, e) + etageres +
     '<button class="btn acc plein" type="button" id="ecu-garder">Enregistrer mon écurie</button>' +
@@ -1610,20 +1610,23 @@ function ecuModifie() { try { return !!ECU && !!ECU.nom && D.personnes.some(p =>
 function btnGarderHaut() { const m = ecuModifie();
   return '<button class="sr-garder' + (m ? " modifie" : "") + '" type="button" id="ecu-garder-haut"' + (m ? "" : ' aria-disabled="true"') + ">" + (m ? '💾 Enregistrer<i class="sr-modif">modifié</i>' : "✓ Enregistrée") + "</button>"; }
 function htmlCollantEcu() { const m = ecuModifie();
-  return '<div class="ecu-collant"><div class="ecu-collant-b' + (m ? " modifie" : "") + '" role="status"><span>Changements pas encore enregistrés</span><button class="btn acc" type="button" data-ecu-garder>💾 Enregistrer</button></div></div>'; }
+  return '<div class="ecu-collant"><div class="ecu-collant-b' + (m ? " modifie" : "") + '" role="status"><span>Pas encore enregistré</span><button class="btn ghost" type="button" data-ecu-voir>🏎️ Voir ↑</button><button class="btn acc" type="button" data-ecu-garder>💾 Enregistrer</button></div></div>'; }
 /** met à jour le bouton du haut et le bandeau (après chaque essai) */
 function majGarderEcu(v) {
   const h = v.querySelector("#ecu-garder-haut"); if (h) { const t = document.createElement("div"); t.innerHTML = btnGarderHaut(); h.replaceWith(t.firstElementChild); }
   const c = v.querySelector(".ecu-collant-b"); if (c) c.classList.toggle("modifie", ecuModifie());
   suivreGarderHaut(v);
 }
-/** le bandeau collant n'apparaît que lorsque le bouton du haut (et la barre 🎲 juste dessous) sont sortis de l'écran */
+/** le bandeau collant n'apparaît que lorsque la carte de la voiture (son 💾) est sortie par le haut, et jamais quand le bouton « Enregistrer » du bas est à l'écran.
+    Il porte aussi « 🏎️ Voir ↑ » : l'objet essayé loin sous la voiture se regarde d'un toucher (v20.84, remplace la bulle flottante qui cachait les titres) */
 function suivreGarderHaut(v) {
-  const h = v.querySelector(".ecu-hasard") || v.querySelector("#ecu-garder-haut"), c = v.querySelector(".ecu-collant-b"); if (!h || !c) return;   // la barre 🎲 sortie par le haut : le bandeau est bien collé en haut, il ne cache rien
+  const h = v.querySelector(".showroom"), bas = v.querySelector("#ecu-garder"), c = v.querySelector(".ecu-collant-b"); if (!h || !c) return;
   if (!window.IntersectionObserver) { c.classList.add("loin"); return; }
   if (ECU_PHOTOS.haut) ECU_PHOTOS.haut.disconnect();
-  ECU_PHOTOS.haut = new IntersectionObserver(l => l.forEach(x => { const cc = document.querySelector("#v-trophees .ecu-collant-b"); if (cc) cc.classList.toggle("loin", !x.isIntersecting && x.boundingClientRect.top < 80); }), { rootMargin: "-60px 0px 0px 0px" });
-  ECU_PHOTOS.haut.observe(h);
+  const etat = { haut: true, bas: false };
+  const maj = () => { const cc = document.querySelector("#v-trophees .ecu-collant-b"); if (cc) cc.classList.toggle("loin", !etat.haut && !etat.bas); };
+  ECU_PHOTOS.haut = new IntersectionObserver(l => { l.forEach(x => { if (x.target === bas) etat.bas = x.isIntersecting; else etat.haut = x.isIntersecting || x.boundingClientRect.top > 0; }); maj(); }, { rootMargin: "-60px 0px -70px 0px" });
+  ECU_PHOTOS.haut.observe(h); if (bas) ECU_PHOTOS.haut.observe(bas);
 }
 let ECU_PASSE = false;
 /** on quitte l'écurie (onglet du bas, onglet du Podium, fiche) avec des changements pas enregistrés : petit rappel ; toucher à côté = on reste */
@@ -1632,8 +1635,18 @@ document.addEventListener("click", ev => {
   try { if (vueActive() !== "trophees" || ongletPodium() !== "ecurie" || !document.querySelector("#v-trophees .etageres") || !ecuModifie()) return; } catch (e) { return; }
   if ((t.dataset.vue && t.dataset.vue === "trophees") || t.dataset.pod === "ecurie") return;
   ev.preventDefault(); ev.stopImmediatePropagation();
-  rappelGarderEcurie(() => { ECU_PASSE = true; try { t.click(); } finally { ECU_PASSE = false; } });
+  const fiche = t.dataset.gpFiche, pod = t.dataset.pod, vue = t.dataset.vue;   // Enregistrer redessine le Podium : le bouton touché peut ne plus exister (relecture : la fiche ne s'ouvrait pas)
+  rappelGarderEcurie(() => { ECU_PASSE = true; try { if (t.isConnected) t.click(); else if (fiche) ouvrirFicheDe(fiche); else if (pod) { ETAT.podium = pod; ECU_NOUV = null; garder(); rendreTrophees(); } else if (vue) allerA(vue); } finally { ECU_PASSE = false; } });
 }, true);
+/** v20.84 · bouton retour du téléphone (js/7-bilan.js, popstate) : rappel ouvert → on le ferme (on reste) ; écurie avec changements → le rappel, puis l'accueil */
+function retourEcurie() {
+  const r = document.querySelector(".ecu-rappel"); if (r) { r.remove(); return true; }
+  if (document.querySelector("#v-trophees .eta-bulle") && vueActive() === "trophees") { fermerBulleEta(); return true; }   // la bulle d'explication se ferme d'abord
+  try { if (vueActive() !== "trophees" || ongletPodium() !== "ecurie" || !document.querySelector("#v-trophees .etageres") || !ecuModifie()) return false;
+    if ([...document.querySelectorAll(".tuto, .revel, .regles, .av-ov, .av-case, .af3d, .m-fete, .ba, .voile:not([hidden]), [aria-modal=true]")].some(x => x.getClientRects().length)) return false; } catch (e) { return false; }   // une autre fenêtre ouverte : elle se ferme d'abord
+  rappelGarderEcurie(() => { const acc = typeof vueAccueil === "function" ? vueAccueil() : "classement"; if (vueActive() !== acc) allerA(acc); });
+  return true;
+}
 function rappelGarderEcurie(suite) {
   if (document.querySelector(".ecu-rappel")) return;
   const o = document.createElement("div"); o.className = "tuto ecu-rappel"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Tu n'as pas enregistré ton écurie");
@@ -1641,16 +1654,22 @@ function rappelGarderEcurie(suite) {
     '<div class="btn-row"><button class="btn ghost" type="button" data-rap="non">Annuler les changements</button><button class="btn acc" type="button" data-rap="oui">💾 Enregistrer</button></div></div>';
   document.body.appendChild(o);
   o.addEventListener("click", ev => { if (ev.target === o) o.remove(); });   // à côté : on reste dans l'écurie
-  o.querySelector('[data-rap="oui"]').addEventListener("click", () => { o.remove(); garderEcurie(); suite(); });
+  o.querySelector('[data-rap="oui"]').addEventListener("click", () => { o.remove(); garderEcurie(); suite(); });   // garderEcurie redessine tout de suite (l'envoi part en arrière-plan) ; suite() sait repartir sans le bouton d'origine
   o.querySelector('[data-rap="non"]').addEventListener("click", () => { o.remove(); ECU = null; ECU_Q = null; toast("↩️ Changements annulés : ta tenue enregistrée est revenue."); suite(); });
 }
-function htmlHasardEcu(qui, e) {
-  const modifie = JSON.stringify(normTenue(e)) !== JSON.stringify(normTenue(equipDe(qui)));
-  return '<div class="ecu-hasard"><button class="btn ghost" type="button" id="ecu-hasard">🎲 Au hasard</button>' + (modifie ? '<button class="btn ghost" type="button" id="ecu-retour">↩️ Ma tenue enregistrée</button>' : "") + "</div>";
+/** sous la voiture : « ↩️ Annuler les changements » (le même mot que le rappel), dès qu'un changement attend (objet, couleur, numéro, tête, badges) */
+function htmlHasardEcu() {
+  return '<div class="ecu-hasard">' + (ecuModifie() ? '<button class="btn ghost" type="button" id="ecu-retour">↩️ Annuler les changements</button>' : "") + "</div>";
 }
 /* ---------- v20.84 (Théo) · 🛍️ les étagères de l'écurie : toutes les catégories l'une sous l'autre, chacune une rangée d'objets qu'on fait défiler au doigt ----------
    Une seule ligne « ouverte » à la fois (ECU_SLOT) : sous elle, les couleurs 🎨 de l'objet choisi, le « ? » (d'où vient l'objet) ou l'éditeur de tête. */
-function rangsEcurie() { return [["pilote", "Pilote"]].concat(SLOTS, [["numero", "Numéro"]], ecurieDepart() ? [] : [["badges", "Badges"]]); }
+/** v20.84 (Théo) · les lignes qui ont des ✨ nouveautés pas encore vues remontent en tête (même devant Pilote : c'est elles qu'on risque de rater) ; ordre habituel sinon.
+    Les nouveautés sont celles de l'ouverture en cours (ECU_NOUV) : l'ordre ne bouge pas tant qu'on reste dans l'écurie, et redevient normal à l'ouverture suivante. */
+function rangsEcurie() {
+  const l = [["pilote", "Pilote"]].concat(SLOTS, [["numero", "Numéro"]], ecurieDepart() ? [] : [["badges", "Badges"]]);
+  const nv = ECU_NOUV && ECU_NOUV.l && ECU && ECU_NOUV.nom === ECU.nom ? new Set(ECU_NOUV.l.map(k => k.split(".")[0])) : null;
+  return nv && nv.size ? l.filter(x => nv.has(x[0])).concat(l.filter(x => !nv.has(x[0]))) : l;
+}
 function htmlEtagere(qui, slot, lib, e, ouverts) {
   const ouvert = ECU_SLOT === slot, item = SLOTS.some(z => z[0] === slot);
   const valeur = slot === "badges" ? (Array.isArray(e.badges) ? e.badges.length + " / 3" : "auto") : slot === "numero" ? "#" + e.numero : slot === "pilote" ? (e.pilote === "casque" ? "Casque" : "Tête") : esc(ITEMS[slot][e[slot]]);
@@ -1666,10 +1685,10 @@ function htmlEtagere(qui, slot, lib, e, ouverts) {
   else if (slot === "badges") corps = htmlChoixBadges(qui, e);
   else {
     corps = '<div class="eta-l" data-eta-l="' + slot + '">' + ids.map(id => htmlObjetEtagere(qui, slot, id, e, ouverts)).join("") + "</div>";
-    if (ouvert) detail = htmlTeintes(qui, slot, e) + (ECU_Q && ECU_Q.split(".")[0] === slot ? '<div class="it-d" id="it-d" aria-live="polite">' + htmlDetailItem(qui) + "</div>" : "");
+    if (ouvert) detail = htmlTeintes(qui, slot, e);
   }
   return '<section class="eta' + (ouvert && detail ? " eta-ouv" : "") + '" data-ecu-slot="' + slot + '" aria-label="' + esc(lib) + '"><div class="eta-h"><h4>' + esc(lib) + "</h4><small>" + valeur + "</small>" +
-    (nv ? '<i class="ecu-pt" aria-label="' + nv + ' nouveau(x)">✨ ' + nv + "</i>" : "") + compte + "</div>" + corps + (detail ? '<div class="eta-det">' + detail + "</div>" : "") + "</section>";
+    (nv ? '<i class="ecu-pt" aria-label="' + nv + ' nouveau(x)">✨ ' + nv + "</i>" : "") + compte + "</div>" + corps + (detail ? '<div class="eta-det">' + detail + "</div>" : "") + htmlBulleEta(qui, slot, e) + "</section>";
 }
 function htmlObjetEtagere(qui, slot, id, e, ouverts) {
   const nouv = ECU_NOUV.l.includes(slot + "." + id), ouvert = ouverts.has(slot + "." + id), org = origineItem(slot, id), r = rareteItem(slot, id), cache = !ouvert && objetCache(slot, id), porte = e[slot] === id;
@@ -1711,7 +1730,7 @@ function majEcurie(slots, el, sansVoiture) {
   if (!v || !qui || ECU_VOIR || !v.querySelector(".etageres")) { redessinerEcurie(el); return; }
   const sec = el && el.closest && el.closest(".eta"), ancre = sec && sec.dataset.ecuSlot, haut = sec ? sec.getBoundingClientRect().top : 0;
   const e = ECU.e, tout = new Set(slots), tout1 = new Set();   // tout1 : tout de suite (la ligne touchée, celles qui s'ouvrent ou se ferment) ; les autres : dès qu'elles sont à l'écran
-  if (ancre) tout1.add(ancre); v.querySelectorAll(".eta-det").forEach(d => tout1.add(d.closest(".eta").dataset.ecuSlot)); if (ECU_SLOT) tout1.add(ECU_SLOT);
+  if (ancre) tout1.add(ancre); v.querySelectorAll(".eta-bulle").forEach(d => tout1.add(d.closest(".eta").dataset.ecuSlot)); v.querySelectorAll(".eta-det").forEach(d => tout1.add(d.closest(".eta").dataset.ecuSlot)); if (ECU_SLOT) tout1.add(ECU_SLOT);
   tout1.forEach(s => remplacerEtagere(v, s)); tout.forEach(s => { if (!tout1.has(s)) ECU_SALES.add(s); });
   const sr = v.querySelector(".showroom");
   if (sr) { const num = sr.querySelector(".sr-num"); if (num) num.textContent = e.numero;
@@ -1724,6 +1743,7 @@ function majEcurie(slots, el, sansVoiture) {
   photosEtagere(v); animerEtageresVisibles(v);
   clearTimeout(ECU_SALES.t); ECU_SALES.t = setTimeout(() => [...ECU_SALES].forEach(s => { const x = v.querySelector('.eta[data-ecu-slot="' + s + '"]'); if (x && x.classList.contains("eta-vue")) remplacerEtagere(v, s); }), 90);
   if (ancre) { const n = v.querySelector('.eta[data-ecu-slot="' + ancre + '"]'); if (n) { const d = n.getBoundingClientRect().top - haut; if (Math.abs(d) > 1) window.scrollBy(0, d); } }
+  placerBulle(v);
 }
 /** les lignes à redessiner (une vignette dépend d'un objet essayé ailleurs) : celles à l'écran juste après le toucher, les autres quand on y arrive */
 const ECU_SALES = new Set();
@@ -1737,15 +1757,16 @@ function remplacerEtagere(v, s) {
 function brancherEtageres(v) {
   if (v.dataset.etageres) return; v.dataset.etageres = "1";
   v.addEventListener("click", ev => {
-    const c = ev.target.closest && ev.target.closest("[data-ecu-pmode], [data-ecu-ouvrir], [data-ecu-bdg], #ecu-bdg-auto, [data-itq], .it[data-slot], [data-teinte]");
+    const c = ev.target.closest && ev.target.closest("[data-ecu-pmode], [data-ecu-ouvrir], [data-ecu-bdg], [data-ecu-bdgq], #ecu-bdg-auto, [data-itq], .it[data-slot], [data-teinte]");
     if (!c || !ECU || !c.closest(".etageres")) return;
     if (c.dataset.ecuPmode) { ECU.e.pilote = c.dataset.ecuPmode; majEcurie(["pilote", "fond"], c); return; }
     if (c.dataset.ecuOuvrir) { ECU_SLOT = ECU_SLOT === c.dataset.ecuOuvrir ? "" : c.dataset.ecuOuvrir; ECU_Q = null; majEcurie([], c); return; }
     if (c.dataset.ecuBdg) { const id = c.dataset.ecuBdg, l = Array.isArray(ECU.e.badges) ? ECU.e.badges.slice() : badgesAffiches(ECU.nom, ECU.e).map(x => x.id), i = l.indexOf(id);
       if (i >= 0) l.splice(i, 1); else { if (l.length >= 3) { toast("3 badges au plus : retires-en un d'abord."); return; } l.push(id); }
       ECU.e.badges = l; majEcurie(["badges"], c); return; }
+    if (c.dataset.ecuBdgq) { const k = "badges." + c.dataset.ecuBdgq; ECU_Q = ECU_Q === k ? null : k; majEcurie(["badges"], c); return; }
     if (c.id === "ecu-bdg-auto") { ECU.e.badges = null; majEcurie(["badges"], c); return; }
-    if (c.dataset.itq) { ECU_Q = ECU_Q === c.dataset.itq ? null : c.dataset.itq; ECU_SLOT = c.dataset.itq.split(".")[0]; majEcurie([], c); return; }
+    if (c.dataset.itq) { const av = ECU_Q && ECU_Q.split(".")[0]; ECU_Q = ECU_Q === c.dataset.itq ? null : c.dataset.itq; majEcurie(av && av !== c.dataset.itq.split(".")[0] ? [av, c.dataset.itq.split(".")[0]] : [c.dataset.itq.split(".")[0]], c); return; }   // la bulle s'ouvre sous l'objet, sans ouvrir la ligne
     if (c.dataset.teinte) {   // v20.70 · 🎨
       const g = c.closest("[data-teinte-slot]"), s = g ? g.dataset.teinteSlot : ECU_SLOT, t = c.dataset.teinte; if (!teintesDe(s, ECU.e[s])) return;
       const T = Object.assign({}, ECU.e.teintes || {});
@@ -1753,19 +1774,21 @@ function brancherEtageres(v) {
       else if (t === teinteDefaut(s, ECU.e[s])) delete T[s]; else T[s] = t;
       ECU.e.teintes = T; majEcurie(ECU_DEPEND[s] || [s], c); popVoiture(); return; }
     const s = c.dataset.slot, id = c.dataset.item; if (!s) return;
-    ECU_SLOT = s; ECU_Q = s + "." + id;
-    if (c.classList.contains("verrou")) { majEcurie([s], c); return; }   // à gagner : on explique, on n'essaie pas
+    ECU_SLOT = s;
+    if (c.classList.contains("verrou")) { ECU_Q = s + "." + id; majEcurie([s], c); return; }   // à gagner : on explique (bulle sous l'objet), on n'essaie pas
+    ECU_Q = null;
     ECU.e[s] = id; if (s === "casque" || s === "finition") ECU.e.pilote = ECU.e.pilote || "tete";
-    majEcurie(ECU_DEPEND[s] || [s], c); popVoiture(); bulleVoirVoiture();
+    majEcurie(ECU_DEPEND[s] || [s], c); popVoiture();
     if (s === "klaxon") confettis(id);
   });
   v.addEventListener("change", ev => { const num = ev.target; if (!num || num.id !== "ecu-num" || !ECU) return;
     const n = parseInt(num.value, 10); if (n >= 1 && n <= 99) { ECU.e.numero = n; majEcurie(["numero"], num); } else { num.value = ECU.e.numero; toast("Un numéro entre 1 et 99."); } });
 }
 function brancherHasardEcu(v) {
+  v.querySelectorAll("[data-ecu-voir]").forEach(b => { if (b.dataset.br) return; b.dataset.br = "1"; b.addEventListener("click", () => { const sr = v.querySelector(".showroom"); if (sr) sr.scrollIntoView({ block: "start", behavior: reduit ? "auto" : "smooth" }); }); });
   v.querySelectorAll("#ecu-garder-haut, [data-ecu-garder]").forEach(b => { if (b.dataset.br) return; b.dataset.br = "1"; b.addEventListener("click", () => { if (ecuModifie()) garderEcurie(); else toast("✓ Ton écurie est déjà enregistrée."); }); });
   const hz = v.querySelector("#ecu-hasard"); if (hz && !hz.dataset.br) { hz.dataset.br = "1"; hz.addEventListener("click", () => { if (!ECU) return; ECU.e = tenueAuHasard(ECU.nom, ECU.e); ECU_Q = null; rendreTrophees(); popVoiture(); demarrer(v); }); }
-  const rt = v.querySelector("#ecu-retour"); if (rt && !rt.dataset.br) { rt.dataset.br = "1"; rt.addEventListener("click", () => { ECU = null; ECU_Q = null; rendreTrophees(); toast("↩️ Ta tenue enregistrée est revenue."); }); }
+  const rt = v.querySelector("#ecu-retour"); if (rt && !rt.dataset.br) { rt.dataset.br = "1"; rt.addEventListener("click", () => { ECU = null; ECU_Q = null; rendreTrophees(); toast("↩️ Changements annulés : ta tenue enregistrée est revenue."); }); }
 }
 function brancherGrilleEcu(v) {
   v.querySelectorAll(".grille-dep [data-voir]").forEach(b => b.addEventListener("click", () => { ECU_VOIR = ECU_VOIR === b.dataset.voir ? null : b.dataset.voir; rendreTrophees(); const g = document.getElementById("garage"); if (g) g.scrollIntoView({ behavior: "smooth", block: "start" }); }));
@@ -1784,14 +1807,6 @@ function redessinerEcurie(el) {
   if (!slot) return; const n = document.querySelector('#v-trophees .eta[data-ecu-slot="' + slot + '"]'); if (!n) return;
   const d = n.getBoundingClientRect().top - haut; if (Math.abs(d) > 1) window.scrollBy(0, d);
 }
-/** l'objet essayé loin sous la voiture : une petite bulle « Voir sur ma voiture » remonte d'un toucher */
-function bulleVoirVoiture() {
-  const sr = document.querySelector("#v-trophees .showroom"); if (!sr) return; const r = sr.getBoundingClientRect();
-  document.querySelectorAll(".ecu-voir").forEach(x => x.remove()); if (r.bottom > 90) return;
-  const b = document.createElement("button"); b.type = "button"; b.className = "ecu-voir"; b.textContent = "🏎️ Voir sur ma voiture ↑"; document.body.appendChild(b);
-  const fin = () => b.remove(); const t = setTimeout(fin, 3500);
-  b.addEventListener("click", () => { clearTimeout(t); fin(); sr.scrollIntoView({ block: "start", behavior: reduit ? "auto" : "smooth" }); });
-}
 /** v20.70 · 🎨 sous l'objet porté (s'il a un motif neutre) : 3 couleurs au choix */
 function htmlTeintes(qui, slot, e) {
   const l = teintesDe(slot, e[slot]); if (!l) return "";
@@ -1801,17 +1816,62 @@ function htmlTeintes(qui, slot, e) {
 }
 /** la tenue comparable (pour savoir si l'aperçu diffère de ce qui est enregistré) */
 function normTenue(e) { const o = {}; SLOTS.forEach(([s]) => o[s] = ecrireTeinte(s, e[s], (e.teintes || {})[s])); return o; }
-/** V16.3 · Écurie › Badges : jusqu'à 3 badges épinglés sur la ligne du Classement (ou choix automatique) */
+/** V16.3 · Écurie › Badges : jusqu'à 3 badges épinglés sur la ligne du Classement (ou choix automatique).
+    v20.84 (Théo) · toucher un badge l'explique dans une bulle juste dessous (ce que le pilote a fait pour l'avoir ; 📌 pour l'afficher) ; les badges pas encore obtenus suivent, 🔒, avec comment les avoir */
+function badgesAGagner(qui) {
+  if (!saisonJouee()) return [];
+  const idx = D.marche.indices[iRef()], a = new Set(badgesPossedes(qui).map(b => b.id)), l = [];
+  if (!a.has("titre")) l.push({ id: "titre", ico: "🏆", nom: "Champion de saison", t: "Pour l'avoir : finir 1er du championnat à la fin d'une saison." });
+  TITRES.forEach(c => { if (!a.has("t-" + c.id)) l.push({ id: "t-" + c.id, ico: c.ico, nom: c.nom, t: "Pour l'avoir : " + c.def + " Il se vole chaque mois." }); });
+  if (!a.has("gant")) l.push({ id: "gant", ico: "🧤", nom: "Gant de l'infini", t: "Pour l'avoir : allumer les 6 pierres du Gant dans une saison (la liste est dans Trophées › 🧤 Gant)." });
+  SUCCES.forEach(x => { if (!a.has(x.id) && !a.has("a-" + x.id)) l.push({ id: "s-" + x.id, ico: x.ico, nom: x.nom, t: "Pour l'avoir : " + x.def.replace("l'indice", "le " + idx) + " (le premier à le réussir le garde en doré)." }); });
+  return l;
+}
 function htmlChoixBadges(qui, e) {
-  const tous = badgesPossedes(qui), auto = !Array.isArray(e.badges), vus = badgesAffiches(qui, e).map(b => b.id);
-  if (!tous.length) return '<div class="bdg-choix"><p class="info">Pas encore de badge : découvre un secret (doré si tu es le premier, argenté ensuite), complète le Gant, prends un titre (🚩 🔥 🔍) ou deviens champion, puis choisis ici les 3 qui s\'affichent à côté de ton nom.</p></div>';
-  return '<div class="bdg-choix"><p class="info">Touche un badge pour l\'épingler ou le retirer : <b>3 au plus</b> s\'affichent à côté de ton nom dans le Classement, les autres se résument en « +N ». ' +
-    (auto ? "Pour l'instant, l'appli choisit tes 3 plus prestigieux." : "") + "</p>" +
+  const tous = badgesPossedes(qui), auto = !Array.isArray(e.badges), vus = badgesAffiches(qui, e).map(b => b.id), aG = badgesAGagner(qui);
+  const qOn = id => ECU_Q === "badges." + id ? " q-on" : "";
+  return '<div class="bdg-choix"><p class="info">' + (tous.length ? "Touche un badge : comment tu l'as eu, et 📌 pour l'afficher. <b>3 au plus</b> à côté de ton nom au Classement" + (auto ? " (pour l'instant, l'appli choisit tes 3 plus prestigieux)" : "") + "." : "Pas encore de badge : touche-en un pour savoir comment l'avoir.") + "</p>" +
     '<div class="bdg-grille">' + tous.map(b => { const on = vus.includes(b.id), rang = on ? vus.indexOf(b.id) + 1 : 0;
-      return '<button type="button" class="bdg-c' + (on ? " on" : "") + (b.niv ? " n" + b.niv : "") + '" data-ecu-bdg="' + b.id + '" aria-pressed="' + on + '"><span class="ico">' + b.ico + "</span><span>" + esc(b.nom) + "</span>" + (on ? '<i class="rg">' + (auto ? "auto" : rang) + "</i>" : "") + "</button>"; }).join("") + "</div>" +
-    '<div class="bdg-apercu"><small>Aperçu de ta ligne</small><b>' + esc(qui) + "</b>" + badgesLigne(qui, e) + "</div>" +
+      return '<button type="button" class="bdg-c' + (on ? " on" : "") + (b.niv ? " n" + b.niv : "") + qOn(b.id) + '" data-ecu-bdgq="' + b.id + '" aria-pressed="' + on + '"><span class="ico">' + b.ico + "</span><span>" + esc(b.nom) + "</span>" + (on ? '<i class="rg">' + (auto ? "auto" : rang) + "</i>" : "") + "</button>"; }).join("") +
+      aG.map(b => '<button type="button" class="bdg-c bdg-bloque' + qOn(b.id) + '" data-ecu-bdgq="' + b.id + '"><span class="ico">' + b.ico + '</span><span>' + esc(b.nom) + '</span><i class="bdg-lk" aria-label="à gagner">🔒</i></button>').join("") + "</div>" +
+    (tous.length ? '<div class="bdg-apercu"><small>Aperçu de ta ligne</small><b>' + esc(qui) + "</b>" + badgesLigne(qui, e) + "</div>" : "") +
     (auto ? "" : '<button class="lien" type="button" id="ecu-bdg-auto">Laisser l\'appli choisir</button>') + "</div>";
 }
+/** le texte d'un badge (celui des bulles du Classement et de la vitrine), ou comment l'avoir */
+function htmlDetailBadge(qui, id, e) {
+  const b = badgesPossedes(qui).find(x => x.id === id);
+  if (b) { const t = ((b.html || "").match(/data-bdg="([^"]*)"/) || [, ""])[1], on = badgesAffiches(qui, e).some(x => x.id === id);
+    return '<div class="itd-l"><b>' + b.ico + " " + esc(b.nom) + ' <small>Badge</small></b><p>' + t + "</p>" +
+      '<button class="btn ' + (on ? "ghost" : "acc") + '" type="button" data-ecu-bdg="' + esc(id) + '">' + (on ? "Retirer de ma ligne" : "📌 Afficher à côté de mon nom") + "</button></div>"; }
+  const g = badgesAGagner(qui).find(x => x.id === id); if (!g) return "";
+  return '<div class="itd-l"><span class="itd-k">🔒 Comment l\'obtenir</span><b>' + g.ico + " " + esc(g.nom) + ' <small>Badge</small></b><p>' + esc(g.t) + "</p></div>";
+}
+/* ---------- v20.84 (Théo) · la bulle d'explication (« ? », objet 🔒, badge) s'ouvre JUSTE SOUS l'objet touché, à l'aplomb, sans sortir de l'écran ; une seule à la fois ;
+   elle se ferme en touchant ailleurs ou avec le bouton retour du téléphone ---------- */
+function htmlBulleEta(qui, slot, e) {
+  if (!ECU_Q || ECU_Q.split(".")[0] !== slot) return "";
+  const id = ECU_Q.slice(slot.length + 1), h = slot === "badges" ? htmlDetailBadge(qui, id, e) : htmlDetailItem(qui); if (!h) return "";
+  return '<div class="it-d eta-bulle" id="it-d" role="note" aria-live="polite"><i class="eta-fl" aria-hidden="true"></i><button class="eta-bx" type="button" aria-label="Fermer l\'explication">✕</button>' + h + "</div>";
+}
+function placerBulle(v, sansDefiler) {
+  const bu = v.querySelector(".eta-bulle"); if (!bu) return; const sec = bu.closest(".eta"), an = sec && sec.querySelector(".it-w.q-on, .bdg-c.q-on"); if (!an) { bu.remove(); return; }
+  const sc = an.closest(".eta-l, .bdg-grille");
+  if (sc && !sansDefiler) { const r = sc.getBoundingClientRect(), a = an.getBoundingClientRect(); if (a.left < r.left + 4) sc.scrollLeft -= r.left + 12 - a.left; else if (a.right > r.right - 4) sc.scrollLeft += a.right - r.right + 12; }
+  if (!sansDefiler) { const t = an.getBoundingClientRect().top, mini = 130; if (t < mini) window.scrollBy(0, t - mini); }   // l'objet reste visible sous l'en-tête et le bandeau « Enregistrer »
+  const S = sec.getBoundingClientRect(), A = an.getBoundingClientRect(), W = Math.min(330, S.width - 16), cx = A.left + A.width / 2 - S.left;
+  if (sc) { const r = sc.getBoundingClientRect(); if (A.right < r.left + 10 || A.left > r.right - 10) { fermerBulleEta(); return; } }   // l'objet est parti hors de la rangée : la bulle se ferme
+  const L = Math.max(8, Math.min(S.width - W - 8, cx - W / 2));
+  bu.style.width = W + "px"; bu.style.left = L + "px"; bu.style.top = (A.bottom - S.top + 8) + "px"; bu.style.setProperty("--fl", Math.max(14, Math.min(W - 14, cx - L)) + "px");
+  if (sc && !sc.dataset.bulle) { sc.dataset.bulle = "1"; let f = 0; sc.addEventListener("scroll", () => { if (f) return; f = requestAnimationFrame(() => { f = 0; if (sc.closest(".eta") && sc.closest(".eta").querySelector(".eta-bulle")) placerBulle(v, true); }); }, { passive: true }); }
+  if (!sansDefiler) { const b = bu.getBoundingClientRect(), bas = innerHeight - 84; if (b.bottom > bas) window.scrollBy(0, Math.min(b.bottom - bas, Math.max(0, A.top - 70))); }
+}
+function fermerBulleEta() {
+  const bu = document.querySelector("#v-trophees .eta-bulle"); if (!bu && !ECU_Q) return false;
+  ECU_Q = null; document.querySelectorAll("#v-trophees .q-on").forEach(x => x.classList.remove("q-on")); if (bu) bu.remove(); return !!bu;
+}
+document.addEventListener("click", ev => { if (!ECU_Q || !ev.target.closest) return;
+  if (ev.target.closest(".eta-bx")) { fermerBulleEta(); return; }
+  if (ev.target.closest(".eta-bulle, [data-itq], .it.verrou, [data-ecu-bdgq], [data-ecu-bdg]")) return; fermerBulleEta(); });
 let ECU_VOIR = null;
 /** Garage d'un autre pilote : sa voiture et tout son équipement, en lecture seule */
 function htmlGarage(qui) {
@@ -2605,7 +2665,7 @@ function brancherSaison(v) {
   else setTimeout(verifierRevelation, 500);
   bandesDefilantes(v); expliquerBadges(v);
   // v20.84 · étagères : les touchers (objet, « ? », 🎨, Pilote, badges, numéro) passent par un seul écouteur posé une fois (brancherEtageres)
-  brancherEtageres(v); photosEtagere(v); animerEtageresVisibles(v); suivreGarderHaut(v);
+  brancherEtageres(v); photosEtagere(v); animerEtageresVisibles(v); suivreGarderHaut(v); placerBulle(v);
   brancherGrilleEcu(v);
   const gf = v.querySelector("#garage-fermer"); if (gf) gf.addEventListener("click", () => { ECU_VOIR = null; rendreTrophees(); });
   const gk = v.querySelector("#garage-klaxon"); if (gk) gk.addEventListener("click", () => { const g = v.querySelector("#garage"); confettis(equipDe(ECU_VOIR).klaxon); demarrer(g); });
