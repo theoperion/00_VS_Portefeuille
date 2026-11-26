@@ -19,7 +19,7 @@ Chaque mois, les pilotes sont classés sur la **performance de leur portefeuille
 |---|---|---|---|---|---|
 | Points | **6** | **4** | **2** | **0** | **+1** |
 
-**Points du mois = place + 🎯 + carte (≤ +4) + bonus.** Ex æquo : mêmes points. Un mois ne descend jamais sous 0. Nouveau pilote : il entre en jeu à son premier mois complet (le mois d'ouverture ou du premier versement ne compte pas ; décision de Théo, 24/11/2026). Égalité au championnat : le plus de victoires, puis la meilleure performance cumulée.
+**Points du mois = place + 🎯 + carte du mois (≤ +4) + carte bonus éventuelle (≤ +4) + bonus.** Ex æquo : mêmes points. Un mois ne descend jamais sous 0. Nouveau pilote : il entre en jeu à son premier mois complet (le mois d'ouverture ou du premier versement ne compte pas ; décision de Théo, 24/11/2026). Égalité au championnat : le plus de victoires, puis la meilleure performance cumulée.
 
 **Relevé en retard (décision de Théo, 24/11/2026) :** tant qu'il manque un relevé, les résultats du mois restent cachés pour tout le monde (suspense). **7 jours après le jour du relevé**, le mois se joue sans le retardataire : il ne marque rien ce mois-là, et il est recompté s'il saisit son relevé ensuite (sauf un exclusif déjà gagné, qui reste acquis). Aspiration : on vise le premier pilote présent devant soi. Un mois d'absence **casse les séries** (victoires, mois sans finir dernier) mais ne compte **pas** comme une dernière place (Increvable).
 
@@ -32,7 +32,7 @@ Chaque mois, les pilotes sont classés sur la **performance de leur portefeuille
 | 🌧️ Pneus pluie | un mois où le S&P 500 baisse : +2 si tu fais mieux que lui |
 | 🎲 Pari | désigne un rival : +2 devant lui, −1 derrière, 0 à égalité |
 
-Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Rejouable, mais **pas deux mois de suite**.
+Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Rejouable, mais **pas deux mois de suite**. Une carte bonus (rattrapage) se joue **en plus** de la carte du mois (décision de Théo, 26/11/2026).
 
 ## ✨ Les bonus
 
@@ -77,7 +77,7 @@ Janvier (Mer de dunes), juin (Bataille spatiale) et décembre (le Multivers, Fin
 
 ## 🎴 Le rattrapage
 
-Dernier d'un mois → **1 carte bonus**, jouable dès le mois suivant, une fois par saison : ✂️ Undercut (+1 si ton mois monte, +2 au-delà de +2 %) · 🟨 Drapeau jaune (+2 si tu finis dernier) · 🚨 Safety car (+2 si 6 pts ou plus de retard sur le leader) · ⏱️ Arrêt éclair (+2 si tu fais mieux que ta place du mois d'avant).
+Dernier d'un mois → **1 carte bonus**, jouable dès le mois suivant, une fois par saison, **à jouer EN PLUS de ta carte du mois** (décision de Théo, 26/11/2026 ; avant : à sa place). Une seule carte bonus par mois (une bonus + la carte du mois), au plus +4 chacune : ✂️ Undercut (+1 si ton mois monte, +2 au-delà de +2 %) · 🟨 Drapeau jaune (+2 si tu finis dernier) · 🚨 Safety car (+2 si 6 pts ou plus de retard sur le leader) · ⏱️ Arrêt éclair (+2 si tu fais mieux que ta place du mois d'avant).
 
 ## 🏎️ Course, écurie et trophées
 
