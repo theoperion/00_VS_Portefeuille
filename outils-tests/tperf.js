@@ -14,6 +14,10 @@
    7. SECRET : un simple joueur ne télécharge ni ne garde d'avance que la carte du circuit qu'il peut voir ce jour-là (25/11, 3/12, 20/12, 31/12),
       rien en mode « économie de données » ; 8. un onglet gardé n'est jamais périmé (nouvelles données, minuit, état changé, hors connexion,
       Podium quitté aussitôt).
+   9. (26/11/2026) images/s de la 3D, processeur ralenti ×CPU : Noël, Dune et le Château, en qualité complète et légère, en Visite (survol) et en course
+      (poursuite, 5 voitures) : images/s (affichées seulement : sur cette machine sans carte graphique, la 3D est dessinée par le processeur et les chiffres
+      bougent beaucoup) et temps de calcul de l'appli par image (vérifié : sous 16 ms en léger, le calcul ne freine jamais l'image) ; en léger, jamais plus de
+      triangles qu'en complet (référence de fluidité : Noël, identique dans les deux niveaux). FPS3D=0 pour sauter cette mesure, plus longue.
    Seuils : onglet < 100 ms (médiane ; Podium < 200 ms : sa carte animée doit être repeinte) ; carte visible < 300 ms au retour, < 450 ms à la toute 1re visite (la page entière se construit) ; jamais de noir.
    MESURE=1 : affiche seulement les chiffres (pour comparer avec une version précédente). */
 const { chromium } = require("playwright");
@@ -148,6 +152,22 @@ const med = l => { const s = l.slice().sort((a, b) => a - b); return s.length ? 
     P(!e4.length, "0 erreur JS (onglets gardés) " + JSON.stringify(e4.slice(0, 2)));
     await ctx.close();
   }
+  // 9. images/s de la 3D (piste.js seule, mêmes réglages qu'un téléphone : 390 px, tactile, processeur ralenti)
+  const FPS = {};
+  if (process.env.FPS3D !== "0") for (const [nom, id] of [["Noël", "abudhabi"], ["Dune", "silverstone"], ["Château", "djeddah"]]) for (const lg of [false, true]) for (const vue of ["visite", "course"]) {
+    const ctx = await b.newContext({ viewport: { width: 390, height: 520 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true }), q = await ctx.newPage(), e5 = [];
+    q.on("pageerror", e => e5.push(e.message)); await q.goto("http://localhost:" + PORT + "/version.js");
+    await q.evaluate(l => { document.body.innerHTML = '<div id="b" style="width:390px;height:520px;position:relative"></div>'; window.VERSUS_LEGER = l; window.__ms = 0; window.__k = 0;
+      const raf = window.requestAnimationFrame.bind(window); window.requestAnimationFrame = f => raf(t => { const t0 = performance.now(); f(t); window.__ms += performance.now() - t0; window.__k++; }); }, lg);
+    await q.addScriptTag({ url: "http://localhost:" + PORT + "/piste.js" });
+    const cdp = await ctx.newCDPSession(q); await cdp.send("Emulation.setCPUThrottlingRate", { rate: CPU });
+    const vs = ["A", "B", "C", "D", "E"].map((n, k) => ({ nom: n, couleur: ["#4C9AFF", "#E0302E", "#3DDC97", "#FFC000", "#B48CFF"][k] })), z = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+    await q.evaluate(([id, vue, vs, z]) => { window.__n = 0; window.__a = Piste.monter(document.getElementById("b"), { circuit: id, effets: true, camera: vue === "visite" ? "helico" : "poursuite", sansVoitures: vue === "visite", voitures: vs, focus: "A", tour: 25, pts: z, image: () => { window.__n++; } });
+      if (vue === "visite") __a.survol(60000); else __a.jouer(z, { A: 25, B: 24, C: 23, D: 22, E: 21 }, 60000); }, [id, vue, vs, z]);
+    await q.waitForTimeout(1500); const n0 = await q.evaluate(() => [__n, __ms, __k]); await q.waitForTimeout(5000); const n1 = await q.evaluate(() => [__n, __ms, __k]), st = await q.evaluate(() => __a.stats());
+    FPS[nom + "|" + (lg ? "léger" : "complet") + "|" + vue] = { ips: Math.round((n1[0] - n0[0]) / 5 * 10) / 10, ms: Math.round((n1[1] - n0[1]) / Math.max(1, n1[2] - n0[2]) * 10) / 10, tri: st.sol + st.piste + st.ov };
+    errs.push(...e5); await ctx.close();
+  }
   await b.close();
   console.log("Téléphone simulé : processeur ralenti ×" + CPU + ", 390 px, mode léger");
   const v1 = med(P1.map(x => x.visible)), v2 = med(P2.map(x => x.visible));
@@ -162,6 +182,12 @@ const med = l => { const s = l.slice().sort((a, b) => a - b); return s.length ? 
   ok(sw.ok && sw.piste && sw.cartesJs && sw.carte, "hors connexion : piste.js, cartes.js et la carte cuite de Noël sont gardées " + JSON.stringify(sw));
   SECRET.forEach(x => ok(x.ok, "secret : cartes téléchargées ou gardées d'avance par un simple joueur le " + x.t));
   PERIME.forEach(x => ok(x.ok, "jamais périmé : " + x.t));
+  if (Object.keys(FPS).length) {
+    ["visite", "course"].forEach(v => console.log("· 3D " + v + " (×" + CPU + ", complet / léger) : " + ["Noël", "Dune", "Château"].map(n => { const c = FPS[n + "|complet|" + v], l = FPS[n + "|léger|" + v];
+      return n + " " + c.ips + " / " + l.ips + " images/s, " + c.ms + " / " + l.ms + " ms de calcul, " + c.tri + " / " + l.tri + " triangles"; }).join(" · ")));
+    ["Noël", "Dune", "Château"].forEach(n => ["visite", "course"].forEach(v => { const c = FPS[n + "|complet|" + v], l = FPS[n + "|léger|" + v];
+      ok(l.ms < 16 && l.tri <= c.tri, n + " en léger (" + v + ") : " + l.ms + " ms de calcul par image (< 16), " + l.tri + " triangles (complet : " + c.tri + ")"); }));
+  }
   ok(!errs.length, "0 erreur JS " + JSON.stringify(errs.slice(0, 3)));
   if (!MESURE) console.log(ko.length ? "\n" + ko.length + " NON" : "\nTout est OUI"); process.exit(MESURE || !ko.length ? 0 : 1);
 })();

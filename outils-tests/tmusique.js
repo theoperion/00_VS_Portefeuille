@@ -62,7 +62,7 @@ async function fuites(b) {
     SONS.course(6000, 0, "anneau"); await z(1000); SONS.basculer(false); await z(1500); out.coupe = { theme: SONS.themeJoue(), vivants: window.__vivants };
     const c0 = window.__crees; SONS.ambiance("titans"); SONS.course(3000, 0, "titans"); await z(2000); out.coupeRien = { nouveaux: window.__crees - c0, theme: SONS.themeJoue(), amb: SONS.ambianceJoue() };
     SONS.ambiance(null); SONS.basculer(true); await z(400);
-    SONS.ambiance("odyssee"); await z(3000); SONS.meteo("orage"); out.meteo = SONS._meteo(); SONS.meteo(null);
+    SONS.ambiance("odyssee"); await z(3000); out.sansMeteo = typeof SONS.meteo === "undefined" && typeof SONS._meteo === "undefined";
     return out;
   }, CLES);
   ok(r.amb.joue && r.amb.vivants > 0, "plein écran : l'ambiance joue (" + r.amb.vivants + " sons)");
@@ -71,7 +71,7 @@ async function fuites(b) {
   ok(!r.pause.theme && r.pause.vivants === 0, "⏸ pause : 0 son actif (" + r.pause.vivants + ")");
   ok(!r.coupe.theme && r.coupe.vivants === 0, "🔇 : 0 son actif (" + r.coupe.vivants + ")");
   ok(r.coupeRien.nouveaux === 0 && !r.coupeRien.theme && !r.coupeRien.amb, "🔇 : rien ne repart, ni course ni ambiance (" + r.coupeRien.nouveaux + " sons créés)");
-  ok(r.meteo === "orage", "météo : l'orage est pris en compte en direct");
+  ok(r.sansMeteo, "plus de météo du marché dans le son (26/11/2026) : ni pluie ni orage qui assourdit la musique");
   await p.evaluate(() => { Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" }); document.dispatchEvent(new Event("visibilitychange")); });
   await p.waitForTimeout(2500);
   const cache = await p.evaluate(() => ({ joue: SONS.ambianceJoue(), vivants: window.__vivants }));

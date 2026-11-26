@@ -3,7 +3,7 @@
 /* ============================================================
    GRAND PRIX · le championnat en vraie course
    Les voitures de chacun (livrée, casque, traînée) tournent sur un circuit : 25 points = un tour.
-   Chaque mois se rejoue en animation, sous la météo du marché (l'indice du mois).
+   Chaque mois se rejoue en animation (toujours par beau temps : plus de météo du marché depuis le 26/11/2026).
    Les cartes de course (une main identique pour tous, chaque saison) ajoutent de la stratégie :
    posées face cachée du 20 du mois précédent au 1er inclus, révélées le 2, elles donnent ou retirent quelques points.
    ============================================================ */
@@ -96,17 +96,8 @@ async function poserCarte(y, k, carte, cible) {
   }
 }
 
-/* ---------- Météo : tirée de l'indice du mois ---------- */
-function meteoMois(k) {
-  const dv = k ? directGP(k) : null; if (dv && dv.j >= 1 && !dv.fini) return meteoDirect(dv.r);   // v20.47 : mois en cours = le S&P depuis le 1er
-  const r = k ? indiceMois(k) : null;
-  if (r === null) return { id: "beau", ico: "🌤️", nom: "Beau temps", txt: "Départ sous un ciel dégagé." };
-  const t = texteIndice(r, "sur le mois");
-  if (r >= 0.03) return { id: "soleil", ico: "☀️", nom: "Grand soleil", txt: t + " : piste sèche, ça roule fort." };
-  if (r >= 0) return { id: "nuages", ico: "⛅", nom: "Nuageux", txt: t + " : temps couvert, course tactique." };
-  if (r > -0.03) return { id: "pluie", ico: "🌧️", nom: "Pluie", txt: t + " : piste glissante, les pneus pluie paient pour qui résiste." };
-  return { id: "orage", ico: "⛈️", nom: "Orage", txt: t + " : déluge sur le circuit, accrochez-vous." };
-}
+/* 26/11/2026 (Théo) · plus de MÉTÉO DU MARCHÉ sur le circuit (ni pluie, ni orage, ni tempête, ni grand soleil, ni pictogramme, ni son) :
+   chaque circuit garde son ambiance de beau temps ; le marché se lit dans l'onglet Moi. (Supprimés : meteoMois, meteoDirect, meteoVue, la météo de la démo.) */
 
 /* ---------- v20.47 (Théo) · LA COURSE EN DIRECT pendant le mois (avant les résultats) : seulement le tour 1.
    Le peloton part dans l'ordre de la grille (classement d'avant le mois ; janvier 2027 : le tour de chauffe), à écart FIXE (aucune info sur les %).
@@ -149,35 +140,18 @@ function texteIndice(r, suite, html) {
   if (!html) return idx + "\u00a0: " + p + (suite ? " " + suite : "");
   return esc(idx) + '\u00a0: <b class="ix-' + (r > 0.0005 ? "up" : r < -0.0005 ? "down" : "nul") + '">' + esc(p) + "</b>" + (suite ? " " + esc(suite) : "");
 }
-function meteoDirect(r) {
-  const t = texteIndice(r, "depuis le 1er");
-  if (r === null) return { id: "beau", ico: "🌤️", nom: "Beau temps", txt: "Le peloton avance avec les jours du mois." };
-  if (r >= 0.015) return { id: "soleil", ico: "☀️", nom: "Grand soleil", txt: t + " : le peloton prend de l'avance." };
-  if (r >= 0) return { id: "beau", ico: "🌤️", nom: "Beau temps", txt: t + " : le peloton roule un peu devant." };
-  if (r > -0.03) return { id: "pluie", ico: "🌧️", nom: "Pluie", txt: t + " : piste glissante, le peloton ralentit." };
-  return { id: "orage", ico: "⛈️", nom: "Orage", txt: t + " : déluge, le peloton prend du retard." };
-}
-/** v20.52 · le pictogramme suit ce qu'on voit sur la piste : à Noël la pluie devient neige, à Dune une tempête de sable */
-function meteoVue(met, ci) {
-  const th = ((window.Piste && Piste.TRACES[ci]) || {}).amb, p = met.id === "pluie", o = met.id === "orage";
-  if (th === "noel" && (p || o)) return Object.assign({}, met, { ico: o ? "❄️" : "🌨️", nom: o ? "Tempête de neige" : "Neige" });
-  if (th === "desert" && (p || o)) return Object.assign({}, met, { ico: "🌪️", nom: o ? "Grosse tempête de sable" : "Tempête de sable" });
-  return met;
-}
 /* ---------- v20.52 (Théo) · 🎬 COURSE DE DÉMONSTRATION, avant le 1er décembre 2026 (rien à rejouer : la chauffe n'a pas commencé).
-   Une course SIMULÉE : performances et météo tirées au hasard à chaque fois, 2 tours, dépassements, arrivée, en 2D comme en 3D et en plein écran.
+   Une course SIMULÉE : performances tirées au hasard à chaque fois, 2 tours, dépassements, arrivée, en 2D comme en 3D et en plein écran.
    Rien n'est lu (aucun %, aucun résultat : seule la grille déjà affichée sert de départ), rien n'est écrit (ni serveur ni « manche vue »), aucun point.
    Le bouton disparaît le 1er décembre (la course en direct prend le relais). ---------- */
 const DEMO_FIN = new Date(2026, 11, 1).getTime();
-const METEOS_DEMO = [{ id: "soleil", ico: "☀️", nom: "Grand soleil" }, { id: "pluie", ico: "🌧️", nom: "Pluie" }, { id: "orage", ico: "⛈️", nom: "Orage" }, { id: "beau", ico: "🌤️", nom: "Beau temps" }];
-let GP_DEMO = null, GP_GRILLE = null;   // GP_DEMO = { meteo, lance, enCours, fini, scen, finir } ; GP_GRILLE = l'ordre de la grille affichée (rang des pastilles avant le départ)
+let GP_DEMO = null, GP_GRILLE = null;   // GP_DEMO = { lance, enCours, fini, scen, finir } ; GP_GRILLE = l'ordre de la grille affichée (rang des pastilles avant le départ)
 function demoPossible(et, dir) { return Date.now() < DEMO_FIN && !!et && !et.m && !dir && !apercuSaison(); }
 function lancerDemo() {
-  const prec = GP_DEMO && GP_DEMO.meteo, l = METEOS_DEMO.filter(m => m !== prec);
   if (GP_INST && GP_INST.api.enCours()) { try { GP_INST.api.suspendre(false); } catch (e) { } }
   GP_COM.forEach(clearTimeout); GP_COM = []; GP_HORLOGE = null;
-  GP_DEMO = { meteo: Object.assign({}, l[Math.floor(Math.random() * l.length)], { txt: "météo de démo, tirée au hasard." }), lance: true };
-  rendreTrophees();   // la piste se remonte avec la météo de la démo, puis la course part (brancherGP)
+  GP_DEMO = { lance: true };
+  rendreTrophees();   // la piste se redessine, puis la course part (brancherGP)
 }
 /** les points « du mois » de la démo : le barème mélangé au hasard, avec au moins deux places qui changent (des dépassements) */
 function gainsDemo(noms) {
@@ -222,12 +196,12 @@ function courseDirect(etapes, i, kGP) {
   return { dv, grille, pts, dep };
 }
 /** v20.47 · le bandeau de sous-titres SOUS le dessin : à gauche le tour (ou « Direct »), à droite une ligne de commentaire, les bulles de points, ou l'état de la manche */
-function bandeauST(y, et, i, kGP, dir, met, mc0, demo) {
+function bandeauST(y, et, i, kGP, dir, mc0, demo) {
   let tour = "", info = "";
-  if (demo) { tour = "🎬 Démo"; info = "🎬 Démo · rien ne compte : performances tirées au hasard, météo aussi (" + met.ico + " " + met.nom + ")."; }
+  if (demo) { tour = "🎬 Démo"; info = "🎬 Démo · rien ne compte : performances tirées au hasard."; }
   else if (dir && dir.dv.fini) { tour = "🏁 Tour <b>1</b> fini"; info = "🏁 Mois fini : tour 2 dès que tous les relevés sont là."; }   // mois fini, pas encore clos : plus de « direct »
   else if (dir) { tour = '<i class="gp-live" aria-hidden="true"></i>Direct · Tour <b>1</b>/' + TOURS_GP;
-    info = met.ico + " Jour " + dir.dv.j + "/" + dir.dv.N + " · " + (dir.dv.r === null ? "le peloton avance avec les jours" : texteIndice(dir.dv.r, "depuis le 1er", true)); }   // court (2 lignes au plus à 390 px), sans répéter la phrase du titre
+    info = "Jour " + dir.dv.j + "/" + dir.dv.N + " · " + (dir.dv.r === null ? "le peloton avance avec les jours" : texteIndice(dir.dv.r, "depuis le 1er", true)); }   // court (2 lignes au plus à 390 px), sans répéter la phrase du titre
   else if (!et.m) { tour = "Sur la grille"; info = "🚦 Départ le 1<sup>er</sup> " + esc(moisLong(kGP).replace(/ \d{4}$/, "")) + " : on avance avec les jours et le S&P 500."; }
   else info = "🏁 Course courue · ↻ Revoir pour la regarder encore.";
   return '<div class="gp-st"><span class="gp-tour">' + tour + '</span><div class="gp-st-l"><div class="gp-com" aria-live="polite"></div><div class="gp-pops"></div><div class="gp-st-info">' + (/<sup>|<b /.test(info) ? info : esc(info)) + "</div></div></div>";
@@ -352,7 +326,8 @@ function prechargerCartesGP() {
 function choisirVueGP(v, y) {
   const pi = document.getElementById("gp-piste"), de3d = pi && !pi.classList.contains("en2d") && GP_INST && GP_INST.api.type === "3d";
   ETAT.gp2d = v === "2d" ? "1" : "0"; if (v !== "2d") ETAT.gpVue3 = v; garder();
-  if (v !== "2d" && de3d) { appliquerVue3(GP_INST.api, v); majVueDOM(v); GP_ETQ = null; etiquettesGP(GP_INST.api); }   // 3D → 3D : même piste, la caméra change en douceur
+  if (v !== "2d" && de3d && qualiteAChanger()) { GP_NIV_PERMIS = Date.now(); rendreTrophees(); }   // qualité 3D changée : la nouvelle vue part au bon niveau
+  else if (v !== "2d" && de3d) { appliquerVue3(GP_INST.api, v); majVueDOM(v); GP_ETQ = null; etiquettesGP(GP_INST.api); }   // 3D → 3D : même piste, la caméra change en douceur
   else rendreTrophees();
   if (v === "2d" || TRESOR_APERCU || SANS_AIDE_VUE) return;   // v17.35 : pendant l'aperçu du trésor, rien de gardé ; v20.74 : ni au départ d'une recherche (la bulle cachait les boutons)
   const cle = "versus.aideVue." + v; if (stock.get(cle)) return; stock.set(cle, "1");
@@ -448,18 +423,18 @@ function classementExemple() {
   } catch (e) { return ""; }
 }
 function htmlGrandPrix(y) {
-  if (GP_DEMO && GP_DEMO.fini && !GP_DEMO.lance) GP_DEMO = null;   // v20.52 : une démo finie s'efface au prochain affichage (retour à la vraie météo, voitures sur la grille)
+  if (GP_DEMO && GP_DEMO.fini && !GP_DEMO.lance) GP_DEMO = null;   // v20.52 : une démo finie s'efface au prochain affichage (voitures sur la grille)
   const etapes = etapesGP(y), c = championnat(y);
   const i = GP_ETAPE !== null && GP_ETAPE < etapes.length ? GP_ETAPE : etapeParDefaut(etapes, y), et = etapes[i];
   const nM = et.k ? et.k % 100 : i;   // le n° de manche affiché = le mois (en janvier, la manche 1 est la 1re étape : pas d'étape « Départ » avant elle)
   const qui = quiEcurie(), kGP = et.k || (c.chauffe ? CHAUFFE_K : y * 100 + 1), ci = circuitDe(kGP), G = GPS[ci], at = atoutsVus(kGP);
-  const met0 = meteoMois(et.k || (!et.m ? kGP : null)), spe = et.k ? moisSpecial(y, et.k) : null, pgm = et.m && et.m.piege ? et.m.piege : null;
+  const spe = et.k ? moisSpecial(y, et.k) : null, pgm = et.m && et.m.piege ? et.m.piege : null;
   const mc0 = !et.m ? mancheGP(etapes, i, kGP) : null, ordre = mc0 && mc0.grilleDe ? mc0.grille : Object.keys(et.pts).sort((a, b) => et.pts[b] - et.pts[a] || (c.tot[b] ? c.tot[b].v : 0) - (c.tot[a] ? c.tot[a].v : 0));   // v17.10 : sur la grille, l'ordre de départ (novembre pour la chauffe, tirage en janvier)
   const tete = ordre[0], tourTete = Math.floor((et.pts[tete] || 0) / TOUR_GP) + 1;
   const deux = ETAT.gp2d !== "0" || !piste3D(), cam = camGP();   // V16.58 : la 2D par défaut
   const v2 = vuesV2(ci), vue = vueGP(ci), suivi = v2 ? suiviGP() : null;   // v17.6
-  const dir = courseDirect(etapes, i, kGP), demoOk = demoPossible(et, dir), demo = demoOk && GP_DEMO ? GP_DEMO : null, met = meteoVue(demo ? demo.meteo : met0, ci);   // v20.52 : 🎬 démo avant le 1er décembre ; pictogramme adapté au circuit
-  const stH = v2 ? bandeauST(y, et, i, kGP, dir, met, mc0, demo) : "";   // v20.47 : course en direct + sous-titres sous le dessin
+  const dir = courseDirect(etapes, i, kGP), demoOk = demoPossible(et, dir), demo = demoOk && GP_DEMO ? GP_DEMO : null;   // v20.52 : 🎬 démo avant le 1er décembre
+  const stH = v2 ? bandeauST(y, et, i, kGP, dir, mc0, demo) : "";   // v20.47 : course en direct + sous-titres sous le dessin
   // v17.6 · la piste « V2 » ne garde AUCUN bouton sur l'image : vue, plein écran et « ⋯ » (bande-annonce, arrivée, survol) passent juste en dessous
   const menuV2 = '<div class="gp-outils"><button class="gp-son-b" type="button" data-son aria-label="Couper le son">🔊</button>' + '<details class="gp-plus"><summary aria-label="Plus d\'options">⋯</summary><div class="gp-plus-m">' + (piste3D() ? '<button type="button" class="gp-survol-b" id="gp-survol">🛸 Survol guidé</button>' : "") +   // v17.10 : toujours utilisable (passe tout seul en 📺 Visite)
     '<button type="button" id="gp-ba">🎬 Bande-annonce</button><button type="button" id="gp-fin">⏭ Aller à l\'arrivée</button><button type="button" id="gp-photo">📷 Mode photo</button></div></details></div>';   // v17.48 : le petit 🔊/🔇 à côté de « ⋯ »
@@ -471,8 +446,8 @@ function htmlGrandPrix(y) {
     (v2 ? "" : '<div class="gp-zones">' + (at ? '<span class="gp-zone at" data-zone="atout">' + at.atout.ico + ' <b>+1</b></span>' : "") + "</div>") +   // v20.47 : plus d'étiquette d'atout posée sur le dessin (l'atout est écrit sous le titre)
     '<div class="gp-tags3">' + ordre.map(n => '<span class="gp-t3' + (n === qui ? " ici" : "") + '" data-gpt3="' + esc(n) + '" style="--c:' + couleur(n) + '" title="' + esc(n) + '">' + avatarCourse(n) + '<i class="gp-rg"></i></span>').join("") + "</div>" +
     (v2 ? "" : '<div class="gp-pops"></div><div class="gp-com" aria-live="polite"></div>') + fxCircuit(G.fx) +
-    (v2 ? stH :   // v20.47 (Théo) : aucun texte posé sur le dessin : tour, commentaires et bulles passent en sous-titres, dans un bandeau sous la course   // v17.6 : « Sur la grille » et la météo sont déjà dans le titre ; il ne reste que « Tour 1/2 » pendant la course
-    '<div class="gp-hud"><span class="gp-tour">' + (et.k && !et.avenir ? "Manche <b>" + nM + "</b>" : "Sur la grille") + "</span><span>" + met.ico + " " + esc(met.nom) + "</span></div>") +
+    (v2 ? stH :   // v20.47 (Théo) : aucun texte posé sur le dessin : tour, commentaires et bulles passent en sous-titres, dans un bandeau sous la course   // v17.6 : « Sur la grille » est déjà dans le titre ; il ne reste que « Tour 1/2 » pendant la course
+    '<div class="gp-hud"><span class="gp-tour">' + (et.k && !et.avenir ? "Manche <b>" + nM + "</b>" : "Sur la grille") + "</span></div>") +
     (v2 ? "" : '<div class="gp-btns">' +
     '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en vue hélico 3D" : "Revenir à la carte 2D") + '">' + (deux ? "🚁 Hélico 3D" : "🗺️ Carte 2D") + '</button><button class="gp-vue gp-son" type="button" data-son aria-label="Son">🔇</button>' + (deux ? "" : '<button class="gp-vue" type="button" id="gp-survol" aria-label="Visite guidée">🎬 Survol</button>') + '<button class="gp-vue" type="button" id="gp-ba" aria-label="Bande-annonce">' + icoOu("bandeannonce", "🎬") + '</button><button class="gp-vue" type="button" id="gp-fin" aria-label="Aller directement à la fin de la course">' + icoOu("arrivee", "⏭") + '</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">' + icoOu("pleinecran", "⛶") + '</button>' + "</div>") + suiviH +
     (v2 ? "" : spe ? '<div class="gp-spe">' + spe.ico + " " + esc(spe.nom) + "</div>" : pgm ? '<div class="gp-spe piege" data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " " + esc(pgm.nom) + "</div>" : "") + "</div>";
@@ -511,7 +486,7 @@ function htmlGrandPrix(y) {
     (c.chauffe && !et.m && Date.now() < SAISON.depart.getTime() ? '<p class="info gp-depart">🏁 Grille de départ : la performance de novembre. La course se joue avec le relevé de fin décembre.</p>' :
       !et.m && kGP === SAISON.premiere * 100 + 1 ? '<p class="info gp-depart">' + (mc0 && /^chauffe/.test(mc0.grilleDe || "") ? "🏁 Grille de départ : l'ordre du tour de chauffe de décembre" + (mc0.grilleDe === "chauffe-grille" ? " (sa grille, tant que son résultat n'est pas connu)" : "") + ", les absents de la chauffe derrière (par ordre alphabétique). Tout le monde part à 0 point." : '<span class="gp-de' + (stock.get("versus.deJanvier") ? "" : (stock.set("versus.deJanvier", "1"), " roule")) + '" aria-hidden="true">🎲</span> Grille tirée au sort : tout le monde part à 0 point.') + "</p>" : "");   // v17.5 (Théo) : sur la grille de la chauffe, du 21/11 au 31/12
   const titreAt = at ? '<div class="gp-atouts"><span class="at" data-bdg="' + esc("Atout de " + G.ville + " : " + at.atout.ico + " " + at.atout.nom + " y gagne +1 quand elle marque (sauf bouchon).") + '">' + at.atout.ico + " " + esc(at.atout.nom) + " +1</span></div>" : (indiceCircuit(kGP) ? htmlIndice(indiceCircuit(kGP)) : "");
-  return versStand + att + '<div class="gp-h"><div><span class="s-k">' + (demo ? "🎬 Démo · rien ne compte" : c.chauffe ? "Tour de chauffe" + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : "") : et.avenir ? "Manche " + nM + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : " · sur la grille") : et.k ? "Manche " + nM : "Départ") + " · " + esc(moisLong(kGP)) + '</span><h3 class="gp-titre">' + G.drap + " " + esc(G.gp) + '</h3><p class="gp-met">' + esc(G.ville) + " · " + met.ico + " " + esc(met.txt) + (spe ? " " + spe.ico + " <b>" + esc(spe.nom) + "</b> : " + esc(spe.txt) : vuesV2(ci) && pgm ? ' <span data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " <b>" + esc(pgm.nom) + "</b></span>" : "") + '</p></div><div class="gp-hb"><button class="btn ghost gp-pause" type="button" id="gp-pause" aria-label="Mettre la course en pause" hidden>⏸\uFE0F Pause</button>' + (demoOk ? '<button class="btn ghost gp-rejouer gp-demo" type="button" id="gp-demo" aria-label="Course de démonstration : une course pour de faux, rien ne compte">🎬 Course de<br>démonstration</button>' : '<button class="btn ghost gp-rejouer" type="button" id="gp-rejouer">↻ Revoir</button>') + "</div></div>" +
+  return versStand + att + '<div class="gp-h"><div><span class="s-k">' + (demo ? "🎬 Démo · rien ne compte" : c.chauffe ? "Tour de chauffe" + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : "") : et.avenir ? "Manche " + nM + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : " · sur la grille") : et.k ? "Manche " + nM : "Départ") + " · " + esc(moisLong(kGP)) + '</span><h3 class="gp-titre">' + G.drap + " " + esc(G.gp) + '</h3><p class="gp-met">' + [villeGP(G) ? esc(villeGP(G)) : "", spe ? spe.ico + " <b>" + esc(spe.nom) + "</b> : " + esc(spe.txt) : vuesV2(ci) && pgm ? '<span data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " <b>" + esc(pgm.nom) + "</b></span>" : ""].filter(Boolean).join(" · ") + '</p></div><div class="gp-hb"><button class="btn ghost gp-pause" type="button" id="gp-pause" aria-label="Mettre la course en pause" hidden>⏸\uFE0F Pause</button>' + (demoOk ? '<button class="btn ghost gp-rejouer gp-demo" type="button" id="gp-demo" aria-label="Course de démonstration : une course pour de faux, rien ne compte">🎬 Course de<br>démonstration</button>' : '<button class="btn ghost gp-rejouer" type="button" id="gp-rejouer">↻ Revoir</button>') + "</div></div>" +
     titreAt + piste + (v2 ? '<div class="gp-vues2">' + selVuesGP(vue, "") + menuV2 + '<button class="gp-plein-gros" type="button" id="gp-plein-gros"><span aria-hidden="true">⛶</span> Plein écran</button></div>' : "") + (v2 ? '<details class="gp-schema"><summary>📐 Comment avance la course ?</summary>' + svgSchemaCourse() + "</details>" : "") + chips + '<div class="gp-liste">' + lignes + "</div>" + (et.m ? '<button class="btn ghost gp-carte" type="button" id="gp-carte">📸 Carte postale · ' + esc(moisLong(et.k)) + "</button>" : "") + cal +
     '<p class="info">Chaque mois, une manche sur un nouveau circuit : départ dans l\'ordre du championnat, et le meilleur du mois boucle le tour.' + " Touche un nom pour ouvrir sa fiche, une icône pour le détail, une voiture pour la suivre." + (c.chauffe ? " 🔥 Rien ne compte pendant la chauffe." : "") + ' <a href="#" class="lien-regles" data-regles="gp">Règles</a></p>' +
     htmlDetailPoints(y);
@@ -788,6 +763,21 @@ function htmlDuel(y, kOuvert) {
 let GP_RIVAL = null, GP_CIBLE = null;
 /* ---------- Le circuit du mois : instance 3D (ou 2D) de piste.js, gardée d'un rendu à l'autre ---------- */
 let GP_INST = null, GP_PLEIN = null, GP_REJOUER = false;
+/** 26/11/2026 · le lieu sous le titre, seulement s'il apporte quelque chose : « Atelier du Père Noël », « Pandora », « Le Multivers »… répètent déjà le titre
+    (comparaison sans majuscules ni accents, sans « Grand Prix de / du » ni article) ; « Paris, la nuit » ou « Château aux sortilèges » restent */
+function villeGP(G) {
+  const n = t => (" " + String(t || "") + " ").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/^ *grand prix /, " ").replace(/ (de la|de l|des|du|de|d|la|le|les|l) /g, " ").replace(/ +/g, " ");
+  const v = n(G.ville); return v.trim() && !n(G.gp).includes(v) ? G.ville : "";
+}
+/* 26/11/2026 · QUALITÉ 3D (piste.js) : la piste n'est reconstruite pour un changement de niveau (baisse automatique, ou choix des Réglages) qu'à un VRAI
+   changement de vue : arrivée sur l'onglet Course, toucher d'une autre vue, choix dans les Réglages ; jamais sur un simple redessin (rotation, plein écran,
+   réponse du serveur, retour sur la page) et jamais pendant une course ni en plein écran. GP_INST.niv garde le niveau de la piste affichée. */
+let GP_NIV_PERMIS = 0;   // instant de l'autorisation (valable 2 s : jamais reportée sur un redessin plus tard)
+const nivGP = () => window.Piste && Piste.qualite ? Piste.qualite.niveau() : "";
+/** le niveau voulu diffère de celui de la piste affichée, et on peut la reconstruire maintenant (pas de course en cours, pas de plein écran) */
+function qualiteAChanger() { return !!(GP_INST && GP_INST.niv && GP_INST.api.type === "3d" && !GP_PLEIN && !(GP_INST.api.enCours && GP_INST.api.enCours()) && nivGP() !== GP_INST.niv); }
+/** appelé par l'arrivée sur l'onglet Course (js/7-bilan.js) et par les Réglages (piste.js) : autorise UNE reconstruction au prochain dessin de la page */
+function permettreQualiteGP() { const ok = qualiteAChanger(); GP_NIV_PERMIS = ok ? Date.now() : 0; return ok; }
 function voituresGP() {
   const qui = quiEcurie();
   return D.personnes.map(p => { const e = equipDe(p.nom); return { nom: p.nom, couleur: couleurReelle(couleur(p.nom)), casque: couleurReelle(couleurCasque(p.nom, e)), livree: e.livree, trainee: e.trainee, moi: p.nom === qui }; });
@@ -1298,14 +1288,14 @@ async function cartePostale(y, et) {
   const m = et && et.m; if (!m) return;
   const W = 1080, H = 1350, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   const g = cv.getContext("2d"), css = getComputedStyle(document.documentElement), col = v => css.getPropertyValue(v).trim() || "#9B87FF";
-  const ci = circuitDe(m.k), G = GPS[ci], met = meteoMois(m.k), spe = m.spec, fond = g.createLinearGradient(0, 0, 0, H);
+  const ci = circuitDe(m.k), G = GPS[ci], spe = m.spec, fond = g.createLinearGradient(0, 0, 0, H);
   fond.addColorStop(0, "#151A2E"); fond.addColorStop(1, "#0B0E14"); g.fillStyle = fond; g.fillRect(0, 0, W, H);
   const reel = c => { const t = document.createElement("i"); t.style.color = c; document.body.appendChild(t); const r = getComputedStyle(t).color; t.remove(); return r; };
   g.fillStyle = reel(col("--accent")); g.fillRect(0, 0, W, 14);
   const txt = (t, x, yy, taille, poids, coul, align, police) => { g.font = (poids || 700) + " " + taille + "px " + (police || "Saira, sans-serif"); g.fillStyle = coul || "#EDF0F4"; g.textAlign = align || "left"; g.fillText(t, x, yy); };
   txt("VERSUS · PODIUM", 70, 110, 34, 800, "#A9B1BD", "left", "'Saira Condensed', sans-serif");
   txt(G.drap + " " + G.gp, 70, 190, 64, 800, "#FFFFFF", "left", "'Saira Condensed', sans-serif");
-  txt(moisLong(m.k) + " · " + met.ico + " " + met.nom + (spe ? " · " + spe.ico + " " + spe.nom : ""), 70, 250, 34, 500, "#A9B1BD");
+  txt(moisLong(m.k) + (spe ? " · " + spe.ico + " " + spe.nom : ""), 70, 250, 34, 500, "#A9B1BD");
   const l = m.l.slice().sort((a, b) => b.p - a.p || a.rg - b.rg), med = ["🥇", "🥈", "🥉", "4", "5"];
   const hL = l.length >= 5 ? 142 : 170, pas = hL + (l.length >= 5 ? 22 : 30), q = v => Math.round(v * hL / 170);   // v16.27 : à 5 pilotes, les lignes se resserrent
   l.forEach((x, i) => {
@@ -1579,21 +1569,21 @@ function brancherGP0(v, y) {
   const pi = v.querySelector("#gp-piste"), scene = v.querySelector("#gp-scene"); if (!pi || !scene) return;
   if (!window.Piste) { scene.innerHTML = '<p class="gp-nopiste">Circuit indisponible : recharge l\'appli.</p>'; return; }
   const c = championnat(y), kGP = et.k || (c.chauffe ? CHAUFFE_K : y * 100 + 1), ci = circuitDe(kGP), deux = pi.classList.contains("en2d"), qui = quiEcurie();
-  const DM = GP_DEMO && demoPossible(et, courseDirect(etapes, i, kGP)) ? GP_DEMO : null;   // v20.52 : 🎬 course de démonstration (météo tirée au hasard)
-  const amb = (equipDe(qui) || {}).circuit || "classique", met = DM ? DM.meteo.id : meteoMois(et.k || (!et.m ? kGP : null)).id, at = atoutsVus(kGP), vs = voituresGP(), vue = vueGP(ci);
-  if (window.SONS && SONS.meteo) SONS.meteo(met);   // v20.53 : la pluie et l'orage s'entendent (musique un peu plus sourde)
-  const cle = [ci, met, amb, deux ? "2d" : "3d", JSON.stringify(vs), at ? at.atout.id : "", couleurAccent()].join("|");
-  if (GP_INST && GP_INST.cle === cle) { scene.appendChild(GP_INST.boite); GP_INST.api.redim(); }
+  const DM = GP_DEMO && demoPossible(et, courseDirect(etapes, i, kGP)) ? GP_DEMO : null;   // v20.52 : 🎬 course de démonstration
+  const amb = (equipDe(qui) || {}).circuit || "classique", at = atoutsVus(kGP), vs = voituresGP(), vue = vueGP(ci);
+  const cle = [ci, amb, deux ? "2d" : "3d", JSON.stringify(vs), at ? at.atout.id : "", couleurAccent()].join("|");
+  const nivNeuf = GP_NIV_PERMIS && Date.now() - GP_NIV_PERMIS < 2000 && qualiteAChanger(); GP_NIV_PERMIS = 0;   // qualité 3D : seulement à un vrai changement de vue (voir permettreQualiteGP)
+  if (GP_INST && GP_INST.cle === cle && !nivNeuf) { scene.appendChild(GP_INST.boite); GP_INST.api.redim(); }
   else {
     if (GP_INST) { try { GP_INST.api.detruire(); } catch (e) { } GP_INST.boite.remove(); GP_INST = null; }
     const boite = document.createElement("div"); boite.className = "gp-rendu"; scene.appendChild(boite);
     const focus = vue === "poursuite" ? suiviGP() : ETAT.gpFocus && D.personnes.some(p => p.nom === ETAT.gpFocus) ? ETAT.gpFocus : (qui && D.personnes.some(p => p.nom === qui) ? qui : D.personnes[0].nom);
-    const api = Piste.monter(boite, { circuit: ci, meteo: met, effets: true, ambiance: amb, mode: deux ? "2d" : "3d", camera: vue === "poursuite" ? "poursuite" : camGP(), sansVoitures: vue === "visite", tour: TOUR_GP, voitures: vs, pts: et.pts, focus,
+    const api = Piste.monter(boite, { circuit: ci, effets: true, ambiance: amb, mode: deux ? "2d" : "3d", camera: vue === "poursuite" ? "poursuite" : camGP(), sansVoitures: vue === "visite", tour: TOUR_GP, voitures: vs, pts: et.pts, focus,
       atoutCol: at ? "#3DDC97" : null, piegeCol: null, accent: couleurAccent(), titre: GPS[ci].gp + ", " + GPS[ci].ville, portrait: n => avatarCourse(n),   // v20.59 (relecture jeu-joueur) + v20.61 (Théo : en course, toujours le visage, jamais le casque de l'écurie) : la même tête que partout (accessoire du mois en cours, ou accessoire mérité), plus un 2e costume du même univers
       image: etiquettesGP, toucher: n => { if (vueGP(ci) === "poursuite") { suivreGP(n); return; } ETAT.gpFocus = n; garder(); if (GP_INST) GP_INST.api.focus(n); toast("👀 " + n + " est mis en avant."); },
       perdu: () => { if (GP_INST && GP_INST.boite === boite) GP_INST = null;   // audit B6 : circuit coupé par le navigateur → on le relance (2 fois au plus)
         if (GP_RELANCES < 2 && typeof rendreTrophees === "function") { GP_RELANCES++; setTimeout(() => { if (boite.isConnected && !document.hidden) rendreTrophees(); }, 400); } } });
-    GP_INST = { cle, api, boite };
+    GP_INST = { cle, api, boite, niv: api.type === "3d" && api.qualite ? api.qualite().niveau : "" };
     if (api.type === "2d" && !deux) { pi.classList.add("en2d"); const cb = pi.querySelector("#gp-cam-b"); if (cb) cb.remove(); }
   }
   // V16.10 · une manche par mois : grille de départ dans l'ordre du classement d'avant le mois ; le meilleur du mois boucle exactement un tour
@@ -1624,7 +1614,7 @@ function brancherGP0(v, y) {
       if (baDue) { stock.set(cleBA, String(kBA)); setTimeout(() => ereApres(() => bandeAnnonce(y, i, apresBA), "ba"), 400); } else setTimeout(() => { if (GP_INST && GP_INST.api === api && !api.enCours()) jouer(false); }, 450); }
     else { if (!api.enCours()) api.placer(pArr); if (baDue) { stock.set(cleBA, String(kBA)); setTimeout(() => ereApres(() => bandeAnnonce(y, i, null), "ba"), 400); } } }
   GP_REJOUER = false;
-  if (DM && DM.lance) { DM.lance = false; setTimeout(() => jouerDemo(y, api, mc, ci), 250); }   // v20.52 : 🎬 la démo part une fois la piste montée avec sa météo
+  if (DM && DM.lance) { DM.lance = false; setTimeout(() => jouerDemo(y, api, mc, ci), 250); }   // v20.52 : 🎬 la démo part une fois la piste montée
   const dm = v.querySelector("#gp-demo"); if (dm) dm.addEventListener("click", lancerDemo);
   const vu3 = v.querySelector("#gp-vue"); if (vu3) vu3.addEventListener("click", () => { const vers3d = pi.classList.contains("en2d"); ETAT.gp2d = vers3d ? "0" : "1"; garder(); rendreTrophees(); if (vers3d && !TRESOR_APERCU && !stock.get("versus.aideVisite")) { stock.set("versus.aideVisite", "1"); setTimeout(() => { toast("🧭 Visite 3D : glisse pour tourner, vers le haut ou le bas pour incliner, pince pour zoomer, deux doigts pour te déplacer. 🎬 Survol : la visite guidée."); try { if (GP_INST && GP_INST.api.type === "3d" && !GP_INST.api.enCours()) GP_INST.api.survol(12000); } catch (e) { } }, 900); } });
   const sv = v.querySelector("#gp-survol"); if (sv) sv.addEventListener("click", () => { if (GP_INST && GP_INST.api.enCours()) { toast("Attends la fin de la course pour le survol."); return; }
@@ -1779,7 +1769,7 @@ function ouvrirCircuits2027(ci0) {
     if (!window.Piste) return;
     const boite = document.createElement("div"); boite.className = "cg-rendu"; scene.appendChild(boite);
     const vs = voituresGP(), pts = Object.fromEntries(D.personnes.map(p => [p.nom, 0]));
-    api = Piste.monter(boite, { circuit: ci, meteo: "soleil", mode: vue === "2d" ? "2d" : "3d", camera: "helico", tour: 0, voitures: vs, pts, focus: vs[0] && vs[0].nom, accent: couleurAccent(),
+    api = Piste.monter(boite, { circuit: ci, mode: vue === "2d" ? "2d" : "3d", camera: "helico", tour: 0, voitures: vs, pts, focus: vs[0] && vs[0].nom, accent: couleurAccent(),
       titre: (G.gp || ci), portrait: n => { const pk = (Piste.TRACES[ci] || {}).peint, k = ci === "abudhabi" ? "noel" : ACCESSOIRES_TETE[pk] ? pk : undefined; return avatar(n, Object.assign({}, equipDe(n), k ? { acc: k } : {}, { pilote: "tete", fond: "couleur" })); } });   // v20.59 : aperçu admin (v20.61 : le visage, jamais le casque) = l'accessoire du mois de ce circuit
     if (vue === "visite" && api && api.viser) setTimeout(() => { try { api.viser(null, .3, .38); } catch (e) { } }, 300);
   };
