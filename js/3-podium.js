@@ -343,7 +343,7 @@ const GAIN_DORE = ["plaque", "hiverdore"];
 function estGainDore(slot, id) { return slot === GAIN_DORE[0] && id === GAIN_DORE[1]; }
 function aventDore(nom) { try { return !!nom && typeof aventDores === "function" && aventDores().includes(nom); } catch (e) { return false; } }
 /* v20.62 (Théo, 25/11) · 🎁 plaque « Chercheur de Noël » : pour chaque pilote qui trouve le trésor de décembre 2026 (l'Atelier du Père Noël, tour de chauffe) ;
-   le PLUS RAPIDE (v20.71 : chrono, serveur V92 ; avant : le premier) a la version dorée (exclusive), qui peut changer de main jusqu'au 31/12. Aucun point, gardée pour toujours. Déduite de la liste PUBLIQUE des chercheurs du trésor
+   le PLUS RAPIDE (v20.74 : chrono, serveur V92 ; avant : le premier) a la version dorée (exclusive), qui peut changer de main jusqu'au 31/12. Aucun point, gardée pour toujours. Déduite de la liste PUBLIQUE des chercheurs du trésor
    (TRESORS.l[].chercheurs : nom et jour, dans l'ordre ; jamais où), comme la pastille des éclats : aucun changement serveur. L'aperçu admin ne donne rien. */
 const GAIN_CHERCHEUR = ["plaque", "chercheur"], GAIN_CHERCHEUR_OR = ["plaque", "chercheuror"], TRESOR_NOEL = "abudhabi";
 function chercheursNoel() {
@@ -351,7 +351,7 @@ function chercheursNoel() {
     const T = typeof TRESORS !== "undefined" && TRESORS && TRESORS.l, t = T && T.find(x => x.circuit === TRESOR_NOEL && (!x.saison || x.saison === SAISON.premiere - 1));
     return t && Array.isArray(t.chercheurs) ? t.chercheurs.filter(x => x && x.nom) : []; } catch (e) { return []; }
 }
-/** v20.71 · la plaque DORÉE est-elle attribuée ? Trésor chronométré (serveur V92) : seulement le 1/1/2027 à 0 h (final) ; avant le chrono : tout de suite */
+/** v20.74 · la plaque DORÉE est-elle attribuée ? Trésor chronométré (serveur V92) : seulement le 1/1/2027 à 0 h (final) ; avant le chrono : tout de suite */
 function noelFinal() {
   try { const T = typeof TRESORS !== "undefined" && TRESORS && TRESORS.l, t = T && T.find(x => x.circuit === TRESOR_NOEL && (!x.saison || x.saison === SAISON.premiere - 1));
     return !t || !t.chrono || !!t.final; } catch (e) { return true; }
@@ -786,7 +786,7 @@ function texteOrigineItem(qui, slot, id) {
   if (org.mj) { const g = typeof gagnantsMJ === "function" ? gagnantsMJ(org.mj) : [], mois = MOIS_L[org.mj % 100 - 1];
     return { t: "🥇 Exclusif · 🗺️ mini-jeu de " + mois, p: g.includes(qui) ? "À toi : tu as été le meilleur du mini-jeu de " + mois + " (surnom du mois et plaque dorée)." : g.length ? "Gagné par " + g.join(" et ") + ", meilleur" + (g.length > 1 ? "s" : "") + " du mini-jeu de " + mois + "." : "Réservé au meilleur du mini-jeu de " + mois + " (page Course), avec son surnom du mois. Aucun point au championnat." }; }
   if (org.chercheur) { const ch = chercheursNoel(), i = ch.findIndex(x => x.nom === qui), j = i >= 0 ? ch[i].j : 0, jour = j ? (j % 100) + "/12" : "", or = id === GAIN_CHERCHEUR_OR[1], fin = noelFinal();
-    const tps = x => x && typeof x.s === "number" && typeof dureeChrono === "function" ? " (" + dureeChrono(x.s) + ")" : "";   // v20.75 : la dorée va au plus rapide, attribuée le 31/12 à minuit
+    const tps = x => x && typeof x.s === "number" && typeof dureeChrono === "function" ? " (" + dureeChrono(x.s) + ")" : "";   // v20.74 : la dorée va au plus rapide, attribuée le 31/12 à minuit
     return { t: "🎁 Souvenir · trésor de l'Atelier du Père Noël" + (or ? " · 🥇" : ""), p: or ? (i === 0 && fin ? "À toi : trouvé le trésor de l'Atelier du Père Noël" + (jour ? " le " + jour : "") + ", 🥇 le plus rapide" + tps(ch[0]) + "." : ch.length ? (fin ? "Attribuée au plus rapide à trouver le trésor de l'Atelier du Père Noël : " : "Pour le plus petit temps du mois, attribuée le 31 décembre à minuit · le plus rapide pour l'instant : ") + ch[0].nom + tps(ch[0]) + "." : "Pour le plus rapide qui trouvera le trésor de l'Atelier du Père Noël (décembre 2026, chrono lancé avec 🔍), attribuée le 31 décembre à minuit.")
       : i >= 0 ? "Trouvé le trésor de l'Atelier du Père Noël" + (jour ? " le " + jour : "") + tps(ch[i]) + (i === 0 ? (fin ? " · 🥇 le plus rapide" : " · 🥇 le plus rapide pour l'instant") : "") + "." : "Pour chaque pilote qui trouve le trésor de l'Atelier du Père Noël (décembre 2026)." }; }
   if (org.dore) return { t: "🏅 Souvenir · calendrier de l'Avent, 24 sur 24", p: ouvert ? "À toi : tu as ouvert les 24 cases du calendrier de l'Avent, chacune le jour même. Elle est à toi pour toujours, aucun point." : "Pour chaque pilote qui ouvre les 24 cases du calendrier de l'Avent (décembre 2026), chacune le jour même." };
@@ -1754,11 +1754,11 @@ function etatTitres(y) {
   }
   return Object.assign({}, base, { flair: flairSaison(y) });
 }
-/** Le Flair : 3 / 2 / 1 points aux trois premiers du classement de chaque trésor de la saison (TRESORS.l[].chercheurs ; v20.71 : classés par temps par le serveur V92) ; null sans trésors chargés */
+/** Le Flair : 3 / 2 / 1 points aux trois premiers du classement de chaque trésor de la saison (TRESORS.l[].chercheurs ; v20.74 : classés par temps par le serveur V92) ; null sans trésors chargés */
 function flairSaison(y) {
   const T = typeof TRESORS !== "undefined" && TRESORS && TRESORS.l; if (!T || !T.length) return null;
-  const dansMois = t => !t.chrono || !t.saison || !t.mois ? t.chercheurs : t.chercheurs.filter(x => !x.j || Math.floor(x.j / 100) <= t.saison * 100 + t.mois);   // v20.75 : trouvé après le mois = pas de points
-  const tr = T.filter(t => CAL_GP.includes(t.circuit) && (t.chercheurs || []).length && (!t.chrono || t.final)).map(t => ({ k: y * 100 + CAL_GP.indexOf(t.circuit) + 1, ch: dansMois(t) })).sort((a, b) => a.k - b.k);   // v20.75 : un trésor chronométré compte le 1er du mois suivant (classement définitif, par temps)
+  const dansMois = t => !t.chrono || !t.saison || !t.mois ? t.chercheurs : t.chercheurs.filter(x => !x.j || Math.floor(x.j / 100) <= t.saison * 100 + t.mois);   // v20.74 : trouvé après le mois = pas de points
+  const tr = T.filter(t => CAL_GP.includes(t.circuit) && (!t.saison || t.saison === y) && (t.chercheurs || []).length && (!t.chrono || t.final)).map(t => ({ k: y * 100 + CAL_GP.indexOf(t.circuit) + 1, ch: dansMois(t) })).sort((a, b) => a.k - b.k);   // v20.74 : un trésor chronométré compte le 1er du mois suivant (classement définitif, par temps)
   const pts = {}; let f = null;
   tr.forEach(t => {
     t.ch.slice(0, 3).forEach((x, i) => { pts[x.nom] = (pts[x.nom] || 0) + [3, 2, 1][i]; });

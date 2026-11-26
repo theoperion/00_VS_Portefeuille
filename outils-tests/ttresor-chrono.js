@@ -1,4 +1,4 @@
-/* Test v20.71 · chasse au trésor CHRONOMÉTRÉE (serveur V92) : le plus rapide gagne, pause possible, or attribué à la fin du mois.
+/* Test v20.74 · chasse au trésor CHRONOMÉTRÉE (serveur V92) : le plus rapide gagne, pause possible, or attribué à la fin du mois.
    Faux serveur (aucune vraie énigme, aucune vraie cachette : position et textes INVENTÉS) ; aperçu admin pour les captures (cachette d'exemple).
    Vérifie : énigme lisible sans chrono ; « 🔍 Je lance ma recherche » (2 touchers, une requête) ; pas d'objet avant le départ ; chrono qui tourne ;
    ⏸️ pause → l'objet disparaît et la position est oubliée, chrono arrêté ; ▶️ reprise → caméra au départ du circuit, temps cumulé juste ;
@@ -36,7 +36,7 @@ const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance")
   /* ---------- 1. Joueur, décembre 2026, faux serveur V92 : départ, pause, reprise, trouvaille ---------- */
   { const E = { lance: false, actif: false, depuis: null, cumul: 0, ch: [{ nom: "Clément", j: 20261202, s: 900 }] };
     const serveur = {
-      tresors: (c, maint) => ({ ok: true, maintenant: maint, trouves: [], total: 0, tresors: [Object.assign({ circuit: "abudhabi", saison: 2026, mois: 12, type: "molette", enigme: ENIGME, indice2: null, chaudFroid: false, chrono: true, final: false,
+      tresors: (c, maint) => ({ ok: true, maintenant: maint, trouves: [], total: 0, tresors: [Object.assign({ circuit: "abudhabi", saison: 2026, mois: 12, type: "trefle", enigme: ENIGME, indice2: null, chaudFroid: false, chrono: true, final: false,
         lance: E.lance, actif: E.actif, depuis: E.depuis, cumul: E.cumul, chercheurs: E.ch }, E.actif ? { p: P_FAUX } : {})] }),
       tresorDepart: (c, maint) => { if (!E.actif) Object.assign(E, { lance: true, actif: true, depuis: maint }); return { ok: true, actif: true, depuis: E.depuis, cumul: E.cumul, maintenant: maint, p: P_FAUX }; },
       tresorArret: (c, maint) => { if (E.actif) { E.cumul += (maint - E.depuis) / 1000; Object.assign(E, { actif: false, depuis: null }); } return { ok: true, actif: false, cumul: E.cumul, maintenant: maint }; },
@@ -70,8 +70,18 @@ const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance")
     await p.evaluate(() => document.querySelector(".gp-piste .gp-lancer").click()); await p.waitForFunction(() => !!document.querySelector(".gp-piste .gp-arret"), null, { timeout: 10000 }).catch(() => {});
     const r6 = await lire(p);
     ok(req.filter(c => c.action === "tresorDepart").length === 2 && r6.obj && r6.arret && JSON.stringify(r6.p) === JSON.stringify(P_FAUX), "▶️ reprise (1 toucher) : la position revient, l'objet existe à nouveau");
+    // pause automatique quand on quitte l'appli, puis retour : l'appli relit le serveur
+    await p.evaluate(() => { Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true }); document.dispatchEvent(new Event("visibilitychange")); });
+    await p.waitForTimeout(600); const nArr = req.filter(c => c.action === "tresorArret").length;
+    await p.evaluate(() => { Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true }); document.dispatchEvent(new Event("visibilitychange")); });
+    await p.waitForFunction(() => !!document.querySelector(".gp-piste .gp-lance.pause"), null, { timeout: 10000 }).catch(() => {});
+    const auto = await lire(p);
+    ok(nArr === 2 && !auto.obj && !auto.p && /Reprendre/.test(auto.lancer), "quitter l'appli : pause automatique envoyée ; au retour, l'appli relit le serveur (en pause, plus d'objet)");
+    await p.evaluate(() => document.querySelector(".gp-piste .gp-lancer").click()); await p.waitForFunction(() => !!document.querySelector(".gp-piste .gp-arret"), null, { timeout: 10000 }).catch(() => {});
     await p.clock.fastForward(689000); await p.clock.runFor(1100);
     const r7 = await p.evaluate(async () => { const t = TRESORS.l[0], b = document.querySelector(".gp-piste .gp-tresor"); await trouverTresor(t, b); await new Promise(r => setTimeout(r, 300)); return { toast: document.querySelector("#toast").textContent, ch: chercheursTxt(TRESORS.l[0]) }; });
+    const jt = req.filter(c => c.action === "tresorTrouve").map(c => c.jeton)[0];
+    ok(typeof jt === "number" && jt > 0, "la trouvaille envoie le jeton de la période en cours");
     ok(/Trouvé en 1[23] min \d\d s · 🥇 le plus rapide pour l'instant/.test(r7.toast), "trouvaille (65 s + 11 min 29 s ; avec les 10 min de pause, on dépasserait 22 min) : « " + r7.toast.replace("✕", "").trim().slice(0, 60) + " »");
     ok(/Les plus rapides : 🥇 Kévin ⏱️ 1[23] min \d\d s · 2\. Clément ⏱️ 15 min 00 s/.test(r7.ch), "classement provisoire avec les temps : " + r7.ch);
     for (let i = 0; i < 10 && !(await p.evaluate(() => !!document.querySelector(".cn-rev"))); i++) { await p.clock.runFor(500); await p.waitForTimeout(200); }
@@ -89,21 +99,26 @@ const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance")
       poser(ch1, true); const fin = { k: debloques("Kévin").has("plaque.chercheuror"), c: debloques("Clément").has("plaque.chercheuror") };
       poser([{ nom: "Devlin", j: 20261215, s: 300 }].concat(ch1), true); const chg = { k: debloques("Kévin").has("plaque.chercheuror"), d: debloques("Devlin").has("plaque.chercheuror"), q: texteOrigineItem("Devlin", "plaque", "chercheuror").p };
       const fl = final => { TRESORS = { l: [{ circuit: "silverstone", saison: 2027, chrono: true, final, chercheurs: [{ nom: "Clément", j: 20270120, s: 400 }, { nom: "Kévin", j: 20270102, s: 5000 }] }], trouves: [], total: 0 }; const f = flairSaison(2027); return f && f.nom; };
-      return { pend, fin, chg, flP: fl(false), flF: fl(true) };
+      TRESORS = { l: [{ circuit: "abudhabi", saison: 2026, mois: 12, chrono: true, final: true, chercheurs: [{ nom: "Devlin", j: 20261210, s: 100 }] }], trouves: [], total: 0 }; const flDec = flairSaison(2027);
+      return { pend, fin, chg, flP: fl(false), flF: fl(true), flDec };
     });
     ok(!r.pend.k && r.pend.kn && /pour l'instant : Kévin/.test(r.pend.q) && /31 décembre à minuit/.test(r.pend.q), "pendant le mois : plaque normale tout de suite, la dorée pas encore (« pour l'instant : Kévin »)");
     ok(r.fin.k && !r.fin.c, "mois fini : la dorée au plus rapide (Kévin), pas au premier arrivé (Clément)");
     ok(!r.chg.k && r.chg.d && /le plus rapide \(5 min 00 s\)/.test(r.chg.q), "un temps plus petit trouvé plus tard dans le mois : la dorée revient à Devlin");
+    ok(r.flDec === null, "le trésor de décembre 2026 ne compte jamais dans le Flair 2027");
     ok(r.flP === null && r.flF === "Clément", "🔍 Flair : rien pendant le mois, puis 3 points au plus rapide (Clément) une fois le mois fini");
     ok(!err.length, "0 erreur JS " + JSON.stringify(err.slice(0, 3)));
     await ctx.close(); }
 
   /* ---------- 3. Annonce du vainqueur définitif, le mois suivant (une seule fois) ---------- */
   for (const sombre of [false, true]) { const tag = sombre ? "sombre" : "clair";
-    const serveur = { tresors: () => ({ ok: true, maintenant: Date.now(), trouves: ["abudhabi"], total: 1, tresors: [{ circuit: "abudhabi", saison: 2026, mois: 12, type: "molette", enigme: ENIGME, chrono: true, final: true, lance: true, actif: false, cumul: 492,
+    const serveur = { tresors: () => ({ ok: true, maintenant: Date.now(), trouves: ["abudhabi"], total: 1, tresors: [{ circuit: "abudhabi", saison: 2026, mois: 12, type: "trefle", enigme: ENIGME, chrono: true, final: true, lance: true, actif: false, cumul: 492,
       vainqueur: { nom: "Clément", s: 492 }, chercheurs: [{ nom: "Clément", j: 20261204, s: 492 }, { nom: "Kévin", j: 20261203, s: 754 }] }] }) };
     const { ctx, p, err } = await page(b, { quand: "2027-01-02T10:00:00", session: { role: "perso", nom: "Kévin" }, serveur, sombre });
-    const a = await p.evaluate(async () => { TRESORS = null; TRESORS_T = 0; await chargerTresors(); await new Promise(r => setTimeout(r, 900)); const o = document.querySelector(".tv-rev"), t = o ? o.innerText : ""; return t; });
+    const a = await p.evaluate(async () => { const autre = !!document.querySelector(".revel, .regles, .tuto");   // une autre fenêtre (ex. ouverture de la saison) : l'annonce attend son tour
+      document.querySelectorAll(".revel:not(.tv-rev), .regles, .tuto").forEach(x => x.remove()); await new Promise(r => setTimeout(r, 3000));
+      if (!document.querySelector(".tv-rev")) { TRESORS = null; TRESORS_T = 0; await chargerTresors(); await new Promise(r => setTimeout(r, 900)); }
+      const o = document.querySelector(".tv-rev"), t = o ? o.innerText : ""; return t + (autre ? " [attendait une autre fenêtre]" : ""); });
     ok(/Plaque dorée Chercheur de Noël/i.test(a) && /Clément en 8 min 12 s/i.test(a) && /résultat définitif/i.test(a), "2/1/2027 (" + tag + ") : annonce « 🎁 Plaque dorée Chercheur de Noël : Clément en 8 min 12 s »");
     await p.screenshot({ path: CAP + "/chrono-6-annonce-" + tag + ".png" });
     const deux = await p.evaluate(async () => { document.querySelectorAll(".tv-rev").forEach(x => x.remove()); annoncerVainqueurTresor(); return !!document.querySelector(".tv-rev"); });
@@ -111,7 +126,7 @@ const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance")
     await ctx.close(); }
 
   /* ---------- 4. Ancien serveur (sans chrono) : l'ancien fonctionnement, sans bouton ---------- */
-  { const serveur = { tresors: () => ({ ok: true, trouves: [], total: 0, tresors: [{ circuit: "abudhabi", saison: 2026, mois: 12, type: "molette", p: P_FAUX, enigme: ENIGME, chercheurs: [{ nom: "Clément", j: 20261202 }] }] }) };
+  { const serveur = { tresors: () => ({ ok: true, trouves: [], total: 0, tresors: [{ circuit: "abudhabi", saison: 2026, mois: 12, type: "trefle", p: P_FAUX, enigme: ENIGME, chercheurs: [{ nom: "Clément", j: 20261202 }] }] }) };
     const { ctx, p, err } = await page(b, { quand: "2026-12-03T10:00:00", session: { role: "perso", nom: "Kévin" }, serveur });
     await pageCourse(p); await p.waitForFunction(() => TRESORS && document.querySelector(".gp-piste .gp-enigme"), null, { timeout: 10000 }).catch(() => {});
     const r = await p.evaluate(() => ({ lancer: !!document.querySelector(".gp-piste .gp-lancer"), obj: !!document.querySelector(".gp-piste .gp-tresor"), ch: chercheursTxt(TRESORS.l[0]), or: debloques("Clément").has("plaque.chercheuror") }));
@@ -123,9 +138,16 @@ const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance")
     const r = await p.evaluate(async () => { ouvrirRegles("gp"); await new Promise(r => setTimeout(r, 300)); const li = document.querySelector("#rg-tresor"), t = li ? li.innerText : ""; document.querySelectorAll(".regles").forEach(x => x.remove());
       const c = JSON.parse(JSON.stringify(COUPE_EX)); c.exemple = false; Object.assign(c.eclats[0], { s: 754, rang: 2, final: false }); Object.assign(c.eclats[1], { s: 300, rang: 1, final: true }); Object.assign(c.eclats[2], { s: 540, rang: 4, final: true }); ouvrirCoupe(c); await new Promise(r => setTimeout(r, 300));
       const co = document.querySelector(".coupe-b").innerText, cl = i => { const x = document.querySelector('.coupe-b .cb-svg [data-ec="' + i + '"]'); return (x.getAttribute("class").match(/m-\w+/) || ["m-normal-absent"])[0]; }, m = [0, 1, 2].map(cl).join(); document.querySelectorAll(".coupe-b").forEach(x => x.remove()); return { t, co, m }; });
-    ok(/Je lance ma recherche/.test(r.t) && /Pause/.test(r.t) && /à chaque reprise, tu repars du départ/i.test(r.t) && /plus rapide gagne/i.test(r.t) && /minuit/.test(r.t) && /argent/.test(r.t) && /bronze/.test(r.t) && /11/.test(r.t) && /21/.test(r.t), "règles : bouton, pause, « à chaque reprise, tu repars du départ », le plus rapide gagne, attribution à minuit, indices du 11 et du 21");
+    ok(/Je lance ma recherche/.test(r.t) && /Mettre en pause/.test(r.t) && /quittes l'appli/.test(r.t) && /à chaque reprise, tu repars du départ/i.test(r.t) && /plus rapide gagne/i.test(r.t) && /minuit/.test(r.t) && /argent/.test(r.t) && /bronze/.test(r.t) && /11/.test(r.t) && /21/.test(r.t), "règles : bouton, pause, « à chaque reprise, tu repars du départ », le plus rapide gagne, attribution à minuit, indices du 11 et du 21");
     ok(/trouvé en 12 min 34 s · 2e plus rapide · 🥈 éclat argent pour l'instant/.test(r.co) && /trouvé en 5 min 00 s · 🥇 le plus rapide · 🥇 éclat or(?! pour)/.test(r.co) && /trouvé en 9 min 00 s · 4e plus rapide · éclat normal/.test(r.co) && r.m === "m-argent,m-or,m-normal-absent", "Coupe : éclat or / argent / bronze / normal selon le temps (« pour l'instant » pendant le mois), liseré de couleur sur la coupe " + r.m);
     ok(!err.length, "0 erreur JS " + JSON.stringify(err.slice(0, 3)));
+    await ctx.close(); }
+
+  /* ---------- 5 bis. Règles de décembre (tour de chauffe) : rien de 2027 ---------- */
+  for (const quand of ["2026-12-03T10:00:00", "2026-12-20T10:00:00", "2026-12-31T20:00:00"]) {
+    const { ctx, p, err } = await page(b, { quand, session: { role: "perso", nom: "Kévin" } });
+    const r = await p.evaluate(async () => { ouvrirRegles("gp"); await new Promise(r => setTimeout(r, 300)); const o = document.querySelector(".regles"), li = document.querySelector("#rg-tresor"); return { tout: o ? o.innerText : "", li: li ? li.innerText : "" }; });
+    ok(/plaque dorée Chercheur de Noël/.test(r.li) && /Mettre en pause/.test(r.li) && !/éclat|Flair/i.test(r.tout) && !err.length, quand.slice(0, 10) + " : règles d'un joueur : la plaque dorée au plus rapide, aucun mot « éclat » ni « Flair »");
     await ctx.close(); }
 
   /* ---------- 6. Aperçu admin (cachette d'EXEMPLE) : parcours complet + captures 390 px clair / sombre ---------- */
@@ -146,12 +168,22 @@ const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance")
     ok(z0 === 1 && /⏱️ 6 min 4\d s/.test(c.chr) && c.op > .5, "aperçu (" + tag + ") : au départ la caméra est à la vue d'ensemble ; le chrono tourne (« " + c.chr.slice(0, 14) + " ») ; l'objet d'exemple se montre tout près");
     await p.evaluate(() => document.querySelector(".gp-piste .gp-enigme").classList.add("ouverte"));
     await p.locator("#gp-piste").screenshot({ path: CAP + "/chrono-2-chrono-" + tag + ".png" });
+    const croise = () => p.evaluate(() => { const j = document.querySelector(".gp-piste .p3-joy"); if (!j || j.hidden || !j.getBoundingClientRect().width) return { vu: false };
+      const a = j.getBoundingClientRect(), sur = [...document.querySelectorAll(".gp-lance button, .gp-btns button, .gp-vues2 button, .gpp-bar button, .gpp-h button, .gp-tresor-appel, .gp-jauge")].filter(x => { const r = x.getBoundingClientRect(); return r.width && r.left < a.right && r.right > a.left && r.top < a.bottom && r.bottom > a.top; }).map(x => x.textContent.trim().slice(0, 20));
+      return { vu: true, sur, haut: Math.round(a.top - document.querySelector("#gp-piste").getBoundingClientRect().top) }; });
+    const j1 = await croise();
+    ok(j1.vu && !j1.sur.length && j1.haut <= 14, "aperçu (" + tag + ") : joystick en haut à droite, ne couvre aucun bouton (pause, Carte/Visite/Plein écran) " + JSON.stringify(j1));
+    await p.evaluate(() => ouvrirPleinGP(saisonCourante() || 2026)); await p.waitForTimeout(1500); await p.evaluate(() => apPres()); await p.waitForTimeout(1800);
+    const j3 = await croise(); await p.screenshot({ path: CAP + "/chrono-2b-plein-ecran-" + tag + ".png" });
+    ok(j3.vu && !j3.sur.length, "aperçu (" + tag + ") · plein écran : le joystick ne couvre aucun bouton (pause, barre du haut) " + JSON.stringify(j3));
+    await p.evaluate(() => fermerPleinGP()); await p.waitForTimeout(1000); await p.evaluate(() => apPres()); await p.waitForTimeout(1600);
     // ⏸️ pause tout près de la cachette : l'objet disparaît
     await p.evaluate(() => document.querySelector(".gp-piste .gp-arret").click()); await p.clock.runFor(600); await p.waitForTimeout(300);
     const pz = await p.evaluate(() => ({ obj: !!document.querySelector(".gp-piste .gp-tresor"), p: !!TRESOR_APERCU.F.p, zoom: GP_INST.api.zoom(), t: (document.querySelector(".gp-piste .gp-lance.pause") || {}).textContent || "" }));
     ok(!pz.obj && !pz.p && /tu repars du départ/.test(pz.t), "aperçu (" + tag + ") : ⏸️ en pause tout près de la cachette : plus d'objet, plus de position ; « à chaque reprise, tu repars du départ »");
     await p.evaluate(() => document.querySelector(".gp-piste .gp-enigme").classList.add("ouverte"));
     await p.locator("#gp-piste").screenshot({ path: CAP + "/chrono-3-pause-" + tag + ".png" });
+    const j2 = await croise(); ok(!j2.vu || !j2.sur.length, "aperçu (" + tag + ") : en pause, le joystick ne couvre pas « ▶️ Reprendre » " + JSON.stringify(j2));
     await p.clock.fastForward(3600000);
     await p.evaluate(() => document.querySelector(".gp-piste .gp-lancer").click()); await p.clock.runFor(600); await p.waitForTimeout(300);
     const rz = await p.evaluate(() => ({ zoom: GP_INST.api.zoom(), obj: !!document.querySelector(".gp-piste .gp-tresor") }));
@@ -160,7 +192,7 @@ const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance")
     await p.evaluate(async () => { const b = document.querySelector(".gp-piste .gp-tresor"); await trouverTresor(TRESOR_EL.t, b); });
     await p.clock.runFor(1500); await p.waitForTimeout(500);
     const e = await p.evaluate(() => { const o = document.querySelector(".cb-rev"), d = document.querySelector(".cb-or"); return { t: o ? o.innerText : "", or: !!d }; });
-    ok(/Trouvé en 1[23] min \d\d s · 🥇 le plus rapide pour l'instant/i.test(e.t) && /attribué le dernier jour à minuit/i.test(e.t) && /éclat or pour l'instant/i.test(e.t) && !e.or, "aperçu (" + tag + ") : trouvaille en 12 min 3x s (pause d'1 h non comptée) : éclat NORMAL tout de suite, « 🥇 le plus rapide pour l'instant », pas de cérémonie dorée " + JSON.stringify(e.t.slice(0, 200)));
+    ok(/Trouvé en 1[23] min \d\d s · 🥇 le plus rapide pour l'instant/i.test(e.t) && /à la fin du mois \(minuit, le soir du dernier jour\)/i.test(e.t) && /éclat or pour l'instant/i.test(e.t) && !e.or, "aperçu (" + tag + ") : trouvaille en 12 min 3x s (pause d'1 h non comptée) : éclat NORMAL tout de suite, « 🥇 le plus rapide pour l'instant », pas de cérémonie dorée " + JSON.stringify(e.t.slice(0, 200)));
     await p.screenshot({ path: CAP + "/chrono-4-trouvaille-" + tag + ".png" });
     await p.evaluate(() => { document.querySelectorAll(".cb-rev, .revel, .coupe-b").forEach(x => x.remove()); ceremonieChercheurNoel(1, 754); });
     await p.waitForTimeout(900); await p.screenshot({ path: CAP + "/chrono-5-ceremonie-noel-" + tag + ".png" });
