@@ -1686,6 +1686,46 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .cb-tps { font-size: 13.5px; } .cb-tps b { font-variant-numeric: tabular-nums; } .cb-tps small { display: block; margin-top: 3px; font-size: 11.5px; opacity: .8; }
 .cbo-c .cb-tps { color: #F4F5F8; } .cbo-c .cb-tps b { color: #F7CF55; }
 .cn-rang { margin-top: -4px !important; font-size: 15px !important; font-weight: 800; color: #F7CF55 !important; }
+/* v20.84 · éclats fer (gris sombre, un peu rouillé) et pierre (brute, mate) */
+.cb-ec.m-fer { stroke: #8A6A58; stroke-width: 1.6; stroke-dasharray: 2.2 .8; } .cb-ec.m-pierre { stroke: #9C968C; stroke-width: 1.4; stroke-dasharray: .9 .9; }
+/* v20.84 · ⏱️ classement du trésor en direct (encadré, fenêtre, Coupe) */
+.gp-enigme.ouverte { max-height: calc(100% - 16px); overflow-y: auto; overscroll-behavior: contain; } .gp-piste.v2 .gp-enigme.ouverte { max-height: calc(100% - 16px - var(--st, 0px)); overscroll-behavior: contain; }   /* v20.84 : avec le classement, l'encadré ouvert défile au lieu de sortir de la piste */
+.gp-piste.avec-enigme:not(.gp-plein *) .gp-enigme.ouverte { max-height: calc(100% - 104px - var(--st, 0px)); }   /* v20.84 : en petite vue, l'encadré ouvert s'arrête sous le joystick (en haut à droite) */
+.gp-enigme .tc-l li { padding: 2px 6px; font-size: 11.5px; } .gp-enigme .tc-md { font-size: 14px; } .gp-enigme .tc-md.tc-n { width: 17px; height: 17px; font-size: 10px; }
+.tc-cl { margin: 4px 0 2px; white-space: normal; } .tc-t { display: block; font-size: 12px; margin-bottom: 3px; }
+.tc-l { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.tc-l li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 6px; padding: 3px 6px; border-radius: 8px; background: rgba(127,127,127,.12); font-size: 12.5px; }
+.tc-l li.moi { background: rgba(247,207,85,.22); box-shadow: inset 0 0 0 1px rgba(247,207,85,.55); }
+.tc-l .tc-nom { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tc-l .tc-tps { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tc-l .tc-tard { grid-column: 2 / -1; font-size: 10.5px; opacity: .75; }
+.tc-md { font-size: 16px; line-height: 1; text-align: center; }
+.tc-md.tc-n { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font: 800 11px/1 var(--f-text); background: rgba(127,127,127,.3); }
+.tc-md.m-fer { background: radial-gradient(circle at 35% 30%, #8E949B, #4A4F56 60%, #6B4A36); color: #F1ECE8; }
+.tc-md.m-pierre { background: #A49C90; color: #2E2A24; }
+.tc-pal { font-weight: 600; opacity: .8; white-space: nowrap; } .tc-l .tc-tps { text-align: right; white-space: normal; }
+.tr-paliers { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; } .tr-paliers li { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+.tr-paliers b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--panel-2, rgba(127,127,127,.15)); border: 1px solid var(--rule, rgba(127,127,127,.3)); font-size: 11px; }
+.cn-pal { margin: -6px 0 2px !important; font-size: 13px !important; opacity: .85; }
+.tc-etat { display: block; margin-top: 3px; font-size: 10.5px; opacity: .85; } .tc-cl.fin .tc-etat { font-weight: 700; opacity: 1; }
+.tc-aide, .tc-voir { margin-top: 5px; padding: 5px 10px; border-radius: 999px; border: 1px solid currentColor; background: transparent; color: inherit; font: 700 11.5px/1.1 var(--f-text); cursor: pointer; opacity: .9; }
+.tc-b .rg-corps { padding: 12px 16px 18px; } .tc-b .tc-cl { margin: 0 0 10px; } .tc-b .tc-l li { font-size: 14px; padding: 6px 8px; } .tc-b .tc-t { font-size: 15px; margin-bottom: 6px; } .tc-b .tc-etat { font-size: 12.5px; }
+.tc-b .btn.tc-aide { opacity: 1; }
+.gp-tresor-appel .tc-mini { color: #FFE08A; opacity: 1; }
+.tv-fige { font-weight: 800; color: #F7CF55; }
+/* v20.84 · la règle du trésor en images : 4 étapes, gains, quand, coincé */
+.tr-regle { margin: 8px 0 2px; }
+.tr-etapes { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tr-e { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 8px 8px 8px 10px; border-radius: 12px; background: var(--panel-2, rgba(127,127,127,.12)); border: 1px solid var(--rule, rgba(127,127,127,.25)); }
+.tr-n { position: absolute; top: 6px; right: 8px; font: 800 11px/1 var(--f-text); opacity: .55; }
+.tr-i { font-size: 24px; line-height: 1.1; } .tr-e b { font-size: 13px; line-height: 1.2; } .tr-e small { font-size: 11.5px; line-height: 1.3; color: var(--ink-2, inherit); }
+.tr-k { margin: 12px 0 4px !important; font-weight: 800; font-size: 13.5px; }
+.tr-p { margin: 4px 0 !important; font-size: 12.5px; line-height: 1.4; }
+.tr-noel { margin: 4px 0 6px !important; padding: 6px 10px; border-radius: 10px; background: rgba(46,196,182,.14); font-size: 12.5px; }
+.tr-gains { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 5px; }
+.tr-g { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; border: 1px solid var(--rule, rgba(127,127,127,.3)); background: var(--panel, transparent); }
+.tr-g.m-or { border-color: #E8B04A; } .tr-g.m-argent { border-color: #AEB8C4; } .tr-g.m-bronze { border-color: #C47A3E; } .tr-g.m-fer { border-color: #6B5446; } .tr-g.m-pierre { border-color: #A49C90; border-style: dashed; }
+@media (max-width: 340px) { .tr-etapes { grid-template-columns: 1fr; } }
 .gp-tresor-appel { display: none; position: absolute; left: 8px; bottom: 8px; z-index: 3; max-width: calc(100% - 16px); padding: 6px 12px; border-radius: 12px; border: 1px solid rgba(255,224,138,.45); background: rgba(8,10,14,.74); color: #F3E6C4; font: 500 12px/1.3 var(--f-text); text-align: left; cursor: pointer; }
 .gp-tresor-appel b { color: #FFE08A; } .gp-tresor-appel small { display: block; opacity: .8; font-size: 10.5px; }
 .gp-piste.en2d .gp-tresor-appel { display: block; }
@@ -2932,6 +2972,9 @@ body:has(.av-ov) .toast, body:has(.av-case) .toast { z-index: 99; }
 .ecu-hasard { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
 .ecu-hasard .btn { flex: 1 1 auto; min-height: 40px; }
 .itd-k { display: block; font: 800 11px/1.2 var(--f-text); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 2px; }
+.plaque.pl-drapeau2027 { color: #FFF0F0; background: linear-gradient(180deg, #5A1F24, #3A1216); border: 1px solid #1E0709; box-shadow: inset 0 0 0 1.5px #E5484D, 0 1px 2px rgba(0,0,0,.3); }
+.plaque.pl-flamme2027 { color: #FFF3E8; background: linear-gradient(180deg, #5C2C0C, #3A1A06); border: 1px solid #1E0C02; box-shadow: inset 0 0 0 1.5px #FF7A1A, 0 1px 2px rgba(0,0,0,.3); }
+.plaque.pl-flair2027 { color: #E6FBF8; background: linear-gradient(180deg, #164A46, #0C2E2B); border: 1px solid #061A18; box-shadow: inset 0 0 0 1.5px #2EC4B6, 0 1px 2px rgba(0,0,0,.3); }   /* v20.84 · 🔍 Flair 2027, gardé pour toujours */
 .plaque.pl-recrue { color: #E9F7F0; background: linear-gradient(180deg, #34424F, #1F2932); border: 1px solid #0E151B; box-shadow: inset 0 0 0 1.5px #9FE3C4, 0 1px 2px rgba(0,0,0,.3); }
 .it-w.it-bloque .it-q { width: 26px; height: 26px; top: 3px; left: 3px; font-size: 14px; font-weight: 800; color: var(--ink); border: 1.5px solid var(--ink-2); background: var(--panel); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
 /* v20.80 · l'affichette « Nouveau : choisis l'affichage des décors 3D » (js/3-podium.js, affichette3D) : une fois par appareil */

@@ -121,7 +121,7 @@ const course = async (p, vue) => p.evaluate(async vue => {
     // 5 bis. Titres, à part
     await ouvrir(p, "titres");
     const ti = await p.evaluate(() => ({ t: document.querySelector("#vit-titres").innerText, svg: document.querySelectorAll("#vit-titres .cour-i .titre-svg").length }));
-    ok(/sans objet/.test(ti.t) && ti.svg === 3, "⚔️ Titres à part, sans objet (3 emblèmes)" + tag);
+    ok(/ils se volent/.test(ti.t) && /gardés en fin de saison/.test(ti.t) && /Drapeau 2027/.test(ti.t) && ti.svg === 3, "⚔️ Titres à part : ils se volent, gardés en fin de saison (plaques souvenirs), 3 emblèmes" + tag);
     if (!sombre) await p.screenshot({ path: DOSSIER + "/titres-clair.png", fullPage: true });
     // 6. Écurie : d'où vient cet objet
     const o = await p.evaluate(() => { const t = (q, s, i) => { const r = texteOrigineItem(q, s, i); return r.t + " | " + r.p; };
