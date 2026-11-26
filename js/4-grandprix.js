@@ -937,7 +937,8 @@ async function lancerRecherche(t, bt, pi) {
   if (rep && rep.ok && rep.actif) {
     const reprise = !!t.lance;
     Object.assign(t, { lance: true, actif: true, depuis: rep.depuis, cumul: +rep.cumul || 0 }); if (rep.p) t.p = rep.p;
-    if (typeof rep.enigme === "string" && rep.enigme) Object.assign(t, { enigme: rep.enigme, indice2: rep.indice2 || null, enigmeCachee: false });   // v20.86 : l'énigme arrive avec le départ (serveur V96) if (TRESORS && typeof rep.maintenant === "number") TRESORS.decal = rep.maintenant - Date.now();
+    if (typeof rep.enigme === "string" && rep.enigme) Object.assign(t, { enigme: rep.enigme, indice2: rep.indice2 || null, enigmeCachee: false });   // v20.86 : l'énigme arrive avec le départ (serveur V97)
+    if (TRESORS && typeof rep.maintenant === "number") TRESORS.decal = rep.maintenant - Date.now();
     if (window.SONS) { try { SONS.vibrer([30, 40, 30]); } catch (e) { /* sans vibreur */ } }
     toast(rep.deja ? "⏱️ Ta recherche est déjà lancée : le chrono tourne." : reprise ? "▶️ Reprise : le chrono repart, et toi aussi, du départ du circuit." : "⏱️ C'est parti ! Le chrono tourne : trouve l'objet en Visite 3D.");
     cameraAuDepart(); poserTresorDOM(document);
@@ -952,7 +953,8 @@ async function arreterRecherche(t, bt) {
   if (bt) { bt.disabled = true; bt.innerHTML = "⏸️ Pause…"; }
   const rep = TRESOR_APERCU ? TRESOR_APERCU.arreter(t) : await posterAdmin({ action: "tresorArret", circuit: t.circuit });
   if (rep && rep.ok) { Object.assign(t, { actif: false, depuis: null, cumul: +rep.cumul || chronoDe(t) }); delete t.p;
-    if (!TRESOR_APERCU && t.enigmeCachee !== undefined) Object.assign(t, { enigme: "", indice2: null, enigmeCachee: true });   // v20.86 : en pause, l'énigme et l'indice disparaissent aussi if (TRESORS && typeof rep.maintenant === "number") TRESORS.decal = rep.maintenant - Date.now();
+    if (!TRESOR_APERCU && t.enigmeCachee !== undefined) Object.assign(t, { enigme: "", indice2: null, enigmeCachee: true });   // v20.86 : en pause, l'énigme et l'indice disparaissent aussi
+    if (TRESORS && typeof rep.maintenant === "number") TRESORS.decal = rep.maintenant - Date.now();
     toast("⏸️ Recherche en pause à " + dureeChrono(t.cumul) + ". Reprends quand tu veux : tu repartiras du départ du circuit."); poserTresorDOM(document); return; }
   if (bt) { bt.disabled = false; bt.innerHTML = "⏸️ Mettre en pause"; }
   toast((rep && rep.message) || "Pause non enregistrée : réessaie.");
