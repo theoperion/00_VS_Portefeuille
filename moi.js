@@ -3176,10 +3176,16 @@ const NOM_MOI = "Mon portefeuille";
 function fenMoi(per) {
   const h = M && !M.simple && M.historique, cols = h && h.cols || [], rows = h && h.rows || [], ki = cols.indexOf("ip"); if (ki < 0 || rows.length < 2) return null;
   const c = { d: [], v: [] }; rows.forEach((r, i) => { if (!(r[ki] > 0)) return; if (c.v.length && r[ki] === c.v[c.v.length - 1] && i < rows.length - 1) return; c.d.push(+r[0]); c.v.push(r[ki]); });   // une valeur par séance
-  const auj = +isoJour(new Date()).replace(/-/g, ""), n = c.v.length, direct = LIVEJ !== null && n && c.d[n - 1] < auj;
+  const auj = +isoJour(new Date()).replace(/-/g, ""), n = c.v.length;
+  /* v21.14 (Théo, 26/11, fichier de Kévin) : le point « en direct » (dernier point × variation du jour) seulement si le dernier point de
+     l'historique est la séance d'avant (≤ 4 jours : week-end, férié). Sinon (historique mensuel), on ne collait que la variation du jour
+     au relevé du mois dernier : la courbe oubliait tout le mois. */
+  const direct = LIVEJ !== null && n && c.d[n - 1] < auj && (dateNum(auj) - dateNum(c.d[n - 1])) / 864e5 <= 4;
   const fin = direct ? dateNum(auj) : dateNum(c.d[n - 1]), num = d => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
   let i0 = -1;
-  if (per === "5j") i0 = Math.max(0, n - 1 - (direct ? 4 : 5));
+  if (per === "5j") { i0 = Math.max(0, n - 1 - (direct ? 4 : 5));
+    /* v21.14 : « 5 j » = les 5 dernières séances, jamais plus loin que 9 jours (historique mensuel : pas de courbe plutôt que 5 MOIS) */
+    const lim = new Date(fin); lim.setDate(lim.getDate() - 9); const cl = num(lim); while (i0 < n - 1 && c.d[i0] < cl) i0++; }
   else if (per === "tout") i0 = 0;
   else { const d0 = debutPer(per, fin), c0 = num(d0); c.d.forEach((d, i) => { if (d <= c0) i0 = i; });
     /* v20.65 (Clément) : historique à trous (photos mensuelles, puis quotidiennes) : pas de point ≤ 6 j avant le début →
