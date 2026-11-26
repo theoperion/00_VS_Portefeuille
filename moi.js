@@ -402,6 +402,9 @@ function injecterStyle() {
 .nt-l { display: grid; gap: 8px; }
 .nt-l .m-h4 { margin: 6px 0 0; }
 .nt { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 14px; border: 1px solid var(--rule); background: var(--panel); }
+/* v21.06 · cours qui ne se met plus à jour (Boursorama muet ou cours Google figé) : petit bandeau sur Aujourd'hui */
+.m-secours { margin: 6px 2px 10px; padding: 9px 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--rule)); background: color-mix(in srgb, var(--gold) 10%, var(--panel)); font-size: 13px; line-height: 1.4; overflow-wrap: anywhere; }
+.m-secours p { margin: 0; } .m-secours p + p { margin-top: 6px; }
 .nt .nt-ic { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 14px; }
 .nt.orange .nt-ic { background: color-mix(in srgb, var(--gold) 20%, transparent); color: var(--gold); } .nt.orange { border-color: color-mix(in srgb, var(--gold) 45%, var(--rule)); }
 .nt.rouge .nt-ic { background: color-mix(in srgb, var(--down) 18%, transparent); color: var(--down); } .nt.rouge { border-color: color-mix(in srgb, var(--down) 45%, var(--rule)); }
@@ -1474,7 +1477,7 @@ function rendre() {
   const bandeauAncien = SRC === "cache" ? '<div class="demo-band">' + (enCours ? "Mise à jour de ton fichier…" : erreur ? "Ton fichier n'a pas répondu (" + esc(String(erreur).replace(/\.$/, "")) + ") · chiffres de la dernière ouverture" + (ageCopie() ? " (" + ageCopie() + ")" : "") + "." : "Chiffres de la dernière ouverture · mise à jour…") + " <small>" + esc(M.majTexte || "") + "</small></div>" : "";
   v.innerHTML =
     '<div class="seg m-onglets" role="tablist" aria-label="Moi">' + ONGLETS.map(([k, l]) => '<button type="button" role="tab" data-m-ong="' + k + '" aria-pressed="' + (o === k) + '" aria-selected="' + (o === k) + '">' + l + "</button>").join("") + "</div>" +
-    bandeau + (o === "jour" ? htmlAFaire() : "")   /* v17.2 (Théo) : plus de phrase-bilan ; les échéances passent dans la cloche */ +   /* v16.95 : calendrier unique des échéances */   // v16.87 : phrase-bilan + boîte unique « À faire » (ailleurs, la cloche suffit)
+    bandeau + (o === "jour" ? htmlCoursSecours() + htmlAFaire() : "")   /* v17.2 (Théo) : plus de phrase-bilan ; les échéances passent dans la cloche */ +   /* v16.95 : calendrier unique des échéances */   // v16.87 : phrase-bilan + boîte unique « À faire » (ailleurs, la cloche suffit)
     ({ jour: M.simple ? htmlJourSimple : htmlJour, patrimoine: htmlPatrimoine, stats: htmlStats, missions: htmlMissions, artema: htmlArtema })[o]();
   v.querySelectorAll("[data-m-ong]").forEach(b => b.addEventListener("click", () => { PREF.onglet = b.dataset.mOng; garderPref(); rendre(); window.scrollTo(0, 0); }));
   brancherAFaire(v); brancherEcheances(v);
@@ -1607,6 +1610,24 @@ function anomaliesVues() {
   if (!enAttenteLignes()) return a;
   const parts = a.replace(/^[⚠\s]+/u, "").split(/\s+▸\s+/).filter(p => !/^Relevé automatique en retard/.test(p.trim()));
   return parts.length ? "⚠ " + parts.join("     ▸ ") : "";
+}
+/* v21.06 (Théo, 26/11) · bandeau « cours qui ne se met plus à jour » : envoyé par le fichier (coursAlerte : code, nom, date, source ; jamais un montant).
+   Boursorama muet depuis plus de 5 jours (cours de secours, dernier cours ou cours manuel) ou cours Google figé / en erreur plus de 5 jours de bourse.
+   Pour les joueurs : « Préviens Théo » ; pour Théo (admin) : ce qu'il faut faire. */
+function texteCoursSecours(a, admin) {
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(a.depuis || "") ? a.depuis.slice(8, 10) + "/" + a.depuis.slice(5, 7) : "";
+  const nom = a.nom || a.code || "un support", depuis = d ? " depuis le " + d : "";
+  if (a.source === "google") return "⚠️ Le cours de " + nom + " ne se met plus à jour" + depuis + (a.motif === "erreur" ? " (cours Google en erreur)" : "") + "." +
+    (admin ? " Vérifie son ticker dans Paramètres › Mes actifs, ou mets le cours manuel." : " Préviens Théo pour qu'il regarde.");
+  const util = a.source === "suiveur" ? "cours de secours utilisé" + (a.suivi ? ", " + a.suivi + " suivi via Google" : "") : a.source === "dernier" ? "dernier cours connu utilisé" : "cours manuel utilisé";
+  return "⚠️ Le cours de " + nom + " ne se met plus à jour automatiquement" + depuis + " (" + util + ")." +
+    (admin ? " Vérifie CoursBourso (testerBourso dans l'éditeur Apps Script) ou mets le cours manuel dans Paramètres › Mes actifs." : " Préviens Théo pour qu'il regarde.");
+}
+function htmlCoursSecours() {
+  const l = M && Array.isArray(M.coursAlerte) ? M.coursAlerte.filter(a => a && (a.code || a.nom)) : [];
+  if (!l.length) return "";
+  const Dv = dVersus(), admin = !!(Dv && Dv.session && Dv.session.role === "admin");   // Théo, même en mode admin coupé ou en vue joueur
+  return '<div class="m-secours" role="status">' + l.map(a => "<p>" + esc(texteCoursSecours(a, admin)) + "</p>").join("") + "</div>";
 }
 function lignesTenues() {
   const out = [];
