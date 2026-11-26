@@ -636,6 +636,14 @@ const ACCESSOIRES_TETE = {
       '<circle cx="29" cy="6.6" r="5.8" fill="#B57BFF" opacity=".32"/><path d="M29 .6L32.8 6.2 29.8 12.8 25.6 7Z" fill="url(#' + u + 'mv)" stroke="#2A0F5C" stroke-width=".85" stroke-linejoin="round"/><path d="M29 .6L29.8 12.8M25.6 7L32.8 6.2" stroke="#fff" stroke-width=".4" opacity=".65"/>' +
       [[23.6, 2.4, 1.1], [33.2, 9, .9], [12.6, 4.2, .8]].map(([x, y, r]) => '<path d="M' + x + " " + (y - r * 1.8) + "L" + (x + r * .35) + " " + (y - r * .35) + "L" + (x + r * 1.8) + " " + y + "L" + (x + r * .35) + " " + (y + r * .35) + "L" + x + " " + (y + r * 1.8) + "L" + (x - r * .35) + " " + (y + r * .35) + "L" + (x - r * 1.8) + " " + y + "L" + (x - r * .35) + " " + (y - r * .35) + 'Z" fill="#FFF3C4"/>').join("") })
 };
+/** 🎅 Avent 26/11 · la couronne de houx dorée (roi des jeux de Noël 2026) : un cercle d'or sur le front, feuilles de houx dorées, baies rouges, une étoile */
+function COURONNE_HOUX() {
+  const fe = (x, y, a) => '<path d="M0-2.3L.8-1.4 1.5-1.6 1.2-.5 1.6.4.8.5 0 2.3-.8.5-1.6.4-1.2-.5-1.5-1.6-.8-1.4Z" transform="translate(' + x + " " + y + ") rotate(" + a + ')" fill="#F2C94C" stroke="#6B4B0C" stroke-width=".35"/>';
+  return { dessus: '<path d="M11 11.4C14.2 7.6 25.8 7.6 29 11.4" stroke="#7A4A0C" stroke-width="1.9" fill="none"/><path d="M11 11.4C14.2 7.6 25.8 7.6 29 11.4" stroke="#F7CF55" stroke-width="1.1" fill="none"/>' +
+    [[12.2, 10.4, -55], [14.6, 8.6, -30], [17.2, 7.7, -12], [22.8, 7.7, 12], [25.4, 8.6, 30], [27.8, 10.4, 55]].map(([x, y, a]) => fe(x, y, a)).join("") +
+    '<circle cx="19.1" cy="7.6" r="1" fill="#E0213A" stroke="#7A0E1C" stroke-width=".3"/><circle cx="20.9" cy="7.6" r="1" fill="#E0213A" stroke="#7A0E1C" stroke-width=".3"/><circle cx="20" cy="6.6" r="1" fill="#E0213A" stroke="#7A0E1C" stroke-width=".3"/>' +
+    '<path d="M20 2.2L20.6 3.9 22.3 4.4 20.6 4.9 20 6.6 19.4 4.9 17.7 4.4 19.4 3.9Z" fill="#FFF6CC" stroke="#9A6716" stroke-width=".3"/>' };
+}
 /** Clé de l'accessoire du mois (null = aucun) : bonnet de Noël en décembre 2026, puis celui du circuit du mois, jamais avant le 1er du mois.
  *  Aperçu admin (double sécurité) : « versus.apercuAcc » en mémoire de session, seulement si apercuAutorise(). */
 function accessoireDuMois(quand) {
@@ -692,8 +700,9 @@ const ECLAT_ACC = (x, y, r, cl) => '<path class="' + cl + '" d="M' + x + " " + (
 function svgTete(nom, eq, statique) {
   const t = decodeTete(eq.tete || presetTete(nom)), u = "tt" + (++NSVG);
   const SK = eq.skin && SKINS_TETE[eq.skin] ? SKINS_TETE[eq.skin](couleur(nom)) : null;   // V16.35 : accessoire du thème (cartes 2D)
-  const kAc = SK ? null : eq.acc !== undefined ? eq.acc : accessoireDuMois(), AC = kAc && ACCESSOIRES_TETE[kAc] ? ACCESSOIRES_TETE[kAc](couleur(nom), TETE.cheveux[t.cheveux], u) : null;   // v20.59 : accessoire du mois
-  const dore = !!AC && (eq.dore !== undefined ? !!eq.dore : eq.acc === undefined && leadersSaison().includes(nom)), neuf = !!AC && eq.acc === undefined && !statique && accessoireNeuf(kAc);   // v20.59 : doré du leader, scintillement du nouveau mois
+  const houx = !SK && eq.finition === "houx";   // 🎅 Avent 26/11 : la couronne de houx dorée du roi de Noël 2026, portée partout (classement, course, écurie) à la place de l'accessoire du mois
+  const kAc = SK || houx ? null : eq.acc !== undefined ? eq.acc : accessoireDuMois(), AC = houx ? COURONNE_HOUX() : kAc && ACCESSOIRES_TETE[kAc] ? ACCESSOIRES_TETE[kAc](couleur(nom), TETE.cheveux[t.cheveux], u) : null;   // v20.59 : accessoire du mois
+  const dore = !!AC && !houx && (eq.dore !== undefined ? !!eq.dore : eq.acc === undefined && leadersSaison().includes(nom)), neuf = !!AC && eq.acc === undefined && !statique && accessoireNeuf(kAc);   // v20.59 : doré du leader, scintillement du nouveau mois
   const acF = dore ? ' filter="url(#' + u + 'or)"' : "", defOr = dore ? '<filter id="' + u + 'or" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="table" tableValues=".36 .78 .97 1"/><feFuncG type="table" tableValues=".2 .52 .8 .97"/><feFuncB type="table" tableValues=".03 .1 .3 .72"/></feComponentTransfer></filter>' : "";
   const peau = TETE.peau[t.peau], ch = TETE.cheveux[t.cheveux], bc = TETE.cheveux[t.barbeC], ten = t.style === 5 ? couleur(nom) : TETE.tenues[t.couleur], des = TETE.tenues[t.dessous];
   const lead = !statique && saisonVisible() && leaderSaison() === nom, expr = lead ? 1 : t.expr, retard = -((hashTxt(nom) % 37) / 10).toFixed(1);

@@ -23,7 +23,7 @@ function fauxServeur(o, c) {
   if (o.horsLigne) return null;
   const t = new Date(o.serveur + "+01:00"), j = Number(o.serveur.slice(0, 10).replace(/-/g, "")), jd = j >= 20261201 && j <= 20261224 ? j % 100 : 0;
   const etat = () => { const r = { ok: true, ouvert: j >= 20261201, maintenant: t.getTime(), aujourdhui: j, cases: S.cases.slice(), mes: {} };
-    if (j >= 20261224) { r.dores = S.dores.slice(); r.doresFinal = j > 20261224; } if (j < 20261201) return { ok: true, ouvert: false, maintenant: t.getTime() }; return r; };
+    if (j >= 20261224) { r.dores = S.dores.slice(); r.doresFinal = j > 20261224; if (j > 20261224) r.gagnants = { roi: null, etoiles: {} }; } if (j < 20261201) return { ok: true, ouvert: false, maintenant: t.getTime() }; return r; };   // Avent 26/11 : le serveur attribue aussi le roi de Noël le 25 (ici : personne)
   if (c.action === "aventCase") {
     if (S.cases.includes(c.jour)) return Object.assign({ accepte: true, deja: true }, etat());
     if (c.jour !== jd) return Object.assign({ accepte: false, raison: c.jour > jd ? "pasEncore" : "manquee", message: "❄️ Case manquée : elle ne s'ouvrait que le " + c.jour + " décembre." }, etat());
@@ -45,10 +45,11 @@ async function page(b, o) {
     if (f.ouvertes) localStorage.setItem("versus.avent", JSON.stringify(f.ouvertes)); if (f.admin) sessionStorage.setItem("versus.adminOn", "1"); if (f.decal) localStorage.setItem("versus.aventDecal", String(f.decal)); }, { ouvertes: o.ouvertes, admin: o.admin, decal: o.decal });
   await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(o.attente || 3800);   // l'état du serveur arrive 2,5 s après le démarrage
   await p.evaluate(() => document.querySelectorAll(".tuto").forEach(x => x.remove()));   // les annonces du jour (Nouvelles règles…) : on les ferme, comme le pilote
+  await p.evaluate(() => { try { allerA("trophees"); } catch (e) { } }); await p.waitForTimeout(300);   // Avent 26/11 : le calendrier vit dans l'onglet Podium
   return { ctx, p, err, o };
 }
 const grille = () => { const c = cls => [...document.querySelectorAll(".av-c." + cls)].map(x => +x.dataset.av).sort((a, b) => a - b); return { manquee: c("manquee"), vue: c("vue"), jour: c("jour"), ferme: c("ferme"), libre: c("libre") }; };
-const entree = () => { const x = document.querySelector("#v-classement > .av-entree"); return x ? { t: x.innerText, pas: !!x.querySelector(".av-pas") } : null; };
+const entree = () => { const x = document.querySelector("#v-trophees > .av-entree"); return x ? { t: x.innerText, pas: !!x.querySelector(".av-pas") } : null; };
 const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-entree, .av-entree *")].filter(e => !e.closest(".av-neige") && !e.closest(".av-porte")).filter(e => { const r = e.getBoundingClientRect(); return r.width && (r.right > innerWidth + 1 || r.left < -1); }).map(e => e.className).slice(0, 5);
 (async () => {
   const b = await chromium.launch(), ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); };
@@ -124,7 +125,7 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
     ok(!err.length, "4 · 0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
   // 5 · du 25 au 31 : rien de nouveau (la 24 était la dernière) ; les cases ouvertes restent rejouables
   { const o = { tel: "2026-12-27T10:00:00", ouvertes: [1, 24], casesSrv: [1, 24] }, { ctx, p, err } = await page(b, o);
-    const r = await p.evaluate(() => { ouvrirAvent(); const g = (cls => [...document.querySelectorAll(".av-c." + cls)].map(x => +x.dataset.av)); return { e: document.querySelector(".av-entree").innerText, pas: !!document.querySelector(".av-entree .av-pas"), jour: g("jour"), vue: g("vue").sort((a, b) => a - b), m: g("manquee").length, ferme: g("ferme").length }; });
+    const r = await p.evaluate(() => { ouvrirAvent(); const g = (cls => [...document.querySelectorAll(".av-c." + cls)].map(x => +x.dataset.av)); return { e: document.querySelector(".av-entree").textContent,   /* la page est cachée sous le calendrier ouvert (Avent 26/11) : textContent */ pas: !!document.querySelector(".av-entree .av-pas"), jour: g("jour"), vue: g("vue").sort((a, b) => a - b), m: g("manquee").length, ferme: g("ferme").length }; });
     ok(/joyeux Noël/.test(r.e) && !r.pas && !r.jour.length && r.vue.join() === "1,24" && r.m === 22 && r.ferme === 0, "27/12 : pas de case du jour, pas de pastille ; 1 et 24 rejouables, les 22 autres manquées " + JSON.stringify(r));
     ok(!err.length, "5 · 0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
   // 5 bis · Noël sans avoir ouvert la 24 : « ton souvenir t'attend dans l'écurie » ; la case 24 manquée le redit ; la règle ne se répète plus

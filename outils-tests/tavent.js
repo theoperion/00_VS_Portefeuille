@@ -38,6 +38,7 @@ async function page(b, o) {
     if (f.ouvertes) localStorage.setItem("versus.avent", JSON.stringify(f.ouvertes)); if (f.admin) sessionStorage.setItem("versus.adminOn", "1"); }, { ouvertes: o.ouvertes, admin: o.admin });
   await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1200);
   await p.evaluate(() => document.querySelectorAll(".tuto").forEach(x => x.remove()));   // v20.74 : l'annonce du jour (Nouvelles règles) se ferme d'abord : le calendrier ne s'ouvre jamais par-dessus
+  await p.evaluate(() => { try { allerA("trophees"); } catch (e) { } }); await p.waitForTimeout(300);   // Avent 26/11 : le calendrier vit dans l'onglet Podium
   return { ctx, p, err, srv: o.srv, o };
 }
 const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-entree")].filter(e => !e.closest(".av-neige") && !e.closest(".av-porte")).filter(e => { const r = e.getBoundingClientRect(); return r.width && (r.right > innerWidth + 1 || r.left < -1); }).map(e => e.className).slice(0, 5);   // la neige (fixe) et les portes ouvertes en 3D sont rognées par leur cadre
@@ -54,7 +55,7 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
   for (const sombre of [false, true]) {
     const tag = sombre ? " (sombre)" : " (clair)";
     const { ctx, p, err } = await page(b, { quand: "2026-12-05T09:00:00", session: JOUEUR, sombre, ouvertes: [1, 2] });
-    const e = await p.evaluate(() => { const x = document.querySelector("#v-classement > .av-entree"); return x ? { t: x.textContent, pas: !!x.querySelector(".av-pas") } : null; });
+    const e = await p.evaluate(() => { const x = document.querySelector("#v-trophees > .av-entree"); return x ? { t: x.textContent, pas: !!x.querySelector(".av-pas") } : null; });
     ok(e && /case du 5/.test(e.t) && e.pas, "5/12 · l'entrée « Calendrier de l'Avent » en haut du Classement, avec la pastille de la case du jour " + JSON.stringify(e) + tag);
     if (!sombre) await p.screenshot({ path: DOSSIER + "/entree.png" });
     await p.click(".av-entree"); await p.waitForTimeout(400);
@@ -75,7 +76,7 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
     const apres = await p.evaluate(() => ({ c: !!document.querySelector(".av-case"), ov: !!document.querySelector(".av-ov"), v5: !!document.querySelector('.av-c.vue[data-av="5"]') }));
     ok(!apres.c && apres.ov && apres.v5, "un toucher en dehors ferme la case ; la porte 5 reste ouverte " + JSON.stringify(apres) + tag);
     await p.click(".av-ov .av-x"); await p.waitForTimeout(200);
-    const e2 = await p.evaluate(() => { const x = document.querySelector("#v-classement > .av-entree"); return x ? { t: x.textContent, pas: !!x.querySelector(".av-pas") } : null; });
+    const e2 = await p.evaluate(() => { const x = document.querySelector("#v-trophees > .av-entree"); return x ? { t: x.textContent, pas: !!x.querySelector(".av-pas") } : null; });
     ok(e2 && !e2.pas && /reviens demain/.test(e2.t), "après ouverture : plus de pastille, « reviens demain » " + JSON.stringify(e2) + tag);
     ok(!err.length, "0 erreur JS" + tag + " " + JSON.stringify(err));
     await ctx.close();
@@ -153,7 +154,7 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
     await p.click(".av-case [data-avj='go']"); await p.waitForTimeout(300);
     ok(await p.evaluate(() => document.querySelector(".avj-voile").hidden), "Rejouer relance une partie");
     ok(!err.length, "0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
-  // 4 bis · sans réseau : les jeux marchent, le record attend en file ; deja = on attend demain
+  // 4 bis · sans réseau : les jeux marchent, le record attend en file ; deja = on réessaie la minute d'après (Avent 26/11)
   { const o = { quand: "2026-12-10T09:00:00", session: JOUEUR }, { ctx, p, err } = await page(b, o); o.horsLigne = true;
     await p.evaluate(() => { ouvrirAvent(); ouvrirCaseAvent(10); document.querySelector(".av-case [data-avj='go']").click(); }); await p.waitForTimeout(200);
     await p.evaluate(() => mettreEnFileAvent("cadeaux", 99)); await p.waitForTimeout(800);
@@ -161,12 +162,12 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
     ok(f1.cadeaux && f1.cadeaux.s === 99, "hors ligne : le record de 99 attend dans la file de l'appareil " + JSON.stringify(f1));
     o.horsLigne = false; o.srv.deja.push("cadeaux"); await p.evaluate(() => envoyerFileAvent()); await p.waitForTimeout(800);
     const f2 = await p.evaluate(() => fileAvent());
-    ok(f2.cadeaux && f2.cadeaux.deja === 20261210, "réseau revenu mais déjà un envoi aujourd'hui : il repartira demain " + JSON.stringify(f2));
+    ok(f2.cadeaux && f2.cadeaux.apres > Date.parse("2026-12-10T09:00:00") && f2.cadeaux.apres <= Date.parse("2026-12-10T09:00:00") + 62000, "réseau revenu mais un record vient d'être écrit : il repartira la minute d'après (Avent 26/11, plus le lendemain) " + JSON.stringify(f2));
     ok(!err.length, "0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
   { const { ctx, p, err } = await page(b, { quand: "2026-12-24T09:00:00", session: JOUEUR });
     await p.evaluate(() => ouvrirAvent()); await p.waitForTimeout(800); await p.evaluate(() => ouvrirCaseAvent(24)); await p.waitForTimeout(1200);
     const r = await p.evaluate(() => { const z = document.querySelector(".av-case .av-records"); return z ? z.innerText : ""; });
-    ok(/records de Noël/i.test(r) && /Les cadeaux du traîneau[\s\S]*Kévin · 42/.test(r) && /Devlin et Théo · 18,2 s/.test(r) && /roi des jeux de Noël : Kévin/.test(r) && !/€|%/.test(r), "24/12 : la case 24 montre les records de la bande et le roi des jeux de Noël " + JSON.stringify(r));
+    ok(/records de Noël/i.test(r) && /Les cadeaux du traîneau[\s\S]*Kévin · 42/.test(r) && /Devlin et Théo · 18,2 s/.test(r) && /roi des jeux de Noël, pour l'instant : Kévin/.test(r) && /se fige ce soir/.test(r) && !/€|%/.test(r), "24/12 : la case 24 montre les records de la bande et le roi des jeux de Noël " + JSON.stringify(r));
     await p.screenshot({ path: DOSSIER + "/case-24-records.png" });
     await p.emulateMedia({ colorScheme: "dark" }); await p.screenshot({ path: DOSSIER + "/case-24-sombre.png" });
     ok(!err.length, "0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
@@ -204,8 +205,8 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
     // case 20 : rouvre l'annonce ; case 24 : « Aller à mon écurie », la règle du roi
     const c20 = await p.evaluate(async () => { ouvrirAvent(); ouvrirCaseAvent(20); const b = document.querySelector("[data-av-podium]"), t = b && b.textContent; b.click(); await new Promise(r => setTimeout(r, 400)); const tu = document.querySelector(".tuto"); const r = { t, tuto: !!tu, txt: tu ? tu.innerText.slice(0, 80) : "" }; if (tu) tu.remove(); return r; });
     ok(c20.tuto && /annonce/i.test(c20.t), "case 20 : le bouton rouvre directement l'annonce du 20 " + JSON.stringify(c20));
-    const c24 = await p.evaluate(async () => { ouvrirAvent(); ouvrirCaseAvent(24); await new Promise(r => setTimeout(r, 1200)); const t = document.querySelector(".av-case").innerText, b = document.querySelector("[data-av-ecurie]"); b.click(); await new Promise(r => setTimeout(r, 500)); return { roi: /le plus souvent devant, tous jeux confondus/.test(t), bouton: /Équiper maintenant/.test(t), podium: ETAT.podium, case: !!document.querySelector(".av-case") }; });
-    ok(c24.roi && c24.bouton && c24.podium === "ecurie" && !c24.case, "case 24 : « 🏎️ Équiper maintenant » y mène (v20.70) ; le roi = celui qui finit le plus souvent devant, tous jeux confondus " + JSON.stringify(c24));
+    const c24 = await p.evaluate(async () => { ouvrirAvent(); ouvrirCaseAvent(24); await new Promise(r => setTimeout(r, 1200)); const t = document.querySelector(".av-case").innerText, b = document.querySelector("[data-av-ecurie]"); b.click(); await new Promise(r => setTimeout(r, 500)); return { roi: /le plus de 1res places, tous jeux confondus/.test(t), bouton: /Équiper maintenant/.test(t), podium: ETAT.podium, case: !!document.querySelector(".av-case") }; });
+    ok(c24.roi && c24.bouton && c24.podium === "ecurie" && !c24.case, "case 24 : « 🏎️ Équiper maintenant » y mène (v20.70) ;  le roi = celui qui a le plus de 1res places, tous jeux confondus (Avent 26/11) " + JSON.stringify(c24));
     ok(!err.length, "4 ter · 0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
   // 4 quater · simulation de date (admin, vue joueur) : aucun envoi, le vrai stockage reste intact
   { const o = { quand: "2026-11-26T10:00:00", session: ADMIN, admin: true };

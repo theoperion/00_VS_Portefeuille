@@ -12041,10 +12041,10 @@
   /* ---------- v20.48 · Écurie : la personnalisation se voit sur LA voiture (course 3D et showroom) ----------
      v.livree, v.casqueModele, v.finition, v.numero (facultatifs) : sans eux, la voiture reste celle d'avant (couleur du pilote, casque uni, pas de numéro).
      La couleur du pilote reste toujours lisible (bande centrale, aileron de requin, caméra T, volet avant et dérives arrière). */
-  const LV_METAL = { chrome: "#C9D2DC", or: "#E8C15A", oranime: "#F2C94C", platine: "#E5E8EC", orrose: "#F2B8A6", rubis: "#B0122E", galaxie: "#2B1B5A" };
+  const LV_METAL = { chrome: "#C9D2DC", or: "#E8C15A", oranime: "#F2C94C", platine: "#E5E8EC", orrose: "#F2B8A6", rubis: "#B0122E", galaxie: "#2B1B5A", roinoel: "#C8142A" };   // Avent 26/11 · 🎅 Roi de Noël : rouge vernis (+ ruban d'or, ci-dessous)
   const LV_CLAIRES = ["chrome", "or", "oranime", "platine", "orrose", "carte"];
   const FIN_COL = { argent: ["#E6EBF0", 0], or: ["#F2C14E", .1], neon: [null, 1], diamant: ["#C9F6FF", .35], lauriers: ["#E9C25A", .1], etoilee: ["#FFE596", .25], soleil: ["#FF9A2E", .45],
-    ailee: ["#F2C14E", .3], elfique: ["#8FCB9A", .15], biolum: ["#5CF2E6", 1], feuilledor: ["#F5C842", .45],
+    ailee: ["#F2C14E", .3], elfique: ["#8FCB9A", .15], biolum: ["#5CF2E6", 1], feuilledor: ["#F5C842", .45], houx: ["#F2C94C", .35],
     lisblanc: ["#FFFFFF", .12], lisnoir: ["#14171C", 0], mat: ["#3A3F48", 0], brillant: ["#F4F8FF", .45] };   // v20.68 · finitions de départ   // v20.61 · finitions des mondes + Feuille d'or (ticket d'or)
   /** casques : [couleur de la bande, lumineux de la bande, visière ("iri" irisée, "or", sinon fumée), forme spéciale] */
   const CQ_DEF = { uni: ["#FFFFFF", 0], carbone: [null, 0], eclair: ["#FFD84A", .35], damier: ["#15171B", 0, 0, "damier"], tortue: ["#1D5A2C", 0], chrome: ["#2B3038", 0, "iri"], etoile: ["#FFFFFF", .2, "iri", "etoile"],
@@ -12123,13 +12123,14 @@
     const corps0 = neon ? hex("#0B0D12") : metal ? hex(metal) : choco ? hex("#6B3A1E") : carte ? hex("#F4F0E6") : ver ? hex("#D9A35A") : c, em = neon ? 1 : 0;
     const corps = mat ? mel(corps0, [.3, .32, .35], .3) : corps0;   // Mat : la peinture adoucie, moins vive
     // accent : la couleur du pilote sur les livrées métal / néon / spéciales, sinon un blanc cassé teinté
-    const perso = !!(neon || metal || choco || carte || prisme || ver), accent = perso ? c : mel(c, [1, 1, 1], .82), emA = neon ? 1 : 0;
+    const perso = !!(neon || metal || choco || carte || prisme || ver), accent = lv === "roinoel" ? hex("#F2C94C") : perso ? c : mel(c, [1, 1, 1], .82), emA = neon ? 1 : 0;
     const carbone = hex("#16191F"), carbone2 = hex("#23272F"), cockpit = hex("#0C0E12"), titane = hex("#2C3038");
     const fonce = mel(corps, [0, 0, 0], .35), nappeChoco = hex("#2E1407");
     /** peinture à l'abscisse x (Prisme : un dégradé arc-en-ciel du museau à l'aileron) */
     const anneauVer = [hex("#E3B46E"), hex("#A8692E")];   // v20.61 · Peau des sables : les anneaux du ver, une section claire, une sombre
     const anthracite = hex("#1E232B");   // v20.68 · Bicolore : l'arrière anthracite, coupé derrière le cockpit
-    const peint = x => prisme ? hex(hsl(((x + 4) / 9.2) * 300, .78, .56)) : ver ? anneauVer[Math.floor((x + 4) * 1.15) % 2] : bico && x < -.35 ? anthracite : corps;
+    const roi = lv === "roinoel", orRoi = hex("#F2C94C"), vertRoi = hex("#1E6B3E");   // Avent 26/11 · 🎅 Roi de Noël : ruban d'or derrière le cockpit, bande de houx vert sur le nez
+    const peint = x => roi ? (x > -1.05 && x < -.7 ? orRoi : x > 2.6 && x < 2.95 ? vertRoi : corps) : prisme ? hex(hsl(((x + 4) / 9.2) * 300, .78, .56)) : ver ? anneauVer[Math.floor((x + 4) * 1.15) % 2] : bico && x < -.35 ? anthracite : corps;
     /** Chocolat fondant : le dessus est nappé de chocolat noir qui coule en gouttes sur les flancs (une section sur deux) */
     const nappage = (i, j, haut, bord) => choco && (haut.includes(j) || (bord.includes(j) && i % 2 === 0));
     // ---- monocoque, du diffuseur au museau : [x, demi-largeur, bas, haut, resserrement du haut]
@@ -13912,7 +13913,7 @@
       return '<path class="p2-gem" d="M' + x.toFixed(2) + " " + (y - 2.8).toFixed(2) + "L" + (x + 1.95).toFixed(2) + " " + y.toFixed(2) + "L" + x.toFixed(2) + " " + (y + 2.8).toFixed(2) + "L" + (x - 1.95).toFixed(2) + " " + y.toFixed(2) + 'Z" fill="' + PIERRES_COL[i] + '" stroke="#FFF6D8" stroke-width=".6"/>'; }).join("") + "</g>";
   }
   const LV_2D = { chrome: ["#DCE3EA", "#6E7884"], or: ["#E9B949", "#7A5300"], oranime: ["#F2C452", "#7A5300"], platine: ["#EEF3FA", "#8A94A0"], rubis: ["#B0002E", "#4A0012"], orrose: ["#E3A792", "#7A4A42"],
-    galaxie: ["#2A1458", "#B98CFF"], neon: ["#0D1017", null], arcenciel: [null, null], chocolat: ["#5A2D14", "#2A1205"], carte: ["#F6F2E8", "#15171B"], ver: ["#D9A35A", "#6B3A12"],
+    galaxie: ["#2A1458", "#B98CFF"], neon: ["#0D1017", null], arcenciel: [null, null], chocolat: ["#5A2D14", "#2A1205"], roinoel: ["#C8142A", "#F7CF55"], carte: ["#F6F2E8", "#15171B"], ver: ["#D9A35A", "#6B3A12"],
     rayures: [null, "#11151B"], damier: ["#F5F5F2", "#101215"], bicolore: [null, "#11151B"], flammes: ["#FF6A1A", "#8A1A05"] };   // v20.68 · livrées de départ (null : couleur du pilote)
   const marqueLivree = v => !!(v.ecurie && v.livree && LV_2D[v.livree]);
   /** pastille de la carte 2D : le disque reste à la couleur du pilote (repère du classement) ; la livrée fait l'anneau, la finition le liseré */
@@ -13935,7 +13936,7 @@
       if (v.livree === "galaxie") h += [[-6, -5], [5, -6.5], [7, 4], [-3, 7.5]].map(([x, y]) => '<circle cx="' + x + '" cy="' + y + '" r=".7" fill="#fff"/>').join("");
       if (v.livree === "or" || v.livree === "oranime" || v.livree === "chrome" || v.livree === "platine") h += '<path d="M-6.5 -6.5A9.3 9.3 0 0 1 4 -8.4" stroke="#fff" stroke-width="1.2" fill="none" opacity=".8" stroke-linecap="round"/>';
     }
-    const FIN = { argent: "#E6EBF0", or: "#F7CF55", neon: c, diamant: "#C9F6FF", lauriers: "#E9C25A", etoilee: "#FFE596", soleil: "#FF9A2E", ailee: "#F7CF55", elfique: "#8FCB9A", biolum: "#5CF2E6", feuilledor: "#F5C842", lisblanc: "#FFFFFF", lisnoir: "#11151B", mat: "#5A606A", brillant: "#FFFFFF" };
+    const FIN = { argent: "#E6EBF0", or: "#F7CF55", neon: c, diamant: "#C9F6FF", lauriers: "#E9C25A", etoilee: "#FFE596", soleil: "#FF9A2E", ailee: "#F7CF55", elfique: "#8FCB9A", biolum: "#5CF2E6", feuilledor: "#F5C842", houx: "#F2C94C", lisblanc: "#FFFFFF", lisnoir: "#11151B", mat: "#5A606A", brillant: "#FFFFFF" };
     if (f === "lisnoir") h += '<circle r="9.9" fill="none" stroke="#fff" stroke-width="1" opacity=".7"/>';   // v20.68 · finitions de départ
     if (f === "brillant") h += '<path d="M-6.8 -7.4A10 10 0 0 1 3.6 -9.4" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round"/>';
     if (f === "feuilledor") h += '<circle r="10.4" fill="none" stroke="#F5C842" stroke-width="1.6" stroke-dasharray="2.2 1.4 .8 1.8" style="filter:drop-shadow(0 0 2px #FFD84A)"/>' + [[-8.6, -6, 30], [7.8, -7, 110], [9.4, 4.6, 200], [-7.4, 7.6, 280], [0, -11.2, 0]].map(([x, y, a]) => '<path d="M' + (x - 1.6) + " " + y + "L" + (x - .2) + " " + (y - 1.5) + "L" + (x + 1.6) + " " + (y - .4) + "L" + (x + .6) + " " + (y + 1.4) + 'Z" fill="#FFE596" stroke="#9A6716" stroke-width=".25" transform="rotate(' + a + " " + x + " " + y + ')"/>').join("");
