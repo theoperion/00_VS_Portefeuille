@@ -14026,7 +14026,7 @@
         const w = cv.width, h = cv.height; if (C.cv.width !== w || C.cv.height !== h) { C.cv.width = w; C.cv.height = h; }
         gl.viewport(0, 0, w, h); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         const asp = w / h, dist = 13.2 / Math.min(1.25, Math.max(.7, asp / 1.75)) * (o.zoom || 1) * st.zv, pitch = o.pitch || .34, cy = Math.cos(st.yaw), sy = Math.sin(st.yaw);
-        const e = [cy * Math.cos(pitch) * dist, Math.sin(pitch) * dist + .6, sy * Math.cos(pitch) * dist], cible = [.2, .7, 0];
+        const e = [cy * Math.cos(pitch) * dist, Math.sin(pitch) * dist + .6, sy * Math.cos(pitch) * dist], cible = [.2, o.cibleY !== undefined ? o.cibleY : .7, 0];   // 26/11 : cibleY plus bas = la voiture monte dans l'image (vitrine de l'écurie : au-dessus des boutons)
         const PV = mul(persp(.52, asp, .5, 80), regard(e, cible));
         gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.disable(gl.CULL_FACE); gl.disable(gl.BLEND);
         gl.useProgram(PL.p); [PL.A.aP, PL.A.aN, PL.A.aC].forEach(a => gl.enableVertexAttribArray(a));

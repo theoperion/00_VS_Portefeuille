@@ -72,7 +72,7 @@ function rgLignesMois(dispo) {
     L.push(rgL("🔥", "<b>Tour de chauffe</b> : tout marche, rien ne compte. Le championnat démarre le 1<sup>er</sup> janvier.", a("essentiel")));
     if (typeof aventPeriode === "function" && aventPeriode() && j <= AVENT.derniere) L.push(rgL("🎄", "<b>Calendrier de l'Avent</b> : une case par jour jusqu'au 24, à ouvrir le jour même (en haut du Classement). Aucun point.", ""));
     if (dispo.includes("tresor")) L.push(rgL("🗝️", "<b>Trésor d'entraînement</b> : une énigme et un objet caché dans la Visite 3D. Le 1<sup>er</sup> du classement gagne la plaque dorée Chercheur de Noël (résultat au plus tard le 31 décembre à minuit).", "tresor"));
-    if (typeof ecurieOuverte === "function" && ecurieOuverte()) L.push(rgL("🏎️", "<b>Écurie ouverte</b> depuis le 1<sup>er</sup> décembre : casque, livrée, numéro… purement cosmétique.", a("gp")));
+    if (typeof ecurieOuverte === "function" && ecurieOuverte()) L.push(rgL("🏎️", "<b>Écurie ouverte</b> depuis le " + (typeof jourEcurie === "function" ? jourEcurie(true) : "1<sup>er</sup> décembre") + " : casque, livrée, numéro… purement cosmétique.", a("gp")));
     L.push(rgL("🃏", j < 20 ? "Les cartes de janvier se poseront à partir du <b>20 décembre</b> (Stand, onglet Saison 1)." : "<b>Fenêtre ouverte</b> : pose ta carte de janvier (Stand, onglet Saison 1) ; révélation le " + rv(kN) + " janvier.", a("cartes")));
     if (janvierAnnonce()) L.push(rgL("📣", "<b>Janvier est annoncé</b> : ses règles sont dans ce sommaire.", ""));
     L.push(rgL("📅", "<b>Fin du mois</b> : ton relevé de décembre, puis le résultat du tour de chauffe.", ""));

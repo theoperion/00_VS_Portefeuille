@@ -1,6 +1,8 @@
-/* Test (v20.61) · L'Écurie ouvre le 1er décembre 2026 (décision de Théo, 25/11), avec une révélation « Ton écurie ouvre ses portes ».
+/* Test (v20.61) · L'Écurie ouvre pendant le tour de chauffe (décision de Théo, 25/11 ; avancée au 26/11/2026 à 0 h, heure de Paris, le 26/11 : ECURIE_OUVRE),
+   avec une révélation « Ton écurie ouvre ses portes ».
    Fausses données uniquement (serveur Google intercepté). Serveur local ouvert : python3 -m http.server 8771 &  puis  node outils-tests/tecurie-dec.js
-   Vérifie : 30/11 = pas d'onglet Écurie, pas de révélation, voitures d'avant ; 1/12 = onglet Écurie, révélation une seule fois (un toucher ferme) ;
+   Vérifie : 25/11 au soir = pas d'onglet Écurie, pas de révélation, voitures d'avant ; 27/11 = Écurie visible et enregistrable, rien de 2027, rien de l'Avent ;
+   1/12 = onglet Écurie, révélation une seule fois (un toucher ferme) ;
    en décembre, seulement les objets de départ, RIEN de 2027 (ni objet de monde, ni succès, ni univers, ni « Trophées ») ; Trophées cachés jusqu'au 1/1 ;
    un objet 2027 déjà enregistré retombe sur la série ; 0 erreur JS ; 390 px clair et sombre. Captures dans CAPTURES. */
 const { chromium } = require("playwright"), fs = require("fs"), path = require("path"), os = require("os");
@@ -33,10 +35,67 @@ async function page(b, o) {
   const etat = p => p.evaluate(() => ({ ecurie: !!document.querySelector('#v-trophees [data-pod="ecurie"]'), defis: !!document.querySelector('#v-trophees [data-pod="defis"]'), teaser: !!document.querySelector(".ecu-rev"),
     ouverte: ecurieOuverte(), piste: Piste.ecurie ? Piste.ecurie("Kévin") : null }));
   const ouvrirPodium = p => p.evaluate(async () => { document.querySelectorAll(".ecu-rev, .revel, .regles, .tuto, .bulle-portrait, .ba").forEach(x => x.remove()); ETAT.podium = "gp"; garder(); allerA("trophees"); rendreTrophees(); await new Promise(r => setTimeout(r, 500)); });
-  // 1. le 30 novembre : rien
-  { const { ctx, p, err } = await page(b, { quand: "2026-11-30T21:00:00", session: { role: "perso", nom: "Kévin" } });
+  // 1. le 25 novembre à 23 h 59 (heure de Paris) : rien
+  ok(await (async () => { const { ctx, p } = await page(b, { quand: "2026-11-25T12:00:00Z", session: { role: "perso", nom: "Kévin" } }); const r = await p.evaluate(() => ECURIE_OUVRE.toISOString()); await ctx.close(); return r === "2026-11-25T23:00:00.000Z"; })(),
+    "ECURIE_OUVRE = 26/11/2026 à 0 h, heure de Paris (même date que VS_ECURIE_OUVRE du serveur)");
+  { const { ctx, p, err } = await page(b, { quand: "2026-11-25T22:59:00Z", session: { role: "perso", nom: "Kévin" } });
     await p.waitForTimeout(3500); const t = await p.evaluate(() => !!document.querySelector(".ecu-rev")); await ouvrirPodium(p); const a = await etat(p);
-    ok(!t && !a.ecurie && !a.defis && !a.ouverte && !a.piste && !err.length, "30/11/2026 : ni onglet Écurie, ni révélation, voitures d'avant en course " + JSON.stringify(Object.assign({ t }, a, { piste: !!a.piste })));
+    ok(!t && !a.ecurie && !a.defis && !a.ouverte && !a.piste && !err.length, "25/11/2026 à 23 h 59 (Paris) : ni onglet Écurie, ni révélation, voitures d'avant en course " + JSON.stringify(Object.assign({ t }, a, { piste: !!a.piste })));
+    await ctx.close(); }
+  // 1 bis. le 27 novembre (ouverture anticipée) : Écurie visible et enregistrable, rien de 2027, rien de l'Avent
+  for (const sombre of [false, true]) {
+    const tag = sombre ? " (sombre)" : " (clair)";
+    const { ctx, p, err } = await page(b, { quand: "2026-11-27T10:00:00Z", sombre, session: { role: "perso", nom: "Kévin" } });
+    const envois = []; await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}");
+      if (c.action === "ecurie") envois.push(c.equip);
+      r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : c.action === "ecurie" || c.action === "tickets" || c.action === "avent" ? { ok: true } : donnees({ role: "perso", nom: "Kévin" })) }); });
+    await p.waitForSelector(".ecu-rev", { timeout: 9000 }).catch(() => {});
+    const rv = await p.evaluate(() => { const o = document.querySelector(".ecu-rev"); return o ? o.innerText : ""; });
+    ok(/Ton écurie ouvre ses portes/i.test(rv) && !/décembre/i.test(rv), "27/11 : la révélation « Ton écurie ouvre ses portes » s'affiche (sans parler de décembre)" + tag + " " + JSON.stringify(rv.slice(0, 200)));
+    // bandeau « 🏎️ Nouveau : ton écurie est ouverte ! » en haut du Classement
+    const bd = await p.evaluate(async () => { document.querySelectorAll(".ecu-rev, .revel, .tuto, .bulle-portrait, .ba").forEach(x => x.remove()); allerA("classement"); await new Promise(r => setTimeout(r, 500));
+      const el = document.querySelector("#v-classement > .ecu-bandeau"), r = el && el.getBoundingClientRect();
+      const ap = (() => { const f = window.apercuSaison; window.apercuSaison = () => true; poserBandeauEcurie(); const x = !!document.querySelector(".ecu-bandeau"); window.apercuSaison = f; poserBandeauEcurie(); return x; })();
+      return { t: el ? el.innerText : "", ok: !!(el && el.querySelector("[data-ecu-bandeau-go]") && el.querySelector("[data-ecu-bandeau-x]")), deb: r ? r.right > innerWidth + 1 || document.documentElement.scrollWidth > innerWidth + 1 : true, ap }; });
+    await p.screenshot({ path: DOSSIER + "/bandeau-ecurie" + (sombre ? "-sombre" : "-clair") + ".png" });
+    ok(bd.ok && /Nouveau : ton écurie est ouverte/.test(bd.t) && /Personnalise ta F1 · Podium › Écurie/.test(bd.t) && !bd.deb && !bd.ap, "27/11 : bandeau « 🏎️ Nouveau : ton écurie est ouverte ! » en haut du Classement (bouton Ouvrir, ✕), lisible à 390 px ; rien en aperçu admin " + JSON.stringify(bd) + tag);
+    if (!sombre) {   // le bouton ouvre l'écurie ; après la visite, plus de bandeau (même au rechargement)
+      await p.click("[data-ecu-bandeau-go]"); await p.waitForTimeout(600);
+      const go = await p.evaluate(() => ({ vue: vueActive(), pod: ongletPodium(), cats: !!document.querySelector("#v-trophees .ecu-cats") }));
+      await p.reload(); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes); await p.waitForTimeout(1500);
+      const apres = await p.evaluate(async () => { allerA("classement"); await new Promise(r => setTimeout(r, 400)); return !!document.querySelector(".ecu-bandeau"); });
+      ok(go.vue === "trophees" && go.pod === "ecurie" && go.cats && !apres, "27/11 : « Ouvrir » ouvre l'Écurie ; ensuite le bandeau ne revient plus " + JSON.stringify(go)); }
+    else {   // ✕ le ferme pour de bon
+      await p.click("[data-ecu-bandeau-x]"); await p.waitForTimeout(200);
+      const x1 = await p.evaluate(() => !!document.querySelector(".ecu-bandeau"));
+      await p.reload(); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes); await p.waitForTimeout(1500);
+      const x2 = await p.evaluate(async () => { document.querySelectorAll(".ecu-rev").forEach(x => x.remove()); allerA("classement"); await new Promise(r => setTimeout(r, 400)); return !!document.querySelector(".ecu-bandeau"); });
+      ok(!x1 && !x2, "27/11 : ✕ ferme le bandeau, il ne revient pas au rechargement" + tag); }
+    await ouvrirPodium(p); const a = await etat(p);
+    ok(a.ecurie && !a.defis && a.ouverte && a.piste, "27/11 : onglet Écurie là, Trophées caché, voiture personnalisée en course" + tag + " " + JSON.stringify({ ecurie: a.ecurie, defis: a.defis, piste: !!a.piste }));
+    const r = await p.evaluate(async () => {
+      ETAT.podium = "ecurie"; ECU = null; garder(); rendreTrophees(); await new Promise(r => setTimeout(r, 900));
+      const ids = SLOTS.flatMap(([s]) => idsSlot(s).map(id => s + "." + id)), pas = ids.filter(k => { const [s, id] = k.split("."); return !estDepart(s, id); });
+      const avent = ["plaque.hiver26", "trainee.flocons", "plaque.hiverdore", "plaque.chercheur", "plaque.chercheuror"].filter(k => ids.includes(k) || debloques("Kévin").has(k));
+      const t = document.querySelector("#v-trophees").innerText, cats = rangsEcurie().map(x => x[0]);
+      // un objet de l'Avent ou de 2027 ne s'équipe pas, même en forçant (bouton « Équiper maintenant ») ; et ne part jamais au serveur
+      equiperMaintenant("plaque", "hiver26"); equiperMaintenant("casque", "anneau"); await new Promise(r => setTimeout(r, 400));
+      const force = [ECU.e.plaque, ECU.e.casque];
+      return { n: ids.length, pas, avent, cats, force, mots: /Trophée|Succès|Gant de l|Légende|2028|Avent|Hiver 2026|Flocons|Chercheur/.test(t), entreeAvent: !!document.querySelector(".av-entree, [data-avent]") || aventPeriode() };
+    });
+    ok(r.n >= 30 && !r.pas.length && !r.mots && !r.cats.includes("badges"), "27/11 : seulement les objets de départ (" + r.n + "), rien de 2027 (ni objet, ni Trophées, ni Badges) " + JSON.stringify(r.pas) + tag);
+    ok(!r.avent.length && !r.entreeAvent && r.force[0] === "aucune" && r.force[1] !== "anneau", "27/11 : rien de l'Avent (ni Hiver 2026, ni Flocons, ni plaque dorée, ni Chercheur de Noël, ni calendrier) ; « Équiper » refuse un objet pas gagné " + JSON.stringify({ avent: r.avent, force: r.force }) + tag);
+    await p.evaluate(async () => { ECU_SLOT = "casque"; ECU_Q = null; choisirCatEcu("casque"); rendreTrophees(); await new Promise(r => setTimeout(r, 200)); });
+    await p.click('[data-slot="casque"][data-item="pois"]'); await p.waitForTimeout(400);
+    await p.evaluate(() => { ECU.e.plaque = "hiver26"; ECU.e.trainee = "flocons"; ECU.e.livree = "ver"; ECU.e.numero = 27; });   // même en forçant : pas d'objet de l'Avent ni de 2027 envoyé
+    await p.click("#ecu-garder"); await p.waitForTimeout(800);
+    const g = envois[envois.length - 1] || {};
+    ok(envois.length === 1 && g.casque === "pois" && g.numero === 27 && g.plaque === "aucune" && g.trainee === "simple" && g.livree === "couleur" && (await p.evaluate(() => equipDe("Kévin").casque)) === "pois",
+      "27/11 : l'écurie s'enregistre (casque Pois, n° 27 envoyés) ; un objet de l'Avent ou de 2027 forcé retombe sur la série avant l'envoi " + JSON.stringify(g) + tag);
+    await p.screenshot({ path: DOSSIER + "/ecurie-27-novembre" + (sombre ? "-sombre" : "-clair") + ".png" });
+    const deb = await p.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
+    const rg = await p.evaluate(async () => { ouvrirRegles(); await new Promise(r => setTimeout(r, 300)); document.querySelectorAll(".regles .rgt-f").forEach(f => { f.hidden = false; }); document.querySelectorAll(".regles details").forEach(d => { d.open = true; }); const o = document.querySelector(".regles"), t = o ? o.innerText : ""; if (o) o.remove(); return t; });
+    ok(!deb && !err.length && /Écurie/.test(rg) && /26 novembre/.test(rg) && !/depuis le 1\s*er décembre/.test(rg), "27/11 : lisible à 390 px, 0 erreur JS, les règles disent « ouverte depuis le 26 novembre »" + tag + " " + JSON.stringify({ deb, err: err.slice(0, 3), rg: (rg.match(/.{0,80}[ÉE]curie.{0,120}/) || [rg.slice(0, 200)])[0] }));
     await ctx.close(); }
   for (const sombre of [false, true]) {
     const tag = sombre ? " (sombre)" : " (clair)";
@@ -45,6 +104,7 @@ async function page(b, o) {
     await p.waitForSelector(".ecu-rev", { timeout: 9000 }).catch(() => {});
     await p.waitForTimeout(500); await p.screenshot({ path: DOSSIER + "/teaser-ecurie-porte" + (sombre ? "-sombre" : "-clair") + ".png" });   // la porte du garage à mi-course
     const r = await p.evaluate(() => { const o = document.querySelector(".ecu-rev"); return o ? { t: o.innerText, voit: !!o.querySelector(".er-garage svg.voiture"), porte: !!o.querySelector(".er-porte") } : null; });
+    ok(!(await p.evaluate(() => !!document.querySelector(".ecu-bandeau") || ecuBandeauVisible())), "1/12/2026 à 0 h passé : plus de bandeau « Nouveau » (jamais vu, mais l'annonce est finie)" + tag);
     ok(r && /Ton écurie ouvre ses portes/i.test(r.t) && /casque/.test(r.t) && /livrée/.test(r.t) && /traînée/.test(r.t) && /tout au long de 2027/.test(r.t) && r.voit && r.porte, "1/12/2026 : la révélation « Ton écurie ouvre ses portes » (porte du garage, voiture du pilote, 3 lignes)" + tag);
     const avoirs = await p.evaluate(() => { const o = document.querySelector(".ecu-rev"); if (!o) return []; const t = o.innerText; return Object.keys(ITEMS).flatMap(s => Object.keys(ITEMS[s]).filter(id => !estDepart(s, id) && t.includes(ITEMS[s][id]))).concat(CAL_GP.map(c => GPS[c].ville).filter(v => t.includes(v))).concat(/Trophée|Monde|Succès|Gant|Légende/.test(t) ? ["mot 2027"] : []); });
     ok(!avoirs.length, "la révélation ne dévoile rien de 2027 (aucun nom d'objet, d'univers, ni Trophées/Mondes/Succès/Gant) " + JSON.stringify(avoirs) + tag);
@@ -124,7 +184,7 @@ async function page(b, o) {
       "en course, Clément garde son visage (ni casque ni avatar Damier) ; au Classement, son casque et son avatar Damier ; l'aide de l'écurie le dit " + JSON.stringify(vis) + tag);
     // les règles de décembre parlent de l'écurie, sans rien de 2027
     const rg = await p.evaluate(async () => { ouvrirRegles(); await new Promise(r => setTimeout(r, 300)); document.querySelectorAll(".regles .rgt-f").forEach(f => { f.hidden = false; }); document.querySelectorAll(".regles details").forEach(d => { d.open = true; }); const o = document.querySelector(".regles"), t = o ? o.innerText : ""; if (o) o.remove(); return t; });
-    ok(/Écurie/.test(rg) && /1er décembre|1\s*er décembre/.test(rg) && !/Trophées|Succès|Gant de l'infini|Mondes/.test(rg), "règles de décembre : l'écurie ouverte depuis le 1er décembre, rien de 2027" + tag);
+    ok(/Écurie/.test(rg) && /26 novembre/.test(rg) && !/Trophées|Succès|Gant de l'infini|Mondes/.test(rg), "règles de décembre : l'écurie ouverte depuis le 26 novembre, rien de 2027" + tag);
     await ctx.close();
   }
   // 3 bis. le souvenir du calendrier de l'Avent (plaque « Hiver 2026 », traînée « Flocons ») : choisissable dans l'écurie de décembre à partir du 24/12, pas avant ; toujours rien de 2027
