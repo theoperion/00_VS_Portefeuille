@@ -379,11 +379,11 @@ function timingVersements(s) {
   return ' <button class="lien f-timing" type="button" data-toast="' + esc(txt) + '" aria-label="' + esc(txt) + '">timing <b class="' + (bon ? "up" : "down") + '">' + (bon ? "▲" : "▼") + "</b></button>";   // lot69 : tient sur la ligne du MWR, le détail au toucher
 }
 function enSaisie(n) { return ok(n) ? String(n).replace(".", ",") : ""; }
-function ouvrirSaisie() {
+function ouvrirSaisie(kVoulu) {   // kVoulu (facultatif) : ouvre directement ce mois-là (bandeau « Ton relevé de … » › Corriger)
   if (!D) return;
   const p = D.personnes.find(x => x.nom === moiVrai()) || D.personnes[0];
   R = { nom: p.nom, k: null, forcer: null, erreur: "", envoi: false, tout: false };
-  choisirMoisParDefaut();
+  if (kVoulu && p.rows.some(r => r[0] === kVoulu)) { R.k = kVoulu; chargerValeurs(); } else choisirMoisParDefaut();
   $("#saisie").hidden = false;
   // la toute première fois, le guide s'ouvre tout seul (une fois par personne et par appareil)
   const cleG = "versus.guideReleve." + p.nom; if (!stock.get(cleG) && !simulation()) { stock.set(cleG, "1"); setTimeout(guideReleve, 250); }
@@ -498,6 +498,46 @@ function rappelReleveJoueur() {
     setTimeout(() => toast("🔔 Ton relevé " + (/^[aeiouy]/i.test(moisLong(r.cle)) ? "d'" : "de ") + moisLong(r.cle) + " n'est pas arrivé au Versus : bouton + › Relevé, 1 minute."), 1200);
   } catch (e) { /* stockage indisponible */ }
 }
+/* Bandeau « 📋 Ton relevé de … » (Théo, 26/11) : après le relevé de fin de mois, chaque pilote voit SON % du mois (jamais celui d'un autre,
+   jamais un montant) tant qu'il peut encore le corriger (date limite = celle de etatReleve, comme le serveur). « ✏️ Corriger » ouvre la saisie
+   sur ce mois ; ✕ « C'est bon » le range pour ce mois sur cet appareil. Rien en aperçu admin (vue joueur, date simulée, saison simulée). */
+const VUES_BD_RELEVE = ["v-classement", "v-trophees"];
+function cleBdReleve(nom, k) { return "versus.releveOk." + nom + "." + k; }
+function bandeauReleve() {
+  try {
+    if (typeof D === "undefined" || !D || !D.personnes || SOURCE !== "api" || simulation() || apercuSaison() || vueJoueur()) return null;
+    const nom = moiVrai(), k = moisReleveCourant();
+    if (!nom || !D.personnes.some(p => p.nom === nom) || !peutModifier(nom) || stock.get(cleBdReleve(nom, k))) return null;
+    const st = etatReleve(nom, k); if (st.etat !== "modif" || !st.lim) return null;
+    const pb = ((D_BRUT || D).personnes || []).find(p => p.nom === nom); if (!pb) return null;   // la copie brute : son propre % se voit même si le mois attend encore un autre pilote
+    const r = e => { const z = serie(pb, e).find(x => x.k === k); return z && ok(z.r) ? z.r : null; };
+    return { nom, k, lim: st.lim, pf: r(0), env: [["PEA", r(1)], ["assurance vie", r(2)]].filter(x => x[1] !== null) };
+  } catch (e) { return null; }
+}
+function htmlBandeauReleve(b) {
+  const m = MOIS_L[b.k % 100 - 1], de = /^[aeiouy]/i.test(m) ? "d'" : "de ", L = b.lim;
+  const lim = L.getDate() + (L.getDate() === 1 ? "er" : "") + " " + MOIS_L[L.getMonth()] + " à " + L.getHours() + " h" + (L.getMinutes() ? " " + String(L.getMinutes()).padStart(2, "0") : "");
+  const v = x => '<b class="' + sens(x) + '">' + pct(x) + "</b>";
+  const chiffre = b.pf !== null ? " : " + v(b.pf) + (b.env.length ? " <span class=\"bdr-env\">(" + b.env.map(x => esc(x[0]) + " " + v(x[1])).join(", ") + ")</span>" : "") : " est arrivé";
+  return '<span class="bdr-i" aria-hidden="true">📋</span><span class="bdr-t"><span class="bdr-l1">Ton relevé ' + de + esc(m) + chiffre + '</span><small>Une erreur ? Tu peux le corriger jusqu\'au ' + esc(lim) + ".</small>" +
+    '<button type="button" class="btn ghost bdr-go" data-bdr="corriger">✏️ Corriger</button></span><button type="button" class="bdr-x" data-bdr="ok" aria-label="C\'est bon : ne plus afficher pour ce mois" title="C\'est bon">✕</button>';
+}
+function assurerBandeauReleve(vue) {
+  try {
+    if (!vue || !VUES_BD_RELEVE.includes(vue.id)) return;
+    const ici = vue.querySelector(":scope > .bd-releve"), b = bandeauReleve();
+    if (!b) { if (ici) ici.remove(); return; }
+    const cle = b.nom + "|" + b.k + "|" + b.lim.getTime() + "|" + b.pf + "|" + b.env.map(x => x[1]).join(",");
+    if (ici && ici.dataset.cle === cle) return;
+    if (ici) ici.remove();
+    const el = document.createElement("div"); el.className = "bd-releve" + (reduit ? " reduit" : ""); el.setAttribute("role", "status"); el.dataset.cle = cle; el.dataset.k = b.k;
+    el.innerHTML = htmlBandeauReleve(b);
+    vue.insertBefore(el, vue.firstChild);
+    el.querySelector('[data-bdr="corriger"]').addEventListener("click", () => ouvrirSaisie(b.k));
+    el.querySelector('[data-bdr="ok"]').addEventListener("click", () => { stock.set(cleBdReleve(b.nom, b.k), "1"); majBandeauReleve(); });
+  } catch (e) { /* jamais bloquant */ }
+}
+function majBandeauReleve() { VUES_BD_RELEVE.forEach(id => assurerBandeauReleve(document.getElementById(id))); }
 function dateHeure(d) { return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0") + " à " + String(d.getHours()).padStart(2, "0") + " h " + String(d.getMinutes()).padStart(2, "0"); }
 function peutModifier(nom) { return (estAdmin() && !estPrive(nom)) || nom === SESSION.nom; }   // V20.26 : les montants des autres ne sont jamais envoyés, donc pas de saisie pour eux dans l'appli
 function utilisees(p) { return NOMS_ENV.map((_, e) => p.rows.some(r => ok(r[2][2 * e + 1]) || (r[2][2 * e] || 0) !== 0)); }
@@ -683,7 +723,7 @@ function restaurerDefil(vue) {
 (function () {
   const m = document.querySelector("main"); if (!m || !window.MutationObserver) return;
   new MutationObserver(l => { const vues = new Set(); l.forEach(x => { if (x.target.closest && x.target.closest("svg, .gp-scene")) return;   // v20.53 : les dessins qui bougent (carte, course) ne relancent plus ces lectures de mise en page
-    const v = x.target.closest && x.target.closest("[data-vue]"); if (v) vues.add(v); }); vues.forEach(v => { restaurerDefil(v); if (typeof assurerRappel === "function") assurerRappel(v); }); })
+    const v = x.target.closest && x.target.closest("[data-vue]"); if (v) vues.add(v); }); vues.forEach(v => { restaurerDefil(v); if (typeof assurerRappel === "function") assurerRappel(v); assurerBandeauReleve(v); }); })
     .observe(m, { childList: true, subtree: true });
 })();
 function toast(t) {   // v16.29 : une croix pour fermer tout de suite (il se ferme toujours tout seul après quelques secondes)
