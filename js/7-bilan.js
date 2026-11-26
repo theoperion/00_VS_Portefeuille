@@ -1000,7 +1000,22 @@ $("#moi-tester-versus").addEventListener("click", async () => {
   const r = await window.Moi.testerVersus();
   el.textContent = r && r.ok ? r.message : r && (r.erreur === "format" || /inconnu/i.test(r.message || "")) ? "Ton fichier n'a pas encore cette fonction : normal avant le transfert (elle arrive avec ta nouvelle adresse)." : (r && r.message) || "Test impossible.";
 });
-/* 26/11 (Théo) : lien Budget → livrets lancé tout de suite (sinon le fichier le fait seul toutes les heures). Réponse : nombres de lignes + message, jamais un montant */
+/* 26/11 (Théo) : lien Budget → livrets lancé tout de suite (sinon le fichier le fait seul toutes les heures). Réponse : nombres de lignes + message
+   (v21.08 : le message finit par « Derniers changements (48 h) : » et une ligne par changement de SES livrets, affichées en liste, le livret en gras) */
+function afficherSyncLivrets(el, texte) {
+  const t = String(texte || ""), i = t.indexOf("Derniers changements (48 h) :");
+  el.textContent = (i < 0 ? t : t.slice(0, i)).trim();
+  if (i < 0) return;
+  const titre = document.createElement("p"); titre.className = "info sync-titre"; titre.textContent = "Derniers changements (48 h)";
+  const ul = document.createElement("ul"); ul.className = "sync-recents";
+  t.slice(i).split("\n").slice(1).map(l => l.trim()).filter(Boolean).forEach(l => {
+    const li = document.createElement("li"), m = l.match(/^(✅ ajouté|❌ retiré) · ([^·]+?) · (.*)$/);
+    if (m) { li.append(m[1] + " · "); const b = document.createElement("b"); b.textContent = m[2]; li.append(b, " · " + m[3]); }
+    else li.textContent = l === "aucun." ? "Aucun changement ces 48 dernières heures." : l;
+    ul.append(li);
+  });
+  el.append(titre, ul);
+}
 $("#moi-sync-livrets").addEventListener("click", async () => {
   const b = $("#moi-sync-livrets"), el = $("#moi-livrets-etat");
   if (b.disabled) return;
@@ -1008,9 +1023,9 @@ $("#moi-sync-livrets").addEventListener("click", async () => {
   b.disabled = true; b.setAttribute("aria-busy", "true"); el.textContent = "Synchronisation…";
   try {
     const r = await window.Moi.syncLivrets();
-    el.textContent = r && r.ok ? (r.message || "✅ C'est fait.")
+    afficherSyncLivrets(el, r && r.ok ? (r.message || "✅ C'est fait.")
       : r && (r.erreur === "format" || /inconnu/i.test(r.message || "")) ? "⚠️ Ton fichier n'a pas encore cette fonction : il doit d'abord être mis à jour."
-      : "⚠️ " + ((r && r.message) || "Synchronisation impossible pour l'instant : réessaie dans un moment.");
+      : "⚠️ " + ((r && r.message) || "Synchronisation impossible pour l'instant : réessaie dans un moment."));
   } catch (e) { el.textContent = "⚠️ Synchronisation impossible pour l'instant : réessaie dans un moment."; }
   finally { b.disabled = false; b.removeAttribute("aria-busy"); }
 });
