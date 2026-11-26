@@ -509,7 +509,7 @@ button.bt-e { cursor: pointer; color: var(--ink); }
 .sr-3d { position: relative; margin-top: -4px; }
 .sr-3d canvas.v3d { display: block; cursor: grab; touch-action: pan-y; }
 .sr-3d canvas.v3d:active { cursor: grabbing; }
-.sr-aide { display: block; padding: 4px 14px 14px; min-height: 30px; font: 600 11px/1 var(--f-text); color: rgba(238,240,243,.55); }
+.sr-aide { display: block; padding: 4px 96px 14px; text-align: center; min-height: 30px; font: 600 11px/1 var(--f-text); color: rgba(238,240,243,.55); }
 
 /* ---------- Grand Prix ---------- */
 .pod-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -2px; padding: 2px; }
@@ -675,6 +675,7 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .sr-barre { width: 90px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.1); overflow: hidden; }
 .sr-barre i { display: block; height: 100%; background: linear-gradient(90deg, #B7791F, #F7CF55); }
 .sr-klaxon { position: absolute; right: 12px; bottom: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.08); color: #fff; border-radius: 999px; padding: 6px 12px; font: 600 12.5px/1 var(--f-text); cursor: pointer; backdrop-filter: blur(6px); }
+.sr-klaxon.sr-vue { right: auto; left: 12px; }   /* v20.80 · bouton 2D / 3D de l'écurie, en bas à gauche */
 .slot-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -2px; padding: 2px; }
 .slot-tabs::-webkit-scrollbar { display: none; }
 .slot-tabs button { flex: none; display: grid; gap: 2px; text-align: left; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); border-radius: 12px; padding: 7px 12px; font: italic 800 13px/1.1 var(--f-display); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }

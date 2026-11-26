@@ -1038,6 +1038,9 @@ function habillageCarte() {
 }
 /* ---------- Voiture : F1 de profil, ombrée, avec reflet au sol ---------- */
 /** o = { nom, e (équipement), drapeau (texte ou null), roule, reflet, label } */
+/** v20.80 (Théo) · vue de la voiture dans l'écurie : 3D par défaut, 2D (dessin d'origine) au choix, gardé sur l'appareil */
+function ecuVue2D() { try { return stock.get("versus.ecuVue") === "2d"; } catch (e) { return false; } }
+function btnVueEcu() { return window.Piste && Piste.supporte && Piste.supporte() ? '<button class="sr-klaxon sr-vue" type="button" data-ecu-vue aria-label="' + (ecuVue2D() ? "Voir la voiture en 3D" : "Voir la voiture en 2D") + '">' + (ecuVue2D() ? "🧊 3D" : "✏️ 2D") + "</button>" : ""; }
 function svgVoiture(o) {
   const u = "sv" + (++NSVG), c = couleur(o.nom), e = o.e, lv = e.livree, avecDrapeau = o.drapeau !== undefined && o.drapeau !== null;
   const haut = avecDrapeau ? 92 : 10, sol = haut + 150, H = sol + (o.reflet ? 46 : 10);
@@ -1491,7 +1494,7 @@ function htmlEcurie() {
     '<div class="sr-h"><span class="sr-k">Mon écurie · ' + (estChauffe(saisonCourante()) ? "Tour de chauffe" : "Saison " + numeroSaison(saisonCourante())) + '</span><span class="sr-id">' + avatar(qui, Object.assign({}, e, { vignette: true })) + "<b" + attrLivree(qui, e) + ">" + esc(qui) + "</b></span>" +
     '<span class="sr-p"><span class="sr-barre"><i style="width:' + (total ? nb / total * 100 : 0).toFixed(0) + '%"></i></span>' + nb + " / " + total + " objets</span></div>" +
     '<div class="sr-3d" id="sr-3d">' + svgVoiture({ nom: qui, e, reflet: true, idle: true }) + "</div>" +
-    '<span class="sr-aide">' + (window.Piste && Piste.supporte() ? "↔ Fais-la tourner du doigt" : "") + '</span><button class="sr-klaxon" type="button" id="ecu-klaxon">📯 Klaxonner</button></div>';   // v20.48 : la voiture de la course, en 3D (plus de bascule 2D / 360°)
+    '<span class="sr-aide">' + (window.Piste && Piste.supporte() && !ecuVue2D() ? "↔ Tourne-la du doigt" : "") + '</span>' + btnVueEcu() + '<button class="sr-klaxon" type="button" id="ecu-klaxon">📯 Klaxonner</button></div>';   // v20.48 : la voiture de la course, en 3D (plus de bascule 2D / 360°)
   const onglets = '<div class="slot-tabs">' + [["pilote", "Pilote"]].concat(SLOTS, [["numero", "Numéro"]], ecurieDepart() ? [] : [["badges", "Badges"]]).map(([s, lib]) => '<button type="button" data-ecu-slot="' + s + '" aria-pressed="' + (s === slot) + '">' + lib +
     (s !== slot && SLOTS.some(z => z[0] === s) && nouveauxEcurie(qui, s).length ? '<i class="ecu-pt" aria-label="' + nouveauxEcurie(qui, s).length + ' nouveau(x)">' + nouveauxEcurie(qui, s).length + "</i>" : "") +
     "<small>" + (s === "badges" ? (Array.isArray(e.badges) ? e.badges.length + " / 3" : "auto") : s === "numero" ? "#" + e.numero : s === "pilote" ? (e.pilote === "casque" ? "Casque" : "Tête") : esc(ITEMS[s][e[s]])) + "</small></button>").join("") + "</div>";
@@ -1547,7 +1550,7 @@ function htmlGarage(qui) {
   const ex = exclusifsDe(n);
   return '<div class="garage" id="garage"><div class="showroom">' + '<div class="sr-num" aria-hidden="true">' + eq.numero + '</div><div class="sr-h"><span class="sr-k">Écurie de ' + esc(n) + '</span><span class="sr-id">' + avatar(n, Object.assign({}, eq, { vignette: true })) + "<b" + attrLivree(n, eq) + ">" + esc(n) + "</b></span>" +
     '<span class="sr-p"><span class="sr-barre"><i style="width:' + (total ? nb / total * 100 : 0).toFixed(0) + '%"></i></span>' + nb + " / " + total + " objets</span></div>" + '<div class="sr-3d" id="gar-3d">' + svgVoiture({ nom: n, e: eq, reflet: true, idle: true }) + "</div>" +
-    '<button class="sr-klaxon" type="button" id="garage-klaxon">📯 Son klaxon</button></div>' +
+    btnVueEcu() + '<button class="sr-klaxon" type="button" id="garage-klaxon">📯 Son klaxon</button></div>' +
     '<div class="gar-eq">' + SLOTS.map(([s, lib]) => '<span><small>' + lib + "</small>" + esc(ITEMS[s][eq[s]]) + "</span>").join("") + "</div>" +
     (ex.length ? '<div class="gar-ex">' + ex.sort((a, b) => b.palier - a.palier).map(x => '<span title="' + esc(x.nom) + '">' + x.ico + " " + esc(x.nom) + "</span>").join("") + "</div>" : "") +
     '<button class="btn acc gar-fiche" type="button" data-gp-fiche="' + esc(n) + '">📂 Fiche de ' + esc(n) + " <small>" + (saisonJouee() ? "vitrine, portefeuille, historique" : "portefeuille, historique mois par mois") + "</small> ›</button>" +   // v20.71
@@ -2310,8 +2313,13 @@ function brancherSaison(v) {
   const gf = v.querySelector("#garage-fermer"); if (gf) gf.addEventListener("click", () => { ECU_VOIR = null; rendreTrophees(); });
   const gk = v.querySelector("#garage-klaxon"); if (gk) gk.addEventListener("click", () => { const g = v.querySelector("#garage"); confettis(equipDe(ECU_VOIR).klaxon); demarrer(g); });
   // v20.48 · la même F1 3D que la course (piste.js) ; sans WebGL, le dessin 2D reste affiché
+  // v20.80 (Théo) · bouton « Voir en 2D » : retour au dessin d'origine, choix gardé sur l'appareil (3D par défaut)
+  if (ecuVue2D()) { try { if (V3D.inst) { V3D.yaw = V3D.inst.yaw(); V3D.inst.stop(); V3D.inst = null; } if (V3D.gar) { V3D.gar.stop(); V3D.gar = null; } } catch (e) { /* rien */ } }
+  else {
   const s3 = v.querySelector("#sr-3d"); if (s3 && ECU) { try { monter3D(s3, ECU.nom, ECU.e); } catch (e) { /* le dessin 2D reste affiché */ } }
   const g3 = v.querySelector("#gar-3d"); if (g3 && ECU_VOIR) { try { if (V3D.gar) V3D.gar.stop(); V3D.gar = monter3D(g3, ECU_VOIR, ECU_VOIR === ECU.nom ? ECU.e : equipDe(ECU_VOIR), true); } catch (e) { /* idem */ } }
+  }
+  v.querySelectorAll("[data-ecu-vue]").forEach(b => b.addEventListener("click", () => { try { stock.set("versus.ecuVue", ecuVue2D() ? "3d" : "2d"); } catch (e) { /* rien */ } rendreTrophees(); }));
   const kl = v.querySelector("#ecu-klaxon"); if (kl) kl.addEventListener("click", () => { confettis(ECU.e.klaxon); demarrer(v); });
   const g = v.querySelector("#ecu-garder"); if (g) g.addEventListener("click", garderEcurie);
   v.querySelectorAll("[data-teinte]").forEach(b => b.addEventListener("click", () => {   // v20.70 · 🎨
