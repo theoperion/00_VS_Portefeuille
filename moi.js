@@ -8673,6 +8673,15 @@ window.Moi = {
   _lxSans(d) { return lxSans(d ? new Date(d) : undefined); }, _rangerLxSans(dr, d) { return rangerLxSans(dr, d ? new Date(d) : undefined); },
   _lxProgDu(m, d) { const a = M; M = m; try { return lxProgDu(d); } finally { M = a; } },   // v20.54 : pour les tests (faux fichier)
   rafraichir(frais) { if (configure()) { rendre(); charger(!!frais); } },
+  lienLivrets() { lireCache(); return !!(M && !M.simple && M.lienLivrets === true); },   // 26/11 (Théo) : le fichier sait recopier les livrets du Budget (seulement celui de Théo)
+  syncLivrets() {   // 26/11 (Théo) : Réglages › Mon fichier › « 🔗 Synchroniser mes livrets » ; s'il y a eu des changements (ou un doute), Moi se relit
+    if (!configure()) return Promise.resolve({ ok: false, message: "Aucun fichier relié à cet appareil." });
+    return posterFichier({ action: "syncLivrets" }).then(r => {
+      r = r || { ok: false, message: "Réponse vide de ton fichier." };
+      if ((r.ok && ((+r.ajoutes || 0) + (+r.retires || 0)) > 0) || r.erreur === "incertain" || r.erreur === "partiel") charger(true);
+      return r;
+    });
+  },
   testerVersus() {   // v17.93 (Théo) : fichier lu directement par le Versus (Théo) → on le dit clairement, avec le dernier relevé
     if (!configure()) return Promise.resolve({ ok: false, message: "Aucun fichier relié à cet appareil." });
     return posterFichier({ action: "testerVersus" }).then(r => {

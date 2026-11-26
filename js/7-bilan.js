@@ -936,6 +936,8 @@ function ouvrirReglages(section) {
   { const pb = document.getElementById("ouvrir-portrait"); if (pb) pb.hidden = !portraitDispo(); }
   { const tv = document.getElementById("moi-tester-versus"), te = document.getElementById("moi-versus-etat");   // v17.96 (Théo) : seulement pour un fichier qui envoie lui-même son relevé (après un transfert)
     const voir = !!(window.Moi && window.Moi.envoieSeul && window.Moi.envoieSeul()); if (tv) tv.parentElement.hidden = !voir; if (te) te.hidden = !voir; }   // V16.56 : Mon portrait à partir du samedi 21/11, 11 h
+  { const lv = document.getElementById("moi-livrets");   // 26/11 (Théo) : « 🔗 Synchroniser mes livrets » seulement si SON fichier le permet (drapeau lienLivrets envoyé par le fichier)
+    if (lv) lv.hidden = !(moiConnecte() && window.Moi && window.Moi.lienLivrets && window.Moi.lienLivrets()); }
   { const ce = document.querySelector('[data-accent-choix="ecurie"]'); if (ce) ce.style.display = ecurieOuverte() ? "" : "none"; }   // v17.5 : pas de couleur « Mon écurie » avant la Saison 1 (tour de chauffe = bases seulement)
   if (section) { const s = document.getElementById(section); if (s) plierRegl(s, false); if (s) setTimeout(() => { s.scrollIntoView({ block: "start" }); const i = s.querySelector("input"); if (i && !i.value) i.focus(); }, 30); }
 }
@@ -990,6 +992,20 @@ $("#moi-tester-versus").addEventListener("click", async () => {
   el.textContent = "Test en cours…";
   const r = await window.Moi.testerVersus();
   el.textContent = r && r.ok ? r.message : r && (r.erreur === "format" || /inconnu/i.test(r.message || "")) ? "Ton fichier n'a pas encore cette fonction : normal avant le transfert (elle arrive avec ta nouvelle adresse)." : (r && r.message) || "Test impossible.";
+});
+/* 26/11 (Théo) : lien Budget → livrets lancé tout de suite (sinon le fichier le fait seul toutes les heures). Réponse : nombres de lignes + message, jamais un montant */
+$("#moi-sync-livrets").addEventListener("click", async () => {
+  const b = $("#moi-sync-livrets"), el = $("#moi-livrets-etat");
+  if (b.disabled) return;
+  if (!window.Moi || !window.Moi.syncLivrets) { el.textContent = "Ouvre d'abord l'onglet Moi une fois, puis réessaie."; return; }
+  b.disabled = true; b.setAttribute("aria-busy", "true"); el.textContent = "Synchronisation…";
+  try {
+    const r = await window.Moi.syncLivrets();
+    el.textContent = r && r.ok ? (r.message || "✅ C'est fait.")
+      : r && (r.erreur === "format" || /inconnu/i.test(r.message || "")) ? "⚠️ Ton fichier n'a pas encore cette fonction : il doit d'abord être mis à jour."
+      : "⚠️ " + ((r && r.message) || "Synchronisation impossible pour l'instant : réessaie dans un moment.");
+  } catch (e) { el.textContent = "⚠️ Synchronisation impossible pour l'instant : réessaie dans un moment."; }
+  finally { b.disabled = false; b.removeAttribute("aria-busy"); }
 });
 $("#moi-tester").addEventListener("click", async () => {
   const a = $("#moi-api").value.trim() || stock.get(MOI_CLES.api) || "", k = $("#moi-cle").value.trim() || stock.get(MOI_CLES.cle) || "";
