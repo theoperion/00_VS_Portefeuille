@@ -1250,7 +1250,7 @@ function htmlDetailPoints(y) {
   const tab = '<div class="scroll-x"><table class="tab ch-t"><thead><tr><th>Mois</th>' + noms.map(n => '<th><i style="background:' + couleur(n) + '"></i>' + esc(n) + "</th>").join("") + "</tr></thead><tbody>" +
     c.mois.slice().reverse().map(m => "<tr><td>" + GPS[circuitDe(m.k)].drap + " " + esc(moisCourt(m.k)) + (m.spec ? " " + m.spec.ico : "") + "</td>" + noms.map(n => { const x = m.l.find(z => z.nom === n); return x ? '<td class="' + (x.rg === 1 ? "r1" : "") + '">' + x.p + (x.bonus ? "<sup>🎯</sup>" : "") + "</td>" : '<td class="muted">·</td>'; }).join("") + "</tr>").join("") +
     "</tbody></table></div>";
-  const bilan = noms.map(n => { const t = c.tot[n]; return "<li><b>" + esc(n) + "</b> : " + t.pts + " pts · " + t.v + " victoire" + (t.v > 1 ? "s" : "") + " · " + t.pod + " podium" + (t.pod > 1 ? "s" : "") + " · " + t.bonus + " 🎯</li>"; }).join("");
+  const bilan = noms.map(n => { const t = c.tot[n]; return '<li><b class="pts-nom" data-gp-fiche="' + esc(n) + '" role="button" tabindex="0" aria-label="Fiche de ' + esc(n) + '">' + esc(n) + ' <i class="gp-vers-fiche" aria-hidden="true">›</i></b> : ' + t.pts + " pts · " + t.v + " victoire" + (t.v > 1 ? "s" : "") + " · " + t.pod + " podium" + (t.pod > 1 ? "s" : "") + " · " + t.bonus + " 🎯</li>"; }).join("");
   return (c.complete ? '<div class="bref">🏆 <b>' + (c.chauffe ? premiersChauffe(c).map(esc).join("</b> & <b>") : esc(c.classement[0])) + "</b> " + (c.chauffe ? (premiersChauffe(c).length > 1 ? "remportent ex æquo le tour de chauffe." : "remporte le tour de chauffe.") : "est champion de la saison " + numeroSaison(y) + ".") + "</div>" : "") +
     (c.mois.length ? '<div class="pts-courbe">' + boiteGraphe("g-champ", noms.map(n => ({ nom: n, c: couleur(n) }))) + "</div>" : "") +   // v17.66 (Théo) : la courbe du championnat reste toujours visible
     '<details class="pts-det" id="pts-det"' + (ETAT.ptsOuvert === "1" ? " open" : "") + '><summary>📊 Détail des points <small>bilan, mois par mois, barème</small></summary>' +
@@ -1493,12 +1493,13 @@ function htmlEcurie() {
       '<button type="button" class="it-q" data-itq="' + slot + "." + id + '" aria-label="D\'où vient ' + esc(cache ? "cet objet" : ITEMS[slot][id]) + ' ?">?</button></div>' +
       (porte ? htmlTeintes(qui, slot, e) : "");
   }).join("") + '</div><div class="it-d" id="it-d" aria-live="polite">' + htmlDetailItem(qui) + "</div>";
-  const grille = D.personnes.map(p => { const eq = p.nom === qui ? e : equipDe(p.nom); return '<button type="button" class="gr-l' + (ECU_VOIR === p.nom ? " on" : "") + '" data-voir="' + esc(p.nom) + '">' + avatar(p.nom, eq) + "<b" + attrLivree(p.nom, eq) + ">" + esc(p.nom) + "</b>" + (eq.plaque !== "aucune" ? '<span class="plaque">' + esc(ITEMS.plaque[eq.plaque]) + "</span>" : "") + '<span class="num">#' + eq.numero + " ›</span></button>"; }).join("");
+  const grille = D.personnes.map(p => { const eq = p.nom === qui ? e : equipDe(p.nom); return '<div class="gr-w' + (ECU_VOIR === p.nom ? " on" : "") + '"><button type="button" class="gr-l' + (ECU_VOIR === p.nom ? " on" : "") + '" data-voir="' + esc(p.nom) + '" aria-label="Voir l\'écurie de ' + esc(p.nom) + '">' + avatar(p.nom, eq) + "<b" + attrLivree(p.nom, eq) + ">" + esc(p.nom) + "</b>" + (eq.plaque !== "aucune" ? '<span class="plaque">' + esc(ITEMS.plaque[eq.plaque]) + "</span>" : "") + '<span class="num">#' + eq.numero + " ›</span></button>" +
+    '<button type="button" class="gr-f" data-gp-fiche="' + esc(p.nom) + '" aria-label="Fiche de ' + esc(p.nom) + '"><span aria-hidden="true">📂</span><small>Fiche</small></button></div>'; }).join("");   // v20.71 (Théo) : la ligne = son écurie, 📂 = sa fiche
   const modifie = JSON.stringify(normTenue(e)) !== JSON.stringify(normTenue(equipDe(qui)));
   return showroom + '<div class="ecu-hasard"><button class="btn ghost" type="button" id="ecu-hasard">🎲 Au hasard</button>' + (modifie ? '<button class="btn ghost" type="button" id="ecu-retour">↩️ Ma tenue enregistrée</button>' : "") + "</div>" + onglets + corps +
     '<button class="btn acc plein" type="button" id="ecu-garder">Enregistrer mon écurie</button>' +
     '<p class="info">Ta voiture de course porte ta livrée, ton casque, ta finition, ton numéro et ta traînée. En course, on garde ton visage pour qu\'on te reconnaisse.' + (ecurieDepart() ? " En décembre, les objets de départ ; de nouveaux objets se gagneront tout au long de 2027." : "") + "</p>" +
-    '<div><h3 class="s-h3">La grille <small>touche une écurie pour la voir</small></h3></div><div class="grille-dep">' + grille + "</div>" + htmlGarage(qui);
+    '<div><h3 class="s-h3">La grille <small>touche une écurie pour la voir, 📂 pour la fiche</small></h3></div><div class="grille-dep">' + grille + "</div>" + htmlGarage(qui);
 }
 /** v20.70 · 🎨 sous l'objet porté (s'il a un motif neutre) : 3 couleurs au choix */
 function htmlTeintes(qui, slot, e) {
@@ -1532,6 +1533,7 @@ function htmlGarage(qui) {
     '<button class="sr-klaxon" type="button" id="garage-klaxon">📯 Son klaxon</button></div>' +
     '<div class="gar-eq">' + SLOTS.map(([s, lib]) => '<span><small>' + lib + "</small>" + esc(ITEMS[s][eq[s]]) + "</span>").join("") + "</div>" +
     (ex.length ? '<div class="gar-ex">' + ex.sort((a, b) => b.palier - a.palier).map(x => '<span title="' + esc(x.nom) + '">' + x.ico + " " + esc(x.nom) + "</span>").join("") + "</div>" : "") +
+    '<button class="btn acc gar-fiche" type="button" data-gp-fiche="' + esc(n) + '">📂 Fiche de ' + esc(n) + " <small>" + (saisonJouee() ? "vitrine, portefeuille, historique" : "portefeuille, historique mois par mois") + "</small> ›</button>" +   // v20.71
     '<button class="lien" type="button" id="garage-fermer">Fermer</button></div>';
 }
 /* ================= V16 · La route des 4 mondes : cartes de collection, badges, vitrine =================

@@ -314,7 +314,8 @@ function rendreFiche() {
   const sAll = serie(p, env);
   const finP = (sAll.filter(x => x.val !== null && x.val !== undefined).pop() || {}).k;
   const v = $("#v-fiche");
-  const chips = '<div class="chips" role="group" aria-label="Personne">' + D.personnes.map(x => '<button class="chip" type="button" data-fiche="' + esc(x.nom) + '" aria-pressed="' + (x.nom === p.nom) + '"><i style="background:' + couleur(x.nom) + '"></i>' + esc(x.nom) + "</button>").join("") + "</div>";
+  const chips = (typeof FICHE_RETOUR !== "undefined" && FICHE_RETOUR ? '<button class="btn ghost fiche-retour" type="button" id="fiche-retour">‹ Retour au Podium</button>' : "") +   // v20.71
+    '<div class="chips" role="group" aria-label="Personne">' + D.personnes.map(x => '<button class="chip" type="button" data-fiche="' + esc(x.nom) + '" aria-pressed="' + (x.nom === p.nom) + '"><i style="background:' + couleur(x.nom) + '"></i>' + esc(x.nom) + "</button>").join("") + "</div>";
   if (!finP) {
     v.innerHTML = chips + (typeof ficheMillion === "function" ? ficheMillion(p.nom) : "") + (typeof vitrineFiche === "function" ? vitrineFiche(p.nom) : "") + filtres(true, true, false) + '<div class="vide">Pas encore de relevé pour ' + esc(p.nom) + " dans " + esc(ENVELOPPES[env]) + ".</div>";
   } else {
@@ -354,6 +355,7 @@ function rendreFiche() {
     compterChiffres(v.querySelector(".hero"));
   }
   brancherFiltres("fiche");
+  { const fr = v.querySelector("#fiche-retour"); if (fr) fr.addEventListener("click", retourPodiumFiche); }
   v.querySelectorAll("[data-fiche]").forEach(b => b.addEventListener("click", () => { ETAT.fiche = b.dataset.fiche; garder(); rendreFiche(); }));
   v.querySelectorAll(".f-timing[data-toast]").forEach(b => b.addEventListener("click", () => toast(b.dataset.toast)));
   v.querySelectorAll(".vitrine [data-carte-coll]").forEach(b => b.addEventListener("click", () => ouvrirCarteColl(b.dataset.carteColl)));
@@ -773,6 +775,7 @@ function montrerVue(v) {
   if (!VUES.includes(v)) v = "classement";
   if (v === "classement" && VUE_AFFICHEE !== null && VUE_AFFICHEE !== "classement") ANIM_CL = true;   // on (re)vient sur l'onglet : les animations se rejouent
   VUE_AFFICHEE = v;
+  if (v !== "fiche" && typeof FICHE_RETOUR !== "undefined") FICHE_RETOUR = null;   // v20.71 : le « Retour au Podium » ne vaut que pour la fiche ouverte depuis le Podium
   if (v !== "trophees" && typeof TRESOR_APERCU !== "undefined" && TRESOR_APERCU) quitterApercuTresor(false);   // v17.35 : changer d'onglet arrête l'aperçu du trésor
   document.querySelectorAll(".view").forEach(s => { s.hidden = s.dataset.vue !== v; });
   if (v !== "trophees" && typeof V3D !== "undefined") {   // v20.48 · on quitte le Podium : le showroom 3D s'arrête (il repart au retour, quand l'Écurie se redessine)
@@ -849,6 +852,7 @@ function armerRetour() {
     const cur = stock.get(CLES.vue) || vueActive(), acc = vueAccueil();
     if (fermerFenetreOuverte()) { /* fenêtre fermée */ }
     else if (cur === "moi" && window.Moi && window.Moi.retour && window.Moi.retour()) { /* Moi › Aujourd'hui */ }
+    else if (cur === "fiche" && FICHE_RETOUR) retourPodiumFiche();   // v20.71 : fiche ouverte depuis le Podium → retour au Podium
     else if (cur !== acc) montrerVue(acc);
     else toast("Tu es sur l'accueil. Pour quitter, utilise le bouton ou le geste « accueil » du téléphone");
     try { const vv = stock.get(CLES.vue) || acc; if (location.hash !== "#" + vv) history.replaceState(history.state, "", "#" + vv); } catch (x) {}   // l'adresse suit l'onglet affiché
@@ -860,13 +864,26 @@ function armerRetour() {
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !document.querySelector(".view:not([hidden]) *")) redessiner("page vide au retour"); });
 })();
 
+/* lot47 · Podium : toucher le nom d'un pilote ouvre directement sa fiche.
+   v20.71 (Théo) · ces écouteurs étaient posés DANS ouvrirReglages (ils ne marchaient qu'après avoir ouvert les Réglages) : sortis ici.
+   partout dans le Podium (liste de la course, détail des points, grille et garage de l'Écurie), décembre compris : la même fiche que dans le Classement ;
+   la fiche ouverte depuis le Podium propose « ‹ Retour au Podium » (le bouton retour du téléphone y ramène aussi) */
+var FICHE_RETOUR = null;   // var : lue par montrerVue avant cette ligne
+function ouvrirFicheDe(nom) {
+  if (!D || !D.personnes.some(p => p.nom === nom)) return;
+  FICHE_RETOUR = vueActive() === "trophees" ? { y: window.scrollY } : null;
+  ETAT.fiche = nom; garder(); allerA("fiche");
+}
+function retourPodiumFiche() {
+  const r = FICHE_RETOUR; FICHE_RETOUR = null; allerA("trophees");
+  if (r && r.y) requestAnimationFrame(() => setTimeout(() => window.scrollTo(0, r.y), 60));
+}
+document.addEventListener("click", ev => { const t = ev.target.closest && ev.target.closest("[data-gp-fiche]"); if (!t) return; ev.stopPropagation(); ev.preventDefault(); ouvrirFicheDe(t.dataset.gpFiche); });
+document.addEventListener("keydown", ev => { const t = ev.target.closest && ev.target.closest("[data-gp-fiche]"); if (!t || (ev.key !== "Enter" && ev.key !== " ")) return; ev.preventDefault(); ouvrirFicheDe(t.dataset.gpFiche); });
 /* ---------- Réglages ---------- */
 function ouvrirReglages(section) {
   $("#champ-api").value = stock.get(CLES.api) || API_URL; aRevoquer = null; $("#reglages").hidden = false; chargerCodes(); majMoiReglages();
-  /* lot47 · Podium (saison) : toucher le nom d'un pilote ouvre directement sa fiche (et sa vitrine) */
-document.addEventListener("click", ev => { const t = ev.target.closest && ev.target.closest("[data-gp-fiche]"); if (!t) return; ev.stopPropagation(); ETAT.fiche = t.dataset.gpFiche; garder(); allerA("fiche"); });
-document.addEventListener("keydown", ev => { const t = ev.target.closest && ev.target.closest("[data-gp-fiche]"); if (!t || (ev.key !== "Enter" && ev.key !== " ")) return; ev.preventDefault(); ETAT.fiche = t.dataset.gpFiche; garder(); allerA("fiche"); });
-{ const pb = document.getElementById("ouvrir-portrait"); if (pb) pb.hidden = !portraitDispo(); }
+  { const pb = document.getElementById("ouvrir-portrait"); if (pb) pb.hidden = !portraitDispo(); }
   { const tv = document.getElementById("moi-tester-versus"), te = document.getElementById("moi-versus-etat");   // v17.96 (Théo) : seulement pour un fichier qui envoie lui-même son relevé (après un transfert)
     const voir = !!(window.Moi && window.Moi.envoieSeul && window.Moi.envoieSeul()); if (tv) tv.parentElement.hidden = !voir; if (te) te.hidden = !voir; }   // V16.56 : Mon portrait à partir du samedi 21/11, 11 h
   { const ce = document.querySelector('[data-accent-choix="ecurie"]'); if (ce) ce.style.display = ecurieOuverte() ? "" : "none"; }   // v17.5 : pas de couleur « Mon écurie » avant la Saison 1 (tour de chauffe = bases seulement)
