@@ -2344,7 +2344,7 @@ function htmlEnveloppes(s, plat) {
   return '<div class="m-envs' + (plat ? " plat" : "") + '">' + tete + corps +
     '<div class="nv-tot nv-g"><span class="nv-n"><b>Portefeuille</b><span class="nv-v">' + eur(s.valeur) + "</span>" + pastilleVol(vp) + "</span>" + col(s.jour, s.jourPct, 2) + col(s.latente, s.latentePct, 1) + "<span></span>" +
     (gs.length > 1 ? '<span class="nv-rep" role="img" aria-label="Répartition par enveloppe">' + rep + "</span>" : "") + "</div>" +
-    (vp || gs.some(g => g.lignes.some(l => !l.especes && volLigne(g.env, l.code))) ? '<p class="nv-vo-aide">' + aideVol(vp, /\*<\/span>/.test(corps)) + "</p>" : "") + "</div>";
+    (vp || gs.some(g => g.lignes.some(l => !l.especes && volLigne(g.env, l.code))) ? '<p class="nv-vo-aide">' + aideVol(vp, corps + pastilleVol(vp)) + "</p>" : "") + "</div>";
 }
 function estOuverte(el) { return el.classList.contains("ouvert"); }
 function basculerEnv(el) {
@@ -2384,15 +2384,17 @@ function basculerLigne(el) {
   const l = lignesTenues().find(x => x.env === env && x.code === code) || {};
   const m = (lab, v) => "<div><span>" + lab + '</span><b class="' + sens(v) + '">' + pct(v) + "</b></div>";
   const e = (lab, v, sig) => "<div><span>" + lab + '</span><b class="' + (sig ? sens(v) : "") + '">' + (ok(v) ? eur(v, 2, sig) : "—") + "</b></div>";
-  const vo = volLigne(env, code), fv = vo && feuVol(vo.v);   // 25/11/2026 (Théo) : volatilité de la ligne
-  const voTxt = !vo ? "Volatilité : pas assez de cours pour la calculer." : "Volatilité " + (vo.an ? "sur 1 an" : "depuis le " + frDate(isoN(vo.deb)) + " (moins d'un an de cours)") + " : " + fv.m + ", " +
-    (vo.src === "marche" ? "estimée d'après le marché « " + esc(vo.nom) + " » (pas encore de cours de la ligne)." : "d'après " + F0.format(vo.n) + " séances du cours de " + esc(vo.ticker) + ".") +
+  const perV = perPastille(), vo = volLigne(env, code, perV), chiffre = vo && ok(vo.v), fv = chiffre && feuVol(vo.v);   // 25/11/2026 (Théo) : volatilité de la ligne ; 26/11 : sur la période choisie
+  const voTxt = !vo ? "Volatilité : pas assez de cours pour la calculer." : vo.indispo ? "Volatilité " + surVol(vo) + " : pas encore calculée, " + (vo.sansAchat ? "ton fichier n'envoie pas encore la date d'achat." : "ton fichier n'a pas encore la volatilité de cette période (il l'ajoutera à sa prochaine mise à jour).")
+    : !chiffre ? "Volatilité " + surVol(vo) + " : trop court pour un chiffre fiable (" + (vo.n || 0) + " séance" + ((vo.n || 0) > 1 ? "s" : "") + ", il en faut " + VOL_MIN + ")."
+    : "Volatilité " + surVol(vo) + " : " + fv.m + (vo.court ? " (court : indicatif)" : "") + ", " +
+    (vo.src === "marche" ? "estimée d'après le marché « " + esc(vo.nom) + " » " + (vo.repli === "periode" ? "(ton fichier n'a pas encore la volatilité de cette période)." : "(pas encore de cours de la ligne).") : "d'après " + F0.format(vo.n) + " séances du cours de " + esc(vo.ticker) + ".") +
     " 🟢 moins de 15 % · 🟠 15 à 30 % · 🔴 plus de 30 %.";
   const d = document.createElement("div");
   d.className = "m-ligne-det";
   d.innerHTML = '<div class="mini">' + m("1 semaine", p.s1) + m("1 mois", p.m1) + m("6 mois", p.m6) + m("YTD", p.ytd) + m("1 an", p.a1) +
     "<div><span>Cours</span><b>" + cours(l.cours) + "</b></div><div><span>Poids</span><b>" + pct(l.poids, 1, false) + "</b></div>" +
-    "<div><span>Volatilité" + (vo && !vo.an ? "*" : " 1 an") + "</span><b>" + (vo ? fv.e + " " + (vo.src === "marche" ? "≈" : "") + pct(vo.v, 1, false) : "—") + "</b></div>" +
+    "<div><span>Volatilité " + VOL_PER[perV][1].slice(5) + (chiffre && vo.an === false ? "*" : "") + "</span><b>" + (chiffre ? fv.e + " " + (vo.src === "marche" ? "≈" : "") + pct(vo.v, 1, false) : "—") + "</b></div>" +
     "<div><span>Quantité × PRU</span><b>" + qte(l.qte) + " × " + cours(l.pru) + "</b></div>" + e("Plus-value", l.pv, true) +
     e("Coût de revient", pos.cout) + e("Plus-value réalisée", pos.pvr, true) + e("Frais payés", pos.frais) +
     '<p style="grid-column:1/-1;margin:0;font-size:12px;color:var(--ink-2)">' + (p.ticker ? "Performance du cours (" + esc(p.ticker) + "), indépendante de tes dates d'achat." : "Pas de cotation Google Finance pour cette ligne : performances du cours indisponibles.") + " " + voTxt + "</p>" +
@@ -3198,7 +3200,8 @@ function panneauMarche() {
     const d0 = debut(vis.length ? vis : lignes.filter(l => l.d)), dm = per === "tout" && fm ? fm.d[0] : null, dmk = per === "tout" ? debut(vis.filter(l => l.nom !== NOM_MOI)) : null;
     const autre = !mkParDefaut() ? '<button class="lien" type="button" data-mk-defaut="1">Revenir aux 4 courbes de base</button>' : "";
     return (vis.length ? courbesSVG(vis, true, per) || '<p class="info">Pas encore assez d\'historique pour cette période.</p>' : '<p class="info m-mk-rien">Aucune courbe : touche une pastille pour l\'afficher.</p>') +
-      '<p class="info m-mk-base">' + (d0 ? txtBase(d0, per, lignes.some(l => l.hebdo)) + ". " : "") + (dm && dmk && dmk > dm ? "Les marchés n'ont pas d'historique avant le " + frDate(isoN(dmk)) + " : leurs courbes partent de là. " : "") + "ETF en euros (Or couvert ≈ GLD, Nasdaq ×3 ≈ TQQQ). " + (m.jour.some(x => volMk(x.nom)) ? "Vol. = volatilité 1 an (🟢 moins de 15 % · 🟠 15 à 30 % · 🔴 plus de 30 %). " : "") + "Toucher long : un marché seul. " + autre + "</p>";
+      '<p class="info m-mk-base">' + (d0 ? txtBase(d0, per, lignes.some(l => l.hebdo)) + ". " : "") + (dm && dmk && dmk > dm ? "Les marchés n'ont pas d'historique avant le " + frDate(isoN(dmk)) + " : leurs courbes partent de là. " : "") + "ETF en euros (Or couvert ≈ GLD, Nasdaq ×3 ≈ TQQQ). " + (m.jour.some(x => volMk(x.nom)) ? (() => { const vs2 = m.jour.map(x => volMk(x.nom)).filter(Boolean), p = VOL_PER[perPastille()][0];
+        return "Vol. = volatilité " + (/^depuis/.test(p) ? p : "sur " + p) + " (🟢 moins de 15 % · 🟠 15 à 30 % · 🔴 plus de 30 %" + (vs2.some(x => x.trop) ? " · — trop court" : vs2.some(x => x.court) ? " · indicatif sous 60 séances" : "") + "). "; })() : "") + "Toucher long : un marché seul. " + autre + "</p>";
   }
   const j = m.jour[marcheOuvert], se = j && serieMk(j.nom); if (!se) return '<p class="info">Pas d\'historique pour ce marché.</p>';
   // lot 61 : les repères 1 mois · 6 mois · 1 an suivent la même règle que les cases (plus les semaines ≈ quand les clôtures existent) ; la période choisie en premier
@@ -3206,7 +3209,7 @@ function panneauMarche() {
   const vo = volMk(j.nom);
   return '<div class="m-mk-res"><button class="lien" type="button" data-mk="cmp">← Tous</button><b>' + esc(NOMS_MK[j.nom] || j.nom) + "</b>" + pastilleVol(vo) + (f ? t(PERIODES_J[per][2], varF(f), true) : "") + ["1m", "6m", "1a"].filter(k => k !== per).map(k => t(PERIODES_J[k][2], varMk(j, k).v)).join("") + "</div>" +
     (f ? courbesSVG([{ nom: se.nom, d: f.d, v: f.v, c: c }], true, per) + '<p class="info m-mk-base">' + txtBase(f.d[0], per, f.hebdo) + ".</p>" : '<p class="info">Pas encore assez d\'historique pour cette période.</p>') +
-    (vo ? '<p class="info m-mk-vo">' + VOL_AIDE + (vo.an ? "" : " * moins d'un an de cours : depuis le " + frDate(isoN(vo.deb)) + ".") + " D'après " + vo.n + " séances de ce marché.</p>" : "") +
+    (vo ? '<p class="info m-mk-vo">' + aideVolPer(vo.per, { court: vo.court, tiret: vo.trop }) + (vo.an === false && vo.deb ? " * moins d'un an de cours : depuis le " + frDate(isoN(vo.deb)) + "." : "") + (vo.trop ? "" : " D'après " + vo.n + " séances de ce marché.") + "</p>" : "") +
     (/^Or/.test(j.nom) && serieMk("Or couvert €") ? '<p class="info">Couvert ou non ? <button class="lien" type="button" data-mk="cmp-or">Comparer l\'or couvert et non couvert</button></p>' : "");
 }
 function majPastillesMk(z) {
@@ -3491,12 +3494,53 @@ function feuVol(v) { return v < .15 ? { e: "🟢", m: "calme", c: "calme" } : v 
 const VOL_PROXY = { LQQ: "Nasdaq ×2", QQQ3: "Nasdaq ×3", ANX: "Nasdaq-100", PUST: "Nasdaq-100", PANX: "Nasdaq-100", CNDX: "Nasdaq-100", EQQQ: "Nasdaq-100",
   PSP5: "S&P 500", ESE: "S&P 500", PE500: "S&P 500", CSPX: "S&P 500", "500": "S&P 500", CW8: "MSCI Monde", EWLD: "MSCI Monde", DCAM: "MSCI Monde", WPEA: "MSCI Monde", WLD: "MSCI Monde", IWDA: "MSCI Monde",
   PAEEM: "Émergents", AEEM: "Émergents", EIMI: "Émergents", EMPEA: "Émergents", GOLD: "Or", IGLN: "Or", BTC: "Bitcoin", ETH: "Ethereum", SEME: "Semi-conducteurs", SOXL: "Semis ×3", ETZ: "Stoxx 600", MEUD: "Stoxx 600" };
-function volLigne(env, code) {
+/** 26/11/2026 (Théo, v20.96) · TOUTES les pastilles de volatilité d'Aujourd'hui (lignes, total, marchés, détail d'une ligne, un marché seul)
+ *  suivent la période choisie en haut (5 j · 1 M · 6 M · YTD · 1 an · Tout ; « Jour » et « Séance » = 1 an, la référence).
+ *  Même méthode partout : écart type des variations quotidiennes de la période × √252 (√365 pour la crypto).
+ *  Moins de 15 variations (5 j, historique trop court) : « vol. — » (trop court), jamais un chiffre inventé ; moins de 60 : indicatif. */
+function perPastille() { return PERIODES_J[VUEJ] ? VUEJ : "1a"; }
+/** volatilité d'une série de clôtures sur [i0, fin] → { v, n, deb, an: true, parAn } ou { trop: true, n } */
+function volDepuis(c, i0, parAn) {
+  const r = [];
+  for (let i = Math.max(1, i0 + 1); i < c.v.length; i++) { const q = c.v[i] / c.v[i - 1]; if (q > .5 && q < 2) r.push(q - 1); }
+  if (r.length < VOL_MIN) return { trop: true, n: r.length };
+  const moy = r.reduce((a, x) => a + x, 0) / r.length;
+  return { v: Math.sqrt(r.reduce((a, x) => a + (x - moy) * (x - moy), 0) / (r.length - 1)) * Math.sqrt(parAn), n: r.length, deb: c.d[Math.max(0, i0)], an: true, parAn };
+}
+/** volatilité d'un marché (clôtures quotidiennes du Versus) sur la période : 1 an = volPoints (comme avant) ; sinon les MÊMES bornes que son % (bornesMk) */
+function volMkPer(nom, per, achat) {   // achat (aaaammjj) : « Tout » d'une LIGNE = depuis son achat (sinon : depuis le début du portefeuille, comme la case)
+  const c = closMk(nom); if (c.hebdo || c.d.length < 21) return null;
+  const an = volPoints(c.d.map((d, i) => ({ d, v: c.v[i] })));
+  if (per === "1a") return an ? Object.assign(an, { per }) : null;
+  if (per === "tout" && achat) {
+    let i0 = -1; c.d.forEach((d, i) => { if (d <= achat) i0 = i; });
+    const x = volDepuis(c, Math.max(0, i0), an ? an.parAn : 252);
+    return Object.assign(x, { per, achat, an: i0 >= 0, court: !x.trop && x.n < VOL_COURT });
+  }
+  const B = bornesMk({ nom }, per);
+  const x = B.vide ? { trop: true, n: 0 } : volDepuis(c, B.i0, an ? an.parAn : 252);
+  return Object.assign(x, { per, court: !x.trop && x.n < VOL_COURT });
+}
+/** ligne : cours de la ligne (Volatilite.js du fichier : 1 an, et chaque période depuis le 26/11) ; à défaut le marché équivalent (≈) ;
+ *  serveur pas encore à jour (pas de période) et pas de marché équivalent : { indispo } (« vol. — », dit dans l'aide) */
+function volLigne(env, code, per) {
+  per = per || perPastille();
   try {
     const p = (M.perfLignes || {})[env + "|" + code] || {}, t = String(p.ticker || "").toUpperCase(), x = M.vol && M.vol.t && t ? M.vol.t[t] : null;
-    if (x && ok(x.v)) return { v: x.v, n: x.n, deb: +String(x.deb || "").replace(/-/g, "") || null, an: x.an !== false, src: "cours", ticker: t };
-    const nom = VOL_PROXY[String(code || "").toUpperCase()];
-    if (nom && marchesMoi()) { const c = closMk(nom); if (!c.hebdo && c.d.length) { const r = volPoints(c.d.map((d, i) => ({ d, v: c.v[i] }))); if (r) return Object.assign(r, { src: "marche", nom }); } }
+    const dnum = s => +String(s || "").replace(/-/g, "") || null;
+    /* « Tout » : depuis l'ACHAT de la ligne (comme son %), date du 1er achat de la position envoyée par le fichier (ref.detenu[].achat) */
+    const achatIso = per === "tout" ? String((((M.ref || {}).detenu || []).find(d => d.env === env && d.code === code) || {}).achat || "").slice(0, 10) : "", achat = dnum(achatIso);
+    const nom = VOL_PROXY[String(code || "").toUpperCase()], prox = () => nom && marchesMoi() && (per !== "tout" || achat) ? volMkPer(nom, per, achat) : null;
+    if (x && ok(x.v)) {
+      if (per === "1a") return { v: x.v, n: x.n, deb: dnum(x.deb), an: x.an !== false, src: "cours", ticker: t, per };
+      if (per === "5j") return { trop: true, n: 5, per, src: "cours", ticker: t };   // 5 variations : toujours trop court
+      const y = x.p && (per === "tout" ? achatIso && x.p.achat && x.p.achat[achatIso] : x.p[per]);
+      if (y) return ok(y.v) ? { v: y.v, n: y.n, deb: dnum(y.deb), an: y.an !== false, src: "cours", ticker: t, per, achat, court: y.n < VOL_COURT } : { trop: true, n: y.n, per, achat, src: "cours", ticker: t };
+      const r = prox(); if (r) return Object.assign(r, { src: "marche", nom, repli: "periode" });   // le fichier a le 1 an de la ligne, pas encore cette période
+      return { indispo: true, per, achat, src: "cours", ticker: t, repli: "periode" };
+    }
+    const r = prox(); if (r) return Object.assign(r, { src: "marche", nom });
+    if (nom && marchesMoi() && per === "tout" && !achat) return { indispo: true, per, src: "marche", nom, sansAchat: true };   // date d'achat pas encore envoyée par le fichier
   } catch (e) { /* pas de volatilité plutôt qu'un écran cassé */ }
   return null;
 }
@@ -3512,28 +3556,36 @@ function volPortefeuille(per) {
     return { v: c.moiVol, deb: c.deb, an: c.an, n: c.n, per: c.per, court: c.court };
   } catch (e) { return null; }
 }
-function pastilleVol(x) { if (!x || x.manque) return ""; const f = feuVol(x.v);
-  return '<span class="nv-vo ' + f.c + '" title="Volatilité ' + (x.per && x.per !== "1a" ? VOL_PER[x.per][0] + (x.an ? "" : " (depuis le " + frDate(isoN(x.deb)) + ")") + (x.court ? " (court : indicatif)" : "") : x.an ? "1 an" : "depuis le " + frDate(isoN(x.deb))) + " : " + f.m + (x.src === "marche" ? " (≈ " + esc(x.nom) + ")" : "") + '"><i aria-hidden="true">' + f.e + "</i> vol. " + (x.src === "marche" ? "≈" : "") + pct(x.v, 0, false) + (x.an ? "" : "*") + "</span>"; }
-/** 25/11/2026 (Théo) : volatilité 1 an d'un marché des cases Marchés, depuis ses clôtures quotidiennes déjà reçues (closMk ← marchesMoi().quot),
- *  même calcul que les lignes (volPoints). Seulement les semaines (pas de clôtures quotidiennes) : rien plutôt qu'un chiffre faux. */
-function volMk(nom) {
-  try { const c = closMk(nom); if (c.hebdo || c.d.length < 21) return null; return volPoints(c.d.map((d, i) => ({ d, v: c.v[i] }))); }
-  catch (e) { return null; }
+/** « sur 1 mois », « depuis janvier », « sur 1 an », « depuis le 03/02/2026 (moins d'un an de cours) » */
+function surVol(x) {
+  const per = x.per || "1a", p = VOL_PER[per] ? VOL_PER[per][0] : "1 an", sur = per === "tout" && x.achat ? "depuis l'achat (" + frDate(isoN(x.achat)) + ")" : /^depuis/.test(p) ? p : "sur " + p;
+  if (x.an === false && x.deb) return per === "1a" ? "depuis le " + frDate(isoN(x.deb)) + " (moins d'un an de cours)" : sur + " (cours depuis le " + frDate(isoN(x.deb)) + " seulement)";
+  return sur;
 }
-const VOL_AIDE = "Vol. = volatilité sur 1 an : à quel point le cours bouge d'un jour à l'autre, ramenée à l'année. 🟢 calme (moins de 15 %) · 🟠 15 à 30 % · 🔴 plus de 30 %.";
-/** phrase d'aide sous les lignes (Aujourd'hui) : les lignes restent sur 1 an ; le portefeuille suit la période choisie (26/11/2026, Théo) */
-function aideVol(vp, etoileLigne) {
-  const etoile = etoileLigne || (vp && !vp.manque && !vp.an && (!vp.per || vp.per === "1a")) ? " * moins d'un an de cours : depuis le premier." : "";
-  if (!vp || !vp.per || vp.per === "1a") return VOL_AIDE + etoile;
-  const p = VOL_PER[vp.per][0], sur = /^depuis/.test(p) ? p : "sur " + p;   // « depuis janvier » / « depuis le début » sans « sur »
-  return "Vol. = volatilité : à quel point le cours bouge d'un jour à l'autre, ramenée à l'année. 🟢 calme (moins de 15 %) · 🟠 15 à 30 % · 🔴 plus de 30 %. " +
-    (vp.manque ? "Portefeuille : pas assez de cours " + sur + " pour la calculer." : "Portefeuille : " + sur + (vp.an ? "" : " (depuis le " + frDate(isoN(vp.deb)) + ")") + ", la période choisie" + (vp.court ? " (court : indicatif)" : "") + ".") +
-    " Lignes : toujours sur 1 an." + etoile;
+function pastilleVol(x) { if (!x) return "";
+  const ap = x.src === "marche" ? " (≈ " + esc(x.nom) + ")" : "";
+  if (x.trop || x.manque || x.indispo) return '<span class="nv-vo sans-vo" title="Volatilité ' + surVol(x) + " : " + (x.indispo ? (x.sansAchat ? "pas encore calculée (date d'achat pas encore connue)" : x.repli === "periode" ? "pas encore calculée : ton fichier n'a pas encore la volatilité de cette période" : "pas encore calculée pour cette période") : "trop court pour un chiffre fiable (" + (x.n || 0) + " séance" + ((x.n || 0) > 1 ? "s" : "") + ", il en faut " + VOL_MIN + ")") + ap + '"><i aria-hidden="true">·</i> vol. —</span>';
+  const f = feuVol(x.v);
+  return '<span class="nv-vo ' + f.c + '" title="Volatilité ' + surVol(x) + " : " + f.m + (x.court ? " (court : indicatif)" : "") + ap + '"><i aria-hidden="true">' + f.e + "</i> vol. " + (x.src === "marche" ? "≈" : "") + pct(x.v, 0, false) + (x.an === false ? "*" : "") + "</span>"; }
+/** marché des cases Marchés, sur la période des pastilles */
+function volMk(nom, per) { try { return volMkPer(nom, per || perPastille()); } catch (e) { return null; } }
+const VOL_FEUX = "🟢 calme (moins de 15 %) · 🟠 15 à 30 % · 🔴 plus de 30 %.";
+/** phrase d'aide : la période utilisée, les feux, « — » et « * » quand ils sont à l'écran */
+function aideVolPer(per, o) {
+  o = o || {}; const p = VOL_PER[per] ? VOL_PER[per][0] : "1 an", sur = /^depuis/.test(p) ? p : "sur " + p;
+  return "Vol. = volatilité " + sur + (per === "1a" ? "" : " (la période choisie)") + " : à quel point le cours bouge d'un jour à l'autre, ramenée à l'année. " + VOL_FEUX +
+    (o.court ? " Moins de 60 séances : chiffre indicatif." : "") + (o.tiret ? " « — » : période trop courte pour un chiffre fiable (il faut " + VOL_MIN + " séances)" + (o.indispo ? ", ou pas encore calculée pour cette ligne" : "") + "." : o.indispo ? " « — » : pas encore calculée pour cette ligne." : "") +
+    (per === "tout" && o.lignes ? " Lignes : depuis leur achat." : "") +
+    (o.etoile ? (per === "1a" ? " * moins d'un an de cours : depuis le premier." : " * moins de cours que la période : depuis le premier.") : "");
+}
+function aideVol(vp, corps, per) {
+  per = per || perPastille();
+  return aideVolPer(per, { court: /indicatif/.test(corps) || !!(vp && vp.court), tiret: /vol\. —/.test(corps) && /trop court/.test(corps) || !!(vp && vp.manque), indispo: /pas encore calculée/.test(corps), lignes: /data-code=/.test(corps), etoile: /\*<\/span>/.test(corps) });
 }
 /** 26/11/2026 (Théo) · la volatilité du PORTEFEUILLE (et celle du S&P 500 à côté, et le Sharpe) suit la PÉRIODE CHOISIE.
  *  1 an : comme avant (valeur du fichier, sinon recalculée). Autres périodes : recalculées ici sur les relevés quotidiens de la période
  *  (mêmes bornes que la courbe, fenetre), même méthode : écart type des variations quotidiennes × √252. Moins de 60 séances : « court : indicatif ».
- *  Moins de 15 séances : pas de chiffre (« pas assez de cours »). Les pastilles des lignes et des marchés restent sur 1 an. */
+ *  Moins de 15 séances : pas de chiffre (« pas assez de cours »). Depuis la v20.96, les pastilles des lignes et des marchés suivent aussi la période (perPastille). */
 const VOL_PER = { "5j": ["5 séances", "Vol. 5 séances"], "1m": ["1 mois", "Vol. 1 mois"], "3m": ["3 mois", "Vol. 3 mois"], "6m": ["6 mois", "Vol. 6 mois"],
   "ytd": ["depuis janvier", "Vol. depuis janv."], "1a": ["1 an", "Vol. 1 an"], "tout": ["depuis le début", "Vol. depuis le début"] };
 const VOL_MIN = 15, VOL_COURT = 60;
@@ -3594,7 +3646,7 @@ function blocRisque() {
     "</div>" +
     '<div class="tuiles m-petit m-t3">' +
       tuile(pv[1], ok(moiVol) ? pct(moiVol, 1, false) : "—", "", manque || depuis + (ok(spVol) ? "S&amp;P 500 : " + pct(spVol, 1, false) : "écart type annualisé") + indic,
-        "La volatilité mesure l'ampleur des secousses : plus elle est haute, plus ta valeur monte et descend fort d'un jour à l'autre. Elle suit la période choisie en haut (" + pv[0] + ") et se lit en comparaison avec le S&P 500 sur " + laPer + ". Sur une période courte (moins de 60 séances), le chiffre change vite : il est seulement indicatif. Les pastilles des lignes restent sur 1 an.") +
+        "La volatilité mesure l'ampleur des secousses : plus elle est haute, plus ta valeur monte et descend fort d'un jour à l'autre. Elle suit la période choisie en haut (" + pv[0] + ") et se lit en comparaison avec le S&P 500 sur " + laPer + ". Sur une période courte (moins de 60 séances), le chiffre change vite : il est seulement indicatif. Dans Aujourd'hui, les pastilles (lignes, total, marchés) suivent la période choisie là-bas.") +
       tuile("Sharpe " + pv[1].slice(5), ok(moiSh) ? F2.format(moiSh) : "—", "", manque || (ok(spSh) ? "S&amp;P 500 : " + F2.format(spSh) + (X.per === "1a" ? " sur la même année" : "") : "rendement pour le risque pris") + indic,
         "Sharpe : ce que tu as gagné au-dessus d'un placement sans risque, pour chaque unité de secousse, sur la période choisie (" + pv[0] + "). Il se lit en comparaison : au-dessus du S&P 500, tu as été mieux payé que le marché pour le risque pris." + (calc ? " Ici, les deux sont recalculés sur tes relevés de la période." : "")) +
       tuile("Jours en hausse", pct(hausse, 0, false), "", "sur les 12 derniers mois") +

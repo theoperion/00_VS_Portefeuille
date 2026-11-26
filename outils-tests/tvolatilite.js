@@ -235,8 +235,8 @@ async function ecranMk(b, sombre, discret) {
     ok(r.monde.vo && /^(🟢|🟠|🔴) vol\. \d+\s%$/.test(r.monde.vo) && r.or.vo === null, "case MSCI Monde : pastille « " + r.monde.vo + " » ; Or sans clôtures quotidiennes : pas de pastille" + tag);
     ok(r.taille === "10.5px" && /rgba\(0, 0, 0, 0\)\|auto|transparent/.test(r.carre), "même style que la pastille des lignes (10,5 px), l'émoji n'hérite pas du carré de couleur de la case" + tag + " " + r.carre);
     ok(r.deb === 0 && r.largeur <= 390 && r.sansRecouvrement && r.sp.h <= 52, "390 px : rien ne déborde ni ne sort de sa case (case de " + r.sp.h + " px)" + tag);
-    ok(/Vol\. = volatilité 1 an \(🟢 moins de 15 % · 🟠 15 à 30 % · 🔴 plus de 30 %\)/.test(r.base), "repère expliqué sous les courbes" + tag);
-    ok(r.seulSp.titre === "S&P 500" && r.seulSp.vo === r.sp.vo && /Volatilité 1 an : agité/.test(r.seulSp.title) && /D'après \d+ séances de ce marché/.test(r.seulSp.aide || "") && r.seulSp.deb === 0, "toucher long S&P 500 : la même pastille « " + r.seulSp.vo + " » à côté du nom, + l'aide" + tag);
+    ok(/Vol\. = volatilité sur 1 an \(🟢 moins de 15 % · 🟠 15 à 30 % · 🔴 plus de 30 %\)/.test(r.base), "repère expliqué sous les courbes" + tag);
+    ok(r.seulSp.titre === "S&P 500" && r.seulSp.vo === r.sp.vo && /Volatilité sur 1 an : agité/.test(r.seulSp.title) && /D'après \d+ séances de ce marché/.test(r.seulSp.aide || "") && r.seulSp.deb === 0, "toucher long S&P 500 : la même pastille « " + r.seulSp.vo + " » à côté du nom, + l'aide" + tag);
     ok(r.seulNq.vo === r.nq.vo && /moins d'un an de cours : depuis le/.test(r.seulNq.aide || "") && /depuis le/.test(r.seulNq.title || ""), "toucher long Nasdaq ×2 : « " + r.seulNq.vo + " » et le sens de « * »" + tag);
     ok(r.seulOr.titre && /^Or/.test(r.seulOr.titre) && r.seulOr.vo === null && r.seulOr.aide === null, "toucher long Or (seulement les semaines) : pas de pastille, rien d'inventé" + tag);
   }

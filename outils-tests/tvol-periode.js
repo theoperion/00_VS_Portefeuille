@@ -1,6 +1,6 @@
 /* Test (26/11/2026, Théo) · la VOLATILITÉ DU PORTEFEUILLE suit la PÉRIODE CHOISIE (et celle du S&P 500 à côté, et le Sharpe).
    Stats › Risque : « Vol. 1 mois », « Vol. 3 mois », « Vol. 6 mois », « Vol. depuis janv. », « Vol. 1 an », « Vol. depuis le début » ;
-   Aujourd'hui : la pastille du total suit 1 M, 6 M, YTD, 1 an, Tout (« Jour » = 1 an ; 5 j = pas assez de cours) ; les lignes restent sur 1 an.
+   Aujourd'hui : la pastille du total suit 1 M, 6 M, YTD, 1 an, Tout (« Jour » = 1 an ; 5 j = « vol. — », trop court) ; v20.96 : les lignes aussi (voir tvol-pastilles.js).
    Série inventée connue : variations de ±2 % en alternance jusqu'au 31/12/2025, ±1,5 % jusqu'au 22/05/2026, ±1 % jusqu'au 23/10/2026,
    puis ±0,5 % ; S&P 500 : ±1,2 % puis ±0,8 % depuis le 24/08/2026. Chaque période donne une valeur différente, recalculée ici À LA MAIN
    (bornes de dates écrites en dur, écart type « échantillon » × √252) et comparée à l'écran.
@@ -101,7 +101,7 @@ const pctTxt = s => s && parseFloat(s.replace(/\s/g, "").replace(",", ".")) / 10
       ok(s.sh && s.sh.lab === "Sharpe " + LIB[k].slice(5) && Math.abs(c.sh - a.moi.sh) < 1e-9 && Math.abs(c.spSh - a.sp.sh) < 1e-9, k + " : « " + (s.sh && s.sh.lab) + " » " + (s.sh && s.sh.val) + " (à la main " + a.moi.sh.toFixed(2) + ", S&P " + a.sp.sh.toFixed(2) + ")" + tag);
       ok(s.deb === 0 && s.largeur <= 390, k + " : rien ne déborde à 390 px" + tag);
       if (k === "1m" || k === "1a") { const t = p.locator('[data-acc="m-risque"]'); await t.scrollIntoViewIfNeeded(); await p.waitForTimeout(150); await t.screenshot({ path: path.join(CAP, "stats-risque-" + k + "-" + (sombre ? "sombre" : "clair") + ".png") }); }
-      if (k === "1m" && !sombre) ok(/suit la période choisie/.test(s.vol.def) && /indicatif/.test(s.vol.def) && /lignes restent sur 1 an/.test(s.vol.def), "aide au toucher : suit la période, court = indicatif, lignes sur 1 an");
+      if (k === "1m" && !sombre) ok(/suit la période choisie/.test(s.vol.def) && /indicatif/.test(s.vol.def) && /pastilles \(lignes, total, marchés\) suivent la période/.test(s.vol.def), "aide au toucher : suit la période, court = indicatif, les pastilles d'Aujourd'hui aussi (v20.96)");
     }
     ok(!err.length, "Stats : 0 erreur JS" + tag + " " + JSON.stringify(err));
     await ctx.close();
@@ -111,19 +111,21 @@ const pctTxt = s => s && parseFloat(s.replace(/\s/g, "").replace(",", ".")) / 10
   for (const sombre of [false, true]) {
     const tag = sombre ? " (sombre)" : " (clair)", { ctx, p, err } = await ouvrir(b, sombre, "base");
     const lire = () => p.evaluate(() => { const t = document.querySelector(".nv-tot .nv-vo"), a = document.querySelector(".nv-vo-aide"), l = document.querySelector('.m-l[data-code="LQQ"] .nv-vo');
-      return { tot: t ? t.textContent.trim() : null, title: t ? t.title : null, aide: a ? a.textContent : null, lqq: l ? l.textContent.trim() : null,
+      return { tot: t ? t.textContent.trim() : null, title: t ? t.title : null, aide: a ? a.textContent : null, lqq: l ? l.textContent.trim() : null, lqqT: l ? l.title : null,
         deb: [...document.querySelectorAll(".m-envs *")].filter(x => { const q = x.getBoundingClientRect(); return q.width && q.right > innerWidth + 1; }).length }; });
     await p.evaluate(() => { const h = document.querySelector('.m-enve:not(.ouvert) .nv-h'); if (h) h.click(); }); await p.waitForTimeout(200);
     const j = await lire();
-    ok(j.tot && j.tot.replace(/\s/g, " ").endsWith("vol. " + Math.round(ATT["1a"].moi.v * 100) + " %") && /Volatilité 1 an/.test(j.title) && /^Vol\. = volatilité sur 1 an/.test(j.aide), "« Jour » : total sur 1 an « " + j.tot + " »" + tag);
+    ok(j.tot && j.tot.replace(/\s/g, " ").endsWith("vol. " + Math.round(ATT["1a"].moi.v * 100) + " %") && /Volatilité sur 1 an/.test(j.title) && /^Vol\. = volatilité sur 1 an/.test(j.aide) && /🔴 vol\. 34/.test(j.lqq || ""), "« Jour » : total et ligne sur 1 an « " + j.tot + " » / « " + j.lqq + " »" + tag);
     for (const k of ["1m", "6m", "ytd", "1a", "tout", "5j"]) {
       await p.evaluate(k => { const c = document.querySelector('.m-per-flot [data-per="' + k + '"]'); if (c) c.click(); }, k); await p.waitForTimeout(400);
       await p.evaluate(() => { const h = document.querySelector('.m-enve:not(.ouvert) .nv-h'); if (h) h.click(); }); await p.waitForTimeout(150);
       const r = await lire();
-      if (k === "5j") { ok(r.tot === null && /pas assez de cours sur 5 séances/.test(r.aide || "") && /🔴 vol\. 34/.test(r.lqq || ""), "5 j : pas de pastille sur le total, « pas assez de cours », lignes toujours sur 1 an" + tag); continue; }
+      if (k === "5j") { ok(/vol\. —$/.test(r.tot || "") && /5 séances : trop court/.test(r.title || "") && /trop courte/.test(r.aide || "") && /vol\. —$/.test(r.lqq || "") && /trop court/.test(r.lqqT || ""), "5 j : total et ligne « vol. — » (trop court, dit au toucher et dans l'aide)" + tag); continue; }
       const a = ATT[k], att = "vol. " + Math.round(a.moi.v * 100) + " %";
-      ok(r.tot && r.tot.replace(/\s/g, " ").endsWith(att) && /🔴 vol\. 34\s%/.test(r.lqq || ""), k + " : total « " + r.tot + " » = Stats (" + (a.moi.v * 100).toFixed(2) + " %), ligne LQQ toujours « " + r.lqq + " » (1 an)" + tag);
-      if (k !== "1a") ok(/Lignes : toujours sur 1 an/.test(r.aide || "") && /Portefeuille : (sur|depuis)/.test(r.aide || "") && /court : indicatif/.test(r.aide || "") === (a.moi.n < 60), k + " : aide « " + (r.aide || "").split(". ").slice(-2).join(". ") + " »" + tag);
+      /* fichier d'avant le 26/11 (Volatilite.js sans les périodes) : la ligne n'invente rien hors 1 an, « vol. — » « pas encore calculée » */
+      const lOk = k === "1a" ? /🔴 vol\. 34\s%/.test(r.lqq || "") : /vol\. —$/.test(r.lqq || "") && /pas encore calculée/.test(r.lqqT || "");
+      ok(r.tot && r.tot.replace(/\s/g, " ").endsWith(att) && lOk, k + " : total « " + r.tot + " » = Stats (" + (a.moi.v * 100).toFixed(2) + " %), ligne LQQ « " + r.lqq + " » (" + (k === "1a" ? "1 an" : "fichier sans périodes : rien d'inventé") + ")" + tag);
+      if (k !== "1a") ok(/^Vol\. = volatilité (sur|depuis) .*\(la période choisie\)/.test(r.aide || "") && /indicatif/.test(r.aide || "") === (a.moi.n < 60) && /pas encore calculée/.test(r.aide || ""), k + " : aide « " + (r.aide || "").slice(0, 60) + "… »" + tag);
       ok(r.deb === 0, k + " : rien ne déborde à 390 px" + tag);
       if (k === "1m") { await p.evaluate(() => { const e = document.querySelector(".nv-tot"); window.scrollBy(0, e.getBoundingClientRect().top - 300); }); await p.waitForTimeout(200); await p.screenshot({ path: path.join(CAP, "aujourdhui-1m-" + (sombre ? "sombre" : "clair") + ".png") }); }
     }
@@ -151,7 +153,7 @@ const pctTxt = s => s && parseFloat(s.replace(/\s/g, "").replace(",", ".")) / 10
     await versStats(p); const s = await lireStats(p); await choisirStats(p, "tout"); const st = await lireStats(p); await choisirStats(p, "1a"); const sa = await lireStats(p);
     const t = p.locator('[data-acc="m-risque"]'); await t.scrollIntoViewIfNeeded(); await choisirStats(p, "1m"); await p.waitForTimeout(150); await p.locator('[data-acc="m-risque"]').screenshot({ path: path.join(CAP, "trop-court-" + (sombre ? "sombre" : "clair") + ".png") });
     ok(!err.length && s.vol.val === "—" && /pas assez de cours \(9 séances\)/.test(s.vol.sub) && s.sh.val === "—" && /pas assez de cours/.test(st.vol.sub) && sa.vol.val === "—", "10 séances : « — » et « " + s.vol.sub + " » (1 mois, depuis le début), 1 an « — », 0 erreur" + tag + " " + JSON.stringify(err));
-    ok(h.tot === null && /pas assez de cours sur 1 mois/.test(h.aide), "10 séances, Aujourd'hui 1 M : pas de pastille sur le total, l'aide le dit" + tag);
+    ok(/vol\. —$/.test(h.tot || "") && /trop courte/.test(h.aide), "10 séances, Aujourd'hui 1 M : total « vol. — », l'aide le dit" + tag);
     ok(s.deb === 0 && s.largeur <= 390, "10 séances : rien ne déborde à 390 px" + tag);
     await ctx.close();
   }
