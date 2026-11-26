@@ -3,7 +3,8 @@
    Vérifie : bouton présent seulement si le fichier envoie lienLivrets: true (absent sinon) ; un toucher envoie l'action « syncLivrets »
    avec la clé ; « Synchronisation… » pendant l'attente (bouton bloqué : pas de double envoi) ; résultat affiché (« ✅ 1 ligne(s) ajoutée(s) »,
    « Déjà à jour ») ; Moi se relit (frais) seulement s'il y a eu des changements ; erreur affichée en clair ; 0 erreur JS ;
-   rien ne déborde à 390 px, en clair et en sombre.
+   rien ne déborde à 390 px, en clair et en sombre. v21.08 : « Derniers changements (48 h) » affichés en liste, une ligne par changement,
+   le livret en gras en tête (libellé ambigu : « → Livret A »), lignes les unes sous les autres, rien qui se recouvre.
    Lancer depuis la racine : python3 -m http.server 8771 &  puis  node outils-tests/tsync-livrets.js   (PORT=… pour un autre port) */
 const { chromium } = require("playwright");
 const PORT = process.env.PORT || 8771;
@@ -24,10 +25,12 @@ const versus = { ok: true, genere: "2026-11-26T10:00:00", majTexte: "", envelopp
   ecurie: {}, exclusifs: {}, cartes: {}, duels: {}, pronos: {}, votes: {}, rivaux: {}, etapes: {}, liaison: { active: true, personnes: [] }, lignes: {}, premierMillion: null,
   session: { role: "perso", nom: "Théo" }, mesCartes: {}, mesDuels: {}, mesPronos: {}, monRival: {} };
 /* réponses successives du fichier à « syncLivrets » */
+const LISTE = "\n\nDerniers changements (48 h) :\n✅ ajouté · LEP · Apport · 10,00 € · 26/11 (18:31)\n❌ retiré · Livret A · Retrait · 200,00 € · 25/11 (18:36)"
+  + "\n✅ ajouté · Livret A · Apport · 25,00 € · 25/11 (18:36) · « Livret A / LEP » → Livret A";
 const REPONSES = [
-  { ok: true, ajoutes: 1, retires: 0, message: "✅ 1 ligne(s) ajoutée(s), ❌ 0 retirée(s)." },
-  { ok: true, ajoutes: 0, retires: 0, message: "Déjà à jour : rien à changer." },
-  { ok: false, erreur: "budget", ajoutes: 0, retires: 0, message: "Budget illisible (Accès refusé) : rien n'a changé." }
+  { ok: true, ajoutes: 1, retires: 0, message: "✅ 1 ligne(s) ajoutée(s), ❌ 0 retirée(s)." + LISTE },
+  { ok: true, ajoutes: 0, retires: 0, message: "Déjà à jour : rien à changer.\n\nDerniers changements (48 h) :\naucun." },
+  { ok: false, erreur: "budget", ajoutes: 0, retires: 0, message: "Budget illisible (Accès refusé) : rien n'a changé." + LISTE }
 ];
 
 async function ouvrir(b, theme, avecLien) {
@@ -53,7 +56,12 @@ async function ouvrir(b, theme, avecLien) {
   return { ctx, p, err, envois, lectures };
 }
 const visible = (p, sel) => p.evaluate(s => { const e = document.querySelector(s); return !!e && e.offsetParent !== null && !e.closest("[hidden]"); }, sel);
-const etat = p => p.evaluate(() => document.getElementById("moi-livrets-etat").textContent.trim());
+const etat = p => p.evaluate(() => { const e = document.getElementById("moi-livrets-etat"); return (e.firstChild && e.firstChild.nodeType === 3 ? e.firstChild.textContent : e.textContent).trim(); });
+const liste = p => p.evaluate(() => [...document.querySelectorAll("#moi-livrets-etat .sync-recents li")].map(li => {
+  const r = li.getBoundingClientRect(), b = li.querySelector("b");
+  return { t: li.textContent, gras: b ? b.textContent : null, poids: b ? getComputedStyle(b).fontWeight : null, haut: r.top, bas: r.bottom, gauche: r.left };
+}));
+const titreListe = p => p.evaluate(() => { const t = document.querySelector("#moi-livrets-etat .sync-titre"); return t ? t.textContent : null; });
 const deborde = p => p.evaluate(() => {
   const l = document.documentElement.scrollWidth, sec = document.getElementById("regl-moi");
   const hors = [...sec.querySelectorAll("*")].filter(e => e.offsetParent !== null).map(e => e.getBoundingClientRect()).filter(r => r.right > 391 || r.left < -1).length;
@@ -75,15 +83,23 @@ const deborde = p => p.evaluate(() => {
     ok(sync.length === 1 && sync[0].cle === "cle-de-test" && Object.keys(sync[0]).sort().join() === "action,cle", q + " · un seul envoi « syncLivrets », avec la clé (double toucher ignoré)", envois);
     ok(/✅ 1 ligne\(s\) ajoutée\(s\)/.test(await etat(p)) && !(await p.evaluate(() => document.getElementById("moi-sync-livrets").disabled)), q + " · résultat affiché : « ✅ 1 ligne(s) ajoutée(s) », bouton de nouveau utilisable", await etat(p));
     ok(lectures.slice(avant).some(x => x.frais), q + " · des lignes ont changé : Moi relit le fichier (rafraîchi)", lectures.slice(avant));
+    { const L = await liste(p);
+      ok(await titreListe(p) === "Derniers changements (48 h)" && L.length === 3, q + " · « Derniers changements (48 h) » : une liste de 3 lignes", L);
+      ok(L[0] && L[0].t === "✅ ajouté · LEP · Apport · 10,00 € · 26/11 (18:31)" && L[1].t === "❌ retiré · Livret A · Retrait · 200,00 € · 25/11 (18:36)", q + " · chaque ligne telle qu'envoyée par le fichier", L.map(x => x.t));
+      ok(L.map(x => x.gras).join() === "LEP,Livret A,Livret A" && L.every(x => +x.poids >= 600), q + " · le livret est en gras en tête de chaque ligne", L.map(x => [x.gras, x.poids]));
+      ok(/« Livret A \/ LEP » → Livret A$/.test(L[2].t), q + " · libellé ambigu : « → Livret A » sur la même ligne", L[2]);
+      ok(L.every((x, i) => !i || x.haut >= L[i - 1].bas - 0.5) && L.every(x => Math.abs(x.gauche - L[0].gauche) < 1), q + " · une ligne sous l'autre, alignées, rien qui se recouvre", L.map(x => [x.haut, x.bas])); }
     const lar = await deborde(p); ok(lar.l <= 390 && lar.hors === 0, q + " · rien ne déborde à 390 px", lar);
-    if (process.env.CAPTURES) await p.screenshot({ path: process.env.CAPTURES + "/sync-livrets-" + theme + ".png", fullPage: false });
+    if (process.env.CAPTURES) await p.locator("#moi-livrets").screenshot({ path: process.env.CAPTURES + "/sync-livrets-" + theme + ".png" });
     // 2e toucher : « Déjà à jour », pas de relecture
     const avant2 = lectures.length;
     await p.click("#moi-sync-livrets"); await p.waitForTimeout(1400);
     ok(/Déjà à jour/.test(await etat(p)) && lectures.length === avant2, q + " · 2e toucher : « Déjà à jour », pas de relecture inutile", { etat: await etat(p), lectures: lectures.length - avant2 });
+    { const L = await liste(p); ok(L.length === 1 && L[0].t === "Aucun changement ces 48 dernières heures." && L[0].gras === null, q + " · aucun changement en 48 h : dit en clair (l'ancienne liste est effacée)", L); }
     // 3e toucher : erreur en clair
     await p.click("#moi-sync-livrets"); await p.waitForTimeout(1400);
     ok(/^⚠️ Budget illisible \(Accès refusé\) : rien n'a changé\.$/.test(await etat(p)), q + " · erreur du fichier affichée en clair", await etat(p));
+    ok((await liste(p)).length === 3, q + " · erreur : les derniers changements restent affichés sous le message");
     const lar2 = await deborde(p); ok(lar2.l <= 390 && lar2.hors === 0, q + " · message d'erreur : rien ne déborde à 390 px", lar2);
     ok(envois.filter(c => c.action === "syncLivrets").every(c => Object.keys(c).sort().join() === "action,cle"), q + " · rien d'autre n'est envoyé que l'action et la clé");
     ok(!err.length, q + " · 0 erreur JS", err.slice(0, 3));

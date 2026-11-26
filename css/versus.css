@@ -1034,6 +1034,11 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .stack i { display: block; height: 100%; min-width: 3px; }
 
 .info { font-size: 12.5px; color: var(--ink-3); margin: 0; }
+/* v21.08 : résultat de « 🔗 Synchroniser mes livrets » + ses derniers changements (une ligne par changement, le livret en gras) */
+#moi-livrets-etat .sync-titre { margin: 8px 0 2px; font-weight: 600; color: var(--ink-2); }
+#moi-livrets-etat .sync-recents { list-style: none; margin: 0; padding: 0; }
+#moi-livrets-etat .sync-recents li { margin: 3px 0; line-height: 1.35; overflow-wrap: anywhere; }
+#moi-livrets-etat .sync-recents b { color: var(--ink); font-weight: 700; }
 
 /* Barre du bas */
 .tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; background: var(--panel); border-top: 1px solid var(--rule); padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px)); padding-bottom: env(safe-area-inset-bottom, 0px); }
