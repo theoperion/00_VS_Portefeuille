@@ -46,6 +46,15 @@ function rgPastilles(sec) {
     return "<li" + (d.dataset.qa ? ' data-qa="' + d.dataset.qa + '"' : "") + "><b>" + (b ? b.innerHTML : "") + "</b>" + (em ? "<em>" + em.innerHTML + "</em>" : "") + (sp ? "<small>" + sp.innerHTML + "</small>" : "") + "</li>"; }).join("") + "</ul>" : "";
 }
 
+/** Théo, 26/11 : « Tout le détail » ne s'affiche pas quand il redit (presque) mot pour mot la fiche courte (ex. Mois spéciaux, Bonus) :
+    au moins 90 % des mots du détail (titre ôté) sont déjà dans la fiche courte */
+function rgRepete(court, sec) {
+  const mots = h => (rgEl(String(h).replace(/</g, " <").replace(/>/g, "> ")).textContent.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) || []);   // un espace entre les morceaux : « obscur » et « juin » restent deux mots
+  const d = sec.cloneNode(true); d.querySelectorAll(":scope > h4").forEach(e => e.remove());
+  const md = mots(d.innerHTML), mc = new Set(mots(court)); if (!md.length) return true;
+  return md.filter(m => mc.has(m)).length / md.length >= 0.9;
+}
+
 /* ---------- 🗓️ Ce mois-ci : seulement ce qui compte ce mois-là, calculé à la date (et seulement ce qui est déjà visible) ---------- */
 function rgBonusEnMain(y) {
   try {
@@ -116,7 +125,7 @@ function rgFiches(tout) {
     gp: s => { const c = gp && gp.querySelector("ul > li"); const p = c && !c.id && !c.classList.contains("rg-schema") ? "<p>" + c.innerHTML + "</p>" : ""; if (p) c.remove();
       const ec = s.querySelector("#rg-ecurie"), pe = ec ? "<p>" + ec.innerHTML + "</p>" : ""; if (ec) ec.remove();
       return p + rgPrendre(s, ".rg-schema").replace(/^<li/, "<div").replace(/<\/li>$/, "</div>") + pe; },
-    tresor: s => { const sch = rgPrendre(s, ".tr-etapes", true);   // la règle en images (htmlRegleTresor, js/4-grandprix.js) : ses étapes font la fiche courte, sans rien réécrire
+    tresor: s => { const sch = rgPrendre(s, ".tr-etapes");   // la règle en images (htmlRegleTresor, js/4-grandprix.js) : ses étapes font la fiche courte, sans rien réécrire (Théo, 26/11 : déplacées, plus répétées dans le détail)
       if (sch) return sch + '<p class="rg-note">Ce que tu gagnes, le classement et les indices : dans le détail ci-dessous.</p>';
       return "<p>Chaque mois, une <b>énigme</b> (dès le 1<sup>er</sup>) et un <b>objet caché</b> dans le décor de la Visite 3D. Touche <b>🔍 Je lance ma recherche</b> quand tu es prêt : le chrono part.</p>" + sch +
         "<p>" + (saison ? "<b>Le plus rapide gagne.</b>" : "En décembre, c'est l'<b>entraînement</b> : le plus rapide gagne la plaque dorée Chercheur de Noël.") + " 💡 2<sup>e</sup> indice le 11 · 🌡️ jauge chaud-froid le 21.</p>"; },
@@ -131,7 +140,7 @@ function rgFiches(tout) {
     if (T.id === "gp") { const h = s.querySelector("h4"); if (h && /écurie/i.test(h.textContent)) sous = "et l'écurie"; }
     const c = court[T.id](s);
     s.querySelectorAll(":scope > ul").forEach(u => { if (!u.children.length) u.remove(); });
-    const reste = [...s.children].some(e => e.tagName !== "H4");
+    const reste = [...s.children].some(e => e.tagName !== "H4") && !rgRepete(c, s);
     F[T.id] = { ico: T.ico, t: titre, sous, court: c, detail: reste ? s.outerHTML : "" };
   });
   return { F, actuel: actuel ? actuel.outerHTML : "" };

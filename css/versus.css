@@ -3066,3 +3066,14 @@ body:has(.av-ov) .toast, body:has(.av-case) .toast { z-index: 99; }
 .bd-releve .bdr-x:hover, .bd-releve .bdr-x:focus-visible { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); }
 @keyframes bdrIn { from { opacity: 0; transform: translateY(-4px); } }
 .bd-releve.reduit { animation: none; } @media (prefers-reduced-motion: reduce) { .bd-releve { animation: none; } }
+/* Théo, 26/11 · Stand : « Prochainement » replié */
+.bientot-det { border: 1px dashed var(--rule); border-radius: 14px; background: var(--panel); }
+.bientot-det > summary { cursor: pointer; list-style: none; padding: 11px 12px; font: 700 13px/1.2 var(--f-text); color: var(--ink-2); }
+.bientot-det > summary::-webkit-details-marker { display: none; }
+.bientot-det > summary small { font-weight: 500; color: var(--ink-3); margin-left: 4px; }
+.bientot-det > summary::after { content: "›"; float: right; transition: transform .2s; } .bientot-det[open] > summary::after { transform: rotate(90deg); }
+.bientot-det > .bientot { border: 0; background: none; padding-top: 0; }
+/* Théo, 26/11 · 🏆 Vitrines : titre du classement de la Course et petite ligne d'aide */
+.gp-lh { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 4px; }
+.gp-lh > b { font: italic 800 15px/1.2 var(--f-display); letter-spacing: .05em; text-transform: uppercase; }
+.aide-vitr { margin: 4px 0 0; font-size: 12px; color: var(--ink-3); }

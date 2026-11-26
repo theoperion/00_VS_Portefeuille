@@ -84,7 +84,7 @@ function majPastilleMJ() {
 function allerCarteMJ() {
   const vise = () => { const c = document.querySelector(".mj-carte:not(.mj-ap), .gp-tablette:not(.tk-ap)"); if (c) c.scrollIntoView({ block: "start", behavior: reduit ? "auto" : "smooth" }); };
   if (document.querySelector(".mj-carte:not(.mj-ap)") && vueActive() === "trophees" && ongletPodium() === "gp" && GP_ETAPE === null) return vise();
-  ETAT.podium = "gp"; GP_ETAPE = null; garder(); if (vueActive() === "trophees") rendreTrophees(); else allerA("trophees");
+  ETAT.podium = "gp"; GP_ETAPE = null; GP_CHAUFFE = false; garder(); if (vueActive() === "trophees") rendreTrophees(); else allerA("trophees");
   setTimeout(vise, 500);
 }
 

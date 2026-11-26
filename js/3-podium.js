@@ -1310,7 +1310,7 @@ function blocSaison() {
     (ch ? '<div class="chauffe-b">🔥 <span><b>Tour de chauffe</b> : les règles de base, et rien ne compte. Le championnat démarre le 1<sup>er</sup> janvier. <a href="#" class="lien-regles" data-regles="essentiel">En savoir plus</a></span></div>' : "") +
     (standSeul(y) ? '<div class="chauffe-b">🏁 <span><b>Saison 1</b> : le championnat démarre le 1<sup>er</sup> janvier. Jusqu\'au 31 décembre, dans le Stand : pose ta carte, fais ton pronostic (avec ta pole) et choisis ton rival.</span></div>' : "") +
     '<div class="pod-tabs" role="group" aria-label="Saison">' + (standSeul(y) ? "" : b("gp", "<span>" + icoOu("course", "🏁") + "</span>Course")) + b("stand", "<span>" + icoOu("stand", "🃏") + "</span>Stand" + compteCartesTab(y) + (rappelCartes() ? '<i class="pastille" aria-label="à faire"></i>' : "")) + (ecurieOuverte() ? b("ecurie", "<span>" + icoOu("ecurie", "🏎️") + "</span>Écurie" + (o !== "ecurie" && nouveauxEcurie(quiEcurie()).length ? '<i class="pastille ecu-nb" aria-label="' + nouveauxEcurie(quiEcurie()).length + ' nouvel objet">' + nouveauxEcurie(quiEcurie()).length + "</i>" : "")) : "") + (basesSeules() ? "" : b("defis", "<span>" + icoOu("trophees", "🏆") + "</span>Trophées")) + "</div>" +
-    '<div class="s-corps">' + (o === "ecurie" ? htmlEcurie() : o === "defis" ? htmlVitrines() : o === "stand" ? htmlStand(y) : htmlGrandPrix(y)) + "</div>" +
+    '<div class="s-corps">' + (o === "ecurie" ? htmlEcurie() : o === "defis" ? htmlVitrines() : o === "stand" ? htmlStand(y) : htmlGrandPrix(yCourseGP(y))) + "</div>" +
     (false && adminActif() && !window.APERCUS_FINIS ? '<button class="reserve-b" type="button" id="reserve-ouvrir">🧪 <span><b>Règles et idées en réserve</b><small>admin · ce qui est en jeu, ce qui dort, les réglages</small></span> ›</button>' : "") + "</section>";
 }
 /** Onglet du Podium : l'ancien « Championnat » est maintenant dans le Grand Prix */
@@ -1318,15 +1318,15 @@ function ongletPodium() {   // v20.44 (règle de Théo) : pendant la chauffe et 
   if (standSeul(saisonCourante())) return ETAT.podium === "ecurie" && ecurieOuverte() ? "ecurie" : "stand"; return (basesSeules() ? (ecurieOuverte() ? ["gp", "stand", "ecurie"] : ["gp", "stand"]) : ["gp", "stand", "ecurie", "defis"]).includes(ETAT.podium) ? ETAT.podium : "gp";   // v20.61 : l'Écurie dès le 1/12
 }
 /** Détail des points (l'ancien onglet Championnat), replié sous la course */
-function htmlDetailPoints(y) {
-  const c = championnat(y); if (!c.mois.length) return "";
+function htmlDetailPoints(y, annonces) {   // Théo, 26/11 : la courbe d'abord, puis le bloc champion et les annonces de la page Course, puis le détail
+  const c = championnat(y); annonces = annonces || ""; if (!c.mois.length) return annonces;
   const noms = c.classement;
   const tab = '<div class="scroll-x"><table class="tab ch-t"><thead><tr><th>Mois</th>' + noms.map(n => '<th><i style="background:' + couleur(n) + '"></i>' + esc(n) + "</th>").join("") + "</tr></thead><tbody>" +
     c.mois.slice().reverse().map(m => "<tr><td>" + GPS[circuitDe(m.k)].drap + " " + esc(moisCourt(m.k)) + (m.spec ? " " + m.spec.ico : "") + "</td>" + noms.map(n => { const x = m.l.find(z => z.nom === n); return x ? '<td class="' + (x.rg === 1 ? "r1" : "") + '">' + x.p + (x.bonus ? "<sup>🎯</sup>" : "") + "</td>" : '<td class="muted">·</td>'; }).join("") + "</tr>").join("") +
     "</tbody></table></div>";
   const bilan = noms.map(n => { const t = c.tot[n]; return '<li><b class="pts-nom" data-gp-fiche="' + esc(n) + '" role="button" tabindex="0" aria-label="Fiche de ' + esc(n) + '">' + esc(n) + ' <i class="gp-vers-fiche" aria-hidden="true">›</i></b> : ' + t.pts + " pts · " + t.v + " victoire" + (t.v > 1 ? "s" : "") + " · " + t.pod + " podium" + (t.pod > 1 ? "s" : "") + " · " + t.bonus + " 🎯</li>"; }).join("");
-  return (c.complete ? '<div class="bref">🏆 <b>' + (c.chauffe ? premiersChauffe(c).map(esc).join("</b> & <b>") : esc(c.classement[0])) + "</b> " + (c.chauffe ? (premiersChauffe(c).length > 1 ? "remportent ex æquo le tour de chauffe." : "remporte le tour de chauffe.") : "est champion de la saison " + numeroSaison(y) + ".") + "</div>" : "") +
-    (c.mois.length ? '<div class="pts-courbe">' + boiteGraphe("g-champ", noms.map(n => ({ nom: n, c: couleur(n) }))) + "</div>" : "") +   // v17.66 (Théo) : la courbe du championnat reste toujours visible
+  return (c.mois.length ? '<div class="pts-courbe">' + boiteGraphe("g-champ", noms.map(n => ({ nom: n, c: couleur(n) }))) + "</div>" : "") +
+    (c.complete ? '<div class="bref">🏆 <b>' + (c.chauffe ? premiersChauffe(c).map(esc).join("</b> & <b>") : esc(c.classement[0])) + "</b> " + (c.chauffe ? (premiersChauffe(c).length > 1 ? "remportent ex æquo le tour de chauffe." : "remporte le tour de chauffe.") : "est champion de la saison " + numeroSaison(y) + ".") + "</div>" : "") + annonces +   // v17.66 (Théo) : la courbe du championnat reste toujours visible
     '<details class="pts-det" id="pts-det"' + (ETAT.ptsOuvert === "1" ? " open" : "") + '><summary>📊 Détail des points <small>bilan, mois par mois, barème</small></summary>' +
     '<ul class="pts-bilan">' + bilan + "</ul>" + tab +
     '<p class="info">Chaque mois : ' + baremeAffiche().join(" · ") + ' points, <b>+1</b> 🎯 si ton mois bat le ' + esc(D.marche.indices[iRef()]) + ", plus les cartes" + (regleVisible("duels") ? " et les duels" : "") + ". Ex æquo : même place, mêmes points. À égalité au total : le plus de victoires, puis la meilleure performance.</p></details>";
@@ -2653,12 +2653,12 @@ async function garderEcurie() {
 function brancherSaison(v) {
   const rs = v.querySelector("#reserve-ouvrir"); if (rs) rs.addEventListener("click", ouvrirReserve);
   v.querySelectorAll("[data-pod]").forEach(b => b.addEventListener("click", () => { ETAT.podium = b.dataset.pod; ECU_NOUV = null; if (b.dataset.pod === "stand") { const r = rappelCartes(); if (r && !kOuvertPour(saisonCourante())) choisirSaison(r.y); } garder(); rendreTrophees(); }));
-  v.querySelectorAll("[data-saison]").forEach(b => b.addEventListener("click", () => { choisirSaison(+b.dataset.saison); rendreTrophees(); }));
+  v.querySelectorAll("[data-saison]").forEach(b => b.addEventListener("click", () => { GP_CHAUFFE = false; choisirSaison(+b.dataset.saison); rendreTrophees(); }));
   const y = saisonCourante();
   const o = ongletPodium();
   if (typeof majPastilleMJ === "function") majPastilleMJ();   // 🎲 pastille du mini-jeu du jour (js/9-minijeux.js)
   if (o === "defis") brancherVitrines(v);
-  if (o === "gp") { brancherGP(v, y); const dp = v.querySelector("#pts-det"); dessinerChampionnat(y); if (dp) dp.addEventListener("toggle", () => { ETAT.ptsOuvert = dp.open ? "1" : "0"; garder(); }); }
+  if (o === "gp") { const yg = yCourseGP(y); brancherGP(v, yg); const dp = v.querySelector("#pts-det"); dessinerChampionnat(yg); if (dp) dp.addEventListener("toggle", () => { ETAT.ptsOuvert = dp.open ? "1" : "0"; garder(); }); }
   if (o === "stand") brancherStand(v, y);
   v.querySelectorAll("[data-aller-stand]").forEach(b => b.addEventListener("click", () => { const r = rappelCartes(); if (r) choisirSaison(r.y); ETAT.podium = "stand"; garder(); rendreTrophees(); const t = document.querySelector(".pod-tabs"); if (t) t.scrollIntoView({ block: "start", behavior: "smooth" }); }));
   if (!stock.get("versus.tuto1")) { stock.set("versus.tuto1", "1"); etapesJeu().filter(e => aujNum() >= annonceEtape(e)).forEach(e => stock.set("versus.nouveaute." + e.id, "1")); }   // v17.17 (Théo) : plus de « Podium en bref » à la première ouverture
