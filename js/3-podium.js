@@ -40,8 +40,11 @@ function anneesPodium() {
   if (!saisonOuverte() && !janvierAnnonce()) return l;   // v17.5 : pas de Saison 1 avant le 20 décembre
   for (let y = SAISON.premiere; y <= Math.max(SAISON.premiere, new Date(Date.now()).getFullYear()); y++) l.push(y); return l;
 }
-/** Jour limite (exclu) pour poser une carte ou lancer un duel : le 2 (chauffe comprise depuis v17.61) */
-function jourLimite(k) { return 2; }   // v17.61 (Théo) : la chauffe suit la règle de la saison (cartes jusqu'au 1er inclus, révélation le 2)
+/** Jour limite (exclu) pour poser une carte ou lancer un duel du mois k : le 1er de k, à 0 h (chauffe comprise), jour de la révélation.
+    Théo (26/11) : cartes du 20 au DERNIER JOUR du mois précédent inclus, révélées le 1er (avant : jusqu'au 1er inclus, révélées le 2). */
+function jourLimite(k) { return 1; }
+/** Dernier jour (inclus) pour poser la carte du mois k, en clair : « 30 novembre », « 28 février »… */
+function finFenetre(k) { const d = new Date(Math.floor(k / 100), k % 100 - 1, 0, 12); return d.getDate() + " " + MOIS_L[d.getMonth()]; }
 /** Saisons jouées (2027, 2028…) ; en aperçu, une répétition sur 2026 */
 function anneesSaison() {
   if (!saisonOuverte()) return apercuSaison() ? [SAISON.premiere - 1] : [];
@@ -1305,7 +1308,7 @@ function blocSaison() {
     '<button class="regles-b" type="button" id="regles-ouvrir" aria-label="Règles du jeu">' + icoOu("regles", "📖") + ' Règles</button></div></div>' +
     (ys.length > 1 ? '<div class="s-ys">' + ys.map(a => '<button type="button" class="chip-s' + (a === y ? " on" : "") + '" data-saison="' + a + '">' + (estChauffe(a) ? "🔥 Chauffe" : "Saison " + numeroSaison(a)) + "</button>").join("") + "</div>" : "") +
     (ch ? '<div class="chauffe-b">🔥 <span><b>Tour de chauffe</b> : les règles de base, et rien ne compte. Le championnat démarre le 1<sup>er</sup> janvier. <a href="#" class="lien-regles" data-regles="essentiel">En savoir plus</a></span></div>' : "") +
-    (standSeul(y) ? '<div class="chauffe-b">🏁 <span><b>Saison 1</b> : le championnat démarre le 1<sup>er</sup> janvier. D\'ici le 1<sup>er</sup> janvier, dans le Stand : pose ta carte, fais ton pronostic (avec ta pole) et choisis ton rival.</span></div>' : "") +
+    (standSeul(y) ? '<div class="chauffe-b">🏁 <span><b>Saison 1</b> : le championnat démarre le 1<sup>er</sup> janvier. Jusqu\'au 31 décembre, dans le Stand : pose ta carte, fais ton pronostic (avec ta pole) et choisis ton rival.</span></div>' : "") +
     '<div class="pod-tabs" role="group" aria-label="Saison">' + (standSeul(y) ? "" : b("gp", "<span>" + icoOu("course", "🏁") + "</span>Course")) + b("stand", "<span>" + icoOu("stand", "🃏") + "</span>Stand" + compteCartesTab(y) + (rappelCartes() ? '<i class="pastille" aria-label="à faire"></i>' : "")) + (ecurieOuverte() ? b("ecurie", "<span>" + icoOu("ecurie", "🏎️") + "</span>Écurie" + (o !== "ecurie" && nouveauxEcurie(quiEcurie()).length ? '<i class="pastille ecu-nb" aria-label="' + nouveauxEcurie(quiEcurie()).length + ' nouvel objet">' + nouveauxEcurie(quiEcurie()).length + "</i>" : "")) : "") + (basesSeules() ? "" : b("defis", "<span>" + icoOu("trophees", "🏆") + "</span>Trophées")) + "</div>" +
     '<div class="s-corps">' + (o === "ecurie" ? htmlEcurie() : o === "defis" ? htmlVitrines() : o === "stand" ? htmlStand(y) : htmlGrandPrix(y)) + "</div>" +
     (false && adminActif() && !window.APERCUS_FINIS ? '<button class="reserve-b" type="button" id="reserve-ouvrir">🧪 <span><b>Règles et idées en réserve</b><small>admin · ce qui est en jeu, ce qui dort, les réglages</small></span> ›</button>' : "") + "</section>";

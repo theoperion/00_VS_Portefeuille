@@ -8,7 +8,8 @@
 Chaque mois, les pilotes sont classés sur la **performance de leur portefeuille** (versements neutralisés : seul le % compte). Saison : janvier → décembre ; le plus de points gagne.
 
 ```
- du 20 au 1er                 le 2                  fin du mois
+ du 20 au dernier jour        le 1er                fin du mois
+ du mois d'avant
  🃏 je pose ma carte    →     👀 tout est révélé  →  📊 relevé → points
     + mon pronostic
 ```
@@ -32,7 +33,7 @@ Chaque mois, les pilotes sont classés sur la **performance de leur portefeuille
 | 🌧️ Pneus pluie | un mois où le S&P 500 baisse : +2 si tu fais mieux que lui |
 | 🎲 Pari | désigne un rival : +2 devant lui, −1 derrière, 0 à égalité |
 
-Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Rejouable, mais **pas deux mois de suite**. Une carte bonus (rattrapage) se joue **en plus** de la carte du mois (décision de Théo, 26/11/2026).
+Posée face cachée dans le Stand (modifiable jusqu'au dernier jour du mois précédent inclus, 23 h 59, heure de Paris), révélée le 1er du mois à 0 h, jour où la course commence (Théo, 26/11 ; avant : jusqu'au 1er, révélée le 2). Même date limite pour le pronostic, la pole et le rival de la saison (20 → 31 déc.). Pas de carte à temps : tant pis pour ce mois. Tour de chauffe : cartes jusqu'au 30 novembre, révélées le 1er décembre. Rejouable, mais **pas deux mois de suite**. Une carte bonus (rattrapage) se joue **en plus** de la carte du mois (décision de Théo, 26/11/2026).
 
 ## ✨ Les bonus
 
@@ -43,7 +44,7 @@ Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Re
 | 🅿️ Pole position | ton chiffre pour le S&P 500 du mois : le plus proche (partagé si égalité) | +1 |
 | 🤝 Équipe | tout le monde bat le S&P 500 le même mois | +1 chacun |
 | 🔥 Série | chaque 3e mois d'affilée sans finir dernier | +1 |
-| 😈 Rival | choisi en secret (20 déc. → 1er janv.) ; devant lui en fin de saison | +3 |
+| 😈 Rival | choisi en secret (20 → 31 déc.) ; devant lui en fin de saison | +3 |
 | 🛡️ Régularité | fin de saison : le moins souvent dernier (puis le plus de mois positifs) | +3 |
 
 **Défis du mois** : janv. bats le Nasdaq-100 · févr. finis positif · mars fais mieux que l'or · avr. bats le MSCI Monde · mai bats le S&P 500 d'au moins 1 point · juin fais mieux que l'Euro Stoxx 50 · juil. fais mieux que ton mois de juin · août fais mieux que les marchés émergents · sept. ne perds pas plus de 1 % · oct. fais mieux que la moyenne des pilotes · nov. fais mieux que les semi-conducteurs · déc. monte sur le podium du mois.
@@ -55,7 +56,7 @@ Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Re
 | 🌑 Le Côté obscur (juin, Bataille spatiale) | le dernier du championnat avant juin : points de place ×2, et **au moins 2** (ex. 2e du mois : 4 × 2 = 8 ; 3e : 2 × 2 = 4 ; dernier du mois : 2 au lieu de 0). Égalité au championnat : le départage habituel (le moins de victoires, puis la moins bonne performance cumulée) désigne un seul dernier |
 | 🪱 Le Chevaucheur des sables (janvier, Mer de dunes) | le vainqueur du mois : +2 |
 | 🏆🦸 Finale et Rassemblement des héros (décembre, le Multivers) | points de place ×2 pour tout le monde, et le 🎯 vaut +2 |
-| 🗳️ Vote (2 → 31 déc.) | « le coup de la saison » (pas pour soi) : plaque pour le gagnant |
+| 🗳️ Vote (1er → 31 déc.) | « le coup de la saison » (pas pour soi) : plaque pour le gagnant |
 
 ## 🪤 Les pièges des circuits (dès janvier 2027)
 
