@@ -112,7 +112,9 @@ const sansPos = req => req.every(c => !("p" in c) && !JSON.stringify(c).includes
   for (const sombre of [false, true]) { const tag = sombre ? "sombre" : "clair";
     for (const [quand, nom] of [["2026-12-03T10:00:00", "decembre"], ["2027-01-05T10:00:00", "janvier"]]) {
       const { ctx, p, err } = await page(b, { quand, session: { role: "perso", nom: "Kévin" }, sombre });
-      const r = await p.evaluate(async () => { ouvrirRegles("tresor"); await new Promise(r => setTimeout(r, 400)); const o = document.querySelector(".regles"), li = document.querySelector("#rg-tresor");
+      const r = await p.evaluate(async () => { ouvrirRegles("tresor"); await new Promise(r => setTimeout(r, 400));
+        document.querySelectorAll(".regles details").forEach(d => { d.open = true; });   // v20.93 (règles en tuiles) : le détail de la fiche est replié ; on le déplie avant de lire
+        const o = document.querySelector(".regles"), li = document.querySelector("#rg-tresor");
         return { tout: o ? o.innerText : "", li: li ? li.innerText : "", etapes: li ? li.querySelectorAll(".tr-etapes > li").length : 0, deb: document.documentElement.scrollWidth > innerWidth + 1 }; });
       if (nom === "decembre") ok(r.etapes === 4 && /entraînement/.test(r.li) && /ne compte pas encore pour 2027/.test(r.li) && /plaque dorée Chercheur de Noël/.test(r.li) && /Dès que les 5 pilotes ont trouvé/.test(r.li) && /Moins tu as d'aide, plus tu passes devant/.test(r.li) && /Dès le 21 : 3e palier \(jauge si personne n'a encore trouvé\)/.test(r.li) && /2e indice \(dès le 11\) et 🌡️ la jauge chaud-froid \(dès le 21\) : visibles pendant ta recherche/.test(r.li) && /L'énigme apparaît et le chrono démarre/.test(r.li) && !/éclat|Flair/i.test(r.tout) && !r.deb,
         "règles de décembre (" + tag + ") : 4 étapes, entraînement, plaque dorée, paliers (« moins tu as d'aide, plus tu passes devant »), « dès que les 5 », coincé ; AUCUN « éclat » ni « Flair »");

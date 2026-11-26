@@ -83,7 +83,10 @@ const mesurer = p => p.evaluate(() => {
     await p.evaluate(() => document.querySelector(".gp-piste .gp-enigme").click()); await p.waitForTimeout(250);
     ok(!(await mesurer(p)).ouverte, tag + " · un 2e toucher replie l'encadré");
     // pendant la recherche : l'énigme lisible en entier, sans couvrir le centre ni le joystick (PAS de capture : l'énigme ne se photographie pas)
-    await p.evaluate(() => { const bt = document.querySelector(".gp-piste .gp-lancer"); bt.click(); bt.click(); }); await p.waitForTimeout(800); await p.evaluate(() => apPres()); await p.waitForTimeout(1500);
+    await p.evaluate(() => { const t = document.getElementById("toast"); if (t) t.style.display = ""; const bt = document.querySelector(".gp-piste .gp-lancer"); bt.click(); bt.click(); }); await p.waitForTimeout(800);
+    const go = await p.evaluate(() => { const f = document.fullscreenElement, t = document.getElementById("toast"); return { dedans: !!f && !!t && f.contains(t), vu: !!t && !t.hidden && !!t.getClientRects().length, txt: t ? t.textContent : "" }; });
+    ok(go.dedans && go.vu && /C'est parti/.test(go.txt), tag + " · le message « ⏱️ C'est parti ! » s'affiche DANS le plein écran " + JSON.stringify({ dedans: go.dedans, vu: go.vu }));
+    await p.evaluate(() => apPres()); await p.waitForTimeout(1500);
     const m3 = await mesurer(p), lis = await p.evaluate(() => { const e = document.querySelector(".gp-piste .gp-enigme"), i = e && e.querySelector(".gp-txt i"); if (!i || !i.getClientRects().length) return { vu: false };
       return { vu: true, entier: getComputedStyle(i.parentNode).whiteSpace !== "nowrap" && e.scrollHeight <= e.clientHeight + 2 && i.textContent.length > 20, chr: !!e.querySelector(".gp-chr") }; });
     ok(lis.vu && lis.entier && lis.chr, tag + " · pendant la recherche : chrono + énigme lisible en entier (replié) " + JSON.stringify(lis));
@@ -92,7 +95,17 @@ const mesurer = p => p.evaluate(() => {
     await p.evaluate(() => document.querySelector(".gp-piste .gp-arret").click()); await p.waitForTimeout(500);
     const pz = await p.evaluate(() => ({ enig: !!document.querySelector(".gp-piste .gp-enigme .gp-txt i") && /Énigme d'exemple/.test(document.querySelector(".gp-piste .gp-enigme").textContent), rep: !!document.querySelector(".gp-piste .gp-lance.pause .gp-lancer") }));
     ok(pz.rep, tag + " · en pause : « ▶️ Reprendre » dans l'encadré replié");
+    // reprise, trouvaille : « 🗝️ Trouvé en … » et la révélation de l'éclat, DANS le plein écran (pas de capture)
+    await p.evaluate(() => document.querySelector(".gp-piste .gp-lancer").click()); await p.waitForTimeout(800); await p.evaluate(() => apPres()); await p.waitForTimeout(1500);
+    const tv = await p.evaluate(async () => { const b = document.querySelector(".gp-piste .gp-tresor"); if (!b) return { obj: false }; await trouverTresor(TRESOR_EL.t, b); const f = document.fullscreenElement, t = document.getElementById("toast");
+      return { obj: true, dedans: !!f && f.contains(t), vu: !t.hidden && !!t.getClientRects().length, txt: /Trouvé en/.test(t.textContent) }; });
+    await p.waitForTimeout(1800);
+    const rv = await p.evaluate(() => { const f = document.fullscreenElement, o = document.querySelector(".cb-rev, .revel"); return { o: !!o, dedans: !!f && !!o && f.contains(o) }; });
+    ok(tv.obj && tv.dedans && tv.vu && tv.txt && rv.o && rv.dedans, tag + " · trouvaille : « 🗝️ Trouvé en … » et l'éclat s'affichent DANS le plein écran " + JSON.stringify({ tv, rv }));
     await p.evaluate(() => fermerPleinGP()); await p.waitForTimeout(800);
+    const tb = await p.evaluate(() => { const t = document.getElementById("toast"); return !!t && t.parentNode === document.body; });
+    ok(tb, tag + " · en sortant du plein écran, la zone des messages revient dans la page");
+    await p.evaluate(() => document.querySelectorAll(".cb-rev, .revel").forEach(x => x.remove()));
     ok(!req.some(x => /^tresor(Depart|Arret|Trouve)$/.test(x.action)), tag + " · aperçu : rien n'est envoyé au serveur");
     ok(!err.length, tag + " · 0 erreur JS " + JSON.stringify(err.slice(0, 3)));
     await ctx.close();

@@ -1043,7 +1043,7 @@ function annoncerVainqueurTresor() {
     (t.fige ? '<p class="tv-fige">Les ' + nbPilotesTresor(t) + " pilotes ont trouvé : c'est décidé tout de suite !</p>" : "") +
     '<p class="cbo-flair">' + (v.nom === moi ? "C'est toi, le 1er du classement ! " + (noel ? "La plaque dorée est à toi pour toujours." : "Ton éclat devient or · 🔍 +3 au Flair.") : rgMoi >= 2 && !noel ? "Ton éclat : " + texteMedaille(medailleDe(rgMoi)) + (rgMoi <= 3 ? " · 🔍 +" + (4 - rgMoi) + " au Flair." : ".") : "Moins d'aide, puis le plus petit temps : c'est le 1er du classement qui l'emporte. Rendez-vous au prochain trésor !") + "</p>" +
     '<div class="btn-row">' + (noel && v.nom === moi && typeof btnEquiper === "function" ? btnEquiper("plaque", "chercheuror") : "") + '<button class="btn ghost" type="button" data-cb-ok>Génial !</button></div></div>';
-  document.body.appendChild(o);
+  hoteFenetre().appendChild(o);
   const t0 = Date.now(), fermer = () => { o.remove(); try { rendreVue(vueActive()); } catch (er) { } };
   o.addEventListener("click", ev => { if (ev.target === o && Date.now() - t0 > 1500) fermer(); });
   o.querySelector("[data-cb-ok]").addEventListener("click", fermer);
@@ -1275,7 +1275,7 @@ function ouvrirCoupe(c0) {
     '<p class="cb-leg"><span><i class="l-t"></i>trouvé</span><span><i class="l-v"></i>à venir</span><span><i class="l-m"></i>manqué</span></p><p class="cb-pro">' + esc(c.prologue || "") + "</p></div></div>" +
     (signes.length ? '<div class="cb-signes"><span>Les signes gravés</span><b>' + signes.map(esc).join(" ") + "</b><small>Chaque éclat porte un signe. Réunis, ils désignent un endroit…</small></div>" : "") +
     '<ol class="cb-liste">' + (c.eclats || []).map(ligne).join("") + "</ol></div></div>";
-  document.body.appendChild(o); document.documentElement.classList.add("fige");
+  hoteFenetre().appendChild(o); document.documentElement.classList.add("fige");
   const fermer = () => { o.remove(); if (!document.querySelector(".regles")) document.documentElement.classList.remove("fige"); };
   o.querySelector(".rg-x").addEventListener("click", fermer); o.addEventListener("click", ev => { if (ev.target === o) fermer(); });
   o.addEventListener("keydown", ev => { if (ev.key === "Escape") fermer(); });
@@ -1291,7 +1291,7 @@ function revelerEclat(e, rang, tps) {
   o.innerHTML = '<div class="rg-c"><span class="tuto-k">🏆 Un éclat de la Coupe</span>' + (c ? svgCoupe(c, i) : "") +
     "<h3>Éclat de " + esc(e.matiere || "") + "</h3>" + (typeof tps === "number" ? '<p class="cb-tps">⏱️ Trouvé en <b>' + dureeChrono(tps) + "</b> · " + PALIERS_TXT[palierTrouve(e.circuit)] + (rang ? " · " + rangRapide(rang) + " pour l'instant" : "") + '<small class="cb-med">' + texteMedaille(medailleDe(rang)) + " pour l'instant · or, argent, bronze, fer, pierre selon ta place : définitif dès que tout le monde a trouvé, sinon à la fin du mois (minuit, le soir du dernier jour).</small></p>" : "") + "<p>" + esc(e.texte || "") + "</p>" + (e.symbole ? '<p class="cb-s1">Un signe y est gravé : <b>' + esc(e.symbole) + "</b></p>" : "") +
     '<div class="btn-row">' + (c ? '<button class="btn" type="button" data-cb-voir>Voir la Coupe</button>' : "") + '<button class="btn ghost" type="button" data-cb-ok>Fermer</button></div></div>';
-  document.body.appendChild(o);
+  hoteFenetre().appendChild(o);
   const fermer = () => o.remove();
   o.querySelector("[data-cb-ok]").addEventListener("click", fermer);
   const v = o.querySelector("[data-cb-voir]"); if (v) v.addEventListener("click", () => { fermer(); ouvrirCoupe(); });
@@ -1308,7 +1308,7 @@ function ceremonieChercheurNoel(rang, tps) {
     '<p class="cn-gain">🎁 Tu gagnes la plaque <b>Chercheur de Noël</b>' + (chrono ? ". La version dorée ira au 1er du classement : attribuée dès que tout le monde a trouvé, sinon le 31 décembre à minuit." : or ? ", dans sa version dorée : tu es le premier !" : ".") + "</p>" +
     '<div class="tk-obj">' + (typeof vignetteItem === "function" ? vignetteItem("plaque", id, moi, {}) : "") + "</div>" +
     '<p class="cbo-flair">Elle est à toi pour toujours, dans ton écurie · aucun point</p><div class="btn-row">' + (typeof btnEquiper === "function" ? btnEquiper("plaque", id) : "") + '<button class="btn ghost" type="button" data-cb-ok>Génial !</button></div></div>';   // v20.70 · 🏎️
-  document.body.appendChild(o);
+  hoteFenetre().appendChild(o);
   const t0 = Date.now(), fermer = () => { o.remove(); try { rendreVue(vueActive()); } catch (er) { } };
   o.addEventListener("click", ev => { if (ev.target === o && Date.now() - t0 > 1500) fermer(); });
   o.querySelector("[data-cb-ok]").addEventListener("click", fermer);
@@ -1325,7 +1325,7 @@ function ceremonieEclat(e, c, i, tps) {
     '<p class="cbo-grave">Gravé à ton nom : <b>' + esc(moi) + "</b></p><p>" + esc(e.texte || "") + "</p>" + (e.symbole ? '<p class="cb-s1">Un signe y est gravé : <b>' + esc(e.symbole) + "</b></p>" : "") +
     (typeof saisonJouee === "function" && saisonJouee() ? '<p class="cbo-flair">🔍 +3 au score de chercheur (titre du Flair) · aucun point au championnat</p>' : "") +
     '<div class="btn-row">' + (c ? '<button class="btn acc" type="button" data-cb-voir>Voir la Coupe</button>' : "") + '<button class="btn ghost" type="button" data-cb-ok>Génial !</button></div></div>';
-  document.body.appendChild(o);
+  hoteFenetre().appendChild(o);
   const t0 = Date.now(), fermer = () => o.remove();
   o.addEventListener("click", ev => { if (ev.target === o && Date.now() - t0 > 1500) fermer(); });
   o.querySelector("[data-cb-ok]").addEventListener("click", fermer);
@@ -1899,7 +1899,7 @@ function fermerPleinGP() {
   if (P.v2) { document.removeEventListener("fullscreenchange", P.fsc); document.removeEventListener("webkitfullscreenchange", P.fsc); if (P.mq && P.mqf) try { P.mq.removeEventListener("change", P.mqf); } catch (e) { }
     try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) { }
     try { const fe = document.fullscreenElement || document.webkitFullscreenElement; if (fe) (document.exitFullscreen || document.webkitExitFullscreen).call(document).catch(() => { }); } catch (e) { } }
-  const fen = [...P.o.querySelectorAll(":scope > .regles, :scope > .revel")]; fen.forEach(x => document.body.appendChild(x));   // v20.96 : une fenêtre ouverte en plein écran (règles, classement) reste ouverte dans la page
+  const fen = [...P.o.querySelectorAll(":scope > .regles, :scope > .revel")]; fen.forEach(x => document.body.appendChild(x)); const tst = P.o.querySelector(":scope > #toast"); if (tst) document.body.appendChild(tst);   // v20.96 : une fenêtre ouverte en plein écran (règles, classement) reste ouverte dans la page
   P.o.remove(); document.documentElement.classList.toggle("fige", fen.some(x => x.classList.contains("rgt"))); GP_ETQ = null;
   if (GP_INST && GP_INST.api.zoom2D) GP_INST.api.zoom2D(false);
   if (GP_INST) GP_INST.api.redim();
