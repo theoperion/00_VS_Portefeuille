@@ -142,7 +142,7 @@ const PERIMES = [/révélées? le 2\b/, /révélé le 2\b/, /du 20 au 1er/, /jus
     const t = await p.evaluate(async () => { const out = [document.body.innerText]; document.querySelectorAll(".tuto, .revel").forEach(x => x.remove());
       for (const y of [2026, 2027]) { try { choisirSaison(y); ETAT.podium = "stand"; garder(); allerA("trophees"); rendreTrophees(); } catch (e) { } await new Promise(r => setTimeout(r, 400)); out.push(document.body.innerText); }
       try { ouvrirTuto(); const x = document.querySelector(".tuto"); out.push(x.innerText); x.remove(); } catch (e) { }
-      try { ouvrirRegles(); out.push(document.querySelector(".regles").innerText); document.querySelector(".regles").remove(); } catch (e) { }
+      try { ouvrirRegles(); document.querySelectorAll(".regles .rgt-f").forEach(f => { f.hidden = false; }); document.querySelectorAll(".regles details").forEach(d => { d.open = true; }); out.push(document.querySelector(".regles").innerText); document.querySelector(".regles").remove(); } catch (e) { }
       return out.join("\n"); });
     const vus = PERIMES.filter(r => r.test(t));
     ok(!vus.length, "22/12 : plus aucun texte de l'ancienne règle (« révélées le 2 », « du 20 au 1er »…) " + vus.map(String).join(" "));

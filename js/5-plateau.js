@@ -764,7 +764,7 @@ function htmlRegles(tout, modeReserve) {
   // schémas (HTML/CSS, lisibles en clair comme en sombre)
   // v20.62 · le piège (ou la règle spéciale) du mois en cours, en évidence en haut des règles
   const dNow = new Date(), kNow = dNow.getFullYear() * 100 + dNow.getMonth() + 1, cNow = univ && (vu("pieges") || vS) ? regleCircuit(kNow) : null;
-  const actuel = cNow ? '<div class="rg-actuel" id="rg-actuel"><small>🗺️ Ce mois-ci · ' + esc(moisLong(kNow)) + " · " + cNow.g.drap + " " + esc(cNow.g.ville) + "</small><b>" + icoCircuit(cNow) + esc(cNow.r.nom) + "</b><span>" + esc(cNow.r.txt) + "</span><em>" + (cNow.spe ? "📅 règle spéciale du mois" : "🪤 piège du mois") + "</em></div>" : "";
+  const actuel = cNow ? '<div class="rg-actuel" id="rg-actuel"><small>🗺️ Ce mois-ci · ' + esc(moisLong(kNow)) + " · " + cNow.g.drap + " " + esc(cNow.g.ville) + "</small><b>" + icoCircuit(cNow) + esc(cNow.r.nom) + "</b><span>" + esc(cNow.r.txt) + "</span><em>" + (cNow.spe ? "📅 mois spécial" : "🪤 piège du mois") + "</em></div>" : "";
   const etapeSch = (ico, quand, quoi) => '<div class="rg-et"><i>' + ico + "</i><b>" + quand + "</b><small>" + quoi + "</small></div>";
   const schemaMois = '<div class="rg-sch rg-flux" aria-label="Un mois en trois temps">' + etapeSch("🃏", "du 20 au dernier jour du mois", "je pose ma carte" + (vu("prono") ? " et mon pronostic" : "")) + '<span class="rg-fl">→</span>' +
     etapeSch("👀", "le 1<sup>er</sup>", "tout est révélé") + '<span class="rg-fl">→</span>' + etapeSch("📊", "fin du mois", "relevé → points") + "</div>";
@@ -809,22 +809,7 @@ function htmlRegles(tout, modeReserve) {
       '<li id="rg-defis"><b>Trophées</b> : 🗺️ <b>Mondes</b> (un par univers : réussissez ensemble l\'objectif commun du mini-jeu du mois et chacun gagne le trophée et ses objets ; le meilleur du mois gagne son surnom du mois et un objet exclusif doré), 🏅 <b>Succès</b> (12 objectifs visibles : l\'objet pour chacun qui réussit, l\'exclusif doré pour le premier), 🧤 <b>Gant de l\'infini</b> (6 pierres, qui brillent aussi sur ta voiture), 💎 <b>Légendes</b> (un seul gagnant : 👑 premier millionnaire, montant jamais montré ; 🌿 premier champion ; 🗳️ coup de la saison ; 🎫 ticket d\'or). À part : ⚔️ <b>titres</b> qu\'on se vole chaque mois (aucun point). Tout reste acquis pour toujours, sauf les titres.</li>' + (typeof regleTresor === "function" ? regleTresor() : "") + (typeof regleTicket === "function" ? regleTicket() : "") + (typeof regleMJ === "function" ? regleMJ() : "") + '</ul>')) +
     (bientot.length ? s("bientot", "🎁", "Bientôt", "<ul>" + bientot.map(e => "<li>" + (estAdmin() ? '<button type="button" class="lien" data-etape="' + e.id + '">🔒 ' + esc(e.nom) + "</button>" : e.ico + " <b>" + esc(e.nom) + "</b>") + " · " + esc(moisEtape(e)) + "</li>").join("") + "</ul>") : "");
 }
-function ouvrirRegles(section, tout) {
-  const o = document.createElement("div"); o.className = "regles"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Règles du Versus");
-  o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>📖 Les règles</b><button class="icon-btn rg-x" type="button" id="rg-x" aria-label="Fermer">✕</button></div><div class="rg-corps">' + (tout ? '<p class="rg-admin">👀 Vue admin : toutes les règles, y compris celles que les autres ne voient pas encore.</p>' : "") + htmlRegles(tout) + "</div></div>";
-  document.body.appendChild(o); document.documentElement.classList.add("fige");
-  const fermer = () => { o.remove(); document.documentElement.classList.remove("fige"); };
-  o.addEventListener("click", e => { if (e.target === o) fermer(); });
-  o.querySelector("#rg-x").addEventListener("click", fermer);
-  // v17.17 : plus de bouton « ▶ Tuto » (Théo : les règles suffisent)
-  const corps = o.querySelector(".rg-corps");
-  const aller = id => { const el = o.querySelector("#rg-" + id); if (el) corps.scrollTop += el.getBoundingClientRect().top - corps.getBoundingClientRect().top - corps.querySelector(".rg-sommaire").offsetHeight - 4; };
-  o.querySelectorAll("[data-rg]").forEach(b => b.addEventListener("click", () => aller(b.dataset.rg)));
-  if (section) setTimeout(() => aller(section), 0);
-  // v20.47 · 🎫 l'empreinte du tirage du ticket d'or (dès le 1/1/2027) : chargée à l'ouverture si besoin
-  if (o.querySelector("#rg-mj .attente") && typeof chargerMJ === "function") chargerMJ(true).then(() => { const li = o.querySelector("#rg-mj"); if (li && MJ) li.outerHTML = regleMJ(); }).catch(() => {});   // 🎲 empreintes des mini-jeux
-  if (o.querySelector("#rg-ticket .attente") && typeof chargerTickets === "function") chargerTickets(true).then(() => { const li = o.querySelector("#rg-ticket"); if (li && TICKETS && TICKETS.empreinte) li.outerHTML = regleTicket(); }).catch(() => {});
-}
+/* ouvrirRegles (sommaire en tuiles, fiches courtes, « ? » d'aide) : voir js/11-regles.js */
 
 /* ---------- Tuto : à la première ouverture du championnat, et depuis les règles ---------- */
 /* v20.59 (Théo, 25/11) · « Le Podium en bref » : barème selon le nombre de pilotes, et chaque règle 2027 seulement une fois révélée

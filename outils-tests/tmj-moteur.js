@@ -7,7 +7,7 @@ const { chromium, NOMS, ETAT, MJ_ETAT, FINI_JANV, page, allerCourse, allerVitrin
   // 1. avant le 1/1/2027 : aucune demande « mj », rien dans l'appli ni dans les règles (même si un serveur fautif répondait)
   { const { ctx, p, err, req } = await page(b, { quand: "2026-12-15T10:00:00", session: { role: "perso", nom: "Clément" }, jusqua: 202612, mj: () => MJ_ETAT(202701, ETAT()) });
     await allerCourse(p);
-    const t = await p.evaluate(async () => { ouvrirRegles(null, false); await new Promise(r => setTimeout(r, 700)); const o = document.querySelector(".regles"); const t = (o ? o.innerText : "") + document.body.innerText; document.querySelectorAll(".regles").forEach(x => x.remove()); return t; });
+    const t = await p.evaluate(async () => { ouvrirRegles(null, false); await new Promise(r => setTimeout(r, 700)); document.querySelectorAll(".regles .rgt-f").forEach(f => { f.hidden = false; }); document.querySelectorAll(".regles details").forEach(d => { d.open = true; }); const o = document.querySelector(".regles"); const t = (o ? o.innerText : "") + document.body.innerText; document.querySelectorAll(".regles").forEach(x => x.remove()); return t; });
     ok(!err.length && !req.some(x => x.startsWith("mj")) && !(await p.$(".mj-carte, .mj-rev, #vit-mj, .mj-pas")) && !/Mini-jeu|Jeu d'essai|Règle inventée/i.test(t), "15/12/2026 : aucune demande au serveur, rien du mini-jeu (carte, règles, vitrine, pastille) " + JSON.stringify(err));
     await ctx.close(); }
   // 2. le serveur dit « pas encore » (ouvert:false) : rien non plus

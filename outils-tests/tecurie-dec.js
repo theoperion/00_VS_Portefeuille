@@ -123,7 +123,7 @@ async function page(b, o) {
     ok(vis.course.tetes >= 5 && !vis.course.casque && !vis.course.damier && (!vis.piste || (!vis.piste.casque && !vis.piste.damier)) && vis.classement.casque >= 1 && vis.classement.damier >= 1 && vis.aide,
       "en course, Clément garde son visage (ni casque ni avatar Damier) ; au Classement, son casque et son avatar Damier ; l'aide de l'écurie le dit " + JSON.stringify(vis) + tag);
     // les règles de décembre parlent de l'écurie, sans rien de 2027
-    const rg = await p.evaluate(async () => { ouvrirRegles(); await new Promise(r => setTimeout(r, 300)); const o = document.querySelector(".regles"), t = o ? o.innerText : ""; if (o) o.remove(); return t; });
+    const rg = await p.evaluate(async () => { ouvrirRegles(); await new Promise(r => setTimeout(r, 300)); document.querySelectorAll(".regles .rgt-f").forEach(f => { f.hidden = false; }); document.querySelectorAll(".regles details").forEach(d => { d.open = true; }); const o = document.querySelector(".regles"), t = o ? o.innerText : ""; if (o) o.remove(); return t; });
     ok(/Écurie/.test(rg) && /1er décembre|1\s*er décembre/.test(rg) && !/Trophées|Succès|Gant de l'infini|Mondes/.test(rg), "règles de décembre : l'écurie ouverte depuis le 1er décembre, rien de 2027" + tag);
     await ctx.close();
   }
