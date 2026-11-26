@@ -7,7 +7,7 @@
    2. Serveur (versus/API.js, vsPoserCarte_ dans un bac à sable, Google simulé) : carte du mois et carte bonus rangées côte à côte (c et b),
       une seule bonus par mois, une bonus déjà jouée refusée, l'ancienne appli (sans « emplacement ») range quand même la bonus à part, vue publique masquée.
    3. Stand (fenêtre d'avril, Théo a 2 cartes bonus) : poser la carte du mois PUIS la carte bonus, textes « en plus », la 2e bonus grisée, reprendre la bonus seule.
-   4. Révélation du 2 : la carte bonus s'annonce sous le nom ; détail des points et règles.
+   4. Révélation du 1er : la carte bonus s'annonce sous le nom ; détail des points et règles.
    Fausses données seulement ; https://script.google.com/** intercepté. Lancer depuis la racine du dépôt, serveur local ouvert :
    python3 -m http.server 8771 &  puis  node outils-tests/tbonus-en-plus.js   (PORT=… ; APP_SCRIPTS=… dossier du dépôt serveur) */
 const { chromium } = require("playwright"), fs = require("fs"), vm = require("vm"), path = require("path");
@@ -124,7 +124,7 @@ async function page(b, quand, route) {
   ok(r8.ok && lit().Théo[202704].c === "pari" && lit().Théo[202704].cible === "Kévin" && lit().Théo[202704].b === "safety", "serveur : changer la carte du mois (Pari contre Kévin) garde la carte bonus");
   S.props.CARTES_2027 = JSON.stringify(Object.assign(lit(), { Devlin: { 202704: { b: "arret" } } }));
   const pub = vm.runInContext("vsCartesPubliques_(vsLireCartes_())", S.ctx)["2027"];
-  ok(JSON.stringify(pub.Théo[202704]) === '{"cache":true}' && !(202704 in (pub.Devlin || {})) && !/arret|safety|"b"/.test(JSON.stringify(Object.values(pub).map(z => z[202704]))), "serveur : vue publique avant le 2 : la carte du mois est un dos de carte, une carte bonus seule n'envoie RIEN (Devlin : " + JSON.stringify((pub.Devlin || {})[202704]) + ")");
+  ok(JSON.stringify(pub.Théo[202704]) === '{"cache":true}' && !(202704 in (pub.Devlin || {})) && !/arret|safety|"b"/.test(JSON.stringify(Object.values(pub).map(z => z[202704]))), "serveur : vue publique avant le 1er : la carte du mois est un dos de carte, une carte bonus seule n'envoie RIEN (Devlin : " + JSON.stringify((pub.Devlin || {})[202704]) + ")");
   const r9 = S.poser({ personne: "Théo", mois: 202704, carte: "pari", cible: "Kévin" });
   S.props.CARTES_2027 = JSON.stringify({ Théo: { 202703: { c: "turbo" } } });
   const r10 = S.poser({ personne: "Théo", mois: 202704, carte: "turbo", emplacement: "base" });
@@ -174,12 +174,12 @@ async function page(b, quand, route) {
       else ok(r.autres.every(z => z === "null") && r.ok.includes("Théo:-") && r.ok.includes("Devlin:-") && r.compte === "1/4", "un autre joueur (Kévin) ne voit RIEN des cartes bonus posées seules (Théo, Devlin : « pas encore de carte ») " + JSON.stringify(r));
       errs.push(...err); await ctx.close();
     } }
-  // ---------- 4. révélation du 2 avril
-  { const { ctx, p, err } = await page(b, "2027-04-02T10:00:00", () => donnees("B", { Théo: { 202704: { c: "turbo", b: "safety" } }, Kévin: { 202704: { c: "pluie" } }, Devlin: { 202704: { b: "undercut" } } }));
+  // ---------- 4. révélation du 1er avril (Théo, 26/11 : révélées le 1er)
+  { const { ctx, p, err } = await page(b, "2027-04-01T10:00:00", () => donnees("B", { Théo: { 202704: { c: "turbo", b: "safety" } }, Kévin: { 202704: { c: "pluie" } }, Devlin: { 202704: { b: "undercut" } } }));
     const rv = await p.evaluate(async () => { localStorage.setItem("versus.revele", "0"); document.querySelectorAll(".revel,.tuto,.regles").forEach(z => z.remove()); const r = revelationAVoir(); if (!r) return null; ouvrirRevelation(r); await new Promise(z => setTimeout(z, 300));
       await new Promise(z => setTimeout(z, 2600)); return [...document.querySelectorAll(".rv-p")].map(z => z.textContent.replace(/\s+/g, " ").trim()); });
     await capture(p, "bonus-revelation");
-    ok(rv && rv.some(t => /Théo/.test(t) && /\+ 🚨 Safety car \(carte bonus\)/.test(t) && /Turbo/.test(t)), "révélation du 2 : la carte du mois se retourne, la carte bonus s'annonce sous le nom (" + JSON.stringify(rv) + ")");
+    ok(rv && rv.some(t => /Théo/.test(t) && /\+ 🚨 Safety car \(carte bonus\)/.test(t) && /Turbo/.test(t)), "révélation du 1er : la carte du mois se retourne, la carte bonus s'annonce sous le nom (" + JSON.stringify(rv) + ")");
     ok(rv && rv.some(t => /Devlin/.test(t) && /Undercut/.test(t)), "révélation : une carte bonus posée seule se retourne aussi");
     errs.push(...err); await ctx.close(); }
   await b.close();

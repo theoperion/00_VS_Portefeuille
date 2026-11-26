@@ -469,7 +469,7 @@ function majModeAdmin() {
 
 }
 /* ---------- Vue joueur et date simulée (admin) ---------- */
-const DATES_SIM = [["", "Aujourd'hui"], ["2026-11-21", "21 nov. · ouverture"], ["2026-12-02", "2 déc. · révélation"], ["2026-12-03", "3 déc. · chauffe"], ["2026-12-22", "22 déc. · cartes de janvier"],
+const DATES_SIM = [["", "Aujourd'hui"], ["2026-11-21", "21 nov. · ouverture"], ["2026-12-01", "1er déc. · révélation"], ["2026-12-03", "3 déc. · chauffe"], ["2026-12-22", "22 déc. · cartes de janvier"],
   ["2027-01-21", "21 janv. · nouvelles règles"], ["2027-02-21", "21 févr. · tout en jeu"], ["2027-04-25", "25 avr. · piège des Androïdes"], ["2027-11-21", "21 nov. 2027 · Finale"]];
 function majVueJoueur() {
   const sec = $("#regl-vue"); if (!sec) return;

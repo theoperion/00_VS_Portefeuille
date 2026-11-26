@@ -5,7 +5,7 @@
    Les voitures de chacun (livrée, casque, traînée) tournent sur un circuit : 25 points = un tour.
    Chaque mois se rejoue en animation (toujours par beau temps : plus de météo du marché depuis le 26/11/2026).
    Les cartes de course (une main identique pour tous, chaque saison) ajoutent de la stratégie :
-   posées face cachée du 20 du mois précédent au 1er inclus, révélées le 2, elles donnent ou retirent quelques points.
+   posées face cachée du 20 au dernier jour du mois précédent inclus, révélées le 1er du mois, elles donnent ou retirent quelques points.
    ============================================================ */
 const TOUR_GP = 25;
 const CARTES = [
@@ -66,8 +66,8 @@ function effetCarte(c, x, l, avant, iR, ctx) {
   if (c.c === "arret") { const px = ctx && ctx.prev && ctx.prev.find(z => z.nom === x.nom); return px && x.rg < px.rg ? 2 : 0; }
   return 0;
 }
-/** Mois où l'on peut encore poser une carte : le mois en cours jusqu'au 1er inclus, sinon le suivant */
-/* Fenêtre des cartes et des duels pour le mois K : du 20 du mois d'avant au 1er de K inclus (chauffe : du 21/11 à 9 h au 1er décembre, v17.61) */
+/** Mois où l'on peut encore poser une carte : à partir du 20, le mois suivant (jusqu'au dernier jour du mois inclus) ; sinon aucun */
+/* Fenêtre des cartes et des duels pour le mois K : du 20 du mois d'avant à son dernier jour inclus, révélation le 1er de K à 0 h (chauffe : du 21/11 à 9 h au 30 novembre ; Théo, 26/11) */
 const CHAUFFE_OUVRE = Date.UTC(2026, 10, 21, 8, 0);   // 10 h (Théo, 20/11 soir ; 9 h → 15 h → 10 h)   // v17.1 (Théo) : tour de chauffe ouvert le samedi 21/11 à 9 h (heure de Paris), pas avant
 function moisCarteOuvert() {
   const d = new Date(), k = d.getFullYear() * 100 + d.getMonth() + 1;
@@ -259,7 +259,7 @@ function circuitDe(k) {
   if (!k || (k === CHAUFFE_K && !apercuSaison())) return "abudhabi";   // v16.84 : en saison simulée (admin), décembre = la Finale du Multivers
   return CAL_GP[((k % 100) - 1 + 12) % 12];
 }
-/** Les cartes d'un mois : secrètes jusqu'à leur révélation (le 2 du mois, chauffe comprise) */
+/** Les cartes d'un mois : secrètes jusqu'à leur révélation (le 1er du mois à 0 h, chauffe comprise) */
 function circuitRevele(k) {
   if (!k || apercuSaison()) return true;
   const d = new Date(), kAuj = d.getFullYear() * 100 + d.getMonth() + 1;
@@ -451,7 +451,7 @@ function htmlGrandPrix(y) {
     const res = z => z.invalide ? (z.piege ? " Interdite ce mois-ci (piège " + (et.m && et.m.piege ? et.m.piege.ico + " " + et.m.piege.nom : "du circuit") + ") : sans effet." : z.deja ? " Déjà jouée cette saison : sans effet." : " Pas encore piochée à ce moment-là : sans effet.") : " Résultat : " + (z.gain > 0 ? "+" : "") + z.gain + " pt" + (Math.abs(z.gain) > 1 ? "s" : "") + (z.sab ? " · " + z.cible + " " + z.sab : "") + ".";
     // lot53 (Conseil, règle « une ligne = 3 zones ») : place · tête + NOM › + 2 pastilles au plus · total ; le calcul du mois ne s'ouvre qu'en touchant la ligne
     const P = [], I = [], pas = (w, pr, h) => P.push({ w, pr, h });   // P = bonus qui comptent (triés), I = infos sans point (seulement dans le détail)
-    if (ca && !x) { if (ca.cache && !idsCa.length) P.push({ w: 0, pr: 0, h: '<span class="gp-x gp-xc cache" data-bdg="Carte posée face cachée : révélée le ' + jourLimite(et.k) + ' du mois.">🂠</span>' }); else idsCa.forEach(id => { const cdef = carteDef(id); P.push({ w: 0, pr: 0, h: '<span class="gp-x gp-xc" data-bdg="' + esc(cdef.ico + " " + cdef.nom + (cdef.bonus ? " (carte bonus, en plus)" : "") + " : " + cdef.def) + '">' + cdef.ico + "</span>" }); }); }
+    if (ca && !x) { if (ca.cache && !idsCa.length) P.push({ w: 0, pr: 0, h: '<span class="gp-x gp-xc cache" data-bdg="Carte posée face cachée : révélée le 1er du mois.">🂠</span>' }); else idsCa.forEach(id => { const cdef = carteDef(id); P.push({ w: 0, pr: 0, h: '<span class="gp-x gp-xc" data-bdg="' + esc(cdef.ico + " " + cdef.nom + (cdef.bonus ? " (carte bonus, en plus)" : "") + " : " + cdef.def) + '">' + cdef.ico + "</span>" }); }); }
     if (x) {
       cartesLigne(x).forEach(z => { const cdef = carteDef(z.id); if (!cdef) return; const g = z.gain, h = '<span class="gp-x gp-xc' + (g < 0 ? " mal" : "") + '" data-bdg="' + esc(cdef.ico + " " + cdef.nom + (cdef.bonus ? " (carte bonus, en plus)" : "") + " : " + cdef.def + res(z)) + '">' + cdef.ico + (g ? (g > 0 ? "+" : "−") + Math.abs(g) : "") + "</span>"; if (g) pas(Math.abs(g), g > 0 ? 2 : 0, h); else I.push(h); });
       if (x.vainq) pas(x.vainq, 3, '<span class="gp-x or" data-bdg="🪱 Le Chevaucheur des sables : vainqueur du mois, +2.">🪱+2</span>');
@@ -545,13 +545,13 @@ function htmlCartes(y) {
       '<div class="btn-row"><button class="btn acc" type="button" id="c-poser"' + (cd.cible && !GP_RIVAL ? " disabled" : "") + ">" + (cd.bonus ? "Poser en plus" : "Poser face cachée") + " sur " + esc(moisLong(kOuvert)) + '</button><button class="lien" type="button" id="c-annuler">Annuler</button></div></div>';
   } else if (dejaMois || dejaBonus) {
     const dc = dejaMois ? carteDef(dejaMois) : null, db = dejaBonus ? carteDef(dejaBonus) : null, aBonus = pioche.some(c => !joues[c.id]);
-    action = '<div class="c-action">' + (dc ? "<p>" + dc.ico + " <b>" + esc(dc.nom) + "</b> posée face cachée sur " + esc(moisLong(kOuvert)) + (src[kOuvert].cible ? " contre " + esc(src[kOuvert].cible) : "") + ". Révélée le " + jourLimite(kOuvert) + '.</p><button class="lien" type="button" id="c-reprendre">Reprendre ma carte</button>' : "<p>🃏 Ta carte du mois n'est pas encore posée.</p>") +
+    action = '<div class="c-action">' + (dc ? "<p>" + dc.ico + " <b>" + esc(dc.nom) + "</b> posée face cachée sur " + esc(moisLong(kOuvert)) + (src[kOuvert].cible ? " contre " + esc(src[kOuvert].cible) : "") + ". Révélée le 1<sup>er</sup> " + esc(moisLong(kOuvert).replace(/ \d{4}$/, "")) + '.</p><button class="lien" type="button" id="c-reprendre">Reprendre ma carte</button>' : "<p>🃏 Ta carte du mois n'est pas encore posée.</p>") +
       (db ? "<p>+ " + db.ico + " <b>" + esc(db.nom) + "</b> : ta carte bonus, posée en plus, face cachée.</p>" + '<button class="lien" type="button" id="c-reprendre-b">Reprendre ma carte bonus</button>' : dc && aBonus ? "<p><small>+ Tu peux aussi poser ta carte bonus, en plus.</small></p>" : "") + "</div>";
   }
   const kPr = kOuvert ? cleMoins(kOuvert, 1) : null;
   const reste = CARTES.filter(c => !(kPr && (joues[c.id] || []).includes(kPr))).length + pioche.filter(c => !joues[c.id]).length, aVenir = j.deck.length - j.i;
   const pf = prochaineFenetre();
-  const fermeture = !kOuvert ? '<p class="c-ferme">🔒 ' + (estChauffe(y) && Date.now() < CHAUFFE_OUVRE ? "Les cartes du tour de chauffe s'ouvrent samedi 21 novembre à 9 h." : estChauffe(y) ? "Les cartes du tour de chauffe se posaient jusqu'au 1er décembre. Celles de janvier se posent dans l'onglet Saison 1, du 20 décembre au 1er janvier." + (moisCarteOuvert() === (SAISON.premiere * 100 + 1) ? ' <button class="lien" type="button" data-saison="' + SAISON.premiere + '">Poser ma carte de janvier ›</button>' : "") : moisCarteOuvert() ? "La fenêtre ouverte concerne une autre saison : change d'onglet en haut." : "Fenêtre fermée. Prochaine ouverture le " + esc(pf.du) + ", pour " + esc(moisLong(pf.k)) + ".") + "</p>" : "";
+  const fermeture = !kOuvert ? '<p class="c-ferme">🔒 ' + (estChauffe(y) && Date.now() < CHAUFFE_OUVRE ? "Les cartes du tour de chauffe s'ouvrent samedi 21 novembre à 9 h." : estChauffe(y) ? "Les cartes du tour de chauffe se posaient jusqu'au 30 novembre. Celles de janvier se posent dans l'onglet Saison 1, du 20 au 31 décembre." + (moisCarteOuvert() === (SAISON.premiere * 100 + 1) ? ' <button class="lien" type="button" data-saison="' + SAISON.premiere + '">Poser ma carte de janvier ›</button>' : "") : moisCarteOuvert() ? "La fenêtre ouverte concerne une autre saison : change d'onglet en haut." : "Fenêtre fermée. Prochaine ouverture le " + esc(pf.du) + ", pour " + esc(moisLong(pf.k)) + ".") + "</p>" : "";
   return '<div><h3 class="s-h3">Mes cartes <small>' + reste + " en main" + (regleVisible("pioche") && !basesSeules() ? " · " + aVenir + " dans la pioche" : "") + "</small></h3></div>" +
     '<p class="info">Touche une carte pour la poser. Chaque mois, ta carte du mois : une carte de base se rejoue, mais pas deux mois de suite.' + (basesSeules() ? "" : regleVisible("pioche") ? " Et si tu as une carte bonus : elle se joue en plus de ta carte du mois (une seule par mois) et ne sert qu\'une fois." : " Une carte bonus ne sert qu\'une fois.") + (regleVisible("pioche") && !basesSeules() ? (regleVisible("niveaux") ? " Tu en pioches une nouvelle à chaque niveau gagné et quand tu finis dernier d\'un mois." : " Tu en pioches une nouvelle quand tu finis dernier d\'un mois.") : "") + (ap ? " Aperçu : choisis le mois avec les puces ci-dessous ; rien n'est envoyé." : "") + "</p>" +
     (ap ? '<div class="gp-mois">' + etapesGP(y).slice(1).map(x => '<button type="button" data-gpcible="' + x.k + '" aria-pressed="' + (x.k === kOuvert) + '">' + esc(moisCourt(x.k)) + "</button>").join("") + "</div>" : "") +
@@ -641,7 +641,7 @@ function ouvrirRevelation(r) {
   // V15.5 : quand la dernière carte est retournée, une gerbe d'étoiles
   const finFlip = (r.l.length - 1) * 700 + 450 + 700; let fini = false;
   setTimeout(() => { if (!fini && o.isConnected && typeof confettis === "function") confettis("etoiles"); }, finFlip);
-  const fermer = () => { fini = true; o.remove(); };
+  const fermer = () => { fini = true; o.remove(); setTimeout(() => { if (typeof verifierRevelation === "function") verifierRevelation(); }, 400); };   // révélation le 1er (Théo, 26/11) : le même jour que les nouvelles règles du 1/1 et l'affichette du mois, qui suivent
   // V15.9 : un tapotement à côté ne coupe plus la révélation ; il ne ferme qu'une fois toutes les cartes retournées (« Fermer » marche toujours)
   const t0 = Date.now(); o.addEventListener("click", e => { if (e.target === o && Date.now() - t0 > finFlip + 600) fermer(); });
   o.querySelector('[data-rv="fermer"]').addEventListener("click", fermer);
@@ -669,7 +669,7 @@ function htmlGPStand(k) {
   return '<div class="st-gp">' + (window.Piste ? Piste.vignette(ci) : "") + "<div><b>" + g.drap + " " + esc(g.gp) + "</b><small>" + esc(g.ville) + " · " + esc(g.txt) + "</small></div></div>";
 }
 /* lot68 (Théo, 21/11) : pendant la fenêtre, qui a déjà posé sa carte du mois k — jamais laquelle (dos de carte ou « en attente ») ;
-   disparaît avec la fenêtre (révélation le jourLimite). On ne lit que « posée ou pas » : ni l'id ni la cible ne sortent d'ici. */
+   disparaît avec la fenêtre (révélation le 1er du mois). On ne lit que « posée ou pas » : ni l'id ni la cible ne sortent d'ici. */
 /** v20.12 (Théo) : « 2/4 » sur l'onglet Stand pendant la fenêtre des cartes (combien ont posé, jamais laquelle) */
 function compteCartesTab(y) {
   try { const k = kCartes(y); if (!k || apercuSaison() || !D || !D.personnes || D.personnes.length < 2) return "";
@@ -680,7 +680,7 @@ function htmlPeloton(y, k, qui) {
   if (!k || !D || !D.personnes || D.personnes.length < 2) return "";
   const l = D.personnes.map(p => { const c = carteDe(y, p.nom, k); return { nom: p.nom, ok: !!(c && (basePosee(c) || c.cache && !c.c && !c.b)) }; }), n = l.filter(x => x.ok).length;   // la carte du mois (une carte bonus seule ne compte pas)
   return '<div class="st-pel"><span class="st-pel-t">' + (n === l.length ? "Tout le monde a posé sa carte" : "Cartes posées") + " <b>" + n + "/" + l.length + "</b></span>" +
-    '<div class="st-pel-l">' + l.map(x => '<span class="st-pel-p' + (x.ok ? " ok" : "") + (x.nom === qui ? " ici" : "") + '" data-bdg="' + esc(x.nom + (x.ok ? " : carte posée, face cachée jusqu'au " + jourLimite(k) + " " + moisLong(k).replace(/ \d{4}$/, "") + "." : " : pas encore de carte.")) + '">' +
+    '<div class="st-pel-l">' + l.map(x => '<span class="st-pel-p' + (x.ok ? " ok" : "") + (x.nom === qui ? " ici" : "") + '" data-bdg="' + esc(x.nom + (x.ok ? " : carte posée, face cachée jusqu'à la révélation du 1er " + moisLong(k).replace(/ \d{4}$/, "") + "." : " : pas encore de carte.")) + '">' +
       avatar(x.nom) + '<i class="st-pel-c" aria-hidden="true">' + (x.ok ? "✓" : "…") + "</i><small>" + esc(x.nom) + "</small></span>").join("") + "</div></div>";
 }
 function htmlStand(y) {
@@ -692,7 +692,7 @@ function htmlStand(y) {
     const c = carteDe(y, qui, k), d = duelDe(y, qui, k), j = ap ? null : joursRestants(k);
     etat = '<div class="st-etat ouvert"><div class="st-h"><span class="st-feu"></span><b>Fenêtre ouverte<small>pour ' + esc(moisLong(k)) + "</small></b>" + (j !== null ? "<em>" + (j <= 1 ? "dernier jour" : "il reste " + j + " jours") + "</em>" : "<em>aperçu</em>") + "</div>" +
       '<div class="st-check"><span class="' + (basePosee(c) ? "ok" : "") + '">' + (basePosee(c) ? "✓ Carte posée" : "🃏 Carte à poser") + "</span>" + (bonusPosee(c) ? '<span class="ok">✓ + carte bonus</span>' : regleVisible("pioche") && bonusDispo(y, qui, k) ? "<span>🎴 + ta carte bonus (en plus)</span>" : "") + (regleVisible("duels") && regleActive("duels", k) ? '<span class="' + (d && d.cible ? "ok" : "") + '">' + (d && d.cible ? "✓ Duel lancé" : "⚔️ Duel (facultatif)") + "</span>" : "") + "</div>" +
-      (ap ? "" : htmlPeloton(y, k, qui)) + "<small>Jusqu'au " + "1<sup>er</sup>" + " " + esc(moisLong(k).replace(/ \d{4}$/, "")) + " inclus. Tout reste caché jusqu'à la révélation, le " + jourLimite(k) + ".</small>" + (k === CHAUFFE_K ? "" : htmlGPStand(k)) + "</div>";   // v17.46 (Théo) : au tour de chauffe, pas de rappel du circuit (ni atout ni piège)
+      (ap ? "" : htmlPeloton(y, k, qui)) + "<small>Jusqu'au " + esc(finFenetre(k)) + " inclus. Tout reste caché jusqu'à la révélation, le 1<sup>er</sup> " + esc(moisLong(k).replace(/ \d{4}$/, "")) + ".</small>" + (k === CHAUFFE_K ? "" : htmlGPStand(k)) + "</div>";   // v17.46 (Théo) : au tour de chauffe, pas de rappel du circuit (ni atout ni piège)
   } else {
     const autre = moisCarteOuvert();
     const d = new Date(), kc = d.getFullYear() * 100 + d.getMonth() + 1, revele = d.getDate() >= jourLimite(kc) && Math.floor(kc / 100) === y && regleActive("duels", kc);
@@ -701,7 +701,7 @@ function htmlStand(y) {
     etat = '<div class="st-etat"><div class="st-h"><span class="st-feu ferme"></span><b>Fenêtre fermée</b></div>' +
       (recus.length ? '<p class="duel-recu">⚔️ ' + recus.map(esc).join(" et ") + " t'" + (recus.length > 1 ? "ont" : "a") + " défié pour " + esc(moisLong(kc)) + " : le meilleur du mois prend 1 point à l'autre.</p>" : "") +
       (paris.length ? '<p class="duel-recu">🎲 ' + paris.map(esc).join(" et ") + " t'" + (paris.length > 1 ? "ont" : "a") + " lancé un Pari pour " + esc(moisLong(kc)) + " : finis devant et " + (paris.length > 1 ? "ils perdent" : "il perd") + " 1 point ; sinon, +2 pour " + (paris.length > 1 ? "eux" : "lui") + ".</p>" : "") + "<small>" +
-      (estChauffe(y) && Date.now() < CHAUFFE_OUVRE ? "Les cartes du tour de chauffe s'ouvrent samedi 21 novembre à 9 h." : estChauffe(y) ? "Les cartes du tour de chauffe se posaient jusqu'au 1er décembre." + (autre ? ' <button class="lien" type="button" data-saison="' + SAISON.premiere + '">Poser ma carte de janvier ›</button>' : " Celles de janvier se poseront du 20 décembre au 1<sup>er</sup> janvier.")
+      (estChauffe(y) && Date.now() < CHAUFFE_OUVRE ? "Les cartes du tour de chauffe s'ouvrent samedi 21 novembre à 9 h." : estChauffe(y) ? "Les cartes du tour de chauffe se posaient jusqu'au 30 novembre." + (autre ? ' <button class="lien" type="button" data-saison="' + SAISON.premiere + '">Poser ma carte de janvier ›</button>' : " Celles de janvier se poseront du 20 au 31 décembre.")
         : autre ? 'La fenêtre ouverte concerne une autre saison : <button class="lien" type="button" data-saison="' + (autre === CHAUFFE_K ? SAISON.premiere - 1 : Math.floor(autre / 100)) + '">y aller ›</button>'
         : "Prochaine ouverture le <b>" + esc(pf.du) + "</b>, pour " + esc(moisLong(pf.k)) + ". En attendant, prépare ta stratégie : ta main est ci-dessous.") + "</small></div>";
   }
@@ -749,7 +749,7 @@ function htmlDuel(y, kOuvert) {
 
   return '<div><h3 class="s-h3">Duel du mois <small>' + esc(moisLong(kOuvert)) + "</small></h3></div>" +
     '<div class="c-action duel"><p>⚔️ Défie un rival : le meilleur du mois lui prend <b>1 point</b>. Même fenêtre que les cartes, face cachée, gratuit, un défi par mois.</p>' +
-    (d && d.cible ? '<p><b>⚔️ Duel lancé contre ' + esc(d.cible) + "</b>" + (d.cache ? " · révélé le " + jourLimite(kOuvert) : "") + '.</p><button class="lien" type="button" id="duel-retirer">Retirer mon duel</button>'
+    (d && d.cible ? '<p><b>⚔️ Duel lancé contre ' + esc(d.cible) + "</b>" + (d.cache ? " · révélé le 1<sup>er</sup>" : "") + '.</p><button class="lien" type="button" id="duel-retirer">Retirer mon duel</button>'
       : '<div class="chips" role="group" aria-label="Rival à défier">' + rivaux.map(n => '<button class="chip" type="button" data-duel="' + esc(n) + '" aria-pressed="' + (DUEL_RIVAL === n) + '">' + esc(n) + "</button>").join("") + "</div>" +
         '<button class="btn acc" type="button" id="duel-lancer"' + (DUEL_RIVAL ? "" : " disabled") + ">Lancer le duel" + (DUEL_RIVAL ? " contre " + esc(DUEL_RIVAL) : "") + "</button>") +
 "</div>";
