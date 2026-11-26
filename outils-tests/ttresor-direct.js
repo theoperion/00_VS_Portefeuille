@@ -39,11 +39,11 @@ const sansPos = req => req.every(c => !("p" in c) && !JSON.stringify(c).includes
   for (const sombre of [false, true]) { const tag = sombre ? "sombre" : "clair";
     const E = { lance: false, actif: false, depuis: null, cumul: 1500, final: false, fige: false, vq: null,
       ch: [{ nom: "Clément", j: 20261204, s: 492 }, { nom: "Devlin", j: 20261205, s: 754 }, { nom: "Théo", j: 20261206, s: 1200 }] };
-    const tres = () => Object.assign({ circuit: "abudhabi", saison: 2026, mois: 12, type: "trefle", enigme: ENIGME, indice2: null, chaudFroid: false, chrono: true, final: E.final, fige: E.fige, pilotes: 5,
+    const tres = () => Object.assign({ circuit: "abudhabi", saison: 2026, mois: 12, type: "trefle", enigme: E.actif ? ENIGME : "", enigmeCachee: !E.actif, indice2: null, chaudFroid: false, chrono: true, final: E.final, fige: E.fige, pilotes: 5,
       lance: E.lance, actif: E.actif, depuis: E.depuis, cumul: E.cumul, chercheurs: E.ch }, E.vq ? { vainqueur: E.vq } : {}, E.actif ? { p: P_FAUX } : {});
     const serveur = {
       tresors: (c, m) => ({ ok: true, maintenant: m, trouves: E.ch.some(x => x.nom === "Kévin") ? ["abudhabi"] : [], total: E.ch.some(x => x.nom === "Kévin") ? 1 : 0, tresors: [tres()] }),
-      tresorDepart: (c, m) => { if (!E.actif) Object.assign(E, { lance: true, actif: true, depuis: m }); return { ok: true, actif: true, depuis: E.depuis, cumul: E.cumul, maintenant: m, p: P_FAUX }; },
+      tresorDepart: (c, m) => { if (!E.actif) Object.assign(E, { lance: true, actif: true, depuis: m }); return { ok: true, actif: true, depuis: E.depuis, cumul: E.cumul, maintenant: m, p: P_FAUX, enigme: ENIGME, indice2: null }; },
       tresorArret: (c, m) => ({ ok: true, actif: false, cumul: E.cumul, maintenant: m }),
       tresorTrouve: (c, m) => { const s = Math.round(E.cumul + (m - E.depuis) / 1000); E.ch = E.ch.concat([{ nom: "Kévin", j: 20261210, s }]).sort((a, b) => a.s - b.s); Object.assign(E, { actif: false, final: true, fige: true, vq: { nom: E.ch[0].nom, s: E.ch[0].s } });
         return { ok: true, deja: false, trouves: ["abudhabi"], total: 1, rang: E.ch.findIndex(x => x.nom === "Kévin") + 1, temps: s, n: E.ch.length, final: true, fige: true, vainqueur: E.vq, pilotes: 5, chercheurs: E.ch, eclat: null }; } };
@@ -98,6 +98,8 @@ const sansPos = req => req.every(c => !("p" in c) && !JSON.stringify(c).includes
       chercheurs: [{ nom: "Kévin", j: 20261204, s: 300 }, { nom: "Clément", j: 20261204, s: 492 }, { nom: "Devlin", j: 20261205, s: 754 }, { nom: "Théo", j: 20261206, s: 1200 }] }] }) };
     const { ctx, p, err } = await page(b, { quand: "2026-12-20T10:00:00", session: { role: "perso", nom: "Kévin" }, serveur });
     await pageCourse(p); await p.waitForFunction(() => TRESORS && document.querySelector(".gp-piste .gp-enigme"), null, { timeout: 10000 }).catch(() => {}); await p.waitForTimeout(1500);
+    const souv = await p.evaluate(() => { const e = document.querySelector(".gp-piste .gp-enigme.trouvee .tc-souv"); return !!e && e.textContent.includes("ÉNIGME-INVENTÉE"); });
+    ok(souv, "V96 · après la trouvaille : l'énigme reste lisible pour le trouveur (souvenir)");
     const r = await p.evaluate(() => ({ an: !!document.querySelector(".tv-rev"), or: debloques("Kévin").has("plaque.chercheuror"), et: (document.querySelector(".gp-piste .tc-etat") || {}).textContent || "", appel: (document.querySelector(".gp-piste .gp-tresor-appel.trouve") || {}).textContent || "" }));
     ok(!r.an && !r.or && /Provisoire · 4 sur 5/.test(r.et) && /Trouvé en 5 min 00 s · sans indice · 🥇 1er pour l'instant/.test(r.appel), "4 sur 5 : provisoire, pas d'annonce ni de dorée ; en 2D « ✅ Trouvé en 5 min 00 s · 🥇 le plus rapide pour l'instant · ⏱️ Classement du trésor »");
     await p.evaluate(() => document.querySelector(".gp-piste .gp-tresor-appel.trouve").click()); await p.waitForTimeout(300);
@@ -112,7 +114,7 @@ const sansPos = req => req.every(c => !("p" in c) && !JSON.stringify(c).includes
       const { ctx, p, err } = await page(b, { quand, session: { role: "perso", nom: "Kévin" }, sombre });
       const r = await p.evaluate(async () => { ouvrirRegles("tresor"); await new Promise(r => setTimeout(r, 400)); const o = document.querySelector(".regles"), li = document.querySelector("#rg-tresor");
         return { tout: o ? o.innerText : "", li: li ? li.innerText : "", etapes: li ? li.querySelectorAll(".tr-etapes > li").length : 0, deb: document.documentElement.scrollWidth > innerWidth + 1 }; });
-      if (nom === "decembre") ok(r.etapes === 4 && /entraînement/.test(r.li) && /ne compte pas encore pour 2027/.test(r.li) && /plaque dorée Chercheur de Noël/.test(r.li) && /Dès que les 5 pilotes ont trouvé/.test(r.li) && /Moins tu as d'aide, plus tu passes devant/.test(r.li) && /Dès le 21 : 3e palier \(jauge si personne n'a encore trouvé\)/.test(r.li) && /2e indice le 11/.test(r.li) && !/éclat|Flair/i.test(r.tout) && !r.deb,
+      if (nom === "decembre") ok(r.etapes === 4 && /entraînement/.test(r.li) && /ne compte pas encore pour 2027/.test(r.li) && /plaque dorée Chercheur de Noël/.test(r.li) && /Dès que les 5 pilotes ont trouvé/.test(r.li) && /Moins tu as d'aide, plus tu passes devant/.test(r.li) && /Dès le 21 : 3e palier \(jauge si personne n'a encore trouvé\)/.test(r.li) && /2e indice \(dès le 11\) et 🌡️ la jauge chaud-froid \(dès le 21\) : visibles pendant ta recherche/.test(r.li) && /L'énigme apparaît et le chrono démarre/.test(r.li) && !/éclat|Flair/i.test(r.tout) && !r.deb,
         "règles de décembre (" + tag + ") : 4 étapes, entraînement, plaque dorée, paliers (« moins tu as d'aide, plus tu passes devant »), « dès que les 5 », coincé ; AUCUN « éclat » ni « Flair »");
       else ok(r.etapes === 4 && /or/.test(r.li) && /argent/.test(r.li) && /bronze/.test(r.li) && /fer/.test(r.li) && /pierre/.test(r.li) && /Pas trouvé : rien/.test(r.li) && /Flair/.test(r.li) && /3, 2 et 1 points/.test(r.li) && /Dès que les 5 pilotes ont trouvé/.test(r.li) && !r.deb,
         "règles de janvier (" + tag + ") : or · argent · bronze · fer · pierre, pas trouvé = rien, Flair 3/2/1, « dès que les 5 »");
