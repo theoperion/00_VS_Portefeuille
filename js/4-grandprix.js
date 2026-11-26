@@ -936,7 +936,8 @@ async function lancerRecherche(t, bt, pi) {
   const rep = TRESOR_APERCU ? TRESOR_APERCU.lancer(t) : await posterAdmin({ action: "tresorDepart", circuit: t.circuit });   // aperçu : départ inventé, rien ne part au serveur
   if (rep && rep.ok && rep.actif) {
     const reprise = !!t.lance;
-    Object.assign(t, { lance: true, actif: true, depuis: rep.depuis, cumul: +rep.cumul || 0 }); if (rep.p) t.p = rep.p; if (TRESORS && typeof rep.maintenant === "number") TRESORS.decal = rep.maintenant - Date.now();
+    Object.assign(t, { lance: true, actif: true, depuis: rep.depuis, cumul: +rep.cumul || 0 }); if (rep.p) t.p = rep.p;
+    if (typeof rep.enigme === "string" && rep.enigme) Object.assign(t, { enigme: rep.enigme, indice2: rep.indice2 || null, enigmeCachee: false });   // v20.86 : l'énigme arrive avec le départ (serveur V96) if (TRESORS && typeof rep.maintenant === "number") TRESORS.decal = rep.maintenant - Date.now();
     if (window.SONS) { try { SONS.vibrer([30, 40, 30]); } catch (e) { /* sans vibreur */ } }
     toast(rep.deja ? "⏱️ Ta recherche est déjà lancée : le chrono tourne." : reprise ? "▶️ Reprise : le chrono repart, et toi aussi, du départ du circuit." : "⏱️ C'est parti ! Le chrono tourne : trouve l'objet en Visite 3D.");
     cameraAuDepart(); poserTresorDOM(document);
@@ -950,7 +951,8 @@ async function lancerRecherche(t, bt, pi) {
 async function arreterRecherche(t, bt) {
   if (bt) { bt.disabled = true; bt.innerHTML = "⏸️ Pause…"; }
   const rep = TRESOR_APERCU ? TRESOR_APERCU.arreter(t) : await posterAdmin({ action: "tresorArret", circuit: t.circuit });
-  if (rep && rep.ok) { Object.assign(t, { actif: false, depuis: null, cumul: +rep.cumul || chronoDe(t) }); delete t.p; if (TRESORS && typeof rep.maintenant === "number") TRESORS.decal = rep.maintenant - Date.now();
+  if (rep && rep.ok) { Object.assign(t, { actif: false, depuis: null, cumul: +rep.cumul || chronoDe(t) }); delete t.p;
+    if (!TRESOR_APERCU && t.enigmeCachee !== undefined) Object.assign(t, { enigme: "", indice2: null, enigmeCachee: true });   // v20.86 : en pause, l'énigme et l'indice disparaissent aussi if (TRESORS && typeof rep.maintenant === "number") TRESORS.decal = rep.maintenant - Date.now();
     toast("⏸️ Recherche en pause à " + dureeChrono(t.cumul) + ". Reprends quand tu veux : tu repartiras du départ du circuit."); poserTresorDOM(document); return; }
   if (bt) { bt.disabled = false; bt.innerHTML = "⏸️ Mettre en pause"; }
   toast((rep && rep.message) || "Pause non enregistrée : réessaie.");
@@ -998,10 +1000,10 @@ function htmlRegleTresor() {
   const gain = (c, ico, t) => '<li class="tr-g ' + c + '"><span aria-hidden="true">' + ico + "</span><span>" + t + "</span></li>";
   return '<div class="tr-regle">' +
     '<ol class="tr-etapes">' +
-      et("1", "📜", "Le 1<sup>er</sup> : l'énigme", "Lis-la tranquille : pas de chrono.") +
-      et("2", "🔍", "Je lance ma recherche", "Le chrono part. L'objet apparaît dans la Visite 3D.") +
-      et("3", "⏸️", "Mettre en pause", "Le chrono s'arrête et l'objet disparaît. À chaque reprise, tu repars du départ. Tu quittes l'appli ? Pause toute seule.") +
-      et("4", "✅", "Trouvé !", "Touche l'objet : ton temps s'affiche dans le classement.") + "</ol>" +
+      et("1", "🔍", "Je lance ma recherche", "L'énigme apparaît et le chrono démarre. Avant : rien à lire, rien à préparer.") +
+      et("2", "🧭", "Cherche", "Lis l'énigme, puis trouve l'objet dans le décor de la Visite 3D.") +
+      et("3", "⏸️", "Mettre en pause", "Tout disparaît : énigme, indice, objet. À chaque reprise, tu repars du départ et tout revient. Tu quittes l'appli ? Pause toute seule.") +
+      et("4", "✅", "Trouvé !", "Touche l'objet : ton temps s'affiche dans le classement, et l'énigme reste à toi en souvenir.") + "</ol>" +
     '<p class="tr-k">🏆 Ce que tu gagnes</p>' +
     (saison ? '<ul class="tr-gains">' + gain("m-or", "🥇", "or") + gain("m-argent", "🥈", "argent") + gain("m-bronze", "🥉", "bronze") + gain("m-fer", '<i class="tc-md tc-n m-fer">4</i>', "fer") + gain("m-pierre", '<i class="tc-md tc-n m-pierre">5</i>', "pierre") + "</ul>" +
         "<p class=\"tr-p\">Le 1er du classement gagne. Ton éclat de la Coupe selon ta place : 1<sup>er</sup> or, 2<sup>e</sup> argent, 3<sup>e</sup> bronze, 4<sup>e</sup> fer, puis pierre. Pas trouvé : rien.</p>" +
@@ -1012,7 +1014,7 @@ function htmlRegleTresor() {
     '<p class="tr-k">🧭 Moins tu as d\'aide, plus tu passes devant</p><ol class="tr-paliers"><li><b>1</b><span>Du 1<sup>er</sup> au 10 : sans indice</span></li><li><b>2</b><span>Du 11 au 20 : avec le 2<sup>e</sup> indice</span></li><li><b>3</b><span>Dès le 21 : 3<sup>e</sup> palier (jauge si personne n\'a encore trouvé)</span></li></ol>' +
       '<p class="tr-p">Trouvé avec moins d\'aide = toujours devant, même avec un temps plus long. Puis, dans le même palier, le plus petit temps.</p>' +
     '<p class="tr-k">⏱️ Quand c\'est décidé</p><p class="tr-p">Dès que les ' + n + " pilotes ont trouvé : tout de suite. Sinon : le dernier soir du mois, à minuit" + (saison ? "" : " (le 31 décembre)") + ". Avant, le classement est provisoire. À égalité, le premier arrivé.</p>" +
-    '<p class="tr-k">🤔 Coincé ?</p><p class="tr-p">💡 2<sup>e</sup> indice le 11 · 🌡️ jauge chaud-froid le 21, visible pendant ta recherche (si personne n\'a encore trouvé).</p></div>';
+    '<p class="tr-k">🤔 Coincé ?</p><p class="tr-p">💡 le 2<sup>e</sup> indice (dès le 11) et 🌡️ la jauge chaud-froid (dès le 21) : visibles pendant ta recherche, si personne n\'a encore trouvé.</p></div>';
 }
 /** la règle dans 📖 Règles (section Course) */
 function regleTresor() {
@@ -1060,7 +1062,7 @@ function poserTresorDOM(v) {
   if (!t) {   // déjà trouvé : plus d'objet, mais l'énigme résolue et le classement des chercheurs restent consultables
     const l0 = tc.chercheurs || [], rg0 = l0.findIndex(x => x.nom === (moiVrai() || "")) + 1, moiX = rg0 ? l0[rg0 - 1] : null;   // v20.84 : mon temps et ma place, tout de suite
     const resume = moiX && typeof moiX.s === "number" ? "Trouvé en " + dureeChrono(moiX.s) + (palierDe(tc, moiX) ? " · " + PALIERS_TXT[palierDe(tc, moiX)] : "") + " · " + (rg0 === 2 || rg0 === 3 ? MED_ICO[rg0 - 1] + " " : "") + rangRapide(rg0) + (tc.chrono && !tc.final ? " pour l'instant" : "") : "Trésor trouvé !";
-    pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme trouvee">✅ <i>' + resume + '</i><div class="gp-chercheurs">' + classementTresorHTML(tc) + '<button class="tc-aide" type="button">❔ Comment ça marche</button></div></div>' +
+    pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme trouvee">✅ <i>' + resume + '</i><div class="gp-chercheurs">' + (tc.enigme && !tc.enigmeCachee && tc.chrono ? '<p class="tc-souv">🗝️ <i>' + esc(tc.enigme) + "</i></p>" : "") + classementTresorHTML(tc) + '<button class="tc-aide" type="button">❔ Comment ça marche</button></div></div>' +
       '<button class="gp-tresor-appel trouve" type="button">✅ ' + esc(resume) + " · <b>⏱️ Classement du trésor</b><small>" + (tc.final ? "Résultat définitif." : (l0.length) + " sur " + nbPilotesTresor(tc) + " ont trouvé · en direct") + "</small></button>");
     const en0 = pi.querySelector(".gp-enigme"); pi.classList.add("avec-enigme"); TRESOR_EL = { pi, b: null, en: en0, t: tc, vu: false, pris: true };
     en0.addEventListener("click", () => en0.classList.toggle("ouverte")); if (ga) majTresor(ga, pi);
@@ -1072,16 +1074,18 @@ function poserTresorDOM(v) {
   const premiere = !stock.get("versus.tresorAide");
   const chr = t.chrono && parti ? '⏱️ <span class="gp-chr">' + dureeChrono(chronoDe(t)) + "</span> · " : t.chrono && t.lance ? "⏸️ En pause à " + dureeChrono(chronoDe(t)) + " · " : "";   // v20.74 : le chrono tourne (ou en pause)
   const nTr = (t.chercheurs || []).length, best = nTr && typeof t.chercheurs[0].s === "number" ? " · en tête : " + dureeChrono(t.chercheurs[0].s) + (palierDe(t, t.chercheurs[0]) ? " · " + PALIERS_TXT[palierDe(t, t.chercheurs[0])] : "") : "";   // v20.84 : le temps à battre, en direct
-  pi.insertAdjacentHTML("beforeend", '<button class="gp-tresor-appel" type="button">' + chr + (cf ? "🌡️ Jauge chaud-froid allumée · " : ind ? "💡 2e indice tombé · " : chr ? "" : "🗝️ Un trésor se cache ici · ") + "<b>" + (parti ? "Chercher en 3D" : t.lance ? "Reprendre en 3D" : "Lire l'énigme en 3D") + "</b>" +
-    (!parti ? "<small>" + (t.lance ? "À chaque reprise (▶️), tu repars du départ du circuit." : "Le chrono ne part que quand tu touches 🔍 Je lance ma recherche.") + "</small>" : premiere ? "<small>Zoome au maximum, au ras du sol.</small>" : "") +
+  /* v20.86 (Théo, anti-préparation, serveur V96) : l'énigme et le 2e indice n'existent QUE pendant la recherche (comme l'objet) ; avant : « Prêt ? » */
+  const cache = !!t.chrono && !parti && (!!t.enigmeCachee || !t.enigme);
+  pi.insertAdjacentHTML("beforeend", '<button class="gp-tresor-appel" type="button">' + chr + (cf ? "🌡️ Jauge chaud-froid allumée · " : ind ? "💡 2e indice tombé · " : chr ? "" : "🗝️ Un trésor se cache ici · ") + "<b>" + (parti ? "Chercher en 3D" : t.lance ? "Reprendre en 3D" : t.chrono ? "lance ta recherche en 3D" : "Lire l'énigme en 3D") + "</b>" +
+    (!parti ? "<small>" + (t.lance ? "À chaque reprise (▶️), tu repars du départ du circuit." : t.chrono ? "L'énigme apparaît au lancement : le chrono compte le temps de la comprendre et de trouver." : "Le chrono ne part que quand tu touches 🔍 Je lance ma recherche.") + "</small>" : premiere ? "<small>Zoome au maximum, au ras du sol.</small>" : "") +
     (t.chrono && nTr ? '<small class="tc-mini">⏱️ ' + nTr + " sur " + nbPilotesTresor(t) + " ont trouvé" + best + "</small>" : "") + "</button>");
   pi.querySelector(".gp-tresor-appel").addEventListener("click", ev => { ev.stopPropagation(); if (!AP) stock.set("versus.tresorAide", "1"); /* aperçu : rien de gardé */ if (pi.classList.contains("v2")) { choisirVueGP("visite"); return; } const bv = document.getElementById("gp-vue"); if (bv && pi.classList.contains("en2d")) bv.click(); });
   /* v20.74 : en tête de l'encadré, le bouton « 🔍 Je lance ma recherche » (avant) ou le chrono qui tourne (pendant) */
   const estNoel = typeof TRESOR_NOEL !== "undefined" && t.circuit === TRESOR_NOEL;
   const lance = !t.chrono ? "" : parti ? '<span class="gp-lance on">⏱️ <b class="gp-chr">' + dureeChrono(chronoDe(t)) + '</b><button class="gp-arret" type="button">⏸️ Mettre en pause</button><small>le 1er du classement gagne · définitif ' + quandDecide(t) + "</small></span>"
-    : t.lance ? '<span class="gp-lance pause">⏸️ <b>' + dureeChrono(chronoDe(t)) + '</b><button class="gp-lancer" type="button">▶️ Reprendre</button><small>En pause : l\'objet a disparu. À chaque reprise, tu repars du départ du circuit.</small></span>'
-    : '<span class="gp-lance"><button class="gp-lancer" type="button">🔍 Je lance ma recherche</button><small>Prends le temps de lire : le chrono ne part qu\'au toucher. Pause possible (l\'objet disparaît, et tu repars du départ). ' + (estNoel ? "Le 1er du classement gagne la plaque dorée Chercheur de Noël." : "Ton éclat selon ta place : or, argent, bronze, fer, pierre.") + " Définitif " + quandDecide(t) + "." + "</small></span>";
-  pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme" title="Énigme du mois : un objet est caché dans le décor de ce circuit. Lance ta recherche, puis approche-toi en Visite 3D. Touche pour lire la suite.">' + lance + (ind ? "💡" : "🗝️") + ' <i>' + esc(t.enigme) + "</i>" + ind + (cf ? '<b class="gp-indice gp-chaud-l">🌡️ Personne n\'a trouvé : la jauge chaud-froid est allumée.</b>' : "") + '<div class="gp-chercheurs">' + classementTresorHTML(t) + '<button class="tc-aide" type="button">❔ Comment ça marche</button></div></div>' +
+    : t.lance ? '<span class="gp-lance pause">⏸️ <b>' + dureeChrono(chronoDe(t)) + '</b><button class="gp-lancer" type="button">▶️ Reprendre</button><small>En pause : l\'énigme, l\'indice et l\'objet ont disparu. À chaque reprise, ils reviennent et tu repars du départ du circuit.</small></span>'
+    : '<span class="gp-lance"><button class="gp-lancer" type="button">🔍 Je lance ma recherche</button><small>L\'énigme apparaît au lancement : le chrono compte le temps de la comprendre et de trouver. Pause possible (tout disparaît, et tu repars du départ). ' + (estNoel ? "Le 1er du classement gagne la plaque dorée Chercheur de Noël." : "Ton éclat selon ta place : or, argent, bronze, fer, pierre.") + " Définitif " + quandDecide(t) + "." + "</small></span>";
+  pi.insertAdjacentHTML("beforeend", '<div class="gp-enigme" title="Énigme du mois : un objet est caché dans le décor de ce circuit. Lance ta recherche, puis approche-toi en Visite 3D. Touche pour lire la suite.">' + lance + (ind && !cache ? "💡" : "🗝️") + ' <i>' + (cache ? "Un trésor est caché sur ce circuit. Prêt ?" : esc(t.enigme)) + "</i>" + (cache ? "" : ind) + (cf ? '<b class="gp-indice gp-chaud-l">🌡️ Personne n\'a trouvé : la jauge chaud-froid est allumée.</b>' : "") + '<div class="gp-chercheurs">' + classementTresorHTML(t) + '<button class="tc-aide" type="button">❔ Comment ça marche</button></div></div>' +
     (cf ? '<div class="gp-jauge cache" role="status" aria-live="polite"></div>' : "") +
     (parti ? '<button class="gp-tresor t-' + esc(t.type) + '" type="button" aria-label="Un objet du film : touche-le !" tabindex="-1">' + (TRESOR_SVG[t.type] || TRESOR_SVG.gemme) + "</button>" : ""));   // avant le départ : l'objet n'existe pas
   pi.classList.add("avec-enigme");   // v20.74 : joystick en haut à droite (repli des navigateurs sans :has)
@@ -1298,7 +1302,7 @@ function ouvrirApercuTresor() {
 /** les données d'exemple, telles que le serveur les donnerait */
 function apDonnees() {
   const AP = TRESOR_APERCU; if (!AP) return; const F = AP.F;
-  F.chrono = true; F.lance = AP.lance; F.actif = AP.actif; F.depuis = AP.depuis; F.cumul = AP.cumul; F.final = false; F.fige = false; F.pilotes = 5;   // v20.74 : l'objet n'existe que pendant une période active
+  F.chrono = true; F.lance = AP.lance; F.actif = AP.actif; F.depuis = AP.depuis; F.cumul = AP.cumul; F.final = false; F.fige = false; F.pilotes = 5; F.enigmeCachee = !AP.actif;   // v20.86 : comme le serveur V96, l'énigme d'exemple n'apparaît qu'au lancement   // v20.74 : l'objet n'existe que pendant une période active
   if (AP.actif) F.p = AP.pEx; else delete F.p;
   F.indice2 = AP.etape >= 1 ? TAP_EX.ind : undefined; F.chaudFroid = AP.etape === 2 && !AP.avecCh && !AP.trouves.length; F.jChaud = F.chaudFroid ? 20271121 : undefined; F.chercheurs = AP.avecCh ? TAP_EX.ch.map(x => Object.assign({}, x)) : [];
   TRESORS = { l: [F], trouves: AP.trouves.slice(), total: AP.trouves.length };
@@ -1561,7 +1565,7 @@ function bandeAnnonce(y, i, ensuite) {
   let p3 = "";
   if (tr) {
     // l'énigme arrive vite (0,6 s) puis reste ~2,3 s à lire ; jamais coupée : la police rétrécit avec la longueur
-    const brut = String(tr.enigme || ""), mots = brut.split(/\s+/).filter(Boolean), pas = Math.min(.05, .6 / Math.max(1, mots.length)), lg = brut.length > 130 ? " l3" : brut.length > 90 ? " l2" : "";
+    const brut = String(tr.enigme || "Un trésor est caché sur ce circuit : l'énigme apparaîtra quand tu lanceras ta recherche."),   /* v20.86 : serveur V96, pas d'énigme avant le départ */ mots = brut.split(/\s+/).filter(Boolean), pas = Math.min(.05, .6 / Math.max(1, mots.length)), lg = brut.length > 130 ? " l3" : brut.length > 90 ? " l2" : "";
     const enig = mots.map((m, q) => '<span style="--m:' + T(t3 + .35 + q * pas) + '">' + esc(m) + "</span>").join(" ");
     const parts = [0, 1, 2, 3, 4, 5, 6].map(q => '<b style="--k:' + (q * 51 + 12) + "deg;--q:" + (q % 3) + '"></b>').join("");
     p3 = plan("ba-p3", t3, zFin, '<div class="ba-relique" style="--r:' + T(t3 + .45) + ";--rd:" + T(dT - .45) + '"><i class="ba-rai"></i><i class="ba-rayons"></i><span class="ba-objet">' + (TRESOR_SVG[tr.type] || TRESOR_SVG.gemme) + '</span><span class="ba-parts">' + parts + "</span></div>" +

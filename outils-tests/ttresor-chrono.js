@@ -28,7 +28,7 @@ async function page(b, o) {
   return { ctx, p, err, req };
 }
 const pageCourse = p => p.evaluate(async () => { montrerVue("trophees"); ETAT.podium = "gp"; garder(); rendreTrophees(); await new Promise(r => setTimeout(r, 700)); const pi = document.getElementById("gp-piste"); return pi ? pi.dataset.circuit : null; });
-const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance").length, lancer: (document.querySelector(".gp-piste .gp-lancer") || {}).textContent || "", arret: !!document.querySelector(".gp-piste .gp-arret"), obj: !!document.querySelector(".gp-piste .gp-tresor"),
+const lire = p => p.evaluate(() => ({ enig: ((document.querySelector(".gp-piste .gp-enigme") || {}).textContent || "").includes("ÉNIGME-INVENTÉE"), nl: document.querySelectorAll(".gp-lance").length, lancer: (document.querySelector(".gp-piste .gp-lancer") || {}).textContent || "", arret: !!document.querySelector(".gp-piste .gp-arret"), obj: !!document.querySelector(".gp-piste .gp-tresor"),
   chr: (document.querySelector(".gp-piste .gp-lance") || {}).textContent || "", p: TRESORS && TRESORS.l[0] && TRESORS.l[0].p }));
 (async () => {
   const b = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] }), ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); };
@@ -36,9 +36,9 @@ const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance")
   /* ---------- 1. Joueur, décembre 2026, faux serveur V92 : départ, pause, reprise, trouvaille ---------- */
   { const E = { lance: false, actif: false, depuis: null, cumul: 0, ch: [{ nom: "Clément", j: 20261202, s: 900 }] };
     const serveur = {
-      tresors: (c, maint) => ({ ok: true, maintenant: maint, trouves: [], total: 0, tresors: [Object.assign({ circuit: "abudhabi", saison: 2026, mois: 12, type: "trefle", enigme: ENIGME, indice2: null, chaudFroid: false, chrono: true, final: false,
+      tresors: (c, maint) => ({ ok: true, maintenant: maint, trouves: [], total: 0, tresors: [Object.assign({ circuit: "abudhabi", saison: 2026, mois: 12, type: "trefle", enigme: E.actif ? ENIGME : "", enigmeCachee: !E.actif, indice2: null, chaudFroid: false, chrono: true, final: false,
         lance: E.lance, actif: E.actif, depuis: E.depuis, cumul: E.cumul, chercheurs: E.ch }, E.actif ? { p: P_FAUX } : {})] }),
-      tresorDepart: (c, maint) => { if (!E.actif) Object.assign(E, { lance: true, actif: true, depuis: maint }); return { ok: true, actif: true, depuis: E.depuis, cumul: E.cumul, maintenant: maint, p: P_FAUX }; },
+      tresorDepart: (c, maint) => { if (!E.actif) Object.assign(E, { lance: true, actif: true, depuis: maint }); return { ok: true, actif: true, depuis: E.depuis, cumul: E.cumul, maintenant: maint, p: P_FAUX, enigme: ENIGME, indice2: null }; },   // V96 : l'énigme arrive avec le départ
       tresorArret: (c, maint) => { if (E.actif) { E.cumul += (maint - E.depuis) / 1000; Object.assign(E, { actif: false, depuis: null }); } return { ok: true, actif: false, cumul: E.cumul, maintenant: maint }; },
       tresorTrouve: (c, maint) => { if (!E.actif) return { ok: false, erreur: "pause", message: "En pause" }; const s = Math.round(E.cumul + (maint - E.depuis) / 1000); E.ch = [{ nom: "Kévin", j: 20261203, s }].concat(E.ch).sort((a, b) => a.s - b.s);
         return { ok: true, deja: false, trouves: ["abudhabi"], total: 1, rang: E.ch.findIndex(x => x.nom === "Kévin") + 1, temps: s, n: 2, final: false, chercheurs: E.ch, eclat: null }; } };
@@ -46,13 +46,14 @@ const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance")
     const ci = await pageCourse(p);
     await p.waitForFunction(() => TRESORS && document.querySelector(".gp-piste .gp-enigme"), null, { timeout: 10000 }).catch(() => {});
     const r1 = await lire(p), en = await p.evaluate(() => document.querySelector(".gp-piste .gp-enigme").textContent), appel = await p.evaluate(() => document.querySelector(".gp-piste .gp-tresor-appel").textContent);
-    ok(ci === "abudhabi" && /Je lance ma recherche/.test(r1.lancer) && !r1.obj && !r1.arret && en.includes("ÉNIGME-INVENTÉE") && !r1.p, "avant le départ : énigme lisible, bouton 🔍, AUCUN objet, pas de position");
-    ok(/Lire l'énigme en 3D/.test(appel) && /Je lance ma recherche/.test(appel), "carte 2D : « Lire l'énigme en 3D » (le chrono ne part qu'au toucher)");
+    ok(ci === "abudhabi" && /Je lance ma recherche/.test(r1.lancer) && !r1.obj && !r1.arret && !en.includes("ÉNIGME-INVENTÉE") && /Prêt \?/.test(en) && !r1.p, "V96 · avant le départ : PAS d'énigme (« Prêt ? »), bouton 🔍, AUCUN objet, pas de position");
+    ok(/Un trésor se cache ici · lance ta recherche en 3D/.test(appel) && /L'énigme apparaît au lancement : le chrono compte le temps de la comprendre et de trouver/.test(appel), "carte 2D : « Un trésor se cache ici · lance ta recherche en 3D » + « l'énigme apparaît au lancement »");
     ok(req.some(c => c.action === "tresors" && c.chrono === 1), "l'appli dit au serveur qu'elle sait lancer le chrono (chrono: 1)");
     const r2 = await p.evaluate(async () => { const bt = document.querySelector(".gp-piste .gp-lancer"); bt.click(); await new Promise(r => setTimeout(r, 200)); return { txt: bt.textContent, arme: bt.classList.contains("arme") }; });
     ok(r2.arme && /Sûr/.test(r2.txt) && !req.some(c => c.action === "tresorDepart"), "1er toucher : « Sûr ? » (rien n'est envoyé)");
     await p.evaluate(() => document.querySelector(".gp-piste .gp-lancer").click()); await p.waitForFunction(() => !!document.querySelector(".gp-piste .gp-arret"), null, { timeout: 10000 }).catch(() => {});
     const r3 = await lire(p);
+    ok(r3.enig, "V96 · au lancement : l'énigme s'affiche (reçue avec le départ)");
     ok(req.filter(c => c.action === "tresorDepart").length === 1 && r3.obj && r3.arret && JSON.stringify(r3.p) === JSON.stringify(P_FAUX), "2e toucher : UNE requête de départ, position reçue, l'objet existe, bouton ⏸️");
     await p.clock.fastForward(65000); await p.clock.runFor(1100);
     const c2 = await p.evaluate(() => document.querySelector(".gp-piste .gp-chr").textContent);
@@ -60,6 +61,7 @@ const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance")
     // ⏸️ pause
     await p.evaluate(() => document.querySelector(".gp-piste .gp-arret").click()); await p.waitForFunction(() => !document.querySelector(".gp-piste .gp-arret"), null, { timeout: 10000 }).catch(() => {});
     const r4 = await lire(p);
+    ok(!r4.enig, "V96 · en pause : l'énigme disparaît aussi");
     ok(req.some(c => c.action === "tresorArret") && !r4.obj && !r4.p && /Reprendre/.test(r4.lancer) && /1 min \d\d s/.test(r4.chr), "⏸️ pause : l'objet disparaît, la position est oubliée, chrono arrêté (« " + r4.chr.slice(0, 14) + " »)");
     await p.clock.fastForward(600000); await p.clock.runFor(1100);
     const r5 = await lire(p);
@@ -69,6 +71,7 @@ const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance")
     // ▶️ reprise (un seul toucher)
     await p.evaluate(() => document.querySelector(".gp-piste .gp-lancer").click()); await p.waitForFunction(() => !!document.querySelector(".gp-piste .gp-arret"), null, { timeout: 10000 }).catch(() => {});
     const r6 = await lire(p);
+    ok(r6.enig, "V96 · à la reprise : l'énigme revient");
     ok(req.filter(c => c.action === "tresorDepart").length === 2 && r6.obj && r6.arret && JSON.stringify(r6.p) === JSON.stringify(P_FAUX), "▶️ reprise (1 toucher) : la position revient, l'objet existe à nouveau");
     // pause automatique quand on quitte l'appli, puis retour : l'appli relit le serveur
     await p.evaluate(() => { Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true }); document.dispatchEvent(new Event("visibilitychange")); });
