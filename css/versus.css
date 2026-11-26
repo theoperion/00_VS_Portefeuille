@@ -2134,6 +2134,8 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 /* v20.29 · Relevés du mois (tout le monde, jamais un montant) */
 .rm { margin-top: 14px; padding: 10px 12px; border: 1px solid rgba(127,127,127,.25); border-radius: 12px; background: var(--panel-2); display: grid; gap: 6px; }
 .rm-t { margin: 0 0 2px; font-size: 13px; color: var(--ink-2); font-weight: 700; }
+summary.rm-t { cursor: pointer; list-style: none; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 0; } summary.rm-t::-webkit-details-marker { display: none; } summary.rm-t::after { content: "▾"; margin-left: auto; color: var(--ink-3, var(--ink-2)); } details.rm[open] > summary.rm-t::after { content: "▴"; } details.rm[open] > summary.rm-t { margin-bottom: 4px; }
+.rm-res { font-weight: 600; font-size: 12px; color: var(--ink-3, var(--ink-2)); } .rm-res.manque { color: var(--warn, #E8A13A); }   /* v21.13 */
 .rm-l { display: grid; grid-template-columns: 86px 1fr auto; align-items: center; gap: 8px; font-size: 13px; min-height: 32px; }
 .rm-n { display: flex; align-items: center; gap: 6px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
 .rm-n i { width: 9px; height: 9px; border-radius: 50%; flex: none; }

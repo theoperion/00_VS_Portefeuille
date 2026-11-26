@@ -484,7 +484,10 @@ function htmlRelevesMois() {
     const b = adm && st.etat === "vide" && p.nom !== moiVrai() ? (rap[p.nom] && rap[p.nom].cle === k ? '<small class="rm-ok">🔔 rappelé</small>' : '<button type="button" class="lien rm-b" data-rappel="' + esc(p.nom) + '">🔔 Le rappeler</button>') : "";
     return '<div class="rm-l"><span class="rm-n"><i style="background:' + couleur(p.nom) + '"></i>' + esc(p.nom) + '</span><span class="rm-s' + (st.etat === "vide" ? " manque" : "") + '">' + t + "</span>" + b + "</div>";
   }).join("");
-  return '<section class="rm" aria-label="Relevés du mois"><h4 class="rm-t">Relevés ' + (/^[aeiouy]/i.test(moisLong(k)) ? "d'" : "de ") + esc(moisLong(k)) + " · tout le monde</h4>" + lignes + "</section>";
+  // v21.13 (Théo, 26/11) : replié par défaut ; le résumé dit combien sont arrivés (et qui manque)
+  const manq = D.personnes.filter(p => etatReleve(p.nom, k).etat === "vide").map(p => p.nom), n = D.personnes.length - manq.length;
+  const res = n + "/" + D.personnes.length + " reçus" + (manq.length ? " · manque " + manq.join(", ") : " ✓");
+  return '<details class="rm" aria-label="Relevés du mois"><summary class="rm-t">Relevés ' + (/^[aeiouy]/i.test(moisLong(k)) ? "d'" : "de ") + esc(moisLong(k)) + ' · tout le monde <span class="rm-res' + (manq.length ? " manque" : "") + '">' + esc(res) + "</span></summary>" + lignes + "</details>";
 }
 function brancherRelevesMois(racine) {
   if (!racine) return;
