@@ -24,7 +24,7 @@ const versus = { ok: true, genere: "2026-11-24T10:00:00", majTexte: "", envelopp
     await p.clock.setFixedTime(new Date("2026-11-24T10:00:00"));
     await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}"); if (/FAUXMOI/.test(r.request().url()) && c.action && c.action !== "data") envois.push(c.action);
       r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi() : versus) }); });
-    await p.addInitScript(() => { localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.tuto1", "1");
+    await p.addInitScript(() => { localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1");
       localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "cle-de-test"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); });
     await p.goto("http://localhost:8771/index.html");
     await p.waitForFunction(() => window.Moi && document.querySelector("#v-moi [data-m-ong]"), null, { timeout: 20000 }).catch(() => {});

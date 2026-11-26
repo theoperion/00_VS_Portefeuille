@@ -16,7 +16,7 @@ const versus = sess => ({ ok: true, version: 84, genere: "2026-11-24T10:00:00", 
     p.on("pageerror", e => err.push(e.message));
     await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}"); envois.push(c.action);
       r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "santeMoi" ? SANTE : versus({ role: "admin" })) }); });
-    await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); });
+    await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); });
     await p.goto("http://localhost:8771/index.html"); await p.waitForTimeout(3000);
     await p.evaluate(() => { document.querySelectorAll(".tuto, .bulle-portrait").forEach(x => x.remove()); ouvrirReglages("regl-liaison"); });
     await p.waitForTimeout(500);
@@ -34,7 +34,7 @@ const versus = sess => ({ ok: true, version: 84, genere: "2026-11-24T10:00:00", 
   }
   { const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block" }), p = await ctx.newPage();
     await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(versus({ role: "perso", nom: "Devlin" })) }));
-    await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); });
+    await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); });
     await p.goto("http://localhost:8771/index.html"); await p.waitForTimeout(3000);
     await p.evaluate(() => ouvrirReglages()); await p.waitForTimeout(300);
     ok(await p.evaluate(() => document.querySelector("#regl-liaison").hidden), "joueur (pas admin) : la rubrique et le bouton restent cachés");

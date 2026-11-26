@@ -13,7 +13,7 @@ const fausses = session => ({ ok: true, version: 84, genere: "2026-12-01T10:00:0
   p.on("pageerror", e => err.push(e.message));
   await p.clock.setFixedTime(new Date("2026-11-25T10:00:00"));
   await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(fausses({ role: "admin" })) }));
-  await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.apercuSaison", "1"); sessionStorage.setItem("versus.adminOn", "1"); });
+  await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.apercuSaison", "1"); sessionStorage.setItem("versus.adminOn", "1"); });
   await p.goto("http://localhost:8771/index.html"); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1200);
   await p.evaluate(() => { montrerVue("trophees"); }); await p.waitForTimeout(600);
   await p.evaluate(() => ouvrirApercuTresor());

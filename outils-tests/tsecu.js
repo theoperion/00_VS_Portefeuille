@@ -11,7 +11,7 @@ async function voir(b, session, quand, force) {
   p.on("pageerror", e => err.push(e.message));
   await p.clock.setFixedTime(new Date(quand));
   await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(fausses(session)) }));
-  await p.addInitScript(f => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1");
+  await p.addInitScript(f => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1");
     if (f) { localStorage.setItem("versus.apercuSaison", "1"); sessionStorage.setItem("versus.adminOn", "1"); } }, force);
   await p.goto("http://localhost:8771/index.html"); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1500);
   const r = await p.evaluate(async () => { try { montrerVue("trophees"); } catch (e) { } await new Promise(r => setTimeout(r, 600));

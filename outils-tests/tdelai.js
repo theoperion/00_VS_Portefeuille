@@ -14,7 +14,7 @@ const data = { ok: true, version: 75, genere: "2027-02-10T10:00:00", majTexte: "
     const p = await (await b.newContext({ serviceWorkers: "block" })).newPage(), err = []; p.on("pageerror", e => err.push(e.message));
     await p.clock.setFixedTime(new Date(quand));
     await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(data) }));
-    await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); });
+    await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); });
     await p.goto("http://localhost:8771/index.html"); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes); await p.waitForTimeout(1500);
     R[quand] = await p.evaluate(() => { const c = championnat(2027), j = c.mois.find(m => m.k === 202701); const v = victoires(0); return { attente: c.attente && c.attente.k, jan: j ? j.l.map(z => [z.nom, z.base]) : null, serieKevin: v["Kévin"].serie, recordKevin: v["Kévin"].record }; }); R[quand].err = err;
     await p.close(); }

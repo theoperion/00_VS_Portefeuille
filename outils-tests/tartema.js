@@ -32,7 +32,7 @@ async function regarder(b, cas) {
   await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json",
     body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi(SUP[cas.replace(/-.*/, "")], cas === "avec-coupe" ? false : cas === "avec-suivi" ? true : undefined) : versus) }));
   await p.addInitScript(() => {
-    localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.tuto1", "1");
+    localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1");
     localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "cle-de-test");
     localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" }));
   });

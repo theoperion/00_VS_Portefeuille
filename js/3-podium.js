@@ -1480,6 +1480,40 @@ function teaserEcurie(essai) {
     o.addEventListener("click", ev => { if (ev.target.closest("[data-er-go]")) { fermer(); ETAT.podium = "ecurie"; ECU_SLOT = "casque"; garder(); try { allerA("trophees"); rendreTrophees(); } catch (er) { } return; } fermer(); });
   } catch (e) { }
 }
+/* v20.80 (Théo, 26/11) · l'affichette « 🎨 Nouveau : choisis l'affichage des décors 3D » (réglage de piste.js, bloc QUALITÉ 3D ; Réglages › Affichage › Décors 3D).
+   Une seule fois par appareil (versus.q3dAffichette), APRÈS les autres annonces d'ouverture et jamais par-dessus une autre fenêtre : elle attend que
+   l'écran soit libre deux fois de suite (la suivante peut s'ouvrir juste après la fermeture de la précédente). Seulement tant qu'on est resté sur l'écran
+   d'ouverture (sinon : à la prochaine ouverture de l'appli). Rien si le choix est déjà fait à la main ou sans 3D. */
+function affichette3D(essai, libre) {
+  try {
+    essai = essai || 0;
+    if (SOURCE !== "api" || stock.get("versus.q3dAffichette") || !window.Piste || !Piste.qualite || document.querySelector(".af3d")) return;
+    if (Piste.qualite.choix() !== "auto") { stock.set("versus.q3dAffichette", "1"); return; }   // déjà choisi dans les Réglages : rien à annoncer
+    if (typeof Piste.supporteVite === "function" && !Piste.supporteVite()) return;
+    { const v = typeof vueActive === "function" ? vueActive() : ""; if (!essai) affichette3D.vue = v; else if (v !== affichette3D.vue) return; }   // déjà parti ailleurs dans l'appli : pas d'interruption, ce sera à la prochaine ouverture
+    const occupe = () => (typeof ereEnCours === "function" && ereEnCours()) || [...document.querySelectorAll(".tuto, .revel, .regles, .ba, .bulle-portrait, .av-ov, .av-case, .voile:not([hidden]), [aria-modal=true]")].some(x => x.getClientRects().length) ||
+      (() => { try { const a = typeof GP_INST !== "undefined" && GP_INST && GP_INST.api; if (a && ((a.enCours && a.enCours()) || (a.survolEnCours && a.survolEnCours()))) return true; } catch (e) { }   // une course ou un survol roule
+        try { return typeof TRESOR_EL !== "undefined" && !!TRESOR_EL && !!TRESOR_EL.t && !!TRESOR_EL.t.actif && !TRESOR_EL.pris; } catch (e) { return false; } })();   // une chasse au trésor est en cours
+    if (occupe()) { if (essai < 80) setTimeout(() => affichette3D(essai + 1), 3000); return; }   // une autre fenêtre : on attend sa fermeture (4 min au plus, sinon à la prochaine ouverture)
+    if (!libre) { setTimeout(() => affichette3D(essai + 1, true), 2500); return; }   // libre : on revérifie 2,5 s plus tard (une annonce peut s'enchaîner)
+    let niv = "complet", raison = ""; try { niv = Piste.qualite.niveau(); raison = Piste.qualite.raison() || ""; } catch (e) { /* inconnu : complet */ }
+    stock.set("versus.q3dAffichette", "1");
+    const o = document.createElement("div"); o.className = "tuto af3d"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Nouveau : choisis tes décors 3D");
+    o.innerHTML = '<div class="tuto-c af3d-c"><span class="tuto-k">🎨 Nouveau</span><h3>Choisis tes décors 3D</h3>' +   // les mots des Réglages, dans le même ordre (Auto, Complet, Léger)
+      '<ul class="af3d-l"><li><b>Auto</b> l\'appli choisit pour ton téléphone</li><li><b>Complet</b> tout le décor et les effets de lumière</li><li><b>Léger</b> décor allégé, plus fluide</li></ul>' +
+      '<p class="af3d-auto">🤖 Pour ce téléphone, l\'auto a choisi : <b>' + (niv === "leger" ? "Léger" : "Complet") + "</b>" + (raison ? "<small>(" + esc(raison) + ")</small>" : "") + "</p>" +
+      '<div class="btn-row"><button class="btn ghost" type="button" data-af3d="tard">Plus tard</button><button class="btn acc" type="button" data-af3d="go">Choisir maintenant</button></div></div>';
+    document.body.appendChild(o);
+    const fermer = () => o.remove();
+    o.addEventListener("click", ev => { if (ev.target === o) fermer(); });
+    o.querySelector('[data-af3d="tard"]').addEventListener("click", fermer);
+    o.querySelector('[data-af3d="go"]').addEventListener("click", () => { fermer();
+      try { const rg = document.getElementById("btn-reglages"); if (rg) rg.click(); else ouvrirReglages();
+        const ch = document.querySelector("[data-q3d]"), bloc = ch && ch.closest(".champ"), sec = bloc && bloc.closest("section.regl");
+        if (sec && sec.classList.contains("ferme") && typeof plierRegl === "function") plierRegl(sec, false);   // la rubrique Affichage repliée : on la déplie d'abord
+        if (bloc) { bloc.scrollIntoView({ block: "center" }); bloc.classList.add("af3d-cible"); setTimeout(() => bloc.classList.remove("af3d-cible"), 2600); } } catch (e) { } });
+  } catch (e) { /* jamais bloquant */ }
+}
 function totalObjets() { return SLOTS.reduce((a, [s]) => a + idsSlot(s).length, 0) - Object.keys(BASE_ECURIE).length; }
 function htmlEcurie() {
   const qui = quiEcurie();

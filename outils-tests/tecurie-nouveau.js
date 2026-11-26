@@ -29,7 +29,7 @@ async function page(b, o) {
     if (c.action === "ecurie") { envois.push(c.equip); S.ecurie[c.personne] = { equip: c.equip }; return r.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, ecurie: S.ecurie }) }); }
     r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tresors" ? TRESORS : c.action === "tickets" || c.action === "avent" ? { ok: true } : donnees(o.session, S.ecurie, o.exclusifs)) }); });
   await p.addInitScript(() => { if (sessionStorage.getItem("init")) return; sessionStorage.setItem("init", "1");
-    ["versus.tuto1", "versus.bullePortrait", "versus.chauffe1", "versus.chauffeFete", "versus.saison1", "versus.ecurieTeaser", "versus.exclVus"].forEach(k => localStorage.setItem(k, k === "versus.exclVus" ? "[]" : "1")); localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.gpVu.2026", "202612"); });
+    ["versus.tuto1", "versus.bullePortrait", "versus.chauffe1", "versus.chauffeFete", "versus.saison1", "versus.ecurieTeaser", "versus.exclVus"].forEach(k => localStorage.setItem(k, k === "versus.exclVus" ? "[]" : "1")); localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.gpVu.2026", "202612"); });
   await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 });
   await p.evaluate(async () => { if (typeof chargerTresors === "function") { TRESORS = null; TRESORS_T = 0; try { await chargerTresors(); } catch (e) { } } });
   return { ctx, p, err, envois, S };

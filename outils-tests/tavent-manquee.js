@@ -41,7 +41,7 @@ async function page(b, o) {
     if (c.action === "avent" || c.action === "aventCase") { if (o.lent) await new Promise(z => setTimeout(z, o.lent)); const x = fauxServeur(o, c); return x ? r.fulfill({ contentType: "application/json", body: JSON.stringify(x) }) : r.abort(); }
     r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tickets" ? { ok: true, ouvert: false } : c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : c.action === "ecurie" ? { ok: true } : donnees(o.session || JOUEUR)) }); });
   await p.addInitScript(f => { if (sessionStorage.getItem("t.init")) return; sessionStorage.setItem("t.init", "1");
-    localStorage.setItem("versus.cle", "x"); ["versus.tuto1", "versus.bullePortrait", "versus.chauffe1", "versus.saison1", "versus.ecurieTeaser"].forEach(k => localStorage.setItem(k, "1"));
+    localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); ["versus.tuto1", "versus.bullePortrait", "versus.chauffe1", "versus.saison1", "versus.ecurieTeaser"].forEach(k => localStorage.setItem(k, "1"));
     if (f.ouvertes) localStorage.setItem("versus.avent", JSON.stringify(f.ouvertes)); if (f.admin) sessionStorage.setItem("versus.adminOn", "1"); if (f.decal) localStorage.setItem("versus.aventDecal", String(f.decal)); }, { ouvertes: o.ouvertes, admin: o.admin, decal: o.decal });
   await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(o.attente || 3800);   // l'état du serveur arrive 2,5 s après le démarrage
   await p.evaluate(() => document.querySelectorAll(".tuto").forEach(x => x.remove()));   // les annonces du jour (Nouvelles règles…) : on les ferme, comme le pilote

@@ -15,7 +15,7 @@ async function essai(b, nom) {
   p.on("pageerror", e => err.push(e.message));
   await p.route("https://script.google.com/**", r => { const u = r.request().url(); appels.push(u.includes("NOUVEAU") ? "nouveau" : u.includes("ANCIEN") ? "ancien" : "versus");
     r.fulfill({ contentType: "application/json", body: JSON.stringify(u.includes("NOUVEAU") ? complet : u.includes("ANCIEN") ? simple : versus(nom)) }); });
-  await p.addInitScript(a => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", a); localStorage.setItem("versus.moi.cle", "cle-kevin"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); }, ANCIENNE);
+  await p.addInitScript(a => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", a); localStorage.setItem("versus.moi.cle", "cle-kevin"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); }, ANCIENNE);
   await p.goto("http://localhost:8771/index.html"); await p.waitForTimeout(4000);
   const r = await p.evaluate(() => ({ api: localStorage.getItem("versus.moi.api"), cle: localStorage.getItem("versus.moi.cle") }));
   await p.close(); return { r, err, appels };

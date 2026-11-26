@@ -28,7 +28,7 @@ async function ouvrir(b, o) {
     r.fulfill({ contentType: "application/json", body: JSON.stringify(rep) }).catch(() => {}); });
   if (!o.ctx) await p.addInitScript(([adminOn, vue]) => { if (sessionStorage.getItem("init")) return; sessionStorage.setItem("init", "1"); for (let m = 1; m <= 12; m++) localStorage.setItem("versus.piegeMois." + (202700 + m), "1");   // affichette du 1er du mois (tpiege) déjà vue
    
-    localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.bullePortrait", "1");
+    localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.bullePortrait", "1");
     localStorage.setItem("versus.saison1", "1"); localStorage.setItem("versus.gpVu.2027", "202712"); localStorage.setItem("versus.baVu.2027", "202712"); localStorage.setItem("versus.chauffe1", "1");
     for (let m = 202701; m <= 202712; m++) { localStorage.setItem("versus.mjRev." + m, "1"); localStorage.setItem("versus.mjFin." + m, "1"); }
     localStorage.setItem("versus.etat", JSON.stringify({ podium: "gp", ouverture: vue })); if (adminOn) sessionStorage.setItem("versus.adminOn", "1"); }, [!!o.adminOn, o.vue || "trophees"]);

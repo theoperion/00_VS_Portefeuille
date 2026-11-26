@@ -21,7 +21,7 @@ async function ouvrir(b, session, theme) {
     if (c.action === "relevePct" || c.action === "releve") { envois.push(c); return r.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, message: "Relevé enregistré (en %, aucun montant)." }) }); }
     if (c.action === "tresors") return r.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, tresors: [], trouves: [], total: 0 }) });
     r.fulfill({ contentType: "application/json", body: JSON.stringify(donnees(session)) }); });
-  await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.guideReleve.Clément", "1"); localStorage.setItem("versus.guideReleve.Théo", "1"); });
+  await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.guideReleve.Clément", "1"); localStorage.setItem("versus.guideReleve.Théo", "1"); });
   await p.goto("http://localhost:8771/index.html");
   await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1000);
   return { p, err, envois, fermer: () => ctx.close() };

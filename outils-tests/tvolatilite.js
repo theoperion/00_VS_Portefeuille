@@ -115,7 +115,7 @@ async function ecran(b, sombre, discret, variante) {
   // les fonctions de moi.js sont privées : pour le test seulement, la copie servie au navigateur les expose (le fichier n'est pas modifié)
   await p.route("**/moi.js*", async r => { const rep = await r.fetch(), t = await rep.text();
     r.fulfill({ response: rep, body: t.replace(/\}\)\(\);\s*$/, "window.__T = { volPoints, volPortefeuille, risqueAn, closMk, choixRisque, M: () => M };\n})();\n") }); });
-  await p.addInitScript(d => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x");
+  await p.addInitScript(d => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x");
     localStorage.setItem("versus.etat", JSON.stringify(Object.assign({ ouverture: "moi" }, d ? { discret: "oui" } : {}))); }, discret);
   await p.goto("http://localhost:" + PORT + "/index.html"); await p.waitForTimeout(3500);
   await p.evaluate(() => document.querySelectorAll(".tuto, .bulle-portrait").forEach(x => x.remove()));
@@ -173,7 +173,7 @@ async function ecranMk(b, sombre, discret) {
   p.on("pageerror", e => err.push(e.message));
   await p.clock.setFixedTime(new Date("2026-11-25T10:00:00"));
   await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi : vMk) }));
-  await p.addInitScript(d => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x");
+  await p.addInitScript(d => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x");
     localStorage.setItem("versus.etat", JSON.stringify(Object.assign({ ouverture: "moi" }, d ? { discret: "oui" } : {}))); }, discret);
   await p.goto("http://localhost:" + PORT + "/index.html"); await p.waitForTimeout(3500);
   await p.evaluate(() => document.querySelectorAll(".tuto, .bulle-portrait").forEach(x => x.remove()));

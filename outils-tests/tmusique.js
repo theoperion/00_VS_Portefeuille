@@ -98,7 +98,7 @@ async function secret(b) {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block" }), p = await ctx.newPage(), err = [];
     p.on("pageerror", e => err.push(e.message)); await p.clock.setFixedTime(new Date(quand));
     await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}"); r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : c.action === "tickets" ? { ok: true, ouvert: false } : donnees(jusqua)) }); });
-    await p.addInitScript(() => { ["versus.cle:x", "versus.tuto1:1", "versus.exclVus:[]", "versus.bullePortrait:1", "versus.saison1:1", "versus.deJanvier:1", "versus.aideVisite:1", "versus.feteChauffe:202612"].forEach(s => { const i = s.indexOf(":"); localStorage.setItem(s.slice(0, i), s.slice(i + 1)); });
+    await p.addInitScript(() => { ["versus.cle:x", "versus.q3dAffichette:1", "versus.tuto1:1", "versus.exclVus:[]", "versus.bullePortrait:1", "versus.saison1:1", "versus.deJanvier:1", "versus.aideVisite:1", "versus.feteChauffe:202612"].forEach(s => { const i = s.indexOf(":"); localStorage.setItem(s.slice(0, i), s.slice(i + 1)); });
       window.__cles = []; const w = () => { if (!window.SONS) return setTimeout(w, 5); ["course", "ambiance", "jingle", "musiqueBA"].forEach(n => { const o = SONS[n]; if (o) SONS[n] = function () { window.__cles.push(n + ":" + arguments[n === "course" ? 2 : 0]); return o.apply(this, arguments); }; }); }; w(); });
     await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1200);
     const cles = await p.evaluate(async () => {

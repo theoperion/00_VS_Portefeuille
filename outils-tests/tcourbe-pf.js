@@ -42,7 +42,7 @@ const moi = { ok: true, version: 14, genere: "2026-11-25T19:00:00", majTexte: ""
   await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi : versus) }));
   // pour le test seulement : la copie servie au navigateur expose fenMoi (le fichier n'est pas modifié)
   await p.route("**/moi.js*", async r => { const rep = await r.fetch(), t = await rep.text(); r.fulfill({ response: rep, body: t.replace(/\}\)\(\);\s*$/, "window.__T = { fenMoi };\n})();\n") }); });
-  await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); });
+  await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); });
   await p.goto("http://localhost:" + PORT + "/index.html"); await p.waitForTimeout(3500);
   await p.evaluate(() => document.querySelectorAll(".tuto, .bulle-portrait").forEach(x => x.remove()));
   for (const per of ["5j", "1m", "6m", "ytd", "1a", "tout"]) {

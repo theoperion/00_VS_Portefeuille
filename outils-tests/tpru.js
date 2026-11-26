@@ -50,7 +50,7 @@ async function casDifficiles(b) {
       if (S.suite === null) delete corps.ref.journalSuite; else corps.ref.journalSuite = S.suite; }
     r.fulfill({ contentType: "application/json", body: JSON.stringify(corps) });
   });
-  await p.addInitScript(() => { localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.guideOrdre", "1");
+  await p.addInitScript(() => { localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.guideOrdre", "1");
     localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "cle-de-test"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); });
   await p.goto("http://localhost:" + PORT + "/index.html");
   await p.waitForFunction(() => window.Moi && document.querySelector("#v-moi [data-m-ong]"), null, { timeout: 20000 }).catch(() => {});
@@ -112,7 +112,7 @@ async function casDifficiles(b) {
       const corps = !estMoi ? versus : c.action === "ordre" ? { ok: true, message: "Ordre enregistré ligne 40." } : c.action === "supprimer" ? { ok: true, message: "Ordre supprimé." } : moi(enregistre);
       r.fulfill({ contentType: "application/json", body: JSON.stringify(corps) });
     });
-    await p.addInitScript(() => { localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.guideOrdre", "1");
+    await p.addInitScript(() => { localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.guideOrdre", "1");
       localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "cle-de-test"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); });
     await p.goto("http://localhost:" + PORT + "/index.html");
     await p.waitForFunction(() => window.Moi && document.querySelector("#v-moi [data-m-ong]"), null, { timeout: 20000 }).catch(() => {});

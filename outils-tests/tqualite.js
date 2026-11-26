@@ -80,7 +80,7 @@ const donnees = () => ({ ok: true, version: 91, genere: "2026-11-26T10:00:00", m
       r.fulfill({ contentType: "application/json", body: JSON.stringify(["tresors", "avent", "tickets", "ecurie"].includes(c.action) ? { ok: true, tresors: [], trouves: [], total: 0 } : donnees()) }); });
     await p.addInitScript(app => { window.VERSUS_APPAREIL = app; if (sessionStorage.getItem("init")) return; sessionStorage.setItem("init", "1");
       ["versus.tuto1", "versus.bullePortrait", "versus.chauffe1", "versus.chauffeFete", "versus.saison1", "versus.aideVisite", "versus.aideVue.visite", "versus.aideVue.poursuite"].forEach(k => localStorage.setItem(k, "1"));
-      localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.gpVu.2026", "202612"); localStorage.setItem("versus.etat", JSON.stringify({ podium: "gp", gp2d: "0" })); }, BON);
+      localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.gpVu.2026", "202612"); localStorage.setItem("versus.etat", JSON.stringify({ podium: "gp", gp2d: "0" })); }, BON);
     await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(800);
     const course = () => p.evaluate(async () => { document.querySelectorAll(".revel,.regles,.tuto,.ba,.ecu-rev").forEach(x => x.remove()); ETAT.podium = "gp"; GP_ETAPE = null; garder(); allerA("trophees"); rendreTrophees();
       await new Promise(r => setTimeout(r, 1200)); document.querySelectorAll(".revel,.ba,.ere-voile").forEach(x => x.remove()); choisirVueGP("visite", saisonCourante() || 2026); await new Promise(r => setTimeout(r, 1200));
@@ -130,7 +130,8 @@ const donnees = () => ({ ok: true, version: 91, genere: "2026-11-26T10:00:00", m
   { const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block" }), p = await ctx.newPage();
     p.on("pageerror", e => errs.push(e.message));
     await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(donnees()) }));
-    await p.addInitScript(() => { const s0 = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (/^versus\.q3d/.test(k)) throw new Error("bloqué"); return s0.call(this, k, v); };
+    await p.addInitScript(() => { localStorage.setItem("versus.q3dAffichette", "1");   // avant le blocage (l'affichette des décors 3D, déjà vue)
+      const s0 = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (/^versus\.q3d/.test(k)) throw new Error("bloqué"); return s0.call(this, k, v); };
       localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); });
     await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(600);
     const r = await p.evaluate(() => { document.getElementById("btn-reglages").click(); document.querySelector('[data-q3d="leger"]').click(); return { info: document.getElementById("q3d-info").textContent, choix: Piste.qualite.choix() }; });

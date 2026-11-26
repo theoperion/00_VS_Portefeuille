@@ -24,7 +24,7 @@ async function mesurer(b, avecNicolas) {
   p.on("pageerror", e => err.push(e.message));
   await p.clock.setFixedTime(new Date("2027-02-05T10:00:00"));
   await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(fausses(avecNicolas)) }));
-  await p.addInitScript(() => { localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.tuto1", "1"); });
+  await p.addInitScript(() => { localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); });
   await p.goto("http://localhost:8771/index.html");
   await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 });
   await p.waitForTimeout(1500);

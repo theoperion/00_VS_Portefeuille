@@ -47,7 +47,7 @@ const CAS = [
     p.on("pageerror", e => err.push(e.message));
     await p.clock.setFixedTime(new Date(c.d));
     await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(fausses(c.etapes, c.cinq)) }));
-    await p.addInitScript(() => { localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.tuto1", "1"); });
+    await p.addInitScript(() => { localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); });
     await p.goto("http://localhost:" + PORT + "/index.html");
     await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 });
     await p.waitForTimeout(2500);
