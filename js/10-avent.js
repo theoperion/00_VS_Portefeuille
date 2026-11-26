@@ -10,8 +10,13 @@
    Entrée : une carte en haut du Classement, en décembre 2026 seulement (pastille tant que la case du jour n'est pas ouverte).
    Aperçu admin (double sécurité apercuAutorise) : toutes les cases ouvrables, rien n'est gardé ni envoyé.
    Records de Noël partagés (serveur, app_scripts/versus/Avent.js, validé par Théo) : chaque meilleur score part au serveur (scores de jeu
-   seulement), en file sur l'appareil si le réseau manque (réessai silencieux) ; 1 envoi utile par jeu et par jour. Avant le 24/12 (date du serveur),
-   chacun ne reçoit que SES records ; à partir du 24/12, la case 24 montre le meilleur de la bande par jeu et le « roi des jeux de Noël ». */
+   seulement), en file sur l'appareil si le réseau manque (réessai silencieux).
+   🏆 Avent 26/11 (Théo, 26/11) · une case ouverte le jour même se rejoue À L'INFINI jusqu'au 24/12 à 23 h 59 (heure de Paris, celle du serveur) et chaque
+   nouveau record compte jusque-là (le serveur en écrit au plus un par jeu et par minute : l'appli renvoie toute seule la minute d'après).
+   CLASSEMENT EN DIRECT de chaque jeu, visible par tous dès le 1er (classements du serveur : un nom et un score de jeu, rien d'autre), dans la carte
+   de la case, sous le jeu ; « ton rang » en avant. Le 25 à 0 h, tout est figé : le ROI DES JEUX DE NOËL (le plus de 1res places, puis de 2es, puis le
+   premier à avoir atteint son dernier record) gagne pour toujours la plaque « Roi de Noël 2026 », la couronne de houx et la livrée « Roi de Noël »
+   (js/3-podium.js, GAINS_ROI) ; chaque 1re place finale = une ⭐ étoile de Noël (vitrine). Attribués par le serveur (gagnants, dès le 25/12). */
 "use strict";
 const AVENT = { debut: 20261201, fin: 20261231, derniere: 24, annonce: 20 };
 let AVENT_APERCU = false;
@@ -37,7 +42,7 @@ function caseManquee(n) { return !aventApercu() && n >= 1 && n <= 24 && n < aven
 function aventOuvertes() { try { const l = JSON.parse(stock.get("versus.avent") || "[]"); return Array.isArray(l) ? l.filter(n => Number.isInteger(n) && n >= 1 && n <= 24) : []; } catch (e) { return []; } }
 function marquerOuverte(n) {
   if (aventApercu() || !caseOuvrable(n)) return; const l = aventOuvertes();
-  if (!l.includes(n)) { l.push(n); stock.set("versus.avent", JSON.stringify(l)); }
+  if (!l.includes(n)) { l.push(n); stock.set("versus.avent", JSON.stringify(l)); majPastillesAvent(); }
   if (n === aventJour() && aventFile() && !(AVENT_SRV && Array.isArray(AVENT_SRV.cases) && AVENT_SRV.cases.includes(n))) mettreEnFileCase(n);   // le serveur tranche
 }
 /** 🏅 le compte des cases ouvertes le jour même : { n (ouvertes), jd (jours écoulés, 24 au plus), perdue (1re case manquée, 0 si aucune), toutes } */
@@ -48,8 +53,13 @@ function aventCompte() {
 }
 const AV_REGLE = "Une case par jour : à ouvrir le jour même, sinon elle est perdue ❄️";
 const AV_DOREE = "🏅 Ouvre les 24 cases, chacune le jour même : la plaque Hiver 2026 dorée t'attend le 24";
+const AV_ROI = "🎅 Le roi des jeux de Noël gagne : plaque Roi de Noël 2026, couronne de houx, la livrée « Roi de Noël »";
+/** 🔒 le 25/12 à 0 h (heure de Paris, celle du serveur dès qu'il a répondu) : records et classements figés */
+function aventFige() { return aventNum() > 20261224; }
 /** le message (toast) passe au-dessus du calendrier tant qu'il est ouvert (secours des navigateurs sans :has) */
-function avToastDessus() { try { const t = document.getElementById("toast"); if (t) t.classList.toggle("av-dessus", !!document.querySelector(".av-ov, .av-case")); } catch (e) { } }
+function avToastDessus() { try { const ouvert = !!document.querySelector(".av-ov, .av-case"), t = document.getElementById("toast"); if (t) t.classList.toggle("av-dessus", ouvert);
+  document.body.classList.toggle("av-page-cachee", ouvert); } catch (e) { } }   // Avent 26/11 : sous le calendrier (plein écran), la page n'est plus dessinée : défilement fluide même sur le Podium
+try { const go = () => new MutationObserver(avToastDessus).observe(document.body, { childList: true }); if (document.body) go(); else document.addEventListener("DOMContentLoaded", go); } catch (e) { }   // une fenêtre retirée par n'importe quel chemin : la page réapparaît
 /** le message d'une case manquée (la 24 : le souvenir reste à chacun) */
 function msgManquee(n) { return "❄️ Case manquée : elle ne s'ouvrait que le " + n + " décembre." + (n === 24 ? " Ton souvenir (plaque Hiver 2026 et traînée Flocons) t'attend quand même dans l'écurie." : ""); }
 /** « 🏅 4/24 · encore possible », « ❄️ 4/24 · plaque dorée perdue (case du 3 manquée) », « 24/24 · plaque dorée gagnée » */
@@ -196,12 +206,15 @@ function avBiscuit(c, x, y, s, k, a) {
   c.restore();
 }
 /** v20.62 · bornes des scores, les MÊMES que le serveur (app_scripts/versus/Avent.js, VS_AVENT_JEUX) : un score hors bornes n'est ni gardé ni envoyé */
-const AV_BORNES = { cadeaux: [0, 120], renne: [0, 80], pile: [0, 400], boules: [0, 90], memory: [4, 900], cheminees: [0, 600], flocons: [0, 250], chaussettes: [0, 60],
-  bonshommes: [2.5, 30], guirlande: [0, 200], livraison: [0, 60], biscuits: [0, 60], rennes: [0, 5], luge: [0, 200000], gobelets: [0, 200], feux: [100, 5000] };
+const AV_BORNES = { cadeaux: [0, 120], renne: [0, 120], pile: [0, 400], boules: [0, 90], memory: [4, 900], cheminees: [0, 600], flocons: [0, 250], chaussettes: [0, 60],
+  bonshommes: [1.25, 30], guirlande: [0, 200], livraison: [0, 60], biscuits: [0, 60], rennes: [0, 5], luge: [0, 200000], gobelets: [0, 200], feux: [100, 5000] };
+/** Avent 26/11 · les décimales gardées par le serveur (Avent.js, dec ; les autres jeux : entiers) : le score est arrondi PAREIL avant d'être comparé, gardé et envoyé */
+const AV_DEC = { memory: 1, bonshommes: 1, feux: 0 };
+function avArrondi(id, v) { if (typeof v !== "number" || !isFinite(v)) return v; const d = AV_DEC[id]; if (d === undefined) return Math.round(v); const p = Math.pow(10, d); return Math.round(v * p) / p; }
 function scoreValide(id, v) { const b = AV_BORNES[id]; return typeof v === "number" && isFinite(v) && (!b || (v >= b[0] && v <= b[1])); }
 /** « 1 cadeau », « 3 cadeaux » : l'unité s'accorde (rien à faire pour s, ms, m, « sur 5 ») */
 function avFmt(J, v) { if (J.fmt) return J.fmt(v); const n = Math.round(v), u = J.unite;
-  return n + " " + (Math.abs(n) < 2 && /[a-zé]{3,}s$|aux$/.test(u) && !/ /.test(u) ? u.replace(/aux$/, "au").replace(/s$/, "") : u); }
+  return n + " " + (Math.abs(n) < 2 && /\p{L}{3,}s$|aux$/u.test(u) && !/ /.test(u) ? u.replace(/aux$/, "au").replace(/s$/, "") : u); }
 let AV_MUET = false;   // v20.62 : avant le début de la partie (consigne affichée), les textes du jeu ne se dessinent pas sous la consigne
 function avTexte(c, t, x, y, taille, col, align) { if (AV_MUET) return; c.font = "800 " + taille + "px Saira, system-ui, sans-serif"; c.textAlign = align || "center"; c.textBaseline = "middle"; c.fillStyle = col || "#fff"; c.fillText(t, x, y); }
 function avEclats(G, x, y, col) { if (reduit) return; (G.s.ecl = G.s.ecl || []).push(...Array.from({ length: 10 }, (_, i) => ({ x, y, vx: Math.cos(i * .63) * (40 + Math.random() * 60), vy: Math.sin(i * .63) * (40 + Math.random() * 60) - 30, v: .6, col }))); }
@@ -493,17 +506,19 @@ function jeuAvent(zone, id) {
   }
   function terminer() {
     if (!G || G.fin) return; G.fin = true; G.enJeu = false;
-    const R = recordsAvent(), av = R[id], valide = J.libre || scoreValide(id, G.score), mieux = valide && (av === undefined || (J.bas ? G.score < av : G.score > av));
+    const R = recordsAvent(), av = R[id], sc = J.libre ? G.score : avArrondi(id, G.score), valide = J.libre || scoreValide(id, sc), fige = aventFige() && !aventApercu();   // Avent 26/11 : arrondi comme le serveur
+    const mieux = !fige && valide && (av === undefined || (J.bas ? sc < av : sc > av));
     if (!valide) G.msg = "Score hors des limites du jeu : il ne compte pas.";
-    if (mieux && !aventApercu()) { R[id] = J.bas ? Math.round(G.score * 10) / 10 : G.score; stock.set("versus.aventRecords", JSON.stringify(R)); mettreEnFileAvent(id, R[id]); }
+    if (mieux && !aventApercu()) { R[id] = sc; stock.set("versus.aventRecords", JSON.stringify(R)); mettreEnFileAvent(id, R[id]); majClassementsAvent(); }
     sonAvent("fin");
     voile.innerHTML = '<span class="avj-ico" aria-hidden="true">' + (mieux ? "🏅" : J.ico) + "</span><b>" + esc(fmt(G.score)) + "</b>" + (G.msg ? "<p>" + esc(G.msg) + "</p>" : "") +
-      '<p class="avj-rec">' + (mieux ? (av === undefined ? "Premier score : c'est ton record !" : "Nouveau record !") : "🏅 Ton record : " + esc(fmt(av))) + '</p><button class="btn acc" type="button" data-avj="go">🔁 Rejouer</button>';
+      '<p class="avj-rec">' + (fige ? "🔒 Classement figé le 24 décembre à 23 h 59 : ce score est pour le plaisir." + (av !== undefined ? " Ton record : " + esc(fmt(av)) : "") : mieux ? (av === undefined ? "Premier score : c'est ton record !" : "Nouveau record ! Il compte au classement.") : av !== undefined ? "🏅 Ton record : " + esc(fmt(av)) : "") + '</p><button class="btn acc" type="button" data-avj="go">🔁 Rejouer</button>';
     voile.hidden = false; brancherGo();
   }
   function brancherGo() { const b = voile.querySelector('[data-avj="go"]'); if (b) b.addEventListener("click", ev => { ev.stopPropagation(); nouveau(true); voile.hidden = true; last = 0; }); }
   function boucle(ts) {
-    if (!vivant) return; raf = requestAnimationFrame(boucle);
+    if (!vivant || !cv.isConnected) { vivant = false; return; }   // Avent 26/11 : la case a été retirée, la boucle s'arrête (jamais de jeu fantôme)
+    raf = requestAnimationFrame(boucle);
     if (document.hidden) { last = 0; return; }
     const dt = last ? Math.min(.1, (ts - last) / 1000) : 0; last = ts;
     try {
@@ -531,7 +546,7 @@ function jeuAvent(zone, id) {
 /* ---------- Les 24 cases ---------- */
 /* surprises : texte seul, ou une petite scène animée (traîneau). Aucun mot sur ce qui arrive, aucun chiffre sur les joueurs. */
 const CASES_AVENT = {
-  1: { type: "scene", ico: "🛷", titre: "Bienvenue dans le calendrier !", texte: "Le traîneau vient de décoller de l'Atelier du Père Noël. Chaque jour jusqu'au 24, une case s'ouvre : des petits jeux de Noël, des surprises… et un cadeau le 24 pour chaque pilote.\n\nUne case par jour : à ouvrir le jour même, sinon elle est perdue ❄️\n\n🏅 Ouvre les 24 cases, chacune le jour même : la plaque Hiver 2026 dorée t'attend le 24. Rien ne compte au championnat, tout est pour le plaisir." },
+  1: { type: "scene", ico: "🛷", titre: "Bienvenue dans le calendrier !", texte: "Le traîneau vient de décoller de l'Atelier du Père Noël. Chaque jour jusqu'au 24, une case s'ouvre : des petits jeux de Noël, des surprises… et un cadeau le 24 pour chaque pilote.\n\nUne case par jour : à ouvrir le jour même, sinon elle est perdue ❄️\n\n🏅 Ouvre les 24 cases, chacune le jour même : la plaque Hiver 2026 dorée t'attend le 24. Rien ne compte au championnat, tout est pour le plaisir.\n\n🏆 Chaque jeu a son classement en direct : une fois sa case ouverte (le jour même), rejoue autant que tu veux jusqu'au 24 décembre à 23 h 59. 🎅 Le roi des jeux de Noël (le plus de 1res places) gagne pour toujours : la plaque Roi de Noël 2026, la couronne de houx et la livrée « Roi de Noël »." },
   2: { type: "jeu", jeu: "cadeaux" }, 3: { type: "jeu", jeu: "renne" }, 4: { type: "jeu", jeu: "pile" },
   5: { type: "texte", ico: "😄", titre: "La blague du paddock", texte: "Pourquoi le traîneau du Père Noël ne prend-il jamais de pénalité ?\n\n… Parce qu'il ne dépasse personne : il survole tout le monde !" },
   6: { type: "jeu", jeu: "boules" }, 7: { type: "jeu", jeu: "memory" }, 8: { type: "jeu", jeu: "cheminees" },
@@ -602,26 +617,116 @@ function htmlSerieAvent(n) {
 }
 
 /* ---------- L'entrée (haut du Classement, décembre 2026 seulement) ---------- */
+/** Avent 26/11 (Théo, 26/11) · l'entrée du calendrier et la course au roi vivent dans l'onglet PODIUM ; le Classement garde une petite ligne de rappel qui y renvoie */
 function poserAventEntree() {
+  poserRappelAvent();
   try {
-    const v = document.querySelector("#v-classement"); if (!v) return;
+    const v = document.querySelector("#v-trophees"); if (!v) return;
     let el = v.querySelector(":scope > .av-entree");
     chargerDoresAvent();   // 🏅 la plaque dorée, pour toujours : la liste du serveur (dès le 24/12/2026)
-    if (!aventPeriode() || typeof D === "undefined" || !D) { if (el) el.remove(); return; }
+    if (!aventPeriode() || typeof D === "undefined" || !D) { if (el) el.remove(); v.querySelectorAll(":scope > .av-roicarte").forEach(x => x.remove()); return; }
     const j = aventJour(), jd = aventJourDec(), fait = !j || aventOuvertes().includes(j), noel = !j || (j === 24 && fait), cpt = texteCompteAvent();
     const html = '<span class="av-cal" aria-hidden="true">' + svgPaquetEntree(jd) + (fait ? "" : '<i class="av-pas"></i>') + "</span>" +
       '<span class="rp-t"><span class="av-l1"><b>🎄 Calendrier de l\'Avent</b>' + (noel ? (aventOuvertes().includes(24) ? "joyeux Noël !" : "joyeux Noël ! ton souvenir t'attend dans l'écurie") : fait ? "case du jour ouverte, reviens demain" : "la case du " + j + " t'attend, aujourd'hui seulement") + "</span>" +
       (j && !noel ? "<small>" + esc(AV_REGLE) + "</small>" : "") + (j && !noel && !aventCompte().perdue && !aventCompte().toutes ? "<small>" + esc(AV_DOREE) + "</small>" : "") + (cpt ? '<small class="av-cpt' + (aventCompte().perdue ? " perdue" : "") + '">' + esc(cpt) + "</small>" : "") + '</span><span class="rp-f" aria-hidden="true">›</span>';
     if (!el) { v.insertAdjacentHTML("afterbegin", '<button type="button" class="av-entree"></button>'); el = v.querySelector(":scope > .av-entree"); el.addEventListener("click", () => ouvrirAvent()); }
     if (!AVENT_SRV_T && SOURCE === "api") setTimeout(() => chargerAvent(), 2500);   // au démarrage : la file d'attente des records repart, en silence
+    else if (SOURCE === "api") chargerAvent(30000);   // Avent 26/11 : à chaque retour sur le Podium, la course au roi se relit (au plus toutes les 30 s)
+    majPastillesAvent(); poserCourseRoi(v, el);   // 🎄 Avent 26/11 : la course au roi de Noël, juste sous l'entrée
     el.innerHTML = html; el.classList.toggle("a-ouvrir", !fait); el.setAttribute("aria-label", "Calendrier de l'Avent" + (fait ? "" : " : la case du " + j + " décembre t'attend, à ouvrir aujourd'hui sinon elle est perdue") + (cpt ? ". " + cpt : ""));
   } catch (e) { /* jamais bloquant */ }
 }
+/** la ligne de rappel du Classement (une seule ligne) : ce qui attend, et où */
+function poserRappelAvent() {
+  try { const v = document.querySelector("#v-classement"); if (!v) return; let r = v.querySelector(":scope > .av-rappel");
+    if (!aventPeriode() || typeof D === "undefined" || !D) { if (r) r.remove(); return; }
+    const j = aventJour(), t = aventCaseAttend() ? "🎁 La case du " + j + " t'attend dans Podium" : "🎄 Calendrier de l'Avent et course au roi : dans Podium";
+    if (!r) { v.insertAdjacentHTML("afterbegin", '<button type="button" class="av-rappel"></button>'); r = v.querySelector(":scope > .av-rappel"); r.addEventListener("click", () => { try { allerA("trophees"); } catch (e) { } }); }
+    const h = esc(t) + ' <span aria-hidden="true">›</span>'; if (r.innerHTML !== h) r.innerHTML = h; r.setAttribute("aria-label", t + " : aller au Podium");
+  } catch (e) { /* jamais bloquant */ }
+}
+/* ---------- Avent 26/11 (Théo, 26/11) · du 1er au 24/12 : le calendrier s'ouvre tout seul une fois par jour, et une pastille 🎁 tant que la case du jour attend ---------- */
+/** la case du jour attend-elle (période, pas d'aperçu admin, pas de date simulée) ? */
+function aventCaseAttend() { try { const j = aventJour(); return !!j && aventPeriode() && !aventApercu() && !simulation() && !aventOuvertes().includes(j); } catch (e) { return false; } }
+/** la pastille 🎁 sur l'onglet Podium (où vit le calendrier) tant que la case du jour attend */
+function majPastillesAvent() {
+  try { const a = aventCaseAttend();
+    ["trophees"].forEach(v => { const b = document.querySelector('.tabbar .onglet[data-vue="' + v + '"]'); if (!b) return; const p = b.querySelector(".pastille-av");
+      if (a && !p) b.insertAdjacentHTML("beforeend", '<i class="pastille-av" aria-hidden="true">🎁</i>'); else if (!a && p) p.remove(); });
+  } catch (e) { /* jamais bloquant */ }
+}
+/** une fois par jour (date de Paris, celle du serveur dès qu'il a répondu), à la première vue de l'appli, quel que soit l'onglet : le calendrier sur le paquet du jour.
+ *  Rien hors connexion, en aperçu admin ou en date simulée ; rien avant le 1/12 ni après le 24/12. Les robots de test (navigator.webdriver) ne l'ont que s'ils le demandent
+ *  (versus.aventAutoTest), pour ne pas gêner les autres tests. */
+let AV_AUTO = false;
+function aventAutoOuvrir() {
+  try {
+    if (typeof D === "undefined" || !D || SOURCE !== "api" || !aventCaseAttend() || document.querySelector(".av-ov, .av-case")) return;
+    if (navigator.webdriver && stock.get("versus.aventAutoTest") !== "1") return;
+    const auj = String(aventNum()); if (stock.get("versus.aventAuto") === auj) return;
+    stock.set("versus.aventAuto", auj); AV_AUTO = true;
+    ouvrirAvent();   // si une annonce est ouverte, le calendrier attend sa fermeture (ouvrirAvent), puis se place sur le paquet du jour
+  } catch (e) { /* jamais bloquant */ }
+}
+if (typeof window.rendreTrophees === "function") { const f0 = window.rendreTrophees; window.rendreTrophees = function () { const r = f0.apply(this, arguments); poserAventEntree(); return r; }; }
+if (typeof window.rendreVue === "function") { const f0 = window.rendreVue; window.rendreVue = function () { const r = f0.apply(this, arguments); majPastillesAvent(); setTimeout(aventAutoOuvrir, 0); return r; }; }
 if (typeof window.rendreClassement === "function") { const f0 = window.rendreClassement; window.rendreClassement = function () { const r = f0.apply(this, arguments); poserAventEntree(); return r; }; }
+
+/* ---------- 🎄 Avent 26/11 (Théo, 26/11) · la COURSE AU ROI DE NOËL : le classement général des jeux, en direct, en haut du Classement en décembre 2026 ----------
+   Les pilotes classés par 1res places (⭐), puis 2es places, puis l'ordre du serveur (le premier à avoir atteint son dernier record). Seulement des places
+   et des nombres de jeux, jamais un score d'argent. Un toucher : qui mène chaque jeu. Le 25 : le résultat final et le roi. */
+const AV_JEUX_CLASSES = Object.keys(AV_BORNES);   // les 16 jeux à score (le dessin de l'aurore n'a pas de classement)
+/** ce que gagne tout le monde ; avant le 24, le cadeau du 24 reste une surprise (relecture jeu-joueur) */
+function avPourTous() { return "Pour tous : " + (aventNum() < 20261224 ? "un cadeau le 24" : "le souvenir du 24 (plaque Hiver 2026 + traînée Flocons)") + ", la plaque dorée si 24/24, une ⭐ par jeu gagné"; }
+function courseRoiAvent() {
+  let noms = []; try { noms = D.personnes.map(p => p.nom); } catch (e) { }
+  const S = AVENT_SRV, ordre = S && Array.isArray(S.roi) ? S.roi.map(x => x && x.nom) : [], t = {};
+  const ligne = n => t[n] = t[n] || { nom: n, or: 0, argent: 0, bronze: 0, jeux: 0 };
+  noms.forEach(ligne);
+  AV_JEUX_CLASSES.forEach(jeu => classementJeuAvent(jeu).forEach((x, k) => { const o = ligne(x.nom); o.jeux++; if (k === 0) o.or++; else if (k === 1) o.argent++; else if (k === 2) o.bronze++; }));
+  const rg = n => { const i = ordre.indexOf(n); return i < 0 ? 99 : i; };
+  return Object.values(t).sort((a, b) => b.or - a.or || b.argent - a.argent || (b.jeux ? 1 : 0) - (a.jeux ? 1 : 0) || rg(a.nom) - rg(b.nom) || noms.indexOf(a.nom) - noms.indexOf(b.nom));
+}
+const REGLE_ROI = '<small class="avr-regle">Le roi : le plus de ⭐ (1res places), à égalité le plus de 2es places · seuls les jeux des cases ouvertes le jour même comptent</small>';
+function htmlCourseRoi() {
+  const l = courseRoiAvent(), fige = aventFige(), MED = ["🥇", "🥈", "🥉"]; let moi = ""; try { moi = moiVrai() || ""; } catch (e) { }
+  const roi = fige ? aventRoiNoel() || (l[0] && l[0].or ? l[0].nom : null) : null, i = l.findIndex(x => x.nom === moi), n = AV_JEUX_CLASSES.length;
+  const tete = fige ? '<span class="avr-h"><b>🎅 Roi des jeux de Noël 2026' + (roi ? " : " + esc(roi) : "") + "</b><small>résultat final · figé le 24 décembre à 23 h 59</small></span>" + REGLE_ROI
+    : '<span class="avr-h"><b>🎄 Course au roi de Noël</b><small>en direct · ' + n + " jeux classés · tout se fige le 24 décembre à 23 h 59</small></span>" + REGLE_ROI;
+  const L = '<ol class="avr-l">' + l.map((x, k) => '<li class="' + (x.nom === moi ? "moi" : "") + (x.jeux ? "" : " zero") + '"><span class="avr-p">' + (x.jeux ? MED[k] || k + 1 + "e" : "–") + '</span><span class="avr-n">' + esc(x.nom) + (x.nom === moi ? " <small>(toi)</small>" : "") + (fige && x.nom === roi ? " 👑" : "") + '</span><span class="avr-s"><b>⭐ ' + x.or + "</b> · 2es : " + x.argent + '</span><small class="avr-j">' + x.jeux + "/" + n + " jeux</small></li>").join("") + "</ol>";
+  const rang = i >= 0 && l[i].jeux ? '<span class="avr-rang">' + (fige ? "Ton rang final" : "Ton rang") + " : <b>" + (i ? i + 1 + "e" : "1er") + "</b> sur " + l.length + " · " + l[i].jeux + " jeu" + (l[i].jeux > 1 ? "x" : "") + " sur " + n + " joué" + (l[i].jeux > 1 ? "s" : "") + "</span>"
+    : i >= 0 && !fige ? '<span class="avr-rang">Joue à un jeu d\'une case que tu as ouverte pour entrer dans la course</span>' : "";
+  const gain = '<small class="avr-gain">' + esc(fige ? (roi ? "🎅 " + roi + " gagne pour toujours : plaque Roi de Noël 2026, couronne de houx, la livrée « Roi de Noël ». " : "") + avPourTous() : AV_ROI + " · " + avPourTous()) + "</small>";
+  return tete + L + rang + gain + '<span class="avr-voir">Qui mène chaque jeu ›</span>';
+}
+function poserCourseRoi(v, entree) {
+  try { let c = v.querySelector(":scope > .av-roicarte");
+    if (!c) { entree.insertAdjacentHTML("afterend", '<button type="button" class="av-roicarte" aria-label="Course au roi de Noël : le détail jeu par jeu"></button>'); c = v.querySelector(":scope > .av-roicarte"); c.addEventListener("click", () => ouvrirDetailRoi()); }
+    const h = htmlCourseRoi(); if (c.innerHTML !== h) c.innerHTML = h; c.classList.toggle("fige", aventFige());
+  } catch (e) { /* jamais bloquant */ }
+}
+/** le détail : pour chaque jeu, qui mène (et ta place) */
+function ouvrirDetailRoi() {
+  document.querySelectorAll(".av-roid").forEach(x => x.remove());
+  let moi = ""; try { moi = moiVrai() || ""; } catch (e) { }
+  const o = document.createElement("div"); o.className = "av-case av-roid"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Course au roi de Noël, jeu par jeu");
+  const jd = aventFige() ? 24 : aventJourDec(), caseDe = jeu => +Object.keys(CASES_AVENT).find(n => CASES_AVENT[n].jeu === jeu);
+  const vus = AV_JEUX_CLASSES.filter(jeu => caseDe(jeu) <= jd), caches = AV_JEUX_CLASSES.length - vus.length;   // secret : un jeu dont la case n'est pas encore arrivée reste caché
+  const L = vus.map(jeu => { const J = JEUX_AVENT[jeu], c = classementJeuAvent(jeu), k = c.findIndex(x => x.nom === moi), cj = caseDe(jeu);
+    return '<li><span class="avd-j">' + J.ico + " " + esc(J.nom) + "<small>case du " + cj + (caseManquee(cj) ? " · ❄️ case manquée" : "") + "</small></span><b>" + (c.length ? "🥇 " + esc(c[0].nom) + " · " + esc(avFmt(J, c[0].score)) : "personne") + "</b>" + (k > 0 ? "<small>toi : " + (k + 1) + "e</small>" : "") + "</li>"; }).join("") +
+    (caches ? '<li class="avd-cache"><span class="avd-j">🎁 ' + caches + " jeu" + (caches > 1 ? "x" : "") + " encore caché" + (caches > 1 ? "s" : "") + "<small>ils arrivent dans les prochaines cases</small></span><b></b></li>" : "");
+  o.innerHTML = neigeAvent(18) + '<div class="av-carte"><div class="av-corps avd"><button class="av-x" type="button" aria-label="Fermer">✕</button><span class="av-k">' + (aventFige() ? "🎅 Résultat final" : "🎄 En direct") + "</span><h3>Qui mène chaque jeu</h3>" +
+    '<ul class="avd-l">' + L + '</ul><p class="av-roi-r">' + esc(AV_ROI) + "</p>" + '<div class="btn-row"><button class="btn ghost" type="button" data-av-fermer>Fermer</button></div></div></div>';
+  document.body.appendChild(o); avToastDessus();
+  const fermer = () => { o.remove(); avToastDessus(); };
+  o.addEventListener("click", e => { if (e.target === o) fermer(); }); o.querySelector(".av-x").addEventListener("click", fermer); o.querySelector("[data-av-fermer]").addEventListener("click", fermer);
+  chargerAvent(15000);
+}
 
 /* ---------- Le calendrier ---------- */
 function neigeAvent(n) { if (reduit) return ""; let h = 7; const r = () => { h = (h * 9301 + 49297) % 233280; return h / 233280; };
   return '<div class="av-neige" aria-hidden="true">' + Array.from({ length: n }, () => '<i style="--x:' + (r() * 100).toFixed(1) + "%;--d:" + (r() * 8).toFixed(2) + "s;--t:" + (6 + r() * 6).toFixed(2) + "s;--s:" + (2 + r() * 4).toFixed(1) + 'px"></i>').join("") + "</div>"; }
+let AV_PAUSE_GP = false;   // Avent 26/11 : la course du Podium mise en pause par le calendrier (et par lui seul)
 function ouvrirAvent() {
   if (!aventPeriode() && !aventApercu()) return;
   { const autre = () => document.querySelector(".tuto");   // une seule fenêtre à la fois : une annonce déjà ouverte passe d'abord, le calendrier s'ouvre à sa fermeture
@@ -633,20 +738,23 @@ function ouvrirAvent() {
     const aOuvrir = !aventApercu() && j && caseOuvrable(j) && !vues.includes(j) ? j : 0;
     o.innerHTML = neigeAvent(36) + '<div class="av-boite"><button class="av-x" type="button" aria-label="Fermer">✕</button><div class="av-h"><b>🎄 Le calendrier de l\'Avent</b>' +
       (aOuvrir ? '<button type="button" class="av-jour" data-av-jour="' + aOuvrir + '">✨ Case du ' + aOuvrir + " à ouvrir</button>" : "") + "<small>" +
-      (aventApercu() ? "Aperçu admin : toutes les cases s'ouvrent, rien n'est gardé." : esc(AV_REGLE) + "</small>" + (!aventCompte().perdue && !aventCompte().toutes ? "<small>" + esc(AV_DOREE) + "</small>" : "") + (cpt ? '<small class="av-cpt' + (aventCompte().perdue ? " perdue" : "") + '">' + esc(cpt) + "</small>" : "") + "<small>Tour de chauffe · rien ne compte au championnat, tout pour le plaisir") + '</small></div><div class="av-grille">' + AV_GUIRLANDE +
+      (aventApercu() ? "Aperçu admin : toutes les cases s'ouvrent, rien n'est gardé." : esc(AV_REGLE) + "</small>" + (!aventCompte().perdue && !aventCompte().toutes ? "<small>" + esc(AV_DOREE) + "</small>" : "") + (cpt ? '<small class="av-cpt' + (aventCompte().perdue ? " perdue" : "") + '">' + esc(cpt) + "</small>" : "") + htmlRoiEntete() + "<small>Tour de chauffe · rien ne compte au championnat, tout pour le plaisir") + '</small></div><div class="av-grille">' + AV_GUIRLANDE +
       ORDRE_AVENT.map((n, i) => { const ok = caseOuvrable(n), vu = vues.includes(n), man = !ok && caseManquee(n), cls = man ? "manquee" : !ok ? "ferme" : vu ? "vue" : n === j ? "jour" : "libre";
         return '<button type="button" class="av-c ' + cls + " pap-" + AV_PAPIERS[(i * 5 + n) % AV_PAPIERS.length] + '" data-av="' + n + '" aria-label="' + (man ? "Case du " + n + " décembre, manquée : elle ne s'ouvrait que ce jour-là" : ok ? "Case du " + n + " décembre" + (vu ? ", déjà ouverte : " + esc(titreCase(n)) : ", à ouvrir aujourd'hui") : "Case du " + n + " décembre, fermée jusqu'au " + n) + '">' +
           htmlPaquet(n, cls) + "</button>"; }).join("") + "</div>" + AV_LEGENDE + "</div>" + AV_PAYSAGE;
+    if (o.auto) { const c = o.querySelector(".av-c.jour"); if (c) c.classList.add("av-auto"); }   // redessiné (réponse du serveur) : le paquet du jour reste mis en avant
     o.querySelector(".av-x").addEventListener("click", fermer);
     o.querySelectorAll("[data-av]").forEach(b => b.addEventListener("click", () => toucherCase(b, +b.dataset.av)));
     const pj = o.querySelector("[data-av-jour]"); if (pj) pj.addEventListener("click", () => { const b = o.querySelector('.av-c[data-av="' + pj.dataset.avJour + '"]'); if (!b) return;
       try { b.scrollIntoView({ block: "center" }); } catch (e) { } toucherCase(b, +pj.dataset.avJour); });   // la pastille ouvre la case du jour (même animation)
   };
-  const fermer = () => { o.remove(); AVENT_APERCU = false; poserAventEntree(); avToastDessus(); };
-  o.redessiner = dessiner;   // le serveur a répondu (cases ouvertes, heure) : on redessine
+  // Avent 26/11 : le calendrier vit dans le Podium : la course qui s'y joue se met en pause sous lui (fluide au téléphone), et reprend à sa fermeture
+  try { if (!AV_PAUSE_GP && typeof basculerPauseGP === "function" && GP_INST && GP_INST.api && GP_INST.api.enCours() && !enPauseGP()) { basculerPauseGP(true); AV_PAUSE_GP = enPauseGP(); } } catch (e) { }
+  const fermer = () => { o.remove(); AVENT_APERCU = false; poserAventEntree(); avToastDessus(); if (AV_PAUSE_GP && !document.querySelector(".av-ov")) { AV_PAUSE_GP = false; try { if (enPauseGP()) basculerPauseGP(false); } catch (e) { } } };
+  o.redessiner = dessiner; o.fermer = fermer;   // le serveur a répondu (cases ouvertes, heure) : on redessine
   const toucherCase = (b, n) => {
     if (!caseOuvrable(n)) { try { toast(caseManquee(n) ? msgManquee(n) : "Patience : cette case s'ouvre le " + n + " décembre."); } catch (e) { } return; }
-    if (b.classList.contains("ouvre")) return;   // déjà en train de s'ouvrir (double toucher)
+    if (o.querySelector(".av-c.ouvre")) return;   // une case est déjà en train de s'ouvrir (double toucher, ou deux paquets coup sur coup) : Avent 26/11
     const deja = b.classList.contains("vue"); marquerOuverte(n);
     if (deja || reduit) return ouvrirCaseAvent(n, dessiner);
     // v20.80 · l'ouverture en 4 temps (~0,9 s, transform et opacity seulement) : le paquet s'écrase, le nœud saute, le couvercle s'envole (rayons dorés), la carte grandit depuis la case
@@ -655,15 +763,16 @@ function ouvrirAvent() {
     setTimeout(() => { if (!o.isConnected) return; const r = b.getBoundingClientRect(); ouvrirCaseAvent(n, dessiner, r); setTimeout(() => { const ry = b.querySelector(".av-ray"); if (ry) ry.remove(); }, 320); }, 650);   // les rayons s'éteignent sous la carte (la grille est redessinée à sa fermeture)
   };
   o.addEventListener("click", e => { if (e.target === o) fermer(); });
-  dessiner(); document.body.appendChild(o); avToastDessus(); poserAventEntree(); chargerAvent();
+  dessiner(); document.body.appendChild(o); avToastDessus(); poserAventEntree(); chargerAvent(15000);
+  if (AV_AUTO) { AV_AUTO = false; o.auto = true; const c = o.querySelector(".av-c.jour"); if (c) { c.classList.add("av-auto"); try { c.scrollIntoView({ block: "center", behavior: reduit ? "auto" : "smooth" }); } catch (e) { } } }   // Avent 26/11 : ouverture automatique, sur le paquet du jour   // Avent 26/11 : au retour sur le calendrier, les classements se relisent (au plus toutes les 15 s)
 }
 /** une case ouverte : jeu ou surprise, dans sa fenêtre (un toucher en dehors, ✕ ou Fermer pour revenir au calendrier) */
 function ouvrirCaseAvent(n, apres, depuis) {
   if (!caseOuvrable(n)) return;
-  document.querySelectorAll(".av-case").forEach(x => x.remove());
+  document.querySelectorAll(".av-case").forEach(x => { if (x.jeu) x.jeu.stop(); x.remove(); });   // Avent 26/11 : l'ancienne partie s'arrête avec sa case
   const c = CASES_AVENT[n], o = document.createElement("div"); o.className = "av-case"; o.dataset.n = n; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
   let corps = "", inst = null;
-  if (c.type === "jeu") corps = '<div class="av-jeu"></div>';
+  if (c.type === "jeu") corps = '<div class="av-jeu"></div>' + (aventApercu() ? "" : '<div class="av-clas" data-jeu="' + c.jeu + '">' + htmlClassementAvent(c.jeu) + "</div>");   // 🏆 Avent 26/11 : le classement en direct, sous le jeu
   else if (c.type === "scene") corps = '<div class="av-jeu av-scene"></div><p class="av-t">' + esc(c.texte) + "</p>";
   else if (c.type === "compte") { const r = joursAvantAnnonce(); corps = '<div class="av-rebours"><span>' + (r > 0 ? "J-" + r : "🎉") + "</span><small>" + (r > 1 ? "avant l'annonce du 20 décembre" : r === 1 ? "demain, l'annonce !" : "l'annonce est arrivée") + '</small></div><p class="av-t">' + esc(c.texte) + "</p>"; }
   else if (c.type === "cadeau") corps = htmlCadeauAvent() + '<p class="av-t">' + esc(c.texte) + '</p><div class="av-records">' + htmlRecordsAvent() + "</div>";
@@ -676,7 +785,7 @@ function ouvrirCaseAvent(n, apres, depuis) {
   document.body.appendChild(o); avToastDessus();
   if (depuis && !reduit) { try { const k = o.querySelector(".av-carte"), r = k.getBoundingClientRect();   // la carte grandit depuis la case touchée
     k.style.transformOrigin = Math.round(depuis.left + depuis.width / 2 - r.left) + "px " + Math.round(depuis.top + depuis.height / 2 - r.top) + "px"; k.classList.add("nait"); } catch (e) { } }
-  if (c.type === "jeu") inst = jeuAvent(o.querySelector(".av-jeu"), c.jeu);
+  if (c.type === "jeu") { inst = jeuAvent(o.querySelector(".av-jeu"), c.jeu); chargerAvent(8000); }
   else if (c.type === "scene") inst = sceneTraineau(o.querySelector(".av-scene"));
   else if (c.type === "cadeau") { chargerAvent(true); try { if (typeof confettis === "function") confettis("confettis"); else sonAvent("fin"); } catch (e) { } }
   else sonAvent("grelots");
@@ -684,9 +793,9 @@ function ouvrirCaseAvent(n, apres, depuis) {
   const fermer = () => { if (inst) inst.stop(); o.remove(); if (apres) apres(); poserAventEntree(); avToastDessus(); };
   o.addEventListener("click", e => { if (e.target === o) fermer(); });
   o.querySelector(".av-x").addEventListener("click", fermer); o.querySelector("[data-av-fermer]").addEventListener("click", fermer);
-  const pd = o.querySelector("[data-av-podium]"); if (pd) pd.addEventListener("click", () => { fermer(); document.querySelectorAll(".av-ov").forEach(x => x.remove()); AVENT_APERCU = false;   // v20.62 : rouvre l'annonce du 20 elle-même
+  const pd = o.querySelector("[data-av-podium]"); if (pd) pd.addEventListener("click", () => { fermer(); document.querySelectorAll(".av-ov").forEach(x => x.fermer ? x.fermer() : x.remove()); AVENT_APERCU = false;   // v20.62 : rouvre l'annonce du 20 elle-même
     try { const l = etapesJeu().filter(e => annonceEtape(e) === 20261220 && regleVisible(e.id)); if (l.length) ouvrirNouveautes(l); else allerA("trophees"); } catch (e) { } });
-  const ec = o.querySelector("[data-av-ecurie]"); if (ec) ec.addEventListener("click", () => { fermer(); document.querySelectorAll(".av-ov").forEach(x => x.remove()); AVENT_APERCU = false;
+  const ec = o.querySelector("[data-av-ecurie]"); if (ec) ec.addEventListener("click", () => { fermer(); document.querySelectorAll(".av-ov").forEach(x => x.fermer ? x.fermer() : x.remove()); AVENT_APERCU = false;
     try { if (typeof equiperMaintenant === "function") equiperMaintenant("plaque", typeof aventDore === "function" && aventDore(moiVrai()) ? "hiverdore" : "hiver26"); else { ETAT.podium = "ecurie"; ECU_SLOT = "plaque"; garder(); allerA("trophees"); rendreTrophees(); } } catch (e) { } });   // v20.70 · la plaque Hiver 2026 déjà essayée
   return o;
 }
@@ -742,12 +851,13 @@ async function envoyerCasesAvent() {
 }
 /** un record à envoyer : gardé en file (le meilleur seulement), puis envoyé dès que possible */
 function mettreEnFileAvent(id, score) {
-  const J = JEUX_AVENT[id]; if (!J || J.libre || !scoreValide(id, score) || !aventFile()) return;   // v20.62 : en file même hors connexion ; la connexion se teste à l'envoi
+  const J = JEUX_AVENT[id]; if (!J || J.libre || !scoreValide(id, score) || !aventFile() || aventFige()) return;   // Avent 26/11 : plus rien ne part après le 24/12 à 23 h 59   // v20.62 : en file même hors connexion ; la connexion se teste à l'envoi
   const f = fileAvent(), d = f[id]; if (d && !(J.bas ? score < d.s : score > d.s)) return;
-  f[id] = { s: score, deja: d ? d.deja : 0 }; stock.set("versus.aventFile", JSON.stringify(f)); envoyerFileAvent();
+  f[id] = { s: score, apres: d ? d.apres || 0 : 0 }; stock.set("versus.aventFile", JSON.stringify(f)); envoyerFileAvent();
 }
-/** la file part au serveur ; « deja » (déjà un envoi aujourd'hui pour ce jeu) = on réessaie demain ; sans réseau = plus tard, en silence */
-let AVENT_RELANCE = false;
+/** la file part au serveur ; « deja » (un record vient d'être écrit pour ce jeu, moins d'une minute avant) = on réessaie la minute d'après ; sans réseau = plus tard, en silence */
+let AVENT_RELANCE = false, AVENT_MINUTE = 0;
+function relancerAventDans(ms) { if (AVENT_MINUTE) return; AVENT_MINUTE = setTimeout(() => { AVENT_MINUTE = 0; envoyerFileAvent(); }, ms); }
 async function envoyerFileAvent() {
   if (!aventEnLigne()) return;
   if (AVENT_ENVOI) { AVENT_RELANCE = true; return; }   // un envoi tourne déjà : on repartira juste après lui (rien ne se perd)
@@ -756,17 +866,21 @@ async function envoyerFileAvent() {
     await envoyerCasesAvent();
     const attente = fileCases();
     for (const jeu of Object.keys(fileAvent())) {
-      const x = fileAvent()[jeu]; if (!x || x.deja === jourAvNum()) continue;
+      const x = fileAvent()[jeu]; if (!x) continue;
+      if (x.apres && Date.now() < x.apres) { relancerAventDans(x.apres - Date.now() + 200); continue; }   // le serveur a demandé d'attendre la minute d'après
       { const cj = Object.keys(CASES_AVENT).find(k => CASES_AVENT[k].jeu === jeu); if (cj && attente.includes(+cj)) continue; }   // sa case attend encore le serveur
       const rep = await posterAdmin({ action: "avent", op: "score", jeu, score: x.s });
       const f = fileAvent(), y = f[jeu];
       if (rep && rep.ok) { if (y && y.s === x.s) delete f[jeu]; recevoirAvent(rep); }
       else if (rep && ["saisie", "fini", "tot", "refus", "manquee"].includes(rep.erreur)) { if (y && y.s === x.s) delete f[jeu];
-        if (rep.erreur === "saisie") { const R = recordsAvent(); if (R[jeu] === x.s) { delete R[jeu]; stock.set("versus.aventRecords", JSON.stringify(R)); } } }   // v20.62 : un score refusé ne reste pas comme record (il bloquerait les suivants)
-      else if (rep && rep.erreur === "deja") { if (y) y.deja = jourAvNum(); }
+        if (rep.erreur === "saisie" || rep.erreur === "manquee") {   // Avent 26/11 : un record d'une case que le serveur n'a pas comptée ne reste pas affiché chez soi
+        const R = recordsAvent(); if (R[jeu] === x.s) { delete R[jeu]; stock.set("versus.aventRecords", JSON.stringify(R)); }
+        if (rep.erreur === "manquee") { const cj = +Object.keys(CASES_AVENT).find(k => CASES_AVENT[k].jeu === jeu); if (cj && aventOuvertes().includes(cj)) { stock.set("versus.avent", JSON.stringify(aventOuvertes().filter(k => k !== cj))); majVuesAvent(); } } } }   // Avent 26/11 : le serveur n'a pas compté sa case : elle se referme aussitôt   // v20.62 : un score refusé ne reste pas comme record (il bloquerait les suivants)
+      else if (rep && rep.erreur === "deja") { if (y) y.apres = Date.now() + 61000; relancerAventDans(61500); }
       else break;   // pas de réseau ou serveur occupé : on garde tout pour plus tard
       stock.set("versus.aventFile", JSON.stringify(f));
     }
+    majClassementsAvent();
   } catch (e) { /* jamais bloquant */ } finally { AVENT_ENVOI = false; if (AVENT_RELANCE) { AVENT_RELANCE = false; setTimeout(envoyerFileAvent, 0); } }
 }
 /* à la reprise de l'appli (retour au premier plan, réseau revenu) : la file repart, l'état du serveur est relu */
@@ -777,6 +891,7 @@ function recevoirAvent(rep) {
   if (!rep || !rep.ok) return;
   try { if (typeof rep.maintenant === "number" && isFinite(rep.maintenant) && !simulation()) { AVENT_DECAL = rep.maintenant - Date.now(); stock.set("versus.aventDecal", String(Math.round(AVENT_DECAL))); } } catch (e) { }   // l'heure du serveur fait foi
   if (Array.isArray(rep.dores)) garderDoresAvent(rep.dores, rep.doresFinal);
+  if (rep.gagnants && typeof rep.gagnants === "object") garderRoiAvent(rep.gagnants);   // 🎅 le roi des jeux de Noël et les ⭐, attribués par le serveur le 25/12 à 0 h
   if (!rep.ouvert) { majVuesAvent(); return; }
   AVENT_SRV = rep; AVENT_SRV_T = Date.now();
   if (Array.isArray(rep.cases)) {   // les cases ouvertes : celles du serveur (+ celles qui attendent de lui être envoyées), jamais deux vérités
@@ -787,6 +902,7 @@ function recevoirAvent(rep) {
     Object.keys(rep.mes || {}).forEach(jeu => { const J = JEUX_AVENT[jeu], v = Number(rep.mes[jeu]); if (!J || !isFinite(v)) return; if (R[jeu] === undefined || (J.bas ? v < R[jeu] : v > R[jeu])) { R[jeu] = v; ch = true; } });
     if (ch) stock.set("versus.aventRecords", JSON.stringify(R)); } catch (e) { }
   const z = document.querySelector(".av-case .av-records"); if (z) z.innerHTML = htmlRecordsAvent();
+  majClassementsAvent();
   const cd = document.querySelector(".av-case .av-cadeau"); if (cd) cd.outerHTML = htmlCadeauAvent();   // 🏅 la plaque dorée dès que le serveur a compté la 24e case
   majVuesAvent();
 }
@@ -809,11 +925,12 @@ function garderDoresAvent(l, fin) {
 /** une fois par ouverture de l'appli, à partir du 24/12/2026 et tant que la liste n'est pas définitive */
 async function chargerDoresAvent() {
   try { if (AVENT_DORES_T || SOURCE !== "api" || simulation() || aventApercu() || aventPeriode() || aventNum() < 20261224) return;
-    const o = JSON.parse(stock.get("versus.aventDores") || "null"); if (o && o.fin) return;
+    const o = JSON.parse(stock.get("versus.aventDores") || "null"), g = JSON.parse(stock.get("versus.aventRoi") || "null"); if (o && o.fin && g) return;   // Avent 26/11 : et le roi de Noël
     AVENT_DORES_T = Date.now(); recevoirAvent(await posterAdmin({ action: "avent", op: "etat" })); } catch (e) { }
 }
-async function chargerAvent(force) {
-  if (!aventEnLigne() || (!force && Date.now() - AVENT_SRV_T < 60000)) return;
+async function chargerAvent(force) {   // force : true = tout de suite ; un nombre = pas plus souvent que ce délai (ms) ; rien = une fois par minute
+  const min = force === true ? 0 : typeof force === "number" ? force : 60000;
+  if (!aventEnLigne() || Date.now() - AVENT_SRV_T < min) return;
   AVENT_SRV_T = Date.now();
   try { recevoirAvent(await posterAdmin({ action: "avent", op: "etat" })); } catch (e) { /* hors ligne : les jeux marchent quand même */ }
   envoyerFileAvent();
@@ -823,8 +940,59 @@ function htmlRecordsAvent() {
   const S = AVENT_SRV; if (!S || !Array.isArray(S.records) || !S.records.length) return "";
   const L = S.records.filter(r => JEUX_AVENT[r.jeu]).map(r => { const J = JEUX_AVENT[r.jeu], f = avFmt(J, Number(r.score));
     return "<li><span>" + J.ico + " " + esc(J.nom) + "</span><b>" + esc([r.nom].concat(r.ex || []).join(" et ")) + " · " + esc(f) + "</b></li>"; }).join("");
-  const roi = Array.isArray(S.roi) && S.roi.length ? '<p class="av-roi">🎅 Le roi des jeux de Noël : <b>' + esc(S.roi[0].nom) + "</b>" + (S.roi.length > 1 ? "<small>puis " + S.roi.slice(1, 5).map(x => esc(x.nom)).join(", ") + "</small>" : "") + '<small class="av-roi-r">Le roi des jeux de Noël, c\'est celui qui finit le plus souvent devant, tous jeux confondus (pour rire, aucun point).</small></p>' : "";
+  const fige = aventFige() || S.fige === true, R = Array.isArray(S.roi) ? S.roi.filter(x => x && typeof x.nom === "string") : [], or = x => Number(x.or) > 0 ? " · ⭐ " + Number(x.or) : "";
+  const roi = R.length ? '<p class="av-roi">🎅 ' + (fige ? "Le roi des jeux de Noël 2026" : "Le roi des jeux de Noël, pour l'instant") + " : <b>" + esc(R[0].nom) + "</b>" + esc(or(R[0])) +
+    (R.length > 1 ? "<small>puis " + R.slice(1, 5).map(x => esc(x.nom) + esc(or(x))).join(", ") + "</small>" : "") +
+    '<small class="av-roi-g">' + (fige ? "Il gagne pour toujours : la plaque Roi de Noël 2026, la couronne de houx et la livrée « Roi de Noël »." : "Tout se fige ce soir à 23 h 59 : rejoue tes jeux pour grimper ! " + esc(AV_ROI.replace(/^🎅 /, ""))) + "</small>" +
+    '<small class="av-roi-r">Le roi des jeux de Noël, c\'est celui qui a le plus de 1res places, tous jeux confondus (à égalité : le plus de 2es places, puis le premier à avoir atteint son record). Chaque 1re place = une ⭐. Aucun point au championnat.</small></p>' : "";
   return '<h4>🏆 Les records de Noël de la bande</h4><ul>' + L + "</ul>" + roi;
+}
+/* ---------- 🏆 Avent 26/11 · le classement en direct d'un jeu (dans la carte de la case, sous le jeu) ---------- */
+/** la liste du serveur [{ nom, score }] (meilleur d'abord), avec MON record de l'appareil tout de suite (avant même la réponse du serveur) */
+function classementJeuAvent(jeu) {
+  const S = AVENT_SRV, J = JEUX_AVENT[jeu]; if (!J) return [];
+  const l = (S && S.classements && Array.isArray(S.classements[jeu]) ? S.classements[jeu] : []).filter(x => x && typeof x.nom === "string" && isFinite(Number(x.score))).map(x => ({ nom: x.nom, score: Number(x.score) }));
+  let moi = ""; try { moi = moiVrai() || ""; } catch (e) { }
+  const r = recordsAvent()[jeu], mieux = (a, b) => J.bas ? a < b : a > b;
+  if (moi && typeof r === "number" && !aventFige()) {
+    const i = l.findIndex(x => x.nom === moi);
+    if (i < 0 || mieux(r, l[i].score)) { if (i >= 0) l.splice(i, 1); const f = fileAvent()[jeu], k = l.findIndex(x => mieux(r, x.score)), x = { nom: moi, score: r, attente: !!(f && f.s === r) };
+      if (k < 0) l.push(x); else l.splice(k, 0, x); }
+  }
+  return l;
+}
+function htmlClassementAvent(jeu) {
+  const J = JEUX_AVENT[jeu]; if (!J) return "";
+  const l = classementJeuAvent(jeu), fige = aventFige(); let moi = ""; try { moi = moiVrai() || ""; } catch (e) { }
+  const i = l.findIndex(x => x.nom === moi), MED = ["🥇", "🥈", "🥉"];
+  const rang = i >= 0 ? '<p class="av-rang">' + (fige ? "Ton rang final" : "Ton rang") + " : <b>" + (i ? i + 1 + "e" : "1er") + "</b> sur " + l.length + (i === 0 ? " 👑" : "") + "</p>"
+    : '<p class="av-rang">' + (fige ? "Tu n'as pas de score sur ce jeu." : "Pas encore classé : joue une partie pour entrer au classement !") + "</p>";
+  const L = l.length ? '<ol class="av-clas-l">' + l.map((x, k) => '<li class="' + (x.nom === moi ? "moi" : "") + (k < 3 ? " m" + (k + 1) : "") + '"><span class="av-pl">' + (MED[k] || k + 1 + "e") + '</span><span class="av-nm">' + esc(x.nom) + (x.nom === moi ? " <small>(toi)</small>" : "") + '</span><b class="av-sc">' + esc(avFmt(J, x.score)) + (x.attente ? ' <small title="en route vers le serveur">⏳</small>' : "") + "</b></li>").join("") + "</ol>"
+    : '<p class="av-vide">Personne n\'a encore de score : sois le premier !</p>';
+  return '<div class="av-clas-h"><b>🏆 Classement ' + (fige ? "final" : "en direct") + "</b><small>" + (fige ? "figé le 24 décembre à 23 h 59" : "rejoue autant que tu veux jusqu'au 24 décembre, 23 h 59") + "</small></div>" + rang + L;
+}
+/** après une réponse du serveur ou un nouveau record : les classements ouverts se redessinent (rien d'autre ne bouge, la partie continue) */
+function majClassementsAvent() { try { document.querySelectorAll(".av-case .av-clas[data-jeu]").forEach(z => { const h = htmlClassementAvent(z.dataset.jeu); if (z.innerHTML !== h) z.innerHTML = h; }); } catch (e) { } }
+/* ---------- 🎅 le roi des jeux de Noël et les ⭐ étoiles de Noël : attribués par le serveur le 25/12 à 0 h, gardés sur l'appareil pour toujours ---------- */
+function garderRoiAvent(g) {
+  if (simulation() || aventApercu()) return;
+  const et = {}; if (g.etoiles && typeof g.etoiles === "object") Object.keys(g.etoiles).forEach(n => { const v = Number(g.etoiles[n]); if (Number.isInteger(v) && v > 0 && v <= 24) et[n] = v; });
+  const n = JSON.stringify({ roi: typeof g.roi === "string" ? g.roi : null, etoiles: et });
+  if (stock.get("versus.aventRoi") !== n) { stock.set("versus.aventRoi", n); try { if (typeof MEMO_SAISON !== "undefined") MEMO_SAISON = { d: null, m: {} }; } catch (e) { } }
+}
+function aventGagnants() {
+  if (aventNum() < 20261225) return null;   // rien avant le 25/12 à 0 h (heure du serveur dès qu'il a répondu)
+  try { const o = JSON.parse(stock.get("versus.aventRoi") || "null"); return o && typeof o === "object" ? o : null; } catch (e) { return null; }
+}
+/** le nom du roi des jeux de Noël 2026 (null avant le 25/12, ou si personne n'a joué) */
+function aventRoiNoel() { const g = aventGagnants(); return g && typeof g.roi === "string" ? g.roi : null; }
+/** ⭐ le nombre de 1res places finales d'un pilote */
+function aventEtoiles(nom) { const g = aventGagnants(); return g && g.etoiles && Number.isInteger(g.etoiles[nom]) ? g.etoiles[nom] : 0; }
+/** l'en-tête du calendrier : ce que gagne le roi (avant le 25), puis qui l'est */
+function htmlRoiEntete() {
+  if (aventApercu()) return '<small class="av-roi-gain">' + esc(AV_ROI) + "</small>";
+  const r = aventRoiNoel();
+  return aventFige() ? (r ? '<small class="av-roi-gain">🎅 Roi des jeux de Noël 2026 : <b>' + esc(r) + "</b>, pour toujours : plaque, couronne de houx et la livrée « Roi de Noël »</small>" : "") : '<small class="av-roi-gain">' + esc(AV_ROI) + "</small>";
 }
 /** 🎄 aperçu admin (double sécurité) : toutes les cases ouvrables, rien n'est gardé */
 function apercuAvent() { if (!apercuAutorise() || window.APERCUS_FINIS) return; AVENT_APERCU = true; ouvrirAvent(); }

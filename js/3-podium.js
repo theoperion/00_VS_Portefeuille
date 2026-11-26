@@ -341,11 +341,11 @@ const ITEMS = {
   casque: { uni: "Uni", carbone: "Carbone", eclair: "Éclair", damier: "Damier", tortue: "Tortue", chrome: "Chrome", etoile: "Étoile", holo: "Holo", couronne: "Couronne", foudre: "Foudre", phenix: "Phénix", glace: "Glace", galaxie: "Galaxie", empereur: "Empereur", eclaireur: "Éclaireur", toque: "Toque de chef", anneau: "Anneau gravé", rebelle: "Pilote rebelle", hoplite: "Casque d'Ulysse", fracture: "Éclats du multivers", raye: "Rayé", bicolore: "Bicolore", pois: "Pois" },
   circuit: { classique: "Jour de course", monaco: "Nocturne", desert: "Heure dorée", neige: "Hiver", neon: "Synthwave" },
   fond: { couleur: "Couleur", carbone: "Carbone", aurore: "Aurore", flammes: "Flammes", neon: "Néon", damier: "Damier", or: "Or", galaxie: "Galaxie", chat: "Chat qui sourit", pandora: "Forêt luminescente", ampoules: "Guirlande d'ampoules", portails: "Portails", degrade: "Dégradé", rayures: "Rayures", etoile: "Étoilé" },
-  finition: { aucune: "Aucune", argent: "Liseré argent", or: "Liseré or", neon: "Liseré néon", diamant: "Diamant", lauriers: "Lauriers", etoilee: "Étoilée", soleil: "Soleil", ailee: "Balle ailée", elfique: "Cape elfique", biolum: "Bioluminescence", feuilledor: "Feuille d'or", lisblanc: "Liseré blanc", lisnoir: "Liseré noir", mat: "Mat", brillant: "Brillant" },
-  livree: { couleur: "Couleur", chrome: "Chrome", or: "Or", neon: "Néon", arcenciel: "Prisme", oranime: "Or vivant", platine: "Platine", rubis: "Rubis", galaxie: "Galaxie", orrose: "Or rose", chocolat: "Chocolat fondant", carte: "Carte à jouer", ver: "Peau des sables", rayures: "Rayures", damier: "Damier", bicolore: "Bicolore", flammes: "Flammes" },
+  finition: { aucune: "Aucune", argent: "Liseré argent", or: "Liseré or", neon: "Liseré néon", diamant: "Diamant", lauriers: "Lauriers", etoilee: "Étoilée", soleil: "Soleil", ailee: "Balle ailée", elfique: "Cape elfique", biolum: "Bioluminescence", feuilledor: "Feuille d'or", houx: "Couronne de houx", lisblanc: "Liseré blanc", lisnoir: "Liseré noir", mat: "Mat", brillant: "Brillant" },
+  livree: { couleur: "Couleur", chrome: "Chrome", or: "Or", neon: "Néon", arcenciel: "Prisme", oranime: "Or vivant", platine: "Platine", rubis: "Rubis", galaxie: "Galaxie", orrose: "Or rose", chocolat: "Chocolat fondant", roinoel: "Roi de Noël", carte: "Carte à jouer", ver: "Peau des sables", rayures: "Rayures", damier: "Damier", bicolore: "Bicolore", flammes: "Flammes" },
   trainee: { simple: "Simple", halo: "Halo", flammes: "Flammes", etincelles: "Étincelles", comete: "Comète", supernova: "Supernova", turbo: "Turbo", arcenciel: "Arc-en-ciel", cables: "Câbles d'acier", flocons: "Flocons", sabre: "Sabre lumineux", glitch: "Faille", pointilles: "Pointillés", double: "Double", ruban: "Ruban", fumee: "Fumée" },
   klaxon: { confettis: "Confettis", damier: "Damier", feu: "Feu d'artifice", parade: "Parade", billets: "Pluie de billets", fanfare: "Fanfare royale", cibles: "Dans le mille", fusees: "Décollage", trophees: "Pluie de trophées", ouvriers: "Fanfare des petits ouvriers", pouet: "Pouet", trompette: "Trompette", sifflet: "Sifflet" },
-  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon", cheval: "Cheval de bois", hiver26: "Hiver 2026", hiverdore: "Hiver 2026 doré", chercheur: "Chercheur de Noël", chercheuror: "Chercheur de Noël d'or", recrue: "Recrue 2026", drapeau2027: "Drapeau 2027", flamme2027: "Flamme 2027", flair2027: "Flair 2027" }
+  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon", cheval: "Cheval de bois", hiver26: "Hiver 2026", hiverdore: "Hiver 2026 doré", roinoel26: "Roi de Noël 2026", chercheur: "Chercheur de Noël", chercheuror: "Chercheur de Noël d'or", recrue: "Recrue 2026", drapeau2027: "Drapeau 2027", flamme2027: "Flamme 2027", flair2027: "Flair 2027" }
 };
 const BASE_ECURIE = { casque: "uni", circuit: "classique", fond: "couleur", finition: "aucune", livree: "couleur", trainee: "simple", klaxon: "confettis", plaque: "aucune" };
 /* v20.61 (Théo, 25/11) · objets de DÉPART en plus de la série : à tout le monde, dès l'ouverture de l'écurie (1/12/2026). Les objets génériques
@@ -377,6 +377,14 @@ const GAINS_SOUVENIR = [["plaque", "hiver26"], ["trainee", "flocons"]], SOUVENIR
    Compté par le SERVEUR (Avent.js : liste dores, dès le 24/12/2026, publique comme celle des chercheurs) : changer la date du téléphone n'y fait rien. */
 const GAIN_DORE = ["plaque", "hiverdore"];
 function estGainDore(slot, id) { return slot === GAIN_DORE[0] && id === GAIN_DORE[1]; }
+/* 🎅 Avent 26/11 (Théo, 26/11) · le ROI DES JEUX DE NOËL (calendrier de l'Avent : le plus de 1res places sur les jeux au 24/12 à 23 h 59) gagne pour toujours
+   la plaque « Roi de Noël 2026 », la finition « Couronne de houx » (dorée : sur le casque, et sur la tête dessinée partout, en course aussi)
+   et la livrée « Roi de Noël » (rouge, ruban d'or, houx ; 2D et 3D). Exclusifs : un seul exemplaire, invisibles dans l'écurie des autres.
+   Attribués par le SERVEUR le 25/12/2026 à 0 h (Avent.js : gagnants), gardés sur l'appareil (js/10-avent.js, aventRoiNoel). */
+const GAINS_ROI = [["plaque", "roinoel26"], ["finition", "houx"], ["livree", "roinoel"]];
+function estGainRoi(slot, id) { return GAINS_ROI.some(g => g[0] === slot && g[1] === id); }
+function roiNoel(nom) { try { return !!nom && typeof aventRoiNoel === "function" && aventRoiNoel() === nom; } catch (e) { return false; } }
+function etoilesNoel(nom) { try { return typeof aventEtoiles === "function" ? aventEtoiles(nom) : 0; } catch (e) { return 0; } }
 function aventDore(nom) { try { return !!nom && typeof aventDores === "function" && aventDores().includes(nom); } catch (e) { return false; } }
 /* v20.62 (Théo, 25/11) · 🎁 plaque « Chercheur de Noël » : pour chaque pilote qui trouve le trésor de décembre 2026 (l'Atelier du Père Noël, tour de chauffe) ;
    le PLUS RAPIDE (v20.74 : chrono, serveur V92 ; avant : le premier) a la version dorée (exclusive), qui peut changer de main jusqu'au 31/12. Aucun point, gardée pour toujours. Déduite de la liste PUBLIQUE des chercheurs du trésor
@@ -448,6 +456,7 @@ function debloques(nom) {
   }
   if (souvenirOuvert()) GAINS_SOUVENIR.forEach(g => o.add(g.join(".")));
   { const ch = chercheursNoel(), i = ch.findIndex(x => x.nom === nom); if (i >= 0) { o.add(GAIN_CHERCHEUR.join(".")); if (i === 0 && noelFinal()) o.add(GAIN_CHERCHEUR_OR.join(".")); } }   // 🎁 Chercheur de Noël   // 🎄 souvenir du tour de chauffe, pour tous (dès le 24/12/2026)
+  if (roiNoel(nom)) GAINS_ROI.forEach(g => o.add(g.join(".")));   // 🎅 roi des jeux de Noël 2026 (serveur, dès le 25/12/2026)
   if (aventDore(nom)) o.add(GAIN_DORE.join("."));   // 🏅 Hiver 2026 doré : 24 cases sur 24, le jour même (liste du serveur)
   if (recrueChauffe(nom)) o.add(GAIN_RECRUE.join("."));
   if (nom) { const G = titresGardes(); Object.keys(G).forEach(t => { if (G[t] === nom) o.add(GAINS_TITRES[t].join(".")); }); }   // ⚔️ titres 2027 gardés pour toujours (dès le 1/1/2028)   // 🔰 Recrue 2026 : a joué le tour de chauffe (dès le 1/1/2027)
@@ -474,6 +483,7 @@ function htmlUnivers(cle, court) { const u = univers(cle); if (!u) return ""; re
 function origineItem(slot, id) {
   if (slot === "plaque" && id === "coupsaison") return { vote: true, legende: true };
   if (estGainTicket(slot, id)) return { ticket: true, legende: true };
+  if (estGainRoi(slot, id)) return { roi: true, legende: true };
   if (estDepart(slot, id)) return { depart: true };
   if (estGainRecrue(slot, id)) return { souvenir: true, recrue: true };
   if (titreDeGain(slot, id)) return { souvenir: true, titre: titreDeGain(slot, id) };
@@ -515,13 +525,16 @@ function plaqueDe(nom) {
   if (!saisonVisible()) return "";
   const p = equipDe(nom).plaque;
   if (p === "aucune") return "";
-  const o = origineItem("plaque", p), quoi = o.dore ? "calendrier de l'Avent ouvert 24 jours sur 24" : o.chercheur ? "trésor de l'Atelier du Père Noël" + (p === GAIN_CHERCHEUR_OR[1] ? " (1er du classement)" : "") : o.titre ? "titre " + TITRES.find(c => c.id === o.titre).ico + " " + TITRES.find(c => c.id === o.titre).nom + " de la saison " + TITRES_AN + " (gardé pour toujours)" : o.exclusif ? "succès doré « " + o.exclusif.nom + " » (le premier)" : o.succes ? "succès « " + o.succes.nom + " »" : o.monde ? "trophée du monde « " + nomMonde(o.monde) + " »" : o.gant ? "Gant de l'infini complet" : "";
+  const o = origineItem("plaque", p), quoi = o.roi ? "titre de 🎅 roi des jeux de Noël 2026 (le plus de 1res places aux jeux du calendrier de l'Avent)" : o.dore ? "calendrier de l'Avent ouvert 24 jours sur 24" : o.chercheur ? "trésor de l'Atelier du Père Noël" + (p === GAIN_CHERCHEUR_OR[1] ? " (1er du classement)" : "") : o.titre ? "titre " + TITRES.find(c => c.id === o.titre).ico + " " + TITRES.find(c => c.id === o.titre).nom + " de la saison " + TITRES_AN + " (gardé pour toujours)" : o.exclusif ? "succès doré « " + o.exclusif.nom + " » (le premier)" : o.succes ? "succès « " + o.succes.nom + " »" : o.monde ? "trophée du monde « " + nomMonde(o.monde) + " »" : o.gant ? "Gant de l'infini complet" : "";
   return '<span class="plaque' + classePlaque(p) + '" data-bdg="' + esc("Plaque « " + ITEMS.plaque[p] + " » de " + nom + (quoi ? ", gagnée avec le " + quoi : o.ticket ? ", gagnée avec le 🎫 ticket d'or de la Chocolaterie" : o.mj ? ", gagnée comme 🥇 meilleur du mini-jeu de " + MOIS_L[o.mj % 100 - 1] : o.souvenir ? ", souvenir du tour de chauffe (décembre 2026)" : "") + ".") + '">' + iconePlaque(p) + esc(ITEMS.plaque[p]) + "</span> ";
 }
 /** v20.46 · plaques émaillées à part : Ratatouille (plaque de rue parisienne, bleue), Ticket d'or (feuille d'or), Carré d'as, et les plaques des mini-jeux ; les autres restent en métal */
-function classePlaque(id) { return ["ratatouille", "ticketor", "carredas", "epice", "voliere", "cheshire", "precieux", "eywa", "kyber", "toquedor", "joyce", "ithaque", "bataillon", "cheval", "hiver26", "hiverdore", "chercheur", "chercheuror", "recrue", "drapeau2027", "flamme2027", "flair2027"].includes(id) ? " pl-" + id : ""; }
+function classePlaque(id) { return ["ratatouille", "ticketor", "carredas", "epice", "voliere", "cheshire", "precieux", "eywa", "kyber", "toquedor", "joyce", "ithaque", "bataillon", "cheval", "hiver26", "hiverdore", "roinoel26", "chercheur", "chercheuror", "recrue", "drapeau2027", "flamme2027", "flair2027"].includes(id) ? " pl-" + id : ""; }
 /** leur petit dessin, à nous : un tian de légumes en rosace (Ratatouille), un ticket doré (Ticket d'or) */
 function iconePlaque(id) {
+  if (id === "roinoel26") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#9E1224" stroke="#F7CF55" stroke-width="1.1"/>' +   // 🎅 une couronne d'or sur du houx
+    '<path d="M4.6 12.6L4 6.4 7.2 9 10 4.6 12.8 9 16 6.4 15.4 12.6Z" fill="#F7CF55" stroke="#7A4A0C" stroke-width=".6" stroke-linejoin="round"/><path d="M4.8 12.6H15.2V14.2H4.8Z" fill="#E9B43C" stroke="#7A4A0C" stroke-width=".5"/>' +
+    '<path d="M5.2 16.4C6.4 14.8 8 15 9.2 16.2 8 17.6 6.4 17.6 5.2 16.4ZM14.8 16.4C13.6 14.8 12 15 10.8 16.2 12 17.6 13.6 17.6 14.8 16.4Z" fill="#2E8B57"/><circle cx="10" cy="15.9" r="1.1" fill="#FF3B4E"/><circle cx="10" cy="4.4" r=".9" fill="#FFF6CC"/></svg>';
   if (id === "ratatouille") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#F4EBD6" stroke="#8A5A2B" stroke-width="1"/>' +
     [0, 1, 2, 3, 4, 5, 6, 7].map(i => { const a = i * Math.PI / 4, x = (10 + 5 * Math.cos(a)).toFixed(1), y = (10 + 5 * Math.sin(a)).toFixed(1); return '<circle cx="' + x + '" cy="' + y + '" r="3.1" fill="' + ["#D62839", "#F2B705", "#3F8F3A"][i % 3] + '" stroke="#fff" stroke-width=".5"/>'; }).join("") +
     '<circle cx="10" cy="10" r="2.6" fill="#3F8F3A" stroke="#fff" stroke-width=".5"/></svg>';
@@ -868,6 +881,8 @@ function texteOrigineItem(qui, slot, id) {
     const tps = x => x && typeof x.s === "number" && typeof dureeChrono === "function" ? " (" + dureeChrono(x.s) + ")" : "";   // v20.74 : la dorée va au plus rapide, attribuée le 31/12 à minuit
     return { t: "🎁 Souvenir · trésor de l'Atelier du Père Noël" + (or ? " · 🥇" : ""), p: or ? (i === 0 && fin ? "À toi : trouvé le trésor de l'Atelier du Père Noël" + (jour ? " le " + jour : "") + ", 🥇 1er du classement" + tps(ch[0]) + "." : ch.length ? (fin ? "Attribuée au 1er du classement du trésor de l'Atelier du Père Noël : " : "Pour le 1er du classement, attribuée dès que tout le monde a trouvé, sinon le 31 décembre à minuit · 1er pour l'instant : ") + ch[0].nom + tps(ch[0]) + "." : "Pour le 1er du classement du trésor de l'Atelier du Père Noël (décembre 2026, chrono lancé avec 🔍), attribuée dès que tout le monde a trouvé, sinon le 31 décembre à minuit.")
       : i >= 0 ? "Trouvé le trésor de l'Atelier du Père Noël" + (jour ? " le " + jour : "") + tps(ch[i]) + (i === 0 ? (fin ? " · 🥇 1er du classement" : " · 🥇 1er pour l'instant") : "") + "." : "Pour chaque pilote qui trouve le trésor de l'Atelier du Père Noël (décembre 2026)." }; }
+  if (org.roi) { const r = typeof aventRoiNoel === "function" ? aventRoiNoel() : null;
+    return { t: "💎 Légende du tour de chauffe · 🎅 Roi de Noël 2026", p: r === qui ? "À toi pour toujours : tu as été le roi des jeux de Noël du calendrier de l'Avent, avec le plus de 1res places (" + etoilesNoel(qui) + " ⭐) au 24 décembre 2026 à 23 h 59. Un seul exemplaire." : r ? "Réservé à " + r + ", roi des jeux de Noël 2026." : "Pour le roi des jeux de Noël : le plus de 1res places aux jeux du calendrier de l'Avent au 24 décembre 2026 à 23 h 59." }; }
   if (org.dore) return { t: "🏅 Souvenir · calendrier de l'Avent, 24 sur 24", p: ouvert ? "À toi : tu as ouvert les 24 cases du calendrier de l'Avent, chacune le jour même. Elle est à toi pour toujours, aucun point." : "Pour chaque pilote qui ouvre les 24 cases du calendrier de l'Avent (décembre 2026), chacune le jour même." };
   if (org.titre) { const T = TITRES.find(c => c.id === org.titre), f = titresGardes()[org.titre], nm = T.ico + " " + T.nom.replace(/^(Le|La) /, "");
     return { t: "⚔️ Souvenir · " + nm + " " + TITRES_AN + " · pour toujours", p: f === qui ? "À toi : tu tenais le titre « " + T.nom + " » à la fin de la saison " + TITRES_AN + " (" + T.court + "). Il est à toi pour toujours." : f ? "Gardé pour toujours par " + f + ", " + T.court + " à la fin de la saison " + TITRES_AN + "." : "Pour le pilote qui tiendra le titre « " + T.nom + " » à la fin de la saison " + TITRES_AN + " : il le garde pour toujours (attribué le 1er janvier " + (TITRES_AN + 1) + ")." }; }
@@ -903,6 +918,7 @@ function defsMotif(u, motif, c) {
   // v20.46 · objets des univers : Éclaireur (Mur des titans), Toque (Petit Chef), Chocolat fondant (Chocolaterie), Carte à jouer (Merveilles)
   if (motif === "eclaireur") return lg([[0, "#5E9C63"], [.3, "#2F6B3B"], [.62, "#1F4A2A"], [1, "#12301B"]]) + "</linearGradient>";
   if (motif === "toque") return lg([[0, "#FFFFFF"], [.35, "#F3F1EA"], [.7, "#DAD6CB"], [1, "#B9B4A8"]]) + "</linearGradient>";
+  if (motif === "roinoel") return lg([[0, "#FF5A6A"], [.22, "#D3172B"], [.5, "#8E0B1C"], [.66, "#C8142A"], [1, "#4A0410"]]) + "</linearGradient>";   // 🎅 velours rouge du Roi de Noël
   if (motif === "chocolat") return lg([[0, "#B9733F"], [.16, "#7A3F1D"], [.4, "#4A230F"], [.55, "#9A5A2F"], [.78, "#5B2C13"], [1, "#2E1407"]]) + "</linearGradient>";
   if (motif === "carte") return '<pattern id="' + u + 'm" width="24" height="24" patternUnits="userSpaceOnUse"><rect width="24" height="24" fill="#FBF8F0"/>' +
     '<path d="M6 9.6C3.2 7.4 2 6.3 2 4.9 2 3.8 2.9 3 3.9 3 4.8 3 5.5 3.5 6 4.2 6.5 3.5 7.2 3 8.1 3 9.1 3 10 3.8 10 4.9 10 6.3 8.8 7.4 6 9.6Z" fill="#D62839"/>' +
@@ -920,7 +936,7 @@ function defsMotif(u, motif, c) {
     (ANIM ? '<animateTransform attributeName="gradientTransform" type="translate" values="0 0;1 0" dur="5s" repeatCount="indefinite"/>' : "") + "</linearGradient>";
   return "";
 }
-const MOTIFS_PLEINS = ["carbone", "damier", "tortue", "chrome", "or", "couronne", "oranime", "holo", "arcenciel", "foudre", "phenix", "platine", "glace", "rubis", "orrose", "empereur", "galaxie", "eclaireur", "toque", "chocolat", "carte", "ver", "anneau", "rebelle", "hoplite", "fracture"];
+const MOTIFS_PLEINS = ["carbone", "damier", "tortue", "chrome", "or", "couronne", "oranime", "holo", "arcenciel", "foudre", "phenix", "platine", "glace", "rubis", "orrose", "empereur", "galaxie", "eclaireur", "toque", "chocolat", "roinoel", "carte", "ver", "anneau", "rebelle", "hoplite", "fracture"];
 /** livrées claires : numéro et inscriptions en noir */
 const LIVREES_CLAIRES = ["chrome", "or", "oranime", "platine", "orrose", "carte"];
 function remplissage(u, motif, c) { return MOTIFS_PLEINS.includes(motif) ? "fill:url(#" + u + "m)" : "fill:" + c; }
@@ -1043,6 +1059,13 @@ function finitionCasque(u, fin, c, lead, tf) {
   else if (fin === "brillant") h += '<g clip-path="url(#' + u + 'k)"><path d="M-15.4-2.4C-14.6-10.4-8.6-16.4-.6-17.6" stroke="#FFFFFF" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".85"/><path d="M-13.4 3.6C-13.4.6-12.6-2-11.2-4.2" stroke="#FFFFFF" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".7"/>' +
     '<path class="cq-brille" d="M-30-26H-24L-36 18H-42Z" fill="#fff" opacity=".42"/></g>' + lis("#FFFFFF", .7, ' opacity=".7"') +
     '<path class="fin-eclat" d="M-6.5-20.2L-5.8-18.2-3.8-17.5-5.8-16.8-6.5-14.8-7.2-16.8-9.2-17.5-7.2-18.2Z" fill="#FFFFFF"/>';
+  else if (fin === "houx") {   // 🎅 couronne de houx dorée : feuilles d'or piquantes de part et d'autre, baies rouges en bas et une petite étoile
+    const fe = (x, y, a) => '<path d="M0-3.8L1.3-2.3 2.4-2.6 1.9-.9 2.6.7 1.3.9 0 3.8-1.3.9-2.6.7-1.9-.9-2.4-2.6-1.3-2.3Z" transform="translate(' + x.toFixed(1) + " " + y.toFixed(1) + ") rotate(" + a.toFixed(0) + ')" fill="#F2C94C" stroke="#6B4B0C" stroke-width=".45"/>';
+    h += '<path d="M-12 13C-18 6-18-3-15-9M17 13C23 6 23-3 21-9" stroke="#8A6414" stroke-width=".9" fill="none"/>' +
+      [0, 1, 2, 3].map(i => { const t = i / 3; return fe(-13.4 - 3 * Math.sin(t * 2.4), 10 - t * 18, -25 - t * 40) + fe(18.4 + 3 * Math.sin(t * 2.4), 10 - t * 18, 25 + t * 40); }).join("") +
+      [[-9.6, 13.4], [-7.4, 14.6], [-8.2, 12], [12.6, 13.4], [14.8, 14.6], [14, 12]].map(([x, y]) => '<circle cx="' + x + '" cy="' + y + '" r="1.5" fill="#E0213A" stroke="#7A0E1C" stroke-width=".4"/>').join("") +
+      '<path class="fin-eclat" d="M2.5-22L3.3-19.8 5.5-19 3.3-18.2 2.5-16 1.7-18.2-.5-19 1.7-19.8Z" fill="#FFF6CC" stroke="#9A6716" stroke-width=".35"/>';
+  }
   else if (fin === "lauriers") {
     const feuilles = (sens) => [0, 1, 2, 3, 4].map(i => { const t = i / 4, x = sens < 0 ? -13 - 3 * Math.sin(t * 2.4) : 18 + 3 * Math.sin(t * 2.4), y = 12 - t * 20, a = sens < 0 ? -30 - t * 40 : 30 + t * 40;
       return '<ellipse cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" rx="1.5" ry="3.3" transform="rotate(' + a.toFixed(0) + " " + x.toFixed(1) + " " + y.toFixed(1) + ')" fill="#E9C25A" stroke="#6B4B0C" stroke-width=".45"/>'; }).join("");
@@ -1088,6 +1111,13 @@ function svgCasque(nom, e) {
 
 /* v20.46 · habillages dessinés par-dessus la peinture (dans la découpe de la caisse) */
 /** Chocolat fondant : une nappe plus sombre coule du haut de la caisse en gouttes rondes, avec ses reflets caramel */
+/** 🎅 Roi de Noël : un ruban d'or le long de la caisse (liseré clair), une branche de houx dorée et ses baies sur le ponton, quelques étoiles */
+function habillageRoiNoel() {
+  const fe = (x, y, a, s) => '<path d="M0-7.6L2.6-4.6 4.8-5.2 3.8-1.8 5.2 1.4 2.6 1.8 0 7.6-2.6 1.8-5.2 1.4-3.8-1.8-4.8-5.2-2.6-4.6Z" transform="translate(' + x + " " + y + ") rotate(" + a + ") scale(" + (s || 1) + ')" fill="#2E8B57" stroke="#F7CF55" stroke-width=".9"/>';
+  return '<path d="M40 100C150 92 300 92 470 100V108C300 100 150 100 40 108Z" fill="#F7CF55"/><path d="M40 100C150 92 300 92 470 100" stroke="#FFF6CC" stroke-width="1" fill="none" opacity=".9"/><path d="M40 108C150 100 300 100 470 108" stroke="#7A4A0C" stroke-width="1" fill="none" opacity=".7"/>' +
+    fe(236, 90, -30) + fe(252, 88, 35) + fe(244, 80, 0, .85) + [[240, 93], [247, 95], [244, 88]].map(([x, y]) => '<circle cx="' + x + '" cy="' + y + '" r="3" fill="#E0213A" stroke="#7A0E1C" stroke-width=".7"/>').join("") +
+    [[120, 70], [330, 76], [400, 96], [170, 88]].map(([x, y], i) => '<path d="M' + x + " " + (y - 4) + "L" + (x + 1.2) + " " + (y - 1.2) + "L" + (x + 4) + " " + y + "L" + (x + 1.2) + " " + (y + 1.2) + "L" + x + " " + (y + 4) + "L" + (x - 1.2) + " " + (y + 1.2) + "L" + (x - 4) + " " + y + "L" + (x - 1.2) + " " + (y - 1.2) + 'Z" fill="#FFF6CC" opacity="' + (.9 - i * .15) + '"/>').join("");
+}
 function habillageChocolat() {
   const g = [[96, 14], [128, 26], [154, 12], [180, 30], [216, 16], [246, 34], [272, 18], [302, 28], [336, 15], [372, 22], [404, 10]];
   const haut = x => (84 + (x - 60) * .045).toFixed(1);
@@ -1127,7 +1157,7 @@ function svgVoiture(o) {
   const haut = avecDrapeau ? 92 : 10, sol = haut + 150, H = sol + (o.reflet ? 46 : 10);
   const neon = lv === "neon";
   const peinture = neon ? "fill:#0a0c11" : remplissage(u, lv === "couleur" || lv === "damier" ? "" : lv, c);   // v20.68 : la livrée Damier = une bande, pas toute la caisse
-  const filet = neon ? c : lv === "or" || lv === "oranime" ? "#3B2405" : lv === "chrome" || lv === "platine" || lv === "orrose" ? "#11151B" : lv === "rubis" ? "#FFD1DC" : lv === "galaxie" ? "#FFB8F0" : lv === "chocolat" ? "#E8B07A" : lv === "carte" ? "#D62839" : lv === "ver" ? "#F6DCAA" : "#ffffff";
+  const filet = neon ? c : lv === "or" || lv === "oranime" ? "#3B2405" : lv === "chrome" || lv === "platine" || lv === "orrose" ? "#11151B" : lv === "rubis" ? "#FFD1DC" : lv === "galaxie" ? "#FFB8F0" : lv === "chocolat" ? "#E8B07A" : lv === "roinoel" ? "#F7CF55" : lv === "carte" ? "#D62839" : lv === "ver" ? "#F6DCAA" : "#ffffff";
   const CORPS = "M36 112L40 98C70 94 110 88 140 82C156 76 178 56 196 48L210 48C213 58 215 72 216 86L262 86C276 88 300 92 330 96L420 104C440 106 452 110 458 114L456 119C420 121 380 121 330 122L120 124L40 124Z";
   const PONTON = "M118 123C124 106 148 97 184 95L298 94C305 94 309 98 309 104V122Z";
   const traineeFx = {
@@ -1204,9 +1234,9 @@ function svgVoiture(o) {
       '<rect x="0" y="113" width="480" height="20" fill="url(#' + u + 'cb)" opacity=".92"/>' +
       '<path d="M0 113H480" stroke="' + filet + '" stroke-width="1.6" opacity=".9"/>' +
       '<rect x="0" y="40" width="480" height="92" fill="url(#' + u + 'sh)"/>' +
-      (lv === "chocolat" ? habillageChocolat() : lv === "carte" ? habillageCarte() : lv === "ver" ? habillageVer() : habillageDepart(lv, u, hexTeinte(o.nom, "livree", e))) +
+      (lv === "chocolat" ? habillageChocolat() : lv === "roinoel" ? habillageRoiNoel() : lv === "carte" ? habillageCarte() : lv === "ver" ? habillageVer() : habillageDepart(lv, u, hexTeinte(o.nom, "livree", e))) +
       (e.finition === "mat" ? '<rect x="0" y="40" width="480" height="92" fill="#2A2E35" opacity=".22"/>' : "") +   // v20.68 · finition Mat : la caisse adoucie
-      (["oranime", "chrome", "or", "platine", "rubis", "orrose", "chocolat"].includes(lv) || e.finition === "brillant" ? '<rect class="vt-brille" x="-90" y="40" width="70" height="92" fill="url(#' + u + 'br)" transform="skewX(-20)" opacity="' + (lv === "oranime" ? ".9" : e.finition === "brillant" ? ".6" : ".35") + '"/>' : "") +
+      (["oranime", "chrome", "or", "platine", "rubis", "orrose", "chocolat", "roinoel"].includes(lv) || e.finition === "brillant" ? '<rect class="vt-brille" x="-90" y="40" width="70" height="92" fill="url(#' + u + 'br)" transform="skewX(-20)" opacity="' + (lv === "oranime" ? ".9" : e.finition === "brillant" ? ".6" : ".35") + '"/>' : "") +
     "</g>" +
     (neon ? '<path d="' + CORPS + '" fill="none" style="stroke:' + c + ';filter:drop-shadow(0 0 4px ' + c + ') drop-shadow(0 0 9px ' + c + ')" stroke-width="2"/>' : "") +
     // entrée d'air du ponton, reflets
@@ -1481,7 +1511,8 @@ function objetCache(slot, id) { const o = origineItem(slot, id); return !!o.mill
 /** (la plaque Ticket d'or n'apparaît qu'à partir d'octobre 2027, ou chez son gagnant) */
 function idsSlot(slot) { const dec = ecurieDepart(), a = dec ? debloques(moiPilote() || "") : null;   // v20.61 : en décembre, seulement les objets de départ (et ce qu'on a déjà)
   const moi = moiPilote() || "", ch = slot === "plaque" ? debloques(moi) : null;   // 🎁 Chercheur de Noël, 🔰 Recrue 2026 : seulement si gagnées
-  return Object.keys(ITEMS[slot]).filter(id => (!dec || estDepart(slot, id) || a.has(slot + "." + id)) && (!ch || !(estGainChercheur(slot, id) || estGainRecrue(slot, id) || estGainDore(slot, id) || titreDeGain(slot, id)) || ch.has(slot + "." + id)) && !objetReserve(slot, id) && (!estGainTicket(slot, id) || ticketVisible()) && (typeof mjObjetVisible !== "function" || mjObjetVisible(slot, id, moi))
+  let own = null; const aMoi = k => (own = own || debloques(moi)).has(k);   // 🎅 les objets du roi de Noël : seulement chez le roi
+  return Object.keys(ITEMS[slot]).filter(id => (!estGainRoi(slot, id) || aMoi(slot + "." + id)) && (!dec || estDepart(slot, id) || a.has(slot + "." + id)) && (!ch || !(estGainChercheur(slot, id) || estGainRecrue(slot, id) || estGainDore(slot, id) || titreDeGain(slot, id)) || ch.has(slot + "." + id)) && !objetReserve(slot, id) && (!estGainTicket(slot, id) || ticketVisible()) && (typeof mjObjetVisible !== "function" || mjObjetVisible(slot, id, moi))
     && !prisParAutre(slot, id, moi)); }
 /** v20.70 (Théo, 25/11) · un objet EXCLUSIF (1er seulement, Légende) déjà pris par un autre pilote disparaît des objets bloqués : on ne pourra plus jamais l'avoir */
 function prisParAutre(slot, id, moi) {
@@ -2225,7 +2256,7 @@ const OBJ_TEINTES = {
   carredas: ["#E8FFF0", "#1F7A4A", "#0B3A22"], diamant: ["#FFFFFF", "#C9F6FF", "#3A9AC0"], rubis: ["#FF9BB0", "#E0115F", "#43000F"], flammes: ["#FFE08A", "#FF6A1F", "#8A1A06"],
   phenix: ["#FFE08A", "#FF8A1F", "#6E0D12"], galaxie: ["#C9B6FF", "#5B2A9E", "#170A36"], soleil: ["#FFF3B0", "#FFB21E", "#9A4A00"], lauriers: ["#F3F9C8", "#8FB33A", "#3A5A10"],
   parade: ["#FFF1B0", "#E8B640", "#7A4A0C"], couronne: ["#FFF6CC", "#F7CF55", "#6B430C"], oranime: ["#FFF6CC", "#F7CF55", "#6B430C"], billets: ["#E8FFE0", "#4FAE5A", "#1B5528"],
-  chercheur: ["#FFD0D0", "#D62839", "#6E0D12"], chercheuror: ["#FFF6CC", "#F7CF55", "#7A4A0C"], hiverdore: ["#FFF6CC", "#F7CF55", "#7A4A0C"], ticketor: ["#FFF6CC", "#F7CF55", "#7A4A0C"], feuilledor: ["#FFFBE0", "#F7CF55", "#7A4A0C"],
+  chercheur: ["#FFD0D0", "#D62839", "#6E0D12"], chercheuror: ["#FFF6CC", "#F7CF55", "#7A4A0C"], hiverdore: ["#FFF6CC", "#F7CF55", "#7A4A0C"], roinoel26: ["#FFD0D0", "#C8142A", "#4A0410"], roinoel: ["#FF9BA6", "#C8142A", "#4A0410"], houx: ["#FFF6CC", "#F2C94C", "#1E5A36"], ticketor: ["#FFF6CC", "#F7CF55", "#7A4A0C"], feuilledor: ["#FFFBE0", "#F7CF55", "#7A4A0C"],
   // v20.61 · objets redessinés à l'image de leur monde
   ver: ["#F6DCAA", "#D9A35A", "#6B3A12"], ailee: ["#FFFDF2", "#F7CF55", "#7A5300"], anneau: ["#FFF3B8", "#F7CF55", "#3A2A1A"], elfique: ["#DFF2E2", "#4E9A5C", "#1E3A26"],
   pandora: ["#9AFFF6", "#1C6E8A", "#071A3A"], biolum: ["#E6FFFC", "#5CF2E6", "#0B5A6E"], rebelle: ["#FFD2B0", "#F57A2E", "#7A2A06"], sabre: ["#FFF1F1", "#FF3A48", "#6E0A12"],
@@ -2679,6 +2710,8 @@ function vitrineFiche(nom) {
   const spe = (id, ico, t) => '<button type="button" class="vt-med vt-spe" data-bdg="' + esc(t + pinT(id)) + '" aria-label="' + esc(t) + '"><span class="cc-emo">' + ico + "</span>" + pin(id) + "</button>";
   const autres = (a("titre") ? spe("titre", "🏆", "🏆 " + nTit + " : " + (soi ? "tu as" : nom + " a") + " fini 1er du championnat à la fin d'une saison. Chaque saison, le 1er du classement final le gagne.") : "") +
     (a(CHAMPION_EX.id) ? spe(CHAMPION_EX.id, CHAMPION_EX.ico, "💎 " + CHAMPION_EX.ico + " Premier champion · Légende : " + (soi ? "tu as" : nom + " a") + " remporté la toute première saison. Un seul gagnant au monde : plus personne ne pourra l'avoir.") : "") +
+    (roiNoel(nom) ? spe("roinoel", "🎅", "💎 🎅 Roi de Noël 2026 · Légende du tour de chauffe : " + (soi ? "tu as" : nom + " a") + " eu le plus de 1res places aux jeux du calendrier de l'Avent (décembre 2026). Un seul roi : plaque, couronne de houx et livrée « Roi de Noël » exclusives, pour toujours.") : "") +
+    (etoilesNoel(nom) ? spe("etoiles", "⭐", "⭐ Étoiles de Noël : ×" + etoilesNoel(nom) + " jeu" + (etoilesNoel(nom) > 1 ? "x" : "") + " gagné" + (etoilesNoel(nom) > 1 ? "s" : "") + " au calendrier de l'Avent 2026 (1re place finale au classement du jeu, figé le 24 décembre à 23 h 59).").replace('<span class="cc-emo">⭐</span>', '<span class="cc-emo">⭐</span><small class="vt-n">×' + etoilesNoel(nom) + "</small>") : "") +
     (a("ticket") ? spe("ticket", "🎫", "💎 🎫 Ticket d'or · Légende : " + (soi ? "tu as" : nom + " a") + " trouvé LE ticket d'or dans sa tablette de la 🍫 Chocolaterie. Un seul dans toute la saison : plus personne ne pourra l'avoir.") : "");
   const nB = ors.length + suiv.length + (pm && pm.nom === nom ? 1 : 0) + (autres ? autres.split("vt-spe").length - 1 : 0);
   const pla = plaqueDe(nom), pid = pla && equipDe(nom).plaque;
