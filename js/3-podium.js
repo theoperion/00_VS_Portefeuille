@@ -24,11 +24,38 @@ function saisonJouee() { return saisonOuverte() || apercuSaison(); }
 function janvierAnnonce() { return Date.now() >= new Date(SAISON.premiere - 1, 11, 20).getTime(); }
 /** V16.22 · pendant le tour de chauffe : seulement les bases (course + cartes) ; écurie, badges, trophées et objets attendent janvier (demande de Théo) */
 function basesSeules() { try { return !apercuSaison() && (!saisonOuverte() || estChauffe(saisonCourante())); } catch (e) { return false; } }
-/** v20.61 (Théo, 25/11) · l'Écurie ouvre le 1er décembre 2026, pendant le tour de chauffe (avant : en janvier, règle v20.44).
- *  En décembre : seulement les objets de DÉPART (rien de 2027 : ni monde, ni succès, ni univers) ; l'onglet Trophées reste caché jusqu'au 1er janvier. */
-const ECURIE_OUVRE = new Date(SAISON.premiere - 1, 11, 1);
+/** v20.61 (Théo, 25/11) · l'Écurie ouvre pendant le tour de chauffe (avant : en janvier, règle v20.44).
+ *  Jusqu'au 31 décembre : seulement les objets de DÉPART (rien de 2027 : ni monde, ni succès, ni univers) ; l'onglet Trophées reste caché jusqu'au 1er janvier.
+ *  ⭐ OUVERTURE (Théo, 26/11) : avancée du 1er décembre au 26 novembre 2026 à 0 h, heure de Paris. SEUL endroit à changer côté appli ;
+ *  même date que VS_ECURIE_OUVRE dans le serveur (app_scripts, versus/API.js). Avent, cartes et tour de chauffe gardent leurs dates. */
+const ECURIE_OUVRE = new Date("2026-11-26T00:00:00+01:00");
 function ecurieOuverte() { return saisonJouee() || Date.now() >= ECURIE_OUVRE.getTime(); }
-/** décembre 2026 : l'écurie est ouverte, mais seulement avec les objets de départ */
+/** « 26 novembre » (« 1<sup>er</sup> décembre » si on revenait au 1er) : le jour d'ouverture de l'écurie, en clair, pour les textes */
+function jourEcurie(html) { const d = new Date(ECURIE_OUVRE.getTime() + 3600e3), j = d.getUTCDate(); return (j === 1 ? (html ? "1<sup>er</sup>" : "1er") : j) + " " + MOIS_L[d.getUTCMonth()]; }
+/* ---------- 26/11 (Théo) · bandeau « 🏎️ Nouveau : ton écurie est ouverte ! » en haut du Classement, pour tous les joueurs, dès l'ouverture ----------
+   Disparaît après la première visite de l'Écurie ou au toucher de ✕ (mémoire de l'appareil, versus.ecuBandeau), et au plus tard le 1/12/2026 à 0 h (Paris).
+   Jamais en aperçu admin ni en simulation. */
+const ECURIE_BANDEAU_FIN = new Date("2026-12-01T00:00:00+01:00");
+function ecuBandeauVu() { try { return stock.get("versus.ecuBandeau") === "1"; } catch (e) { return false; } }
+function ecuBandeauFini() { try { stock.set("versus.ecuBandeau", "1"); } catch (e) { /* mémoire indisponible : rien */ } }
+function ecuBandeauVisible() {
+  try { return SOURCE === "api" && ecurieOuverte() && Date.now() < ECURIE_BANDEAU_FIN.getTime() && !apercuSaison() && !(typeof simulation === "function" && simulation()) && !ecuBandeauVu() && !!quiEcurie() && D.personnes.some(p => p.nom === quiEcurie()); } catch (e) { return false; }
+}
+function poserBandeauEcurie() {
+  try {
+    const v = document.querySelector("#v-classement"); if (!v) return;
+    let el = v.querySelector(":scope > .ecu-bandeau");
+    if (!ecuBandeauVisible()) { if (el) el.remove(); return; }
+    if (el) return;
+    v.insertAdjacentHTML("afterbegin", '<div class="ecu-bandeau" role="region" aria-label="Nouveau : ton écurie est ouverte"><button type="button" class="ecu-b-go" data-ecu-bandeau-go><span class="ecu-b-ico" aria-hidden="true">🏎️</span><span class="ecu-b-t"><b>Nouveau : ton écurie est ouverte !</b><small>Personnalise ta F1 · Podium › Écurie</small></span><span class="ecu-b-btn">Ouvrir</span></button><button type="button" class="ecu-b-x" data-ecu-bandeau-x aria-label="Fermer l\'annonce">✕</button></div>');
+    el = v.querySelector(":scope > .ecu-bandeau");
+    el.querySelector("[data-ecu-bandeau-x]").addEventListener("click", ev => { ev.stopPropagation(); ecuBandeauFini(); el.remove(); });
+    el.querySelector("[data-ecu-bandeau-go]").addEventListener("click", () => { ecuBandeauFini(); el.remove(); ETAT.podium = "ecurie"; garder();
+      try { allerA("trophees"); rendreTrophees(); scrollTo(0, 0); } catch (e) { /* rien */ } });
+  } catch (e) { /* jamais bloquant */ }
+}
+if (typeof window.rendreClassement === "function") { const f0 = window.rendreClassement; window.rendreClassement = function () { const r = f0.apply(this, arguments); poserBandeauEcurie(); return r; }; }
+/** jusqu'au 31 décembre 2026 : l'écurie est ouverte, mais seulement avec les objets de départ */
 function ecurieDepart() { return ecurieOuverte() && basesSeules(); }
 /** v17.5 · onglet « Saison 1 » ouvert avant le 1er janvier (du 20 au 31 décembre) : seulement le Stand */
 function standSeul(y) { return !saisonJouee() && y >= SAISON.premiere; }
@@ -1490,6 +1517,7 @@ function btnEquiper(slot, id, cls) {
 }
 function equiperMaintenant(slot, id) {
   const qui = quiEcurie(); if (!qui || !ITEMS[slot] || !ITEMS[slot][id]) return;
+  if (!debloques(qui).has(slot + "." + id)) { toast("🔒 Cet objet n'est pas encore à toi."); return; }   // 26/11 : jamais un objet pas encore gagné (souvenir de l'Avent avant le 24/12, objet de 2027…)
   try { document.querySelectorAll(".av-ov").forEach(x => x.remove()); if (typeof AVENT_APERCU !== "undefined") AVENT_APERCU = false; } catch (e) { }
   ECU = { nom: qui, e: equipDe(qui) }; ECU.e[slot] = id; if (ECU.e.teintes) delete ECU.e.teintes[slot];
   choisirCatEcu(slot); ECU_Q = slot + "." + id; ECU_VOIR = null; ECU_NOUV = null; ETAT.podium = "ecurie"; garder();   // v20.96 : l'écurie s'ouvre sur la bonne catégorie
@@ -1520,8 +1548,8 @@ function tenueAuHasard(qui, e, alea) {
   if (!Object.keys(n.teintes).length) delete n.teintes;
   return n;
 }
-/* ---------- v20.61 · 🏎️ « Ton écurie ouvre ses portes » : une seule fois, au premier passage à partir du 1er décembre 2026 ----------
-   La porte du garage se lève sur la voiture du pilote ; un toucher ferme. Rien de 2027 : seulement ce qu'on peut faire en décembre. */
+/* ---------- v20.61 · 🏎️ « Ton écurie ouvre ses portes » : une seule fois, au premier passage à partir de l'ouverture (ECURIE_OUVRE, 26/11/2026) ----------
+   La porte du garage se lève sur la voiture du pilote ; un toucher ferme. Rien de 2027 : seulement ce qu'on peut faire pendant le tour de chauffe. */
 function teaserEcurie(essai) {
   try {
     if (SOURCE !== "api" || !ecurieOuverte() || saisonJouee() || stock.get("versus.ecurieTeaser") || document.querySelector(".ecu-rev")) return;
@@ -1531,7 +1559,7 @@ function teaserEcurie(essai) {
     stock.set("versus.ecurieTeaser", "1");
     const e = Object.assign({}, equipDe(qui));
     const o = document.createElement("div"); o.className = "revel ecu-rev" + (reduit ? " reduit" : ""); o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Ton écurie ouvre ses portes");
-    o.innerHTML = '<div class="rv-c er-c"><span class="tuto-k">🔥 Tour de chauffe · décembre</span>' +
+    o.innerHTML = '<div class="rv-c er-c"><span class="tuto-k">🔥 Tour de chauffe</span>' +
       '<div class="er-garage" aria-hidden="true"><span class="er-lum"></span><div class="er-voit">' + svgVoiture({ nom: qui, e, reflet: true, idle: true, label: "" }) + '</div><span class="er-porte"><i></i></span><span class="er-sol"></span></div>' +
       "<h3>🏎️ Ton écurie ouvre ses portes</h3><small class=\"er-ou\">(Podium › 🏎️ Écurie)</small>" +
       '<ul class="er-l"><li>🪖 Personnalise ton <b>casque</b>, ta <b>livrée</b>, ta <b>traînée</b> et ton <b>numéro</b>.</li><li>🏁 Ta voiture les porte en course, sous les yeux de tous.</li><li>🎁 Pour l\'instant, les objets de départ. <b>De nouveaux objets se gagneront tout au long de 2027.</b></li></ul>' +
@@ -1578,6 +1606,7 @@ function affichette3D(essai, libre) {
 function totalObjets() { return SLOTS.reduce((a, [s]) => a + idsSlot(s).length, 0) - Object.keys(BASE_ECURIE).length; }
 function htmlEcurie() {
   const qui = quiEcurie();
+  if (!apercuSaison()) ecuBandeauFini();   // 26/11 : l'écurie visitée, le bandeau « Nouveau » ne revient plus
   if (!D.personnes.some(p => p.nom === qui)) return '<div class="vide">Choisis ton nom dans les réglages pour monter ton écurie.</div>';
   if (!ECU || ECU.nom !== qui) ECU = { nom: qui, e: equipDe(qui) };
   const ouverts = debloques(qui), e = ECU.e;
@@ -1594,7 +1623,7 @@ function htmlEcurie() {
     '<p class="eta-aide">Touche un objet pour l\'essayer sur ta F1, ou « ? » pour savoir d\'où il vient.</p>';
   return showroom + htmlCollantEcu(qui, e) + htmlHasardEcu(qui, e) + etageres +
     '<button class="btn acc plein" type="button" id="ecu-garder">Enregistrer mon écurie</button>' +
-    '<p class="info">Ta voiture de course porte ta livrée, ton casque, ta finition, ton numéro et ta traînée. En course, on garde ton visage pour qu\'on te reconnaisse.' + (ecurieDepart() ? " En décembre, les objets de départ ; de nouveaux objets se gagneront tout au long de 2027." : "") + "</p>" +
+    '<p class="info">Ta voiture de course porte ta livrée, ton casque, ta finition, ton numéro et ta traînée. En course, on garde ton visage pour qu\'on te reconnaisse.' + (ecurieDepart() ? " Jusqu'au 31 décembre, les objets de départ ; de nouveaux objets se gagneront tout au long de 2027." : "") + "</p>" +
     '<div><h3 class="s-h3">La grille <small>touche une écurie pour la voir, 📂 pour la fiche</small></h3></div><div class="grille-dep">' + htmlGrilleEcu(qui, e) + "</div>" + htmlGarage(qui);
 }
 function htmlGrilleEcu(qui, e) {
@@ -2684,6 +2713,7 @@ function popVoiture() {
 async function garderEcurie() {
   const qui = ECU.nom, equip = Object.assign({}, ECU.e), avant = D.ecurie, brut = ((avant || {})[qui] || {}).equip || {};
   delete equip.vignette;
+  { const ouv = debloques(qui); SLOTS.forEach(([s]) => { if (equip[s] && !ouv.has(s + "." + equip[s])) { equip[s] = BASE_ECURIE[s]; if (equip.teintes) delete equip.teintes[s]; } }); }   // 26/11 : un objet pas encore gagné ne part jamais au serveur (il retombe sur la série)
   if (equip.teintes) { Object.keys(equip.teintes).forEach(s => { if (equip[s]) equip[s] = ecrireTeinte(s, equip[s], equip.teintes[s]); }); delete equip.teintes; }   // v20.70 · 🎨 « rayures » + or → « rayuresor » (serveur V91 : 2 à 16 lettres)
   let envoi = Object.assign({}, equip);
   if (brut.aura && envoi.aura === undefined) envoi.aura = brut.aura;

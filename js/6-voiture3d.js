@@ -14,10 +14,13 @@ function voitureEcurie(nom, e) {
   return { nom, couleur: couleurReelle(couleur(nom)), casque: couleurReelle(couleurCasque(nom, e)), casqueModele: e.casque, livree: e.livree, finition: e.finition, trainee: e.trainee, numero: e.numero, teintes: teintesHex(nom, e) };   // v20.70 · 🎨 couleurs choisies (rayures, casque, liseré)
 }
 /** Monte la voiture 3D dans un conteneur (remplace le dessin 2D) ; l'angle de vue est gardé d'un rendu à l'autre */
-function monter3D(box, nom, e, garage) {   // v20.96 : la vitrine de l'écurie un peu plus basse (ratio .4) : les catégories se voient au premier écran
+/* 26/11 (Théo) · vitrine de MON écurie plus grande : hauteur ×1,35 (ratio .4 → .54) et caméra rapprochée (zoom < 1 = plus près) :
+   la F1 remplit ~70 % de la largeur à 390 px sans être coupée quand on la tourne. Le garage d'un autre pilote garde son réglage (.56, zoom 1). */
+const VITRINE_ECU = { ratio: .54, zoom: 1.05, cibleY: .35 };
+function monter3D(box, nom, e, garage) {   // v20.96 : vitrine plus basse (ratio .4) ; 26/11 : regrandie (VITRINE_ECU)
   if (!box || !window.Piste || !Piste.supporte() || !Piste.vitrine) return null;
   if (!garage && V3D.inst) { V3D.yaw = V3D.inst.yaw(); V3D.inst.stop(); }
-  const inst = Piste.vitrine(box, voitureEcurie(nom, e), { yaw: garage ? 1.0 : V3D.yaw !== undefined ? V3D.yaw : 1.0, ratio: garage ? .56 : .4, label: "Voiture de " + nom + " en 3D : fais-la tourner du doigt" });
+  const inst = Piste.vitrine(box, voitureEcurie(nom, e), { yaw: garage ? 1.0 : V3D.yaw !== undefined ? V3D.yaw : 1.0, ratio: garage ? .56 : VITRINE_ECU.ratio, zoom: garage ? 1 : VITRINE_ECU.zoom, cibleY: garage ? undefined : VITRINE_ECU.cibleY, label: "Voiture de " + nom + " en 3D : fais-la tourner du doigt" });
   if (!garage) V3D.inst = inst;
   return inst;
 }

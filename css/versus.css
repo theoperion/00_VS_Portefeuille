@@ -3155,7 +3155,7 @@ body:has(.av-ov) .toast, body:has(.av-case) .toast { z-index: 99; }
 .sr-compact .sr-p small { display: block; margin-top: 2px; font: 500 11px/1.2 var(--f-text); }
 .sr-compact .sr-garder { top: 66px; right: 10px; min-height: 30px; padding: 5px 11px; font-size: 12px; }
 .sr-compact .sr-3d { margin-top: 2px; }
-.sr-compact .sr-3d > .voiture { max-height: 150px; }
+.sr-compact .sr-3d > .voiture { max-height: 190px; }   /* 26/11 : vitrine plus grande (comme la 3D, VITRINE_ECU) */
 .sr-compact .sr-aide { padding: 0; min-height: 0; }
 .sr-compact .sr-aide em { top: 70px; bottom: auto; left: 16px; right: auto; text-align: left; }   /* en haut à gauche de la vitrine, face au 💾 */
 .sr-compact .sr-klaxon { bottom: 10px; }   /* 2D, 🎲, 📯 posés sur le bas de la vitrine (le sol laqué) */
@@ -3217,3 +3217,15 @@ body:has(.av-ov) .toast, body:has(.av-case) .toast { z-index: 99; }
 .ecu-v .bdg-c { max-width: none; min-width: 0; }
 .ecu-v + .eta-aide { margin: -4px 2px 0; font-size: 12.5px; }
 @media (max-width: 360px) { .ecu-v .eta-g { gap: 5px; } .ecu-v .it-n { font-size: 10px; } .ecu-cats .chip b { font-size: 11.5px; } }
+
+/* 26/11 · bandeau « 🏎️ Nouveau : ton écurie est ouverte ! » (haut du Classement, jusqu'au 1/12) */
+.ecu-bandeau { display: flex; align-items: stretch; gap: 0; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; margin: 0 0 12px; border-radius: 12px; overflow: hidden;
+  background: linear-gradient(120deg, var(--accent, #7C5CFF), #2A1E6B); color: #fff; box-shadow: 0 3px 10px rgba(40,30,110,.35); }
+.ecu-bandeau .ecu-b-go { all: unset; box-sizing: border-box; flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 10px 6px 10px 14px; cursor: pointer; font: 500 13px/1.3 var(--f-text); }
+.ecu-bandeau .ecu-b-ico { font-size: 26px; flex: none; }
+.ecu-bandeau .ecu-b-t { flex: 1; min-width: 0; }
+.ecu-bandeau .ecu-b-t b { display: block; }
+.ecu-bandeau .ecu-b-t small { display: block; margin-top: 2px; font-size: 12px; opacity: .9; }
+.ecu-bandeau .ecu-b-btn { flex: none; padding: 6px 10px; border-radius: 999px; background: #fff; color: #2A1E6B; font-weight: 700; font-size: 12px; }
+.ecu-bandeau .ecu-b-x { all: unset; flex: none; width: 40px; display: grid; place-items: center; cursor: pointer; font-size: 15px; color: #fff; opacity: .85; }
+.ecu-bandeau button:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
