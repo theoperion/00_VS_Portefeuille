@@ -133,15 +133,31 @@ function nouveautesAVoir() {
   if (typeof D === "undefined" || !D || apercuSaison() || !saisonVisible()) return [];
   return etapesJeu().filter(e => regleVisible(e.id) && !stock.get("versus.nouveaute." + e.id));
 }
-/* v20.58 (Théo, 25/11) · l'annonce du 20 décembre : en plus des règles à jouer en janvier, une promesse sans rien dévoiler */
-function htmlAnnonceVingt() {
-  return '<div class="nv-plus"><b>🎁 Et ce n\'est que le début…</b>' +
-    "<p>🎮 <b>Chaque univers cache une surprise</b> : un mini-jeu à jouer ensemble, révélé le 1<sup>er</sup> de son mois.</p>" +
-    "<p>✨ <b>Dès janvier</b> : 🏆 les Trophées en 4 vitrines (Mondes, Succès, Gant, Légendes), 🏎️ la course en direct au rythme du S&amp;P 500, 🛠️ de nouveaux objets à gagner pour ton écurie.</p></div>";
-}
-/* v20.58 · la révélation du 1er janvier : les 12 circuits dévoilés, avec le piège ou le mois spécial de chacun,
-   lus dans PIEGES et moisSpecial (donc toujours les règles à jour) ; la Finale reste cachée tant qu'elle n'est pas annoncée */
-/** v20.62 · le piège ou la règle spéciale du mois k (saison 2027 et après), lus dans PIEGES et moisSpecial : toujours les règles à jour.
+/* v20.96 (Théo, 26/11) · « NOUVELLES RÈGLES » en PAQUET DE CARTES à glisser, façon « stories » (avant : une longue liste que personne ne lisait).
+   Une règle par carte : un grand visuel, un titre de 2 à 4 mots, UNE phrase de 10 mots au plus, le gain en gros (« +1 », « ×2 »…).
+   On glisse ou on touche à droite → suivante, à gauche → précédente (flèches du clavier aussi) ; les points en haut montrent où on en est ; « Passer » ferme.
+   La dernière carte : « Et ce n'est que le début… » (seulement le 20/12, jamais le 1/1) ou « C'est parti ! », avec « Compris 🏁 » et « 📖 Toutes les règles ».
+   LE CONTENU NE CHANGE PAS : les cartes sont celles que nouveautesAVoir() donne à la date (regleVisible, rien avant l'heure) ; le texte complet reste dans 📖 Règles.
+   Les faits (points, dates) sont les mêmes que les « resume » d'ETAPES : si une valeur change là-haut, la changer ici aussi. */
+const NV_CARTES = {
+  pieges: { t: "Les pièges", ph: "Chaque circuit cache une règle, valable un mois" },
+  gpspeciaux: { v: "🗓️", t: "Les mois spéciaux", ph: "Janvier : le vainqueur du mois gagne en plus", g: "+2" },
+  prono: { t: "Le pronostic", ph: "Qui gagne le mois ? Le S&P passe +1 % ?", g: "+1 · +1", q: "🗓️ du 20 à la fin du mois · révélé le 1er" },
+  pole: { t: "La pole position", ph: "Le chiffre du S&P le plus proche", g: "+1", q: "🗓️ avec ton pronostic" },
+  defi: { t: "Le défi du mois", ph: "Battre le Nasdaq, faire mieux que l'or…", g: "+1", q: "🗓️ annoncé le 20 du mois d'avant" },
+  rival: { t: "Le rival", ph: "Choisis-le en secret, finis devant lui", g: "+3", q: "🗓️ choix du 20 au 31 décembre" },
+  pioche: { t: "Le rattrapage", ph: "Dernier du mois ? Une carte bonus en plus", g: "+1 carte" },
+  monaco: { v: "🌗", t: "L'éclipse", ph: "Un mois, le dernier du championnat marque double", g: "×2", q: "🛟 2 points au moins", tR: "Le Côté obscur", phR: "En juin, le dernier du championnat marque double" },
+  equipe: { t: "Le bonus d'équipe", ph: "Tout le monde bat le S&P le même mois", g: "+1 chacun" },
+  serie: { t: "La série", ph: "Trois mois d'affilée sans finir dernier", g: "+1" },
+  regularite: { t: "La régularité", ph: "Le moins souvent dernier de la saison", g: "+3" },
+  vote: { t: "Le vote", ph: "Élis le coup de la saison (pas toi)", g: "🏅" },
+  finale: { t: "La Finale", ph: "Décembre : les points de place comptent double", g: "×2" },
+  duels: { t: "Les duels", ph: "Défie un rival : le meilleur lui prend un point", g: "+1" },
+  niveaux: { t: "Les niveaux", ph: "Tes points donnent de l'XP, puis des cartes", g: "⭐" },
+  atelier: { t: "L'atelier", ph: "Chaque niveau renforce une de tes cartes", g: "+1" }
+};
+/** v20.58 · le piège ou la règle spéciale du mois k (saison 2027 et après), lus dans PIEGES et moisSpecial : toujours les règles à jour.
     La Finale n'y figure qu'une fois annoncée (le 20 novembre) ; avant, décembre garde le Rassemblement des héros. */
 function regleCircuit(k) {
   if (!k || Math.floor(k / 100) < SAISON.premiere) return null;
@@ -150,28 +166,87 @@ function regleCircuit(k) {
 }
 /** une seule icône quand le piège a la même que le circuit (mai : 🌿) */
 function icoCircuit(c) { return c.r.ico === c.g.drap ? "" : c.r.ico + " "; }
-function htmlAnnonceCircuits(y) {
-  const lignes = CAL_GP.map((id, i) => {
-    const c = regleCircuit(y * 100 + i + 1); if (!c) return "";
-    return "<li><em>" + esc(moisCourt(c.k).replace(/ \d+$/, "")) + "</em><span>" + c.g.drap + " " + esc(c.g.ville) + "</span><span" + (c.spe ? ' class="spe"' : "") + ">" + icoCircuit(c) + "<b>" + esc(c.r.nom) + "</b> : " + esc(c.r.bref) + "</span></li>";
-  }).join("");
-  return '<div class="nv-plus"><b>🗺️ Les 12 circuits sont dévoilés</b><p>Chaque mois, son piège ou sa règle spéciale :</p><ul class="nv-cal">' + lignes + "</ul></div>";
-}
-function ouvrirNouveautes(l) {
-  l.forEach(e => stock.set("versus.nouveaute." + e.id, "1"));
+/** les cartes du paquet, dans l'ordre : une par règle, puis (le 1/1) les 12 circuits, puis la carte de fin */
+function cartesNouveautes(l) {
   const y = SAISON.premiere, vingt = (y - 1) * 10000 + 1220, premier = y * 10000 + 101, revele = saisonJouee();
   const lotVingt = l.some(e => annonceEtape(e) === vingt), lotPremier = revele && l.some(e => annonceEtape(e) === premier);
+  const c = l.map(e => { const f = NV_CARTES[e.id] || {}, mots = String(e.resume || "").split(/\s+/);
+    return { id: e.id, vis: f.v || e.ico, t: (revele && f.tR) || f.t || (revele && e.nomRevele) || e.nom, ph: (revele && f.phR) || f.ph || mots.slice(0, 9).join(" ") + (mots.length > 9 ? "…" : ""), g: f.g || "", q: f.q || "", regle: e.regle }; });
+  if (lotPremier) c.push({ id: "circuits", y });
+  c.push({ id: "fin", promesse: lotVingt && !revele, lancement: lotVingt || lotPremier });
+  return { c, lotPremier };
+}
+function htmlCarteNv(c, i, n) {
+  const h = "nvs-carte";
+  if (c.id === "circuits") {
+    const l = CAL_GP.map((id, m) => regleCircuit(c.y * 100 + m + 1)).filter(Boolean);
+    const tuiles = l.map(x => { const mo = moisCourt(x.k).replace(/ \d+$/, ""), plein = mo + " · " + x.g.drap + " " + x.g.ville + " · " + icoCircuit(x) + x.r.nom + " : " + x.r.bref;
+      return '<button type="button" class="nvs-m' + (x.spe ? " spe" : "") + '" data-nvs-m="' + x.k + '" title="' + esc(plein) + '" aria-label="' + esc(plein) + '"><em>' + esc(mo) + "</em><i>" + x.r.ico + "</i></button>"; }).join("");
+    return '<article class="' + h + ' nvs-circ" data-nvs-carte="circuits" style="--nvs-h:200"><div class="nvs-vis nvs-grille" role="group" aria-label="Les 12 circuits">' + tuiles + "</div>" +
+      '<h3 class="nvs-t">12 circuits dévoilés</h3><p class="nvs-ph">Chaque mois, son piège ou sa règle spéciale</p><p class="nvs-detail" aria-live="polite"></p></article>';
+  }
+  if (c.id === "fin") {
+    const ic = c.promesse ? '<div class="nvs-vis nvs-trio"><span><i>🎮</i><small>Un mini-jeu par univers</small></span><span><i>🏆</i><small>Trophées en 4 vitrines</small></span><span><i>🛠️</i><small>Objets d\'écurie</small></span></div>'
+      : '<div class="nvs-vis"><i class="nvs-emo">🏁</i></div>';
+    return '<article class="' + h + ' nvs-fin" data-nvs-carte="fin" style="--nvs-h:45">' + ic + '<h3 class="nvs-t">' + (c.promesse ? "Et ce n'est que le début…" : c.lancement ? "C'est parti !" : "À toi de jouer !") + "</h3>" +
+      '<p class="nvs-ph">' + (c.promesse ? "Rendez-vous le 1er janvier" : "Tout le détail est dans les règles") + "</p>" +
+      '<div class="nvs-fin-b"><button class="btn acc" type="button" data-nv="ok">Compris 🏁</button><button class="btn ghost" type="button" data-nv="regles">📖 Toutes les règles</button></div></article>';
+  }
+  const teinte = [265, 200, 330, 150, 20, 290, 175, 45, 230, 0][i % 10];
+  return '<article class="' + h + '" data-nvs-carte="' + c.id + '" style="--nvs-h:' + teinte + '"><div class="nvs-vis"><i class="nvs-emo" aria-hidden="true">' + c.vis + "</i>" + (c.g ? '<b class="nvs-gain">' + esc(c.g) + "</b>" : "") + "</div>" +
+    '<h3 class="nvs-t">' + esc(c.t) + '</h3><p class="nvs-ph">' + esc(c.ph) + "</p>" + (c.q ? '<p class="nvs-q">' + esc(c.q) + "</p>" : "") + "</article>";
+}
+function ouvrirNouveautes(l) {
+  if (!l || !l.length) return;
+  document.querySelectorAll(".nvs").forEach(x => x.remove());
+  l.forEach(e => stock.set("versus.nouveaute." + e.id, "1"));
+  const { c, lotPremier } = cartesNouveautes(l), n = c.length, y = SAISON.premiere;
   if (lotPremier) stock.set("versus.piegeMois." + (y * 100 + 1), "1");   // v20.62 : le 1/1, les 12 circuits valent l'affichette de janvier (pas de doublon)
-  const nomE = e => revele && e.nomRevele || e.nom, resE = e => revele && e.resumeRevele || e.resume;   // v20.58 : dès le 1/1, l'éclipse devient le Côté obscur
-  const o = document.createElement("div"); o.className = "tuto"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
-  o.innerHTML = '<div class="tuto-c' + (l.length > 2 ? " multi" : "") + '"><span class="tuto-k">' + (l.length > 1 ? "Nouvelles règles" : "Nouvelle règle") + "</span>" + (lotVingt && !revele ? htmlAnnonceVingt() : "") + l.map(e => '<div class="tuto-i">' + e.ico + "</div><h3>" + esc(nomE(e)) + "</h3><p>" + esc(resE(e)) + "</p>").join("") +
-    (lotPremier ? htmlAnnonceCircuits(y) : "") +
-    '<div class="btn-row"><button class="btn ghost" type="button" data-nv="regles">Lire la règle</button><button class="btn acc" type="button" data-nv="ok">Compris 🏁</button></div></div>';
-  document.body.appendChild(o);
-  const fermer = () => { o.remove(); setTimeout(() => { if (typeof verifierRevelation === "function") verifierRevelation(); }, 400); };   // v20.62 : ensuite, l'affichette du mois
+  const calme = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const o = document.createElement("div"); o.className = "tuto nvs"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", l.length > 1 ? "Nouvelles règles" : "Nouvelle règle");
+  o.innerHTML = '<div class="tuto-c nvs-c' + (calme ? " calme" : "") + '" tabindex="-1"><div class="nvs-pts" aria-hidden="true">' + c.map(() => "<i><b></b></i>").join("") + "</div>" +
+    '<div class="nvs-h"><span class="tuto-k">' + (l.length > 1 ? "Nouvelles règles" : "Nouvelle règle") + ' · <span class="nvs-n">1</span>/' + n + '</span><button type="button" class="nvs-passer" data-nv="passer">Passer ✕</button></div>' +
+    '<div class="nvs-pile">' + c.map((x, i) => htmlCarteNv(x, i, n)).join("") + "</div>" +
+    '<div class="nvs-nav"><button type="button" class="nvs-fl" data-nvs="-1" aria-label="Carte précédente">‹</button><span class="nvs-aide">Touche ou glisse</span><button type="button" class="nvs-fl" data-nvs="1" aria-label="Carte suivante">›</button></div></div>';
+  document.body.appendChild(o); document.documentElement.classList.add("fige");
+  const cartes = [...o.querySelectorAll(".nvs-carte")], pts = [...o.querySelectorAll(".nvs-pts i")], cc = o.querySelector(".nvs-c");
+  let i = -1;
+  const son = k => { try { if (typeof SONS === "undefined") return; if (k === n - 1) SONS.succes(); else SONS.noel("ton", k); } catch (e) { } };
+  const aller = (k, sens) => {
+    k = Math.max(0, Math.min(n - 1, k)); if (k === i) return;
+    cartes.forEach((x, j) => { x.hidden = j !== k; x.classList.remove("in-d", "in-g"); });
+    if (!calme && i >= 0) { void cartes[k].offsetWidth; cartes[k].classList.add(sens < 0 ? "in-g" : "in-d"); }
+    pts.forEach((p, j) => { p.classList.toggle("vu", j < k); p.classList.toggle("on", j === k); });
+    if (i >= 0) son(k);
+    i = k; o.querySelector(".nvs-n").textContent = i + 1; cc.classList.toggle("derniere", i === n - 1); cc.classList.toggle("premiere", i === 0);
+    o.dataset.carte = c[i].id;
+  };
+  const fermer = () => { if (!o.isConnected) return; o.remove(); document.removeEventListener("keydown", clavier, true); document.documentElement.classList.remove("fige"); setTimeout(() => { if (typeof verifierRevelation === "function") verifierRevelation(); }, 400); };   // v20.62 : ensuite, l'affichette du mois
+  o.fermer = fermer;
+  const clavier = ev => { if (!o.isConnected) return; if (ev.key === "ArrowRight") { ev.preventDefault(); aller(i + 1, 1); } else if (ev.key === "ArrowLeft") { ev.preventDefault(); aller(i - 1, -1); } else if (ev.key === "Escape") { ev.preventDefault(); fermer(); } };
+  document.addEventListener("keydown", clavier, true);
+  // le doigt : glisser (au moins 40 px) ou toucher à gauche / à droite de la carte
+  let x0 = null, y0 = 0, glisse = false;
+  cc.addEventListener("pointerdown", ev => { x0 = ev.clientX; y0 = ev.clientY; glisse = false; });
+  cc.addEventListener("pointerup", ev => { if (x0 === null) return; const dx = ev.clientX - x0, dy = ev.clientY - y0; x0 = null; if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) { glisse = true; aller(i + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1); } });
+  cc.addEventListener("click", ev => {
+    if (glisse) { glisse = false; return; }
+    const b = ev.target.closest("button");
+    if (b) {
+      if (b.dataset.nv === "ok" || b.dataset.nv === "passer") fermer();
+      else if (b.dataset.nv === "regles") { o.remove(); document.removeEventListener("keydown", clavier, true); document.documentElement.classList.remove("fige"); ouvrirRegles(); }
+      else if (b.dataset.nvs) aller(i + +b.dataset.nvs, +b.dataset.nvs);
+      else if (b.dataset.nvsM) { const d = o.querySelector(".nvs-detail"); o.querySelectorAll(".nvs-m").forEach(m => m.classList.toggle("on", m === b)); d.textContent = b.title; }
+      return;
+    }
+    if (ev.target.closest(".nvs-pts, .nvs-h")) return;
+    const r = cc.getBoundingClientRect(); aller(i + (ev.clientX < r.left + r.width / 3 ? -1 : 1), ev.clientX < r.left + r.width / 3 ? -1 : 1);
+  });
   o.addEventListener("click", ev => { if (ev.target === o) fermer(); });
-  o.querySelector('[data-nv="ok"]').addEventListener("click", fermer);
-  o.querySelector('[data-nv="regles"]').addEventListener("click", () => { o.remove(); ouvrirRegles(l[0].regle); });
+  aller(0, 1);
+  // les 12 circuits : le mois en cours (janvier) déjà ouvert
+  { const m = o.querySelector(".nvs-m"); if (m) { m.classList.add("on"); o.querySelector(".nvs-detail").textContent = m.title; } }
+  try { cc.focus({ preventScroll: true }); } catch (e) { }
 }
 /* v20.62 (Théo, 25/11) · l'affichette du 1er du mois : « 🗺️ Ce mois-ci sur [circuit] : [piège ou règle spéciale] », une fois par mois et par joueur,
    à la première ouverture du mois (à partir du 1/1/2027). Ordre : cartes retournées / nouvelles règles, puis l'affichette, puis le mini-jeu du mois
