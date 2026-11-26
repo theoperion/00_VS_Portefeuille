@@ -66,6 +66,18 @@ const moi = { ok: true, version: 14, genere: "2026-11-25T19:00:00", majTexte: ""
   await p2.route("**/moi.js*", async r => { const rep = await r.fetch(), t = await rep.text(); r.fulfill({ response: rep, body: t.replace(/\}\)\(\);\s*$/, "window.__T = { fenMoi };\n})();\n") }); });
   await p2.goto("http://localhost:" + PORT + "/index.html"); await p2.waitForTimeout(3500);
   for (const per of ["5j", "1m", "1a"]) { const f = await p2.evaluate(k => window.__T.fenMoi(k), per); ok(!!f && f.d.length > 1, "matin, photo du soir absente · " + per + " : courbe présente", f); }
+  /* v21.14 · historique MENSUEL (fichier de Kévin) : dernier relevé le 30/10, rien après, bourse ouverte le 26/11 →
+     pas de courbe « 5 j » sur 5 MOIS, et le point en direct ne recolle plus la seule variation du jour au relevé du 30/10 */
+  const p3 = await ctx.newPage(); p3.on("pageerror", e => err.push(e.message));
+  await p3.clock.setFixedTime(new Date("2026-11-26T11:00:00"));
+  const mens = [[20250831, 100], [20250930, 102.94], [20260630, 125.0], [20260731, 123.79], [20260831, 121.66], [20260930, 125.89], [20261030, 122.39]];
+  const moi3 = Object.assign({}, moi, { historique: Object.assign({}, moi.historique, { rows: mens.map(([d, v]) => [d, 3000, 2700, v, null, null, v, null, v, null]) }) });
+  await p3.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi3 : versus) }));
+  await p3.route("**/moi.js*", async r => { const rep = await r.fetch(), t = await rep.text(); r.fulfill({ response: rep, body: t.replace(/\}\)\(\);\s*$/, "window.__T = { fenMoi };\n})();\n") }); });
+  await p3.goto("http://localhost:" + PORT + "/index.html"); await p3.waitForTimeout(3500);
+  const m5 = await p3.evaluate(() => window.__T.fenMoi("5j")), mt = await p3.evaluate(() => window.__T.fenMoi("tout"));
+  ok(!m5, "historique mensuel · 5 j : pas de courbe étalée sur 5 mois", m5 && m5.d);
+  ok(mt && mt.d[mt.d.length - 1] === 20261030 && mt.v[mt.v.length - 1] === 122.39, "historique mensuel · Tout : finit au dernier relevé, sans point « en direct » collé dessus", mt && [mt.d.slice(-2), mt.v.slice(-2)]);
   ok(!err.length, "0 erreur JS", err.slice(0, 3));
   await b.close();
   console.log(ko.length ? "\n✗ " + ko.length + " NON" : "\n✓ Tout est OUI");
