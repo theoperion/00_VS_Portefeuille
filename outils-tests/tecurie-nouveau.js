@@ -45,14 +45,14 @@ const ouvrirEcurie = (p, slot) => p.evaluate(async s => { document.querySelector
     // 1. décembre : Kévin a trouvé le trésor (plaques Chercheur de Noël, dorée) → ✨ Nouveau, en tête, points sur les onglets ; puis effacé après vue
     { const { ctx, p, err } = await page(b, { quand: "2026-12-15T10:00:00", sombre, session: { role: "perso", nom: "Kévin" } });
       const t = await ouvrirEcurie(p, "casque");
-      const a = await p.evaluate(() => ({ nv: ECU_NOUV.l, tab: (document.querySelector('[data-ecu-slot="plaque"] .ecu-pt') || {}).textContent || "", tabCasque: !!document.querySelector('[data-ecu-slot="casque"] .ecu-pt') }));   // v20.84 : toutes les étagères d'un coup
-      ok(t.podiumPt === "2" && a.nv.length === 2 && /✨\s*2/.test(a.tab) && !a.tabCasque, "décembre : 2 objets gagnés pas vus → compteur 2 sur l'onglet Écurie du Podium et « ✨ 2 » sur la ligne Plaque " + JSON.stringify(Object.assign(t, a)) + tag);
+      const a = await p.evaluate(() => ({ nv: ECU_NOUV.l, tab: document.querySelector('[data-ecu-cat="plaque"] .ecu-cat-nv') ? document.querySelector('[data-ecu-cat="plaque"]').getAttribute("aria-label") : "", tabCasque: !!document.querySelector('[data-ecu-cat="casque"] .ecu-cat-nv') }));   // v20.96 : pastille ✨ sur la catégorie
+      ok(t.podiumPt === "2" && a.nv.length === 2 && /2 nouveaux/.test(a.tab) && !a.tabCasque, "décembre : 2 objets gagnés pas vus → compteur 2 sur l'onglet Écurie du Podium et ✨ sur la pastille Plaque (« 2 nouveaux ») " + JSON.stringify(Object.assign(t, a)) + tag);
       await p.evaluate(async () => { ECU_SLOT = "plaque"; rendreTrophees(); await new Promise(r => setTimeout(r, 300)); });
       const pl = await p.evaluate(() => { const it = [...document.querySelectorAll('.eta[data-ecu-slot="plaque"] .it')]; return { ordre: it.slice(0, 3).map(x => x.dataset.item), nv: it.filter(x => x.querySelector(".it-nv")).map(x => x.dataset.item), bloque: document.querySelectorAll(".etageres .it.verrou").length }; });
       ok(pl.ordre[0] === "chercheuror" && pl.ordre[1] === "chercheur" && pl.nv.length === 2 && !pl.bloque, "Plaque : les nouveaux en tête (dorée d'abord), pastille « ✨ Nouveau », aucun objet 2027 bloqué en décembre " + JSON.stringify(pl) + tag);
       await p.locator('.eta[data-ecu-slot="plaque"]').first().screenshot({ path: DOSSIER + "/nouveau-plaque" + (sombre ? "-sombre" : "-clair") + ".png" });
       await p.evaluate(async () => { ECU_NOUV = null; rendreTrophees(); await new Promise(r => setTimeout(r, 200)); });   // v20.84 : on revient dans l'écurie (les « ✨ » restent tant qu'on y est)
-      const apres = await p.evaluate(() => ({ nv: document.querySelectorAll(".etageres .it-nv").length, pt: !!document.querySelector('[data-ecu-slot="plaque"] .ecu-pt'), n: nouveauxEcurie("Kévin").length, premier: document.querySelector('.eta[data-ecu-slot="plaque"] .it').dataset.item }));
+      const apres = await p.evaluate(() => ({ nv: document.querySelectorAll(".etageres .it-nv").length, pt: !!document.querySelector('[data-ecu-cat="plaque"] .ecu-cat-nv'), n: nouveauxEcurie("Kévin").length, premier: document.querySelector('.eta[data-ecu-slot="plaque"] .it').dataset.item }));
       await p.reload(); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes); await p.evaluate(async () => { TRESORS = null; TRESORS_T = 0; await chargerTresors(); });
       const t2 = await ouvrirEcurie(p, "plaque");
       ok(!apres.nv && !apres.pt && !apres.n && apres.premier === "chercheuror" && !t2.podiumPt, "pastille effacée après vue (même après rechargement), l'objet gagné reste en tête des gagnés " + JSON.stringify(Object.assign(apres, t2)) + tag);
@@ -114,12 +114,12 @@ const ouvrirEcurie = (p, slot) => p.evaluate(async s => { document.querySelector
     const r = await p.evaluate(async () => {
       const its = [...document.querySelectorAll('[data-eta-l="casque"] .it')], verrous = its.filter(x => x.classList.contains("verrou")), idx = its.findIndex(x => x.classList.contains("verrou"));
       const apresVerrou = its.slice(idx).some(x => !x.classList.contains("verrou"));
-      const q = verrous.length ? verrous[0].closest(".it-w").querySelector(".it-q") : null, qL = q ? parseFloat(getComputedStyle(q).width) : 0;   // v20.84 : lu avant le toucher (la ligne est redessinée)
+      const q = verrous.length ? verrous[0].closest(".it-w").querySelector(".it-q") : null, qL = q ? parseFloat(getComputedStyle(q).width) : 0;   // v20.84 : lu avant le toucher (la ligne est redessinée) ; v20.96 : 20 px comme au Vestiaire, zone de toucher agrandie autour
       const avant = ECU.e.casque; if (verrous[0]) verrous[0].click(); await new Promise(r => setTimeout(r, 200));
       const det = (document.querySelector("#it-d") || {}).innerText || "";
       // l'exclusif « Premier sang » (klaxon Damier) est à Clément : plus dans les bloqués de Kévin ; l'objet commun (plaque) reste à gagner
       const kl = idsSlot("klaxon"), pl = idsSlot("plaque"), clem = (() => { const m = moiVrai; return null; })();
-      return { n: verrous.length, ordreOk: idx >= 0 && !apresVerrou, q: !!q && qL >= 24, essai: ECU.e.casque === avant, det, damier: kl.includes("damier") ? "visible" : "absent", plaqueCommune: pl.includes("premiersang"), mjAvance: SLOTS.flatMap(([s]) => idsSlot(s).filter(id => origineItem(s, id).mj && MJ_OBJETS[s + "." + id] > 202701)) };
+      return { n: verrous.length, ordreOk: idx >= 0 && !apresVerrou, q: !!q && qL >= 20, essai: ECU.e.casque === avant, det, damier: kl.includes("damier") ? "visible" : "absent", plaqueCommune: pl.includes("premiersang"), mjAvance: SLOTS.flatMap(([s]) => idsSlot(s).filter(id => origineItem(s, id).mj && MJ_OBJETS[s + "." + id] > 202701)) };
     });
     // le klaxon Damier est aussi un objet de départ ? on vérifie sur l'objet exclusif réel de Premier sang
     const ex = await p.evaluate(() => { const x = SUCCES.find(z => z.id === "premiersang"), [s, id] = x.bonus; return { k: s + "." + id, depart: estDepart(s, id), visKevin: idsSlot(s).includes(id), prisAutre: prisParAutre(s, id, "Kévin") }; });

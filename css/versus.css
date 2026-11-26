@@ -3043,11 +3043,6 @@ body:has(.av-ov) .toast, body:has(.av-case) .toast { z-index: 99; }
 .eta-aide { margin: 4px 2px 8px; font: 500 12.5px/1.35 var(--f-text); color: var(--ink-3); }
 .etageres { display: grid; gap: 10px; margin-bottom: 12px; }
 .eta { min-width: 0; padding: 10px 0 10px; border-radius: 16px; background: var(--panel-2); border: 1px solid var(--rule-2); }
-.eta-h { display: flex; align-items: baseline; gap: 8px; padding: 0 12px 8px; min-width: 0; }
-.eta-h h4 { margin: 0; flex: none; font: italic 800 14px/1.1 var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); }
-.eta-h small { min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 12px/1.1 var(--f-text); color: var(--ink-3); }
-.eta-h .ecu-pt { position: static; flex: none; align-self: center; height: 18px; padding: 0 7px; font: 800 10.5px/18px var(--f-text); color: #3A2600; background: linear-gradient(110deg, #FFE596, #F7CF55); box-shadow: 0 0 6px rgba(247,207,85,.5); }
-.eta-c { flex: none; font: 700 11.5px/1 var(--f-num); color: var(--ink-2); padding: 3px 7px; border-radius: 999px; background: var(--panel); border: 1px solid var(--rule); }
 .eta-l { position: relative; display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scroll-padding: 0 12px; padding: 3px 12px 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
 .eta-l::-webkit-scrollbar { display: none; }
 .eta-l > .it-w { flex: 0 0 104px; scroll-snap-align: start; }
@@ -3117,3 +3112,78 @@ body:has(.av-ov) .toast, body:has(.av-case) .toast { z-index: 99; }
 .gp-lh { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 4px; }
 .gp-lh > b { font: italic 800 15px/1.2 var(--f-display); letter-spacing: .05em; text-transform: uppercase; }
 .aide-vitr { margin: 4px 0 0; font-size: 12px; color: var(--ink-3); }
+/* ---------- v20.96 (Théo, 26/11) · l'Écurie sur le modèle du Vestiaire de Moi : carte de la F1, pastilles de catégories, grille de 4 objets ---------- */
+/* la carte de la F1 : avatar, nom, numéro, « N / total objets » sur une ligne ; la vitrine 3D un peu plus basse */
+.showroom.sr-compact { padding: 12px 8px 8px; }
+.sr-compact .sr-num { top: 34px; font-size: 104px; }
+.sr-compact .sr-h { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 0 6px; }
+.sr-compact .sr-nm { display: grid; gap: 4px; min-width: 0; }
+.sr-compact .sr-h .sr-nm b { font: italic 800 21px/1.05 var(--f-display); letter-spacing: .05em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.showroom.sr-compact .sr-k { padding-right: 0; font-size: 10px; letter-spacing: .12em; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sr-compact .sr-p { display: block; text-align: right; font: 600 13px/1.1 var(--f-num); color: #9AA3AD; white-space: nowrap; }
+.sr-compact .sr-h .sr-p b { display: inline; font: 700 18px/1 var(--f-num); letter-spacing: 0; text-transform: none; color: #fff; }
+.sr-compact .sr-p small { display: block; margin-top: 2px; font: 500 11px/1.2 var(--f-text); }
+.sr-compact .sr-garder { top: 66px; right: 10px; min-height: 30px; padding: 5px 11px; font-size: 12px; }
+.sr-compact .sr-3d { margin-top: 2px; }
+.sr-compact .sr-3d > .voiture { max-height: 150px; }
+.sr-compact .sr-aide { padding: 0; min-height: 0; }
+.sr-compact .sr-aide em { top: 70px; bottom: auto; left: 16px; right: auto; text-align: left; }   /* en haut à gauche de la vitrine, face au 💾 */
+.sr-compact .sr-klaxon { bottom: 10px; }   /* 2D, 🎲, 📯 posés sur le bas de la vitrine (le sol laqué) */
+/* les pastilles des catégories : 3 par ligne, émoji + nom + compteur ; la choisie en blanc (comme le Vestiaire) */
+.ecu-cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin: -12px 0 0; }   /* -12 : l'écart de la page est doublé par le bandeau collant (hauteur 0) */
+.ecu-cats .chip { position: relative; display: grid; justify-items: center; gap: 3px; padding: 5px 3px 4px; border-radius: 10px; min-width: 0; color: var(--ink); }
+.ecu-cats .chip b { max-width: 100%; font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ecu-cats .chip small { font: 500 10.5px/1 var(--f-num); color: var(--ink-3); }
+.ecu-cats .chip[aria-pressed="true"] { color: var(--bg); }
+.ecu-cats .chip[aria-pressed="true"] small { color: inherit; opacity: .75; }
+.ecu-cats .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ecu-cat-nv { position: absolute; top: 3px; right: 5px; font: normal 12px/1 var(--f-text); filter: drop-shadow(0 0 3px rgba(247,207,85,.8)); pointer-events: none; }
+.ecu-cats .chip:has(.ecu-cat-nv):not([aria-pressed="true"]) { border-color: color-mix(in srgb, #E2B33A 70%, var(--rule)); }
+/* la catégorie ouverte : un titre fin, puis la grille (plus de cadre ni de rangée qui défile) */
+.etageres.ecu-v { display: block; margin: -4px 0 0; }
+.ecu-v .eta { padding: 0; border: 0; border-radius: 0; background: none; }
+.ecu-v .eta-g { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; overflow: visible; padding: 0; scroll-snap-type: none; touch-action: auto; }
+.ecu-v .eta-g > .it-w { flex: none; min-width: 0; }
+.ecu-v .eta-g > .it-w > .it { height: 100%; }
+/* une case = celle du Vestiaire : aperçu, nom sur 2 lignes, « ? » en haut à droite, 🔒 en bas à droite de l'aperçu, ✓ et cadre bleu si équipée */
+.ecu-v .it { box-sizing: border-box; width: 100%; display: grid; align-content: start; justify-items: center; gap: 4px; padding: 8px 2px 7px; border-radius: 10px;
+  border: 1px solid var(--rule); background: var(--panel); color: var(--ink); box-shadow: none; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+.ecu-v .it::before { display: none; }
+.ecu-v .it.r-unique::before, .ecu-v .it.r-legende::before { display: block; height: 2px; }   /* une fine ligne d'or ou d'arc-en-ciel pour les Légendes et les exclusifs */
+.ecu-v .it.r-legende { border: 1px solid var(--rule); background: var(--panel); }
+.ecu-v .it:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ecu-v .it:active { transform: scale(.97); }
+.ecu-v .it.on { border-color: var(--accent); box-shadow: 0 0 0 1.5px var(--accent); }
+.ecu-v .it-w.q-on .it { outline: none; }
+.ecu-v .it-w.q-on:not(:has(.it.on)) .it { border-color: var(--ink-3); }
+.ecu-v .it-v { position: relative; width: 100%; height: 44px; display: grid; place-items: center; overflow: hidden; }
+.ecu-v .it-v .casque { width: 42px; height: 42px; }
+.ecu-v .it-v .av { width: 42px; height: 42px; } .ecu-v .it-v .av .casque { width: 34px !important; height: 34px !important; }
+.ecu-v .it-v .voiture { width: 100%; }
+.ecu-v .it-v .vg-3d { width: 100%; margin: 2px 0 0; }
+.ecu-v .it-v .vg-trainee { width: 100%; height: 34px; }
+.ecu-v .it-v .plaque.grande { max-width: calc(100% - 4px); padding: 3px 4px; font-size: 7.5px; letter-spacing: .02em; }
+.ecu-v .it-emo { font-size: 26px; }
+.ecu-v .it-emo .kl-svg { width: 30px; height: 30px; }
+.ecu-v .eta-edit .it-emo { font-size: 24px; }
+.ecu-v .it.verrou .it-v > :not(.it-lock) { filter: saturate(.35) brightness(.6); opacity: .8; }
+.ecu-v .it-secret .it-v > .it-emo { filter: none; opacity: 1; color: var(--ink-3); font: 800 20px/1 var(--f-display); }
+.ecu-v .it-lock { inset: auto 4px 0 auto; display: block; font-size: 12px; line-height: 1; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.ecu-v .it-n { max-width: 100%; padding: 0 3px; font: 600 10.5px/1.25 var(--f-text); letter-spacing: 0; text-transform: none; color: var(--ink-2);
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; hyphens: auto; }
+.ecu-v .it.verrou .it-n { color: var(--ink-3); }
+.ecu-v .it-ok { position: absolute; top: 4px; left: 6px; font: 800 10px/1 var(--f-text); color: var(--accent); }
+.ecu-v .it-q, .ecu-v .it-w.it-bloque .it-q { top: 3px; right: 3px; left: auto; width: 20px; height: 20px; border: 1px solid var(--rule); background: var(--panel-2); color: var(--ink-3); font: 700 10.5px/1 var(--f-text); box-shadow: none; }
+.ecu-v .it-q::after { content: ""; position: absolute; inset: -8px; }   /* le doigt l'attrape même s'il est petit */
+.ecu-v .it-w.q-on .it-q { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+/* ✨ nouveauté : petite étoile dorée en bas à gauche de l'aperçu, case légèrement dorée */
+.ecu-v .it-nouv .it { border-color: color-mix(in srgb, #E2B33A 70%, var(--rule)); background: color-mix(in srgb, #F7CF55 9%, var(--panel)); }
+.ecu-v .it-nv { position: absolute; top: 5px; left: 6px; margin: 0; padding: 0; background: none; box-shadow: none; font: normal 12px/1 var(--f-text); filter: drop-shadow(0 0 3px rgba(247,207,85,.8)); }
+.ecu-v .it-ok + .it-nv { left: 18px; }   /* nouvelle ET équipée : l’étoile à côté du ✓ */
+/* détails sous la grille : 🎨 couleurs, éditeur de tête ; numéro et badges sans cadre */
+.ecu-v .eta-det { margin: 8px 0 0; }
+.ecu-v .eta-num, .ecu-v .bdg-choix { padding: 0; }
+.ecu-v .bdg-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; padding: 0; scroll-snap-type: none; }
+.ecu-v .bdg-c { max-width: none; min-width: 0; }
+.ecu-v + .eta-aide { margin: -4px 2px 0; font-size: 12.5px; }
+@media (max-width: 360px) { .ecu-v .eta-g { gap: 5px; } .ecu-v .it-n { font-size: 10px; } .ecu-cats .chip b { font-size: 11.5px; } }

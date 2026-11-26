@@ -1392,7 +1392,7 @@ function bullePortrait(essai) {
     b.querySelector('[data-bp="non"]').addEventListener("click", () => { b.remove(); toast("Ton portrait t'attend dans Réglages, ou touche ta tête dans le Classement."); });
   } catch (e) { }
 }
-let ECU_SLOT = "";   // v20.84 : la ligne (étagère) ouverte en détail (🎨, « ? », éditeur de tête) ; une seule à la fois
+let ECU_SLOT = "";   // v20.96 : la catégorie ouverte dans l'écurie (pastille en blanc, sa grille dessous) ; "" = la dernière ouverte sur l'appareil
 /* v20.68 · klaxons de départ (neutres), dessinés par nous : Pouet (trompe à poire), Trompette, Sifflet */
 const KLAXONS_DESSINES = (() => {
   const svg = (x, nom) => '<svg class="kl-svg" viewBox="0 0 32 32" width="1.25em" height="1.25em" role="img" aria-label="' + nom + '">' + x + "</svg>";
@@ -1492,16 +1492,15 @@ function equiperMaintenant(slot, id) {
   const qui = quiEcurie(); if (!qui || !ITEMS[slot] || !ITEMS[slot][id]) return;
   try { document.querySelectorAll(".av-ov").forEach(x => x.remove()); if (typeof AVENT_APERCU !== "undefined") AVENT_APERCU = false; } catch (e) { }
   ECU = { nom: qui, e: equipDe(qui) }; ECU.e[slot] = id; if (ECU.e.teintes) delete ECU.e.teintes[slot];
-  ECU_SLOT = slot; ECU_Q = slot + "." + id; ECU_VOIR = null; ECU_NOUV = null; ETAT.podium = "ecurie"; garder();
+  choisirCatEcu(slot); ECU_Q = slot + "." + id; ECU_VOIR = null; ECU_NOUV = null; ETAT.podium = "ecurie"; garder();   // v20.96 : l'écurie s'ouvre sur la bonne catégorie
   try { if (vueActive() !== "trophees") allerA("trophees"); } catch (e) { }
   rendreTrophees();
-  setTimeout(() => montrerObjetEcurie(slot, id), 250);   // v20.84 : jusqu'à sa ligne (étagère), défilée jusqu'à l'objet, mis en évidence
+  setTimeout(() => montrerObjetEcurie(slot, id), 250);   // v20.96 : la grille de sa catégorie, l'objet au centre de l'écran, mis en évidence
   toast("🏎️ Essayé sur ta voiture : « 💾 Enregistrer » (en haut) pour le garder.");
 }
-/** v20.84 · amène à un objet de l'écurie : sa ligne au centre de l'écran, l'étagère défilée jusqu'à lui, puis un halo quelques secondes */
+/** v20.84 · amène à un objet de l'écurie : au centre de l'écran, puis un halo quelques secondes (v20.96 : dans la grille de sa catégorie) */
 function montrerObjetEcurie(slot, id) {
-  const b = document.querySelector('.it[data-slot="' + slot + '"][data-item="' + id + '"]'), w = b && b.closest(".it-w"), l = b && b.closest(".eta-l"); if (!b) return;
-  if (l) { const x = w.offsetLeft - (l.clientWidth - w.offsetWidth) / 2; l.scrollLeft = Math.max(0, x); }
+  const b = document.querySelector('.it[data-slot="' + slot + '"][data-item="' + id + '"]'), w = b && b.closest(".it-w"); if (!b) return;
   if (w.scrollIntoView) w.scrollIntoView({ block: "center", inline: "nearest", behavior: reduit ? "auto" : "smooth" });
   w.classList.add("eta-cible"); setTimeout(() => w.classList.remove("eta-cible"), 2600);
 }
@@ -1539,7 +1538,7 @@ function teaserEcurie(essai) {
       '<div class="btn-row"><button class="btn acc" type="button" data-er-go>Ouvrir mon écurie</button></div><small class="er-x">Touche n\'importe où pour fermer</small></div>';
     document.body.appendChild(o);
     const fermer = () => { o.remove(); };
-    o.addEventListener("click", ev => { if (ev.target.closest("[data-er-go]")) { fermer(); ETAT.podium = "ecurie"; ECU_SLOT = "casque"; garder(); try { allerA("trophees"); rendreTrophees(); setTimeout(() => { const r = document.querySelector('#v-trophees .eta[data-ecu-slot="casque"]'); if (r) r.scrollIntoView({ block: "center", behavior: reduit ? "auto" : "smooth" }); }, 250); } catch (er) { } return; } fermer(); });   // v20.84 : la porte ouvre l'écurie défilée jusqu'à la ligne Casque
+    o.addEventListener("click", ev => { if (ev.target.closest("[data-er-go]")) { fermer(); ETAT.podium = "ecurie"; choisirCatEcu("casque"); garder(); try { allerA("trophees"); rendreTrophees(); setTimeout(() => { const r = document.querySelector('#v-trophees .eta[data-ecu-slot="casque"]'); if (r) r.scrollIntoView({ block: "center", behavior: reduit ? "auto" : "smooth" }); }, 250); } catch (er) { } return; } fermer(); });   // v20.84 : la porte ouvre l'écurie défilée jusqu'à la ligne Casque
   } catch (e) { }
 }
 /* v20.80 (Théo, 26/11) · l'affichette « 🎨 Nouveau : choisis l'affichage des décors 3D » (réglage de piste.js, bloc QUALITÉ 3D ; Réglages › Affichage › Décors 3D).
@@ -1582,17 +1581,17 @@ function htmlEcurie() {
   if (!D.personnes.some(p => p.nom === qui)) return '<div class="vide">Choisis ton nom dans les réglages pour monter ton écurie.</div>';
   if (!ECU || ECU.nom !== qui) ECU = { nom: qui, e: equipDe(qui) };
   const ouverts = debloques(qui), e = ECU.e;
-  // v20.84 (Théo) · toutes les catégories d'un coup : une étagère par catégorie ; les ✨ nouveaux de toute l'écurie sont montrés (en tête de leur étagère, pastille) puis notés comme vus
+  // v20.84 (Théo) · les ✨ nouveaux de toute l'écurie sont montrés (pastille ✨ sur leur catégorie, en tête de la grille) puis notés comme vus
   if (!ECU_NOUV || ECU_NOUV.nom !== qui) { ECU_NOUV = { nom: qui, l: nouveauxEcurie(qui) }; marquerVus(qui, ECU_NOUV.l); }
   ECU_SALES.clear();
-  const total = totalObjets(), nb = ouverts.size - Object.keys(BASE_ECURIE).length;
-  const showroom = '<div class="showroom"><div class="sr-num" aria-hidden="true">' + e.numero + '</div>' +
-    '<div class="sr-h"><span class="sr-k">Mon écurie · ' + (estChauffe(saisonCourante()) ? "Tour de chauffe" : "Saison " + numeroSaison(saisonCourante())) + '</span><span class="sr-id">' + avatar(qui, Object.assign({}, e, { vignette: true })) + "<b" + attrLivree(qui, e) + ">" + esc(qui) + "</b></span>" +
-    '<span class="sr-p"><span class="sr-barre"><i style="width:' + (total ? nb / total * 100 : 0).toFixed(0) + '%"></i></span>' + nb + " / " + total + " objets</span></div>" + btnGarderHaut(qui, e) +
+  const cat = catEcurie(), r = rangsEcurie().find(x => x[0] === cat);
+  // v20.96 (Théo) · sur le modèle du Vestiaire de Moi : la carte de la F1 (nom, numéro, objets), les pastilles de catégories avec compteurs, puis la grille des objets de la catégorie choisie
+  const showroom = '<div class="showroom sr-compact"><div class="sr-num" aria-hidden="true">' + e.numero + '</div>' +
+    '<div class="sr-h">' + htmlTeteEcu(qui, e, ouverts) + "</div>" + btnGarderHaut(qui, e) +
     '<div class="sr-3d" id="sr-3d">' + svgVoiture({ nom: qui, e, reflet: true, idle: true }) + "</div>" +
-    '<span class="sr-aide" aria-hidden="true">' + (window.Piste && Piste.supporte() && !ecuVue2D() ? "<em>↔ Tourne-la · 🤏 zoome</em>" : "") + "</span>" + btnVueEcu() + '<button class="sr-klaxon sr-hasard" type="button" id="ecu-hasard">🎲 Au hasard</button><button class="sr-klaxon" type="button" id="ecu-klaxon">📯 Klaxonner</button></div>';   // v20.48 : la voiture de la course, en 3D ; v20.84 : 🎲 dans la carte (la 1re étagère se voit dès l'arrivée), l'aide « tourne-la » dans l'étiquette de la voiture
-  const etageres = '<p class="eta-aide">Touche un objet pour l\'essayer, « ? » : d\'où il vient.</p><div class="etageres">' +
-    rangsEcurie().map(([s, lib]) => htmlEtagere(qui, s, lib, e, ouverts)).join("") + "</div>";
+    '<span class="sr-aide" aria-hidden="true">' + (window.Piste && Piste.supporte() && !ecuVue2D() ? "<em>↔ Tourne-la · 🤏 zoome</em>" : "") + "</span>" + btnVueEcu() + '<button class="sr-klaxon sr-hasard" type="button" id="ecu-hasard">🎲 Au hasard</button><button class="sr-klaxon" type="button" id="ecu-klaxon">📯 Klaxonner</button></div>';   // v20.48 : la voiture de la course, en 3D
+  const etageres = htmlCatsEcu(qui, e, ouverts) + '<div class="etageres ecu-v">' + (r ? htmlEtagere(qui, r[0], r[1], e, ouverts) : "") + "</div>" +
+    '<p class="eta-aide">Touche un objet pour l\'essayer sur ta F1, ou « ? » pour savoir d\'où il vient.</p>';
   return showroom + htmlCollantEcu(qui, e) + htmlHasardEcu(qui, e) + etageres +
     '<button class="btn acc plein" type="button" id="ecu-garder">Enregistrer mon écurie</button>' +
     '<p class="info">Ta voiture de course porte ta livrée, ton casque, ta finition, ton numéro et ta traînée. En course, on garde ton visage pour qu\'on te reconnaisse.' + (ecurieDepart() ? " En décembre, les objets de départ ; de nouveaux objets se gagneront tout au long de 2027." : "") + "</p>" +
@@ -1661,43 +1660,83 @@ function rappelGarderEcurie(suite) {
 function htmlHasardEcu() {
   return '<div class="ecu-hasard">' + (ecuModifie() ? '<button class="btn ghost" type="button" id="ecu-retour">↩️ Annuler les changements</button>' : "") + "</div>";
 }
-/* ---------- v20.84 (Théo) · 🛍️ les étagères de l'écurie : toutes les catégories l'une sous l'autre, chacune une rangée d'objets qu'on fait défiler au doigt ----------
-   Une seule ligne « ouverte » à la fois (ECU_SLOT) : sous elle, les couleurs 🎨 de l'objet choisi, le « ? » (d'où vient l'objet) ou l'éditeur de tête. */
-/** v20.84 (Théo) · les lignes qui ont des ✨ nouveautés pas encore vues remontent en tête (même devant Pilote : c'est elles qu'on risque de rater) ; ordre habituel sinon.
+/* ---------- v20.96 (Théo, 26/11) · 🧥 l'écurie sur le modèle du Vestiaire de Moi ----------
+   En haut la carte de la F1 (nom, numéro, « N / total objets ») ; dessous, les pastilles des catégories (3 par ligne, émoji, nom, compteur « 8 / 15 ») ;
+   dessous, la grille des objets de la catégorie choisie (4 par ligne). Les catégories viennent des listes existantes (SLOTS, ITEMS) : un nouvel objet
+   ou un nouvel emplacement y apparaît tout seul. ECU_SLOT = la catégorie ouverte (mémorisée sur l'appareil) ; ECU_PED = l'éditeur de tête ouvert. */
+const ECU_CATS_ORDRE = ["livree", "casque", "finition", "trainee", "plaque", "badges", "pilote", "fond", "klaxon", "circuit", "numero"];   // l'ordre des pastilles (une catégorie inconnue va à la fin)
+const ICO_CAT = { pilote: "🙂", casque: "🪖", finition: "🖌️", fond: "🖼️", livree: "🏎️", trainee: "💨", klaxon: "📯", plaque: "🏷️", circuit: "🎞️", numero: "🔢", badges: "🏅" };
+const COURT_CAT = { circuit: "Filtre" };   // libellés courts des pastilles (3 par ligne à 360 px)
+let ECU_PED = false;
+/** v20.84 (Théo) · les catégories qui ont des ✨ nouveautés pas encore vues passent en tête ; ordre habituel sinon.
     Les nouveautés sont celles de l'ouverture en cours (ECU_NOUV) : l'ordre ne bouge pas tant qu'on reste dans l'écurie, et redevient normal à l'ouverture suivante. */
 function rangsEcurie() {
-  const l = [["pilote", "Pilote"]].concat(SLOTS, [["numero", "Numéro"]], ecurieDepart() ? [] : [["badges", "Badges"]]);
-  const nv = ECU_NOUV && ECU_NOUV.l && ECU && ECU_NOUV.nom === ECU.nom ? new Set(ECU_NOUV.l.map(k => k.split(".")[0])) : null;
-  return nv && nv.size ? l.filter(x => nv.has(x[0])).concat(l.filter(x => !nv.has(x[0]))) : l;
+  const base = [["pilote", "Pilote"]].concat(SLOTS, [["numero", "Numéro"]], ecurieDepart() ? [] : [["badges", "Badges"]]);
+  const o = s => { const i = ECU_CATS_ORDRE.indexOf(s); return i < 0 ? 99 : i; };
+  const l = base.map((x, i) => [x, i]).sort((a, b) => o(a[0][0]) - o(b[0][0]) || a[1] - b[1]).map(x => x[0]);
+  const nv = catsNouvelles();
+  return nv.size ? l.filter(x => nv.has(x[0])).concat(l.filter(x => !nv.has(x[0]))) : l;
+}
+function catsNouvelles() { return ECU_NOUV && ECU_NOUV.l && ECU && ECU_NOUV.nom === ECU.nom ? new Set(ECU_NOUV.l.map(k => k.split(".")[0])) : new Set(); }
+/** la catégorie ouverte : celle choisie ; sinon la première qui a des ✨ ; sinon la dernière ouverte sur cet appareil ; sinon la première */
+function catEcurie() {
+  const l = rangsEcurie().map(x => x[0]); if (ECU_SLOT && l.includes(ECU_SLOT)) return ECU_SLOT;
+  const nv = catsNouvelles(); let m = null;
+  if (nv.size) m = l.find(s => nv.has(s));
+  if (!m) { try { m = stock.get("versus.ecuCat"); } catch (e) { m = null; } }
+  ECU_SLOT = l.includes(m) ? m : l[0]; ECU_PED = false; return ECU_SLOT;
+}
+function choisirCatEcu(s) { if (ECU_SLOT !== s) ECU_PED = false; ECU_SLOT = s; try { stock.set("versus.ecuCat", s); } catch (e) { /* mémoire indisponible : rien */ } }
+/** le haut de la carte de la F1 : avatar, nom, numéro, « N / total objets » (comme le profil du Vestiaire) */
+function htmlTeteEcu(qui, e, ouverts) {
+  const total = totalObjets(), nb = ouverts.size - Object.keys(BASE_ECURIE).length;
+  return '<span class="sr-id">' + avatar(qui, Object.assign({}, e, { vignette: true })) + "</span>" +
+    '<span class="sr-nm"><b' + attrLivree(qui, e) + ">" + esc(qui) + '</b><span class="sr-k">#' + e.numero + " · " + (estChauffe(saisonCourante()) ? "Tour de chauffe" : "Saison " + numeroSaison(saisonCourante())) + "</span></span>" +
+    '<span class="sr-p" aria-label="' + nb + " objets sur " + total + '"><b>' + nb + "</b> / " + total + "<small>objets</small></span>";
+}
+/** les pastilles des catégories : émoji, nom, compteur ; la choisie en blanc ; ✨ sur celles qui ont des nouveautés */
+function htmlCatsEcu(qui, e, ouverts) {
+  const cur = catEcurie(), nv = ECU_NOUV && ECU_NOUV.nom === qui ? ECU_NOUV.l : [];
+  return '<div class="chips ecu-cats" role="tablist" aria-label="Catégories de l\'écurie">' + rangsEcurie().map(([s, lib]) => {
+    let c = "";
+    if (SLOTS.some(z => z[0] === s)) { const ids = idsSlot(s); c = ids.filter(id => ouverts.has(s + "." + id)).length + " / " + ids.length; }
+    else if (s === "numero") c = "#" + e.numero;
+    else if (s === "pilote") c = e.pilote === "casque" ? "Casque" : "Tête";
+    else if (s === "badges") { const a = badgesPossedes(qui).length; c = a + " / " + (a + badgesAGagner(qui).length); }
+    const n = nv.filter(k => k.split(".")[0] === s).length, court = COURT_CAT[s] || lib;
+    return '<button class="chip" type="button" role="tab" data-ecu-cat="' + s + '" aria-pressed="' + (s === cur) + '" aria-selected="' + (s === cur) + '" aria-label="' + esc(lib + " : " + c + (n ? ", " + n + " nouveau" + (n > 1 ? "x" : "") : "")) + '">' +
+      (n ? '<i class="ecu-cat-nv" aria-hidden="true">✨</i>' : "") + "<b>" + (ICO_CAT[s] || "🎁") + " " + esc(court) + "</b><small>" + esc(c) + "</small></button>";
+  }).join("") + "</div>";
 }
 function htmlEtagere(qui, slot, lib, e, ouverts) {
-  const ouvert = ECU_SLOT === slot, item = SLOTS.some(z => z[0] === slot);
-  const valeur = slot === "badges" ? (Array.isArray(e.badges) ? e.badges.length + " / 3" : "auto") : slot === "numero" ? "#" + e.numero : slot === "pilote" ? (e.pilote === "casque" ? "Casque" : "Tête") : esc(ITEMS[slot][e[slot]]);
+  const item = SLOTS.some(z => z[0] === slot), ouvert = slot === "pilote" ? ECU_PED : item;
+  const valeur = slot === "badges" ? (Array.isArray(e.badges) ? e.badges.length + " / 3 affichés" : "choix auto") : slot === "numero" ? "#" + e.numero : slot === "pilote" ? (e.pilote === "casque" ? "Casque" : "Tête") : esc(ITEMS[slot][e[slot]]);
   let ids = [], nv = 0, corps = "", detail = "";
   if (item) { ids = ordreItems(qui, slot, idsSlot(slot)); nv = ECU_NOUV.l.filter(k => k.split(".")[0] === slot).length; }
-  const compte = item ? '<span class="eta-c" aria-label="' + ids.filter(id => ouverts.has(slot + "." + id)).length + " objets à toi sur " + ids.length + '">' + ids.filter(id => ouverts.has(slot + "." + id)).length + " / " + ids.length + "</span>" : "";
   if (slot === "pilote") {
-    corps = '<div class="eta-l">' + [["tete", "🙂 Ma tête", avatar(qui, Object.assign({}, e, { pilote: "tete", acc: "" }))], ["casque", "🪖 Mon casque", avatar(qui, Object.assign({}, e, { pilote: "casque" }))]].map(([m, t, av]) =>
-      '<div class="it-w"><button type="button" class="it r-serie' + ((e.pilote === "casque") === (m === "casque") ? " on" : "") + '" data-ecu-pmode="' + m + '"><span class="it-v">' + av + "</span><span class=\"it-n\">" + t + "</span></button></div>").join("") +
-      '<div class="it-w"><button type="button" class="it r-serie eta-edit' + (ouvert ? " on" : "") + '" data-ecu-ouvrir="pilote" aria-expanded="' + ouvert + '"><span class="it-v"><span class="it-emo">✏️</span></span><span class="it-n">' + (ouvert ? "Fermer" : "Modifier") + '</span><span class="it-r">visage, coupe, tenue…</span></button></div></div>';
+    corps = '<div class="eta-l eta-g">' + [["tete", "🙂 Ma tête", avatar(qui, Object.assign({}, e, { pilote: "tete", acc: "" }))], ["casque", "🪖 Mon casque", avatar(qui, Object.assign({}, e, { pilote: "casque" }))]].map(([m, t, av]) => { const on = (e.pilote === "casque") === (m === "casque");
+      return '<div class="it-w"><button type="button" class="it r-serie' + (on ? " on" : "") + '" data-ecu-pmode="' + m + '"><span class="it-v">' + av + '</span><span class="it-n">' + t + "</span>" + (on ? '<span class="it-ok" aria-hidden="true">✓</span>' : "") + "</button></div>"; }).join("") +
+      '<div class="it-w"><button type="button" class="it r-serie eta-edit' + (ouvert ? " ouvert" : "") + '" data-ecu-ouvrir="pilote" aria-expanded="' + ouvert + '"><span class="it-v"><span class="it-emo">✏️</span></span><span class="it-n">' + (ouvert ? "Fermer" : "Modifier") + "</span></button></div></div>";
     if (ouvert) detail = htmlPilote(qui, e);
   } else if (slot === "numero") corps = '<div class="num-bloc eta-num"><input id="ecu-num" class="champ-num" inputmode="numeric" maxlength="2" value="' + e.numero + '" aria-label="Numéro de course (1 à 99)"><p class="info">Ton numéro de course, de 1 à 99 : sur le ponton de ta voiture et dans la grille.</p></div>';
   else if (slot === "badges") corps = htmlChoixBadges(qui, e);
   else {
-    corps = '<div class="eta-l" data-eta-l="' + slot + '">' + ids.map(id => htmlObjetEtagere(qui, slot, id, e, ouverts)).join("") + "</div>";
+    corps = '<div class="eta-l eta-g" data-eta-l="' + slot + '">' + ids.map(id => htmlObjetEtagere(qui, slot, id, e, ouverts)).join("") + "</div>";
     if (ouvert) detail = htmlTeintes(qui, slot, e);
   }
-  return '<section class="eta' + (ouvert && detail ? " eta-ouv" : "") + '" data-ecu-slot="' + slot + '" aria-label="' + esc(lib) + '"><div class="eta-h"><h4>' + esc(lib) + "</h4><small>" + valeur + "</small>" +
-    (nv ? '<i class="ecu-pt" aria-label="' + nv + ' nouveau(x)">✨ ' + nv + "</i>" : "") + compte + "</div>" + corps + (detail ? '<div class="eta-det">' + detail + "</div>" : "") + htmlBulleEta(qui, slot, e) + "</section>";
+  // comme au Vestiaire, pas de titre au-dessus de la grille : la pastille choisie (en blanc) dit la catégorie et son compteur ; le titre reste pour les lecteurs d'écran
+  return '<section class="eta eta-vue' + (detail ? " eta-ouv" : "") + '" data-ecu-slot="' + slot + '" role="tabpanel" aria-label="' + esc(lib + " : " + valeur.replace(/<[^>]*>/g, "") + (nv ? ", " + nv + " nouveau" + (nv > 1 ? "x" : "") : "")) + '">' + corps + (detail ? '<div class="eta-det">' + detail + "</div>" : "") + htmlBulleEta(qui, slot, e) + "</section>";
 }
+/** une case de la grille, comme au Vestiaire : l'aperçu, le nom, « ? » en haut à droite, 🔒 si pas encore obtenu, « ??? » si secret, ✓ et cadre bleu si équipé */
 function htmlObjetEtagere(qui, slot, id, e, ouverts) {
   const nouv = ECU_NOUV.l.includes(slot + "." + id), ouvert = ouverts.has(slot + "." + id), org = origineItem(slot, id), r = rareteItem(slot, id), cache = !ouvert && objetCache(slot, id), porte = e[slot] === id;
   const sous = ouvert ? r.lib : org.million ? "👑 Premier millionnaire" : org.champion ? "🌿 Premier champion" : org.monde ? icoMonde(org.monde) + " " + nomMonde(org.monde) : org.succes ? "🏅 " + org.succes.nom : org.gant ? "🧤 Gant de l'infini" : "";
   const ex = org.exclusif ? detenteur(org.exclusif.id) : null;
-  const sous2 = !ouvert && org.exclusif ? (ex ? "🔒 À " + ex.nom : "🥇 1er · " + org.exclusif.nom) : sous;
-  return '<div class="it-w' + (ECU_Q === slot + "." + id ? " q-on" : "") + (ouvert ? "" : " it-bloque") + '"><button type="button" class="it ' + r.cls + (porte ? " on" : "") + (ouvert ? "" : " verrou") + '" data-slot="' + slot + '" data-item="' + id + '">' +
-    '<span class="it-v">' + (cache ? '<span class="it-emo">?</span>' : vignetteEtagere(slot, id, qui, e)) + (ouvert ? "" : '<span class="it-lock">' + (org.million ? "👑" : org.exclusif ? (ex ? org.exclusif.ico : "🥇") : "🔒") + "</span>") + (porte ? '<span class="it-on">Équipé</span>' : "") + "</span>" + (nouv ? '<span class="it-nv">✨ Nouveau</span>' : "") +
-    '<span class="it-n">' + (cache ? "???" : esc(ITEMS[slot][id])) + '</span><span class="it-r">' + esc(sous2) + "</span></button>" +
+  const sous2 = !ouvert && org.exclusif ? (ex ? "🔒 À " + ex.nom : "🥇 1er · " + org.exclusif.nom) : sous, nomV = cache ? "???" : ITEMS[slot][id];
+  const lab = nomV + (porte ? " (équipé)" : ouvert ? " (essayer)" : " (à gagner)") + (sous2 ? " · " + sous2 : "") + (nouv ? " · nouveau" : "");
+  return '<div class="it-w' + (ECU_Q === slot + "." + id ? " q-on" : "") + (ouvert ? "" : " it-bloque") + (cache ? " it-secret" : "") + (nouv ? " it-nouv" : "") + '"><button type="button" class="it ' + r.cls + (porte ? " on" : "") + (ouvert ? "" : " verrou") + '" data-slot="' + slot + '" data-item="' + id + '" aria-label="' + esc(lab) + '">' +
+    '<span class="it-v">' + (cache ? '<span class="it-emo">?</span>' : vignetteEtagere(slot, id, qui, e)) + (ouvert ? "" : '<span class="it-lock" aria-hidden="true">' + (org.million ? "👑" : org.exclusif ? (ex ? org.exclusif.ico : "🥇") : "🔒") + "</span>") + "</span>" +
+    '<span class="it-n">' + esc(nomV) + "</span>" + (porte ? '<span class="it-ok" aria-hidden="true">✓</span>' : "") + (nouv ? '<span class="it-nv" aria-hidden="true" title="Nouveau">✨</span>' : "") + "</button>" +
     '<button type="button" class="it-q" data-itq="' + slot + "." + id + '" aria-label="D\'où vient ' + esc(cache ? "cet objet" : ITEMS[slot][id]) + ' ?">?</button></div>';
 }
 /** les photos 3D des livrées (une image par livrée, jamais une voiture 3D vivante) : prises une à une, en douceur, quand l'étagère approche de l'écran.
@@ -1734,10 +1773,11 @@ function majEcurie(slots, el, sansVoiture) {
   tout1.forEach(s => remplacerEtagere(v, s)); tout.forEach(s => { if (!tout1.has(s)) ECU_SALES.add(s); });
   const sr = v.querySelector(".showroom");
   if (sr) { const num = sr.querySelector(".sr-num"); if (num) num.textContent = e.numero;
-    const id = sr.querySelector(".sr-id"); if (id) id.innerHTML = avatar(qui, Object.assign({}, e, { vignette: true })) + "<b" + attrLivree(qui, e) + ">" + esc(qui) + "</b>";
+    const h = sr.querySelector(".sr-h"); if (h) h.innerHTML = htmlTeteEcu(qui, e, debloques(qui));
     const box = sr.querySelector("#sr-3d");
     if (box && !sansVoiture) { let fait = false; if (!ecuVue2D()) { try { fait = !!monter3D(box, qui, e); } catch (er) { fait = false; } } if (!fait) box.innerHTML = svgVoiture({ nom: qui, e, reflet: true, idle: true }); } }
   const hz = v.querySelector(".ecu-hasard"); if (hz) { const t = document.createElement("div"); t.innerHTML = htmlHasardEcu(qui, e); hz.replaceWith(t.firstElementChild); brancherHasardEcu(v); }
+  const ca = v.querySelector(".ecu-cats"); if (ca) { const t = document.createElement("div"); t.innerHTML = htmlCatsEcu(qui, e, debloques(qui)); ca.replaceWith(t.firstElementChild); }   // v20.96 : « Tête / Casque », « #12 » des pastilles
   const gr = v.querySelector(".grille-dep"); if (gr) { gr.innerHTML = htmlGrilleEcu(qui, e); brancherGrilleEcu(v); }
   majGarderEcu(v); brancherHasardEcu(v);
   photosEtagere(v); animerEtageresVisibles(v);
@@ -1757,10 +1797,12 @@ function remplacerEtagere(v, s) {
 function brancherEtageres(v) {
   if (v.dataset.etageres) return; v.dataset.etageres = "1";
   v.addEventListener("click", ev => {
+    const k = ev.target.closest && ev.target.closest("#v-trophees [data-ecu-cat]");
+    if (k && ECU) { choisirCatEcu(k.dataset.ecuCat); ECU_Q = null; ouvrirCatEcu(v); return; }   // v20.96 : une pastille = la grille de sa catégorie
     const c = ev.target.closest && ev.target.closest("[data-ecu-pmode], [data-ecu-ouvrir], [data-ecu-bdg], [data-ecu-bdgq], #ecu-bdg-auto, [data-itq], .it[data-slot], [data-teinte]");
     if (!c || !ECU || !c.closest(".etageres")) return;
     if (c.dataset.ecuPmode) { ECU.e.pilote = c.dataset.ecuPmode; majEcurie(["pilote", "fond"], c); return; }
-    if (c.dataset.ecuOuvrir) { ECU_SLOT = ECU_SLOT === c.dataset.ecuOuvrir ? "" : c.dataset.ecuOuvrir; ECU_Q = null; majEcurie([], c); return; }
+    if (c.dataset.ecuOuvrir) { ECU_PED = !ECU_PED; ECU_Q = null; majEcurie(["pilote"], c); return; }
     if (c.dataset.ecuBdg) { const id = c.dataset.ecuBdg, l = Array.isArray(ECU.e.badges) ? ECU.e.badges.slice() : badgesAffiches(ECU.nom, ECU.e).map(x => x.id), i = l.indexOf(id);
       if (i >= 0) l.splice(i, 1); else { if (l.length >= 3) { toast("3 badges au plus : retires-en un d'abord."); return; } l.push(id); }
       ECU.e.badges = l; majEcurie(["badges"], c); return; }
@@ -1789,6 +1831,17 @@ function brancherHasardEcu(v) {
   v.querySelectorAll("#ecu-garder-haut, [data-ecu-garder]").forEach(b => { if (b.dataset.br) return; b.dataset.br = "1"; b.addEventListener("click", () => { if (ecuModifie()) garderEcurie(); else toast("✓ Ton écurie est déjà enregistrée."); }); });
   const hz = v.querySelector("#ecu-hasard"); if (hz && !hz.dataset.br) { hz.dataset.br = "1"; hz.addEventListener("click", () => { if (!ECU) return; ECU.e = tenueAuHasard(ECU.nom, ECU.e); ECU_Q = null; rendreTrophees(); popVoiture(); demarrer(v); }); }
   const rt = v.querySelector("#ecu-retour"); if (rt && !rt.dataset.br) { rt.dataset.br = "1"; rt.addEventListener("click", () => { ECU = null; ECU_Q = null; rendreTrophees(); toast("↩️ Changements annulés : ta tenue enregistrée est revenue."); }); }
+}
+/** v20.96 · change de catégorie : seules les pastilles et la grille sont redessinées (la F1 3D ne bouge pas, la page ne saute pas) */
+function ouvrirCatEcu(v) {
+  const et = v.querySelector(".etageres"), ca = v.querySelector(".ecu-cats"); if (!et || !ca || !ECU) { rendreTrophees(); return; }
+  const qui = ECU.nom, e = ECU.e, ouv = debloques(qui), cat = catEcurie(), r = rangsEcurie().find(x => x[0] === cat), haut = ca.getBoundingClientRect().top;
+  ECU_SALES.clear(); clearTimeout(ECU_SALES.t);
+  const t = document.createElement("div"); t.innerHTML = htmlCatsEcu(qui, e, ouv); ca.replaceWith(t.firstElementChild);
+  et.innerHTML = r ? htmlEtagere(qui, r[0], r[1], e, ouv) : "";
+  photosEtagere(v); animerEtageresVisibles(v); brancherPilote(v);
+  const n = v.querySelector(".ecu-cats"); if (n) { const d = n.getBoundingClientRect().top - haut; if (Math.abs(d) > 1) window.scrollBy(0, d); }
+  const g = v.querySelector(".etageres"), gt = g ? g.getBoundingClientRect().top : 0; if (g && gt > innerHeight - 90) window.scrollBy({ top: gt - (innerHeight - 260), behavior: reduit ? "auto" : "smooth" });   // la grille cachée sous la barre du bas : on en montre le début
 }
 function brancherGrilleEcu(v) {
   v.querySelectorAll(".grille-dep [data-voir]").forEach(b => b.addEventListener("click", () => { ECU_VOIR = ECU_VOIR === b.dataset.voir ? null : b.dataset.voir; rendreTrophees(); const g = document.getElementById("garage"); if (g) g.scrollIntoView({ behavior: "smooth", block: "start" }); }));

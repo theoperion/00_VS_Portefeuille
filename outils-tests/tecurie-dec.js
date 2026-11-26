@@ -61,7 +61,7 @@ async function page(b, o) {
     ok(a.ecurie && !a.defis && a.ouverte, "décembre : l'onglet Écurie est là, Trophées toujours caché" + tag + " " + JSON.stringify({ ecurie: a.ecurie, defis: a.defis }));
     const ec = await p.evaluate(async () => {
       ETAT.podium = "ecurie"; garder(); rendreTrophees(); await new Promise(r => setTimeout(r, 900));
-      const fuites = [], vus = [], slots = [...document.querySelectorAll("[data-ecu-slot]")].map(x => x.dataset.ecuSlot), dec = ITEMS;
+      const fuites = [], vus = [], slots = rangsEcurie().map(x => x[0]), dec = ITEMS;   // v20.96 : une pastille par catégorie, la grille de la catégorie choisie
       for (const s of slots) { ECU_SLOT = s; rendreTrophees(); await new Promise(r => setTimeout(r, 120));
         const v = document.querySelector("#v-trophees"), t = v.innerText;
         [...v.querySelectorAll("[data-item]")].forEach(x => { vus.push(x.dataset.slot + "." + x.dataset.item); if (!estDepart(x.dataset.slot, x.dataset.item)) fuites.push(x.dataset.slot + "." + x.dataset.item); });
