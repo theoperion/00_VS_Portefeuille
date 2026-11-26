@@ -774,15 +774,40 @@ function badgesLigne(nom, e) {
   const vus = badgesAffiches(nom, e), autres = tous.filter(b => !vus.some(x => x.id === b.id));
   return '<span class="bdgs">' + vus.map(b => b.html).join("") + (autres.length ? '<span class="bdg bdg-plus" data-bdg="' + esc(nom + " a aussi : " + autres.map(b => b.ico + " " + b.nom).join(", ") + ". Tout est dans sa vitrine (touche sa ligne, puis sa fiche). Chacun choisit ses 3 badges dans Podium › Écurie › Badges.") + '">+' + autres.length + "</span>" : "") + "</span>";
 }
-/** lot47 · la vitrine de la fiche commence par un palmarès en 3 chiffres (saison seulement, comme toute la vitrine) */
+/** lot47 · la vitrine de la fiche commence par un palmarès en 3 chiffres (saison seulement, comme toute la vitrine)
+ *  v20.83 (Théo, 26/11) : chaque chiffre s'explique au toucher (ce qu'il compte) ; l'ancienne « étagère » d'icônes faisait doublon
+ *  avec les médailles et les puces : ses badges sont rangés avec les médailles, sous un titre « 🎖️ Ses badges » (voir vitrineFiche) */
 function palmaresVitrine(nom) {
   const ys = anneesSaison(), y = ys[ys.length - 1]; let titres = 0, manches = 0, tete = 0;
   try { titres = ys.filter(a => { const c = championnat(a); return c.complete && c.classement[0] === nom; }).length; } catch (e) { /* rien */ }
   try { const c = championnat(y); manches = c.mois.filter(m => (m.l || []).some(x => x.nom === nom && x.rg === 1)).length; tete = moisEnTete(nom, y); } catch (e) { /* rien */ }
-  const tous = badgesPossedes(nom);
-  const case_ = (n, l) => '<div><b>' + n + "</b><small>" + l + "</small></div>";
-  return '<div class="vt-palm">' + case_(titres, titres > 1 ? "titres" : "titre") + case_(manches, manches > 1 ? "manches gagnées" : "manche gagnée") + case_(tete, "mois en tête") + "</div>" +
-    (tous.length ? '<div class="vt-etagere" aria-label="Badges de ' + esc(nom) + '">' + tous.slice(0, 8).map(b => '<span class="vt-niche">' + b.html.replace('class="bdg', 'class="bdg vt-b') + "</span>").join("") + (tous.length > 8 ? '<span class="vt-niche plus">+' + (tous.length - 8) + "</span>" : "") + "</div>" : "");
+  const soi = nom === moiPilote(), il = soi ? "Tu en as " : nom + " en a ";
+  const case_ = (n, l, t) => '<button type="button" class="vt-chif" data-bdg="' + esc(t) + '"><b>' + n + "</b><small>" + l + "</small></button>";
+  return '<div class="vt-palm">' +
+    case_(titres, titres > 1 ? "titres" : "titre", "🏆 Titres : les saisons du championnat remportées (1er du classement final, en décembre). " + il + titres + "." + (titres ? "" : " Pour en gagner un : finir 1er du championnat à la fin de la saison.")) +
+    case_(manches, manches > 1 ? "manches gagnées" : "manche gagnée", "🏁 Manches gagnées : chaque mois est une manche, gagnée par le meilleur rendement du mois. " + il + manches + " cette saison.") +
+    case_(tete, "mois en tête", "🟡 Mois en tête : les fins de mois où l'on mène le championnat de la saison (au total des points). " + il + tete + " cette saison.") + "</div>";
+}
+/** v20.83 · une bulle à la fois dans la vitrine (le petit message du bas, comme les badges du Classement) ;
+ *  elle se ferme au toucher ailleurs, au bouton retour du téléphone, ou toute seule au bout de quelques secondes */
+let BULLE_VT = null;   // le texte de la bulle ouverte (un autre message du bas n'est jamais fermé à sa place)
+function bulleVitrine(t) { toast(t); BULLE_VT = t; }
+function fermerBulleVitrine() {
+  const el = $("#toast"), t = BULLE_VT; BULLE_VT = null;
+  if (!t || !el || el.hidden || (el.querySelector(".tst-t") || {}).textContent !== t) return false;
+  el.hidden = true; return true;
+}
+document.addEventListener("click", ev => { if (BULLE_VT && !(ev.target.closest && ev.target.closest(".vitrine [data-bdg], #toast"))) fermerBulleVitrine(); }, true);
+/** Branche la vitrine d'une fiche : chaque élément s'explique au toucher (bulle), les médailles ouvrent leur fiche de succès */
+function brancherVitrine(v, nom) {
+  const vt = v && v.querySelector(".vitrine"); if (!vt) return;
+  vt.querySelectorAll(".vt-badges > span:not([data-bdg])").forEach(p => {   // une puce ajoutée plus tard sans explication : au moins ce qu'elle est
+    p.dataset.bdg = p.textContent.trim() + (p.title ? " : " + p.title : "") + (p.classList.contains("vt-garde") ? ". Titre tenu à la fin de la saison : gardé pour toujours, il ne se vole plus." : ".");
+  });
+  vt.querySelectorAll("[data-bdg]").forEach(b => { b.style.cursor = "help"; if (b.tagName !== "BUTTON") { b.setAttribute("role", "button"); b.tabIndex = 0; }
+    const go = ev => { ev.stopPropagation(); bulleVitrine(b.dataset.bdg); };
+    b.addEventListener("click", go); b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(e); } }); });
+  vt.querySelectorAll("[data-carte-coll]").forEach(b => b.addEventListener("click", () => { fermerBulleVitrine(); ouvrirSucces(b.dataset.carteColl, nom); }));
 }
 /** Le « ? » d'un objet de l'écurie : d'où il vient (Trophées v2 : 🗺️ Mondes, 🏅 Succès commun, 🥇 Succès exclusif, 🧤 Gant, 💎 Légendes, 2028), qui l'a, ce qu'il reste à faire */
 function texteOrigineItem(qui, slot, id) {
@@ -2216,17 +2241,17 @@ function htmlVitrines() {
     '<div class="vit-apart"><small>À part :</small><button type="button" data-vit="titres" aria-pressed="' + (o === "titres") + '">⚔️ Titres</button><button type="button" data-vit-coupe>🏆 Coupe brisée</button></div>' + corps;
 }
 /** Ouvrir un succès : sa médaille (selon son palier), l'objectif, les objets, qui l'a réussi (le premier doré, puis les autres) */
-function ouvrirSucces(id) {
+function ouvrirSucces(id, de) {   // v20.83 : « de » = le pilote de la vitrine d'où l'on vient
   if (id === "million") return ouvrirCarteMillion();
   const x = SUCCES.find(z => z.id === id); if (!x) return;
   const apercu = !saisonJouee(), r = apercu ? { or: null, autres: [], tous: [] } : rangsSucces(id), moi = moiPilote(), P = PALIERS[x.palier], cc = CARTES_COLL[id] || {}, idx = D.marche.indices[iRef()];
-  const premier = !!(r.or && r.or.noms.includes(moi));
+  const premier = !!(r.or && r.or.noms.includes(moi)), dore = !!(r.or && r.or.noms.includes(de || moi));   // v20.83 : depuis une vitrine, la médaille de CE pilote (dorée s'il était le premier)
   const ov = document.createElement("div"); ov.className = "revel cc-ov sec-ov sc-ov"; ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
   const hist = (o, med) => '<li class="h-' + med + '" style="--c:' + couleur(o.nom) + '"><span>' + (med === "or" ? "🥇" : "🏅") + "</span><div><b>" + esc(o.nom) + (med === "or" ? ' <em class="h-1er">1<sup>er</sup></em>' : "") + "</b><small>" + esc(moisLong(o.k) + (histoireSecret(id, o) ? " · " + histoireSecret(id, o) : "")) + "</small></div></li>";
   const ors = r.or ? r.or.noms.map(n => r.tous.find(o => o.nom === n) || { nom: n, k: r.or.k }) : [];
   ov.innerHTML = '<div class="rv-c cc-c sc-c p-' + P.id + '"><span class="tuto-k">🏅 Succès · ' + P.ico + " " + esc(P.nom) + "</span>" +
-    '<div class="sc-grand p-' + P.id + '">' + svgMedaille(x.palier, premier) + '<span class="cc-emo">' + x.ico + "</span></div>" +
-    "<h3>" + esc(x.nom) + '</h3><p class="cc-cond"><b>Objectif :</b> ' + esc(x.def.replace("l'indice", "le " + idx)) + ".</p>" +
+    '<div class="sc-grand p-' + P.id + '">' + svgMedaille(x.palier, dore) + '<span class="cc-emo">' + x.ico + "</span></div>" +
+    "<h3>" + esc(x.nom) + "</h3>" + (de && !apercu ? lignePiloteSucces(x, r, de, moi) : "") + '<p class="cc-cond"><b>Objectif :</b> ' + esc(x.def.replace("l'indice", "le " + idx)) + ".</p>" +
     '<ul class="sc-gains"><li>🎁 <b>Pour chacun qui réussit :</b> ' + esc(libGains([x.gain])) + "</li>" + (x.bonus ? "<li>🥇 <b>En plus, au premier seulement :</b> " + esc(libGains([x.bonus])) + " (exclusif), la version dorée et son nom gravé</li>" : "") + "</ul>" +
     (r.or ? '<p class="sec-histoire">📜 ' + esc(ligneHistoire(x, ors[0])) + '</p><ol class="sec-rangs">' + ors.map(o => hist(o, "or")).join("") + r.autres.map(o => hist(o, "arg")).join("") + "</ol>"
       : '<p class="cc-cond">' + (apercu ? "Il se joue dès janvier." : "Personne ne l'a encore réussi : le premier gagnera la version dorée et l'objet exclusif.") + "</p>") +
@@ -2236,6 +2261,15 @@ function ouvrirSucces(id) {
   const t0 = Date.now(), fermer = () => ov.remove();
   ov.addEventListener("click", e => { if (e.target === ov && Date.now() - t0 > 600) fermer(); });
   ov.querySelector('[data-cc="ok"]').addEventListener("click", fermer);
+}
+/** v20.83 · en haut de la fiche d'un succès ouverte depuis une vitrine : quand ce pilote l'a réussi, en premier ou non ; et toi */
+function lignePiloteSucces(x, r, de, moi) {
+  const o = r.tous.find(z => z.nom === de), prem = !!(r.or && r.or.noms.includes(de)), k = o ? o.k : prem ? r.or.k : null;
+  if (!reussi(x.id, de)) return "";
+  const qui = de === moi ? "Toi" : esc(de), quand = k ? " en " + esc(moisLong(k)) : "";
+  const t = prem ? qui + " : réussi" + quand + ", <b>en premier 🥇</b>" + (x.bonus ? " (version dorée et objet exclusif)" : "") : qui + " : réussi" + quand + ", après " + esc(r.or ? r.or.nom : "le premier") + " (le premier)";
+  const toi = de === moi ? "" : reussi(x.id, moi) ? " · toi aussi, tu l'as réussi." : " · toi : pas encore, l'objectif est juste en dessous.";
+  return '<p class="cc-cond vt-qui">🎖️ ' + t + toi + "</p>";
 }
 /** (ancien nom) */
 function ouvrirSecret(id) { return ouvrirSucces(id); }
@@ -2292,21 +2326,44 @@ function eclatsDe(nom) {
   const T = typeof TRESORS !== "undefined" && TRESORS && TRESORS.l; if (!T || (typeof TRESOR_APERCU !== "undefined" && TRESOR_APERCU)) return null;
   return T.filter(t => CAL_GP.includes(t.circuit) && (!t.saison || t.saison >= SAISON.premiere) && (t.chercheurs || []).some(x => x.nom === nom)).length;
 }
-/* La vitrine d'un pilote (fiche du Classement) : ses succès (dorés en premier), ses mondes, son Gant, ses titres */
+/* La vitrine d'un pilote (fiche du Classement) : sa plaque, son palmarès, ses badges (médailles des succès, dorés en premier, et Légendes), sa saison (mondes, Gant, éclats, titres).
+   v20.83 (Théo, 26/11) : TOUT s'explique au toucher, pour soi comme pour les autres : comment il l'a eu, et pour qui ne l'a pas, comment l'avoir. */
 function vitrineFiche(nom) {
   if (typeof saisonJouee !== "function" || !saisonJouee()) return "";   // v17.5 : pas de vitrine pendant le tour de chauffe (date, pas onglet)
-  const pm = D.premierMillion, ors = exclusifsDe(nom), suiv = succesSuivantDe(nom);
+  const pm = D.premierMillion, ors = exclusifsDe(nom), suiv = succesSuivantDe(nom), moi = moiPilote(), soi = nom === moi, Nom = esc(nom);
   const TM = etatTropheesMondes(), nT = TROPHEES_MONDES.filter(t => TM[t.id][nom] && TM[t.id][nom].ok).length, y = anneesSaison().slice(-1)[0], g = (etatGant(y)[nom] || { n: 0 }).n, C = etatTitres(y);
   const ne = eclatsDe(nom);   // v20.61 · 🏆 combien d'éclats de la Coupe brisée ce pilote a trouvés (un nombre, jamais leur contenu)
   if (ne === null && typeof chargerTresors === "function") chargerTresors().then(() => { if (eclatsDe(nom) !== null && vueActive() === "fiche") rendreVue("fiche"); }).catch(() => {});
-  const puces = ['<span style="--mc:#B9C3CE">🗺️ ' + nT + " / 12 mondes</span>", '<span style="--mc:#9B6BFF">🧤 ' + g + " / 6 pierres</span>"]
-    .concat(ne === null ? [] : ['<span class="vt-eclats" style="--mc:#E8B640" title="Éclats de la Coupe brisée trouvés par ' + esc(nom) + '">🏆 ' + ne + " / 12 éclats</span>"])
-    .concat(TITRES.filter(c => C[c.id] && C[c.id].nom === nom).map(c => '<span style="--mc:' + c.c + '">' + c.ico + " " + esc(c.nom) + "</span>"))
-    .concat((G0 => TITRES.filter(c => G0[c.id] === nom).map(c => '<span class="vt-garde" style="--mc:' + c.c + '" title="Titre gardé pour toujours">' + c.ico + " " + esc(c.nom.replace(/^(Le|La) /, "")) + " " + TITRES_AN + " · pour toujours</span>"))(titresGardes()));   // v20.84 : titres de fin de saison, gardés pour toujours
-  const med = (x, premier) => '<button type="button" class="vt-med p-' + PALIERS[x.palier].id + '" data-carte-coll="' + x.id + '" title="' + esc(x.nom) + '">' + svgMedaille(x.palier, premier) + '<span class="cc-emo">' + x.ico + "</span></button>";
-  return '<div class="vitrine">' + (plaqueDe(nom) ? '<div class="vt-plaque">' + plaqueDe(nom).replace('class="plaque', 'class="plaque grande') + "</div>" : "") + '<div class="vt-h"><b>🗄️ La vitrine de ' + esc(nom) + "</b><small>" + (ors.length + suiv.length) + " succès sur 12 · " + ors.length + " en premier 🥇</small></div>" + palmaresVitrine(nom) +
-    (ors.length + suiv.length || pm && pm.nom === nom ? '<div class="vt-meds">' + (pm && pm.nom === nom ? '<button type="button" class="vt-med p-legende" data-carte-coll="million" title="Premier millionnaire"><span class="cc-emo">👑</span></button>' : "") + ors.map(x => med(x, true)).join("") + suiv.map(x => med(x, false)).join("") + "</div>" : '<p class="info">Pas encore de succès : le premier qui en réussit un grave son nom dessus.</p>') +
-    '<div class="vt-badges">' + puces.join("") + "</div></div>";
+  const ep = new Set(badgesAffiches(nom).map(b => b.id)), pin = id => ep.has(id) ? '<i class="vt-pin" aria-hidden="true">📌</i>' : "", pinT = id => ep.has(id) ? " 📌 Affiché à côté de son nom au Classement." : "";
+  const il = soi ? "Tu en as " : nom + " en a ";
+  const puce = (c, txt, bdg, id, cls) => '<span' + (cls ? ' class="' + cls + '"' : "") + ' style="--mc:' + c + '" data-bdg="' + esc(bdg + pinT(id)) + '">' + txt + pin(id) + "</span>";
+  const puces = [puce("#B9C3CE", "🗺️ " + nT + " / 12 mondes", "🗺️ Mondes : chaque mois a son monde et son mini-jeu. Quand le groupe réussit ENSEMBLE l'objectif commun du mini-jeu, chacun gagne le trophée du monde et ses objets d'écurie. " + il + nT + " sur 12."),
+    puce("#9B6BFF", "🧤 " + g + " / 6 pierres", "🧤 Pierres du Gant de l'infini : 6 exploits à réussir dans la saison, une pierre chacun (liste dans Trophées › 🧤 Gant). Les 6 allumées = le badge 🧤 Gant de l'infini et ses objets. " + il + g + " sur 6.", "gant")]
+    .concat(ne === null ? [] : [puce("#E8B640", "🏆 " + ne + " / 12 éclats", "🏆 Éclats de la Coupe brisée : un éclat par trésor de circuit trouvé dans la saison (chasse au trésor de la page Course). " + il + ne + " sur 12.", null, "vt-eclats")])
+    .concat(TITRES.filter(c => C[c.id] && C[c.id].nom === nom).map(c => puce(c.c, c.ico + " " + esc(c.nom), c.ico + " " + c.nom + " : " + c.def + " " + (soi ? "Tu le tiens" : nom + " le tient") + " depuis " + moisLong(C[c.id].depuis) + ". Il se vole chaque mois, sans point ni objet.", "t-" + c.id)))
+    .concat((G0 => TITRES.filter(c => G0[c.id] === nom).map(c => puce(c.c, c.ico + " " + esc(c.nom.replace(/^(Le|La) /, "")) + " " + TITRES_AN + " · pour toujours", c.ico + " " + c.nom + " " + TITRES_AN + " : " + (soi ? "tu tenais" : nom + " tenait") + " ce titre à la fin de la saison " + TITRES_AN + " : il est à " + (soi ? "toi" : "lui") + " pour toujours.", "g-" + c.id, "vt-garde")))(titresGardes()));   // v20.84 : titres de fin de saison, gardés pour toujours
+  // 🎖️ ses badges : les médailles des succès (une fiche s'ouvre) et les badges qui ne sont nulle part ailleurs (titre de champion, Légendes), expliqués en bulle
+  const med = (x, premier) => '<button type="button" class="vt-med p-' + PALIERS[x.palier].id + '" data-carte-coll="' + x.id + '" title="' + esc(x.nom) + '" aria-label="' + esc(x.nom + (premier ? ", réussi en premier" : "") + " : toucher pour voir comment") + '">' + svgMedaille(x.palier, premier) + '<span class="cc-emo">' + x.ico + "</span>" + pin(premier ? x.id : "a-" + x.id) + "</button>";
+  const tous = badgesPossedes(nom), a = id => tous.some(b => b.id === id), nTit = (tous.find(b => b.id === "titre") || {}).nom;
+  const spe = (id, ico, t) => '<button type="button" class="vt-med vt-spe" data-bdg="' + esc(t + pinT(id)) + '" aria-label="' + esc(t) + '"><span class="cc-emo">' + ico + "</span>" + pin(id) + "</button>";
+  const autres = (a("titre") ? spe("titre", "🏆", "🏆 " + nTit + " : " + (soi ? "tu as" : nom + " a") + " fini 1er du championnat à la fin d'une saison. Chaque saison, le 1er du classement final le gagne.") : "") +
+    (a(CHAMPION_EX.id) ? spe(CHAMPION_EX.id, CHAMPION_EX.ico, "💎 " + CHAMPION_EX.ico + " Premier champion · Légende : " + (soi ? "tu as" : nom + " a") + " remporté la toute première saison. Un seul gagnant au monde : plus personne ne pourra l'avoir.") : "") +
+    (a("ticket") ? spe("ticket", "🎫", "💎 🎫 Ticket d'or · Légende : " + (soi ? "tu as" : nom + " a") + " trouvé LE ticket d'or dans sa tablette de la 🍫 Chocolaterie. Un seul dans toute la saison : plus personne ne pourra l'avoir.") : "");
+  const nB = ors.length + suiv.length + (pm && pm.nom === nom ? 1 : 0) + (autres ? autres.split("vt-spe").length - 1 : 0);
+  const pla = plaqueDe(nom), pid = pla && equipDe(nom).plaque;
+  return '<div class="vitrine">' + (pla ? '<div class="vt-plaque">' + pla.replace('class="plaque', 'class="plaque grande').replace(/data-bdg="[^"]*"/, 'role="button" tabindex="0" data-bdg="' + esc(textePlaqueVitrine(nom, pid, pla)) + '"') + "</div>" : "") +
+    '<div class="vt-h"><b>🗄️ La vitrine de ' + Nom + "</b><small>" + (ors.length + suiv.length) + " succès sur 12 · " + ors.length + " en premier 🥇</small></div>" + palmaresVitrine(nom) +
+    '<div class="vt-st"><b>🎖️ ' + (soi ? "Tes" : "Ses") + " badges</b><small>" + (nB ? "touche-en un : comment " + (soi ? "tu l'as eu" : "il l'a eu") + (ep.size ? " · 📌 = affiché au Classement" : "") : "") + "</small></div>" +
+    (nB ? '<div class="vt-meds">' + (pm && pm.nom === nom ? '<button type="button" class="vt-med p-legende" data-carte-coll="million" title="Premier millionnaire" aria-label="Premier millionnaire : toucher pour voir comment"><span class="cc-emo">👑</span></button>' : "") + autres + ors.map(x => med(x, true)).join("") + suiv.map(x => med(x, false)).join("") + "</div>" : '<p class="info">Pas encore de badge : chaque succès réussi (Trophées › 🏅 Succès) en donne un, et le premier qui le réussit grave son nom dessus.</p>') +
+    '<div class="vt-st"><b>📈 ' + (soi ? "Ta" : "Sa") + ' saison</b><small>touche une pastille : ce qu\'elle compte</small></div><div class="vt-badges">' + puces.join("") + "</div></div>";
+}
+/** v20.83 · la bulle de la plaque : comment il l'a eue ; pour un autre, si tu l'as aussi ou comment l'avoir (même texte que le « ? » de l'Écurie) */
+function textePlaqueVitrine(nom, id, html) {
+  const moi = moiPilote(), base = ((html || "").match(/data-bdg="([^"]*)"/) || [, ""])[1].replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+  let o = null; try { o = moi ? texteOrigineItem(moi, "plaque", id) : null; } catch (e) { o = null; }
+  if (nom === moi) return "🏷️ Ta plaque « " + ITEMS.plaque[id] + " » : " + (o ? o.p : base) + " Tu la changes dans Podium › Écurie.";
+  const aMoi = moi && debloques(moi).has("plaque." + id);
+  return "🏷️ " + base + (aMoi ? " Tu l'as aussi : tu peux la mettre dans Podium › Écurie." : o ? " " + (/^Pour l'avoir : /.test(o.p) ? o.p.replace(/^Pour l'avoir : /, "Pour l'avoir toi aussi : ") : "Pour toi : " + o.p) : "");
 }
 /* Animations du showroom : la voiture démarre au klaxon, rebondit quand on change un objet */
 function demarrer(v) {

@@ -358,7 +358,7 @@ function rendreFiche() {
   { const fr = v.querySelector("#fiche-retour"); if (fr) fr.addEventListener("click", retourPodiumFiche); }
   v.querySelectorAll("[data-fiche]").forEach(b => b.addEventListener("click", () => { ETAT.fiche = b.dataset.fiche; garder(); rendreFiche(); }));
   v.querySelectorAll(".f-timing[data-toast]").forEach(b => b.addEventListener("click", () => toast(b.dataset.toast)));
-  v.querySelectorAll(".vitrine [data-carte-coll]").forEach(b => b.addEventListener("click", () => ouvrirCarteColl(b.dataset.carteColl)));
+  if (typeof brancherVitrine === "function") brancherVitrine(v, p.nom);   // v20.83 : chaque élément de la vitrine s'explique au toucher ; les médailles ouvrent leur succès
 }
 
 /* ---------- Saisie du relevé ---------- */
@@ -818,6 +818,7 @@ addEventListener("error", e => diag("ERREUR " + (e.message || "") + " " + (e.fil
 const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1) || navigator.standalone === true;
 function vueAccueil() { const o = ETAT.ouverture || ""; return /^moi/.test(o) || o === "fiche" ? "moi" : ["classement", "mois", "trophees"].includes(o) ? o : "classement"; }
 function fermerFenetreOuverte() {
+  if (typeof fermerBulleVitrine === "function" && fermerBulleVitrine()) return true;   // v20.83 : la bulle d'explication de la vitrine d'abord
   { const f = document.querySelectorAll(".m-fete"), d = f[f.length - 1]; if (d) { const c = d.querySelector("[data-continuer]"); if (c) c.click(); else d.remove(); return true; } }   // v16.83 : la fête de palier de Moi
   // V16.16 : les fenêtres plein écran de la Course (bande-annonce, carte postale / règles, plein écran) passent avant le reste
   if (typeof BA_OUVERTE !== "undefined" && BA_OUVERTE) { BA_OUVERTE.fermer(false); return true; }

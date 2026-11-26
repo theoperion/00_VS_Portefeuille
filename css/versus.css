@@ -1647,7 +1647,7 @@ details.ex-bloc > summary .ex-niv small::after { content: " ▾"; } details.ex-b
 .ic.or { --ic-acc: var(--gold); } .ic.argent { --ic-acc: #B8C0CC; } .ic.bronze { --ic-acc: #C98A4B; }
 .pod-tabs .ic { width: 22px; height: 22px; } .carte .c-ico .ic { width: 28px; height: 28px; }
 /* v16.29 · croix des bulles de détail */
-.toast { display: flex; align-items: flex-start; gap: 10px; pointer-events: auto; } .toast .tst-t { flex: 1; }
+.toast { display: flex; align-items: flex-start; gap: 10px; pointer-events: auto; width: max-content; }   /* v20.83 : un long message prend la largeur de l'écran (il était coincé dans la moitié droite) */ .toast .tst-t { flex: 1; }
 .toast .tst-x { flex: none; border: 0; background: rgba(127,127,127,.18); color: inherit; width: 26px; height: 26px; border-radius: 50%; font-size: 13px; line-height: 26px; padding: 0; cursor: pointer; margin: -2px -4px -2px 0; }
 .p2-portrait, .p2-portrait .av { width: 100%; height: 100%; display: block; } .p2-portrait .av { border-radius: 50%; }
 /* 🗝️ V16.61 · chasse au trésor (Visite 3D) : l'objet caché, ses étincelles, l'énigme du mois, le compteur */
@@ -2023,10 +2023,16 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .vt-palm div { display: grid; justify-items: center; padding: 8px 4px; border-radius: 10px; background: var(--panel-2); }
 .vt-palm b { font: italic 800 22px/1 var(--f-display); }
 .vt-palm small { font-size: 10.5px; color: var(--ink-3); text-align: center; }
-.vt-etagere { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border-radius: 10px; background: linear-gradient(180deg, transparent 70%, color-mix(in srgb, var(--ink) 8%, transparent)); border-bottom: 3px solid color-mix(in srgb, var(--ink) 18%, transparent); }
-.vt-niche { display: grid; place-items: center; min-width: 34px; height: 34px; border-radius: 8px; background: var(--panel-2); }
-.vt-niche .bdg { margin: 0; font-size: 16px; border: 0; background: none; padding: 0; }
-.vt-niche.plus { font: 700 12px/1 var(--f-text); color: var(--ink-3); }
+/* v20.83 · vitrine : tout s'explique au toucher (chiffres, badges, pastilles, plaque) */
+.vt-palm .vt-chif { all: unset; box-sizing: border-box; cursor: help; display: grid; justify-items: center; padding: 8px 4px; border-radius: 10px; background: var(--panel-2); color: var(--ink); -webkit-tap-highlight-color: transparent; }
+.vt-palm .vt-chif:active, .vt-badges [data-bdg]:active, .vt-med:active { transform: scale(.96); }
+.vt-palm .vt-chif:focus-visible, .vt-badges [data-bdg]:focus-visible, .vt-med:focus-visible, .vt-plaque [data-bdg]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.vt-st { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: -4px; } .vt-st b { font-size: 13px; } .vt-st small { font-size: 11px; color: var(--ink-3); }
+.vt-med.vt-spe { border-radius: 50%; background: radial-gradient(circle at 35% 30%, color-mix(in srgb, #F5C542 45%, var(--panel-2)), var(--panel-2) 70%); border: 1.5px solid color-mix(in srgb, #E8B640 70%, transparent); }
+.vt-med.vt-spe .cc-emo { margin: 0; font-size: 22px; }
+.vt-pin { position: absolute; top: -3px; right: -3px; font-size: 11px; font-style: normal; line-height: 1; pointer-events: none; }
+.vt-badges span { position: relative; cursor: help; } .vt-badges .vt-pin { top: -6px; right: -4px; }
+.vt-qui { padding: 6px 10px; border-radius: 10px; background: color-mix(in srgb, currentColor 10%, transparent); color: inherit; }
 
 /* lot47 · filtres compacts (pastilles enveloppe + période, petites listes pour les indices) */
 .filtres-c { display: grid; gap: 6px; }
