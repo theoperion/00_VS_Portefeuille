@@ -82,11 +82,11 @@ const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance")
     const r7 = await p.evaluate(async () => { const t = TRESORS.l[0], b = document.querySelector(".gp-piste .gp-tresor"); await trouverTresor(t, b); await new Promise(r => setTimeout(r, 300)); return { toast: document.querySelector("#toast").textContent, ch: chercheursTxt(TRESORS.l[0]) }; });
     const jt = req.filter(c => c.action === "tresorTrouve").map(c => c.jeton)[0];
     ok(typeof jt === "number" && jt > 0, "la trouvaille envoie le jeton de la période en cours");
-    ok(/Trouvé en 1[23] min \d\d s · 🥇 le plus rapide pour l'instant/.test(r7.toast), "trouvaille (65 s + 11 min 29 s ; avec les 10 min de pause, on dépasserait 22 min) : « " + r7.toast.replace("✕", "").trim().slice(0, 60) + " »");
-    ok(/Les plus rapides : 🥇 Kévin ⏱️ 1[23] min \d\d s · 2\. Clément ⏱️ 15 min 00 s/.test(r7.ch), "classement provisoire avec les temps : " + r7.ch);
+    ok(/Trouvé en 1[23] min \d\d s · (?:(?:sans indice|2e indice|jauge) · )?🥇 1er pour l'instant/.test(r7.toast), "trouvaille (65 s + 11 min 29 s ; avec les 10 min de pause, on dépasserait 22 min) : « " + r7.toast.replace("✕", "").trim().slice(0, 60) + " »");
+    ok(/Classement : 🥇 Kévin ⏱️ 1[23] min \d\d s · 2\. Clément ⏱️ 15 min 00 s/.test(r7.ch), "classement provisoire avec les temps : " + r7.ch);
     for (let i = 0; i < 10 && !(await p.evaluate(() => !!document.querySelector(".cn-rev"))); i++) { await p.clock.runFor(500); await p.waitForTimeout(200); }
     const cer = await p.evaluate(() => { const o = document.querySelector(".cn-rev"); return o ? o.innerText : ""; });
-    ok(/Trouvé en 1[23] min \d\d s/i.test(cer) && /le plus rapide pour l'instant/i.test(cer) && /31 décembre à minuit/i.test(cer), "cérémonie de Noël : « Trouvé en … · 🥇 le plus rapide pour l'instant », la dorée attribuée le 31/12 à minuit " + JSON.stringify(cer.slice(0, 160)));
+    ok(/Trouvé en 1[23] min \d\d s/i.test(cer) && /1er pour l'instant/i.test(cer) && /31 décembre à minuit/i.test(cer), "cérémonie de Noël : « Trouvé en … · 🥇 le plus rapide pour l'instant », la dorée attribuée le 31/12 à minuit " + JSON.stringify(cer.slice(0, 160)));
     ok(!err.length, "joueur : 0 erreur JS " + JSON.stringify(err.slice(0, 3)));
     await ctx.close(); }
 
@@ -104,7 +104,7 @@ const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance")
     });
     ok(!r.pend.k && r.pend.kn && /pour l'instant : Kévin/.test(r.pend.q) && /31 décembre à minuit/.test(r.pend.q), "pendant le mois : plaque normale tout de suite, la dorée pas encore (« pour l'instant : Kévin »)");
     ok(r.fin.k && !r.fin.c, "mois fini : la dorée au plus rapide (Kévin), pas au premier arrivé (Clément)");
-    ok(!r.chg.k && r.chg.d && /le plus rapide \(5 min 00 s\)/.test(r.chg.q), "un temps plus petit trouvé plus tard dans le mois : la dorée revient à Devlin");
+    ok(!r.chg.k && r.chg.d && /1er du classement \(5 min 00 s\)/.test(r.chg.q), "un temps plus petit trouvé plus tard dans le mois : la dorée revient à Devlin");
     ok(r.flDec === null, "le trésor de décembre 2026 ne compte jamais dans le Flair 2027");
     ok(r.flP === null && r.flF === "Clément", "🔍 Flair : rien pendant le mois, puis 3 points au plus rapide (Clément) une fois le mois fini");
     ok(!err.length, "0 erreur JS " + JSON.stringify(err.slice(0, 3)));
@@ -138,8 +138,8 @@ const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance")
     const r = await p.evaluate(async () => { ouvrirRegles("gp"); await new Promise(r => setTimeout(r, 300)); const li = document.querySelector("#rg-tresor"), t = li ? li.innerText : ""; document.querySelectorAll(".regles").forEach(x => x.remove());
       const c = JSON.parse(JSON.stringify(COUPE_EX)); c.exemple = false; Object.assign(c.eclats[0], { s: 754, rang: 2, final: false }); Object.assign(c.eclats[1], { s: 300, rang: 1, final: true }); Object.assign(c.eclats[2], { s: 540, rang: 4, final: true }); ouvrirCoupe(c); await new Promise(r => setTimeout(r, 300));
       const co = document.querySelector(".coupe-b").innerText, cl = i => { const x = document.querySelector('.coupe-b .cb-svg [data-ec="' + i + '"]'); return (x.getAttribute("class").match(/m-\w+/) || ["m-normal-absent"])[0]; }, m = [0, 1, 2].map(cl).join(); document.querySelectorAll(".coupe-b").forEach(x => x.remove()); return { t, co, m }; });
-    ok(/Je lance ma recherche/.test(r.t) && /Mettre en pause/.test(r.t) && /quittes l'appli/.test(r.t) && /à chaque reprise, tu repars du départ/i.test(r.t) && /plus rapide gagne/i.test(r.t) && /minuit/.test(r.t) && /argent/.test(r.t) && /bronze/.test(r.t) && /11/.test(r.t) && /21/.test(r.t), "règles : bouton, pause, « à chaque reprise, tu repars du départ », le plus rapide gagne, attribution à minuit, indices du 11 et du 21");
-    ok(/trouvé en 12 min 34 s · 2e plus rapide · 🥈 éclat argent pour l'instant/.test(r.co) && /trouvé en 5 min 00 s · 🥇 le plus rapide · 🥇 éclat or(?! pour)/.test(r.co) && /trouvé en 9 min 00 s · 4e plus rapide · éclat normal/.test(r.co) && r.m === "m-argent,m-or,m-normal-absent", "Coupe : éclat or / argent / bronze / normal selon le temps (« pour l'instant » pendant le mois), liseré de couleur sur la coupe " + r.m);
+    ok(/Je lance ma recherche/.test(r.t) && /Mettre en pause/.test(r.t) && /quittes l'appli/.test(r.t) && /à chaque reprise, tu repars du départ/i.test(r.t) && /1er du classement gagne/i.test(r.t) && /minuit/.test(r.t) && /argent/.test(r.t) && /bronze/.test(r.t) && /11/.test(r.t) && /21/.test(r.t), "règles : bouton, pause, « à chaque reprise, tu repars du départ », le plus rapide gagne, attribution à minuit, indices du 11 et du 21");
+    ok(/trouvé en 12 min 34 s · 2e · 🥈 éclat argent pour l'instant/.test(r.co) && /trouvé en 5 min 00 s · 🥇 1er · 🥇 éclat or(?! pour)/.test(r.co) && /trouvé en 9 min 00 s · 4e · éclat de fer/.test(r.co) && r.m === "m-argent,m-or,m-fer", "Coupe : éclat or / argent / bronze / fer / pierre selon le temps (« pour l'instant » pendant le mois), liseré de couleur sur la coupe " + r.m);
     ok(!err.length, "0 erreur JS " + JSON.stringify(err.slice(0, 3)));
     await ctx.close(); }
 
@@ -192,7 +192,7 @@ const lire = p => p.evaluate(() => ({ nl: document.querySelectorAll(".gp-lance")
     await p.evaluate(async () => { const b = document.querySelector(".gp-piste .gp-tresor"); await trouverTresor(TRESOR_EL.t, b); });
     await p.clock.runFor(1500); await p.waitForTimeout(500);
     const e = await p.evaluate(() => { const o = document.querySelector(".cb-rev"), d = document.querySelector(".cb-or"); return { t: o ? o.innerText : "", or: !!d }; });
-    ok(/Trouvé en 1[23] min \d\d s · 🥇 le plus rapide pour l'instant/i.test(e.t) && /à la fin du mois \(minuit, le soir du dernier jour\)/i.test(e.t) && /éclat or pour l'instant/i.test(e.t) && !e.or, "aperçu (" + tag + ") : trouvaille en 12 min 3x s (pause d'1 h non comptée) : éclat NORMAL tout de suite, « 🥇 le plus rapide pour l'instant », pas de cérémonie dorée " + JSON.stringify(e.t.slice(0, 200)));
+    ok(/Trouvé en 1[23] min \d\d s · (?:(?:sans indice|2e indice|jauge) · )?🥇 1er pour l'instant/i.test(e.t) && /à la fin du mois \(minuit, le soir du dernier jour\)/i.test(e.t) && /éclat or pour l'instant/i.test(e.t) && !e.or, "aperçu (" + tag + ") : trouvaille en 12 min 3x s (pause d'1 h non comptée) : éclat NORMAL tout de suite, « 🥇 le plus rapide pour l'instant », pas de cérémonie dorée " + JSON.stringify(e.t.slice(0, 200)));
     await p.screenshot({ path: CAP + "/chrono-4-trouvaille-" + tag + ".png" });
     await p.evaluate(() => { document.querySelectorAll(".cb-rev, .revel, .coupe-b").forEach(x => x.remove()); ceremonieChercheurNoel(1, 754); });
     await p.waitForTimeout(900); await p.screenshot({ path: CAP + "/chrono-5-ceremonie-noel-" + tag + ".png" });

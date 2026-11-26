@@ -126,7 +126,11 @@ function appliquerAccent(a) {
 async function envoyerApi(url, corps, ms) {
   const ab = window.AbortController ? new AbortController() : null, minu = ab ? setTimeout(() => ab.abort(), ms || 30000) : null;
   try { return await (await fetch(url, { method: "POST", body: JSON.stringify(corps), signal: ab ? ab.signal : undefined })).json(); }
-  catch (e) { throw new Error(e && e.name === "AbortError" ? "Le fichier met trop de temps à répondre : réessaie dans un instant." : "Impossible de joindre le fichier : vérifie la connexion puis réessaie."); }
+  catch (e) {   // v20.84 (Théo) : dire la vraie cause (délai dépassé, réponse illisible du serveur, réseau) plutôt que « vérifie la connexion »
+    const n = e && e.name;
+    throw new Error(n === "AbortError" ? "⏱️ Délai dépassé : le serveur n'a pas répondu en " + Math.round((ms || 30000) / 1000) + " s. Réessaie dans un instant."
+      : n === "SyntaxError" ? "🧩 Réponse illisible du serveur (souvent : traitement Google trop long ou mise à jour en cours). Réessaie dans un instant."
+      : "📡 Réseau : le serveur est injoignable (connexion coupée ou bloquée). Réessaie dans un instant."); }
   finally { clearTimeout(minu); }
 }
 /** Lecture d'une API Apps Script sans mettre la clé dans l'adresse (POST). v16.83 : plus de repli en GET (la clé n'est jamais dans l'URL,
@@ -290,10 +294,10 @@ function afficherTout() {
 
 /* ---------- Codes personnels (administrateur) ---------- */
 let CODES = [], aRevoquer = null;
-async function posterAdmin(corps) {
+async function posterAdmin(corps, ms) {   // v20.84 : délai optionnel (ms), 30 s par défaut
   if (simulation()) return { ok: false, erreur: "simulation", message: MSG_SIMULATION };
   if (navigator.onLine === false) return { ok: false, erreur: "reseau", message: "📴 Hors connexion : réessaie quand le réseau revient." };
-  try { return await envoyerApi(apiUrl(), Object.assign({ cle: stock.get(CLES.cle) }, corps)); }
+  try { return await envoyerApi(apiUrl(), Object.assign({ cle: stock.get(CLES.cle) }, corps), ms); }
   catch (e) { return { ok: false, message: e.message }; }
 }
 async function chargerCodes() {

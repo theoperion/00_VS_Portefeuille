@@ -311,7 +311,7 @@ const ITEMS = {
   livree: { couleur: "Couleur", chrome: "Chrome", or: "Or", neon: "Néon", arcenciel: "Prisme", oranime: "Or vivant", platine: "Platine", rubis: "Rubis", galaxie: "Galaxie", orrose: "Or rose", chocolat: "Chocolat fondant", carte: "Carte à jouer", ver: "Peau des sables", rayures: "Rayures", damier: "Damier", bicolore: "Bicolore", flammes: "Flammes" },
   trainee: { simple: "Simple", halo: "Halo", flammes: "Flammes", etincelles: "Étincelles", comete: "Comète", supernova: "Supernova", turbo: "Turbo", arcenciel: "Arc-en-ciel", cables: "Câbles d'acier", flocons: "Flocons", sabre: "Sabre lumineux", glitch: "Faille", pointilles: "Pointillés", double: "Double", ruban: "Ruban", fumee: "Fumée" },
   klaxon: { confettis: "Confettis", damier: "Damier", feu: "Feu d'artifice", parade: "Parade", billets: "Pluie de billets", fanfare: "Fanfare royale", cibles: "Dans le mille", fusees: "Décollage", trophees: "Pluie de trophées", ouvriers: "Fanfare des petits ouvriers", pouet: "Pouet", trompette: "Trompette", sifflet: "Sifflet" },
-  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon", cheval: "Cheval de bois", hiver26: "Hiver 2026", hiverdore: "Hiver 2026 doré", chercheur: "Chercheur de Noël", chercheuror: "Chercheur de Noël d'or", recrue: "Recrue 2026" }
+  plaque: { aucune: "Aucune", metronome: "Le Métronome", bouclier: "Bouclier", contre: "Contre-attaque", remontada: "Roi de la remontée", premiersang: "Premier sang", fidele: "Fidèle au poste", vingt: "Pointeur", coupsaison: "Coup de la saison", ratatouille: "Ratatouille", ticketor: "Ticket d'or", carredas: "Carré d'as", epice: "Yeux de l'Épice", voliere: "La Volière", cheshire: "Sourire du Chat", precieux: "Mon précieux", eywa: "Eywa", kyber: "Kyber", toquedor: "Toque d'or", joyce: "Joyce", ithaque: "Ithaque", bataillon: "Bataillon", cheval: "Cheval de bois", hiver26: "Hiver 2026", hiverdore: "Hiver 2026 doré", chercheur: "Chercheur de Noël", chercheuror: "Chercheur de Noël d'or", recrue: "Recrue 2026", drapeau2027: "Drapeau 2027", flamme2027: "Flamme 2027", flair2027: "Flair 2027" }
 };
 const BASE_ECURIE = { casque: "uni", circuit: "classique", fond: "couleur", finition: "aucune", livree: "couleur", trainee: "simple", klaxon: "confettis", plaque: "aucune" };
 /* v20.61 (Théo, 25/11) · objets de DÉPART en plus de la série : à tout le monde, dès l'ouverture de l'écurie (1/12/2026). Les objets génériques
@@ -353,7 +353,7 @@ function chercheursNoel() {
     const T = typeof TRESORS !== "undefined" && TRESORS && TRESORS.l, t = T && T.find(x => x.circuit === TRESOR_NOEL && (!x.saison || x.saison === SAISON.premiere - 1));
     return t && Array.isArray(t.chercheurs) ? t.chercheurs.filter(x => x && x.nom) : []; } catch (e) { return []; }
 }
-/** v20.74 · la plaque DORÉE est-elle attribuée ? Trésor chronométré (serveur V92) : seulement le 1/1/2027 à 0 h (final) ; avant le chrono : tout de suite */
+/** v20.74 · la plaque DORÉE est-elle attribuée ? Trésor chronométré (serveur V92) : le 1/1/2027 à 0 h (final ; v20.84 : ou dès que tous ont trouvé, serveur V95) ; avant le chrono : tout de suite */
 function noelFinal() {
   try { const T = typeof TRESORS !== "undefined" && TRESORS && TRESORS.l, t = T && T.find(x => x.circuit === TRESOR_NOEL && (!x.saison || x.saison === SAISON.premiere - 1));
     return !t || !t.chrono || !!t.final; } catch (e) { return true; }
@@ -368,6 +368,19 @@ function recrueChauffe(nom) {
   if (Date.now() < RECRUE_DES.getTime() || !nom) return false;
   try { const B = typeof D_BRUT !== "undefined" && D_BRUT && D_BRUT.personnes && D_BRUT.personnes.some(x => x.nom === nom) ? D_BRUT : D, p = B.personnes.find(x => x.nom === nom); if (!p) return false;
     const s = serie(p, 0); return s.some(z => z.k === CHAUFFE_K && typeof z.r === "number") && s.some(z => z.k < CHAUFFE_K && z.val > 0); } catch (e) { return false; }
+}
+/* v20.84 (Théo, 26/11) · ⚔️ les 3 titres (🚩 Drapeau, 🔥 Flamme, 🔍 Flair) bougent de mois en mois ; à la fin de la saison, leur détenteur les GARDE
+   POUR TOUJOURS : plaques souvenirs exclusives « Drapeau 2027 », « Flamme 2027 », « Flair 2027 », attribuées le 1/1 de l'année suivante
+   (Drapeau et Flamme : une fois la saison complète, dernier relevé compris ; Flair : trésors tous définitifs). Déduites des titres (etatTitres), aucun point. */
+const TITRES_AN = 2027, GAINS_TITRES = { drapeau: ["plaque", "drapeau2027"], flamme: ["plaque", "flamme2027"], flair: ["plaque", "flair2027"] };
+function titreDeGain(slot, id) { return slot === "plaque" ? Object.keys(GAINS_TITRES).find(t => GAINS_TITRES[t][1] === id) || null : null; }
+/** { drapeau: nom, flamme: nom, flair: nom } : les détenteurs définitifs de la saison TITRES_AN (à partir du 1/1 suivant) ; {} avant */
+function titresGardes() {
+  if (Date.now() < new Date(TITRES_AN + 1, 0, 1).getTime() || (typeof TRESOR_APERCU !== "undefined" && TRESOR_APERCU)) return {};
+  try { const C = etatTitres(TITRES_AN), c = championnat(TITRES_AN), o = {};
+    if (c && c.complete) ["drapeau", "flamme"].forEach(t => { if (C[t]) o[t] = C[t].nom; });
+    if (C.flair) o.flair = C.flair.nom;
+    return o; } catch (e) { return {}; }
 }
 /* v20.70 (Théo, 25/11) · 🎨 couleur au choix des objets à motif neutres : Rayures (livrée), Rayé et Bicolore (casque), Liseré blanc / noir (finition).
    Le serveur (V91) n'accepte qu'un identifiant de 2 à 16 lettres par emplacement : la couleur s'écrit DANS l'identifiant (« rayuresor », « lisblancpilote ») ;
@@ -402,7 +415,8 @@ function debloques(nom) {
   if (souvenirOuvert()) GAINS_SOUVENIR.forEach(g => o.add(g.join(".")));
   { const ch = chercheursNoel(), i = ch.findIndex(x => x.nom === nom); if (i >= 0) { o.add(GAIN_CHERCHEUR.join(".")); if (i === 0 && noelFinal()) o.add(GAIN_CHERCHEUR_OR.join(".")); } }   // 🎁 Chercheur de Noël   // 🎄 souvenir du tour de chauffe, pour tous (dès le 24/12/2026)
   if (aventDore(nom)) o.add(GAIN_DORE.join("."));   // 🏅 Hiver 2026 doré : 24 cases sur 24, le jour même (liste du serveur)
-  if (recrueChauffe(nom)) o.add(GAIN_RECRUE.join("."));   // 🔰 Recrue 2026 : a joué le tour de chauffe (dès le 1/1/2027)
+  if (recrueChauffe(nom)) o.add(GAIN_RECRUE.join("."));
+  if (nom) { const G = titresGardes(); Object.keys(G).forEach(t => { if (G[t] === nom) o.add(GAINS_TITRES[t].join(".")); }); }   // ⚔️ titres 2027 gardés pour toujours (dès le 1/1/2028)   // 🔰 Recrue 2026 : a joué le tour de chauffe (dès le 1/1/2027)
   if (D.premierMillion && D.premierMillion.nom === nom) GAINS_MILLION.forEach(g => o.add(g.join(".")));
   succesDe(nom).forEach(x => o.add(x.gain.join(".")));                      // 🏅 l'objet commun : pour chacun qui réussit
   exclusifsDe(nom).forEach(x => gainsSecret(x).forEach(g => o.add(g.join("."))));   // 🥇 + l'exclusif : pour le premier
@@ -428,9 +442,10 @@ function origineItem(slot, id) {
   if (estGainTicket(slot, id)) return { ticket: true, legende: true };
   if (estDepart(slot, id)) return { depart: true };
   if (estGainRecrue(slot, id)) return { souvenir: true, recrue: true };
+  if (titreDeGain(slot, id)) return { souvenir: true, titre: titreDeGain(slot, id) };
   if (estGainDore(slot, id)) return { souvenir: true, dore: true };
   if (GAINS_SOUVENIR.some(g => g[0] === slot && g[1] === id)) return { souvenir: true };
-  if (estGainChercheur(slot, id)) return { souvenir: true, chercheur: true, exclusif: id === GAIN_CHERCHEUR_OR[1] ? { id: "chercheuror", nom: "chercheur de Noël le plus rapide", ico: "🥇" } : null };
+  if (estGainChercheur(slot, id)) return { souvenir: true, chercheur: true, exclusif: id === GAIN_CHERCHEUR_OR[1] ? { id: "chercheuror", nom: "1er du classement du trésor de Noël", ico: "🥇" } : null };
   { const m = typeof mjOrigine === "function" && mjOrigine(slot, id); if (m) return m; }   // 🎲 plaque du meilleur d'un mini-jeu (js/9-minijeux.js) : exclusif doré
   const a = (g => !!g && g[0] === slot && g[1] === id);
   const sc = SUCCES.find(x => a(x.gain) || a(x.bonus)); if (sc) return { succes: sc, exclusif: a(sc.bonus) ? sc : null };
@@ -466,11 +481,11 @@ function plaqueDe(nom) {
   if (!saisonVisible()) return "";
   const p = equipDe(nom).plaque;
   if (p === "aucune") return "";
-  const o = origineItem("plaque", p), quoi = o.dore ? "calendrier de l'Avent ouvert 24 jours sur 24" : o.chercheur ? "trésor de l'Atelier du Père Noël" + (p === GAIN_CHERCHEUR_OR[1] ? " (le plus rapide)" : "") : o.exclusif ? "succès doré « " + o.exclusif.nom + " » (le premier)" : o.succes ? "succès « " + o.succes.nom + " »" : o.monde ? "trophée du monde « " + nomMonde(o.monde) + " »" : o.gant ? "Gant de l'infini complet" : "";
+  const o = origineItem("plaque", p), quoi = o.dore ? "calendrier de l'Avent ouvert 24 jours sur 24" : o.chercheur ? "trésor de l'Atelier du Père Noël" + (p === GAIN_CHERCHEUR_OR[1] ? " (1er du classement)" : "") : o.titre ? "titre " + TITRES.find(c => c.id === o.titre).ico + " " + TITRES.find(c => c.id === o.titre).nom + " de la saison " + TITRES_AN + " (gardé pour toujours)" : o.exclusif ? "succès doré « " + o.exclusif.nom + " » (le premier)" : o.succes ? "succès « " + o.succes.nom + " »" : o.monde ? "trophée du monde « " + nomMonde(o.monde) + " »" : o.gant ? "Gant de l'infini complet" : "";
   return '<span class="plaque' + classePlaque(p) + '" data-bdg="' + esc("Plaque « " + ITEMS.plaque[p] + " » de " + nom + (quoi ? ", gagnée avec le " + quoi : o.ticket ? ", gagnée avec le 🎫 ticket d'or de la Chocolaterie" : o.mj ? ", gagnée comme 🥇 meilleur du mini-jeu de " + MOIS_L[o.mj % 100 - 1] : o.souvenir ? ", souvenir du tour de chauffe (décembre 2026)" : "") + ".") + '">' + iconePlaque(p) + esc(ITEMS.plaque[p]) + "</span> ";
 }
 /** v20.46 · plaques émaillées à part : Ratatouille (plaque de rue parisienne, bleue), Ticket d'or (feuille d'or), Carré d'as, et les plaques des mini-jeux ; les autres restent en métal */
-function classePlaque(id) { return ["ratatouille", "ticketor", "carredas", "epice", "voliere", "cheshire", "precieux", "eywa", "kyber", "toquedor", "joyce", "ithaque", "bataillon", "cheval", "hiver26", "hiverdore", "chercheur", "chercheuror", "recrue"].includes(id) ? " pl-" + id : ""; }
+function classePlaque(id) { return ["ratatouille", "ticketor", "carredas", "epice", "voliere", "cheshire", "precieux", "eywa", "kyber", "toquedor", "joyce", "ithaque", "bataillon", "cheval", "hiver26", "hiverdore", "chercheur", "chercheuror", "recrue", "drapeau2027", "flamme2027", "flair2027"].includes(id) ? " pl-" + id : ""; }
 /** leur petit dessin, à nous : un tian de légumes en rosace (Ratatouille), un ticket doré (Ticket d'or) */
 function iconePlaque(id) {
   if (id === "ratatouille") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#F4EBD6" stroke="#8A5A2B" stroke-width="1"/>' +
@@ -499,6 +514,9 @@ function iconePlaque(id) {
   if (id === "hiverdore") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><defs><radialGradient id="pl-hd" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#FFF6CC"/><stop offset=".55" stop-color="#F7CF55"/><stop offset="1" stop-color="#B7791F"/></radialGradient></defs>' +   // 🏅 le flocon d'Hiver 2026, en or, sur médaille
     '<circle cx="10" cy="10" r="9" fill="url(#pl-hd)" stroke="#7A4A0C" stroke-width="1"/><circle cx="10" cy="10" r="7.2" fill="none" stroke="#FFF6CC" stroke-width=".5" opacity=".8"/><g stroke="#1E4E8C" stroke-width="1.3" stroke-linecap="round">' +
     [0, 60, 120].map(a => '<path d="M10 4.2V15.8M10 6 8.6 4.8M10 6 11.4 4.8M10 14 8.6 15.2M10 14 11.4 15.2" transform="rotate(' + a + ' 10 10)"/>').join("") + '</g><circle cx="10" cy="10" r="1.6" fill="#FFF6CC" stroke="#1E4E8C" stroke-width=".6"/><path d="M15.6 2.2l.5 1.2 1.2.5-1.2.5-.5 1.2-.5-1.2-1.2-.5 1.2-.5Z" fill="#fff"/></svg>';
+  if (id === "drapeau2027") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 2.4V18" stroke="#C9D0D8" stroke-width="1.6" stroke-linecap="round"/><path d="M5.8 3.4C9 2 11.4 4.6 14.6 3.4S17.6 3 18 3.4V10.6C17 10 16 10 14.6 10.6S9 9.4 5.8 10.6Z" fill="#E5484D" stroke="#7E1A20" stroke-width=".7"/></svg>';   // v20.84 · 🚩 Drapeau 2027
+  if (id === "flamme2027") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 18.4C5.4 18.4 3.4 15.2 4 11.6 4.6 8.4 7.2 6.8 7.2 3.6 9.2 5.2 9.8 7.4 9.2 9.4 10.8 8.4 11.8 5.8 11.2 2 15.4 4.6 16.8 9.6 16.2 12.8 15.6 16 13.6 18.4 10 18.4Z" fill="#FF7A1A" stroke="#8E2E06" stroke-width=".8"/></svg>';   // v20.84 · 🔥 Flamme 2027
+  if (id === "flair2027") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.4" cy="8.4" r="5.4" fill="#0F3A37" stroke="#2EC4B6" stroke-width="1.8"/><path d="M12.4 12.4 17.6 17.6" stroke="#2EC4B6" stroke-width="2.6" stroke-linecap="round"/><path d="M5.8 6.8C6.4 5.6 7.6 5 8.8 5.2" stroke="#BFF3EC" stroke-width="1" fill="none" stroke-linecap="round"/></svg>';   // v20.84 · 🔍 Flair 2027
   if (id === "recrue") return '<svg class="pl-ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.4 17 4V9.6C17 13.8 14 16.9 10 18.6 6 16.9 3 13.8 3 9.6V4Z" fill="#26313C" stroke="#9FE3C4" stroke-width="1"/>' +   // v20.70 · 🔰 Recrue 2026 : un écusson, deux chevrons de recrue
     '<path d="M6 9.4 10 6.6 14 9.4M6 12.8 10 10 14 12.8" fill="none" stroke="#9FE3C4" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="15.2" r=".9" fill="#E9EEF3"/></svg>';
   if (id === "ticketor") return '<svg class="pl-ico" viewBox="0 0 24 16" aria-hidden="true"><path d="M1 2H23V6A2 2 0 0 0 23 10V14H1V10A2 2 0 0 0 1 6Z" fill="#F7CF55" stroke="#7A4A0C" stroke-width="1"/><path d="M6 2.5V13.5" stroke="#7A4A0C" stroke-width=".7" stroke-dasharray="1.2 1"/><path d="M14 4.6L15 7 17.6 7.2 15.6 8.8 16.2 11.4 14 10 11.8 11.4 12.4 8.8 10.4 7.2 13 7Z" fill="#FFF6CC" stroke="#9A6716" stroke-width=".5"/></svg>';
@@ -789,9 +807,11 @@ function texteOrigineItem(qui, slot, id) {
     return { t: "🥇 Exclusif · 🗺️ mini-jeu de " + mois, p: g.includes(qui) ? "À toi : tu as été le meilleur du mini-jeu de " + mois + " (surnom du mois et plaque dorée)." : g.length ? "Gagné par " + g.join(" et ") + ", meilleur" + (g.length > 1 ? "s" : "") + " du mini-jeu de " + mois + "." : "Réservé au meilleur du mini-jeu de " + mois + " (page Course), avec son surnom du mois. Aucun point au championnat." }; }
   if (org.chercheur) { const ch = chercheursNoel(), i = ch.findIndex(x => x.nom === qui), j = i >= 0 ? ch[i].j : 0, jour = j ? (j % 100) + "/12" : "", or = id === GAIN_CHERCHEUR_OR[1], fin = noelFinal();
     const tps = x => x && typeof x.s === "number" && typeof dureeChrono === "function" ? " (" + dureeChrono(x.s) + ")" : "";   // v20.74 : la dorée va au plus rapide, attribuée le 31/12 à minuit
-    return { t: "🎁 Souvenir · trésor de l'Atelier du Père Noël" + (or ? " · 🥇" : ""), p: or ? (i === 0 && fin ? "À toi : trouvé le trésor de l'Atelier du Père Noël" + (jour ? " le " + jour : "") + ", 🥇 le plus rapide" + tps(ch[0]) + "." : ch.length ? (fin ? "Attribuée au plus rapide à trouver le trésor de l'Atelier du Père Noël : " : "Pour le plus petit temps du mois, attribuée le 31 décembre à minuit · le plus rapide pour l'instant : ") + ch[0].nom + tps(ch[0]) + "." : "Pour le plus rapide qui trouvera le trésor de l'Atelier du Père Noël (décembre 2026, chrono lancé avec 🔍), attribuée le 31 décembre à minuit.")
-      : i >= 0 ? "Trouvé le trésor de l'Atelier du Père Noël" + (jour ? " le " + jour : "") + tps(ch[i]) + (i === 0 ? (fin ? " · 🥇 le plus rapide" : " · 🥇 le plus rapide pour l'instant") : "") + "." : "Pour chaque pilote qui trouve le trésor de l'Atelier du Père Noël (décembre 2026)." }; }
+    return { t: "🎁 Souvenir · trésor de l'Atelier du Père Noël" + (or ? " · 🥇" : ""), p: or ? (i === 0 && fin ? "À toi : trouvé le trésor de l'Atelier du Père Noël" + (jour ? " le " + jour : "") + ", 🥇 1er du classement" + tps(ch[0]) + "." : ch.length ? (fin ? "Attribuée au 1er du classement du trésor de l'Atelier du Père Noël : " : "Pour le 1er du classement, attribuée dès que tout le monde a trouvé, sinon le 31 décembre à minuit · 1er pour l'instant : ") + ch[0].nom + tps(ch[0]) + "." : "Pour le 1er du classement du trésor de l'Atelier du Père Noël (décembre 2026, chrono lancé avec 🔍), attribuée dès que tout le monde a trouvé, sinon le 31 décembre à minuit.")
+      : i >= 0 ? "Trouvé le trésor de l'Atelier du Père Noël" + (jour ? " le " + jour : "") + tps(ch[i]) + (i === 0 ? (fin ? " · 🥇 1er du classement" : " · 🥇 1er pour l'instant") : "") + "." : "Pour chaque pilote qui trouve le trésor de l'Atelier du Père Noël (décembre 2026)." }; }
   if (org.dore) return { t: "🏅 Souvenir · calendrier de l'Avent, 24 sur 24", p: ouvert ? "À toi : tu as ouvert les 24 cases du calendrier de l'Avent, chacune le jour même. Elle est à toi pour toujours, aucun point." : "Pour chaque pilote qui ouvre les 24 cases du calendrier de l'Avent (décembre 2026), chacune le jour même." };
+  if (org.titre) { const T = TITRES.find(c => c.id === org.titre), f = titresGardes()[org.titre], nm = T.ico + " " + T.nom.replace(/^(Le|La) /, "");
+    return { t: "⚔️ Souvenir · " + nm + " " + TITRES_AN + " · pour toujours", p: f === qui ? "À toi : tu tenais le titre « " + T.nom + " » à la fin de la saison " + TITRES_AN + " (" + T.court + "). Il est à toi pour toujours." : f ? "Gardé pour toujours par " + f + ", " + T.court + " à la fin de la saison " + TITRES_AN + "." : "Pour le pilote qui tiendra le titre « " + T.nom + " » à la fin de la saison " + TITRES_AN + " : il le garde pour toujours (attribué le 1er janvier " + (TITRES_AN + 1) + ")." }; }
   if (org.recrue) return { t: "🔰 Souvenir · Recrue 2026", p: ouvert ? "À toi : tu as joué le tour de chauffe de décembre 2026. Elle est à toi pour toujours, aucun point." : "Offerte à chaque pilote qui a joué le tour de chauffe de décembre 2026." };
   if (org.souvenir) return { t: "🎄 Souvenir du tour de chauffe", p: "Offert à chaque pilote du tour de chauffe : le cadeau de la case du 24 décembre 2026, dans le calendrier de l'Avent." };
   if (org.vote) return { t: "💎 Légende · 🗳️ Coup de la saison", p: "Gagné au vote de fin de saison : les autres pilotes t'élisent pour le coup de la saison." };
@@ -1364,6 +1384,7 @@ function rareteItem(slot, id) {
   const o = origineItem(slot, id);
   if (o.legende) return { cls: "r-unique" + (o.ticket ? " r-excl" : ""), lib: "Légende" };
   if (o.recrue) return { cls: "r-argent", lib: "Souvenir" };
+  if (o.titre) return { cls: "r-unique r-excl", lib: "Titre" };
   if (o.chercheur) return o.exclusif ? { cls: "r-unique r-excl", lib: "Exclusif" } : { cls: "r-argent", lib: "Souvenir" };
   if (o.exclusif || o.mj) return { cls: "r-unique r-excl", lib: "Exclusif" };
   if (o.gant) return { cls: "r-legende", lib: "Gant" };
@@ -1401,7 +1422,7 @@ function objetCache(slot, id) { const o = origineItem(slot, id); return !!o.mill
 /** (la plaque Ticket d'or n'apparaît qu'à partir d'octobre 2027, ou chez son gagnant) */
 function idsSlot(slot) { const dec = ecurieDepart(), a = dec ? debloques(moiPilote() || "") : null;   // v20.61 : en décembre, seulement les objets de départ (et ce qu'on a déjà)
   const moi = moiPilote() || "", ch = slot === "plaque" ? debloques(moi) : null;   // 🎁 Chercheur de Noël, 🔰 Recrue 2026 : seulement si gagnées
-  return Object.keys(ITEMS[slot]).filter(id => (!dec || estDepart(slot, id) || a.has(slot + "." + id)) && (!ch || !(estGainChercheur(slot, id) || estGainRecrue(slot, id) || estGainDore(slot, id)) || ch.has(slot + "." + id)) && !objetReserve(slot, id) && (!estGainTicket(slot, id) || ticketVisible()) && (typeof mjObjetVisible !== "function" || mjObjetVisible(slot, id, moi))
+  return Object.keys(ITEMS[slot]).filter(id => (!dec || estDepart(slot, id) || a.has(slot + "." + id)) && (!ch || !(estGainChercheur(slot, id) || estGainRecrue(slot, id) || estGainDore(slot, id) || titreDeGain(slot, id)) || ch.has(slot + "." + id)) && !objetReserve(slot, id) && (!estGainTicket(slot, id) || ticketVisible()) && (typeof mjObjetVisible !== "function" || mjObjetVisible(slot, id, moi))
     && !prisParAutre(slot, id, moi)); }
 /** v20.70 (Théo, 25/11) · un objet EXCLUSIF (1er seulement, Légende) déjà pris par un autre pilote disparaît des objets bloqués : on ne pourra plus jamais l'avoir */
 function prisParAutre(slot, id, moi) {
@@ -1748,9 +1769,9 @@ function etatGant(y) {
 /* ⚔️ Les titres : 3 badges qu'on se vole, recalculés à chaque mois joué, aucun point (v20.45, Théo : rien qui ressemble au 👑 du Premier millionnaire).
    c = couleur du titre (jamais l'or du millionnaire) ; embleme() = son dessin à nous (fanion, flamme, loupe) */
 const TITRES = [
-  { id: "drapeau", ico: "🚩", c: "#E5484D", nom: "Le Drapeau de tête", court: "en tête du championnat", def: "Au pilote en tête du championnat de la saison." },
-  { id: "flamme", ico: "🔥", c: "#FF7A1A", nom: "La Flamme", court: "la plus longue série sans finir dernier", def: "À la plus longue série en cours de mois sans finir dernier. À égalité, celui qui la tient la garde." },
-  { id: "flair", ico: "🔍", c: "#2EC4B6", nom: "Le Flair", court: "meilleur chercheur de trésors", def: "Au meilleur chercheur de trésors de la saison : 3, 2 et 1 points aux trois plus rapides de chaque trésor (chrono lancé avec 🔍 Je lance ma recherche), comptés à la fin du mois du trésor. À égalité, celui qui la tient la garde." }
+  { id: "drapeau", ico: "🚩", c: "#E5484D", nom: "Le Drapeau de tête", court: "en tête du championnat", def: "Au pilote en tête du championnat. À égalité : celui qui le tient le garde, sinon le mieux classé au championnat." },
+  { id: "flamme", ico: "🔥", c: "#FF7A1A", nom: "La Flamme", court: "la plus longue série sans finir dernier", def: "À la plus longue série en cours de mois sans finir dernier. À égalité : celui qui la tient la garde, sinon le mieux classé." },
+  { id: "flair", ico: "🔍", c: "#2EC4B6", nom: "Le Flair", court: "meilleur chercheur de trésors", def: "Meilleur chercheur de trésors : 3, 2, 1 points aux 3 premiers de chaque trésor. À égalité : le détenteur le garde, sinon le plus de victoires." }   // v20.84 (Théo) : définition courte ; le détail du chrono est dans les Règles
 ];
 /** L'emblème d'un titre, dessiné par nous (même rendu sur tous les téléphones) */
 function emblemeTitre(id) {
@@ -1776,15 +1797,17 @@ function etatTitres(y) {
       // le Drapeau de tête : 1re place du championnat après ce mois (classement final, bonus compris, pour le dernier mois d'une saison complète)
       const der = m === c.mois[c.mois.length - 1] && c.complete, leads = der ? [c.classement[0]] : Object.keys(m.places).filter(n => m.places[n] === 1);
       // v20.44 (arbitre) : à égalité parfaite, le détenteur garde le Drapeau ; sans détenteur parmi les ex æquo, personne ne la prend
-      if (co && leads.includes(co.nom)) { /* il la garde */ } else co = leads.length === 1 ? { nom: leads[0], depuis: m.k } : null; if (co) co.val = m.cumul[co.nom];
+      // v20.84 (Théo, 26/11) : à égalité de points, celui qui le tient le garde ; sinon le 1er du classement officiel (même départage que le championnat)
+      const ptsMax = Math.max(...Object.values(m.cumul)), egaux = Object.keys(m.cumul).filter(n => m.cumul[n] === ptsMax);
+      if (co && (leads.includes(co.nom) || (!der && egaux.includes(co.nom)))) { /* il le garde */ } else co = leads.length ? { nom: leads[0], depuis: m.k } : null; if (co) co.val = m.cumul[co.nom];
       // la Flamme : série en cours de mois sans finir dernier (absent = série remise à zéro)
       D.personnes.forEach(p => { const x = m.l.find(z => z.nom === p.nom); run[p.nom] = x ? (x.dernier ? 0 : (run[p.nom] || 0) + 1) : 0; });
       const mx = Math.max(0, ...Object.values(run));
       if (!mx) { fl = null; return; }
       const cands = Object.keys(run).filter(n => run[n] === mx);
       if (fl && cands.includes(fl.nom)) { fl.val = mx; return; }   // à égalité, le détenteur la garde
-      const tri = cands.sort((a, b) => (m.places[a] || 99) - (m.places[b] || 99));   // séries égales (commencées le même mois) : le mieux classé
-      fl = tri.length > 1 && (m.places[tri[0]] || 99) === (m.places[tri[1]] || 99) ? null : { nom: tri[0], depuis: m.k, val: mx };   // v20.44 : égalité parfaite, personne
+      const tri = cands.sort((a, b) => (m.places[a] || 99) - (m.places[b] || 99) || a.localeCompare(b));   // séries égales : le mieux classé au général (places uniques : jamais de trou)
+      fl = { nom: tri[0], depuis: m.k, val: mx };
     });
     base = MEMO_TITRES.m[cle] = {
       drapeau: co ? Object.assign(co, { txt: co.val + " points" }) : null,
@@ -1803,8 +1826,13 @@ function flairSaison(y) {
     t.ch.slice(0, 3).forEach((x, i) => { pts[x.nom] = (pts[x.nom] || 0) + [3, 2, 1][i]; });
     const mx = Math.max(...Object.values(pts)), cands = Object.keys(pts).filter(n => pts[n] === mx);
     if (f && cands.includes(f.nom)) { f.val = mx; return; }   // à égalité, il reste au détenteur
-    const rang = n => { const i = t.ch.findIndex(x => x.nom === n); return i < 0 ? 99 : i; };
-    f = { nom: cands.sort((a, b) => rang(a) - rang(b))[0], depuis: t.k, val: mx };
+    // v20.84 (Théo, 26/11) : sans détenteur parmi les ex æquo : le plus de 1res places (éclats d'or), puis le meilleur temps total sur les trésors
+    // trouvés en COMMUN (avec un temps), puis le mieux classé au général (après le mois du trésor), puis l'ordre alphabétique (jamais de trou)
+    const faits = tr.filter(z => z.k <= t.k), ors = n => faits.filter(z => z.ch[0] && z.ch[0].nom === n).length;
+    const communs = faits.filter(z => cands.every(n => z.ch.some(x => x.nom === n && typeof x.s === "number")));
+    const tps = n => communs.reduce((a, z) => a + z.ch.find(x => x.nom === n).s, 0);
+    let pl = {}; try { const cm = championnat(y), mm = cm && cm.mois.filter(z => z.k <= t.k).pop(); pl = mm ? mm.places : {}; } catch (e) { /* sans championnat */ }
+    f = { nom: cands.sort((a, b) => ors(b) - ors(a) || tps(a) - tps(b) || (pl[a] || 99) - (pl[b] || 99) || a.localeCompare(b))[0], depuis: t.k, val: mx };
   });
   return f ? Object.assign(f, { txt: f.val + " points de chercheur" }) : null;
 }
@@ -2168,8 +2196,9 @@ function htmlLegendes(apercu, noms, moi) {
 }
 function htmlTitres(apercu, y) {
   const C = apercu ? {} : etatTitres(y), moi = moiPilote();
-  return '<section class="vit" id="vit-titres"><h3 class="vit-h">⚔️ Les titres <small>à part · sans objet · ils se volent</small></h3>' +
-    '<p class="info">Recalculés à chaque mois joué. Ils ne rapportent aucun point ni objet : seulement l\'honneur de les tenir, jusqu\'à ce qu\'un autre te les prenne.</p><div class="cour-l">' +
+  return '<section class="vit" id="vit-titres"><h3 class="vit-h">⚔️ Les titres <small>à part · ils se volent · gardés en fin de saison</small></h3>' +
+    '<p class="info">Recalculés à chaque mois joué. Aucun point : l\'honneur de les tenir, jusqu\'à ce qu\'un autre te les prenne. À la fin de la saison, chaque détenteur garde son titre pour toujours (plaque souvenir « Drapeau ' + TITRES_AN + ' », « Flamme ' + TITRES_AN + ' » ou « Flair ' + TITRES_AN + ' »).</p>' +
+    (G0 => Object.keys(G0).length ? '<p class="info titres-gardes">🏛️ Gardés pour toujours, saison ' + TITRES_AN + " : " + TITRES.filter(c => G0[c.id]).map(c => c.ico + " <b>" + esc(G0[c.id]) + "</b>").join(" · ") + "</p>" : "")(titresGardes()) + '<div class="cour-l">' +
     TITRES.map(c => {
       const o = C[c.id], vide = apercu ? "À prendre dès janvier" : c.id === "flair" && !o ? (typeof TRESORS !== "undefined" && TRESORS && TRESORS.l && TRESORS.l.length ? "Personne pour l'instant" : "Non attribuée : pas encore de trésor") : "Personne pour l'instant";
       return '<div class="cour' + (o && o.nom === moi ? " a-moi" : "") + (o ? "" : " libre") + '" data-cour="' + c.id + '" style="--c:' + (o ? couleur(o.nom) : "var(--rule)") + ";--tc:" + c.c + '"><span class="cour-i" aria-hidden="true">' + emblemeTitre(c.id) + '</span><div class="cour-t"><b>' + esc(c.nom) + "</b><small>" + esc(c.def) + "</small></div>" +
@@ -2184,7 +2213,7 @@ function htmlVitrines() {
   return (apercu ? '<div class="chauffe-b">🔥 <span>Aperçu : les trophées démarrent le 1<sup>er</sup> janvier 2027. Voici ce qui t\'attend.</span></div>' : "") +
     (D.premierMillion ? bandeauMillion() : "") +   /* v17.31 (Théo) : le bandeau « Premier millionnaire » n'apparaît qu'une fois le badge gagné, puis pour toujours */
     '<nav class="vit-tabs" role="tablist" aria-label="Trophées">' + VIT_ONGLETS.map(([id, ico, lib]) => '<button type="button" role="tab" data-vit="' + id + '" aria-selected="' + (o === id) + '"><span aria-hidden="true">' + ico + "</span>" + lib + "</button>").join("") + "</nav>" +
-    '<div class="vit-apart"><small>À part, sans objet :</small><button type="button" data-vit="titres" aria-pressed="' + (o === "titres") + '">⚔️ Titres</button><button type="button" data-vit-coupe>🏆 Coupe brisée</button></div>' + corps;
+    '<div class="vit-apart"><small>À part :</small><button type="button" data-vit="titres" aria-pressed="' + (o === "titres") + '">⚔️ Titres</button><button type="button" data-vit-coupe>🏆 Coupe brisée</button></div>' + corps;
 }
 /** Ouvrir un succès : sa médaille (selon son palier), l'objectif, les objets, qui l'a réussi (le premier doré, puis les autres) */
 function ouvrirSucces(id) {
@@ -2272,7 +2301,8 @@ function vitrineFiche(nom) {
   if (ne === null && typeof chargerTresors === "function") chargerTresors().then(() => { if (eclatsDe(nom) !== null && vueActive() === "fiche") rendreVue("fiche"); }).catch(() => {});
   const puces = ['<span style="--mc:#B9C3CE">🗺️ ' + nT + " / 12 mondes</span>", '<span style="--mc:#9B6BFF">🧤 ' + g + " / 6 pierres</span>"]
     .concat(ne === null ? [] : ['<span class="vt-eclats" style="--mc:#E8B640" title="Éclats de la Coupe brisée trouvés par ' + esc(nom) + '">🏆 ' + ne + " / 12 éclats</span>"])
-    .concat(TITRES.filter(c => C[c.id] && C[c.id].nom === nom).map(c => '<span style="--mc:' + c.c + '">' + c.ico + " " + esc(c.nom) + "</span>"));
+    .concat(TITRES.filter(c => C[c.id] && C[c.id].nom === nom).map(c => '<span style="--mc:' + c.c + '">' + c.ico + " " + esc(c.nom) + "</span>"))
+    .concat((G0 => TITRES.filter(c => G0[c.id] === nom).map(c => '<span class="vt-garde" style="--mc:' + c.c + '" title="Titre gardé pour toujours">' + c.ico + " " + esc(c.nom.replace(/^(Le|La) /, "")) + " " + TITRES_AN + " · pour toujours</span>"))(titresGardes()));   // v20.84 : titres de fin de saison, gardés pour toujours
   const med = (x, premier) => '<button type="button" class="vt-med p-' + PALIERS[x.palier].id + '" data-carte-coll="' + x.id + '" title="' + esc(x.nom) + '">' + svgMedaille(x.palier, premier) + '<span class="cc-emo">' + x.ico + "</span></button>";
   return '<div class="vitrine">' + (plaqueDe(nom) ? '<div class="vt-plaque">' + plaqueDe(nom).replace('class="plaque', 'class="plaque grande') + "</div>" : "") + '<div class="vt-h"><b>🗄️ La vitrine de ' + esc(nom) + "</b><small>" + (ors.length + suiv.length) + " succès sur 12 · " + ors.length + " en premier 🥇</small></div>" + palmaresVitrine(nom) +
     (ors.length + suiv.length || pm && pm.nom === nom ? '<div class="vt-meds">' + (pm && pm.nom === nom ? '<button type="button" class="vt-med p-legende" data-carte-coll="million" title="Premier millionnaire"><span class="cc-emo">👑</span></button>' : "") + ors.map(x => med(x, true)).join("") + suiv.map(x => med(x, false)).join("") + "</div>" : '<p class="info">Pas encore de succès : le premier qui en réussit un grave son nom dessus.</p>') +

@@ -146,7 +146,7 @@ async function page(b, o) {
       const q = texteOrigineItem(m, "plaque", "chercheur"), qo = texteOrigineItem(m, "plaque", "chercheuror");
       TRESOR_APERCU = { sauve: {} }; const ap = debloques(m).has("plaque.chercheur"); TRESOR_APERCU = null;
       return { n: d.has("plaque.chercheur"), o: d.has("plaque.chercheuror"), vis: ids.filter(i => /chercheur/.test(i)), q: q.p, qo: qo.p, ap, rar: rareteItem("plaque", "chercheuror").lib }; });
-    const bon = att === "or" ? r.n && r.o && r.vis.length === 2 && /le 5\/12/.test(r.q) && /premier|plus rapide/.test(r.qo) && r.rar === "Exclusif" : att === "normale" ? r.n && !r.o && r.vis.join() === "chercheur" && /le 7\/12/.test(r.q) : !r.n && !r.o && !r.vis.length;
+    const bon = att === "or" ? r.n && r.o && r.vis.length === 2 && /le 5\/12/.test(r.q) && /premier|plus rapide|1er du classement/.test(r.qo) && r.rar === "Exclusif" : att === "normale" ? r.n && !r.o && r.vis.join() === "chercheur" && /le 7\/12/.test(r.q) : !r.n && !r.o && !r.vis.length;
     ok(bon && !r.ap && !err.length && !/cach|où|sous|derrière/i.test(r.q + r.qo), "Chercheur de Noël · " + qui + " : " + (att === "or" ? "1er → plaque dorée et normale" : att === "normale" ? "2e → plaque normale" : "pas trouvé → aucune plaque") + " ; l'aperçu admin ne donne rien ; rien sur la cachette " + JSON.stringify(r));
     if (att === "or") { await p.evaluate(async () => { document.querySelectorAll(".ecu-rev,.revel").forEach(x => x.remove()); ETAT.podium = "ecurie"; ECU_SLOT = "plaque"; garder(); allerA("trophees"); rendreTrophees(); await new Promise(r => setTimeout(r, 900)); ceremonieChercheurNoel(1); await new Promise(r => setTimeout(r, 600)); });
       const t = await p.evaluate(() => (document.querySelector(".cn-rev") || {}).innerText || "");
