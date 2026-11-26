@@ -988,10 +988,9 @@ function armerLancement(bt, t, pi) {
 /** la caméra repart de la vue d'ensemble du circuit (comme au départ) : le trajet jusqu'à la cachette est toujours chronométré */
 function cameraAuDepart() { try { const a = GP_INST && GP_INST.api; if (a && a.type === "3d" && a.camera && a.mode && a.mode() === "helico") a.camera("helico"); } catch (e) { /* sans 3D */ } }
 async function lancerRecherche(t, bt, pi) {
-  const lib = bt ? bt.innerHTML : ""; if (bt) { bt.disabled = true; bt.innerHTML = "⏱️ Départ…"; }
+  const lib = bt ? bt.innerHTML : "", reprise = !!t.lance; if (bt) { bt.disabled = true; bt.innerHTML = "⏱️ Départ…"; }   // v20.96 : « reprise » lu AVANT le départ (l'aperçu admin modifiait t.lance pendant la requête → « Reprise » au 1er départ)
   const rep = TRESOR_APERCU ? TRESOR_APERCU.lancer(t) : await posterAdmin({ action: "tresorDepart", circuit: t.circuit });   // aperçu : départ inventé, rien ne part au serveur
   if (rep && rep.ok && rep.actif) {
-    const reprise = !!t.lance;
     Object.assign(t, { lance: true, actif: true, depuis: rep.depuis, cumul: +rep.cumul || 0 }); if (rep.p) t.p = rep.p;
     if (typeof rep.enigme === "string" && rep.enigme) Object.assign(t, { enigme: rep.enigme, indice2: rep.indice2 || null, enigmeCachee: false });   // v20.86 : l'énigme arrive avec le départ (serveur V97)
     if (TRESORS && typeof rep.maintenant === "number") TRESORS.decal = rep.maintenant - Date.now();

@@ -85,7 +85,7 @@ const mesurer = p => p.evaluate(() => {
     // pendant la recherche : l'énigme lisible en entier, sans couvrir le centre ni le joystick (PAS de capture : l'énigme ne se photographie pas)
     await p.evaluate(() => { const t = document.getElementById("toast"); if (t) t.style.display = ""; const bt = document.querySelector(".gp-piste .gp-lancer"); bt.click(); bt.click(); }); await p.waitForTimeout(800);
     const go = await p.evaluate(() => { const f = document.fullscreenElement, t = document.getElementById("toast"); return { dedans: !!f && !!t && f.contains(t), vu: !!t && !t.hidden && !!t.getClientRects().length, txt: t ? t.textContent : "" }; });
-    ok(go.dedans && go.vu && /C'est parti/.test(go.txt), tag + " · le message « ⏱️ C'est parti ! » s'affiche DANS le plein écran " + JSON.stringify({ dedans: go.dedans, vu: go.vu }));
+    ok(go.dedans && go.vu && /C'est parti/.test(go.txt), tag + " · le message « ⏱️ C'est parti ! » s'affiche DANS le plein écran " + JSON.stringify({ dedans: go.dedans, vu: go.vu, txt: go.txt.slice(0, 60) }));
     await p.evaluate(() => apPres()); await p.waitForTimeout(1500);
     const m3 = await mesurer(p), lis = await p.evaluate(() => { const e = document.querySelector(".gp-piste .gp-enigme"), i = e && e.querySelector(".gp-txt i"); if (!i || !i.getClientRects().length) return { vu: false };
       return { vu: true, entier: getComputedStyle(i.parentNode).whiteSpace !== "nowrap" && e.scrollHeight <= e.clientHeight + 2 && i.textContent.length > 20, chr: !!e.querySelector(".gp-chr") }; });
