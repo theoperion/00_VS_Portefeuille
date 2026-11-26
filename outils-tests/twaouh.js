@@ -1,19 +1,23 @@
 /* Test (25/11/2026) · RECETTE WAOUH (brume, lumière propre, rayons, sols par zones, ombres de contact, décor lointain) sur 10 circuits ;
-   l'Atelier de Noël (v20.66), Envers, Odyssée, Chocolaterie et Multivers sont en brouillon (WAOUH_BROUILLON, non appliqué : rendu d'avant, mot pour mot).
+   Envers, Odyssée, Chocolaterie et Multivers sont en brouillon (WAOUH_BROUILLON, non appliqué : rendu d'avant, mot pour mot) ;
+   l'Atelier de Noël n'a plus de recette du tout (26/11/2026 : brouillon et paillettes supprimés).
+   26/11/2026 · qualité 3D : la recette n'existe qu'en qualité « complet » (VERSUS_LEGER = false ici) ; en « léger », aucune couche ; plus de météo du marché.
    Lancer depuis la racine, serveur local ouvert : python3 -m http.server 8771 &  puis  node outils-tests/twaouh.js   (PORT=… pour un autre port)
    Trésors : APP_SCRIPTS=/chemin/vers/app_scripts node outils-tests/twaouh.js  lit versus/Tresors.js (dépôt PRIVÉ) pour vérifier les cachettes ;
    sans APP_SCRIPTS, cette vérification est sautée (aucune position de cachette n'est écrite dans ce dépôt public, ni affichée par ce test).
    Vérifie : 1. (sans navigateur) les 10 circuits ont leur ligne, chaque univers sa brume ; les brouillons aucune couche ajoutée ;
-   budgets : couches transparentes ≤ 30 000 triangles (≤ 16 000 en mode léger), décor lointain ≤ 1 200 triangles ; mode léger = moitié moins de rayons ;
+   budgets : couches transparentes ≤ 30 000 triangles ; qualité légère = aucune couche (ni voiles, ni ombres, ni rayons) ;
    le décor lointain va jusqu'à l'horizon (plus aucun bord du monde) ; trésors : rien de neuf à moins de 15 m d'une cachette, ou effacé au rendu dès que
-   le trésor est là (tresorEvite) ; 2. (navigateur) chaque circuit : recette allumée, 0 erreur JS ; pluie : rayons atténués, jamais éteints, même brume (météo légère v20.62) ; Dune : tempête et orage
-   inchangés ; « réduire les animations » : la recette reste ; trésor du mois présent : la recette s'efface autour de lui. Fausses données uniquement. */
+   le trésor est là (tresorEvite) ; 2. (navigateur, qualité complète forcée) chaque circuit : recette allumée, 0 erreur JS ; l'ancienne météo (pluie, orage, soleil) ne change plus rien :
+   même recette qu'au beau temps ; « réduire les animations » avec Complet choisi : la recette reste ; qualité légère : aucune recette ;
+   trésor du mois présent : la recette s'efface autour de lui. Fausses données uniquement. */
 const fs = require("fs"), path = require("path"), cp = require("child_process");
 const AVEC_N = ["silverstone", "djeddah", "melbourne", "suzuka", "arene2028", "miami", "montreal", "bahrein", "interlagos", "monaco"];
 const PORT = process.env.PORT || 8771, ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); };
 const src = fs.readFileSync(path.join(__dirname, "..", "piste.js"), "utf8").replace("window.Piste = {", "window.__P = { echantillonner, zones, TRACES, construire, ambiance, WAOUH };\n  window.Piste = {");
 global.window = {}; eval(src);
 const { echantillonner, zones, TRACES, construire, ambiance, WAOUH } = window.__P;
+ok(!WAOUH.garage && !/WAOUH_BROUILLON = \{[^]*?\n    garage:/.test(src) && !/paillettes:|R\.pai|uSolE/.test(src), "Noël : plus aucune recette waouh, ni en brouillon (paillettes comprises)");
 const scene = (id, leger) => { window.VERSUS_LEGER = leger; const def = TRACES[id], T = echantillonner(def); return { S: construire(def, T, ambiance(def, "soleil", ""), zones(T)), T }; };
 const AVEC = ["silverstone", "djeddah", "melbourne", "suzuka", "arene2028", "miami", "montreal", "bahrein", "interlagos", "monaco"], ids = AVEC, recette = id => TRACES[id].waouh || WAOUH[TRACES[id].decor];
 // 1. une ligne par circuit, une ambiance par univers
@@ -30,8 +34,7 @@ ids.forEach(id => { R[id] = scene(id, false); L[id] = scene(id, true); });
 const tr = S => (S.voile.n + S.lueur.n + S.rayons.n) / 3;
 ids.forEach(id => {
   const r = R[id].S, l = L[id].S, W = recette(id);
-  ok(tr(r) <= 30000 && tr(l) <= 16000, id + " : couches transparentes " + tr(r) + " triangles (léger " + tr(l) + ")");
-  if (W.rayons && r.rayons.n) ok(l.rayons.n <= r.rayons.n * .6, id + " : mode léger = moitié moins de rayons (" + r.rayons.n / 3 + " → " + l.rayons.n / 3 + ")");
+  ok(tr(r) <= 30000 && tr(l) === 0, id + " : couches transparentes " + tr(r) + " triangles en complet, " + tr(l) + " en léger (comme Noël)");
   const T = R[id].T, ext = Math.max(T.rx, T.rz) * 3.2 + 600, d = r.sol.d; let rmax = 0;
   for (let i = 0; i < d.length; i += 10) { const q = Math.hypot(d[i] - T.cx, d[i + 2] - T.cz); if (q > rmax) rmax = q; }
   const H = W.horizon; W.horizon = null; const sh = scene(id, false).S.sol; W.horizon = H; const nh = (r.sol.d.length - sh.d.length) / 30;   // triangles du décor lointain seul
@@ -59,34 +62,36 @@ else {
 (async () => {
   const { chromium } = require("playwright");
   const b = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
-  const essai = async (reduit, f, arg) => { const ctx = await b.newContext({ viewport: { width: 390, height: 300 }, reducedMotion: reduit ? "reduce" : "no-preference" }), p = await ctx.newPage(), err = [];
-    p.on("pageerror", e => err.push(e.message)); await p.setContent('<div id="b" style="width:390px;height:300px;position:relative"></div>'); await p.addScriptTag({ url: "http://localhost:" + PORT + "/piste.js" });
+  const essai = async (reduit, f, arg, leger) => { const ctx = await b.newContext({ viewport: { width: 390, height: 300 }, reducedMotion: reduit ? "reduce" : "no-preference" }), p = await ctx.newPage(), err = [];
+    p.on("pageerror", e => err.push(e.message)); await p.setContent('<div id="b" style="width:390px;height:300px;position:relative"></div>');
+    await p.evaluate(l => { window.VERSUS_LEGER = l; }, !!leger);   // qualité forcée (la machine de test, sans carte graphique, serait en léger automatique)
+    await p.addScriptTag({ url: "http://localhost:" + PORT + "/piste.js" });
     const r = await p.evaluate(f, arg); await ctx.close(); return { r, err }; };
   const monter = (circuit, meteo, ambiance) => { const b = document.getElementById("b"); if (window.__a) window.__a.detruire(); b.innerHTML = "";
     return window.__a = Piste.monter(b, { circuit, meteo, ambiance, camera: "helico", effets: true, voitures: [{ nom: "A", couleur: "#4C9AFF" }], pts: { A: 1 } }); };
   const F = "const monter = " + monter.toString() + ";", attendre = "await new Promise(r => setTimeout(r, 500));";
-  const a = await essai(false, new Function("return (async () => {" + F + "const o = {}; o.soleil = monter('silverstone', 'soleil').waouh(); " + attendre +
-    "o.beau = monter('silverstone', 'beau').waouh(); " + attendre + "o.orage = monter('silverstone', 'orage'); o.orageW = o.orage.waouh(); o.orageM = o.orage.meteo(); o.pluie = monter('silverstone', 'pluie').waouh(); o.nuit = monter('silverstone', 'soleil', 'monaco').waouh();" +
+  const a = await essai(false, new Function("return (async () => {" + F + "const o = {}; o.beau = monter('silverstone', 'beau').waouh(); o.pBeau = __a.particules(); " + attendre +
+    "o.meteos = ['soleil', 'pluie', 'orage', 'neige', 'nuages'].map(m => { const x = monter('silverstone', m); return [x.waouh(), x.particules()]; }); o.nuit = monter('silverstone', 'soleil', 'monaco').waouh();" +
     "o.tous = {}; for (const id of Object.keys(Piste.TRACES)) { const x = monter(id, 'soleil'); " + attendre + " o.tous[id] = x.waouh(); }" +
-    "o.pluieJour = monter('djeddah', 'pluie').waouh(); o.orage = null; return o; })()"));
+    "o.pluieJour = monter('djeddah', 'pluie').waouh(); return o; })()"));
   const r = a.r;
-  ok(r.soleil && r.soleil.brume && r.soleil.sol && r.soleil.rayons && r.soleil.voile, "Dune au soleil : brume, sols par zones, rayons du soleil et voiles allumés " + JSON.stringify(r.soleil));
-  // v20.62 (météo « très accessoire », branche course) : la météo n'assombrit jamais le décor ; rayons atténués sous la pluie, jamais éteints ; même brume qu'au beau temps
-  ok(r.orageW && r.orageW.rayons && r.orageW.brume && r.orageM === "sable" && JSON.stringify(r.orageW.brumeCol) === JSON.stringify(r.beau.brumeCol), "Dune sous l'orage : tempête de sable toujours visible (" + r.orageM + "), même brume qu'au beau temps, rayons atténués mais présents");
-  ok(r.pluie && r.pluie.rayons && r.pluie.force < r.beau.force && r.pluie.force > 0, "Dune « pluie » (tempête de sable) : rayons atténués (" + (r.pluie && r.pluie.force) + " < " + r.beau.force + "), jamais éteints");
-  ok(r.soleil.force > r.beau.force, "grand soleil : rayons un peu plus présents");
+  ok(r.beau && r.beau.brume && r.beau.sol && r.beau.rayons && r.beau.voile, "Dune (complet) : brume, sols par zones, rayons du soleil et voiles allumés " + JSON.stringify(r.beau));
+  // 26/11/2026 (Théo) · plus de météo du marché : quelle que soit l'ancienne météo, exactement le beau temps (même recette, mêmes particules du décor)
+  ok(r.meteos.every(([w, n]) => JSON.stringify(w) === JSON.stringify(r.beau) && n === r.pBeau), "Dune : soleil, pluie, orage, neige, nuages = le beau temps, mot pour mot (recette et " + r.pBeau + " grains de sable du décor)");
   ok(r.nuit && !r.nuit.rayons, "Dune avec le filtre de nuit du joueur : pas de rayons");
   const AV = AVEC_N, eteints = AV.filter(id => !(r.tous[id] && r.tous[id].brume && r.tous[id].sol && r.tous[id].voile));
   ok(!eteints.length, AV.length + " circuits : recette allumée (brume, sols, ombres ou voiles) " + JSON.stringify(eteints));
   const sansR = Object.keys(r.tous).filter(id => AV.indexOf(id) < 0 && r.tous[id]);
   ok(!sansR.length, "les " + (Object.keys(r.tous).length - AV.length) + " circuits en brouillon : aucune recette au rendu " + JSON.stringify(sansR));
-  ok(r.tous.djeddah.rayons && !r.tous.abudhabi, "rayons du soleil sur le Château (jour) ; l'Atelier de Noël sans recette (v20.66 : en brouillon, la Visite d'abord fluide sur téléphone)");
-  ok(r.pluieJour && r.pluieJour.rayons && r.pluieJour.force < r.tous.djeddah.force && r.pluieJour.brume && JSON.stringify(r.pluieJour.brumeCol) === JSON.stringify(r.tous.djeddah.brumeCol), "Château sous la pluie : rayons atténués (jamais éteints), même brume (la météo n'assombrit pas)");
+  ok(r.tous.djeddah.rayons && !r.tous.abudhabi, "rayons du soleil sur le Château (jour) ; l'Atelier de Noël sans recette (sa Visite sans effets est la référence de fluidité)");
+  ok(JSON.stringify(r.pluieJour) === JSON.stringify(r.tous.djeddah), "Château « sous la pluie » : exactement le beau temps (plus de météo)");
   const c = await essai(true, new Function("return (async () => {" + F + "return [monter('silverstone', 'soleil').waouh(), monter('melbourne', 'soleil').waouh()]; })()"));
-  ok(c.r.every(x => x && x.brume && x.sol), "« réduire les animations » : la recette reste (rayons fixes, paillettes fixes)");
+  ok(c.r.every(x => x && x.brume && x.sol), "« réduire les animations » avec Complet choisi : la recette reste (rayons fixes)");
+  const l = await essai(false, new Function("return (async () => {" + F + "const o = {}; for (const id of Object.keys(Piste.TRACES)) o[id] = monter(id, 'soleil').waouh(); return o; })()"), null, true);
+  ok(Object.values(l.r).every(x => x === null), "qualité légère : aucune recette sur aucun circuit (comme Noël)");
   const e = await essai(false, new Function("return (async () => {" + F + "window.tresorDuCircuit = ci => ci === 'djeddah' ? { p: [0, 0, 0] } : null; const x = monter('djeddah', 'soleil'); " + attendre + " const a = x.waouh().evite;" +
     "window.tresorDuCircuit = () => null; const y = monter('djeddah', 'soleil'); " + attendre + " return [a, y.waouh().evite]; })()"));
   ok(e.r[0] === true && e.r[1] === false, "trésor du mois présent (exemple inventé) : ombres, rayons et nappes s'effacent autour de sa cachette ; sans trésor, rien d'effacé");
-  ok(!a.err.length && !c.err.length && !e.err.length, "0 erreur JS " + JSON.stringify(a.err.concat(c.err, e.err)));
+  ok(!a.err.length && !c.err.length && !e.err.length && !l.err.length, "0 erreur JS " + JSON.stringify(a.err.concat(c.err, e.err, l.err)));
   await b.close(); console.log(ko.length ? "\n" + ko.length + " NON" : "\nTout est OUI"); process.exit(ko.length ? 1 : 0);
 })();

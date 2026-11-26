@@ -1,6 +1,6 @@
 /* ============================================================
    Versus · Grand Prix : le circuit du mois
-   - en 3D : WebGL pur, sans bibliothèque (décors low-poly, météo, caméras, replays)
+   - en 3D : WebGL pur, sans bibliothèque (décors low-poly, caméras, replays ; qualité automatique complet / léger)
    - en 2D : une carte SVG épurée, en secours ou par choix
    Ce fichier ne contient que le dessin. Le calendrier, les atouts et les points restent dans l'appli.
    Interface : Piste.monter(boite, options) → { placer, jouer, camera, focus, ecran, courant, redim, detruire }
@@ -8,13 +8,88 @@
 (function () {
   "use strict";
   const PI = Math.PI, TAU = 2 * PI;
-  /** v20.48 · MODE LÉGER des grands décors (Pandora, Mur des titans) : sur un téléphone à 4 Go de mémoire ou moins (ou mémoire inconnue sur un écran
-   *  étroit et tactile, comme Firefox Android), un arbre ou un objet lointain sur deux ; sur ordinateur, le rendu riche. window.VERSUS_LEGER force le choix (tests). */
-  function leger() {
-    try { if (window.VERSUS_LEGER !== undefined) return !!window.VERSUS_LEGER;
-      const m = typeof navigator !== "undefined" ? navigator.deviceMemory : undefined; if (m) return m <= 4;
-      return !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches && Math.min(window.innerWidth || 9999, (window.screen && window.screen.width) || 9999) < 700); } catch (e) { return false; }
+  /* ---------- QUALITÉ 3D : UN SEUL RÉGLAGE AUTOMATIQUE pour tous les circuits (26/11/2026, Théo) ----------
+     Deux niveaux, décidés AVANT la 1re image et gardés pour toute la visite (jamais de clignotement ni de saut à l'écran) :
+       « complet » : le décor entier et la recette waouh (WAOUH : brume, lumière, rayons, sols par zones, ombres de contact, voiles de sable) ;
+       « léger »   : comme l'Atelier de Noël, la référence de fluidité : AUCUNE recette, un arbre ou un objet lointain sur deux (Pandora, Titans…),
+                     un peu plus de la moitié des particules ; jamais de décor lointain (DECOR_LOINTAIN reste coupé dans les deux niveaux).
+     Qui décide, dans l'ordre : window.VERSUS_LEGER (tests) ; Réglages › Décors 3D (Auto / Complet / Léger, sur cet appareil : versus.q3d) ; sinon AUTO :
+       léger si « réduire les animations » ou « économie de données » est demandé, si la 3D est calculée sans carte graphique (WebGL logiciel) ou par une petite
+       (textures < 4096), si le téléphone a 4 Go de mémoire ou moins, 4 cœurs ou moins, ou s'il a déjà ramé ici dans les 30 derniers jours (versus.q3dLent) ;
+       mémoire inconnue sur un écran tactile étroit (Firefox Android, iPhone) : voir INCONNU_COMPLET (aujourd'hui léger) ; sinon complet.
+     Rétrogradation : en complet automatique, si les images restent lentes (plus de 30 ms en moyenne, sans répit, pendant 2,5 s et au moins 20 images
+     en mouvement, une fois la définition déjà baissée), le niveau passe à léger UNE fois, pour la vue SUIVANTE, et c'est retenu 30 jours. La piste du Podium
+     n'est reconstruite qu'à un vrai changement de vue (arrivée sur l'onglet Course, autre vue touchée, choix dans les Réglages), jamais sur un simple redessin,
+     ni pendant une course, ni en plein écran (js/4-grandprix.js : permettreQualiteGP, GP_INST.niv). Le niveau ne remonte jamais pendant la visite.
+     window.VERSUS_APPAREIL (tests) remplace la mesure de l'appareil : { memoire, coeurs, gpu, texMax, tactileEtroit, reduit, eco }. */
+  /** Navigateurs qui ne donnent pas leur mémoire (Firefox Android ; iPhone, probablement léger de toute façon : la règle des 4 cœurs passe avant) :
+      false (décision du 26/11 : Théo est en léger sur Firefox Android et trouve Noël parfait) = ils partent en léger par prudence, Complet reste possible
+      à la main dans les Réglages ; true = ils partent en complet, et passent en léger à la vue suivante si ça saccade plus de 2,5 s. */
+  const INCONNU_COMPLET = false;
+  const Q3D = { niveau: null, raison: "", descendu: false, choix: null };   // choix : le choix des Réglages, gardé ici si la mémoire du téléphone est bloquée
+  const Q3D_LENT = 30 * 864e5;
+  function lireQ(k) { try { return window.localStorage ? localStorage.getItem(k) : null; } catch (e) { return null; } }
+  /** écrit dans la mémoire du téléphone ; false si elle est bloquée (navigation privée, réglages du navigateur) */
+  function ecrireQ(k, v) { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); return lireQ(k) === v; } catch (e) { return false; } }
+  /** le choix des Réglages : "auto" (par défaut), "complet" ou "leger" */
+  function choixQualite() { const c = Q3D.choix || lireQ("versus.q3d"); return c === "complet" || c === "leger" ? c : "auto"; }
+  /** ce que l'on sait de l'appareil, sans rien ouvrir de plus (la carte graphique est lue une fois, dans le contexte d'essai de supporte()) */
+  function appareil() {
+    if (window.VERSUS_APPAREIL) return window.VERSUS_APPAREIL;
+    const nav = typeof navigator !== "undefined" ? navigator : {}, mm = q => { try { return !!(window.matchMedia && window.matchMedia(q).matches); } catch (e) { return false; } };
+    const co = nav.connection || {};
+    return { memoire: nav.deviceMemory, coeurs: nav.hardwareConcurrency, gpu: GPU.nom, texMax: GPU.texMax,
+      tactileEtroit: mm("(pointer: coarse)") && Math.min(window.innerWidth || 9999, (window.screen && window.screen.width) || 9999) < 700,
+      reduit: mm("(prefers-reduced-motion: reduce)"), eco: !!co.saveData || mm("(prefers-reduced-data: reduce)") };
   }
+  const GPU = { nom: "", texMax: 0 };
+  /** la carte graphique (nom et plus grande texture), lue une fois sur le premier contexte WebGL ouvert */
+  function lireGPU(g) { if (!g || GPU.texMax) return; try { const x = g.getExtension("WEBGL_debug_renderer_info"); GPU.nom = String(g.getParameter(x ? x.UNMASKED_RENDERER_WEBGL : g.RENDERER) || ""); GPU.texMax = +g.getParameter(g.MAX_TEXTURE_SIZE) || 0; } catch (e) { /* inconnue */ } }
+  /** niveau automatique d'après l'appareil : [léger ?, raison en clair] */
+  function niveauAuto(sansSonde) {
+    if (typeof navigator === "undefined" && !window.VERSUS_APPAREIL) return [false, "hors navigateur"];
+    if (!sansSonde && !GPU.texMax && !window.VERSUS_APPAREIL && typeof document !== "undefined") supporte();   // la carte graphique d'abord (contexte d'essai, une fois)
+    const lent = +lireQ("versus.q3dLent"); if (lent && Date.now() - lent < Q3D_LENT) return [true, "la course a saccadé ici ces derniers jours"];
+    const a = appareil(), faible = "téléphone peu puissant pour la 3D";
+    if (a.reduit) return [true, "« réduire les animations » est demandé sur ce téléphone"];
+    if (a.eco) return [true, "économie de données activée"];
+    if (/swiftshader|llvmpipe|softpipe|software|basic render/i.test(a.gpu || "")) return [true, faible];   // 3D calculée sans carte graphique
+    if (a.texMax && a.texMax < 4096) return [true, faible];   // petite carte graphique
+    if (a.memoire) { if (a.memoire <= 4) return [true, faible]; }   // 4 Go ou moins
+    else if (a.tactileEtroit && !INCONNU_COMPLET) return [true, "par prudence sur ce téléphone"];   // mémoire inconnue (Firefox Android, iPhone)
+    if (a.coeurs && a.coeurs <= 4) return [true, faible];   // 4 cœurs ou moins
+    if (!a.memoire && a.tactileEtroit) return [false, "à l'essai : léger ensuite si la course saccade"];
+    return [false, "téléphone assez puissant"];
+  }
+  /** niveau de la visite : décidé une fois (avant la 1re image), puis seulement rétrogradé */
+  function niveauQualite() {
+    if (window.VERSUS_LEGER !== undefined) return window.VERSUS_LEGER ? "leger" : "complet";
+    const c = choixQualite(); if (c !== "auto") return c;
+    if (!Q3D.niveau) { const [l, r] = niveauAuto(); Q3D.niveau = l ? "leger" : "complet"; Q3D.raison = r; }
+    return Q3D.niveau;
+  }
+  /** les images rament en complet automatique : léger pour la suite (une seule fois, retenu 30 jours) */
+  function descendreQualite() {
+    if (window.VERSUS_LEGER !== undefined || choixQualite() !== "auto" || Q3D.niveau !== "complet") return false;
+    Q3D.niveau = "leger"; Q3D.raison = "la course a saccadé : léger dès la prochaine ouverture"; Q3D.descendu = true; ecrireQ("versus.q3dLent", String(Date.now())); return true;
+  }
+  /** mode léger (nom d'avant, gardé partout dans les décors) */
+  function leger() { try { return niveauQualite() === "leger"; } catch (e) { return false; } }
+  /** Réglages › Affichage › Décors 3D : les puces Auto / Complet / Léger (index.html, data-q3d) et la ligne qui dit ce que l'automatique a choisi */
+  function brancherReglageQualite() {
+    const bs = document.querySelectorAll("[data-q3d]"); if (!bs.length) return;
+    const maj = () => { const c = choixQualite(); bs.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.q3d === c)));
+      const i = document.getElementById("q3d-info"); if (!i) return;
+      const n = window.VERSUS_LEGER !== undefined || Q3D.niveau ? niveauQualite() : (niveauAuto(true)[0] ? "leger" : "complet"), r = Q3D.niveau ? Q3D.raison : niveauAuto(true)[1];
+      i.textContent = (c === "auto" ? "Sur ce téléphone : " + (n === "leger" ? "léger" : "complet") + (r ? " (" + r + ")" : "") + "." : "Choisi à la main sur ce téléphone. Touche Auto pour laisser l'appli décider.") + (Q3D.nonGarde ? " Choix non mémorisé sur ce téléphone." : ""); };
+    bs.forEach(b => b.addEventListener("click", () => { const v = b.dataset.q3d; Q3D.choix = v;
+      Q3D.nonGarde = !ecrireQ("versus.q3d", v === "auto" ? null : v); if (v === "auto") ecrireQ("versus.q3dLent", null);
+      // la piste du Podium suit tout de suite, sauf pendant une course ou en plein écran (alors à la prochaine ouverture de la vue Course)
+      maj(); try { if (typeof window.vueActive === "function" && window.vueActive() === "trophees" && typeof window.permettreQualiteGP === "function" && window.permettreQualiteGP()) window.rendreVue("trophees"); } catch (e) { /* la piste suivra à la prochaine ouverture */ } }));
+    const rg = document.getElementById("btn-reglages"); if (rg) rg.addEventListener("click", maj);
+    maj();
+  }
+  if (typeof document !== "undefined" && document.addEventListener) { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", brancherReglageQualite); else setTimeout(brancherReglageQualite, 0); }
 
   /* ---------- Tracés (360 × 240, y vers le bas, 3e valeur = relief) ---------- */
   function huit() {   // Suzuka : un huit ; le second passage au centre se fait sur un pont
@@ -232,7 +307,7 @@
     return { atout: { s0: a0, s1: Math.max(a1, a0 + 40) }, piege: { s0: piege * T.ds - 22, s1: piege * T.ds + 22 } };
   }
 
-  /* ---------- Ambiances : heure du jour, décor de la ville, météo, cosmétique du spectateur ---------- */
+  /* ---------- Ambiances : heure du jour, décor de la ville, cosmétique du spectateur ---------- */
   const HEURES = {
     jour: { haut: "#2F74D0", horizon: "#B4DCF5", soleil: [.5, .62, .35], sCol: "#FFF1DA", sForce: 1.0, amb: .5, sol: "#7FA36A", nuit: 0, brume: .00045 },
     crepuscule: { haut: "#2E3170", horizon: "#F7A36E", soleil: [-.75, .2, .5], sCol: "#FFCFA6", sForce: .85, amb: .55, nuit: .35, brume: .00045 },
@@ -280,49 +355,42 @@
   };
   /** objets qui gardent leurs couleurs propres (lumineux ou peints), même sous la neige ou le néon */
   const SANS_TEINTE = new Set(["yacht", "neon", "luciole", "cube", "tourholo", "lanterne", "fleurs", "de", "pion", "nuage"]);
-  /** ambiance finale : heure de la ville, puis météo du marché, puis cosmétique du spectateur */
-  /** ambiance finale : heure et thème du circuit (toujours), météo du marché, puis le filtre de course du joueur (une touche par-dessus, V16.5) */
-  function ambiance(def, meteo, cosm) {
+  /** ambiance finale : heure et thème du circuit (toujours), puis le filtre de course du joueur (une touche par-dessus, V16.5).
+      26/11/2026 (Théo) · plus de météo du marché dans le décor : chaque circuit garde TOUJOURS son ambiance de beau temps (le 2e paramètre, ancienne météo, est ignoré) ;
+      le marché se lit dans l'onglet Moi. Les particules du thème (neige de Noël, sable de Dune, lucioles, poussière d'étoiles…) font partie du décor et restent. */
+  function ambiance(def, _sansMeteo, cosm) {
     const D = DECORS[def.decor] || DECORS.parc, th = def.amb || null;
     let h = Object.assign({}, HEURES[def.heure] || HEURES.jour);
     if (th === "desert") h = Object.assign({}, HEURES.crepuscule, { horizon: "#FFA060", haut: "#3A2E7A", sCol: "#FFD8A4", sForce: 1.32, amb: .47, brume: .00026, nuit: 0, soleil: [-.74, .38, .46] });   // 25/11/2026 · plus contrasté : soleil rasant et fort, ombres pourpres profondes sur les faces d'avalanche   // v16.63 · Dune : couchant plus chaud, soleil un peu plus haut (sable lumineux, faces d'avalanche pourpres)
     if (th === "gouter") h = Object.assign({}, HEURES.jour, { haut: "#5E86CC", horizon: "#FFD8A8", soleil: [-.55, .5, .45], sCol: "#FFE6C0", sForce: 1, amb: .6, brume: .0004, nuit: 0 });   // goûter : fin d'après-midi douce, sans particules
     if (th === "anneau") h = Object.assign({}, HEURES.jour, { haut: "#3C5AA8", horizon: "#FFC08A", soleil: [-.55, .5, .55], sCol: "#FFE6BC", sForce: 1.05, amb: .58, brume: .0004, nuit: .3 });   // v20.46 · l'Anneau : fin d'après-midi dorée, horizon rougi par le Mordor (les lanternes et la lave ont leur halo)
-    let tempete = 0; if (th === "noel" && meteo !== "soleil" && meteo !== "beau") { tempete = meteo === "orage" ? 2 : meteo === "neige" || meteo === "pluie" ? 1 : .5; meteo = "soleil-noel"; }   // V16.63 · Noël : la météo du mois devient de la neige, jamais de pluie grise
-    let sable = 0; if (th === "desert" && (meteo === "pluie" || meteo === "orage")) { sable = meteo === "orage" ? 2 : 1; meteo = "sable"; }   // v20.52 (Théo) · Dune : jamais de pluie, une tempête de sable
     const A = { haut: hex(h.haut), horizon: hex(h.horizon), soleil: norme(h.soleil), sCol: fois(hex(h.sCol), h.sForce), amb: h.amb, nuit: h.nuit, brume: h.brume,
-      sol: hex(D.sol), bord: hex(D.bord), piste: hex(D.piste), murs: D.murs.map(hex), eau: D.eau ? hex(D.eau) : null, pluie: 0, neige: 0, eclairs: 0, mouille: 0, synth: 0, hiver: 0 };
-    /* v20.62 (Théo : « la météo très accessoire ») · la météo du marché ne change JAMAIS la lumière ni les couleurs du décor (même ciel, même soleil qu'au beau temps) :
-       pluie = fines gouttes discrètes + léger reflet sur la piste ; orage = la même pluie + de temps en temps un bref éclair DANS LE CIEL (A.eclairCiel, jamais de flash plein écran) */
-    if (meteo === "pluie" || meteo === "orage") { A.pluie = 1; A.mouille = 1; A.eclairCiel = meteo === "orage" ? 1 : 0; }
+      sol: hex(D.sol), bord: hex(D.bord), piste: hex(D.piste), murs: D.murs.map(hex), eau: D.eau ? hex(D.eau) : null, neige: 0, eclairs: 0, synth: 0, hiver: 0 };
     // le thème du circuit (V16.2) : il ne disparaît jamais
-    if (th === "neige") { A.hiver = 1; A.sol = hex("#E8EEF4"); A.bord = hex("#D5DFEA"); A.neige = A.pluie ? 0 : 1; A.horizon = mel(A.horizon, hex("#E6EDF5"), .5); A.haut = mel(A.haut, hex("#9FB5CC"), .4); }
-    if (th === "noel") { A.sol = hex("#E6EFFF"); A.bord = hex("#D2E0F6"); A.neige = 1; A.floc = [1, 1, 1, .85 + Math.min(tempete, 1) * .05]; A.flocV = 3 * Math.min(1.5, 1 + tempete * .25); }   // v16.89 · tempête plafonnée à 1,5 × la neige normale (fluidité)   // V16.63 · Noël : neige fraîche et flocons, plus serrés s'il « pleut »
-    if (th === "lucioles") { A.haut = hex("#13244A"); A.horizon = hex("#4A7E7A"); A.nuit = .8; A.amb = .6; A.sCol = fois(A.sCol, .6); if (!A.pluie) { A.neige = 1; A.floc = [.85, 1, .35, .9]; A.flocV = 1.5; } }
-    if (th === "paris") { A.haut = hex("#0E1636"); A.horizon = hex("#C8784E"); A.sCol = hex("#FFD8A8"); A.soleil = norme([-.55, .5, .45]); A.amb = .6; A.nuit = .75; A.brume = .0003; if (!A.pluie) { A.neige = 1; A.floc = [1, .86, .55, .45]; A.flocV = .8; } }   // juillet 2027 · Petit Chef : nuit de Paris, poussière dorée
-    if (th === "envers") { A.haut = hex("#0B0610"); A.horizon = hex("#5A1424"); A.nuit = 1; A.eclairs = 1; A.sCol = hex("#9AA6C8"); A.sol = hex("#2A2730"); A.bord = hex("#35303A"); A.envers = 1; if (!A.pluie) { A.neige = 1; A.floc = [.75, .68, .7, .6]; A.flocV = 2.5; } }
+    if (th === "neige") { A.hiver = 1; A.sol = hex("#E8EEF4"); A.bord = hex("#D5DFEA"); A.neige = 1; A.horizon = mel(A.horizon, hex("#E6EDF5"), .5); A.haut = mel(A.haut, hex("#9FB5CC"), .4); }
+    if (th === "noel") { A.sol = hex("#E6EFFF"); A.bord = hex("#D2E0F6"); A.neige = 1; A.floc = [1, 1, 1, .85]; A.flocV = 3; }   // V16.63 · Noël : neige fraîche et flocons
+    if (th === "lucioles") { A.haut = hex("#13244A"); A.horizon = hex("#4A7E7A"); A.nuit = .8; A.amb = .6; A.sCol = fois(A.sCol, .6); A.neige = 1; A.floc = [.85, 1, .35, .9]; A.flocV = 1.5; }
+    if (th === "paris") { A.haut = hex("#0E1636"); A.horizon = hex("#C8784E"); A.sCol = hex("#FFD8A8"); A.soleil = norme([-.55, .5, .45]); A.amb = .6; A.nuit = .75; A.brume = .0003; A.neige = 1; A.floc = [1, .86, .55, .45]; A.flocV = .8; }   // juillet 2027 · Petit Chef : nuit de Paris, poussière dorée
+    if (th === "envers") { A.haut = hex("#0B0610"); A.horizon = hex("#5A1424"); A.nuit = 1; A.eclairs = 1; A.sCol = hex("#9AA6C8"); A.sol = hex("#2A2730"); A.bord = hex("#35303A"); A.envers = 1; A.neige = 1; A.floc = [.75, .68, .7, .6]; A.flocV = 2.5; }
     if (th === "multivers") { A.haut = hex("#0E0828"); A.horizon = hex("#E8743A"); A.sCol = hex("#D8CCFF"); A.soleil = norme([.35, .5, .55]); A.amb = .56; A.nuit = 1; A.brume = .00016; }
-    if (th === "spores") { A.horizon = mel(A.horizon, hex("#B7C27A"), .6); A.haut = mel(A.haut, hex("#33402C"), .4); if (!A.pluie) { A.neige = 1; A.floc = [.85, .92, .6, .6]; A.flocV = 2; } }
+    if (th === "spores") { A.horizon = mel(A.horizon, hex("#B7C27A"), .6); A.haut = mel(A.haut, hex("#33402C"), .4); A.neige = 1; A.floc = [.85, .92, .6, .6]; A.flocV = 2; }
     // novembre · Mur des titans : le soleil se couche sur la mer, au nord, derrière le Colosse (comme la carte)
-    if (th === "cendres") { A.horizon = mel(A.horizon, hex("#E8904E"), .6); A.haut = mel(A.haut, hex("#3A2440"), .55); A.brume *= 1.15; A.soleil = norme([-.3, .26, -.9]); A.sCol = fois(hex("#FFC890"), 1.05); A.amb = .6; if (!A.pluie) { A.neige = 1; A.floc = [.62, .6, .58, .7]; A.flocV = 3; } }
-    if (th === "desert" && !A.pluie && !sable) { A.neige = 1; A.floc = [.95, .8, .55, .5]; A.flocV = 9; }
-    if (sable) { A.neige = 1; A.sable = sable; A.floc = [.92, .7, .42, .8]; A.flocV = 5; A.vent = 22 + 14 * sable; A.densite = 1.1 + .25 * sable; A.eclairCiel = sable > 1 ? 1 : 0; }   // v20.62 : le sable vole, mais le ciel et la lumière de Dune restent ceux du beau temps
-    if (th === "magie") { A.haut = hex("#3A82D6"); A.horizon = hex("#D6ECFA"); A.sCol = hex("#FFF2DC"); A.soleil = norme([.42, .62, .62]); A.amb = .6; A.brume = .00032; if (!A.pluie) { A.neige = 1; A.floc = [1, .88, .5, .8]; A.flocV = 1.1; } }   // février · le Château de jour : ciel clair, soleil au sud-est sur la façade, poussière d'étoiles dorée
+    if (th === "cendres") { A.horizon = mel(A.horizon, hex("#E8904E"), .6); A.haut = mel(A.haut, hex("#3A2440"), .55); A.brume *= 1.15; A.soleil = norme([-.3, .26, -.9]); A.sCol = fois(hex("#FFC890"), 1.05); A.amb = .6; A.neige = 1; A.floc = [.62, .6, .58, .7]; A.flocV = 3; }
+    if (th === "desert") { A.neige = 1; A.floc = [.95, .8, .55, .5]; A.flocV = 9; }
+    if (th === "magie") { A.haut = hex("#3A82D6"); A.horizon = hex("#D6ECFA"); A.sCol = hex("#FFF2DC"); A.soleil = norme([.42, .62, .62]); A.amb = .6; A.brume = .00032; A.neige = 1; A.floc = [1, .88, .5, .8]; A.flocV = 1.1; }   // février · le Château de jour : ciel clair, soleil au sud-est sur la façade, poussière d'étoiles dorée
     if (th === "odyssee") { A.haut = hex("#3A6CC0"); A.horizon = hex("#FFD49A"); A.sCol = hex("#FFE6BE"); A.soleil = norme([.55, .42, .62]); A.amb = .58; A.brume = .00032; }   // l'aube d'Ithaque (sud-est), comme la carte peinte
     if (th === "chocolat") { A.haut = hex("#5A2A12"); A.horizon = hex("#FFE6B8"); A.sCol = hex("#E6CCA8"); A.soleil = norme([.25, .85, .45]); A.amb = .46; A.brume = .00014; }   // octobre · dans la salle : voûte de chocolat, lumière dorée de la verrière
     if (th === "pandora") { A.haut = hex("#3E9AD6"); A.horizon = hex("#D8F0D8"); A.sCol = hex("#FFF0CC"); A.soleil = norme([.4, .58, .5]); A.amb = .66; A.nuit = 0; A.brume = .00042;
-      A.sol = hex("#367A3C"); A.bord = hex("#5AA650"); A.piste = hex("#8A7050"); A.murs = [hex("#6A5238"), hex("#3E8A5A")]; if (!A.pluie) { A.neige = 1; A.floc = [1, .95, .7, .7]; A.flocV = .9; } }   // mai · Pandora en plein jour (25/11) : ciel bleu-vert, brume dorée, poussière de graines qui flotte
+      A.sol = hex("#367A3C"); A.bord = hex("#5AA650"); A.piste = hex("#8A7050"); A.murs = [hex("#6A5238"), hex("#3E8A5A")]; A.neige = 1; A.floc = [1, .95, .7, .7]; A.flocV = .9; }   // mai · Pandora en plein jour (25/11) : ciel bleu-vert, brume dorée, poussière de graines qui flotte
     if (th === "olympe") { A.haut = hex("#3E7BE0"); A.horizon = hex("#FFE2A0"); A.sCol = hex("#FFF1D0"); A.eclairs = 1; }
-    if (th === "pluie" && !A.pluie) { A.pluie = 1; A.mouille = 1; A.haut = mel(A.haut, hex("#1C222D"), .5); A.brume *= 1.3; }
     if (th === "neon") { A.synth = 1; A.nuit = 1; A.haut = hex("#0B0220"); A.horizon = hex("#FF2E97"); A.sol = hex("#12062A"); A.bord = hex("#1C0B3A"); A.sCol = hex("#FF77C8"); A.soleil = norme([0, .12, -1]); A.amb = .45; A.murs = [hex("#22D3EE"), hex("#FF4FD8")]; }
     // le filtre de course du joueur : une touche de couleur et d'heure, sans effacer le thème
     if (cosm === "monaco") { A.haut = mel(A.haut, hex("#03060F"), .55); A.horizon = mel(A.horizon, hex("#1A2446"), .5); A.sCol = fois(A.sCol, .6); A.nuit = Math.max(A.nuit, .7); A.amb = Math.min(A.amb, .48); }
     if (cosm === "desert") { A.horizon = mel(A.horizon, hex("#FFB86B"), .45); A.haut = mel(A.haut, hex("#5C6FC9"), .25); A.sCol = mel(A.sCol, hex("#FFC98A"), .4); }
-    if (cosm === "neige") { A.horizon = mel(A.horizon, hex("#E6EDF5"), .35); A.haut = mel(A.haut, hex("#9FB5CC"), .3); A.sCol = mel(A.sCol, hex("#DDE8F5"), .3); if (!A.neige && !A.pluie) { A.neige = 1; A.floc = [.92, .95, 1, .55]; A.flocV = 6; } }
+    if (cosm === "neige") { A.horizon = mel(A.horizon, hex("#E6EDF5"), .35); A.haut = mel(A.haut, hex("#9FB5CC"), .3); A.sCol = mel(A.sCol, hex("#DDE8F5"), .3); if (!A.neige) { A.neige = 1; A.floc = [.92, .95, 1, .55]; A.flocV = 6; } }
     if (cosm === "neon") { A.horizon = mel(A.horizon, hex("#FF2E97"), .32); A.haut = mel(A.haut, hex("#2A0B5A"), .32); A.sCol = mel(A.sCol, hex("#FF77C8"), .35); if (!A.synth) A.murs = [A.murs[0], hex("#FF4FD8")]; }
     A.brouillard = mel(A.horizon, A.haut, .15);
     if (th === "multivers") A.brouillard = hex("#3A1C5A");
-    A.meteo = meteo;   // v20.52 : la météo réellement montrée (après Noël → neige, Dune → sable)
     if (th === "pandora") A.brouillard = hex("#CFE6C8");   // brume dorée-verte au loin   // sol violet, liseré orange à l'horizon
     return A;
   }
@@ -11794,6 +11862,7 @@
   function construire(def, T, A, Z) {
     const sol = new Geo(), piste = new Geo(), eau = new Geo(), lum = [], voile = new Voile(), lueur = new Voile(), rayons = new Voile();   // recette waouh : couches transparentes
     const teinte = teinteur(A), r = alea(hashTxt(def.decor + def.pts.length)), D = DECORS[def.decor] || DECORS.parc, N = T.N, rue = !!def.rue;
+    const W = leger() ? null : def.waouh || WAOUH[def.decor];   // qualité légère : aucune couche de la recette (ni voiles, ni ombres de contact, ni rayons)
     const tint = c => teinte ? teinte(c) : c;
     // sol : un grand plan, puis des taches de couleur pour la matière
     const ext = Math.max(T.rx, T.rz) * 3.2 + 600, cx = T.cx, cz = T.cz;
@@ -11878,7 +11947,7 @@
     // les monuments d'abord : les autres décors s'écartent de la place qu'ils occupent
     const occupe = []; (def.reperes || []).forEach(R => { const o = repere(sol, R, T, A, teinte, [[ps.x, ps.z, 70], [pt2.x, pt2.z, 75]], lum); if (o) occupe.push(...o); });
     const rotors = [];
-    if (def.peint && PEINTS[def.peint] && PEINTS[def.peint].deco) occupe.push(...PEINTS[def.peint].deco({ T, A, sol, eau, lum, rotors, voile, lueur, pistePose: (g, x, z, cap) => sol.poser(g, x, 0, z, cap, 1) }));
+    if (def.peint && PEINTS[def.peint] && PEINTS[def.peint].deco) occupe.push(...PEINTS[def.peint].deco({ T, A, sol, eau, lum, rotors, voile: W ? voile : null, lueur: W ? lueur : null, pistePose: (g, x, z, cap) => sol.poser(g, x, 0, z, cap, 1) }));
     const pris = (x, z) => occupe.some(o => Math.hypot(x - o[0], z - o[1]) < o[2]);
     // plateau de jeu : de grandes cases sur tout le sol
     if (def.damier) for (let a = -40; a <= 40; a++) for (let b = -40; b <= 40; b++) { if ((a + b) % 2) continue; const x = cx + a * 26, z = cz + b * 26; if (Math.abs(x - cx) > ext * .7 || Math.abs(z - cz) > ext * .7 || T.dist(x + 13, z + 13) < DEMI + 26) continue;
@@ -11916,7 +11985,7 @@
       if (A.nuit) lum.push([pp[0] - e.nx * sd * 1.2, pp[1] + 8.8, pp[2] - e.nz * sd * 1.2, 1, .9, .7, 13]);
     }
     // recette waouh : les rayons du soleil (voir WAOUH)
-    const W = def.waouh || WAOUH[def.decor]; if (W && W.rayons) { const R = Object.assign({}, W.rayons); if (leger()) R.n = Math.ceil((R.n || 10) / 2); rayonsSoleil(rayons, T, A, R); }
+    if (W && W.rayons) rayonsSoleil(rayons, T, A, W.rayons);
     if (W) habillerWaouh(W, T, A, sol, piste, voile, lueur, lum, eau);   // recette waouh : ombres de contact, sols, flaques de lumière, nappes de brume, décor lointain
     return { sol, piste, eau, lum, stands: ps, portique: p0, rotors, voile, lueur, rayons };
   }
@@ -12246,8 +12315,8 @@
   /* ---------- RECETTE WAOUH (25/11/2026, d'abord sur Dune) ----------
      Ce qui manquait aux décors vus de haut : de grands aplats de sol tous pareils et aucune lumière d'ambiance. Tout tient ici, en un seul endroit,
      et ne s'allume QUE pour les décors qui ont une ligne dans WAOUH : les autres circuits gardent mot pour mot le shader d'avant (fsScene(false), fsCiel(false)) ;
-     les programmes « waouh » ne sont compilés qu'au premier circuit qui en a besoin. Si le téléphone peine malgré la baisse de résolution, sols par zones
-     et rayons s'éteignent tout seuls (I.allege) ; brume et lumière restent.
+     les programmes « waouh » ne sont compilés qu'au premier circuit qui en a besoin. La recette n'existe qu'en qualité « complet » (voir QUALITÉ 3D, en haut) :
+     si le téléphone peine, rien ne s'éteint sous les yeux, c'est la vue SUIVANTE qui passe en qualité légère (sans recette).
      POUR L'APPLIQUER À UN AUTRE CIRCUIT (3 étapes) :
        1. ajouter une ligne WAOUH[clé du décor] (def.decor : « titans », « lucioles »…) ; un décor partagé par deux circuits (« solstice » : suzuka et arene2028)
           prend la même recette, sinon mettre waouh: {…} directement dans TRACES[circuit] ;
@@ -12261,7 +12330,7 @@
        rim     : 0 à 1                      contre-jour : les silhouettes tournées vers le soleil gagnent un liseré doré.
        etalonnage : [saturation, contraste] étalonnage « cinéma » des objets (avant la brume, qui reste douce) ; ex. [.2, .25].
        rayons  : { n, long, larg:[haut, bas], force, col, evite:[[x, z, r]] (zones de décor à garder libres, jamais une cachette) }   rayons de soleil : des voiles de lumière additifs qui descendent du soleil
-                                            sur la piste (mode léger : moitié moins ; coupés de nuit sauf rayons.nuit ; atténués sous la pluie ou dans la tempête, un peu plus forts au grand soleil ; « réduire les animations » = fixes).
+                                            sur la piste (coupés de nuit sauf rayons.nuit ; « réduire les animations » = fixes ; jamais en qualité légère).
        sol     : { echelle, haut, creux:[col, force], cretes:[col, force], roche:[col, force], taches:[col, force, seuil], grain, rides:[par m, force, angle] }
                                             sols variés par ZONES, calculés au pixel (bruit procédural, transitions douces) : creux ombrés (bas et taches du bruit),
                                             crêtes claires (en hauteur, faces peu pentues), roche (pentes raides), taches étirées (épice, fleurs, mousse…), grain fin,
@@ -12274,7 +12343,6 @@
      Pistes pour la suite (non branchées, à valider avec Théo) : titans (cendres) brume grise-orangée épaisse, rayons à travers la fumée, sol cendre/roche ;
      lucioles (Pandora) brume verte basse, rayons entre les arbres, sol mousse/fougère/terre ; egee (Odyssée) brume marine, rides sur le sable, sol sable/galets ;
      chateau (magie) brume bleutée légère, sol herbe/pavés/fleurs ; solstice (anneau) brume dorée, sol prairie/chemins. */
-  const RAYONS_GRIS = .45, RAYONS_SOLEIL = 1.3;   // v20.62 : force des rayons waouh sous la pluie / la tempête (atténués, jamais éteints) et au grand soleil
   const SOL = -1, SOL_PISTE = -2;   // SOL_PISTE : une piste de terre ne prend que le grain et les rides (pas les zones)
   // SOL : « couleur lumineuse » des surfaces de sol : le shader y peint les zones de la recette (sans recette : rendu identique, e = max(-1, 0) = 0)
   const WAOUH = {
@@ -12283,7 +12351,7 @@
       rayons: { n: 12, long: 620, larg: [4, 34], force: .16, col: "#FFC67E" },
       sol: { echelle: 75, haut: 34, creux: ["#8E4E54", .5], cretes: ["#FFE4B0", .55], roche: ["#7E3E2C", .6], taches: ["#D9692A", .45, .8], grain: .24, rides: [.45, .09, .35] },
       horizon: { type: "dunes", col: "#D8925A", haut: 80 } },   // ses ombres de contact sont posées à la main dans decorDunes
-    // 25/11/2026 · la recette étendue à 10 autres circuits (Envers, Odyssée, Chocolaterie, Multivers : en brouillon, voir WAOUH_BROUILLON), chacun avec SA lumière (les ombres de contact et les sols par zones sont calculés tout seuls : ombresAuto, marquerSolsAuto)
+    // 25/11/2026 · la recette étendue à 10 autres circuits (Envers, Odyssée, Chocolaterie, Multivers : en brouillon, voir WAOUH_BROUILLON ; l'Atelier de Noël : jamais, voir plus bas), chacun avec SA lumière (les ombres de contact et les sols par zones sont calculés tout seuls : ombresAuto, marquerSolsAuto)
     // février · le Château, de jour : soleil d'après-midi doré sur le lac, voile de brume sur la forêt interdite, prairie piquée de boutons d'or, montagnes d'Écosse au loin
     chateau: { marque: { y: 90, ny: .8, vert: true }, soleil: ["#FFD08A", .35], brume: { col: "#F2E4C6", dens: .0018, haut: 26, halo: .9 }, ciel: "#A8CCF2", rebond: "#B4C88A", rim: .35, etalonnage: [.21, .27],
       rayons: { n: 9, long: 560, larg: [4, 28], force: .12, col: "#FFE0A0" },
@@ -12327,12 +12395,9 @@
   /** BROUILLONS (25/11/2026) : réglages commencés mais NON appliqués (à finir) : au premier essai, ils assombrissaient la course (Envers, Multivers)
       ou la délavaient (Odyssée : piste et mer grisées ; Chocolaterie : contraste divisé par 1,4). Gardés ici pour ne pas repartir de zéro :
       pour en reprendre un, le retoucher puis le déplacer dans WAOUH (captures avant / après, twaouh, ttresor-secret). */
+  /* 26/11/2026 (Théo) · l'Atelier de Noël (décembre) n'aura PAS de recette : sa Visite 3D sans effets (v20.67) est la référence de fluidité.
+     Son brouillon (et ce qui ne servait qu'à lui : paillettes de neige, silhouettes de glaciers au loin) est supprimé. */
   const WAOUH_BROUILLON = {
-    // décembre · l'Atelier du Père Noël (v20.66, Théo : « ça bug constamment » en Visite sur téléphone ; la fluidité d'abord, rendu de la v20.62) : lumière froide bleutée, neige qui scintille, flaques chaudes sous les guirlandes, glaciers au loin
-    garage: { soleil: ["#CFE0FF", .3], brume: { col: "#BCD0F6", dens: .0019, haut: 30, halo: .3 }, ciel: "#9CB8FF", rebond: "#E8F0FF", rim: .25, etalonnage: [.14, .23],
-      sol: { echelle: 60, haut: 30, creux: ["#C2D4F2", .47], cretes: ["#FFFFFF", .54], roche: ["#9AAAC4", .54], taches: ["#DCE8FF", .41, .78], grain: .22 }, paillettes: 1,
-      ombres: { force: .49, col: "#2A3C80" }, flaques: { col: "#FFB45E", r: 10, force: .38, max: 70 },
-      horizon: { type: "glace", col: "#9CB6E2", haut: 190, cime: "#FFFFFF" } },
     // août · le Monde à l'envers : nuit rouge d'orage, brume sang, lueurs rouges au sol sous les lampes, sol de cendre veiné de rouge, forêt morte à l'horizon
     envers: { brume: { col: "#5A1828", dens: .0022, haut: 30, halo: 0 }, ciel: "#3A2040", rebond: "#601020", rim: .5, etalonnage: [.14, .38],
       sol: { echelle: 50, haut: 25, creux: ["#26222C", .41], cretes: ["#4A3A44", .41], roche: ["#3A3036", .54], taches: ["#6A1A2A", .41, .8], grain: .3 },
@@ -12358,21 +12423,19 @@
        ombres   : { force, col, min, plein }  ombres de contact calculées d'après le décor lui-même (ombresAuto) ; jamais sur la piste
        nappes   : { col, l: [[x, z, rayon, hauteur, force]] }  nappes de brume posées au ras du sol (forêt, marais…)
        flaques  : { col, r, force, max }  flaques de lumière chaude sur le sol sous les lampes et guirlandes du décor (additives)
-       paillettes : force                 la neige (ou le sucre) scintille de près (fixe si « réduire les animations »)
        soleil   : [couleur, part]         teinte du soleil (doré, froid…), à luminosité égale : n'assombrit jamais
        horizon  : { type, col, haut, cime }  le DÉCOR LOINTAIN : le sol se prolonge jusqu'à l'horizon et deux anneaux de silhouettes
-                                            (montagnes, pics, glace, collines, dunes, forêt, ville, mur, îles) se fondent dans la brume
+                                            (montagnes, pics, collines, dunes, forêt, ville, mur, îles) se fondent dans la brume
        Les grands sols plats du décor sur mesure (pelouses, places, planchers) sont marqués SOL tout seuls (marquerSolsAuto ; marque: false pour l'éviter). */
-  function habillerWaouh(W, T, A, sol, piste, voile, lueur, lum, eau) {
-    const LG = leger();
+  function habillerWaouh(W, T, A, sol, piste, voile, lueur, lum, eau) {   // seulement en qualité « complet »
     if (W.marque !== false && W.sol) marquerSolsAuto(sol, W.marque);
-    const F = W.ombres || W.flaques ? solGrille(sol, piste, T, LG) : null;
+    const F = W.ombres || W.flaques ? solGrille(sol, piste, T) : null;
     if (W.ombres) ombresAuto(voile, F, A, W.ombres);
     if (W.flaques) lum.slice(0, W.flaques.max || 60).forEach(l => { if (l[1] > 40) return; const y = F.sol(l[0], l[2]) + .3, r = W.flaques.r * clamp(l[6] / 13, .6, 1.6);
       lueur.ombre(l[0], y, l[2], r, r, W.flaques.force, 0, hex(W.flaques.col)); });
     if (W.nappes) W.nappes.l.forEach(([x, z, r, h, f]) => [.3, .65, 1].forEach((k, i) => voile.ombre(x + i * 9, h * k, z - i * 7, r * (1 - i * .12), r * (.8 - i * .1), f / 2.4, i * .5, hex(W.nappes.col))));
     [sol, sol.o, eau].forEach(g => { if (g) affiner(g, 150); });   // la brume se calcule par sommet : plus de grand triangle de sol (le plan du sol en fait 2 000)
-    if (W.horizon && DECOR_LOINTAIN) horizonLointain(sol, T, A, W.horizon, W.brume ? hex(W.brume.col) : A.brouillard, LG);   // au loin, la brume est déjà presque pleine : grands triangles permis
+    if (W.horizon && DECOR_LOINTAIN) horizonLointain(sol, T, A, W.horizon, W.brume ? hex(W.brume.col) : A.brouillard, false);   // au loin, la brume est déjà presque pleine : grands triangles permis
   }
   /** recoupe les GRANDS triangles de sol (presque à plat, bas, de plus de L × L / 2 m²) en coupant leur plus long côté en deux, jusqu'à ce qu'aucun côté
       ne dépasse L : même dessin, sommets plus serrés (les longues bandes fines, déjà serrées en travers, restent telles quelles) */
@@ -12395,9 +12458,9 @@
     if (d[i + 9] !== 0 || d[i + 4] < nm || d[i + 1] > ym || d[i + 11] > ym || d[i + 21] > ym) continue; const r = d[i + 6], gg = d[i + 7], b = d[i + 8]; if (b > r + .08 && b > gg) continue;
     if (vert && !(gg > r * 1.08 && gg > b * 1.1) && (d[i + 1] > 3 || d[i + 11] > 3 || d[i + 21] > 3)) continue;
     d[i + 9] = d[i + 19] = d[i + 29] = SOL; } }); }
-  /** le décor « vu d'en haut » sur une grille (11 m, 16 en mode léger) : hauteur du sol et du plus haut objet de chaque case, cases de la piste */
-  function solGrille(sol, piste, T, LG) {
-    const c = LG ? 16 : 11, X0 = T.cx - T.rx - 520, Z0 = T.cz - T.rz - 520, NX = Math.ceil((2 * T.rx + 1040) / c), NZ = Math.ceil((2 * T.rz + 1040) / c), NN = NX * NZ;
+  /** le décor « vu d'en haut » sur une grille de 11 m : hauteur du sol et du plus haut objet de chaque case, cases de la piste */
+  function solGrille(sol, piste, T) {
+    const c = 11, X0 = T.cx - T.rx - 520, Z0 = T.cz - T.rz - 520, NX = Math.ceil((2 * T.rx + 1040) / c), NZ = Math.ceil((2 * T.rz + 1040) / c), NN = NX * NZ;
     const haut = new Float32Array(NN).fill(-1e9), bas = new Float32Array(NN).fill(1e9), pis = new Uint8Array(NN);
     const cell = (x, z) => { const i = Math.floor((x - X0) / c), j = Math.floor((z - Z0) / c); return i < 0 || j < 0 || i >= NX || j >= NZ ? -1 : j * NX + i; };
     const ras = (d, f) => { for (let k = 0; k < d.length; k += 30) { const ax = d[k], az = d[k + 2], bx = d[k + 10], bz = d[k + 12], qx = d[k + 20], qz = d[k + 22];
@@ -12443,7 +12506,7 @@
       triLisse(sol, P(a0, r0), P(a1, r0), P(a1, r1), up, up, up, CC[m], CC[m], CC[m + 1]); triLisse(sol, P(a0, r0), P(a1, r1), P(a0, r1), up, up, up, CC[m], CC[m + 1], CC[m + 1]); }
     const ty = H.type, h0 = H.haut || 120, cime = H.cime ? hex(H.cime) : null;
     const prof = (t, k) => { const S = (f, p) => Math.sin(t * f + p + k * 1.7);
-      if (ty === "montagnes" || ty === "glace" || ty === "pics") { const v = .5 + .25 * S(3, 1) + .15 * S(7, 2) + .1 * S(17, .5) + (ty === "montagnes" ? 0 : .08 * S(23, 3)); return Math.pow(clamp(v, 0, 1), ty === "pics" ? 2.2 : 1.5) * 1.3 + .08; }
+      if (ty === "montagnes" || ty === "pics") { const v = .5 + .25 * S(3, 1) + .15 * S(7, 2) + .1 * S(17, .5) + (ty === "montagnes" ? 0 : .08 * S(23, 3)); return Math.pow(clamp(v, 0, 1), ty === "pics" ? 2.2 : 1.5) * 1.3 + .08; }
       if (ty === "collines") return .3 + .25 * (S(4, 0) + 1) / 2 + .2 * (S(9, 1) + 1) / 2;
       if (ty === "dunes") return .25 + .35 * Math.pow(Math.abs(S(5, 0)), .7) + .15 * (S(11, 2) + 1) / 2;
       if (ty === "foret") return .35 + .1 * S(5, 0) + (Math.round(t * 120) % 2 ? .25 : 0);
@@ -12508,22 +12571,19 @@
         g.quad(P(t0, -w(t0)), P(t1, -w(t1)), P(t1, 0), P(t0, 0), z, z, c(t1), c(t0)); g.quad(P(t0, 0), P(t1, 0), P(t1, w(t1)), P(t0, w(t0)), c(t0), c(t1), z, z); } });
     }
   }
-  /** réglages de la recette pour cette course : météo (tempête, pluie, nuit) et mode léger ; null = pas de recette (rendu d'avant) */
+  /** réglages de la recette pour cette course (nuit du filtre du joueur, niveau de qualité) ; null = pas de recette (rendu d'avant, et toujours en qualité légère) */
   function recetteWaouh(def, A, LGR) {
-    const W = def.waouh || WAOUH[def.decor]; if (!W) return null;
-    // v20.62 (Théo) · la météo ne touche plus à la lumière : brume, ciel, contre-jour et étalonnage restent ceux du beau temps ;
-    // seuls les rayons changent : atténués (jamais éteints) sous la pluie ou dans la tempête, un peu plus présents au grand soleil (A.dore)
-    const nuit = A.nuit > .5, gris = !!(A.pluie || A.sable), R = { W };
+    const W = def.waouh || WAOUH[def.decor]; if (!W || LGR) return null;   // qualité légère : jamais de recette (comme Noël)
+    const nuit = A.nuit > .5, R = { W };
     if (W.brume) { const b = W.brume; R.brume = [...hex(b.col), b.dens];
       R.brumeK = 1 / (b.haut || 30); R.halo = (b.halo || 0) * (nuit ? .3 : 1); }
     if (W.ciel) R.ciel = mel(hex(W.ciel), A.haut, .15); if (W.rebond) R.rebond = mel(hex(W.rebond), A.sol, .1);
     R.rim = (W.rim || 0) * (nuit ? .4 : 1);
     if (W.etalonnage) R.grade = [W.etalonnage[0], W.etalonnage[1]];
-    R.rayons = W.rayons && (!nuit || W.rayons.nuit) ? W.rayons.force * (LGR ? .85 : 1) * (gris ? RAYONS_GRIS : A.dore ? RAYONS_SOLEIL : 1) : 0;   // météo légère (v20.62) : atténués, jamais éteints ; rayons.nuit : rais de lumière gardés la nuit (lampes, portails)
-    if (W.soleil && !gris) { const lu = c => c[0] * .299 + c[1] * .587 + c[2] * .114, t = hex(W.soleil[0]), L0 = lu(A.sCol); A.sCol = mel(A.sCol, fois(t, L0 / Math.max(.05, lu(t))), W.soleil[1]); }   // teinte du soleil, à luminosité égale
-    R.pai = W.paillettes ? W.paillettes * (gris ? .4 : 1) : 0;
+    R.rayons = W.rayons && (!nuit || W.rayons.nuit) ? W.rayons.force : 0;   // rayons.nuit : rais de lumière gardés la nuit (lampes, portails)
+    if (W.soleil) { const lu = c => c[0] * .299 + c[1] * .587 + c[2] * .114, t = hex(W.soleil[0]), L0 = lu(A.sCol); A.sCol = mel(A.sCol, fois(t, L0 / Math.max(.05, lu(t))), W.soleil[1]); }   // teinte du soleil, à luminosité égale
     if (W.sol) { const s = W.sol, z = x => x ? [...hex(x[0]), x[1]] : [0, 0, 0, 0]; const ri = s.rides || [0, 0, 0];
-      R.sol = { A: z(s.creux), B: z(s.cretes), C: z(s.roche), D: z(s.taches), P: [s.echelle || 70, s.haut || 30, s.taches ? s.taches[2] : 2, s.grain || 0], R: [ri[0], LGR ? 0 : ri[1], Math.cos(ri[2]), Math.sin(ri[2])] }; }   // mode léger : pas de rides
+      R.sol = { A: z(s.creux), B: z(s.cretes), C: z(s.roche), D: z(s.taches), P: [s.echelle || 70, s.haut || 30, s.taches ? s.taches[2] : 2, s.grain || 0], R: [ri[0], ri[1], Math.cos(ri[2]), Math.sin(ri[2])] }; }
     return R;
   }
   /** GLSL partagé : brume de profondeur au ras du sol (intégrale exacte d'une densité qui décroît avec la hauteur, sans débordement en mediump) */
@@ -12532,7 +12592,7 @@
     "float m=abs(dy)>.5?(exp(-k*yc)-exp(-k*yp))/(k*dy):exp(-k*yp);return clamp(1.-exp(-uBrH.a*length(w-c)*m),0.,1.);}";
   /** GLSL : sols par zones. Le bruit vient d'une petite texture calculée une fois (texBruit) : 2 lectures par pixel, bien moins cher qu'un bruit calculé
       (r = grandes taches, g = taches étirées par le vent, b = grain fin, a = déformation des rides) ; les mipmaps évitent le scintillement au loin. */
-  const GL_SOL = "uniform vec4 uSolA;uniform vec4 uSolB;uniform vec4 uSolC;uniform vec4 uSolD;uniform vec4 uSolP;uniform vec4 uSolR;uniform vec2 uSolE;uniform sampler2D uBruit;" +
+  const GL_SOL = "uniform vec4 uSolA;uniform vec4 uSolB;uniform vec4 uSolC;uniform vec4 uSolD;uniform vec4 uSolP;uniform vec4 uSolR;uniform sampler2D uBruit;" +
     "vec3 sol(vec3 c,vec3 w,vec3 n,float z){vec4 N=texture2D(uBruit,w.xz/(uSolP.x*6.));float g=N.r,pe=clamp((1.-n.y)*2.6,0.,1.),dc=length(w-uCam);" +
     "if(z>0.){float h=clamp(w.y/uSolP.y,0.,1.);" +
     "c=mix(c,uSolA.rgb,uSolA.a*(1.-smoothstep(.04,.5,h))*smoothstep(.38,.72,g));" +
@@ -12542,7 +12602,6 @@
     "float f=texture2D(uBruit,w.xz*.0061).b;" +
     "if(uSolR.y>0.&&dc<240.)c*=1.+uSolR.y*sin(dot(w.xz,uSolR.zw)*uSolR.x*6.2832+N.a*30.)*(1.-pe)*(.55+.45*z)*(1.-smoothstep(50.,240.,dc));" +
     "c*=1.-uSolP.w*.5+uSolP.w*f;" +
-    "if(uSolE.x>0.&&dc<160.){vec2 q=floor(w.xz*2.5);float hs=fract(sin(dot(q,vec2(12.9898,78.233)))*43758.5453);c+=uSolE.x*step(.986,hs)*(.55+.45*sin(uT*uSolE.y+hs*90.))*(1.-smoothstep(50.,160.,dc))*(1.-pe);}" +   // paillettes : la neige scintille de près
     "return c;}";
   /** texture de bruit répétable 128 × 128 (valeur lissée, plusieurs octaves), calculée une fois par contexte WebGL */
   function texBruit(gl) {
@@ -12582,13 +12641,13 @@
       : "float dist=length(vW-uCam);float fo=1.-exp(-dist*uDens);gl_FragColor=vec4(mix(col,uFog,clamp(fo,0.,1.)),1.);}");
   const FS = fsScene(false);
   const VS_CIEL = "attribute vec3 aP;uniform mat4 uPV;uniform vec3 uCam;varying vec3 vD;void main(){vD=aP;gl_Position=uPV*vec4(uCam+aP*1500.,1.);gl_Position.z=gl_Position.w*.9999;}";
-  const fsCiel = w => "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nvarying vec3 vD;uniform vec3 uHaut;uniform vec3 uHor;uniform vec3 uFog;uniform vec3 uSun;uniform vec3 uSunC;uniform float uNuit;uniform float uSynth;uniform float uFlash;uniform vec4 uEcl;" + (w ? "uniform vec4 uBrH;uniform float uHalo;" : "") +
+  const fsCiel = w => "#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\nvarying vec3 vD;uniform vec3 uHaut;uniform vec3 uHor;uniform vec3 uFog;uniform vec3 uSun;uniform vec3 uSunC;uniform float uNuit;uniform float uSynth;uniform float uFlash;" + (w ? "uniform vec4 uBrH;uniform float uHalo;" : "") +
     "float hs(vec3 p){return fract(sin(dot(p,vec3(12.9898,78.233,37.719)))*43758.5453);}" +
     "void main(){vec3 d=normalize(vD);float t=d.y;vec3 c=mix(uHor,uHaut,smoothstep(0.,mix(.55,.16,uSynth),t));if(t<0.)c=mix(uHor,uFog,smoothstep(0.,-.08,t));" +
     "float s=max(dot(d,uSun),0.);" + (w ? "c=mix(c,uBrH.rgb+uSunC*uHalo*pow(s,5.),(1.-smoothstep(-.03,.22,t))*(uBrH.a>0.?.92:0.));c+=uSunC*uHalo*pow(s,3.)*.14;" : "") + "c+=uSunC*(pow(s,800.)*3.+pow(s,12.)*.25)*(1.-uSynth);" +
     "if(uSynth>0.){float r=acos(clamp(s,-1.,1.));if(r<.32&&t>-.01){float bande=step(.5,fract(t*38.));vec3 sc=mix(vec3(1.,.85,.3),vec3(1.,.2,.6),clamp(1.-(t+.02)/.3,0.,1.));c=mix(c,sc,t>.12||bande>.5?1.:0.);}}" +
     "if(uNuit>0.&&t>0.){vec3 q=floor(d*420.);float st=step(.9975,hs(q));c+=vec3(st)*uNuit*smoothstep(0.,.3,t)*.9;}" +
-    "c+=uFlash*.6;if(uEcl.w>0.)c+=vec3(.86,.9,1.)*uEcl.w*(pow(max(dot(d,uEcl.xyz),0.),7.)*.9+.06)*smoothstep(-.02,.12,t);gl_FragColor=vec4(c,1.);}";
+    "c+=uFlash*.6;gl_FragColor=vec4(c,1.);}";
   const FS_CIEL = fsCiel(false);
   const VS_FX = "attribute vec3 aP;attribute vec4 aC;uniform mat4 uPV;varying vec4 vC;void main(){vC=aC;gl_Position=uPV*vec4(aP,1.);}";
   const FS_FX = "precision mediump float;varying vec4 vC;void main(){gl_FragColor=vC;}";
@@ -12622,6 +12681,7 @@
     const cv = document.createElement("canvas"); cv.className = "p3-cv";
     const gl = cv.getContext("webgl", { antialias: true, alpha: false, powerPreference: "high-performance" }) || cv.getContext("experimental-webgl");
     if (!gl) throw new Error("webgl");
+    lireGPU(gl);
     const ciel = new Geo(); ciel.boule(0, 0, 0, 1, [1, 1, 1], 0, 1, true);
     const feu = new Geo(); feu.boule(0, 0, 0, .7, [1, 1, 1]);
     return { cv, gl, PL: programme(gl, VS, FS), PC: programme(gl, VS_CIEL, FS_CIEL), PF: programme(gl, VS_FX, FS_FX), PP: programme(gl, VS_PT, FS_PT), PR: programme(gl, VS_PLUIE, FS_PLUIE), PW: programme(gl, VS_VOILE, FS_VOILE),
@@ -12646,7 +12706,7 @@
     if (SUPPORTE !== null) return SUPPORTE;
     try {
       const c = document.createElement("canvas"), g = window.WebGLRenderingContext && (c.getContext("webgl") || c.getContext("experimental-webgl"));
-      SUPPORTE = !!g;
+      SUPPORTE = !!g; lireGPU(g);
       try { const x = g && g.getExtension && g.getExtension("WEBGL_lose_context"); if (x) x.loseContext(); } catch (e) { /* rien à rendre */ }
     } catch (e) { SUPPORTE = false; }
     return SUPPORTE;
@@ -12677,18 +12737,17 @@
     const C = contexte(), cv = C.cv, gl = C.gl, PF = C.PF, PP = C.PP, PR = C.PR, PW = C.PW, BC = C.BC, roues = C.roues;
     cv.setAttribute("role", "img"); cv.setAttribute("aria-label", o.titre || "Circuit"); cv.width = 2; cv.height = 2;
     boite.appendChild(cv);
-    const def = TRACES[o.circuit] || TRACES.melbourne, T = echantillonner(def), A = ambiance(def, o.meteo, o.ambiance), Z = zones(T);
+    const def = TRACES[o.circuit] || TRACES.melbourne, T = echantillonner(def), A = ambiance(def, null, o.ambiance), Z = zones(T);
     Z.atoutCol = o.atoutCol || null; Z.piegeCol = o.piegeCol || null;
+    const LGR = leger(), NIV = LGR ? "leger" : "complet";   // qualité 3D : décidée ici, avant la 1re image, et gardée pour toute cette vue
     const t0c = performance.now();
-    const S = sceneDe([o.circuit, o.ambiance || "", A.nuit, Z.atoutCol, Z.piegeCol].join("|"), () => construire(def, T, A, Z));
+    const S = sceneDe([o.circuit, o.ambiance || "", A.nuit, Z.atoutCol, Z.piegeCol, NIV].join("|"), () => construire(def, T, A, Z));
     const B = { sol: tampon(gl, S.sol), solOv: tampon(gl, S.solOv), piste: tampon(gl, S.piste), pisteOv: tampon(gl, S.pisteOv), eau: S.eau ? tampon(gl, S.eau) : null };
     const RO = (S.rotors || []).map(x => Object.assign({ b: tampon(gl, x), sph: x.a && x.a.vivant ? sphereGeo(x.f) : null }, x));   // sph : pour la garde « course calme »
-    // v20.52 (Théo) · météo visible (course du Grand Prix seulement, o.effets) : grand soleil = lumière dorée chaude, brume de chaleur au loin, éclats sur les carrosseries ;
-    // pluie = gerbes d'eau derrière les voitures et reflets sur la piste mouillée ; Noël = gerbes de neige ; Dune = tempête de sable. Coupé si « réduire les animations ».
-    const ANI = ANIM(), FX = !!o.effets && ANI, LGR = leger();
-    // v20.62 (Théo) · la météo ne change plus la lumière : grand soleil = éclats sur les carrosseries et rayons waouh un peu plus présents ; pluie = gouttes fines et léger reflet
-    if (o.effets && A.meteo === "soleil" && !A.nuit) A.dore = 1;
-    if (!ANI) { A.eclairs = 0; A.eclairCiel = 0; }   // « réduire les animations » : aucun éclair
+    // v20.52 · effets de course (Grand Prix seulement, o.effets) : gerbes de neige derrière les voitures à Noël. Coupé si « réduire les animations ».
+    // 26/11/2026 (Théo) · plus de météo du marché : ni pluie, ni orage, ni tempête, ni grand soleil doré (l'ambiance de beau temps, toujours)
+    const ANI = ANIM(), FX = !!o.effets && ANI;
+    if (!ANI) A.eclairs = 0;   // « réduire les animations » : aucun éclair
     const RW = recetteWaouh(def, A, LGR);   // recette waouh (null : rendu d'avant)
     // les programmes « waouh » ne sont compilés qu'au premier circuit qui a une recette (puis gardés avec le contexte)
     const PL = RW ? C.PLW || (C.PLW = programme(gl, VS_W, fsScene(true))) : C.PL, PC = RW ? C.PCW || (C.PCW = programme(gl, VS_CIEL, fsCiel(true))) : C.PC;
@@ -12697,19 +12756,19 @@
       gl.uniform1f(U.uRim, RW ? RW.rim : 0); gl.uniform1f(U.uHaloV, RW && RW.halo || 0); gl.uniform2fv(U.uGrade, RW && RW.grade || [0, 0]);
       gl.uniform3fv(U.uCamV, I.cam.e); gl.uniform3fv(U.uSunV, A.soleil); gl.uniform3fv(U.uSunCV, A.sCol); gl.uniform3fv(U.uFogV, A.brouillard); gl.uniform1f(U.uDensV, A.brume);
       if (RW && RW.brume) { gl.uniform4fv(U.uBrH, RW.brume); gl.uniform1f(U.uBrK, RW.brumeK); } else gl.uniform4f(U.uBrH, 0, 0, 0, 0);
-      const Sl = RW && !I.allege && RW.sol; gl.uniform4fv(U.uSolP, Sl ? Sl.P : [0, 0, 0, 0]); gl.uniform2f(U.uSolE, Sl ? RW.pai : 0, ANI ? 3 : 0);
+      const Sl = RW && RW.sol; gl.uniform4fv(U.uSolP, Sl ? Sl.P : [0, 0, 0, 0]);
       if (Sl) { gl.uniform4fv(U.uSolA, Sl.A); gl.uniform4fv(U.uSolB, Sl.B); gl.uniform4fv(U.uSolC, Sl.C); gl.uniform4fv(U.uSolD, Sl.D); gl.uniform4fv(U.uSolR, Sl.R); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, C.bruit || (C.bruit = texBruit(gl))); gl.uniform1i(U.uBruit, 0); }
     }
     const BV = (S.voiles || []).map(f => { if (!f) return null; const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, f, gl.STATIC_DRAW); return { b, n: f.length / 7 }; });
     const V = ecurieDes(o.voitures).map(v => ({ v, b: tampon(gl, voiture(v)), s: 0, voie: 0, rang: 0, rot: 0, hist: [], x: 0, y: 0, z: 0, cap: 0, vit: 0 }));
     // lumières (lampadaires, projecteurs) en sprites additifs
     const LUM = S.lum, bL = gl.createBuffer(); { const d = []; LUM.forEach(l => d.push(l[0], l[1], l[2], l[3], l[4], l[5], A.nuit ? .55 : 0, l[6] * 1.6)); gl.bindBuffer(gl.ARRAY_BUFFER, bL); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(d), gl.STATIC_DRAW); }
-    // pluie / neige
-    const nbP = ANI ? Math.round((A.pluie ? 900 : A.neige ? 1400 * (A.densite || 1) : 0) * (LGR ? .55 : 1)) : 0, bP = gl.createBuffer();   // v20.52 : mode léger = un peu plus de la moitié des gouttes ; « réduire les animations » = aucune
-    if (nbP) { const d = [], r = alea(42); for (let i = 0; i < nbP; i++) { const x = r(), y = r(), z = r(); d.push(x, y, z, 0); if (!A.neige) d.push(x, y, z, 1); } gl.bindBuffer(gl.ARRAY_BUFFER, bP); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(d), gl.STATIC_DRAW); }
+    // particules du thème (neige de Noël, sable de Dune, lucioles, poussière d'étoiles…)
+    const nbP = ANI && A.neige ? Math.round(1400 * (LGR ? .55 : 1)) : 0, bP = gl.createBuffer();   // v20.52 : qualité légère = un peu plus de la moitié ; « réduire les animations » = aucune
+    if (nbP) { const d = [], r = alea(42); for (let i = 0; i < nbP; i++) { const x = r(), y = r(), z = r(); d.push(x, y, z, 0); } gl.bindBuffer(gl.ARRAY_BUFFER, bP); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(d), gl.STATIC_DRAW); }
     const bFX = gl.createBuffer(), bPT = gl.createBuffer();
     const DPR = Math.min(1.5, window.devicePixelRatio || 1);
-    const I = { q: DPR, ft: 16, lents: 0, cssW: 1, cssH: 1, tConstr: Math.round(performance.now() - t0c), cv, gl, T, A, Z, V, mode: o.camera || "tv", focus: o.focus || (V[0] && V[0].v.nom), pts: Object.assign({}, o.pts || {}), anim: null, t0: performance.now(), cam: null, cible: null,
+    const I = { q: DPR, ft: 16, lents: 0, tLent: 0, cssW: 1, cssH: 1, tConstr: Math.round(performance.now() - t0c), cv, gl, T, A, Z, V, mode: o.camera || "tv", focus: o.focus || (V[0] && V[0].v.nom), pts: Object.assign({}, o.pts || {}), anim: null, t0: performance.now(), cam: null, cible: null,
       orbite: 0, zoom: 1, incl: .72, pan: [0, 0], tir: null, sansVoit: !!o.sansVoitures, rel: null, fondu: null, actif: true, dernier: 0, inactif: 0, feux: 0, flash: 0, prochainEclair: 3, artifice: [], ordreDepart: (o.voitures || []).map(v => v.nom), feuxDepart: -1 };
     const placer = (instant) => {
       const c = cibles(I.pts, o.tour || 25, T.L, I.ordreDepart, o.grille);
@@ -12788,15 +12847,12 @@
       // éclairs
       if (A.eclairs) { I.prochainEclair -= dt; if (I.prochainEclair < 0) { I.flash = 1; I.prochainEclair = 3 + Math.random() * 6; } }
       I.flash = Math.max(0, I.flash - dt * 3); const fl = I.flash > .5 ? I.flash : I.flash * .4;
-      // v20.62 · orage (météo) : un bref éclair lumineux DANS LE CIEL, devant la caméra (double éclat de 0,5 s), le décor garde sa lumière
-      if (A.eclairCiel) { I.prochainCiel = (I.prochainCiel === undefined ? 2.5 : I.prochainCiel) - dt; if (I.prochainCiel < 0) { I.prochainCiel = 5 + Math.random() * 7; eclairCiel(); } }
-      let ecl = 0; if (I.ecl) { const e = (performance.now() - I.ecl.t0) / 1000; ecl = e < .06 ? 1 : e < .12 ? .2 : e < .2 ? .75 : Math.max(0, .75 * (1 - (e - .2) / .35)); if (e > .6) I.ecl = null; }
       gl.clearColor(A.brouillard[0], A.brouillard[1], A.brouillard[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.disable(gl.CULL_FACE); gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.disable(gl.BLEND);
       // ciel
       gl.useProgram(PC.p); gl.depthMask(false);
       gl.uniformMatrix4fv(PC.U.uPV, false, PV); gl.uniform3fv(PC.U.uCam, I.cam.e); gl.uniform3fv(PC.U.uHaut, A.haut); gl.uniform3fv(PC.U.uHor, A.horizon); gl.uniform3fv(PC.U.uFog, A.brouillard);
-      gl.uniform3fv(PC.U.uSun, A.soleil); gl.uniform3fv(PC.U.uSunC, A.sCol); gl.uniform1f(PC.U.uNuit, A.nuit); gl.uniform1f(PC.U.uSynth, A.synth); gl.uniform1f(PC.U.uFlash, fl); gl.uniform4f(PC.U.uEcl, I.ecl ? I.ecl.d[0] : 0, I.ecl ? I.ecl.d[1] : 1, I.ecl ? I.ecl.d[2] : 0, ecl * .55);
+      gl.uniform3fv(PC.U.uSun, A.soleil); gl.uniform3fv(PC.U.uSunC, A.sCol); gl.uniform1f(PC.U.uNuit, A.nuit); gl.uniform1f(PC.U.uSynth, A.synth); gl.uniform1f(PC.U.uFlash, fl);
       if (RW) { gl.uniform4fv(PC.U.uBrH, RW.brume || [0, 0, 0, 0]); gl.uniform1f(PC.U.uHalo, RW.halo || 0); }
       gl.bindBuffer(gl.ARRAY_BUFFER, BC.b); gl.enableVertexAttribArray(PC.A.aP); gl.vertexAttribPointer(PC.A.aP, 3, gl.FLOAT, false, 40, 0); gl.drawArrays(gl.TRIANGLES, 0, BC.n);
       gl.depthMask(true);
@@ -12808,11 +12864,11 @@
       const ident = modele(0, 0, 0, 0, 0, 1);
       gl.uniformMatrix4fv(U.uM, false, ident); gl.uniform1f(U.uEau, 0);
       gl.uniform1f(U.uSpec, 0); lier(gl, PL, B.sol); gl.drawArrays(gl.TRIANGLES, 0, B.sol.n);
-      gl.uniform1f(U.uSpec, A.mouille * .4); lier(gl, PL, B.piste); gl.drawArrays(gl.TRIANGLES, 0, B.piste.n);
+      gl.uniform1f(U.uSpec, 0); lier(gl, PL, B.piste); gl.drawArrays(gl.TRIANGLES, 0, B.piste.n);
       // surcouches (marquages, fenêtres, champs) : poussées vers la caméra, elles ne scintillent plus
       gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-2, -4);
       if (B.solOv.n) { gl.uniform1f(U.uSpec, 0); lier(gl, PL, B.solOv); gl.drawArrays(gl.TRIANGLES, 0, B.solOv.n); }
-      if (B.pisteOv.n) { gl.uniform1f(U.uSpec, A.mouille * .28); lier(gl, PL, B.pisteOv); gl.drawArrays(gl.TRIANGLES, 0, B.pisteOv.n); }
+      if (B.pisteOv.n) { lier(gl, PL, B.pisteOv); gl.drawArrays(gl.TRIANGLES, 0, B.pisteOv.n); }
       gl.disable(gl.POLYGON_OFFSET_FILL);
       if (B.eau) { gl.uniform3fv(U.uSky, mel(A.horizon, [1, 1, 1], A.nuit ? .05 : .25)); gl.uniform1f(U.uSpec, .9); gl.uniform1f(U.uEau, 1); lier(gl, PL, B.eau); gl.drawArrays(gl.TRIANGLES, 0, B.eau.n); gl.uniform1f(U.uEau, 0); }
       // feux du portique de départ
@@ -12820,7 +12876,7 @@
         gl.uniform4f(U.uTint, on ? 1 : .25, on ? .15 : .25, on ? .12 : .28, on ? 1 : 0); gl.uniformMatrix4fv(U.uM, false, modele(p0.x + n0[0] * (i - 2) * 2.2, p0.y + 7.4, p0.z + n0[1] * (i - 2) * 2.2, 0, 0, 1)); lier(gl, PL, C.FEU); gl.drawArrays(gl.TRIANGLES, 0, C.FEU.n); }
         gl.uniform4f(U.uTint, 1, 1, 1, 0); }
       // voitures
-      gl.uniform1f(U.uSpec, A.dore ? .9 : .55);
+      gl.uniform1f(U.uSpec, .55);
       const KV = I.mode === "helico" ? 1.8 : 1;   // v16.35 · vue d'hélico : voitures grossies pour rester lisibles
       const VV = I.sansVoit ? [] : V;   // v17.6 · 📺 Visite : la carte seule, sans aucune voiture
       VV.forEach(x => {
@@ -12842,7 +12898,7 @@
         const tv = tresorEvite(o.circuit); I.evite = !!tv; gl.uniform4fv(PW.U.uEv, tv || [0, 0, 1, 0]);
         if (RW && RW.brume) { gl.uniform4fv(PW.U.uBrH, RW.brume); gl.uniform1f(PW.U.uBrK, RW.brumeK); } else gl.uniform4f(PW.U.uBrH, 0, 0, 0, 0);
         gl.enableVertexAttribArray(PW.A.aP); gl.enableVertexAttribArray(PW.A.aC); gl.enable(gl.BLEND); gl.depthMask(false);
-        [[0, false, I.allege ? 0 : 1], [1, true, 1], [2, true, RW && !I.allege ? RW.rayons * (ANI ? .84 + .16 * Math.sin(t * .45) : 1) : 0]].forEach(([k, add, f]) => { const c = BV[k]; if (!c || f <= 0) return;
+        [[0, false, 1], [1, true, 1], [2, true, RW ? RW.rayons * (ANI ? .84 + .16 * Math.sin(t * .45) : 1) : 0]].forEach(([k, add, f]) => { const c = BV[k]; if (!c || f <= 0) return;
           if (k === 0) { gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(-3, -6); } gl.blendFunc(gl.SRC_ALPHA, add ? gl.ONE : gl.ONE_MINUS_SRC_ALPHA); gl.uniform1f(PW.U.uK, f);
           gl.bindBuffer(gl.ARRAY_BUFFER, c.b); gl.vertexAttribPointer(PW.A.aP, 3, gl.FLOAT, false, 28, 0); gl.vertexAttribPointer(PW.A.aC, 4, gl.FLOAT, false, 28, 12); gl.drawArrays(gl.TRIANGLES, 0, c.n);
           if (k === 0) gl.disable(gl.POLYGON_OFFSET_FILL); }); }
@@ -12865,34 +12921,29 @@
       if (fx.length) { gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(fx), gl.DYNAMIC_DRAW); gl.vertexAttribPointer(PF.A.aP, 3, gl.FLOAT, false, 28, 0); gl.vertexAttribPointer(PF.A.aC, 4, gl.FLOAT, false, 28, 12); gl.drawArrays(gl.TRIANGLES, 0, fx.length / 7); }
       if (add.length) { gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(add), gl.DYNAMIC_DRAW); gl.vertexAttribPointer(PF.A.aP, 3, gl.FLOAT, false, 28, 0); gl.vertexAttribPointer(PF.A.aC, 4, gl.FLOAT, false, 28, 12); gl.drawArrays(gl.TRIANGLES, 0, add.length / 7); }
       gl.disable(gl.POLYGON_OFFSET_FILL);
-      // halos de lumière, feux arrière sous la pluie, feu d'artifice
+      // halos de lumière, feux arrière la nuit, feu d'artifice
       const pts = [];
-      if (A.nuit || A.pluie) VV.forEach(x => pts.push(x.x - x.tx * 4.1, x.y + .7, x.z - x.tz * 4.1, 1, .15, .1, A.pluie ? .9 : .5, 7));
-      if (FX) meteoVoitures(VV, t, pts, KV);
+      if (A.nuit) VV.forEach(x => pts.push(x.x - x.tx * 4.1, x.y + .7, x.z - x.tz * 4.1, 1, .15, .1, .5, 7));
+      if (FX && GERBE) gerbesVoitures(VV, t, pts, KV);
       I.artifice.forEach(p => pts.push(p.x, p.y, p.z, p.c[0], p.c[1], p.c[2], Math.max(0, p.v), 9));
       gl.useProgram(PP.p); gl.uniformMatrix4fv(PP.U.uPV, false, PV); gl.uniform1f(PP.U.uH, Hh * .9); gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
       [PP.A.aP, PP.A.aC, PP.A.aS].forEach(a => gl.enableVertexAttribArray(a));
       if (A.nuit && LUM.length) { gl.bindBuffer(gl.ARRAY_BUFFER, bL); gl.vertexAttribPointer(PP.A.aP, 3, gl.FLOAT, false, 32, 0); gl.vertexAttribPointer(PP.A.aC, 4, gl.FLOAT, false, 32, 12); gl.vertexAttribPointer(PP.A.aS, 1, gl.FLOAT, false, 32, 28); gl.drawArrays(gl.POINTS, 0, LUM.length); }
       if (pts.length) { gl.bindBuffer(gl.ARRAY_BUFFER, bPT); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pts), gl.DYNAMIC_DRAW); gl.vertexAttribPointer(PP.A.aP, 3, gl.FLOAT, false, 32, 0); gl.vertexAttribPointer(PP.A.aC, 4, gl.FLOAT, false, 32, 12); gl.vertexAttribPointer(PP.A.aS, 1, gl.FLOAT, false, 32, 28); gl.drawArrays(gl.POINTS, 0, pts.length / 8); }
       gl.disableVertexAttribArray(PP.A.aS);
-      // pluie ou neige
-      if (nbP) { gl.useProgram(PR.p); gl.uniformMatrix4fv(PR.U.uPV, false, PV); gl.uniform3fv(PR.U.uCam, I.cam.e); gl.uniform1f(PR.U.uT, t); gl.uniform1f(PR.U.uV, A.neige ? (A.flocV || 7) : 60);
-        gl.uniform1f(PR.U.uLong, A.neige ? 0 : 1.3); gl.uniform1f(PR.U.uVent, A.vent || 0); gl.uniform1f(PR.U.uNeige, A.neige ? 1 : 0); if (A.floc) gl.uniform4f(PR.U.uC, A.floc[0], A.floc[1], A.floc[2], A.floc[3]); else gl.uniform4f(PR.U.uC, .86, .9, .96, A.neige ? .85 : .28);   // v20.62 : pluie fine et discrète gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-        gl.bindBuffer(gl.ARRAY_BUFFER, bP); gl.enableVertexAttribArray(PR.A.aS); gl.vertexAttribPointer(PR.A.aS, 4, gl.FLOAT, false, 16, 0); gl.drawArrays(A.neige ? gl.POINTS : gl.LINES, 0, A.neige ? nbP : nbP * 2); gl.disableVertexAttribArray(PR.A.aS); }
+      // particules du thème
+      if (nbP) { gl.useProgram(PR.p); gl.uniformMatrix4fv(PR.U.uPV, false, PV); gl.uniform3fv(PR.U.uCam, I.cam.e); gl.uniform1f(PR.U.uT, t); gl.uniform1f(PR.U.uV, A.flocV || 7);
+        gl.uniform1f(PR.U.uLong, 0); gl.uniform1f(PR.U.uVent, 0); gl.uniform1f(PR.U.uNeige, 1); if (A.floc) gl.uniform4f(PR.U.uC, A.floc[0], A.floc[1], A.floc[2], A.floc[3]); else gl.uniform4f(PR.U.uC, .86, .9, .96, .85);
+        gl.bindBuffer(gl.ARRAY_BUFFER, bP); gl.enableVertexAttribArray(PR.A.aS); gl.vertexAttribPointer(PR.A.aS, 4, gl.FLOAT, false, 16, 0); gl.drawArrays(gl.POINTS, 0, nbP); gl.disableVertexAttribArray(PR.A.aS); }
       gl.depthMask(true); gl.disable(gl.BLEND);
     }
-    /** v20.62 · un éclair dans le ciel : une direction devant la caméra (± 50°), assez haut pour rester dans le ciel */
-    function eclairCiel() { const e = I.cam ? I.cam.e : [T.cx, 50, T.cz], c = I.cam ? I.cam.c : [T.cx, 0, T.cz], a = Math.atan2(c[2] - e[2], c[0] - e[0]) + (Math.random() - .5) * 1.7, h = .3 + Math.random() * .2;
-      I.ecl = { t0: performance.now(), d: norme([Math.cos(a), h, Math.sin(a)]) }; }
-    /** v20.52 · gerbes (eau, neige, sable) derrière les voitures qui roulent, reflet coloré sur la piste mouillée, éclats de soleil : des points lumineux, recalculés à chaque image (aucun état) */
-    const GERBE = A.pluie ? [.86, .91, .98, .34] : A.sable ? [.93, .74, .48, .3] : (def.amb === "noel" || A.hiver) ? [1, 1, 1, .38] : null, NG = LGR ? 6 : 12;
-    function meteoVoitures(VV, t, pts, KV) {
+    /** v20.52 · gerbes de neige derrière les voitures qui roulent (Noël, hiver) : des points lumineux, recalculés à chaque image (aucun état) */
+    const GERBE = def.amb === "noel" || A.hiver ? [1, 1, 1, .38] : null, NG = LGR ? 6 : 12;
+    function gerbesVoitures(VV, t, pts, KV) {
       VV.forEach((x, i) => {
         const k = clamp(x.vit / 60, 0, 1), nx = -x.tz, nz = x.tx;
-        if (GERBE && k > .08) for (let j = 0; j < NG; j++) { const h = Math.sin(j * 12.9898 + i * 78.233) * 43758.5453, u = h - Math.floor(h), ph = ((t * 2.4 + j / NG + i * .37) % 1 + 1) % 1, back = (3 + ph * 8) * KV, lat = (u - .5) * 2.6 * KV;
+        if (k > .08) for (let j = 0; j < NG; j++) { const h = Math.sin(j * 12.9898 + i * 78.233) * 43758.5453, u = h - Math.floor(h), ph = ((t * 2.4 + j / NG + i * .37) % 1 + 1) % 1, back = (3 + ph * 8) * KV, lat = (u - .5) * 2.6 * KV;
           pts.push(x.x - x.tx * back + nx * lat, x.y + (.3 + ph * (1 - ph) * 3.2) * KV, x.z - x.tz * back + nz * lat, GERBE[0], GERBE[1], GERBE[2], GERBE[3] * k * (1 - ph), (4 + ph * 10) * KV); }
-        if (A.mouille) { const c = x.rgb || (x.rgb = hex(x.v.couleur || "#ffffff")); pts.push(x.x - x.tx * 1.5 * KV, x.y + .08, x.z - x.tz * 1.5 * KV, c[0], c[1], c[2], .3, 12 * KV); }
-        if (A.dore) { const e = Math.pow(Math.max(0, Math.sin(t * 1.7 + i * 2.1)), 14); if (e > .04) pts.push(x.x + x.tx * .6 * KV, x.y + 1.4 * KV, x.z + x.tz * .6 * KV, 1, .95, .78, e, (3 + 9 * e) * KV); }
       });
     }
     // ----- boucle -----
@@ -12903,9 +12954,9 @@
       const calme = !I.anim && !I.tir && !I.enRoute && !I.artifice.length && !I.survol;
       if (calme && I.dernier && now - I.dernier < 31) { if (I.actif) raf = requestAnimationFrame(image); return; }
       const t = (now - I.t0) / 1000, dt = Math.min(.05, I.dernier ? (now - I.dernier) / 1000 : .016);
-      if (!calme && I.dernier) { I.ft = I.ft * .92 + (now - I.dernier) * .08; if (I.ft > 26 && I.q > 1) { if (++I.lents > 40) { I.q = Math.max(1, I.q - .25); I.lents = 0; I.ft = 16; redim(); } }
-        else if (RW && !I.allege && I.ft > 30) { if (++I.lents > 60) { I.allege = true; I.lents = 0; I.ft = 16; } }   // recette waouh : si le téléphone peine encore, sols par zones, ombres et rayons s'éteignent (brume, lumière et décor lointain restent)
-        else I.lents = 0; }
+      if (!calme && I.dernier) { const dms = now - I.dernier; I.ft = I.ft * .92 + dms * .08; if (I.ft > 26 && I.q > 1) { if (++I.lents > 40) { I.q = Math.max(1, I.q - .25); I.lents = 0; I.ft = 16; redim(); } }
+        else if (!LGR && !I.descente && I.ft > 30) { I.tLent += Math.min(dms, 1000); if (++I.lents > 20 && I.tLent > 2500) { I.descente = descendreQualite() || "non"; I.lents = 0; } }   // qualité 3D : images toujours lentes en complet automatique → léger pour la VUE SUIVANTE (rien ne change sous les yeux)
+        else { I.lents = 0; I.tLent = 0; } }
       I.dernier = now;
       // animation des points
       if (I.anim && I.suspendu) V.forEach(x => { x.vit = lisse(x.vit, 0, .1); });   // ⏸ course en pause : les voitures restent où elles sont
@@ -12922,7 +12973,7 @@
       dessiner(t, dt);
       if (o.image) o.image(api);
       // cadence : 60 i/s en mouvement, 30 au repos, rien quand tout est calme
-      const bouge = (I.anim && !I.suspendu) || I.survol || I.tir || I.joy || I.enRoute || I.artifice.length || (I.inactif < 40 && (nbP || A.eclairs || A.eclairCiel || I.ecl || A.dore && FX || (ANIM() && I.mode !== "bord")));
+      const bouge = (I.anim && !I.suspendu) || I.survol || I.tir || I.joy || I.enRoute || I.artifice.length || (I.inactif < 40 && (nbP || A.eclairs || (ANIM() && I.mode !== "bord")));
       I.inactif += dt; if (I.anim || I.tir || I.joy) I.inactif = 0; majJoy();
       if (I.actif && bouge && document.visibilityState !== "hidden") raf = requestAnimationFrame(image); else I.endormi = true;
     }
@@ -13053,13 +13104,14 @@
       survol(dur, fin) { if (I.mode !== "helico" || !ANIM()) { if (fin) fin(); return; } I.survol = { t0: performance.now(), dur: dur || 12000, s0: 0, o0: I.orbite, fin }; reveiller(); },
       arreterSurvol() { if (I.survol) { I.survol = null; I.pan = [0, 0]; I.zoom = 1; I.incl = .72; reveiller(); } },
       ecran, ecranMonde, projeter, masque, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim, reveiller, taille: () => ({ w: I.cssW, h: I.cssH }),
-      /** v20.52 · la météo montrée (tests) et un éclair tout de suite (captures) */
-      meteo: () => A.sable ? "sable" : A.pluie ? "pluie" : (def.amb === "noel" && A.neige && A.meteo !== "soleil" && A.meteo !== "beau") ? "neige" : A.dore ? "soleil" : null, particules: () => nbP,
+      /** particules du thème (tests : plus aucune particule de météo, seulement celles du décor) */
+      particules: () => nbP,
       /** recette waouh en cours (tests) : null sans recette ; sinon ce qui est allumé */
-      waouh: () => RW ? { brume: !!RW.brume, sol: !!(RW.sol && !I.allege), rayons: !I.allege && RW.rayons > 0 && !!(BV[2]), force: RW.rayons, brumeCol: RW.brume ? RW.brume.slice() : null, voile: !!BV[0], lueur: !!BV[1], evite: !!I.evite, allege: !!I.allege } : null,
-      eclair() { if (A.eclairCiel) { eclairCiel(); I.prochainCiel = 5; reveiller(); } else if (A.eclairs) { I.flash = 1; I.prochainEclair = 4; reveiller(); } },
-      /** v20.62 · intensité de l'éclair du ciel en cours (tests) */
-      eclairEnCours: () => !!I.ecl,
+      waouh: () => RW ? { brume: !!RW.brume, sol: !!RW.sol, rayons: RW.rayons > 0 && !!(BV[2]), force: RW.rayons, brumeCol: RW.brume ? RW.brume.slice() : null, voile: !!BV[0], lueur: !!BV[1], evite: !!I.evite } : null,
+      /** qualité 3D de cette vue (tests) : niveau décidé avant la 1re image, et si une descente est prévue pour la vue suivante */
+      qualite: () => ({ niveau: NIV, suivante: niveauQualite(), descente: I.descente === true, ips: Math.round(1000 / Math.max(1, I.ft)), q: I.q }),
+      /** un éclair du décor tout de suite (Monde à l'envers, Olympe : captures) */
+      eclair() { if (A.eclairs) { I.flash = 1; I.prochainEclair = 4; reveiller(); } },
       /** zoom de la Visite 3D (1 = vue d'ensemble, 0,12 = au plus près) et mode de caméra */
       zoom: () => I.zoom, orbite: () => I.orbite, mode: () => I.mode, survolEnCours: () => !!I.survol, cible: () => ({ x: T.cx + I.pan[0], z: T.cz + I.pan[1], r: Math.max(T.rx, T.rz) }),   // v17.35 : point visé par la caméra (jauge chaud-froid)
       /** v17.35 · recul automatique de la Visite (1 en paysage ; > 1 sur un écran en hauteur, où la caméra se place plus loin pour tout montrer) : même formule que camVoulue */
@@ -13707,122 +13759,6 @@
           if (q > .7) b.setAttribute("opacity", O.f(Math.max(0, (1 - q) / .3))); }, () => { g.remove(); lueurT.remove(); b.remove(); }); } }; }
   };
 
-  /* ============================================================
-     v20.52 (Théo) · MÉTÉO VISIBLE sur la carte 2D (purement visuelle, aucun effet sur les points)
-     Même météo que le titre (S&P depuis le 1er) : pluie, orage, grand soleil ; beau temps = rien. Adaptée au circuit :
-     à Noël la pluie devient neige (l'orage, une tempête de neige), à Dune une tempête de sable.
-     - une couche SVG fixe sous les voitures (piste mouillée plus sombre et brillante, flaques) : jamais dans les fonds cuits ;
-     - une couche animée (canvas) par-dessus : gouttes, ronds dans les flaques, reflets qui glissent sur la piste, éclaboussures derrière
-       les voitures, éclairs qui illuminent la carte, flocons, grains de sable, lumière dorée et éclats de soleil sur les voitures.
-     Mode léger : moitié moins de particules, 30 images/s, définition 1. « Réduire les animations » : aucune particule (la piste mouillée reste).
-     ============================================================ */
-  function modeMeteo(def, meteo) {
-    const th = def && def.amb, f = meteo === "orage" ? 1.6 : 1;
-    if (meteo === "pluie" || meteo === "orage") return th === "noel" ? { m: "neige", f, eclairs: 0 } : th === "desert" ? { m: "sable", f, eclairs: meteo === "orage" ? 1 : 0 } : { m: "pluie", f: 1, eclairs: meteo === "orage" ? 1 : 0 };   // v20.62 : l'orage = la même pluie fine (+ un éclair de temps en temps)
-    if (meteo === "nuages" && th === "noel") return { m: "neige", f: .6, eclairs: 0 };
-    if (meteo === "soleil") return { m: "soleil", f: 1, eclairs: 0 };
-    return null;
-  }
-  function meteo2D(boite, svg, gAvant, T, def, meteo, C) {
-    const M = modeMeteo(def, meteo); if (!M) return null;
-    const NS = "http://www.w3.org/2000/svg", r = alea(97), LG = leger();
-    // ---- couche fixe (sous les voitures) ----
-    const pts = []; for (let i = 0; i <= T.N; i += 2) { const k = i % T.N; pts.push(T.X[k].toFixed(1) + " " + T.Z[k].toFixed(1)); } const d = "M" + pts.join("L") + "Z";
-    const g = document.createElementNS(NS, "g"); g.setAttribute("class", "p2-met p2-met-" + M.m); g.setAttribute("pointer-events", "none");
-    if (M.m === "pluie") {
-      const fl = []; for (let i = 0; i < 9; i++) { const s = r() * T.L, p = T.a(s, (r() < .5 ? -1 : 1) * (DEMI + 4 + r() * 10)), a = Math.atan2(p.tz, p.tx) * 180 / PI;
-        fl.push('<ellipse cx="' + p.x.toFixed(1) + '" cy="' + p.z.toFixed(1) + '" rx="' + (9 + r() * 10).toFixed(1) + '" ry="' + (3.5 + r() * 3).toFixed(1) + '" transform="rotate(' + a.toFixed(0) + " " + p.x.toFixed(1) + " " + p.z.toFixed(1) + ')" fill="rgba(140,180,230,.22)" stroke="rgba(225,238,255,.45)" stroke-width="1.2"/>'); }
-      // v20.62 (Théo) · plus de voile sombre sur la carte : seulement un léger reflet sur la piste mouillée et quelques flaques
-      g.innerHTML = '<path d="' + d + '" fill="none" stroke="#D6E8FF" stroke-width="2.4" stroke-linejoin="round" stroke-dasharray="46 30 12 30" opacity=".26"/>' + fl.join("");
-    }
-    gAvant.parentNode.insertBefore(g, gAvant);
-    if (!ANIM()) return { g, mode: M.m, stop() { g.remove(); }, redim() { }, reveiller() { } };
-    // ---- couche animée ----
-    const cv = document.createElement("canvas"); cv.className = "p2-meteo"; cv.setAttribute("aria-hidden", "true");
-    cv.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1";
-    boite.appendChild(cv); const x = cv.getContext("2d");
-    const Q = LG ? .5 : 1, DPR = LG ? 1 : Math.min(1.5, window.devicePixelRatio || 1);
-    let W = 1, H = 1, raf = 0, dern = 0, t = 0, vis = true, fini = false, prochain = 1.5 + r() * 3, flash = -1, eclair = null;
-    const P = [], R = [], E = [], prev = {};
-    function redim(w, h) { if (!w || !h) { const b = boite.getBoundingClientRect(); w = b.width; h = b.height; } W = Math.max(1, w); H = Math.max(1, h); cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); x.setTransform(DPR, 0, 0, DPR, 0, 0); remplir(); }
-    function remplir() {
-      P.length = 0; const n = Math.round((M.m === "pluie" ? 120 : M.m === "neige" ? 95 : M.m === "sable" ? 130 : 0) * M.f * Q * Math.max(.6, Math.min(2.2, W * H / (390 * 260))));
-      for (let i = 0; i < n; i++) P.push({ x: r() * W, y: r() * H, v: .6 + r() * .4, l: .5 + r() * .5, ph: r() * TAU, z: r() });
-    }
-    // monde (unités de la carte) → pixels de la boîte, sans lire la mise en page (viewBox courant + taille connue)
-    const versPx = () => { const vb = C.vb(), s = Math.min(W / vb[2], H / vb[3]); return { s, ox: (W - vb[2] * s) / 2 - vb[0] * s, oy: (H - vb[3] * s) / 2 - vb[1] * s }; };
-    function eclaboussures(m, dt) {   // derrière chaque voiture qui roule : gerbe d'eau, de neige ou de poussière
-      const vs = C.voitures(), lim = LG ? 50 : 120;
-      vs.forEach(v => { const px = m.ox + v.x * m.s, py = m.oy + v.y * m.s, a = prev[v.nom]; prev[v.nom] = [px, py];
-        if (!a || !v.roule) return; const dx = px - a[0], dy = py - a[1], sp = Math.hypot(dx, dy) / Math.max(dt, .001); if (sp < 12 || sp > 2000) return;
-        const ux = dx / Math.hypot(dx, dy), uy = dy / Math.hypot(dx, dy), nb = Math.min(LG ? 2 : 4, 1 + sp / 120);
-        for (let k = 0; k < nb && E.length < lim; k++) { const c = (r() - .5) * 2, j = 6 + r() * 4;
-          E.push({ x: px - ux * j - uy * c * 3, y: py - uy * j + ux * c * 3, vx: -ux * (25 + r() * 35) - uy * c * 30, vy: -uy * (25 + r() * 35) + ux * c * 30, t: 0, d: .28 + r() * .22, s: .8 + r() * 1.3 }); } });
-      x.fillStyle = M.m === "sable" ? "rgba(225,175,110,.75)" : M.m === "neige" ? "rgba(255,255,255,.9)" : "rgba(214,232,255,.85)";
-      for (let i = E.length - 1; i >= 0; i--) { const e = E[i]; e.t += dt; if (e.t > e.d) { E.splice(i, 1); continue; } e.x += e.vx * dt; e.y += e.vy * dt; e.vx *= .9; e.vy *= .9;
-        x.globalAlpha = 1 - e.t / e.d; x.beginPath(); x.arc(e.x, e.y, e.s * (1 + e.t / e.d * (M.m === "pluie" ? 1 : 1.8)), 0, TAU); x.fill(); }
-      x.globalAlpha = 1;
-    }
-    function image(now) {
-      raf = 0; if (fini || !cv.isConnected) return; if (!vis || document.hidden) { dern = 0; return; }
-      const vite = C.enCourse() && !LG, pasMin = vite ? 15 : 31;
-      if (dern && now - dern < pasMin) { raf = requestAnimationFrame(image); return; }
-      const dt = Math.min(.06, dern ? (now - dern) / 1000 : .016); dern = now; t += dt;
-      x.clearRect(0, 0, W, H); const m = versPx();
-      if (M.m === "pluie") {
-        // reflets qui glissent sur la piste mouillée
-        x.lineCap = "round"; x.strokeStyle = "rgba(235,245,255,.55)"; x.lineWidth = 1.6;
-        for (let i = 0; i < 6; i++) { const s = (i / 6 + t * .035) * T.L, a = T.a(s, 0), px = m.ox + a.x * m.s, py = m.oy + a.z * m.s, l = 7; x.globalAlpha = .35 + .3 * Math.sin(t * 2 + i); x.beginPath(); x.moveTo(px - a.tx * l, py - a.tz * l); x.lineTo(px + a.tx * l, py + a.tz * l); x.stroke(); }
-        // ronds dans l'eau
-        if (R.length < (LG ? 8 : 16) * M.f && r() < dt * 26 * M.f * Q) R.push({ x: r() * W, y: r() * H, t: 0 });
-        x.strokeStyle = "rgba(220,235,255,.8)"; x.lineWidth = 1;
-        for (let i = R.length - 1; i >= 0; i--) { const o = R[i]; o.t += dt; if (o.t > .6) { R.splice(i, 1); continue; } x.globalAlpha = .7 * (1 - o.t / .6); x.beginPath(); x.ellipse(o.x, o.y, 1 + o.t * 11, .5 + o.t * 6, 0, 0, TAU); x.stroke(); }
-        // gouttes (en biais, un peu de vent)
-        x.globalAlpha = 1; x.strokeStyle = "rgba(215,230,255,.34)"; x.lineWidth = .9; x.beginPath();
-        P.forEach(p => { p.y += (520 + 260 * p.v) * dt; p.x += 90 * dt; if (p.y > H + 14) { p.y = -14; p.x = r() * W; } if (p.x > W + 10) p.x -= W + 20; const l = 9 + 7 * p.l; x.moveTo(p.x, p.y); x.lineTo(p.x - l * .17, p.y - l); }); x.stroke();
-      } else if (M.m === "neige") {
-        x.fillStyle = "#fff"; const vent = 22 * (M.f - .6);
-        P.forEach(p => { p.y += (24 + 30 * p.v) * M.f * dt; p.x += (Math.sin(t * .9 + p.ph) * 14 + vent) * dt; if (p.y > H + 4) { p.y = -4; p.x = r() * W; } if (p.x > W + 4) p.x = -4; if (p.x < -4) p.x = W + 4;
-          x.globalAlpha = .55 + .4 * p.z; x.beginPath(); x.arc(p.x, p.y, .8 + 1.6 * p.l, 0, TAU); x.fill(); }); x.globalAlpha = 1;
-      } else if (M.m === "sable") {
-        const rafale = .5 + .5 * Math.sin(t * .7) * Math.sin(t * .31 + 1);
-        // nuages de poussière qui traversent la carte
-        for (let i = 0; i < 4; i++) { const cx = ((i * .29 + t * (.05 + .02 * i)) % 1.4 - .2) * W, cy = H * (.2 + .2 * i) + Math.sin(t * .4 + i) * 14, rr = Math.max(W, H) * (.22 + .06 * i), gg = x.createRadialGradient(cx, cy, 0, cx, cy, rr);
-          gg.addColorStop(0, "rgba(214,160,96," + ((.07 + .05 * rafale) * M.f).toFixed(3) + ")"); gg.addColorStop(1, "rgba(160,98,44,0)"); x.fillStyle = gg; x.fillRect(cx - rr, cy - rr, rr * 2, rr * 2); }
-        x.strokeStyle = "rgba(120,74,30,.5)"; x.lineWidth = 1.2; x.lineCap = "round"; x.beginPath();
-        P.forEach(p => { p.x += (180 + 200 * p.v) * (.7 + .6 * rafale) * dt; p.y += Math.sin(t * 2 + p.ph) * 12 * dt; if (p.x > W + 12) { p.x = -12; p.y = r() * H; } const l = 4 + 8 * p.l; x.moveTo(p.x, p.y); x.lineTo(p.x - l, p.y + l * .08); }); x.stroke();
-      } else if (M.m === "soleil") {
-        const sx = W * .1, sy = -H * .08, D = Math.hypot(W, H), b = .88 + .12 * Math.sin(t * .6), g0 = x.createRadialGradient(sx, sy, 0, sx, sy, D * .95);
-        g0.addColorStop(0, "rgba(255,228,150," + (.6 * b).toFixed(3) + ")"); g0.addColorStop(.22, "rgba(255,205,115," + (.26 * b).toFixed(3) + ")"); g0.addColorStop(.6, "rgba(255,182,80," + (.08 * b).toFixed(3) + ")"); g0.addColorStop(1, "rgba(255,170,60,0)");
-        x.globalCompositeOperation = "lighter"; x.fillStyle = g0; x.fillRect(0, 0, W, H);
-        // rayons qui tournent doucement
-        x.fillStyle = "rgba(255,226,160,.09)";
-        for (let i = 0; i < 4; i++) { const a = .2 + i * .3 + Math.sin(t * .15 + i) * .06, l = D * 1.2, e = .03 + .015 * (i % 2); x.beginPath(); x.moveTo(sx, sy); x.lineTo(sx + Math.cos(a - e) * l, sy + Math.sin(a - e) * l); x.lineTo(sx + Math.cos(a + e) * l, sy + Math.sin(a + e) * l); x.fill(); }
-        // reflets de l'objectif, le long de la diagonale
-        [[.32, 13, .1], [.5, 6, .16], [.74, 22, .07], [.9, 9, .1]].forEach(([k, rr, al]) => { x.fillStyle = "rgba(255,232,175," + (al * b).toFixed(3) + ")"; x.beginPath(); x.arc(sx + (W * .62 - sx) * k * 1.4, sy + (H * .7 - sy) * k * 1.4, rr, 0, TAU); x.fill(); });
-        // éclats de soleil sur les carrosseries
-        x.strokeStyle = "#FFF6D8"; x.lineCap = "round";
-        C.voitures().forEach((v, i) => { const e = Math.pow(Math.max(0, Math.sin(t * 1.7 + i * 2.1)), 14); if (e < .03) return; const px = m.ox + v.x * m.s + 3, py = m.oy + v.y * m.s - 3, l = 3 + 6 * e;
-          x.globalAlpha = e; x.lineWidth = 1.4; x.beginPath(); x.moveTo(px - l, py); x.lineTo(px + l, py); x.moveTo(px, py - l); x.lineTo(px, py + l); x.stroke(); x.lineWidth = .8; x.beginPath(); x.moveTo(px - l * .5, py - l * .5); x.lineTo(px + l * .5, py + l * .5); x.moveTo(px + l * .5, py - l * .5); x.lineTo(px - l * .5, py + l * .5); x.stroke(); });
-        x.globalAlpha = 1; x.globalCompositeOperation = "source-over";
-      }
-      if (M.m !== "soleil") eclaboussures(m, dt);
-      // ⚡ éclairs : la carte s'illumine (double éclat), un trait zigzague dans le ciel
-      if (M.eclairs) { prochain -= dt; if (prochain < 0) { flash = 0; prochain = 2.8 + r() * 5.5; const x0 = W * (.15 + r() * .7), l = [[x0, -4]]; let px = x0, py = -4; while (py < H * (.22 + r() * .16)) { py += 10 + r() * 16; px += (r() - .5) * 26; l.push([px, py]); } eclair = l; }
-        if (flash >= 0) { flash += dt; const f = flash < .07 ? .55 : flash < .13 ? .08 : flash < .2 ? .42 : Math.max(0, .42 * (1 - (flash - .2) / .45));
-          // v20.62 : plus de flash plein écran : une lueur brève en haut, autour de l'éclair (le reste de la carte garde sa lumière)
-          const ex = eclair ? eclair[0][0] : W / 2, gl0 = x.createRadialGradient(ex, 0, 0, ex, 0, Math.max(W, H) * .45); gl0.addColorStop(0, "rgba(232,240,255," + (f * .55).toFixed(3) + ")"); gl0.addColorStop(1, "rgba(232,240,255,0)");
-          x.fillStyle = gl0; x.fillRect(0, 0, W, H * .6);
-          if (eclair && flash < .26) { x.lineJoin = "round"; [[5, "rgba(190,210,255,.35)"], [1.6, "#FFFFFF"]].forEach(([lw, c]) => { x.strokeStyle = c; x.lineWidth = lw; x.beginPath(); eclair.forEach((q, i) => i ? x.lineTo(q[0], q[1]) : x.moveTo(q[0], q[1])); x.stroke(); }); }
-          if (flash > .7) flash = -1; } }
-      raf = requestAnimationFrame(image);
-    }
-    const io = window.IntersectionObserver ? new IntersectionObserver(l => { vis = l[l.length - 1].isIntersecting; if (vis) reveiller(); }) : null; if (io) io.observe(boite);
-    const onVis = () => { if (!document.hidden) reveiller(); }; document.addEventListener("visibilitychange", onVis);
-    function reveiller() { if (!raf && !fini) raf = requestAnimationFrame(image); }
-    redim(); reveiller();
-    return { g, cv, mode: M.m, eclair() { prochain = 0; reveiller(); }, redim(w, h) { redim(w, h); reveiller(); }, reveiller, stop() { fini = true; if (raf) cancelAnimationFrame(raf); if (io) io.disconnect(); document.removeEventListener("visibilitychange", onVis); cv.remove(); g.remove(); } };
-  }
   function monter2D(boite, o) {
     const def = TRACES[o.circuit] || TRACES.melbourne, T = echantillonner(def), Z = zones(T), NS = "http://www.w3.org/2000/svg";
     const m = 34, minx = T.cx - T.rx - m, minz = T.cz - T.rz - m, w = T.rx * 2 + 2 * m, h = T.rz * 2 + 2 * m;
@@ -13864,7 +13800,7 @@
     ecurieDes(o.voitures).forEach(v => { const g = document.createElementNS(NS, "g"); g.setAttribute("class", "p2-car" + (v.moi ? " ici" : "") + (v.ecurie && v.livree && v.livree !== "couleur" ? " lv-" + v.livree : "")); g.innerHTML = '<g transform="scale(' + k.toFixed(2) + ')">' + (v.moi ? '<circle r="' + (marqueLivree(v) ? 12.5 : 10.5) + '" fill="none" stroke="' + v.couleur + '" stroke-width="1.6" opacity=".55"/>' : "") + marque2D(v) + '<text y="3" text-anchor="middle"></text>' + (v.casqueSvg ? '<g class="p2-casque" transform="translate(9.4 6.2) scale(.27)">' + v.casqueSvg + "</g>" : "") + "</g>"; gV.appendChild(g);
       const tr = traineeSvg2D(v, k, gTr); V[v.nom] = { g, t: g.querySelector("text"), x: 0, y: 0, couleur: v.couleur, tr, hist: [], v }; });
     const I = { pts: Object.assign({}, o.pts || {}), anim: null, ordre: (o.voitures || []).map(v => v.nom), e: 1 };
-    let VBc = [minx, minz, w, h], taille = { w: 1, h: 1 };   // viewBox courant (zoom du plein écran) et taille de la boîte : la météo place ses effets sans lire la mise en page
+    let VBc = [minx, minz, w, h], taille = { w: 1, h: 1 };   // viewBox courant (zoom du plein écran) et taille de la boîte
     /** v20.52 (Théo) · sur la grille : écart entre deux voitures = 19 px à l'écran (pastilles des pilotes jamais l'une sur l'autre), quinconce marqué */
     function grille2D() { if (!o.grille) return null; let W = taille.w, H = taille.h; if (W < 50) { const b = boite.getBoundingClientRect(); W = b.width; H = b.height; }
       const sc = W >= 50 ? Math.min(W / w, H / h) : 0; return { pas: sc ? clamp(19 / sc, 9, 90) : 30, lat: 7 }; }
@@ -13873,7 +13809,6 @@
       const vb = VBc, sc = Math.min(W / vb[2], H / vb[3]), ox = (W - vb[2] * sc) / 2 - vb[0] * sc, oy = (H - vb[3] * sc) / 2 - vb[1] * sc, px = v => v.toFixed(1) + "px";
       const st = boite.style; if (!st.backgroundImage) { st.backgroundColor = CP.couleur; st.backgroundImage = 'url("' + CU + '")'; st.backgroundRepeat = "no-repeat"; }
       st.backgroundSize = px(CP.W / KU * sc) + " " + px(CP.H / KU * sc); st.backgroundPosition = px(ox) + " " + px(oy); }
-    const MET = o.effets ? (() => { try { return meteo2D(boite, svg, gTr, T, def, o.meteo, { vb: () => VBc, enCourse: () => !!(I.anim && !I.suspendu), voitures: () => Object.keys(V).map(n => ({ nom: n, x: V[n].x, y: V[n].y, roule: !!I.anim && !I.suspendu })) }); } catch (e) { return null; } })() : null;
     const gEv = svg.querySelector(".p2-ev"), EVf = gEv && EVENEMENTS[def.peint];   // V16.35 : événements en course
     let EV = null; try { EV = EVf ? EVf({ svg, g: gEv, T, KU, V, lieux: (CP && CP.lieux) || {}, anime: ANIM() }) : null; } catch (e) { EV = null; }
     let raf = 0;
@@ -13930,26 +13865,26 @@
     ["pointerup", "pointercancel"].forEach(t => svg.addEventListener(t, lacher));
     svg.addEventListener("wheel", ev => { if (!ZM.on) return; ev.preventDefault(); zoomer(Math.exp(-ev.deltaY * .0015), ev.clientX, ev.clientY); }, { passive: false });
     svg.addEventListener("click", ev => { if (ZM.on && ZM.glisse) return; const r = boite.getBoundingClientRect(); let best = null, bd = 30; Object.keys(V).forEach(n => { const e = ecran(n); if (!e) return; const dd = Math.hypot(e.x + r.left - ev.clientX, e.y + 10 + r.top - ev.clientY); if (dd < bd) { bd = dd; best = n; } }); if (best && o.toucher) o.toucher(best); });
-    const ro = window.ResizeObserver ? new ResizeObserver(() => { const r = boite.getBoundingClientRect(), g0 = taille.w; taille = { w: r.width, h: r.height }; majFond(); if (MET) MET.redim(r.width, r.height); if (o.grille && !I.anim && Math.abs(g0 - r.width) > 1) poser(); if (o.image) o.image(api); }) : null; if (ro) ro.observe(boite);
+    const ro = window.ResizeObserver ? new ResizeObserver(() => { const r = boite.getBoundingClientRect(), g0 = taille.w; taille = { w: r.width, h: r.height }; majFond(); if (o.grille && !I.anim && Math.abs(g0 - r.width) > 1) poser(); if (o.image) o.image(api); }) : null; if (ro) ro.observe(boite);
     const api = {
       type: "2d", T, zones: Z,
       equipes: () => Object.keys(V).map(n => ({ nom: n, livree: V[n].v.livree || null, casque: V[n].v.casqueModele || null, finition: V[n].v.finition || null, trainee: V[n].v.trainee || null, numero: V[n].v.numero || null, pierres: (V[n].v.pierres || []).filter(Boolean).length })),
       placer(pts) { I.anim = null; I.suspendu = null; I.pts = Object.assign({}, pts); poser(); },
       regler(x) { Object.assign(o, x); },
       /** v20.52 · écart de la grille (unités de la piste) : la démo part exactement de là */
-      pasGrille: () => { const g = grille2D(); return g ? g.pas : 9; }, meteo: () => MET ? MET.mode : null, eclair() { if (MET && MET.eclair) MET.eclair(); },
+      pasGrille: () => { const g = grille2D(); return g ? g.pas : 9; },
       suspendre(b) { if (!I.anim) { I.suspendu = null; return; } if (b && !I.suspendu) { I.suspendu = performance.now(); if (raf) { cancelAnimationFrame(raf); raf = 0; } }
         else if (!b && I.suspendu) { I.anim.t0 += performance.now() - I.suspendu; I.suspendu = null; if (!raf) raf = requestAnimationFrame(boucle); } },
       suspendu: () => !!(I.anim && I.suspendu),
       jouer(de, a, duree, fin) { if (!ANIM()) { api.placer(a); if (fin) fin(); return; } I.suspendu = null; I.pts = Object.assign({}, de); poser(); I.anim = { de: Object.assign({}, de), a: Object.assign({}, a), t0: performance.now(), duree: Math.min(duree || 2600, 3200), fin }; if (!raf) raf = requestAnimationFrame(boucle); },
       jouerScenario(scen, duree, fin) { if (EV && EV.raz) EV.raz(); if (!ANIM()) { api.placer(scen(1)); if (fin) fin(); return; } I.suspendu = null; I.e = 0; I.pts = scen(0); poser(); I.anim = { scen, de: scen(0), a: scen(1), t0: performance.now(), duree, fin }; if (!raf) raf = requestAnimationFrame(boucle); },
-      camera() { }, focus() { }, voitures() { }, survol(d, fin) { if (fin) fin(); }, arreterSurvol() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); if (MET) MET.reveiller(); if (o.image) o.image(api); }, reveiller() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); if (MET) MET.reveiller(); },   // V16.16 : la course reprend si la piste a été détachée
+      camera() { }, focus() { }, voitures() { }, survol(d, fin) { if (fin) fin(); }, arreterSurvol() { }, ecran, ecranMonde, taille: () => taille, courant: () => Object.assign({}, I.pts), enCours: () => !!I.anim, redim() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); if (o.image) o.image(api); }, reveiller() { if (I.anim && !I.suspendu && !raf) raf = requestAnimationFrame(boucle); },   // V16.16 : la course reprend si la piste a été détachée
       /** v17.10 · zoom et déplacement de la carte (plein écran) : true pour l'activer, false pour l'arrêter et recentrer */
       /** v20.53 · onglet caché (true) : le décor animé (SMIL) s'arrête net, il repart au retour (false) ; la course se suspend côté appli */
       pause(b) { I.cache = !!b; try { if (b) svg.pauseAnimations(); else svg.unpauseAnimations(); } catch (e) { } if (!b) api.reveiller(); },
       cachee: () => !!I.cache,
       zoom2D(b) { ZM.on = !!b; svg.style.touchAction = b ? "none" : ""; svg.classList.toggle("zoomable", ZM.on); if (!b) recentrer(); },
-      detruire() { if (raf) cancelAnimationFrame(raf); if (ZM.raf) cancelAnimationFrame(ZM.raf); if (ro) ro.disconnect(); if (MET) MET.stop(); svg.remove(); rec.remove(); ["backgroundImage", "backgroundColor", "backgroundSize", "backgroundPosition", "backgroundRepeat"].forEach(k => boite.style[k] = ""); }
+      detruire() { if (raf) cancelAnimationFrame(raf); if (ZM.raf) cancelAnimationFrame(ZM.raf); if (ro) ro.disconnect(); svg.remove(); rec.remove(); ["backgroundImage", "backgroundColor", "backgroundSize", "backgroundPosition", "backgroundRepeat"].forEach(k => boite.style[k] = ""); }
     };
     majFond(); poser();
     return api;
@@ -14059,6 +13994,7 @@
     if (VIT.ctx && !VIT.ctx.gl.isContextLost()) return VIT.ctx;
     const cv = document.createElement("canvas"), gl = cv.getContext("webgl", { antialias: true, alpha: true, premultipliedAlpha: false, preserveDrawingBuffer: true }) || cv.getContext("experimental-webgl");
     if (!gl) throw new Error("webgl");
+    lireGPU(gl);
     VIT.ctx = { cv, gl, PL: programme(gl, VS, FS), PF: programme(gl, VS_FX, FS_FX), roues: ROUES.map(([x, z, r, l]) => [tampon(gl, roue(r, l, 1)), tampon(gl, roue(r, l, -1))]), bFX: gl.createBuffer() };
     return VIT.ctx;
   }
@@ -14137,6 +14073,8 @@
 
   window.Piste = {
     TRACES, supporte,
+    /** 26/11/2026 · qualité 3D (un seul réglage pour tous les circuits) : niveau() = "complet" | "leger" pour la prochaine vue ; choix() = "auto" | "complet" | "leger" ; raison() en clair */
+    qualite: { niveau: niveauQualite, choix: choixQualite, raison: () => Q3D.raison },
     /** v20.53 · réponse sans ouvrir de contexte 3D (boutons, choix de la vue) : le vrai test n'a lieu qu'en montant la 3D */
     supporteVite: () => SUPPORTE !== null ? SUPPORTE : !!(window.WebGLRenderingContext),
     /** v20.48 · showroom de l'Écurie : la voiture de la course sur un plateau tournant (v = { nom, couleur, casque, casqueModele, livree, finition, numero }) */

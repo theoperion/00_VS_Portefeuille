@@ -317,10 +317,6 @@ const SONS = (() => {
       A: nt("7,.5 4,.5 7,.5 12,.5 14,1.5 12,.5  15,1 12,1 8,2  10,.5 7,.5 3,.5 7,.5 10,1 15,1  14,3 -,1"),
       B: nt("12,.5 16,.5 19,1 16,.5 12,.5 7,1  8,1 12,1 15,2  14,1 17,1 14,.5 10,.5 5,1  12,4") }
   };
-  /** v20.53 · la météo de la course s'entend : pluie et orage = la musique un peu plus sourde (un filtre doux sur le bus) */
-  const METEO_SON = { pluie: 2600, orage: 1500 };
-  let meteoSon = null;
-  function filtreMeteo(c, dest) { const f = c.createBiquadFilter(); f.type = "lowpass"; f.Q.value = .5; f.frequency.value = METEO_SON[meteoSon] || 20000; f.connect(dest); return f; }
 
   /* ==================== v17.48 · Le thème de la COURSE (un par circuit, clé « peint ») ====================
      Joué en fond, volume bas, de « C'est parti » à l'arrivée (fondu avant le jingle et le klaxon), puis plus rien.
@@ -475,7 +471,7 @@ const SONS = (() => {
   function themeStop(f) {
     if (!theme) return; const M = theme; theme = null; clearInterval(M.iv);
     try { const t = M.c.currentTime; M.bus.gain.cancelScheduledValues(t); M.bus.gain.setValueAtTime(M.bus.gain.value, t); M.bus.gain.linearRampToValueAtTime(0, t + (f || .02)); } catch (e) { /* rien */ }
-    setTimeout(() => { M.N.forEach(x => { try { x.stop(); } catch (e) { } }); M.N = []; try { M.bus.disconnect(); M.fm.disconnect(); } catch (e) { } }, (f || .02) * 1000 + 120);
+    setTimeout(() => { M.N.forEach(x => { try { x.stop(); } catch (e) { } }); M.N = []; try { M.bus.disconnect(); } catch (e) { } }, (f || .02) * 1000 + 120);
   }
   /** pose le thème de la course sur (c, sortie) de t0 à t0 + duree (s), en commençant « depuis » secondes dans la boucle ; avance = posé au fil de l'eau */
   function poserTheme(T, c, out, t0, duree, depuis, N, avance) {
@@ -494,10 +490,10 @@ const SONS = (() => {
   /** le thème d'un circuit pendant la course : duree en s ; renvoie true s'il joue */
   function themeCourse(cle, duree, depuis) {
     themeStop(.05); const T = THEMES_COURSE[cle], c = audio(); if (!T || !c || duree < .4) return false;
-    const bus = c.createGain(), t0 = c.currentTime + .03, fin = t0 + duree, fm = filtreMeteo(c, maitre); bus.connect(fm);   // v20.53 : la météo (pluie, orage) assourdit un peu
+    const bus = c.createGain(), t0 = c.currentTime + .03, fin = t0 + duree; bus.connect(maitre);
     bus.gain.setValueAtTime(0, t0); bus.gain.linearRampToValueAtTime(T.gain, t0 + (depuis ? .5 : .25));
     bus.gain.setValueAtTime(T.gain, Math.max(t0 + .5, fin - .5)); bus.gain.linearRampToValueAtTime(0, fin + .1);   // filet : il s'éteint seul à la fin prévue
-    const M = theme = { c, bus, fm, N: [], cle };
+    const M = theme = { c, bus, N: [], cle };
     const P = poserTheme(T, c, bus, t0, duree, depuis, M.N, 1.2);
     M.iv = setInterval(() => { if (theme !== M) return; if (!P.pose(c.currentTime + 1.2)) { clearInterval(M.iv); } }, 300);
     plus_tard((duree + .6) * 1000, () => { if (theme === M) themeStop(.05); });
@@ -586,14 +582,14 @@ const SONS = (() => {
     try { const T = AMBIANCES[M.cle], L = T.longueur * 60 / T.tempo, ici = ((M.c.currentTime - M.t0) + M.depuis) % L, b = 60 / T.tempo;   // la partie suivante, pour la reprise
       AMB.pos[M.cle] = (T.sections.map(s => s * b).find(s => s > ici + .05) || 0) % L; } catch (e) { /* rien */ }
     try { const t = M.c.currentTime; M.bus.gain.cancelScheduledValues(t); M.bus.gain.setValueAtTime(M.bus.gain.value, t); M.bus.gain.linearRampToValueAtTime(0, t + (f || .05)); } catch (e) { /* rien */ }
-    setTimeout(() => { M.N.forEach(x => { try { x.stop(); } catch (e) { } }); M.N = []; try { M.bus.disconnect(); M.fm.disconnect(); } catch (e) { } }, (f || .05) * 1000 + 150);
+    setTimeout(() => { M.N.forEach(x => { try { x.stop(); } catch (e) { } }); M.N = []; try { M.bus.disconnect(); } catch (e) { } }, (f || .05) * 1000 + 150);
   }
   function ambDemarrer() {
     const T = AMBIANCES[AMB.cle], c = audio(); if (!T || !c) return;
     const bus = c.createGain(), busG = c.createGain(), t0 = c.currentTime + .05, depuis = AMB.pos[AMB.cle] || 0, monte = depuis ? 1.5 : 2.5;
-    bus.gain.setValueAtTime(0, t0); bus.gain.linearRampToValueAtTime(T.gain, t0 + monte); const fm = filtreMeteo(c, maitre); bus.connect(fm);
+    bus.gain.setValueAtTime(0, t0); bus.gain.linearRampToValueAtTime(T.gain, t0 + monte); bus.connect(maitre);
     busG.gain.value = AMB_CHALEUR[Math.max(0, AMB.chaleur)] || 1; busG.connect(bus);
-    const M = amb = { c, bus, busG, fm, N: [], cle: AMB.cle, t0, depuis };
+    const M = amb = { c, bus, busG, N: [], cle: AMB.cle, t0, depuis };
     const P = poserTheme(T, c, e => e.i === (T.vif || "grelots") ? busG : bus, t0, Infinity, depuis, M.N, 1.2);
     M.iv = setInterval(() => { if (amb !== M) return; P.pose(c.currentTime + 1.2); if (M.N.length > 500) M.N.splice(0, M.N.length - 300); }, 300);   // les sons déjà joués sont oubliés : la liste reste bornée
   }
@@ -789,9 +785,7 @@ const SONS = (() => {
     sacre,
     actif, vibreOK, arreter, vibrer, klaxon, musiqueBA, bloque, debloquer, MUSIQUES, JINGLE_TIMBRE, _ecoute: ecoute, _ecouteJingles: ecouteJingles, _ecouteTheme: ecouteTheme, THEMES_COURSE, themeJoue: () => !!theme, _partition: composer,
     /** v17.59 · l'ambiance douce du plein écran (circuits à thème) ; chaleur = bonus chasse au trésor (palier de la jauge affichée) */
-    /** v20.53 · la météo de la course (id de meteoMois : soleil, nuages, beau, pluie, orage) : pluie et orage assourdissent un peu la musique et l'ambiance */
-    meteo(id) { meteoSon = id || null; const fq = METEO_SON[meteoSon] || 20000; [theme, amb].forEach(M => { if (M && M.fm) try { M.fm.frequency.setTargetAtTime(fq, M.c.currentTime, .4); } catch (e) { /* rien */ } }); },
-    _meteo: () => meteoSon, AIRS, _instr: INSTR,
+    AIRS, _instr: INSTR,
     ambiance, chaleur, AMBIANCES, ambianceJoue: () => !!amb, _ambN: () => amb ? amb.N.length : 0, _ambGrelots: () => amb ? amb.busG.gain.value : 0, _ecouteAmbiance: ecouteAmbiance, _amb: AMB,
     /** V16.75 · le jingle « VER-SUS ! » dans le timbre d'un univers : mode « motif » (3 notes enchaînées) ou « accord » (tenu ~1 s) */
     jingle(cle, mode) { const c = audio(); if (!c) return; try { jingleSur(c, maitre, c.currentTime + .02, cle, mode || "motif", []); } catch (e) { /* rien */ } },

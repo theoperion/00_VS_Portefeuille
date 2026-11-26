@@ -1175,7 +1175,7 @@ function teaser() {
     (noel ? '<div class="t-concept">' +
       '<div><b>🔥 Tour de chauffe</b><span>Décembre pour découvrir les règles, sans que rien ne compte. Vos cartes de janvier se posent pendant les fêtes.</span></div>' +
       '<div><b>🏁 Championnat</b><span>Chaque mois : ' + baremeJ().join(", ") + ' points, et +1 🎯 si tu bats le ' + esc(D.marche.indices[iRef()]) + '.</span></div>' +
-      '<div><b>🏎️ Grand Prix</b><span>Un circuit à thème par mois : 12 univers gardés secrets jusqu\'à fin décembre. Vos voitures en 3D, 25 points le tour, la météo du marché.</span></div>' +
+      '<div><b>🏎️ Grand Prix</b><span>Un circuit à thème par mois : 12 univers gardés secrets jusqu\'à fin décembre. Vos voitures en 3D, 25 points le tour.</span></div>' +
       '<div><b>🃏 Cartes de course</b><span>4 cartes de stratégie, les mêmes pour tous. Une par mois, face cachée.</span></div>' +
       (estAdmin() ? '<div><b>🎁 Nouveautés en cours de saison</b><span>' + etapesJeu().map(e => e.ico + " " + esc(e.nom) + " (" + esc(moisEtape(e).replace(/ \d{4}$/, "")) + ")").join(" · ") + ". Chaque règle est expliquée le 20 du mois d'avant, quand sa fenêtre s'ouvre.</span></div>" : '<div><b>🎁 Et plus tard…</b><span>D\'autres surprises arrivent en décembre.</span></div>') +   // v17.8 : liste cachée aux joueurs
       '<div><b>🙂 Ta tête au volant</b><span>Ton portrait animé, à côté de ton nom.</span></div></div>' +

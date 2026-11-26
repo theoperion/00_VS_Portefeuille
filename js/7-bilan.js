@@ -774,6 +774,7 @@ function reveillerGP() {
 function montrerVue(v) {
   if (!VUES.includes(v)) v = "classement";
   if (v === "classement" && VUE_AFFICHEE !== null && VUE_AFFICHEE !== "classement") ANIM_CL = true;   // on (re)vient sur l'onglet : les animations se rejouent
+  const qualiteNeuve = v === "trophees" && VUE_AFFICHEE !== "trophees" && typeof permettreQualiteGP === "function" && permettreQualiteGP();   // 26/11 : arrivée sur Course = vrai changement de vue (qualité 3D)
   VUE_AFFICHEE = v;
   if (v !== "fiche" && typeof FICHE_RETOUR !== "undefined") FICHE_RETOUR = null;   // v20.71 : le « Retour au Podium » ne vaut que pour la fiche ouverte depuis le Podium
   if (v !== "trophees" && typeof TRESOR_APERCU !== "undefined" && TRESOR_APERCU) quitterApercuTresor(false);   // v17.35 : changer d'onglet arrête l'aperçu du trésor
@@ -785,7 +786,7 @@ function montrerVue(v) {
   document.body.classList.toggle("vue-moi", v === "moi");
   document.querySelectorAll(".onglet").forEach(t => t.setAttribute("aria-current", t.dataset.vue === v || (v === "fiche" && t.dataset.vue === "classement") ? "page" : "false"));
   stock.set(CLES.vue, v);
-  if (vueGardee(v)) {   // v20.53 : rien n'a changé, l'onglet s'affiche tel quel (seules les animations d'arrivée du Classement se rejouent)
+  if (vueGardee(v) && !qualiteNeuve) {   // v20.53 : rien n'a changé, l'onglet s'affiche tel quel (seules les animations d'arrivée du Classement se rejouent)
     const el = document.querySelector('.view[data-vue="' + v + '"]');
     if (v === "classement" && ANIM_CL) { ANIM_CL = false; const t = el.querySelector(".tour"); if (t && ANIM) { t.classList.remove("entree"); void t.offsetWidth; t.classList.add("entree"); } }   // le navigateur doit voir la classe partir puis revenir pour rejouer
     requestAnimationFrame(() => { try { restaurerDefil(el); } catch (e) { } });
