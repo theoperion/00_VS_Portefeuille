@@ -51,6 +51,8 @@ function numeroSaison(y) { return Math.max(1, y - SAISON.premiere + 1); }
 
 /* ---------- Championnat : 6 / 4 / 2 / 0 point (V15 : le dernier ne marque plus, prendre trop de risque se paie), +1 si le mois bat le S&P 500 ---------- */
 const BAREME = [6, 4, 2, 0], BAREME5 = [6, 4, 2, 1, 0];   // V16.20 : à 5 pilotes (Nicolas), le 4e garde 1 point (validé par Théo le 19/11)
+/** v20.83 · barème montré dans les règles : celui de la saison (tous les pilotes inscrits), même avant le 1er relevé du 5e ; le calcul des points garde baremeJ() */
+function baremeAffiche() { try { return baremeJ(D && D.personnes ? D.personnes.length : undefined); } catch (e) { return BAREME5; } }
 function baremeJ(n) { return (n !== undefined ? n : nbPilotesEnJeu()) >= 5 ? BAREME5 : BAREME; }
 /** v20.25 · pilotes déjà en jeu (au moins un relevé avec une valeur) : un nouveau venu ne change le barème affiché qu'une fois lancé */
 function nbPilotesEnJeu() { try { return D.personnes.filter(p => serie(p, 0).some(z => z.val > 0)).length || D.personnes.length; } catch (e) { return 4; } }
@@ -1177,7 +1179,7 @@ function teaser() {
     '<p class="t-phrase">Tout le monde sur la ligne de départ.<br>Même point de départ, mêmes chances.</p>' +
     (noel ? '<div class="t-concept">' +
       '<div><b>🔥 Tour de chauffe</b><span>Décembre pour découvrir les règles, sans que rien ne compte. Vos cartes de janvier se posent pendant les fêtes.</span></div>' +
-      '<div><b>🏁 Championnat</b><span>Chaque mois : ' + baremeJ().join(", ") + ' points, et +1 🎯 si tu bats le ' + esc(D.marche.indices[iRef()]) + '.</span></div>' +
+      '<div><b>🏁 Championnat</b><span>Chaque mois : ' + baremeAffiche().join(", ") + ' points, et +1 🎯 si tu bats le ' + esc(D.marche.indices[iRef()]) + '.</span></div>' +
       '<div><b>🏎️ Grand Prix</b><span>Un circuit à thème par mois : 12 univers gardés secrets jusqu\'à fin décembre. Vos voitures en 3D, 25 points le tour.</span></div>' +
       '<div><b>🃏 Cartes de course</b><span>4 cartes de stratégie, les mêmes pour tous. Une par mois, face cachée.</span></div>' +
       (estAdmin() ? '<div><b>🎁 Nouveautés en cours de saison</b><span>' + etapesJeu().map(e => e.ico + " " + esc(e.nom) + " (" + esc(moisEtape(e).replace(/ \d{4}$/, "")) + ")").join(" · ") + ". Chaque règle est expliquée le 20 du mois d'avant, quand sa fenêtre s'ouvre.</span></div>" : '<div><b>🎁 Et plus tard…</b><span>D\'autres surprises arrivent en décembre.</span></div>') +   // v17.8 : liste cachée aux joueurs
@@ -1275,7 +1277,7 @@ function htmlDetailPoints(y) {
     (c.mois.length ? '<div class="pts-courbe">' + boiteGraphe("g-champ", noms.map(n => ({ nom: n, c: couleur(n) }))) + "</div>" : "") +   // v17.66 (Théo) : la courbe du championnat reste toujours visible
     '<details class="pts-det" id="pts-det"' + (ETAT.ptsOuvert === "1" ? " open" : "") + '><summary>📊 Détail des points <small>bilan, mois par mois, barème</small></summary>' +
     '<ul class="pts-bilan">' + bilan + "</ul>" + tab +
-    '<p class="info">Chaque mois : ' + baremeJ().join(" · ") + ' points, <b>+1</b> 🎯 si ton mois bat le ' + esc(D.marche.indices[iRef()]) + ", plus les cartes" + (regleVisible("duels") ? " et les duels" : "") + ". Ex æquo : même place, mêmes points. À égalité au total : le plus de victoires, puis la meilleure performance.</p></details>";
+    '<p class="info">Chaque mois : ' + baremeAffiche().join(" · ") + ' points, <b>+1</b> 🎯 si ton mois bat le ' + esc(D.marche.indices[iRef()]) + ", plus les cartes" + (regleVisible("duels") ? " et les duels" : "") + ". Ex æquo : même place, mêmes points. À égalité au total : le plus de victoires, puis la meilleure performance.</p></details>";
 }
 function dessinerChampionnat(y) {
   const box = $("#g-champ"); if (!box) return;
