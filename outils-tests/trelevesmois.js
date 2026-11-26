@@ -31,6 +31,7 @@ async function voir(b, session, monRappel, sombre) {
   await p.evaluate(() => ouvrirSaisie());
   await p.waitForTimeout(600); await p.evaluate(() => document.querySelectorAll(".tuto").forEach(x => x.remove()));
   await p.waitForTimeout(800);
+  const ferme = await p.evaluate(() => { const s = document.querySelector("#corps-saisie details.rm"); if (!s) return null; const f = !s.open, res = (s.querySelector(".rm-res") || {}).textContent || ""; s.open = true; return { f, res }; });   // v21.13 : replié par défaut, résumé « n/5 reçus »
   const rm = await p.evaluate(() => { const s = document.querySelector("#corps-saisie .rm"); return s ? { texte: s.innerText, boutons: [...s.querySelectorAll("[data-rappel]")].map(x => x.dataset.rappel) } : null; });
   if (rm) await p.locator("#corps-saisie .rm").scrollIntoViewIfNeeded();
   const nom = "rm-" + (session.role === "admin" ? "admin" : "joueur") + (sombre ? "-sombre" : "-clair");
@@ -39,7 +40,7 @@ async function voir(b, session, monRappel, sombre) {
   let apres = null;
   if (rm && rm.boutons.length) { await p.locator('#corps-saisie [data-rappel="' + rm.boutons[0] + '"]').click(); await p.waitForTimeout(500); apres = await p.evaluate(() => document.querySelector("#corps-saisie .rm").innerText); }
   await ctx.close();
-  return { err, rm, toasts, envois, apres, deborde };
+  return { err, ferme, rm, toasts, envois, apres, deborde };
 }
 (async () => {
   const b = await chromium.launch();
@@ -48,6 +49,7 @@ async function voir(b, session, monRappel, sombre) {
   await b.close();
   if (process.env.DBG) console.log(JSON.stringify({ A: A.rm, Jt: J.toasts }, null, 1));
   const ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); };
+  ok(A.ferme && A.ferme.f && /^2\/4 reçus · manque Clément, Devlin$/.test(A.ferme.res) && J.ferme && J.ferme.f, "replié par défaut, résumé « 3/5 reçus · manque … »" + JSON.stringify([A.ferme, J.ferme]));
   ok(![A, As, J, Js].some(x => x.err.length), "0 erreur JS " + JSON.stringify([A, As, J, Js].map(x => x.err)));
   ok(A.rm && /Relevés de novembre 2026/.test(A.rm.texte), "le tableau « Relevés de novembre 2026 · tout le monde » est sous le relevé");
   ok(A.rm && /Théo\s*✅ import automatique le 30\/11\s*à 19\s*h\s*07/.test(A.rm.texte), "Théo : ✅ import automatique avec la date et l'heure");
