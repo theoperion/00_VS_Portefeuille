@@ -617,7 +617,7 @@ function rendreClassement() {
     '<div id="boite-verdict"' + (animer ? "" : ' class="calme"') + ">" + carteVerdict(verdict) + "</div>" +
     (bref ? '<div class="bref">' + bref + "</div>" : "") +
     (anomalies.length ? '<div style="display:grid;gap:6px">' + anomalies.map(t => '<div class="alerte warn">' + t + "</div>").join("") + "</div>" : "") +
-    '<div><h2 class="sec">Classement <span class="h-boutons"><button class="million-b' + (D.premierMillion ? " pris" : "") + '" type="button" id="info-million" aria-label="Premier millionnaire">👑</button><button class="vers-fiches" type="button" id="vers-fiches" aria-label="Ouvrir les fiches de chacun"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c1-3.2 3-4.8 5.5-4.8s4.5 1.6 5.5 4.8"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.4c2.3.1 3.9 1.6 4.8 4.6"/></svg>Fiches</button></span></h2></div>' +
+    '<div><h2 class="sec">Classement <span class="h-boutons"><button class="million-b' + (D.premierMillion ? " pris" : "") + '" type="button" id="info-million" aria-label="Premier millionnaire">👑</button><button class="vers-fiches" type="button" id="vers-fiches" aria-label="Ma vitrine (puis celles des autres pilotes)">🏆 Vitrines</button></span></h2>' + (typeof aideVitrines === "function" ? aideVitrines() : "") + "</div>" +   // Théo, 26/11 : le raccourci vers les vitrines (ma fiche d'abord, les pastilles des noms pour passer aux autres)
     (typeof plaqueMillion === "function" ? plaqueMillion() : "") + filtres(true) +
     '<div class="periode" title="Performance (TWR), versements neutralisés' + (deb && st.some(s => s.n < nMois) ? " ; chaque courbe démarre au premier relevé de la personne" : "") + '">' + esc(textePeriode(deb, fin, nMois)) + " · TWR, versements neutralisés</div>" +
     '<div class="tour' + (animer ? " entree" : "") + '"><div class="tour-h"><span>Pos.</span><span>Portefeuille</span><span>TWR<span class="h-long"> · écart</span></span></div>' + tour + "</div>" +
@@ -645,10 +645,10 @@ function rendreClassement() {
   { const bv = $("#boite-verdict"); if (bv) { if (animer) compterChiffres(bv);
       // la première fois qu'on voit le verdict d'un nouveau mois : une petite fête
       if (verdict && verdict.complet && !VK && +(stock.get("versus.verdictVu") || 0) < verdict.k) { const premier = !stock.get("versus.verdictVu"); stock.set("versus.verdictVu", String(verdict.k)); if (!premier && typeof confettis === "function" && !(verdict.champion && verdict.champion.seul && verdict.champion.nom === ETAT.moi)) setTimeout(() => ereApres(() => { if (vueActive() === "classement") confettis(); }, "verdict"), 1100); } } }
-  v.querySelectorAll("[data-nv-manche]").forEach(b => b.addEventListener("click", () => { choisirSaison(+b.dataset.nvManche); ETAT.podium = "gp"; GP_ETAPE = null; garder(); allerA("trophees"); }));
+  v.querySelectorAll("[data-nv-manche]").forEach(b => b.addEventListener("click", () => { choisirSaison(+b.dataset.nvManche); ETAT.podium = "gp"; GP_ETAPE = null; GP_CHAUFFE = false; garder(); allerA("trophees"); }));
   v.querySelectorAll(".regles-mois[data-aller-stand]").forEach(b => { const go = () => { ETAT.podium = "stand"; garder(); allerA("trophees"); }; b.addEventListener("click", go); b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }); });
   { const ib = $("#info-million"); if (ib) { if (!D.premierMillion) ib.hidden = true;   /* v17.30 (Théo) : le 👑 n'apparaît qu'une fois le badge gagné (le rappel est dans Moi) */ ib.addEventListener("click", () => toast(texteMillion())); } }   // v17.5 : pas de 👑 pendant la chauffe
-  $("#vers-fiches").addEventListener("click", () => { if (!ETAT.fiche) ETAT.fiche = ETAT.moi; garder(); allerA("fiche"); });
+  $("#vers-fiches").addEventListener("click", () => ouvrirFicheDe(typeof moiPilote === "function" && moiPilote() || ETAT.moi));   // Théo, 26/11 : 🏆 Vitrines = ma fiche, comme toucher mon nom
   v.querySelectorAll("[data-bilan]").forEach(b => b.addEventListener("click", () => ouvrirBilan(+b.dataset.bilan)));
   v.querySelectorAll("[data-aller-recap]").forEach(b => b.addEventListener("click", () => { ETAT.bilans = "mensuel"; garder(); allerA("mois"); ouvrirRecap(+b.dataset.allerRecap); }));
   feterChampion(dernierVerdict);

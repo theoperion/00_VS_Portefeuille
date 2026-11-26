@@ -309,6 +309,7 @@ function palmaresMois(env, deb, fin, ksDesc) {
 /* ---------- Vue Fiche ---------- */
 const FICHE_OUVERTS = new Set();   // lot69 : rubriques dépliées pendant la visite seulement (tout revient replié à la réouverture, règle de Théo)
 function rendreFiche() {
+  try { if (vueActive() === "fiche") stock.set("versus.ficheVue", "1"); } catch (e) { /* rien */ }   // Théo, 26/11 : une fiche vraiment ouverte (par n'importe quel chemin)
   const p = D.personnes.find(x => x.nom === ETAT.fiche) || D.personnes[0];
   const env = ETAT.env, i1 = ETAT.i1;
   const sAll = serie(p, env);
@@ -916,8 +917,11 @@ var FICHE_RETOUR = null;   // var : lue par montrerVue avant cette ligne
 function ouvrirFicheDe(nom) {
   if (!D || !D.personnes.some(p => p.nom === nom)) return;
   FICHE_RETOUR = vueActive() === "trophees" ? { y: window.scrollY } : null;
+  stock.set("versus.ficheVue", "1");   // Théo, 26/11 : la ligne « Touche un pilote pour voir sa vitrine » a servi
   ETAT.fiche = nom; garder(); allerA("fiche");
 }
+/** Théo, 26/11 · la petite ligne sous le titre du classement, tant qu'aucune fiche n'a été ouverte sur cet appareil */
+function aideVitrines() { return stock.get("versus.ficheVue") ? "" : '<p class="aide-vitr">Touche un pilote pour voir sa vitrine</p>'; }
 function retourPodiumFiche() {
   const r = FICHE_RETOUR; FICHE_RETOUR = null; allerA("trophees");
   if (r && r.y) requestAnimationFrame(() => setTimeout(() => window.scrollTo(0, r.y), 60));

@@ -402,6 +402,17 @@ function etapeParDefaut(etapes, y) {
   return etapes[j].k && !etapes[j].avenir && etapes[j].k > vu ? j : etapes.length - 1;
 }
 let GP_ETAPE = null, GP_ANIM = null;
+/* Théo, 26/11 · 🔥 la puce « Chauffe » de la saison 1 : GP_CHAUFFE = on regarde la chauffe (décembre 2026) depuis la page Course de 2027 (le reste de la page, Stand, Écurie, reste en 2027) */
+let GP_CHAUFFE = false;
+/** la rangée des mois de cette page a-t-elle la puce « 🔥 Chauffe » ? (saison 1 jouée pour de vrai, pas en aperçu admin) */
+function puceChauffeGP(y) { return saisonOuverte() && !apercuSaison() && (y === SAISON.premiere || (GP_CHAUFFE && y === SAISON.premiere - 1)); }
+/** la saison que montre la page Course : la chauffe si la puce « 🔥 Chauffe » est choisie, sinon la saison de l'onglet */
+function yCourseGP(y) { return GP_CHAUFFE && y === SAISON.premiere && saisonOuverte() && !apercuSaison() ? SAISON.premiere - 1 : y; }
+/** les puces de la rangée des mois (page et plein écran) */
+function brancherPucesGP(root) {
+  root.querySelectorAll("[data-gpe]").forEach(b => b.addEventListener("click", () => { GP_CHAUFFE = false; GP_ETAPE = +b.dataset.gpe; GP_REJOUER = true; rendreTrophees(); }));
+  root.querySelectorAll("[data-gpch]").forEach(b => b.addEventListener("click", () => { if (!GP_CHAUFFE) { GP_CHAUFFE = true; GP_ETAPE = null; } GP_REJOUER = true; rendreTrophees(); }));
+}
 const GP_OUVERTS = new Set();   // lot53 : lignes du mois dépliées pendant la visite seulement (tout revient replié à la réouverture, règle de Théo)
 /** v20.16 (Théo) : PLUS AFFICHÉ (doublon avec l'onglet Classement ; le Podium = les points). lot47 · tour de chauffe (jusqu'au 31/12/2026) : un classement d'EXEMPLE sous la grille = la performance 2026 (PEA + assurance-vie,
  *  depuis le 1er janvier 2026), comme l'onglet Classement. Il ne compte pas et ne dévoile rien de la saison 2027. */
@@ -444,7 +455,14 @@ function htmlGrandPrix(y) {
     (v2 ? "" : '<div class="gp-btns">' +
     '<button class="gp-vue" type="button" id="gp-vue" aria-label="' + (deux ? "Passer en vue hélico 3D" : "Revenir à la carte 2D") + '">' + (deux ? "🚁 Hélico 3D" : "🗺️ Carte 2D") + '</button><button class="gp-vue gp-son" type="button" data-son aria-label="Son">🔇</button>' + (deux ? "" : '<button class="gp-vue" type="button" id="gp-survol" aria-label="Visite guidée">🎬 Survol</button>') + '<button class="gp-vue" type="button" id="gp-ba" aria-label="Bande-annonce">' + icoOu("bandeannonce", "🎬") + '</button><button class="gp-vue" type="button" id="gp-fin" aria-label="Aller directement à la fin de la course">' + icoOu("arrivee", "⏭") + '</button><button class="gp-vue gp-pl" type="button" id="gp-plein" aria-label="Plein écran">' + icoOu("pleinecran", "⛶") + '</button>' + "</div>") + suiviH +
     (v2 ? "" : spe ? '<div class="gp-spe">' + spe.ico + " " + esc(spe.nom) + "</div>" : pgm ? '<div class="gp-spe piege" data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " " + esc(pgm.nom) + "</div>" : "") + "</div>";
-  const chips = '<div class="gp-mois">' + etapes.map((x, j) => '<button type="button" data-gpe="' + j + '" aria-pressed="' + (j === i) + '">' + (x.k ? GPS[circuitDe(x.k)].drap + " " + esc(moisCourt(x.k)) + (x.avenir ? " ⏳" : "") : "Départ") + "</button>").join("") + "</div>";
+  // Théo, 26/11 · la rangée des mois : en 2027, « 🔥 Chauffe » (décembre 2026) reste en tête, avant « janv. 27 », et rouvre la course et le classement de la chauffe.
+  // Elle remplace l'ancienne puce « Départ » (la grille de janvier à 0 point) : la grille de janvier, c'est justement le classement de la chauffe, et la puce de janvier la montre déjà.
+  const avecCh = puceChauffeGP(y), enCh = avecCh && y === SAISON.premiere - 1, e27 = avecCh ? (enCh ? etapesGP(SAISON.premiere) : etapes) : null;
+  const puceM = (x, j, on) => '<button type="button" data-gpe="' + j + '" aria-pressed="' + on + '">' + (x.k ? GPS[circuitDe(x.k)].drap + " " + esc(moisCourt(x.k)) + (x.avenir ? " ⏳" : "") : "Départ") + "</button>";
+  const puceCh = (attr, on) => '<button type="button" class="gp-mch" ' + attr + ' aria-pressed="' + on + '" aria-label="Tour de chauffe, décembre 2026 : ne compte pas au championnat">🔥 Chauffe</button>';
+  const chips = '<div class="gp-mois">' + (avecCh ? puceCh('data-gpch="1"', enCh) + e27.map((x, j) => x.k ? puceM(x, j, !enCh && j === i) : "").join("")
+    : c.chauffe ? etapes.map((x, j) => x.k || etapes.length === 1 ? puceCh('data-gpe="' + j + '"', true) : "").join("")   // décembre : une seule puce, la chauffe (sa grille, puis sa course)
+    : etapes.map((x, j) => puceM(x, j, j === i)).join("")) + "</div>";
   const lignes = ordre.map((n, r) => {
     const devant = r ? ordre[r - 1] : null, ecart = devant ? et.pts[devant] - et.pts[n] : 0, x = et.m ? et.m.l.find(z => z.nom === n) : null;
     const ca = et.k ? carteDe(y, n, et.k) : null, idsCa = [basePosee(ca), bonusPosee(ca)].filter(Boolean);   // Théo, 26/11 : carte du mois + carte bonus en plus
@@ -475,13 +493,20 @@ function htmlGrandPrix(y) {
   }).join("");
   const cal = htmlCalendrierGP(y, kGP);
   const rap = rappelCartes(), versStand = rap ? '<button class="gp-stand" type="button" data-aller-stand>🃏 <span><b>Fenêtre ouverte</b> : pose ta carte de ' + esc(moisLong(rap.k)) + "</span> ›</button>" : "";
-  const att = (c.attente ? '<div class="bref">⏳ ' + esc(moisLong(c.attente.k)) + " : le tour 2 se court dès que tout le monde a saisi son relevé, au plus tard 7 jours après la date (il manque " + c.attente.manquent.map(n => "<b>" + esc(n) + "</b>").join(" et ") + ").</div>" : "") +
+  const infoCh = c.chauffe && saisonOuverte() ? '<p class="info gp-depart gp-ch-info">🔥 <b>Tour de chauffe</b> (décembre 2026) : ne compte pas au championnat. Il a seulement servi de grille de départ de janvier : son classement a donné l\'ordre de départ (le 1<sup>er</sup> en pole).</p>' : "";
+  const att = infoCh + (c.attente ? '<div class="bref">⏳ ' + esc(moisLong(c.attente.k)) + " : le tour 2 se court dès que tout le monde a saisi son relevé, au plus tard 7 jours après la date (il manque " + c.attente.manquent.map(n => "<b>" + esc(n) + "</b>").join(" et ") + ").</div>" : "") +
     (c.chauffe && !et.m && Date.now() < SAISON.depart.getTime() ? '<p class="info gp-depart">🏁 Grille de départ : la performance de novembre. La course se joue avec le relevé de fin décembre.</p>' :
       !et.m && kGP === SAISON.premiere * 100 + 1 ? '<p class="info gp-depart">' + (mc0 && /^chauffe/.test(mc0.grilleDe || "") ? "🏁 Grille de départ : l'ordre du tour de chauffe de décembre" + (mc0.grilleDe === "chauffe-grille" ? " (sa grille, tant que son résultat n'est pas connu)" : "") + ", les absents de la chauffe derrière (par ordre alphabétique). Tout le monde part à 0 point." : '<span class="gp-de' + (stock.get("versus.deJanvier") ? "" : (stock.set("versus.deJanvier", "1"), " roule")) + '" aria-hidden="true">🎲</span> Grille tirée au sort : tout le monde part à 0 point.') + "</p>" : "");   // v17.5 (Théo) : sur la grille de la chauffe, du 21/11 au 31/12
-  return versStand + att + '<div class="gp-h"><div><span class="s-k">' + (demo ? "🎬 Démo · rien ne compte" : c.chauffe ? "Tour de chauffe" + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : "") : et.avenir ? "Manche " + nM + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : " · sur la grille") : et.k ? "Manche " + nM : "Départ") + " · " + esc(moisLong(kGP)) + '</span><h3 class="gp-titre">' + G.drap + " " + esc(G.gp) + '</h3><p class="gp-met">' + [villeGP(G) ? esc(villeGP(G)) : "", spe ? spe.ico + " <b>" + esc(spe.nom) + "</b> : " + esc(spe.txt) : vuesV2(ci) && pgm ? '<span data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " <b>" + esc(pgm.nom) + "</b></span>" : ""].filter(Boolean).join(" · ") + '</p></div><div class="gp-hb"><button class="btn ghost gp-pause" type="button" id="gp-pause" aria-label="Mettre la course en pause" hidden>⏸\uFE0F Pause</button>' + (demoOk ? '<button class="btn ghost gp-rejouer gp-demo" type="button" id="gp-demo" aria-label="Course de démonstration : une course pour de faux, rien ne compte">🎬 Course de<br>démonstration</button>' : '<button class="btn ghost gp-rejouer" type="button" id="gp-rejouer">↻ Revoir</button>') + "</div></div>" +
-    piste + (v2 ? '<div class="gp-vues2">' + selVuesGP(vue, "") + menuV2 + '<button class="gp-plein-gros" type="button" id="gp-plein-gros"><span aria-hidden="true">⛶</span> Plein écran</button></div>' : "") + (v2 && !(typeof saisonJouee === "function" && saisonJouee()) ? '<details class="gp-schema"><summary>📐 Comment avance la course ?</summary>' + svgSchemaCourse() + "</details>" : "") + chips + '<div class="gp-liste">' + lignes + "</div>" + (et.m ? '<button class="btn ghost gp-carte" type="button" id="gp-carte">📸 Carte postale · ' + esc(moisLong(et.k)) + "</button>" : "") +   // v20.87 (Théo) : courbe + détail des points juste sous le classement, calendrier et texte des règles tout en bas
-    htmlDetailPoints(y) + cal +
-    '<p class="info">Chaque mois, une manche sur un nouveau circuit : départ dans l\'ordre du championnat, et le meilleur du mois boucle le tour.' + " Touche un nom pour ouvrir sa fiche, une icône pour le détail, une voiture pour la suivre." + (c.chauffe ? " 🔥 Rien ne compte pendant la chauffe." : "") + ' <a href="#" class="lien-regles" data-regles="gp">Règles</a></p>';
+  // Théo, 26/11 · ordre de la page, de haut en bas : la course (et ses boutons), la rangée des mois, le classement, la courbe, puis les annonces (champion, attente, grille, fenêtre des cartes),
+  // le détail des points, le calendrier, le petit texte des règles, et la carte postale tout en bas. Plus de schéma « Comment avance la course » ici (les « ? » et la fiche « La course » des règles l'expliquent).
+  const annonces = att + versStand;
+  return '<div class="gp-h"><div><span class="s-k">' + (demo ? "🎬 Démo · rien ne compte" : c.chauffe ? "Tour de chauffe" + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : "") : et.avenir ? "Manche " + nM + (dir ? (dir.dv.fini ? " · tour 1 terminé" : " · en direct") : " · sur la grille") : et.k ? "Manche " + nM : "Départ") + " · " + esc(moisLong(kGP)) + '</span><h3 class="gp-titre">' + G.drap + " " + esc(G.gp) + '</h3><p class="gp-met">' + [villeGP(G) ? esc(villeGP(G)) : "", spe ? spe.ico + " <b>" + esc(spe.nom) + "</b> : " + esc(spe.txt) : vuesV2(ci) && pgm ? '<span data-bdg="' + esc("Piège du circuit · " + pgm.nom + " : " + pgm.txt) + '">' + pgm.ico + " <b>" + esc(pgm.nom) + "</b></span>" : ""].filter(Boolean).join(" · ") + '</p></div><div class="gp-hb"><button class="btn ghost gp-pause" type="button" id="gp-pause" aria-label="Mettre la course en pause" hidden>⏸\uFE0F Pause</button>' + (demoOk ? '<button class="btn ghost gp-rejouer gp-demo" type="button" id="gp-demo" aria-label="Course de démonstration : une course pour de faux, rien ne compte">🎬 Course de<br>démonstration</button>' : '<button class="btn ghost gp-rejouer" type="button" id="gp-rejouer">↻ Revoir</button>') + "</div></div>" +
+    piste + (v2 ? '<div class="gp-vues2">' + selVuesGP(vue, "") + menuV2 + '<button class="gp-plein-gros" type="button" id="gp-plein-gros"><span aria-hidden="true">⛶</span> Plein écran</button></div>' : "") + chips +
+    '<div class="gp-lh"><b>Classement</b>' + (D.personnes.some(p => p.nom === moiPilote()) ? '<button class="vers-fiches" type="button" data-gp-fiche="' + esc(moiPilote()) + '" aria-label="Ma vitrine (puis celles des autres pilotes)">🏆 Vitrines</button>' : "") + "</div>" + aideVitrines() +   // Théo, 26/11 : le raccourci vers les vitrines
+    '<div class="gp-liste">' + lignes + "</div>" +
+    htmlDetailPoints(y, annonces) + cal +
+    '<p class="info">Chaque mois, une manche sur un nouveau circuit : départ dans l\'ordre du championnat, et le meilleur du mois boucle le tour.' + " Touche un nom pour ouvrir sa fiche, une icône pour le détail, une voiture pour la suivre." + (c.chauffe ? " 🔥 La chauffe ne compte pas au championnat : elle donne seulement la grille de départ de janvier." : "") + ' <a href="#" class="lien-regles" data-regles="gp">Règles</a></p>' +
+    (et.m ? '<button class="btn ghost gp-carte" type="button" id="gp-carte">📸 Carte postale · ' + esc(moisLong(et.k)) + "</button>" : "");
 }
 /** V16 · ambiance animée du circuit à thème : un calque de particules (lucioles, neige, pluie néon, pétales, brume…) */
 function fxCircuit(fx) {
@@ -553,7 +578,8 @@ function htmlCartes(y) {
   const pf = prochaineFenetre();
   const fermeture = !kOuvert ? '<p class="c-ferme">🔒 ' + (estChauffe(y) && Date.now() < CHAUFFE_OUVRE ? "Les cartes du tour de chauffe s'ouvrent samedi 21 novembre à 9 h." : estChauffe(y) ? "Les cartes du tour de chauffe se posaient jusqu'au 30 novembre. Celles de janvier se posent dans l'onglet Saison 1, du 20 au 31 décembre." + (moisCarteOuvert() === (SAISON.premiere * 100 + 1) ? ' <button class="lien" type="button" data-saison="' + SAISON.premiere + '">Poser ma carte de janvier ›</button>' : "") : moisCarteOuvert() ? "La fenêtre ouverte concerne une autre saison : change d'onglet en haut." : "Fenêtre fermée. Prochaine ouverture le " + esc(pf.du) + ", pour " + esc(moisLong(pf.k)) + ".") + "</p>" : "";
   return '<div><h3 class="s-h3">Mes cartes <small>' + reste + " en main" + (regleVisible("pioche") && !basesSeules() ? " · " + aVenir + " dans la pioche" : "") + "</small></h3></div>" +
-    '<p class="info">Touche une carte pour la poser. Chaque mois, ta carte du mois : une carte de base se rejoue, mais pas deux mois de suite.' + (basesSeules() ? "" : regleVisible("pioche") ? " Et si tu as une carte bonus : elle se joue en plus de ta carte du mois (une seule par mois) et ne sert qu\'une fois." : " Une carte bonus ne sert qu\'une fois.") + (regleVisible("pioche") && !basesSeules() ? (regleVisible("niveaux") ? " Tu en pioches une nouvelle à chaque niveau gagné et quand tu finis dernier d\'un mois." : " Tu en pioches une nouvelle quand tu finis dernier d\'un mois.") : "") + (ap ? " Aperçu : choisis le mois avec les puces ci-dessous ; rien n'est envoyé." : "") + "</p>" +
+    // Théo, 26/11 : plus de paragraphe d'explication sous « Mes cartes » : le petit « ? » du titre ouvre la fiche « Les cartes » (reste seulement la note de l'aperçu admin)
+    (ap ? '<p class="info">Aperçu : choisis le mois avec les puces ci-dessous ; rien n\'est envoyé.</p>' : "") +
     (ap ? '<div class="gp-mois">' + etapesGP(y).slice(1).map(x => '<button type="button" data-gpcible="' + x.k + '" aria-pressed="' + (x.k === kOuvert) + '">' + esc(moisCourt(x.k)) + "</button>").join("") + "</div>" : "") +
     '<div class="main-cartes">' + main.map(tuile).join("") + "</div>" + action + htmlProno(y, kOuvert) + htmlRival(y, kOuvert) + htmlVote(y);
 }
@@ -667,7 +693,7 @@ function bonusDispo(y, qui, k) {
 /** Le Grand Prix sur lequel on pose sa carte : ville et tracé */
 function htmlGPStand(k) {
   const ci = circuitDe(k), g = GPS[ci];
-  return '<div class="st-gp">' + (window.Piste ? Piste.vignette(ci) : "") + "<div><b>" + g.drap + " " + esc(g.gp) + "</b><small>" + esc(g.ville) + " · " + esc(g.txt) + "</small></div></div>";
+  return '<div class="st-gp">' + (window.Piste ? Piste.vignette(ci) : "") + "<div><b>" + g.drap + " " + esc(g.gp) + "</b><small>" + esc(g.ville) + "</small></div></div>";   // Théo, 26/11 : sans la phrase d'ambiance de l'univers (le Stand se lit en 2 secondes)
 }
 /* lot68 (Théo, 21/11) : pendant la fenêtre, qui a déjà posé sa carte du mois k — jamais laquelle (dos de carte ou « en attente ») ;
    disparaît avec la fenêtre (révélation le 1er du mois). On ne lit que « posée ou pas » : ni l'id ni la cible ne sortent d'ici. */
@@ -707,7 +733,7 @@ function htmlStand(y) {
         : "Prochaine ouverture le <b>" + esc(pf.du) + "</b>, pour " + esc(moisLong(pf.k)) + ". En attendant, prépare ta stratégie : ta main est ci-dessous.") + "</small></div>";
   }
   const kRm = k || (m => m && Math.floor(m / 100) === y ? m : null)(moisAMettreEnAvant());
-  return etat + htmlReglesMois(y, kRm) + htmlCartes(y) + (regleVisible("niveaux") ? '<div><h3 class="s-h3">' + (regleVisible("atelier") ? "Atelier <small>niveau d\'écurie et améliorations</small>" : "Niveau d\'écurie") + "</h3></div>" + htmlAtelier(qui) : "") + htmlProchainement() +
+  return etat + htmlReglesMois(y, kRm) + htmlCartes(y) + (regleVisible("niveaux") ? '<div><h3 class="s-h3">' + (regleVisible("atelier") ? "Atelier <small>niveau d\'écurie et améliorations</small>" : "Niveau d\'écurie") + "</h3></div>" + htmlAtelier(qui) : "") + htmlProchainement(false, true) +
     '<p class="info">Le Stand regroupe tout ce qui se joue.' + (basesSeules() ? "" : " La Course montre la course, l\'Écurie ton look.") + ' <a href="#" class="lien-regles" data-regles="cartes">Règles des cartes</a></p>';
 }
 function brancherStand(v, y) {
@@ -1044,7 +1070,8 @@ function htmlRegleTresor() {
 }
 /** la règle dans 📖 Règles (section Course) */
 function regleTresor() {
-  if (!(typeof aujNum === "function" && aujNum() >= TRESOR_DEBUT)) return "";
+  // Théo, 26/11 : aussi dans l'aperçu admin « Tout afficher » (avant le 1er décembre) ; la règle seule, jamais une énigme
+  if (!(typeof aujNum === "function" && aujNum() >= TRESOR_DEBUT) && !(typeof apercuSaison === "function" && apercuSaison())) return "";
   return '<li id="rg-tresor" class="rg-tresor"><b>🗝️ Chasse au trésor</b> : chaque mois, un objet caché dans le décor de la Visite 3D.' + htmlRegleTresor() + "</li>";
 }
 function tresorDuCircuit(ci) { if (!TRESORS) return null; const t = TRESORS.l.find(x => x.circuit === ci); return t && TRESORS.trouves.indexOf(ci) < 0 ? t : null; }
@@ -1750,7 +1777,7 @@ function brancherGP0(v, y) {
   v.querySelectorAll("[data-suivre]").forEach(b => b.addEventListener("click", ev => { ev.stopPropagation(); suivreGP(b.dataset.suivre); }));
   const bb = v.querySelector("#gp-ba"); if (bb) bb.addEventListener("click", () => { const j = i > 0 && !et.avenir; if (j) api.placer(pDep); bandeAnnonce(y, i, j ? apresBA : null); });
   const cp = v.querySelector("#gp-carte"); if (cp) cp.addEventListener("click", () => cartePostale(y, et));
-  v.querySelectorAll(".gp-mois [data-gpe]").forEach(b => b.addEventListener("click", () => { GP_ETAPE = +b.dataset.gpe; GP_REJOUER = true; rendreTrophees(); }));
+  v.querySelectorAll(".gp-mois").forEach(brancherPucesGP);
   const cal = v.querySelector("#gp-calend"); if (cal) cal.addEventListener("toggle", () => { ETAT.calOuvert = cal.open ? "1" : "0"; garder(); });
   GP_ETQ = null; majPauseGP();
   if (GP_PLEIN) placerPlein(y);
@@ -1831,7 +1858,7 @@ function placerPlein(y) {
   const h = document.querySelector(".saison .gp-h"), t = h ? h.querySelector(".gp-titre") : null, k = h ? h.querySelector(".s-k") : null;
   P.o.querySelector(".gpp-t").innerHTML = "<b>" + (t ? t.innerHTML : "") + "</b><small>" + (k ? k.innerHTML : "") + "</small>"; majPlayPlein();
   const ch = document.querySelector(".saison .gp-mois"); P.o.querySelector(".gpp-mois").innerHTML = ch ? ch.outerHTML : "";
-  P.o.querySelectorAll(".gpp-mois [data-gpe]").forEach(b => b.addEventListener("click", () => { GP_ETAPE = +b.dataset.gpe; GP_REJOUER = true; rendreTrophees(); }));
+  brancherPucesGP(P.o.querySelector(".gpp-mois"));
   const sel = P.o.querySelector('.gpp-mois [aria-pressed="true"]'); if (sel && !P.v2) sel.scrollIntoView({ inline: "center", block: "nearest" });
   if (P.v2) { majVueDOM(vueGP(pi.dataset.circuit)); P.survol = null; majSurvolPlein(true);
     if (window.SONS && SONS.ambiance) SONS.ambiance((Piste.TRACES[pi.dataset.circuit] || {}).peint); }   // v17.59 : l'ambiance douce du circuit (v20.53 : chaque circuit a la sienne)

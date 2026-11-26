@@ -5,7 +5,7 @@
    Vérifie : au 10 du mois, tour 1, ordre de la grille (classement d'avant le mois), plus loin si le S&P monte que s'il baisse, jamais de recul
    d'un jour à l'autre, ligne d'arrivée le dernier jour ; janvier 2027 = ordre du tour de chauffe, l'absent (Nicolas) derrière ; décembre (chauffe)
    = ordre de novembre ; après clôture, course complète en 2 tours ; pause / reprise (2D, 3D, plein écran) ; commentaires, bulles et tour
-   dans le bandeau sous le dessin (jamais dessus) ; mode photo ; schéma ; 0 erreur JS ; captures 390 px clair et sombre.
+   dans le bandeau sous le dessin (jamais dessus) ; mode photo ; schéma seulement dans les règles (plus jamais sur la page Course, décembre compris) ; 0 erreur JS ; captures 390 px clair et sombre.
    v20.52 (Théo) : grille 2D alignée en quinconce (pastilles sans chevauchement, ordre de la grille) ; 🎬 course de démonstration seulement
    avant le 1er décembre (aucune requête d'écriture, aucun %, « manche vue » intacte, pause visible, dépassements, 2D, 3D et plein écran) ;
    26/11/2026 (Théo) : plus de météo du marché : que le S&P monte ou s'effondre, aucun pictogramme météo, aucune couche de pluie en 2D, les mêmes
@@ -69,7 +69,6 @@ const horsDessin = p => p.evaluate(() => { const sc = document.querySelector("#g
   const A = await ouvrir(b, "2027-02-10T12:00:00", donnees(202701, { sig: true, kSP: 202702, sp: up }), { vu: 202701 }); await A.p.waitForTimeout(4200);
   const eA = await etat(A.p), hA = await horsDessin(A.p), txtA = await A.p.evaluate(() => { document.querySelectorAll("details").forEach(d => d.open = true); return document.body.innerText; });
   await A.p.screenshot({ path: DOSSIER + "/direct-2d-hausse.png", fullPage: false });
-  await A.p.evaluate(() => { const s = document.querySelector(".gp-schema"); if (s) { s.open = true; s.scrollIntoView({ block: "center" }); } }); await A.p.waitForTimeout(300); await A.p.screenshot({ path: DOSSIER + "/schema-clair.png" });
   // v20.62 (Théo) : « S&P 500 : +3,5 % depuis le 1er », le nom de l'indice et le chiffre séparés, le % en gras (vert si ça monte)
   const ixA = await A.p.evaluate(() => { const i = document.querySelector(".gp-st-info"), b = i && i.querySelector("b.ix-up"); return { t: i ? i.textContent : "", b: !!b, col: b ? getComputedStyle(b).color : "" }; });
   ok(/S&P 500\u00a0: \+[\d,]+\u00a0?%/.test(ixA.t.replace(/ %/, "\u00a0%")) && ixA.b && !/S&P 500 \d/.test(ixA.t), "bandeau du direct : « S&P 500 : +x % depuis le 1er », le % en gras et en vert " + JSON.stringify(ixA));
@@ -103,6 +102,8 @@ const horsDessin = p => p.evaluate(() => { const sc = document.querySelector("#g
   // 4. décembre 2026 (chauffe) : ordre de novembre, en direct
   const Dc = await ouvrir(b, "2026-12-10T12:00:00", donnees(202611, { kSP: 202612, sp: up }), { vu: 0 }); await Dc.p.waitForTimeout(4200);
   const eD = await etat(Dc.p), nov = await Dc.p.evaluate(() => rendementsDuMois(0, 202611).sort((a, b) => b.r - a.r).map(x => x.nom)); errs.push(...Dc.err);
+  const schD = await Dc.p.evaluate(() => ({ s: document.querySelectorAll(".gp-schema").length, t: /Comment avance la course/.test(document.body.textContent) }));
+  ok(!schD.s && !schD.t, "26/11 (Théo) : en décembre aussi, plus de schéma « Comment avance la course » sur la page Course " + JSON.stringify(schD));
   ok(eD.dir && eD.kGP === 202612 && JSON.stringify(eD.ordre.slice(0, nov.length)) === JSON.stringify(nov) && eD.max < 1 && eD.max > 0.2, "tour de chauffe (10/12) : en direct, ordre de novembre " + JSON.stringify(eD.ordre));
   await Dc.ctx.close();
   // 5. après clôture : la course complète (2 tours, scénario) ; ⏸ pause / ▶ reprise en 2D
@@ -164,13 +165,12 @@ const horsDessin = p => p.evaluate(() => { const sc = document.querySelector("#g
   const fe = await F.p.evaluate(() => !!document.querySelector(".gp-plein") && !document.querySelector(".gp-plein.photo")); ok(fe, "Échap quitte le mode photo (le plein écran reste)");
   errs.push(...F.err); await F.ctx.close();
   const G = await ouvrir(b, "2027-02-10T12:00:00", donnees(202701, { kSP: 202702, sp: up }), { vu: 202701, sombre: true });
-  await G.p.evaluate(() => { const s = document.querySelector(".gp-schema"); if (s) { s.open = true; s.scrollIntoView({ block: "center" }); } }); await G.p.waitForTimeout(300); await G.p.screenshot({ path: DOSSIER + "/schema-sombre.png" });
   const sch = await G.p.evaluate(() => document.querySelectorAll(".gp-schema-l li svg").length);
   await G.p.evaluate(() => ouvrirRegles("gp")); await G.p.waitForTimeout(600);
   const rg = await G.p.evaluate(() => { const l = document.querySelector(".regles .rg-schema"); if (!l) return 0; l.scrollIntoView({ block: "center" }); return l.querySelectorAll(".gp-schema-l li svg").length; }); await G.p.waitForTimeout(300);
   await G.p.screenshot({ path: DOSSIER + "/schema-regles-sombre.png" });
   const larg = await G.p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
-  ok(sch === 0 && rg === 4, "v20.87 (Théo) : en saison, plus de schéma sous la course, il est dans les règles (4 étapes en SVG) (" + sch + ", " + rg + ")");
+  ok(sch === 0 && rg === 4, "v20.87 puis 26/11 (Théo) : plus de schéma sous la course, il est dans les règles (4 étapes en SVG) (" + sch + ", " + rg + ")");
   ok(larg, "390 px : pas de défilement horizontal");
   errs.push(...G.err); await G.ctx.close();
   // 8. S&P absent : le peloton avance avec les jours seulement (avance = jour / nombre de jours)

@@ -46,12 +46,13 @@ async function page(b, o) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block", colorScheme: o.sombre ? "dark" : "light" }), p = await ctx.newPage(), err = [];
   p.on("pageerror", e => err.push(e.message)); p.on("console", m => { if (m.type() === "error" && !/Failed to load resource/.test(m.text())) err.push(m.text()); });
   await p.clock.setFixedTime(new Date(o.quand));
-  const rep = donnees(o.moi, o.jusqua);
+  const rep = donnees(o.moi, o.jusqua); if (o.admin) rep.session = { role: "admin", nom: o.moi };
   await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}");
     r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tickets" ? { ok: true, ouvert: false } : c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : rep) }); });
   await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.bullePortrait", "1");
     localStorage.setItem("versus.saison1", "1"); localStorage.setItem("versus.chauffe1", "1"); localStorage.setItem("versus.ecurieTeaser", "1");
     ["2026", "2027"].forEach(y => { localStorage.setItem("versus.gpVu." + y, y + "12"); localStorage.setItem("versus.baVu." + y, y + "12"); }); });
+  if (o.admin) await p.addInitScript(() => { localStorage.setItem("versus.apercuSaison", "1"); sessionStorage.setItem("versus.adminOn", "1"); });
   await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1200);
   await p.evaluate(() => document.querySelectorAll(".revel, .regles, .tuto, .bulle-portrait, .ba, .av-ov").forEach(x => x.remove()));
   return { ctx, p, err };
@@ -186,6 +187,14 @@ const SECRET_2027 = /Mer de dunes|Chevaucheur|Nasdaq|Mini-jeu|mini-jeu|Trophées
     ok(l.length >= 3 && l.every(q => ["essentiel", "champ", "cartes", "gp", "tresor", "mois"].includes(q.split("#")[0])), "5/12/2026 : les « ? » ne mènent qu'aux règles de décembre (" + [...new Set(l)].join(", ") + ")");
     await essaiQ(p, "5/12/2026", "Mes cartes", () => podium(p, "stand"), '#v-trophees h3.s-h3 .qr[data-qr="cartes"]', "cartes");
     ok(!err.length, "5/12/2026 (« ? ») : 0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
+  /* Théo, 26/11 : en aperçu admin « Tout afficher » (avant le 1er décembre), la tuile 🗝️ Le trésor est là aussi, sans aucune énigme */
+  { const { ctx, p, err } = await page(b, { quand: "2026-11-26T10:00:00", jusqua: 202610, moi: "Théo", admin: true });
+    const ap = await p.evaluate(() => apercuSaison()); await podium(p, "stand"); await p.click("#regles-ouvrir"); await w(p, 300);
+    const t = await p.evaluate(() => { const o = document.querySelector(".regles"), b = o && o.querySelector('.rgt-som [data-rgt="tresor"]'), f = o && o.querySelector("#rgt-tresor");
+      return { tuile: !!b, etapes: f ? f.querySelectorAll(".rgt-court .tr-e").length : 0, txt: f ? f.textContent : "" }; });
+    ok(ap && t.tuile && t.etapes === 4, "aperçu admin « Tout afficher » (26/11/2026) : la tuile 🗝️ Le trésor est là, avec ses 4 étapes " + JSON.stringify({ ap, tuile: t.tuile, etapes: t.etapes }));
+    ok(!/gp-enigme|Énigme du mois :|💡 2e indice :/.test(t.txt) && !/« [^»]{25,} »/.test(t.txt), "aperçu admin : la fiche du trésor ne dévoile aucune énigme");
+    ok(!err.length, "aperçu admin (trésor) : 0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
   await b.close();
   console.log(ko.length ? "\n" + ko.length + " NON" : "\nTout est OUI. Captures : " + DOSSIER);
   process.exit(ko.length ? 1 : 0);
