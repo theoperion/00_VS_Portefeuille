@@ -23,7 +23,7 @@ const J0 = [{ type: "Apport", enveloppe: "AV Linxea Test", date: "2026-10-12", m
   const b = await chromium.launch(), ctx = await b.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block" }), err = [];
   let journal = J0;
   await ctx.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi(journal) : versus) }));
-  await ctx.addInitScript(() => { if (sessionStorage.getItem("init")) return; sessionStorage.setItem("init", "1"); localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1");
+  await ctx.addInitScript(() => { if (sessionStorage.getItem("init")) return; sessionStorage.setItem("init", "1"); localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1");
     localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); });
   const ouvrir = async () => { const p = await ctx.newPage(); p.on("pageerror", e => err.push(e.message)); await p.clock.setFixedTime(new Date("2026-11-20T10:00:00"));
     await p.goto("http://localhost:" + PORT + "/index.html"); await p.waitForFunction(() => window.Moi && document.querySelector("#v-moi .m-afaire"), null, { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(600);

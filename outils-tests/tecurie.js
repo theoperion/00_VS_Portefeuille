@@ -36,7 +36,7 @@ async function page(b, o) {
   await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}");
     const rep = c.action === "tickets" ? { ok: true, ouvert: false } : c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : c.action === "ecurie" ? { ok: true } : donnees(o.session, o.jusqua);
     r.fulfill({ contentType: "application/json", body: JSON.stringify(rep) }); });
-  await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.bullePortrait", "1");
+  await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.bullePortrait", "1");
     localStorage.setItem("versus.saison1", "1"); localStorage.setItem("versus.chauffe1", "1"); localStorage.setItem("versus.gpVu.2027", "202703"); localStorage.setItem("versus.baVu.2027", "202712"); localStorage.setItem("versus.gpVu.2026", "202612"); });
   await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1000);
   // objets débloqués pour le test (sinon equipDe retombe sur la base)

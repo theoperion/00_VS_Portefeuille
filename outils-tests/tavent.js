@@ -34,7 +34,7 @@ async function page(b, o) {
   await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}");
     if (c.action === "avent" || c.action === "aventCase") { const x = fauxAvent(o, c); return x ? r.fulfill({ contentType: "application/json", body: JSON.stringify(x) }) : r.abort(); }
     r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tickets" ? { ok: true, ouvert: false } : c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : donnees(o.session)) }); });
-  await p.addInitScript(f => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.bullePortrait", "1"); localStorage.setItem("versus.chauffe1", "1"); localStorage.setItem("versus.saison1", "1"); localStorage.setItem("versus.ecurieTeaser", "1");
+  await p.addInitScript(f => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.bullePortrait", "1"); localStorage.setItem("versus.chauffe1", "1"); localStorage.setItem("versus.saison1", "1"); localStorage.setItem("versus.ecurieTeaser", "1");
     if (f.ouvertes) localStorage.setItem("versus.avent", JSON.stringify(f.ouvertes)); if (f.admin) sessionStorage.setItem("versus.adminOn", "1"); }, { ouvertes: o.ouvertes, admin: o.admin });
   await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1200);
   await p.evaluate(() => document.querySelectorAll(".tuto").forEach(x => x.remove()));   // v20.74 : l'annonce du jour (Nouvelles règles) se ferme d'abord : le calendrier ne s'ouvre jamais par-dessus
@@ -239,5 +239,29 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
     const s = await q.p.evaluate(() => ({ tous: D.personnes.every(x => debloques(x.nom).has("plaque.hiver26") && debloques(x.nom).has("trainee.flocons")), o: texteOrigineItem("Kévin", "plaque", "hiver26").t }));
     ok(s.tous && /Souvenir/.test(s.o), "24/12 au matin : la plaque « Hiver 2026 » et la traînée « Flocons » sont à chaque pilote, portables tout de suite (" + s.o + ")");
     ok(!err.length && !q.err.length, "0 erreur JS " + JSON.stringify(err.concat(q.err))); await q.ctx.close(); }
+  // 8 · v20.80 (maquette du directeur artistique) : paquets cadeaux, pastille « ✨ Case du N à ouvrir », ouverture en 4 temps, carte qui grandit ;
+  //     fluide sur un téléphone moyen (processeur ralenti ×4) : images pendant l'ouverture et le défilement de la grille
+  { const { ctx, p, err } = await page(b, { quand: "2026-12-05T09:00:00", session: JOUEUR, ouvertes: [1, 2] });
+    const cdp = await ctx.newCDPSession(p); await cdp.send("Emulation.setCPUThrottlingRate", { rate: Number(process.env.CPU || 4) });
+    await p.click(".av-entree"); await p.waitForTimeout(600);
+    const g = await p.evaluate(() => ({ paquets: document.querySelectorAll(".av-c .av-noeud").length, vues: [...document.querySelectorAll(".av-c.vue")].every(x => x.querySelector(".av-couv") && x.querySelector(".av-ico") && /\d/.test(x.querySelector(".av-tag").textContent)),
+      jour: !!document.querySelector('.av-c.jour[data-av="5"] .av-auj'), pastille: (document.querySelector(".av-h .av-jour") || {}).textContent || "",
+      anims: document.getAnimations().filter(a => a.effect && a.effect.target && a.effect.target.closest && a.effect.target.closest(".av-grille")).length }));
+    ok(g.paquets === 22 && g.vues && g.jour && /Case du 5 à ouvrir/.test(g.pastille) && g.anims === 1, "5/12 · 22 paquets fermés (ruban, nœud), 2 boîtes ouvertes (couvercle, icône, numéro), la 5 « Aujourd'hui », pastille « ✨ Case du 5 à ouvrir », une seule animation continue dans la grille " + JSON.stringify(g));
+    // défilement de la grille : images mesurées
+    const mesure = () => new Promise(r => { const t = []; let d = performance.now(); const f = n => { t.push(n - d); d = n; if (t.length < 90) requestAnimationFrame(f); else { t.sort((a, b) => a - b); r({ med: Math.round(t[45]), p90: Math.round(t[81]), max: Math.round(t[89]) }); } }; requestAnimationFrame(f); });
+    const def = await p.evaluate(async m => { const o = document.querySelector(".av-ov"), f = eval(m); const pr = f(); let y = 0; const iv = setInterval(() => { y = (y + 37) % 600; o.scrollTop = y; }, 16); const r = await pr; clearInterval(iv); o.scrollTop = 0; return r; }, "(" + mesure.toString() + ")");
+    // l'ouverture par la pastille : 4 temps puis la carte, images mesurées
+    const ouv = await p.evaluate(async m => { const f = eval(m), pr = f(); document.querySelector(".av-h .av-jour").click(); const c = document.querySelector('.av-c[data-av="5"]');
+      await new Promise(r => setTimeout(r, 60)); const t1 = { ouvre: c.classList.contains("ouvre"), couv: !!c.querySelector(".av-vole"), ray: !!c.querySelector(".av-ray") };
+      const anims = c.getAnimations({ subtree: true }).map(a => Object.keys((a.effect.getKeyframes()[0] || {})).filter(k => !/^(offset|easing|composite|computedOffset)$/.test(k))).flat();
+      await new Promise(r => setTimeout(r, 1300)); const k = document.querySelector(".av-case .av-carte");
+      return Object.assign(t1, { props: [...new Set(anims)], carte: !!k, nait: !!k && k.classList.contains("nait"), origine: k && k.style.transformOrigin, sceau: k && k.querySelector(".av-sceau").innerText.replace(/\s+/g, " "), points: k && k.querySelectorAll(".av-serie i").length, images: await pr }); }, "(" + mesure.toString() + ")");
+    ok(ouv.ouvre && ouv.couv && ouv.ray && ouv.carte && ouv.nait && /px/.test(ouv.origine || "") && ouv.props.every(x => x === "transform" || x === "opacity"),
+      "la pastille ouvre la case du jour en 4 temps (écrasement, nœud, couvercle et rayons, carte qui grandit depuis la case), transform et opacity seulement " + JSON.stringify(Object.assign({}, ouv, { images: undefined })));
+    ok(/5 DÉC/.test(ouv.sceau || "") && ouv.points === 24, "la carte : sceau doré « 5 DÉC. », 24 points de progression " + JSON.stringify([ouv.sceau, ouv.points]));
+    ok(def.med <= 34 && def.p90 <= 70 && ouv.images.med <= 34 && ouv.images.p90 <= 70, "processeur ×" + (process.env.CPU || 4) + " : le calendrier reste fluide (images en ms, médiane / 90 % / pire) défilement " + JSON.stringify(def) + " ouverture " + JSON.stringify(ouv.images));
+    await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+    ok(!err.length, "8 · 0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
   await b.close(); console.log(ko.length ? "\n" + ko.length + " NON" : "\nTout est OUI"); process.exit(ko.length ? 1 : 0);
 })();

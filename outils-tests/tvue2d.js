@@ -20,7 +20,7 @@ const donnees = () => ({ ok: true, version: 91, genere: "2026-11-26T10:00:00", m
   // un appareil qui avait choisi la 3D (📺 Visite) lors d'une visite précédente
   await p.addInitScript(() => { if (sessionStorage.getItem("init")) return; sessionStorage.setItem("init", "1");
     ["versus.tuto1", "versus.bullePortrait", "versus.chauffe1", "versus.chauffeFete", "versus.saison1", "versus.aideVisite", "versus.aideVue.visite", "versus.aideVue.poursuite"].forEach(k => localStorage.setItem(k, "1"));
-    localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.gpVu.2026", "202612");
+    localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.gpVu.2026", "202612");
     localStorage.setItem("versus.etat", JSON.stringify({ podium: "gp", gp2d: "0", gpVue3: "visite" })); });
   const course = async () => { await p.evaluate(async () => { document.querySelectorAll(".revel,.regles,.tuto,.ba,.ecu-rev").forEach(x => x.remove()); ETAT.podium = "gp"; GP_ETAPE = null; garder(); allerA("trophees"); rendreTrophees();
     await new Promise(r => setTimeout(r, 1500)); document.querySelectorAll(".revel,.ba,.ere-voile").forEach(x => x.remove()); }); };

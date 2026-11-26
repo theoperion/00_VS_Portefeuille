@@ -2696,66 +2696,157 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 @media (prefers-reduced-motion: reduce) { .ecu-rev * { animation: none !important; } .ecu-rev .er-porte { display: none; } .ecu-rev .er-voit { transform: none; opacity: 1; } }
 .ecu-rev .rv-c .btn-row { grid-template-columns: 1fr; }
 /* ---------- v20.61 · 🎄 Calendrier de l'Avent (js/10-avent.js) : toujours une nuit d'hiver, lisible en clair comme en sombre ---------- */
-.av-entree .av-cal { position: relative; width: 30px; height: 30px; flex: none; }
-.av-entree .av-cal svg { width: 30px; height: 30px; display: block; filter: drop-shadow(0 2px 3px rgba(0,0,0,.25)); }
-.av-entree .av-pas { position: absolute; top: -3px; right: -4px; width: 11px; height: 11px; border-radius: 50%; background: #FF3B4E; border: 2px solid var(--panel); animation: avPas 1.6s ease-in-out infinite; }
+.av-entree .av-cal { position: relative; width: 36px; height: 36px; flex: none; }
+.av-entree .av-cal svg { width: 36px; height: 36px; display: block; overflow: visible; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+.av-entree .av-pas { position: absolute; top: -3px; right: -4px; width: 11px; height: 11px; border-radius: 50%; background: #FF3B4E; border: 2px solid #FFE596; animation: avPas 1.6s ease-in-out infinite; }
 /* pas de classe « rappel » : assurerRappel (js/4-grandprix.js) retire tout « .rappel » qui n'est pas le sien */
+/* v20.80 (bonus validé par Théo) : rouge et or francs, les mêmes en clair et en sombre (comme le calendrier, toujours une nuit de Noël) */
 .av-entree { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; width: 100%; max-width: 100%; min-width: 0; margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; cursor: pointer;
-  border: 1px solid color-mix(in srgb, #2EC46B 35%, var(--rule)); background: color-mix(in srgb, #1F7A4C 8%, var(--panel)); color: var(--ink); font: 500 13px/1.3 var(--f-text); }
-.av-entree:focus-visible { outline: 2px solid var(--accent); }
+  background: radial-gradient(120% 140% at 0% 0%, #B3182B, #7A0E1C 55%, #4A0912); box-shadow: inset 0 0 0 1.5px #E7C35A, inset 0 0 0 3px rgba(74,9,18,.9), inset 0 0 0 3.5px rgba(231,195,90,.45), 0 3px 10px rgba(122,14,28,.35);
+  color: #FFF6E8; font: 500 13px/1.3 var(--f-text); }
+.av-entree:focus-visible { outline: 2px solid #FFE596; outline-offset: 2px; }
 .av-entree .rp-t { flex: 1; min-width: 0; }
 .av-entree .av-l1 { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.av-entree .rp-t small { display: block; margin-top: 2px; font: 500 12px/1.35 var(--f-text); color: var(--ink-2); }
-.av-entree .rp-t small.av-cpt { font-weight: 700; color: color-mix(in srgb, #B7791F 70%, var(--ink)); }
-.av-entree .rp-t small.av-cpt.perdue { color: color-mix(in srgb, #3A8FD0 60%, var(--ink)); }
-.av-entree .rp-t b { font: 700 14px/1.3 var(--f-text); }
-.av-entree .rp-f { color: var(--ink-3); font-size: 16px; }
-.av-entree.a-ouvrir { border-color: color-mix(in srgb, #2EC46B 55%, var(--rule)); background: linear-gradient(110deg, color-mix(in srgb, #C1121F 14%, var(--panel)), color-mix(in srgb, #1F7A4C 12%, var(--panel))); }
+.av-entree .rp-t small { display: block; margin-top: 2px; font: 500 12px/1.35 var(--f-text); color: #F6D9DD; }
+.av-entree .rp-t small.av-cpt { font-weight: 700; color: #FFE596; }
+.av-entree .rp-t small.av-cpt.perdue { color: #CFEFFF; }
+.av-entree .rp-t b { font: 700 14px/1.3 var(--f-text); color: #FFE596; }
+.av-entree .rp-f { color: #FFE596; font-size: 16px; }
+.av-entree.a-ouvrir { background: radial-gradient(120% 140% at 0% 0%, #D21E34, #8E0E1E 55%, #4A0912); }
+.av-entree .av-ent-noeud { transform-box: fill-box; transform-origin: 50% 90%; }
+.av-entree.a-ouvrir .av-ent-noeud { animation: avFretille 2.4s ease-in-out infinite; }
+@keyframes avFretille { 0%, 70%, 100% { transform: none; } 76% { transform: rotate(-14deg) scale(1.08); } 84% { transform: rotate(12deg) scale(1.08); } 91% { transform: rotate(-6deg); } }
 @keyframes avPas { 50% { transform: scale(1.25); } }
 .toast.av-dessus { z-index: 99; }   /* le message d'une case (manquée, fermée, refusée) au-dessus du calendrier (97) : classe posée par l'appli (secours sans :has) */
 body:has(.av-ov) .toast, body:has(.av-case) .toast { z-index: 99; }
 .av-ov, .av-case { position: fixed; inset: 0; z-index: 97; display: flex; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; background: radial-gradient(120% 80% at 50% 0%, #1B2C5C, #070B1C 70%); color: #F2F6FF; }
+/* v20.80 · fond plus riche, sans rien d'animé : aurore discrète et étoiles fixes (dégradés), petit paysage en bas (un SVG fixe) */
+.av-ov { background:
+    radial-gradient(60% 30% at 80% 6%, rgba(61,220,151,.16), transparent 70%), radial-gradient(50% 25% at 15% 10%, rgba(181,123,255,.14), transparent 70%),
+    radial-gradient(1.2px 1.2px at 12% 18%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 33% 7%, #fff 50%, transparent 51%), radial-gradient(1.4px 1.4px at 71% 14%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 28%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 52% 22%, #fff 50%, transparent 51%), radial-gradient(1.3px 1.3px at 6% 34%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 94% 46%, #fff 50%, transparent 51%), radial-gradient(1.2px 1.2px at 24% 52%, #fff 50%, transparent 51%),
+    radial-gradient(120% 80% at 50% 0%, #1B2C5C, #070B1C 70%); }
+.av-paysage { position: fixed; left: 0; bottom: 0; width: 100%; height: 190px; pointer-events: none; z-index: 0; }
 .av-case { z-index: 98; background: rgba(4,7,18,.86); backdrop-filter: blur(5px); }
 .av-boite, .av-carte { position: relative; z-index: 1; margin: auto; width: 100%; max-width: 420px; }
-.av-h { text-align: center; margin: 6px 36px 14px; }
-.av-h b { display: block; font: italic 800 22px/1.1 var(--f-display); letter-spacing: .04em; text-transform: uppercase; color: #FFE596; text-shadow: 0 2px 10px rgba(247,207,85,.35); }
+.av-h { text-align: center; margin: 6px 36px 16px; }
+.av-h b { display: block; font: italic 800 24px/1.05 var(--f-display); letter-spacing: .04em; text-transform: uppercase; color: #FFE596; text-shadow: 0 2px 0 #8a5a10, 0 0 18px rgba(247,207,85,.45); }
 .av-h small { display: block; margin-top: 6px; font: 500 12.5px/1.4 var(--f-text); color: #C9D6EA; }
-.av-x { all: unset; position: absolute; top: 0; right: 0; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,.12); color: #fff; font-size: 18px; cursor: pointer; z-index: 2; }
+.av-jour { all: unset; display: inline-flex; gap: 6px; align-items: center; margin-top: 9px; padding: 6px 12px; border-radius: 999px; cursor: pointer; background: rgba(247,207,85,.16); box-shadow: inset 0 0 0 1px rgba(247,207,85,.6); font: 700 11.5px/1 var(--f-num); letter-spacing: .08em; color: #FFE596; text-transform: uppercase; }
+.av-jour:focus-visible { outline: 2px solid #FFE596; outline-offset: 2px; }
+.av-x { all: unset; position: absolute; top: 0; right: 0; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,.12); color: #fff; font-size: 18px; cursor: pointer; z-index: 3; }
 .av-x:focus-visible { outline: 2px solid #FFE596; }
-.av-grille { overflow: hidden; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; padding: 12px; border-radius: 18px; background: linear-gradient(160deg, #7A1420, #4A0C14); box-shadow: inset 0 0 0 3px #C9A227, 0 12px 30px rgba(0,0,0,.45); }
-.av-c { all: unset; position: relative; aspect-ratio: 1 / 1.05; border-radius: 10px; cursor: pointer; perspective: 360px; background: #120A0C; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
-.av-c:focus-visible { outline: 2px solid #FFE596; outline-offset: 2px; }
-.av-dedans { position: absolute; inset: 0; display: grid; place-items: center; font-size: 28px; border-radius: 10px; background: radial-gradient(circle at 50% 40%, #3A2A12, #120A0C 75%); }
-.av-porte { position: absolute; inset: 0; border-radius: 10px; display: grid; place-items: center; transform-origin: left center; transition: transform .6s cubic-bezier(.3,.7,.3,1); backface-visibility: hidden;
-  background: linear-gradient(145deg, #2E8B57, #155C36); box-shadow: inset 0 0 0 2px #C9A227, inset 0 0 0 4px rgba(0,0,0,.2); }
-.av-c:nth-child(3n+2) .av-porte { background: linear-gradient(145deg, #D7263D, #8E0E18); }
-.av-c:nth-child(3n) .av-porte { background: linear-gradient(145deg, #2F5FA8, #18346A); }
-.av-n { font: italic 800 26px/1 var(--f-display); color: #FFE596; text-shadow: 0 2px 4px rgba(0,0,0,.45); }
-.av-cad { position: absolute; bottom: 4px; right: 5px; font-size: 11px; opacity: .85; }
-.av-c.ferme { cursor: default; }
-.av-c.manquee { cursor: default; }   /* ❄️ manquée : une porte givrée, fermée pour toujours */
-.av-c.manquee .av-porte { background: linear-gradient(145deg, #5E7290, #2C3A52) !important; filter: saturate(.6); box-shadow: inset 0 0 0 1px rgba(207,239,255,.35), inset 0 0 14px rgba(207,239,255,.35); }
-.av-c.manquee .av-n { color: #CFEFFF; opacity: .7; font-size: 20px; }
-.av-man { position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; font: 700 9.5px/1 var(--f-text); color: #EAF6FF; letter-spacing: .02em; }
-.av-h small.av-cpt { color: #FFE596; font-weight: 700; }
-.av-h small.av-cpt.perdue { color: #CFEFFF; }
-.av-doree { grid-column: 1 / -1; background: rgba(247,207,85,.14); box-shadow: inset 0 0 0 1px rgba(247,207,85,.45); }
-.av-obj.av-doree small { line-height: 1.35; text-transform: none; letter-spacing: 0; text-align: center; color: #FFE596; }
-.av-c.ferme .av-porte { filter: saturate(.45) brightness(.7); }
-.av-c.jour .av-porte { animation: avBrille 1.8s ease-in-out infinite; }
-.av-c.jour::after { content: ""; position: absolute; inset: -4px; border-radius: 13px; border: 2px solid #FFE596; pointer-events: none; animation: avPas 1.8s ease-in-out infinite; }
-@keyframes avBrille { 50% { box-shadow: inset 0 0 0 2px #FFE596, 0 0 16px rgba(255,229,150,.7); } }
-.av-c.vue .av-porte, .av-c.ouvre .av-porte { transform: rotateY(-108deg); }
-.av-c.vue .av-porte .av-n { opacity: 0; }
+/* le plateau : velours rouge, double filet doré, rivets, guirlande lumineuse */
+.av-grille { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 10px; margin-top: 18px; padding: 24px 12px 18px; border-radius: 20px;
+  background: radial-gradient(120% 70% at 50% 0%, #9A1B2A, #5A0D17 60%, #3D0810);
+  box-shadow: inset 0 0 0 2px #E7C35A, inset 0 0 0 5px #5A0D17, inset 0 0 0 6px rgba(231,195,90,.5), 0 18px 36px rgba(0,0,0,.55); }
+.av-grille::before, .av-grille::after { content: ""; position: absolute; top: 9px; width: 7px; height: 7px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #FFF3C4, #B8861B); }
+.av-grille::before { left: 10px; } .av-grille::after { right: 10px; }
+.av-guirlande { position: absolute; left: 8px; top: -14px; width: calc(100% - 16px); height: 34px; z-index: 2; pointer-events: none; }
+/* ---- une case = un vrai paquet cadeau ---- */
+.av-c { all: unset; box-sizing: border-box; position: relative; aspect-ratio: 1 / 1; margin-top: 8px; border-radius: 9px; cursor: pointer;
+  background: var(--motif, none), linear-gradient(155deg, var(--c1), var(--c2));
+  box-shadow: inset 0 2px 0 rgba(255,255,255,.35), inset 0 -8px 12px rgba(0,0,0,.28), 0 4px 0 var(--c3), 0 9px 14px rgba(0,0,0,.45); }
+.av-c:focus-visible { outline: 2px solid #FFE596; outline-offset: 3px; }
+.av-c > i, .av-c > span, .av-c > svg { position: absolute; pointer-events: none; }
+.av-rv, .av-rh { background: linear-gradient(90deg, #C99A2E, #FFE9A3 45%, #D9A93A 55%, #A87818); }
+.av-rv { top: 0; bottom: 0; left: 50%; width: 9px; margin-left: -4.5px; }
+.av-rh { left: 0; right: 0; top: 50%; height: 9px; margin-top: -4.5px; background: linear-gradient(180deg, #C99A2E, #FFE9A3 45%, #D9A93A 55%, #A87818); }
+.av-c .av-noeud { left: 50%; top: -13px; width: 38px; height: 22px; margin-left: -19px; filter: drop-shadow(0 2px 1px rgba(0,0,0,.35)); z-index: 2; }
+.av-tag { left: 4px; bottom: 5px; z-index: 3; min-width: 30px; padding: 2px 6px 1px 9px; border-radius: 3px 7px 7px 3px; background: linear-gradient(180deg, #FFFDF5, #EADFC4); color: #6B1420;
+  font: italic 800 19px/1 var(--f-display); transform: rotate(-8deg); box-shadow: 0 2px 3px rgba(0,0,0,.35); }
+.av-tag::before { content: ""; position: absolute; left: 3px; top: 50%; width: 3px; height: 3px; margin-top: -1.5px; border-radius: 50%; background: #6B1420; }
+/* papiers */
+.av-c.pap-rouge { --c1: #E23A4E; --c2: #9E1224; --c3: #6E0B18; --motif: repeating-linear-gradient(135deg, rgba(255,255,255,.09) 0 4px, transparent 4px 11px); }
+.av-c.pap-vert  { --c1: #2FA36A; --c2: #155C36; --c3: #0C3B22; --motif: radial-gradient(circle, rgba(255,255,255,.16) 1.3px, transparent 1.6px) 0 0 / 9px 9px; }
+.av-c.pap-bleu  { --c1: #3D7BD6; --c2: #18346A; --c3: #0F2147; --motif: radial-gradient(circle, rgba(255,255,255,.22) 1px, transparent 1.3px) 0 0 / 7px 7px, radial-gradient(circle, rgba(255,255,255,.12) 1.6px, transparent 2px) 3px 4px / 13px 13px; }
+.av-c.pap-violet{ --c1: #9B6BFF; --c2: #4E2A9A; --c3: #321A66; --motif: repeating-linear-gradient(45deg, rgba(255,255,255,.08) 0 3px, transparent 3px 9px), repeating-linear-gradient(-45deg, rgba(255,255,255,.06) 0 3px, transparent 3px 9px); }
+/* pas encore (jour futur) : papier givré, plus sombre */
+.av-c.ferme { cursor: default; filter: saturate(.7) brightness(.68); }
+.av-c.ferme::after { content: ""; position: absolute; inset: 0; border-radius: 9px; background: linear-gradient(180deg, rgba(220,235,255,.16), transparent 40%); pointer-events: none; }
+.av-c.ferme .av-tag { color: #555; }
+/* ❄️ manquée : papier bleu-gris pris dans le givre, ruban gris, fermée pour toujours */
+.av-c.manquee { cursor: default; --c1: #6F829E; --c2: #34435C; --c3: #232E40; --motif: radial-gradient(circle at 20% 15%, rgba(235,248,255,.5), transparent 35%), radial-gradient(circle at 85% 80%, rgba(235,248,255,.35), transparent 30%);
+  box-shadow: inset 0 0 0 1px rgba(207,239,255,.45), inset 0 0 14px rgba(207,239,255,.4), 0 4px 0 var(--c3), 0 9px 14px rgba(0,0,0,.45); }
+.av-c.manquee .av-rv { background: linear-gradient(90deg, #7E8794, #D5DCE4 45%, #9AA3AE 55%, #6B737E); }
+.av-c.manquee .av-rh { background: linear-gradient(180deg, #7E8794, #D5DCE4 45%, #9AA3AE 55%, #6B737E); }
+.av-c.manquee .av-noeud { filter: grayscale(1) brightness(1.1) drop-shadow(0 2px 1px rgba(0,0,0,.35)); }
+.av-c.manquee .av-tag { color: #5E7290; background: linear-gradient(180deg, #F2F8FF, #CFDCEB); bottom: 18px; }
+.av-man { left: 0; right: 0; bottom: 3px; z-index: 3; text-align: center; font: 700 9.5px/1.2 var(--f-text); color: #EAF6FF; letter-spacing: .02em; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+/* case du jour : soulevée, halo doré, 3 étincelles, ruban « aujourd'hui » ; UNE seule animation continue (l'éclat du halo, en opacité) */
+.av-c.jour { transform: translateY(-4px) scale(1.04); z-index: 1; box-shadow: inset 0 2px 0 rgba(255,255,255,.45), inset 0 -8px 12px rgba(0,0,0,.25), 0 4px 0 var(--c3), 0 0 0 2px #FFE596, 0 0 14px 2px rgba(255,214,102,.55); }
+.av-lum { inset: -6px; border-radius: 12px; box-shadow: 0 0 22px 6px rgba(255,214,102,.7); animation: avHalo 1.8s ease-in-out infinite alternate; }
+.av-lum i { position: absolute; color: #FFF3C4; font-style: normal; font-size: 12px; line-height: 1; text-shadow: 0 0 6px #FFD54A; }
+.av-lum i:nth-child(1) { left: 0; top: 8px; } .av-lum i:nth-child(2) { right: 2px; top: 22px; font-size: 9px; } .av-lum i:nth-child(3) { right: 12px; bottom: 2px; }
+@keyframes avHalo { from { opacity: .35; } to { opacity: 1; } }
+.av-auj { left: 50%; bottom: -11px; z-index: 4; transform: translateX(-50%); white-space: nowrap; padding: 2px 6px; border-radius: 4px; background: #FFE596; color: #5A0D17; font: 800 9px/1.2 var(--f-num); letter-spacing: .06em; text-transform: uppercase; box-shadow: 0 2px 4px rgba(0,0,0,.4); }
+/* déjà ouverte : boîte ouverte, couvercle de travers, l'icône brille, le numéro reste lisible */
+.av-c.vue { background: linear-gradient(180deg, #2A0F12, #120709); box-shadow: inset 0 0 0 2px var(--c2), inset 0 10px 16px rgba(0,0,0,.6), 0 4px 0 var(--c3), 0 9px 14px rgba(0,0,0,.45); }
+.av-int { inset: 0; border-radius: 9px; background: linear-gradient(180deg, #2A0F12, #120709); box-shadow: inset 0 0 0 2px var(--c2), inset 0 10px 16px rgba(0,0,0,.6); opacity: 0; }
+.av-couv { left: -6px; top: -12px; width: 62%; height: 14px; z-index: 2; border-radius: 4px; background: linear-gradient(155deg, var(--c1), var(--c2)); transform: rotate(-24deg); box-shadow: 0 3px 4px rgba(0,0,0,.4); }
+.av-couv::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 7px; margin-left: -3.5px; background: linear-gradient(90deg, #C99A2E, #FFE9A3, #A87818); }
+.av-lueur { inset: 8px; border-radius: 50%; background: radial-gradient(circle, rgba(255,214,102,.35), transparent 70%); }
+.av-ico { inset: 0; display: grid; place-items: center; font-size: 30px; line-height: 1; filter: drop-shadow(0 0 8px rgba(255,214,102,.55)); }
+.av-c.vue .av-tag, .av-c.ouvre .av-tag { font-size: 14px; bottom: 3px; left: 3px; min-width: 0; }
+/* l'ouverture en 4 temps (~0,9 s ; transform et opacity seulement) */
+.av-ray { inset: -32%; border-radius: 50%; opacity: 0; background: repeating-conic-gradient(rgba(255,229,150,.42) 0 8deg, transparent 8deg 22deg); }
+.av-c.ouvre { z-index: 2; animation: avEcrase .42s cubic-bezier(.3,.7,.3,1) both; }
+.av-c.ouvre .av-lum, .av-c.ouvre .av-auj { animation: avFond .15s linear both; }
+.av-c.ouvre .av-noeud { animation: avSaute .34s .12s cubic-bezier(.2,.7,.4,1) both; }
+.av-c.ouvre .av-rv, .av-c.ouvre .av-rh { animation: avFond .2s .2s linear both; }
+.av-c.ouvre .av-int { animation: avMontre .18s .34s linear both; }
+.av-c.ouvre .av-ray { animation: avRayons .55s .36s ease-out both; }
+.av-c.ouvre .av-vole { transform-origin: 0 50%; animation: avVole .46s .32s cubic-bezier(.2,.7,.3,1) both; }
+.av-c.ouvre .av-lueur { animation: avMontre .2s .4s linear both; }
+.av-c.ouvre .av-ico { animation: avSort .3s .4s cubic-bezier(.3,1.5,.5,1) both; }
+@keyframes avEcrase { 0% { transform: translateY(-4px) scale(1.04); } 30% { transform: translateY(6px) scale(.9, .84); } 65% { transform: scale(1.06); } 100% { transform: scale(1); } }
+@keyframes avSaute { to { transform: translate(8px, -34px) rotate(28deg); opacity: 0; } }
+@keyframes avFond { to { opacity: 0; } }
+@keyframes avMontre { from { opacity: 0; } to { opacity: 1; } }
+@keyframes avRayons { 0% { opacity: 0; transform: scale(.3) rotate(0); } 35% { opacity: 1; } 100% { opacity: .85; transform: scale(1) rotate(30deg); } }
+@keyframes avVole { 0% { transform: translate(6px, 12px) scaleX(1.62); } 55% { transform: translate(10px, -24px) rotate(-38deg); } 100% { transform: rotate(-24deg); } }
+@keyframes avSort { from { opacity: 0; transform: scale(.2); } to { opacity: 1; transform: none; } }
+.av-legende { position: relative; z-index: 1; margin: 16px auto 0; width: fit-content; max-width: 100%; box-sizing: border-box; padding: 7px 12px; border-radius: 999px; background: rgba(7,11,28,.78); display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: center; font: 600 11.5px/1.3 var(--f-text); color: #C9D6EA; }
+.av-legende span { display: inline-flex; gap: 5px; align-items: center; }
+.av-legende i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+.av-legende .lg-jour { background: #FFE596; box-shadow: 0 0 6px #FFD54A; } .av-legende .lg-vue { background: #2A0F12; box-shadow: inset 0 0 0 1px #E23A4E; }
+.av-legende .lg-man { background: #6F829E; box-shadow: inset 0 0 0 1px #CFEFFF; } .av-legende .lg-ferme { background: #555c70; }
 .av-neige { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
 .av-neige i { position: absolute; top: -10px; left: var(--x); width: var(--s); height: var(--s); border-radius: 50%; background: #fff; opacity: .8; animation: avTombe var(--t) linear var(--d) infinite; }
 @keyframes avTombe { to { transform: translate(24px, 105vh); } }
-.av-carte { padding: 18px 16px 14px; border-radius: 18px; background: linear-gradient(180deg, #16224A, #0D1430); box-shadow: inset 0 0 0 2px #C9A227, 0 16px 40px rgba(0,0,0,.5); text-align: center; }
-.av-k { display: block; font: 700 11.5px/1 var(--f-num); letter-spacing: .1em; text-transform: uppercase; color: #FFE596; margin: 4px 40px 8px; }
-.av-carte h3 { margin: 0 34px 12px; font: italic 800 21px/1.15 var(--f-display); letter-spacing: .03em; text-transform: uppercase; color: #fff; }
-.av-t { white-space: pre-line; font: 500 15px/1.5 var(--f-text); color: #E6EDF8; margin: 12px 4px; text-align: left; }
+/* v20.80 · la carte d'une case : en-tête illustré, sceau doré, texte dans un encart clair, 24 points de progression (même cadre pour jeux, surprises et case 24) */
+.av-carte { overflow: hidden; border-radius: 20px; background: linear-gradient(180deg, #16224A, #0D1430); text-align: center;
+  box-shadow: inset 0 0 0 2px #E7C35A, inset 0 0 0 5px #0D1430, inset 0 0 0 6px rgba(231,195,90,.45), 0 24px 50px rgba(0,0,0,.6); }
+.av-carte.nait { animation: avNait .3s cubic-bezier(.2,.8,.3,1.05) both; }
+@keyframes avNait { from { transform: scale(.14); opacity: 0; } 40% { opacity: 1; } to { transform: none; opacity: 1; } }
+.av-entete { position: relative; height: 136px; }
+.av-entete > svg { display: block; width: 100%; height: 100%; }
+.av-entete .av-x { top: 10px; right: 10px; background: rgba(7,11,28,.45); }
+.av-sceau { position: absolute; left: 50%; bottom: -30px; z-index: 2; width: 70px; height: 70px; margin-left: -35px; border-radius: 50%; display: grid; place-items: center; align-content: center;
+  background: radial-gradient(circle at 35% 30%, #FFF3C4, #F7CF55 35%, #B8861B 80%); box-shadow: 0 0 0 3px #0D1430, 0 0 0 5px #E7C35A, 0 8px 18px rgba(0,0,0,.5), 0 0 24px rgba(247,207,85,.5); color: #5A0D17; }
+.av-sceau b { font: italic 800 32px/.9 var(--f-display); } .av-sceau small { font: 800 9px/1 var(--f-num); letter-spacing: .1em; }
+.av-corps { padding: 40px 16px 14px; }
+.av-k { display: block; font: 700 11px/1 var(--f-num); letter-spacing: .14em; text-transform: uppercase; color: #FFE596; opacity: .9; margin: 0 0 8px; }
+.av-carte h3 { margin: 0 0 12px; font: italic 800 24px/1.08 var(--f-display); letter-spacing: .03em; text-transform: uppercase; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.4); }
+.av-t { white-space: pre-line; font: 500 15px/1.5 var(--f-text); color: #E6EDF8; margin: 12px 0; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); text-align: left; }
+.av-serie { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin: 14px auto 4px; max-width: 290px; }
+.av-serie i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.18); }
+.av-serie i.v { background: #FFE596; box-shadow: 0 0 5px #FFD54A; } .av-serie i.m { background: transparent; box-shadow: inset 0 0 0 1.5px #CFEFFF; }
+.av-serie i.c { box-shadow: 0 0 0 1.5px #0D1430, 0 0 0 3px #FFE596; }
+.av-serie-t { display: block; margin: 0 0 4px; font: 600 12px/1.3 var(--f-text); color: #C9D6EA; }
 .av-carte .btn-row { justify-content: center; margin-top: 10px; }
+.av-carte .btn { border-radius: 12px; font: 700 15px/1 var(--f-text); padding: 12px 18px; }
+.av-carte .btn.acc { background: linear-gradient(180deg, #E23A4E, #9E1224); color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 3px 0 #6E0B18; }
 .av-carte .btn.ghost, .avj-eff.btn.ghost { color: #fff; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.35); }
+/* la case 24 : grand sceau, rayons dorés qui tournent lentement (les confettis viennent de l'appli) */
+.av-24 .av-entete { height: 150px; }
+.av-24 .av-sceau { width: 88px; height: 88px; margin-left: -44px; bottom: -38px; }
+.av-24 .av-sceau b { font-size: 42px; }
+.av-24 .av-corps { padding-top: 50px; }
+.av-r24 { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }   /* les rayons restent dans l'en-tête (le cadre tourne, pas la découpe) */
+.av-r24 > .cbo-rayons { position: absolute; left: 50%; bottom: -150px; width: 300px; height: 300px; margin-left: -150px; border-radius: 50%; pointer-events: none; z-index: 1;
+  background: repeating-conic-gradient(from 0deg, rgba(255,229,150,.3) 0 9deg, transparent 9deg 22deg); animation: cboTourne 18s linear infinite; }
 .av-jeu { position: relative; }
 .avj { position: relative; width: 100%; max-width: 340px; margin: 0 auto; border-radius: 14px; overflow: hidden; box-shadow: 0 0 0 2px rgba(201,162,39,.6); }
 .avj-c { display: block; width: 100%; height: auto; touch-action: none; }
@@ -2777,7 +2868,7 @@ body:has(.av-ov) .toast, body:has(.av-case) .toast { z-index: 99; }
 .plaque.pl-hiverdore { color: #4A2C05; background: linear-gradient(115deg, #B7791F, #FFE596 28%, #F7CF55 46%, #FFF6CC 58%, #9ED8FF 70%, #C98E22); border: 1px solid #7A4A0C; box-shadow: inset 0 0 0 1.5px rgba(207,239,255,.85), inset 0 1px 0 #FFF6CC, 0 0 7px rgba(247,207,85,.55); }   /* 🏅 Hiver 2026 doré (24/24) : l'or de la médaille, un reflet de glace */
 .plaque.pl-hiver26 { color: #fff; background: linear-gradient(120deg, #1E4E8C, #3A8FD0 45%, #9ED8FF 60%, #2F6DB5); border: 1px solid #CFEFFF; box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 0 6px rgba(158,216,255,.45); }
 .fx-flocons { stroke: #CFEFFF !important; stroke-width: 5; stroke-dasharray: .1 9; opacity: .95; filter: drop-shadow(0 0 1.5px #3A8FD0); animation: fxDefile 2.2s linear infinite; }
-@media (prefers-reduced-motion: reduce) { .av-neige, .av-entree .av-pas, .av-c.jour .av-porte, .av-c.jour::after, .fx-flocons { animation: none !important; } .av-neige { display: none; } .av-porte { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .av-neige, .av-entree .av-pas, .av-entree .av-ent-noeud, .av-lum, .av-r24 > .cbo-rayons, .av-carte.nait, .fx-flocons { animation: none !important; } .av-neige { display: none; } }
 .av-records:empty { display: none; }
 .av-records { margin: 10px 0 4px; padding: 12px; border-radius: 14px; background: rgba(255,255,255,.07); text-align: left; }
 .av-records h4 { margin: 0 0 8px; font: italic 800 16px/1.2 var(--f-display); letter-spacing: .04em; text-transform: uppercase; color: #FFE596; }
@@ -2843,3 +2934,15 @@ body:has(.av-ov) .toast, body:has(.av-case) .toast { z-index: 99; }
 .itd-k { display: block; font: 800 11px/1.2 var(--f-text); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 2px; }
 .plaque.pl-recrue { color: #E9F7F0; background: linear-gradient(180deg, #34424F, #1F2932); border: 1px solid #0E151B; box-shadow: inset 0 0 0 1.5px #9FE3C4, 0 1px 2px rgba(0,0,0,.3); }
 .it-w.it-bloque .it-q { width: 26px; height: 26px; top: 3px; left: 3px; font-size: 14px; font-weight: 800; color: var(--ink); border: 1.5px solid var(--ink-2); background: var(--panel); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+/* v20.80 · l'affichette « Nouveau : choisis l'affichage des décors 3D » (js/3-podium.js, affichette3D) : une fois par appareil */
+.af3d-c { border-color: rgba(247,207,85,.45); }
+.af3d-c .tuto-k { color: #FFE596; }
+.af3d-c h3 { font-size: 22px; }
+.af3d-l { list-style: none; margin: 0; padding: 0; width: 100%; display: grid; gap: 6px; text-align: left; }
+.af3d-l li { padding: 9px 12px; border-radius: 12px; background: rgba(255,255,255,.07); font: 500 14px/1.35 var(--f-text); color: rgba(244,245,248,.88); }
+.af3d-l li { display: grid; grid-template-columns: 72px 1fr; column-gap: 8px; }
+.af3d-l b { color: #fff; }
+.af3d-c .af3d-auto { padding: 9px 12px; border-radius: 12px; background: rgba(247,207,85,.12); box-shadow: inset 0 0 0 1px rgba(247,207,85,.4); color: #FFF3C4; }
+.af3d-auto b { color: #FFE596; } .af3d-auto small { display: block; font-size: 12px; color: rgba(244,245,248,.7); }
+.af3d-c .btn-row { justify-content: center; }
+.champ.af3d-cible { border-radius: 12px; box-shadow: 0 0 0 2px var(--accent); transition: box-shadow .6s; }

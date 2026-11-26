@@ -479,7 +479,7 @@ function avNouveauDepart(G) { const S = G.s; S.ph = "feux"; S.tm = 0; S.n = 0; S
 function jeuAvent(zone, id) {
   const J = JEUX_AVENT[id], W = 320, H = 400, dpr = Math.min(2, window.devicePixelRatio || 1);
   zone.innerHTML = '<div class="avj"><canvas class="avj-c" width="' + W * dpr + '" height="' + H * dpr + '" aria-label="' + esc(J.nom) + '"></canvas>' +
-    '<div class="avj-voile"><span class="avj-ico" aria-hidden="true">' + J.ico + '</span><b>' + esc(J.nom) + "</b><p>" + esc(J.aide) + '</p><p class="avj-rec"></p><button class="btn acc" type="button" data-avj="go">▶ ' + (J.libre ? "Dessiner" : "Jouer") + "</button></div></div>" +
+    '<div class="avj-voile"><span class="avj-ico" aria-hidden="true">' + J.ico + "</span><p>" + esc(J.aide) + '</p><p class="avj-rec"></p><button class="btn acc" type="button" data-avj="go">▶ ' + (J.libre ? "Dessiner" : "Jouer") + "</button></div></div>" +
     (J.libre ? '<button class="btn ghost avj-eff" type="button" data-avj="eff">🧽 Tout effacer</button>' : "");
   const cv = zone.querySelector("canvas"), ctx = cv.getContext("2d"), voile = zone.querySelector(".avj-voile");
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -552,6 +552,55 @@ const ORDRE_AVENT = [7, 15, 1, 20, 11, 4, 18, 23, 9, 2, 13, 22, 5, 17, 10, 24, 3
 function icoCase(n) { const c = CASES_AVENT[n]; return c.type === "jeu" ? JEUX_AVENT[c.jeu].ico : c.ico; }
 function titreCase(n) { const c = CASES_AVENT[n]; return c.type === "jeu" ? JEUX_AVENT[c.jeu].nom : c.titre; }
 
+/* ---------- v20.80 · Habillage (maquette du directeur artistique validée par Théo le 26/11) : des CSS et des SVG fixes, aucune image à charger ----------
+   Chaque case est un vrai paquet cadeau (papier à motif, ruban doré, nœud, étiquette) ; la carte d'une case a un en-tête illustré et un sceau doré. */
+const AV_PAPIERS = ["rouge", "vert", "bleu", "rouge", "violet", "vert", "bleu", "rouge", "vert", "violet", "bleu", "rouge"];
+const AV_NOEUD = '<svg class="av-noeud" viewBox="0 0 38 22" aria-hidden="true"><path d="M19 12 C8 -2 0 6 6 12 C10 16 16 13 19 12Z M19 12 C30 -2 38 6 32 12 C28 16 22 13 19 12Z" fill="#FFD86B" stroke="#A87818"/><path d="M17 13 l-6 9 M21 13 l6 9" stroke="#D9A93A" stroke-width="3"/><circle cx="19" cy="12" r="4" fill="#E9B43C" stroke="#A87818"/></svg>';
+const AV_GUIRLANDE = '<svg class="av-guirlande" viewBox="0 0 340 34" preserveAspectRatio="none" aria-hidden="true"><path d="M0 6 Q42 30 85 8 T170 8 T255 8 T340 6" fill="none" stroke="#1E5A36" stroke-width="3"/>' +
+  [[20, 16, "#FF5A6E"], [48, 22, "#FFE596"], [76, 12, "#5BC8FF"], [106, 16, "#3DDC97"], [134, 22, "#FF5A6E"], [160, 11, "#FFE596"], [190, 16, "#5BC8FF"], [218, 22, "#3DDC97"], [246, 11, "#FF5A6E"], [276, 16, "#FFE596"], [304, 22, "#5BC8FF"], [330, 11, "#3DDC97"]]
+    .map(([x, y, c]) => '<circle cx="' + x + '" cy="' + y + '" r="8" fill="' + c + '" opacity=".22"/><circle cx="' + x + '" cy="' + y + '" r="4.5" fill="' + c + '"/>').join("") + "</svg>";
+const AV_PAYSAGE = '<svg class="av-paysage" viewBox="0 0 390 190" preserveAspectRatio="none" aria-hidden="true"><path d="M0 120 Q90 80 190 115 T390 100 V190 H0Z" fill="#14244D" opacity=".9"/>' +
+  '<g fill="#0C1836"><path d="M30 118 l12 -34 l12 34z"/><path d="M60 122 l9 -26 l9 26z"/><path d="M318 108 l13 -38 l13 38z"/><path d="M350 112 l9 -24 l9 24z"/></g>' +
+  '<path d="M0 150 Q110 118 220 148 T390 140 V190 H0Z" fill="#DCE8FF"/><path d="M0 150 Q110 118 220 148 T390 140" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/>' +
+  '<circle cx="267" cy="136" r="18" fill="#FFC85A" opacity=".16"/><rect x="250" y="128" width="34" height="22" fill="#3A2416"/><path d="M246 130 l21 -16 l21 16z" fill="#F2F6FF"/><rect x="258" y="134" width="8" height="8" fill="#FFC85A"/><rect x="270" y="134" width="8" height="8" fill="#FFC85A"/></svg>';
+const AV_LEGENDE = '<div class="av-legende" aria-hidden="true"><span><i class="lg-jour"></i>aujourd\'hui</span><span><i class="lg-vue"></i>ouverte</span><span><i class="lg-man"></i>manquée</span><span><i class="lg-ferme"></i>pas encore</span></div>';
+/** l'intérieur d'une case : paquet fermé (ruban, nœud, étiquette), ou boîte ouverte (couvercle de travers, icône qui brille) */
+function htmlPaquet(n, cls) {
+  const tag = '<span class="av-tag">' + n + "</span>";
+  if (cls === "vue") return '<i class="av-couv"></i><i class="av-lueur"></i><span class="av-ico" aria-hidden="true">' + icoCase(n) + "</span>" + tag;
+  return '<i class="av-rv"></i><i class="av-rh"></i>' + AV_NOEUD + tag + (cls === "jour" ? '<span class="av-lum" aria-hidden="true"><i>✦</i><i>✦</i><i>✦</i></span><span class="av-auj">Aujourd\'hui</span>' : "") +
+    (cls === "manquee" ? '<span class="av-man">❄️ Manquée</span>' : "");
+}
+/** l'icône de l'entrée du Classement : un paquet rouge et or, le jour sur l'étiquette, le nœud qui frétille tant que la case du jour attend */
+function svgPaquetEntree(jd) {
+  return '<svg viewBox="0 0 36 36"><rect x="4" y="12" width="28" height="21" rx="4" fill="#C1121F"/><rect x="4" y="12" width="28" height="21" rx="4" fill="url(#av-ent-r)" opacity=".5"/><rect x="16" y="12" width="4.5" height="21" fill="#F7CF55"/><rect x="4" y="19" width="28" height="4" fill="#F7CF55"/>' +
+    '<defs><pattern id="av-ent-r" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="6" fill="#FF6B7A"/></pattern></defs>' +
+    '<g class="av-ent-noeud"><path d="M18.2 12 C10 2 3 7 8 11.5 C11 14 16 12.6 18.2 12Z M18.2 12 C26 2 33 7 28.4 11.5 C25.4 14 20.4 12.6 18.2 12Z" fill="#FFD86B" stroke="#A87818" stroke-width=".8"/><circle cx="18.2" cy="12" r="2.8" fill="#E9B43C" stroke="#A87818" stroke-width=".8"/></g>' +
+    '<g transform="rotate(-8 10 28)"><rect x="5" y="24" width="12" height="8.5" rx="2" fill="#FFFDF5"/><text x="11" y="30.7" text-anchor="middle" font-size="7.4" font-weight="800" fill="#6B1420">' + jd + "</text></g></svg>";
+}
+/** la petite ligne au-dessus du titre de la carte */
+function kickerCase(c) { return c.type === "jeu" ? "🎮 Jeu de Noël" : c.type === "cadeau" ? "🎄 Le cadeau de Noël" : c.type === "annonce" ? "📣 Grand jour" : c.type === "scene" ? "🛷 Premier jour" : "🎁 Surprise"; }
+/** l'en-tête illustré de la carte (ciel, aurore, lune, traîneau, sapins, guirlande) et son sceau doré « 5 DÉC. » ; le 24 : grand sceau et rayons dorés */
+function htmlEnteteCase(n) {
+  return '<div class="av-entete"><svg viewBox="0 0 360 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="av-ciel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0B1640"/><stop offset="1" stop-color="#2B4A8F"/></linearGradient>' +
+    '<radialGradient id="av-lune"><stop offset="0" stop-color="#FFF8DC"/><stop offset="1" stop-color="#FFF8DC" stop-opacity="0"/></radialGradient></defs><rect width="360" height="150" fill="url(#av-ciel)"/>' +
+    '<path d="M0 40 Q120 10 240 50 T360 30 V70 Q240 40 120 70 T0 60Z" fill="#3DDC97" opacity=".14"/><circle cx="296" cy="40" r="30" fill="url(#av-lune)" opacity=".5"/><circle cx="296" cy="40" r="13" fill="#FFF3C4"/>' +
+    '<g fill="#fff"><circle cx="30" cy="26" r="1.2"/><circle cx="80" cy="44" r="1"/><circle cx="140" cy="22" r="1.4"/><circle cx="200" cy="34" r="1"/><circle cx="250" cy="20" r="1.2"/><circle cx="340" cy="64" r="1"/></g>' +
+    '<g transform="translate(70 58) rotate(-8)"><path d="M0 10 h34 q8 0 8 -8" fill="none" stroke="#F7CF55" stroke-width="2"/><path d="M4 0 h24 l-4 9 h-18z" fill="#E23A4E"/><path d="M-60 6 q20 -4 56 0" stroke="#FFE596" stroke-width="1.5" stroke-dasharray="1 5" stroke-linecap="round" fill="none"/></g>' +
+    '<path d="M0 110 Q90 86 180 108 T360 100 V150 H0Z" fill="#1B3570"/><g fill="#10224D"><path d="M24 112 l14 -40 l14 40z"/><path d="M56 116 l10 -28 l10 28z"/><path d="M300 106 l15 -44 l15 44z"/><path d="M332 110 l10 -26 l10 26z"/></g>' +
+    '<path d="M0 130 Q100 112 200 130 T360 124 V150 H0Z" fill="#E6EFFF"/><path d="M0 4 Q45 22 90 6 T180 6 T270 6 T360 4" fill="none" stroke="#1E5A36" stroke-width="2.5"/>' +
+    [[22, "#FF5A6E"], [66, "#FFE596"], [112, "#5BC8FF"], [156, "#3DDC97"], [204, "#FF5A6E"], [246, "#FFE596"], [292, "#5BC8FF"], [336, "#3DDC97"]].map(([x, c]) => '<circle cx="' + x + '" cy="12.5" r="3.5" fill="' + c + '"/>').join("") +
+    "</svg>" + (n === 24 ? '<span class="av-r24" aria-hidden="true"><span class="cbo-rayons"></span></span>' : "") + '<button class="av-x" type="button" aria-label="Fermer">✕</button>' +
+    '<span class="av-sceau" aria-hidden="true"><b>' + n + "</b><small>DÉC.</small></span></div>";
+}
+/** 24 points : les cases ouvertes (or), manquées (givre), celle-ci (entourée) */
+function htmlSerieAvent(n) {
+  if (aventApercu()) return "";
+  const l = aventOuvertes();
+  const t = l.length + (l.length > 1 ? " cases ouvertes" : " case ouverte") + " sur 24";
+  return '<div class="av-serie" aria-hidden="true">' + Array.from({ length: 24 }, (_, i) => '<i class="' + [l.includes(i + 1) ? "v" : caseManquee(i + 1) ? "m" : "", i + 1 === n ? "c" : ""].join(" ").trim() + '"></i>').join("") + '</div><small class="av-serie-t">' + t + "</small>";
+}
+
 /* ---------- L'entrée (haut du Classement, décembre 2026 seulement) ---------- */
 function poserAventEntree() {
   try {
@@ -560,8 +609,7 @@ function poserAventEntree() {
     chargerDoresAvent();   // 🏅 la plaque dorée, pour toujours : la liste du serveur (dès le 24/12/2026)
     if (!aventPeriode() || typeof D === "undefined" || !D) { if (el) el.remove(); return; }
     const j = aventJour(), jd = aventJourDec(), fait = !j || aventOuvertes().includes(j), noel = !j || (j === 24 && fait), cpt = texteCompteAvent();
-    const html = '<span class="av-cal" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="3" y="6" width="26" height="23" rx="4" fill="#C1121F"/><rect x="3" y="6" width="26" height="7" rx="3" fill="#8E0E18"/><path d="M10 3v6M22 3v6" stroke="#F7CF55" stroke-width="2.4" stroke-linecap="round"/>' +
-      '<text x="16" y="25" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">' + jd + "</text></svg>" + (fait ? "" : '<i class="av-pas"></i>') + "</span>" +
+    const html = '<span class="av-cal" aria-hidden="true">' + svgPaquetEntree(jd) + (fait ? "" : '<i class="av-pas"></i>') + "</span>" +
       '<span class="rp-t"><span class="av-l1"><b>🎄 Calendrier de l\'Avent</b>' + (noel ? (aventOuvertes().includes(24) ? "joyeux Noël !" : "joyeux Noël ! ton souvenir t'attend dans l'écurie") : fait ? "case du jour ouverte, reviens demain" : "la case du " + j + " t'attend, aujourd'hui seulement") + "</span>" +
       (j && !noel ? "<small>" + esc(AV_REGLE) + "</small>" : "") + (j && !noel && !aventCompte().perdue && !aventCompte().toutes ? "<small>" + esc(AV_DOREE) + "</small>" : "") + (cpt ? '<small class="av-cpt' + (aventCompte().perdue ? " perdue" : "") + '">' + esc(cpt) + "</small>" : "") + '</span><span class="rp-f" aria-hidden="true">›</span>';
     if (!el) { v.insertAdjacentHTML("afterbegin", '<button type="button" class="av-entree"></button>'); el = v.querySelector(":scope > .av-entree"); el.addEventListener("click", () => ouvrirAvent()); }
@@ -582,27 +630,35 @@ function ouvrirAvent() {
   const o = document.createElement("div"); o.className = "av-ov"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Calendrier de l'Avent");
   const dessiner = () => {
     const vues = aventOuvertes(), j = aventJour(), cpt = texteCompteAvent();
-    o.innerHTML = neigeAvent(36) + '<div class="av-boite"><button class="av-x" type="button" aria-label="Fermer">✕</button><div class="av-h"><b>🎄 Le calendrier de l\'Avent</b><small>' +
-      (aventApercu() ? "Aperçu admin : toutes les cases s'ouvrent, rien n'est gardé." : esc(AV_REGLE) + "</small>" + (!aventCompte().perdue && !aventCompte().toutes ? "<small>" + esc(AV_DOREE) + "</small>" : "") + (cpt ? '<small class="av-cpt' + (aventCompte().perdue ? " perdue" : "") + '">' + esc(cpt) + "</small>" : "") + "<small>Tour de chauffe · rien ne compte au championnat, tout pour le plaisir") + '</small></div><div class="av-grille">' +
-      ORDRE_AVENT.map(n => { const ok = caseOuvrable(n), vu = vues.includes(n), man = !ok && caseManquee(n), cls = man ? "manquee" : !ok ? "ferme" : vu ? "vue" : n === j ? "jour" : "libre";
-        return '<button type="button" class="av-c ' + cls + '" data-av="' + n + '" aria-label="' + (man ? "Case du " + n + " décembre, manquée : elle ne s'ouvrait que ce jour-là" : ok ? "Case du " + n + " décembre" + (vu ? ", déjà ouverte : " + esc(titreCase(n)) : ", à ouvrir aujourd'hui") : "Case du " + n + " décembre, fermée jusqu'au " + n) + '">' +
-          '<span class="av-dedans" aria-hidden="true">' + (ok ? icoCase(n) : "") + '</span><span class="av-porte" aria-hidden="true"><span class="av-n">' + n + "</span>" + (man ? '<span class="av-man">❄️ Manquée</span>' : ok ? "" : '<span class="av-cad">🔒</span>') + "</span></button>"; }).join("") + "</div></div>";
+    const aOuvrir = !aventApercu() && j && caseOuvrable(j) && !vues.includes(j) ? j : 0;
+    o.innerHTML = neigeAvent(36) + '<div class="av-boite"><button class="av-x" type="button" aria-label="Fermer">✕</button><div class="av-h"><b>🎄 Le calendrier de l\'Avent</b>' +
+      (aOuvrir ? '<button type="button" class="av-jour" data-av-jour="' + aOuvrir + '">✨ Case du ' + aOuvrir + " à ouvrir</button>" : "") + "<small>" +
+      (aventApercu() ? "Aperçu admin : toutes les cases s'ouvrent, rien n'est gardé." : esc(AV_REGLE) + "</small>" + (!aventCompte().perdue && !aventCompte().toutes ? "<small>" + esc(AV_DOREE) + "</small>" : "") + (cpt ? '<small class="av-cpt' + (aventCompte().perdue ? " perdue" : "") + '">' + esc(cpt) + "</small>" : "") + "<small>Tour de chauffe · rien ne compte au championnat, tout pour le plaisir") + '</small></div><div class="av-grille">' + AV_GUIRLANDE +
+      ORDRE_AVENT.map((n, i) => { const ok = caseOuvrable(n), vu = vues.includes(n), man = !ok && caseManquee(n), cls = man ? "manquee" : !ok ? "ferme" : vu ? "vue" : n === j ? "jour" : "libre";
+        return '<button type="button" class="av-c ' + cls + " pap-" + AV_PAPIERS[(i * 5 + n) % AV_PAPIERS.length] + '" data-av="' + n + '" aria-label="' + (man ? "Case du " + n + " décembre, manquée : elle ne s'ouvrait que ce jour-là" : ok ? "Case du " + n + " décembre" + (vu ? ", déjà ouverte : " + esc(titreCase(n)) : ", à ouvrir aujourd'hui") : "Case du " + n + " décembre, fermée jusqu'au " + n) + '">' +
+          htmlPaquet(n, cls) + "</button>"; }).join("") + "</div>" + AV_LEGENDE + "</div>" + AV_PAYSAGE;
     o.querySelector(".av-x").addEventListener("click", fermer);
     o.querySelectorAll("[data-av]").forEach(b => b.addEventListener("click", () => toucherCase(b, +b.dataset.av)));
+    const pj = o.querySelector("[data-av-jour]"); if (pj) pj.addEventListener("click", () => { const b = o.querySelector('.av-c[data-av="' + pj.dataset.avJour + '"]'); if (!b) return;
+      try { b.scrollIntoView({ block: "center" }); } catch (e) { } toucherCase(b, +pj.dataset.avJour); });   // la pastille ouvre la case du jour (même animation)
   };
   const fermer = () => { o.remove(); AVENT_APERCU = false; poserAventEntree(); avToastDessus(); };
   o.redessiner = dessiner;   // le serveur a répondu (cases ouvertes, heure) : on redessine
   const toucherCase = (b, n) => {
     if (!caseOuvrable(n)) { try { toast(caseManquee(n) ? msgManquee(n) : "Patience : cette case s'ouvre le " + n + " décembre."); } catch (e) { } return; }
+    if (b.classList.contains("ouvre")) return;   // déjà en train de s'ouvrir (double toucher)
     const deja = b.classList.contains("vue"); marquerOuverte(n);
     if (deja || reduit) return ouvrirCaseAvent(n, dessiner);
-    b.classList.add("ouvre"); sonAvent("porte"); setTimeout(() => { if (o.isConnected) ouvrirCaseAvent(n, dessiner); }, 650);
+    // v20.80 · l'ouverture en 4 temps (~0,9 s, transform et opacity seulement) : le paquet s'écrase, le nœud saute, le couvercle s'envole (rayons dorés), la carte grandit depuis la case
+    b.insertAdjacentHTML("beforeend", '<i class="av-int"></i><i class="av-ray"></i><i class="av-couv av-vole"></i><i class="av-lueur"></i><span class="av-ico">' + icoCase(n) + "</span>");
+    b.classList.add("ouvre"); sonAvent("porte");
+    setTimeout(() => { if (!o.isConnected) return; const r = b.getBoundingClientRect(); ouvrirCaseAvent(n, dessiner, r); setTimeout(() => { const ry = b.querySelector(".av-ray"); if (ry) ry.remove(); }, 320); }, 650);   // les rayons s'éteignent sous la carte (la grille est redessinée à sa fermeture)
   };
   o.addEventListener("click", e => { if (e.target === o) fermer(); });
   dessiner(); document.body.appendChild(o); avToastDessus(); poserAventEntree(); chargerAvent();
 }
 /** une case ouverte : jeu ou surprise, dans sa fenêtre (un toucher en dehors, ✕ ou Fermer pour revenir au calendrier) */
-function ouvrirCaseAvent(n, apres) {
+function ouvrirCaseAvent(n, apres, depuis) {
   if (!caseOuvrable(n)) return;
   document.querySelectorAll(".av-case").forEach(x => x.remove());
   const c = CASES_AVENT[n], o = document.createElement("div"); o.className = "av-case"; o.dataset.n = n; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
@@ -610,11 +666,16 @@ function ouvrirCaseAvent(n, apres) {
   if (c.type === "jeu") corps = '<div class="av-jeu"></div>';
   else if (c.type === "scene") corps = '<div class="av-jeu av-scene"></div><p class="av-t">' + esc(c.texte) + "</p>";
   else if (c.type === "compte") { const r = joursAvantAnnonce(); corps = '<div class="av-rebours"><span>' + (r > 0 ? "J-" + r : "🎉") + "</span><small>" + (r > 1 ? "avant l'annonce du 20 décembre" : r === 1 ? "demain, l'annonce !" : "l'annonce est arrivée") + '</small></div><p class="av-t">' + esc(c.texte) + "</p>"; }
-  else if (c.type === "cadeau") corps = htmlCadeauAvent() + '<p class="av-t">' + esc(c.texte) + '</p><button class="btn acc" type="button" data-av-ecurie>🏎️ Équiper maintenant</button><div class="av-records">' + htmlRecordsAvent() + "</div>";
-  else corps = '<p class="av-t">' + esc(c.texte) + "</p>" + (c.type === "annonce" ? '<button class="btn acc" type="button" data-av-podium>📣 Revoir l\'annonce</button>' : "");
-  o.innerHTML = neigeAvent(24) + '<div class="av-carte"><button class="av-x" type="button" aria-label="Fermer">✕</button><span class="av-k">🎄 Case du ' + n + " décembre</span><h3>" + (c.type === "jeu" ? "" : '<span aria-hidden="true">' + c.ico + "</span> ") + esc(titreCase(n)) + "</h3>" + corps +
-    '<div class="btn-row"><button class="btn ghost" type="button" data-av-fermer>Fermer</button></div></div>';
+  else if (c.type === "cadeau") corps = htmlCadeauAvent() + '<p class="av-t">' + esc(c.texte) + '</p><div class="av-records">' + htmlRecordsAvent() + "</div>";
+  else corps = '<p class="av-t">' + esc(c.texte) + "</p>";
+  const bouton = c.type === "cadeau" ? '<button class="btn acc" type="button" data-av-ecurie>🏎️ Équiper maintenant</button>' : c.type === "annonce" ? '<button class="btn acc" type="button" data-av-podium>📣 Revoir l\'annonce</button>' : "";   // v20.80 : dans la rangée du bas, sous les 24 points
+  o.setAttribute("aria-label", "Case du " + n + " décembre");
+  const demain = n === aventJour() && n < 24 && !aventApercu() && c.type !== "jeu" && c.type !== "annonce";   // la surprise du jour : « À demain ! » ferme aussi
+  o.innerHTML = neigeAvent(24) + '<div class="av-carte' + (n === 24 ? " av-24" : "") + '">' + htmlEnteteCase(n) + '<div class="av-corps"><span class="av-k">' + kickerCase(c) + "</span><h3>" + (c.type === "jeu" ? "" : '<span aria-hidden="true">' + c.ico + "</span> ") + esc(titreCase(n)) + "</h3>" + corps +
+    htmlSerieAvent(n) + '<div class="btn-row"><button class="btn ' + (demain ? "acc" : "ghost") + '" type="button" data-av-fermer>' + (demain ? "🎄 À demain !" : "Fermer") + "</button>" + bouton + "</div></div></div>";
   document.body.appendChild(o); avToastDessus();
+  if (depuis && !reduit) { try { const k = o.querySelector(".av-carte"), r = k.getBoundingClientRect();   // la carte grandit depuis la case touchée
+    k.style.transformOrigin = Math.round(depuis.left + depuis.width / 2 - r.left) + "px " + Math.round(depuis.top + depuis.height / 2 - r.top) + "px"; k.classList.add("nait"); } catch (e) { } }
   if (c.type === "jeu") inst = jeuAvent(o.querySelector(".av-jeu"), c.jeu);
   else if (c.type === "scene") inst = sceneTraineau(o.querySelector(".av-scene"));
   else if (c.type === "cadeau") { chargerAvent(true); try { if (typeof confettis === "function") confettis("confettis"); else sonAvent("fin"); } catch (e) { } }

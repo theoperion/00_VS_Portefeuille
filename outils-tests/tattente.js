@@ -19,7 +19,7 @@ async function page(b, opts) {
   p.on("pageerror", e => err.push(e.message));
   await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi(opts.avec, opts.ano) : versus) }));
   if (opts.nouvelle) await p.route(/version\.js\?t=/, r => r.fulfill({ contentType: "text/javascript", body: 'self.VERSUS_VERSION = { app: "99.0", date: "" };' }));
-  await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi-jour" })); });
+  await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi-jour" })); });
   return { ctx, p, err };
 }
 (async () => {

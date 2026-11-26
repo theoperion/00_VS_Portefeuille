@@ -68,7 +68,7 @@ const f = r => JSON.stringify(r.ev);
   const { chromium } = require("playwright"), b = await chromium.launch();
   const nouveau = async () => { const c = await b.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block" });
     await c.addInitScript(() => { if (sessionStorage.getItem("__init")) return; sessionStorage.setItem("__init", "1");
-      if (localStorage.getItem("versus.cle")) return; localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x");
+      if (localStorage.getItem("versus.cle")) return; localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x");
       localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); }); return c; };
   const bt = btc("2026-11-25"), BTC_J = J1("Bitcoin", 0.01, "25/11 09:00");
 

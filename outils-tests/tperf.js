@@ -47,7 +47,7 @@ const med = l => { const s = l.slice().sort((a, b) => a - b); return s.length ? 
     await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}");
       r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : c.action === "tickets" ? { ok: true, ouvert: false } : data) }); });
     await p.addInitScript(() => { window.VERSUS_LEGER = true; ["versus.tuto1", "versus.bullePortrait", "versus.saison1", "versus.chauffe1", "versus.aideVisite", "versus.deJanvier"].forEach(k => localStorage.setItem(k, "1"));
-      localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.vue", "classement");
+      localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.vue", "classement");
       // compteur de contextes 3D : la 3D (ou son test) ne doit pas s'ouvrir sur la Carte 2D
       const gc = HTMLCanvasElement.prototype.getContext; window.__GL = 0; HTMLCanvasElement.prototype.getContext = function (t, o) { if (/webgl/.test(t)) window.__GL++; return gc.call(this, t, o); };
       window.__LT = []; try { new PerformanceObserver(l => l.getEntries().forEach(e => window.__LT.push([e.startTime, e.duration]))).observe({ type: "longtask", buffered: true }); } catch (e) { } });
@@ -103,7 +103,7 @@ const med = l => { const s = l.slice().sort((a, b) => a - b); return s.length ? 
   const ctx2 = await b.newContext({ viewport: { width: 390, height: 844 } }), p2 = await ctx2.newPage();
   await p2.route(/fonts\.(googleapis|gstatic)\.com/, r => r.fulfill({ contentType: "text/css", body: "" }));
   await p2.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(data) }));
-  await p2.addInitScript(() => { ["versus.tuto1", "versus.bullePortrait", "versus.saison1", "versus.chauffe1", "versus.aideVisite", "versus.deJanvier"].forEach(k => localStorage.setItem(k, "1")); localStorage.setItem("versus.cle", "x"); });
+  await p2.addInitScript(() => { ["versus.tuto1", "versus.bullePortrait", "versus.saison1", "versus.chauffe1", "versus.aideVisite", "versus.deJanvier"].forEach(k => localStorage.setItem(k, "1")); localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); });
   await p2.clock.setFixedTime(new Date("2026-11-25T12:00:00"));
   for (let k = 0; k < 2; k++) { await p2.goto(URL); await p2.evaluate(() => navigator.serviceWorker.ready).catch(() => null); await p2.waitForTimeout(3000); }   // 2e ouverture : l'appli passe par le service worker
   const sw = await p2.evaluate(async () => { const n = (await caches.keys()).filter(k => k.startsWith("versus-")); if (!n.length) return { ok: false }; const ks = [];
@@ -119,7 +119,7 @@ const med = l => { const s = l.slice().sort((a, b) => a - b); return s.length ? 
     await q.route(/fonts\.(googleapis|gstatic)\.com/, r => r.fulfill({ contentType: "text/css", body: "" }));
     const dK = JSON.parse(JSON.stringify(data)); dK.session = { role: "perso", nom: "Kévin" };
     await q.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}"); r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : c.action === "tickets" ? { ok: true, ouvert: false } : dK) }); });
-    await q.addInitScript(eco => { ["versus.tuto1", "versus.bullePortrait", "versus.saison1", "versus.chauffe1", "versus.aideVisite", "versus.deJanvier"].forEach(k => localStorage.setItem(k, "1")); localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.vue", "classement");
+    await q.addInitScript(eco => { ["versus.tuto1", "versus.bullePortrait", "versus.saison1", "versus.chauffe1", "versus.aideVisite", "versus.deJanvier"].forEach(k => localStorage.setItem(k, "1")); localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.vue", "classement");
       if (eco) Object.defineProperty(navigator, "connection", { value: { saveData: true }, configurable: true }); }, eco);
     for (let k = 0; k < 2; k++) { await q.goto(URL + "#classement"); await q.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 20000 }); await q.evaluate(() => navigator.serviceWorker && navigator.serviceWorker.ready).catch(() => null); await q.waitForTimeout(4000); }
     const garde = await q.evaluate(async () => { const o = []; for (const k of await caches.keys()) (await (await caches.open(k)).keys()).forEach(r => { const m = /cartes\/([\w-]+)\.webp/.exec(r.url); if (m) o.push(m[1]); }); return o; }).catch(() => []);
@@ -133,7 +133,7 @@ const med = l => { const s = l.slice().sort((a, b) => a - b); return s.length ? 
     q.on("pageerror", e => e4.push(e.message)); await q.clock.setFixedTime(new Date("2026-11-30T23:58:00")); let DATA = JSON.parse(JSON.stringify(data));
     await q.route(/fonts\.(googleapis|gstatic)\.com/, r => r.fulfill({ contentType: "text/css", body: "" }));
     await q.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}"); r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : c.action === "tickets" ? { ok: true, ouvert: false } : DATA) }); });
-    await q.addInitScript(() => { ["versus.tuto1", "versus.bullePortrait", "versus.saison1", "versus.chauffe1", "versus.aideVisite", "versus.deJanvier"].forEach(k => localStorage.setItem(k, "1")); localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.vue", "classement"); });
+    await q.addInitScript(() => { ["versus.tuto1", "versus.bullePortrait", "versus.saison1", "versus.chauffe1", "versus.aideVisite", "versus.deJanvier"].forEach(k => localStorage.setItem(k, "1")); localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.vue", "classement"); });
     await q.goto(URL + "#classement"); await q.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 20000 }); await q.waitForTimeout(2500);
     await q.evaluate(() => { document.querySelectorAll(".revel, .regles, .tuto, .bulle-portrait, .ba, .ere-voile").forEach(x => x.remove()); ETAT.podium = "gp"; garder(); window.__R = []; const f = rendreVue; rendreVue = function (v) { window.__R.push(v); return f.apply(this, arguments); }; });
     const tab = async v => { await q.evaluate(v => { window.__R = []; document.querySelector('.onglet[data-vue="' + v + '"]').click(); }, v); await q.waitForTimeout(600); return q.evaluate(() => window.__R.slice()); };

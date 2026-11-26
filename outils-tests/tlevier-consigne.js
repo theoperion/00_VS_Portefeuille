@@ -103,7 +103,7 @@ async function ecran(b, sombre, signal, capture) {
   p.on("pageerror", e => err.push(e.message));
   await p.clock.setFixedTime(new Date("2026-11-26T10:00:00"));
   await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi(signal) : versus) }));
-  await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); });
+  await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); });
   await p.goto("http://localhost:" + PORT + "/index.html"); await p.waitForTimeout(3500);
   await p.evaluate(() => document.querySelectorAll(".tuto, .bulle-portrait").forEach(x => x.remove()));
   const ferme = await p.evaluate(() => { const c = document.querySelector(".sig"); if (!c) return null; const t = c.querySelector(".sg-consigne");
@@ -150,7 +150,7 @@ async function ecran(b, sombre, signal, capture) {
       p.on("pageerror", e => err.push(e.message)); let sig = etat;
       await p.clock.setFixedTime(new Date("2026-11-26T10:00:00"));
       await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi(sig) : versus) }));
-      await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); });
+      await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); });
       const charge = async () => { await p.goto("http://localhost:" + PORT + "/index.html"); await p.waitForTimeout(3000); await p.evaluate(() => { document.querySelectorAll(".tuto, .bulle-portrait").forEach(x => x.remove()); const c = document.querySelector(".sig");
         [...document.querySelectorAll("body *")].forEach(x => { if (c && !c.contains(x) && !x.contains(c) && /fixed|sticky/.test(getComputedStyle(x).position)) x.style.visibility = "hidden"; }); }); };
       const vu = () => p.evaluate(() => { const t = document.querySelector(".sig .sg-texte"); return { cache: t ? t.hidden : null, chev: (document.querySelector(".sig .chev-t") || {}).textContent, deb: document.documentElement.scrollWidth }; });

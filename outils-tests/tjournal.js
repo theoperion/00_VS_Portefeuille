@@ -115,7 +115,7 @@ async function appli(b, theme, nouveau) {
     if (estMoi && c.action === "supprimer") { supprime = true; corps = { ok: true, message: "Ordre supprimé (ligne " + c.ordre.ligne + ")." }; }
     r.fulfill({ contentType: "application/json", body: JSON.stringify(corps) });
   });
-  await p.addInitScript(() => { localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.tuto1", "1");
+  await p.addInitScript(() => { localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1");
     localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "cle-de-test"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); });
   await p.goto("http://localhost:" + PORT + "/index.html");
   await p.waitForFunction(() => window.Moi && document.querySelector("#v-moi [data-m-ong]"), null, { timeout: 20000 }).catch(() => {});

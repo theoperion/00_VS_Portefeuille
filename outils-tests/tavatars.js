@@ -30,7 +30,7 @@ async function ouvrir(b, quand, o) {
   const data = donnees(o.session || { role: "perso", nom: "Clément" }, o.R2);
   await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}");
     r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : c.action === "tickets" ? { ok: true, ouvert: false } : data) }); });
-  await p.addInitScript(f => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.bullePortrait", "1"); localStorage.setItem("versus.saison1", "1");
+  await p.addInitScript(f => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.bullePortrait", "1"); localStorage.setItem("versus.saison1", "1");
     localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.deJanvier", "1"); localStorage.setItem("versus.feteChauffe", "202612"); localStorage.setItem("versus.aideVisite", "1");
     if (f.adminOn) sessionStorage.setItem("versus.adminOn", "1"); if (f.force) sessionStorage.setItem("versus.apercuAcc", f.force); if (f.vj) localStorage.setItem("versus.vueJoueur", f.vj); }, { adminOn: !!o.adminOn, force: o.force || "", vj: o.vj || "" });
   await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1200);

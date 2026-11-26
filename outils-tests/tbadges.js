@@ -35,7 +35,7 @@ async function page(b, quand, session, sombre, chauffe) {
   await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}");
     if (c.action === "tresors") return r.fulfill({ contentType: "application/json", body: JSON.stringify(chauffe ? { ok: true, tresors: [], trouves: [], total: 0 } : TRESORS) });
     r.fulfill({ contentType: "application/json", body: JSON.stringify(donnees(session, chauffe)) }); });
-  await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.bullePortrait", "1"); localStorage.setItem("versus.saison1", "1"); });
+  await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.exclVus", "[]"); localStorage.setItem("versus.bullePortrait", "1"); localStorage.setItem("versus.saison1", "1"); });
   await p.goto("http://localhost:8771/index.html"); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1500);
   await p.evaluate(async () => { document.querySelectorAll(".revel, .regles, .tuto, .bulle-portrait").forEach(x => x.remove()); ETAT.podium = "defis"; garder(); montrerVue("trophees"); rendreTrophees(); await new Promise(r => setTimeout(r, 900)); });
   return { ctx, p, err };

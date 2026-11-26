@@ -23,7 +23,7 @@ async function page(b, o) {
     if (["tresors", "tresorDepart", "tresorArret", "tresorTrouve"].includes(c.action)) return json(S[c.action] ? S[c.action](c, now) : c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : { ok: false });
     if (["tickets", "mj", "avent"].includes(c.action)) return json({ ok: true });
     json(fausses(o.session, o.quand)); });
-  await p.addInitScript(a => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.tresorAide", "1"); if (a) { localStorage.setItem("versus.apercuSaison", "1"); sessionStorage.setItem("versus.adminOn", "1"); } }, !!o.admin);
+  await p.addInitScript(a => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.tresorAide", "1"); if (a) { localStorage.setItem("versus.apercuSaison", "1"); sessionStorage.setItem("versus.adminOn", "1"); } }, !!o.admin);
   await p.goto("http://localhost:" + PORT + "/index.html"); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1200);
   return { ctx, p, err, req };
 }

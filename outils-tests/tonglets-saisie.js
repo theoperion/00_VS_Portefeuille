@@ -35,7 +35,7 @@ async function cas(b, w, h, neuf, theme) {
   const ctx = await b.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2.6, isMobile: true, hasTouch: true, serviceWorkers: "block", colorScheme: theme }), err = [];
   await ctx.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi() : versus) }));
   /* appareil neuf : rien sur le téléphone sauf l'adresse et la clé du fichier, saisies comme après le transfert */
-  await ctx.addInitScript(neuf => { if (sessionStorage.getItem("init")) return; sessionStorage.setItem("init", "1"); localStorage.clear(); localStorage.setItem("versus.cle", "x");
+  await ctx.addInitScript(neuf => { if (sessionStorage.getItem("init")) return; sessionStorage.setItem("init", "1"); localStorage.clear(); localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1");
     localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" }));
     if (!neuf) { localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.guideOrdre.Clément", "1"); localStorage.setItem("versus.bullePortrait", "1"); } }, neuf);
   const p = await ctx.newPage(); p.on("pageerror", e => err.push(e.message));

@@ -62,7 +62,7 @@ function serveur(sc) {
     await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}");
       if (c.action === "tresors") return r.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, tresors: [], trouves: [], total: 0 }) });
       r.fulfill({ contentType: "application/json", body: JSON.stringify(donnees(SCENES[nom])) }); });
-    await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); });
+    await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); });
     await p.goto("http://localhost:" + PORT + "/index.html");
     await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(800);
     R[nom] = await p.evaluate(() => { MEMO_SAISON = { d: null, m: {} }; const c = championnat(2027), j = c.mois.find(m => m.k === 202706);

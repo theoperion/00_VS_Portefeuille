@@ -22,7 +22,7 @@ async function voir(b, session, monRappel, sombre) {
   await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}");
     if (c.action === "rappelReleve") { envois.push(c); return r.fulfill({ contentType: "application/json", body: JSON.stringify({ ok: true, message: "🔔 Rappel envoyé à " + c.personne + "." }) }); }
     return r.fulfill({ contentType: "application/json", body: JSON.stringify(fausses(session, monRappel)) }); });
-  await p.addInitScript(() => { localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.tuto1", "1"); });
+  await p.addInitScript(() => { localStorage.setItem("versus.cle", "cle-de-test"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); });
   await p.goto("http://localhost:8771/index.html");
   await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 });
   await p.waitForTimeout(2500);
