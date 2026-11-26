@@ -64,7 +64,7 @@ async function page(b, o) {
   await p.evaluate(() => { try { allerA("trophees"); } catch (e) { } }); await p.waitForTimeout(300);   // Avent 26/11 : le calendrier vit dans l'onglet Podium
   return { ctx, p, err, o };
 }
-const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-entree, .av-roicarte, .av-roicarte *")].filter(e => !e.closest(".av-neige")).filter(e => { const r = e.getBoundingClientRect(); return r.width && (r.right > innerWidth + 1 || r.left < -1); }).map(e => e.className).slice(0, 5);
+const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-bloc, .av-bloc *")].filter(e => !e.closest(".av-neige")).filter(e => { const r = e.getBoundingClientRect(); return r.width && (r.right > innerWidth + 1 || r.left < -1); }).map(e => e.className).slice(0, 5);
 const attendre = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const b = await chromium.launch(), ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); };
@@ -73,16 +73,23 @@ const attendre = ms => new Promise(r => setTimeout(r, ms));
     const tag = sombre ? " (sombre)" : " (clair)", o = { quand: "2026-12-05T09:00:00", session: CLEMENT, sombre, ouvertes: [1, 2, 5] };
     const { ctx, p, err } = await page(b, o);
     await p.waitForTimeout(2600);   // la 1re lecture du serveur part 2,5 s après l'affichage
-    if (!sombre) { const rc = await p.evaluate(async () => { allerA("classement"); await new Promise(z => setTimeout(z, 300)); const r = document.querySelector("#v-classement > .av-rappel"), e = document.querySelector("#v-classement > .av-entree, #v-classement > .av-roicarte");
+    if (!sombre) { const rc = await p.evaluate(async () => { allerA("classement"); await new Promise(z => setTimeout(z, 300)); const r = document.querySelector("#v-classement > .av-rappel"), e = document.querySelector("#v-classement > .av-entree, #v-classement > .av-roicarte, #v-classement .av-bloc");
         const t = r ? r.innerText : "", h = r ? r.getBoundingClientRect().height : 0; if (r) r.click(); await new Promise(z => setTimeout(z, 400)); return { t, h, e: !!e, vue: typeof vueActive === "function" ? vueActive() : "" }; });
       ok(rc.t && /dans Podium/.test(rc.t) && rc.h < 44 && !rc.e && rc.vue === "trophees", "Classement : une seule petite ligne de rappel (ni entrée ni carte), qui mène au Podium " + JSON.stringify(rc)); }
-    const cr = await p.evaluate(() => { const c = document.querySelector("#v-trophees > .av-roicarte"), e = document.querySelector("#v-trophees > .av-entree");
-      return c ? { t: c.innerText, apres: !!e && e.nextElementSibling === c, moi: (c.querySelector("li.moi") || {}).innerText || "", lignes: c.querySelectorAll(".avr-l li").length } : null; });
-    ok(cr && cr.apres && cr.lignes === 5 && /Course au roi de Noël/i.test(cr.t) && /🥇\s*Kévin\s*⭐ 2/.test(cr.t) && /Clément \(toi\)\s*⭐ 0 · 2es : 2/.test(cr.t) && /Le roi : le plus de ⭐ \(1res places\), à égalité le plus de 2es places · seuls les jeux des cases ouvertes le jour même comptent/.test(cr.t) && /un cadeau le 24/.test(cr.t) && /livrée « Roi de Noël »/.test(cr.t) && /Ton rang : 3e sur 5 · 2 jeux sur 16 joués/.test(cr.t) && /16 jeux/.test(cr.t) && /couronne de houx/.test(cr.t) && /plaque dorée si 24\/24/.test(cr.t) && /Clément/.test(cr.moi),
-      "Classement · la carte « Course au roi de Noël » sous l'entrée du calendrier : 5 pilotes (⭐ puis 🥈), ton rang, N/16 jeux, ce que gagne le roi et ce que gagne tout le monde " + JSON.stringify(cr) + tag);
+    const pl = await p.evaluate(() => { const b = document.querySelector("#v-trophees > .av-bloc"); return b ? { replie: !b.querySelector(".av-roicarte"), l: b.querySelector(".av-roiligne").innerText, fine: b.classList.contains("fine"), h: b.getBoundingClientRect().height } : null; });
+    ok(pl && pl.replie && /roi : 3e · classement/.test(pl.l) && pl.fine && pl.h < 50, "Avent compact · case du jour ouverte : une fine barre, le roi replié, « 🎅 roi : 3e · classement ▾ » " + JSON.stringify(pl) + tag);
+    const aq = await p.evaluate(async () => { document.querySelector("#v-trophees .av-q").click(); await new Promise(z => setTimeout(z, 200)); const a = document.querySelector("#v-trophees .av-aide"), t = a ? a.innerText : "";
+      document.documentElement.classList.add("sans-qr"); const cache = getComputedStyle(document.querySelector("#v-trophees .av-q")).display === "none" && !!a && getComputedStyle(a).display === "none"; document.documentElement.classList.remove("sans-qr");
+      document.querySelector("#v-trophees .av-q").click(); await new Promise(z => setTimeout(z, 200)); return { t: t.slice(0, 120), ok: /Une case par jour/.test(t) && /plaque dorée/.test(t) && /Le roi : le plus de ⭐/.test(t) && /couronne de houx/.test(t), cache, ferme: !document.querySelector("#v-trophees .av-aide") }; });
+    ok(aq.ok && aq.cache && aq.ferme, "Avent compact · le « ? » : les règles (une case par jour, plaque dorée, le roi, ses gains) ; masqué par le réglage des aides ; un 2e toucher les replie " + JSON.stringify(aq) + tag);
+    await p.click("#v-trophees .av-roiligne"); await p.waitForTimeout(300);
+    const cr = await p.evaluate(() => { const c = document.querySelector("#v-trophees > .av-bloc .av-roicarte");
+      return c ? { t: c.innerText, moi: (c.querySelector("li.moi") || {}).innerText || "", lignes: c.querySelectorAll(".avr-l li").length } : null; });
+    ok(cr && cr.lignes === 5 && /Course au roi de Noël/i.test(cr.t) && /🥇\s*Kévin\s*⭐ 2/.test(cr.t) && /Clément \(toi\)\s*⭐ 0 · 2es : 2/.test(cr.t) && /Le roi : le plus de ⭐ \(1res places\), à égalité le plus de 2es places · seuls les jeux des cases ouvertes le jour même comptent/.test(cr.t) && /un cadeau le 24/.test(cr.t) && /livrée « Roi de Noël »/.test(cr.t) && /Ton rang : 3e sur 5 · 2 jeux sur 16 joués/.test(cr.t) && /16 jeux/.test(cr.t) && /couronne de houx/.test(cr.t) && /plaque dorée si 24\/24/.test(cr.t) && /Clément/.test(cr.moi),
+      "Podium · un toucher sur « roi » déplie la course au roi de Noël : 5 pilotes (⭐ puis 🥈), ton rang, N/16 jeux, ce que gagne le roi et ce que gagne tout le monde " + JSON.stringify(cr) + tag);
     ok(!/€|%|2027|Hiver 2026|Flocons|skin|🥈 \d/.test(cr ? cr.t : ""), "la carte : aucun montant, aucun %, rien de 2027, le cadeau du 24 reste secret, pas de « skin », « 2es : » (pas de médaille 🥈 pour compter)" + tag);
     await p.screenshot({ path: DOSSIER + "/podium-course-roi" + (sombre ? "-sombre" : "") + ".png" });
-    await p.click(".av-roicarte"); await p.waitForTimeout(400);
+    await p.click(".av-roicarte .avr-voir"); await p.waitForTimeout(400);
     const dt = await p.evaluate(() => { const d = document.querySelector(".av-roid"); return d ? { n: d.querySelectorAll(".avd-l li").length, t: d.innerText } : null; });
     ok(dt && dt.n === 4 && /Les cadeaux du traîneau[\s\S]*Kévin · 42 cadeaux/.test(dt.t) && /toi : 2e/.test(dt.t) && /case du 3 · ❄️ case manquée/.test(dt.t) && /13 jeux encore cachés/.test(dt.t) && !/biscuits|luge|Départ du traîneau/i.test(dt.t), "un toucher : qui mène chaque jeu, seulement ceux des cases passées (3 + « 13 jeux encore cachés »), ❄️ sur un jeu manqué, et ta place " + JSON.stringify(dt && dt.t.slice(0, 200)) + tag);
     ok(!(await p.evaluate(deborde)).length, "390 px : la carte et le détail ne débordent pas" + tag);
@@ -102,7 +109,7 @@ const attendre = ms => new Promise(r => setTimeout(r, ms));
       const n0 = o.srv.envois.filter(c => c.op === "score").length;
       const r = await p.evaluate(async () => { document.querySelector(".av-case [data-avj='go']").click(); await new Promise(z => setTimeout(z, 100));
         const G = document.querySelector(".av-case").jeu.etat(); G.score = 50; G.finir(); const tout = document.querySelector(".av-case .av-clas").innerText;   // juste après la partie
-        await new Promise(z => setTimeout(z, 900)); return { tout, apres: document.querySelector(".av-case .av-clas").innerText, voile: document.querySelector(".avj-voile").innerText, carte: document.querySelector("#v-trophees > .av-roicarte").textContent }; });
+        await new Promise(z => setTimeout(z, 900)); return { tout, apres: document.querySelector(".av-case .av-clas").innerText, voile: document.querySelector(".avj-voile").innerText, carte: document.querySelector("#v-trophees > .av-bloc .av-roicarte").textContent }; });
       const env = o.srv.envois.filter(c => c.op === "score").slice(n0);
       ok(/Ton rang : 1er sur 3/.test(r.tout) && /🥇\s*Clément/.test(r.tout), "rejouer le jeu d'un jour passé : 50 cadeaux → 1er tout de suite, avant même la réponse du serveur " + JSON.stringify(r.tout.slice(0, 160)));
       ok(env.length === 1 && env[0].jeu === "cadeaux" && env[0].score === 50 && Object.keys(env[0]).sort().join() === "action,cle,jeu,op,score" && /1er sur 3/.test(r.apres) && !/⏳/.test(r.apres) && /compte au classement/.test(r.voile),
@@ -136,10 +143,12 @@ const attendre = ms => new Promise(r => setTimeout(r, ms));
   for (const [qui, sombre] of [[KEVIN, false], [CLEMENT, true]]) {
     const o = { quand: "2026-12-25T10:00:00", session: qui, sombre, ouvertes: [1, 2, 7, 24] }, { ctx, p, err } = await page(b, o), roi = qui.nom === "Kévin", tag = " (" + qui.nom + (sombre ? ", sombre)" : ", clair)");
     await p.waitForTimeout(2200);
-    const r = await p.evaluate(() => { const c = document.querySelector("#v-trophees > .av-roicarte"); return { carte: c ? c.innerText : "", fige: aventFige(), roi: aventRoiNoel(), et: aventEtoiles("Kévin"),
+    const r = await p.evaluate(() => { const bl = document.querySelector("#v-trophees > .av-bloc"), barre = bl ? bl.innerText.replace(/\n+/g, " ") : "", fine = !!bl && bl.classList.contains("fine") && bl.getBoundingClientRect().height < 50;
+      if (bl && !bl.querySelector(".av-roicarte")) bl.querySelector(".av-roiligne").click(); const c = document.querySelector("#v-trophees > .av-bloc .av-roicarte"); return { barre, fine, carte: c ? c.innerText : "", fige: aventFige(), roi: aventRoiNoel(), et: aventEtoiles("Kévin"),
       d: ["plaque.roinoel26", "finition.houx", "livree.roinoel"].map(k => debloques("Kévin").has(k)), autre: ["plaque.roinoel26", "finition.houx", "livree.roinoel"].some(k => debloques("Clément").has(k)),
       ids: ["plaque", "finition", "livree"].map(s => idsSlot(s).filter(id => estGainRoi(s, id))).flat(), q: texteOrigineItem(moiVrai(), "plaque", "roinoel26").p }; });
     ok(r.fige && r.roi === "Kévin" && r.et === 2 && r.d.every(Boolean) && !r.autre && /Roi des jeux de Noël 2026 : K[ée]vin/i.test(r.carte) && /résultat final/.test(r.carte), "25/12 · figé : Kévin roi des jeux de Noël (⭐ ×2), ses 3 objets à lui seul ; la carte affiche le résultat final " + JSON.stringify(Object.assign({}, r, { carte: r.carte.slice(0, 120) })) + tag);
+    ok(r.fine && /Joyeux Noël/.test(r.barre) && (roi ? /🎅 toi ! 👑 · classement/.test(r.barre) : /🎅 Kévin 👑 · classement/.test(r.barre)), "Avent compact · 25/12 : une fine barre « 🎄 Joyeux Noël › | 🎅 " + (roi ? "toi ! 👑" : "Kévin 👑") + " · classement ▾ » " + JSON.stringify(r.barre) + tag);
     ok(roi ? r.ids.sort().join() === "houx,roinoel,roinoel26" && /À toi pour toujours/.test(r.q) : !r.ids.length && /Réservé à Kévin/.test(r.q), (roi ? "écurie de Kévin : plaque, couronne de houx et livrée visibles, « ? » = « À toi pour toujours… »" : "écurie de Clément : aucun objet du roi visible ; « ? » = « Réservé à Kévin »") + " " + JSON.stringify(r.ids) + tag);
     const n0 = o.srv.envois.filter(c => c.op === "score").length;
     const j = await p.evaluate(async () => { ouvrirAvent(); ouvrirCaseAvent(2); await new Promise(z => setTimeout(z, 300)); document.querySelector(".av-case [data-avj='go']").click(); await new Promise(z => setTimeout(z, 100));

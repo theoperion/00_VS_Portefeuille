@@ -41,7 +41,7 @@ async function page(b, o) {
   await p.evaluate(() => { try { allerA("trophees"); } catch (e) { } }); await p.waitForTimeout(300);   // Avent 26/11 : le calendrier vit dans l'onglet Podium
   return { ctx, p, err, srv: o.srv, o };
 }
-const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-entree")].filter(e => !e.closest(".av-neige") && !e.closest(".av-porte")).filter(e => { const r = e.getBoundingClientRect(); return r.width && (r.right > innerWidth + 1 || r.left < -1); }).map(e => e.className).slice(0, 5);   // la neige (fixe) et les portes ouvertes en 3D sont rognées par leur cadre
+const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-bloc, .av-bloc *")].filter(e => !e.closest(".av-neige") && !e.closest(".av-porte")).filter(e => { const r = e.getBoundingClientRect(); return r.width && (r.right > innerWidth + 1 || r.left < -1); }).map(e => e.className).slice(0, 5);   // la neige (fixe) et les portes ouvertes en 3D sont rognées par leur cadre
 (async () => {
   const b = await chromium.launch(), ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); };
   // 1 · hors décembre : rien, même en forçant
@@ -55,8 +55,8 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
   for (const sombre of [false, true]) {
     const tag = sombre ? " (sombre)" : " (clair)";
     const { ctx, p, err } = await page(b, { quand: "2026-12-05T09:00:00", session: JOUEUR, sombre, ouvertes: [1, 2] });
-    const e = await p.evaluate(() => { const x = document.querySelector("#v-trophees > .av-entree"); return x ? { t: x.textContent, pas: !!x.querySelector(".av-pas") } : null; });
-    ok(e && /case du 5/.test(e.t) && e.pas, "5/12 · l'entrée « Calendrier de l'Avent » en haut du Classement, avec la pastille de la case du jour " + JSON.stringify(e) + tag);
+    const e = await p.evaluate(() => { const x = document.querySelector("#v-trophees > .av-bloc .av-entree"); return x ? { t: x.textContent, a: x.getAttribute("aria-label"), pas: !!x.querySelector(".av-pas") } : null; });
+    ok(e && /Case du jour : à ouvrir/.test(e.t) && /case du 5 décembre t'attend/.test(e.a) && e.pas, "5/12 · la carte compacte en haut du Podium : « Case du jour : à ouvrir », avec la pastille de la case du jour " + JSON.stringify(e) + tag);
     if (!sombre) await p.screenshot({ path: DOSSIER + "/entree.png" });
     await p.click(".av-entree"); await p.waitForTimeout(400);
     const g = await p.evaluate(() => ({ n: document.querySelectorAll(".av-c").length, ferme: [...document.querySelectorAll(".av-c.ferme")].map(x => +x.dataset.av).sort((a, b) => a - b), jour: [...document.querySelectorAll(".av-c.jour")].map(x => +x.dataset.av), vue: [...document.querySelectorAll(".av-c.vue")].map(x => +x.dataset.av).sort() }));
@@ -76,8 +76,8 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
     const apres = await p.evaluate(() => ({ c: !!document.querySelector(".av-case"), ov: !!document.querySelector(".av-ov"), v5: !!document.querySelector('.av-c.vue[data-av="5"]') }));
     ok(!apres.c && apres.ov && apres.v5, "un toucher en dehors ferme la case ; la porte 5 reste ouverte " + JSON.stringify(apres) + tag);
     await p.click(".av-ov .av-x"); await p.waitForTimeout(200);
-    const e2 = await p.evaluate(() => { const x = document.querySelector("#v-trophees > .av-entree"); return x ? { t: x.textContent, pas: !!x.querySelector(".av-pas") } : null; });
-    ok(e2 && !e2.pas && /reviens demain/.test(e2.t), "après ouverture : plus de pastille, « reviens demain » " + JSON.stringify(e2) + tag);
+    const e2 = await p.evaluate(() => { const x = document.querySelector("#v-trophees > .av-bloc .av-entree"); return x ? { t: x.textContent, a: x.getAttribute("aria-label"), pas: !!x.querySelector(".av-pas"), fine: x.parentElement.classList.contains("fine"), h: x.parentElement.getBoundingClientRect().height } : null; });
+    ok(e2 && !e2.pas && /Case du 5 ouverte/.test(e2.t) && /reviens demain/.test(e2.a) && e2.fine && e2.h < 50, "après ouverture : plus de pastille, la carte devient une fine barre « ✅ Case du 5 ouverte » " + JSON.stringify(e2) + tag);
     ok(!err.length, "0 erreur JS" + tag + " " + JSON.stringify(err));
     await ctx.close();
   }
