@@ -54,13 +54,13 @@ const fermer = async (p, sel) => { await p.click(sel); await p.waitForTimeout(45
         // les règles : le mois en cours en évidence
         if (c.m === 202702) {
           await p2.evaluate(() => { document.querySelectorAll(".tuto, .revel").forEach(x => x.remove()); ouvrirRegles(); });
-          const r = await p2.evaluate(() => ({ haut: (document.querySelector(".regles .rg-actuel") || {}).innerText || "", ligne: (document.querySelector(".regles .rg-tab > div.actuel") || {}).innerText || "" }));
-          ok(/Ce mois-ci · février 2027/i.test(r.haut) && /Couloirs mouvants/.test(r.haut) && /Château aux sortilèges/.test(r.ligne), "règles du 1/2 : le piège de février en haut et sa ligne en évidence " + JSON.stringify(r).replace(/\\n/g, " "));
+          const r = await p2.evaluate(() => ({ haut: (document.querySelector(".regles .rgt-hero") || {}).innerText || "", ligne: (document.querySelector(".regles .rg-tab > div.actuel") || {}).innerText || "" }));
+          ok(/Ce mois-ci[\s\S]*février 2027/i.test(r.haut) && /Couloirs mouvants/.test(r.haut) && /Château aux sortilèges/.test(r.ligne), "règles du 1/2 : le piège de février en haut et sa ligne en évidence " + JSON.stringify(r).replace(/\\n/g, " "));
           for (const sch of ["light", "dark"]) { await p2.emulateMedia({ colorScheme: sch }); await p2.waitForTimeout(300); await p2.screenshot({ path: DOSSIER + "/regles-1fev-" + (sch === "light" ? "clair" : "sombre") + ".png" }); }
         }
         if (c.m === 202706) {
           await p2.evaluate(() => { document.querySelectorAll(".tuto, .revel").forEach(x => x.remove()); ouvrirRegles(); });
-          const r = await p2.evaluate(() => (document.querySelector(".regles .rg-actuel") || {}).innerText || "");
+          const r = await p2.evaluate(() => (document.querySelector(".regles .rgt-hero") || {}).innerText || "");
           ok(/Le Côté obscur/.test(r) && /au moins 2/.test(r), "règles du 1/6 : le Côté obscur en haut " + r.replace(/\s+/g, " "));
         }
       }

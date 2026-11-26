@@ -60,7 +60,7 @@ const CAS = [
       const out = [document.body.innerText];
       for (const y of [2026, 2027]) { try { choisirSaison(y); ETAT.podium = "stand"; garder(); allerA("trophees"); rendreTrophees(); } catch (e) { } await new Promise(r => setTimeout(r, 400)); out.push(document.body.innerText); }
       try { ouvrirTuto(); const t = document.querySelector(".tuto"); out.push("@@TUTO@@" + t.innerText + "@@FIN@@"); t.remove(); } catch (e) { out.push("@@TUTO@@ERREUR tuto " + e.message + "@@FIN@@"); }
-      try { ouvrirRegles(); out.push(document.querySelector(".regles").innerText); document.querySelector(".regles").remove(); } catch (e) { out.push("ERREUR règles " + e.message); }
+      try { ouvrirRegles(); document.querySelectorAll(".regles .rgt-f").forEach(f => { f.hidden = false; }); document.querySelectorAll(".regles details").forEach(d => { d.open = true; }); out.push(document.querySelector(".regles").innerText); document.querySelector(".regles").remove(); } catch (e) { out.push("ERREUR règles " + e.message); }
       return out.join("\n");
     });
     const tout = pop + "\n" + textes, ko = [];

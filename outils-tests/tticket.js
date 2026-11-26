@@ -38,7 +38,7 @@ async function page(b, o) {
   await p.evaluate(async () => { document.querySelectorAll(".revel, .regles, .tuto, .bulle-portrait, .ba").forEach(x => x.remove()); if (saisonVisible()) { ETAT.podium = "gp"; GP_ETAPE = null; garder(); } montrerVue("trophees"); rendreTrophees(); await new Promise(r => setTimeout(r, 1800)); document.querySelectorAll(".revel, .ba").forEach(x => x.remove()); });
   return { ctx, p, err, req };
 }
-const regles = async p => p.evaluate(async () => { ouvrirRegles(null, false); await new Promise(r => setTimeout(r, 900)); const o = document.querySelector(".regles"); const t = o ? o.innerText : ""; document.querySelectorAll(".regles").forEach(x => x.remove()); document.documentElement.classList.remove("fige"); return t; });
+const regles = async p => p.evaluate(async () => { ouvrirRegles(null, false); await new Promise(r => setTimeout(r, 900)); document.querySelectorAll(".regles .rgt-f").forEach(f => { f.hidden = false; }); document.querySelectorAll(".regles details").forEach(d => { d.open = true; }); const o = document.querySelector(".regles"); const t = o ? o.innerText : ""; document.querySelectorAll(".regles").forEach(x => x.remove()); document.documentElement.classList.remove("fige"); return t; });
 const deborde = () => [...document.querySelectorAll(".gp-tablette *, .tk-or *, .vit-tk *")].filter(x => { const r = x.getBoundingClientRect(); return r.width && (r.right > innerWidth + 1 || r.left < -1) && !x.closest(".cbo-rayons, .tb-papier") && !x.classList.contains("cbo-rayons"); }).map(x => x.className.baseVal !== undefined ? x.className.baseVal : x.className).slice(0, 5);
 (async () => {
   const b = await chromium.launch(), ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); };

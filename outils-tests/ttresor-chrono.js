@@ -149,7 +149,7 @@ const lire = p => p.evaluate(() => ({ enig: ((document.querySelector(".gp-piste 
   /* ---------- 5 bis. Règles de décembre (tour de chauffe) : rien de 2027 ---------- */
   for (const quand of ["2026-12-03T10:00:00", "2026-12-20T10:00:00", "2026-12-31T20:00:00"]) {
     const { ctx, p, err } = await page(b, { quand, session: { role: "perso", nom: "Kévin" } });
-    const r = await p.evaluate(async () => { ouvrirRegles("gp"); await new Promise(r => setTimeout(r, 300)); const o = document.querySelector(".regles"), li = document.querySelector("#rg-tresor"); return { tout: o ? o.innerText : "", li: li ? li.innerText : "" }; });
+    const r = await p.evaluate(async () => { ouvrirRegles("gp"); await new Promise(r => setTimeout(r, 300)); document.querySelectorAll(".regles .rgt-f").forEach(f => { f.hidden = false; }); document.querySelectorAll(".regles details").forEach(d => { d.open = true; }); const o = document.querySelector(".regles"), li = document.querySelector("#rg-tresor"); return { tout: o ? o.innerText : "", li: li ? li.innerText : "" }; });
     ok(/plaque dorée Chercheur de Noël/.test(r.li) && /Mettre en pause/.test(r.li) && !/éclat|Flair/i.test(r.tout) && !err.length, quand.slice(0, 10) + " : règles d'un joueur : la plaque dorée au plus rapide, aucun mot « éclat » ni « Flair »");
     await ctx.close(); }
 
