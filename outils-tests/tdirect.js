@@ -164,13 +164,13 @@ const horsDessin = p => p.evaluate(() => { const sc = document.querySelector("#g
   const fe = await F.p.evaluate(() => !!document.querySelector(".gp-plein") && !document.querySelector(".gp-plein.photo")); ok(fe, "Échap quitte le mode photo (le plein écran reste)");
   errs.push(...F.err); await F.ctx.close();
   const G = await ouvrir(b, "2027-02-10T12:00:00", donnees(202701, { kSP: 202702, sp: up }), { vu: 202701, sombre: true });
-  await G.p.evaluate(() => { const s = document.querySelector(".gp-schema"); s.open = true; s.scrollIntoView({ block: "center" }); }); await G.p.waitForTimeout(300); await G.p.screenshot({ path: DOSSIER + "/schema-sombre.png" });
+  await G.p.evaluate(() => { const s = document.querySelector(".gp-schema"); if (s) { s.open = true; s.scrollIntoView({ block: "center" }); } }); await G.p.waitForTimeout(300); await G.p.screenshot({ path: DOSSIER + "/schema-sombre.png" });
   const sch = await G.p.evaluate(() => document.querySelectorAll(".gp-schema-l li svg").length);
   await G.p.evaluate(() => ouvrirRegles("gp")); await G.p.waitForTimeout(600);
   const rg = await G.p.evaluate(() => { const l = document.querySelector(".regles .rg-schema"); if (!l) return 0; l.scrollIntoView({ block: "center" }); return l.querySelectorAll(".gp-schema-l li svg").length; }); await G.p.waitForTimeout(300);
   await G.p.screenshot({ path: DOSSIER + "/schema-regles-sombre.png" });
   const larg = await G.p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1);
-  ok(sch === 4 && rg === 4, "schéma dessiné (4 étapes en SVG) sous la course et dans les règles (" + sch + ", " + rg + ")");
+  ok(sch === 0 && rg === 4, "v20.87 (Théo) : en saison, plus de schéma sous la course, il est dans les règles (4 étapes en SVG) (" + sch + ", " + rg + ")");
   ok(larg, "390 px : pas de défilement horizontal");
   errs.push(...G.err); await G.ctx.close();
   // 8. S&P absent : le peloton avance avec les jours seulement (avance = jour / nombre de jours)
