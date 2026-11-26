@@ -3902,14 +3902,14 @@ function blocSignal() {
   const ordre = t => '<p class="sig-msg ordre">' + t + "</p>";
   /* jours d'ordre : la phrase fabriquée par le script (message, la même que l'e-mail) ; ancien script : l'ordre brut du moteur */
   const MG = g.message && g.message.pea ? g.message : null;
-  const ordres = () => MG ? ordre("⏵ PEA : " + esc(MG.pea)) + (aCTO && MG.cto ? ordre("⏵ CTO : " + esc(MG.cto)) : "")
-    : ordre("⏵ PEA : " + esc(g.ordre)) + (aCTO && g.ordreCTO && g.ordreCTO !== "Aucun" ? ordre("⏵ CTO : " + esc(g.ordreCTO)) : "");
+  const ordres = () => MG ? ordre("👉 PEA : " + esc(MG.pea)) + (aCTO && MG.cto ? ordre("👉 CTO : " + esc(MG.cto)) : "")
+    : ordre("👉 PEA : " + esc(g.ordre)) + (aCTO && g.ordreCTO && g.ordreCTO !== "Aucun" ? ordre("👉 CTO : " + esc(g.ordreCTO)) : "");
   const bascCreux = enCreux && g.transition && g.ordre && /BASCULE|RETOUR/.test(g.ordre);   // l'agitation change pendant l'exception : ne concerne que celui qui a gardé
   if (enCreux) {
     const avecGarde = venteEv ? "de garder ton " + D.pea + (aCTO ? (D.cto === D.pea ? " (PEA et CTO)" : " et ton " + D.cto) : "") : "d'acheter dès maintenant le " + D.pea + (aCTO ? (D.cto === D.pea ? " (PEA et CTO)" : " (" + D.cto + " au CTO)") : "");
     const nuance = "<b>Exception creux possible</b> : la chute " + (passe ? "était" : "est") + " assez profonde (" + (chuteE === null ? "" : F1.format(chuteE) + NNBSP + "%" + (passe ? " le " + esc(court(g.creuxDepuis).slice(0, 5)) : "") + ", seuil " + nS(ECART) + NNBSP + "%") + ") sans signe de récession, donc la règle permet aussi " + avecGarde + " ; à toi de choisir.";
-    msg = (bascCreux ? (MG ? ordres() : ordre("⏵ Si tu as gardé (exception creux), PEA : " + esc(g.ordre) + (aCTO && g.ordreCTO && g.ordreCTO !== "Aucun" ? " · CTO : " + esc(g.ordreCTO) : "") + ". Si tu es en cash : rien à faire."))
-        : venteEv ? ordre("⏵ Vends ton " + D.pea + (aCTO ? (D.cto === D.pea ? " au PEA et au CTO : cash au PEA, or au CTO" : " (cash au PEA) et ton " + D.cto + " (or au CTO)") : " : cash au PEA") + (passe ? ", si ce n'est pas déjà fait." : "."))
+    msg = (bascCreux ? (MG ? ordres() : ordre("👉 Si tu as gardé (exception creux), PEA : " + esc(g.ordre) + (aCTO && g.ordreCTO && g.ordreCTO !== "Aucun" ? " · CTO : " + esc(g.ordreCTO) : "") + ". Si tu es en cash : rien à faire."))
+        : venteEv ? ordre("👉 Vends ton " + D.pea + (aCTO ? (D.cto === D.pea ? " au PEA et au CTO : cash au PEA, or au CTO" : " (cash au PEA) et ton " + D.cto + " (or au CTO)") : " : cash au PEA") + (passe ? ", si ce n'est pas déjà fait." : "."))
         : pq("<b>À faire : rien.</b> Reste en cash" + (aCTO ? " (or au CTO)" : "") + ".", " sg-af")) +
       pq("<b>Pourquoi</b> : " + (venteEv ? leJ + "e Nasdaq a clôturé plus de " + nS(BANDE) + NNBSP + "% sous " + LIGNE + ". " : (passe ? leJ + "e Nasdaq était" : "Le Nasdaq est") + " sous " + LIGNE + ". ") + nuance) +
       pq("<b>Jusqu'à quand</b> : rachat (ou fin de l'exception) quand le Nasdaq repassera au-dessus de sa ligne de tendance" + (remonte ? " : " + remonte : "") + ".");
@@ -3918,9 +3918,9 @@ function blocSignal() {
     const bloque = jx.declLargeur ? (!jx.lisible || !jx.feuVert ? "l'exception creux est bloquée (" + raisonCreux(jx.raison) + ")" : !jx.arme ? "l'exception creux a déjà servi pendant cette baisse" : "l'exception creux ne s'applique pas")
       : "la chute n'est pas assez profonde pour l'exception creux";
     const dejaFait = g.transition ? "" : " (si ce n'est pas déjà fait depuis le " + esc(court(g.depuis).slice(0, 5)) + ")";
-    msg = (cashRecent && MG && MG.ordre ? ordre("⏵ PEA : " + esc(MG.pea.replace(/\.$/, "")) + dejaFait + ".") + (aCTO && MG.cto ? ordre("⏵ CTO : " + esc(MG.cto.replace(/\.$/, "")) + dejaFait + ".") : "")
-      : cashRecent ? ordre("⏵ PEA : vends ton " + (Q ? Q.pea : "LQQ ×2 ou ton Nasdaq-100 ×1 (ce que tu as)") + ", garde l'argent en cash" + dejaFait + ".") +
-        (aCTO ? ordre("⏵ CTO : vends ton " + (Q ? Q.cto : "QQQ3 ×3 ou ton Nasdaq-100 ×1 (ce que tu as)") + ", achète de l'or" + dejaFait + ".") : "")
+    msg = (cashRecent && MG && MG.ordre ? ordre("👉 PEA : " + esc(MG.pea.replace(/\.$/, "")) + dejaFait + ".") + (aCTO && MG.cto ? ordre("👉 CTO : " + esc(MG.cto.replace(/\.$/, "")) + dejaFait + ".") : "")
+      : cashRecent ? ordre("👉 PEA : vends ton " + (Q ? Q.pea : "LQQ ×2 ou ton Nasdaq-100 ×1 (ce que tu as)") + ", garde l'argent en cash" + dejaFait + ".") +
+        (aCTO ? ordre("👉 CTO : vends ton " + (Q ? Q.cto : "QQQ3 ×3 ou ton Nasdaq-100 ×1 (ce que tu as)") + ", achète de l'or" + dejaFait + ".") : "")
       : pq("<b>À faire : rien.</b> Reste en cash" + (aCTO ? " (or au CTO)" : "") + ".", " sg-af")) +
       pq("<b>Pourquoi</b> : le Nasdaq " + (cashRecent ? "a clôturé plus de " + nS(BANDE) + NNBSP + "% sous " + LIGNE + (g.depuis ? " le " + esc(court(g.depuis).slice(0, 5)) : "") : "est sous " + LIGNE) + (sansCreux ? "." : " et " + bloque + ".")) +
       pq("<b>Jusqu'à quand</b> : rachat quand il repassera au-dessus de sa ligne de tendance" + (remonte ? " : " + remonte : "") + (sansCreux ? "." : ", ou plus tôt si l'exception creux se déclenche."));
