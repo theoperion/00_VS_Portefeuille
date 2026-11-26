@@ -1,6 +1,9 @@
 /* Versus · 🎄 Calendrier de l'Avent du tour de chauffe (v20.61, validé par Théo le 25/11/2026)
-   Du 1er au 24 décembre 2026, une case par jour : on n'ouvre que la case du jour et celles des jours passés (date de l'appareil ;
-   l'appli n'a aucun garde-fou d'horloge ailleurs, donc date simple). Dix-sept petits jeux de Noël (v20.62 : + « Les biscuits du Père Noël » en case 16) (10 à 30 s, rejouables, score pour soi seul)
+   Du 1er au 24 décembre 2026, une case par jour (Théo, 25/11 : crash test de participation avant les mini-jeux 2027) : une case ne s'ouvre QUE
+   le jour même (heure de Paris) ; pas ouverte ce jour-là = « ❄️ Manquée » pour toujours (une case déjà ouverte reste rejouable). C'est le SERVEUR qui
+   tranche (Avent.js, action aventCase) : l'appli lui envoie « case n ouverte » (en file sans réseau), il n'accepte que la case de son jour de Paris,
+   et l'appli se cale sur sa réponse (son heure, ses cases ouvertes). Sans réseau : la date de l'appareil, corrigée à la reconnexion.
+   🏅 Les 24 cases ouvertes, chacune le jour même (compté par le serveur) : la plaque « Hiver 2026 » dorée, le 24 (liste dores du serveur, js/3-podium.js). Dix-sept petits jeux de Noël (v20.62 : + « Les biscuits du Père Noël » en case 16) (10 à 30 s, rejouables, score pour soi seul)
    et sept surprises. AUCUN point. Les cases ouvertes et les records vivent sur l'appareil (versus.avent*) ; chaque nouveau record part aussi au serveur (ci-dessous).
    Le 24 : un souvenir pour chaque pilote (plaque « Hiver 2026 » + traînée « Flocons »), à porter dès le 24/12/2026 (js/3-podium.js, souvenirOuvert).
    Règle du secret : aucune case ne parle de ce qui arrive (règles, circuits, nouveautés) ; le 20 dit seulement « l'annonce est arrivée ».
@@ -10,15 +13,53 @@
    seulement), en file sur l'appareil si le réseau manque (réessai silencieux) ; 1 envoi utile par jeu et par jour. Avant le 24/12 (date du serveur),
    chacun ne reçoit que SES records ; à partir du 24/12, la case 24 montre le meilleur de la bande par jeu et le « roi des jeux de Noël ». */
 "use strict";
-const AVENT = { debut: new Date(2026, 11, 1), fin: new Date(2027, 0, 1), annonce: 20 };
+const AVENT = { debut: 20261201, fin: 20261231, derniere: 24, annonce: 20 };
 let AVENT_APERCU = false;
-function aventPeriode() { const t = Date.now(); return t >= AVENT.debut.getTime() && t < AVENT.fin.getTime(); }
-/** le jour du calendrier (1..24 ; du 25 au 31 : 24, tout est ouvrable) ; 0 hors décembre 2026 */
-function aventJour() { return aventPeriode() ? Math.min(24, new Date().getDate()) : 0; }
+/** écart entre l'horloge du serveur et celle de l'appareil (ms), appris à chaque réponse du serveur ; 0 tant qu'il n'a pas répondu (hors réseau : la date de l'appareil) */
+let AVENT_DECAL = (() => { try { const v = Number(stock.get("versus.aventDecal")); return isFinite(v) && Math.abs(v) < 4e10 ? v : 0; } catch (e) { return 0; } })();   // v20.74 : le dernier écart connu, dès le démarrage
+const AV_PARIS = (() => { try { return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }); } catch (e) { return null; } })();
+/** aujourd'hui à Paris (aaaammjj), à l'heure du serveur s'il a répondu */
+function aventNum() {
+  const t = new Date(Date.now() + AVENT_DECAL);
+  try { const p = {}; AV_PARIS.formatToParts(t).forEach(x => { p[x.type] = x.value; }); return +p.year * 10000 + +p.month * 100 + +p.day; }
+  catch (e) { return t.getFullYear() * 10000 + (t.getMonth() + 1) * 100 + t.getDate(); }
+}
+function aventPeriode() { const n = aventNum(); return n >= AVENT.debut && n <= AVENT.fin; }
+/** le jour de décembre 2026 (1..31) ; 0 hors décembre 2026 */
+function aventJourDec() { return aventPeriode() ? aventNum() % 100 : 0; }
+/** la case du jour (1..24) ; 0 du 25 au 31 (le 24 reste la dernière) et hors décembre */
+function aventJour() { const j = aventJourDec(); return j >= 1 && j <= AVENT.derniere ? j : 0; }
 function aventApercu() { return AVENT_APERCU && !window.APERCUS_FINIS && apercuAutorise(); }
-function caseOuvrable(n) { return n >= 1 && n <= 24 && (aventApercu() || n <= aventJour()); }
+/** ouvrable : la case du jour, ou une case déjà ouverte (rejouable) ; tout en aperçu admin */
+function caseOuvrable(n) { return n >= 1 && n <= 24 && (aventApercu() || (aventPeriode() && (n === aventJour() || aventOuvertes().includes(n)))); }
+/** ❄️ manquée : un jour passé dont la case n'a pas été ouverte ce jour-là (fermée pour toujours) */
+function caseManquee(n) { return !aventApercu() && n >= 1 && n <= 24 && n < aventJourDec() && !aventOuvertes().includes(n); }
 function aventOuvertes() { try { const l = JSON.parse(stock.get("versus.avent") || "[]"); return Array.isArray(l) ? l.filter(n => Number.isInteger(n) && n >= 1 && n <= 24) : []; } catch (e) { return []; } }
-function marquerOuverte(n) { if (aventApercu() || !caseOuvrable(n)) return; const l = aventOuvertes(); if (!l.includes(n)) { l.push(n); stock.set("versus.avent", JSON.stringify(l)); } }
+function marquerOuverte(n) {
+  if (aventApercu() || !caseOuvrable(n)) return; const l = aventOuvertes();
+  if (!l.includes(n)) { l.push(n); stock.set("versus.avent", JSON.stringify(l)); }
+  if (n === aventJour() && aventFile() && !(AVENT_SRV && Array.isArray(AVENT_SRV.cases) && AVENT_SRV.cases.includes(n))) mettreEnFileCase(n);   // le serveur tranche
+}
+/** 🏅 le compte des cases ouvertes le jour même : { n (ouvertes), jd (jours écoulés, 24 au plus), perdue (1re case manquée, 0 si aucune), toutes } */
+function aventCompte() {
+  const l = aventOuvertes(), jd = Math.min(24, aventJourDec()), att = fileCases().filter(k => l.includes(k) && k <= jd), n = l.filter(k => k <= jd && !att.includes(k)).length;
+  let perdue = 0; for (let k = 1; k <= jd && !perdue; k++) if (caseManquee(k)) perdue = k;
+  return { n, jd, perdue, attente: att, toutes: n === 24 };   // une case qui attend le serveur n'est pas encore comptée
+}
+const AV_REGLE = "Une case par jour : à ouvrir le jour même, sinon elle est perdue ❄️";
+const AV_DOREE = "🏅 Ouvre les 24 cases, chacune le jour même : la plaque Hiver 2026 dorée t'attend le 24";
+/** le message (toast) passe au-dessus du calendrier tant qu'il est ouvert (secours des navigateurs sans :has) */
+function avToastDessus() { try { const t = document.getElementById("toast"); if (t) t.classList.toggle("av-dessus", !!document.querySelector(".av-ov, .av-case")); } catch (e) { } }
+/** le message d'une case manquée (la 24 : le souvenir reste à chacun) */
+function msgManquee(n) { return "❄️ Case manquée : elle ne s'ouvrait que le " + n + " décembre." + (n === 24 ? " Ton souvenir (plaque Hiver 2026 et traînée Flocons) t'attend quand même dans l'écurie." : ""); }
+/** « 🏅 4/24 · encore possible », « ❄️ 4/24 · plaque dorée perdue (case du 3 manquée) », « 24/24 · plaque dorée gagnée » */
+function texteCompteAvent() {
+  const c = aventCompte(); if (!c.jd) return "";
+  const at = c.attente.length ? " · ⏳ case du " + c.attente.join(", ") + " pas encore comptée (pas de réseau)" : "";
+  if (c.perdue) return "❄️ " + c.n + "/24 · plaque dorée perdue (case du " + c.perdue + " manquée)" + at;
+  if (c.toutes) return "🏅 24/24 · plaque Hiver 2026 dorée gagnée !";
+  return "🏅 " + c.n + "/24 · encore possible" + at;
+}
 function recordsAvent() { try { const o = JSON.parse(stock.get("versus.aventRecords") || "{}"); return o && typeof o === "object" ? o : {}; } catch (e) { return {}; } }
 function sonAvent(k, i) { try { if (window.SONS && SONS.noel) SONS.noel(k, i); } catch (e) { /* rien */ } }
 
@@ -490,7 +531,7 @@ function jeuAvent(zone, id) {
 /* ---------- Les 24 cases ---------- */
 /* surprises : texte seul, ou une petite scène animée (traîneau). Aucun mot sur ce qui arrive, aucun chiffre sur les joueurs. */
 const CASES_AVENT = {
-  1: { type: "scene", ico: "🛷", titre: "Bienvenue dans le calendrier !", texte: "Le traîneau vient de décoller de l'Atelier du Père Noël. Chaque jour jusqu'au 24, une case s'ouvre : des petits jeux de Noël, des surprises… et un cadeau le 24 pour chaque pilote. Rien ne compte, tout est pour le plaisir." },
+  1: { type: "scene", ico: "🛷", titre: "Bienvenue dans le calendrier !", texte: "Le traîneau vient de décoller de l'Atelier du Père Noël. Chaque jour jusqu'au 24, une case s'ouvre : des petits jeux de Noël, des surprises… et un cadeau le 24 pour chaque pilote.\n\nUne case par jour : à ouvrir le jour même, sinon elle est perdue ❄️\n\n🏅 Ouvre les 24 cases, chacune le jour même : la plaque Hiver 2026 dorée t'attend le 24. Rien ne compte au championnat, tout est pour le plaisir." },
   2: { type: "jeu", jeu: "cadeaux" }, 3: { type: "jeu", jeu: "renne" }, 4: { type: "jeu", jeu: "pile" },
   5: { type: "texte", ico: "😄", titre: "La blague du paddock", texte: "Pourquoi le traîneau du Père Noël ne prend-il jamais de pénalité ?\n\n… Parce qu'il ne dépasse personne : il survole tout le monde !" },
   6: { type: "jeu", jeu: "boules" }, 7: { type: "jeu", jeu: "memory" }, 8: { type: "jeu", jeu: "cheminees" },
@@ -516,14 +557,16 @@ function poserAventEntree() {
   try {
     const v = document.querySelector("#v-classement"); if (!v) return;
     let el = v.querySelector(":scope > .av-entree");
+    chargerDoresAvent();   // 🏅 la plaque dorée, pour toujours : la liste du serveur (dès le 24/12/2026)
     if (!aventPeriode() || typeof D === "undefined" || !D) { if (el) el.remove(); return; }
-    const j = aventJour(), fait = aventOuvertes().includes(j), toutes = j === 24 && fait;
+    const j = aventJour(), jd = aventJourDec(), fait = !j || aventOuvertes().includes(j), noel = !j || (j === 24 && fait), cpt = texteCompteAvent();
     const html = '<span class="av-cal" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="3" y="6" width="26" height="23" rx="4" fill="#C1121F"/><rect x="3" y="6" width="26" height="7" rx="3" fill="#8E0E18"/><path d="M10 3v6M22 3v6" stroke="#F7CF55" stroke-width="2.4" stroke-linecap="round"/>' +
-      '<text x="16" y="25" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">' + j + "</text></svg>" + (fait ? "" : '<i class="av-pas"></i>') + "</span>" +
-      '<span class="rp-t"><b>🎄 Calendrier de l\'Avent</b> · ' + (toutes ? "joyeux Noël !" : fait ? "case du jour ouverte, reviens demain" : "la case du " + j + " t'attend") + '</span><span class="rp-f" aria-hidden="true">›</span>';
+      '<text x="16" y="25" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">' + jd + "</text></svg>" + (fait ? "" : '<i class="av-pas"></i>') + "</span>" +
+      '<span class="rp-t"><span class="av-l1"><b>🎄 Calendrier de l\'Avent</b>' + (noel ? (aventOuvertes().includes(24) ? "joyeux Noël !" : "joyeux Noël ! ton souvenir t'attend dans l'écurie") : fait ? "case du jour ouverte, reviens demain" : "la case du " + j + " t'attend, aujourd'hui seulement") + "</span>" +
+      (j && !noel ? "<small>" + esc(AV_REGLE) + "</small>" : "") + (j && !noel && !aventCompte().perdue && !aventCompte().toutes ? "<small>" + esc(AV_DOREE) + "</small>" : "") + (cpt ? '<small class="av-cpt' + (aventCompte().perdue ? " perdue" : "") + '">' + esc(cpt) + "</small>" : "") + '</span><span class="rp-f" aria-hidden="true">›</span>';
     if (!el) { v.insertAdjacentHTML("afterbegin", '<button type="button" class="av-entree"></button>'); el = v.querySelector(":scope > .av-entree"); el.addEventListener("click", () => ouvrirAvent()); }
     if (!AVENT_SRV_T && SOURCE === "api") setTimeout(() => chargerAvent(), 2500);   // au démarrage : la file d'attente des records repart, en silence
-    el.innerHTML = html; el.classList.toggle("a-ouvrir", !fait); el.setAttribute("aria-label", "Calendrier de l'Avent" + (fait ? "" : " : la case du " + j + " décembre n'est pas encore ouverte"));
+    el.innerHTML = html; el.classList.toggle("a-ouvrir", !fait); el.setAttribute("aria-label", "Calendrier de l'Avent" + (fait ? "" : " : la case du " + j + " décembre t'attend, à ouvrir aujourd'hui sinon elle est perdue") + (cpt ? ". " + cpt : ""));
   } catch (e) { /* jamais bloquant */ }
 }
 if (typeof window.rendreClassement === "function") { const f0 = window.rendreClassement; window.rendreClassement = function () { const r = f0.apply(this, arguments); poserAventEntree(); return r; }; }
@@ -533,33 +576,36 @@ function neigeAvent(n) { if (reduit) return ""; let h = 7; const r = () => { h =
   return '<div class="av-neige" aria-hidden="true">' + Array.from({ length: n }, () => '<i style="--x:' + (r() * 100).toFixed(1) + "%;--d:" + (r() * 8).toFixed(2) + "s;--t:" + (6 + r() * 6).toFixed(2) + "s;--s:" + (2 + r() * 4).toFixed(1) + 'px"></i>').join("") + "</div>"; }
 function ouvrirAvent() {
   if (!aventPeriode() && !aventApercu()) return;
+  { const autre = () => document.querySelector(".tuto");   // une seule fenêtre à la fois : une annonce déjà ouverte passe d'abord, le calendrier s'ouvre à sa fermeture
+    if (autre()) { const mo = new MutationObserver(() => { if (!autre()) { mo.disconnect(); ouvrirAvent(); } }); mo.observe(document.body, { childList: true }); return; } }
   document.querySelectorAll(".av-ov").forEach(x => x.remove());
   const o = document.createElement("div"); o.className = "av-ov"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Calendrier de l'Avent");
   const dessiner = () => {
-    const vues = aventOuvertes(), j = aventJour();
+    const vues = aventOuvertes(), j = aventJour(), cpt = texteCompteAvent();
     o.innerHTML = neigeAvent(36) + '<div class="av-boite"><button class="av-x" type="button" aria-label="Fermer">✕</button><div class="av-h"><b>🎄 Le calendrier de l\'Avent</b><small>' +
-      (aventApercu() ? "Aperçu admin : toutes les cases s'ouvrent, rien n'est gardé." : "Tour de chauffe · une case par jour jusqu'au 24 · rien ne compte, tout pour le plaisir") + '</small></div><div class="av-grille">' +
-      ORDRE_AVENT.map(n => { const ok = caseOuvrable(n), vu = vues.includes(n), cls = !ok ? "ferme" : vu ? "vue" : n === j ? "jour" : "libre";
-        return '<button type="button" class="av-c ' + cls + '" data-av="' + n + '" aria-label="' + (ok ? "Case du " + n + " décembre" + (vu ? ", déjà ouverte : " + esc(titreCase(n)) : "") : "Case du " + n + " décembre, fermée jusqu'au " + n) + '">' +
-          '<span class="av-dedans" aria-hidden="true">' + (ok ? icoCase(n) : "") + '</span><span class="av-porte" aria-hidden="true"><span class="av-n">' + n + "</span>" + (ok ? "" : '<span class="av-cad">🔒</span>') + "</span></button>"; }).join("") + "</div></div>";
+      (aventApercu() ? "Aperçu admin : toutes les cases s'ouvrent, rien n'est gardé." : esc(AV_REGLE) + "</small>" + (!aventCompte().perdue && !aventCompte().toutes ? "<small>" + esc(AV_DOREE) + "</small>" : "") + (cpt ? '<small class="av-cpt' + (aventCompte().perdue ? " perdue" : "") + '">' + esc(cpt) + "</small>" : "") + "<small>Tour de chauffe · rien ne compte au championnat, tout pour le plaisir") + '</small></div><div class="av-grille">' +
+      ORDRE_AVENT.map(n => { const ok = caseOuvrable(n), vu = vues.includes(n), man = !ok && caseManquee(n), cls = man ? "manquee" : !ok ? "ferme" : vu ? "vue" : n === j ? "jour" : "libre";
+        return '<button type="button" class="av-c ' + cls + '" data-av="' + n + '" aria-label="' + (man ? "Case du " + n + " décembre, manquée : elle ne s'ouvrait que ce jour-là" : ok ? "Case du " + n + " décembre" + (vu ? ", déjà ouverte : " + esc(titreCase(n)) : ", à ouvrir aujourd'hui") : "Case du " + n + " décembre, fermée jusqu'au " + n) + '">' +
+          '<span class="av-dedans" aria-hidden="true">' + (ok ? icoCase(n) : "") + '</span><span class="av-porte" aria-hidden="true"><span class="av-n">' + n + "</span>" + (man ? '<span class="av-man">❄️ Manquée</span>' : ok ? "" : '<span class="av-cad">🔒</span>') + "</span></button>"; }).join("") + "</div></div>";
     o.querySelector(".av-x").addEventListener("click", fermer);
     o.querySelectorAll("[data-av]").forEach(b => b.addEventListener("click", () => toucherCase(b, +b.dataset.av)));
   };
-  const fermer = () => { o.remove(); AVENT_APERCU = false; poserAventEntree(); };
+  const fermer = () => { o.remove(); AVENT_APERCU = false; poserAventEntree(); avToastDessus(); };
+  o.redessiner = dessiner;   // le serveur a répondu (cases ouvertes, heure) : on redessine
   const toucherCase = (b, n) => {
-    if (!caseOuvrable(n)) { try { toast("Patience : cette case s'ouvre le " + n + " décembre."); } catch (e) { } return; }
+    if (!caseOuvrable(n)) { try { toast(caseManquee(n) ? msgManquee(n) : "Patience : cette case s'ouvre le " + n + " décembre."); } catch (e) { } return; }
     const deja = b.classList.contains("vue"); marquerOuverte(n);
     if (deja || reduit) return ouvrirCaseAvent(n, dessiner);
     b.classList.add("ouvre"); sonAvent("porte"); setTimeout(() => { if (o.isConnected) ouvrirCaseAvent(n, dessiner); }, 650);
   };
   o.addEventListener("click", e => { if (e.target === o) fermer(); });
-  dessiner(); document.body.appendChild(o); poserAventEntree(); chargerAvent();
+  dessiner(); document.body.appendChild(o); avToastDessus(); poserAventEntree(); chargerAvent();
 }
 /** une case ouverte : jeu ou surprise, dans sa fenêtre (un toucher en dehors, ✕ ou Fermer pour revenir au calendrier) */
 function ouvrirCaseAvent(n, apres) {
   if (!caseOuvrable(n)) return;
   document.querySelectorAll(".av-case").forEach(x => x.remove());
-  const c = CASES_AVENT[n], o = document.createElement("div"); o.className = "av-case"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
+  const c = CASES_AVENT[n], o = document.createElement("div"); o.className = "av-case"; o.dataset.n = n; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
   let corps = "", inst = null;
   if (c.type === "jeu") corps = '<div class="av-jeu"></div>';
   else if (c.type === "scene") corps = '<div class="av-jeu av-scene"></div><p class="av-t">' + esc(c.texte) + "</p>";
@@ -568,22 +614,22 @@ function ouvrirCaseAvent(n, apres) {
   else corps = '<p class="av-t">' + esc(c.texte) + "</p>" + (c.type === "annonce" ? '<button class="btn acc" type="button" data-av-podium>📣 Revoir l\'annonce</button>' : "");
   o.innerHTML = neigeAvent(24) + '<div class="av-carte"><button class="av-x" type="button" aria-label="Fermer">✕</button><span class="av-k">🎄 Case du ' + n + " décembre</span><h3>" + (c.type === "jeu" ? "" : '<span aria-hidden="true">' + c.ico + "</span> ") + esc(titreCase(n)) + "</h3>" + corps +
     '<div class="btn-row"><button class="btn ghost" type="button" data-av-fermer>Fermer</button></div></div>';
-  document.body.appendChild(o);
+  document.body.appendChild(o); avToastDessus();
   if (c.type === "jeu") inst = jeuAvent(o.querySelector(".av-jeu"), c.jeu);
   else if (c.type === "scene") inst = sceneTraineau(o.querySelector(".av-scene"));
   else if (c.type === "cadeau") { chargerAvent(true); try { if (typeof confettis === "function") confettis("confettis"); else sonAvent("fin"); } catch (e) { } }
   else sonAvent("grelots");
   o.jeu = inst;   // v20.62 : l'état de la partie, lisible par les tests
-  const fermer = () => { if (inst) inst.stop(); o.remove(); if (apres) apres(); poserAventEntree(); };
+  const fermer = () => { if (inst) inst.stop(); o.remove(); if (apres) apres(); poserAventEntree(); avToastDessus(); };
   o.addEventListener("click", e => { if (e.target === o) fermer(); });
   o.querySelector(".av-x").addEventListener("click", fermer); o.querySelector("[data-av-fermer]").addEventListener("click", fermer);
   const pd = o.querySelector("[data-av-podium]"); if (pd) pd.addEventListener("click", () => { fermer(); document.querySelectorAll(".av-ov").forEach(x => x.remove()); AVENT_APERCU = false;   // v20.62 : rouvre l'annonce du 20 elle-même
     try { const l = etapesJeu().filter(e => annonceEtape(e) === 20261220 && regleVisible(e.id)); if (l.length) ouvrirNouveautes(l); else allerA("trophees"); } catch (e) { } });
   const ec = o.querySelector("[data-av-ecurie]"); if (ec) ec.addEventListener("click", () => { fermer(); document.querySelectorAll(".av-ov").forEach(x => x.remove()); AVENT_APERCU = false;
-    try { if (typeof equiperMaintenant === "function") equiperMaintenant("plaque", "hiver26"); else { ETAT.podium = "ecurie"; ECU_SLOT = "plaque"; garder(); allerA("trophees"); rendreTrophees(); } } catch (e) { } });   // v20.70 · la plaque Hiver 2026 déjà essayée
+    try { if (typeof equiperMaintenant === "function") equiperMaintenant("plaque", typeof aventDore === "function" && aventDore(moiVrai()) ? "hiverdore" : "hiver26"); else { ETAT.podium = "ecurie"; ECU_SLOT = "plaque"; garder(); allerA("trophees"); rendreTrophees(); } } catch (e) { } });   // v20.70 · la plaque Hiver 2026 déjà essayée
   return o;
 }
-function joursAvantAnnonce() { const d = new Date(); if (d.getFullYear() !== 2026 || d.getMonth() !== 11) return aventApercu() ? AVENT.annonce - 13 : 0; return Math.max(0, AVENT.annonce - d.getDate()); }
+function joursAvantAnnonce() { if (!aventPeriode()) return aventApercu() ? AVENT.annonce - 13 : 0; return Math.max(0, AVENT.annonce - aventJourDec()); }
 /** la scène du 1er : le traîneau et ses rennes traversent le ciel, en boucle (immobile si « réduire les animations ») */
 function sceneTraineau(zone) {
   const W = 320, H = 200, dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -606,7 +652,8 @@ function htmlCadeauAvent() {
   let plaque = "", trainee = "";
   try { plaque = '<span class="plaque grande pl-hiver26">' + iconePlaque("hiver26") + esc(ITEMS.plaque.hiver26) + "</span>"; } catch (e) { }
   try { trainee = vignetteItem("trainee", "flocons", nom, {}); } catch (e) { }
-  return '<div class="av-cadeau"><div class="av-obj"><small>Plaque</small>' + plaque + '</div><div class="av-obj"><small>Traînée « Flocons »</small>' + trainee + "</div></div>";
+  let doree = ""; try { if (!aventApercu() && aventDores().includes(nom)) doree = '<div class="av-obj av-doree"><small>🏅 24 cases sur 24, chacune le jour même : la plaque dorée</small><span class="plaque grande pl-hiverdore">' + iconePlaque("hiverdore") + esc(ITEMS.plaque.hiverdore) + "</span></div>"; } catch (e) { }
+  return '<div class="av-cadeau">' + doree + '<div class="av-obj"><small>Plaque</small>' + plaque + '</div><div class="av-obj"><small>Traînée « Flocons »</small>' + trainee + "</div></div>";
 }
 /* ---------- Records de Noël partagés (serveur Versus · Avent.js) : jamais bloquant, jamais en simulation ni en aperçu ---------- */
 let AVENT_SRV = null, AVENT_SRV_T = 0, AVENT_ENVOI = false;
@@ -614,7 +661,24 @@ let AVENT_SRV = null, AVENT_SRV_T = 0, AVENT_ENVOI = false;
 function aventFile() { try { return !simulation() && !aventApercu() && aventPeriode(); } catch (e) { return false; } }
 function aventEnLigne() { try { return SOURCE === "api" && !simulation() && !aventApercu() && aventPeriode(); } catch (e) { return false; } }
 function fileAvent() { try { const o = JSON.parse(stock.get("versus.aventFile") || "{}"); return o && typeof o === "object" && !Array.isArray(o) ? o : {}; } catch (e) { return {}; } }
-function jourAvNum() { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
+function jourAvNum() { return aventNum(); }
+/** les cases ouvertes pas encore confirmées par le serveur (en file sur l'appareil si le réseau manque) */
+function fileCases() { try { const l = JSON.parse(stock.get("versus.aventCases") || "[]"); return Array.isArray(l) ? l.filter(n => Number.isInteger(n) && n >= 1 && n <= 24) : []; } catch (e) { return []; } }
+function mettreEnFileCase(n) { const l = fileCases(); if (!l.includes(n)) { l.push(n); stock.set("versus.aventCases", JSON.stringify(l)); } envoyerFileAvent(); }
+/** « case n ouverte » part au serveur ; il accepte (case du jour) ou refuse (manquée : on l'enlève de l'appareil) ; sans réseau : on garde pour plus tard */
+async function envoyerCasesAvent() {
+  let n;
+  while ((n = fileCases()[0]) !== undefined) {   // la file est relue à chaque tour : une case ouverte pendant l'envoi part aussi
+    const rep = await posterAdmin({ action: "aventCase", jour: n });
+    if (!rep || !rep.ok || typeof rep.accepte !== "boolean") return false;   // pas de réseau, serveur occupé ou pas encore à jour : plus tard
+    stock.set("versus.aventCases", JSON.stringify(fileCases().filter(k => k !== n)));
+    if (!rep.accepte) { stock.set("versus.avent", JSON.stringify(aventOuvertes().filter(k => k !== n)));
+      const c = document.querySelector('.av-case[data-n="' + n + '"]'); if (c) { if (c.jeu) c.jeu.stop(); c.remove(); }
+      try { toast(rep.raison === "manquee" || !rep.message ? msgManquee(n) : rep.message); } catch (e) { } }
+    recevoirAvent(rep);
+  }
+  return true;
+}
 /** un record à envoyer : gardé en file (le meilleur seulement), puis envoyé dès que possible */
 function mettreEnFileAvent(id, score) {
   const J = JEUX_AVENT[id]; if (!J || J.libre || !scoreValide(id, score) || !aventFile()) return;   // v20.62 : en file même hors connexion ; la connexion se teste à l'envoi
@@ -622,29 +686,70 @@ function mettreEnFileAvent(id, score) {
   f[id] = { s: score, deja: d ? d.deja : 0 }; stock.set("versus.aventFile", JSON.stringify(f)); envoyerFileAvent();
 }
 /** la file part au serveur ; « deja » (déjà un envoi aujourd'hui pour ce jeu) = on réessaie demain ; sans réseau = plus tard, en silence */
+let AVENT_RELANCE = false;
 async function envoyerFileAvent() {
-  if (AVENT_ENVOI || !aventEnLigne()) return; AVENT_ENVOI = true;
+  if (!aventEnLigne()) return;
+  if (AVENT_ENVOI) { AVENT_RELANCE = true; return; }   // un envoi tourne déjà : on repartira juste après lui (rien ne se perd)
+  AVENT_ENVOI = true; AVENT_RELANCE = false;
   try {
+    await envoyerCasesAvent();
+    const attente = fileCases();
     for (const jeu of Object.keys(fileAvent())) {
       const x = fileAvent()[jeu]; if (!x || x.deja === jourAvNum()) continue;
+      { const cj = Object.keys(CASES_AVENT).find(k => CASES_AVENT[k].jeu === jeu); if (cj && attente.includes(+cj)) continue; }   // sa case attend encore le serveur
       const rep = await posterAdmin({ action: "avent", op: "score", jeu, score: x.s });
       const f = fileAvent(), y = f[jeu];
       if (rep && rep.ok) { if (y && y.s === x.s) delete f[jeu]; recevoirAvent(rep); }
-      else if (rep && ["saisie", "fini", "tot", "refus"].includes(rep.erreur)) { if (y && y.s === x.s) delete f[jeu];
+      else if (rep && ["saisie", "fini", "tot", "refus", "manquee"].includes(rep.erreur)) { if (y && y.s === x.s) delete f[jeu];
         if (rep.erreur === "saisie") { const R = recordsAvent(); if (R[jeu] === x.s) { delete R[jeu]; stock.set("versus.aventRecords", JSON.stringify(R)); } } }   // v20.62 : un score refusé ne reste pas comme record (il bloquerait les suivants)
       else if (rep && rep.erreur === "deja") { if (y) y.deja = jourAvNum(); }
       else break;   // pas de réseau ou serveur occupé : on garde tout pour plus tard
       stock.set("versus.aventFile", JSON.stringify(f));
     }
-  } catch (e) { /* jamais bloquant */ } finally { AVENT_ENVOI = false; }
+  } catch (e) { /* jamais bloquant */ } finally { AVENT_ENVOI = false; if (AVENT_RELANCE) { AVENT_RELANCE = false; setTimeout(envoyerFileAvent, 0); } }
 }
+/* à la reprise de l'appli (retour au premier plan, réseau revenu) : la file repart, l'état du serveur est relu */
+try { document.addEventListener("visibilitychange", () => { if (!document.hidden) { chargerAvent(); envoyerFileAvent(); } });
+  window.addEventListener("online", () => { chargerAvent(true); envoyerFileAvent(); }); } catch (e) { /* rien */ }
 /** l'état du serveur : mes records (fusionnés avec ceux de l'appareil) et, dès le 24/12, ceux de la bande */
 function recevoirAvent(rep) {
-  if (!rep || !rep.ok || !rep.ouvert) return; AVENT_SRV = rep; AVENT_SRV_T = Date.now();
+  if (!rep || !rep.ok) return;
+  try { if (typeof rep.maintenant === "number" && isFinite(rep.maintenant) && !simulation()) { AVENT_DECAL = rep.maintenant - Date.now(); stock.set("versus.aventDecal", String(Math.round(AVENT_DECAL))); } } catch (e) { }   // l'heure du serveur fait foi
+  if (Array.isArray(rep.dores)) garderDoresAvent(rep.dores, rep.doresFinal);
+  if (!rep.ouvert) { majVuesAvent(); return; }
+  AVENT_SRV = rep; AVENT_SRV_T = Date.now();
+  if (Array.isArray(rep.cases)) {   // les cases ouvertes : celles du serveur (+ celles qui attendent de lui être envoyées), jamais deux vérités
+    const l = [...new Set(rep.cases.filter(n => Number.isInteger(n) && n >= 1 && n <= 24).concat(fileCases()))].sort((a, b) => a - b);
+    if (l.join() !== aventOuvertes().slice().sort((a, b) => a - b).join()) stock.set("versus.avent", JSON.stringify(l));
+  }
   try { const R = recordsAvent(); let ch = false;
     Object.keys(rep.mes || {}).forEach(jeu => { const J = JEUX_AVENT[jeu], v = Number(rep.mes[jeu]); if (!J || !isFinite(v)) return; if (R[jeu] === undefined || (J.bas ? v < R[jeu] : v > R[jeu])) { R[jeu] = v; ch = true; } });
     if (ch) stock.set("versus.aventRecords", JSON.stringify(R)); } catch (e) { }
   const z = document.querySelector(".av-case .av-records"); if (z) z.innerHTML = htmlRecordsAvent();
+  const cd = document.querySelector(".av-case .av-cadeau"); if (cd) cd.outerHTML = htmlCadeauAvent();   // 🏅 la plaque dorée dès que le serveur a compté la 24e case
+  majVuesAvent();
+}
+/** après une réponse du serveur : le calendrier (s'il est ouvert) et l'entrée du Classement se redessinent ; une case devenue interdite se ferme */
+function majVuesAvent() {
+  try { document.querySelectorAll(".av-case[data-n]").forEach(c => { if (!caseOuvrable(+c.dataset.n)) { if (c.jeu) c.jeu.stop(); c.remove(); } });
+    const o = document.querySelector(".av-ov"); if (o && o.redessiner && !o.querySelector(".av-c.ouvre")) o.redessiner(); poserAventEntree(); } catch (e) { }
+}
+/* ---------- 🏅 plaque « Hiver 2026 » dorée : la liste du serveur (les pilotes à 24/24), gardée sur l'appareil pour toujours une fois définitive ---------- */
+let AVENT_DORES_T = 0;
+function aventDores() {
+  if (aventNum() < 20261224) return [];   // rien avant le 24/12 (heure du serveur dès qu'il a répondu)
+  const S = AVENT_SRV && Array.isArray(AVENT_SRV.dores) ? AVENT_SRV.dores : null; if (S) return S.filter(x => typeof x === "string");
+  try { const o = JSON.parse(stock.get("versus.aventDores") || "null"); return o && Array.isArray(o.l) ? o.l.filter(x => typeof x === "string") : []; } catch (e) { return []; }
+}
+function garderDoresAvent(l, fin) {
+  if (simulation() || aventApercu()) return; const a = stock.get("versus.aventDores"), n = JSON.stringify({ l: l.filter(x => typeof x === "string"), fin: !!fin });
+  if (a !== n) { stock.set("versus.aventDores", n); try { if (typeof MEMO_SAISON !== "undefined") MEMO_SAISON = { d: null, m: {} }; } catch (e) { } }
+}
+/** une fois par ouverture de l'appli, à partir du 24/12/2026 et tant que la liste n'est pas définitive */
+async function chargerDoresAvent() {
+  try { if (AVENT_DORES_T || SOURCE !== "api" || simulation() || aventApercu() || aventPeriode() || aventNum() < 20261224) return;
+    const o = JSON.parse(stock.get("versus.aventDores") || "null"); if (o && o.fin) return;
+    AVENT_DORES_T = Date.now(); recevoirAvent(await posterAdmin({ action: "avent", op: "etat" })); } catch (e) { }
 }
 async function chargerAvent(force) {
   if (!aventEnLigne() || (!force && Date.now() - AVENT_SRV_T < 60000)) return;
