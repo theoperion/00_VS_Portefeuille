@@ -3525,9 +3525,9 @@ const VOL_AIDE = "Vol. = volatilité sur 1 an : à quel point le cours bouge d'u
 function aideVol(vp, etoileLigne) {
   const etoile = etoileLigne || (vp && !vp.manque && !vp.an && (!vp.per || vp.per === "1a")) ? " * moins d'un an de cours : depuis le premier." : "";
   if (!vp || !vp.per || vp.per === "1a") return VOL_AIDE + etoile;
-  const p = VOL_PER[vp.per][0];
+  const p = VOL_PER[vp.per][0], sur = /^depuis/.test(p) ? p : "sur " + p;   // « depuis janvier » / « depuis le début » sans « sur »
   return "Vol. = volatilité : à quel point le cours bouge d'un jour à l'autre, ramenée à l'année. 🟢 calme (moins de 15 %) · 🟠 15 à 30 % · 🔴 plus de 30 %. " +
-    (vp.manque ? "Portefeuille : pas assez de cours sur " + p + " pour la calculer." : "Portefeuille : sur " + p + (vp.an ? "" : " (depuis le " + frDate(isoN(vp.deb)) + ")") + ", la période choisie" + (vp.court ? " (court : indicatif)" : "") + ".") +
+    (vp.manque ? "Portefeuille : pas assez de cours " + sur + " pour la calculer." : "Portefeuille : " + sur + (vp.an ? "" : " (depuis le " + frDate(isoN(vp.deb)) + ")") + ", la période choisie" + (vp.court ? " (court : indicatif)" : "") + ".") +
     " Lignes : toujours sur 1 an." + etoile;
 }
 /** 26/11/2026 (Théo) · la volatilité du PORTEFEUILLE (et celle du S&P 500 à côté, et le Sharpe) suit la PÉRIODE CHOISIE.
