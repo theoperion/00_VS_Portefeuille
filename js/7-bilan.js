@@ -853,7 +853,8 @@ function armerRetour() {
     if (estGarde()) return;   // on revient « en avant » sur la garde : rien à faire
     window.__pop = Date.now();
     const cur = stock.get(CLES.vue) || vueActive(), acc = vueAccueil();
-    if (fermerFenetreOuverte()) { /* fenêtre fermée */ }
+    if (typeof retourEcurie === "function" && retourEcurie()) { /* v20.84 : écurie pas enregistrée → rappel (ou rappel fermé) */ }
+    else if (fermerFenetreOuverte()) { /* fenêtre fermée */ }
     else if (cur === "moi" && window.Moi && window.Moi.retour && window.Moi.retour()) { /* Moi › Aujourd'hui */ }
     else if (cur === "fiche" && FICHE_RETOUR) retourPodiumFiche();   // v20.71 : fiche ouverte depuis le Podium → retour au Podium
     else if (cur !== acc) montrerVue(acc);
