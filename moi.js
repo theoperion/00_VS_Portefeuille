@@ -2339,11 +2339,12 @@ function htmlEnveloppes(s, plat) {
     }).join("");
     tete = '<div class="nv-tete nv-g"><span>Enveloppe</span><span>' + esc(lib) + "</span><span>Plus-value</span><span></span></div>";
   }
+  const vp = volPortefeuille();
   const rep = gs.map((g, gi) => '<i style="' + ce(gi) + ";flex-grow:" + Math.max(0, (g.total || {}).valeur || 0).toFixed(0) + '" title="' + esc(g.env) + '"></i>').join("");
   return '<div class="m-envs' + (plat ? " plat" : "") + '">' + tete + corps +
-    '<div class="nv-tot nv-g"><span class="nv-n"><b>Portefeuille</b><span class="nv-v">' + eur(s.valeur) + "</span>" + pastilleVol(volPortefeuille()) + "</span>" + col(s.jour, s.jourPct, 2) + col(s.latente, s.latentePct, 1) + "<span></span>" +
+    '<div class="nv-tot nv-g"><span class="nv-n"><b>Portefeuille</b><span class="nv-v">' + eur(s.valeur) + "</span>" + pastilleVol(vp) + "</span>" + col(s.jour, s.jourPct, 2) + col(s.latente, s.latentePct, 1) + "<span></span>" +
     (gs.length > 1 ? '<span class="nv-rep" role="img" aria-label="Répartition par enveloppe">' + rep + "</span>" : "") + "</div>" +
-    (volPortefeuille() || gs.some(g => g.lignes.some(l => !l.especes && volLigne(g.env, l.code))) ? '<p class="nv-vo-aide">' + VOL_AIDE + (/\*<\/span>/.test(corps) || (volPortefeuille() && !volPortefeuille().an) ? " * moins d'un an de cours : depuis le premier." : "") + "</p>" : "") + "</div>";
+    (vp || gs.some(g => g.lignes.some(l => !l.especes && volLigne(g.env, l.code))) ? '<p class="nv-vo-aide">' + aideVol(vp, /\*<\/span>/.test(corps)) + "</p>" : "") + "</div>";
 }
 function estOuverte(el) { return el.classList.contains("ouvert"); }
 function basculerEnv(el) {
@@ -3322,13 +3323,17 @@ function choixCompte() {
 }
 function fenetre(rows, per) {
   if (!rows.length || per === "tout") return rows;
+  const cle = cleFenetre(rows, per);
+  let i0 = 0; rows.forEach((r, i) => { if (r[0] <= cle) i0 = i; });
+  return rows.slice(i0);
+}
+/** date de début (aaaammjj) demandée pour la période, comptée depuis le dernier relevé (sert à fenetre et à la volatilité de la période) */
+function cleFenetre(rows, per) {
   const fin = dateNum(rows[rows.length - 1][0]);
   const nm = ({ "1m": 1, "3m": 3, "6m": 6, "1a": 12 }[per] || 6), mDeb = new Date(fin.getFullYear(), fin.getMonth() - nm, 1);
   /* v16.83 : le 31 mai − 3 mois = le 28/29 février (et non le 3 mars) : jour borné au dernier jour du mois visé */
   const debut = per === "ytd" ? new Date(fin.getFullYear() - 1, 11, 31) : new Date(mDeb.getFullYear(), mDeb.getMonth(), Math.min(fin.getDate(), new Date(mDeb.getFullYear(), mDeb.getMonth() + 1, 0).getDate()));
-  const cle = debut.getFullYear() * 10000 + (debut.getMonth() + 1) * 100 + debut.getDate();
-  let i0 = 0; rows.forEach((r, i) => { if (r[0] <= cle) i0 = i; });
-  return rows.slice(i0);
+  return debut.getFullYear() * 10000 + (debut.getMonth() + 1) * 100 + debut.getDate();
 }
 /* lot 27 (Conseil validé par Théo) : Stats = « ma bourse en profondeur ». Ordre : bandeau du mois, courbe « Contre le marché »,
    Mois par mois (€ par défaut), Risque (ouvert, courbe des baisses), records perso, Répartition, Performances et Frais repliés.
@@ -3495,18 +3500,20 @@ function volLigne(env, code) {
   } catch (e) { /* pas de volatilité plutôt qu'un écran cassé */ }
   return null;
 }
-/** portefeuille entier : la MÊME valeur que « Volatilité 1 an » de Stats › Risque (celle du fichier, sinon recalculée de la même façon) */
-function volPortefeuille() {
+/** portefeuille entier : la MÊME valeur que la volatilité de Stats › Risque pour la même période (même fonction, choixRisque).
+ *  26/11/2026 (Théo) : suit la période d'Aujourd'hui (1 M, 6 M, YTD, 1 an, Tout) ; « Jour » = 1 an ; 5 j = trop court.
+ *  → { v, deb, an (période complète), n, per, court } ; { manque: true, … } si pas assez de cours sur la période ; null sans historique quotidien. */
+function volPortefeuille(per) {
   try {
     const h = M.historique; if (M.simple || !h || !h.rows || h.rows.length < 2) return null;   // profil simple : relevés de fin de mois, pas de variations quotidiennes
     const k = h.cols.indexOf("ip"); if (k < 0) return null;
-    const R = rowsS(null), v = choixRisque(null).moiVol; if (!ok(v)) return null;   // exactement le chiffre de Stats › Risque (même fonction)
-    const fin = R[R.length - 1][0], borne = fin - 10000, deb = (R.find(r => r[0] >= borne) || R[0])[0];
-    return { v, deb, an: R[0][0] <= borne, n: R.filter(r => r[0] >= borne).length - 1 };
+    const c = choixRisque(null, per === undefined ? VUEJ : per);   // exactement le chiffre de Stats › Risque (même fonction)
+    if (!ok(c.moiVol)) return c.per === "1a" ? null : { manque: true, n: c.n, per: c.per, deb: c.deb, an: c.an };
+    return { v: c.moiVol, deb: c.deb, an: c.an, n: c.n, per: c.per, court: c.court };
   } catch (e) { return null; }
 }
-function pastilleVol(x) { if (!x) return ""; const f = feuVol(x.v);
-  return '<span class="nv-vo ' + f.c + '" title="Volatilité ' + (x.an ? "1 an" : "depuis le " + frDate(isoN(x.deb))) + " : " + f.m + (x.src === "marche" ? " (≈ " + esc(x.nom) + ")" : "") + '"><i aria-hidden="true">' + f.e + "</i> vol. " + (x.src === "marche" ? "≈" : "") + pct(x.v, 0, false) + (x.an ? "" : "*") + "</span>"; }
+function pastilleVol(x) { if (!x || x.manque) return ""; const f = feuVol(x.v);
+  return '<span class="nv-vo ' + f.c + '" title="Volatilité ' + (x.per && x.per !== "1a" ? VOL_PER[x.per][0] + (x.an ? "" : " (depuis le " + frDate(isoN(x.deb)) + ")") + (x.court ? " (court : indicatif)" : "") : x.an ? "1 an" : "depuis le " + frDate(isoN(x.deb))) + " : " + f.m + (x.src === "marche" ? " (≈ " + esc(x.nom) + ")" : "") + '"><i aria-hidden="true">' + f.e + "</i> vol. " + (x.src === "marche" ? "≈" : "") + pct(x.v, 0, false) + (x.an ? "" : "*") + "</span>"; }
 /** 25/11/2026 (Théo) : volatilité 1 an d'un marché des cases Marchés, depuis ses clôtures quotidiennes déjà reçues (closMk ← marchesMoi().quot),
  *  même calcul que les lignes (volPoints). Seulement les semaines (pas de clôtures quotidiennes) : rien plutôt qu'un chiffre faux. */
 function volMk(nom) {
@@ -3514,14 +3521,55 @@ function volMk(nom) {
   catch (e) { return null; }
 }
 const VOL_AIDE = "Vol. = volatilité sur 1 an : à quel point le cours bouge d'un jour à l'autre, ramenée à l'année. 🟢 calme (moins de 15 %) · 🟠 15 à 30 % · 🔴 plus de 30 %.";
-/** Sharpe et volatilité du compte (cS, ou tout le portefeuille) et du S&P sur la même année : ceux de ton fichier quand il les donne ;
- *  sinon les deux recalculés ici, de la même façon. UNE seule fonction : Stats › Risque et la pastille du total (volPortefeuille) lisent la même. */
-function choixRisque(cS) {
-  const h = M.historique, R = rowsS(cS), k = colsS(cS).i;
+/** phrase d'aide sous les lignes (Aujourd'hui) : les lignes restent sur 1 an ; le portefeuille suit la période choisie (26/11/2026, Théo) */
+function aideVol(vp, etoileLigne) {
+  const etoile = etoileLigne || (vp && !vp.manque && !vp.an && (!vp.per || vp.per === "1a")) ? " * moins d'un an de cours : depuis le premier." : "";
+  if (!vp || !vp.per || vp.per === "1a") return VOL_AIDE + etoile;
+  const p = VOL_PER[vp.per][0];
+  return "Vol. = volatilité : à quel point le cours bouge d'un jour à l'autre, ramenée à l'année. 🟢 calme (moins de 15 %) · 🟠 15 à 30 % · 🔴 plus de 30 %. " +
+    (vp.manque ? "Portefeuille : pas assez de cours sur " + p + " pour la calculer." : "Portefeuille : sur " + p + (vp.an ? "" : " (depuis le " + frDate(isoN(vp.deb)) + ")") + ", la période choisie" + (vp.court ? " (court : indicatif)" : "") + ".") +
+    " Lignes : toujours sur 1 an." + etoile;
+}
+/** 26/11/2026 (Théo) · la volatilité du PORTEFEUILLE (et celle du S&P 500 à côté, et le Sharpe) suit la PÉRIODE CHOISIE.
+ *  1 an : comme avant (valeur du fichier, sinon recalculée). Autres périodes : recalculées ici sur les relevés quotidiens de la période
+ *  (mêmes bornes que la courbe, fenetre), même méthode : écart type des variations quotidiennes × √252. Moins de 60 séances : « court : indicatif ».
+ *  Moins de 15 séances : pas de chiffre (« pas assez de cours »). Les pastilles des lignes et des marchés restent sur 1 an. */
+const VOL_PER = { "5j": ["5 séances", "Vol. 5 séances"], "1m": ["1 mois", "Vol. 1 mois"], "3m": ["3 mois", "Vol. 3 mois"], "6m": ["6 mois", "Vol. 6 mois"],
+  "ytd": ["depuis janvier", "Vol. depuis janv."], "1a": ["1 an", "Vol. 1 an"], "tout": ["depuis le début", "Vol. depuis le début"] };
+const VOL_MIN = 15, VOL_COURT = 60;
+function perVol(p) { return VOL_PER[p] ? p : "1a"; }   // « Jour », « Séance » : 1 an (la référence)
+/** relevés de la période (5 séances : les 6 derniers relevés) et si l'historique commence après le début demandé */
+function fenVol(R, per) {
+  if (!R.length) return { W: [], part: false };
+  if (per === "5j") return { W: R.slice(-6), part: R.length < 6 };
+  if (per === "tout") return { W: R, part: false };
+  return { W: fenetre(R, per), part: R[0][0] > cleFenetre(R, per) };
+}
+/** volatilité et Sharpe d'une colonne sur des relevés donnés (tous) : { vol, sharpe, n } ; n = nombre de variations ; vol null sous VOL_MIN */
+function risqueSur(W, k) {
+  const r = [];
+  if (k >= 0) for (let i = 1; i < W.length; i++) if (W[i - 1][k] > 0 && W[i][k] > 0) r.push(W[i][k] / W[i - 1][k] - 1);
+  if (r.length < VOL_MIN) return { vol: null, sharpe: null, n: r.length };
+  const moy = r.reduce((a, x) => a + x, 0) / r.length, et = Math.sqrt(r.reduce((a, x) => a + (x - moy) * (x - moy), 0) / (r.length - 1)) * Math.sqrt(252);
+  const rf = ((dVersus() || {}).marche || {}).tauxSansRisque || 0;
+  return { vol: et, sharpe: et > 0 ? (moy * 252 - rf) / et : null, n: r.length };
+}
+/** Sharpe et volatilité du compte (cS, ou tout le portefeuille) et du S&P sur la même période (per, 1 an par défaut).
+ *  1 an : ceux de ton fichier quand il les donne ; sinon les deux recalculés ici, de la même façon.
+ *  UNE seule fonction : Stats › Risque et la pastille du total (volPortefeuille) lisent la même. */
+function choixRisque(cS, per) {
+  per = perVol(per);
+  const h = M.historique, R = rowsS(cS), k = colsS(cS).i, kS = h.cols.indexOf("isp");
   const envs = M.enveloppes || [], pf = cS ? cS.env : envs.find(e => e.type === "total") || {}, idx = envs.find(e => e.type === "indice" && /S&P/i.test(e.nom || "")) || {};
+  if (per !== "1a") {
+    const { W, part } = fenVol(R, per), a = risqueSur(W, k), b = risqueSur(W, kS);
+    return { moiSh: a.sharpe, spSh: a.vol === null ? null : b.sharpe, moiVol: a.vol, spVol: a.vol === null ? null : b.vol, calc: true, pf, per, n: a.n, court: a.n < VOL_COURT, an: !part, deb: W.length ? W[0][0] : null };
+  }
   let moiSh = pf.sharpe, spSh = idx.sharpe, moiVol = pf.vol, spVol = idx.vol, calc = false;
-  if (k >= 0 && (!ok(spSh) || (cS && !(ok(moiSh) && ok(moiVol))))) { const a = risqueAn(R, k), b = risqueAn(R, h.cols.indexOf("isp")); if (a && b) { moiSh = a.sharpe; spSh = b.sharpe; moiVol = a.vol; spVol = b.vol; calc = true; } }
-  return { moiSh, spSh, moiVol, spVol, calc, pf };
+  if (k >= 0 && (!ok(spSh) || (cS && !(ok(moiSh) && ok(moiVol))))) { const a = risqueAn(R, k), b = risqueAn(R, kS); if (a && b) { moiSh = a.sharpe; spSh = b.sharpe; moiVol = a.vol; spVol = b.vol; calc = true; } }
+  const fin = R.length ? R[R.length - 1][0] : 0, borne = fin - 10000, deb = R.length ? (R.find(r => r[0] >= borne) || R[0])[0] : null;
+  const n = k < 0 ? 0 : R.filter(r => r[0] >= borne).length - 1;
+  return { moiSh, spSh, moiVol, spVol, calc, pf, per, n, court: n < VOL_COURT, an: R.length ? R[0][0] <= borne : false, deb };
 }
 function blocRisque() {
   const h = M.historique; if (!h || !h.rows || h.rows.length < 2) return "";
@@ -3529,7 +3577,10 @@ function blocRisque() {
   if (k < 0) return cS ? acc("m-risque", "Risque", "au jour le jour", seulTout("Risque"), true) : "";
   const R = rowsS(cS); if (R.length < 2) return "";
   const B = baisses(R, k), dc = i => dateCourte(dateNum(R[i][0])) + "/" + String(R[i][0]).slice(2, 4);
-  const { moiSh, spSh, moiVol, spVol, calc, pf } = choixRisque(cS);
+  const X = choixRisque(cS, PREF.per), { moiSh, spSh, moiVol, spVol, calc, pf } = X;
+  const pv = VOL_PER[X.per], laPer = { "1a": "la même année", "1m": "le même mois", "3m": "les mêmes 3 mois", "6m": "les mêmes 6 mois" }[X.per] || "la même période";
+  const depuis = !X.an && X.deb ? "depuis le " + dc(R.findIndex(r => r[0] === X.deb)) + " · " : "", indic = X.court ? " (court : indicatif)" : "";
+  const manque = !ok(moiVol) && X.per !== "1a" ? "pas assez de cours (" + X.n + " séance" + (X.n > 1 ? "s" : "") + ")" : "";
   const hausse = cS && !ok(pf.hausse) ? hausseAn(R, k) : pf.hausse;
   const auHaut = B.actuel > -0.0005;
   const retour = B.iCreux < 0 ? null : B.iRetour >= 0 ? duree(R[B.iCreux][0], R[B.iRetour][0]) : null;
@@ -3542,9 +3593,10 @@ function blocRisque() {
       tuile("Temps de retour", B.iCreux < 0 ? "—" : retour || "pas encore", "", B.iCreux < 0 ? "" : retour ? "du creux au retour, le " + dc(B.iRetour) : "depuis le creux du " + dc(B.iCreux)) +
     "</div>" +
     '<div class="tuiles m-petit m-t3">' +
-      tuile("Volatilité 1 an", pct(moiVol, 1, false), "", ok(spVol) ? "S&amp;P 500 : " + pct(spVol, 1, false) : "écart type annualisé", "La volatilité mesure l'ampleur des secousses : plus elle est haute, plus ta valeur monte et descend fort d'un jour à l'autre. Elle se lit en comparaison avec le S&P 500.") +
-      tuile("Sharpe 1 an", ok(moiSh) ? F2.format(moiSh) : "—", "", ok(spSh) ? "S&amp;P 500 : " + F2.format(spSh) + " sur la même année" : "rendement pour le risque pris",
-        "Sharpe : ce que tu as gagné au-dessus d'un placement sans risque, pour chaque unité de secousse. Il se lit en comparaison : au-dessus du S&P 500, tu as été mieux payé que le marché pour le risque pris." + (calc ? " Ici, les deux sont recalculés sur tes relevés de l'année." : "")) +
+      tuile(pv[1], ok(moiVol) ? pct(moiVol, 1, false) : "—", "", manque || depuis + (ok(spVol) ? "S&amp;P 500 : " + pct(spVol, 1, false) : "écart type annualisé") + indic,
+        "La volatilité mesure l'ampleur des secousses : plus elle est haute, plus ta valeur monte et descend fort d'un jour à l'autre. Elle suit la période choisie en haut (" + pv[0] + ") et se lit en comparaison avec le S&P 500 sur " + laPer + ". Sur une période courte (moins de 60 séances), le chiffre change vite : il est seulement indicatif. Les pastilles des lignes restent sur 1 an.") +
+      tuile("Sharpe " + pv[1].slice(5), ok(moiSh) ? F2.format(moiSh) : "—", "", manque || (ok(spSh) ? "S&amp;P 500 : " + F2.format(spSh) + (X.per === "1a" ? " sur la même année" : "") : "rendement pour le risque pris") + indic,
+        "Sharpe : ce que tu as gagné au-dessus d'un placement sans risque, pour chaque unité de secousse, sur la période choisie (" + pv[0] + "). Il se lit en comparaison : au-dessus du S&P 500, tu as été mieux payé que le marché pour le risque pris." + (calc ? " Ici, les deux sont recalculés sur tes relevés de la période." : "")) +
       tuile("Jours en hausse", pct(hausse, 0, false), "", "sur les 12 derniers mois") +
     "</div>", true);
 }

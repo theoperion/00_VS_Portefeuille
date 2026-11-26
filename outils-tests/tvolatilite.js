@@ -115,7 +115,7 @@ async function ecran(b, sombre, discret, variante) {
   // les fonctions de moi.js sont privées : pour le test seulement, la copie servie au navigateur les expose (le fichier n'est pas modifié)
   await p.route("**/moi.js*", async r => { const rep = await r.fetch(), t = await rep.text();
     r.fulfill({ response: rep, body: t.replace(/\}\)\(\);\s*$/, "window.__T = { volPoints, volPortefeuille, risqueAn, closMk, choixRisque, M: () => M };\n})();\n") }); });
-  await p.addInitScript(d => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x");
+  await p.addInitScript(d => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x"); localStorage.setItem("versus.moi.pref", JSON.stringify({ per: "1a" }));   // Stats › Risque sur 1 an (26/11 : la volatilité du portefeuille suit la période)
     localStorage.setItem("versus.etat", JSON.stringify(Object.assign({ ouverture: "moi" }, d ? { discret: "oui" } : {}))); }, discret);
   await p.goto("http://localhost:" + PORT + "/index.html"); await p.waitForTimeout(3500);
   await p.evaluate(() => document.querySelectorAll(".tuto, .bulle-portrait").forEach(x => x.remove()));
@@ -127,7 +127,7 @@ async function ecran(b, sombre, discret, variante) {
       return { lqq: pil("LQQ"), ese: pil("ESE"), cw8: pil("CW8"), tot: t ? t.textContent.trim() : null, risque: x }; });
     await p.evaluate(() => { const o = document.querySelector('#v-moi [data-m-ong="stats"]'); if (o) o.click(); }); await p.waitForTimeout(700);
     await p.evaluate(() => document.querySelectorAll("#v-moi details").forEach(d => { d.open = true; }));
-    const st = await p.evaluate(() => { const l = [...document.querySelectorAll("#v-moi .lab")].find(x => /^Volatilité 1 an/.test(x.textContent)); const v = l && l.parentElement.querySelector(".val"); return v ? v.textContent.trim() : null; });
+    const st = await p.evaluate(() => { const l = [...document.querySelectorAll("#v-moi .lab")].find(x => /^Vol\. 1 an/.test(x.textContent)); const v = l && l.parentElement.querySelector(".val"); return v ? v.textContent.trim() : null; });
     await ctx2.close(); return Object.assign(r, { err, stats: st });
   }
   const r = await p.evaluate(([A, B]) => {
