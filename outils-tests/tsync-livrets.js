@@ -25,8 +25,8 @@ const versus = { ok: true, genere: "2026-11-26T10:00:00", majTexte: "", envelopp
   ecurie: {}, exclusifs: {}, cartes: {}, duels: {}, pronos: {}, votes: {}, rivaux: {}, etapes: {}, liaison: { active: true, personnes: [] }, lignes: {}, premierMillion: null,
   session: { role: "perso", nom: "Théo" }, mesCartes: {}, mesDuels: {}, mesPronos: {}, monRival: {} };
 /* réponses successives du fichier à « syncLivrets » */
-const LISTE = "\n\nDerniers changements (48 h) :\n✅ ajouté · LEP · Apport · 10,00 € · 26/11 (18:31)\n❌ retiré · Livret A · Retrait · 200,00 € · 25/11 (18:36)"
-  + "\n✅ ajouté · Livret A · Apport · 25,00 € · 25/11 (18:36) · « Livret A / LEP » → Livret A";
+const LISTE = "\n\nDerniers changements (48 h) :\n✅ ajouté · LEP · Apport · 1 234,56 € · 26/11/2099 (12:34)\n❌ retiré · Livret A · Retrait · 9 999,99 € · 25/11/2099 (12:34)"
+  + "\n✅ ajouté · Livret A · Apport · 1 234,56 € · 25/11/2099 (12:34) · « Livret A / LEP » → Livret A";
 const REPONSES = [
   { ok: true, ajoutes: 1, retires: 0, message: "✅ 1 ligne(s) ajoutée(s), ❌ 0 retirée(s)." + LISTE },
   { ok: true, ajoutes: 0, retires: 0, message: "Déjà à jour : rien à changer.\n\nDerniers changements (48 h) :\naucun." },
@@ -85,7 +85,7 @@ const deborde = p => p.evaluate(() => {
     ok(lectures.slice(avant).some(x => x.frais), q + " · des lignes ont changé : Moi relit le fichier (rafraîchi)", lectures.slice(avant));
     { const L = await liste(p);
       ok(await titreListe(p) === "Derniers changements (48 h)" && L.length === 3, q + " · « Derniers changements (48 h) » : une liste de 3 lignes", L);
-      ok(L[0] && L[0].t === "✅ ajouté · LEP · Apport · 10,00 € · 26/11 (18:31)" && L[1].t === "❌ retiré · Livret A · Retrait · 200,00 € · 25/11 (18:36)", q + " · chaque ligne telle qu'envoyée par le fichier", L.map(x => x.t));
+      ok(L[0] && L[0].t === "✅ ajouté · LEP · Apport · 1 234,56 € · 26/11/2099 (12:34)" && L[1].t === "❌ retiré · Livret A · Retrait · 9 999,99 € · 25/11/2099 (12:34)", q + " · chaque ligne telle qu'envoyée par le fichier", L.map(x => x.t));
       ok(L.map(x => x.gras).join() === "LEP,Livret A,Livret A" && L.every(x => +x.poids >= 600), q + " · le livret est en gras en tête de chaque ligne", L.map(x => [x.gras, x.poids]));
       ok(/« Livret A \/ LEP » → Livret A$/.test(L[2].t), q + " · libellé ambigu : « → Livret A » sur la même ligne", L[2]);
       ok(L.every((x, i) => !i || x.haut >= L[i - 1].bas - 0.5) && L.every(x => Math.abs(x.gauche - L[0].gauche) < 1), q + " · une ligne sous l'autre, alignées, rien qui se recouvre", L.map(x => [x.haut, x.bas])); }

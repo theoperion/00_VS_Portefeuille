@@ -590,7 +590,7 @@ function rendreClassement() {
     const vivante = manque.has(s.nom) ? '<span class="a-saisir">⏳ relevé à saisir</span>'
       : typeof saisonJouee === "function" && saisonJouee() && typeof badgesLigne === "function" && badgesLigne(s.nom) ? badgesLigne(s.nom) + (s.n < nMois ? '<span class="nmois">' + s.n + " mois</span>" : "") + mini(s)
       : pts(ecart) + " vs " + esc(D.marche.indices[i1]) + (s.n < nMois ? '<span class="nmois">' + s.n + " mois</span>" : "") + mini(s);   // v20.25 : « N mois » à part (plus de ligne coupée à 5 pilotes)
-    return '<div class="pos' + (s.nom === ETAT.moi ? " ici" : "") + '" tabindex="0" role="button" aria-expanded="false" data-key="' + esc(s.nom) + '" data-nom="' + esc(s.nom) + '"><span class="rk">' + rang + fleche(s.nom) + '</span><div class="who">' + (saisonVisible() ? avatar(s.nom) : '<i style="background:' + couleur(s.nom) + '"></i>') + '<div><b' + attrLivree(s.nom) + '>' + esc(s.nom) + couronne(s.nom) +
+    return '<div class="pos' + (s.nom === ETAT.moi ? " ici" : "") + '" tabindex="0" role="button" aria-expanded="false" data-key="' + esc(s.nom) + '" data-nom="' + esc(s.nom) + '"><span class="rk">' + rang + fleche(s.nom) + '</span><div class="who">' + (saisonVisible() ? avatar(s.nom) : '<i style="background:' + couleur(s.nom) + '"></i>') + '<div><b>' + nomLivree(s.nom) + couronne(s.nom) +
       (s.nom === ETAT.moi ? '<span class="sr">(moi)</span>' : "") +
       "</b><small>" + vivante + '</small></div></div><span class="t ' + sens(s.twr) + '" data-cv="' + s.twr + '" data-cf="pct">' + pct(s.twr) + "</span>" +
       (s === leader ? '<span class="g lead">LEADER</span>' : '<span class="g">' + pts(s.twr - leader.twr) + "</span>") + "</div>";

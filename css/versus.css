@@ -217,6 +217,7 @@ body.vue-moi .ticker { display: none; }
 @media (max-width: 360px) { .pos, .tour-h { column-gap: 7px; padding-left: 8px; padding-right: 8px; grid-template-columns: 28px minmax(0, 1fr) 80px; } .pos .g { font-size: 11px; white-space: nowrap; } .pos .rk { width: 26px; height: 26px; font-size: 15px; } .pos .who { gap: 5px; } .pos .who .casque { width: 21px; height: 21px; margin: 0; } .pos .t { font-size: 15px; } }
 .casque.holo { filter: drop-shadow(0 0 3px rgba(181,123,255,.6)); }
 .lv { font-style: italic; }
+span.lv { display: inline-block; padding-right: .12em; }   /* v21.11 : la livrée sur le nom seul ; .12em de marge pour que la dernière lettre en italique ne soit pas rognée (background-clip: text, Firefox) */
 .lv-chrome, .lv-or, .lv-arcenciel, .lv-oranime { -webkit-background-clip: text; background-clip: text; color: transparent !important; }
 .lv-chrome { background-image: linear-gradient(90deg, #6c7580, #c9d0d8 35%, #59616b 60%, #aab3bd); }
 .lv-or { background-image: linear-gradient(90deg, #B7791F, #F5C542 40%, #9A6418 70%, #E8B23A); }
@@ -3040,7 +3041,7 @@ body:has(.av-ov) .toast, body:has(.av-case) .toast { z-index: 99; }
 .lv-rayures, .lv-damier, .lv-flammes { color: var(--c) !important; }
 .lv-rayures { text-decoration: underline double; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 .lv-damier { background: repeating-linear-gradient(90deg, #101215 0 4px, #F5F5F2 4px 8px) 0 100% / 100% 2.5px no-repeat; padding-bottom: 2px; }
-.lv-flammes { text-shadow: 0 0 6px rgba(255, 106, 26, .65); }
+.lv-flammes { text-shadow: 0 0 2px rgba(255, 106, 26, .9); }   /* v21.11 : halo fin (le flou de 6px faisait une plaque brune derrière le nom en sombre) */
 .lv-bicolore { -webkit-background-clip: text; background-clip: text; color: transparent !important; background-image: linear-gradient(100deg, var(--c) 55%, var(--ink) 55%); }
 /* v20.70 · ✨ objets gagnés mis en avant, 🎨 couleur au choix, 🎲 au hasard, 🔰 plaque Recrue 2026 */
 .it-nv { justify-self: center; margin: 2px 0 1px; padding: 2px 7px; border-radius: 999px; font: 800 9.5px/1.2 var(--f-text); letter-spacing: .02em; color: #3A2600; background: linear-gradient(110deg, #FFE596, #F7CF55); box-shadow: 0 0 0 1.5px var(--panel), 0 0 8px rgba(247,207,85,.55); white-space: nowrap; }

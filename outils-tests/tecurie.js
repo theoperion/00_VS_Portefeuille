@@ -108,10 +108,10 @@ const course = async (p, vue) => p.evaluate(async vue => {
     await ctx.close();
   }
   // 4. tour de chauffe : avant le 1er décembre 2026, les voitures d'avant pour tout le monde, même avec une écurie enregistrée
-  { const { ctx, p, err } = await page(b, { quand: "2026-11-30T10:00:00", session: { role: "perso", nom: "Kévin" }, jusqua: 202612 });
+  { const { ctx, p, err } = await page(b, { quand: "2026-11-25T10:00:00", session: { role: "perso", nom: "Kévin" }, jusqua: 202612 });
     const c = await course(p, "2d"), e = c && c.eq ? c.eq : [];
     const m2 = await p.evaluate(() => [...document.querySelectorAll("#gp-piste .p2-car")].map(g => g.getAttribute("class") + (g.querySelector(".p2-casque") ? " casque" : "")));
-    ok(e.length === 5 && e.every(x => !x.casque && !x.numero && !x.finition) && m2.every(x => !/lv-|casque/.test(x)) && !err.length, "30/11/2026 : aucune écurie visible en course (rendu d'avant) " + JSON.stringify(m2));
+    ok(e.length === 5 && e.every(x => !x.casque && !x.numero && !x.finition) && m2.every(x => !/lv-|casque/.test(x)) && !err.length, "25/11/2026 (veille de l'ouverture du 26/11, v21.02) : aucune écurie visible en course (rendu d'avant) " + JSON.stringify(m2));
     await ctx.close(); }
   // 5. v20.61 (Théo, 25/11) : à partir du 1er décembre 2026, l'écurie se voit en course, mais seulement avec les objets de DÉPART (les objets 2027 enregistrés retombent sur la série)
   { const { ctx, p, err } = await page(b, { quand: "2026-12-15T10:00:00", session: { role: "perso", nom: "Kévin" }, jusqua: 202612 });
