@@ -101,7 +101,7 @@ function championnat(y) {
   if (MEMO_SAISON.m[y]) return MEMO_SAISON.m[y];
   const ch = estChauffe(y), deb = ch ? CHAUFFE_K - 1 : (y - 1) * 100 + 12, f = ch ? CHAUFFE_K : y * 100 + 12;
   const tot = {}; D.personnes.forEach(p => tot[p.nom] = { pts: 0, v: 0, pod: 0, bonus: 0, n: 0, cum: 1 });
-  const J = {}; D.personnes.forEach(p => J[p.nom] = { xp: 0, niv: 1, pioche: [], deck: deckBonus(y, p.nom), i: 0 });
+  const J = {}; D.personnes.forEach(p => J[p.nom] = { xp: 0, niv: 1, pioche: [], deck: deckBonus(y, p.nom), i: 0, bj: [] });
   const SERIE = {};
   let prevL = null;
   const ordre = (a, b) => tot[b].pts - tot[a].pts || tot[b].v - tot[a].v || tot[b].cum - tot[a].cum;
@@ -135,14 +135,20 @@ function championnat(y) {
       if (plancher) o.plancher = plancher;
       return o;
     });
-    // cartes révélées (main de base et pioche bonus), plafonnées à +4
+    // cartes révélées, plafonnées à +4 chacune : la carte du mois (main de base) et, EN PLUS (Théo, 26/11), la carte bonus piochée (une par mois au plus, chacune une fois par saison)
     l.forEach(x => {
-      const c = carteDe(y, x.nom, k); if (!c || !c.c) return;
-      const def = carteDef(c.c), j = J[x.nom]; if (!def || !j) return;
-      if (def.bonus && (!regleActive("pioche", k) || !j.pioche.some(z => z.c === c.c && z.k < k))) { x.carte = { id: c.c, gain: 0, cible: c.cible || null, invalide: true }; return; }
-      if (PG && PG.id === "chaleur" && c.c === "turbo") { x.carte = { id: c.c, gain: 0, cible: null, invalide: true, piege: true }; return; }   // « La forêt endormie » (ex-« Chaleur ») : Turbo interdit
-      if (PG && PG.id === "sirenes" && c.c === "pari") { x.carte = { id: c.c, gain: 0, cible: null, invalide: true, piege: true }; return; }   // V16.55 « Chant des Sirènes » : Pari interdit   // « Chaleur » : Turbo interdit
-      x._c = c; x._g = effetCarte(Object.assign({}, c, { revele: true }), x, l, avant, iR, { up: amelioAu(y, x.nom, k, j.niv), prev: prevL, cumAvant, piege: PG });
+      const c = carteDe(y, x.nom, k), j = J[x.nom]; if (!c || !j) return;
+      const ctx = () => ({ up: amelioAu(y, x.nom, k, j.niv), prev: prevL, cumAvant, piege: PG });
+      const bon = bonusPosee(c);
+      if (bon && carteDef(bon)) {
+        if (!regleActive("pioche", k) || !j.pioche.some(z => z.c === bon && z.k < k)) x.carteB = { id: bon, gain: 0, cible: null, invalide: true };
+        else if (j.bj.includes(bon)) x.carteB = { id: bon, gain: 0, cible: null, invalide: true, deja: true };
+        else { j.bj.push(bon); x._b = bon; x._gb = effetCarte({ c: bon, revele: true }, x, l, avant, iR, ctx()); }
+      }
+      const base = basePosee(c); if (!base) return;
+      if (PG && PG.id === "chaleur" && base === "turbo") { x.carte = { id: base, gain: 0, cible: null, invalide: true, piege: true }; return; }   // « La forêt endormie » (ex-« Chaleur ») : Turbo interdit
+      if (PG && PG.id === "sirenes" && base === "pari") { x.carte = { id: base, gain: 0, cible: null, invalide: true, piege: true }; return; }   // V16.55 « Chant des Sirènes » : Pari interdit   // « Chaleur » : Turbo interdit
+      x._c = c; x._g = effetCarte(Object.assign({}, c, { revele: true }), x, l, avant, iR, ctx());
     });
     // Théo, 26/11 : l'atout du circuit (+1, bouchon) est supprimé ; la carte garde son effet, plafonné à +4
     l.forEach(x => {
@@ -152,6 +158,7 @@ function championnat(y) {
       if (c.c === "pari" && c.cible) { const xc = l.find(z => z.nom === c.cible); if (xc) (xc.vise = xc.vise || []).push({ par: x.nom, gain: g }); }
       delete x._c; delete x._g;
     });
+    l.forEach(x => { if (!x._b) return; const g = Math.min(PLAFOND_CARTE, x._gb); x.carteB = { id: x._b, gain: g, cible: null }; x.p += g; delete x._b; delete x._gb; });   // la carte bonus, en plus
     // bonus d'équipe : tous les pilotes du mois battent le S&P 500 → +1 chacun
     if (!ch && regleActive("equipe", k) && iR !== null && l.length >= 2 && l.every(x => x.r > iR)) l.forEach(x => { x.equipe = 1; x.p += 1; });
     // série (V15) : +1 à chaque 3e mois d'affilée SANS FINIR DERNIER (remise à zéro à chaque saison)
@@ -1776,7 +1783,7 @@ function etatGant(y) {
       const allume = i => { if (!o.p[i]) { o.p[i] = m.k; o.n++; } };
       if (x.rg === 1) allume(0);
       if (m.iR !== null && x.r > m.iR) { r.bat++; if (r.bat >= 3) allume(1); }
-      if (x.carte && x.carte.gain > 0) allume(2);
+      if (x.carte && x.carte.gain > 0 || x.carteB && x.carteB.gain > 0) allume(2);
       if (x.carte && x.carte.id === "pari" && x.carte.gain > 0 && leads.includes(x.carte.cible)) allume(3);
       r.run = x.dernier ? 0 : r.run + 1; if (r.run >= 3) allume(4);
       if (x.rg === 1 && r.dernier) allume(5);

@@ -335,7 +335,7 @@ html.fige, html.fige body { overflow: hidden; }
 .rv-c h3 { margin: 0; font: italic 800 22px/1.1 var(--f-display); letter-spacing: .05em; text-transform: uppercase; } .rv-c p { margin: 0; font-size: 12.5px; color: rgba(244,245,248,.7); }
 .rv-l { display: grid; gap: 8px; }
 .rv-p { display: grid; grid-template-columns: 34px minmax(0, 1fr) 112px; gap: 10px; align-items: center; text-align: left; opacity: 0; animation: rvVient .4s ease-out forwards; animation-delay: calc(var(--i) * .7s); }
-.rv-n b { display: block; font: italic 700 15px/1.1 var(--f-display); letter-spacing: .05em; text-transform: uppercase; } .rv-n small { font-size: 11.5px; color: rgba(244,245,248,.7); }
+.rv-n b { display: block; font: italic 700 15px/1.1 var(--f-display); letter-spacing: .05em; text-transform: uppercase; } .rv-n small { display: block; font-size: 11.5px; color: rgba(244,245,248,.7); }
 .rv-carte { height: 58px; perspective: 500px; }
 .rv-in { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; animation: rvFlip .7s cubic-bezier(.3,.7,.3,1.2) forwards; animation-delay: calc(var(--i) * .7s + .45s); }
 .rv-dos, .rv-face { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 1px; border-radius: 10px; backface-visibility: hidden; -webkit-backface-visibility: hidden; border: 1px solid rgba(255,255,255,.18); }

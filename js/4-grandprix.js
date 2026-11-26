@@ -25,16 +25,30 @@ function mesCartes() {
   return loc;
 }
 function carteDe(y, nom, k) {
-  if (apercuSaison()) { const c = (((cartesApercu()[y] || {})[nom]) || {})[k]; return c && c.c ? c : null; }
+  if (apercuSaison()) { const c = (((cartesApercu()[y] || {})[nom]) || {})[k]; return c && (c.c || c.b) ? c : null; }
   const c = ((((D.cartes || {})[y] || {})[nom]) || {})[k];
-  if (c && c.c && vraiAdmin() && !adminActif() && nom !== moiPilote() && !circuitRevele(k)) return { cache: true };
-  if (c && c.c) return c;
+  if (c && (c.c || c.b) && vraiAdmin() && !adminActif() && nom !== moiPilote() && !circuitRevele(k)) return basePosee(c) ? { cache: true } : null;   // une carte bonus seule ne se devine pas
+  if (c && (c.c || c.b)) return c;
   // ma propre carte, gardée sur l'appareil, même avant que le Versus la renvoie (face cachée)
   const m = nom === moiPilote() ? ((mesCartes()[Math.floor(k / 100)] || {})[k] || (mesCartes()[y] || {})[k]) : null;
-  if (m && m.c) return Object.assign({ cache: true }, m);
+  if (m && (m.c || m.b)) return Object.assign({ cache: true }, m);
   return c && c.cache ? { cache: true } : null;
 }
 function moiPilote() { return moiVrai(); }
+/* Théo, 26/11 · la carte bonus (rattrapage) se joue EN PLUS de la carte du mois : un mois = { c: carte de base, cible, b: carte bonus }.
+   Ancien format (une seule carte) : une carte bonus rangée dans c compte comme la carte bonus du mois. Jamais deux cartes bonus le même mois. */
+function basePosee(c) { const d = c && c.c ? carteDef(c.c) : null; return d && !d.bonus ? c.c : null; }
+function bonusPosee(c) { if (!c) return null; if (c.b) return c.b; const d = c.c ? carteDef(c.c) : null; return d && d.bonus ? c.c : null; }
+/** les cartes jouées par un pilote sur un mois calculé : carte du mois, puis carte bonus */
+function cartesLigne(x) { return x ? [x.carte, x.carteB].filter(Boolean) : []; }
+/** un mois posé, mis à jour : la carte de base (bonus = false) ou la carte bonus (bonus = true), posée (id) ou reprise (null) */
+function majMoisCartes(e, bonus, carte, cible) {
+  e = Object.assign({}, e || {}); delete e.cache;
+  if (e.c && (carteDef(e.c) || {}).bonus && !e.b) { e.b = e.c; delete e.c; delete e.cible; }   // ancien format : la bonus passe à sa place
+  if (bonus) { if (carte) e.b = carte; else delete e.b; }
+  else if (carte) { e.c = carte; e.cible = cible || null; } else { delete e.c; delete e.cible; }
+  return e.c || e.b ? e : null;
+}
 /** Effet d'une carte sur un mois : x = ligne du pilote, l = tout le mois, avant = places au championnat avant ce mois */
 function effetCarte(c, x, l, avant, iR, ctx) {
   if (!c || !c.c || c.cache && !c.revele) return 0;
@@ -69,23 +83,25 @@ function kOuvertPour(y) {
   if (estChauffe(y)) return k === CHAUFFE_K ? k : null;
   return Math.floor(k / 100) === y && k !== CHAUFFE_K ? k : null;
 }
-async function poserCarte(y, k, carte, cible) {
-  const qui = moiPilote();
+async function poserCarte(y, k, carte, cible, emplacement) {
+  const qui = moiPilote(), bonus = carte ? !!(carteDef(carte) || {}).bonus : emplacement === "bonus";   // Théo, 26/11 : la carte bonus a sa propre place, en plus de la carte du mois
+  const ranger = o => { const e = majMoisCartes(o[k], bonus, carte, cible); if (e) o[k] = e; else delete o[k]; };
+  const nomC = bonus ? "Carte bonus" : "Carte";
   if (apercuSaison()) {
     const a = cartesApercu(); a[y] = a[y] || {}; a[y][qui] = a[y][qui] || {};
-    if (carte) a[y][qui][k] = { c: carte, cible: cible || null }; else delete a[y][qui][k];   // y : saison de l'aperçu
+    ranger(a[y][qui]);   // y : saison de l'aperçu
     stock.set("versus.cartesApercu", JSON.stringify(a)); MEMO_SAISON = { d: null, m: {} }; MEMO_EXCL = { d: null, cle: "", v: null };
-    toast(carte ? "Aperçu : carte posée sur " + moisLong(k) + " (sur cet appareil seulement)." : "Carte reprise."); rendreTrophees(); return;
+    toast(carte ? "Aperçu : " + nomC.toLowerCase() + " posée sur " + moisLong(k) + " (sur cet appareil seulement)." : nomC + " reprise."); rendreTrophees(); return;
   }
   if (SOURCE !== "api") { toast("Cartes indisponibles hors connexion."); return; }
   const yk = Math.floor(k / 100), m = mesCartes(), avant = JSON.stringify(m);
-  m[yk] = m[yk] || {}; if (carte) m[yk][k] = { c: carte, cible: cible || null }; else delete m[yk][k];
+  m[yk] = m[yk] || {}; ranger(m[yk]);
   const avantD = D.mesCartes ? JSON.stringify(D.mesCartes) : null;
-  if (D.mesCartes) { D.mesCartes[yk] = D.mesCartes[yk] || {}; if (carte) D.mesCartes[yk][k] = { c: carte, cible: cible || null }; else delete D.mesCartes[yk][k]; }
+  if (D.mesCartes) { D.mesCartes[yk] = D.mesCartes[yk] || {}; ranger(D.mesCartes[yk]); }
   stock.set(cleMesCartes(), JSON.stringify(m)); MEMO_SAISON = { d: null, m: {} }; MEMO_EXCL = { d: null, cle: "", v: null };
-  if (simulation()) { toast(carte ? "👁️ Simulation : carte posée pour voir, rien n'est envoyé." : "Carte reprise (simulation)."); rendreTrophees(); return; }
-  toast(carte ? "🂠 Carte posée face cachée sur " + moisLong(k) + "." : "Carte reprise."); rendreTrophees();
-  const rep = await posterAdmin({ action: "carte", personne: qui, mois: k, carte: carte || null, cible: cible || null });
+  if (simulation()) { toast(carte ? "👁️ Simulation : " + nomC.toLowerCase() + " posée pour voir, rien n'est envoyé." : nomC + " reprise (simulation)."); rendreTrophees(); return; }
+  toast(carte ? "🂠 " + nomC + " posée face cachée sur " + moisLong(k) + (bonus ? ", en plus de ta carte du mois." : ".") : nomC + " reprise."); rendreTrophees();
+  const rep = await posterAdmin({ action: "carte", personne: qui, mois: k, carte: carte || null, cible: cible || null, emplacement: bonus ? "bonus" : "base" });
   if (rep.ok) {
     const n = mesCartes(); n[yk] = rep.mesCartes || n[yk] || {}; stock.set(cleMesCartes(), JSON.stringify(n));
     if (D.mesCartes && rep.mesCartes) D.mesCartes[yk] = rep.mesCartes;
@@ -431,13 +447,13 @@ function htmlGrandPrix(y) {
   const chips = '<div class="gp-mois">' + etapes.map((x, j) => '<button type="button" data-gpe="' + j + '" aria-pressed="' + (j === i) + '">' + (x.k ? GPS[circuitDe(x.k)].drap + " " + esc(moisCourt(x.k)) + (x.avenir ? " ⏳" : "") : "Départ") + "</button>").join("") + "</div>";
   const lignes = ordre.map((n, r) => {
     const devant = r ? ordre[r - 1] : null, ecart = devant ? et.pts[devant] - et.pts[n] : 0, x = et.m ? et.m.l.find(z => z.nom === n) : null;
-    const ca = et.k ? carteDe(y, n, et.k) : null, cdef = ca && ca.c ? carteDef(ca.c) : null;
-    const res = x && x.carte ? (x.carte.invalide ? (x.carte.piege ? " Interdite ce mois-ci (piège " + (et.m && et.m.piege ? et.m.piege.ico + " " + et.m.piege.nom : "du circuit") + ") : sans effet." : " Pas encore piochée à ce moment-là : sans effet.") : " Résultat : " + (x.carte.gain > 0 ? "+" : "") + x.carte.gain + " pt" + (Math.abs(x.carte.gain) > 1 ? "s" : "") + (x.carte.sab ? " · " + x.carte.cible + " " + x.carte.sab : "") + ".") : "";
+    const ca = et.k ? carteDe(y, n, et.k) : null, idsCa = [basePosee(ca), bonusPosee(ca)].filter(Boolean);   // Théo, 26/11 : carte du mois + carte bonus en plus
+    const res = z => z.invalide ? (z.piege ? " Interdite ce mois-ci (piège " + (et.m && et.m.piege ? et.m.piege.ico + " " + et.m.piege.nom : "du circuit") + ") : sans effet." : z.deja ? " Déjà jouée cette saison : sans effet." : " Pas encore piochée à ce moment-là : sans effet.") : " Résultat : " + (z.gain > 0 ? "+" : "") + z.gain + " pt" + (Math.abs(z.gain) > 1 ? "s" : "") + (z.sab ? " · " + z.cible + " " + z.sab : "") + ".";
     // lot53 (Conseil, règle « une ligne = 3 zones ») : place · tête + NOM › + 2 pastilles au plus · total ; le calcul du mois ne s'ouvre qu'en touchant la ligne
     const P = [], I = [], pas = (w, pr, h) => P.push({ w, pr, h });   // P = bonus qui comptent (triés), I = infos sans point (seulement dans le détail)
-    if (ca && !x) { if (ca.cache && !cdef) P.push({ w: 0, pr: 0, h: '<span class="gp-x gp-xc cache" data-bdg="Carte posée face cachée : révélée le ' + jourLimite(et.k) + ' du mois.">🂠</span>' }); else if (cdef) P.push({ w: 0, pr: 0, h: '<span class="gp-x gp-xc" data-bdg="' + esc(cdef.ico + " " + cdef.nom + " : " + cdef.def) + '">' + cdef.ico + "</span>" }); }
+    if (ca && !x) { if (ca.cache && !idsCa.length) P.push({ w: 0, pr: 0, h: '<span class="gp-x gp-xc cache" data-bdg="Carte posée face cachée : révélée le ' + jourLimite(et.k) + ' du mois.">🂠</span>' }); else idsCa.forEach(id => { const cdef = carteDef(id); P.push({ w: 0, pr: 0, h: '<span class="gp-x gp-xc" data-bdg="' + esc(cdef.ico + " " + cdef.nom + (cdef.bonus ? " (carte bonus, en plus)" : "") + " : " + cdef.def) + '">' + cdef.ico + "</span>" }); }); }
     if (x) {
-      if (x.carte && cdef) { const g = x.carte.gain, h = '<span class="gp-x gp-xc' + (g < 0 ? " mal" : "") + '" data-bdg="' + esc(cdef.ico + " " + cdef.nom + " : " + cdef.def + res) + '">' + cdef.ico + (g ? (g > 0 ? "+" : "−") + Math.abs(g) : "") + "</span>"; if (g) pas(Math.abs(g), g > 0 ? 2 : 0, h); else I.push(h); }
+      cartesLigne(x).forEach(z => { const cdef = carteDef(z.id); if (!cdef) return; const g = z.gain, h = '<span class="gp-x gp-xc' + (g < 0 ? " mal" : "") + '" data-bdg="' + esc(cdef.ico + " " + cdef.nom + (cdef.bonus ? " (carte bonus, en plus)" : "") + " : " + cdef.def + res(z)) + '">' + cdef.ico + (g ? (g > 0 ? "+" : "−") + Math.abs(g) : "") + "</span>"; if (g) pas(Math.abs(g), g > 0 ? 2 : 0, h); else I.push(h); });
       if (x.vainq) pas(x.vainq, 3, '<span class="gp-x or" data-bdg="🪱 Le Chevaucheur des sables : vainqueur du mois, +2.">🪱+2</span>');
       if (x.piege === "nuit" && x.dernier) pas(2, 3, '<span class="gp-x" data-bdg="🌃 Safety car de nuit : le dernier du mois marque 2 points de place.">🌃+2</span>');
       if (x.equipe) pas(1, 1, '<span class="gp-x" data-bdg="🤝 Bonus d\'équipe : tout le monde a battu le S&P 500 ce mois-ci, +1.">🤝+1</span>');
@@ -501,10 +517,10 @@ function texteCarte(cd, up) {
 function htmlCartes(y) {
   const qui = moiPilote(); if (!qui || !D.personnes.some(p => p.nom === qui)) return "";
   const ap = apercuSaison(), src = ap ? ((cartesApercu()[y] || {})[qui] || {}) : Object.assign({}, (((D.cartes || {})[y] || {})[qui]) || {}, (mesCartes()[y] || {}));
-  const joues = {}; Object.entries(src).forEach(([k, c]) => { if (c && c.c) (joues[c.c] = joues[c.c] || []).push(+k); });
+  const joues = {}; Object.entries(src).forEach(([k, c]) => { [basePosee(c), bonusPosee(c)].forEach(id => { if (id) (joues[id] = joues[id] || []).push(+k); }); });
   const utilisees = {}; Object.entries(joues).forEach(([id, ks]) => { utilisees[id] = Math.max(...ks); });
   const kOuvert = kCartes(y), j = jeuDe(qui, y), up = kOuvert ? amelioAu(y, qui, kOuvert, j.niv) : { m: 0, a: 0, p: 0 };
-  const dejaMois = kOuvert && src[kOuvert] && src[kOuvert].c ? src[kOuvert].c : null;
+  const dejaMois = kOuvert ? basePosee(src[kOuvert]) : null, dejaBonus = kOuvert ? bonusPosee(src[kOuvert]) : null;   // Théo, 26/11 : carte du mois + carte bonus en plus
   const pioche = regleVisible("pioche") ? j.pioche.map(z => Object.assign({ tire: z.k }, carteDef(z.c))) : [];
   const main = CARTES.concat(pioche);
   const tuile = cd => {
@@ -514,6 +530,7 @@ function htmlCartes(y) {
     const pgO = kOuvert ? piegeMois(y, kOuvert) || {} : {}, interdite = !!kOuvert && regleVisible("pieges") && (cd.id === "turbo" && pgO.id === "chaleur" || cd.id === "pari" && pgO.id === "sirenes");   // V16.55 : Pari interdit sous le chant des Sirènes
     if (interdite) return '<button type="button" class="carte jouee" disabled data-carte="' + cd.id + '"><span class="c-ico">' + icoOu(cd.id, cd.ico) + "</span><b>" + esc(cd.nom) + "</b><small>" + esc(cd.court) + "</small><em>" + (cd.id === "pari" ? "🧜 interdite (Sirènes)" : "🌡️ interdite (Surchauffe)") + "</em></button>";
     // v16.95 : Aspiration grisée quand il n'y a pas encore de classement (tour de chauffe, janvier)
+    if (cd.bonus && kOuvert && dejaBonus && dejaBonus !== cd.id && !jouee) return '<button type="button" class="carte bonus jouee" disabled data-carte="' + cd.id + '"><span class="c-ico">' + icoOu(cd.id, cd.ico) + "</span><b>" + esc(cd.nom) + "</b><small>" + esc(cd.court) + "</small><em>une bonus par mois</em></button>";
     if (cd.id === "aspiration" && kOuvert && (kOuvert === CHAUFFE_K || kOuvert % 100 === 1)) return '<button type="button" class="carte jouee" disabled data-carte="aspiration"><span class="c-ico">' + icoOu(cd.id, cd.ico) + "</span><b>" + esc(cd.nom) + "</b><small>" + esc(cd.court) + "</small><em>⏳ s'active en février</em></button>";
     return '<button type="button" class="carte' + (cd.bonus ? " bonus" : "") + (jouee && !ici ? " jouee" : "") + (ici ? " posee" : "") + (CARTE_CHOIX === cd.id ? " choix" : "") + '" data-carte="' + cd.id + '"' + (jouee && !ici || !kOuvert ? " disabled" : "") + ">" +
       '<span class="c-ico">' + icoOu(cd.id, cd.ico) + "</span><b>" + esc(cd.nom) + "</b><small>" + esc(cd.court) + "</small>" + (n ? '<span class="c-up">+' + n + "</span>" : "") +
@@ -523,20 +540,20 @@ function htmlCartes(y) {
   const cd = CARTE_CHOIX ? carteDef(CARTE_CHOIX) : null;
   if (cd && kOuvert) {
     const rivaux = D.personnes.map(p => p.nom).filter(n => n !== qui);
-    action = '<div class="c-action"><p><b>' + cd.ico + " " + esc(cd.nom) + "</b> · " + esc(texteCarte(cd, up)) + "</p>" +
+    action = '<div class="c-action"><p><b>' + cd.ico + " " + esc(cd.nom) + "</b>" + (cd.bonus ? " <small>(carte bonus, en plus de ta carte du mois)</small>" : "") + " · " + esc(texteCarte(cd, up)) + "</p>" +
       (cd.cible ? '<div class="chips" role="group" aria-label="Rival">' + rivaux.map(n => '<button class="chip" type="button" data-rival="' + esc(n) + '" aria-pressed="' + (GP_RIVAL === n) + '">' + esc(n) + "</button>").join("") + "</div>" : "") +
-      '<div class="btn-row"><button class="btn acc" type="button" id="c-poser"' + (cd.cible && !GP_RIVAL ? " disabled" : "") + ">Poser face cachée sur " + esc(moisLong(kOuvert)) + '</button><button class="lien" type="button" id="c-annuler">Annuler</button></div></div>';
-  } else if (dejaMois) {
-    const dc = carteDef(dejaMois);
-    action = '<div class="c-action"><p>' + dc.ico + " <b>" + esc(dc.nom) + "</b> posée face cachée sur " + esc(moisLong(kOuvert)) + (src[kOuvert].cible ? " contre " + esc(src[kOuvert].cible) : "") + ". Révélée le " + jourLimite(kOuvert) + ".</p>" +
-      '<button class="lien" type="button" id="c-reprendre">Reprendre ma carte</button></div>';
+      '<div class="btn-row"><button class="btn acc" type="button" id="c-poser"' + (cd.cible && !GP_RIVAL ? " disabled" : "") + ">" + (cd.bonus ? "Poser en plus" : "Poser face cachée") + " sur " + esc(moisLong(kOuvert)) + '</button><button class="lien" type="button" id="c-annuler">Annuler</button></div></div>';
+  } else if (dejaMois || dejaBonus) {
+    const dc = dejaMois ? carteDef(dejaMois) : null, db = dejaBonus ? carteDef(dejaBonus) : null, aBonus = pioche.some(c => !joues[c.id]);
+    action = '<div class="c-action">' + (dc ? "<p>" + dc.ico + " <b>" + esc(dc.nom) + "</b> posée face cachée sur " + esc(moisLong(kOuvert)) + (src[kOuvert].cible ? " contre " + esc(src[kOuvert].cible) : "") + ". Révélée le " + jourLimite(kOuvert) + '.</p><button class="lien" type="button" id="c-reprendre">Reprendre ma carte</button>' : "<p>🃏 Ta carte du mois n'est pas encore posée.</p>") +
+      (db ? "<p>+ " + db.ico + " <b>" + esc(db.nom) + "</b> : ta carte bonus, posée en plus, face cachée.</p>" + '<button class="lien" type="button" id="c-reprendre-b">Reprendre ma carte bonus</button>' : dc && aBonus ? "<p><small>+ Tu peux aussi poser ta carte bonus, en plus.</small></p>" : "") + "</div>";
   }
   const kPr = kOuvert ? cleMoins(kOuvert, 1) : null;
   const reste = CARTES.filter(c => !(kPr && (joues[c.id] || []).includes(kPr))).length + pioche.filter(c => !joues[c.id]).length, aVenir = j.deck.length - j.i;
   const pf = prochaineFenetre();
   const fermeture = !kOuvert ? '<p class="c-ferme">🔒 ' + (estChauffe(y) && Date.now() < CHAUFFE_OUVRE ? "Les cartes du tour de chauffe s'ouvrent samedi 21 novembre à 9 h." : estChauffe(y) ? "Les cartes du tour de chauffe se posaient jusqu'au 1er décembre. Celles de janvier se posent dans l'onglet Saison 1, du 20 décembre au 1er janvier." + (moisCarteOuvert() === (SAISON.premiere * 100 + 1) ? ' <button class="lien" type="button" data-saison="' + SAISON.premiere + '">Poser ma carte de janvier ›</button>' : "") : moisCarteOuvert() ? "La fenêtre ouverte concerne une autre saison : change d'onglet en haut." : "Fenêtre fermée. Prochaine ouverture le " + esc(pf.du) + ", pour " + esc(moisLong(pf.k)) + ".") + "</p>" : "";
   return '<div><h3 class="s-h3">Mes cartes <small>' + reste + " en main" + (regleVisible("pioche") && !basesSeules() ? " · " + aVenir + " dans la pioche" : "") + "</small></h3></div>" +
-    '<p class="info">Touche une carte pour la poser. Une par mois ; une carte de base se rejoue, mais pas deux mois de suite.' + (basesSeules() ? "" : " Une carte bonus ne sert qu\'une fois.") + (regleVisible("pioche") && !basesSeules() ? (regleVisible("niveaux") ? " Tu en pioches une nouvelle à chaque niveau gagné et quand tu finis dernier d\'un mois." : " Tu en pioches une nouvelle quand tu finis dernier d\'un mois.") : "") + (ap ? " Aperçu : choisis le mois avec les puces ci-dessous ; rien n'est envoyé." : "") + "</p>" +
+    '<p class="info">Touche une carte pour la poser. Chaque mois, ta carte du mois : une carte de base se rejoue, mais pas deux mois de suite.' + (basesSeules() ? "" : regleVisible("pioche") ? " Et si tu as une carte bonus : elle se joue en plus de ta carte du mois (une seule par mois) et ne sert qu\'une fois." : " Une carte bonus ne sert qu\'une fois.") + (regleVisible("pioche") && !basesSeules() ? (regleVisible("niveaux") ? " Tu en pioches une nouvelle à chaque niveau gagné et quand tu finis dernier d\'un mois." : " Tu en pioches une nouvelle quand tu finis dernier d\'un mois.") : "") + (ap ? " Aperçu : choisis le mois avec les puces ci-dessous ; rien n'est envoyé." : "") + "</p>" +
     (ap ? '<div class="gp-mois">' + etapesGP(y).slice(1).map(x => '<button type="button" data-gpcible="' + x.k + '" aria-pressed="' + (x.k === kOuvert) + '">' + esc(moisCourt(x.k)) + "</button>").join("") + "</div>" : "") +
     '<div class="main-cartes">' + main.map(tuile).join("") + "</div>" + action + htmlProno(y, kOuvert) + htmlRival(y, kOuvert) + htmlVote(y);
 }
@@ -549,7 +566,7 @@ function rappelCartes() {
   const k = moisCarteOuvert(); if (!k) return null;
   const y = k === CHAUFFE_K ? SAISON.premiere - 1 : Math.floor(k / 100);
   if (kOuvertPour(y) !== k) return null;
-  const c = carteDe(y, qui, k), sansCarte = !(c && c.c);
+  const c = carteDe(y, qui, k), sansCarte = !basePosee(c);
   // V15.1 : le rappel reste tant que la carte ET le pronostic (quand il compte) ne sont pas faits
   const pr = k !== CHAUFFE_K && regleVisible("prono") && regleActive("prono", k) ? pronoDe(y, qui, k) : true, sansProno = !pr;
   if (!sansCarte && !sansProno) return null;
@@ -607,15 +624,15 @@ function revelationAVoir() {
   const d = new Date(), kc = d.getFullYear() * 100 + d.getMonth() + 1;
   if (d.getDate() < jourLimite(kc) || +(stock.get("versus.revele") || 0) >= kc) return null;
   const y = kc === CHAUFFE_K ? SAISON.premiere - 1 : Math.floor(kc / 100);
-  const l = D.personnes.map(p => ({ nom: p.nom, c: carteDe(y, p.nom, kc), d: regleActive("duels", kc) ? duelDe(y, p.nom, kc) : null })).filter(x => x.c && x.c.c && !x.c.cache || x.d && x.d.cible && !x.d.cache);
+  const l = D.personnes.map(p => ({ nom: p.nom, c: carteDe(y, p.nom, kc), d: regleActive("duels", kc) ? duelDe(y, p.nom, kc) : null })).filter(x => x.c && (x.c.c || x.c.b) && !x.c.cache || x.d && x.d.cible && !x.d.cache);
   return l.length ? { k: kc, y, l } : null;
 }
 function ouvrirRevelation(r) {
   stock.set("versus.revele", String(r.k));
   const o = document.createElement("div"); o.className = "revel"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
   o.innerHTML = '<div class="rv-c"><span class="tuto-k">Révélation · ' + esc(moisLong(r.k)) + "</span><h3>Les cartes sont retournées</h3>" +
-    '<div class="rv-l">' + r.l.map((x, i) => { const cd = x.c && x.c.c ? carteDef(x.c.c) : null;
-      return '<div class="rv-p" style="--i:' + i + '">' + avatar(x.nom) + '<div class="rv-n"><b>' + esc(x.nom) + "</b>" + (x.d && x.d.cible ? "<small>⚔️ défie " + esc(x.d.cible) + "</small>" : "") + "</div>" +
+    '<div class="rv-l">' + r.l.map((x, i) => { const id = basePosee(x.c) || bonusPosee(x.c), cd = id ? carteDef(id) : null, cb = basePosee(x.c) && bonusPosee(x.c) ? carteDef(bonusPosee(x.c)) : null;   // Théo, 26/11 : la carte bonus, jouée en plus, s'annonce sous le nom
+      return '<div class="rv-p" style="--i:' + i + '">' + avatar(x.nom) + '<div class="rv-n"><b>' + esc(x.nom) + "</b>" + (cb ? "<small>+ " + cb.ico + " " + esc(cb.nom) + " (carte bonus)</small>" : "") + (x.d && x.d.cible ? "<small>⚔️ défie " + esc(x.d.cible) + "</small>" : "") + "</div>" +
         '<div class="rv-carte' + (cd && cd.bonus ? " bonus" : "") + '"><div class="rv-in"><div class="rv-dos">🂠</div><div class="rv-face">' + (cd ? "<span>" + cd.ico + "</span><b>" + esc(cd.nom) + "</b>" + (x.c.cible ? "<small>→ " + esc(x.c.cible) + "</small>" : "") : "<b>Pas de carte</b>") + "</div></div></div></div>"; }).join("") + "</div>" +
     (() => { const moi = moiPilote(), p = r.l.filter(x => x.c && x.c.c === "pari" && x.c.cible === moi).map(x => x.nom); return p.length ? '<p class="duel-recu">🎲 ' + p.map(esc).join(" et ") + " te défi" + (p.length > 1 ? "ent" : "e") + " avec un Pari : finis devant !</p>" : ""; })() +
     "<p>Les effets se calculent à la fin du mois, quand tous les relevés sont saisis.</p>" +
@@ -641,6 +658,11 @@ function joursRestants(k) {
   const fin = new Date(Math.floor(k / 100), k % 100 - 1, jourLimite(k) - 1, 23, 59, 59);
   return Math.max(0, Math.ceil((fin - new Date()) / 864e5));
 }
+/** Théo, 26/11 : une carte bonus piochée avant le mois k et pas encore jouée cette saison (à poser en plus de la carte du mois) ? */
+function bonusDispo(y, qui, k) {
+  try { const j = jeuDe(qui, y), src = apercuSaison() ? ((cartesApercu()[y] || {})[qui] || {}) : Object.assign({}, (((D.cartes || {})[y] || {})[qui]) || {}, (mesCartes()[y] || {})), joues = Object.keys(src).filter(m => +m !== k).map(m => bonusPosee(src[m]));
+    return j.pioche.some(z => z.k < k && !joues.includes(z.c)); } catch (e) { return false; }
+}
 /** Le Grand Prix sur lequel on pose sa carte : ville et tracé */
 function htmlGPStand(k) {
   const ci = circuitDe(k), g = GPS[ci];
@@ -651,12 +673,12 @@ function htmlGPStand(k) {
 /** v20.12 (Théo) : « 2/4 » sur l'onglet Stand pendant la fenêtre des cartes (combien ont posé, jamais laquelle) */
 function compteCartesTab(y) {
   try { const k = kCartes(y); if (!k || apercuSaison() || !D || !D.personnes || D.personnes.length < 2) return "";
-    const n = D.personnes.filter(p => { const c = carteDe(y, p.nom, k); return !!(c && (c.c || c.cache)); }).length;
+    const n = D.personnes.filter(p => { const c = carteDe(y, p.nom, k); return !!(c && (basePosee(c) || c.cache && !c.c && !c.b)); }   /* une carte connue qui n'est pas une carte du mois ne compte pas */).length;
     return ' <small class="pod-cc" aria-label="' + n + " carte" + (n > 1 ? "s" : "") + " posée" + (n > 1 ? "s" : "") + " sur " + D.personnes.length + '">' + n + "/" + D.personnes.length + "</small>"; } catch (e) { return ""; }
 }
 function htmlPeloton(y, k, qui) {
   if (!k || !D || !D.personnes || D.personnes.length < 2) return "";
-  const l = D.personnes.map(p => { const c = carteDe(y, p.nom, k); return { nom: p.nom, ok: !!(c && (c.c || c.cache)) }; }), n = l.filter(x => x.ok).length;
+  const l = D.personnes.map(p => { const c = carteDe(y, p.nom, k); return { nom: p.nom, ok: !!(c && (basePosee(c) || c.cache && !c.c && !c.b)) }; }), n = l.filter(x => x.ok).length;   // la carte du mois (une carte bonus seule ne compte pas)
   return '<div class="st-pel"><span class="st-pel-t">' + (n === l.length ? "Tout le monde a posé sa carte" : "Cartes posées") + " <b>" + n + "/" + l.length + "</b></span>" +
     '<div class="st-pel-l">' + l.map(x => '<span class="st-pel-p' + (x.ok ? " ok" : "") + (x.nom === qui ? " ici" : "") + '" data-bdg="' + esc(x.nom + (x.ok ? " : carte posée, face cachée jusqu'au " + jourLimite(k) + " " + moisLong(k).replace(/ \d{4}$/, "") + "." : " : pas encore de carte.")) + '">' +
       avatar(x.nom) + '<i class="st-pel-c" aria-hidden="true">' + (x.ok ? "✓" : "…") + "</i><small>" + esc(x.nom) + "</small></span>").join("") + "</div></div>";
@@ -669,7 +691,7 @@ function htmlStand(y) {
   if (k) {
     const c = carteDe(y, qui, k), d = duelDe(y, qui, k), j = ap ? null : joursRestants(k);
     etat = '<div class="st-etat ouvert"><div class="st-h"><span class="st-feu"></span><b>Fenêtre ouverte<small>pour ' + esc(moisLong(k)) + "</small></b>" + (j !== null ? "<em>" + (j <= 1 ? "dernier jour" : "il reste " + j + " jours") + "</em>" : "<em>aperçu</em>") + "</div>" +
-      '<div class="st-check"><span class="' + (c && c.c ? "ok" : "") + '">' + (c && c.c ? "✓ Carte posée" : "🃏 Carte à poser") + "</span>" + (regleVisible("duels") && regleActive("duels", k) ? '<span class="' + (d && d.cible ? "ok" : "") + '">' + (d && d.cible ? "✓ Duel lancé" : "⚔️ Duel (facultatif)") + "</span>" : "") + "</div>" +
+      '<div class="st-check"><span class="' + (basePosee(c) ? "ok" : "") + '">' + (basePosee(c) ? "✓ Carte posée" : "🃏 Carte à poser") + "</span>" + (bonusPosee(c) ? '<span class="ok">✓ + carte bonus</span>' : regleVisible("pioche") && bonusDispo(y, qui, k) ? "<span>🎴 + ta carte bonus (en plus)</span>" : "") + (regleVisible("duels") && regleActive("duels", k) ? '<span class="' + (d && d.cible ? "ok" : "") + '">' + (d && d.cible ? "✓ Duel lancé" : "⚔️ Duel (facultatif)") + "</span>" : "") + "</div>" +
       (ap ? "" : htmlPeloton(y, k, qui)) + "<small>Jusqu'au " + "1<sup>er</sup>" + " " + esc(moisLong(k).replace(/ \d{4}$/, "")) + " inclus. Tout reste caché jusqu'à la révélation, le " + jourLimite(k) + ".</small>" + (k === CHAUFFE_K ? "" : htmlGPStand(k)) + "</div>";   // v17.46 (Théo) : au tour de chauffe, pas de rappel du circuit (ni atout ni piège)
   } else {
     const autre = moisCarteOuvert();
@@ -709,7 +731,8 @@ function brancherStand(v, y) {
   const vk = v.querySelector("#vote-ok"); if (vk) vk.addEventListener("click", () => { const c = VOTE_CHOIX || ((D.monVote || {})[y] || {}).c; VOTE_CHOIX = null; if (c) envoyerVote(y, c); });
   const rk = v.querySelector("#rival-ok"); if (rk) rk.addEventListener("click", () => { const r = RIVAL_CHOIX; RIVAL_CHOIX = null; if (r) choisirRival(y, r); });
   const an = v.querySelector("#c-annuler"); if (an) an.addEventListener("click", () => { CARTE_CHOIX = null; GP_RIVAL = null; rendreTrophees(); });
-  const re = v.querySelector("#c-reprendre"); if (re) re.addEventListener("click", () => poserCarte(y, kOuvert(), null, null));
+  const re = v.querySelector("#c-reprendre"); if (re) re.addEventListener("click", () => poserCarte(y, kOuvert(), null, null, "base"));
+  const rb = v.querySelector("#c-reprendre-b"); if (rb) rb.addEventListener("click", () => poserCarte(y, kOuvert(), null, null, "bonus"));
   v.querySelectorAll("[data-amelio]").forEach(b => b.addEventListener("click", () => {
     if (estChauffe(saisonCourante())) { toast("🔥 Tour de chauffe : les améliorations s'ouvrent le 1er janvier."); return; }
     if (!ECU || ECU.nom !== quiEcurie()) ECU = { nom: quiEcurie(), e: equipDe(quiEcurie()) };
@@ -1366,7 +1389,7 @@ function bullesGP(y, i) {
   const box = pi.querySelector(".gp-pops"); if (!box) return; box.innerHTML = "";
   et.m.l.slice().sort((a, b) => a.rg - b.rg).forEach(x => {
     const extra = [];
-    if (x.carte && !x.carte.invalide && x.carte.gain) { const cd = carteDef(x.carte.id); extra.push((cd ? cd.ico : "🃏") + (x.carte.gain > 0 ? "+" : "") + x.carte.gain); }
+    cartesLigne(x).forEach(z => { if (!z.invalide && z.gain) { const cd = carteDef(z.id); extra.push((cd ? cd.ico : "🃏") + (z.gain > 0 ? "+" : "") + z.gain); } });
     if (x.bonus) extra.push("🎯+" + x.bonus); if (x.mult > 1) extra.push("×2"); if (x.vainq) extra.push("🇬🇧+2"); if (x.equipe) extra.push("🤝+1"); if (x.serie) extra.push("🔥+1"); if (x.defi) extra.push("🏁+1"); if (x.prono && x.prono.pts) extra.push("🔮+" + x.prono.pts); if (x.rival) extra.push("😈+3"); if (x.regul !== undefined) extra.push("🛡️+3");
     box.insertAdjacentHTML("beforeend", '<span class="gp-pop" data-pop="' + esc(x.nom) + '" style="--c:' + couleur(x.nom) + '" title="' + esc(x.nom) + '" aria-label="' + esc(x.nom + " " + (x.p >= 0 ? "+" : "") + x.p + " points") + '">' + avatarCourse(x.nom) + "<b>" + (x.p >= 0 ? "+" : "") + x.p + '<i class="gp-pop-u"> pt' + (Math.abs(x.p) > 1 ? "s" : "") + "</i></b>" + (extra.length ? "<small>" + esc(extra.join(" ")) + "</small>" : "") + "</span>");
   });
@@ -1395,7 +1418,7 @@ async function cartePostale(y, et) {
     g.fillStyle = reel(couleur(x.nom)); g.fillRect(60, y0, 14, hL);
     txt(i < 3 ? med[i] : String(i + 1), 125, y0 + q(105), 64, 800, "#FFFFFF", "center");
     txt(x.nom.toUpperCase(), 190, y0 + q(80), 58, 800, "#FFFFFF", "left", "'Saira Condensed', sans-serif");
-    const d = []; if (x.carte && !x.carte.invalide) { const cd = carteDef(x.carte.id); d.push((cd ? cd.ico : "🃏") + (x.carte.gain > 0 ? "+" : "") + x.carte.gain); }
+    const d = []; cartesLigne(x).forEach(z => { if (!z.invalide) { const cd = carteDef(z.id); d.push((cd ? cd.ico : "🃏") + (z.gain > 0 ? "+" : "") + z.gain); } });
     if (x.bonus) d.push("🎯+" + x.bonus); if (x.prono && x.prono.pts) d.push("🔮+" + x.prono.pts); if (x.equipe) d.push("🤝+1"); if (x.serie) d.push("🔥+1"); if (x.defi) d.push("🏁+1"); if (x.vainq) d.push("🇬🇧+2"); if (x.mult > 1) d.push("×2"); if (x.rival) d.push("😈+3"); if (x.regul !== undefined) d.push("🛡️+3");
     txt((x.r >= 0 ? "+" : "") + (x.r * 100).toFixed(1).replace(".", ",") + " % ce mois" + (d.length ? "   " + d.join("  ") : ""), 190, y0 + q(135), 32, 500, "#A9B1BD");
     txt("+" + x.p, W - 110, y0 + q(100), 76, 800, reel(col("--accent-ink")), "right", "'JetBrains Mono', monospace");
@@ -1456,7 +1479,7 @@ document.addEventListener("keydown", ev => { if (ev.key !== "Enter" && ev.key !=
 function decompte(x, spec) {
   const l = [(x.plancher ? x.base + "×2 → " + (x.base * x.mult + x.plancher) : x.mult > 1 ? x.base + "×2" : String(x.base)) + " de place"], add = (v, t) => { if (v) l.push((v > 0 ? "+ " : "− ") + Math.abs(v) + " " + t); };
   add(x.bonus, "🎯"); add(x.vainq, spec ? spec.ico : "★");
-  if (x.carte && !x.carte.invalide && x.carte.gain) { const cd = carteDef(x.carte.id); add(x.carte.gain, cd ? cd.ico : "🃏"); }
+  cartesLigne(x).forEach(z => { if (!z.invalide && z.gain) { const cd = carteDef(z.id); add(z.gain, cd ? cd.ico : "🃏"); } });   // carte du mois, puis carte bonus (en plus)
   add(x.equipe, "🤝"); add(x.serie ? 1 : 0, "🔥"); add(x.prono && x.prono.pts, "🔮"); add(x.defi, "🏁"); add(x.rival ? 3 : 0, "😈"); add(x.regul !== undefined ? 3 : 0, "🛡️");
   return l.join(" ") + " = " + x.p + " pt" + (Math.abs(x.p) > 1 ? "s" : "");
 }
@@ -1467,7 +1490,7 @@ function phrasesCourse(y, i) {
   const mc = mancheGP(etapes, i), av = mc.grille, ap = Object.keys(et.pts).sort((a, b) => et.pts[b] - et.pts[a] || av.indexOf(a) - av.indexOf(b));
   const l = m.l.slice().sort((a, b) => a.rg - b.rg), v = l[0], dern = av[av.length - 1], debut = [], milieu = [];
   debut.push(av.length > 1 ? "🚦 " + av[0] + " part en pole, " + dern + " ferme la marche." : "🚦 Départ !");
-  l.forEach(x => { if (x.carte && !x.carte.invalide && x.carte.gain) { const cd = carteDef(x.carte.id); if (cd) milieu.push({ p: Math.abs(x.carte.gain) + 1, t: x.carte.gain > 0 ? cd.ico + " " + x.nom + " sort son " + cd.nom + " : +" + x.carte.gain + " !" : cd.ico + " Raté pour " + x.nom + " : son " + cd.nom + " coûte " + Math.abs(x.carte.gain) + " point" + (Math.abs(x.carte.gain) > 1 ? "s" : "") + "." }); } });
+  l.forEach(x => cartesLigne(x).forEach(z => { if (!z.invalide && z.gain) { const cd = carteDef(z.id); if (cd) milieu.push({ p: Math.abs(z.gain) + 1, t: z.gain > 0 ? cd.ico + " " + x.nom + " sort son " + cd.nom + " : +" + z.gain + " !" : cd.ico + " Raté pour " + x.nom + " : son " + cd.nom + " coûte " + Math.abs(z.gain) + " point" + (Math.abs(z.gain) > 1 ? "s" : "") + "." }); } }));
   l.forEach(x => { const g = av.indexOf(x.nom) - ap.indexOf(x.nom); if (g >= 2) milieu.push({ p: g + 1, t: "🚀 " + x.nom + " gagne " + g + " places au championnat !" }); });
   l.forEach(x => { if (x.serie) milieu.push({ p: 2, t: "🔥 " + x.nom + " enchaîne " + x.serie + " mois sans finir dernier." }); });
   if (m.piege) milieu.push({ p: 1.5, t: m.piege.ico + " Piège du circuit : " + m.piege.nom + "." });
