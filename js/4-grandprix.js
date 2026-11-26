@@ -918,14 +918,14 @@ function ouvrirClassementTresor(ci) {
   const G = GPS[ci], o = document.createElement("div"); o.className = "regles tc-b"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", "Classement du trésor");
   o.innerHTML = '<div class="rg-c"><div class="rg-h"><b>🗝️ Trésor de ' + esc(MOIS_L[t.mois - 1] || "") + (G ? " · " + G.drap + " " + esc(G.gp) : "") + '</b><button class="icon-btn rg-x" type="button" aria-label="Fermer">✕</button></div><div class="rg-corps">' +
     classementTresorHTML(t) + '<button class="btn ghost tc-aide" type="button">❔ Comment ça marche</button></div></div>';
-  hoteFenetre().appendChild(o);   // v20.96 : en plein écran, la fenêtre s'ouvre DANS le plein écran (sinon elle restait invisible derrière)
+  hoteFenetre().appendChild(o);   // v20.98 : en plein écran, la fenêtre s'ouvre DANS le plein écran (sinon elle restait invisible derrière)
   const fermer = () => o.remove();
   o.querySelector(".rg-x").addEventListener("click", fermer); o.addEventListener("click", ev => { if (ev.target === o) fermer(); });
   o.addEventListener("keydown", ev => { if (ev.key === "Escape") fermer(); });
   o.querySelector(".tc-aide").addEventListener("click", () => { fermer(); aideTresor(); });
   o.querySelector(".rg-x").focus();
 }
-/** v20.96 (Théo) · « ❔ Comment ça marche » : la tuile « Le trésor » des règles (js/11-regles.js), ouverte dans le plein écran s'il y en a un ;
+/** v20.98 (Théo) · « ❔ Comment ça marche » : la tuile « Le trésor » des règles (js/11-regles.js), ouverte dans le plein écran s'il y en a un ;
  *  si la tuile n'existe pas encore (avant le 1er décembre 2026, aperçu admin), la règle en images dans sa propre fenêtre */
 function aideTresor() {
   if (typeof ouvrirRegles === "function" && regleTresor()) { ouvrirRegles("tresor"); if (document.querySelector('.regles #rgt-tresor:not([hidden])')) return; document.querySelectorAll(".regles.rgt").forEach(x => x.remove()); document.documentElement.classList.remove("fige"); }
@@ -988,7 +988,7 @@ function armerLancement(bt, t, pi) {
 /** la caméra repart de la vue d'ensemble du circuit (comme au départ) : le trajet jusqu'à la cachette est toujours chronométré */
 function cameraAuDepart() { try { const a = GP_INST && GP_INST.api; if (a && a.type === "3d" && a.camera && a.mode && a.mode() === "helico") a.camera("helico"); } catch (e) { /* sans 3D */ } }
 async function lancerRecherche(t, bt, pi) {
-  const lib = bt ? bt.innerHTML : "", reprise = !!t.lance; if (bt) { bt.disabled = true; bt.innerHTML = "⏱️ Départ…"; }   // v20.96 : « reprise » lu AVANT le départ (l'aperçu admin modifiait t.lance pendant la requête → « Reprise » au 1er départ)
+  const lib = bt ? bt.innerHTML : "", reprise = !!t.lance; if (bt) { bt.disabled = true; bt.innerHTML = "⏱️ Départ…"; }   // v20.98 : « reprise » lu AVANT le départ (l'aperçu admin modifiait t.lance pendant la requête → « Reprise » au 1er départ)
   const rep = TRESOR_APERCU ? TRESOR_APERCU.lancer(t) : await posterAdmin({ action: "tresorDepart", circuit: t.circuit });   // aperçu : départ inventé, rien ne part au serveur
   if (rep && rep.ok && rep.actif) {
     Object.assign(t, { lance: true, actif: true, depuis: rep.depuis, cumul: +rep.cumul || 0 }); if (rep.p) t.p = rep.p;
@@ -1102,7 +1102,7 @@ const TRESOR_SVG = {
   bonbon: '<svg viewBox="-12 -12 24 24"><circle r="11.5" fill="#FFE07A" opacity=".35"/><circle r="9" fill="#FF7EB6" stroke="#7A2A4A" stroke-width="1"/><path d="M-8.6 -2.6Q0 -6 8.6 -2.6" stroke="#FFD04A" stroke-width="2.6" fill="none"/><path d="M-9 1.4Q0 -1.6 9 1.4" stroke="#7EC8F0" stroke-width="2.6" fill="none"/><path d="M-7.6 5Q0 2.6 7.6 5" stroke="#B6E36A" stroke-width="2.4" fill="none"/><path d="M-6.8 -6Q0 -8.6 6.8 -6" stroke="#FF9A2A" stroke-width="2" fill="none"/><path d="M-4.6 -4.6A6 6 0 0 1 0 -6.8" stroke="#FFFFFF" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>',
   cle: '<svg viewBox="-14 -14 28 28"><path d="M-12.5 -13Q-13 -3 -6.2 -5.6" fill="none" stroke="#4A2E18" stroke-width="1.4"/><g transform="rotate(45)"><circle cx="-6" r="4.4" fill="#C8A868" stroke="#4A3418" stroke-width="1"/><circle cx="-6" r="1.9" fill="#2A1E12"/><path d="M-7.8 -3.2A4 4 0 0 1 -3 -2.4" fill="none" stroke="#FFF0C0" stroke-width=".8"/><rect x="-1.8" y="-1.2" width="13" height="2.4" rx=".9" fill="#C8A868" stroke="#4A3418" stroke-width=".9"/><path d="M6.6 1.2V5.4H8.6V3.6H10.4V1.2Z" fill="#C8A868" stroke="#4A3418" stroke-width=".9"/></g></svg>'
 };
-/** v20.96 · le petit chevron de l'encadré (▾ replié, ▴ déplié) ; un toucher sur l'encadré le déplie ou le replie */
+/** v20.98 · le petit chevron de l'encadré (▾ replié, ▴ déplié) ; un toucher sur l'encadré le déplie ou le replie */
 const PLIE_TRESOR = '<span class="gp-plie" aria-hidden="true"></span>';
 function plierTresor(en) { const o = en.classList.toggle("ouverte"); en.setAttribute("aria-expanded", String(o)); if (o) en.scrollTop = 0; }
 /** pose (ou retire) le compteur, l'énigme du mois et l'objet dans la page Course ; sans rien recalculer d'autre */
@@ -1143,7 +1143,7 @@ function poserTresorDOM(v) {
   pi.querySelector(".gp-tresor-appel").addEventListener("click", ev => { ev.stopPropagation(); if (!AP) stock.set("versus.tresorAide", "1"); /* aperçu : rien de gardé */ if (pi.classList.contains("v2")) { choisirVueGP("visite"); return; } const bv = document.getElementById("gp-vue"); if (bv && pi.classList.contains("en2d")) bv.click(); });
   /* v20.74 : en tête de l'encadré, le bouton « 🔍 Je lance ma recherche » (avant) ou le chrono qui tourne (pendant) */
   const estNoel = typeof TRESOR_NOEL !== "undefined" && t.circuit === TRESOR_NOEL;
-  /* v20.96 (Théo) · replié par défaut : une pastille « 🗝️ Trésor · 🔍 Lancer » (ou le chrono, ou la pause) ; un toucher déplie l'explication courte, le classement et « ❔ Comment ça marche ».
+  /* v20.98 (Théo) · replié par défaut : une pastille « 🗝️ Trésor · 🔍 Lancer » (ou le chrono, ou la pause) ; un toucher déplie l'explication courte, le classement et « ❔ Comment ça marche ».
      Pendant la recherche, l'énigme et les indices restent affichés (repliés compris). Le long texte des règles est dans « Comment ça marche ». */
   const lance = !t.chrono ? "" : parti ? '<span class="gp-lance on">⏱️ <b class="gp-chr">' + dureeChrono(chronoDe(t)) + '</b><button class="gp-arret" type="button" aria-label="Mettre en pause">⏸️ Pause</button>' + PLIE_TRESOR + "<small>Le 1er du classement gagne · définitif " + quandDecide(t) + "</small></span>"
     : t.lance ? '<span class="gp-lance pause">⏸️ <b>' + dureeChrono(chronoDe(t)) + '</b><button class="gp-lancer" type="button">▶️ Reprendre</button>' + PLIE_TRESOR + "<small>En pause : l'énigme, l'indice et l'objet ont disparu. À chaque reprise, ils reviennent et tu repars du départ du circuit.</small></span>"
@@ -1383,7 +1383,7 @@ function quitterApercuTresor(vue) {
 /** le petit bandeau de l'aperçu, posé dans la piste (il la suit en plein écran) */
 function apBandeau(pi) {
   const AP = TRESOR_APERCU, pr = (k, v) => ' aria-pressed="' + v + '"';
-  /* v20.96 (Théo) · une seule ligne, repliée par défaut (« 👁️ Aperçu · exemple ▸ » et ✕) : elle ne couvre jamais le bouton de lancement */
+  /* v20.98 (Théo) · une seule ligne, repliée par défaut (« 👁️ Aperçu · exemple ▸ » et ✕) : elle ne couvre jamais le bouton de lancement */
   pi.insertAdjacentHTML("beforeend", '<div class="tap-band' + (AP.bande ? " ouverte" : "") + '" role="group" aria-label="Aperçu admin du trésor (exemple inventé, rien n\'est envoyé)">' +
     '<button type="button" class="tap-plie" data-tapplie aria-expanded="' + !!AP.bande + '" title="Aperçu admin · exemple inventé · rien n\'est envoyé">' + (AP.bande ? "👁️ ◂" : "👁️ Aperçu · exemple ▸") + '</button><span class="tap-outils">' +
     '<span class="tap-seg"><button type="button" data-tapi="0"' + pr(0, AP.etape === 0) + '>Avant 11</button><button type="button" data-tapi="1"' + pr(0, AP.etape === 1) + ' title="2e indice tombé">Après 11</button><button type="button" data-tapi="2"' + pr(0, AP.etape === 2) + ' title="Jauge chaud-froid (tant que personne n\'a trouvé)">Après 21 🌡️</button></span>' +
@@ -1898,7 +1898,7 @@ function fermerPleinGP() {
   if (P.v2) { document.removeEventListener("fullscreenchange", P.fsc); document.removeEventListener("webkitfullscreenchange", P.fsc); if (P.mq && P.mqf) try { P.mq.removeEventListener("change", P.mqf); } catch (e) { }
     try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) { }
     try { const fe = document.fullscreenElement || document.webkitFullscreenElement; if (fe) (document.exitFullscreen || document.webkitExitFullscreen).call(document).catch(() => { }); } catch (e) { } }
-  const fen = [...P.o.querySelectorAll(":scope > .regles, :scope > .revel")]; fen.forEach(x => document.body.appendChild(x)); const tst = P.o.querySelector(":scope > #toast"); if (tst) document.body.appendChild(tst);   // v20.96 : une fenêtre ouverte en plein écran (règles, classement) reste ouverte dans la page
+  const fen = [...P.o.querySelectorAll(":scope > .regles, :scope > .revel")]; fen.forEach(x => document.body.appendChild(x)); const tst = P.o.querySelector(":scope > #toast"); if (tst) document.body.appendChild(tst);   // v20.98 : une fenêtre ouverte en plein écran (règles, classement) reste ouverte dans la page
   P.o.remove(); document.documentElement.classList.toggle("fige", fen.some(x => x.classList.contains("rgt"))); GP_ETQ = null;
   if (GP_INST && GP_INST.api.zoom2D) GP_INST.api.zoom2D(false);
   if (GP_INST) GP_INST.api.redim();

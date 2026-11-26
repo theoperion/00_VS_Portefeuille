@@ -1869,7 +1869,7 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .gp-plein.v2 .gp-piste > :is(.gp-btns, .gp-spe, .gp-tresor-appel) { display: none !important; }
 .gp-plein.v2 .gp-hud { top: calc(env(safe-area-inset-top, 0px) + 10px); left: 10px; right: auto; }
 .gp-plein.v2 .gp-suivi { left: calc(env(safe-area-inset-left, 0px) + 10px); bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); }
-.gp-plein.v2 .gp-enigme { left: auto; right: calc(env(safe-area-inset-right, 0px) + 10px); bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); max-width: min(380px, calc(100% - 130px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))); }   /* v20.96 : à droite du joystick, jamais sur le centre */
+.gp-plein.v2 .gp-enigme { left: auto; right: calc(env(safe-area-inset-right, 0px) + 10px); bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); max-width: min(380px, calc(100% - 130px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))); }   /* v20.98 : à droite du joystick, jamais sur le centre */
 @media (orientation: landscape) { .gp-plein.v2 .gp-enigme { max-width: min(380px, 44%); } }
 .gpp-bar { position: absolute; z-index: 5; top: calc(env(safe-area-inset-top, 0px) + 8px); right: calc(env(safe-area-inset-right, 0px) + 8px); display: flex; align-items: center; gap: 6px; }
 .gpp-bar .gp-sel.mini { background: rgba(8,10,14,.62); border-color: rgba(255,255,255,.16); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); color: #fff; }
@@ -1908,7 +1908,7 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .tap-band button { min-height: 26px; padding: 0 7px; border: 1px solid rgba(42,30,5,.28); border-radius: 8px; background: rgba(255,255,255,.55); color: inherit; font: 600 11px/1 var(--f-text); cursor: pointer; }
 .tap-band button[aria-pressed="true"] { background: #2A1E05; color: #FFE08A; border-color: #2A1E05; }
 .tap-band .tap-seg { display: inline-flex; gap: 2px; }
-/* v20.96 (Théo) · une seule ligne, repliée par défaut (« 👁️ Aperçu · exemple ▸ » + ✕) ; dépliée, ses outils défilent sur la même ligne si la place manque */
+/* v20.98 (Théo) · une seule ligne, repliée par défaut (« 👁️ Aperçu · exemple ▸ » + ✕) ; dépliée, ses outils défilent sur la même ligne si la place manque */
 .tap-band button { flex: none; white-space: nowrap; }
 .tap-band .tap-x { font-weight: 800; padding: 0 8px; }
 .tap-band .tap-plie { border-color: transparent; background: transparent; font-weight: 700; }
@@ -1941,10 +1941,10 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 }
 /* v17.39 (Théo) : en plein écran, l'énigme, le 2e indice et les chercheurs sont affichés en entier (en Visite comme sur la carte 2D) */
 .gp-plein .gp-enigme { white-space: normal; font-size: 13px; line-height: 1.4; padding: 8px 12px; }
-.gp-plein .gp-enigme .gp-indice { display: block; }   /* v20.96 : le classement, lui, attend qu'on déplie l'encadré */
+.gp-plein .gp-enigme .gp-indice { display: block; }   /* v20.98 : le classement, lui, attend qu'on déplie l'encadré */
 .gp-plein .gp-piste.en2d .gp-enigme:not(.cache) { display: block; }
 .gp-plein .gp-piste.en2d .gp-tresor-appel { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 56px); }
-/* v20.96 (Théo : « encombré, ça cache la course ») · l'encadré du trésor REPLIÉ par défaut : une pastille « 🗝️ Trésor · 🔍 Lancer » (ou ⏱️ le chrono, ou ⏸️ la pause) ;
+/* v20.98 (Théo : « encombré, ça cache la course ») · l'encadré du trésor REPLIÉ par défaut : une pastille « 🗝️ Trésor · 🔍 Lancer » (ou ⏱️ le chrono, ou ⏸️ la pause) ;
    un toucher la déplie (explication courte, classement, « ❔ Comment ça marche »), un autre la replie. Pendant la recherche, l'énigme et les indices restent lisibles,
    repliés compris, mais l'encadré s'arrête avant le centre de la piste. */
 .gp-enigme { right: auto; max-width: calc(100% - 16px); white-space: normal; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
