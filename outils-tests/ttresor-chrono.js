@@ -28,7 +28,7 @@ async function page(b, o) {
   return { ctx, p, err, req };
 }
 const pageCourse = p => p.evaluate(async () => { montrerVue("trophees"); ETAT.podium = "gp"; garder(); rendreTrophees(); await new Promise(r => setTimeout(r, 700)); const pi = document.getElementById("gp-piste"); return pi ? pi.dataset.circuit : null; });
-const lire = p => p.evaluate(() => ({ enig: ((document.querySelector(".gp-piste .gp-enigme") || {}).textContent || "").includes("ÉNIGME-INVENTÉE"), nl: document.querySelectorAll(".gp-lance").length, lancer: (document.querySelector(".gp-piste .gp-lancer") || {}).textContent || "", arret: !!document.querySelector(".gp-piste .gp-arret"), obj: !!document.querySelector(".gp-piste .gp-tresor"),
+const lire = p => p.evaluate(() => ({ enig: ((document.querySelector(".gp-piste .gp-enigme") || {}).textContent || "").includes("ÉNIGME-INVENTÉE"), nl: document.querySelectorAll(".gp-lance").length, lancer: (b => b ? b.textContent + " " + (b.getAttribute("aria-label") || "") : "")(document.querySelector(".gp-piste .gp-lancer")) /* trésor compact, 26/11 : « 🔍 Lancer », nom complet « Je lance ma recherche » */, arret: !!document.querySelector(".gp-piste .gp-arret"), obj: !!document.querySelector(".gp-piste .gp-tresor"),
   chr: (document.querySelector(".gp-piste .gp-lance") || {}).textContent || "", p: TRESORS && TRESORS.l[0] && TRESORS.l[0].p }));
 (async () => {
   const b = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] }), ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); };
@@ -138,7 +138,7 @@ const lire = p => p.evaluate(() => ({ enig: ((document.querySelector(".gp-piste 
 
   /* ---------- 5. Règles et Coupe ---------- */
   { const { ctx, p, err } = await page(b, { quand: "2027-02-03T10:00:00", session: { role: "perso", nom: "Kévin" } });
-    const r = await p.evaluate(async () => { ouvrirRegles("gp"); await new Promise(r => setTimeout(r, 300)); const li = document.querySelector("#rg-tresor"), t = li ? li.innerText : ""; document.querySelectorAll(".regles").forEach(x => x.remove());
+    const r = await p.evaluate(async () => { ouvrirRegles("gp"); await new Promise(r => setTimeout(r, 300)); const li = document.querySelector("#rgt-tresor") || document.querySelector("#rg-tresor"), t = li ? li.textContent : "";   /* v20.97 : les étapes sont dans la fiche courte de la tuile, le reste dans son détail */ document.querySelectorAll(".regles").forEach(x => x.remove());
       const c = JSON.parse(JSON.stringify(COUPE_EX)); c.exemple = false; Object.assign(c.eclats[0], { s: 754, rang: 2, final: false }); Object.assign(c.eclats[1], { s: 300, rang: 1, final: true }); Object.assign(c.eclats[2], { s: 540, rang: 4, final: true }); ouvrirCoupe(c); await new Promise(r => setTimeout(r, 300));
       const co = document.querySelector(".coupe-b").innerText, cl = i => { const x = document.querySelector('.coupe-b .cb-svg [data-ec="' + i + '"]'); return (x.getAttribute("class").match(/m-\w+/) || ["m-normal-absent"])[0]; }, m = [0, 1, 2].map(cl).join(); document.querySelectorAll(".coupe-b").forEach(x => x.remove()); return { t, co, m }; });
     ok(/Je lance ma recherche/.test(r.t) && /Mettre en pause/.test(r.t) && /quittes l'appli/.test(r.t) && /à chaque reprise, tu repars du départ/i.test(r.t) && /1er du classement gagne/i.test(r.t) && /minuit/.test(r.t) && /argent/.test(r.t) && /bronze/.test(r.t) && /11/.test(r.t) && /21/.test(r.t), "règles : bouton, pause, « à chaque reprise, tu repars du départ », le plus rapide gagne, attribution à minuit, indices du 11 et du 21");
@@ -149,7 +149,7 @@ const lire = p => p.evaluate(() => ({ enig: ((document.querySelector(".gp-piste 
   /* ---------- 5 bis. Règles de décembre (tour de chauffe) : rien de 2027 ---------- */
   for (const quand of ["2026-12-03T10:00:00", "2026-12-20T10:00:00", "2026-12-31T20:00:00"]) {
     const { ctx, p, err } = await page(b, { quand, session: { role: "perso", nom: "Kévin" } });
-    const r = await p.evaluate(async () => { ouvrirRegles("gp"); await new Promise(r => setTimeout(r, 300)); document.querySelectorAll(".regles .rgt-f").forEach(f => { f.hidden = false; }); document.querySelectorAll(".regles details").forEach(d => { d.open = true; }); const o = document.querySelector(".regles"), li = document.querySelector("#rg-tresor"); return { tout: o ? o.innerText : "", li: li ? li.innerText : "" }; });
+    const r = await p.evaluate(async () => { ouvrirRegles("gp"); await new Promise(r => setTimeout(r, 300)); document.querySelectorAll(".regles .rgt-f").forEach(f => { f.hidden = false; }); document.querySelectorAll(".regles details").forEach(d => { d.open = true; }); const o = document.querySelector(".regles"), li = document.querySelector("#rgt-tresor") || document.querySelector("#rg-tresor"); return { tout: o ? o.innerText : "", li: li ? li.innerText : "" }; });   // v20.97 : toute la tuile « Le trésor » (étapes + détail)
     ok(/plaque dorée Chercheur de Noël/.test(r.li) && /Mettre en pause/.test(r.li) && !/éclat|Flair/i.test(r.tout) && !err.length, quand.slice(0, 10) + " : règles d'un joueur : la plaque dorée au plus rapide, aucun mot « éclat » ni « Flair »");
     await ctx.close(); }
 
