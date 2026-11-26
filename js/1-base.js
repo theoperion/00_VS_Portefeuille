@@ -68,7 +68,7 @@ function sharpeTxt(s) { return s.n < RECUL || !ok(s.sharpe) ? "—" : F2.format(
 function pts(v) { if (!ok(v)) return "—"; const r = Math.round(v * 1000); return sg(r) + F1.format(Math.abs(v * 100)) + NB + "pt" + (Math.abs(v * 100) >= 2 ? "s" : ""); }
 function sens(v) { return !ok(v) || Math.abs(v) < 1e-9 ? "flat" : v > 0 ? "up" : "down"; }
 function esc(t) { return String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
-/** v20.98 · où poser une fenêtre : dans l'élément en plein écran s'il y en a un (le navigateur ne montre rien d'autre), sinon dans la page */
+/** trésor compact, 26/11 · où poser une fenêtre : dans l'élément en plein écran s'il y en a un (le navigateur ne montre rien d'autre), sinon dans la page */
 function hoteFenetre() { const f = document.fullscreenElement || document.webkitFullscreenElement; return f && f !== document.documentElement && f.appendChild ? f : document.body; }
 const MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
 const MOIS_L = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];

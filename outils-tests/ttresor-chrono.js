@@ -28,7 +28,7 @@ async function page(b, o) {
   return { ctx, p, err, req };
 }
 const pageCourse = p => p.evaluate(async () => { montrerVue("trophees"); ETAT.podium = "gp"; garder(); rendreTrophees(); await new Promise(r => setTimeout(r, 700)); const pi = document.getElementById("gp-piste"); return pi ? pi.dataset.circuit : null; });
-const lire = p => p.evaluate(() => ({ enig: ((document.querySelector(".gp-piste .gp-enigme") || {}).textContent || "").includes("ÉNIGME-INVENTÉE"), nl: document.querySelectorAll(".gp-lance").length, lancer: (b => b ? b.textContent + " " + (b.getAttribute("aria-label") || "") : "")(document.querySelector(".gp-piste .gp-lancer")) /* v20.98 : « 🔍 Lancer », nom complet « Je lance ma recherche » */, arret: !!document.querySelector(".gp-piste .gp-arret"), obj: !!document.querySelector(".gp-piste .gp-tresor"),
+const lire = p => p.evaluate(() => ({ enig: ((document.querySelector(".gp-piste .gp-enigme") || {}).textContent || "").includes("ÉNIGME-INVENTÉE"), nl: document.querySelectorAll(".gp-lance").length, lancer: (b => b ? b.textContent + " " + (b.getAttribute("aria-label") || "") : "")(document.querySelector(".gp-piste .gp-lancer")) /* trésor compact, 26/11 : « 🔍 Lancer », nom complet « Je lance ma recherche » */, arret: !!document.querySelector(".gp-piste .gp-arret"), obj: !!document.querySelector(".gp-piste .gp-tresor"),
   chr: (document.querySelector(".gp-piste .gp-lance") || {}).textContent || "", p: TRESORS && TRESORS.l[0] && TRESORS.l[0].p }));
 (async () => {
   const b = await chromium.launch({ args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] }), ko = [], ok = (c, t) => { if (!c) ko.push(t); console.log((c ? "OUI " : "NON ") + t); };

@@ -728,7 +728,7 @@ function restaurerDefil(vue) {
     .observe(m, { childList: true, subtree: true });
 })();
 function toast(t) {   // v16.29 : une croix pour fermer tout de suite (il se ferme toujours tout seul après quelques secondes)
-  const el = $("#toast"), h = hoteFenetre(); if (el.parentNode !== h) h.appendChild(el);   // v20.98 : en plein écran (course, trésor), le message s'affiche DANS le plein écran
+  const el = $("#toast"), h = hoteFenetre(); if (el.parentNode !== h) h.appendChild(el);   // trésor compact, 26/11 : en plein écran (course, trésor), le message s'affiche DANS le plein écran
   el.innerHTML = '<span class="tst-t"></span><button class="tst-x" type="button" aria-label="Fermer">✕</button>'; el.querySelector(".tst-t").textContent = t;
   el.querySelector(".tst-x").addEventListener("click", ev => { ev.stopPropagation(); clearTimeout(minuteur); el.hidden = true; });
   el.hidden = false; clearTimeout(minuteur); minuteur = setTimeout(() => { el.hidden = true; }, Math.max(4200, String(t).length * 50)); }

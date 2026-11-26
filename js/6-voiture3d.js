@@ -124,7 +124,7 @@ function confettis(style) {
   const c = document.createElement("canvas"), x = c.getContext("2d"), dpr = window.devicePixelRatio || 1, W = innerWidth, H = innerHeight;
   c.width = W * dpr; c.height = H * dpr; c.setAttribute("aria-hidden", "true");
   c.style.cssText = "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:99";
-  hoteFenetre().appendChild(c); x.scale(dpr, dpr);   // v20.98 : visibles aussi en plein écran
+  hoteFenetre().appendChild(c); x.scale(dpr, dpr);   // trésor compact, 26/11 : visibles aussi en plein écran
   const pal = ["--p0", "--p1", "--p2", "--p3", "--gold"].map(css);
   const emo = { parade: ["🏁", "🎺", "🎉", "🏆", "🥁"], billets: ["💶", "💸", "💶", "💰"], lingots: ["🪙", "💰", "🥇", "🪙"], fanfare: ["📯", "🎺", "✨", "🏆", "🎺"], cibles: ["🎯", "🏹", "🎯", "✨"], trophees: ["🏆", "🥇", "🏆", "🎖️"], etoiles: ["⭐", "✨", "🌟", "💫"], fusees: ["🚀", "🌙", "⭐", "🪐"], pouet: ["🎵", "💨", "🎶", "🎵"], trompette: ["🎺", "🎵", "🎶", "✨"], sifflet: ["🎵", "💨", "✨", "🎶"] }[style] || (Array.isArray(style) ? style : null);   // V15.4 : une liste d'emoji = pluie de ces emoji
   const hasard = l => l[Math.floor(Math.random() * l.length)];

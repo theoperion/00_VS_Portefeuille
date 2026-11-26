@@ -1,4 +1,4 @@
-/* Test v20.98 · chasse au trésor : un encadré COMPACT qui ne cache plus la course (Théo, 26/11).
+/* Test trésor compact, 26/11 · chasse au trésor : un encadré COMPACT qui ne cache plus la course (Théo, 26/11).
    Paysage 844×390 et portrait 390×844, clair et sombre, petite vue et plein écran (vrai plein écran du navigateur).
    Vérifie : replié par défaut (« 🗝️ Trésor · 🔍 Lancer ») ; ne couvre ni le centre de la piste ni le joystick ; un toucher le déplie, un autre le replie ;
    « ❔ Comment ça marche » s'ouvre DANS l'élément en plein écran (la tuile « Le trésor » des règles) ; la barre admin (repliée, sur une ligne)
