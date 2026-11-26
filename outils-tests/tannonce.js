@@ -28,7 +28,10 @@ const PREMIER = [/Le Côté obscur/, /marque double\s*🛟 2 points au moins/, /
 const PERIMES = [/aller et retour/i, /graines sacrées/i, /Chaleur/, /atout du circuit|atouts? des circuits|bouchon/i];   // atout du circuit supprimé le 26/11 (Théo)
 // v20.59 : « Le Podium en bref » ne cite une règle 2027 qu'une fois révélée
 const TUTO_AVANT_20 = /défi|pronostic|pole|rival|chevaucheur/i, TUTO_AVANT_1 = /côté obscur|série|rassemblement/i, TUTO_JAMAIS_JANV = /finale|régularité/i;
-const ADMIN = [/admin/i, /Aperçu/, /Prochainement/, /Circuits 2027/, /Voir décembre/, /Tout afficher/];
+const ADMIN = [/admin/i, /Aperçu/, /Circuits 2027/, /Voir décembre/, /Tout afficher/];
+// « 🎁 Prochainement » (noms et mois des règles pas encore annoncées) : visible des joueurs dès le 1/1 (v17.15 ; déjà le cas en v20.95, en majuscules),
+// jamais avant (pendant la chauffe, rien sur ce qui arrive). v20.97 l'a replié dans le Stand : son titre n'est plus en majuscules, d'où la règle par date.
+const PROCHAINEMENT = /Prochainement/i;
 const CAS = [
   { d: "2026-12-19T12:00:00", jouer: false, caches: true },
   { d: "2026-12-20T09:00:00", jouer: true, caches: true },
@@ -131,6 +134,7 @@ async function retourEtRegles(p, c) {
     const tout = pop + "\n" + textes, ko = kc.slice();
     if (err.length) ko.push("erreurs JS : " + err.join(" | "));
     if (c.caches) CACHES.forEach(r => { const m = tout.match(r); if (m) ko.push("visible trop tôt : « " + m[0] + " » …" + tout.slice(Math.max(0, m.index - 60), m.index + 40).replace(/\s+/g, " ")); });
+    if (c.caches) { const m = tout.match(PROCHAINEMENT); if (m) ko.push("« Prochainement » visible avant le 1/1 : …" + tout.slice(Math.max(0, m.index - 40), m.index + 60).replace(/\s+/g, " ")); }
     ADMIN.forEach(r => { const m = tout.match(r); if (m) ko.push("trace d'admin : « " + m[0] + " » …" + tout.slice(Math.max(0, m.index - 60), m.index + 40).replace(/\s+/g, " ")); });
     if (c.jouer) JOUER.forEach(r => { if (!r.test(tout)) ko.push("absent alors qu'attendu : " + r); });
     else JOUER.slice(0, 3).forEach(r => { if (r.test(tout)) ko.push("visible trop tôt : " + r); });
