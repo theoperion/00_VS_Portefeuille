@@ -1034,25 +1034,28 @@ function majLiaison() {
     : "Désactivée. Une fois activée, les relevés de " + qui + " se remplissent seuls le dernier jour ouvré du mois après la clôture, depuis leurs fichiers « Portefeuille & Épargne ».";
   $("#liaison-bascule").textContent = l.active ? "Désactiver" : "Activer";
 }
-const LENT_MS = 120000;   // v20.84 (Théo) : « Tester » et « Santé des Moi » lisent tous les fichiers : jusqu'à 2 min (avant : 30 s, puis « impossible de joindre »)
+const LENT_MS = 120000;   // v20.84 (Théo) : « État des relevés » (ex « Tester » et « Santé des Moi ») lit tous les fichiers : jusqu'à 2 min (avant : 30 s, puis « impossible de joindre »)
 function nbFichiersLiaison() { const l = (D && D.liaison) || {}; return (l.personnes && l.personnes.length) || (D && D.personnes ? D.personnes.length : 5); }
 async function actionLiaison(action, corps) {
-  const lent = action === "testerLiaison";
-  $("#liaison-res").innerHTML = '<p class="info">' + (lent ? "⏳ Lecture des " + nbFichiersLiaison() + " fichiers… (jusqu'à 2 min)" : "En cours…") + "</p>";
-  const rep = await posterAdmin(Object.assign({ action }, corps || {}), lent ? LENT_MS : undefined);
+  $("#liaison-res").innerHTML = '<p class="info">En cours…</p>';
+  const rep = await posterAdmin(Object.assign({ action }, corps || {}));
   $("#liaison-res").innerHTML = '<p class="info">' + esc(rep.message || (rep.ok ? "OK" : "Échec")) + "</p>" +
     (rep.detail ? rep.detail.map(d => "<div><span>" + esc(d.enveloppe) + "</span><b>lu ✓</b></div>").join("") : "");   // v17.84 : jamais les montants des autres joueurs (règle 1), seulement « lu ✓ »
   return rep;
 }
 $("#liaison-bascule").addEventListener("click", async () => { const rep = await actionLiaison("liaison", { actif: !(D.liaison && D.liaison.active) }); if (rep.ok) { D.liaison = Object.assign({}, D.liaison, { active: !(D.liaison && D.liaison.active) }); majLiaison(); } });
-$("#liaison-test").addEventListener("click", () => actionLiaison("testerLiaison"));
-/* v20.36 (Théo, 24/11) : « Santé des Moi » : pour chaque joueur, dernière photo et relevé de fin de mois prêt. Jamais un montant (le serveur n'envoie que des dates et des oui/non). */
+/* v20.36 (Théo, 24/11) : « Santé des Moi » ; (Théo, 26/11) fusionné avec « Tester » en « 📋 État des relevés » : une ligne par joueur
+   (✅ / ⏳ / 🔴 en tête : photos, relevé prêt avec le nom des enveloppes lues, envoi reçu). Jamais un montant (le serveur n'envoie que des dates, des oui/non et des noms d'enveloppes). */
+function dureeSante(ms) { return typeof ms === "number" ? (ms < 1000 ? "moins d'1 s" : String(Math.round(ms / 100) / 10).replace(".", ",") + " s") : ""; }
 $("#liaison-sante").addEventListener("click", async () => {
-  const b = $("#liaison-sante"); b.disabled = true; $("#liaison-res").innerHTML = '<p class="info">⏳ Lecture des ' + (D && D.personnes ? D.personnes.length : 5) + " fichiers… (jusqu'à 2 min)</p>";
+  const b = $("#liaison-sante"); b.disabled = true; $("#liaison-res").innerHTML = '<p class="info">⏳ Lecture des ' + nbFichiersLiaison() + " fichiers… (jusqu'à 2 min)</p>";
   const rep = await posterAdmin({ action: "santeMoi" }, LENT_MS); b.disabled = false;
   if (!rep.ok || !rep.joueurs) { $("#liaison-res").innerHTML = '<p class="info">' + esc(rep.message || "Contrôle impossible.") + "</p>"; return; }
+  const ico = j => j.etat === "rouge" || (!j.etat && j.rouge) ? "🔴" : j.etat === "attente" ? "⏳" : "✅";
+  const d = dureeSante(rep.ms);
   $("#liaison-res").innerHTML = '<p class="info sante-titre">' + esc(rep.message) + "</p>" +
-    rep.joueurs.map(j => '<div class="sante' + (j.rouge ? " rouge" : "") + '"><b>' + esc(j.nom) + "</b><span>" + esc(j.texte).replace(/ · /g, "<br>") + "</span></div>").join("");
+    (d ? '<p class="info sante-duree">Durée : ' + esc(d) + (rep.cache ? " (gardé 5 min)" : "") + "</p>" : "") +
+    rep.joueurs.map(j => '<div class="sante' + (ico(j) === "🔴" ? " rouge" : ico(j) === "⏳" ? " attente" : "") + '"><span class="sante-ico" aria-hidden="true">' + ico(j) + "</span><p><b>" + esc(j.nom) + "</b> " + esc(j.texte) + "</p></div>").join("");
 });
 $("#liaison-import").addEventListener("click", async () => { const rep = await actionLiaison("importer"); if (rep.ok) { await charger(true); majLiaison(); } });
 document.addEventListener("keydown", e => { if (e.key === "Escape") { $("#saisie").hidden = true; $("#reglages").hidden = true; $("#notifs").hidden = true; } });
