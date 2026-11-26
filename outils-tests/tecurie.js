@@ -71,9 +71,9 @@ const course = async (p, vue) => p.evaluate(async vue => {
     if (!sombre) {
       // chaque casque sur la nouvelle forme (vignettes de l'Écurie)
       await p.evaluate(async () => { ECU_SLOT = "casque"; rendreTrophees(); await new Promise(r => setTimeout(r, 800)); });
-      await p.locator(".items").first().screenshot({ path: DOSSIER + "/casques.png" });
-      await p.evaluate(async () => { ECU_SLOT = "livree"; rendreTrophees(); await new Promise(r => setTimeout(r, 900)); });
-      await p.locator(".items").first().screenshot({ path: DOSSIER + "/livrees.png" });
+      await p.locator('.eta[data-ecu-slot="casque"]').first().screenshot({ path: DOSSIER + "/casques.png" });
+      await p.evaluate(async () => { ECU_SLOT = "livree"; rendreTrophees(); document.querySelector('[data-eta-l="livree"]').scrollIntoView({ block: "center" }); await new Promise(r => setTimeout(r, 2500)); });   // v20.84 : étagère, photos prises une à une
+      await p.locator('.eta[data-ecu-slot="livree"]').first().screenshot({ path: DOSSIER + "/livrees.png" });
       // garage d'un autre pilote, en 3D aussi
       await p.evaluate(async () => { ECU_VOIR = "Kévin"; rendreTrophees(); await new Promise(r => setTimeout(r, 900)); });
       const gar = await p.evaluate(() => V3D.gar && V3D.gar.equipe ? V3D.gar.equipe() : null);

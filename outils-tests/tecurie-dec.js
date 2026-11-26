@@ -66,7 +66,7 @@ async function page(b, o) {
         const v = document.querySelector("#v-trophees"), t = v.innerText;
         [...v.querySelectorAll("[data-item]")].forEach(x => { vus.push(x.dataset.slot + "." + x.dataset.item); if (!estDepart(x.dataset.slot, x.dataset.item)) fuites.push(x.dataset.slot + "." + x.dataset.item); });
         const permis = new Set(Object.keys(dec).flatMap(sl => Object.keys(dec[sl]).filter(id => estDepart(sl, id)).map(id => dec[sl][id])));   // noms des objets montrés (vignettes, onglets, grille)
-        [...v.querySelectorAll(".it-n, .slot-tabs small, .gar-eq span, .grille-dep .plaque")].forEach(x => { const n = (x.lastChild && x.lastChild.textContent || x.textContent).trim(); if (n && !permis.has(n) && !/^#\d+$|^Tête$|^Casque$|^auto$/.test(n)) fuites.push("nom:" + n); });
+        [...v.querySelectorAll(".it-n, .eta-h small, .gar-eq span, .grille-dep .plaque")].forEach(x => { const n = (x.lastChild && x.lastChild.textContent || x.textContent).trim(); if (n && !permis.has(n) && !/^#\d+$|^Tête$|^Casque$|^auto$|Ma tête$|Mon casque$|^Modifier$|^Fermer$/.test(n)) fuites.push("nom:" + n); });
         CAL_GP.forEach(c => { if (t.includes(GPS[c].ville) || t.includes(GPS[c].gp)) fuites.push("univers:" + c); });
         if (/Trophée|🗺️|Succès|Gant de l|Légende|réserve|2028/.test(t)) fuites.push("mot:" + s);
         [...v.querySelectorAll("[data-itq]")].forEach(q => { ECU_Q = q.dataset.itq; }); }
@@ -153,7 +153,7 @@ async function page(b, o) {
       ok(/Tu gagnes la plaque Chercheur de Noël/.test(t) && /premier/.test(t), "cérémonie de décembre : « 🎁 Tu gagnes la plaque Chercheur de Noël » (dorée pour le premier)");
       await p.screenshot({ path: DOSSIER + "/chercheur-noel-ceremonie.png" });
       await p.evaluate(() => document.querySelectorAll(".cn-rev, .revel, .ecu-rev").forEach(x => x.remove())); await p.waitForTimeout(900);
-      await p.locator(".items").first().screenshot({ path: DOSSIER + "/chercheur-noel-ecurie.png" }); }
+      await p.locator('.eta[data-ecu-slot="plaque"]').first().screenshot({ path: DOSSIER + "/chercheur-noel-ecurie.png" }); }
     await ctx.close(); }
   // 4. animations réduites : révélation sans animation, voiture visible tout de suite
   { const { ctx, p, err } = await page(b, { quand: "2026-12-05T08:00:00", reduit: true, session: { role: "perso", nom: "Nicolas" } });
