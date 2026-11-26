@@ -4,7 +4,7 @@
    Fausses données uniquement (tmj-commun.js, textes de mini-jeu inventés). Serveur local ouvert : python3 -m http.server 8771 &
    puis node outils-tests/tpiege.js (PORT=… pour un autre port, CAPTURES=… pour le dossier des captures). */
 const { chromium, DOSSIER, ETAT, MJ_ETAT, page, compteur, fin } = require("./tmj-commun.js");
-const VUES = {}; ["circuits", "pioche", "monaco", "pieges", "gpspeciaux", "prono", "pole", "defi", "rival", "regularite", "vote", "equipe", "serie", "finale"].forEach(id => { VUES["versus.nouveaute." + id] = "1"; });
+const VUES = {}; ["pioche", "monaco", "pieges", "gpspeciaux", "prono", "pole", "defi", "rival", "regularite", "vote", "equipe", "serie", "finale"].forEach(id => { VUES["versus.nouveaute." + id] = "1"; });
 const JOUEUR = { role: "perso", nom: "Clément" };
 // suit chaque fenêtre ouverte (affichette, nouvelles règles, mini-jeu) et le nombre maximum ouvertes en même temps
 const SUIVI = () => { window.FEN = []; window.FEN_MAX = 0; const scan = () => {

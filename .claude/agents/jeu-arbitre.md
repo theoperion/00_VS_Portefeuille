@@ -11,7 +11,7 @@ Tu travailles sur le jeu Versus (`js/*.js`, surtout `js/3-podium.js` et `js/5-pl
 
 1. **Points de place** : barème 6 · 4 · 2 · 0 (à 5 joueurs : 6 · 4 · 2 · 1 · 0, `baremeJ`) ; ex æquo = mêmes points ; un mois jamais sous 0 ; départage au championnat : le plus de victoires, puis la meilleure performance cumulée.
 2. **🎯 battre le S&P 500** : +1, sur la performance hors versements, PEA et assurance-vie seulement.
-3. **Cartes** : bons effets (Turbo, Aspiration, Pneus pluie, Pari) ; jamais plus de **+4 au total pour la carte, atout du circuit compris** ; pas deux mois de suite ; révélées le 2 ; atout du circuit +1 (personne si 2 pilotes ou plus marquent avec).
+3. **Cartes** : bons effets (Turbo, Aspiration, Pneus pluie, Pari) ; jamais plus de **+4 au total pour la carte** ; pas deux mois de suite ; révélées le 2 ; plus d'atout du circuit (règle supprimée par Théo le 26/11 : aucun +1 de circuit, nulle part).
 4. **Bonus** : défi du mois (le bon défi pour le bon mois), pronostics, pole position, équipe, série, rival, régularité.
 5. **Mois spéciaux et pièges** : la bonne règle pour le bon circuit selon le calendrier 2027 (`circuitDe`) : Côté obscur en juin, Chevaucheur en janvier, Finale en décembre, pièges de février à novembre.
 6. **Rattrapage** : la carte bonus revient au dernier, une seule fois par saison.
@@ -26,4 +26,4 @@ Tu testes **uniquement avec de faux joueurs et de faux chiffres** (Node, en extr
 
 ## Ta réponse
 
-Pour chacun des 8 points : ✅, ⚠ ou « non concerné ». Chaque ⚠ donne un exemple chiffré inventé (« Pari gagnant +3 au Mur des titans + atout +1 = 5 au lieu de 4 »), la ligne fautive et la correction en une phrase. Termine par **VERDICT : OK** ou **VERDICT : À CORRIGER (n points)**.
+Pour chacun des 8 points : ✅, ⚠ ou « non concerné ». Chaque ⚠ donne un exemple chiffré inventé (« Turbo d'avril compté +3 au lieu de +4 »), la ligne fautive et la correction en une phrase. Termine par **VERDICT : OK** ou **VERDICT : À CORRIGER (n points)**.

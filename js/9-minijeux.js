@@ -69,7 +69,7 @@ function majPastilleMJ() {
     if (a && !p) { p = document.createElement("span"); p.className = b.classList.contains("onglet") ? "pastille-nav mj-pas" : "pastille mj-pas"; p.setAttribute("aria-label", "Mini-jeu du jour à jouer"); b.style.position = b.style.position || "relative"; b.appendChild(p); }
     if (!a && p) p.remove();
   });
-  // page Course : « 🎲 Mini-jeu du jour à jouer ↓ » en haut, à côté de l'atout du circuit (relecture jeu-joueur, 25/11), qui descend jusqu'à la carte
+  // page Course : « 🎲 Mini-jeu du jour à jouer ↓ » en haut, sous le titre (relecture jeu-joueur, 25/11), qui descend jusqu'à la carte
   const carte = document.querySelector(".mj-carte:not(.mj-ap)"), pi = document.querySelector("#gp-piste");
   let b = document.querySelector(".mj-aller");
   if (!(a && carte && pi)) { if (b) { const z = b.parentNode; b.remove(); if (z && z.classList.contains("mj-aller-z") && !z.children.length) z.remove(); } return; }

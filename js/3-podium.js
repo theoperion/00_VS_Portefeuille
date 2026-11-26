@@ -136,7 +136,6 @@ function championnat(y) {
       return o;
     });
     // cartes révélées (main de base et pioche bonus), plafonnées à +4
-    const atM = ch ? null : atoutsDe(k);
     l.forEach(x => {
       const c = carteDe(y, x.nom, k); if (!c || !c.c) return;
       const def = carteDef(c.c), j = J[x.nom]; if (!def || !j) return;
@@ -145,13 +144,11 @@ function championnat(y) {
       if (PG && PG.id === "sirenes" && c.c === "pari") { x.carte = { id: c.c, gain: 0, cible: null, invalide: true, piege: true }; return; }   // V16.55 « Chant des Sirènes » : Pari interdit   // « Chaleur » : Turbo interdit
       x._c = c; x._g = effetCarte(Object.assign({}, c, { revele: true }), x, l, avant, iR, { up: amelioAu(y, x.nom, k, j.niv), prev: prevL, cumAvant, piege: PG });
     });
-    // circuit du mois : +1 pour la carte atout qui a marqué ; bouchon (personne n'a le +1) seulement si au moins deux pilotes l'ont jouée ET ont marqué avec
-    const nbAtout = atM ? l.filter(z => z._c && z._c.c === atM.atout.id && z._g > 0).length : 0;
+    // Théo, 26/11 : l'atout du circuit (+1, bouchon) est supprimé ; la carte garde son effet, plafonné à +4
     l.forEach(x => {
       if (!x._c) return;
-      const c = x._c, at = atM, marque = !!(at && x._g > 0 && at.atout.id === c.c), bouchon = marque && nbAtout >= 2, circ = marque && !bouchon ? 1 : 0;
-      const g = Math.min(PLAFOND_CARTE, x._g + circ);
-      x.carte = { id: c.c, gain: g, cible: c.cible || null, circ, bouchon }; x.p += g;
+      const c = x._c, g = Math.min(PLAFOND_CARTE, x._g);
+      x.carte = { id: c.c, gain: g, cible: c.cible || null }; x.p += g;
       if (c.c === "pari" && c.cible) { const xc = l.find(z => z.nom === c.cible); if (xc) (xc.vise = xc.vise || []).push({ par: x.nom, gain: g }); }
       delete x._c; delete x._g;
     });

@@ -33,7 +33,6 @@ Chaque mois, les pilotes sont classés sur la **performance de leur portefeuille
 | 🎲 Pari | désigne un rival : +2 devant lui, −1 derrière, 0 à égalité |
 
 Posée face cachée dans le Stand (modifiable jusqu'au 1er), révélée le 2. Rejouable, mais **pas deux mois de suite**.
-🗺️ **Atout du circuit** : chaque circuit préfère une carte ; jouée **et** gagnante → **+1** (si 2 pilotes ou plus marquent avec : personne). Turbo : Paris la nuit, Pandora, l'Odyssée · Aspiration : Château aux sortilèges, Mer de dunes, le Multivers · Pneus pluie : Pays des merveilles, Monde à l'envers, Mur des titans · Pari : la Chocolaterie, Bataille spatiale, Terre de l'Anneau.
 
 ## ✨ Les bonus
 
