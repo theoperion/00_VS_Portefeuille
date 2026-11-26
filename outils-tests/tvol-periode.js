@@ -123,7 +123,7 @@ const pctTxt = s => s && parseFloat(s.replace(/\s/g, "").replace(",", ".")) / 10
       if (k === "5j") { ok(r.tot === null && /pas assez de cours sur 5 séances/.test(r.aide || "") && /🔴 vol\. 34/.test(r.lqq || ""), "5 j : pas de pastille sur le total, « pas assez de cours », lignes toujours sur 1 an" + tag); continue; }
       const a = ATT[k], att = "vol. " + Math.round(a.moi.v * 100) + " %";
       ok(r.tot && r.tot.replace(/\s/g, " ").endsWith(att) && /🔴 vol\. 34\s%/.test(r.lqq || ""), k + " : total « " + r.tot + " » = Stats (" + (a.moi.v * 100).toFixed(2) + " %), ligne LQQ toujours « " + r.lqq + " » (1 an)" + tag);
-      if (k !== "1a") ok(/Lignes : toujours sur 1 an/.test(r.aide || "") && /Portefeuille : sur/.test(r.aide || "") && /court : indicatif/.test(r.aide || "") === (a.moi.n < 60), k + " : aide « " + (r.aide || "").split(". ").slice(-2).join(". ") + " »" + tag);
+      if (k !== "1a") ok(/Lignes : toujours sur 1 an/.test(r.aide || "") && /Portefeuille : (sur|depuis)/.test(r.aide || "") && /court : indicatif/.test(r.aide || "") === (a.moi.n < 60), k + " : aide « " + (r.aide || "").split(". ").slice(-2).join(". ") + " »" + tag);
       ok(r.deb === 0, k + " : rien ne déborde à 390 px" + tag);
       if (k === "1m") { await p.evaluate(() => { const e = document.querySelector(".nv-tot"); window.scrollBy(0, e.getBoundingClientRect().top - 300); }); await p.waitForTimeout(200); await p.screenshot({ path: path.join(CAP, "aujourdhui-1m-" + (sombre ? "sombre" : "clair") + ".png") }); }
     }
