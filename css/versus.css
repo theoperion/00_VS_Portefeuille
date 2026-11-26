@@ -2684,6 +2684,8 @@ html.sans-qm .qm, html.sans-qm .qm-b { display: none !important; }
 .av-entree .rp-f { color: var(--ink-3); font-size: 16px; }
 .av-entree.a-ouvrir { border-color: color-mix(in srgb, #2EC46B 55%, var(--rule)); background: linear-gradient(110deg, color-mix(in srgb, #C1121F 14%, var(--panel)), color-mix(in srgb, #1F7A4C 12%, var(--panel))); }
 @keyframes avPas { 50% { transform: scale(1.25); } }
+.toast.av-dessus { z-index: 99; }   /* le message d'une case (manquée, fermée, refusée) au-dessus du calendrier (97) : classe posée par l'appli (secours sans :has) */
+body:has(.av-ov) .toast, body:has(.av-case) .toast { z-index: 99; }
 .av-ov, .av-case { position: fixed; inset: 0; z-index: 97; display: flex; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px; background: radial-gradient(120% 80% at 50% 0%, #1B2C5C, #070B1C 70%); color: #F2F6FF; }
 .av-case { z-index: 98; background: rgba(4,7,18,.86); backdrop-filter: blur(5px); }
 .av-boite, .av-carte { position: relative; z-index: 1; margin: auto; width: 100%; max-width: 420px; }

@@ -1,4 +1,4 @@
-/* Test (v20.71) · 🎄 Calendrier de l'Avent : une case par jour, à ouvrir le jour même, sinon « ❄️ Manquée » ; le serveur tranche ; 🏅 plaque Hiver 2026 dorée.
+/* Test (v20.74) · 🎄 Calendrier de l'Avent : une case par jour, à ouvrir le jour même, sinon « ❄️ Manquée » ; le serveur tranche ; 🏅 plaque Hiver 2026 dorée.
    Fausses données uniquement (serveur Google intercepté, faux Avent.js qui tient la date « du serveur » à part de celle du téléphone).
    Serveur local ouvert : python3 -m http.server 8771 &  puis  node outils-tests/tavent-manquee.js   (PORT=… pour un autre port, CAPTURES=… pour les captures)
    Vérifie : case passée non ouverte = « Manquée » (inaccessible, toast), case déjà ouverte rejouable, case du jour ; textes (règle, plaque dorée, compte x/24) ;
@@ -37,13 +37,14 @@ async function page(b, o) {
   await p.clock.install({ time: new Date(o.tel + "+01:00") }); await p.clock.resume();   // l'heure du TÉLÉPHONE (heure de Paris)
   o.serveur = o.serveur || o.tel;
   o.srv = o.srv || { envois: [], cases: (o.casesSrv || []).slice(), dores: (o.dores || []).slice() };
-  await p.route("https://script.google.com/**", r => { const c = JSON.parse(r.request().postData() || "{}");
-    if (c.action === "avent" || c.action === "aventCase") { const x = fauxServeur(o, c); return x ? r.fulfill({ contentType: "application/json", body: JSON.stringify(x) }) : r.abort(); }
+  await p.route("https://script.google.com/**", async r => { const c = JSON.parse(r.request().postData() || "{}");
+    if (c.action === "avent" || c.action === "aventCase") { if (o.lent) await new Promise(z => setTimeout(z, o.lent)); const x = fauxServeur(o, c); return x ? r.fulfill({ contentType: "application/json", body: JSON.stringify(x) }) : r.abort(); }
     r.fulfill({ contentType: "application/json", body: JSON.stringify(c.action === "tickets" ? { ok: true, ouvert: false } : c.action === "tresors" ? { ok: true, tresors: [], trouves: [], total: 0 } : c.action === "ecurie" ? { ok: true } : donnees(o.session || JOUEUR)) }); });
   await p.addInitScript(f => { if (sessionStorage.getItem("t.init")) return; sessionStorage.setItem("t.init", "1");
     localStorage.setItem("versus.cle", "x"); ["versus.tuto1", "versus.bullePortrait", "versus.chauffe1", "versus.saison1", "versus.ecurieTeaser"].forEach(k => localStorage.setItem(k, "1"));
-    if (f.ouvertes) localStorage.setItem("versus.avent", JSON.stringify(f.ouvertes)); if (f.admin) sessionStorage.setItem("versus.adminOn", "1"); }, { ouvertes: o.ouvertes, admin: o.admin });
+    if (f.ouvertes) localStorage.setItem("versus.avent", JSON.stringify(f.ouvertes)); if (f.admin) sessionStorage.setItem("versus.adminOn", "1"); if (f.decal) localStorage.setItem("versus.aventDecal", String(f.decal)); }, { ouvertes: o.ouvertes, admin: o.admin, decal: o.decal });
   await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(o.attente || 3800);   // l'état du serveur arrive 2,5 s après le démarrage
+  await p.evaluate(() => document.querySelectorAll(".tuto").forEach(x => x.remove()));   // les annonces du jour (Nouvelles règles…) : on les ferme, comme le pilote
   return { ctx, p, err, o };
 }
 const grille = () => { const c = cls => [...document.querySelectorAll(".av-c." + cls)].map(x => +x.dataset.av).sort((a, b) => a - b); return { manquee: c("manquee"), vue: c("vue"), jour: c("jour"), ferme: c("ferme"), libre: c("libre") }; };
@@ -63,10 +64,13 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
     const g = await p.evaluate(grille);
     ok(g.manquee.join() === "3,4,6,8" && g.vue.join() === "1,2,5,7" && g.jour.join() === "9" && g.ferme.length === 15 && g.ferme[0] === 10 && !g.libre.length, "9/12 · manquées 3, 4, 6, 8 ; ouvertes 1, 2, 5, 7 ; du jour 9 ; fermées 10 à 24 " + JSON.stringify(g) + tag);
     const h = await p.evaluate(() => ({ h: document.querySelector(".av-h").innerText, m: document.querySelector('.av-c[data-av="3"]').innerText, a: document.querySelector('.av-c[data-av="3"]').getAttribute("aria-label") }));
-    ok(/à ouvrir le jour même, sinon elle est perdue ❄️/.test(h.h) && /Ouvre les 24 cases, chacune le jour même : la plaque Hiver 2026 dorée t'attend le 24/.test(h.h) && /❄️ Manquée/.test(h.m) && /manquée/.test(h.a), "l'aide du calendrier : la règle, la plaque dorée, le compte ; la porte 3 dit « ❄️ Manquée » " + JSON.stringify(h) + tag);
+    ok(/à ouvrir le jour même, sinon elle est perdue ❄️/.test(h.h) && !/t'attend le 24/.test(h.h) && /plaque dorée perdue/.test(h.h) && /❄️ Manquée/.test(h.m) && /manquée/.test(h.a), "l'aide du calendrier : la règle et le compte (plaque dorée perdue : plus de « t'attend le 24 ») ; la porte 3 dit « ❄️ Manquée » " + JSON.stringify(h) + tag);
     ok(!(await p.evaluate(deborde)).length, "390 px : le calendrier ne déborde pas" + tag);
     await p.screenshot({ path: DOSSIER + "/calendrier-9dec" + (sombre ? "-sombre" : "") + ".png" });
     await p.click('.av-c[data-av="3"]'); await p.waitForTimeout(400);
+    const zt = await p.evaluate(() => { const t = document.getElementById("toast"), r = t.getBoundingClientRect(), e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return { z: getComputedStyle(t).zIndex, dessus: !t.hidden && !!e && !!e.closest("#toast") }; });
+    ok(zt.z === "99" && zt.dessus, "le message de la case manquée s'affiche AU-DESSUS du calendrier " + JSON.stringify(zt) + tag);
+    if (!sombre) await p.screenshot({ path: DOSSIER + "/toast-manquee.png" });
     const m = await p.evaluate(() => { const c = !!document.querySelector(".av-case"); const t = [...document.querySelectorAll(".toast, #toast")].map(x => x.textContent).join(" "); ouvrirCaseAvent(3); marquerOuverte(3); return { c, force: !!document.querySelector(".av-case"), noteé: aventOuvertes().includes(3), t }; });
     ok(!m.c && !m.force && !m.noteé && /Case manquée/.test(m.t), "case 3 manquée : ne s'ouvre pas (même en forçant), jamais notée, un message le dit " + JSON.stringify(m) + tag);
     await p.click('.av-c[data-av="5"]'); await p.waitForTimeout(500);
@@ -92,22 +96,47 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
   // 3 · hors réseau : la date de l'appareil (case du jour ouvrable), l'ouverture attend en file ; à la reconnexion, le serveur confirme
   { const o = { tel: "2026-12-10T08:00:00", ouvertes: [], casesSrv: [], attente: 600 }; o.horsLigne = true; const { ctx, p, err } = await page(b, o);
     const r1 = await p.evaluate(async () => { ouvrirAvent(); document.querySelector('.av-c[data-av="10"]').click(); await new Promise(r => setTimeout(r, 1200)); return { c: !!document.querySelector(".av-case"), vu: aventOuvertes().includes(10), file: fileCases() }; });
+    const at = await p.evaluate(() => texteCompteAvent());
+    ok(/0\/24/.test(at) && /⏳ case du 10 pas encore comptée \(pas de réseau\)/.test(at), "hors réseau : le compteur ne compte pas encore la case 10 (« ⏳ pas encore comptée ») " + JSON.stringify(at));
     ok(r1.c && r1.vu && r1.file.join() === "10", "hors réseau, le 10/12 : la case du jour s'ouvre (date de l'appareil), « case 10 ouverte » attend en file " + JSON.stringify(r1));
     o.horsLigne = false; await p.evaluate(() => { AVENT_SRV_T = 0; return chargerAvent(true); }); await p.waitForTimeout(1200);
     const r2 = await p.evaluate(() => ({ file: fileCases(), ouv: aventOuvertes(), cpt: texteCompteAvent() }));
     ok(!r2.file.length && r2.ouv.join() === "10" && o.srv.cases.join() === "10" && /9 manquée|case du 1 manquée/.test(r2.cpt), "réseau revenu : le serveur confirme la case 10, la file se vide ; le compte dit la plaque dorée perdue " + JSON.stringify(r2));
     ok(!err.length, "3 · 0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
+  // 3 bis · une case ouverte PENDANT un envoi (serveur lent, 2 records en file) part quand même
+  { const o = { tel: "2026-12-09T10:00:00", ouvertes: [7, 8], casesSrv: [7, 8] }, { ctx, p, err } = await page(b, o); o.lent = 2500;
+    await p.evaluate(async () => { stock.set("versus.aventFile", JSON.stringify({ memory: { s: 20, deja: 0 }, cheminees: { s: 100, deja: 0 } })); envoyerFileAvent(); await new Promise(z => setTimeout(z, 300)); marquerOuverte(9); });
+    await p.waitForTimeout(9000);
+    const r = await p.evaluate(() => ({ file: fileCases(), recs: Object.keys(fileAvent()) }));
+    ok(o.srv.cases.includes(9) && !r.file.length && !r.recs.length, "serveur lent, 2 records en file, case 9 ouverte pendant l'envoi : au bout de 9 s le serveur a la case 9, les files sont vides " + JSON.stringify(r));
+    ok(!err.length, "3 bis · 0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
+  // 3 ter · l'écart d'heure avec le serveur est gardé : dès le démarrage (même hors réseau), la case du jour est celle du serveur
+  { const o = { tel: "2026-12-12T10:00:00", decal: -3 * 86400000, attente: 300 }; o.horsLigne = true; const { ctx, p, err } = await page(b, o);
+    const j = await p.evaluate(() => aventJour());
+    ok(j === 9, "téléphone au 12/12, écart connu de -3 jours : dès le démarrage, la case du jour est la 9 " + j);
+    ok(!err.length, "3 ter · 0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
   // 4 · le serveur connaît une case ouverte sur un autre appareil : elle revient ici (une seule vérité)
   { const o = { tel: "2026-12-06T10:00:00", ouvertes: [1], casesSrv: [1, 2, 3, 4, 5] }, { ctx, p, err } = await page(b, o);
     const r = await p.evaluate(() => ({ ouv: aventOuvertes(), cpt: texteCompteAvent(), e: document.querySelector(".av-entree").innerText }));
-    ok(r.ouv.join() === "1,2,3,4,5" && /5\/24 · encore possible/.test(r.cpt) && /5\/24 · encore possible/.test(r.e), "cases ouvertes sur un autre téléphone : reprises du serveur ; « 🏅 5/24 · encore possible » " + JSON.stringify(r));
-    await p.click(".av-entree"); await p.waitForTimeout(400); await p.screenshot({ path: DOSSIER + "/calendrier-6dec-encore-possible.png" });
+    ok(r.ouv.join() === "1,2,3,4,5" && /5\/24 · encore possible/.test(r.cpt) && /5\/24 · encore possible/.test(r.e) && /t'attend le 24/.test(r.e), "cases ouvertes sur un autre téléphone : reprises du serveur ; « 🏅 5/24 · encore possible », la plaque dorée annoncée " + JSON.stringify(r));
+    await p.click(".av-entree"); await p.waitForTimeout(400);
+    ok(await p.evaluate(() => /plaque Hiver 2026 dorée t'attend le 24/.test(document.querySelector(".av-h").innerText)), "encore possible : l'aide du calendrier annonce la plaque dorée"); await p.screenshot({ path: DOSSIER + "/calendrier-6dec-encore-possible.png" });
     ok(!err.length, "4 · 0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
   // 5 · du 25 au 31 : rien de nouveau (la 24 était la dernière) ; les cases ouvertes restent rejouables
   { const o = { tel: "2026-12-27T10:00:00", ouvertes: [1, 24], casesSrv: [1, 24] }, { ctx, p, err } = await page(b, o);
     const r = await p.evaluate(() => { ouvrirAvent(); const g = (cls => [...document.querySelectorAll(".av-c." + cls)].map(x => +x.dataset.av)); return { e: document.querySelector(".av-entree").innerText, pas: !!document.querySelector(".av-entree .av-pas"), jour: g("jour"), vue: g("vue").sort((a, b) => a - b), m: g("manquee").length, ferme: g("ferme").length }; });
     ok(/joyeux Noël/.test(r.e) && !r.pas && !r.jour.length && r.vue.join() === "1,24" && r.m === 22 && r.ferme === 0, "27/12 : pas de case du jour, pas de pastille ; 1 et 24 rejouables, les 22 autres manquées " + JSON.stringify(r));
     ok(!err.length, "5 · 0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
+  // 5 bis · Noël sans avoir ouvert la 24 : « ton souvenir t'attend dans l'écurie » ; la case 24 manquée le redit ; la règle ne se répète plus
+  { const o = { tel: "2026-12-27T10:00:00", ouvertes: [1], casesSrv: [1] }, { ctx, p, err } = await page(b, o);
+    const e = await p.evaluate(entree);
+    await p.evaluate(() => ouvrirAvent()); await p.waitForTimeout(300); await p.click('.av-c[data-av="24"]'); await p.waitForTimeout(300);
+    const t = await p.evaluate(() => document.getElementById("toast").textContent);
+    ok(/joyeux Noël ! ton souvenir t'attend dans l'écurie/.test(e.t) && !/Une case par jour/.test(e.t) && !/t'attend le 24/.test(e.t) && /Case manquée : elle ne s'ouvrait que le 24 décembre\. Ton souvenir \(plaque Hiver 2026 et traînée Flocons\) t'attend quand même dans l'écurie\./.test(t) && await p.evaluate(() => debloques("Clément").has("plaque.hiver26")), "27/12, case 24 pas ouverte : « joyeux Noël ! ton souvenir t'attend dans l'écurie », le message de la 24 manquée le redit, le souvenir est bien là " + JSON.stringify({ e: e.t, t }));
+    // une annonce (Nouvelles règles) déjà ouverte : le calendrier attend sa fermeture (une seule fenêtre à la fois)
+    const a = await p.evaluate(async () => { document.querySelectorAll(".av-ov").forEach(x => x.remove()); const tu = document.createElement("div"); tu.className = "tuto"; document.body.appendChild(tu); ouvrirAvent(); const avant = !!document.querySelector(".av-ov"); tu.remove(); await new Promise(r => setTimeout(r, 100)); return { avant, apres: !!document.querySelector(".av-ov") }; });
+    ok(!a.avant && a.apres, "une annonce déjà ouverte passe d'abord : le calendrier s'ouvre à sa fermeture " + JSON.stringify(a));
+    ok(!err.length, "5 bis · 0 erreur JS " + JSON.stringify(err)); await ctx.close(); }
   // 6 · 🏅 plaque Hiver 2026 dorée : Clément ouvre la 24 le 24/12 avec 23 cases déjà ouvertes → dorée (serveur) ; Kévin 23/24 → normale
   { const vingt3 = Array.from({ length: 23 }, (_, i) => i + 1), o = { tel: "2026-12-24T09:00:00", ouvertes: vingt3, casesSrv: vingt3 }, { ctx, p, err } = await page(b, o);
     const a = await p.evaluate(() => ({ d: debloques("Clément").has("plaque.hiverdore"), n: debloques("Clément").has("plaque.hiver26") }));

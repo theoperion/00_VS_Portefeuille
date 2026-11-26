@@ -19,7 +19,7 @@ const JOUEUR = { role: "perso", nom: "Clément" }, ADMIN = { role: "admin" };
 function fauxAvent(o, c) {
   const S = o.srv; S.envois.push(c);
   if (o.horsLigne) return null;
-  if (c.action === "aventCase") { const j = +o.quand.slice(8, 10), ok = o.quand.slice(0, 7) === "2026-12" && c.jour === j; return { ok: true, accepte: ok, raison: ok ? undefined : "manquee", ouvert: true, mes: Object.assign({}, S.mes) }; }   // v20.71 : une case par jour
+  if (c.action === "aventCase") { const j = +o.quand.slice(8, 10), ok = o.quand.slice(0, 7) === "2026-12" && c.jour === j; return { ok: true, accepte: ok, raison: ok ? undefined : "manquee", ouvert: true, mes: Object.assign({}, S.mes) }; }   // v20.74 : une case par jour
   if (c.op === "score" && o.refuse) return { ok: false, erreur: "saisie", message: "Score impossible." };   // v20.62 : le serveur refuse un score hors bornes
   if (c.op === "score") { if (S.deja.includes(c.jeu)) return { ok: false, erreur: "deja", message: "demain" }; S.deja.push(c.jeu); S.mes[c.jeu] = c.score; }
   const r = { ok: true, ouvert: true, mes: Object.assign({}, S.mes) };
@@ -37,6 +37,7 @@ async function page(b, o) {
   await p.addInitScript(f => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.bullePortrait", "1"); localStorage.setItem("versus.chauffe1", "1"); localStorage.setItem("versus.saison1", "1"); localStorage.setItem("versus.ecurieTeaser", "1");
     if (f.ouvertes) localStorage.setItem("versus.avent", JSON.stringify(f.ouvertes)); if (f.admin) sessionStorage.setItem("versus.adminOn", "1"); }, { ouvertes: o.ouvertes, admin: o.admin });
   await p.goto(URL); await p.waitForFunction(() => typeof D !== "undefined" && D && D.personnes, null, { timeout: 15000 }); await p.waitForTimeout(1200);
+  await p.evaluate(() => document.querySelectorAll(".tuto").forEach(x => x.remove()));   // v20.74 : l'annonce du jour (Nouvelles règles) se ferme d'abord : le calendrier ne s'ouvre jamais par-dessus
   return { ctx, p, err, srv: o.srv, o };
 }
 const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-entree")].filter(e => !e.closest(".av-neige") && !e.closest(".av-porte")).filter(e => { const r = e.getBoundingClientRect(); return r.width && (r.right > innerWidth + 1 || r.left < -1); }).map(e => e.className).slice(0, 5);   // la neige (fixe) et les portes ouvertes en 3D sont rognées par leur cadre
@@ -80,7 +81,7 @@ const deborde = () => [...document.querySelectorAll(".av-ov *, .av-case *, .av-e
     await ctx.close();
   }
   // 3 · le 24 décembre : tout s'ouvre ; chaque jeu se lance, se joue, se ferme ; textes sans secret
-  const TOUTES = Array.from({ length: 24 }, (_, i) => i + 1);   // v20.71 : une case ne se rouvre que si elle a été ouverte le jour même
+  const TOUTES = Array.from({ length: 24 }, (_, i) => i + 1);   // v20.74 : une case ne se rouvre que si elle a été ouverte le jour même
   { const { ctx, p, err } = await page(b, { quand: "2026-12-24T09:00:00", session: JOUEUR, ouvertes: TOUTES });
     const t = await p.evaluate(() => ({ tous: Array.from({ length: 24 }, (_, i) => caseOuvrable(i + 1)).every(Boolean), jeux: Object.keys(JEUX_AVENT), cases: Object.values(CASES_AVENT).filter(c => c.type === "jeu").map(c => c.jeu),
       textes: JSON.stringify(CASES_AVENT) + JSON.stringify(Object.values(JEUX_AVENT).map(j => [j.nom, j.aide, j.unite])) }));
