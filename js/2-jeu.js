@@ -101,14 +101,14 @@ function carteVerdict(v) {
   const marche = (x, place) => {
     if (!x) return '<div class="vp-m vp-' + place + ' vide"></div>';
     const rg = rangDe(x), bat = idxOk && x.r > v.iR;
-    return '<div class="vp-m vp-' + place + (rg === 1 ? " champ" : "") + '" style="--c:' + couleur(x.nom) + '" data-fiche="' + esc(x.nom) + '" role="button" tabindex="0" aria-label="Fiche de ' + esc(x.nom) + '">' +
+    return '<div class="vp-m vp-' + place + (rg === 1 ? " champ" : "") + '" style="--c:' + couleur(x.nom) + '" data-fiche="' + esc(x.nom) + '" role="button" tabindex="0" aria-label="Vitrine de ' + esc(x.nom) + '">' +
       '<div class="vp-p">' + (rg === 1 ? '<span class="vp-cour" aria-hidden="true">🥇</span>' : "") + tete(x.nom) + '<b style="color:' + couleur(x.nom) + '">' + esc(x.nom) + "</b>" + (typeof plaqueDe === "function" && plaqueDe(x.nom) ? '<span class="vp-plq">' + plaqueDe(x.nom) + "</span>" : "") +
       '<em class="' + sens(x.r) + '" data-cv="' + x.r + '" data-cf="pct">' + pct(x.r) + "</em>" + (bat ? '<i class="vp-bat" title="Bat ' + nomI + '">🎯</i>' : "") + "</div>" +
       '<div class="vp-s"><span class="vp-rg">' + rg + "</span>" + (rg === 1 ? "<small>champion</small>" : "") + "</div></div>";
   };
   const top = v.du.slice(0, 3), suite = v.du.slice(3);
   const autres = suite.map(x => { const rg = rangDe(x), tortue = n >= 3 && rg === rangDernier && rg > 1, bat = idxOk && x.r > v.iR;
-    return '<div class="vp-l' + (tortue ? " lanterne" : "") + '" data-fiche="' + esc(x.nom) + '" role="button" tabindex="0" aria-label="Fiche de ' + esc(x.nom) + '"><span class="vp-lrg">' + rangTxt(rg) + "</span>" + tete(x.nom) + '<b style="color:' + couleur(x.nom) + '">' + esc(x.nom) + "</b>" + (tortue ? '<span class="vp-tag">🐢 lanterne rouge</span>' : "") +
+    return '<div class="vp-l' + (tortue ? " lanterne" : "") + '" data-fiche="' + esc(x.nom) + '" role="button" tabindex="0" aria-label="Vitrine de ' + esc(x.nom) + '"><span class="vp-lrg">' + rangTxt(rg) + "</span>" + tete(x.nom) + '<b style="color:' + couleur(x.nom) + '">' + esc(x.nom) + "</b>" + (tortue ? '<span class="vp-tag">🐢 lanterne rouge</span>' : "") +
       '<em class="' + sens(x.r) + '">' + pct(x.r) + (bat ? " 🎯" : "") + "</em></div>"; }).join("");
   const barreIdx = idxOk ? '<div class="vp-idx"><span>🎯 ' + nomI + " <b>" + pct(v.iR) + "</b></span><span>" + (v.battent.length ? v.battent.length + " sur " + n + " l'" + (v.battent.length > 1 ? "ont" : "a") + " battu" : "personne ne l'a battu") +
     '</span><span class="vp-jauge" aria-hidden="true">' + v.du.map(x => '<i style="background:' + (x.r > v.iR ? "var(--up)" : "var(--rule)") + '"></i>').join("") + "</span></div>" : "";
@@ -116,7 +116,7 @@ function carteVerdict(v) {
     '<div class="vp-podium">' + marche(top[1], 2) + marche(top[0], 1) + marche(top[2], 3) + "</div>" +
     (autres ? '<div class="vp-suite">' + autres + "</div>" : "") + barreIdx +
     ((v.sansReleve || []).length ? '<p class="v-n">⏱️ Pas de relevé pour ' + v.sansReleve.map(n => "<b>" + esc(n) + "</b>").join(" et ") + " 7 jours après la date : mois joué sans " + (v.sansReleve.length > 1 ? "eux" : "lui") + " (rattrapable s'" + (v.sansReleve.length > 1 ? "ils saisissent leur" : "il saisit son") + " relevé).</p>" : "") +
-    '<p class="v-n">Uniquement le mois de ' + esc(moisLong(v.k)) + ". Sur un seul mois, la chance pèse plus que le talent. Touche un pilote pour sa fiche.</p></div>";
+    '<p class="v-n">Uniquement le mois de ' + esc(moisLong(v.k)) + ". Sur un seul mois, la chance pèse plus que le talent. Touche un pilote pour sa vitrine.</p></div>";
 }
 function brancherVerdict(v) {
   const boite = $("#boite-verdict"); if (!boite) return;

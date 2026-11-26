@@ -317,8 +317,12 @@ function rendreFiche() {
   const v = $("#v-fiche");
   const chips = (typeof FICHE_RETOUR !== "undefined" && FICHE_RETOUR ? '<button class="btn ghost fiche-retour" type="button" id="fiche-retour">‹ Retour au Podium</button>' : "") +   // v20.71
     '<div class="chips" role="group" aria-label="Personne">' + D.personnes.map(x => '<button class="chip" type="button" data-fiche="' + esc(x.nom) + '" aria-pressed="' + (x.nom === p.nom) + '"><i style="background:' + couleur(x.nom) + '"></i>' + esc(x.nom) + "</button>").join("") + "</div>";
+  // Théo, 26/11 · la vitrine d'un pilote, de haut en bas : en-tête (avatar, nom, numéro, plaque, badges épinglés), trophées, SA F1 (3D),
+  // puis « 📈 Ses chiffres » (tous ses % de bourse et ses stats) dans une section REPLIÉE par défaut
+  const haut = chips + (typeof enteteFiche === "function" ? enteteFiche(p.nom) : "") + (typeof ficheMillion === "function" ? ficheMillion(p.nom) : "") + (typeof vitrineFiche === "function" ? vitrineFiche(p.nom) : "") + (typeof htmlVoitureFiche === "function" ? htmlVoitureFiche(p.nom) : "");
+  const chiffres = corps => '<details class="pts-det f-pli f-chiffres" data-fpli="chiffres"' + (FICHE_OUVERTS.has("chiffres") ? " open" : "") + "><summary>📈 " + (p.nom === moiPilote() ? "Tes" : "Ses") + " chiffres <small>performance, stats, mois par mois</small></summary>" + corps + "</details>";
   if (!finP) {
-    v.innerHTML = chips + (typeof ficheMillion === "function" ? ficheMillion(p.nom) : "") + (typeof vitrineFiche === "function" ? vitrineFiche(p.nom) : "") + filtres(true, true, false) + '<div class="vide">Pas encore de relevé pour ' + esc(p.nom) + " dans " + esc(ENVELOPPES[env]) + ".</div>";
+    v.innerHTML = haut + chiffres(filtres(true, true, false) + '<div class="vide">Pas encore de relevé pour ' + esc(p.nom) + " dans " + esc(ENVELOPPES[env]) + ".</div>");
   } else {
     const deb = debutPeriode(D, ETAT.per, finP);
     const s = stats(D, p, env, deb, finP, i1, null);
@@ -331,7 +335,7 @@ function rendreFiche() {
     const annees = [...new Set(sAll.filter(x => typeof x.r === "number").map(x => Math.floor(x.k / 100)))].sort().reverse();
     const max = Math.max(.04, ...sAll.filter(x => typeof x.r === "number").map(x => Math.abs(x.r)));
 
-    v.innerHTML = chips + (typeof ficheMillion === "function" ? ficheMillion(p.nom) : "") + (typeof vitrineFiche === "function" ? vitrineFiche(p.nom) : "") + filtres(true) +
+    v.innerHTML = haut + chiffres(filtres(true) +
       '<div class="periode">' + esc(textePeriode(deb, finP, s.n)) + (s.debutK && deb && s.debutK > cleMoins(deb, -1) ? " · enveloppe ouverte plus tard" : "") + "</div>" +
       '<div class="hero"><span class="eyebrow">' + esc(ENVELOPPES[env]) + " · " + esc(p.nom) + '</span><span class="big"' + (estPrive(p.nom) ? "" : ' data-cv="' + s.valeur + '" data-cf="eur"') + ">" + (estPrive(p.nom) ? pct(s.twr) : eur(s.valeur)) + '</span><div class="sous"><span class="badge ' + sens(estPrive(p.nom) ? s.twr : s.pvPeriode) + '">' + (estPrive(p.nom) ? "🔒 montants privés" : eur(s.pvPeriode, 0, true) + " · " + pct(s.twr)) + "</span><span>" + ({ mois: "sur 1 mois", "6m": "sur 6 mois", ytd: "depuis janvier", "12m": "sur 1 an", tout: "depuis le début" }[ETAT.per] || "sur la période") + " · versements exclus</span></div></div>" +   // v20.15 (Théo) : la valeur reste fixe, la variation suit la période
       (s.n ? '<div class="tuiles">' +
@@ -351,15 +355,16 @@ function rendreFiche() {
       pli("mois", "Mois par mois", esc(ENVELOPPES[env]), '<div class="scroll-x"><table class="grille"><thead><tr><th></th>' + MOIS.map(m => "<th>" + m + "</th>").join("") + "<th>Année</th></tr></thead><tbody>" +
         annees.map(y => { const st = stats(D, p, env, (y - 1) * 100 + 12, y * 100 + 12, null, null); return '<tr><td class="nom">' + y + "</td>" + MOIS.map((m, j) => { const x = sAll.find(z => z.k === y * 100 + j + 1); return x && typeof x.r === "number" ? '<td style="' + teinte(x.r, max) + '">' + pct(x.r) + "</td>" : '<td class="vide">·</td>'; }).join("") + '<td style="' + teinte(st.twr, max * 3) + '"><b>' + pct(st.twr) + "</b></td></tr>"; }).join("") +
       "</tbody></table></div>") +
-      "</div>";
-    v.querySelectorAll("details[data-fpli]").forEach(d => d.addEventListener("toggle", () => { if (d.open) FICHE_OUVERTS.add(d.dataset.fpli); else FICHE_OUVERTS.delete(d.dataset.fpli); }));
-    compterChiffres(v.querySelector(".hero"));
+      "</div>");
   }
+  v.querySelectorAll("details[data-fpli]").forEach(d => d.addEventListener("toggle", () => { if (d.open) FICHE_OUVERTS.add(d.dataset.fpli); else FICHE_OUVERTS.delete(d.dataset.fpli);
+    if (d.open && d.dataset.fpli === "chiffres" && v.querySelector(".hero")) compterChiffres(v.querySelector(".hero")); }));   // les chiffres défilent quand on déplie
   brancherFiltres("fiche");
   { const fr = v.querySelector("#fiche-retour"); if (fr) fr.addEventListener("click", retourPodiumFiche); }
-  v.querySelectorAll("[data-fiche]").forEach(b => b.addEventListener("click", () => { ETAT.fiche = b.dataset.fiche; garder(); rendreFiche(); }));
+  v.querySelectorAll("[data-fiche]").forEach(b => b.addEventListener("click", () => { if (typeof FICHE_2D !== "undefined") FICHE_2D = false; ETAT.fiche = b.dataset.fiche; garder(); rendreFiche(); }));   // un autre pilote : sa voiture, en 3D
   v.querySelectorAll(".f-timing[data-toast]").forEach(b => b.addEventListener("click", () => toast(b.dataset.toast)));
   if (typeof brancherVitrine === "function") brancherVitrine(v, p.nom);   // v20.83 : chaque élément de la vitrine s'explique au toucher ; les médailles ouvrent leur succès
+  if (typeof brancherVoitureFiche === "function") brancherVoitureFiche(v, p.nom);   // Théo, 26/11 : sa F1 (une seule voiture 3D à l'écran)
 }
 
 /* ---------- Saisie du relevé ---------- */
@@ -796,7 +801,7 @@ if (window.fetch) { const f0 = window.fetch; window.fetch = function () { const 
 [["classement", "rendreClassement"], ["mois", "rendreMois"], ["fiche", "rendreFiche"], ["trophees", "rendreTrophees"]].forEach(([v, n]) => { const f0 = window[n]; if (typeof f0 !== "function") return;
   window[n] = function () { const r = f0.apply(this, arguments); VUES_FAITES[v] = sigVue(); return r; }; });
 function vueGardee(v) {
-  if (v === "moi" || !D) return false;
+  if (v === "moi" || v === "fiche" || !D) return false;   // la vitrine se redessine toujours (sa F1 3D repart, en 3D, tout replié)
   if (v === "trophees" && (typeof ongletPodium !== "function" || ongletPodium() !== "gp" || (typeof TRESOR_APERCU !== "undefined" && TRESOR_APERCU))) return false;
   const el = document.querySelector('.view[data-vue="' + v + '"]'); return !!(el && el.firstElementChild) && memeSig(VUES_FAITES[v], sigVue());
 }
@@ -825,6 +830,7 @@ function montrerVue(v) {
     try { if (V3D.inst) { V3D.yaw = V3D.inst.yaw(); V3D.inst.stop(); V3D.inst = null; } if (V3D.gar) { V3D.gar.stop(); V3D.gar = null; } } catch (e) { /* rien à arrêter */ }
   }
   if (v !== "trophees") endormirGP();   // v20.53
+  if (v !== "fiche" && typeof arreterVoitureFiche === "function") { arreterVoitureFiche(); FICHE_2D = false; FICHE_OUVERTS.clear(); }   // Théo, 26/11 : on quitte la vitrine → sa F1 3D s'arrête
   document.body.classList.toggle("vue-moi", v === "moi");
   document.querySelectorAll(".onglet").forEach(t => t.setAttribute("aria-current", t.dataset.vue === v || (v === "fiche" && t.dataset.vue === "classement") ? "page" : "false"));
   stock.set(CLES.vue, v);
@@ -920,6 +926,7 @@ function ouvrirFicheDe(nom) {
   if (!D || !D.personnes.some(p => p.nom === nom)) return;
   FICHE_RETOUR = vueActive() === "trophees" ? { y: window.scrollY } : null;
   stock.set("versus.ficheVue", "1");   // Théo, 26/11 : la ligne « Touche un pilote pour voir sa vitrine » a servi
+  if (typeof FICHE_2D !== "undefined") FICHE_2D = false;   // Théo, 26/11 : la F1 s'ouvre toujours en 3D
   ETAT.fiche = nom; garder(); allerA("fiche");
 }
 /** Théo, 26/11 · la petite ligne sous le titre du classement, tant qu'aucune fiche n'a été ouverte sur cet appareil */

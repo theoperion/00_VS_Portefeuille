@@ -1,5 +1,5 @@
 /* Test v20.71 · Podium → fiche : partout dans le Podium où un pilote apparaît, un toucher ouvre SA fiche (la même que dans le Classement).
-   Endroits : liste de la course (nom), détail des points (bilan), grille de l'Écurie (📂), garage d'une écurie (📂 Fiche de X).
+   Endroits : liste de la course (nom), détail des points (bilan), grille de l'Écurie (🏆 Vitrine), garage d'une écurie (🏆 Vitrine de X).
    Vérifie aussi : le toucher sur la ligne de la grille ouvre toujours l'écurie (pas la fiche) ; « ‹ Retour au Podium » et le bouton retour
    du téléphone ramènent au Podium ; en décembre, pas de vitrine (rien de 2027), en saison la vitrine ; jamais un montant d'un autre pilote
    (données masquées par la VRAIE fonction du serveur, vsMasquerMontants_ de app_scripts/versus/API.js ; le pilote connecté a plus de 1 M€,
@@ -86,7 +86,7 @@ const PARCOURS = async ({ moi }) => {
   await essai("course", "gp", ".gp-liste [data-gp-fiche]");
   // 2. détail des points (bilan), s'il y a déjà des manches
   await essai("points", "gp", "#pts-det [data-gp-fiche]", async () => { const d = document.querySelector("#pts-det"); if (d) d.open = true; }, "pop");
-  // 3. grille de l'Écurie : 📂 → fiche
+  // 3. grille de l'Écurie : 🏆 Vitrine → fiche
   await essai("grille", "ecurie", ".grille-dep .gr-f");
   // 4. la ligne de la grille ouvre toujours l'écurie (pas la fiche), puis le garage propose la fiche
   await podium("ecurie"); const lg = [...document.querySelectorAll(".grille-dep [data-voir]")]; out.places.ligneEcurie = 0;
@@ -111,9 +111,9 @@ const PARCOURS = async ({ moi }) => {
     const t = " · " + cas.tag + " · vu par " + moi;
     ok(r.places.course === 5, "liste de la course : les 5 noms ouvrent une fiche" + t + " (" + r.places.course + ")");
     if (cas.points) ok(r.places.points === 5, "détail des points : les 5 noms ouvrent une fiche" + t + " (" + r.places.points + ")");
-    ok(r.places.grille === 5, "grille de l'Écurie : 5 boutons 📂 Fiche" + t + " (" + r.places.grille + ")");
+    ok(r.places.grille === 5, "grille de l'Écurie : 5 boutons 🏆 Vitrine" + t + " (" + r.places.grille + ")");
     ok(r.places.ligneEcurie === 5, "grille de l'Écurie : toucher la ligne ouvre toujours l'écurie" + t + " (" + r.places.ligneEcurie + ")");
-    ok(r.places.garage === 5, "garage de chaque écurie : bouton « 📂 Fiche de X »" + t + " (" + r.places.garage + ")");
+    ok(r.places.garage === 5, "garage de chaque écurie : bouton « 🏆 Vitrine de X »" + t + " (" + r.places.garage + ")");
     ok(!r.ko.length, "chaque toucher ouvre la fiche du BON pilote, avec « Retour au Podium » (bouton et retour du téléphone)" + t + " " + r.ko.slice(0, 4).join(" ; "));
     ok(cas.saison ? r.vitrine === r.ouvertes : r.vitrine === 0, (cas.saison ? "la vitrine est sur chaque fiche" : "pas de vitrine en décembre (rien de 2027)") + t + " (" + r.vitrine + "/" + r.ouvertes + ")");
     ok(!r.euros.length, "aucun montant d'un autre pilote sur les fiches ouvertes" + t + " " + r.euros.slice(0, 4).join(" ; "));
