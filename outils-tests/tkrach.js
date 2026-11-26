@@ -7,7 +7,7 @@
    Scénarios (aucune vraie donnée : serveurs Google interceptés, séries inventées) :
    1. matin (ligne Google « en séance » + Versus de la veille) puis après-midi (Versus −1,09 %) : jamais de krach, Marchés −1,09 %.
    2. vrai krach en direct −3,4 % (chiffre exact), puis −2,5 % (le krach disparaît), puis −3,6 % (il revient avec −3,6 %).
-   3. krach d'hier (−3,2 % en direct le soir) : gardé le lendemain, avec le chiffre de la clôture Google (−3,25 %).
+   3. krach d'hier (−3,2 % en direct le soir) : gardé le lendemain avant 9 h, avec le chiffre de la clôture Google (−3,25 %), disparu à 10 h (règle du 26/11).
    4. tempête crypto : Bitcoin −11 % puis −6 % (disparaît).
    Lancer depuis la racine : python3 -m http.server 8771 &  puis  node outils-tests/tkrach.js   (PORT=…) */
 const PORT = process.env.PORT || 8771;
@@ -113,9 +113,11 @@ const f = r => JSON.stringify(r.ev);
   { const c = await nouveau();
     const soir = await ouvrir(c, "2026-11-24T22:30:00", versusDe(sp("2026-11-23"), btc("2026-11-24"), [J1("S&P 500", -0.032, "24/11 17:35"), J1("Bitcoin", 0.01, "24/11 22:00")]));
     ok(krach(soir).length === 1 && krach(soir)[0].d === "2026-11-24" && proche(krach(soir)[0].p, -0.032, 1e-12), "3. le 24/11 au soir : krach −3,2 % " + f(soir));
-    const lend = await ouvrir(c, "2026-11-25T10:00:00", versusDe(sp("2026-11-24", { "2026-11-24": { base: "2026-11-23", p: -0.0325 } }), bt, [J1("S&P 500", -0.003, "25/11 09:55"), BTC_J]));
+    const lend = await ouvrir(c, "2026-11-25T08:30:00+01:00", versusDe(sp("2026-11-24", { "2026-11-24": { base: "2026-11-23", p: -0.0325 } }), bt, [J1("S&P 500", -0.0325, "24/11 22:00"), BTC_J]));
     const k = krach(lend)[0];
-    ok(!lend.err.length && krach(lend).length === 1 && k.d === "2026-11-24" && proche(k.p, -0.0325, 1e-6), "3. le lendemain : le krach du 24/11 reste, avec la clôture Google (−3,25 %) " + f(lend));
+    ok(!lend.err.length && krach(lend).length === 1 && k.d === "2026-11-24" && proche(k.p, -0.0325, 1e-6), "3. le lendemain à 8 h 30 : le krach du 24/11 reste, avec la clôture Google (−3,25 %) " + f(lend));
+    const apres9 = await ouvrir(c, "2026-11-25T10:00:00+01:00", versusDe(sp("2026-11-24", { "2026-11-24": { base: "2026-11-23", p: -0.0325 } }), bt, [J1("S&P 500", -0.003, "25/11 09:55"), BTC_J]));
+    ok(!apres9.err.length && krach(apres9).length === 0, "3. le lendemain à 10 h : le krach du 24/11 a disparu (Théo, 26/11 : un événement s'en va le lendemain à 9 h) " + f(apres9));
     await c.close(); }
 
   /* 4. tempête crypto */
