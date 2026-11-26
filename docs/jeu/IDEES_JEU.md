@@ -32,3 +32,5 @@ Ce fichier n'est **pas** lu automatiquement : seulement quand Théo le demande. 
 - Tickets d'or : « tablette du mois » à déballer ; tirages par graine fixée au 1er janvier (empreinte affichée).
 - **Versus multijoueur à grande échelle** (ligues d'amis qui comparent des %, jamais des montants ; saisons, défis) : ne pas pousser au risque, récompenser régularité et patience, jamais de conseil en investissement.
 - **Vidéos tuto mensuelles (Théo, 26/11, à la toute fin)** : une fois toutes les règles, cosmétiques, trophées et mini-jeux validés et sans bug, préparer à l'avance une vidéo par mois/circuit 2027 qui explique en détail ce qu'il y a à faire ce mois-là (mini-jeu, trésor, règle spéciale…). Théo l'envoie juste avant le 1er de chaque mois. Méthode : plan validé par Théo avant chaque vidéo, style tuto-teaser clair et épique. Pas avant que tout soit terminé.
+- **Écurie, plus tard (Théo, 26/11)** : mini-voiture collée en haut quand on descend dans les étagères (voir chaque essai sans remonter) ; aperçu « avant / après » au doigt appuyé sur un objet.
+- **Visite guidée de 30 s au 1er janvier** (gardée en tête, pas pour l'instant : les vidéos expliquent déjà).
