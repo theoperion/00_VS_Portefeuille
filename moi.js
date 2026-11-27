@@ -1279,6 +1279,7 @@ function injecterStyle() {
 .m-folle .mfo-p { font: italic 800 clamp(64px, 21vw, 104px)/1 var(--f-display); letter-spacing: -.01em; font-variant-numeric: tabular-nums; margin: 6px 0 2px; white-space: nowrap; }
 .m-folle.feu .mfo-p { color: #FFE2B0; text-shadow: 0 0 18px rgba(255,120,30,.85), 0 0 46px rgba(255,60,10,.55), 0 2px 0 rgba(60,10,0,.6); }
 .m-folle.joie .mfo-p { color: #F2FFFA; text-shadow: 0 0 18px rgba(94,234,212,.75), 0 0 46px rgba(255,111,168,.4), 0 2px 0 rgba(0,20,30,.5); }
+.m-folle .mfo-ok { display: inline-block; margin-top: 2px; padding: 3px 10px; border-radius: 999px; font: 700 12.5px/1.2 var(--f-text); letter-spacing: .03em; background: rgba(255,255,255,.14); color: #fff; }
 .m-folle .mfo-e { font: 700 17px/1 var(--f-num); opacity: .9; }
 .m-folle p { margin: 10px 0 0; font: 600 15px/1.4 var(--f-text); color: #FFF1DC; text-shadow: 0 1px 8px rgba(0,0,0,.9); }
 .m-folle .mfo-t { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); padding: 6px 12px; border-radius: 999px; background: rgba(0,0,0,.5); font-size: 12px; letter-spacing: .06em; color: rgba(255,255,255,.75); white-space: nowrap; }
@@ -1932,7 +1933,7 @@ function lancerFolle(x, revoir) {
   o.className = "m-folle moi " + kind + (fort ? " fort" : "") + (explo ? " explo" : "") + (bonbons ? " bonbons" : "") + (reduit ? " calme" : "");
   o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", T.k + " : " + T.sub + ", " + T.big); o.tabIndex = -1;
   o.innerHTML = '<canvas aria-hidden="true"></canvas><div class="mfo-c"><span class="mfo-k">' + esc(T.k) + '</span><span class="mfo-d">' + esc(T.sub) + "</span>" +
-    '<b class="mfo-p' + (T.big.length > 8 ? " long" : "") + '">' + esc(T.big) + "</b>" + ((feu || joie) && !disc && ok(x.e) && Math.abs(x.e) >= 1 ? '<span class="mfo-e">' + eur(x.e, 0, true) + "</span>" : "") + "<p>" + esc(T.phr) + '</p></div><span class="mfo-t">Touche pour continuer</span>';
+    '<b class="mfo-p' + (T.big.length > 8 ? " long" : "") + '">' + esc(T.big) + "</b>" + ((feu || joie) && !disc && ok(x.e) && Math.abs(x.e) >= 1 ? '<span class="mfo-e">' + eur(x.e, 0, true) + "</span>" : "") + (!x.enRoute && (feu || joie || kind === "krach") ? '<span class="mfo-ok">✅ Confirmé à la clôture</span>' : "") + "<p>" + esc(T.phr) + '</p></div><span class="mfo-t">Touche pour continuer</span>';   // v21.22 (Théo, 27/11)
   document.body.appendChild(o);
   try { o.focus({ preventScroll: true }); } catch (e) { /* rien */ }
   const S = window.SONS, duree = reduit ? 2800 : fort ? 5000 : niv === 2 ? 4600 : kind === "relache" || ["record", "pirebaisse", "volhaut", "volbas"].includes(kind) ? 3600 : 4300, t0 = performance.now();
