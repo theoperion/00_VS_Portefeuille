@@ -13,7 +13,7 @@ Ne lire que la fiche de la partie du chantier en cours. Ancienne fiche et journa
 - **Idées** : toute idée non finalisée va dans le fichier d'idées de sa partie (jamais dans les fiches). Ne le lire que si Théo le demande.
 - Pas de tâche programmée sans demande explicite de Théo, une seule à la fois.
 - GitHub (Théo, 24/11) : Claude fusionne lui-même ses demandes de fusion (PR) une fois les tests passés, sans demander à Théo à chaque fois.
-- Toujours finir par : ce qui est en ligne, tests passés, explication courte, et quels agents ont relu et pourquoi.
+- Toujours finir par : ce qui est en ligne, **pour qui** (« pour tout le monde » ou qui exactement : Théo seul, Kévin…, sans que Théo ait à le demander ; Théo, 27/11), tests passés, explication courte, et quels agents ont relu et pourquoi.
 
 ## Règles à ne jamais enfreindre
 1. Théo ne doit **jamais voir les données financières de Clément, Devlin, Kévin** (ni copie dans un dépôt, une capture, un message). Leurs fichiers ne se lisent que pour une opération technique.
