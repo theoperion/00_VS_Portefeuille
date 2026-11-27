@@ -232,4 +232,46 @@ Amundi MSCI World\tLU1681043599\t1 000,00 €\t0,00 €\t1 000,00 €\t15/11/202
 r = lire(L10); o = op0(r);
 ok(!o.ecart, "L10 · 3,0000 × 333,33 = 999,99 vs 1 000,00 (arrondi de l'assureur) : pas d'alerte à tort ?", o);
 
+
+/* ---------- LINXEA AVENIR 2 (Suravenir) · v21.16 : faux documents au format des confirmations Suravenir ---------- */
+const S1 = `Références :
+Contrat : LINXEA AVENIR 2
+N°: 000000 L8 000000000
+Objet : Confirmation de versement
+Ÿ Date du versement : 05/03/2099
+1 234,56 €
+Montant brut (frais inclus) :
+0,00 €
+Frais sur versement :
+1 234,56 €
+Montant net :
+Suravenir - Siège social
+l Répartition du versement :
+Unités de compte Code Isin liquidatives
+EUR SURAVENIR OPPORTUNITES 2 234,56
+AMUNDI MSCI WORLD SWAP II ETF FR0010315770 06/03/2099 400,00 1,2500 500,00
+DB X-TRACKERS ETC PHYS GOLD HDG DE000A1EK0G 06/03/2099 250,00 2,0000 500,00
+3
+Total 1 234,56`;
+r = lire(S1);
+ok(r.compte === "LINXEA" && r.ops.length === 2 && r.ops.every(o => o.type === "Achat"), "S1 · versement Avenir 2 : 2 achats (le fonds en euros reste en espèces)", r.ops);
+ok(r.ops[0].apport && r.ops[0].montantApport === "1234,56" && !r.ops[1].apport, "S1 · un seul apport, du montant net total (fonds en euros compris)", r.ops.map(o => [o.apport, o.montantApport]));
+ok(r.ops[1].isin === "DE000A1EK0G3" && r.ops[1].qte === "2,0000" && r.ops[1].cours === "250,00" && r.ops[1].date === "2099-03-06", "S1 · ISIN coupé en fin de cellule recollé, parts et valeur de part lues", r.ops[1]);
+const S2 = `Contrat : LINXEA AVENIR 2
+Objet : Confirmation d'arbitrage
+l Date de l'arbitrage 10 mars 2099
+Montant brut de l'arbitrage : 999,99 €
+Frais d’arbitrage : 0,00 €
+Frais de gestion : 0,15 €
+Montant net : 999,75 €
+l Désinvestissement :
+Unités de compte Code Isin liquidatives
+AMUNDI EURO STOXX 50 II UCIT ETF FR0007054358 11/03/2099 99,99 10,0007 999,99
+l Réinvestissement :
+Unités de compte Code Isin liquidatives
+AMUNDI MSCI EMER MARK III UC ETF FR0010429068 11/03/2099 19,99 50,0125 999,75`;
+r = lire(S2);
+ok(r.ops.length === 3 && r.ops[0].type === "Vente" && r.ops[1].type === "Achat" && r.ops[2].type === "Frais" && r.ops[2].montant === "0,24", "S2 · arbitrage Avenir 2 : 1 vente, 1 achat, 0,24 € de frais", r.ops.map(o => [o.type, o.montant]));
+ok(r.ops.every(o => !o.apport), "S2 · un arbitrage n'est jamais un apport", r.ops.map(o => o.apport));
+
 console.log("\n" + (ko.length ? ko.length + " NON" : "tout OUI"));

@@ -5467,6 +5467,7 @@ function lireAvis(brut) {
   const t = String(brut || "").replace(/[    ]/g, " ").replace(/\r/g, "");
   if (/\bSens\b/.test(t) && /Montant\s+net/i.test(t)) return lireFortuneo(t);
   if (/Niveau de risque/i.test(t) && /^\s*Valeur\d?\s+\d/im.test(t)) return lireQuintessa(t);
+  if (/SURAVENIR|LINXEA AVENIR/i.test(t) && /Confirmation d.arbitrage|Confirmation de versement/i.test(t)) return lireSuravenir(t);   // v21.16 : Linxea Avenir 2
   if (/linxea|spirica|nombre de parts|valeur de (?:la )?parts?|versement libre|frais de gestion sur UC|rachat partiel/i.test(t)) return lireLinxea(t);
   return lireFortuneo(t);
 }
@@ -5610,6 +5611,41 @@ function lireLinxea(t) {
   const garde = sansDoublons(ops.filter(o => !o.liste || !memeOp(o)));
   if (!garde.length) return { compte: "LINXEA", ops: lireLinxeaFiche(t, nature) };   // v20.30 : la fiche « Libellé : valeur » de l'appli/du site Linxea
   return { compte: "LINXEA", ops: garde };
+}
+/* v21.16 (Théo, 27/11) · Linxea Avenir 2 (assureur Suravenir) : « Confirmation de versement » et « Confirmation d'arbitrage » (PDF).
+   Une ligne par support : NOM  ISIN  date  valeur de part  nombre de parts  montant (l'ISIN est parfois coupé : son dernier caractère passe à la ligne).
+   Versement → un apport (montant net du versement) + un achat par support ; arbitrage → une vente par support désinvesti, un achat par support
+   réinvesti ; frais de gestion / prélèvements de l'arbitrage → une ligne « Frais ». Le fonds en euros (sans ISIN ni parts) reste dans les espèces
+   de l'enveloppe : rien à acheter ni à vendre. Rien n'est inventé : un champ absent reste vide et est signalé. */
+function lireSuravenir(t) {
+  const L = t.split("\n").map(x => x.replace(/\s+/g, " ").trim()), ops = [], isoFr = d => d ? d.slice(6, 10) + "-" + d.slice(3, 5) + "-" + d.slice(0, 2) : "";
+  const arb = /confirmation d.arbitrage/i.test(t), mt = lab => { const x = t.match(new RegExp(lab + "[^\\d\\n]*(?:\\n[^\\d\\n]*)?" + NUM_AV + "\\s*€", "i")); return x ? chiffre(x[1]) : ""; };
+  /* montants de l'en-tête (le montant est parfois sur la ligne du dessus dans le PDF) */
+  const avant = lab => { const i = L.findIndex(l => new RegExp("^" + lab, "i").test(l)); if (i < 0) return ""; const ici = L[i].match(new RegExp(NUM_AV + "\\s*€")); if (ici) return chiffre(ici[1]);
+    const dessus = (L[i - 1] || "").match(new RegExp("^" + NUM_AV + "\\s*€$")); return dessus ? chiffre(dessus[1]) : ""; };
+  const netVers = avant("Montant net"), brutArb = avant("Montant brut de l.arbitrage"), netArb = avant("Montant net");
+  const dVers = (t.match(/Date du versement\s*:?\s*(\d{2}\/\d{2}\/\d{4})/i) || [])[1] || "";
+  let sens = arb ? "" : "Achat";
+  const reLigne = new RegExp("^(.*?)\\s*\\b([A-Z]{2}[A-Z0-9]{8,9}\\d?)\\s+(\\d{2}\\/\\d{2}\\/\\d{4})\\s+" + NUM_AV + "\\s+" + NUM_AV + "\\s+" + NUM_AV + "\\s*€?$");
+  let premier = true;
+  L.forEach((l, n) => {
+    if (/D[ée]sinvestissement/i.test(l)) sens = "Vente"; else if (/R[ée]investissement|R[ée]partition du versement/i.test(l)) sens = "Achat";
+    const m = l.match(reLigne); if (!m || !sens) return;
+    let isin = m[2]; if (isin.length === 11 && /^[A-Z0-9]$/.test(L[n + 1] || "")) isin += L[n + 1];   // ISIN coupé en fin de cellule
+    const nom = (m[1] || "").trim() || (L[n - 1] || ""), date = isoFr(m[3]), cours = chiffre(m[4]), qte = chiffre(m[5]), montant = chiffre(m[6]);
+    const op = { src: "linxea", texte: l, nom: nom.replace(/\s+/g, " ").trim(), isin: isin, date: date, qte: qte, cours: cours, montant: montant, brut: montant, net: montant, frais: "" };
+    if (sens === "Vente") op.type = "Vente";
+    else { op.type = "Achat"; if (!arb) { op.versDoc = true; op.apport = premier; op.montantApport = premier && netVers && Math.abs(lireNombre(netVers) - lireNombre(montant)) > .005 ? netVers : "";
+      if (!premier) op.note = "Le versement est déjà enregistré avec le 1er support de ce document."; premier = false; } }
+    ops.push(finirOp(op, ["date", "qte", "cours", "montant"]));
+  });
+  if (!arb && dVers && ops.length) { const a = ops.find(o => o.apport); if (a && !a.montantApport && netVers && Math.abs(lireNombre(netVers) - lireNombre(a.montant)) > .005) a.montantApport = netVers; }
+  /* versement placé en partie (ou en totalité) sur le fonds en euros : l'apport porte le montant total, le reste attend en espèces */
+  if (!arb && netVers && !ops.length) ops.push(finirOp({ src: "linxea", type: "Apport", nom: "Versement (fonds en euros)", isin: "", date: isoFr(dVers), montant: netVers, note: "Versement placé sur le fonds en euros : il reste dans les espèces de l'enveloppe." }, ["date", "montant"]));
+  if (arb) { const b = lireNombre(brutArb), nn = lireNombre(netArb);
+    if (b > 0 && nn > 0 && b - nn >= .005) { const d0 = (ops.find(o => o.date) || {}).date || "";
+      ops.push(finirOp({ src: "linxea", type: "Frais", nom: "Frais et prélèvements de l'arbitrage", isin: "", date: d0, montant: saisieNombre(b - nn, 2), note: "Montant brut désinvesti " + brutArb + " € − montant net réinvesti " + netArb + " € (frais de gestion, prélèvements sociaux du fonds en euros)." }, ["date", "montant"])); } }
+  return { compte: "LINXEA", ops: sansDoublons(ops) };
 }
 /* v20.30 (Théo, 24/11) · Linxea en « fiche » (copiée depuis l'appli ou le site) : un support par bloc, une ligne « Libellé : valeur » par champ.
    Ex. « Amundi Physical Gold ETC C 100 % / Montant brut : 100,00 € / Frais (€) : - / Montant net : 100,00 € / Date de valeur : 13/08/2026 /
