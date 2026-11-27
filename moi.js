@@ -1313,6 +1313,9 @@ function injecterStyle() {
 .m-folle.plat .mfo-c { margin-top: -30vh; } .m-folle.plat .mfo-p { color: #EEFBFF; text-shadow: 0 0 20px rgba(158,227,240,.45), 0 2px 0 rgba(0,0,0,.5); }
 .m-folle .mfo-p.long { font-size: clamp(48px, 15vw, 80px); }
 .moi .m-ev { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -4px; }   /* lot 62 c (Théo) : de petites pastilles sous la carte du haut, rien de pleine largeur */
+.moi .m-ev-r { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 6px 0 0; font: 600 12.5px/1.3 var(--f-text); color: var(--ink-2); }
+.moi .m-ev-r > span { display: inline-flex; gap: 5px; align-items: center; padding: 3px 10px; border: 1px dashed color-mix(in srgb, var(--evc, var(--rule)) 55%, var(--rule)); border-radius: 999px; }
+.moi .m-ev-r small { color: var(--ink-3); font-weight: 500; }
 .moi .m-ev-p { display: inline-flex; align-items: stretch; max-width: 100%; border: 1px solid color-mix(in srgb, var(--evc, var(--rule)) 45%, var(--rule)); border-radius: 999px; background: var(--panel); overflow: hidden; }
 .moi .m-ev-p.on { border-color: var(--evc, var(--accent)); background: color-mix(in srgb, var(--evc, var(--accent)) 14%, var(--panel)); }
 .moi .m-ev-p .m-ev-b { all: unset; box-sizing: border-box; position: relative; display: inline-flex; align-items: center; gap: 5px; min-width: 0; min-height: 30px; padding: 3px 2px 3px 10px; font: 600 12.5px/1.2 var(--f-text); color: var(--ink); cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
@@ -1789,13 +1792,32 @@ function seanceCarte() {
   const d = seanceDu(); if (!d) return null;
   const sy = mSeance(M, null).synthese; return ok(sy.jourPct) && Math.abs(sy.jourPct) > 1e-9 ? { d, p: sy.jourPct, e: sy.jour } : null;
 }
+/* v21.20 (Théo, 27/11) : un événement né d'une séance (journée folle, krach, sommet du S&P) n'est annoncé qu'une fois la séance FINIE ;
+   pendant la séance, un simple signe « en route » (la journée n'est pas terminée). Fin de séance, heure de Paris (cours Google en léger différé) :
+   17 h 45 pour un portefeuille seulement coté à Paris, 22 h 15 s'il a une ligne cotée à New York ; toujours 22 h 15 pour le S&P 500.
+   La crypto (24 h/24, sans clôture) reste en direct. */
+const FIN_PARIS = 17.75, FIN_NY = 22.25;
+function heureParis() { const n = new Date(); let y = n.getFullYear(), m = n.getMonth() + 1, d = n.getDate(), h = n.getHours() + n.getMinutes() / 60;
+  try { const f = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(n), g = t => +f.find(x => x.type === t).value;
+    y = g("year"); m = g("month"); d = g("day"); h = g("hour") + g("minute") / 60; } catch (e) { /* ancien navigateur : l'heure du téléphone */ }
+  return { iso: isoJour(new Date(y, m - 1, d, 12)), h }; }
+function finPf() { let t = []; try { t = tickersTenus(); } catch (e) { t = []; } return t.some(x => /^(NASDAQ|NYSE|NYSEARCA|NYSEAMERICAN|BATS):/.test(x)) ? FIN_NY : FIN_PARIS; }
+function seanceFinie(d, fin) { const P = heureParis(), j = new Date(d + "T12:00:00").getDay(); return d < P.iso || j === 0 || j === 6 || (d === P.iso && P.h >= fin); }   // le week-end, pas de séance à attendre
+function finEvK(k) { return k === "feu" || k === "joie" ? finPf() : FIN_NY; }
+/** les événements « en route » (séance pas finie) : [{ k, p, ic, t }] */
+function evEnRoute() {
+  const out = []; if (!M || M.simple) return out;
+  try { const x = seanceCarte(); if (x && !seanceFinie(x.d, finPf()) && Math.abs(x.p) >= FOLLE_SEUIL - 1e-9) out.push({ k: x.p > 0 ? "joie" : "feu", p: x.p, ic: x.p > 0 ? "🎆" : "🔥", t: x.p > 0 ? "En route vers un feu d'artifice" : "En route vers un incendie", de: "" }); } catch (e) { /* rien */ }
+  try { const l = varsEv(closEv("S&P 500"), 5), y = l[l.length - 1]; if (y && !seanceFinie(y.d, FIN_NY) && y.p <= KRACH_SEUIL + 1e-9) out.push({ k: "krach", p: y.p, ic: "🌍", t: "Krach possible", de: "S&P 500" }); } catch (e) { /* rien */ }
+  return out;
+}
 /** la journée folle en cours (la plus récente des 4 derniers jours), ou null */
 function journeeFolle() {
   if (!M || M.simple) return null;
   /* lot 62 d (Théo, 21/11) : seulement la DERNIÈRE séance, avec le chiffre exact de la carte du haut (on ne relit jamais l'historique pour faire naître
      un événement passé). (L'exception de la séance du 20/11/2026 est retirée le 26/11 : dépassée.) */
   const c = []; try { const x = seanceCarte(); if (x) c.push(x); } catch (e) { /* données absentes */ }
-  const x = c.find(y => Math.abs(y.p) >= FOLLE_SEUIL - 1e-9);
+  const x = c.find(y => Math.abs(y.p) >= FOLLE_SEUIL - 1e-9 && seanceFinie(y.d, finPf()));   // v21.20 : seulement une séance finie
   const niv = x ? (Math.abs(x.p) >= FOLLE_FORT - 1e-9 ? 3 : Math.abs(x.p) >= FOLLE_MID - 1e-9 ? 2 : 1) : 0;
   return x ? Object.assign({}, x, { sens: x.p > 0 ? 1 : -1, niv, fort: niv === 3 }) : null;
 }
@@ -2127,7 +2149,7 @@ function evRisque(k) {
 function evNaissants() {
   const out = [];
   try { const x = journeeFolle(); if (x) out.push(Object.assign({}, x, { k: x.sens < 0 ? "feu" : "joie", folle: true })); } catch (e) { /* rien */ }
-  const dernier = (k, fin) => { try { const l = evDe(k); if (!fin) return; l.filter(x => x.d === fin).forEach(x => out.push(x)); } catch (e) { /* données absentes */ } };
+  const dernier = (k, fin) => { try { const l = evDe(k); if (!fin || ((k === "krach" || k === "sommet") && !seanceFinie(fin, FIN_NY))) return; l.filter(x => x.d === fin).forEach(x => out.push(x)); } catch (e) { /* données absentes */ } };
   const finSP = (closEv("S&P 500").slice(-1)[0] || {}).d, finBTC = (closEv("Bitcoin").slice(-1)[0] || {}).d, finH = (seancesHisto().slice(-1)[0] || {}).d;
   dernier("krach", finSP); dernier("sommet", finSP); dernier("crypto", finBTC); dernier("serie", finH); dernier("plat", finH); dernier("relache", isoJour(new Date()));
   ["record", "pirebaisse", "volhaut", "volbas"].forEach(k => dernier(k, finH));   // lot 63 : naissent seulement à la dernière séance de l'historique
@@ -2163,6 +2185,7 @@ function evenementsListe() {
       let l; try { l = evDe(k).map(w => w.d); } catch (e) { return; }
       nes = nes.filter(z => { if (z.k !== k || z.d > finH || l.includes(z.d)) return true; change = true; return false; }); }); }
   nes = nes.filter(x => x.d >= isoJour(new Date(Date.now() - 400 * 864e5)));
+  nes = nes.filter(x => { if (!["feu", "joie", "krach", "sommet"].includes(x.k) || seanceFinie(x.d, finEvK(x.k))) return true; change = true; return false; });   // v21.20 : séance pas finie = pas encore d'événement
   if (change) stock.set(cleStock("evNes"), JSON.stringify(nes.slice(-60)));
   const parK = {}; nes.filter(x => x.d <= auj && (x.k === "relache" ? x.d === auj : x.d >= sc)).forEach(x => { if (!parK[x.k] || parK[x.k].d < x.d) parK[x.k] = x; });   // un par genre : le plus récent
   const cand = Object.values(parK).map(x => Object.assign({}, x));
@@ -2247,7 +2270,11 @@ const NB_AMB = 14;
 function evChoisi(L) { const c = stock.get(cleStock("evAmb")); return L.find(x => x.cle === c) || L.find(x => !ambCoupee(x.k)) || L[0]; }
 function icoEv(y) { return y.k === "feu" && y.niv === 2 ? "💥" : y.k === "joie" && y.niv === 2 ? "🍬" : EV_DEF[y.k].ic; }
 function habillerFolle(v) {
-  const L = evenementsActifs(), hero = v.querySelector(".m-hero"); if (!L.length || !hero || evTousCoupes()) return;
+  const L = evenementsActifs(), hero = v.querySelector(".m-hero"), R = (() => { try { return evEnRoute(); } catch (e) { return []; } })();
+  if (hero && R.length) { const r = document.createElement("p"); r.className = "m-ev-r";   // v21.20 : signe discret pendant la séance
+    r.innerHTML = R.map(z => '<span data-ev="' + z.k + '"><span aria-hidden="true">' + z.ic + "</span> " + esc(z.t) + " · " + (z.de ? esc(z.de) + " " : "") + '<b style="white-space:nowrap">' + esc(pct(z.p, 2)) + "</b></span>").join("") + "<small>Décidé à la clôture, si ça tient.</small>";
+    hero.after(r); }
+  if (!L.length || !hero || evTousCoupes()) return;
   const x = evChoisi(L), joues = evListe("evJoues");
   const c = document.createElement("div"); c.className = "m-ev"; c.setAttribute("role", "group"); c.setAttribute("aria-label", "Événements en cours");
   const pastilles = () => L.map(y => { const T = textesEv(y), nv = !joues.includes(y.cle), on = y === x;
