@@ -1588,10 +1588,13 @@ function modePhotoGP(on, y) {
   const P = GP_PLEIN; if (!P) return; if (!!P.photo === !!on) return; P.photo = !!on;
   P.o.classList.toggle("photo", P.photo);
   if (P.photo) { const h = document.createElement("div"); h.className = "gpp-photo-aide"; h.textContent = "📷 Mode photo · touche l'écran pour revenir"; P.o.appendChild(h); setTimeout(() => h.remove(), 2600);
-    let d = null; P.photoDown = ev => { d = { x: ev.clientX, y: ev.clientY, t: performance.now() }; };
-    P.photoUp = ev => { if (!d) return; const tap = Math.hypot(ev.clientX - d.x, ev.clientY - d.y) < 8 && performance.now() - d.t < 350; d = null; if (tap && performance.now() - P.photoT > 400) { ev.stopPropagation(); ev.preventDefault(); modePhotoGP(false); } };
-    P.photoT = performance.now(); P.o.addEventListener("pointerdown", P.photoDown, true); P.o.addEventListener("pointerup", P.photoUp, true); }
-  else { P.o.removeEventListener("pointerdown", P.photoDown, true); P.o.removeEventListener("pointerup", P.photoUp, true); const h = P.o.querySelector(".gpp-photo-aide"); if (h) h.remove(); }
+    /* v21.23 (Théo, 27/11) : un pincement n'est jamais un « toucher pour revenir » (doigts comptés), et le lâcher n'est plus bloqué : la 3D le reçoit
+       (avant, elle gardait un doigt fantôme et le zoom sautait en arrière au geste suivant) */
+    let d = null; const doigts = new Set(); P.photoDown = ev => { doigts.add(ev.pointerId); if (doigts.size === 1) d = { x: ev.clientX, y: ev.clientY, t: performance.now(), multi: false }; else if (d) d.multi = true; };
+    P.photoUp = ev => { doigts.delete(ev.pointerId); if (!d) return; const tap = !d.multi && !doigts.size && Math.hypot(ev.clientX - d.x, ev.clientY - d.y) < 8 && performance.now() - d.t < 350; if (!doigts.size) d = null; if (tap && performance.now() - P.photoT > 400) setTimeout(() => modePhotoGP(false), 0); };
+    P.photoCancel = ev => { doigts.delete(ev.pointerId); if (!doigts.size) d = null; };
+    P.photoT = performance.now(); P.o.addEventListener("pointerdown", P.photoDown, true); P.o.addEventListener("pointerup", P.photoUp, true); P.o.addEventListener("pointercancel", P.photoCancel, true); }
+  else { P.o.removeEventListener("pointerdown", P.photoDown, true); P.o.removeEventListener("pointerup", P.photoUp, true); P.o.removeEventListener("pointercancel", P.photoCancel, true); const h = P.o.querySelector(".gpp-photo-aide"); if (h) h.remove(); }
   GP_ETQ = null; if (GP_INST) { GP_INST.api.redim(); requestAnimationFrame(() => GP_INST && GP_INST.api.redim()); }
 }
 /* ---------- 🎬 V16.12 · Bande-annonce avant la course · V16.70 : « le circuit, la règle, le trésor » (affiche de cinéma) ---------- */

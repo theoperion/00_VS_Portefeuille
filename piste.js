@@ -12989,6 +12989,7 @@
     // ----- interactions : glisser pour tourner, pincer / molette pour zoomer, toucher une voiture pour la suivre -----
     const pointeurs = new Map(), ecoutes = [], ecoute = (type, f, opt) => { cv.addEventListener(type, f, opt); ecoutes.push([type, f, opt]); };
     ecoute("pointerdown", ev => { if (I.survol) { I.survol = null; }   // V16.59 : toucher reprend la main
+      if (ev.isPrimary) { pointeurs.clear(); I.tir = null; }   // v21.23 : 1er doigt d'un nouveau geste → plus aucun doigt fantôme d'un geste précédent (zoom qui sautait)
       pointeurs.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
       if (I.tir && pointeurs.size > 1) rancrer();   // 2e doigt : on repart d'ici (le toucher court du 1er doigt ne compte plus)
       else I.tir = { x: ev.clientX, o: I.orbite, z: I.zoom, i: I.incl, d0: null, m0: null, p0: I.pan.slice(), t: performance.now(), x0: ev.clientX, y0: ev.clientY }; try { cv.setPointerCapture(ev.pointerId); } catch (e) { } reveiller(); });
