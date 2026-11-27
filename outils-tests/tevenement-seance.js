@@ -23,12 +23,13 @@ const versus = { ok: true, genere: "2026-11-19T10:00:00", majTexte: "", envelopp
   ecurie: {}, exclusifs: {}, cartes: {}, duels: {}, pronos: {}, votes: {}, rivaux: {}, etapes: {}, liaison: { active: false, personnes: [] }, lignes: {}, premierMillion: null,
   session: { role: "perso", nom: "Test" }, mesCartes: {}, mesDuels: {}, mesPronos: {}, monRival: {} };
 const ev = d => [{ k: "feu", d, p: -0.031, sens: -1, niv: 1, fort: false, folle: true }, { k: "krach", d, p: -0.035 }, { k: "crypto", d, p: -0.12 }];
+let DIRECT = {};
 (async () => {
   const b = await chromium.launch(), err = [];
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: "block", timezoneId: "Europe/Paris" });
   await ctx.addInitScript(() => { if (localStorage.getItem("versus.cle")) return; localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1");
     localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); });
-  await ctx.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi : versus) }));
+  await ctx.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? Object.assign({}, moi, { synthese: Object.assign({}, moi.synthese, DIRECT) }) : versus) }));
   // fonctions privées de moi.js exposées pour le test seulement (la copie servie au navigateur ; le fichier n'est pas modifié)
   await ctx.route("**/moi.js*", async r => { const rep = await r.fetch(), t = await rep.text();
     r.fulfill({ response: rep, body: t.replace(/\}\)\(\);\s*$/, "window.__T = { evenementsListe, jourEv, etatObjets, seed: l => { stock.set(cleStock(\"evNes\"), JSON.stringify(l)); stock.set(cleStock(\"folles\"), JSON.stringify(l.filter(x => x.folle).map(x => x.d + \"-1\"))); stock.set(cleStock(\"evVus\"), JSON.stringify(l.map(x => x.k + \":\" + x.d))); MEMO_EV = { m: null, j: \"\", l: null }; } };\n})();\n") }); });
@@ -59,6 +60,19 @@ const ev = d => [{ k: "feu", d, p: -0.031, sens: -1, niv: 1, fort: false, folle:
   }
   const r = await voir("2026-11-24T10:00:00+01:00", ev("2026-11-20"));
   ok(r.obj.includes("emb.montagnes") && r.obj.includes("theme.phenix"), "Montagnes russes et Phénix : toujours gagnés d'après l'historique (séances d'octobre), sans lien avec la durée des événements", r.obj);
+  /* v21.18 (Théo, 27/11) : si la séance retombe sous 2,8 %, ce n'est pas un feu d'artifice */
+  const joie = (d, p) => [{ k: "joie", d, p, sens: 1, niv: 1, fort: false, folle: true }];
+  let q = await voir("2026-11-13T20:00:00+01:00", joie("2026-11-13", 0.031));
+  ok(!q.ev.some(x => x.startsWith("joie")), "Feu d'artifice né en direct (+3,1 %) mais séance finie sous 2,8 % dans l'historique : retiré", q);
+  q = await voir("2026-10-09T20:00:00+02:00", joie("2026-10-09", 0.029));
+  ok(q.ev.includes("joie:2026-10-09"), "Séance finie à +3,5 % : le feu d'artifice reste", q);
+  DIRECT = { jourPct: 0.0163, jour: 576 };
+  q = await voir("2026-11-27T13:42:00+01:00", joie("2026-11-27", 0.029));
+  ok(!q.ev.some(x => x.startsWith("joie")) && !q.pastilles, "En direct : +2,9 % ce matin, +1,63 % maintenant → plus de feu d'artifice ni de pastille", q);
+  DIRECT = { jourPct: 0.031, jour: 1000 };
+  q = await voir("2026-11-27T15:00:00+01:00", joie("2026-11-27", 0.029));
+  ok(q.ev.includes("joie:2026-11-27"), "En direct : toujours au-dessus de 2,8 % → le feu d'artifice reste", q);
+  DIRECT = {};
   ok(!err.length, "0 erreur JS", err.slice(0, 3));
   await b.close();
   console.log(ko.length ? "\n✗ " + ko.length + " NON" : "\n✓ Tout est OUI");

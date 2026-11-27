@@ -2141,7 +2141,15 @@ function evenementsListe() {
   let change = false;
   evNaissants().forEach(x => { x.cle = x.folle ? cleFolle(x) : x.k + ":" + x.d; const y = { k: x.k, d: x.d, p: x.p, e: x.e, v: x.v, avant: x.avant, dAvant: x.dAvant, de: x.de, places: x.places, lib: x.lib, sens: x.sens, niv: x.niv, fort: x.fort, folle: x.folle, creux: x.creux, pire: x.pire, an: x.an, vol: x.vol, perso: x.perso };
     const i = nes.findIndex(z => z.k === x.k && z.d === x.d);
-    if (i < 0) { nes.push(y); change = true; } else if (JSON.stringify(nes[i]) !== JSON.stringify(Object.assign({}, nes[i], y, { niv: Math.max(nes[i].niv || 0, y.niv || 0) || undefined }))) { nes[i] = Object.assign({}, nes[i], y, { niv: Math.max(nes[i].niv || 0, y.niv || 0) || undefined }); if (nes[i].folle) nes[i].fort = nes[i].niv === 3; change = true; } });   // même séance revue (en direct) : chiffre mis à jour, palier jamais baissé
+    if (i < 0) { nes.push(y); change = true; } else if (JSON.stringify(nes[i]) !== JSON.stringify(Object.assign({}, nes[i], y, { niv: Math.max(nes[i].niv || 0, y.niv || 0) || undefined }))) { nes[i] = Object.assign({}, nes[i], y, { niv: Math.max(nes[i].niv || 0, y.niv || 0) || undefined }); if (nes[i].folle) nes[i].fort = nes[i].niv === 3; change = true; } });   // même séance revue (en direct) : chiffre mis à jour (le palier est revu juste après)
+  /* v21.18 (Théo, 27/11) : une journée folle n'est pas un feu d'artifice si la séance retombe sous le seuil. Tant que sa séance est connue (en direct sur la
+     carte du haut, ou dans l'historique une fois finie), son chiffre et son palier suivent la séance ; sous 2,8 % (ou changement de sens), elle disparaît. */
+  if (nes.some(z => z.folle)) { let sc0 = null, hs = []; try { sc0 = seanceCarte(); } catch (e) { sc0 = null; } try { hs = seancesHisto(); } catch (e) { hs = []; }
+    nes = nes.filter(z => { if (!z.folle) return true;
+      const h = hs.find(w => w.d === z.d), p = h ? h.p : sc0 && sc0.d === z.d ? sc0.p : null; if (!ok(p)) return true;
+      if (Math.abs(p) < FOLLE_SEUIL - 1e-9 || (p > 0) !== (z.sens > 0)) { change = true; return false; }
+      const niv = Math.abs(p) >= FOLLE_FORT - 1e-9 ? 3 : Math.abs(p) >= FOLLE_MID - 1e-9 ? 2 : 1;
+      if (z.p !== p || z.niv !== niv) { z.p = p; z.niv = niv; z.fort = niv === 3; change = true; } return true; }); }
   /* v20.61 : un événement de marché gardé sur l'appareil est revu à chaque ouverture tant que sa séance est dans les données : chiffre à jour
      (clôture Google ou variation du Versus), et retiré si la séance ne remplit plus la condition (krach né en direct à −3,4 %, séance finie à −2,5 %). */
   [["krach", "S&P 500"], ["crypto", "Bitcoin"], ["sommet", "S&P 500"]].forEach(([k, nom]) => { if (!nes.some(z => z.k === k) || (k === "crypto" && !aDuBitcoin())) return;
