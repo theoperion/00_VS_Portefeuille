@@ -39,16 +39,16 @@ let DIRECT = {};
     await p.goto("http://localhost:" + PORT + "/index.html");
     await p.waitForFunction(() => window.__T && window.Moi && document.querySelector("#v-moi .m-hero"), null, { timeout: 20000 }).catch(() => {});
     await p.waitForTimeout(500);
-    const r = await p.evaluate(l => { window.__T.seed(l); window.Moi.rendre(); return { sc: window.__T.jourEv(), ev: window.__T.evenementsListe().map(x => x.k + ":" + x.d), pastilles: document.querySelectorAll("#v-moi .m-ev-b").length,
+    const r = await p.evaluate(l => { window.__T.seed(l); window.Moi.rendre(); return { sc: window.__T.jourEv(), ev: window.__T.evenementsListe().map(x => x.k + ":" + x.d), pastilles: document.querySelectorAll("#v-moi .m-ev-b").length, route: (document.querySelector("#v-moi .m-ev-r") || {}).textContent || "",
       obj: ["emb.montagnes", "theme.phenix"].filter(k => window.__T.etatObjets().ok.has(k)) }; }, l);
     await p.close(); return r;
   };
-  const cas = [["2026-11-19T16:00:00+01:00", "2026-11-19", true, "Événement du jeudi : visible le jeudi à 16 h"],
-    ["2026-11-19T22:00:00+01:00", "2026-11-19", true, "Événement du jeudi : visible le jeudi à 22 h"],
+  const cas = [["2026-11-19T22:30:00+01:00", "2026-11-19", true, "Événement du jeudi : visible le jeudi après la clôture (22 h 30)"],
+    ["2026-11-19T23:00:00+01:00", "2026-11-19", true, "Événement du jeudi : visible le jeudi à 23 h"],
     ["2026-11-20T08:59:00+01:00", "2026-11-19", true, "Événement du jeudi : encore visible le vendredi à 8 h 59"],
     ["2026-11-20T09:00:00+01:00", "2026-11-19", false, "Événement du jeudi : disparu le vendredi à 9 h"],
     ["2026-11-20T10:00:00+01:00", "2026-11-19", false, "Événement du jeudi : disparu le vendredi à 10 h"],
-    ["2026-11-20T16:00:00+01:00", "2026-11-20", true, "Événement du vendredi : visible le vendredi à 16 h"],
+    ["2026-11-20T22:30:00+01:00", "2026-11-20", true, "Événement du vendredi : visible le vendredi après la clôture"],
     ["2026-11-21T08:30:00+01:00", "2026-11-20", true, "Événement du vendredi : visible le samedi à 8 h 30"],
     ["2026-11-21T09:00:00+01:00", "2026-11-20", false, "Événement du vendredi : disparu le samedi à 9 h (pas d'exception pour le week-end)"],
     ["2026-11-21T12:00:00+01:00", "2026-11-21", true, "Événement du samedi (crypto) : visible le samedi"],
@@ -69,9 +69,17 @@ let DIRECT = {};
   DIRECT = { jourPct: 0.0163, jour: 576 };
   q = await voir("2026-11-27T13:42:00+01:00", joie("2026-11-27", 0.029));
   ok(!q.ev.some(x => x.startsWith("joie")) && !q.pastilles, "En direct : +2,9 % ce matin, +1,63 % maintenant → plus de feu d'artifice ni de pastille", q);
+  ok(!q.route, "En direct à +1,63 % : pas de signe « en route »", q.route);
   DIRECT = { jourPct: 0.031, jour: 1000 };
-  q = await voir("2026-11-27T15:00:00+01:00", joie("2026-11-27", 0.029));
-  ok(q.ev.includes("joie:2026-11-27"), "En direct : toujours au-dessus de 2,8 % → le feu d'artifice reste", q);
+  q = await voir("2026-11-27T15:00:00+01:00", []);
+  ok(!q.ev.length && !q.pastilles && /En route vers un feu d'artifice/.test(q.route) && /\+3,10/.test(q.route), "v21.20 · séance en cours à +3,1 % : pas d'événement, seulement « En route vers un feu d'artifice · +3,10 % »", q);
+  q = await voir("2026-11-27T15:00:00+01:00", joie("2026-11-27", 0.031));
+  ok(!q.ev.length && !q.pastilles, "v21.20 · un feu d'artifice gardé de ce matin (ancienne version) est retiré tant que la séance n'est pas finie", q);
+  q = await voir("2026-11-27T18:00:00+01:00", []);
+  ok(q.ev.includes("joie:2026-11-27") && !q.route, "v21.20 · séance finie (18 h, portefeuille coté à Paris) à +3,1 % : le feu d'artifice naît", q);
+  DIRECT = { jourPct: -0.032, jour: -1000 };
+  q = await voir("2026-11-27T11:00:00+01:00", []);
+  ok(!q.ev.length && /En route vers un incendie/.test(q.route), "v21.20 · séance en cours à −3,2 % : « En route vers un incendie », pas d'événement", q);
   DIRECT = {};
   q = await voir("2026-11-13T20:00:00+01:00", [{ k: "serie", d: "2026-11-13", p: 0.02 }]);
   ok(!q.ev.includes("serie:2026-11-13"), "Série verte gardée sur le téléphone mais plus vraie dans l'historique : retirée (tous les événements)", q);

@@ -56,7 +56,7 @@ async function ouvrir(ctx, heure, versus) {
   await p.goto("http://localhost:" + PORT + "/index.html"); await p.waitForTimeout(3000);
   const r = await p.evaluate(() => { const T = window.__T, l = T.evenementsListe(), mk = n => { const x = T.marchesMoi().jour.find(y => y.nom === n); return x ? T.varMk(x, null).v : null; };
     const pas = [...document.querySelectorAll(".m-ev-b")].map(b => b.getAttribute("title"));
-    return { ev: l.filter(x => x.k === "krach" || x.k === "crypto").map(x => ({ k: x.k, d: x.d, p: x.p, big: T.textesEv(x).big, sub: T.textesEv(x).sub })), mkSP: mk("S&P 500"), mkBTC: mk("Bitcoin"), pastilles: pas,
+    return { ev: l.filter(x => x.k === "krach" || x.k === "crypto").map(x => ({ k: x.k, d: x.d, p: x.p, big: T.textesEv(x).big, sub: T.textesEv(x).sub })), mkSP: mk("S&P 500"), mkBTC: mk("Bitcoin"), pastilles: pas, route: (document.querySelector(".m-ev-r") || {}).textContent || "",
       puce: (document.querySelector('[data-mk-cache="S&P 500"] b') || {}).textContent || null }; });
   await p.close(); return Object.assign(r, { err });
 }
@@ -99,14 +99,14 @@ const f = r => JSON.stringify(r.ev);
   /* 2. vrai krach suivi en direct */
   { const c = await nouveau(), sp24 = sp("2026-11-24");
     const a = await ouvrir(c, "2026-11-25T16:30:00", versusDe(sp24, bt, [J1("S&P 500", -0.034, "25/11 16:20"), BTC_J]));
-    const k = krach(a)[0];
-    ok(!a.err.length && krach(a).length === 1 && k.d === "2026-11-25" && proche(k.p, -0.034, 1e-12) && k.big === "−3,4 %".replace(" ", k.big.charAt(4)) && /Aujourd'hui/.test(k.sub),
-      "2. vrai krach : « " + (k && k.big) + " · " + (k && k.sub) + " », exactement la variation du jour de Marchés (" + (a.mkSP * 100).toFixed(2) + " %)");
-    ok(a.pastilles.some(t => /S&P 500 −3,4/.test(t || "")), "2. pastille « Krach mondial » avec −3,4 % " + JSON.stringify(a.pastilles));
+    ok(!a.err.length && krach(a).length === 0 && !a.pastilles.some(t => /S&P 500/.test(t || "")) && /Krach possible · S&P 500 −3,40/.test(a.route),
+      "2. v21.20 · séance en cours à −3,4 % : pas encore de krach, seulement « Krach possible · S&P 500 −3,40 % » " + JSON.stringify(a.route));
     const b2 = await ouvrir(c, "2026-11-25T17:40:00", versusDe(sp24, bt, [J1("S&P 500", -0.025, "25/11 17:35"), BTC_J]));
-    ok(krach(b2).length === 0, "2. la séance remonte à −2,5 % : le krach disparaît (plus de −3,4 % mémorisé) " + f(b2));
-    const c3 = await ouvrir(c, "2026-11-25T21:00:00", versusDe(sp24, bt, [J1("S&P 500", -0.036, "25/11 17:35"), BTC_J]));
-    ok(krach(c3).length === 1 && proche(krach(c3)[0].p, -0.036, 1e-12), "2. la séance replonge à −3,6 % : le krach revient avec −3,6 % " + f(c3));
+    ok(krach(b2).length === 0 && !/Krach/.test(b2.route), "2. la séance remonte à −2,5 % : ni krach ni « Krach possible » " + f(b2));
+    const c3 = await ouvrir(c, "2026-11-25T22:30:00", versusDe(sp24, bt, [J1("S&P 500", -0.036, "25/11 22:05"), BTC_J]));
+    const k = krach(c3)[0];
+    ok(krach(c3).length === 1 && proche(k.p, -0.036, 1e-12) && /Aujourd'hui/.test(k.sub) && !/Krach/.test(c3.route), "2. séance finie (22 h 30) à −3,6 % : le krach naît avec −3,6 %, exactement la variation de Marchés " + f(c3));
+    ok(c3.pastilles.some(t => /S&P 500 −3,6/.test(t || "")), "2. pastille « Krach mondial » avec −3,6 % " + JSON.stringify(c3.pastilles));
     await c.close(); }
 
   /* 3. krach d'hier gardé le lendemain */
