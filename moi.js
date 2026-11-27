@@ -1314,7 +1314,7 @@ function injecterStyle() {
 .m-folle .mfo-p.long { font-size: clamp(48px, 15vw, 80px); }
 .moi .m-ev { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -4px; }   /* lot 62 c (Théo) : de petites pastilles sous la carte du haut, rien de pleine largeur */
 .moi .m-ev-r { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 6px 0 0; font: 600 12.5px/1.3 var(--f-text); color: var(--ink-2); }
-.moi .m-ev-r > span { display: inline-flex; gap: 5px; align-items: center; padding: 3px 10px; border: 1px dashed color-mix(in srgb, var(--evc, var(--rule)) 55%, var(--rule)); border-radius: 999px; }
+.moi .m-ev-r > span { cursor: pointer; display: inline-flex; gap: 5px; align-items: center; padding: 3px 10px; border: 1px dashed color-mix(in srgb, var(--evc, var(--rule)) 55%, var(--rule)); border-radius: 999px; }
 .moi .m-ev-r small { color: var(--ink-3); font-weight: 500; }
 .moi .m-ev-p { display: inline-flex; align-items: stretch; max-width: 100%; border: 1px solid color-mix(in srgb, var(--evc, var(--rule)) 45%, var(--rule)); border-radius: 999px; background: var(--panel); overflow: hidden; }
 .moi .m-ev-p.on { border-color: var(--evc, var(--accent)); background: color-mix(in srgb, var(--evc, var(--accent)) 14%, var(--panel)); }
@@ -1807,8 +1807,9 @@ function finEvK(k) { return k === "feu" || k === "joie" ? finPf() : FIN_NY; }
 /** les événements « en route » (séance pas finie) : [{ k, p, ic, t }] */
 function evEnRoute() {
   const out = []; if (!M || M.simple) return out;
-  try { const x = seanceCarte(); if (x && !seanceFinie(x.d, finPf()) && Math.abs(x.p) >= FOLLE_SEUIL - 1e-9) out.push({ k: x.p > 0 ? "joie" : "feu", p: x.p, ic: x.p > 0 ? "🎆" : "🔥", t: x.p > 0 ? "En route vers un feu d'artifice" : "En route vers un incendie", de: "" }); } catch (e) { /* rien */ }
-  try { const l = varsEv(closEv("S&P 500"), 5), y = l[l.length - 1]; if (y && !seanceFinie(y.d, FIN_NY) && y.p <= KRACH_SEUIL + 1e-9) out.push({ k: "krach", p: y.p, ic: "🌍", t: "Krach possible", de: "S&P 500" }); } catch (e) { /* rien */ }
+  try { const x = seanceCarte(); if (x && !seanceFinie(x.d, finPf()) && Math.abs(x.p) >= FOLLE_SEUIL - 1e-9) out.push({ k: x.p > 0 ? "joie" : "feu", d: x.d, e: x.e, sens: x.p > 0 ? 1 : -1, niv: Math.abs(x.p) >= FOLLE_FORT - 1e-9 ? 3 : Math.abs(x.p) >= FOLLE_MID - 1e-9 ? 2 : 1, enRoute: true, p: x.p, ic: x.p > 0 ? "🎆" : "🔥", t: x.p > 0 ? "En route vers un feu d'artifice" : "En route vers un incendie", de: "" }); } catch (e) { /* rien */ }
+  try { const l = varsEv(closEv("S&P 500"), 5), y = l[l.length - 1]; if (y && !seanceFinie(y.d, FIN_NY) && y.p <= KRACH_SEUIL + 1e-9) out.push({ k: "krach", d: y.d, enRoute: true, p: y.p, ic: "🌍", t: "Krach possible", de: "S&P 500" }); } catch (e) { /* rien */ }
+  out.forEach(z => { z.fort = z.niv === 3; z.cleR = "route:" + z.k + ":" + z.d + ":" + (z.niv || 1); });
   return out;
 }
 /** la journée folle en cours (la plus récente des 4 derniers jours), ou null */
@@ -2210,6 +2211,9 @@ function finEv(x) { if (x.k === "relache") return x.d; const d = new Date(x.d + 
 function libFinEv(x) { const f = finEv(x); return x.k === "relache" ? "ce soir" : f <= isoJour(new Date()) ? "9 h ce matin" : "demain " + libCourt(f) + " à 9 h"; }
 /** textes d'un événement : kicker, gros chiffre, ligne du dessous, phrase, carte « pourquoi » */
 function textesEv(x) {
+  if (x.enRoute) { const krach = x.k === "krach";   // v21.21 (Théo, 27/11) : l'affichette s'ouvre aussi pendant la séance, avec la phrase « en route »
+    return { k: krach ? "Krach possible" : x.p > 0 ? "En route vers un feu d'artifice" : "En route vers un incendie", big: pct(x.p, krach ? 1 : 2), sub: (krach ? "S&P 500 · " : "") + "séance en cours",
+      phr: "La journée n'est pas finie : décidé à la clôture, si ça tient.", carte: (krach ? "S&P 500 " : "ton portefeuille ") + pct(x.p, 2) + " en séance" }; }
   const lib = libJourFolle(x.d), lc = libCourt(x.d), pts = v => v >= 1000 ? F0.format(Math.round(v)) + NB + "pts" : "";
   if (x.k === "krach") return { k: "Krach mondial", big: pct(x.p, 1), sub: "S&P 500 · " + lib, phr: "Le monde entier tousse. Les krachs passent, les plans réguliers restent.", carte: "S&P 500 " + pct(x.p, 1) + " le " + lc };
   if (x.k === "crypto") return { k: "Tempête crypto", big: pct(x.p, 1), sub: "Bitcoin en 24 h · " + lib, phr: x.p < 0 ? "Le Bitcoin plonge. Ta bourse, elle, n'a rien vu." : "Le Bitcoin s'emballe. Garde la tête froide.", carte: "Bitcoin " + pct(x.p, 1) + " le " + lc };
@@ -2241,7 +2245,11 @@ let evAttente = 0;
 function verifierEvenement() {
   if (!M || M.simple || SRC !== "api" || PREF.onglet !== "jour" || !vueMoi() || document.hidden || !identiteSure() || evTousCoupes()) return;
   if (document.querySelector(".m-fete, .m-folle")) { clearTimeout(evAttente); evAttente = setTimeout(verifierEvenement, 1500); return; }   // une fête de palier passe d'abord ; l'effet suit quand elle est fermée (jamais les deux ensemble)
-  const L = evenementsActifs(), nv = L.filter(x => !evVu(x)); if (!nv.length) return;
+  const L = evenementsActifs(), nv = L.filter(x => !evVu(x));
+  if (!nv.length) {   // v21.21 : pas d'événement confirmé → l'affichette « en route » (une fois par séance, par sens et par palier)
+    let R = []; try { R = evEnRoute(); } catch (e) { R = []; } const r = R.find(z => !evListe("evRoute").includes(z.cleR)); if (!r) return;
+    evAjoute("evRoute", [r.cleR], 30); const go = () => lancerFolle(r);
+    if (typeof window.ereApres === "function") window.ereApres(go, "folleMoi"); else go(); return; }
   const x = nv[0];
   nv.forEach(y => { if (y.folle) evAjoute("folles", [cleFolle(y)], 40); else evAjoute("evVus", [y.cle]); });   // tous notés : un seul est joué
   evAjoute("evJoues", [x.cle]);
@@ -2272,7 +2280,8 @@ function icoEv(y) { return y.k === "feu" && y.niv === 2 ? "💥" : y.k === "joie
 function habillerFolle(v) {
   const L = evenementsActifs(), hero = v.querySelector(".m-hero"), R = (() => { try { return evEnRoute(); } catch (e) { return []; } })();
   if (hero && R.length) { const r = document.createElement("p"); r.className = "m-ev-r";   // v21.20 : signe discret pendant la séance
-    r.innerHTML = R.map(z => '<span data-ev="' + z.k + '"><span aria-hidden="true">' + z.ic + "</span> " + esc(z.t) + " · " + (z.de ? esc(z.de) + " " : "") + '<b style="white-space:nowrap">' + esc(pct(z.p, 2)) + "</b></span>").join("") + "<small>Décidé à la clôture, si ça tient.</small>";
+    r.innerHTML = R.map((z, i) => '<span data-ev="' + z.k + '" data-route="' + i + '" role="button" tabindex="0" title="Toucher pour revoir l\'affichette"><span aria-hidden="true">' + z.ic + "</span> " + esc(z.t) + " · " + (z.de ? esc(z.de) + " " : "") + '<b style="white-space:nowrap">' + esc(pct(z.p, 2)) + "</b></span>").join("") + "<small>Décidé à la clôture, si ça tient.</small>";
+    r.querySelectorAll("[data-route]").forEach(b => { const go = () => lancerFolle(R[+b.dataset.route], true); b.addEventListener("click", go); b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }); });
     hero.after(r); }
   if (!L.length || !hero || evTousCoupes()) return;
   const x = evChoisi(L), joues = evListe("evJoues");
