@@ -5467,7 +5467,8 @@ function lireAvis(brut) {
   const t = String(brut || "").replace(/[    ]/g, " ").replace(/\r/g, "");
   if (/\bSens\b/.test(t) && /Montant\s+net/i.test(t)) return lireFortuneo(t);
   if (/Niveau de risque/i.test(t) && /^\s*Valeur\d?\s+\d/im.test(t)) return lireQuintessa(t);
-  if (/SURAVENIR|LINXEA AVENIR/i.test(t) && /Confirmation d.arbitrage|Confirmation de versement/i.test(t)) return lireSuravenir(t);   // v21.16 : Linxea Avenir 2
+  if (/SURAVENIR|LINXEA AVENIR/i.test(t) && /Confirmation d.arbitrage|Confirmation de versement/i.test(t)) return lireSuravenir(t);
+  if (/Caract[ée]ristiques/i.test(t) && /Nbr\.? de parts|Montant (?:prime|net distribution)|Pr[ée]l[èe]vements sociaux/i.test(t)) return lireLinxeaSite(t);   // v21.16 : page de détail copiée du site Linxea   // v21.16 : Linxea Avenir 2
   if (/linxea|spirica|nombre de parts|valeur de (?:la )?parts?|versement libre|frais de gestion sur UC|rachat partiel/i.test(t)) return lireLinxea(t);
   return lireFortuneo(t);
 }
@@ -5645,6 +5646,44 @@ function lireSuravenir(t) {
   if (arb) { const b = lireNombre(brutArb), nn = lireNombre(netArb);
     if (b > 0 && nn > 0 && b - nn >= .005) { const d0 = (ops.find(o => o.date) || {}).date || "";
       ops.push(finirOp({ src: "linxea", type: "Frais", nom: "Frais et prélèvements de l'arbitrage", isin: "", date: d0, montant: saisieNombre(b - nn, 2), note: "Montant brut désinvesti " + brutArb + " € − montant net réinvesti " + netArb + " € (frais de gestion, prélèvements sociaux du fonds en euros)." }, ["date", "montant"])); } }
+  return { compte: "LINXEA", ops: sansDoublons(ops) };
+}
+/* v21.16 (Théo, 27/11) · Linxea (site/appli) : page de détail d'une opération COPIÉE (Versement, Souscription, Arbitrage, Distribution,
+   Prime exceptionnelle, Revalorisation, Prélèvements sociaux). Supports : NOM, ISIN, (répartition %), montant €, nombre de parts (0.2729), « 378,42 € au 01/12/2025 ».
+   Même logique que les PDF : versement → apport + achats ; arbitrage → ventes (Désinvestissement) puis achats (Réinvestissement) + « Frais » si brut > net ;
+   distribution → « Intérêts » puis achat des parts réinvesties ; prime / revalorisation → « Intérêts » ; prélèvements sociaux → « Frais ».
+   Le fonds en euros (sans ISIN, « - » en parts) reste dans les espèces. */
+function lireLinxeaSite(t) {
+  const txt = t.replace(/\t/g, "\n"), L = txt.split("\n").map(x => x.replace(/\s+/g, " ").trim()).filter(Boolean), isoFr = d => d ? d.slice(6, 10) + "-" + d.slice(3, 5) + "-" + d.slice(0, 2) : "";
+  const tete = L.slice(0, 4).join(" "), nat = /arbitrage/i.test(tete) ? "arbitrage" : /distribution/i.test(tete) ? "distribution" : /pr[ée]l[èe]vements? sociaux/i.test(L[0] || "") ? "ps" : /prime|revalorisation/i.test(tete) ? "prime" : /versement|souscription/i.test(tete) ? "versement" : "";
+  const champ = lab => { const x = txt.match(new RegExp(lab + "[^\\n\\d]*\\n?\\s*" + NB + "\\s*€", "i")); return x ? chiffre(x[1]) : ""; };
+  const dEffet = isoFr((txt.match(/Date d.effet\s*\n?\s*(\d{2}\/\d{2}\/\d{4})/i) || [])[1] || "");
+  const NB = "(?<![\\d.,])" + NUM_AV, ops = [], reIsin = /^([A-Z]{2}[A-Z0-9]{9}\d)$/;
+  if (nat === "prime" || nat === "ps") {
+    const m = champ(nat === "ps" ? "Montant" : "Montant (?:prime|net)") ; if (m) ops.push(finirOp({ src: "linxea", type: nat === "ps" ? "Frais" : "Intérêts", nom: nat === "ps" ? "Prélèvements sociaux (fonds en euros)" : "Prime / revalorisation (fonds en euros)", isin: "", date: dEffet, montant: m, note: "Fonds en euros : reste dans les espèces de l'enveloppe." }, ["date", "montant"]));
+    return { compte: "LINXEA", ops };
+  }
+  let sens = nat === "arbitrage" ? "" : "Achat", premier = true;
+  L.forEach((l, i) => {
+    if (/^D[ée]sinvestissement/i.test(l)) { sens = "Vente"; return; } if (/^R[ée]investissement|^R[ée]partition/i.test(l)) { sens = "Achat"; return; }
+    const mi = l.match(reIsin) || l.match(/\b([A-Z]{2}[A-Z0-9]{9}\d)\b/); if (!mi || !sens) return;
+    let nom = l.replace(mi[1], "").trim(); if (!/[A-Za-z]{3}/.test(nom)) nom = L[i - 1] || "";
+    const suite = L.slice(i + 1, i + 8), fin = suite.findIndex(x => /\b[A-Z]{2}[A-Z0-9]{9}\d\b/.test(x) || /^R[ée]investissement|^D[ée]sinvestissement|^Total/i.test(x) || (/^[A-Z0-9 &'.-]{8,}$/.test(x) && !/€/.test(x)));
+    const bloc = (fin < 0 ? suite : suite.slice(0, fin)).join(" ");
+    const euros = []; { const re = new RegExp(NB + "\\s*€(?!\\s*au)", "g"); let x; while ((x = re.exec(bloc))) euros.push(chiffre(x[1])); }
+    const vl = bloc.match(new RegExp(NB + "\\s*€\\s*au\\s*(\\d{2}\\/\\d{2}\\/\\d{4})"));
+    const sans = bloc.replace(new RegExp(NB + "\\s*(?:€|%)(?:\\s*au\\s*\\d{2}\\/\\d{2}\\/\\d{4})?", "g"), " ").replace(/\d{2}\/\d{2}\/\d{4}/g, " ");
+    const pq = sans.match(/(?:^|\s)(\d+[.,]\d+)(?=\s|$)/);
+    const op = { src: "linxea", texte: l + " " + bloc, nom: nom.replace(/\s+/g, " ").trim(), isin: mi[1], date: vl ? isoFr(vl[2]) : dEffet, qte: pq ? chiffre(pq[1]) : "", cours: vl ? chiffre(vl[1]) : "", montant: euros[0] || "", frais: "" };
+    if (sens === "Vente") op.type = "Vente";
+    else { op.type = "Achat"; if (nat === "versement") { op.versDoc = true; op.apport = premier; op.montantApport = ""; if (!premier) op.note = "Le versement est déjà enregistré avec le 1er support de ce document."; premier = false; } }
+    ops.push(finirOp(op, ["date", "qte", "cours", "montant"]));
+  });
+  if (nat === "versement" && ops.length) { const net = champ("Montant net"), a = ops.find(o => o.apport); if (a && net && Math.abs(lireNombre(net) - lireNombre(a.montant)) > .005) a.montantApport = net; }
+  if (nat === "versement" && !ops.length) { const net = champ("Montant net"); if (net) ops.push(finirOp({ src: "linxea", type: "Apport", nom: "Versement (fonds en euros)", isin: "", date: dEffet, montant: net, note: "Versement placé sur le fonds en euros : il reste dans les espèces de l'enveloppe." }, ["date", "montant"])); }
+  if (nat === "distribution") { const m = champ("Montant net distribution"); if (m) ops.unshift(finirOp({ src: "linxea", type: "Intérêts", nom: "Distribution (dividende réinvesti)", isin: "", date: dEffet, montant: m, note: "Le dividende est aussitôt réinvesti en parts (ligne suivante)." }, ["date", "montant"])); }
+  if (nat === "arbitrage") { const b = lireNombre(champ("Montant brut")), n = lireNombre(champ("Montant net"));
+    if (b > 0 && n > 0 && b - n >= .005) ops.push(finirOp({ src: "linxea", type: "Frais", nom: "Frais et prélèvements de l'arbitrage", isin: "", date: dEffet, montant: saisieNombre(b - n, 2), note: "Montant brut désinvesti − montant net réinvesti (frais de gestion, prélèvements sociaux du fonds en euros)." }, ["date", "montant"])); }
   return { compte: "LINXEA", ops: sansDoublons(ops) };
 }
 /* v20.30 (Théo, 24/11) · Linxea en « fiche » (copiée depuis l'appli ou le site) : un support par bloc, une ligne « Libellé : valeur » par champ.

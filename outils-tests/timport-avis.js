@@ -274,4 +274,21 @@ r = lire(S2);
 ok(r.ops.length === 3 && r.ops[0].type === "Vente" && r.ops[1].type === "Achat" && r.ops[2].type === "Frais" && r.ops[2].montant === "0,24", "S2 · arbitrage Avenir 2 : 1 vente, 1 achat, 0,24 € de frais", r.ops.map(o => [o.type, o.montant]));
 ok(r.ops.every(o => !o.apport), "S2 · un arbitrage n'est jamais un apport", r.ops.map(o => o.apport));
 
+
+/* ---------- LINXEA (site) · v21.16 : page de détail d'une opération copiée (faux chiffres) ---------- */
+const W1 = "← Retour\nVersement\nM. Test Exemple\tLinxea Avenir 2 N° L8 000000000\nCaractéristiques\nMontant brut\n250,00 €\nTaux de frais\n0,00 %\nFrais d'entrée\n0,00 €\nMontant net\n250,00 €\nDate de validation\n28/11/2099\nDate d'effet\n01/12/2099\nRépartition\n1\nCompartiment 1\n250,00 €\nMode de gestion\tGestion libre\nSupport\tRépartition\tMontant net\tNbr. de parts\tValeur de la part\nEUR SURAVENIR OPPORTUNITES 2\n20,00 %\t50,00 €\t-\t-\nAMUNDI MSCI WORLD SWAP II ETF\nFR0010315770\n40,00 %\t100,00 €\t0.2500\t400,00 € au 01/12/2099\nDB X-TRACKERS ETC PHYS GOLD HDG\nDE000A1EK0G3\n40,00 %\t100,00 €\t0.5000\t200,00 € au 01/12/2099";
+r = lire(W1);
+ok(r.ops.length === 2 && r.ops.every(o => o.type === "Achat") && r.ops[0].qte === "0,2500" && r.ops[0].cours === "400,00" && r.ops[0].montant === "100,00" && r.ops[1].isin === "DE000A1EK0G3", "W1 · versement copié du site : 2 achats (parts, valeur de part, montant)", r.ops);
+ok(r.ops[0].apport && r.ops[0].montantApport === "250,00" && !r.ops[1].apport && r.ops[0].date === "2099-12-01", "W1 · un seul apport de 250 € (fonds en euros compris)", r.ops.map(o => [o.apport, o.montantApport, o.date]));
+const W2 = "Arbitrage\nCaractéristiques\nMontant brut\n300,00 €\nPrélèvements sociaux sur les intérêts de l'année des fonds en €\n-0,11 €\nFrais de gestion\n0,24 €\nMontant net\n299,65 €\nDate de saisie\n08/10/2099\nDate d'effet\n09/10/2099\nDésinvestissement\n1\nCompartiment 1\n300,00 €\nSupport\tMontant brut (€)\tNbr. de parts\tValeur de la part\nEUR SURAVENIR OPPORTUNITES 2\n300,00 €\t-\t-\nRéinvestissement\n1\nCompartiment 1\n299,65 €\nSupport\tRépartition\tMontant net\tNbr. de parts\tValeur de la part\nAMUNDI MSCI EMER MARK III UC ETF\nFR0010429068\n100,00 %\t299,65 €\t20.0000\t14,98 € au 09/10/2099";
+r = lire(W2);
+ok(r.ops.length === 2 && r.ops[0].type === "Achat" && !r.ops[0].apport && r.ops[0].qte === "20,0000" && r.ops[1].type === "Frais" && r.ops[1].montant === "0,35", "W2 · arbitrage depuis le fonds euros : 1 achat (pas d'apport) + 0,35 € de frais", r.ops.map(o => [o.type, o.qte, o.montant, o.apport]));
+const W3 = "Distribution\nCaractéristiques\nSupport concerné\nAMUNDI MSCI WORLD SWAP II ETF\nDate d'effet\n18/12/2099\nMontant net distribution\n9,99 €\nRépartition des supports\nSupport\tRépartition\tMontant net\tNbr. de parts\tValeur de la part\nAMUNDI MSCI WORLD SWAP II ETF\nFR0010315770\n100,00 %\t9,99 €\t0.0250\t399,60 € au 18/12/2099";
+r = lire(W3);
+ok(r.ops.length === 2 && r.ops[0].type === "Intérêts" && r.ops[0].montant === "9,99" && r.ops[1].type === "Achat" && r.ops[1].qte === "0,0250" && !r.ops[1].apport, "W3 · distribution : dividende (Intérêts) puis achat des parts réinvesties", r.ops.map(o => [o.type, o.qte, o.montant]));
+const W4 = "Prime exceptionnelle\nCaractéristiques\nSupport concerné\nEUR SURAVENIR OPPORTUNITES 2\nDate d'effet\n01/01/2099\nMontant prime\n0,80 €";
+r = lire(W4); ok(r.ops.length === 1 && r.ops[0].type === "Intérêts" && r.ops[0].montant === "0,80" && r.ops[0].date === "2099-01-01", "W4 · prime du fonds en euros → Intérêts", r.ops);
+const W5 = "Prélèvements sociaux sur revalorisation\nCaractéristiques\nSupport concerné\nEUR SURAVENIR OPPORTUNITES 2\nDate d'effet\n01/01/2099\nAssiette\n0,84 €\nMontant\n0,14 €";
+r = lire(W5); ok(r.ops.length === 1 && r.ops[0].type === "Frais" && r.ops[0].montant === "0,14", "W5 · prélèvements sociaux → Frais 0,14 € (pas l'assiette)", r.ops);
+
 console.log("\n" + (ko.length ? ko.length + " NON" : "tout OUI"));
