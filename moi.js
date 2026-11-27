@@ -1664,6 +1664,7 @@ function badgeFerme(bf) { return '<span class="m-ferme" title="Les chiffres sont
 function libSeance() { const d = seanceDu(); if (!d) return ""; const x = new Date(d + "T12:00:00"); return JOURS_C[x.getDay()] + " " + frDate(d).slice(0, 5); }
 /** les 5 dernières séances (jours ouvrés, fériés non retirés) : la dernière = aujourd'hui si la bourse bouge, sinon la dernière séance connue */
 function seances5() {
+  { const r = fen5j(); if (r) return r.seances.map(n => isoN(n)); }   // v21.15 : les mêmes 5 séances que les marchés (jours fériés retirés)
   const fin = new Date((seanceProposee() ? seanceDu() : isoJour(new Date())) + "T12:00:00"), out = [];
   for (const d = new Date(fin); out.length < 5; d.setDate(d.getDate() - 1)) if (d.getDay() % 6) out.unshift(isoJour(d));
   return out;
@@ -1673,7 +1674,8 @@ function lib5j() { const s = seances5(); return "sur 5 séances · du " + frDate
 function finPer() { return new Date((seanceProposee() ? seanceDu() : isoJour(new Date())) + "T12:00:00"); }
 function debutPer(p, fin) {
   if (p === "tout") { const r = M && M.historique && M.historique.rows; return r && r.length ? dateNum(r[0][0]) : new Date(2000, 0, 1, 12); }   // lot 63 : le début du portefeuille
-  if (p === "5j") { const d = new Date(seances5()[0] + "T12:00:00"); d.setDate(d.getDate() - 1); return d; }   // la veille de la 1re des 5 séances
+  if (p === "5j") { const b = base5j(); if (b) { const d = dateNum(b); d.setHours(12); return d; }   // v21.15 : même départ que les marchés
+    const d = new Date(seances5()[0] + "T12:00:00"); d.setDate(d.getDate() - 1); return d; }   // secours : la veille de la 1re des 5 séances
   if (p === "ytd") return new Date(fin.getFullYear() - 1, 11, 31, 12);
   const m = new Date(fin.getFullYear(), fin.getMonth() - ({ "1m": 1, "6m": 6, "1a": 12 }[p] || 1), 1);   // le 31/05 − 3 mois = le 28/02 (comme Stats)
   return new Date(m.getFullYear(), m.getMonth(), Math.min(fin.getDate(), new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate()), 12);
@@ -3098,6 +3100,27 @@ function closMk(nom) {   // { d: [aaaammjj], v: [cours] } sans trous, du plus an
   return out;
 }
 /** lot 61 : bornes communes aux cases ET aux courbes (une seule règle) : i0 = la clôture de départ (dernière ≤ début de la période) */
+/** v21.15 (Théo, 27/11) : « 5 j » = le MÊME départ pour toutes les courbes et toutes les cases (marchés ET Mon portefeuille) : la clôture
+    d'avant les 5 dernières séances, comptées sur les jours où au moins une bourse (hors crypto) a coté. Avant, chaque marché comptait SES 5
+    séances : un jour férié à New York (Thanksgiving) faisait partir l'or un jour plus tôt, avec une base 100 décalée. Le jour en séance
+    compte comme 5e séance s'il n'a pas encore de clôture (relecture moi-patrimoine). → { base: aaaammjj, seances: [aaaammjj ×5] } ou null */
+let F5J = null;
+function fen5j() {
+  const m = marchesMoi(), q = m && m.quot; if (!q || !(q.d || []).length) return null;
+  const cle = (q.d.length) + "|" + q.d[q.d.length - 1] + "|" + (m.jour || []).map(x => x.heure + ":" + x.pct).join(",") + "|" + isoJour(new Date());
+  if (F5J && F5J.cle === cle) return F5J.r;
+  const nc = (q.s || []).filter(x => !CRYPTO_MK.includes(x.nom));
+  const D = nc.length ? q.d.map(Number).filter((d, i) => nc.some(x => x.v[i] > 0)) : [];
+  let r = null;
+  if (D.length >= 6) {
+    let aujS = 0;   // le jour de séance « en direct » (même calcul que bornesMk), s'il n'a pas encore de clôture
+    (m.jour || []).forEach(x => { if (CRYPTO_MK.includes(x.nom) || !closMk(x.nom).d.length) return; const b = bornesMk(x, "1m"); if (b.enDirect) aujS = Math.max(aujS, b.auj); });
+    const dir = aujS > D[D.length - 1], k = dir ? 4 : 5;
+    r = { base: D[D.length - 1 - k], seances: D.slice(D.length - k).concat(dir ? [aujS] : []) };
+  }
+  F5J = { cle, r }; return r;
+}
+function base5j() { const r = fen5j(); return r ? r.base : null; }
 function bornesMk(x, per) {
   const c = closMk(x.nom), n = c.v.length, live = typeof x.pct === "number";
   // v18.7 : la variation du Versus est celle de SA séance (« 20/11 17:35 ») : elle ne s'ajoute que si l'historique s'arrête avant cette séance (pas de double compte le lundi matin)
@@ -3106,7 +3129,9 @@ function bornesMk(x, per) {
   const dLast = n ? c.d[n - 1] : 0, enDirect = !!(n && live && !c.hebdo && dLast < auj), fin = enDirect ? dateNum(auj) : dateNum(Math.min(dLast || auj, auj));   // hebdo : la clé de la semaine est son vendredi
   const num = d => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
   let i0 = -1;
-  if (n && per === "5j" && !c.hebdo) i0 = n - 1 - (enDirect ? 4 : 5);   // 5 séances : la clôture d'avant la 1re (aujourd'hui compte en séance)
+  const b5 = per === "5j" && !c.hebdo ? base5j() : null;
+  if (n && b5) c.d.forEach((d, i) => { if (d <= b5) i0 = i; });   // v21.15 (Théo, 27/11) : même jour de départ pour tous (un marché fermé ce jour-là part de sa dernière clôture d'avant)
+  else if (n && per === "5j" && !c.hebdo) i0 = n - 1 - (enDirect ? 4 : 5);   // 5 séances : la clôture d'avant la 1re (aujourd'hui compte en séance)
   else if (n) {
     const d0 = per === "5j" ? new Date(fin.getFullYear(), fin.getMonth(), fin.getDate() - 7, 12) : debutPer(per, fin), c0 = num(d0);
     c.d.forEach((d, i) => { if (d <= c0) i0 = i; });
@@ -3184,6 +3209,7 @@ function fenMoi(per) {
   const fin = direct ? dateNum(auj) : dateNum(c.d[n - 1]), num = d => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
   let i0 = -1;
   if (per === "5j") { i0 = Math.max(0, n - 1 - (direct ? 4 : 5));
+    { const b5 = base5j(); if (b5) { let j = -1; c.d.forEach((d, i) => { if (d <= b5) j = i; }); if (j >= 0) i0 = j; } }   // v21.15 : même départ que les marchés
     /* v21.14 : « 5 j » = les 5 dernières séances, jamais plus loin que 9 jours (historique mensuel : pas de courbe plutôt que 5 MOIS) */
     const lim = new Date(fin); lim.setDate(lim.getDate() - 9); const cl = num(lim); while (i0 < n - 1 && c.d[i0] < cl) i0++; }
   else if (per === "tout") i0 = 0;

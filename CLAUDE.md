@@ -27,7 +27,7 @@ Ne lire que la fiche de la partie du chantier en cours. Ancienne fiche et journa
 | Fichier | Partie |
 |---|---|
 | `index.html`, `css/versus.css`, `sw.js`, `manifest.webmanifest` | communs |
-| `version.js` (`app` + `date`) : **seul endroit à changer** à chaque mise en ligne (sert aussi au cache hors connexion). Version actuelle : **21.14** | commun |
+| `version.js` (`app` + `date`) : **seul endroit à changer** à chaque mise en ligne (sert aussi au cache hors connexion). Version actuelle : **21.15** | commun |
 | `js/1-base.js` … `js/8-eredor-demarrage.js`, `js/icones.js`, `js/sons.js`, `piste.js`, `img/cartes/` | jeu |
 | `moi.js`, `moteur.js` (calculs) | Moi |
 | `outils-tests/` | tests (harness, scènes 3D, captures) |
