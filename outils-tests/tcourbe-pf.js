@@ -62,6 +62,8 @@ const moi = { ok: true, version: 14, genere: "2026-11-25T19:00:00", majTexte: ""
   /* v21.15 · jour férié d'un seul marché : toutes les courbes « 5 j » (et la tienne) partent du MÊME jour */
   const al = await p.evaluate(() => ["S&P 500", "Nasdaq-100", "Or non couvert"].map(n => { const f = window.__T.fenMk({ nom: n, pct: null, heure: "" }, "5j"); return f ? f.d[0] : null; }).concat([window.__T.fenMoi("5j").d[0], window.__T.base5j()]));
   ok(al.every(x => x === al[0]) && al[0] === 20261118, "5 j : même départ pour tous les marchés, l'or (fermé un jour) et ton portefeuille", al);
+  const tt = await p.evaluate(() => [window.__T.fenMoi("tout").d[0]].concat(["S&P 500", "Nasdaq-100", "Or non couvert"].map(n => { const f = window.__T.fenMk({ nom: n, pct: null, heure: "" }, "tout"); return f ? f.d[0] : null; })));
+  ok(tt.every(x => x === tt[0]), "Tout : marchés et portefeuille partent du même jour quand l'historique des marchés remonte assez loin (V105)", tt);
   const dp = await p.evaluate(() => { const d = window.__T.debutPer("5j", new Date()); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); });
   ok(dp === 20261118, "5 j : la carte « Mon portefeuille » (et son %) part du même jour que les courbes", dp);
   /* relecture moi-patrimoine : une bourse a déjà sa clôture du jour (Nasdaq-100 le 25/11) pendant qu'une autre est encore en séance (S&P 500) :
