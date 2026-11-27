@@ -41,6 +41,7 @@ let DIRECT = {};
     await p.waitForTimeout(500);
     const r = await p.evaluate(l => { window.__T.seed(l); window.Moi.rendre(); return { sc: window.__T.jourEv(), ev: window.__T.evenementsListe().map(x => x.k + ":" + x.d), pastilles: document.querySelectorAll("#v-moi .m-ev-b").length, route: (document.querySelector("#v-moi .m-ev-r") || {}).textContent || "",
       obj: ["emb.montagnes", "theme.phenix"].filter(k => window.__T.etatObjets().ok.has(k)) }; }, l);
+    if (globalThis.AFF) { await p.waitForTimeout(1800); r.affiche = await p.evaluate(() => [...document.querySelectorAll(".m-folle")].map(e => e.textContent)); }
     await p.close(); return r;
   };
   const cas = [["2026-11-19T22:30:00+01:00", "2026-11-19", true, "Événement du jeudi : visible le jeudi après la clôture (22 h 30)"],
@@ -73,6 +74,10 @@ let DIRECT = {};
   DIRECT = { jourPct: 0.031, jour: 1000 };
   q = await voir("2026-11-27T15:00:00+01:00", []);
   ok(!q.ev.length && !q.pastilles && /En route vers un feu d'artifice/.test(q.route) && /\+3,10/.test(q.route), "v21.20 · séance en cours à +3,1 % : pas d'événement, seulement « En route vers un feu d'artifice · +3,10 % »", q);
+  globalThis.AFF = 1; q = await voir("2026-11-27T15:00:00+01:00", []);
+  ok(q.affiche && q.affiche.length === 1 && /En route vers un feu d'artifice/.test(q.affiche[0]) && /\+3,10/.test(q.affiche[0]) && /décidé à la clôture/.test(q.affiche[0]), "v21.21 · à l'ouverture pendant la séance : l'affichette s'ouvre avec « En route vers un feu d'artifice · +3,10 % · décidé à la clôture »", q.affiche);
+  q = await voir("2026-11-27T15:30:00+01:00", []); globalThis.AFF = 0;
+  ok(q.affiche && q.affiche.length === 0, "v21.21 · rouverte 30 min plus tard, même palier : l'affichette ne se rejoue pas (une fois par séance)", q.affiche);
   q = await voir("2026-11-27T15:00:00+01:00", joie("2026-11-27", 0.031));
   ok(!q.ev.length && !q.pastilles, "v21.20 · un feu d'artifice gardé de ce matin (ancienne version) est retiré tant que la séance n'est pas finie", q);
   q = await voir("2026-11-27T18:00:00+01:00", []);
