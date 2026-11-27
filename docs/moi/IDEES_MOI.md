@@ -45,3 +45,4 @@ Ce fichier n'est **pas** lu automatiquement : seulement quand Théo le demande. 
 - **Kévin** : étaler ses frais d'assurance-vie 2026 mois par mois dans l'historique reconstruit.
 - **Projection** : choisir l'année qu'on veut (curseur, ou « l'année de mes X ans ») au lieu de 2034/2040/2050 ; remplacer « millionnaire en 2106 » par l'effet d'un versement en plus.
 - **Interface ordinateur** (faisable) : sur grand écran, mise en page en 2 ou 3 colonnes. Commencer par Moi (courbe, enveloppes, marchés côte à côte), puis le jeu (course 3D en grand, classement à côté).
+- **Idée de Kévin : « si je retirais tout »** : un graphique de ce que prendrait l'État (impôt + prélèvements sociaux) si on retirait tout aujourd'hui, comparé à ce qu'il prendrait après la date de fiscalité allégée (PEA à 5 ans, assurance-vie à 8 ans), avec le compte à rebours jusqu'à cette date (ex. « dans 3 ans et 8 mois »), enveloppe par enveloppe.
