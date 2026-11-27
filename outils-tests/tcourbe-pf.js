@@ -19,9 +19,10 @@ const MK = []; for (let t = Date.parse("2025-06-02T00:00:00Z"); iso(t) <= "2026-
 const serie = (b, a) => MK.map((d, i) => Math.round(b * (1 + a * i) * 100) / 100);
 const versus = { ok: true, genere: "2026-11-25T19:00:00", majTexte: "", enveloppes: ["Portefeuille", "PEA", "Assurance vie"], personnes: [{ nom: "Clément", rows: [] }],
   marche: { indices: [], mois: [], resume: [], dateComparaison: null, tauxSansRisque: 0.03, libelleDepuis: "" },
-  marchesMoi: { jour: [{ nom: "S&P 500", pct: 0.002, heure: "25/11 17:35" }, { nom: "Nasdaq-100", pct: 0.003, heure: "25/11 17:35" }],
-    series: [{ nom: "S&P 500", v: [1, 1] }, { nom: "Nasdaq-100", v: [1, 1] }], semaines: ["2026-11-13", "2026-11-20"],
-    quot: { d: MK.map(num), s: [{ nom: "S&P 500", v: serie(500, 0.0004) }, { nom: "Nasdaq-100", v: serie(400, 0.0006) }] } },
+  marchesMoi: { jour: [{ nom: "S&P 500", pct: 0.002, heure: "25/11 17:35" }, { nom: "Nasdaq-100", pct: 0.003, heure: "25/11 17:35" }, { nom: "Or non couvert", pct: 0.004, heure: "25/11 17:35" }],
+    series: [{ nom: "S&P 500", v: [1, 1] }, { nom: "Nasdaq-100", v: [1, 1] }, { nom: "Or non couvert", v: [1, 1] }], semaines: ["2026-11-13", "2026-11-20"],
+    /* v21.15 : l'or (coté à New York) n'a pas coté le 24/11 (jour férié imité) */
+    quot: { d: MK.map(num), s: [{ nom: "S&P 500", v: serie(500, 0.0004) }, { nom: "Nasdaq-100", v: serie(400, 0.0006) }, { nom: "Or non couvert", v: serie(200, 0.0003).map((v, i) => MK[i] === "2026-11-24" ? 0 : v) }] } },
   objectifs: [], journal: [], joursModif: 7, ecurie: {}, exclusifs: {}, cartes: {}, duels: {}, pronos: {}, votes: {}, rivaux: {}, etapes: {}, liaison: { active: false, personnes: [] }, lignes: {}, premierMillion: null,
   session: { role: "perso", nom: "Clément" }, mesCartes: {}, mesDuels: {}, mesPronos: {}, monRival: {} };
 const L = (code, nom, valeur) => ({ code, nom, valeur, cours: 10, qte: valeur / 10, pru: 9, pv: valeur * 0.1, pvPct: 0.11, pct: 0.001, jour: valeur * 0.001, poids: 0.33 });
@@ -41,7 +42,7 @@ const moi = { ok: true, version: 14, genere: "2026-11-25T19:00:00", majTexte: ""
   await p.clock.setFixedTime(new Date("2026-11-25T20:00:00"));
   await p.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi : versus) }));
   // pour le test seulement : la copie servie au navigateur expose fenMoi (le fichier n'est pas modifié)
-  await p.route("**/moi.js*", async r => { const rep = await r.fetch(), t = await rep.text(); r.fulfill({ response: rep, body: t.replace(/\}\)\(\);\s*$/, "window.__T = { fenMoi };\n})();\n") }); });
+  await p.route("**/moi.js*", async r => { const rep = await r.fetch(), t = await rep.text(); r.fulfill({ response: rep, body: t.replace(/\}\)\(\);\s*$/, "window.__T = { fenMoi, fenMk, base5j, debutPer, seances5 };\n})();\n") }); });
   await p.addInitScript(() => { localStorage.setItem("versus.cle", "x"); localStorage.setItem("versus.q3dAffichette", "1"); localStorage.setItem("versus.tuto1", "1"); localStorage.setItem("versus.moi.api", "https://script.google.com/macros/s/FAUXMOI/exec"); localStorage.setItem("versus.moi.cle", "x"); localStorage.setItem("versus.etat", JSON.stringify({ ouverture: "moi" })); });
   await p.goto("http://localhost:" + PORT + "/index.html"); await p.waitForTimeout(3500);
   await p.evaluate(() => document.querySelectorAll(".tuto, .bulle-portrait").forEach(x => x.remove()));
@@ -58,12 +59,26 @@ const moi = { ok: true, version: 14, genere: "2026-11-25T19:00:00", majTexte: ""
   for (const k of Object.keys(attendu)) { const f = await p.evaluate(x => window.__T.fenMoi(x), k); ok(f && f.d[0] === attendu[k], k + " : la courbe part du premier point de la période (" + attendu[k] + ")", f && f.d[0]); }
   const fy = await p.evaluate(() => window.__T.fenMoi("ytd")); ok(fy && fy.d[0] === 20251231, "YTD : départ au 31/12 (photo présente), inchangé", fy && fy.d[0]);
   const f5 = await p.evaluate(() => window.__T.fenMoi("5j")); ok(f5 && f5.d.length === 6 && f5.d[0] === 20261118, "5 j : les 5 dernières séances + la clôture d'avant", f5 && f5.d);
+  /* v21.15 · jour férié d'un seul marché : toutes les courbes « 5 j » (et la tienne) partent du MÊME jour */
+  const al = await p.evaluate(() => ["S&P 500", "Nasdaq-100", "Or non couvert"].map(n => { const f = window.__T.fenMk({ nom: n, pct: null, heure: "" }, "5j"); return f ? f.d[0] : null; }).concat([window.__T.fenMoi("5j").d[0], window.__T.base5j()]));
+  ok(al.every(x => x === al[0]) && al[0] === 20261118, "5 j : même départ pour tous les marchés, l'or (fermé un jour) et ton portefeuille", al);
+  const dp = await p.evaluate(() => { const d = window.__T.debutPer("5j", new Date()); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); });
+  ok(dp === 20261118, "5 j : la carte « Mon portefeuille » (et son %) part du même jour que les courbes", dp);
+  /* relecture moi-patrimoine : une bourse a déjà sa clôture du jour (Nasdaq-100 le 25/11) pendant qu'une autre est encore en séance (S&P 500) :
+     le jour du 25/11 ne doit pas être compté deux fois (départ toujours au 18/11, 5 vraies séances) */
+  const p4 = await ctx.newPage(); p4.on("pageerror", e => err.push(e.message));
+  const v4 = JSON.parse(JSON.stringify(versus)); const iS = MK.indexOf("2026-11-25"); v4.marchesMoi.quot.s[0].v[iS] = 0;
+  await p4.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi : v4) }));
+  await p4.route("**/moi.js*", async r => { const rep = await r.fetch(), t = await rep.text(); r.fulfill({ response: rep, body: t.replace(/\}\)\(\);\s*$/, "window.__T = { fenMoi, fenMk, base5j, seances5 };\n})();\n") }); });
+  await p4.goto("http://localhost:" + PORT + "/index.html"); await p4.waitForTimeout(3500);
+  const b4 = await p4.evaluate(() => [window.__T.base5j(), window.__T.seances5().join(",")]);
+  ok(b4[0] === 20261118 && b4[1] === "2026-11-19,2026-11-20,2026-11-23,2026-11-24,2026-11-25", "5 j : une clôture du jour déjà connue + une bourse en séance → départ 18/11, 5 séances (le 25 compté une fois)", b4);
   /* matin du 25/11 (photo du soir pas encore prise, bourse ouverte) : 5 j garde la courbe, dernier point = en direct */
   const p2 = await ctx.newPage(); p2.on("pageerror", e => err.push(e.message));
   await p2.clock.setFixedTime(new Date("2026-11-25T11:00:00"));
   const moi2 = Object.assign({}, moi, { historique: Object.assign({}, moi.historique, { rows: moi.historique.rows.filter(r => r[0] < 20261125) }) });
   await p2.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi2 : versus) }));
-  await p2.route("**/moi.js*", async r => { const rep = await r.fetch(), t = await rep.text(); r.fulfill({ response: rep, body: t.replace(/\}\)\(\);\s*$/, "window.__T = { fenMoi };\n})();\n") }); });
+  await p2.route("**/moi.js*", async r => { const rep = await r.fetch(), t = await rep.text(); r.fulfill({ response: rep, body: t.replace(/\}\)\(\);\s*$/, "window.__T = { fenMoi, fenMk, base5j, debutPer, seances5 };\n})();\n") }); });
   await p2.goto("http://localhost:" + PORT + "/index.html"); await p2.waitForTimeout(3500);
   for (const per of ["5j", "1m", "1a"]) { const f = await p2.evaluate(k => window.__T.fenMoi(k), per); ok(!!f && f.d.length > 1, "matin, photo du soir absente · " + per + " : courbe présente", f); }
   /* v21.14 · historique MENSUEL (fichier de Kévin) : dernier relevé le 30/10, rien après, bourse ouverte le 26/11 →
@@ -73,7 +88,7 @@ const moi = { ok: true, version: 14, genere: "2026-11-25T19:00:00", majTexte: ""
   const mens = [[20250831, 100], [20250930, 102.94], [20260630, 125.0], [20260731, 123.79], [20260831, 121.66], [20260930, 125.89], [20261030, 122.39]];
   const moi3 = Object.assign({}, moi, { historique: Object.assign({}, moi.historique, { rows: mens.map(([d, v]) => [d, 3000, 2700, v, null, null, v, null, v, null]) }) });
   await p3.route("https://script.google.com/**", r => r.fulfill({ contentType: "application/json", body: JSON.stringify(/FAUXMOI/.test(r.request().url()) ? moi3 : versus) }));
-  await p3.route("**/moi.js*", async r => { const rep = await r.fetch(), t = await rep.text(); r.fulfill({ response: rep, body: t.replace(/\}\)\(\);\s*$/, "window.__T = { fenMoi };\n})();\n") }); });
+  await p3.route("**/moi.js*", async r => { const rep = await r.fetch(), t = await rep.text(); r.fulfill({ response: rep, body: t.replace(/\}\)\(\);\s*$/, "window.__T = { fenMoi, fenMk, base5j, debutPer, seances5 };\n})();\n") }); });
   await p3.goto("http://localhost:" + PORT + "/index.html"); await p3.waitForTimeout(3500);
   const m5 = await p3.evaluate(() => window.__T.fenMoi("5j")), mt = await p3.evaluate(() => window.__T.fenMoi("tout"));
   ok(!m5, "historique mensuel · 5 j : pas de courbe étalée sur 5 mois", m5 && m5.d);
