@@ -2156,6 +2156,12 @@ function evenementsListe() {
     let c, l; try { c = closEv(nom).map(z => z.d); l = evDe(k); } catch (e) { return; } if (!c.length) return;
     nes = nes.filter(z => { if (z.k !== k || !c.includes(z.d)) return true; const y = l.find(w => w.d === z.d);
       if (!y) { change = true; return false; } ["p", "v", "avant", "dAvant"].forEach(f => { if (y[f] !== undefined && z[f] !== y[f]) { z[f] = y[f]; change = true; } }); return true; }); });
+  /* v21.18 (Théo, 27/11) : « pour tous les événements » : ceux de l'historique (record, pire baisse effacée, volatilité, série, calme plat) sont aussi revus
+     à chaque ouverture ; si l'historique ne remplit plus la condition ce jour-là (photo corrigée…), l'événement disparaît. */
+  { let hs = []; try { hs = seancesHisto(); } catch (e) { hs = []; } const finH = (hs[hs.length - 1] || {}).d;
+    if (finH) ["record", "pirebaisse", "volhaut", "volbas", "serie", "plat"].forEach(k => { if (!nes.some(z => z.k === k && z.d <= finH)) return;
+      let l; try { l = evDe(k).map(w => w.d); } catch (e) { return; }
+      nes = nes.filter(z => { if (z.k !== k || z.d > finH || l.includes(z.d)) return true; change = true; return false; }); }); }
   nes = nes.filter(x => x.d >= isoJour(new Date(Date.now() - 400 * 864e5)));
   if (change) stock.set(cleStock("evNes"), JSON.stringify(nes.slice(-60)));
   const parK = {}; nes.filter(x => x.d <= auj && (x.k === "relache" ? x.d === auj : x.d >= sc)).forEach(x => { if (!parK[x.k] || parK[x.k].d < x.d) parK[x.k] = x; });   // un par genre : le plus récent

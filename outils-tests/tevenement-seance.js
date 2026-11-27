@@ -73,6 +73,8 @@ let DIRECT = {};
   q = await voir("2026-11-27T15:00:00+01:00", joie("2026-11-27", 0.029));
   ok(q.ev.includes("joie:2026-11-27"), "En direct : toujours au-dessus de 2,8 % → le feu d'artifice reste", q);
   DIRECT = {};
+  q = await voir("2026-11-13T20:00:00+01:00", [{ k: "serie", d: "2026-11-13", p: 0.02 }]);
+  ok(!q.ev.includes("serie:2026-11-13"), "Série verte gardée sur le téléphone mais plus vraie dans l'historique : retirée (tous les événements)", q);
   ok(!err.length, "0 erreur JS", err.slice(0, 3));
   await b.close();
   console.log(ko.length ? "\n✗ " + ko.length + " NON" : "\n✓ Tout est OUI");
