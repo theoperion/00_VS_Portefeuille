@@ -13022,8 +13022,8 @@
        Il n'apparaît qu'en Visite (hélico) une fois zoomé ; pousser le bouton fait avancer la vue dans cette direction, plus loin = plus vite. */
     const hote = cv.parentNode, joy = document.createElement("div"), bouton = document.createElement("i");
     joy.className = "p3-joy"; joy.setAttribute("role", "slider"); joy.setAttribute("aria-label", "Se déplacer sur la carte"); joy.hidden = true; joy.appendChild(bouton);
-    joy.style.cssText = "position:absolute;left:50%;margin-left:-46px;bottom:calc(env(safe-area-inset-bottom, 0px) + 14px);width:92px;height:92px;border-radius:50%;background:rgba(10,14,22,.38);border:1.5px solid rgba(255,255,255,.55);box-shadow:0 2px 10px rgba(0,0,0,.35);touch-action:none;z-index:5;backdrop-filter:blur(3px)";
-    bouton.style.cssText = "position:absolute;left:50%;top:50%;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 1px 6px rgba(0,0,0,.4);pointer-events:none";
+    joy.style.cssText = "position:absolute;right:12px;bottom:calc(env(safe-area-inset-bottom, 0px) + 14px);width:72px;height:72px;border-radius:50%;background:rgba(10,14,22,.38);border:1.5px solid rgba(255,255,255,.55);box-shadow:0 2px 10px rgba(0,0,0,.35);touch-action:none;z-index:5;backdrop-filter:blur(3px)";
+    bouton.style.cssText = "position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:rgba(255,255,255,.9);box-shadow:0 1px 6px rgba(0,0,0,.4);pointer-events:none";
     if (hote) { if (getComputedStyle(hote).position === "static") hote.style.position = "relative"; hote.appendChild(joy); }
     const poserJoy = ev => { const r = joy.getBoundingClientRect(), R = r.width / 2; let x = (ev.clientX - r.left - R) / R, y = (ev.clientY - r.top - R) / R; const n = Math.hypot(x, y); if (n > 1) { x /= n; y /= n; }
       I.joy = Math.hypot(x, y) < .12 ? [0, 0] : [x, y]; bouton.style.transform = "translate(" + (x * R * .62) + "px," + (y * R * .62) + "px)"; reveiller(); };
@@ -13034,7 +13034,8 @@
     function majJoy() { const voir = I.mode === "helico" && !I.survol && (I.zoom < ZOOM_EXPLO || !!I.joy); if (joy.hidden === voir) joy.hidden = !voir;
       /* v20.66 (Théo : « difficile de manipuler la carte ») : de près, un doigt déplace la carte dans tous les sens ; avant, glisser vers le haut ou le bas
          faisait défiler la page (touch-action pan-y) et le geste s'arrêtait net. Loin, la page défile toujours en glissant sur la carte. */
-      const ta = I.mode === "helico" && I.zoom < ZOOM_EXPLO ? "none" : "pan-y"; if (I.ta !== ta) { I.ta = ta; cv.style.touchAction = ta; } }
+      /* v21.24 (Théo : « hors mode photo, c'était chaotique ») : en plein écran, rien à faire défiler → la 3D garde TOUS les gestes, sans bascule en cours de geste */
+      const ta = (I.mode === "helico" && I.zoom < ZOOM_EXPLO) || cv.closest(".gp-plein") ? "none" : "pan-y"; if (I.ta !== ta) { I.ta = ta; cv.style.touchAction = ta; } }
     function ecran(n) {
       const x = voitureDe(n); if (!x || !PV) return null; if (I.sansVoit || I.mode === "bord" && n === I.focus) return { vis: false }; const p = appliquer(PV, [x.x, x.y + 3.2, x.z, 1]); if (p[3] <= .5) return { vis: false };
       return { x: (p[0] / p[3] * .5 + .5) * I.cssW, y: (1 - (p[1] / p[3] * .5 + .5)) * I.cssH, vis: Math.abs(p[0] / p[3]) < 1.15 && Math.abs(p[1] / p[3]) < 1.2, d: p[3] };
